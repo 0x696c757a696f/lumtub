@@ -112,6 +112,34 @@ pub fn asset_of<'a>(release: &'a Value, package: &str, portable: bool) -> Option
     })
 }
 
+/// The version in a package's file name, `Lumtub_<version>_<package>.<ext>`.
+pub fn package_version(name: &str) -> Option<&str> {
+    let rest = name.strip_prefix("Lumtub_")?;
+    let (version, _) = rest.split_once('_')?;
+    (!version.is_empty()).then_some(version)
+}
+
+/// Whether the package [name] is the [offered] version and is newer than
+/// the [current] build: a signed name cannot be moved to another release,
+/// and an older signed package cannot be installed as an update.
+pub fn check_package(name: &str, offered: &str, current: &str) -> Result<(), String> {
+    let offered = offered.strip_prefix('v').unwrap_or(offered);
+    let Some(version) = package_version(name) else {
+        return Err("The update's file name has no version".into());
+    };
+    if version != offered {
+        return Err("The update's package is not the version offered".into());
+    }
+    let (Some(have), Some(next)) = (numbers(current), numbers(version)) else {
+        return Err("The update's version could not be read".into());
+    };
+    let current = current.strip_prefix('v').unwrap_or(current);
+    if next < have || (next == have && version == current) {
+        return Err("The update is not newer than this version".into());
+    }
+    Ok(())
+}
+
 /// The signature file published next to [asset].
 pub fn signature_of<'a>(release: &'a Value, asset: &Value) -> Option<&'a Value> {
     let name = format!("{}.sig", asset.get("name")?.as_str()?);
@@ -151,7 +179,14 @@ pub fn offer<'a>(
     if !is_newer(current, tag, published, built) {
         return None;
     }
-    let asset = asset_of(release, package, portable);
+    let version = tag.strip_prefix('v').unwrap_or(tag);
+    let asset = asset_of(release, package, portable).filter(|asset| {
+        asset
+            .get("name")
+            .and_then(Value::as_str)
+            .and_then(package_version)
+            == Some(version)
+    });
     Some(Offer {
         version: tag.strip_prefix('v').unwrap_or(tag),
         page: release
@@ -603,5 +638,25 @@ mod tests {
         assert!(script.contains(r"-Destination 'C:\Lumtub'"));
         assert!(!script.contains("/VERYSILENT"));
         assert!(script.ends_with(r"Start-Process -FilePath 'C:\Lumtub\lumtub.exe'"));
+    }
+
+    #[test]
+    fn a_package_must_be_the_offered_newer_version() {
+        let name = "Lumtub_0.2.3-abc1234_windows-x64.zip";
+        assert_eq!(package_version(name), Some("0.2.3-abc1234"));
+        assert!(check_package(name, "v0.2.3-abc1234", "0.2.2-1111111").is_ok());
+        assert!(check_package(name, "0.2.4-abc1234", "0.2.2-1111111").is_err());
+        assert!(check_package(name, "0.2.3-abc1234", "0.2.4-1111111").is_err());
+        assert!(check_package(name, "0.2.3-abc1234", "0.2.3-abc1234").is_err());
+        assert!(check_package(name, "0.2.3-abc1234", "0.2.3-1111111").is_ok());
+        assert!(check_package("setup.exe", "0.2.3-abc1234", "0.2.2").is_err());
+    }
+
+    #[test]
+    fn an_asset_of_another_version_is_not_offered() {
+        let mut release = release();
+        release["tag_name"] = json!("v0.2.3-7654321");
+        let offered = offer(&release, "0.2.1-0000000", None, "windows-x64", false).unwrap();
+        assert!(offered.asset.is_none());
     }
 }

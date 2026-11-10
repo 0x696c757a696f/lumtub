@@ -13,7 +13,7 @@
 //! from YouTube in chunks the way the loopback relay reads them. Only
 //! registered sessions are served, under random tokens.
 
-use crate::relay::{Fetch, Stop, Target, Web, drain, read_request, request};
+use crate::relay::{Fetch, Stop, Target, Web, drain, read_request_within, request};
 use crate::{cast_mkv, cast_webm};
 use serde::Deserialize;
 use std::collections::{HashMap, VecDeque};
@@ -28,6 +28,8 @@ use std::time::{Duration, Instant};
 const KEEP: usize = 4;
 /// Connections served at once.
 const MAX_CONNECTIONS: usize = 8;
+/// How long a client has to send its request head.
+const HEAD_DEADLINE: Duration = Duration::from_secs(5);
 /// The most bytes read to find a file's index.
 const HEAD_LIMIT: u64 = 8 << 20;
 /// The largest fragment read into memory.
@@ -263,9 +265,10 @@ fn track(data: &[u8], moov: Atom, sidx: Atom) -> Result<Track, &'static str> {
     let trak = child(data, moov, b"trak").ok_or("no trak")?;
     let mvhd = child(data, moov, b"mvhd").ok_or("no mvhd")?;
     let mdhd = path(data, trak, &[b"mdia", b"mdhd"]).ok_or("no mdhd")?;
-    let timescale = match data[mdhd.body] {
-        1 => be32(data, mdhd.body + 20),
-        _ => be32(data, mdhd.body + 12),
+    let timescale = match data.get(mdhd.body) {
+        Some(1) => be32(data, mdhd.body + 20),
+        Some(_) => be32(data, mdhd.body + 12),
+        None => None,
     }
     .filter(|&t| t > 0)
     .ok_or("no timescale")?;
@@ -292,7 +295,7 @@ fn track(data: &[u8], moov: Atom, sidx: Atom) -> Result<Track, &'static str> {
             if count == 0 {
                 return None;
             }
-            let time = match data[elst.body] {
+            let time = match data.get(elst.body)? {
                 1 => be64(data, elst.body + 16)? as i64,
                 _ => be32(data, elst.body + 12)? as i32 as i64,
             };
@@ -329,7 +332,9 @@ fn codec(data: &[u8], stsd: Atom) -> Codec {
             else {
                 return Codec::Other;
             };
-            avc_config(&data[avcc.body..avcc.end]).unwrap_or(Codec::Other)
+            data.get(avcc.body..avcc.end)
+                .and_then(avc_config)
+                .unwrap_or(Codec::Other)
         }
         b"mp4a" => {
             let Some(esds) = atoms(data, entry.body + 28, entry.end)
@@ -338,7 +343,9 @@ fn codec(data: &[u8], stsd: Atom) -> Codec {
             else {
                 return Codec::Other;
             };
-            aac_config(&data[esds.body + 4..esds.end]).unwrap_or(Codec::Other)
+            data.get(esds.body + 4..esds.end)
+                .and_then(aac_config)
+                .unwrap_or(Codec::Other)
         }
         b"ac-3" | b"ec-3" => {
             let plus = &entry.kind == b"ec-3";
@@ -431,7 +438,7 @@ fn aac_config(b: &[u8]) -> Option<Codec> {
     if tag != 5 || info_end > config_end || info_end < info + 2 {
         return None;
     }
-    let bits = u16::from_be_bytes([b[info], b[info + 1]]);
+    let bits = be16(b, info)?;
     let object = (bits >> 11) as u8;
     let frequency = ((bits >> 7) & 0xf) as u8;
     let channels = ((bits >> 3) & 0xf) as u8;
@@ -447,7 +454,7 @@ fn aac_config(b: &[u8]) -> Option<Codec> {
 }
 
 fn index(data: &[u8], sidx: Atom) -> Option<Vec<Segment>> {
-    let b = &data[sidx.body..sidx.end];
+    let b = data.get(sidx.body..sidx.end)?;
     let version = *b.first()?;
     let timescale = be32(b, 8).filter(|&t| t > 0)? as f64;
     let (earliest, first, mut at) = match version {
@@ -542,32 +549,50 @@ fn read_traf(
         d.flags = be32(data, at).ok_or("short tfhd")?;
     }
     let mut time = match child(data, traf, b"tfdt") {
-        Some(tfdt) => match data[tfdt.body] {
-            1 => be64(data, tfdt.body + 4),
-            _ => be32(data, tfdt.body + 4).map(u64::from),
+        Some(tfdt) => match data.get(tfdt.body) {
+            Some(1) => be64(data, tfdt.body + 4),
+            Some(_) => be32(data, tfdt.body + 4).map(u64::from),
+            None => None,
         }
         .ok_or("short tfdt")?,
-        None => samples.last().map_or(0, |s| s.time + s.duration as u64),
+        None => samples
+            .last()
+            .map_or(0, |s| s.time.saturating_add(s.duration as u64)),
     };
     let mut next = start;
     for trun in atoms(data, traf.body, traf.end)
         .into_iter()
         .filter(|a| &a.kind == b"trun")
     {
-        let b = &data[trun.body..trun.end.min(data.len())];
-        let version = b[0];
+        let b = data
+            .get(trun.body..trun.end.min(data.len()))
+            .ok_or("short trun")?;
+        let version = *b.first().ok_or("short trun")?;
         let flags = be32(b, 0).ok_or("short trun")? & 0xff_ffff;
         let count = be32(b, 4).ok_or("short trun")? as usize;
         let mut at = 8;
         if flags & 0x01 != 0 {
             let offset = be32(b, at).ok_or("short trun")? as i32 as i64;
-            next = u64::try_from(start as i64 + offset).map_err(|_| "negative data offset")?;
+            next = i64::try_from(start)
+                .ok()
+                .and_then(|s| s.checked_add(offset))
+                .and_then(|n| u64::try_from(n).ok())
+                .ok_or("negative data offset")?;
             at += 4;
         }
         let mut first_flags = None;
         if flags & 0x04 != 0 {
             first_flags = Some(be32(b, at).ok_or("short trun")?);
             at += 4;
+        }
+        let stride = 4 * (flags & 0xf00).count_ones() as usize;
+        let room = b
+            .len()
+            .saturating_sub(at)
+            .checked_div(stride)
+            .unwrap_or(data.len());
+        if count > room {
+            return Err("too many samples");
         }
         for i in 0..count {
             let mut field = |on: u32| -> Result<Option<u32>, &'static str> {
@@ -601,8 +626,8 @@ fn read_traf(
                 offset,
                 sync: sample_flags & 0x0001_0000 == 0,
             });
-            next += size as u64;
-            time += duration as u64;
+            next = next.saturating_add(size as u64);
+            time = time.saturating_add(duration as u64);
         }
     }
     Ok(())
@@ -620,7 +645,11 @@ fn webm_track(head: &cast_webm::Head, total: u64) -> Track {
         .enumerate()
         .map(|(i, &(offset, start))| Segment {
             offset,
-            size: head.clusters.get(i + 1).map_or(total, |n| n.0) - offset,
+            size: head
+                .clusters
+                .get(i + 1)
+                .map_or(total, |n| n.0)
+                .saturating_sub(offset),
             start,
         })
         .collect();
@@ -935,6 +964,12 @@ fn opus_trak(opus: &cast_webm::Opus, timescale: u32) -> Vec<u8> {
 /// last as long as the file says a frame lasts (or as the one before it).
 fn webm_fragment(data: Vec<u8>, number: u64, frame: u32) -> Result<Fragment, &'static str> {
     let frames = cast_webm::frames(&data, number)?;
+    if frames
+        .iter()
+        .any(|f| f.at.checked_add(f.size).is_none_or(|end| end > data.len()))
+    {
+        return Err("sample outside the fragment");
+    }
     let mut samples: Vec<Sample> = Vec::with_capacity(frames.len());
     for (i, f) in frames.iter().enumerate() {
         let duration = match frames.get(i + 1) {
@@ -2865,10 +2900,12 @@ fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &Arc<dyn Fetch>) {
         return;
     };
     let mut reader = BufReader::new(client);
-    let Some((method, path, headers)) = read_request(&mut reader) else {
+    let Some((method, path, headers)) = read_request_within(&mut reader, Some(HEAD_DEADLINE))
+    else {
         log(shared, format!("{peer} connected but sent no request"));
         return;
     };
+    let _ = writer.set_read_timeout(Some(Duration::from_secs(30)));
     let token = path
         .trim_start_matches('/')
         .split(['.', '?', '/'])
@@ -3568,5 +3605,58 @@ mod tests {
                     && l.ends_with("answered 404")),
             "{log:?}"
         );
+    }
+
+    fn mp4_box(kind: &[u8; 4], body: &[u8]) -> Vec<u8> {
+        let mut out = ((body.len() + 8) as u32).to_be_bytes().to_vec();
+        out.extend_from_slice(kind);
+        out.extend_from_slice(body);
+        out
+    }
+
+    fn moof(children: &[Vec<u8>]) -> Vec<u8> {
+        let traf = mp4_box(b"traf", &children.concat());
+        mp4_box(b"moof", &traf)
+    }
+
+    fn tfhd() -> Vec<u8> {
+        mp4_box(b"tfhd", &[0, 0, 0, 0, 0, 0, 0, 1])
+    }
+
+    #[test]
+    fn a_huge_trun_count_is_refused() {
+        for flags in [0x200u32, 0] {
+            let mut body = flags.to_be_bytes().to_vec();
+            body.extend_from_slice(&u32::MAX.to_be_bytes());
+            body.extend_from_slice(&[0; 16]);
+            let data = moof(&[tfhd(), mp4_box(b"trun", &body)]);
+            assert!(fragment(data, 0, Defaults::default()).is_err());
+        }
+    }
+
+    #[test]
+    fn truncated_boxes_are_errors() {
+        let empty_tfdt = moof(&[tfhd(), mp4_box(b"tfdt", &[])]);
+        assert_eq!(
+            fragment(empty_tfdt, 0, Defaults::default()).err(),
+            Some("short tfdt")
+        );
+        let empty_trun = moof(&[tfhd(), mp4_box(b"trun", &[])]);
+        assert_eq!(
+            fragment(empty_trun, 0, Defaults::default()).err(),
+            Some("short trun")
+        );
+        let mut moov = mp4_box(b"mvhd", &[0; 100]);
+        moov.extend(mp4_box(b"trak", &mp4_box(b"mdia", &mp4_box(b"mdhd", &[]))));
+        let mut file = mp4_box(b"moov", &moov);
+        file.extend(mp4_box(b"sidx", &[0; 12]));
+        assert!(matches!(read_head(&file), Head::Unusable(_)));
+        let esds = mp4_box(b"esds", &[0, 0]);
+        let mut entry = vec![0; 28];
+        entry.extend(esds);
+        let stsd_body = [vec![0; 8], mp4_box(b"mp4a", &entry)].concat();
+        let stsd = mp4_box(b"stsd", &stsd_body);
+        let atom = atoms(&stsd, 0, stsd.len())[0];
+        assert!(matches!(codec(&stsd, atom), Codec::Other));
     }
 }

@@ -196,6 +196,8 @@ fn handle(
         return;
     }
     let (Ok(mut up_read), Ok(mut up_write)) = (upstream.try_clone(), upstream.try_clone()) else {
+        let _ = upstream.shutdown(Shutdown::Both);
+        open.lock().unwrap().remove(&(id | 1 << 63));
         return;
     };
     let mut client_read = reader.into_inner();

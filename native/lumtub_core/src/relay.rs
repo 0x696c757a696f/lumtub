@@ -17,7 +17,7 @@ use std::net::{Shutdown, TcpListener, TcpStream};
 use std::os::raw::c_char;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 /// Bytes fetched from YouTube per request.
 pub const CHUNK: u64 = 9 << 20;
@@ -571,25 +571,72 @@ const IDLE_TIMEOUT: Duration = Duration::from_secs(300);
 const MAX_LINE: u64 = 8 << 10;
 
 /// One line of at most [MAX_LINE] bytes; a longer one ends the request.
-fn read_bounded_line(reader: &mut BufReader<TcpStream>, line: &mut String) -> Option<usize> {
-    let n = reader.by_ref().take(MAX_LINE).read_line(line).ok()?;
-    if n as u64 == MAX_LINE && !line.ends_with('\n') {
-        return None;
+fn read_bounded_line(
+    reader: &mut BufReader<TcpStream>,
+    line: &mut String,
+    deadline: Option<Instant>,
+) -> Option<usize> {
+    let mut bytes = Vec::new();
+    loop {
+        if let Some(deadline) = deadline {
+            let left = deadline
+                .checked_duration_since(Instant::now())
+                .filter(|l| !l.is_zero())?;
+            reader.get_ref().set_read_timeout(Some(left)).ok()?;
+        }
+        let room = MAX_LINE as usize - bytes.len();
+        let (used, done) = match reader.fill_buf() {
+            Ok([]) => break,
+            Ok(buf) => {
+                let window = &buf[..buf.len().min(room)];
+                match window.iter().position(|&b| b == b'\n') {
+                    Some(i) => {
+                        bytes.extend_from_slice(&window[..=i]);
+                        (i + 1, true)
+                    }
+                    None => {
+                        bytes.extend_from_slice(window);
+                        (window.len(), false)
+                    }
+                }
+            }
+            Err(e) if e.kind() == ErrorKind::Interrupted => continue,
+            Err(_) => return None,
+        };
+        reader.consume(used);
+        if done {
+            break;
+        }
+        if bytes.len() as u64 >= MAX_LINE {
+            return None;
+        }
     }
+    let n = bytes.len();
+    line.push_str(&String::from_utf8(bytes).ok()?);
     Some(n)
 }
 
 pub(crate) fn read_request(reader: &mut BufReader<TcpStream>) -> Option<Request> {
+    read_request_within(reader, None)
+}
+
+/// Reads a request head that has to arrive whole within `total`, so a slow
+/// client cannot hold a connection.
+pub(crate) fn read_request_within(
+    reader: &mut BufReader<TcpStream>,
+    total: Option<Duration>,
+) -> Option<Request> {
+    let deadline = total.map(|t| Instant::now() + t);
     let mut line = String::new();
     let mut total = 0;
-    read_bounded_line(reader, &mut line).filter(|&n| n > 0)?;
+    read_bounded_line(reader, &mut line, deadline).filter(|&n| n > 0)?;
     let mut parts = line.split_whitespace();
     let method = parts.next()?.to_string();
     let path = parts.next()?.to_string();
     let mut headers = HashMap::new();
     loop {
         let mut header = String::new();
-        let n = read_bounded_line(reader, &mut header)?;
+        let n = read_bounded_line(reader, &mut header, deadline)?;
         total += n;
         if n == 0 || total > 32 << 10 {
             return None;

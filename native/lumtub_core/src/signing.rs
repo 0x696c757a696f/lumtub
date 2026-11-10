@@ -122,6 +122,10 @@ pub unsafe extern "C" fn lumtub_update_verify(json: *const u8, length: usize) ->
         file: String,
         name: String,
         signature: String,
+        /// The version offered and the one running: when both are given the
+        /// package must be that version and newer than this build.
+        version: Option<String>,
+        current: Option<String>,
     }
     #[derive(Serialize)]
     struct Answer {
@@ -131,7 +135,12 @@ pub unsafe extern "C" fn lumtub_update_verify(json: *const u8, length: usize) ->
         error: Option<String>,
     }
     let answer = match serde_json::from_str::<Ask>(unsafe { text(json, length) }) {
-        Ok(ask) => match verify_file(&ask.file, &ask.name, &ask.signature) {
+        Ok(ask) => match (|| {
+            if let (Some(version), Some(current)) = (&ask.version, &ask.current) {
+                crate::update::check_package(&ask.name, version, current)?;
+            }
+            verify_file(&ask.file, &ask.name, &ask.signature)
+        })() {
             Ok(()) => Answer {
                 ok: Some(true),
                 error: None,

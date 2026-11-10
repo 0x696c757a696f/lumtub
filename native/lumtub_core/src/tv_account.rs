@@ -331,7 +331,9 @@ async fn sign_in(port: i64, attempt: u64) {
             return;
         }
         match answer.map(|a| read_token_answer(&a)) {
-            Ok(TokenAnswer::Pending) => continue,
+            // A dropped connection says nothing about the sign-in: keep asking
+            // until the code expires.
+            Ok(TokenAnswer::Pending) | Err(_) => continue,
             Ok(TokenAnswer::SlowDown) => wait += Duration::from_secs(5),
             Ok(TokenAnswer::Tokens {
                 access,
@@ -380,7 +382,7 @@ async fn sign_in(port: i64, attempt: u64) {
                 post(port, vec![Item::Int(2), Item::Text("invalid_grant".into())]);
                 return;
             }
-            Ok(TokenAnswer::Failed(why)) | Err(why) => {
+            Ok(TokenAnswer::Failed(why)) => {
                 post(port, vec![Item::Int(2), Item::Text(why)]);
                 return;
             }
@@ -399,15 +401,13 @@ pub(crate) enum NoToken {
 pub(crate) async fn access_token() -> Result<String, NoToken> {
     let (refresh, base) = {
         let account = account();
+        let refresh = account.refresh.clone().ok_or(NoToken::SignedOut)?;
         if let Some((token, until)) = &account.access
             && Instant::now() < *until
         {
             return Ok(token.clone());
         }
-        (
-            account.refresh.clone().ok_or(NoToken::SignedOut)?,
-            account.base.clone(),
-        )
+        (refresh, account.base.clone())
     };
     let answer = send(
         format!("{base}/o/oauth2/token"),
@@ -419,7 +419,11 @@ pub(crate) async fn access_token() -> Result<String, NoToken> {
         TokenAnswer::Tokens {
             access, seconds, ..
         } => {
-            account().access = Some((
+            let mut account = account();
+            if account.refresh.as_ref() != Some(&refresh) {
+                return Err(NoToken::SignedOut);
+            }
+            account.access = Some((
                 access.clone(),
                 Instant::now() + Duration::from_secs(seconds.saturating_sub(60)),
             ));

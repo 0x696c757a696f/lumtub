@@ -164,12 +164,14 @@ fn build(settings: &Settings) -> reqwest::Client {
         .tcp_keepalive(Duration::from_secs(60))
         .http2_adaptive_window(true)
         .redirect(reqwest::redirect::Policy::limited(10));
-    match settings
-        .proxy
-        .as_deref()
-        .and_then(|p| reqwest::Proxy::all(p).ok())
-    {
-        Some(proxy) => builder = builder.proxy(proxy),
+    match settings.proxy.as_deref().filter(|p| !p.trim().is_empty()) {
+        Some(address) => match reqwest::Proxy::all(address) {
+            Ok(proxy) => builder = builder.proxy(proxy),
+            Err(_) => {
+                eprintln!("lumtub: the proxy address could not be read; requests will fail");
+                return blocked();
+            }
+        },
         None if !settings.system => builder = builder.no_proxy(),
         None => {}
     }
@@ -183,6 +185,27 @@ fn build(settings: &Settings) -> reqwest::Client {
             .build()
             .unwrap_or_default()
     })
+}
+
+/// Resolves nothing, so a client that must not connect cannot.
+struct Refuse;
+
+impl reqwest::dns::Resolve for Refuse {
+    fn resolve(&self, _: reqwest::dns::Name) -> reqwest::dns::Resolving {
+        Box::pin(async { Err(Box::new(std::io::Error::other("no route is allowed")) as Box<_>) })
+    }
+}
+
+/// A client whose every request fails: used when the proxy asked for cannot
+/// be set up, so traffic never leaves directly.
+fn blocked() -> reqwest::Client {
+    let mut builder = reqwest::Client::builder()
+        .dns_resolver(Arc::new(Refuse))
+        .connect_timeout(Duration::from_secs(1));
+    if let Ok(proxy) = reqwest::Proxy::all("http://blocked.invalid:9") {
+        builder = builder.proxy(proxy);
+    }
+    builder.build().unwrap_or_default()
 }
 
 static RUNTIME: LazyLock<Runtime> = LazyLock::new(|| {
@@ -395,8 +418,11 @@ pub unsafe extern "C" fn lumtub_http_init(post: PostCObject) {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_http_configure(json: *const u8, length: usize) {
-    let settings: Settings =
-        serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
+    let Ok(settings) = serde_json::from_str::<Settings>(unsafe { text(json, length) }) else {
+        eprintln!("lumtub: the network settings could not be read; requests will fail");
+        *CLIENT.write().unwrap_or_else(|e| e.into_inner()) = blocked();
+        return;
+    };
     crate::roots::set(settings.roots);
     crate::dns::set(settings.dns.clone());
     *CLIENT.write().unwrap_or_else(|e| e.into_inner()) = build(&settings);
@@ -531,5 +557,31 @@ mod tests {
         }
         let d: Settings = serde_json::from_str("{}").unwrap();
         assert!(d.proxy.is_none() && !d.system);
+    }
+
+    #[test]
+    fn a_bad_proxy_fails_closed() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}/", listener.local_addr().unwrap());
+        listener.set_nonblocking(true).unwrap();
+        let bad = Settings {
+            proxy: Some("not a proxy address".into()),
+            ..Default::default()
+        };
+        let client = build(&bad);
+        let result = runtime().block_on(client.get(&url).send());
+        assert!(result.is_err());
+        assert!(listener.accept().is_err(), "the request went direct");
+    }
+
+    #[test]
+    fn a_blocked_client_never_connects() {
+        assert!(serde_json::from_str::<Settings>("{not json").is_err());
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}/", listener.local_addr().unwrap());
+        listener.set_nonblocking(true).unwrap();
+        let result = runtime().block_on(blocked().get(&url).send());
+        assert!(result.is_err());
+        assert!(listener.accept().is_err(), "the request went direct");
     }
 }

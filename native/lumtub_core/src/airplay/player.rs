@@ -413,7 +413,12 @@ fn answer_events(mut stream: TcpStream, mut framing: Framing, stop: Arc<AtomicBo
             break;
         };
         plain.extend(more);
-        while let Some((head, length)) = message_end(&plain) {
+        loop {
+            let (head, length) = match message_end(&plain) {
+                Ok(Some(found)) => found,
+                Ok(None) => break,
+                Err(_) => return,
+            };
             if plain.len() < head + length {
                 break;
             }

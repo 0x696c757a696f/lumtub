@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Šiam atsisiuntimui reikia ffmpeg, bet jo nerasta",
   "The download failed; see the logs for details": "Atsisiųsti nepavyko; išsamią informaciją rasite žurnaluose",
   "see the logs for details": "išsamią informaciją rasite žurnaluose",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Postkvantinis šifravimas",
+  "Prefer (default)": "Teikti pirmenybę (numatytasis)",
+  "Require": "Reikalauti",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Dabar: {0}. HTTPS ryšiai, kuriuos Lumtub užmezga pats (YouTube puslapiai ir duomenys, srauto perdavimas, šifruotas DNS, naujinimai), pirmiausia siūlo X25519MLKEM768 raktų mainus, kurių negalės įveikti būsimas kvantinis kompiuteris; serveriai be jų naudoja klasikinius mainus. „Reikalauti“ atmeta serverius be jų ir TLS 1.2. Vaizdo grotuvų ir yt-dlp savo ryšiai neapimami",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "postkvantinis kvantinis ML-KEM Kyber X25519MLKEM768 TLS 1.3 raktų-mainai",
+  "Key exchange by site": "Raktų mainai pagal svetainę",
+  "What each site agreed on the last time Lumtub connected to it": "Dėl ko susitarė kiekviena svetainė, kai Lumtub paskutinį kartą prie jos prisijungė",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "postkvantinis TLS raktų-mainai X25519MLKEM768 svetainės šeimininkai",
+  "No HTTPS connection yet since Lumtub started": "Nuo Lumtub paleidimo dar nebuvo HTTPS ryšių",
+  "{0}, post-quantum": "{0}, postkvantinis",
+  "{0}, not post-quantum": "{0}, nepostkvantinis"
 }

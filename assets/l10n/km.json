@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "ការទាញយកនេះត្រូវការ ffmpeg ប៉ុន្តែរកមិនឃើញ",
   "The download failed; see the logs for details": "ការទាញយកបរាជ័យ សូមមើលកំណត់ហេតុសម្រាប់ព័ត៌មានលម្អិត",
   "see the logs for details": "សូមមើលកំណត់ហេតុសម្រាប់ព័ត៌មានលម្អិត",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "ការអ៊ិនគ្រីបក្រោយកង់ទិច",
+  "Prefer (default)": "ពេញចិត្ត (លំនាំដើម)",
+  "Require": "តម្រូវ",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "ឥឡូវនេះ៖ {0}។ ការតភ្ជាប់ HTTPS ដែល Lumtub បង្កើតខ្លួនឯង (ទំព័រ និងទិន្នន័យ YouTube, ឧបករណ៍បញ្ជូនបន្តស្ទ្រីម, DNS អ៊ិនគ្រីប, ការអាប់ដេត) ផ្តល់ជូនការផ្លាស់ប្តូរសោ X25519MLKEM768 មុនគេ ដែលកុំព្យូទ័រកង់ទិចនាពេលអនាគតមិនអាចបំបែកបាន។ ម៉ាស៊ីនមេដែលគ្មានវាប្រើការផ្លាស់ប្តូរបែបបុរាណ។ «តម្រូវ» បដិសេធម៉ាស៊ីនមេដែលគ្មានវា និង TLS 1.2។ ការតភ្ជាប់របស់កម្មវិធីចាក់វីដេអូ និង yt-dlp ផ្ទាល់ មិនត្រូវបានរាប់បញ្ចូលទេ",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "ក្រោយកង់ទិច កង់ទិច ML-KEM Kyber X25519MLKEM768 TLS 1.3 ការផ្លាស់ប្តូរសោ",
+  "Key exchange by site": "ការផ្លាស់ប្តូរសោតាមគេហទំព័រ",
+  "What each site agreed on the last time Lumtub connected to it": "អ្វីដែលគេហទំព័រនីមួយៗបានយល់ព្រមនៅពេលចុងក្រោយដែល Lumtub តភ្ជាប់ទៅវា",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "ក្រោយកង់ទិច TLS ការផ្លាស់ប្តូរសោ X25519MLKEM768 គេហទំព័រ ម៉ាស៊ីនបម្រើ",
+  "No HTTPS connection yet since Lumtub started": "មិនទាន់មានការតភ្ជាប់ HTTPS ចាប់តាំងពី Lumtub ចាប់ផ្តើម",
+  "{0}, post-quantum": "{0}, ក្រោយកង់ទិច",
+  "{0}, not post-quantum": "{0}, មិនមែនក្រោយកង់ទិច"
 }

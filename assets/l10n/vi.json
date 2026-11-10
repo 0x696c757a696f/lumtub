@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Cần có ffmpeg cho lượt tải này nhưng không tìm thấy",
   "The download failed; see the logs for details": "Tải xuống không thành công; xem nhật ký để biết chi tiết",
   "see the logs for details": "xem nhật ký để biết chi tiết",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Mã hóa hậu lượng tử",
+  "Prefer (default)": "Ưu tiên (mặc định)",
+  "Require": "Bắt buộc",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Hiện tại: {0}. Các kết nối HTTPS do chính Lumtub tạo (trang và dữ liệu YouTube, máy chủ chuyển tiếp luồng, DNS mã hóa, cập nhật) sẽ đề xuất trao đổi khóa X25519MLKEM768 trước, thứ mà máy tính lượng tử tương lai cũng không phá được; máy chủ không hỗ trợ sẽ dùng cách trao đổi truyền thống. \"Bắt buộc\" sẽ từ chối máy chủ không hỗ trợ và TLS 1.2. Kết nối riêng của trình phát video và yt-dlp không nằm trong phạm vi này",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "hậu lượng tử lượng tử ML-KEM Kyber X25519MLKEM768 TLS 1.3 trao đổi khóa",
+  "Key exchange by site": "Trao đổi khóa theo trang web",
+  "What each site agreed on the last time Lumtub connected to it": "Những gì mỗi trang web đã thống nhất trong lần Lumtub kết nối gần nhất",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "hậu lượng tử TLS trao đổi khóa X25519MLKEM768 trang web máy chủ",
+  "No HTTPS connection yet since Lumtub started": "Chưa có kết nối HTTPS nào kể từ khi Lumtub khởi động",
+  "{0}, post-quantum": "{0}, hậu lượng tử",
+  "{0}, not post-quantum": "{0}, không hậu lượng tử"
 }

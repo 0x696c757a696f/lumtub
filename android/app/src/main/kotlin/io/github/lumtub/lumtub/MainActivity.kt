@@ -37,8 +37,17 @@ class MainActivity : FlutterActivity() {
     /** Waiting for WebSignInActivity: answered with its file, or null. */
     private var signingIn: MethodChannel.Result? = null
 
+    /** Gives the core's certificate check (rustls-platform-verifier) this app's context. */
+    private external fun initTls(context: android.content.Context)
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        // Before Dart's first request; should it fail, the core reads
+        // Android's certificate files instead.
+        runCatching {
+            System.loadLibrary("lumtub_core")
+            initTls(applicationContext)
+        }
         val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lumtub/windows_shell")
         this.channel = channel
         PlaybackService.listener = { method, argument -> runOnUiThread { channel.invokeMethod(method, argument) } }

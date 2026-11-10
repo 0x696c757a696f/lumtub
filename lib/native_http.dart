@@ -53,10 +53,10 @@ abstract final class NativeHttp {
   /// [dns] looks names up for direct connections instead of the system.
   /// [roots] names the certificate authorities trusted: `system`,
   /// `mozilla` or `google`.
-  static void configure({String? proxy, bool system = false, DnsServer? dns, String roots = 'system'}) {
+  static void configure({String? proxy, bool system = false, DnsServer? dns, String roots = 'system', String quantum = 'prefer'}) {
     final native = _native;
     if (native == null) return;
-    final bytes = utf8.encode(jsonEncode({'proxy': proxy, 'system': system, 'dns': dns?.toJson() ?? const {}, 'roots': roots}));
+    final bytes = utf8.encode(jsonEncode({'proxy': proxy, 'system': system, 'dns': dns?.toJson() ?? const {}, 'roots': roots, 'quantum': quantum}));
     _withBytes(bytes, (p, n) => native.configure(p, n));
   }
 

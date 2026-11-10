@@ -368,6 +368,20 @@ class NativeCore {
   }
 
   /// Whether this core can [join] files.
+  /// What each host's TLS last agreed on, newest first; empty before any
+  /// HTTPS connection, or with a core that does not keep it.
+  static List<TlsSeen> tlsSeen() {
+    final core = instance;
+    if (core == null || !core.library.providesSymbol('lumtub_tls_seen')) return const [];
+    final seen = core.library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_tls_seen');
+    try {
+      final list = jsonDecode(core.take(seen()) ?? '[]') as List;
+      return [for (final entry in list.whereType<Map>()) TlsSeen.fromJson(entry)];
+    } catch (_) {
+      return const [];
+    }
+  }
+
   static bool get canJoin => instance?.library.providesSymbol('lumtub_join') ?? false;
 
   Pointer<Utf8> Function(Pointer<Uint8>, int)? _join;
@@ -498,4 +512,22 @@ class ProcessTree implements Process {
   Stream<List<int>> get stderr => _process.stderr;
   @override
   IOSink get stdin => _process.stdin;
+}
+
+/// The key exchange one host's TLS last agreed on.
+class TlsSeen {
+  const TlsSeen({required this.host, required this.group, required this.postQuantum, required this.at});
+
+  factory TlsSeen.fromJson(Map json) => TlsSeen(
+        host: json['host']?.toString() ?? '',
+        group: json['group']?.toString() ?? '',
+        postQuantum: json['quantum'] == true,
+        at: DateTime.fromMillisecondsSinceEpoch(((json['at'] as num?)?.toInt() ?? 0) * 1000),
+      );
+
+  final String host;
+  /// X25519MLKEM768, X25519, P-256… or TLS 1.2, which has no post-quantum exchange.
+  final String group;
+  final bool postQuantum;
+  final DateTime at;
 }

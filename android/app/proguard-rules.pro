@@ -3,3 +3,7 @@
 -dontwarn com.yausername.**
 -dontwarn com.fasterxml.jackson.**
 -dontwarn org.apache.commons.**
+
+# rustls-platform-verifier's Kotlin classes are called only from the core
+# through JNI.
+-keep, includedescriptorclasses class org.rustls.platformverifier.** { *; }

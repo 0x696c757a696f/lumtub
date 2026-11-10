@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Undhuhan iki mbutuhake ffmpeg, nanging ora ketemu",
   "The download failed; see the logs for details": "Undhuhan gagal; deleng log kanggo rincian",
   "see the logs for details": "deleng log kanggo rincian",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Enkripsi pasca-kuantum",
+  "Prefer (default)": "Luwih disenengi (baku)",
+  "Require": "Wajibake",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Saiki: {0}. Sambungan HTTPS sing digawe Lumtub dhewe (kaca lan data YouTube, relai stream, DNS terenkripsi, nganyari) nawakake ijol-ijolan kunci X25519MLKEM768 dhisik, sing ora bisa dibobol komputer kuantum ing mbesuk; server tanpa iku nganggo ijol-ijolan klasik. “Wajibake” nolak server tanpa iku lan TLS 1.2. Sambungan duweke pamuter video lan yt-dlp dhewe ora kalebu",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "pasca-kuantum kuantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 ijol-ijolan-kunci",
+  "Key exchange by site": "Ijol-ijolan kunci miturut situs",
+  "What each site agreed on the last time Lumtub connected to it": "Apa sing disepakati saben situs nalika Lumtub nyambung pungkasan",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "pasca-kuantum TLS ijol-ijolan-kunci X25519MLKEM768 situs host",
+  "No HTTPS connection yet since Lumtub started": "Durung ana sambungan HTTPS wiwit Lumtub diwiwiti",
+  "{0}, post-quantum": "{0}, pasca-kuantum",
+  "{0}, not post-quantum": "{0}, dudu pasca-kuantum"
 }

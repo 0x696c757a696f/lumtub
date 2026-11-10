@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "ffmpeg necesas por ĉi tiu elŝuto, sed ne troviĝis",
   "The download failed; see the logs for details": "La elŝuto malsukcesis; vidu la protokolojn por detaloj",
   "see the logs for details": "vidu la protokolojn por detaloj",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Postkvanta ĉifrado",
+  "Prefer (default)": "Preferi (defaŭlto)",
+  "Require": "Postuli",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Nun: {0}. HTTPS-konektoj, kiujn Lumtub mem faras (paĝoj kaj datumoj de YouTube, la fluo-relajso, ĉifrita DNS, ĝisdatigoj), unue proponas la ŝlosilinterŝanĝon X25519MLKEM768, kiun estonta kvantuma komputilo ne povas rompi; serviloj sen ĝi uzas klasikan interŝanĝon. “Postuli” rifuzas servilojn sen ĝi kaj TLS 1.2. La propraj konektoj de videoludiloj kaj de yt-dlp ne estas kovritaj",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "postkvanta kvanta ML-KEM Kyber X25519MLKEM768 TLS 1.3 ŝlosilinterŝanĝo",
+  "Key exchange by site": "Ŝlosilinterŝanĝo laŭ retejo",
+  "What each site agreed on the last time Lumtub connected to it": "Pri kio ĉiu retejo interkonsentis lastfoje, kiam Lumtub konektis al ĝi",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "postkvanta TLS ŝlosilinterŝanĝo X25519MLKEM768 retejoj gastigoj",
+  "No HTTPS connection yet since Lumtub started": "Ankoraŭ neniu HTTPS-konekto ekde la starto de Lumtub",
+  "{0}, post-quantum": "{0}, postkvanta",
+  "{0}, not post-quantum": "{0}, ne postkvanta"
 }

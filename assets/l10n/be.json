@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Для гэтай загрузкі патрэбны ffmpeg, але ён не знойдзены",
   "The download failed; see the logs for details": "Не ўдалося спампаваць; падрабязнасці глядзіце ў журналах",
   "see the logs for details": "падрабязнасці глядзіце ў журналах",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Постквантавае шыфраванне",
+  "Prefer (default)": "Пераважна (стандартна)",
+  "Require": "Патрабаваць",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Цяпер: {0}. HTTPS-злучэнні, якія Lumtub стварае сам (старонкі і даныя YouTube, рэтранслятар струменя, шыфраваны DNS, абнаўленні), спачатку прапануюць абмен ключамі X25519MLKEM768, які не зможа ўзламаць будучы квантавы камп’ютар; серверы без яго выкарыстоўваюць класічны абмен. Параметр «Патрабаваць» адхіляе серверы без яго і TLS 1.2. Уласныя злучэнні відэапрайгравальнікаў і yt-dlp не ўлічваюцца",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "постквантавы квант ML-KEM Kyber X25519MLKEM768 TLS 1.3 абмен-ключамі",
+  "Key exchange by site": "Абмен ключамі па сайтах",
+  "What each site agreed on the last time Lumtub connected to it": "Пра што дамовіўся кожны сайт пры апошнім злучэнні з Lumtub",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "постквантавы TLS абмен-ключамі X25519MLKEM768 сайты хосты",
+  "No HTTPS connection yet since Lumtub started": "З моманту запуску Lumtub яшчэ не было HTTPS-злучэнняў",
+  "{0}, post-quantum": "{0}, постквантавы",
+  "{0}, not post-quantum": "{0}, не постквантавы"
 }

@@ -75,4 +75,7 @@ dependencies {
     // Only its Python, QuickJS and yt-dlp files are used
     // (PythonSetup.kt); its Kotlin and the libraries that needs are not.
     implementation("io.github.junkfood02.youtubedl-android:library:0.18.1") { isTransitive = false }
+    // Must be the version of the rustls-platform-verifier-android crate in
+    // native/lumtub_core/Cargo.lock (checked by android/packaging/build-core.sh).
+    implementation("org.rustls:rustls-platform-verifier:0.2.0")
 }

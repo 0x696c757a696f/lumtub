@@ -152,6 +152,19 @@ struct Settings {
     /// The certificate authorities every connection trusts.
     #[serde(default)]
     roots: crate::roots::Roots,
+    /// Whether connections offer, avoid or require a post-quantum key
+    /// exchange.
+    #[serde(default)]
+    quantum: crate::tls::Quantum,
+}
+
+impl Settings {
+    fn tls(&self) -> crate::tls::Tls {
+        crate::tls::Tls {
+            roots: self.roots,
+            quantum: self.quantum,
+        }
+    }
 }
 
 fn build(settings: &Settings) -> reqwest::Client {
@@ -178,10 +191,10 @@ fn build(settings: &Settings) -> reqwest::Client {
     if let Some(doh) = crate::dns::current() {
         builder = builder.dns_resolver(std::sync::Arc::new(crate::dns::Resolver(doh)));
     }
-    builder = crate::roots::apply(builder, settings.roots);
+    builder = crate::tls::apply(builder, settings.tls());
     // A list of its own is kept even then, rather than the system's store.
     builder.build().unwrap_or_else(|_| {
-        crate::roots::apply(reqwest::Client::builder(), settings.roots)
+        crate::tls::apply(reqwest::Client::builder(), settings.tls())
             .build()
             .unwrap_or_default()
     })
@@ -205,7 +218,9 @@ fn blocked() -> reqwest::Client {
     if let Ok(proxy) = reqwest::Proxy::all("http://blocked.invalid:9") {
         builder = builder.proxy(proxy);
     }
-    builder.build().unwrap_or_default()
+    crate::tls::apply(builder, crate::tls::current())
+        .build()
+        .unwrap_or_default()
 }
 
 static RUNTIME: LazyLock<Runtime> = LazyLock::new(|| {
@@ -231,6 +246,7 @@ static CLIENT: LazyLock<RwLock<reqwest::Client>> = LazyLock::new(|| {
         system: true,
         dns: Default::default(),
         roots: Default::default(),
+        quantum: Default::default(),
     }))
 });
 static RUNNING: LazyLock<Mutex<HashMap<i64, AbortHandle>>> =
@@ -411,7 +427,7 @@ pub unsafe extern "C" fn lumtub_http_init(post: PostCObject) {
 
 /// Sets the proxy and 加密 DNS from JSON `{"proxy": "socks5://…" | null,
 /// "system": bool, "dns": {"url", "bootstrap"}, "roots": "system" |
-/// "mozilla" | "google"}`;
+/// "mozilla" | "google", "quantum": "prefer" | "off" | "require"}`;
 /// connections already open finish on the old route.
 ///
 /// # Safety
@@ -423,7 +439,7 @@ pub unsafe extern "C" fn lumtub_http_configure(json: *const u8, length: usize) {
         *CLIENT.write().unwrap_or_else(|e| e.into_inner()) = blocked();
         return;
     };
-    crate::roots::set(settings.roots);
+    crate::tls::set(settings.tls());
     crate::dns::set(settings.dns.clone());
     *CLIENT.write().unwrap_or_else(|e| e.into_inner()) = build(&settings);
 }

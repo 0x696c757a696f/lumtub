@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "ఈ డౌన్‌లోడ్‌కు ffmpeg అవసరం, కానీ అది కనుగొనబడలేదు",
   "The download failed; see the logs for details": "డౌన్‌లోడ్ విఫలమైంది; వివరాల కోసం లాగ్‌లను చూడండి",
   "see the logs for details": "వివరాల కోసం లాగ్‌లను చూడండి",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "పోస్ట్-క్వాంటం ఎన్‌క్రిప్షన్",
+  "Prefer (default)": "ప్రాధాన్యత (డిఫాల్ట్)",
+  "Require": "తప్పనిసరి",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "ప్రస్తుతం: {0}. Lumtub స్వయంగా చేసే HTTPS కనెక్షన్‌లు (YouTube పేజీలు మరియు డేటా, స్ట్రీమ్ రిలే, ఎన్‌క్రిప్టెడ్ DNS, అప్‌డేట్‌లు) ముందుగా X25519MLKEM768 కీ మార్పిడిని అందిస్తాయి; భవిష్యత్తు క్వాంటం కంప్యూటర్ దీన్ని ఛేదించలేదు. ఇది లేని సర్వర్లు సాంప్రదాయ మార్పిడిని ఉపయోగిస్తాయి. \"తప్పనిసరి\" ఇది లేని సర్వర్లను మరియు TLS 1.2 ను తిరస్కరిస్తుంది. వీడియో ప్లేయర్‌లు మరియు yt-dlp యొక్క సొంత కనెక్షన్‌లు ఇందులో లేవు",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "పోస్ట్-క్వాంటం క్వాంటం ML-KEM Kyber X25519MLKEM768 TLS 1.3 కీ మార్పిడి",
+  "Key exchange by site": "సైట్ వారీగా కీ మార్పిడి",
+  "What each site agreed on the last time Lumtub connected to it": "Lumtub చివరిసారి కనెక్ట్ అయినప్పుడు ప్రతి సైట్ అంగీకరించినది",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "పోస్ట్-క్వాంటం TLS కీ మార్పిడి X25519MLKEM768 సైట్‌లు హోస్ట్‌లు",
+  "No HTTPS connection yet since Lumtub started": "Lumtub ప్రారంభమైనప్పటి నుండి ఇంకా HTTPS కనెక్షన్ లేదు",
+  "{0}, post-quantum": "{0}, పోస్ట్-క్వాంటం",
+  "{0}, not post-quantum": "{0}, పోస్ట్-క్వాంటం కాదు"
 }

@@ -3143,5 +3143,16 @@
   "The chosen format isn't available for this video; pick another": "该视频没有所选的格式，请换一个",
   "ffmpeg is needed for this download but was not found": "此下载需要 ffmpeg，但没有找到",
   "The download failed; see the logs for details": "下载失败，详情见日志",
-  "see the logs for details": "详情见日志"
+  "see the logs for details": "详情见日志",
+  "Post-quantum encryption": "抗量子加密",
+  "Prefer (default)": "优先（默认）",
+  "Require": "必须",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "当前：{0}。Lumtub 自己发起的 HTTPS 连接（YouTube 页面和数据、视频中转、加密 DNS、更新）会优先使用 X25519MLKEM768 密钥交换，将来的量子计算机也无法破解；不支持的服务器改用传统方式。选「必须」时，不支持它的服务器和 TLS 1.2 都会被拒绝。播放器和 yt-dlp 自己的连接不在此列",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "抗量子 量子 后量子 ML-KEM Kyber X25519MLKEM768 TLS 1.3 密钥交换",
+  "Key exchange by site": "各网站的密钥交换",
+  "What each site agreed on the last time Lumtub connected to it": "Lumtub 上次连接每个网站时双方商定的加密方式",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "抗量子 TLS 密钥交换 X25519MLKEM768 网站 主机",
+  "No HTTPS connection yet since Lumtub started": "Lumtub 启动以来还没有 HTTPS 连接",
+  "{0}, post-quantum": "{0}，抗量子",
+  "{0}, not post-quantum": "{0}，非抗量子"
 }

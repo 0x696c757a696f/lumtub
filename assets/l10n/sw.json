@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Upakuaji huu unahitaji ffmpeg lakini haikupatikana",
   "The download failed; see the logs for details": "Upakuaji umeshindwa; angalia kumbukumbu kwa maelezo",
   "see the logs for details": "angalia kumbukumbu kwa maelezo",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Usimbaji fiche wa baada ya kuantamu",
+  "Prefer (default)": "Pendelea (chaguo-msingi)",
+  "Require": "Lazima",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Sasa: {0}. Miunganisho ya HTTPS ambayo Lumtub hufanya yenyewe (kurasa na data za YouTube, kisambazaji cha mtiririko, DNS iliyosimbwa, masasisho) hutoa kwanza ubadilishanaji wa funguo X25519MLKEM768, ambao kompyuta ya kuantamu ya siku zijazo haiwezi kuuvunja; seva zisizo nao hutumia ubadilishanaji wa kawaida. \"Lazima\" hukataa seva zisizo nao na TLS 1.2. Miunganisho ya vicheza video na yt-dlp yenyewe haihusiki",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "baada-ya-kuantamu kuantamu ML-KEM Kyber X25519MLKEM768 TLS 1.3 ubadilishanaji wa funguo",
+  "Key exchange by site": "Ubadilishanaji wa funguo kwa tovuti",
+  "What each site agreed on the last time Lumtub connected to it": "Kile kila tovuti ilichokubaliana mara ya mwisho Lumtub ilipounganishwa nayo",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "baada-ya-kuantamu TLS ubadilishanaji wa funguo X25519MLKEM768 tovuti wenyeji",
+  "No HTTPS connection yet since Lumtub started": "Hakuna muunganisho wa HTTPS bado tangu Lumtub ilipoanza",
+  "{0}, post-quantum": "{0}, baada ya kuantamu",
+  "{0}, not post-quantum": "{0}, si baada ya kuantamu"
 }

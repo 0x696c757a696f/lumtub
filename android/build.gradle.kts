@@ -2,6 +2,12 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // The Kotlin half of rustls-platform-verifier, which the core's
+        // HTTPS uses to check certificates as Android does.
+        maven {
+            url = uri("https://raw.githubusercontent.com/rustls/rustls-platform-verifier/maven-archive/android-release-support/maven/")
+            content { includeGroup("org.rustls") }
+        }
     }
 }
 

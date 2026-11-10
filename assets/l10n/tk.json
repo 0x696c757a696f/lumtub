@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Bu ýükleme üçin ffmpeg gerek, ýöne tapylmady",
   "The download failed; see the logs for details": "Ýükleme şowsuz boldy; jikme-jiklikler üçin gündeliklere serediň",
   "see the logs for details": "jikme-jiklikler üçin gündeliklere serediň",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Kwantdan soňky şifrlemek",
+  "Prefer (default)": "Ileri tut (adaty)",
+  "Require": "Talap et",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Häzir: {0}. Lumtub-yň özi açýan HTTPS birikmeleri (YouTube sahypalary we maglumatlary, akym röle, şifrlenen DNS, täzelenmeler) ilki bilen X25519MLKEM768 açar alyşygyny teklip edýär; geljekki kwant kompýuteri ony döwip bilmez. Ol ýok serwerler adaty alyşygy ulanýar. \"Talap et\" ol ýok serwerleri we TLS 1.2-ni ret edýär. Wideo pleýerleriň we yt-dlp-niň öz birikmeleri şoňa girmeýär",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "kwantdan-soňky kwant ML-KEM Kyber X25519MLKEM768 TLS 1.3 açar alyşygy",
+  "Key exchange by site": "Sahypa boýunça açar alyşygy",
+  "What each site agreed on the last time Lumtub connected to it": "Lumtub soňky gezek birleşende her sahypa nämä razy boldy",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "kwantdan-soňky TLS açar alyşygy X25519MLKEM768 sahypalar hostlar",
+  "No HTTPS connection yet since Lumtub started": "Lumtub başlanaly bäri entek HTTPS birikmesi ýok",
+  "{0}, post-quantum": "{0}, kwantdan soňky",
+  "{0}, not post-quantum": "{0}, kwantdan soňky däl"
 }

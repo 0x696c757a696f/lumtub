@@ -20,6 +20,7 @@ extension NetworkActions on AppController {
       system: settings.proxyMode == ProxyMode.system,
       dns: DnsServer.of(settings.dnsServer, settings.dnsCustomUrl),
       roots: settings.certificateRoots,
+      quantum: settings.postQuantum,
     );
     if (next.url != proxy.url) logInfo(next.url == null ? 'Network: direct connection' : 'Network: using proxy ${next.redacted}');
     proxy = next;

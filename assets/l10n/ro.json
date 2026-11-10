@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Pentru această descărcare este nevoie de ffmpeg, dar nu a fost găsit",
   "The download failed; see the logs for details": "Descărcarea a eșuat; consultați jurnalele pentru detalii",
   "see the logs for details": "consultați jurnalele pentru detalii",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Criptare post-cuantică",
+  "Prefer (default)": "Preferă (implicit)",
+  "Require": "Necesar",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Acum: {0}. Conexiunile HTTPS făcute chiar de Lumtub (paginile și datele YouTube, releul de flux, DNS criptat, actualizările) oferă mai întâi schimbul de chei X25519MLKEM768, pe care un viitor computer cuantic nu îl poate sparge; serverele fără el folosesc un schimb clasic. „Necesar” refuză serverele fără el și TLS 1.2. Conexiunile proprii ale playerelor video și ale yt-dlp nu sunt acoperite",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "post-cuantic cuantic ML-KEM Kyber X25519MLKEM768 TLS 1.3 schimb de chei",
+  "Key exchange by site": "Schimbul de chei pe site",
+  "What each site agreed on the last time Lumtub connected to it": "Ce a convenit fiecare site la ultima conectare a Lumtub",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "post-cuantic TLS schimb de chei X25519MLKEM768 site-uri gazde",
+  "No HTTPS connection yet since Lumtub started": "Încă nicio conexiune HTTPS de la pornirea Lumtub",
+  "{0}, post-quantum": "{0}, post-cuantic",
+  "{0}, not post-quantum": "{0}, non post-cuantic"
 }

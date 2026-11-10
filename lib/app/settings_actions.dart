@@ -249,7 +249,8 @@ extension SettingsActions on AppController {
         next.proxyAddress != oldSettings.proxyAddress ||
         next.dnsServer != oldSettings.dnsServer ||
         next.dnsCustomUrl != oldSettings.dnsCustomUrl ||
-        next.certificateRoots != oldSettings.certificateRoots) {
+        next.certificateRoots != oldSettings.certificateRoots ||
+        next.postQuantum != oldSettings.postQuantum) {
       await _refreshProxy();
     }
     _update(() {

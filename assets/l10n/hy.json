@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Այս ներբեռնման համար անհրաժեշտ է ffmpeg, բայց այն չի գտնվել",
   "The download failed; see the logs for details": "Ներբեռնումը ձախողվեց. մանրամասները տես մատյաններում",
   "see the logs for details": "մանրամասները տես մատյաններում",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Հետկվանտային գաղտնագրում",
+  "Prefer (default)": "Նախընտրել (կանխադրված)",
+  "Require": "Պարտադիր",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Այժմ՝ {0}։ HTTPS կապերը, որոնք Lumtub-ը ստեղծում է ինքնուրույն (YouTube-ի էջերը և տվյալները, հոսքի ռելեն, գաղտնագրված DNS, թարմացումները), նախ առաջարկում են X25519MLKEM768 բանալիների փոխանակումը, որը ապագա քվանտային համակարգիչը չի կարող կոտրել․ այն չունեցող սերվերներն օգտագործում են դասական փոխանակում։ «Պարտադիր» տարբերակը մերժում է այն չունեցող սերվերներին և TLS 1.2-ը։ Տեսանյութերի նվագարկիչների և yt-dlp-ի սեփական կապերը չեն ընդգրկվում",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "հետկվանտային քվանտային ML-KEM Kyber X25519MLKEM768 TLS 1.3 բանալիների-փոխանակում",
+  "Key exchange by site": "Բանալիների փոխանակումն ըստ կայքերի",
+  "What each site agreed on the last time Lumtub connected to it": "Ինչի շուրջ է յուրաքանչյուր կայք պայմանավորվել, երբ Lumtub-ը վերջին անգամ միացել է դրան",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "հետկվանտային TLS բանալիների-փոխանակում X25519MLKEM768 կայքեր հոսթեր",
+  "No HTTPS connection yet since Lumtub started": "Lumtub-ի գործարկումից ի վեր HTTPS կապ դեռ չկա",
+  "{0}, post-quantum": "{0}, հետկվանտային",
+  "{0}, not post-quantum": "{0}, ոչ հետկվանտային"
 }

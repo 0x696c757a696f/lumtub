@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "За ова преземање е потребен ffmpeg, но не е пронајден",
   "The download failed; see the logs for details": "Преземањето не успеа; погледнете ги дневниците за детали",
   "see the logs for details": "погледнете ги дневниците за детали",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Постквантно шифрирање",
+  "Prefer (default)": "Претпочитај (стандардно)",
+  "Require": "Задолжително",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Сега: {0}. HTTPS-врските што Lumtub ги остварува самиот (страниците и податоците на YouTube, релејот за стримови, шифрираниот DNS, ажурирањата) прво нудат размена на клучеви X25519MLKEM768, која идниот квантен компјутер не може да ја пробие; серверите без неа користат класична размена. „Задолжително“ ги одбива серверите без неа и TLS 1.2. Сопствените врски на видео плеерите и yt-dlp не се опфатени",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "постквантно квантно ML-KEM Kyber X25519MLKEM768 TLS 1.3 размена-на-клучеви",
+  "Key exchange by site": "Размена на клучеви по страница",
+  "What each site agreed on the last time Lumtub connected to it": "За што се договорила секоја страница при последното поврзување на Lumtub",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "постквантно TLS размена-на-клучеви X25519MLKEM768 страници хостови",
+  "No HTTPS connection yet since Lumtub started": "Сè уште нема HTTPS-врска од стартувањето на Lumtub",
+  "{0}, post-quantum": "{0}, постквантно",
+  "{0}, not post-quantum": "{0}, не е постквантно"
 }

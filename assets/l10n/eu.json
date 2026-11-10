@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Deskarga honek ffmpeg behar du, baina ez da aurkitu",
   "The download failed; see the logs for details": "Deskargak huts egin du; ikusi erregistroak xehetasunetarako",
   "see the logs for details": "ikusi erregistroak xehetasunetarako",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Kuantikoaren osteko zifratzea",
+  "Prefer (default)": "Hobetsi (lehenetsia)",
+  "Require": "Eskatu",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Orain: {0}. Lumtubek berak egiten dituen HTTPS konexioek (YouTube-ren orriak eta datuak, jario-errelea, DNS enkriptatua, eguneratzeak) lehenik X25519MLKEM768 gako-trukea eskaintzen dute, etorkizuneko ordenagailu kuantiko batek hautsi ezin duena; hau ez duten zerbitzariek truke klasikoa erabiltzen dute. “Eskatu” aukerak hau ez duten zerbitzariak eta TLS 1.2 baztertzen ditu. Bideo-erreproduzitzaileen eta yt-dlp-ren konexio propioak ez daude barne",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "kuantikoaren-osteko kuantiko ML-KEM Kyber X25519MLKEM768 TLS 1.3 gako-trukea",
+  "Key exchange by site": "Gako-trukea gunearen arabera",
+  "What each site agreed on the last time Lumtub connected to it": "Gune bakoitzak adostu zuena Lumtub azkenekoz horrekin konektatu zenean",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "kuantikoaren-osteko TLS gako-trukea X25519MLKEM768 guneak ostalariak",
+  "No HTTPS connection yet since Lumtub started": "Lumtub abiatu zenetik ez dago HTTPS konexiorik oraindik",
+  "{0}, post-quantum": "{0}, kuantikoaren osteko",
+  "{0}, not post-quantum": "{0}, kuantikoaren osteko ez"
 }

@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Voor deze download is ffmpeg nodig, maar het is niet gevonden",
   "The download failed; see the logs for details": "De download is mislukt; zie de logboeken voor details",
   "see the logs for details": "zie de logboeken voor details",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Post-kwantumversleuteling",
+  "Prefer (default)": "Voorkeur (standaard)",
+  "Require": "Vereist",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Nu: {0}. HTTPS-verbindingen die Lumtub zelf maakt (pagina's en gegevens van YouTube, het streamrelais, versleutelde DNS, updates) bieden eerst de sleuteluitwisseling X25519MLKEM768 aan, die een toekomstige kwantumcomputer niet kan kraken; servers zonder deze gebruiken een klassieke uitwisseling. \"Vereist\" weigert servers zonder deze en TLS 1.2. De eigen verbindingen van videospelers en yt-dlp vallen hier niet onder",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "post-kwantum kwantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 sleuteluitwisseling",
+  "Key exchange by site": "Sleuteluitwisseling per site",
+  "What each site agreed on the last time Lumtub connected to it": "Wat elke site afsprak toen Lumtub er voor het laatst verbinding mee maakte",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "post-kwantum TLS sleuteluitwisseling X25519MLKEM768 sites hosts",
+  "No HTTPS connection yet since Lumtub started": "Nog geen HTTPS-verbinding sinds Lumtub is gestart",
+  "{0}, post-quantum": "{0}, post-kwantum",
+  "{0}, not post-quantum": "{0}, niet post-kwantum"
 }

@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Esta descarga necesita ffmpeg, pero no se encontró",
   "The download failed; see the logs for details": "La descarga falló; consulta los registros para ver los detalles",
   "see the logs for details": "consulta los registros para ver los detalles",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Cifrado poscuántico",
+  "Prefer (default)": "Preferir (predeterminado)",
+  "Require": "Exigir",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Ahora: {0}. Las conexiones HTTPS que Lumtub establece por sí mismo (páginas y datos de YouTube, el relé de streaming, DNS cifrado, actualizaciones) ofrecen primero el intercambio de claves X25519MLKEM768, que un futuro ordenador cuántico no podrá romper; los servidores sin él usan un intercambio clásico. «Exigir» rechaza los servidores sin él y TLS 1.2. Las conexiones propias de los reproductores de vídeo y de yt-dlp no están cubiertas",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "poscuántico cuántico ML-KEM Kyber X25519MLKEM768 TLS 1.3 intercambio-de-claves",
+  "Key exchange by site": "Intercambio de claves por sitio",
+  "What each site agreed on the last time Lumtub connected to it": "Lo que acordó cada sitio la última vez que Lumtub se conectó a él",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "poscuántico TLS intercambio-de-claves X25519MLKEM768 sitios hosts",
+  "No HTTPS connection yet since Lumtub started": "Aún no hay conexiones HTTPS desde que se inició Lumtub",
+  "{0}, post-quantum": "{0}, poscuántico",
+  "{0}, not post-quantum": "{0}, no poscuántico"
 }

@@ -36,8 +36,8 @@ pub struct Settings {
 
 pub struct Doh {
     url: String,
-    /// The certificate authorities [client] trusts.
-    roots: crate::roots::Roots,
+    /// The TLS [client] was set up with.
+    tls: crate::tls::Tls,
     client: reqwest::Client,
     cache: Mutex<HashMap<String, (Vec<IpAddr>, Instant)>>,
 }
@@ -73,11 +73,11 @@ impl Doh {
                 builder = builder.resolve_to_addrs(host, &addrs);
             }
         }
-        let roots = crate::roots::current();
-        builder = crate::roots::apply(builder, roots);
+        let tls = crate::tls::current();
+        builder = crate::tls::apply(builder, tls);
         Some(Doh {
             url: url.to_string(),
-            roots,
+            tls,
             client: builder.build().ok()?,
             cache: Mutex::new(HashMap::new()),
         })
@@ -196,7 +196,7 @@ pub fn current() -> Option<Arc<Doh>> {
 /// returns whether anything changed.
 pub fn set(settings: Settings) -> bool {
     let mut old = SETTINGS.lock().unwrap_or_else(|e| e.into_inner());
-    if *old == settings && current().is_none_or(|doh| doh.roots == crate::roots::current()) {
+    if *old == settings && current().is_none_or(|doh| doh.tls == crate::tls::current()) {
         return false;
     }
     *CURRENT.write().unwrap_or_else(|e| e.into_inner()) = Doh::new(&settings).map(Arc::new);

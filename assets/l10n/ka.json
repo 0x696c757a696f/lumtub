@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "ამ ჩამოტვირთვას ffmpeg სჭირდება, მაგრამ ვერ მოიძებნა",
   "The download failed; see the logs for details": "ჩამოტვირთვა ვერ მოხერხდა; დეტალებისთვის იხილეთ ჟურნალები",
   "see the logs for details": "დეტალებისთვის იხილეთ ჟურნალები",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "პოსტკვანტური დაშიფვრა",
+  "Prefer (default)": "უპირატესობა (ნაგულისხმევი)",
+  "Require": "სავალდებულო",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "ახლა: {0}. HTTPS კავშირები, რომლებსაც Lumtub თავად ამყარებს (YouTube-ის გვერდები და მონაცემები, ნაკადის რელე, დაშიფრული DNS, განახლებები), ჯერ X25519MLKEM768 გასაღებების გაცვლას სთავაზობს, რომელსაც მომავლის კვანტური კომპიუტერი ვერ გატეხავს; მის გარეშე სერვერები კლასიკურ გაცვლას იყენებენ. „სავალდებულო“ უარყოფს სერვერებს მის გარეშე და TLS 1.2-ს. ვიდეოპლეერებისა და yt-dlp-ის საკუთარი კავშირები არ შედის",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "პოსტკვანტური კვანტური ML-KEM Kyber X25519MLKEM768 TLS 1.3 გასაღებების-გაცვლა",
+  "Key exchange by site": "გასაღებების გაცვლა საიტების მიხედვით",
+  "What each site agreed on the last time Lumtub connected to it": "რაზე შეთანხმდა თითოეული საიტი, როცა Lumtub ბოლოს დაუკავშირდა",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "პოსტკვანტური TLS გასაღებების-გაცვლა X25519MLKEM768 საიტები ჰოსტები",
+  "No HTTPS connection yet since Lumtub started": "Lumtub-ის გაშვების შემდეგ HTTPS კავშირი ჯერ არ ყოფილა",
+  "{0}, post-quantum": "{0}, პოსტკვანტური",
+  "{0}, not post-quantum": "{0}, არაპოსტკვანტური"
 }

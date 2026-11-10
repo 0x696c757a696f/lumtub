@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "이 다운로드에는 ffmpeg가 필요하지만 찾을 수 없습니다",
   "The download failed; see the logs for details": "다운로드에 실패했습니다. 자세한 내용은 로그를 확인하세요",
   "see the logs for details": "자세한 내용은 로그를 확인하세요",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "양자내성 암호화",
+  "Prefer (default)": "선호(기본값)",
+  "Require": "필수",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "현재: {0}. Lumtub이 직접 만드는 HTTPS 연결(YouTube 페이지와 데이터, 스트림 릴레이, 암호화 DNS, 업데이트)은 미래의 양자 컴퓨터도 깰 수 없는 X25519MLKEM768 키 교환을 먼저 제안하며, 이를 지원하지 않는 서버는 기존 방식을 사용합니다. ‘필수’를 선택하면 이를 지원하지 않는 서버와 TLS 1.2를 거부합니다. 동영상 플레이어와 yt-dlp 자체 연결은 적용 대상이 아닙니다",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "양자내성 양자 ML-KEM Kyber X25519MLKEM768 TLS 1.3 키교환",
+  "Key exchange by site": "사이트별 키 교환",
+  "What each site agreed on the last time Lumtub connected to it": "Lumtub이 마지막으로 연결했을 때 각 사이트가 합의한 내용",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "양자내성 TLS 키교환 X25519MLKEM768 사이트 호스트",
+  "No HTTPS connection yet since Lumtub started": "Lumtub 시작 후 아직 HTTPS 연결이 없습니다",
+  "{0}, post-quantum": "{0}, 양자내성",
+  "{0}, not post-quantum": "{0}, 양자내성 아님"
 }

@@ -8,7 +8,7 @@ use rustls::RootCertStore;
 use rustls::pki_types::CertificateDer;
 use rustls::pki_types::pem::PemObject;
 use serde::Deserialize;
-use std::sync::{Arc, LazyLock, RwLock};
+use std::sync::{Arc, LazyLock};
 
 #[derive(Deserialize, Clone, Copy, PartialEq, Eq, Hash, Debug, Default)]
 #[serde(rename_all = "lowercase")]
@@ -32,20 +32,6 @@ static MOZILLA: LazyLock<Arc<RootCertStore>> =
     LazyLock::new(|| store(webpki_root_certs::TLS_SERVER_ROOT_CERTS.iter().cloned()));
 static GOOGLE: LazyLock<Arc<RootCertStore>> =
     LazyLock::new(|| store(CertificateDer::pem_slice_iter(CHROME).flatten()));
-
-static CURRENT: RwLock<Roots> = RwLock::new(Roots::System);
-
-pub fn current() -> Roots {
-    *CURRENT.read().unwrap_or_else(|e| e.into_inner())
-}
-
-/// Switches to [roots]; returns whether it changed.
-pub fn set(roots: Roots) -> bool {
-    let mut current = CURRENT.write().unwrap_or_else(|e| e.into_inner());
-    let changed = *current != roots;
-    *current = roots;
-    changed
-}
 
 /// Android's own authorities, which every app trusts: one PEM file each in
 /// /system/etc/security/cacerts (and the APEX copy that replaces it from
@@ -75,39 +61,28 @@ static ANDROID: LazyLock<Arc<RootCertStore>> = LazyLock::new(|| {
     store(certs)
 });
 
-/// The authorities [roots] names, none for the system's (on Android, its
-/// store read by rustls).
-fn list(roots: Roots) -> Option<Arc<RootCertStore>> {
+/// Whether Android's own certificate check has the app's context
+/// (tls::Java_io_github_lumtub_lumtub_MainActivity_initTls).
+#[cfg(target_os = "android")]
+static ANDROID_VERIFIER: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[cfg(target_os = "android")]
+pub(crate) fn android_verifier_ready() {
+    ANDROID_VERIFIER.store(true, std::sync::atomic::Ordering::SeqCst);
+}
+
+/// The authorities [roots] names, none for the system's own check
+/// (rustls-platform-verifier). On Android, before that check is ready,
+/// the system's store files.
+pub(crate) fn list(roots: Roots) -> Option<Arc<RootCertStore>> {
     match roots {
         #[cfg(target_os = "android")]
-        Roots::System => Some(ANDROID.clone()),
-        #[cfg(not(target_os = "android"))]
+        Roots::System if !ANDROID_VERIFIER.load(std::sync::atomic::Ordering::SeqCst) => {
+            Some(ANDROID.clone())
+        }
         Roots::System => None,
         Roots::Mozilla => Some(MOZILLA.clone()),
         Roots::Google => Some(GOOGLE.clone()),
-    }
-}
-
-/// [builder] trusting [roots]: unchanged for the system's store, else
-/// rustls with only that list.
-pub fn apply(builder: reqwest::ClientBuilder, roots: Roots) -> reqwest::ClientBuilder {
-    let Some(list) = list(roots) else {
-        return builder;
-    };
-    let provider = Arc::new(rustls::crypto::ring::default_provider());
-    match rustls::ClientConfig::builder_with_provider(provider)
-        .with_safe_default_protocol_versions()
-    {
-        Ok(config) => {
-            let mut config = config.with_root_certificates(list).with_no_client_auth();
-            config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
-            builder.tls_backend_preconfigured(config)
-        }
-        // Never the system's store in its place: trust nothing instead.
-        Err(_) => {
-            let _ = rustls::crypto::ring::default_provider().install_default();
-            builder.tls_backend_rustls().tls_certs_only(Vec::new())
-        }
     }
 }
 
@@ -155,9 +130,6 @@ mod tests {
             (r#""google""#, Roots::Google),
         ] {
             assert_eq!(serde_json::from_str::<Roots>(json).unwrap(), roots);
-        }
-        for roots in [Roots::System, Roots::Mozilla, Roots::Google] {
-            assert!(apply(reqwest::Client::builder(), roots).build().is_ok());
         }
     }
 }

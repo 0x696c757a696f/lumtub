@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "このダウンロードには ffmpeg が必要ですが、見つかりませんでした",
   "The download failed; see the logs for details": "ダウンロードに失敗しました。詳細はログをご確認ください",
   "see the logs for details": "詳細はログをご確認ください",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "耐量子暗号化",
+  "Prefer (default)": "優先（既定）",
+  "Require": "必須",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "現在：{0}。Lumtub 自身が行う HTTPS 接続（YouTube のページとデータ、ストリーム中継、暗号化 DNS、更新）では、将来の量子コンピューターにも破られない X25519MLKEM768 鍵交換を最初に提案します。対応していないサーバーには従来の鍵交換を使います。「必須」にすると、対応していないサーバーと TLS 1.2 を拒否します。動画プレーヤーや yt-dlp 自身の接続は対象外です",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "耐量子 量子 ML-KEM Kyber X25519MLKEM768 TLS 1.3 鍵交換",
+  "Key exchange by site": "サイトごとの鍵交換",
+  "What each site agreed on the last time Lumtub connected to it": "Lumtub が前回各サイトに接続したときに合意した内容",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "耐量子 TLS 鍵交換 X25519MLKEM768 サイト ホスト",
+  "No HTTPS connection yet since Lumtub started": "Lumtub の起動後、HTTPS 接続はまだありません",
+  "{0}, post-quantum": "{0}、耐量子",
+  "{0}, not post-quantum": "{0}、耐量子ではない"
 }

@@ -203,6 +203,14 @@ extension PlaybackOpening on AppController {
       _openedDirect = direct != null ? item.id : null;
       final split = live && video != null && relay != null && _liveSplitOff != item.id ? _liveSplitAddress(video, relay) : null;
       _liveSplit = split != null ? item.id : null;
+      // Which TLS carries the streams: only the core's relay uses the
+      // post-quantum setting.
+      final path = split != null || _relayed == item.id
+          ? (relay is NativeRelay ? "the core's relay" : "the Dart relay")
+          : direct != null
+              ? "libmpv's own connection"
+              : "libmpv and yt-dlp's own connections";
+      logInfo('Streams of ${item.id} go through $path');
       final platform = player.platform;
       if (platform is NativePlayer) {
         // A live stream plays from one HLS stream with picture and sound

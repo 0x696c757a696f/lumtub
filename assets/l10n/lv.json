@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Šai lejupielādei nepieciešams ffmpeg, taču tas nav atrasts",
   "The download failed; see the logs for details": "Lejupielāde neizdevās; sīkāku informāciju skatiet žurnālos",
   "see the logs for details": "sīkāku informāciju skatiet žurnālos",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Pēckvantu šifrēšana",
+  "Prefer (default)": "Dot priekšroku (noklusējums)",
+  "Require": "Pieprasīt",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Tagad: {0}. HTTPS savienojumi, ko Lumtub izveido pats (YouTube lapas un dati, straumes releja, šifrēts DNS, atjauninājumi), vispirms piedāvā X25519MLKEM768 atslēgu apmaiņu, ko nākotnes kvantu dators nespēs uzlauzt; serveri bez tās izmanto klasisko apmaiņu. “Pieprasīt” noraida serverus bez tās un TLS 1.2. Video atskaņotāju un yt-dlp paša savienojumi netiek aptverti",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "pēckvantu kvantu ML-KEM Kyber X25519MLKEM768 TLS 1.3 atslēgu-apmaiņa",
+  "Key exchange by site": "Atslēgu apmaiņa pa vietnēm",
+  "What each site agreed on the last time Lumtub connected to it": "Par ko katra vietne vienojās, kad Lumtub pēdējoreiz tai pieslēdzās",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "pēckvantu TLS atslēgu-apmaiņa X25519MLKEM768 vietnes resursdatori",
+  "No HTTPS connection yet since Lumtub started": "Kopš Lumtub palaišanas vēl nav bijis neviena HTTPS savienojuma",
+  "{0}, post-quantum": "{0}, pēckvantu",
+  "{0}, not post-quantum": "{0}, nav pēckvantu"
 }

@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "இந்தப் பதிவிறக்கத்துக்கு ffmpeg தேவை, ஆனால் அது கிடைக்கவில்லை",
   "The download failed; see the logs for details": "பதிவிறக்கம் தோல்வியடைந்தது; விவரங்களுக்குப் பதிவுகளைப் பார்க்கவும்",
   "see the logs for details": "விவரங்களுக்குப் பதிவுகளைப் பார்க்கவும்",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "குவாண்டத்திற்குப் பிந்தைய குறியாக்கம்",
+  "Prefer (default)": "முன்னுரிமை (இயல்புநிலை)",
+  "Require": "கட்டாயம்",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "இப்போது: {0}. Lumtub தானே உருவாக்கும் HTTPS இணைப்புகள் (YouTube பக்கங்கள் மற்றும் தரவு, ஸ்ட்ரீம் ரிலே, குறியாக்கப்பட்ட DNS, புதுப்பிப்புகள்) முதலில் X25519MLKEM768 விசை பரிமாற்றத்தை வழங்குகின்றன; எதிர்கால குவாண்டம் கணினியால் இதை உடைக்க முடியாது. இது இல்லாத சேவையகங்கள் வழக்கமான பரிமாற்றத்தைப் பயன்படுத்தும். \"கட்டாயம்\" இது இல்லாத சேவையகங்களையும் TLS 1.2 ஐயும் நிராகரிக்கும். வீடியோ பிளேயர்கள் மற்றும் yt-dlp இன் சொந்த இணைப்புகள் இதில் அடங்காது",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "குவாண்டத்திற்குப்-பிந்தைய குவாண்டம் ML-KEM Kyber X25519MLKEM768 TLS 1.3 விசை பரிமாற்றம்",
+  "Key exchange by site": "தளம் வாரியாக விசை பரிமாற்றம்",
+  "What each site agreed on the last time Lumtub connected to it": "Lumtub கடைசியாக இணைந்தபோது ஒவ்வொரு தளமும் ஒப்புக்கொண்டது",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "குவாண்டத்திற்குப்-பிந்தைய TLS விசை பரிமாற்றம் X25519MLKEM768 தளங்கள் ஹோஸ்ட்கள்",
+  "No HTTPS connection yet since Lumtub started": "Lumtub தொடங்கியதிலிருந்து HTTPS இணைப்பு இன்னும் இல்லை",
+  "{0}, post-quantum": "{0}, குவாண்டத்திற்குப் பிந்தையது",
+  "{0}, not post-quantum": "{0}, குவாண்டத்திற்குப் பிந்தையது அல்ல"
 }

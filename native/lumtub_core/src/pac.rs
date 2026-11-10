@@ -47,9 +47,10 @@ pub fn fetch(url: &str) -> Result<String, String> {
     if !url.starts_with("http://") && !url.starts_with("https://") {
         return Err("not an http, https or file address".into());
     }
-    let client = reqwest::Client::builder()
+    let builder = reqwest::Client::builder()
         .no_proxy()
-        .timeout(Duration::from_secs(5))
+        .timeout(Duration::from_secs(5));
+    let client = crate::tls::apply(builder, crate::tls::current())
         .build()
         .map_err(|e| e.to_string())?;
     crate::http::runtime().block_on(async {

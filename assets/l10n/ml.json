@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "ഈ ഡൗൺലോഡിന് ffmpeg ആവശ്യമാണ്, പക്ഷേ അത് കണ്ടെത്താനായില്ല",
   "The download failed; see the logs for details": "ഡൗൺലോഡ് പരാജയപ്പെട്ടു; വിശദാംശങ്ങൾക്ക് ലോഗുകൾ കാണുക",
   "see the logs for details": "വിശദാംശങ്ങൾക്ക് ലോഗുകൾ കാണുക",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "പോസ്റ്റ്-ക്വാണ്ടം എൻക്രിപ്ഷൻ",
+  "Prefer (default)": "മുൻഗണന (ഡിഫോൾട്ട്)",
+  "Require": "നിർബന്ധം",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "ഇപ്പോൾ: {0}. Lumtub സ്വയം ഉണ്ടാക്കുന്ന HTTPS കണക്ഷനുകൾ (YouTube പേജുകളും ഡാറ്റയും, സ്ട്രീം റിലേ, എൻക്രിപ്റ്റഡ് DNS, അപ്‌ഡേറ്റുകൾ) ആദ്യം X25519MLKEM768 കീ എക്സ്ചേഞ്ച് നൽകുന്നു; ഭാവിയിലെ ക്വാണ്ടം കമ്പ്യൂട്ടറിന് ഇത് തകർക്കാനാവില്ല. ഇതില്ലാത്ത സെർവറുകൾ ക്ലാസിക് എക്സ്ചേഞ്ച് ഉപയോഗിക്കുന്നു. “നിർബന്ധം” ഇതില്ലാത്ത സെർവറുകളെയും TLS 1.2 നെയും നിരസിക്കുന്നു. വീഡിയോ പ്ലേയറുകളുടെയും yt-dlp യുടെയും സ്വന്തം കണക്ഷനുകൾ ഇതിൽ ഉൾപ്പെടുന്നില്ല",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "പോസ്റ്റ്-ക്വാണ്ടം ക്വാണ്ടം ML-KEM Kyber X25519MLKEM768 TLS 1.3 കീ-എക്സ്ചേഞ്ച്",
+  "Key exchange by site": "സൈറ്റ് അനുസരിച്ചുള്ള കീ എക്സ്ചേഞ്ച്",
+  "What each site agreed on the last time Lumtub connected to it": "Lumtub അവസാനമായി കണക്റ്റ് ചെയ്തപ്പോൾ ഓരോ സൈറ്റും സമ്മതിച്ചത്",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "പോസ്റ്റ്-ക്വാണ്ടം TLS കീ-എക്സ്ചേഞ്ച് X25519MLKEM768 സൈറ്റുകൾ ഹോസ്റ്റുകൾ",
+  "No HTTPS connection yet since Lumtub started": "Lumtub ആരംഭിച്ചശേഷം ഇതുവരെ HTTPS കണക്ഷനില്ല",
+  "{0}, post-quantum": "{0}, പോസ്റ്റ്-ക്വാണ്ടം",
+  "{0}, not post-quantum": "{0}, പോസ്റ്റ്-ക്വാണ്ടം അല്ല"
 }

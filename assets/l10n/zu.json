@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Lokhu kulanda kudinga ffmpeg kodwa ayitholakalanga",
   "The download failed; see the logs for details": "Ukulanda kuhlulekile; bheka amalogi ukuthola imininingwane",
   "see the logs for details": "bheka amalogi ukuthola imininingwane",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Ukubethela kwangemuva kwe-quantum",
+  "Prefer (default)": "Khetha (okuzenzakalelayo)",
+  "Require": "Kudingeka",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Manje: {0}. Uxhumo lwe-HTTPS i-Lumtub ezenzela lona (amakhasi nedatha ye-YouTube, i-relay yesakaza, i-DNS ebethelwe, izibuyekezo) lunikeza kuqala ukushintshana kokhiye X25519MLKEM768, kwekhompyutha ye-quantum yesikhathi esizayo ayikwazi ukukuphula; amaseva angenakho asebenzisa ukushintshana okuvamile. \"Kudingeka\" lenqaba amaseva angenakho ne-TLS 1.2. Uxhumo lwabadlali bamavidiyo ne-yt-dlp ngokwabo alubandakanyiwe",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "ngemuva-kwe-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 ukushintshana kokhiye",
+  "Key exchange by site": "Ukushintshana kokhiye ngesayithi",
+  "What each site agreed on the last time Lumtub connected to it": "Lokho isayithi ngalinye elavuma ngakho ngesikhathi sokugcina i-Lumtub ixhuma kulo",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "ngemuva-kwe-quantum TLS ukushintshana kokhiye X25519MLKEM768 amasayithi ama-host",
+  "No HTTPS connection yet since Lumtub started": "Akukho uxhumo lwe-HTTPS kusukela i-Lumtub iqala",
+  "{0}, post-quantum": "{0}, ngemuva kwe-quantum",
+  "{0}, not post-quantum": "{0}, hhayi ngemuva kwe-quantum"
 }

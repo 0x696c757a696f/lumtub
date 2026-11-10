@@ -6,6 +6,13 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 out="$root/android/app/src/main/jniLibs"
 mkdir -p "$out"
 cd "$root/native/lumtub_core"
+# The verifier's Kotlin half (android/app/build.gradle.kts) must match the
+# crate the core is built with.
+crate=$(awk '/^name = "rustls-platform-verifier-android"$/ { getline; gsub(/[^0-9.]/, ""); print }' Cargo.lock)
+grep -q "org.rustls:rustls-platform-verifier:$crate\"" "$root/android/app/build.gradle.kts" || {
+  echo "android/app/build.gradle.kts must use org.rustls:rustls-platform-verifier:$crate" >&2
+  exit 1
+}
 cargo ndk --platform 24 -t arm64-v8a -t armeabi-v7a -t x86_64 -o "$out" build --release --lib
 # Every library must load on devices with 16 KB pages.
 for so in "$out"/*/*.so; do

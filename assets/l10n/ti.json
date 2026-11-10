@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "እዚ ምውራድ ffmpeg የድሊ፣ ግን ኣይተረኽበን",
   "The download failed; see the logs for details": "ምውራድ ኣይተዓወተን፤ ንዝርዝር ሎግ ርኣዩ",
   "see the logs for details": "ንዝርዝር ሎግ ርኣዩ",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "ድሕሪ-ኳንተም ምስጠራ",
+  "Prefer (default)": "ዝተመርጸ (ነባሪ)",
+  "Require": "ግድን",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "ሕጂ: {0}። Lumtub ባዕሉ ዝፈጥሮም HTTPS ርክባት (ናይ YouTube ገጻትን ዳታን፣ ናይ ስትሪም ሪሌ፣ ዝተመስጠረ DNS፣ ኣዳለዋት) ቅድም X25519MLKEM768 ልውውጥ ቀሊሕ ይህብ፤ ናይ መጻኢ ኳንተም ኮምፒተር ከፍርሶ ኣይክእልን። ዘይብሎም ሰርቨራት ባህላዊ ልውውጥ ይጥቀሙ። \"ግድን\" ዘይብሎም ሰርቨራትን TLS 1.2ን ይነጽግ። ናይ ቪድዮ መጻወቲታትን yt-dlpን ናቶም ርክባት ኣይሕዙን",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "ድሕሪ-ኳንተም ኳንተም ML-KEM Kyber X25519MLKEM768 TLS 1.3 ልውውጥ ቀሊሕ",
+  "Key exchange by site": "ልውውጥ ቀሊሕ ብጣቢያ",
+  "What each site agreed on the last time Lumtub connected to it": "Lumtub ዝተሓለፈ ግዜ ምስ ተራኸበ ነፍሲ ወከፍ ጣቢያ እተሰማምዓሉ",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "ድሕሪ-ኳንተም TLS ልውውጥ ቀሊሕ X25519MLKEM768 ጣቢያታት ሆስትስ",
+  "No HTTPS connection yet since Lumtub started": "ካብ Lumtub ጀሚሩ ገና HTTPS ርክብ የለን",
+  "{0}, post-quantum": "{0}, ድሕሪ-ኳንተም",
+  "{0}, not post-quantum": "{0}, ድሕሪ-ኳንተም ኣይኮነን"
 }

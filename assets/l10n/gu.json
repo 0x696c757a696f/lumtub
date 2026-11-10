@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "આ ડાઉનલોડ માટે ffmpeg જોઈએ છે, પણ તે મળ્યું નથી",
   "The download failed; see the logs for details": "ડાઉનલોડ નિષ્ફળ ગયું; વિગતો માટે લૉગ જુઓ",
   "see the logs for details": "વિગતો માટે લૉગ જુઓ",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "પોસ્ટ-ક્વોન્ટમ એન્ક્રિપ્શન",
+  "Prefer (default)": "પસંદગી (ડિફોલ્ટ)",
+  "Require": "જરૂરી",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "હમણાં: {0}. Lumtub પોતે જે HTTPS કનેક્શન બનાવે છે (YouTube ના પેજ અને ડેટા, સ્ટ્રીમ રિલે, એન્ક્રિપ્ટેડ DNS, અપડેટ) તે પહેલાં X25519MLKEM768 કી એક્સચેન્જ ઓફર કરે છે, જેને ભવિષ્યનું ક્વોન્ટમ કમ્પ્યુટર તોડી શકતું નથી; તે વિનાના સર્વર ક્લાસિક એક્સચેન્જ વાપરે છે. “જરૂરી” તે વિનાના સર્વર અને TLS 1.2 ને નકારે છે. વિડિયો પ્લેયર અને yt-dlp ના પોતાના કનેક્શન આમાં આવરી લેવાતા નથી",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "પોસ્ટ-ક્વોન્ટમ ક્વોન્ટમ ML-KEM Kyber X25519MLKEM768 TLS 1.3 કી-એક્સચેન્જ",
+  "Key exchange by site": "સાઇટ મુજબ કી એક્સચેન્જ",
+  "What each site agreed on the last time Lumtub connected to it": "Lumtub છેલ્લે જોડાયું ત્યારે દરેક સાઇટે શેના પર સહમતિ આપી",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "પોસ્ટ-ક્વોન્ટમ TLS કી-એક્સચેન્જ X25519MLKEM768 સાઇટ હોસ્ટ",
+  "No HTTPS connection yet since Lumtub started": "Lumtub શરૂ થયા પછી હજી કોઈ HTTPS કનેક્શન થયું નથી",
+  "{0}, post-quantum": "{0}, પોસ્ટ-ક્વોન્ટમ",
+  "{0}, not post-quantum": "{0}, પોસ્ટ-ક્વોન્ટમ નથી"
 }

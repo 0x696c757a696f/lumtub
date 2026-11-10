@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Για αυτή τη λήψη χρειάζεται το ffmpeg, αλλά δεν βρέθηκε",
   "The download failed; see the logs for details": "Η λήψη απέτυχε· δείτε τα αρχεία καταγραφής για λεπτομέρειες",
   "see the logs for details": "δείτε τα αρχεία καταγραφής για λεπτομέρειες",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Μετακβαντική κρυπτογράφηση",
+  "Prefer (default)": "Προτίμηση (προεπιλογή)",
+  "Require": "Απαίτηση",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Τώρα: {0}. Οι συνδέσεις HTTPS που δημιουργεί το ίδιο το Lumtub (σελίδες και δεδομένα του YouTube, ο αναμεταδότης ροής, το κρυπτογραφημένο DNS, οι ενημερώσεις) προσφέρουν πρώτα την ανταλλαγή κλειδιών X25519MLKEM768, την οποία ένας μελλοντικός κβαντικός υπολογιστής δεν μπορεί να σπάσει· οι διακομιστές χωρίς αυτήν χρησιμοποιούν κλασική ανταλλαγή. Η «Απαίτηση» απορρίπτει διακομιστές χωρίς αυτήν και το TLS 1.2. Οι δικές τους συνδέσεις των προγραμμάτων αναπαραγωγής βίντεο και του yt-dlp δεν καλύπτονται",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "μετακβαντικό κβαντικό ML-KEM Kyber X25519MLKEM768 TLS 1.3 ανταλλαγή-κλειδιών",
+  "Key exchange by site": "Ανταλλαγή κλειδιών ανά ιστότοπο",
+  "What each site agreed on the last time Lumtub connected to it": "Τι συμφώνησε κάθε ιστότοπος την τελευταία φορά που συνδέθηκε το Lumtub",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "μετακβαντικό TLS ανταλλαγή-κλειδιών X25519MLKEM768 ιστότοποι διακομιστές",
+  "No HTTPS connection yet since Lumtub started": "Δεν υπάρχει ακόμη σύνδεση HTTPS από την εκκίνηση του Lumtub",
+  "{0}, post-quantum": "{0}, μετακβαντικό",
+  "{0}, not post-quantum": "{0}, όχι μετακβαντικό"
 }

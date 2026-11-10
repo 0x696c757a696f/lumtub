@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Selle allalaadimise jaoks on vaja ffmpegi, aga seda ei leitud",
   "The download failed; see the logs for details": "Allalaadimine ebaõnnestus; üksikasjad leiad logidest",
   "see the logs for details": "üksikasjad leiad logidest",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Kvantjärgne krüpteerimine",
+  "Prefer (default)": "Eelista (vaikimisi)",
+  "Require": "Nõua",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Praegu: {0}. HTTPS-ühendused, mida Lumtub ise loob (YouTube'i lehed ja andmed, voo vahendaja, krüpteeritud DNS, värskendused), pakuvad esmalt võtmevahetust X25519MLKEM768, mida tulevane kvantarvuti murda ei suuda; ilma selleta serverid kasutavad klassikalist vahetust. „Nõua“ keeldub serveritest ilma selleta ning TLS 1.2-st. Videomängijate ja yt-dlp enda ühendused ei kuulu siia",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "kvantjärgne kvant ML-KEM Kyber X25519MLKEM768 TLS 1.3 võtmevahetus",
+  "Key exchange by site": "Võtmevahetus saitide kaupa",
+  "What each site agreed on the last time Lumtub connected to it": "Milles iga sait leppis kokku, kui Lumtub viimati sellega ühendus",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "kvantjärgne TLS võtmevahetus X25519MLKEM768 saidid hostid",
+  "No HTTPS connection yet since Lumtub started": "Lumtubi käivitamisest saati pole veel HTTPS-ühendusi olnud",
+  "{0}, post-quantum": "{0}, kvantjärgne",
+  "{0}, not post-quantum": "{0}, mitte kvantjärgne"
 }

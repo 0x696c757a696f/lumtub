@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Bu indirme için ffmpeg gerekiyor ama bulunamadı",
   "The download failed; see the logs for details": "İndirme başarısız oldu; ayrıntılar için günlüklere bakın",
   "see the logs for details": "ayrıntılar için günlüklere bakın",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Kuantum sonrası şifreleme",
+  "Prefer (default)": "Tercih et (varsayılan)",
+  "Require": "Zorunlu",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Şu an: {0}. Lumtub'ın kendi kurduğu HTTPS bağlantıları (YouTube sayfaları ve verileri, akış aktarıcısı, şifreli DNS, güncellemeler) önce X25519MLKEM768 anahtar değişimini sunar; gelecekteki bir kuantum bilgisayar bunu kıramaz. Bunu desteklemeyen sunucular klasik değişimi kullanır. \"Zorunlu\" bunu desteklemeyen sunucuları ve TLS 1.2'yi reddeder. Video oynatıcıların ve yt-dlp'nin kendi bağlantıları kapsam dışıdır",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "kuantum-sonrası kuantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 anahtar değişimi",
+  "Key exchange by site": "Siteye göre anahtar değişimi",
+  "What each site agreed on the last time Lumtub connected to it": "Lumtub son bağlandığında her sitenin üzerinde anlaştığı",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "kuantum-sonrası TLS anahtar değişimi X25519MLKEM768 siteler sunucular",
+  "No HTTPS connection yet since Lumtub started": "Lumtub başlatıldığından beri henüz HTTPS bağlantısı yok",
+  "{0}, post-quantum": "{0}, kuantum sonrası",
+  "{0}, not post-quantum": "{0}, kuantum sonrası değil"
 }

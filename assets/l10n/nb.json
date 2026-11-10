@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "ffmpeg trengs for denne nedlastingen, men ble ikke funnet",
   "The download failed; see the logs for details": "Nedlastingen mislyktes; se loggene for detaljer",
   "see the logs for details": "se loggene for detaljer",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Kvantesikker kryptering",
+  "Prefer (default)": "Foretrekk (standard)",
+  "Require": "Krev",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Nå: {0}. HTTPS-tilkoblinger Lumtub selv oppretter (YouTube-sider og -data, strømreléet, kryptert DNS, oppdateringer) tilbyr nøkkelutvekslingen X25519MLKEM768 først, som en fremtidig kvantedatamaskin ikke kan knekke. Tjenere uten den bruker en klassisk utveksling. «Krev» avviser tjenere uten den, og TLS 1.2. Videospilleres og yt-dlps egne tilkoblinger dekkes ikke",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "kvantesikker post-quantum kvante ML-KEM Kyber X25519MLKEM768 TLS 1.3 nøkkelutveksling",
+  "Key exchange by site": "Nøkkelutveksling per nettsted",
+  "What each site agreed on the last time Lumtub connected to it": "Hva hvert nettsted ble enig om sist Lumtub koblet til det",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "kvantesikker post-quantum TLS nøkkelutveksling X25519MLKEM768 nettsteder verter",
+  "No HTTPS connection yet since Lumtub started": "Ingen HTTPS-tilkobling ennå siden Lumtub startet",
+  "{0}, post-quantum": "{0}, kvantesikker",
+  "{0}, not post-quantum": "{0}, ikke kvantesikker"
 }

@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "ဤဒေါင်းလုဒ်အတွက် ffmpeg လိုအပ်သော်လည်း ရှာမတွေ့ပါ",
   "The download failed; see the logs for details": "ဒေါင်းလုဒ်မအောင်မြင်ပါ၊ အသေးစိတ်အတွက် မှတ်တမ်းများကို ကြည့်ပါ",
   "see the logs for details": "အသေးစိတ်အတွက် မှတ်တမ်းများကို ကြည့်ပါ",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "ကွမ်တမ်လွန် ကုဒ်ဝှက်ခြင်း",
+  "Prefer (default)": "ဦးစားပေး (မူလ)",
+  "Require": "လိုအပ်သည်",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "ယခု - {0}။ Lumtub ကိုယ်တိုင်ပြုလုပ်သော HTTPS ချိတ်ဆက်မှုများ (YouTube စာမျက်နှာများနှင့် ဒေတာ၊ စီးကြောင်း ထပ်ဆင့်လွှဲစနစ်၊ ကုဒ်ဝှက် DNS၊ အပ်ဒိတ်များ) သည် X25519MLKEM768 သော့လဲလှယ်မှုကို ဦးစွာကမ်းလှမ်းပြီး အနာဂတ်ကွမ်တမ်ကွန်ပျူတာနှင့်ပင် ဖောက်ထွင်း၍မရပါ။ မပါသော ဆာဗာများသည် ရိုးရိုးလဲလှယ်မှုကို သုံးသည်။ \"လိုအပ်သည်\" က မပါသောဆာဗာများနှင့် TLS 1.2 ကို ပယ်ချသည်။ ဗီဒီယိုပလေယာများနှင့် yt-dlp ၏ ကိုယ်ပိုင်ချိတ်ဆက်မှုများ မပါဝင်ပါ",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "ကွမ်တမ်လွန် ကွမ်တမ် ML-KEM Kyber X25519MLKEM768 TLS 1.3 သော့လဲလှယ်မှု",
+  "Key exchange by site": "ဝဘ်ဆိုက်အလိုက် သော့လဲလှယ်မှု",
+  "What each site agreed on the last time Lumtub connected to it": "Lumtub နောက်ဆုံးချိတ်ဆက်ချိန်တွင် ဆိုက်တစ်ခုစီ သဘောတူခဲ့သည့်အရာ",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "ကွမ်တမ်လွန် TLS သော့လဲလှယ်မှု X25519MLKEM768 ဆိုက်များ ဟို့စ်များ",
+  "No HTTPS connection yet since Lumtub started": "Lumtub စတင်ပြီးကတည်းက HTTPS ချိတ်ဆက်မှု မရှိသေးပါ",
+  "{0}, post-quantum": "{0}၊ ကွမ်တမ်လွန်",
+  "{0}, not post-quantum": "{0}၊ ကွမ်တမ်လွန် မဟုတ်ပါ"
 }

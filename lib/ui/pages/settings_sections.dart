@@ -18,6 +18,7 @@ import '../../app_preferences.dart';
 import '../../appearance_settings.dart';
 import '../../decoder_status.dart';
 import '../../encrypted_dns.dart';
+import '../../native_core.dart';
 import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
@@ -643,6 +644,25 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             onTap: () => pickFromDialog<String>(context, title: tr('Certificate authorities'), value: settings.certificateRoots, values: roots, onSelected: (value) => save(settings.copyWith(certificateRoots: value))),
           );
         }, subtitle: tr('certificate CA root TLS HTTPS Mozilla Google Chrome Firefox')),
+        SettingEntry(tr('Post-quantum encryption'), (context) {
+          final modes = [
+            ('prefer', tr('Prefer (default)')),
+            ('off', tr('Off')),
+            ('require', tr('Require')),
+          ];
+          return NormalItem(
+            title: tr('Post-quantum encryption'),
+            subtitle: tr("Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered", [labelOf(modes, settings.postQuantum)]),
+            leading: _icon(AppIcons.lockSimple),
+            onTap: () => pickFromDialog<String>(context, title: tr('Post-quantum encryption'), value: settings.postQuantum, values: modes, onSelected: (value) => save(settings.copyWith(postQuantum: value))),
+          );
+        }, subtitle: tr('post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange')),
+        SettingEntry(tr('Key exchange by site'), (context) => NormalItem(
+              title: tr('Key exchange by site'),
+              subtitle: tr('What each site agreed on the last time Lumtub connected to it'),
+              leading: _icon(AppIcons.key),
+              onTap: () => _showTlsSeen(context),
+            ), subtitle: tr('post-quantum TLS key exchange X25519MLKEM768 sites hosts')),
         SettingEntry(tr('Buffering mode'), (context) => NormalItem(
               title: tr('Buffering mode'),
               subtitle: tr('Current: {0}. Memory only, nothing written to disk', [labelOf(_cacheModes, settings.cacheMode)]),
@@ -1554,6 +1574,36 @@ Future<String?> _editDnsUrl(BuildContext context, String current) async {
 }
 
 /// Looks www.youtube.com up over [server] and says how it went.
+Future<void> _showTlsSeen(BuildContext context) => showDialog<void>(
+      context: context,
+      builder: (context) {
+        final seen = NativeCore.tlsSeen();
+        final colors = context.colors;
+        return AlertDialog(
+          title: Text(tr('Key exchange by site')),
+          content: SizedBox(
+            width: dialogWidth(context, 480),
+            child: seen.isEmpty
+                ? Text(tr('No HTTPS connection yet since Lumtub started'))
+                : ListView(
+                    shrinkWrap: true,
+                    children: [
+                      for (final site in seen)
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(site.postQuantum ? AppIcons.lockSimple : AppIcons.lockOpen, size: 18, color: site.postQuantum ? colors.primary : colors.outline),
+                          title: Text(site.host),
+                          subtitle: Text(site.postQuantum ? tr('{0}, post-quantum', [site.group]) : tr('{0}, not post-quantum', [site.group])),
+                        ),
+                    ],
+                  ),
+          ),
+          actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('Close')))],
+        );
+      },
+    );
+
 Future<void> _testDns(BuildContext context, DnsServer server) async {
   final messenger = ScaffoldMessenger.of(context);
   messenger.showSnackBar(SnackBar(content: Text(tr('Testing {0}…', [server.name])), duration: const Duration(seconds: 10)));

@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "ffmpeg est nécessaire pour ce téléchargement, mais il est introuvable",
   "The download failed; see the logs for details": "Le téléchargement a échoué ; consultez les journaux pour plus de détails",
   "see the logs for details": "consultez les journaux pour plus de détails",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Chiffrement post-quantique",
+  "Prefer (default)": "Préférer (par défaut)",
+  "Require": "Exiger",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Actuellement : {0}. Les connexions HTTPS que Lumtub établit lui-même (pages et données de YouTube, relais de flux, DNS chiffré, mises à jour) proposent d’abord l’échange de clés X25519MLKEM768, qu’un futur ordinateur quantique ne pourra pas casser ; les serveurs qui ne le gèrent pas utilisent un échange classique. « Exiger » refuse les serveurs sans cet échange ainsi que TLS 1.2. Les connexions propres aux lecteurs vidéo et à yt-dlp ne sont pas couvertes",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "post-quantique quantique ML-KEM Kyber X25519MLKEM768 TLS 1.3 échange-de-clés",
+  "Key exchange by site": "Échange de clés par site",
+  "What each site agreed on the last time Lumtub connected to it": "Ce sur quoi chaque site s’est accordé lors de la dernière connexion de Lumtub",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "post-quantique TLS échange-de-clés X25519MLKEM768 sites hôtes",
+  "No HTTPS connection yet since Lumtub started": "Aucune connexion HTTPS depuis le démarrage de Lumtub",
+  "{0}, post-quantum": "{0}, post-quantique",
+  "{0}, not post-quantum": "{0}, non post-quantique"
 }

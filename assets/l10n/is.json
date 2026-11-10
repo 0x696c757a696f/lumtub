@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "Þetta niðurhal þarf ffmpeg en það fannst ekki",
   "The download failed; see the logs for details": "Niðurhalið mistókst; sjá nánari upplýsingar í annálum",
   "see the logs for details": "sjá nánari upplýsingar í annálum",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "Dulritun gegn skammtatölvum",
+  "Prefer (default)": "Kjósa frekar (sjálfgefið)",
+  "Require": "Krefjast",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "Núna: {0}. HTTPS-tengingar sem Lumtub býr sjálft til (síður og gögn YouTube, straumvarpið, dulkóðað DNS, uppfærslur) bjóða fyrst upp á X25519MLKEM768 lyklaskipti, sem framtíðarskammtatölva getur ekki brotið; þjónar án þeirra nota hefðbundin skipti. „Krefjast“ hafnar þjónum án þeirra og TLS 1.2. Eigin tengingar myndspilara og yt-dlp falla ekki undir þetta",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "skammtaöruggt skammtatölvur ML-KEM Kyber X25519MLKEM768 TLS 1.3 lyklaskipti",
+  "Key exchange by site": "Lyklaskipti eftir vefsvæði",
+  "What each site agreed on the last time Lumtub connected to it": "Hvað hvert vefsvæði samþykkti síðast þegar Lumtub tengdist því",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "skammtaöruggt TLS lyklaskipti X25519MLKEM768 vefsvæði gestgjafar",
+  "No HTTPS connection yet since Lumtub started": "Engin HTTPS-tenging enn síðan Lumtub ræsti",
+  "{0}, post-quantum": "{0}, skammtaöruggt",
+  "{0}, not post-quantum": "{0}, ekki skammtaöruggt"
 }

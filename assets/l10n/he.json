@@ -3143,5 +3143,16 @@
   "ffmpeg is needed for this download but was not found": "ההורדה הזו דורשת את ffmpeg, אבל הוא לא נמצא",
   "The download failed; see the logs for details": "ההורדה נכשלה; פרטים ביומנים",
   "see the logs for details": "פרטים ביומנים",
-  "YouTube": "YouTube"
+  "YouTube": "YouTube",
+  "Post-quantum encryption": "הצפנה עמידה בפני מחשוב קוונטי",
+  "Prefer (default)": "העדפה (ברירת מחדל)",
+  "Require": "חובה",
+  "Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered": "כעת: {0}. חיבורי HTTPS ש-Lumtub יוצר בעצמו (דפים ונתונים של YouTube, ממסר הזרם, DNS מוצפן, עדכונים) מציעים תחילה את חילופי המפתחות X25519MLKEM768, שמחשב קוונטי עתידי לא יוכל לשבור; שרתים בלעדיו משתמשים בחילופים קלאסיים. האפשרות “חובה” דוחה שרתים בלעדיו וגם TLS 1.2. החיבורים של נגני הווידאו ושל yt-dlp עצמם אינם מכוסים",
+  "post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange": "עמיד-קוונטי קוונטי ML-KEM Kyber X25519MLKEM768 TLS 1.3 חילופי-מפתחות",
+  "Key exchange by site": "חילופי מפתחות לפי אתר",
+  "What each site agreed on the last time Lumtub connected to it": "על מה הסכים כל אתר בפעם האחרונה ש-Lumtub התחבר אליו",
+  "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "עמיד-קוונטי TLS חילופי-מפתחות X25519MLKEM768 אתרים מארחים",
+  "No HTTPS connection yet since Lumtub started": "עדיין אין חיבור HTTPS מאז ש-Lumtub הופעל",
+  "{0}, post-quantum": "{0}, עמיד בפני מחשוב קוונטי",
+  "{0}, not post-quantum": "{0}, לא עמיד בפני מחשוב קוונטי"
 }

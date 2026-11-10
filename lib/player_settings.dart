@@ -398,6 +398,8 @@ class PlayerSettings {
   final bool deArrowThumbnails;
   final Set<String> sponsorCategories;
   final bool sponsorNotice;
+  /// Leave the chosen segments out of downloaded files, at keyframes.
+  final bool sponsorCut;
   final String? cachePath;
   final int? cacheLimitGb;
   /// Extra libmpv options in mpv.conf syntax, applied after all others.
@@ -482,6 +484,7 @@ class PlayerSettings {
     this.deArrowThumbnails = false,
     this.sponsorCategories = defaultSponsorCategories,
     this.sponsorNotice = true,
+    this.sponsorCut = false,
     this.cachePath,
     this.cacheLimitGb,
     this.mpvConf = '',
@@ -549,6 +552,7 @@ class PlayerSettings {
     bool? deArrowThumbnails,
     Set<String>? sponsorCategories,
     bool? sponsorNotice,
+    bool? sponsorCut,
     String? cachePath,
     bool clearCachePath = false,
     int? cacheLimitGb,
@@ -612,6 +616,7 @@ class PlayerSettings {
         deArrowThumbnails: deArrowThumbnails ?? this.deArrowThumbnails,
         sponsorCategories: sponsorCategories ?? this.sponsorCategories,
         sponsorNotice: sponsorNotice ?? this.sponsorNotice,
+        sponsorCut: sponsorCut ?? this.sponsorCut,
         cachePath: clearCachePath ? null : cachePath ?? this.cachePath,
         cacheLimitGb: clearCacheLimit ? null : cacheLimitGb ?? this.cacheLimitGb,
         mpvConf: mpvConf ?? this.mpvConf,
@@ -678,6 +683,7 @@ class PlayerSettings {
         'deArrowThumbnails': deArrowThumbnails,
         'sponsorCategories': sponsorCategories.toList(),
         'sponsorNotice': sponsorNotice,
+        'sponsorCut': sponsorCut,
         if (cachePath != null) 'cachePath': cachePath,
         if (cacheLimitGb != null) 'cacheLimitGb': cacheLimitGb,
         'mpvConf': mpvConf,
@@ -862,6 +868,7 @@ class PlayerSettings {
       deArrowThumbnails: raw['deArrowThumbnails'] == true,
       sponsorCategories: categories,
       sponsorNotice: raw['sponsorNotice'] != false,
+      sponsorCut: raw['sponsorCut'] == true,
       cachePath: path != null && path.trim().isNotEmpty ? path : null,
       cacheLimitGb: raw['cacheLimitGb'] == null ? null : number('cacheLimitGb', 1, 1, 100),
       mpvConf: conf,

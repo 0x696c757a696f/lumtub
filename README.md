@@ -79,7 +79,7 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 - Speed and volume remembered per channel; background playback with media keys and a tray icon.
 - **Cast** to Chromecast and DLNA TVs, and to AirPlay receivers (preview).
 - **Diagnostics:** a network check of the proxy, exit addresses and each kind of request, and a built-in playback test of H.264, VP9 and AV1 on your computer (processor, memory, dropped frames).
-- **Downloads:** pick any format YouTube serves, joined without re-encoding, and play it offline in Lumtub.
+- **Downloads:** pick any format YouTube serves, joined without re-encoding, with subtitles, title and cover inside, sponsor segments cut out if you like, and play it offline in Lumtub. Live streams can be recorded as they air.
 
 ### 💬 Subtitles and translation
 - **Bilingual subtitles** with styles you can tune live, and one-click translation of chapter names.

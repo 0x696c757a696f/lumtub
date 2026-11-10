@@ -19,12 +19,12 @@ class LiveSplit {
   String? get userAgent => (video['http_headers'] as Map?)?['User-Agent'] as String?;
   String get label => '${video['format_id']}+${audio['format_id']} (${height}p${video['fps'] ?? ''} ${video['vcodec']})';
 
-  /// The tallest picture above 1080p within [settings]' cap in a codec they
-  /// allow, with the AAC sound (140) or else the best other; null when
-  /// [info] has none or the cap is 1080p or lower.
-  static LiveSplit? pick(Map<String, dynamic> info, PlayerSettings settings) {
+  /// The tallest picture above [above] (1080p) within [settings]' cap in a
+  /// codec they allow, with the AAC sound (140) or else the best other; null
+  /// when [info] has none or the cap is [above] or lower.
+  static LiveSplit? pick(Map<String, dynamic> info, PlayerSettings settings, {int above = 1080}) {
     final cap = settings.maxHeight;
-    if (cap > 0 && cap <= 1080) return null;
+    if (cap > 0 && cap <= above) return null;
     final formats = [for (final f in (info['formats'] as List? ?? const [])) if (f is Map<String, dynamic> && _fragmented(f)) f];
     final order = FormatPolicy.codecOrder(settings);
     int rank(VideoCodec? codec) {
@@ -34,7 +34,7 @@ class LiveSplit {
 
     final videos = [
       for (final f in formats)
-        if (f['acodec'] == 'none' && f['height'] is int && (f['height'] as int) > 1080 && (cap <= 0 || (f['height'] as int) <= cap))
+        if (f['acodec'] == 'none' && f['height'] is int && (f['height'] as int) > above && (cap <= 0 || (f['height'] as int) <= cap))
           if (VideoCodec.of(f['vcodec']) case final codec? when FormatPolicy.allows(settings, codec)) f,
     ]..sort((a, b) {
         final byHeight = (b['height'] as int).compareTo(a['height'] as int);

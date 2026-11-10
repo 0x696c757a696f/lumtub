@@ -168,7 +168,9 @@ class VideoItem {
       viewCount: views is num ? views.toInt() : null,
       watching: watching is num ? watching.toInt() : null,
       channelId: channelId != null && ChannelRef.isValidId(channelId) ? channelId : null,
-      published: DateTime.tryParse(map['published']?.toString() ?? ''),
+      // Lists give only about when ("3 days ago"); the core and yt-dlp's
+      // approximate_date turn that into a timestamp.
+      published: DateTime.tryParse(map['published']?.toString() ?? '') ?? (liveStatus == null || liveStatus == 'was_live' ? unixTime(map['timestamp']) : null),
       liveStatus: liveStatus,
       scheduledStart: savedScheduledStart ?? (liveStatus == 'is_upcoming' ? unixTime(map['release_timestamp']) ?? unixTime(map['timestamp']) : null),
       width: width is num ? width.toInt() : null,

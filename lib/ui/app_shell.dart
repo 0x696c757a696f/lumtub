@@ -503,7 +503,7 @@ class _TopBar extends StatelessWidget {
             icon: Icon(AppIcons.eyeSlash),
             selectedIcon: const Icon(AppIcons.eyeSlashFill),
           ),
-          // Phones and TVs have no yt-dlp or ffmpeg to update.
+          // Phones and TVs have no Deno or libmpv to update.
           if (!touchFirst) IconButton(
             tooltip: tr('Check for component updates'),
             onPressed: ready && !controller.checking ? controller.checkUpdates : null,

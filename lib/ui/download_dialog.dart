@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -14,7 +13,7 @@ import 'app_icons.dart';
 /// [quality] when the formats could not be read.
 class DownloadChoice {
   const DownloadChoice(this.quality, {this.selection, this.defaults});
-  /// For a [selection], only whether it is audio (what ffmpeg is needed for).
+  /// For a [selection], only whether it is audio.
   final DownloadQuality quality;
   final DownloadSelection? selection;
   /// The options to offer next time.
@@ -24,12 +23,10 @@ class DownloadChoice {
 /// Lets the user pick the codec, height and container of a download from the
 /// formats the video really has.
 class DownloadDialog extends StatefulWidget {
-  const DownloadDialog({super.key, required this.title, required this.loadFormats, this.defaults = const DownloadDefaults(), this.canMerge = true, this.onCover, this.onSubtitles});
+  const DownloadDialog({super.key, required this.title, required this.loadFormats, this.defaults = const DownloadDefaults(), this.onCover, this.onSubtitles});
   final String title;
   final Future<DownloadFormats> Function() loadFormats;
   final DownloadDefaults defaults;
-  /// Whether ffmpeg is there; without it the video comes as a single file.
-  final bool canMerge;
   /// Saves just the cover or a subtitle instead; the dialog closes first.
   final VoidCallback? onCover;
   final VoidCallback? onSubtitles;
@@ -204,7 +201,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
       ],
       // Android joins the streams in lumtub_core, which picks the container
       // from the codecs.
-      if (video != null && !Platform.isAndroid) ...[
+      if (video != null) ...[
         const SizedBox(height: 12),
         _section(context, tr('Container'), [
           for (final c in DownloadContainer.values)
@@ -226,10 +223,6 @@ class _DownloadDialogState extends State<DownloadDialog> {
       ],
       const SizedBox(height: 16),
       if (plan?.selection != null) Text(_summary(plan!.selection!), style: context.text.titleSmall),
-      if (!widget.canMerge && !_audioOnly) ...[
-        const SizedBox(height: 8),
-        Text(tr('Without ffmpeg, video and audio cannot be merged, so videos download as the single-file format YouTube provides (usually 360p). You can install ffmpeg on demand the first time you pick a high quality.'), style: context.text.bodySmall),
-      ],
     ]);
   }
 
@@ -240,7 +233,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
         : [
             s.codec!.label,
             heightLabel(s.height!, _formats?.video.where((f) => f.id == s.videoId).firstOrNull?.fps),
-            if (!Platform.isAndroid) _container == DownloadContainer.auto ? tr('Automatic container ({0})', [s.container.label]) : s.container.label,
+            _container == DownloadContainer.auto ? tr('Automatic container ({0})', [s.container.label]) : s.container.label,
           ];
     if (s.size != null) parts.add(approximateSize(s.size!));
     return tr('Current selection: {0}', [parts.join(' · ')]);

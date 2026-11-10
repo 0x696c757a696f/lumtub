@@ -10,7 +10,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'android_python.dart';
 import 'app_directories.dart';
 import 'app_log.dart';
-import 'ffmpeg_component.dart';
+import 'zip_archive.dart';
 import 'libmpv_updates.dart';
 import 'native_core.dart';
 import 'native_http.dart';
@@ -249,7 +249,7 @@ class ToolManager {
   }
 
   Future<void> checkUpdates({bool force = false}) async {
-    // Android has no yt-dlp, Deno or ffmpeg to keep current: streams come from the core.
+    // Android has no Deno to keep current, and yt-dlp only with its Python.
     if (Platform.isIOS || Platform.isAndroid && AndroidPython.current == null) return;
     final stamp = File('${root.path}${Platform.pathSeparator}last_update_check.txt');
     // The single-file yt-dlp is replaced as soon as possible, but a failed
@@ -261,13 +261,19 @@ class ToolManager {
       final wait = _ytDlpIsSingleFile || rest.contains('failed') ? const Duration(hours: 1) : const Duration(hours: 24);
       if (last != null && DateTime.now().difference(last) < wait) return;
     }
+    // The ffmpeg earlier versions installed for downloads; the core joins
+    // and cuts streams now.
+    try {
+      final ffmpeg = Directory('${root.path}${_separator}ffmpeg');
+      if (await ffmpeg.exists()) await ffmpeg.delete(recursive: true);
+    } on FileSystemException catch (e) {
+      logWarn('Could not remove the old ffmpeg: ${e.message}');
+    }
     final errors = <String>[];
     for (final task in <(String, Future<void> Function())>[
       ('yt-dlp', _installYtDlp),
       if (!Platform.isAndroid) ('Deno', _installDeno),
       if (!_systemMpv) ('libmpv', _installLibmpv),
-      // Never installed by an update check: only kept current once the user has it.
-      if (!Platform.isAndroid) ('ffmpeg', () => installFfmpeg(onlyIfInstalled: true)),
     ]) {
       try {
         status('Check for {0} updates…', [task.$1]);
@@ -624,258 +630,10 @@ class ToolManager {
     }
   }
 
-  // ffmpeg: optional, installed on demand (see ffmpeg_component.dart).
-  // The macOS app carries its own, made for copying streams only.
-
-  /// The folder of the ffmpeg and ffprobe inside the macOS app, if there.
-  static String? get bundledFfmpegDirectory {
-    if (!Platform.isMacOS) return null;
-    final dir = File(Platform.resolvedExecutable).parent.path;
-    return File('$dir/ffmpeg').existsSync() && File('$dir/ffprobe').existsSync() ? dir : null;
-  }
-
-  /// The folder holding the newest installed ffmpeg and ffprobe, if any.
-  String? get ffmpegDirectory {
-    if (bundledFfmpegDirectory case final bundled?) return bundled;
-    final exe = _findNewest('ffmpeg', _exe('ffmpeg'));
-    return exe == null ? null : File(exe).parent.path;
-  }
-
-  String? get ffmpegVersion {
-    if (bundledFfmpegDirectory case final bundled?) {
-      try {
-        final file = File('${File(bundled).parent.path}/Resources/ffmpeg-version.txt');
-        return file.existsSync() ? file.readAsStringSync().trim() : 'ffmpeg';
-      } on FileSystemException {
-        return 'ffmpeg';
-      }
-    }
-    return _versionOf(_findNewest('ffmpeg', _exe('ffmpeg')));
-  }
-
-  /// Bytes on disk of the installed ffmpeg, or null without it.
-  int? get ffmpegBytes {
-    if (bundledFfmpegDirectory case final bundled?) {
-      return File('$bundled/ffmpeg').lengthSync() + File('$bundled/ffprobe').lengthSync();
-    }
-    final dir = ffmpegDirectory;
-    if (dir == null) return null;
-    var total = 0;
-    for (final file in Directory(dir).listSync().whereType<File>()) {
-      total += file.lengthSync();
-    }
-    return total;
-  }
-
-  /// The download size in bytes the release lists for the ffmpeg archive.
-  Future<int?> ffmpegDownloadSize() async {
-    if (Platform.isMacOS) return null;
-    if (!Platform.isWindows) {
-      final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
-      final assets = (release['assets'] as List? ?? const []).whereType<Map>();
-      final name = linuxFfmpegAssetName(assets.map((a) => a['name']?.toString() ?? ''), arm64: _linuxArm64);
-      final size = assets.where((a) => a['name'] == name).firstOrNull?['size'];
-      return size is int ? size : null;
-    }
-    try {
-      if (!await _no7z.exists()) {
-        final size = (await _zhongflyFfmpeg()).$2['size'];
-        if (size is int) return size;
-      }
-    } catch (_) {
-      // The BtbN build is installed instead.
-    }
-    final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
-    final name = ffmpegAssetName((release['assets'] as List? ?? const []).whereType<Map>().map((a) => a['name']?.toString() ?? ''), libmpvVariantForThisProcess());
-    final size = (release['assets'] as List).whereType<Map>().where((a) => a['name'] == name).firstOrNull?['size'];
-    return size is int ? size : null;
-  }
-
-  /// Marks a Windows whose tar.exe cannot unpack 7z, for libmpv and ffmpeg.
-  File get _no7z => File('${libmpv.directory.path}$_separator$_no7zMarker');
-
-  /// Installs the newest ffmpeg build unless it is there already. With
-  /// [onlyIfInstalled] nothing happens for a user who never installed it.
-  Future<void> installFfmpeg({bool onlyIfInstalled = false, void Function(int received, int? total)? onProgress}) async {
-    if (onlyIfInstalled && ffmpegDirectory == null) return;
-    if (Platform.isMacOS) {
-      if (bundledFfmpegDirectory != null) return;
-      throw StateError(tr('The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.'));
-    }
-    if (!Platform.isWindows) return _installLinuxFfmpeg(onProgress);
-    if (!await _no7z.exists()) {
-      try {
-        await _installZhongflyFfmpeg(onProgress);
-        return;
-      } on ProcessException {
-        await _no7z.parent.create(recursive: true);
-        await _no7z.writeAsString(DateTime.now().toIso8601String());
-        logWarn('This Windows version cannot extract 7z; using the BtbN ffmpeg');
-      } catch (e) {
-        logWarn('Could not install the zhongfly ffmpeg, using the BtbN one: $e');
-      }
-    }
-    await _installBtbnFfmpeg(onProgress);
-  }
-
-  Future<(Map<String, dynamic>, Map<String, dynamic>)> _zhongflyFfmpeg() async {
-    final release = await _release(ffmpegPrimaryRepository);
-    final names = (release['assets'] as List? ?? const []).whereType<Map>().map((a) => a['name']?.toString() ?? '');
-    final variant = libmpvVariantForThisProcess();
-    final name = zhongflyFfmpegAssetName(names, variant);
-    if (name == null) throw StateError('No $variant ffmpeg in ${release['tag_name']} of $ffmpegPrimaryRepository');
-    return (release, _asset(release, (n) => n == name));
-  }
-
-  Future<void> _installZhongflyFfmpeg(void Function(int received, int? total)? onProgress) async {
-    final (release, asset) = await _zhongflyFfmpeg();
-    final tag = _safeTag(release['tag_name']);
-    final folder = zhongflyFfmpegFolderName(asset['name'].toString(), tag);
-    final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');
-    if (await File('${dest.path}${_separator}ffmpeg.exe').exists()) return;
-    status('Downloading ffmpeg {0}…', [folder]);
-    // Checked against the SHA-256 digest GitHub lists for the asset.
-    final archive = await _downloadVerified(asset, Directory('${root.path}${_separator}downloads'), onProgress: onProgress);
-    final partial = Directory('${dest.path}.partial');
-    final whole = Directory('${dest.path}.all');
-    for (final dir in [partial, whole]) {
-      if (await dir.exists()) await dir.delete(recursive: true);
-      await dir.create(recursive: true);
-    }
-    try {
-      await _extractZip(archive, whole);
-      final exe = whole.listSync(recursive: true).whereType<File>().where((f) => f.path.toLowerCase().endsWith('${_separator}ffmpeg.exe')).firstOrNull;
-      if (exe == null) throw StateError('ffmpeg archive $tag has no ffmpeg.exe');
-      await exe.copy('${partial.path}${_separator}ffmpeg.exe');
-      final check = await runWithTimeout('${partial.path}${_separator}ffmpeg.exe', ['-version'], timeout: const Duration(seconds: 30));
-      if (check.exitCode != 0) throw StateError('ffmpeg $folder failed its self-check');
-      await partial.rename(dest.path);
-    } catch (_) {
-      if (await partial.exists()) await partial.delete(recursive: true);
-      rethrow;
-    } finally {
-      if (await whole.exists()) await whole.delete(recursive: true);
-      if (await archive.exists()) await archive.delete();
-    }
-    await _prune(Directory('${root.path}${_separator}ffmpeg'), keep: 2);
-  }
-
-  Future<void> _installBtbnFfmpeg(void Function(int received, int? total)? onProgress) async {
-    final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
-    final assets = (release['assets'] as List? ?? const []).whereType<Map<String, dynamic>>().toList();
-    final variant = libmpvVariantForThisProcess();
-    final assetName = ffmpegAssetName(assets.map((a) => a['name']?.toString() ?? ''), variant);
-    if (assetName == null) throw StateError('No LGPL shared ffmpeg build for $variant in the $ffmpegRepository release');
-    final asset = _asset(release, (name) => name == assetName);
-    final folder = ffmpegFolderName(assetName, asset['updated_at']?.toString());
-    final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');
-    if (await File('${dest.path}${_separator}ffmpeg.exe').exists()) return;
-    status('Downloading ffmpeg {0}…', [folder]);
-    // The hash comes from the checksum file of the same release, over HTTPS.
-    final sums = await _client.get(_assetUri(_asset(release, (name) => name == ffmpegChecksumsAsset)), headers: {'User-Agent': _userAgent}).timeout(const Duration(seconds: 30));
-    if (sums.statusCode != 200) throw HttpException('Checksum file HTTP ${sums.statusCode}');
-    final expected = parseChecksums(sums.body)[assetName];
-    if (expected == null) throw StateError('No checksum listed for $assetName');
-    final archive = await _downloadVerified(asset, Directory('${root.path}${_separator}downloads'), sha256Hex: expected, onProgress: onProgress);
-    final partial = Directory('${dest.path}.partial');
-    if (await partial.exists()) await partial.delete(recursive: true);
-    await partial.create(recursive: true);
-    try {
-      final written = await _extractFfmpeg(archive, partial);
-      if (!written.contains('ffmpeg.exe') || !written.contains('ffprobe.exe')) throw StateError('ffmpeg archive lacks ffmpeg.exe or ffprobe.exe');
-      final check = await runWithTimeout('${partial.path}${_separator}ffmpeg.exe', ['-version'], timeout: const Duration(seconds: 30));
-      if (check.exitCode != 0) throw StateError('ffmpeg $folder failed its self-check');
-      await partial.rename(dest.path);
-    } catch (_) {
-      if (await partial.exists()) await partial.delete(recursive: true);
-      rethrow;
-    } finally {
-      if (await archive.exists()) await archive.delete();
-    }
-    await _prune(Directory('${root.path}${_separator}ffmpeg'), keep: 2);
-  }
-
-  /// The static LGPL build from BtbN, unpacked by the system's tar.
-  Future<void> _installLinuxFfmpeg(void Function(int received, int? total)? onProgress) async {
-    final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
-    final assets = (release['assets'] as List? ?? const []).whereType<Map<String, dynamic>>().toList();
-    final assetName = linuxFfmpegAssetName(assets.map((a) => a['name']?.toString() ?? ''), arm64: _linuxArm64);
-    if (assetName == null) throw StateError('No LGPL Linux ffmpeg build in the $ffmpegRepository release');
-    final asset = _asset(release, (name) => name == assetName);
-    final folder = ffmpegFolderName(assetName, asset['updated_at']?.toString());
-    final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');
-    if (await File('${dest.path}${_separator}ffmpeg').exists()) return;
-    status('Downloading ffmpeg {0}…', [folder]);
-    final sums = await _client.get(_assetUri(_asset(release, (name) => name == ffmpegChecksumsAsset)), headers: {'User-Agent': _userAgent}).timeout(const Duration(seconds: 30));
-    if (sums.statusCode != 200) throw HttpException('Checksum file HTTP ${sums.statusCode}');
-    final expected = parseChecksums(sums.body)[assetName];
-    if (expected == null) throw StateError('No checksum listed for $assetName');
-    final archive = await _downloadVerified(asset, Directory('${root.path}${_separator}downloads'), sha256Hex: expected, onProgress: onProgress);
-    final partial = Directory('${dest.path}.partial');
-    final whole = Directory('${dest.path}.all');
-    for (final dir in [partial, whole]) {
-      if (await dir.exists()) await dir.delete(recursive: true);
-      await dir.create(recursive: true);
-    }
-    try {
-      final result = await Process.run('tar', ['-xJf', archive.path, '-C', whole.path]);
-      if (result.exitCode != 0) throw ProcessException('tar', ['-xJf', archive.path], result.stderr.toString(), result.exitCode);
-      for (final name in ['ffmpeg', 'ffprobe']) {
-        final found = whole.listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('${_separator}bin$_separator$name')).firstOrNull;
-        if (found == null) throw StateError('ffmpeg archive lacks $name');
-        await found.copy('${partial.path}$_separator$name');
-      }
-      await Process.run('chmod', ['+x', '${partial.path}${_separator}ffmpeg', '${partial.path}${_separator}ffprobe']);
-      final check = await runWithTimeout('${partial.path}${_separator}ffmpeg', ['-version'], timeout: const Duration(seconds: 30));
-      if (check.exitCode != 0) throw StateError('ffmpeg $folder failed its self-check');
-      await partial.rename(dest.path);
-    } catch (_) {
-      if (await partial.exists()) await partial.delete(recursive: true);
-      rethrow;
-    } finally {
-      if (await whole.exists()) await whole.delete(recursive: true);
-      if (await archive.exists()) await archive.delete();
-    }
-    await _prune(Directory('${root.path}${_separator}ffmpeg'), keep: 2);
-  }
-
-  /// Deletes every installed ffmpeg.
-  Future<void> removeFfmpeg() async {
-    if (Platform.isMacOS) return;
-    final dir = Directory('${root.path}${_separator}ffmpeg');
-    if (await dir.exists()) await dir.delete(recursive: true);
-  }
-
   String _safeTag(Object? value) {
     final tag = value?.toString() ?? '';
     if (!RegExp(r'^[a-zA-Z0-9._-]{1,100}$').hasMatch(tag)) throw const FormatException('Invalid release tag');
     return tag;
-  }
-
-  /// ffmpeg.exe, ffprobe.exe and their DLLs from [archive]; Windows' own
-  /// tar.exe takes over for an archive the small reader cannot read (Zip64).
-  Future<List<String>> _extractFfmpeg(File archive, Directory into) async {
-    try {
-      return await extractFfmpegBinaries(archive, into);
-    } on FormatException {
-      final whole = Directory('${into.path}.all');
-      if (await whole.exists()) await whole.delete(recursive: true);
-      await whole.create();
-      try {
-        await _extractZip(archive, whole);
-        final written = <String>[];
-        await for (final entry in whole.list(recursive: true)) {
-          final name = entry.uri.pathSegments.last.toLowerCase();
-          if (entry is File && entry.parent.uri.pathSegments.where((s) => s.isNotEmpty).last == 'bin' && (name == 'ffmpeg.exe' || name == 'ffprobe.exe' || name.endsWith('.dll'))) {
-            await entry.copy('${into.path}$_separator$name');
-            written.add(name);
-          }
-        }
-        return written;
-      } finally {
-        await whole.delete(recursive: true);
-      }
-    }
   }
 
   Future<void> _extractZip(File archive, Directory into) async {

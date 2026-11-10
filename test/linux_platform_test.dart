@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app_updater.dart';
-import 'package:lumtub/ffmpeg_component.dart';
+import 'package:lumtub/zip_archive.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/network_proxy.dart';
 import 'package:lumtub/power.dart';
@@ -58,20 +58,6 @@ void main() {
       final proxy = await NetworkProxy.linux(environment: const {}, gsettings: (key) async => key.endsWith('mode') ? 'none' : null);
       expect(proxy.url, isNull);
     });
-  });
-
-  test('picks the static LGPL Linux ffmpeg', () {
-    const names = [
-      'ffmpeg-master-latest-linux64-lgpl.tar.xz',
-      'ffmpeg-master-latest-linux64-lgpl-shared.tar.xz',
-      'ffmpeg-n7.1-latest-linux64-lgpl-7.1.tar.xz',
-      'ffmpeg-n8.0-latest-linux64-lgpl-8.0.tar.xz',
-      'ffmpeg-n8.0-latest-linux64-gpl-8.0.tar.xz',
-      'ffmpeg-n8.0-latest-linuxarm64-lgpl-8.0.tar.xz',
-    ];
-    expect(linuxFfmpegAssetName(names, arm64: false), 'ffmpeg-n8.0-latest-linux64-lgpl-8.0.tar.xz');
-    expect(linuxFfmpegAssetName(names, arm64: true), 'ffmpeg-n8.0-latest-linuxarm64-lgpl-8.0.tar.xz');
-    expect(linuxFfmpegAssetName(['ffmpeg-master-latest-linuxarm64-lgpl.tar.xz'], arm64: true), 'ffmpeg-master-latest-linuxarm64-lgpl.tar.xz');
   });
 
   test('unzips folders, keeps executables executable and stays inside', () async {

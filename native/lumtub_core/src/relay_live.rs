@@ -54,6 +54,11 @@ enum Miss {
 /// What of a fragment after the first carries the stream on: from the first
 /// WebM cluster, or from the first MP4 `moof`; all of it when neither is
 /// found.
+#[cfg(test)]
+pub(crate) fn continuation_len(bytes: &[u8]) -> usize {
+    continuation(bytes).len()
+}
+
 fn continuation(bytes: &[u8]) -> &[u8] {
     let at = if bytes.starts_with(&[0x1A, 0x45, 0xDF, 0xA3]) { webm_clusters(bytes) } else { mp4_fragments(bytes) };
     at.map_or(bytes, |at| &bytes[at..])
@@ -267,14 +272,41 @@ pub(crate) fn stream(writer: &mut impl Write, target: &Target, fetch: &dyn Fetch
     if write!(writer, "HTTP/1.1 200 OK\r\nContent-Type: {mime}\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n").is_err() {
         return;
     }
+    let put = |bytes: &[u8]| writer.write_all(bytes).and_then(|_| writer.flush()).is_ok();
+    if let End::Refused(sq, status) = follow(target, fetch, first, head, true, &|| false, put, &log) {
+        log(format!("Live fragment {sq} refused (HTTP {status}); the address has to be renewed"));
+    }
+}
+
+/// How [follow] ended.
+#[derive(Debug, PartialEq)]
+pub(crate) enum End {
+    /// Asked to stop, or the writer would take no more.
+    Stopped,
+    /// Fragment `sq` was refused: the address has expired.
+    Refused(u64, u16),
+    /// No new fragment for [GIVE_UP]: the live has ended, or YouTube stopped
+    /// answering.
+    Over,
+}
+
+/// Fetches the fragments of [target] from `first` on, a few at once while
+/// they are behind `newest`, and hands each to `put` in order: the first
+/// whole when `whole_first`, the rest from their first cluster or `moof`.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn follow(target: &Target, fetch: &dyn Fetch, first: u64, newest: u64, whole_first: bool, stop: &dyn Fn() -> bool, mut put: impl FnMut(&[u8]) -> bool, log: &dyn Fn(String)) -> End {
+    let base = base(&target.url);
     std::thread::scope(|scope| {
         let base = base.as_str();
-        let mut newest = head;
+        let mut newest = newest;
         let mut asked = first;
         let mut pending = VecDeque::new();
         let mut missing_since: Option<Instant> = None;
-        let mut first = true;
+        let mut whole = whole_first;
         loop {
+            if stop() {
+                return End::Stopped;
+            }
             // Several at once only for fragments already out; the next one
             // past the newest is asked alone and again until it appears.
             while pending.len() < AT_ONCE && (asked <= newest || pending.is_empty()) {
@@ -282,39 +314,60 @@ pub(crate) fn stream(writer: &mut impl Write, target: &Target, fetch: &dyn Fetch
                 pending.push_back((sq, scope.spawn(move || fetch_fragment(fetch, target, base, sq))));
                 asked += 1;
             }
-            let Some((sq, handle)) = pending.pop_front() else { return };
+            let Some((sq, handle)) = pending.pop_front() else { return End::Stopped };
             match handle.join() {
                 Ok(Ok(fragment)) => {
                     missing_since = None;
                     if let Some(head) = fragment.head {
                         newest = newest.max(head);
                     }
-                    let bytes = if first { &fragment.bytes[..] } else { continuation(&fragment.bytes) };
-                    first = false;
-                    if writer.write_all(bytes).and_then(|_| writer.flush()).is_err() {
-                        // libmpv hung up; the fragments still being fetched
-                        // finish on their own and are dropped.
-                        return;
+                    let bytes = if whole { &fragment.bytes[..] } else { continuation(&fragment.bytes) };
+                    whole = false;
+                    if !put(bytes) {
+                        // The fragments still being fetched finish on their
+                        // own and are dropped.
+                        return End::Stopped;
                     }
                 }
-                Ok(Err(Miss::Refused(status))) => {
-                    log(format!("Live fragment {sq} refused (HTTP {status}); the address has to be renewed"));
-                    return;
-                }
+                Ok(Err(Miss::Refused(status))) => return End::Refused(sq, status),
                 Ok(Err(Miss::Again(why))) => {
                     let since = *missing_since.get_or_insert_with(Instant::now);
                     if since.elapsed() > GIVE_UP {
                         log(format!("Live stream stopped: {why} for {} s", GIVE_UP.as_secs()));
-                        return;
+                        return End::Over;
                     }
                     // Ask for it again first; the ones after it wait.
                     std::thread::sleep(RETRY);
                     pending.push_front((sq, scope.spawn(move || fetch_fragment(fetch, target, base, sq))));
                 }
-                Err(_) => return,
+                Err(_) => return End::Stopped,
             }
         }
-    });
+    })
+}
+
+/// The newest fragment of [target], asking again a few times while
+/// YouTube's server does not answer; or why there is none.
+pub(crate) fn newest(target: &Target, fetch: &dyn Fetch, log: &dyn Fn(String)) -> Result<u64, String> {
+    let base = base(&target.url);
+    let mut waits = HEAD_WAITS.iter();
+    loop {
+        let answer = fetch.get_live(target, &base);
+        let passing = matches!(answer, Ok((500..=599, _, _)) | Err(_));
+        match (answer, waits.next()) {
+            (Ok((200, Some(head), _)), _) => return Ok(head),
+            (answer, Some(wait)) if passing => {
+                let why = match &answer {
+                    Ok((status, _, _)) => format!("HTTP {status}"),
+                    Err(e) => e.clone(),
+                };
+                log(format!("Live stream gave no newest fragment ({why}); asking again in {} ms", wait.as_millis()));
+                std::thread::sleep(*wait);
+            }
+            (Ok((status, head, _)), _) => return Err(format!("no newest fragment (HTTP {status}, head {head:?})")),
+            (Err(e), _) => return Err(e),
+        }
+    }
 }
 
 #[cfg(test)]

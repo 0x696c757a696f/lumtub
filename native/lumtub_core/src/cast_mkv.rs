@@ -1,7 +1,7 @@
 //! Writes the joined cast stream as Matroska: a segment of unknown length
 //! that grows cluster by cluster, so a TV can play it as it arrives. MKV
-//! carries any of YouTube's pictures (H.264, VP9, AV1) and a text subtitle
-//! track, which TVs that play MKV show without asking for another file.
+//! carries any of YouTube's pictures (H.264, VP9, AV1) and text subtitle
+//! tracks, which TVs that play MKV show without asking for another file.
 //! A saved file also gets its length and a `Cues` index at the end, which
 //! the writer fills in once the whole stream is written.
 
@@ -27,6 +27,15 @@ pub struct Head {
     /// position of `Cues` (an 8-byte integer) are.
     pub duration_at: Option<usize>,
     pub cues_at: Option<usize>,
+}
+
+/// What goes into the head besides picture and sound: subtitle tracks
+/// (language and name, numbered from [TEXT]), a title and a cover.
+#[derive(Default, Clone, Copy)]
+pub struct Extra<'a> {
+    pub texts: &'a [(&'a str, &'a str)],
+    pub title: Option<&'a str>,
+    pub cover: Option<&'a [u8]>,
 }
 
 pub const VIDEO: u64 = 1;
@@ -76,8 +85,9 @@ fn float(out: &mut Vec<u8>, kind: u32, v: f64) {
 /// The EBML header, the start of a segment of unknown size, its info and
 /// its tracks. `duration` is in milliseconds, 0 when not known. For a
 /// `file`, room is left for its length and the position of its index.
-pub fn head(video: &TrackInfo, audio: &TrackInfo, subtitles: Option<&str>, duration: f64, file: bool) -> Head {
-    let webm = matches!(video.codec, "V_VP9" | "V_AV1") && audio.codec == "A_OPUS" && subtitles.is_none();
+/// It is called WebM when that holds it, unless `matroska`.
+pub fn head(video: &TrackInfo, audio: &TrackInfo, extra: Extra, duration: f64, file: bool, matroska: bool) -> Head {
+    let webm = !matroska && webm_holds(video, audio, extra);
     let mut out = Vec::new();
     master(&mut out, 0x1A45_DFA3, |o| {
         uint(o, 0x4286, 1);
@@ -113,6 +123,9 @@ pub fn head(video: &TrackInfo, audio: &TrackInfo, subtitles: Option<&str>, durat
         duration_at = Some(info.len());
         info.extend_from_slice(&duration.to_be_bytes());
     }
+    if let Some(title) = extra.title.filter(|t| !t.is_empty()) {
+        element(&mut info, 0x7BA9, title.as_bytes());
+    }
     element(&mut info, 0x4D80, b"Lumtub");
     element(&mut info, 0x5741, b"Lumtub");
     id(&mut out, 0x1549_A966);
@@ -127,7 +140,7 @@ pub fn head(video: &TrackInfo, audio: &TrackInfo, subtitles: Option<&str>, durat
                 uint(o, 0x83, if info.video.is_some() { 1 } else { 2 });
                 uint(o, 0x9C, 0);
                 element(o, 0x86, info.codec.as_bytes());
-                element(o, 0x22B5_9C, b"und");
+                element(o, 0x0022_B59C, b"und");
                 if let Some(private) = &info.private {
                     element(o, 0x63A2, private);
                 }
@@ -151,21 +164,43 @@ pub fn head(video: &TrackInfo, audio: &TrackInfo, subtitles: Option<&str>, durat
                 }
             });
         }
-        if let Some(language) = subtitles {
+        for (i, &(language, name)) in extra.texts.iter().enumerate() {
             master(o, 0xAE, |o| {
-                uint(o, 0xD7, TEXT);
-                uint(o, 0x73C5, TEXT);
+                uint(o, 0xD7, TEXT + i as u64);
+                uint(o, 0x73C5, TEXT + i as u64);
                 uint(o, 0x83, 0x11);
                 uint(o, 0x9C, 0);
-                uint(o, 0x88, 1);
+                uint(o, 0x88, u64::from(i == 0));
                 element(o, 0x86, b"S_TEXT/UTF8");
+                if !name.is_empty() {
+                    element(o, 0x536E, name.as_bytes());
+                }
+                element(o, 0x0022_B59C, crate::embed::iso639_2(language).as_bytes());
                 if !language.is_empty() {
-                    element(o, 0x22B5_9D, language.as_bytes());
+                    element(o, 0x0022_B59D, language.as_bytes());
                 }
             });
         }
     });
+    if let Some(cover) = extra.cover {
+        // Attachments { AttachedFile { name, type, data, id } }, named so
+        // players show it as the cover.
+        let png = crate::embed::is_png(cover);
+        master(&mut out, 0x1941_A469, |o| {
+            master(o, 0x61A7, |o| {
+                element(o, 0x466E, if png { b"cover.png" } else { b"cover.jpg" });
+                element(o, 0x4660, if png { b"image/png" } else { b"image/jpeg" });
+                element(o, 0x465C, cover);
+                uint(o, 0x46AE, 1);
+            });
+        });
+    }
     Head { bytes: out, segment, duration_at, cues_at }
+}
+
+/// Whether WebM may hold these: VP9 or AV1 with Opus, and nothing else.
+pub fn webm_holds(video: &TrackInfo, audio: &TrackInfo, extra: Extra) -> bool {
+    matches!(video.codec, "V_VP9" | "V_AV1") && audio.codec == "A_OPUS" && extra.texts.is_empty() && extra.cover.is_none()
 }
 
 /// Gathers blocks into clusters; a cluster is written out whole, as its
@@ -199,13 +234,13 @@ impl Clusters {
         element(&mut self.body, 0xA3, &block);
     }
 
-    /// Adds a subtitle shown from `time` ms for `duration` ms.
-    pub fn text(&mut self, out: &mut Vec<u8>, time: i64, duration: u64, text: &str) {
+    /// Adds a subtitle of track `track` shown from `time` ms for `duration` ms.
+    pub fn text(&mut self, out: &mut Vec<u8>, track: u64, time: i64, duration: u64, text: &str) {
         self.open(out, time, false);
         let relative = (time - self.start.unwrap_or(time)) as i16;
         master(&mut self.body, 0xA0, |o| {
             let mut block = Vec::with_capacity(text.len() + 4);
-            size(&mut block, TEXT);
+            size(&mut block, track);
             block.extend_from_slice(&relative.to_be_bytes());
             block.push(0);
             block.extend_from_slice(text.as_bytes());

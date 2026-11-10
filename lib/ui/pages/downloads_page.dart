@@ -12,27 +12,28 @@ import '../../l10n/l10n.dart';
 import '../../models.dart';
 import '../../system_env.dart';
 import '../download_dialog.dart';
-import '../ffmpeg_dialog.dart';
 import '../common.dart';
 import '../theme.dart';
 import '../app_icons.dart';
 
-/// Asks what to download [item] as, then queues it.
+/// Asks what to download [item] as, then queues it; a live stream starts
+/// recording.
 Future<void> showDownloadChoice(BuildContext context, AppController controller, VideoItem item) async {
+  // A live stream is recorded as it comes, in the best the settings allow.
+  if (item.isLive) return controller.download(item, DownloadQuality.best);
   final choice = await showDialog<DownloadChoice>(
     context: context,
     builder: (context) => DownloadDialog(
       title: item.title,
       loadFormats: () => controller.downloadFormats(item.id),
       defaults: controller.downloads?.defaults ?? const DownloadDefaults(),
-      canMerge: controller.downloads?.canMerge ?? false,
       onCover: () => unawaited(_saveExtra(context, controller, () => controller.saveCover(item))),
       onSubtitles: () => unawaited(_chooseSubtitle(context, controller, item)),
     ),
   );
   if (choice == null || !context.mounted) return;
   if (choice.defaults != null) unawaited(controller.downloads?.setDefaults(choice.defaults!));
-  if (await ensureFfmpegForDownload(context, controller, choice.quality)) controller.download(item, choice.quality, selection: choice.selection);
+  controller.download(item, choice.quality, selection: choice.selection);
 }
 
 /// Runs [save] and says where the file went, with a button to show it.
@@ -213,6 +214,9 @@ class _DownloadTile extends StatelessWidget {
     switch (task.status) {
       case DownloadStatus.queued:
         return tr('Waiting');
+      case DownloadStatus.downloading when task.item.isLive:
+        if (task.finishing) return tr('Saving the recording…');
+        return [tr('Recording'), formatBytes(task.downloaded), formatSpeed(task.speed)].where((s) => s.isNotEmpty).join(' · ');
       case DownloadStatus.downloading:
         final parts = [
           if (task.fraction != null) '${(task.fraction! * 100).toStringAsFixed(1)}%',
@@ -275,9 +279,10 @@ class _DownloadTile extends StatelessWidget {
       ]),
       onTap: task.status == DownloadStatus.done ? () => controller.play(item) : null,
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (task.active) button(AppIcons.pauseFill, tr('Pause'), () => manager.pause(task.id)),
-        if (task.status == DownloadStatus.paused) button(AppIcons.playFill, tr('Resume'), () => manager.resume(task.id)),
-        if (task.active || task.status == DownloadStatus.paused) button(AppIcons.x, tr('Cancel'), () => manager.cancel(task.id)),
+        if (task.active && task.item.isLive && !task.finishing) button(AppIcons.stop, tr('Stop recording and save'), () => manager.pause(task.id)),
+        if (task.active && !task.item.isLive) button(AppIcons.pauseFill, tr('Pause'), () => manager.pause(task.id)),
+        if (task.status == DownloadStatus.paused && !task.item.isLive) button(AppIcons.playFill, tr('Resume'), () => manager.resume(task.id)),
+        if ((task.active || task.status == DownloadStatus.paused) && !task.finishing) button(AppIcons.x, tr('Cancel'), () => manager.cancel(task.id)),
         if (failed || task.status == DownloadStatus.cancelled) button(AppIcons.arrowsClockwise, tr('Retry'), () => manager.retry(task.id)),
         if (task.status == DownloadStatus.done && task.filePath != null)
           button(AppIcons.folderOpen, tr('Show in folder'), () => unawaited(openInExplorer(task.filePath!, select: true))),

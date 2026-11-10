@@ -631,8 +631,8 @@ const gemMaxViews = 50000;
 /// views, from channels not followed or watched.
 const freshMaxViews = 5000;
 
-/// The periods popular videos can be counted over.
-const explorePeriods = [SearchUploadDate.today, SearchUploadDate.week, SearchUploadDate.month, SearchUploadDate.year];
+/// The periods popular videos can be counted over; [SearchUploadDate.any] is all time.
+const explorePeriods = [SearchUploadDate.today, SearchUploadDate.week, SearchUploadDate.month, SearchUploadDate.year, SearchUploadDate.any];
 
 /// YouTube's `sp` for a zone shown by [mode]: the most viewed of [period],
 /// the newest, the most relevant (of the year, or of all time for 精选;

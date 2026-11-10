@@ -230,6 +230,7 @@ abstract final class AppIcons {
   static IconData get robot => filled ? const IconData(0xe762, fontFamily: 'Phosphor Fill') : const IconData(0xe762, fontFamily: 'Phosphor');
   static IconData get rows => filled ? const IconData(0xe5a2, fontFamily: 'Phosphor Fill') : const IconData(0xe5a2, fontFamily: 'Phosphor');
   static IconData get scanSmiley => filled ? const IconData(0xebb4, fontFamily: 'Phosphor Fill') : const IconData(0xebb4, fontFamily: 'Phosphor');
+  static IconData get scissors => filled ? const IconData(0xeae0, fontFamily: 'Phosphor Fill') : const IconData(0xeae0, fontFamily: 'Phosphor');
   static IconData get screencast => filled ? const IconData(0xe404, fontFamily: 'Phosphor Fill') : const IconData(0xe404, fontFamily: 'Phosphor');
   static IconData get scroll => filled ? const IconData(0xeb7a, fontFamily: 'Phosphor Fill') : const IconData(0xeb7a, fontFamily: 'Phosphor');
   static IconData get sealCheck => filled ? const IconData(0xe606, fontFamily: 'Phosphor Fill') : const IconData(0xe606, fontFamily: 'Phosphor');
@@ -267,6 +268,7 @@ abstract final class AppIcons {
   static const stackSimpleFill = IconData(0xe468, fontFamily: 'Phosphor Fill');
   static IconData get star => filled ? const IconData(0xe46a, fontFamily: 'Phosphor Fill') : const IconData(0xe46a, fontFamily: 'Phosphor');
   static const starFill = IconData(0xe46a, fontFamily: 'Phosphor Fill');
+  static IconData get stop => filled ? const IconData(0xe46c, fontFamily: 'Phosphor Fill') : const IconData(0xe46c, fontFamily: 'Phosphor');
   static IconData get subtitles => filled ? const IconData(0xe1a8, fontFamily: 'Phosphor Fill') : const IconData(0xe1a8, fontFamily: 'Phosphor');
   static IconData get subtitlesSlash => filled ? const IconData(0xe1a6, fontFamily: 'Phosphor Fill') : const IconData(0xe1a6, fontFamily: 'Phosphor');
   static IconData get sun => filled ? const IconData(0xe472, fontFamily: 'Phosphor Fill') : const IconData(0xe472, fontFamily: 'Phosphor');

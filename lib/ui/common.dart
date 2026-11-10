@@ -134,6 +134,23 @@ String formatPlaybackTime(Duration value) {
   return hours > 0 ? '$hours:$minutes:$seconds' : '${value.inMinutes}:$seconds';
 }
 
+/// How long ago [date] was, as YouTube puts it under a video: 3 days ago.
+String formatAgo(DateTime date, {DateTime? now}) {
+  final age = (now ?? DateTime.now()).difference(date);
+  final days = age.inDays;
+  final (count, one, many) = switch (age) {
+    _ when age.inMinutes < 1 => (0, '', ''),
+    _ when age.inHours < 1 => (age.inMinutes, tr('1 minute ago'), tr('{0} minutes ago', [age.inMinutes])),
+    _ when days < 1 => (age.inHours, tr('1 hour ago'), tr('{0} hours ago', [age.inHours])),
+    _ when days < 7 => (days, tr('1 day ago'), tr('{0} days ago', [days])),
+    _ when days < 30 => (days ~/ 7, tr('1 week ago'), tr('{0} weeks ago', [days ~/ 7])),
+    _ when days < 365 => (days ~/ 30, tr('1 month ago'), tr('{0} months ago', [days ~/ 30])),
+    _ => (days ~/ 365, tr('1 year ago'), tr('{0} years ago', [days ~/ 365])),
+  };
+  if (count == 0) return tr('Just now');
+  return count == 1 ? one : many;
+}
+
 String formatDate(DateTime date) => tr('{1}/{2}/{0}', [date.year, date.month, date.day]);
 
 /// An exact local start time for an upcoming stream.

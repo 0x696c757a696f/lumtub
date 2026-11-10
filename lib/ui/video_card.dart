@@ -181,6 +181,7 @@ class VideoRow extends StatelessWidget {
       if (upcomingStart != null) upcomingStart,
       if (item.channel.isNotEmpty) item.channel,
       if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
+      if (!item.isLive && !item.isUpcoming && item.published != null) formatAgo(item.published!),
       if (text && status == null && item.durationLabel.isNotEmpty) item.durationLabel,
     ].join(' · ');
     return InkWell(
@@ -489,6 +490,7 @@ class _VideoCardState extends State<VideoCard> {
       if (upcomingStart != null) upcomingStart,
       if (item.channel.isNotEmpty) item.channel,
       if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
+      if (!item.isLive && !item.isUpcoming && item.published != null) formatAgo(item.published!),
     ].join(' · ');
     // A picture and text on the page, as YouTube shows them: no box round,
     // unless a skin puts cards on a surface.
@@ -833,6 +835,7 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
             : entry('remove', AppIcons.thumbsDown, removeLabel),
       const PopupMenuDivider(),
       if (controller?.downloads != null && !item.isLive) entry('download', AppIcons.downloadSimple, tr('Downloads')),
+      if (item.isLive && (controller?.downloads?.canRecord ?? false)) entry('download', AppIcons.radioButton, tr('Record the live stream')),
       entry('copy', AppIcons.link, tr('Copy link')),
       entry('browser', AppIcons.arrowSquareOut, tr('Open in browser')),
     ],

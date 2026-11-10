@@ -9,6 +9,7 @@ import 'package:lumtub/downloads/download_manager.dart';
 import 'package:lumtub/downloads/download_models.dart';
 import 'package:lumtub/downloads/download_selection.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/ui/download_dialog.dart';
 import 'package:lumtub/video_codec.dart';
 
@@ -179,16 +180,13 @@ void main() {
     test('audio only takes the best m4a', () {
       final s = planDownload(parsed(), audioOnly: true).selection!;
       expect((s.audioOnly, s.audioId, s.videoId), (true, '140', null));
-      expect(s.format(merge: true), '140');
-      expect(s.containerArguments(merge: true), isEmpty);
+      expect(s.format(), '140');
     });
 
     test('yt-dlp format and container arguments', () {
       final s = planDownload(parsed(), codec: VideoCodec.av1, container: DownloadContainer.mp4).selection!;
-      expect(s.format(merge: true), '401+140');
-      expect(s.containerArguments(merge: true), ['--merge-output-format', 'mp4']);
-      expect(s.format(merge: false), 'b[height<=2160][ext=mp4]/b[height<=2160]/b[ext=mp4]/b');
-      expect(s.containerArguments(merge: false), isEmpty);
+      expect(s.joinFormat(), '401,140');
+      expect(s.format(), 'b[height<=2160][ext=mp4]/b[height<=2160]/b[ext=mp4]/b');
     });
 
     test('round-trips through json and ignores a broken one', () {
@@ -222,32 +220,33 @@ void main() {
     });
 
     final item = VideoItem(id: 'aaaaaaaaaaa', title: 'T', channel: 'C', url: 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
-    DownloadManager manager({String? ffmpeg}) => DownloadManager(
+    Future<Joined> joiner(JoinRequest request) async => (path: null, error: null, cut: const <(Duration, Duration)>[]);
+    DownloadManager manager({bool join = false}) => DownloadManager(
         file: File('${dir.path}/downloads.json'),
         ytDlpPath: 'yt-dlp',
         defaultDirectory: dir.path,
-        ffmpegDirectory: () => ffmpeg,
+        join: join ? joiner : null,
         // yt-dlp never starts.
         start: (exe, args, {environment}) => Completer<Process>().future,
       );
 
     test('locks the format ids and the container', () {
       final s = planDownload(parsed(), codec: VideoCodec.vp9, height: 1440, container: DownloadContainer.mkv).selection!;
-      final args = manager(ffmpeg: 'F').arguments(DownloadTask(item: item, quality: DownloadQuality.best, directory: 'D', selection: s));
-      expect(args[args.indexOf('--format') + 1], '271+251');
-      expect(args[args.indexOf('--merge-output-format') + 1], 'mkv');
+      final args = manager(join: true).arguments(DownloadTask(item: item, quality: DownloadQuality.best, directory: 'D', selection: s));
+      expect(args[args.indexOf('--format') + 1], '271,251');
+      expect(args, isNot(contains('--merge-output-format')));
       expect(args, isNot(contains('--remux-video')));
-      expect(args, contains('--ffmpeg-location'));
+      expect(args, isNot(contains('--ffmpeg-location')));
     });
 
     test('downloads the audio id alone without a merge', () {
       final s = planDownload(parsed(), audioOnly: true).selection!;
-      final args = manager(ffmpeg: 'F').arguments(DownloadTask(item: item, quality: DownloadQuality.audio, directory: 'D', selection: s));
+      final args = manager(join: true).arguments(DownloadTask(item: item, quality: DownloadQuality.audio, directory: 'D', selection: s));
       expect(args[args.indexOf('--format') + 1], '140');
       expect(args, isNot(contains('--merge-output-format')));
     });
 
-    test('without ffmpeg takes a single-file format at most that tall', () {
+    test('without the core to join takes a single-file format at most that tall', () {
       final s = planDownload(parsed(), codec: VideoCodec.h264).selection!;
       final args = manager().arguments(DownloadTask(item: item, quality: DownloadQuality.best, directory: 'D', selection: s));
       expect(args[args.indexOf('--format') + 1], startsWith('b[height<=1080]'));
@@ -260,9 +259,9 @@ void main() {
       expect(task.selection, isNull);
       expect(task.quality, DownloadQuality.p720);
       expect(task.qualityLabel, '720p');
-      final args = manager(ffmpeg: 'F').arguments(task);
+      final args = manager(join: true).arguments(task);
       expect(args[args.indexOf('--format') + 1], contains('height<=720'));
-      expect(args[args.indexOf('--merge-output-format') + 1], 'mp4/mkv');
+      expect(args[args.indexOf('--format') + 1], contains(','));
     });
 
     test('a task with a selection and the remembered choices survive a restart', () async {

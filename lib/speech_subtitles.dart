@@ -7,6 +7,7 @@ import 'dart:math';
 import 'package:ffi/ffi.dart';
 import 'package:http/http.dart' as http;
 
+import 'app_log.dart';
 import 'background_json.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
@@ -16,8 +17,8 @@ import 'translation.dart' show TranslationException;
 
 /// 语音识别: subtitles for a video that has none, from its audio sent to an
 /// OpenAI-compatible `/audio/transcriptions`. Nothing is decoded here: yt-dlp
-/// fetches the smallest audio stream, ffmpeg cuts long ones by copying
-/// packets, and the timed text comes back to lumtub_core to become WebVTT.
+/// fetches the smallest audio stream, lumtub_core cuts long ones by
+/// copying whole clusters, and the timed text comes back to lumtub_core to become WebVTT.
 class SpeechRecognizer {
   SpeechRecognizer(this._client, {required String baseUrl, required this.key, required this.model}) : baseUrl = baseUrl.replaceAll(RegExp(r'/+$'), '');
   final http.Client _client;
@@ -65,17 +66,11 @@ class SpeechRecognizer {
   }
 }
 
-/// A video too long for one request, while ffmpeg, which cuts it, is not
-/// installed. The audio fetched stays for the next try.
-class SpeechNeedsFfmpeg extends TranslationException {
-  SpeechNeedsFfmpeg() : super(tr('This video is long and needs ffmpeg (the same one downloads use) to be recognized in parts.'));
-}
-
 /// One stretch of audio to recognize and where in the video it starts.
 typedef SpeechPart = ({File file, Duration offset});
 
-/// Audio fetched for 语音识别, cut into parts each [SpeechAudio.partBytes] or
-/// smaller when ffmpeg is there.
+/// Audio fetched for 语音识别, cut by lumtub_core into parts each
+/// [SpeechAudio.partBytes] or smaller.
 class SpeechAudio {
   /// What one request may carry: the services take 25 MB at most.
   static const partBytes = 20 * 1024 * 1024;
@@ -92,6 +87,8 @@ class SpeechAudio {
         '--no-playlist',
         '--no-progress',
         '--no-part',
+        // Left as YouTube sends it, which lumtub_core cuts.
+        '--fixup', 'never',
         if (proxy != null) ...['--proxy', proxy],
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory],
         if (deno != null) ...['--js-runtimes', 'deno:$deno'],
@@ -102,8 +99,7 @@ class SpeechAudio {
         '--', 'https://www.youtube.com/watch?v=$videoId',
       ];
 
-  /// The audio of [videoId] in parts. Without ffmpeg a long video stays
-  /// whole, when it is small enough for one request.
+  /// The audio of [videoId] in parts.
   static Future<List<SpeechPart>> fetch(
     String videoId,
     Directory folder, {
@@ -112,10 +108,9 @@ class SpeechAudio {
     String? proxy,
     String? cacheDirectory,
     String? deno,
-    String? ffmpeg,
   }) async {
     await folder.create(recursive: true);
-    // What an earlier try fetched, when it stopped for ffmpeg.
+    // What an earlier try fetched.
     final fetched = File('${folder.path}${Platform.pathSeparator}audio.txt');
     var printed = await fetched.exists() ? (await fetched.readAsString()).trim() : null;
     if (printed == null || !await File(printed.substring(printed.indexOf('|') + 1)).exists()) {
@@ -138,42 +133,16 @@ class SpeechAudio {
     final length = Duration(milliseconds: (seconds * 1000).round());
     final count = max((size / partBytes).ceil(), (length.inSeconds / partLength.inSeconds).ceil());
     if (count <= 1) return [(file: audio, offset: Duration.zero)];
-    if (ffmpeg == null) {
-      if (size <= partBytes) return [(file: audio, offset: Duration.zero)];
-      throw SpeechNeedsFfmpeg();
+    final every = Duration(seconds: (length.inSeconds / count).ceil() + 1);
+    final stem = '${folder.path}${Platform.pathSeparator}part';
+    final cut = await Isolate.run(() => NativeCore.cutAudio(audio.path, stem, every));
+    final parts = cut.parts;
+    if (parts == null) {
+      logWarn('Speech audio not cut: ${cut.error}');
+      throw TranslationException(tr('Could not split the audio'));
     }
-    return _cut(audio, folder, ffmpeg, Duration(seconds: (length.inSeconds / count).ceil() + 1));
+    return [for (final p in parts) (file: File(p.path), offset: Duration(milliseconds: (p.start * 1000).round()))];
   }
-
-  /// [audio] cut every [every] by copying packets, with each part's start
-  /// as ffmpeg's segment list gives it.
-  static Future<List<SpeechPart>> _cut(File audio, Directory folder, String ffmpeg, Duration every) async {
-    final extension = audio.path.substring(audio.path.lastIndexOf('.'));
-    final sep = Platform.pathSeparator;
-    final list = File('${folder.path}${sep}parts.csv');
-    final result = await runWithTimeout(
-      ffmpeg,
-      [
-        '-hide_banner', '-loglevel', 'error', '-nostdin', '-y',
-        '-i', audio.path,
-        '-map', '0:a:0', '-c', 'copy',
-        '-f', 'segment', '-segment_time', '${every.inSeconds}', '-reset_timestamps', '1',
-        '-segment_list', list.path, '-segment_list_type', 'csv',
-        '${folder.path}${sep}part%03d$extension',
-      ],
-      timeout: const Duration(minutes: 5),
-      onStart: (process) => lowerPriority(process.pid),
-    );
-    if (result.exitCode != 0 || !await list.exists()) throw TranslationException(tr('Could not split the audio'));
-    return parseSegmentList(await list.readAsString(), folder);
-  }
-
-  /// The parts ffmpeg's csv segment list names: `file,start,end` a line.
-  static List<SpeechPart> parseSegmentList(String csv, Directory folder) => [
-        for (final line in const LineSplitter().convert(csv))
-          if (line.split(',') case [final name, final start, ...] when double.tryParse(start) != null)
-            (file: File('${folder.path}${Platform.pathSeparator}$name'), offset: Duration(milliseconds: (double.parse(start) * 1000).round())),
-      ];
 }
 
 /// WebVTT of the answers to each part, by lumtub_core.

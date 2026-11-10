@@ -159,7 +159,7 @@ class VideoRepository {
   final String? cacheDirectory;
   /// Deno for YouTube's JavaScript challenges.
   final String? deno;
-  /// Put before PATH for yt-dlp, so it finds Deno and ffmpeg even though
+  /// Put before PATH for yt-dlp, so it finds Deno even though
   /// [Platform.environment] still holds the PATH from before the app
   /// added them.
   final List<String> toolDirectories;
@@ -219,6 +219,7 @@ class VideoRepository {
         '--extractor-retries', '3',
         '--flat-playlist',
         '--lazy-playlist',
+        '--extractor-args', 'youtubetab:approximate_date',
         '--dump-json',
         '--', url,
       ];

@@ -4,6 +4,8 @@
 # reports, its log and pictures of the screen in <output>.
 #
 #   smoke.sh <DMG> <output folder>
+#
+# FFMPEG names the ffmpeg that makes the generated video.
 set -uo pipefail
 
 dmg=$1
@@ -15,7 +17,7 @@ mount=$(mktemp -d)
 hdiutil attach -nobrowse -readonly -mountpoint "$mount" "$dmg" > /dev/null
 ditto "$mount/Lumtub.app" "$out/Lumtub.app"
 hdiutil detach "$mount" > /dev/null
-ffmpeg="$out/Lumtub.app/Contents/MacOS/ffmpeg"
+ffmpeg=${FFMPEG:-ffmpeg}
 "$ffmpeg" -hide_banner -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=30 -f lavfi -i sine=frequency=440 \
   -t 15 -c:v h264_videotoolbox -b:v 4M -c:a aac -shortest "$out/test.mp4" \
   || "$ffmpeg" -hide_banner -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=30 -f lavfi -i sine=frequency=440 \

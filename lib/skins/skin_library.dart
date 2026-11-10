@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../app_log.dart';
-import '../ffmpeg_component.dart' show extractZip;
+import '../zip_archive.dart' show extractZip;
 import 'jsonc.dart';
 import 'skin.dart';
 

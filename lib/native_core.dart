@@ -10,6 +10,10 @@ import 'android_python.dart';
 import 'app_log.dart';
 import 'l10n/l10n.dart';
 
+/// A joined file, or why not, and the stretches (from, to) of the
+/// original left out of it.
+typedef Joined = ({String? path, String? error, List<(Duration, Duration)> cut});
+
 /// lumtub_core, the Rust library built from native/lumtub_core and
 /// shipped next to lumtub.exe. The recommendations, the format policy,
 /// the filters (block lists, Shorts, language, bait) and the download
@@ -315,23 +319,50 @@ class NativeCore {
 
   int Function()? _processCpu;
 
-  /// Joins a downloaded picture and sound without ffmpeg into [stem] plus
-  /// the extension that fits them (.mp4, or .webm/.mkv for Opus sound);
-  /// the path written, or why not. It reads and writes the whole video,
-  /// so run it on another isolate.
-  static ({String? path, String? error}) join(String video, String audio, String stem) {
+  /// Joins a downloaded picture and sound without ffmpeg, as [request]
+  /// (`{video, audio, out, container, subtitles, title, cover, cut}`, see
+  /// JoinRequest) asks; the path written and the stretches left out, or
+  /// why not. It reads and writes the whole video, so run it on another
+  /// isolate.
+  static Joined join(Map<String, Object?> request) {
+    const none = <(Duration, Duration)>[];
     final core = instance;
-    if (core == null) return (path: null, error: 'lumtub_core is missing');
+    if (core == null) return (path: null, error: 'lumtub_core is missing', cut: none);
     try {
       final call = core._join ??= core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_join');
-      final answer = core.take(core.withText(jsonEncode({'video': video, 'audio': audio, 'out': stem}), call));
+      final answer = core.take(core.withText(jsonEncode(request), call));
       final map = answer == null ? null : jsonDecode(answer);
-      if (map is Map && map['path'] is String) return (path: map['path'] as String, error: null);
-      return (path: null, error: map is Map ? '${map['error']}' : 'the files could not be joined');
+      if (map is Map && map['path'] is String) {
+        final cut = [
+          for (final c in (map['cut'] as List? ?? const []).whereType<List>())
+            if (c.length == 2 && c[0] is int && c[1] is int) (Duration(milliseconds: c[0] as int), Duration(milliseconds: c[1] as int)),
+        ];
+        return (path: map['path'] as String, error: null, cut: cut);
+      }
+      return (path: null, error: map is Map ? '${map['error']}' : 'the files could not be joined', cut: none);
     } on ArgumentError {
-      return (path: null, error: 'lumtub_core is too old to join files');
+      return (path: null, error: 'lumtub_core is too old to join files', cut: none);
     } on FormatException {
-      return (path: null, error: 'lumtub_core is too old to join files');
+      return (path: null, error: 'lumtub_core is too old to join files', cut: none);
+    }
+  }
+
+  /// [audio] (WebM or fragmented MP4) cut into parts of about [every],
+  /// named [stem] plus a number, by copying whole clusters or fragments;
+  /// each part's file and start, or why not. Run it on another isolate.
+  static ({List<({String path, double start})>? parts, String? error}) cutAudio(String audio, String stem, Duration every) {
+    final core = instance;
+    if (core == null) return (parts: null, error: 'lumtub_core is missing');
+    try {
+      final call = core._cutAudio ??= core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_cut_audio');
+      final answer = core.take(core.withText(jsonEncode({'input': audio, 'stem': stem, 'every': every.inMilliseconds / 1000}), call));
+      final map = answer == null ? null : jsonDecode(answer);
+      if (map is Map && map['parts'] is List) {
+        return (parts: [for (final p in (map['parts'] as List).cast<Map>()) (path: p['path'] as String, start: (p['start'] as num).toDouble())], error: null);
+      }
+      return (parts: null, error: map is Map ? '${map['error']}' : 'the audio could not be cut');
+    } on ArgumentError {
+      return (parts: null, error: 'lumtub_core is too old to cut audio');
     }
   }
 
@@ -339,6 +370,49 @@ class NativeCore {
   static bool get canJoin => instance?.library.providesSymbol('lumtub_join') ?? false;
 
   Pointer<Utf8> Function(Pointer<Uint8>, int)? _join;
+
+  /// Whether this core can record a live stream.
+  static bool get canRecord => instance?.library.providesSymbol('lumtub_record_start') ?? false;
+
+  Map<String, dynamic> _answer(String? text) {
+    final map = text == null ? null : jsonDecode(text);
+    return map is Map<String, dynamic> ? map : const {};
+  }
+
+  /// Starts recording a live stream's [video] and [audio] addresses (of
+  /// numbered fragments) into `stem.live-video.part` and
+  /// `stem.live-audio.part`; the recording's id, or why not.
+  ({int? id, String? error}) recordStart({required String video, required String audio, required String stem, String? userAgent, String? proxy}) {
+    Map<String, Object?> target(String url) => {'url': url, 'size': 0, if (userAgent != null) 'user_agent': userAgent, if (proxy != null) 'proxy': proxy, 'live': 'record'};
+    final call = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_record_start');
+    final map = _answer(take(withText(jsonEncode({'video': target(video), 'audio': target(audio), 'stem': stem}), call)));
+    return map['id'] is int ? (id: map['id'] as int, error: null) : (id: null, error: '${map['error'] ?? 'the recording could not start'}');
+  }
+
+  /// How recording [id] goes: `bytes`, `seconds`, `running`, `renew` (an
+  /// address expired), `error`, and `log` lines; empty for no such one.
+  Map<String, dynamic> recordState(int id) {
+    final call = library.lookupFunction<Pointer<Utf8> Function(Uint64), Pointer<Utf8> Function(int)>('lumtub_record_state');
+    return _answer(take(call(id)));
+  }
+
+  /// New addresses for recording [id].
+  bool recordRenew(int id, String video, String audio) {
+    final call = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_record_renew');
+    return withText(jsonEncode({'id': id, 'video': video, 'audio': audio}), call);
+  }
+
+  /// Stops recording [id] once its files are written; why a stream failed,
+  /// or null. It waits for the fragments being fetched, so run it on
+  /// another isolate.
+  static String? recordStop(int id) {
+    final core = instance;
+    if (core == null) return 'lumtub_core is missing';
+    final call = core.library.lookupFunction<Pointer<Utf8> Function(Uint64), Pointer<Utf8> Function(int)>('lumtub_record_stop');
+    final error = core._answer(core.take(call(id)))['error'];
+    return error == null ? null : '$error';
+  }
+  Pointer<Utf8> Function(Pointer<Uint8>, int)? _cutAudio;
 
   /// Calls [call] with [text] as UTF-8 in native memory.
   T withText<T>(String text, T Function(Pointer<Uint8> bytes, int length) call) => withBytes(utf8.encode(text), call);
@@ -366,7 +440,7 @@ class NativeCore {
   }
 }
 
-/// [process] and everything it starts (yt-dlp's ffmpeg and Deno), kept in
+/// [process] and everything it starts (yt-dlp's Deno), kept in
 /// a job object: [kill] ends all of them, and whatever is still running
 /// when [process] exits, or when Lumtub itself exits or crashes, ends too.
 /// Without lumtub_core.dll it is [process] alone.

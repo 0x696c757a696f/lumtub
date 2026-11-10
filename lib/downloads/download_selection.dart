@@ -86,25 +86,21 @@ class DownloadSelection {
   /// What the downloads list shows, such as `VP9 · 1080p · MP4`.
   String get label => audioOnly ? tr('Audio only') : '${codec?.label ?? ''} · ${height}p · ${container.label}';
 
-  /// Whether ffmpeg has to join a video and an audio stream.
+  /// Whether a video and an audio stream are joined.
   bool get needsMerge => !audioOnly && videoId != null && audioId != null;
 
-  /// yt-dlp's `--format`. Without ffmpeg ([merge] false) the streams cannot
-  /// be joined, so the best single-file format of that height is taken.
-  String format({required bool merge}) {
+  /// yt-dlp's `--format` when the streams are not joined: the stream
+  /// itself, or, when two would have to be joined but cannot be, the best
+  /// single-file format of that height.
+  String format() {
     if (audioOnly) return audioId ?? 'ba';
     if (!needsMerge) return videoId ?? 'b';
-    if (merge) return '$videoId+$audioId';
     return 'b[height<=$height][ext=mp4]/b[height<=$height]/b[ext=mp4]/b';
   }
 
-  /// The two streams as separate files, picture first, for a download
-  /// joined without ffmpeg.
+  /// The two streams as separate files, picture first, for the core to
+  /// join into [container].
   String joinFormat() => '$videoId,$audioId';
-
-  /// Extra arguments for the container, none when nothing is merged.
-  List<String> containerArguments({required bool merge}) =>
-      merge && needsMerge ? ['--merge-output-format', container.name] : const [];
 
   Map<String, dynamic> toJson() => {
         if (audioOnly) 'audioOnly': true,

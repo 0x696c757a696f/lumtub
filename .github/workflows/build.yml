@@ -694,8 +694,9 @@ jobs:
     # packing a DMG thinned to each.
     runs-on: macos-15
     env:
-      # LGPL ffmpeg and ffprobe for each CPU, from
-      # https://github.com/dfloresc/ffmpeg-macos-builds; sums from its SHA256SUMS.
+      # An LGPL ffmpeg from https://github.com/dfloresc/ffmpeg-macos-builds
+      # that makes the smoke test's video (the app carries none); sum from
+      # its SHA256SUMS.
       FFMPEG_RELEASE: v9.0.1-1
     permissions:
       contents: read
@@ -765,19 +766,14 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
         run: flutter build macos --release --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE=macos --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
 
-      - name: macOS - download ffmpeg
+      - name: macOS - download ffmpeg for the smoke test
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
-          for arch in arm64 x86_64; do
-            case $arch in
-              arm64) sum=d0ea5ea43a5adfa5d01d4137c9e5a61728b800a812f12917a26fd7af0c14c03a ;;
-              x86_64) sum=d63ad731cbf1eb71c2055130fedfbd7e49edd60a9815ab763e72ba802c1ac666 ;;
-            esac
-            name="ffmpeg-${FFMPEG_RELEASE#v}-lgpl-macos-$arch"
-            curl -sSfL --retry 4 -o "$RUNNER_TEMP/$name.tar.xz" "https://github.com/dfloresc/ffmpeg-macos-builds/releases/download/$FFMPEG_RELEASE/$name.tar.xz"
-            echo "$sum  $RUNNER_TEMP/$name.tar.xz" | shasum -a 256 -c -
-            tar -xJf "$RUNNER_TEMP/$name.tar.xz" -C "$RUNNER_TEMP"
-            mv "$RUNNER_TEMP/$name" "$RUNNER_TEMP/ffmpeg-$arch"
-          done
+          name="ffmpeg-${FFMPEG_RELEASE#v}-lgpl-macos-arm64"
+          curl -sSfL --retry 4 -o "$RUNNER_TEMP/$name.tar.xz" "https://github.com/dfloresc/ffmpeg-macos-builds/releases/download/$FFMPEG_RELEASE/$name.tar.xz"
+          echo "d0ea5ea43a5adfa5d01d4137c9e5a61728b800a812f12917a26fd7af0c14c03a  $RUNNER_TEMP/$name.tar.xz" | shasum -a 256 -c -
+          tar -xJf "$RUNNER_TEMP/$name.tar.xz" -C "$RUNNER_TEMP"
+          echo "FFMPEG=$RUNNER_TEMP/$name/bin/ffmpeg" >> "$GITHUB_ENV"
 
       - name: macOS - import the signing certificate
         env:
@@ -811,10 +807,8 @@ jobs:
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
           app=build/macos/Build/Products/Release/Lumtub.app
-          release=${FFMPEG_RELEASE#v}
-          ffmpeg_version="FFmpeg ${release%-*} (LGPL, dfloresc/ffmpeg-macos-builds $FFMPEG_RELEASE)"
-          macos/packaging/package.sh "$app" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg-arm64" "$ffmpeg_version" "Lumtub_${LUMTUB_VERSION}_macos-arm64.dmg" arm64
-          macos/packaging/package.sh "$app" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg-x86_64" "$ffmpeg_version" "Lumtub_${LUMTUB_VERSION}_macos-x64.dmg" x86_64
+          macos/packaging/package.sh "$app" "$LUMTUB_CORE_DLL" "Lumtub_${LUMTUB_VERSION}_macos-arm64.dmg" arm64
+          macos/packaging/package.sh "$app" "$LUMTUB_CORE_DLL" "Lumtub_${LUMTUB_VERSION}_macos-x64.dmg" x86_64
 
       - name: macOS - smoke test the Apple silicon DMG
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}

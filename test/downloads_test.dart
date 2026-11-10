@@ -6,7 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/video_codec.dart';
 import 'package:lumtub/downloads/download_manager.dart';
 import 'package:lumtub/downloads/download_models.dart';
+import 'package:lumtub/downloads/download_selection.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/sponsor_block.dart';
 
 class FakeProcess implements Process {
@@ -42,6 +44,40 @@ class FakeProcess implements Process {
   IOSink get stdin => throw UnimplementedError();
 }
 
+/// Records by writing a little to each file every call of [state].
+class FakeRecorder implements LiveRecorder {
+  final stems = <String>[];
+  final stopped = <int>[];
+  var _bytes = 0;
+
+  @override
+  Future<int> start(String videoId, String stem) async {
+    stems.add(stem);
+    for (final f in DownloadManager.recordFiles(stem)) {
+      File(f).writeAsStringSync('');
+    }
+    return stems.length;
+  }
+
+  @override
+  ({int bytes, bool running, bool renew, String? error}) state(int id) {
+    for (final f in DownloadManager.recordFiles(stems[id - 1])) {
+      File(f).writeAsStringSync('fragment', mode: FileMode.append);
+    }
+    _bytes += 16;
+    return (bytes: _bytes, running: true, renew: false, error: null);
+  }
+
+  @override
+  Future<void> renew(int id, String videoId) async {}
+
+  @override
+  Future<String?> stop(int id) async {
+    stopped.add(id);
+    return null;
+  }
+}
+
 VideoItem video(String id) => VideoItem(id: id, title: 'Video $id', channel: 'Channel', url: 'https://www.youtube.com/watch?v=$id');
 
 void main() {
@@ -73,14 +109,13 @@ void main() {
     });
   });
 
-  test('formats depend on quality and ffmpeg', () {
-    expect(DownloadQuality.audio.format(merge: false), 'ba[ext=m4a]/ba');
-    expect(DownloadQuality.best.format(merge: true), 'bv*+ba/b');
-    expect(DownloadQuality.p1080.format(merge: true), contains('bv*[height<=1080]'));
-    expect(DownloadQuality.p720.format(merge: true), contains('height<=720'));
-    // Without ffmpeg nothing may ask for a merge.
+  test('formats depend on quality and whether the core joins', () {
+    expect(DownloadQuality.audio.format(), 'ba[ext=m4a]/ba');
+    expect(DownloadQuality.p1080.joinFormat(), startsWith('bv[height<=1080]/bv,'));
+    expect(DownloadQuality.p720.format(), contains('height<=720'));
+    // yt-dlp never merges: nothing may ask for it.
     for (final q in DownloadQuality.values) {
-      expect(q.format(merge: false), isNot(contains('+')));
+      expect(q.format(), isNot(contains('+')));
     }
   });
 
@@ -116,7 +151,7 @@ void main() {
     });
 
     final joined = <List<String>>[];
-    DownloadManager manager({String? ffmpeg, List<SkipSegment> segments = const [], Future<({String? path, String? error})> Function(String video, String audio, String stem)? join}) => _track(managers, DownloadManager(
+    DownloadManager manager({List<SkipSegment> segments = const [], Future<Joined> Function(JoinRequest request)? join, Future<List<int>?> Function(String id)? cover, bool cutSponsors = false, LiveRecorder? recorder}) => _track(managers, DownloadManager(
           file: File('${dir.path}/downloads.json'),
           ytDlpPath: 'yt-dlp',
           defaultDirectory: '${dir.path}/videos',
@@ -127,11 +162,12 @@ void main() {
             lastEnvironment = environment ?? {};
             return process;
           },
-          ffmpegDirectory: () => ffmpeg,
-          options: () => const DownloadOptions(proxy: 'http://127.0.0.1:7890', deno: 'deno.exe', subtitleLanguages: '(zh|en).*', autoSubtitles: true),
+          options: () => DownloadOptions(proxy: 'http://127.0.0.1:7890', deno: 'deno.exe', subtitleLanguages: '(zh|en).*', autoSubtitles: true, cutSponsors: cutSponsors),
           sponsorSegments: (id) async => segments,
           onFinished: finished.add,
           join: join,
+          cover: cover,
+          recorder: recorder,
         ));
 
     Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 80));
@@ -248,7 +284,7 @@ void main() {
       expect(m.tasks, hasLength(1));
     });
 
-    test('arguments carry the proxy, Deno, format and subtitles; ffmpeg enables merging', () {
+    test('arguments carry the proxy, Deno, format and subtitles, and never let yt-dlp run ffmpeg', () {
       final without = manager().arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.best, directory: 'D'));
       expect(without, containsAllInOrder(['--proxy', 'http://127.0.0.1:7890']));
       expect(without, containsAllInOrder(['--js-runtimes', 'deno:deno.exe']));
@@ -256,24 +292,23 @@ void main() {
       expect(without, containsAll(['--write-subs', '--write-auto-subs', '--write-info-json', '--newline']));
       expect(without, isNot(contains('--merge-output-format')));
       expect(without[without.indexOf('--format') + 1], isNot(contains('+')));
+      expect(without, containsAllInOrder(['--fixup', 'never']));
       expect(without.last, 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
-
-      final merged = manager(ffmpeg: 'F').arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.best, directory: 'D'));
-      expect(merged, containsAllInOrder(['--merge-output-format', 'mp4/mkv']));
-      expect(merged, containsAllInOrder(['--ffmpeg-location', 'F']));
-      expect(merged[merged.indexOf('--format') + 1], contains('+'));
 
       final audio = manager().arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.audio, directory: 'D'));
       expect(audio, isNot(contains('--write-subs')));
     });
 
-    test('without ffmpeg but with a joiner, the two streams come as files that are joined into one', () async {
+    test('with a joiner, the two streams come as files that are joined into one', () async {
       joined.clear();
-      final m = manager(join: (video, audio, stem) async {
-        joined.add([video, audio, stem]);
-        final out = '$stem.webm';
+      final requests = <JoinRequest>[];
+      final m = manager(cover: (id) async => [0xFF, 0xD8, 1], join: (r) async {
+        requests.add(r);
+        expect(File(r.cover!).readAsBytesSync(), [0xFF, 0xD8, 1]);
+        joined.add([r.video, r.audio, r.stem, r.container]);
+        final out = '${r.stem}.webm';
         File(out).writeAsStringSync('joined');
-        return (path: out, error: null);
+        return (path: out, error: null, cut: const <(Duration, Duration)>[]);
       });
       expect(m.canMerge, isTrue);
       final best = m.arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.p720, directory: 'D'));
@@ -281,6 +316,8 @@ void main() {
       expect(best, containsAllInOrder(['-o', '%(title).80B [%(id)s].f%(format_id)s.%(ext)s']));
       expect(best, containsAllInOrder(['-o', 'infojson:%(title).80B [%(id)s].%(ext)s', '-o', 'subtitle:%(title).80B [%(id)s].%(ext)s']));
       expect(best, isNot(contains('--merge-output-format')));
+      expect(best, isNot(contains('--ffmpeg-location')));
+      expect(best, containsAllInOrder(['--fixup', 'never']));
       final audio = m.arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.audio, directory: 'D'));
       expect(audio[audio.indexOf('--format') + 1], 'ba[ext=m4a]/ba');
 
@@ -288,27 +325,142 @@ void main() {
       await until(() => processes.isNotEmpty);
       final picture = File('${dir.path}/videos/Video [aaaaaaaaaaa].f137.mp4')..createSync(recursive: true);
       final sound = File('${dir.path}/videos/Video [aaaaaaaaaaa].f251.webm')..createSync(recursive: true);
+      File('${dir.path}/videos/Video [aaaaaaaaaaa].en-orig.vtt').writeAsStringSync('WEBVTT');
+      File('${dir.path}/videos/Video [aaaaaaaaaaa].zh-Hans.vtt').writeAsStringSync('WEBVTT');
+      File('${dir.path}/videos/Video [aaaaaaaaaaa].info.json').writeAsStringSync('{}');
       processes[0].out('lumtub-file|${picture.path}');
       processes[0].out('lumtub-file|${sound.path}');
       await processes[0].exit(0);
       final task = m.taskFor('aaaaaaaaaaa')!;
       await until(() => task.status == DownloadStatus.done);
       expect(task.status, DownloadStatus.done);
-      expect(joined.single, [picture.path, sound.path, '${dir.path}/videos/Video [aaaaaaaaaaa]']);
+      expect(joined.single, [picture.path, sound.path, '${dir.path}/videos/Video [aaaaaaaaaaa]', 'auto']);
       expect(task.filePath, '${dir.path}/videos/Video [aaaaaaaaaaa].webm');
       expect(picture.existsSync() || sound.existsSync(), isFalse);
+      expect(requests.single.subtitles.map((s) => s.language), ['en', 'zh-Hans']);
+      expect(requests.single.title, 'Video aaaaaaaaaaa');
+      // The cover went inside; its file is gone.
+      expect(File(requests.single.cover!).existsSync(), isFalse);
 
-      final fails = manager(join: (video, audio, stem) async => (path: null, error: 'sound other than AAC, Opus or Dolby'));
-      fails.add(video('ccccccccccc'), DownloadQuality.best);
+      m.add(video('bbbbbbbbbbb'), DownloadQuality.best, selection: const DownloadSelection(codec: VideoCodec.vp9, height: 1080, videoId: '248', audioId: '251', container: DownloadContainer.mp4));
       await until(() => processes.length > 1);
+      expect(started.last[started.last.indexOf('--format') + 1], '248,251');
+      final p2 = File('${dir.path}/videos/Video [bbbbbbbbbbb].f248.webm')..createSync(recursive: true);
+      final a2 = File('${dir.path}/videos/Video [bbbbbbbbbbb].f251.webm')..createSync(recursive: true);
+      processes[1].out('lumtub-file|${p2.path}');
+      processes[1].out('lumtub-file|${a2.path}');
+      await processes[1].exit(0);
+      await until(() => m.taskFor('bbbbbbbbbbb')!.status == DownloadStatus.done);
+      expect(joined.last.last, 'mp4');
+
+      final fails = manager(join: (r) async => (path: null, error: 'sound other than AAC, Opus or Dolby', cut: const <(Duration, Duration)>[]));
+      fails.add(video('ccccccccccc'), DownloadQuality.best);
+      await until(() => processes.length > 2);
       final p = File('${dir.path}/videos/Video [ccccccccccc].f248.webm')..createSync(recursive: true);
       final a = File('${dir.path}/videos/Video [ccccccccccc].f251.webm')..createSync(recursive: true);
-      processes[1].out('lumtub-file|${p.path}');
-      processes[1].out('lumtub-file|${a.path}');
-      await processes[1].exit(0);
+      processes[2].out('lumtub-file|${p.path}');
+      processes[2].out('lumtub-file|${a.path}');
+      await processes[2].exit(0);
       final failed = fails.taskFor('ccccccccccc')!;
       await until(() => failed.status == DownloadStatus.failed);
       expect(failed.error, 'sound other than AAC, Opus or Dolby');
+    });
+
+    test('cut sponsor segments leave the file, and the saved times move past them', () async {
+      const sec = Duration(seconds: 1);
+      final segments = [SkipSegment(sec * 10, sec * 20, 'sponsor'), SkipSegment(sec * 50, sec * 60, 'selfpromo')];
+      final requests = <JoinRequest>[];
+      final m = manager(segments: segments, cutSponsors: true, join: (r) async {
+        requests.add(r);
+        final out = '${r.stem}.mp4';
+        File(out).writeAsStringSync('joined');
+        // The core cut 12 s to 18 s of the first (its keyframes) and nothing of the second.
+        return (path: out, error: null, cut: [(sec * 12, sec * 18)]);
+      });
+      m.add(video('aaaaaaaaaaa'), DownloadQuality.best);
+      await until(() => processes.isNotEmpty);
+      final picture = File('${dir.path}/videos/Video [aaaaaaaaaaa].f137.mp4')..createSync(recursive: true);
+      final sound = File('${dir.path}/videos/Video [aaaaaaaaaaa].f140.m4a')..createSync(recursive: true);
+      File('${dir.path}/videos/Video [aaaaaaaaaaa].info.json').writeAsStringSync(jsonEncode({
+        'id': 'aaaaaaaaaaa',
+        'duration': 100,
+        'chapters': [
+          {'start_time': 0, 'end_time': 14, 'title': 'One'},
+          {'start_time': 14, 'end_time': 17, 'title': 'Ad'},
+          {'start_time': 17, 'end_time': 100, 'title': 'Two'},
+        ],
+      }));
+      processes[0].out('lumtub-file|${picture.path}');
+      processes[0].out('lumtub-file|${sound.path}');
+      await processes[0].exit(0);
+      final task = m.taskFor('aaaaaaaaaaa')!;
+      await until(() => task.status == DownloadStatus.done);
+      expect(requests.single.toJson()['cut'], [[10.0, 20.0], [50.0, 60.0]]);
+      final local = LocalVideo.read(File(task.filePath!));
+      expect(local.info['duration'], 94);
+      expect([for (final c in local.info['chapters'] as List) [c['title'], c['start_time'], c['end_time']]], [['One', 0, 12], ['Two', 12, 94]]);
+      expect([for (final s in local.segments) (s.start, s.end, s.category)], [(sec * 10, sec * 14, 'sponsor'), (sec * 44, sec * 54, 'selfpromo')]);
+    });
+
+    test('a live stream is recorded until stopped, then joined into its file', () async {
+      final recorder = FakeRecorder();
+      final requests = <JoinRequest>[];
+      final m = manager(recorder: recorder, join: (r) async {
+        requests.add(r);
+        final out = '${r.stem}.mp4';
+        File(out).writeAsStringSync('joined');
+        return (path: out, error: null, cut: const <(Duration, Duration)>[]);
+      });
+      expect(m.canRecord, isTrue);
+      // Recordings take no download place.
+      m.add(video('aaaaaaaaaaa'), DownloadQuality.best);
+      m.add(video('bbbbbbbbbbb'), DownloadQuality.best);
+      m.add(video('lllllllllll').withLiveStatus('is_live'), DownloadQuality.best);
+      final task = m.taskFor('lllllllllll')!;
+      await until(() => recorder.stems.isNotEmpty && task.downloaded > 0);
+      expect(processes, hasLength(2));
+      expect(task.status, DownloadStatus.downloading);
+      final stem = recorder.stems.single;
+      expect(stem, startsWith('${dir.path}/videos${Platform.pathSeparator}Video lllllllllll [lllllllllll] '));
+      m.pause('lllllllllll');
+      await until(() => task.status == DownloadStatus.done);
+      expect(recorder.stopped, [1]);
+      expect(requests.single.video, '$stem.live-video.part');
+      expect(requests.single.audio, '$stem.live-audio.part');
+      expect(task.filePath, '$stem.mp4');
+      expect(task.item.isLive, isFalse);
+      expect(File('$stem.live-video.part').existsSync(), isFalse);
+      expect(LocalVideo.read(File('$stem.mp4')).info['was_live'], isTrue);
+    });
+
+    test('a recording left by a closed Lumtub is joined, not recorded again', () async {
+      final recorder = FakeRecorder();
+      final stem = '${dir.path}/videos/Old [lllllllllll] 2026-11-10 08-00';
+      for (final f in DownloadManager.recordFiles(stem)) {
+        File(f)
+          ..createSync(recursive: true)
+          ..writeAsStringSync('data');
+      }
+      File('${dir.path}/downloads.json').writeAsStringSync(jsonEncode({
+        'tasks': [
+          (DownloadTask(item: video('lllllllllll').withLiveStatus('is_live'), quality: DownloadQuality.best, directory: '${dir.path}/videos', status: DownloadStatus.downloading, filePath: stem)).toJson(),
+        ],
+      }));
+      final m = manager(recorder: recorder, join: (r) async {
+        File('${r.stem}.mp4').writeAsStringSync('joined');
+        return (path: '${r.stem}.mp4', error: null, cut: const <(Duration, Duration)>[]);
+      });
+      await m.load();
+      final task = m.taskFor('lllllllllll')!;
+      await until(() => task.status == DownloadStatus.done);
+      expect(recorder.stems, isEmpty);
+      expect(task.filePath, '$stem.mp4');
+    });
+
+    test('times move past cut stretches', () {
+      const sec = Duration(seconds: 1);
+      final cut = [(sec * 2, sec * 6), (sec * 10, sec * 12)];
+      expect([for (final t in [0, 2, 4, 6, 8, 11, 20]) DownloadManager.shiftPastCuts(sec * t, cut).inSeconds], [0, 2, 2, 2, 4, 6, 14]);
     });
 
     test('progress ticks reach only the progress listenable, at most twice a second', () async {

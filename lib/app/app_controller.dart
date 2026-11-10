@@ -28,6 +28,7 @@ import '../library_store.dart';
 import '../secure_store.dart';
 import '../dearrow.dart';
 import '../downloads/download_formats.dart';
+import '../downloads/core_recorder.dart';
 import '../downloads/download_manager.dart';
 import '../downloads/download_models.dart';
 import '../downloads/download_selection.dart';
@@ -70,7 +71,6 @@ import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
 import '../power.dart';
 import '../player_settings.dart';
-import '../ffmpeg_component.dart';
 import '../thumbnail_trim.dart';
 import '../tool_manager.dart';
 import '../format_policy.dart';
@@ -1223,19 +1223,22 @@ class AppController extends ChangeNotifier with _ExploreState {
         },
         defaultDirectory: DownloadManager.defaultDirectoryFor(Platform.environment, '${directories.data.path}${Platform.pathSeparator}downloads'),
         environment: () => _repository!.processEnvironment,
-        // Android cannot start an ffmpeg: lumtub_core joins the streams.
-        join: Platform.isAndroid && NativeCore.canJoin ? (video, audio, out) => Isolate.run(() => NativeCore.join(video, audio, out)) : null,
-        ffmpegDirectory: () {
-          final env = _repository!.processEnvironment;
-          final path = env.entries.where((e) => e.key.toUpperCase() == 'PATH').firstOrNull?.value;
-          return DownloadManager.findFfmpeg([if (_tools?.ffmpegDirectory != null) _tools!.ffmpegDirectory!, ...paths.executableDirectories, '${directories.components.path}${Platform.pathSeparator}ffmpeg'], path);
-        },
+        // lumtub_core joins the streams, so no ffmpeg is needed.
+        join: NativeCore.canJoin
+            ? (request) {
+                final json = request.toJson();
+                return Isolate.run(() => NativeCore.join(json));
+              }
+            : null,
+        cover: _coverBytes,
+        recorder: NativeCore.canRecord ? CoreRecorder(sources: _liveSources, proxy: () => proxy.url) : null,
         options: () => DownloadOptions(
           proxy: proxy.ytDlpValue(settings.proxyMode),
           deno: paths.deno,
           cacheDirectory: _repository?.cacheDirectory,
           subtitleLanguages: settings.subtitleLanguage.ytDlpLangs,
           autoSubtitles: settings.subtitleMode == SubtitleMode.always,
+          cutSponsors: settings.sponsorBlock && settings.sponsorCut,
         ),
         sponsorSegments: (id) => _sponsorBlock.segments(id, settings.sponsorCategories),
       );
@@ -1252,21 +1255,28 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Saves [item]'s largest cover image next to the downloads and returns
   /// its path.
   Future<String> saveCover(VideoItem item) async {
+    final bytes = await _coverBytes(item.id);
+    if (bytes == null) throw StateError(tr('This video has no cover image'));
+    final file = File(_downloadPath(item, '.jpg'));
+    await file.parent.create(recursive: true);
+    await file.writeAsBytes(bytes);
+    return file.path;
+  }
+
+  /// The largest JPEG cover of video [id], or null when it has none.
+  Future<List<int>?> _coverBytes(String id) async {
     for (final name in const ['maxresdefault', 'sddefault', 'hqdefault']) {
       final http.Response response;
       try {
-        response = await _http.get(Uri.https('i.ytimg.com', '/vi/${item.id}/$name.jpg')).timeout(const Duration(seconds: 20));
+        response = await _http.get(Uri.https('i.ytimg.com', '/vi/$id/$name.jpg')).timeout(const Duration(seconds: 20));
       } catch (_) {
         throw StateError(tr("Couldn't download the cover; check the network or proxy"));
       }
       // YouTube answers a missing size with a small placeholder or 404.
       if (response.statusCode != 200 || response.bodyBytes.length < 2000) continue;
-      final file = File(_downloadPath(item, '.jpg'));
-      await file.parent.create(recursive: true);
-      await file.writeAsBytes(response.bodyBytes);
-      return file.path;
+      return response.bodyBytes;
     }
-    throw StateError(tr('This video has no cover image'));
+    return null;
   }
 
   /// The subtitles [item] offers, with the one translated into 第一字幕语言
@@ -1292,8 +1302,21 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   void download(VideoItem item, DownloadQuality quality, {DownloadSelection? selection}) {
     final manager = downloads;
-    if (manager == null || item.isLive || item.isUpcoming) return _notice(tr('Live streams cannot be downloaded'));
+    if (manager == null || item.isUpcoming || (item.isLive && !manager.canRecord)) return _notice(tr('Live streams cannot be downloaded'));
+    if (item.isLive) {
+      return _notice(manager.add(item, DownloadQuality.best) == null ? tr('Already in the download list') : tr('Recording the live stream; stop it in Downloads'));
+    }
     _notice(manager.add(item, quality, selection: selection) == null ? tr('Already in the download list') : tr('Added to downloads'));
+  }
+
+  /// The picture and sound of live [videoId] to record: the tallest in a
+  /// codec the playback settings allow, within their cap.
+  Future<LiveSplit?> _liveSources(String videoId, {bool fresh = false}) async {
+    final repository = _repository;
+    if (repository == null) throw StateError(tr('Components are not ready yet'));
+    if (fresh) repository.streams.forget(videoId);
+    final video = await repository.streams.resolve(videoId, _format, formatSort: _formatSort, live: true);
+    return LiveSplit.pick(video.info, _playback, above: 0);
   }
 
   /// The streams [videoId] can be downloaded as, from the extraction the
@@ -1306,9 +1329,8 @@ class AppController extends ChangeNotifier with _ExploreState {
     // this PC decodes well; the quality strategy takes the best picture.
     final preference = settings.strategy == PlaybackStrategy.quality ? const <VideoCodec>[] : FormatPolicy.codecOrder(settings);
     final formats = await DownloadFormats.parseInBackground(info, preference: preference);
-    // Android joins the streams in lumtub_core, which takes AAC, Opus and
-    // Dolby sound.
-    if (Platform.isAndroid && formats.audio.any((a) => a.joins)) {
+    // lumtub_core joins the streams, and takes AAC, Opus and Dolby sound.
+    if (downloads?.join != null && formats.audio.any((a) => a.joins)) {
       return DownloadFormats(formats.video, [for (final a in formats.audio) if (a.joins) a], preference: formats.preference);
     }
     return formats;
@@ -3097,12 +3119,6 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   ToolManager? get tools => _tools;
 
-  /// Download progress (0..1, null when unknown) while ffmpeg installs.
-  double? ffmpegProgress;
-  bool installingFfmpeg = false;
-
-  /// Whether ffmpeg is there, so downloads can merge video and audio.
-  bool get ffmpegInstalled => downloads?.canMerge ?? false;
 
   /// Whether a crop check for a changed picture size is already scheduled.
   bool _cropFitting = false;

@@ -76,8 +76,9 @@ fn float(out: &mut Vec<u8>, kind: u32, v: f64) {
 /// The EBML header, the start of a segment of unknown size, its info and
 /// its tracks. `duration` is in milliseconds, 0 when not known. For a
 /// `file`, room is left for its length and the position of its index.
-pub fn head(video: &TrackInfo, audio: &TrackInfo, subtitles: Option<&str>, duration: f64, file: bool) -> Head {
-    let webm = matches!(video.codec, "V_VP9" | "V_AV1") && audio.codec == "A_OPUS" && subtitles.is_none();
+/// It is called WebM when that holds it, unless `matroska`.
+pub fn head(video: &TrackInfo, audio: &TrackInfo, subtitles: Option<&str>, duration: f64, file: bool, matroska: bool) -> Head {
+    let webm = !matroska && matches!(video.codec, "V_VP9" | "V_AV1") && audio.codec == "A_OPUS" && subtitles.is_none();
     let mut out = Vec::new();
     master(&mut out, 0x1A45_DFA3, |o| {
         uint(o, 0x4286, 1);

@@ -1,9 +1,10 @@
-//! Joins a downloaded picture and sound into one file, without ffmpeg,
-//! for Android, which cannot start a downloaded ffmpeg: the cast stream
-//! writer ([crate::cast::Session]) reads the two files instead of
-//! YouTube's addresses. The picture may be H.264 or AV1 in MP4, or VP9 in
-//! WebM; the sound AAC or Dolby (AC-3, E-AC-3) in MP4, which makes an MP4,
-//! or Opus in WebM, which makes a WebM (an MKV beside H.264).
+//! Joins a downloaded picture and sound into one file, without ffmpeg:
+//! the cast stream writer ([crate::cast::Session]) reads the two files
+//! instead of YouTube's addresses. The picture may be H.264 or AV1 in MP4,
+//! or VP9 in WebM; the sound AAC or Dolby (AC-3, E-AC-3) in MP4, or Opus
+//! in WebM. Left to choose, AAC and Dolby make an MP4 and Opus a WebM (an
+//! MKV beside H.264); asked, any of them goes into MP4 or MKV, and Opus
+//! with VP9 or AV1 into WebM.
 
 use std::ffi::c_char;
 use std::fs::File;
@@ -44,14 +45,26 @@ fn is_webm(path: &str) -> Result<bool, String> {
     Ok(cast_webm::is_webm(&start[..read]))
 }
 
-/// Writes `video` and `audio` joined into `stem` plus the extension that
-/// fits them, and returns that path. The file is written beside as
-/// `.part` and renamed when whole.
-pub fn join(video: &str, audio: &str, stem: &str) -> Result<String, String> {
+/// Writes `video` and `audio` joined into `stem` plus the extension of
+/// `container` (`mp4`, `webm` or `mkv`; any other word picks what fits),
+/// and returns that path. The file is written beside as `.part` and
+/// renamed when whole.
+pub fn join(video: &str, audio: &str, stem: &str, container: &str) -> Result<String, String> {
     let fetch: Arc<dyn Fetch> = Arc::new(Files);
-    let kind = if is_webm(audio)? { Kind::Mkv } else { Kind::Mp4 };
+    let kind = match container {
+        "mp4" => Kind::Mp4,
+        "webm" | "mkv" => Kind::Mkv,
+        _ if is_webm(audio)? => Kind::Mkv,
+        _ => Kind::Mp4,
+    };
     let ask = Ask { video: target(video)?, audio: target(audio)?, start_ms: 0, kind, duration_ms: 0, subtitles: None };
-    let session = Session::new(ask, &fetch)?;
+    let mut session = Session::new(ask, &fetch)?;
+    if container == "mkv" {
+        session = session.plain_matroska();
+    }
+    if container == "webm" && session.extension() != "webm" {
+        return Err("WebM takes only VP9 or AV1 with Opus".into());
+    }
     let out = format!("{stem}.{}", session.extension());
     let part = format!("{out}.part");
     let result = (|| {
@@ -67,7 +80,7 @@ pub fn join(video: &str, audio: &str, stem: &str) -> Result<String, String> {
     result.map(|_| out)
 }
 
-/// Joins JSON `{video, audio, out}`, `out` without its extension; answers
+/// Joins JSON `{video, audio, out, container?}`, `out` without its extension; answers
 /// `{"path": …}` when done, else `{"error": …}`. It reads and writes the
 /// whole video, so call it off the UI thread.
 #[unsafe(no_mangle)]
@@ -77,8 +90,10 @@ pub unsafe extern "C" fn lumtub_join(json: *const u8, length: usize) -> *mut c_c
         video: String,
         audio: String,
         out: String,
+        #[serde(default)]
+        container: String,
     }
-    let answer = serde_json::from_str::<Request>(unsafe { text(json, length) }).map_err(|e| e.to_string()).and_then(|r| join(&r.video, &r.audio, &r.out));
+    let answer = serde_json::from_str::<Request>(unsafe { text(json, length) }).map_err(|e| e.to_string()).and_then(|r| join(&r.video, &r.audio, &r.out, &r.container));
     give(match answer {
         Ok(path) => serde_json::json!({ "path": path }).to_string(),
         Err(error) => serde_json::json!({ "error": error }).to_string(),
@@ -113,13 +128,19 @@ mod tests {
                 continue;
             }
             let stem = format!("{dir}/joined-{}-{}", picture.replace('.', "_"), sound.replace('.', "_"));
-            let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &stem).expect("join");
+            let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &stem, "auto").expect("join");
             assert_eq!(out, format!("{stem}.{extension}"));
             assert!(std::fs::metadata(&out).unwrap().len() > 100_000);
             assert!(!std::path::Path::new(&format!("{out}.part")).exists());
+            for asked in ["mp4", "mkv"] {
+                let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &format!("{stem}-as"), asked).expect("join as asked");
+                assert_eq!(out, format!("{stem}-as.{asked}"));
+            }
+            let webm = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &format!("{stem}-as"), "webm");
+            assert_eq!(webm.is_ok(), extension == "webm", "{picture} {sound} as WebM");
         }
         let audio = format!("{dir}/a.mp4");
-        assert!(join(&audio, &audio, &format!("{dir}/wrong")).is_err());
+        assert!(join(&audio, &audio, &format!("{dir}/wrong"), "auto").is_err());
         assert!(!std::path::Path::new(&format!("{dir}/wrong.mp4.part")).exists());
     }
 }

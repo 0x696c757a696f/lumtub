@@ -510,8 +510,8 @@ fn read_traf(data: &[u8], moof: Atom, traf: Atom, base: u64, defaults: Defaults,
 // ---- WebM pictures ----
 
 /// A WebM picture track as the MP4 writer takes it: a `trak` with a `vp09`
-/// sample entry, and its clusters as segments. An Opus sound track goes
-/// only into Matroska, so it has no `trak`.
+/// sample entry, and its clusters as segments; an Opus sound track has an
+/// `Opus` one.
 fn webm_track(head: &cast_webm::Head, total: u64) -> Track {
     let segments = head
         .clusters
@@ -521,7 +521,7 @@ fn webm_track(head: &cast_webm::Head, total: u64) -> Track {
         .collect();
     if let Some(opus) = &head.opus {
         return Track {
-            trak: Vec::new(),
+            trak: opus_trak(opus, head.timescale),
             mvhd: Vec::new(),
             timescale: head.timescale,
             video: false,
@@ -532,61 +532,18 @@ fn webm_track(head: &cast_webm::Head, total: u64) -> Track {
             webm: Some((head.number, head.frame)),
         };
     }
-    let mut trak = Vec::new();
-    put_box(&mut trak, b"trak", |o| {
-        put_box(o, b"tkhd", |o| {
-            o.extend_from_slice(&3u32.to_be_bytes());
-            o.extend_from_slice(&[0; 8]);
-            o.extend_from_slice(&1u32.to_be_bytes());
-            o.extend_from_slice(&[0; 4 + 4 + 8 + 2 + 2 + 2 + 2]);
-            for v in [0x0001_0000u32, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000] {
-                o.extend_from_slice(&v.to_be_bytes());
-            }
-            o.extend_from_slice(&((head.width as u32) << 16).to_be_bytes());
-            o.extend_from_slice(&((head.height as u32) << 16).to_be_bytes());
-        });
-        put_box(o, b"mdia", |o| {
-            put_box(o, b"mdhd", |o| {
-                o.extend_from_slice(&[0; 12]);
-                o.extend_from_slice(&head.timescale.to_be_bytes());
-                o.extend_from_slice(&[0, 0, 0, 0, 0x55, 0xc4, 0, 0]);
-            });
-            put_box(o, b"hdlr", |o| {
-                o.extend_from_slice(&[0; 8]);
-                o.extend_from_slice(b"vide");
-                o.extend_from_slice(&[0; 12]);
-                o.extend_from_slice(b"VideoHandler\0");
-            });
-            put_box(o, b"minf", |o| {
-                put_box(o, b"vmhd", |o| o.extend_from_slice(&[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]));
-                put_box(o, b"dinf", |o| {
-                    put_box(o, b"dref", |o| {
-                        o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
-                        put_box(o, b"url ", |o| o.extend_from_slice(&[0, 0, 0, 1]));
-                    });
-                });
-                put_box(o, b"stbl", |o| {
-                    put_box(o, b"stsd", |o| {
-                        o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
-                        put_box(o, b"vp09", |o| {
-                            o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
-                            o.extend_from_slice(&[0; 16]);
-                            o.extend_from_slice(&head.width.to_be_bytes());
-                            o.extend_from_slice(&head.height.to_be_bytes());
-                            o.extend_from_slice(&0x0048_0000u32.to_be_bytes());
-                            o.extend_from_slice(&0x0048_0000u32.to_be_bytes());
-                            o.extend_from_slice(&[0, 0, 0, 0, 0, 1]);
-                            o.extend_from_slice(&[0; 32]);
-                            o.extend_from_slice(&[0, 0x18, 0xff, 0xff]);
-                            o.extend_from_slice(&head.vpcc);
-                        });
-                    });
-                    for kind in [b"stts", b"stsc", b"stco"] {
-                        put_box(o, kind, |o| o.extend_from_slice(&[0; 8]));
-                    }
-                    put_box(o, b"stsz", |o| o.extend_from_slice(&[0; 12]));
-                });
-            });
+    let trak = trak_box(head.timescale, Some((head.width, head.height)), |o| {
+        put_box(o, b"vp09", |o| {
+            o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
+            o.extend_from_slice(&[0; 16]);
+            o.extend_from_slice(&head.width.to_be_bytes());
+            o.extend_from_slice(&head.height.to_be_bytes());
+            o.extend_from_slice(&0x0048_0000u32.to_be_bytes());
+            o.extend_from_slice(&0x0048_0000u32.to_be_bytes());
+            o.extend_from_slice(&[0, 0, 0, 0, 0, 1]);
+            o.extend_from_slice(&[0; 32]);
+            o.extend_from_slice(&[0, 0x18, 0xff, 0xff]);
+            o.extend_from_slice(&head.vpcc);
         });
     });
     let mut mvhd = Vec::new();
@@ -614,6 +571,92 @@ fn webm_track(head: &cast_webm::Head, total: u64) -> Track {
         segments,
         webm: Some((head.number, head.frame)),
     }
+}
+
+/// A `trak` with one sample entry, written by `entry`: a picture of
+/// `size`, or sound when there is none. The sample tables are empty, as
+/// the samples come in fragments.
+fn trak_box(timescale: u32, size: Option<(u16, u16)>, entry: impl FnOnce(&mut Vec<u8>)) -> Vec<u8> {
+    let mut trak = Vec::new();
+    put_box(&mut trak, b"trak", |o| {
+        put_box(o, b"tkhd", |o| {
+            o.extend_from_slice(&3u32.to_be_bytes());
+            o.extend_from_slice(&[0; 8]);
+            o.extend_from_slice(&1u32.to_be_bytes());
+            o.extend_from_slice(&[0; 4 + 4 + 8 + 2 + 2]);
+            o.extend_from_slice(&(if size.is_some() { 0u16 } else { 0x0100 }).to_be_bytes());
+            o.extend_from_slice(&[0; 2]);
+            for v in [0x0001_0000u32, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000] {
+                o.extend_from_slice(&v.to_be_bytes());
+            }
+            let (width, height) = size.unwrap_or((0, 0));
+            o.extend_from_slice(&((width as u32) << 16).to_be_bytes());
+            o.extend_from_slice(&((height as u32) << 16).to_be_bytes());
+        });
+        put_box(o, b"mdia", |o| {
+            put_box(o, b"mdhd", |o| {
+                o.extend_from_slice(&[0; 12]);
+                o.extend_from_slice(&timescale.to_be_bytes());
+                o.extend_from_slice(&[0, 0, 0, 0, 0x55, 0xc4, 0, 0]);
+            });
+            put_box(o, b"hdlr", |o| {
+                o.extend_from_slice(&[0; 8]);
+                o.extend_from_slice(if size.is_some() { b"vide" } else { b"soun" });
+                o.extend_from_slice(&[0; 12]);
+                o.extend_from_slice(if size.is_some() { b"VideoHandler\0" } else { b"SoundHandler\0" });
+            });
+            put_box(o, b"minf", |o| {
+                if size.is_some() {
+                    put_box(o, b"vmhd", |o| o.extend_from_slice(&[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]));
+                } else {
+                    put_box(o, b"smhd", |o| o.extend_from_slice(&[0; 8]));
+                }
+                put_box(o, b"dinf", |o| {
+                    put_box(o, b"dref", |o| {
+                        o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
+                        put_box(o, b"url ", |o| o.extend_from_slice(&[0, 0, 0, 1]));
+                    });
+                });
+                put_box(o, b"stbl", |o| {
+                    put_box(o, b"stsd", |o| {
+                        o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
+                        entry(o);
+                    });
+                    for kind in [b"stts", b"stsc", b"stco"] {
+                        put_box(o, kind, |o| o.extend_from_slice(&[0; 8]));
+                    }
+                    put_box(o, b"stsz", |o| o.extend_from_slice(&[0; 12]));
+                });
+            });
+        });
+    });
+    trak
+}
+
+/// An Opus sound track's `trak`, its `OpusHead` turned into `dOps`
+/// (big-endian, without the magic and version).
+fn opus_trak(opus: &cast_webm::Opus, timescale: u32) -> Vec<u8> {
+    let head = &opus.private;
+    let le16 = |at: usize| head.get(at..at + 2).map_or(0, |b| u16::from_le_bytes([b[0], b[1]]));
+    let le32 = |at: usize| head.get(at..at + 4).map_or(0, |b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]));
+    trak_box(timescale, None, |o| {
+        put_box(o, b"Opus", |o| {
+            o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
+            o.extend_from_slice(&[0; 8]);
+            o.extend_from_slice(&(opus.channels as u16).to_be_bytes());
+            o.extend_from_slice(&16u16.to_be_bytes());
+            o.extend_from_slice(&[0; 4]);
+            o.extend_from_slice(&(48000u32 << 16).to_be_bytes());
+            put_box(o, b"dOps", |o| {
+                o.push(0);
+                o.push(head.get(9).copied().unwrap_or(opus.channels));
+                o.extend_from_slice(&le16(10).to_be_bytes());
+                o.extend_from_slice(&le32(12).to_be_bytes());
+                o.extend_from_slice(&le16(16).to_be_bytes());
+                o.extend_from_slice(head.get(18..).unwrap_or(&[0]));
+            });
+        });
+    })
 }
 
 /// One WebM cluster's frames as samples; each lasts until the next, the
@@ -1241,6 +1284,8 @@ pub struct Session {
     kind: Kind,
     duration: f64,
     subtitles: Option<Subtitles>,
+    /// Matroska named so even when WebM would hold it.
+    matroska: bool,
     /// Raised by each request, so an older one for the same session stops.
     generation: AtomicU64,
     /// HLS segments made last, as players often ask for one twice.
@@ -1261,15 +1306,18 @@ impl Session {
         if matches!(ask.kind, Kind::Ts | Kind::Hls) && (!matches!(video.codec, Codec::Avc { .. }) || !matches!(audio.codec, Codec::Aac { .. })) {
             return Err("only H.264 with AAC goes into a transport stream".into());
         }
-        if ask.kind != Kind::Mkv && matches!(audio.codec, Codec::Opus(_)) {
-            return Err("Opus sound goes only into Matroska".into());
-        }
         if ask.kind == Kind::Mkv {
             mkv_track(&video)?;
             mkv_track(&audio)?;
         }
         let addresses = [Address::new(ask.video.url.clone()), Address::new(ask.audio.url.clone())];
-        Ok(Session { video_target: ask.video, audio_target: ask.audio, addresses, video, audio, start: ask.start_ms as f64 / 1000.0, kind: ask.kind, duration: ask.duration_ms as f64 / 1000.0, subtitles: ask.subtitles.filter(|s| !s.cues.is_empty()), generation: AtomicU64::new(0), made: Mutex::new(VecDeque::new()) })
+        Ok(Session { video_target: ask.video, audio_target: ask.audio, addresses, video, audio, start: ask.start_ms as f64 / 1000.0, kind: ask.kind, duration: ask.duration_ms as f64 / 1000.0, subtitles: ask.subtitles.filter(|s| !s.cues.is_empty()), matroska: false, generation: AtomicU64::new(0), made: Mutex::new(VecDeque::new()) })
+    }
+
+    /// Names Matroska so, never WebM, for a file the user asked to be MKV.
+    pub fn plain_matroska(mut self) -> Self {
+        self.matroska = true;
+        self
     }
 
     /// The file name extension a saved stream takes: `webm` when Matroska
@@ -1279,7 +1327,7 @@ impl Session {
             Kind::Mp4 => "mp4",
             Kind::Ts => "ts",
             Kind::Hls => "m3u8",
-            Kind::Mkv if self.subtitles.is_none() && matches!(self.audio.codec, Codec::Opus(_)) && mkv_track(&self.video).is_ok_and(|v| matches!(v.codec, "V_VP9" | "V_AV1")) => "webm",
+            Kind::Mkv if !self.matroska && self.subtitles.is_none() && matches!(self.audio.codec, Codec::Opus(_)) && mkv_track(&self.video).is_ok_and(|v| matches!(v.codec, "V_VP9" | "V_AV1")) => "webm",
             Kind::Mkv => "mkv",
         }
     }
@@ -1541,7 +1589,7 @@ impl Session {
                 let (picture, sound) = (mkv_track(&self.video)?, mkv_track(&self.audio)?);
                 let from = seconds;
                 let length = if self.duration > from { (self.duration - from) * 1000.0 } else { 0.0 };
-                let head = cast_mkv::head(&picture, &sound, self.subtitles.as_ref().map(|s| s.language.as_str()), length, file);
+                let head = cast_mkv::head(&picture, &sound, self.subtitles.as_ref().map(|s| s.language.as_str()), length, file, self.matroska);
                 into.write_all(&head.bytes).map_err(|_| String::new())?;
                 let mut end = 0i64;
                 let from_ms = (from * 1000.0).round() as i64;

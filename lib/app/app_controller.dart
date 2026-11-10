@@ -1223,8 +1223,8 @@ class AppController extends ChangeNotifier with _ExploreState {
         },
         defaultDirectory: DownloadManager.defaultDirectoryFor(Platform.environment, '${directories.data.path}${Platform.pathSeparator}downloads'),
         environment: () => _repository!.processEnvironment,
-        // Android cannot start an ffmpeg: lumtub_core joins the streams.
-        join: Platform.isAndroid && NativeCore.canJoin ? (video, audio, out) => Isolate.run(() => NativeCore.join(video, audio, out)) : null,
+        // lumtub_core joins the streams, so no ffmpeg is needed.
+        join: NativeCore.canJoin ? (video, audio, out, container) => Isolate.run(() => NativeCore.join(video, audio, out, container: container)) : null,
         ffmpegDirectory: () {
           final env = _repository!.processEnvironment;
           final path = env.entries.where((e) => e.key.toUpperCase() == 'PATH').firstOrNull?.value;
@@ -1306,9 +1306,8 @@ class AppController extends ChangeNotifier with _ExploreState {
     // this PC decodes well; the quality strategy takes the best picture.
     final preference = settings.strategy == PlaybackStrategy.quality ? const <VideoCodec>[] : FormatPolicy.codecOrder(settings);
     final formats = await DownloadFormats.parseInBackground(info, preference: preference);
-    // Android joins the streams in lumtub_core, which takes AAC, Opus and
-    // Dolby sound.
-    if (Platform.isAndroid && formats.audio.any((a) => a.joins)) {
+    // lumtub_core joins the streams, and takes AAC, Opus and Dolby sound.
+    if (downloads?.join != null && formats.audio.any((a) => a.joins)) {
       return DownloadFormats(formats.video, [for (final a in formats.audio) if (a.joins) a], preference: formats.preference);
     }
     return formats;

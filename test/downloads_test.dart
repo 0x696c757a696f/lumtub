@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/video_codec.dart';
 import 'package:lumtub/downloads/download_manager.dart';
 import 'package:lumtub/downloads/download_models.dart';
+import 'package:lumtub/downloads/download_selection.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/sponsor_block.dart';
 
@@ -116,7 +117,7 @@ void main() {
     });
 
     final joined = <List<String>>[];
-    DownloadManager manager({String? ffmpeg, List<SkipSegment> segments = const [], Future<({String? path, String? error})> Function(String video, String audio, String stem)? join}) => _track(managers, DownloadManager(
+    DownloadManager manager({String? ffmpeg, List<SkipSegment> segments = const [], Future<({String? path, String? error})> Function(String video, String audio, String stem, String container)? join}) => _track(managers, DownloadManager(
           file: File('${dir.path}/downloads.json'),
           ytDlpPath: 'yt-dlp',
           defaultDirectory: '${dir.path}/videos',
@@ -267,10 +268,10 @@ void main() {
       expect(audio, isNot(contains('--write-subs')));
     });
 
-    test('without ffmpeg but with a joiner, the two streams come as files that are joined into one', () async {
+    test('with a joiner, the two streams come as files that are joined into one, ffmpeg or not', () async {
       joined.clear();
-      final m = manager(join: (video, audio, stem) async {
-        joined.add([video, audio, stem]);
+      final m = manager(ffmpeg: 'F', join: (video, audio, stem, container) async {
+        joined.add([video, audio, stem, container]);
         final out = '$stem.webm';
         File(out).writeAsStringSync('joined');
         return (path: out, error: null);
@@ -281,6 +282,8 @@ void main() {
       expect(best, containsAllInOrder(['-o', '%(title).80B [%(id)s].f%(format_id)s.%(ext)s']));
       expect(best, containsAllInOrder(['-o', 'infojson:%(title).80B [%(id)s].%(ext)s', '-o', 'subtitle:%(title).80B [%(id)s].%(ext)s']));
       expect(best, isNot(contains('--merge-output-format')));
+      expect(best, isNot(contains('--ffmpeg-location')));
+      expect(best, containsAllInOrder(['--fixup', 'never']));
       final audio = m.arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.audio, directory: 'D'));
       expect(audio[audio.indexOf('--format') + 1], 'ba[ext=m4a]/ba');
 
@@ -294,18 +297,29 @@ void main() {
       final task = m.taskFor('aaaaaaaaaaa')!;
       await until(() => task.status == DownloadStatus.done);
       expect(task.status, DownloadStatus.done);
-      expect(joined.single, [picture.path, sound.path, '${dir.path}/videos/Video [aaaaaaaaaaa]']);
+      expect(joined.single, [picture.path, sound.path, '${dir.path}/videos/Video [aaaaaaaaaaa]', 'auto']);
       expect(task.filePath, '${dir.path}/videos/Video [aaaaaaaaaaa].webm');
       expect(picture.existsSync() || sound.existsSync(), isFalse);
 
-      final fails = manager(join: (video, audio, stem) async => (path: null, error: 'sound other than AAC, Opus or Dolby'));
-      fails.add(video('ccccccccccc'), DownloadQuality.best);
+      m.add(video('bbbbbbbbbbb'), DownloadQuality.best, selection: const DownloadSelection(codec: VideoCodec.vp9, height: 1080, videoId: '248', audioId: '251', container: DownloadContainer.mp4));
       await until(() => processes.length > 1);
+      expect(started.last[started.last.indexOf('--format') + 1], '248,251');
+      final p2 = File('${dir.path}/videos/Video [bbbbbbbbbbb].f248.webm')..createSync(recursive: true);
+      final a2 = File('${dir.path}/videos/Video [bbbbbbbbbbb].f251.webm')..createSync(recursive: true);
+      processes[1].out('lumtub-file|${p2.path}');
+      processes[1].out('lumtub-file|${a2.path}');
+      await processes[1].exit(0);
+      await until(() => m.taskFor('bbbbbbbbbbb')!.status == DownloadStatus.done);
+      expect(joined.last.last, 'mp4');
+
+      final fails = manager(join: (video, audio, stem, container) async => (path: null, error: 'sound other than AAC, Opus or Dolby'));
+      fails.add(video('ccccccccccc'), DownloadQuality.best);
+      await until(() => processes.length > 2);
       final p = File('${dir.path}/videos/Video [ccccccccccc].f248.webm')..createSync(recursive: true);
       final a = File('${dir.path}/videos/Video [ccccccccccc].f251.webm')..createSync(recursive: true);
-      processes[1].out('lumtub-file|${p.path}');
-      processes[1].out('lumtub-file|${a.path}');
-      await processes[1].exit(0);
+      processes[2].out('lumtub-file|${p.path}');
+      processes[2].out('lumtub-file|${a.path}');
+      await processes[2].exit(0);
       final failed = fails.taskFor('ccccccccccc')!;
       await until(() => failed.status == DownloadStatus.failed);
       expect(failed.error, 'sound other than AAC, Opus or Dolby');

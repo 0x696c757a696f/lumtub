@@ -128,11 +128,10 @@ class DownloadManager extends ChangeNotifier {
   final Future<List<SkipSegment>> Function(String videoId)? sponsorSegments;
   /// Called once a download's file is complete.
   final void Function(DownloadTask task)? onFinished;
-  /// Joins a picture and a sound file into one without ffmpeg (Android,
-  /// which cannot start one): null when done, else why not.
-  /// Joins the picture and sound into the stem plus the extension that
-  /// fits them; the path written, or why not.
-  final Future<({String? path, String? error})> Function(String video, String audio, String stem)? join;
+  /// Joins a picture and a sound file into one without ffmpeg: into the
+  /// stem plus the extension of the container (mp4, webm, mkv, or `auto`
+  /// for the one that fits them); the path written, or why not.
+  final Future<({String? path, String? error})> Function(String video, String audio, String stem, String container)? join;
 
   String _directory;
   DownloadDefaults _defaults = const DownloadDefaults();
@@ -162,7 +161,7 @@ class DownloadManager extends ChangeNotifier {
 
   /// Whether [task]'s picture and sound come as two files for [join].
   bool _joins(DownloadTask task) =>
-      join != null && ffmpegDirectory?.call() == null && !(task.selection?.audioOnly ?? task.quality.audioOnly) && (task.selection?.needsMerge ?? true);
+      join != null && !(task.selection?.audioOnly ?? task.quality.audioOnly) && (task.selection?.needsMerge ?? true);
 
   /// The name yt-dlp gives each stream of a joined download, and what
   /// the joined file is called.
@@ -384,7 +383,8 @@ class DownloadManager extends ChangeNotifier {
         ...selection.containerArguments(merge: ffmpeg != null)
       else if (ffmpeg != null && !audio)
         ...['--merge-output-format', 'mp4/mkv'],
-      if (ffmpeg != null) ...['--ffmpeg-location', ffmpeg],
+      // The core reads the streams as YouTube sends them.
+      if (joins) ...['--fixup', 'never'] else if (ffmpeg != null) ...['--ffmpeg-location', ffmpeg],
       if (!audio && o.subtitleLanguages != null) ...[
         '--write-subs',
         if (o.autoSubtitles) '--write-auto-subs',
@@ -473,7 +473,7 @@ class DownloadManager extends ChangeNotifier {
   Future<void> _finish(DownloadTask task, List<String> printed) async {
     var path = printed.lastOrNull;
     if (_joins(task) && printed.length >= 2) {
-      final joined = await join!(printed.first, printed.last, printed.first.replaceFirst(_partSuffix, ''));
+      final joined = await join!(printed.first, printed.last, printed.first.replaceFirst(_partSuffix, ''), task.selection?.container.name ?? 'auto');
       final out = joined.path;
       if (out == null) {
         task.status = DownloadStatus.failed;

@@ -8,9 +8,8 @@ on:
         type: choice
         options: [latest, media_kit]
         default: latest
-  # A release tag builds everything. main itself is not built again: every
-  # change reaches it through a pull request that was built already.
   push:
+    branches: [main]
     tags: ['v*']
   pull_request:
     branches: [main]
@@ -23,83 +22,30 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # What to build. A release tag, a manual run, a change to this workflow, or a
-  # pull request whose newest commit says [full] or [showcase] builds every
-  # package. Otherwise a pull request builds only the systems it touches:
-  # files under windows/, linux/, macos/ or android/ (also inside vendor/)
-  # build that system; shared code (lib, native, assets, tests, pubspec and
-  # the rest) builds Windows x64 and Linux x64, which run all the tests; text
-  # and website changes build nothing.
-  plan:
-    name: Plan
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      windows: ${{ steps.plan.outputs.windows }}
-      linux: ${{ steps.plan.outputs.linux }}
-      macos: ${{ steps.plan.outputs.macos }}
-      android: ${{ steps.plan.outputs.android }}
-    steps:
-      - name: Pick the systems to build
-        id: plan
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.pull_request.number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          set -uo pipefail
-          win=() lin=() mac=false and=false
-          full() { win=(x64 x64-v3 arm64) lin=(x64 arm64) mac=true and=true; }
-          add() { local -n list=$1; [[ " ${list[*]} " == *" $2 "* ]] || list+=("$2"); }
-          if [[ "$GITHUB_EVENT_NAME" != pull_request ]]; then
-            full
-          elif ! message=$(gh api "repos/$GITHUB_REPOSITORY/commits/$HEAD_SHA" --jq .commit.message) \
-            || ! files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files?per_page=100" --jq '.[].filename'); then
-            echo "Could not read the pull request; building everything."
-            full
-          elif grep -qE '\[(full|showcase)\]' <<< "$message"; then
-            full
-          else
-            while IFS= read -r f; do
-              [[ -n "$f" ]] || continue
-              case "$f" in
-                .github/workflows/build.yml) full ;;
-                windows/*|*/windows/*) win=(x64 x64-v3 arm64) ;;
-                linux/*|*/linux/*) lin=(x64 arm64) ;;
-                macos/*|*/macos/*|*/darwin/*) mac=true ;;
-                android/*|*/android/*) and=true ;;
-                website/*|.github/*|*.md|docs/*|LICENSE*|NOTICE*|.gitignore) ;;
-                *) add win x64; add lin x64 ;;
-              esac
-            done <<< "$files"
-          fi
-          # The matrix entries, by package architecture.
-          declare -A settings=(
-            [win-x64]='{"package_arch":"x64","runner":"windows-latest","mpv_arch":"x86_64","runtime_arch":"x86_64","build_dir":"x64","install_arch":"x64"}'
-            [win-x64-v3]='{"package_arch":"x64-v3","runner":"windows-latest","mpv_arch":"x86_64-v3","runtime_arch":"x86_64-v3","build_dir":"x64","install_arch":"x64"}'
-            [win-arm64]='{"package_arch":"arm64","runner":"windows-11-arm","mpv_arch":"aarch64","runtime_arch":"aarch64","build_dir":"arm64","install_arch":"arm64"}'
-            [lin-x64]='{"package_arch":"x64","runner":"ubuntu-24.04","appimage_arch":"x86_64"}'
-            [lin-arm64]='{"package_arch":"arm64","runner":"ubuntu-24.04-arm","appimage_arch":"aarch64"}'
-          )
-          json() { local prefix=$1; shift; local a; for a in "$@"; do echo "${settings[$prefix-$a]}"; done | jq -sc .; }
-          {
-            echo "windows=$(json win "${win[@]}")"
-            echo "linux=$(json lin "${lin[@]}")"
-            echo "macos=$mac"
-            echo "android=$and"
-          } | tee -a "$GITHUB_OUTPUT"
-
   windows:
     name: Windows ${{ matrix.package_arch }}
-    needs: plan
-    if: needs.plan.outputs.windows != '[]'
     strategy:
       fail-fast: false
       matrix:
-        # Each system's settings are in the Plan job.
-        include: ${{ fromJSON(needs.plan.outputs.windows) }}
+        include:
+          - package_arch: x64
+            runner: windows-latest
+            mpv_arch: x86_64
+            runtime_arch: x86_64
+            build_dir: x64
+            install_arch: x64
+          - package_arch: x64-v3
+            runner: windows-latest
+            mpv_arch: x86_64-v3
+            runtime_arch: x86_64-v3
+            build_dir: x64
+            install_arch: x64
+          - package_arch: arm64
+            runner: windows-11-arm
+            mpv_arch: aarch64
+            runtime_arch: aarch64
+            build_dir: arm64
+            install_arch: arm64
     runs-on: ${{ matrix.runner }}
     env:
       PACKAGE_ARCH: ${{ matrix.package_arch }}
@@ -521,12 +467,16 @@ jobs:
 
   linux:
     name: Linux ${{ matrix.package_arch }}
-    needs: plan
-    if: needs.plan.outputs.linux != '[]'
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(needs.plan.outputs.linux) }}
+        include:
+          - package_arch: x64
+            runner: ubuntu-24.04
+            appimage_arch: x86_64
+          - package_arch: arm64
+            runner: ubuntu-24.04-arm
+            appimage_arch: aarch64
     # Pinned, so a new default Ubuntu changes nothing; the build itself runs
     # in Ubuntu 22.04, whose glibc 2.35 sets the oldest Linux the AppImage
     # runs on: the oldest Ubuntu LTS in standard support, as AppImageHub
@@ -796,8 +746,6 @@ jobs:
 
   macos:
     name: macOS
-    needs: plan
-    if: needs.plan.outputs.macos == 'true'
     # Pinned like the others; Apple silicon, building once for both CPUs and
     # packing a DMG thinned to each.
     runs-on: macos-15
@@ -970,8 +918,6 @@ jobs:
 
   android:
     name: Android
-    needs: plan
-    if: needs.plan.outputs.android == 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: write

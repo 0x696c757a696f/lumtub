@@ -61,6 +61,7 @@ class AppPreferences {
     this.exploreHeardOnly = true,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
+    this.hideMembersOnly = false,
     this.updateBlockLists = true,
     this.blockGroups = false,
     this.allowedGroups = const [],
@@ -161,6 +162,7 @@ class AppPreferences {
   final bool exploreHeardOnly;
   final int minDurationMinutes;
   final bool hideWatched;
+  final bool hideMembersOnly;
   /// Fetches the signed block lists once a day (lib/block_list_updates.dart).
   final bool updateBlockLists;
   /// Hides the lists of lists/religion from recommendations, explore and
@@ -398,6 +400,7 @@ class AppPreferences {
     if (hideShorts && _isShort(item)) return false;
     if (minDurationMinutes > 0 && duration != null && duration > 0 && duration < minDurationMinutes * 60) return false;
     if (hideWatched && watched) return false;
+    if (hideMembersOnly && item.membersOnly) return false;
     return true;
   }
 
@@ -423,6 +426,7 @@ class AppPreferences {
     bool? exploreHeardOnly,
     int? minDurationMinutes,
     bool? hideWatched,
+    bool? hideMembersOnly,
     bool? updateBlockLists,
     bool? blockGroups,
     List<String>? allowedGroups,
@@ -506,6 +510,7 @@ class AppPreferences {
         exploreHeardOnly: exploreHeardOnly ?? this.exploreHeardOnly,
         minDurationMinutes: minDurationMinutes ?? this.minDurationMinutes,
         hideWatched: hideWatched ?? this.hideWatched,
+        hideMembersOnly: hideMembersOnly ?? this.hideMembersOnly,
         updateBlockLists: updateBlockLists ?? this.updateBlockLists,
         blockGroups: blockGroups ?? this.blockGroups,
         allowedGroups: allowedGroups ?? this.allowedGroups,
@@ -590,6 +595,7 @@ class AppPreferences {
         'exploreHeardOnlyV2': exploreHeardOnly,
         'minDurationMinutes': minDurationMinutes,
         'hideWatched': hideWatched,
+        'hideMembersOnly': hideMembersOnly,
         'updateBlockLists': updateBlockLists,
         'blockGroups': blockGroups,
         'allowedGroups': allowedGroups,
@@ -720,6 +726,7 @@ class AppPreferences {
       exploreHeardOnly: flag('exploreHeardOnlyV2', d.exploreHeardOnly),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),
+      hideMembersOnly: flag('hideMembersOnly', d.hideMembersOnly),
       updateBlockLists: flag('updateBlockLists', d.updateBlockLists),
       // Saved before new installs started with it off and asked.
       blockGroups: flag('blockGroups', true),

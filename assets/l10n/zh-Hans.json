@@ -3144,5 +3144,8 @@
   "ffmpeg is needed for this download but was not found": "此下载需要 ffmpeg，但没有找到",
   "The download failed; see the logs for details": "下载失败，详情见日志",
   "see the logs for details": "详情见日志",
-  "Oldest": "最早"
+  "Oldest": "最早",
+  "Hide members-only videos": "隐藏会员专享视频",
+  "Videos only channel members can watch are left out of lists": "仅频道会员可观看的视频不会出现在列表中",
+  "members only membership": "会员专享 会员"
 }

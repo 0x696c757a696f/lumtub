@@ -43,6 +43,7 @@ class _SubtitleListState extends State<SubtitleList> {
   /// Following the playing line stops while the person scrolls.
   bool _follow = true;
   String _query = '';
+  Timer? _typing;
   final _currentKey = GlobalKey();
 
   late SubtitleOption? _second = widget.controller.secondarySubtitle;
@@ -95,6 +96,7 @@ class _SubtitleListState extends State<SubtitleList> {
     widget.controller.removeListener(_secondChanged);
     _trackChanges?.cancel();
     _positions?.cancel();
+    _typing?.cancel();
     _scroll.dispose();
     super.dispose();
   }
@@ -169,7 +171,13 @@ class _SubtitleListState extends State<SubtitleList> {
               Expanded(
                 child: TextField(
                   decoration: InputDecoration(isDense: true, prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Search subtitles')),
-                  onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+                  onChanged: (v) {
+                    // Filtering thousands of lines waits for a pause in typing.
+                    _typing?.cancel();
+                    _typing = Timer(const Duration(milliseconds: 250), () {
+                      if (mounted) setState(() => _query = v.trim().toLowerCase());
+                    });
+                  },
                 ),
               ),
               if (_bothOn) _modeMenu(colors),

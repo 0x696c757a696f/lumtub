@@ -27,9 +27,11 @@ class PlayQueuePanel extends StatelessWidget {
           TextButton(onPressed: controller.clearQueue, child: Text(tr('Clear all'))),
         ]),
       ),
-      ReorderableListView.builder(
+      // A long queue scrolls inside its own box instead of lengthening the page.
+      ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 320),
+        child: ReorderableListView.builder(
         shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
         buildDefaultDragHandles: false,
         itemCount: items.length,
         onReorderItem: controller.moveQueued,
@@ -41,6 +43,7 @@ class PlayQueuePanel extends StatelessWidget {
             ReorderableDragStartListener(index: i, child: Padding(padding: EdgeInsetsDirectional.only(end: 4), child: Icon(AppIcons.equals, size: 20))),
           ]);
         },
+        ),
       ),
     ]);
   }

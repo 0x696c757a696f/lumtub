@@ -194,6 +194,19 @@ enum VideoLayout {
   String get label => tr(_label);
 }
 
+/// The icon on the window, taskbar, Dock, tray and Android home screen.
+/// The installed files (the .exe, the app bundle, the AppImage) keep the
+/// classic one.
+enum AppIcon {
+  classic('Classic', 'assets/app_icons/classic.png'),
+  sunlight('Sunlight', 'assets/app_icons/sunlight.png');
+
+  const AppIcon(this._label, this.preview);
+  final String _label;
+  String get label => tr(_label);
+  final String preview;
+}
+
 int _hour(Object? raw, int fallback) => raw is int && raw >= 0 && raw < 24 ? raw : fallback;
 
 T _byName<T extends Enum>(List<T> values, Object? name, T fallback) => values.where((v) => v.name == name).firstOrNull ?? fallback;
@@ -258,6 +271,7 @@ class AppearanceSettings {
   /// smaller image cache.
   final bool lowResource;
   final VideoLayout layout;
+  final AppIcon appIcon;
 
   const AppearanceSettings({
     this.themeMode = ThemeMode.system,
@@ -292,6 +306,7 @@ class AppearanceSettings {
     this.darkEnd = 7,
     this.lowResource = false,
     this.layout = VideoLayout.grid,
+    this.appIcon = AppIcon.classic,
   });
 
   /// Whether 护眼暖色 is on at [now].
@@ -373,6 +388,7 @@ class AppearanceSettings {
     int? darkEnd,
     bool? lowResource,
     VideoLayout? layout,
+    AppIcon? appIcon,
   }) =>
       AppearanceSettings(
         themeMode: themeMode ?? this.themeMode,
@@ -407,6 +423,7 @@ class AppearanceSettings {
         darkEnd: darkEnd ?? this.darkEnd,
         lowResource: lowResource ?? this.lowResource,
         layout: layout ?? this.layout,
+        appIcon: appIcon ?? this.appIcon,
       );
 
   /// The family text is drawn in; null is the system UI font.
@@ -449,6 +466,7 @@ class AppearanceSettings {
         'darkEnd': darkEnd,
         'lowResource': lowResource,
         'layout': layout.name,
+        'appIcon': appIcon.name,
       };
 
   factory AppearanceSettings.fromJson(Object? raw) {
@@ -503,6 +521,7 @@ class AppearanceSettings {
       darkEnd: _hour(raw['darkEnd'], 7),
       lowResource: raw['lowResource'] == true,
       layout: _byName(VideoLayout.values, raw['layout'], VideoLayout.grid),
+      appIcon: _byName(AppIcon.values, raw['appIcon'], AppIcon.classic),
     );
   }
 }

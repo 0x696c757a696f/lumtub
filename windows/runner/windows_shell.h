@@ -33,6 +33,8 @@ class WindowsShell {
   void HideToTray();
   void ShowTrayMenu();
   void RemoveTrayIcon();
+  // Shows the icon resource |id| on the window, the taskbar and the tray.
+  void SetAppIcon(int id);
 
   HWND window_;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
@@ -40,6 +42,8 @@ class WindowsShell {
   bool close_to_tray_ = false;
   bool minimize_to_tray_ = false;
   bool tray_icon_ = false;
+  int icon_id_ = 0;  // 0 until Dart picks one: the window class's IDI_APP_ICON.
+  HICON big_icon_ = nullptr, small_icon_ = nullptr;
   std::wstring show_label_ = L"Show window", play_pause_label_ = L"Play/Pause",
                next_label_ = L"Next", exit_label_ = L"Exit";
 };

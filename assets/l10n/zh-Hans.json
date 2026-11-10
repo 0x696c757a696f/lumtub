@@ -3143,5 +3143,13 @@
   "The chosen format isn't available for this video; pick another": "该视频没有所选的格式，请换一个",
   "ffmpeg is needed for this download but was not found": "此下载需要 ffmpeg，但没有找到",
   "The download failed; see the logs for details": "下载失败，详情见日志",
-  "see the logs for details": "详情见日志"
+  "see the logs for details": "详情见日志",
+  "App icon": "应用图标",
+  "Classic": "经典",
+  "Sunlight": "阳光",
+  "Current: {0}. {1}": "当前：{0}。{1}",
+  "The home screen icon; your launcher may take a moment to show it": "桌面上的图标，启动器可能要过一会儿才会换过来",
+  "Shown in the Dock while Lumtub runs; when it is closed the Dock shows the classic one": "Lumtub 运行时在程序坞里显示；退出后程序坞显示经典图标",
+  "The icon on the window, taskbar and tray; the installed program keeps the classic one": "窗口、任务栏和托盘上的图标；安装的程序文件仍是经典图标",
+  "logo launcher dock taskbar tray icon": "图标 标志 启动器 程序坞 任务栏 托盘"
 }

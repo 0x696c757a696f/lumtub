@@ -153,6 +153,14 @@ final class MacShell: NSObject, NSWindowDelegate {
         info.removeValue(forKey: MPMediaItemPropertyPlaybackDuration)
       }
       publish()
+    case "setAppIcon":
+      // The Dock shows it while Lumtub runs; the app bundle keeps the
+      // classic icon, which Finder and the Dock show when it is closed.
+      if let data = arguments["png"] as? FlutterStandardTypedData, let image = NSImage(data: data.data) {
+        NSApp.applicationIconImage = image
+      } else {
+        NSApp.applicationIconImage = nil
+      }
     case "setTray":
       closeToTray = arguments["enabled"] as? Bool ?? false
       minimizeToTray = arguments["minimize"] as? Bool ?? false

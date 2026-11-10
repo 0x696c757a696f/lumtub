@@ -226,6 +226,8 @@ WindowsShell::WindowsShell(HWND window, flutter::BinaryMessenger* messenger) : w
 WindowsShell::~WindowsShell() {
   channel_->SetMethodCallHandler(nullptr);
   RemoveTrayIcon();
+  if (big_icon_) ::DestroyIcon(big_icon_);
+  if (small_icon_) ::DestroyIcon(small_icon_);
 }
 
 void WindowsShell::Send(const char* method, EncodableValue argument) {
@@ -248,6 +250,8 @@ void WindowsShell::HandleCall(const flutter::MethodCall<EncodableValue>& call,
       next_label_ = Widen(StringArg(args, "next"));
       exit_label_ = Widen(StringArg(args, "exit"));
       if (!close_to_tray_ && !minimize_to_tray_ && tray_icon_) ShowFromTray();
+    } else if (method == "setAppIcon") {
+      SetAppIcon(args && std::get<std::string>(*args) == "sunlight" ? IDI_APP_ICON_SUNLIGHT : IDI_APP_ICON);
     } else if (media_ && method == "setMetadata") {
       media_->SetMetadata(StringArg(args, "title"), StringArg(args, "artist"), StringArg(args, "thumbnail"));
     } else if (media_ && method == "setStatus") {
@@ -256,7 +260,7 @@ void WindowsShell::HandleCall(const flutter::MethodCall<EncodableValue>& call,
       media_->SetTimeline(IntArg(args, "position"), IntArg(args, "duration"));
     } else if (media_ && method == "setButtons") {
       media_->SetButtons(BoolArg(args, "next"), BoolArg(args, "previous"));
-    } else if (!media_ && method != "setTray") {
+    } else if (!media_ && method != "setTray" && method != "setAppIcon") {
       // No overlay on this system; nothing to do.
     } else {
       result->NotImplemented();
@@ -315,11 +319,44 @@ void WindowsShell::HideToTray() {
   icon.uID = kTrayIconId;
   icon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
   icon.uCallbackMessage = kTrayMessage;
-  icon.hIcon = ::LoadIcon(::GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_APP_ICON));
+  icon.hIcon = small_icon_ ? small_icon_ : ::LoadIcon(::GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_APP_ICON));
   wcscpy_s(icon.szTip, L"Lumtub");
   if (!tray_icon_ && !::Shell_NotifyIconW(NIM_ADD, &icon)) return;  // No icon to bring it back: stay open.
   tray_icon_ = true;
   ::ShowWindow(window_, SW_HIDE);
+}
+
+void WindowsShell::SetAppIcon(int id) {
+  if (id == icon_id_ && big_icon_) return;
+  const HINSTANCE instance = ::GetModuleHandle(nullptr);
+  const UINT dpi = ::GetDpiForWindow(window_);
+  auto load = [&](int metric) {
+    const int size = ::GetSystemMetricsForDpi(metric, dpi);
+    return static_cast<HICON>(::LoadImageW(instance, MAKEINTRESOURCEW(id), IMAGE_ICON, size, size, LR_DEFAULTCOLOR));
+  };
+  // Not "small": the Windows headers define it as a macro.
+  HICON large_icon = load(SM_CXICON), little_icon = load(SM_CXSMICON);
+  if (!large_icon || !little_icon) {
+    if (large_icon) ::DestroyIcon(large_icon);
+    if (little_icon) ::DestroyIcon(little_icon);
+    return;
+  }
+  ::SendMessage(window_, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(large_icon));
+  ::SendMessage(window_, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(little_icon));
+  if (tray_icon_) {
+    NOTIFYICONDATAW icon{};
+    icon.cbSize = sizeof(icon);
+    icon.hWnd = window_;
+    icon.uID = kTrayIconId;
+    icon.uFlags = NIF_ICON;
+    icon.hIcon = little_icon;
+    ::Shell_NotifyIconW(NIM_MODIFY, &icon);
+  }
+  if (big_icon_) ::DestroyIcon(big_icon_);
+  if (small_icon_) ::DestroyIcon(small_icon_);
+  big_icon_ = large_icon;
+  small_icon_ = little_icon;
+  icon_id_ = id;
 }
 
 void WindowsShell::RemoveTrayIcon() {

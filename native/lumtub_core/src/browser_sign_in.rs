@@ -29,13 +29,25 @@ pub static ATTEMPT: AtomicU64 = AtomicU64::new(0);
 const PATIENCE: Duration = Duration::from_secs(15 * 60);
 
 /// Executable names of Chromium-based browsers, which take the flags used here.
-const CHROMIUM: [&str; 8] = ["msedge.exe", "chrome.exe", "brave.exe", "vivaldi.exe", "chromium.exe", "opera.exe", "thorium.exe", "browser.exe"];
+const CHROMIUM: [&str; 8] = [
+    "msedge.exe",
+    "chrome.exe",
+    "brave.exe",
+    "vivaldi.exe",
+    "chromium.exe",
+    "opera.exe",
+    "thorium.exe",
+    "browser.exe",
+];
 
 /// Whether [exe] is Firefox, which is driven through WebDriver BiDi.
 pub fn is_firefox(exe: &Path) -> bool {
     let path = exe.to_string_lossy().to_ascii_lowercase();
     let name = path.rsplit(['\\', '/']).next().unwrap_or("");
-    matches!(name.strip_suffix(".exe").unwrap_or(name), "firefox" | "org.mozilla.firefox")
+    matches!(
+        name.strip_suffix(".exe").unwrap_or(name),
+        "firefox" | "org.mozilla.firefox"
+    )
 }
 
 pub fn is_chromium(exe: &Path) -> bool {
@@ -53,15 +65,31 @@ pub fn is_chromium(exe: &Path) -> bool {
 /// then Firefox.
 #[cfg(target_os = "macos")]
 pub fn find_browser() -> Option<PathBuf> {
-    const APPS: [&str; 5] = ["Google Chrome", "Microsoft Edge", "Brave Browser", "Chromium", "Vivaldi"];
+    const APPS: [&str; 5] = [
+        "Google Chrome",
+        "Microsoft Edge",
+        "Brave Browser",
+        "Chromium",
+        "Vivaldi",
+    ];
     let mut roots = Vec::new();
     if let Some(home) = std::env::var_os("HOME") {
         roots.push(PathBuf::from(home).join("Applications"));
     }
     roots.push(PathBuf::from("/Applications"));
     APPS.iter()
-        .find_map(|app| roots.iter().map(|root| root.join(format!("{app}.app/Contents/MacOS/{app}"))).find(|p| p.is_file()))
-        .or_else(|| roots.iter().map(|root| root.join("Firefox.app/Contents/MacOS/firefox")).find(|p| p.is_file()))
+        .find_map(|app| {
+            roots
+                .iter()
+                .map(|root| root.join(format!("{app}.app/Contents/MacOS/{app}")))
+                .find(|p| p.is_file())
+        })
+        .or_else(|| {
+            roots
+                .iter()
+                .map(|root| root.join("Firefox.app/Contents/MacOS/firefox"))
+                .find(|p| p.is_file())
+        })
 }
 
 /// Linux: Chromium-based browsers on the PATH, as their packages name
@@ -69,9 +97,27 @@ pub fn find_browser() -> Option<PathBuf> {
 /// Firefox the same way.
 #[cfg(all(unix, not(target_os = "macos")))]
 pub fn find_browser() -> Option<PathBuf> {
-    const NAMES: [&str; 9] = ["google-chrome-stable", "google-chrome", "microsoft-edge-stable", "microsoft-edge", "brave-browser", "brave", "chromium", "chromium-browser", "vivaldi-stable"];
-    const FLATPAKS: [&str; 5] = ["com.google.Chrome", "com.microsoft.Edge", "com.brave.Browser", "org.chromium.Chromium", "com.vivaldi.Vivaldi"];
-    let mut folders: Vec<PathBuf> = std::env::var_os("PATH").map(|path| std::env::split_paths(&path).collect()).unwrap_or_default();
+    const NAMES: [&str; 9] = [
+        "google-chrome-stable",
+        "google-chrome",
+        "microsoft-edge-stable",
+        "microsoft-edge",
+        "brave-browser",
+        "brave",
+        "chromium",
+        "chromium-browser",
+        "vivaldi-stable",
+    ];
+    const FLATPAKS: [&str; 5] = [
+        "com.google.Chrome",
+        "com.microsoft.Edge",
+        "com.brave.Browser",
+        "org.chromium.Chromium",
+        "com.vivaldi.Vivaldi",
+    ];
+    let mut folders: Vec<PathBuf> = std::env::var_os("PATH")
+        .map(|path| std::env::split_paths(&path).collect())
+        .unwrap_or_default();
     // Snap's commands, also when the PATH Lumtub was started with lacks them.
     folders.push(PathBuf::from("/snap/bin"));
     let mut exports = Vec::new();
@@ -79,7 +125,14 @@ pub fn find_browser() -> Option<PathBuf> {
         exports.push(PathBuf::from(home).join(".local/share/flatpak/exports/bin"));
     }
     exports.push(PathBuf::from("/var/lib/flatpak/exports/bin"));
-    let first = |names: &[&str], folders: &[PathBuf]| names.iter().find_map(|name| folders.iter().map(|folder| folder.join(name)).find(|p| p.is_file()));
+    let first = |names: &[&str], folders: &[PathBuf]| {
+        names.iter().find_map(|name| {
+            folders
+                .iter()
+                .map(|folder| folder.join(name))
+                .find(|p| p.is_file())
+        })
+    };
     first(&NAMES, &folders)
         .or_else(|| first(&FLATPAKS, &exports))
         .or_else(|| first(&["firefox"], &folders))
@@ -95,7 +148,11 @@ pub fn find_browser() -> Option<PathBuf> {
         ["ProgramFiles(x86)", "ProgramFiles", "LOCALAPPDATA"]
             .iter()
             .filter_map(std::env::var_os)
-            .map(|root| parts.iter().fold(PathBuf::from(root), |p, part| p.join(part)))
+            .map(|root| {
+                parts
+                    .iter()
+                    .fold(PathBuf::from(root), |p, part| p.join(part))
+            })
             .find(|p| p.is_file())
     };
     let default = default_browser();
@@ -114,31 +171,59 @@ pub fn find_browser() -> Option<PathBuf> {
 /// Where [name] is installed, as its installer registered under App Paths.
 #[cfg(windows)]
 fn app_path(name: &str) -> Option<PathBuf> {
-    use windows_sys::Win32::System::Registry::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, RRF_RT_REG_SZ, RegGetValueW};
-    let key: Vec<u16> = format!("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\{name}\0").encode_utf16().collect();
-    [HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER].into_iter().find_map(|root| {
-        let mut buffer = [0u16; 1024];
-        let mut size = std::mem::size_of_val(&buffer) as u32;
-        // SAFETY: [key] is NUL-terminated and [buffer] holds [size] bytes.
-        let status = unsafe { RegGetValueW(root, key.as_ptr(), std::ptr::null(), RRF_RT_REG_SZ, std::ptr::null_mut(), buffer.as_mut_ptr().cast(), &mut size) };
-        if status != 0 {
-            return None;
-        }
-        let end = buffer.iter().position(|&c| c == 0).unwrap_or(0);
-        let path = String::from_utf16_lossy(&buffer[..end]);
-        Some(PathBuf::from(path.trim_matches('"'))).filter(|p| p.is_file())
-    })
+    use windows_sys::Win32::System::Registry::{
+        HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, RRF_RT_REG_SZ, RegGetValueW,
+    };
+    let key: Vec<u16> =
+        format!("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\{name}\0")
+            .encode_utf16()
+            .collect();
+    [HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER]
+        .into_iter()
+        .find_map(|root| {
+            let mut buffer = [0u16; 1024];
+            let mut size = std::mem::size_of_val(&buffer) as u32;
+            // SAFETY: [key] is NUL-terminated and [buffer] holds [size] bytes.
+            let status = unsafe {
+                RegGetValueW(
+                    root,
+                    key.as_ptr(),
+                    std::ptr::null(),
+                    RRF_RT_REG_SZ,
+                    std::ptr::null_mut(),
+                    buffer.as_mut_ptr().cast(),
+                    &mut size,
+                )
+            };
+            if status != 0 {
+                return None;
+            }
+            let end = buffer.iter().position(|&c| c == 0).unwrap_or(0);
+            let path = String::from_utf16_lossy(&buffer[..end]);
+            Some(PathBuf::from(path.trim_matches('"'))).filter(|p| p.is_file())
+        })
 }
 
 #[cfg(windows)]
 fn default_browser() -> Option<PathBuf> {
-    use windows_sys::Win32::UI::Shell::{ASSOCF_IS_PROTOCOL, ASSOCSTR_EXECUTABLE, AssocQueryStringW};
+    use windows_sys::Win32::UI::Shell::{
+        ASSOCF_IS_PROTOCOL, ASSOCSTR_EXECUTABLE, AssocQueryStringW,
+    };
     let scheme: Vec<u16> = "https\0".encode_utf16().collect();
     let verb: Vec<u16> = "open\0".encode_utf16().collect();
     let mut buffer = [0u16; 1024];
     let mut length = buffer.len() as u32;
     // SAFETY: the strings are NUL-terminated and [buffer] holds [length] characters.
-    let status = unsafe { AssocQueryStringW(ASSOCF_IS_PROTOCOL, ASSOCSTR_EXECUTABLE, scheme.as_ptr(), verb.as_ptr(), buffer.as_mut_ptr(), &mut length) };
+    let status = unsafe {
+        AssocQueryStringW(
+            ASSOCF_IS_PROTOCOL,
+            ASSOCSTR_EXECUTABLE,
+            scheme.as_ptr(),
+            verb.as_ptr(),
+            buffer.as_mut_ptr(),
+            &mut length,
+        )
+    };
     if status != 0 {
         return None;
     }
@@ -148,10 +233,18 @@ fn default_browser() -> Option<PathBuf> {
 
 /// The browser's name for messages, from its executable.
 pub fn browser_name(exe: &Path) -> String {
-    let name = exe.file_stem().and_then(|n| n.to_str()).unwrap_or("browser").to_ascii_lowercase();
+    let name = exe
+        .file_stem()
+        .and_then(|n| n.to_str())
+        .unwrap_or("browser")
+        .to_ascii_lowercase();
     match name.as_str() {
-        "msedge" | "microsoft edge" | "microsoft-edge" | "microsoft-edge-stable" => "Microsoft Edge".into(),
-        "chrome" | "google chrome" | "google-chrome" | "google-chrome-stable" => "Google Chrome".into(),
+        "msedge" | "microsoft edge" | "microsoft-edge" | "microsoft-edge-stable" => {
+            "Microsoft Edge".into()
+        }
+        "chrome" | "google chrome" | "google-chrome" | "google-chrome-stable" => {
+            "Google Chrome".into()
+        }
         "brave" | "brave browser" | "brave-browser" => "Brave".into(),
         "vivaldi" | "vivaldi-stable" => "Vivaldi".into(),
         "chromium" | "chromium-browser" => "Chromium".into(),
@@ -178,17 +271,24 @@ impl Socket {
         let mut stream = TcpStream::connect(("127.0.0.1", port))?;
         stream.set_read_timeout(Some(Duration::from_secs(10)))?;
         stream.set_nodelay(true)?;
-        write!(stream, "GET {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n")?;
+        write!(
+            stream,
+            "GET {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n"
+        )?;
         let mut head = Vec::new();
         let mut byte = [0u8; 1];
         while !head.ends_with(b"\r\n\r\n") {
             if stream.read(&mut byte)? == 0 || head.len() > 8192 {
-                return Err(std::io::Error::other("the browser closed the DevTools connection"));
+                return Err(std::io::Error::other(
+                    "the browser closed the DevTools connection",
+                ));
             }
             head.push(byte[0]);
         }
         if !head.starts_with(b"HTTP/1.1 101") {
-            return Err(std::io::Error::other("the browser refused the DevTools connection"));
+            return Err(std::io::Error::other(
+                "the browser refused the DevTools connection",
+            ));
         }
         Ok(Socket { stream, next: 1 })
     }
@@ -206,7 +306,11 @@ impl Socket {
                 frame.extend_from_slice(&(n as u64).to_be_bytes());
             }
         }
-        let mask = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.subsec_nanos()) ^ 0x5a17_c3e9).to_be_bytes();
+        let mask = (std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.subsec_nanos())
+            ^ 0x5a17_c3e9)
+            .to_be_bytes();
         frame.extend_from_slice(&mask);
         frame.extend(payload.iter().enumerate().map(|(i, b)| b ^ mask[i % 4]));
         self.stream.write_all(&frame)
@@ -235,7 +339,11 @@ impl Socket {
             let mut payload = vec![0u8; length as usize];
             self.stream.read_exact(&mut payload)?;
             match opcode {
-                0x8 => return Err(std::io::Error::other("the browser closed the DevTools connection")),
+                0x8 => {
+                    return Err(std::io::Error::other(
+                        "the browser closed the DevTools connection",
+                    ));
+                }
                 0x9 => self.send(0xA, &payload)?,
                 0x0..=0x2 => {
                     message.extend_from_slice(&payload);
@@ -253,7 +361,12 @@ impl Socket {
     fn call(&mut self, method: &str, params: Value) -> std::io::Result<Vec<u8>> {
         let id = self.next;
         self.next += 1;
-        self.send(0x1, json!({"id": id, "method": method, "params": params}).to_string().as_bytes())?;
+        self.send(
+            0x1,
+            json!({"id": id, "method": method, "params": params})
+                .to_string()
+                .as_bytes(),
+        )?;
         loop {
             let mut message = self.receive()?;
             let answer: Value = serde_json::from_slice(&message).unwrap_or_default();
@@ -271,16 +384,27 @@ impl Socket {
 pub fn youtube_cookies(answer: &[u8]) -> Jar {
     let value: Value = serde_json::from_slice(answer).unwrap_or_default();
     let mut jar = Jar::default();
-    for cookie in value.pointer("/result/cookies").and_then(Value::as_array).into_iter().flatten() {
-        let domain = cookie.get("domain").and_then(Value::as_str).unwrap_or("").trim_start_matches('.');
+    for cookie in value
+        .pointer("/result/cookies")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let domain = cookie
+            .get("domain")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .trim_start_matches('.');
         if domain != "youtube.com" && !domain.ends_with(".youtube.com") {
             continue;
         }
-        let value = cookie.get("value").and_then(|v| match v.get("type").and_then(Value::as_str) {
-            Some("string") => v.get("value").and_then(Value::as_str),
-            Some(_) => None,
-            None => v.as_str(),
-        });
+        let value = cookie
+            .get("value")
+            .and_then(|v| match v.get("type").and_then(Value::as_str) {
+                Some("string") => v.get("value").and_then(Value::as_str),
+                Some(_) => None,
+                None => v.as_str(),
+            });
         if let (Some(name), Some(value)) = (cookie.get("name").and_then(Value::as_str), value) {
             jar.set(name, value);
         }
@@ -297,7 +421,9 @@ pub fn finished(jar: &Jar) -> bool {
 /// The DevTools port and path in the browser's "DevTools listening on
 /// ws://127.0.0.1:<port>/<path>" line.
 fn listening(said: &str) -> Option<(u16, String)> {
-    let address = said.lines().find_map(|l| l.trim().strip_prefix("DevTools listening on ws://"))?;
+    let address = said
+        .lines()
+        .find_map(|l| l.trim().strip_prefix("DevTools listening on ws://"))?;
     let (host, path) = address.split_once('/')?;
     let port = host.rsplit_once(':')?.1.parse().ok()?;
     Some((port, format!("/{path}")))
@@ -306,9 +432,18 @@ fn listening(said: &str) -> Option<(u16, String)> {
 /// The port in Firefox's "WebDriver BiDi listening on ws://127.0.0.1:<port>"
 /// line.
 fn bidi_listening(said: &str) -> Option<u16> {
-    let address = said.lines().find_map(|l| l.trim().split_once("WebDriver BiDi listening on ws://").map(|(_, a)| a))?;
+    let address = said.lines().find_map(|l| {
+        l.trim()
+            .split_once("WebDriver BiDi listening on ws://")
+            .map(|(_, a)| a)
+    })?;
     let host = address.split('/').next()?;
-    host.rsplit_once(':')?.1.trim().parse().ok().filter(|&port| port != 0)
+    host.rsplit_once(':')?
+        .1
+        .trim()
+        .parse()
+        .ok()
+        .filter(|&port| port != 0)
 }
 
 /// Why a WebDriver BiDi answer is an error, if it is one.
@@ -342,11 +477,22 @@ pub enum Outcome {
 /// goes there; any other gets one under [folder].
 fn profile_for(exe: &Path, folder: &Path) -> PathBuf {
     let path = exe.to_string_lossy();
-    let name = exe.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let name = exe
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
     let home = std::env::var_os("HOME").map(PathBuf::from);
     match home {
-        Some(home) if path.starts_with("/snap/bin/") => home.join("snap").join(&name).join("common").join("lumtub-sign-in"),
-        Some(home) if path.contains("/flatpak/exports/bin/") => home.join(".var").join("app").join(&name).join("lumtub-sign-in"),
+        Some(home) if path.starts_with("/snap/bin/") => home
+            .join("snap")
+            .join(&name)
+            .join("common")
+            .join("lumtub-sign-in"),
+        Some(home) if path.contains("/flatpak/exports/bin/") => home
+            .join(".var")
+            .join("app")
+            .join(&name)
+            .join("lumtub-sign-in"),
         _ => folder.join("browser-sign-in"),
     }
 }
@@ -381,16 +527,26 @@ fn close(browser: &mut Child, profile: &Path, socket: Option<&mut Socket>, metho
 /// and keeps the `lock` link elsewhere.
 fn profile_in_use(profile: &Path) -> bool {
     if cfg!(windows) {
-        ["lockfile", "parent.lock"].iter().map(|name| profile.join(name)).any(|lock| lock.exists() && std::fs::remove_file(&lock).is_err())
+        ["lockfile", "parent.lock"]
+            .iter()
+            .map(|name| profile.join(name))
+            .any(|lock| lock.exists() && std::fs::remove_file(&lock).is_err())
     } else {
-        ["SingletonLock", "lock"].iter().any(|name| profile.join(name).symlink_metadata().is_ok())
+        ["SingletonLock", "lock"]
+            .iter()
+            .any(|name| profile.join(name).symlink_metadata().is_ok())
     }
 }
 
 /// Waits for the browser to let go of [profile]; false when this sign-in
 /// was cancelled or took too long. The process started may hand the window
 /// to another one and exit at once, so its exit alone says nothing.
-fn wait_closed(browser: &mut Child, profile: &Path, current: impl Fn() -> bool, patience: Duration) -> bool {
+fn wait_closed(
+    browser: &mut Child,
+    profile: &Path,
+    current: impl Fn() -> bool,
+    patience: Duration,
+) -> bool {
     let begun = Instant::now();
     let mut seen = false;
     loop {
@@ -417,11 +573,21 @@ fn read_profile(exe: &Path, profile: &Path, current: impl Fn() -> bool) -> Resul
     let _ = std::fs::remove_file(profile.join("DevToolsActivePort"));
     let mut command = Command::new(exe);
     if firefox {
-        command.args(["-headless", "-no-remote", "-profile"]).arg(profile).args(["--remote-debugging-port", "0", "about:blank"]);
+        command
+            .args(["-headless", "-no-remote", "-profile"])
+            .arg(profile)
+            .args(["--remote-debugging-port", "0", "about:blank"]);
     } else {
         command
             .arg(format!("--user-data-dir={}", profile.display()))
-            .args(["--headless=new", "--remote-debugging-port=0", "--no-first-run", "--no-default-browser-check", "--disable-sync", "about:blank"]);
+            .args([
+                "--headless=new",
+                "--remote-debugging-port=0",
+                "--no-first-run",
+                "--no-default-browser-check",
+                "--disable-sync",
+                "about:blank",
+            ]);
     }
     let mut browser = command
         .stdout(Stdio::null())
@@ -449,19 +615,45 @@ fn read_profile(exe: &Path, profile: &Path, current: impl Fn() -> bool) -> Resul
         if !current() {
             break String::new();
         }
-        let address = if firefox { bidi_listening(&heard()).map(|port| (port, "/session".to_owned())) } else { devtools(profile).or_else(|| listening(&heard())) };
+        let address = if firefox {
+            bidi_listening(&heard()).map(|port| (port, "/session".to_owned()))
+        } else {
+            devtools(profile).or_else(|| listening(&heard()))
+        };
         if let Some(Ok(mut socket)) = address.map(|(port, path)| Socket::connect(port, &path)) {
-            let read = if firefox { read_bidi(&mut socket) } else { read_devtools(&mut socket) };
-            close(&mut browser, profile, Some(&mut socket), if firefox { "browser.close" } else { "Browser.close" });
+            let read = if firefox {
+                read_bidi(&mut socket)
+            } else {
+                read_devtools(&mut socket)
+            };
+            close(
+                &mut browser,
+                profile,
+                Some(&mut socket),
+                if firefox {
+                    "browser.close"
+                } else {
+                    "Browser.close"
+                },
+            );
             return read;
         }
         // Like the window, the process started may hand over to another
         // and exit; only a profile nothing holds says it has gone.
-        let gone = !matches!(browser.try_wait(), Ok(None)) && !profile_in_use(profile) && begun.elapsed() > Duration::from_secs(10);
+        let gone = !matches!(browser.try_wait(), Ok(None))
+            && !profile_in_use(profile)
+            && begun.elapsed() > Duration::from_secs(10);
         if gone || begun.elapsed() > Duration::from_secs(30) {
-            let last = heard().lines().rev().find(|l| !l.trim().is_empty()).map(|l| l.chars().take(200).collect::<String>());
+            let last = heard()
+                .lines()
+                .rev()
+                .find(|l| !l.trim().is_empty())
+                .map(|l| l.chars().take(200).collect::<String>());
             break match last {
-                Some(last) => format!("{} did not start without a window: {last}", browser_name(exe)),
+                Some(last) => format!(
+                    "{} did not start without a window: {last}",
+                    browser_name(exe)
+                ),
                 None => format!("{} did not start without a window", browser_name(exe)),
             };
         }
@@ -483,7 +675,9 @@ fn read_devtools(socket: &mut Socket) -> Result<Jar, String> {
 }
 
 fn read_bidi(socket: &mut Socket) -> Result<Jar, String> {
-    let started = socket.call("session.new", json!({"capabilities": {}})).map_err(|e| format!("could not start a session: {e}"))?;
+    let started = socket
+        .call("session.new", json!({"capabilities": {}}))
+        .map_err(|e| format!("could not start a session: {e}"))?;
     if let Some(why) = bidi_error(&started) {
         return Err(format!("could not start a session: {why}"));
     }
@@ -522,21 +716,40 @@ user_pref("remote.active-protocols", 1);
 /// has its DevTools port open, so the cookies are read after it closed, by
 /// opening the profile again without a window. [opened] runs once the
 /// browser is up, [reading] once its window was closed.
-pub fn sign_in(exe: &Path, folder: &Path, url: &str, opened: impl FnOnce(), reading: impl FnOnce()) -> Outcome {
+pub fn sign_in(
+    exe: &Path,
+    folder: &Path,
+    url: &str,
+    opened: impl FnOnce(),
+    reading: impl FnOnce(),
+) -> Outcome {
     let attempt = ATTEMPT.fetch_add(1, Ordering::SeqCst) + 1;
     let current = || ATTEMPT.load(Ordering::SeqCst) == attempt;
     let firefox = is_firefox(exe);
     let profile = profile_for(exe, folder);
     remove_profile(&profile);
-    if std::fs::create_dir_all(&profile).is_err() || (firefox && std::fs::write(profile.join("user.js"), FIREFOX_SETTINGS).is_err()) {
+    if std::fs::create_dir_all(&profile).is_err()
+        || (firefox && std::fs::write(profile.join("user.js"), FIREFOX_SETTINGS).is_err())
+    {
         remove_profile(&profile);
         return Outcome::Failed("could not make the browser's profile folder".into());
     }
     let mut command = Command::new(exe);
     if firefox {
-        command.args(["-no-remote", "-profile"]).arg(&profile).args(["-new-window", url]);
+        command
+            .args(["-no-remote", "-profile"])
+            .arg(&profile)
+            .args(["-new-window", url]);
     } else {
-        command.arg(format!("--user-data-dir={}", profile.display())).args(["--no-first-run", "--no-default-browser-check", "--disable-sync", "--new-window"]).arg(url);
+        command
+            .arg(format!("--user-data-dir={}", profile.display()))
+            .args([
+                "--no-first-run",
+                "--no-default-browser-check",
+                "--disable-sync",
+                "--new-window",
+            ])
+            .arg(url);
     }
     let started = command.spawn();
     let mut browser = match started {
@@ -576,27 +789,80 @@ mod tests {
     fn sandboxed_browsers_get_a_profile_they_may_write() {
         let home = PathBuf::from(std::env::var_os("HOME").unwrap());
         let folder = Path::new("/data");
-        assert_eq!(profile_for(Path::new("/snap/bin/chromium"), folder), home.join("snap/chromium/common/lumtub-sign-in"));
-        assert_eq!(profile_for(Path::new("/var/lib/flatpak/exports/bin/com.google.Chrome"), folder), home.join(".var/app/com.google.Chrome/lumtub-sign-in"));
-        assert_eq!(profile_for(Path::new("/usr/bin/google-chrome-stable"), folder), folder.join("browser-sign-in"));
-        assert_eq!(profile_for(Path::new("/snap/bin/firefox"), folder), home.join("snap/firefox/common/lumtub-sign-in"));
-        assert_eq!(profile_for(Path::new("/var/lib/flatpak/exports/bin/org.mozilla.firefox"), folder), home.join(".var/app/org.mozilla.firefox/lumtub-sign-in"));
-        assert_eq!(browser_name(Path::new("/var/lib/flatpak/exports/bin/com.brave.Browser")), "Brave");
-        assert_eq!(browser_name(Path::new("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")), "Google Chrome");
+        assert_eq!(
+            profile_for(Path::new("/snap/bin/chromium"), folder),
+            home.join("snap/chromium/common/lumtub-sign-in")
+        );
+        assert_eq!(
+            profile_for(
+                Path::new("/var/lib/flatpak/exports/bin/com.google.Chrome"),
+                folder
+            ),
+            home.join(".var/app/com.google.Chrome/lumtub-sign-in")
+        );
+        assert_eq!(
+            profile_for(Path::new("/usr/bin/google-chrome-stable"), folder),
+            folder.join("browser-sign-in")
+        );
+        assert_eq!(
+            profile_for(Path::new("/snap/bin/firefox"), folder),
+            home.join("snap/firefox/common/lumtub-sign-in")
+        );
+        assert_eq!(
+            profile_for(
+                Path::new("/var/lib/flatpak/exports/bin/org.mozilla.firefox"),
+                folder
+            ),
+            home.join(".var/app/org.mozilla.firefox/lumtub-sign-in")
+        );
+        assert_eq!(
+            browser_name(Path::new("/var/lib/flatpak/exports/bin/com.brave.Browser")),
+            "Brave"
+        );
+        assert_eq!(
+            browser_name(Path::new(
+                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            )),
+            "Google Chrome"
+        );
     }
 
     #[test]
     fn knows_chromium_browsers() {
-        assert!(is_chromium(Path::new(r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe")));
-        assert!(is_chromium(Path::new(r"C:\Users\a\AppData\Local\Programs\Opera\launcher.exe")));
-        assert!(is_chromium(Path::new(r"C:\Users\a\AppData\Local\Yandex\YandexBrowser\Application\browser.exe")));
-        assert!(!is_chromium(Path::new(r"C:\Program Files\Mozilla Firefox\firefox.exe")));
-        assert!(is_firefox(Path::new(r"C:\Program Files\Mozilla Firefox\firefox.exe")));
-        assert!(is_firefox(Path::new("/Applications/Firefox.app/Contents/MacOS/firefox")));
-        assert!(is_firefox(Path::new("/var/lib/flatpak/exports/bin/org.mozilla.firefox")));
-        assert!(!is_firefox(Path::new(r"C:\Program Files\Google\Chrome\Application\chrome.exe")));
-        assert_eq!(browser_name(Path::new("/snap/bin/firefox")), "Mozilla Firefox");
-        assert_eq!(browser_name(Path::new("/var/lib/flatpak/exports/bin/org.mozilla.firefox")), "Mozilla Firefox");
+        assert!(is_chromium(Path::new(
+            r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+        )));
+        assert!(is_chromium(Path::new(
+            r"C:\Users\a\AppData\Local\Programs\Opera\launcher.exe"
+        )));
+        assert!(is_chromium(Path::new(
+            r"C:\Users\a\AppData\Local\Yandex\YandexBrowser\Application\browser.exe"
+        )));
+        assert!(!is_chromium(Path::new(
+            r"C:\Program Files\Mozilla Firefox\firefox.exe"
+        )));
+        assert!(is_firefox(Path::new(
+            r"C:\Program Files\Mozilla Firefox\firefox.exe"
+        )));
+        assert!(is_firefox(Path::new(
+            "/Applications/Firefox.app/Contents/MacOS/firefox"
+        )));
+        assert!(is_firefox(Path::new(
+            "/var/lib/flatpak/exports/bin/org.mozilla.firefox"
+        )));
+        assert!(!is_firefox(Path::new(
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+        )));
+        assert_eq!(
+            browser_name(Path::new("/snap/bin/firefox")),
+            "Mozilla Firefox"
+        );
+        assert_eq!(
+            browser_name(Path::new(
+                "/var/lib/flatpak/exports/bin/org.mozilla.firefox"
+            )),
+            "Mozilla Firefox"
+        );
         assert!(!is_chromium(Path::new(r"C:\Other\browser.exe")));
         assert_eq!(browser_name(Path::new("msedge.exe")), "Microsoft Edge");
     }
@@ -636,18 +902,38 @@ mod tests {
     fn reads_the_bidi_address_and_errors() {
         let said = "console.warn: something\nWebDriver BiDi listening on ws://127.0.0.1:9222\n";
         assert_eq!(bidi_listening(said), Some(9222));
-        assert_eq!(bidi_listening("WebDriver BiDi listening on ws://127.0.0.1:41000/session\n"), Some(41000));
-        assert_eq!(bidi_listening("DevTools listening on ws://127.0.0.1:41235/devtools/browser/0b1c"), None);
+        assert_eq!(
+            bidi_listening("WebDriver BiDi listening on ws://127.0.0.1:41000/session\n"),
+            Some(41000)
+        );
+        assert_eq!(
+            bidi_listening("DevTools listening on ws://127.0.0.1:41235/devtools/browser/0b1c"),
+            None
+        );
         assert_eq!(bidi_listening("nothing here"), None);
-        let failed = json!({"type": "error", "id": 1, "error": "session not created", "message": "busy"});
-        assert_eq!(bidi_error(failed.to_string().as_bytes()), Some("session not created: busy".to_owned()));
-        assert_eq!(bidi_error(json!({"type": "success", "id": 1, "result": {}}).to_string().as_bytes()), None);
+        let failed =
+            json!({"type": "error", "id": 1, "error": "session not created", "message": "busy"});
+        assert_eq!(
+            bidi_error(failed.to_string().as_bytes()),
+            Some("session not created: busy".to_owned())
+        );
+        assert_eq!(
+            bidi_error(
+                json!({"type": "success", "id": 1, "result": {}})
+                    .to_string()
+                    .as_bytes()
+            ),
+            None
+        );
     }
 
     #[test]
     fn reads_the_devtools_address_from_stderr() {
         let said = "[1:2:ERROR] something\n\nDevTools listening on ws://127.0.0.1:41235/devtools/browser/0b1c\n";
-        assert_eq!(listening(said), Some((41235, "/devtools/browser/0b1c".to_owned())));
+        assert_eq!(
+            listening(said),
+            Some((41235, "/devtools/browser/0b1c".to_owned()))
+        );
         assert_eq!(listening("nothing here"), None);
     }
 
@@ -655,8 +941,15 @@ mod tests {
     fn reads_the_devtools_port_file() {
         let folder = std::env::temp_dir().join(format!("lumtub-devtools-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
-        std::fs::write(folder.join("DevToolsActivePort"), "51234\n/devtools/browser/abc\n").unwrap();
-        assert_eq!(devtools(&folder), Some((51234, "/devtools/browser/abc".into())));
+        std::fs::write(
+            folder.join("DevToolsActivePort"),
+            "51234\n/devtools/browser/abc\n",
+        )
+        .unwrap();
+        assert_eq!(
+            devtools(&folder),
+            Some((51234, "/devtools/browser/abc".into()))
+        );
         std::fs::remove_dir_all(&folder).unwrap();
     }
 }

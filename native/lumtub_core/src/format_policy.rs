@@ -25,7 +25,9 @@ impl Codec {
     /// none for audio-only (`none`), missing or unknown codecs.
     pub(crate) fn of(name: &str) -> Option<Codec> {
         let name = name.trim().to_lowercase();
-        Codec::ALL.into_iter().find(|c| c.prefixes().iter().any(|p| name.starts_with(p)))
+        Codec::ALL
+            .into_iter()
+            .find(|c| c.prefixes().iter().any(|p| name.starts_with(p)))
     }
 
     /// Lower-case name prefixes that mean this codec.
@@ -50,7 +52,10 @@ impl Codec {
 
     /// yt-dlp filters dropping this codec, one per name prefix.
     fn exclude_filter(self) -> String {
-        self.prefixes().iter().map(|p| format!("[vcodec!^={p}]")).collect()
+        self.prefixes()
+            .iter()
+            .map(|p| format!("[vcodec!^={p}]"))
+            .collect()
     }
 }
 
@@ -125,12 +130,20 @@ impl Settings {
     /// - quality: no preference (VP9, AV1, H.264, VP8 as a tie-break).
     pub fn codec_order(&self) -> Vec<Codec> {
         let all: Vec<Codec> = Codec::ALL.into_iter().filter(|&c| self.allows(c)).collect();
-        let verified: Vec<Codec> = all.iter().copied().filter(|&c| matches!(c, Codec::Vp9 | Codec::Av1) && self.hardware(c)).collect();
+        let verified: Vec<Codec> = all
+            .iter()
+            .copied()
+            .filter(|&c| matches!(c, Codec::Vp9 | Codec::Av1) && self.hardware(c))
+            .collect();
         let h264: Vec<Codec> = all.iter().copied().filter(|&c| c == Codec::H264).collect();
         let front: Vec<Codec> = match self.strategy {
             Strategy::Quality => vec![],
-            Strategy::Auto if self.hardware(Codec::Av1) => [vec![Codec::Av1, Codec::Vp9], h264].concat(),
-            Strategy::Auto if self.hardware(Codec::Vp9) => [vec![Codec::Vp9], h264, vec![Codec::Av1]].concat(),
+            Strategy::Auto if self.hardware(Codec::Av1) => {
+                [vec![Codec::Av1, Codec::Vp9], h264].concat()
+            }
+            Strategy::Auto if self.hardware(Codec::Vp9) => {
+                [vec![Codec::Vp9], h264, vec![Codec::Av1]].concat()
+            }
             Strategy::Auto => [h264, vec![Codec::Vp9, Codec::Av1]].concat(),
             Strategy::LowResource => {
                 let tall = self.max_height > 1080;
@@ -155,21 +168,40 @@ impl Settings {
         }
         const LADDER: [u32; 5] = [720, 1080, 1440, 2160, 4320];
         let modern = self.hardware(Codec::Vp9) || self.hardware(Codec::Av1);
-        let decoder = if self.strategy == Strategy::Auto && !modern { 1080 } else { 0 };
+        let decoder = if self.strategy == Strategy::Auto && !modern {
+            1080
+        } else {
+            0
+        };
         let display = if self.display == 0 {
             0
         } else {
-            LADDER.into_iter().find(|&h| h as f64 >= self.display as f64 * 0.95).unwrap_or(0)
+            LADDER
+                .into_iter()
+                .find(|&h| h as f64 >= self.display as f64 * 0.95)
+                .unwrap_or(0)
         };
-        [decoder, display].into_iter().filter(|&h| h > 0).min().unwrap_or(0)
+        [decoder, display]
+            .into_iter()
+            .filter(|&h| h > 0)
+            .min()
+            .unwrap_or(0)
     }
 
     /// Every alternative, the last `best` included, carries the exclude
     /// filters of the disabled codecs. The quality strategy is yt-dlp's own
     /// `bestvideo`, written `ytdl` when nothing restricts it.
     pub fn expression(&self) -> String {
-        let height = if self.max_height > 0 { format!("[height<=?{}]", self.max_height) } else { String::new() };
-        let exclude: String = Codec::ALL.into_iter().filter(|&c| !self.allows(c)).map(Codec::exclude_filter).collect();
+        let height = if self.max_height > 0 {
+            format!("[height<=?{}]", self.max_height)
+        } else {
+            String::new()
+        };
+        let exclude: String = Codec::ALL
+            .into_iter()
+            .filter(|&c| !self.allows(c))
+            .map(Codec::exclude_filter)
+            .collect();
         let audio = match self.audio {
             Audio::Best => "bestaudio",
             Audio::Medium => "bestaudio[abr<=?128]",
@@ -179,7 +211,9 @@ impl Settings {
             if height.is_empty() && exclude.is_empty() && self.audio == Audio::Best {
                 return "ytdl".into();
             }
-            return format!("bestvideo{exclude}{height}+{audio}/best{exclude}{height}/best{exclude}");
+            return format!(
+                "bestvideo{exclude}{height}+{audio}/best{exclude}{height}/best{exclude}"
+            );
         }
         let mut parts = vec![format!("bestvideo{exclude}{height}+{audio}")];
         if audio != "bestaudio" {
@@ -195,7 +229,9 @@ impl Settings {
         if self.strategy == Strategy::Quality {
             return None;
         }
-        self.codec_order().first().map(|c| format!("res,fps,vcodec:{}", c.sort_name()))
+        self.codec_order()
+            .first()
+            .map(|c| format!("res,fps,vcodec:{}", c.sort_name()))
     }
 
     pub fn policy(&self) -> Policy {
@@ -231,16 +267,30 @@ mod tests {
         let s = settings("{}");
         assert_eq!(s.policy().order, ["h264", "vp9", "av1", "vp8"]);
         assert!(s.expression().starts_with("bestvideo+bestaudio/"));
-        assert_eq!(settings(r#"{"hardware":["av1","vp9"]}"#).policy().order[..3], ["av1", "vp9", "h264"]);
-        assert_eq!(settings(r#"{"hardware":["vp9"]}"#).policy().order[..3], ["vp9", "h264", "av1"]);
-        assert_eq!(settings(r#"{"hardware":["av1"],"maxHeight":720}"#).format_sort().unwrap(), "res,fps,vcodec:av01");
+        assert_eq!(
+            settings(r#"{"hardware":["av1","vp9"]}"#).policy().order[..3],
+            ["av1", "vp9", "h264"]
+        );
+        assert_eq!(
+            settings(r#"{"hardware":["vp9"]}"#).policy().order[..3],
+            ["vp9", "h264", "av1"]
+        );
+        assert_eq!(
+            settings(r#"{"hardware":["av1"],"maxHeight":720}"#)
+                .format_sort()
+                .unwrap(),
+            "res,fps,vcodec:av01"
+        );
     }
 
     #[test]
     fn disabled_codecs_are_never_picked() {
         let s = settings(r#"{"disabled":["av1"],"hardware":["av1"]}"#);
         assert_eq!(s.policy().order, ["vp9", "h264", "vp8"]);
-        assert_eq!(s.expression(), "bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio/best[vcodec!^=av01][vcodec!^=av1]/best[vcodec!^=av01][vcodec!^=av1]");
+        assert_eq!(
+            s.expression(),
+            "bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio/best[vcodec!^=av01][vcodec!^=av1]/best[vcodec!^=av01][vcodec!^=av1]"
+        );
     }
 
     #[test]
@@ -250,17 +300,35 @@ mod tests {
         let tall = settings(r#"{"strategy":"lowResource","maxHeight":2160,"hardware":["vp9"]}"#);
         assert_eq!(tall.policy().order[..2], ["vp9", "h264"]);
         assert_eq!(settings(r#"{"strategy":"quality"}"#).expression(), "ytdl");
-        assert_eq!(settings(r#"{"strategy":"quality","maxHeight":480}"#).expression(), "bestvideo[height<=?480]+bestaudio/best[height<=?480]/best");
+        assert_eq!(
+            settings(r#"{"strategy":"quality","maxHeight":480}"#).expression(),
+            "bestvideo[height<=?480]+bestaudio/best[height<=?480]/best"
+        );
         assert_eq!(settings(r#"{"strategy":"quality"}"#).format_sort(), None);
-        assert_eq!(settings(r#"{"audio":"low"}"#).expression(), "bestvideo+bestaudio[abr<=?64]/bestvideo+bestaudio/best/best");
+        assert_eq!(
+            settings(r#"{"audio":"low"}"#).expression(),
+            "bestvideo+bestaudio[abr<=?64]/bestvideo+bestaudio/best/best"
+        );
     }
 
     #[test]
     fn display_cap() {
         assert_eq!(settings(r#"{"display":2160}"#).display_height(), 1080);
-        assert_eq!(settings(r#"{"display":2160,"hardware":["vp9"]}"#).display_height(), 2160);
-        assert_eq!(settings(r#"{"display":1440,"hardware":["vp9"]}"#).display_height(), 1440);
-        assert_eq!(settings(r#"{"display":0,"hardware":["vp9"]}"#).display_height(), 0);
-        assert_eq!(settings(r#"{"display":2160,"maxHeight":720}"#).display_height(), 0);
+        assert_eq!(
+            settings(r#"{"display":2160,"hardware":["vp9"]}"#).display_height(),
+            2160
+        );
+        assert_eq!(
+            settings(r#"{"display":1440,"hardware":["vp9"]}"#).display_height(),
+            1440
+        );
+        assert_eq!(
+            settings(r#"{"display":0,"hardware":["vp9"]}"#).display_height(),
+            0
+        );
+        assert_eq!(
+            settings(r#"{"display":2160,"maxHeight":720}"#).display_height(),
+            0
+        );
     }
 }

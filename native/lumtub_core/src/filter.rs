@@ -245,7 +245,11 @@ pub fn title_language(title: &str) -> Language {
         if lower.contains(['ө', 'ү']) {
             return Language::Mn;
         }
-        return cyrillic(title).unwrap_or(if lower.contains('і') { Language::Uk } else { Language::Ru });
+        return cyrillic(title).unwrap_or(if lower.contains('і') {
+            Language::Uk
+        } else {
+            Language::Ru
+        });
     }
     let lower = title.to_lowercase();
     if lower.chars().any(|c| VIETNAMESE.contains(c)) {
@@ -273,7 +277,10 @@ pub fn title_language(title: &str) -> Language {
     // Dutch, where there is text enough to go by.
     // A title of a word or two, such as a game's name, is too little.
     let enough = if words.len() >= 4 { 0.2 } else { 0.5 };
-    if let Some(found) = latin_detector().detect(title).filter(|info| info.confidence() >= enough).and_then(|info| latin_language(info.lang()))
+    if let Some(found) = latin_detector()
+        .detect(title)
+        .filter(|info| info.confidence() >= enough)
+        .and_then(|info| latin_language(info.lang()))
         && (best_score < 2.0 || found == best)
     {
         return found;
@@ -286,18 +293,24 @@ fn latin_detector() -> &'static whatlang::Detector {
     static DETECTOR: std::sync::OnceLock<whatlang::Detector> = std::sync::OnceLock::new();
     DETECTOR.get_or_init(|| {
         whatlang::Detector::with_allowlist(vec![
-            Eng, Spa, Fra, Deu, Por, Ita, Nld, Tur, Ind, Tgl, Pol, Ces, Slk, Ron, Hun, Swe, Nob, Dan, Fin, Aze, Epo,
-            Est, Jav, Lat, Lit, Lav, Tuk, Uzb,
+            Eng, Spa, Fra, Deu, Por, Ita, Nld, Tur, Ind, Tgl, Pol, Ces, Slk, Ron, Hun, Swe, Nob,
+            Dan, Fin, Aze, Epo, Est, Jav, Lat, Lit, Lav, Tuk, Uzb,
         ])
     })
 }
 
 /// The language whatlang reads [title] as among [langs], which share its
 /// script (Devanagari or Cyrillic), when it is sure enough.
-fn shared_script(cell: &'static std::sync::OnceLock<whatlang::Detector>, langs: &[whatlang::Lang], title: &str) -> Option<Language> {
+fn shared_script(
+    cell: &'static std::sync::OnceLock<whatlang::Detector>,
+    langs: &[whatlang::Lang],
+    title: &str,
+) -> Option<Language> {
     use whatlang::Lang::*;
     let detector = cell.get_or_init(|| whatlang::Detector::with_allowlist(langs.to_vec()));
-    let info = detector.detect(title).filter(|info| info.confidence() >= 0.5)?;
+    let info = detector
+        .detect(title)
+        .filter(|info| info.confidence() >= 0.5)?;
     Some(match info.lang() {
         Hin => Language::Hi,
         Mar => Language::Mr,
@@ -592,8 +605,14 @@ mod tests {
     #[test]
     fn tells_languages_apart() {
         assert_eq!(title_language("【4K】東京の夜景を歩く"), Language::Ja);
-        assert_eq!(title_language("【小Pの遊戲實況】週一不想努力啦 今天輕鬆玩遊戲"), Language::Zh);
-        assert_eq!(title_language("lijack的遊戲直播--光榮--PC--真・三國無雙 2 with 猛將傳"), Language::Zh);
+        assert_eq!(
+            title_language("【小Pの遊戲實況】週一不想努力啦 今天輕鬆玩遊戲"),
+            Language::Zh
+        );
+        assert_eq!(
+            title_language("lijack的遊戲直播--光榮--PC--真・三國無雙 2 with 猛將傳"),
+            Language::Zh
+        );
         assert_eq!(title_language("東京大学の入試問題を解説"), Language::Ja);
         assert_eq!(title_language("【ホロライブ】新衣装お披露目"), Language::Ja);
         assert_eq!(title_language("初音ミク 千本桜"), Language::Ja);
@@ -617,11 +636,26 @@ mod tests {
         assert_eq!(title_language("Как приготовить борщ"), Language::Ru);
         assert_eq!(title_language("Phở bò Hà Nội"), Language::Vi);
         assert_eq!(title_language("2026 12 31"), Language::Any);
-        assert_eq!(title_language("Come coltivare i pomodori sul balcone di casa"), Language::It);
-        assert_eq!(title_language("Notizie internazionali di oggi: cosa sta succedendo"), Language::It);
-        assert_eq!(title_language("Hoe maak je de lekkerste appeltaart van Nederland"), Language::Nl);
-        assert_eq!(title_language("Jak zrobić najlepszą pizzę w domu"), Language::Pl);
-        assert_eq!(title_language("Evde en güzel pizza nasıl yapılır"), Language::Tr);
+        assert_eq!(
+            title_language("Come coltivare i pomodori sul balcone di casa"),
+            Language::It
+        );
+        assert_eq!(
+            title_language("Notizie internazionali di oggi: cosa sta succedendo"),
+            Language::It
+        );
+        assert_eq!(
+            title_language("Hoe maak je de lekkerste appeltaart van Nederland"),
+            Language::Nl
+        );
+        assert_eq!(
+            title_language("Jak zrobić najlepszą pizzę w domu"),
+            Language::Pl
+        );
+        assert_eq!(
+            title_language("Evde en güzel pizza nasıl yapılır"),
+            Language::Tr
+        );
         assert_eq!(title_language("ગુજરાતી ભોજન બનાવવાની રીત"), Language::Gu);
         assert_eq!(title_language("ಬೆಂಗಳೂರು ನಗರ ಪ್ರವಾಸ"), Language::Kn);
         assert_eq!(title_language("ശ്രീലങ്കൻ യാത്ര"), Language::Ml);
@@ -633,14 +667,32 @@ mod tests {
         assert_eq!(title_language("ប្រវត្តិសាស្ត្រកម្ពុជា"), Language::Km);
         assert_eq!(title_language("የኢትዮጵያ ታሪክ"), Language::Am);
         assert_eq!(title_language("ਪੰਜਾਬੀ ਗੀਤ"), Language::Pa);
-        assert_eq!(title_language("Гісторыя Беларусі ў XX стагоддзі"), Language::Be);
-        assert_eq!(title_language("Историја на Македонија и Охрид, ѕвездите"), Language::Mk);
+        assert_eq!(
+            title_language("Гісторыя Беларусі ў XX стагоддзі"),
+            Language::Be
+        );
+        assert_eq!(
+            title_language("Историја на Македонија и Охрид, ѕвездите"),
+            Language::Mk
+        );
         assert_eq!(title_language("Монгол улсын түүх"), Language::Mn);
-        assert_eq!(title_language("Как да си направим най-хубавата баница у дома"), Language::Bg);
+        assert_eq!(
+            title_language("Как да си направим най-хубавата баница у дома"),
+            Language::Bg
+        );
         assert_eq!(title_language("भारत का इतिहास और संस्कृति"), Language::Hi);
-        assert_eq!(title_language("Kaip išsikepti skaniausią duoną namuose"), Language::Lt);
-        assert_eq!(title_language("Kā pagatavot garšīgāko maizi mājās"), Language::Lv);
-        assert_eq!(title_language("Ako upiecť najlepší chlieb doma za hodinu"), Language::Sk);
+        assert_eq!(
+            title_language("Kaip išsikepti skaniausią duoną namuose"),
+            Language::Lt
+        );
+        assert_eq!(
+            title_language("Kā pagatavot garšīgāko maizi mājās"),
+            Language::Lv
+        );
+        assert_eq!(
+            title_language("Ako upiecť najlepší chlieb doma za hodinu"),
+            Language::Sk
+        );
     }
 
     #[test]

@@ -86,7 +86,14 @@ fn float(out: &mut Vec<u8>, kind: u32, v: f64) {
 /// its tracks. `duration` is in milliseconds, 0 when not known. For a
 /// `file`, room is left for its length and the position of its index.
 /// It is called WebM when that holds it, unless `matroska`.
-pub fn head(video: &TrackInfo, audio: &TrackInfo, extra: Extra, duration: f64, file: bool, matroska: bool) -> Head {
+pub fn head(
+    video: &TrackInfo,
+    audio: &TrackInfo,
+    extra: Extra,
+    duration: f64,
+    file: bool,
+    matroska: bool,
+) -> Head {
     let webm = !matroska && webm_holds(video, audio, extra);
     let mut out = Vec::new();
     master(&mut out, 0x1A45_DFA3, |o| {
@@ -195,12 +202,20 @@ pub fn head(video: &TrackInfo, audio: &TrackInfo, extra: Extra, duration: f64, f
             });
         });
     }
-    Head { bytes: out, segment, duration_at, cues_at }
+    Head {
+        bytes: out,
+        segment,
+        duration_at,
+        cues_at,
+    }
 }
 
 /// Whether WebM may hold these: VP9 or AV1 with Opus, and nothing else.
 pub fn webm_holds(video: &TrackInfo, audio: &TrackInfo, extra: Extra) -> bool {
-    matches!(video.codec, "V_VP9" | "V_AV1") && audio.codec == "A_OPUS" && extra.texts.is_empty() && extra.cover.is_none()
+    matches!(video.codec, "V_VP9" | "V_AV1")
+        && audio.codec == "A_OPUS"
+        && extra.texts.is_empty()
+        && extra.cover.is_none()
 }
 
 /// Gathers blocks into clusters; a cluster is written out whole, as its
@@ -218,7 +233,10 @@ pub struct Clusters {
 impl Clusters {
     /// Clusters that follow `head`.
     pub fn after(head: &Head) -> Clusters {
-        Clusters { position: (head.bytes.len() - head.segment) as u64, ..Clusters::default() }
+        Clusters {
+            position: (head.bytes.len() - head.segment) as u64,
+            ..Clusters::default()
+        }
     }
 
     /// Adds a frame at `time` ms (its presentation time). A new cluster
@@ -252,7 +270,9 @@ impl Clusters {
     fn open(&mut self, out: &mut Vec<u8>, time: i64, key: bool) {
         let fresh = match self.start {
             None => true,
-            Some(start) => (key && time - start >= 1000) || time - start > 30_000 || time < start - 30_000,
+            Some(start) => {
+                (key && time - start >= 1000) || time - start > 30_000 || time < start - 30_000
+            }
         };
         if fresh {
             self.flush(out);

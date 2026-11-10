@@ -15,7 +15,10 @@ pub struct Response {
 
 impl Response {
     pub fn header(&self, name: &str) -> Option<&str> {
-        self.headers.iter().find(|(k, _)| k.eq_ignore_ascii_case(name)).map(|(_, v)| v.as_str())
+        self.headers
+            .iter()
+            .find(|(k, _)| k.eq_ignore_ascii_case(name))
+            .map(|(_, v)| v.as_str())
     }
 }
 
@@ -32,7 +35,11 @@ pub fn message_end(data: &[u8]) -> Option<(usize, usize)> {
     let text = String::from_utf8_lossy(&data[..head]);
     let length = text
         .lines()
-        .find_map(|l| l.split_once(':').filter(|(k, _)| k.trim().eq_ignore_ascii_case("content-length")).and_then(|(_, v)| v.trim().parse().ok()))
+        .find_map(|l| {
+            l.split_once(':')
+                .filter(|(k, _)| k.trim().eq_ignore_ascii_case("content-length"))
+                .and_then(|(_, v)| v.trim().parse().ok())
+        })
         .unwrap_or(0);
     Some((head, length))
 }
@@ -42,7 +49,10 @@ pub fn parse_head(head: &[u8]) -> (String, Vec<(String, String)>) {
     let text = String::from_utf8_lossy(head);
     let mut lines = text.split("\r\n");
     let first = lines.next().unwrap_or("").to_string();
-    let headers = lines.filter_map(|l| l.split_once(':')).map(|(k, v)| (k.trim().to_string(), v.trim().to_string())).collect();
+    let headers = lines
+        .filter_map(|l| l.split_once(':'))
+        .map(|(k, v)| (k.trim().to_string(), v.trim().to_string()))
+        .collect();
     (first, headers)
 }
 
@@ -52,11 +62,18 @@ impl Conn {
         stream.set_read_timeout(Some(Duration::from_secs(10)))?;
         stream.set_write_timeout(Some(Duration::from_secs(10)))?;
         let _ = stream.set_nodelay(true);
-        Ok(Conn { stream, framing: None, buffer: Vec::new() })
+        Ok(Conn {
+            stream,
+            framing: None,
+            buffer: Vec::new(),
+        })
     }
 
     pub fn local_ip(&self) -> String {
-        self.stream.local_addr().map(|a| a.ip().to_string()).unwrap_or_default()
+        self.stream
+            .local_addr()
+            .map(|a| a.ip().to_string())
+            .unwrap_or_default()
     }
 
     pub fn peer(&self) -> Option<SocketAddr> {
@@ -69,7 +86,14 @@ impl Conn {
 
     /// Sends a request and reads its answer. `protocol` is `HTTP/1.1` or
     /// `RTSP/1.0`.
-    pub fn request(&mut self, method: &str, uri: &str, protocol: &str, headers: &[(&str, String)], body: &[u8]) -> Result<Response, String> {
+    pub fn request(
+        &mut self,
+        method: &str,
+        uri: &str,
+        protocol: &str,
+        headers: &[(&str, String)],
+        body: &[u8],
+    ) -> Result<Response, String> {
         let mut out = format!("{method} {uri} {protocol}\r\n");
         for (k, v) in headers {
             out.push_str(&format!("{k}: {v}\r\n"));
@@ -83,8 +107,11 @@ impl Conn {
         if let Some(f) = self.framing.as_mut() {
             bytes = f.encrypt(&bytes);
         }
-        self.stream.write_all(&bytes).map_err(|e| format!("could not send {method} {uri}: {e}"))?;
-        self.answer().map_err(|e| format!("no answer to {method} {uri}: {e}"))
+        self.stream
+            .write_all(&bytes)
+            .map_err(|e| format!("could not send {method} {uri}: {e}"))?;
+        self.answer()
+            .map_err(|e| format!("no answer to {method} {uri}: {e}"))
     }
 
     fn answer(&mut self) -> Result<Response, String> {
@@ -96,8 +123,16 @@ impl Conn {
                 let (first, headers) = parse_head(&self.buffer[..head - 4]);
                 let body = self.buffer[head..head + length].to_vec();
                 self.buffer.drain(..head + length);
-                let code = first.split_whitespace().nth(1).and_then(|c| c.parse().ok()).ok_or_else(|| format!("bad answer: {first}"))?;
-                return Ok(Response { code, headers, body });
+                let code = first
+                    .split_whitespace()
+                    .nth(1)
+                    .and_then(|c| c.parse().ok())
+                    .ok_or_else(|| format!("bad answer: {first}"))?;
+                return Ok(Response {
+                    code,
+                    headers,
+                    body,
+                });
             }
             let n = match self.stream.read(&mut chunk) {
                 Ok(n) => n,
@@ -108,7 +143,9 @@ impl Conn {
                 return Err("the device closed the connection".into());
             }
             match self.framing.as_mut() {
-                Some(f) => self.buffer.extend(f.decrypt(&chunk[..n]).ok_or("an answer did not decrypt")?),
+                Some(f) => self
+                    .buffer
+                    .extend(f.decrypt(&chunk[..n]).ok_or("an answer did not decrypt")?),
                 None => self.buffer.extend_from_slice(&chunk[..n]),
             }
         }

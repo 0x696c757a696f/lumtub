@@ -77,7 +77,10 @@ impl Drop for Locked {
         unsafe {
             std::slice::from_raw_parts_mut(self.ptr, self.size).zeroize();
             memory::unlock(self.ptr, self.size);
-            std::alloc::dealloc(self.ptr, std::alloc::Layout::from_size_align_unchecked(self.size, PAGE));
+            std::alloc::dealloc(
+                self.ptr,
+                std::alloc::Layout::from_size_align_unchecked(self.size, PAGE),
+            );
         }
     }
 }
@@ -100,14 +103,21 @@ fn cipher(key: &[u8]) -> Option<Aes256Gcm> {
 fn encrypt(key: &[u8], aad: &[u8], data: &mut [u8]) -> Option<([u8; NONCE], [u8; TAG])> {
     let mut nonce = [0u8; NONCE];
     getrandom::fill(&mut nonce).ok()?;
-    let tag = cipher(key)?.encrypt_inout_detached(&Nonce::from(nonce), aad, data.into()).ok()?;
+    let tag = cipher(key)?
+        .encrypt_inout_detached(&Nonce::from(nonce), aad, data.into())
+        .ok()?;
     Some((nonce, tag.into()))
 }
 
 /// [data] decrypted in place; false when it was changed.
 fn decrypt(key: &[u8], aad: &[u8], nonce: &[u8], tag: &[u8], data: &mut [u8]) -> bool {
-    let (Ok(nonce), Ok(tag)) = (<[u8; NONCE]>::try_from(nonce), <[u8; TAG]>::try_from(tag)) else { return false };
-    cipher(key).is_some_and(|c| c.decrypt_inout_detached(&Nonce::from(nonce), aad, data.into(), &tag.into()).is_ok())
+    let (Ok(nonce), Ok(tag)) = (<[u8; NONCE]>::try_from(nonce), <[u8; TAG]>::try_from(tag)) else {
+        return false;
+    };
+    cipher(key).is_some_and(|c| {
+        c.decrypt_inout_detached(&Nonce::from(nonce), aad, data.into(), &tag.into())
+            .is_ok()
+    })
 }
 
 /// A secret held encrypted in memory: only this process can decrypt it,
@@ -124,7 +134,12 @@ impl Secret {
         let mut data = Locked::new(plain.len().max(1).div_ceil(16) * 16)?;
         data[..plain.len()].copy_from_slice(plain);
         let (nonce, tag) = memory::seal(&mut data)?;
-        Some(Secret { data, len: plain.len(), nonce, tag })
+        Some(Secret {
+            data,
+            len: plain.len(),
+            nonce,
+            tag,
+        })
     }
 
     /// Runs [f] on the secret, decrypted into a copy that is wiped after.
@@ -217,7 +232,11 @@ impl Sealer {
             match keys::existing(mode, reason) {
                 Ok(Some(key)) if key.len() == 32 => {
                     if let Some(key) = Secret::new(&key) {
-                        return Sealer { key: Some(key), mode, wrapped: vec![mode] };
+                        return Sealer {
+                            key: Some(key),
+                            mode,
+                            wrapped: vec![mode],
+                        };
                     }
                 }
                 Ok(_) => {}
@@ -229,20 +248,36 @@ impl Sealer {
         // sealed with it would never open again. Kept unencrypted this time
         // instead, by the file's permissions.
         if unsure {
-            return Sealer { key: None, mode: PLAIN, wrapped: Vec::new() };
+            return Sealer {
+                key: None,
+                mode: PLAIN,
+                wrapped: Vec::new(),
+            };
         }
         if let Some(key) = random(32) {
             for &mode in keys::modes(presence) {
-                let Some(wrapped) = keys::wrap(mode, &key, reason) else { continue };
+                let Some(wrapped) = keys::wrap(mode, &key, reason) else {
+                    continue;
+                };
                 // A key that does not come back is not used: the file would never open.
-                if keys::unwrap(mode, &wrapped, reason).ok().is_some_and(|back| *back == *key)
+                if keys::unwrap(mode, &wrapped, reason)
+                    .ok()
+                    .is_some_and(|back| *back == *key)
                     && let Some(key) = Secret::new(&key)
                 {
-                    return Sealer { key: Some(key), mode, wrapped };
+                    return Sealer {
+                        key: Some(key),
+                        mode,
+                        wrapped,
+                    };
                 }
             }
         }
-        Sealer { key: None, mode: PLAIN, wrapped: Vec::new() }
+        Sealer {
+            key: None,
+            mode: PLAIN,
+            wrapped: Vec::new(),
+        }
     }
 
     pub fn guard(&self) -> Guard {
@@ -290,7 +325,8 @@ pub fn guard(sealed: &[u8]) -> Option<Guard> {
 /// where their confirmation guards it.
 pub fn open(sealed: &[u8], reason: &str) -> Result<(Locked, Sealer), Failure> {
     let broken = |why: &str| Failure::Broken(why.to_owned());
-    let inner = account::open(sealed).ok_or_else(|| broken("the system could not decrypt the data"))?;
+    let inner =
+        account::open(sealed).ok_or_else(|| broken("the system could not decrypt the data"))?;
     if inner.len() <= MAGIC.len() || inner[..4] != *MAGIC {
         return Err(broken("not a sealed file"));
     }
@@ -298,9 +334,17 @@ pub fn open(sealed: &[u8], reason: &str) -> Result<(Locked, Sealer), Failure> {
     let rest = &inner[5..];
     if mode == PLAIN {
         let plain = Locked::from(rest).ok_or_else(|| broken("out of memory"))?;
-        return Ok((plain, Sealer { key: None, mode, wrapped: Vec::new() }));
+        return Ok((
+            plain,
+            Sealer {
+                key: None,
+                mode,
+                wrapped: Vec::new(),
+            },
+        ));
     }
-    let length = u16::from_le_bytes([*rest.first().unwrap_or(&0), *rest.get(1).unwrap_or(&0)]) as usize;
+    let length =
+        u16::from_le_bytes([*rest.first().unwrap_or(&0), *rest.get(1).unwrap_or(&0)]) as usize;
     if rest.len() < 2 + length + NONCE + TAG {
         return Err(broken("the sealed file is cut short"));
     }
@@ -314,12 +358,21 @@ pub fn open(sealed: &[u8], reason: &str) -> Result<(Locked, Sealer), Failure> {
         return Err(broken("the sealed file was changed"));
     }
     let key = Secret::new(&key).ok_or_else(|| broken("out of memory"))?;
-    Ok((plain, Sealer { key: Some(key), mode, wrapped: wrapped.to_vec() }))
+    Ok((
+        plain,
+        Sealer {
+            key: Some(key),
+            mode,
+            wrapped: wrapped.to_vec(),
+        },
+    ))
 }
 
 #[cfg(windows)]
 mod memory {
-    use windows_sys::Win32::Security::Cryptography::{CRYPTPROTECTMEMORY_SAME_PROCESS, CryptProtectMemory, CryptUnprotectMemory};
+    use windows_sys::Win32::Security::Cryptography::{
+        CRYPTPROTECTMEMORY_SAME_PROCESS, CryptProtectMemory, CryptUnprotectMemory,
+    };
     use windows_sys::Win32::System::Memory::{VirtualLock, VirtualUnlock};
 
     use super::{NONCE, TAG};
@@ -336,13 +389,25 @@ mod memory {
     /// Encrypted in place by Windows, with a key it keeps for this process.
     pub fn seal(data: &mut [u8]) -> Option<([u8; NONCE], [u8; TAG])> {
         // SAFETY: [data] is a live buffer of a multiple of 16 bytes.
-        let ok = unsafe { CryptProtectMemory(data.as_mut_ptr() as _, data.len() as u32, CRYPTPROTECTMEMORY_SAME_PROCESS) != 0 };
+        let ok = unsafe {
+            CryptProtectMemory(
+                data.as_mut_ptr() as _,
+                data.len() as u32,
+                CRYPTPROTECTMEMORY_SAME_PROCESS,
+            ) != 0
+        };
         ok.then_some(([0; NONCE], [0; TAG]))
     }
 
     pub fn open(data: &mut [u8], _: &[u8; NONCE], _: &[u8; TAG]) -> bool {
         // SAFETY: as in seal.
-        unsafe { CryptUnprotectMemory(data.as_mut_ptr() as _, data.len() as u32, CRYPTPROTECTMEMORY_SAME_PROCESS) != 0 }
+        unsafe {
+            CryptUnprotectMemory(
+                data.as_mut_ptr() as _,
+                data.len() as u32,
+                CRYPTPROTECTMEMORY_SAME_PROCESS,
+            ) != 0
+        }
     }
 }
 
@@ -377,14 +442,17 @@ mod memory {
     }
 
     pub fn open(data: &mut [u8], nonce: &[u8; NONCE], tag: &[u8; TAG]) -> bool {
-        KEY.as_ref().is_some_and(|key| decrypt(key, b"", nonce, tag, data))
+        KEY.as_ref()
+            .is_some_and(|key| decrypt(key, b"", nonce, tag, data))
     }
 }
 
 #[cfg(windows)]
 mod account {
     use windows_sys::Win32::Foundation::{HLOCAL, LocalFree};
-    use windows_sys::Win32::Security::Cryptography::{CRYPT_INTEGER_BLOB, CRYPTPROTECT_UI_FORBIDDEN, CryptProtectData, CryptUnprotectData};
+    use windows_sys::Win32::Security::Cryptography::{
+        CRYPT_INTEGER_BLOB, CRYPTPROTECT_UI_FORBIDDEN, CryptProtectData, CryptUnprotectData,
+    };
     use zeroize::Zeroize;
 
     use super::Locked;
@@ -392,22 +460,48 @@ mod account {
     const ENTROPY: &[u8] = b"Lumtub vault v2";
 
     fn run(data: &[u8], seal: bool) -> Option<Locked> {
-        let input = CRYPT_INTEGER_BLOB { cbData: data.len() as u32, pbData: data.as_ptr() as *mut u8 };
-        let entropy = CRYPT_INTEGER_BLOB { cbData: ENTROPY.len() as u32, pbData: ENTROPY.as_ptr() as *mut u8 };
-        let mut output = CRYPT_INTEGER_BLOB { cbData: 0, pbData: std::ptr::null_mut() };
+        let input = CRYPT_INTEGER_BLOB {
+            cbData: data.len() as u32,
+            pbData: data.as_ptr() as *mut u8,
+        };
+        let entropy = CRYPT_INTEGER_BLOB {
+            cbData: ENTROPY.len() as u32,
+            pbData: ENTROPY.as_ptr() as *mut u8,
+        };
+        let mut output = CRYPT_INTEGER_BLOB {
+            cbData: 0,
+            pbData: std::ptr::null_mut(),
+        };
         // SAFETY: the blobs point to live buffers; the output is wiped and freed below.
         let ok = unsafe {
             if seal {
-                CryptProtectData(&input, std::ptr::null(), &entropy, std::ptr::null(), std::ptr::null(), CRYPTPROTECT_UI_FORBIDDEN, &mut output)
+                CryptProtectData(
+                    &input,
+                    std::ptr::null(),
+                    &entropy,
+                    std::ptr::null(),
+                    std::ptr::null(),
+                    CRYPTPROTECT_UI_FORBIDDEN,
+                    &mut output,
+                )
             } else {
-                CryptUnprotectData(&input, std::ptr::null_mut(), &entropy, std::ptr::null(), std::ptr::null(), CRYPTPROTECT_UI_FORBIDDEN, &mut output)
+                CryptUnprotectData(
+                    &input,
+                    std::ptr::null_mut(),
+                    &entropy,
+                    std::ptr::null(),
+                    std::ptr::null(),
+                    CRYPTPROTECT_UI_FORBIDDEN,
+                    &mut output,
+                )
             }
         };
         if ok == 0 || output.pbData.is_null() {
             return None;
         }
         // SAFETY: Windows filled [output] with cbData bytes.
-        let bytes = unsafe { std::slice::from_raw_parts_mut(output.pbData, output.cbData as usize) };
+        let bytes =
+            unsafe { std::slice::from_raw_parts_mut(output.pbData, output.cbData as usize) };
         let out = Locked::from(bytes);
         bytes.zeroize();
         unsafe { LocalFree(output.pbData as HLOCAL) };
@@ -459,7 +553,9 @@ pub fn write_private(file: &std::path::Path, data: &[u8]) -> std::io::Result<()>
 
 #[cfg(windows)]
 mod keys {
-    use windows_sys::Win32::Foundation::{HWND, LPARAM, NTE_BAD_KEYSET, NTE_USER_CANCELLED, SCARD_W_CANCELLED_BY_USER};
+    use windows_sys::Win32::Foundation::{
+        HWND, LPARAM, NTE_BAD_KEYSET, NTE_USER_CANCELLED, SCARD_W_CANCELLED_BY_USER,
+    };
     use windows_sys::Win32::Security::Cryptography::*;
     use windows_sys::core::{BOOL, HRESULT, PCWSTR};
 
@@ -471,7 +567,11 @@ mod keys {
     const ERROR_CANCELLED: HRESULT = 0x800704C7_u32 as _;
 
     pub fn modes(presence: bool) -> &'static [u8] {
-        if presence { &[WINDOWS_HELLO, TPM_OAEP, TPM_PKCS1] } else { &[TPM_OAEP, TPM_PKCS1] }
+        if presence {
+            &[WINDOWS_HELLO, TPM_OAEP, TPM_PKCS1]
+        } else {
+            &[TPM_OAEP, TPM_PKCS1]
+        }
     }
 
     struct Handle(NCRYPT_HANDLE);
@@ -497,7 +597,9 @@ mod keys {
     fn user_sid() -> Option<String> {
         use windows_sys::Win32::Foundation::{CloseHandle, HANDLE, HLOCAL, LocalFree};
         use windows_sys::Win32::Security::Authorization::ConvertSidToStringSidW;
-        use windows_sys::Win32::Security::{GetTokenInformation, TOKEN_QUERY, TOKEN_USER, TokenUser};
+        use windows_sys::Win32::Security::{
+            GetTokenInformation, TOKEN_QUERY, TOKEN_USER, TokenUser,
+        };
         use windows_sys::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
         let mut token: HANDLE = std::ptr::null_mut();
         // SAFETY: plain Win32 calls on live buffers; handles are closed below.
@@ -507,7 +609,13 @@ mod keys {
             }
             let mut buffer = [0u64; 64];
             let mut length = 0u32;
-            let ok = GetTokenInformation(token, TokenUser, buffer.as_mut_ptr() as _, std::mem::size_of_val(&buffer) as u32, &mut length);
+            let ok = GetTokenInformation(
+                token,
+                TokenUser,
+                buffer.as_mut_ptr() as _,
+                std::mem::size_of_val(&buffer) as u32,
+                &mut length,
+            );
             CloseHandle(token);
             if ok == 0 {
                 return None;
@@ -527,13 +635,18 @@ mod keys {
     /// The app's main window, which the Windows Hello prompt is shown over.
     fn window() -> HWND {
         use windows_sys::Win32::System::Threading::GetCurrentProcessId;
-        use windows_sys::Win32::UI::WindowsAndMessaging::{EnumWindows, GW_OWNER, GetWindow, GetWindowThreadProcessId, IsWindowVisible};
+        use windows_sys::Win32::UI::WindowsAndMessaging::{
+            EnumWindows, GW_OWNER, GetWindow, GetWindowThreadProcessId, IsWindowVisible,
+        };
         unsafe extern "system" fn each(window: HWND, found: LPARAM) -> BOOL {
             let mut process = 0u32;
             // SAFETY: [found] points to the HWND below, alive during EnumWindows.
             unsafe {
                 GetWindowThreadProcessId(window, &mut process);
-                if process == GetCurrentProcessId() && IsWindowVisible(window) != 0 && GetWindow(window, GW_OWNER).is_null() {
+                if process == GetCurrentProcessId()
+                    && IsWindowVisible(window) != 0
+                    && GetWindow(window, GW_OWNER).is_null()
+                {
                     *(found as *mut HWND) = window;
                     return 0;
                 }
@@ -549,7 +662,10 @@ mod keys {
     fn key(mode: u8, create: bool) -> Result<Handle, HRESULT> {
         let (provider_name, name) = if mode == WINDOWS_HELLO {
             let sid = user_sid().ok_or(NTE_BAD_KEYSET)?;
-            (MS_NGC_KEY_STORAGE_PROVIDER, wide(&format!("{sid}//Lumtub/Cookies/Vault")))
+            (
+                MS_NGC_KEY_STORAGE_PROVIDER,
+                wide(&format!("{sid}//Lumtub/Cookies/Vault")),
+            )
         } else {
             (MS_PLATFORM_CRYPTO_PROVIDER, wide("Lumtub vault key"))
         };
@@ -561,19 +677,38 @@ mod keys {
                 return Err(status);
             }
             let mut key = Handle(0);
-            let silent = if mode == WINDOWS_HELLO { 0 } else { NCRYPT_SILENT_FLAG };
+            let silent = if mode == WINDOWS_HELLO {
+                0
+            } else {
+                NCRYPT_SILENT_FLAG
+            };
             let status = NCryptOpenKey(provider.0, &mut key.0, name.as_ptr(), 0, silent);
             if status == 0 || !create {
                 return if status == 0 { Ok(key) } else { Err(status) };
             }
-            let status = NCryptCreatePersistedKey(provider.0, &mut key.0, NCRYPT_RSA_ALGORITHM, name.as_ptr(), 0, 0);
+            let status = NCryptCreatePersistedKey(
+                provider.0,
+                &mut key.0,
+                NCRYPT_RSA_ALGORITHM,
+                name.as_ptr(),
+                0,
+                0,
+            );
             if status != 0 {
                 return Err(status);
             }
             set(&key, NCRYPT_LENGTH_PROPERTY, &2048u32.to_le_bytes());
             if mode == WINDOWS_HELLO {
-                set(&key, NCRYPT_KEY_USAGE_PROPERTY, &(ALLOW_DECRYPT | ALLOW_SIGNING).to_le_bytes());
-                set(&key, NCRYPT_WINDOW_HANDLE_PROPERTY, &(window() as usize).to_le_bytes());
+                set(
+                    &key,
+                    NCRYPT_KEY_USAGE_PROPERTY,
+                    &(ALLOW_DECRYPT | ALLOW_SIGNING).to_le_bytes(),
+                );
+                set(
+                    &key,
+                    NCRYPT_WINDOW_HANDLE_PROPERTY,
+                    &(window() as usize).to_le_bytes(),
+                );
             }
             let status = NCryptFinalizeKey(key.0, silent);
             if status != 0 {
@@ -585,12 +720,24 @@ mod keys {
 
     /// The padding [mode] uses: OAEP with SHA-256 where the TPM takes it.
     fn padding(mode: u8) -> (NCRYPT_FLAGS, BCRYPT_OAEP_PADDING_INFO) {
-        let info = BCRYPT_OAEP_PADDING_INFO { pszAlgId: BCRYPT_SHA256_ALGORITHM, pbLabel: std::ptr::null_mut(), cbLabel: 0 };
-        if mode == TPM_OAEP { (NCRYPT_PAD_OAEP_FLAG, info) } else { (NCRYPT_PAD_PKCS1_FLAG, info) }
+        let info = BCRYPT_OAEP_PADDING_INFO {
+            pszAlgId: BCRYPT_SHA256_ALGORITHM,
+            pbLabel: std::ptr::null_mut(),
+            cbLabel: 0,
+        };
+        if mode == TPM_OAEP {
+            (NCRYPT_PAD_OAEP_FLAG, info)
+        } else {
+            (NCRYPT_PAD_PKCS1_FLAG, info)
+        }
     }
 
     fn info_of(flags: NCRYPT_FLAGS, info: &BCRYPT_OAEP_PADDING_INFO) -> *const core::ffi::c_void {
-        if flags == NCRYPT_PAD_OAEP_FLAG { info as *const _ as _ } else { std::ptr::null() }
+        if flags == NCRYPT_PAD_OAEP_FLAG {
+            info as *const _ as _
+        } else {
+            std::ptr::null()
+        }
     }
 
     /// Every file carries its own wrapped key here.
@@ -606,11 +753,31 @@ mod keys {
         let mut length = 0u32;
         // SAFETY: sized first, then filled into a buffer of that size.
         unsafe {
-            if NCryptEncrypt(key.0, data.as_ptr(), data.len() as u32, info, std::ptr::null_mut(), 0, &mut length, flags | NCRYPT_SILENT_FLAG) != 0 {
+            if NCryptEncrypt(
+                key.0,
+                data.as_ptr(),
+                data.len() as u32,
+                info,
+                std::ptr::null_mut(),
+                0,
+                &mut length,
+                flags | NCRYPT_SILENT_FLAG,
+            ) != 0
+            {
                 return None;
             }
             let mut out = vec![0u8; length as usize];
-            if NCryptEncrypt(key.0, data.as_ptr(), data.len() as u32, info, out.as_mut_ptr(), length, &mut length, flags | NCRYPT_SILENT_FLAG) != 0 {
+            if NCryptEncrypt(
+                key.0,
+                data.as_ptr(),
+                data.len() as u32,
+                info,
+                out.as_mut_ptr(),
+                length,
+                &mut length,
+                flags | NCRYPT_SILENT_FLAG,
+            ) != 0
+            {
                 return None;
             }
             out.truncate(length as usize);
@@ -624,23 +791,44 @@ mod keys {
             _ => Failure::Broken(format!("the key would not open: {status:#010x}")),
         };
         if ![WINDOWS_HELLO, TPM_OAEP, TPM_PKCS1].contains(&mode) {
-            return Err(Failure::Broken("the file was sealed on another system".into()));
+            return Err(Failure::Broken(
+                "the file was sealed on another system".into(),
+            ));
         }
         let key = key(mode, false).map_err(failed)?;
         let (mut flags, info) = padding(mode);
         let info_pointer = info_of(flags, &info);
         if mode == WINDOWS_HELLO {
-            set(&key, NCRYPT_WINDOW_HANDLE_PROPERTY, &(window() as usize).to_le_bytes());
+            set(
+                &key,
+                NCRYPT_WINDOW_HANDLE_PROPERTY,
+                &(window() as usize).to_le_bytes(),
+            );
             let reason: Vec<u8> = wide(reason).iter().flat_map(|c| c.to_le_bytes()).collect();
             set(&key, NCRYPT_USE_CONTEXT_PROPERTY, &reason);
-            set(&key, NCRYPT_PIN_CACHE_IS_GESTURE_REQUIRED_PROPERTY, &1u32.to_le_bytes());
+            set(
+                &key,
+                NCRYPT_PIN_CACHE_IS_GESTURE_REQUIRED_PROPERTY,
+                &1u32.to_le_bytes(),
+            );
         } else {
             flags |= NCRYPT_SILENT_FLAG;
         }
         let mut out = Locked::new(512).ok_or(Failure::Broken("out of memory".into()))?;
         let mut length = 0u32;
         // SAFETY: [out] holds 512 bytes, more than a 2048-bit key decrypts to.
-        let status = unsafe { NCryptDecrypt(key.0, data.as_ptr(), data.len() as u32, info_pointer, out.as_mut_ptr(), 512, &mut length, flags) };
+        let status = unsafe {
+            NCryptDecrypt(
+                key.0,
+                data.as_ptr(),
+                data.len() as u32,
+                info_pointer,
+                out.as_mut_ptr(),
+                512,
+                &mut length,
+                flags,
+            )
+        };
         if status != 0 {
             return Err(failed(status));
         }
@@ -651,7 +839,9 @@ mod keys {
 
 #[cfg(target_os = "macos")]
 mod keys {
-    use security_framework::passwords::{delete_generic_password_options, generic_password, set_generic_password_options};
+    use security_framework::passwords::{
+        delete_generic_password_options, generic_password, set_generic_password_options,
+    };
     use security_framework::passwords_options::{AccessControlOptions, PasswordOptions};
 
     use super::{Failure, KEYCHAIN, KEYCHAIN_PRESENCE, Locked};
@@ -664,7 +854,11 @@ mod keys {
     const NOT_FOUND: i32 = -25300;
 
     pub fn modes(presence: bool) -> &'static [u8] {
-        if presence { &[KEYCHAIN_PRESENCE, KEYCHAIN] } else { &[KEYCHAIN] }
+        if presence {
+            &[KEYCHAIN_PRESENCE, KEYCHAIN]
+        } else {
+            &[KEYCHAIN]
+        }
     }
 
     /// The item's options: in the data protection keychain behind Touch ID
@@ -692,7 +886,10 @@ mod keys {
             }
             Err(e) if e.code() == NOT_FOUND => Ok(None),
             Err(e) if e.code() == CANCELLED => Err(Failure::Cancelled),
-            Err(e) => Err(Failure::Broken(format!("the keychain would not give the key: {}", e.code()))),
+            Err(e) => Err(Failure::Broken(format!(
+                "the keychain would not give the key: {}",
+                e.code()
+            ))),
         }
     }
 
@@ -705,7 +902,9 @@ mod keys {
 
     pub fn unwrap(mode: u8, _wrapped: &[u8], _reason: &str) -> Result<Locked, Failure> {
         if ![KEYCHAIN_PRESENCE, KEYCHAIN].contains(&mode) {
-            return Err(Failure::Broken("the file was sealed on another system".into()));
+            return Err(Failure::Broken(
+                "the file was sealed on another system".into(),
+            ));
         }
         match generic_password(options(mode, false)) {
             Ok(mut key) => {
@@ -714,7 +913,10 @@ mod keys {
                 out.ok_or(Failure::Broken("out of memory".into()))
             }
             Err(e) if e.code() == CANCELLED => Err(Failure::Cancelled),
-            Err(e) => Err(Failure::Broken(format!("the keychain would not give the key: {}", e.code()))),
+            Err(e) => Err(Failure::Broken(format!(
+                "the keychain would not give the key: {}",
+                e.code()
+            ))),
         }
     }
 }
@@ -739,7 +941,9 @@ mod keys {
 
     /// Runs [work] on the Secret Service, here on this thread. Unlocking
     /// waits for the user; everything else answers within 10 seconds.
-    fn run<T: Send>(work: impl AsyncFnOnce(oo7::Keyring) -> Result<T, String> + Send) -> Result<T, String> {
+    fn run<T: Send>(
+        work: impl AsyncFnOnce(oo7::Keyring) -> Result<T, String> + Send,
+    ) -> Result<T, String> {
         use std::sync::atomic::Ordering;
         if UNREACHABLE.load(Ordering::Relaxed) {
             return Err("no keyring answered".to_owned());
@@ -747,26 +951,35 @@ mod keys {
         // Called from a thread that runs async work itself, such as the one
         // making web requests, which cannot wait for another runtime.
         if tokio::runtime::Handle::try_current().is_ok() {
-            return std::thread::scope(|scope| scope.spawn(|| run_here(work)).join().unwrap_or_else(|_| Err("the keyring thread failed".to_owned())));
+            return std::thread::scope(|scope| {
+                scope
+                    .spawn(|| run_here(work))
+                    .join()
+                    .unwrap_or_else(|_| Err("the keyring thread failed".to_owned()))
+            });
         }
         run_here(work)
     }
 
     fn run_here<T>(work: impl AsyncFnOnce(oo7::Keyring) -> Result<T, String>) -> Result<T, String> {
         use std::sync::atomic::Ordering;
-        let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().map_err(|e| e.to_string())?;
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .map_err(|e| e.to_string())?;
         runtime.block_on(async {
-            let keyring = match tokio::time::timeout(Duration::from_secs(10), oo7::Keyring::new()).await {
-                Ok(Ok(keyring)) => keyring,
-                Ok(Err(e)) => {
-                    UNREACHABLE.store(true, Ordering::Relaxed);
-                    return Err(e.to_string());
-                }
-                Err(_) => {
-                    UNREACHABLE.store(true, Ordering::Relaxed);
-                    return Err("no keyring answered".to_owned());
-                }
-            };
+            let keyring =
+                match tokio::time::timeout(Duration::from_secs(10), oo7::Keyring::new()).await {
+                    Ok(Ok(keyring)) => keyring,
+                    Ok(Err(e)) => {
+                        UNREACHABLE.store(true, Ordering::Relaxed);
+                        return Err(e.to_string());
+                    }
+                    Err(_) => {
+                        UNREACHABLE.store(true, Ordering::Relaxed);
+                        return Err("no keyring answered".to_owned());
+                    }
+                };
             work(keyring).await
         })
     }
@@ -785,7 +998,10 @@ mod keys {
         run(async |keyring| {
             keyring.unlock().await.map_err(|e| e.to_string())?;
             // Only ever called when the keyring said it had no key.
-            keyring.create_item("Lumtub", &ATTRIBUTES, oo7::Secret::blob(data), false).await.map_err(|e| e.to_string())
+            keyring
+                .create_item("Lumtub", &ATTRIBUTES, oo7::Secret::blob(data), false)
+                .await
+                .map_err(|e| e.to_string())
         })
         .ok()?;
         Some(vec![SECRET_SERVICE])
@@ -793,10 +1009,15 @@ mod keys {
 
     pub fn unwrap(mode: u8, _wrapped: &[u8], _reason: &str) -> Result<Locked, Failure> {
         if mode != SECRET_SERVICE {
-            return Err(Failure::Broken("the file was sealed on another system".into()));
+            return Err(Failure::Broken(
+                "the file was sealed on another system".into(),
+            ));
         }
         let key = run(async |keyring| {
-            let items = keyring.search_items(&ATTRIBUTES).await.map_err(|e| e.to_string())?;
+            let items = keyring
+                .search_items(&ATTRIBUTES)
+                .await
+                .map_err(|e| e.to_string())?;
             let item = items.first().ok_or(NO_KEY)?;
             if item.is_locked().await.unwrap_or(false) {
                 item.unlock().await.map_err(|e| e.to_string())?;
@@ -805,7 +1026,13 @@ mod keys {
             Locked::from(&secret).ok_or_else(|| "out of memory".to_owned())
         });
         // A keyring whose unlocking prompt was dismissed answers with an error too.
-        key.map_err(|why| if why.contains("ismissed") { Failure::Cancelled } else { Failure::Broken(why) })
+        key.map_err(|why| {
+            if why.contains("ismissed") {
+                Failure::Cancelled
+            } else {
+                Failure::Broken(why)
+            }
+        })
     }
 }
 
@@ -825,7 +1052,9 @@ mod keys {
         None
     }
     pub fn unwrap(_: u8, _: &[u8], _: &str) -> Result<Locked, Failure> {
-        Err(Failure::Broken("the file was sealed on another system".into()))
+        Err(Failure::Broken(
+            "the file was sealed on another system".into(),
+        ))
     }
 }
 
@@ -835,7 +1064,10 @@ mod keys {
 /// # Safety
 /// [text] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn lumtub_vault_seal(text: *const u8, length: usize) -> *mut std::os::raw::c_char {
+pub unsafe extern "C" fn lumtub_vault_seal(
+    text: *const u8,
+    length: usize,
+) -> *mut std::os::raw::c_char {
     let plain = unsafe { crate::taste::text(text, length) };
     match Sealer::new(false, "Lumtub").seal(plain.as_bytes()) {
         Some(sealed) => crate::taste::give(sealed.iter().map(|b| format!("{b:02x}")).collect()),
@@ -849,16 +1081,25 @@ pub unsafe extern "C" fn lumtub_vault_seal(text: *const u8, length: usize) -> *m
 /// # Safety
 /// [hex] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn lumtub_vault_open(hex: *const u8, length: usize) -> *mut std::os::raw::c_char {
+pub unsafe extern "C" fn lumtub_vault_open(
+    hex: *const u8,
+    length: usize,
+) -> *mut std::os::raw::c_char {
     let hex = unsafe { crate::taste::text(hex, length) };
     if hex.len() % 2 != 0 {
         return std::ptr::null_mut();
     }
-    let Some(sealed) = (0..hex.len()).step_by(2).map(|i| u8::from_str_radix(hex.get(i..i + 2)?, 16).ok()).collect::<Option<Vec<u8>>>() else {
+    let Some(sealed) = (0..hex.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(hex.get(i..i + 2)?, 16).ok())
+        .collect::<Option<Vec<u8>>>()
+    else {
         return std::ptr::null_mut();
     };
     match open(&sealed, "Lumtub") {
-        Ok((plain, _)) => std::str::from_utf8(&plain).map_or(std::ptr::null_mut(), |text| crate::taste::give(text.to_owned())),
+        Ok((plain, _)) => std::str::from_utf8(&plain).map_or(std::ptr::null_mut(), |text| {
+            crate::taste::give(text.to_owned())
+        }),
         Err(_) => std::ptr::null_mut(),
     }
 }
@@ -882,7 +1123,10 @@ mod tests {
     fn secrets_come_back_only_inside_reveal() {
         let secret = Secret::new(b"SAPISID=abc").unwrap();
         assert_ne!(&secret.data[..11], b"SAPISID=abc");
-        assert_eq!(secret.reveal(|bytes| bytes.to_vec()).unwrap(), b"SAPISID=abc");
+        assert_eq!(
+            secret.reveal(|bytes| bytes.to_vec()).unwrap(),
+            b"SAPISID=abc"
+        );
         assert_eq!(Secret::new(b"").unwrap().reveal(<[u8]>::len), Some(0));
     }
 
@@ -900,16 +1144,33 @@ mod tests {
 
     #[test]
     fn sealed_files_open_again() {
-        let sealed = Sealer { key: Some(Secret::new(&[7; 32]).unwrap()), mode: b'X', wrapped: vec![1, 2] }.seal(b"cookies").unwrap();
+        let sealed = Sealer {
+            key: Some(Secret::new(&[7; 32]).unwrap()),
+            mode: b'X',
+            wrapped: vec![1, 2],
+        }
+        .seal(b"cookies")
+        .unwrap();
         assert!(matches!(open(&sealed, "why"), Err(Failure::Broken(_))));
 
-        let sealer = Sealer { key: None, mode: PLAIN, wrapped: Vec::new() };
+        let sealer = Sealer {
+            key: None,
+            mode: PLAIN,
+            wrapped: Vec::new(),
+        };
         let sealed = sealer.seal(b"cookies").unwrap();
-        let plain_guard = if cfg!(windows) { Guard::Account } else { Guard::File };
+        let plain_guard = if cfg!(windows) {
+            Guard::Account
+        } else {
+            Guard::File
+        };
         assert_eq!(guard(&sealed), Some(plain_guard));
         let (plain, again) = open(&sealed, "why").unwrap();
         assert_eq!(&*plain, b"cookies");
-        assert_eq!(&*open(&again.seal(b"more").unwrap(), "why").unwrap().0, b"more");
+        assert_eq!(
+            &*open(&again.seal(b"more").unwrap(), "why").unwrap().0,
+            b"more"
+        );
         assert!(matches!(open(b"junk", "why"), Err(Failure::Broken(_))));
     }
 
@@ -919,7 +1180,12 @@ mod tests {
         write_private(&file, b"x").unwrap();
         assert_eq!(std::fs::read(&file).unwrap(), b"x");
         #[cfg(unix)]
-        assert_eq!(std::os::unix::fs::PermissionsExt::mode(&std::fs::metadata(&file).unwrap().permissions()) & 0o777, 0o600);
+        assert_eq!(
+            std::os::unix::fs::PermissionsExt::mode(
+                &std::fs::metadata(&file).unwrap().permissions()
+            ) & 0o777,
+            0o600
+        );
         std::fs::remove_file(&file).unwrap();
     }
 }

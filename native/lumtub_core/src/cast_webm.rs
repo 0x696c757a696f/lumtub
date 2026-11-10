@@ -103,7 +103,11 @@ fn vint(b: &[u8], at: usize, keep_marker: bool) -> Option<(u64, usize)> {
         return None;
     }
     let length = first.leading_zeros() as usize + 1;
-    let mut value = if keep_marker { first as u64 } else { (first as u64) & (0xffu64 >> length) };
+    let mut value = if keep_marker {
+        first as u64
+    } else {
+        (first as u64) & (0xffu64 >> length)
+    };
     for i in 1..length {
         value = (value << 8) | *b.get(at + i)? as u64;
     }
@@ -118,8 +122,16 @@ pub(crate) fn element(b: &[u8], at: usize) -> Option<Element> {
     let (size, m) = vint(b, at + n, false)?;
     let data = at + n + m;
     let unknown = size == (1u64 << (7 * m)) - 1;
-    let end = if unknown { usize::MAX } else { data.saturating_add(usize::try_from(size).ok()?) };
-    Some(Element { id: id as u32, data, end })
+    let end = if unknown {
+        usize::MAX
+    } else {
+        data.saturating_add(usize::try_from(size).ok()?)
+    };
+    Some(Element {
+        id: id as u32,
+        data,
+        end,
+    })
 }
 
 /// The elements one after another in `b[from..to]`, stopping at one that
@@ -151,7 +163,9 @@ fn float(b: &[u8], e: Element) -> Option<f64> {
 }
 
 fn find(b: &[u8], parent: Element, id: u32) -> Option<Element> {
-    children(b, parent.data, parent.end.min(b.len())).into_iter().find(|e| e.id == id && e.end <= b.len())
+    children(b, parent.data, parent.end.min(b.len()))
+        .into_iter()
+        .find(|e| e.id == id && e.end <= b.len())
 }
 
 pub fn is_webm(b: &[u8]) -> bool {
@@ -161,22 +175,38 @@ pub fn is_webm(b: &[u8]) -> bool {
 /// Reads the head of a WebM file of `total` bytes: its VP9 or Opus track
 /// and the clusters its `Cues` index lists.
 pub fn read_head(b: &[u8], total: u64) -> Read {
-    let Some(ebml) = element(b, 0).filter(|e| e.id == EBML) else { return Read::Unusable("not WebM") };
+    let Some(ebml) = element(b, 0).filter(|e| e.id == EBML) else {
+        return Read::Unusable("not WebM");
+    };
     let Some(segment) = element(b, ebml.end).filter(|e| e.id == SEGMENT) else {
-        return if ebml.end + 12 > b.len() { Read::More(ebml.end as u64 + 4096) } else { Read::Unusable("no segment") };
+        return if ebml.end + 12 > b.len() {
+            Read::More(ebml.end as u64 + 4096)
+        } else {
+            Read::Unusable("no segment")
+        };
     };
     let (mut scale, mut track, mut cues) = (1_000_000u64, None, None);
     let mut at = segment.data;
     loop {
-        let Some(e) = element(b, at) else { return Read::More((at as u64 + 4096).max(b.len() as u64 * 2)) };
+        let Some(e) = element(b, at) else {
+            return Read::More((at as u64 + 4096).max(b.len() as u64 * 2));
+        };
         if e.id == CLUSTER {
             return Read::Unusable("no index before the clusters");
         }
         if matches!(e.id, INFO | TRACKS | CUES) && e.end > b.len() {
-            return if e.end == usize::MAX { Read::Unusable("element of unknown size") } else { Read::More(e.end as u64) };
+            return if e.end == usize::MAX {
+                Read::Unusable("element of unknown size")
+            } else {
+                Read::More(e.end as u64)
+            };
         }
         match e.id {
-            INFO => scale = find(b, e, TIMECODE_SCALE).and_then(|s| uint(b, s)).unwrap_or(scale),
+            INFO => {
+                scale = find(b, e, TIMECODE_SCALE)
+                    .and_then(|s| uint(b, s))
+                    .unwrap_or(scale)
+            }
             TRACKS => track = Some(e),
             CUES => cues = Some(e),
             _ => {}
@@ -198,36 +228,90 @@ fn head(b: &[u8], segment: u64, scale: u64, tracks: Element, cues: Element, tota
     let timescale = (1_000_000_000 / scale) as u32;
     let entries = children(b, tracks.data, tracks.end);
     let kind = |e: &Element| find(b, *e, TRACK_TYPE).and_then(|t| uint(b, t));
-    let Some(entry) = entries.iter().copied().find(|e| e.id == TRACK_ENTRY && kind(e) == Some(1)).or_else(|| entries.iter().copied().find(|e| e.id == TRACK_ENTRY && kind(e) == Some(2))) else {
+    let Some(entry) = entries
+        .iter()
+        .copied()
+        .find(|e| e.id == TRACK_ENTRY && kind(e) == Some(1))
+        .or_else(|| {
+            entries
+                .iter()
+                .copied()
+                .find(|e| e.id == TRACK_ENTRY && kind(e) == Some(2))
+        })
+    else {
         return Read::Unusable("no picture or sound track");
     };
     let codec = find(b, entry, CODEC_ID).and_then(|c| b.get(c.data..c.end));
-    let Some(number) = find(b, entry, TRACK_NUMBER).and_then(|n| uint(b, n)) else { return Read::Unusable("no track number") };
+    let Some(number) = find(b, entry, TRACK_NUMBER).and_then(|n| uint(b, n)) else {
+        return Read::Unusable("no track number");
+    };
     if kind(&entry) == Some(2) {
         if codec != Some(b"A_OPUS") {
             return Read::Unusable("sound other than Opus");
         }
-        let Some(private) = find(b, entry, CODEC_PRIVATE).and_then(|p| b.get(p.data..p.end)).filter(|p| p.starts_with(b"OpusHead")) else {
+        let Some(private) = find(b, entry, CODEC_PRIVATE)
+            .and_then(|p| b.get(p.data..p.end))
+            .filter(|p| p.starts_with(b"OpusHead"))
+        else {
             return Read::Unusable("no OpusHead");
         };
         let audio = find(b, entry, AUDIO);
-        let rate = audio.and_then(|a| find(b, a, SAMPLING)).and_then(|e| float(b, e)).unwrap_or(48_000.0);
-        let channels = audio.and_then(|a| find(b, a, CHANNELS)).and_then(|e| uint(b, e)).unwrap_or(2) as u8;
+        let rate = audio
+            .and_then(|a| find(b, a, SAMPLING))
+            .and_then(|e| float(b, e))
+            .unwrap_or(48_000.0);
+        let channels = audio
+            .and_then(|a| find(b, a, CHANNELS))
+            .and_then(|e| uint(b, e))
+            .unwrap_or(2) as u8;
         let nanoseconds = |id| find(b, entry, id).and_then(|e| uint(b, e)).unwrap_or(0);
-        let opus = Opus { private: private.to_vec(), rate, channels, delay: nanoseconds(CODEC_DELAY), preroll: nanoseconds(SEEK_PREROLL) };
-        let frame = find(b, entry, DEFAULT_DURATION).and_then(|d| uint(b, d)).map_or(0, |ns| (ns / scale) as u32);
-        return clusters(b, segment, timescale, number, cues, total).map_or(Read::Unusable("empty index"), |clusters| {
-            Read::Head(Box::new(Head { number, timescale, width: 0, height: 0, vpcc: Vec::new(), frame, clusters, opus: Some(opus) }))
-        });
+        let opus = Opus {
+            private: private.to_vec(),
+            rate,
+            channels,
+            delay: nanoseconds(CODEC_DELAY),
+            preroll: nanoseconds(SEEK_PREROLL),
+        };
+        let frame = find(b, entry, DEFAULT_DURATION)
+            .and_then(|d| uint(b, d))
+            .map_or(0, |ns| (ns / scale) as u32);
+        return clusters(b, segment, timescale, number, cues, total).map_or(
+            Read::Unusable("empty index"),
+            |clusters| {
+                Read::Head(Box::new(Head {
+                    number,
+                    timescale,
+                    width: 0,
+                    height: 0,
+                    vpcc: Vec::new(),
+                    frame,
+                    clusters,
+                    opus: Some(opus),
+                }))
+            },
+        );
     }
     if codec != Some(b"V_VP9") {
         return Read::Unusable("not VP9");
     }
-    let Some(video) = find(b, entry, VIDEO) else { return Read::Unusable("no picture size") };
-    let dimension = |id| find(b, video, id).and_then(|e| uint(b, e)).and_then(|v| u16::try_from(v).ok());
-    let (Some(width), Some(height)) = (dimension(PIXEL_WIDTH), dimension(PIXEL_HEIGHT)) else { return Read::Unusable("no picture size") };
+    let Some(video) = find(b, entry, VIDEO) else {
+        return Read::Unusable("no picture size");
+    };
+    let dimension = |id| {
+        find(b, video, id)
+            .and_then(|e| uint(b, e))
+            .and_then(|v| u16::try_from(v).ok())
+    };
+    let (Some(width), Some(height)) = (dimension(PIXEL_WIDTH), dimension(PIXEL_HEIGHT)) else {
+        return Read::Unusable("no picture size");
+    };
     let colour = find(b, video, COLOUR);
-    let field = |id, fallback: u64| colour.and_then(|c| find(b, c, id)).and_then(|e| uint(b, e)).unwrap_or(fallback);
+    let field = |id, fallback: u64| {
+        colour
+            .and_then(|c| find(b, c, id))
+            .and_then(|e| uint(b, e))
+            .unwrap_or(fallback)
+    };
     let mut bits = field(BITS, 8) as u8;
     // CodecPrivate: VP9 features as id, length, value.
     let (mut profile, mut level) = (None, None);
@@ -235,7 +319,9 @@ fn head(b: &[u8], segment: u64, scale: u64, tracks: Element, cues: Element, tota
         let mut i = 0;
         while i + 2 <= private.len() {
             let (id, len) = (private[i], private[i + 1] as usize);
-            let Some(&value) = private.get(i + 2).filter(|_| len == 1) else { break };
+            let Some(&value) = private.get(i + 2).filter(|_| len == 1) else {
+                break;
+            };
             match id {
                 1 => profile = Some(value),
                 2 => level = Some(value),
@@ -253,25 +339,70 @@ fn head(b: &[u8], segment: u64, scale: u64, tracks: Element, cues: Element, tota
         _ => 61,
     });
     let full = field(RANGE, 1) == 2;
-    let (primaries, transfer, matrix) = (field(PRIMARIES, 1) as u8, field(TRANSFER, 1) as u8, field(MATRIX, 1) as u8);
-    let mut vpcc = vec![1, 0, 0, 0, profile, level, (bits << 4) | (1 << 1) | u8::from(full), primaries, transfer, matrix, 0, 0];
+    let (primaries, transfer, matrix) = (
+        field(PRIMARIES, 1) as u8,
+        field(TRANSFER, 1) as u8,
+        field(MATRIX, 1) as u8,
+    );
+    let mut vpcc = vec![
+        1,
+        0,
+        0,
+        0,
+        profile,
+        level,
+        (bits << 4) | (1 << 1) | u8::from(full),
+        primaries,
+        transfer,
+        matrix,
+        0,
+        0,
+    ];
     vpcc.splice(0..0, [0, 0, 0, 20, b'v', b'p', b'c', b'C']);
-    let frame = find(b, entry, DEFAULT_DURATION).and_then(|d| uint(b, d)).map_or(0, |ns| (ns / scale) as u32);
+    let frame = find(b, entry, DEFAULT_DURATION)
+        .and_then(|d| uint(b, d))
+        .map_or(0, |ns| (ns / scale) as u32);
     match clusters(b, segment, timescale, number, cues, total) {
-        Some(clusters) => Read::Head(Box::new(Head { number, timescale, width, height, vpcc, frame, clusters, opus: None })),
+        Some(clusters) => Read::Head(Box::new(Head {
+            number,
+            timescale,
+            width,
+            height,
+            vpcc,
+            frame,
+            clusters,
+            opus: None,
+        })),
         None => Read::Unusable("empty index"),
     }
 }
 
 /// The clusters `cues` lists for track `number`: offset and start in seconds.
-fn clusters(b: &[u8], segment: u64, timescale: u32, number: u64, cues: Element, total: u64) -> Option<Vec<(u64, f64)>> {
+fn clusters(
+    b: &[u8],
+    segment: u64,
+    timescale: u32,
+    number: u64,
+    cues: Element,
+    total: u64,
+) -> Option<Vec<(u64, f64)>> {
     let mut points = Vec::new();
-    for point in children(b, cues.data, cues.end).into_iter().filter(|e| e.id == CUE_POINT) {
-        let Some(time) = find(b, point, CUE_TIME).and_then(|t| uint(b, t)) else { continue };
-        for positions in children(b, point.data, point.end).into_iter().filter(|e| e.id == CUE_POSITIONS) {
+    for point in children(b, cues.data, cues.end)
+        .into_iter()
+        .filter(|e| e.id == CUE_POINT)
+    {
+        let Some(time) = find(b, point, CUE_TIME).and_then(|t| uint(b, t)) else {
+            continue;
+        };
+        for positions in children(b, point.data, point.end)
+            .into_iter()
+            .filter(|e| e.id == CUE_POSITIONS)
+        {
             let track = find(b, positions, CUE_TRACK).and_then(|t| uint(b, t));
-            if let (Some(n), Some(position)) = (track, find(b, positions, CUE_CLUSTER).and_then(|p| uint(b, p)))
-                && n == number
+            if let (Some(n), Some(position)) = (
+                track,
+                find(b, positions, CUE_CLUSTER).and_then(|p| uint(b, p)),
+            ) && n == number
             {
                 points.push((segment + position, time as f64 / timescale as f64));
             }
@@ -285,7 +416,9 @@ fn clusters(b: &[u8], segment: u64, timescale: u32, number: u64, cues: Element, 
 
 /// The frames of `track` in one whole cluster, in file order.
 pub fn frames(b: &[u8], track: u64) -> Result<Vec<Frame>, &'static str> {
-    let cluster = element(b, 0).filter(|e| e.id == CLUSTER).ok_or("not a cluster")?;
+    let cluster = element(b, 0)
+        .filter(|e| e.id == CLUSTER)
+        .ok_or("not a cluster")?;
     let end = cluster.end.min(b.len());
     let mut base = 0u64;
     let mut found = Vec::new();
@@ -308,20 +441,35 @@ pub fn frames(b: &[u8], track: u64) -> Result<Vec<Frame>, &'static str> {
     Ok(found)
 }
 
-fn block(b: &[u8], e: Element, track: u64, base: u64, key: Option<bool>, found: &mut Vec<Frame>) -> Result<(), &'static str> {
+fn block(
+    b: &[u8],
+    e: Element,
+    track: u64,
+    base: u64,
+    key: Option<bool>,
+    found: &mut Vec<Frame>,
+) -> Result<(), &'static str> {
     let (number, n) = vint(b, e.data, false).ok_or("bad block")?;
     if number != track {
         return Ok(());
     }
     let at = e.data + n;
-    let relative = i16::from_be_bytes([*b.get(at).ok_or("bad block")?, *b.get(at + 1).ok_or("bad block")?]);
+    let relative = i16::from_be_bytes([
+        *b.get(at).ok_or("bad block")?,
+        *b.get(at + 1).ok_or("bad block")?,
+    ]);
     let flags = *b.get(at + 2).ok_or("bad block")?;
     if flags & 0x06 != 0 {
         return Err("laced frames");
     }
     let start = at + 3;
     let time = (base as i64 + relative as i64).max(0) as u64;
-    found.push(Frame { at: start, size: e.end - start, time, key: key.unwrap_or(flags & 0x80 != 0) });
+    found.push(Frame {
+        at: start,
+        size: e.end - start,
+        time,
+        key: key.unwrap_or(flags & 0x80 != 0),
+    });
     Ok(())
 }
 
@@ -333,9 +481,18 @@ mod tests {
     fn reads_variable_integers() {
         assert_eq!(vint(&[0x81], 0, false), Some((1, 1)));
         assert_eq!(vint(&[0x40, 0x02], 0, false), Some((2, 2)));
-        assert_eq!(vint(&[0x1A, 0x45, 0xDF, 0xA3], 0, true), Some((0x1A45_DFA3, 4)));
+        assert_eq!(
+            vint(&[0x1A, 0x45, 0xDF, 0xA3], 0, true),
+            Some((0x1A45_DFA3, 4))
+        );
         assert_eq!(vint(&[0], 0, false), None);
-        let unknown = element(&[0x1F, 0x43, 0xB6, 0x75, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], 0).unwrap();
+        let unknown = element(
+            &[
+                0x1F, 0x43, 0xB6, 0x75, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+            ],
+            0,
+        )
+        .unwrap();
         assert_eq!(unknown.end, usize::MAX);
     }
 }

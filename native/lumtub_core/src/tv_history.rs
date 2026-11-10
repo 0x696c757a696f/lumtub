@@ -16,7 +16,8 @@ use crate::tv_account::{NoToken, access_token, base, forget_access};
 
 /// SmartTube's `TV_DOWNGRADED`: the TV client the history works with.
 const CLIENT_VERSION: &str = "5.20260901";
-const USER_AGENT: &str = "Mozilla/5.0 (DirectFB; Linux x86_64) Cobalt/4.13031-qa (unlike Gecko) Starboard/1";
+const USER_AGENT: &str =
+    "Mozilla/5.0 (DirectFB; Linux x86_64) Cobalt/4.13031-qa (unlike Gecko) Starboard/1";
 
 #[derive(Deserialize, Debug)]
 pub struct Watched {
@@ -34,9 +35,16 @@ pub struct Watched {
 /// A client playback nonce: 16 characters of `A-Za-z0-9-_`.
 fn cpn() -> String {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-    let seed = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0) ^ (std::process::id() as u128) << 64;
+    let seed = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0)
+        ^ (std::process::id() as u128) << 64;
     let digest = <sha2::Sha256 as sha2::Digest>::digest(seed.to_le_bytes());
-    digest[..16].iter().map(|b| ALPHABET[(b & 63) as usize] as char).collect()
+    digest[..16]
+        .iter()
+        .map(|b| ALPHABET[(b & 63) as usize] as char)
+        .collect()
 }
 
 /// The `player` request body of the older TV client.
@@ -68,36 +76,80 @@ pub struct Tracking {
 }
 
 pub fn tracking(player: &Value) -> Option<Tracking> {
-    let url = at(player, &["playbackTracking", "videostatsWatchtimeUrl", "baseUrl"])
-        .or_else(|| at(player, &["playbackTracking", "videostatsPlaybackUrl", "baseUrl"]))
-        .and_then(Value::as_str)?;
+    let url = at(
+        player,
+        &["playbackTracking", "videostatsWatchtimeUrl", "baseUrl"],
+    )
+    .or_else(|| {
+        at(
+            player,
+            &["playbackTracking", "videostatsPlaybackUrl", "baseUrl"],
+        )
+    })
+    .and_then(Value::as_str)?;
     let query = url.split_once('?')?.1;
-    let field = |name: &str| query.split('&').find_map(|pair| pair.strip_prefix(name)?.strip_prefix('=')).map(str::to_owned);
-    let length = at(player, &["videoDetails", "lengthSeconds"]).and_then(Value::as_str).and_then(|t| t.parse().ok()).unwrap_or(0.0);
-    Some(Tracking { ei: field("ei")?, vm: field("vm")?, of: field("of")?, length })
+    let field = |name: &str| {
+        query
+            .split('&')
+            .find_map(|pair| pair.strip_prefix(name)?.strip_prefix('='))
+            .map(str::to_owned)
+    };
+    let length = at(player, &["videoDetails", "lengthSeconds"])
+        .and_then(Value::as_str)
+        .and_then(|t| t.parse().ok())
+        .unwrap_or(0.0);
+    Some(Tracking {
+        ei: field("ei")?,
+        vm: field("vm")?,
+        of: field("of")?,
+        length,
+    })
 }
 
 /// What a `player` answer without tracking says instead: its playability
 /// status and reason, and the parts it holds.
 pub fn why_not(player: &Value) -> String {
-    let status = at(player, &["playabilityStatus", "status"]).and_then(Value::as_str).unwrap_or("no status");
-    let reason = at(player, &["playabilityStatus", "reason"]).and_then(Value::as_str).unwrap_or("");
-    let parts = player.as_object().map(|o| o.keys().cloned().collect::<Vec<_>>().join(",")).unwrap_or_default();
-    format!("{status}{}{reason}; {parts}", if reason.is_empty() { "" } else { ": " })
+    let status = at(player, &["playabilityStatus", "status"])
+        .and_then(Value::as_str)
+        .unwrap_or("no status");
+    let reason = at(player, &["playabilityStatus", "reason"])
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    let parts = player
+        .as_object()
+        .map(|o| o.keys().cloned().collect::<Vec<_>>().join(","))
+        .unwrap_or_default();
+    format!(
+        "{status}{}{reason}; {parts}",
+        if reason.is_empty() { "" } else { ": " }
+    )
 }
 
 /// The two `api/stats` addresses for [watched] as SmartTube builds them:
 /// the record (from where watching started) and the watch time. Near the
 /// end (less than 5% left) both say `final=1`, which marks it watched.
 pub fn stats(base: &str, watched: &Watched, tracking: &Tracking, cpn: &str) -> [String; 2] {
-    let length = if watched.length > 0.0 { watched.length } else { tracking.length };
+    let length = if watched.length > 0.0 {
+        watched.length
+    } else {
+        tracking.length
+    };
     let done = length > 0.0 && length - watched.to < 0.05 * length;
-    let (from, to) = if done { (length, length) } else { (watched.from, watched.to) };
-    let common = format!("docid={}&cpn={cpn}&ei={}&vm={}&of={}&len={length:.3}", watched.video_id, tracking.ei, tracking.vm, tracking.of);
+    let (from, to) = if done {
+        (length, length)
+    } else {
+        (watched.from, watched.to)
+    };
+    let common = format!(
+        "docid={}&cpn={cpn}&ei={}&vm={}&of={}&len={length:.3}",
+        watched.video_id, tracking.ei, tracking.vm, tracking.of
+    );
     let last = if done { "&final=1" } else { "" };
     [
         format!("{base}/api/stats/playback?ns=yt&ver=2&{common}&cmt={from:.3}{last}"),
-        format!("{base}/api/stats/watchtime?ns=yt&ver=2&{common}&st={from:.3}&et={to:.3}&cmt={to:.3}{last}"),
+        format!(
+            "{base}/api/stats/watchtime?ns=yt&ver=2&{common}&st={from:.3}&et={to:.3}&cmt={to:.3}{last}"
+        ),
     ]
 }
 
@@ -114,7 +166,14 @@ async fn report(port: i64, watched: Watched) {
     let nonce = cpn();
     let request = |url: String| {
         client()
-            .request(if url.contains("/youtubei/") { reqwest::Method::POST } else { reqwest::Method::GET }, url)
+            .request(
+                if url.contains("/youtubei/") {
+                    reqwest::Method::POST
+                } else {
+                    reqwest::Method::GET
+                },
+                url,
+            )
             .bearer_auth(&token)
             .header("User-Agent", USER_AGENT)
             .header("Referer", "https://www.youtube.com/tv")
@@ -128,7 +187,11 @@ async fn report(port: i64, watched: Watched) {
         .send()
         .await;
     let player = match player {
-        Ok(response) if response.status().is_success() => response.bytes().await.ok().and_then(|b| serde_json::from_slice::<Value>(&b).ok()),
+        Ok(response) if response.status().is_success() => response
+            .bytes()
+            .await
+            .ok()
+            .and_then(|b| serde_json::from_slice::<Value>(&b).ok()),
         Ok(response) => {
             if response.status().as_u16() == 401 {
                 forget_access();
@@ -138,7 +201,13 @@ async fn report(port: i64, watched: Watched) {
         Err(e) => return fail(e.to_string()),
     };
     let Some(tracking) = player.as_ref().and_then(tracking) else {
-        return fail(format!("no tracking in the player answer ({})", player.as_ref().map(why_not).unwrap_or_else(|| "not JSON".into())));
+        return fail(format!(
+            "no tracking in the player answer ({})",
+            player
+                .as_ref()
+                .map(why_not)
+                .unwrap_or_else(|| "not JSON".into())
+        ));
     };
     for url in stats(&base, &watched, &tracking, &nonce) {
         match request(url).send().await {
@@ -177,26 +246,52 @@ mod tests {
 
     #[test]
     fn reads_the_tracking_values() {
-        assert_eq!(tracking(&player()), Some(Tracking { ei: "EI%3D".into(), vm: "VM_1".into(), of: "OF".into(), length: 600.0 }));
+        assert_eq!(
+            tracking(&player()),
+            Some(Tracking {
+                ei: "EI%3D".into(),
+                vm: "VM_1".into(),
+                of: "OF".into(),
+                length: 600.0
+            })
+        );
         assert_eq!(tracking(&json!({})), None);
     }
 
     #[test]
     fn says_why_there_is_no_tracking() {
         let answer = json!({"responseContext": {}, "playabilityStatus": {"status": "LOGIN_REQUIRED", "reason": "Sign in to confirm you're not a bot"}});
-        assert_eq!(why_not(&answer), "LOGIN_REQUIRED: Sign in to confirm you're not a bot; responseContext,playabilityStatus");
+        assert_eq!(
+            why_not(&answer),
+            "LOGIN_REQUIRED: Sign in to confirm you're not a bot; responseContext,playabilityStatus"
+        );
         assert_eq!(why_not(&json!({})), "no status; ");
     }
 
     #[test]
     fn builds_the_stats_addresses() {
         let track = tracking(&player()).unwrap();
-        let watched = Watched { video_id: "abcdefghijk".into(), from: 0.0, to: 120.5, length: 0.0, hl: String::new() };
+        let watched = Watched {
+            video_id: "abcdefghijk".into(),
+            from: 0.0,
+            to: 120.5,
+            length: 0.0,
+            hl: String::new(),
+        };
         let [record, time] = stats("https://www.youtube.com", &watched, &track, "CPN");
-        assert_eq!(record, "https://www.youtube.com/api/stats/playback?ns=yt&ver=2&docid=abcdefghijk&cpn=CPN&ei=EI%3D&vm=VM_1&of=OF&len=600.000&cmt=0.000");
-        assert_eq!(time, "https://www.youtube.com/api/stats/watchtime?ns=yt&ver=2&docid=abcdefghijk&cpn=CPN&ei=EI%3D&vm=VM_1&of=OF&len=600.000&st=0.000&et=120.500&cmt=120.500");
+        assert_eq!(
+            record,
+            "https://www.youtube.com/api/stats/playback?ns=yt&ver=2&docid=abcdefghijk&cpn=CPN&ei=EI%3D&vm=VM_1&of=OF&len=600.000&cmt=0.000"
+        );
+        assert_eq!(
+            time,
+            "https://www.youtube.com/api/stats/watchtime?ns=yt&ver=2&docid=abcdefghijk&cpn=CPN&ei=EI%3D&vm=VM_1&of=OF&len=600.000&st=0.000&et=120.500&cmt=120.500"
+        );
 
-        let ended = Watched { to: 590.0, ..watched };
+        let ended = Watched {
+            to: 590.0,
+            ..watched
+        };
         let [record, time] = stats("https://www.youtube.com", &ended, &track, "CPN");
         assert!(record.ends_with("&cmt=600.000&final=1"));
         assert!(time.ends_with("&st=600.000&et=600.000&cmt=600.000&final=1"));
@@ -206,6 +301,10 @@ mod tests {
     fn makes_a_nonce() {
         let nonce = cpn();
         assert_eq!(nonce.len(), 16);
-        assert!(nonce.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_'));
+        assert!(
+            nonce
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+        );
     }
 }

@@ -42,7 +42,10 @@ fn encode(bytes: &[u8], like: &str) -> String {
     let url = like.contains(['-', '_']);
     let mut out = String::new();
     for chunk in bytes.chunks(3) {
-        let n = chunk.iter().enumerate().fold(0u32, |n, (i, b)| n | (*b as u32) << (16 - 8 * i));
+        let n = chunk
+            .iter()
+            .enumerate()
+            .fold(0u32, |n, (i, b)| n | (*b as u32) << (16 - 8 * i));
         for i in 0..=chunk.len() {
             let c = ALPHABET[(n >> (18 - 6 * i) & 63) as usize];
             out.push(match (url, c) {
@@ -197,7 +200,10 @@ mod tests {
         let bytes = decode(&made).unwrap();
         let mut wanted_inner = message(&[(1, b"UgyBBBBBB.reply"), (2, b"dQw4w9WgXcQ")]);
         let mut wanted = vec![0x08, 0x05];
-        wanted.extend(message(&[(3, b"UgyBBBBBB.reply"), (4, &std::mem::take(&mut wanted_inner))]));
+        wanted.extend(message(&[
+            (3, b"UgyBBBBBB.reply"),
+            (4, &std::mem::take(&mut wanted_inner)),
+        ]));
         assert_eq!(bytes, wanted);
         assert_eq!(action_for(&action, "nothere", "x"), None);
         assert_eq!(action_for("%%%", "a", "b"), None);

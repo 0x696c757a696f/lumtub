@@ -28,8 +28,10 @@ fn store(certs: impl IntoIterator<Item = CertificateDer<'static>>) -> Arc<RootCe
     Arc::new(store)
 }
 
-static MOZILLA: LazyLock<Arc<RootCertStore>> = LazyLock::new(|| store(webpki_root_certs::TLS_SERVER_ROOT_CERTS.iter().cloned()));
-static GOOGLE: LazyLock<Arc<RootCertStore>> = LazyLock::new(|| store(CertificateDer::pem_slice_iter(CHROME).flatten()));
+static MOZILLA: LazyLock<Arc<RootCertStore>> =
+    LazyLock::new(|| store(webpki_root_certs::TLS_SERVER_ROOT_CERTS.iter().cloned()));
+static GOOGLE: LazyLock<Arc<RootCertStore>> =
+    LazyLock::new(|| store(CertificateDer::pem_slice_iter(CHROME).flatten()));
 
 static CURRENT: RwLock<Roots> = RwLock::new(Roots::System);
 
@@ -51,8 +53,13 @@ pub fn set(roots: Roots) -> bool {
 #[cfg(target_os = "android")]
 static ANDROID: LazyLock<Arc<RootCertStore>> = LazyLock::new(|| {
     let mut certs = Vec::new();
-    for folder in ["/apex/com.android.conscrypt/cacerts", "/system/etc/security/cacerts"] {
-        let Ok(entries) = std::fs::read_dir(folder) else { continue };
+    for folder in [
+        "/apex/com.android.conscrypt/cacerts",
+        "/system/etc/security/cacerts",
+    ] {
+        let Ok(entries) = std::fs::read_dir(folder) else {
+            continue;
+        };
         for entry in entries.flatten() {
             if let Ok(bytes) = std::fs::read(entry.path()) {
                 certs.extend(CertificateDer::pem_slice_iter(&bytes).flatten());
@@ -84,9 +91,13 @@ fn list(roots: Roots) -> Option<Arc<RootCertStore>> {
 /// [builder] trusting [roots]: unchanged for the system's store, else
 /// rustls with only that list.
 pub fn apply(builder: reqwest::ClientBuilder, roots: Roots) -> reqwest::ClientBuilder {
-    let Some(list) = list(roots) else { return builder };
+    let Some(list) = list(roots) else {
+        return builder;
+    };
     let provider = Arc::new(rustls::crypto::ring::default_provider());
-    match rustls::ClientConfig::builder_with_provider(provider).with_safe_default_protocol_versions() {
+    match rustls::ClientConfig::builder_with_provider(provider)
+        .with_safe_default_protocol_versions()
+    {
         Ok(config) => {
             let mut config = config.with_root_certificates(list).with_no_client_auth();
             config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
@@ -109,24 +120,40 @@ mod tests {
     fn reads_both_lists() {
         assert!(MOZILLA.len() > 100, "{}", MOZILLA.len());
         assert!(GOOGLE.len() > 50, "{}", GOOGLE.len());
-        assert_eq!(GOOGLE.len(), String::from_utf8_lossy(CHROME).matches("BEGIN CERTIFICATE").count());
+        assert_eq!(
+            GOOGLE.len(),
+            String::from_utf8_lossy(CHROME)
+                .matches("BEGIN CERTIFICATE")
+                .count()
+        );
     }
 
     #[test]
     fn chrome_certificates_match_their_hashes() {
         let text = String::from_utf8_lossy(CHROME);
-        let hashes: Vec<&str> = text.lines().filter_map(|l| l.strip_prefix("# ")).filter(|h| h.len() == 64).collect();
+        let hashes: Vec<&str> = text
+            .lines()
+            .filter_map(|l| l.strip_prefix("# "))
+            .filter(|h| h.len() == 64)
+            .collect();
         let certs: Vec<CertificateDer> = CertificateDer::pem_slice_iter(CHROME).flatten().collect();
         assert_eq!(hashes.len(), certs.len());
         for (hash, cert) in hashes.iter().zip(&certs) {
-            let digest: String = Sha256::digest(cert.as_ref()).iter().map(|b| format!("{b:02x}")).collect();
+            let digest: String = Sha256::digest(cert.as_ref())
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect();
             assert_eq!(&digest, hash);
         }
     }
 
     #[test]
     fn reads_the_setting() {
-        for (json, roots) in [(r#""system""#, Roots::System), (r#""mozilla""#, Roots::Mozilla), (r#""google""#, Roots::Google)] {
+        for (json, roots) in [
+            (r#""system""#, Roots::System),
+            (r#""mozilla""#, Roots::Mozilla),
+            (r#""google""#, Roots::Google),
+        ] {
             assert_eq!(serde_json::from_str::<Roots>(json).unwrap(), roots);
         }
         for roots in [Roots::System, Roots::Mozilla, Roots::Google] {

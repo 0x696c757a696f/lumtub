@@ -45,7 +45,11 @@ impl Jar {
     }
 
     pub fn get(&self, name: &str) -> Option<&str> {
-        self.0.iter().find(|(n, _)| n == name).map(|(_, v)| v.as_str()).filter(|v| !v.is_empty())
+        self.0
+            .iter()
+            .find(|(n, _)| n == name)
+            .map(|(_, v)| v.as_str())
+            .filter(|v| !v.is_empty())
     }
 
     pub fn len(&self) -> usize {
@@ -58,12 +62,18 @@ impl Jar {
 
     /// Whether these are a signed-in session: they hold an `SAPISID`.
     pub fn signed_in(&self) -> bool {
-        self.get("SAPISID").or_else(|| self.get("__Secure-3PAPISID")).is_some()
+        self.get("SAPISID")
+            .or_else(|| self.get("__Secure-3PAPISID"))
+            .is_some()
     }
 
     /// The `Cookie` header.
     pub fn header(&self) -> String {
-        self.0.iter().map(|(n, v)| format!("{n}={v}")).collect::<Vec<_>>().join("; ")
+        self.0
+            .iter()
+            .map(|(n, v)| format!("{n}={v}"))
+            .collect::<Vec<_>>()
+            .join("; ")
     }
 }
 
@@ -97,7 +107,11 @@ pub fn read_cookies(text: &str) -> Jar {
             }
         }
     } else {
-        let header = text.trim().strip_prefix("Cookie:").or_else(|| text.trim().strip_prefix("cookie:")).unwrap_or(text);
+        let header = text
+            .trim()
+            .strip_prefix("Cookie:")
+            .or_else(|| text.trim().strip_prefix("cookie:"))
+            .unwrap_or(text);
         for pair in header.split(';') {
             if let Some((name, value)) = pair.split_once('=') {
                 jar.set(name, value);
@@ -108,7 +122,10 @@ pub fn read_cookies(text: &str) -> Jar {
 }
 
 fn sha1_hex(text: &str) -> String {
-    <sha1::Sha1 as sha1::Digest>::digest(text.as_bytes()).iter().map(|b| format!("{b:02x}")).collect()
+    <sha1::Sha1 as sha1::Digest>::digest(text.as_bytes())
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 /// The `Authorization` header the website sends with [jar] at [seconds]
@@ -116,8 +133,15 @@ fn sha1_hex(text: &str) -> String {
 /// 3P variants. The hash is SHA-1 because YouTube takes only that; it signs
 /// one request and keeps nothing secret.
 pub fn authorization(jar: &Jar, seconds: u64, origin: &str) -> Option<String> {
-    let hash = |kind: &str, id: &str| format!("{kind} {seconds}_{}", sha1_hex(&format!("{seconds} {id} {origin}")));
-    let main = jar.get("SAPISID").or_else(|| jar.get("__Secure-3PAPISID"))?;
+    let hash = |kind: &str, id: &str| {
+        format!(
+            "{kind} {seconds}_{}",
+            sha1_hex(&format!("{seconds} {id} {origin}"))
+        )
+    };
+    let main = jar
+        .get("SAPISID")
+        .or_else(|| jar.get("__Secure-3PAPISID"))?;
     let mut parts = vec![hash("SAPISIDHASH", main)];
     if let Some(id) = jar.get("__Secure-1PAPISID") {
         parts.push(hash("SAPISID1PHASH", id));
@@ -144,7 +168,15 @@ struct Session {
 }
 
 static SESSION: LazyLock<Mutex<Session>> = LazyLock::new(|| {
-    Mutex::new(Session { file: None, base: "https://www.youtube.com".into(), reason: "Lumtub".into(), sealed: None, guard: None, open: None, declined: false })
+    Mutex::new(Session {
+        file: None,
+        base: "https://www.youtube.com".into(),
+        reason: "Lumtub".into(),
+        sealed: None,
+        guard: None,
+        open: None,
+        declined: false,
+    })
 });
 
 /// Held while the Windows Hello prompt is up, so requests ask once.
@@ -166,11 +198,16 @@ fn keep(jar: &Jar, hello: bool) -> Result<Guard, String> {
     }
     let (file, reason) = {
         let session = session();
-        (session.file.clone().ok_or("the sign-in has no folder")?, session.reason.clone())
+        (
+            session.file.clone().ok_or("the sign-in has no folder")?,
+            session.reason.clone(),
+        )
     };
     let header = Zeroizing::new(jar.header());
     let sealer = Sealer::new(hello, &reason);
-    let sealed = sealer.seal(header.as_bytes()).ok_or("Windows could not encrypt the cookies")?;
+    let sealed = sealer
+        .seal(header.as_bytes())
+        .ok_or("Windows could not encrypt the cookies")?;
     write_file(&file, &sealed)?;
     let secret = Secret::new(header.as_bytes()).ok_or("out of memory")?;
     let guard = sealer.guard();
@@ -202,7 +239,10 @@ fn unlock(ask: bool) -> Result<(), Shut> {
             return Err(Shut::Declined);
         }
         session.declined = false;
-        (session.sealed.clone().ok_or(Shut::SignedOut)?, session.reason.clone())
+        (
+            session.sealed.clone().ok_or(Shut::SignedOut)?,
+            session.reason.clone(),
+        )
     };
     match vault::open(&sealed, &reason) {
         Ok((plain, sealer)) => {
@@ -228,14 +268,21 @@ fn renew(answer: &reqwest::Response) {
         .get_all("set-cookie")
         .iter()
         .filter_map(|v| v.to_str().ok())
-        .filter_map(|v| v.split(';').next()?.split_once('=').map(|(n, v)| (n.trim().to_owned(), Zeroizing::new(v.trim().to_owned()))))
+        .filter_map(|v| {
+            v.split(';')
+                .next()?
+                .split_once('=')
+                .map(|(n, v)| (n.trim().to_owned(), Zeroizing::new(v.trim().to_owned())))
+        })
         .filter(|(_, v)| !v.is_empty())
         .collect();
     if fresh.is_empty() {
         return;
     }
     let mut session = session();
-    let Some((secret, sealer)) = &session.open else { return };
+    let Some((secret, sealer)) = &session.open else {
+        return;
+    };
     let changed = secret.reveal(|header| {
         let mut jar = read_cookies(std::str::from_utf8(header).unwrap_or(""));
         let mut changed = false;
@@ -248,7 +295,12 @@ fn renew(answer: &reqwest::Response) {
         changed.then(|| Zeroizing::new(jar.header()))
     });
     let Some(Some(header)) = changed else { return };
-    let (Some(secret), Some(sealed)) = (Secret::new(header.as_bytes()), sealer.seal(header.as_bytes())) else { return };
+    let (Some(secret), Some(sealed)) = (
+        Secret::new(header.as_bytes()),
+        sealer.seal(header.as_bytes()),
+    ) else {
+        return;
+    };
     if let Some(file) = &session.file {
         let _ = write_file(file, &sealed);
     }
@@ -312,12 +364,23 @@ fn sensitive(text: &str) -> Option<HeaderValue> {
 /// Windows Hello was closed, or `[-3, why]`.
 async fn innertube(port: i64, request: Request) {
     if !ENDPOINTS.contains(&request.endpoint.as_str()) {
-        post(port, vec![Item::Int(-3), Item::Text(format!("endpoint {} is not allowed", request.endpoint))]);
+        post(
+            port,
+            vec![
+                Item::Int(-3),
+                Item::Text(format!("endpoint {} is not allowed", request.endpoint)),
+            ],
+        );
         return;
     }
     let ask = request.ask;
     let fail = |code: i64, why: Option<String>| {
-        post(port, std::iter::once(Item::Int(code)).chain(why.map(Item::Text)).collect());
+        post(
+            port,
+            std::iter::once(Item::Int(code))
+                .chain(why.map(Item::Text))
+                .collect(),
+        );
     };
     match runtime().spawn_blocking(move || unlock(ask)).await {
         Ok(Ok(())) => {}
@@ -326,23 +389,32 @@ async fn innertube(port: i64, request: Request) {
         Ok(Err(Shut::Broken(why))) => return fail(-3, Some(why)),
         Err(e) => return fail(-3, Some(e.to_string())),
     }
-    let seconds = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
+    let seconds = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
     let (headers, base) = {
         let session = session();
         let headers = session.open.as_ref().and_then(|(secret, _)| {
             secret.reveal(|header| {
                 let jar = read_cookies(std::str::from_utf8(header).unwrap_or(""));
                 let cookie = Zeroizing::new(jar.header());
-                let authorization = Zeroizing::new(authorization(&jar, seconds, "https://www.youtube.com")?);
+                let authorization =
+                    Zeroizing::new(authorization(&jar, seconds, "https://www.youtube.com")?);
                 Some((sensitive(&cookie)?, sensitive(&authorization)?))
             })
         });
         (headers.flatten(), session.base.clone())
     };
-    let Some((cookie, authorization)) = headers else { return fail(-1, None) };
+    let Some((cookie, authorization)) = headers else {
+        return fail(-1, None);
+    };
     let body = web_body(&request.body, &request.hl, &request.client_version);
     let sent = client()
-        .post(format!("{base}/youtubei/v1/{}?prettyPrint=false", request.endpoint))
+        .post(format!(
+            "{base}/youtubei/v1/{}?prettyPrint=false",
+            request.endpoint
+        ))
         .header("Cookie", cookie)
         .header("Authorization", authorization)
         .header("X-Origin", "https://www.youtube.com")
@@ -350,7 +422,14 @@ async fn innertube(port: i64, request: Request) {
         .header("X-Goog-AuthUser", "0")
         .header("X-Youtube-Client-Name", "1")
         .header("X-Youtube-Client-Version", request.client_version.as_str())
-        .header("Accept-Language", if request.language.is_empty() { "en" } else { request.language.as_str() })
+        .header(
+            "Accept-Language",
+            if request.language.is_empty() {
+                "en"
+            } else {
+                request.language.as_str()
+            },
+        )
         .header("Content-Type", "application/json")
         .body(body.to_string())
         .timeout(Duration::from_secs(20))
@@ -387,9 +466,14 @@ fn status() -> Value {
 /// # Safety
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn lumtub_web_open(json: *const u8, length: usize) -> *mut std::os::raw::c_char {
+pub unsafe extern "C" fn lumtub_web_open(
+    json: *const u8,
+    length: usize,
+) -> *mut std::os::raw::c_char {
     let options: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
-    let Some(folder) = options.get("folder").and_then(Value::as_str) else { return give_json(&status()) };
+    let Some(folder) = options.get("folder").and_then(Value::as_str) else {
+        return give_json(&status());
+    };
     let file = PathBuf::from(folder).join("youtube-cookies.bin");
     let sealed = std::fs::read(&file).ok();
     let guard = sealed.as_deref().and_then(vault::guard);
@@ -418,7 +502,14 @@ pub extern "C" fn lumtub_web_status() -> *mut std::os::raw::c_char {
 
 fn answer(port: i64, kept: Result<(usize, Guard), String>) {
     match kept {
-        Ok((count, guard)) => post(port, vec![Item::Int(0), Item::Int(count as i64), Item::Text(guard.name().into())]),
+        Ok((count, guard)) => post(
+            port,
+            vec![
+                Item::Int(0),
+                Item::Int(count as i64),
+                Item::Text(guard.name().into()),
+            ],
+        ),
         Err(why) => post(port, vec![Item::Int(-2), Item::Text(why)]),
     };
 }
@@ -440,9 +531,21 @@ fn shred(file: &Path) {
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_web_import(port: i64, json: *const u8, length: usize) -> bool {
     let options: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
-    let Some(path) = options.get("path").and_then(Value::as_str).map(PathBuf::from) else { return false };
-    let hello = options.get("hello").and_then(Value::as_bool).unwrap_or(true);
-    let delete = options.get("delete").and_then(Value::as_bool).unwrap_or(false);
+    let Some(path) = options
+        .get("path")
+        .and_then(Value::as_str)
+        .map(PathBuf::from)
+    else {
+        return false;
+    };
+    let hello = options
+        .get("hello")
+        .and_then(Value::as_bool)
+        .unwrap_or(true);
+    let delete = options
+        .get("delete")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
     runtime().spawn_blocking(move || {
         let kept = (|| {
             let mut bytes = std::fs::read(&path).map_err(|e| e.to_string())?;
@@ -473,11 +576,29 @@ pub unsafe extern "C" fn lumtub_web_import(port: i64, json: *const u8, length: u
 /// # Safety
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn lumtub_web_browser_sign_in(port: i64, json: *const u8, length: usize) -> bool {
+pub unsafe extern "C" fn lumtub_web_browser_sign_in(
+    port: i64,
+    json: *const u8,
+    length: usize,
+) -> bool {
     let options: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
-    let hello = options.get("hello").and_then(Value::as_bool).unwrap_or(true);
-    let url = options.get("url").and_then(Value::as_str).unwrap_or(browser_sign_in::SIGN_IN_URL).to_owned();
-    let Some(folder) = session().file.as_ref().and_then(|f| f.parent()).map(Path::to_path_buf) else { return false };
+    let hello = options
+        .get("hello")
+        .and_then(Value::as_bool)
+        .unwrap_or(true);
+    let url = options
+        .get("url")
+        .and_then(Value::as_str)
+        .unwrap_or(browser_sign_in::SIGN_IN_URL)
+        .to_owned();
+    let Some(folder) = session()
+        .file
+        .as_ref()
+        .and_then(|f| f.parent())
+        .map(Path::to_path_buf)
+    else {
+        return false;
+    };
     let Some(browser) = browser_sign_in::find_browser() else {
         post(port, vec![Item::Int(-2), Item::Text("no browser".into())]);
         return true;
@@ -496,7 +617,9 @@ pub unsafe extern "C" fn lumtub_web_browser_sign_in(port: i64, json: *const u8, 
             },
         );
         match outcome {
-            browser_sign_in::Outcome::SignedIn(jar) => answer(port, keep(&jar, hello).map(|guard| (jar.len(), guard))),
+            browser_sign_in::Outcome::SignedIn(jar) => {
+                answer(port, keep(&jar, hello).map(|guard| (jar.len(), guard)))
+            }
             browser_sign_in::Outcome::Closed => {
                 post(port, vec![Item::Int(-4)]);
             }
@@ -528,7 +651,9 @@ pub extern "C" fn lumtub_web_sign_out() {
 pub fn cookies_txt(jar: &Jar, expires: u64) -> Zeroizing<String> {
     let mut text = Zeroizing::new(String::from("# Netscape HTTP Cookie File\n"));
     for (name, value) in &jar.0 {
-        text.push_str(&format!(".youtube.com\tTRUE\t/\tTRUE\t{expires}\t{name}\t{value}\n"));
+        text.push_str(&format!(
+            ".youtube.com\tTRUE\t/\tTRUE\t{expires}\t{name}\t{value}\n"
+        ));
     }
     text
 }
@@ -541,13 +666,28 @@ pub fn cookies_txt(jar: &Jar, expires: u64) -> Zeroizing<String> {
 /// # Safety
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn lumtub_web_cookies_file(port: i64, json: *const u8, length: usize) -> bool {
+pub unsafe extern "C" fn lumtub_web_cookies_file(
+    port: i64,
+    json: *const u8,
+    length: usize,
+) -> bool {
     let options: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
-    let Some(path) = options.get("path").and_then(Value::as_str).map(PathBuf::from) else { return false };
+    let Some(path) = options
+        .get("path")
+        .and_then(Value::as_str)
+        .map(PathBuf::from)
+    else {
+        return false;
+    };
     let ask = options.get("ask").and_then(Value::as_bool).unwrap_or(false);
     runtime().spawn_blocking(move || {
         let fail = |code: i64, why: Option<String>| {
-            post(port, std::iter::once(Item::Int(code)).chain(why.map(Item::Text)).collect());
+            post(
+                port,
+                std::iter::once(Item::Int(code))
+                    .chain(why.map(Item::Text))
+                    .collect(),
+            );
         };
         match unlock(ask) {
             Ok(()) => {}
@@ -555,12 +695,25 @@ pub unsafe extern "C" fn lumtub_web_cookies_file(port: i64, json: *const u8, len
             Err(Shut::Declined) => return fail(-4, None),
             Err(Shut::Broken(why)) => return fail(-3, Some(why)),
         }
-        let expires = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0) + 3600;
+        let expires = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0)
+            + 3600;
         let text = {
             let session = session();
-            session.open.as_ref().and_then(|(secret, _)| secret.reveal(|header| cookies_txt(&read_cookies(std::str::from_utf8(header).unwrap_or("")), expires)))
+            session.open.as_ref().and_then(|(secret, _)| {
+                secret.reveal(|header| {
+                    cookies_txt(
+                        &read_cookies(std::str::from_utf8(header).unwrap_or("")),
+                        expires,
+                    )
+                })
+            })
         };
-        let Some(text) = text else { return fail(-1, None) };
+        let Some(text) = text else {
+            return fail(-1, None);
+        };
         match vault::write_private(&path, text.as_bytes()) {
             Ok(()) => fail(0, None),
             Err(e) => fail(-3, Some(e.to_string())),
@@ -618,7 +771,10 @@ mod tests {
         let jar = read_cookies(file);
         assert_eq!(jar.header(), "SAPISID=abc/def; SID=sid1; PREF=hl=en");
         assert!(jar.signed_in());
-        assert_eq!(read_cookies("Cookie: a=1; SAPISID=x; b=2=3").header(), "a=1; SAPISID=x; b=2=3");
+        assert_eq!(
+            read_cookies("Cookie: a=1; SAPISID=x; b=2=3").header(),
+            "a=1; SAPISID=x; b=2=3"
+        );
         assert!(!read_cookies("PREF=hl=en").signed_in());
     }
 
@@ -628,15 +784,25 @@ mod tests {
         jar.set("SAPISID", "abc");
         jar.set("__Secure-3PAPISID", "abc");
         let hash = sha1_hex("1700000000 abc https://www.youtube.com");
-        assert_eq!(authorization(&jar, 1_700_000_000, "https://www.youtube.com").unwrap(), format!("SAPISIDHASH 1700000000_{hash} SAPISID3PHASH 1700000000_{hash}"));
+        assert_eq!(
+            authorization(&jar, 1_700_000_000, "https://www.youtube.com").unwrap(),
+            format!("SAPISIDHASH 1700000000_{hash} SAPISID3PHASH 1700000000_{hash}")
+        );
         assert_eq!(sha1_hex("abc"), "a9993e364706816aba3e25717850c26c9cd0d89d");
         assert_eq!(authorization(&Jar::default(), 1, "o"), None);
     }
 
     #[test]
     fn builds_the_websites_request() {
-        let body = web_body(&json!({"continuation": "C", "context": "ignored"}), "zh-CN", "2.2026");
-        assert_eq!(body, json!({"context": {"client": {"clientName": "WEB", "clientVersion": "2.2026", "hl": "zh-CN"}}, "continuation": "C"}));
+        let body = web_body(
+            &json!({"continuation": "C", "context": "ignored"}),
+            "zh-CN",
+            "2.2026",
+        );
+        assert_eq!(
+            body,
+            json!({"context": {"client": {"clientName": "WEB", "clientVersion": "2.2026", "hl": "zh-CN"}}, "continuation": "C"})
+        );
     }
 
     #[test]
@@ -644,14 +810,26 @@ mod tests {
         let folder = std::env::temp_dir().join(format!("lumtub-web-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
         let options = json!({"folder": folder.to_string_lossy()}).to_string();
-        unsafe { crate::taste::lumtub_string_free(lumtub_web_open(options.as_ptr(), options.len())) };
+        unsafe {
+            crate::taste::lumtub_string_free(lumtub_web_open(options.as_ptr(), options.len()))
+        };
         assert_eq!(status()["signedIn"], false);
         let jar = read_cookies("SAPISID=abc; LOGIN_INFO=x");
         let guard = keep(&jar, true).unwrap();
-        unsafe { crate::taste::lumtub_string_free(lumtub_web_open(options.as_ptr(), options.len())) };
-        assert_eq!(status(), json!({"signedIn": true, "guard": guard.name(), "unlocked": false}));
+        unsafe {
+            crate::taste::lumtub_string_free(lumtub_web_open(options.as_ptr(), options.len()))
+        };
+        assert_eq!(
+            status(),
+            json!({"signedIn": true, "guard": guard.name(), "unlocked": false})
+        );
         assert!(unlock(false).is_ok());
-        let header = session().open.as_ref().unwrap().0.reveal(|h| String::from_utf8(h.to_vec()).unwrap());
+        let header = session()
+            .open
+            .as_ref()
+            .unwrap()
+            .0
+            .reveal(|h| String::from_utf8(h.to_vec()).unwrap());
         assert_eq!(header.as_deref(), Some("SAPISID=abc; LOGIN_INFO=x"));
         lumtub_web_sign_out();
         assert!(!folder.join("youtube-cookies.bin").exists());

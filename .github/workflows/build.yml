@@ -481,7 +481,7 @@ jobs:
 
       - name: Linux - install the Rust toolchain
         run: |
-          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path
+          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --component rustfmt,clippy --default-toolchain stable --no-modify-path
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           "$HOME/.cargo/bin/rustc" --version
 
@@ -494,6 +494,10 @@ jobs:
       - name: Linux - build the Rust core
         run: |
           manifest=native/lumtub_core/Cargo.toml
+          if [ "${{ matrix.package_arch }}" = x64 ]; then
+            cargo fmt --manifest-path "$manifest" --check
+            cargo clippy --manifest-path "$manifest" --release --all-targets -- -D warnings
+          fi
           cargo test --manifest-path "$manifest" --release
           cargo build --manifest-path "$manifest" --release --lib
           core="$PWD/native/lumtub_core/target/release/liblumtub_core.so"

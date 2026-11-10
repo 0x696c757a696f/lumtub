@@ -36,7 +36,9 @@ pub struct VideoFormat {
 
 impl VideoFormat {
     fn hdr(&self) -> bool {
-        self.range.as_ref().is_some_and(|r| !r.eq_ignore_ascii_case("SDR"))
+        self.range
+            .as_ref()
+            .is_some_and(|r| !r.eq_ignore_ascii_case("SDR"))
     }
 }
 
@@ -119,7 +121,11 @@ impl Formats {
             let field = |key: &str| f.get(key).unwrap_or(&Value::Null);
             let id = string(field("format_id"));
             let ext = string(field("ext"));
-            if id.is_empty() || string(field("url")).is_empty() || ext == "mhtml" || string(field("protocol")).contains("m3u8") {
+            if id.is_empty()
+                || string(field("url")).is_empty()
+                || ext == "mhtml"
+                || string(field("protocol")).contains("m3u8")
+            {
                 continue;
             }
             let vcodec = string(field("vcodec"));
@@ -141,10 +147,19 @@ impl Formats {
                 }),
                 _ if has_audio && (vcodec.is_empty() || vcodec == "none") => {
                     // Loudness-boosted copies (`251-drc`) duplicate the normal track.
-                    if id.ends_with("-drc") || string(field("format_note")).to_uppercase().contains("DRC") {
+                    if id.ends_with("-drc")
+                        || string(field("format_note")).to_uppercase().contains("DRC")
+                    {
                         continue;
                     }
-                    formats.audio.push(AudioFormat { id, codec: acodec, abr: number(field("abr")).or(tbr), ext, size, language: int(field("language_preference")) });
+                    formats.audio.push(AudioFormat {
+                        id,
+                        codec: acodec,
+                        abr: number(field("abr")).or(tbr),
+                        ext,
+                        size,
+                        language: int(field("language_preference")),
+                    });
                 }
                 _ => {}
             }
@@ -154,18 +169,29 @@ impl Formats {
 
     /// Codecs this video has, in the order the dialog lists them.
     pub fn codecs(&self) -> Vec<Codec> {
-        [Codec::Vp9, Codec::Av1, Codec::H264, Codec::Vp8].into_iter().filter(|&c| self.video.iter().any(|f| f.codec == c)).collect()
+        [Codec::Vp9, Codec::Av1, Codec::H264, Codec::Vp8]
+            .into_iter()
+            .filter(|&c| self.video.iter().any(|f| f.codec == c))
+            .collect()
     }
 
     /// The codec an automatic pick takes: the first of [preference] the
     /// video has; none (any) when it has none of them.
     pub fn automatic(&self, preference: &[Codec]) -> Option<Codec> {
-        preference.iter().copied().find(|&c| self.video.iter().any(|f| f.codec == c))
+        preference
+            .iter()
+            .copied()
+            .find(|&c| self.video.iter().any(|f| f.codec == c))
     }
 
     /// Heights offered for [codec], highest first.
     pub fn heights(&self, codec: Option<Codec>) -> Vec<u32> {
-        let mut heights: Vec<u32> = self.video.iter().filter(|f| codec.is_none_or(|c| f.codec == c)).map(|f| f.height).collect();
+        let mut heights: Vec<u32> = self
+            .video
+            .iter()
+            .filter(|f| codec.is_none_or(|c| f.codec == c))
+            .map(|f| f.height)
+            .collect();
         heights.sort_unstable_by(|a, b| b.cmp(a));
         heights.dedup();
         heights
@@ -177,7 +203,11 @@ impl Formats {
     pub fn pick_video(&self, codec: Option<Codec>, height: Option<u32>) -> Option<&VideoFormat> {
         let chosen = pick_height(&self.heights(codec), height)?;
         let rank = |c: Codec| Codec::ALL.iter().position(|&x| x == c);
-        let mut candidates: Vec<&VideoFormat> = self.video.iter().filter(|f| f.height == chosen && codec.is_none_or(|c| f.codec == c)).collect();
+        let mut candidates: Vec<&VideoFormat> = self
+            .video
+            .iter()
+            .filter(|f| f.height == chosen && codec.is_none_or(|c| f.codec == c))
+            .collect();
         candidates.sort_by(|a, b| {
             b.fps
                 .unwrap_or(0.0)
@@ -192,7 +222,12 @@ impl Formats {
     /// Audio tracks, best first: the video's own language, then bitrate.
     pub fn audio_best(&self) -> Vec<&AudioFormat> {
         let mut best: Vec<&AudioFormat> = self.audio.iter().collect();
-        best.sort_by(|a, b| b.language.unwrap_or(-1).cmp(&a.language.unwrap_or(-1)).then(b.abr.unwrap_or(0.0).total_cmp(&a.abr.unwrap_or(0.0))));
+        best.sort_by(|a, b| {
+            b.language
+                .unwrap_or(-1)
+                .cmp(&a.language.unwrap_or(-1))
+                .then(b.abr.unwrap_or(0.0).total_cmp(&a.abr.unwrap_or(0.0)))
+        });
         best
     }
 }
@@ -205,7 +240,11 @@ pub fn pick_height(available: &[u32], wanted: Option<u32>) -> Option<u32> {
         Some(w) => w,
         None => return available.first().copied(),
     };
-    available.iter().copied().find(|&h| h <= wanted).or_else(|| available.last().copied())
+    available
+        .iter()
+        .copied()
+        .find(|&h| h <= wanted)
+        .or_else(|| available.last().copied())
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize, Default)]
@@ -242,14 +281,22 @@ pub struct ContainerPlan<'a> {
 /// stream. MKV holds anything, MP4 AV1/VP9/H.264 with AAC or Opus, WebM
 /// VP8/VP9/AV1 with Opus or Vorbis. Auto takes MP4 for H.264 with AAC,
 /// WebM when everything fits it, else MKV.
-pub fn plan_container<'a>(wanted: Container, video: Codec, audio_best: &[&'a AudioFormat]) -> ContainerPlan<'a> {
+pub fn plan_container<'a>(
+    wanted: Container,
+    video: Codec,
+    audio_best: &[&'a AudioFormat],
+) -> ContainerPlan<'a> {
     let first = |test: fn(&AudioFormat) -> bool| audio_best.iter().copied().find(|a| test(a));
     let aac = first(AudioFormat::aac);
     let mp4_audio = aac.or_else(|| first(AudioFormat::opus));
     let webm_audio = first(|a| a.opus() || a.vorbis());
     let webm_video = video != Codec::H264;
     let has_audio = !audio_best.is_empty();
-    let plan = |container, audio, problem| ContainerPlan { container, audio, problem };
+    let plan = |container, audio, problem| ContainerPlan {
+        container,
+        audio,
+        problem,
+    };
     match wanted {
         Container::Mkv => plan(Container::Mkv, audio_best.first().copied(), None),
         Container::Mp4 => {
@@ -310,12 +357,26 @@ pub struct Plan {
 /// Builds the selection for [codec] (none: the automatic one), [height]
 /// and [container]; for [audio_only] the best m4a track, else the best
 /// track.
-pub fn plan(formats: &Formats, codec: Option<Codec>, height: Option<u32>, container: Container, audio_only: bool) -> Plan {
+pub fn plan(
+    formats: &Formats,
+    codec: Option<Codec>,
+    height: Option<u32>,
+    container: Container,
+    audio_only: bool,
+) -> Plan {
     let audio = formats.audio_best();
     if audio_only {
         let track = audio.iter().find(|a| a.ext == "m4a").or(audio.first());
         return Plan {
-            selection: track.map(|t| Selection { audio_only: true, codec: None, height: None, video: None, audio: Some(t.id.clone()), container: Container::Mkv, size: t.size }),
+            selection: track.map(|t| Selection {
+                audio_only: true,
+                codec: None,
+                height: None,
+                video: None,
+                audio: Some(t.id.clone()),
+                container: Container::Mkv,
+                size: t.size,
+            }),
             problem: None,
         };
     }
@@ -324,9 +385,14 @@ pub fn plan(formats: &Formats, codec: Option<Codec>, height: Option<u32>, contai
     };
     let chosen = plan_container(container, video.codec, &audio);
     if let Some(problem) = chosen.problem {
-        return Plan { selection: None, problem: Some(problem) };
+        return Plan {
+            selection: None,
+            problem: Some(problem),
+        };
     }
-    let size = video.size.map(|s| s + chosen.audio.and_then(|a| a.size).unwrap_or(0));
+    let size = video
+        .size
+        .map(|s| s + chosen.audio.and_then(|a| a.size).unwrap_or(0));
     Plan {
         selection: Some(Selection {
             audio_only: false,
@@ -398,7 +464,11 @@ pub unsafe extern "C" fn lumtub_download_choose(json: *const u8, length: usize) 
         automatic: formats.automatic(&ask.preference),
         heights: formats.heights(codec),
         video: formats.pick_video(codec, ask.height).map(|v| v.id.as_str()),
-        audio_best: formats.audio_best().into_iter().map(|a| a.id.as_str()).collect(),
+        audio_best: formats
+            .audio_best()
+            .into_iter()
+            .map(|a| a.id.as_str())
+            .collect(),
         plan: plan(formats, codec, ask.height, ask.container, ask.audio_only),
     })
 }
@@ -427,7 +497,15 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    fn v(id: &str, codec: &str, height: u32, ext: &str, fps: f64, tbr: f64, size: Option<i64>) -> Value {
+    fn v(
+        id: &str,
+        codec: &str,
+        height: u32,
+        ext: &str,
+        fps: f64,
+        tbr: f64,
+        size: Option<i64>,
+    ) -> Value {
         let mut f = json!({"format_id": id, "vcodec": codec, "acodec": "none", "height": height, "fps": fps, "ext": ext, "tbr": tbr, "url": format!("http://x/{id}"), "protocol": "https"});
         if let Some(size) = size {
             f["filesize"] = json!(size);
@@ -470,8 +548,14 @@ mod tests {
     #[test]
     fn parses_video_and_audio_streams() {
         let f = Formats::parse(&info());
-        assert_eq!(ids(f.video.iter().map(|v| v.id.as_str())), ["401", "400", "313", "271", "248", "303", "137", "136"]);
-        assert_eq!(ids(f.audio.iter().map(|a| a.id.as_str())), ["140", "251", "139"]);
+        assert_eq!(
+            ids(f.video.iter().map(|v| v.id.as_str())),
+            ["401", "400", "313", "271", "248", "303", "137", "136"]
+        );
+        assert_eq!(
+            ids(f.audio.iter().map(|a| a.id.as_str())),
+            ["140", "251", "139"]
+        );
         assert_eq!(f.video[0].size, Some(900000000));
         assert_eq!(f.audio[0].abr, Some(129.5));
         assert!(Formats::parse(&json!({})).video.is_empty());
@@ -508,7 +592,10 @@ mod tests {
             {"format_id": "250-en", "vcodec": "none", "acodec": "opus", "ext": "webm", "abr": 70, "url": "u", "language_preference": 10},
             {"format_id": "251-drc", "vcodec": "none", "acodec": "opus", "ext": "webm", "abr": 200, "url": "u", "format_note": "Medium, DRC"},
         ]}));
-        assert_eq!(ids(f.audio_best().into_iter().map(|a| a.id.as_str())), ["251-en", "250-en", "251-de"]);
+        assert_eq!(
+            ids(f.audio_best().into_iter().map(|a| a.id.as_str())),
+            ["251-en", "250-en", "251-de"]
+        );
     }
 
     #[test]
@@ -519,24 +606,49 @@ mod tests {
             let p = plan_container(wanted, codec, &audio);
             (p.container, p.audio.map(|a| a.id.clone()), p.problem)
         };
-        assert_eq!(chosen(Container::Auto, Codec::H264), (Container::Mp4, Some("140".into()), None));
-        assert_eq!(chosen(Container::Auto, Codec::Vp9), (Container::Webm, Some("251".into()), None));
+        assert_eq!(
+            chosen(Container::Auto, Codec::H264),
+            (Container::Mp4, Some("140".into()), None)
+        );
+        assert_eq!(
+            chosen(Container::Auto, Codec::Vp9),
+            (Container::Webm, Some("251".into()), None)
+        );
         assert_eq!(chosen(Container::Mp4, Codec::Vp8).2, Some(Problem::Mp4Vp8));
-        assert_eq!(chosen(Container::Webm, Codec::H264).2, Some(Problem::WebmH264));
+        assert_eq!(
+            chosen(Container::Webm, Codec::H264).2,
+            Some(Problem::WebmH264)
+        );
         let aac: Vec<&AudioFormat> = audio.iter().copied().filter(|a| a.aac()).collect();
-        assert_eq!(plan_container(Container::Webm, Codec::Vp9, &aac).problem, Some(Problem::WebmAudio));
-        assert_eq!(plan_container(Container::Auto, Codec::Vp8, &aac).container, Container::Mkv);
+        assert_eq!(
+            plan_container(Container::Webm, Codec::Vp9, &aac).problem,
+            Some(Problem::WebmAudio)
+        );
+        assert_eq!(
+            plan_container(Container::Auto, Codec::Vp8, &aac).container,
+            Container::Mkv
+        );
     }
 
     #[test]
     fn plans_downloads() {
         let f = Formats::parse(&info());
-        let s = plan(&f, Some(Codec::Vp9), Some(1080), Container::Auto, false).selection.unwrap();
-        assert_eq!((s.video.as_deref(), s.audio.as_deref(), s.container, s.size), (Some("303"), Some("251"), Container::Webm, Some(711000000)));
+        let s = plan(&f, Some(Codec::Vp9), Some(1080), Container::Auto, false)
+            .selection
+            .unwrap();
+        assert_eq!(
+            (s.video.as_deref(), s.audio.as_deref(), s.container, s.size),
+            (Some("303"), Some("251"), Container::Webm, Some(711000000))
+        );
         let p = plan(&f, Some(Codec::H264), None, Container::Webm, false);
         assert!(p.selection.is_none());
         assert_eq!(p.problem, Some(Problem::WebmH264));
-        let s = plan(&f, None, None, Container::Auto, true).selection.unwrap();
-        assert_eq!((s.audio_only, s.audio.as_deref(), s.video), (true, Some("140"), None));
+        let s = plan(&f, None, None, Container::Auto, true)
+            .selection
+            .unwrap();
+        assert_eq!(
+            (s.audio_only, s.audio.as_deref(), s.video),
+            (true, Some("140"), None)
+        );
     }
 }

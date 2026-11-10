@@ -12,7 +12,10 @@ use crate::taste::{give_json, text};
 
 /// The `ytInitialData` object embedded in a YouTube page.
 pub fn initial_data(html: &str) -> Option<Value> {
-    let marker = ["var ytInitialData", "window[\"ytInitialData\"]"].iter().filter_map(|m| html.find(m).map(|at| (at, m.len()))).min()?;
+    let marker = ["var ytInitialData", "window[\"ytInitialData\"]"]
+        .iter()
+        .filter_map(|m| html.find(m).map(|at| (at, m.len())))
+        .min()?;
     let after = html[marker.0 + marker.1..].trim_start();
     let after = after.strip_prefix('=')?.trim_start();
     let start = html.len() - after.len();
@@ -90,11 +93,19 @@ pub struct Page {
 }
 
 fn image(renderer: Option<&Value>) -> Option<String> {
-    https(at(renderer?, &["image", "thumbnails"])?.as_array()?.last()?.get("url"))
+    https(
+        at(renderer?, &["image", "thumbnails"])?
+            .as_array()?
+            .last()?
+            .get("url"),
+    )
 }
 
 fn is_video_id(id: &str) -> bool {
-    id.len() == 11 && id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+    id.len() == 11
+        && id
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
 }
 
 fn post(post: &Value) -> Option<Post> {
@@ -106,10 +117,18 @@ fn post(post: &Value) -> Option<Post> {
     let of = |path: &[&str]| attachment.and_then(|a| at(a, path));
     let mut images: Vec<String> = image(of(&["backstageImageRenderer"])).into_iter().collect();
     if let Some(Value::Array(multi)) = of(&["postMultiImageRenderer", "images"]) {
-        images.extend(multi.iter().filter_map(|item| image(item.get("backstageImageRenderer"))));
+        images.extend(
+            multi
+                .iter()
+                .filter_map(|item| image(item.get("backstageImageRenderer"))),
+        );
     }
     let video = of(&["videoRenderer"]).and_then(|renderer| {
-        let id = renderer.get("videoId")?.as_str().filter(|id| is_video_id(id))?.to_owned();
+        let id = renderer
+            .get("videoId")?
+            .as_str()
+            .filter(|id| is_video_id(id))?
+            .to_owned();
         let length = plain_text(renderer.get("lengthText"));
         let parts: Option<Vec<u32>> = length.split(':').map(|n| n.parse().ok()).collect();
         Some(AttachedVideo {
@@ -120,7 +139,11 @@ fn post(post: &Value) -> Option<Post> {
         })
     });
     let poll = match of(&["pollRenderer", "choices"]) {
-        Some(Value::Array(choices)) => choices.iter().map(|c| plain_text(c.get("text"))).filter(|t| !t.is_empty()).collect(),
+        Some(Value::Array(choices)) => choices
+            .iter()
+            .map(|c| plain_text(c.get("text")))
+            .filter(|t| !t.is_empty())
+            .collect(),
         _ => Vec::new(),
     };
     let action = |choice: &Value, key: &str| choice.get(key).and_then(|e| find_string(e, "action"));
@@ -145,7 +168,16 @@ fn post(post: &Value) -> Option<Post> {
         text: plain_text(post.get("contentText")),
         published: plain_text(post.get("publishedTimeText")),
         likes: plain_text(post.get("voteCount")),
-        comments: plain_text(at(post, &["actionButtons", "commentActionButtonsRenderer", "replyButton", "buttonRenderer", "text"])),
+        comments: plain_text(at(
+            post,
+            &[
+                "actionButtons",
+                "commentActionButtonsRenderer",
+                "replyButton",
+                "buttonRenderer",
+                "text",
+            ],
+        )),
         images,
         video,
         poll,
@@ -163,7 +195,12 @@ pub fn page(data: &Value) -> Page {
         match node {
             Value::Array(list) => list.iter().for_each(|child| walk(child, page)),
             Value::Object(map) => {
-                if let Some(renderer) = map.get("backstagePostRenderer").filter(|v| !v.is_null()).or_else(|| map.get("postRenderer")).filter(|v| v.is_object()) {
+                if let Some(renderer) = map
+                    .get("backstagePostRenderer")
+                    .filter(|v| !v.is_null())
+                    .or_else(|| map.get("postRenderer"))
+                    .filter(|v| v.is_object())
+                {
                     if let Some(found) = post(renderer)
                         && !page.posts.iter().any(|p| p.id == found.id)
                     {
@@ -171,10 +208,20 @@ pub fn page(data: &Value) -> Page {
                     }
                     return;
                 }
-                if let Some(Value::String(token)) = at(node, &["continuationItemRenderer", "continuationEndpoint", "continuationCommand", "token"]) {
+                if let Some(Value::String(token)) = at(
+                    node,
+                    &[
+                        "continuationItemRenderer",
+                        "continuationEndpoint",
+                        "continuationCommand",
+                        "token",
+                    ],
+                ) {
                     page.continuation = Some(token.clone());
                 }
-                map.values().filter(|v| v.is_object() || v.is_array()).for_each(|v| walk(v, page));
+                map.values()
+                    .filter(|v| v.is_object() || v.is_array())
+                    .for_each(|v| walk(v, page));
             }
             _ => {}
         }
@@ -190,11 +237,14 @@ pub fn section_token(data: &Value) -> Option<String> {
         Value::Array(list) => list.iter().find_map(section_token),
         Value::Object(map) => {
             if let Some(section) = map.get("itemSectionRenderer").filter(|v| v.is_object())
-                && section.get("sectionIdentifier").and_then(Value::as_str) == Some("comment-item-section")
+                && section.get("sectionIdentifier").and_then(Value::as_str)
+                    == Some("comment-item-section")
             {
                 return token(section.get("contents"));
             }
-            map.values().filter(|v| v.is_object() || v.is_array()).find_map(section_token)
+            map.values()
+                .filter(|v| v.is_object() || v.is_array())
+                .find_map(section_token)
         }
         _ => None,
     }
@@ -208,7 +258,11 @@ pub fn section_token(data: &Value) -> Option<String> {
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_youtube_posts(body: *const u8, length: usize) -> *mut c_char {
     let body = unsafe { text(body, length) };
-    let data = if body.trim_start().starts_with('{') { serde_json::from_str(body).ok() } else { initial_data(body) };
+    let data = if body.trim_start().starts_with('{') {
+        serde_json::from_str(body).ok()
+    } else {
+        initial_data(body)
+    };
     data.map_or(std::ptr::null_mut(), |data| give_json(&page(&data)))
 }
 
@@ -218,7 +272,10 @@ pub unsafe extern "C" fn lumtub_youtube_posts(body: *const u8, length: usize) ->
 /// # Safety
 /// [html] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn lumtub_youtube_post_comments(html: *const u8, length: usize) -> *mut c_char {
+pub unsafe extern "C" fn lumtub_youtube_post_comments(
+    html: *const u8,
+    length: usize,
+) -> *mut c_char {
     give_json(&initial_data(unsafe { text(html, length) }).and_then(|data| section_token(&data)))
 }
 
@@ -230,8 +287,14 @@ mod tests {
     #[test]
     fn finds_the_initial_data() {
         let html = r#"<script>var ytInitialData = {"a":"};{","b":{"c":1},"d":"\"}"};</script>"#;
-        assert_eq!(initial_data(html), Some(json!({"a": "};{", "b": {"c": 1}, "d": "\"}"})));
-        assert_eq!(initial_data(r#"window["ytInitialData"]={"x":[1]};"#), Some(json!({"x": [1]})));
+        assert_eq!(
+            initial_data(html),
+            Some(json!({"a": "};{", "b": {"c": 1}, "d": "\"}"}))
+        );
+        assert_eq!(
+            initial_data(r#"window["ytInitialData"]={"x":[1]};"#),
+            Some(json!({"x": [1]}))
+        );
         assert_eq!(initial_data("<html></html>"), None);
     }
 
@@ -260,9 +323,25 @@ mod tests {
         assert_eq!(page.continuation.as_deref(), Some("NEXT"));
         assert_eq!(page.posts.len(), 3);
         let first = &page.posts[0];
-        assert_eq!((first.text.as_str(), first.published.as_str(), first.likes.as_str(), first.comments.as_str()), ("你好 世界", "3天前", "12", "4"));
+        assert_eq!(
+            (
+                first.text.as_str(),
+                first.published.as_str(),
+                first.likes.as_str(),
+                first.comments.as_str()
+            ),
+            ("你好 世界", "3天前", "12", "4")
+        );
         assert_eq!(first.images, ["https://yt3.ggpht.com/big"]);
-        assert_eq!(page.posts[1].video, Some(AttachedVideo { id: "dQw4w9WgXcQ".into(), title: "视频".into(), channel: "频道".into(), duration: Some(3723) }));
+        assert_eq!(
+            page.posts[1].video,
+            Some(AttachedVideo {
+                id: "dQw4w9WgXcQ".into(),
+                title: "视频".into(),
+                channel: "频道".into(),
+                duration: Some(3723)
+            })
+        );
         assert_eq!(page.posts[2].poll, ["是"]);
         assert!(page.posts[2].choices.is_empty());
     }
@@ -281,9 +360,19 @@ mod tests {
         assert_eq!(post.votes, "1.2K 票");
         assert_eq!(
             post.choices[0],
-            PollChoice { text: "是".into(), selected: true, ratio: Some(0.75), percent: "75%".into(), select: Some("S1".into()), deselect: Some("D1".into()) }
+            PollChoice {
+                text: "是".into(),
+                selected: true,
+                ratio: Some(0.75),
+                percent: "75%".into(),
+                select: Some("S1".into()),
+                deselect: Some("D1".into())
+            }
         );
-        assert_eq!((post.choices[1].selected, post.choices[1].select.as_deref()), (false, Some("S2")));
+        assert_eq!(
+            (post.choices[1].selected, post.choices[1].select.as_deref()),
+            (false, Some("S2"))
+        );
     }
 
     #[test]

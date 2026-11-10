@@ -6,12 +6,13 @@ use serde::Serialize;
 use serde_json::{Map, Value};
 use std::os::raw::c_char;
 
-use crate::filter::{title_language, Language};
+use crate::filter::{Language, title_language};
 use crate::taste::{give_json, text};
 
 /// The value at [path] of nested objects.
 pub(crate) fn at<'a>(node: &'a Value, path: &[&str]) -> Option<&'a Value> {
-    path.iter().try_fold(node, |current, key| current.as_object()?.get(*key))
+    path.iter()
+        .try_fold(node, |current, key| current.as_object()?.get(*key))
 }
 
 /// Text from YouTube's `simpleText`, `runs` or `content` shapes, or an
@@ -20,7 +21,9 @@ pub(crate) fn text_of(node: Option<&Value>) -> String {
     match node {
         Some(Value::String(s)) => s.clone(),
         Some(Value::Object(map)) => {
-            if let Some(Value::String(simple)) = map.get("simpleText").or_else(|| map.get("content")) {
+            if let Some(Value::String(simple)) =
+                map.get("simpleText").or_else(|| map.get("content"))
+            {
                 return simple.clone();
             }
             if let Some(Value::Array(runs)) = map.get("runs") {
@@ -33,12 +36,19 @@ pub(crate) fn text_of(node: Option<&Value>) -> String {
                     })
                     .collect();
             }
-            match map.get("accessibility").and_then(|a| at(a, &["accessibilityData", "label"])) {
+            match map
+                .get("accessibility")
+                .and_then(|a| at(a, &["accessibilityData", "label"]))
+            {
                 Some(Value::String(label)) => label.clone(),
                 _ => String::new(),
             }
         }
-        Some(Value::Array(list)) => list.iter().map(|v| text_of(Some(v))).collect::<Vec<_>>().join(" "),
+        Some(Value::Array(list)) => list
+            .iter()
+            .map(|v| text_of(Some(v)))
+            .collect::<Vec<_>>()
+            .join(" "),
         _ => String::new(),
     }
 }
@@ -62,7 +72,11 @@ pub(crate) fn browse_id(node: Option<&Value>) -> Option<String> {
 /// `1:02:03` or `4:05` as seconds.
 pub(crate) fn seconds(text: &str) -> Option<u32> {
     let parts: Vec<&str> = text.trim().split(':').collect();
-    let digits = |s: &str, max: usize| (!s.is_empty() && s.len() <= max && s.bytes().all(|b| b.is_ascii_digit())).then(|| s.parse::<u32>().ok()).flatten();
+    let digits = |s: &str, max: usize| {
+        (!s.is_empty() && s.len() <= max && s.bytes().all(|b| b.is_ascii_digit()))
+            .then(|| s.parse::<u32>().ok())
+            .flatten()
+    };
     let (hours, minutes, secs) = match parts.as_slice() {
         [m, s] => (0, digits(m, 2)?, *s),
         [h, m, s] => (digits(h, 9)?, digits(m, 2)?, *s),
@@ -87,9 +101,16 @@ pub(crate) fn count(text: &str) -> Option<u64> {
     }
     let start = text.find(|c: char| c.is_ascii_digit() || c == '.' || c == ',')?;
     let rest = &text[start..];
-    let end = rest.find(|c: char| !(c.is_ascii_digit() || c == '.' || c == ',')).unwrap_or(rest.len());
+    let end = rest
+        .find(|c: char| !(c.is_ascii_digit() || c == '.' || c == ','))
+        .unwrap_or(rest.len());
     let number: f64 = rest[..end].replace(',', "").parse().ok()?;
-    let factor = match rest[end..].trim_start().chars().next().map(|c| c.to_ascii_uppercase()) {
+    let factor = match rest[end..]
+        .trim_start()
+        .chars()
+        .next()
+        .map(|c| c.to_ascii_uppercase())
+    {
         Some('万' | '萬') => 1e4,
         Some('亿' | '億') => 1e8,
         Some('K') => 1e3,
@@ -133,20 +154,34 @@ pub(crate) fn members_only(node: &Value) -> bool {
 /// [members_only] for an object, skipping what the uploader writes.
 fn members_only_in(map: &Map<String, Value>) -> bool {
     map.iter().any(|(key, value)| match key.as_str() {
-        "title" | "headline" | "descriptionSnippet" | "detailedMetadataSnippets" | "navigationEndpoint" => false,
+        "title"
+        | "headline"
+        | "descriptionSnippet"
+        | "detailedMetadataSnippets"
+        | "navigationEndpoint" => false,
         _ => members_only(value),
     })
 }
 
 fn video_id(node: &Map<String, Value>, key: &str) -> Option<String> {
-    node.get(key).and_then(Value::as_str).filter(|id| id.chars().count() == 11).map(str::to_owned)
+    node.get(key)
+        .and_then(Value::as_str)
+        .filter(|id| id.chars().count() == 11)
+        .map(str::to_owned)
 }
 
 fn compact(node: &Map<String, Value>) -> Option<Video> {
     let id = video_id(node, "videoId")?;
-    let byline = node.get("longBylineText").filter(|v| !v.is_null()).or_else(|| node.get("shortBylineText"));
+    let byline = node
+        .get("longBylineText")
+        .filter(|v| !v.is_null())
+        .or_else(|| node.get("shortBylineText"));
     let badges = text_of(node.get("badges"));
-    let watching = matches!(node.get("viewCountText"), Some(Value::Object(_))) && contains_ignore_case(&text_of(node.get("viewCountText")), &["正在观看", "正在觀看", "watching"]);
+    let watching = matches!(node.get("viewCountText"), Some(Value::Object(_)))
+        && contains_ignore_case(
+            &text_of(node.get("viewCountText")),
+            &["正在观看", "正在觀看", "watching"],
+        );
     Some(Video {
         id,
         title: text_of(node.get("title")),
@@ -170,7 +205,9 @@ fn lockup(value: &Value) -> Option<Video> {
     let metadata = at(value, &["metadata", "lockupMetadataViewModel"]);
     let title = text_of(metadata.and_then(|m| at(m, &["title"])));
     let mut parts = Vec::new();
-    if let Some(Value::Array(rows)) = metadata.and_then(|m| at(m, &["metadata", "contentMetadataViewModel", "metadataRows"])) {
+    if let Some(Value::Array(rows)) =
+        metadata.and_then(|m| at(m, &["metadata", "contentMetadataViewModel", "metadataRows"]))
+    {
         for row in rows {
             if let Some(Value::Array(list)) = at(row, &["metadataParts"]) {
                 parts.extend(list.iter().map(|part| text_of(at(part, &["text"]))));
@@ -204,7 +241,9 @@ fn lockup(value: &Value) -> Option<Video> {
         channel_id: browse_id(metadata.and_then(|m| at(m, &["image"]))),
         duration: badges.iter().find_map(|badge| seconds(badge)),
         view_count,
-        live: badges.iter().any(|b| b.contains("直播") || b.to_uppercase() == "LIVE"),
+        live: badges
+            .iter()
+            .any(|b| b.contains("直播") || b.to_uppercase() == "LIVE"),
         members_only: members_only(value),
     })
 }
@@ -229,7 +268,11 @@ impl<'a> Parts<'a> {
     fn walk(&mut self, node: &'a Value, collect: bool) {
         match node {
             Value::Object(map) => {
-                for (slot, key) in [(&mut self.primary, "videoPrimaryInfoRenderer"), (&mut self.secondary, "videoSecondaryInfoRenderer"), (&mut self.like, "likeCountEntity")] {
+                for (slot, key) in [
+                    (&mut self.primary, "videoPrimaryInfoRenderer"),
+                    (&mut self.secondary, "videoSecondaryInfoRenderer"),
+                    (&mut self.like, "likeCountEntity"),
+                ] {
                     if slot.is_none()
                         && let Some(Value::Object(found)) = map.get(key)
                     {
@@ -282,12 +325,22 @@ impl<'a> Parts<'a> {
     }
 
     fn localized(&self) -> Option<Localized> {
-        let title = text_of(self.primary.and_then(|p| p.get("title"))).trim().to_owned();
+        let title = text_of(self.primary.and_then(|p| p.get("title")))
+            .trim()
+            .to_owned();
         if title.is_empty() {
             return None;
         }
-        let description = text_of(self.secondary.and_then(|s| s.get("attributedDescription").filter(|v| !v.is_null()).or_else(|| s.get("description"))));
-        Some(Localized { title, description, likes: self.likes() })
+        let description = text_of(self.secondary.and_then(|s| {
+            s.get("attributedDescription")
+                .filter(|v| !v.is_null())
+                .or_else(|| s.get("description"))
+        }));
+        Some(Localized {
+            title,
+            description,
+            likes: self.likes(),
+        })
     }
 }
 
@@ -333,13 +386,20 @@ pub unsafe extern "C" fn lumtub_youtube_next(body: *const u8, length: usize) -> 
     };
     let parts = Parts::of(&data);
     let text = parts.localized();
-    give_json(&Next { related: parts.related, text })
+    give_json(&Next {
+        related: parts.related,
+        text,
+    })
 }
 
 /// [code], a YouTube language code such as `zh-Hant` or `en-US`, as one of
 /// explore's languages; [Language::Any] for one explore does not offer.
 fn language_of_code(code: &str) -> Option<Language> {
-    let base = code.split(['-', '_', '.']).next().unwrap_or("").to_ascii_lowercase();
+    let base = code
+        .split(['-', '_', '.'])
+        .next()
+        .unwrap_or("")
+        .to_ascii_lowercase();
     Some(match base.as_str() {
         "zh" | "yue" | "cmn" => Language::Zh,
         "ja" => Language::Ja,
@@ -437,13 +497,35 @@ pub struct Spoken {
 /// uploader's own title and description.
 pub fn spoken_language(data: &Value) -> Option<Spoken> {
     let details = at(data, &["videoDetails"])?;
-    let title = details.get("title").and_then(Value::as_str).unwrap_or_default().to_string();
-    let playable = at(data, &["playabilityStatus", "status"]).and_then(Value::as_str).is_none_or(|status| status == "OK");
+    let title = details
+        .get("title")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_string();
+    let playable = at(data, &["playabilityStatus", "status"])
+        .and_then(Value::as_str)
+        .is_none_or(|status| status == "OK");
     let tracks = at(data, &["streamingData", "adaptiveFormats"]).and_then(Value::as_array);
-    if let Some(language) = tracks.and_then(|formats| original_audio(formats)).and_then(language_of_code) {
-        return Some(Spoken { language: Some(language), title, source: "audio", playable });
+    if let Some(language) = tracks
+        .and_then(|formats| original_audio(formats))
+        .and_then(language_of_code)
+    {
+        return Some(Spoken {
+            language: Some(language),
+            title,
+            source: "audio",
+            playable,
+        });
     }
-    let captions = at(data, &["captions", "playerCaptionsTracklistRenderer", "captionTracks"]).and_then(Value::as_array);
+    let captions = at(
+        data,
+        &[
+            "captions",
+            "playerCaptionsTracklistRenderer",
+            "captionTracks",
+        ],
+    )
+    .and_then(Value::as_array);
     let from_captions = captions
         .into_iter()
         .flatten()
@@ -452,19 +534,60 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
         .and_then(Value::as_str)
         .and_then(language_of_code);
     if let Some(language) = from_captions {
-        return Some(Spoken { language: Some(language), title, source: "captions", playable });
+        return Some(Spoken {
+            language: Some(language),
+            title,
+            source: "captions",
+            playable,
+        });
     }
-    let description: String = details.get("shortDescription").and_then(Value::as_str).unwrap_or_default().chars().take(500).collect();
+    let description: String = details
+        .get("shortDescription")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .chars()
+        .take(500)
+        .collect();
     let by_title = title_language(&title);
     let by_description = title_language(&description);
     let latin = |l: Language| {
         matches!(
             l,
-            Language::En | Language::Es | Language::Fr | Language::De | Language::Pt | Language::It | Language::Nl | Language::Tr
-                | Language::Id | Language::Tl | Language::Pl | Language::Cs | Language::Ro | Language::Hu | Language::Sv
-                | Language::No | Language::Da | Language::Fi | Language::Af | Language::Az | Language::Eo | Language::Et
-                | Language::Eu | Language::Gl | Language::Is | Language::Jv | Language::La | Language::Lt | Language::Lv
-                | Language::Sk | Language::Sq | Language::Su | Language::Sw | Language::Tk | Language::Uz
+            Language::En
+                | Language::Es
+                | Language::Fr
+                | Language::De
+                | Language::Pt
+                | Language::It
+                | Language::Nl
+                | Language::Tr
+                | Language::Id
+                | Language::Tl
+                | Language::Pl
+                | Language::Cs
+                | Language::Ro
+                | Language::Hu
+                | Language::Sv
+                | Language::No
+                | Language::Da
+                | Language::Fi
+                | Language::Af
+                | Language::Az
+                | Language::Eo
+                | Language::Et
+                | Language::Eu
+                | Language::Gl
+                | Language::Is
+                | Language::Jv
+                | Language::La
+                | Language::Lt
+                | Language::Lv
+                | Language::Sk
+                | Language::Sq
+                | Language::Su
+                | Language::Sw
+                | Language::Tk
+                | Language::Uz
         )
     };
     let language = match (by_title, by_description) {
@@ -472,13 +595,24 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
         (Language::Any, other) => Some(other),
         // A Latin title over a description in another script, such as an
         // English title for a Chinese video, goes by the description.
-        (title, description) if latin(title) && !latin(description) && description != Language::Any => Some(description),
+        (title, description)
+            if latin(title) && !latin(description) && description != Language::Any =>
+        {
+            Some(description)
+        }
         // Both Latin: the two together give the most text to go by.
-        (title_says, description_says) if latin(title_says) && latin(description_says) => Some(title_language(&format!("{title}\n{description}"))),
+        (title_says, description_says) if latin(title_says) && latin(description_says) => {
+            Some(title_language(&format!("{title}\n{description}")))
+        }
         (title, _) => Some(title),
     };
     let source = if language.is_some() { "text" } else { "none" };
-    Some(Spoken { language, title, source, playable })
+    Some(Spoken {
+        language,
+        title,
+        source,
+        playable,
+    })
 }
 
 /// The language code of the original audio track among [formats], when
@@ -489,7 +623,22 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
 /// as YouTube makes a dub in the viewer's language the default.
 fn original_audio(formats: &[Value]) -> Option<&str> {
     const ORIGINAL: [&str; 16] = [
-        "original", "オリジナル", "原声", "原聲", "原始", "원본", "оригинал", "orijinal", "oryginał", "asli", "gốc", "ต้นฉบับ", "मूल", "أصلي", "מקורי", "πρωτότυπ",
+        "original",
+        "オリジナル",
+        "原声",
+        "原聲",
+        "原始",
+        "원본",
+        "оригинал",
+        "orijinal",
+        "oryginał",
+        "asli",
+        "gốc",
+        "ต้นฉบับ",
+        "मूल",
+        "أصلي",
+        "מקורי",
+        "πρωτότυπ",
     ];
     let tracks: Vec<(&str, &Value, &Value)> = formats
         .iter()
@@ -499,10 +648,21 @@ fn original_audio(formats: &[Value]) -> Option<&str> {
         })
         .filter(|(code, _, _)| !code.is_empty())
         .collect();
-    let tagged = tracks.iter().find(|(_, _, format)| format.get("xtags").and_then(Value::as_str).and_then(audio_content).as_deref() == Some("original"));
+    let tagged = tracks.iter().find(|(_, _, format)| {
+        format
+            .get("xtags")
+            .and_then(Value::as_str)
+            .and_then(audio_content)
+            .as_deref()
+            == Some("original")
+    });
     let named = || {
         tracks.iter().find(|(_, track, _)| {
-            let name = track.get("displayName").and_then(Value::as_str).unwrap_or_default().to_lowercase();
+            let name = track
+                .get("displayName")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_lowercase();
             !name.contains("descriptive") && ORIGINAL.iter().any(|word| name.contains(word))
         })
     };
@@ -510,14 +670,20 @@ fn original_audio(formats: &[Value]) -> Option<&str> {
         return Some(code);
     }
     let first = tracks.first()?.0;
-    tracks.iter().all(|(code, _, _)| *code == first).then_some(first)
+    tracks
+        .iter()
+        .all(|(code, _, _)| *code == first)
+        .then_some(first)
 }
 
 /// The `acont` of a format's `xtags`: original, dubbed, dubbed-auto or
 /// descriptive. They come as `key=value:key=value` text, or as base64 of
 /// a protobuf list of key and value strings.
 fn audio_content(xtags: &str) -> Option<String> {
-    if let Some(value) = xtags.split(':').find_map(|pair| pair.strip_prefix("acont=")) {
+    if let Some(value) = xtags
+        .split(':')
+        .find_map(|pair| pair.strip_prefix("acont="))
+    {
         return Some(value.to_string());
     }
     let bytes = base64_any(xtags)?;
@@ -581,7 +747,12 @@ pub unsafe extern "C" fn lumtub_spoken_language(body: *const u8, length: usize) 
         Some(Language::Any) => -1,
         Some(other) => other as i64,
     };
-    give_json(&Out { language, title: spoken.title, source: spoken.source, playable: spoken.playable })
+    give_json(&Out {
+        language,
+        title: spoken.title,
+        source: spoken.source,
+        playable: spoken.playable,
+    })
 }
 
 /// Whether YouTube labels a video as made with AI, from its `/next`
@@ -589,22 +760,47 @@ pub unsafe extern "C" fn lumtub_spoken_language(body: *const u8, length: usize) 
 /// "How this content was made" section alone is not enough, as dubbed
 /// videos have it too. None when the answer has no primary info to tell.
 pub fn ai_label(data: &Value) -> Option<bool> {
-    let contents = at(data, &["contents", "twoColumnWatchNextResults", "results", "results", "contents"])?.as_array()?;
-    let primary = contents.iter().find_map(|c| c.get("videoPrimaryInfoRenderer"))?;
+    let contents = at(
+        data,
+        &[
+            "contents",
+            "twoColumnWatchNextResults",
+            "results",
+            "results",
+            "contents",
+        ],
+    )?
+    .as_array()?;
+    let primary = contents
+        .iter()
+        .find_map(|c| c.get("videoPrimaryInfoRenderer"))?;
     let badges = primary.get("badges").and_then(Value::as_array);
     Some(badges.is_some_and(|badges| {
-        badges.iter().filter_map(|b| b.get("metadataBadgeRenderer")).any(|badge| {
-            let style = badge.get("style").and_then(Value::as_str).unwrap_or_default();
-            let icon = at(badge, &["icon", "iconType"]).and_then(Value::as_str).unwrap_or_default();
-            let words = format!(
-                "{} {} {}",
-                text_of(badge.get("label")),
-                text_of(badge.get("tooltip")),
-                at(badge, &["accessibilityData", "label"]).and_then(Value::as_str).unwrap_or_default()
-            )
-            .to_lowercase();
-            (style.contains("SIMPLE") && icon.contains("INFO")) || words.contains("made with ai") || words.contains("synthetic") || words.starts_with("ai:")
-        })
+        badges
+            .iter()
+            .filter_map(|b| b.get("metadataBadgeRenderer"))
+            .any(|badge| {
+                let style = badge
+                    .get("style")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default();
+                let icon = at(badge, &["icon", "iconType"])
+                    .and_then(Value::as_str)
+                    .unwrap_or_default();
+                let words = format!(
+                    "{} {} {}",
+                    text_of(badge.get("label")),
+                    text_of(badge.get("tooltip")),
+                    at(badge, &["accessibilityData", "label"])
+                        .and_then(Value::as_str)
+                        .unwrap_or_default()
+                )
+                .to_lowercase();
+                (style.contains("SIMPLE") && icon.contains("INFO"))
+                    || words.contains("made with ai")
+                    || words.contains("synthetic")
+                    || words.starts_with("ai:")
+            })
     }))
 }
 
@@ -618,7 +814,9 @@ pub unsafe extern "C" fn lumtub_ai_label(body: *const u8, length: usize) -> *mut
     struct Label {
         ai: Option<bool>,
     }
-    let ai = serde_json::from_str::<Value>(unsafe { text(body, length) }).ok().and_then(|data| ai_label(&data));
+    let ai = serde_json::from_str::<Value>(unsafe { text(body, length) })
+        .ok()
+        .and_then(|data| ai_label(&data));
     give_json(&Label { ai })
 }
 
@@ -633,7 +831,13 @@ pub fn ai_channels(data: &Value) -> Vec<String> {
         .iter()
         .filter(|c| c.get("score").and_then(Value::as_f64).unwrap_or(0.0) <= 0.0)
         .filter_map(|c| c.get("id").and_then(Value::as_str))
-        .map(|id| if id.starts_with('@') { id.to_lowercase() } else { id.to_string() })
+        .map(|id| {
+            if id.starts_with('@') {
+                id.to_lowercase()
+            } else {
+                id.to_string()
+            }
+        })
         .filter(|id| id.starts_with("UC") || id.starts_with('@'))
         .collect()
 }
@@ -643,7 +847,13 @@ pub fn ai_channels(data: &Value) -> Vec<String> {
 pub fn listed_channel_ids(list: &str) -> Vec<String> {
     list.lines()
         .map(str::trim)
-        .filter(|line| line.len() == 24 && line.starts_with("UC") && line.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_'))
+        .filter(|line| {
+            line.len() == 24
+                && line.starts_with("UC")
+                && line
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+        })
         .map(str::to_string)
         .collect()
 }
@@ -675,11 +885,17 @@ mod tests {
                 {"videoPrimaryInfoRenderer": {"title": {"runs": [{"text": "A"}]}, "badges": badges}}
             ]}}}}})
         }
-        let ai = next(json!([{"metadataBadgeRenderer": {"style": "BADGE_STYLE_TYPE_SIMPLE", "icon": {"iconType": "INFO"}, "label": "AI"}}]));
+        let ai = next(
+            json!([{"metadataBadgeRenderer": {"style": "BADGE_STYLE_TYPE_SIMPLE", "icon": {"iconType": "INFO"}, "label": "AI"}}]),
+        );
         assert_eq!(ai_label(&ai), Some(true));
-        let worded = next(json!([{"metadataBadgeRenderer": {"style": "BADGE_STYLE_TYPE_COLLECTION", "accessibilityData": {"label": "AI: Content was made with AI"}}}]));
+        let worded = next(
+            json!([{"metadataBadgeRenderer": {"style": "BADGE_STYLE_TYPE_COLLECTION", "accessibilityData": {"label": "AI: Content was made with AI"}}}]),
+        );
         assert_eq!(ai_label(&worded), Some(true));
-        let plain = next(json!([{"metadataBadgeRenderer": {"style": "BADGE_STYLE_TYPE_SIMPLE", "label": "4K"}}]));
+        let plain = next(
+            json!([{"metadataBadgeRenderer": {"style": "BADGE_STYLE_TYPE_SIMPLE", "label": "4K"}}]),
+        );
         assert_eq!(ai_label(&plain), Some(false));
         let none = json!({"contents": {"twoColumnWatchNextResults": {"results": {"results": {"contents": [{"videoPrimaryInfoRenderer": {}}]}}}}});
         assert_eq!(ai_label(&none), Some(false));
@@ -694,13 +910,25 @@ mod tests {
             {"id": "@wsj", "score": 1},
             {"id": "nonsense"}
         ]});
-        assert_eq!(ai_channels(&list), vec!["UCs8kQREN6lwSKNgGUF9LYsA".to_string(), "@seapop".to_string()]);
+        assert_eq!(
+            ai_channels(&list),
+            vec![
+                "UCs8kQREN6lwSKNgGUF9LYsA".to_string(),
+                "@seapop".to_string()
+            ]
+        );
     }
 
     #[test]
     fn reads_a_channel_id_list() {
         let list = "! AiSList blocklist by YouTube channel ID\n! Channels: 2\nUC---VSS6clgbT9mXRPqzzZA\r\nUC--1M2MGDAWI1EBcEzWbKJQ\n\nnot an id\nUC--1M2MGDAWI1EBcEzWbKJ\n";
-        assert_eq!(listed_channel_ids(list), vec!["UC---VSS6clgbT9mXRPqzzZA".to_string(), "UC--1M2MGDAWI1EBcEzWbKJQ".to_string()]);
+        assert_eq!(
+            listed_channel_ids(list),
+            vec![
+                "UC---VSS6clgbT9mXRPqzzZA".to_string(),
+                "UC--1M2MGDAWI1EBcEzWbKJQ".to_string()
+            ]
+        );
     }
 
     #[test]
@@ -714,7 +942,12 @@ mod tests {
         });
         assert_eq!(
             spoken_language(&asr),
-            Some(Spoken { language: Some(Language::Ja), title: "How to cook rice".into(), source: "captions", playable: true })
+            Some(Spoken {
+                language: Some(Language::Ja),
+                title: "How to cook rice".into(),
+                source: "captions",
+                playable: true
+            })
         );
         let original = json!({
             "videoDetails": {"title": "Voyage", "shortDescription": ""},
@@ -724,7 +957,10 @@ mod tests {
             ]},
             "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "en", "kind": "asr"}]}}
         });
-        assert_eq!(spoken_language(&original).unwrap().language, Some(Language::Fr));
+        assert_eq!(
+            spoken_language(&original).unwrap().language,
+            Some(Language::Fr)
+        );
         assert_eq!(spoken_language(&original).unwrap().source, "audio");
         // Asked in Japanese, with the Italian dub as the default track.
         let tagged = json!({
@@ -734,26 +970,45 @@ mod tests {
                 {"audioTrack": {"id": "en.4", "displayName": "英語"}, "xtags": "acont=original:lang=en"}
             ]}
         });
-        assert_eq!(spoken_language(&tagged).unwrap().language, Some(Language::En));
+        assert_eq!(
+            spoken_language(&tagged).unwrap().language,
+            Some(Language::En)
+        );
         let protobuf = |pairs: &[(&str, &str)]| {
             let mut bytes = Vec::new();
             for (key, value) in pairs {
-                let entry = [&[0x0a, key.len() as u8][..], key.as_bytes(), &[0x12, value.len() as u8], value.as_bytes()].concat();
+                let entry = [
+                    &[0x0a, key.len() as u8][..],
+                    key.as_bytes(),
+                    &[0x12, value.len() as u8],
+                    value.as_bytes(),
+                ]
+                .concat();
                 bytes.extend([0x0a, entry.len() as u8]);
                 bytes.extend(entry);
             }
-            const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+            const ALPHABET: &[u8] =
+                b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
             let mut text = String::new();
             for chunk in bytes.chunks(3) {
-                let n = chunk.iter().enumerate().fold(0u32, |n, (i, b)| n | (*b as u32) << (16 - 8 * i));
+                let n = chunk
+                    .iter()
+                    .enumerate()
+                    .fold(0u32, |n, (i, b)| n | (*b as u32) << (16 - 8 * i));
                 for i in 0..=chunk.len() {
                     text.push(ALPHABET[(n >> (18 - 6 * i) & 63) as usize] as char);
                 }
             }
             text
         };
-        assert_eq!(audio_content(&protobuf(&[("acont", "original"), ("lang", "en")])).as_deref(), Some("original"));
-        assert_eq!(audio_content(&protobuf(&[("lang", "it"), ("acont", "dubbed-auto")])).as_deref(), Some("dubbed-auto"));
+        assert_eq!(
+            audio_content(&protobuf(&[("acont", "original"), ("lang", "en")])).as_deref(),
+            Some("original")
+        );
+        assert_eq!(
+            audio_content(&protobuf(&[("lang", "it"), ("acont", "dubbed-auto")])).as_deref(),
+            Some("dubbed-auto")
+        );
         let named = json!({
             "videoDetails": {"title": "Viaggio", "shortDescription": ""},
             "streamingData": {"adaptiveFormats": [
@@ -761,7 +1016,10 @@ mod tests {
                 {"audioTrack": {"id": "en.4", "displayName": "英语（原声）"}}
             ]}
         });
-        assert_eq!(spoken_language(&named).unwrap().language, Some(Language::En));
+        assert_eq!(
+            spoken_language(&named).unwrap().language,
+            Some(Language::En)
+        );
         // A dub made the default, and nothing says which is the original:
         // the captions tell.
         let untold = json!({
@@ -772,30 +1030,59 @@ mod tests {
             ]},
             "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "en", "kind": "asr"}]}}
         });
-        assert_eq!((spoken_language(&untold).unwrap().language, spoken_language(&untold).unwrap().source), (Some(Language::En), "captions"));
+        assert_eq!(
+            (
+                spoken_language(&untold).unwrap().language,
+                spoken_language(&untold).unwrap().source
+            ),
+            (Some(Language::En), "captions")
+        );
         let chinese = json!({"videoDetails": {"title": "My trip to Chengdu", "shortDescription": "这次去成都吃了很多好吃的"}});
-        assert_eq!(spoken_language(&chinese).unwrap().language, Some(Language::Zh));
+        assert_eq!(
+            spoken_language(&chinese).unwrap().language,
+            Some(Language::Zh)
+        );
         let own = json!({"videoDetails": {"title": "成都旅行", "shortDescription": ""}});
         let own = spoken_language(&own).unwrap();
-        assert_eq!((own.language, own.title.as_str(), own.source), (Some(Language::Zh), "成都旅行", "text"));
+        assert_eq!(
+            (own.language, own.title.as_str(), own.source),
+            (Some(Language::Zh), "成都旅行", "text")
+        );
         let italian = json!({"videoDetails": {"title": "Ciao", "shortDescription": ""}, "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "it", "kind": "asr"}]}}});
-        assert_eq!(spoken_language(&italian).unwrap().language, Some(Language::It));
+        assert_eq!(
+            spoken_language(&italian).unwrap().language,
+            Some(Language::It)
+        );
         let zulu = json!({"videoDetails": {"title": "Sawubona", "shortDescription": ""}, "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "zu", "kind": "asr"}]}}});
-        assert_eq!(spoken_language(&zulu).unwrap().language, Some(Language::Any));
+        assert_eq!(
+            spoken_language(&zulu).unwrap().language,
+            Some(Language::Any)
+        );
         assert_eq!(spoken_language(&json!({"playabilityStatus": {}})), None);
         let signed_out = json!({
             "playabilityStatus": {"status": "LOGIN_REQUIRED"},
             "videoDetails": {"title": "Giardinaggio", "shortDescription": "Oggi vi mostro come coltivare i pomodori sul balcone di casa, passo dopo passo."}
         });
         let signed_out = spoken_language(&signed_out).unwrap();
-        assert_eq!((signed_out.language, signed_out.source, signed_out.playable), (Some(Language::It), "text", false));
+        assert_eq!(
+            (signed_out.language, signed_out.source, signed_out.playable),
+            (Some(Language::It), "text", false)
+        );
     }
 
     #[test]
     fn reads_text_shapes() {
         assert_eq!(text_of(Some(&json!({"simpleText": "a"}))), "a");
-        assert_eq!(text_of(Some(&json!({"runs": [{"text": "a"}, {"text": "b"}, {}]}))), "ab");
-        assert_eq!(text_of(Some(&json!({"accessibility": {"accessibilityData": {"label": "c"}}}))), "c");
+        assert_eq!(
+            text_of(Some(&json!({"runs": [{"text": "a"}, {"text": "b"}, {}]}))),
+            "ab"
+        );
+        assert_eq!(
+            text_of(Some(
+                &json!({"accessibility": {"accessibilityData": {"label": "c"}}})
+            )),
+            "c"
+        );
         assert_eq!(text_of(Some(&json!([{"simpleText": "a"}, "b"]))), "a b");
         assert_eq!(text_of(None), "");
     }
@@ -842,9 +1129,36 @@ mod tests {
             {"compactVideoRenderer": {"videoId": "ddddddddddd", "title": {"simpleText": "Live"}, "viewCountText": {"runs": [{"text": "123"}, {"text": " watching"}]}}}
         ]});
         let videos = related(&data);
-        assert_eq!(videos.iter().map(|v| v.id.as_str()).collect::<Vec<_>>(), ["aaaaaaaaaaa", "bbbbbbbbbbb", "ddddddddddd"]);
-        assert_eq!(videos[0], Video { id: "aaaaaaaaaaa".into(), title: "Old".into(), channel: "Chan".into(), channel_id: Some("UCabc".into()), duration: Some(600), view_count: Some(1000), live: false, members_only: false });
-        assert_eq!(videos[1], Video { id: "bbbbbbbbbbb".into(), title: "New".into(), channel: "Other".into(), channel_id: Some("UCdef".into()), duration: Some(3723), view_count: Some(120_000), live: false, members_only: false });
+        assert_eq!(
+            videos.iter().map(|v| v.id.as_str()).collect::<Vec<_>>(),
+            ["aaaaaaaaaaa", "bbbbbbbbbbb", "ddddddddddd"]
+        );
+        assert_eq!(
+            videos[0],
+            Video {
+                id: "aaaaaaaaaaa".into(),
+                title: "Old".into(),
+                channel: "Chan".into(),
+                channel_id: Some("UCabc".into()),
+                duration: Some(600),
+                view_count: Some(1000),
+                live: false,
+                members_only: false
+            }
+        );
+        assert_eq!(
+            videos[1],
+            Video {
+                id: "bbbbbbbbbbb".into(),
+                title: "New".into(),
+                channel: "Other".into(),
+                channel_id: Some("UCdef".into()),
+                duration: Some(3723),
+                view_count: Some(120_000),
+                live: false,
+                members_only: false
+            }
+        );
         assert!(videos[2].live);
         assert!(videos.iter().all(|v| !v.members_only));
     }
@@ -865,7 +1179,10 @@ mod tests {
             {"compactVideoRenderer": {"videoId": "ccccccccccc", "title": {"simpleText": "BADGE_STYLE_TYPE_MEMBERS_ONLY"}}}
         ]});
         let videos = related(&data);
-        assert_eq!(videos.iter().map(|v| v.members_only).collect::<Vec<_>>(), [true, true, false]);
+        assert_eq!(
+            videos.iter().map(|v| v.members_only).collect::<Vec<_>>(),
+            [true, true, false]
+        );
     }
 
     #[test]
@@ -886,7 +1203,14 @@ mod tests {
             "videoPrimaryInfoRenderer": {"title": {"runs": [{"text": " 标题 "}]}},
             "videoSecondaryInfoRenderer": {"attributedDescription": {"content": "说明"}},
         }, "frameworkUpdates": {"likeCountEntity": {"likeCountIfIndifferentNumber": "42"}}});
-        assert_eq!(localized(&data), Some(Localized { title: "标题".into(), description: "说明".into(), likes: Some(42) }));
+        assert_eq!(
+            localized(&data),
+            Some(Localized {
+                title: "标题".into(),
+                description: "说明".into(),
+                likes: Some(42)
+            })
+        );
         assert_eq!(localized(&json!({})), None);
     }
 }

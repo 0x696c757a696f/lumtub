@@ -27,10 +27,22 @@ mod imp {
     use windows_sys::Win32::System::Threading::{GetCurrentProcess, GetProcessTimes};
 
     pub fn used_ms() -> u64 {
-        let zero = FILETIME { dwLowDateTime: 0, dwHighDateTime: 0 };
+        let zero = FILETIME {
+            dwLowDateTime: 0,
+            dwHighDateTime: 0,
+        };
         let (mut created, mut exited, mut kernel, mut user) = (zero, zero, zero, zero);
         // SAFETY: the pseudo handle of this process and four FILETIMEs to fill.
-        if unsafe { GetProcessTimes(GetCurrentProcess(), &mut created, &mut exited, &mut kernel, &mut user) } == 0 {
+        if unsafe {
+            GetProcessTimes(
+                GetCurrentProcess(),
+                &mut created,
+                &mut exited,
+                &mut kernel,
+                &mut user,
+            )
+        } == 0
+        {
             return 0;
         }
         let hundreds = |t: FILETIME| (t.dwHighDateTime as u64) << 32 | t.dwLowDateTime as u64;

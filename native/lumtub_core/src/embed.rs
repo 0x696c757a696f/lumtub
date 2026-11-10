@@ -26,7 +26,11 @@ pub fn is_png(bytes: &[u8]) -> bool {
 /// The ISO 639-2 code of a BCP 47 `language` (`zh-Hans` → `chi`), or
 /// `und`, for players that read only the old three-letter field.
 pub fn iso639_2(language: &str) -> &'static str {
-    let primary = language.split(['-', '_']).next().unwrap_or("").to_ascii_lowercase();
+    let primary = language
+        .split(['-', '_'])
+        .next()
+        .unwrap_or("")
+        .to_ascii_lowercase();
     match primary.as_str() {
         "af" => "afr",
         "am" => "amh",

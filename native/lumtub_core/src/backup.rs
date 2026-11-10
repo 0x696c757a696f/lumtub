@@ -21,7 +21,10 @@ struct State {
     log: VecDeque<String>,
 }
 
-static STATE: Mutex<State> = Mutex::new(State { avoided: Vec::new(), log: VecDeque::new() });
+static STATE: Mutex<State> = Mutex::new(State {
+    avoided: Vec::new(),
+    log: VecDeque::new(),
+});
 
 fn state() -> std::sync::MutexGuard<'static, State> {
     STATE.lock().unwrap_or_else(|e| e.into_inner())
@@ -39,7 +42,11 @@ fn with_host(url: &str, host: &str) -> Option<String> {
     let (start, old) = host_of(url)?;
     let mut out = format!("{}{host}{}", &url[..start], &url[start + old.len()..]);
     if !out.contains("&fallback_count=") && !out.contains("?fallback_count=") {
-        out.push_str(if out.contains('?') { "&fallback_count=1" } else { "?fallback_count=1" });
+        out.push_str(if out.contains('?') {
+            "&fallback_count=1"
+        } else {
+            "?fallback_count=1"
+        });
     }
     Some(out)
 }
@@ -54,15 +61,22 @@ pub fn backup(url: &str) -> Option<String> {
         return None;
     }
     let servers = crate::relay::query(url, "mn")?;
-    let next = servers.split(',').map(str::trim).find(|s| !s.is_empty() && *s != server)?;
+    let next = servers
+        .split(',')
+        .map(str::trim)
+        .find(|s| !s.is_empty() && *s != server)?;
     with_host(url, &format!("{replica}---{next}.{domain}"))
 }
 
 /// [url] with its server replaced by the backup used since it failed.
 pub fn steer(url: &str) -> String {
-    let Some((_, host)) = host_of(url) else { return url.to_string() };
+    let Some((_, host)) = host_of(url) else {
+        return url.to_string();
+    };
     let mut state = state();
-    state.avoided.retain(|(_, _, since)| since.elapsed() < AVOID_FOR);
+    state
+        .avoided
+        .retain(|(_, _, since)| since.elapsed() < AVOID_FOR);
     match state.avoided.iter().find(|(failed, _, _)| failed == host) {
         Some((_, instead, _)) => with_host(url, instead).unwrap_or_else(|| url.to_string()),
         None => url.to_string(),
@@ -71,14 +85,20 @@ pub fn steer(url: &str) -> String {
 
 /// Passes over the server of [failed] for that of [instead], which answered.
 pub fn avoid(failed: &str, instead: &str, why: &str) {
-    let (Some((_, from)), Some((_, to))) = (host_of(failed), host_of(instead)) else { return };
+    let (Some((_, from)), Some((_, to))) = (host_of(failed), host_of(instead)) else {
+        return;
+    };
     let mut state = state();
     state.avoided.retain(|(host, _, _)| host != from);
-    state.avoided.push((from.to_string(), to.to_string(), Instant::now()));
+    state
+        .avoided
+        .push((from.to_string(), to.to_string(), Instant::now()));
     if state.log.len() >= LOG_KEEP {
         state.log.pop_front();
     }
-    state.log.push_back(format!("YouTube server {from} failed ({why}); reading from its backup {to}"));
+    state.log.push_back(format!(
+        "YouTube server {from} failed ({why}); reading from its backup {to}"
+    ));
 }
 
 /// Whether an answer is worth trying the backup server for.
@@ -107,8 +127,14 @@ mod tests {
             backup(URL).unwrap(),
             "https://rr2---sn-4g5lznlz.googlevideo.com/videoplayback?expire=1&mn=sn-8vq54voxpu-925e%2Csn-4g5lznlz&sig=x&fallback_count=1"
         );
-        assert_eq!(backup("https://rr2---sn-a.googlevideo.com/videoplayback?mn=sn-a"), None);
-        assert_eq!(backup("https://example.com/videoplayback?mn=sn-a,sn-b"), None);
+        assert_eq!(
+            backup("https://rr2---sn-a.googlevideo.com/videoplayback?mn=sn-a"),
+            None
+        );
+        assert_eq!(
+            backup("https://example.com/videoplayback?mn=sn-a,sn-b"),
+            None
+        );
     }
 
     #[test]
@@ -117,8 +143,15 @@ mod tests {
         let other = "https://rr2---sn-8vq54voxpu-925e.googlevideo.com/videoplayback?itag=140&sq=5";
         assert_eq!(steer(other), other);
         avoid(URL, &backup(URL).unwrap(), "HTTP 503");
-        assert_eq!(steer(other), "https://rr2---sn-4g5lznlz.googlevideo.com/videoplayback?itag=140&sq=5&fallback_count=1");
-        assert!(take_log().iter().any(|l| l.contains("sn-8vq54voxpu-925e") && l.contains("503")));
+        assert_eq!(
+            steer(other),
+            "https://rr2---sn-4g5lznlz.googlevideo.com/videoplayback?itag=140&sq=5&fallback_count=1"
+        );
+        assert!(
+            take_log()
+                .iter()
+                .any(|l| l.contains("sn-8vq54voxpu-925e") && l.contains("503"))
+        );
         forget();
     }
 

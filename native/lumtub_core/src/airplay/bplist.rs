@@ -31,7 +31,12 @@ impl Value {
 }
 
 pub fn dict(entries: Vec<(&str, Value)>) -> Value {
-    Value::Dict(entries.into_iter().map(|(k, v)| (k.to_string(), v)).collect())
+    Value::Dict(
+        entries
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v))
+            .collect(),
+    )
 }
 
 // ---- writing ----
@@ -76,8 +81,14 @@ fn flatten(value: &Value, objects: &mut Vec<Vec<u8>>, width: usize) -> u64 {
             refs(&ids, &mut out);
         }
         Value::Dict(entries) => {
-            let keys: Vec<u64> = entries.iter().map(|(k, _)| flatten(&Value::String(k.clone()), objects, width)).collect();
-            let values: Vec<u64> = entries.iter().map(|(_, v)| flatten(v, objects, width)).collect();
+            let keys: Vec<u64> = entries
+                .iter()
+                .map(|(k, _)| flatten(&Value::String(k.clone()), objects, width))
+                .collect();
+            let values: Vec<u64> = entries
+                .iter()
+                .map(|(_, v)| flatten(v, objects, width))
+                .collect();
             marker(&mut out, 0xD, keys.len());
             refs(&keys, &mut out);
             refs(&values, &mut out);
@@ -107,7 +118,13 @@ fn count(value: &Value) -> usize {
 
 pub fn write(value: &Value) -> Vec<u8> {
     let total = count(value);
-    let width = if total < 256 { 1 } else if total < 65536 { 2 } else { 4 };
+    let width = if total < 256 {
+        1
+    } else if total < 65536 {
+        2
+    } else {
+        4
+    };
     let mut objects = Vec::new();
     flatten(value, &mut objects, width);
     let mut out = b"bplist00".to_vec();
@@ -117,7 +134,15 @@ pub fn write(value: &Value) -> Vec<u8> {
         out.extend_from_slice(o);
     }
     let table = out.len() as u64;
-    let offset_width = if table < 256 { 1 } else if table < 65536 { 2 } else if table < 1 << 32 { 4 } else { 8 };
+    let offset_width = if table < 256 {
+        1
+    } else if table < 65536 {
+        2
+    } else if table < 1 << 32 {
+        4
+    } else {
+        8
+    };
     for o in offsets {
         out.extend_from_slice(&o.to_be_bytes()[8 - offset_width..]);
     }
@@ -148,11 +173,20 @@ impl Reader<'_> {
             return Some((low as usize, at + 1));
         }
         let size = 1usize << (self.data.get(at + 1)? & 0xF);
-        Some((uint(self.data.get(at + 2..at + 2 + size)?) as usize, at + 2 + size))
+        Some((
+            uint(self.data.get(at + 2..at + 2 + size)?) as usize,
+            at + 2 + size,
+        ))
     }
 
     fn refs(&self, at: usize, n: usize) -> Option<Vec<usize>> {
-        (0..n).map(|i| self.data.get(at + i * self.width..at + (i + 1) * self.width).map(|b| uint(b) as usize)).collect()
+        (0..n)
+            .map(|i| {
+                self.data
+                    .get(at + i * self.width..at + (i + 1) * self.width)
+                    .map(|b| uint(b) as usize)
+            })
+            .collect()
     }
 
     fn object(&self, id: usize, depth: u8) -> Option<Value> {
@@ -171,13 +205,23 @@ impl Reader<'_> {
             0x1 => {
                 let size = 1usize << low;
                 let b = self.data.get(at + 1..at + 1 + size)?;
-                Value::Int(if size == 8 { i64::from_be_bytes(b.try_into().ok()?) } else { uint(b) as i64 })
+                Value::Int(if size == 8 {
+                    i64::from_be_bytes(b.try_into().ok()?)
+                } else {
+                    uint(b) as i64
+                })
             }
             0x2 => match low {
-                2 => Value::Real(f32::from_be_bytes(self.data.get(at + 1..at + 5)?.try_into().ok()?) as f64),
-                _ => Value::Real(f64::from_be_bytes(self.data.get(at + 1..at + 9)?.try_into().ok()?)),
+                2 => Value::Real(
+                    f32::from_be_bytes(self.data.get(at + 1..at + 5)?.try_into().ok()?) as f64,
+                ),
+                _ => Value::Real(f64::from_be_bytes(
+                    self.data.get(at + 1..at + 9)?.try_into().ok()?,
+                )),
             },
-            0x3 => Value::Real(f64::from_be_bytes(self.data.get(at + 1..at + 9)?.try_into().ok()?)),
+            0x3 => Value::Real(f64::from_be_bytes(
+                self.data.get(at + 1..at + 9)?.try_into().ok()?,
+            )),
             0x4 => {
                 let (n, from) = self.length(at, low)?;
                 Value::Data(self.data.get(from..from + n)?.to_vec())
@@ -188,13 +232,23 @@ impl Reader<'_> {
             }
             0x6 => {
                 let (n, from) = self.length(at, low)?;
-                let units: Vec<u16> = self.data.get(from..from + n * 2)?.chunks(2).map(|c| u16::from_be_bytes([c[0], c[1]])).collect();
+                let units: Vec<u16> = self
+                    .data
+                    .get(from..from + n * 2)?
+                    .chunks(2)
+                    .map(|c| u16::from_be_bytes([c[0], c[1]]))
+                    .collect();
                 Value::String(String::from_utf16_lossy(&units))
             }
             0x8 => Value::Int(uint(self.data.get(at + 1..at + 2 + low as usize)?) as i64),
             0xA | 0xC => {
                 let (n, from) = self.length(at, low)?;
-                Value::Array(self.refs(from, n)?.into_iter().map(|r| self.object(r, depth + 1)).collect::<Option<_>>()?)
+                Value::Array(
+                    self.refs(from, n)?
+                        .into_iter()
+                        .map(|r| self.object(r, depth + 1))
+                        .collect::<Option<_>>()?,
+                )
             }
             0xD => {
                 let (n, from) = self.length(at, low)?;
@@ -202,7 +256,9 @@ impl Reader<'_> {
                 let values = self.refs(from + n * self.width, n)?;
                 let mut entries = Vec::with_capacity(n);
                 for (k, v) in keys.into_iter().zip(values) {
-                    let Value::String(key) = self.object(k, depth + 1)? else { return None };
+                    let Value::String(key) = self.object(k, depth + 1)? else {
+                        return None;
+                    };
                     entries.push((key, self.object(v, depth + 1)?));
                 }
                 Value::Dict(entries)
@@ -226,9 +282,17 @@ pub fn read(data: &[u8]) -> Option<Value> {
         return None;
     }
     let offsets = (0..objects)
-        .map(|i| data.get(table + i * offset_width..table + (i + 1) * offset_width).map(|b| uint(b) as usize))
+        .map(|i| {
+            data.get(table + i * offset_width..table + (i + 1) * offset_width)
+                .map(|b| uint(b) as usize)
+        })
         .collect::<Option<Vec<_>>>()?;
-    Reader { data, offsets, width }.object(top, 0)
+    Reader {
+        data,
+        offsets,
+        width,
+    }
+    .object(top, 0)
 }
 
 #[cfg(test)]
@@ -238,13 +302,19 @@ mod tests {
     #[test]
     fn writes_what_it_reads() {
         let value = dict(vec![
-            ("Content-Location", Value::String("http://192.168.1.2:4000/x.m3u8".into())),
+            (
+                "Content-Location",
+                Value::String("http://192.168.1.2:4000/x.m3u8".into()),
+            ),
             ("Start-Position-Seconds", Value::Real(12.5)),
             ("rate", Value::Real(1.0)),
             ("isMultiSelectAirPlay", Value::Bool(true)),
             ("timingPort", Value::Int(7011)),
             ("name", Value::String("Wohnzimmer – 客厅".into())),
-            ("value", dict(vec![("flags", Value::Int(0)), ("epoch", Value::Int(-1))])),
+            (
+                "value",
+                dict(vec![("flags", Value::Int(0)), ("epoch", Value::Int(-1))]),
+            ),
             ("list", Value::Array(vec![Value::Data(vec![1, 2, 3]); 20])),
         ]);
         let data = write(&value);

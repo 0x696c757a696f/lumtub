@@ -12,6 +12,10 @@ on:
         description: Most names to search (empty for all)
         required: false
         default: ''
+      check:
+        description: Only print the real names of these channel ids (space separated)
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -25,7 +29,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Names of the given channel ids
+        if: inputs.check != ''
+        env:
+          IDS: ${{ inputs.check }}
+        run: |
+          read -ra ids <<< "$IDS"
+          python3 .github/scripts/channel_names.py "${ids[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Search YouTube for the named channels
+        if: inputs.check == ''
         env:
           LIMIT: ${{ inputs.limit }}
         run: |
@@ -34,16 +47,19 @@ jobs:
           awk '/^## The same channel/{on=1} /^## Several/{on=0} on' "$RUNNER_TEMP/report.md"
 
       - name: Install the Rust toolchain
+        if: inputs.check == ''
         run: |
           curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
       - name: Check the lists
+        if: inputs.check == ''
         run: |
           cargo build --manifest-path native/lumtub_core/Cargo.toml --release --bin lumtub-lists
           native/lumtub_core/target/release/lumtub-lists check lists
 
       - name: Push the branch
+        if: inputs.check == ''
         run: |
           if git diff --quiet -- lists; then
             echo "No ids were added." | tee -a "$GITHUB_STEP_SUMMARY"
@@ -63,7 +79,7 @@ jobs:
           echo "Pushed $branch; open a pull request from it." | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Keep the report
-        if: always()
+        if: always() && inputs.check == ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: list-ids-report

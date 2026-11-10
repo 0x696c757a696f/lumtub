@@ -52,6 +52,7 @@ Future<void> _reveal(WidgetTester tester, String label, {bool back = false}) asy
 void main() {
   test('each mode asks YouTube for its own order and filters', () {
     expect(exploreParams(ExploreMode.popular, period: SearchUploadDate.month), 'CAMSBAgEEAE%253D');
+    expect(exploreParams(ExploreMode.popular, period: SearchUploadDate.any), 'CAMSAhAB');
     expect(exploreParams(ExploreMode.liveViewers), 'CAMSAkAB');
     // Newest first, videos only.
     expect(exploreParams(ExploreMode.latest), 'CAISAhAB');

@@ -41,11 +41,11 @@
     status: unproven
 :qingtou-shijie | UCD6H5HohLmLzkdg_e6_M_6g | @yinlongli6276 | ^清透世界
     status: unproven
-:xin-wen-wu-ren-xing | ^新闻五人行 | ^新聞五人行
+:xin-wen-wu-ren-xing | UCsWp69-zSsKebNnCzP9HdsQ | @NTDFIVE | ^新闻五人行 | ^新聞五人行
     status: unproven
 :shi-shi-guan-xin | ^世事关心 | ^世事關心
     status: unproven
-:fu-yao-hui-ke-shi | ^扶摇会客室 | ^扶搖會客室
+:fu-yao-hui-ke-shi | UC_Hjt7UxiAA85wS1TAUKYdQ | @%E6%89%B6%E6%90%96%E6%9C%83%E5%AE%A2%E5%AE%A4 | ^扶摇会客室 | ^扶搖會客室
     status: unproven
 :tou-shi-jin-hua-lun | ^透视进化论 | ^透視進化論
     status: unproven

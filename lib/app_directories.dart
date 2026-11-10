@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import 'app_log.dart';
+
 /// The small set of directories owned by Lumtub.
 ///
 /// They live under LocalAppData, so the installed package initialises without
@@ -65,5 +67,35 @@ class AppDirectories {
     for (final directory in [root, config, data, cache, components, logs]) {
       await directory.create(recursive: true);
     }
+  }
+}
+
+/// Writes to a temporary file first so a crash never leaves half a file.
+Future<void> writeFileAtomic(File file, String text) async {
+  await file.parent.create(recursive: true);
+  final temp = File('${file.path}.tmp');
+  await temp.writeAsString(text, flush: true);
+  await temp.rename(file.path);
+}
+
+/// Moves an unreadable file aside as `<name>.broken`, so the next save does
+/// not overwrite what could still be recovered by hand.
+Future<void> setBrokenFileAside(File file, Object error) async {
+  logWarn('${file.uri.pathSegments.last} could not be read, starting from defaults: $error');
+  try {
+    await file.rename('${file.path}.broken');
+  } catch (e) {
+    logWarn('Could not keep a copy of ${file.uri.pathSegments.last}: $e');
+  }
+}
+
+/// Runs jobs one after another, so two saves of a file never interleave.
+class WriteQueue {
+  Future<void> _tail = Future.value();
+
+  Future<void> run(Future<void> Function() job) {
+    final result = _tail.then((_) => job());
+    _tail = result.then((_) {}, onError: (_) {});
+    return result;
   }
 }

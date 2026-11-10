@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../app/app_controller.dart';
 import '../../l10n/l10n.dart';
 import '../../models.dart';
+import '../../video_repository.dart' show historyLimit;
 import '../common.dart';
 import '../theme.dart';
 import '../video_card.dart';
@@ -51,7 +52,7 @@ class _HistoryPageState extends State<HistoryPage> {
     final signedIn = controller.tvFeed?.available ?? false;
     if (signedIn && _youtube) return _youtubeHistory(context);
     if (all.isEmpty && !signedIn) {
-      return StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('No watch history yet'), message: tr('Played videos are saved on this device, up to 60 entries.'));
+      return StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('No watch history yet'), message: tr('Played videos are saved on this device, up to {0} entries.', [historyLimit]));
     }
     final items = filterHistory(all, _query);
     _selected.removeWhere((id) => !all.any((item) => item.id == id));
@@ -98,7 +99,7 @@ class _HistoryPageState extends State<HistoryPage> {
         )),
       )),
       if (all.isEmpty)
-        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('No watch history yet'), message: tr('Played videos are saved on this device, up to 60 entries.')))
+        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('No watch history yet'), message: tr('Played videos are saved on this device, up to {0} entries.', [historyLimit])))
       else if (items.isEmpty)
         SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.magnifyingGlassMinus, title: tr('No matching history'), message: tr('Try other keywords.')))
       else if (_selecting)

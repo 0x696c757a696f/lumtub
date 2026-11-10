@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'app_directories.dart';
+import 'app_log.dart';
 import 'background_json.dart';
 import 'live_chat_repository.dart';
 import 'models.dart';
@@ -481,54 +482,82 @@ class VideoRepository {
   }
 }
 
+/// How many watched videos the history keeps.
+const historyLimit = 5000;
+
 class HistoryStore {
   final AppDirectories directories;
   HistoryStore(this.directories);
 
   late File file;
   final List<VideoItem> items = [];
+  final _writes = WriteQueue();
+  Timer? _saveTimer;
 
   Future<void> initialize() async {
     file = File('${directories.data.path}${Platform.pathSeparator}watch_history.json');
     if (!await file.exists()) return;
     try {
       final data = await decodeJsonInBackground(await file.readAsString());
-      if (data is List) {
-        for (final value in data) {
-          try {
-            if (value is Map<String, dynamic>) items.add(VideoItem.fromJson(value));
-          } catch (_) {}
+      if (data is! List) throw const FormatException('The history is not a list');
+      for (final value in data) {
+        try {
+          if (value is Map<String, dynamic>) items.add(VideoItem.fromJson(value));
+        } catch (e) {
+          logWarn('Skipped an unreadable history entry: $e');
         }
       }
-    } catch (_) {}
+      if (items.length > historyLimit) items.removeRange(historyLimit, items.length);
+    } catch (e) {
+      items.clear();
+      await setBrokenFileAside(file, e);
+    }
   }
 
-  Future<void> clear() async {
+  Future<void> clear() {
     items.clear();
-    await file.writeAsString('[]', flush: true);
+    return _saveNow();
   }
 
   /// Forgets the videos with these ids.
-  Future<void> remove(Set<String> ids) async {
+  Future<void> remove(Set<String> ids) {
     items.removeWhere((item) => ids.contains(item.id));
-    await _write();
+    return _saveNow();
   }
 
-  Future<void> _write() => file.writeAsString(jsonEncode(items.map((e) => e.toJson()).toList()), flush: true);
-
   /// Sets the live status of the videos with these ids.
-  Future<void> setLiveStatus(Map<String, String?> states) async {
+  Future<void> setLiveStatus(Map<String, String?> states) {
     for (final (i, item) in items.indexed) {
       if (states.containsKey(item.id)) items[i] = item.withLiveStatus(states[item.id]);
     }
-    await _write();
+    return _saveNow();
   }
 
-  Future<void> record(VideoItem item) async {
+  /// Puts [item] first. The file follows after a moment, so videos played
+  /// one after another are one write; [flush] writes it at once.
+  Future<void> record(VideoItem item) {
     items.removeWhere((other) => other.id == item.id);
     items.insert(0, item);
-    if (items.length > 60) items.removeRange(60, items.length);
-    await _write();
+    if (items.length > historyLimit) items.removeRange(historyLimit, items.length);
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 300), () => unawaited(_saveNow()));
+    return Future.value();
+  }
+
+  /// Completes when every change so far is on disk.
+  Future<void> flush() => _saveNow();
+
+  /// The text is made when the write's turn comes, so it is the latest state.
+  Future<void> _saveNow() {
+    _saveTimer?.cancel();
+    _saveTimer = null;
+    return _writes.run(() async {
+      try {
+        await writeFileAtomic(file, jsonEncode(items.map((e) => e.toJson()).toList()));
+      } catch (e) {
+        logError('Could not save the watch history', e);
+      }
+    });
   }
 }
 

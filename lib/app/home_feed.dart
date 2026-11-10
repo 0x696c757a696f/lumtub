@@ -351,10 +351,14 @@ class HomeFeed extends ChangeNotifier {
 
   int get _remaining => _queues.values.fold(0, (sum, queue) => sum + queue.where((r) => !_taken.contains(r.item.id)).length);
 
+  /// Older entries weigh next to nothing at the decay used, so the long-term
+  /// taste reads only this many of the history.
+  static const _tasteHistory = 600;
+
   void _learnTastes(HomeFeedSources sources) {
     final followed = {for (final c in sources.followed) c.id};
     _longTaste = TasteProfile.from(
-      history: sources.history,
+      history: sources.history.take(_tasteHistory).toList(),
       progressOf: sources.progressOf,
       favorites: sources.favorites,
       followed: followed,

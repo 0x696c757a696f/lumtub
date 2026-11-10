@@ -136,6 +136,21 @@ class PipedVideo {
     );
   }
 
+  /// This video without the streams on a host that is not YouTube's and
+  /// resolves to an address on this computer or its network.
+  Future<PipedVideo> withoutPrivateHosts() async {
+    final all = [...video, ...audio, ...muxed];
+    final hosts = {for (final s in all) Uri.parse(s.url).host.toLowerCase()};
+    final blocked = <String>{};
+    for (final host in hosts) {
+      if (!isYoutubeMediaHost(host) && !await resolvesToPublicAddress(host)) blocked.add(host);
+    }
+    if (blocked.isEmpty) return this;
+    logWarn('Dropped streams on hosts that point into the local network: ${blocked.join(', ')}');
+    bool keep(PipedStream s) => !blocked.contains(Uri.parse(s.url).host.toLowerCase());
+    return PipedVideo(server: server, video: video.where(keep).toList(), audio: audio.where(keep).toList(), muxed: muxed.where(keep).toList(), live: live);
+  }
+
   List<int> get heights => ({for (final s in video) s.height}.toList()..sort((a, b) => b.compareTo(a)));
 
   /// [heights] of the streams [settings] allows.
@@ -257,7 +272,7 @@ class PipedStreams extends RelayServers {
         if (response.statusCode != 200 || data is! Map<String, dynamic>) {
           throw StateError(data is Map && data['message'] != null ? '${data['message']}' : 'HTTP ${response.statusCode}');
         }
-        return PipedVideo.fromJson(candidate, data);
+        return await PipedVideo.fromJson(candidate, data).withoutPrivateHosts();
       } catch (e) {
         lastError = e;
         logWarn('Piped server $candidate could not resolve $videoId: $e');

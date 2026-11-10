@@ -210,6 +210,7 @@ class YoutubeTvSignIn extends ChangeNotifier implements SignedInnerTube {
     if (status == -1) return null;
     if (status == -2) {
       logWarn('The TV-code sign-in expired or was revoked');
+      native.signOut();
       state = TvSignInState.signedOut;
       error = tr('The TV-code sign-in has expired. Please sign in again');
       _notify();

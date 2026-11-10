@@ -144,6 +144,10 @@ class SkinLibrary extends ChangeNotifier {
   Future<void> _loadFonts(Skin skin) async {
     for (final MapEntry(key: family, value: name) in skin.fontFiles.entries) {
       final path = skin.file(name);
+      if (path == null) {
+        skin.warn('font "$family" ($name) must be a file inside the skin folder');
+        continue;
+      }
       // Flutter cannot unload a font, so each file is read once a run.
       if (!_loadedFonts.add('$family\n$path')) continue;
       try {

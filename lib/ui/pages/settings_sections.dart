@@ -29,6 +29,7 @@ import '../../windows_video_info.dart';
 import '../../friendly_error.dart';
 import '../common.dart';
 import '../diagnostics_dialog.dart';
+import 'downloads_page.dart' show openInExplorer;
 import '../format_policy_dialogs.dart';
 import '../player_shortcuts.dart';
 import '../shortcut_settings.dart';
@@ -1218,7 +1219,8 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               title: tr('Data location'),
               subtitle: tr('{0}\nSettings, watch history, favorites and downloaded components are stored here and kept when you uninstall.', [controller.directories?.root.path ?? tr('Preparing…')]),
               leading: _icon(AppIcons.archive),
-              onTap: controller.directories == null ? null : () => openExternal(controller.directories!.root.path),
+              // Android has no file manager to hand the folder to.
+              onTap: controller.directories == null || Platform.isAndroid ? null : () => unawaited(openInExplorer(controller.directories!.root.path)),
             )),
       ],
     SettingsCategory.backup => [

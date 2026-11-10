@@ -176,10 +176,17 @@ String formatScheduledStart(DateTime date) {
 /// (the dialog's own margins and padding take 128).
 double dialogWidth(BuildContext context, [double wanted = 420]) => math.max(200.0, math.min(wanted, MediaQuery.sizeOf(context).width - 128));
 
+/// [url] as an http(s) link, or null for anything else, such as a folder
+/// path, which `openInExplorer` opens.
+Uri? webLink(String url) {
+  final uri = Uri.tryParse(url);
+  return uri == null || (uri.scheme != 'https' && uri.scheme != 'http') ? null : uri;
+}
+
 /// Opens a web link in the default browser.
 Future<void> openExternal(String url) async {
-  final uri = Uri.tryParse(url);
-  if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) return;
+  final uri = webLink(url);
+  if (uri == null) return;
   if (!Platform.isWindows) return openWithDesktop(uri.toString());
   // rundll32 passes the whole address on; explorer.exe can drop everything
   // after the first '&'.

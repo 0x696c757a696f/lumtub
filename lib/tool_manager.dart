@@ -414,7 +414,10 @@ class ToolManager {
     if (await temp.exists()) await temp.delete();
     try {
       final result = await _sendRetrying(uri);
-      if (result.statusCode != 200) throw HttpException('Download failed: HTTP ${result.statusCode}');
+      if (result.statusCode != 200) {
+        unawaited(result.stream.drain<void>().catchError((Object _) {}));
+        throw HttpException('Download failed: HTTP ${result.statusCode}');
+      }
       final sink = temp.openWrite();
       try {
         var received = 0;

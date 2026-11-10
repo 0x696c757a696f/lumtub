@@ -82,8 +82,29 @@ void main() {
     }
 
     expect(await callback({'code': 'c', 'state': 'expected'}), 'c');
-    expect('${await callback({'code': 'c', 'state': 'forged'})}', contains('verification failed'));
     expect('${await callback({'error': 'access_denied', 'state': 'expected'})}', 'Authorization revoked');
+  });
+
+  test('a callback with the wrong state is answered 400 and does not end the wait', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    addTearDown(() => server.close(force: true));
+    var done = false;
+    final result = GoogleAuth.waitForCode(server, 'expected').then<Object?>((code) => code, onError: (Object e) => e).whenComplete(() => done = true);
+    final http = HttpClient();
+    addTearDown(http.close);
+    Future<int> get(Map<String, String> query) async {
+      final response = await (await http.getUrl(Uri.http('127.0.0.1:${server.port}', '/', query))).close();
+      await response.drain<void>();
+      return response.statusCode;
+    }
+
+    expect(await get({'code': 'evil', 'state': 'forged'}), 400);
+    expect(await get({'error': 'access_denied', 'state': 'forged'}), 400);
+    expect(await get({'code': 'evil'}), 400);
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(done, isFalse);
+    expect(await get({'code': 'good', 'state': 'expected'}), 200);
+    expect(await result, 'good');
   });
 
   test('refresh keeps the refresh token and reports a revoked grant', () async {

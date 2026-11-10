@@ -10,6 +10,7 @@
 // removed, and the Bilibili-only options (danmaku, long-press speed,
 // dynamic colour on Android) are dropped or replaced by Windows ones.
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -30,6 +31,7 @@ import '../common.dart';
 import '../subtitle_style.dart';
 import '../theme.dart';
 import '../theme_preset_card.dart';
+import 'downloads_page.dart' show openInExplorer;
 import 'settings_sections.dart';
 import 'support_page.dart';
 import 'translation_settings_page.dart';
@@ -1140,7 +1142,7 @@ class _LogsPageState extends State<_LogsPage> {
             onSelected: (value) => switch (value) {
               0 => copyText(context, text ?? '', tr('Copied')),
               1 => openExternal('$_repository/issues/new/choose'),
-              2 => _directory == null ? null : openExternal(_directory!.path),
+              2 => _directory == null ? null : unawaited(openInExplorer(_directory!.path)),
               _ => _clear(),
             },
             itemBuilder: (context) => [

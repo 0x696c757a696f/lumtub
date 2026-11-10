@@ -360,7 +360,7 @@ void main() {
       expect(build(TranslationService.deepl, {'deepl': 'k'}), isA<DeepLTranslator>());
       expect(build(TranslationService.microsoft, {'microsoft': 'k'}), isA<MicrosoftTranslator>());
       expect(build(TranslationService.libre), isA<LibreTranslator>());
-      expect(build(TranslationService.ai, {'ai': 'k'}), isA<AiTranslator>());
+      expect(build(TranslationService.ai, {'ai@api.openai.com': 'k'}), isA<AiTranslator>());
       expect(build(TranslationService.ai, {}, 'ollama'), isA<AiTranslator>());
       expect(build(TranslationService.microsoft), isA<MicrosoftTranslator>());
       expect(build(TranslationService.deeplx), isA<DeepLXTranslator>());

@@ -21,9 +21,18 @@ extension SettingsActions on AppController {
   Future<void> _loadTranslationKeys() async {
     final saved = await _translationKeyFile?.read();
     if (saved == null) return;
-    translationKeys = {for (final MapEntry(:key, :value) in saved.entries) if (value is String && value.isNotEmpty) key: value};
+    final loaded = {for (final MapEntry(:key, :value) in saved.entries) if (value is String && value.isNotEmpty) key: value};
+    // The single key older versions kept belongs to the host it is sent to now.
+    translationKeys = migrateKeyHosts(preferences.translation, loaded);
     _useTranslator();
     _update(() {});
+    if (translationKeys.length != loaded.length || !translationKeys.keys.every(loaded.containsKey)) {
+      try {
+        await _translationKeyFile?.write(translationKeys);
+      } catch (e) {
+        logError('Could not save the translation key', e);
+      }
+    }
   }
 
   void _useTranslator() {
@@ -35,8 +44,10 @@ extension SettingsActions on AppController {
   Future<void> saveTranslationKey(TranslationService service, String key) => saveApiKey(service.name, key);
 
   /// Saves the API key kept under [name] (a [TranslationService.name], or
-  /// `speech` for 语音识别); an empty one removes it.
+  /// [aiKeyName] and [speechKeyName], which are kept per host); an empty one
+  /// removes it.
   Future<void> saveApiKey(String name, String key) async {
+    if (name.isEmpty) return;
     final keys = {...translationKeys}..remove(name);
     if (key.trim().isNotEmpty) keys[name] = key.trim();
     _update(() => translationKeys = keys);
@@ -54,7 +65,7 @@ extension SettingsActions on AppController {
   /// The models the chosen AI endpoint lists.
   Future<List<String>> listAiModels() {
     final config = preferences.translation;
-    return AiTranslator.listModels(_http, config.effectiveAiBaseUrl, translationKeys[TranslationService.ai.name] ?? '');
+    return AiTranslator.listModels(_http, config.effectiveAiBaseUrl, aiKeyFor(config, translationKeys));
   }
 
   /// A one-line answer from the AI interface, to check it works whichever

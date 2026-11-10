@@ -824,7 +824,7 @@ bool _isLocalUrl(String url) {
 /// [TranslationService.name]). Google's is [fallback].
 Translator translatorFor(TranslationConfig config, Map<String, String> keys, http.Client client, {required Translator fallback}) {
   final service = config.service;
-  final key = (keys[service.name] ?? '').trim();
+  final key = (service == TranslationService.ai ? aiKeyFor(config, keys) : keys[service.name] ?? '').trim();
   switch (service) {
     case TranslationService.google:
       return fallback;
@@ -861,7 +861,7 @@ Translator translatorFor(TranslationConfig config, Map<String, String> keys, htt
 /// The AI service set up under 翻译服务, whichever service translates;
 /// null when it still needs its key.
 AiTranslator? aiServiceFor(TranslationConfig config, Map<String, String> keys, http.Client client) {
-  final key = (keys[TranslationService.ai.name] ?? '').trim();
+  final key = aiKeyFor(config, keys);
   final baseUrl = config.effectiveAiBaseUrl;
   final keyOptional = config.aiPreset == 'ollama' || config.aiPreset == 'custom' || _isLocalUrl(baseUrl);
   if (key.isEmpty && !keyOptional || baseUrl.isEmpty || config.effectiveAiModel.isEmpty) return null;
@@ -888,13 +888,52 @@ class SpeechPreset {
   static SpeechPreset byId(String id) => all.firstWhere((p) => p.id == id, orElse: () => all.first);
 }
 
-/// The key 语音识别 uses: its own, else the AI 接口's when that is the same
-/// service.
+/// `host:port` of [url], lower case, or empty when it has no host: what an
+/// API key is kept for, so that it is only ever sent where it was entered.
+String keyHostOf(String url) {
+  final uri = Uri.tryParse(url.trim());
+  if (uri == null || uri.host.isEmpty) return '';
+  return uri.hasPort ? '${uri.host.toLowerCase()}:${uri.port}' : uri.host.toLowerCase();
+}
+
+/// The name the AI interface's key is kept under: for the host of its
+/// current address; empty while it has none.
+String aiKeyName(TranslationConfig config) {
+  final host = keyHostOf(config.effectiveAiBaseUrl);
+  return host.isEmpty ? '' : '${TranslationService.ai.name}@$host';
+}
+
+/// The name 语音识别's own key is kept under, for the host of its address.
+String speechKeyName(TranslationConfig config) {
+  final host = keyHostOf(config.effectiveSpeechBaseUrl);
+  return host.isEmpty ? '' : 'speech@$host';
+}
+
+/// The key saved for the AI interface's current host.
+String aiKeyFor(TranslationConfig config, Map<String, String> keys) {
+  final name = aiKeyName(config);
+  return name.isEmpty ? '' : (keys[name] ?? '').trim();
+}
+
+/// [keys] with the single AI and 语音识别 keys older versions kept moved to
+/// the hosts [config] sends them to now: the host they were saved for.
+Map<String, String> migrateKeyHosts(TranslationConfig config, Map<String, String> keys) {
+  const ai = 'ai', speech = 'speech';
+  if (!keys.containsKey(ai) && !keys.containsKey(speech)) return keys;
+  final next = {...keys}..remove(ai)..remove(speech);
+  final aiName = aiKeyName(config), speechName = speechKeyName(config);
+  if (keys[ai] != null && aiName.isNotEmpty) next.putIfAbsent(aiName, () => keys[ai]!);
+  if (keys[speech] != null && speechName.isNotEmpty) next.putIfAbsent(speechName, () => keys[speech]!);
+  return next;
+}
+
+/// The key 语音识别 uses: its own for its host, else the AI interface's
+/// key for that same host.
 String speechKeyFor(TranslationConfig config, Map<String, String> keys) {
-  final own = (keys['speech'] ?? '').trim();
-  if (own.isNotEmpty) return own;
-  final same = config.speech.sameKeyAs;
-  return same != null && same == config.aiPreset ? (keys[TranslationService.ai.name] ?? '').trim() : '';
+  final host = keyHostOf(config.effectiveSpeechBaseUrl);
+  if (host.isEmpty) return '';
+  final own = (keys['speech@$host'] ?? '').trim();
+  return own.isNotEmpty ? own : (keys['${TranslationService.ai.name}@$host'] ?? '').trim();
 }
 
 /// Whether 语音识别 has what it needs to be asked.

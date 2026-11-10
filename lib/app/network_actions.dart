@@ -1,6 +1,9 @@
 part of 'app_controller.dart';
 
 /// The network proxy and its local bridge.
+/// The route change in progress or last done; the next one waits for it.
+Future<void> _bridgeTail = Future.value();
+
 extension NetworkActions on AppController {
   /// Reads the proxy setting again; for 跟随系统 also the Windows proxy,
   /// which a proxy tool may have turned on or off since.
@@ -25,7 +28,15 @@ extension NetworkActions on AppController {
   }
 
   /// Starts, replaces or stops the bridge so it matches [next].
-  Future<void> _routeThroughBridge(NetworkProxy next) async {
+  Future<void> _routeThroughBridge(NetworkProxy next) {
+    // One at a time: two refreshes at once would each start a bridge and
+    // only one of them would be kept.
+    final run = _bridgeTail.then((_) => _routeNow(next));
+    _bridgeTail = run.catchError((Object _) {});
+    return run;
+  }
+
+  Future<void> _routeNow(NetworkProxy next) async {
     final old = _bridge;
     if (next.isSocks && next.url == _bridgeFor && old != null) return;
     _bridge = null;

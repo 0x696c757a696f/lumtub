@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.ConnectivityManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Rational
@@ -113,6 +114,13 @@ class MainActivity : FlutterActivity() {
             }
             "isTv" -> return packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK) ||
                 !packageManager.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN)
+            "openUrl" -> {
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(call.arguments as String)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                } catch (e: Exception) {
+                    // No browser installed: nothing to open it with.
+                }
+            }
             "moveToBack" -> moveTaskToBack(true)
             "setFrameRate" -> fitFrameRate((call.arguments as? Number)?.toDouble() ?: 0.0)
             "isMetered" -> return (getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager).isActiveNetworkMetered

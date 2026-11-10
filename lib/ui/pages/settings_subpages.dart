@@ -131,7 +131,7 @@ Future<void> _addBlockedChannel(BuildContext context, AppController controller) 
     builder: (context) => AlertDialog(
       title: Text(tr('Blocked channels')),
       content: SizedBox(
-        width: 420,
+        width: dialogWidth(context, 420),
         child: TextField(
           controller: text,
           autofocus: true,
@@ -1146,7 +1146,7 @@ class _LogsPageState extends State<_LogsPage> {
             itemBuilder: (context) => [
               PopupMenuItem(value: 0, child: Text(tr('Copy log'))),
               PopupMenuItem(value: 1, child: Text(tr('Bug reports'))),
-              PopupMenuItem(value: 2, child: Text(tr('Open log folder'))),
+              if (!Platform.isAndroid) PopupMenuItem(value: 2, child: Text(tr('Open log folder'))),
               PopupMenuItem(value: 3, child: Text(tr('Clear logs'))),
             ],
           ),

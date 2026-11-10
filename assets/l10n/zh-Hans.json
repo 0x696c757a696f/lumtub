@@ -3128,5 +3128,20 @@
   "1 month ago": "1个月前",
   "{0} months ago": "{0}个月前",
   "1 year ago": "1年前",
-  "{0} years ago": "{0}年前"
+  "{0} years ago": "{0}年前",
+  "YouTube": "YouTube",
+  "The disk is full; free some space and try again": "磁盘已满，请释放一些空间后重试",
+  "No permission to use that folder; choose another one": "没有权限使用该文件夹，请换一个",
+  "The file or folder wasn't found": "找不到该文件或文件夹",
+  "Couldn't use the file or folder; check that it is available and try again": "无法使用该文件或文件夹，请确认它可用后重试",
+  "YouTube wants to confirm you're not a bot; sign in or try another network": "YouTube 要求确认你不是机器人，请登录或换一个网络",
+  "This video is age-restricted and cannot be downloaded": "该视频有年龄限制，无法下载",
+  "This video is private": "该视频为私享视频",
+  "This video is for channel members only": "该视频仅限频道会员观看",
+  "This video isn't available": "该视频无法观看",
+  "This video isn't available in your region": "该视频在你所在的地区无法观看",
+  "The chosen format isn't available for this video; pick another": "该视频没有所选的格式，请换一个",
+  "ffmpeg is needed for this download but was not found": "此下载需要 ffmpeg，但没有找到",
+  "The download failed; see the logs for details": "下载失败，详情见日志",
+  "see the logs for details": "详情见日志"
 }

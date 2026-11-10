@@ -758,7 +758,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
             const SizedBox(height: 4),
             if (upcomingStart != null)
               Text(upcomingStart, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary, fontWeight: FontWeight.w500)),
-            Text(item.channel.isEmpty ? 'YouTube' : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
+            Text(item.channel.isEmpty ? tr('YouTube') : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
           ])),
         ]),
       ),
@@ -988,7 +988,7 @@ class MetaLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (lead.isEmpty && tail.isEmpty) return Text('YouTube', maxLines: 1, style: style);
+    if (lead.isEmpty && tail.isEmpty) return Text(tr('YouTube'), maxLines: 1, style: style);
     return LayoutBuilder(
       builder: (context, box) => Row(children: [
         if (lead.isNotEmpty) Flexible(child: Text(lead, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style)),

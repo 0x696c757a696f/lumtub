@@ -385,7 +385,7 @@ class _AddTopicDialogState extends State<_AddTopicDialog> {
   Widget build(BuildContext context) => AlertDialog(
         title: Text(tr('Add category')),
         content: SizedBox(
-          width: 380,
+          width: dialogWidth(context, 380),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             TextField(
               controller: _label,
@@ -442,7 +442,7 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
   Widget build(BuildContext context) => AlertDialog(
         title: Text(tr('Manage {0} categories', [widget.section.label])),
         content: SizedBox(
-          width: 420,
+          width: dialogWidth(context),
           height: 480,
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(tr('Drag to reorder, pin to move to the top, turn off the switch to hide.'), style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),

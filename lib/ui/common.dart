@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -88,7 +89,7 @@ class ErrorBanner extends StatelessWidget {
       child: Row(children: [
         Icon(AppIcons.warningCircle, color: colors.onErrorContainer, size: 20),
         const SizedBox(width: 12),
-        Expanded(child: Text(message, maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onErrorContainer))),
+        Expanded(child: SelectableText(message, maxLines: 8, style: TextStyle(color: colors.onErrorContainer))),
         if (onRetry != null) TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('Retry'))),
       ]),
     );
@@ -159,6 +160,10 @@ String formatScheduledStart(DateTime date) {
   final time = '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   return '${formatDate(local)} $time';
 }
+
+/// A dialog body's width: [wanted], or less on a screen too narrow for it
+/// (the dialog's own margins and padding take 128).
+double dialogWidth(BuildContext context, [double wanted = 420]) => math.max(200.0, math.min(wanted, MediaQuery.sizeOf(context).width - 128));
 
 /// Opens a web link in the default browser.
 Future<void> openExternal(String url) async {

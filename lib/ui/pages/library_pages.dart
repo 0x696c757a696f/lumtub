@@ -220,7 +220,7 @@ class _ManageGroups extends StatelessWidget {
         builder: (context, _) => AlertDialog(
           title: Text(tr('Subscription groups')),
           content: SizedBox(
-            width: 420,
+            width: dialogWidth(context, 420),
             child: library.channelGroups.isEmpty
                 ? Text(tr("Sort the channels you follow into groups, such as “Learning” or “Music”, and see one group's new videos at a time on the Subscriptions page."), style: TextStyle(color: context.colors.outline, height: 1.5))
                 : ListView(shrinkWrap: true, children: [
@@ -286,7 +286,7 @@ class _GroupChannelsState extends State<_GroupChannels> {
       builder: (context, _) => AlertDialog(
         title: Text(tr('Channels in “{0}”', [group.name])),
         content: SizedBox(
-          width: 420,
+          width: dialogWidth(context, 420),
           height: 480,
           child: Column(children: [
             TextField(

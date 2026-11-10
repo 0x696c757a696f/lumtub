@@ -9,6 +9,7 @@ import 'package:flutter/services.dart' show MethodChannel, PlatformException;
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'friendly_error.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
 
@@ -127,7 +128,7 @@ class AppUpdater extends ChangeNotifier {
       if (offer == null) ready = null;
       logInfo(offer != null ? 'Lumtub update available: ${offer.version}' : 'Lumtub is up to date ($appVersion)');
     } catch (e) {
-      error = '$e';
+      error = friendlyError(e);
       logWarn('Could not check Lumtub updates: $e');
     } finally {
       checking = false;
@@ -171,7 +172,7 @@ class AppUpdater extends ChangeNotifier {
       ready = file;
       logInfo('Lumtub ${available!.version} downloaded; it installs when Lumtub closes');
     } catch (e) {
-      error = '$e';
+      error = friendlyError(e);
       logWarn('Could not download the Lumtub update: $e');
     } finally {
       progress = null;
@@ -233,7 +234,7 @@ class AppUpdater extends ChangeNotifier {
         if (result == null) throw StateError('No native core');
         if (result['ok'] != true) {
           logWarn('Could not start the Lumtub installer${result['elevated'] == true ? ' as administrator' : ''}: ${result['error']}');
-          installError = result['elevated'] == true ? tr('Administrator rights are needed to install into this folder') : '${result['error']}';
+          installError = result['elevated'] == true ? tr('Administrator rights are needed to install into this folder') : tr('see the logs for details');
           notifyListeners();
           return false;
         }
@@ -256,7 +257,7 @@ class AppUpdater extends ChangeNotifier {
     } catch (e) {
       logWarn('Could not start the Lumtub update: $e');
       if (appImage != null || macApp != null) {
-        installError = e is FileSystemException ? (e.osError?.message ?? e.message) : '$e';
+        installError = friendlyFileError(e);
         notifyListeners();
       }
       return false;
@@ -272,8 +273,8 @@ class AppUpdater extends ChangeNotifier {
       logInfo('Handed Lumtub ${available?.version ?? ''} to the Android installer');
       return true;
     } on PlatformException catch (e) {
-      installError = e.message ?? e.code;
-      logWarn('Could not start the Android installer: $installError');
+      logWarn('Could not start the Android installer: ${e.message ?? e.code}');
+      installError = tr('see the logs for details');
       notifyListeners();
       return false;
     }

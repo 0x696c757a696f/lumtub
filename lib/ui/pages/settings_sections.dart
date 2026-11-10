@@ -26,6 +26,7 @@ import '../../shortcut_bindings.dart';
 import '../../video_codec.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../../windows_video_info.dart';
+import '../../friendly_error.dart';
 import '../common.dart';
 import '../diagnostics_dialog.dart';
 import '../format_policy_dialogs.dart';
@@ -1277,7 +1278,7 @@ Future<void> _exportSettings(BuildContext context, AppController controller) asy
     if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Settings exported'))));
   } catch (e) {
     logError('Could not export settings', e);
-    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Export failed: {0}', [e]))));
+    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Export failed: {0}', [friendlyFileError(e)]))));
   }
 }
 
@@ -1288,7 +1289,7 @@ Future<void> _importSettings(BuildContext context, AppController controller) asy
   try {
     text = await file.readAsString();
   } catch (e) {
-    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr("Couldn't read file: {0}", [e]))));
+    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr("Couldn't read file: {0}", [friendlyFileError(e)]))));
     return;
   }
   final ok = await controller.importSettings(text);
@@ -1508,7 +1509,7 @@ class _ClearDataDialogState extends State<_ClearDataDialog> {
   Widget build(BuildContext context) => AlertDialog(
         title: Text(tr('Clear local data')),
         content: SizedBox(
-          width: 420,
+          width: dialogWidth(context, 420),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             for (final kind in LocalData.values)
               CheckboxListTile(

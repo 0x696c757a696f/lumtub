@@ -43,7 +43,7 @@ value with German:
 
 A language is offered in Settings › Appearance › Language once it translates
 at least 90% of the strings, so the interface never shows a patchwork of
-languages. "Follow system" picks it when Windows uses that language.
+languages. "Follow system" picks it when your system uses that language.
 
 The build reports how complete each translation is (look for
 `Translation <tag>:` in the test output of the Build workflow).

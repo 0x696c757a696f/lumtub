@@ -7,6 +7,7 @@ import '../../translation.dart';
 import '../../translation_services.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../app_icons.dart';
+import '../common.dart' show dialogWidth;
 import '../translatable.dart' show TranslationView;
 import '../skin_paint.dart';
 
@@ -373,7 +374,7 @@ class _KeyDialogState extends State<_KeyDialog> {
   Widget build(BuildContext context) => AlertDialog(
         title: Text(widget.title),
         content: SizedBox(
-          width: 420,
+          width: dialogWidth(context, 420),
           child: TextField(
             controller: _text,
             autofocus: true,

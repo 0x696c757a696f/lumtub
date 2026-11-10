@@ -476,12 +476,12 @@ class _Details extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       Row(children: [
-        ChannelAvatar(name: channel.isEmpty ? 'YouTube' : channel, image: channelRef?.avatar, channelId: channelRef?.id),
+        ChannelAvatar(name: channel.isEmpty ? tr('YouTube') : channel, image: channelRef?.avatar, channelId: channelRef?.id),
         const SizedBox(width: 12),
         // The name and its link take the free space, so the follow button
         // and menu sit at the right edge.
         Expanded(child: Row(children: [
-          Flexible(child: Text(channel.isEmpty ? 'YouTube' : channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall)),
+          Flexible(child: Text(channel.isEmpty ? tr('YouTube') : channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall)),
           const SizedBox(width: 8),
           if (channelRef != null)
             TextButton(onPressed: () => controller.openChannel(channelRef), child: Text(tr('View channel')))

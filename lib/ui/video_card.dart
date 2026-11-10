@@ -391,8 +391,9 @@ class VideoCard extends StatefulWidget {
 
 class _VideoCardState extends State<VideoCard> {
   bool _hovered = false;
-  /// Reached with the keyboard: it previews and shows its actions as a
-  /// pointer resting on it would, with an outline to show where focus is.
+  /// Reached with the keyboard: it shows its actions as a pointer resting
+  /// on it would, with an outline to show where focus is, but does not
+  /// prefetch or preview.
   bool _focused = false;
   bool _pointer = false;
   Timer? _prefetch;
@@ -413,7 +414,7 @@ class _VideoCardState extends State<VideoCard> {
     _prefetch?.cancel();
     _preview?.cancel();
     // 低占用模式 loads nothing until a video is opened.
-    if (!value || lowResourceMode) return;
+    if (!value || !_pointer || lowResourceMode) return;
     if (!widget.item.membersOnly) _prefetch = Timer(const Duration(milliseconds: 700), () => VideoActions.of(context)?.prefetch(widget.item, hover: true));
     if (widget.item.isLive || widget.item.isUpcoming) return;
     _preview = Timer(const Duration(milliseconds: 700), () {
@@ -433,6 +434,10 @@ class _VideoCardState extends State<VideoCard> {
   void _focus(bool value) {
     setState(() => _focused = value);
     _hover(_pointer || _focused);
+    if (!_pointer) {
+      _prefetch?.cancel();
+      _preview?.cancel();
+    }
   }
 
   /// The menu, at the card's middle when opened from the keyboard.

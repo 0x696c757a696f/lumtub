@@ -272,6 +272,50 @@ void main() {
     expect(player.state.playing, before);
   });
 
+  testWidgets('a control reached with the keyboard has focus and a name, and Enter or Space activates it', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await pump(tester);
+    expect(find.bySemanticsLabel('Play/Pause (Space)'), findsWidgets);
+    final ring = find.descendant(of: find.byTooltip('Play/Pause (Space)'), matching: find.byType(AnimatedContainer));
+    expect(ring, findsOneWidget);
+    var focused = false;
+    for (var i = 0; i < 40 && !focused; i++) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      focused = Focus.of(tester.element(ring)).hasFocus;
+    }
+    expect(focused, isTrue);
+    expect((tester.widget<AnimatedContainer>(ring).decoration! as BoxDecoration).border, isNotNull);
+    final before = player.state.playing;
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(player.state.playing, !before);
+    await tester.sendKeyEvent(LogicalKeyboardKey.space);
+    await tester.pump();
+    expect(player.state.playing, before);
+    semantics.dispose();
+  });
+
+  testWidgets('Space still pauses when the picture, not a button, has focus', (tester) async {
+    await pump(tester);
+    await tester.tap(find.byType(PlayerControls), warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 400));
+    final before = player.state.playing;
+    await tester.sendKeyEvent(LogicalKeyboardKey.space);
+    await tester.pump();
+    expect(player.state.playing, !before);
+  });
+
+  testWidgets('the volume slider opens when its button is tapped', (tester) async {
+    await pump(tester);
+    expect(find.byType(Slider), findsNothing);
+    await tester.tap(find.byTooltip('Mute (M)'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(Slider), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+  });
+
   testWidgets('keys seek by the configured step and show feedback', (tester) async {
     await controller.savePreferences(controller.preferences.copyWith(seekSeconds: 7));
     await pump(tester);

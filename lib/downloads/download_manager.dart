@@ -5,6 +5,7 @@ import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 
+import '../app_directories.dart';
 import '../app_log.dart';
 import '../background_json.dart';
 import '../l10n/l10n.dart';
@@ -115,6 +116,10 @@ class LocalVideo {
 
 /// The download queue: runs up to [maxConcurrent] yt-dlp processes, keeps the
 /// list in [file] and finds the downloaded files for playback.
+class _NoList {
+  const _NoList();
+}
+
 class DownloadManager extends ChangeNotifier {
   DownloadManager({
     required this.file,
@@ -209,6 +214,7 @@ class DownloadManager extends ChangeNotifier {
 
   Future<void> load() async {
     try {
+      if (!await file.exists()) throw const _NoList();
       final data = jsonDecode(await file.readAsString());
       if (data is Map) {
         final dir = data['directory']?.toString();
@@ -222,8 +228,10 @@ class DownloadManager extends ChangeNotifier {
           tasks.add(task);
         }
       }
-    } catch (_) {
-      // No list yet, or an unreadable one: start empty.
+    } on _NoList {
+      // No list yet: start empty.
+    } catch (e) {
+      await setBrokenFileAside(file, e);
     }
     notifyListeners();
     _pump();
@@ -252,8 +260,7 @@ class DownloadManager extends ChangeNotifier {
 
   Future<void> _write() async {
     try {
-      await file.parent.create(recursive: true);
-      await file.writeAsString(jsonEncode({'directory': _directory, 'defaults': _defaults.toJson(), 'tasks': tasks.map((t) => t.toJson()).toList()}), flush: true);
+      await writeFileAtomic(file, jsonEncode({'directory': _directory, 'defaults': _defaults.toJson(), 'tasks': tasks.map((t) => t.toJson()).toList()}));
     } on FileSystemException catch (e) {
       logError('Could not save the download list', e);
     }

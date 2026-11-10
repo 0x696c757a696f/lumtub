@@ -220,6 +220,7 @@ void main() {
 
     test('remembers when each video was watched across restarts', () async {
       expect(history.watched.keys, containsAll(videos.map((v) => v.id)));
+      await history.flush();
       final again = HistoryStore(history.directories);
       await again.initialize();
       expect(again.watched[videos.first.id]!.difference(history.watched[videos.first.id]!).inSeconds.abs(), lessThan(1));

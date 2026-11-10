@@ -61,8 +61,9 @@ Future<void> main() async {
     store = AppearanceSettingsStore(directories);
     appearance = await store.load();
     await SkinLibrary.instance.load(folder: directories.skins);
-  } catch (_) {
+  } catch (e) {
     // Directories are created again, with errors reported, during startup.
+    logWarn('Startup could not load the settings or skins: $e');
   }
   setLanguage(appearance.language);
   runApp(LumtubApp(controller: AppController(appearance: appearance, appearanceStore: store)));

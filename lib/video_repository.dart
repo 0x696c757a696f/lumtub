@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'app_directories.dart';
+import 'app_log.dart';
 import 'background_json.dart';
 import 'live_chat_repository.dart';
 import 'models.dart';
@@ -481,6 +482,9 @@ class VideoRepository {
   }
 }
 
+/// How many watched videos the history keeps.
+const historyLimit = 5000;
+
 class HistoryStore {
   final AppDirectories directories;
   HistoryStore(this.directories);
@@ -490,73 +494,97 @@ class HistoryStore {
   /// When each video in [items] was last played, by id; entries saved by
   /// an older Lumtub have none.
   final Map<String, DateTime> watched = {};
+  final _writes = WriteQueue();
+  Timer? _saveTimer;
 
   Future<void> initialize() async {
     file = File('${directories.data.path}${Platform.pathSeparator}watch_history.json');
     if (!await file.exists()) return;
     try {
       final data = await decodeJsonInBackground(await file.readAsString());
-      if (data is List) {
-        for (final value in data) {
-          try {
-            if (value is Map<String, dynamic>) {
-              final item = VideoItem.fromJson(value);
-              items.add(item);
-              if (DateTime.tryParse('${value['watched_at'] ?? ''}') case final at?) watched[item.id] = at.toLocal();
-            }
-          } catch (_) {}
+      if (data is! List) throw const FormatException('The history is not a list');
+      for (final value in data) {
+        try {
+          if (value is Map<String, dynamic>) {
+            final item = VideoItem.fromJson(value);
+            items.add(item);
+            if (DateTime.tryParse('${value['watched_at'] ?? ''}') case final at?) watched[item.id] = at.toLocal();
+          }
+        } catch (e) {
+          logWarn('Skipped an unreadable history entry: $e');
         }
       }
-    } catch (_) {}
+      if (items.length > historyLimit) items.removeRange(historyLimit, items.length);
+    } catch (e) {
+      items.clear();
+      watched.clear();
+      await setBrokenFileAside(file, e);
+    }
   }
 
-  Future<void> clear() async {
+  Future<void> clear() {
     items.clear();
     watched.clear();
-    await file.writeAsString('[]', flush: true);
+    return _saveNow();
   }
 
   /// Forgets the videos with these ids.
-  Future<void> remove(Set<String> ids) async {
+  Future<void> remove(Set<String> ids) {
     items.removeWhere((item) => ids.contains(item.id));
     watched.removeWhere((id, _) => ids.contains(id));
-    await _write();
+    return _saveNow();
   }
 
-  Future<void> _write() => file.writeAsString(
-      jsonEncode([
-        for (final item in items) {...item.toJson(), if (watched[item.id] case final at?) 'watched_at': at.toUtc().toIso8601String()},
-      ]),
-      flush: true);
-
   /// Sets the live status of the videos with these ids.
-  Future<void> setLiveStatus(Map<String, String?> states) async {
+  Future<void> setLiveStatus(Map<String, String?> states) {
     for (final (i, item) in items.indexed) {
       if (states.containsKey(item.id)) items[i] = item.withLiveStatus(states[item.id]);
     }
-    await _write();
+    return _saveNow();
   }
 
-  Future<void> record(VideoItem item) async {
+  /// Puts [item] first. The file follows after a moment, so videos played
+  /// one after another are one write; [flush] writes it at once.
+  Future<void> record(VideoItem item) {
     items.removeWhere((other) => other.id == item.id);
     items.insert(0, item);
     watched[item.id] = DateTime.now();
-    if (items.length > 60) {
-      for (final old in items.skip(60)) {
+    if (items.length > historyLimit) {
+      for (final old in items.skip(historyLimit)) {
         watched.remove(old.id);
       }
-      items.removeRange(60, items.length);
+      items.removeRange(historyLimit, items.length);
     }
-    await _write();
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 300), () => unawaited(_saveNow()));
+    return Future.value();
   }
 
   /// Gives a remembered video the length its player found, when the list
   /// it came from had none.
-  Future<void> fillDuration(String id, int seconds) async {
+  Future<void> fillDuration(String id, int seconds) {
     final at = items.indexWhere((item) => item.id == id);
-    if (at < 0 || items[at].duration != null) return;
+    if (at < 0 || items[at].duration != null) return Future.value();
     items[at] = items[at].withDuration(seconds);
-    await _write();
+    return _saveNow();
+  }
+
+  /// Completes when every change so far is on disk.
+  Future<void> flush() => _saveNow();
+
+  /// The text is made when the write's turn comes, so it is the latest state.
+  Future<void> _saveNow() {
+    _saveTimer?.cancel();
+    _saveTimer = null;
+    return _writes.run(() async {
+      try {
+        await writeFileAtomic(file, jsonEncode([
+          for (final item in items) {...item.toJson(), if (watched[item.id] case final at?) 'watched_at': at.toUtc().toIso8601String()},
+        ]));
+      } catch (e) {
+        logError('Could not save the watch history', e);
+      }
+    });
   }
 }
 

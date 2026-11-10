@@ -933,16 +933,20 @@ class PlayerSettingsStore {
   PlayerSettingsStore(AppDirectories directories) : file = File('${directories.config.path}${Platform.pathSeparator}player_settings.json');
 
   Future<PlayerSettings> load() async {
+    if (!await file.exists()) return const PlayerSettings();
     try {
       return PlayerSettings.fromJson(jsonDecode(await file.readAsString()));
-    } catch (_) {
+    } catch (e) {
+      await setBrokenFileAside(file, e);
       return const PlayerSettings();
     }
   }
 
-  Future<void> save(PlayerSettings settings) async {
-    await file.parent.create(recursive: true);
-    await file.writeAsString(jsonEncode(settings.toJson()), flush: true);
+  final _writes = WriteQueue();
+
+  Future<void> save(PlayerSettings settings) {
+    final text = jsonEncode(settings.toJson());
+    return _writes.run(() => writeFileAtomic(file, text));
   }
 }
 

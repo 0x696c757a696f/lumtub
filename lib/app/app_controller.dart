@@ -404,7 +404,9 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (platform is! NativePlayer) return;
     try {
       await platform.setProperty('video-crop', '');
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'Could not reset the video crop: $e');
+    }
   }
 
   /// The TV or Chromecast the video is cast to, if any.
@@ -3184,6 +3186,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     _countWatchTime(flush: true);
     await (watchTime?.save() ?? Future.value(), channelPlayback?.save() ?? Future.value()).wait;
     await library?.flush();
+    await _history?.flush();
     await downloads?.flush();
     await _translationCache.save();
     await _flushAppearance();

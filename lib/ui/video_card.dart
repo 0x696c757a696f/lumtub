@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
 
@@ -160,8 +161,20 @@ class SliverVideoGrid extends StatelessWidget {
   }
 }
 
-/// What [SliverVideoGrid.watched] shows for each time: "3 days ago".
-Map<String, String> watchedLabels(Map<String, DateTime> times) => {for (final MapEntry(:key, :value) in times.entries) key: formatAgo(value)};
+/// What [SliverVideoGrid.watched] shows for each time: "3 days ago", made
+/// only for the cards asked about, so a long history costs nothing extra.
+Map<String, String> watchedLabels(Map<String, DateTime> times) => _WatchedLabels(times);
+
+class _WatchedLabels extends UnmodifiableMapBase<String, String> {
+  _WatchedLabels(this._times);
+  final Map<String, DateTime> _times;
+
+  @override
+  String? operator [](Object? key) => switch (_times[key]) { final at? => formatAgo(at), null => null };
+
+  @override
+  Iterable<String> get keys => _times.keys;
+}
 
 /// A video as one row of a list: a small thumbnail or none, the title, the
 /// channel and views, for 列表 and 纯文字. Fewer and smaller pictures than

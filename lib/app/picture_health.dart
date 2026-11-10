@@ -212,7 +212,9 @@ extension PictureHealth on AppController {
       if (settings.customOptions.containsKey(key)) continue;
       try {
         await platform.setProperty(key, value);
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'Could not set the mpv option $key: $e');
+      }
     }
     _refitCrop(player);
     logInfo(reason == 'battery' ? 'On battery; scaling switched to the fast kind' : 'Scaling switched to the fast kind');

@@ -77,7 +77,9 @@ class BlockListUpdates {
         for (final f in [file, sig]) {
           try {
             await f.delete();
-          } catch (_) {}
+          } catch (e) {
+            logDebug(() => 'Could not delete a block list file: $e');
+          }
         }
         final json = answer == null ? null : jsonDecode(answer);
         if (json is! Map<String, dynamic>) throw const FormatException('lumtub_core did not answer');

@@ -79,7 +79,9 @@ extension SmokeCheck on AppController {
     }
     try {
       await shutdown(install: false).timeout(const Duration(seconds: 20));
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'Shutdown after the smoke check failed: $e');
+    }
     exit(0);
   }
 
@@ -351,7 +353,9 @@ extension SmokeCheck on AppController {
     await out.writeAsString(text);
     try {
       await shutdown(install: false).timeout(const Duration(seconds: 20));
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'Shutdown after the smoke check failed: $e');
+    }
     exit(passed ? 0 : 1);
   }
 
@@ -374,7 +378,9 @@ extension SmokeCheck on AppController {
       for (final name in ['hwdec-current', 'video-codec', 'current-vo', 'current-ao', 'path']) {
         try {
           result[name] = await native.getProperty(name);
-        } catch (_) {}
+        } catch (e) {
+          logDebug(() => 'Could not read an mpv property for the smoke check ($name): $e');
+        }
       }
     }
     try {

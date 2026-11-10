@@ -14,7 +14,9 @@ extension LifecycleActions on AppController {
       // folder and read-only under Program Files.
       try {
         Directory.current = directories.cache;
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'Could not change the working directory: $e');
+      }
       await AppLog.open(directories.logs);
       logInfo('Lumtub $appVersion started · ${Platform.operatingSystemVersion}');
       final history = HistoryStore(directories);
@@ -57,7 +59,9 @@ extension LifecycleActions on AppController {
       if (!Platform.isWindows && player.platform is NativePlayer) {
         try {
           manager.mpvVersion = await (player.platform as NativePlayer).getProperty('mpv-version');
-        } catch (_) {}
+        } catch (e) {
+          logDebug(() => 'Could not read the mpv version: $e');
+        }
       }
       _applied = settings;
       // Compiled shaders are kept between runs, so a video's first frame
@@ -68,7 +72,9 @@ extension LifecycleActions on AppController {
         try {
           shaders.createSync(recursive: true);
           await platform.setProperty('gpu-shader-cache-dir', shaders.path);
-        } catch (_) {}
+        } catch (e) {
+          logDebug(() => 'Could not set up the shader cache folder: $e');
+        }
       }
       _lightRendering = null;
       await _applyProxy(player);

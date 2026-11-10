@@ -168,7 +168,9 @@ class AiFilter extends ChangeNotifier {
           if (labelsPath != null && File(labelsPath).existsSync()) {
             labels = (jsonDecode(File(labelsPath).readAsStringSync()) as Map<String, dynamic>).map((k, v) => MapEntry(k, v == true));
           }
-        } catch (_) {}
+        } catch (e) {
+          logDebug(() => 'No cached AI labels were read: $e');
+        }
         try {
           if (channelsPath != null && File(channelsPath).existsSync()) {
             final file = File(channelsPath);
@@ -178,7 +180,9 @@ class AiFilter extends ChangeNotifier {
                 : {'killslop': [for (final c in kept as List) c.toString()]};
             fetched = kept is Map ? file.lastModifiedSync() : null;
           }
-        } catch (_) {}
+        } catch (e) {
+          logDebug(() => 'No cached AI channel list was read: $e');
+        }
         return (labels, listed, fetched);
       });
       _labels = labels;

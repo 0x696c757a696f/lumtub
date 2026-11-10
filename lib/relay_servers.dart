@@ -150,7 +150,9 @@ abstract class RelayServers {
       ];
       _catalogAt = DateTime.tryParse('${data['updated']}') ?? DateTime(0);
       _lastGood = normalize('${data['last']}');
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'The relay catalog could not be read: $e');
+    }
   }
 
   /// Probes [servers], the last one that worked first, at most
@@ -164,7 +166,9 @@ abstract class RelayServers {
       try {
         final response = await client.get(healthUrl(server)).timeout(const Duration(seconds: 5));
         if (isHealthy(response)) _timings[server] = watch.elapsedMilliseconds;
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'Relay health check failed: $e');
+      }
       _tried.add(server);
     });
   }

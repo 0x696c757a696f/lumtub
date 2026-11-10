@@ -7,6 +7,7 @@ import 'dart:isolate';
 import 'package:ffi/ffi.dart';
 
 import 'native_core.dart';
+import 'app_log.dart';
 
 /// 观看统计: how long videos played each day, per channel, kept in
 /// `data/watch_time.json` on this computer only.
@@ -73,7 +74,9 @@ class WatchTime {
       final temp = File('${file.path}.tmp');
       await temp.writeAsString(jsonEncode({'days': _days, 'names': _names}), flush: true);
       await temp.rename(file.path);
-    } catch (_) {}
+    } catch (e) {
+      logWarn('Could not save the watch time: $e');
+    }
   }
 
   /// Totals for 观看统计 over the last [span] days, worked out by

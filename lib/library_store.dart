@@ -4,6 +4,7 @@ import 'dart:io';
 import 'background_json.dart';
 import 'models.dart';
 import 'l10n/l10n.dart';
+import 'app_log.dart';
 
 /// How far into a video playback stopped.
 class WatchProgress {
@@ -107,7 +108,9 @@ class LibraryStore {
     for (final value in raw is List ? raw : const []) {
       try {
         if (value is Map<String, dynamic>) items.add(VideoItem.fromJson(value));
-      } catch (_) {}
+      } catch (e) {
+        logWarn('Skipped a library item that could not be read: $e');
+      }
     }
     return items;
   }

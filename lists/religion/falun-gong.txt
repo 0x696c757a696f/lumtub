@@ -10,8 +10,8 @@
 :li-hongzhi | ^李洪志 | ^Li Hongzhi
 :minghui | @MinghuiTV | ^明慧网 | ^明慧網 | ^Minghui | ^明慧
 :shen-yun | @shenyun | ^神韵艺术团 | ^神韻藝術團 | ^Shen Yun | ^神韵 | ^神韻
-:epoch-times | @epochtimesdigital | ^大纪元 | ^大紀元 | ^The Epoch Times | ^Epoch Times | ^EpochTV | ^Epoch Health
-:ntd | UCdbvc-yJ4JQjNGTgFiJIZNA | @NTDCHINESE | @NTDSpanish | ^新唐人 | ^NTD Television | ^NTD
+:epoch-times | ^大纪元 | ^大紀元 | ^The Epoch Times | ^Epoch Times | ^EpochTV | ^Epoch Health
+:ntd | UCdbvc-yJ4JQjNGTgFiJIZNA | @NTDCHINESE | ^新唐人 | ^NTD Television | ^NTD
 :epoch-headlines | ^纪元头条 | ^紀元頭條
 :jinwen | ^中国禁闻 | ^中國禁聞
 :news-decoded | UCHY4xOBo9z03nceB6Pl-yzg | @News_Insight | ^新闻大破解 | ^新聞大破解
@@ -27,7 +27,7 @@
 :facts-matter | @FactsMatterRoman | ^Facts Matter
 :american-thought-leaders | UCmWhuFRkZKu0g-e1xrlakVA | @AmericanThoughtLeaders | ^American Thought Leaders
 :china-observer | @ChinaObserver0 | ^China Observer
-:china-insights | @chinainsights4458 | ^China Insights
+:china-insights | ^China Insights
 :hot-topic-dialogue | UCAa9oah8kGEDteKSHKVhK0A | @%E7%83%AD%E7%82%B9%E4%BA%92%E5%8A%A8-s8f | ^热点互动 | ^熱點互動
 :mainland-news-analysis | ^大陆新闻解读 | ^大陸新聞解讀
 :china-decoded | ^中国解密 | ^中國解密

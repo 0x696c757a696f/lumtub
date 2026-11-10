@@ -22,8 +22,61 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # A release tag points at a commit main has normally built already, with the
+  # same version and the same keys: its packages are signed and published
+  # instead of building everything a second time.
+  reuse:
+    name: Reuse main's build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      run: ${{ steps.find.outputs.run }}
+    steps:
+      - name: Find main's finished build of this commit
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          runs() {
+            gh api "repos/$GITHUB_REPOSITORY/actions/workflows/build.yml/runs?branch=main&event=push&head_sha=$GITHUB_SHA&per_page=5" \
+              --jq '.workflow_runs | sort_by(.created_at) | reverse | .[0] // empty | "\(.id) \(.status) \(.conclusion)"'
+          }
+          # The build main started for this commit may still be running; wait
+          # for it. A commit main never built (a version bump pushed by the
+          # release workflow) is built here.
+          deadline=$(( $(date +%s) + 90 * 60 ))
+          seen=$(date +%s)
+          while :; do
+            read -r id status conclusion <<< "$(runs || true)"
+            if [[ -z "${id:-}" ]]; then
+              (( $(date +%s) - seen < 180 )) || { echo "main has no build of $GITHUB_SHA; building here."; exit 0; }
+            elif [[ "$status" == completed ]]; then
+              break
+            fi
+            (( $(date +%s) < deadline )) || { echo "main's build $id is still $status; building here."; exit 0; }
+            sleep 60
+          done
+          if [[ "$conclusion" != success ]]; then
+            echo "main's build $id ended $conclusion; building here."
+            exit 0
+          fi
+          # Every package the release publishes: 3 Windows CPUs x 2, 2 AppImages, 2 DMGs, the APKs.
+          names=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts?per_page=100" \
+            --jq '[.artifacts[] | select(.expired | not) | .name | select(test("^Lumtub-(windows|linux|macos|android)-"))] | length')
+          if (( names != 11 )); then
+            echo "main's build $id has $names of 11 packages; building here."
+            exit 0
+          fi
+          echo "Reusing the packages of main's build $id."
+          echo "run=$id" >> "$GITHUB_OUTPUT"
+
   windows:
     name: Windows ${{ matrix.package_arch }}
+    needs: reuse
+    if: ${{ !cancelled() && needs.reuse.outputs.run == '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -467,6 +520,8 @@ jobs:
 
   linux:
     name: Linux ${{ matrix.package_arch }}
+    needs: reuse
+    if: ${{ !cancelled() && needs.reuse.outputs.run == '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -746,6 +801,8 @@ jobs:
 
   macos:
     name: macOS
+    needs: reuse
+    if: ${{ !cancelled() && needs.reuse.outputs.run == '' }}
     # Pinned like the others; Apple silicon, building once for both CPUs and
     # packing a DMG thinned to each.
     runs-on: macos-15
@@ -918,6 +975,8 @@ jobs:
 
   android:
     name: Android
+    needs: reuse
+    if: ${{ !cancelled() && needs.reuse.outputs.run == '' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -1101,10 +1160,12 @@ jobs:
 
   release:
     name: Release
-    needs: [windows, linux, macos, android]
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [reuse, windows, linux, macos, android]
+    # Skipped builds (reused from main) are not failures.
+    if: ${{ !cancelled() && !failure() && startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -1112,11 +1173,34 @@ jobs:
           sparse-checkout: |
             release-notes
             native/lumtub_core
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+      - name: Packages built here
+        if: needs.reuse.outputs.run == ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           path: dist
           pattern: Lumtub-{windows,linux,macos,android}-*
           merge-multiple: true
+      - name: Packages main built
+        if: needs.reuse.outputs.run != ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          path: dist
+          pattern: Lumtub-{windows,linux,macos,android}-*
+          merge-multiple: true
+          run-id: ${{ needs.reuse.outputs.run }}
+          github-token: ${{ github.token }}
+      - name: Check the packages carry this version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          # main names its packages <pubspec version>-<commit>, as the tag does.
+          shopt -s nullglob
+          files=(dist/*)
+          (( ${#files[@]} > 0 )) || { echo "::error::No packages"; exit 1; }
+          for f in "${files[@]}"; do
+            [[ "$(basename "$f")" == *"${TAG#v}"* ]] || { echo "::error::$f does not carry ${TAG#v}"; exit 1; }
+          done
+          ls -l dist
       - name: Sign all packages
         env:
           LUMTUB_UPDATE_KEY: ${{ secrets.LUMTUB_UPDATE_KEY }}

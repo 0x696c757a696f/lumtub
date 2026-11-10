@@ -1,6 +1,6 @@
 name: Upstream updates
 
-# Once a week, looks for newer versions of what build.yml pins (libmpv for
+# Once a week, looks for newer versions of what .github/pins.env pins (libmpv for
 # Linux, FFmpeg for macOS, appimagetool). Those go to the deps/upstream
 # branch, Build checks them there, smoke tests included, and Merge
 # dependency updates brings them into main once it passes. The media_kit

@@ -427,11 +427,9 @@ jobs:
           - package_arch: x64
             runner: ubuntu-24.04
             appimage_arch: x86_64
-            appimagetool_sha256: 46fdd785094c7f6e545b61afcfb0f3d98d8eab243f644b4b17698c01d06083d1
           - package_arch: arm64
             runner: ubuntu-24.04-arm
             appimage_arch: aarch64
-            appimagetool_sha256: 04f45ea45b5aa07bb2b071aed9dbf7a5185d3953b11b47358c1311f11ea94a96
     # Pinned, so a new default Ubuntu changes nothing; the build itself runs
     # in Ubuntu 22.04, whose glibc 2.35 sets the oldest Linux the AppImage
     # runs on: the oldest Ubuntu LTS in standard support, as AppImageHub
@@ -441,10 +439,6 @@ jobs:
     env:
       PACKAGE_ARCH: ${{ matrix.package_arch }}
       DEBIAN_FRONTEND: noninteractive
-      # libmpv 0.41 with FFmpeg 9 and libplacebo, built on Ubuntu 22.04 by
-      # jason-yau/mpv-prebuilt's GitHub Actions; the GPL build, which keeps
-      # X11, VA-API and VDPAU. Pinned by checksum.
-      MPV_RELEASE: "20260906162952"
     permissions:
       contents: read
     steps:
@@ -460,9 +454,11 @@ jobs:
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
-      - name: Linux - read the Flutter version
+      - name: Linux - read the Flutter version and the pinned downloads
         shell: bash
-        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
+        run: |
+          echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
+          grep -E '^[A-Z0-9_]+=' .github/pins.env >> "$GITHUB_ENV"
 
       - name: Linux - install Flutter stable SDK
         run: |
@@ -514,10 +510,10 @@ jobs:
       - name: Linux - download libmpv
         run: |
           case "$PACKAGE_ARCH" in
-            x64) arch=x86_64; sum=a5822547f23cd47921c81d878aa3b3d2c76301c5b6b48343c18b6340896f8a0d ;;
-            arm64) arch=arm64; sum=d0ae5dbf8fed6e63353f1d1614c4ee55edb1eac41d625090dbef196027a479ed ;;
+            x64) arch=x86_64; sum=$MPV_SHA256_X86_64 ;;
+            arm64) arch=arm64; sum=$MPV_SHA256_ARM64 ;;
           esac
-          name="libmpv-0.41.0-linux-$arch-gpl-$MPV_RELEASE"
+          name="libmpv-$MPV_VERSION-linux-$arch-gpl-$MPV_RELEASE"
           mkdir -p .linux-downloads
           archive="$PWD/.linux-downloads/$name.tar.gz"
           [ -s "$archive" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$archive" "https://github.com/jason-yau/mpv-prebuilt/releases/download/$MPV_RELEASE/$name.tar.gz"
@@ -558,7 +554,6 @@ jobs:
       - name: Linux - package AppImage
         env:
           APPIMAGE_ARCH: ${{ matrix.appimage_arch }}
-          APPIMAGETOOL_SHA256: ${{ matrix.appimagetool_sha256 }}
         run: |
           bundle="build/linux/$PACKAGE_ARCH/release/bundle"
           # Only here, so the smoke test finds nothing but what the AppImage carries.
@@ -574,8 +569,12 @@ jobs:
             echo "The AppDir needs $newest, newer than Ubuntu 22.04's glibc 2.35." >&2
             exit 1
           fi
-          tool="$PWD/.linux-downloads/appimagetool-$APPIMAGE_ARCH"
-          [ -s "$tool" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$tool" "https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-$APPIMAGE_ARCH.AppImage"
+          case "$APPIMAGE_ARCH" in
+            x86_64) APPIMAGETOOL_SHA256=$APPIMAGETOOL_SHA256_X86_64 ;;
+            aarch64) APPIMAGETOOL_SHA256=$APPIMAGETOOL_SHA256_AARCH64 ;;
+          esac
+          tool="$PWD/.linux-downloads/appimagetool-$APPIMAGETOOL_VERSION-$APPIMAGE_ARCH"
+          [ -s "$tool" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$tool" "https://github.com/AppImage/appimagetool/releases/download/$APPIMAGETOOL_VERSION/appimagetool-$APPIMAGE_ARCH.AppImage"
           echo "$APPIMAGETOOL_SHA256  $tool" | sha256sum -c -
           chmod +x "$tool"
           # No FUSE in the container: the tool unpacks itself and runs.
@@ -697,11 +696,6 @@ jobs:
     # Pinned like the others; Apple silicon, building once for both CPUs and
     # packing a DMG thinned to each.
     runs-on: macos-15
-    env:
-      # An LGPL ffmpeg from https://github.com/dfloresc/ffmpeg-macos-builds
-      # that makes the smoke test's video (the app carries none); sum from
-      # its SHA256SUMS.
-      FFMPEG_RELEASE: v9.0.1-1
     permissions:
       contents: read
     steps:
@@ -710,9 +704,11 @@ jobs:
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
-      - name: macOS - read the Flutter version
+      - name: macOS - read the Flutter version and the pinned downloads
         shell: bash
-        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
+        run: |
+          echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
+          grep -E '^[A-Z0-9_]+=' .github/pins.env >> "$GITHUB_ENV"
 
       - name: macOS - install Flutter stable SDK
         run: |
@@ -775,7 +771,7 @@ jobs:
         run: |
           name="ffmpeg-${FFMPEG_RELEASE#v}-lgpl-macos-arm64"
           curl -sSfL --retry 4 -o "$RUNNER_TEMP/$name.tar.xz" "https://github.com/dfloresc/ffmpeg-macos-builds/releases/download/$FFMPEG_RELEASE/$name.tar.xz"
-          echo "d0ea5ea43a5adfa5d01d4137c9e5a61728b800a812f12917a26fd7af0c14c03a  $RUNNER_TEMP/$name.tar.xz" | shasum -a 256 -c -
+          echo "$FFMPEG_ARM64_SHA256  $RUNNER_TEMP/$name.tar.xz" | shasum -a 256 -c -
           tar -xJf "$RUNNER_TEMP/$name.tar.xz" -C "$RUNNER_TEMP"
           echo "FFMPEG=$RUNNER_TEMP/$name/bin/ffmpeg" >> "$GITHUB_ENV"
 

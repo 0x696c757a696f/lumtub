@@ -369,8 +369,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     );
   }
 
-  Widget _lockButton() => Positioned(
-        left: 12,
+  Widget _lockButton() => PositionedDirectional(
+        start: 12,
         top: 0,
         bottom: 0,
         child: Center(
@@ -489,7 +489,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                   ),
                 _buffering(),
                 if (_feedback case (final icon, final text)) Center(child: IgnorePointer(child: _FeedbackBubble(icon: icon, text: text))),
-                if (_controller.showStats) Positioned(left: 12, top: fullscreen ? 64 : 52, child: PlayerStats(player: _player)),
+                if (_controller.showStats) PositionedDirectional(start: 12, top: fullscreen ? 64 : 52, child: PlayerStats(player: _player)),
                 if (_controller.preferences.progressLine.shows(fullscreen: fullscreen))
                   Positioned(
                     left: 0,
@@ -617,7 +617,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     }
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(fullscreen ? 8 : 4, fullscreen ? 8 : 4, 8, 16),
+      padding: EdgeInsetsDirectional.fromSTEB(fullscreen ? 8 : 4, fullscreen ? 8 : 4, 8, 16),
       child: Row(children: [
         _IconButton(
           tooltip: fullscreen ? tr('Exit fullscreen') : tr('Back'),
@@ -751,7 +751,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                     style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
                   ),
           ),
-          Expanded(child: Align(alignment: Alignment.centerLeft, child: _chapterMenu())),
+          Expanded(child: Align(alignment: AlignmentDirectional.centerStart, child: _chapterMenu())),
           _danmakuButtons(width),
           _subtitleMenu(width),
           StreamBuilder<double>(

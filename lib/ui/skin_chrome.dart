@@ -567,7 +567,7 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
                 ),
             ],
           )),
-          if (widget.clock) Padding(padding: const EdgeInsets.only(right: 10), child: _Clock(color: bar.text)),
+          if (widget.clock) Padding(padding: const EdgeInsetsDirectional.only(end: 10), child: _Clock(color: bar.text)),
         ]),
       ),
     );

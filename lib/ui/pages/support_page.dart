@@ -173,7 +173,7 @@ class _AddressRow extends StatelessWidget {
     return InkWell(
       onTap: () => copyText(context, address.address, tr('Address copied')),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8),
         child: Row(children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

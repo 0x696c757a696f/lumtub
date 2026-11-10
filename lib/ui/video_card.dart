@@ -175,15 +175,8 @@ class VideoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final text = layout == VideoLayout.text;
-    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
     final status = item.isLive ? tr('Live now') : item.isUpcoming ? tr('Upcoming live') : null;
-    final meta = [
-      if (upcomingStart != null) upcomingStart,
-      if (item.channel.isNotEmpty) item.channel,
-      if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
-      if (!item.isLive && !item.isUpcoming && item.published != null) formatAgo(item.published!),
-      if (text && status == null && item.durationLabel.isNotEmpty) item.durationLabel,
-    ].join(' · ');
+    final meta = MetaLine.of(item, extra: text && status == null && item.durationLabel.isNotEmpty ? item.durationLabel : null, style: TextStyle(fontSize: 12, color: colors.outline));
     return InkWell(
       borderRadius: AppStyle.controlRadius,
       onTap: onOpen,
@@ -232,7 +225,7 @@ class VideoRow extends StatelessWidget {
                 Text(tr('Members only'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2BA640))),
                 const SizedBox(width: Space.s),
               ],
-              Expanded(child: Text(meta.isEmpty ? 'YouTube' : meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline))),
+              Expanded(child: meta),
             ]),
             if (reason case final reason? when reason.isNotEmpty)
               Padding(
@@ -485,13 +478,7 @@ class _VideoCardState extends State<VideoCard> {
     final item = widget.item;
     _branding = _brandingNow();
     final colors = context.colors;
-    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
-    final meta = [
-      if (upcomingStart != null) upcomingStart,
-      if (item.channel.isNotEmpty) item.channel,
-      if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
-      if (!item.isLive && !item.isUpcoming && item.published != null) formatAgo(item.published!),
-    ].join(' · ');
+    final meta = MetaLine.of(item, style: TextStyle(fontSize: 12, color: colors.outline));
     // A picture and text on the page, as YouTube shows them: no box round,
     // unless a skin puts cards on a surface.
     final skin = context.skin;
@@ -572,7 +559,7 @@ class _VideoCardState extends State<VideoCard> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Flexible(child: Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
               const SizedBox(height: Space.xs),
-              Text(meta.isEmpty ? 'YouTube' : meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
+              meta,
               if (widget.reason case final reason?)
                 SizedBox(
                   height: _reasonHeight,
@@ -975,4 +962,42 @@ Future<String?> promptText(BuildContext context, {required String title, require
 Offset _centreOf(BuildContext context) {
   final box = context.findRenderObject() as RenderBox?;
   return box == null ? Offset.zero : box.localToGlobal(box.size.center(Offset.zero));
+}
+
+/// A video's channel, then its views and upload date, on one line: a long
+/// channel name is shortened first, so the views and date stay in sight.
+class MetaLine extends StatelessWidget {
+  const MetaLine({super.key, required this.lead, required this.tail, required this.style});
+
+  factory MetaLine.of(VideoItem item, {String? extra, required TextStyle style}) {
+    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
+    return MetaLine(
+      lead: [if (upcomingStart != null) upcomingStart, if (item.channel.isNotEmpty) item.channel].join(' · '),
+      tail: [
+        if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
+        if (!item.isLive && !item.isUpcoming && item.published != null) formatAgo(item.published!),
+        if (extra != null) extra,
+      ].join(' · '),
+      style: style,
+    );
+  }
+
+  final String lead;
+  final String tail;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    if (lead.isEmpty && tail.isEmpty) return Text('YouTube', maxLines: 1, style: style);
+    return LayoutBuilder(
+      builder: (context, box) => Row(children: [
+        if (lead.isNotEmpty) Flexible(child: Text(lead, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style)),
+        if (tail.isNotEmpty)
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: box.maxWidth),
+            child: Text(lead.isEmpty ? tail : ' · $tail', maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style),
+          ),
+      ]),
+    );
+  }
 }

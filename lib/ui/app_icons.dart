@@ -268,6 +268,7 @@ abstract final class AppIcons {
   static const stackSimpleFill = IconData(0xe468, fontFamily: 'Phosphor Fill');
   static IconData get star => filled ? const IconData(0xe46a, fontFamily: 'Phosphor Fill') : const IconData(0xe46a, fontFamily: 'Phosphor');
   static const starFill = IconData(0xe46a, fontFamily: 'Phosphor Fill');
+  static IconData get stop => filled ? const IconData(0xe46c, fontFamily: 'Phosphor Fill') : const IconData(0xe46c, fontFamily: 'Phosphor');
   static IconData get subtitles => filled ? const IconData(0xe1a8, fontFamily: 'Phosphor Fill') : const IconData(0xe1a8, fontFamily: 'Phosphor');
   static IconData get subtitlesSlash => filled ? const IconData(0xe1a6, fontFamily: 'Phosphor Fill') : const IconData(0xe1a6, fontFamily: 'Phosphor');
   static IconData get sun => filled ? const IconData(0xe472, fontFamily: 'Phosphor Fill') : const IconData(0xe472, fontFamily: 'Phosphor');

@@ -9,33 +9,49 @@
 use std::ffi::c_char;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use serde::Deserialize;
 
 use crate::cast::{Ask, Kind, Session};
 use crate::cast_webm;
+use crate::record::Unindexed;
 use crate::relay::{Fetch, Target};
 use crate::taste::{give, text};
 
 /// Local files read like YouTube's streams: the address is the path and
-/// the byte range comes after `&range=`.
-struct Files;
+/// the byte range comes after `&range=`. A recorded live stream is read
+/// with the index it lacks ([crate::record]).
+#[derive(Default)]
+struct Files(HashMap<String, Unindexed>);
 
 impl Fetch for Files {
     fn get(&self, _: &Target, url: &str) -> Result<(u16, Box<dyn Read + Send>), String> {
         let (path, range) = url.rsplit_once("&range=").ok_or("no range")?;
         let (from, to) = range.split_once('-').ok_or("bad range")?;
         let (from, to): (u64, u64) = (from.parse().map_err(|_| "bad range")?, to.parse().map_err(|_| "bad range")?);
+        if let Some(seen) = self.0.get(path) {
+            return Ok((206, seen.read(path, from, to)?));
+        }
         let mut file = File::open(path).map_err(|e| e.to_string())?;
         file.seek(SeekFrom::Start(from)).map_err(|e| e.to_string())?;
         Ok((206, Box::new(file.take((to + 1).saturating_sub(from)))))
     }
 }
 
-fn target(path: &str) -> Result<Target, String> {
-    let size = std::fs::metadata(path).map_err(|e| format!("{path}: {e}"))?.len();
-    Ok(Target { url: path.to_string(), size, user_agent: None, mime: None, proxy: None, chunk: 8 << 20, live: None })
+impl Files {
+    fn target(&mut self, path: &str) -> Result<Target, String> {
+        let size = match crate::record::unindexed(path)? {
+            Some(seen) => {
+                let size = seen.len();
+                self.0.insert(path.to_string(), seen);
+                size
+            }
+            None => std::fs::metadata(path).map_err(|e| format!("{path}: {e}"))?.len(),
+        };
+        Ok(Target { url: path.to_string(), size, user_agent: None, mime: None, proxy: None, chunk: 8 << 20, live: None })
+    }
 }
 
 /// Whether the file at `path` is WebM (or other Matroska).
@@ -100,14 +116,16 @@ impl Extra {
 /// and returns that path. The file is written beside as `.part` and
 /// renamed when whole.
 pub fn join(video: &str, audio: &str, stem: &str, container: &str, extra: &Extra) -> Result<Joined, String> {
-    let fetch: Arc<dyn Fetch> = Arc::new(Files);
+    let mut files = Files::default();
+    let (video_target, audio_target) = (files.target(video)?, files.target(audio)?);
+    let fetch: Arc<dyn Fetch> = Arc::new(files);
     let kind = match container {
         "mp4" => Kind::Mp4,
         "webm" | "mkv" => Kind::Mkv,
         _ if is_webm(audio)? => Kind::Mkv,
         _ => Kind::Mp4,
     };
-    let ask = Ask { video: target(video)?, audio: target(audio)?, start_ms: 0, kind, duration_ms: 0, subtitles: None };
+    let ask = Ask { video: video_target, audio: audio_target, start_ms: 0, kind, duration_ms: 0, subtitles: None };
     let mut session = Session::new(ask, &fetch)?;
     if container == "mkv" {
         session = session.plain_matroska();

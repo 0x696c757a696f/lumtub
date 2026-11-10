@@ -124,7 +124,7 @@ pub(crate) fn element(b: &[u8], at: usize) -> Option<Element> {
 
 /// The elements one after another in `b[from..to]`, stopping at one that
 /// does not fit.
-fn children(b: &[u8], from: usize, to: usize) -> Vec<Element> {
+pub(crate) fn children(b: &[u8], from: usize, to: usize) -> Vec<Element> {
     let mut found = Vec::new();
     let mut at = from;
     while at < to {

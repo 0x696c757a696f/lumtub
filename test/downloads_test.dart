@@ -44,6 +44,40 @@ class FakeProcess implements Process {
   IOSink get stdin => throw UnimplementedError();
 }
 
+/// Records by writing a little to each file every call of [state].
+class FakeRecorder implements LiveRecorder {
+  final stems = <String>[];
+  final stopped = <int>[];
+  var _bytes = 0;
+
+  @override
+  Future<int> start(String videoId, String stem) async {
+    stems.add(stem);
+    for (final f in DownloadManager.recordFiles(stem)) {
+      File(f).writeAsStringSync('');
+    }
+    return stems.length;
+  }
+
+  @override
+  ({int bytes, bool running, bool renew, String? error}) state(int id) {
+    for (final f in DownloadManager.recordFiles(stems[id - 1])) {
+      File(f).writeAsStringSync('fragment', mode: FileMode.append);
+    }
+    _bytes += 16;
+    return (bytes: _bytes, running: true, renew: false, error: null);
+  }
+
+  @override
+  Future<void> renew(int id, String videoId) async {}
+
+  @override
+  Future<String?> stop(int id) async {
+    stopped.add(id);
+    return null;
+  }
+}
+
 VideoItem video(String id) => VideoItem(id: id, title: 'Video $id', channel: 'Channel', url: 'https://www.youtube.com/watch?v=$id');
 
 void main() {
@@ -117,7 +151,7 @@ void main() {
     });
 
     final joined = <List<String>>[];
-    DownloadManager manager({List<SkipSegment> segments = const [], Future<Joined> Function(JoinRequest request)? join, Future<List<int>?> Function(String id)? cover, bool cutSponsors = false}) => _track(managers, DownloadManager(
+    DownloadManager manager({List<SkipSegment> segments = const [], Future<Joined> Function(JoinRequest request)? join, Future<List<int>?> Function(String id)? cover, bool cutSponsors = false, LiveRecorder? recorder}) => _track(managers, DownloadManager(
           file: File('${dir.path}/downloads.json'),
           ytDlpPath: 'yt-dlp',
           defaultDirectory: '${dir.path}/videos',
@@ -133,6 +167,7 @@ void main() {
           onFinished: finished.add,
           join: join,
           cover: cover,
+          recorder: recorder,
         ));
 
     Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 80));
@@ -365,6 +400,61 @@ void main() {
       expect(local.info['duration'], 94);
       expect([for (final c in local.info['chapters'] as List) [c['title'], c['start_time'], c['end_time']]], [['One', 0, 12], ['Two', 12, 94]]);
       expect([for (final s in local.segments) (s.start, s.end, s.category)], [(sec * 10, sec * 14, 'sponsor'), (sec * 44, sec * 54, 'selfpromo')]);
+    });
+
+    test('a live stream is recorded until stopped, then joined into its file', () async {
+      final recorder = FakeRecorder();
+      final requests = <JoinRequest>[];
+      final m = manager(recorder: recorder, join: (r) async {
+        requests.add(r);
+        final out = '${r.stem}.mp4';
+        File(out).writeAsStringSync('joined');
+        return (path: out, error: null, cut: const <(Duration, Duration)>[]);
+      });
+      expect(m.canRecord, isTrue);
+      // Recordings take no download place.
+      m.add(video('aaaaaaaaaaa'), DownloadQuality.best);
+      m.add(video('bbbbbbbbbbb'), DownloadQuality.best);
+      m.add(video('lllllllllll').withLiveStatus('is_live'), DownloadQuality.best);
+      final task = m.taskFor('lllllllllll')!;
+      await until(() => recorder.stems.isNotEmpty && task.downloaded > 0);
+      expect(processes, hasLength(2));
+      expect(task.status, DownloadStatus.downloading);
+      final stem = recorder.stems.single;
+      expect(stem, startsWith('${dir.path}/videos/Video lllllllllll [lllllllllll] '));
+      m.pause('lllllllllll');
+      await until(() => task.status == DownloadStatus.done);
+      expect(recorder.stopped, [1]);
+      expect(requests.single.video, '$stem.live-video.part');
+      expect(requests.single.audio, '$stem.live-audio.part');
+      expect(task.filePath, '$stem.mp4');
+      expect(task.item.isLive, isFalse);
+      expect(File('$stem.live-video.part').existsSync(), isFalse);
+      expect(LocalVideo.read(File('$stem.mp4')).info['was_live'], isTrue);
+    });
+
+    test('a recording left by a closed Lumtub is joined, not recorded again', () async {
+      final recorder = FakeRecorder();
+      final stem = '${dir.path}/videos/Old [lllllllllll] 2026-11-10 08-00';
+      for (final f in DownloadManager.recordFiles(stem)) {
+        File(f)
+          ..createSync(recursive: true)
+          ..writeAsStringSync('data');
+      }
+      File('${dir.path}/downloads.json').writeAsStringSync(jsonEncode({
+        'tasks': [
+          (DownloadTask(item: video('lllllllllll').withLiveStatus('is_live'), quality: DownloadQuality.best, directory: '${dir.path}/videos', status: DownloadStatus.downloading, filePath: stem)).toJson(),
+        ],
+      }));
+      final m = manager(recorder: recorder, join: (r) async {
+        File('${r.stem}.mp4').writeAsStringSync('joined');
+        return (path: '${r.stem}.mp4', error: null, cut: const <(Duration, Duration)>[]);
+      });
+      await m.load();
+      final task = m.taskFor('lllllllllll')!;
+      await until(() => task.status == DownloadStatus.done);
+      expect(recorder.stems, isEmpty);
+      expect(task.filePath, '$stem.mp4');
     });
 
     test('times move past cut stretches', () {

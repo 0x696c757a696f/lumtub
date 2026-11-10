@@ -34,6 +34,23 @@ class DownloadOptions {
 
 typedef ProcessStarter = Future<Process> Function(String executable, List<String> arguments, {Map<String, String>? environment});
 
+/// Records live streams for the manager: lumtub_core fetching YouTube's
+/// numbered fragments, with the addresses the app resolves.
+abstract interface class LiveRecorder {
+  /// Starts recording live [videoId] into the two [DownloadManager.recordFiles]
+  /// of [stem]; the recording's id.
+  Future<int> start(String videoId, String stem);
+
+  /// How recording [id] goes; [renew] when an address expired.
+  ({int bytes, bool running, bool renew, String? error}) state(int id);
+
+  /// Brings recording [id] of [videoId] new addresses.
+  Future<void> renew(int id, String videoId);
+
+  /// Stops [id] once its files are written; why a stream failed, or null.
+  Future<String?> stop(int id);
+}
+
 /// A downloaded video as playback finds it: the file and what the sidecar
 /// `.info.json` and the neighbouring subtitle files hold.
 class LocalVideo {
@@ -111,6 +128,7 @@ class DownloadManager extends ChangeNotifier {
     this.onFinished,
     this.join,
     this.cover,
+    this.recorder,
   })  : _directory = defaultDirectory,
         _start = start ?? _backgroundStart;
 
@@ -133,6 +151,17 @@ class DownloadManager extends ChangeNotifier {
   final Future<Joined> Function(JoinRequest request)? join;
   /// The cover picture (JPEG) of a video, to put inside a joined file.
   final Future<List<int>?> Function(String videoId)? cover;
+  /// Records live streams; without it (or [join]) they cannot be saved.
+  final LiveRecorder? recorder;
+
+  /// Whether a live stream can be recorded.
+  bool get canRecord => recorder != null && join != null;
+
+  /// The picture and sound files a recording of [stem] writes.
+  static List<String> recordFiles(String stem) => ['$stem.live-video.part', '$stem.live-audio.part'];
+
+  /// Recordings under way: the task's id and the recording's.
+  final _recordings = <String, int>{};
 
   String _directory;
   DownloadDefaults _defaults = const DownloadDefaults();
@@ -315,6 +344,7 @@ class DownloadManager extends ChangeNotifier {
   }
 
   void _stop(String id) {
+    if (_active.contains(id) && (taskFor(id)?.item.isLive ?? false)) _stopping.add(id);
     final process = _processes[id];
     if (process == null) return;
     _stopping.add(id);
@@ -330,11 +360,13 @@ class DownloadManager extends ChangeNotifier {
   /// Starts queued tasks while there are free places.
   void _pump() {
     for (final task in tasks.reversed.toList()) {
-      if (_active.length >= maxConcurrent) return;
       if (task.status != DownloadStatus.queued || _active.contains(task.id)) continue;
+      // A recording runs as long as the live and takes no download's place.
+      final live = task.item.isLive;
+      if (!live && _active.length - _recordings.length >= maxConcurrent) continue;
       _active.add(task.id);
       task.status = DownloadStatus.downloading;
-      unawaited(_run(task));
+      unawaited(live ? _record(task) : _run(task));
     }
   }
 
@@ -379,6 +411,132 @@ class DownloadManager extends ChangeNotifier {
       ],
       '--', task.item.url,
     ];
+  }
+
+  /// Records live [task] until it ends or is stopped, then joins what was
+  /// recorded. A task left recording when Lumtub closed has its files
+  /// joined instead.
+  Future<void> _record(DownloadTask task) async {
+    final id = task.id;
+    final recorder = this.recorder;
+    if (recorder == null || join == null) {
+      task.status = DownloadStatus.failed;
+      task.error = tr('Live streams cannot be downloaded');
+      _active.remove(id);
+      _changed();
+      return;
+    }
+    var stem = task.filePath;
+    final earlier = stem != null && File(recordFiles(stem).first).existsSync();
+    String? error;
+    if (!earlier) {
+      final now = DateTime.now();
+      String two(int n) => '$n'.padLeft(2, '0');
+      final title = task.item.title.replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1F]'), '_').replaceAll(RegExp(r'\s+'), ' ').trim();
+      final short = title.length > 80 ? title.substring(0, 80).trim() : title;
+      stem = '${task.directory}${Platform.pathSeparator}$short [$id] ${now.year}-${two(now.month)}-${two(now.day)} ${two(now.hour)}-${two(now.minute)}';
+      task.filePath = stem;
+      _saveSoon();
+      try {
+        await Directory(task.directory).create(recursive: true);
+        _recordings[id] = await recorder.start(id, stem);
+      } catch (e) {
+        error = '$e';
+      }
+      final recording = _recordings[id];
+      if (recording != null) {
+        var renewing = false;
+        var last = (bytes: 0, at: DateTime.now());
+        while (!_stopping.contains(id)) {
+          await Future<void>.delayed(const Duration(seconds: 1));
+          final state = recorder.state(recording);
+          final now = DateTime.now();
+          final seconds = now.difference(last.at).inMilliseconds / 1000;
+          task.downloaded = state.bytes;
+          task.speed = seconds > 0 ? (state.bytes - last.bytes) / seconds : null;
+          last = (bytes: state.bytes, at: now);
+          progress.value++;
+          if (!state.running) {
+            error = state.error;
+            break;
+          }
+          if (state.renew && !renewing) {
+            renewing = true;
+            unawaited(recorder.renew(recording, id).catchError((Object e) => logWarn('Recording $id: no new address: $e')).whenComplete(() => renewing = false));
+          }
+        }
+        error = await recorder.stop(recording) ?? error;
+        _recordings.remove(id);
+      }
+    }
+    final stopped = _stopping.remove(id);
+    task.speed = null;
+    if (_wipe.remove(id)) {
+      await _deleteFiles(task);
+    } else if (task.status != DownloadStatus.cancelled) {
+      final files = recordFiles(stem);
+      final recorded = files.every((f) => File(f).existsSync() && File(f).lengthSync() > 0);
+      if (!recorded) {
+        task.status = DownloadStatus.failed;
+        task.error = error ?? tr('The downloaded file was not found');
+      } else {
+        if (error != null) logWarn('Recording $id stopped: $error');
+        await _finishRecording(task, stem, files);
+      }
+    }
+    if (stopped && task.status == DownloadStatus.paused) task.status = DownloadStatus.done;
+    _active.remove(id);
+    _changed();
+  }
+
+  Future<void> _finishRecording(DownloadTask task, String stem, List<String> files) async {
+    task.status = DownloadStatus.downloading;
+    task.finishing = true;
+    _changed();
+    File? coverFile;
+    try {
+      final bytes = await cover?.call(task.id);
+      if (bytes != null) coverFile = await File('$stem.cover.jpg').writeAsBytes(bytes);
+    } catch (e) {
+      logWarn('No cover for ${task.id} inside the file: $e');
+    }
+    final joined = await join!(JoinRequest(video: files[0], audio: files[1], stem: stem, title: task.item.title, cover: coverFile?.path));
+    task.finishing = false;
+    try {
+      await coverFile?.delete();
+    } on FileSystemException {
+      // Left for the user.
+    }
+    final out = joined.path;
+    if (out == null) {
+      task.status = DownloadStatus.failed;
+      task.error = joined.error ?? tr('The downloaded file was not found');
+      return;
+    }
+    for (final part in files) {
+      try {
+        await File(part).delete();
+      } on FileSystemException {
+        // Left for the user.
+      }
+    }
+    task.filePath = out;
+    task.status = DownloadStatus.done;
+    task.total = task.downloaded = File(out).lengthSync();
+    // Played from the file now, not as the live it was.
+    task.item = task.item.withLiveStatus('was_live');
+    try {
+      await LocalVideo.sidecarOf(out).writeAsString(jsonEncode({
+        'id': task.id,
+        'title': task.item.title,
+        'channel': task.item.channel,
+        'webpage_url': task.item.url,
+        'was_live': true,
+      }), flush: true);
+    } catch (e) {
+      logError('Could not save the offline info of ${task.id}', e);
+    }
+    onFinished?.call(task);
   }
 
   Future<void> _run(DownloadTask task) async {

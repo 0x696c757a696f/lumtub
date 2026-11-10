@@ -28,6 +28,7 @@ import '../library_store.dart';
 import '../secure_store.dart';
 import '../dearrow.dart';
 import '../downloads/download_formats.dart';
+import '../downloads/core_recorder.dart';
 import '../downloads/download_manager.dart';
 import '../downloads/download_models.dart';
 import '../downloads/download_selection.dart';
@@ -1230,6 +1231,7 @@ class AppController extends ChangeNotifier with _ExploreState {
               }
             : null,
         cover: _coverBytes,
+        recorder: NativeCore.canRecord ? CoreRecorder(sources: _liveSources, proxy: () => proxy.url) : null,
         options: () => DownloadOptions(
           proxy: proxy.ytDlpValue(settings.proxyMode),
           deno: paths.deno,
@@ -1300,8 +1302,21 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   void download(VideoItem item, DownloadQuality quality, {DownloadSelection? selection}) {
     final manager = downloads;
-    if (manager == null || item.isLive || item.isUpcoming) return _notice(tr('Live streams cannot be downloaded'));
+    if (manager == null || item.isUpcoming || (item.isLive && !manager.canRecord)) return _notice(tr('Live streams cannot be downloaded'));
+    if (item.isLive) {
+      return _notice(manager.add(item, DownloadQuality.best) == null ? tr('Already in the download list') : tr('Recording the live stream; stop it in Downloads'));
+    }
     _notice(manager.add(item, quality, selection: selection) == null ? tr('Already in the download list') : tr('Added to downloads'));
+  }
+
+  /// The picture and sound of live [videoId] to record: the tallest in a
+  /// codec the playback settings allow, within their cap.
+  Future<LiveSplit?> _liveSources(String videoId, {bool fresh = false}) async {
+    final repository = _repository;
+    if (repository == null) throw StateError(tr('Components are not ready yet'));
+    if (fresh) repository.streams.forget(videoId);
+    final video = await repository.streams.resolve(videoId, _format, formatSort: _formatSort, live: true);
+    return LiveSplit.pick(video.info, _playback, above: 0);
   }
 
   /// The streams [videoId] can be downloaded as, from the extraction the

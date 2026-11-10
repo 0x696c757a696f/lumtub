@@ -91,7 +91,8 @@ class DownloadTask {
     DateTime? added,
   }) : added = added ?? DateTime.now();
 
-  final VideoItem item;
+  /// A recorded live stream's becomes the finished video's.
+  VideoItem item;
   /// The simple choice; for a task with a [selection] only whether it is audio.
   final DownloadQuality quality;
   /// The formats picked in the download dialog; null for a task added with
@@ -105,6 +106,8 @@ class DownloadTask {
   final DateTime added;
 
   // Live values, not saved.
+  /// A recording being joined into its file.
+  bool finishing = false;
   int downloaded = 0;
   int? total;
   double? speed;

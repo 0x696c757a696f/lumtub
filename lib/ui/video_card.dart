@@ -835,6 +835,7 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
             : entry('remove', AppIcons.thumbsDown, removeLabel),
       const PopupMenuDivider(),
       if (controller?.downloads != null && !item.isLive) entry('download', AppIcons.downloadSimple, tr('Downloads')),
+      if (item.isLive && (controller?.downloads?.canRecord ?? false)) entry('download', AppIcons.radioButton, tr('Record the live stream')),
       entry('copy', AppIcons.link, tr('Copy link')),
       entry('browser', AppIcons.arrowSquareOut, tr('Open in browser')),
     ],

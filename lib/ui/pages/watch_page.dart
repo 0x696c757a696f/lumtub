@@ -333,6 +333,8 @@ class _Toolbar extends StatelessWidget {
           ],
           if (controller.downloads != null && !item.isLive)
             IconButton(tooltip: tr('Downloads'), icon: Icon(AppIcons.downloadSimple), onPressed: () => showDownloadChoice(context, controller, item)),
+          if (item.isLive && (controller.downloads?.canRecord ?? false))
+            IconButton(tooltip: tr('Record the live stream'), icon: Icon(AppIcons.radioButton), onPressed: () => showDownloadChoice(context, controller, item)),
           if (!item.isLive)
             IconButton(tooltip: tr('AI summary'), icon: Icon(AppIcons.sparkle), onPressed: () => showVideoSummary(context, controller)),
           IconButton(tooltip: tr('Copy link'), icon: Icon(AppIcons.link), onPressed: () => copyText(context, item.url, tr('Link copied'))),

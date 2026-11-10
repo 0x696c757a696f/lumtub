@@ -370,6 +370,48 @@ class NativeCore {
   static bool get canJoin => instance?.library.providesSymbol('lumtub_join') ?? false;
 
   Pointer<Utf8> Function(Pointer<Uint8>, int)? _join;
+
+  /// Whether this core can record a live stream.
+  static bool get canRecord => instance?.library.providesSymbol('lumtub_record_start') ?? false;
+
+  Map<String, dynamic> _answer(String? text) {
+    final map = text == null ? null : jsonDecode(text);
+    return map is Map<String, dynamic> ? map : const {};
+  }
+
+  /// Starts recording a live stream's [video] and [audio] addresses (of
+  /// numbered fragments) into `stem.live-video.part` and
+  /// `stem.live-audio.part`; the recording's id, or why not.
+  ({int? id, String? error}) recordStart({required String video, required String audio, required String stem, String? userAgent, String? proxy}) {
+    Map<String, Object?> target(String url) => {'url': url, 'size': 0, if (userAgent != null) 'user_agent': userAgent, if (proxy != null) 'proxy': proxy, 'live': 'record'};
+    final call = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_record_start');
+    final map = _answer(take(withText(jsonEncode({'video': target(video), 'audio': target(audio), 'stem': stem}), call)));
+    return map['id'] is int ? (id: map['id'] as int, error: null) : (id: null, error: '${map['error'] ?? 'the recording could not start'}');
+  }
+
+  /// How recording [id] goes: `bytes`, `seconds`, `running`, `renew` (an
+  /// address expired), `error`, and `log` lines; empty for no such one.
+  Map<String, dynamic> recordState(int id) {
+    final call = library.lookupFunction<Pointer<Utf8> Function(Uint64), Pointer<Utf8> Function(int)>('lumtub_record_state');
+    return _answer(take(call(id)));
+  }
+
+  /// New addresses for recording [id].
+  bool recordRenew(int id, String video, String audio) {
+    final call = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_record_renew');
+    return withText(jsonEncode({'id': id, 'video': video, 'audio': audio}), call);
+  }
+
+  /// Stops recording [id] once its files are written; why a stream failed,
+  /// or null. It waits for the fragments being fetched, so run it on
+  /// another isolate.
+  static String? recordStop(int id) {
+    final core = instance;
+    if (core == null) return 'lumtub_core is missing';
+    final call = core.library.lookupFunction<Pointer<Utf8> Function(Uint64), Pointer<Utf8> Function(int)>('lumtub_record_stop');
+    final error = core._answer(core.take(call(id)))['error'];
+    return error == null ? null : '$error';
+  }
   Pointer<Utf8> Function(Pointer<Uint8>, int)? _cutAudio;
 
   /// Calls [call] with [text] as UTF-8 in native memory.

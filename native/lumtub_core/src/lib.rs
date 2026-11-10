@@ -12,6 +12,7 @@ pub mod process_tree;
 pub mod redact;
 pub mod backup;
 pub mod relay;
+pub mod record;
 pub mod relay_live;
 pub mod socks;
 pub mod subtitles;
@@ -53,5 +54,5 @@ pub mod process_cpu;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    43
+    44
 }

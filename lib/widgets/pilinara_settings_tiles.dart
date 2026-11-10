@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
 import '../ui/app_icons.dart';
+import '../ui/common.dart' show dialogWidth;
 
 TextStyle _titleStyle(ThemeData theme) => theme.textTheme.titleMedium!;
 TextStyle _subtitleStyle(ThemeData theme) => theme.textTheme.labelMedium!.copyWith(color: theme.colorScheme.outline);
@@ -354,7 +355,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
       title: Text(widget.title),
       contentPadding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
       content: SizedBox(
-        width: 420,
+        width: dialogWidth(context, 420),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Expanded(
@@ -571,7 +572,7 @@ class _OrderedMultiSelectDialogState<T> extends State<OrderedMultiSelectDialog<T
       title: Text(widget.title),
       contentPadding: const EdgeInsets.only(top: 12),
       content: SizedBox(
-        width: 420,
+        width: dialogWidth(context, 420),
         child: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             for (final (value, title, description) in widget.values)

@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import '../app_directories.dart';
 import '../app_log.dart';
 import '../background_json.dart';
+import '../friendly_error.dart';
 import '../l10n/l10n.dart';
 import '../models.dart';
 import '../process_priority.dart';
@@ -451,7 +452,7 @@ class DownloadManager extends ChangeNotifier {
         await Directory(task.directory).create(recursive: true);
         _recordings[id] = await recorder.start(id, stem);
       } catch (e) {
-        error = '$e';
+        error = friendlyFileError(e);
       }
       final recording = _recordings[id];
       if (recording != null) {
@@ -590,7 +591,7 @@ class DownloadManager extends ChangeNotifier {
       exitCode = await process.exitCode;
       await Future.wait(done);
     } catch (e) {
-      errors.add('$e');
+      errors.add(e is FileSystemException ? friendlyFileError(e) : '$e');
       exitCode = -1;
     }
     _processes.remove(id);
@@ -601,7 +602,8 @@ class DownloadManager extends ChangeNotifier {
     } else {
       task.status = DownloadStatus.failed;
       task.speed = null;
-      task.error = errors.lastWhere((e) => e.startsWith('ERROR'), orElse: () => errors.isEmpty ? tr('yt-dlp exited with code {0}', [exitCode]) : errors.last);
+      final raw = errors.lastWhere((e) => e.startsWith('ERROR'), orElse: () => errors.isEmpty ? 'yt-dlp exited with code $exitCode' : errors.last);
+      task.error = friendlyDownloadError(raw);
     }
     if (_wipe.remove(id)) await _deleteFiles(task);
     _active.remove(id);

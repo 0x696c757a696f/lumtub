@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../app_log.dart';
+import '../friendly_error.dart';
 import '../google_auth.dart';
 import '../models.dart';
 import '../secure_store.dart';
@@ -378,7 +379,7 @@ class AccountController extends ChangeNotifier {
         if (likesPlaylist != null) 'likes': likesPlaylist,
       });
     } on FileSystemException catch (e) {
-      error = tr("Couldn't save sign-in credentials: {0}", [e.message]);
+      error = tr("Couldn't save sign-in credentials: {0}", [friendlyFileError(e)]);
     }
   }
 

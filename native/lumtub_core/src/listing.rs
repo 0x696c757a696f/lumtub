@@ -480,6 +480,18 @@ fn lockup(model: &Value) -> Option<Value> {
     } else {
         None
     };
+    // About when it was published, as for a videoRenderer.
+    let published = if matches!(live_status, Some("is_live" | "is_upcoming")) {
+        None
+    } else {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_secs());
+        relative
+            .as_deref()
+            .and_then(ago)
+            .and_then(|seconds| now.checked_sub(seconds))
+    };
     Some(entry(vec![
         ("_type", "url".into()),
         ("ie_key", "Youtube".into()),
@@ -488,6 +500,7 @@ fn lockup(model: &Value) -> Option<Value> {
             "url",
             format!("https://www.youtube.com/watch?v={id}").into(),
         ),
+        ("timestamp", opt(published)),
         ("title", opt(title)),
         ("duration", opt(duration_text.as_deref().and_then(seconds))),
         ("view_count", opt(views)),
@@ -973,6 +986,12 @@ mod tests {
         assert_eq!(first.entries[0]["duration"], 3723);
         assert_eq!(first.entries[0]["view_count"], 12_000);
         assert_eq!(first.entries[0]["live_status"], "was_live");
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let published = first.entries[0]["timestamp"].as_u64().unwrap();
+        assert!(now - published >= 2 * 86_400 && now - published < 2 * 86_400 + 60);
         assert_eq!(
             first.entries[1]["url"],
             "https://www.youtube.com/shorts/shortsvid01"

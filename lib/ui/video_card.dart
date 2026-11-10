@@ -1027,7 +1027,10 @@ class MetaLine extends StatelessWidget {
       lead: [if (upcomingStart != null) upcomingStart, if (item.channel.isNotEmpty) item.channel].join(' · '),
       tail: [
         if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
-        if (!item.isLive && !item.isUpcoming && item.published != null) formatAgo(item.published!),
+        if (!item.isLive && !item.isUpcoming && item.published != null)
+          formatAgo(item.published!)
+        else if (!item.isLive && !item.isUpcoming && item.age != null)
+          item.age!,
         if (extra != null) extra,
       ].join(' · '),
       style: style,

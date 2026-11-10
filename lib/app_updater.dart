@@ -204,8 +204,8 @@ class AppUpdater extends ChangeNotifier {
       if (response.statusCode != 200) throw HttpException('Signature download failed: HTTP ${response.statusCode}');
       final sig = File('${file.path}.sig');
       await sig.writeAsBytes(response.bodyBytes);
-      final path = file.path, sigPath = sig.path;
-      final error = await Isolate.run(() => verifyUpdate(file: path, name: name, signature: sigPath));
+      final path = file.path, sigPath = sig.path, version = available?.version;
+      final error = await Isolate.run(() => verifyUpdate(file: path, name: name, signature: sigPath, version: version, current: appVersion));
       if (error != null) throw FormatException(error);
     } catch (_) {
       await _discard(file);
@@ -226,10 +226,10 @@ class AppUpdater extends ChangeNotifier {
   /// Deletes it and returns false when it no longer holds.
   Future<bool> _recheck(File file) async {
     final name = available?.asset?['name']?.toString() ?? file.path.split(Platform.pathSeparator).last;
-    final sigPath = '${file.path}.sig', path = file.path;
+    final sigPath = '${file.path}.sig', path = file.path, version = available?.version;
     String? error;
     try {
-      error = await File(sigPath).exists() ? await Isolate.run(() => verifyUpdate(file: path, name: name, signature: sigPath)) : 'The update signature is missing';
+      error = await File(sigPath).exists() ? await Isolate.run(() => verifyUpdate(file: path, name: name, signature: sigPath, version: version, current: appVersion)) : 'The update signature is missing';
     } catch (e) {
       error = '$e';
     }
@@ -458,10 +458,14 @@ AppRelease? offerOf(Map<String, dynamic> release, {required String current, Date
 /// Why the package [file] (listed as [name]) fails its `.sig` file
 /// [signature], or null when both signatures hold. It reads the whole
 /// package, so run it on another isolate.
-String? verifyUpdate({required String file, required String name, required String signature}) {
+/// With [version] (the release offered) the package's name must carry that
+/// version, newer than [current], so a signed older package can't be passed
+/// off as an update.
+String? verifyUpdate({required String file, required String name, required String signature, String? version, String? current}) {
   final core = NativeCore.instance;
   if (core == null) return 'The native core is missing';
-  final answer = jsonDecode(core.take(core.withText(jsonEncode({'file': file, 'name': name, 'signature': signature}), core.updateVerify)) ?? 'null');
+  final ask = {'file': file, 'name': name, 'signature': signature, if (version != null) 'version': version, if (version != null && current != null && RegExp(r'^v?\d+\.\d+\.\d+').hasMatch(current)) 'current': current};
+  final answer = jsonDecode(core.take(core.withText(jsonEncode(ask), core.updateVerify)) ?? 'null');
   if (answer is Map && answer['ok'] == true) return null;
   return answer is Map ? '${answer['error']}' : 'Could not check the signature';
 }

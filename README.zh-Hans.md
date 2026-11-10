@@ -15,6 +15,7 @@
 ![Windows](https://img.shields.io/badge/Windows-x64%20%7C%20ARM64-0078D4?logo=windows)
 ![Linux](https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-FCC624?logo=linux&logoColor=black)
 ![macOS](https://img.shields.io/badge/macOS-Apple%20silicon%20%7C%20Intel-000000?logo=apple)
+![Android](https://img.shields.io/badge/Android-%E6%89%8B%E6%9C%BA%20%7C%20%E5%B9%B3%E6%9D%BF%20%7C%20%E7%94%B5%E8%A7%86-3DDC84?logo=android&logoColor=white)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![翻译状态](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 

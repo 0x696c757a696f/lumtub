@@ -93,9 +93,8 @@ fn format(raw: &Value) -> Option<Format<'_>> {
     let default_audio = original
         || (!drc
             && content.is_none()
-            && track.is_none_or(|t| {
-                t.get("audioIsDefault").and_then(Value::as_bool) == Some(true)
-            }));
+            && track
+                .is_none_or(|t| t.get("audioIsDefault").and_then(Value::as_bool) == Some(true)));
     Some(Format {
         raw,
         itag: number(raw.get("itag"))?.to_string(),

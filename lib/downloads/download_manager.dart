@@ -520,9 +520,6 @@ class DownloadManager extends ChangeNotifier {
         // Left for the user.
       }
     }
-    task.filePath = out;
-    task.status = DownloadStatus.done;
-    task.total = task.downloaded = File(out).lengthSync();
     // Played from the file now, not as the live it was.
     task.item = task.item.withLiveStatus('was_live');
     try {
@@ -536,6 +533,9 @@ class DownloadManager extends ChangeNotifier {
     } catch (e) {
       logError('Could not save the offline info of ${task.id}', e);
     }
+    task.filePath = out;
+    task.total = task.downloaded = File(out).lengthSync();
+    task.status = DownloadStatus.done;
     onFinished?.call(task);
   }
 

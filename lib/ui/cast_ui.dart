@@ -318,7 +318,7 @@ class _CastBarState extends State<CastBar> {
             color: colors.secondaryContainer,
             borderRadius: AppStyle.cardRadius,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+              padding: const EdgeInsetsDirectional.fromSTEB(12, 8, 4, 8),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
                   Icon(AppIcons.airplay, size: 20, color: colors.onSecondaryContainer),

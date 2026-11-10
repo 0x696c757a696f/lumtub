@@ -44,7 +44,7 @@ class _Panel extends StatelessWidget {
           child: SafeArea(
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 8, 4),
                 child: Row(children: [
                   Expanded(child: Text(title, style: theme.textTheme.titleMedium)),
                   ...actions,

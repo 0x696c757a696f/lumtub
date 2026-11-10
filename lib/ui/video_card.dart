@@ -202,10 +202,10 @@ class VideoRow extends StatelessWidget {
                       errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
                     ),
                     if (status != null)
-                      Positioned(right: 4, bottom: 4, child: DurationBadge(status, color: item.isLive ? const Color(0xFFCC0000) : null))
+                      PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(status, color: item.isLive ? const Color(0xFFCC0000) : null))
                     else if (item.durationLabel.isNotEmpty)
-                      Positioned(right: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
-                    if (item.membersOnly) const Positioned(left: 4, bottom: 4, child: MembersOnlyBadge()),
+                      PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
+                    if (item.membersOnly) const PositionedDirectional(start: 4, bottom: 4, child: MembersOnlyBadge()),
                     _ProgressBar(item: item),
                   ]),
                 ),
@@ -545,10 +545,10 @@ class _VideoCardState extends State<VideoCard> {
                   ])),
                 ],
                 if (item.isLive || item.isUpcoming)
-                  Positioned(right: 8, bottom: 8, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
+                  PositionedDirectional(end: 8, bottom: 8, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
                 else if (item.durationLabel.isNotEmpty)
-                  Positioned(right: 8, bottom: 8, child: DurationBadge(item.durationLabel)),
-                if (item.membersOnly) const Positioned(left: 8, bottom: 8, child: MembersOnlyBadge()),
+                  PositionedDirectional(end: 8, bottom: 8, child: DurationBadge(item.durationLabel)),
+                if (item.membersOnly) const PositionedDirectional(start: 8, bottom: 8, child: MembersOnlyBadge()),
                 _ProgressBar(item: item),
                 if (_hovered) Positioned(top: 8, right: 8, child: _QuickActions(item: item, onMore: _menu)),
               ]),
@@ -620,7 +620,7 @@ class _QuickActionsState extends State<_QuickActions> {
     final item = widget.item;
     final later = library?.isWatchLater(item.id) ?? false;
     Widget button(IconData icon, String tip, VoidCallback onPressed) => Padding(
-          padding: const EdgeInsets.only(left: 4),
+          padding: const EdgeInsetsDirectional.only(start: 4),
           child: Tooltip(
             message: tip,
             child: Material(
@@ -743,10 +743,10 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
                     errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
                   ),
                   if (item.isLive || item.isUpcoming)
-                    Positioned(right: 4, bottom: 4, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
+                    PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
                   else if (item.durationLabel.isNotEmpty)
-                    Positioned(right: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
-                  if (item.membersOnly) const Positioned(left: 4, bottom: 4, child: MembersOnlyBadge()),
+                    PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
+                  if (item.membersOnly) const PositionedDirectional(start: 4, bottom: 4, child: MembersOnlyBadge()),
                   _ProgressBar(item: item),
                 ]),
               ),

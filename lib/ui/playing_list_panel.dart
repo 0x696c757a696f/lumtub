@@ -32,7 +32,7 @@ class PlayingListPanel extends StatelessWidget {
         child: Text(list.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
       ),
       Padding(
-        padding: const EdgeInsets.fromLTRB(Space.xs, Space.xxs, 0, Space.xs),
+        padding: const EdgeInsetsDirectional.fromSTEB(Space.xs, Space.xxs, 0, Space.xs),
         child: Row(children: [
           Text(
             index < 0 ? tr('Playlist · {0} videos', [ordered.length]) : tr('Playlist · {0}/{1}', [index + 1, ordered.length]),

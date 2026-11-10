@@ -151,7 +151,7 @@ class _ChannelPageState extends State<ChannelPage> {
       SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, Space.m),
-          child: Align(alignment: Alignment.centerLeft, child: ImmersiveTranslationSwitch(controller: controller)),
+          child: Align(alignment: AlignmentDirectional.centerStart, child: ImmersiveTranslationSwitch(controller: controller)),
         ),
       ),
       SliverPadding(
@@ -160,7 +160,7 @@ class _ChannelPageState extends State<ChannelPage> {
           itemCount: posts.length,
           separatorBuilder: (context, i) => const SizedBox(height: AppStyle.cardSpacing),
           itemBuilder: (context, i) => Align(
-            alignment: Alignment.topLeft,
+            alignment: AlignmentDirectional.topStart,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 760),
               child: PostCard(
@@ -211,7 +211,7 @@ class PostCommentsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 8, 4),
           child: Row(children: [
             Expanded(child: Text(tr('Post comments'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
             IconButton(tooltip: tr('Close (Esc)'), icon: Icon(AppIcons.x), onPressed: onClose),
@@ -361,7 +361,7 @@ class _Poll extends StatelessWidget {
                 if (voted >= 0 && choice.ratio != null)
                   Positioned.fill(
                     child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
+                      alignment: AlignmentDirectional.centerStart,
                       widthFactor: choice.ratio!.clamp(0.0, 1.0),
                       child: ColoredBox(color: colors.primary.withValues(alpha: 0.12)),
                     ),
@@ -447,7 +447,7 @@ class ChannelHeader extends StatelessWidget {
     final colors = context.colors;
     final name = channel.name.isEmpty ? tr('YouTube channels') : channel.name;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
+      padding: const EdgeInsetsDirectional.fromSTEB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
       child: Row(children: [
         if (onBack != null) IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: onBack, icon: Icon(AppIcons.arrowLeft)),
         const SizedBox(width: 8),

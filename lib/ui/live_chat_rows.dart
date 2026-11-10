@@ -93,7 +93,7 @@ class ChatMessageRow extends StatelessWidget {
       const SizedBox(width: 8),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          if (kindIcon != null) Padding(padding: const EdgeInsets.only(right: 4), child: Icon(kindIcon, size: 14, color: tier ?? colors.outline)),
+          if (kindIcon != null) Padding(padding: const EdgeInsetsDirectional.only(end: 4), child: Icon(kindIcon, size: 14, color: tier ?? colors.outline)),
           Flexible(
             child: MouseRegion(
               cursor: openAuthor == null ? MouseCursor.defer : SystemMouseCursors.click,
@@ -112,7 +112,7 @@ class ChatMessageRow extends StatelessWidget {
                     decoration: BoxDecoration(color: tier, borderRadius: BorderRadius.circular(6)),
                     child: Text(amount, style: TextStyle(color: _onTier(tier), fontWeight: FontWeight.w700, fontSize: 12)),
                   ),
-          if (time.isNotEmpty) Padding(padding: const EdgeInsets.only(left: 8), child: Text(time, style: TextStyle(color: colors.outline, fontSize: 12))),
+          if (time.isNotEmpty) Padding(padding: const EdgeInsetsDirectional.only(start: 8), child: Text(time, style: TextStyle(color: colors.outline, fontSize: 12))),
         ]),
         if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 4), child: SelectionArea(child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis))))),
         if (message.text.isNotEmpty) ChatMessageTranslation(controller: controller, message: message),
@@ -206,7 +206,7 @@ class _SuperChatStripState extends State<SuperChatStrip> {
                 ),
               ),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(4, 4, 10, 4),
+                padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 10, 4),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   ChannelAvatar(name: message.author.replaceFirst(RegExp(r'^@'), ''), image: message.authorAvatar, radius: 12),
                   const SizedBox(width: 6),

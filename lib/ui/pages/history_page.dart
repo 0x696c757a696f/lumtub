@@ -80,7 +80,7 @@ class _HistoryPageState extends State<HistoryPage> {
       if (signedIn) SliverToBoxAdapter(child: _sourceChips()),
       SliverToBoxAdapter(child: Padding(
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
-        child: Align(alignment: Alignment.centerLeft, child: ConstrainedBox(
+        child: Align(alignment: AlignmentDirectional.centerStart, child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: TextField(
             controller: _search,

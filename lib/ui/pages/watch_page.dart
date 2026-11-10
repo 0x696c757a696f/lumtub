@@ -215,7 +215,7 @@ class _WatchPageState extends State<WatchPage> {
                 )
               else
                 Padding(
-                  padding: const EdgeInsets.only(top: 4, right: 4),
+                  padding: const EdgeInsetsDirectional.only(top: 4, end: 4),
                   child: Align(
                     alignment: Alignment.topCenter,
                     child: IconButton(tooltip: tr('Expand'), icon: Icon(AppIcons.sidebar, size: 20), onPressed: () => theaterChatOpen.value = true),
@@ -226,7 +226,7 @@ class _WatchPageState extends State<WatchPage> {
           return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Expanded(child: ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding), children: main)),
             SizedBox(width: _sidePanelWidth, child: Padding(
-              padding: const EdgeInsets.only(right: AppStyle.pagePadding, top: 8),
+              padding: const EdgeInsetsDirectional.only(end: AppStyle.pagePadding, top: 8),
               child: _SidePanel(controller: controller, comments: comments, replayChat: replayChat),
             )),
           ]);
@@ -344,7 +344,7 @@ class _Toolbar extends StatelessWidget {
       ),
       if (decoded)
         Padding(
-          padding: const EdgeInsets.only(top: 8, left: 4),
+          padding: const EdgeInsetsDirectional.only(top: 8, start: 4),
           child: Text(tr('Decoding: {0} · {1}', [controller.currentCodec, controller.currentHwdec]), style: TextStyle(fontSize: 12, color: context.colors.outline)),
         ),
     ]);
@@ -357,7 +357,7 @@ class _BackRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Align(
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         child: Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: TextButton.icon(onPressed: onBack, icon: Icon(AppIcons.arrowLeft), label: Text(tr('Back'))),
@@ -789,7 +789,7 @@ class _UpNext extends StatelessWidget {
   }
 
   Widget _header(BuildContext context, String title, String? note, {Widget? trailing}) => Padding(
-        padding: EdgeInsets.fromLTRB(4, 0, trailing == null ? 4 : 0, 8),
+        padding: EdgeInsetsDirectional.fromSTEB(4, 0, trailing == null ? 4 : 0, 8),
         child: Row(children: [
           Text(title, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
           if (note != null) ...[const SizedBox(width: 8), Text(note, style: TextStyle(color: context.colors.outline, fontSize: 12))],

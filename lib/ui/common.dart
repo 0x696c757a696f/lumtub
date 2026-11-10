@@ -83,7 +83,7 @@ class ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8),
       decoration: BoxDecoration(color: colors.errorContainer, borderRadius: AppStyle.cardRadius),
       child: Row(children: [
         Icon(AppIcons.warningCircle, color: colors.onErrorContainer, size: 20),

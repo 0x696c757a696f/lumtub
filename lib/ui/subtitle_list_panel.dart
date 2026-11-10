@@ -164,7 +164,7 @@ class _SubtitleListState extends State<SubtitleList> {
         ];
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, _bothOn ? 4 : 16, 8),
+            padding: EdgeInsetsDirectional.fromSTEB(16, 0, _bothOn ? 4 : 16, 8),
             child: Row(children: [
               Expanded(
                 child: TextField(
@@ -203,7 +203,7 @@ class _SubtitleListState extends State<SubtitleList> {
                           unawaited(widget.controller.seek(cue.start));
                         },
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
+                          padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 4, 8),
                           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             SizedBox(
                               width: 52,

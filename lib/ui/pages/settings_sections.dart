@@ -567,6 +567,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 },
               ),
             ), subtitle: tr('Piped Invidious server rate limit instance instance 429')),
+        SettingEntry(tr('Fall back to Piped or Invidious when YouTube refuses'), (context) => SwitchItem(
+              title: tr('Fall back to Piped or Invidious when YouTube refuses'),
+              subtitle: tr('When YouTube answers with a bot check, a rate limit or a refusal, play the video from a public Piped or Invidious server instead. That server learns which video you watch. When off, the error is shown instead'),
+              leading: _icon(AppIcons.hardDrives),
+              value: settings.relayFallback,
+              onChanged: (v) => save(settings.copyWith(relayFallback: v)),
+            ), subtitle: tr('Piped Invidious fallback privacy bot check 429')),
         SettingEntry(tr('Piped servers'), (context) => NormalItem(
               title: tr('Piped servers'),
               subtitle: settings.playbackSource == PlaybackSource.pipedCustom ? tr('Current: {0}', [settings.pipedServer]) : tr('Current: automatically picks the fastest server. You can run a speed test or choose manually; the list updates daily'),
@@ -718,6 +725,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.gauge),
               onTap: () => openPlaySpeed(context, controller),
             ), subtitle: tr('Playback speed')),
+        SettingEntry(tr('Skip silence'), (context) => SwitchItem(
+              title: tr('Skip silence'),
+              subtitle: tr('Plays silent stretches of a video faster. Not used for livestreams; the speed menu may show 4X while it skips'),
+              leading: _icon(AppIcons.gauge),
+              value: settings.skipSilence,
+              onChanged: (v) => save(settings.copyWith(skipSilence: v)),
+            ), subtitle: tr('Silence skip silent pauses faster')),
         SettingEntry(tr('Remember speed and volume per channel'), (context) => SwitchItem(
               title: tr('Remember speed and volume per channel'),
               subtitle: tr("The speed and volume you set on a channel's videos are used again the next time that channel plays"),

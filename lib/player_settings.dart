@@ -423,6 +423,11 @@ class PlayerSettings {
   final String certificateRoots;
   /// Where playback streams come from: YouTube directly by default.
   final PlaybackSource playbackSource;
+  /// Play from public Piped or Invidious servers when YouTube refuses a
+  /// video, which tells them what is watched.
+  final bool relayFallback;
+  /// Skip silent stretches by playing them faster.
+  final bool skipSilence;
   /// The Piped API server for [PlaybackSource.pipedCustom].
   final String pipedServer;
   /// The Invidious instance for [PlaybackSource.invidiousCustom].
@@ -497,6 +502,8 @@ class PlayerSettings {
     this.dnsCustomUrl = '',
     this.certificateRoots = 'system',
     this.playbackSource = PlaybackSource.youtube,
+    this.relayFallback = true,
+    this.skipSilence = false,
     this.pipedServer = '',
     this.invidiousServer = '',
     this.directRendering = 'auto',
@@ -567,6 +574,8 @@ class PlayerSettings {
     String? dnsCustomUrl,
     String? certificateRoots,
     PlaybackSource? playbackSource,
+    bool? relayFallback,
+    bool? skipSilence,
     String? pipedServer,
     String? invidiousServer,
     String? directRendering,
@@ -629,6 +638,8 @@ class PlayerSettings {
         dnsCustomUrl: dnsCustomUrl ?? this.dnsCustomUrl,
         certificateRoots: certificateRoots ?? this.certificateRoots,
         playbackSource: playbackSource ?? this.playbackSource,
+        relayFallback: relayFallback ?? this.relayFallback,
+        skipSilence: skipSilence ?? this.skipSilence,
         pipedServer: pipedServer ?? this.pipedServer,
         invidiousServer: invidiousServer ?? this.invidiousServer,
         directRendering: directRendering ?? this.directRendering,
@@ -695,6 +706,8 @@ class PlayerSettings {
         'dnsCustomUrl': dnsCustomUrl,
         'certificateRoots': certificateRoots,
         'playbackSourceV2': playbackSource.name,
+        'relayFallback': relayFallback,
+        'skipSilence': skipSilence,
         'pipedServer': pipedServer,
         'invidiousServer': invidiousServer,
         'directRendering': directRendering,
@@ -868,6 +881,8 @@ class PlayerSettings {
       deArrowThumbnails: raw['deArrowThumbnails'] == true,
       sponsorCategories: categories,
       sponsorNotice: raw['sponsorNotice'] != false,
+      relayFallback: raw['relayFallback'] != false,
+      skipSilence: raw['skipSilence'] == true,
       sponsorCut: raw['sponsorCut'] == true,
       cachePath: path != null && path.trim().isNotEmpty ? path : null,
       cacheLimitGb: raw['cacheLimitGb'] == null ? null : number('cacheLimitGb', 1, 1, 100),

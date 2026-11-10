@@ -49,6 +49,9 @@ struct Format<'a> {
     fps: u32,
     bitrate: u64,
     default_audio: bool,
+    /// Marked `acont=original`: the video's own sound, whichever track
+    /// YouTube calls the default.
+    original: bool,
 }
 
 fn number(value: Option<&Value>) -> Option<u64> {
@@ -80,8 +83,19 @@ fn format(raw: &Value) -> Option<Format<'_>> {
             .get("xtags")
             .and_then(Value::as_str)
             .is_some_and(|x| x.contains("drc"));
-    let default_audio = !drc
-        && track.is_none_or(|t| t.get("audioIsDefault").and_then(Value::as_bool) == Some(true));
+    // YouTube can mark an automatic dub as the default track, so the
+    // `acont` of the format decides first.
+    let content = raw
+        .get("xtags")
+        .and_then(Value::as_str)
+        .and_then(crate::innertube::audio_content);
+    let original = !drc && content.as_deref() == Some("original");
+    let default_audio = original
+        || (!drc
+            && content.is_none()
+            && track.is_none_or(|t| {
+                t.get("audioIsDefault").and_then(Value::as_bool) == Some(true)
+            }));
     Some(Format {
         raw,
         itag: number(raw.get("itag"))?.to_string(),
@@ -94,6 +108,7 @@ fn format(raw: &Value) -> Option<Format<'_>> {
             .or_else(|| number(raw.get("averageBitrate")))
             .unwrap_or(0),
         default_audio,
+        original,
     })
 }
 
@@ -160,7 +175,14 @@ pub fn info(player: &Value, settings: &Settings) -> Option<Value> {
         Audio::Medium => 128_000,
         Audio::Low => 64_000,
     };
-    let sounds = || formats.iter().filter(|f| !f.video && f.default_audio);
+    // A track marked original wins; without one, the default track, but
+    // never a dubbed one (then yt-dlp is left to choose).
+    let marked = formats.iter().any(|f| !f.video && f.original);
+    let sounds = || {
+        formats
+            .iter()
+            .filter(move |f| !f.video && if marked { f.original } else { f.default_audio })
+    };
     let audio = sounds()
         .filter(|f| f.bitrate <= limit.saturating_add(limit / 10))
         .max_by_key(|f| f.bitrate)
@@ -316,6 +338,39 @@ mod tests {
         list.push(drc);
         let info = info(&p, &settings("{}")).unwrap();
         assert_eq!(info["requested_formats"][1]["abr"], json!(140.0));
+    }
+
+    #[test]
+    fn an_automatic_dub_flagged_default_never_beats_the_original() {
+        let mut p = player();
+        let list = p["streamingData"]["adaptiveFormats"]
+            .as_array_mut()
+            .unwrap();
+        list.retain(|f| f["mimeType"].as_str().unwrap().starts_with("video/"));
+        let mut dub = stream(251, "audio/webm; codecs=\"opus\"", 0, 160_000);
+        dub["audioTrack"] = json!({"id": "it.3", "audioIsDefault": true});
+        dub["xtags"] = json!("acont=dubbed-auto:lang=it");
+        list.push(dub);
+        let mut original = stream(251, "audio/webm; codecs=\"opus\"", 0, 130_000);
+        original["audioTrack"] = json!({"id": "en.4", "audioIsDefault": false});
+        original["xtags"] = json!("acont=original:lang=en");
+        list.push(original);
+        let info = info(&p, &settings("{}")).unwrap();
+        assert_eq!(info["requested_formats"][1]["abr"], json!(130.0));
+    }
+
+    #[test]
+    fn dubs_are_left_to_ytdlp_when_no_track_is_marked_original() {
+        let mut p = player();
+        let list = p["streamingData"]["adaptiveFormats"]
+            .as_array_mut()
+            .unwrap();
+        list.retain(|f| f["mimeType"].as_str().unwrap().starts_with("video/"));
+        let mut dub = stream(251, "audio/webm; codecs=\"opus\"", 0, 160_000);
+        dub["audioTrack"] = json!({"id": "it.3", "audioIsDefault": true});
+        dub["xtags"] = json!("acont=dubbed-auto:lang=it");
+        list.push(dub);
+        assert!(info(&p, &settings("{}")).is_none());
     }
 
     #[test]

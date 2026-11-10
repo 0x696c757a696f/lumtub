@@ -234,4 +234,13 @@ vo=gpu-next
     final chosen = const PlayerSettings(playOrder: PlayOrder.autoPlayRelated).toJson();
     expect(PlayerSettings.fromJson(chosen).playOrder, PlayOrder.autoPlayRelated);
   });
+
+  test('falling back to relays is on and skipping silence off unless chosen, and both are saved', () {
+    final fresh = PlayerSettings.fromJson({});
+    expect(fresh.relayFallback, isTrue);
+    expect(fresh.skipSilence, isFalse);
+    final chosen = PlayerSettings.fromJson(const PlayerSettings(relayFallback: false, skipSilence: true).toJson());
+    expect(chosen.relayFallback, isFalse);
+    expect(chosen.skipSilence, isTrue);
+  });
 }

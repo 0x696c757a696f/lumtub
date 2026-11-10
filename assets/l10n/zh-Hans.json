@@ -3143,5 +3143,11 @@
   "The chosen format isn't available for this video; pick another": "该视频没有所选的格式，请换一个",
   "ffmpeg is needed for this download but was not found": "此下载需要 ffmpeg，但没有找到",
   "The download failed; see the logs for details": "下载失败，详情见日志",
-  "see the logs for details": "详情见日志"
+  "see the logs for details": "详情见日志",
+  "Skip silence": "跳过静音",
+  "Plays silent stretches of a video faster. Not used for livestreams; the speed menu may show 4X while it skips": "将视频中的静音片段加速播放。不用于直播；跳过时倍速菜单可能显示 4X",
+  "Silence skip silent pauses faster": "静音 跳过 停顿 加速",
+  "Fall back to Piped or Invidious when YouTube refuses": "YouTube 拒绝时改用 Piped 或 Invidious",
+  "When YouTube answers with a bot check, a rate limit or a refusal, play the video from a public Piped or Invidious server instead. That server learns which video you watch. When off, the error is shown instead": "当 YouTube 要求验证、限流或拒绝时，改从公共 Piped 或 Invidious 服务器播放。该服务器会知道你在看哪个视频。关闭后将直接显示错误",
+  "Piped Invidious fallback privacy bot check 429": "Piped Invidious 回退 隐私 机器人验证 429"
 }

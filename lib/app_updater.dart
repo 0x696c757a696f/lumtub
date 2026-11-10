@@ -72,6 +72,10 @@ class AppUpdater extends ChangeNotifier {
   /// downloaded again, and the settings page sends to GitHub instead.
   String? rejected;
   Timer? _timer;
+  /// GitHub's ETag for the last answer and that answer, so a check can ask
+  /// "has it changed?" and an unchanged one (HTTP 304) costs no rate limit.
+  String? _etag;
+  Map<String, dynamic>? _latest;
 
   /// The portable package keeps a portable.txt next to lumtub.exe.
   static bool get portable => File('${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}portable.txt').existsSync();
@@ -118,10 +122,19 @@ class AppUpdater extends ChangeNotifier {
     try {
       final response = await _client.get(
         Uri.https('api.github.com', '/repos/0x696c757a696f/lumtub/releases/latest'),
-        headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'Lumtub/$appVersion'},
+        headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'Lumtub/$appVersion', if (_etag != null && _latest != null) 'If-None-Match': _etag!},
       ).timeout(const Duration(seconds: 15));
-      if (response.statusCode != 200) throw HttpException('GitHub returned HTTP ${response.statusCode}');
-      final json = jsonDecode(response.body);
+      final Object? json;
+      if (response.statusCode == 304 && _latest != null) {
+        json = _latest;
+      } else {
+        if (response.statusCode != 200) throw HttpException('GitHub returned HTTP ${response.statusCode}');
+        json = jsonDecode(response.body);
+        if (json is Map<String, dynamic>) {
+          _latest = json;
+          _etag = response.headers['etag'];
+        }
+      }
       if (json is! Map<String, dynamic>) throw const FormatException('Invalid GitHub release response');
       final offer = offerOf(json, current: appVersion, built: appBuilt, package: updatePackage, portable: portable);
       available = offer;

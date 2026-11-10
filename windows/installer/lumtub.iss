@@ -50,6 +50,27 @@ CloseApplications=yes
 #if FileExists(CompilerPath + "Languages\ChineseSimplified.isl")
 Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 #endif
+#if FileExists(CompilerPath + "Languages\Japanese.isl")
+Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
+#endif
+#if FileExists(CompilerPath + "Languages\Korean.isl")
+Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
+#endif
+#if FileExists(CompilerPath + "Languages\German.isl")
+Name: "german"; MessagesFile: "compiler:Languages\German.isl"
+#endif
+#if FileExists(CompilerPath + "Languages\French.isl")
+Name: "french"; MessagesFile: "compiler:Languages\French.isl"
+#endif
+#if FileExists(CompilerPath + "Languages\Spanish.isl")
+Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
+#endif
+#if FileExists(CompilerPath + "Languages\BrazilianPortuguese.isl")
+Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
+#endif
+#if FileExists(CompilerPath + "Languages\Russian.isl")
+Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
+#endif
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]

@@ -815,11 +815,22 @@ mod tests {
                 target: &Target,
                 url: &str,
             ) -> Result<(u16, Option<u64>, Box<dyn Read + Send>), String> {
-                if self
-                    .busy
-                    .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |n| n.checked_sub(1))
-                    .is_ok()
-                {
+                let mut left = self.busy.load(Ordering::SeqCst);
+                let took = loop {
+                    if left == 0 {
+                        break false;
+                    }
+                    match self.busy.compare_exchange(
+                        left,
+                        left - 1,
+                        Ordering::SeqCst,
+                        Ordering::SeqCst,
+                    ) {
+                        Ok(_) => break true,
+                        Err(now) => left = now,
+                    }
+                };
+                if took {
                     return Ok((503, None, Box::new(Cursor::new(vec![]))));
                 }
                 self.live.get_live(target, url)

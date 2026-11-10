@@ -1223,7 +1223,13 @@ class AppController extends ChangeNotifier with _ExploreState {
         defaultDirectory: DownloadManager.defaultDirectoryFor(Platform.environment, '${directories.data.path}${Platform.pathSeparator}downloads'),
         environment: () => _repository!.processEnvironment,
         // lumtub_core joins the streams, so no ffmpeg is needed.
-        join: NativeCore.canJoin ? (video, audio, out, container) => Isolate.run(() => NativeCore.join(video, audio, out, container: container)) : null,
+        join: NativeCore.canJoin
+            ? (request) {
+                final json = request.toJson();
+                return Isolate.run(() => NativeCore.join(json));
+              }
+            : null,
+        cover: _coverBytes,
         options: () => DownloadOptions(
           proxy: proxy.ytDlpValue(settings.proxyMode),
           deno: paths.deno,
@@ -1246,21 +1252,28 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Saves [item]'s largest cover image next to the downloads and returns
   /// its path.
   Future<String> saveCover(VideoItem item) async {
+    final bytes = await _coverBytes(item.id);
+    if (bytes == null) throw StateError(tr('This video has no cover image'));
+    final file = File(_downloadPath(item, '.jpg'));
+    await file.parent.create(recursive: true);
+    await file.writeAsBytes(bytes);
+    return file.path;
+  }
+
+  /// The largest JPEG cover of video [id], or null when it has none.
+  Future<List<int>?> _coverBytes(String id) async {
     for (final name in const ['maxresdefault', 'sddefault', 'hqdefault']) {
       final http.Response response;
       try {
-        response = await _http.get(Uri.https('i.ytimg.com', '/vi/${item.id}/$name.jpg')).timeout(const Duration(seconds: 20));
+        response = await _http.get(Uri.https('i.ytimg.com', '/vi/$id/$name.jpg')).timeout(const Duration(seconds: 20));
       } catch (_) {
         throw StateError(tr("Couldn't download the cover; check the network or proxy"));
       }
       // YouTube answers a missing size with a small placeholder or 404.
       if (response.statusCode != 200 || response.bodyBytes.length < 2000) continue;
-      final file = File(_downloadPath(item, '.jpg'));
-      await file.parent.create(recursive: true);
-      await file.writeAsBytes(response.bodyBytes);
-      return file.path;
+      return response.bodyBytes;
     }
-    throw StateError(tr('This video has no cover image'));
+    return null;
   }
 
   /// The subtitles [item] offers, with the one translated into 第一字幕语言

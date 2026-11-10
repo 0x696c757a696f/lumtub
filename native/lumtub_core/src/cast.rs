@@ -52,6 +52,9 @@ pub enum Kind {
 pub struct Subtitles {
     #[serde(default)]
     pub language: String,
+    /// What a player lists the track as, such as `English (auto-generated)`.
+    #[serde(default)]
+    pub name: String,
     pub cues: Vec<(u64, u64, String)>,
 }
 
@@ -532,7 +535,7 @@ fn webm_track(head: &cast_webm::Head, total: u64) -> Track {
             webm: Some((head.number, head.frame)),
         };
     }
-    let trak = trak_box(head.timescale, Some((head.width, head.height)), |o| {
+    let trak = trak_box(head.timescale, Media::Picture(head.width, head.height), |o| {
         put_box(o, b"vp09", |o| {
             o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
             o.extend_from_slice(&[0; 16]);
@@ -573,23 +576,33 @@ fn webm_track(head: &cast_webm::Head, total: u64) -> Track {
     }
 }
 
-/// A `trak` with one sample entry, written by `entry`: a picture of
-/// `size`, or sound when there is none. The sample tables are empty, as
-/// the samples come in fragments.
-fn trak_box(timescale: u32, size: Option<(u16, u16)>, entry: impl FnOnce(&mut Vec<u8>)) -> Vec<u8> {
+/// What a track made here holds.
+#[derive(Clone, Copy)]
+enum Media<'a> {
+    Picture(u16, u16),
+    Sound,
+    /// Timed text in this language (BCP 47).
+    Text(&'a str),
+}
+
+/// A `trak` with one sample entry, written by `entry`. The sample tables
+/// are empty, as the samples come in fragments.
+fn trak_box(timescale: u32, media: Media, entry: impl FnOnce(&mut Vec<u8>)) -> Vec<u8> {
     let mut trak = Vec::new();
     put_box(&mut trak, b"trak", |o| {
         put_box(o, b"tkhd", |o| {
             o.extend_from_slice(&3u32.to_be_bytes());
             o.extend_from_slice(&[0; 8]);
             o.extend_from_slice(&1u32.to_be_bytes());
-            o.extend_from_slice(&[0; 4 + 4 + 8 + 2 + 2]);
-            o.extend_from_slice(&(if size.is_some() { 0u16 } else { 0x0100 }).to_be_bytes());
+            o.extend_from_slice(&[0; 4 + 4 + 8 + 2]);
+            // Subtitle tracks share an alternate group: one shows at a time.
+            o.extend_from_slice(&(if matches!(media, Media::Text(_)) { 2u16 } else { 0 }).to_be_bytes());
+            o.extend_from_slice(&(if matches!(media, Media::Sound) { 0x0100u16 } else { 0 }).to_be_bytes());
             o.extend_from_slice(&[0; 2]);
             for v in [0x0001_0000u32, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000] {
                 o.extend_from_slice(&v.to_be_bytes());
             }
-            let (width, height) = size.unwrap_or((0, 0));
+            let (width, height) = if let Media::Picture(w, h) = media { (w, h) } else { (0, 0) };
             o.extend_from_slice(&((width as u32) << 16).to_be_bytes());
             o.extend_from_slice(&((height as u32) << 16).to_be_bytes());
         });
@@ -597,19 +610,37 @@ fn trak_box(timescale: u32, size: Option<(u16, u16)>, entry: impl FnOnce(&mut Ve
             put_box(o, b"mdhd", |o| {
                 o.extend_from_slice(&[0; 12]);
                 o.extend_from_slice(&timescale.to_be_bytes());
-                o.extend_from_slice(&[0, 0, 0, 0, 0x55, 0xc4, 0, 0]);
+                o.extend_from_slice(&[0, 0, 0, 0]);
+                let language = if let Media::Text(l) = media { crate::embed::iso639_2t(l) } else { "und" };
+                let packed = language.bytes().fold(0u16, |v, c| (v << 5) | (c.wrapping_sub(0x60) as u16 & 0x1f));
+                o.extend_from_slice(&packed.to_be_bytes());
+                o.extend_from_slice(&[0, 0]);
             });
+            let (handler, name): (&[u8; 4], &[u8]) = match media {
+                Media::Picture(..) => (b"vide", b"VideoHandler\0"),
+                Media::Sound => (b"soun", b"SoundHandler\0"),
+                Media::Text(_) => (b"sbtl", b"SubtitleHandler\0"),
+            };
             put_box(o, b"hdlr", |o| {
                 o.extend_from_slice(&[0; 8]);
-                o.extend_from_slice(if size.is_some() { b"vide" } else { b"soun" });
+                o.extend_from_slice(handler);
                 o.extend_from_slice(&[0; 12]);
-                o.extend_from_slice(if size.is_some() { b"VideoHandler\0" } else { b"SoundHandler\0" });
+                o.extend_from_slice(name);
             });
+            if let Media::Text(language) = media
+                && !language.is_empty()
+            {
+                put_box(o, b"elng", |o| {
+                    o.extend_from_slice(&[0; 4]);
+                    o.extend_from_slice(language.as_bytes());
+                    o.push(0);
+                });
+            }
             put_box(o, b"minf", |o| {
-                if size.is_some() {
-                    put_box(o, b"vmhd", |o| o.extend_from_slice(&[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]));
-                } else {
-                    put_box(o, b"smhd", |o| o.extend_from_slice(&[0; 8]));
+                match media {
+                    Media::Picture(..) => put_box(o, b"vmhd", |o| o.extend_from_slice(&[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])),
+                    Media::Sound => put_box(o, b"smhd", |o| o.extend_from_slice(&[0; 8])),
+                    Media::Text(_) => put_box(o, b"nmhd", |o| o.extend_from_slice(&[0; 4])),
                 }
                 put_box(o, b"dinf", |o| {
                     put_box(o, b"dref", |o| {
@@ -633,13 +664,101 @@ fn trak_box(timescale: u32, size: Option<(u16, u16)>, entry: impl FnOnce(&mut Ve
     trak
 }
 
+/// A timed text (`tx3g`) track's `trak`, at 1000 ticks a second: white
+/// text centred at the bottom.
+fn text_trak(language: &str) -> Vec<u8> {
+    trak_box(1000, Media::Text(language), |o| {
+        put_box(o, b"tx3g", |o| {
+            o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
+            o.extend_from_slice(&0u32.to_be_bytes());
+            o.extend_from_slice(&[1, 0xff]);
+            o.extend_from_slice(&[0, 0, 0, 0]);
+            o.extend_from_slice(&[0; 8]);
+            o.extend_from_slice(&[0, 0, 0, 0, 0, 1, 0, 18, 0xff, 0xff, 0xff, 0xff]);
+            put_box(o, b"ftab", |o| {
+                o.extend_from_slice(&1u16.to_be_bytes());
+                o.extend_from_slice(&1u16.to_be_bytes());
+                o.push(5);
+                o.extend_from_slice(b"Serif");
+            });
+        });
+    })
+}
+
+/// The text track's one fragment: each cue a sample, and the gaps between
+/// cues empty samples, so it covers the whole video from 0.
+fn text_fragment(cues: &[(u64, u64, String)]) -> Fragment {
+    let mut data = Vec::new();
+    let mut samples = Vec::new();
+    let mut at = 0u64;
+    let mut sample = |data: &mut Vec<u8>, text: &str, time: u64, duration: u64| {
+        let start = data.len();
+        let text = &text.as_bytes()[..text.len().min(u16::MAX as usize)];
+        data.extend_from_slice(&(text.len() as u16).to_be_bytes());
+        data.extend_from_slice(text);
+        samples.push(Sample { at: start, size: data.len() - start, time, duration: duration.min(u32::MAX as u64) as u32, offset: 0, sync: true });
+    };
+    for (i, (start, end, text)) in cues.iter().enumerate() {
+        let start = (*start).max(at);
+        let end = cues.get(i + 1).map_or(*end, |next| (*end).min(next.0)).max(start + 1);
+        if start > at {
+            sample(&mut data, "", at, start - at);
+        }
+        sample(&mut data, text, start, end - start);
+        at = end;
+    }
+    // An empty one after the last, so players that time a line by the
+    // next sample clear it.
+    if !cues.is_empty() {
+        sample(&mut data, "", at, 1);
+    }
+    Fragment { data, samples }
+}
+
+/// `udta` with the title and cover as iTunes-style metadata, which players
+/// and file managers read.
+fn mp4_metadata(title: Option<&str>, cover: Option<&[u8]>) -> Vec<u8> {
+    let mut out = Vec::new();
+    if title.is_none() && cover.is_none() {
+        return out;
+    }
+    put_box(&mut out, b"udta", |o| {
+        put_box(o, b"meta", |o| {
+            o.extend_from_slice(&[0; 4]);
+            put_box(o, b"hdlr", |o| {
+                o.extend_from_slice(&[0; 8]);
+                o.extend_from_slice(b"mdirappl");
+                o.extend_from_slice(&[0; 9]);
+            });
+            put_box(o, b"ilst", |o| {
+                let item = |o: &mut Vec<u8>, kind: &[u8; 4], type_: u32, value: &[u8]| {
+                    put_box(o, kind, |o| {
+                        put_box(o, b"data", |o| {
+                            o.extend_from_slice(&type_.to_be_bytes());
+                            o.extend_from_slice(&[0; 4]);
+                            o.extend_from_slice(value);
+                        });
+                    });
+                };
+                if let Some(title) = title {
+                    item(o, b"\xa9nam", 1, title.as_bytes());
+                }
+                if let Some(cover) = cover {
+                    item(o, b"covr", if crate::embed::is_png(cover) { 14 } else { 13 }, cover);
+                }
+            });
+        });
+    });
+    out
+}
+
 /// An Opus sound track's `trak`, its `OpusHead` turned into `dOps`
 /// (big-endian, without the magic and version).
 fn opus_trak(opus: &cast_webm::Opus, timescale: u32) -> Vec<u8> {
     let head = &opus.private;
     let le16 = |at: usize| head.get(at..at + 2).map_or(0, |b| u16::from_le_bytes([b[0], b[1]]));
     let le32 = |at: usize| head.get(at..at + 4).map_or(0, |b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]));
-    trak_box(timescale, None, |o| {
+    trak_box(timescale, Media::Sound, |o| {
         put_box(o, b"Opus", |o| {
             o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
             o.extend_from_slice(&[0; 8]);
@@ -968,8 +1087,9 @@ fn renumbered(trak: &[u8], id: u32) -> Vec<u8> {
 }
 
 /// The start of a fragmented MP4 holding both tracks: picture as track 1,
-/// sound as track 2.
-fn mp4_head(video: &Track, audio: &Track) -> Vec<u8> {
+/// sound as track 2, and `texts` (language) as tracks 3 on, with `extra`
+/// metadata.
+fn mp4_head(video: &Track, audio: &Track, texts: &[&str], title: Option<&str>, cover: Option<&[u8]>) -> Vec<u8> {
     let mut out = Vec::new();
     put_box(&mut out, b"ftyp", |o| {
         o.extend_from_slice(b"isom");
@@ -982,13 +1102,17 @@ fn mp4_head(video: &Track, audio: &Track) -> Vec<u8> {
         let mut mvhd = video.mvhd.clone();
         let n = mvhd.len();
         if n >= 12 {
-            mvhd[n - 4..].copy_from_slice(&3u32.to_be_bytes());
+            mvhd[n - 4..].copy_from_slice(&(3 + texts.len() as u32).to_be_bytes());
         }
         o.extend_from_slice(&mvhd);
         o.extend_from_slice(&renumbered(&video.trak, 1));
         o.extend_from_slice(&renumbered(&audio.trak, 2));
+        for (i, language) in texts.iter().enumerate() {
+            o.extend_from_slice(&renumbered(&text_trak(language), 3 + i as u32));
+        }
+        o.extend_from_slice(&mp4_metadata(title, cover));
         put_box(o, b"mvex", |o| {
-            for id in [1u32, 2] {
+            for id in 1..3 + texts.len() as u32 {
                 put_box(o, b"trex", |o| {
                     o.extend_from_slice(&[0, 0, 0, 0]);
                     o.extend_from_slice(&id.to_be_bytes());
@@ -1286,6 +1410,8 @@ pub struct Session {
     subtitles: Option<Subtitles>,
     /// Matroska named so even when WebM would hold it.
     matroska: bool,
+    /// What a saved file carries besides: subtitle tracks, title, cover.
+    extras: crate::embed::Extras,
     /// Raised by each request, so an older one for the same session stops.
     generation: AtomicU64,
     /// HLS segments made last, as players often ask for one twice.
@@ -1311,13 +1437,24 @@ impl Session {
             mkv_track(&audio)?;
         }
         let addresses = [Address::new(ask.video.url.clone()), Address::new(ask.audio.url.clone())];
-        Ok(Session { video_target: ask.video, audio_target: ask.audio, addresses, video, audio, start: ask.start_ms as f64 / 1000.0, kind: ask.kind, duration: ask.duration_ms as f64 / 1000.0, subtitles: ask.subtitles.filter(|s| !s.cues.is_empty()), matroska: false, generation: AtomicU64::new(0), made: Mutex::new(VecDeque::new()) })
+        Ok(Session { video_target: ask.video, audio_target: ask.audio, addresses, video, audio, start: ask.start_ms as f64 / 1000.0, kind: ask.kind, duration: ask.duration_ms as f64 / 1000.0, subtitles: ask.subtitles.filter(|s| !s.cues.is_empty()), matroska: false, extras: crate::embed::Extras::default(), generation: AtomicU64::new(0), made: Mutex::new(VecDeque::new()) })
     }
 
     /// Names Matroska so, never WebM, for a file the user asked to be MKV.
     pub fn plain_matroska(mut self) -> Self {
         self.matroska = true;
         self
+    }
+
+    /// Carries `extras` in a saved file.
+    pub fn with_extras(mut self, extras: crate::embed::Extras) -> Self {
+        self.extras = extras;
+        self
+    }
+
+    /// Every subtitle track a Matroska stream carries.
+    fn texts(&self) -> Vec<&Subtitles> {
+        self.subtitles.iter().chain(self.extras.texts.iter()).collect()
     }
 
     /// The file name extension a saved stream takes: `webm` when Matroska
@@ -1327,7 +1464,7 @@ impl Session {
             Kind::Mp4 => "mp4",
             Kind::Ts => "ts",
             Kind::Hls => "m3u8",
-            Kind::Mkv if !self.matroska && self.subtitles.is_none() && matches!(self.audio.codec, Codec::Opus(_)) && mkv_track(&self.video).is_ok_and(|v| matches!(v.codec, "V_VP9" | "V_AV1")) => "webm",
+            Kind::Mkv if !self.matroska && self.texts().is_empty() && self.extras.cover.is_none() && matches!(self.audio.codec, Codec::Opus(_)) && mkv_track(&self.video).is_ok_and(|v| matches!(v.codec, "V_VP9" | "V_AV1")) => "webm",
             Kind::Mkv => "mkv",
         }
     }
@@ -1589,11 +1726,21 @@ impl Session {
                 let (picture, sound) = (mkv_track(&self.video)?, mkv_track(&self.audio)?);
                 let from = seconds;
                 let length = if self.duration > from { (self.duration - from) * 1000.0 } else { 0.0 };
-                let head = cast_mkv::head(&picture, &sound, self.subtitles.as_ref().map(|s| s.language.as_str()), length, file, self.matroska);
+                let texts = self.texts();
+                let names: Vec<(&str, &str)> = texts.iter().map(|t| (t.language.as_str(), t.name.as_str())).collect();
+                let extra = cast_mkv::Extra { texts: &names, title: self.extras.title.as_deref(), cover: self.extras.cover.as_deref() };
+                let head = cast_mkv::head(&picture, &sound, extra, length, file, self.matroska);
                 into.write_all(&head.bytes).map_err(|_| String::new())?;
                 let mut end = 0i64;
                 let from_ms = (from * 1000.0).round() as i64;
-                let mut cues = self.subtitles.iter().flat_map(|s| s.cues.iter()).filter(|c| c.1 as i64 > from_ms).peekable();
+                let mut all: Vec<(u64, u64, &str, u64)> = texts
+                    .iter()
+                    .enumerate()
+                    .flat_map(|(i, t)| t.cues.iter().map(move |c| (c.0, c.1, c.2.as_str(), cast_mkv::TEXT + i as u64)))
+                    .filter(|c| c.1 as i64 > from_ms)
+                    .collect();
+                all.sort_by_key(|c| (c.0, c.3));
+                let mut cues = all.into_iter().peekable();
                 let mut clusters = cast_mkv::Clusters::after(&head);
                 let timescales = [self.video.timescale, self.audio.timescale];
                 let shifts = [self.video.shift as i64, self.audio.shift as i64];
@@ -1616,7 +1763,7 @@ impl Session {
                     while let Some(cue) = cues.next_if(|c| (c.0 as i64 - from_ms) <= decoded) {
                         let start = (cue.0 as i64 - from_ms).max(0);
                         let end = cue.1 as i64 - from_ms;
-                        clusters.text(&mut out, start, (end - start).max(1) as u64, &cue.2);
+                        clusters.text(&mut out, cue.3, start, (end - start).max(1) as u64, cue.2);
                     }
                     clusters.frame(&mut out, if pick == 0 { cast_mkv::VIDEO } else { cast_mkv::AUDIO }, shown, pick == 1 || s.sync, &f.data[s.at..s.at + s.size]);
                     end = end.max(shown + ms(s.duration as i64, pick));
@@ -1644,8 +1791,19 @@ impl Session {
                 return Ok(Some(Saved { segment: head.segment, duration_at: head.duration_at, cues_at: head.cues_at, duration: end as f64, cues }));
             }
             Kind::Mp4 => {
-                out.extend_from_slice(&mp4_head(&self.video, &self.audio));
+                let texts = self.texts();
+                let languages: Vec<&str> = texts.iter().map(|t| t.language.as_str()).collect();
+                out.extend_from_slice(&mp4_head(&self.video, &self.audio, &languages, self.extras.title.as_deref(), self.extras.cover.as_deref()));
                 let mut sequence = 1u32;
+                // Each subtitle track whole, first: a player reads it before
+                // the picture and sound it goes with.
+                if file {
+                    for (i, text) in texts.iter().enumerate() {
+                        let fragment = text_fragment(&text.cues);
+                        mp4_fragment(&mut out, sequence, 3 + i as u32, &fragment, &fragment.samples, 0);
+                        sequence += 1;
+                    }
+                }
                 let timescales = [self.video.timescale, self.audio.timescale];
                 loop {
                     if !current() {
@@ -2083,7 +2241,7 @@ mod tests {
             assert!(Session::new(ask, &files).is_err());
         }
         // As Matroska with a subtitle track: H.264, VP9 from WebM and AV1.
-        let lines = || Some(Subtitles { language: "en".into(), cues: vec![(500, 2_500, "First line".into()), (8_000, 12_000, "Second\nline".into())] });
+        let lines = || Some(Subtitles { language: "en".into(), name: String::new(), cues: vec![(500, 2_500, "First line".into()), (8_000, 12_000, "Second\nline".into())] });
         for (picture, start, name) in [("v.mp4", 0, "out.mkv"), ("v.mp4", 9_500, "seek.mkv"), ("vp9.webm", 0, "vp9.mkv"), ("av1.mp4", 0, "av1.mkv")] {
             let Some(p) = sample(&dir, picture) else { continue };
             let files = super::tests::files(HashMap::from([(picture.to_string(), p.clone()), ("a.mp4".to_string(), a.clone())]));

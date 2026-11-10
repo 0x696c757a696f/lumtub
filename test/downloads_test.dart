@@ -116,7 +116,7 @@ void main() {
     });
 
     final joined = <List<String>>[];
-    DownloadManager manager({List<SkipSegment> segments = const [], Future<({String? path, String? error})> Function(String video, String audio, String stem, String container)? join}) => _track(managers, DownloadManager(
+    DownloadManager manager({List<SkipSegment> segments = const [], Future<({String? path, String? error})> Function(JoinRequest request)? join, Future<List<int>?> Function(String id)? cover}) => _track(managers, DownloadManager(
           file: File('${dir.path}/downloads.json'),
           ytDlpPath: 'yt-dlp',
           defaultDirectory: '${dir.path}/videos',
@@ -131,6 +131,7 @@ void main() {
           sponsorSegments: (id) async => segments,
           onFinished: finished.add,
           join: join,
+          cover: cover,
         ));
 
     Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 80));
@@ -264,9 +265,12 @@ void main() {
 
     test('with a joiner, the two streams come as files that are joined into one', () async {
       joined.clear();
-      final m = manager(join: (video, audio, stem, container) async {
-        joined.add([video, audio, stem, container]);
-        final out = '$stem.webm';
+      final requests = <JoinRequest>[];
+      final m = manager(cover: (id) async => [0xFF, 0xD8, 1], join: (r) async {
+        requests.add(r);
+        expect(File(r.cover!).readAsBytesSync(), [0xFF, 0xD8, 1]);
+        joined.add([r.video, r.audio, r.stem, r.container]);
+        final out = '${r.stem}.webm';
         File(out).writeAsStringSync('joined');
         return (path: out, error: null);
       });
@@ -285,6 +289,9 @@ void main() {
       await until(() => processes.isNotEmpty);
       final picture = File('${dir.path}/videos/Video [aaaaaaaaaaa].f137.mp4')..createSync(recursive: true);
       final sound = File('${dir.path}/videos/Video [aaaaaaaaaaa].f251.webm')..createSync(recursive: true);
+      File('${dir.path}/videos/Video [aaaaaaaaaaa].en-orig.vtt').writeAsStringSync('WEBVTT');
+      File('${dir.path}/videos/Video [aaaaaaaaaaa].zh-Hans.vtt').writeAsStringSync('WEBVTT');
+      File('${dir.path}/videos/Video [aaaaaaaaaaa].info.json').writeAsStringSync('{}');
       processes[0].out('lumtub-file|${picture.path}');
       processes[0].out('lumtub-file|${sound.path}');
       await processes[0].exit(0);
@@ -294,6 +301,10 @@ void main() {
       expect(joined.single, [picture.path, sound.path, '${dir.path}/videos/Video [aaaaaaaaaaa]', 'auto']);
       expect(task.filePath, '${dir.path}/videos/Video [aaaaaaaaaaa].webm');
       expect(picture.existsSync() || sound.existsSync(), isFalse);
+      expect(requests.single.subtitles.map((s) => s.language), ['en', 'zh-Hans']);
+      expect(requests.single.title, 'Video aaaaaaaaaaa');
+      // The cover went inside; its file is gone.
+      expect(File(requests.single.cover!).existsSync(), isFalse);
 
       m.add(video('bbbbbbbbbbb'), DownloadQuality.best, selection: const DownloadSelection(codec: VideoCodec.vp9, height: 1080, videoId: '248', audioId: '251', container: DownloadContainer.mp4));
       await until(() => processes.length > 1);
@@ -306,7 +317,7 @@ void main() {
       await until(() => m.taskFor('bbbbbbbbbbb')!.status == DownloadStatus.done);
       expect(joined.last.last, 'mp4');
 
-      final fails = manager(join: (video, audio, stem, container) async => (path: null, error: 'sound other than AAC, Opus or Dolby'));
+      final fails = manager(join: (r) async => (path: null, error: 'sound other than AAC, Opus or Dolby'));
       fails.add(video('ccccccccccc'), DownloadQuality.best);
       await until(() => processes.length > 2);
       final p = File('${dir.path}/videos/Video [ccccccccccc].f248.webm')..createSync(recursive: true);

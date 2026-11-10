@@ -219,7 +219,7 @@ void main() {
     });
 
     final item = VideoItem(id: 'aaaaaaaaaaa', title: 'T', channel: 'C', url: 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
-    Future<({String? path, String? error})> joiner(String video, String audio, String stem, String container) async => (path: null, error: null);
+    Future<({String? path, String? error})> joiner(JoinRequest request) async => (path: null, error: null);
     DownloadManager manager({bool join = false}) => DownloadManager(
         file: File('${dir.path}/downloads.json'),
         ytDlpPath: 'yt-dlp',

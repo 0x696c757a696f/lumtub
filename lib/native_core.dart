@@ -315,17 +315,16 @@ class NativeCore {
 
   int Function()? _processCpu;
 
-  /// Joins a downloaded picture and sound without ffmpeg into [stem] plus
-  /// the extension of [container] (mp4, webm or mkv), or for `auto` the
-  /// one that fits them (.mp4, or .webm/.mkv for Opus sound); the path
-  /// written, or why not. It reads and writes the whole video, so run it
-  /// on another isolate.
-  static ({String? path, String? error}) join(String video, String audio, String stem, {String container = 'auto'}) {
+  /// Joins a downloaded picture and sound without ffmpeg, as [request]
+  /// (`{video, audio, out, container, subtitles, title, cover}`, see
+  /// JoinRequest) asks; the path written, or why not. It reads and writes
+  /// the whole video, so run it on another isolate.
+  static ({String? path, String? error}) join(Map<String, Object?> request) {
     final core = instance;
     if (core == null) return (path: null, error: 'lumtub_core is missing');
     try {
       final call = core._join ??= core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_join');
-      final answer = core.take(core.withText(jsonEncode({'video': video, 'audio': audio, 'out': stem, 'container': container}), call));
+      final answer = core.take(core.withText(jsonEncode(request), call));
       final map = answer == null ? null : jsonDecode(answer);
       if (map is Map && map['path'] is String) return (path: map['path'] as String, error: null);
       return (path: null, error: map is Map ? '${map['error']}' : 'the files could not be joined');

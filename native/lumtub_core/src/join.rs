@@ -45,11 +45,52 @@ fn is_webm(path: &str) -> Result<bool, String> {
     Ok(cast_webm::is_webm(&start[..read]))
 }
 
+/// A subtitle file (WebVTT or SRT) to carry as a track.
+#[derive(Deserialize, Default, Clone)]
+pub struct Text {
+    pub path: String,
+    #[serde(default)]
+    pub language: String,
+    #[serde(default)]
+    pub name: String,
+}
+
+/// What a joined file carries besides picture and sound.
+#[derive(Deserialize, Default)]
+pub struct Extra {
+    #[serde(default)]
+    pub subtitles: Vec<Text>,
+    #[serde(default)]
+    pub title: Option<String>,
+    /// A JPEG or PNG file.
+    #[serde(default)]
+    pub cover: Option<String>,
+}
+
+impl Extra {
+    /// The subtitle files read, a file that cannot be read or holds no
+    /// lines left out, and the cover read.
+    fn read(&self) -> crate::embed::Extras {
+        let texts = self
+            .subtitles
+            .iter()
+            .filter_map(|t| {
+                let source = std::fs::read(&t.path).ok()?;
+                let cues: Vec<(u64, u64, String)> = crate::subtitles::cues(&String::from_utf8_lossy(&source)).into_iter().map(|c| (c.start, c.end, c.text)).collect();
+                (!cues.is_empty()).then(|| crate::cast::Subtitles { language: t.language.clone(), name: t.name.clone(), cues })
+            })
+            .collect();
+        let cover = self.cover.as_ref().and_then(|p| std::fs::read(p).ok()).filter(|b| b.starts_with(&[0xFF, 0xD8]) || crate::embed::is_png(b));
+        crate::embed::Extras { texts, title: self.title.clone().filter(|t| !t.is_empty()), cover }
+    }
+}
+
 /// Writes `video` and `audio` joined into `stem` plus the extension of
 /// `container` (`mp4`, `webm` or `mkv`; any other word picks what fits),
+/// with `extra` inside where the container takes it (WebM takes none),
 /// and returns that path. The file is written beside as `.part` and
 /// renamed when whole.
-pub fn join(video: &str, audio: &str, stem: &str, container: &str) -> Result<String, String> {
+pub fn join(video: &str, audio: &str, stem: &str, container: &str, extra: &Extra) -> Result<String, String> {
     let fetch: Arc<dyn Fetch> = Arc::new(Files);
     let kind = match container {
         "mp4" => Kind::Mp4,
@@ -61,6 +102,9 @@ pub fn join(video: &str, audio: &str, stem: &str, container: &str) -> Result<Str
     let mut session = Session::new(ask, &fetch)?;
     if container == "mkv" {
         session = session.plain_matroska();
+    }
+    if container != "webm" {
+        session = session.with_extras(extra.read());
     }
     if container == "webm" && session.extension() != "webm" {
         return Err("WebM takes only VP9 or AV1 with Opus".into());
@@ -80,9 +124,13 @@ pub fn join(video: &str, audio: &str, stem: &str, container: &str) -> Result<Str
     result.map(|_| out)
 }
 
-/// Joins JSON `{video, audio, out, container?}`, `out` without its extension; answers
+/// Joins JSON `{video, audio, out, container?, subtitles?: [{path,
+/// language, name}], title?, cover?}`, `out` without its extension; answers
 /// `{"path": …}` when done, else `{"error": …}`. It reads and writes the
 /// whole video, so call it off the UI thread.
+///
+/// # Safety
+/// [json] points at [length] readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_join(json: *const u8, length: usize) -> *mut c_char {
     #[derive(Deserialize)]
@@ -92,8 +140,10 @@ pub unsafe extern "C" fn lumtub_join(json: *const u8, length: usize) -> *mut c_c
         out: String,
         #[serde(default)]
         container: String,
+        #[serde(flatten)]
+        extra: Extra,
     }
-    let answer = serde_json::from_str::<Request>(unsafe { text(json, length) }).map_err(|e| e.to_string()).and_then(|r| join(&r.video, &r.audio, &r.out, &r.container));
+    let answer = serde_json::from_str::<Request>(unsafe { text(json, length) }).map_err(|e| e.to_string()).and_then(|r| join(&r.video, &r.audio, &r.out, &r.container, &r.extra));
     give(match answer {
         Ok(path) => serde_json::json!({ "path": path }).to_string(),
         Err(error) => serde_json::json!({ "error": error }).to_string(),
@@ -103,6 +153,24 @@ pub unsafe extern "C" fn lumtub_join(json: *const u8, length: usize) -> *mut c_c
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Two subtitle files, a title and a cover picture in `dir`.
+    fn extras(dir: &str) -> Extra {
+        std::fs::write(format!("{dir}/en.vtt"), "WEBVTT\n\n00:00:00.500 --> 00:00:02.500\nFirst line\n\n00:00:08.000 --> 00:00:12.000\nSecond line\n").unwrap();
+        std::fs::write(format!("{dir}/de.srt"), "1\n00:00:01,000 --> 00:00:03,000\nErste Zeile\n\n2\n00:00:09,000 --> 00:00:11,000\nZweite Zeile\n").unwrap();
+        let mut jpeg = vec![0xFF, 0xD8, 0xFF, 0xE0];
+        jpeg.extend_from_slice(&[0x42; 100]);
+        std::fs::write(format!("{dir}/cover.jpg"), jpeg).unwrap();
+        Extra {
+            subtitles: vec![
+                Text { path: format!("{dir}/en.vtt"), language: "en".into(), name: "English".into() },
+                Text { path: format!("{dir}/de.srt"), language: "de".into(), name: "Deutsch".into() },
+                Text { path: format!("{dir}/missing.vtt"), language: "fr".into(), name: String::new() },
+            ],
+            title: Some("A title".into()),
+            cover: Some(format!("{dir}/cover.jpg")),
+        }
+    }
 
     /// Joins the sample files of cast's test (LUMTUB_CAST_SAMPLES) from disk:
     /// each picture with AAC, Dolby and Opus sound where there are samples.
@@ -128,19 +196,28 @@ mod tests {
                 continue;
             }
             let stem = format!("{dir}/joined-{}-{}", picture.replace('.', "_"), sound.replace('.', "_"));
-            let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &stem, "auto").expect("join");
+            let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &stem, "auto", &Extra::default()).expect("join");
             assert_eq!(out, format!("{stem}.{extension}"));
             assert!(std::fs::metadata(&out).unwrap().len() > 100_000);
             assert!(!std::path::Path::new(&format!("{out}.part")).exists());
             for asked in ["mp4", "mkv"] {
-                let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &format!("{stem}-as"), asked).expect("join as asked");
+                let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &format!("{stem}-as"), asked, &Extra::default()).expect("join as asked");
                 assert_eq!(out, format!("{stem}-as.{asked}"));
             }
-            let webm = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &format!("{stem}-as"), "webm");
+            let webm = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &format!("{stem}-as"), "webm", &Extra::default());
             assert_eq!(webm.is_ok(), extension == "webm", "{picture} {sound} as WebM");
+            let extra = extras(&dir);
+            for asked in ["mp4", "mkv", "auto"] {
+                let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &format!("{stem}-extra-{asked}"), asked, &extra).expect("join with extras");
+                assert!(!out.ends_with(".webm"), "a WebM takes no subtitles: {out}");
+                let bytes = std::fs::read(&out).unwrap();
+                let has = |needle: &[u8]| bytes.windows(needle.len()).any(|w| w == needle);
+                assert!(has(b"Second line") && has(b"Zweite Zeile") && has(b"A title"), "{out}");
+                assert!(has(&[0xFF, 0xD8, 0xFF, 0xE0]), "cover in {out}");
+            }
         }
         let audio = format!("{dir}/a.mp4");
-        assert!(join(&audio, &audio, &format!("{dir}/wrong"), "auto").is_err());
+        assert!(join(&audio, &audio, &format!("{dir}/wrong"), "auto", &Extra::default()).is_err());
         assert!(!std::path::Path::new(&format!("{dir}/wrong.mp4.part")).exists());
     }
 }

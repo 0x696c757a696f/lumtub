@@ -108,6 +108,7 @@ class DownloadManager extends ChangeNotifier {
     this.sponsorSegments,
     this.onFinished,
     this.join,
+    this.cover,
   })  : _directory = defaultDirectory,
         _start = start ?? _backgroundStart;
 
@@ -125,10 +126,11 @@ class DownloadManager extends ChangeNotifier {
   final Future<List<SkipSegment>> Function(String videoId)? sponsorSegments;
   /// Called once a download's file is complete.
   final void Function(DownloadTask task)? onFinished;
-  /// Joins a picture and a sound file into one without ffmpeg: into the
-  /// stem plus the extension of the container (mp4, webm, mkv, or `auto`
-  /// for the one that fits them); the path written, or why not.
-  final Future<({String? path, String? error})> Function(String video, String audio, String stem, String container)? join;
+  /// Joins a picture and a sound file into one without ffmpeg; the path
+  /// written, or why not.
+  final Future<({String? path, String? error})> Function(JoinRequest request)? join;
+  /// The cover picture (JPEG) of a video, to put inside a joined file.
+  final Future<List<int>?> Function(String videoId)? cover;
 
   String _directory;
   DownloadDefaults _defaults = const DownloadDefaults();
@@ -452,7 +454,31 @@ class DownloadManager extends ChangeNotifier {
   Future<void> _finish(DownloadTask task, List<String> printed) async {
     var path = printed.lastOrNull;
     if (_joins(task) && printed.length >= 2) {
-      final joined = await join!(printed.first, printed.last, printed.first.replaceFirst(_partSuffix, ''), task.selection?.container.name ?? 'auto');
+      final stem = printed.first.replaceFirst(_partSuffix, '');
+      final container = task.selection?.container.name ?? 'auto';
+      File? coverFile;
+      if (container != 'webm') {
+        try {
+          final bytes = await cover?.call(task.id);
+          if (bytes != null) coverFile = await File('$stem.cover.jpg').writeAsBytes(bytes);
+        } catch (e) {
+          logWarn('No cover for ${task.id} inside the file: $e');
+        }
+      }
+      final joined = await join!(JoinRequest(
+        video: printed.first,
+        audio: printed.last,
+        stem: stem,
+        container: container,
+        subtitles: subtitleFilesOf(stem),
+        title: task.item.title,
+        cover: coverFile?.path,
+      ));
+      try {
+        await coverFile?.delete();
+      } on FileSystemException {
+        // Left for the user.
+      }
       final out = joined.path;
       if (out == null) {
         task.status = DownloadStatus.failed;
@@ -486,6 +512,26 @@ class DownloadManager extends ChangeNotifier {
       logError('Could not save the offline info of ${task.id}', e);
     }
     onFinished?.call(task);
+  }
+
+  /// The subtitle files yt-dlp saved beside [stem] (`stem.en.vtt`), each
+  /// with its language.
+  static List<({String path, String language})> subtitleFilesOf(String stem) {
+    final file = File(stem);
+    final name = file.uri.pathSegments.last;
+    final found = <({String path, String language})>[];
+    try {
+      for (final entity in file.parent.listSync()) {
+        final other = entity.uri.pathSegments.last;
+        if (entity is! File || !other.startsWith('$name.')) continue;
+        final match = RegExp(r'^\.([A-Za-z0-9_-]+)\.(vtt|srt)$').firstMatch(other.substring(name.length));
+        if (match != null) found.add((path: entity.path, language: match[1]!.replaceFirst(RegExp(r'-orig$'), '')));
+      }
+    } on FileSystemException {
+      // None then.
+    }
+    found.sort((a, b) => a.path.compareTo(b.path));
+    return found;
   }
 
   static const _sidecarKeys = [
@@ -579,4 +625,30 @@ class DownloadManager extends ChangeNotifier {
     progress.dispose();
     super.dispose();
   }
+}
+
+/// A picture and a sound file for the core to join, and what goes inside
+/// besides.
+class JoinRequest {
+  const JoinRequest({required this.video, required this.audio, required this.stem, this.container = 'auto', this.subtitles = const [], this.title, this.cover});
+  final String video;
+  final String audio;
+  /// The joined file's path without its extension.
+  final String stem;
+  /// mp4, webm, mkv, or `auto` for the one that fits the streams.
+  final String container;
+  final List<({String path, String language})> subtitles;
+  final String? title;
+  /// A JPEG file.
+  final String? cover;
+
+  Map<String, Object?> toJson() => {
+        'video': video,
+        'audio': audio,
+        'out': stem,
+        'container': container,
+        'subtitles': [for (final s in subtitles) {'path': s.path, 'language': s.language}],
+        if (title != null) 'title': title,
+        if (cover != null) 'cover': cover,
+      };
 }

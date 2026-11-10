@@ -304,6 +304,9 @@ fn mp4(file: &mut File, total: u64, stem: &str, extension: &str, every: f64) -> 
 
 /// Cuts JSON `{input, stem, every}` (`every` in seconds); answers
 /// `{"parts": [{"path", "start"}]}` or `{"error"}`.
+///
+/// # Safety
+/// [json] points at [length] readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_cut_audio(json: *const u8, length: usize) -> *mut c_char {
     #[derive(Deserialize)]

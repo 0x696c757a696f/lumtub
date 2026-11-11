@@ -4,8 +4,15 @@
 the Android build.
 
 Copied from pub.dev (MIT, see LICENSE) with the Windows, Linux and macOS
-plugins kept (`linux/` is unchanged from 2.0.1).
+plugins kept.
 The changes, marked "Lumtub" in the code:
+
+- `linux/texture_gl.cc`: each frame ends with an EGL fence instead of
+  `glFinish()`. Flutter's context waits for that fence on the GPU
+  (`EGL_KHR_wait_sync`), or the CPU waits for that frame alone, so the
+  raster thread no longer blocks until the whole GPU queue is drained.
+  Without `EGL_KHR_fence_sync`, or with `LUMTUB_GL_FINISH` set, it falls
+  back to `glFinish()`.
 
 - `windows/angle_surface_manager.cc`, `video_output.cc`: libmpv draws
   straight into a ring of four shared textures that Flutter samples, instead

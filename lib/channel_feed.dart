@@ -24,8 +24,17 @@ class ChannelFeed {
   final _recent = <String, (DateTime, List<VideoItem>)>{};
   static const recentFor = Duration(minutes: 5);
 
-  Future<List<VideoItem>> latest(ChannelRef channel, {bool fresh = false}) async {
-    if (_recent[channel.id] case (final at, final items) when !fresh && _clock().difference(at) < recentFor) return items;
+  /// Reads under way, so callers asking for the same channel at once share one request.
+  final _inFlight = <String, Future<List<VideoItem>>>{};
+
+  Future<List<VideoItem>> latest(ChannelRef channel, {bool fresh = false}) {
+    if (_recent[channel.id] case (final at, final items) when !fresh && _clock().difference(at) < recentFor) return Future.value(items);
+    return _inFlight[channel.id] ??= _fetch(channel).whenComplete(() {
+      _inFlight.remove(channel.id);
+    });
+  }
+
+  Future<List<VideoItem>> _fetch(ChannelRef channel) async {
     final items = await _read(channel);
     _recent.remove(channel.id);
     if (_recent.length >= 300) _recent.remove(_recent.keys.first);

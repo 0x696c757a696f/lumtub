@@ -74,19 +74,30 @@ abstract final class WindowFrame {
 
   static ({double height, List<double>? maximize, List<List<double>> interactive})? _lastCaption;
 
+  /// Lets tests see the caption reports Windows gets.
+  @visibleForTesting
+  static bool debugCaptions = false;
+
+  /// Whether the runner takes caption reports (Windows only).
+  static bool get reportsCaption => Platform.isWindows || debugCaptions;
+
   /// Windows hit-testing, in logical pixels: the title bar [height] (the
   /// caption: draggable, double-click maximizes, Aero snap works; 0 for
   /// none), the [maximizeButton] rect, and [interactive] rects inside the
   /// caption that stay clickable (menus, buttons, the search box). Call it
   /// whenever the layout changes.
   static void setCaption({required double height, Rect? maximizeButton, List<Rect> interactive = const []}) {
-    if (!Platform.isWindows) return;
+    if (!reportsCaption) return;
     final next = (height: height, maximize: maximizeButton == null ? null : rectToList(maximizeButton), interactive: interactive.map(rectToList).toList());
     final last = _lastCaption;
     if (last != null && last.height == next.height && listEquals(last.maximize, next.maximize) && _sameRects(last.interactive, next.interactive)) return;
     _lastCaption = next;
     _listen();
-    _invoke('setCaption', {'height': next.height, 'maximize': next.maximize, 'interactive': next.interactive});
+    _tryInvoke('setCaption', {'height': next.height, 'maximize': next.maximize, 'interactive': next.interactive}).then((taken) {
+      // Not taken: the next report goes out again instead of being
+      // skipped as already sent.
+      if (!taken && identical(_lastCaption, next)) _lastCaption = null;
+    });
   }
 
   /// A rect as the runner reads it: left, top, right, bottom.
@@ -108,14 +119,20 @@ abstract final class WindowFrame {
     return WindowButtonState.values[index.clamp(0, WindowButtonState.values.length - 1)];
   }
 
-  static Future<void> _invoke(String method, [Object? arguments]) async {
-    if (!supported) return;
+  static Future<void> _invoke(String method, [Object? arguments]) => _tryInvoke(method, arguments);
+
+  /// False when the runner did not take the call.
+  static Future<bool> _tryInvoke(String method, [Object? arguments]) async {
+    if (!supported) return false;
     try {
       await _channel.invokeMethod<void>(method, arguments);
+      return true;
     } on MissingPluginException {
       // An older runner has no custom frame.
+      return false;
     } on PlatformException {
       // Nothing to do for a window call that failed.
+      return false;
     }
   }
 

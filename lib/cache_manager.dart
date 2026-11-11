@@ -9,6 +9,9 @@ import 'player_settings.dart';
 /// deleted or scanned as if it belonged to the application.
 class CacheManager {
   static const managedFolders = {'thumbnails', 'temp', 'yt-dlp', 'mpv'};
+
+  /// The folders yt-dlp downloads and recordings use while they run.
+  static const downloadFolders = {'temp', 'yt-dlp'};
   final AppDirectories directories;
   CacheManager(this.directories);
 
@@ -23,6 +26,43 @@ class CacheManager {
       await Directory('${root.path}${Platform.pathSeparator}$name').create(recursive: true);
     }
     return root;
+  }
+
+  /// Whether [to]'s location is inside one of [from]'s cache folders, or
+  /// the other way round: moving then would copy a folder into itself, or
+  /// delete the new cache with the old one.
+  bool nested(PlayerSettings from, PlayerSettings to) {
+    final oldRoot = rootFor(from), newRoot = rootFor(to);
+    for (final name in managedFolders) {
+      if (isWithin(newRoot.path, '${oldRoot.path}${Platform.pathSeparator}$name')) return true;
+      if (isWithin(oldRoot.path, '${newRoot.path}${Platform.pathSeparator}$name')) return true;
+    }
+    return false;
+  }
+
+  /// Whether [inner] is [outer] or a folder under it, symbolic links and
+  /// (on Windows and macOS) letter case aside.
+  static bool isWithin(String inner, String outer) {
+    String normal(String path) {
+      var full = Directory(path).absolute.path;
+      // The deepest part that exists, with its links resolved.
+      var existing = Directory(full);
+      var rest = '';
+      while (!existing.existsSync() && existing.parent.path != existing.path) {
+        rest = '/${existing.uri.pathSegments.where((s) => s.isNotEmpty).last}$rest';
+        existing = existing.parent;
+      }
+      try {
+        full = existing.resolveSymbolicLinksSync() + rest;
+      } on FileSystemException {
+        // Kept as written.
+      }
+      full = full.replaceAll('\\', '/');
+      if (Platform.isWindows || Platform.isMacOS) full = full.toLowerCase();
+      return full.endsWith('/') ? full : '$full/';
+    }
+
+    return normal(inner).startsWith(normal(outer));
   }
 
   Future<int> size(PlayerSettings settings) async {
@@ -41,12 +81,13 @@ class CacheManager {
   /// Deletes what is inside the managed folders, keeping the folders. A
   /// file in use, such as one yt-dlp or Deno holds in `temp` while a search
   /// runs, is skipped rather than stopping the rest. Returns the bytes freed
-  /// and how many files were left.
-  Future<({int freed, int skipped})> clear(PlayerSettings settings) async {
+  /// and how many files were left. Folders named in [keep] are left alone,
+  /// as `temp` and `yt-dlp` are while a download uses them.
+  Future<({int freed, int skipped})> clear(PlayerSettings settings, {Set<String> keep = const {}}) async {
     final root = await prepare(settings);
     var freed = 0;
     var skipped = 0;
-    for (final name in managedFolders) {
+    for (final name in managedFolders.difference(keep)) {
       final child = Directory('${root.path}${Platform.pathSeparator}$name');
       if (!await child.exists()) continue;
       final entries = await child.list(recursive: true, followLinks: false).toList();
@@ -80,6 +121,7 @@ class CacheManager {
   /// they were, whatever was already in [to] is restored, and the error is
   /// rethrown.
   Future<void> migrate(PlayerSettings from, PlayerSettings to, {Future<void> Function()? commit, @visibleForTesting String? tag}) async {
+    if (nested(from, to)) throw FileSystemException('The new cache location is inside the old cache, or the other way round', rootFor(to).path);
     final oldRoot = await prepare(from);
     final newRoot = await prepare(to);
     tag ??= '${DateTime.now().microsecondsSinceEpoch}';

@@ -19,7 +19,6 @@ import android.os.IBinder
 import android.os.Looper
 import java.net.HttpURLConnection
 import java.net.URL
-import kotlin.concurrent.thread
 
 /**
  * Keeps Lumtub playing while it is in the background: a foreground service
@@ -41,6 +40,7 @@ class PlaybackService : Service() {
 
     companion object {
         private const val CHANNEL = "playback"
+        private const val ARTWORK_LIMIT = 8 shl 20
         private const val NOTIFICATION = 1
 
         var listener: ((String, Any?) -> Unit)? = null
@@ -53,6 +53,12 @@ class PlaybackService : Service() {
         private var denied = false
         private var session: MediaSession? = null
         private var artwork: Pair<String, Bitmap?>? = null
+        // One thumbnail at a time; one asked for and replaced before its
+        // turn is never fetched.
+        private val artworkLoader = java.util.concurrent.Executors.newSingleThreadExecutor { task ->
+            Thread(task, "lumtub-artwork").apply { isDaemon = true }
+        }
+        @Volatile private var wantedArtwork = ""
         private val main = Handler(Looper.getMainLooper())
 
         fun createChannel(context: Context) {
@@ -157,12 +163,25 @@ class PlaybackService : Service() {
             val address = state.thumbnail
             if (address.isEmpty() || artwork?.first == address) return
             artwork = address to null
-            thread(isDaemon = true) {
+            wantedArtwork = address
+            artworkLoader.execute {
+                if (wantedArtwork != address) return@execute
                 val bitmap = try {
                     val connection = URL(address).openConnection() as HttpURLConnection
                     connection.connectTimeout = 8000
                     connection.readTimeout = 8000
-                    artworkBitmap(connection.inputStream.use { it.readBytes() })
+                    val bytes = connection.inputStream.use { stream ->
+                        // A thumbnail is well under this; anything larger is not drawn.
+                        val out = java.io.ByteArrayOutputStream()
+                        val buffer = ByteArray(16 * 1024)
+                        while (out.size() <= ARTWORK_LIMIT && wantedArtwork == address) {
+                            val n = stream.read(buffer)
+                            if (n < 0) break
+                            out.write(buffer, 0, n)
+                        }
+                        if (out.size() > ARTWORK_LIMIT || wantedArtwork != address) null else out.toByteArray()
+                    }
+                    bytes?.let { artworkBitmap(it) }
                 } catch (e: Exception) {
                     null
                 }

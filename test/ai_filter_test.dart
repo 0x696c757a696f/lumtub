@@ -84,4 +84,20 @@ void main() {
     await filter.setMode(AiFilterMode.off);
     expect(filter.hides(labeled), isFalse);
   }, skip: !AiFilter.available ? 'needs the native core' : false);
+
+  test('a disposed filter asks about nothing more', () async {
+    final asked = <String>[];
+    final client = MockClient((request) async {
+      asked.add((jsonDecode(request.body) as Map)['videoId'] as String);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      return http.Response(jsonEncode(next(ai: true)), 200);
+    });
+    final filter = AiFilter(client);
+    await filter.setMode(AiFilterMode.labeled);
+    filter.check([for (var i = 0; i < 8; i++) video('video${i}000000'.substring(0, 11), 'UCother00000000000000000')]);
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    filter.dispose();
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    expect(asked, hasLength(AiFilter.parallel));
+  }, skip: !AiFilter.available ? 'needs the native core' : false);
 }

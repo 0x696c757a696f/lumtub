@@ -26,6 +26,9 @@ const BEHIND_SECONDS: f64 = 20.0;
 const BEHIND_UNKNOWN: u64 = 5;
 /// Fragments asked for at once while there are that many to catch up on.
 const AT_ONCE: usize = 3;
+/// The most a fragment may hold. A 2160p60 one of a few seconds is around
+/// 10 MB; a reply far past that is not a fragment and is not kept whole.
+const FRAGMENT_LIMIT: u64 = 64 << 20;
 /// How long a fragment may stay unavailable before the stream ends and the
 /// app reconnects.
 const GIVE_UP: Duration = Duration::from_secs(45);
@@ -136,9 +139,12 @@ fn fetch_fragment(
     // Appended as text: rebuilding the query could re-encode signed values.
     let url = format!("{base}&sq={sq}");
     match fetch.get_live(target, &url) {
-        Ok((200, head, mut body)) => {
+        Ok((200, head, body)) => {
             let mut bytes = Vec::new();
-            match body.read_to_end(&mut bytes) {
+            match body.take(FRAGMENT_LIMIT + 1).read_to_end(&mut bytes) {
+                Ok(_) if bytes.len() as u64 > FRAGMENT_LIMIT => Err(Miss::Again(format!(
+                    "fragment {sq} is over {FRAGMENT_LIMIT} bytes"
+                ))),
                 Ok(_) if !bytes.is_empty() => Ok(Fragment { bytes, head }),
                 Ok(_) => Err(Miss::Again(format!("fragment {sq} was empty"))),
                 Err(e) => Err(Miss::Again(format!("fragment {sq} broke off: {e}"))),

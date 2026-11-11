@@ -72,6 +72,7 @@ class AppUpdater extends ChangeNotifier {
   /// downloaded again, and the settings page sends to GitHub instead.
   String? rejected;
   Timer? _timer;
+  bool _disposed = false;
   /// GitHub's ETag for the last answer and that answer, so a check can ask
   /// "has it changed?" and an unchanged one (HTTP 304) costs no rate limit.
   String? _etag;
@@ -118,7 +119,7 @@ class AppUpdater extends ChangeNotifier {
     if (checking) return;
     checking = true;
     error = null;
-    notifyListeners();
+    _notify();
     try {
       final response = await _client.get(
         Uri.https('api.github.com', '/repos/0x696c757a696f/lumtub/releases/latest'),
@@ -145,7 +146,7 @@ class AppUpdater extends ChangeNotifier {
       logWarn('Could not check Lumtub updates: $e');
     } finally {
       checking = false;
-      notifyListeners();
+      _notify();
     }
     if (download && !(automatic && await _metered())) await this.download();
   }
@@ -166,7 +167,7 @@ class AppUpdater extends ChangeNotifier {
     if (!canInstall || asset == null || progress != null || rejected == available!.version || ready?.path.endsWith(asset['name'].toString()) == true) return;
     progress = 0;
     error = null;
-    notifyListeners();
+    _notify();
     try {
       final file = await _download(asset, _directory, (received, total) {
         if (total == null || total <= 0) return;
@@ -174,7 +175,7 @@ class AppUpdater extends ChangeNotifier {
         final next = (received * 100 ~/ total) / 100;
         if (next == progress) return;
         progress = next;
-        notifyListeners();
+        _notify();
       });
       try {
         await _verifySignature(file, asset, available!.signature);
@@ -189,7 +190,7 @@ class AppUpdater extends ChangeNotifier {
       logWarn('Could not download the Lumtub update: $e');
     } finally {
       progress = null;
-      notifyListeners();
+      _notify();
     }
   }
 
@@ -239,7 +240,7 @@ class AppUpdater extends ChangeNotifier {
     rejected = available?.version;
     ready = null;
     installError = tr('see the logs for details');
-    notifyListeners();
+    _notify();
     return false;
   }
 
@@ -278,7 +279,7 @@ class AppUpdater extends ChangeNotifier {
         if (result['ok'] != true) {
           logWarn('Could not start the Lumtub installer${result['elevated'] == true ? ' as administrator' : ''}: ${result['error']}');
           installError = result['elevated'] == true ? tr('Administrator rights are needed to install into this folder') : tr('see the logs for details');
-          notifyListeners();
+          _notify();
           return false;
         }
         installError = null;
@@ -301,7 +302,7 @@ class AppUpdater extends ChangeNotifier {
       logWarn('Could not start the Lumtub update: $e');
       if (appImage != null || macApp != null) {
         installError = friendlyFileError(e);
-        notifyListeners();
+        _notify();
       }
       return false;
     }
@@ -318,7 +319,7 @@ class AppUpdater extends ChangeNotifier {
     } on PlatformException catch (e) {
       logWarn('Could not start the Android installer: ${e.message ?? e.code}');
       installError = tr('see the logs for details');
-      notifyListeners();
+      _notify();
       return false;
     }
   }
@@ -358,8 +359,13 @@ class AppUpdater extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _timer?.cancel();
     super.dispose();
+  }
+
+  void _notify() {
+    if (!_disposed) notifyListeners();
   }
 }
 

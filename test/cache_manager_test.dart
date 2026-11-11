@@ -6,6 +6,20 @@ import 'package:lumtub/cache_manager.dart';
 import 'package:lumtub/player_settings.dart';
 
 void main() {
+  test('clear keeps the folders a running download uses', () async {
+    final temp = await Directory.systemTemp.createTemp('lumtub-cache-test-');
+    addTearDown(() => temp.delete(recursive: true));
+    final manager = CacheManager(AppDirectories.at(Directory('${temp.path}${Platform.pathSeparator}app')));
+    const settings = PlayerSettings();
+    final root = await manager.prepare(settings);
+    final part = File('${root.path}${Platform.pathSeparator}temp${Platform.pathSeparator}download.part')..writeAsStringSync('1234');
+    final picture = File('${root.path}${Platform.pathSeparator}thumbnails${Platform.pathSeparator}a.jpg')..writeAsStringSync('12');
+    final result = await manager.clear(settings, keep: CacheManager.downloadFolders);
+    expect(result, (freed: 2, skipped: 0));
+    expect(part.existsSync(), isTrue);
+    expect(picture.existsSync(), isFalse);
+  });
+
   test('clear removes only Lumtub-managed cache folders', () async {
     final temp = await Directory.systemTemp.createTemp('lumtub-cache-test-');
     addTearDown(() => temp.delete(recursive: true));
@@ -65,6 +79,20 @@ void main() {
       expect(await manager.size(from), 0);
       expect(await manager.size(to), 10);
       expect(await Directory(manager.rootFor(to).path).list().map((e) => e.path).where((p) => p.contains('.migrating') || p.contains('.replaced')).toList(), isEmpty);
+    });
+
+    test('refuses a new location inside the old cache, and the other way round', () async {
+      final inside = PlayerSettings(cachePath: '${sub(from, 'thumbnails')}${Platform.pathSeparator}LumtubCache');
+      expect(manager.nested(from, inside), isTrue);
+      await expectLater(manager.migrate(from, inside), throwsA(isA<FileSystemException>()));
+      expect(await Directory(inside.cachePath!).exists(), isFalse);
+      expect(await manager.size(from), 10);
+      final outer = PlayerSettings(cachePath: '${temp.path}${Platform.pathSeparator}outer');
+      final under = PlayerSettings(cachePath: '${temp.path}${Platform.pathSeparator}outer${Platform.pathSeparator}yt-dlp${Platform.pathSeparator}x');
+      expect(manager.nested(outer, under), isTrue);
+      expect(manager.nested(under, outer), isTrue);
+      expect(manager.nested(from, to), isFalse);
+      expect(CacheManager.isWithin('${temp.path}${Platform.pathSeparator}ab', '${temp.path}${Platform.pathSeparator}a'), isFalse);
     });
 
     test('a failure while saving keeps the old cache and the target as it was', () async {

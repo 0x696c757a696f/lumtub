@@ -29,7 +29,10 @@ class SkinLibrary extends ChangeNotifier {
   Directory? _folder;
   StreamSubscription<FileSystemEvent>? _watch;
   Timer? _debounce;
-  final _loadedFonts = <String>{};
+  /// Font files read this run, by family, path and version, and the name
+  /// each was loaded under.
+  final _loadedFonts = <String, String>{};
+  final _fontVersions = <String, int>{};
 
   /// Changes whenever the skins are read again, so themes built from them
   /// are rebuilt.
@@ -93,8 +96,24 @@ class SkinLibrary extends ChangeNotifier {
       final skin = Skin.parse(decodeJsonc(await found.first.readAsString()), folder: source.path, builtIn: false);
       if (builtInIds.contains(skin.id)) throw FormatException('"${skin.id}" is the name of a built-in skin');
       final target = Directory('${folder.path}${Platform.pathSeparator}${skin.id}');
-      if (await target.exists()) await target.delete(recursive: true);
-      await source.rename(target.path);
+      // The skin it replaces is set aside, not deleted, until the new one
+      // is in place, and put back if that fails.
+      final old = Directory('${target.path}.replaced-${DateTime.now().microsecondsSinceEpoch}');
+      final replacing = await target.exists();
+      if (replacing) await target.rename(old.path);
+      try {
+        await source.rename(target.path);
+      } catch (_) {
+        if (replacing) await old.rename(target.path);
+        rethrow;
+      }
+      if (replacing) {
+        try {
+          await old.delete(recursive: true);
+        } catch (e) {
+          logDebug(() => 'Could not remove the replaced skin: $e');
+        }
+      }
       await reload();
       return skin.id;
     } finally {
@@ -121,6 +140,8 @@ class SkinLibrary extends ChangeNotifier {
         final dirs = await folder.list().where((e) => e is Directory).cast<Directory>().toList()
           ..sort((a, b) => a.path.compareTo(b.path));
         for (final dir in dirs) {
+          // A replaced skin that could not be removed is not shown twice.
+          if (dir.path.contains('.replaced-')) continue;
           final file = File('${dir.path}${Platform.pathSeparator}skin.jsonc');
           if (!await file.exists()) continue;
           try {
@@ -148,11 +169,21 @@ class SkinLibrary extends ChangeNotifier {
         skin.warn('font "$family" ($name) must be a file inside the skin folder');
         continue;
       }
-      // Flutter cannot unload a font, so each file is read once a run.
-      if (!_loadedFonts.add('$family\n$path')) continue;
+      // Flutter cannot unload a font, so each version of a file is read
+      // once a run; a changed one is loaded under a new name.
       try {
+        final stat = await File(path).stat();
+        final key = '$family\n$path\n${stat.modified.microsecondsSinceEpoch}\n${stat.size}';
+        final known = _loadedFonts[key];
+        if (known != null) {
+          skin.loadedFonts[family] = known;
+          continue;
+        }
+        final loaded = (_fontVersions[family] = (_fontVersions[family] ?? 0) + 1) == 1 ? family : '$family~${_fontVersions[family]}';
         final bytes = await File(path).readAsBytes();
-        await (FontLoader(family)..addFont(Future.value(ByteData.sublistView(bytes)))).load();
+        await (FontLoader(loaded)..addFont(Future.value(ByteData.sublistView(bytes)))).load();
+        _loadedFonts[key] = loaded;
+        skin.loadedFonts[family] = loaded;
       } catch (e) {
         skin.warn('font "$family" ($name) could not be read');
       }

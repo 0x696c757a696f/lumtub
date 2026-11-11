@@ -18,6 +18,11 @@ class TranslationCache {
   final _entries = <String, (String, int)>{};
   Timer? _saveTimer;
   Future<void>? _loading;
+  /// Saves and deletions run one after another, so a save that started
+  /// before [clear] cannot write the cleared translations back.
+  Future<void> _writes = Future.value();
+  /// Raised by [clear], so a load still reading drops what it read.
+  int _generation = 0;
 
   /// Off in 无痕模式: translations made meanwhile are used but never written.
   bool persist = true;
@@ -28,10 +33,11 @@ class TranslationCache {
   Future<void> _load() async {
     final file = this.file;
     if (file == null) return;
+    final generation = _generation;
     try {
       if (!await file.exists()) return;
       final data = jsonDecode(await file.readAsString());
-      if (data is! Map) return;
+      if (data is! Map || generation != _generation) return;
       final oldest = _now().subtract(maxAge).millisecondsSinceEpoch;
       for (final MapEntry(:key, :value) in data.entries) {
         if (key is String && value is List && value.length == 2 && value[0] is String && value[1] is int && (value[1] as int) >= oldest) {
@@ -73,12 +79,30 @@ class TranslationCache {
 
   int get length => _entries.length;
 
-  void clear() {
+  /// Forgets every translation and deletes the file once any save already
+  /// under way has finished.
+  Future<void> clear() {
+    _generation++;
     _entries.clear();
     _private.clear();
     _saveTimer?.cancel();
     final file = this.file;
-    if (file != null) unawaited(file.delete().then((_) {}, onError: (_) {}));
+    if (file == null) return Future.value();
+    return _write(() async {
+      for (final f in [file, File('${file.path}.tmp')]) {
+        try {
+          await f.delete();
+        } on FileSystemException {
+          // Not there.
+        }
+      }
+    });
+  }
+
+  Future<void> _write(Future<void> Function() step) {
+    final next = _writes.then((_) => step()).catchError((Object _) {});
+    _writes = next;
+    return next;
   }
 
   void _trim() {
@@ -94,18 +118,28 @@ class TranslationCache {
     _saveTimer = Timer(const Duration(seconds: 3), () => unawaited(save()));
   }
 
-  Future<void> save() async {
+  Future<void> save() {
     final file = this.file;
-    if (file == null) return;
+    if (file == null) return Future.value();
     _saveTimer?.cancel();
-    try {
-      await file.parent.create(recursive: true);
-      final temp = File('${file.path}.tmp');
-      await temp.writeAsString(jsonEncode({for (final MapEntry(:key, :value) in _entries.entries) if (!_private.contains(key)) key: [value.$1, value.$2]}));
-      await temp.rename(file.path);
-    } catch (_) {
-      // The cache is only a saving; translating again still works.
-    }
+    final generation = _generation;
+    final json = jsonEncode({for (final MapEntry(:key, :value) in _entries.entries) if (!_private.contains(key)) key: [value.$1, value.$2]});
+    return _write(() async {
+      // A clear since this save was asked for wins.
+      if (generation != _generation) return;
+      try {
+        await file.parent.create(recursive: true);
+        final temp = File('${file.path}.tmp');
+        await temp.writeAsString(json);
+        if (generation != _generation) {
+          await temp.delete();
+          return;
+        }
+        await temp.rename(file.path);
+      } catch (_) {
+        // The cache is only a saving; translating again still works.
+      }
+    });
   }
 }
 

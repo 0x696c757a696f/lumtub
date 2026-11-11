@@ -23,6 +23,26 @@ void main() {
     return jsonEncode({...json as Map<String, Object?>, 'id': id});
   }
 
+  test('a font file changed while Lumtub runs is loaded again under a new name', () async {
+    final skins = Directory('${temp.path}/skins');
+    final folder = Directory('${skins.path}/font-skin')..createSync(recursive: true);
+    final json = decodeJsonc(File('skins/paper/skin.jsonc').readAsStringSync()) as Map<String, Object?>;
+    File('${folder.path}/skin.jsonc').writeAsStringSync(jsonEncode({
+      ...json,
+      'id': 'font-skin',
+      'fonts': {'Skin Face': 'face.ttf'},
+      'text': {'font': 'Skin Face'},
+    }));
+    final face = File('${folder.path}/face.ttf')..writeAsBytesSync(File('assets/fonts/LumtubQuotes-Regular.ttf').readAsBytesSync());
+    await SkinLibrary.instance.load(folder: skins);
+    expect(SkinLibrary.instance.byId('font-skin')!.font, 'Skin Face');
+    await SkinLibrary.instance.reload();
+    expect(SkinLibrary.instance.byId('font-skin')!.font, 'Skin Face');
+    face.writeAsBytesSync(File('assets/fonts/NotoSansSC-Regular.ttf').readAsBytesSync());
+    await SkinLibrary.instance.reload();
+    expect(SkinLibrary.instance.byId('font-skin')!.font, 'Skin Face~2');
+  });
+
   test('a skin.jsonc on its own and a zip of a folder are both added', () async {
     final skins = Directory('${temp.path}/skins');
     await SkinLibrary.instance.load(folder: skins);
@@ -44,6 +64,22 @@ void main() {
     final empty = File('${temp.path}/y.json')..writeAsStringSync('{}');
     await expectLater(SkinLibrary.instance.importFile(empty.path), throwsFormatException);
     expect(skins.listSync(), hasLength(2));
+  });
+
+  test('adding a skin again replaces it, leaving nothing behind', () async {
+    final skins = Directory('${temp.path}/skins');
+    await SkinLibrary.instance.load(folder: skins);
+    final first = File('${temp.path}/a.jsonc')..writeAsStringSync(skinText('again'));
+    expect(await SkinLibrary.instance.importFile(first.path), 'again');
+    File('${skins.path}/again/old.txt').writeAsStringSync('old');
+    expect(await SkinLibrary.instance.importFile(first.path), 'again');
+    expect(File('${skins.path}/again/old.txt').existsSync(), isFalse);
+    expect(skins.listSync().map((e) => e.uri.pathSegments.where((s) => s.isNotEmpty).last).toList(), ['again']);
+    // A replaced skin left over from a failed removal is not listed.
+    Directory('${skins.path}/again.replaced-1').createSync();
+    File('${skins.path}/again.replaced-1/skin.jsonc').writeAsStringSync(skinText('again'));
+    await SkinLibrary.instance.load(folder: skins);
+    expect(SkinLibrary.instance.byId('again')?.folder, endsWith('again'));
   });
 
   test('on a TV a skin without a focused look gets a ring in its accent', () {

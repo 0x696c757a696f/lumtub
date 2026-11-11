@@ -60,6 +60,7 @@ class LibraryStore {
   final liveVideos = <String, (String, String)>{};
   // Insertion order is age order, so the oldest entry is dropped first.
   final _progress = <String, (int, int)>{};
+  final _writes = WriteQueue();
 
   Future<void> load() async {
     if (!await file.exists()) return;
@@ -137,12 +138,14 @@ class LibraryStore {
       };
 
   /// Writes to a temporary file first so a crash never leaves half a file.
-  Future<void> save() async {
-    await file.parent.create(recursive: true);
-    final temp = File('${file.path}.tmp');
-    await temp.writeAsString(jsonEncode(toJson()), flush: true);
-    await temp.rename(file.path);
-  }
+  /// Saves run one after another and read the state when they start, so
+  /// the latest state is written last.
+  Future<void> save() => _writes.run(() async {
+        await file.parent.create(recursive: true);
+        final temp = File('${file.path}.tmp');
+        await temp.writeAsString(jsonEncode(toJson()), flush: true);
+        await temp.rename(file.path);
+      });
 
   /// Forgets every position, for the privacy settings.
   void clearProgress() {

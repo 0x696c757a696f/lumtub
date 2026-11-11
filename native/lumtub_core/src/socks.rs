@@ -15,6 +15,10 @@ use std::thread::JoinHandle;
 use std::time::Duration;
 
 const TIMEOUT: Duration = Duration::from_secs(15);
+/// Connections served at once; the next waits until one ends. mpv and yt-dlp open a handful each.
+const MAX_CLIENTS: usize = 128;
+/// The bridge's threads only copy bytes through a heap buffer.
+const STACK: usize = 128 << 10;
 
 /// Where the SOCKS proxy is and how to talk to it.
 #[derive(Clone, Debug, PartialEq)]
@@ -83,6 +87,7 @@ impl Bridge {
         let stop = Arc::new(AtomicBool::new(false));
         let open = Arc::new(Mutex::new(HashMap::new()));
         let (stopping, tracked) = (stop.clone(), open.clone());
+        let serving = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let accept = std::thread::Builder::new()
             .name("socks-bridge".into())
             .spawn(move || {
@@ -93,17 +98,33 @@ impl Bridge {
                     }
                     let Ok(client) = client else { continue };
                     let _ = client.set_nodelay(true);
+                    while serving.load(Ordering::SeqCst) >= MAX_CLIENTS
+                        && !stopping.load(Ordering::SeqCst)
+                    {
+                        std::thread::sleep(Duration::from_millis(20));
+                    }
                     let id = ids.fetch_add(1, Ordering::Relaxed);
                     if let Ok(copy) = client.try_clone() {
                         tracked.lock().unwrap().insert(id, copy);
                     }
-                    let (proxy, tracked) = (proxy.clone(), tracked.clone());
-                    let _ = std::thread::Builder::new()
+                    serving.fetch_add(1, Ordering::SeqCst);
+                    let (proxy, mine, count) = (proxy.clone(), tracked.clone(), serving.clone());
+                    let spawned = std::thread::Builder::new()
                         .name("socks-client".into())
+                        .stack_size(STACK)
                         .spawn(move || {
-                            handle(client, &proxy, address, &tracked, id);
-                            tracked.lock().unwrap().remove(&id);
+                            handle(client, &proxy, address, &mine, id);
+                            mine.lock().unwrap().remove(&id);
+                            count.fetch_sub(1, Ordering::SeqCst);
                         });
+                    if spawned.is_err() {
+                        // The client was moved into the closure that never
+                        // ran; its tracked copy closes the socket.
+                        if let Some(socket) = tracked.lock().unwrap().remove(&id) {
+                            let _ = socket.shutdown(Shutdown::Both);
+                        }
+                        serving.fetch_sub(1, Ordering::SeqCst);
+                    }
                 }
             })?;
         Ok(Bridge {
@@ -201,10 +222,19 @@ fn handle(
         return;
     };
     let mut client_read = reader.into_inner();
-    let to_upstream = std::thread::spawn(move || {
-        pipe(&mut client_read, &mut up_write);
-        let _ = up_write.shutdown(Shutdown::Write);
-    });
+    let to_upstream = std::thread::Builder::new()
+        .name("socks-upload".into())
+        .stack_size(STACK)
+        .spawn(move || {
+            pipe(&mut client_read, &mut up_write);
+            let _ = up_write.shutdown(Shutdown::Write);
+        });
+    let Ok(to_upstream) = to_upstream else {
+        let _ = writer.shutdown(Shutdown::Both);
+        let _ = upstream.shutdown(Shutdown::Both);
+        open.lock().unwrap().remove(&(id | 1 << 63));
+        return;
+    };
     pipe(&mut up_read, &mut writer);
     let _ = writer.shutdown(Shutdown::Write);
     let _ = to_upstream.join();

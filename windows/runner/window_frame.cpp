@@ -182,10 +182,27 @@ LRESULT WindowFrame::HitTest(LPARAM lparam) {
   ::ScreenToClient(window_, &point);
   const double scale = ScaleOf(window_);
   const bool top_edge = !zoomed && point.y < std::lround(6 * scale);
-  if (system != HTCLIENT) {
-    if (top_edge && system == HTLEFT) return HTTOPLEFT;
-    if (top_edge && system == HTRIGHT) return HTTOPRIGHT;
-    return system;
+  // Only the sizing borders are taken from the system. Its caption, menu
+  // and button answers come from the frame it would draw, which is not
+  // there: taken while that frame is not yet recalculated, they would
+  // cover the menus with the caption.
+  switch (system) {
+    case HTLEFT:
+      return top_edge ? HTTOPLEFT : HTLEFT;
+    case HTRIGHT:
+      return top_edge ? HTTOPRIGHT : HTRIGHT;
+    case HTBOTTOM:
+    case HTBOTTOMLEFT:
+    case HTBOTTOMRIGHT:
+    case HTTOPLEFT:
+    case HTTOPRIGHT:
+    case HTNOWHERE:
+    case HTERROR:
+    case HTTRANSPARENT:
+      return system;
+    case HTTOP:
+      if (!zoomed) return HTTOP;
+      break;
   }
   if (top_edge) return HTTOP;
   if (caption_height_ <= 0 || point.y < 0 || point.y >= std::lround(caption_height_ * scale)) return HTCLIENT;

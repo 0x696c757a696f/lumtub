@@ -95,6 +95,9 @@ public class VideoOutput implements TextureRegistry.SurfaceProducer.Callback {
         synchronized (lock) {
             Log.i(TAG, "onSurfaceAvailable");
             id = surfaceProducer.id();
+            // Lumtub: a size change makes a new surface reference without a
+            // cleanup first; the one it replaces is released too.
+            releaseLater();
             wid = newGlobalObjectRef(surfaceProducer.getSurface());
             textureUpdateCallback.onTextureUpdate(id, wid, surfaceProducer.getWidth(), surfaceProducer.getHeight());
         }
@@ -105,10 +108,17 @@ public class VideoOutput implements TextureRegistry.SurfaceProducer.Callback {
         synchronized (lock) {
             Log.i(TAG, "onSurfaceCleanup");
             textureUpdateCallback.onTextureUpdate(id, 0, surfaceProducer.getWidth(), surfaceProducer.getHeight());
-            if (wid != 0) {
-                final long widReference = wid;
-                handler.postDelayed(() -> deleteGlobalObjectRef(widReference), 5000);
-            }
+            releaseLater();
+        }
+    }
+
+    // Lumtub: frees the current surface reference after mpv has had time to
+    // take the next one.
+    private void releaseLater() {
+        if (wid != 0) {
+            final long widReference = wid;
+            wid = 0;
+            handler.postDelayed(() -> deleteGlobalObjectRef(widReference), 5000);
         }
     }
 

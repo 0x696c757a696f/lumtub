@@ -18,7 +18,9 @@ Future<ProcessResult> runWithTimeout(
   onStart?.call(process);
   const decoder = Utf8Decoder(allowMalformed: true);
   final out = process.stdout.transform(decoder).join();
-  final err = process.stderr.transform(decoder).join();
+  // stdout is the answer and is kept whole; of stderr, which a failing
+  // tool can fill with the same warning over and over, the last part.
+  final err = _tail(process.stderr.transform(decoder), stderrLimit);
   try {
     final code = await process.exitCode.timeout(timeout);
     return ProcessResult(process.pid, code, await out, await err);
@@ -26,4 +28,23 @@ Future<ProcessResult> runWithTimeout(
     process.kill();
     rethrow;
   }
+}
+
+/// The most of a process's stderr kept, in characters.
+const stderrLimit = 1 << 20;
+
+/// [lines] joined, keeping the last [limit] characters.
+Future<String> _tail(Stream<String> lines, int limit) async {
+  final kept = StringBuffer();
+  await for (final piece in lines) {
+    kept.write(piece);
+    if (kept.length > limit * 2) {
+      final text = kept.toString();
+      kept
+        ..clear()
+        ..write(text.substring(text.length - limit));
+    }
+  }
+  final text = kept.toString();
+  return text.length > limit ? text.substring(text.length - limit) : text;
 }

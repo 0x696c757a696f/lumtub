@@ -109,10 +109,18 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
   final _maximize = GlobalKey();
   final _close = GlobalKey();
 
+  /// The title bar whose caption Windows has, so one going away takes the
+  /// caption away only when no newer title bar has reported since.
+  static Object? _captionOwner;
+
   @override
   void dispose() {
     SkinMenuBarView.menusAbove.removeListener(_report);
-    if (Platform.isWindows) WindowFrame.setCaption(height: 0);
+    _AfterLayout.remove(_report);
+    if (_captionOwner == this) {
+      _captionOwner = null;
+      if (WindowFrame.reportsCaption) WindowFrame.setCaption(height: 0);
+    }
     super.dispose();
   }
 
@@ -128,14 +136,16 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
   void initState() {
     super.initState();
     SkinMenuBarView.menusAbove.addListener(_report);
+    _AfterLayout.add(_report);
   }
 
   void _report() {
-    if (!Platform.isWindows || !mounted) return;
+    if (!WindowFrame.reportsCaption || !mounted) return;
     final max = _rectOf(_maximize);
     // A menu bar drawn above the title bar is part of the caption, except
     // where its menus are.
     final bottom = _rectOf(_self)?.bottom ?? widget.bar.height;
+    _captionOwner = this;
     WindowFrame.setCaption(
       height: bottom,
       maximizeButton: max,
@@ -145,7 +155,6 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => _report());
     final bar = widget.bar;
     return ValueListenableBuilder(
       valueListenable: WindowFrame.active,
@@ -237,6 +246,28 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
         onDoubleTap: Platform.isWindows ? null : () => unawaited(WindowFrame.toggleMaximize()),
         child: SizedBox(key: _self, height: height, child: SkinBox(surface: surface, child: row)),
       );
+}
+
+/// Runs its callbacks at the end of every frame, once layout is done, so
+/// the rects reported to Windows follow the layout even when it moves
+/// without a rebuild: the window resized or its frame changed, text laid
+/// out again in a font that finished loading.
+abstract final class _AfterLayout {
+  static final _callbacks = <VoidCallback>{};
+  static bool _registered = false;
+
+  static void add(VoidCallback callback) {
+    _callbacks.add(callback);
+    if (_registered) return;
+    _registered = true;
+    WidgetsBinding.instance.addPersistentFrameCallback((_) {
+      for (final callback in _callbacks.toList()) {
+        if (_callbacks.contains(callback)) callback();
+      }
+    });
+  }
+
+  static void remove(VoidCallback callback) => _callbacks.remove(callback);
 }
 
 enum _Glyph { minimize, maximize, restore, close }
@@ -456,7 +487,14 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
   final _last = GlobalKey();
 
   @override
+  void initState() {
+    super.initState();
+    _AfterLayout.add(_report);
+  }
+
+  @override
   void dispose() {
+    _AfterLayout.remove(_report);
     if (SkinMenuBarView._menusAboveOwner == this) {
       SkinMenuBarView._menusAboveOwner = null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -480,7 +518,6 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
   @override
   Widget build(BuildContext context) {
     final bar = widget.bar;
-    if (bar.top || widget.embedded) WidgetsBinding.instance.addPostFrameCallback((_) => _report());
     final colors = context.colors;
     final menuSurface = bar.menu;
     final menuColor = menuSurface?.baseColor ?? colors.surface;

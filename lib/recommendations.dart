@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
+import 'app_directories.dart';
 import 'background_json.dart';
 import 'feed_quality.dart';
 import 'library_store.dart' show WatchProgress;
@@ -50,8 +51,23 @@ class Recommendation {
 class TasteProfile implements Finalizable {
   TasteProfile._(this._core, this._handle);
 
-  final NativeCore? _core;
-  final Pointer<Void> _handle;
+  NativeCore? _core;
+  Pointer<Void> _handle;
+
+  /// Whether [close] was called; a closed profile knows nothing.
+  bool get isClosed => _core == null;
+
+  /// Frees the native profile now instead of when Dart collects it. Safe to
+  /// call twice; a closed profile answers like one without the library.
+  void close() {
+    final core = _core;
+    if (core == null) return;
+    final handle = _handle;
+    _core = null;
+    _handle = nullptr;
+    core.tasteFinalizer.detach(this);
+    core.tasteFree(handle);
+  }
 
   /// [searches] are the words typed into search, newest first.
   factory TasteProfile.from({
@@ -85,7 +101,7 @@ class TasteProfile implements Finalizable {
     final handle = core.withText(json, core.tasteNew);
     if (handle == nullptr) return TasteProfile._(null, nullptr);
     final taste = TasteProfile._(core, handle);
-    core.tasteFinalizer.attach(taste, handle);
+    core.tasteFinalizer.attach(taste, handle, detach: taste);
     return taste;
   }
 
@@ -207,6 +223,10 @@ class NotInterested {
   final File? file;
   final videos = <String>{};
   final channels = <String, int>{};
+  bool _dirty = false;
+  /// Counts changes, so a save only clears [_dirty] when nothing changed while it wrote.
+  int _revision = 0;
+  final _writes = WriteQueue();
 
   Future<void> load() async {
     final file = this.file;
@@ -236,24 +256,33 @@ class NotInterested {
     while (videos.length > 500) {
       videos.remove(videos.first);
     }
+    _dirty = true;
+    _revision++;
     await _save();
   }
 
   Future<void> clear() async {
     videos.clear();
     channels.clear();
+    _dirty = true;
+    _revision++;
     await _save();
   }
 
-  Future<void> _save() async {
+  /// Writes in order; the JSON is built when the write runs, so the last one holds the latest state.
+  Future<void> _save() {
     final file = this.file;
-    if (file == null) return;
-    try {
-      await file.parent.create(recursive: true);
-      await file.writeAsString(jsonEncode({'videos': videos.toList(), 'channels': channels}));
-    } catch (e) {
-      logWarn('Could not save the recommendation history: $e');
-    }
+    if (file == null) return Future.value();
+    return _writes.run(() async {
+      if (!_dirty) return;
+      final written = _revision;
+      try {
+        await writeFileAtomic(file, jsonEncode({'videos': videos.toList(), 'channels': channels}));
+        if (written == _revision) _dirty = false;
+      } catch (e) {
+        logWarn('Could not save the recommendation history: $e');
+      }
+    });
   }
 }
 

@@ -3163,5 +3163,9 @@
   "Kazakh": "哈薩克語",
   "Kyrgyz": "吉爾吉斯語",
   "Assamese": "阿薩姆語",
-  "Odia": "奧里亞語"
+  "Odia": "奧里亞語",
+  "The new cache location can't be inside the current cache folders.": "新的快取位置不能放在目前的快取資料夾裡面。",
+  "That file is too large to be a subscription export (over {0} MB)": "該檔案過大，不是訂閱匯出檔案（超過 {0} MB）",
+  "Cleared {0} of cache; yt-dlp's cache was kept while downloads are running.": "已清除 {0} 快取；下載正在進行，yt-dlp 的快取先保留。",
+  "YouTube isn't saying which language these videos are spoken in, so untranslated titles are used as well.": "YouTube 沒有告訴這些影片說的是什麼語言，所以也參考了未經翻譯的原標題。"
 }

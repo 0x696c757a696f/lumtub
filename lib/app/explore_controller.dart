@@ -389,6 +389,7 @@ extension ExploreActions on AppController {
                       heardOnly: preferences.exploreHeardOnly,
                       giveUpAfter: VideoLanguages.giveUpAfterDefault * (depth + 1),
                       done: (asked, kept) => _update(() => exploreLanguageCheck = (asked: asked, kept: kept)),
+                      judgingByTitle: () => _notice(tr("YouTube isn't saying which language these videos are spoken in, so untranslated titles are used as well.")),
                     ))
                 : listing;
           },

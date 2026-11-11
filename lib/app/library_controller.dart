@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../channel_avatars.dart';
+import '../app_log.dart';
 import '../channel_feed.dart';
 import '../library_store.dart';
 import '../map_limited.dart';
@@ -184,8 +185,9 @@ class LibraryController extends ChangeNotifier {
   int followAll(List<ChannelRef> channels) {
     var added = 0;
     var updated = false;
+    final index = {for (var i = 0; i < store.channels.length; i++) store.channels[i].id: i};
     for (final channel in channels) {
-      final at = store.channels.indexOf(channel);
+      final at = index[channel.id] ?? -1;
       if (at >= 0) {
         // Keep pictures and names current for channels already followed.
         final known = store.channels[at];
@@ -195,6 +197,7 @@ class LibraryController extends ChangeNotifier {
         }
         continue;
       }
+      index[channel.id] = store.channels.length;
       store.channels.add(channel);
       added++;
     }
@@ -260,10 +263,12 @@ class LibraryController extends ChangeNotifier {
     // A few requests at a time: hundreds of imported subscriptions would
     // otherwise open hundreds of connections at once and, where the feed
     // fails, start as many yt-dlp processes.
+    final feedErrors = <int, Object>{};
     final results = await mapLimited(channels, feedConcurrency, (channel) async {
       try {
         return await _feed.latest(channel, fresh: force);
-      } catch (_) {
+      } catch (e) {
+        feedErrors[channels.indexOf(channel)] = e;
         return null;
       }
     });
@@ -279,7 +284,11 @@ class LibraryController extends ChangeNotifier {
         } finally {
           listing.close();
         }
-      } catch (_) {
+      } catch (e) {
+        // Why each channel failed, for the log: a channel gone or renamed
+        // fails here every time.
+        final channel = channels[i];
+        logWarn('Could not load the uploads of ${channel.name} (${channel.id}): feed: ${feedErrors[i]}; yt-dlp: $e');
         return null;
       }
     });
@@ -287,6 +296,7 @@ class LibraryController extends ChangeNotifier {
       final list = n < fallback.length ? fallback[n] : null;
       results[i] = list;
       if (list == null) failures.add(channels[i].name.isEmpty ? channels[i].id : channels[i].name);
+      if (list == null && n >= fallback.length) logWarn('Could not load the uploads of ${channels[i].name} (${channels[i].id}): feed: ${feedErrors[i]}');
     }
     final merged = mergeFeeds([for (final list in results) if (list != null) list]).take(maxFeedItems).toList();
     feed = _marked(merged) ?? merged;

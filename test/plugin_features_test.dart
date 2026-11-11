@@ -59,6 +59,33 @@ void main() {
       again.clear();
       expect(again.length, 0);
     });
+
+    test('overlapping saves leave the latest state and no temporary file', () async {
+      final file = File('${dir.path}/channel_playback.json');
+      final store = ChannelPlayback(file)..remember('UC1', volume: 10);
+      final first = store.save();
+      store.remember('UC1', volume: 20);
+      final second = store.save();
+      store.remember('UC1', volume: 30);
+      await Future.wait([first, second, store.save()]);
+      final again = ChannelPlayback(file);
+      await again.load();
+      expect(again.of('UC1'), (rate: null, volume: 30));
+      expect(File('${file.path}.tmp').existsSync(), isFalse);
+    });
+
+    test('clear during a pending save leaves nothing', () async {
+      final file = File('${dir.path}/channel_playback.json');
+      final store = ChannelPlayback(file)..remember('UC1', volume: 10);
+      final pending = store.save();
+      store.clear();
+      await pending;
+      await store.save();
+      final again = ChannelPlayback(file);
+      await again.load();
+      expect(again.length, 0);
+      expect(File('${file.path}.tmp').existsSync(), isFalse);
+    });
   });
 
   group('Watch statistics', () {

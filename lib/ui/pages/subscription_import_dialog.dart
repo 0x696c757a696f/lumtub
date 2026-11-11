@@ -17,7 +17,11 @@ Future<void> importSubscriptionsFromFile(BuildContext context, LibraryController
       XTypeGroup(label: tr('Subscription export'), extensions: const ['json', 'db', 'csv', 'opml', 'xml', 'txt'])
     ]);
     if (file == null) return;
-    data = parseSubscriptions(await file.readAsBytes());
+    if (await file.length() > maxSubscriptionFileBytes) {
+      say(tr('That file is too large to be a subscription export (over {0} MB)', [maxSubscriptionFileBytes >> 20]));
+      return;
+    }
+    data = await parseSubscriptionsInBackground(await file.readAsBytes());
   } catch (_) {
     say(tr('Could not open the file'));
     return;

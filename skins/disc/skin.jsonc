@@ -242,6 +242,7 @@
         "seed": 9
       }
     ],
+    "menuBar": {},
     "titleBar": {
       "height": 30,
       "surface": {

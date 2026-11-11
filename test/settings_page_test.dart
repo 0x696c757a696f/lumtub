@@ -12,7 +12,7 @@ void main() {
   setUp(() => controller = AppController());
 
   Future<void> pump(WidgetTester tester, {double width = 1280}) async {
-    tester.view.physicalSize = Size(width, 900);
+    tester.view.physicalSize = Size(width, 1400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(MaterialApp(
@@ -27,7 +27,7 @@ void main() {
     for (final category in SettingsCategory.values) {
       expect(find.text(category.title), findsOneWidget);
     }
-    await tester.tap(find.text(SettingsCategory.video.title));
+    await tester.tap(find.text(SettingsCategory.quality.title));
     await tester.pump();
     expect(find.text('Default quality'), findsOneWidget);
     expect(find.text('Enable hardware decoding'), findsOneWidget);
@@ -83,11 +83,11 @@ void main() {
     await pump(tester);
     for (final (category, row, title, content) in [
       (SettingsCategory.play, 'Speed settings', 'Speed settings', 'Speed list'),
-      (SettingsCategory.play, 'Subtitle settings', 'Subtitle settings', 'First subtitle language'),
-      (SettingsCategory.extra, 'Translation & AI', 'Translation & AI', 'Google Translate (free)'),
+      (SettingsCategory.subtitles, 'Subtitle settings', 'Subtitle settings', 'First subtitle language'),
+      (SettingsCategory.subtitles, 'Translation & AI', 'Translation & AI', 'Google Translate (free)'),
       (SettingsCategory.style, 'App theme', 'Choose app theme', 'Palette style'),
       (SettingsCategory.style, 'App font', 'App font', 'Microsoft YaHei'),
-      (SettingsCategory.extra, 'Components', 'Components', 'Preparing components…'),
+      (SettingsCategory.storage, 'Components', 'Components', 'Preparing components…'),
       (SettingsCategory.about, 'Error log', 'Logs', 'No logs yet'),
     ]) {
       await openRow(tester, category, row);
@@ -117,7 +117,7 @@ void main() {
 
   testWidgets('the SponsorBlock row opens its categories and keeps its switch', (tester) async {
     await pump(tester);
-    await openRow(tester, SettingsCategory.extra, 'SponsorBlock');
+    await openRow(tester, SettingsCategory.enhance, 'SponsorBlock');
     expect(find.text('Segment types to skip'), findsOneWidget);
     expect(find.byType(CheckboxListTile), findsNWidgets(8));
   });
@@ -125,7 +125,7 @@ void main() {
   testWidgets('blocked channels can be removed', (tester) async {
     await controller.savePreferences(controller.preferences.copyWith(blockedChannels: const [ChannelRef('UC0123456789abcdefghijkl', '测试频道')]));
     await pump(tester);
-    await openRow(tester, SettingsCategory.privacy, 'Blocked channels');
+    await openRow(tester, SettingsCategory.filters, 'Blocked channels');
     expect(find.text('测试频道'), findsOneWidget);
     await tester.tap(find.text('Remove'));
     await tester.pumpAndSettle();
@@ -135,7 +135,7 @@ void main() {
 
   testWidgets('account and about sit at the bottom without a subtitle', (tester) async {
     await pump(tester);
-    expect(find.text(SettingsCategory.video.subtitle), findsOneWidget);
+    expect(find.text(SettingsCategory.quality.subtitle), findsOneWidget);
     expect(find.text(SettingsCategory.about.subtitle), findsNothing);
     expect(find.text('Sign out'), findsNothing);
   });
@@ -167,5 +167,20 @@ void main() {
     await tester.pump();
     expect(controller.preferences.allowedEntries, isEmpty);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('every group holds settings and each setting sits in one group only', (tester) async {
+    await pump(tester);
+    final seen = <String, SettingsCategory>{};
+    for (final category in SettingsCategory.values) {
+      final entries = settingEntries(category, controller);
+      expect(entries, isNotEmpty, reason: category.name);
+      expect(entries.length, lessThanOrEqualTo(25), reason: '${category.name} is getting crowded again');
+      for (final entry in entries) {
+        if (entry.title.contains(RegExp(r'\d'))) continue;
+        expect(seen[entry.title], isNull, reason: '${entry.title} is in ${seen[entry.title]?.name} and ${category.name}');
+        seen[entry.title] = category;
+      }
+    }
   });
 }

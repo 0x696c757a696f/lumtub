@@ -11,6 +11,8 @@
 #include <epoxy/gl.h>
 #include <epoxy/egl.h>
 
+#include <string.h>
+
 // EGLImage extension function pointers
 typedef EGLImageKHR (*PFNEGLCREATEIMAGEKHRPROC)(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list);
 typedef EGLBoolean (*PFNEGLDESTROYIMAGEKHRPROC)(EGLDisplay dpy, EGLImageKHR image);
@@ -27,6 +29,18 @@ static PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR = NULL;
 static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES = NULL;
 #endif
 
+// Lumtub: fence sync, so a frame waits for its own drawing only instead of
+// glFinish() draining the whole GPU queue with the CPU blocked.
+typedef void* LumtubSync;
+typedef LumtubSync (*LumtubCreateSync)(EGLDisplay dpy, EGLenum type, const EGLint* attrib_list);
+typedef EGLBoolean (*LumtubDestroySync)(EGLDisplay dpy, LumtubSync sync);
+typedef EGLint (*LumtubClientWaitSync)(EGLDisplay dpy, LumtubSync sync, EGLint flags, EGLTimeKHR timeout);
+typedef EGLint (*LumtubWaitSync)(EGLDisplay dpy, LumtubSync sync, EGLint flags);
+static LumtubCreateSync lumtub_create_sync = NULL;
+static LumtubDestroySync lumtub_destroy_sync = NULL;
+static LumtubClientWaitSync lumtub_client_wait_sync = NULL;
+static LumtubWaitSync lumtub_wait_sync = NULL;
+
 static void init_egl_image_extensions() {
   static gboolean initialized = FALSE;
   if (!initialized) {
@@ -35,6 +49,54 @@ static void init_egl_image_extensions() {
     glEGLImageTargetTexture2DOES = (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)eglGetProcAddress("glEGLImageTargetTexture2DOES");
     initialized = TRUE;
   }
+}
+
+// Lumtub: the fence functions when the display offers EGL_KHR_fence_sync;
+// the GPU-side wait also needs EGL_KHR_wait_sync.
+static void init_fence_sync(EGLDisplay display) {
+  static gboolean initialized = FALSE;
+  if (initialized) return;
+  initialized = TRUE;
+  if (g_getenv("LUMTUB_GL_FINISH") != NULL) return;
+  const char* extensions = eglQueryString(display, EGL_EXTENSIONS);
+  if (extensions == NULL || strstr(extensions, "EGL_KHR_fence_sync") == NULL) return;
+  lumtub_create_sync = (LumtubCreateSync)eglGetProcAddress("eglCreateSyncKHR");
+  lumtub_destroy_sync = (LumtubDestroySync)eglGetProcAddress("eglDestroySyncKHR");
+  lumtub_client_wait_sync = (LumtubClientWaitSync)eglGetProcAddress("eglClientWaitSyncKHR");
+  if (strstr(extensions, "EGL_KHR_wait_sync") != NULL) {
+    lumtub_wait_sync = (LumtubWaitSync)eglGetProcAddress("eglWaitSyncKHR");
+  }
+  if (lumtub_create_sync == NULL || lumtub_destroy_sync == NULL || lumtub_client_wait_sync == NULL) {
+    lumtub_create_sync = NULL;
+    lumtub_wait_sync = NULL;
+  }
+}
+
+// Lumtub: called with mpv's context current, after the frame is drawn.
+// Returns a fence for that frame, or NULL after falling back to glFinish().
+static LumtubSync finish_frame(EGLDisplay display) {
+  init_fence_sync(display);
+  if (lumtub_create_sync != NULL) {
+    LumtubSync sync = lumtub_create_sync(display, EGL_SYNC_FENCE_KHR, NULL);
+    if (sync != NULL) {
+      // The other context waits on it, so the commands must reach the GPU.
+      glFlush();
+      return sync;
+    }
+  }
+  glFinish();
+  return NULL;
+}
+
+// Lumtub: called with Flutter's context current. On one display the GPU
+// waits for the frame before Flutter's next commands, and the CPU goes on;
+// otherwise the CPU waits for this frame only.
+static void wait_frame(EGLDisplay display, EGLDisplay current, LumtubSync sync) {
+  if (sync == NULL) return;
+  if (lumtub_wait_sync == NULL || display != current || lumtub_wait_sync(display, sync, 0) != EGL_TRUE) {
+    lumtub_client_wait_sync(display, sync, EGL_SYNC_FLUSH_COMMANDS_BIT_KHR, EGL_FOREVER_KHR);
+  }
+  lumtub_destroy_sync(display, sync);
 }
 
 struct _TextureGL {
@@ -282,11 +344,12 @@ gboolean texture_gl_populate_texture(FlTextureGL* texture,
     // Unbind FBO
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
-    // Flush to ensure rendering is complete
-    glFinish();
+    // Lumtub: wait for this frame only, not with the CPU for the whole GPU.
+    LumtubSync frame_done = finish_frame(egl_display);
     
     // Restore Flutter's context
     eglMakeCurrent(flutter_display, flutter_draw, flutter_read, flutter_context);
+    wait_frame(egl_display, flutter_display, frame_done);
   }
   
   *target = GL_TEXTURE_2D;

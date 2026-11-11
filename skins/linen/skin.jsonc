@@ -244,6 +244,7 @@
         }
       }
     ],
+    "menuBar": {},
     "titleBar": {
       "height": 28,
       "surface": {

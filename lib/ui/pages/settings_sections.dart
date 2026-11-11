@@ -48,32 +48,44 @@ import 'watch_stats_page.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
 
-/// The groups in the settings list, in display order, named and ordered
-/// like PiliNara's settings page. [account] and [about] are drawn at the
-/// bottom of the list without a subtitle, as PiliNara draws them.
+/// The groups in the settings list, in display order: each holds one kind
+/// of setting, so none grows into a catch-all. [account] and [about] are
+/// drawn at the bottom of the list without a subtitle.
 enum SettingsCategory {
-  privacy('Privacy settings', 'Blocked channels, watch history, playback progress'),
-  recommend('Home & search settings', 'Home content, keyword filters, hiding Shorts and watched videos'),
+  play('Playback settings', 'Speed, autoplay, play order, mini player, fullscreen, lights off'),
+  quality('Quality & decoding', 'Default quality, video formats, hardware decoding, playback test'),
+  sound('Sound', 'Audio quality, output device, volume, normalization, skipping silence'),
+  picture('Picture', 'Scaling, debanding, frame interpolation, video sync, mpv options'),
+  subtitles('Subtitles & translation', 'Subtitle languages and style, translation and AI'),
+  controls('Controls & shortcuts', 'Player controls, progress bar, keyboard and mouse'),
+  network('Network', 'Proxy, encrypted DNS, certificates, playback source, buffering'),
+  recommend('Home & recommendations', 'For you, Continue watching, Not interested, focus mode'),
+  filters('Filters & blocking', 'Blocked channels, block lists, Shorts, AI videos, keywords, length'),
   subscriptions('Subscription settings', 'Subscription feed refresh and filtering'),
-  video('Video settings', 'Quality, audio quality, decoding, buffering, audio output and more'),
-  play('Playback settings', 'Speed, autoplay, play order, subtitles, volume, fullscreen, shortcuts and more'),
-  style('Appearance', 'Theme, fonts, page transitions, navigation bar, card width, thumbnail quality and more'),
-  extra('Other settings', 'SponsorBlock, related videos, descriptions, component updates, download and cache locations and more'),
-  backup('Backup & restore', 'Import, export and reset settings'),
+  enhance('YouTube extras', 'SponsorBlock, dislikes, DeArrow'),
+  privacy('Privacy settings', 'Incognito mode, watch history, playback progress, connected servers'),
+  style('Appearance', 'Language, theme, skins, fonts, warm light, layout, tray'),
+  storage('Storage & updates', 'Components, updates, cache, download and data locations, backup'),
   account('YouTube account', 'Google sign-in, TV-code sign-in, syncing subscriptions and playlists'),
   about('About', 'Version, logs, diagnostics, open-source licenses');
 
   const SettingsCategory(this._title, this._subtitle);
 
   IconData get icon => switch (this) {
-        privacy => AppIcons.shieldWarning,
+        play => AppIcons.playCircle,
+        quality => AppIcons.highDefinition,
+        sound => AppIcons.speakerHigh,
+        picture => AppIcons.image,
+        subtitles => AppIcons.subtitles,
+        controls => AppIcons.keyboard,
+        network => AppIcons.globe,
         recommend => AppIcons.compass,
+        filters => AppIcons.funnel,
         subscriptions => AppIcons.stackSimple,
-        video => AppIcons.gearSix,
-        play => AppIcons.handTap,
+        enhance => AppIcons.puzzlePiece,
+        privacy => AppIcons.shieldWarning,
         style => AppIcons.cards,
-        extra => AppIcons.puzzlePiece,
-        backup => AppIcons.gearFine,
+        storage => AppIcons.hardDrive,
         account => AppIcons.userCircle,
         about => AppIcons.info,
       };
@@ -201,560 +213,6 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
 
   final hardware = settings.hwdec != 'no';
   return switch (category) {
-    SettingsCategory.privacy => [
-        SettingEntry(tr('Blocked channels'), (context) => NormalItem(
-              title: tr('Blocked channels'),
-              subtitle: prefs.blockedChannels.isEmpty && prefs.blockedChannelNames.isEmpty && prefs.unrecommendedChannels.isEmpty
-                  ? tr('Add one here, or choose “Block this channel” on a video card, channel page or the watch page')
-                  : tr('{0} blocked, {1} not recommended', [prefs.blockedChannels.length + prefs.blockedChannelNames.length, prefs.unrecommendedChannels.length]),
-              leading: _icon(AppIcons.prohibitFill),
-              onTap: () => openBlockedChannels(context, controller),
-            ), subtitle: tr('blocklist not recommended')),
-        SettingEntry(tr('Save watch history'), (context) => SwitchItem(
-              title: tr('Save watch history'),
-              subtitle: tr("When off, newly watched videos won't appear in History or Home, and search terms aren't saved"),
-              leading: _icon(AppIcons.clockCounterClockwiseFill),
-              value: prefs.recordHistory,
-              onChanged: (v) => savePrefs(prefs.copyWith(recordHistory: v)),
-            )),
-        SettingEntry(tr('Watch statistics'), (context) => NormalItem(
-              title: tr('Watch statistics'),
-              subtitle: tr('How long you watched each day and your most watched channels, kept on this computer only'),
-              leading: _icon(AppIcons.chartLineUp),
-              onTap: () => openWatchStats(context, controller),
-            ), subtitle: tr('Watch time')),
-        SettingEntry(tr('Save playback position'), (context) => SwitchItem(
-              title: tr('Save playback position'),
-              subtitle: tr('Used for resuming playback and progress bars on cards'),
-              leading: _icon(AppIcons.hourglassMedium),
-              value: prefs.recordProgress,
-              onChanged: (v) => savePrefs(prefs.copyWith(recordProgress: v)),
-            )),
-        SettingEntry(tr('Clear watch history'), (context) => NormalItem(
-              title: tr('Clear watch history'),
-              subtitle: tr('{0} entries', [controller.history.length]),
-              leading: _icon(AppIcons.trashSimple),
-              onTap: () async {
-                if (await confirmDialog(context, title: tr('Clear watch history?'), content: tr('Only deletes records on this device. Your YouTube account is not affected.'))) await controller.clearHistory();
-              },
-            )),
-        SettingEntry(tr('Clear search history'), (context) => NormalItem(
-              title: tr('Clear search history'),
-              subtitle: tr('Recent searches shown below the search box'),
-              leading: _icon(AppIcons.listMagnifyingGlass),
-              onTap: () async {
-                if (await confirmDialog(context, title: tr('Clear search history?'), content: tr('Only deletes search terms saved on this device.'))) await controller.clearSearchHistory();
-              },
-            )),
-        SettingEntry(tr('Clear playback progress'), (context) => NormalItem(
-              title: tr('Clear playback progress'),
-              subtitle: tr('Start all videos from the beginning'),
-              leading: _icon(AppIcons.arrowCounterClockwise),
-              onTap: () async {
-                if (await confirmDialog(context, title: tr('Clear playback progress?'), content: tr('"Continue watching" and the progress bars on cards will also be cleared.'))) controller.clearProgress();
-              },
-            )),
-        SettingEntry(tr('Connected servers'), (context) => NormalItem(
-              title: tr('Connected servers'),
-              subtitle: tr('Which servers Lumtub connects to and what each learns; whatever can be turned off can be turned off here'),
-              leading: _icon(AppIcons.network),
-              onTap: () => openPrivacyConnections(context, controller),
-            ), subtitle: tr('privacy servers network connections telemetry third party')),
-        SettingEntry(tr('Incognito mode'), (context) => SwitchItem(
-              title: tr('Incognito mode'),
-              subtitle: keyNames(tr("Watch history, searches and progress aren't recorded and For you doesn't learn; it ends when Lumtub closes. Shortcut Ctrl+Shift+N")),
-              leading: _icon(AppIcons.eyeSlash),
-              value: controller.incognito,
-              onChanged: controller.setIncognito,
-            ), subtitle: tr('incognito private no history')),
-        SettingEntry(tr('Clear local data'), (context) => NormalItem(
-              title: tr('Clear local data'),
-              subtitle: tr('Choose what to remove from this computer; favorites, playlists and followed channels are kept'),
-              leading: _icon(AppIcons.broom),
-              onTap: () => _clearLocalData(context, controller),
-            ), subtitle: tr('clear delete data privacy reset uninstall')),
-      ],
-    SettingsCategory.recommend => [
-        SettingEntry(tr('Focus mode: hide the home page'), (context) => SwitchItem(
-              title: tr('Focus mode: hide the home page'),
-              subtitle: tr('The home page shows no videos, only search'),
-              leading: _icon(AppIcons.personSimpleTaiChi),
-              value: prefs.focusHideHome,
-              onChanged: (v) => savePrefs(prefs.copyWith(focusHideHome: v)),
-            ), subtitle: tr('Focus mode')),
-        SettingEntry(tr('Focus mode: hide related videos'), (context) => SwitchItem(
-              title: tr('Focus mode: hide related videos'),
-              subtitle: tr('The watch page neither shows nor loads related videos; the queue plays as usual. The same switch as “Show related videos” under Other settings'),
-              leading: _icon(AppIcons.filmReel),
-              value: !prefs.showRelated,
-              onChanged: (v) => savePrefs(prefs.copyWith(showRelated: !v)),
-            ), subtitle: tr('Focus mode')),
-        SettingEntry(tr('Focus mode: hide comments'), (context) => SwitchItem(
-              title: tr('Focus mode: hide comments'),
-              subtitle: tr('The watch page neither shows nor loads comments'),
-              leading: _icon(AppIcons.chatCircleSlash),
-              value: prefs.focusHideComments,
-              onChanged: (v) => savePrefs(prefs.copyWith(focusHideComments: v)),
-            ), subtitle: tr('Focus mode')),
-        SettingEntry(tr('Show For you on Home'), (context) => SwitchItem(
-              title: tr('Show "For you" on Home'),
-              subtitle: tr('Calculated on this device from your watch history, favorites and follows. Nothing is uploaded'),
-              leading: _icon(AppIcons.sparkle),
-              value: prefs.homeShowRecommended,
-              onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecommended: v)),
-            )),
-        SettingEntry(tr('Auto-refresh For you'), (context) => SwitchItem(
-              title: tr('Auto-refresh "For you"'),
-              subtitle: tr('Gathers it again at launch and once the list is over 30 minutes old; when off, the last list stays until you press Refresh'),
-              leading: _icon(AppIcons.arrowClockwise),
-              value: prefs.homeAutoRefresh,
-              enabled: prefs.homeShowRecommended,
-              onChanged: (v) => savePrefs(prefs.copyWith(homeAutoRefresh: v)),
-            ), subtitle: tr('startup refresh')),
-        SettingEntry(tr('Hide Shorts'), (context) => SwitchItem(
-              title: tr('Hide all Shorts'),
-              subtitle: tr('No Shorts in search, channels, Home or Explore'),
-              leading: _icon(AppIcons.deviceMobile),
-              value: prefs.hideShorts,
-              onChanged: (v) => savePrefs(prefs.copyWith(hideShorts: v)),
-            ), subtitle: tr('shorts hide')),
-        SettingEntry(tr('Hide AI-generated videos'), (context) => NormalItem(
-              title: tr('Hide AI-generated videos'),
-              subtitle: tr('Now: {0}. Applies to Home, search, Explore, related videos and channels; subscribed channels are not affected. Each video is checked once with YouTube for its AI label. The AI channel lists come from KillSlop (killslop.app, CC BY-SA 4.0) and AiSList (CC BY-NC 4.0) and are downloaded daily', [labelOf(_aiFilterModes, prefs.aiFilter)]),
-              leading: _icon(AppIcons.robot),
-              onTap: () => pickFromDialog<AiFilterMode>(context, title: tr('Hide AI-generated videos'), value: prefs.aiFilter, values: _aiFilterModes, onSelected: (v) => savePrefs(prefs.copyWith(aiFilter: v))),
-            ), subtitle: tr('AI artificial intelligence generated synthetic hide')),
-        SettingEntry(tr('Shorts in For You'), (context) => NormalItem(
-              title: tr('Shorts in For You'),
-              subtitle: prefs.hideShorts
-                  ? tr('All Shorts are hidden')
-                  : tr('Now: {0}. Shorts use YouTube Shorts metadata or short duration. They are separate from ordinary vertical videos and affect For You on Home and Explore only', [labelOf(_feedLevels, prefs.feedShorts)]),
-              leading: _icon(AppIcons.deviceMobile),
-              enabled: !prefs.hideShorts,
-              onTap: () => pickFromDialog<FeedLevel>(context, title: tr('Shorts in For You'), value: prefs.feedShorts, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedShorts: v))),
-            ), subtitle: tr("shorts fewer don't recommend")),
-        SettingEntry(tr('Vertical videos in For You'), (context) => NormalItem(
-              title: tr('Vertical videos in For You'),
-              subtitle: tr('Now: {0}. A vertical video has known dimensions with height greater than width. It is separate from Shorts and affects For You on Home and Explore only', [labelOf(_feedLevels, prefs.feedVertical)]),
-              leading: _icon(AppIcons.deviceMobileSpeaker),
-              onTap: () => pickFromDialog<FeedLevel>(context, title: tr('Vertical videos in For You'), value: prefs.feedVertical, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedVertical: v))),
-            ), subtitle: tr("vertical fewer don't recommend")),
-        SettingEntry(tr('Block controversial religious groups'), (context) => NormalItem(
-              title: tr('Block controversial religious groups'),
-              subtitle: prefs.blockGroups
-                  ? tr("On, {0} groups blocked; a search for a channel's exact name still finds it", [blockedGroups.where(prefs.groupOn).length])
-                  : tr('Off'),
-              leading: _icon(AppIcons.prohibitFill),
-              onTap: () => openBlockedGroups(context, controller),
-            ), subtitle: tr('Falun Gong Almighty God Shincheonji Unification cult heresy 法轮功 全能神 新天地 统一教')),
-        SettingEntry(tr('Block state propaganda media'), (context) => NormalItem(
-              title: tr('Block state propaganda media'),
-              subtitle: prefs.blockStateMedia
-                  ? tr('On, blocking {0} kinds of media', [stateMedia.where((g) => prefs.groupOn(g, media: true)).length])
-                  : tr('Off'),
-              leading: _icon(AppIcons.megaphone),
-              onTap: () => openStateMedia(context, controller),
-            ), subtitle: tr('CGTN CCTV RT government propaganda state media')),
-        SettingEntry(tr('Update block lists automatically'), (context) => SwitchItem(
-              title: tr('Update block lists automatically'),
-              subtitle: _blockListsVersion(controller),
-              leading: _icon(AppIcons.arrowsClockwise),
-              value: prefs.updateBlockLists,
-              onChanged: (v) => savePrefs(prefs.copyWith(updateBlockLists: v)),
-            )),
-        SettingEntry(tr('Clear Not interested'), (context) => NormalItem(
-              title: tr('Clear "Not interested" list'),
-              subtitle: tr('{0} videos', [controller.homeFeed?.notInterested.videos.length ?? 0]),
-              leading: _icon(AppIcons.thumbsDown),
-              onTap: () async {
-                if (await confirmDialog(context, title: tr('Clear "Not interested" list?'), content: tr('Marked videos and channels will show up in recommendations again.'))) await controller.clearNotInterested();
-              },
-            )),
-        SettingEntry(tr('Show Continue watching on Home'), (context) => SwitchItem(
-              title: tr('Show "Continue watching" on Home'),
-              subtitle: tr('Unfinished videos'),
-              leading: _icon(AppIcons.playCircle),
-              value: prefs.homeShowContinue,
-              onChanged: (v) => savePrefs(prefs.copyWith(homeShowContinue: v)),
-            )),
-        SettingEntry(tr('Show Recently watched on Home'), (context) => SwitchItem(
-              title: tr('Show "Recently watched" on Home'),
-              leading: _icon(AppIcons.clockCountdown),
-              value: prefs.homeShowRecent,
-              onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecent: v)),
-            )),
-        SettingEntry(tr('Title keyword filter'), (context) => NormalItem(
-              title: tr('Title keyword filter'),
-              subtitle: prefs.blockedKeywords.isEmpty ? tr('Tap to add') : tr('{0} keywords', [prefs.blockedKeywords.length]),
-              leading: _icon(AppIcons.funnelSimple),
-              onTap: () async {
-                final result = await showDialog<List<String>>(
-                  context: context,
-                  builder: (context) => ListEditorDialog(title: tr('Title keyword filter'), initialItems: prefs.blockedKeywords, hintText: tr('Enter keywords (case-insensitive)'), itemLabel: tr('Keywords')),
-                );
-                if (result != null) savePrefs(controller.preferences.copyWith(blockedKeywords: result));
-              },
-            ), subtitle: tr('Block keywords')),
-        SettingEntry(tr('Minimum video length'), (context) => NormalItem(
-              title: tr('Minimum video length'),
-              subtitle: tr('Current: {0}. Shorter videos are hidden', [labelOf(_durations, prefs.minDurationMinutes)]),
-              leading: _icon(AppIcons.timer),
-              onTap: () => pickFromDialog<int>(context, title: tr('Minimum video length'), value: prefs.minDurationMinutes, values: _durations, onSelected: (v) => savePrefs(prefs.copyWith(minDurationMinutes: v))),
-            ), subtitle: tr('Duration filter')),
-        SettingEntry(tr('Hide watched videos'), (context) => SwitchItem(
-              title: tr('Hide watched videos'),
-              subtitle: tr('Based on playback progress on this device'),
-              leading: _icon(AppIcons.eyeSlash),
-              value: prefs.hideWatched,
-              onChanged: (v) => savePrefs(prefs.copyWith(hideWatched: v)),
-            )),
-        SettingEntry(tr('Hide members-only videos'), (context) => SwitchItem(
-              title: tr('Hide members-only videos'),
-              subtitle: tr('Videos only channel members can watch are left out of lists'),
-              leading: _icon(AppIcons.eyeSlash),
-              value: prefs.hideMembersOnly,
-              onChanged: (v) => savePrefs(prefs.copyWith(hideMembersOnly: v)),
-            ), subtitle: tr('members only membership')),
-      ],
-    SettingsCategory.subscriptions => [
-        SettingEntry(tr('Refresh automatically when opening Subscriptions'), (context) => SwitchItem(
-              title: tr('Refresh automatically when opening Subscriptions'),
-              subtitle: tr('When off, updates only when you tap refresh'),
-              leading: _icon(AppIcons.arrowsCounterClockwise),
-              value: prefs.feedAutoRefresh,
-              onChanged: (v) => savePrefs(prefs.copyWith(feedAutoRefresh: v)),
-            )),
-        SettingEntry(tr('Auto-refresh interval'), (context) => NormalItem(
-              title: tr('Auto-refresh interval'),
-              subtitle: tr("Current: {0}. Revisiting within this interval won't reload", [labelOf(_feedIntervals, prefs.feedRefreshMinutes)]),
-              leading: _icon(AppIcons.clockClockwise),
-              enabled: prefs.feedAutoRefresh,
-              onTap: () => pickFromDialog<int>(context, title: tr('Auto-refresh interval'), value: prefs.feedRefreshMinutes, values: _feedIntervals, onSelected: (v) => savePrefs(prefs.copyWith(feedRefreshMinutes: v))),
-            )),
-        SettingEntry(tr('Apply filters to subscription feed too'), (context) => SwitchItem(
-              title: tr('Apply filters to subscription feed too'),
-              subtitle: tr('Keywords, Shorts, duration and watched videos; blocked channels are always hidden'),
-              leading: _icon(AppIcons.funnel),
-              value: prefs.filterSubscriptions,
-              onChanged: (v) => savePrefs(prefs.copyWith(filterSubscriptions: v)),
-            )),
-        SettingEntry(tr('Refresh subscription feed now'), (context) => NormalItem(
-              title: tr('Refresh subscription feed now'),
-              subtitle: tr('Following {0} channels', [controller.library?.channels.length ?? 0]),
-              leading: _icon(AppIcons.arrowsClockwise),
-              onTap: () => controller.library?.refreshFeed(force: true),
-            )),
-        SettingEntry(tr('Import from file'), (context) => NormalItem(
-              title: tr('Import from file'),
-              subtitle: tr('Import subscriptions from a NewPipe, FreeTube or Google Takeout file; nothing is uploaded'),
-              leading: _icon(AppIcons.downloadSimple),
-              onTap: () {
-                final library = controller.library;
-                if (library != null) importSubscriptionsFromFile(context, library);
-              },
-            )),
-      ],
-    SettingsCategory.video => [
-        SettingEntry(tr('Enable hardware decoding'), (context) => SwitchItem(
-              title: tr('Enable hardware decoding'),
-              subtitle: tr('Plays video with lower power use. Turn off if playback freezes.'),
-              leading: _icon(AppIcons.cpu),
-              value: hardware,
-              onChanged: (value) => save(settings.copyWith(hwdec: value ? 'auto-safe' : 'no')),
-            ), subtitle: tr('Hardware decoding hwdec')),
-        SettingEntry(tr('Hardware decoding mode'), (context) => NormalItem(
-              title: tr('Hardware decoding mode'),
-              subtitle: hardware ? tr("Current: {0} (this is mpv's --hwdec, tried in order)", [settings.hwdec]) : tr('Hardware decoding off'),
-              leading: _icon(AppIcons.circuitry),
-              enabled: hardware,
-              onTap: () async {
-                final result = await showDialog<List<String>>(
-                  context: context,
-                  builder: (context) => OrderedMultiSelectDialog<String>(
-                    title: tr('Hardware decoding mode'),
-                    initValues: settings.hwdec.split(','),
-                    values: [for (final (name, label) in hwdecChoices) (name, name, label)],
-                  ),
-                );
-                if (result != null && result.isNotEmpty) save(controller.settings.copyWith(hwdec: result.join(',')));
-              },
-            ), subtitle: 'hwdec D3D11VA D3D12VA DXVA2 NVDEC Vulkan AMF QSV'),
-        SettingEntry(tr('Playback test'), (context) => NormalItem(
-              title: tr('Playback test'),
-              subtitle: tr('Plays a test video as H.264, VP9 and AV1 and measures processor use, memory, dropped frames and the decoder used'),
-              leading: _icon(AppIcons.speedometer),
-              onTap: () => showDiagnostics(context, controller, playback: true),
-            ), subtitle: tr('benchmark performance CPU hardware decoding diagnostics')),
-        if (Platform.isWindows) SettingEntry(tr('D3D11VA zero-copy'), (context) => SwitchItem(
-              title: tr('D3D11VA zero-copy'),
-              subtitle: tr("This is mpv's --d3d11va-zero-copy and only works with d3d11va. For other decoders, pick a mode without -copy for zero-copy"),
-              leading: _icon(AppIcons.lightning),
-              enabled: hardware,
-              value: settings.d3d11vaZeroCopy,
-              onChanged: (v) => save(settings.copyWith(d3d11vaZeroCopy: v)),
-            ), subtitle: 'd3d11va-zero-copy'),
-        SettingEntry(tr('Decode directly to video memory'), (context) => PopupItem<String>(
-              title: tr('Decode directly to video memory (vd-lavc-dr)'),
-              leading: _icon(AppIcons.cpuFill),
-              value: settings.directRendering,
-              values: [('auto', tr('auto (default)')), ('yes', 'yes'), ('no', 'no')],
-              onSelected: (v) => save(settings.copyWith(directRendering: v)),
-            ), subtitle: 'vd-lavc-dr direct rendering'),
-        SettingEntry(tr('Default quality'), (context) => NormalItem(
-              title: tr('Default quality'),
-              subtitle: tr('Current: {0}', [qualityLabel(settings.maxHeight)]),
-              leading: _icon(AppIcons.sealCheck),
-              onTap: () => pickFromDialog<int>(context, title: tr('Default quality'), value: settings.maxHeight, values: [for (final h in qualityHeights) (h, qualityLabel(h))], onSelected: (h) => controller.setMaxHeight(h, asDefault: true)),
-            ), subtitle: tr('Quality resolution')),
-        SettingEntry(tr('Playback strategy'), (context) => NormalItem(
-              title: tr('Playback strategy'),
-              subtitle: tr('{0}: {1}', [settings.strategy.label, settings.strategy.description]),
-              leading: _icon(AppIcons.filmStrip),
-              onTap: () => pickPlaybackStrategy(context, settings.strategy, (v) => save(settings.copyWith(strategy: v))),
-            ), subtitle: tr('video format codec H.264 VP9 AV1 smart auto quality first low resource')),
-        for (final codec in VideoCodec.values)
-          SettingEntry(tr('Disable {0}', [codec.label]), (context) => SwitchItem(
-                title: tr('Disable {0}', [codec.label]),
-                subtitle: codec == VideoCodec.h264 && !FormatPolicy.canDisableH264(settings)
-                    ? h264NeededNote
-                    : codec == VideoCodec.values.first ? disabledCodecsNote : null,
-                leading: _icon(AppIcons.prohibit),
-                value: settings.disabledCodecs.contains(codec),
-                enabled: codec != VideoCodec.h264 || FormatPolicy.canDisableH264(settings) || settings.disabledCodecs.contains(codec),
-                onChanged: (v) => toggleCodec(context, settings, codec, v, save),
-              ), subtitle: tr('video format disable video codecs')),
-        SettingEntry(tr('Current rule'), (context) => ListTile(
-              dense: true,
-              leading: _icon(AppIcons.checkSquare),
-              title: Text(FormatPolicy.summary(settings), style: _note(context)),
-            ), subtitle: tr('Video format')),
-        SettingEntry(tr('Default audio quality'), (context) => NormalItem(
-              title: tr('Default audio quality'),
-              subtitle: tr('Current: {0}', [settings.audioQuality.label]),
-              leading: _icon(AppIcons.musicNote),
-              onTap: () => pickFromDialog<AudioQuality>(
-                context,
-                title: tr('Default audio quality'),
-                value: settings.audioQuality,
-                values: _enumValues(AudioQuality.values, (q) => q.label),
-                onSelected: (v) => save(settings.copyWith(audioQuality: v)),
-              ),
-            )),
-        SettingEntry(tr('Audio output device'), (context) {
-          final devices = controller.audioDevices;
-          String describe(String name) => name == 'auto'
-              ? tr('Auto (system default)')
-              : devices.where((d) => d.name == name).map((d) => d.description.isEmpty ? d.name : d.description).firstOrNull ?? name;
-          return NormalItem(
-            title: tr('Audio output device'),
-            subtitle: tr('Current: {0}', [describe(settings.audioDevice)]),
-            leading: _icon(AppIcons.speakerHifi),
-            onTap: () => pickFromDialog<String>(
-              context,
-              title: tr('Audio output device'),
-              value: settings.audioDevice,
-              values: [('auto', tr('Auto (system default)')), for (final d in devices) if (d.name != 'auto') (d.name, describe(d.name))],
-              onSelected: (v) => save(settings.copyWith(audioDevice: v)),
-            ),
-          );
-        }, subtitle: tr('Sound card headphones speakers')),
-        SettingEntry(tr('Volume normalization'), (context) => NormalItem(
-              title: tr('Volume normalization'),
-              subtitle: tr('Current: {0}', [audioFilterPresets.where((p) => p.$1 == settings.audioFilter).map((p) => p.$2).firstOrNull ?? tr('Custom {0}', [settings.audioFilter])]),
-              leading: _icon(AppIcons.equalizer),
-              onTap: () => _pickAudioFilter(context, controller),
-            ), subtitle: tr('loudnorm dynaudnorm af loudness')),
-        SettingEntry(tr('Video and A/V sync adjustments'), (context) => NormalItem(
-              title: tr('Video and A/V sync adjustments'),
-              subtitle: settings.picture.isEmpty && settings.audioDelayMs == 0 ? tr('Brightness, contrast, saturation, gamma, hue, audio delay') : tr('Adjusted'),
-              leading: _icon(AppIcons.slidersHorizontal),
-              onTap: () => openPictureSettings(context, controller),
-            ), subtitle: tr('brightness contrast saturation gamma hue audio delay audio-delay')),
-        SettingEntry(tr('Playback source'), (context) => NormalItem(
-              title: tr('Playback source'),
-              subtitle: tr('Current: {0}{1}. Piped and Invidious servers fetch videos from YouTube for you, which avoids rate limits, but they will know which videos you watch. On failure, for livestreams, or when subtitles are on, connect directly to YouTube. When YouTube returns 429, they are tried automatically.', [settings.playbackSource.label, switch (settings.playbackSource) { PlaybackSource.pipedCustom => ' ${settings.pipedServer}', PlaybackSource.invidiousCustom => ' ${settings.invidiousServer}', _ => '' }]),
-              leading: _icon(AppIcons.hardDrives),
-              onTap: () => pickFromDialog<PlaybackSource>(
-                context,
-                title: tr('Playback source'),
-                value: settings.playbackSource,
-                values: _enumValues(PlaybackSource.values, (s) => s.label),
-                onSelected: (source) async {
-                  if (!source.isCustom) return save(settings.copyWith(playbackSource: source));
-                  if (context.mounted) await openRelayServers(context, controller, source.relay!);
-                },
-              ),
-            ), subtitle: tr('Piped Invidious server rate limit instance instance 429')),
-        SettingEntry(tr('Fall back to Piped or Invidious when YouTube refuses'), (context) => SwitchItem(
-              title: tr('Fall back to Piped or Invidious when YouTube refuses'),
-              subtitle: tr('When YouTube answers with a bot check, a rate limit or a refusal, play the video from a public Piped or Invidious server instead. That server learns which video you watch. When off, the error is shown instead'),
-              leading: _icon(AppIcons.hardDrives),
-              value: settings.relayFallback,
-              onChanged: (v) => save(settings.copyWith(relayFallback: v)),
-            ), subtitle: tr('Piped Invidious fallback privacy bot check 429')),
-        SettingEntry(tr('Piped servers'), (context) => NormalItem(
-              title: tr('Piped servers'),
-              subtitle: settings.playbackSource == PlaybackSource.pipedCustom ? tr('Current: {0}', [settings.pipedServer]) : tr('Current: automatically picks the fastest server. You can run a speed test or choose manually; the list updates daily'),
-              leading: _icon(AppIcons.gauge),
-              onTap: () => openRelayServers(context, controller, RelayKind.piped),
-            ), subtitle: tr('Piped server speed test list update instance')),
-        SettingEntry(tr('Invidious instance'), (context) => NormalItem(
-              title: tr('Invidious instance'),
-              subtitle: settings.playbackSource == PlaybackSource.invidiousCustom ? tr('Current: {0}', [settings.invidiousServer]) : tr('Current: automatically selects the fastest instance. You can run speed tests or choose manually; the list updates daily.'),
-              leading: _icon(AppIcons.gauge),
-              onTap: () => openRelayServers(context, controller, RelayKind.invidious),
-            ), subtitle: tr('Invidious instance speed test list update instance')),
-        SettingEntry(tr('Network proxy'), (context) {
-          final proxy = controller.proxy;
-          final now = proxy.url == null ? tr('Currently connecting directly') : tr('Currently using {0}{1}', [proxy.url, '']);
-          return NormalItem(
-            title: tr('Network proxy'),
-            subtitle: tr('{0}. {1}', [settings.proxyMode.label, now]),
-            leading: _icon(AppIcons.lockKey),
-            onTap: () => pickFromDialog<ProxyMode>(
-              context,
-              title: tr('Network proxy'),
-              value: settings.proxyMode,
-              values: _enumValues(ProxyMode.values, (m) => m.label),
-              onSelected: (mode) async {
-                if (mode != ProxyMode.custom) return save(settings.copyWith(proxyMode: mode));
-                await _editProxy(context, controller);
-              },
-            ),
-          );
-        }, subtitle: tr('proxy Clash v2rayN system proxy http-proxy')),
-        SettingEntry(tr('Encrypted DNS'), (context) => NormalItem(
-              title: tr('Encrypted DNS'),
-              subtitle: tr("Current: {0}. On a direct connection, host names are looked up over DNS-over-HTTPS so DNS can't be tampered with; if the server can't be reached, the system DNS is used. Through a proxy the proxy looks names up and this has no effect. Keep it off with Clash's TUN/fake-ip mode", [DnsServer.label(settings.dnsServer, settings.dnsCustomUrl)]),
-              leading: _icon(AppIcons.hardDrives),
-              onTap: () => pickFromDialog<String>(
-                context,
-                title: tr('Encrypted DNS'),
-                value: settings.dnsServer,
-                values: [
-                  ('', DnsServer.label('', '')),
-                  for (final server in DnsServer.presets) (server.id, server.name),
-                  (DnsServer.custom, tr('Custom…')),
-                ],
-                onSelected: (id) async {
-                  var custom = settings.dnsCustomUrl;
-                  if (id == DnsServer.custom) {
-                    final url = await _editDnsUrl(context, custom);
-                    if (url == null) return;
-                    custom = url;
-                  }
-                  await controller.saveSettings(settings.copyWith(dnsServer: id, dnsCustomUrl: custom));
-                  final server = DnsServer.of(id, custom);
-                  if (server != null && context.mounted) await _testDns(context, server);
-                },
-              ),
-            ), subtitle: tr('DNS DoH DNS-over-HTTPS Cloudflare Google Quad9 encrypted poisoning')),
-        SettingEntry(tr('Network check'), (context) => NormalItem(
-              title: tr('Network check'),
-              subtitle: tr('Tries the YouTube API, stream extraction, video servers, subtitles and thumbnails one by one, and shows whether each went through the proxy and where it came out'),
-              leading: _icon(AppIcons.globe),
-              onTap: () => showDiagnostics(context, controller),
-            ), subtitle: tr('diagnostics network test proxy exit address connection')),
-        SettingEntry(tr('Certificate authorities'), (context) {
-          final roots = [
-            ('system', tr('System (default)')),
-            ('mozilla', tr('Mozilla (the list Firefox uses)')),
-            ('google', tr('Google (the list Chrome uses)')),
-          ];
-          return NormalItem(
-            title: tr('Certificate authorities'),
-            subtitle: tr("Now: {0}. With Mozilla or Google, only the certificate authorities on that list are trusted, not root certificates added to the system; where a company network, antivirus or proxy tool inspects HTTPS, connections fail, so keep System. Live streams and yt-dlp's own requests are not affected", [labelOf(roots, settings.certificateRoots)]),
-            leading: _icon(AppIcons.sealCheck),
-            onTap: () => pickFromDialog<String>(context, title: tr('Certificate authorities'), value: settings.certificateRoots, values: roots, onSelected: (value) => save(settings.copyWith(certificateRoots: value))),
-          );
-        }, subtitle: tr('certificate CA root TLS HTTPS Mozilla Google Chrome Firefox')),
-        SettingEntry(tr('Post-quantum encryption'), (context) {
-          final modes = [
-            ('prefer', tr('Prefer (default)')),
-            ('off', tr('Off')),
-            ('require', tr('Require')),
-          ];
-          return NormalItem(
-            title: tr('Post-quantum encryption'),
-            subtitle: tr("Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered", [labelOf(modes, settings.postQuantum)]),
-            leading: _icon(AppIcons.lockSimple),
-            onTap: () => pickFromDialog<String>(context, title: tr('Post-quantum encryption'), value: settings.postQuantum, values: modes, onSelected: (value) => save(settings.copyWith(postQuantum: value))),
-          );
-        }, subtitle: tr('post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange')),
-        SettingEntry(tr('Key exchange by site'), (context) => NormalItem(
-              title: tr('Key exchange by site'),
-              subtitle: tr('What each site agreed on the last time Lumtub connected to it'),
-              leading: _icon(AppIcons.key),
-              onTap: () => _showTlsSeen(context),
-            ), subtitle: tr('post-quantum TLS key exchange X25519MLKEM768 sites hosts')),
-        SettingEntry(tr('Buffering mode'), (context) => NormalItem(
-              title: tr('Buffering mode'),
-              subtitle: tr('Current: {0}. Memory only, nothing written to disk', [labelOf(_cacheModes, settings.cacheMode)]),
-              leading: _icon(AppIcons.database),
-              onTap: () => pickFromDialog<String>(context, title: tr('Buffering mode'), value: settings.cacheMode, values: _cacheModes, onSelected: (value) => save(settings.copyWith(cacheMode: value))),
-            ), subtitle: tr('Network cache')),
-        SettingEntry(tr('Buffer size'), (context) => NormalItem(
-              title: tr('Buffer size'),
-              subtitle: tr('Current: {0} MB, memory limit for read-ahead', [settings.cacheMemoryMb]),
-              leading: _icon(AppIcons.hardDrive),
-              onTap: () => pickWithSlider(context, title: tr('Buffer size'), value: settings.cacheMemoryMb.toDouble(), min: 16, max: 512, divisions: 31, suffix: ' MB', onSelected: (v) => save(settings.copyWith(cacheMemoryMb: v.round()))),
-            ), subtitle: tr('Memory limit')),
-        SettingEntry(tr('Buffer duration'), (context) => NormalItem(
-              title: tr('Buffer duration'),
-              subtitle: tr('Current: {0} seconds, the maximum video to read ahead', [settings.cacheSeconds]),
-              leading: _icon(AppIcons.timer),
-              onTap: () => pickWithSlider(context, title: tr('Buffer duration'), value: settings.cacheSeconds.toDouble(), min: 1, max: 300, divisions: 299, suffix: tr(' s'), onSelected: (v) => save(settings.copyWith(cacheSeconds: v.round()))),
-            ), subtitle: tr('Read-ahead time')),
-        SettingEntry(tr('Video sync'), (context) => NormalItem(
-              title: tr('Video sync'),
-              subtitle: tr("Current: {0}, {1} (this is mpv's --video-sync)", [settings.videoSync.mpvValue, settings.videoSync.label]),
-              leading: _icon(AppIcons.arrowsLeftRight),
-              onTap: () => pickFromDialog<VideoSync>(
-                context,
-                title: tr('Video sync'),
-                value: settings.videoSync,
-                values: _enumValues(VideoSync.values, (v) => v.label),
-                onSelected: (v) => save(settings.copyWith(videoSync: v)),
-              ),
-            ), subtitle: 'video-sync display-resample'),
-        SettingEntry(tr('Auto sync'), (context) => NormalItem(
-              title: tr('Auto sync'),
-              subtitle: tr("Current: {0} (this is mpv's --autosync; 0 is off)", [settings.autosync == 0 ? tr('Close') : settings.autosync]),
-              leading: _icon(AppIcons.arrowsCounterClockwise),
-              onTap: () => pickWithSlider(context, title: tr('Auto sync'), value: settings.autosync.toDouble(), min: 0, max: 30, divisions: 30, suffix: '', onSelected: (v) => save(controller.settings.copyWith(autosync: v.round()))),
-            ), subtitle: 'autosync'),
-        SettingEntry(tr('Video scaling algorithm'), (context) => NormalItem(
-              title: tr('Video scaling algorithm'),
-              subtitle: tr('Current: {0}', [labelOf(_scaleModes, settings.scale)]),
-              leading: _icon(AppIcons.imagesSquare),
-              onTap: () => pickFromDialog<String>(context, title: tr('Video scaling algorithm'), value: settings.scale, values: _scaleModes, onSelected: (value) => save(settings.copyWith(scale: value))),
-            ), subtitle: tr('scale upscaling')),
-        SettingEntry(tr('Debanding'), (context) => SwitchItem(
-              title: tr('Debanding'),
-              subtitle: tr('Reduces banding in gradients; slightly increases GPU load'),
-              leading: _icon(AppIcons.gradient),
-              value: settings.deband,
-              onChanged: (value) => save(settings.copyWith(deband: value)),
-            ), subtitle: 'deband'),
-        SettingEntry(tr('Frame interpolation'), (context) => SwitchItem(
-              title: tr('Frame interpolation'),
-              subtitle: tr('Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.'),
-              leading: _icon(AppIcons.spiralFill),
-              value: settings.interpolation,
-              onChanged: (value) => save(settings.copyWith(interpolation: value)),
-            ), subtitle: 'interpolation'),
-        SettingEntry(tr('Decoding status'), (context) => _DecoderStatus(controller: controller), subtitle: tr('GPU current decoding mode VP9 AV1 video extensions')),
-        SettingEntry(tr('Custom mpv options'), (context) {
-          final (options, rejected) = parseMpvConf(settings.mpvConf);
-          return NormalItem(
-            title: tr('Custom mpv options'),
-            subtitle: options.isEmpty ? tr('Use mpv.conf format, e.g. d3d11va-zero-copy=yes') : tr('{0} options set{1}', [options.length, rejected.isEmpty ? '' : tr(", {0} lines couldn't be used", [rejected.length])]),
-            leading: _icon(AppIcons.code),
-            onTap: () => _editMpvConf(context, controller),
-          );
-        }, subtitle: tr('Custom mpv.conf options')),
-        SettingEntry(tr('Advanced libmpv options'), (context) => _AdvancedOptions(settings: settings, onReset: () => save(PlayerSettings(cachePath: settings.cachePath, decoderResults: settings.decoderResults))), subtitle: tr('Restore default settings')),
-      ],
     SettingsCategory.play => [
         SettingEntry(tr('Speed settings'), (context) => NormalItem(
               title: tr('Speed settings'),
@@ -762,24 +220,6 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.gauge),
               onTap: () => openPlaySpeed(context, controller),
             ), subtitle: tr('Playback speed')),
-        SettingEntry(tr('Skip silence'), (context) => SwitchItem(
-              title: tr('Skip silence'),
-              subtitle: tr('Plays silent stretches of a video faster. Not used for livestreams; the speed menu may show 4X while it skips'),
-              leading: _icon(AppIcons.gauge),
-              value: settings.skipSilence,
-              onChanged: (v) => save(settings.copyWith(skipSilence: v)),
-            ), subtitle: tr('Silence skip silent pauses faster')),
-        SettingEntry(tr('Remember speed and volume per channel'), (context) => SwitchItem(
-              title: tr('Remember speed and volume per channel'),
-              subtitle: tr("The speed and volume you set on a channel's videos are used again the next time that channel plays"),
-              leading: _icon(AppIcons.slidersHorizontal),
-              value: prefs.rememberChannelPlayback,
-              onChanged: (v) {
-                // Off forgets what was kept, so it does not come back later.
-                if (!v) controller.channelPlayback?.clear();
-                savePrefs(prefs.copyWith(rememberChannelPlayback: v));
-              },
-            ), subtitle: tr('channel speed volume')),
         SettingEntry(tr('Autoplay'), (context) => SwitchItem(
               title: tr('Autoplay'),
               subtitle: tr('Start playing as soon as a video opens'),
@@ -816,30 +256,30 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.watchLaterAutoRemove,
               onChanged: (v) => savePrefs(prefs.copyWith(watchLaterAutoRemove: v)),
             ), subtitle: tr('watch later auto remove')),
-        SettingEntry(tr('Subtitle settings'), (context) => NormalItem(
-              title: tr('Subtitle settings'),
-              subtitle: '${settings.subtitleMode.label} · ${settings.subtitleOriginal ? tr("Video's own language") : settings.subtitleLanguage.label} · ${settings.subtitleScale.toStringAsFixed(1)}×',
-              leading: _icon(AppIcons.subtitles),
-              onTap: () => openSubtitleSettings(context, controller),
-            ), subtitle: tr('Turn on subtitles automatically, subtitle language, subtitle size')),
-        SettingEntry(tr('Player volume'), (context) => NormalItem(
-              title: tr('Player volume'),
-              subtitle: tr('Startup volume: {0}%', [settings.defaultVolume]),
-              leading: _icon(AppIcons.speakerHigh),
-              onTap: () => pickWithSlider(context, title: tr('Player volume'), value: settings.defaultVolume.toDouble(), min: 0, max: 100, divisions: 20, suffix: '%', onSelected: (v) => save(settings.copyWith(defaultVolume: v.round()))),
-            )),
-        SettingEntry(tr('Max volume'), (context) => NormalItem(
-              title: tr('Max volume'),
-              subtitle: tr('Current: {0}. Above 100% boosts quiet videos', [labelOf(_volumeMaxes, settings.volumeMax)]),
-              leading: _icon(AppIcons.megaphone),
-              onTap: () => pickFromDialog<int>(context, title: tr('Max volume'), value: settings.volumeMax, values: _volumeMaxes, onSelected: (v) => save(settings.copyWith(volumeMax: v))),
-            ), subtitle: tr('Volume boost')),
+        SettingEntry(tr('Remember speed and volume per channel'), (context) => SwitchItem(
+              title: tr('Remember speed and volume per channel'),
+              subtitle: tr("The speed and volume you set on a channel's videos are used again the next time that channel plays"),
+              leading: _icon(AppIcons.slidersHorizontal),
+              value: prefs.rememberChannelPlayback,
+              onChanged: (v) {
+                // Off forgets what was kept, so it does not come back later.
+                if (!v) controller.channelPlayback?.clear();
+                savePrefs(prefs.copyWith(rememberChannelPlayback: v));
+              },
+            ), subtitle: tr('channel speed volume')),
         SettingEntry(tr('Auto fullscreen'), (context) => SwitchItem(
               title: tr('Auto fullscreen'),
               subtitle: tr('Go fullscreen when a video starts playing'),
               leading: _icon(AppIcons.cornersOut),
               value: prefs.autoFullscreen,
               onChanged: (v) => savePrefs(prefs.copyWith(autoFullscreen: v)),
+            )),
+        SettingEntry(tr('Exit fullscreen automatically'), (context) => SwitchItem(
+              title: tr('Exit fullscreen automatically'),
+              subtitle: tr('Exit fullscreen when a video ends and nothing is next'),
+              leading: _icon(AppIcons.cornersIn),
+              value: prefs.exitFullscreenOnEnd,
+              onChanged: (v) => savePrefs(prefs.copyWith(exitFullscreenOnEnd: v)),
             )),
         SettingEntry(tr('Lights off while playing'), (context) => SwitchItem(
               title: tr('Lights off while playing'),
@@ -854,13 +294,6 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.moon),
               onTap: () => pickWithSlider(context, title: tr('Lights-off darkness'), value: prefs.lightsOffDim.toDouble(), min: 50, max: 98, divisions: 48, suffix: '%', onSelected: (v) => savePrefs(prefs.copyWith(lightsOffDim: v.round()))),
             ), subtitle: tr('Cinema mode')),
-        SettingEntry(tr('Exit fullscreen automatically'), (context) => SwitchItem(
-              title: tr('Exit fullscreen automatically'),
-              subtitle: tr('Exit fullscreen when a video ends and nothing is next'),
-              leading: _icon(AppIcons.cornersIn),
-              value: prefs.exitFullscreenOnEnd,
-              onChanged: (v) => savePrefs(prefs.copyWith(exitFullscreenOnEnd: v)),
-            )),
         SettingEntry(tr('Pause when minimized'), (context) => SwitchItem(
               title: tr('Pause when minimized / play when restored'),
               leading: _icon(AppIcons.minus),
@@ -877,6 +310,89 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               enabled: !prefs.pauseOnMinimize,
               onChanged: (v) => savePrefs(prefs.copyWith(audioOnlyInBackground: v)),
             ), subtitle: tr('Background playback')),
+        SettingEntry(tr('Show related videos on the video page'), (context) => SwitchItem(
+              title: tr('Show related videos on the video page'),
+              subtitle: tr('Found by title search; when off, autoplay plays only the queue'),
+              leading: _icon(AppIcons.filmReel),
+              value: prefs.showRelated,
+              onChanged: (v) => savePrefs(prefs.copyWith(showRelated: v)),
+            )),
+        SettingEntry(tr('Expand video description by default'), (context) => SwitchItem(
+              title: tr('Expand video description by default'),
+              leading: _icon(AppIcons.notepad),
+              value: prefs.expandDescription,
+              onChanged: (v) => savePrefs(prefs.copyWith(expandDescription: v)),
+            )),
+    ],
+    SettingsCategory.quality => [
+        SettingEntry(tr('Default quality'), (context) => NormalItem(
+              title: tr('Default quality'),
+              subtitle: tr('Current: {0}', [qualityLabel(settings.maxHeight)]),
+              leading: _icon(AppIcons.sealCheck),
+              onTap: () => pickFromDialog<int>(context, title: tr('Default quality'), value: settings.maxHeight, values: [for (final h in qualityHeights) (h, qualityLabel(h))], onSelected: (h) => controller.setMaxHeight(h, asDefault: true)),
+            ), subtitle: tr('Quality resolution')),
+        SettingEntry(tr('Playback strategy'), (context) => NormalItem(
+              title: tr('Playback strategy'),
+              subtitle: tr('{0}: {1}', [settings.strategy.label, settings.strategy.description]),
+              leading: _icon(AppIcons.filmStrip),
+              onTap: () => pickPlaybackStrategy(context, settings.strategy, (v) => save(settings.copyWith(strategy: v))),
+            ), subtitle: tr('video format codec H.264 VP9 AV1 smart auto quality first low resource')),
+        for (final codec in VideoCodec.values)
+          SettingEntry(tr('Disable {0}', [codec.label]), (context) => SwitchItem(
+                title: tr('Disable {0}', [codec.label]),
+                subtitle: codec == VideoCodec.h264 && !FormatPolicy.canDisableH264(settings)
+                    ? h264NeededNote
+                    : codec == VideoCodec.values.first ? disabledCodecsNote : null,
+                leading: _icon(AppIcons.prohibit),
+                value: settings.disabledCodecs.contains(codec),
+                enabled: codec != VideoCodec.h264 || FormatPolicy.canDisableH264(settings) || settings.disabledCodecs.contains(codec),
+                onChanged: (v) => toggleCodec(context, settings, codec, v, save),
+              ), subtitle: tr('video format disable video codecs')),
+        SettingEntry(tr('Current rule'), (context) => ListTile(
+              dense: true,
+              leading: _icon(AppIcons.checkSquare),
+              title: Text(FormatPolicy.summary(settings), style: _note(context)),
+            ), subtitle: tr('Video format')),
+        SettingEntry(tr('Enable hardware decoding'), (context) => SwitchItem(
+              title: tr('Enable hardware decoding'),
+              subtitle: tr('Plays video with lower power use. Turn off if playback freezes.'),
+              leading: _icon(AppIcons.cpu),
+              value: hardware,
+              onChanged: (value) => save(settings.copyWith(hwdec: value ? 'auto-safe' : 'no')),
+            ), subtitle: tr('Hardware decoding hwdec')),
+        SettingEntry(tr('Hardware decoding mode'), (context) => NormalItem(
+              title: tr('Hardware decoding mode'),
+              subtitle: hardware ? tr("Current: {0} (this is mpv's --hwdec, tried in order)", [settings.hwdec]) : tr('Hardware decoding off'),
+              leading: _icon(AppIcons.circuitry),
+              enabled: hardware,
+              onTap: () async {
+                final result = await showDialog<List<String>>(
+                  context: context,
+                  builder: (context) => OrderedMultiSelectDialog<String>(
+                    title: tr('Hardware decoding mode'),
+                    initValues: settings.hwdec.split(','),
+                    values: [for (final (name, label) in hwdecChoices) (name, name, label)],
+                  ),
+                );
+                if (result != null && result.isNotEmpty) save(controller.settings.copyWith(hwdec: result.join(',')));
+              },
+            ), subtitle: 'hwdec D3D11VA D3D12VA DXVA2 NVDEC Vulkan AMF QSV'),
+        if (Platform.isWindows) SettingEntry(tr('D3D11VA zero-copy'), (context) => SwitchItem(
+              title: tr('D3D11VA zero-copy'),
+              subtitle: tr("This is mpv's --d3d11va-zero-copy and only works with d3d11va. For other decoders, pick a mode without -copy for zero-copy"),
+              leading: _icon(AppIcons.lightning),
+              enabled: hardware,
+              value: settings.d3d11vaZeroCopy,
+              onChanged: (v) => save(settings.copyWith(d3d11vaZeroCopy: v)),
+            ), subtitle: 'd3d11va-zero-copy'),
+        SettingEntry(tr('Decode directly to video memory'), (context) => PopupItem<String>(
+              title: tr('Decode directly to video memory (vd-lavc-dr)'),
+              leading: _icon(AppIcons.cpuFill),
+              value: settings.directRendering,
+              values: [('auto', tr('auto (default)')), ('yes', 'yes'), ('no', 'no')],
+              onSelected: (v) => save(settings.copyWith(directRendering: v)),
+            ), subtitle: 'vd-lavc-dr direct rendering'),
+        SettingEntry(tr('Decoding status'), (context) => _DecoderStatus(controller: controller), subtitle: tr('GPU current decoding mode VP9 AV1 video extensions')),
         if (Platform.isAndroid)
           SettingEntry(tr('Match the frame rate'), (context) => SwitchItem(
                 title: tr('Match the frame rate'),
@@ -885,22 +401,141 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 value: prefs.matchFrameRate,
                 onChanged: (v) => savePrefs(prefs.copyWith(matchFrameRate: v)),
               ), subtitle: tr('refresh rate fps TV')),
-        if (!Platform.isAndroid) SettingEntry(tr('Minimize to tray on close'), (context) => SwitchItem(
-              title: tr('Minimize to tray on close'),
-              subtitle: tr('The close button hides the window to the tray icon and playback continues; exit from the tray menu'),
-              leading: _icon(AppIcons.layout),
-              value: prefs.closeToTray,
-              onChanged: (v) => savePrefs(prefs.copyWith(closeToTray: v)),
-            ), subtitle: tr('tray background playback')),
-        if (!Platform.isAndroid) SettingEntry(tr('Minimize to tray'), (context) => SwitchItem(
-              title: tr('Minimize to tray'),
-              subtitle: tr('Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back'),
-              leading: _icon(AppIcons.minus),
-              value: prefs.minimizeToTray,
-              onChanged: (v) => savePrefs(prefs.copyWith(minimizeToTray: v)),
-            ), subtitle: tr('tray background playback')),
-        if (AppWindow.waylandDesktop && controller.directories != null)
-          SettingEntry(tr('X11 compatibility mode'), (context) => _X11ModeSwitch(controller: controller, data: controller.directories!.data), subtitle: tr('Wayland on top picture in picture')),
+        SettingEntry(tr('Playback test'), (context) => NormalItem(
+              title: tr('Playback test'),
+              subtitle: tr('Plays a test video as H.264, VP9 and AV1 and measures processor use, memory, dropped frames and the decoder used'),
+              leading: _icon(AppIcons.speedometer),
+              onTap: () => showDiagnostics(context, controller, playback: true),
+            ), subtitle: tr('benchmark performance CPU hardware decoding diagnostics')),
+    ],
+    SettingsCategory.sound => [
+        SettingEntry(tr('Default audio quality'), (context) => NormalItem(
+              title: tr('Default audio quality'),
+              subtitle: tr('Current: {0}', [settings.audioQuality.label]),
+              leading: _icon(AppIcons.musicNote),
+              onTap: () => pickFromDialog<AudioQuality>(
+                context,
+                title: tr('Default audio quality'),
+                value: settings.audioQuality,
+                values: _enumValues(AudioQuality.values, (q) => q.label),
+                onSelected: (v) => save(settings.copyWith(audioQuality: v)),
+              ),
+            )),
+        SettingEntry(tr('Audio output device'), (context) {
+          final devices = controller.audioDevices;
+          String describe(String name) => name == 'auto'
+              ? tr('Auto (system default)')
+              : devices.where((d) => d.name == name).map((d) => d.description.isEmpty ? d.name : d.description).firstOrNull ?? name;
+          return NormalItem(
+            title: tr('Audio output device'),
+            subtitle: tr('Current: {0}', [describe(settings.audioDevice)]),
+            leading: _icon(AppIcons.speakerHifi),
+            onTap: () => pickFromDialog<String>(
+              context,
+              title: tr('Audio output device'),
+              value: settings.audioDevice,
+              values: [('auto', tr('Auto (system default)')), for (final d in devices) if (d.name != 'auto') (d.name, describe(d.name))],
+              onSelected: (v) => save(settings.copyWith(audioDevice: v)),
+            ),
+          );
+        }, subtitle: tr('Sound card headphones speakers')),
+        SettingEntry(tr('Player volume'), (context) => NormalItem(
+              title: tr('Player volume'),
+              subtitle: tr('Startup volume: {0}%', [settings.defaultVolume]),
+              leading: _icon(AppIcons.speakerHigh),
+              onTap: () => pickWithSlider(context, title: tr('Player volume'), value: settings.defaultVolume.toDouble(), min: 0, max: 100, divisions: 20, suffix: '%', onSelected: (v) => save(settings.copyWith(defaultVolume: v.round()))),
+            )),
+        SettingEntry(tr('Max volume'), (context) => NormalItem(
+              title: tr('Max volume'),
+              subtitle: tr('Current: {0}. Above 100% boosts quiet videos', [labelOf(_volumeMaxes, settings.volumeMax)]),
+              leading: _icon(AppIcons.megaphone),
+              onTap: () => pickFromDialog<int>(context, title: tr('Max volume'), value: settings.volumeMax, values: _volumeMaxes, onSelected: (v) => save(settings.copyWith(volumeMax: v))),
+            ), subtitle: tr('Volume boost')),
+        SettingEntry(tr('Volume normalization'), (context) => NormalItem(
+              title: tr('Volume normalization'),
+              subtitle: tr('Current: {0}', [audioFilterPresets.where((p) => p.$1 == settings.audioFilter).map((p) => p.$2).firstOrNull ?? tr('Custom {0}', [settings.audioFilter])]),
+              leading: _icon(AppIcons.equalizer),
+              onTap: () => _pickAudioFilter(context, controller),
+            ), subtitle: tr('loudnorm dynaudnorm af loudness')),
+        SettingEntry(tr('Skip silence'), (context) => SwitchItem(
+              title: tr('Skip silence'),
+              subtitle: tr('Plays silent stretches of a video faster. Not used for livestreams; the speed menu may show 4X while it skips'),
+              leading: _icon(AppIcons.gauge),
+              value: settings.skipSilence,
+              onChanged: (v) => save(settings.copyWith(skipSilence: v)),
+            ), subtitle: tr('Silence skip silent pauses faster')),
+    ],
+    SettingsCategory.picture => [
+        SettingEntry(tr('Video scaling algorithm'), (context) => NormalItem(
+              title: tr('Video scaling algorithm'),
+              subtitle: tr('Current: {0}', [labelOf(_scaleModes, settings.scale)]),
+              leading: _icon(AppIcons.imagesSquare),
+              onTap: () => pickFromDialog<String>(context, title: tr('Video scaling algorithm'), value: settings.scale, values: _scaleModes, onSelected: (value) => save(settings.copyWith(scale: value))),
+            ), subtitle: tr('scale upscaling')),
+        SettingEntry(tr('Debanding'), (context) => SwitchItem(
+              title: tr('Debanding'),
+              subtitle: tr('Reduces banding in gradients; slightly increases GPU load'),
+              leading: _icon(AppIcons.gradient),
+              value: settings.deband,
+              onChanged: (value) => save(settings.copyWith(deband: value)),
+            ), subtitle: 'deband'),
+        SettingEntry(tr('Frame interpolation'), (context) => SwitchItem(
+              title: tr('Frame interpolation'),
+              subtitle: tr('Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.'),
+              leading: _icon(AppIcons.spiralFill),
+              value: settings.interpolation,
+              onChanged: (value) => save(settings.copyWith(interpolation: value)),
+            ), subtitle: 'interpolation'),
+        SettingEntry(tr('Video sync'), (context) => NormalItem(
+              title: tr('Video sync'),
+              subtitle: tr("Current: {0}, {1} (this is mpv's --video-sync)", [settings.videoSync.mpvValue, settings.videoSync.label]),
+              leading: _icon(AppIcons.arrowsLeftRight),
+              onTap: () => pickFromDialog<VideoSync>(
+                context,
+                title: tr('Video sync'),
+                value: settings.videoSync,
+                values: _enumValues(VideoSync.values, (v) => v.label),
+                onSelected: (v) => save(settings.copyWith(videoSync: v)),
+              ),
+            ), subtitle: 'video-sync display-resample'),
+        SettingEntry(tr('Auto sync'), (context) => NormalItem(
+              title: tr('Auto sync'),
+              subtitle: tr("Current: {0} (this is mpv's --autosync; 0 is off)", [settings.autosync == 0 ? tr('Close') : settings.autosync]),
+              leading: _icon(AppIcons.arrowsCounterClockwise),
+              onTap: () => pickWithSlider(context, title: tr('Auto sync'), value: settings.autosync.toDouble(), min: 0, max: 30, divisions: 30, suffix: '', onSelected: (v) => save(controller.settings.copyWith(autosync: v.round()))),
+            ), subtitle: 'autosync'),
+        SettingEntry(tr('Video and A/V sync adjustments'), (context) => NormalItem(
+              title: tr('Video and A/V sync adjustments'),
+              subtitle: settings.picture.isEmpty && settings.audioDelayMs == 0 ? tr('Brightness, contrast, saturation, gamma, hue, audio delay') : tr('Adjusted'),
+              leading: _icon(AppIcons.slidersHorizontal),
+              onTap: () => openPictureSettings(context, controller),
+            ), subtitle: tr('brightness contrast saturation gamma hue audio delay audio-delay')),
+        SettingEntry(tr('Custom mpv options'), (context) {
+          final (options, rejected) = parseMpvConf(settings.mpvConf);
+          return NormalItem(
+            title: tr('Custom mpv options'),
+            subtitle: options.isEmpty ? tr('Use mpv.conf format, e.g. d3d11va-zero-copy=yes') : tr('{0} options set{1}', [options.length, rejected.isEmpty ? '' : tr(", {0} lines couldn't be used", [rejected.length])]),
+            leading: _icon(AppIcons.code),
+            onTap: () => _editMpvConf(context, controller),
+          );
+        }, subtitle: tr('Custom mpv.conf options')),
+        SettingEntry(tr('Advanced libmpv options'), (context) => _AdvancedOptions(settings: settings, onReset: () => save(PlayerSettings(cachePath: settings.cachePath, decoderResults: settings.decoderResults))), subtitle: tr('Restore default settings')),
+    ],
+    SettingsCategory.subtitles => [
+        SettingEntry(tr('Subtitle settings'), (context) => NormalItem(
+              title: tr('Subtitle settings'),
+              subtitle: '${settings.subtitleMode.label} · ${settings.subtitleOriginal ? tr("Video's own language") : settings.subtitleLanguage.label} · ${settings.subtitleScale.toStringAsFixed(1)}×',
+              leading: _icon(AppIcons.subtitles),
+              onTap: () => openSubtitleSettings(context, controller),
+            ), subtitle: tr('Turn on subtitles automatically, subtitle language, subtitle size')),
+        SettingEntry(tr('Translation & AI'), (context) => NormalItem(
+              title: tr('Translation & AI'),
+              subtitle: tr('Translation: {0} · AI: {1}', [prefs.translation.service.label, controller.canSummarize ? prefs.translation.effectiveAiModel : tr('Not set')]),
+              leading: _icon(AppIcons.translate),
+              onTap: () => openTranslationSettings(context, controller),
+            ), subtitle: '翻译目标语言 沉浸式翻译 双语对照 译文 翻译服务 AI 总结 接口 模型 语音识别 Whisper Groq 没有字幕 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
+    ],
+    SettingsCategory.controls => [
         SettingEntry(tr('Show playback controls longer'), (context) => NormalItem(
               title: tr('Playback controls display time'),
               subtitle: tr('Hide after {0} without mouse movement', [labelOf(_hideTimes, prefs.controlsHideSeconds)]),
@@ -967,7 +602,430 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.question),
               onTap: () => showShortcutHelp(context, controller.preferences),
             )),
-      ],
+    ],
+    SettingsCategory.network => [
+        SettingEntry(tr('Network proxy'), (context) {
+          final proxy = controller.proxy;
+          final now = proxy.url == null ? tr('Currently connecting directly') : tr('Currently using {0}{1}', [proxy.url, '']);
+          return NormalItem(
+            title: tr('Network proxy'),
+            subtitle: tr('{0}. {1}', [settings.proxyMode.label, now]),
+            leading: _icon(AppIcons.lockKey),
+            onTap: () => pickFromDialog<ProxyMode>(
+              context,
+              title: tr('Network proxy'),
+              value: settings.proxyMode,
+              values: _enumValues(ProxyMode.values, (m) => m.label),
+              onSelected: (mode) async {
+                if (mode != ProxyMode.custom) return save(settings.copyWith(proxyMode: mode));
+                await _editProxy(context, controller);
+              },
+            ),
+          );
+        }, subtitle: tr('proxy Clash v2rayN system proxy http-proxy')),
+        SettingEntry(tr('Encrypted DNS'), (context) => NormalItem(
+              title: tr('Encrypted DNS'),
+              subtitle: tr("Current: {0}. On a direct connection, host names are looked up over DNS-over-HTTPS so DNS can't be tampered with; if the server can't be reached, the system DNS is used. Through a proxy the proxy looks names up and this has no effect. Keep it off with Clash's TUN/fake-ip mode", [DnsServer.label(settings.dnsServer, settings.dnsCustomUrl)]),
+              leading: _icon(AppIcons.hardDrives),
+              onTap: () => pickFromDialog<String>(
+                context,
+                title: tr('Encrypted DNS'),
+                value: settings.dnsServer,
+                values: [
+                  ('', DnsServer.label('', '')),
+                  for (final server in DnsServer.presets) (server.id, server.name),
+                  (DnsServer.custom, tr('Custom…')),
+                ],
+                onSelected: (id) async {
+                  var custom = settings.dnsCustomUrl;
+                  if (id == DnsServer.custom) {
+                    final url = await _editDnsUrl(context, custom);
+                    if (url == null) return;
+                    custom = url;
+                  }
+                  await controller.saveSettings(settings.copyWith(dnsServer: id, dnsCustomUrl: custom));
+                  final server = DnsServer.of(id, custom);
+                  if (server != null && context.mounted) await _testDns(context, server);
+                },
+              ),
+            ), subtitle: tr('DNS DoH DNS-over-HTTPS Cloudflare Google Quad9 encrypted poisoning')),
+        SettingEntry(tr('Certificate authorities'), (context) {
+          final roots = [
+            ('system', tr('System (default)')),
+            ('mozilla', tr('Mozilla (the list Firefox uses)')),
+            ('google', tr('Google (the list Chrome uses)')),
+          ];
+          return NormalItem(
+            title: tr('Certificate authorities'),
+            subtitle: tr("Now: {0}. With Mozilla or Google, only the certificate authorities on that list are trusted, not root certificates added to the system; where a company network, antivirus or proxy tool inspects HTTPS, connections fail, so keep System. Live streams and yt-dlp's own requests are not affected", [labelOf(roots, settings.certificateRoots)]),
+            leading: _icon(AppIcons.sealCheck),
+            onTap: () => pickFromDialog<String>(context, title: tr('Certificate authorities'), value: settings.certificateRoots, values: roots, onSelected: (value) => save(settings.copyWith(certificateRoots: value))),
+          );
+        }, subtitle: tr('certificate CA root TLS HTTPS Mozilla Google Chrome Firefox')),
+        SettingEntry(tr('Post-quantum encryption'), (context) {
+          final modes = [
+            ('prefer', tr('Prefer (default)')),
+            ('off', tr('Off')),
+            ('require', tr('Require')),
+          ];
+          return NormalItem(
+            title: tr('Post-quantum encryption'),
+            subtitle: tr("Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered", [labelOf(modes, settings.postQuantum)]),
+            leading: _icon(AppIcons.lockSimple),
+            onTap: () => pickFromDialog<String>(context, title: tr('Post-quantum encryption'), value: settings.postQuantum, values: modes, onSelected: (value) => save(settings.copyWith(postQuantum: value))),
+          );
+        }, subtitle: tr('post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange')),
+        SettingEntry(tr('Key exchange by site'), (context) => NormalItem(
+              title: tr('Key exchange by site'),
+              subtitle: tr('What each site agreed on the last time Lumtub connected to it'),
+              leading: _icon(AppIcons.key),
+              onTap: () => _showTlsSeen(context),
+            ), subtitle: tr('post-quantum TLS key exchange X25519MLKEM768 sites hosts')),
+        SettingEntry(tr('Playback source'), (context) => NormalItem(
+              title: tr('Playback source'),
+              subtitle: tr('Current: {0}{1}. Piped and Invidious servers fetch videos from YouTube for you, which avoids rate limits, but they will know which videos you watch. On failure, for livestreams, or when subtitles are on, connect directly to YouTube. When YouTube returns 429, they are tried automatically.', [settings.playbackSource.label, switch (settings.playbackSource) { PlaybackSource.pipedCustom => ' ${settings.pipedServer}', PlaybackSource.invidiousCustom => ' ${settings.invidiousServer}', _ => '' }]),
+              leading: _icon(AppIcons.hardDrives),
+              onTap: () => pickFromDialog<PlaybackSource>(
+                context,
+                title: tr('Playback source'),
+                value: settings.playbackSource,
+                values: _enumValues(PlaybackSource.values, (s) => s.label),
+                onSelected: (source) async {
+                  if (!source.isCustom) return save(settings.copyWith(playbackSource: source));
+                  if (context.mounted) await openRelayServers(context, controller, source.relay!);
+                },
+              ),
+            ), subtitle: tr('Piped Invidious server rate limit instance instance 429')),
+        SettingEntry(tr('Fall back to Piped or Invidious when YouTube refuses'), (context) => SwitchItem(
+              title: tr('Fall back to Piped or Invidious when YouTube refuses'),
+              subtitle: tr('When YouTube answers with a bot check, a rate limit or a refusal, play the video from a public Piped or Invidious server instead. That server learns which video you watch. When off, the error is shown instead'),
+              leading: _icon(AppIcons.hardDrives),
+              value: settings.relayFallback,
+              onChanged: (v) => save(settings.copyWith(relayFallback: v)),
+            ), subtitle: tr('Piped Invidious fallback privacy bot check 429')),
+        SettingEntry(tr('Piped servers'), (context) => NormalItem(
+              title: tr('Piped servers'),
+              subtitle: settings.playbackSource == PlaybackSource.pipedCustom ? tr('Current: {0}', [settings.pipedServer]) : tr('Current: automatically picks the fastest server. You can run a speed test or choose manually; the list updates daily'),
+              leading: _icon(AppIcons.gauge),
+              onTap: () => openRelayServers(context, controller, RelayKind.piped),
+            ), subtitle: tr('Piped server speed test list update instance')),
+        SettingEntry(tr('Invidious instance'), (context) => NormalItem(
+              title: tr('Invidious instance'),
+              subtitle: settings.playbackSource == PlaybackSource.invidiousCustom ? tr('Current: {0}', [settings.invidiousServer]) : tr('Current: automatically selects the fastest instance. You can run speed tests or choose manually; the list updates daily.'),
+              leading: _icon(AppIcons.gauge),
+              onTap: () => openRelayServers(context, controller, RelayKind.invidious),
+            ), subtitle: tr('Invidious instance speed test list update instance')),
+        SettingEntry(tr('Buffering mode'), (context) => NormalItem(
+              title: tr('Buffering mode'),
+              subtitle: tr('Current: {0}. Memory only, nothing written to disk', [labelOf(_cacheModes, settings.cacheMode)]),
+              leading: _icon(AppIcons.database),
+              onTap: () => pickFromDialog<String>(context, title: tr('Buffering mode'), value: settings.cacheMode, values: _cacheModes, onSelected: (value) => save(settings.copyWith(cacheMode: value))),
+            ), subtitle: tr('Network cache')),
+        SettingEntry(tr('Buffer size'), (context) => NormalItem(
+              title: tr('Buffer size'),
+              subtitle: tr('Current: {0} MB, memory limit for read-ahead', [settings.cacheMemoryMb]),
+              leading: _icon(AppIcons.hardDrive),
+              onTap: () => pickWithSlider(context, title: tr('Buffer size'), value: settings.cacheMemoryMb.toDouble(), min: 16, max: 512, divisions: 31, suffix: ' MB', onSelected: (v) => save(settings.copyWith(cacheMemoryMb: v.round()))),
+            ), subtitle: tr('Memory limit')),
+        SettingEntry(tr('Buffer duration'), (context) => NormalItem(
+              title: tr('Buffer duration'),
+              subtitle: tr('Current: {0} seconds, the maximum video to read ahead', [settings.cacheSeconds]),
+              leading: _icon(AppIcons.timer),
+              onTap: () => pickWithSlider(context, title: tr('Buffer duration'), value: settings.cacheSeconds.toDouble(), min: 1, max: 300, divisions: 299, suffix: tr(' s'), onSelected: (v) => save(settings.copyWith(cacheSeconds: v.round()))),
+            ), subtitle: tr('Read-ahead time')),
+        SettingEntry(tr('Network check'), (context) => NormalItem(
+              title: tr('Network check'),
+              subtitle: tr('Tries the YouTube API, stream extraction, video servers, subtitles and thumbnails one by one, and shows whether each went through the proxy and where it came out'),
+              leading: _icon(AppIcons.globe),
+              onTap: () => showDiagnostics(context, controller),
+            ), subtitle: tr('diagnostics network test proxy exit address connection')),
+    ],
+    SettingsCategory.recommend => [
+        SettingEntry(tr('Show For you on Home'), (context) => SwitchItem(
+              title: tr('Show "For you" on Home'),
+              subtitle: tr('Calculated on this device from your watch history, favorites and follows. Nothing is uploaded'),
+              leading: _icon(AppIcons.sparkle),
+              value: prefs.homeShowRecommended,
+              onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecommended: v)),
+            )),
+        SettingEntry(tr('Auto-refresh For you'), (context) => SwitchItem(
+              title: tr('Auto-refresh "For you"'),
+              subtitle: tr('Gathers it again at launch and once the list is over 30 minutes old; when off, the last list stays until you press Refresh'),
+              leading: _icon(AppIcons.arrowClockwise),
+              value: prefs.homeAutoRefresh,
+              enabled: prefs.homeShowRecommended,
+              onChanged: (v) => savePrefs(prefs.copyWith(homeAutoRefresh: v)),
+            ), subtitle: tr('startup refresh')),
+        SettingEntry(tr('Shorts in For You'), (context) => NormalItem(
+              title: tr('Shorts in For You'),
+              subtitle: prefs.hideShorts
+                  ? tr('All Shorts are hidden')
+                  : tr('Now: {0}. Shorts use YouTube Shorts metadata or short duration. They are separate from ordinary vertical videos and affect For You on Home and Explore only', [labelOf(_feedLevels, prefs.feedShorts)]),
+              leading: _icon(AppIcons.deviceMobile),
+              enabled: !prefs.hideShorts,
+              onTap: () => pickFromDialog<FeedLevel>(context, title: tr('Shorts in For You'), value: prefs.feedShorts, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedShorts: v))),
+            ), subtitle: tr("shorts fewer don't recommend")),
+        SettingEntry(tr('Vertical videos in For You'), (context) => NormalItem(
+              title: tr('Vertical videos in For You'),
+              subtitle: tr('Now: {0}. A vertical video has known dimensions with height greater than width. It is separate from Shorts and affects For You on Home and Explore only', [labelOf(_feedLevels, prefs.feedVertical)]),
+              leading: _icon(AppIcons.deviceMobileSpeaker),
+              onTap: () => pickFromDialog<FeedLevel>(context, title: tr('Vertical videos in For You'), value: prefs.feedVertical, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedVertical: v))),
+            ), subtitle: tr("vertical fewer don't recommend")),
+        SettingEntry(tr('Show Continue watching on Home'), (context) => SwitchItem(
+              title: tr('Show "Continue watching" on Home'),
+              subtitle: tr('Unfinished videos'),
+              leading: _icon(AppIcons.playCircle),
+              value: prefs.homeShowContinue,
+              onChanged: (v) => savePrefs(prefs.copyWith(homeShowContinue: v)),
+            )),
+        SettingEntry(tr('Show Recently watched on Home'), (context) => SwitchItem(
+              title: tr('Show "Recently watched" on Home'),
+              leading: _icon(AppIcons.clockCountdown),
+              value: prefs.homeShowRecent,
+              onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecent: v)),
+            )),
+        SettingEntry(tr('Clear Not interested'), (context) => NormalItem(
+              title: tr('Clear "Not interested" list'),
+              subtitle: tr('{0} videos', [controller.homeFeed?.notInterested.videos.length ?? 0]),
+              leading: _icon(AppIcons.thumbsDown),
+              onTap: () async {
+                if (await confirmDialog(context, title: tr('Clear "Not interested" list?'), content: tr('Marked videos and channels will show up in recommendations again.'))) await controller.clearNotInterested();
+              },
+            )),
+        SettingEntry(tr('Focus mode: hide the home page'), (context) => SwitchItem(
+              title: tr('Focus mode: hide the home page'),
+              subtitle: tr('The home page shows no videos, only search'),
+              leading: _icon(AppIcons.personSimpleTaiChi),
+              value: prefs.focusHideHome,
+              onChanged: (v) => savePrefs(prefs.copyWith(focusHideHome: v)),
+            ), subtitle: tr('Focus mode')),
+        SettingEntry(tr('Focus mode: hide related videos'), (context) => SwitchItem(
+              title: tr('Focus mode: hide related videos'),
+              subtitle: tr('The watch page neither shows nor loads related videos; the queue plays as usual. The same switch as “Show related videos” under Other settings'),
+              leading: _icon(AppIcons.filmReel),
+              value: !prefs.showRelated,
+              onChanged: (v) => savePrefs(prefs.copyWith(showRelated: !v)),
+            ), subtitle: tr('Focus mode')),
+        SettingEntry(tr('Focus mode: hide comments'), (context) => SwitchItem(
+              title: tr('Focus mode: hide comments'),
+              subtitle: tr('The watch page neither shows nor loads comments'),
+              leading: _icon(AppIcons.chatCircleSlash),
+              value: prefs.focusHideComments,
+              onChanged: (v) => savePrefs(prefs.copyWith(focusHideComments: v)),
+            ), subtitle: tr('Focus mode')),
+    ],
+    SettingsCategory.filters => [
+        SettingEntry(tr('Blocked channels'), (context) => NormalItem(
+              title: tr('Blocked channels'),
+              subtitle: prefs.blockedChannels.isEmpty && prefs.blockedChannelNames.isEmpty && prefs.unrecommendedChannels.isEmpty
+                  ? tr('Add one here, or choose “Block this channel” on a video card, channel page or the watch page')
+                  : tr('{0} blocked, {1} not recommended', [prefs.blockedChannels.length + prefs.blockedChannelNames.length, prefs.unrecommendedChannels.length]),
+              leading: _icon(AppIcons.prohibitFill),
+              onTap: () => openBlockedChannels(context, controller),
+            ), subtitle: tr('blocklist not recommended')),
+        SettingEntry(tr('Hide Shorts'), (context) => SwitchItem(
+              title: tr('Hide all Shorts'),
+              subtitle: tr('No Shorts in search, channels, Home or Explore'),
+              leading: _icon(AppIcons.deviceMobile),
+              value: prefs.hideShorts,
+              onChanged: (v) => savePrefs(prefs.copyWith(hideShorts: v)),
+            ), subtitle: tr('shorts hide')),
+        SettingEntry(tr('Hide AI-generated videos'), (context) => NormalItem(
+              title: tr('Hide AI-generated videos'),
+              subtitle: tr('Now: {0}. Applies to Home, search, Explore, related videos and channels; subscribed channels are not affected. Each video is checked once with YouTube for its AI label. The AI channel lists come from KillSlop (killslop.app, CC BY-SA 4.0) and AiSList (CC BY-NC 4.0) and are downloaded daily', [labelOf(_aiFilterModes, prefs.aiFilter)]),
+              leading: _icon(AppIcons.robot),
+              onTap: () => pickFromDialog<AiFilterMode>(context, title: tr('Hide AI-generated videos'), value: prefs.aiFilter, values: _aiFilterModes, onSelected: (v) => savePrefs(prefs.copyWith(aiFilter: v))),
+            ), subtitle: tr('AI artificial intelligence generated synthetic hide')),
+        SettingEntry(tr('Block controversial religious groups'), (context) => NormalItem(
+              title: tr('Block controversial religious groups'),
+              subtitle: prefs.blockGroups
+                  ? tr("On, {0} groups blocked; a search for a channel's exact name still finds it", [blockedGroups.where(prefs.groupOn).length])
+                  : tr('Off'),
+              leading: _icon(AppIcons.prohibitFill),
+              onTap: () => openBlockedGroups(context, controller),
+            ), subtitle: tr('Falun Gong Almighty God Shincheonji Unification cult heresy 法轮功 全能神 新天地 统一教')),
+        SettingEntry(tr('Block state propaganda media'), (context) => NormalItem(
+              title: tr('Block state propaganda media'),
+              subtitle: prefs.blockStateMedia
+                  ? tr('On, blocking {0} kinds of media', [stateMedia.where((g) => prefs.groupOn(g, media: true)).length])
+                  : tr('Off'),
+              leading: _icon(AppIcons.megaphone),
+              onTap: () => openStateMedia(context, controller),
+            ), subtitle: tr('CGTN CCTV RT government propaganda state media')),
+        SettingEntry(tr('Update block lists automatically'), (context) => SwitchItem(
+              title: tr('Update block lists automatically'),
+              subtitle: _blockListsVersion(controller),
+              leading: _icon(AppIcons.arrowsClockwise),
+              value: prefs.updateBlockLists,
+              onChanged: (v) => savePrefs(prefs.copyWith(updateBlockLists: v)),
+            )),
+        SettingEntry(tr('Title keyword filter'), (context) => NormalItem(
+              title: tr('Title keyword filter'),
+              subtitle: prefs.blockedKeywords.isEmpty ? tr('Tap to add') : tr('{0} keywords', [prefs.blockedKeywords.length]),
+              leading: _icon(AppIcons.funnelSimple),
+              onTap: () async {
+                final result = await showDialog<List<String>>(
+                  context: context,
+                  builder: (context) => ListEditorDialog(title: tr('Title keyword filter'), initialItems: prefs.blockedKeywords, hintText: tr('Enter keywords (case-insensitive)'), itemLabel: tr('Keywords')),
+                );
+                if (result != null) savePrefs(controller.preferences.copyWith(blockedKeywords: result));
+              },
+            ), subtitle: tr('Block keywords')),
+        SettingEntry(tr('Minimum video length'), (context) => NormalItem(
+              title: tr('Minimum video length'),
+              subtitle: tr('Current: {0}. Shorter videos are hidden', [labelOf(_durations, prefs.minDurationMinutes)]),
+              leading: _icon(AppIcons.timer),
+              onTap: () => pickFromDialog<int>(context, title: tr('Minimum video length'), value: prefs.minDurationMinutes, values: _durations, onSelected: (v) => savePrefs(prefs.copyWith(minDurationMinutes: v))),
+            ), subtitle: tr('Duration filter')),
+        SettingEntry(tr('Hide watched videos'), (context) => SwitchItem(
+              title: tr('Hide watched videos'),
+              subtitle: tr('Based on playback progress on this device'),
+              leading: _icon(AppIcons.eyeSlash),
+              value: prefs.hideWatched,
+              onChanged: (v) => savePrefs(prefs.copyWith(hideWatched: v)),
+            )),
+        SettingEntry(tr('Hide members-only videos'), (context) => SwitchItem(
+              title: tr('Hide members-only videos'),
+              subtitle: tr('Videos only channel members can watch are left out of lists'),
+              leading: _icon(AppIcons.eyeSlash),
+              value: prefs.hideMembersOnly,
+              onChanged: (v) => savePrefs(prefs.copyWith(hideMembersOnly: v)),
+            ), subtitle: tr('members only membership')),
+    ],
+    SettingsCategory.subscriptions => [
+        SettingEntry(tr('Refresh automatically when opening Subscriptions'), (context) => SwitchItem(
+              title: tr('Refresh automatically when opening Subscriptions'),
+              subtitle: tr('When off, updates only when you tap refresh'),
+              leading: _icon(AppIcons.arrowsCounterClockwise),
+              value: prefs.feedAutoRefresh,
+              onChanged: (v) => savePrefs(prefs.copyWith(feedAutoRefresh: v)),
+            )),
+        SettingEntry(tr('Auto-refresh interval'), (context) => NormalItem(
+              title: tr('Auto-refresh interval'),
+              subtitle: tr("Current: {0}. Revisiting within this interval won't reload", [labelOf(_feedIntervals, prefs.feedRefreshMinutes)]),
+              leading: _icon(AppIcons.clockClockwise),
+              enabled: prefs.feedAutoRefresh,
+              onTap: () => pickFromDialog<int>(context, title: tr('Auto-refresh interval'), value: prefs.feedRefreshMinutes, values: _feedIntervals, onSelected: (v) => savePrefs(prefs.copyWith(feedRefreshMinutes: v))),
+            )),
+        SettingEntry(tr('Apply filters to subscription feed too'), (context) => SwitchItem(
+              title: tr('Apply filters to subscription feed too'),
+              subtitle: tr('Keywords, Shorts, duration and watched videos; blocked channels are always hidden'),
+              leading: _icon(AppIcons.funnel),
+              value: prefs.filterSubscriptions,
+              onChanged: (v) => savePrefs(prefs.copyWith(filterSubscriptions: v)),
+            )),
+        SettingEntry(tr('Refresh subscription feed now'), (context) => NormalItem(
+              title: tr('Refresh subscription feed now'),
+              subtitle: tr('Following {0} channels', [controller.library?.channels.length ?? 0]),
+              leading: _icon(AppIcons.arrowsClockwise),
+              onTap: () => controller.library?.refreshFeed(force: true),
+            )),
+        SettingEntry(tr('Import from file'), (context) => NormalItem(
+              title: tr('Import from file'),
+              subtitle: tr('Import subscriptions from a NewPipe, FreeTube or Google Takeout file; nothing is uploaded'),
+              leading: _icon(AppIcons.downloadSimple),
+              onTap: () {
+                final library = controller.library;
+                if (library != null) importSubscriptionsFromFile(context, library);
+              },
+            )),
+    ],
+    SettingsCategory.enhance => [
+        SettingEntry(tr('SponsorBlock'), (context) => SwitchItem(
+              title: tr('SponsorBlock'),
+              subtitle: settings.sponsorBlock ? tr('On · Skipping {0} segment types, click to configure', [settings.sponsorCategories.length]) : tr('Tap to configure'),
+              leading: _icon(AppIcons.airplaneTakeoff),
+              value: settings.sponsorBlock,
+              onChanged: (v) => save(settings.copyWith(sponsorBlock: v)),
+              onTap: () => openSponsorBlock(context, controller),
+            ), subtitle: tr('SponsorBlock skip sponsor ads')),
+        SettingEntry(tr('Show dislikes'), (context) => SwitchItem(
+              title: tr('Show dislikes'),
+              subtitle: tr("Return YouTube Dislike's estimated dislikes, shown on the watch page; when on, the id of the video you watch is sent to its server"),
+              leading: _icon(AppIcons.thumbsDown),
+              value: settings.returnDislike,
+              onChanged: (v) => save(settings.copyWith(returnDislike: v)),
+            ), subtitle: tr('Return YouTube Dislike dislikes')),
+        SettingEntry(tr('DeArrow titles'), (context) => SwitchItem(
+              title: tr('DeArrow titles'),
+              subtitle: tr("Replace clickbait titles with ones DeArrow's users submitted. Like SponsorBlock, only the first digits of a hash of the video id are sent, so the server cannot tell what you watch"),
+              leading: _icon(AppIcons.textT),
+              value: settings.deArrowTitles,
+              onChanged: (v) => save(settings.copyWith(deArrowTitles: v)),
+            ), subtitle: tr('DeArrow clickbait titles thumbnails')),
+        SettingEntry(tr('DeArrow thumbnails'), (context) => SwitchItem(
+              title: tr('DeArrow thumbnails'),
+              subtitle: tr("Replace exaggerated thumbnails with a frame DeArrow's users picked. Its server renders the frame, so when on, the ids of videos with a replacement are sent to it"),
+              leading: _icon(AppIcons.image),
+              value: settings.deArrowThumbnails,
+              onChanged: (v) => save(settings.copyWith(deArrowThumbnails: v)),
+            ), subtitle: tr('DeArrow cover thumbnail')),
+    ],
+    SettingsCategory.privacy => [
+        SettingEntry(tr('Incognito mode'), (context) => SwitchItem(
+              title: tr('Incognito mode'),
+              subtitle: keyNames(tr("Watch history, searches and progress aren't recorded and For you doesn't learn; it ends when Lumtub closes. Shortcut Ctrl+Shift+N")),
+              leading: _icon(AppIcons.eyeSlash),
+              value: controller.incognito,
+              onChanged: controller.setIncognito,
+            ), subtitle: tr('incognito private no history')),
+        SettingEntry(tr('Save watch history'), (context) => SwitchItem(
+              title: tr('Save watch history'),
+              subtitle: tr("When off, newly watched videos won't appear in History or Home, and search terms aren't saved"),
+              leading: _icon(AppIcons.clockCounterClockwiseFill),
+              value: prefs.recordHistory,
+              onChanged: (v) => savePrefs(prefs.copyWith(recordHistory: v)),
+            )),
+        SettingEntry(tr('Watch statistics'), (context) => NormalItem(
+              title: tr('Watch statistics'),
+              subtitle: tr('How long you watched each day and your most watched channels, kept on this computer only'),
+              leading: _icon(AppIcons.chartLineUp),
+              onTap: () => openWatchStats(context, controller),
+            ), subtitle: tr('Watch time')),
+        SettingEntry(tr('Save playback position'), (context) => SwitchItem(
+              title: tr('Save playback position'),
+              subtitle: tr('Used for resuming playback and progress bars on cards'),
+              leading: _icon(AppIcons.hourglassMedium),
+              value: prefs.recordProgress,
+              onChanged: (v) => savePrefs(prefs.copyWith(recordProgress: v)),
+            )),
+        SettingEntry(tr('Clear watch history'), (context) => NormalItem(
+              title: tr('Clear watch history'),
+              subtitle: tr('{0} entries', [controller.history.length]),
+              leading: _icon(AppIcons.trashSimple),
+              onTap: () async {
+                if (await confirmDialog(context, title: tr('Clear watch history?'), content: tr('Only deletes records on this device. Your YouTube account is not affected.'))) await controller.clearHistory();
+              },
+            )),
+        SettingEntry(tr('Clear search history'), (context) => NormalItem(
+              title: tr('Clear search history'),
+              subtitle: tr('Recent searches shown below the search box'),
+              leading: _icon(AppIcons.listMagnifyingGlass),
+              onTap: () async {
+                if (await confirmDialog(context, title: tr('Clear search history?'), content: tr('Only deletes search terms saved on this device.'))) await controller.clearSearchHistory();
+              },
+            )),
+        SettingEntry(tr('Clear playback progress'), (context) => NormalItem(
+              title: tr('Clear playback progress'),
+              subtitle: tr('Start all videos from the beginning'),
+              leading: _icon(AppIcons.arrowCounterClockwise),
+              onTap: () async {
+                if (await confirmDialog(context, title: tr('Clear playback progress?'), content: tr('"Continue watching" and the progress bars on cards will also be cleared.'))) controller.clearProgress();
+              },
+            )),
+        SettingEntry(tr('Connected servers'), (context) => NormalItem(
+              title: tr('Connected servers'),
+              subtitle: tr('Which servers Lumtub connects to and what each learns; whatever can be turned off can be turned off here'),
+              leading: _icon(AppIcons.network),
+              onTap: () => openPrivacyConnections(context, controller),
+            ), subtitle: tr('privacy servers network connections telemetry third party')),
+        SettingEntry(tr('Clear local data'), (context) => NormalItem(
+              title: tr('Clear local data'),
+              subtitle: tr('Choose what to remove from this computer; favorites, playlists and followed channels are kept'),
+              leading: _icon(AppIcons.broom),
+              onTap: () => _clearLocalData(context, controller),
+            ), subtitle: tr('clear delete data privacy reset uninstall')),
+    ],
     SettingsCategory.style => [
         SettingEntry(tr('Language'), (context) => PopupItem<AppLanguage>(
               title: tr('Language'),
@@ -1201,56 +1259,24 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: appearance.showStatusBar,
               onChanged: (v) => saveLooks(appearance.copyWith(showStatusBar: v)),
             )),
-      ],
-    SettingsCategory.extra => [
-        SettingEntry(tr('SponsorBlock'), (context) => SwitchItem(
-              title: tr('SponsorBlock'),
-              subtitle: settings.sponsorBlock ? tr('On · Skipping {0} segment types, click to configure', [settings.sponsorCategories.length]) : tr('Tap to configure'),
-              leading: _icon(AppIcons.airplaneTakeoff),
-              value: settings.sponsorBlock,
-              onChanged: (v) => save(settings.copyWith(sponsorBlock: v)),
-              onTap: () => openSponsorBlock(context, controller),
-            ), subtitle: tr('SponsorBlock skip sponsor ads')),
-        SettingEntry(tr('Show dislikes'), (context) => SwitchItem(
-              title: tr('Show dislikes'),
-              subtitle: tr("Return YouTube Dislike's estimated dislikes, shown on the watch page; when on, the id of the video you watch is sent to its server"),
-              leading: _icon(AppIcons.thumbsDown),
-              value: settings.returnDislike,
-              onChanged: (v) => save(settings.copyWith(returnDislike: v)),
-            ), subtitle: tr('Return YouTube Dislike dislikes')),
-        SettingEntry(tr('DeArrow titles'), (context) => SwitchItem(
-              title: tr('DeArrow titles'),
-              subtitle: tr("Replace clickbait titles with ones DeArrow's users submitted. Like SponsorBlock, only the first digits of a hash of the video id are sent, so the server cannot tell what you watch"),
-              leading: _icon(AppIcons.textT),
-              value: settings.deArrowTitles,
-              onChanged: (v) => save(settings.copyWith(deArrowTitles: v)),
-            ), subtitle: tr('DeArrow clickbait titles thumbnails')),
-        SettingEntry(tr('DeArrow thumbnails'), (context) => SwitchItem(
-              title: tr('DeArrow thumbnails'),
-              subtitle: tr("Replace exaggerated thumbnails with a frame DeArrow's users picked. Its server renders the frame, so when on, the ids of videos with a replacement are sent to it"),
-              leading: _icon(AppIcons.image),
-              value: settings.deArrowThumbnails,
-              onChanged: (v) => save(settings.copyWith(deArrowThumbnails: v)),
-            ), subtitle: tr('DeArrow cover thumbnail')),
-        SettingEntry(tr('Show related videos on the video page'), (context) => SwitchItem(
-              title: tr('Show related videos on the video page'),
-              subtitle: tr('Found by title search; when off, autoplay plays only the queue'),
-              leading: _icon(AppIcons.filmReel),
-              value: prefs.showRelated,
-              onChanged: (v) => savePrefs(prefs.copyWith(showRelated: v)),
-            )),
-        SettingEntry(tr('Expand video description by default'), (context) => SwitchItem(
-              title: tr('Expand video description by default'),
-              leading: _icon(AppIcons.notepad),
-              value: prefs.expandDescription,
-              onChanged: (v) => savePrefs(prefs.copyWith(expandDescription: v)),
-            )),
-        SettingEntry(tr('Translation & AI'), (context) => NormalItem(
-              title: tr('Translation & AI'),
-              subtitle: tr('Translation: {0} · AI: {1}', [prefs.translation.service.label, controller.canSummarize ? prefs.translation.effectiveAiModel : tr('Not set')]),
-              leading: _icon(AppIcons.translate),
-              onTap: () => openTranslationSettings(context, controller),
-            ), subtitle: '翻译目标语言 沉浸式翻译 双语对照 译文 翻译服务 AI 总结 接口 模型 语音识别 Whisper Groq 没有字幕 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
+        if (!Platform.isAndroid) SettingEntry(tr('Minimize to tray on close'), (context) => SwitchItem(
+              title: tr('Minimize to tray on close'),
+              subtitle: tr('The close button hides the window to the tray icon and playback continues; exit from the tray menu'),
+              leading: _icon(AppIcons.layout),
+              value: prefs.closeToTray,
+              onChanged: (v) => savePrefs(prefs.copyWith(closeToTray: v)),
+            ), subtitle: tr('tray background playback')),
+        if (!Platform.isAndroid) SettingEntry(tr('Minimize to tray'), (context) => SwitchItem(
+              title: tr('Minimize to tray'),
+              subtitle: tr('Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back'),
+              leading: _icon(AppIcons.minus),
+              value: prefs.minimizeToTray,
+              onChanged: (v) => savePrefs(prefs.copyWith(minimizeToTray: v)),
+            ), subtitle: tr('tray background playback')),
+        if (AppWindow.waylandDesktop && controller.directories != null)
+          SettingEntry(tr('X11 compatibility mode'), (context) => _X11ModeSwitch(controller: controller, data: controller.directories!.data), subtitle: tr('Wayland on top picture in picture')),
+    ],
+    SettingsCategory.storage => [
         SettingEntry(tr('Check for component updates automatically'), (context) => SwitchItem(
               title: tr('Check for component updates automatically'),
               subtitle: tr('Check libmpv, yt-dlp and Deno once a day'),
@@ -1296,8 +1322,6 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               // Android has no file manager to hand the folder to.
               onTap: controller.directories == null || Platform.isAndroid ? null : () => unawaited(openInExplorer(controller.directories!.root.path)),
             )),
-      ],
-    SettingsCategory.backup => [
         SettingEntry(tr('Export settings'), (context) => NormalItem(
               title: tr('Export settings'),
               subtitle: tr('Saves to a JSON file, without accounts, watch history or local paths'),
@@ -1318,7 +1342,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 if (await confirmDialog(context, title: tr('Reset all settings?'), content: tr('Playback, appearance and privacy settings will all be reset to defaults.'), confirm: tr('Reset'))) await controller.resetSettings();
               },
             ), subtitle: tr('Restore default')),
-      ],
+    ],
     SettingsCategory.account => [
         SettingEntry(tr('YouTube account'), (context) => AccountSettings(account: controller.account, tvSignIn: controller.tvSignIn, webSignIn: controller.webSignIn, saveTvSamples: controller.saveTvSamples, note: _note(context)), subtitle: tr('Google sign-in, TV code sign-in, browser sign-in, sync, sign out, custom client')),
         SettingEntry(tr('Subscribe when following'), (context) => SwitchItem(
@@ -1335,7 +1359,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.syncHistoryToYoutube,
               onChanged: (v) => savePrefs(prefs.copyWith(syncHistoryToYoutube: v)),
             )),
-      ],
+    ],
     SettingsCategory.about => aboutEntries(controller),
   };
 }

@@ -42,6 +42,8 @@ jobs:
               -d "{\"context\":{\"client\":{\"clientName\":\"WEB\",\"clientVersion\":\"2.20260708.00.00\",\"hl\":\"zh-CN\"}},\"videoId\":\"$id\"}" \
               'https://www.youtube.com/youtubei/v1/next?prettyPrint=false' -o "$RUNNER_TEMP/next/$id.json"
             ls -l "$RUNNER_TEMP/next/$id.json"
+            jq -c '[.. | objects | select(has("lockupViewModel")) | .lockupViewModel | {id: .contentId, type: .contentType, rows: [.metadata.lockupMetadataViewModel.metadata.contentMetadataViewModel.metadataRows[]? | [.metadataParts[]? | (.text.content // .text // "?")]]}] | .[:12][]' "$RUNNER_TEMP/next/$id.json"
+            jq -c '[.. | objects | select(has("compactVideoRenderer")) | .compactVideoRenderer | {id: .videoId, v: .viewCountText, p: .publishedTimeText}] | .[:3][]' "$RUNNER_TEMP/next/$id.json"
           done
 
       - uses: actions/upload-artifact@v4

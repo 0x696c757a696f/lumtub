@@ -4,6 +4,7 @@ part of 'app_controller.dart';
 extension SettingsActions on AppController {
   Future<void> savePreferences(AppPreferences next) async {
     final service = next.translation != preferences.translation;
+    final gpu = next.gpuPreference != preferences.gpuPreference;
     _update(() => preferences = next);
     if (next.logLevel != AppLog.level) {
       AppLog.level = next.logLevel;
@@ -13,10 +14,30 @@ extension SettingsActions on AppController {
     }
     if (service) _useTranslator();
     unawaited(_aiFilter?.setMode(next.aiFilter));
+    if (gpu) await _writeGpuPreference(next.gpuPreference);
     try {
       await _preferencesStore?.save(next);
     } on FileSystemException {
       _notice(tr("Couldn't save settings. They still apply for this session."));
+    }
+  }
+
+  /// The Windows runner picks the graphics card before the engine starts,
+  /// from `config\gpu.txt`; without the file Windows decides.
+  Future<void> _writeGpuPreference(String value) async {
+    final config = directories?.config;
+    if (config == null || !Platform.isWindows) return;
+    final file = File('${config.path}${Platform.pathSeparator}gpu.txt');
+    try {
+      if (value == 'system') {
+        if (await file.exists()) await file.delete();
+      } else {
+        await config.create(recursive: true);
+        await file.writeAsString(value);
+      }
+      logInfo('Graphics card preference $value, used from the next start');
+    } on FileSystemException catch (e) {
+      logError('Could not save the graphics card preference', e);
     }
   }
 

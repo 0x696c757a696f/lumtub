@@ -111,4 +111,12 @@ void main() {
     final copy = AppPreferences.fromJson(defaults.copyWith(closeToTray: true, minimizeToTray: true, audioOnlyInBackground: true).toJson());
     expect((copy.closeToTray, copy.minimizeToTray, copy.audioOnlyInBackground), (true, true, true));
   });
+
+  test('the graphics card follows Windows by default and keeps only known values', () {
+    expect(const AppPreferences().gpuPreference, 'system');
+    for (final value in gpuPreferences) {
+      expect(AppPreferences.fromJson(const AppPreferences().copyWith(gpuPreference: value).toJson()).gpuPreference, value);
+    }
+    expect(AppPreferences.fromJson({...const AppPreferences().toJson(), 'gpuPreference': 'nvidia'}).gpuPreference, 'system');
+  });
 }

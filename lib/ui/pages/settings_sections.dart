@@ -407,6 +407,23 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.speedometer),
               onTap: () => showDiagnostics(context, controller, playback: true),
             ), subtitle: tr('benchmark performance CPU hardware decoding diagnostics')),
+        if (Platform.isWindows) SettingEntry(tr('Graphics card'), (context) => PopupItem<String>(
+              title: tr('Graphics card'),
+              leading: _icon(AppIcons.monitorPlay),
+              value: prefs.gpuPreference,
+              values: [
+                ('system', tr('As Windows decides (default)')),
+                ('low-power', tr('Power saving (integrated graphics)')),
+                ('high-performance', tr('High performance (dedicated graphics)')),
+              ],
+              onSelected: (v) async {
+                if (v == prefs.gpuPreference) return;
+                await controller.savePreferences(prefs.copyWith(gpuPreference: v));
+                if (!context.mounted) return;
+                final restart = await confirmDialog(context, title: tr('Graphics card'), content: tr('Lumtub uses the new graphics card after a restart. Restart now?'), confirm: tr('Restart now'));
+                if (restart) await controller.restart();
+              },
+            ), subtitle: tr('GPU integrated dedicated battery power saving laptop')),
     ],
     SettingsCategory.sound => [
         SettingEntry(tr('Default audio quality'), (context) => NormalItem(

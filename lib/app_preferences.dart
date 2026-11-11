@@ -21,6 +21,9 @@ import 'l10n/l10n.dart';
 ///
 /// This must be evaluated after the selected language is loaded, instead of
 /// once during library initialization.
+/// [AppPreferences.gpuPreference]'s values, as the Windows runner reads them.
+const gpuPreferences = {'system', 'low-power', 'high-performance'};
+
 List<(String, String)> get startPages => [
       ('home', tr('Home')),
       ('explore', tr('Explore')),
@@ -101,6 +104,7 @@ class AppPreferences {
     this.audioOnlyInBackground = false,
     this.closeToTray = false,
     this.minimizeToTray = false,
+    this.gpuPreference = 'system',
     this.matchFrameRate = true,
     this.keyboardShortcuts = true,
     this.seekSeconds = 5,
@@ -243,6 +247,10 @@ class AppPreferences {
   final bool closeToTray;
   /// Minimising the window hides it to the tray icon.
   final bool minimizeToTray;
+  /// Windows: the graphics card Lumtub draws and decodes on, read by the
+  /// runner from `config\gpu.txt` before the engine starts: `system` (as
+  /// Windows decides), `low-power` (integrated) or `high-performance`.
+  final String gpuPreference;
   /// Android: the screen switches to a refresh rate that fits the video's
   /// frame rate while it plays, as TVs do for films.
   final bool matchFrameRate;
@@ -466,6 +474,7 @@ class AppPreferences {
     bool? audioOnlyInBackground,
     bool? closeToTray,
     bool? minimizeToTray,
+    String? gpuPreference,
     bool? matchFrameRate,
     bool? keyboardShortcuts,
     int? seekSeconds,
@@ -550,6 +559,7 @@ class AppPreferences {
         audioOnlyInBackground: audioOnlyInBackground ?? this.audioOnlyInBackground,
         closeToTray: closeToTray ?? this.closeToTray,
         minimizeToTray: minimizeToTray ?? this.minimizeToTray,
+        gpuPreference: gpuPreference ?? this.gpuPreference,
         matchFrameRate: matchFrameRate ?? this.matchFrameRate,
         keyboardShortcuts: keyboardShortcuts ?? this.keyboardShortcuts,
         seekSeconds: seekSeconds ?? this.seekSeconds,
@@ -635,6 +645,7 @@ class AppPreferences {
         'audioOnlyInBackground': audioOnlyInBackground,
         'closeToTray': closeToTray,
         'minimizeToTray': minimizeToTray,
+        'gpuPreference': gpuPreference,
         'matchFrameRate': matchFrameRate,
         'keyboardShortcuts': keyboardShortcuts,
         'seekSeconds': seekSeconds,
@@ -759,6 +770,7 @@ class AppPreferences {
       audioOnlyInBackground: flag('audioOnlyInBackground', d.audioOnlyInBackground),
       closeToTray: flag('closeToTray', d.closeToTray),
       minimizeToTray: flag('minimizeToTray', d.minimizeToTray),
+      gpuPreference: gpuPreferences.contains(raw['gpuPreference']) ? raw['gpuPreference'] as String : d.gpuPreference,
       matchFrameRate: flag('matchFrameRate', d.matchFrameRate),
       keyboardShortcuts: flag('keyboardShortcuts', d.keyboardShortcuts),
       seekSeconds: number('seekSeconds', 5, 1, 60),

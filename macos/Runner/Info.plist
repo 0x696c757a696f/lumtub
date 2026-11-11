@@ -55,6 +55,8 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSSupportsAutomaticGraphicsSwitching</key>
+	<true/>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Lumtub looks for TVs and speakers on your network to cast videos to.</string>
 	<key>NSBonjourServices</key>

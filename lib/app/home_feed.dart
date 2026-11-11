@@ -372,6 +372,8 @@ class HomeFeed extends ChangeNotifier {
 
   void _learnTastes(HomeFeedSources sources) {
     final followed = {for (final c in sources.followed) c.id};
+    _longTaste?.close();
+    _recentTaste?.close();
     _longTaste = TasteProfile.from(
       history: sources.history.take(_tasteHistory).toList(),
       progressOf: sources.progressOf,
@@ -446,6 +448,8 @@ class HomeFeed extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _longTaste?.close();
+    _recentTaste?.close();
     // The waiting sources see the feed is gone and end without starting.
     for (final turn in _waiting) {
       turn.complete();

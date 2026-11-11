@@ -24,6 +24,7 @@ class NativeCore {
   NativeCore._(this.library)
       : tasteNew = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size), Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_taste_new'),
         tasteFinalizer = NativeFinalizer(library.lookup<NativeFinalizerFunction>('lumtub_taste_free')),
+        tasteFree = library.lookupFunction<Void Function(Pointer<Void>), void Function(Pointer<Void>)>('lumtub_taste_free'),
         tasteAffinity = library.lookupFunction<Double Function(Pointer<Void>, Pointer<Uint8>, Size), double Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_taste_affinity'),
         tasteMatch = library.lookupFunction<Double Function(Pointer<Void>, Pointer<Uint8>, Size), double Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_taste_match'),
         tasteInterest = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_taste_interest'),
@@ -98,6 +99,8 @@ class NativeCore {
   final Pointer<Void> Function(Pointer<Uint8> json, int length) tasteNew;
   /// Frees a taste once Dart no longer holds it.
   final NativeFinalizer tasteFinalizer;
+  /// Frees a taste at once; the finalizer must be detached first.
+  final void Function(Pointer<Void> taste) tasteFree;
   final double Function(Pointer<Void> taste, Pointer<Uint8> key, int length) tasteAffinity;
   final double Function(Pointer<Void> taste, Pointer<Uint8> title, int length) tasteMatch;
   final Pointer<Utf8> Function(Pointer<Void> taste, Pointer<Uint8> title, int length) tasteInterest;

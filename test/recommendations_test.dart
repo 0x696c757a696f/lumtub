@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/home_feed.dart';
 import 'package:lumtub/library_store.dart' show WatchProgress;
 import 'package:lumtub/models.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/recommendations.dart';
 import 'package:lumtub/youtube_related.dart';
 
@@ -21,6 +22,18 @@ VideoItem video(String id, {String title = '', String channel = 'c', String? cha
 
 void main() {
   group('TasteProfile', () {
+    test('close frees at once, twice is harmless, and a closed profile knows nothing', () {
+      if (NativeCore.instance == null) return;
+      final taste = TasteProfile.from(history: [video('a', channelId: 'UCgood', title: 'good things')]);
+      expect(taste.channelAffinity(video('x', channelId: 'UCgood')), greaterThan(0));
+      expect(taste.isClosed, isFalse);
+      taste.close();
+      taste.close();
+      expect(taste.isClosed, isTrue);
+      expect(taste.channelAffinity(video('x', channelId: 'UCgood')), 0);
+      expect(taste.topChannels(3), isEmpty);
+    });
+
     test('weighs recent channels and shared title words', () {
       final taste = TasteProfile.from(history: [
         video('a', title: '原神 新角色 实机演示', channelId: 'UCgame'),
@@ -90,6 +103,35 @@ void main() {
     await loaded.load();
     expect(loaded.videos, {video('x').id});
     expect(loaded.channels, {'UCx': 1});
+  });
+
+  group('NotInterested saves', () {
+    late Directory dir;
+    setUp(() => dir = Directory.systemTemp.createTempSync('lumtub_ni'));
+    tearDown(() => dir.deleteSync(recursive: true));
+
+    test('overlapping saves leave the latest state and no temporary file', () async {
+      final file = File('${dir.path}/not_interested.json');
+      final store = NotInterested(file);
+      await Future.wait([for (final id in ['a', 'b', 'c']) store.add(video(id, channelId: 'UC$id'))]);
+      final loaded = NotInterested(file);
+      await loaded.load();
+      expect(loaded.videos, {video('a').id, video('b').id, video('c').id});
+      expect(File('${file.path}.tmp').existsSync(), isFalse);
+    });
+
+    test('clear during a pending save leaves nothing', () async {
+      final file = File('${dir.path}/not_interested.json');
+      final store = NotInterested(file);
+      final pending = store.add(video('a', channelId: 'UCa'));
+      final cleared = store.clear();
+      await Future.wait([pending, cleared]);
+      final loaded = NotInterested(file);
+      await loaded.load();
+      expect(loaded.videos, isEmpty);
+      expect(loaded.channels, isEmpty);
+      expect(File('${file.path}.tmp').existsSync(), isFalse);
+    });
   });
 
   group('HomeFeed', () {

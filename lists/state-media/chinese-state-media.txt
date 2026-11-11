@@ -29,7 +29,7 @@
 :china-youth-daily | ^中国青年报
 :ipanda | ^iPanda | ^熊猫频道
 :china-military-online | UC-56DqgG987rFpeYBFDOZ6Q | @%E4%B8%AD%E5%9B%BD%E5%86%9B%E7%BD%9112 | ^中国军网
-:pla-daily | ^解放军报 | ^PLA Daily
+:pla-daily | UCv-jCuD0-MEfL12y-IX1Kgw | @hquangtu | ^解放军报 | ^PLA Daily
 :ta-kung-pao | ^大公报 | ^大公報 | ^Ta Kung Pao
 :wen-wei-po | UCipsRIUyYONCQ8OdV_DRNxg | @wenweipo2023 | ^文汇报 | ^文匯報 | ^Wen Wei Po
 :ta-kung-wen-wei | ^大公文汇 | ^大公文匯

@@ -8,7 +8,7 @@
 
 :bolivia-tv | ^Bolivia TV
     reviewed: 2026-11-11
-:telesur | ^teleSUR
+:telesur | UCEXKaswCHMJmOIdR8HrZy9Q | @teleSURtv.net.e | ^teleSUR
     reviewed: 2026-11-11
 :rta-argentina | ^Radio y Televisión Argentina | ^Televisión Pública Argentina | ^TV Pública
     reviewed: 2026-11-11

@@ -13,5 +13,5 @@
     reviewed: 2026-11-11
 :mena | ^Middle East News Agency | =MENA
     reviewed: 2026-11-11
-:al-ahram | ^Al-Ahram | ^الأهرام | ^Ahram Online
+:al-ahram | UCsmzko1FKC0UNRG36cvYDBQ | @al-ahram9230 | ^Al-Ahram | ^الأهرام | ^Ahram Online
     reviewed: 2026-11-11

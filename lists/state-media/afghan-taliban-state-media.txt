@@ -10,5 +10,5 @@
     reviewed: 2026-11-11
 :bakhtar-news | ^Bakhtar | ^باختر
     reviewed: 2026-11-11
-:al-emarah | ^Al Emarah | ^Al-Emarah | ^الامارة
+:al-emarah | UC18PtrNgVKsB2KJbdkvGiZw | @alemarah5276 | ^Al Emarah | ^Al-Emarah | ^الامارة
     reviewed: 2026-11-11

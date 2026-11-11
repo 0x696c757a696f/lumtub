@@ -13,7 +13,7 @@
     reviewed: 2026-11-11
 :lao-national-radio-tv | ^Lao National Television | =LNTV | ^Lao National Radio
     reviewed: 2026-11-11
-:vientiane-times | ^Vientiane Times
+:vientiane-times | UCnw8ycr-De-Q6P2votJ_GHQ | @TheVientianeTimes | ^Vientiane Times
     reviewed: 2026-11-11
 :khmer-times | ^Khmer Times
     reviewed: 2026-11-11

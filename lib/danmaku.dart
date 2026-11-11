@@ -136,6 +136,10 @@ class DanmakuOverlay {
   double _osdWidth = 1920;
   double _osdHeight = 1080;
   int _ticks = 0;
+  /// The time last laid out; while it stays (paused) and nothing new came,
+  /// the frame is the same and the core is not asked again.
+  double? _laidOut;
+  bool _changed = true;
 
   Pointer<Void>? _layout;
   NativeCore? _core;
@@ -162,6 +166,8 @@ class DanmakuOverlay {
     _layout = core.withText(settings.layoutJson, core.danmakuNew);
     _painter = DanmakuPainter(font: PlayerSettings.fontForThisSystem(PlayerSettings.defaultSubtitleFont), size: settings.size, opacity: settings.opacity);
     _generation++;
+    _laidOut = null;
+    _changed = true;
     unawaited(_readOsdSize());
     _liveClock
       ..reset()
@@ -209,6 +215,7 @@ class DanmakuOverlay {
     }
     batch.sort((a, b) => (a['start_ms'] as double).compareTo(b['start_ms'] as double));
     core.withText(jsonEncode(batch), (bytes, length) => core.danmakuAdd(layout, bytes, length));
+    _changed = true;
   }
 
   /// Marks [messages] as shown without flying them.
@@ -229,6 +236,9 @@ class DanmakuOverlay {
     }
     final now = _live ? _liveClock.elapsedMilliseconds.toDouble() : player.state.position.inMilliseconds.toDouble();
     if (++_ticks % 30 == 0) unawaited(_readOsdSize());
+    if (!_changed && now == _laidOut) return;
+    _laidOut = now;
+    _changed = false;
     final frame = core.take(core.danmakuFrame(layout, now, _live)) ?? '';
     if (frame == _shown) return;
     _shown = frame;
@@ -256,6 +266,7 @@ class DanmakuOverlay {
       final width = double.tryParse(await platform.getProperty('osd-width')) ?? 0;
       final height = double.tryParse(await platform.getProperty('osd-height')) ?? 0;
       if (width > 0 && height > 0) {
+        if (width != _osdWidth || height != _osdHeight) _changed = true;
         _osdWidth = width;
         _osdHeight = height;
       }
@@ -351,6 +362,7 @@ class DanmakuOverlay {
       if (before != null) _release(before);
       // Shown at the next frame even while paused.
       _shown = '';
+      _changed = true;
     }, onError: (Object e) {
       _drawing.remove(id);
       logWarn('Could not draw a danmaku picture: $e');

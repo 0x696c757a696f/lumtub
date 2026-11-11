@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ffi' hide Size;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:ffi/ffi.dart';
@@ -105,6 +106,7 @@ class DanmakuPainter {
   final double opacity;
 
   static final _pictures = <String, Future<ui.Image?>>{};
+  static const _keptPictures = 200;
   static const _emojiFonts = ['Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji'];
 
   double _border(double scale) => (size / 30).clamp(1, double.infinity) * scale;
@@ -142,33 +144,60 @@ class DanmakuPainter {
     return width / (osdWidth / 1920);
   }
 
-  static Future<ui.Image?> _picture(String url) => _pictures.putIfAbsent(url, () {
-        final done = Completer<ui.Image?>();
-        final stream = NetworkImage(url).resolve(ImageConfiguration.empty);
-        late final ImageStreamListener listener;
-        listener = ImageStreamListener((info, _) {
-          if (!done.isCompleted) done.complete(info.image.clone());
-          stream.removeListener(listener);
-        }, onError: (error, stack) {
-          if (!done.isCompleted) done.complete(null);
-          stream.removeListener(listener);
-          _pictures.remove(url);
-        });
-        stream.addListener(listener);
-        return done.future.timeout(const Duration(seconds: 10), onTimeout: () {
-          _pictures.remove(url);
-          return null;
-        });
-      });
+  /// The emoji pictures loaded, least recently used first; each is
+  /// disposed when it drops out. [draw] works on clones, so dropping one
+  /// never takes a picture from a drawing in progress.
+  static Future<ui.Image?> _picture(String url) {
+    final known = _pictures.remove(url);
+    if (known != null) return _pictures[url] = known;
+    final done = Completer<ui.Image?>();
+    final stream = NetworkImage(url).resolve(ImageConfiguration.empty);
+    late final ImageStreamListener listener;
+    void finish(ui.Image? image) {
+      stream.removeListener(listener);
+      if (done.isCompleted) {
+        image?.dispose();
+        return;
+      }
+      if (image == null) _pictures.remove(url);
+      done.complete(image);
+    }
+
+    listener = ImageStreamListener((info, _) => finish(info.image.clone()), onError: (error, stack) => finish(null));
+    stream.addListener(listener);
+    final loading = done.future;
+    Timer(const Duration(seconds: 10), () {
+      if (!done.isCompleted) finish(null);
+    });
+    _pictures[url] = loading;
+    while (_pictures.length > _keptPictures) {
+      final oldest = _pictures.keys.first;
+      unawaited(_pictures.remove(oldest)!.then((image) => image?.dispose()));
+    }
+    return loading;
+  }
 
   /// [parts] drawn for an OSD [osdHeight] pixels high, gold when [paid];
   /// null when nothing could be drawn.
   Future<DanmakuBitmap?> draw(List<DanmakuPart> parts, {required double osdHeight, required bool paid}) async {
+    final images = <String, ui.Image?>{};
+    try {
+      for (final part in parts) {
+        if (part case DanmakuEmojiPicture(:final url) when !images.containsKey(url)) {
+          final image = await _picture(url);
+          images[url] = image?.clone();
+        }
+      }
+      return await _drawWith(parts, images, osdHeight: osdHeight, paid: paid);
+    } finally {
+      for (final image in images.values) {
+        image?.dispose();
+      }
+    }
+  }
+
+  Future<DanmakuBitmap?> _drawWith(List<DanmakuPart> parts, Map<String, ui.Image?> images, {required double osdHeight, required bool paid}) async {
     final scale = osdHeight / 1080;
-    final images = <String, ui.Image?>{
-      for (final part in parts)
-        if (part case DanmakuEmojiPicture(:final url)) url: await _picture(url),
-    };
     final border = _border(scale);
     final edge = Color.fromARGB((opacity * 0.6 * 255).round(), 0, 0, 0);
     final fillColour = (paid ? const Color(0xFFFFC838) : const Color(0xFFFFFFFF)).withValues(alpha: opacity);
@@ -217,9 +246,16 @@ class DanmakuPainter {
     }
     outline.dispose();
     fill.dispose();
-    final image = await recorder.endRecording().toImage(width, height);
-    final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
-    image.dispose();
+    final picture = recorder.endRecording();
+    ui.Image? image;
+    ByteData? data;
+    try {
+      image = await picture.toImage(width, height);
+      data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    } finally {
+      image?.dispose();
+      picture.dispose();
+    }
     if (data == null) return null;
     final rgba = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
     final pixels = calloc<Uint8>(rgba.length);

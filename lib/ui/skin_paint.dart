@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui show Codec, ImmutableBuffer, TargetImageSize, TargetImageSizeCallback;
 import 'dart:ui' show PointMode;
 
 import 'package:flutter/material.dart';
@@ -252,8 +253,8 @@ class SkinLayers extends StatelessWidget {
           if (layer is ImagePaint)
             Opacity(
               opacity: layer.opacity,
-              child: Image(
-                image: layer.builtIn ? AssetImage(layer.path) as ImageProvider : FileImage(File(layer.path)),
+              child: LayoutBuilder(builder: (context, constraints) => Image(
+                image: _decodedFor(layer, constraints, MediaQuery.devicePixelRatioOf(context)),
                 fit: switch (layer.fit) {
                   'contain' => BoxFit.contain,
                   'fill' => BoxFit.fill,
@@ -263,11 +264,66 @@ class SkinLayers extends StatelessWidget {
                 repeat: layer.fit == 'tile' ? ImageRepeat.repeat : ImageRepeat.noRepeat,
                 alignment: layer.fit == 'tile' ? Alignment.topLeft : Alignment.center,
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
+              )),
             )
           else
             CustomPaint(painter: _LayerPainter(layer)),
       ]);
+}
+
+/// A picture is decoded no bigger than the box shows it (in steps of 256
+/// pixels, so resizing the window does not decode it again each time); a
+/// photo straight from a camera would otherwise sit in memory at full
+/// size. Tiles keep their own size.
+ImageProvider _decodedFor(ImagePaint layer, BoxConstraints constraints, double pixelRatio) {
+  final provider = layer.builtIn ? AssetImage(layer.path) as ImageProvider : FileImage(File(layer.path));
+  if (layer.fit == 'tile' || !constraints.hasBoundedWidth || !constraints.hasBoundedHeight) return provider;
+  int step(double length) => math.max(256, (length * pixelRatio / 256).ceil() * 256);
+  return BoxDecodedImage(provider, width: step(constraints.maxWidth), height: step(constraints.maxHeight), cover: layer.fit != 'contain');
+}
+
+/// [image] decoded at the size it is drawn in a [width] × [height] box:
+/// covering it (or filling it) when [cover], else fitting inside; never
+/// larger than the picture itself.
+class BoxDecodedImage extends ImageProvider<BoxDecodedKey> {
+  const BoxDecodedImage(this.image, {required this.width, required this.height, required this.cover});
+  final ImageProvider<Object> image;
+  final int width;
+  final int height;
+  final bool cover;
+
+  /// The decoded size of a [pictureWidth] × [pictureHeight] picture.
+  static (int, int) sizeFor(int pictureWidth, int pictureHeight, {required int width, required int height, required bool cover}) {
+    final across = width / pictureWidth, down = height / pictureHeight;
+    final scale = math.min(1.0, cover ? math.max(across, down) : math.min(across, down));
+    return (math.max(1, (pictureWidth * scale).round()), math.max(1, (pictureHeight * scale).round()));
+  }
+
+  @override
+  Future<BoxDecodedKey> obtainKey(ImageConfiguration configuration) async => BoxDecodedKey(await image.obtainKey(configuration), width, height, cover);
+
+  @override
+  ImageStreamCompleter loadImage(BoxDecodedKey key, ImageDecoderCallback decode) {
+    Future<ui.Codec> sized(ui.ImmutableBuffer buffer, {ui.TargetImageSizeCallback? getTargetSize}) => decode(buffer, getTargetSize: (pictureWidth, pictureHeight) {
+          final (w, h) = sizeFor(pictureWidth, pictureHeight, width: width, height: height, cover: cover);
+          return ui.TargetImageSize(width: w, height: h);
+        });
+    return image.loadImage(key.inner, sized);
+  }
+}
+
+class BoxDecodedKey {
+  const BoxDecodedKey(this.inner, this.width, this.height, this.cover);
+  final Object inner;
+  final int width;
+  final int height;
+  final bool cover;
+
+  @override
+  bool operator ==(Object other) => other is BoxDecodedKey && other.inner == inner && other.width == width && other.height == height && other.cover == cover;
+
+  @override
+  int get hashCode => Object.hash(inner, width, height, cover);
 }
 
 class _LayerPainter extends CustomPainter {

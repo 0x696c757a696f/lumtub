@@ -37,6 +37,7 @@ class PlayerStats extends StatefulWidget {
 class _PlayerStatsState extends State<PlayerStats> {
   Map<String, String> _values = const {};
   Timer? _timer;
+  bool _reading = false;
 
   @override
   void initState() {
@@ -53,14 +54,21 @@ class _PlayerStatsState extends State<PlayerStats> {
 
   Future<void> _read() async {
     final platform = widget.player.platform;
-    if (platform is! NativePlayer) return;
+    // A slow player is not asked again before it has answered.
+    if (platform is! NativePlayer || _reading) return;
+    _reading = true;
     final values = <String, String>{};
-    for (final name in _properties) {
-      try {
-        values[name] = await platform.getProperty(name);
-      } catch (_) {
-        // Unavailable until the first frame, or for audio-only media.
+    try {
+      for (final name in _properties) {
+        if (!mounted) return;
+        try {
+          values[name] = await platform.getProperty(name);
+        } catch (_) {
+          // Unavailable until the first frame, or for audio-only media.
+        }
       }
+    } finally {
+      _reading = false;
     }
     if (mounted) setState(() => _values = values);
   }

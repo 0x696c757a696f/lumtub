@@ -63,13 +63,20 @@ abstract final class Power {
     }
   }
 
-  /// macOS: pmset says where the power comes from.
+  static bool _onBatteryMac = false;
+  static bool _askingMac = false;
+
+  /// macOS: pmset says where the power comes from. It is asked in the
+  /// background, not waited for on the UI thread; until it answers, the
+  /// answer before stands.
   static bool _readMac() {
-    try {
-      final result = Process.runSync('pmset', ['-g', 'batt']);
-      return result.exitCode == 0 && result.stdout.toString().contains("'Battery Power'");
-    } catch (_) {
-      return false;
+    if (!_askingMac) {
+      _askingMac = true;
+      Process.run('pmset', ['-g', 'batt']).then((result) {
+        _onBatteryMac = result.exitCode == 0 && result.stdout.toString().contains("'Battery Power'");
+        _last = (DateTime.now(), _onBatteryMac);
+      }, onError: (Object _) {}).whenComplete(() => _askingMac = false);
     }
+    return _onBatteryMac;
   }
 }

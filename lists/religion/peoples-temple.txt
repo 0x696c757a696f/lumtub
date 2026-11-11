@@ -7,5 +7,5 @@
 ! source: https://en.wikipedia.org/wiki/Peoples_Temple
 
 :peoples-temple | UCmas22On_Rqya_vLEeWwpqQ | @PeoplesTemple | ^人民圣殿 | ^人民聖殿 | ^Peoples Temple | ^People's Temple | ^People’s Temple
-:jonestown | ^琼斯镇 | ^瓊斯鎮 | ^Jonestown
-:jim-jones | ^Jim Jones
+:jonestown | UCFBHnF2GliaCNsWEIGV40PA | @JonestownMusicSweden | ^琼斯镇 | ^瓊斯鎮 | ^Jonestown
+:jim-jones | UCYo2m5Og4G592dSdiO3OmeQ | @jimjonesofficial | ^Jim Jones

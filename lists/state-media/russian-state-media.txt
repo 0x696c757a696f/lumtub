@@ -9,9 +9,9 @@
 
 :rt | =RT | ^Russia Today | ^RT Arabic | ^RT en Español | ^RT Documentary | ^RT Balkan | ^RT India | ^RT DE | ^RT France | ^RT News | ^RT на русском | ^今日俄罗斯 | ^今日俄羅斯 | ^RT Hindi | ^RT UK | ^RT America | ^RT Brazil | ^RT Chinese | ^Actualidad RT | ^Rusiya Al-Yaum | ^RT en Français
     reviewed: 2026-11-08
-:sputnik | ^Sputnik | ^卫星通讯社 | ^衛星通訊社 | ^Radio Sputnik
+:sputnik | UC-ojBSRX90JnUT28pRDV7Kg | @sputnikbandvideo | ^Sputnik | ^卫星通讯社 | ^衛星通訊社 | ^Radio Sputnik
     reviewed: 2026-11-08
-:tass | ^TASS | ^ТАСС | ^塔斯社
+:tass | UCz4JJPh7ZxE6XC-ydWzjbrA | @tass_world | ^TASS | ^ТАСС | ^塔斯社
 :ria-novosti | ^RIA Novosti | ^РИА Новости | ^俄新社
 :rossiya-segodnya | ^Rossiya Segodnya | ^Россия сегодня
 :ruptly | ^Ruptly
@@ -19,16 +19,16 @@
 :rossiya-24 | ^Россия 24 | ^Rossiya 24
 :rossiya-k | UCPWjiAULzvh0Kc4Mf-N3jHQ | @%D0%A0%D0%9E%D0%A1%D0%A1%D0%98%D0%AF%D0%9A-%D1%8C8%D1%83 | ^Россия К
 :vgtrk | ^ВГТРК | ^VGTRK
-:vesti | ^Вести | ^Vesti
+:vesti | UCnQn78RYx4nGbmnFoYJkB8Q | @vesti_officiel | ^Вести | ^Vesti
 :channel-one-russia | ^Первый канал | ^Channel One Russia | ^俄罗斯第一频道
-:zvezda | =Звезда | =Zvezda | ^Телеканал Звезда
+:zvezda | UCx3wnWFs-K202jkMWl4hluQ | @zvezda314 | =Звезда | =Zvezda | ^Телеканал Звезда
 :tv-tsentr | ^ТВ Центр | ^TV Tsentr
 :rossiyskaya-gazeta | ^Российская газета | ^Rossiyskaya Gazeta
 :izvestia | ^Известия | ^Izvestia
 :ntv | =NTV | ^НТВ
 :ren-tv | ^РЕН ТВ | ^REN TV
 :otr | =ОТР
-:redfish | =Redfish
+:redfish | UCT5jAORHlcZlyVC1Gr16tcw | @redfish1 | =Redfish
     reviewed: 2026-11-08
 :maffick | ^Maffick
     reviewed: 2026-11-08

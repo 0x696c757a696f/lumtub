@@ -10,11 +10,11 @@
     reviewed: 2026-11-11
 :mcot | UCGcziEMimfeM7l-cVOkM5qA | @mcot | ^MCOT | ^Modernine
     reviewed: 2026-11-11
-:tvri | =TVRI | ^TVRI Nasional | ^TVRI World
+:tvri | UCyIMsCzDRm8_y_6wM26_PWQ | @TVRINasional | =TVRI | ^TVRI Nasional | ^TVRI World
     reviewed: 2026-11-11
 :rri | =RRI | ^Radio Republik Indonesia | ^RRI Net
     reviewed: 2026-11-11
 :rtm-malaysia | =RTM | ^Radio Televisyen Malaysia | ^RTM Berita | ^TV1 Malaysia | ^Bernama
     reviewed: 2026-11-11
-:rtb-brunei | =RTB | ^Radio Television Brunei | ^RTB Brunei
+:rtb-brunei | UC_r6qlRRylLIJ1HJ90sSs1g | @RememberTheBeatMusic | =RTB | ^Radio Television Brunei | ^RTB Brunei
     reviewed: 2026-11-11

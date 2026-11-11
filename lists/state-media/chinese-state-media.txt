@@ -18,7 +18,7 @@
 :people-com-cn | UCSRvJiQYtGPkNOBKGCOpGVA | @Renminwang | ^人民网
 :china-news-service | UCpbfXQsYBJTwq5lCkwGIeuQ | @cnsvideo | ^China News Service | ^中国新闻社 | ^中新社
 :chinanews | ^ChinaNews | ^中国新闻网 | ^中國新聞網 | ^中新网
-:cri | =CRI | ^China Radio International | ^中国国际广播电台
+:cri | UCaZGQt419Ptsdk_lh2mz9lQ | @notcri | =CRI | ^China Radio International | ^中国国际广播电台
 :cri-online | ^国际在线
 :china-plus | ^China Plus
 :zhongguo-zhi-sheng | ^中国之声

@@ -26,8 +26,8 @@
 :china-in-focus | UCBOqkAGTtzZVmKvY4SwdZ2g | @ChinainFocusNTD | ^China in Focus
 :facts-matter | @FactsMatterRoman | ^Facts Matter
 :american-thought-leaders | UCmWhuFRkZKu0g-e1xrlakVA | @AmericanThoughtLeaders | ^American Thought Leaders
-:china-observer | @ChinaObserver0 | ^China Observer
-:china-insights | @chinainsights4458 | ^China Insights
+:china-observer | UCT2kPBcD6tXn8TP_aV7BmgA | @ChinaObserver0 | ^China Observer
+:china-insights | UCwjvvgGX6oby5mZ3gbDe8Ug | @chinainsights-r2w | @chinainsights4458 | ^China Insights
 :hot-topic-dialogue | UCAa9oah8kGEDteKSHKVhK0A | @%E7%83%AD%E7%82%B9%E4%BA%92%E5%8A%A8-s8f | ^热点互动 | ^熱點互動
 :mainland-news-analysis | ^大陆新闻解读 | ^大陸新聞解讀
 :china-decoded | ^中国解密 | ^中國解密

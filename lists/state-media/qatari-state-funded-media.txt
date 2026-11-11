@@ -9,7 +9,7 @@
 ! source: https://en.wikipedia.org/wiki/Al_Jazeera_Media_Network
 
 :al-jazeera | UCm_a-Ze81vsAWY4W0Ga1GLg | @aljazeera9823 | ^Al Jazeera | ^الجزيرة | ^半岛电视台 | ^半島電視台
-:aj-plus | ^AJ+ | ^AJ Plus
+:aj-plus | UCV3Nm3T-XAgVhKH9jT0ViRg | @ajplus | ^AJ+ | ^AJ Plus
 :qatar-tv | ^Qatar TV
 :qatar-media-corporation | =QMC | ^Qatar Media Corporation
 :qatar-news-agency | =QNA | ^Qatar News Agency

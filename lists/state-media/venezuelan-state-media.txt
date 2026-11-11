@@ -9,9 +9,9 @@
 
 :telesur | UCEXKaswCHMJmOIdR8HrZy9Q | @teleSURtv.net.e | ^teleSUR
 :vtv | =VTV | ^Venezolana de Televisión
-:tves | ^TVes
+:tves | UCciLSQTyi6W0UJ8ptreovXQ | @tvesaldia | ^TVes
 :vive-tv | ^ViVe TV
 :avila-tv | ^Ávila TV
-:avn | =AVN | ^Agencia Venezolana de Noticias
+:avn | UC6bpc6YuYFdXhhNWPKzOH0Q | @AVNg4n | =AVN | ^Agencia Venezolana de Noticias
 :rnv | =RNV | ^Radio Nacional de Venezuela
 :correo-del-orinoco | ^Correo del Orinoco

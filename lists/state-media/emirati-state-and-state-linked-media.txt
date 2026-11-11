@@ -14,4 +14,4 @@
 :dubai-media | ^Dubai Media
 :dubai-tv | ^Dubai TV
 :al-emarat-tv | ^Al Emarat TV
-:sky-news-arabia | ^Sky News Arabia | ^سكاي نيوز عربية
+:sky-news-arabia | UCIJXOvggjKtCagMfxvcCzAA | @SkyNewsArabia | ^Sky News Arabia | ^سكاي نيوز عربية

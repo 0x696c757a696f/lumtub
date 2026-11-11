@@ -9,16 +9,16 @@
 ! source: https://en.wikipedia.org/wiki/Shepherd_Bushiri
 
 :dera-sacha-sauda | =Saint MSG | =Dera Sacha Sauda
-:kalki | =KALKI
+:kalki | UC66mav6fDZnFErxJhkWBz6w | @KalkiMusic | =KALKI
 :sri-amma-bhagavan | =Sri Amma Bhagavan
 :dr-and-master-sha | UCl_CFKw-uytdOks4SOBASww | @DrandMasterSha | =Dr and Master Sha
 :sahaja-yoga | =Shri Mataji Teachings | =Shri Mataji Excerpts | =Sahaja Workshop
 :bhakti-marga | UCyIxE0cUDtuGIQ3-tFaYH8A | @BhaktiMarga1008 | =Bhakti Marga
 :awakening-with-brahma-kumaris | =Awakening with Brahma Kumaris
 :benny-hinn | =Benny Hinn Ministries | =This Is Your Day
-:shepherd-bushiri | =Prophet Shepherd Bushiri | =Shepherd Bushiri Sermon
+:shepherd-bushiri | UCcbBHQXuSkw8Me1vnY-u4bw | @ProphetShepherdBushiriOfficial | =Prophet Shepherd Bushiri | =Shepherd Bushiri Sermon
 :the-jesus-nation-rsa | UC6tvgcO-yKg7CZvMdDA0OsA | @Propheticchannelrsa | =The Jesus Nation RSA
-:uebert-angel | =Uebert Angel | =Uebert Angel Highlight
+:uebert-angel | UC-tEjU3PrA8aGhxa5WpaJwA | @UebertAngelGNW | =Uebert Angel | =Uebert Angel Highlight
 :goodnews-city | UC-oiocNdkzXqCfIob5Qz7AQ | @goodnewscity396 | =GoodNews City
 :kenneth-copeland | =Copeland Ministries | =Kenneth Copeland Africa
 :prophet-jeremiah-dreamfarm | UCDUNCEuSPXrtlHVf96BtGvg | @prophetjeremiahdreamfarm | =Prophet Jeremiah DreamFarm
@@ -27,7 +27,7 @@
 :happy-science | ^Happy Science Official | ^Happy Science India | ^Happy Science Europe
 :church-of-almighty-god | @TheChurchofAlmightyGod | @ChurchofAlmightyGodMalaysia | ^The Church of Almighty God
 :shincheonji | @ShincheonjiChurch_zh | ^Shincheonji Church of Jesus
-:wmscog | @wmscog_zh | @wmscog_hk | @wmscog_mo | @JerusalemMother | @JerusalemMother_en | @WMSCOG | @wmscog_us | @wmscog_uk | @wmscog_sa | @wmscog_newsong | @wmscog_guide | ^God the Mother | ^Newsong, Church of God | ^Newsong Guide
+:wmscog | UCMGEd5kKEwErD4M17ujsSEQ | @wmscog_zh | @wmscog_hk | @wmscog_mo | @JerusalemMother | @JerusalemMother_en | @WMSCOG | @wmscog_us | @wmscog_uk | @wmscog_sa | @wmscog_newsong | @wmscog_guide | ^God the Mother | ^Newsong, Church of God | ^Newsong Guide
 :asez-wao | UCox3E8U7I3gO8VZYoX6KTmg | @asezwao6148 | @ASEZWAO | ^ASEZ WAO
 :familyfed-media | UCKrzWmprDzCLxd1GatyNzzA | @FamilyFedMedia | ^FamilyFed Media
 :family-federation-eume | UCgIM2gGSibaRBbro2uePwXg | @FamilyFederationEUME | ^Family Federation EUME

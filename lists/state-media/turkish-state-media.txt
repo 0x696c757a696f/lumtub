@@ -10,4 +10,4 @@
 
 :trt | UC7fWeaHhqgM4Ry-RMpM2YYw | @trtworld | =TRT | ^TRT World | ^TRT Haber | ^TRT عربي | ^TRT Arabic | ^TRT Deutsch | ^TRT Balkan | ^TRT Afrika | ^TRT Français | ^TRT Русский
     reviewed: 2026-11-08
-:anadolu-agency | =AA | ^Anadolu Agency | ^Anadolu Ajansı | ^阿纳多卢通讯社
+:anadolu-agency | UCVbZYhcirOke2vipxs4lT2w | @anadoluajansi | =AA | ^Anadolu Agency | ^Anadolu Ajansı | ^阿纳多卢通讯社

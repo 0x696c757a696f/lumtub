@@ -9,5 +9,5 @@
 
 :iraqiya | ^Al Iraqiya | ^العراقية | ^Iraqi Media Network
     reviewed: 2026-11-11
-:ina | =INA | ^Iraqi News Agency | ^وكالة الأنباء العراقية
+:ina | UCPlxmWbGbwVM2baH8q7MK6w | @InaOfficiel | =INA | ^Iraqi News Agency | ^وكالة الأنباء العراقية
     reviewed: 2026-11-11

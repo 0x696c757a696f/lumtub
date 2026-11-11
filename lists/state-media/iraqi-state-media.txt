@@ -1,0 +1,13 @@
+! id: iraqi-state-media
+! name: Iraqi state media
+! name.zh-Hans: 伊拉克官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State network and the official news agency
+! source: https://en.wikipedia.org/wiki/Iraqi_Media_Network
+
+:iraqiya | ^Al Iraqiya | ^العراقية | ^Iraqi Media Network
+    reviewed: 2026-11-11
+:ina | =INA | ^Iraqi News Agency | ^وكالة الأنباء العراقية
+    reviewed: 2026-11-11

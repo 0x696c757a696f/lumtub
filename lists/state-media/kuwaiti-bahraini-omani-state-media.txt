@@ -1,0 +1,21 @@
+! id: kuwaiti-bahraini-omani-state-media
+! name: Kuwaiti, Bahraini and Omani state media
+! name.zh-Hans: 科威特、巴林和阿曼官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State broadcasters and news agencies of three Gulf states
+! source: https://en.wikipedia.org/wiki/Media_of_Kuwait
+
+:kuwait-tv | ^Kuwait TV | ^تلفزيون الكويت | ^Kuwait Television
+    reviewed: 2026-11-11
+:kuna | =KUNA | ^Kuwait News Agency
+    reviewed: 2026-11-11
+:bahrain-tv | ^Bahrain TV | ^تلفزيون البحرين
+    reviewed: 2026-11-11
+:bna | =BNA | ^Bahrain News Agency
+    reviewed: 2026-11-11
+:oman-tv | ^Oman TV | ^تلفزيون سلطنة عمان | ^Oman Television
+    reviewed: 2026-11-11
+:oman-news-agency | ^Oman News Agency | =ONA
+    reviewed: 2026-11-11

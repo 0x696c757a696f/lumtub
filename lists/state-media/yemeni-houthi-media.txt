@@ -1,0 +1,13 @@
+! id: yemeni-houthi-media
+! name: Houthi media
+! name.zh-Hans: 胡塞武装媒体
+! category: state-media
+! action: hide
+! default: off
+! note: Media of the Houthi movement
+! source: https://en.wikipedia.org/wiki/Al-Masirah
+
+:al-masirah | ^Al-Masirah | ^Al Masirah | ^المسيرة
+    reviewed: 2026-11-11
+:saba-sanaa | ^Saba News | ^Saba Yemen
+    reviewed: 2026-11-11

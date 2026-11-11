@@ -1,0 +1,17 @@
+! id: african-state-media
+! name: African state media
+! name.zh-Hans: 非洲国家官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State broadcasters of Ethiopia, Rwanda and Zimbabwe
+! source: https://en.wikipedia.org/wiki/Media_of_Ethiopia
+
+:ebc-ethiopia | =EBC | ^Ethiopian Broadcasting Corporation | ^Ethiopian News Agency
+    reviewed: 2026-11-11
+:rbc-rwanda | =RBC | ^Rwanda Broadcasting Agency | ^Rwanda Broadcasting
+    reviewed: 2026-11-11
+:zbc-zimbabwe | =ZBC | ^Zimbabwe Broadcasting Corporation | ^ZBC News
+    reviewed: 2026-11-11
+:herald-zimbabwe | ^The Herald Zimbabwe | ^Zimpapers
+    reviewed: 2026-11-11

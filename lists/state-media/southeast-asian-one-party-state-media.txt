@@ -1,0 +1,19 @@
+! id: southeast-asian-one-party-state-media
+! name: Cambodian and Lao state media
+! name.zh-Hans: 柬埔寨和老挝官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State broadcasters of Cambodia and Laos
+! source: https://en.wikipedia.org/wiki/Media_of_Cambodia
+
+:tvk-cambodia | =TVK | ^National Television of Kampuchea | ^Television Kampuchea
+    reviewed: 2026-11-11
+:apsara-tv | ^Apsara TV
+    reviewed: 2026-11-11
+:lao-national-radio-tv | ^Lao National Television | =LNTV | ^Lao National Radio
+    reviewed: 2026-11-11
+:vientiane-times | ^Vientiane Times
+    reviewed: 2026-11-11
+:khmer-times | ^Khmer Times
+    reviewed: 2026-11-11

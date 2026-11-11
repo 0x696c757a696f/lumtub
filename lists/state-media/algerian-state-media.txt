@@ -1,0 +1,13 @@
+! id: algerian-state-media
+! name: Algerian state media
+! name.zh-Hans: 阿尔及利亚官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State television, radio and the official news agency
+! source: https://en.wikipedia.org/wiki/Media_of_Algeria
+
+:entv | =ENTV | ^Algerian Television | ^التلفزيون الجزائري
+    reviewed: 2026-11-11
+:aps | =APS | ^Algérie Presse Service | ^Algeria Press Service
+    reviewed: 2026-11-11

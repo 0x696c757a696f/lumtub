@@ -73,11 +73,31 @@ class LiveChatRepository {
     return _readReplay(file);
   }
 
-  // A replay of a long stream runs to a hundred megabytes.
-  static Future<List<LiveChatMessage>> _readReplay(File file) => Isolate.run(() async {
-        final contents = await file.readAsString();
-        return contents.trim().isEmpty ? const <LiveChatMessage>[] : LiveChatMessage.parseLines(contents);
-      });
+  // A replay of a long stream runs to hundreds of megabytes, nearly all
+  // of it markup the messages leave out; it is read a few megabytes of
+  // lines at a time, so only the messages are held whole.
+  static Future<List<LiveChatMessage>> _readReplay(File file) => Isolate.run(() => readReplayFile(file));
+
+  /// The messages of the replay [file], read [chunkChars] of lines at a time.
+  static Future<List<LiveChatMessage>> readReplayFile(File file, {int chunkChars = 4 << 20}) async {
+    final messages = <LiveChatMessage>[];
+    final lines = StringBuffer();
+    void parse() {
+      if (lines.isEmpty) return;
+      messages.addAll(LiveChatMessage.parseLines(lines.toString()));
+      lines.clear();
+    }
+
+    await for (final line in file.openRead().transform(utf8.decoder).transform(const LineSplitter())) {
+      if (line.trim().isEmpty) continue;
+      lines
+        ..write(line)
+        ..write('\n');
+      if (lines.length >= chunkChars) parse();
+    }
+    parse();
+    return messages;
+  }
 
   /// Streams new messages from an active live chat. yt-dlp owns YouTube's
   /// continuation requests and appends each action to the same JSON format

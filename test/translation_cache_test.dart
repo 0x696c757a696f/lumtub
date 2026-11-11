@@ -83,4 +83,34 @@ void main() {
     expect(again.get('g', 'zh-CN', 'kept'), '保留');
     expect(again.get('g', 'zh-CN', 'secret'), isNull);
   });
+
+  test('clearing while a save is under way leaves nothing on disk', () async {
+    final dir = await Directory.systemTemp.createTemp('lumtub_cache');
+    addTearDown(() => dir.delete(recursive: true));
+    final file = File('${dir.path}/translations.json');
+    final cache = TranslationCache(file: file);
+    for (var i = 0; i < 2000; i++) {
+      cache.put('g', 'zh-CN', 'line $i', '行 $i');
+    }
+    final saving = cache.save();
+    final clearing = cache.clear();
+    final savingAgain = cache.save();
+    await Future.wait([saving, clearing, savingAgain]);
+    final again = TranslationCache(file: file);
+    await again.load();
+    expect(again.length, 0);
+    expect(File('${file.path}.tmp').existsSync(), isFalse);
+  });
+
+  test('a load still reading when the cache is cleared keeps nothing', () async {
+    final dir = await Directory.systemTemp.createTemp('lumtub_cache');
+    addTearDown(() => dir.delete(recursive: true));
+    final file = File('${dir.path}/translations.json');
+    await (TranslationCache(file: file)..put('g', 'zh-CN', 'old', '旧')).save();
+    final cache = TranslationCache(file: file);
+    final loading = cache.load();
+    await cache.clear();
+    await loading;
+    expect(cache.get('g', 'zh-CN', 'old'), isNull);
+  });
 }

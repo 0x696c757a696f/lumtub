@@ -368,8 +368,26 @@ class DownloadManager extends ChangeNotifier {
     _pump();
   }
 
+  /// Whether a download or recording is running.
+  bool get working => _active.isNotEmpty;
+
+  int _held = 0;
+
+  /// Runs [step] with no new task starting meanwhile, as while the cache
+  /// they use is being cleared.
+  Future<T> holding<T>(Future<T> Function() step) async {
+    _held++;
+    try {
+      return await step();
+    } finally {
+      _held--;
+      _pump();
+    }
+  }
+
   /// Starts queued tasks while there are free places.
   void _pump() {
+    if (_held > 0) return;
     for (final task in tasks.reversed.toList()) {
       if (task.status != DownloadStatus.queued || _active.contains(task.id)) continue;
       // A recording runs as long as the live and takes no download's place.

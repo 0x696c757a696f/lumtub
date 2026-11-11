@@ -139,7 +139,7 @@ fn fetch_fragment(
     // Appended as text: rebuilding the query could re-encode signed values.
     let url = format!("{base}&sq={sq}");
     match fetch.get_live(target, &url) {
-        Ok((200, head, mut body)) => {
+        Ok((200, head, body)) => {
             let mut bytes = Vec::new();
             match body.take(FRAGMENT_LIMIT + 1).read_to_end(&mut bytes) {
                 Ok(_) if bytes.len() as u64 > FRAGMENT_LIMIT => Err(Miss::Again(format!(

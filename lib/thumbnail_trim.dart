@@ -7,7 +7,8 @@ const defaultThumbnailCapBytes = 512 * 1024 * 1024;
 /// GiB; null means the default).
 int thumbnailCapBytes(int? limitGb) => limitGb == null ? defaultThumbnailCapBytes : limitGb * 1024 * 1024 * 1024;
 
-/// Deletes the least recently modified files of [directory] until what is
+/// Deletes the least recently used files of [directory] (a file's
+/// modification time is moved forward when it is shown again) until what is
 /// left is at most [capBytes]. Files modified within [recent] of [now] (being
 /// written, or just shown) are never deleted, and a file that cannot be
 /// deleted is skipped. Returns the bytes freed.

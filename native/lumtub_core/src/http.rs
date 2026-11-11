@@ -458,16 +458,61 @@ pub unsafe extern "C" fn lumtub_http_send(
     body: *const u8,
     body_length: usize,
 ) -> bool {
-    if POST.read().map(|p| p.is_none()).unwrap_or(true) {
-        return false;
-    }
-    let Ok(request) = serde_json::from_str::<Request>(unsafe { text(json, length) }) else {
-        return false;
-    };
     let body = if body.is_null() || body_length == 0 {
         Vec::new()
     } else {
         unsafe { std::slice::from_raw_parts(body, body_length) }.to_vec()
+    };
+    start(id, port, unsafe { text(json, length) }, body)
+}
+
+/// A body buffer of [length] bytes for [lumtub_http_send_owned], so a large
+/// request body is written once, straight into the core's memory.
+#[unsafe(no_mangle)]
+pub extern "C" fn lumtub_http_body(length: usize) -> *mut u8 {
+    Box::into_raw(vec![0u8; length].into_boxed_slice()) as *mut u8
+}
+
+/// Frees a buffer from [lumtub_http_body] that was never sent.
+///
+/// # Safety
+/// [body] and [length] must be what [lumtub_http_body] gave and took.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_http_body_free(body: *mut u8, length: usize) {
+    if !body.is_null() {
+        drop(unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(body, length)) });
+    }
+}
+
+/// As [lumtub_http_send], with a [body] from [lumtub_http_body] that the
+/// core now owns, whether or not the request starts.
+///
+/// # Safety
+/// [json] must point to [length] bytes; [body] and [body_length] must be
+/// what [lumtub_http_body] gave and took, and not be used again.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_http_send_owned(
+    id: i64,
+    port: i64,
+    json: *const u8,
+    length: usize,
+    body: *mut u8,
+    body_length: usize,
+) -> bool {
+    let body = if body.is_null() {
+        Vec::new()
+    } else {
+        unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(body, body_length)) }.into_vec()
+    };
+    start(id, port, unsafe { text(json, length) }, body)
+}
+
+fn start(id: i64, port: i64, json: &str, body: Vec<u8>) -> bool {
+    if POST.read().map(|p| p.is_none()).unwrap_or(true) {
+        return false;
+    }
+    let Ok(request) = serde_json::from_str::<Request>(json) else {
+        return false;
     };
     let flow = Arc::new(Flow::default());
     FLOWS

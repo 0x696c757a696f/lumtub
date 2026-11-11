@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:lumtub/thumbnail_cache.dart';
 
 void main() {
@@ -28,5 +30,14 @@ void main() {
       'https://i.ytimg.com/vi/a-b_c/hqdefault.jpg',
     ]);
     expect(CachedThumbnail.candidates('https://dearrow-thumb.ajay.app/api/v1/getThumbnail?videoID=x&time=1'), ['https://dearrow-thumb.ajay.app/api/v1/getThumbnail?videoID=x&time=1']);
+  });
+
+  test('a thumbnail larger than the limit is refused', () async {
+    final big = MockClient.streaming((request, _) async => http.StreamedResponse(Stream.fromIterable([for (var i = 0; i < 80; i++) List.filled(64 << 10, 1)]), 200));
+    expect((await CachedThumbnail.fetch(big, Uri.parse('https://i.ytimg.com/x'))).$1, 413);
+    final small = MockClient((request) async => http.Response.bytes([1, 2, 3], 200));
+    final (status, body) = await CachedThumbnail.fetch(small, Uri.parse('https://i.ytimg.com/x'));
+    expect(status, 200);
+    expect(body, [1, 2, 3]);
   });
 }

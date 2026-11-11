@@ -327,18 +327,32 @@ extension SettingsActions on AppController {
     }
   }
 
+  /// Clears the cache folders with no download starting meanwhile; while
+  /// one runs, the folders it uses are kept.
+  Future<({int freed, int skipped, bool keptForDownloads})> _clearCacheFolders(CacheManager manager) async {
+    Future<({int freed, int skipped, bool keptForDownloads})> clear() async {
+      final busy = downloads?.working ?? false;
+      final (:freed, :skipped) = await manager.clear(settings, keep: busy ? CacheManager.downloadFolders : const {});
+      return (freed: freed, skipped: skipped, keptForDownloads: busy);
+    }
+
+    return downloads?.holding(clear) ?? clear();
+  }
+
   Future<void> clearCache() async {
     final manager = _cacheManager;
     if (manager == null) return;
     if (!ensureNotPlaying(tr("The cache can't be cleared during playback. Go back to the list first."))) return;
     try {
-      _translationCache.clear();
-      final (:freed, :skipped) = await manager.clear(settings);
+      await _translationCache.clear();
+      final (:freed, :skipped, :keptForDownloads) = await _clearCacheFolders(manager);
       final left = await manager.size(settings);
       _update(() => cacheBytes = left);
-      _notice(skipped == 0
-          ? tr('Cleared {0} of cache.', [formatBytes(freed)])
-          : tr('Cleared {0} of cache; {1} files in use were left for next time.', [formatBytes(freed), skipped]));
+      _notice(keptForDownloads
+          ? tr("Cleared {0} of cache; yt-dlp's cache was kept while downloads are running.", [formatBytes(freed)])
+          : skipped == 0
+              ? tr('Cleared {0} of cache.', [formatBytes(freed)])
+              : tr('Cleared {0} of cache; {1} files in use were left for next time.', [formatBytes(freed), skipped]));
     } on FileSystemException catch (error) {
       logError('Could not clear the cache', error);
       _notice(tr('Could not clear the cache: {0}', [error.message]));
@@ -361,10 +375,10 @@ extension SettingsActions on AppController {
           case LocalData.recommendations:
             await homeFeed?.notInterested.clear();
           case LocalData.cache:
-            _translationCache.clear();
+            await _translationCache.clear();
             final manager = _cacheManager;
             if (manager != null) {
-              await manager.clear(settings);
+              await _clearCacheFolders(manager);
               cacheBytes = await manager.size(settings);
             }
           case LocalData.account:

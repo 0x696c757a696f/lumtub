@@ -6,6 +6,20 @@ import 'package:lumtub/cache_manager.dart';
 import 'package:lumtub/player_settings.dart';
 
 void main() {
+  test('clear keeps the folders a running download uses', () async {
+    final temp = await Directory.systemTemp.createTemp('lumtub-cache-test-');
+    addTearDown(() => temp.delete(recursive: true));
+    final manager = CacheManager(AppDirectories.at(Directory('${temp.path}${Platform.pathSeparator}app')));
+    const settings = PlayerSettings();
+    final root = await manager.prepare(settings);
+    final part = File('${root.path}${Platform.pathSeparator}temp${Platform.pathSeparator}download.part')..writeAsStringSync('1234');
+    final picture = File('${root.path}${Platform.pathSeparator}thumbnails${Platform.pathSeparator}a.jpg')..writeAsStringSync('12');
+    final result = await manager.clear(settings, keep: CacheManager.downloadFolders);
+    expect(result, (freed: 2, skipped: 0));
+    expect(part.existsSync(), isTrue);
+    expect(picture.existsSync(), isFalse);
+  });
+
   test('clear removes only Lumtub-managed cache folders', () async {
     final temp = await Directory.systemTemp.createTemp('lumtub-cache-test-');
     addTearDown(() => temp.delete(recursive: true));

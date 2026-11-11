@@ -198,6 +198,21 @@ void main() {
       expect(m.taskFor('ccccccccccc')!.status, DownloadStatus.downloading);
     });
 
+    test('no download starts while the cache is being cleared', () async {
+      final m = manager();
+      final release = Completer<void>();
+      final clearing = m.holding(() => release.future);
+      m.add(video('aaaaaaaaaaa'), DownloadQuality.best);
+      await settle();
+      expect(processes, isEmpty);
+      expect(m.working, isFalse);
+      release.complete();
+      await clearing;
+      await until(() => processes.isNotEmpty);
+      expect(processes, hasLength(1));
+      expect(m.working, isTrue);
+    });
+
     test('shows progress and finishes with the printed file, a sidecar and segments', () async {
       final m = manager(segments: const [SkipSegment(Duration(seconds: 5), Duration(seconds: 12), 'sponsor')]);
       m.add(video('aaaaaaaaaaa'), DownloadQuality.p720);

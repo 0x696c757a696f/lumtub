@@ -104,7 +104,10 @@ class _Bindings {
         configure = library.lookupFunction<Void Function(Pointer<Uint8>, Size), void Function(Pointer<Uint8>, int)>('lumtub_http_configure'),
         send = library.lookupFunction<Bool Function(Int64, Int64, Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(int, int, Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_http_send'),
         cancel = library.lookupFunction<Void Function(Int64), void Function(int)>('lumtub_http_cancel'),
-        take = library.providesSymbol('lumtub_http_take') ? library.lookupFunction<Void Function(Int64, Int64), void Function(int, int)>('lumtub_http_take') : null;
+        take = library.providesSymbol('lumtub_http_take') ? library.lookupFunction<Void Function(Int64, Int64), void Function(int, int)>('lumtub_http_take') : null,
+        body = library.providesSymbol('lumtub_http_send_owned') ? library.lookupFunction<Pointer<Uint8> Function(Size), Pointer<Uint8> Function(int)>('lumtub_http_body') : null,
+        bodyFree = library.providesSymbol('lumtub_http_send_owned') ? library.lookupFunction<Void Function(Pointer<Uint8>, Size), void Function(Pointer<Uint8>, int)>('lumtub_http_body_free') : null,
+        sendOwned = library.providesSymbol('lumtub_http_send_owned') ? library.lookupFunction<Bool Function(Int64, Int64, Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(int, int, Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_http_send_owned') : null;
 
   final void Function(Pointer<NativeFunction<Int8 Function(Int64, Pointer<Dart_CObject>)>>) init;
   final void Function(Pointer<Uint8>, int) configure;
@@ -113,6 +116,11 @@ class _Bindings {
   /// Tells the core the body's reader has taken so many more bytes, so it
   /// sends more; a core without it does not wait.
   final void Function(int id, int bytes)? take;
+  /// A buffer in the core's memory that [sendOwned] hands over, so a large
+  /// body is written there once instead of being gathered and copied.
+  final Pointer<Uint8> Function(int length)? body;
+  final void Function(Pointer<Uint8> body, int length)? bodyFree;
+  final bool Function(int id, int port, Pointer<Uint8> json, int length, Pointer<Uint8> body, int bodyLength)? sendOwned;
 }
 
 /// A request waiting for its head, then streaming its body.
@@ -179,7 +187,11 @@ class NativeHttpClient extends http.BaseClient {
     if (_closed) throw http.ClientException('Client is closed', request.url);
     final native = NativeHttp._native;
     if (native == null) throw http.ClientException('The native HTTP client is missing', request.url);
-    final bytes = await request.finalize().toBytes();
+    final length = request.contentLength;
+    final direct = native.sendOwned != null && length != null && length >= _directBody;
+    final stream = request.finalize();
+    final bytes = direct ? null : await stream.toBytes();
+    final owned = direct ? await _gather(native, stream, length) : null;
     final headers = [
       for (final MapEntry(:key, :value) in request.headers.entries) [key, value],
     ];
@@ -191,12 +203,37 @@ class NativeHttpClient extends http.BaseClient {
       ..removeWhere((done) => !NativeHttp._open.containsKey(done))
       ..add(id);
     final port = NativeHttp._sendPort.nativePort;
-    final started = NativeHttp._withBytes(meta, (m, ml) => NativeHttp._withBytes(bytes, (b, bl) => native.send(id, port, m, ml, b, bl)));
+    final started = owned != null
+        ? NativeHttp._withBytes(meta, (m, ml) => native.sendOwned!(id, port, m, ml, owned, length!))
+        : NativeHttp._withBytes(meta, (m, ml) => NativeHttp._withBytes(bytes!, (b, bl) => native.send(id, port, m, ml, b, bl)));
     if (!started) {
       NativeHttp._open.remove(id);
       throw http.ClientException('Could not start the request', request.url);
     }
     return pending.response.future;
+  }
+
+  /// Bodies this large, such as audio sent for speech recognition, are
+  /// written straight into the core's memory.
+  static const _directBody = 256 << 10;
+
+  /// [stream], which must be [length] bytes, in a buffer the core owns.
+  static Future<Pointer<Uint8>> _gather(_Bindings native, Stream<List<int>> stream, int length) async {
+    final buffer = native.body!(length);
+    final view = buffer.asTypedList(length);
+    var at = 0;
+    try {
+      await for (final piece in stream) {
+        if (at + piece.length > length) throw const FormatException('The request body is longer than its length');
+        view.setAll(at, piece);
+        at += piece.length;
+      }
+      if (at != length) throw const FormatException('The request body is shorter than its length');
+      return buffer;
+    } catch (_) {
+      native.bodyFree!(buffer, length);
+      rethrow;
+    }
   }
 
   @override

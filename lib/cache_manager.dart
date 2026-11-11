@@ -9,6 +9,9 @@ import 'player_settings.dart';
 /// deleted or scanned as if it belonged to the application.
 class CacheManager {
   static const managedFolders = {'thumbnails', 'temp', 'yt-dlp', 'mpv'};
+
+  /// The folders yt-dlp downloads and recordings use while they run.
+  static const downloadFolders = {'temp', 'yt-dlp'};
   final AppDirectories directories;
   CacheManager(this.directories);
 
@@ -78,12 +81,13 @@ class CacheManager {
   /// Deletes what is inside the managed folders, keeping the folders. A
   /// file in use, such as one yt-dlp or Deno holds in `temp` while a search
   /// runs, is skipped rather than stopping the rest. Returns the bytes freed
-  /// and how many files were left.
-  Future<({int freed, int skipped})> clear(PlayerSettings settings) async {
+  /// and how many files were left. Folders named in [keep] are left alone,
+  /// as `temp` and `yt-dlp` are while a download uses them.
+  Future<({int freed, int skipped})> clear(PlayerSettings settings, {Set<String> keep = const {}}) async {
     final root = await prepare(settings);
     var freed = 0;
     var skipped = 0;
-    for (final name in managedFolders) {
+    for (final name in managedFolders.difference(keep)) {
       final child = Directory('${root.path}${Platform.pathSeparator}$name');
       if (!await child.exists()) continue;
       final entries = await child.list(recursive: true, followLinks: false).toList();

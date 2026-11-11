@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Viðmótið skilaði engum líkönum; færðu eitt inn handvirkt",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Sleppa texta sem er þegar á markmálinu",
+  "Take Simplified and Traditional Chinese as one language": "Líta á einfaldaða og hefðbundna kínversku sem eitt tungumál",
+  "Chinese in either script is left untranslated when the target is the other": "Kínverskur texti í hvoru letrinu sem er er ekki þýddur þegar markmálið er hitt letrið",
   "{0} (lower is steadier, higher is freer)": "{0} (lægra er stöðugra, hærra er frjálsara)",
   "APP ID from the Baidu Translate open platform": "APP ID frá opnum vettvangi Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "APP ID eða lykill Baidu Translate er ógildur",

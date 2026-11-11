@@ -2207,6 +2207,8 @@
   "The endpoint listed no models; type one in instead": "Krajnja točka nije navela nijedan model; unesite ga ručno",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Preskoči tekst koji je već na ciljnom jeziku",
+  "Take Simplified and Traditional Chinese as one language": "Tretiraj pojednostavljeni i tradicionalni kineski kao jedan jezik",
+  "Chinese in either script is left untranslated when the target is the other": "Kineski tekst u bilo kojem pismu ne prevodi se kada je ciljno drugo pismo",
   "{0} (lower is steadier, higher is freer)": "{0} (niže je stabilnije, više je slobodnije)",
   "APP ID from the Baidu Translate open platform": "APP ID s otvorene platforme Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "Baidu Translate APP ID ili ključ nije valjan",

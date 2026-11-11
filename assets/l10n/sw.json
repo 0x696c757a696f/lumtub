@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "API haikuorodhesha miundo yoyote; andika mmoja mwenyewe",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Ruka maandishi ambayo tayari yako katika lugha lengwa",
+  "Take Simplified and Traditional Chinese as one language": "Chukulia Kichina Kilichorahisishwa na cha Jadi kuwa lugha moja",
+  "Chinese in either script is left untranslated when the target is the other": "Kichina katika maandishi yoyote hakitafsiriwi pale lengo ni maandishi mengine",
   "{0} (lower is steadier, higher is freer)": "{0} (chini ni thabiti zaidi, juu ni huru zaidi)",
   "APP ID from the Baidu Translate open platform": "APP ID kutoka jukwaa huria la Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "APP ID au ufunguo wa Baidu Translate si halali",

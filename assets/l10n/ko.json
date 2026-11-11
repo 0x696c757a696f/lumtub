@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "엔드포인트가 모델을 반환하지 않았습니다. 직접 입력하세요",
   "Baidu Translate": "Baidu 번역",
   "Skip text already in the target language": "이미 대상 언어인 콘텐츠는 건너뛰기",
+  "Take Simplified and Traditional Chinese as one language": "중국어 간체와 번체를 같은 언어로 취급",
+  "Chinese in either script is left untranslated when the target is the other": "대상이 다른 쪽 문자일 때는 어느 쪽 문자의 중국어도 번역하지 않음",
   "{0} (lower is steadier, higher is freer)": "{0}(낮을수록 안정적이고 높을수록 유연함)",
   "APP ID from the Baidu Translate open platform": "Baidu 번역 오픈 플랫폼의 APP ID",
   "The Baidu Translate APP ID or key is invalid": "Baidu 번역의 APP ID 또는 키가 올바르지 않습니다",

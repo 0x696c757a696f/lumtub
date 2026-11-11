@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Το endpoint δεν επέστρεψε μοντέλα· πληκτρολογήστε ένα χειροκίνητα",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Παράλειψη κειμένου που είναι ήδη στη γλώσσα-στόχο",
+  "Take Simplified and Traditional Chinese as one language": "Αντιμετώπιση των απλοποιημένων και παραδοσιακών κινεζικών ως μίας γλώσσας",
+  "Chinese in either script is left untranslated when the target is the other": "Τα κινεζικά σε οποιαδήποτε γραφή δεν μεταφράζονται όταν ο στόχος είναι η άλλη γραφή",
   "{0} (lower is steadier, higher is freer)": "{0} (χαμηλότερο = πιο σταθερό, υψηλότερο = πιο ελεύθερο)",
   "APP ID from the Baidu Translate open platform": "APP ID από την ανοιχτή πλατφόρμα του Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "Το APP ID ή το κλειδί του Baidu Translate δεν είναι έγκυρο",

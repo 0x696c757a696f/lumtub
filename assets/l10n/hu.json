@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "A végpont nem adott vissza modellt; add meg kézzel",
   "Baidu Translate": "Baidu Fordító",
   "Skip text already in the target language": "A már célnyelvű szöveg kihagyása",
+  "Take Simplified and Traditional Chinese as one language": "Az egyszerűsített és a hagyományos kínai egy nyelvnek számít",
+  "Chinese in either script is left untranslated when the target is the other": "A kínai szöveget egyik írásmódban sem fordítja, ha a cél a másik írásmód",
   "{0} (lower is steadier, higher is freer)": "{0} (alacsonyabb = kiegyensúlyozottabb, magasabb = szabadabb)",
   "APP ID from the Baidu Translate open platform": "A Baidu Fordító nyílt platformjának APP ID-ja",
   "The Baidu Translate APP ID or key is invalid": "A Baidu Fordító APP ID-ja vagy kulcsa érvénytelen",

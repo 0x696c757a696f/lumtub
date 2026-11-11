@@ -6,6 +6,13 @@ import 'native_core.dart';
 /// text for English. The native core decides when it is there.
 bool looksLike(String text, String target) => NativeCore.instance?.looksLike(text, target) ?? dartLooksLike(text, target);
 
+/// [looksLike], with Simplified and Traditional Chinese taken as one
+/// language when [chineseAsOne]: a reader of either reads both.
+bool readsAs(String text, String target, {required bool chineseAsOne}) {
+  if (chineseAsOne && (target == 'zh-CN' || target == 'zh-TW')) return looksLike(text, 'zh-CN') || looksLike(text, 'zh-TW');
+  return looksLike(text, target);
+}
+
 /// [looksLike] without the native core.
 bool dartLooksLike(String text, String target) {
   final letters = text.runes.where(_isLetter).toList();

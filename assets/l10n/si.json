@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "අන්ත ලක්ෂ්‍යය ආකෘති ලැයිස්තුගත කළේ නැත; ඒ වෙනුවට එකක් ටයිප් කරන්න",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "දැනටමත් ඉලක්ක භාෂාවෙන් ඇති පෙළ මඟ හරින්න",
+  "Take Simplified and Traditional Chinese as one language": "සරල සහ සාම්ප්‍රදායික චීන එකම භාෂාවක් ලෙස සලකන්න",
+  "Chinese in either script is left untranslated when the target is the other": "ඉලක්කය අනෙක් අක්ෂර වර්ගය වූ විට, කුමන අක්ෂර වර්ගයේ චීන පෙළක් වුවද පරිවර්තනය නොකෙරේ",
   "{0} (lower is steadier, higher is freer)": "{0} (අඩු අගය වඩා ස්ථායී, වැඩි අගය වඩා නිදහස්)",
   "APP ID from the Baidu Translate open platform": "Baidu Translate විවෘත වේදිකාවේ APP ID",
   "The Baidu Translate APP ID or key is invalid": "Baidu Translate APP ID හෝ යතුර වලංගු නොවේ",

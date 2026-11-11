@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Endpoint ora ngasilaké model; ketik dhéwé wae",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Lewati teks sing wis nganggo basa target",
+  "Take Simplified and Traditional Chinese as one language": "Anggep Tionghoa Sederhana lan Tradisional minangka siji basa",
+  "Chinese in either script is left untranslated when the target is the other": "Teks Tionghoa nganggo aksara apa wae ora diterjemahake yen targete aksara liyane",
   "{0} (lower is steadier, higher is freer)": "{0} (luwih endhek luwih stabil, luwih dhuwur luwih bebas)",
   "APP ID from the Baidu Translate open platform": "APP ID saka platform terbuka Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "APP ID utawa kunci Baidu Translate ora sah",

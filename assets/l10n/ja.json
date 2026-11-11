@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "エンドポイントからモデルが返されませんでした。手動で入力してください",
   "Baidu Translate": "百度翻訳",
   "Skip text already in the target language": "すでに翻訳先の言語になっている内容をスキップ",
+  "Take Simplified and Traditional Chinese as one language": "簡体字中国語と繁体字中国語を同じ言語として扱う",
+  "Chinese in either script is left untranslated when the target is the other": "翻訳先がもう一方の字体の場合、どちらの字体の中国語も翻訳しない",
   "{0} (lower is steadier, higher is freer)": "{0}（低いほど安定し、高いほど自由になります）",
   "APP ID from the Baidu Translate open platform": "百度翻訳オープンプラットフォームの APP ID",
   "The Baidu Translate APP ID or key is invalid": "百度翻訳の APP ID またはキーが無効です",

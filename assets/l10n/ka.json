@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "მისამართმა მოდელები არ დააბრუნა; შეგიძლიათ ხელით შეიყვანოთ",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "სათარგმნ ენაზე უკვე არსებული ტექსტის გამოტოვება",
+  "Take Simplified and Traditional Chinese as one language": "გამარტივებული და ტრადიციული ჩინური ერთ ენად ჩაითვალოს",
+  "Chinese in either script is left untranslated when the target is the other": "ჩინური ტექსტი ორივე დამწერლობაში არ ითარგმნება, როცა სამიზნე მეორე დამწერლობაა",
   "{0} (lower is steadier, higher is freer)": "{0} (რაც დაბალია, მით უფრო სტაბილურია, რაც მაღალია, მით უფრო თავისუფალია)",
   "APP ID from the Baidu Translate open platform": "Baidu Translate-ის ღია პლატფორმის APP ID",
   "The Baidu Translate APP ID or key is invalid": "Baidu Translate-ის APP ID ან გასაღები არასწორია",

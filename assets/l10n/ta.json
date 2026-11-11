@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "முனை எந்த மாதிரியையும் பட்டியலிடவில்லை; கைமுறையாக உள்ளிடவும்",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "ஏற்கெனவே இலக்கு மொழியில் உள்ள உரையைத் தவிர்",
+  "Take Simplified and Traditional Chinese as one language": "எளிய சீனத்தையும் மரபுச் சீனத்தையும் ஒரே மொழியாகக் கருது",
+  "Chinese in either script is left untranslated when the target is the other": "இலக்கு மற்றொரு எழுத்துமுறையாக இருந்தால் எந்த எழுத்துமுறையின் சீன உரையும் மொழிபெயர்க்கப்படாது",
   "{0} (lower is steadier, higher is freer)": "{0} (குறைவாக இருந்தால் நிலையானது, அதிகமாக இருந்தால் நெகிழ்வானது)",
   "APP ID from the Baidu Translate open platform": "Baidu Translate திறந்த தளத்தின் APP ID",
   "The Baidu Translate APP ID or key is invalid": "Baidu Translate APP ID அல்லது விசை செல்லாதது",

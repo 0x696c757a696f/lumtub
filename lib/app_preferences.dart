@@ -131,6 +131,7 @@ class AppPreferences {
     this.translationFirst = false,
     this.subtitleListMode = SubtitleListMode.firstOver,
     this.skipSameLanguage = true,
+    this.chineseAsOne = true,
   });
 
   final bool recordHistory;
@@ -310,6 +311,9 @@ class AppPreferences {
   final SubtitleListMode subtitleListMode;
   /// 翻译 does nothing for text already in the target language.
   final bool skipSameLanguage;
+  /// Translation takes Simplified and Traditional Chinese as one language,
+  /// leaving either alone when the other is the target.
+  final bool chineseAsOne;
 
   bool isBlocked(String? channelId) => channelId != null && _lists.blockedIds.contains(channelId);
 
@@ -501,6 +505,7 @@ class AppPreferences {
     bool? translationFirst,
     SubtitleListMode? subtitleListMode,
     bool? skipSameLanguage,
+    bool? chineseAsOne,
   }) =>
       AppPreferences(
         recordHistory: recordHistory ?? this.recordHistory,
@@ -586,6 +591,7 @@ class AppPreferences {
         translationFirst: translationFirst ?? this.translationFirst,
         subtitleListMode: subtitleListMode ?? this.subtitleListMode,
         skipSameLanguage: skipSameLanguage ?? this.skipSameLanguage,
+        chineseAsOne: chineseAsOne ?? this.chineseAsOne,
       );
 
   Map<String, dynamic> toJson() => {
@@ -672,6 +678,7 @@ class AppPreferences {
         'translationFirst': translationFirst,
         'subtitleListMode': subtitleListMode.name,
         'skipSameLanguage': skipSameLanguage,
+        'chineseAsOne': chineseAsOne,
       };
 
   factory AppPreferences.fromJson(Object? raw) {
@@ -803,6 +810,7 @@ class AppPreferences {
       translationFirst: flag('translationFirst', d.translationFirst),
       subtitleListMode: SubtitleListMode.values.where((v) => v.name == raw['subtitleListMode']).firstOrNull ?? d.subtitleListMode,
       skipSameLanguage: flag('skipSameLanguage', d.skipSameLanguage),
+      chineseAsOne: flag('chineseAsOne', d.chineseAsOne),
     );
   }
 }

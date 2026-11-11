@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Sąsaja negrąžino modelių; įveskite vieną rankiniu būdu",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Praleisti tekstą, kuris jau yra tikslinė kalba",
+  "Take Simplified and Traditional Chinese as one language": "Supaprastintąją ir tradicinę kinų kalbą laikyti viena kalba",
+  "Chinese in either script is left untranslated when the target is the other": "Kinų tekstas jokiu rašmeniu neverčiamas, kai tikslas yra kitas rašmuo",
   "{0} (lower is steadier, higher is freer)": "{0} (kuo mažiau, tuo stabiliau, kuo daugiau, tuo laisviau)",
   "APP ID from the Baidu Translate open platform": "„Baidu Translate“ atvirosios platformos APP ID",
   "The Baidu Translate APP ID or key is invalid": "„Baidu Translate“ APP ID arba raktas negalioja",

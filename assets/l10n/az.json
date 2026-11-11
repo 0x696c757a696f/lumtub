@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Endpoint heç bir model qaytarmadı; əl ilə daxil edin",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Artıq hədəf dildə olan mətni keç",
+  "Take Simplified and Traditional Chinese as one language": "Sadələşdirilmiş və Ənənəvi Çin dilini vahid dil say",
+  "Chinese in either script is left untranslated when the target is the other": "Hədəf digər yazı olduqda hər iki yazıdakı Çin mətni tərcümə edilmir",
   "{0} (lower is steadier, higher is freer)": "{0} (aşağı olduqca daha sabit, yüksək olduqca daha sərbəst)",
   "APP ID from the Baidu Translate open platform": "Baidu Translate açıq platformasından APP ID",
   "The Baidu Translate APP ID or key is invalid": "Baidu Translate APP ID-si və ya açarı etibarsızdır",

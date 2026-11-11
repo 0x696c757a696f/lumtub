@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Die eindpunt het geen modelle gelys nie; tik eerder een in",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Slaan teks oor wat reeds in die teikentaal is",
+  "Take Simplified and Traditional Chinese as one language": "Behandel Vereenvoudigde en Tradisionele Chinees as een taal",
+  "Chinese in either script is left untranslated when the target is the other": "Chinees in enige skrif word nie vertaal nie wanneer die teiken die ander skrif is",
   "{0} (lower is steadier, higher is freer)": "{0} (laer is bestendiger, hoër is vryer)",
   "APP ID from the Baidu Translate open platform": "APP ID van die Baidu Translate-oopplatform",
   "The Baidu Translate APP ID or key is invalid": "Die Baidu Translate APP ID of sleutel is ongeldig",

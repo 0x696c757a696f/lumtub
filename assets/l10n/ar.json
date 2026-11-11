@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "لم ترجع الواجهة أي نماذج؛ اكتب اسم نموذج يدويًا",
   "Baidu Translate": "ترجمة Baidu",
   "Skip text already in the target language": "تخطي النص الذي هو بلغة الهدف بالفعل",
+  "Take Simplified and Traditional Chinese as one language": "اعتبار الصينية المبسّطة والصينية التقليدية لغة واحدة",
+  "Chinese in either script is left untranslated when the target is the other": "لا تُترجم الصينية بأي من الكتابتين عندما تكون اللغة الهدف هي الكتابة الأخرى",
   "{0} (lower is steadier, higher is freer)": "{0} (الأقل أكثر ثباتًا، والأعلى أكثر مرونة)",
   "APP ID from the Baidu Translate open platform": "APP ID من منصة Baidu Translate المفتوحة",
   "The Baidu Translate APP ID or key is invalid": "APP ID أو المفتاح الخاص بترجمة Baidu غير صالح",

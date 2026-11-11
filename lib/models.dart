@@ -123,6 +123,28 @@ class VideoItem {
         age: age,
       );
 
+  /// This video with what its listing left out: [length], [views] and
+  /// [publishedAt], each used only where this one has none.
+  VideoItem filledIn({int? length, int? views, DateTime? publishedAt}) => VideoItem(
+        id: id,
+        title: title,
+        channel: channel,
+        duration: duration ?? length,
+        url: url,
+        viewCount: viewCount ?? (isLive ? null : views),
+        watching: watching,
+        channelId: channelId,
+        published: published ?? (age == null ? publishedAt : null),
+        liveStatus: liveStatus,
+        scheduledStart: scheduledStart,
+        width: width,
+        height: height,
+        description: description,
+        isShortListing: isShortListing,
+        membersOnly: membersOnly,
+        age: age,
+      );
+
   ChannelRef? get channelRef => channelId == null ? null : ChannelRef(channelId!, channel);
 
   /// The thumbnail size to load, a YouTube file name such as `hqdefault`;

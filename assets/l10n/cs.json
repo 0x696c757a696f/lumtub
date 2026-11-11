@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Rozhraní nevrátilo žádné modely; zadejte jeden ručně",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Přeskočit text, který už je v cílovém jazyce",
+  "Take Simplified and Traditional Chinese as one language": "Považovat zjednodušenou a tradiční čínštinu za jeden jazyk",
+  "Chinese in either script is left untranslated when the target is the other": "Čínský text v jednom písmu se nepřekládá, je-li cílem druhé písmo",
   "{0} (lower is steadier, higher is freer)": "{0} (nižší hodnota je stabilnější, vyšší volnější)",
   "APP ID from the Baidu Translate open platform": "APP ID z otevřené platformy Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "APP ID nebo klíč Baidu Translate je neplatný",

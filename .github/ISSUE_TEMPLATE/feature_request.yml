@@ -2,6 +2,11 @@ name: Feature request / 功能建议
 description: An idea for something new or better / 想要的新功能或改进
 labels: [enhancement]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Lumtub is free and built by one person. Every idea is read, but there is no promise that it will be built, nor when. Requests from [sponsors](https://github.com/0x696c757a696f/lumtub#support-lumtub) are worked on first.
+        Lumtub 是一个人免费做的。每条建议都会看，但不保证实现，也没有时间表。[赞助者](https://github.com/0x696c757a696f/lumtub/blob/main/README.zh-Hans.md#支持-lumtub)的建议优先处理。
   - type: textarea
     id: problem
     attributes:

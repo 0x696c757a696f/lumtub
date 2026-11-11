@@ -39,13 +39,29 @@ class LibassLayout {
   }
 
   /// A rough width in ems: full-width characters (CJK, kana, Hangul) one
-  /// each, everything else a little over half.
+  /// each, Latin letters by their usual widths in a sans-serif font (i, l
+  /// and punctuation narrow, m and w wide, capitals wider than small
+  /// letters), anything else a little over half.
   static double _ems(String line) {
     var width = 0.0;
     for (final rune in line.runes) {
-      width += _wide(rune) ? 1.0 : 0.58;
+      width += _wide(rune) ? 1.0 : _latin(rune);
     }
     return width;
+  }
+
+  static const _narrow = " .,:;'!|il\u0131jI[]()";
+  static const _thin = 'ftr-"/';
+  static const _broad = 'mwMW';
+
+  static double _latin(int rune) {
+    final c = String.fromCharCode(rune);
+    if (_narrow.contains(c)) return 0.26;
+    if (_thin.contains(c)) return 0.33;
+    if (_broad.contains(c)) return 0.85;
+    if (rune >= 0x41 && rune <= 0x5A) return 0.66;
+    if ((rune >= 0x61 && rune <= 0x7A) || (rune >= 0x30 && rune <= 0x39) || (rune >= 0xC0 && rune <= 0x24F)) return 0.54;
+    return 0.58;
   }
 
   static bool _wide(int rune) =>

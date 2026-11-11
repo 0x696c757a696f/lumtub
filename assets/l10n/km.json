@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "ចំណុចប្រទាក់មិនបានរាយម៉ូដែលទេ; សូមវាយបញ្ចូលមួយដោយខ្លួនឯង",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "រំលងអត្ថបទដែលជាភាសាគោលដៅរួចហើយ",
+  "Take Simplified and Traditional Chinese as one language": "ចាត់ទុកចិនសាមញ្ញនិងចិនប្រពៃណីជាភាសាតែមួយ",
+  "Chinese in either script is left untranslated when the target is the other": "អត្ថបទចិនក្នុងអក្សរណាមួយមិនត្រូវបានបកប្រែទេ នៅពេលគោលដៅជាអក្សរមួយទៀត",
   "{0} (lower is steadier, higher is freer)": "{0} (កាន់តែទាប កាន់តែស្ថិរភាព កាន់តែខ្ពស់ កាន់តែសេរី)",
   "APP ID from the Baidu Translate open platform": "APP ID ពីវេទិកាបើកចំហរបស់ Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "APP ID ឬសោរបស់ Baidu Translate មិនត្រឹមត្រូវ",

@@ -118,7 +118,7 @@ class ChatMessageTranslation extends StatelessWidget {
   Future<String?> _translate({required bool asked}) async {
     final language = asked ? controller.preferences.translateTarget : controller.preferences.immersiveTarget;
     final known = asked ? {language} : readLanguages(controller);
-    bool done(String line) => known.any((k) => looksLike(line, k)) || !RegExp(r'\p{L}{2,}', unicode: true).hasMatch(line);
+    bool done(String line) => known.any((k) => readsAs(line, k, chineseAsOne: controller.preferences.chineseAsOne)) || !RegExp(r'\p{L}{2,}', unicode: true).hasMatch(line);
     // Channel emoji are written as :name: and are not words to translate.
     final text = message.emojis.keys.fold(message.text, (text, shortcut) => text.replaceAll(shortcut, ' ')).trim();
     if (text.split('\n').every(done)) return null;

@@ -27,4 +27,10 @@ void main() {
   test('stays on screen', () {
     expect(LibassLayout.secondaryPosition('a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np', position: 50, scale: 2), 0);
   });
+
+  test('a line of ordinary Latin text that fits is counted as one', () {
+    expect(LibassLayout.lineCount('Was kam danach?\nJa, die Leute müssen verstehen, was es', scale: 1.5), 2);
+    expect(LibassLayout.lineCount('gute Erkennisse mit Manuel [musik]\nOstermann ungeskriptet.', scale: 1.5), 2);
+    expect(LibassLayout.lineCount('mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm', scale: 1), 2);
+  });
 }

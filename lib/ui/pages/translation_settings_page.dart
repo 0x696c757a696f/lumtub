@@ -276,6 +276,13 @@ List<Widget> _items(BuildContext context, AppController controller) {
       value: prefs.skipSameLanguage,
       onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(skipSameLanguage: v)),
     ),
+    SwitchItem(
+      title: tr('Take Simplified and Traditional Chinese as one language'),
+      subtitle: tr('Chinese in either script is left untranslated when the target is the other'),
+      leading: Icon(AppIcons.translate),
+      value: prefs.chineseAsOne,
+      onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(chineseAsOne: v)),
+    ),
     Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: _StylePreview(style: prefs.translationStyle, first: prefs.translationFirst, both: prefs.bilingualTranslation),

@@ -176,6 +176,7 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 <a href="https://afdian.com/a/linmuqingfeng"><img src="https://img.shields.io/badge/%E5%9C%A8%E7%88%B1%E5%8F%91%E7%94%B5%E4%B8%8A%E8%B5%9E%E5%8A%A9-%E2%9D%A4-946CE6?style=for-the-badge" alt="在爱发电上赞助" height="44"></a>
 
 **每月赞助者**决定接下来做什么：让 Windows 安装时不再警告的代码签名证书，以及 Apple 公证。<br>
+赞助者提的功能建议会打上 **sponsor priority** 标签，优先处理。<br>
 任何金额的一次性赞助同样欢迎。应用里的 设置 › 关于 › 支持开发 也是同一个页面。
 
 </div>

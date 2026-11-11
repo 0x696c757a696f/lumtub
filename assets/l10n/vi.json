@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Giao diện không trả về mô hình nào, bạn có thể nhập thủ công",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Bỏ qua nội dung đã ở ngôn ngữ đích",
+  "Take Simplified and Traditional Chinese as one language": "Coi tiếng Trung giản thể và phồn thể là một ngôn ngữ",
+  "Chinese in either script is left untranslated when the target is the other": "Nội dung tiếng Trung ở cả hai dạng chữ không được dịch khi đích đến là dạng chữ còn lại",
   "{0} (lower is steadier, higher is freer)": "{0} (càng thấp càng ổn định, càng cao càng linh hoạt)",
   "APP ID from the Baidu Translate open platform": "APP ID từ nền tảng mở của Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "APP ID hoặc khóa của Baidu Translate không hợp lệ",

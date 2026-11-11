@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "endpoint ບໍ່ມີລາຍການໂມເດວ; ພິມເອງແທນ",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "ຂ້າມຂໍ້ຄວາມທີ່ເປັນພາສາປາຍທາງແລ້ວ",
+  "Take Simplified and Traditional Chinese as one language": "ຖືວ່າຈີນຕົວຫຍໍ້ ແລະ ຈີນຕົວເຕັມເປັນພາສາດຽວກັນ",
+  "Chinese in either script is left untranslated when the target is the other": "ຂໍ້ຄວາມຈີນໃນຕົວອັກສອນໃດກໍບໍ່ຖືກແປ ເມື່ອປາຍທາງເປັນຕົວອັກສອນອີກແບບ",
   "{0} (lower is steadier, higher is freer)": "{0} (ຕ່ຳກວ່າຄືສະຖຽນກວ່າ, ສູງກວ່າຄືອິດສະຫຼະກວ່າ)",
   "APP ID from the Baidu Translate open platform": "APP ID ຈາກແພລດຟອມເປີດຂອງ Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "APP ID ຫຼື key ຂອງ Baidu Translate ບໍ່ຖືກຕ້ອງ",

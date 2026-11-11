@@ -105,12 +105,23 @@ pub fn video(tile: &Value) -> Option<Value> {
         entry.insert("channel_id".into(), channel.into());
     }
     let details = line(lines, 1);
-    if let Some(views) = details.iter().find_map(|t| {
-        count(t)
-            .filter(|_| t.chars().any(|c| c.is_ascii_digit()))
-            .filter(|_| details.len() > 1 || !t.contains(':'))
-    }) {
+    let views = details.iter().position(|t| {
+        count(t).is_some()
+            && t.chars().any(|c| c.is_ascii_digit())
+            && (details.len() > 1 || !t.contains(':'))
+    });
+    if let Some(views) = views.and_then(|i| count(&details[i])) {
         entry.insert("view_count".into(), views.into());
+    }
+    // "3 months ago", "2 天前": the other item with a number that is not a length.
+    if let Some(age) = details.iter().enumerate().find_map(|(i, t)| {
+        (Some(i) != views
+            && t.chars().any(|c| c.is_ascii_digit())
+            && t.chars().count() > 2
+            && seconds(t).is_none())
+        .then_some(t)
+    }) {
+        entry.insert("age".into(), age.clone().into());
     }
     let overlays =
         at(tile, &["header", "tileHeaderRenderer", "thumbnailOverlays"]).and_then(Value::as_array);
@@ -145,6 +156,17 @@ pub fn video(tile: &Value) -> Option<Value> {
             entry.insert("lumtub_watched".into(), watched.into());
         }
     }
+    if !entry.contains_key("duration") && !entry.contains_key("live_status") && !shorts {
+        let texts = (0..4).flat_map(|i| line(lines, i));
+        if let Some(length) = texts.clone().find_map(|t| seconds(&t)) {
+            entry.insert("duration".into(), length.into());
+        } else {
+            entry.insert(
+                "lumtub_shape".into(),
+                shape(tile, kind, texts.collect()).into(),
+            );
+        }
+    }
     let url = if shorts {
         format!("https://www.youtube.com/shorts/{id}")
     } else {
@@ -162,6 +184,40 @@ pub fn video(tile: &Value) -> Option<Value> {
         entry.insert("lumtub_feedback".into(), token.into());
     }
     Some(Value::Object(entry))
+}
+
+/// What a video tile without a length is made of, for the log: the kind,
+/// where selecting it goes, its overlays and its text lines.
+fn shape(tile: &Value, kind: &str, texts: Vec<String>) -> String {
+    let keys = |node: Option<&Value>| {
+        node.and_then(Value::as_object)
+            .map(|m| m.keys().cloned().collect::<Vec<_>>().join(","))
+            .unwrap_or_default()
+    };
+    let overlays: Vec<String> = at(tile, &["header", "tileHeaderRenderer", "thumbnailOverlays"])
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .map(|o| {
+            let style = find(o, "style").and_then(Value::as_str).unwrap_or("");
+            format!(
+                "{}{}{}",
+                keys(Some(o)),
+                if style.is_empty() { "" } else { ":" },
+                style
+            )
+        })
+        .collect();
+    let select = tile.get("onSelectCommand");
+    let watch = select.and_then(|c| c.get("watchEndpoint"));
+    format!(
+        "{kind} style={} select=[{}] watch=[{}] overlays=[{}] lines={:?}",
+        tile.get("style").and_then(Value::as_str).unwrap_or(""),
+        keys(select),
+        keys(watch),
+        overlays.join(" "),
+        texts
+    )
 }
 
 fn playlist(tile: &Value) -> Option<Value> {
@@ -439,9 +495,33 @@ mod tests {
         assert_eq!(first["channel_id"], "UCIGSeb72lRj7Jxlwt63OmMQ");
         assert_eq!(first["duration"], 2052);
         assert_eq!(first["view_count"], 358_000);
+        assert_eq!(first["age"], "3 months ago");
         assert_eq!(first["lumtub_feedback"], "FB-K3nvny5x47w");
         assert_eq!(page.entries[1]["live_status"], "is_live");
         assert_eq!(page.entries[1]["lumtub_watched"], 100);
+    }
+
+    #[test]
+    fn length_comes_from_the_text_lines_when_the_picture_has_none() {
+        let mut with_line = tile("lineslength", json!([]));
+        with_line["tileRenderer"]["metadata"]["tileMetadataRenderer"]["lines"][1]["lineRenderer"]["items"]
+            .as_array_mut()
+            .unwrap()
+            .push(json!({"lineItemRenderer": {"text": {"simpleText": "1:02:03"}}}));
+        let entry = video(&with_line["tileRenderer"]).unwrap();
+        assert_eq!(entry["duration"], 3723);
+        assert_eq!(entry["view_count"], 358_000);
+        assert!(entry.get("lumtub_shape").is_none());
+
+        let bare = video(&tile("nolengthatt", json!([]))["tileRenderer"]).unwrap();
+        assert!(bare.get("duration").is_none());
+        let shape = bare["lumtub_shape"].as_str().unwrap();
+        assert!(
+            shape.starts_with("TILE_CONTENT_TYPE_VIDEO style=TILE_STYLE_YTLR_DEFAULT"),
+            "{shape}"
+        );
+        assert!(shape.contains("watch=[videoId]"), "{shape}");
+        assert!(shape.contains("358K views"), "{shape}");
     }
 
     #[test]

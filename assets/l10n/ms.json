@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Titik akhir tidak menyenaraikan model; taip satu sebaliknya",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Langkau teks yang sudah dalam bahasa sasaran",
+  "Take Simplified and Traditional Chinese as one language": "Anggap Cina Ringkas dan Tradisional sebagai satu bahasa",
+  "Chinese in either script is left untranslated when the target is the other": "Teks Cina dalam mana-mana tulisan tidak diterjemahkan jika sasarannya tulisan yang satu lagi",
   "{0} (lower is steadier, higher is freer)": "{0} (lebih rendah lebih stabil, lebih tinggi lebih bebas)",
   "APP ID from the Baidu Translate open platform": "APP ID daripada platform terbuka Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "APP ID atau kunci Baidu Translate tidak sah",

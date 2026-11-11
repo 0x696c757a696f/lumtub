@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Ndërfaqja nuk renditi modele; shkruaje vetë",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Anashkalo tekstin që është tashmë në gjuhën e synuar",
+  "Take Simplified and Traditional Chinese as one language": "Trajto kinezishten e thjeshtuar dhe tradicionale si një gjuhë",
+  "Chinese in either script is left untranslated when the target is the other": "Teksti kinez në cilindo shkrim nuk përkthehet kur synimi është shkrimi tjetër",
   "{0} (lower is steadier, higher is freer)": "{0} (sa më i ulët, aq më i qëndrueshëm; sa më i lartë, aq më i lirshëm)",
   "APP ID from the Baidu Translate open platform": "APP ID nga platforma e hapur e Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "APP ID ose çelësi i Baidu Translate nuk është i vlefshëm",

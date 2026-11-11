@@ -31,6 +31,9 @@ class YoutubeTvFeed {
   /// The Watch Later playlist's id, for [PlaylistResult].
   static const watchLaterId = 'WL';
 
+  /// Tiles without a length written to the log this run.
+  static var _shapesLogged = 0;
+
   static Pointer<Utf8> Function(Pointer<Uint8>, int, bool)? _browse;
   static bool _tried = false;
 
@@ -67,7 +70,12 @@ class YoutubeTvFeed {
       for (final entry in (data['entries'] as List? ?? const []).whereType<Map>()) {
         final id = '${entry['id'] ?? ''}';
         final day = entry.remove('shelf');
+        final shape = entry.remove('lumtub_shape');
         if (!seen.add(id)) continue;
+        if (shape is String && _shapesLogged < 8) {
+          _shapesLogged++;
+          logInfo('TV tile without a length ($browseId): $shape');
+        }
         if (browseId == history && day is String) historyDays[id] = day;
         yield jsonEncode(entry);
       }

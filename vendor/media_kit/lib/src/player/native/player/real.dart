@@ -1245,6 +1245,16 @@ class NativePlayer extends PlatformPlayer {
     calloc.free(data);
   }
 
+  /// Lumtub: the lowest level of libmpv's own messages passed on, which
+  /// [PlayerConfiguration.logLevel] sets only when the player is made.
+  Future<void> requestLogMessages(MPVLogLevel level) async {
+    if (disposed) return;
+    await waitForPlayerInitialization;
+    final min = level.name.toNativeUtf8();
+    mpv.mpv_request_log_messages(ctx, min.cast());
+    calloc.free(min);
+  }
+
   /// Retrieves the value of a property from the internal libmpv instance of this [Player].
   /// Please use this method only if you know what you are doing, existing methods in [Player] implementation are suited for the most use cases.
   ///

@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:media_kit/media_kit.dart';
 
+import 'libass_layout.dart';
 import 'player_settings.dart';
 import 'app_log.dart';
 
@@ -51,8 +52,9 @@ class PlayerOptionApplicator {
       'sub-font': settings.subtitleFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.subtitleFont),
       'sub-color': PlayerSettings.mpvColor(settings.subtitleColor, settings.subtitleOpacity),
       'sub-pos': settings.subtitlePosition.toString(),
-      // The secondary subtitle (libass) sits just above the main one.
-      'secondary-sub-pos': (settings.subtitlePosition - 8).clamp(0, 100).toString(),
+      // The secondary subtitle (libass) sits just above a one-line main one;
+      // the controller moves it as the main one gains lines.
+      'secondary-sub-pos': LibassLayout.secondaryPosition('', position: settings.subtitlePosition, scale: settings.subtitleScale).toString(),
       'sub-border-size': settings.subtitleBorder.toStringAsFixed(1),
       'sub-border-style': settings.subtitleBackground ? 'background-box' : 'outline-and-shadow',
       'sub-bold': settings.subtitleBold ? 'yes' : 'no',

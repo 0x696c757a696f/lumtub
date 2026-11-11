@@ -8,6 +8,8 @@ extension SettingsActions on AppController {
     if (next.logLevel != AppLog.level) {
       AppLog.level = next.logLevel;
       logInfo('Log level ${next.logLevel.name}');
+      // libmpv's own notes follow at once, not after a restart.
+      if (player?.platform case final NativePlayer native) unawaited(native.requestLogMessages(next.logLevel == LogLevel.debug ? MPVLogLevel.info : MPVLogLevel.warn));
     }
     if (service) _useTranslator();
     unawaited(_aiFilter?.setMode(next.aiFilter));

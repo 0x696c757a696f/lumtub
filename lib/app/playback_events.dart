@@ -174,6 +174,9 @@ extension PlaybackEvents on AppController {
     _playerSubscriptions.addAll([
       player.stream.width.listen(videoSize),
       player.stream.height.listen(videoSize),
+      // While libmpv draws subtitles, the second one moves up as the main
+      // one gains lines, as the Flutter view stacks them.
+      player.stream.subtitle.listen((lines) => _placeSecondary(player, lines)),
       player.stream.playing.listen((_) {
         _updateEfficiency();
         _countWatchTime();

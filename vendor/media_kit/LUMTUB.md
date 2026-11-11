@@ -11,3 +11,6 @@ The change, marked "Lumtub" in the code:
   PipeWire output when no server answers: its cleanup calls
   `spa_hook_remove` on a hook never added, which those headers do not
   check. Lumtub also leaves PipeWire out of `ao` on such a system.
+- `lib/src/player/native/player/real.dart`: `NativePlayer.requestLogMessages`
+  changes the level of libmpv messages passed on while the player runs, so
+  switching the log level to debug includes libmpv's notes without a restart.

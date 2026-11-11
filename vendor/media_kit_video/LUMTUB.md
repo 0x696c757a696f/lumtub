@@ -61,3 +61,7 @@ The changes, marked "Lumtub" in the code:
   render target. On Mesa (Intel Xe2, Mesa 25) a texture an EGLImage is made
   from stops receiving mpv's drawing, and the video stayed black. Taken from
   media-kit/media-kit#1464 (Starfallan/media-kit 85f0a69).
+- `lib/src/video/video_texture.dart`: the subtitle view shows whenever its
+  configuration is visible, not only when the player was made without
+  libass, so switching libass off while playing brings the subtitles back
+  at once instead of after a restart.

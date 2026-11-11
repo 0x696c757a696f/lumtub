@@ -20,6 +20,7 @@ import '../app_updater.dart';
 import '../app_log.dart';
 import '../app_window.dart';
 import '../app_preferences.dart';
+import '../libass_layout.dart';
 import '../play_queue.dart';
 import '../video_languages.dart';
 import '../playback_failure.dart';

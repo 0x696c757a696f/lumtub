@@ -41,6 +41,17 @@ def search(name):
             time.sleep(5 * (attempt + 1))
 
 
+def subscribers(channel):
+    """Subscriber count of a search result channel, 0 when not shown."""
+    for key in ('videoCountText', 'subscriberCountText'):
+        text = channel.get(key, {}).get('simpleText', '')
+        found = re.match(r'([\d.,]+)\s*([KMB]?)\s+subscribers?', text)
+        if found:
+            number = float(found.group(1).replace(',', ''))
+            return int(number * {'': 1, 'K': 1e3, 'M': 1e6, 'B': 1e9}[found.group(2)])
+    return 0
+
+
 def channels(answer):
     """(id, title, handle) of every channel in a search answer."""
     found = []
@@ -55,7 +66,7 @@ def channels(answer):
                 if not handle:
                     text = channel.get('subscriberCountText', {}).get('simpleText', '')
                     handle = text[1:] if text.startswith('@') else ''
-                found.append((channel['channelId'], title, handle))
+                found.append((channel['channelId'], title, handle, subscribers(channel)))
             for value in node.values():
                 walk(value)
         elif isinstance(node, list):
@@ -74,7 +85,7 @@ def main():
     lists = Path(sys.argv[1])
     report_path = Path(sys.argv[2])
     limit = int(sys.argv[sys.argv.index('--limit') + 1]) if '--limit' in sys.argv else None
-    added, unclear, none, same, asked = [], [], [], [], 0
+    added, unclear, none, same, sized, asked = [], [], [], [], [], 0
     cache = {}
     for path in sorted(lists.glob('*/*.txt')):
         lines = path.read_text(encoding='utf-8').split('\n')
@@ -111,12 +122,18 @@ def main():
                     answer = search(name)
                     cache[name] = channels(answer) if answer else None
                     time.sleep(0.7)
-                for channel_id, title, handle in cache[name] or []:
+                for channel_id, title, handle, subs in cache[name] or []:
                     if title.casefold() == name.casefold():
-                        ids.setdefault(channel_id, handle)
+                        ids.setdefault(channel_id, (handle, subs))
             key = f'{list_id}/{slug}'
+            if len(ids) > 1:
+                # One channel with far more subscribers than all the others of that name is the one meant.
+                ranked = sorted(ids.items(), key=lambda item: -item[1][1])
+                if ranked[0][1][1] >= 1000 and ranked[0][1][1] >= 5 * ranked[1][1][1]:
+                    sized.append(f'{list_id}/{slug}: {ranked[0][0]} @{ranked[0][1][0]} ({ranked[0][1][1]} subscribers, next {ranked[1][1][1]})')
+                    ids = {ranked[0][0]: ranked[0][1]}
             if len(ids) == 1:
-                channel_id, handle = next(iter(ids.items()))
+                channel_id, (handle, _subs) = next(iter(ids.items()))
                 other = taken.get(channel_id.casefold()) or (handle and taken.get(f'@{handle}'.casefold()))
                 if other and other != slug:
                     same.append(f'{key}: {", ".join(names)} → {channel_id} @{handle}, already {list_id}/{other}')
@@ -131,7 +148,7 @@ def main():
                 added.append(f'{key}: {" ".join(extra)} ({", ".join(names)})')
                 changed = True
             elif ids:
-                unclear.append(f'{key}: {", ".join(names)} → ' + ', '.join(f'{c} @{h}' for c, h in ids.items()))
+                unclear.append(f'{key}: {", ".join(names)} → ' + ', '.join(f'{c} @{h[0]}' for c, h in ids.items()))
             else:
                 none.append(f'{key}: {", ".join(names)}')
         if changed:
@@ -140,6 +157,9 @@ def main():
         f'# Channel ids for the block lists',
         '',
         f'{asked} names searched. {len(added)} records got an id, {len(same)} are the same channel as another record, {len(unclear)} have several channels of that name, {len(none)} found no channel of that exact name.',
+        '',
+        '## Chosen by subscriber count (check these)',
+        *[f'- {x}' for x in sized],
         '',
         '## Added',
         *[f'- {a}' for a in added],

@@ -1,0 +1,9 @@
+! id: kabbalah-centre
+! name: Kabbalah Centre
+! name.zh-Hans: 卡巴拉中心
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Kabbalah_Centre
+
+:kabbalah-centre | ^Kabbalah Centre | ^The Kabbalah Centre | ^Kabbalah.com

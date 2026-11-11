@@ -1,0 +1,13 @@
+! id: lebanese-hezbollah-media
+! name: Hezbollah media
+! name.zh-Hans: 真主党媒体
+! category: state-media
+! action: hide
+! default: off
+! note: Media run by Hezbollah, banned or designated in several countries
+! source: https://en.wikipedia.org/wiki/Al-Manar
+
+:al-manar | ^Al-Manar | ^Al Manar | ^المنار
+    reviewed: 2026-11-11
+:al-ahed | ^Al-Ahed | ^Al Ahed | ^العهد
+    reviewed: 2026-11-11

@@ -1,0 +1,12 @@
+! id: hungarian-state-media
+! name: Hungarian state media
+! name.zh-Hans: 匈牙利官方媒体
+! category: state-media
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Media_Services_and_Support_Trust_Fund
+
+:mtva | =MTVA | ^M1 Hirado | ^M1 Híradó | ^Duna Televízió | ^Duna TV | ^Kossuth Rádió | ^Hirado.hu
+    reviewed: 2026-11-11
+:mti | =MTI | ^Magyar Távirati Iroda | ^Hungarian News Agency
+    reviewed: 2026-11-11

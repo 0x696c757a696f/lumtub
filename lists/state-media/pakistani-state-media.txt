@@ -1,0 +1,14 @@
+! id: pakistani-state-media
+! name: Pakistani state media
+! name.zh-Hans: 巴基斯坦官方媒体
+! category: state-media
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Pakistan_Television_Corporation
+
+:ptv | =PTV | ^PTV News | ^PTV Home | ^PTV Sports | ^Pakistan Television
+    reviewed: 2026-11-11
+:radio-pakistan | ^Radio Pakistan | ^ریڈیو پاکستان
+    reviewed: 2026-11-11
+:app-pakistan | UCuX8xYvzmdDlIJSEcUPMUoQ | @APPTVLIVE | ^Associated Press of Pakistan
+    reviewed: 2026-11-11

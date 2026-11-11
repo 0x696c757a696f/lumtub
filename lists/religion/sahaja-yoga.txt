@@ -1,0 +1,10 @@
+! id: sahaja-yoga
+! name: Sahaja Yoga
+! name.zh-Hans: 萨哈贾瑜伽
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Sahaja_Yoga
+
+:sahaja-yoga | ^Sahaja Yoga | ^Shri Mataji | ^Nirmala Devi
+:shri-mataji | ^Shri Mataji Nirmala Devi

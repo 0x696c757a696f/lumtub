@@ -1,0 +1,15 @@
+! id: syrian-state-media
+! name: Syrian state media
+! name.zh-Hans: 叙利亚官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State television and the official news agency
+! source: https://en.wikipedia.org/wiki/Media_of_Syria
+
+:sana | =SANA | ^Syrian Arab News Agency | ^سانا
+    reviewed: 2026-11-11
+:syrian-tv | ^Syria TV | ^Syrian TV | ^الإخبارية السورية | ^Syrian Arab Television
+    reviewed: 2026-11-11
+:al-watan-syria | ^Al-Watan
+    reviewed: 2026-11-11

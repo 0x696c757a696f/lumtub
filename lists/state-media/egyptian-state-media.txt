@@ -1,0 +1,17 @@
+! id: egyptian-state-media
+! name: Egyptian state media
+! name.zh-Hans: 埃及官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State television, radio and the official news agency
+! source: https://en.wikipedia.org/wiki/Media_of_Egypt
+
+:nile-tv | ^Nile TV | ^النيل
+    reviewed: 2026-11-11
+:egyptian-radio-and-television-union | ^Egyptian TV | ^ماسبيرو | ^Maspero
+    reviewed: 2026-11-11
+:mena | ^Middle East News Agency | =MENA
+    reviewed: 2026-11-11
+:al-ahram | UCsmzko1FKC0UNRG36cvYDBQ | @al-ahram9230 | ^Al-Ahram | ^الأهرام | ^Ahram Online
+    reviewed: 2026-11-11

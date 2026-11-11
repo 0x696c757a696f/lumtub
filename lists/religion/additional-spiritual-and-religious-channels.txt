@@ -35,9 +35,9 @@
 :ramthas-school-of-enlightenment | @RSEWebTeam | @KRSERADIO | =Ramtha’s School of Enlightenment
 :kryon | @kryonleecarroll3491 | =Kryon
 :bashar-higher-mind | @BasharHigherMind99 | =Bashar Higher Mind
-:osho-international | @OSHOInternational | =OSHO International
+:osho-international | UCS0s6BFzIcvC2gTH52_vBEA | @OSHOInternational | =OSHO International
 :mooji | @Moojiji | @Moojiitaliano | =Mooji
-:isha-foundation | @ishafoundation | =Isha Foundation
+:isha-foundation | UCgaiWfiix1zaQS6Mn5SIw2g | @ishafoundation | =Isha Foundation
 :eckankar | @eckankar | =ECKANKAR
 :chuang-zao-feng-sheng | UC-zY8Y8BC3bcOjAtb8tnCqQ | =创造丰盛 | =創造豐盛
 :abraham-hicks | =Abraham-Hicks

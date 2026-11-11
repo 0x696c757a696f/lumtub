@@ -51,7 +51,7 @@
     status: unproven
 :women-xuyao-zhenxiang | ^我们需要真相 | ^我們需要真相 | ^We Need Truth
     status: unproven
-:edge-of-wonder | ^Edge of Wonder
+:edge-of-wonder | UCxC2RlwWGHnwXanvHNBmw2w | @EdgeofWonderOfficial | ^Edge of Wonder
     status: unproven
 :zhao-pei | ^赵培 | ^趙培
     status: unproven

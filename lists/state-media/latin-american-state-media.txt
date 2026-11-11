@@ -1,0 +1,16 @@
+! id: latin-american-state-media
+! name: Bolivian, Argentine and other Latin American state media
+! name.zh-Hans: 拉美国家官方媒体
+! category: state-media
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Media_of_Bolivia
+
+:bolivia-tv | ^Bolivia TV
+    reviewed: 2026-11-11
+:telesur | UCEXKaswCHMJmOIdR8HrZy9Q | @teleSURtv.net.e | ^teleSUR
+    reviewed: 2026-11-11
+:rta-argentina | ^Radio y Televisión Argentina | ^Televisión Pública Argentina | ^TV Pública
+    reviewed: 2026-11-11
+:tves-el-salvador | ^TVES | ^Canal 10 El Salvador
+    reviewed: 2026-11-11

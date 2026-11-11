@@ -1,0 +1,23 @@
+! id: central-asian-state-media
+! name: Central Asian state media
+! name.zh-Hans: 中亚国家官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State broadcasters of Kazakhstan, Uzbekistan, Tajikistan and Kyrgyzstan
+! source: https://en.wikipedia.org/wiki/Media_of_Kazakhstan
+
+:khabar-agency | ^Khabar | ^Хабар
+    reviewed: 2026-11-11
+:kazakh-tv | ^Kazakh TV | ^Qazaqstan TV | ^Казахстан
+    reviewed: 2026-11-11
+:kazinform | UCrSC9vdaSRlES5QJwKHhbJA | @kazinform | ^Kazinform | ^Казинформ
+    reviewed: 2026-11-11
+:uzbekistan-national-tv | ^Uzbekistan National | ^O'zbekiston Milliy | ^Uzbekistan 24
+    reviewed: 2026-11-11
+:uza | UC8VnKuevlppw9R4p12wA31A | @UzAuzb | =UzA | ^Uzbekistan National News Agency
+    reviewed: 2026-11-11
+:khovar | ^Khovar | ^Ховар
+    reviewed: 2026-11-11
+:kyrgyz-koom-tv | ^KTRK | ^Koom TV | ^Кыргыз
+    reviewed: 2026-11-11

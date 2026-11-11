@@ -1,0 +1,10 @@
+! id: mcgi-members-church-of-god
+! name: Members Church of God International
+! name.zh-Hans: 国际神之会会员教会
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Members_Church_of_God_International
+
+:mcgi | =MCGI | ^Members Church of God International | ^Ang Dating Daan | ^Eli Soriano
+:mcgi-tv | ^Breakthrough | ^UNTV

@@ -6,7 +6,7 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Happy_Science
 
-:happy-science | ^幸福科学 | ^幸福科學 | ^Happy Science
+:happy-science | UCIC0vcXnwnBekb-MSb2gFgA | @happyscienceofl | ^幸福科学 | ^幸福科學 | ^Happy Science
 :ryuho-okawa | ^大川隆法 | ^Ryuho Okawa
 :irh-press | UCuN7npROV4OsfRWOsSOBcfQ | @irhpress8708 | ^IRH Press
     reviewed: 2026-11-08

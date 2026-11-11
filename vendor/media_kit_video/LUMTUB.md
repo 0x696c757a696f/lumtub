@@ -66,3 +66,9 @@ The changes, marked "Lumtub" in the code:
   configuration is visible, not only when the player was made without
   libass, so switching libass off while playing brings the subtitles back
   at once instead of after a restart.
+- `windows/media_kit_video_plugin.cc`, `angle_surface_manager.cc`
+  (`SetAdapter`): the shared textures and the ANGLE display libmpv draws and
+  decodes with are made on the adapter Flutter renders on (its LUID, through
+  `EGL_PLATFORM_ANGLE_D3D_LUID_*`), not on the system default. The graphics
+  card setting (`GpuPreference` in the runner) then moves the video too,
+  and a texture is never shared across two adapters.

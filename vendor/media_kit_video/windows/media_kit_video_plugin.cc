@@ -25,6 +25,14 @@ MediaKitVideoPlugin::MediaKitVideoPlugin(
     : registrar_(registrar),
       video_output_manager_(std::make_unique<VideoOutputManager>(registrar)) {
   instance_ = this;
+  // Lumtub: video is drawn on the adapter Flutter renders on.
+  if (auto adapter = registrar->GetView()->GetGraphicsAdapter()) {
+    DXGI_ADAPTER_DESC description{};
+    if (SUCCEEDED(adapter->GetDesc(&description))) {
+      ANGLESurfaceManager::SetAdapter(description.AdapterLuid);
+    }
+    adapter->Release();
+  }
   flutter_window_ =
       ::GetAncestor(registrar->GetView()->GetNativeWindow(), GA_ROOT);
   original_window_proc_ = reinterpret_cast<WNDPROC>(

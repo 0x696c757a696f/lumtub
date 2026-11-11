@@ -23,6 +23,7 @@
   }
 
 int ANGLESurfaceManager::instance_count_ = 0;
+std::optional<LUID> ANGLESurfaceManager::adapter_luid_;
 
 ANGLESurfaceManager::ANGLESurfaceManager(int32_t width, int32_t height)
     : width_(width), height_(height) {
@@ -197,11 +198,18 @@ bool ANGLESurfaceManager::CreateD3DTexture() {
     IDXGIAdapter* adapter = nullptr;
     D3D_DRIVER_TYPE driver_type = D3D_DRIVER_TYPE_UNKNOWN;
 
+    // Lumtub: Flutter's own adapter when it is known.
+    if (adapter_luid_.has_value()) {
+      Microsoft::WRL::ComPtr<IDXGIFactory4> factory;
+      if (SUCCEEDED(::CreateDXGIFactory1(IID_PPV_ARGS(&factory)))) {
+        factory->EnumAdapterByLuid(*adapter_luid_, IID_PPV_ARGS(&adapter));
+      }
+    }
     // NOTE: Automatically selecting adapter on Windows 10 RTM or greater.
-    if (Utils::IsWindows10RTMOrGreater()) {
+    if (adapter == nullptr && Utils::IsWindows10RTMOrGreater()) {
       adapter = NULL;
       driver_type = D3D_DRIVER_TYPE_HARDWARE;
-    } else {
+    } else if (adapter == nullptr) {
       IDXGIFactory* dxgi = nullptr;
       ::CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&dxgi);
       // As far as my experience goes, this is the safest approach. Passing NULL
@@ -270,6 +278,26 @@ bool ANGLESurfaceManager::CreateEGLDisplay() {
         reinterpret_cast<PFNEGLGETPLATFORMDISPLAYEXTPROC>(
             eglGetProcAddress("eglGetPlatformDisplayEXT"));
     if (eglGetPlatformDisplayEXT) {
+      // Lumtub: on Flutter's adapter first, as Flutter itself asks ANGLE.
+      if (adapter_luid_.has_value()) {
+        const EGLint attributes[] = {
+            EGL_PLATFORM_ANGLE_TYPE_ANGLE,
+            EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
+            EGL_PLATFORM_ANGLE_D3D_LUID_HIGH_ANGLE,
+            static_cast<EGLint>(adapter_luid_->HighPart),
+            EGL_PLATFORM_ANGLE_D3D_LUID_LOW_ANGLE,
+            static_cast<EGLint>(adapter_luid_->LowPart),
+            EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE,
+            EGL_TRUE,
+            EGL_NONE,
+        };
+        display_ = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE,
+                                            EGL_DEFAULT_DISPLAY, attributes);
+        if (display_ != EGL_NO_DISPLAY &&
+            eglInitialize(display_, 0, 0) == EGL_TRUE) {
+          return true;
+        }
+      }
       display_ = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE,
                                           EGL_DEFAULT_DISPLAY,
                                           kD3D11DisplayAttributes);

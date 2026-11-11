@@ -20,6 +20,7 @@
 #include <d3d.h>
 #include <d3d11.h>
 #include <d3d11_4.h>
+#include <dxgi1_4.h>
 #include <wrl.h>
 
 #include "frame_stats.h"
@@ -29,7 +30,15 @@
 #include <cstdint>
 #include <functional>
 #include <mutex>
+#include <optional>
 #include <string>
+
+// Lumtub: ANGLE's EGL_ANGLE_platform_angle_d3d_luid, which the headers
+// shipped with the prebuilt ANGLE may not define.
+#ifndef EGL_PLATFORM_ANGLE_D3D_LUID_HIGH_ANGLE
+#define EGL_PLATFORM_ANGLE_D3D_LUID_HIGH_ANGLE 0x34A0
+#define EGL_PLATFORM_ANGLE_D3D_LUID_LOW_ANGLE 0x34A1
+#endif
 
 // |ANGLESurfaceManager| provides an abstraction around ANGLE to easily draw
 // OpenGL ES 2.0 content & read as D3D 11 texture using shared |HANDLE|.
@@ -50,6 +59,12 @@ class ANGLESurfaceManager {
   const int32_t width() const { return width_; }
   const int32_t height() const { return height_; }
   const HANDLE handle() const { return handles_[front_]; }
+
+  // Lumtub: the adapter Flutter renders on. The shared textures and the
+  // ANGLE display libmpv draws (and decodes) with are made on it too, so
+  // the graphics card picked for Flutter carries the video as well, and a
+  // texture is never shared between two adapters.
+  static void SetAdapter(LUID luid) { adapter_luid_ = luid; }
 
   ANGLESurfaceManager(int32_t width, int32_t height);
 
@@ -102,6 +117,8 @@ class ANGLESurfaceManager {
   std::mutex ring_mutex_;
   std::atomic<uint64_t> drawn_{0};
   std::atomic<uint64_t> shown_{0};
+
+  static std::optional<LUID> adapter_luid_;
 
   // Sync |Draw| with |SetSize| and the context's other users.
   HANDLE mutex_ = nullptr;

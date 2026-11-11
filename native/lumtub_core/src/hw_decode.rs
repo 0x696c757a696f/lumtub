@@ -30,17 +30,35 @@ pub fn tallest(decodes: impl Fn(u32, u32) -> bool) -> u32 {
 #[cfg(windows)]
 pub fn probe() -> Option<Decoders> {
     use windows::Win32::Foundation::HMODULE;
-    use windows::Win32::Graphics::Direct3D::D3D_DRIVER_TYPE_HARDWARE;
+    use windows::Win32::Graphics::Direct3D::{D3D_DRIVER_TYPE_HARDWARE, D3D_DRIVER_TYPE_UNKNOWN};
     use windows::Win32::Graphics::Direct3D11::*;
     use windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT_NV12;
-    use windows::Win32::Graphics::Dxgi::IDXGIDevice;
+    use windows::Win32::Graphics::Dxgi::{
+        CreateDXGIFactory1, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
+        DXGI_GPU_PREFERENCE_MINIMUM_POWER, IDXGIAdapter, IDXGIDevice, IDXGIFactory6,
+    };
     use windows::core::{GUID, Interface};
 
     unsafe {
+        // The adapter the app draws and decodes on: the runner passes the
+        // graphics card setting on, and Flutter picks the same adapter.
+        let preference = match std::env::var("LUMTUB_GPU").as_deref() {
+            Ok("low-power") => Some(DXGI_GPU_PREFERENCE_MINIMUM_POWER),
+            Ok("high-performance") => Some(DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE),
+            _ => None,
+        };
+        let chosen: Option<IDXGIAdapter> = preference.and_then(|p| {
+            let factory: IDXGIFactory6 = CreateDXGIFactory1().ok()?;
+            factory.EnumAdapterByGpuPreference(0, p).ok()
+        });
         let mut device = None;
         D3D11CreateDevice(
-            None,
-            D3D_DRIVER_TYPE_HARDWARE,
+            chosen.as_ref(),
+            if chosen.is_some() {
+                D3D_DRIVER_TYPE_UNKNOWN
+            } else {
+                D3D_DRIVER_TYPE_HARDWARE
+            },
             HMODULE::default(),
             D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
             None,

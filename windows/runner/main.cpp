@@ -49,6 +49,27 @@ LONG WINAPI WriteCrashDump(EXCEPTION_POINTERS* exception) {
   return EXCEPTION_CONTINUE_SEARCH;
 }
 
+// The graphics card chosen in the settings (lib/app/settings_actions.dart
+// writes config\gpu.txt); without the file Windows decides, as it does
+// for an app listed in its own graphics settings.
+std::string ReadGpuPreference() {
+  if (DataRoot().empty()) return "";
+  const std::wstring path = DataRoot() + L"\\config\\gpu.txt";
+  const HANDLE file = ::CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ,
+                                    nullptr, OPEN_EXISTING,
+                                    FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (file == INVALID_HANDLE_VALUE) return "";
+  char buffer[64]{};
+  DWORD read = 0;
+  ::ReadFile(file, buffer, sizeof(buffer) - 1, &read, nullptr);
+  ::CloseHandle(file);
+  std::string value(buffer, read);
+  while (!value.empty() && (value.back() == '\n' || value.back() == '\r' || value.back() == ' ')) {
+    value.pop_back();
+  }
+  return value;
+}
+
 }  // namespace
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
@@ -80,6 +101,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // As PiliNara does: with Impeller, media_kit's video texture flashes black
   // on some GPUs (flutter/flutter#188635, #191050, #191069).
   project.set_impeller_switch(flutter::ImpellerSwitch::Disabled);
+
+  // The video plugin draws on the adapter the engine uses, so this one
+  // choice moves both; the core's decoder probe reads LUMTUB_GPU to ask
+  // the same adapter.
+  const std::string gpu = ReadGpuPreference();
+  if (gpu == "low-power") {
+    project.set_gpu_preference(flutter::GpuPreference::LowPowerPreference);
+    ::SetEnvironmentVariableW(L"LUMTUB_GPU", L"low-power");
+  } else if (gpu == "high-performance") {
+    project.set_gpu_preference(flutter::GpuPreference::HighPerformancePreference);
+    ::SetEnvironmentVariableW(L"LUMTUB_GPU", L"high-performance");
+  }
 
   std::vector<std::string> command_line_arguments =
       GetCommandLineArguments();

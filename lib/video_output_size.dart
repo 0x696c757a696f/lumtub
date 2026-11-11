@@ -7,11 +7,39 @@ import 'dart:ui';
 /// 4K video in a small window renders 8 million pixels a frame to show one.
 /// Drawn at the size it is shown, libmpv scales once with its own scaler.
 class VideoOutputSize {
-  VideoOutputSize(this._apply, {this.delay = const Duration(milliseconds: 250)});
+  VideoOutputSize(this._apply, {this.delay = const Duration(milliseconds: 250), this.onError});
 
   /// Sets the output size; null and null is the video's own size.
   final Future<void> Function(int? width, int? height) _apply;
   final Duration delay;
+  final void Function(Object error)? onError;
+
+  /// Sizes are set one after another: a size asked for while another is
+  /// being set waits, and of several waiting only the latest is set. One
+  /// asked for while nothing is being set starts at once.
+  Future<void>? _setting;
+  (int?, int?)? _waiting;
+
+  Future<void> _set(int? width, int? height) {
+    _waiting = (width, height);
+    return _setting ??= _setWaiting();
+  }
+
+  Future<void> _setWaiting() async {
+    try {
+      while (_waiting != null) {
+        final size = _waiting!;
+        _waiting = null;
+        try {
+          await _apply(size.$1, size.$2);
+        } catch (e) {
+          onError?.call(e);
+        }
+      }
+    } finally {
+      _setting = null;
+    }
+  }
 
   final _boxes = <Object, Size>{};
   Size _video = Size.zero;
@@ -92,9 +120,9 @@ class VideoOutputSize {
   Future<void> refresh() async {
     final size = _applied ?? (_video.isEmpty ? null : (_video.width.round(), _video.height.round()));
     if (size == null) return;
-    await _apply(size.$1, size.$2 + 2);
+    await _set(size.$1, size.$2 + 2);
     final applied = _applied;
-    await (applied == null ? _apply(null, null) : _apply(applied.$1, applied.$2));
+    await (applied == null ? _set(null, null) : _set(applied.$1, applied.$2));
   }
 
   void _update() {
@@ -106,13 +134,13 @@ class VideoOutputSize {
       if (_native) return;
       _native = true;
       _applied = null;
-      unawaited(_apply(null, null));
+      unawaited(_set(null, null));
       return;
     }
     if (next == _applied) return;
     _native = false;
     _applied = next;
-    unawaited(_apply(next.$1, next.$2));
+    unawaited(_set(next.$1, next.$2));
   }
 
   void dispose() => _timer?.cancel();

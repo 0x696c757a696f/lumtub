@@ -122,6 +122,11 @@ impl Web {
         let client = crate::tls::apply(builder, tls)
             .build()
             .map_err(|e| e.to_string())?;
+        // One per proxy and security setting in use; settings changed back
+        // and forth would otherwise keep a connection pool for each.
+        if clients.len() >= 4 {
+            clients.clear();
+        }
         clients.insert(key, client.clone());
         Ok(client)
     }

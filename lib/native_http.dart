@@ -171,6 +171,8 @@ class _Pending {
 /// An [http.Client] whose requests the Rust core makes.
 class NativeHttpClient extends http.BaseClient {
   bool _closed = false;
+  /// This client's requests, so closing it stops those still running.
+  final _mine = <int>{};
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
@@ -185,6 +187,9 @@ class NativeHttpClient extends http.BaseClient {
     final id = NativeHttp._nextId++;
     final pending = _Pending(id, request);
     NativeHttp._open[id] = pending;
+    _mine
+      ..removeWhere((done) => !NativeHttp._open.containsKey(done))
+      ..add(id);
     final port = NativeHttp._sendPort.nativePort;
     final started = NativeHttp._withBytes(meta, (m, ml) => NativeHttp._withBytes(bytes, (b, bl) => native.send(id, port, m, ml, b, bl)));
     if (!started) {
@@ -195,5 +200,14 @@ class NativeHttpClient extends http.BaseClient {
   }
 
   @override
-  void close() => _closed = true;
+  void close() {
+    _closed = true;
+    for (final id in _mine) {
+      final pending = NativeHttp._open.remove(id);
+      if (pending == null) continue;
+      NativeHttp._native?.cancel(id);
+      pending.fail('Client is closed');
+    }
+    _mine.clear();
+  }
 }

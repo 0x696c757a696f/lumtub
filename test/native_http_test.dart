@@ -88,6 +88,21 @@ void main() {
       client.close();
     });
 
+    test('closing the client stops its requests still running', () async {
+      final client = NativeHttpClient();
+      final response = await client.send(http.Request('GET', base.replace(path: '/big')));
+      final failed = Completer<Object>();
+      response.stream.listen((_) {}, onError: (Object e) {
+        if (!failed.isCompleted) failed.complete(e);
+      }, onDone: () {
+        if (!failed.isCompleted) failed.complete('done');
+      });
+      client.close();
+      final outcome = await failed.future.timeout(const Duration(seconds: 5));
+      expect(outcome, isA<http.ClientException>());
+      expect(() => client.send(http.Request('GET', base)), throwsA(isA<http.ClientException>()));
+    }, skip: NativeHttp.available ? false : 'needs LUMTUB_CORE_DLL');
+
     test('is the app client when the core is there', () {
       expect(NativeHttp.available, isTrue);
       expect(appHttpClient(), isA<NativeHttpClient>());

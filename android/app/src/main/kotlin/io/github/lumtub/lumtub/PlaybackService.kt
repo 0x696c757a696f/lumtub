@@ -41,6 +41,7 @@ class PlaybackService : Service() {
 
     companion object {
         private const val CHANNEL = "playback"
+        private const val ARTWORK_LIMIT = 8 shl 20
         private const val NOTIFICATION = 1
 
         var listener: ((String, Any?) -> Unit)? = null
@@ -162,7 +163,18 @@ class PlaybackService : Service() {
                     val connection = URL(address).openConnection() as HttpURLConnection
                     connection.connectTimeout = 8000
                     connection.readTimeout = 8000
-                    artworkBitmap(connection.inputStream.use { it.readBytes() })
+                    val bytes = connection.inputStream.use { stream ->
+                        // A thumbnail is well under this; anything larger is not drawn.
+                        val out = java.io.ByteArrayOutputStream()
+                        val buffer = ByteArray(16 * 1024)
+                        while (out.size() <= ARTWORK_LIMIT) {
+                            val n = stream.read(buffer)
+                            if (n < 0) break
+                            out.write(buffer, 0, n)
+                        }
+                        if (out.size() > ARTWORK_LIMIT) null else out.toByteArray()
+                    }
+                    bytes?.let { artworkBitmap(it) }
                 } catch (e: Exception) {
                     null
                 }

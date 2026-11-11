@@ -35,7 +35,20 @@ jobs:
           IDS: ${{ inputs.check }}
         run: |
           read -ra ids <<< "$IDS"
-          python3 .github/scripts/channel_names.py "${ids[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+          mkdir -p "$RUNNER_TEMP/next"
+          for id in "${ids[@]}"; do
+            curl -sS -H 'Content-Type: application/json' -H 'Accept-Language: zh-CN,zh;q=0.9' \
+              -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36' \
+              -d "{\"context\":{\"client\":{\"clientName\":\"WEB\",\"clientVersion\":\"2.20260708.00.00\",\"hl\":\"zh-CN\"}},\"videoId\":\"$id\"}" \
+              'https://www.youtube.com/youtubei/v1/next?prettyPrint=false' -o "$RUNNER_TEMP/next/$id.json"
+            ls -l "$RUNNER_TEMP/next/$id.json"
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: inputs.check != ''
+        with:
+          name: next
+          path: ${{ runner.temp }}/next
 
       - name: Search YouTube for the named channels
         if: inputs.check == ''

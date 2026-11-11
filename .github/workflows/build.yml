@@ -539,7 +539,10 @@ jobs:
     # runs on: the oldest Ubuntu LTS in standard support, as AppImageHub
     # tests on.
     runs-on: ${{ matrix.runner }}
-    container: ubuntu:22.04
+    container:
+      image: ubuntu:22.04
+      # The job network's own resolver has been seen failing; ask public ones too.
+      options: --dns 168.63.129.16 --dns 8.8.8.8 --dns 1.1.1.1
     env:
       PACKAGE_ARCH: ${{ matrix.package_arch }}
       DEBIAN_FRONTEND: noninteractive

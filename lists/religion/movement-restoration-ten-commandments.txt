@@ -1,0 +1,9 @@
+! id: movement-restoration-ten-commandments
+! name: Movement for the Restoration of the Ten Commandments of God
+! name.zh-Hans: 恢复十诫运动
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Movement_for_the_Restoration_of_the_Ten_Commandments_of_God
+
+:restoration-ten-commandments | ^Movement for the Restoration of the Ten Commandments of God | ^Kanungu

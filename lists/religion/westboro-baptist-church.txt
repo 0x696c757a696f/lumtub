@@ -1,0 +1,9 @@
+! id: westboro-baptist-church
+! name: Westboro Baptist Church
+! name.zh-Hans: 韦斯特伯勒浸信会
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Westboro_Baptist_Church
+
+:westboro-baptist-church | ^Westboro Baptist Church | ^God Hates Fags | ^Phelps-Roper

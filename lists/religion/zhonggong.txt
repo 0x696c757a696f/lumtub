@@ -1,0 +1,9 @@
+! id: zhonggong
+! name: Zhong Gong
+! name.zh-Hans: 中功
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Zhong_Gong
+
+:zhonggong | ^中功 | ^Zhong Gong | ^张宏堡 | ^張宏堡 | ^Zhang Hongbao

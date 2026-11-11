@@ -1,0 +1,9 @@
+! id: nation-of-yahweh
+! name: Nation of Yahweh
+! name.zh-Hans: 雅威国度
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Nation_of_Yahweh
+
+:nation-of-yahweh | ^Nation of Yahweh | ^Yahweh ben Yahweh

@@ -1,0 +1,10 @@
+! id: twelve-tribes
+! name: Twelve Tribes
+! name.zh-Hans: 十二支派
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Twelve_Tribes_communities
+
+:twelve-tribes | ^Twelve Tribes | ^The Twelve Tribes | ^Yahshua's Tribes
+:twelve-tribes-fruit | ^Common Sense Farm | ^Twelve Tribes Communities

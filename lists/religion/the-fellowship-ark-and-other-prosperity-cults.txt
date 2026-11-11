@@ -1,0 +1,9 @@
+! id: the-fellowship-ark-and-other-prosperity-cults
+! name: Universal Church of the Kingdom of God
+! name.zh-Hans: 神国普世教会
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Universal_Church_of_the_Kingdom_of_God
+
+:universal-church-kingdom-god | ^Universal Church of the Kingdom of God | ^Igreja Universal | ^Universal Church | ^Edir Macedo

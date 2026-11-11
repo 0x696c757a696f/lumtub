@@ -1,0 +1,9 @@
+! id: process-church
+! name: Process Church of the Final Judgment
+! name.zh-Hans: 末日审判过程教会
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Process_Church_of_The_Final_Judgment
+
+:process-church | ^The Process Church | ^Process Church of the Final Judgment

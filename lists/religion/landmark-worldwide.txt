@@ -1,0 +1,9 @@
+! id: landmark-worldwide
+! name: Landmark Worldwide
+! name.zh-Hans: 地标论坛
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Landmark_Worldwide
+
+:landmark-worldwide | ^Landmark Worldwide | ^Landmark Forum | ^Landmark Education

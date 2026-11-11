@@ -143,6 +143,16 @@ class PlaybackService : Service() {
             return builder.build()
         }
 
+        // The thumbnail decoded at a size the notification and lock screen
+        // show, not at the full size YouTube sends.
+        private fun artworkBitmap(bytes: ByteArray): android.graphics.Bitmap? {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+            var sample = 1
+            while (bounds.outWidth / (sample * 2) >= 512 && bounds.outHeight / (sample * 2) >= 288) sample *= 2
+            return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
+        }
+
         private fun loadArtwork(context: Context) {
             val address = state.thumbnail
             if (address.isEmpty() || artwork?.first == address) return
@@ -152,7 +162,7 @@ class PlaybackService : Service() {
                     val connection = URL(address).openConnection() as HttpURLConnection
                     connection.connectTimeout = 8000
                     connection.readTimeout = 8000
-                    connection.inputStream.use { BitmapFactory.decodeStream(it) }
+                    artworkBitmap(connection.inputStream.use { it.readBytes() })
                 } catch (e: Exception) {
                     null
                 }

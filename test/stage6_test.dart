@@ -29,7 +29,7 @@ void main() {
 
     test('appends lines and rotates a large log', () async {
       final dir = await Directory.systemTemp.createTemp('lumtub_log');
-      addTearDown(() => dir.delete(recursive: true));
+      addTearDown(() => _deleteSoon(dir));
       final log = (await AppLog.open(dir))!;
       log.write(LogLevel.info, '第一行');
       log.write(LogLevel.error, 'refresh_token=secret');
@@ -46,7 +46,7 @@ void main() {
 
     test('writes only lines at or above the chosen level', () async {
       final dir = await Directory.systemTemp.createTemp('lumtub_log');
-      addTearDown(() => dir.delete(recursive: true));
+      addTearDown(() => _deleteSoon(dir));
       final log = (await AppLog.open(dir))!;
       addTearDown(() {
         AppLog.level = LogLevel.info;
@@ -70,7 +70,7 @@ void main() {
 
     test('rotates during a long session once the file passes the limit', () async {
       final dir = await Directory.systemTemp.createTemp('lumtub_log');
-      addTearDown(() => dir.delete(recursive: true));
+      addTearDown(() => _deleteSoon(dir));
       final log = (await AppLog.open(dir))!;
       log.write(LogLevel.info, 'x' * 1000);
       await log.flush();
@@ -89,7 +89,7 @@ void main() {
 
     test('batches lines in order and flushes pending ones on demand', () async {
       final dir = await Directory.systemTemp.createTemp('lumtub_log');
-      addTearDown(() => dir.delete(recursive: true));
+      addTearDown(() => _deleteSoon(dir));
       final log = (await AppLog.open(dir))!;
       for (var i = 0; i < 50; i++) {
         log.write(i == 25 ? LogLevel.error : LogLevel.info, 'line $i');
@@ -164,4 +164,18 @@ void main() {
     expect(rows['Download speed'], '3.0 MB/s');
     expect(Map.fromEntries(statsRows({'hwdec-current': 'no'}).map((r) => MapEntry(r.$1, r.$2)))['Decoding'], 'Software decoding');
   });
+}
+
+/// Deletes a temporary folder, waiting a little while Windows still holds a
+/// file just written (a virus scanner on the CI machines does).
+Future<void> _deleteSoon(Directory dir) async {
+  for (var attempt = 0;; attempt++) {
+    try {
+      await dir.delete(recursive: true);
+      return;
+    } on FileSystemException {
+      if (attempt == 9) return;
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    }
+  }
 }

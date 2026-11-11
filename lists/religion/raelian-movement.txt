@@ -6,4 +6,4 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Ra%C3%ABlism
 
-:raelian-movement | ^雷尔运动 | ^雷爾運動 | ^Raelian | ^Raëlian | ^Rael movement
+:raelian-movement | UC0CTDg9bmpVjjr2pvGxY_SQ | @%E9%9B%B7%E7%88%BE%E9%81%8B%E5%8B%95 | ^雷尔运动 | ^雷爾運動 | ^Raelian | ^Raëlian | ^Rael movement

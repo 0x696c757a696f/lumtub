@@ -7,13 +7,13 @@
 ! note: State broadcasters and news agencies of three Gulf states
 ! source: https://en.wikipedia.org/wiki/Media_of_Kuwait
 
-:kuwait-tv | ^Kuwait TV | ^تلفزيون الكويت | ^Kuwait Television
+:kuwait-tv | UCG4-9WNllnOt-_hEES0sIAg | @kuwaittv9710 | ^Kuwait TV | ^تلفزيون الكويت | ^Kuwait Television
     reviewed: 2026-11-11
 :kuna | =KUNA | ^Kuwait News Agency
     reviewed: 2026-11-11
-:bahrain-tv | ^Bahrain TV | ^تلفزيون البحرين
+:bahrain-tv | UCj9q5jEhyWbk5bibkT7ZFMA | @9dabahrain | ^Bahrain TV | ^تلفزيون البحرين
     reviewed: 2026-11-11
-:bna | =BNA | ^Bahrain News Agency
+:bna | UCVYvTSRwQBmz3SfPeVdqtvg | @bnalife | =BNA | ^Bahrain News Agency
     reviewed: 2026-11-11
 :oman-tv | ^Oman TV | ^تلفزيون سلطنة عمان | ^Oman Television
     reviewed: 2026-11-11

@@ -8,13 +8,13 @@
 ! source: https://en.wikipedia.org/wiki/Belteleradiocompany
 
 :belarus-1 | ^Belarus 1 | ^Беларусь 1
-:belarus-2 | ^Belarus 2 | ^Беларусь 2
+:belarus-2 | UCWssHvvokPN6Cwj6m6XIUVA | @tvbelarus2 | ^Belarus 2 | ^Беларусь 2
 :belarus-24 | ^Belarus 24 | ^Беларусь 24
-:belarus-5 | ^Belarus 5 | ^Беларусь 5
-:belta | ^BelTA | ^БелТА
+:belarus-5 | UCWXMSLt1_6xoqt2bokXQEZA | @belarus5tv | ^Belarus 5 | ^Беларусь 5
+:belta | UCq8IFrOjotyy4clF13oYW_A | @ytbelta | ^BelTA | ^БелТА
 :belteleradiocompany | =BTRC | ^Belteleradiocompany | ^Белтелерадиокомпания
 :ont | =ONT | ^ОНТ
-:stv | =STV | ^СТВ
+:stv | UCqUz51IWAsXdrLu-Rjjg7pA | @wearestv | =STV | ^СТВ
 :pervyi-informatsionnyi | ^Первый информационный
 :radio-belarus | UC89Cojt8XSIUBoAtnABsQxw | @radiobelarus1389 | ^Radio Belarus | ^Радио Беларусь
 :belarus-segodnya | UC0xT3Ec-OfEWvUs1tqutTnA | @Belarus-x5m | ^Belarus Segodnya | ^СБ Беларусь сегодня | ^СБ. Беларусь сегодня

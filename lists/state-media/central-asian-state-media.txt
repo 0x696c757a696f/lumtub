@@ -11,13 +11,13 @@
     reviewed: 2026-11-11
 :kazakh-tv | ^Kazakh TV | ^Qazaqstan TV | ^Казахстан
     reviewed: 2026-11-11
-:kazinform | ^Kazinform | ^Казинформ
+:kazinform | UCrSC9vdaSRlES5QJwKHhbJA | @kazinform | ^Kazinform | ^Казинформ
     reviewed: 2026-11-11
-:uzbekistan-national-tv | ^Uzbekistan National | ^O'zbekiston Milliy | ^Uzbekistan 24
+:uzbekistan-national-tv | UCxdfrxEsAzy9miEcfWAklnQ | @uzbekistan2463 | ^Uzbekistan National | ^O'zbekiston Milliy | ^Uzbekistan 24
     reviewed: 2026-11-11
-:uza | =UzA | ^Uzbekistan National News Agency
+:uza | UC8VnKuevlppw9R4p12wA31A | @UzAuzb | =UzA | ^Uzbekistan National News Agency
     reviewed: 2026-11-11
-:khovar | ^Khovar | ^Ховар
+:khovar | UC97duyJsUeqlW6qnevMyYRw | @Khovar_officiel | ^Khovar | ^Ховар
     reviewed: 2026-11-11
 :kyrgyz-koom-tv | ^KTRK | ^Koom TV | ^Кыргыз
     reviewed: 2026-11-11

@@ -8,7 +8,7 @@
 
 :ptv | =PTV | ^PTV News | ^PTV Home | ^PTV Sports | ^Pakistan Television
     reviewed: 2026-11-11
-:radio-pakistan | ^Radio Pakistan | ^ریڈیو پاکستان
+:radio-pakistan | UCjI3wZ-vhJjZhhRlC6Lz2Eg | @Radiopakistandigital | ^Radio Pakistan | ^ریڈیو پاکستان
     reviewed: 2026-11-11
 :app-pakistan | UCuX8xYvzmdDlIJSEcUPMUoQ | @APPTVLIVE | ^Associated Press of Pakistan
     reviewed: 2026-11-11

@@ -7,16 +7,16 @@
 ! note: IRIB channels and IRNA are state media; Fars, Tasnim and Mehr are tied to the Revolutionary Guards or state bodies
 ! source: https://en.wikipedia.org/wiki/Islamic_Republic_of_Iran_Broadcasting
 
-:press-tv | ^Press TV | ^PressTV
+:press-tv | UCpgY6MdWk3iNSMb5JwoZGbw | @PressTelevision | ^Press TV | ^PressTV
 :irib | ^IRIB | ^Islamic Republic of Iran Broadcasting | ^伊朗国家广播电视台
 :hispantv | ^HispanTV
 :al-alam | =العالم | ^Al-Alam | ^Al Alam
 :irinn | ^IRINN
 :irna | ^IRNA | ^Islamic Republic News Agency
 :pars-today | ^Pars Today
-:sahar-tv | ^Sahar TV
+:sahar-tv | UC0AfLSwR5-aGDi9gPtRcM_Q | @saharTv. | ^Sahar TV
 :al-kawthar | ^Al-Kawthar | ^Al Kawthar
 :fars-news | ^Fars News
 :tasnim | UCg9ya_4sI6u_6A5zXtLgq6w | @solacefulmemoirs | ^Tasnim
 :mehr-news | UCvSZK7QYdrNA7-3kfXRi4Ng | @mehrnews7257 | ^Mehr News
-:isna | =ISNA
+:isna | UCPNobeX-hH9fiJOlixamtIA | @Isna097 | =ISNA

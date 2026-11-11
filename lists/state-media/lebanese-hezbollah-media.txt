@@ -9,5 +9,5 @@
 
 :al-manar | ^Al-Manar | ^Al Manar | ^المنار
     reviewed: 2026-11-11
-:al-ahed | ^Al-Ahed | ^Al Ahed | ^العهد
+:al-ahed | UCAFYSgqyaLVFboF5GRwoIDQ | @shoj._jifh | ^Al-Ahed | ^Al Ahed | ^العهد
     reviewed: 2026-11-11

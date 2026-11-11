@@ -7,11 +7,11 @@
 ! note: State broadcasters of Ethiopia, Rwanda and Zimbabwe
 ! source: https://en.wikipedia.org/wiki/Media_of_Ethiopia
 
-:ebc-ethiopia | =EBC | ^Ethiopian Broadcasting Corporation | ^Ethiopian News Agency
+:ebc-ethiopia | UCOhrz3uRCOHmK6ueUstw7_Q | @EBCworld | =EBC | ^Ethiopian Broadcasting Corporation | ^Ethiopian News Agency
     reviewed: 2026-11-11
-:rbc-rwanda | =RBC | ^Rwanda Broadcasting Agency | ^Rwanda Broadcasting
+:rbc-rwanda | UCi4ie2vwCvR2xv7jdFNBxSA | @RBC | =RBC | ^Rwanda Broadcasting Agency | ^Rwanda Broadcasting
     reviewed: 2026-11-11
-:zbc-zimbabwe | =ZBC | ^Zimbabwe Broadcasting Corporation | ^ZBC News
+:zbc-zimbabwe | UCxiW1iTMYgjyh7Qgkiyj2PQ | @zbcnews_official | =ZBC | ^Zimbabwe Broadcasting Corporation | ^ZBC News
     reviewed: 2026-11-11
 :herald-zimbabwe | ^The Herald Zimbabwe | ^Zimpapers
     reviewed: 2026-11-11

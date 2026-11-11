@@ -6,4 +6,4 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Kabbalah_Centre
 
-:kabbalah-centre | ^Kabbalah Centre | ^The Kabbalah Centre | ^Kabbalah.com
+:kabbalah-centre | UCFboPzBduJan1CYQo5Mm4qg | @kabbalah | ^Kabbalah Centre | ^The Kabbalah Centre | ^Kabbalah.com

@@ -9,11 +9,11 @@
 
 :tvk-cambodia | =TVK | ^National Television of Kampuchea | ^Television Kampuchea
     reviewed: 2026-11-11
-:apsara-tv | ^Apsara TV
+:apsara-tv | UCgf13uOW6_pxFDoHFi1TYjA | @apsaratv5362 | ^Apsara TV
     reviewed: 2026-11-11
 :lao-national-radio-tv | ^Lao National Television | =LNTV | ^Lao National Radio
     reviewed: 2026-11-11
 :vientiane-times | UCnw8ycr-De-Q6P2votJ_GHQ | @TheVientianeTimes | ^Vientiane Times
     reviewed: 2026-11-11
-:khmer-times | ^Khmer Times
+:khmer-times | UCrt1z-amDxCuORWclr20B1Q | @khmertimes5768 | ^Khmer Times
     reviewed: 2026-11-11

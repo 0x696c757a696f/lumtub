@@ -7,7 +7,7 @@
 ! note: State radio and television and the Communist Party paper
 ! source: https://en.wikipedia.org/wiki/Media_of_Vietnam
 
-:vietnam-television | =VTV | ^Vietnam Television
+:vietnam-television | UC5EJRZpLcen7xu5pcU0lP3g | @VTV_Armenia | =VTV | ^Vietnam Television
     reviewed: 2026-11-08
 :voice-of-vietnam | =VOV | ^Voice of Vietnam
     reviewed: 2026-11-08

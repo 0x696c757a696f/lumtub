@@ -12,4 +12,4 @@
 :el-19-tv | ^El 19 TV
 :radio-nicaragua | UCi_oAa2kMOt4I0pX98SX9Ag | @Nicaragua905 | ^Radio Nicaragua
 :la-nueva-radio-ya | UCR-5wV3tV9kOOAhctxmF3bQ | @radioya | ^La Nueva Radio Ya
-:barricada | =Barricada
+:barricada | UC4tnzhmUC5jSDoERYCYmniA | @barricada2166 | =Barricada

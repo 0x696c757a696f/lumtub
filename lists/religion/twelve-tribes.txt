@@ -6,5 +6,5 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Twelve_Tribes_communities
 
-:twelve-tribes | ^Twelve Tribes | ^The Twelve Tribes | ^Yahshua's Tribes
+:twelve-tribes | UCSnrxUZN53SwIpp-ZLJnFbw | @TheTwelveTribes | ^Twelve Tribes | ^The Twelve Tribes | ^Yahshua's Tribes
 :twelve-tribes-fruit | ^Common Sense Farm | ^Twelve Tribes Communities

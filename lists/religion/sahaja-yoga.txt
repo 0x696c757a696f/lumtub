@@ -7,4 +7,4 @@
 ! source: https://en.wikipedia.org/wiki/Sahaja_Yoga
 
 :sahaja-yoga | ^Sahaja Yoga | ^Shri Mataji | ^Nirmala Devi
-:shri-mataji | ^Shri Mataji Nirmala Devi
+:shri-mataji | UCDT8W3A8rwfholeqQMsdZAQ | @Shri_Mataji_Nirmala_Devi | ^Shri Mataji Nirmala Devi

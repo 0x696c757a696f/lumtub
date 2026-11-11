@@ -8,5 +8,5 @@
 ! topic: 撒旦教会
 ! source: https://en.wikipedia.org/wiki/Church_of_Satan
 
-:church-of-satan | ^Church of Satan | ^The Church of Satan | ^撒旦教会 | ^撒旦教會
+:church-of-satan | UCCdWlbB0TB58FSquop3Sc2w | @ChurchofSatanOfficial | ^Church of Satan | ^The Church of Satan | ^撒旦教会 | ^撒旦教會
 :anton-lavey | ^Anton LaVey | ^Anton Szandor LaVey

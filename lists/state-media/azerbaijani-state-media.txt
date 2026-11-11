@@ -7,7 +7,7 @@
 ! note: State-owned television channels
 ! source: https://en.wikipedia.org/wiki/Media_of_Azerbaijan
 
-:aztv | =AzTV
+:aztv | UCVf7OL0jKiO1OMHN_qaNf0w | @aztvresmi | =AzTV
     reviewed: 2026-11-08
 :idman-tv | ^Idman TV
     reviewed: 2026-11-08

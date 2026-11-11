@@ -11,7 +11,7 @@
     status: unproven
 :wenrui-kan-shijie | ^文睿看世界
     status: unproven
-:you-mo-gao-cuo | ^有冇搞错 | ^有冇搞錯
+:you-mo-gao-cuo | UCfcKA64eTXAP38wAxOM_lMA | @shishanviewpoint | ^有冇搞错 | ^有冇搞錯
     status: unproven
 :jiyuan-shenghuo | ^纪元生活 | ^紀元生活
     status: unproven
@@ -29,7 +29,7 @@
     status: unproven
 :ziling-jiang-gushi | UCQKPaqvfUupC_PU8xURFIzQ | @%E7%B4%AB%E8%8F%B1%E8%AC%9B%E6%95%85%E4%BA%8B | ^紫菱讲故事 | ^紫菱講故事
     status: unproven
-:xin-bu-xin-you-ni | ^信不信由你
+:xin-bu-xin-you-ni | UCPZ5aLH5k-2aqfzhxxemC3Q | @xbxynfun | ^信不信由你
     status: unproven
 :jingxiang-shijie | ^镜像世界 | ^鏡像世界 | ^映象世界
     status: unproven
@@ -51,7 +51,7 @@
     status: unproven
 :women-xuyao-zhenxiang | ^我们需要真相 | ^我們需要真相 | ^We Need Truth
     status: unproven
-:edge-of-wonder | ^Edge of Wonder
+:edge-of-wonder | UCxC2RlwWGHnwXanvHNBmw2w | @EdgeofWonderOfficial | ^Edge of Wonder
     status: unproven
 :zhao-pei | ^赵培 | ^趙培
     status: unproven

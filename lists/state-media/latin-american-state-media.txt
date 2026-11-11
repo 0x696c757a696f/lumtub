@@ -10,7 +10,7 @@
     reviewed: 2026-11-11
 :telesur | UCEXKaswCHMJmOIdR8HrZy9Q | @teleSURtv.net.e | ^teleSUR
     reviewed: 2026-11-11
-:rta-argentina | ^Radio y Televisión Argentina | ^Televisión Pública Argentina | ^TV Pública
+:rta-argentina | UC0zWtwT7ws_hUZJ5clF9rCw | @rta_se | ^Radio y Televisión Argentina | ^Televisión Pública Argentina | ^TV Pública
     reviewed: 2026-11-11
-:tves-el-salvador | ^TVES | ^Canal 10 El Salvador
+:tves-el-salvador | UCciLSQTyi6W0UJ8ptreovXQ | @tvesaldia | ^TVES | ^Canal 10 El Salvador
     reviewed: 2026-11-11

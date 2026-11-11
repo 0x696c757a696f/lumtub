@@ -15,6 +15,6 @@
 :granma | UCAathHKu0bvXbX4pIlsnkXA | @granma.oficial | ^Granma
 :acn | =ACN | ^Agencia Cubana de Noticias
 :radio-habana-cuba | UCQ0u1WCiOyJ9VqsPe0ln5fg | @RadioHabanaCubaVideos | ^Radio Habana Cuba
-:radio-rebelde | ^Radio Rebelde
+:radio-rebelde | UCdW4mWl91eph-zOtdLrKcIQ | @RadioRebeldeOK | ^Radio Rebelde
 :juventud-rebelde | ^Juventud Rebelde
-:canal-habana | ^Canal Habana
+:canal-habana | UCq9UPlGWncAlb5YaGb3bGOw | @CanalHabanaOficial | ^Canal Habana

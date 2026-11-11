@@ -14,7 +14,7 @@
 :al-ekhbariya | =الإخبارية | ^Al Ekhbariya
 :al-arabiya | =العربية | ^Al Arabiya
 :al-hadath | =الحدث | ^Al Hadath
-:mbc-group | ^MBC Group
+:mbc-group | UCy2CIDKYZqqbeJ0NHNcJ9sQ | @MBCGROUPTv | ^MBC Group
 :asharq-news | ^Asharq News
 :asharq-al-awsat | ^Asharq Al-Awsat
-:arab-news | ^Arab News
+:arab-news | UCI8DegIWgK51cGakXcf1dOQ | @arabnews | ^Arab News

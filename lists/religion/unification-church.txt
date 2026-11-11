@@ -7,7 +7,7 @@
 ! source: https://en.wikipedia.org/wiki/Unification_Church
 
 :unification-church | ^统一教 | ^統一教 | ^Unification Church | ^Moonies
-:sun-myung-moon | ^文鲜明 | ^文鮮明 | ^Sun Myung Moon
+:sun-myung-moon | UCauGPQE8Vyi-CQn6c-yGenw | @SunMyungMoon1 | ^文鲜明 | ^文鮮明 | ^Sun Myung Moon
 :family-federation-for-world-peace | ^家庭联合 | ^家庭聯合 | ^世界和平统一家庭 | ^世界和平統一家庭 | ^Family Federation for World Peace
 :segye-ilbo | ^Segye Ilbo
     reviewed: 2026-11-08

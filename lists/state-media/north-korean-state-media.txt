@@ -10,7 +10,7 @@
 :kctv | ^KCTV | ^Korean Central Television | ^조선중앙TV | ^조선중앙텔레비죤 | ^朝鲜中央电视台 | ^朝鮮中央電視台
 :kcna | ^KCNA | ^Korean Central News Agency | ^조선중앙통신 | ^朝鲜中央通讯社
 :rodong-sinmun | ^Rodong Sinmun | ^로동신문 | ^劳动新闻 | ^勞動新聞
-:voice-of-korea | ^Voice of Korea | ^조선의 소리 | ^朝鲜之声
+:voice-of-korea | UCcgmvcsjh1MMue_9xw0CqSg | @MakeKoreaGreatFirst | ^Voice of Korea | ^조선의 소리 | ^朝鲜之声
 :korean-central-broadcasting | ^Korean Central Broadcasting | ^조선중앙방송
 :naenara | ^Naenara | ^내나라
 :uriminzokkiri | ^Uriminzokkiri | ^우리민족끼리

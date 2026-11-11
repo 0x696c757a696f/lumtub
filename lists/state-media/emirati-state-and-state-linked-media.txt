@@ -10,8 +10,8 @@
 
 :emirates-news-agency | UCFuuiOEWjN2k_Vw81Trzavg | @WamLV | =WAM | ^Emirates News Agency | ^阿联酋通讯社
 :abu-dhabi-media | ^Abu Dhabi Media
-:abu-dhabi-tv | ^Abu Dhabi TV
-:dubai-media | ^Dubai Media
+:abu-dhabi-tv | UC9rZn_483cUzL9UA5BAMJWg | @abudhabitv150 | ^Abu Dhabi TV
+:dubai-media | UCX13PMZN07i3xlwpM9DFBKw | @DubaiMedia077 | ^Dubai Media
 :dubai-tv | ^Dubai TV
 :al-emarat-tv | ^Al Emarat TV
-:sky-news-arabia | ^Sky News Arabia | ^سكاي نيوز عربية
+:sky-news-arabia | UCIJXOvggjKtCagMfxvcCzAA | @SkyNewsArabia | ^Sky News Arabia | ^سكاي نيوز عربية

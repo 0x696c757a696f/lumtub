@@ -6,5 +6,5 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Heaven%27s_Gate_(religious_group)
 
-:heavens-gate | ^天堂之门 | ^天堂之門 | ^Heaven's Gate | ^Heavens Gate | ^Heaven’s Gate
+:heavens-gate | UCNKeSMZusmzZ0wHPxdmxWOg | @HeavensGate64 | ^天堂之门 | ^天堂之門 | ^Heaven's Gate | ^Heavens Gate | ^Heaven’s Gate
 :marshall-applewhite | ^Marshall Applewhite

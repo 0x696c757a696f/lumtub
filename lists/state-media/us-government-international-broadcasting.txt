@@ -8,11 +8,11 @@
 ! note: Funded by the US Agency for Global Media with editorial independence in law, unlike media whose content a government controls
 ! source: https://en.wikipedia.org/wiki/United_States_Agency_for_Global_Media
 
-:voice-of-america | ^VOA | ^Voice of America | ^美国之音 | ^美國之音
+:voice-of-america | UCVSNOxehfALut52NbkfRBaA | @VOANews | ^VOA | ^Voice of America | ^美国之音 | ^美國之音
 :radio-free-asia | =RFA | ^Radio Free Asia | ^自由亚洲电台 | ^自由亞洲電台
-:rferl | ^Radio Free Europe | ^RFE/RL | ^Radio Liberty | ^Радио Свобода | ^Radio Svoboda
-:current-time | ^Current Time | ^Настоящее время
-:marti | ^Radio Martí | ^TV Martí | ^Martí Noticias
+:rferl | UCiWMFQCGvwGSc8QWHOqcQhw | @Radio-Svoboda | ^Radio Free Europe | ^RFE/RL | ^Radio Liberty | ^Радио Свобода | ^Radio Svoboda
+:current-time | UCBG57608Hukev3d0d-gvLhQ | @CurrentTimeTV | ^Current Time | ^Настоящее время
+:marti | UCT6G68lD2FQvHwIJ5FEZgcg | @TVMartiNoticias | ^Radio Martí | ^TV Martí | ^Martí Noticias
 :alhurra | UCJJsH0QEXvTxl3BnCvQBlNw | @alhurra6067 | ^Alhurra | ^الحرة
 :radio-sawa | ^Radio Sawa
 :middle-east-broadcasting-networks | UC7Yy2NChypvyR4InlpSi7TA | @mbn2503 | =MBN | ^Middle East Broadcasting Networks

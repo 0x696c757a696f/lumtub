@@ -7,12 +7,12 @@
 ! source: https://en.wikipedia.org/wiki/Happy_Science
 
 :happy-science | ^幸福科学 | ^幸福科學 | ^Happy Science
-:ryuho-okawa | ^大川隆法 | ^Ryuho Okawa
+:ryuho-okawa | UCnW4BFJ9Auh0Rid7HN0KcCw | @ryuhookawa6475 | ^大川隆法 | ^Ryuho Okawa
 :irh-press | UCuN7npROV4OsfRWOsSOBcfQ | @irhpress8708 | ^IRH Press
     reviewed: 2026-11-08
 :ari-production | ^ARI Production
     reviewed: 2026-11-08
-:new-star-production | ^New Star Production
+:new-star-production | UCo8sa4vlG8_1qnTFCfl0GfA | @newstarproduction6303 | ^New Star Production
     reviewed: 2026-11-08
 :hs-pictures-studio | ^HS Pictures
     reviewed: 2026-11-08

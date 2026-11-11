@@ -24,10 +24,10 @@
 :zhong-yuan | ^钟原 | ^鍾原
 :xia-xiaoqiang | UCVIr0XqwgOYMaSzsFqYne1A | @%E5%A4%8F%E5%B0%8F%E5%BC%BA-n9z | ^夏小强 | ^夏小強
 :cheng-xiaorong | ^程晓容 | ^程曉容
-:facts-matter-with-roman-balmakov | ^Facts Matter With Roman Balmakov | ^Roman Balmakov
+:facts-matter-with-roman-balmakov | UCXuwhn5_41m4VxZJ3wcDyxA | @FactsMatterRoman | ^Facts Matter With Roman Balmakov | ^Roman Balmakov
 :eye-opener-with-michael-lewis | ^Eye Opener With Michael Lewis
-:crossroads-with-joshua-philipp | ^Crossroads with Joshua Philipp | ^Joshua Philipp
-:trevor-loudon | ^Trevor Loudon
+:crossroads-with-joshua-philipp | UCG8yy4W8nBbTle9YSpCqXeg | @CrossroadsWithJoshuaPhilipp | ^Crossroads with Joshua Philipp | ^Joshua Philipp
+:trevor-loudon | UCYaoTFn4shsRPpyb1JwdixQ | @newzealblog | ^Trevor Loudon
 :brendon-fallon | UCYMUxzXTpYz16-Dhqx-dO-g | @brendonfallon4171 | ^Brendon Fallon
 :xin-wen-kan-dian | UC-0QjLL-apKuvZAbfbpA9Dw | @%E6%96%B0%E8%81%9E%E7%9C%8B%E9%BB%9E | ^新闻看点 | ^新聞看點
 :li-muyang | ^李沐阳 | ^李沐陽
@@ -50,7 +50,7 @@
 :shi-shan-shi-dian | ^石山视点 | ^石山視點
 :jing-ying-lun-tan | ^菁英论坛 | ^菁英論壇
 :wei-yu-kan-shi-jian | UCpG17Giz_CLK0jWLPG9O5Kw | @weiyuksj | ^薇羽看世间 | ^薇羽看世間
-:xiao-ming-kan-shi-jie | ^萧茗看世界 | ^蕭茗看世界
+:xiao-ming-kan-shi-jie | UC6HcLCrHusY7qLwsWGzfXnw | @%E8%95%AD%E8%8C%97%E7%9C%8B%E4%B8%96%E7%95%8C | ^萧茗看世界 | ^蕭茗看世界
 :xue-er-zhu-bo | ^雪儿主播 | ^雪兒主播
 :xin-wen-zui-chao-dian | ^新闻最嘲点 | ^新聞最嘲點
 :jiang-guangyu | ^姜光宇
@@ -69,7 +69,7 @@
 :she-health | ^她健康 | ^She Health
 :tian-ting-xiao-zi | ^天庭小子
 :xiao-qian-kun | UCsnpYvx02DcQFoAC-gg5C9A | @%E5%B0%8F%E4%B9%BE%E5%9D%A4-s3g | ^小乾坤
-:china-uncensored | @ChinaUncensored | ^China Uncensored
+:china-uncensored | UCgFP46yVT-GG4o1TgXn-04Q | @ChinaUncensored | ^China Uncensored
 :china-unscripted | UCvr1DclUsRzNYXWOWJ7eVLQ | @ChinaUnscripted | ^China Unscripted
 :wenzhaoofficial | UCtAIPjABiQD3qjlEl1T5VpA | @wenzhaoofficial
 :wenzhaostudio | UCTu_hTaVf3DJMpMIyOAq2Ew | @wenzhaostudio

@@ -8,4 +8,4 @@
 ! topic: 撒旦圣殿
 ! source: https://en.wikipedia.org/wiki/The_Satanic_Temple
 
-:the-satanic-temple | ^The Satanic Temple | ^Satanic Temple | ^撒旦圣殿 | ^撒旦聖殿
+:the-satanic-temple | UCYIv7bicSK4NBL_lgH61zIw | @TheSatanicTemple | ^The Satanic Temple | ^Satanic Temple | ^撒旦圣殿 | ^撒旦聖殿

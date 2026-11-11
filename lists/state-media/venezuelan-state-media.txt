@@ -8,10 +8,10 @@
 ! source: https://en.wikipedia.org/wiki/Venezolana_de_Televisi%C3%B3n
 
 :telesur | UCEXKaswCHMJmOIdR8HrZy9Q | @teleSURtv.net.e | ^teleSUR
-:vtv | =VTV | ^Venezolana de Televisión
-:tves | ^TVes
+:vtv | UC5EJRZpLcen7xu5pcU0lP3g | @VTV_Armenia | =VTV | ^Venezolana de Televisión
+:tves | UCciLSQTyi6W0UJ8ptreovXQ | @tvesaldia | ^TVes
 :vive-tv | ^ViVe TV
 :avila-tv | ^Ávila TV
 :avn | =AVN | ^Agencia Venezolana de Noticias
-:rnv | =RNV | ^Radio Nacional de Venezuela
+:rnv | UC10QVkKRPqgkze5Pl5sDxJw | @theRNV | =RNV | ^Radio Nacional de Venezuela
 :correo-del-orinoco | ^Correo del Orinoco

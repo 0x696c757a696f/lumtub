@@ -25,7 +25,7 @@
 :jinbodhi | UCSJ50A_crxC0jiJEIBITC_Q | @jinbodhi93 | @jinbodhi-en | @jinbodhi-kr | @jinbodhi-vn | =金菩提 | =JinBodhi
 :bodhi-meditation | UC4w1wI6C18dtb6AyqeC8STw | @Bodhi-Meditation | @BodhiMeditation | @BodhiMeditationKR | =Bodhi Meditation
 :energy-bagua | @EnergyBagua | @EnergyBaguaEn | @EnergyBaguaID | =Energy Bagua | =八卦内功 | =八卦內功
-:church-of-almighty-god | =全能神教会 | =全能神教會 | =The Church of Almighty God | =Eastern Lightning
+:church-of-almighty-god | UCnm99agRmGJIca7cvowv0og | @TheChurchofAlmightyGod | =全能神教会 | =全能神教會 | =The Church of Almighty God | =Eastern Lightning
 :nithyananda | =Nithyananda
 :shrikailasa | UCKn1kLPxbbFCKXAC5yQn4ZA | @shrikailasa4254 | =SHRIKAILASA
 :la-luz-del-mundo | UC6XhrgxRN0V7QfWZiRWTzKg | @IglesiaLaLuzdelMundo | @Radiolldmhoy | =La Luz del Mundo
@@ -34,14 +34,14 @@
 :the-last-reformation | UCJXcYb9zYJ8_QA3Bcg5Fe2g | @TheLastReformation | @thelastreformationfrance | @thelastreformationuk | =The Last Reformation
 :ramthas-school-of-enlightenment | @RSEWebTeam | @KRSERADIO | =Ramtha’s School of Enlightenment
 :kryon | @kryonleecarroll3491 | =Kryon
-:bashar-higher-mind | @BasharHigherMind99 | =Bashar Higher Mind
-:osho-international | @OSHOInternational | =OSHO International
+:bashar-higher-mind | UCYwXLgiJRqIpOQ2lYu73aLQ | @BasharHigherMind99 | =Bashar Higher Mind
+:osho-international | UCS0s6BFzIcvC2gTH52_vBEA | @OSHOInternational | =OSHO International
 :mooji | @Moojiji | @Moojiitaliano | =Mooji
-:isha-foundation | @ishafoundation | =Isha Foundation
-:eckankar | @eckankar | =ECKANKAR
+:isha-foundation | UCgaiWfiix1zaQS6Mn5SIw2g | @ishafoundation | =Isha Foundation
+:eckankar | UC8MuYbZw_TmWZJI_tCd9uQA | @eckankar | =ECKANKAR
 :chuang-zao-feng-sheng | UC-zY8Y8BC3bcOjAtb8tnCqQ | =创造丰盛 | =創造豐盛
 :abraham-hicks | =Abraham-Hicks
-:access-consciousness | @accessconsciousness | =Access Consciousness
+:access-consciousness | UCLdXSiUS9p-7rE3Skavx8TA | @accessconsciousness | =Access Consciousness
 :thetahealing | UCREBjyI4qKwRHxOgCzuDA5g | @ThetaHealingPro | @ThetaHealingVianna | =ThetaHealing
 :bruno-gr-ning | =Bruno Gröning
 :pranic-healing | =Pranic Healing

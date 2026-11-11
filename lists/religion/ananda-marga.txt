@@ -6,4 +6,4 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Ananda_Marga
 
-:ananda-marga | ^Ananda Marga | ^Ananda Marga Yoga | ^Shrii Shrii Anandamurti
+:ananda-marga | UCc3f8g07me5NpqHfAsF8GIA | @Ananda_Marga | ^Ananda Marga | ^Ananda Marga Yoga | ^Shrii Shrii Anandamurti

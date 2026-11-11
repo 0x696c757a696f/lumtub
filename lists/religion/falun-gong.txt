@@ -8,16 +8,16 @@
 
 :falun-gong | @falungonginfo | ^法轮功 | ^法輪功 | ^法轮大法 | ^法輪大法 | ^Falun Gong | ^Falun Dafa
 :li-hongzhi | ^李洪志 | ^Li Hongzhi
-:minghui | @MinghuiTV | ^明慧网 | ^明慧網 | ^Minghui | ^明慧
+:minghui | UCkFaefziZkPp5IMeYuzHagA | @%E6%98%8E%E6%85%A7-p6z | @MinghuiTV | ^明慧网 | ^明慧網 | ^Minghui | ^明慧
 :shen-yun | @shenyun | ^神韵艺术团 | ^神韻藝術團 | ^Shen Yun | ^神韵 | ^神韻
 :epoch-times | @epochtimesdigital | ^大纪元 | ^大紀元 | ^The Epoch Times | ^Epoch Times | ^EpochTV | ^Epoch Health
 :ntd | UCdbvc-yJ4JQjNGTgFiJIZNA | @NTDCHINESE | @NTDSpanish | ^新唐人 | ^NTD Television | ^NTD
 :epoch-headlines | ^纪元头条 | ^紀元頭條
-:jinwen | ^中国禁闻 | ^中國禁聞
+:jinwen | UCHnZLOs1v4LAnKLIWHAZZtA | @%E4%B8%AD%E5%9B%BD%E7%A6%81%E9%97%BB-j9h | ^中国禁闻 | ^中國禁聞
 :news-decoded | UCHY4xOBo9z03nceB6Pl-yzg | @News_Insight | ^新闻大破解 | ^新聞大破解
 :sound-of-hope | UCk89pEd76qutMB08hVSY49Q | @soh_tv | ^希望之声 | ^希望之聲 | ^SOH | ^Sound of Hope
 :kan-zhongguo | @kzg | ^看中国 | ^看中國
-:vision-times | ^Vision Times
+:vision-times | UCkXXSJw7PsYGx-tyo8eOGaw | @VisionTimes | ^Vision Times
 :apollo-net | ^阿波罗新闻网 | ^阿波羅新聞網 | ^阿波罗网 | ^阿波羅網
 :renminbao | UCFLJkn78gQViXxbplQyz3XA | @%E4%BA%BA%E6%B0%91%E5%A0%B1-o1x | ^人民报 | ^人民報
 :zhengjian | UC40T0Oz3ZV5ZAsQ3Cw7cOuQ | @zhengjian2009 | ^正见网 | ^正見網
@@ -26,8 +26,8 @@
 :china-in-focus | UCBOqkAGTtzZVmKvY4SwdZ2g | @ChinainFocusNTD | ^China in Focus
 :facts-matter | @FactsMatterRoman | ^Facts Matter
 :american-thought-leaders | UCmWhuFRkZKu0g-e1xrlakVA | @AmericanThoughtLeaders | ^American Thought Leaders
-:china-observer | @ChinaObserver0 | ^China Observer
-:china-insights | @chinainsights4458 | ^China Insights
+:china-observer | UCT2kPBcD6tXn8TP_aV7BmgA | @ChinaObserver0 | ^China Observer
+:china-insights | UCwjvvgGX6oby5mZ3gbDe8Ug | @chinainsights-r2w | @chinainsights4458 | ^China Insights
 :hot-topic-dialogue | UCAa9oah8kGEDteKSHKVhK0A | @%E7%83%AD%E7%82%B9%E4%BA%92%E5%8A%A8-s8f | ^热点互动 | ^熱點互動
 :mainland-news-analysis | ^大陆新闻解读 | ^大陸新聞解讀
 :china-decoded | ^中国解密 | ^中國解密

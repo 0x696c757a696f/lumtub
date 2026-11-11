@@ -25,6 +25,43 @@ class CacheManager {
     return root;
   }
 
+  /// Whether [to]'s location is inside one of [from]'s cache folders, or
+  /// the other way round: moving then would copy a folder into itself, or
+  /// delete the new cache with the old one.
+  bool nested(PlayerSettings from, PlayerSettings to) {
+    final oldRoot = rootFor(from), newRoot = rootFor(to);
+    for (final name in managedFolders) {
+      if (isWithin(newRoot.path, '${oldRoot.path}${Platform.pathSeparator}$name')) return true;
+      if (isWithin(oldRoot.path, '${newRoot.path}${Platform.pathSeparator}$name')) return true;
+    }
+    return false;
+  }
+
+  /// Whether [inner] is [outer] or a folder under it, symbolic links and
+  /// (on Windows and macOS) letter case aside.
+  static bool isWithin(String inner, String outer) {
+    String normal(String path) {
+      var full = Directory(path).absolute.path;
+      // The deepest part that exists, with its links resolved.
+      var existing = Directory(full);
+      var rest = '';
+      while (!existing.existsSync() && existing.parent.path != existing.path) {
+        rest = '/${existing.uri.pathSegments.where((s) => s.isNotEmpty).last}$rest';
+        existing = existing.parent;
+      }
+      try {
+        full = existing.resolveSymbolicLinksSync() + rest;
+      } on FileSystemException {
+        // Kept as written.
+      }
+      full = full.replaceAll('\\', '/');
+      if (Platform.isWindows || Platform.isMacOS) full = full.toLowerCase();
+      return full.endsWith('/') ? full : '$full/';
+    }
+
+    return normal(inner).startsWith(normal(outer));
+  }
+
   Future<int> size(PlayerSettings settings) async {
     var bytes = 0;
     final root = rootFor(settings);
@@ -80,6 +117,7 @@ class CacheManager {
   /// they were, whatever was already in [to] is restored, and the error is
   /// rethrown.
   Future<void> migrate(PlayerSettings from, PlayerSettings to, {Future<void> Function()? commit, @visibleForTesting String? tag}) async {
+    if (nested(from, to)) throw FileSystemException('The new cache location is inside the old cache, or the other way round', rootFor(to).path);
     final oldRoot = await prepare(from);
     final newRoot = await prepare(to);
     tag ??= '${DateTime.now().microsecondsSinceEpoch}';

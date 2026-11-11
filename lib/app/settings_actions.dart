@@ -307,6 +307,10 @@ extension SettingsActions on AppController {
     if (directories == null || manager == null) return;
     final target = Directory('$selectedFolder${Platform.pathSeparator}LumtubCache');
     final next = settings.copyWith(cachePath: target.path);
+    if (manager.nested(settings, next)) {
+      _notice(tr("The new cache location can't be inside the current cache folders."));
+      return;
+    }
     try {
       await manager.prepare(next);
       final migrate = await confirmMigrate(target.path);

@@ -93,8 +93,24 @@ class SkinLibrary extends ChangeNotifier {
       final skin = Skin.parse(decodeJsonc(await found.first.readAsString()), folder: source.path, builtIn: false);
       if (builtInIds.contains(skin.id)) throw FormatException('"${skin.id}" is the name of a built-in skin');
       final target = Directory('${folder.path}${Platform.pathSeparator}${skin.id}');
-      if (await target.exists()) await target.delete(recursive: true);
-      await source.rename(target.path);
+      // The skin it replaces is set aside, not deleted, until the new one
+      // is in place, and put back if that fails.
+      final old = Directory('${target.path}.replaced-${DateTime.now().microsecondsSinceEpoch}');
+      final replacing = await target.exists();
+      if (replacing) await target.rename(old.path);
+      try {
+        await source.rename(target.path);
+      } catch (_) {
+        if (replacing) await old.rename(target.path);
+        rethrow;
+      }
+      if (replacing) {
+        try {
+          await old.delete(recursive: true);
+        } catch (e) {
+          logDebug(() => 'Could not remove the replaced skin: $e');
+        }
+      }
       await reload();
       return skin.id;
     } finally {
@@ -121,6 +137,8 @@ class SkinLibrary extends ChangeNotifier {
         final dirs = await folder.list().where((e) => e is Directory).cast<Directory>().toList()
           ..sort((a, b) => a.path.compareTo(b.path));
         for (final dir in dirs) {
+          // A replaced skin that could not be removed is not shown twice.
+          if (dir.path.contains('.replaced-')) continue;
           final file = File('${dir.path}${Platform.pathSeparator}skin.jsonc');
           if (!await file.exists()) continue;
           try {

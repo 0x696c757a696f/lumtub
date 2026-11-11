@@ -3163,5 +3163,6 @@
   "Kazakh": "哈薩克語",
   "Kyrgyz": "吉爾吉斯語",
   "Assamese": "阿薩姆語",
-  "Odia": "奧里亞語"
+  "Odia": "奧里亞語",
+  "The new cache location can't be inside the current cache folders.": "新的快取位置不能放在目前的快取資料夾裡面。"
 }

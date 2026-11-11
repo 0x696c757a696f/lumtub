@@ -67,6 +67,20 @@ void main() {
       expect(await Directory(manager.rootFor(to).path).list().map((e) => e.path).where((p) => p.contains('.migrating') || p.contains('.replaced')).toList(), isEmpty);
     });
 
+    test('refuses a new location inside the old cache, and the other way round', () async {
+      final inside = PlayerSettings(cachePath: '${sub(from, 'thumbnails')}${Platform.pathSeparator}LumtubCache');
+      expect(manager.nested(from, inside), isTrue);
+      await expectLater(manager.migrate(from, inside), throwsA(isA<FileSystemException>()));
+      expect(await Directory(inside.cachePath!).exists(), isFalse);
+      expect(await manager.size(from), 10);
+      final outer = PlayerSettings(cachePath: '${temp.path}${Platform.pathSeparator}outer');
+      final under = PlayerSettings(cachePath: '${temp.path}${Platform.pathSeparator}outer${Platform.pathSeparator}yt-dlp${Platform.pathSeparator}x');
+      expect(manager.nested(outer, under), isTrue);
+      expect(manager.nested(under, outer), isTrue);
+      expect(manager.nested(from, to), isFalse);
+      expect(CacheManager.isWithin('${temp.path}${Platform.pathSeparator}ab', '${temp.path}${Platform.pathSeparator}a'), isFalse);
+    });
+
     test('a failure while saving keeps the old cache and the target as it was', () async {
       final existing = File(sub(to, 'thumbnails', '${Platform.pathSeparator}keep.jpg'));
       await manager.prepare(to);

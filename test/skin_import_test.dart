@@ -46,6 +46,22 @@ void main() {
     expect(skins.listSync(), hasLength(2));
   });
 
+  test('adding a skin again replaces it, leaving nothing behind', () async {
+    final skins = Directory('${temp.path}/skins');
+    await SkinLibrary.instance.load(folder: skins);
+    final first = File('${temp.path}/a.jsonc')..writeAsStringSync(skinText('again'));
+    expect(await SkinLibrary.instance.importFile(first.path), 'again');
+    File('${skins.path}/again/old.txt').writeAsStringSync('old');
+    expect(await SkinLibrary.instance.importFile(first.path), 'again');
+    expect(File('${skins.path}/again/old.txt').existsSync(), isFalse);
+    expect(skins.listSync().map((e) => e.uri.pathSegments.where((s) => s.isNotEmpty).last).toList(), ['again']);
+    // A replaced skin left over from a failed removal is not listed.
+    Directory('${skins.path}/again.replaced-1').createSync();
+    File('${skins.path}/again.replaced-1/skin.jsonc').writeAsStringSync(skinText('again'));
+    await SkinLibrary.instance.load(folder: skins);
+    expect(SkinLibrary.instance.byId('again')?.folder, endsWith('again'));
+  });
+
   test('on a TV a skin without a focused look gets a ring in its accent', () {
     Skin parse() => Skin.parse(decodeJsonc(File('skins/paper/skin.jsonc').readAsStringSync()), folder: 'skins/paper', builtIn: true);
     Skin.formFactor = 'desktop';

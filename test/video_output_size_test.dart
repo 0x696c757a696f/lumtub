@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -91,20 +92,28 @@ void main() {
 
   test('sets nothing more once disposed, not even a size already waiting', () async {
     final applied = <(int?, int?)>[];
+    // The first size is held being set until after dispose, whatever the
+    // timers of a slow machine do.
+    final first = Completer<void>();
+    final started = Completer<void>();
     final size = VideoOutputSize((w, h) async {
-      await Future<void>.delayed(const Duration(milliseconds: 30));
+      if (!started.isCompleted) {
+        started.complete();
+        await first.future;
+      }
       applied.add((w, h));
     }, delay: const Duration(milliseconds: 1));
     final page = Object();
     size.video = const Size(1920, 1080);
     size.show(page, const Size(960, 540));
-    await Future<void>.delayed(const Duration(milliseconds: 10));
+    await started.future;
     size.show(page, const Size(1280, 720));
-    await Future<void>.delayed(const Duration(milliseconds: 5));
+    await Future<void>.delayed(const Duration(milliseconds: 20));
     size.dispose();
     size.hidden = true;
     await size.refresh();
-    await Future<void>.delayed(const Duration(milliseconds: 80));
+    first.complete();
+    await Future<void>.delayed(const Duration(milliseconds: 20));
     expect(applied, [(960, 540)]);
   });
 }

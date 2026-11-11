@@ -539,7 +539,10 @@ jobs:
     # runs on: the oldest Ubuntu LTS in standard support, as AppImageHub
     # tests on.
     runs-on: ${{ matrix.runner }}
-    container: ubuntu:22.04
+    container:
+      image: ubuntu:22.04
+      # The job network's own resolver has been seen failing; ask public ones too.
+      options: --dns 168.63.129.16 --dns 8.8.8.8 --dns 1.1.1.1
     env:
       PACKAGE_ARCH: ${{ matrix.package_arch }}
       DEBIAN_FRONTEND: noninteractive
@@ -548,8 +551,22 @@ jobs:
     steps:
       - name: Linux - install build tools
         run: |
-          apt-get update
-          apt-get install -y --no-install-recommends ca-certificates curl git unzip xz-utils zip file patchelf binutils \
+          # Ubuntu's archive is sometimes unreachable from the runners: retry,
+          # then switch to the Azure mirror the hosted runners use.
+          echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80retries
+          cat > /usr/local/bin/apt-install <<'SH'
+          #!/bin/sh
+          for attempt in 1 2 3; do
+            apt-get update && apt-get install -y --no-install-recommends "$@" && exit 0
+            if [ "$attempt" = 2 ] && grep -q 'archive.ubuntu.com' /etc/apt/sources.list; then
+              sed -i 's#http://\(archive\|security\).ubuntu.com#http://azure.archive.ubuntu.com#' /etc/apt/sources.list
+            fi
+            sleep 10
+          done
+          exit 1
+          SH
+          chmod +x /usr/local/bin/apt-install
+          apt-install ca-certificates curl git unzip xz-utils zip file patchelf binutils \
             clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libfontconfig-dev libssl-dev desktop-file-utils python3 \
             libepoxy-dev libasound2 libpulse0
 
@@ -697,7 +714,7 @@ jobs:
       - name: Linux - smoke test the AppImage
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
-          apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri libegl1 libgles2 ffmpeg imagemagick gdb
+          apt-install xvfb xauth libgl1-mesa-dri libegl1 libgles2 ffmpeg imagemagick gdb
           linux/packaging/smoke.sh Lumtub_*_linux-$PACKAGE_ARCH.AppImage "$RUNNER_TEMP/smoke"
 
       - name: Linux - README pictures
@@ -705,7 +722,7 @@ jobs:
         run: |
           message=$(git log -1 --format=%B HEAD^2 2> /dev/null || git log -1 --format=%B HEAD)
           if echo "$message" | grep -qF '[showcase]'; then
-            apt-get install -y --no-install-recommends xdotool fonts-noto-core fonts-noto-cjk bc
+            apt-install xdotool fonts-noto-core fonts-noto-cjk bc
             linux/packaging/showcase.sh Lumtub_*_linux-x64.AppImage "$RUNNER_TEMP/shots"
           fi
 

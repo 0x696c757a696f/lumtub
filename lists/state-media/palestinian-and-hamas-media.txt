@@ -1,0 +1,14 @@
+! id: palestinian-and-hamas-media
+! name: Palestinian official and Hamas media
+! name.zh-Hans: 巴勒斯坦官方和哈马斯媒体
+! category: state-media
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Palestinian_Broadcasting_Corporation
+
+:pbc-palestine | ^Palestine TV | ^Palestinian Broadcasting Corporation | ^تلفزيون فلسطين
+    reviewed: 2026-11-11
+:wafa | =WAFA | ^Palestine News and Info Agency
+    reviewed: 2026-11-11
+:al-aqsa-tv | ^Al-Aqsa TV | ^Al Aqsa TV | ^قناة الأقصى | ^Al-Aqsa Media
+    reviewed: 2026-11-11

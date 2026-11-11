@@ -1,0 +1,16 @@
+! id: indian-state-media
+! name: Indian state media
+! name.zh-Hans: 印度官方媒体
+! category: state-media
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Prasar_Bharati
+
+:doordarshan | ^Doordarshan | ^DD National | ^DD News | ^DD India | ^दूरदर्शन
+    reviewed: 2026-11-11
+:all-india-radio | ^All India Radio | ^आकाशवाणी | ^Akashvani
+    reviewed: 2026-11-11
+:prasar-bharati | ^Prasar Bharati | ^प्रसार भारती
+    reviewed: 2026-11-11
+:ani-news | =ANI | ^Asian News International
+    reviewed: 2026-11-11

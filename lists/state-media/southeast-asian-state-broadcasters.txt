@@ -1,0 +1,20 @@
+! id: southeast-asian-state-broadcasters
+! name: Thai, Indonesian, Malaysian and Bruneian state media
+! name.zh-Hans: 泰国、印尼、马来西亚和文莱官方媒体
+! category: state-media
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Media_of_Thailand
+
+:nbt-thailand | =NBT | ^NBT Connext | ^National Broadcasting Services of Thailand | ^TV5 HD
+    reviewed: 2026-11-11
+:mcot | ^MCOT | ^Modernine
+    reviewed: 2026-11-11
+:tvri | =TVRI | ^TVRI Nasional | ^TVRI World
+    reviewed: 2026-11-11
+:rri | =RRI | ^Radio Republik Indonesia | ^RRI Net
+    reviewed: 2026-11-11
+:rtm-malaysia | =RTM | ^Radio Televisyen Malaysia | ^RTM Berita | ^TV1 Malaysia | ^Bernama
+    reviewed: 2026-11-11
+:rtb-brunei | =RTB | ^Radio Television Brunei | ^RTB Brunei
+    reviewed: 2026-11-11

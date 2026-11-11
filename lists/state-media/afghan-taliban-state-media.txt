@@ -1,0 +1,14 @@
+! id: afghan-taliban-state-media
+! name: Afghan state media under the Taliban
+! name.zh-Hans: 塔利班控制的阿富汗官方媒体
+! category: state-media
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Radio_Television_Afghanistan
+
+:rta-afghanistan | ^RTA | ^Radio Television Afghanistan | ^رادیو تلویزیون ملی افغانستان
+    reviewed: 2026-11-11
+:bakhtar-news | ^Bakhtar | ^باختر
+    reviewed: 2026-11-11
+:al-emarah | ^Al Emarah | ^Al-Emarah | ^الامارة
+    reviewed: 2026-11-11

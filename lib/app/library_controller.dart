@@ -185,8 +185,9 @@ class LibraryController extends ChangeNotifier {
   int followAll(List<ChannelRef> channels) {
     var added = 0;
     var updated = false;
+    final index = {for (var i = 0; i < store.channels.length; i++) store.channels[i].id: i};
     for (final channel in channels) {
-      final at = store.channels.indexOf(channel);
+      final at = index[channel.id] ?? -1;
       if (at >= 0) {
         // Keep pictures and names current for channels already followed.
         final known = store.channels[at];
@@ -196,6 +197,7 @@ class LibraryController extends ChangeNotifier {
         }
         continue;
       }
+      index[channel.id] = store.channels.length;
       store.channels.add(channel);
       added++;
     }

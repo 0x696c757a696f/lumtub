@@ -953,6 +953,9 @@ class AppController extends ChangeNotifier with _ExploreState {
     tvSignIn?.cancel();
     webSignIn?.cancel();
     downloads?.dispose();
+    homeFeed?.dispose();
+    appUpdater?.dispose();
+    _aiFilter?.dispose();
     library?.dispose();
     channelVideos?.dispose();
     searchResults?.dispose();

@@ -63,6 +63,7 @@ class AiFilter extends ChangeNotifier {
   int _running = 0;
   Timer? _save;
   bool _loading = false;
+  bool _disposed = false;
 
   /// Goes up each time an answer hides a video.
   int version = 0;
@@ -82,7 +83,7 @@ class AiFilter extends ChangeNotifier {
     if (next == mode) return;
     mode = next;
     version++;
-    notifyListeners();
+    _notify();
     if (next == AiFilterMode.off) return;
     await _loadOnce();
     if (next == AiFilterMode.labeledAndList) await refreshList();
@@ -104,7 +105,7 @@ class AiFilter extends ChangeNotifier {
   }
 
   void _pump() {
-    while (_running < parallel && _queue.isNotEmpty) {
+    while (!_disposed && _running < parallel && _queue.isNotEmpty) {
       final id = _queue.removeLast();
       _running++;
       unawaited(_ask(id).whenComplete(() {
@@ -137,7 +138,7 @@ class AiFilter extends ChangeNotifier {
       if (ai && mode != AiFilterMode.off) {
         logDebug(() => 'YouTube labels $id as made with AI; hidden');
         version++;
-        notifyListeners();
+        _notify();
       }
     } catch (e) {
       logWarn('Could not ask whether $id is labeled as AI: $e');
@@ -185,11 +186,12 @@ class AiFilter extends ChangeNotifier {
         }
         return (labels, listed, fetched);
       });
+      if (_disposed) return;
       _labels = labels;
       _setListed(listed);
       _listFetched = fetched;
       version++;
-      notifyListeners();
+      _notify();
     } finally {
       _loading = false;
     }
@@ -209,6 +211,7 @@ class AiFilter extends ChangeNotifier {
     final listed = Map<String, List<String>>.of(_listed);
     var changed = false;
     for (final MapEntry(key: name, value: url) in lists.entries) {
+      if (_disposed) return;
       try {
         final response = await _client.get(Uri.parse(url)).timeout(const Duration(seconds: 30));
         if (response.statusCode != 200) throw StateError('HTTP ${response.statusCode}');
@@ -225,7 +228,7 @@ class AiFilter extends ChangeNotifier {
         logWarn('Could not download the AI channel list $name: $e');
       }
     }
-    if (!changed) return;
+    if (!changed || _disposed) return;
     _setListed(listed);
     _listFetched = DateTime.now();
     final path = channelsFile?.path;
@@ -237,7 +240,7 @@ class AiFilter extends ChangeNotifier {
       }).catchError((Object e) => logWarn('Could not save the AI channel lists: $e'));
     }
     version++;
-    notifyListeners();
+    _notify();
   }
 
   /// Channels on the downloaded list.
@@ -254,5 +257,24 @@ class AiFilter extends ChangeNotifier {
       file.parent.createSync(recursive: true);
       file.writeAsStringSync(jsonEncode(copy));
     }).catchError((Object e) => logWarn('Could not save AI labels: $e')));
+  }
+
+  void _notify() {
+    if (!_disposed) notifyListeners();
+  }
+
+  /// Stops asking, saves the labels still waiting for their timer and ends
+  /// notices; answers that arrive later are dropped.
+  @override
+  void dispose() {
+    if (_disposed) return;
+    final pending = _save;
+    if (pending != null) {
+      pending.cancel();
+      _write();
+    }
+    _disposed = true;
+    _queue.clear();
+    super.dispose();
   }
 }

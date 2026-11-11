@@ -3164,5 +3164,6 @@
   "Kyrgyz": "吉爾吉斯語",
   "Assamese": "阿薩姆語",
   "Odia": "奧里亞語",
-  "The new cache location can't be inside the current cache folders.": "新的快取位置不能放在目前的快取資料夾裡面。"
+  "The new cache location can't be inside the current cache folders.": "新的快取位置不能放在目前的快取資料夾裡面。",
+  "That file is too large to be a subscription export (over {0} MB)": "該檔案過大，不是訂閱匯出檔案（超過 {0} MB）"
 }

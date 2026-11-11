@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 /// The follow list read from an exported file.
 class SubscriptionImport {
@@ -19,6 +20,12 @@ enum SubscriptionFormat { newPipe, freeTube, youtubeJson, csv, opml }
 
 final _channelId = RegExp(r'^UC[\w-]{22}$');
 final _inUrl = RegExp(r'(?:/channel/|[?&]channel_id=)(UC[\w-]{22})');
+
+/// The largest file read as a subscription export; real ones are far smaller.
+const maxSubscriptionFileBytes = 20 << 20;
+
+/// [parseSubscriptions] off the UI thread, for files that can be large.
+Future<SubscriptionImport> parseSubscriptionsInBackground(List<int> bytes) => Isolate.run(() => parseSubscriptions(bytes));
 
 /// Reads a NewPipe, FreeTube or YouTube JSON export, a Google Takeout or
 /// FreeTube CSV, or an OPML file, deciding by the content. Never throws:

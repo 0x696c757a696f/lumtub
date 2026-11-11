@@ -262,6 +262,7 @@ extension LifecycleActions on AppController {
     await (watchTime?.save() ?? Future.value(), channelPlayback?.save() ?? Future.value()).wait;
     await library?.flush();
     await _history?.flush();
+    await downloads?.shutdown();
     await downloads?.flush();
     await _translationCache.save();
     await _flushAppearance();

@@ -884,7 +884,12 @@ class SkinMenuBar {
   static SkinMenuBar? parse(Object? value, Skin skin) {
     if (value is! Map<String, Object?> || value['enabled'] == false) return null;
     final chrome = skin.colors.chrome;
-    final surface = SkinSurface.parse(value['surface'], skin) ?? (chrome == null ? null : SkinSurface._(fill: [SolidPaint(chrome)]));
+    final colors = skin.colors;
+    // Left out, the bar takes the skin's own colours on each side, light
+    // and dark: its chrome or card colour with a line below; the menu that
+    // is open takes the theme's accent.
+    final surface = SkinSurface.parse(value['surface'], skin) ??
+        SkinSurface._(fill: [SolidPaint(Color.alphaBlend(chrome ?? colors.card ?? colors.page, colors.page))], border: colors.border, borderSides: const {'bottom'});
     final highlight = SkinSurface.parse(value['highlight'], skin);
     List<Color> on(SkinSurface? s) => s?.tones(skin.colors.page) ?? [skin.colors.page];
     final highlightText = skin.colorOf(value['highlightText'], 'menuBar.highlightText');

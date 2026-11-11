@@ -180,10 +180,12 @@ void main() {
       ));
       await tester.pump();
       for (final category in SettingsCategory.values) {
+        await tester.ensureVisible(find.text(category.title).first);
         await tester.tap(find.text(category.title).first);
         await tester.pump();
         expect(tester.takeException(), isNull, reason: category.title);
       }
+      await tester.ensureVisible(find.text(SettingsCategory.style.title).first);
       await tester.tap(find.text(SettingsCategory.style.title).first);
       await tester.pump();
       expect(find.text(tr('Language')), findsOneWidget);

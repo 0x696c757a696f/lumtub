@@ -10,6 +10,11 @@ import '../appearance_settings.dart';
 import '../downloads/download_models.dart';
 import '../native_core.dart';
 import 'common.dart';
+import '../models.dart';
+import '../timestamp_link.dart';
+import 'cast_ui.dart';
+import 'pages/settings_subpages.dart' show openLogs;
+import 'screenshot_action.dart';
 import 'pages/account_settings.dart';
 import 'pages/channel_page.dart';
 import 'pages/downloads_page.dart';
@@ -172,21 +177,28 @@ class _AppShellState extends State<AppShell> {
   }
 
   /// The menus of a skin's menu bar: what the window's buttons and
-  /// shortcuts already do, gathered under File, View, Play and Help.
+  /// shortcuts already do, gathered under File, View, Play, Tools and Help.
+  /// Play is there only while a video is open. The entries are plain
+  /// objects built with the bar, which is rebuilt only when the page, the
+  /// video or a setting changes, never with the playing position.
   List<SkinMenu> _menus({required bool appMenu}) {
     final c = _controller;
     final primary = Platform.isMacOS ? (LogicalKeyboardKey key, {bool shift = false}) => SingleActivator(key, meta: true, shift: shift) : (LogicalKeyboardKey key, {bool shift = false}) => SingleActivator(key, control: true, shift: shift);
-    final player = c.player;
     final appearance = c.appearance;
     void save(AppearanceSettings next) => unawaited(c.saveAppearance(next));
     final settings = SkinMenuEntry(tr('S&ettings'), () => openSettings(context, c), shortcut: primary(LogicalKeyboardKey.comma));
     final exit = SkinMenuEntry(tr('E&xit'), () => unawaited(WindowFrame.close()), shortcut: appMenu ? primary(LogicalKeyboardKey.keyQ) : null);
     final about = SkinMenuEntry(tr('&About Lumtub'), () => openSettings(context, c, category: SettingsCategory.about));
+    final playing = c.playing;
     return [
       if (appMenu) SkinMenu(appName, [about, const SkinMenuEntry.divider(), settings, const SkinMenuEntry.divider(), exit], bold: true),
       SkinMenu(tr('&File'), [
         SkinMenuEntry(tr('&Search or open a link…'), _focusSearch, shortcut: primary(LogicalKeyboardKey.keyK)),
+        const SkinMenuEntry.divider(),
         SkinMenuEntry(tr('&Downloads'), () => c.navigate(PageMode.downloads)),
+        SkinMenuEntry(tr('History'), () => c.navigate(PageMode.history)),
+        SkinMenuEntry(tr('Playlist'), () => c.navigate(PageMode.playlists)),
+        const SkinMenuEntry.divider(),
         SkinMenuEntry(tr('&Incognito mode'), () => c.setIncognito(!c.incognito), shortcut: primary(LogicalKeyboardKey.keyN, shift: true), checked: c.incognito),
         if (!appMenu) ...[
           const SkinMenuEntry.divider(),
@@ -203,26 +215,56 @@ class _AppShellState extends State<AppShell> {
         SkinMenuEntry(tr('&Compact mode'), () => save(appearance.copyWith(compact: !appearance.compact)), checked: appearance.compact),
         SkinMenuEntry(tr('&Status bar'), () => save(appearance.copyWith(showStatusBar: !appearance.showStatusBar)), checked: appearance.showStatusBar),
       ]),
-      SkinMenu(tr('&Play'), [
-        SkinMenuEntry(tr('&Play or pause'), player == null ? null : () => unawaited(player.playOrPause())),
-        SkinMenuEntry(tr('&Next video'), c.playing == null ? null : () => unawaited(c.playNext())),
-        SkinMenuEntry(tr('P&revious video'), c.playing == null ? null : () => unawaited(c.playPrevious())),
+      if (playing != null) SkinMenu(tr('&Play'), _playMenu(playing)),
+      SkinMenu(tr('Tools'), [
+        SkinMenuEntry(tr('Check for component updates'), c.checking ? null : () => unawaited(c.checkUpdates())),
+        SkinMenuEntry(tr('Clear cache'), () => openSettings(context, c, category: SettingsCategory.storage)),
+        SkinMenuEntry(tr('Error log'), () => unawaited(openLogs(context, c))),
         const SkinMenuEntry.divider(),
-        SkinMenuEntry(tr('&Mute'), player == null ? null : () => unawaited(c.toggleMute())),
-        SkinMenuEntry(tr('Picture in p&icture'), c.playing == null ? null : () => c.setPip(true)),
-        SkinMenuEntry(tr('&Audio only'), c.playing == null ? null : () => unawaited(c.toggleAudioOnly())),
-      ]),
-      SkinMenu(tr('&Help'), [
         SkinMenuEntry(tr('&Skins folder'), () {
           final folder = SkinLibrary.instance.folder;
           if (folder != null) unawaited(openInExplorer(folder.path));
         }),
+      ]),
+      SkinMenu(tr('&Help'), [
+        SkinMenuEntry(tr('Keyboard shortcuts'), () => unawaited(showShortcutHelp(context, c.preferences))),
         SkinMenuEntry(tr('How to &make a skin'), () => unawaited(openExternal('https://github.com/0x696c757a696f/lumtub/blob/main/skins/README.md'))),
+        SkinMenuEntry(tr('Report a bug or suggest an idea'), () => unawaited(openExternal('https://github.com/0x696c757a696f/lumtub/issues/new/choose'))),
         if (!appMenu) ...[
           const SkinMenuEntry.divider(),
           about,
         ],
       ]),
+    ];
+  }
+
+  /// What the player and the watch page offer for the video that is open.
+  List<SkinMenuEntry> _playMenu(VideoItem item) {
+    final c = _controller;
+    final player = c.player;
+    final library = c.library;
+    final danmaku = c.preferences.danmaku;
+    return [
+      SkinMenuEntry(tr('&Play or pause'), player == null ? null : () => unawaited(player.playOrPause())),
+      SkinMenuEntry(tr('P&revious video'), () => unawaited(c.playPrevious())),
+      SkinMenuEntry(tr('&Next video'), () => unawaited(c.playNext())),
+      const SkinMenuEntry.divider(),
+      SkinMenuEntry(tr('&Mute'), player == null ? null : () => unawaited(c.toggleMute())),
+      SkinMenuEntry(tr('&Audio only'), () => unawaited(c.toggleAudioOnly())),
+      SkinMenuEntry(tr('Picture in p&icture'), () => c.setPip(true)),
+      if (c.hasDanmaku) SkinMenuEntry(tr('Bullet chat'), () => unawaited(c.setDanmaku(danmaku.copyWith(enabled: !danmaku.enabled))), checked: danmaku.enabled),
+      SkinMenuEntry(tr('Screenshot'), player == null ? null : () => unawaited(captureScreenshot(context, c))),
+      const SkinMenuEntry.divider(),
+      SkinMenuEntry(tr('Copy link'), () => unawaited(copyText(context, item.url, tr('Link copied')))),
+      if (!item.isLive)
+        SkinMenuEntry(tr('Copy link at current time'), () {
+          final link = timestampLink(item.id, c.player?.state.position ?? Duration.zero);
+          unawaited(copyText(context, link ?? item.url, tr('Link copied')));
+        }),
+      if (library != null) SkinMenuEntry(tr('Watch later'), () => library.toggleWatchLater(item), checked: library.isWatchLater(item.id)),
+      if (c.downloads != null && (!item.isLive || c.downloads!.canRecord)) SkinMenuEntry(item.isLive ? tr('Record the live stream') : tr('Downloads'), () => unawaited(showDownloadChoice(context, c, item))),
+      SkinMenuEntry(tr('Cast'), () => unawaited(showCastDialog(context, c))),
+      if (c.playingChannel case final channel?) SkinMenuEntry(tr('View channel'), () => c.openChannel(channel)),
     ];
   }
 

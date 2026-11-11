@@ -190,6 +190,7 @@
         }
       }
     ],
+    "menuBar": {},
     "titleBar": {
       "height": 30,
       "surface": {

@@ -230,6 +230,7 @@
         "seed": 5
       }
     ],
+    "menuBar": {},
     "titleBar": {
       "height": 30,
       "surface": {

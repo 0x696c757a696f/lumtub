@@ -216,6 +216,7 @@
         "seed": 2
       }
     ],
+    "menuBar": {},
     "titleBar": {
       "height": 30,
       "surface": {

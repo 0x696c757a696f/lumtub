@@ -12,7 +12,8 @@ class WindowsVideoInfo {
   });
 
   static Future<WindowsVideoInfo> read() async {
-    if (!Platform.isWindows) return const WindowsVideoInfo();
+    // Tests run without asking PowerShell, whose process outlives them.
+    if (!Platform.isWindows || Platform.environment.containsKey('FLUTTER_TEST')) return const WindowsVideoInfo();
     final gpus = await _runLines('Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty Name');
     return WindowsVideoInfo(
       gpuNames: gpus,

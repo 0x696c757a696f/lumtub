@@ -161,7 +161,10 @@ pub fn video(tile: &Value) -> Option<Value> {
         if let Some(length) = texts.clone().find_map(|t| seconds(&t)) {
             entry.insert("duration".into(), length.into());
         } else {
-            entry.insert("lumtub_shape".into(), shape(tile, kind, texts.collect()).into());
+            entry.insert(
+                "lumtub_shape".into(),
+                shape(tile, kind, texts.collect()).into(),
+            );
         }
     }
     let url = if shorts {
@@ -197,7 +200,12 @@ fn shape(tile: &Value, kind: &str, texts: Vec<String>) -> String {
         .flatten()
         .map(|o| {
             let style = find(o, "style").and_then(Value::as_str).unwrap_or("");
-            format!("{}{}{}", keys(Some(o)), if style.is_empty() { "" } else { ":" }, style)
+            format!(
+                "{}{}{}",
+                keys(Some(o)),
+                if style.is_empty() { "" } else { ":" },
+                style
+            )
         })
         .collect();
     let select = tile.get("onSelectCommand");
@@ -508,7 +516,10 @@ mod tests {
         let bare = video(&tile("nolengthatt", json!([]))["tileRenderer"]).unwrap();
         assert!(bare.get("duration").is_none());
         let shape = bare["lumtub_shape"].as_str().unwrap();
-        assert!(shape.starts_with("TILE_CONTENT_TYPE_VIDEO style=TILE_STYLE_YTLR_DEFAULT"), "{shape}");
+        assert!(
+            shape.starts_with("TILE_CONTENT_TYPE_VIDEO style=TILE_STYLE_YTLR_DEFAULT"),
+            "{shape}"
+        );
         assert!(shape.contains("watch=[videoId]"), "{shape}");
         assert!(shape.contains("358K views"), "{shape}");
     }

@@ -29,7 +29,10 @@ class SkinLibrary extends ChangeNotifier {
   Directory? _folder;
   StreamSubscription<FileSystemEvent>? _watch;
   Timer? _debounce;
-  final _loadedFonts = <String>{};
+  /// Font files read this run, by family, path and version, and the name
+  /// each was loaded under.
+  final _loadedFonts = <String, String>{};
+  final _fontVersions = <String, int>{};
 
   /// Changes whenever the skins are read again, so themes built from them
   /// are rebuilt.
@@ -166,11 +169,21 @@ class SkinLibrary extends ChangeNotifier {
         skin.warn('font "$family" ($name) must be a file inside the skin folder');
         continue;
       }
-      // Flutter cannot unload a font, so each file is read once a run.
-      if (!_loadedFonts.add('$family\n$path')) continue;
+      // Flutter cannot unload a font, so each version of a file is read
+      // once a run; a changed one is loaded under a new name.
       try {
+        final stat = await File(path).stat();
+        final key = '$family\n$path\n${stat.modified.microsecondsSinceEpoch}\n${stat.size}';
+        final known = _loadedFonts[key];
+        if (known != null) {
+          skin.loadedFonts[family] = known;
+          continue;
+        }
+        final loaded = (_fontVersions[family] = (_fontVersions[family] ?? 0) + 1) == 1 ? family : '$family~${_fontVersions[family]}';
         final bytes = await File(path).readAsBytes();
-        await (FontLoader(family)..addFont(Future.value(ByteData.sublistView(bytes)))).load();
+        await (FontLoader(loaded)..addFont(Future.value(ByteData.sublistView(bytes)))).load();
+        _loadedFonts[key] = loaded;
+        skin.loadedFonts[family] = loaded;
       } catch (e) {
         skin.warn('font "$family" ($name) could not be read');
       }

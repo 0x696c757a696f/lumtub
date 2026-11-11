@@ -23,6 +23,26 @@ void main() {
     return jsonEncode({...json as Map<String, Object?>, 'id': id});
   }
 
+  test('a font file changed while Lumtub runs is loaded again under a new name', () async {
+    final skins = Directory('${temp.path}/skins');
+    final folder = Directory('${skins.path}/font-skin')..createSync(recursive: true);
+    final json = decodeJsonc(File('skins/paper/skin.jsonc').readAsStringSync()) as Map<String, Object?>;
+    File('${folder.path}/skin.jsonc').writeAsStringSync(jsonEncode({
+      ...json,
+      'id': 'font-skin',
+      'fonts': {'Skin Face': 'face.ttf'},
+      'text': {'font': 'Skin Face'},
+    }));
+    final face = File('${folder.path}/face.ttf')..writeAsBytesSync(File('assets/fonts/LumtubQuotes-Regular.ttf').readAsBytesSync());
+    await SkinLibrary.instance.load(folder: skins);
+    expect(SkinLibrary.instance.byId('font-skin')!.font, 'Skin Face');
+    await SkinLibrary.instance.reload();
+    expect(SkinLibrary.instance.byId('font-skin')!.font, 'Skin Face');
+    face.writeAsBytesSync(File('assets/fonts/NotoSansSC-Regular.ttf').readAsBytesSync());
+    await SkinLibrary.instance.reload();
+    expect(SkinLibrary.instance.byId('font-skin')!.font, 'Skin Face~2');
+  });
+
   test('a skin.jsonc on its own and a zip of a folder are both added', () async {
     final skins = Directory('${temp.path}/skins');
     await SkinLibrary.instance.load(folder: skins);

@@ -518,6 +518,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   int _startAttempts = 0;
   bool _recovering = false;
   bool _shutDown = false;
+  /// The start-up under way, so a retry joins it instead of running twice.
+  Future<void>? _initializing;
   late final _sponsorBlock = SponsorBlock(_http);
   late final _returnDislike = ReturnDislike(_http);
   /// Each channel's last speed and volume; see [ChannelPlayback].

@@ -21,13 +21,14 @@ class VideoOutputSize {
   (int?, int?)? _waiting;
 
   Future<void> _set(int? width, int? height) {
+    if (_disposed) return Future.value();
     _waiting = (width, height);
     return _setting ??= _setWaiting();
   }
 
   Future<void> _setWaiting() async {
     try {
-      while (_waiting != null) {
+      while (_waiting != null && !_disposed) {
         final size = _waiting!;
         _waiting = null;
         try {
@@ -73,7 +74,7 @@ class VideoOutputSize {
   /// small: it keeps playing, so it is there at once on return, at a
   /// fraction of the GPU work.
   set hidden(bool value) {
-    if (value == _hidden) return;
+    if (value == _hidden || _disposed) return;
     _hidden = value;
     _timer?.cancel();
     // Back to full size without the usual pause, so the first frames are sharp.
@@ -108,6 +109,7 @@ class VideoOutputSize {
   }
 
   void _schedule() {
+    if (_disposed) return;
     _timer?.cancel();
     _timer = Timer(delay, _update);
   }
@@ -143,5 +145,13 @@ class VideoOutputSize {
     unawaited(_set(next.$1, next.$2));
   }
 
-  void dispose() => _timer?.cancel();
+  bool _disposed = false;
+
+  /// Stops sizing: a size waiting is dropped, and none is set from now on,
+  /// as the player and its texture are going.
+  void dispose() {
+    _disposed = true;
+    _timer?.cancel();
+    _waiting = null;
+  }
 }

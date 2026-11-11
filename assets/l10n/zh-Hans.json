@@ -3201,5 +3201,7 @@
   "logo launcher dock taskbar tray icon": "图标 标志 启动器 程序坞 任务栏 托盘",
   "Could not find the channel {0}": "找不到频道 {0}",
   "The new cache location can't be inside the current cache folders.": "新的缓存位置不能放在当前缓存文件夹里面。",
-  "That file is too large to be a subscription export (over {0} MB)": "该文件过大，不是订阅导出文件（超过 {0} MB）"
+  "That file is too large to be a subscription export (over {0} MB)": "该文件过大，不是订阅导出文件（超过 {0} MB）",
+  "Cleared {0} of cache; yt-dlp's cache was kept while downloads are running.": "已清除 {0} 缓存；下载正在进行，yt-dlp 的缓存先保留。",
+  "YouTube isn't saying which language these videos are spoken in, so untranslated titles are used as well.": "YouTube 没有告诉这些视频说的是什么语言，所以也参考了未经翻译的原标题。"
 }

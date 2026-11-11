@@ -88,4 +88,23 @@ void main() {
     expect(applied, [(960, 540), (1600, 900)]);
     expect(errors, hasLength(1));
   });
+
+  test('sets nothing more once disposed, not even a size already waiting', () async {
+    final applied = <(int?, int?)>[];
+    final size = VideoOutputSize((w, h) async {
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      applied.add((w, h));
+    }, delay: const Duration(milliseconds: 1));
+    final page = Object();
+    size.video = const Size(1920, 1080);
+    size.show(page, const Size(960, 540));
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    size.show(page, const Size(1280, 720));
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+    size.dispose();
+    size.hidden = true;
+    await size.refresh();
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    expect(applied, [(960, 540)]);
+  });
 }

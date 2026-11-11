@@ -166,6 +166,10 @@ class DownloadManager extends ChangeNotifier {
   /// The picture and sound files a recording of [stem] writes.
   static List<String> recordFiles(String stem) => ['$stem.live-video.part', '$stem.live-audio.part'];
 
+  /// Lives recorded at once; each holds a connection and writes all the
+  /// time, so more wait their turn.
+  static const maxRecordings = 3;
+
   /// Recordings under way: the task's id and the recording's.
   final _recordings = <String, int>{};
   /// The running [_record] calls, so [shutdown] can wait for them.
@@ -409,14 +413,19 @@ class DownloadManager extends ChangeNotifier {
     if (_closing) return;
     for (final task in tasks.reversed.toList()) {
       if (task.status != DownloadStatus.queued || _active.contains(task.id)) continue;
-      // A recording runs as long as the live and takes no download's place.
+      // A recording runs as long as the live and takes no download's place;
+      // recordings have their own limit.
       final live = task.item.isLive;
       if (!live && _active.length - _recordings.length >= maxConcurrent) continue;
+      if (live && _recordTasks.length >= maxRecordings) continue;
       _active.add(task.id);
       task.status = DownloadStatus.downloading;
       if (live) {
         final id = task.id;
-        _recordTasks[id] = _record(task).whenComplete(() => _recordTasks.remove(id));
+        _recordTasks[id] = _record(task).whenComplete(() {
+          _recordTasks.remove(id);
+          _pump();
+        });
       } else {
         unawaited(_run(task));
       }

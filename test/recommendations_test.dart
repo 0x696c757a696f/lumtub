@@ -130,6 +130,57 @@ void main() {
       expect(feed.notInterested.videos, hasLength(1));
     });
 
+    test('repeated refreshes share the source limit and drop older waiting sources', () async {
+      final feed = HomeFeed(NotInterested(null));
+      var running = 0;
+      var most = 0;
+      var started = 0;
+      final gates = <Completer<void>>[];
+      Future<List<VideoItem>> slow() async {
+        started++;
+        running++;
+        most = running > most ? running : most;
+        final gate = Completer<void>();
+        gates.add(gate);
+        await gate.future;
+        running--;
+        return const [];
+      }
+
+      HomeFeedSources sources() => HomeFeedSources(
+            history: [for (var i = 0; i < 6; i++) video('h$i', title: 'topic $i', channelId: 'UC$i')],
+            related: (_) => slow(),
+            channelUploads: (_) => slow(),
+            search: (_) => slow(),
+          );
+      final rounds = [for (var i = 0; i < 4; i++) feed.refresh(sources())];
+      await Future<void>.delayed(Duration.zero);
+      expect(running, HomeFeed.maxConcurrentSources);
+      // Let everything finish, a few at a time.
+      while (gates.any((g) => !g.isCompleted)) {
+        for (final gate in gates.where((g) => !g.isCompleted).toList()) {
+          gate.complete();
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      await Future.wait(rounds);
+      expect(most, HomeFeed.maxConcurrentSources);
+      final allRounds = started;
+      started = 0;
+      final single = feed.refresh(sources());
+      while (!gates.every((g) => g.isCompleted) || started == 0) {
+        for (final gate in gates.where((g) => !g.isCompleted).toList()) {
+          gate.complete();
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      await single;
+      // The older rounds started only the sources that had a place before
+      // the last round began.
+      expect(allRounds, started + HomeFeed.maxConcurrentSources);
+      feed.dispose();
+    });
+
     test('starts from popular videos with no history', () async {
       final feed = HomeFeed(NotInterested(null));
       String? query;

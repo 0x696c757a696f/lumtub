@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:math';
 
+import 'app_log.dart';
 import 'live_chat.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
@@ -73,6 +75,12 @@ class LiveChatRepository {
     return _readReplay(file);
   }
 
+  /// The most read from the chat file at once.
+  static const _readBytes = 4 << 20;
+  /// A chat line is a few kilobytes; one longer than this is skipped.
+  static const _lineBytes = 16 << 20;
+  static const _errorChars = 256 << 10;
+
   // A replay of a long stream runs to hundreds of megabytes, nearly all
   // of it markup the messages leave out; it is read a few megabytes of
   // lines at a time, so only the messages are held whole.
@@ -116,8 +124,12 @@ class LiveChatRepository {
       environment: _environment,
     );
     lowerPriority(process.pid);
-    final errors = StringBuffer();
-    final errorSubscription = process.stderr.transform(utf8.decoder).listen(errors.write);
+    // Only the end of yt-dlp's errors is kept; it names what went wrong.
+    var errors = '';
+    final errorSubscription = process.stderr.transform(utf8.decoder).listen((text) {
+      errors += text;
+      if (errors.length > _errorChars) errors = errors.substring(errors.length - _errorChars);
+    });
     // Read and dropped: unread, yt-dlp's progress lines fill the pipe and
     // it stops fetching the chat.
     final outputSubscription = process.stdout.listen((_) {});
@@ -129,6 +141,8 @@ class LiveChatRepository {
     }));
     var offset = 0;
     var pending = <int>[];
+    // Set while a line longer than [_lineBytes] is being skipped.
+    var skipping = false;
     var yielded = false;
     try {
       while (running || pending.isNotEmpty) {
@@ -136,18 +150,37 @@ class LiveChatRepository {
           final length = await file.length();
           if (length > offset) {
             final reader = await file.open();
-            await reader.setPosition(offset);
-            pending.addAll(await reader.read(length - offset));
-            await reader.close();
-            offset = length;
-            final lastLine = pending.lastIndexOf(10);
-            if (lastLine >= 0) {
-              final lines = utf8.decode(pending.sublist(0, lastLine + 1), allowMalformed: true);
-              pending = pending.sublist(lastLine + 1);
-              for (final message in LiveChatMessage.parseLines(lines)) {
-                yielded = true;
-                yield message;
+            try {
+              await reader.setPosition(offset);
+              while (offset < length) {
+                final piece = await reader.read(min(length - offset, _readBytes));
+                if (piece.isEmpty) break;
+                offset += piece.length;
+                var start = 0;
+                if (skipping) {
+                  final end = piece.indexOf(10);
+                  if (end < 0) continue;
+                  skipping = false;
+                  start = end + 1;
+                }
+                pending.addAll(piece.sublist(start));
+                final lastLine = pending.lastIndexOf(10);
+                if (lastLine >= 0) {
+                  final lines = utf8.decode(pending.sublist(0, lastLine + 1), allowMalformed: true);
+                  pending = pending.sublist(lastLine + 1);
+                  for (final message in LiveChatMessage.parseLines(lines)) {
+                    yielded = true;
+                    yield message;
+                  }
+                }
+                if (pending.length > _lineBytes) {
+                  logWarn('Live chat: skipped a line over ${_lineBytes >> 20} MiB');
+                  pending = [];
+                  skipping = true;
+                }
               }
+            } finally {
+              await reader.close();
             }
           }
         }
@@ -164,7 +197,7 @@ class LiveChatRepository {
         await Future<void>.delayed(const Duration(milliseconds: 800));
       }
       if (!yielded && exitCode != 0) {
-        final error = errors.toString().trim();
+        final error = errors.trim();
         throw StateError(error.isEmpty ? 'yt-dlp exited with code $exitCode' : error);
       }
     } finally {

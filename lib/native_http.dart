@@ -192,6 +192,11 @@ class NativeHttpClient extends http.BaseClient {
     final stream = request.finalize();
     final bytes = direct ? null : await stream.toBytes();
     final owned = direct ? await _gather(native, stream, length) : null;
+    // Closed while the body was being read: nothing is started.
+    if (_closed) {
+      if (owned != null) native.bodyFree!(owned, length!);
+      throw http.ClientException('Client is closed', request.url);
+    }
     final headers = [
       for (final MapEntry(:key, :value) in request.headers.entries) [key, value],
     ];

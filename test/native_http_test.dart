@@ -98,6 +98,19 @@ void main() {
       client.close();
     });
 
+    test('a request whose body is still being read when the client closes never starts', () async {
+      for (final size in [100, 1 << 20]) {
+        final client = NativeHttpClient();
+        final request = http.StreamedRequest('POST', base.replace(path: '/count'))..contentLength = size;
+        final refused = expectLater(client.send(request), throwsA(isA<http.ClientException>()));
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        client.close();
+        request.sink.add(List.filled(size, 1));
+        unawaited(request.sink.close());
+        await refused;
+      }
+    }, skip: NativeHttp.available ? false : 'needs LUMTUB_CORE_DLL');
+
     test('closing the client stops its requests still running', () async {
       final client = NativeHttpClient();
       final response = await client.send(http.Request('GET', base.replace(path: '/big')));

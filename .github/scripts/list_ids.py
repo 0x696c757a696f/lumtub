@@ -41,6 +41,15 @@ def search(name):
             time.sleep(5 * (attempt + 1))
 
 
+def verified(channel):
+    """Whether the search result carries YouTube's verified (or official artist) badge."""
+    for badge in channel.get('ownerBadges', []):
+        style = badge.get('metadataBadgeRenderer', {}).get('style', '')
+        if 'VERIFIED' in style:
+            return True
+    return False
+
+
 def subscribers(channel):
     """Subscriber count of a search result channel, 0 when not shown."""
     for key in ('videoCountText', 'subscriberCountText'):
@@ -66,7 +75,7 @@ def channels(answer):
                 if not handle:
                     text = channel.get('subscriberCountText', {}).get('simpleText', '')
                     handle = text[1:] if text.startswith('@') else ''
-                found.append((channel['channelId'], title, handle, subscribers(channel)))
+                found.append((channel['channelId'], title, handle, subscribers(channel), verified(channel)))
             for value in node.values():
                 walk(value)
         elif isinstance(node, list):
@@ -122,8 +131,8 @@ def main():
                     answer = search(name)
                     cache[name] = channels(answer) if answer else None
                     time.sleep(0.7)
-                for channel_id, title, handle, subs in cache[name] or []:
-                    if title.casefold() == name.casefold():
+                for channel_id, title, handle, subs, badge in cache[name] or []:
+                    if badge and title.casefold() == name.casefold():
                         ids.setdefault(channel_id, (handle, subs))
             key = f'{list_id}/{slug}'
             if len(ids) > 1:

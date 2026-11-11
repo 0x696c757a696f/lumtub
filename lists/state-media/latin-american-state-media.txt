@@ -6,9 +6,9 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Media_of_Bolivia
 
-:bolivia-tv | ^Bolivia TV | ^Bolivia Tv
+:bolivia-tv | ^Bolivia TV
     reviewed: 2026-11-11
-:telesur | ^teleSUR | ^TeleSUR
+:telesur | ^teleSUR
     reviewed: 2026-11-11
 :rta-argentina | ^Radio y Televisión Argentina | ^Televisión Pública Argentina | ^TV Pública
     reviewed: 2026-11-11

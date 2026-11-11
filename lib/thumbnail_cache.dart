@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -75,7 +77,10 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
     try {
       if (await file.exists()) {
         final bytes = await file.readAsBytes();
-        if (bytes.isNotEmpty) return bytes;
+        if (bytes.isNotEmpty) {
+          _touch();
+          return bytes;
+        }
       }
     } on FileSystemException {
       // Downloaded again below.
@@ -84,24 +89,86 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
       throw HttpException('Thumbnail failed lately', uri: Uri.parse(url));
     }
     try {
-      late http.Response response;
-      for (final address in candidates(url)) {
-        response = await _client.get(Uri.parse(address)).timeout(const Duration(seconds: 10));
-        if (response.statusCode != 404) break;
+      var status = 0;
+      Uint8List? body;
+      await _slot();
+      try {
+        for (final address in candidates(url)) {
+          (status, body) = await fetch(_client, Uri.parse(address)).timeout(const Duration(seconds: 10));
+          if (status != 404) break;
+        }
+      } finally {
+        _free();
       }
-      if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
+      if (status != 200 || body == null || body.isEmpty) {
         _remember(const Duration(minutes: 10));
-        throw HttpException('Thumbnail HTTP ${response.statusCode}', uri: Uri.parse(url));
+        throw HttpException('Thumbnail HTTP $status', uri: Uri.parse(url));
       }
       _failed.remove(url);
-      await _store(response.bodyBytes);
-      return response.bodyBytes;
+      await _store(body);
+      return body;
     } on HttpException {
       rethrow;
     } catch (_) {
       _remember(const Duration(seconds: 30));
       rethrow;
     }
+  }
+
+  /// The largest thumbnail read; YouTube's biggest are well under 1 MiB.
+  static const maxBytes = 4 << 20;
+
+  /// Downloads at a time, so a fast scroll does not open dozens at once.
+  static const _parallel = 6;
+  static int _running = 0;
+  static final _waiting = <Completer<void>>[];
+
+  static Future<void> _slot() {
+    if (_running < _parallel) {
+      _running++;
+      return Future.value();
+    }
+    final turn = Completer<void>();
+    _waiting.add(turn);
+    return turn.future;
+  }
+
+  static void _free() {
+    if (_waiting.isNotEmpty) {
+      _waiting.removeAt(0).complete();
+    } else {
+      _running--;
+    }
+  }
+
+  /// [address]'s status and body; a body over [maxBytes] is cut off and
+  /// read as a failure.
+  @visibleForTesting
+  static Future<(int, Uint8List?)> fetch(http.Client client, Uri address) async {
+    final response = await client.send(http.Request('GET', address));
+    if (response.statusCode != 200 || (response.contentLength ?? 0) > maxBytes) {
+      unawaited(response.stream.listen(null).cancel());
+      return (response.statusCode == 200 ? 413 : response.statusCode, null);
+    }
+    final body = BytesBuilder(copy: false);
+    await for (final piece in response.stream) {
+      body.add(piece);
+      if (body.length > maxBytes) return (413, null);
+    }
+    return (200, body.takeBytes());
+  }
+
+  /// Marks the file as used, at most once a day, so trimming drops the
+  /// pictures not seen for longest rather than the oldest downloads.
+  void _touch() {
+    unawaited(() async {
+      try {
+        final now = DateTime.now();
+        if (now.difference(await file.lastModified()) > const Duration(days: 1)) await file.setLastModified(now);
+      } on FileSystemException {
+        // Only the order of trimming suffers.
+      }
+    }());
   }
 
   void _remember(Duration wait) {

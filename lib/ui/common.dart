@@ -89,7 +89,7 @@ class ErrorBanner extends StatelessWidget {
       child: Row(children: [
         Icon(AppIcons.warningCircle, color: colors.onErrorContainer, size: 20),
         const SizedBox(width: 12),
-        Expanded(child: SelectableText(message, maxLines: 8, style: TextStyle(color: colors.onErrorContainer))),
+        Expanded(child: SelectableText(message, minLines: 1, maxLines: 8, style: TextStyle(color: colors.onErrorContainer))),
         if (onRetry != null) TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('Retry'))),
       ]),
     );

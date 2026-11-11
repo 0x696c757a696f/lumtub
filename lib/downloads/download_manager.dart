@@ -166,8 +166,17 @@ class DownloadManager extends ChangeNotifier {
   /// The picture and sound files a recording of [stem] writes.
   static List<String> recordFiles(String stem) => ['$stem.live-video.part', '$stem.live-audio.part'];
 
+  /// Lives recorded at once; each holds a connection and writes all the
+  /// time, so more wait their turn.
+  static const maxRecordings = 3;
+
   /// Recordings under way: the task's id and the recording's.
   final _recordings = <String, int>{};
+  /// The running [_record] calls, so [shutdown] can wait for them.
+  final _recordTasks = <String, Future<void>>{};
+  /// Set once [shutdown] or [dispose] began: recordings are stopped and
+  /// their files kept as they are for the next start to join.
+  bool _closing = false;
 
   String _directory;
   DownloadDefaults _defaults = const DownloadDefaults();
@@ -239,6 +248,19 @@ class DownloadManager extends ChangeNotifier {
   }
 
   Future<void> _saving = Future.value();
+
+  /// Stops the live recordings, leaving their files for the next start to
+  /// join, and waits a few seconds for them to settle; call before [dispose].
+  Future<void> shutdown() async {
+    _closing = true;
+    final tasks = _recordTasks.values.toList();
+    if (tasks.isEmpty) return;
+    try {
+      await Future.wait(tasks).timeout(const Duration(seconds: 5));
+    } catch (e) {
+      logWarn('Recordings did not settle before exit: $e');
+    }
+  }
 
   /// Completes when every change so far is written, including one still
   /// waiting for its delay.
@@ -368,16 +390,45 @@ class DownloadManager extends ChangeNotifier {
     _pump();
   }
 
+  /// Whether a download or recording is running.
+  bool get working => _active.isNotEmpty;
+
+  int _held = 0;
+
+  /// Runs [step] with no new task starting meanwhile, as while the cache
+  /// they use is being cleared.
+  Future<T> holding<T>(Future<T> Function() step) async {
+    _held++;
+    try {
+      return await step();
+    } finally {
+      _held--;
+      _pump();
+    }
+  }
+
   /// Starts queued tasks while there are free places.
   void _pump() {
+    if (_held > 0) return;
+    if (_closing) return;
     for (final task in tasks.reversed.toList()) {
       if (task.status != DownloadStatus.queued || _active.contains(task.id)) continue;
-      // A recording runs as long as the live and takes no download's place.
+      // A recording runs as long as the live and takes no download's place;
+      // recordings have their own limit.
       final live = task.item.isLive;
       if (!live && _active.length - _recordings.length >= maxConcurrent) continue;
+      if (live && _recordTasks.length >= maxRecordings) continue;
       _active.add(task.id);
       task.status = DownloadStatus.downloading;
-      unawaited(live ? _record(task) : _run(task));
+      if (live) {
+        final id = task.id;
+        _recordTasks[id] = _record(task).whenComplete(() {
+          _recordTasks.remove(id);
+          _pump();
+        });
+      } else {
+        unawaited(_run(task));
+      }
     }
   }
 
@@ -458,8 +509,9 @@ class DownloadManager extends ChangeNotifier {
       if (recording != null) {
         var renewing = false;
         var last = (bytes: 0, at: DateTime.now());
-        while (!_stopping.contains(id)) {
+        while (!_stopping.contains(id) && !_closing) {
           await Future<void>.delayed(const Duration(seconds: 1));
+          if (_closing) break;
           final state = recorder.state(recording);
           final now = DateTime.now();
           final seconds = now.difference(last.at).inMilliseconds / 1000;
@@ -476,9 +528,12 @@ class DownloadManager extends ChangeNotifier {
             unawaited(recorder.renew(recording, id).catchError((Object e) => logWarn('Recording $id: no new address: $e')).whenComplete(() => renewing = false));
           }
         }
-        error = await recorder.stop(recording) ?? error;
-        _recordings.remove(id);
+        if (_recordings.remove(id) != null) error = await recorder.stop(recording) ?? error;
       }
+    }
+    if (_closing) {
+      _active.remove(id);
+      return;
     }
     final stopped = _stopping.remove(id);
     task.speed = null;
@@ -835,6 +890,12 @@ class DownloadManager extends ChangeNotifier {
 
   @override
   void dispose() {
+    _closing = true;
+    final recorder = this.recorder;
+    for (final recording in _recordings.values) {
+      if (recorder != null) unawaited(recorder.stop(recording).then<void>((_) {}, onError: (Object e) => logWarn('A recording did not stop: $e')));
+    }
+    _recordings.clear();
     for (final process in _processes.values) {
       process.kill();
     }

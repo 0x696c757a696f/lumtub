@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/home_feed.dart';
 import 'package:lumtub/library_store.dart' show WatchProgress;
 import 'package:lumtub/models.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/recommendations.dart';
 import 'package:lumtub/youtube_related.dart';
 
@@ -21,6 +22,18 @@ VideoItem video(String id, {String title = '', String channel = 'c', String? cha
 
 void main() {
   group('TasteProfile', () {
+    test('close frees at once, twice is harmless, and a closed profile knows nothing', () {
+      if (NativeCore.instance == null) return;
+      final taste = TasteProfile.from(history: [video('a', channelId: 'UCgood', title: 'good things')]);
+      expect(taste.channelAffinity(video('x', channelId: 'UCgood')), greaterThan(0));
+      expect(taste.isClosed, isFalse);
+      taste.close();
+      taste.close();
+      expect(taste.isClosed, isTrue);
+      expect(taste.channelAffinity(video('x', channelId: 'UCgood')), 0);
+      expect(taste.topChannels(3), isEmpty);
+    });
+
     test('weighs recent channels and shared title words', () {
       final taste = TasteProfile.from(history: [
         video('a', title: '原神 新角色 实机演示', channelId: 'UCgame'),
@@ -92,6 +105,35 @@ void main() {
     expect(loaded.channels, {'UCx': 1});
   });
 
+  group('NotInterested saves', () {
+    late Directory dir;
+    setUp(() => dir = Directory.systemTemp.createTempSync('lumtub_ni'));
+    tearDown(() => dir.deleteSync(recursive: true));
+
+    test('overlapping saves leave the latest state and no temporary file', () async {
+      final file = File('${dir.path}/not_interested.json');
+      final store = NotInterested(file);
+      await Future.wait([for (final id in ['a', 'b', 'c']) store.add(video(id, channelId: 'UC$id'))]);
+      final loaded = NotInterested(file);
+      await loaded.load();
+      expect(loaded.videos, {video('a').id, video('b').id, video('c').id});
+      expect(File('${file.path}.tmp').existsSync(), isFalse);
+    });
+
+    test('clear during a pending save leaves nothing', () async {
+      final file = File('${dir.path}/not_interested.json');
+      final store = NotInterested(file);
+      final pending = store.add(video('a', channelId: 'UCa'));
+      final cleared = store.clear();
+      await Future.wait([pending, cleared]);
+      final loaded = NotInterested(file);
+      await loaded.load();
+      expect(loaded.videos, isEmpty);
+      expect(loaded.channels, isEmpty);
+      expect(File('${file.path}.tmp').existsSync(), isFalse);
+    });
+  });
+
   group('HomeFeed', () {
     test('gathers from related videos, channels and topics', () async {
       final asked = <String>[];
@@ -128,6 +170,57 @@ void main() {
       expect(first, isNotEmpty);
       await feed.dismiss(feed.items.first);
       expect(feed.notInterested.videos, hasLength(1));
+    });
+
+    test('repeated refreshes share the source limit and drop older waiting sources', () async {
+      final feed = HomeFeed(NotInterested(null));
+      var running = 0;
+      var most = 0;
+      var started = 0;
+      final gates = <Completer<void>>[];
+      Future<List<VideoItem>> slow() async {
+        started++;
+        running++;
+        most = running > most ? running : most;
+        final gate = Completer<void>();
+        gates.add(gate);
+        await gate.future;
+        running--;
+        return const [];
+      }
+
+      HomeFeedSources sources() => HomeFeedSources(
+            history: [for (var i = 0; i < 6; i++) video('h$i', title: 'topic $i', channelId: 'UC$i')],
+            related: (_) => slow(),
+            channelUploads: (_) => slow(),
+            search: (_) => slow(),
+          );
+      final rounds = [for (var i = 0; i < 4; i++) feed.refresh(sources())];
+      await Future<void>.delayed(Duration.zero);
+      expect(running, HomeFeed.maxConcurrentSources);
+      // Let everything finish, a few at a time.
+      while (gates.any((g) => !g.isCompleted)) {
+        for (final gate in gates.where((g) => !g.isCompleted).toList()) {
+          gate.complete();
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      await Future.wait(rounds);
+      expect(most, HomeFeed.maxConcurrentSources);
+      final allRounds = started;
+      started = 0;
+      final single = feed.refresh(sources());
+      while (!gates.every((g) => g.isCompleted) || started == 0) {
+        for (final gate in gates.where((g) => !g.isCompleted).toList()) {
+          gate.complete();
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      await single;
+      // The older rounds started only the sources that had a place before
+      // the last round began.
+      expect(allRounds, started + HomeFeed.maxConcurrentSources);
+      feed.dispose();
     });
 
     test('starts from popular videos with no history', () async {

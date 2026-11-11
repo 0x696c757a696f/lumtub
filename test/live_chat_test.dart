@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/live_chat.dart';
+import 'package:lumtub/live_chat_repository.dart';
 
 void main() {
   String line(Map<String, Object?> renderer, {int? offset}) => jsonEncode({
@@ -90,5 +92,26 @@ void main() {
 
   test('ignores non-chat actions and unknown renderers', () {
     expect(LiveChatMessage.parseLines('{"actions": []}\n{"actions":[{"addChatItemAction":{"item":{"unknownRenderer":{"id":"x"}}}}]}'), isEmpty);
+  });
+
+  test('a replay file read a few lines at a time gives every message in order', () async {
+    final dir = await Directory.systemTemp.createTemp('lumtub_chat');
+    addTearDown(() => dir.delete(recursive: true));
+    final file = File('${dir.path}/replay.json');
+    final lines = [
+      for (var i = 0; i < 50; i++)
+        line({
+          'liveChatTextMessageRenderer': {
+            'id': 'm$i',
+            'message': {'runs': [{'text': 'hello $i'}]},
+            'authorName': {'simpleText': 'A'},
+          }
+        }, offset: i * 1000),
+    ];
+    file.writeAsStringSync('${lines.join('\n')}\n\n');
+    final whole = LiveChatMessage.parseLines(lines.join('\n'));
+    final chunked = await LiveChatRepository.readReplayFile(file, chunkChars: 300);
+    expect(whole, hasLength(50));
+    expect(chunked.map((m) => m.id), whole.map((m) => m.id));
   });
 }

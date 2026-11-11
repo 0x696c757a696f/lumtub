@@ -33,7 +33,6 @@ class WebSignInActivity : Activity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        forget()
         // One an earlier sign-in left when the app was closed under it.
         File(noBackupFilesDir, FILE).delete()
         val web = WebView(this)
@@ -71,7 +70,11 @@ class WebSignInActivity : Activity() {
             insets
         }
         setContentView(root)
-        web.loadUrl(SIGN_IN)
+        // Cookies are removed in the background; the page opens only once
+        // an earlier account's are gone.
+        forget {
+            if (!isDestroyed && this.web === web) web.loadUrl(SIGN_IN)
+        }
     }
 
     /** Takes the cookies once YouTube shows the account signed in. */
@@ -109,11 +112,14 @@ class WebSignInActivity : Activity() {
         super.onDestroy()
     }
 
-    /** Deletes every cookie and bit of storage a sign-in page left. */
-    private fun forget() {
-        CookieManager.getInstance().removeAllCookies(null)
-        CookieManager.getInstance().flush()
+    /** Deletes every cookie and bit of storage a sign-in page left, then runs [then]. */
+    private fun forget(then: (() -> Unit)? = null) {
         WebStorage.getInstance().deleteAllData()
+        val cookies = CookieManager.getInstance()
+        cookies.removeAllCookies {
+            cookies.flush()
+            then?.invoke()
+        }
     }
 
     companion object {

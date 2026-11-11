@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'app_directories.dart';
 import 'models.dart';
 import 'app_log.dart';
 
@@ -17,6 +18,10 @@ class ChannelPlayback {
   // Insertion order is age order: the channel used longest ago goes first.
   final _entries = <String, ({double? rate, int? volume})>{};
   Timer? _save;
+  bool _dirty = false;
+  /// Counts changes, so a save only clears [_dirty] when nothing changed while it wrote.
+  int _revision = 0;
+  final _writes = WriteQueue();
 
   /// The key of [item]'s channel: its id, or its name when it has none.
   static String? keyOf(VideoItem item) {
@@ -54,30 +59,40 @@ class ChannelPlayback {
     while (_entries.length > _most) {
       _entries.remove(_entries.keys.first);
     }
+    _dirty = true;
+    _revision++;
     _save?.cancel();
     _save = Timer(const Duration(seconds: 2), () => unawaited(save()));
   }
 
   void clear() {
     _entries.clear();
-    _save?.cancel();
+    _dirty = true;
+    _revision++;
     unawaited(save());
   }
 
   int get length => _entries.length;
 
-  Future<void> save() async {
+  /// Writes in order; the JSON is built when the write runs, and a failed
+  /// write stays pending for the next save.
+  Future<void> save() {
     _save?.cancel();
-    try {
-      await file.parent.create(recursive: true);
-      final temp = File('${file.path}.tmp');
-      await temp.writeAsString(jsonEncode({
-        for (final MapEntry(:key, :value) in _entries.entries)
-          key: {if (value.rate != null) 'rate': value.rate, if (value.volume != null) 'volume': value.volume},
-      }), flush: true);
-      await temp.rename(file.path);
-    } catch (e) {
-      logWarn('Could not save the per-channel playback settings: $e');
-    }
+    _save = null;
+    return _writes.run(() async {
+      if (!_dirty) return;
+      final written = _revision;
+      try {
+        await writeFileAtomic(
+            file,
+            jsonEncode({
+              for (final MapEntry(:key, :value) in _entries.entries)
+                key: {if (value.rate != null) 'rate': value.rate, if (value.volume != null) 'volume': value.volume},
+            }));
+        if (written == _revision) _dirty = false;
+      } catch (e) {
+        logWarn('Could not save the per-channel playback settings: $e');
+      }
+    });
   }
 }

@@ -19,6 +19,9 @@ use zeroize::Zeroize;
 
 use crate::web_account::Jar;
 
+/// The largest DevTools message read; cookie lists are far smaller.
+const MESSAGE_LIMIT: u64 = 64 << 20;
+
 /// Where the browser lands: Google's sign-in, going on to YouTube's.
 pub const SIGN_IN_URL: &str = "https://accounts.google.com/ServiceLogin?service=youtube&passive=true&continue=https%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26app%3Ddesktop%26next%3Dhttps%253A%252F%252Fwww.youtube.com%252F";
 
@@ -333,7 +336,10 @@ impl Socket {
                 self.stream.read_exact(&mut bytes)?;
                 length = u64::from_be_bytes(bytes);
             }
-            if length > 64 << 20 {
+            // A message may come in many frames; the whole is held to the
+            // same limit as one.
+            if length > MESSAGE_LIMIT || message.len() as u64 + length > MESSAGE_LIMIT {
+                message.zeroize();
                 return Err(std::io::Error::other("the browser sent too much"));
             }
             let mut payload = vec![0u8; length as usize];

@@ -92,4 +92,11 @@ void main() {
     expect(library.channels, hasLength(2));
     await library.flush();
   });
+
+  test('parsing in the background gives the same answer, and the size limit is sane', () async {
+    final text = 'Channel Id,Channel Url,Channel Title\n$a,u,A\n$b,u,B\n';
+    final data = await parseSubscriptionsInBackground(utf8.encode(text));
+    expect(data.channels.map((ch) => ch.$1), [a, b]);
+    expect(maxSubscriptionFileBytes, 20 << 20);
+  });
 }

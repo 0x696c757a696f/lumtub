@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'app_directories.dart';
 import 'l10n/l10n.dart';
 import 'app_log.dart';
 
@@ -18,32 +19,53 @@ class SearchHistory {
     if (cached != null) return cached;
     try {
       final data = jsonDecode(await file.readAsString());
-      return _items = [if (data is List) for (final item in data) if (item is String && item.trim().isNotEmpty) item];
+      return _items ??= [if (data is List) for (final item in data) if (item is String && item.trim().isNotEmpty) item];
     } catch (_) {
-      return _items = [];
+      return _items ??= [];
     }
   }
+
+  final _writes = WriteQueue();
 
   Future<void> add(String query) async {
     final text = query.trim();
     if (text.isEmpty) return;
-    final list = [text, ...(await items()).where((q) => q != text)].take(limit).toList();
-    await _save(list);
+    final epoch = _cleared;
+    await items();
+    if (epoch != _cleared) return;
+    await _save([text, ...(_items ?? const []).where((q) => q != text)].take(limit).toList());
   }
 
-  Future<void> remove(String query) async => _save((await items()).where((q) => q != query).toList());
+  Future<void> remove(String query) async {
+    final epoch = _cleared;
+    await items();
+    if (epoch != _cleared) return;
+    await _save((_items ?? const []).where((q) => q != query).toList());
+  }
 
-  Future<void> clear() => _save(const []);
+  /// Counts clears, so an add or remove that was waiting for the file does not bring old entries back.
+  int _cleared = 0;
 
-  Future<void> _save(List<String> list) async {
+  Future<void> clear() {
+    _cleared++;
+    _items = [];
+    return _persist();
+  }
+
+  /// Updates memory at once, then writes in order.
+  Future<void> _save(List<String> list) {
     _items = list;
-    try {
-      await file.parent.create(recursive: true);
-      await file.writeAsString(jsonEncode(list));
-    } catch (e) {
-      logWarn('Could not save the search suggestions: $e');
-    }
+    return _persist();
   }
+
+  Future<void> _persist() => _writes.run(() async {
+        try {
+          await file.parent.create(recursive: true);
+          await file.writeAsString(jsonEncode(_items ?? const []), flush: true);
+        } catch (e) {
+          logWarn('Could not save the search suggestions: $e');
+        }
+      });
 }
 
 /// YouTube's search suggestions for what has been typed so far, from the

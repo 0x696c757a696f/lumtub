@@ -6,7 +6,16 @@ extension LifecycleActions on AppController {
   /// [shutdown] (Android in the background).
   Future<void> flushHistory() => _history?.flush() ?? Future.value();
 
-  Future<void> initialize() async {
+  /// Starts Lumtub up: once at a time, and not again once it is ready.
+  Future<void> initialize() {
+    if (ready || _disposed) return Future.value();
+    return _initializing ??= _initializeOnce().whenComplete(() => _initializing = null);
+  }
+
+  Future<void> _initializeOnce() async {
+    // Made by this attempt and not yet handed over; released if it fails.
+    Player? madePlayer;
+    StreamRelay? madeRelay;
     try {
       final directories = await AppDirectories.create();
       // yt-dlp, including the one libmpv starts, writes some temporary
@@ -35,6 +44,8 @@ extension LifecycleActions on AppController {
       this.channelPlayback = channelPlayback;
       this.watchTime = watchTime;
       speechStore = SpeechSubtitleStore(Directory('${directories.data.path}${Platform.pathSeparator}speech'));
+      // An earlier attempt that failed may have left one.
+      homeFeed?.dispose();
       homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(_passOn('home feed'));
       this.settings = settings;
       final cacheManager = CacheManager(directories);
@@ -48,7 +59,7 @@ extension LifecycleActions on AppController {
       final paths = await manager.ensureReady();
       addToPath(paths.executableDirectories);
       MediaKit.ensureInitialized(libmpv: paths.mpv.isEmpty ? null : paths.mpv);
-      final player = Player(configuration: PlayerConfiguration(
+      final player = madePlayer = Player(configuration: PlayerConfiguration(
         bufferSize: settings.cacheMemoryMb * 1024 * 1024,
         // With libass, libmpv draws the subtitles and the Flutter subtitle
         // view is turned off on the watch page. It is off by default: the
@@ -80,7 +91,8 @@ extension LifecycleActions on AppController {
       }
       _lightRendering = null;
       await _applyProxy(player);
-      _relay = await _startRelay();
+      unawaited(_relay?.close());
+      _relay = madeRelay = await _startRelay();
       _piped.catalogFile = File('${directories.config.path}${Platform.pathSeparator}piped_servers.json');
       // Measures the Piped servers while the app starts, not on the first click.
       _invidious.catalogFile = File('${directories.config.path}${Platform.pathSeparator}invidious_servers.json');
@@ -95,6 +107,8 @@ extension LifecycleActions on AppController {
       // yt-dlp and Deno are on PATH before libmpv starts, so ytdl_hook can find them.
       if (_disposed) {
         await player.dispose();
+        await madeRelay?.close();
+        _relay = null;
         return;
       }
       _update(() {
@@ -144,7 +158,11 @@ extension LifecycleActions on AppController {
         tv.load();
         _tvWasSignedIn = tv.signedIn;
         this.player = player;
-        _outputSize = VideoOutputSize((width, height) async => videoController?.setSize(width: width, height: height));
+        madePlayer = null;
+        madeRelay = null;
+        // Android draws into a surface of its own size; media_kit has no
+        // output size there.
+        _outputSize = Platform.isAndroid ? null : VideoOutputSize((width, height) async => videoController?.setSize(width: width, height: height), onError: (e) => logWarn('Could not size the video output: $e'));
         _listenTo(player);
         _dropTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkDrops());
         _thumbnailTrimTimer?.cancel();
@@ -181,6 +199,18 @@ extension LifecycleActions on AppController {
       airPlayPairings.file = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}airplay-pairings.bin'), SecretProtector.forThisSystem());
       logInfo('Components ready · libmpv ${manager.libmpv.current?.label ?? 'bundled'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
     } catch (e) {
+      // What this attempt made goes, so a retry starts clean.
+      if (madePlayer case final made?) {
+        try {
+          await made.dispose();
+        } catch (error) {
+          logWarn('Could not release the player of a failed start: $error');
+        }
+      }
+      if (madeRelay case final made?) {
+        if (identical(_relay, made)) _relay = null;
+        unawaited(made.close());
+      }
       _update(() {
         error = e.toString();
         status = tr('Initialization failed');
@@ -241,6 +271,7 @@ extension LifecycleActions on AppController {
   }
 
   void retryInitialize() {
+    if (_initializing != null) return;
     _update(() {
       error = null;
       status = tr('Reinstall components…');
@@ -260,6 +291,7 @@ extension LifecycleActions on AppController {
     await (watchTime?.save() ?? Future.value(), channelPlayback?.save() ?? Future.value()).wait;
     await library?.flush();
     await _history?.flush();
+    await downloads?.shutdown();
     await downloads?.flush();
     await _translationCache.save();
     await _flushAppearance();

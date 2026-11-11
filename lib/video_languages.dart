@@ -282,7 +282,8 @@ class VideoLanguages {
   /// With [heardOnly], a video passes when its audio or automatic captions
   /// say so. Only when YouTube hardly ever tells does a title judge, and
   /// then only one that is the same asked in English and in [language], so
-  /// never a translation. After [giveUpAfter] videos with none kept, it stops;
+  /// never a translation, and [judgingByTitle] hears it, so the person can
+  /// be told. After [giveUpAfter] videos with none kept, it stops;
   /// [done] hears how many were asked about and kept.
   Stream<String> only(
     Stream<String> lines,
@@ -290,6 +291,7 @@ class VideoLanguages {
     bool heardOnly = false,
     int giveUpAfter = giveUpAfterDefault,
     void Function(int asked, int kept)? done,
+    void Function()? judgingByTitle,
   }) async* {
     final pending = <_Pending>[];
     var asked = 0, kept = 0, untold = 0, heard = 0, unasked = 0;
@@ -312,6 +314,7 @@ class VideoLanguages {
       final answered = asked - pending.length;
       if (!strict || answered < after || heard * 10 >= answered) return;
       strict = false;
+      judgingByTitle?.call();
       logInfo('Language ${language.name}: YouTube told $heard of $answered videos by captions or audio; judging by title too');
       kept += held.length;
       yield* held;

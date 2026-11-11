@@ -198,6 +198,21 @@ void main() {
       expect(m.taskFor('ccccccccccc')!.status, DownloadStatus.downloading);
     });
 
+    test('no download starts while the cache is being cleared', () async {
+      final m = manager();
+      final release = Completer<void>();
+      final clearing = m.holding(() => release.future);
+      m.add(video('aaaaaaaaaaa'), DownloadQuality.best);
+      await settle();
+      expect(processes, isEmpty);
+      expect(m.working, isFalse);
+      release.complete();
+      await clearing;
+      await until(() => processes.isNotEmpty);
+      expect(processes, hasLength(1));
+      expect(m.working, isTrue);
+    });
+
     test('shows progress and finishes with the printed file, a sidecar and segments', () async {
       final m = manager(segments: const [SkipSegment(Duration(seconds: 5), Duration(seconds: 12), 'sponsor')]);
       m.add(video('aaaaaaaaaaa'), DownloadQuality.p720);
@@ -431,6 +446,40 @@ void main() {
       expect(task.item.isLive, isFalse);
       expect(File('$stem.live-video.part').existsSync(), isFalse);
       expect(LocalVideo.read(File('$stem.mp4')).info['was_live'], isTrue);
+    });
+
+    test('shutdown stops a recording and keeps its files unjoined', () async {
+      final recorder = FakeRecorder();
+      var joined = false;
+      final m = manager(recorder: recorder, join: (r) async {
+        joined = true;
+        return (path: null, error: 'unexpected', cut: const <(Duration, Duration)>[]);
+      });
+      m.add(video('lllllllllll').withLiveStatus('is_live'), DownloadQuality.best);
+      final task = m.taskFor('lllllllllll')!;
+      await until(() => task.downloaded > 0);
+      final stem = recorder.stems.single;
+      await m.shutdown();
+      expect(recorder.stopped, [1]);
+      expect(joined, isFalse);
+      expect(task.status, DownloadStatus.downloading);
+      for (final f in DownloadManager.recordFiles(stem)) {
+        expect(File(f).existsSync(), isTrue);
+      }
+      m.dispose();
+      await Future<void>.delayed(const Duration(milliseconds: 1200));
+      expect(recorder.stopped, [1]);
+    });
+
+    test('disposing stops a recording once and the polling writes nothing afterwards', () async {
+      final recorder = FakeRecorder();
+      final m = manager(recorder: recorder, join: (r) async => (path: null, error: 'unexpected', cut: const <(Duration, Duration)>[]));
+      m.add(video('lllllllllll').withLiveStatus('is_live'), DownloadQuality.best);
+      final task = m.taskFor('lllllllllll')!;
+      await until(() => task.downloaded > 0);
+      m.dispose();
+      await Future<void>.delayed(const Duration(milliseconds: 1300));
+      expect(recorder.stopped, [1]);
     });
 
     test('a recording left by a closed Lumtub is joined, not recorded again', () async {

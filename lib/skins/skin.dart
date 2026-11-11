@@ -57,13 +57,24 @@ class Skin {
   /// Font families to load from files in the skin's folder.
   late final Map<String, String> fontFiles = _strings(_raw['fonts']);
 
+  /// The names [fontFiles] were loaded under: a font file changed while
+  /// Lumtub runs is loaded again under a new name, as Flutter keeps the
+  /// first one it read for a name.
+  final loadedFonts = <String, String>{};
+
+  /// What [family] is drawn with: the name its file was loaded under.
+  String? fontName(String? family) => family == null ? null : loadedFonts[family] ?? family;
+
   late final Map<String, Object?> _text = _map(_raw['text']);
   /// The face for all text, or null to keep the one chosen in Settings.
-  late final String? font = _str(_text['font']);
+  late final String? _font = _str(_text['font']);
+  String? get font => fontName(_font);
   /// The face for headings and the app name.
-  late final String? displayFont = _str(_text['displayFont']);
+  late final String? _displayFont = _str(_text['displayFont']);
+  String? get displayFont => fontName(_displayFont);
   /// The face for numbers: times, durations, the status bar.
-  late final String? monoFont = _str(_text['monoFont']);
+  late final String? _monoFont = _str(_text['monoFont']);
+  String? get monoFont => fontName(_monoFont);
 
   late final SkinColors colors = SkinColors._(_map(_raw['colors']), this);
   late final SkinShape shape = SkinShape._(_map(_raw['shape']));
@@ -912,7 +923,8 @@ class SkinMenuBar {
 class SkinLogo {
   SkinLogo._(Map<String, Object?> m, Skin skin)
       : text = _str(m['text']),
-        font = _str(m['font']),
+        _font = _str(m['font']),
+        _skin = skin,
         size = _num(m['size']),
         fill = SkinPaint.listOf(m['fill'], skin),
         stroke = skin.colorOf(m['stroke'], 'logo.stroke'),
@@ -923,7 +935,9 @@ class SkinLogo {
 
   /// What is written next to the badge; null for the app's name.
   final String? text;
-  final String? font;
+  final String? _font;
+  final Skin _skin;
+  String? get font => _skin.fontName(_font);
   final double? size;
   /// Paint for the letters: a colour or a gradient.
   final List<SkinPaint> fill;

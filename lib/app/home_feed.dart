@@ -98,6 +98,17 @@ class HomeFeed extends ChangeNotifier {
   List<VideoItem> Function(List<VideoItem>)? _filter;
   int _seed = 0;
   int _generation = 0;
+
+  /// Sources being read, across refreshes: searches each start a yt-dlp
+  /// process, and a dozen at once peg the CPU. A refresh begun while an
+  /// older one still waits for its turn drops the older one's waiting
+  /// sources.
+  int _running = 0;
+  final _waiting = <Completer<void>>[];
+
+  void _wakeNext() {
+    if (_waiting.isNotEmpty && _running < maxConcurrentSources) _waiting.removeAt(0).complete();
+  }
   bool _disposed = false;
 
   /// Whether this launch gathered the feed, rather than only restoring
@@ -160,16 +171,20 @@ class HomeFeed extends ChangeNotifier {
     var failures = 0;
     var answered = 0;
     final enough = Completer<void>();
-    // Searches each start a yt-dlp process; a dozen at once pegs the CPU.
-    var running = 0;
-    final waiting = <Completer<void>>[];
     Future<void> gather(FeedLane lane, Future<List<VideoItem>> Function() load, RecommendSource source, double weight, int limit, String Function(VideoItem item) reason) async {
-      while (running >= maxConcurrentSources) {
+      while (_running >= maxConcurrentSources) {
         final turn = Completer<void>();
-        waiting.add(turn);
+        _waiting.add(turn);
         await turn.future;
       }
-      running++;
+      // A newer refresh began while this waited: it is not started at all.
+      if (generation != _generation || _disposed) {
+        answered++;
+        if (answered >= firstPageSources && !enough.isCompleted) enough.complete();
+        _wakeNext();
+        return;
+      }
+      _running++;
       try {
         final found = await load();
         candidates[lane]!.addAll(found.take(limit).map((item) => Candidate(item, source, seedWeight: weight, reason: reason(item))));
@@ -177,10 +192,10 @@ class HomeFeed extends ChangeNotifier {
         failures++;
         logWarn('Recommendation source failed: $e');
       } finally {
-        running--;
+        _running--;
         answered++;
         if (answered >= firstPageSources && !enough.isCompleted) enough.complete();
-        if (waiting.isNotEmpty) waiting.removeAt(0).complete();
+        _wakeNext();
       }
     }
 
@@ -357,6 +372,8 @@ class HomeFeed extends ChangeNotifier {
 
   void _learnTastes(HomeFeedSources sources) {
     final followed = {for (final c in sources.followed) c.id};
+    _longTaste?.close();
+    _recentTaste?.close();
     _longTaste = TasteProfile.from(
       history: sources.history.take(_tasteHistory).toList(),
       progressOf: sources.progressOf,
@@ -431,6 +448,13 @@ class HomeFeed extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _longTaste?.close();
+    _recentTaste?.close();
+    // The waiting sources see the feed is gone and end without starting.
+    for (final turn in _waiting) {
+      turn.complete();
+    }
+    _waiting.clear();
     super.dispose();
   }
 }

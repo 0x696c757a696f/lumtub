@@ -34,7 +34,7 @@ class SpeechRecognizer {
       ..fields['model'] = model
       ..fields['response_format'] = 'verbose_json'
       ..fields['timestamp_granularities[]'] = 'segment'
-      ..files.add(http.MultipartFile.fromBytes('file', await audio.readAsBytes(), filename: audio.uri.pathSegments.last));
+      ..files.add(await http.MultipartFile.fromPath('file', audio.path, filename: audio.uri.pathSegments.last));
     if (language != null && language.isNotEmpty) request.fields['language'] = language;
     if (key.isNotEmpty) request.headers['Authorization'] = 'Bearer $key';
     final http.Response response;

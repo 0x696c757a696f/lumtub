@@ -74,4 +74,17 @@ void main() {
     expect(verifyUpdate(file: file.path, name: 'Lumtub_0.2.4-abcdef0_windows-x64-setup.exe', signature: sig.path), "The update's signature does not match");
     expect(verifyUpdate(file: file.path, name: 'x', signature: '${folder.path}/missing.sig'), startsWith('Could not read the signature'));
   }, skip: skip);
+
+  test('a check finishing after dispose notifies nobody', () async {
+    final client = MockClient((request) async {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      return http.Response(jsonEncode(release('v9.9.9-1234567', built)), 200);
+    });
+    final folder = Directory.systemTemp.createTempSync('updater');
+    addTearDown(() => folder.deleteSync(recursive: true));
+    final updater = AppUpdater(client: client, directory: folder, download: (asset, into, onProgress) async => throw UnimplementedError());
+    final check = updater.check();
+    updater.dispose();
+    await check;
+  });
 }

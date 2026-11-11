@@ -121,6 +121,23 @@ pub(crate) fn count(text: &str) -> Option<u64> {
     Some((number * factor).round() as u64)
 }
 
+/// A number standing alone, as "2.9万", "25亿" or "1.2K": a view count
+/// written without the word for views.
+pub(crate) fn bare_count(text: &str) -> Option<u64> {
+    let text = text.trim();
+    let digits = text.trim_end_matches(['万', '萬', '亿', '億', 'K', 'M', 'B', 'k']);
+    if digits.is_empty()
+        || text.chars().count() - digits.chars().count() > 1
+        || !digits.starts_with(|c: char| c.is_ascii_digit())
+        || !digits
+            .chars()
+            .all(|c| c.is_ascii_digit() || c == '.' || c == ',')
+    {
+        return None;
+    }
+    count(&format!("{text} views"))
+}
+
 /// A video as Dart's VideoItem takes it.
 #[derive(Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -222,14 +239,16 @@ fn lockup(value: &Value) -> Option<Video> {
     parts.retain(|part| !part.is_empty());
     // The first row names the channel; the next holds views and age.
     let channel = parts.first().cloned().unwrap_or_default();
-    let view_count = parts.iter().skip(1).find_map(|part| count(part));
+    // YouTube may write the views as a bare number ("2.9万") here.
+    let views = |part: &String| count(part).or_else(|| bare_count(part));
+    let view_count = parts.iter().skip(1).find_map(views);
     // After the views comes the age, which holds no count of its own.
     let age = parts
         .iter()
         .skip(1)
-        .skip_while(|part| count(part).is_none())
+        .skip_while(|part| views(part).is_none())
         .skip(1)
-        .find(|part| count(part).is_none())
+        .find(|part| views(part).is_none())
         .cloned();
     let mut badges = Vec::new();
     fn badges_in(node: &Value, out: &mut Vec<String>) {
@@ -1115,6 +1134,31 @@ mod tests {
         assert_eq!(count("1.2M views"), Some(1_200_000));
         assert_eq!(count("7k Views"), Some(7000));
         assert_eq!(count("3 years ago"), None);
+        assert_eq!(bare_count("2.9万"), Some(29_000));
+        assert_eq!(bare_count("25亿"), Some(2_500_000_000));
+        assert_eq!(bare_count("1.2K"), Some(1200));
+        assert_eq!(bare_count("4737"), Some(4737));
+        assert_eq!(bare_count("1天前"), None);
+        assert_eq!(bare_count("16年前"), None);
+        assert_eq!(bare_count("a-ha"), None);
+        assert_eq!(bare_count("2026"), Some(2026));
+    }
+
+    #[test]
+    fn reads_views_written_as_a_bare_number() {
+        // As YouTube sent them on 2026-11-11 (hl zh-CN).
+        let v = lockup(&json!({
+            "contentId": "-9INVa5i1KQ", "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+            "metadata": {"lockupMetadataViewModel": {"title": {"content": "T"}, "metadata": {"contentMetadataViewModel": {"metadataRows": [
+                {"metadataParts": [{"text": {"content": "新聞大白話"}}]},
+                {"metadataParts": [{"text": {"content": "2.9万"}}, {"text": {"content": "1天前"}}]},
+                {}
+            ]}}}}
+        }))
+        .unwrap();
+        assert_eq!(v.channel, "新聞大白話");
+        assert_eq!(v.view_count, Some(29_000));
+        assert_eq!(v.age.as_deref(), Some("1天前"));
     }
 
     #[test]

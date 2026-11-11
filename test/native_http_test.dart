@@ -27,6 +27,16 @@ void main() {
       server.listen((request) async {
         final response = request.response;
         switch (request.uri.path) {
+          case '/count':
+            var count = 0;
+            var sum = 0;
+            await for (final piece in request) {
+              count += piece.length;
+              for (final b in piece) {
+                sum = (sum + b) % 1000003;
+              }
+            }
+            response.write('$count $sum');
           case '/echo':
             final body = await utf8.decodeStream(request);
             response.headers.set('x-method', request.method);
@@ -88,6 +98,34 @@ void main() {
       client.close();
     });
 
+    test('a request whose body is still being read when the client closes never starts', () async {
+      for (final size in [100, 1 << 20]) {
+        final client = NativeHttpClient();
+        final request = http.StreamedRequest('POST', base.replace(path: '/count'))..contentLength = size;
+        final refused = expectLater(client.send(request), throwsA(isA<http.ClientException>()));
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        client.close();
+        request.sink.add(List.filled(size, 1));
+        unawaited(request.sink.close());
+        await refused;
+      }
+    }, skip: NativeHttp.available ? false : 'needs LUMTUB_CORE_DLL');
+
+    test('closing the client stops its requests still running', () async {
+      final client = NativeHttpClient();
+      final response = await client.send(http.Request('GET', base.replace(path: '/big')));
+      final failed = Completer<Object>();
+      response.stream.listen((_) {}, onError: (Object e) {
+        if (!failed.isCompleted) failed.complete(e);
+      }, onDone: () {
+        if (!failed.isCompleted) failed.complete('done');
+      });
+      client.close();
+      final outcome = await failed.future.timeout(const Duration(seconds: 5));
+      expect(outcome, isA<http.ClientException>());
+      expect(() => client.send(http.Request('GET', base)), throwsA(isA<http.ClientException>()));
+    }, skip: NativeHttp.available ? false : 'needs LUMTUB_CORE_DLL');
+
     test('is the app client when the core is there', () {
       expect(NativeHttp.available, isTrue);
       expect(appHttpClient(), isA<NativeHttpClient>());
@@ -100,6 +138,22 @@ void main() {
       expect(response.headers['x-method'], 'POST');
       expect(response.headers['set-cookie'], 'a=1,b=2');
       expect(jsonDecode(response.body), {'body': '{"字":1}', 'agent': 'Lumtub test', 'type': 'application/json'});
+    }, skip: NativeHttp.available ? false : 'needs LUMTUB_CORE_DLL');
+
+    test('a large file body reaches the server whole', () async {
+      final dir = await Directory.systemTemp.createTemp('lumtub_http');
+      addTearDown(() => dir.delete(recursive: true));
+      final file = File('${dir.path}/audio.bin')..writeAsBytesSync(List.generate(3 << 20, (i) => i * 7 % 251));
+      final whole = file.readAsBytesSync();
+      var sum = 0;
+      for (final b in whole) {
+        sum = (sum + b) % 1000003;
+      }
+      final sent = http.StreamedRequest('POST', base.replace(path: '/count'))..contentLength = whole.length;
+      unawaited(file.openRead().pipe(sent.sink));
+      final response = await http.Response.fromStream(await NativeHttpClient().send(sent));
+      expect(response.statusCode, 200);
+      expect(response.body, '${whole.length} $sum');
     }, skip: NativeHttp.available ? false : 'needs LUMTUB_CORE_DLL');
 
     test('decompresses, streams big bodies and follows redirects', () async {

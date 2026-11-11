@@ -23,6 +23,9 @@ class WatchTime {
   final _names = <String, String>{};
   Timer? _save;
   bool _dirty = false;
+  /// Counts changes, so a save only clears [_dirty] when nothing changed while it wrote.
+  int _revision = 0;
+  final _writes = WriteQueue();
 
   static String dayOf(DateTime time) => '${time.year.toString().padLeft(4, '0')}-${time.month.toString().padLeft(2, '0')}-${time.day.toString().padLeft(2, '0')}';
 
@@ -52,6 +55,7 @@ class WatchTime {
     day[channel] = (day[channel] ?? 0) + seconds;
     if (name.isNotEmpty) _names[channel] = name;
     _dirty = true;
+    _revision++;
     _save ??= Timer(const Duration(minutes: 1), () => unawaited(save()));
   }
 
@@ -61,26 +65,30 @@ class WatchTime {
     _days.clear();
     _names.clear();
     _dirty = true;
+    _revision++;
     unawaited(save());
   }
 
   Future<void> save() async {
     _save?.cancel();
     _save = null;
-    if (!_dirty) return;
-    _dirty = false;
-    final keep = (_days.keys.toList()..sort()).reversed.take(_keptDays).toSet();
-    _days.removeWhere((day, _) => !keep.contains(day));
-    final used = {for (final day in _days.values) ...day.keys};
-    _names.removeWhere((channel, _) => !used.contains(channel));
-    try {
-      await file.parent.create(recursive: true);
-      final temp = File('${file.path}.tmp');
-      await temp.writeAsString(jsonEncode({'days': _days, 'names': _names}), flush: true);
-      await temp.rename(file.path);
-    } catch (e) {
-      logWarn('Could not save the watch time: $e');
-    }
+    return _writes.run(() async {
+      if (!_dirty) return;
+      final written = _revision;
+      final keep = (_days.keys.toList()..sort()).reversed.take(_keptDays).toSet();
+      _days.removeWhere((day, _) => !keep.contains(day));
+      final used = {for (final day in _days.values) ...day.keys};
+      _names.removeWhere((channel, _) => !used.contains(channel));
+      try {
+        await file.parent.create(recursive: true);
+        final temp = File('${file.path}.tmp');
+        await temp.writeAsString(jsonEncode({'days': _days, 'names': _names}), flush: true);
+        await temp.rename(file.path);
+        if (written == _revision) _dirty = false;
+      } catch (e) {
+        logWarn('Could not save the watch time: $e');
+      }
+    });
   }
 
   /// Totals for 观看统计 over the last [span] days, worked out by

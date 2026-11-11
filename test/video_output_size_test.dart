@@ -63,4 +63,48 @@ void main() {
     size.hidden = false;
     expect(applied.last, (1280, 720));
   });
+
+  test('sets one size at a time, the latest of those waiting, and survives a failure', () async {
+    final applied = <(int?, int?)>[];
+    final errors = <Object>[];
+    var running = 0, most = 0;
+    final size = VideoOutputSize((w, h) async {
+      running++;
+      most = running > most ? running : most;
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      running--;
+      applied.add((w, h));
+      if (w == 960) throw StateError('texture lost');
+    }, delay: const Duration(milliseconds: 1), onError: errors.add);
+    final page = Object();
+    size.video = const Size(1920, 1080);
+    size.show(page, const Size(960, 540));
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    size.show(page, const Size(1280, 720));
+    await Future<void>.delayed(const Duration(milliseconds: 3));
+    size.show(page, const Size(1600, 900));
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    expect(most, 1);
+    expect(applied, [(960, 540), (1600, 900)]);
+    expect(errors, hasLength(1));
+  });
+
+  test('sets nothing more once disposed, not even a size already waiting', () async {
+    final applied = <(int?, int?)>[];
+    final size = VideoOutputSize((w, h) async {
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      applied.add((w, h));
+    }, delay: const Duration(milliseconds: 1));
+    final page = Object();
+    size.video = const Size(1920, 1080);
+    size.show(page, const Size(960, 540));
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    size.show(page, const Size(1280, 720));
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+    size.dispose();
+    size.hidden = true;
+    await size.refresh();
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    expect(applied, [(960, 540)]);
+  });
 }

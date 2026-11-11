@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "एंडपॉइंट ने कोई मॉडल नहीं लौटाया; हाथ से भरें",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "पहले से लक्षित भाषा में मौजूद टेक्स्ट छोड़ें",
+  "Take Simplified and Traditional Chinese as one language": "सरलीकृत और पारंपरिक चीनी को एक ही भाषा मानें",
+  "Chinese in either script is left untranslated when the target is the other": "लक्ष्य दूसरी लिपि होने पर किसी भी लिपि की चीनी का अनुवाद नहीं किया जाता",
   "{0} (lower is steadier, higher is freer)": "{0} (कम होने पर स्थिर, ज़्यादा होने पर अधिक स्वतंत्र)",
   "APP ID from the Baidu Translate open platform": "Baidu Translate ओपन प्लेटफ़ॉर्म का APP ID",
   "The Baidu Translate APP ID or key is invalid": "Baidu Translate का APP ID या कुंजी अमान्य है",

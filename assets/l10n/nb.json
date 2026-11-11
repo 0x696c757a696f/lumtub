@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Endepunktet oppga ingen modeller. Skriv inn en selv",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Hopp over tekst som allerede er på målspråket",
+  "Take Simplified and Traditional Chinese as one language": "Behandle forenklet og tradisjonell kinesisk som ett språk",
+  "Chinese in either script is left untranslated when the target is the other": "Kinesisk tekst i begge skriftformer oversettes ikke når målet er den andre",
   "{0} (lower is steadier, higher is freer)": "{0} (lavere er mer stabilt, høyere er friere)",
   "APP ID from the Baidu Translate open platform": "APP ID fra Baidu Translates åpne plattform",
   "The Baidu Translate APP ID or key is invalid": "APP ID-en eller nøkkelen for Baidu Translate er ugyldig",

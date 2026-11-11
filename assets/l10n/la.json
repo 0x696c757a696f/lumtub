@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Terminalis nulla exemplaria enumeravit; unum manu inscribe",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Textum iam in lingua destinata omittere",
+  "Take Simplified and Traditional Chinese as one language": "Sinice simplicatum et traditionale ut unam linguam habere",
+  "Chinese in either script is left untranslated when the target is the other": "Textus Sinicus in utraque scriptura non vertitur, cum scriptura destinata altera est",
   "{0} (lower is steadier, higher is freer)": "{0} (inferior stabilior, superior liberior)",
   "APP ID from the Baidu Translate open platform": "ID APP ex platea aperta Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "ID APP vel clavis Baidu Translate invalida est",

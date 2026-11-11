@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Walang inilistang model ang endpoint; mag-type na lang ng isa",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Laktawan ang text na nasa target na wika na",
+  "Take Simplified and Traditional Chinese as one language": "Ituring na iisang wika ang Simplified at Traditional Chinese",
+  "Chinese in either script is left untranslated when the target is the other": "Hindi isinasalin ang Chinese sa alinmang script kapag ang target ay ang isa pang script",
   "{0} (lower is steadier, higher is freer)": "{0} (mas matatag kapag mas mababa, mas malaya kapag mas mataas)",
   "APP ID from the Baidu Translate open platform": "APP ID mula sa open platform ng Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "Hindi valid ang APP ID o key ng Baidu Translate",

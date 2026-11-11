@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "API не вернул ни одной модели; введите название вручную",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Пропускать текст, который уже на языке перевода",
+  "Take Simplified and Traditional Chinese as one language": "Считать китайский (упрощённый) и китайский (традиционный) одним языком",
+  "Chinese in either script is left untranslated when the target is the other": "Китайский текст в любом написании не переводится, если целевое написание другое",
   "{0} (lower is steadier, higher is freer)": "{0} (чем ниже, тем стабильнее; чем выше, тем свободнее)",
   "APP ID from the Baidu Translate open platform": "APP ID с открытой платформы Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "Недействительный APP ID или ключ Baidu Translate",

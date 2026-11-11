@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Punctul final nu a returnat modele; introdu unul manual",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Omite textul care este deja în limba țintă",
+  "Take Simplified and Traditional Chinese as one language": "Tratează chineza simplificată și tradițională ca o singură limbă",
+  "Chinese in either script is left untranslated when the target is the other": "Textul chinezesc în oricare dintre scrieri nu se traduce dacă ținta este cealaltă",
   "{0} (lower is steadier, higher is freer)": "{0} (mai mic înseamnă mai stabil, mai mare înseamnă mai liber)",
   "APP ID from the Baidu Translate open platform": "APP ID de pe platforma deschisă Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "APP ID-ul sau cheia Baidu Translate nu este validă",

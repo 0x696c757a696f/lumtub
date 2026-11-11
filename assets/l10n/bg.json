@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Интерфейсът не върна модели, въведете ръчно",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Пропускане на съдържание, което вече е на целевия език",
+  "Take Simplified and Traditional Chinese as one language": "Третиране на опростен и традиционен китайски като един език",
+  "Chinese in either script is left untranslated when the target is the other": "Китайският текст в която и да е писменост не се превежда, когато целевата е другата",
   "{0} (lower is steadier, higher is freer)": "{0} (по-ниско е по-стабилно, по-високо е по-гъвкаво)",
   "APP ID from the Baidu Translate open platform": "APP ID от отворената платформа на Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "APP ID или ключът на Baidu Translate е невалиден",

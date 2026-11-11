@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "እቲ ኣድራሻ ሞዴላት ኣይመለሰን፤ ባዕልኻ ጽሓፍ",
   "Baidu Translate": "ትርጉም Baidu",
   "Skip text already in the target language": "ኣብ ቋንቋ ዕላማ ዘሎ ጽሑፍ ሕለፍ",
+  "Take Simplified and Traditional Chinese as one language": "ቻይንኛ ቀሊልን ቻይንኛ ልሙድን ከም ሓደ ቋንቋ ተጠቐም",
+  "Chinese in either script is left untranslated when the target is the other": "ዕላማ እቲ ካልኣይ ፊደል ክኸውን ከሎ ብዝኾነ ፊደል ዘሎ ቻይንኛ ኣይግለጽን",
   "{0} (lower is steadier, higher is freer)": "{0} (ትሑት ርጉእ፣ ዓቢ ዝያዳ ናጽነት)",
   "APP ID from the Baidu Translate open platform": "APP ID ካብ ክፉት መድረኽ Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "APP ID ወይ ቁልፊ Baidu Translate ዘይቅኑዕ እዩ",

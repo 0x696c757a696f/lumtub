@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "એન્ડપૉઇન્ટે કોઈ મૉડલ યાદી આપ્યા નથી; જાતે લખો",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "પહેલેથી લક્ષ્ય ભાષામાં હોય તે ટેક્સ્ટ છોડો",
+  "Take Simplified and Traditional Chinese as one language": "સરળ અને પરંપરાગત ચીનીને એક જ ભાષા ગણો",
+  "Chinese in either script is left untranslated when the target is the other": "લક્ષ્ય બીજી લિપિ હોય ત્યારે કોઈપણ લિપિનું ચીની લખાણ અનુવાદિત થતું નથી",
   "{0} (lower is steadier, higher is freer)": "{0} (ઓછું એટલે વધુ સ્થિર, વધુ એટલે વધુ મુક્ત)",
   "APP ID from the Baidu Translate open platform": "Baidu Translate ઓપન પ્લૅટફૉર્મનો APP ID",
   "The Baidu Translate APP ID or key is invalid": "Baidu Translate નો APP ID અથવા કી અમાન્ય છે",

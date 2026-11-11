@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Panghubung teu mulangkeun modél, bisa diketik sorangan",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Luncatan eusi anu geus basa tujuan",
+  "Take Simplified and Traditional Chinese as one language": "Anggap Cina Sederhana jeung Tradisional salaku hiji basa",
+  "Chinese in either script is left untranslated when the target is the other": "Téks Cina dina aksara naon waé teu ditarjamahkeun lamun targétna aksara nu séjén",
   "{0} (lower is steadier, higher is freer)": "{0} (beuki handap beuki stabil, beuki luhur beuki luwes)",
   "APP ID from the Baidu Translate open platform": "APP ID ti platform terbuka Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "APP ID atawa konci Baidu Translate teu valid",

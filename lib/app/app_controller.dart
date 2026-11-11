@@ -22,6 +22,7 @@ import '../app_window.dart';
 import '../app_preferences.dart';
 import '../libass_layout.dart';
 import '../play_queue.dart';
+import '../video_facts_lookup.dart';
 import '../video_languages.dart';
 import '../playback_failure.dart';
 import '../skip_silence.dart';
@@ -92,7 +93,7 @@ import '../subtitle_cues.dart';
 import '../subtitle_translation.dart';
 import '../danmaku.dart';
 import '../comment_danmaku.dart';
-import '../language_guess.dart' show looksLike;
+import '../language_guess.dart' show readsAs;
 import '../translation.dart';
 import '../translation_cache.dart';
 import '../translation_services.dart';
@@ -762,6 +763,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool waitingForSubtitles = false;
 
   bool _subtitlesFollowing = false;
+  /// How far, in percent of the picture's height, subtitles drawn by mpv
+  /// are raised while the player's controls cover the bottom.
+  int _subtitleLift = 0;
+  /// The main subtitle mpv shows now, for placing the second one.
+  List<String> _mainSubtitle = const [];
 
   bool _backgroundAudioOnly = false;
   bool _windowHidden = false;

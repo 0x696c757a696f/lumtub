@@ -139,9 +139,12 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     _controller.addListener(_syncVideo);
     KeepAwake.hold(this, _player.state.playing && !_controller.audioOnly);
     // Hides the pointer together with the bars.
-    _animation.addStatusListener((_) {
+    _animation.addStatusListener((status) {
       if (mounted) setState(() {});
+      _liftSubtitles(status != AnimationStatus.dismissed && status != AnimationStatus.reverse);
     });
+    // The bars start out shown.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _liftSubtitles(_animation.value > 0));
     _subscriptions.addAll([
       // The next video may have another shape; the ratio set for the last
       // one would stretch it.
@@ -178,6 +181,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     if (_orientationLocked) unawaited(SystemChrome.setPreferredOrientations(const []));
     _hideTimer?.cancel();
     _feedbackTimer?.cancel();
+    if (_lifted) _controller.liftSubtitles(0);
     _animation.dispose();
     _focus.dispose();
     super.dispose();
@@ -225,6 +229,28 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     // the video's own one.
     final ratio = videoAspectFor(fit.aspectRatio, _player.state.width, _player.state.height);
     widget.state?.update(fit: fit.fit, aspectRatio: ratio);
+  }
+
+  final _bottomBarKey = GlobalKey();
+  bool _lifted = false;
+
+  /// Moves the subtitles above the bottom bar while it [shows], so it never
+  /// covers them, and back down once it hides.
+  void _liftSubtitles(bool shows) {
+    if (!mounted || shows == _lifted) return;
+    final bar = _bottomBarKey.currentContext?.findRenderObject();
+    final box = context.findRenderObject();
+    if (shows && (bar is! RenderBox || !bar.hasSize || box is! RenderBox || !box.hasSize)) return;
+    _lifted = shows;
+    final lift = shows ? (bar as RenderBox).size.height : 0.0;
+    final view = widget.state;
+    if (view != null && view.mounted) view.setSubtitleViewPadding(view.widget.subtitleViewConfiguration.padding + EdgeInsets.only(bottom: lift));
+    if (lift == 0) return _controller.liftSubtitles(0);
+    // mpv places subtitles in percent of the picture, which may be letterboxed.
+    final size = (box as RenderBox).size;
+    final w = _player.state.width ?? 0, h = _player.state.height ?? 0;
+    final picture = w > 0 && h > 0 ? min(size.height, size.width * h / w) : size.height;
+    _controller.liftSubtitles(picture > 0 ? (lift / picture * 100).ceil().clamp(0, 40) : 0);
   }
 
   void _show() {
@@ -504,7 +530,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                   ),
                 if (!_locked) ...[
                   Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _topBar(context, fullscreen))),
-                  Positioned(left: 0, right: 0, bottom: 0, child: _bar(top: false, child: _bottomBar(context, fullscreen))),
+                  Positioned(left: 0, right: 0, bottom: 0, child: KeyedSubtree(key: _bottomBarKey, child: _bar(top: false, child: _bottomBar(context, fullscreen)))),
                 ],
                 if (_locked || _touched || fullscreen) _lockButton(),
               ]),

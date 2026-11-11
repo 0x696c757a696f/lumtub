@@ -76,7 +76,8 @@ class _TranslatableState extends State<Translatable> {
     }
     final text = widget.text;
     final lines = text.split('\n').where((l) => l.trim().isNotEmpty);
-    if (prefs.skipSameLanguage && looksLike(text, language) && lines.every((l) => looksLike(l, language) || !_hasLetters(l))) {
+    bool reads(String l) => readsAs(l, language, chineseAsOne: prefs.chineseAsOne);
+    if (prefs.skipSameLanguage && reads(text) && lines.every((l) => reads(l) || !_hasLetters(l))) {
       if (quiet) return;
       return setState(() => _error = tr('Already in {0}, nothing to translate', [TranslationLanguage.byCode(language).label]));
     }
@@ -85,7 +86,7 @@ class _TranslatableState extends State<Translatable> {
       _error = null;
     });
     try {
-      final result = await translateForeignLines(widget.controller.translator, text, language, (line) => looksLike(line, language) || !_hasLetters(line));
+      final result = await translateForeignLines(widget.controller.translator, text, language, (line) => reads(line) || !_hasLetters(line));
       if (!mounted || text != widget.text) return;
       setState(() {
         _translation = result;
@@ -148,7 +149,8 @@ Set<String> readLanguages(AppController controller) => {
 /// Whether some line of [text] is in none of [readLanguages].
 bool needsTranslation(AppController controller, String text) {
   final known = readLanguages(controller);
-  return text.split('\n').any((line) => _hasLetters(line) && !known.any((language) => looksLike(line, language)));
+  final chineseAsOne = controller.preferences.chineseAsOne;
+  return text.split('\n').any((line) => _hasLetters(line) && !known.any((language) => readsAs(line, language, chineseAsOne: chineseAsOne)));
 }
 
 /// Whether [line] has a word in it, not just emoji, digits or a link.

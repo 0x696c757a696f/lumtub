@@ -126,6 +126,7 @@ extension LifecycleActions on AppController {
         _repository = _repositoryFor(paths, cacheManager, settings);
         _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}heard_languages.json'));
         ChannelAvatarLookup.instance.configure(_http, File('${directories.cache.path}${Platform.pathSeparator}channel_avatars.json'));
+        VideoFactsLookup.instance.configure(_http, File('${directories.cache.path}${Platform.pathSeparator}video_facts.json'));
         // Answers kept before 0.2.12 went by titles, which took some Chinese
         // ones for Japanese and every Italian one for English.
         for (final old in ['video_languages.json', 'spoken_languages.json']) {

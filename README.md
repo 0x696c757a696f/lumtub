@@ -188,6 +188,7 @@ Sponsors pay for the time to build it.
 <a href="https://afdian.com/a/linmuqingfeng"><img src="https://img.shields.io/badge/Afdian_%E7%88%B1%E5%8F%91%E7%94%B5-%E2%9D%A4-946CE6?style=for-the-badge" alt="Afdian" height="44"></a>
 
 **Monthly sponsors** decide what comes next: a code-signing certificate so Windows stops warning on install, and Apple notarization.<br>
+Feature requests from sponsors carry the **sponsor priority** label and are worked on first.<br>
 One-time gifts of any amount are just as welcome. The same page is in the app under Settings › About › Support development.
 
 </div>

@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "ਐਂਡਪੁਆਇੰਟ ਨੇ ਕੋਈ ਮਾਡਲ ਸੂਚੀਬੱਧ ਨਹੀਂ ਕੀਤਾ; ਇੱਕ ਹੱਥੀਂ ਲਿਖੋ",
   "Baidu Translate": "ਬਾਈਦੂ ਅਨੁਵਾਦ",
   "Skip text already in the target language": "ਟੀਚਾ ਭਾਸ਼ਾ ਵਿੱਚ ਪਹਿਲਾਂ ਤੋਂ ਮੌਜੂਦ ਟੈਕਸਟ ਛੱਡੋ",
+  "Take Simplified and Traditional Chinese as one language": "ਸਰਲ ਅਤੇ ਰਵਾਇਤੀ ਚੀਨੀ ਨੂੰ ਇੱਕ ਹੀ ਭਾਸ਼ਾ ਮੰਨੋ",
+  "Chinese in either script is left untranslated when the target is the other": "ਟੀਚਾ ਦੂਜੀ ਲਿਪੀ ਹੋਣ 'ਤੇ ਕਿਸੇ ਵੀ ਲਿਪੀ ਦਾ ਚੀਨੀ ਟੈਕਸਟ ਅਨੁਵਾਦ ਨਹੀਂ ਕੀਤਾ ਜਾਂਦਾ",
   "{0} (lower is steadier, higher is freer)": "{0} (ਘੱਟ ਮੁੱਲ ਵੱਧ ਸਥਿਰ, ਵੱਧ ਮੁੱਲ ਵੱਧ ਖੁੱਲ੍ਹਾ)",
   "APP ID from the Baidu Translate open platform": "ਬਾਈਦੂ ਅਨੁਵਾਦ ਓਪਨ ਪਲੇਟਫਾਰਮ ਤੋਂ APP ID",
   "The Baidu Translate APP ID or key is invalid": "ਬਾਈਦੂ ਅਨੁਵਾਦ APP ID ਜਾਂ ਕੁੰਜੀ ਅਵੈਧ ਹੈ",

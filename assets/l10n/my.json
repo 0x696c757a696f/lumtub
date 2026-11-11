@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "endpoint က မော်ဒယ်မပြန်ပေးပါ၊ ကိုယ်တိုင်ရိုက်ထည့်နိုင်သည်",
   "Baidu Translate": "Baidu ဘာသာပြန်",
   "Skip text already in the target language": "ဘာသာပြန်မည့်ဘာသာစကားဖြစ်ပြီးသော အကြောင်းအရာကို ကျော်ရန်",
+  "Take Simplified and Traditional Chinese as one language": "တရုတ် (ရိုးရှင်း) နှင့် တရုတ် (ရိုးရာ) ကို ဘာသာစကားတစ်ခုတည်းအဖြစ် သတ်မှတ်ရန်",
+  "Chinese in either script is left untranslated when the target is the other": "ပစ်မှတ်က အခြားစာလုံးဖြစ်ပါက မည်သည့်စာလုံးဖြင့်ရေးထားသော တရုတ်စာကိုမျှ မဘာသာပြန်ပါ",
   "{0} (lower is steadier, higher is freer)": "{0} (နိမ့်လေ ပိုတည်ငြိမ်၊ မြင့်လေ ပိုလွတ်လပ်)",
   "APP ID from the Baidu Translate open platform": "Baidu ဘာသာပြန် open platform မှ APP ID",
   "The Baidu Translate APP ID or key is invalid": "Baidu ဘာသာပြန်၏ APP ID သို့မဟုတ် ကီး မမှန်ပါ",

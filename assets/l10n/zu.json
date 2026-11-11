@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Isixhumi asibuyisanga amamodeli; thayipha elilodwa esikhundleni",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Yeqa umbhalo osuvele ululimi lokuhumushela kulo",
+  "Take Simplified and Traditional Chinese as one language": "Phatha isiShayina Esilula nesendabuko njengolimi olulodwa",
+  "Chinese in either script is left untranslated when the target is the other": "Umbhalo wesiShayina kunoma yiluphi uhlelo awuhunyushwa uma okuhlosiwe kungolunye",
   "{0} (lower is steadier, higher is freer)": "{0} (okuphansi kuzinzile, okuphezulu kukhululekile)",
   "APP ID from the Baidu Translate open platform": "I-APP ID evela kuplathifomu evulekile ye-Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "I-APP ID noma ukhiye we-Baidu Translate awuvumelekile",

@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "എൻഡ്‌പോയിന്റ് മോഡലുകളൊന്നും നൽകിയില്ല; ഒന്ന് ടൈപ്പ് ചെയ്യുക",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "ലക്ഷ്യ ഭാഷയിലുള്ള ടെക്സ്റ്റ് ഒഴിവാക്കുക",
+  "Take Simplified and Traditional Chinese as one language": "ലളിതവൽക്കരിച്ച, പരമ്പരാഗത ചൈനീസുകളെ ഒരേ ഭാഷയായി കണക്കാക്കുക",
+  "Chinese in either script is left untranslated when the target is the other": "ലക്ഷ്യം മറ്റേ ലിപിയാകുമ്പോൾ ഏതു ലിപിയിലെയും ചൈനീസ് ടെക്സ്റ്റ് വിവർത്തനം ചെയ്യില്ല",
   "{0} (lower is steadier, higher is freer)": "{0} (കുറവാകുമ്പോൾ സ്ഥിരത കൂടും, കൂടുമ്പോൾ സ്വാതന്ത്ര്യം കൂടും)",
   "APP ID from the Baidu Translate open platform": "Baidu Translate ഓപ്പൺ പ്ലാറ്റ്‌ഫോമിൽ നിന്നുള്ള APP ID",
   "The Baidu Translate APP ID or key is invalid": "Baidu Translate APP ID അല്ലെങ്കിൽ കീ അസാധുവാണ്",

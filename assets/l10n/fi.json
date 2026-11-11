@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "Rajapinta ei palauttanut malleja; kirjoita yksi itse",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Ohita teksti, joka on jo kohdekielellä",
+  "Take Simplified and Traditional Chinese as one language": "Käsittele yksinkertaistettu ja perinteinen kiina yhtenä kielenä",
+  "Chinese in either script is left untranslated when the target is the other": "Kumpaakin kiinan kirjoitusasua ei käännetä, kun kohteena on toinen",
   "{0} (lower is steadier, higher is freer)": "{0} (pienempi on tasaisempi, suurempi vapaampi)",
   "APP ID from the Baidu Translate open platform": "APP ID Baidu Translaten avoimelta alustalta",
   "The Baidu Translate APP ID or key is invalid": "Baidu Translaten APP ID tai avain ei kelpaa",

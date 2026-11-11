@@ -195,7 +195,7 @@ extension SubtitleActions on AppController {
     chaptersChanged.value++;
     try {
       final titles = [for (final c in chapters) c.title.replaceAll('\n', ' ')];
-      final lines = (await translateForeignLines(translator, titles.join('\n'), language, (line) => looksLike(line, language))).split('\n');
+      final lines = (await translateForeignLines(translator, titles.join('\n'), language, (line) => readsAs(line, language, chineseAsOne: preferences.chineseAsOne))).split('\n');
       if (playing?.id != id) return;
       _update(() {
         chapterTranslation = lines.length == titles.length ? lines : titles;
@@ -503,18 +503,32 @@ extension SubtitleActions on AppController {
   /// Moves libmpv's second subtitle to just above the main one in [lines],
   /// so a main subtitle on two or more lines does not run into it.
   void _placeSecondary(Player player, List<String> lines) {
+    if (identical(player, this.player)) _mainSubtitle = lines;
     if (!settings.libassSubtitles || secondaryTrackId == 'no' || !identical(player, this.player)) return;
     final platform = player.platform;
     if (platform is! NativePlayer) return;
     final width = player.state.width ?? 0, height = player.state.height ?? 0;
     final position = LibassLayout.secondaryPosition(
       lines.isEmpty ? '' : lines.first,
-      position: settings.subtitlePosition,
+      position: (settings.subtitlePosition - _subtitleLift).clamp(0, 100),
       scale: settings.subtitleScale,
       aspect: width > 0 && height > 0 ? width / height : 16 / 9,
     );
     // Only scheduled: this runs while media_kit handles an mpv event.
     unawaited(platform.setProperty('secondary-sub-pos', '$position').catchError((Object e) => logDebug(() => 'Could not move the second subtitle: $e')));
+  }
+
+  /// Raises subtitles drawn by mpv by [percent] of the picture's height,
+  /// above the player's controls while they show; 0 puts them back.
+  void liftSubtitles(int percent) {
+    final player = this.player;
+    if (!settings.libassSubtitles || player == null || percent == _subtitleLift) return;
+    _subtitleLift = percent;
+    final platform = player.platform;
+    if (platform is! NativePlayer) return;
+    final position = (settings.subtitlePosition - percent).clamp(0, 100);
+    unawaited(platform.setProperty('sub-pos', '$position').catchError((Object e) => logDebug(() => 'Could not move the subtitles: $e')));
+    _placeSecondary(player, _mainSubtitle);
   }
 
   /// Reads the subtitles mpv shows after the current mpv event is handled.

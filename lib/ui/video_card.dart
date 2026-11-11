@@ -19,6 +19,7 @@ import 'skeleton.dart';
 import 'skin_paint.dart';
 import 'theme.dart';
 import '../l10n/l10n.dart';
+import '../video_facts_lookup.dart';
 import 'motion.dart';
 import 'app_icons.dart';
 
@@ -197,7 +198,9 @@ class VideoRow extends StatelessWidget {
   void _menu(BuildContext context, Offset position) => unawaited(showVideoMenu(context, item, position, onOpen: onOpen, onRemove: onRemove, removeLabel: removeLabel));
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => WithVideoFacts(item, builder: _build);
+
+  Widget _build(BuildContext context, VideoItem item) {
     final colors = context.colors;
     final text = layout == VideoLayout.text;
     final status = item.isLive ? tr('Live now') : item.isUpcoming ? tr('Upcoming live') : null;
@@ -507,8 +510,9 @@ class _VideoCardState extends State<VideoCard> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final item = widget.item;
+  Widget build(BuildContext context) => WithVideoFacts(widget.item, builder: _build);
+
+  Widget _build(BuildContext context, VideoItem item) {
     _branding = _brandingNow();
     final colors = context.colors;
     final meta = MetaLine.of(item, style: TextStyle(fontSize: 12, color: colors.outline));
@@ -684,6 +688,21 @@ class _QuickActionsState extends State<_QuickActions> {
   }
 }
 
+/// [builder] given [item] with what its listing left out filled in by
+/// [VideoFactsLookup], built again as answers come.
+class WithVideoFacts extends StatelessWidget {
+  const WithVideoFacts(this.item, {super.key, required this.builder});
+  final VideoItem item;
+  final Widget Function(BuildContext context, VideoItem item) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    final lookup = VideoFactsLookup.instance;
+    if (!lookup.needs(item)) return builder(context, item);
+    return ListenableBuilder(listenable: lookup, builder: (context, _) => builder(context, lookup.of(item)));
+  }
+}
+
 class DurationBadge extends StatelessWidget {
   const DurationBadge(this.label, {super.key, this.color});
   final String label;
@@ -768,7 +787,9 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
   (String, Uri?)? _branding;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => WithVideoFacts(widget.item, builder: _build);
+
+  Widget _build(BuildContext context, VideoItem item) {
     _branding = _brandingNow();
     final colors = context.colors;
     final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;

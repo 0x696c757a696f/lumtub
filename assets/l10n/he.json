@@ -2204,6 +2204,8 @@
   "The endpoint listed no models; type one in instead": "הממשק לא החזיר מודלים; אפשר להקליד אחד ידנית",
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "דילוג על טקסט שכבר בשפת היעד",
+  "Take Simplified and Traditional Chinese as one language": "התייחסות לסינית מפושטת ולסינית מסורתית כשפה אחת",
+  "Chinese in either script is left untranslated when the target is the other": "טקסט סיני בכל אחת מהכתיבות לא יתורגם כשיעד התרגום הוא הכתיב השני",
   "{0} (lower is steadier, higher is freer)": "{0} (ערך נמוך יציב יותר, ערך גבוה גמיש יותר)",
   "APP ID from the Baidu Translate open platform": "APP ID מפלטפורמת הפיתוח הפתוחה של Baidu Translate",
   "The Baidu Translate APP ID or key is invalid": "ה-APP ID או המפתח של Baidu Translate אינם תקינים",

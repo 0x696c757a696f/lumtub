@@ -218,7 +218,7 @@ class _AppShellState extends State<AppShell> {
       if (playing != null) SkinMenu(tr('&Play'), _playMenu(playing)),
       SkinMenu(tr('Tools'), [
         SkinMenuEntry(tr('Check for component updates'), c.checking ? null : () => unawaited(c.checkUpdates())),
-        SkinMenuEntry(tr('Clear cache'), () => openSettings(context, c, category: SettingsCategory.extra)),
+        SkinMenuEntry(tr('Clear cache'), () => openSettings(context, c, category: SettingsCategory.storage)),
         SkinMenuEntry(tr('Error log'), () => unawaited(openLogs(context, c))),
         const SkinMenuEntry.divider(),
         SkinMenuEntry(tr('&Skins folder'), () {

@@ -17,6 +17,9 @@ on:
   pull_request:
     branches: [main]
     paths-ignore: ['**.md', 'docs/**', 'website/**']
+  # Builds main once a day when no build on main has its files yet.
+  schedule:
+    - cron: '41 3 * * *'
 
 # A newer push to a pull request makes its earlier run moot.
 concurrency:
@@ -24,55 +27,68 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # A release tag points at a commit main has normally built already, with the
-  # same version and the same keys: its packages are signed and published
-  # instead of building everything a second time.
+  # Packages are named by the commit's files (its tree), and a build that
+  # passes leaves a marker artifact named after that tree. A tree that was
+  # built and passed already is not built again:
+  # - main reuses its pull request's build when the merge gave the same files;
+  # - a release tag signs and publishes the packages of that build;
+  # - the daily run builds main only when no build on main has its files yet,
+  #   which keeps main's caches fresh for pull requests.
   reuse:
-    name: Reuse main's build
-    if: startsWith(github.ref, 'refs/tags/v')
+    name: Reuse an earlier build
+    if: github.event_name == 'push' || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       actions: read
+      contents: read
     outputs:
       run: ${{ steps.find.outputs.run }}
     steps:
-      - name: Find main's finished build of this commit
+      - name: Find a finished build of these files
         id: find
         env:
           GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          runs() {
-            gh api "repos/$GITHUB_REPOSITORY/actions/workflows/build.yml/runs?branch=main&event=push&head_sha=$GITHUB_SHA&per_page=5" \
-              --jq '.workflow_runs | sort_by(.created_at) | reverse | .[0] // empty | "\(.id) \(.status) \(.conclusion)"'
+          tree=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$GITHUB_SHA" --jq .tree.sha)
+          echo "Files of $GITHUB_SHA: $tree"
+          # A run that built these files and passed, with every package the
+          # release publishes (3 Windows CPUs x 2, 2 AppImages, 2 DMGs, the APKs).
+          built() {
+            local id
+            for id in $(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=built-$tree&per_page=20" \
+                --jq '[.artifacts[] | select(.expired | not) | .workflow_run.id] | unique | reverse | .[]'); do
+              read -r event branch conclusion <<< "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq '"\(.event) \(.head_branch) \(.conclusion)"')"
+              [[ "$conclusion" == success ]] || continue
+              # The daily run wants a build made on main, for main's caches.
+              if [[ "$EVENT" == schedule ]] && ! [[ "$event" == push || "$event" == schedule ]]; then continue; fi
+              names=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts?per_page=100" \
+                --jq '[.artifacts[] | select(.expired | not) | .name | select(test("^Lumtub-(windows|linux|macos|android)-"))] | length')
+              (( names == 11 )) || continue
+              echo "$id"
+              return
+            done
           }
-          # The build main started for this commit may still be running; wait
-          # for it. A commit main never built (a version bump pushed by the
-          # release workflow) is built here.
-          deadline=$(( $(date +%s) + 90 * 60 ))
-          seen=$(date +%s)
-          while :; do
-            read -r id status conclusion <<< "$(runs || true)"
-            if [[ -z "${id:-}" ]]; then
-              (( $(date +%s) - seen < 180 )) || { echo "main has no build of $GITHUB_SHA; building here."; exit 0; }
-            elif [[ "$status" == completed ]]; then
-              break
-            fi
-            (( $(date +%s) < deadline )) || { echo "main's build $id is still $status; building here."; exit 0; }
-            sleep 60
-          done
-          if [[ "$conclusion" != success ]]; then
-            echo "main's build $id ended $conclusion; building here."
+          id=$(built || true)
+          if [[ -z "$id" && "$GITHUB_REF" == refs/tags/v* ]]; then
+            # main may still be building this commit; wait for it. A commit
+            # main never built (a version bump pushed by the release
+            # workflow) is built here.
+            deadline=$(( $(date +%s) + 90 * 60 ))
+            while :; do
+              running=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/build.yml/runs?branch=main&event=push&head_sha=$GITHUB_SHA&per_page=5" \
+                --jq '[.workflow_runs[] | select(.status != "completed")] | length')
+              id=$(built || true)
+              [[ -z "$id" && "$running" != 0 && $(date +%s) -lt $deadline ]] || break
+              sleep 60
+            done
+          fi
+          if [[ -z "$id" ]]; then
+            echo "No finished build of these files; building here."
             exit 0
           fi
-          # Every package the release publishes: 3 Windows CPUs x 2, 2 AppImages, 2 DMGs, the APKs.
-          names=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts?per_page=100" \
-            --jq '[.artifacts[] | select(.expired | not) | .name | select(test("^Lumtub-(windows|linux|macos|android)-"))] | length')
-          if (( names != 11 )); then
-            echo "main's build $id has $names of 11 packages; building here."
-            exit 0
-          fi
-          echo "Reusing the packages of main's build $id."
+          echo "Reusing the packages of build $id."
           echo "run=$id" >> "$GITHUB_OUTPUT"
 
   windows:
@@ -359,7 +375,7 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             version="${GITHUB_REF#refs/tags/v}"
           else
-            version="$base-${GITHUB_SHA::7}"
+            version="$base-$(git rev-parse --short=7 "HEAD^{tree}")"
           fi
           [[ "$version" =~ ^[0-9A-Za-z.+-]+$ ]] || { echo "Unexpected version: $version"; exit 1; }
           echo "LUMTUB_VERSION=$version" >> "$GITHUB_ENV"
@@ -666,7 +682,7 @@ jobs:
           if [ "${GITHUB_REF#refs/tags/v}" != "$GITHUB_REF" ]; then
             version="${GITHUB_REF#refs/tags/v}"
           else
-            version="$base-$(echo "$GITHUB_SHA" | cut -c1-7)"
+            version="$base-$(git rev-parse --short=7 "HEAD^{tree}")"
           fi
           echo "$version" | grep -Eq '^[0-9A-Za-z.+-]+$' || { echo "Unexpected version: $version"; exit 1; }
           echo "LUMTUB_VERSION=$version" >> "$GITHUB_ENV"
@@ -883,7 +899,7 @@ jobs:
           if [ "${GITHUB_REF#refs/tags/v}" != "$GITHUB_REF" ]; then
             version="${GITHUB_REF#refs/tags/v}"
           else
-            version="$base-$(echo "$GITHUB_SHA" | cut -c1-7)"
+            version="$base-$(git rev-parse --short=7 "HEAD^{tree}")"
           fi
           echo "$version" | grep -Eq '^[0-9A-Za-z.+-]+$' || { echo "Unexpected version: $version"; exit 1; }
           echo "LUMTUB_VERSION=$version" >> "$GITHUB_ENV"
@@ -1047,7 +1063,7 @@ jobs:
           if [ "${GITHUB_REF#refs/tags/v}" != "$GITHUB_REF" ]; then
             version="${GITHUB_REF#refs/tags/v}"
           else
-            version="$base-$(echo "$GITHUB_SHA" | cut -c1-7)"
+            version="$base-$(git rev-parse --short=7 "HEAD^{tree}")"
           fi
           echo "$version" | grep -Eq '^[0-9A-Za-z.+-]+$' || { echo "Unexpected version: $version"; exit 1; }
           echo "LUMTUB_VERSION=$version" >> "$GITHUB_ENV"
@@ -1177,10 +1193,32 @@ jobs:
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Android pictures of $sha"
           git push -f origin android-shots
 
+  # Marks these files as built and passed, for the reuse job above.
+  built:
+    name: Mark the files built
+    needs: [reuse, windows, linux, macos, android]
+    if: ${{ !cancelled() && !failure() && needs.reuse.outputs.run == '' && needs.windows.result == 'success' && needs.linux.result == 'success' && needs.macos.result == 'success' && needs.android.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Name the marker after the commit's files
+        id: tree
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tree=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$GITHUB_SHA" --jq .tree.sha)
+          echo "tree=$tree" >> "$GITHUB_OUTPUT"
+          echo "$GITHUB_SHA" > built.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: built-${{ steps.tree.outputs.tree }}
+          path: built.txt
+
   release:
     name: Release
     needs: [reuse, windows, linux, macos, android]
-    # Skipped builds (reused from main) are not failures.
+    # Skipped builds (reused from an earlier build) are not failures.
     if: ${{ !cancelled() && !failure() && startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-latest
     permissions:
@@ -1199,7 +1237,7 @@ jobs:
           path: dist
           pattern: Lumtub-{windows,linux,macos,android}-*
           merge-multiple: true
-      - name: Packages main built
+      - name: Packages of the earlier build
         if: needs.reuse.outputs.run != ''
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
@@ -1212,7 +1250,7 @@ jobs:
         env:
           TAG: ${{ github.ref_name }}
         run: |
-          # main names its packages <pubspec version>-<commit>, as the tag does.
+          # Builds name their packages <pubspec version>-<files>, as the tag does.
           shopt -s nullglob
           files=(dist/*)
           (( ${#files[@]} > 0 )) || { echo "::error::No packages"; exit 1; }

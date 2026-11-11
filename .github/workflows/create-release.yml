@@ -66,7 +66,9 @@ jobs:
             echo "$pubspec_version was released already; main now says $next."
             pubspec_version=$next
           fi
-          commit=$(git rev-parse --short=7 HEAD)
+          # Named by the commit's files, not the commit: a pull request's
+          # build of the same files is the release's build.
+          commit=$(git rev-parse --short=7 "HEAD^{tree}")
           tag="v$pubspec_version-$commit"
           git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1 && {
             echo "Tag $tag already exists" >&2
@@ -76,7 +78,7 @@ jobs:
           git push origin "$tag"
           echo 'release=true' >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "Created $tag from application version $pubspec_version and commit $commit"
+          echo "Created $tag from application version $pubspec_version and files $commit"
 
       - name: Dispatch the tagged Windows release build
         if: steps.prepare.outputs.release == 'true'

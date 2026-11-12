@@ -238,6 +238,7 @@ class PostCommentsPanel extends StatelessWidget {
             key: PageStorageKey('post-comments:${post.id}'),
             controller: controller,
             postId: post.id,
+            creator: controller.channel,
             scrollable: true,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           ),

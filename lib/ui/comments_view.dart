@@ -21,7 +21,7 @@ import 'live_chat_input.dart';
 /// The comments under a video or a post: sort order, comments with their
 /// replies, and a button for more. It loads when first shown.
 class CommentsSection extends StatefulWidget {
-  const CommentsSection({super.key, required this.controller, this.videoId, this.postId, this.onSeek, this.scrollable = false, this.sliver = false, this.padding = EdgeInsets.zero});
+  const CommentsSection({super.key, required this.controller, this.videoId, this.postId, this.creator, this.onSeek, this.scrollable = false, this.sliver = false, this.padding = EdgeInsets.zero});
   final AppController controller;
   /// Scrolls by itself and builds only the comments on screen; otherwise it
   /// sits in the page's own scrolling column.
@@ -32,6 +32,9 @@ class CommentsSection extends StatefulWidget {
   final EdgeInsets padding;
   final String? videoId;
   final String? postId;
+  /// The channel of the video or post, whose picture marks the comments
+  /// it liked.
+  final ChannelRef? creator;
   /// Seeks the video when a timestamp in a comment is clicked.
   final void Function(Duration position)? onSeek;
 
@@ -166,6 +169,7 @@ class _CommentsSectionState extends State<CommentsSection> {
           loader: loader,
           controller: widget.controller,
           onSeek: widget.onSeek,
+          creator: widget.creator,
           reply: reply,
           onReply: _canWrite && !reply && !c.id.startsWith('own:') ? () => setState(() => _replyingTo = _replyingTo == c.id ? null : c.id) : null,
         );
@@ -271,7 +275,8 @@ class _CommentsSectionState extends State<CommentsSection> {
 }
 
 class _CommentTile extends StatelessWidget {
-  const _CommentTile({required this.comment, required this.loader, required this.controller, this.onSeek, this.reply = false, this.onReply});
+  const _CommentTile({required this.comment, required this.loader, required this.controller, this.onSeek, this.creator, this.reply = false, this.onReply});
+  final ChannelRef? creator;
   final YoutubeComment comment;
   final CommentsLoader loader;
   final AppController controller;
@@ -336,9 +341,31 @@ class _CommentTile extends StatelessWidget {
             ),
             if (comment.hearted) ...[
               const SizedBox(width: 12),
-              Icon(AppIcons.heartFill, size: 14, color: colors.error),
-              const SizedBox(width: 4),
-              Flexible(child: Text(tr('Liked by creator'), maxLines: 1, overflow: TextOverflow.ellipsis, style: small)),
+              if (creator case final creator?)
+                // As YouTube shows it: the creator's picture with a heart.
+                Tooltip(
+                  message: tr('Liked by creator'),
+                  child: Semantics(
+                    label: tr('Liked by creator'),
+                    child: SizedBox(
+                      width: 26,
+                      height: 24,
+                      child: Stack(clipBehavior: Clip.none, children: [
+                        ExcludeSemantics(child: ChannelAvatar(name: creator.name, image: creator.avatar, channelId: creator.id, radius: 11)),
+                        PositionedDirectional(
+                          end: 0,
+                          bottom: -1,
+                          child: Icon(AppIcons.heartFill, size: 12, color: colors.error, shadows: [Shadow(color: colors.surface, blurRadius: 2)]),
+                        ),
+                      ]),
+                    ),
+                  ),
+                )
+              else ...[
+                Icon(AppIcons.heartFill, size: 14, color: colors.error),
+                const SizedBox(width: 4),
+                Flexible(child: Text(tr('Liked by creator'), maxLines: 1, overflow: TextOverflow.ellipsis, style: small)),
+              ],
             ],
             if (onReply != null) ...[
               const SizedBox(width: 8),

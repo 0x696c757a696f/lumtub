@@ -187,6 +187,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
                   key: ValueKey('comments:${item.id}'),
                   controller: controller,
                   videoId: item.id,
+                  creator: controller.playingChannel,
                   onSeek: (position) => controller.seek(position),
                   scrollable: wide || panelOpen || phone,
                   sliver: !wide && !panelOpen && !phone,

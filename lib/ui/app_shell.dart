@@ -34,6 +34,8 @@ import 'video_card.dart';
 import 'window_chrome.dart';
 import '../l10n/l10n.dart';
 import 'frame_stats.dart';
+import 'key_scroll.dart';
+import '../shortcut_bindings.dart';
 import 'motion.dart';
 import 'player_shortcuts.dart';
 import 'app_icons.dart';
@@ -193,13 +195,13 @@ class _AppShellState extends State<AppShell> {
     return [
       if (appMenu) SkinMenu(appName, [about, const SkinMenuEntry.divider(), settings, const SkinMenuEntry.divider(), exit], bold: true),
       SkinMenu(tr('&File'), [
-        SkinMenuEntry(tr('&Search or open a link…'), _focusSearch, shortcut: primary(LogicalKeyboardKey.keyK)),
+        SkinMenuEntry(tr('&Search or open a link…'), _focusSearch, shortcut: _keyOf(PlayerAction.search)),
         const SkinMenuEntry.divider(),
         SkinMenuEntry(tr('&Downloads'), () => c.navigate(PageMode.downloads)),
         SkinMenuEntry(tr('History'), () => c.navigate(PageMode.history)),
         SkinMenuEntry(tr('Playlist'), () => c.navigate(PageMode.playlists)),
         const SkinMenuEntry.divider(),
-        SkinMenuEntry(tr('&Incognito mode'), () => c.setIncognito(!c.incognito), shortcut: primary(LogicalKeyboardKey.keyN, shift: true), checked: c.incognito),
+        SkinMenuEntry(tr('&Incognito mode'), () => c.setIncognito(!c.incognito), shortcut: _keyOf(PlayerAction.incognito), checked: c.incognito),
         if (!appMenu) ...[
           const SkinMenuEntry.divider(),
           settings,
@@ -210,7 +212,7 @@ class _AppShellState extends State<AppShell> {
       SkinMenu(tr('&View'), [
         for (final (i, d) in _destinations.indexed) SkinMenuEntry(d.$4, () => _select(i), checked: _selectedIndex == i && !c.onWatchPage),
         const SkinMenuEntry.divider(),
-        SkinMenuEntry(tr('&Back'), _back, shortcut: const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true)),
+        SkinMenuEntry(tr('&Back'), _back, shortcut: _keyOf(PlayerAction.back)),
         const SkinMenuEntry.divider(),
         SkinMenuEntry(tr('&Compact mode'), () => save(appearance.copyWith(compact: !appearance.compact)), checked: appearance.compact),
         SkinMenuEntry(tr('&Status bar'), () => save(appearance.copyWith(showStatusBar: !appearance.showStatusBar)), checked: appearance.showStatusBar),
@@ -227,7 +229,7 @@ class _AppShellState extends State<AppShell> {
         }),
       ]),
       SkinMenu(tr('&Help'), [
-        SkinMenuEntry(tr('Keyboard shortcuts'), () => unawaited(showShortcutHelp(context, c.preferences))),
+        SkinMenuEntry(tr('Keyboard shortcuts'), () => unawaited(showShortcutHelp(context, c.preferences)), shortcut: _keyOf(PlayerAction.help)),
         SkinMenuEntry(tr('How to &make a skin'), () => unawaited(openExternal('https://github.com/0x696c757a696f/lumtub/blob/main/skins/README.md'))),
         SkinMenuEntry(tr('Report a bug or suggest an idea'), () => unawaited(openExternal('https://github.com/0x696c757a696f/lumtub/issues/new/choose'))),
         if (!appMenu) ...[
@@ -267,6 +269,41 @@ class _AppShellState extends State<AppShell> {
       if (c.playingChannel case final channel?) SkinMenuEntry(tr('View channel'), () => c.openChannel(channel)),
     ];
   }
+
+  /// The keys of the pages' own actions, as set in the shortcut settings.
+  /// Keys without Ctrl, Alt or ⌘ do nothing while typing.
+  Map<ShortcutActivator, VoidCallback> _pageShortcuts() {
+    void scroll(bool Function() move) {
+      // Space on a focused button or card presses it, as before.
+      final context = primaryFocus?.context;
+      final space = HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.space);
+      if (space && context != null && Actions.maybeFind<ActivateIntent>(context) != null) {
+        Actions.maybeInvoke(context, const ActivateIntent());
+        return;
+      }
+      move();
+    }
+    VoidCallback? run(PlayerAction action) => switch (action) {
+          PlayerAction.search => _focusSearch,
+          PlayerAction.incognito => () => _controller.setIncognito(!_controller.incognito),
+          PlayerAction.back => _back,
+          PlayerAction.top => () => scroll(() => KeyScroll.toEnd(false)),
+          PlayerAction.bottom => () => scroll(() => KeyScroll.toEnd(true)),
+          PlayerAction.pageDown => () => scroll(() => KeyScroll.byPage(1)),
+          PlayerAction.pageUp => () => scroll(() => KeyScroll.byPage(-1)),
+          PlayerAction.help => () => unawaited(showShortcutHelp(context, _controller.preferences)),
+          _ => null,
+        };
+    return {
+      for (final MapEntry(:key, :value) in shortcutKeys(_controller.preferences.shortcutKeys).entries)
+        if (key.page)
+          if (run(key) case final callback?)
+            for (final combo in value) (combo.control || combo.alt || combo.meta ? combo.activator : NotWhileTyping(combo.activator)): callback,
+    };
+  }
+
+  /// The first key of [action], for a menu to show.
+  SingleActivator? _keyOf(PlayerAction action) => shortcutKeys(_controller.preferences.shortcutKeys)[action]!.firstOrNull?.activator;
 
   /// Goes back to the previous page or video.
   void _back() {
@@ -317,10 +354,7 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) => CallbackShortcuts(
         bindings: {
-          // ⌘ on a Mac where Windows and Linux take Ctrl.
-          SingleActivator(LogicalKeyboardKey.keyK, control: !Platform.isMacOS, meta: Platform.isMacOS): _focusSearch,
-          SingleActivator(LogicalKeyboardKey.keyN, control: !Platform.isMacOS, meta: Platform.isMacOS, shift: true): () => _controller.setIncognito(!_controller.incognito),
-          const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): _back,
+          ..._pageShortcuts(),
           // Esc goes back too, except on the watch page, where it leaves
           // full screen and closes panels.
           const SingleActivator(LogicalKeyboardKey.escape): () {

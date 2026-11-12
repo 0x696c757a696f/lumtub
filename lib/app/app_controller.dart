@@ -709,6 +709,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The subtitles shown in this video, by label, so a reopened video can
   /// show them again.
   final _shownOptions = <String, SubtitleOption>{};
+  /// The main subtitle's title when the subtitle key last turned it off.
+  String? _subtitleBeforeOff;
 
   /// The play whose first open already tried a quick start.
   int? _quickSerial;

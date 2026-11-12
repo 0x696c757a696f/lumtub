@@ -38,7 +38,7 @@ class _ShortcutSettingsState extends State<_ShortcutSettings> {
     final prefs = _controller.preferences;
     final now = shortcutKeys(prefs.shortcutKeys);
     if (now[action]!.contains(combo)) return;
-    final from = actionOfKey(now, combo);
+    final from = actionOfKey(now, combo, page: action.page);
     _save(
       withShortcutKeys(prefs.shortcutKeys, action, [...now[action]!, combo]),
       from == null ? null : tr('{0} was taken from "{1}"', [combo.label, shortcutActionLabel(from, prefs)]),
@@ -62,30 +62,36 @@ class _ShortcutSettingsState extends State<_ShortcutSettings> {
                 Text(tr('0-9 and the media keys stay as they are.'), style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12)),
                 if (_note != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_note!, style: TextStyle(color: colors.primary, fontSize: 12))),
                 const SizedBox(height: 8),
-                for (final action in PlayerAction.values)
+                for (final page in [false, true]) ...[
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Row(children: [
-                      Expanded(child: Text(shortcutActionLabel(action, prefs))),
-                      Flexible(child: Wrap(spacing: 4, runSpacing: 4, alignment: WrapAlignment.end, children: [
-                        for (final combo in keys[action]!)
-                          InputChip(
-                            label: Text(combo.label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            deleteButtonTooltipMessage: tr('Remove'),
-                            onDeleted: () => _save(withShortcutKeys(prefs.shortcutKeys, action, [for (final k in keys[action]!) if (k != combo) k])),
-                          ),
-                      ])),
-                      IconButton(tooltip: tr('Add a key'), visualDensity: VisualDensity.compact, icon: Icon(AppIcons.plus, size: 16), onPressed: () => _add(action)),
-                      IconButton(
-                        tooltip: tr('Reset'),
-                        visualDensity: VisualDensity.compact,
-                        icon: Icon(AppIcons.arrowCounterClockwise, size: 16),
-                        onPressed: _same(keys[action]!, defaults[action]!) ? null : () => _save(resetShortcutKeys(prefs.shortcutKeys, action)),
-                      ),
-                    ]),
+                    padding: const EdgeInsets.only(top: 12, bottom: 4),
+                    child: Text(page ? tr('Every page') : tr('Player'), style: Theme.of(context).textTheme.titleSmall),
                   ),
+                  for (final action in PlayerAction.values.where((a) => a.page == page))
+                  Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(children: [
+                        Expanded(child: Text(shortcutActionLabel(action, prefs))),
+                        Flexible(child: Wrap(spacing: 4, runSpacing: 4, alignment: WrapAlignment.end, children: [
+                          for (final combo in keys[action]!)
+                            InputChip(
+                              label: Text(combo.label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              deleteButtonTooltipMessage: tr('Remove'),
+                              onDeleted: () => _save(withShortcutKeys(prefs.shortcutKeys, action, [for (final k in keys[action]!) if (k != combo) k])),
+                            ),
+                        ])),
+                        IconButton(tooltip: tr('Add a key'), visualDensity: VisualDensity.compact, icon: Icon(AppIcons.plus, size: 16), onPressed: () => _add(action)),
+                        IconButton(
+                          tooltip: tr('Reset'),
+                          visualDensity: VisualDensity.compact,
+                          icon: Icon(AppIcons.arrowCounterClockwise, size: 16),
+                          onPressed: _same(keys[action]!, defaults[action]!) ? null : () => _save(resetShortcutKeys(prefs.shortcutKeys, action)),
+                        ),
+                      ]),
+                    ),
+                ],
               ]),
             ),
             actions: [

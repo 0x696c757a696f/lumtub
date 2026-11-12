@@ -35,7 +35,6 @@ import '../format_policy_dialogs.dart';
 import '../player_shortcuts.dart';
 import '../shortcut_settings.dart';
 import '../motion.dart';
-import '../palettes.dart';
 import '../../skins/skin_library.dart';
 import 'skins_page.dart';
 import '../theme.dart';
@@ -1089,8 +1088,10 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               title: tr('Skins'),
               subtitle: tr('Current: {0}', [SkinLibrary.instance.byId(appearance.skin)?.nameIn(currentLanguage.tag) ?? tr('Standard')]),
               leading: _icon(AppIcons.paintBrush),
+              trailing: CircleAvatar(radius: 12, backgroundColor: controller.accentColor),
               onTap: () => openSkins(context, controller),
-            ), subtitle: '${tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')} ${tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')}'),
+              // The app theme (accent color) is chosen on the skins page too.
+            ), subtitle: '${tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')} ${tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')} ${tr('App theme')} ${tr('theme color palette dynamic color')}'),
         if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid)
           SettingEntry(tr('App icon'), (context) => NormalItem(
                 title: tr('App icon'),
@@ -1184,16 +1185,6 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: appearance.compact,
               onChanged: (v) => saveLooks(appearance.copyWith(compact: v)),
             ), subtitle: tr('spacing density')),
-        SettingEntry(tr('App theme'), (context) => NormalItem(
-              title: tr('App theme'),
-              subtitle: switch (paletteForSkin(appearance.skin)) {
-                final palette? => tr('Set by the {0} color scheme', [palette.name]),
-                null => tr('Current: {0} · {1}', [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),
-              },
-              leading: _icon(AppIcons.eyedropper),
-              trailing: CircleAvatar(radius: 12, backgroundColor: controller.accentColor),
-              onTap: () => openColorSelect(context, controller),
-            ), subtitle: tr('theme color palette dynamic color')),
         SettingEntry(tr('App font'), (context) => NormalItem(
               title: tr('App font'),
               subtitle: tr('{0} · font size {1}%', [fontChoices.where((f) => f.$1 == appearance.fontFamily).map((f) => f.$2).firstOrNull ?? tr('System default'), (appearance.textScale * 100).round()]),

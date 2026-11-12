@@ -18,7 +18,9 @@ import '../skin_paint.dart';
 import '../theme.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import 'downloads_page.dart' show openInExplorer;
+import '../palettes.dart' show paletteForSkin;
 import 'settings_sections.dart' show themeModes;
+import 'settings_subpages.dart' show openColorSelect;
 
 const _guide = 'https://github.com/0x696c757a696f/lumtub/blob/main/skins/README.md';
 
@@ -88,6 +90,18 @@ class _SkinsPage extends StatelessWidget {
               value: appearance.themeMode,
               values: themeModes,
               onSelected: (mode) => controller.saveAppearance(controller.appearance.copyWith(themeMode: mode, darkSchedule: DarkSchedule.off)),
+            ),
+            // The accent color of the standard look and of skins that leave
+            // colors to the app; a color scheme sets its own.
+            NormalItem(
+              title: tr('App theme'),
+              subtitle: switch (paletteForSkin(appearance.skin)) {
+                final palette? => tr('Set by the {0} color scheme', [palette.name]),
+                null => tr('Current: {0} · {1}', [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),
+              },
+              leading: Icon(AppIcons.eyedropper),
+              trailing: CircleAvatar(radius: 12, backgroundColor: controller.accentColor),
+              onTap: () => openColorSelect(context, controller),
             ),
             if (context.skin?.glass ?? false)
               ListTile(

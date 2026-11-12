@@ -85,7 +85,6 @@ void main() {
       (SettingsCategory.play, 'Speed settings', 'Speed settings', 'Speed list'),
       (SettingsCategory.subtitles, 'Subtitle settings', 'Subtitle settings', 'First subtitle language'),
       (SettingsCategory.subtitles, 'Translation & AI', 'Translation & AI', 'Google Translate (free)'),
-      (SettingsCategory.style, 'App theme', 'Choose app theme', 'Palette style'),
       (SettingsCategory.style, 'App font', 'App font', 'Microsoft YaHei'),
       (SettingsCategory.storage, 'Components', 'Components', 'Preparing components…'),
       (SettingsCategory.about, 'Error log', 'Logs', 'No logs yet'),
@@ -101,7 +100,11 @@ void main() {
 
   testWidgets('a theme preset sets the colour and palette style in one tap', (tester) async {
     await pump(tester);
-    await openRow(tester, SettingsCategory.style, 'App theme');
+    // The app theme is chosen on the skins page.
+    await openRow(tester, SettingsCategory.style, 'Skins');
+    await tester.tap(find.text('App theme'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(AppBar, 'Choose app theme'), findsOneWidget);
     expect(find.text('Classic red'), findsOneWidget);
     await tester.tap(find.text('Forest green'));
     await tester.pumpAndSettle();

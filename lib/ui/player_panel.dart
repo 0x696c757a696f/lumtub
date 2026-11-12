@@ -13,7 +13,7 @@ import 'app_icons.dart';
 /// video apps open their panels, so the video stays in view.
 Future<void> showPlayerPanel(BuildContext context, {required String title, List<Widget> actions = const [], double width = 400, required WidgetBuilder builder}) {
   final size = MediaQuery.sizeOf(context);
-  if (isPhone(context) && size.height > size.width) {
+  if (watchesLikePhone(context) && size.height > size.width) {
     final below = size.height - MediaQuery.paddingOf(context).top - size.width * 9 / 16;
     return showModalBottomSheet<void>(
       context: context,

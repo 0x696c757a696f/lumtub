@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show DeviceOrientation, SystemChrome, SystemUiMode;
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../../device.dart';
 import '../window_chrome.dart';
 import '../../app/app_controller.dart';
 import '../../appearance_settings.dart' show bundledFont;
@@ -120,10 +121,11 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
     _waitUpright = view != null && view.physicalSize.width > view.physicalSize.height;
   }
 
-  /// Enters fullscreen once per video when 自动全屏 is on.
+  /// Enters fullscreen once per video when 自动全屏 is on, and always on a TV.
   void _autoFullscreen(AppController controller) {
     final id = controller.playing?.id;
-    if (id == null || id == _fullscreenFor || !controller.preferences.autoFullscreen) return;
+    // A TV plays full screen, as TV video apps do; back shows the page.
+    if (id == null || id == _fullscreenFor || !(controller.preferences.autoFullscreen || Device.tv)) return;
     _fullscreenFor = id;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = _video.currentState;
@@ -164,7 +166,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
           final theater = theaterMode.value;
           // A phone keeps the player at the top and the rest in tabs under
           // it, as phone video apps do.
-          final phone = isPhone(context);
+          final phone = watchesLikePhone(context);
           final item = controller.playing;
           final hasChat = item?.isLive == true || item?.liveStatus == 'was_live';
           // 剧场模式 in a wide window keeps comments, up next and the chat
@@ -382,7 +384,7 @@ class _Toolbar extends StatelessWidget {
     final library = controller.library;
     final favorite = library?.isFavorite(item.id) ?? false;
     final later = library?.isWatchLater(item.id) ?? false;
-    final phone = isPhone(context);
+    final phone = watchesLikePhone(context);
     // A phone's buttons go in one row that scrolls sideways, each with its
     // name, as phone video apps lay them out.
     Widget layout(List<Widget> children) => phone
@@ -652,7 +654,7 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isPhone(context)) return IconButton(tooltip: tooltip, icon: icon, onPressed: onPressed);
+    if (!watchesLikePhone(context)) return IconButton(tooltip: tooltip, icon: icon, onPressed: onPressed);
     return TextButton.icon(
       style: TextButton.styleFrom(foregroundColor: context.colors.onSurface, backgroundColor: context.colors.surfaceContainerHighest, padding: const EdgeInsets.symmetric(horizontal: 12)),
       onPressed: onPressed,

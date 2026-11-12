@@ -264,6 +264,14 @@ final bool _touchFirst = Platform.isAndroid || Platform.isIOS;
 /// the top edge, full screen when turned sideways.
 bool isPhone(BuildContext context) => touchFirst && !Device.tv && MediaQuery.sizeOf(context).shortestSide < 600;
 
+/// A watch page laid out as a phone's: on a phone, and on a tablet held
+/// upright, where the player across the width leaves room for tabs under it.
+bool watchesLikePhone(BuildContext context) {
+  if (isPhone(context)) return true;
+  final size = MediaQuery.sizeOf(context);
+  return touchFirst && !Device.tv && size.height > size.width;
+}
+
 /// One row of [pickFromSheet]; a null label draws a divider.
 typedef SheetChoice<T> = ({T? value, IconData? icon, String? label, bool selected});
 

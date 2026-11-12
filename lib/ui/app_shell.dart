@@ -408,7 +408,7 @@ class _AppShellState extends State<AppShell> {
                     selected: _bottomIndex,
                     onSelected: _selectBottom,
                   );
-              final watchingOnPhone = _controller.onWatchPage && isPhone(context);
+              final watchingOnPhone = _controller.onWatchPage && watchesLikePhone(context);
               final scaffold = Scaffold(
                 // The page under the bars is veiled on its own (_veiled).
                 backgroundColor: Colors.transparent,

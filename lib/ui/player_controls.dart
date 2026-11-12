@@ -1542,7 +1542,8 @@ class _PopupMenu<T> extends StatelessWidget {
   final VoidCallback onClosed;
   final Widget child;
 
-  static const _itemHeight = 36.0;
+  /// A finger's height on a touch screen, and a remote's on a TV.
+  static double get _itemHeight => touchFirst ? 48.0 : 36.0;
   static const _padding = 6.0;
 
   /// Opens the list just above the button, as the bars sit at the bottom,

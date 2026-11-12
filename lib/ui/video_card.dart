@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../device.dart';
 import '../app/app_controller.dart';
 import '../appearance_settings.dart';
 import '../library_store.dart';
@@ -82,7 +83,10 @@ const _reasonHeight = 20.0;
 
 /// [padding] is the space a skin leaves round each video card.
 ({int columns, double itemHeight}) gridLayoutFor(double width, {double padding = 0}) {
-  final narrowest = compactCards ? videoCardMinWidth * _compactWidth : videoCardMinWidth;
+  // A TV is seen from across the room, so its few pixels across still fit
+  // three or four cards a row, as TV video apps show them.
+  final base = Device.tv ? min(videoCardMinWidth, 200.0) : videoCardMinWidth;
+  final narrowest = compactCards ? base * _compactWidth : base;
   final columns = max(1, ((width + gridGap) / (narrowest + gridGap)).floor());
   final itemWidth = (width - gridGap * (columns - 1)) / columns;
   return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight + 2 * padding);

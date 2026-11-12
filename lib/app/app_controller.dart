@@ -418,6 +418,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   static void _applyAppearanceGlobals(AppearanceSettings appearance) {
     VideoItem.thumbnailFile = appearance.effectiveThumbnails.file;
     videoCardMinWidth = appearance.cardWidth;
+    compactCards = appearance.compact;
     lowResourceMode = appearance.lowResource;
     videoLayout = appearance.layout;
   }

@@ -709,8 +709,8 @@ class SliverVideoLayout extends StatelessWidget {
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: layout.columns,
-              mainAxisSpacing: AppStyle.cardSpacing,
-              crossAxisSpacing: AppStyle.cardSpacing,
+              mainAxisSpacing: gridGap,
+              crossAxisSpacing: gridGap,
               mainAxisExtent: layout.itemHeight,
             ),
             delegate: SliverChildBuilderDelegate(builder, childCount: count),

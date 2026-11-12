@@ -302,11 +302,11 @@ Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => sho
                 child: Row(children: [
                   Expanded(child: Text(action)),
                   const SizedBox(width: 12),
-                  Container(
+                  Flexible(child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(6)),
-                    child: Text(keys, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                  ),
+                    child: Text(keys, textAlign: TextAlign.end, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  )),
                 ]),
               ),
           ]),

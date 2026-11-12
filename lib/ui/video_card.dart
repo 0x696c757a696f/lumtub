@@ -24,8 +24,17 @@ import 'motion.dart';
 import 'app_icons.dart';
 
 /// Height of the text below a card's thumbnail: two title lines and one
-/// channel line.
-const _cardInfoHeight = 82.0;
+/// channel line; in compact mode, smaller type with the views and age on a
+/// line of their own above the channel.
+double get _cardInfoHeight => compactCards ? 86.0 : 82.0;
+
+/// The gap between cards; tighter in compact mode, where cards sit on a
+/// surface of their own.
+double get gridGap => compactCards ? Space.s : AppStyle.cardSpacing;
+double get _gridRowGap => compactCards ? Space.m : AppStyle.cardSpacing;
+
+/// The narrowest card in compact mode is this part of the chosen width.
+const _compactWidth = 0.8;
 
 /// [item]'s thumbnail, or DeArrow's frame for it when that is on and one
 /// was chosen. [size] is a smaller YouTube file for small tiles, so they
@@ -72,8 +81,9 @@ const _reasonHeight = 20.0;
 
 /// [padding] is the space a skin leaves round each video card.
 ({int columns, double itemHeight}) gridLayoutFor(double width, {double padding = 0}) {
-  final columns = max(1, ((width + AppStyle.cardSpacing) / (videoCardMinWidth + AppStyle.cardSpacing)).floor());
-  final itemWidth = (width - AppStyle.cardSpacing * (columns - 1)) / columns;
+  final narrowest = compactCards ? videoCardMinWidth * _compactWidth : videoCardMinWidth;
+  final columns = max(1, ((width + gridGap) / (narrowest + gridGap)).floor());
+  final itemWidth = (width - gridGap * (columns - 1)) / columns;
   return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight + 2 * padding);
 }
 
@@ -137,8 +147,8 @@ class SliverVideoGrid extends StatelessWidget {
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: layout.columns,
-              mainAxisSpacing: AppStyle.cardSpacing,
-              crossAxisSpacing: AppStyle.cardSpacing,
+              mainAxisSpacing: _gridRowGap,
+              crossAxisSpacing: gridGap,
               mainAxisExtent: layout.itemHeight + (reasons == null ? 0 : _reasonHeight) + (watched == null ? 0 : _reasonHeight),
             ),
             delegate: SliverChildBuilderDelegate(
@@ -286,8 +296,8 @@ class SliverPlaylistGrid extends StatelessWidget {
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: layout.columns,
-              mainAxisSpacing: AppStyle.cardSpacing,
-              crossAxisSpacing: AppStyle.cardSpacing,
+              mainAxisSpacing: _gridRowGap,
+              crossAxisSpacing: gridGap,
               mainAxisExtent: layout.itemHeight,
             ),
             delegate: SliverChildBuilderDelegate((context, i) => PlaylistCard(item: items[i], onOpen: () => onOpen(items[i])), childCount: items.length),
@@ -374,10 +384,10 @@ class SliverSkeletonGrid extends StatelessWidget {
           return SliverToBoxAdapter(child: Skeleton(child: SizedBox(
             width: width,
             child: Wrap(
-              spacing: AppStyle.cardSpacing,
-              runSpacing: AppStyle.cardSpacing,
+              spacing: gridGap,
+              runSpacing: _gridRowGap,
               children: List.generate(layout.columns * rows, (_) => SizedBox(
-                width: (width - AppStyle.cardSpacing * (layout.columns - 1)) / layout.columns - 0.01,
+                width: (width - gridGap * (layout.columns - 1)) / layout.columns - 0.01,
                 height: layout.itemHeight,
                 child: const _CardSkeleton(),
               )),
@@ -515,14 +525,17 @@ class _VideoCardState extends State<VideoCard> {
   Widget _build(BuildContext context, VideoItem item) {
     _branding = _brandingNow();
     final colors = context.colors;
-    final meta = MetaLine.of(item, style: TextStyle(fontSize: 12, color: colors.outline));
+    final metaStyle = TextStyle(fontSize: 12, color: colors.outline);
+    final meta = MetaLine.of(item, style: metaStyle);
     // A picture and text on the page, as YouTube shows them: no box round,
-    // unless a skin puts cards on a surface.
+    // unless a skin puts cards on a surface. Compact cards sit on a quiet
+    // surface of their own, so tightly packed ones still read apart.
     final skin = context.skin;
+    final compact = compactCards && skin?.videoCard == null;
     final card = Card(
-      color: Colors.transparent,
+      color: compact ? colors.surfaceContainerLow : Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: AppStyle.cardRadius),
-      clipBehavior: Clip.none,
+      clipBehavior: compact ? Clip.antiAlias : Clip.none,
       child: InkWell(
         borderRadius: AppStyle.cardRadius,
         hoverColor: Colors.transparent,
@@ -535,7 +548,7 @@ class _VideoCardState extends State<VideoCard> {
           AspectRatio(
             aspectRatio: 16 / 9,
             child: ClipRRect(
-              borderRadius: context.thumbnailRadius,
+              borderRadius: compact ? BorderRadius.zero : context.thumbnailRadius,
               child: Stack(fit: StackFit.expand, children: [
                 AnimatedScale(
                   scale: _hovered ? 1.04 : 1,
@@ -592,11 +605,17 @@ class _VideoCardState extends State<VideoCard> {
             ),
           ),
           Expanded(child: Padding(
-            padding: const EdgeInsets.fromLTRB(2, 10, 2, 4),
+            padding: compact ? const EdgeInsets.fromLTRB(8, 6, 8, 4) : const EdgeInsets.fromLTRB(2, 10, 2, 4),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Flexible(child: Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
+              Flexible(child: Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: compact ? 13 : 14, height: compact ? 1.32 : 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
               const SizedBox(height: Space.xs),
-              meta,
+              if (compact) ...[
+                // Views and age first, where the eye lands after the title,
+                // then whose it is.
+                Text(meta.tail.isEmpty ? ' ' : meta.tail, maxLines: 1, overflow: TextOverflow.ellipsis, style: metaStyle),
+                Text(meta.lead.isEmpty ? tr('YouTube') : meta.lead, maxLines: 1, overflow: TextOverflow.ellipsis, style: metaStyle),
+              ] else
+                meta,
               if (widget.watched case final watched?) SizedBox(height: _reasonHeight, child: WatchedLine(watched)),
               if (widget.reason case final reason?)
                 SizedBox(
@@ -832,6 +851,9 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
             if (upcomingStart != null)
               Text(upcomingStart, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary, fontWeight: FontWeight.w500)),
             Text(item.channel.isEmpty ? tr('YouTube') : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
+            // Views and age, so choosing what to watch next needs no hover.
+            if (MetaLine.of(item, style: const TextStyle()).tail case final facts when facts.isNotEmpty)
+              Text(facts, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
           ])),
         ]),
       ),

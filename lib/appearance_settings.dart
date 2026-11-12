@@ -154,6 +154,10 @@ final fontChoices = <(String?, String)>[
 /// The narrowest a video card may get; set from [AppearanceSettings.cardWidth].
 double videoCardMinWidth = 250.0;
 
+/// [AppearanceSettings.compact]: denser video grids, for code that has no
+/// settings at hand.
+bool compactCards = false;
+
 /// [AppearanceSettings.lowResource], for code that has no settings at hand.
 bool lowResourceMode = false;
 

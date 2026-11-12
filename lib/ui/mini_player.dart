@@ -134,6 +134,9 @@ class _MiniPlayerState extends State<MiniPlayer> {
     }
   }
 
+  /// Below this height the mini player shows no subtitles.
+  static const miniSubtitlesFrom = 120.0;
+
   Widget _video(BuildContext context) {
     if (!_videoMounted) return const SizedBox.expand();
     final builder = widget.videoBuilder;
@@ -147,7 +150,11 @@ class _MiniPlayerState extends State<MiniPlayer> {
           builder: (context, constraints) => Video(
             controller: controller,
             controls: NoVideoControls,
-            subtitleViewConfiguration: subtitleViewFor(_controller.settings, smallWindow: constraints.biggest, secondary: _controller.secondarySubtitle?.label),
+            // The phone's mini bar is a thumbnail: even the smallest
+            // readable text would cover the picture.
+            subtitleViewConfiguration: constraints.biggest.shortestSide < miniSubtitlesFrom
+                ? const SubtitleViewConfiguration(visible: false)
+                : subtitleViewFor(_controller.settings, smallWindow: constraints.biggest, secondary: _controller.secondarySubtitle?.label),
           ),
         ),
       ),

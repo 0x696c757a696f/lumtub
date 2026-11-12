@@ -112,20 +112,35 @@ class PageHeader extends StatelessWidget {
   final String? subtitle;
   final Widget? trailing;
 
+  /// Narrower than this, the buttons go under the title, so on a phone
+  /// they do not squeeze it.
+  static const stackBelow = 560.0;
+
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, 16),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
-            if (subtitle != null) ...[
-              const SizedBox(height: 2),
-              Text(subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.bodyMedium?.copyWith(color: context.colors.onSurfaceVariant)),
-            ],
-          ])),
-          if (trailing != null) trailing!,
-        ]),
-      );
+  Widget build(BuildContext context) {
+    final heading = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+      if (subtitle != null) ...[
+        const SizedBox(height: 2),
+        Text(subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.bodyMedium?.copyWith(color: context.colors.onSurfaceVariant)),
+      ],
+    ]);
+    final trailing = this.trailing;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, 16),
+      child: trailing == null
+          ? Row(children: [Expanded(child: heading)])
+          : LayoutBuilder(
+              builder: (context, constraints) => constraints.maxWidth < stackBelow
+                  ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      heading,
+                      const SizedBox(height: 4),
+                      SingleChildScrollView(scrollDirection: Axis.horizontal, child: trailing),
+                    ])
+                  : Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Expanded(child: heading), trailing]),
+            ),
+    );
+  }
 }
 
 String twoDigits(int n) => n.toString().padLeft(2, '0');

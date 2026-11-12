@@ -697,6 +697,9 @@ jobs:
           # requirements only matter for static linking and are not installed.
           sed -i '/^Requires.private:/d' "$RUNNER_TEMP/mpv/lib/pkgconfig/mpv.pc"
           echo "PKG_CONFIG_PATH=$RUNNER_TEMP/mpv/lib/pkgconfig" >> "$GITHUB_ENV"
+          # The libraries libmpv needs come in the same folder; the linker
+          # looks there for them when it links the video plugin.
+          echo "LDFLAGS=-Wl,-rpath-link,$RUNNER_TEMP/mpv/lib" >> "$GITHUB_ENV"
           PKG_CONFIG_PATH="$RUNNER_TEMP/mpv/lib/pkgconfig" pkg-config --modversion --libs mpv
 
       - name: Linux - get packages

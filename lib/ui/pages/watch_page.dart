@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'dart:math';
 
@@ -349,7 +350,7 @@ class _Toolbar extends StatelessWidget {
                   ? const SizedBox.shrink()
                   : IconButton(
                       tooltip: tr('Copy link at current time'),
-                      icon: Icon(AppIcons.clock),
+                      icon: Icon(AppIcons.timer),
                       onPressed: () {
                         final link = timestampLink(item.id, controller.player?.state.position ?? Duration.zero);
                         if (link != null) copyText(context, link, tr('Link copied'));
@@ -357,7 +358,8 @@ class _Toolbar extends StatelessWidget {
                     ),
             ),
           IconButton(tooltip: tr('Open in browser'), icon: Icon(AppIcons.arrowSquareOut), onPressed: () => openExternal(item.url)),
-          IconButton(tooltip: tr('Keyboard shortcuts'), icon: Icon(AppIcons.keyboard), onPressed: () => showShortcutHelp(context, controller.preferences)),
+          if (!Platform.isAndroid)
+            IconButton(tooltip: tr('Keyboard shortcuts'), icon: Icon(AppIcons.keyboard), onPressed: () => showShortcutHelp(context, controller.preferences)),
         ],
       ),
       if (decoded)

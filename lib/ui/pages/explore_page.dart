@@ -193,12 +193,17 @@ class _ExplorePageState extends State<ExplorePage> {
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 12, AppStyle.pagePadding, 16),
           child: Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-            SegmentedButton<ExploreMode>(
-              showSelectedIcon: false,
-              style: const ButtonStyle(visualDensity: VisualDensity.compact),
-              segments: [for (final m in ExploreMode.of(section)) ButtonSegment(value: m, label: Text(m.label))],
-              selected: {mode},
-              onSelectionChanged: (value) => controller.setExplore(mode: value.first),
+            // On a narrow screen the row scrolls instead of each label
+            // breaking over two lines.
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SegmentedButton<ExploreMode>(
+                showSelectedIcon: false,
+                style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                segments: [for (final m in ExploreMode.of(section)) ButtonSegment(value: m, label: Text(m.label, maxLines: 1, softWrap: false))],
+                selected: {mode},
+                onSelectionChanged: (value) => controller.setExplore(mode: value.first),
+              ),
             ),
             if (mode.hasPeriod)
               OptionChip(

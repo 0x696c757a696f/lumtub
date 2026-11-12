@@ -232,6 +232,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   final _bottomBarKey = GlobalKey();
+  /// The most subtitles move up while the controls show, as a share of the
+  /// picture's height.
+  static const _maxLift = 0.15;
   bool _lifted = false;
 
   /// Moves the subtitles above the bottom bar while it [shows], so it never
@@ -242,15 +245,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final box = context.findRenderObject();
     if (shows && (bar is! RenderBox || !bar.hasSize || box is! RenderBox || !box.hasSize)) return;
     _lifted = shows;
-    final lift = shows ? (bar as RenderBox).size.height : 0.0;
+    // mpv places subtitles in percent of the picture, which may be letterboxed.
+    final size = shows ? (box as RenderBox).size : Size.zero;
+    final w = _player.state.width ?? 0, h = _player.state.height ?? 0;
+    final picture = w > 0 && h > 0 ? min(size.height, size.width * h / w) : size.height;
+    // Above the bar, but never far into the picture: in a small player,
+    // such as a phone's above the page, the bar covers a third of it, and
+    // subtitles lifted over all of it would sit in the middle.
+    final lift = shows ? min((bar as RenderBox).size.height, picture * _maxLift) : 0.0;
     final view = widget.state;
     if (view != null && view.mounted) view.setSubtitleViewPadding(view.widget.subtitleViewConfiguration.padding + EdgeInsets.only(bottom: lift));
     if (lift == 0) return _controller.liftSubtitles(0);
-    // mpv places subtitles in percent of the picture, which may be letterboxed.
-    final size = (box as RenderBox).size;
-    final w = _player.state.width ?? 0, h = _player.state.height ?? 0;
-    final picture = w > 0 && h > 0 ? min(size.height, size.width * h / w) : size.height;
-    _controller.liftSubtitles(picture > 0 ? (lift / picture * 100).ceil().clamp(0, 40) : 0);
+    _controller.liftSubtitles(picture > 0 ? (lift / picture * 100).ceil() : 0);
   }
 
   void _show() {
@@ -399,7 +405,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         start: 12,
         top: 0,
         bottom: 0,
-        child: Center(
+        child: SafeArea(
+          right: false,
+          child: Center(
           child: FadeTransition(
             opacity: _animation,
             child: IgnorePointer(
@@ -425,6 +433,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               ]),
             ),
           ),
+        ),
         ),
       );
 
@@ -529,10 +538,13 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                     ),
                   ),
                 if (!_locked) ...[
-                  Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _topBar(context, fullscreen))),
+                  // In full screen the bars keep clear of a camera cutout.
+                  Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: SafeArea(top: fullscreen, bottom: false, left: fullscreen, right: fullscreen, child: _topBar(context, fullscreen)))),
                   Positioned(left: 0, right: 0, bottom: 0, child: KeyedSubtree(key: _bottomBarKey, child: _bar(top: false, child: _bottomBar(context, fullscreen)))),
                 ],
-                if (_locked || _touched || fullscreen) _lockButton(),
+                // On a phone, only in full screen: over the small player above the
+                // page it covers the picture and has nothing to lock.
+                if (_locked || fullscreen || (_touched && !_phone)) _lockButton(),
               ]),
             ),
           ),

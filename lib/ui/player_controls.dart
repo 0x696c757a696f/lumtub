@@ -561,8 +561,6 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                       ),
                     ),
                   ),
-                // The small player's play button is in its bar.
-                if (!_locked && _phone && fullscreen) _centerControls(),
                 if (!_locked) ...[
                   // In full screen the bars keep clear of a camera cutout.
                   Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: SafeArea(top: fullscreen, bottom: false, left: fullscreen, right: fullscreen, child: _topBar(context, fullscreen)))),
@@ -629,40 +627,6 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       ),
     );
   }
-
-  /// On a phone, as on phone players: previous, a large play/pause and
-  /// next in the middle of the picture, where a thumb reaches them. The
-  /// spinner takes the play button's place while loading.
-  Widget _centerControls() => Center(
-        child: AnimatedBuilder(
-          animation: _animation,
-          builder: (context, child) => IgnorePointer(ignoring: _animation.value < 0.5, child: Opacity(opacity: _animation.value, child: child)),
-          child: StreamBuilder<bool>(
-            stream: _player.stream.buffering,
-            initialData: _player.state.buffering,
-            builder: (context, snapshot) => Row(mainAxisSize: MainAxisSize.min, children: [
-              _RoundButton(
-                tooltip: tr('Previous video'),
-                icon: AppIcons.skipBackFill,
-                size: 52,
-                onTap: _controller.hasPrevious ? () => unawaited(_controller.playPrevious()) : null,
-              ),
-              const SizedBox(width: 28),
-              if (snapshot.data == true)
-                const SizedBox(width: 64, height: 64)
-              else
-                _PlayPauseButton(player: _player, big: true),
-              const SizedBox(width: 28),
-              _RoundButton(
-                tooltip: tr('Next (Shift+N)'),
-                icon: AppIcons.skipForwardFill,
-                size: 52,
-                onTap: _controller.hasNext ? () => unawaited(_controller.playNext()) : null,
-              ),
-            ]),
-          ),
-        ),
-      );
 
   Widget _buffering() => StreamBuilder<bool>(
         stream: _player.stream.buffering,
@@ -867,8 +831,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ),
         const SizedBox(height: 2),
         Row(children: [
-          if (!_phone) _PlayPauseButton(player: _player),
-          if (_controller.hasNext && !_phone)
+          // On a phone too the buttons are in the bar, as phone video apps
+          // have them in full screen, leaving the picture clear.
+          _PlayPauseButton(player: _player),
+          if (_controller.hasNext)
             _IconButton(tooltip: tr('Next (Shift+N)'), icon: AppIcons.skipForwardFill, size: 22, width: width, onTap: () => unawaited(_controller.playNext())),
           if (!_phone) _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
           SizedBox(width: _phone ? 8 : 4),
@@ -1350,10 +1316,8 @@ class _PositionBuilderState extends State<_PositionBuilder> {
 }
 
 class _PlayPauseButton extends StatefulWidget {
-  const _PlayPauseButton({required this.player, this.big = false});
+  const _PlayPauseButton({required this.player});
   final Player player;
-  /// The round one in the middle of a phone's picture.
-  final bool big;
 
   @override
   State<_PlayPauseButton> createState() => _PlayPauseButtonState();
@@ -1382,18 +1346,12 @@ class _PlayPauseButtonState extends State<_PlayPauseButton> with SingleTickerPro
         child: _Hover(
           label: tr('Play/Pause (Space)'),
           onTap: () => unawaited(widget.player.playOrPause()),
-          child: widget.big
-              ? Container(
-                  width: 64,
-                  height: 64,
-                  decoration: const BoxDecoration(color: Color(0x66000000), shape: BoxShape.circle),
-                  child: Center(child: AnimatedIcon(progress: _animation, icon: AnimatedIcons.play_pause, color: Colors.white, size: 36)),
-                )
-              : SizedBox(
-                  width: 42,
-                  height: 34,
-                  child: Center(child: AnimatedIcon(progress: _animation, icon: AnimatedIcons.play_pause, color: Colors.white, size: 20)),
-                ),
+          // A finger's size on a touch screen.
+          child: SizedBox(
+            width: touchFirst ? 48 : 42,
+            height: touchFirst ? 40 : 34,
+            child: Center(child: AnimatedIcon(progress: _animation, icon: AnimatedIcons.play_pause, color: Colors.white, size: touchFirst ? 26 : 20)),
+          ),
         ),
       );
 }
@@ -1625,34 +1583,4 @@ String trackLabel(String id, String? title, String? language) {
   }
   final parts = [if (title != null && title.isNotEmpty) title, if (language != null && language.isNotEmpty) language];
   return parts.isEmpty ? tr('Track {0}', [id]) : parts.join(' · ');
-}
-
-/// A round button over the middle of the picture; dimmed when [onTap] is
-/// null, so the row keeps its shape.
-class _RoundButton extends StatelessWidget {
-  const _RoundButton({required this.tooltip, required this.icon, required this.size, required this.onTap});
-  final String tooltip;
-  final IconData icon;
-  final double size;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-        message: tooltip,
-        child: Semantics(
-          button: true,
-          enabled: onTap != null,
-          label: tooltip,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onTap,
-            child: Container(
-              width: size,
-              height: size,
-              decoration: const BoxDecoration(color: Color(0x4D000000), shape: BoxShape.circle),
-              child: Icon(icon, color: onTap == null ? Colors.white38 : Colors.white, size: size * 0.46),
-            ),
-          ),
-        ),
-      );
 }

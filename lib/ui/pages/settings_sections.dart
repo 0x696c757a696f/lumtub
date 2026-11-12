@@ -826,7 +826,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr("shorts fewer don't recommend")),
         SettingEntry(tr('Vertical videos in For You'), (context) => NormalItem(
               title: tr('Vertical videos in For You'),
-              subtitle: tr('Now: {0}. A vertical video has known dimensions with height greater than width. It is separate from Shorts and affects For You on Home and Explore only', [labelOf(_feedLevels, prefs.feedVertical)]),
+              subtitle: tr('Now: {0}. Told by a frame taller than wide, or by the bars at the sides of the thumbnail. Separate from Shorts. Fewer applies to For You; Don\'t recommend also removes them from every Explore list', [labelOf(_feedLevels, prefs.feedVertical)]),
               leading: _icon(AppIcons.deviceMobileSpeaker),
               onTap: () => pickFromDialog<FeedLevel>(context, title: tr('Vertical videos in For You'), value: prefs.feedVertical, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedVertical: v))),
             ), subtitle: tr("vertical fewer don't recommend")),

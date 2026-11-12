@@ -306,6 +306,8 @@ extension ExploreActions on AppController {
     // its own loader, so it must apply the mix here instead of relying on
     // HomeFeed's ranking pass.
     final feedMix = mode == ExploreMode.forYou ? preferences.feedMix : null;
+    // Hiding vertical videos holds for every list of the explore page.
+    final dropVertical = preferences.feedVertical == FeedLevel.drop;
     final notInterested = homeFeed?.notInterested;
     final faith = exploreSection.isFaith ? faithFilter() : null;
     // A live stream goes on after it was watched: only videos are left out
@@ -346,6 +348,7 @@ extension ExploreActions on AppController {
         if (known.contains(TasteProfile.channelKey(item))) return drop('known channel');
       }
       if (mode == ExploreMode.curated && seconds != null && seconds < 240) return drop('too short');
+      if (dropVertical && isVertical(item)) return drop('vertical');
       if (!spoken && !language.matches(item.title)) return drop('language');
       // 全部 is for finding more: not what was watched or what 为你推荐
       // already shows. It keeps any one channel from filling it.
@@ -380,6 +383,12 @@ extension ExploreActions on AppController {
               for (final wider in broader) {
                 listing = listing.followedBy(() => searchIn([wider]), switched: () => logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$wider"'));
               }
+            }
+            // Search listings give no frame size: a vertical video is told
+            // by the bars at the sides of its thumbnail.
+            final thumbnails = thumbnailDirectory;
+            if (dropVertical && thumbnails != null) {
+              listing = listing.refined((lines) => PortraitThumbnails.drop(lines, (id) => PortraitThumbnails.check(id, thumbnails)));
             }
             final languages = _videoLanguages;
             return spoken && languages != null

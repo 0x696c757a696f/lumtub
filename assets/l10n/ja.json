@@ -1605,7 +1605,6 @@
   "Now: {0}. Shorts use YouTube Shorts metadata or short duration. They are separate from ordinary vertical videos and affect For You on Home and Explore only": "現在：{0}。ショートは YouTube のショートのマークまたは短い長さで判定し、通常の縦長動画とは別扱いです。ホームと探索のあなたへのおすすめにのみ影響します",
   "shorts fewer don't recommend": "ショート 減らす おすすめしない",
   "Vertical videos in For You": "おすすめ内の縦長動画",
-  "Now: {0}. A vertical video has known dimensions with height greater than width. It is separate from Shorts and affects For You on Home and Explore only": "現在：{0}。既知の画面サイズで高さが幅より大きいものを縦長動画と判定し、ショートとは別扱いです。ホームと探索のあなたへのおすすめにのみ影響します",
   "vertical fewer don't recommend": "縦長 減らす おすすめしない",
   "3D modeling": "3D モデリング",
   "AI conference": "AI カンファレンス",

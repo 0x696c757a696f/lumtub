@@ -1608,7 +1608,7 @@
   "Now: {0}. Shorts use YouTube Shorts metadata or short duration. They are separate from ordinary vertical videos and affect For You on Home and Explore only": "当前：{0}；Shorts 按 YouTube Shorts 标记或短时长识别，和普通竖屏视频独立；只影响首页和探索的为你推荐",
   "shorts fewer don't recommend": "短视频 减少 不推荐",
   "Vertical videos in For You": "推荐中的竖屏视频",
-  "Now: {0}. A vertical video has known dimensions with height greater than width. It is separate from Shorts and affects For You on Home and Explore only": "当前：{0}；按已知画面尺寸的高大于宽识别，和 Shorts 独立；只影响首页和探索的为你推荐",
+  "Now: {0}. Told by a frame taller than wide, or by the bars at the sides of the thumbnail. Separate from Shorts. Fewer applies to For You; Don't recommend also removes them from every Explore list": "当前：{0}；按画面高大于宽，或缩略图两侧的黑边、模糊边识别，和 Shorts 独立；“减少”只影响为你推荐，“不推荐”还会从探索的所有列表里去掉",
   "vertical fewer don't recommend": "竖屏 减少 不推荐",
   "3D modeling": "3D 建模",
   "AI conference": "AI 大会",

@@ -423,15 +423,20 @@ class WebVtt {
     var last = 0;
     for (var k = 0; k < parts.length - 1; k++) {
       done += weights[k];
-      final aim = (text.length * done / total).round().clamp(last, text.length);
+      // Each piece keeps at least a character, and leaves one for each
+      // piece after it.
+      final low = last + 1;
+      final high = text.length - (parts.length - 1 - k);
+      if (low > high) return [for (final _ in parts) text];
+      final aim = (text.length * done / total).round().clamp(low, high);
       int? best;
       bool better(int at, int? than) => than == null || (at - aim).abs() < (than - aim).abs();
       // A punctuation mark first, then a space; the cut goes after either.
-      for (var at = (aim - window).clamp(last, text.length); at <= (aim + window).clamp(last, text.length); at++) {
-        if (at > 0 && at < text.length && _clauseEnd.hasMatch(text[at - 1]) && (!spaced || text[at] == ' ') && better(at, best)) best = at;
+      for (var at = (aim - window).clamp(low, high); at <= (aim + window).clamp(low, high); at++) {
+        if (at < text.length && _clauseEnd.hasMatch(text[at - 1]) && (!spaced || text[at] == ' ') && better(at, best)) best = at;
       }
       if (best == null && spaced) {
-        for (var at = last + 1; at < text.length; at++) {
+        for (var at = low; at < high; at++) {
           if (text[at] == ' ' && better(at, best)) best = at;
         }
       }

@@ -97,8 +97,19 @@ typedef PairedCue = ({SubtitleCue cue, String? second});
 /// line spans several main lines, as a translation joined into whole
 /// sentences does, those main lines become one row, so each row reads as a
 /// sentence beside its translation.
-List<PairedCue> pairSubtitleCues(List<SubtitleCue> main, List<SubtitleCue> second) {
-  if (second.isEmpty) return [for (final cue in main) (cue: cue, second: null)];
+List<PairedCue> pairSubtitleCues(List<SubtitleCue> main, List<SubtitleCue> given) {
+  if (given.isEmpty) return [for (final cue in main) (cue: cue, second: null)];
+  // A sentence too short to share out shows whole on each of its lines:
+  // those lines are one second line, so the sentence gets one row.
+  final second = <SubtitleCue>[];
+  for (final cue in given) {
+    final last = second.lastOrNull;
+    if (last != null && last.text == cue.text && cue.start - last.end <= const Duration(seconds: 1)) {
+      second.last = (start: last.start, end: cue.end > last.end ? cue.end : last.end, text: last.text);
+    } else {
+      second.add(cue);
+    }
+  }
   final joinNext = List.filled(main.length, false);
   var from = 0;
   for (final other in second) {
@@ -164,7 +175,7 @@ List<PairedCue> pairSubtitleCues(List<SubtitleCue> main, List<SubtitleCue> secon
   return joined;
 }
 
-const _longestRow = Duration(seconds: 15);
+const _longestRow = Duration(seconds: 30);
 
 Duration _overlap(SubtitleCue a, SubtitleCue b) {
   final end = a.end < b.end ? a.end : b.end;

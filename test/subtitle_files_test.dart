@@ -207,6 +207,12 @@ void main() {
     // Never an empty fragment: too short to share, each shows it all.
     expect(WebVtt.splitLike('one', ['a', 'b', 'c']), ['one', 'one', 'one']);
     expect(WebVtt.splitLike('whole', ['only']), ['whole']);
+    // Many short fragments each get a piece, never two cuts at one mark.
+    const sentence = '我知道所有的词，所有的词，但我对答案思考得太多，以至于他更慢地、更慢地重复了这个问题，就像他在和一个小女孩说话一样。';
+    final seven = WebVtt.splitLike(sentence, ['Io conoscevo tutte le parole,', 'tutte, ma ho pensato così tanto alla', 'risposta', 'che lui ha ripetuto la domanda', 'più lentamente,', 'molto più lentamente,', 'come se stesse parlando con una bambina.']);
+    expect(seven.length, 7);
+    expect(seven.join(), sentence);
+    expect(seven.toSet().length, 7);
   });
 
   test('translates automatic captions by sentence, each fragment keeping its time', () async {

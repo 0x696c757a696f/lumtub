@@ -1351,6 +1351,13 @@ class _PopupMenu<T> extends StatelessWidget {
   /// Opens the list just above the button, as the bars sit at the bottom,
   /// instead of over it.
   Future<void> _open(BuildContext context) async {
+    if (touchFirst && isPhone(context)) {
+      onOpened();
+      final picked = await pickFromSheet<T>(context, [for (final (item, label) in items) (value: item, icon: null, label: label, selected: item == value)], title: tooltip);
+      onClosed();
+      if (picked != null && picked != value) onSelected(picked);
+      return;
+    }
     final box = context.findRenderObject()! as RenderBox;
     final overlay = Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
     final rect = Rect.fromPoints(box.localToGlobal(Offset.zero, ancestor: overlay), box.localToGlobal(box.size.bottomRight(Offset.zero), ancestor: overlay));

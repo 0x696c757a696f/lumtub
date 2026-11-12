@@ -246,6 +246,34 @@ final bool touchFirst = Platform.isAndroid || Platform.isIOS;
 /// the top edge, full screen when turned sideways.
 bool isPhone(BuildContext context) => (debugTouchFirst ?? touchFirst) && MediaQuery.sizeOf(context).shortestSide < 600;
 
+/// One row of [pickFromSheet]; a null label draws a divider.
+typedef SheetChoice<T> = ({T? value, IconData? icon, String? label, bool selected});
+
+/// A phone's menu: [choices] as rows a finger can hit, in a sheet from the
+/// bottom of the screen. The picked value, or null when dismissed.
+Future<T?> pickFromSheet<T>(BuildContext context, List<SheetChoice<T>> choices, {String? title}) => showModalBottomSheet<T>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.7),
+      builder: (context) => ListView(shrinkWrap: true, padding: const EdgeInsets.only(bottom: 8), children: [
+        if (title != null) Padding(padding: const EdgeInsets.fromLTRB(24, 0, 24, 8), child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
+        for (final c in choices)
+          if (c.label == null)
+            const Divider(height: 8)
+          else
+            ListTile(
+              minTileHeight: 52,
+              leading: c.icon != null ? Icon(c.icon) : c.selected ? Icon(AppIcons.check) : const SizedBox(width: 24),
+              title: Text(c.label!),
+              selected: c.selected,
+              trailing: c.icon != null && c.selected ? Icon(AppIcons.check) : null,
+              onTap: () => Navigator.pop(context, c.value),
+            ),
+      ]),
+    );
+
 /// Lets tests lay pages out as on a touch screen.
 @visibleForTesting
 bool? debugTouchFirst;

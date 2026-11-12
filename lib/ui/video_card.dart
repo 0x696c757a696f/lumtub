@@ -864,12 +864,20 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
   final favorite = library?.isFavorite(item.id) ?? false;
   final later = library?.isWatchLater(item.id) ?? false;
   final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-  PopupMenuItem<String> entry(String value, IconData icon, String label) =>
-      PopupMenuItem(value: value, child: ListTile(dense: true, leading: Icon(icon), title: Text(label)));
-  final choice = await showMenu<String>(
-    context: context,
-    position: RelativeRect.fromRect(position & const Size(1, 1), Offset.zero & overlay.size),
-    items: [
+  // On a phone the same rows come up from the bottom, a finger's height each.
+  final phone = isPhone(context);
+  final rows = <SheetChoice<String>>[];
+  PopupMenuEntry<String> entry(String value, IconData icon, String label) {
+    rows.add((value: value, icon: icon, label: label, selected: false));
+    return PopupMenuItem(value: value, child: ListTile(dense: true, leading: Icon(icon), title: Text(label)));
+  }
+
+  PopupMenuEntry<String> divider() {
+    rows.add((value: null, icon: null, label: null, selected: false));
+    return const PopupMenuDivider();
+  }
+
+  final items = <PopupMenuEntry<String>>[
       entry('play', AppIcons.playFill, tr('Play')),
       if (library != null) ...[
         entry('favorite', favorite ? AppIcons.heartFill : AppIcons.heart, favorite ? tr('Remove from favorites') : tr('Favorites')),
@@ -893,13 +901,15 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
         removeLabel == null
             ? entry('remove', AppIcons.minusCircle, tr('Remove from this list'))
             : entry('remove', AppIcons.thumbsDown, removeLabel),
-      const PopupMenuDivider(),
+      divider(),
       if (controller?.downloads != null && !item.isLive) entry('download', AppIcons.downloadSimple, tr('Downloads')),
       if (item.isLive && (controller?.downloads?.canRecord ?? false)) entry('download', AppIcons.radioButton, tr('Record the live stream')),
       entry('copy', AppIcons.link, tr('Copy link')),
       entry('browser', AppIcons.arrowSquareOut, tr('Open in browser')),
-    ],
-  );
+  ];
+  final choice = phone
+      ? await pickFromSheet<String>(context, rows, title: item.title)
+      : await showMenu<String>(context: context, position: RelativeRect.fromRect(position & const Size(1, 1), Offset.zero & overlay.size), items: items);
   if (!context.mounted) return;
   switch (choice) {
     case 'play':

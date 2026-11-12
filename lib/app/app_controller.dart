@@ -756,7 +756,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// for the chapter menu, which does not rebuild with everything else.
   final chaptersChanged = ValueNotifier<int>(0);
 
-  static const subtitleWait = Duration(seconds: 10);
+  /// The most a video opened paused waits for its translated subtitles. It
+  /// plays as soon as they are loaded in the player; this only guards a
+  /// translation service that never answers. The first stretch took 9 to
+  /// 30 s in the user's logs; the play button starts it sooner.
+  static const subtitleWait = Duration(seconds: 60);
 
   /// The video opened is held until its translated subtitle is ready.
   bool waitingForSubtitles = false;

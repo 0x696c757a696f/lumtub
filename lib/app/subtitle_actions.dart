@@ -520,7 +520,7 @@ extension SubtitleActions on AppController {
       aspect: width > 0 && height > 0 ? width / height : 16 / 9,
     );
     // Only scheduled: this runs while media_kit handles an mpv event.
-    unawaited(platform.setProperty('secondary-sub-pos', '$position').catchError((Object e) => logDebug(() => 'Could not move the second subtitle: $e')));
+    unawaited(platform.setProperty('secondary-sub-pos', position.toStringAsFixed(1)).catchError((Object e) => logDebug(() => 'Could not move the second subtitle: $e')));
   }
 
   /// Raises subtitles drawn by mpv by [percent] of the picture's height,

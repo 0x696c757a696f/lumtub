@@ -158,9 +158,18 @@ class SecondarySubtitle {
     final before = await platform.getProperty('sid');
     var track = subtitleTrackOf(await mpvSubtitleTracks(platform), option);
     if (track == null) {
-      // "auto" adds the track without choosing it as the main subtitle.
-      await platform.command(['sub-add', file ?? option.url, 'auto', option.label, option.language]);
-      track = subtitleTrackOf(await mpvSubtitleTracks(platform), option);
+      // "auto" adds the track without choosing it as the main subtitle. A
+      // file being replaced by more of its translation can't be opened for
+      // a moment on Windows, so a failed add is tried once more.
+      for (var attempt = 0; track == null && attempt < 2; attempt++) {
+        if (attempt > 0) await Future<void>.delayed(const Duration(milliseconds: 500));
+        try {
+          await platform.command(['sub-add', file ?? option.url, 'auto', option.label, option.language]);
+        } catch (_) {
+          if (attempt > 0) rethrow;
+        }
+        track = subtitleTrackOf(await mpvSubtitleTracks(platform), option);
+      }
       if (track == null) return false;
     }
     await platform.setProperty('secondary-sid', track.id);

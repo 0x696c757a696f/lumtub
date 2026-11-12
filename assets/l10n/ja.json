@@ -2130,7 +2130,6 @@
   "Model name": "モデル名",
   "Reading the subtitle list…": "字幕の一覧を読み取り中…",
   "Test translation": "翻訳をテスト",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "mpv が字幕を描画する場合、第2字幕には第1字幕のスタイルが使われます。",
   "First subtitle": "第1字幕",
   "The first subtitle shows here": "ここに第1字幕が表示されます",
   "First subtitle style": "第1字幕のスタイル",

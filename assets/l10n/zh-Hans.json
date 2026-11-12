@@ -2133,7 +2133,7 @@
   "Model name": "模型名",
   "Reading the subtitle list…": "正在读取字幕列表…",
   "Test translation": "测试翻译",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "由 mpv 绘制字幕时，第二字幕使用第一字幕的样式。",
+  "While mpv draws subtitles, the second subtitle takes the first one's font and color; its size can be set.": "由 mpv 绘制字幕时，第二字幕沿用第一字幕的字体和颜色，大小可以单独设置。",
   "First subtitle": "第一字幕",
   "The first subtitle shows here": "第一字幕在这里显示",
   "First subtitle style": "第一字幕样式",

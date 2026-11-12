@@ -4,33 +4,40 @@ import 'dart:math';
 /// subtitles: just above the main one, however many lines that has.
 ///
 /// mpv lays text subtitles out on a 720-unit-tall canvas, with the font at
-/// 38 units times `sub-scale` and 25 units of margin left and right, and
-/// both `sub-pos` and `secondary-sub-pos` give where a subtitle's bottom
-/// edge sits, in percent of the height. The main subtitle's lines are
-/// counted here the way libass wraps them, rounding up, so the secondary
-/// one is never drawn over it.
+/// 38 units times `sub-scale` and 25 units of margin left and right; libass
+/// puts lines one font size apart (measured on the libmpv Lumtub ships for
+/// Windows: 43 px apart at 808 px, 38/720 of the height). `sub-pos` and
+/// `secondary-sub-pos` give where a subtitle's bottom edge sits as a share
+/// of the height above `sub-margin-y`, not of the whole height. The main
+/// subtitle's lines are counted here the way libass wraps them, rounding
+/// up, so the secondary one sits just above it.
 class LibassLayout {
   static const _canvas = 720.0;
   static const _font = 38.0;
   static const _margin = 25.0;
 
-  /// A line's height, in percent of the canvas at sub-scale 1.
-  static const _line = 6.5;
+  /// `sub-margin-y`, set by Lumtub: mpv's default changed between versions.
+  static const marginY = 34;
 
-  /// The gap between the two subtitles, in percent.
-  static const _gap = 1.5;
+  /// A line's height, in percent of the picture at sub-scale 1.
+  static const _line = _font / _canvas * 100;
+
+  /// The gap between the two subtitles, in percent of the picture.
+  static const _gap = 1.0;
 
   /// `secondary-sub-pos` for a main subtitle showing [main].
-  static int secondaryPosition(String main, {required int position, required double scale, double aspect = 16 / 9}) {
+  static double secondaryPosition(String main, {required int position, required double scale, double aspect = 16 / 9}) {
     final lines = max(1, lineCount(main, scale: scale, aspect: aspect));
-    return (position - lines * _line * scale - _gap).floor().clamp(0, 100);
+    // Percent of the picture to percent of the room above the margin.
+    final raise = (lines * _line * scale + _gap) / (1 - marginY / _canvas);
+    return ((position - raise) * 10).floorToDouble().clamp(0, 1000) / 10;
   }
 
   /// How many lines libass draws [text] on, wrapping at the canvas width.
   static int lineCount(String text, {required double scale, double aspect = 16 / 9}) {
     final room = (_canvas * max(aspect, 0.5) - 2 * _margin) / (_font * scale);
     var lines = 0;
-    for (final line in text.trim().split('\n')) {
+    for (final line in text.replaceAll(_invisible, '').trim().split('\n')) {
       final width = _ems(line.trim());
       if (width == 0) continue;
       lines += max(1, (width / room).ceil());
@@ -49,6 +56,9 @@ class LibassLayout {
     }
     return width;
   }
+
+  /// Zero-width and direction marks, which take no room on screen.
+  static final _invisible = RegExp('[\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]');
 
   static const _narrow = " .,:;'!|il\u0131jI[]()";
   static const _thin = 'ftr-"/';

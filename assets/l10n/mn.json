@@ -2130,7 +2130,6 @@
   "Model name": "Загварын нэр",
   "Reading the subtitle list…": "Хадмалын жагсаалтыг уншиж байна…",
   "Test translation": "Орчуулга турших",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "Хадмалыг mpv зурж байх үед хоёр дахь хадмал эхний хадмалын хэв маягийг ашиглана.",
   "First subtitle": "Эхний хадмал",
   "The first subtitle shows here": "Эхний хадмал энд харагдана",
   "First subtitle style": "Эхний хадмалын хэв маяг",

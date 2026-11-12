@@ -54,7 +54,9 @@ class PlayerOptionApplicator {
       'sub-pos': settings.subtitlePosition.toString(),
       // The secondary subtitle (libass) sits just above a one-line main one;
       // the controller moves it as the main one gains lines.
-      'secondary-sub-pos': LibassLayout.secondaryPosition('', position: settings.subtitlePosition, scale: settings.subtitleScale).toString(),
+      'secondary-sub-pos': LibassLayout.secondaryPosition('', position: settings.subtitlePosition, scale: settings.subtitleScale).toStringAsFixed(1),
+      'secondary-sub-scale': settings.secondaryScale.toStringAsFixed(1),
+      'sub-margin-y': '${LibassLayout.marginY}',
       'sub-border-size': settings.subtitleBorder.toStringAsFixed(1),
       'sub-border-style': settings.subtitleBackground ? 'background-box' : 'outline-and-shadow',
       'sub-bold': settings.subtitleBold ? 'yes' : 'no',

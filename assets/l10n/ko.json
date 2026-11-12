@@ -2130,7 +2130,6 @@
   "Model name": "모델 이름",
   "Reading the subtitle list…": "자막 목록 읽는 중…",
   "Test translation": "번역 테스트",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "mpv가 자막을 그릴 때 보조 자막은 주 자막의 스타일을 사용합니다.",
   "First subtitle": "주 자막",
   "The first subtitle shows here": "주 자막이 여기에 표시됩니다",
   "First subtitle style": "주 자막 스타일",

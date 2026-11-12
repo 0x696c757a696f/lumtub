@@ -2,15 +2,31 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/libass_layout.dart';
 
 void main() {
-  test('one main line keeps the old place', () {
-    expect(LibassLayout.secondaryPosition('Hello there', position: 100, scale: 1), 92);
-    expect(LibassLayout.secondaryPosition('', position: 100, scale: 1), 92);
+  test('one main line: the second subtitle sits a line and a small gap above', () {
+    expect(LibassLayout.secondaryPosition('Hello there', position: 100, scale: 1), 93.4);
+    expect(LibassLayout.secondaryPosition('', position: 100, scale: 1), 93.4);
+  });
+
+  test('two main lines leave no empty line between the subtitles', () {
+    // Measured on the Windows libmpv: lines 43 px apart in an 808 px picture,
+    // the main subtitle's bottom at 770 px with sub-margin-y 34. Position
+    // 87.8 puts the second subtitle's bottom at 676 px, 8 px above the top
+    // of the main one's first line (770 - 2 * 43 = 684).
+    const italian = 'è visibile già alla periferia di Hanoi,\nin particolare a Ninh Hiệp, uno dei più';
+    final position = LibassLayout.secondaryPosition(italian, position: 100, scale: 1);
+    expect(position, 87.8);
+    final bottom = 770 * position / 100;
+    expect(684 - bottom, inInclusiveRange(4, 12));
+  });
+
+  test('zero-width marks take no line', () {
+    expect(LibassLayout.lineCount('Ciao\n\u200B\nA tutti\u200E', scale: 1), 2);
   });
 
   test('two main lines move the second subtitle up a line', () {
     final one = LibassLayout.secondaryPosition('I think it was', position: 100, scale: 1);
     final two = LibassLayout.secondaryPosition('I think it was\nthe first time we met', position: 100, scale: 1);
-    expect(two, lessThanOrEqualTo(one - 6));
+    expect(two, lessThanOrEqualTo(one - 5));
   });
 
   test('long lines count as wrapped', () {

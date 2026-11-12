@@ -2130,7 +2130,6 @@
   "Model name": "ชื่อโมเดล",
   "Reading the subtitle list…": "กำลังอ่านรายการคำบรรยาย…",
   "Test translation": "ทดสอบการแปล",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "เมื่อ mpv เป็นผู้แสดงคำบรรยาย คำบรรยายที่สองจะใช้รูปแบบเดียวกับคำบรรยายแรก",
   "First subtitle": "คำบรรยายแรก",
   "The first subtitle shows here": "คำบรรยายแรกจะแสดงที่นี่",
   "First subtitle style": "รูปแบบคำบรรยายแรก",

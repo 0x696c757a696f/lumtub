@@ -709,7 +709,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           if (on) Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Tooltip(message: tip, child: Icon(icon, color: Theme.of(context).colorScheme.inversePrimary, size: 17))),
         if (_controller.sleepAt != null || _controller.sleepAfterCurrent)
           Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Tooltip(message: tr('Sleep timer on'), child: Icon(AppIcons.moonStars, color: Colors.white, size: 18))),
-        if (!fullscreen)
+        // 关灯 dims the page around the player, which a phone does not show.
+        if (!fullscreen && !_phone)
           ValueListenableBuilder(
             valueListenable: lightsOff,
             builder: (context, off, _) => _IconButton(
@@ -760,7 +761,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       if (_controller.loopA case final a?) ProgressSegment(a, _controller.loopB ?? a + const Duration(seconds: 1), const Color(0xCCFFFFFF)),
     ];
     final chapterStarts = [for (final c in _chapters) c.start];
-    final width = fullscreen ? 42.0 : 35.0;
+    // A finger's size on a phone. The small player above a phone's page
+    // keeps what a phone needs there; the rest is in full screen and the
+    // settings panel, and the volume is the phone's own keys.
+    final width = _phone ? 44.0 : fullscreen ? 42.0 : 35.0;
+    final compact = _phone && !fullscreen;
     // Keep the action cluster anchored to the physical bottom-right edge in
     // fullscreen. The progress and playback information remain on the left.
     return SafeArea(
@@ -793,7 +798,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           _PlayPauseButton(player: _player),
           if (_controller.hasNext)
             _IconButton(tooltip: tr('Next (Shift+N)'), icon: AppIcons.skipForwardFill, size: 22, width: width, onTap: () => unawaited(_controller.playNext())),
-          _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
+          if (!_phone) _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
           const SizedBox(width: 4),
           _PositionBuilder(
             player: _player,
@@ -810,8 +815,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                   ),
           ),
           Expanded(child: Align(alignment: AlignmentDirectional.centerStart, child: _chapterMenu())),
-          _danmakuButtons(width),
+          if (!compact) _danmakuButtons(width),
           _subtitleMenu(width),
+          if (!compact)
           StreamBuilder<double>(
             stream: _player.stream.rate,
             initialData: _player.state.rate,
@@ -846,7 +852,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               );
             },
           ),
-          if (!fullscreen)
+          if (!fullscreen && !_phone)
             ValueListenableBuilder(
               valueListenable: theaterMode,
               builder: (context, theater, _) => _IconButton(
@@ -993,6 +999,15 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ]),
       ),
       PanelHeading(tr('Video')),
+      // A phone's small player has no room for the speed button.
+      if (_phone)
+        PanelChoices<double>(
+          label: tr('Speed'),
+          icon: AppIcons.gauge,
+          value: _player.state.rate,
+          values: [for (final speed in _controller.settings.speeds) (speed, '${trimSpeed(speed)}X')],
+          onSelected: (speed) => unawaited(_player.setRate(speed)),
+        ),
       PanelChoices<int>(
         label: tr('Quality'),
         icon: AppIcons.sealCheck,
@@ -1153,7 +1168,8 @@ class _IconButton extends StatelessWidget {
         child: _Hover(
           label: tooltip,
           onTap: onTap,
-          child: SizedBox(width: width, height: 34, child: Icon(icon, size: size, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white)),
+          // A finger's size on a touch screen.
+          child: SizedBox(width: touchFirst ? max(width, 44) : width, height: touchFirst ? 44 : 34, child: Icon(icon, size: size, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white)),
         ),
       );
 }

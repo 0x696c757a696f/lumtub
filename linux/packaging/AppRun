@@ -2,6 +2,21 @@
 # Starts Lumtub from the AppImage. Each library under lib/fallback is used
 # only when the system has none of that name.
 here=$(dirname "$(readlink -f "$0")")
+# The x64-v3 package needs AVX2 (and the rest of x86-64-v3).
+if [ -e "$here/usr/bin/x86-64-v3" ] && ! grep -qw avx2 /proc/cpuinfo 2>/dev/null; then
+  message="This Lumtub package needs a CPU with AVX2. Please download the linux-x64 AppImage instead."
+  echo "$message" >&2
+  for tool in zenity kdialog notify-send; do
+    command -v $tool > /dev/null || continue
+    case $tool in
+      zenity) zenity --error --title=Lumtub --text="$message" ;;
+      kdialog) kdialog --title Lumtub --error "$message" ;;
+      notify-send) notify-send Lumtub "$message" ;;
+    esac
+    break
+  done
+  exit 1
+fi
 known=$( (ldconfig -p || /sbin/ldconfig -p) 2>/dev/null)
 extra=
 for dir in "$here"/usr/bin/lib/fallback/*/; do

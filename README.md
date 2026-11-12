@@ -121,6 +121,7 @@ These are also found in other YouTube clients, and all are opt-in here:
 | `windows-x64-v3` | Most PCs from 2015 on (AVX2) — **pick this if unsure** |
 | `windows-x64` | Older x64 CPUs |
 | `windows-arm64` | Windows on ARM laptops |
+| `linux-x64-v3` AppImage | Most 64-bit PCs from 2015 on (AVX2) with glibc 2.35 or newer — **pick this if unsure** |
 | `linux-x64` AppImage | 64-bit PCs with glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36 and later) |
 | `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 |
 | `macos-arm64` DMG | Macs with Apple silicon (M1 and later) |

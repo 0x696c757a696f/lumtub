@@ -27,7 +27,9 @@ import '../heatmap.dart';
 import '../keep_awake.dart';
 import '../picture_transform.dart';
 import '../storyboard.dart';
-import '../models.dart' show Chapter;
+import '../models.dart' show Chapter, formatCount;
+import '../system_env.dart' show shareText;
+import '../youtube_account.dart' show VideoRating;
 import '../format_policy.dart';
 import '../player_settings.dart';
 import '../widgets/mini_progress_line.dart';
@@ -670,6 +672,60 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   /// Laid out as PiliNara's: 返回 and 主页 on the left, the title, then a
   /// row of switches.
+  /// 点赞, 评论, 收藏 and 分享 with their counts, for a phone's full screen.
+  List<Widget> _fullscreenActions(BuildContext context, Future<void> Function() leaveFullscreen) {
+    final item = _controller.playing!;
+    final account = _controller.account;
+    final signedIn = account?.signedIn ?? false;
+    final library = _controller.library;
+    final liked = signedIn && account!.ratingOf(item.id) == VideoRating.like;
+    final likes = _controller.details?.likeCount ?? _controller.dislikes?.likes;
+    final shownLikes = likes == null || !signedIn ? likes : (likes + account!.ratingChange(item.id, VideoRating.like)).clamp(0, 1 << 62);
+    final favorite = library?.isFavorite(item.id) ?? false;
+    return [
+      _CountButton(
+        tooltip: tr('Like'),
+        icon: liked ? AppIcons.thumbsUpFill : AppIcons.thumbsUp,
+        count: shownLikes,
+        active: liked,
+        onTap: () {
+          if (signedIn && !account!.ratingOff(item.id)) {
+            unawaited(account.rate(item, VideoRating.like));
+          } else {
+            _showFeedback(AppIcons.thumbsUp, signedIn ? tr('The uploader turned off likes and dislikes for this video') : tr('Sign in to Google to {0}', [tr('Like')]));
+          }
+        },
+      ),
+      if (!_controller.preferences.focusHideComments)
+        _CountButton(
+          tooltip: tr('Comments'),
+          icon: AppIcons.chatCircle,
+          onTap: () async {
+            await leaveFullscreen();
+            sidePanelTab.value = null;
+            sidePanelTab.value = 'comments';
+          },
+        ),
+      if (library != null)
+        _CountButton(
+          tooltip: tr('Favorites'),
+          icon: favorite ? AppIcons.heartFill : AppIcons.heart,
+          active: favorite,
+          onTap: () => library.toggleFavorite(item),
+        ),
+      _CountButton(
+        tooltip: tr('Share'),
+        icon: AppIcons.share,
+        onTap: () async {
+          if (await shareText(item.url)) return;
+          await Clipboard.setData(ClipboardData(text: item.url));
+          _showFeedback(AppIcons.link, tr('Link copied'));
+        },
+      ),
+      const SizedBox(width: 8),
+    ];
+  }
+
   Widget _topBar(BuildContext context, bool fullscreen) {
     final item = _controller.playing;
     final details = _controller.details;
@@ -706,6 +762,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               Text(details?.channel ?? item!.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 12)),
           ]),
         ),
+        // A phone in full screen: the page's main actions, as phone video
+        // apps keep them by the title, so there is no need to leave.
+        if (_phone && fullscreen && item != null) ..._fullscreenActions(context, leaveFullscreen),
         // Switches that are on show here, so the state stays visible after
         // they moved into 更多设置.
         for (final (on, icon, tip) in [
@@ -1202,6 +1261,42 @@ class _IconButton extends StatelessWidget {
           child: SizedBox(width: touchFirst ? max(width, 44) : width, height: touchFirst ? 44 : 34, child: Icon(icon, size: size, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white)),
         ),
       );
+}
+
+/// An icon of a phone's full-screen top bar, with its count small at the
+/// top right, as phone video apps draw them.
+class _CountButton extends StatelessWidget {
+  const _CountButton({required this.tooltip, required this.icon, required this.onTap, this.count, this.active = false});
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onTap;
+  final int? count;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = active ? Theme.of(context).colorScheme.inversePrimary : Colors.white;
+    return Tooltip(
+      message: tooltip,
+      child: _Hover(
+        label: tooltip,
+        onTap: onTap,
+        child: SizedBox(
+          width: 52,
+          height: 44,
+          child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
+            Icon(icon, size: 24, color: color),
+            if (count case final count?)
+              PositionedDirectional(
+                top: 0,
+                start: 30,
+                child: Text(formatCount(count), maxLines: 1, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600, shadows: const [Shadow(blurRadius: 3)])),
+              ),
+          ]),
+        ),
+      ),
+    );
+  }
 }
 
 /// A pressable area of the bars: the click cursor and a translucent

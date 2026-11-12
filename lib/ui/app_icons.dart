@@ -235,6 +235,7 @@ abstract final class AppIcons {
   static IconData get scroll => filled ? const IconData(0xeb7a, fontFamily: 'Phosphor Fill') : const IconData(0xeb7a, fontFamily: 'Phosphor');
   static IconData get sealCheck => filled ? const IconData(0xe606, fontFamily: 'Phosphor Fill') : const IconData(0xe606, fontFamily: 'Phosphor');
   static IconData get shapes => filled ? const IconData(0xec5e, fontFamily: 'Phosphor Fill') : const IconData(0xec5e, fontFamily: 'Phosphor');
+  static IconData get share => filled ? const IconData(0xe406, fontFamily: 'Phosphor Fill') : const IconData(0xe406, fontFamily: 'Phosphor');
   static IconData get shield => filled ? const IconData(0xe40a, fontFamily: 'Phosphor Fill') : const IconData(0xe40a, fontFamily: 'Phosphor');
   static IconData get shieldWarning => filled ? const IconData(0xe412, fontFamily: 'Phosphor Fill') : const IconData(0xe412, fontFamily: 'Phosphor');
   static IconData get shuffle => filled ? const IconData(0xe422, fontFamily: 'Phosphor Fill') : const IconData(0xe422, fontFamily: 'Phosphor');

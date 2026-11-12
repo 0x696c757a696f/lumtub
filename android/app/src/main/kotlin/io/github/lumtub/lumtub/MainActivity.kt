@@ -219,6 +219,10 @@ class MainActivity : FlutterActivity() {
                     // No browser installed: nothing to open it with.
                 }
             }
+            "shareText" -> {
+                val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, call.arguments as String)
+                startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
             "moveToBack" -> moveTaskToBack(true)
             "setAppIcon" -> setAppIcon(call.arguments == "sunlight")
             "setFrameRate" -> fitFrameRate((call.arguments as? Number)?.toDouble() ?: 0.0)

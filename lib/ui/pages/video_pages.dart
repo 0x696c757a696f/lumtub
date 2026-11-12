@@ -6,6 +6,7 @@ import '../../search_options.dart';
 import '../../video_repository.dart';
 import '../common.dart';
 import '../theme.dart';
+import '../pull_to_refresh.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
 export 'history_page.dart';
@@ -65,15 +66,20 @@ class HomeFeedPage extends StatelessWidget {
               ),
             ]),
           )),
-          if (feed.items.isNotEmpty)
-            SliverVideoGrid(
-              items: feed.items,
-              thumbnails: controller.thumbnailDirectory,
-              onOpen: (item) => controller.play(item, from: feed.items),
-              onRemove: controller.dismissRecommendation,
-              removeLabel: tr('Not interested'),
-              reasons: feed.reasons,
-            ),
+          // After 下拉刷新 the new videos come first, then a line where the
+          // ones seen before begin; pressing it loads newer ones again.
+          for (final (i, part) in _seenSplit(feed.items, feed.seenFrom).indexed) ...[
+            if (i == 1) SliverToBoxAdapter(child: _SeenHere(onTap: () => PullToRefresh.refresh())),
+            if (part.isNotEmpty)
+              SliverVideoGrid(
+                items: part,
+                thumbnails: controller.thumbnailDirectory,
+                onOpen: (item) => controller.play(item, from: feed.items),
+                onRemove: controller.dismissRecommendation,
+                removeLabel: tr('Not interested'),
+                reasons: feed.reasons,
+              ),
+          ],
           if (feed.loading || feed.loadingMore) ...[
             if (feed.items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
             SliverSkeletonGrid(rows: feed.items.isEmpty ? 2 : 1),
@@ -91,6 +97,43 @@ class HomeFeedPage extends StatelessWidget {
           )),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
+    );
+  }
+}
+
+/// [items] before and from [seenFrom], or all of them in one part.
+List<List<VideoItem>> _seenSplit(List<VideoItem> items, String? seenFrom) {
+  final at = seenFrom == null ? -1 : items.indexWhere((item) => item.id == seenFrom);
+  if (at <= 0) return [items];
+  return [items.sublist(0, at), items.sublist(at)];
+}
+
+/// 上次看到这里: the line between the newest videos and those seen before.
+class _SeenHere extends StatelessWidget {
+  const _SeenHere({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, AppStyle.cardSpacing),
+      child: Material(
+        color: colors.surfaceContainerLow,
+        shape: RoundedRectangleBorder(borderRadius: AppStyle.cardRadius, side: BorderSide(color: colors.outlineVariant)),
+        child: InkWell(
+          borderRadius: AppStyle.cardRadius,
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(AppIcons.arrowsClockwise, size: 16, color: colors.primary),
+              const SizedBox(width: 8),
+              Flexible(child: Text(tr('You were here last time · Tap to refresh'), style: TextStyle(color: colors.primary, fontSize: 13))),
+            ]),
+          ),
+        ),
+      ),
     );
   }
 }

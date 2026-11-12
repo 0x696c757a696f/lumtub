@@ -34,8 +34,8 @@ abstract final class KeyScroll {
   }
 
   /// To the top, or the bottom of what has loaded so far.
-  static bool toEnd(bool bottom) {
-    final position = target();
+  static bool toEnd(bool bottom, {ScrollPosition? of}) {
+    final position = of ?? target();
     if (position == null) return false;
     final to = bottom ? position.maxScrollExtent : position.minScrollExtent;
     // Far away, jump to a page short of it so the lists in between are not

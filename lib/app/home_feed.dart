@@ -75,6 +75,11 @@ class HomeFeed extends ChangeNotifier {
   List<VideoItem> items = const [];
   /// Why each of [items] is suggested, by video id.
   Map<String, String> reasons = const {};
+  /// The first video seen before the last refresh with `ahead`, where
+  /// 上次看到这里 goes; null when the feed was not refreshed that way.
+  String? seenFrom;
+  /// Videos seen before such a refresh that stay below the new ones.
+  static const seenKept = pageSize * 2;
   bool loading = false;
   /// The first page is shown but slower sources are still answering.
   bool gathering = false;
@@ -173,8 +178,10 @@ class HomeFeed extends ChangeNotifier {
   }
 
   /// Gathers everything again; [filter] drops blocked or hidden videos.
-  /// With [keep], the videos shown stay and new ones follow them.
-  Future<void> refresh(HomeFeedSources sources, {List<VideoItem> Function(List<VideoItem>)? filter, bool keep = false}) async {
+  /// With [keep], the videos shown stay and new ones follow them; with
+  /// [ahead], a new page comes first and the videos seen before follow it,
+  /// below [seenFrom].
+  Future<void> refresh(HomeFeedSources sources, {List<VideoItem> Function(List<VideoItem>)? filter, bool keep = false, bool ahead = false}) async {
     final generation = ++_generation;
     _sources = sources;
     _filter = filter;
@@ -282,14 +289,23 @@ class HomeFeed extends ChangeNotifier {
       ..addAll(sources.history.take(200).map((item) => item.id));
     _placed.clear();
     _seed = 0;
-    if (keep) {
-      _taken.addAll(items.map((item) => item.id));
-    } else {
+    final seen = ahead && !keep ? items.take(seenKept).toList() : const <VideoItem>[];
+    final seenReasons = reasons;
+    if (keep || ahead) _taken.addAll(items.map((item) => item.id));
+    if (!keep) {
       items = const [];
       reasons = const {};
     }
+    seenFrom = null;
     _rankAll();
     _appendPage();
+    if (seen.isNotEmpty) {
+      final fresh = {for (final item in items) item.id};
+      final rest = [for (final item in seen) if (!fresh.contains(item.id)) item];
+      if (items.isNotEmpty && rest.isNotEmpty) seenFrom = rest.first.id;
+      items = [...items, ...rest];
+      reasons = {...seenReasons, ...reasons};
+    }
     loading = false;
     loadedAt = DateTime.now();
     gathering = true;
@@ -328,6 +344,7 @@ class HomeFeed extends ChangeNotifier {
     _taken.addAll(items.map((item) => item.id));
     _seed++;
     _placed.clear();
+    seenFrom = null;
     items = const [];
     reasons = const {};
     _rankAll();

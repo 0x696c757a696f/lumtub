@@ -35,6 +35,7 @@ import 'window_chrome.dart';
 import '../l10n/l10n.dart';
 import 'frame_stats.dart';
 import 'key_scroll.dart';
+import 'pull_to_refresh.dart';
 import '../shortcut_bindings.dart';
 import 'motion.dart';
 import 'player_shortcuts.dart';
@@ -165,6 +166,10 @@ class _AppShellState extends State<AppShell> {
 
   void _select(int index) {
     final target = _destinations[index].$1;
+    // Pressed again on its own page: to the top, and from the top, new
+    // videos.
+    final c = _controller;
+    if (target == c.mode && !c.onWatchPage && (target != PageMode.explore || c.query == null) && PullToRefresh.topOrRefresh(refresh: c.canRefreshPage)) return;
     if (target == PageMode.explore) {
       _controller.openExplore();
     } else {
@@ -305,6 +310,12 @@ class _AppShellState extends State<AppShell> {
   /// The first key of [action], for a menu to show.
   SingleActivator? _keyOf(PlayerAction action) => shortcutKeys(_controller.preferences.shortcutKeys)[action]!.firstOrNull?.activator;
 
+  /// F5 or Ctrl+R: the page shown loaded again.
+  void _refreshPage() {
+    if (!_controller.canRefreshPage) return;
+    if (!PullToRefresh.refresh()) unawaited(_controller.refreshPage());
+  }
+
   /// Goes back to the previous page or video.
   void _back() {
     if (_controller.canGoBack) _controller.goBack();
@@ -355,6 +366,8 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) => CallbackShortcuts(
         bindings: {
           ..._pageShortcuts(),
+          const SingleActivator(LogicalKeyboardKey.f5): _refreshPage,
+          SingleActivator(LogicalKeyboardKey.keyR, control: !Platform.isMacOS, meta: Platform.isMacOS): _refreshPage,
           // Esc goes back too, except on the watch page, where it leaves
           // full screen and closes panels.
           const SingleActivator(LogicalKeyboardKey.escape): () {
@@ -438,7 +451,7 @@ class _AppShellState extends State<AppShell> {
                         duration: Motion.of(Ease.fade),
                         // Keyed per page so each page's list keeps its scroll position
                         // (PageStorage) when the user comes back to it.
-                        child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _veiled(skin, !rail && !_controller.onWatchPage && _library.contains(_controller.mode) ? _libraryTabs(_content()) : _content()))),
+                        child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _veiled(skin, !rail && !_controller.onWatchPage && _library.contains(_controller.mode) ? _libraryTabs(_refreshable(_content())) : _refreshable(_content())))),
                       )),
                     ]),
                     // The video keeps playing over the pages; the watch page
@@ -502,6 +515,14 @@ class _AppShellState extends State<AppShell> {
         PageMode.explore when _controller.query != null => 'search:${_controller.query}',
         final mode => mode.name,
       };
+
+  /// Every page but the watch page can be pulled down; only those with
+  /// videos to load again refresh.
+  Widget _refreshable(Widget page) {
+    final c = _controller;
+    if (!c.ready || c.onWatchPage) return page;
+    return PullToRefresh(enabled: c.canRefreshPage, onRefresh: c.refreshPage, child: page);
+  }
 
   Widget _content() {
     final controller = _controller;

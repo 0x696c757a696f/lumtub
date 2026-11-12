@@ -235,6 +235,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   /// The most subtitles move up while the controls show, as a share of the
   /// picture's height.
   static const _maxLift = 0.15;
+  /// In a picture shorter than this, such as a phone's held upright, the
+  /// subtitles move all the way above the bar, as phone video apps do;
+  /// lifted only part of the way they would sit on the time and buttons.
+  static const _clearBelow = 360.0;
   bool _lifted = false;
 
   /// Moves the subtitles above the bottom bar while it [shows], so it never
@@ -249,11 +253,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final size = shows ? (box as RenderBox).size : Size.zero;
     final w = _player.state.width ?? 0, h = _player.state.height ?? 0;
     final picture = w > 0 && h > 0 ? min(size.height, size.width * h / w) : size.height;
-    // Above the bar, but never far into the picture: in a small player,
-    // such as a phone's above the page, the bar covers a third of it, and
-    // subtitles lifted over all of it would sit in the middle.
-    final lift = shows ? min((bar as RenderBox).size.height, picture * _maxLift) : 0.0;
+    // Above the bar. In a large picture never more than a share of it, so
+    // a tall bar does not push them into the middle.
     final view = widget.state;
+    final barHeight = shows ? (bar as RenderBox).size.height : 0.0;
+    final lift = !shows ? 0.0 : picture < _clearBelow ? barHeight : min(barHeight, picture * _maxLift);
     if (view != null && view.mounted) view.setSubtitleViewPadding(view.widget.subtitleViewConfiguration.padding + EdgeInsets.only(bottom: lift));
     if (lift == 0) return _controller.liftSubtitles(0);
     _controller.liftSubtitles(picture > 0 ? (lift / picture * 100).ceil() : 0);

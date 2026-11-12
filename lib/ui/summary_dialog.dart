@@ -10,10 +10,7 @@ import 'theme.dart';
 import 'app_icons.dart';
 
 /// AI 总结 of the video playing. The times in it seek the video.
-Future<void> showVideoSummary(BuildContext context, AppController controller) => showDialog<void>(
-      context: context,
-      builder: (context) => _SummaryDialog(controller: controller),
-    );
+Future<void> showVideoSummary(BuildContext context, AppController controller) => showPanel<void>(context, (context) => _SummaryDialog(controller: controller));
 
 class _SummaryDialog extends StatefulWidget {
   const _SummaryDialog({required this.controller});
@@ -115,7 +112,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
         )),
       ]);
     }
-    return AlertDialog(
+    return PanelDialog(
       title: Row(children: [
         Icon(AppIcons.sparkleFill, color: colors.primary),
         const SizedBox(width: 8),

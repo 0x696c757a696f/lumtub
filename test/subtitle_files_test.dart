@@ -233,6 +233,13 @@ void main() {
     expect(seven.length, 7);
     expect(seven.join(), sentence);
     expect(seven.toSet().length, 7);
+    // A word is not cut in two when a clause ends or a particle sits near.
+    final bbc = WebVtt.splitLike('普京表示，他希望乌克兰能够永远保持和平。', ['Mr. Putin said he would like peace in', 'Ukraine to last forever.']);
+    expect(bbc.join(), '普京表示，他希望乌克兰能够永远保持和平。');
+    expect(bbc.first, '普京表示，');
+    final name = WebVtt.splitLike('我们从俄罗斯编辑史蒂夫·罗森伯格那里得到了最新消息。', ['we got an update from our', 'Russia editor, Steve Rosenberg.']);
+    expect(name.join(), '我们从俄罗斯编辑史蒂夫·罗森伯格那里得到了最新消息。');
+    expect(name.any((piece) => piece.contains('史蒂夫·罗森伯格')), isTrue);
   });
 
   test('translates automatic captions by sentence, each fragment keeping its time', () async {

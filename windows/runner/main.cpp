@@ -89,6 +89,28 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // them next to the executable.
   DataRoot();
 
+  // Restarting: the old process started this one and is ending; wait for it
+  // so its single-instance lock is gone.
+  if (const wchar_t* after = command_line ? ::wcsstr(command_line, L"--restart-after=") : nullptr) {
+    const DWORD pid = static_cast<DWORD>(::wcstoul(after + 16, nullptr, 10));
+    if (HANDLE old = ::OpenProcess(SYNCHRONIZE, FALSE, pid)) {
+      ::WaitForSingleObject(old, 15000);
+      ::CloseHandle(old);
+    }
+  }
+
+  // One Lumtub per data folder: two would overwrite each other's settings
+  // and library. A second start brings the running one to the front. The
+  // handle stays open for the life of the process.
+  const std::wstring lock_name = L"Local\\Lumtub-" + std::to_wstring(DataRootTag());
+  HANDLE single_instance = ::CreateMutexW(nullptr, FALSE, lock_name.c_str());
+  if (single_instance != nullptr && ::GetLastError() == ERROR_ALREADY_EXISTS) {
+    ::AllowSetForegroundWindow(ASFW_ANY);
+    ::PostMessageW(HWND_BROADCAST, ::RegisterWindowMessageW(kShowWindowMessage), static_cast<WPARAM>(DataRootTag()), 0);
+    ::CloseHandle(single_instance);
+    return EXIT_SUCCESS;
+  }
+
   // Initialize COM, so that it is available for use in the library and/or
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);

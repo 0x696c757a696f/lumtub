@@ -890,6 +890,18 @@ jobs:
       - name: macOS - get packages
         run: flutter pub get
 
+      # Mpv.framework from MPVKit's static libraries (see
+      # vendor/media_kit_libs_macos_video/LUMTUB.md). The podspec would run the
+      # same make during pod install, but with its output hidden.
+      - name: macOS - cache MPVKit downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: vendor/media_kit_libs_macos_video/macos/.cache
+          key: mpvkit-${{ hashFiles('vendor/media_kit_libs_macos_video/macos/mpvkit.lock') }}
+
+      - name: macOS - link libmpv
+        run: make -C vendor/media_kit_libs_macos_video/macos
+
       - name: macOS - run unit tests
         run: flutter test
 

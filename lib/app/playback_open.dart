@@ -37,10 +37,8 @@ extension PlaybackOpening on AppController {
   }
 
   /// Gets the first video ready while nothing else happens: reads the
-  /// player's files from disk once they may be cold after an update,
-  /// probes the hardware decoders, and makes the picture output when the
-  /// mouse and keyboard have been still for a moment. Opening a video
-  /// first does whatever is still left there and then.
+  /// player's files from disk once they may be cold after an update and
+  /// probes the hardware decoders.
   Future<void> _warmUp(Player player) async {
     await WidgetsBinding.instance.waitUntilFirstFrameRasterized;
     await Future<void>.delayed(const Duration(seconds: 2));
@@ -61,33 +59,13 @@ extension PlaybackOpening on AppController {
       }
     }
     await _measureDecoders();
-    var lastInput = DateTime.now();
-    void touched(PointerEvent _) => lastInput = DateTime.now();
-    bool pressed(KeyEvent _) {
-      lastInput = DateTime.now();
-      return false;
-    }
-
-    GestureBinding.instance.pointerRouter.addGlobalRoute(touched);
-    HardwareKeyboard.instance.addHandler(pressed);
-    try {
-      while (!_disposed && videoController == null && this.player == player) {
-        final still = DateTime.now().difference(lastInput);
-        if (still >= const Duration(milliseconds: 1500)) {
-          _ensureVideo(player);
-          break;
-        }
-        await Future<void>.delayed(const Duration(milliseconds: 1500) - still);
-      }
-    } finally {
-      GestureBinding.instance.pointerRouter.removeGlobalRoute(touched);
-      HardwareKeyboard.instance.removeHandler(pressed);
-    }
+    // The picture output is not made here: its textures and drawing
+    // context take memory a window that plays nothing should not hold.
+    // Opening a video makes it while yt-dlp is still answering.
   }
 
-  /// Makes the video's picture output, from [_warmUp] or when the first
-  /// video plays. Made right at start it held up drawing the window for
-  /// most of a second.
+  /// Makes the video's picture output when the first video opens. Made
+  /// right at start it held up drawing the window for most of a second.
   void _ensureVideo(Player player) {
     if (videoController != null) return;
     final made = Stopwatch()..start();

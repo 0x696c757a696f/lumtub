@@ -11,6 +11,16 @@ import 'package:lumtub/skins/skin_library.dart';
 /// Every skin in skins/ reads without a single warning, contrast included,
 /// on every kind of device.
 void main() {
+  test('a picture keeps its focus in view, and a plain background is checked under the veil', () {
+    Skin parse(Map<String, Object?> window) => Skin.parse({'lumtubSkin': 1, 'id': 't', 'name': 'T', 'colors': {'page': '#ffffff', 'text': '#000000'}, 'window': window}, folder: 'skins/aero', builtIn: true);
+    final picture = parse({'background': [{'image': 'day.jpg', 'focus': [0.5, 0.3]}]}).background.single as ImagePaint;
+    expect(picture.focus.x, 0);
+    expect(picture.focus.y, closeTo(-0.4, 1e-9));
+    expect(parse({'background': [{'image': 'day.jpg', 'focus': [2, 0]}]}).warnings, contains(contains('focus')));
+    expect(parse({'background': ['#008080']}).warnings, contains(contains('on window.background')));
+    expect(parse({'background': ['#008080'], 'veil': 0.5}).warnings.where((w) => w.contains('on window.background')), isEmpty);
+  });
+
   test('jsonc allows comments and trailing commas', () {
     expect(decodeJsonc('{\n // a\n "a": "x//y", /* b */ "b": [1, 2,],\n}'), {'a': 'x//y', 'b': [1, 2]});
     expect(() => decodeJsonc('{\n"a": 1\n"b": 2}'), throwsA(isA<FormatException>().having((e) => e.message, 'message', startsWith('line 3'))));

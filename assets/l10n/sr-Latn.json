@@ -2133,7 +2133,6 @@
   "Model name": "Ime modela",
   "Reading the subtitle list…": "Čitanje liste titlova…",
   "Test translation": "Test prevoda",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "Dok mpv iscrtava titlove, drugi titl koristi stil prvog.",
   "First subtitle": "Prvi titl",
   "The first subtitle shows here": "Prvi titl se prikazuje ovde",
   "First subtitle style": "Stil prvog titla",
@@ -2208,6 +2207,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Preskoči tekst koji je već na ciljnom jeziku",
   "Take Simplified and Traditional Chinese as one language": "Tretiraj uprošćeni i tradicionalni kineski kao jedan jezik",
+  "Languages never translated": "Jezici koji se nikad ne prevode",
+  "None besides the target, interface and system languages": "Nijedan osim ciljnog jezika, jezika interfejsa i jezika sistema",
   "Chinese in either script is left untranslated when the target is the other": "Kineski tekst u bilo kom pismu se ne prevodi kada je ciljno drugo pismo",
   "{0} (lower is steadier, higher is freer)": "{0} (niže je stabilnije, više je slobodnije)",
   "APP ID from the Baidu Translate open platform": "APP ID sa otvorene platforme Baidu Translate",
@@ -2223,7 +2224,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "Prevodi komentara, opisa i objava prikazuju se uz original; kada je isključeno, prevod zamenjuje original",
   "Highlighted": "Istaknuto",
   "{0} entries": "Unosa: {0}",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "Procenjuje se na osnovu pisma: pouzdano za kineski, japanski, korejski, ruski i slične; od jezika na latinici prepoznaje se samo engleski",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "Procenjuje se na osnovu pisma: pouzdano za kineski, japanski, korejski, ruski i slične; jezici na latinici razlikuju se po rečima čim je red dovoljno dugačak",
   "Temperature": "Temperatura",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "Bez ključa koristi besplatnu krajnju tačku kojom Microsoft Edge prevodi stranice; sa Azure ključem koristi zvanični API.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "Tekst ide izabranoj usluzi samo kada dodirnete Prevedi ili koristite prevedene titlove. Ključevi su šifrovani pomoću Windows-a na ovom računaru i ne nalaze se u datoteci podešavanja. Prevodi se keširaju na ovom računaru 7 dana i uklanjaju kada obrišete keš.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "kazaški",
   "Kyrgyz": "kirgiski",
   "Assamese": "asamski",
-  "Odia": "odija"
+  "Odia": "odija",
+  "Overview": "Pregled"
 }

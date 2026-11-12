@@ -2130,7 +2130,6 @@
   "Model name": "ಮಾದರಿ ಹೆಸರು",
   "Reading the subtitle list…": "ಉಪಶೀರ್ಷಿಕೆ ಪಟ್ಟಿಯನ್ನು ಓದಲಾಗುತ್ತಿದೆ…",
   "Test translation": "ಅನುವಾದ ಪರೀಕ್ಷಿಸಿ",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "mpv ಉಪಶೀರ್ಷಿಕೆಗಳನ್ನು ಚಿತ್ರಿಸುವಾಗ, ಎರಡನೇ ಉಪಶೀರ್ಷಿಕೆ ಮೊದಲನೆಯದರ ಶೈಲಿಯನ್ನು ಬಳಸುತ್ತದೆ.",
   "First subtitle": "ಮೊದಲ ಉಪಶೀರ್ಷಿಕೆ",
   "The first subtitle shows here": "ಮೊದಲ ಉಪಶೀರ್ಷಿಕೆ ಇಲ್ಲಿ ತೋರಿಸುತ್ತದೆ",
   "First subtitle style": "ಮೊದಲ ಉಪಶೀರ್ಷಿಕೆ ಶೈಲಿ",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "ಈಗಾಗಲೇ ಗುರಿ ಭಾಷೆಯಲ್ಲಿರುವ ಪಠ್ಯವನ್ನು ಬಿಟ್ಟುಬಿಡಿ",
   "Take Simplified and Traditional Chinese as one language": "ಸರಳೀಕೃತ ಮತ್ತು ಸಾಂಪ್ರದಾಯಿಕ ಚೈನೀಸ್ ಅನ್ನು ಒಂದೇ ಭಾಷೆ ಎಂದು ಪರಿಗಣಿಸಿ",
+  "Languages never translated": "ಎಂದಿಗೂ ಅನುವಾದಿಸದ ಭಾಷೆಗಳು",
+  "None besides the target, interface and system languages": "ಗುರಿ, ಇಂಟರ್ಫೇಸ್ ಮತ್ತು ಸಿಸ್ಟಮ್ ಭಾಷೆಗಳ ಹೊರತು ಯಾವುದೂ ಇಲ್ಲ",
   "Chinese in either script is left untranslated when the target is the other": "ಗುರಿ ಇನ್ನೊಂದು ಲಿಪಿಯಾದಾಗ ಯಾವುದೇ ಲಿಪಿಯ ಚೈನೀಸ್ ಪಠ್ಯವನ್ನು ಅನುವಾದಿಸುವುದಿಲ್ಲ",
   "{0} (lower is steadier, higher is freer)": "{0} (ಕಡಿಮೆ ಇದ್ದರೆ ಹೆಚ್ಚು ಸ್ಥಿರ, ಹೆಚ್ಚು ಇದ್ದರೆ ಹೆಚ್ಚು ಸ್ವತಂತ್ರ)",
   "APP ID from the Baidu Translate open platform": "Baidu Translate ಮುಕ್ತ ವೇದಿಕೆಯಿಂದ APP ID",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "ಕಾಮೆಂಟ್‌ಗಳು, ವಿವರಣೆಗಳು ಮತ್ತು ಪೋಸ್ಟ್‌ಗಳ ಅನುವಾದಗಳು ಮೂಲದೊಂದಿಗೆ ಕಾಣಿಸುತ್ತವೆ; ಆಫ್ ಇದ್ದಾಗ, ಅನುವಾದ ಮೂಲವನ್ನು ಬದಲಾಯಿಸುತ್ತದೆ",
   "Highlighted": "ಹೈಲೈಟ್ ಮಾಡಲಾಗಿದೆ",
   "{0} entries": "{0} ನಮೂದುಗಳು",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "ಲಿಪಿಯ ಆಧಾರದ ಮೇಲೆ ನಿರ್ಣಯಿಸಲಾಗುತ್ತದೆ: ಚೈನೀಸ್, ಜಪಾನೀಸ್, ಕೊರಿಯನ್, ರಷ್ಯನ್ ಮುಂತಾದವುಗಳಿಗೆ ವಿಶ್ವಾಸಾರ್ಹ; ಲ್ಯಾಟಿನ್ ಲಿಪಿಯ ಭಾಷೆಗಳಲ್ಲಿ ಇಂಗ್ಲಿಷ್ ಮಾತ್ರ ಗುರುತಿಸಲಾಗುತ್ತದೆ",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "ಲಿಪಿಯ ಆಧಾರದ ಮೇಲೆ ನಿರ್ಣಯಿಸಲಾಗುತ್ತದೆ: ಚೈನೀಸ್, ಜಪಾನೀಸ್, ಕೊರಿಯನ್, ರಷ್ಯನ್ ಮುಂತಾದವುಗಳಿಗೆ ವಿಶ್ವಾಸಾರ್ಹ; ಲ್ಯಾಟಿನ್ ಲಿಪಿಯ ಭಾಷೆಗಳನ್ನು ಸಾಲು ಸಾಕಷ್ಟು ಉದ್ದವಿದ್ದಾಗ ಪದಗಳ ಮೂಲಕ ಗುರುತಿಸಲಾಗುತ್ತದೆ",
   "Temperature": "ತಾಪಮಾನ",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "ಕೀ ಇಲ್ಲದಿದ್ದರೆ Microsoft Edge ಪುಟಗಳನ್ನು ಅನುವಾದಿಸಲು ಬಳಸುವ ಉಚಿತ ಎಂಡ್‌ಪಾಯಿಂಟ್ ಬಳಸುತ್ತದೆ; Azure ಕೀ ಇದ್ದರೆ ಅಧಿಕೃತ API ಬಳಸುತ್ತದೆ.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "ನೀವು ಅನುವಾದಿಸು ಒತ್ತಿದಾಗ ಅಥವಾ ಅನುವಾದಿತ ಉಪಶೀರ್ಷಿಕೆಗಳನ್ನು ಬಳಸಿದಾಗ ಮಾತ್ರ ಪಠ್ಯ ಆಯ್ಕೆಮಾಡಿದ ಸೇವೆಗೆ ಹೋಗುತ್ತದೆ. ಕೀಗಳನ್ನು ಈ ಕಂಪ್ಯೂಟರ್‌ನಲ್ಲಿ Windows ಎನ್‌ಕ್ರಿಪ್ಟ್ ಮಾಡುತ್ತದೆ ಮತ್ತು ಸೆಟ್ಟಿಂಗ್‌ಗಳ ಫೈಲ್‌ನಿಂದ ಹೊರಗಿಡುತ್ತದೆ. ಅನುವಾದಗಳನ್ನು ಈ ಕಂಪ್ಯೂಟರ್‌ನಲ್ಲಿ 7 ದಿನ ಕ್ಯಾಶ್ ಮಾಡಲಾಗುತ್ತದೆ ಮತ್ತು ಕ್ಯಾಶ್ ತೆರವುಗೊಳಿಸಿದಾಗ ತೆಗೆದುಹಾಕಲಾಗುತ್ತದೆ.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "ಕಝಕ್",
   "Kyrgyz": "ಕಿರ್ಗಿಜ್",
   "Assamese": "ಅಸ್ಸಾಮಿ",
-  "Odia": "ಒಡಿಯಾ"
+  "Odia": "ಒಡಿಯಾ",
+  "Overview": "ಅವಲೋಕನ"
 }

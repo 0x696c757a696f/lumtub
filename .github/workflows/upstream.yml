@@ -1,7 +1,8 @@
 name: Upstream updates
 
 # Once a week, looks for newer versions of what .github/pins.env pins (libmpv for
-# Linux, FFmpeg for macOS, appimagetool). Those go to the deps/upstream
+# Linux, FFmpeg for macOS, appimagetool) and of libmpv for Android (Predidit's
+# jars) and macOS (MPVKit), pinned in their vendor/ copies. Those go to the deps/upstream
 # branch, Build checks them there, smoke tests included, and Merge
 # dependency updates brings them into main once it passes. The media_kit
 # copies under vendor/ carry Lumtub's own changes, so a newer media_kit

@@ -132,6 +132,7 @@ class AppPreferences {
     this.subtitleListMode = SubtitleListMode.firstOver,
     this.skipSameLanguage = true,
     this.chineseAsOne = true,
+    this.neverTranslate = const [],
   });
 
   final bool recordHistory;
@@ -314,6 +315,9 @@ class AppPreferences {
   /// Translation takes Simplified and Traditional Chinese as one language,
   /// leaving either alone when the other is the target.
   final bool chineseAsOne;
+  /// Translation codes of languages the user reads, left untranslated like
+  /// the target.
+  final List<String> neverTranslate;
 
   bool isBlocked(String? channelId) => channelId != null && _lists.blockedIds.contains(channelId);
 
@@ -506,6 +510,7 @@ class AppPreferences {
     SubtitleListMode? subtitleListMode,
     bool? skipSameLanguage,
     bool? chineseAsOne,
+    List<String>? neverTranslate,
   }) =>
       AppPreferences(
         recordHistory: recordHistory ?? this.recordHistory,
@@ -592,6 +597,7 @@ class AppPreferences {
         subtitleListMode: subtitleListMode ?? this.subtitleListMode,
         skipSameLanguage: skipSameLanguage ?? this.skipSameLanguage,
         chineseAsOne: chineseAsOne ?? this.chineseAsOne,
+        neverTranslate: neverTranslate ?? this.neverTranslate,
       );
 
   Map<String, dynamic> toJson() => {
@@ -679,6 +685,7 @@ class AppPreferences {
         'subtitleListMode': subtitleListMode.name,
         'skipSameLanguage': skipSameLanguage,
         'chineseAsOne': chineseAsOne,
+        'neverTranslate': neverTranslate,
       };
 
   factory AppPreferences.fromJson(Object? raw) {
@@ -811,6 +818,11 @@ class AppPreferences {
       subtitleListMode: SubtitleListMode.values.where((v) => v.name == raw['subtitleListMode']).firstOrNull ?? d.subtitleListMode,
       skipSameLanguage: flag('skipSameLanguage', d.skipSameLanguage),
       chineseAsOne: flag('chineseAsOne', d.chineseAsOne),
+      neverTranslate: [
+        if (raw['neverTranslate'] is List)
+          for (final code in raw['neverTranslate'] as List)
+            if (TranslationLanguage.maybeByCode(code) != null) TranslationLanguage.maybeByCode(code)!.code,
+      ],
     );
   }
 }

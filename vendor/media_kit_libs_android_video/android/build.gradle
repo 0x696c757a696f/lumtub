@@ -1,0 +1,104 @@
+import java.io.File
+import java.nio.file.Files
+import java.security.MessageDigest
+
+group 'com.alexmercerind.media_kit_libs_android_video'
+version '1.0'
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.0'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    // Conditional for compatibility with AGP <4.2.
+    if (project.android.hasProperty("namespace")) {
+        namespace 'com.alexmercerind.media_kit_libs_android_video'
+    }
+
+    compileSdkVersion 36
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        minSdkVersion 16
+    }
+
+    dependencies {
+        implementation fileTree(dir: "$buildDir/output", include: "*.jar")
+    }
+}
+
+task downloadDependencies(type: Exec) {   
+        // Delete previously created /output subdirectory.
+
+        def outputDir = file("$buildDir/output")
+        if (outputDir.exists()) {
+            outputDir.deleteDir()
+        }
+        outputDir.mkdirs()
+
+        // libmpv for each ABI, from Predidit/libmpv-android-video-build.
+        // .github/scripts/upstream.py moves these lines to a newer release.
+        def libmpvRelease = "v1.3.1"
+        def libmpvMd5 = [
+            "arm64-v8a": "9d1a1f12b8c815ac17ed767454d5388f",
+            "armeabi-v7a": "aa9b93a4c8b81fc569fca69b3f03f1bd",
+            "x86_64": "6ca3c4ea3332c5b7567108c7bea2eed3",
+            "x86": "2b0ffe2bae80ce672129d16cad46b756",
+        ]
+        def filesToDownload = libmpvMd5.collect { abi, md5 ->
+            ["url": "https://github.com/Predidit/libmpv-android-video-build/releases/download/${libmpvRelease}/default-${abi}.jar", "md5": md5, "destination": file("$buildDir/${libmpvRelease}/default-${abi}.jar")]
+        }
+
+        filesToDownload.each { fileInfo ->
+            def destFile = fileInfo.destination
+            if (destFile.exists()) {
+                def calculatedMD5 = MessageDigest.getInstance("MD5").digest(Files.readAllBytes(destFile.toPath())).encodeHex().toString()
+
+                if (calculatedMD5 != fileInfo.md5) {
+                    destFile.delete()
+                    println "MD5 mismatch. File deleted: ${destFile}"
+                }
+
+            }
+
+            if (!destFile.exists()) {
+                destFile.parentFile.mkdirs()
+                println "Downloading file from: ${fileInfo.url}"
+                destFile.withOutputStream { os ->
+                    os << new URL(fileInfo.url).openStream()
+                }
+
+                def calculatedMD5 = MessageDigest.getInstance("MD5").digest(Files.readAllBytes(destFile.toPath())).encodeHex().toString()
+                if (calculatedMD5 != fileInfo.md5) {
+                    throw new GradleException("MD5 verification failed for ${destFile}")
+                }
+            }
+
+            copy {
+                from destFile
+                into outputDir
+            }
+        }
+}
+
+assemble.dependsOn(downloadDependencies)

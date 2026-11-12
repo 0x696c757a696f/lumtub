@@ -2130,7 +2130,6 @@
   "Model name": "Име на моделот",
   "Reading the subtitle list…": "Се чита списокот со титлови…",
   "Test translation": "Тестирај превод",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "Кога титловите ги исцртува mpv, вториот титл го користи стилот на првиот.",
   "First subtitle": "Прв титл",
   "The first subtitle shows here": "Првиот титл се прикажува тука",
   "First subtitle style": "Стил на првиот титл",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Прескокни текст што веќе е на целниот јазик",
   "Take Simplified and Traditional Chinese as one language": "Третирај го поедноставениот и традиционалниот кинески како еден јазик",
+  "Languages never translated": "Јазици што никогаш не се преведуваат",
+  "None besides the target, interface and system languages": "Нема, освен целниот јазик, јазикот на интерфејсот и системскиот јазик",
   "Chinese in either script is left untranslated when the target is the other": "Кинескиот текст во кое било писмо не се преведува кога целното е другото писмо",
   "{0} (lower is steadier, higher is freer)": "{0} (пониско е постабилно, повисоко е послободно)",
   "APP ID from the Baidu Translate open platform": "APP ID од отворената платформа на Baidu Translate",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "Преводите на коментарите, описите и објавите се прикажуваат заедно со оригиналот; кога е исклучено, преводот го заменува оригиналот",
   "Highlighted": "Истакнато со позадина",
   "{0} entries": "{0} ставки",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "Се одредува според писмото: сигурно е за кинески, јапонски, корејски, руски и слично; од јазиците со латиница се препознава само англискиот",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "Се одредува според писмото: сигурно е за кинески, јапонски, корејски, руски и слично; јазиците со латиница се разликуваат по зборовите штом редот е доволно долг",
   "Temperature": "Температура",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "Без клуч се користи бесплатниот интерфејс што го користи Microsoft Edge за преведување страници; со Azure клуч се користи официјалниот API.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "Текстот му се испраќа на избраната услуга само кога ќе притиснете „Преведи“ или ќе користите преведени титлови. Клучевите се шифрирани со Windows и се чуваат на овој компјутер, а не во датотеката со поставки. Преводите се чуваат во кеш на овој компјутер 7 дена и се бришат кога ќе го исчистите кешот.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "казашки",
   "Kyrgyz": "киргишки",
   "Assamese": "асамски",
-  "Odia": "одија"
+  "Odia": "одија",
+  "Overview": "Преглед"
 }

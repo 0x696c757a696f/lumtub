@@ -2,6 +2,21 @@
 # Starts Lumtub from the AppImage. Each library under lib/fallback is used
 # only when the system has none of that name.
 here=$(dirname "$(readlink -f "$0")")
+# The x64-v3 package needs AVX2 (and the rest of x86-64-v3).
+if [ -e "$here/usr/bin/x86-64-v3" ] && ! grep -qw avx2 /proc/cpuinfo 2>/dev/null; then
+  message="This Lumtub package needs a CPU with AVX2. Please download the linux-x64 AppImage instead."
+  echo "$message" >&2
+  for tool in zenity kdialog notify-send; do
+    command -v $tool > /dev/null || continue
+    case $tool in
+      zenity) zenity --error --title=Lumtub --text="$message" ;;
+      kdialog) kdialog --title Lumtub --error "$message" ;;
+      notify-send) notify-send Lumtub "$message" ;;
+    esac
+    break
+  done
+  exit 1
+fi
 known=$( (ldconfig -p || /sbin/ldconfig -p) 2>/dev/null)
 extra=
 for dir in "$here"/usr/bin/lib/fallback/*/; do
@@ -20,6 +35,16 @@ for dir in "$here"/usr/bin/lib/fallback/*/; do
   fi
   extra="$extra${extra:+:}${dir%/}"
 done
+# libmpv needs libwayland-client 1.23 or newer (Ubuntu 22.04 has 1.20,
+# Debian 12 1.21): ours replaces an older system copy for the whole process,
+# GTK's use included, which libwayland's stable interface allows.
+if [ -d "$here/usr/bin/lib/wayland" ]; then
+  newer=
+  for path in $(printf '%s\n' "$known" | awk '/libwayland-client\.so\.0 /{print $NF}'); do
+    grep -qa wl_display_create_queue_with_name "$path" 2>/dev/null && newer=1
+  done
+  [ -n "$newer" ] || extra="$extra${extra:+:}$here/usr/bin/lib/wayland"
+fi
 if [ -n "$extra" ]; then
   LD_LIBRARY_PATH="$extra${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
   export LD_LIBRARY_PATH

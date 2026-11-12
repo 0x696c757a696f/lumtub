@@ -353,17 +353,24 @@ class _AppShellState extends State<AppShell> {
                 NavigationStyle.bottom => false,
               };
               final tabs = rail ? null : skin?.tabs;
+              // The same pages as the plain bottom bar, the library ones
+              // gathered under Library, so the labels fit a phone's width.
               Widget tabBar(SkinTabs tabs) => SkinTabBar(
                     tabs: tabs,
-                    destinations: [for (final d in _destinations) (d.$2, d.$3, d.$4)],
-                    selected: _selectedIndex,
-                    onSelected: _select,
+                    destinations: [for (final d in _bottomDestinations) (d.$2, d.$3, d.$4)],
+                    selected: _bottomIndex,
+                    onSelected: _selectBottom,
                   );
+              final watchingOnPhone = _controller.onWatchPage && isPhone(context);
               final scaffold = Scaffold(
+                // The page under the bars is veiled on its own (_veiled).
+                backgroundColor: Colors.transparent,
                 // Below Android's status bar and camera cutout; the
                 // navigation bar keeps clear of the gesture bar itself.
                 body: SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [
-                  _TopBar(
+                  // A phone's watch page starts with the player, as phone
+                  // apps do; back is the player's arrow or the system's.
+                  if (!watchingOnPhone) _TopBar(
                     wide: wide,
                     controller: _controller,
                     searchText: _searchText,
@@ -373,14 +380,14 @@ class _AppShellState extends State<AppShell> {
                   if (tabs != null && tabs.top) tabBar(tabs),
                   Expanded(child: Stack(children: [
                     Row(children: [
-                      if (rail && skin != null && skin.drawsRail)
+                      if (rail && !watchingOnPhone && skin != null && skin.drawsRail)
                         SkinRail(
                           skin: skin,
                           destinations: [for (final d in _destinations) (d.$2, d.$3, d.$4)],
                           selected: _selectedIndex,
                           onSelected: _select,
                         )
-                      else if (rail)
+                      else if (rail && !watchingOnPhone)
                         NavigationRail(
                           backgroundColor: context.tones.chrome,
                           selectedIndex: _selectedIndex,
@@ -408,7 +415,7 @@ class _AppShellState extends State<AppShell> {
                   // No status line on phones, tablets and TVs: the room goes to the page.
                   if (_controller.appearance.showStatusBar && !touchFirst) _StatusBar(controller: _controller),
                 ])),
-                bottomNavigationBar: rail || (tabs != null && tabs.top) ? null : tabs != null ? tabBar(tabs) : NavigationBar(
+                bottomNavigationBar: rail || watchingOnPhone || (tabs != null && tabs.top) ? null : tabs != null ? tabBar(tabs) : NavigationBar(
                   height: 64,
                   // Six labels do not fit a phone's width side by side.
                   labelBehavior: MediaQuery.sizeOf(context).width < 600 ? NavigationDestinationLabelBehavior.onlyShowSelected : null,
@@ -448,8 +455,10 @@ class _AppShellState extends State<AppShell> {
   /// A skin with a busy picture behind lays some of its page colour over
   /// it under the pages, so what is written on them reads.
   Widget _veiled(Skin? skin, Widget page) {
-    if (skin == null || skin.veil == 0 || _controller.appearance.lowResource) return page;
-    return ColoredBox(color: skin.colors.page.withValues(alpha: skin.veil * SkinGlass.thinning(skin)), child: page);
+    // Kept in low resource mode: one flat colour costs nothing.
+    if (skin == null || skin.veil == 0) return page;
+    // A Material, not a ColoredBox, so list rows still show their ink on it.
+    return Material(color: skin.colors.page.withValues(alpha: skin.veil * SkinGlass.thinning(skin)), child: page);
   }
 
   String get _pageKey => !_controller.ready ? 'setup' : _controller.onWatchPage ? 'watch' : switch (_controller.mode) {

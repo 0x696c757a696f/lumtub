@@ -2130,7 +2130,6 @@
   "Model name": "Názov modelu",
   "Reading the subtitle list…": "Načítava sa zoznam titulkov…",
   "Test translation": "Vyskúšať preklad",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "Keď titulky vykresľuje mpv, druhé titulky používajú štýl prvých.",
   "First subtitle": "Prvé titulky",
   "The first subtitle shows here": "Tu sa zobrazia prvé titulky",
   "First subtitle style": "Štýl prvých titulkov",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Prekladač Baidu",
   "Skip text already in the target language": "Preskočiť text, ktorý je už v cieľovom jazyku",
   "Take Simplified and Traditional Chinese as one language": "Považovať zjednodušenú a tradičnú čínštinu za jeden jazyk",
+  "Languages never translated": "Jazyky, ktoré sa nikdy neprekladajú",
+  "None besides the target, interface and system languages": "Žiadne okrem cieľového jazyka, jazyka rozhrania a jazyka systému",
   "Chinese in either script is left untranslated when the target is the other": "Čínsky text v ktoromkoľvek písme sa neprekladá, ak je cieľom druhé písmo",
   "{0} (lower is steadier, higher is freer)": "{0} (nižšia hodnota je stabilnejšia, vyššia voľnejšia)",
   "APP ID from the Baidu Translate open platform": "APP ID z otvorenej platformy prekladača Baidu",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "Preklady komentárov, popisov a príspevkov sa zobrazujú spolu s originálom; keď je vypnuté, preklad nahradí originál",
   "Highlighted": "Zvýraznené pozadie",
   "{0} entries": "Položky: {0}",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "Určuje sa podľa písma: spoľahlivé pre čínštinu, japončinu, kórejčinu, ruštinu a podobne; z jazykov s latinkou sa rozpozná iba angličtina",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "Určuje sa podľa písma: spoľahlivé pre čínštinu, japončinu, kórejčinu, ruštinu a podobne; jazyky s latinkou sa rozlišujú podľa slov, keď je riadok dostatočne dlhý",
   "Temperature": "Teplota",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "Bez kľúča sa použije bezplatný koncový bod, ktorým prekladá stránky Microsoft Edge; s kľúčom Azure sa použije oficiálne API.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "Text sa odosiela vybranej službe, len keď kliknete na Preložiť alebo použijete preložené titulky. Kľúče šifruje Windows a ukladajú sa v tomto počítači, nie do súboru nastavení. Preklady sa v tomto počítači ukladajú do vyrovnávacej pamäte na 7 dní a pri jej vymazaní sa odstránia.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "kazaština",
   "Kyrgyz": "kirgizština",
   "Assamese": "ásamčina",
-  "Odia": "uríjčina"
+  "Odia": "uríjčina",
+  "Overview": "Prehľad"
 }

@@ -2130,7 +2130,6 @@
   "Model name": "ឈ្មោះម៉ូដែល",
   "Reading the subtitle list…": "កំពុងអានបញ្ជីចំណងជើងរង…",
   "Test translation": "សាកល្បងការបកប្រែ",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "នៅពេល mpv គូរចំណងជើងរង ចំណងជើងរងទីពីរប្រើរចនាប័ទ្មរបស់ចំណងជើងរងទីមួយ។",
   "First subtitle": "ចំណងជើងរងទីមួយ",
   "The first subtitle shows here": "ចំណងជើងរងទីមួយបង្ហាញនៅទីនេះ",
   "First subtitle style": "រចនាប័ទ្មចំណងជើងរងទីមួយ",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "រំលងអត្ថបទដែលជាភាសាគោលដៅរួចហើយ",
   "Take Simplified and Traditional Chinese as one language": "ចាត់ទុកចិនសាមញ្ញនិងចិនប្រពៃណីជាភាសាតែមួយ",
+  "Languages never translated": "ភាសាដែលមិនដែលបកប្រែ",
+  "None besides the target, interface and system languages": "គ្មាន ក្រៅពីភាសាគោលដៅ ភាសាចំណុចប្រទាក់ និងភាសាប្រព័ន្ធ",
   "Chinese in either script is left untranslated when the target is the other": "អត្ថបទចិនក្នុងអក្សរណាមួយមិនត្រូវបានបកប្រែទេ នៅពេលគោលដៅជាអក្សរមួយទៀត",
   "{0} (lower is steadier, higher is freer)": "{0} (កាន់តែទាប កាន់តែស្ថិរភាព កាន់តែខ្ពស់ កាន់តែសេរី)",
   "APP ID from the Baidu Translate open platform": "APP ID ពីវេទិកាបើកចំហរបស់ Baidu Translate",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "ការបកប្រែមតិ ការពិពណ៌នា និងការបង្ហោះបង្ហាញជាមួយអត្ថបទដើម; នៅពេលបិទ ការបកប្រែជំនួសអត្ថបទដើម",
   "Highlighted": "បន្លិចផ្ទៃខាងក្រោយ",
   "{0} entries": "{0} ធាតុ",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "វិនិច្ឆ័យតាមអក្សរ៖ ត្រឹមត្រូវសម្រាប់ចិន ជប៉ុន កូរ៉េ រុស្ស៊ី និងដូចគ្នា; ក្នុងចំណោមភាសាអក្សរឡាតាំង ស្គាល់តែអង់គ្លេសប៉ុណ្ណោះ",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "វិនិច្ឆ័យតាមអក្សរ៖ ត្រឹមត្រូវសម្រាប់ចិន ជប៉ុន កូរ៉េ រុស្ស៊ី និងដូចគ្នា; ភាសាអក្សរឡាតាំងត្រូវបានញែកដោយពាក្យ នៅពេលបន្ទាត់វែងគ្រប់គ្រាន់",
   "Temperature": "សីតុណ្ហភាព",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "ពេលមិនបំពេញសោ វាប្រើចំណុចប្រទាក់ឥតគិតថ្លៃដែល Microsoft Edge ប្រើបកប្រែទំព័រ; ពេលបំពេញសោ Azure វាប្រើ API ផ្លូវការ។",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "អត្ថបទត្រូវបានផ្ញើទៅសេវាដែលបានជ្រើសតែនៅពេលអ្នកចុចបកប្រែ ឬប្រើចំណងជើងរងបកប្រែប៉ុណ្ណោះ។ សោត្រូវបានអ៊ិនគ្រីបដោយ Windows នៅលើកុំព្យូទ័រនេះ ហើយមិនរក្សាទុកក្នុងឯកសារការកំណត់ទេ។ ការបកប្រែត្រូវបានរក្សាទុកក្នុងឃ្លាំងសម្ងាត់លើកុំព្យូទ័រនេះ 7 ថ្ងៃ ហើយត្រូវលុបពេលសម្អាតឃ្លាំងសម្ងាត់។",
@@ -3165,5 +3166,6 @@
   "Kazakh": "កាហ្សាក់",
   "Kyrgyz": "កៀហ្ស៊ីស",
   "Assamese": "អាសាមីស",
-  "Odia": "អូឌីយ៉ា"
+  "Odia": "អូឌីយ៉ា",
+  "Overview": "ទិដ្ឋភាពទូទៅ"
 }

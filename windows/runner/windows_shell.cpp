@@ -17,6 +17,7 @@
 
 #include <flutter/standard_method_codec.h>
 
+#include "data_root.h"
 #include "resource.h"
 
 namespace {
@@ -282,6 +283,13 @@ bool WindowsShell::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRE
     tray_icon_ = false;
     AddTrayIcon();
     return false;
+  }
+  // Lumtub started again for the same data folder: show this window.
+  static const UINT show_window = ::RegisterWindowMessageW(kShowWindowMessage);
+  if (message == show_window) {
+    if (static_cast<unsigned long long>(wparam) == DataRootTag()) ShowFromTray();
+    *result = 0;
+    return true;
   }
   switch (message) {
     case WM_DESTROY:

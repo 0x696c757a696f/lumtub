@@ -2130,7 +2130,6 @@
   "Model name": "モデル名",
   "Reading the subtitle list…": "字幕の一覧を読み取り中…",
   "Test translation": "翻訳をテスト",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "mpv が字幕を描画する場合、第2字幕には第1字幕のスタイルが使われます。",
   "First subtitle": "第1字幕",
   "The first subtitle shows here": "ここに第1字幕が表示されます",
   "First subtitle style": "第1字幕のスタイル",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "百度翻訳",
   "Skip text already in the target language": "すでに翻訳先の言語になっている内容をスキップ",
   "Take Simplified and Traditional Chinese as one language": "簡体字中国語と繁体字中国語を同じ言語として扱う",
+  "Languages never translated": "翻訳しない言語",
+  "None besides the target, interface and system languages": "対象言語・表示言語・システム言語以外はありません",
   "Chinese in either script is left untranslated when the target is the other": "翻訳先がもう一方の字体の場合、どちらの字体の中国語も翻訳しない",
   "{0} (lower is steadier, higher is freer)": "{0}（低いほど安定し、高いほど自由になります）",
   "APP ID from the Baidu Translate open platform": "百度翻訳オープンプラットフォームの APP ID",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "コメント、説明、投稿の翻訳は原文と一緒に表示されます。オフにすると翻訳が原文を置き換えます",
   "Highlighted": "背景ハイライト",
   "{0} entries": "{0} 件",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "文字から判定します。中国語、日本語、韓国語、ロシア語などは精度が高いですが、ラテン文字の言語は英語しか認識できません",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "文字から判定します。中国語、日本語、韓国語、ロシア語などは精度が高く、ラテン文字の言語は行が十分に長ければ単語で見分けます",
   "Temperature": "温度",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "キーを入力しない場合は、Microsoft Edge のページ翻訳が使う無料のエンドポイントを使用します。Azure のキーを入力すると正式な API を使用します。",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "翻訳するテキストは、「翻訳」をタップしたときか翻訳字幕を使うときにのみ、選択したサービスに送信されます。キーは Windows の暗号化でこのコンピューターに保存され、設定ファイルには書き込まれません。翻訳済みの内容はこのコンピューターに 7 日間キャッシュされ、キャッシュを消去すると一緒に削除されます。",
@@ -3165,5 +3166,6 @@
   "Kazakh": "カザフ語",
   "Kyrgyz": "キルギス語",
   "Assamese": "アッサム語",
-  "Odia": "オリヤー語"
+  "Odia": "オリヤー語",
+  "Overview": "概要"
 }

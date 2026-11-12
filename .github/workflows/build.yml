@@ -36,7 +36,6 @@ jobs:
   #   which keeps main's caches fresh for pull requests.
   reuse:
     name: Reuse an earlier build
-    if: github.event_name == 'push' || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -44,8 +43,27 @@ jobs:
     outputs:
       run: ${{ steps.find.outputs.run }}
     steps:
+      # One full build at a time: a run waits until the Build runs started
+      # before it have finished (each waits only for older runs, so two never
+      # wait for each other).
+      - name: Wait for earlier builds
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          created=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq .created_at)
+          deadline=$(( $(date +%s) + 5 * 60 * 60 ))
+          while :; do
+            earlier=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/build.yml/runs?per_page=50" \
+              --jq "[.workflow_runs[] | select(.status != \"completed\" and .id != $GITHUB_RUN_ID and .created_at < \"$created\") | .html_url] | .[]")
+            [[ -n "$earlier" && $(date +%s) -lt $deadline ]] || break
+            echo "Waiting for:"; echo "$earlier"
+            sleep 60
+          done
+
       - name: Find a finished build of these files
         id: find
+        if: github.event_name == 'push' || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}
@@ -547,9 +565,17 @@ jobs:
           - package_arch: x64
             runner: ubuntu-24.04
             appimage_arch: x86_64
+            flutter_arch: x64
+          # The Rust core and libmpv built for AVX2 CPUs;
+          # AppRun refuses other CPUs with a message.
+          - package_arch: x64-v3
+            runner: ubuntu-24.04
+            appimage_arch: x86_64
+            flutter_arch: x64
           - package_arch: arm64
             runner: ubuntu-24.04-arm
             appimage_arch: aarch64
+            flutter_arch: arm64
     # Pinned, so a new default Ubuntu changes nothing; the build itself runs
     # in Ubuntu 22.04, whose glibc 2.35 sets the oldest Linux the AppImage
     # runs on: the oldest Ubuntu LTS in standard support, as AppImageHub
@@ -600,7 +626,7 @@ jobs:
       - name: Linux - install Flutter stable SDK
         run: |
           git config --global --add safe.directory '*'
-          if [ "$PACKAGE_ARCH" = x64 ]; then
+          if [ "$PACKAGE_ARCH" != arm64 ]; then
             archive="$RUNNER_TEMP/flutter.tar.xz"
             curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$FLUTTER_VERSION-stable.tar.xz"
             tar -xJf "$archive" -C "$RUNNER_TEMP"
@@ -631,6 +657,7 @@ jobs:
             cargo fmt --manifest-path "$manifest" --check
             cargo clippy --manifest-path "$manifest" --release --all-targets -- -D warnings
           fi
+          if [ "$PACKAGE_ARCH" = x64-v3 ]; then export RUSTFLAGS='-C target-cpu=x86-64-v3'; fi
           cargo test --manifest-path "$manifest" --release
           cargo build --manifest-path "$manifest" --release --lib
           core="$PWD/native/lumtub_core/target/release/liblumtub_core.so"
@@ -652,14 +679,16 @@ jobs:
 
       - name: Linux - download libmpv
         run: |
+          # Built from mpv master by lumtub-media-builds (see .github/pins.env).
           case "$PACKAGE_ARCH" in
-            x64) arch=x86_64; sum=$MPV_SHA256_X86_64 ;;
-            arm64) arch=arm64; sum=$MPV_SHA256_ARM64 ;;
+            x64) flavor=x86_64; sum=$MPV_SHA256_X86_64 ;;
+            x64-v3) flavor=x86_64-v3; sum=$MPV_SHA256_X86_64_V3 ;;
+            arm64) flavor=aarch64; sum=$MPV_SHA256_AARCH64 ;;
           esac
-          name="libmpv-$MPV_VERSION-linux-$arch-gpl-$MPV_RELEASE"
+          name="libmpv-linux-$flavor-$MPV_RELEASE"
           mkdir -p .linux-downloads
           archive="$PWD/.linux-downloads/$name.tar.gz"
-          [ -s "$archive" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$archive" "https://github.com/jason-yau/mpv-prebuilt/releases/download/$MPV_RELEASE/$name.tar.gz"
+          [ -s "$archive" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$archive" "https://github.com/0x696c757a696f/lumtub-media-builds/releases/download/$MPV_RELEASE/$name.tar.gz"
           echo "$sum  $archive" | sha256sum -c -
           tar -xzf "$archive" -C "$RUNNER_TEMP"
           mv "$RUNNER_TEMP/$name" "$RUNNER_TEMP/mpv"
@@ -668,6 +697,9 @@ jobs:
           # requirements only matter for static linking and are not installed.
           sed -i '/^Requires.private:/d' "$RUNNER_TEMP/mpv/lib/pkgconfig/mpv.pc"
           echo "PKG_CONFIG_PATH=$RUNNER_TEMP/mpv/lib/pkgconfig" >> "$GITHUB_ENV"
+          # The libraries libmpv needs come in the same folder; the linker
+          # looks there for them when it links the video plugin.
+          echo "LDFLAGS=-Wl,-rpath-link,$RUNNER_TEMP/mpv/lib" >> "$GITHUB_ENV"
           PKG_CONFIG_PATH="$RUNNER_TEMP/mpv/lib/pkgconfig" pkg-config --modversion --libs mpv
 
       - name: Linux - get packages
@@ -698,10 +730,11 @@ jobs:
         env:
           APPIMAGE_ARCH: ${{ matrix.appimage_arch }}
         run: |
-          bundle="build/linux/$PACKAGE_ARCH/release/bundle"
+          bundle="build/linux/${{ matrix.flutter_arch }}/release/bundle"
           # Only here, so the smoke test finds nothing but what the AppImage carries.
           LD_LIBRARY_PATH="$RUNNER_TEMP/mpv/lib" linux/packaging/make-appdir.sh "$bundle" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/AppDir"
           cp LICENSE NOTICE "$RUNNER_TEMP/AppDir/usr/bin/"
+          if [ "$PACKAGE_ARCH" = x64-v3 ]; then touch "$RUNNER_TEMP/AppDir/usr/bin/x86-64-v3"; fi
           mkdir -p "$RUNNER_TEMP/AppDir/usr/share/doc/libmpv"
           cp -r "$RUNNER_TEMP/mpv/licenses" "$RUNNER_TEMP/mpv/manifest.txt" "$RUNNER_TEMP/AppDir/usr/share/doc/libmpv/"
           # Nothing bundled may need a newer glibc than the build system's.
@@ -889,6 +922,18 @@ jobs:
 
       - name: macOS - get packages
         run: flutter pub get
+
+      # Mpv.framework from MPVKit's static libraries (see
+      # vendor/media_kit_libs_macos_video/LUMTUB.md). The podspec would run the
+      # same make during pod install, but with its output hidden.
+      - name: macOS - cache MPVKit downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: vendor/media_kit_libs_macos_video/macos/.cache
+          key: mpvkit-${{ hashFiles('vendor/media_kit_libs_macos_video/macos/mpvkit.lock') }}
+
+      - name: macOS - link libmpv
+        run: make -C vendor/media_kit_libs_macos_video/macos
 
       - name: macOS - run unit tests
         run: flutter test

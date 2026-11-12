@@ -2133,7 +2133,6 @@
   "Model name": "Модель атауы",
   "Reading the subtitle list…": "Субтитр тізімі оқылуда…",
   "Test translation": "Аударманы сынау",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "mpv субтитрлерді салған кезде екінші субтитр бірінші субтитрдің мәнерін қолданады.",
   "First subtitle": "Бірінші субтитр",
   "The first subtitle shows here": "Бірінші субтитр осында көрсетіледі",
   "First subtitle style": "Бірінші субтитр мәнері",
@@ -2208,6 +2207,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Мақсатты тілде жазылған мәтінді өткізіп жіберу",
   "Take Simplified and Traditional Chinese as one language": "Жеңілдетілген және дәстүрлі қытай тілін бір тіл деп санау",
+  "Languages never translated": "Ешқашан аударылмайтын тілдер",
+  "None besides the target, interface and system languages": "Мақсатты тіл, интерфейс тілі және жүйе тілінен басқасы жоқ",
   "Chinese in either script is left untranslated when the target is the other": "Мақсатты жазу екінші болса, қытай мәтіні қай жазуда болса да аударылмайды",
   "{0} (lower is steadier, higher is freer)": "{0} (төмендеген сайын тұрақты, жоғарылаған сайын еркін)",
   "APP ID from the Baidu Translate open platform": "Baidu Translate ашық платформасының APP ID",
@@ -2223,7 +2224,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "Пікірлердің, сипаттамалардың және жазбалардың аудармалары түпнұсқамен бірге көрінеді; өшірулі болса, аударма түпнұсқаны алмастырады",
   "Highlighted": "Ерекшеленген",
   "{0} entries": "{0} жазба",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "Жазу жүйесі бойынша анықталады: қытай, жапон, корей, орыс сияқты тілдерде дәл; латын жазуындағы тілдерден тек ағылшын танылады",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "Жазу жүйесі бойынша анықталады: қытай, жапон, корей, орыс сияқты тілдерде дәл; латын жазуындағы тілдер жол жеткілікті ұзын болғанда сөздері арқылы ажыратылады",
   "Temperature": "Температура",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "Кілтсіз Microsoft Edge беттерді аудару үшін қолданатын тегін эндпоинт қолданылады; Azure кілтімен ресми API қолданылады.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "Мәтін таңдалған қызметке тек \"Аудару\" түймесін басқанда немесе аударылған субтитрлерді қолданғанда жіберіледі. Кілттер осы компьютерде Windows арқылы шифрланып, баптаулар файлынан тыс сақталады. Аудармалар осы компьютерде 7 күн кэште сақталады және кэшті тазалағанда жойылады.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "қазақ",
   "Kyrgyz": "қырғыз",
   "Assamese": "ассам",
-  "Odia": "ория"
+  "Odia": "ория",
+  "Overview": "Шолу"
 }

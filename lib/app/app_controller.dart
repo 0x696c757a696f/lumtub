@@ -6,8 +6,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart' show Color, PaintingBinding, Size;
-import 'package:flutter/gestures.dart' show GestureBinding, PointerEvent;
-import 'package:flutter/services.dart' show HardwareKeyboard, KeyEvent, MethodChannel;
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:http/http.dart' as http;
@@ -446,7 +445,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   TranslationCache _translationCache = TranslationCache();
   /// Behind 翻译 buttons and translated subtitles: the service 翻译服务
   /// names; called only when something is to be translated.
-  late Translator translator = CachingTranslator(_google, _translationCache, preferences.translation.cacheScope);
+  late Translator translator = CachingTranslator(_google, _translationCache, preferences.translation.cacheScope, batch: true);
   /// The translation services' API keys, by [TranslationService.name],
   /// kept encrypted with DPAPI apart from the settings.
   Map<String, String> translationKeys = const {};
@@ -743,7 +742,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     () => translator,
     byTranslator: () => preferences.subtitlesByService && preferences.translation.service != TranslationService.google,
     position: () => player?.state.position ?? Duration.zero,
-    onUpdated: (path) => unawaited(_subtitleFileUpdated(path)),
+    onUpdated: _subtitleFileUpdated,
   );
 
   final _cues = <String, List<SubtitleCue>>{};
@@ -757,7 +756,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// for the chapter menu, which does not rebuild with everything else.
   final chaptersChanged = ValueNotifier<int>(0);
 
-  static const subtitleWait = Duration(seconds: 10);
+  /// The most a video opened paused waits for its translated subtitles. It
+  /// plays as soon as they are loaded in the player; this only guards a
+  /// translation service that never answers. The first stretch took 9 to
+  /// 30 s in the user's logs; the play button starts it sooner.
+  static const subtitleWait = Duration(seconds: 60);
 
   /// The video opened is held until its translated subtitle is ready.
   bool waitingForSubtitles = false;

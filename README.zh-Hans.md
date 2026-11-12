@@ -110,6 +110,7 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 | `windows-x64-v3` | 2015 年以后的大多数电脑（支持 AVX2）。**不确定就选这个** |
 | `windows-x64` | 较老的 x64 处理器 |
 | `windows-arm64` | Windows on ARM 笔记本 |
+| `linux-x64-v3` AppImage | 2015 年以后的大多数 64 位电脑（AVX2），glibc 2.35 或更新——**拿不准就选这个** |
 | `linux-x64` AppImage | glibc 2.35 或更新的 64 位电脑（Ubuntu 22.04、Debian 12、Fedora 36 及以后） |
 | `linux-arm64` AppImage | ARM64 Linux，例如树莓派 5 |
 | `macos-arm64` DMG | Apple 芯片的 Mac（M1 及以后） |

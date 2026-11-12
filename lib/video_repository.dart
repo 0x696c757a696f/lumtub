@@ -407,8 +407,18 @@ class VideoRepository {
   Stream<String> _lines(List<String> arguments) async* {
     final process = await ProcessTree.start(ytDlpPath, arguments, environment: _environment);
     lowerPriority(process.pid);
+    // The last 64 KiB of stderr: enough for the error, bounded however
+    // often a warning repeats.
     final stderr = StringBuffer();
-    final errors = process.stderr.transform(utf8.decoder).listen(stderr.write);
+    final errors = process.stderr.transform(utf8.decoder).listen((piece) {
+      stderr.write(piece);
+      if (stderr.length > 128 << 10) {
+        final text = stderr.toString();
+        stderr
+          ..clear()
+          ..write(text.substring(text.length - (64 << 10)));
+      }
+    });
     try {
       // Reading pauses while the page is full, which pauses yt-dlp through
       // the pipe until the next page is asked for.

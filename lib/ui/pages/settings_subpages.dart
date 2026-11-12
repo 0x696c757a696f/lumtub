@@ -415,6 +415,7 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
         required void Function(int) setColor,
         required void Function(double) setOpacity,
         bool enabled = true,
+        bool scaleEnabled = true,
       }) =>
           [
             NormalItem(
@@ -428,7 +429,7 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
               title: tr('Size'),
               subtitle: '${scale.toStringAsFixed(1)}×',
               leading: Icon(AppIcons.textAa),
-              enabled: enabled,
+              enabled: scaleEnabled,
               onTap: () => pickWithSlider(context, title: tr('Size'), value: scale, min: 0.5, max: 3, divisions: 25, suffix: '×', precise: 1, onSelected: (v) => setScale((v * 10).round() / 10)),
             ),
             NormalItem(
@@ -495,7 +496,7 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           setOpacity: (v) => save(now().copyWith(subtitleOpacity: v)),
         ),
         _header(context, tr('Second subtitle style')),
-        if (settings.libassSubtitles) _tip(context, tr("While mpv draws subtitles, the second subtitle uses the first one's style.")),
+        if (settings.libassSubtitles) _tip(context, tr("While mpv draws subtitles, the second subtitle takes the first one's font and color; its size can be set.")),
         ...look(
           font: settings.secondaryFont,
           scale: settings.secondaryScale,

@@ -35,6 +35,14 @@ void main() {
     expect((await Process.run('kill', ['-0', '$pid'])).exitCode, isNot(0));
   });
 
+  test('stops a process whose output runs away', () async {
+    if (Platform.isWindows) return;
+    await expectLater(
+      runWithTimeout('sh', ['-c', 'yes'], timeout: const Duration(seconds: 30)),
+      throwsA(isA<ProcessException>()),
+    );
+  });
+
   group('version folder order', () {
     List<String> sorted(List<String> names) => [...names]..sort(compareVersionFolders);
 

@@ -2130,7 +2130,6 @@
   "Model name": "Modelio pavadinimas",
   "Reading the subtitle list…": "Nuskaitomas subtitrų sąrašas…",
   "Test translation": "Išbandyti vertimą",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "Kai subtitrus piešia mpv, antrasis subtitras naudoja pirmojo stilių.",
   "First subtitle": "Pirmasis subtitras",
   "The first subtitle shows here": "Čia rodomas pirmasis subtitras",
   "First subtitle style": "Pirmojo subtitro stilius",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Praleisti tekstą, kuris jau yra tikslinė kalba",
   "Take Simplified and Traditional Chinese as one language": "Supaprastintąją ir tradicinę kinų kalbą laikyti viena kalba",
+  "Languages never translated": "Kalbos, kurios niekada neverčiamos",
+  "None besides the target, interface and system languages": "Nėra, išskyrus tikslo, sąsajos ir sistemos kalbas",
   "Chinese in either script is left untranslated when the target is the other": "Kinų tekstas jokiu rašmeniu neverčiamas, kai tikslas yra kitas rašmuo",
   "{0} (lower is steadier, higher is freer)": "{0} (kuo mažiau, tuo stabiliau, kuo daugiau, tuo laisviau)",
   "APP ID from the Baidu Translate open platform": "„Baidu Translate“ atvirosios platformos APP ID",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "Komentarų, aprašymų ir įrašų vertimai rodomi kartu su originalu; išjungus vertimas pakeičia originalą",
   "Highlighted": "Paryškintas fonas",
   "{0} entries": "Įrašų: {0}",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "Nustatoma pagal rašmenis: patikima kinų, japonų, korėjiečių, rusų ir panašioms kalboms; iš lotyniško rašto kalbų atpažįstama tik anglų",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "Nustatoma pagal rašmenis: patikima kinų, japonų, korėjiečių, rusų ir panašioms kalboms; lotyniško rašto kalbos atskiriamos pagal žodžius, kai eilutė pakankamai ilga",
   "Temperature": "Temperatūra",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "Nenurodžius rakto naudojama nemokama sąsaja, kurią „Microsoft Edge“ naudoja puslapiams versti; įvedus Azure raktą naudojama oficiali API.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "Tekstas pasirinktai paslaugai siunčiamas tik tada, kai spustelite „Versti“ arba naudojate išverstus subtitrus. Raktai užšifruojami „Windows“ šiame kompiuteryje ir nesaugomi nustatymų faile. Vertimai šiame kompiuteryje saugomi talpykloje 7 dienas ir pašalinami išvalius talpyklą.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "kazachų",
   "Kyrgyz": "kirgizų",
   "Assamese": "asamų",
-  "Odia": "odijų"
+  "Odia": "odijų",
+  "Overview": "Apžvalga"
 }

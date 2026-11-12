@@ -232,6 +232,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   final _bottomBarKey = GlobalKey();
+  /// The most subtitles move up while the controls show, as a share of the
+  /// picture's height.
+  static const _maxLift = 0.15;
   bool _lifted = false;
 
   /// Moves the subtitles above the bottom bar while it [shows], so it never
@@ -242,15 +245,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final box = context.findRenderObject();
     if (shows && (bar is! RenderBox || !bar.hasSize || box is! RenderBox || !box.hasSize)) return;
     _lifted = shows;
-    final lift = shows ? (bar as RenderBox).size.height : 0.0;
+    // mpv places subtitles in percent of the picture, which may be letterboxed.
+    final size = shows ? (box as RenderBox).size : Size.zero;
+    final w = _player.state.width ?? 0, h = _player.state.height ?? 0;
+    final picture = w > 0 && h > 0 ? min(size.height, size.width * h / w) : size.height;
+    // Above the bar, but never far into the picture: in a small player,
+    // such as a phone's above the page, the bar covers a third of it, and
+    // subtitles lifted over all of it would sit in the middle.
+    final lift = shows ? min((bar as RenderBox).size.height, picture * _maxLift) : 0.0;
     final view = widget.state;
     if (view != null && view.mounted) view.setSubtitleViewPadding(view.widget.subtitleViewConfiguration.padding + EdgeInsets.only(bottom: lift));
     if (lift == 0) return _controller.liftSubtitles(0);
-    // mpv places subtitles in percent of the picture, which may be letterboxed.
-    final size = (box as RenderBox).size;
-    final w = _player.state.width ?? 0, h = _player.state.height ?? 0;
-    final picture = w > 0 && h > 0 ? min(size.height, size.width * h / w) : size.height;
-    _controller.liftSubtitles(picture > 0 ? (lift / picture * 100).ceil().clamp(0, 40) : 0);
+    _controller.liftSubtitles(picture > 0 ? (lift / picture * 100).ceil() : 0);
   }
 
   void _show() {
@@ -399,7 +405,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         start: 12,
         top: 0,
         bottom: 0,
-        child: Center(
+        child: SafeArea(
+          right: false,
+          child: Center(
           child: FadeTransition(
             opacity: _animation,
             child: IgnorePointer(
@@ -426,14 +434,34 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             ),
           ),
         ),
+        ),
       );
+
+  /// On a phone outside full screen a slide is not brightness or volume
+  /// but where the player goes: up into full screen, down into the mini
+  /// player, as in phone video apps.
+  bool _slideMoves = false;
+  double _slid = 0;
 
   void _dragStart(DragStartDetails details) {
     _dragLeft = _onLeft(details.localPosition);
     _dragSteps = 0;
+    _slideMoves = _phone && !isFullscreen(context);
+    _slid = 0;
+  }
+
+  void _dragEnd(DragEndDetails details) {
+    if (!_slideMoves) return;
+    final speed = details.primaryVelocity ?? 0;
+    if (_slid < -48 || speed < -400) unawaited(widget.state?.enterFullscreen());
+    if (_slid > 48 || speed > 400) _controller.goBack();
   }
 
   void _dragUpdate(DragUpdateDetails details) {
+    if (_slideMoves) {
+      _slid += details.primaryDelta ?? 0;
+      return;
+    }
     final height = context.size?.height ?? 0;
     if (height <= 0) return;
     // The player's full height is the whole range: 100 % volume, or every
@@ -494,6 +522,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                     supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus},
                     onVerticalDragStart: _dragStart,
                     onVerticalDragUpdate: _dragUpdate,
+                    onVerticalDragEnd: _dragEnd,
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () {
@@ -528,11 +557,15 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                       ),
                     ),
                   ),
+                if (!_locked && _phone) _centerControls(),
                 if (!_locked) ...[
-                  Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _topBar(context, fullscreen))),
+                  // In full screen the bars keep clear of a camera cutout.
+                  Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: SafeArea(top: fullscreen, bottom: false, left: fullscreen, right: fullscreen, child: _topBar(context, fullscreen)))),
                   Positioned(left: 0, right: 0, bottom: 0, child: KeyedSubtree(key: _bottomBarKey, child: _bar(top: false, child: _bottomBar(context, fullscreen)))),
                 ],
-                if (_locked || _touched || fullscreen) _lockButton(),
+                // On a phone, only in full screen: over the small player above the
+                // page it covers the picture and has nothing to lock.
+                if (_locked || fullscreen || (_touched && !_phone)) _lockButton(),
               ]),
             ),
           ),
@@ -591,6 +624,40 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       ),
     );
   }
+
+  /// On a phone, as on phone players: previous, a large play/pause and
+  /// next in the middle of the picture, where a thumb reaches them. The
+  /// spinner takes the play button's place while loading.
+  Widget _centerControls() => Center(
+        child: AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) => IgnorePointer(ignoring: _animation.value < 0.5, child: Opacity(opacity: _animation.value, child: child)),
+          child: StreamBuilder<bool>(
+            stream: _player.stream.buffering,
+            initialData: _player.state.buffering,
+            builder: (context, snapshot) => Row(mainAxisSize: MainAxisSize.min, children: [
+              _RoundButton(
+                tooltip: tr('Previous video'),
+                icon: AppIcons.skipBackFill,
+                size: 52,
+                onTap: _controller.hasPrevious ? () => unawaited(_controller.playPrevious()) : null,
+              ),
+              const SizedBox(width: 28),
+              if (snapshot.data == true)
+                const SizedBox(width: 64, height: 64)
+              else
+                _PlayPauseButton(player: _player, big: true),
+              const SizedBox(width: 28),
+              _RoundButton(
+                tooltip: tr('Next (Shift+N)'),
+                icon: AppIcons.skipForwardFill,
+                size: 52,
+                onTap: _controller.hasNext ? () => unawaited(_controller.playNext()) : null,
+              ),
+            ]),
+          ),
+        ),
+      );
 
   Widget _buffering() => StreamBuilder<bool>(
         stream: _player.stream.buffering,
@@ -651,6 +718,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           size: 20,
           onTap: () => fullscreen ? unawaited(leaveFullscreen()) : _controller.goBack(),
         ),
+        // Above a phone's page the back arrow and a swipe down do this.
+        if (!_phone || fullscreen)
         _IconButton(
           tooltip: tr('Home'),
           icon: AppIcons.houseFill,
@@ -677,7 +746,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           if (on) Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Tooltip(message: tip, child: Icon(icon, color: Theme.of(context).colorScheme.inversePrimary, size: 17))),
         if (_controller.sleepAt != null || _controller.sleepAfterCurrent)
           Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Tooltip(message: tr('Sleep timer on'), child: Icon(AppIcons.moonStars, color: Colors.white, size: 18))),
-        if (!fullscreen)
+        // 关灯 dims the page around the player, which a phone does not show.
+        if (!fullscreen && !_phone)
           ValueListenableBuilder(
             valueListenable: lightsOff,
             builder: (context, off, _) => _IconButton(
@@ -695,6 +765,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           active: _controller.cast.active,
           onTap: () => unawaited(showCastDialog(context, _controller)),
         ),
+        if (!_phone || fullscreen)
         _IconButton(
           tooltip: tr('Picture in picture'),
           icon: AppIcons.browsers,
@@ -728,7 +799,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       if (_controller.loopA case final a?) ProgressSegment(a, _controller.loopB ?? a + const Duration(seconds: 1), const Color(0xCCFFFFFF)),
     ];
     final chapterStarts = [for (final c in _chapters) c.start];
-    final width = fullscreen ? 42.0 : 35.0;
+    // A finger's size on a phone. The small player above a phone's page
+    // keeps what a phone needs there; the rest is in full screen and the
+    // settings panel, and the volume is the phone's own keys.
+    final width = _phone ? 44.0 : fullscreen ? 42.0 : 35.0;
+    final compact = _phone && !fullscreen;
     // Keep the action cluster anchored to the physical bottom-right edge in
     // fullscreen. The progress and playback information remain on the left.
     return SafeArea(
@@ -758,11 +833,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ),
         const SizedBox(height: 2),
         Row(children: [
-          _PlayPauseButton(player: _player),
-          if (_controller.hasNext)
+          if (!_phone) _PlayPauseButton(player: _player),
+          if (_controller.hasNext && !_phone)
             _IconButton(tooltip: tr('Next (Shift+N)'), icon: AppIcons.skipForwardFill, size: 22, width: width, onTap: () => unawaited(_controller.playNext())),
-          _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
-          const SizedBox(width: 4),
+          if (!_phone) _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
+          SizedBox(width: _phone ? 8 : 4),
           _PositionBuilder(
             player: _player,
             active: !_animation.isDismissed,
@@ -778,8 +853,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                   ),
           ),
           Expanded(child: Align(alignment: AlignmentDirectional.centerStart, child: _chapterMenu())),
-          _danmakuButtons(width),
+          if (!compact) _danmakuButtons(width),
           _subtitleMenu(width),
+          if (!compact)
           StreamBuilder<double>(
             stream: _player.stream.rate,
             initialData: _player.state.rate,
@@ -793,6 +869,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               onClosed: _menuClosed,
             ),
           ),
+          // Quality on the small player is in its settings panel.
+          if (!compact)
           StreamBuilder<int?>(
             stream: _player.stream.height,
             initialData: _player.state.height,
@@ -814,7 +892,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               );
             },
           ),
-          if (!fullscreen)
+          if (!fullscreen && !_phone)
             ValueListenableBuilder(
               valueListenable: theaterMode,
               builder: (context, theater, _) => _IconButton(
@@ -961,6 +1039,15 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ]),
       ),
       PanelHeading(tr('Video')),
+      // A phone's small player has no room for the speed button.
+      if (_phone)
+        PanelChoices<double>(
+          label: tr('Speed'),
+          icon: AppIcons.gauge,
+          value: _player.state.rate,
+          values: [for (final speed in _controller.settings.speeds) (speed, '${trimSpeed(speed)}X')],
+          onSelected: (speed) => unawaited(_player.setRate(speed)),
+        ),
       PanelChoices<int>(
         label: tr('Quality'),
         icon: AppIcons.sealCheck,
@@ -1121,7 +1208,8 @@ class _IconButton extends StatelessWidget {
         child: _Hover(
           label: tooltip,
           onTap: onTap,
-          child: SizedBox(width: width, height: 34, child: Icon(icon, size: size, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white)),
+          // A finger's size on a touch screen.
+          child: SizedBox(width: touchFirst ? max(width, 44) : width, height: touchFirst ? 44 : 34, child: Icon(icon, size: size, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white)),
         ),
       );
 }
@@ -1238,8 +1326,10 @@ class _PositionBuilderState extends State<_PositionBuilder> {
 }
 
 class _PlayPauseButton extends StatefulWidget {
-  const _PlayPauseButton({required this.player});
+  const _PlayPauseButton({required this.player, this.big = false});
   final Player player;
+  /// The round one in the middle of a phone's picture.
+  final bool big;
 
   @override
   State<_PlayPauseButton> createState() => _PlayPauseButtonState();
@@ -1268,11 +1358,18 @@ class _PlayPauseButtonState extends State<_PlayPauseButton> with SingleTickerPro
         child: _Hover(
           label: tr('Play/Pause (Space)'),
           onTap: () => unawaited(widget.player.playOrPause()),
-          child: SizedBox(
-            width: 42,
-            height: 34,
-            child: Center(child: AnimatedIcon(progress: _animation, icon: AnimatedIcons.play_pause, color: Colors.white, size: 20)),
-          ),
+          child: widget.big
+              ? Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(color: Color(0x66000000), shape: BoxShape.circle),
+                  child: Center(child: AnimatedIcon(progress: _animation, icon: AnimatedIcons.play_pause, color: Colors.white, size: 36)),
+                )
+              : SizedBox(
+                  width: 42,
+                  height: 34,
+                  child: Center(child: AnimatedIcon(progress: _animation, icon: AnimatedIcons.play_pause, color: Colors.white, size: 20)),
+                ),
         ),
       );
 }
@@ -1303,6 +1400,13 @@ class _PopupMenu<T> extends StatelessWidget {
   /// Opens the list just above the button, as the bars sit at the bottom,
   /// instead of over it.
   Future<void> _open(BuildContext context) async {
+    if (touchFirst && isPhone(context)) {
+      onOpened();
+      final picked = await pickFromSheet<T>(context, [for (final (item, label) in items) (value: item, icon: null, label: label, selected: item == value)], title: tooltip);
+      onClosed();
+      if (picked != null && picked != value) onSelected(picked);
+      return;
+    }
     final box = context.findRenderObject()! as RenderBox;
     final overlay = Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
     final rect = Rect.fromPoints(box.localToGlobal(Offset.zero, ancestor: overlay), box.localToGlobal(box.size.bottomRight(Offset.zero), ancestor: overlay));
@@ -1497,4 +1601,34 @@ String trackLabel(String id, String? title, String? language) {
   }
   final parts = [if (title != null && title.isNotEmpty) title, if (language != null && language.isNotEmpty) language];
   return parts.isEmpty ? tr('Track {0}', [id]) : parts.join(' · ');
+}
+
+/// A round button over the middle of the picture; dimmed when [onTap] is
+/// null, so the row keeps its shape.
+class _RoundButton extends StatelessWidget {
+  const _RoundButton({required this.tooltip, required this.icon, required this.size, required this.onTap});
+  final String tooltip;
+  final IconData icon;
+  final double size;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+        message: tooltip,
+        child: Semantics(
+          button: true,
+          enabled: onTap != null,
+          label: tooltip,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onTap,
+            child: Container(
+              width: size,
+              height: size,
+              decoration: const BoxDecoration(color: Color(0x4D000000), shape: BoxShape.circle),
+              child: Icon(icon, color: onTap == null ? Colors.white38 : Colors.white, size: size * 0.46),
+            ),
+          ),
+        ),
+      );
 }

@@ -2130,7 +2130,6 @@
   "Model name": "Nomen exemplaris",
   "Reading the subtitle list…": "Index subtitulorum legitur…",
   "Test translation": "Translationem probare",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "Dum mpv subtitula pingit, subtitulum alterum stilo primi utitur.",
   "First subtitle": "Subtitulum primum",
   "The first subtitle shows here": "Subtitulum primum hic monstratur",
   "First subtitle style": "Stilus subtituli primi",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Textum iam in lingua destinata omittere",
   "Take Simplified and Traditional Chinese as one language": "Sinice simplicatum et traditionale ut unam linguam habere",
+  "Languages never translated": "Linguae numquam translatae",
+  "None besides the target, interface and system languages": "Nulla praeter linguam destinatam, linguam interfaciei et linguam systematis",
   "Chinese in either script is left untranslated when the target is the other": "Textus Sinicus in utraque scriptura non vertitur, cum scriptura destinata altera est",
   "{0} (lower is steadier, higher is freer)": "{0} (inferior stabilior, superior liberior)",
   "APP ID from the Baidu Translate open platform": "ID APP ex platea aperta Baidu Translate",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "Translationes commentariorum, descriptionum et nuntiorum cum originali apparent; cum exstinctum est, translatio originale substituit",
   "Highlighted": "Insigne",
   "{0} entries": "{0} notae",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "Ex scriptura iudicatur: pro Sinico, Iaponico, Coreano, Russico et similibus fidum; ex linguis scripturae Latinae tantum Anglica agnoscitur",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "Ex scriptura iudicatur: pro Sinico, Iaponico, Coreano, Russico et similibus fidum; linguae scripturae Latinae ex verbis suis dignoscuntur ubi linea satis longa est",
   "Temperature": "Temperatura",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "Sine clave termino gratuito utitur quo Microsoft Edge paginas vertit; cum clave Azure API officiali utitur.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "Textus ad servitium electum tantum mittitur cum Vertere premis vel subtitula translata uteris. Claves a Windows in hoc computro cryptantur et extra fasciculum optionum servantur. Translationes in hoc computro 7 dies in memoria cache servantur et cum cellam memoriae purgas removentur.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "Kazakhica",
   "Kyrgyz": "Kirgisica",
   "Assamese": "Assamica",
-  "Odia": "Odia"
+  "Odia": "Odia",
+  "Overview": "Conspectus"
 }

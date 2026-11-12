@@ -2130,7 +2130,6 @@
   "Model name": "Όνομα μοντέλου",
   "Reading the subtitle list…": "Ανάγνωση λίστας υποτίτλων…",
   "Test translation": "Δοκιμή μετάφρασης",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "Όταν οι υπότιτλοι αποδίδονται από το mpv, ο δεύτερος υπότιτλος χρησιμοποιεί το στυλ του πρώτου.",
   "First subtitle": "Πρώτος υπότιτλος",
   "The first subtitle shows here": "Ο πρώτος υπότιτλος εμφανίζεται εδώ",
   "First subtitle style": "Στυλ πρώτου υποτίτλου",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Παράλειψη κειμένου που είναι ήδη στη γλώσσα-στόχο",
   "Take Simplified and Traditional Chinese as one language": "Αντιμετώπιση των απλοποιημένων και παραδοσιακών κινεζικών ως μίας γλώσσας",
+  "Languages never translated": "Γλώσσες που δεν μεταφράζονται ποτέ",
+  "None besides the target, interface and system languages": "Καμία εκτός από τη γλώσσα-στόχο, τη γλώσσα διεπαφής και τη γλώσσα συστήματος",
   "Chinese in either script is left untranslated when the target is the other": "Τα κινεζικά σε οποιαδήποτε γραφή δεν μεταφράζονται όταν ο στόχος είναι η άλλη γραφή",
   "{0} (lower is steadier, higher is freer)": "{0} (χαμηλότερο = πιο σταθερό, υψηλότερο = πιο ελεύθερο)",
   "APP ID from the Baidu Translate open platform": "APP ID από την ανοιχτή πλατφόρμα του Baidu Translate",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "Οι μεταφράσεις σχολίων, περιγραφών και αναρτήσεων εμφανίζονται μαζί με το πρωτότυπο· όταν είναι απενεργοποιημένο, η μετάφραση αντικαθιστά το πρωτότυπο",
   "Highlighted": "Επισημασμένο",
   "{0} entries": "{0} στοιχεία",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "Ο εντοπισμός γίνεται από τη γραφή: είναι αξιόπιστος για κινεζικά, ιαπωνικά, κορεατικά, ρωσικά και παρόμοια· από τις γλώσσες με λατινική γραφή αναγνωρίζονται μόνο τα αγγλικά",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "Ο εντοπισμός γίνεται από τη γραφή: είναι αξιόπιστος για κινεζικά, ιαπωνικά, κορεατικά, ρωσικά και παρόμοια· οι γλώσσες με λατινική γραφή διακρίνονται από τις λέξεις τους όταν η γραμμή είναι αρκετά μεγάλη",
   "Temperature": "Θερμοκρασία",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "Χωρίς κλειδί χρησιμοποιείται το δωρεάν endpoint που χρησιμοποιεί το Microsoft Edge για τη μετάφραση σελίδων· με κλειδί Azure χρησιμοποιείται το επίσημο API.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "Το κείμενο αποστέλλεται στην επιλεγμένη υπηρεσία μόνο όταν πατήσετε «Μετάφραση» ή χρησιμοποιήσετε μεταφρασμένους υπότιτλους. Τα κλειδιά κρυπτογραφούνται από τα Windows σε αυτόν τον υπολογιστή και δεν γράφονται στο αρχείο ρυθμίσεων. Οι μεταφράσεις αποθηκεύονται προσωρινά σε αυτόν τον υπολογιστή για 7 ημέρες και διαγράφονται όταν εκκαθαρίσετε την προσωρινή μνήμη.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "Καζακικά",
   "Kyrgyz": "Κιργιζικά",
   "Assamese": "Ασαμικά",
-  "Odia": "Ορίγια"
+  "Odia": "Ορίγια",
+  "Overview": "Επισκόπηση"
 }

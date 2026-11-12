@@ -2130,7 +2130,6 @@
   "Model name": "मॉडेलचे नाव",
   "Reading the subtitle list…": "उपशीर्षक यादी वाचत आहे…",
   "Test translation": "भाषांतर तपासा",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "mpv उपशीर्षके रेंडर करत असताना, दुसरे उपशीर्षक पहिल्याची शैली वापरते.",
   "First subtitle": "पहिले उपशीर्षक",
   "The first subtitle shows here": "पहिले उपशीर्षक येथे दिसेल",
   "First subtitle style": "पहिल्या उपशीर्षकाची शैली",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu भाषांतर",
   "Skip text already in the target language": "आधीच लक्ष्य भाषेत असलेला मजकूर वगळा",
   "Take Simplified and Traditional Chinese as one language": "सरलीकृत आणि पारंपरिक चिनीला एकच भाषा माना",
+  "Languages never translated": "कधीही भाषांतर न केल्या जाणाऱ्या भाषा",
+  "None besides the target, interface and system languages": "लक्ष्य भाषा, इंटरफेस भाषा आणि सिस्टीम भाषा यांशिवाय कोणतीही नाही",
   "Chinese in either script is left untranslated when the target is the other": "लक्ष्य दुसरी लिपी असल्यास कोणत्याही लिपीतील चिनी मजकूर भाषांतरित केला जात नाही",
   "{0} (lower is steadier, higher is freer)": "{0} (कमी म्हणजे अधिक स्थिर, जास्त म्हणजे अधिक मोकळे)",
   "APP ID from the Baidu Translate open platform": "Baidu भाषांतर ओपन प्लॅटफॉर्मचा APP ID",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "टिप्पण्या, वर्णन आणि पोस्टची भाषांतरे मूळ मजकुरासोबत दिसतात; बंद असताना भाषांतर मूळ मजकुराची जागा घेते",
   "Highlighted": "पार्श्वभूमी हायलाइट",
   "{0} entries": "{0} नोंदी",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "लिपीवरून ओळखले जाते: चिनी, जपानी, कोरियन, रशियन इत्यादींसाठी विश्वसनीय; लॅटिन लिपीतील भाषांपैकी फक्त इंग्रजी ओळखली जाते",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "लिपीवरून ओळखले जाते: चिनी, जपानी, कोरियन, रशियन इत्यादींसाठी विश्वसनीय; लॅटिन लिपीतील भाषा ओळ पुरेशी लांब असल्यास शब्दांवरून ओळखल्या जातात",
   "Temperature": "तापमान",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "की न भरल्यास Microsoft Edge पृष्ठे भाषांतरित करण्यासाठी वापरतो तो मोफत एंडपॉइंट वापरला जातो; Azure की भरल्यास अधिकृत API वापरला जातो.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "तुम्ही भाषांतर करा दाबल्यावर किंवा भाषांतरित उपशीर्षके वापरल्यावरच मजकूर निवडलेल्या सेवेला जातो. की Windows ने एन्क्रिप्ट करून या संगणकावर साठवल्या जातात आणि सेटिंग्ज फाइलमध्ये ठेवल्या जात नाहीत. भाषांतरे या संगणकावर 7 दिवस कॅश केली जातात आणि कॅश साफ केल्यावर काढली जातात.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "कझाक",
   "Kyrgyz": "किर्गिझ",
   "Assamese": "आसामी",
-  "Odia": "ओडिया"
+  "Odia": "ओडिया",
+  "Overview": "आढावा"
 }

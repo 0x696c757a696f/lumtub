@@ -17,17 +17,45 @@ Future<ProcessResult> runWithTimeout(
   final process = await ProcessTree.start(executable, arguments, environment: environment);
   onStart?.call(process);
   const decoder = Utf8Decoder(allowMalformed: true);
-  final out = process.stdout.transform(decoder).join();
-  // stdout is the answer and is kept whole; of stderr, which a failing
-  // tool can fill with the same warning over and over, the last part.
+  // stdout is the answer and is kept whole up to [stdoutLimit]; of stderr,
+  // which a failing tool can fill with the same warning over and over,
+  // the last part.
+  var tooLong = false;
+  final out = _upTo(process.stdout.transform(decoder), stdoutLimit, () {
+    tooLong = true;
+    process.kill();
+  });
   final err = _tail(process.stderr.transform(decoder), stderrLimit);
   try {
     final code = await process.exitCode.timeout(timeout);
-    return ProcessResult(process.pid, code, await out, await err);
+    final text = await out;
+    if (tooLong) throw ProcessException(executable, arguments, 'Output longer than ${stdoutLimit >> 20} Mi characters; stopped');
+    return ProcessResult(process.pid, code, text, await err);
   } on TimeoutException {
     process.kill();
     rethrow;
   }
+}
+
+/// The most of a process's stdout read, in characters: far above any
+/// answer yt-dlp gives (a long video's JSON is a few MiB), so only a
+/// runaway process reaches it.
+const stdoutLimit = 64 << 20;
+
+/// [pieces] joined; past [limit] characters [onTooLong] runs once and the
+/// rest is dropped.
+Future<String> _upTo(Stream<String> pieces, int limit, void Function() onTooLong) async {
+  final kept = StringBuffer();
+  var over = false;
+  await for (final piece in pieces) {
+    if (over) continue;
+    kept.write(piece);
+    if (kept.length > limit) {
+      over = true;
+      onTooLong();
+    }
+  }
+  return kept.toString();
 }
 
 /// The most of a process's stderr kept, in characters.

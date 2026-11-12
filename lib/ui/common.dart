@@ -239,6 +239,86 @@ Color chipForeground(BuildContext context, bool selected) {
 /// [text] naming keys as this system's keyboard does: ⌘ and ⌥ on a Mac for
 /// Ctrl and Alt.
 /// Phones, tablets and TVs: no keyboard shortcuts or right-click to mention.
-final bool touchFirst = Platform.isAndroid || Platform.isIOS;
+bool get touchFirst => debugTouchFirst ?? _touchFirst;
+final bool _touchFirst = Platform.isAndroid || Platform.isIOS;
+
+/// A phone held either way: a touch screen whose short side is under a
+/// tablet's. Its watch page is laid out as phone apps do: the player at
+/// the top edge, full screen when turned sideways.
+bool isPhone(BuildContext context) => touchFirst && MediaQuery.sizeOf(context).shortestSide < 600;
+
+/// One row of [pickFromSheet]; a null label draws a divider.
+typedef SheetChoice<T> = ({T? value, IconData? icon, String? label, bool selected});
+
+/// A phone's menu: [choices] as rows a finger can hit, in a sheet from the
+/// bottom of the screen. The picked value, or null when dismissed.
+Future<T?> pickFromSheet<T>(BuildContext context, List<SheetChoice<T>> choices, {String? title}) => showModalBottomSheet<T>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.7),
+      builder: (context) => ListView(shrinkWrap: true, padding: const EdgeInsets.only(bottom: 8), children: [
+        if (title != null) Padding(padding: const EdgeInsets.fromLTRB(24, 0, 24, 8), child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
+        for (final c in choices)
+          if (c.label == null)
+            const Divider(height: 8)
+          else
+            ListTile(
+              minTileHeight: 52,
+              leading: c.icon != null ? Icon(c.icon) : c.selected ? Icon(AppIcons.check) : const SizedBox(width: 24),
+              title: Text(c.label!),
+              selected: c.selected,
+              trailing: c.icon != null && c.selected ? Icon(AppIcons.check) : null,
+              onTap: () => Navigator.pop(context, c.value),
+            ),
+      ]),
+    );
+
+/// A dialog on larger screens. On a phone a sheet that rises only to the
+/// bottom of the player, so the video stays in view while it is open.
+Future<T?> showPanel<T>(BuildContext context, WidgetBuilder builder) {
+  if (!isPhone(context)) return showDialog<T>(context: context, builder: builder);
+  final size = MediaQuery.sizeOf(context);
+  final below = size.height - MediaQuery.paddingOf(context).top - size.width * 9 / 16;
+  return showModalBottomSheet<T>(
+    context: context,
+    useSafeArea: true,
+    isScrollControlled: true,
+    showDragHandle: true,
+    constraints: BoxConstraints(maxHeight: math.max(size.height * 0.5, below)),
+    builder: builder,
+  );
+}
+
+/// The inside of a [showPanel]: an [AlertDialog] on larger screens, on a
+/// phone the same title, content and buttons laid out in the sheet.
+class PanelDialog extends StatelessWidget {
+  const PanelDialog({super.key, required this.title, required this.content, this.actions = const []});
+  final Widget title;
+  final Widget content;
+  final List<Widget> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isPhone(context)) return AlertDialog(title: title, content: content, actions: actions);
+    return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+        child: DefaultTextStyle.merge(style: Theme.of(context).textTheme.titleLarge, child: title),
+      ),
+      Flexible(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: content)),
+      if (actions.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: OverflowBar(alignment: MainAxisAlignment.end, spacing: 8, children: actions),
+        ),
+    ]);
+  }
+}
+
+/// Lets tests lay pages out as on a touch screen.
+@visibleForTesting
+bool? debugTouchFirst;
 
 String keyNames(String text) => Platform.isMacOS ? text.replaceAll('Ctrl + ', '⌘ + ').replaceAll('Ctrl+', '⌘').replaceAll('Alt + ', '⌥ + ').replaceAll('Alt+', '⌥') : text;

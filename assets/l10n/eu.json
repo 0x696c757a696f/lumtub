@@ -2130,7 +2130,6 @@
   "Model name": "Ereduaren izena",
   "Reading the subtitle list…": "Azpitituluen zerrenda irakurtzen…",
   "Test translation": "Probatu itzulpena",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "mpv-k azpitituluak marrazten dituenean, bigarren azpitituluak lehenengoaren estiloa erabiltzen du.",
   "First subtitle": "Lehen azpititulua",
   "The first subtitle shows here": "Lehen azpititulua hemen agertzen da",
   "First subtitle style": "Lehen azpitituluaren estiloa",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Saltatu helburu-hizkuntzan dagoen testua",
   "Take Simplified and Traditional Chinese as one language": "Tratatu txinera sinplifikatua eta tradizionala hizkuntza bakar gisa",
+  "Languages never translated": "Inoiz itzultzen ez diren hizkuntzak",
+  "None besides the target, interface and system languages": "Bat ere ez, xede-hizkuntza, interfazearen hizkuntza eta sistemaren hizkuntza ez beste",
   "Chinese in either script is left untranslated when the target is the other": "Edozein idazkeratako txinera testua ez da itzultzen helburua beste idazkera denean",
   "{0} (lower is steadier, higher is freer)": "{0} (txikiagoa egonkorragoa, handiagoa askeagoa)",
   "APP ID from the Baidu Translate open platform": "Baidu Translate plataforma irekiko APP ID",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "Iruzkinen, deskribapenen eta argitalpenen itzulpenak jatorrizkoarekin batera agertzen dira; desaktibatuta, itzulpenak jatorrizkoa ordezkatzen du",
   "Highlighted": "Nabarmenduta",
   "{0} entries": "{0} sarrera",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "Idazkeraren arabera zehazten da: fidagarria txinera, japoniera, koreera, errusiera eta antzekoetan; alfabeto latinoko hizkuntzetatik ingelesa bakarrik ezagutzen da",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "Idazkeraren arabera zehazten da: fidagarria txinera, japoniera, koreera, errusiera eta antzekoetan; alfabeto latinoko hizkuntzak hitzen bidez bereizten dira, lerroa luzea denean",
   "Temperature": "Tenperatura",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "Gakorik gabe, Microsoft Edge-k orriak itzultzeko erabiltzen duen doako interfazea erabiltzen da; Azure gako bat idazten bada, API ofiziala erabiltzen da.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "Testua hautatutako zerbitzura \"Itzuli\" sakatzean edo itzulitako azpitituluak erabiltzean soilik bidaltzen da. Gakoak Windows-ekin enkriptatuta daude ordenagailu honetan eta ez dira ezarpen-fitxategian gordetzen. Itzulpenak ordenagailu honetan gordetzen dira 7 egunez eta cachea garbitzean ezabatzen dira.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "kazakhera",
   "Kyrgyz": "kirgizera",
   "Assamese": "assamera",
-  "Odia": "odia"
+  "Odia": "odia",
+  "Overview": "Ikuspegi orokorra"
 }

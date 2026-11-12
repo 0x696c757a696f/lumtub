@@ -2130,7 +2130,6 @@
   "Model name": "שם מודל",
   "Reading the subtitle list…": "קוראים את רשימת הכתוביות…",
   "Test translation": "בדיקת תרגום",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "כש-mpv מציג את הכתוביות, הכתובית השנייה משתמשת בסגנון של הראשונה.",
   "First subtitle": "כתובית ראשונה",
   "The first subtitle shows here": "הכתובית הראשונה מוצגת כאן",
   "First subtitle style": "סגנון כתובית ראשונה",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "דילוג על טקסט שכבר בשפת היעד",
   "Take Simplified and Traditional Chinese as one language": "התייחסות לסינית מפושטת ולסינית מסורתית כשפה אחת",
+  "Languages never translated": "שפות שלא מתורגמות לעולם",
+  "None besides the target, interface and system languages": "אין, מלבד שפת היעד, שפת הממשק ושפת המערכת",
   "Chinese in either script is left untranslated when the target is the other": "טקסט סיני בכל אחת מהכתיבות לא יתורגם כשיעד התרגום הוא הכתיב השני",
   "{0} (lower is steadier, higher is freer)": "{0} (ערך נמוך יציב יותר, ערך גבוה גמיש יותר)",
   "APP ID from the Baidu Translate open platform": "APP ID מפלטפורמת הפיתוח הפתוחה של Baidu Translate",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "התרגומים של תגובות, תיאורים ופוסטים מוצגים יחד עם המקור; כשהאפשרות כבויה, התרגום מחליף את המקור",
   "Highlighted": "הדגשת רקע",
   "{0} entries": "{0} רשומות",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "נקבע לפי הכתב: אמין לסינית, יפנית, קוריאנית, רוסית ודומות להן; משפות בכתב לטיני מזוהה רק אנגלית",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "נקבע לפי הכתב: אמין לסינית, יפנית, קוריאנית, רוסית ודומות להן; שפות בכתב לטיני מובחנות לפי המילים שלהן כשהשורה ארוכה מספיק",
   "Temperature": "טמפרטורה",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "בלי מפתח נעשה שימוש בממשק החינמי שבו Microsoft Edge מתרגם דפים; עם מפתח Azure נעשה שימוש בממשק הרשמי.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "הטקסט נשלח לשירות שנבחר רק כשלוחצים על \"תרגום\" או משתמשים בכתוביות מתורגמות. המפתחות מוצפנים על ידי Windows במחשב הזה ואינם נשמרים בקובץ ההגדרות. תרגומים נשמרים במטמון של המחשב הזה למשך 7 ימים ונמחקים בעת ניקוי המטמון.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "קזחית",
   "Kyrgyz": "קירגיזית",
   "Assamese": "אסאמית",
-  "Odia": "אורייה"
+  "Odia": "אורייה",
+  "Overview": "סקירה"
 }

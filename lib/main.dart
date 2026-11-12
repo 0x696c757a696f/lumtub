@@ -309,7 +309,8 @@ class _TvFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        // A skin's window paints itself, veiled page by page.
+        color: Theme.of(context).extension<SkinTheme>()?.skin != null ? Colors.transparent : Theme.of(context).scaffoldBackgroundColor,
         child: ValueListenableBuilder<bool>(
           valueListenable: WindowChrome.fullscreen,
           builder: (context, fullscreen, child) => Padding(padding: fullscreen ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 48, vertical: 27), child: child),

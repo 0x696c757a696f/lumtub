@@ -2130,7 +2130,6 @@
   "Model name": "Modelnavn",
   "Reading the subtitle list…": "Læser undertekstlisten …",
   "Test translation": "Test oversættelse",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "Når mpv tegner undertekster, bruger den anden undertekst den førstes typografi.",
   "First subtitle": "Første undertekst",
   "The first subtitle shows here": "Den første undertekst vises her",
   "First subtitle style": "Første undertekstens typografi",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Spring tekst over, der allerede er på målsproget",
   "Take Simplified and Traditional Chinese as one language": "Behandl forenklet og traditionelt kinesisk som ét sprog",
+  "Languages never translated": "Sprog, der aldrig oversættes",
+  "None besides the target, interface and system languages": "Ingen ud over mål-, grænseflade- og systemsproget",
   "Chinese in either script is left untranslated when the target is the other": "Kinesisk tekst i begge skrifttyper oversættes ikke, når målet er den anden",
   "{0} (lower is steadier, higher is freer)": "{0} (lavere er mere stabilt, højere er friere)",
   "APP ID from the Baidu Translate open platform": "APP ID fra Baidu Translates åbne platform",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "Oversættelser af kommentarer, beskrivelser og opslag vises sammen med originalen; når det er slået fra, erstatter oversættelsen originalen",
   "Highlighted": "Fremhævet",
   "{0} entries": "{0} poster",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "Vurderes ud fra skriften: pålidelig for kinesisk, japansk, koreansk, russisk og lignende; af sprog med latinsk skrift genkendes kun engelsk",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "Vurderes ud fra skriften: pålidelig for kinesisk, japansk, koreansk, russisk og lignende; sprog med latinsk skrift kan skelnes fra hinanden på ordene, når en linje er lang nok",
   "Temperature": "Temperatur",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "Uden nøgle bruges det gratis endepunkt, som Microsoft Edge oversætter sider med; med en Azure-nøgle bruges det officielle API.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "Tekst sendes til den valgte tjeneste, kun når du trykker på Oversæt eller bruger oversatte undertekster. Nøgler krypteres med Windows på denne computer og holdes uden for indstillingsfilen. Oversættelser gemmes i cachen på denne computer i 7 dage og fjernes, når du rydder cachen.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "kasakhisk",
   "Kyrgyz": "kirgisisk",
   "Assamese": "assamesisk",
-  "Odia": "odia"
+  "Odia": "odia",
+  "Overview": "Oversigt"
 }

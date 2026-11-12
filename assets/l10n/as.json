@@ -2133,7 +2133,6 @@
   "Model name": "মডেলৰ নাম",
   "Reading the subtitle list…": "ছাবটাইটেলৰ তালিকা পঢ়ি আছে…",
   "Test translation": "অনুবাদ পৰীক্ষা",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "mpv এ ছাবটাইটেল আঁকোতে, দ্বিতীয় ছাবটাইটেলে প্ৰথমটোৰ শৈলী ব্যৱহাৰ কৰে।",
   "First subtitle": "প্ৰথম ছাবটাইটেল",
   "The first subtitle shows here": "প্ৰথম ছাবটাইটেল ইয়াত দেখা যায়",
   "First subtitle style": "প্ৰথম ছাবটাইটেলৰ শৈলী",
@@ -2208,6 +2207,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "ইতিমধ্যে লক্ষ্য ভাষাত থকা লিখনী এৰি যাওক",
   "Take Simplified and Traditional Chinese as one language": "সৰলীকৃত চীনা আৰু পৰম্পৰাগত চীনাক একেটা ভাষা হিচাপে গণ্য কৰক",
+  "Languages never translated": "কেতিয়াও অনুবাদ নকৰা ভাষা",
+  "None besides the target, interface and system languages": "লক্ষ্য ভাষা, ইণ্টাৰফেচ ভাষা আৰু ছিষ্টেম ভাষাৰ বাহিৰে একো নাই",
   "Chinese in either script is left untranslated when the target is the other": "লক্ষ্য আনটো লিপি হ'লে যিকোনো লিপিৰ চীনা ভাষা অনুবাদ নকৰা হয়",
   "{0} (lower is steadier, higher is freer)": "{0} (কম হ'লে অধিক স্থিৰ, বেছি হ'লে অধিক মুক্ত)",
   "APP ID from the Baidu Translate open platform": "Baidu Translate মুক্ত প্ল্যাটফৰ্মৰ APP ID",
@@ -2223,7 +2224,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "মন্তব্য, বিৱৰণ আৰু পোষ্টৰ অনুবাদ মূলৰ সৈতে দেখা যায়; বন্ধ থাকিলে, অনুবাদে মূলক সলনি কৰে",
   "Highlighted": "হাইলাইট কৰা",
   "{0} entries": "{0} টা প্ৰৱিষ্টি",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "লিপিৰ পৰা বিচাৰ কৰা: চীনা, জাপানী, কোৰিয়ান, ৰুছিয়ান আদিৰ বাবে নিৰ্ভৰযোগ্য; লেটিন লিপিৰ ভাষাৰ ভিতৰত কেৱল ইংৰাজীহে চিনি পোৱা যায়",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "লিপিৰ পৰা বিচাৰ কৰা: চীনা, জাপানী, কোৰিয়ান, ৰুছিয়ান আদিৰ বাবে নিৰ্ভৰযোগ্য; লেটিন লিপিৰ ভাষাবোৰ শাৰী যথেষ্ট দীঘল হ'লে শব্দৰ দ্বাৰা চিনি পোৱা যায়",
   "Temperature": "উষ্ণতা",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "কী নিদিলে ই Microsoft Edge এ পৃষ্ঠা অনুবাদ কৰিবলৈ ব্যৱহাৰ কৰা বিনামূলীয়া এণ্ডপইণ্ট ব্যৱহাৰ কৰে; Azure কী দিলে আনুষ্ঠানিক API ব্যৱহাৰ কৰে।",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "আপুনি অনুবাদ টিপিলে বা অনুবাদ কৰা ছাবটাইটেল ব্যৱহাৰ কৰিলেহে বাছনি কৰা সেৱালৈ লিখনী পঠিওৱা হয়। কী এই কম্পিউটাৰত Windows ৰে এনক্ৰিপ্ট কৰা হয় আৰু ছেটিংছ ফাইলৰ বাহিৰত ৰখা হয়। অনুবাদ এই কম্পিউটাৰত 7 দিনৰ বাবে কেশ্ব কৰা হয় আৰু আপুনি কেশ্ব মচিলে আঁতৰোৱা হয়।",
@@ -3165,5 +3166,6 @@
   "Kazakh": "কাজাখ",
   "Kyrgyz": "কিৰ্গিজ",
   "Assamese": "অসমীয়া",
-  "Odia": "ওড়িয়া"
+  "Odia": "ওড়িয়া",
+  "Overview": "অৱলোকন"
 }

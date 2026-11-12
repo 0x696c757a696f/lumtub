@@ -45,6 +45,9 @@ void main() {
         for (final MapEntry(key: what, value: (fg, bg, min)) in pairs.entries) {
           expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(min - 0.05), reason: '$what in ${mode.name}');
         }
+        // Pages opened over the window (settings and the like) are veiled
+        // like the main page, not drawn straight on the picture.
+        if (side.veil > 0) expect(theme.scaffoldBackgroundColor, page.withValues(alpha: side.veil), reason: 'pushed pages veiled in ${mode.name}');
         // Glass made as clear as it goes still keeps what is on it readable.
         if (side.glass) {
           // Every colour of the backdrop the glass can lie over.

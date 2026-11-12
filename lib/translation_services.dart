@@ -530,12 +530,14 @@ class AiTranslator extends _CachedTranslator {
     throw TranslationException(tr('The AI returned a different number of lines, so the subtitles cannot be aligned'));
   }
 
-  /// The system prompt with the target, line count, style and terms filled in.
-  String systemPrompt(String target, int count, List<String> context) {
+  /// The system prompt with the target, line count, style and the terms
+  /// [text] uses filled in.
+  String systemPrompt(String target, int count, List<String> context, [String text = '']) {
+    final terms = glossaryFor(text);
     final parts = [
       prompt.replaceAll('{target}', TranslationLanguage.byCode(target).englishName).replaceAll('{lines}', '$count'),
       if (tone.isNotEmpty) tone,
-      if (glossaryLines.isNotEmpty) 'Always translate these terms as given (original = translation):\n${glossaryLines.join('\n')}',
+      if (terms.isNotEmpty) 'Always translate these terms as given (original = translation):\n${terms.join('\n')}',
       if (context.isNotEmpty) 'For context only, these lines came just before; do not translate or repeat them:\n${context.join('\n')}',
     ];
     return parts.join('\n\n');
@@ -546,10 +548,20 @@ class AiTranslator extends _CachedTranslator {
           if (line.contains(RegExp('[=＝]')) && line.trim().length > 2) line.trim(),
       ];
 
+  /// The [glossaryLines] whose original appears in [text], ignoring case,
+  /// so a long glossary costs nothing on lines that use none of it.
+  List<String> glossaryFor(String text) {
+    final lower = text.toLowerCase();
+    return [
+      for (final line in glossaryLines)
+        if (lower.contains(line.split(RegExp('[=＝]')).first.trim().toLowerCase())) line,
+    ];
+  }
+
   static List<String> _split(String reply) => reply.split('\n');
 
   Future<String> _ask(String input, int count, String target, String? note, List<String> context) => _chat([
-        {'role': 'system', 'content': systemPrompt(target, count, context)},
+        {'role': 'system', 'content': systemPrompt(target, count, context, input)},
         {'role': 'user', 'content': input},
         if (note != null) {'role': 'user', 'content': note},
       ], temperature, const Duration(seconds: 60));

@@ -16,7 +16,7 @@ import 'app_icons.dart';
 /// Lists the TVs and Chromecasts on the network and casts the playing video
 /// to the one picked.
 Future<void> showCastDialog(BuildContext context, AppController controller) =>
-    showDialog<void>(context: context, builder: (_) => _CastDialog(controller: controller, messenger: ScaffoldMessenger.of(context)));
+    showPanel<void>(context, (_) => _CastDialog(controller: controller, messenger: ScaffoldMessenger.of(context)));
 
 /// Pauses the local player, hands the video to [device] at the current
 /// position and tells what went wrong in a short message. An AirPlay
@@ -203,7 +203,7 @@ class _CastDialogState extends State<_CastDialog> {
   @override
   Widget build(BuildContext context) {
     final cast = widget.controller.cast;
-    return AlertDialog(
+    return PanelDialog(
       title: Text(tr('Cast')),
       content: SizedBox(
         width: 380,

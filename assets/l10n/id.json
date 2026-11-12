@@ -2130,7 +2130,6 @@
   "Model name": "Nama model",
   "Reading the subtitle list…": "Membaca daftar subtitel…",
   "Test translation": "Uji terjemahan",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "Saat mpv merender subtitel, subtitel kedua memakai gaya subtitel pertama.",
   "First subtitle": "Subtitel pertama",
   "The first subtitle shows here": "Subtitel pertama tampil di sini",
   "First subtitle style": "Gaya subtitel pertama",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Lewati teks yang sudah dalam bahasa tujuan",
   "Take Simplified and Traditional Chinese as one language": "Anggap Mandarin Sederhana dan Tradisional sebagai satu bahasa",
+  "Languages never translated": "Bahasa yang tidak pernah diterjemahkan",
+  "None besides the target, interface and system languages": "Tidak ada selain bahasa target, bahasa antarmuka, dan bahasa sistem",
   "Chinese in either script is left untranslated when the target is the other": "Teks Mandarin dalam aksara mana pun tidak diterjemahkan jika targetnya aksara yang lain",
   "{0} (lower is steadier, higher is freer)": "{0} (makin rendah makin stabil, makin tinggi makin bebas)",
   "APP ID from the Baidu Translate open platform": "APP ID dari platform terbuka Baidu Translate",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "Terjemahan komentar, deskripsi, dan postingan ditampilkan bersama teks asli; jika nonaktif, terjemahan menggantikan teks asli",
   "Highlighted": "Disorot",
   "{0} entries": "{0} entri",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "Dinilai dari aksara: andal untuk Mandarin, Jepang, Korea, Rusia, dan sejenisnya; dari bahasa beraksara Latin hanya bahasa Inggris yang dikenali",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "Dinilai dari aksara: andal untuk Mandarin, Jepang, Korea, Rusia, dan sejenisnya; bahasa beraksara Latin dibedakan dari kata-katanya jika barisnya cukup panjang",
   "Temperature": "Temperatur",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "Tanpa kunci, endpoint gratis yang dipakai Microsoft Edge untuk menerjemahkan halaman akan digunakan; dengan kunci Azure, API resmi yang digunakan.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "Teks dikirim ke layanan yang dipilih hanya saat Anda mengetuk Terjemahkan atau memakai subtitel terjemahan. Kunci dienkripsi dengan Windows di komputer ini dan tidak disimpan di file setelan. Terjemahan disimpan di cache komputer ini selama 7 hari dan dihapus saat Anda membersihkan cache.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "Kazakh",
   "Kyrgyz": "Kirgiz",
   "Assamese": "Assam",
-  "Odia": "Odia"
+  "Odia": "Odia",
+  "Overview": "Ringkasan"
 }

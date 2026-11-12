@@ -146,7 +146,51 @@ void WindowFrame::SetCustom(bool on) {
   ApplyMargins();
   ::SetWindowPos(window_, nullptr, 0, 0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+  FitView();
   if (!on) SetButton(0);
+}
+
+void WindowFrame::FitView() {
+  if (!view_) return;
+  RECT client{};
+  if (!::GetClientRect(window_, &client)) return;
+  RECT now{};
+  ::GetWindowRect(view_, &now);
+  ::MapWindowPoints(HWND_DESKTOP, window_, reinterpret_cast<POINT*>(&now), 2);
+  if (now.left == 0 && now.top == 0 && now.right == client.right && now.bottom == client.bottom) return;
+  ::MoveWindow(view_, 0, 0, client.right, client.bottom, TRUE);
+}
+
+void WindowFrame::TraceCaptionClick(LPARAM lparam) {
+  if (traces_ >= 20) return;
+  ++traces_;
+  POINT point{static_cast<short>(LOWORD(lparam)), static_cast<short>(HIWORD(lparam))};
+  ::ScreenToClient(window_, &point);
+  RECT view{};
+  if (view_) {
+    ::GetWindowRect(view_, &view);
+    ::MapWindowPoints(HWND_DESKTOP, window_, reinterpret_cast<POINT*>(&view), 2);
+  }
+  RECT client{};
+  ::GetClientRect(window_, &client);
+  EncodableList boxes;
+  for (const Box& box : interactive_) {
+    boxes.push_back(EncodableValue(EncodableList{EncodableValue(box.left), EncodableValue(box.top),
+                                                 EncodableValue(box.right), EncodableValue(box.bottom)}));
+  }
+  Send("captionClick", EncodableValue(EncodableMap{
+      {EncodableValue("x"), EncodableValue(static_cast<int32_t>(point.x))},
+      {EncodableValue("y"), EncodableValue(static_cast<int32_t>(point.y))},
+      {EncodableValue("scale"), EncodableValue(ScaleOf(window_))},
+      {EncodableValue("view"), EncodableValue(EncodableList{
+          EncodableValue(static_cast<int32_t>(view.left)), EncodableValue(static_cast<int32_t>(view.top)),
+          EncodableValue(static_cast<int32_t>(view.right)), EncodableValue(static_cast<int32_t>(view.bottom))})},
+      {EncodableValue("client"), EncodableValue(EncodableList{
+          EncodableValue(static_cast<int32_t>(client.right)), EncodableValue(static_cast<int32_t>(client.bottom))})},
+      {EncodableValue("caption"), EncodableValue(caption_height_)},
+      {EncodableValue("boxes"), EncodableValue(boxes)},
+      {EncodableValue("zoomed"), EncodableValue(::IsZoomed(window_) != FALSE)},
+  }));
 }
 
 // One pixel of glass keeps the shadow and, on Windows 11, the rounded
@@ -258,6 +302,7 @@ bool WindowFrame::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRES
       SetButton(0);
       return false;
     case WM_NCLBUTTONDOWN:
+      if (Active() && wparam == HTCAPTION) TraceCaptionClick(lparam);
       if (!Active() || wparam != HTMAXBUTTON) return false;
       // Left to the system this would draw a classic button.
       SetButton(2);

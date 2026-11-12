@@ -43,7 +43,8 @@ void addToPath(Iterable<String> directories) {
 /// changed.
 Future<void> restartApp() async {
   if (Platform.isWindows) {
-    await Process.start(Platform.resolvedExecutable, const [], mode: ProcessStartMode.detached);
+    // The new copy waits for this one to end: only one Lumtub runs at a time.
+    await Process.start(Platform.resolvedExecutable, ['--restart-after=$pid'], mode: ProcessStartMode.detached);
   } else {
     // Started once this process has ended: on Linux a copy started now
     // would only hand itself to this one, which then quits, and an

@@ -2130,7 +2130,6 @@
   "Model name": "Mallin nimi",
   "Reading the subtitle list…": "Luetaan tekstitysluetteloa…",
   "Test translation": "Testaa käännös",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "Kun mpv piirtää tekstityksen, toinen tekstitys käyttää ensimmäisen tyyliä.",
   "First subtitle": "Ensimmäinen tekstitys",
   "The first subtitle shows here": "Ensimmäinen tekstitys näkyy tässä",
   "First subtitle style": "Ensimmäisen tekstityksen tyyli",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "Ohita teksti, joka on jo kohdekielellä",
   "Take Simplified and Traditional Chinese as one language": "Käsittele yksinkertaistettu ja perinteinen kiina yhtenä kielenä",
+  "Languages never translated": "Kielet, joita ei koskaan käännetä",
+  "None besides the target, interface and system languages": "Ei mitään kohde-, käyttöliittymä- ja järjestelmäkielen lisäksi",
   "Chinese in either script is left untranslated when the target is the other": "Kumpaakin kiinan kirjoitusasua ei käännetä, kun kohteena on toinen",
   "{0} (lower is steadier, higher is freer)": "{0} (pienempi on tasaisempi, suurempi vapaampi)",
   "APP ID from the Baidu Translate open platform": "APP ID Baidu Translaten avoimelta alustalta",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "Kommenttien, kuvausten ja julkaisujen käännökset näytetään alkuperäisen kanssa; kun tämä on pois päältä, käännös korvaa alkuperäisen",
   "Highlighted": "Korostettu tausta",
   "{0} entries": "{0} kpl",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "Tunnistus perustuu kirjoitusjärjestelmään: luotettava kiinalle, japanille, korealle, venäjälle ja vastaaville; latinalaista kirjoitusta käyttävistä kielistä tunnistetaan vain englanti",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "Tunnistus perustuu kirjoitusjärjestelmään: luotettava kiinalle, japanille, korealle, venäjälle ja vastaaville; latinalaista kirjoitusta käyttävät kielet erotetaan sanoista, kun rivi on riittävän pitkä",
   "Temperature": "Lämpötila",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "Ilman avainta käytetään ilmaista rajapintaa, jolla Microsoft Edge kääntää sivuja; Azure-avaimella käytetään virallista rajapintaa.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "Teksti lähetetään valitulle palvelulle vain, kun napautat Käännä tai käytät käännettyä tekstitystä. Avaimet salataan Windowsilla ja tallennetaan tälle tietokoneelle, ei asetustiedostoon. Käännökset tallennetaan tämän tietokoneen välimuistiin 7 päiväksi ja poistetaan, kun tyhjennät välimuistin.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "kazakki",
   "Kyrgyz": "kirgiisi",
   "Assamese": "assami",
-  "Odia": "orija"
+  "Odia": "orija",
+  "Overview": "Yleiskatsaus"
 }

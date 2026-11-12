@@ -2130,7 +2130,6 @@
   "Model name": "Modell neve",
   "Reading the subtitle list…": "A feliratlista beolvasása…",
   "Test translation": "Fordítás tesztelése",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "Ha a feliratokat az mpv jeleníti meg, a második felirat az első stílusát használja.",
   "First subtitle": "Első felirat",
   "The first subtitle shows here": "Az első felirat itt jelenik meg",
   "First subtitle style": "Első felirat stílusa",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Fordító",
   "Skip text already in the target language": "A már célnyelvű szöveg kihagyása",
   "Take Simplified and Traditional Chinese as one language": "Az egyszerűsített és a hagyományos kínai egy nyelvnek számít",
+  "Languages never translated": "Soha nem fordított nyelvek",
+  "None besides the target, interface and system languages": "Nincs más, mint a célnyelv, a felület nyelve és a rendszernyelv",
   "Chinese in either script is left untranslated when the target is the other": "A kínai szöveget egyik írásmódban sem fordítja, ha a cél a másik írásmód",
   "{0} (lower is steadier, higher is freer)": "{0} (alacsonyabb = kiegyensúlyozottabb, magasabb = szabadabb)",
   "APP ID from the Baidu Translate open platform": "A Baidu Fordító nyílt platformjának APP ID-ja",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "A hozzászólások, leírások és bejegyzések fordítása az eredetivel együtt jelenik meg; kikapcsolva a fordítás váltja fel az eredetit",
   "Highlighted": "Kiemelt háttér",
   "{0} entries": "{0} elem",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "Az írásrendszer alapján ismeri fel: a kínai, japán, koreai, orosz és hasonló nyelveknél megbízható; a latin betűs nyelvek közül csak az angolt ismeri fel",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "Az írásrendszer alapján ismeri fel: a kínai, japán, koreai, orosz és hasonló nyelveknél megbízható; a latin betűs nyelveket a szavaikról különbözteti meg, ha a sor elég hosszú",
   "Temperature": "Hőmérséklet",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "Kulcs nélkül azt az ingyenes végpontot használja, amellyel a Microsoft Edge fordítja az oldalakat; Azure-kulccsal a hivatalos API-t használja.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "A lefordítandó szöveg csak akkor kerül elküldésre a kiválasztott szolgáltatásnak, ha a Fordítás gombra kattintasz vagy fordított feliratot használsz. A kulcsokat a Windows titkosítja, és ezen a számítógépen tárolódnak, a beállításfájlban nem. A lefordított tartalmak 7 napig a számítógépen gyorsítótárazódnak, és a gyorsítótár törlésekor törlődnek.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "kazah",
   "Kyrgyz": "kirgiz",
   "Assamese": "asszámi",
-  "Odia": "odia"
+  "Odia": "odia",
+  "Overview": "Áttekintés"
 }

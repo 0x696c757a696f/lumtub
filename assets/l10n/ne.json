@@ -2130,7 +2130,6 @@
   "Model name": "मोडेलको नाम",
   "Reading the subtitle list…": "उपशीर्षक सूची पढ्दै…",
   "Test translation": "अनुवाद परीक्षण",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "mpv ले उपशीर्षक बनाउँदा, दोस्रो उपशीर्षकले पहिलोको शैली प्रयोग गर्छ।",
   "First subtitle": "पहिलो उपशीर्षक",
   "The first subtitle shows here": "पहिलो उपशीर्षक यहाँ देखिन्छ",
   "First subtitle style": "पहिलो उपशीर्षकको शैली",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Translate",
   "Skip text already in the target language": "लक्षित भाषामै भएको पाठ छोड्नुहोस्",
   "Take Simplified and Traditional Chinese as one language": "सरलीकृत र परम्परागत चिनियाँलाई एउटै भाषा मान्नुहोस्",
+  "Languages never translated": "कहिल्यै अनुवाद नगरिने भाषाहरू",
+  "None besides the target, interface and system languages": "लक्षित भाषा, इन्टरफेस भाषा र प्रणाली भाषा बाहेक कुनै छैन",
   "Chinese in either script is left untranslated when the target is the other": "लक्षित लिपि अर्कै भएमा कुनै पनि लिपिको चिनियाँ पाठ अनुवाद गरिँदैन",
   "{0} (lower is steadier, higher is freer)": "{0} (कम भए अझ स्थिर, बढी भए अझ स्वतन्त्र)",
   "APP ID from the Baidu Translate open platform": "Baidu Translate खुला प्लेटफर्मको APP ID",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "टिप्पणी, विवरण र पोस्टका अनुवाद मूल पाठसँगै देखिन्छन्; बन्द हुँदा अनुवादले मूललाई बदल्छ",
   "Highlighted": "हाइलाइट गरिएको",
   "{0} entries": "{0} प्रविष्टि",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "लिपिका आधारमा निर्धारण गरिन्छ: चिनियाँ, जापानी, कोरियाली, रुसी आदिका लागि भरपर्दो; ल्याटिन लिपिका भाषामध्ये अङ्ग्रेजी मात्र पहिचान हुन्छ",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "लिपिका आधारमा निर्धारण गरिन्छ: चिनियाँ, जापानी, कोरियाली, रुसी आदिका लागि भरपर्दो; ल्याटिन लिपिका भाषाहरू पङ्क्ति पर्याप्त लामो भएपछि शब्दका आधारमा छुट्याइन्छन्",
   "Temperature": "तापक्रम",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "कुञ्जी बिना यसले Microsoft Edge ले पृष्ठ अनुवाद गर्न प्रयोग गर्ने निःशुल्क एन्डपोइन्ट प्रयोग गर्छ; Azure कुञ्जीसहित आधिकारिक API प्रयोग गर्छ।",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "अनुवाद गर्नुहोस् थिच्दा वा अनुवादित उपशीर्षक प्रयोग गर्दा मात्र पाठ छानिएको सेवामा जान्छ। कुञ्जीहरू यही कम्प्युटरमा Windows ले इन्क्रिप्ट गर्छ र सेटिङ फाइलमा राखिँदैन। अनुवाद यही कम्प्युटरमा 7 दिन क्यास हुन्छ र क्यास खाली गर्दा हटाइन्छ।",
@@ -3165,5 +3166,6 @@
   "Kazakh": "कजाख",
   "Kyrgyz": "किर्गिज",
   "Assamese": "असमिया",
-  "Odia": "उडिया"
+  "Odia": "उडिया",
+  "Overview": "सिंहावलोकन"
 }

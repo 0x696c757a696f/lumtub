@@ -2130,7 +2130,6 @@
   "Model name": "Modellname",
   "Reading the subtitle list…": "Untertitelliste wird gelesen…",
   "Test translation": "Übersetzung testen",
-  "While mpv draws subtitles, the second subtitle uses the first one's style.": "Wenn mpv die Untertitel rendert, verwendet der zweite Untertitel den Stil des ersten.",
   "First subtitle": "Erster Untertitel",
   "The first subtitle shows here": "Hier wird der erste Untertitel angezeigt",
   "First subtitle style": "Stil des ersten Untertitels",
@@ -2205,6 +2204,8 @@
   "Baidu Translate": "Baidu Übersetzer",
   "Skip text already in the target language": "Texte überspringen, die bereits in der Zielsprache sind",
   "Take Simplified and Traditional Chinese as one language": "Vereinfachtes und Traditionelles Chinesisch als eine Sprache behandeln",
+  "Languages never translated": "Nie übersetzte Sprachen",
+  "None besides the target, interface and system languages": "Keine außer Ziel-, Oberflächen- und Systemsprache",
   "Chinese in either script is left untranslated when the target is the other": "Chinesischer Text in einer der Schriften wird nicht übersetzt, wenn die andere Zielschrift ist",
   "{0} (lower is steadier, higher is freer)": "{0} (niedriger ist stabiler, höher freier)",
   "APP ID from the Baidu Translate open platform": "APP-ID der Baidu-Übersetzer-Open-Platform",
@@ -2220,7 +2221,7 @@
   "Translations of comments, descriptions and posts appear with the original; when off, the translation replaces it": "Übersetzungen von Kommentaren, Beschreibungen und Beiträgen werden zusammen mit dem Original angezeigt; wenn aus, ersetzt die Übersetzung das Original",
   "Highlighted": "Hervorgehoben",
   "{0} entries": "{0} Einträge",
-  "Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised": "Wird anhand der Schrift erkannt: zuverlässig für Chinesisch, Japanisch, Koreanisch, Russisch und Ähnliches; bei Sprachen mit lateinischer Schrift wird nur Englisch erkannt",
+  "Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough": "Wird anhand der Schrift erkannt: zuverlässig für Chinesisch, Japanisch, Koreanisch, Russisch und Ähnliches; Sprachen mit lateinischer Schrift werden an ihren Wörtern unterschieden, sobald eine Zeile lang genug ist",
   "Temperature": "Temperatur",
   "Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.": "Ohne Schlüssel wird der kostenlose Endpunkt verwendet, mit dem Microsoft Edge Seiten übersetzt; mit einem Azure-Schlüssel wird die offizielle API genutzt.",
   "Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.": "Der zu übersetzende Text wird nur an den gewählten Dienst gesendet, wenn du auf „Übersetzen“ tippst oder übersetzte Untertitel verwendest. Schlüssel werden von Windows verschlüsselt auf diesem Computer gespeichert und nicht in die Einstellungsdatei geschrieben. Übersetzungen werden 7 Tage auf diesem Computer zwischengespeichert und beim Leeren des Caches entfernt.",
@@ -3165,5 +3166,6 @@
   "Kazakh": "Kasachisch",
   "Kyrgyz": "Kirgisisch",
   "Assamese": "Assamesisch",
-  "Odia": "Odia"
+  "Odia": "Odia",
+  "Overview": "Übersicht"
 }

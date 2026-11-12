@@ -44,7 +44,9 @@ class Device {
       await Future<void>.delayed(const Duration(milliseconds: 600));
       final focus = FocusManager.instance.primaryFocus;
       if (focus == null || focus == FocusManager.instance.rootScope || focus is FocusScopeNode) {
-        FocusManager.instance.rootScope.nextFocus();
+        // The root scope has no context to find a traversal order in, so
+        // take the first control that can hold focus, in tree order.
+        FocusManager.instance.rootScope.traversalDescendants.where((node) => node.context?.mounted ?? false).firstOrNull?.requestFocus();
       }
     });
   }

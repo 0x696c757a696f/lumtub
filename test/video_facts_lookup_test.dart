@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/language_guess.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/video_facts_lookup.dart';
@@ -58,5 +59,11 @@ void main() {
     expect(readsAs(traditional, 'zh-CN', chineseAsOne: true), isTrue);
     expect(readsAs('这个视频真的很好看，谢谢分享', 'zh-TW', chineseAsOne: true), isTrue);
     expect(readsAs('これはとても良い動画です', 'zh-CN', chineseAsOne: true), isFalse);
+  });
+
+  test('languages never translated are kept, unknown codes dropped', () {
+    final read = AppPreferences.fromJson(const AppPreferences(neverTranslate: ['ja', 'de']).toJson()..['neverTranslate'] = ['ja', 'de', 'xx']);
+    expect(read.neverTranslate, ['ja', 'de']);
+    expect(AppPreferences.fromJson(const <String, dynamic>{}).neverTranslate, isEmpty);
   });
 }

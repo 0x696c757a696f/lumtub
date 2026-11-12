@@ -76,7 +76,10 @@ class _TranslatableState extends State<Translatable> {
     }
     final text = widget.text;
     final lines = text.split('\n').where((l) => l.trim().isNotEmpty);
-    bool reads(String l) => readsAs(l, language, chineseAsOne: prefs.chineseAsOne);
+    // 沉浸式翻译 also leaves alone the languages the user listed; a tap on
+    // 翻译 translates them as asked.
+    final kept = quiet ? {language, ...prefs.neverTranslate} : {language};
+    bool reads(String l) => kept.any((k) => readsAs(l, k, chineseAsOne: prefs.chineseAsOne));
     if (prefs.skipSameLanguage && reads(text) && lines.every((l) => reads(l) || !_hasLetters(l))) {
       if (quiet) return;
       return setState(() => _error = tr('Already in {0}, nothing to translate', [TranslationLanguage.byCode(language).label]));
@@ -139,9 +142,10 @@ class _TranslatableState extends State<Translatable> {
 }
 
 /// The languages 沉浸式翻译 leaves alone: the one it translates into, the
-/// interface's and Windows'.
+/// interface's, Windows' and those the user listed as never translated.
 Set<String> readLanguages(AppController controller) => {
       controller.preferences.immersiveTarget,
+      ...controller.preferences.neverTranslate,
       interfaceTranslationLanguage.code,
       SubtitleLanguage.systemTranslation.code,
     };

@@ -203,8 +203,89 @@ pub fn looks_like(source: &str, target: &str) -> bool {
                 && words.iter().filter(|w| ENGLISH.contains(w)).count() as f64
                     >= words.len() as f64 * 0.2
         }
-        _ => false,
+        _ => written_in(source, letters.len(), target),
     }
+}
+
+/// Whether whatlang is sure [source] is in [target], for the languages the
+/// script alone cannot tell apart (German, French, Spanish, …). Short text
+/// is never judged: a few words say too little.
+fn written_in(source: &str, letters: usize, target: &str) -> bool {
+    if letters < 12 {
+        return false;
+    }
+    let Some(info) = whatlang::detect(source) else {
+        return false;
+    };
+    info.confidence() >= 0.5 && translation_code(info.lang()) == Some(target)
+}
+
+/// The translation language code (Google's) of a whatlang language.
+fn translation_code(lang: whatlang::Lang) -> Option<&'static str> {
+    use whatlang::Lang::*;
+    Some(match lang {
+        Spa => "es",
+        Fra => "fr",
+        Deu => "de",
+        Por => "pt",
+        Ita => "it",
+        Nld => "nl",
+        Tur => "tr",
+        Ind => "id",
+        Pol => "pl",
+        Ces => "cs",
+        Slk => "sk",
+        Ron => "ro",
+        Hun => "hu",
+        Swe => "sv",
+        Nob => "no",
+        Dan => "da",
+        Fin => "fi",
+        Aze => "az",
+        Epo => "eo",
+        Est => "et",
+        Jav => "jw",
+        Lat => "la",
+        Lit => "lt",
+        Lav => "lv",
+        Tuk => "tk",
+        Uzb => "uz",
+        Vie => "vi",
+        Tgl => "tl",
+        Hrv => "hr",
+        Srp => "sr",
+        Slv => "sl",
+        Cat => "ca",
+        Afr => "af",
+        Ukr => "uk",
+        Bel => "be",
+        Bul => "bg",
+        Mkd => "mk",
+        Ell => "el",
+        Heb => "iw",
+        Pes => "fa",
+        Urd => "ur",
+        Ben => "bn",
+        Tam => "ta",
+        Tel => "te",
+        Mar => "mr",
+        Nep => "ne",
+        Guj => "gu",
+        Pan => "pa",
+        Kan => "kn",
+        Mal => "ml",
+        Sin => "si",
+        Mya => "my",
+        Kat => "ka",
+        Hye => "hy",
+        Khm => "km",
+        Amh => "am",
+        Zul => "zu",
+        Sna => "sn",
+        Yid => "yi",
+        Ori => "or",
+        _ => return None,
+    })
 }
 
 /// [cues] for Dart, as JSON `[[start_ms, end_ms, "text"], …]`. Free the text
@@ -282,5 +363,18 @@ mod tests {
         assert!(looks_like("This is a really great video, thanks!", "en"));
         assert!(!looks_like("Cette vidéo est vraiment super", "en"));
         assert!(!looks_like("😂😂", "zh-CN"));
+        assert!(looks_like(
+            "Dieses Video ist wirklich sehr gut gemacht, danke dafür",
+            "de"
+        ));
+        assert!(looks_like(
+            "Cette vidéo est vraiment super, merci beaucoup pour le travail",
+            "fr"
+        ));
+        assert!(!looks_like(
+            "Dieses Video ist wirklich sehr gut gemacht, danke dafür",
+            "fr"
+        ));
+        assert!(!looks_like("Sehr gut", "de"));
     }
 }

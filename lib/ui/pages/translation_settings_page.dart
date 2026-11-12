@@ -254,6 +254,17 @@ List<Widget> _items(BuildContext context, AppController controller) {
           : controller.preferences.copyWith(immersiveTranslation: true, immersiveLanguage: v)),
     ),
     tip(tr('When on, foreign-language comments, posts and live chat show a translation underneath; text in the interface or system language is left alone.')),
+    NormalItem(
+      title: tr('Languages never translated'),
+      subtitle: prefs.neverTranslate.isEmpty
+          ? tr('None besides the target, interface and system languages')
+          : prefs.neverTranslate.map((code) => TranslationLanguage.byCode(code).label).join(', '),
+      leading: Icon(AppIcons.skipForward),
+      onTap: () async {
+        final chosen = await showDialog<List<String>>(context: context, builder: (context) => _NeverTranslateDialog(initial: prefs.neverTranslate));
+        if (chosen != null) await controller.savePreferences(controller.preferences.copyWith(neverTranslate: chosen));
+      },
+    ),
     PopupItem<_Layout>(
       title: tr('Translation layout'),
       leading: Icon(AppIcons.columns),
@@ -271,7 +282,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     ),
     SwitchItem(
       title: tr('Skip text already in the target language'),
-      subtitle: tr('Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised'),
+      subtitle: tr('Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough'),
       leading: Icon(AppIcons.skipForward),
       value: prefs.skipSameLanguage,
       onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(skipSameLanguage: v)),
@@ -294,6 +305,46 @@ List<Widget> _items(BuildContext context, AppController controller) {
 }
 
 const _off = 'off';
+
+/// Picks the languages the user reads, which translation leaves alone.
+class _NeverTranslateDialog extends StatefulWidget {
+  const _NeverTranslateDialog({required this.initial});
+
+  final List<String> initial;
+
+  @override
+  State<_NeverTranslateDialog> createState() => _NeverTranslateDialogState();
+}
+
+class _NeverTranslateDialogState extends State<_NeverTranslateDialog> {
+  late final _chosen = {...widget.initial};
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(tr('Languages never translated')),
+        content: SizedBox(
+          width: dialogWidth(context, 420),
+          height: 420,
+          child: ListView(children: [
+            for (final language in TranslationLanguage.all)
+              CheckboxListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                value: _chosen.contains(language.code),
+                title: Text(language.label),
+                onChanged: (v) => setState(() => v == true ? _chosen.add(language.code) : _chosen.remove(language.code)),
+              ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, [for (final l in TranslationLanguage.all) if (_chosen.contains(l.code)) l.code]),
+            child: Text(tr('OK')),
+          ),
+        ],
+      );
+}
 
 /// Where 翻译 puts the translation; 沉浸式翻译 always keeps both.
 enum _Layout { below, above, replace }

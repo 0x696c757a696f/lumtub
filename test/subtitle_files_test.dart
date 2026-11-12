@@ -125,7 +125,10 @@ void main() {
       if (n > most) most = n;
     });
     final updated = <String>[];
-    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], concurrency: 3, position: () => const Duration(seconds: 20), onUpdated: updated.add);
+    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], concurrency: 3, position: () => const Duration(seconds: 20), onUpdated: (path) async {
+      updated.add(path);
+      return true;
+    });
     const option = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated);
     final path = await files.pathFor(option);
     // First the pieces from where playback is.
@@ -139,6 +142,35 @@ void main() {
     expect([for (final c in cues) c.text.split(' ').first], [for (var i = 0; i < 40; i++) 'WORD$i']);
     expect(most, 3);
     expect(updated, [path]);
+  });
+
+  test('translates only near playback, follows it, and all of it when asked whole', () async {
+    String stamp(int minute) => '${(minute ~/ 60).toString().padLeft(2, '0')}:${(minute % 60).toString().padLeft(2, '0')}:00.000';
+    final vtt = StringBuffer('WEBVTT\n\n');
+    for (var i = 0; i < 60; i++) {
+      vtt.write('${stamp(i)} --> ${stamp(i).replaceFirst(':00.000', ':05.000')}\n${'word$i ' * 300}.\n\n');
+    }
+    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang') ? http.Response('', 429) : http.Response('$vtt', 200));
+    final translator = _Upper();
+    var position = Duration.zero;
+    final updated = <String>[];
+    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], position: () => position, poll: const Duration(milliseconds: 10), onUpdated: (path) async {
+      updated.add(path);
+      return true;
+    });
+    const option = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=b&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated);
+    final path = await files.pathFor(option);
+    Future<List<int>> shown() async => [for (final c in WebVtt.cues(await File(path).readAsString())) int.parse(c.text.split(' ').first.substring(4))];
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    // Five minutes ahead of the start, nothing further.
+    expect(await shown(), [0, 1, 2, 3, 4, 5]);
+    position = const Duration(minutes: 30);
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    expect(await shown(), [0, 1, 2, 3, 4, 5, 30, 31, 32, 33, 34, 35]);
+    expect(translator.asked, hasLength(12));
+    expect(await files.wholePathFor(option), path);
+    expect(await shown(), [for (var i = 0; i < 60; i++) i]);
+    expect(updated.last, path);
   });
 
   test('joins caption fragments into sentences for translation', () {

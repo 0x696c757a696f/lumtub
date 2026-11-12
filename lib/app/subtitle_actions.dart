@@ -46,12 +46,15 @@ extension SubtitleActions on AppController {
     }
   }
 
-  /// Swaps the loaded track of [path] for the file's new contents (the
-  /// rest of a translation), keeping it where it was shown: main, second or
-  /// not at all. mpv's sub-reload would select it as the main one.
-  Future<void> _subtitleFileUpdated(String path) async {
+  /// Swaps the loaded track of [path] for the file's new contents (more of
+  /// a translation), keeping it where it was shown: main, second or not at
+  /// all. mpv's sub-reload would select it as the main one. False when no
+  /// track of it is loaded, so its translation stops following playback.
+  Future<bool> _subtitleFileUpdated(String path) async {
     final platform = player?.platform;
-    if (platform is! NativePlayer) return;
+    if (platform is! NativePlayer) return false;
+    // The subtitle list reads the file again.
+    _cues.clear();
     try {
       Future<List<Map<dynamic, dynamic>>> tracks() async {
         final list = jsonDecode(await platform.getProperty('track-list'));
@@ -59,20 +62,22 @@ extension SubtitleActions on AppController {
       }
 
       final old = (await tracks()).firstOrNull;
-      if (old == null) return;
+      if (old == null) return false;
       final id = '${old['id']}';
       final main = await platform.getProperty('sid');
       final second = await platform.getProperty('secondary-sid');
       await platform.command(['sub-add', path, 'auto', '${old['title'] ?? ''}', '${old['lang'] ?? ''}']);
       final added = (await tracks()).where((t) => '${t['id']}' != id).lastOrNull;
-      if (added == null) return;
+      if (added == null) return true;
       if (main == id) await platform.setProperty('sid', '${added['id']}');
       if (second == id) await platform.setProperty('secondary-sid', '${added['id']}');
       await platform.command(['sub-remove', id]);
       if (main == id) await syncMainSubtitle();
-      logInfo('Subtitle translation finished; track $id replaced by ${added['id']}');
+      logInfo('Subtitle translation updated; track $id replaced by ${added['id']}');
+      return true;
     } catch (e) {
-      logWarn('Could not reload the finished subtitle translation: $e');
+      logWarn('Could not reload the updated subtitle translation: $e');
+      return true;
     }
   }
 

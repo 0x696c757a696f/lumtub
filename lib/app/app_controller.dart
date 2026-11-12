@@ -743,7 +743,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     () => translator,
     byTranslator: () => preferences.subtitlesByService && preferences.translation.service != TranslationService.google,
     position: () => player?.state.position ?? Duration.zero,
-    onUpdated: (path) => unawaited(_subtitleFileUpdated(path)),
+    onUpdated: _subtitleFileUpdated,
   );
 
   final _cues = <String, List<SubtitleCue>>{};

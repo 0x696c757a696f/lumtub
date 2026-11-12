@@ -438,13 +438,16 @@ void main() {
         return _json({'choices': [{'message': {'content': user.split('\n').map((l) => '译$l').join('\n')}}]});
       });
       final translator = AiTranslator(client,
-          baseUrl: 'http://x/v1', model: 'm', prompt: 'To {target}.', tone: AiTone.byId('casual').instruction, glossary: 'Lumtub=路姆\nbad line', temperature: 0.7, contextLines: 2);
+          baseUrl: 'http://x/v1', model: 'm', prompt: 'To {target}.', tone: AiTone.byId('casual').instruction, glossary: 'Lumtub=路姆\nOther=别的\nbad line', temperature: 0.7, contextLines: 2);
       await translator.translate('one\ntwo\nthree', 'zh-CN');
-      await translator.translate('four', 'zh-CN');
+      // Only the terms the text uses go along.
+      expect(((sent.last['messages'] as List)[0] as Map)['content'], isNot(contains('Lumtub')));
+      await translator.translate('four lumtub', 'zh-CN');
       final system = ((sent.last['messages'] as List)[0] as Map)['content'] as String;
       expect(sent.last['temperature'], 0.7);
       expect(system, contains('casual'));
       expect(system, contains('Lumtub=路姆'));
+      expect(system, isNot(contains('Other')));
       expect(system, isNot(contains('bad line')));
       expect(system, endsWith('do not translate or repeat them:\ntwo\nthree'));
     });

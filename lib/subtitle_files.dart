@@ -20,8 +20,15 @@ import 'app_log.dart';
 /// stretch of lines, as the 翻译 button does for comments. When
 /// [byTranslator] says so, every translation is made that way and YouTube's
 /// is not asked for.
+///
+/// A track translated here is translated only around playback, [ahead] of
+/// it and a little [behind], and follows it from there, so a long video
+/// watched in part, or skimmed, costs only the requests for what is seen.
+/// The whole track is translated when it is asked for whole.
 class SubtitleFiles {
-  SubtitleFiles(this._client, this._folder, this._translator, {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3, Duration Function()? position, this.onUpdated}) : _position = position ?? _start;
+  SubtitleFiles(this._client, this._folder, this._translator,
+      {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3, Duration Function()? position, this.onUpdated, this.poll = const Duration(seconds: 5)})
+      : _position = position ?? _start;
   final http.Client _client;
   final Directory _folder;
   /// The translator chosen now; a new one translates again.
@@ -32,9 +39,18 @@ class SubtitleFiles {
   final int concurrency;
   /// Where playback is, so a track Lumtub translates starts there.
   final Duration Function() _position;
-  /// Called with a file's path once the rest of a translation, begun at
-  /// [_position], has been written to it.
-  final void Function(String path)? onUpdated;
+  /// Called with a file's path each time more of a translation, begun at
+  /// [_position], has been written to it; false once the track is no
+  /// longer shown, which stops translating it.
+  final Future<bool> Function(String path)? onUpdated;
+  /// How often a translation following playback looks where it is.
+  final Duration poll;
+
+  static const ahead = Duration(minutes: 5);
+  static const behind = Duration(seconds: 30);
+  /// After a file is first handed out, how long its track may take to be
+  /// loaded before [onUpdated]'s false is believed.
+  static const _grace = Duration(seconds: 30);
 
   static Duration _start() => Duration.zero;
 
@@ -43,6 +59,10 @@ class SubtitleFiles {
   final _paths = <String, Future<String>>{};
   /// Translations still being finished in the background, by key.
   final _finishing = <String, Future<void>>{};
+  /// Keys of translations asked for whole, and how to wake one waiting for
+  /// playback to move.
+  final _whole = <String>{};
+  final _wake = <String, Completer<void>>{};
   Future<void>? _cleared;
 
   /// A file holding [option], fetched once per address.
@@ -64,22 +84,37 @@ class SubtitleFiles {
   /// The file of [option] with every line in it, waiting for a translation
   /// still being finished; for saving or listing the whole track.
   Future<String> wholePathFor(SubtitleOption option) async {
+    final key = _keyOf(option).$1;
+    _whole.add(key);
     final path = await pathFor(option);
-    await _finishing[_keyOf(option).$1];
+    _wake.remove(key)?.complete();
+    await _finishing[key];
     return path;
   }
 
   Future<String> _fetch(SubtitleOption option, String key, Translator? translator) async {
-    ({String text, Future<String>? rest}) result;
+    ({String text, Future<String?>? rest}) result;
     final source = _sourceOf(option);
+    final file = File('${_folder.path}${Platform.pathSeparator}${_name(key)}.vtt');
+    // When the first text was written, which every later write waits for.
+    final handedOut = Completer<DateTime>();
+    // More of a translation following playback: written, and the track
+    // reloaded; false once it is no longer shown.
+    Future<bool> save(String text) async {
+      final since = await handedOut.future;
+      await file.writeAsString(text);
+      final shown = await (onUpdated?.call(file.path) ?? Future.value(true));
+      return shown || _whole.contains(key) || DateTime.now().difference(since) < _grace;
+    }
+
     if (translator != null && source != null) {
-      result = await _translate(await _get(source.url), source.target, translator);
+      result = await _translate(await _get(source.url), source.target, translator, key, save);
     } else {
       try {
         result = (text: await _get(option.url), rest: null);
       } on _Refused {
         if (source == null) rethrow;
-        result = await _translate(await _get(source.url), source.target, _translator());
+        result = await _translate(await _get(source.url), source.target, _translator(), key, save);
       }
     }
     final text = result.text;
@@ -93,17 +128,24 @@ class SubtitleFiles {
       }
     }());
     await _folder.create(recursive: true);
-    final file = File('${_folder.path}${Platform.pathSeparator}${_name(key)}.vtt');
     await file.writeAsString(text);
+    handedOut.complete(DateTime.now());
     if (result.rest case final rest?) {
       _finishing[key] = rest.then((whole) async {
+        if (whole == null) {
+          // No longer shown: what is translated stays in the cache, and the
+          // track is followed again when it is next asked for.
+          _paths.remove(key);
+          return;
+        }
         await file.writeAsString(whole);
-        onUpdated?.call(file.path);
+        await onUpdated?.call(file.path);
       }).catchError((Object e) {
         // The lines translated so far stay; the track is asked again next time.
         _paths.remove(key);
       }).whenComplete(() {
         _finishing.remove(key);
+        _whole.remove(key);
       });
     }
     return file.path;
@@ -135,8 +177,10 @@ class SubtitleFiles {
 
   /// [vtt] translated into [tlang]. The pieces around [_position] come
   /// first: the text has those lines, enough to start with, and [rest]
-  /// completes with the whole track, or is null when it is all there.
-  Future<({String text, Future<String>? rest})> _translate(String vtt, String tlang, Translator translator) async {
+  /// follows playback, handing each new stretch to [save], and completes
+  /// with the whole track, or with null once [save] says it is no longer
+  /// shown. [rest] is null when the text is all there.
+  Future<({String text, Future<String?>? rest})> _translate(String vtt, String tlang, Translator translator, String key, Future<bool> Function(String text) save) async {
     // Whole sentences, not the fragments captions show, so each is
     // translated with all its words and never split between two requests.
     final cues = WebVtt.sentences(WebVtt.cues(vtt));
@@ -155,25 +199,44 @@ class SubtitleFiles {
       groups.add((start, end));
       start = end;
     }
-    // From the piece playing now onwards, then the ones before it.
-    final now = _position();
-    final at = groups.lastIndexWhere((g) => WebVtt.startOf(cues[g.$1].timing) <= now).clamp(0, groups.length - 1);
-    final order = [for (var i = at; i < groups.length; i++) i, for (var i = 0; i < at; i++) i];
-    final translated = List<List<String>?>.filled(groups.length, null);
-    var next = 0;
-    // A few requests at a time: a long track is ready several times sooner,
-    // without the burst that gets a free service to answer 429.
-    Future<void> worker(int stop) async {
-      while (next < stop) {
-        final i = order[next++];
-        final (start, end) = groups[i];
-        // The sentences just before the piece go along for AI to read.
-        final before = [for (final cue in cues.sublist(start > contextSentences ? start - contextSentences : 0, start)) cue.text];
-        translated[i] = await _translateLines([for (final cue in cues.sublist(start, end)) cue.text], target, translator, before);
-      }
+    // The pieces from the one playing at [now] onwards, then those before.
+    List<int> order(Duration now) {
+      final at = groups.lastIndexWhere((g) => WebVtt.startOf(cues[g.$1].timing) <= now).clamp(0, groups.length - 1);
+      return [for (var i = at; i < groups.length; i++) i, for (var i = 0; i < at; i++) i];
     }
 
-    Future<void> run(int stop) => Future.wait([for (var i = 0; i < concurrency && i < stop; i++) worker(stop)]);
+    // Whether a piece is near enough to [now] to be needed soon.
+    bool near(int i, Duration now) {
+      final (start, end) = groups[i];
+      return WebVtt.endOf(cues[end - 1].timing) >= now - behind && WebVtt.startOf(cues[start].timing) <= now + ahead;
+    }
+
+    final translated = List<List<String>?>.filled(groups.length, null);
+    bool done() => translated.every((t) => t != null);
+    // [pieces] translated, a few requests at a time: a long stretch is
+    // ready several times sooner, without the burst that gets a free
+    // service to answer 429.
+    Future<void> run(List<int> pieces) {
+      var next = 0;
+      Future<void> worker() async {
+        while (next < pieces.length) {
+          final i = pieces[next++];
+          final (start, end) = groups[i];
+          // The sentences just before the piece go along for AI to read.
+          final before = [for (final cue in cues.sublist(start > contextSentences ? start - contextSentences : 0, start)) cue.text];
+          translated[i] = await _translateLines([for (final cue in cues.sublist(start, end)) cue.text], target, translator, before);
+        }
+      }
+
+      return Future.wait([for (var i = 0; i < concurrency && i < pieces.length; i++) worker()]);
+    }
+
+    // The pieces still to do that are wanted now, in [order].
+    List<int> wanted() {
+      final now = _position();
+      final whole = _whole.contains(key);
+      return [for (final i in order(now)) if (translated[i] == null && (whole || near(i, now))) i];
+    }
 
     String write() => WebVtt.write([
           for (final (i, (start, end)) in groups.indexed)
@@ -181,11 +244,28 @@ class SubtitleFiles {
               for (var c = start; c < end; c++) (timing: cues[c].timing, text: lines[c - start].trim()),
         ]);
 
-    final first = order.length <= concurrency ? order.length : concurrency;
-    await run(first);
-    if (first == order.length) return (text: write(), rest: null);
-    final partial = write();
-    return (text: partial, rest: run(order.length).then((_) => write()));
+    // Enough to start with: the piece playing now and the next few.
+    final start = order(_position());
+    final first = wanted();
+    await run((first.isEmpty ? start : first).take(concurrency).toList());
+    if (done()) return (text: write(), rest: null);
+
+    Future<String?> follow() async {
+      while (true) {
+        final pieces = wanted();
+        if (pieces.isNotEmpty) {
+          await run(pieces);
+          if (done()) return write();
+          if (!await save(write())) return null;
+          continue;
+        }
+        final wake = _wake[key] ??= Completer<void>();
+        await Future.any([Future<void>.delayed(poll), wake.future]);
+        if (identical(_wake[key], wake)) _wake.remove(key);
+      }
+    }
+
+    return (text: write(), rest: follow());
   }
 
   /// [texts] translated line for line. A reply with more or fewer lines

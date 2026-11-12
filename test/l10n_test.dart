@@ -173,7 +173,7 @@ void main() {
     await tester.tap(find.text('Psychology'));
     await tester.pump();
     expect(find.text('Clinical psychology'), findsOneWidget);
-    expect(find.text('Selected'), findsOneWidget);
+    expect(controller.exploreMode, ExploreMode.curated);
     expect(tester.takeException(), isNull);
   });
 

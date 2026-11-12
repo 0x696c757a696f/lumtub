@@ -632,9 +632,10 @@ class _VideoCardState extends State<VideoCard> {
                   Builder(builder: (context) => IconButton(
                     tooltip: tr('More (Menu key)'),
                     onPressed: () => _menu(_centreOf(context)),
-                    icon: Icon(AppIcons.dotsThreeVertical, size: 16, color: colors.outline),
+                    icon: Icon(AppIcons.dotsThreeVertical, size: touchFirst ? 18 : 16, color: colors.outline),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints.tightFor(width: 24, height: 24),
+                    // Wider for a finger; the row's height stays.
+                    constraints: BoxConstraints.tightFor(width: touchFirst ? 40 : 24, height: 24),
                     visualDensity: VisualDensity.compact,
                   )),
                 ]),

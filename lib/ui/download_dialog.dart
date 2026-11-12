@@ -6,6 +6,7 @@ import '../downloads/download_models.dart';
 import '../downloads/download_selection.dart';
 import '../l10n/l10n.dart';
 import '../video_codec.dart';
+import 'common.dart';
 import 'theme.dart';
 import 'app_icons.dart';
 
@@ -129,10 +130,10 @@ class _DownloadDialogState extends State<DownloadDialog> {
   Widget build(BuildContext context) {
     final plan = _plan;
     final selection = plan?.selection;
-    return AlertDialog(
+    // A phone shows it as a sheet under the player, which stays in view.
+    return PanelDialog(
       title: Text(tr('Download video')),
       content: SizedBox(width: 460, child: SingleChildScrollView(child: _body(context))),
-      actionsOverflowButtonSpacing: 4,
       actions: [
         if (widget.onCover != null)
           TextButton.icon(

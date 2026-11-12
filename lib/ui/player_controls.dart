@@ -287,6 +287,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       if (_heldRate != null || !_player.state.playing) return;
       final rate = _heldRate = _player.state.rate;
       final fast = max(2.0, rate * 2).clamp(0.25, 4.0);
+      unawaited(HapticFeedback.lightImpact());
       unawaited(_player.setRate(fast));
       _showFeedback(AppIcons.fastForwardFill, tr('Playing at {0}x', [rateText(fast)]));
     } else if (_heldRate case final rate?) {
@@ -366,20 +367,36 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   TapDownDetails? _doubleTapAt;
 
   /// A finger's double tap on the left or right third skips back or ahead
-  /// 10 s, as in YouTube's phone app; the middle, and the mouse anywhere,
-  /// toggles full screen.
+  /// 10 s, as in YouTube's phone app, and taps in a row add up; the middle
+  /// plays or pauses. The mouse's double click toggles full screen.
   void _doubleTap() {
     final at = _doubleTapAt;
     final width = context.size?.width ?? 0;
     final touch = at != null && (at.kind == PointerDeviceKind.touch || at.kind == PointerDeviceKind.stylus);
-    if (touch && width > 0 && (at.localPosition.dx < width / 3 || at.localPosition.dx > width * 2 / 3)) {
-      final ahead = at.localPosition.dx > width / 2;
-      unawaited(_controller.seekBy(Duration(seconds: ahead ? 10 : -10)));
-      _showFeedback(ahead ? AppIcons.fastForwardFill : AppIcons.rewindFill, ahead ? tr('+10 s') : tr('-10 s'));
+    if (!touch || width <= 0) {
+      unawaited(widget.state?.toggleFullscreen());
       return;
     }
-    unawaited(widget.state?.toggleFullscreen());
+    final x = at.localPosition.dx;
+    if (x >= width / 3 && x <= width * 2 / 3) {
+      unawaited(HapticFeedback.selectionClick());
+      unawaited(_player.playOrPause());
+      _showFeedback(_player.state.playing ? AppIcons.pauseFill : AppIcons.playFill, _player.state.playing ? tr('Pause') : tr('Play'));
+      return;
+    }
+    final ahead = x > width / 2;
+    final now = DateTime.now();
+    // Taps soon after the last one, the same way, show the total skipped.
+    final run = _seekRunAt != null && now.difference(_seekRunAt!) < const Duration(milliseconds: 1200) && (_seekRun > 0) == ahead ? _seekRun : 0;
+    _seekRun = run + (ahead ? 10 : -10);
+    _seekRunAt = now;
+    unawaited(HapticFeedback.selectionClick());
+    unawaited(_controller.seekBy(Duration(seconds: ahead ? 10 : -10)));
+    _showFeedback(ahead ? AppIcons.fastForwardFill : AppIcons.rewindFill, ahead ? tr('+10 s').replaceFirst('10', '$_seekRun') : tr('-10 s').replaceFirst('10', '${-_seekRun}'));
   }
+
+  int _seekRun = 0;
+  DateTime? _seekRunAt;
 
   /// Phones only: keeps the screen in the way it is held now, landscape or
   /// portrait, until unlocked.

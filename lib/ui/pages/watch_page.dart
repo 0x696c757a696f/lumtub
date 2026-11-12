@@ -5,7 +5,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show SystemChrome, SystemUiMode;
+import 'package:flutter/services.dart' show DeviceOrientation, SystemChrome, SystemUiMode;
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../window_chrome.dart';
@@ -748,6 +748,15 @@ class _Player extends StatelessWidget {
                     // Turned sideways: the bars hide, and the screen still
                     // turns with the phone, so turning it back leaves.
                     if (byRotation()) return SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky, overlays: []);
+                    // A video taller than wide fills an upright screen best,
+                    // so the phone is not turned for it.
+                    final width = controller.player?.state.width ?? 0, height = controller.player?.state.height ?? 0;
+                    if (touchFirst && width > 0 && height > width) {
+                      return Future.wait([
+                        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky, overlays: []),
+                        SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]),
+                      ]);
+                    }
                     return defaultEnterNativeFullscreen();
                   },
                   onExitFullscreen: () {

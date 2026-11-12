@@ -109,6 +109,23 @@ class HomeFeed extends ChangeNotifier {
   void _wakeNext() {
     if (_waiting.isNotEmpty && _running < maxConcurrentSources) _waiting.removeAt(0).complete();
   }
+
+  /// Runs [work] once fewer than [maxConcurrentSources] sources are being
+  /// read, so going on down the feed shares the same limit.
+  Future<T> _inTurn<T>(Future<T> Function() work) async {
+    while (_running >= maxConcurrentSources) {
+      final turn = Completer<void>();
+      _waiting.add(turn);
+      await turn.future;
+    }
+    _running++;
+    try {
+      return await work();
+    } finally {
+      _running--;
+      _wakeNext();
+    }
+  }
   bool _disposed = false;
 
   /// Whether this launch gathered the feed, rather than only restoring
@@ -425,7 +442,7 @@ class HomeFeed extends ChangeNotifier {
     await Future.wait(seeds.map((seed) async {
       _expanded.add(seed.id);
       try {
-        final found = await sources.related(seed.id);
+        final found = await _inTurn(() => generation == _generation && !_disposed ? sources.related(seed.id) : Future.value(const <VideoItem>[]));
         if (generation != _generation) return;
         final close = (_recentTaste?.titleMatch(seed) ?? 0) > 0.3;
         _candidates.putIfAbsent(close ? FeedLane.recent : FeedLane.explore, () => []).addAll(found.take(12).map(

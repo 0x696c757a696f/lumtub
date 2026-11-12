@@ -705,7 +705,7 @@ class DownloadManager extends ChangeNotifier {
         audio: printed.last,
         stem: stem,
         container: container,
-        subtitles: subtitleFilesOf(stem),
+        subtitles: await subtitleFilesOf(stem),
         title: task.item.title,
         cover: coverFile?.path,
         cut: [for (final s in segments ?? const <SkipSegment>[]) (s.start, s.end)],
@@ -732,7 +732,7 @@ class DownloadManager extends ChangeNotifier {
       path = out;
       cut = joined.cut;
     }
-    if (path == null || !File(path).existsSync()) path = _findMedia(task);
+    if (path == null || !await File(path).exists()) path = await _findMedia(task);
     if (path == null) {
       task.status = DownloadStatus.failed;
       task.error = tr('The downloaded file was not found');
@@ -753,12 +753,12 @@ class DownloadManager extends ChangeNotifier {
 
   /// The subtitle files yt-dlp saved beside [stem] (`stem.en.vtt`), each
   /// with its language.
-  static List<({String path, String language})> subtitleFilesOf(String stem) {
+  static Future<List<({String path, String language})>> subtitleFilesOf(String stem) async {
     final file = File(stem);
     final name = file.uri.pathSegments.last;
     final found = <({String path, String language})>[];
     try {
-      for (final entity in file.parent.listSync()) {
+      await for (final entity in file.parent.list()) {
         final other = entity.uri.pathSegments.last;
         if (entity is! File || !other.startsWith('$name.')) continue;
         final match = RegExp(r'^\.([A-Za-z0-9_-]+)\.(vtt|srt)$').firstMatch(other.substring(name.length));
@@ -836,9 +836,9 @@ class DownloadManager extends ChangeNotifier {
   }
 
   /// The media file of [task] in its folder, by the `[id]` in its name.
-  String? _findMedia(DownloadTask task) {
+  Future<String?> _findMedia(DownloadTask task) async {
     try {
-      for (final entity in Directory(task.directory).listSync(followLinks: false)) {
+      await for (final entity in Directory(task.directory).list(followLinks: false)) {
         final name = entity.uri.pathSegments.last;
         if (entity is File && name.contains('[${task.id}]') && RegExp(r'\.(mp4|m4a|webm|mkv|mp3|opus)$').hasMatch(name)) return entity.path;
       }
@@ -853,8 +853,8 @@ class DownloadManager extends ChangeNotifier {
   Future<void> _deleteFiles(DownloadTask task) async {
     try {
       final dir = Directory(task.directory);
-      if (!dir.existsSync()) return;
-      for (final entity in dir.listSync(followLinks: false)) {
+      if (!await dir.exists()) return;
+      await for (final entity in dir.list(followLinks: false)) {
         if (entity is File && entity.uri.pathSegments.last.contains('[${task.id}]')) {
           try {
             await entity.delete();

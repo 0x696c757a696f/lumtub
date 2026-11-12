@@ -223,6 +223,44 @@ void main() {
       feed.dispose();
     });
 
+    test('going on down the feed keeps to the source limit', () async {
+      final feed = HomeFeed(NotInterested(null));
+      var expanding = false;
+      var running = 0;
+      var most = 0;
+      final gates = <Completer<void>>[];
+      Future<List<VideoItem>> related(String id) async {
+        if (!expanding) return const [];
+        running++;
+        most = running > most ? running : most;
+        final gate = Completer<void>();
+        gates.add(gate);
+        await gate.future;
+        running--;
+        return [video('r$id', channelId: 'UCr$id')];
+      }
+
+      await feed.refresh(HomeFeedSources(
+        history: const [],
+        related: related,
+        channelUploads: (_) async => const [],
+        search: (_) async => [for (var i = 0; i < 40; i++) video('s$i', channelId: 'UCs$i')],
+      ));
+      expanding = true;
+      var done = false;
+      final more = feed.loadMore().whenComplete(() => done = true);
+      while (!done) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        expect(running, lessThanOrEqualTo(HomeFeed.maxConcurrentSources));
+        for (final gate in gates.where((g) => !g.isCompleted).toList()) {
+          gate.complete();
+        }
+      }
+      await more;
+      expect(most, inInclusiveRange(1, HomeFeed.maxConcurrentSources));
+      feed.dispose();
+    });
+
     test('starts from popular videos with no history', () async {
       final feed = HomeFeed(NotInterested(null));
       String? query;

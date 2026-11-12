@@ -134,23 +134,15 @@ Each is fixed in its own change; remove the line when it is.
 
 代码里还没达到本规范的地方，按重要程度排列。逐条单独修，修完就删掉对应行。
 
-1. The stream resolver keeps up to 12 resolved videos, and the next video is resolved as soon as one opens. Keep the current one and one next, and resolve the next only after playback is stable (`lib/stream_resolver.dart`).
-   流解析器最多保留 12 个已解析视频，并且一打开就解析下一个。改为只保留当前和下一个，播放稳定后再解析下一个。
-2. Home feed expansion runs four related-video requests outside the feed's limit of 3 (`lib/app/home_feed.dart`, `_expand`).
-   首页推荐扩充时有 4 个相关视频请求不受“同时 3 个”的上限约束。
-3. Process stdout is read whole, and the yt-dlp listing's stderr buffer is unbounded (`lib/process_runner.dart`, `lib/video_repository.dart`).
-   进程的 stdout 整段读入，yt-dlp 列表的 stderr 缓冲没有上限。
-4. Downloads list their folder with `listSync` on the UI isolate (`lib/downloads/download_manager.dart`).
-   下载管理在 UI isolate 上用 `listSync` 遍历下载文件夹。
-5. Storyboards read whole response bodies; playlist covers and hover frames bypass the thumbnail cache and its limits (`lib/storyboard.dart`, `lib/ui/pages/library_pages.dart`).
+1. The stream resolver keeps up to 12 resolved videos, oldest out first, each with yt-dlp's whole answer, and the next video is resolved as soon as one opens. Keep fewer, never dropping the one playing, and resolve the next only after playback is stable; measure the memory first (`lib/stream_resolver.dart`).
+   流解析器最多保留 12 个已解析视频（先进先出，每个都存着 yt-dlp 的完整结果），并且一打开就解析下一个。改为少存几个、永不丢掉正在播放的那个，播放稳定后再解析下一个；先实测内存。
+2. Storyboards read whole response bodies; playlist covers and hover frames bypass the thumbnail cache and its limits (`lib/storyboard.dart`, `lib/ui/pages/library_pages.dart`).
    故事板预览图整段读取响应；播放列表封面和悬停预览帧绕过了缩略图缓存及其上限。
-6. Cast status polling can overlap itself (`lib/cast/cast_controller.dart`).
-   投屏状态轮询可能重叠执行。
-7. Thumbnails keep loading for cards scrolled off screen.
+3. Thumbnails keep loading for cards scrolled off screen.
    卡片滑出屏幕后缩略图仍在继续加载。
-8. Card height is fixed, so large text sizes crowd the card (`lib/ui/video_card.dart`, `_cardInfoHeight`).
+4. Card height is fixed, so large text sizes crowd the card (`lib/ui/video_card.dart`, `_cardInfoHeight`).
    卡片高度固定，系统字号调大时卡片会挤。
-9. Redirects are not checked against the host rules in the Rust core (`relay.rs`, `http.rs`).
+5. Redirects are not checked against the host rules in the Rust core (`relay.rs`, `http.rs`).
    Rust 核心里的网络跳转没有按主机规则检查。
-10. The player cache defaults (60 s / 150 MiB) and `demuxer-hysteresis` are untested against a 96 MiB budget; the Windows bridge still calls `glFinish` every frame. Both need measurements first.
-    播放器缓冲默认值（60 秒 / 150 MiB）和 `demuxer-hysteresis` 还没按 96 MiB 的目标测过；Windows 渲染桥每帧仍调用 `glFinish`。两项都要先实测。
+6. The player cache defaults (60 s / 150 MiB) and `demuxer-hysteresis` are untested against a 96 MiB budget; the Windows bridge still calls `glFinish` every frame. Both need measurements first.
+   播放器缓冲默认值（60 秒 / 150 MiB）和 `demuxer-hysteresis` 还没按 96 MiB 的目标测过；Windows 渲染桥每帧仍调用 `glFinish`。两项都要先实测。

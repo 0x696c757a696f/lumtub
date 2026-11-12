@@ -63,10 +63,20 @@ class CastController extends ChangeNotifier {
     _notify();
   }
 
+  /// A status request still waiting for the device: a slow TV is not asked
+  /// again until it answers, so requests don't pile up.
+  bool _asking = false;
+
   Future<void> _refresh() async {
     final current = device;
-    if (current == null) return;
-    var next = await current.status();
+    if (current == null || _asking) return;
+    _asking = true;
+    CastStatus? next;
+    try {
+      next = await current.status();
+    } finally {
+      _asking = false;
+    }
     if (device != current) return;
     if (next == null) {
       // A device that stays silent has gone away.

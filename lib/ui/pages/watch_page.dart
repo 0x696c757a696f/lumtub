@@ -161,9 +161,10 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
       child: Focus(
         autofocus: true,
         child: ListenableBuilder(listenable: Listenable.merge([theaterMode, theaterChatOpen]), builder: (context, _) => LayoutBuilder(builder: (context, outer) {
-          // A phone lays the page out as 剧场模式 does: the player edge to
-          // edge at the top, nothing above it.
-          final theater = theaterMode.value || isPhone(context);
+          final theater = theaterMode.value;
+          // A phone keeps the player at the top and the rest in tabs under
+          // it, as phone video apps do.
+          final phone = isPhone(context);
           final item = controller.playing;
           final hasChat = item?.isLive == true || item?.liveStatus == 'was_live';
           // 剧场模式 in a wide window keeps comments, up next and the chat
@@ -187,11 +188,34 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
                   controller: controller,
                   videoId: item.id,
                   onSeek: (position) => controller.seek(position),
-                  scrollable: wide || panelOpen,
-                  sliver: !wide && !panelOpen,
+                  scrollable: wide || panelOpen || phone,
+                  sliver: !wide && !panelOpen && !phone,
                   padding: wide ? const EdgeInsets.fromLTRB(4, 0, 4, AppStyle.pagePadding) : EdgeInsets.zero,
                 );
-          final replayChat = hasChat ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide && !panelOpen) : null;
+          final replayChat = hasChat ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide && !panelOpen && !phone) : null;
+          if (phone) {
+            return Column(children: [
+              _Player(controller: controller, videoKey: _video, byRotation: () => _byRotation, onExit: _leftFullscreen),
+              CastBar(controller: controller),
+              Expanded(
+                child: _SidePanel(
+                  controller: controller,
+                  comments: comments,
+                  replayChat: replayChat,
+                  chatFirst: item?.isLive == true,
+                  intro: ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, AppStyle.pagePadding), children: [
+                    _Toolbar(controller: controller),
+                    if (controller.playbackError != null && !controller.waitingForStart) ...[
+                      const SizedBox(height: 12),
+                      ErrorBanner(tr('Playback failed: {0}', [controller.playbackError]), onRetry: controller.retryPlayback),
+                    ],
+                    const SizedBox(height: 16),
+                    _Details(controller: controller),
+                  ]),
+                ),
+              ),
+            ]);
+          }
           final main = <Widget>[
             if (!theater) _BackRow(onBack: controller.goBack),
             Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, byRotation: () => _byRotation, onExit: _leftFullscreen))),
@@ -667,8 +691,10 @@ class _DescriptionState extends State<_Description> {
 /// player. The comments load when their tab is first opened and stay
 /// loaded while the video plays. The tab chosen is kept for the next video.
 class _SidePanel extends StatefulWidget {
-  const _SidePanel({required this.controller, required this.comments, this.replayChat, this.chatFirst = false, this.trailing});
+  const _SidePanel({required this.controller, required this.comments, this.replayChat, this.chatFirst = false, this.trailing, this.intro});
   final AppController controller;
+  /// On a phone: the buttons and details, as the first tab.
+  final Widget? intro;
   final Widget? comments;
   final Widget? replayChat;
   /// The chat as the first tab, as a live stream in 剧场模式 wants it.
@@ -724,6 +750,7 @@ class _SidePanelState extends State<_SidePanel> with TickerProviderStateMixin {
     final chat = widget.replayChat == null ? null : ('chat', tr('Chat'), _KeepAlive(child: widget.replayChat!));
     final subtitles = player != null && (controller.details?.subtitles.isNotEmpty == true || controller.secondarySubtitle != null);
     final tabs = [
+      if (widget.intro case final intro?) ('intro', tr('Overview'), _KeepAlive(child: intro)),
       if (widget.chatFirst && chat != null) chat,
       ('next', controller.playingList != null ? tr('Playlist') : tr('Up next'), _UpNext(controller: controller)),
       if (widget.comments case final comments?) ('comments', tr('Comments'), _KeepAlive(child: comments)),
@@ -733,7 +760,7 @@ class _SidePanelState extends State<_SidePanel> with TickerProviderStateMixin {
     final tabController = _controllerFor([for (final (id, _, _) in tabs) id]);
     return Column(children: [
       Row(children: [
-        Expanded(child: TabBar(controller: tabController, isScrollable: tabs.length > 3, tabAlignment: tabs.length > 3 ? TabAlignment.start : null, dividerColor: Colors.transparent, tabs: [for (final (_, label, _) in tabs) Tab(height: 40, text: label)])),
+        Expanded(child: TabBar(controller: tabController, isScrollable: tabs.length > 3, tabAlignment: tabs.length > 3 ? TabAlignment.start : null, dividerColor: Colors.transparent, tabs: [for (final (_, label, _) in tabs) Tab(height: widget.intro != null ? 48 : 40, text: label)])),
         if (widget.trailing case final trailing?) trailing,
       ]),
       const SizedBox(height: 8),

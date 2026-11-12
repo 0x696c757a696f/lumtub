@@ -381,7 +381,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   /// Phones only: keeps the screen in the way it is held now, landscape or
   /// portrait, until unlocked.
-  static final _phone = Platform.isAndroid || Platform.isIOS;
+  static bool get _phone => touchFirst;
   bool _orientationLocked = false;
 
   void _toggleOrientation() {
@@ -561,7 +561,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                       ),
                     ),
                   ),
-                if (!_locked && _phone) _centerControls(),
+                // The small player's play button is in its bar.
+                if (!_locked && _phone && fullscreen) _centerControls(),
                 if (!_locked) ...[
                   // In full screen the bars keep clear of a camera cutout.
                   Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: SafeArea(top: fullscreen, bottom: false, left: fullscreen, right: fullscreen, child: _topBar(context, fullscreen)))),
@@ -808,6 +809,51 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     // settings panel, and the volume is the phone's own keys.
     final width = _phone ? 44.0 : fullscreen ? 42.0 : 35.0;
     final compact = _phone && !fullscreen;
+    final progress = _PositionBuilder(
+      player: _player,
+      active: !_animation.isDismissed,
+      builder: (context) => VideoProgressBar(
+        position: _player.state.position,
+        buffered: _player.state.buffer,
+        total: _player.state.duration,
+        color: primary,
+        playedGradient: playedGradient,
+        segments: segments,
+        chapterStarts: chapterStarts,
+        preview: _preview,
+        heatmap: _controller.preferences.showHeatmap ? _heatmap?.values : null,
+        labelOf: _chapters.isEmpty ? null : (time) => '${formatPlaybackTime(time)} · ${Chapter.at(_chapters, time)?.title ?? ''}',
+        onSeek: (time) => unawaited(_controller.seek(time)),
+      ),
+    );
+    final time = _PositionBuilder(
+      player: _player,
+      active: !_animation.isDismissed,
+      seconds: true,
+      builder: (context) => _controller.playing?.isLive == true
+          ? _LiveButton(
+              behind: _player.state.duration - _player.state.position > AppController.liveBehind,
+              onTap: () => unawaited(_controller.goLive()),
+            )
+          : Text(
+              '${formatPlaybackTime(_player.state.position)} / ${formatPlaybackTime(_player.state.duration)}',
+              style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
+            ),
+    );
+    // The small player above a phone's page: one thin row, as phone video
+    // apps have it, so the subtitles lifted above it stay low.
+    if (compact) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(4, 12, 4, 2),
+        child: Row(children: [
+          _PlayPauseButton(player: _player),
+          Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: progress)),
+          time,
+          _subtitleMenu(width),
+          _IconButton(tooltip: tr('Fullscreen (F)'), icon: AppIcons.cornersOut, size: 24, width: width, onTap: () => unawaited(widget.state?.toggleFullscreen())),
+        ]),
+      );
+    }
     // Keep the action cluster anchored to the physical bottom-right edge in
     // fullscreen. The progress and playback information remain on the left.
     return SafeArea(
@@ -817,23 +863,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         child: Column(mainAxisSize: MainAxisSize.min, children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: _PositionBuilder(
-            player: _player,
-            active: !_animation.isDismissed,
-            builder: (context) => VideoProgressBar(
-              position: _player.state.position,
-              buffered: _player.state.buffer,
-              total: _player.state.duration,
-              color: primary,
-              playedGradient: playedGradient,
-              segments: segments,
-              chapterStarts: chapterStarts,
-              preview: _preview,
-              heatmap: _controller.preferences.showHeatmap ? _heatmap?.values : null,
-              labelOf: _chapters.isEmpty ? null : (time) => '${formatPlaybackTime(time)} · ${Chapter.at(_chapters, time)?.title ?? ''}',
-              onSeek: (time) => unawaited(_controller.seek(time)),
-            ),
-          ),
+          child: progress,
         ),
         const SizedBox(height: 2),
         Row(children: [
@@ -842,20 +872,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             _IconButton(tooltip: tr('Next (Shift+N)'), icon: AppIcons.skipForwardFill, size: 22, width: width, onTap: () => unawaited(_controller.playNext())),
           if (!_phone) _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
           SizedBox(width: _phone ? 8 : 4),
-          _PositionBuilder(
-            player: _player,
-            active: !_animation.isDismissed,
-            seconds: true,
-            builder: (context) => _controller.playing?.isLive == true
-                ? _LiveButton(
-                    behind: _player.state.duration - _player.state.position > AppController.liveBehind,
-                    onTap: () => unawaited(_controller.goLive()),
-                  )
-                : Text(
-                    '${formatPlaybackTime(_player.state.position)} / ${formatPlaybackTime(_player.state.duration)}',
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
-                  ),
-          ),
+          time,
           Expanded(child: Align(alignment: AlignmentDirectional.centerStart, child: _chapterMenu())),
           if (!compact) _danmakuButtons(width),
           _subtitleMenu(width),

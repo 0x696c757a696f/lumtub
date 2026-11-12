@@ -9,6 +9,7 @@ import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/l10n/l10n.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/player_settings.dart';
+import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/ui/lights_off.dart';
 import 'package:lumtub/ui/pip_view.dart';
 import 'package:lumtub/ui/player_controls.dart';
@@ -139,6 +140,26 @@ void main() {
     expect(find.text('1X'), findsOneWidget, reason: 'Speed');
     expect(find.text('1080P'), findsOneWidget, reason: 'Quality');
     expect(find.byIcon(AppIcons.cornersOut), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets("a phone's small player has play in its one-row bar, as phone video apps do, and nothing in the middle", (tester) async {
+    debugTouchFirst = true;
+    addTearDown(() => debugTouchFirst = null);
+    tester.view.physicalSize = const Size(412, 232);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(Colors.red, Brightness.light),
+      home: Scaffold(body: ColoredBox(color: Colors.black, child: PlayerControls(player: player, state: null, controller: controller))),
+    ));
+    await tester.pump();
+    expect(find.byTooltip('Previous video'), findsNothing);
+    final time = tester.getCenter(find.text('1:00 / 10:00'));
+    final play = tester.getCenter(find.byType(AnimatedIcon).hitTestable().first);
+    expect((play.dy - time.dy).abs(), lessThan(4), reason: 'Play sits in the same row as the time');
+    expect(play.dx, lessThan(time.dx));
+    expect(tester.getCenter(find.byType(VideoProgressBar)).dy, closeTo(time.dy, 8));
     expect(tester.takeException(), isNull);
   });
 

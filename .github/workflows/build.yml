@@ -548,7 +548,7 @@ jobs:
             runner: ubuntu-24.04
             appimage_arch: x86_64
             flutter_arch: x64
-          # The Rust core (and libmpv, once built for it) for AVX2 CPUs;
+          # The Rust core and libmpv built for AVX2 CPUs;
           # AppRun refuses other CPUs with a message.
           - package_arch: x64-v3
             runner: ubuntu-24.04
@@ -661,14 +661,16 @@ jobs:
 
       - name: Linux - download libmpv
         run: |
+          # Built from mpv master by lumtub-media-builds (see .github/pins.env).
           case "$PACKAGE_ARCH" in
-            x64|x64-v3) arch=x86_64; sum=$MPV_SHA256_X86_64 ;;
-            arm64) arch=arm64; sum=$MPV_SHA256_ARM64 ;;
+            x64) flavor=x86_64; sum=$MPV_SHA256_X86_64 ;;
+            x64-v3) flavor=x86_64-v3; sum=$MPV_SHA256_X86_64_V3 ;;
+            arm64) flavor=aarch64; sum=$MPV_SHA256_AARCH64 ;;
           esac
-          name="libmpv-$MPV_VERSION-linux-$arch-gpl-$MPV_RELEASE"
+          name="libmpv-linux-$flavor-$MPV_RELEASE"
           mkdir -p .linux-downloads
           archive="$PWD/.linux-downloads/$name.tar.gz"
-          [ -s "$archive" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$archive" "https://github.com/jason-yau/mpv-prebuilt/releases/download/$MPV_RELEASE/$name.tar.gz"
+          [ -s "$archive" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$archive" "https://github.com/0x696c757a696f/lumtub-media-builds/releases/download/$MPV_RELEASE/$name.tar.gz"
           echo "$sum  $archive" | sha256sum -c -
           tar -xzf "$archive" -C "$RUNNER_TEMP"
           mv "$RUNNER_TEMP/$name" "$RUNNER_TEMP/mpv"

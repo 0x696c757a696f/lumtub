@@ -40,29 +40,33 @@ def sha256(asset):
     return hashlib.sha256(get(asset["browser_download_url"], raw=True)).hexdigest()
 
 
+MEDIA_BUILDS = "0x696c757a696f/lumtub-media-builds"
+LINUX_MPV = {"X86_64": "x86_64", "X86_64_V3": "x86_64-v3", "AARCH64": "aarch64"}
+
+
 def mpv_prebuilt(text, changes):
-    """Linux libmpv from jason-yau/mpv-prebuilt, pinned by release and checksums."""
-    pinned = re.search(r"^MPV_RELEASE=(\d+)$", text, re.M)
+    """Linux libmpv from lumtub-media-builds, pinned by release and checksums."""
+    pinned = re.search(r"^MPV_RELEASE=(libmpv-\d{8}-[0-9a-f]+)$", text, re.M)
     if not pinned:
         return text
-    release = get("https://api.github.com/repos/jason-yau/mpv-prebuilt/releases/latest")
-    if release["tag_name"] == pinned[1] or not release["tag_name"].isdigit():
+    releases = get(f"https://api.github.com/repos/{MEDIA_BUILDS}/releases?per_page=20")
+    for release in releases:
+        tag = release["tag_name"]
+        if release["draft"] or release["prerelease"] or not re.fullmatch(r"libmpv-\d{8}-[0-9a-f]+", tag):
+            continue
+        assets = {a["name"]: a for a in release["assets"]}
+        names = {key: f"libmpv-linux-{flavor}-{tag}.tar.gz" for key, flavor in LINUX_MPV.items()}
+        if all(name in assets for name in names.values()):
+            break
+    else:
+        print("lumtub-media-builds has no release with every Linux libmpv; skipped.")
         return text
-    assets = {}
-    for asset in release["assets"]:
-        m = re.fullmatch(r"libmpv-([\d.]+)-linux-(x86_64|arm64)-gpl-\d+\.tar\.gz", asset["name"])
-        if m:
-            assets[m[2]] = (m[1], sha256(asset))
-    if set(assets) != {"x86_64", "arm64"} or assets["x86_64"][0] != assets["arm64"][0]:
-        print(f"mpv-prebuilt {release['tag_name']} lacks the GPL x86_64 and arm64 archives; skipped.")
+    if tag == pinned[1]:
         return text
-    mpv = assets["x86_64"][0]
-    old = re.search(r"^MPV_VERSION=([\d.]+)$", text, re.M)[1]
-    text = text.replace(pinned[0], f"MPV_RELEASE={release['tag_name']}")
-    text = re.sub(r"^MPV_VERSION=[\d.]+$", f"MPV_VERSION={mpv}", text, flags=re.M)
-    for arch in ("x86_64", "arm64"):
-        text = re.sub(rf"^(MPV_SHA256_{arch.upper()}=)[0-9a-f]{{64}}$", rf"\g<1>{assets[arch][1]}", text, flags=re.M)
-    changes.append(f"Linux libmpv {old} ({pinned[1]}) -> {mpv} ({release['tag_name']})")
+    text = text.replace(pinned[0], f"MPV_RELEASE={tag}")
+    for key, name in names.items():
+        text = re.sub(rf"^(MPV_SHA256_{key}=)[0-9a-f]{{64}}$", rf"\g<1>{sha256(assets[name])}", text, flags=re.M)
+    changes.append(f"Linux libmpv {pinned[1]} -> {tag}")
     return text
 
 

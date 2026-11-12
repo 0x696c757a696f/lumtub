@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
+import 'app_log.dart';
 
 /// Which edge or corner of the window a resize starts from.
 enum WindowEdge { top, bottom, left, right, topLeft, topRight, bottomLeft, bottomRight }
@@ -35,6 +37,10 @@ abstract final class WindowFrame {
     _listen();
     _custom = on;
     await _invoke('setCustom', on);
+    // The client area just changed under the title bar: what it reported
+    // goes out again from the next frame, whatever the runner holds.
+    _lastCaption = null;
+    SchedulerBinding.instance.scheduleFrame();
     await _refresh();
   }
 
@@ -147,6 +153,8 @@ abstract final class WindowFrame {
           _active.value = call.arguments == true;
         case 'maximizeButton':
           _maximizeButton.value = buttonStateOf(call.arguments);
+        case 'captionClick':
+          logInfo('Title bar click taken as the caption: ${call.arguments}, last report $_lastCaption');
       }
     });
     _refresh();

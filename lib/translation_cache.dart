@@ -145,11 +145,30 @@ class TranslationCache {
 
 /// [inner] with answers kept in [cache] under [scope], which names the
 /// service and its settings so another one translates afresh.
+///
+/// The same text asked for again while it is being translated waits for
+/// that answer instead of being sent twice. With [batch], short one-line
+/// texts asked for within [gather] of each other (live chat lines,
+/// comments coming into view) go out together as the lines of one request
+/// and are split up again; when the answer does not have one line for
+/// each, they are asked one by one.
 class CachingTranslator implements Translator {
-  CachingTranslator(this.inner, this.cache, this.scope);
+  CachingTranslator(this.inner, this.cache, this.scope, {this.batch = false});
   final Translator inner;
   final TranslationCache cache;
   final String scope;
+  final bool batch;
+
+  static const gather = Duration(milliseconds: 80);
+  /// Lines and characters one batch holds at most.
+  static const batchLines = 25;
+  static const batchChars = 1800;
+  /// Longer texts are sent on their own.
+  static const lineChars = 400;
+
+  final _pending = <String, Future<String>>{};
+  final _waiting = <String, List<(String, Completer<String>)>>{};
+  final _timers = <String, Timer>{};
 
   @override
   Future<String> translate(String text, String target) async {
@@ -157,8 +176,60 @@ class CachingTranslator implements Translator {
     await cache.load();
     final hit = cache.get(scope, target, text);
     if (hit != null) return hit;
-    final result = await inner.translate(text, target);
+    final key = '$target\u0000$text';
+    // The callback returns nothing: given the removed future, whenComplete
+    // would wait on itself.
+    return _pending[key] ??= _fetch(text, target).whenComplete(() {
+      _pending.remove(key);
+    });
+  }
+
+  Future<String> _fetch(String text, String target) async {
+    final result = batch && !text.contains('\n') && text.length <= lineChars ? await _gathered(text, target) : await inner.translate(text, target);
     cache.put(scope, target, text, result);
     return result;
+  }
+
+  Future<String> _gathered(String text, String target) {
+    final done = Completer<String>();
+    final queue = _waiting.putIfAbsent(target, () => []);
+    queue.add((text, done));
+    final chars = queue.fold<int>(0, (n, e) => n + e.$1.length + 1);
+    if (queue.length >= batchLines || chars >= batchChars) {
+      _flush(target);
+    } else {
+      _timers[target] ??= Timer(gather, () => _flush(target));
+    }
+    return done.future;
+  }
+
+  void _flush(String target) {
+    _timers.remove(target)?.cancel();
+    final items = _waiting.remove(target);
+    if (items == null || items.isEmpty) return;
+    unawaited(_send(items, target));
+  }
+
+  Future<void> _send(List<(String, Completer<String>)> items, String target) async {
+    if (items.length > 1) {
+      try {
+        final lines = (await inner.translate(items.map((e) => e.$1).join('\n'), target)).split('\n');
+        if (lines.length == items.length && lines.every((l) => l.trim().isNotEmpty)) {
+          for (final (i, item) in items.indexed) {
+            item.$2.complete(lines[i].trim());
+          }
+          return;
+        }
+      } catch (_) {
+        // Asked one by one below, each failing on its own if it must.
+      }
+    }
+    for (final (text, done) in items) {
+      try {
+        done.complete(await inner.translate(text, target));
+      } catch (e, stack) {
+        done.completeError(e, stack);
+      }
+    }
   }
 }

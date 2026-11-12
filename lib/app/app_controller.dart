@@ -446,7 +446,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   TranslationCache _translationCache = TranslationCache();
   /// Behind 翻译 buttons and translated subtitles: the service 翻译服务
   /// names; called only when something is to be translated.
-  late Translator translator = CachingTranslator(_google, _translationCache, preferences.translation.cacheScope);
+  late Translator translator = CachingTranslator(_google, _translationCache, preferences.translation.cacheScope, batch: true);
   /// The translation services' API keys, by [TranslationService.name],
   /// kept encrypted with DPAPI apart from the settings.
   Map<String, String> translationKeys = const {};

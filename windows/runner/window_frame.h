@@ -38,6 +38,11 @@ class WindowFrame {
                   std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   void Send(const char* method, flutter::EncodableValue argument);
   void SetCustom(bool on);
+  // Sizes Flutter's view to the client area, which a frame change alters
+  // without a WM_SIZE.
+  void FitView();
+  // Writes a click the caption took to the app's log, for the first few.
+  void TraceCaptionClick(LPARAM lparam);
   void ApplyMargins();
   bool Active() const;
   LRESULT HitTest(LPARAM lparam);
@@ -59,6 +64,7 @@ class WindowFrame {
   bool tracking_ = false;
   bool maximized_ = false;
   bool active_ = true;
+  int traces_ = 0;
 };
 
 #endif  // RUNNER_WINDOW_FRAME_H_

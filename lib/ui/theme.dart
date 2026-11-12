@@ -310,7 +310,7 @@ ThemeData buildAppTheme(
     // as the main page does in AppShell, so text reads over its picture.
     scaffoldBackgroundColor: skin == null
         ? scheme.surface
-        : skin.veil == 0 || plain
+        : skin.veil == 0
             ? Colors.transparent
             : skin.colors.page.withValues(alpha: skin.veil * SkinGlass.thinning(skin)),
     // A skin's icon finish (emboss, gel, glow); left out in Low resource mode.

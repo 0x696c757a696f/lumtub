@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../device.dart';
 import '../skins/skin.dart';
 import '../window_frame.dart';
 import 'app_icons.dart';
@@ -669,7 +670,8 @@ class SkinRail extends StatelessWidget {
     return SkinBox(
       surface: skin.sideBar,
       child: SizedBox(
-        width: 84,
+        // Wider on a TV, where the labels are read from across the room.
+        width: Device.tv ? 108 : 84,
         // The rail runs the full height of the window, not just its items.
         height: double.infinity,
         child: SingleChildScrollView(
@@ -751,7 +753,12 @@ class _RailItemState extends State<_RailItem> {
                 child: Column(children: [
                   Icon(widget.icon, color: widget.color, size: 22),
                   const SizedBox(height: 2),
-                  Text(widget.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: widget.color, fontWeight: widget.selected ? FontWeight.w700 : null)),
+                  // Shrunk a little rather than cut, so a long word such as
+                  // Subscriptions still reads in the narrow rail.
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: FittedBox(fit: BoxFit.scaleDown, child: Text(widget.label, maxLines: 1, style: TextStyle(fontSize: 12, color: widget.color, fontWeight: widget.selected ? FontWeight.w700 : null))),
+                  ),
                 ]),
               ),
             ),
@@ -796,10 +803,21 @@ class SkinTabBar extends StatelessWidget {
           child: tabs.top
               // Words along the top scroll when they don't all fit.
               ? LayoutBuilder(builder: (context, constraints) {
-                  final each = constraints.maxWidth / items.length;
-                  return each >= 88
+                  // Each word as wide as it needs; shared out evenly when
+                  // they all fit, scrolled when they don't.
+                  final style = TextStyle(fontSize: tabs.textOnly ? 13 : 11, letterSpacing: tabs.caps ? 0.6 : null, fontWeight: FontWeight.w700);
+                  final scaler = MediaQuery.textScalerOf(context);
+                  double widthOf(String label) {
+                    final painter = TextPainter(text: TextSpan(text: tabs.caps ? label.toUpperCase() : label, style: style), textDirection: Directionality.of(context), textScaler: scaler, maxLines: 1)..layout();
+                    final width = painter.width;
+                    painter.dispose();
+                    return math.max(72.0, width + 28);
+                  }
+                  final widths = [for (final d in destinations) widthOf(d.$3)];
+                  final total = widths.fold(0.0, (a, b) => a + b);
+                  return total <= constraints.maxWidth
                       ? Row(children: [for (final item in items) Expanded(child: item)])
-                      : ListView(scrollDirection: Axis.horizontal, children: [for (final item in items) SizedBox(width: 96, child: item)]);
+                      : ListView(scrollDirection: Axis.horizontal, children: [for (var i = 0; i < items.length; i++) SizedBox(width: widths[i], child: items[i])]);
                 })
               : Row(children: [for (final item in items) Expanded(child: item)]),
         ),

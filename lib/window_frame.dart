@@ -25,7 +25,11 @@ abstract final class WindowFrame {
   static bool _custom = false;
 
   /// Windows, Linux (X11 and Wayland) and macOS.
-  static bool get supported => Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+  static bool get supported => debugSupported ?? (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
+  /// Lets tests lay the app out as on a phone, tablet or TV.
+  @visibleForTesting
+  static bool? debugSupported;
 
   /// Whether the system title bar is currently removed.
   static bool get custom => _custom;

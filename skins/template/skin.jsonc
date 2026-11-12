@@ -31,8 +31,10 @@
 //                      center as fractions of the box (may be outside it),
 //                      radius as a fraction of its longer side
 //                      center 是相对盒子的比例（可以在盒子外），radius 是长边的比例
-//                  { "image": "pictures/back.png", "fit": "cover" }
-//                      fit: cover, contain, fill, tile; "opacity": 0–1.
+//                  { "image": "pictures/back.png", "fit": "cover", "focus": [0.5, 0.5] }
+//                      fit: cover, contain, fill, tile; "opacity": 0–1;
+//                      "focus": the point [x, y] kept in view when cover crops,
+//                      e.g. on an upright phone. cover 裁切时保留的位置（竖屏手机）。
 //                      Only on window.background. 只能用在 window.background。
 //                  { "pattern": { "type": "dots", "color": "#0002", "spacing": 4, "size": 1 } }
 //                      type: lines, grid, dots, checker, scanlines, stitch (seams
@@ -97,6 +99,14 @@
 //    remotes can see where they are.
 //    一份文件全平台通用。titleBar 和 menuBar 只在电脑上有，手机、平板、电视会忽略。
 //    要按设备区分就写 "overrides"；记得写 "focused"，电视遥控器才看得出焦点在哪。
+//    - An upright phone shows only the middle of a wide picture: keep the
+//      subject there or set "focus". 竖屏手机只露出宽图中间：主体放中间或设 "focus"。
+//    - Lists lie on the background under "veil": a busy picture needs a veil
+//      of 0.5–0.8. 列表直接压在背景上：花哨的图要设 0.5–0.8 的 veil。
+//    - TVs are seen from a sofa: no 1 px lines or small grey text there.
+//      电视是远看的：别用 1 像素线和小号灰字。
+//    - It must still read in Low resource mode, which drops pictures and
+//      decorations. 低占用模式不画图片和装饰，也要能看清。
 //
 // Check a skin before sharing it 分享前检查：
 //    SKIN=path/to/your/skin flutter test test/skin_check_test.dart

@@ -195,27 +195,89 @@ any warning. Every built-in skin passes the same check in CI
 ## Phones, tablets and TVs 手机、平板和电视
 
 One file serves every device. Lumtub on a phone, tablet or TV ignores
-`titleBar`, `menuBar` and window edges, and uses everything else. For what
-should differ, add `overrides`:
+`titleBar`, `menuBar` and window edges, and uses everything else. The
+check in [Check a skin](#check-a-skin-检查皮肤) reads the skin as each
+device would, so a skin that passes it works on all of them; the points
+below are what the check cannot see.
 
 一份文件通用于所有设备。手机、平板、电视会忽略 `titleBar`、`menuBar` 和窗口边缘，其余照用。
+[检查皮肤](#check-a-skin-检查皮肤) 会按每种设备读一遍皮肤，通过了就能在各设备上用；下面几条是检查看不出来的。
+
+**Phones 手机**
+
+- The pages are four tabs along the bottom (or under the top bar with
+  `"position": "top"`): Home, Explore, Subscriptions and Library. Long
+  words are shrunk or scrolled, never cut, but short ones look best.
+  页面是底部的四个标签（`"position": "top"` 时在顶栏下）：首页、探索、订阅、媒体库。
+  长词会缩小或滚动，不会被截断，但短一点更好看。
+- A phone held upright shows only a narrow middle slice of a wide picture,
+  because `"fit": "cover"` crops it to fill the screen. Keep what matters
+  in the middle third, or say where it is with `"focus": [x, y]` (0 to 1
+  from the top left), or give an upright picture just for phones in
+  `overrides.mobile`.
+  竖着拿手机时，宽图只露出中间窄窄一条，因为 `"fit": "cover"` 会裁切铺满。重要的内容放在中间三分之一，
+  或用 `"focus": [x, y]`（0 到 1，从左上角算）指定要保留的位置，或者在 `overrides.mobile` 里给手机单独一张竖图。
+- Lists and settings lie straight on `window.background`, under `veil` of
+  the page colour. A plain-colour background is checked like any other
+  pair; a picture cannot be, so a busy one needs `"veil"` of about 0.5 to
+  0.8.
+  列表和设置直接画在 `window.background` 上，上面盖一层 `veil` 的页面色。纯色背景会像其他配色一样检查对比度；
+  图片没法检查，花哨的图片要把 `"veil"` 设到 0.5 到 0.8 左右。
+
+**Tablets 平板**
+
+- From 720 logical pixels wide the side rail comes back, as on a computer;
+  narrower, the phone's tabs. Turning the tablet switches between them, so
+  give both `sideBar` and `window.tabs` a look that fits the skin.
+  宽度到 720 逻辑像素就改用侧边导航栏（和电脑一样），更窄就用手机的标签栏。平板一转就会切换，所以
+  `sideBar` 和 `window.tabs` 都要配好。
+
+**TVs 电视**
+
+- There is no pointer, only a remote, so the focused item is the only
+  thing that says where you are. Give cards, buttons, chips and the rail
+  a clear `"focused"` look: a 3 to 4 pixel border or a glow in the accent.
+  Where a skin gives none, Lumtub adds an accent ring.
+  电视没有鼠标只有遥控器，焦点是唯一的位置提示。给卡片、按钮、标签、侧边栏写明显的 `"focused"` 样式：
+  3 到 4 像素的边框或强调色光晕。皮肤没写的，Lumtub 会自动加一圈强调色。
+- TVs are watched from a sofa. Lines of 1 pixel and small grey text
+  disappear; use `overrides.tv` for thicker borders, larger radii and
+  stronger contrast.
+  电视是坐在沙发上看的，1 像素的线和小号灰字会看不见；用 `overrides.tv` 加粗边框、加大圆角、提高对比度。
+- Lumtub keeps the edges of the screen clear itself, for TVs that crop
+  them. Don't add your own margin.
+  Lumtub 会自己在屏幕四周留出安全边距（有些电视会裁掉边缘），不用再自己加。
+
+**Pictures and fonts on every device 各设备上的图片和字体**
+
+- Lumtub decodes a picture at the size it is drawn, so a large file costs
+  only loading time, not memory. 2560 pixels on the long side is plenty.
+  Lumtub 按实际显示大小解码图片，大文件只多花加载时间，不多占内存。长边 2560 像素就够了。
+- Low resource mode (Settings › Appearance) draws a skin without its
+  pictures and decorations. A skin must still read well that way.
+  低占用模式（设置 › 外观）下皮肤不画图片和装饰，这时也要能看清。
+
+For what should differ by device, add `overrides`:
+
 需要按设备区分的，写 `overrides`：
 
 ```jsonc
 "overrides": {
+  "mobile": {
+    "window": { "background": [{ "image": "pictures/upright.webp", "focus": [0.5, 0.3] }] },
+    "cards": { "padding": 4 }
+  },
   "tv": {
     "shape": { "cardRadius": 20 },
     "cards": { "video": { "focused": { "border": { "color": "#0873ad", "width": 4 }, "glow": "#0873ad" } } }
-  },
-  "mobile": { "cards": { "padding": 4 } }
+  }
 }
 ```
 
-Each override is merged into the skin key by key. On TVs there is no
-pointer, only a remote, so give cards, buttons and chips a clear
-`"focused"` look.
+Each override is merged into the skin key by key. The devices are
+`desktop`, `mobile`, `tablet` and `tv`.
 
-覆盖会逐项合并进皮肤。电视上没有鼠标只有遥控器，所以要给卡片、按钮、标签写明显的 `"focused"` 样式。
+覆盖会逐项合并进皮肤。设备名是 `desktop`、`mobile`、`tablet`、`tv`。
 
 ## Share a skin 分享皮肤
 

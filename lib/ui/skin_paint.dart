@@ -251,10 +251,11 @@ class SkinLayers extends StatelessWidget {
   Widget build(BuildContext context) => Stack(fit: StackFit.expand, children: [
         for (final layer in layers)
           if (layer is ImagePaint)
-            Opacity(
-              opacity: layer.opacity,
-              child: LayoutBuilder(builder: (context, constraints) => Image(
+            // The image's own opacity, not an Opacity layer: no offscreen
+            // pass for a picture the size of the window.
+            LayoutBuilder(builder: (context, constraints) => Image(
                 image: _decodedFor(layer, constraints, MediaQuery.devicePixelRatioOf(context)),
+                opacity: layer.opacity < 1 ? AlwaysStoppedAnimation(layer.opacity) : null,
                 fit: switch (layer.fit) {
                   'contain' => BoxFit.contain,
                   'fill' => BoxFit.fill,
@@ -262,10 +263,9 @@ class SkinLayers extends StatelessWidget {
                   _ => BoxFit.cover,
                 },
                 repeat: layer.fit == 'tile' ? ImageRepeat.repeat : ImageRepeat.noRepeat,
-                alignment: layer.fit == 'tile' ? Alignment.topLeft : Alignment.center,
+                alignment: layer.fit == 'tile' ? Alignment.topLeft : layer.focus,
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              )),
-            )
+              ))
           else
             CustomPaint(painter: _LayerPainter(layer)),
       ]);
@@ -362,7 +362,9 @@ class SkinBackdrop extends StatelessWidget {
         // Pure black in dark mode replaces the page of a skin that follows
         // the theme mode, as it does Lumtub's own.
         ColoredBox(color: skin.followsThemeMode && Theme.of(context).colorScheme.surface == Colors.black ? Colors.black : skin.colors.page),
-        if (skin.background.isNotEmpty && pictures) SkinLayers(skin.background),
+        // Low resource mode keeps the colours and leaves out pictures,
+        // which cost memory to decode.
+        if (skin.background.isNotEmpty && pictures) SkinLayers(plain ? skin.background.where((layer) => layer is! ImagePaint).toList() : skin.background),
         if (below.isNotEmpty) CustomPaint(painter: SkinDecorationPainter(below)),
       ]))),
       child,

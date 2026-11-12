@@ -4526,6 +4526,17 @@
               "type": "number",
               "minimum": 0,
               "maximum": 1
+            },
+            "focus": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "minItems": 2,
+              "maxItems": 2,
+              "description": "The point [x, y] (0 to 1 from the top left) kept in view when \"cover\" crops the picture, for example on a phone held upright. Default [0.5, 0.5]. 图片被 cover 裁切时（比如竖着拿手机）保留在画面里的点 [x, y]，0 到 1，从左上角算起。默认 [0.5, 0.5]。"
             }
           },
           "additionalProperties": false,

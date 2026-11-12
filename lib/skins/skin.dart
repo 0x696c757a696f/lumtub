@@ -250,8 +250,27 @@ class Skin {
       ..durationText
       ..topBarText
       ..statusBarText
+      .._checkOnBackground()
       .._glaze();
     return skin;
+  }
+
+  /// Lists and settings lie on the background, under [veil] of the page
+  /// colour, not on colors.page itself: where the background is plain
+  /// colour, the text must read there too.
+  void _checkOnBackground() {
+    final top = background.lastOrNull;
+    final bgs = switch (top) {
+      SolidPaint(:final color) => [color],
+      LinearPaint(:final colors) => colors,
+      RadialPaint(:final colors) => colors,
+      _ => const <Color>[],
+    };
+    if (bgs.isEmpty) return;
+    final page = colors.page;
+    final under = [for (final c in bgs) Color.alphaBlend(page.withValues(alpha: veil), Color.alphaBlend(c, page))];
+    readableOnAll(colors.text, under, 'colors.text on window.background');
+    if (colors.muted case final muted?) readableOnAll(muted, under, 'colors.muted on window.background');
   }
 
   /// What kind of device this is: desktop, mobile, tablet or tv. A skin's
@@ -403,7 +422,10 @@ sealed class SkinPaint {
     if (value['image'] case final String name) {
       final path = skin.file(name);
       if (path == null) return _bad(skin, 'image "$name" must be a file inside the skin folder');
-      return ImagePaint(path, builtIn: skin.builtIn, fit: _str(value['fit']) ?? 'cover', opacity: (_num(value['opacity']) ?? 1).clamp(0, 1).toDouble());
+      final focus = _list(value['focus']);
+      if (value['focus'] != null && (focus.length != 2 || focus.any((v) => v is! num || v < 0 || v > 1))) skin.warn('image focus must be [x, y], each from 0 to 1');
+      final (x, y) = focus.length == 2 && focus.every((v) => v is num) ? ((focus[0] as num).toDouble().clamp(0.0, 1.0), (focus[1] as num).toDouble().clamp(0.0, 1.0)) : (0.5, 0.5);
+      return ImagePaint(path, builtIn: skin.builtIn, fit: _str(value['fit']) ?? 'cover', opacity: (_num(value['opacity']) ?? 1).clamp(0, 1).toDouble(), focus: Alignment(x * 2 - 1, y * 2 - 1));
     }
     if (value['pattern'] case final Map<String, Object?> m) {
       final color = skin.colorOf(m['color'], 'pattern.color');
@@ -450,12 +472,14 @@ class RadialPaint extends SkinPaint {
 }
 
 class ImagePaint extends SkinPaint {
-  const ImagePaint(this.path, {required this.builtIn, required this.fit, required this.opacity});
+  const ImagePaint(this.path, {required this.builtIn, required this.fit, required this.opacity, this.focus = Alignment.center});
   final String path;
   final bool builtIn;
   /// cover, contain, fill or tile.
   final String fit;
   final double opacity;
+  /// What stays in view when the picture is cropped: `focus`.
+  final Alignment focus;
 }
 
 /// A repeating pixel pattern.

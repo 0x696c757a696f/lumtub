@@ -180,6 +180,7 @@
     "background": [
       "#008080"
     ],
+    "veil": 0.5,
     "titleBar": {
       "height": 26,
       "surface": {

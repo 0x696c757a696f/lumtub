@@ -353,11 +353,13 @@ class _AppShellState extends State<AppShell> {
                 NavigationStyle.bottom => false,
               };
               final tabs = rail ? null : skin?.tabs;
+              // The same pages as the plain bottom bar, the library ones
+              // gathered under Library, so the labels fit a phone's width.
               Widget tabBar(SkinTabs tabs) => SkinTabBar(
                     tabs: tabs,
-                    destinations: [for (final d in _destinations) (d.$2, d.$3, d.$4)],
-                    selected: _selectedIndex,
-                    onSelected: _select,
+                    destinations: [for (final d in _bottomDestinations) (d.$2, d.$3, d.$4)],
+                    selected: _bottomIndex,
+                    onSelected: _selectBottom,
                   );
               final watchingOnPhone = _controller.onWatchPage && isPhone(context);
               final scaffold = Scaffold(
@@ -453,8 +455,10 @@ class _AppShellState extends State<AppShell> {
   /// A skin with a busy picture behind lays some of its page colour over
   /// it under the pages, so what is written on them reads.
   Widget _veiled(Skin? skin, Widget page) {
-    if (skin == null || skin.veil == 0 || _controller.appearance.lowResource) return page;
-    return ColoredBox(color: skin.colors.page.withValues(alpha: skin.veil * SkinGlass.thinning(skin)), child: page);
+    // Kept in low resource mode: one flat colour costs nothing.
+    if (skin == null || skin.veil == 0) return page;
+    // A Material, not a ColoredBox, so list rows still show their ink on it.
+    return Material(color: skin.colors.page.withValues(alpha: skin.veil * SkinGlass.thinning(skin)), child: page);
   }
 
   String get _pageKey => !_controller.ready ? 'setup' : _controller.onWatchPage ? 'watch' : switch (_controller.mode) {

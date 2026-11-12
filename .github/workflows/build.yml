@@ -72,7 +72,7 @@ jobs:
           tree=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$GITHUB_SHA" --jq .tree.sha)
           echo "Files of $GITHUB_SHA: $tree"
           # A run that built these files and passed, with every package the
-          # release publishes (3 Windows CPUs x 2, 2 AppImages, 2 DMGs, the APKs).
+          # release publishes (3 Windows CPUs x 2, 3 AppImages, 2 DMGs, the APKs).
           built() {
             local id
             for id in $(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=built-$tree&per_page=20" \
@@ -83,7 +83,7 @@ jobs:
               if [[ "$EVENT" == schedule ]] && ! [[ "$event" == push || "$event" == schedule ]]; then continue; fi
               names=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts?per_page=100" \
                 --jq '[.artifacts[] | select(.expired | not) | .name | select(test("^Lumtub-(windows|linux|macos|android)-"))] | length')
-              (( names == 11 )) || continue
+              (( names == 12 )) || continue
               echo "$id"
               return
             done

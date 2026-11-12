@@ -196,7 +196,7 @@ void main() {
       final keys = playerShortcuts(controller, () => null, onScreenshot: () {}).keys.whereType<NotWhileTyping>().map((k) => k.activator).whereType<SingleActivator>().toList();
       final seen = <String>{};
       for (final k in keys) {
-        expect(seen.add('${k.trigger.keyId}/${k.shift}/${k.control}/${k.alt}'), isTrue, reason: 'duplicate ${k.trigger.keyLabel}');
+        expect(seen.add('${k.trigger.keyId}/${k.shift}/${k.control}/${k.alt}/${k.meta}'), isTrue, reason: 'duplicate ${k.trigger.keyLabel}');
       }
       for (final key in [
         LogicalKeyboardKey.comma, LogicalKeyboardKey.period, LogicalKeyboardKey.bracketLeft, LogicalKeyboardKey.bracketRight,

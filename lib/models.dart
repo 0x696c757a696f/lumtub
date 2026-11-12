@@ -125,7 +125,7 @@ class VideoItem {
 
   /// This video with what its listing left out: [length], [views] and
   /// [publishedAt], each used only where this one has none.
-  VideoItem filledIn({int? length, int? views, DateTime? publishedAt}) => VideoItem(
+  VideoItem filledIn({int? length, int? views, DateTime? publishedAt, String? liveStatus}) => VideoItem(
         id: id,
         title: title,
         channel: channel,
@@ -135,7 +135,7 @@ class VideoItem {
         watching: watching,
         channelId: channelId,
         published: published ?? (age == null ? publishedAt : null),
-        liveStatus: liveStatus,
+        liveStatus: this.liveStatus ?? liveStatus,
         scheduledStart: scheduledStart,
         width: width,
         height: height,

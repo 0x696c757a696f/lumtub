@@ -11,26 +11,30 @@ import 'native_core.dart';
 /// What a card shows of a video and its listing may leave out: the length,
 /// the views and the day it was published.
 class VideoFacts {
-  const VideoFacts({this.length, this.views, this.published, required this.asked});
+  const VideoFacts({this.length, this.views, this.published, this.liveStatus, required this.asked});
 
   final int? length;
   final int? views;
   final DateTime? published;
+  /// `is_live` or `is_upcoming` when the video was one when asked; a feed
+  /// that does not say so would otherwise show it as a video with no length.
+  final String? liveStatus;
   /// When YouTube was asked; views grow, so old answers are asked again.
   final DateTime asked;
 
-  VideoItem fill(VideoItem item) => item.filledIn(length: length, views: views, publishedAt: published);
+  VideoItem fill(VideoItem item) => item.filledIn(length: length, views: views, publishedAt: published, liveStatus: liveStatus);
 
-  List<Object?> toJson() => [length, views, published?.toUtc().toIso8601String(), asked.toUtc().toIso8601String()];
+  List<Object?> toJson() => [length, views, published?.toUtc().toIso8601String(), asked.toUtc().toIso8601String(), if (liveStatus != null) liveStatus];
 
   static VideoFacts? fromJson(Object? raw) {
-    if (raw is! List || raw.length != 4) return null;
+    if (raw is! List || raw.length < 4 || raw.length > 5) return null;
     final asked = DateTime.tryParse('${raw[3]}');
     if (asked == null) return null;
     return VideoFacts(
       length: raw[0] is int ? raw[0] as int : null,
       views: raw[1] is int ? raw[1] as int : null,
       published: raw[2] is String ? DateTime.tryParse(raw[2] as String) : null,
+      liveStatus: raw.length == 5 && (raw[4] == 'is_live' || raw[4] == 'is_upcoming') ? raw[4] as String : null,
       asked: asked,
     );
   }
@@ -38,15 +42,27 @@ class VideoFacts {
   static final _length = RegExp(r'"lengthSeconds"\s*:\s*"(\d+)"');
   static final _views = RegExp(r'"viewCount"\s*:\s*"(\d+)"');
   static final _published = RegExp(r'"(?:publishDate|uploadDate)"\s*:\s*"([^"]+)"');
+  static final _live = RegExp(r'"isLive"\s*:\s*true');
+  static final _upcoming = RegExp(r'"isUpcoming"\s*:\s*true');
+  static final _streamLength = RegExp(r'"approxDurationMs"\s*:\s*"(\d+)"');
 
   /// The facts of a /player answer, read without decoding the whole of it;
-  /// null when it has none (an error page). A length of 0 is a live's.
+  /// null when it has none (an error page). A live has no length; a live
+  /// that has just ended says 0 until YouTube has processed it, so its
+  /// length is then taken from its streams.
   static VideoFacts? ofPlayer(String answer, DateTime asked) {
-    final length = int.tryParse(_length.firstMatch(answer)?.group(1) ?? '');
+    var length = int.tryParse(_length.firstMatch(answer)?.group(1) ?? '');
     final views = int.tryParse(_views.firstMatch(answer)?.group(1) ?? '');
     final published = DateTime.tryParse(_published.firstMatch(answer)?.group(1) ?? '');
-    if (length == null && views == null && published == null) return null;
-    return VideoFacts(length: length == 0 ? null : length, views: views, published: published, asked: asked);
+    final liveStatus = _live.hasMatch(answer) ? 'is_live' : _upcoming.hasMatch(answer) ? 'is_upcoming' : null;
+    if (liveStatus != null) {
+      length = null;
+    } else if (length == null || length == 0) {
+      final streams = [for (final m in _streamLength.allMatches(answer)) int.parse(m.group(1)!)];
+      length = streams.isEmpty ? null : streams.reduce((a, b) => a > b ? a : b) ~/ 1000;
+    }
+    if (length == null && views == null && published == null && liveStatus == null) return null;
+    return VideoFacts(length: length == 0 ? null : length, views: views, published: published, liveStatus: liveStatus, asked: asked);
   }
 }
 
@@ -66,6 +82,9 @@ class VideoFactsLookup extends ChangeNotifier {
   static const waitingAtMost = 40;
   /// Views older than this are asked again when a card needs them.
   static const freshFor = Duration(days: 2);
+  /// A video that had no length yet (live, upcoming, or a live just ended)
+  /// is asked again after this.
+  static const lengthlessFor = Duration(minutes: 20);
 
   Future<VideoFacts?> Function(String id)? _source;
   File? _file;
@@ -110,7 +129,8 @@ class VideoFactsLookup extends ChangeNotifier {
     if (item.isLive || item.isUpcoming || !_lacks(item) || !_videoId.hasMatch(item.id)) return item;
     final known = _known[item.id];
     final filled = known?.fill(item) ?? item;
-    final stale = known == null || (item.viewCount == null && now().difference(known.asked) > freshFor);
+    final since = known == null ? null : now().difference(known.asked);
+    final stale = since == null || (item.viewCount == null && since > freshFor) || (filled.duration == null && since > lengthlessFor);
     if (stale && _source != null && _tried.add(item.id)) {
       _waiting.add(item.id);
       while (_waiting.length > waitingAtMost) {
@@ -131,6 +151,8 @@ class VideoFactsLookup extends ChangeNotifier {
           _put(id, facts);
           notifyListeners();
         }
+        // Still without a length: may be asked again once lengthlessFor has passed.
+        if (facts?.length == null) _tried.remove(id);
       }, onError: (Object _) {
         // Offline or refused: tried again next session.
       }).whenComplete(() {

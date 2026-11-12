@@ -22,6 +22,37 @@ void main() {
     expect(VideoFacts.ofPlayer('{"playabilityStatus":{"status":"ERROR"}}', DateTime.now()), isNull);
   });
 
+  test('a live the feed did not mark becomes one, and a live just ended takes its length from its streams', () async {
+    final live = VideoFacts.ofPlayer('{"streamingData":{"adaptiveFormats":[{"itag":136}]},"videoDetails":{"lengthSeconds":"0","isLive":true,"viewCount":"40"}}', DateTime.now())!;
+    expect((live.length, live.liveStatus), (null, 'is_live'));
+    expect(VideoFacts.ofPlayer('{"videoDetails":{"isUpcoming":true}}', DateTime.now())!.liveStatus, 'is_upcoming');
+    final ended = VideoFacts.ofPlayer('{"streamingData":{"adaptiveFormats":[{"approxDurationMs":"3605120"},{"approxDurationMs":"3605201"}]},"videoDetails":{"lengthSeconds":"0","isLiveContent":true,"viewCount":"9"}}', DateTime.now())!;
+    expect((ended.length, ended.liveStatus), (3605, null));
+    expect(VideoFacts.fromJson(live.toJson())!.liveStatus, 'is_live');
+
+    var time = DateTime.utc(2026, 11, 12, 10);
+    var answer = VideoFacts(views: 40, liveStatus: 'is_live', asked: time);
+    lookup.now = () => time;
+    addTearDown(() => lookup.now = DateTime.now);
+    final asked = <String>[];
+    lookup.use((id) async {
+      asked.add(id);
+      return answer;
+    }, null);
+    final item = feedItem('ccccccccccc');
+    lookup.of(item);
+    await Future<void>.delayed(Duration.zero);
+    expect(lookup.of(item).isLive, isTrue);
+    expect(asked, hasLength(1));
+    answer = VideoFacts(length: 3605, views: 50, asked: time);
+    time = time.add(const Duration(minutes: 30));
+    lookup.of(item);
+    await Future<void>.delayed(Duration.zero);
+    final done = lookup.of(item);
+    expect(asked, hasLength(2));
+    expect((done.durationLabel, done.isLive), ('1:00:05', false));
+  });
+
   test('fills in what a card lacks once, keeps it on disk and never overrides the listing', () async {
     final dir = await Directory.systemTemp.createTemp('facts');
     addTearDown(() => dir.delete(recursive: true));

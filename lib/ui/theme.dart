@@ -305,8 +305,14 @@ ThemeData buildAppTheme(
     // Characters a chosen Windows font lacks come from the bundled one.
     fontFamilyFallback: fallback,
     colorScheme: scheme,
-    // A skin paints the page itself, under every page (WindowChrome).
-    scaffoldBackgroundColor: skin == null ? scheme.surface : Colors.transparent,
+    // A skin paints the page itself, under every page (WindowChrome). Pages
+    // opened over the window (settings and the like) get the skin's veil,
+    // as the main page does in AppShell, so text reads over its picture.
+    scaffoldBackgroundColor: skin == null
+        ? scheme.surface
+        : skin.veil == 0 || plain
+            ? Colors.transparent
+            : skin.colors.page.withValues(alpha: skin.veil * SkinGlass.thinning(skin)),
     // A skin's icon finish (emboss, gel, glow); left out in Low resource mode.
     iconTheme: IconThemeData(color: dark ? Colors.white : Colors.black87, shadows: plain ? null : skin?.icons.shadows(brightness, scheme.primary)),
     canvasColor: scheme.surface,

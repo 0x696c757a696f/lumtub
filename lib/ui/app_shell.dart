@@ -360,6 +360,8 @@ class _AppShellState extends State<AppShell> {
                     onSelected: _select,
                   );
               final scaffold = Scaffold(
+                // The page under the bars is veiled on its own (_veiled).
+                backgroundColor: Colors.transparent,
                 // Below Android's status bar and camera cutout; the
                 // navigation bar keeps clear of the gesture bar itself.
                 body: SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [

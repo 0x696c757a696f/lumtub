@@ -59,8 +59,11 @@ void main() {
 
   testWidgets('the theme mode menu changes the theme mode', (tester) async {
     await pump(tester);
+    // Theme mode is on the skins page.
     await tester.tap(find.text(SettingsCategory.style.title));
     await tester.pump();
+    await tester.tap(find.text('Skins'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Theme mode'));
     await tester.pumpAndSettle();
     // The menu item's text sits under its ink; the tap still lands on the item.

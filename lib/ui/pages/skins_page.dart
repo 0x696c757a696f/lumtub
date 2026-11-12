@@ -19,7 +19,7 @@ import '../theme.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import 'downloads_page.dart' show openInExplorer;
 import '../palettes.dart' show paletteForSkin;
-import 'settings_sections.dart' show themeModes;
+import 'settings_sections.dart' show themeModeTiles;
 import 'settings_subpages.dart' show openColorSelect;
 
 const _guide = 'https://github.com/0x696c757a696f/lumtub/blob/main/skins/README.md';
@@ -84,13 +84,7 @@ class _SkinsPage extends StatelessWidget {
           final schemes = SkinLibrary.colorSchemeIds.toSet();
           return ListView(padding: const EdgeInsets.only(bottom: 40), children: [
             // Skins with both sides take light or dark from here.
-            PopupItem<ThemeMode>(
-              title: tr('Theme mode'),
-              leading: Icon(AppIcons.sunHorizon),
-              value: appearance.themeMode,
-              values: themeModes,
-              onSelected: (mode) => controller.saveAppearance(controller.appearance.copyWith(themeMode: mode, darkSchedule: DarkSchedule.off)),
-            ),
+            ...themeModeTiles(context, controller),
             // The accent color of the standard look and of skins that leave
             // colors to the app; a color scheme sets its own.
             NormalItem(

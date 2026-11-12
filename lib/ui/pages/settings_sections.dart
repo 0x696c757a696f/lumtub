@@ -161,6 +161,49 @@ String _eyeCareLabel(AppearanceSettings a) => switch (a.eyeCare) {
     };
 
 /// Asks for a span of hours, which may run through midnight.
+/// Light, dark or following the system, the sun or set hours, and the
+/// hours when they are set; for the skins page.
+List<Widget> themeModeTiles(BuildContext context, AppController controller) {
+  final appearance = controller.appearance;
+  void saveLooks(AppearanceSettings next) => controller.saveAppearance(next);
+  return [
+    NormalItem(
+      title: tr('Theme mode'),
+      subtitle: _darkLabel(appearance),
+      leading: Icon(AppIcons.sunHorizon),
+      onTap: () => pickFromDialog<String>(
+        context,
+        title: tr('Theme mode'),
+        value: appearance.darkSchedule == DarkSchedule.off ? appearance.themeMode.name : appearance.darkSchedule.name,
+        values: [
+          for (final (mode, label) in themeModes) (mode.name, label),
+          (DarkSchedule.sun.name, tr('Dark from sunset to sunrise')),
+          (DarkSchedule.hours.name, tr('Dark during set hours')),
+        ],
+        onSelected: (choice) async {
+          if (choice == DarkSchedule.sun.name) return saveLooks(appearance.copyWith(darkSchedule: DarkSchedule.sun));
+          if (choice == DarkSchedule.hours.name) {
+            final hours = await _pickHours(context, tr('Dark hours'), appearance.darkStart, appearance.darkEnd);
+            if (hours != null) saveLooks(controller.appearance.copyWith(darkSchedule: DarkSchedule.hours, darkStart: hours.$1, darkEnd: hours.$2));
+            return;
+          }
+          saveLooks(appearance.copyWith(darkSchedule: DarkSchedule.off, themeMode: ThemeMode.values.byName(choice)));
+        },
+      ),
+    ),
+    if (appearance.darkSchedule == DarkSchedule.hours)
+      NormalItem(
+        title: tr('Dark hours'),
+        subtitle: _hoursLabel(appearance.darkStart, appearance.darkEnd),
+        leading: Icon(AppIcons.clock),
+        onTap: () async {
+          final hours = await _pickHours(context, tr('Dark hours'), appearance.darkStart, appearance.darkEnd);
+          if (hours != null) saveLooks(controller.appearance.copyWith(darkStart: hours.$1, darkEnd: hours.$2));
+        },
+      ),
+  ];
+}
+
 Future<(int, int)?> _pickHours(BuildContext context, String title, int start, int end) => showDialog<(int, int)>(
       context: context,
       builder: (context) {
@@ -1050,48 +1093,15 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               values: [for (final l in AppLanguage.selectable) (l, l.label)],
               onSelected: (language) => changeLanguage(context, appearance.copyWith(language: language)),
             ), subtitle: 'Language 语言 English 简体中文'),
-        SettingEntry(tr('Theme mode'), (context) => NormalItem(
-              title: tr('Theme mode'),
-              subtitle: _darkLabel(appearance),
-              leading: _icon(AppIcons.sunHorizon),
-              onTap: () => pickFromDialog<String>(
-                context,
-                title: tr('Theme mode'),
-                value: appearance.darkSchedule == DarkSchedule.off ? appearance.themeMode.name : appearance.darkSchedule.name,
-                values: [
-                  for (final (mode, label) in themeModes) (mode.name, label),
-                  (DarkSchedule.sun.name, tr('Dark from sunset to sunrise')),
-                  (DarkSchedule.hours.name, tr('Dark during set hours')),
-                ],
-                onSelected: (choice) async {
-                  if (choice == DarkSchedule.sun.name) return saveLooks(appearance.copyWith(darkSchedule: DarkSchedule.sun));
-                  if (choice == DarkSchedule.hours.name) {
-                    final hours = await _pickHours(context, tr('Dark hours'), appearance.darkStart, appearance.darkEnd);
-                    if (hours != null) saveLooks(controller.appearance.copyWith(darkSchedule: DarkSchedule.hours, darkStart: hours.$1, darkEnd: hours.$2));
-                    return;
-                  }
-                  saveLooks(appearance.copyWith(darkSchedule: DarkSchedule.off, themeMode: ThemeMode.values.byName(choice)));
-                },
-              ),
-            ), subtitle: tr('dark light sunrise sunset schedule night')),
-        if (appearance.darkSchedule == DarkSchedule.hours)
-          SettingEntry(tr('Dark hours'), (context) => NormalItem(
-                title: tr('Dark hours'),
-                subtitle: _hoursLabel(appearance.darkStart, appearance.darkEnd),
-                leading: _icon(AppIcons.clock),
-                onTap: () async {
-                  final hours = await _pickHours(context, tr('Dark hours'), appearance.darkStart, appearance.darkEnd);
-                  if (hours != null) saveLooks(controller.appearance.copyWith(darkStart: hours.$1, darkEnd: hours.$2));
-                },
-              )),
         SettingEntry(tr('Skins'), (context) => NormalItem(
               title: tr('Skins'),
               subtitle: tr('Current: {0}', [SkinLibrary.instance.byId(appearance.skin)?.nameIn(currentLanguage.tag) ?? tr('Standard')]),
               leading: _icon(AppIcons.paintBrush),
               trailing: CircleAvatar(radius: 12, backgroundColor: controller.accentColor),
               onTap: () => openSkins(context, controller),
-              // The app theme (accent color) is chosen on the skins page too.
-            ), subtitle: '${tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')} ${tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')} ${tr('App theme')} ${tr('theme color palette dynamic color')}'),
+              // Theme mode and the app theme (accent color) are chosen on
+              // the skins page.
+            ), subtitle: '${tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')} ${tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')} ${tr('App theme')} ${tr('theme color palette dynamic color')} ${tr('Theme mode')} ${tr('dark light sunrise sunset schedule night')}'),
         if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid)
           SettingEntry(tr('App icon'), (context) => NormalItem(
                 title: tr('App icon'),

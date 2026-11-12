@@ -108,7 +108,9 @@ class _SkinsPage extends StatelessWidget {
                   onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(glassOpacity: v)),
                 ),
               ),
-            if (context.skin != null)
+            // Only a skin with pictures or a landscape has a background to
+            // turn off; a color scheme is colors alone.
+            if (context.skin case final skin? when skin.decorations.isNotEmpty || skin.background.isNotEmpty)
               SwitchItem(
                 title: tr('Skin background'),
                 subtitle: tr("The skin's pictures and landscape behind the pages; off leaves a plain color"),

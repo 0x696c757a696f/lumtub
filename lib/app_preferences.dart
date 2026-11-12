@@ -312,8 +312,9 @@ class AppPreferences {
   final SubtitleListMode subtitleListMode;
   /// 翻译 does nothing for text already in the target language.
   final bool skipSameLanguage;
-  /// Translation takes Simplified and Traditional Chinese as one language,
-  /// leaving either alone when the other is the target.
+  /// 沉浸式翻译 takes Simplified and Traditional Chinese as one language,
+  /// leaving either alone when the other is the target; a tap on 翻译
+  /// always turns one into the other.
   final bool chineseAsOne;
   /// Translation codes of languages the user reads, left untranslated like
   /// the target.

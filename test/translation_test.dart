@@ -185,6 +185,24 @@ void main() {
     expect(find.text('[zh-CN] Hello there'), findsNothing);
   });
 
+  testWidgets('a tap turns Traditional Chinese into Simplified even when the two count as one', (tester) async {
+    final fake = _Fake();
+    final controller = AppController()..translator = fake;
+    controller.preferences = controller.preferences.copyWith(translateLanguage: 'zh-CN', immersiveLanguage: 'zh-CN', immersiveTranslation: true, bilingualTranslation: false);
+    expect(controller.preferences.chineseAsOne, isTrue);
+    const text = '這樣的國家還會說這些話';
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(controller: controller, text: text, builder: (context, text) => Text(text)))));
+    await tester.pump();
+    await tester.pump();
+    // 沉浸式翻译 leaves it alone; a tap asks for Simplified.
+    expect(fake.calls, 0);
+    await tester.tap(find.text('Translation'));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('[zh-CN] $text'), findsOneWidget);
+    expect(fake.calls, 1);
+  });
+
   testWidgets('translates on tap, shows the original again and reports errors', (tester) async {
     final fake = _Fake();
     final controller = AppController()..translator = fake;

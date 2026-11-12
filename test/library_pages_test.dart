@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app/library_controller.dart';
 import 'package:lumtub/app/video_list_loader.dart';
@@ -169,6 +170,24 @@ void main() {
     expect(library.isFollowing(channel.id), isTrue);
     expect(tester.takeException(), isNull);
     // Cancels the delayed save, which the test clock would never run.
+    unawaited(library.flush());
+  });
+
+  testWidgets("on a phone the channel's tabs are one row that stays at the top while the videos scroll", (tester) async {
+    debugTouchFirst = true;
+    addTearDown(() => debugTouchFirst = null);
+    controller.channel = channel;
+    controller.channelVideos = VideoListLoader(() => Listing(() => Stream.fromIterable([for (final v in videos) jsonEncode(v.toJson())])))..loadMore();
+    addTearDown(controller.channelVideos!.dispose);
+    await pump(tester, ChannelPage(controller: controller), width: 412);
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await tester.pump();
+    final tab = find.text(ChannelTab.videos.label);
+    expect(tab, findsOneWidget);
+    await tester.drag(find.byType(CustomScrollView).first, const Offset(0, -600));
+    await tester.pump();
+    expect(tester.getTopLeft(tab).dy, inInclusiveRange(0, 52));
+    expect(tester.takeException(), isNull);
     unawaited(library.flush());
   });
 }

@@ -187,7 +187,7 @@ class _CommentsSectionState extends State<CommentsSection> {
         Padding(
           padding: const EdgeInsetsDirectional.only(start: 44, bottom: 8),
           child: DecoratedBox(
-            decoration: BoxDecoration(color: context.colors.surfaceContainerLow, borderRadius: AppStyle.cardRadius),
+            decoration: BoxDecoration(color: context.colors.onSurface.withValues(alpha: 0.05), borderRadius: AppStyle.cardRadius),
             child: Padding(
               padding: const EdgeInsetsDirectional.fromSTEB(10, 2, 8, 2),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -383,7 +383,7 @@ class _CommentTile extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Material(
-                  color: colors.surfaceContainerLow,
+                  color: colors.onSurface.withValues(alpha: 0.05),
                   borderRadius: AppStyle.cardRadius,
                   child: InkWell(
                     borderRadius: AppStyle.cardRadius,

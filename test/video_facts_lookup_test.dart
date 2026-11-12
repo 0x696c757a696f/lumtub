@@ -99,4 +99,14 @@ void main() {
     expect(read.neverTranslate, ['ja', 'de']);
     expect(AppPreferences.fromJson(const <String, dynamic>{}).neverTranslate, isEmpty);
   });
+
+  test('a search for the id gives the facts when /player wants sign-in', () {
+    final asked = DateTime.utc(2026, 11, 12);
+    const line = '{"_type": "url", "id": "LRvSRV4WeOg", "duration": 151.0, "view_count": 28000, "timestamp": 1794400000}';
+    final facts = VideoFactsLookup.factsOfListing(line, 'LRvSRV4WeOg', asked)!;
+    expect((facts.length, facts.views, facts.published), (151, 28000, DateTime.fromMillisecondsSinceEpoch(1794400000 * 1000, isUtc: true)));
+    expect(VideoFactsLookup.factsOfListing(line, 'otherVideo1', asked), isNull);
+    expect(VideoFactsLookup.factsOfListing('{"id": "LRvSRV4WeOg", "live_status": "is_live", "duration": 0}', 'LRvSRV4WeOg', asked)!.liveStatus, 'is_live');
+    expect(VideoFactsLookup.factsOfListing('not json', 'LRvSRV4WeOg', asked), isNull);
+  });
 }

@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'app_log.dart';
 import 'models.dart';
 import 'native_core.dart';
+import 'youtube_listing.dart';
 
 /// What a card shows of a video and its listing may leave out: the length,
 /// the views and the day it was published.
@@ -189,8 +190,12 @@ class VideoFactsLookup extends ChangeNotifier {
 
   /// The facts YouTube's /player gives for [id], asked the way a quick
   /// start asks, and when that client is refused, the way the signed-out
-  /// TV client asks.
+  /// TV client asks. Where YouTube wants both signed in (it takes some
+  /// addresses for bots), the video is looked up by its id in search
+  /// instead, and /player is left alone for a while.
   static Future<VideoFacts?> askYoutube(http.Client client, String id) async {
+    final refused = _playerRefused;
+    if (refused != null && DateTime.now().difference(refused) < playerRestFor) return ofSearch(client, id);
     final request = NativeCore.instance?.quickRequest(id);
     if (request == null) return null;
     final parts = jsonDecode(request) as Map<String, dynamic>;
@@ -199,11 +204,62 @@ class VideoFactsLookup extends ChangeNotifier {
     if (facts != null || parts['tv'] is! Map) return facts;
     final second = await _ask(client, (parts['tv'] as Map).cast<String, dynamic>());
     final tv = second == null ? null : VideoFacts.ofPlayer(second, DateTime.now());
+    if (tv != null) return tv;
+    final searched = await ofSearch(client, id);
     if (!_toldWhy) {
       _toldWhy = true;
-      logInfo('Video facts of $id: quick start client gave none (${first == null ? 'no answer' : playerWhy(first)}), TV client ${tv != null ? 'did' : 'neither (${second == null ? 'no answer' : playerWhy(second)})'}');
+      logInfo('Video facts of $id: quick start client gave none (${first == null ? 'no answer' : playerWhy(first)}), TV client neither (${second == null ? 'no answer' : playerWhy(second)}), search ${searched == null ? 'neither' : 'did'}');
     }
-    return tv;
+    if (second != null && second.contains('"LOGIN_REQUIRED"')) _playerRefused = DateTime.now();
+    return searched;
+  }
+
+  /// How long /player is left alone once it wants sign-in.
+  static const playerRestFor = Duration(minutes: 30);
+  static DateTime? _playerRefused;
+
+  /// The facts of [id] as a search for it lists them: length, views and
+  /// about when it came out; null when the search does not find it.
+  static Future<VideoFacts?> ofSearch(http.Client client, String id) async {
+    if (!YoutubeListing.available) return null;
+    try {
+      var seen = 0;
+      await for (final line in YoutubeListing(client).search(id).timeout(const Duration(seconds: 10))) {
+        final facts = factsOfListing(line, id, DateTime.now());
+        if (facts != null) return facts;
+        // The video, when found, is among the first results.
+        if (++seen >= 5) break;
+      }
+    } catch (e) {
+      logDebug(() => 'Video facts of $id from search: $e');
+    }
+    return null;
+  }
+
+  /// The facts in a listing [line] (as `yt-dlp --flat-playlist` prints
+  /// one) when it is video [id]'s.
+  @visibleForTesting
+  static VideoFacts? factsOfListing(String line, String id, DateTime asked) {
+    final Object? item;
+    try {
+      item = jsonDecode(line);
+    } catch (_) {
+      return null;
+    }
+    if (item is! Map<String, dynamic> || item['id'] != id) return null;
+    final length = (item['duration'] as num?)?.round();
+    final views = (item['view_count'] as num?)?.toInt();
+    final stamp = (item['timestamp'] as num?)?.toInt();
+    final live = item['live_status'];
+    final liveStatus = live == 'is_live' || live == 'is_upcoming' ? live as String : null;
+    if (length == null && views == null && stamp == null && liveStatus == null) return null;
+    return VideoFacts(
+      length: liveStatus != null || length == 0 ? null : length,
+      views: views,
+      published: stamp == null ? null : DateTime.fromMillisecondsSinceEpoch(stamp * 1000, isUtc: true),
+      liveStatus: liveStatus,
+      asked: asked,
+    );
   }
 
   static var _toldWhy = false;
@@ -238,6 +294,7 @@ class VideoFactsLookup extends ChangeNotifier {
     _waiting.clear();
     _running = 0;
     _save?.cancel();
+    _playerRefused = null;
     now = DateTime.now;
   }
 }

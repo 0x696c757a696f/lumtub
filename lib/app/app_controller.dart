@@ -29,6 +29,7 @@ import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
 import '../dearrow.dart';
+import '../emoji_pictures.dart';
 import '../downloads/download_formats.dart';
 import '../downloads/core_recorder.dart';
 import '../downloads/download_manager.dart';

@@ -115,7 +115,8 @@ fn attached_emojis(content: Option<&Value>) -> Emojis {
         let name = String::from_utf16_lossy(slice);
         let url = at(run, &["element", "type", "imageType", "image", "sources"])
             .and_then(Value::as_array)
-            .and_then(|s| s.iter().filter_map(|s| https(s.get("url"))).next_back());
+            .and_then(|s| s.iter().filter_map(|s| https(s.get("url"))).next_back())
+            .or_else(|| run.get("element").and_then(last_url));
         if let Some(url) = url
             && name.starts_with(':')
             && name.ends_with(':')
@@ -124,6 +125,20 @@ fn attached_emojis(content: Option<&Value>) -> Emojis {
         }
     }
     emojis
+}
+
+/// The last picture address anywhere in [node], for an attachment laid
+/// out other than the usual way.
+fn last_url(node: &Value) -> Option<String> {
+    match node {
+        Value::Object(map) => map.iter().rev().find_map(|(key, value)| match value {
+            Value::String(_) if key == "url" => https(Some(value)),
+            Value::Object(_) | Value::Array(_) => last_url(value),
+            _ => None,
+        }),
+        Value::Array(list) => list.iter().rev().find_map(last_url),
+        _ => None,
+    }
 }
 
 /// What liking a comment or a post takes: the signed-in state and the
@@ -653,6 +668,11 @@ mod tests {
         let runs = json!({"runs": [{"text": "a "}, {"emoji": {"emojiId": "x", "isCustomEmoji": true, "shortcuts": [":x:"], "image": {"thumbnails": [{"url": "https://yt3/x"}]}}}]});
         assert_eq!(rich_text(Some(&runs), &mut emojis), "a :x:");
         assert_eq!(emojis.get(":x:").map(String::as_str), Some("https://yt3/x"));
+        let other = json!({"content": "hi :y:", "attachmentRuns": [{"startIndex": 3, "length": 3, "element": {"type": {"imageType": {"image": {"sources": []}, "fallback": {"url": "https://yt3/y"}}}}}]});
+        assert_eq!(
+            attached_emojis(Some(&other)).get(":y:").map(String::as_str),
+            Some("https://yt3/y")
+        );
     }
 
     #[test]

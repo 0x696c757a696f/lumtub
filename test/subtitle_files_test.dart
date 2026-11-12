@@ -97,8 +97,8 @@ void main() {
     expect(asked.last.queryParameters.containsKey('tlang'), isFalse);
     expect(translator.asked, ['hello world how & why']);
     expect(translator.targets, ['zh-CN']);
-    // Translated as one sentence, shared back out over the two lines' times.
-    expect(await File(path).readAsString(), contains('00:00:00.000 --> 00:00:02.000 align:start position:0%\nHELLO WORLD\n\n00:00:02.010 --> 00:00:04.000 align:start position:0%\nHOW &amp; WHY\n'));
+    // Translated as one sentence and shown as one, over both lines' times.
+    expect(await File(path).readAsString(), contains('00:00:00.000 --> 00:00:04.000\nHELLO WORLD HOW &amp; WHY\n'));
   });
 
   test('asks again in halves when a translation joins lines', () async {
@@ -196,6 +196,26 @@ void main() {
     expect(joined.length, greaterThan(1));
     expect(joined.every((c) => WebVtt.endOf(c.timing) - WebVtt.startOf(c.timing) <= const Duration(seconds: 7)), isTrue);
     expect(joined.every((c) => c.text.length <= 90), isTrue);
+  });
+
+  test('automatic captions show as sentences, a long one in lines broken at commas', () {
+    final vtt = StringBuffer('WEBVTT\n\n');
+    const words = ['Io conoscevo tutte le parole,', 'tutte, ma ho pensato così tanto alla', 'risposta', 'che lui ha ripetuto la domanda', 'più lentamente,', 'molto più lentamente,', 'come se stesse parlando con una bambina.', 'Io ho sorriso.'];
+    for (final (i, w) in words.indexed) {
+      // Each fragment runs on over the next, as YouTube's do.
+      vtt.write('00:01:${(17 + i * 2).toString().padLeft(2, '0')}.000 --> 00:01:${(20 + i * 2).toString().padLeft(2, '0')}.000\n$w\n\n');
+    }
+    final lines = WebVtt.cues(WebVtt.asLines('$vtt'));
+    expect([for (final l in lines) l.text], [
+      'Io conoscevo tutte le parole, tutte, ma ho pensato così tanto alla risposta',
+      'che lui ha ripetuto la domanda più lentamente,',
+      'molto più lentamente, come se stesse parlando con una bambina.',
+      'Io ho sorriso.',
+    ]);
+    // One line at a time: a line ends where the next begins.
+    for (var k = 0; k + 1 < lines.length; k++) {
+      expect(WebVtt.endOf(lines[k].timing), WebVtt.startOf(lines[k + 1].timing));
+    }
   });
 
   test('shares a sentence translation out over its fragments', () {

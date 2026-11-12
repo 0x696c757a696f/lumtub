@@ -58,7 +58,10 @@ fi
 
 fw="$WORK/out/Mpv.framework"
 mkdir -p "$fw/Versions/A/Headers/mpv" "$fw/Versions/A/Resources"
-cp "$headers"/*.h "$fw/Versions/A/Headers/mpv/"
+# MPVKit keeps them in Headers/mpv; plain Headers also works.
+client=$(find "$headers" -name client.h | head -n1)
+[ -n "$client" ] || { echo "Libmpv has no client.h" >&2; exit 1; }
+cp "$(dirname "$client")"/*.h "$fw/Versions/A/Headers/mpv/"
 
 xcrun clang -dynamiclib \
   -arch arm64 -arch x86_64 \

@@ -79,4 +79,17 @@ void main() {
     expect(failure.message.split('\n').first, endsWith(' (also tried Piped, Invidious)'));
     expect(const PlaybackFailure(FailureKind.unknown, 'odd', tried: ['Piped']).message, 'odd (also tried Piped)');
   });
+
+  test("libmpv's bare \"Failed to open\" is not called a network failure, and a line naming the cause goes first", () {
+    final bare = PlaybackFailure.classify(['Failed to open']);
+    expect(bare.kind, FailureKind.unknown);
+    expect(bare.message, contains('Network check'));
+    final caused = PlaybackFailure.classify(['Failed to open', 'tcp: Connection to tcp://rr1.googlevideo.com:443 failed: Connection refused']);
+    expect(caused.kind, FailureKind.network);
+    expect(caused.detail, startsWith('tcp: Connection'));
+    final other = PlaybackFailure.classify(['Failed to open', 'Could not create device']);
+    expect(other.kind, FailureKind.unknown);
+    expect(other.detail, 'Could not create device');
+    expect(other.message, isNot(contains('Network check')));
+  });
 }

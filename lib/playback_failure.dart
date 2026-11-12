@@ -57,14 +57,17 @@ class PlaybackFailure {
     (FailureKind.challenge, RegExp(r'n challenge|nsig|signature (solving|extraction|function)|JavaScript runtime|js.?runtime', caseSensitive: false)),
     (FailureKind.forbidden, RegExp(r'\b403\b|Forbidden|PO Token', caseSensitive: false)),
     (FailureKind.network, RegExp(
-      r'timed? ?out|connection|tcp|tls|ssl|network|unreachable|getaddrinfo|resolve host|reset by peer|\b5\d\d\b|stream ended|failed to open',
+      r'timed? ?out|connection|tcp|tls|ssl|network|unreachable|getaddrinfo|resolve host|reset by peer|\b5\d\d\b|stream ended',
       caseSensitive: false,
     )),
   ];
 
   /// The first cause any of [messages] names, most specific first.
   static PlaybackFailure classify(Iterable<String> messages) {
-    final all = messages.where((m) => m.trim().isNotEmpty && !isSubtitleError(m)).toList();
+    final given = messages.where((m) => m.trim().isNotEmpty && !isSubtitleError(m)).toList();
+    // libmpv's own "Failed to open" says nothing of why; a line before it
+    // that does goes first.
+    final all = [...given.where((m) => !isBareOpenFailure(m)), ...given.where(isBareOpenFailure)];
     for (final (kind, pattern) in _patterns) {
       final hit = all.where(pattern.hasMatch).firstOrNull;
       if (hit != null) return PlaybackFailure(kind, hit.trim());
@@ -91,7 +94,7 @@ class PlaybackFailure {
       FailureKind.forbidden => tr('YouTube rejected the video URL (403). Re-parsing still failed. Try another proxy node, or choose Piped or Invidious in Settings › Playback › Playback source'),
       FailureKind.noFormat => disabled.isEmpty ? tr('No playable video stream.') : tr('No playable video stream matches the format rules (disabled: {0}). You can change this under Settings → Video settings.', [disabled]),
       FailureKind.network => tr("Couldn't connect. Check your network or proxy."),
-      FailureKind.unknown => '',
+      FailureKind.unknown => isBareOpenFailure(detail) ? tr("The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.") : '',
     };
     if (kind == FailureKind.upcoming) return reason;
     // The servers named in the 429 message are said here for the others.
@@ -101,6 +104,10 @@ class PlaybackFailure {
     return shown.isEmpty ? '$reason$servers' : '$reason$servers\n$shown';
   }
 }
+
+/// Whether [message] is libmpv saying only that it could not open the
+/// video, without an address or a cause.
+bool isBareOpenFailure(String message) => RegExp(r'^\s*(failed to open|loading failed)\b[\s.:]*$', caseSensitive: false).hasMatch(message);
 
 /// Whether an mpv error is about a subtitle track (YouTube's timedtext),
 /// which never stops the video itself.

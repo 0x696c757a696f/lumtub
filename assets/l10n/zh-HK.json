@@ -3458,5 +3458,6 @@
   "Similar": "相似",
   "Next up": "接着看",
   "Searched": "搜過",
-  "You were here last time · Tap to refresh": "上次睇到呢度，㩒一下重新整理"
+  "You were here last time · Tap to refresh": "上次睇到呢度，㩒一下重新整理",
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "播放器打不開影片串流，也沒說原因。可以在 設定 › 網絡 › 網絡診斷 裡看是哪一環被擋住了。"
 }

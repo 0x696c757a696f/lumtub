@@ -3516,5 +3516,6 @@
   "Similar": "相似",
   "Next up": "接着看",
   "Searched": "搜过",
-  "You were here last time · Tap to refresh": "上次看到这里，点击刷新"
+  "You were here last time · Tap to refresh": "上次看到这里，点击刷新",
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "播放器打不开视频流，也没说原因。可以在 设置 › 网络 › 网络诊断 里看是哪一环被拦住了。"
 }

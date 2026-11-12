@@ -63,6 +63,11 @@ client=$(find "$headers" -name client.h | head -n1)
 [ -n "$client" ] || { echo "Libmpv has no client.h" >&2; exit 1; }
 cp "$(dirname "$client")"/*.h "$fw/Versions/A/Headers/mpv/"
 
+# mpv's macOS code is partly Swift: link the Swift compatibility shims
+# from the toolchain; the Swift runtime itself is part of macOS 12.
+toolchain=$(dirname "$(dirname "$(xcrun -f swiftc)")")
+swift_libs=(-L"$toolchain/lib/swift/macosx" -L"$(xcrun --show-sdk-path)/usr/lib/swift" -Wl,-rpath,/usr/lib/swift)
+
 xcrun clang -dynamiclib \
   -arch arm64 -arch x86_64 \
   -mmacosx-version-min="$MIN_MACOS" \
@@ -79,7 +84,8 @@ xcrun clang -dynamiclib \
   -framework IOSurface -framework Metal -framework OpenGL \
   -framework QuartzCore -framework Security -framework SystemConfiguration \
   -framework VideoToolbox \
-  -lbz2 -lc++ -lexpat -liconv -lresolv -lxml2 -lz
+  -lbz2 -lc++ -lexpat -liconv -lresolv -lxml2 -lz \
+  "${swift_libs[@]}"
 
 cat > "$fw/Versions/A/Resources/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

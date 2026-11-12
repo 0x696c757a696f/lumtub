@@ -6,6 +6,9 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.media.MediaCodecInfo
+import android.media.MediaCodecList
+import android.media.MediaFormat
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
@@ -59,6 +62,14 @@ class MainActivity : FlutterActivity() {
                 signingIn = result
                 @Suppress("DEPRECATION")
                 startActivityForResult(Intent(this, WebSignInActivity::class.java), WEB_SIGN_IN)
+                return@setMethodCallHandler
+            }
+            if (call.method == "hwDecoders") {
+                // Listing the codecs loads every codec plugin; kept off the UI thread.
+                Thread {
+                    val answer = runCatching { hardwareDecoders() }
+                    runOnUiThread { answer.fold({ result.success(it) }, { result.error("hwDecoders", it.message ?: it.toString(), null) }) }
+                }.start()
                 return@setMethodCallHandler
             }
             if (call.method == "installApk") {
@@ -118,6 +129,40 @@ class MainActivity : FlutterActivity() {
                 // An older build without the alias: keep the icon it has.
             }
         }
+    }
+
+    /**
+     * The tallest 16:9 picture a hardware decoder takes for H.264, VP9 and
+     * AV1 (0 for none), as the desktop builds ask their GPU: the automatic
+     * codecs follow the answer.
+     */
+    private fun hardwareDecoders(): Map<String, Any> {
+        val codecs = MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos.filter { !it.isEncoder && isHardware(it) }
+        fun tallest(mime: String): Int {
+            var best = 0
+            for (info in codecs) {
+                if (mime !in info.supportedTypes) continue
+                val video = runCatching { info.getCapabilitiesForType(mime).videoCapabilities }.getOrNull() ?: continue
+                for (height in intArrayOf(720, 1080, 1440, 2160, 4320)) {
+                    val width = height * 16 / 9
+                    if (height > best && (video.isSizeSupported(width, height) || video.isSizeSupported(height, width))) best = height
+                }
+            }
+            return best
+        }
+        val chip = if (Build.VERSION.SDK_INT >= 31) " ${Build.SOC_MANUFACTURER} ${Build.SOC_MODEL}" else ""
+        return mapOf(
+            "adapter" to "${Build.MANUFACTURER} ${Build.MODEL}$chip MediaCodec",
+            "h264" to tallest(MediaFormat.MIMETYPE_VIDEO_AVC),
+            "vp9" to tallest(MediaFormat.MIMETYPE_VIDEO_VP9),
+            "av1" to tallest(MediaFormat.MIMETYPE_VIDEO_AV1),
+        )
+    }
+
+    private fun isHardware(info: MediaCodecInfo): Boolean {
+        if (Build.VERSION.SDK_INT >= 29) return info.isHardwareAccelerated
+        val name = info.name.lowercase()
+        return !name.startsWith("omx.google.") && !name.startsWith("c2.android.") && !name.contains(".sw.")
     }
 
     private fun handle(call: MethodCall): Any? {

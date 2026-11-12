@@ -2,18 +2,26 @@ part of 'app_controller.dart';
 
 /// Decoders, cropping and keeping the picture smooth: dropped frames, stalls and memory.
 extension PictureHealth on AppController {
-  /// Asks the GPU what it decodes in hardware, once per graphics adapter
-  /// and driver: the automatic codecs follow the answer.
+  /// Asks the GPU (on Android the media codecs) what it decodes in
+  /// hardware, once per graphics adapter and driver: the automatic codecs
+  /// follow the answer.
   Future<void> _measureDecoders() async {
     try {
-      final json = await Isolate.run(NativeCore.hwDecodersNow);
-      if (json == null || _disposed) return;
-      final probe = jsonDecode(json) as Map<String, dynamic>;
+      final Map<String, dynamic> probe;
+      if (Platform.isAndroid) {
+        final answer = await const MethodChannel('lumtub/windows_shell').invokeMapMethod<String, dynamic>('hwDecoders');
+        if (answer == null || _disposed) return;
+        probe = answer;
+      } else {
+        final json = await Isolate.run(NativeCore.hwDecodersNow);
+        if (json == null || _disposed) return;
+        probe = jsonDecode(json) as Map<String, dynamic>;
+      }
       final adapter = probe['adapter']?.toString() ?? '';
       if (adapter.isEmpty) return;
       int height(String key) => (probe[key] as num?)?.toInt() ?? 0;
       final results = {
-        for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? DecoderStatus.hardware(Platform.isWindows ? 'd3d11va' : Platform.isMacOS ? 'videotoolbox' : 'vaapi') : const DecoderStatus.software(),
+        for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? DecoderStatus.hardware(Platform.isWindows ? 'd3d11va' : Platform.isMacOS ? 'videotoolbox' : Platform.isAndroid ? 'mediacodec' : 'vaapi') : const DecoderStatus.software(),
       };
       // Asked again at every start: a result saved earlier may have been
       // a one-off, such as a video decoded in software after the graphics

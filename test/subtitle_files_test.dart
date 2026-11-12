@@ -97,7 +97,8 @@ void main() {
     expect(asked.last.queryParameters.containsKey('tlang'), isFalse);
     expect(translator.asked, ['hello world how & why']);
     expect(translator.targets, ['zh-CN']);
-    expect(await File(path).readAsString(), contains('00:00:00.000 --> 00:00:04.000\nHELLO WORLD HOW &amp; WHY\n'));
+    // Translated as one sentence, shared back out over the two lines' times.
+    expect(await File(path).readAsString(), contains('00:00:00.000 --> 00:00:02.000 align:start position:0%\nHELLO WORLD\n\n00:00:02.010 --> 00:00:04.000 align:start position:0%\nHOW &amp; WHY\n'));
   });
 
   test('asks again in halves when a translation joins lines', () async {
@@ -195,6 +196,45 @@ void main() {
     expect(joined.length, greaterThan(1));
     expect(joined.every((c) => WebVtt.endOf(c.timing) - WebVtt.startOf(c.timing) <= const Duration(seconds: 7)), isTrue);
     expect(joined.every((c) => c.text.length <= 90), isTrue);
+  });
+
+  test('shares a sentence translation out over its fragments', () {
+    expect(WebVtt.splitLike('But Kennedy does not believe it, and suspects they are secretly building nuclear weapons.', ['ma Kennedy non ci crede e sospetta che stiano sviluppando invece', 'delle armi nucleari in segreto e fa bene.']),
+        ['But Kennedy does not believe it, and suspects they are', 'secretly building nuclear weapons.']);
+    final zh = WebVtt.splitLike('但肯尼迪不相信，怀疑他们其实在秘密研制核武器，而且他怀疑得对。', ['ma Kennedy non ci crede e sospetta che stiano sviluppando invece', 'delle armi nucleari in segreto e fa bene.']);
+    expect(zh.join(), '但肯尼迪不相信，怀疑他们其实在秘密研制核武器，而且他怀疑得对。');
+    expect(zh.first, endsWith('，'));
+    // Never an empty fragment: too short to share, each shows it all.
+    expect(WebVtt.splitLike('one', ['a', 'b', 'c']), ['one', 'one', 'one']);
+    expect(WebVtt.splitLike('whole', ['only']), ['whole']);
+  });
+
+  test('translates automatic captions by sentence, each fragment keeping its time', () async {
+    const asr = '''WEBVTT
+
+00:00:00.000 --> 00:00:04.000
+ma Kennedy non ci crede e sospetta
+
+00:00:04.000 --> 00:00:08.000
+che stiano sviluppando armi.
+
+00:00:08.000 --> 00:00:10.000
+Ok, finita la chicca.
+''';
+    final asked = <Uri>[];
+    final client = MockClient((request) async {
+      asked.add(request.url);
+      return http.Response(asr, 200);
+    });
+    final translator = _Upper();
+    final files = SubtitleFiles(client, folder, () => translator);
+    const option = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=c&lang=it&kind=asr&tlang=zh-Hans', kind: SubtitleKind.translated);
+    final cues = WebVtt.cues(await File(await files.pathFor(option)).readAsString());
+    // YouTube's own translation is not asked for, the sentence goes whole.
+    expect(asked.map((u) => u.queryParameters.containsKey('tlang')), [false]);
+    expect(translator.asked.single.split('\n'), ['ma Kennedy non ci crede e sospetta che stiano sviluppando armi.', 'Ok, finita la chicca.']);
+    expect([for (final c in cues) WebVtt.startOf(c.timing).inSeconds], [0, 4, 8]);
+    expect([for (final c in cues) c.text].join(' '), 'MA KENNEDY NON CI CREDE E SOSPETTA CHE STIANO SVILUPPANDO ARMI. OK, FINITA LA CHICCA.');
   });
 
   test('reads when a cue starts', () {

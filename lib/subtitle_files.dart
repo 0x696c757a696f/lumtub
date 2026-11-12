@@ -77,7 +77,10 @@ class SubtitleFiles {
   }
 
   (String, Translator?) _keyOf(SubtitleOption option) {
-    final translator = _sourceOf(option) != null && byTranslator() ? _translator() : null;
+    final source = _sourceOf(option);
+    // YouTube translates automatic captions fragment by fragment, words of
+    // one sentence apart; here they are translated whole sentences at a time.
+    final translator = source != null && (byTranslator() || Uri.parse(source.url).queryParameters['kind'] == 'asr') ? _translator() : null;
     return (translator == null ? option.url : '${option.url}\u0000${identityHashCode(translator)}', translator);
   }
 
@@ -182,9 +185,12 @@ class SubtitleFiles {
   /// shown. [rest] is null when the text is all there.
   Future<({String text, Future<String?>? rest})> _translate(String vtt, String tlang, Translator translator, String key, Future<bool> Function(String text) save) async {
     // Whole sentences, not the fragments captions show, so each is
-    // translated with all its words and never split between two requests.
-    final cues = WebVtt.sentences(WebVtt.cues(vtt));
-    if (cues.isEmpty) return (text: vtt, rest: null);
+    // translated with all its words and never split between two requests;
+    // each translation is then shared out over its fragments' times.
+    final fragments = WebVtt.cues(vtt);
+    if (fragments.isEmpty) return (text: vtt, rest: null);
+    final spans = WebVtt.sentenceSpans(fragments, maxLength: sentenceTime, maxWidth: sentenceWidth);
+    final cues = [for (final (from, to) in spans) (timing: '${WebVtt._stamp(WebVtt.startOf(fragments[from].timing))} --> ${WebVtt._stamp(WebVtt.endOf(fragments[to - 1].timing))}', text: [for (final f in fragments.sublist(from, to)) f.text].reduce(WebVtt._join))];
     final target = TranslationLanguage.all.where((l) => l.youtube == tlang).firstOrNull?.code ?? tlang;
     final chunkLength = chunkLengthOf(translator);
     // Line groups of one request each, so a reply that drops the line break
@@ -241,7 +247,9 @@ class SubtitleFiles {
     String write() => WebVtt.write([
           for (final (i, (start, end)) in groups.indexed)
             if (translated[i] case final lines?)
-              for (var c = start; c < end; c++) (timing: cues[c].timing, text: lines[c - start].trim()),
+              for (var c = start; c < end; c++)
+                for (final (k, piece) in WebVtt.splitLike(lines[c - start].trim(), [for (final f in fragments.sublist(spans[c].$1, spans[c].$2)) f.text]).indexed)
+                  if (piece.isNotEmpty) (timing: fragments[spans[c].$1 + k].timing, text: piece),
         ]);
 
     // Enough to start with: the piece playing now and the next few.
@@ -287,6 +295,10 @@ class SubtitleFiles {
 
   /// How many sentences before a request AI is shown.
   static const contextSentences = 3;
+
+  /// How long and how wide a sentence sent for translation may grow.
+  static const sentenceTime = Duration(seconds: 30);
+  static const sentenceWidth = 400;
 
   static AiTranslator? _aiOf(Translator translator) => switch (translator) {
         AiTranslator() => translator.contextLines > 0 ? translator : null,
@@ -351,9 +363,27 @@ class WebVtt {
     Duration gap = const Duration(milliseconds: 1200),
     Duration maxLength = const Duration(seconds: 7),
     int maxWidth = 90,
+  }) =>
+      [
+        for (final (i, j) in sentenceSpans(cues, gap: gap, maxLength: maxLength, maxWidth: maxWidth))
+          j == i + 1
+              ? cues[i]
+              : (
+                  timing: '${_stamp(startOf(cues[i].timing))} --> ${_stamp(endOf(cues[j - 1].timing))}',
+                  text: [for (final c in cues.sublist(i, j)) c.text].reduce(_join),
+                ),
+      ];
+
+  /// Where the sentences of [sentences] start and end in [cues], as
+  /// (first cue, cue after the last).
+  static List<(int, int)> sentenceSpans(
+    List<({String timing, String text})> cues, {
+    Duration gap = const Duration(milliseconds: 1200),
+    Duration maxLength = const Duration(seconds: 7),
+    int maxWidth = 90,
   }) {
     int width(String text) => text.length + _cjk.allMatches(text).length;
-    final out = <({String timing, String text})>[];
+    final out = <(int, int)>[];
     for (var i = 0; i < cues.length;) {
       final start = startOf(cues[i].timing);
       var end = endOf(cues[i].timing);
@@ -368,9 +398,58 @@ class WebVtt {
         end = nextEnd;
         j++;
       }
-      out.add(j == i + 1 ? cues[i] : (timing: '${_stamp(start)} --> ${_stamp(end)}', text: text));
+      out.add((i, j));
       i = j;
     }
+    return out;
+  }
+
+  static final _clauseEnd = RegExp(r'[.!?;:,。！？；：，、…)）」』"”]');
+
+  /// [text], a translation of [parts] read as one sentence, cut into as
+  /// many pieces, each about as long, against the whole, as its part is:
+  /// at a punctuation mark near there if there is one, else between words,
+  /// else (CJK) between characters.
+  static List<String> splitLike(String text, List<String> parts) {
+    if (parts.length <= 1) return [text];
+    final weights = [for (final p in parts) p.length + _cjk.allMatches(p).length];
+    final total = weights.fold(0, (a, b) => a + b);
+    if (total == 0 || text.isEmpty) return [for (final _ in parts) text];
+    // Text written with spaces is cut only between words.
+    final spaced = _cjk.allMatches(text).length * 2 < text.length;
+    final window = (text.length / (parts.length * 3)).ceil();
+    final cuts = <int>[];
+    var done = 0;
+    var last = 0;
+    for (var k = 0; k < parts.length - 1; k++) {
+      done += weights[k];
+      final aim = (text.length * done / total).round().clamp(last, text.length);
+      int? best;
+      bool better(int at, int? than) => than == null || (at - aim).abs() < (than - aim).abs();
+      // A punctuation mark first, then a space; the cut goes after either.
+      for (var at = (aim - window).clamp(last, text.length); at <= (aim + window).clamp(last, text.length); at++) {
+        if (at > 0 && at < text.length && _clauseEnd.hasMatch(text[at - 1]) && (!spaced || text[at] == ' ') && better(at, best)) best = at;
+      }
+      if (best == null && spaced) {
+        for (var at = last + 1; at < text.length; at++) {
+          if (text[at] == ' ' && better(at, best)) best = at;
+        }
+      }
+      if (best == null && spaced) return [for (final _ in parts) text];
+      var cut = best ?? aim;
+      // Never inside a surrogate pair.
+      if (cut > 0 && cut < text.length && text.codeUnitAt(cut) & 0xFC00 == 0xDC00) cut++;
+      cuts.add(cut);
+      last = cut;
+    }
+    final out = <String>[];
+    var from = 0;
+    for (final cut in [...cuts, text.length]) {
+      out.add(text.substring(from, cut).trim());
+      from = cut;
+    }
+    // Too short to share out: every fragment shows the whole sentence.
+    if (out.any((piece) => piece.isEmpty)) return [for (final _ in parts) text];
     return out;
   }
 

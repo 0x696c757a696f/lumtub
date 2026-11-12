@@ -36,7 +36,6 @@ jobs:
   #   which keeps main's caches fresh for pull requests.
   reuse:
     name: Reuse an earlier build
-    if: github.event_name == 'push' || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -44,8 +43,27 @@ jobs:
     outputs:
       run: ${{ steps.find.outputs.run }}
     steps:
+      # One full build at a time: a run waits until the Build runs started
+      # before it have finished (each waits only for older runs, so two never
+      # wait for each other).
+      - name: Wait for earlier builds
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          created=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq .created_at)
+          deadline=$(( $(date +%s) + 5 * 60 * 60 ))
+          while :; do
+            earlier=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/build.yml/runs?per_page=50" \
+              --jq "[.workflow_runs[] | select(.status != \"completed\" and .id != $GITHUB_RUN_ID and .created_at < \"$created\") | .html_url] | .[]")
+            [[ -n "$earlier" && $(date +%s) -lt $deadline ]] || break
+            echo "Waiting for:"; echo "$earlier"
+            sleep 60
+          done
+
       - name: Find a finished build of these files
         id: find
+        if: github.event_name == 'push' || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}

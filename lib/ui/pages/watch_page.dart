@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemChrome, SystemUiMode;
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../window_chrome.dart';
@@ -59,7 +60,7 @@ class WatchPage extends StatefulWidget {
   State<WatchPage> createState() => _WatchPageState();
 }
 
-class _WatchPageState extends State<WatchPage> {
+class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
   static const _sidePanelWidth = 400.0;
   final _video = GlobalKey<VideoState>();
   String? _fullscreenFor;
@@ -68,6 +69,7 @@ class _WatchPageState extends State<WatchPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final player = widget.controller.player;
     _playing = player?.stream.playing.listen(_autoLights);
     // The shell above is building now, so its 关灯 layer changes after.
@@ -76,6 +78,7 @@ class _WatchPageState extends State<WatchPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     unawaited(_playing?.cancel());
     subtitleListBeside = false;
     super.dispose();
@@ -84,6 +87,37 @@ class _WatchPageState extends State<WatchPage> {
   /// 播放时自动关灯: dark while the video plays, lit while it is paused.
   void _autoLights(bool playing) {
     if (mounted && widget.controller.preferences.autoLightsOff) lightsOff.value = playing;
+  }
+
+  /// Whether full screen came from turning the phone sideways, so turning
+  /// it back leaves it, as phone video apps do. Full screen from the button
+  /// holds the screen sideways instead.
+  bool _byRotation = false;
+  /// Left full screen while sideways: it is not entered again until the
+  /// phone has been upright once.
+  bool _waitUpright = false;
+
+  @override
+  void didChangeMetrics() {
+    final view = View.maybeOf(context);
+    final state = _video.currentState;
+    if (!touchFirst || view == null || state == null || !state.mounted) return;
+    final size = view.physicalSize / view.devicePixelRatio;
+    if (size.shortestSide >= 600 || size.isEmpty) return;
+    final sideways = size.width > size.height;
+    if (!sideways) _waitUpright = false;
+    if (sideways && !_waitUpright && !state.isFullscreen() && widget.controller.playing != null) {
+      _byRotation = true;
+      unawaited(state.enterFullscreen());
+    } else if (!sideways && _byRotation && state.isFullscreen()) {
+      unawaited(state.exitFullscreen());
+    }
+  }
+
+  void _leftFullscreen() {
+    _byRotation = false;
+    final view = View.maybeOf(context);
+    _waitUpright = view != null && view.physicalSize.width > view.physicalSize.height;
   }
 
   /// Enters fullscreen once per video when 自动全屏 is on.
@@ -127,7 +161,9 @@ class _WatchPageState extends State<WatchPage> {
       child: Focus(
         autofocus: true,
         child: ListenableBuilder(listenable: Listenable.merge([theaterMode, theaterChatOpen]), builder: (context, _) => LayoutBuilder(builder: (context, outer) {
-          final theater = theaterMode.value;
+          // A phone lays the page out as 剧场模式 does: the player edge to
+          // edge at the top, nothing above it.
+          final theater = theaterMode.value || isPhone(context);
           final item = controller.playing;
           final hasChat = item?.isLive == true || item?.liveStatus == 'was_live';
           // 剧场模式 in a wide window keeps comments, up next and the chat
@@ -158,7 +194,7 @@ class _WatchPageState extends State<WatchPage> {
           final replayChat = hasChat ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide && !panelOpen) : null;
           final main = <Widget>[
             if (!theater) _BackRow(onBack: controller.goBack),
-            Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
+            Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, byRotation: () => _byRotation, onExit: _leftFullscreen))),
             CastBar(controller: controller),
             if (!theater) const SizedBox(height: 12),
             _Toolbar(controller: controller),
@@ -181,7 +217,7 @@ class _WatchPageState extends State<WatchPage> {
             ];
             final page = CustomScrollView(slivers: [
               // In 剧场模式 the player goes edge to edge.
-              if (theater) SliverToBoxAdapter(child: Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video)))),
+              if (theater) SliverToBoxAdapter(child: Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, byRotation: () => _byRotation, onExit: _leftFullscreen)))),
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(margin, theater ? 12 : 0, margin, 0),
                 sliver: SliverList.list(children: theater ? main.skip(1).toList() : main),
@@ -302,12 +338,18 @@ class _Toolbar extends StatelessWidget {
     final library = controller.library;
     final favorite = library?.isFavorite(item.id) ?? false;
     final later = library?.isWatchLater(item.id) ?? false;
+    final phone = isPhone(context);
+    // A phone's buttons go in one row that scrolls sideways, each with its
+    // name, as phone video apps lay them out.
+    Widget layout(List<Widget> children) => phone
+        ? SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: [for (final (i, c) in children.indexed) Padding(padding: EdgeInsetsDirectional.only(start: i == 0 ? 0 : 8), child: c)]),
+          )
+        : Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: children);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
+      layout(
+        [
           PopupMenuButton<PlayOrder>(
             tooltip: tr('Playback order'),
             initialValue: settings.playOrder,
@@ -319,36 +361,36 @@ class _Toolbar extends StatelessWidget {
           ),
           _RatingButtons(controller: controller),
           if (library != null) ...[
-            IconButton(
+            _ActionButton(
               tooltip: favorite ? tr('Remove from favorites') : tr('Favorites'),
-              isSelected: favorite,
-              icon: Icon(AppIcons.heart),
-              selectedIcon: Icon(AppIcons.heartFill, color: context.colors.primary),
+              label: tr('Favorites'),
+              icon: Icon(favorite ? AppIcons.heartFill : AppIcons.heart, color: favorite ? context.colors.primary : null),
               onPressed: () => library.toggleFavorite(item),
             ),
-            IconButton(
+            _ActionButton(
               tooltip: later ? tr('Remove from Watch later') : tr('Watch later'),
+              label: tr('Watch later'),
               icon: Icon(later ? AppIcons.clockFill : AppIcons.clock, color: later ? context.colors.primary : null),
               onPressed: () => library.toggleWatchLater(item),
             ),
-            IconButton(tooltip: tr('Add to playlist'), icon: Icon(AppIcons.listPlus), onPressed: () => showAddToPlaylist(context, controller, item)),
+            _ActionButton(tooltip: tr('Add to playlist'), icon: Icon(AppIcons.listPlus), onPressed: () => showAddToPlaylist(context, controller, item)),
             if (controller.account?.signedIn ?? false)
-              IconButton(tooltip: tr('Save to YouTube playlist'), icon: Icon(AppIcons.filmReel), onPressed: () => showSaveToYoutube(context, controller, item)),
+              _ActionButton(tooltip: tr('Save to YouTube playlist'), label: tr('Save'), icon: Icon(AppIcons.filmReel), onPressed: () => showSaveToYoutube(context, controller, item)),
           ],
           if (controller.downloads != null && !item.isLive)
-            IconButton(tooltip: tr('Downloads'), icon: Icon(AppIcons.downloadSimple), onPressed: () => showDownloadChoice(context, controller, item)),
+            _ActionButton(tooltip: tr('Downloads'), icon: Icon(AppIcons.downloadSimple), onPressed: () => showDownloadChoice(context, controller, item)),
           if (item.isLive && (controller.downloads?.canRecord ?? false))
-            IconButton(tooltip: tr('Record the live stream'), icon: Icon(AppIcons.radioButton), onPressed: () => showDownloadChoice(context, controller, item)),
+            _ActionButton(tooltip: tr('Record the live stream'), icon: Icon(AppIcons.radioButton), onPressed: () => showDownloadChoice(context, controller, item)),
           if (!item.isLive)
-            IconButton(tooltip: tr('AI summary'), icon: Icon(AppIcons.sparkle), onPressed: () => showVideoSummary(context, controller)),
-          IconButton(tooltip: tr('Copy link'), icon: Icon(AppIcons.link), onPressed: () => copyText(context, item.url, tr('Link copied'))),
+            _ActionButton(tooltip: tr('AI summary'), icon: Icon(AppIcons.sparkle), onPressed: () => showVideoSummary(context, controller)),
+          _ActionButton(tooltip: tr('Copy link'), icon: Icon(AppIcons.link), onPressed: () => copyText(context, item.url, tr('Link copied'))),
           if (!item.isLive && controller.player != null)
             StreamBuilder<bool>(
               stream: controller.player!.stream.position.map((p) => p.inSeconds > 0).distinct(),
               initialData: controller.player!.state.position.inSeconds > 0,
               builder: (context, started) => started.data != true
                   ? const SizedBox.shrink()
-                  : IconButton(
+                  : _ActionButton(
                       tooltip: tr('Copy link at current time'),
                       icon: Icon(AppIcons.timer),
                       onPressed: () {
@@ -357,7 +399,7 @@ class _Toolbar extends StatelessWidget {
                       },
                     ),
             ),
-          IconButton(tooltip: tr('Open in browser'), icon: Icon(AppIcons.arrowSquareOut), onPressed: () => openExternal(item.url)),
+          _ActionButton(tooltip: tr('Open in browser'), icon: Icon(AppIcons.arrowSquareOut), onPressed: () => openExternal(item.url)),
           if (!Platform.isAndroid)
             IconButton(tooltip: tr('Keyboard shortcuts'), icon: Icon(AppIcons.keyboard), onPressed: () => showShortcutHelp(context, controller.preferences)),
         ],
@@ -368,6 +410,27 @@ class _Toolbar extends StatelessWidget {
           child: Text(tr('Decoding: {0} · {1}', [controller.currentCodec, controller.currentHwdec]), style: TextStyle(fontSize: 12, color: context.colors.outline)),
         ),
     ]);
+  }
+}
+
+/// A button of the watch page's row: an icon with a tooltip, or on a phone
+/// a pill with its [label] too.
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({required this.tooltip, required this.icon, required this.onPressed, String? label}) : label = label ?? tooltip;
+  final String tooltip;
+  final String label;
+  final Widget icon;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isPhone(context)) return IconButton(tooltip: tooltip, icon: icon, onPressed: onPressed);
+    return TextButton.icon(
+      style: TextButton.styleFrom(foregroundColor: context.colors.onSurface, backgroundColor: context.colors.surfaceContainerHighest, padding: const EdgeInsets.symmetric(horizontal: 12)),
+      onPressed: onPressed,
+      icon: IconTheme.merge(data: const IconThemeData(size: 20), child: icon),
+      label: Text(label),
+    );
   }
 }
 
@@ -386,9 +449,12 @@ class _BackRow extends StatelessWidget {
 }
 
 class _Player extends StatelessWidget {
-  const _Player({required this.controller, required this.videoKey});
+  const _Player({required this.controller, required this.videoKey, required this.byRotation, required this.onExit});
   final AppController controller;
   final GlobalKey<VideoState> videoKey;
+  /// Whether the phone entering full screen was turned sideways.
+  final bool Function() byRotation;
+  final VoidCallback onExit;
 
   @override
   Widget build(BuildContext context) {
@@ -451,10 +517,14 @@ class _Player extends StatelessWidget {
                   subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label),
                   onEnterFullscreen: () {
                     WindowChrome.fullscreen.value = true;
+                    // Turned sideways: the bars hide, and the screen still
+                    // turns with the phone, so turning it back leaves.
+                    if (byRotation()) return SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky, overlays: []);
                     return defaultEnterNativeFullscreen();
                   },
                   onExitFullscreen: () {
                     WindowChrome.fullscreen.value = false;
+                    onExit();
                     return defaultExitNativeFullscreen();
                   },
                 ),

@@ -241,4 +241,9 @@ Color chipForeground(BuildContext context, bool selected) {
 /// Phones, tablets and TVs: no keyboard shortcuts or right-click to mention.
 final bool touchFirst = Platform.isAndroid || Platform.isIOS;
 
+/// A phone held either way: a touch screen whose short side is under a
+/// tablet's. Its watch page is laid out as phone apps do: the player at
+/// the top edge, full screen when turned sideways.
+bool isPhone(BuildContext context) => touchFirst && MediaQuery.sizeOf(context).shortestSide < 600;
+
 String keyNames(String text) => Platform.isMacOS ? text.replaceAll('Ctrl + ', '⌘ + ').replaceAll('Ctrl+', '⌘').replaceAll('Alt + ', '⌥ + ').replaceAll('Alt+', '⌥') : text;

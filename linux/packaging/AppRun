@@ -35,6 +35,16 @@ for dir in "$here"/usr/bin/lib/fallback/*/; do
   fi
   extra="$extra${extra:+:}${dir%/}"
 done
+# libmpv needs libwayland-client 1.23 or newer (Ubuntu 22.04 has 1.20,
+# Debian 12 1.21): ours replaces an older system copy for the whole process,
+# GTK's use included, which libwayland's stable interface allows.
+if [ -d "$here/usr/bin/lib/wayland" ]; then
+  newer=
+  for path in $(printf '%s\n' "$known" | awk '/libwayland-client\.so\.0 /{print $NF}'); do
+    grep -qa wl_display_create_queue_with_name "$path" 2>/dev/null && newer=1
+  done
+  [ -n "$newer" ] || extra="$extra${extra:+:}$here/usr/bin/lib/wayland"
+fi
 if [ -n "$extra" ]; then
   LD_LIBRARY_PATH="$extra${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
   export LD_LIBRARY_PATH

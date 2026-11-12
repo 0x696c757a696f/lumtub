@@ -64,6 +64,14 @@ for path in "$mpv" $(needed "$mpv") $(needed "$core"); do
 done
 echo "Bundled $count libraries with $(basename "$mpv"), and $spare as a fallback."
 
+# A libwayland-client newer than the system's, when libmpv came with one
+# (see AppRun).
+if [[ -e "$(dirname "$mpv")/libwayland-client.so.0" ]]; then
+  mkdir -p "$lib/wayland"
+  cp -L "$(dirname "$mpv")/libwayland-client.so.0" "$lib/wayland/"
+  echo "Carrying libwayland-client from libmpv's package for older systems."
+fi
+
 # Bundled libraries and the plugins find each other next to themselves.
 # libapp.so is the compiled Dart program and is left as Flutter built it.
 for file in "$lib"/*.so*; do

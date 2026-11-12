@@ -154,6 +154,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _focusSearch() {
+    if (_tvRail) return _tvSearch();
     _searchFocus.requestFocus();
     _searchText.selection = TextSelection(baseOffset: 0, extentOffset: _searchText.text.length);
   }
@@ -162,6 +163,34 @@ class _AppShellState extends State<AppShell> {
     if (value.trim().isEmpty) return;
     _searchFocus.unfocus();
     unawaited(_controller.search(value));
+  }
+
+  /// A TV has no bar across the top, as TV video apps have none: search,
+  /// settings and the account are the rail's first and last items, so the
+  /// page gets the whole height. Set while the plain rail is shown.
+  bool _tvRail = false;
+
+  /// The search field over the page, as a TV app opens it from its rail.
+  void _tvSearch() {
+    _searchText.selection = TextSelection(baseOffset: 0, extentOffset: _searchText.text.length);
+    unawaited(showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        alignment: Alignment.topCenter,
+        insetPadding: const EdgeInsets.fromLTRB(96, 32, 96, 32),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: SizedBox(height: 44, child: _SearchField(app: _controller, controller: _searchText, focusNode: _searchFocus, enabled: _controller.ready, autofocus: true, onSubmit: (value) {
+              if (value.trim().isEmpty) return;
+              Navigator.of(context).pop();
+              _submitSearch(value);
+            })),
+          ),
+        ),
+      ),
+    ));
   }
 
   void _select(int index) {
@@ -409,6 +438,7 @@ class _AppShellState extends State<AppShell> {
                     onSelected: _selectBottom,
                   );
               final watchingOnPhone = _controller.onWatchPage && watchesLikePhone(context);
+              _tvRail = Device.tv && rail && !(skin?.drawsRail ?? false);
               final scaffold = Scaffold(
                 // The page under the bars is veiled on its own (_veiled).
                 backgroundColor: Colors.transparent,
@@ -417,7 +447,7 @@ class _AppShellState extends State<AppShell> {
                 body: SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [
                   // A phone's watch page starts with the player, as phone
                   // apps do; back is the player's arrow or the system's.
-                  if (!watchingOnPhone) _TopBar(
+                  if (!watchingOnPhone && !_tvRail) _TopBar(
                     wide: wide,
                     controller: _controller,
                     searchText: _searchText,
@@ -438,10 +468,22 @@ class _AppShellState extends State<AppShell> {
                         NavigationRail(
                           backgroundColor: context.tones.chrome,
                           selectedIndex: _selectedIndex,
-                          labelType: NavigationRailLabelType.all,
+                          // A TV's few hundred pixels of height hold the
+                          // pages, search and settings with only the chosen
+                          // page named, as TV apps' rails do.
+                          labelType: _tvRail ? NavigationRailLabelType.selected : NavigationRailLabelType.all,
                           minWidth: 76,
                           groupAlignment: -1,
                           onDestinationSelected: _select,
+                          leading: _tvRail ? IconButton(tooltip: tr('Search'), onPressed: _tvSearch, icon: Icon(AppIcons.magnifyingGlass)) : null,
+                          // The account is under Settings.
+                          trailing: _tvRail ? IconButton(
+                            tooltip: tr('Settings'),
+                            isSelected: _controller.mode == PageMode.settings && !_controller.onWatchPage,
+                            onPressed: () => openSettings(context, _controller),
+                            icon: Icon(AppIcons.gear),
+                            selectedIcon: const Icon(AppIcons.gearFill),
+                          ) : null,
                           destinations: [
                             for (final d in _destinations)
                               NavigationRailDestination(icon: Icon(d.$2), selectedIcon: Icon(d.$3), label: Text(d.$4)),
@@ -656,7 +698,8 @@ class _TopBar extends StatelessWidget {
 }
 
 class _SearchField extends StatefulWidget {
-  const _SearchField({required this.app, required this.controller, required this.focusNode, required this.enabled, required this.onSubmit});
+  const _SearchField({required this.app, required this.controller, required this.focusNode, required this.enabled, required this.onSubmit, this.autofocus = false});
+  final bool autofocus;
   final AppController app;
   final TextEditingController controller;
   final FocusNode focusNode;
@@ -760,6 +803,7 @@ class _SearchFieldState extends State<_SearchField> {
             fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) => TextField(
               controller: controller,
               focusNode: focusNode,
+              autofocus: widget.autofocus,
               enabled: widget.enabled,
               onSubmitted: (text) {
                 if (_picking) {

@@ -28,7 +28,9 @@ import '../feed_reason.dart';
 /// Height of the text below a card's thumbnail: two title lines and one
 /// line with the reason, the channel and the menu. The views and age sit
 /// on the thumbnail, as Bilibili shows them.
-double get _cardInfoHeight => compactCards ? 70.0 : 76.0;
+/// A TV's text is 1.15 times larger (main.dart), so two title lines need
+/// the room too.
+double get _cardInfoHeight => (compactCards ? 70.0 : 76.0) * (Device.tv ? 1.15 : 1);
 
 /// The gap between cards; tighter in compact mode, where cards sit on a
 /// surface of their own.

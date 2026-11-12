@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../device.dart';
 import '../../app/app_controller.dart';
 import '../../app/posts_loader.dart';
 import '../../app/video_list_loader.dart';
@@ -83,6 +84,7 @@ class _ChannelPageState extends State<ChannelPage> {
     }
     final tab = controller.channelTab;
     final searching = controller.channelQuery != null;
+    final sortable = !searching && posts == null && (tab == ChannelTab.videos || tab == ChannelTab.shorts || tab == ChannelTab.live);
     return NearEndListener(
       onNearEnd: () {
         loader?.loadMore();
@@ -130,15 +132,22 @@ class _ChannelPageState extends State<ChannelPage> {
                         onSelected: (_) => controller.searchChannel(controller.channelQuery!, within: value),
                       ),
                   ])
-                : Wrap(spacing: 8, runSpacing: 8, children: [
+                : FilterFlow(children: [
                     for (final value in ChannelTab.values)
                       ChoiceChip(label: Text(value.label), selected: tab == value, onSelected: (_) => controller.setChannelTab(value)),
+                    // A TV keeps the order on the same line, so the videos
+                    // start higher.
+                    if (Device.tv && sortable) ...[
+                      const SizedBox(width: 8),
+                      for (final value in ChannelSort.values)
+                        FilterChip(label: Text(value.label), showCheckmark: false, selected: controller.channelSort == value, onSelected: (_) => controller.setChannelSort(value)),
+                    ],
                   ])),
             const SizedBox(width: 12),
             SizedBox(width: math.min(240, MediaQuery.sizeOf(context).width * 0.4), child: _ChannelSearchField(key: ValueKey((channel.id, controller.channelQuery == null)), controller: controller)),
           ]),
         )),
-        if (!searching && posts == null && (tab == ChannelTab.videos || tab == ChannelTab.shorts || tab == ChannelTab.live))
+        if (sortable && !Device.tv)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
             child: Wrap(spacing: 8, runSpacing: 8, children: [

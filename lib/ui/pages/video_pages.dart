@@ -259,7 +259,7 @@ class SearchResultsPage extends StatelessWidget {
         )),
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
-          child: Wrap(spacing: 8, runSpacing: 8, children: [
+          child: FilterFlow(children: [
             for (final value in SearchFilter.values)
               ChoiceChip(label: Text(value.label), selected: filter == value, onSelected: (_) => controller.setSearchFilter(value)),
             const SizedBox(width: 8),

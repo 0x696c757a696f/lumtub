@@ -121,14 +121,15 @@ class PageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final heading = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
-      if (subtitle != null) ...[
+      // A TV's few hundred pixels of height go to the videos.
+      if (subtitle != null && !Device.tv) ...[
         const SizedBox(height: 2),
         Text(subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.bodyMedium?.copyWith(color: context.colors.onSurfaceVariant)),
       ],
     ]);
     final trailing = this.trailing;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, 16),
+      padding: EdgeInsets.fromLTRB(AppStyle.pagePadding, Device.tv ? 0 : 8, AppStyle.pagePadding, Device.tv ? 8 : 16),
       child: trailing == null
           ? Row(children: [Expanded(child: heading)])
           : LayoutBuilder(
@@ -142,6 +143,25 @@ class PageHeader extends StatelessWidget {
             ),
     );
   }
+}
+
+/// Chips and filters: wrapped over as many lines as they need, or on a TV
+/// one line that scrolls sideways as the remote moves along it, as TV apps
+/// lay out their filters, so the videos start higher.
+class FilterFlow extends StatelessWidget {
+  const FilterFlow({super.key, required this.children, this.spacing = 8});
+  final List<Widget> children;
+  final double spacing;
+
+  @override
+  Widget build(BuildContext context) => Device.tv
+      ? SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(children: [
+            for (final (i, child) in children.indexed) Padding(padding: EdgeInsetsDirectional.only(end: i == children.length - 1 ? 0 : spacing), child: child),
+          ]),
+        )
+      : Wrap(spacing: spacing, runSpacing: spacing, crossAxisAlignment: WrapCrossAlignment.center, children: children);
 }
 
 String twoDigits(int n) => n.toString().padLeft(2, '0');

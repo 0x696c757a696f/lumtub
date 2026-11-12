@@ -464,9 +464,11 @@ extension PlaybackEvents on AppController {
     unawaited(player.stop().then((_) => releaseMemory()));
   }
 
-  /// Hands memory freed by closed videos back to the system.
+  /// Hands memory freed by closed videos back to the system, after letting
+  /// go of the yt-dlp answers no video is playing from.
   void releaseMemory() {
     final before = ProcessInfo.currentRss;
+    _repository?.streams.trim();
     releaseFreedMemory();
     logDebug(() => 'Released idle memory: ${before >> 20} MB → ${ProcessInfo.currentRss >> 20} MB');
   }

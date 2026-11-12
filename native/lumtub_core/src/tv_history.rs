@@ -47,6 +47,29 @@ fn cpn() -> String {
         .collect()
 }
 
+/// The `/player` request, body and headers, the TV client sends signed out:
+/// what a card's length, views and day are asked with when the quick start's
+/// client gets no answer.
+pub fn anonymous_player(video_id: &str) -> Value {
+    // As yt-dlp's `tv` client asks, which plays signed out.
+    let agent = crate::tv_account::TV_USER_AGENT;
+    json!({
+        "body": {
+            "context": {"client": {"clientName": "TVHTML5", "clientVersion": crate::tv_account::TV_CLIENT_VERSION, "userAgent": agent, "hl": "en", "timeZone": "UTC", "utcOffsetMinutes": 0}},
+            "videoId": video_id,
+            "playbackContext": {"contentPlaybackContext": {"html5Preference": "HTML5_PREF_WANTS"}},
+            "contentCheckOk": true,
+            "racyCheckOk": true
+        },
+        "headers": {
+            "X-YouTube-Client-Name": "7",
+            "X-YouTube-Client-Version": crate::tv_account::TV_CLIENT_VERSION,
+            "User-Agent": agent,
+            "Origin": "https://www.youtube.com"
+        }
+    })
+}
+
 /// The `player` request body of the older TV client.
 pub fn player_body(video_id: &str, cpn: &str, hl: &str) -> Value {
     json!({

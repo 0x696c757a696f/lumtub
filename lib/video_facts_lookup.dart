@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'app_log.dart';
 import 'models.dart';
 import 'native_core.dart';
 
@@ -187,11 +188,27 @@ class VideoFactsLookup extends ChangeNotifier {
   static final _videoId = RegExp(r'^[A-Za-z0-9_-]{11}$');
 
   /// The facts YouTube's /player gives for [id], asked the way a quick
-  /// start asks.
+  /// start asks, and when that client is refused, the way the signed-out
+  /// TV client asks.
   static Future<VideoFacts?> askYoutube(http.Client client, String id) async {
     final request = NativeCore.instance?.quickRequest(id);
     if (request == null) return null;
     final parts = jsonDecode(request) as Map<String, dynamic>;
+    final first = await _ask(client, parts);
+    final facts = first == null ? null : VideoFacts.ofPlayer(first, DateTime.now());
+    if (facts != null || parts['tv'] is! Map) return facts;
+    final second = await _ask(client, (parts['tv'] as Map).cast<String, dynamic>());
+    final tv = second == null ? null : VideoFacts.ofPlayer(second, DateTime.now());
+    if (!_toldWhy) {
+      _toldWhy = true;
+      logInfo('Video facts of $id: quick start client gave none (${first == null ? 'no answer' : playerWhy(first)}), TV client ${tv != null ? 'did' : 'neither (${second == null ? 'no answer' : playerWhy(second)})'}');
+    }
+    return tv;
+  }
+
+  static var _toldWhy = false;
+
+  static Future<String?> _ask(http.Client client, Map<String, dynamic> parts) async {
     final response = await client
         .post(
           Uri.parse('https://www.youtube.com/youtubei/v1/player?prettyPrint=false'),
@@ -199,8 +216,17 @@ class VideoFactsLookup extends ChangeNotifier {
           body: jsonEncode(parts['body']),
         )
         .timeout(const Duration(seconds: 8));
-    if (response.statusCode != 200) return null;
-    return VideoFacts.ofPlayer(utf8.decode(response.bodyBytes, allowMalformed: true), DateTime.now());
+    if (response.statusCode != 200) return 'HTTP ${response.statusCode}';
+    return utf8.decode(response.bodyBytes, allowMalformed: true);
+  }
+
+  static final _status = RegExp(r'"playabilityStatus"\s*:\s*\{\s*"status"\s*:\s*"([A-Z_]+)"(?:\s*,\s*"reason"\s*:\s*"([^"]{0,120}))?');
+
+  /// Why a /player answer had nothing, in a few words for the log.
+  static String playerWhy(String answer) {
+    if (answer.startsWith('HTTP ')) return answer;
+    final m = _status.firstMatch(answer);
+    return m == null ? 'no playability status' : [m.group(1), if (m.group(2) != null) m.group(2)].join(': ');
   }
 
   @visibleForTesting

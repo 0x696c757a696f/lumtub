@@ -20,6 +20,8 @@ void main() {
     expect(facts.published, DateTime.parse('2026-10-30T05:00:00-07:00'));
     expect(VideoFacts.ofPlayer('{"videoDetails":{"lengthSeconds":"0","viewCount":"9"}}', DateTime.now())!.length, isNull);
     expect(VideoFacts.ofPlayer('{"playabilityStatus":{"status":"ERROR"}}', DateTime.now()), isNull);
+    expect(VideoFactsLookup.playerWhy('{"responseContext":{},"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"Sign in to confirm you’re not a bot"}}'), 'LOGIN_REQUIRED: Sign in to confirm you’re not a bot');
+    expect(VideoFactsLookup.playerWhy('HTTP 403'), 'HTTP 403');
   });
 
   test('a live the feed did not mark becomes one, and a live just ended takes its length from its streams', () async {

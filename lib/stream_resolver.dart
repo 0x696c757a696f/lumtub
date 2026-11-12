@@ -14,6 +14,7 @@ import 'player_settings.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
 import 'video_codec.dart';
+import 'video_facts_lookup.dart';
 
 /// What yt-dlp found for one video: every format, the ones picked for
 /// [format], and the metadata the watch page shows. What the formats offer
@@ -229,9 +230,10 @@ class StreamResolver {
         logInfo('Quick start of $videoId: /player answered HTTP ${response.statusCode}');
         return null;
       }
-      final text = core.quickInfo(utf8.decode(response.bodyBytes, allowMalformed: true), policy);
+      final answer = utf8.decode(response.bodyBytes, allowMalformed: true);
+      final text = core.quickInfo(answer, policy);
       if (text == null) {
-        logInfo('Quick start of $videoId: left to yt-dlp');
+        logInfo('Quick start of $videoId: left to yt-dlp (${VideoFactsLookup.playerWhy(answer)})');
         return null;
       }
       final info = jsonDecode(text) as Map<String, dynamic>;

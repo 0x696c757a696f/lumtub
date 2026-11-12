@@ -27,7 +27,7 @@ const CLIENT_SECRET: &str = "SboVhoG9s0rNafixCSGGKXAT";
 const SCOPE: &str = "http://gdata.youtube.com https://www.googleapis.com/auth/youtube-paid-content";
 pub const TV_CLIENT_NAME: &str = "TVHTML5";
 pub const TV_CLIENT_VERSION: &str = "7.20260901.15.00";
-const TV_USER_AGENT: &str = "Mozilla/5.0 (ChromiumStylePlatform) Cobalt/25.lts.30.1034943-gold (unlike Gecko), Unknown_TV_Unknown_0/Unknown (Unknown, Unknown)";
+pub const TV_USER_AGENT: &str = "Mozilla/5.0 (ChromiumStylePlatform) Cobalt/25.lts.30.1034943-gold (unlike Gecko), Unknown_TV_Unknown_0/Unknown (Unknown, Unknown)";
 
 #[derive(Default)]
 struct Account {

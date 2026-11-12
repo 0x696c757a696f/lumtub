@@ -21,7 +21,7 @@ mixin _ExploreState {
   /// The chosen zone's videos.
   VideoListLoader? explore;
 
-  (ExploreSection, int) _topicBeforeFaith = (ExploreSection.popular, 0);
+  (ExploreSection, int) _topicBeforeTabs = (ExploreSection.popular, 0);
 
   /// Lists of zones shown lately, so going back to one shows it again
   /// instead of searching anew. 全部 is left out, as each visit brings
@@ -163,8 +163,8 @@ extension ExploreActions on AppController {
     _loadExplore();
   }
 
-  /// 视频 or 直播, whichever 宗教信仰 was opened from while its tabs show.
-  ExploreSection get exploreHalf => exploreSection.isFaith ? _topicBeforeFaith.$1 : exploreSection;
+  /// 视频 or 直播, whichever 宗教信仰 or 学术 was opened from while its tabs show.
+  ExploreSection get exploreHalf => exploreSection.tabs != null ? _topicBeforeTabs.$1 : exploreSection;
 
   /// Shows another part, zone, sub-category, mode, period or filter of the
   /// explore page. A new part starts on its first zone, and on its usual
@@ -199,14 +199,14 @@ extension ExploreActions on AppController {
     // goes back to the zone shown before.
     final opens = topics[nextTopic].opens;
     if (opens != null) {
-      if (!exploreSection.isFaith) _topicBeforeFaith = (exploreSection, exploreTopic);
+      if (exploreSection.tabs == null) _topicBeforeTabs = (exploreSection, exploreTopic);
       setExplore(section: opens);
       return;
     }
     final nextSub = sub ?? (newSection || nextTopic != exploreTopic ? 0 : exploreSub);
     final nextLeaf = leaf ?? (newSection || nextTopic != exploreTopic || nextSub != exploreSub ? 0 : exploreLeaf);
     final modes = ExploreMode.of(nextSection);
-    final sameKind = nextSection.isFaith == exploreSection.isFaith && nextSection.isLive == exploreSection.isLive;
+    final sameKind = nextSection.tabs == exploreSection.tabs && nextSection.isLive == exploreSection.isLive;
     final nextMode = mode != null && modes.contains(mode)
         ? mode
         : !newSection || (sameKind && modes.contains(exploreMode))

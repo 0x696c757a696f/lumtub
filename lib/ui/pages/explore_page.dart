@@ -74,9 +74,9 @@ class _ExplorePageState extends State<ExplorePage> {
         key: ValueKey((half, vertical)),
         vertical: vertical,
         topics: topics,
-        selected: section.isFaith ? topics.indexWhere((t) => t.opens != null) : controller.exploreTopic,
+        selected: section.tabs != null ? topics.indexWhere((t) => t.opens?.tabs == section.tabs) : controller.exploreTopic,
         onSelected: (i) {
-          if (section.isFaith && topics[i].opens != null) return;
+          if (section.tabs != null && topics[i].opens?.tabs == section.tabs) return;
           controller.setExplore(section: half, topic: i);
         },
         onAdd: () => _addTopic(context, half),
@@ -127,22 +127,25 @@ class _ExplorePageState extends State<ExplorePage> {
               ButtonSegment(value: ExploreSection.popular, label: Text(ExploreSection.popular.label), icon: const Icon(AppIcons.filmReelFill, size: 18)),
               ButtonSegment(value: ExploreSection.live, label: Text(ExploreSection.live.label), icon: Icon(AppIcons.broadcast, size: 18)),
             ],
-            // 宗教与信仰 shows as part of the half it was opened from.
+            // 宗教与信仰 and 学术 show as part of the half they were opened from.
             selected: {controller.exploreHalf},
             onSelectionChanged: (value) => controller.setExplore(section: value.first),
           ),
         )),
-        if (section.isFaith)
+        if (section.tabs case final tabs?)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(AppStyle.pagePadding - 8, 0, AppStyle.pagePadding, 4),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Padding(
                 padding: const EdgeInsetsDirectional.only(start: 8),
-                child: SegmentedButton<ExploreSection>(
-                  showSelectedIcon: false,
-                  segments: [for (final s in ExploreSection.faithTabs) ButtonSegment(value: s, label: Text(s.label))],
-                  selected: {section},
-                  onSelectionChanged: (value) => controller.setExplore(section: value.first),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SegmentedButton<ExploreSection>(
+                    showSelectedIcon: false,
+                    segments: [for (final s in tabs) ButtonSegment(value: s, label: Text(s.label))],
+                    selected: {section},
+                    onSelectionChanged: (value) => controller.setExplore(section: value.first),
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
@@ -409,7 +412,7 @@ class _AddTopicDialogState extends State<_AddTopicDialog> {
             SegmentedButton<ExploreSection>(
               showSelectedIcon: false,
               segments: [
-                for (final s in widget.section.isFaith ? ExploreSection.faithTabs : const [ExploreSection.popular, ExploreSection.live])
+                for (final s in widget.section.tabs ?? const [ExploreSection.popular, ExploreSection.live])
                   ButtonSegment(value: s, label: Text(s.label)),
               ],
               selected: {_section},

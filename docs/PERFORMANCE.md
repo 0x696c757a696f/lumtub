@@ -39,7 +39,7 @@ already measured. Numbers in **bold** are the current limits in the code.
 | Thumbnail downloads at once 同时下载的缩略图 | **6** |
 | Home feed sources at once 首页推荐同时请求的来源 | **3** |
 | Downloads at once 同时下载 | **2** |
-| Player demuxer cache 播放器缓冲 | **60 s / 150 MiB**, `cache-on-disk=no`; Low resource **64 MiB** |
+| Player demuxer cache 播放器缓冲 | **60 s / 150 MiB**, `cache-on-disk=no`; with the playback strategy 低资源占用优先 **30 s / 64 MiB** |
 | Pending video renders per output 每个画面待渲染帧 | **1**: the newest frame wins 只画最新帧 |
 | Retries after a playback failure 播放失败重试 | **3 per 2 min**, recovery counts only after decoded progress 解码前进才算恢复 |
 | Skin pictures 皮肤图片 | decoded at window size; none in Low resource mode 按窗口尺寸解码；低占用模式不画 |

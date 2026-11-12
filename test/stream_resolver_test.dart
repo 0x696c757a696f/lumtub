@@ -61,6 +61,13 @@ void main() {
     expect(heightLabel(2160, 59.94, 'P'), '2160P60');
   });
 
+  test('a portrait video goes by its width, as YouTube names it', () {
+    expect(heightLabel(1920, 30, 'P', 1080 / 1920), '1080P');
+    expect(heightLabel(1280, 60, 'P', 720 / 1280), '720P60');
+    expect(heightLabel(1918, null, 'p', 1080 / 1918), '1080p');
+    expect(heightLabel(1080, null, 'p', 16 / 9), '1080p');
+  });
+
   test('leaves live and fragmented streams to ytdl_hook', () {
     expect(ResolvedVideo({..._info(), 'is_live': true}, file, 'f').directUrl, isNull);
     final fragmented = _info();

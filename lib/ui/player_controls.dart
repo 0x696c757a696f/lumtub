@@ -876,16 +876,19 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             initialData: _player.state.height,
             builder: (context, _) {
               final height = _player.state.height ?? 0;
+              final width = _player.state.width ?? 0;
+              // Portrait videos are named by their width, as YouTube does.
+              final aspect = width > 0 && height > 0 ? width / height : null;
               final max = _controller.settings.maxHeight;
               final choices = _controller.qualityChoices;
               return _TextMenu<int>(
                 tooltip: tr('Quality'),
-                label: height > 0 ? heightLabel(height, _controller.availableFrameRates[height], 'P') : (max == 0 ? tr('Auto') : heightLabel(max, _controller.availableFrameRates[max], 'P')),
+                label: height > 0 ? heightLabel(height, _controller.availableFrameRates[height], 'P', aspect) : (max == 0 ? tr('Auto') : heightLabel(max, _controller.availableFrameRates[max], 'P', aspect)),
                 // A limit above what this video offers plays its highest.
                 // Lowered for dropped frames, 自动 is not ticked, so
                 // picking it lifts the limit.
                 value: max == 0 && _controller.droppedCap > 0 ? -1 : (choices.contains(max) ? max : height),
-                values: [for (final h in choices) (h, h == 0 ? tr('Auto') : heightLabel(h, _controller.availableFrameRates[h], 'P'))],
+                values: [for (final h in choices) (h, h == 0 ? tr('Auto') : heightLabel(h, _controller.availableFrameRates[h], 'P', aspect))],
                 onSelected: (h) => unawaited(_controller.setMaxHeight(h)),
                 onOpened: _menuOpened,
                 onClosed: _menuClosed,

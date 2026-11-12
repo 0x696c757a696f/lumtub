@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:lumtub/device.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/l10n/l10n.dart';
 import 'package:lumtub/models.dart';
@@ -315,6 +316,37 @@ void main() {
     await tester.pump();
     expect(player.state.playing, before);
     semantics.dispose();
+  });
+
+  testWidgets('a TV remote plays with OK, seeks with left and right and walks the bar with the arrows', (tester) async {
+    Device.tv = true;
+    addTearDown(() => Device.tv = false);
+    await pump(tester);
+    final player0 = FocusManager.instance.primaryFocus;
+    final before = player.state.playing;
+    await tester.sendKeyEvent(LogicalKeyboardKey.select);
+    await tester.pump();
+    expect(player.state.playing, !before);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pump();
+    expect(find.textContaining('Forward'), findsOneWidget);
+    expect(FocusManager.instance.primaryFocus, player0);
+    // Down brings the remote onto the bar's first button, at its bottom left.
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    final first = FocusManager.instance.primaryFocus!;
+    expect(first, isNot(player0));
+    expect(first.rect.bottom, greaterThan(400));
+    expect(first.rect.left, lessThan(200));
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pump();
+    final second = FocusManager.instance.primaryFocus!;
+    expect(second, isNot(first));
+    expect(second.rect.left, greaterThan(first.rect.left));
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    await tester.pump();
+    expect(FocusManager.instance.primaryFocus, first);
+    await tester.pump(const Duration(seconds: 10));
   });
 
   testWidgets('Space still pauses when the picture, not a button, has focus', (tester) async {

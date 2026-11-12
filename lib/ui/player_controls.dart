@@ -21,6 +21,7 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../device.dart';
 import '../app/app_controller.dart';
 import '../app_preferences.dart' show rateText;
 import '../heatmap.dart';
@@ -400,7 +401,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   /// Phones only: keeps the screen in the way it is held now, landscape or
   /// portrait, until unlocked.
-  static bool get _phone => touchFirst;
+  static bool get _phone => touchFirst && !Device.tv;
   bool _orientationLocked = false;
 
   void _toggleOrientation() {
@@ -496,6 +497,58 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     _dragLeft ? _brighten(whole) : _louder(whole.toDouble());
   }
 
+  /// A TV remote, as TV video apps take it: with the bars hidden, OK plays
+  /// or pauses, left and right seek and up or down bring the bars up on
+  /// their first button; with the bars up the arrows move between buttons.
+  KeyEventResult _remoteKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    final ok = key == LogicalKeyboardKey.select || key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter || key == LogicalKeyboardKey.gameButtonA;
+    final direction = switch (key) {
+      LogicalKeyboardKey.arrowUp => TraversalDirection.up,
+      LogicalKeyboardKey.arrowDown => TraversalDirection.down,
+      LogicalKeyboardKey.arrowLeft => TraversalDirection.left,
+      LogicalKeyboardKey.arrowRight => TraversalDirection.right,
+      _ => null,
+    };
+    if (!ok && direction == null) return KeyEventResult.ignored;
+    final shown = _animation.value > 0 && _animation.status != AnimationStatus.reverse;
+    var focused = FocusManager.instance.primaryFocus;
+    // A button the bars hid with them is not where the remote is.
+    if (!shown && focused != _focus) {
+      _focus.requestFocus();
+      focused = _focus;
+    }
+    final onButton = focused != _focus;
+    if (onButton) {
+      _show();
+      if (direction != null) focused?.focusInDirection(direction);
+      return direction != null ? KeyEventResult.handled : KeyEventResult.ignored;
+    }
+    if (ok) {
+      unawaited(_player.playOrPause());
+      _show();
+      return KeyEventResult.handled;
+    }
+    _show();
+    // Left and right seek through the player's own keys.
+    if (direction == TraversalDirection.left || direction == TraversalDirection.right) return KeyEventResult.ignored;
+    _firstButton()?.requestFocus();
+    return KeyEventResult.handled;
+  }
+
+  /// The bottom bar's first button: the lowest row's leftmost control.
+  FocusNode? _firstButton() {
+    FocusNode? best;
+    for (final node in _focus.traversalDescendants) {
+      if (!node.canRequestFocus || node.context == null) continue;
+      final rect = node.rect;
+      final b = best?.rect;
+      if (b == null || rect.bottom > b.bottom + 4 || ((rect.bottom - b.bottom).abs() <= 4 && rect.left < b.left)) best = node;
+    }
+    return best;
+  }
+
   /// Keeps the bars up while one of their menus is open.
   void _menuOpened() {
     _menus++;
@@ -521,6 +574,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       child: Focus(
         focusNode: _focus,
         autofocus: true,
+        onKeyEvent: Device.tv ? _remoteKey : null,
         child: ListenableBuilder(
           listenable: _controller,
           builder: (context, _) => MouseRegion(

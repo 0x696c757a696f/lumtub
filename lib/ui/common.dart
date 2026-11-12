@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'theme.dart';
+import '../device.dart';
 import '../l10n/l10n.dart';
 import '../system_env.dart';
 import 'app_icons.dart';
@@ -258,9 +259,10 @@ bool get touchFirst => debugTouchFirst ?? _touchFirst;
 final bool _touchFirst = Platform.isAndroid || Platform.isIOS;
 
 /// A phone held either way: a touch screen whose short side is under a
-/// tablet's. Its watch page is laid out as phone apps do: the player at
+/// tablet's, never a TV, whose screen is as few pixels across but far
+/// away. Its watch page is laid out as phone apps do: the player at
 /// the top edge, full screen when turned sideways.
-bool isPhone(BuildContext context) => touchFirst && MediaQuery.sizeOf(context).shortestSide < 600;
+bool isPhone(BuildContext context) => touchFirst && !Device.tv && MediaQuery.sizeOf(context).shortestSide < 600;
 
 /// One row of [pickFromSheet]; a null label draws a divider.
 typedef SheetChoice<T> = ({T? value, IconData? icon, String? label, bool selected});

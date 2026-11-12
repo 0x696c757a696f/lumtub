@@ -15,6 +15,7 @@ import 'ui/skin_paint.dart' show SkinGlass;
 import 'keep_awake.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
+import 'player_settings.dart';
 import 'skins/skin_library.dart';
 import 'ui/app_shell.dart';
 import 'ui/frame_stats.dart';
@@ -97,10 +98,11 @@ class _LumtubAppState extends State<LumtubApp> {
   void _updateThemes(AppearanceSettings appearance, Color accent) {
     Motion.update(appearance.effectiveMotion);
     // Decoded thumbnails and avatars; pages rebuild them from the disk
-    // cache quickly, so few are kept, fewer in 低占用模式.
+    // cache quickly, so few are kept, fewer on phones and in 低占用模式.
+    final phone = PlayerSettings.smallMemory;
     PaintingBinding.instance.imageCache
-      ..maximumSize = appearance.lowResource ? 120 : 300
-      ..maximumSizeBytes = (appearance.lowResource ? 24 : 64) << 20;
+      ..maximumSize = appearance.lowResource ? 120 : (phone ? 200 : 300)
+      ..maximumSizeBytes = (appearance.lowResource ? 24 : (phone ? 32 : 48)) << 20;
     final warmth = appearance.warmthAt(DateTime.now());
     final skin = SkinLibrary.instance.byId(appearance.skin);
     final key = (appearance.themeKey(accent), Motion.reduced, warmth, SkinLibrary.instance.revision, skin, appearance.glassOpacity);

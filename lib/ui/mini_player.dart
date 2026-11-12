@@ -24,6 +24,7 @@ import '../widgets/video_progress_bar.dart';
 import 'motion.dart';
 import '../widgets/position_ticks.dart';
 import 'app_icons.dart';
+import 'common.dart' show isPhone;
 import 'warm_layer.dart';
 import 'pages/watch_page.dart' show subtitleViewFor;
 
@@ -65,6 +66,8 @@ class MiniPlayer extends StatefulWidget {
   final WidgetBuilder? videoBuilder;
 
   static const width = 320.0;
+  /// The phone's bar, as tall as LibreTube's and NewPipe's.
+  static const barHeight = 64.0;
   static const margin = 12.0;
 
   @override
@@ -155,6 +158,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
   Widget build(BuildContext context) {
     final player = _controller.player;
     if (player == null) return const SizedBox.shrink();
+    if (isPhone(context)) return Align(alignment: Alignment.bottomCenter, child: _bar(context, player));
     return LayoutBuilder(builder: (context, constraints) {
       final area = constraints.biggest;
       final size = miniSize(_controller.videoAspect, area);
@@ -172,6 +176,58 @@ class _MiniPlayerState extends State<MiniPlayer> {
         ),
       ]);
     });
+  }
+
+  /// On a phone: a bar along the bottom of the page, above the navigation,
+  /// as phone video apps have it. A tap or a swipe up opens the watch page,
+  /// a swipe down closes it; its buttons are a finger's size.
+  Widget _bar(BuildContext context, Player player) {
+    final title = _controller.details?.title.isNotEmpty == true ? _controller.details!.title : _controller.playing?.title ?? '';
+    final channel = _controller.details?.channel ?? _controller.playing?.channel ?? '';
+    final colors = Theme.of(context).colorScheme;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _controller.expandMini,
+      onVerticalDragEnd: (details) {
+        final speed = details.primaryVelocity ?? 0;
+        if (speed < -200) _controller.expandMini();
+        if (speed > 200) _controller.stopWatching();
+      },
+      child: Material(
+        color: colors.surfaceContainerHigh,
+        elevation: 4,
+        child: SizedBox(
+          height: MiniPlayer.barHeight,
+          child: Column(children: [
+            _ProgressLine(player: player),
+            Expanded(
+              child: Row(children: [
+                AspectRatio(aspectRatio: 16 / 9, child: ColoredBox(color: Colors.black, child: RepaintBoundary(child: _video(context)))),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                    if (channel.isNotEmpty) Text(channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant)),
+                  ]),
+                ),
+                StreamBuilder<bool>(
+                  stream: player.stream.playing,
+                  initialData: player.state.playing,
+                  builder: (context, snapshot) => IconButton(
+                    tooltip: tr('Play/Pause (Space)'),
+                    iconSize: 28,
+                    icon: Icon(snapshot.data == true ? AppIcons.pauseFill : AppIcons.playFill),
+                    onPressed: () => unawaited(player.playOrPause()),
+                  ),
+                ),
+                IconButton(tooltip: tr('Close the mini player and stop playback'), iconSize: 24, icon: Icon(AppIcons.x), onPressed: _controller.stopWatching),
+                const SizedBox(width: 4),
+              ]),
+            ),
+          ]),
+        ),
+      ),
+    );
   }
 
   Widget _card(BuildContext context, Player player, Size area, Size size) {

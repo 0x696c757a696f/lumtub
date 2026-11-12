@@ -437,12 +437,31 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ),
       );
 
+  /// On a phone outside full screen a slide is not brightness or volume
+  /// but where the player goes: up into full screen, down into the mini
+  /// player, as in phone video apps.
+  bool _slideMoves = false;
+  double _slid = 0;
+
   void _dragStart(DragStartDetails details) {
     _dragLeft = _onLeft(details.localPosition);
     _dragSteps = 0;
+    _slideMoves = _phone && !isFullscreen(context);
+    _slid = 0;
+  }
+
+  void _dragEnd(DragEndDetails details) {
+    if (!_slideMoves) return;
+    final speed = details.primaryVelocity ?? 0;
+    if (_slid < -48 || speed < -400) unawaited(widget.state?.enterFullscreen());
+    if (_slid > 48 || speed > 400) _controller.goBack();
   }
 
   void _dragUpdate(DragUpdateDetails details) {
+    if (_slideMoves) {
+      _slid += details.primaryDelta ?? 0;
+      return;
+    }
     final height = context.size?.height ?? 0;
     if (height <= 0) return;
     // The player's full height is the whole range: 100 % volume, or every
@@ -503,6 +522,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                     supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus},
                     onVerticalDragStart: _dragStart,
                     onVerticalDragUpdate: _dragUpdate,
+                    onVerticalDragEnd: _dragEnd,
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () {

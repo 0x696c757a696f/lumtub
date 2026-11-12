@@ -17,7 +17,8 @@ void main() {
         ),
       ),
     ));
-    expect(find.byIcon(AppIcons.dotsThreeVertical), findsNothing);
+    // The menu button sits on the card's channel line at all times.
+    expect(find.byIcon(AppIcons.dotsThreeVertical), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pump();
     expect(find.byIcon(AppIcons.dotsThreeVertical), findsOneWidget);

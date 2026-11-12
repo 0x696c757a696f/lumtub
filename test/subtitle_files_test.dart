@@ -218,31 +218,7 @@ void main() {
     }
   });
 
-  test('shares a sentence translation out over its fragments', () {
-    expect(WebVtt.splitLike('But Kennedy does not believe it, and suspects they are secretly building nuclear weapons.', ['ma Kennedy non ci crede e sospetta che stiano sviluppando invece', 'delle armi nucleari in segreto e fa bene.']),
-        ['But Kennedy does not believe it, and suspects they are', 'secretly building nuclear weapons.']);
-    final zh = WebVtt.splitLike('但肯尼迪不相信，怀疑他们其实在秘密研制核武器，而且他怀疑得对。', ['ma Kennedy non ci crede e sospetta che stiano sviluppando invece', 'delle armi nucleari in segreto e fa bene.']);
-    expect(zh.join(), '但肯尼迪不相信，怀疑他们其实在秘密研制核武器，而且他怀疑得对。');
-    expect(zh.first, endsWith('，'));
-    // Never an empty fragment: too short to share, each shows it all.
-    expect(WebVtt.splitLike('one', ['a', 'b', 'c']), ['one', 'one', 'one']);
-    expect(WebVtt.splitLike('whole', ['only']), ['whole']);
-    // Many short fragments each get a piece, never two cuts at one mark.
-    const sentence = '我知道所有的词，所有的词，但我对答案思考得太多，以至于他更慢地、更慢地重复了这个问题，就像他在和一个小女孩说话一样。';
-    final seven = WebVtt.splitLike(sentence, ['Io conoscevo tutte le parole,', 'tutte, ma ho pensato così tanto alla', 'risposta', 'che lui ha ripetuto la domanda', 'più lentamente,', 'molto più lentamente,', 'come se stesse parlando con una bambina.']);
-    expect(seven.length, 7);
-    expect(seven.join(), sentence);
-    expect(seven.toSet().length, 7);
-    // A word is not cut in two when a clause ends or a particle sits near.
-    final bbc = WebVtt.splitLike('普京表示，他希望乌克兰能够永远保持和平。', ['Mr. Putin said he would like peace in', 'Ukraine to last forever.']);
-    expect(bbc.join(), '普京表示，他希望乌克兰能够永远保持和平。');
-    expect(bbc.first, '普京表示，');
-    final name = WebVtt.splitLike('我们从俄罗斯编辑史蒂夫·罗森伯格那里得到了最新消息。', ['we got an update from our', 'Russia editor, Steve Rosenberg.']);
-    expect(name.join(), '我们从俄罗斯编辑史蒂夫·罗森伯格那里得到了最新消息。');
-    expect(name.any((piece) => piece.contains('史蒂夫·罗森伯格')), isTrue);
-  });
-
-  test('translates automatic captions by sentence, each fragment keeping its time', () async {
+  test('translates automatic captions by sentence, each translation shown for its whole sentence', () async {
     const asr = '''WEBVTT
 
 00:00:00.000 --> 00:00:04.000
@@ -266,8 +242,8 @@ Ok, finita la chicca.
     // YouTube's own translation is not asked for, the sentence goes whole.
     expect(asked.map((u) => u.queryParameters.containsKey('tlang')), [false]);
     expect(translator.asked.single.split('\n'), ['ma Kennedy non ci crede e sospetta che stiano sviluppando armi.', 'Ok, finita la chicca.']);
-    expect([for (final c in cues) WebVtt.startOf(c.timing).inSeconds], [0, 4, 8]);
-    expect([for (final c in cues) c.text].join(' '), 'MA KENNEDY NON CI CREDE E SOSPETTA CHE STIANO SVILUPPANDO ARMI. OK, FINITA LA CHICCA.');
+    expect([for (final c in cues) (WebVtt.startOf(c.timing).inSeconds, WebVtt.endOf(c.timing).inSeconds)], [(0, 8), (8, 10)]);
+    expect([for (final c in cues) c.text], ['MA KENNEDY NON CI CREDE E SOSPETTA CHE STIANO SVILUPPANDO ARMI.', 'OK, FINITA LA CHICCA.']);
   });
 
   test('reads when a cue starts', () {

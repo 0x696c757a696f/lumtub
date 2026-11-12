@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:http/http.dart' as http;
 
@@ -189,20 +188,14 @@ class SubtitleFiles {
   /// shown. [rest] is null when the text is all there.
   Future<({String text, Future<String?>? rest})> _translate(String vtt, String tlang, Translator translator, String key, Future<bool> Function(String text) save) async {
     // Whole sentences, not the fragments captions show, so each is
-    // translated with all its words and never split between two requests;
-    // each translation is then shared out over its fragments' times.
+    // translated with all its words and never split between two requests.
+    // Each translation shows whole for its sentence's time: cut back into
+    // the fragments it cannot be, since the two languages do not put their
+    // words in the same order, and the subtitle list shows the sentence as
+    // one row beside it.
     final fragments = WebVtt.cues(vtt);
     if (fragments.isEmpty) return (text: vtt, rest: null);
     final spans = WebVtt.sentenceSpans(fragments, maxLength: sentenceTime, maxWidth: sentenceWidth);
-    // Shown the way the original is (see [WebVtt.asLines]): a sentence a
-    // line, a long one in a few lines broken at commas, each translated
-    // line on its original line's time.
-    final lines2 = [for (final span in spans) WebVtt.lineSpans(fragments, span)];
-    final timings = WebVtt.lineTimings(fragments, [for (final l in lines2) ...l]);
-    final firstLine = <int>[];
-    for (var n = 0, c = 0; c < lines2.length; n += lines2[c++].length) {
-      firstLine.add(n);
-    }
     final cues = [for (final (from, to) in spans) (timing: '${WebVtt._stamp(WebVtt.startOf(fragments[from].timing))} --> ${WebVtt._stamp(WebVtt.endOf(fragments[to - 1].timing))}', text: [for (final f in fragments.sublist(from, to)) f.text].reduce(WebVtt._join))];
     final target = TranslationLanguage.all.where((l) => l.youtube == tlang).firstOrNull?.code ?? tlang;
     final chunkLength = chunkLengthOf(translator);
@@ -261,8 +254,7 @@ class SubtitleFiles {
           for (final (i, (start, end)) in groups.indexed)
             if (translated[i] case final lines?)
               for (var c = start; c < end; c++)
-                for (final (k, piece) in WebVtt.splitLike(lines[c - start].trim(), [for (final (a, b) in lines2[c]) WebVtt.textOf(fragments, a, b)]).indexed)
-                  if (piece.isNotEmpty) (timing: timings[firstLine[c] + k], text: piece),
+                if (lines[c - start].trim() case final text when text.isNotEmpty) (timing: cues[c].timing, text: text),
         ]);
 
     // Enough to start with: the piece playing now and the next few.
@@ -417,7 +409,6 @@ class WebVtt {
     return out;
   }
 
-  static final _clauseEnd = RegExp(r'[.!?;:,。！？；：，、…)）」』"”]');
   static final _clauseTail = RegExp(r'[;:,；：，、…)）」』"”]$');
 
   /// How long and how wide a line on screen may grow.
@@ -486,111 +477,6 @@ class WebVtt {
     return write([for (final (k, (a, b)) in lines.indexed) (timing: timings[k], text: textOf(cues, a, b))]);
   }
 
-
-  /// [text], a translation of [parts] read as one sentence, cut into as
-  /// many pieces, each about as long, against the whole, as its part is:
-  /// at a punctuation mark near there if there is one, else between words,
-  /// else (CJK) between characters.
-  static List<String> splitLike(String text, List<String> parts) {
-    if (parts.length <= 1) return [text];
-    final weights = [for (final p in parts) p.length + _cjk.allMatches(p).length];
-    final total = weights.fold(0, (a, b) => a + b);
-    if (total == 0 || text.isEmpty) return [for (final _ in parts) text];
-    // Text written with spaces is cut only between words.
-    final spaced = _cjk.allMatches(text).length * 2 < text.length;
-    final window = (text.length / (parts.length * 3)).ceil();
-    final cuts = <int>[];
-    var done = 0;
-    var last = 0;
-    for (var k = 0; k < parts.length - 1; k++) {
-      done += weights[k];
-      // Each piece keeps at least a character, and leaves one for each
-      // piece after it.
-      final low = last + 1;
-      final high = text.length - (parts.length - 1 - k);
-      if (low > high) return [for (final _ in parts) text];
-      final aim = (text.length * done / total).round().clamp(low, high);
-      int? best;
-      bool better(int at, int? than) => than == null || (at - aim).abs() < (than - aim).abs();
-      if (!spaced) {
-        best = _cjkCut(text, aim, low, high, max(window, (text.length / parts.length * 0.5).ceil()));
-      } else {
-        // A punctuation mark, the cut going after it and its space.
-        for (var at = (aim - window).clamp(low, high); at <= (aim + window).clamp(low, high); at++) {
-          if (at < text.length && _clauseEnd.hasMatch(text[at - 1]) && text[at] == ' ' && better(at, best)) best = at;
-        }
-      }
-      if (best == null && spaced) {
-        for (var at = low; at < high; at++) {
-          if (text[at] == ' ' && better(at, best)) best = at;
-        }
-      }
-      if (best == null && spaced) return [for (final _ in parts) text];
-      var cut = best ?? aim;
-      // Never inside a surrogate pair.
-      if (cut > 0 && cut < text.length && text.codeUnitAt(cut) & 0xFC00 == 0xDC00) cut++;
-      cuts.add(cut);
-      last = cut;
-    }
-    final out = <String>[];
-    var from = 0;
-    for (final cut in [...cuts, text.length]) {
-      out.add(text.substring(from, cut).trim());
-      from = cut;
-    }
-    // Too short to share out: every fragment shows the whole sentence.
-    if (out.any((piece) => piece.isEmpty)) return [for (final _ in parts) text];
-    return out;
-  }
-
-  /// Where to cut text written without spaces near [aim], within [reach]
-  /// of it: after a punctuation mark, which may lie further away, else where
-  /// a word is likely to end (after a particle, before a pronoun or
-  /// conjunction, where the script changes), and only else at [aim], so a
-  /// word such as 永远 is not split over two lines.
-  static int? _cjkCut(String text, int aim, int low, int high, int reach) {
-    int? best;
-    var bestCost = double.infinity;
-    for (var at = (aim - reach).clamp(low, high); at <= (aim + reach).clamp(low, high); at++) {
-      if (at <= 0 || at >= text.length) continue;
-      final before = text[at - 1], after = text[at];
-      final double penalty;
-      if (_sentenceEnd.hasMatch(before)) {
-        penalty = 0;
-      } else if (_clauseEnd.hasMatch(before)) {
-        penalty = reach * 0.15;
-      } else if (_softEnd.contains(before) || _softStart.contains(after) || _cjk.hasMatch(before) != _cjk.hasMatch(after) && before.trim().isNotEmpty && after.trim().isNotEmpty && before != '·' && after != '·') {
-        penalty = reach * 0.6;
-      } else {
-        continue;
-      }
-      final cost = (at - aim).abs() + penalty;
-      if (cost < bestCost) {
-        bestCost = cost;
-        best = at;
-      }
-    }
-    // A punctuation mark further off still beats cutting through a word.
-    if (best == null) {
-      for (var at = (aim - 2 * reach).clamp(low, high); at <= (aim + 2 * reach).clamp(low, high); at++) {
-        if (at > 0 && at < text.length && _clauseEnd.hasMatch(text[at - 1]) && (best == null || (at - aim).abs() < (best - aim).abs())) best = at;
-      }
-    }
-    // Never between two letters of a word in another script.
-    if (best == null && aim > 0 && aim < text.length && RegExp(r'[A-Za-z0-9]').hasMatch(text[aim - 1]) && RegExp(r'[A-Za-z0-9]').hasMatch(text[aim])) {
-      for (var d = 1; d <= reach; d++) {
-        for (final at in [aim - d, aim + d]) {
-          if (at >= low && at <= high && at < text.length && !(RegExp(r'[A-Za-z0-9]').hasMatch(text[at - 1]) && RegExp(r'[A-Za-z0-9]').hasMatch(text[at]))) return at;
-        }
-      }
-    }
-    return best;
-  }
-
-  /// Characters after which a Chinese or Japanese word usually ends, and
-  /// before which one usually starts.
-  static const _softEnd = '的了着吗呢吧啊呀是在到给把被与而也都就又才很';
-  static const _softStart = '我你他她它这那与但也都就还又才很把被让从因虽';
 
   /// [a] and [b] as one line: with a space, except between CJK characters.
   static String _join(String a, String b) {

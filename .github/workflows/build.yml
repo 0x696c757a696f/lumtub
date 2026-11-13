@@ -1354,12 +1354,12 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          # Cone mode: files at the top, such as pubspec.yaml, come along;
+          # cargo can't list the core's files in a non-cone checkout.
           sparse-checkout: |
             release-notes
             native/lumtub_core
             ios/packaging
-            pubspec.yaml
-          sparse-checkout-cone-mode: false
       - name: Packages built here
         if: needs.reuse.outputs.run == ''
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8

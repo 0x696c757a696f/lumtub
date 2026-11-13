@@ -209,8 +209,23 @@ class LibraryController extends ChangeNotifier {
     return added;
   }
 
+  /// A copy of the followed channels, groups, favorites, 稍后观看 and own
+  /// playlists, for the settings backup.
+  LibraryBackup backup() => store.backup();
+
+  /// Adds what [backup] has and this library lacks.
+  LibraryMerge restoreBackup(LibraryBackup backup) {
+    final merge = store.mergeBackup(backup);
+    if (merge.channels > 0) {
+      _feedLoadedAt = null;
+      unawaited(fillMissingAvatars());
+    }
+    _changed();
+    return merge;
+  }
+
   /// Playlists copied from the YouTube account have ids starting with this.
-  static const remotePrefix = 'yt:';
+  static const remotePrefix = remotePlaylistPrefix;
 
   static bool isRemote(LocalPlaylist playlist) => playlist.id.startsWith(remotePrefix);
 

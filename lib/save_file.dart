@@ -14,6 +14,9 @@ Future<bool> saveFileAs(String name, Uint8List bytes, {required String mime, req
   }
   final location = await getSaveLocation(suggestedName: name, acceptedTypeGroups: [XTypeGroup(label: label, extensions: [extension])]);
   if (location == null) return false;
-  await File(location.path).writeAsBytes(bytes, flush: true);
+  // A temporary file first, so a failed write never leaves half a file.
+  final temp = File('${location.path}.tmp');
+  await temp.writeAsBytes(bytes, flush: true);
+  await temp.rename(location.path);
   return true;
 }

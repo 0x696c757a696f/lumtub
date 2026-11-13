@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:http/http.dart' as http;
@@ -12,13 +14,14 @@ import 'native_http.dart';
 
 /// Loads a thumbnail from Lumtub's `thumbnails` cache folder, downloading it
 /// there on first use. Scrolling back or reopening the app then needs no
-/// network request.
+/// network request. With no [file] it is only downloaded, still within the
+/// size cap and the downloads at once.
 @immutable
 class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   const CachedThumbnail(this.url, this.file, {this.fallback});
 
   final String url;
-  final File file;
+  final File? file;
   /// Loaded instead when [url] fails, such as YouTube's own thumbnail
   /// when DeArrow's frame is not ready.
   final CachedThumbnail? fallback;
@@ -32,6 +35,11 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   /// name, so switching sizes never shows a stale image.
   static File fileFor(Directory directory, String videoId, [String size = 'hqdefault']) =>
       File('${directory.path}${Platform.pathSeparator}$videoId${size == 'hqdefault' ? '' : '_$size'}.jpg');
+
+  /// The cache file for a picture known only by its address, such as a
+  /// playlist's cover: named after a hash of it.
+  static File fileForUrl(Directory directory, String url) =>
+      File('${directory.path}${Platform.pathSeparator}cover_${sha1.convert(utf8.encode(url)).toString().substring(0, 20)}.jpg');
 
   @override
   Future<CachedThumbnail> obtainKey(ImageConfiguration configuration) => SynchronousFuture(this);
@@ -84,11 +92,12 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   static bool _always() => true;
 
   Future<Uint8List> _bytes(bool Function() wanted) async {
+    final file = this.file;
     try {
-      if (await file.exists()) {
+      if (file != null && await file.exists()) {
         final bytes = await file.readAsBytes();
         if (bytes.isNotEmpty) {
-          _touch();
+          _touch(file);
           return bytes;
         }
       }
@@ -115,7 +124,7 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
         throw HttpException('Thumbnail HTTP $status', uri: Uri.parse(url));
       }
       _failed.remove(url);
-      await _store(body);
+      if (file != null) await _store(file, body);
       return body;
     } on HttpException {
       rethrow;
@@ -159,6 +168,17 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
     _running--;
   }
 
+  /// [address]'s status and body, fetched in turn with thumbnails and
+  /// under the same size cap: for other pictures, such as storyboards.
+  static Future<(int, Uint8List?)> download(http.Client client, Uri address) async {
+    await slot(_always);
+    try {
+      return await fetch(client, address);
+    } finally {
+      free();
+    }
+  }
+
   /// [address]'s status and body; a body over [maxBytes] is cut off and
   /// read as a failure.
   @visibleForTesting
@@ -178,7 +198,7 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
 
   /// Marks the file as used, at most once a day, so trimming drops the
   /// pictures not seen for longest rather than the oldest downloads.
-  void _touch() {
+  void _touch(File file) {
     unawaited(() async {
       try {
         final now = DateTime.now();
@@ -197,7 +217,7 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
 
   /// Writes through a unique temporary file so two cards loading the same
   /// video never leave a half-written image behind. Failures only skip caching.
-  Future<void> _store(Uint8List bytes) async {
+  Future<void> _store(File file, Uint8List bytes) async {
     final temp = File('${file.path}.${_random.nextInt(1 << 32)}.part');
     try {
       await file.parent.create(recursive: true);
@@ -213,10 +233,10 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   }
 
   @override
-  bool operator ==(Object other) => other is CachedThumbnail && other.url == url && other.file.path == file.path;
+  bool operator ==(Object other) => other is CachedThumbnail && other.url == url && other.file?.path == file?.path;
 
   @override
-  int get hashCode => Object.hash(url, file.path);
+  int get hashCode => Object.hash(url, file?.path);
 }
 
 /// A thumbnail download skipped because no card shows it any more. The

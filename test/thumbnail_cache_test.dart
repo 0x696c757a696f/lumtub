@@ -20,6 +20,15 @@ void main() {
     expect(a.hashCode, b.hashCode);
   });
 
+  test('covers known only by address get a file of their own', () {
+    final dir = Directory('cache');
+    const url = 'https://i.ytimg.com/vi/x/hqdefault.jpg?sqp=abc';
+    expect(CachedThumbnail.fileForUrl(dir, url).path, CachedThumbnail.fileForUrl(dir, url).path);
+    expect(CachedThumbnail.fileForUrl(dir, url).path, isNot(CachedThumbnail.fileForUrl(dir, '$url&rs=1').path));
+    expect(CachedThumbnail.fileForUrl(dir, url).uri.pathSegments.last, matches(RegExp(r'^cover_[0-9a-f]{20}\.jpg$')));
+    expect(const CachedThumbnail(url, null), const CachedThumbnail(url, null));
+  });
+
   test('asks for the WebP copy first, then the JPEG, then hqdefault', () {
     expect(CachedThumbnail.candidates('https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg'), [
       'https://i.ytimg.com/vi_webp/dQw4w9WgXcQ/mqdefault.webp',

@@ -7,6 +7,7 @@ import '../../app/app_controller.dart';
 import '../../app/library_controller.dart';
 import '../../library_store.dart';
 import '../../models.dart';
+import '../../thumbnail_cache.dart';
 import '../../youtube_tv_feed.dart';
 import '../common.dart';
 import '../playlist_length.dart';
@@ -747,7 +748,7 @@ class _PlaylistCard extends StatelessWidget {
               borderRadius: AppStyle.thumbnailRadius,
               child: Stack(fit: StackFit.expand, children: [
                 if (thumbnailUrl case final url? when items.isEmpty)
-                  Image(color: context.pictureWarmth, colorBlendMode: BlendMode.multiply, image: ResizeImage.resizeIfNeeded(480, null, NetworkImage(url)), fit: BoxFit.cover, errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(icon, size: 40, color: colors.outline)))
+                  Image(color: context.pictureWarmth, colorBlendMode: BlendMode.multiply, image: ResizeImage.resizeIfNeeded(480, null, CachedThumbnail(url, thumbnails == null ? null : CachedThumbnail.fileForUrl(thumbnails!, url))), fit: BoxFit.cover, errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(icon, size: 40, color: colors.outline)))
                 else if (items.isEmpty)
                   ColoredBox(color: colors.surfaceContainerHighest, child: Icon(icon, size: 40, color: colors.outline))
                 else

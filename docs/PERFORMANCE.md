@@ -134,9 +134,7 @@ Each is fixed in its own change; remove the line when it is.
 
 代码里还没达到本规范的地方，按重要程度排列。逐条单独修，修完就删掉对应行。
 
-1. Storyboards read whole response bodies; playlist covers and hover frames bypass the thumbnail cache and its limits (`lib/storyboard.dart`, `lib/ui/pages/library_pages.dart`).
-   故事板预览图整段读取响应；播放列表封面和悬停预览帧绕过了缩略图缓存及其上限。
-2. Redirects are not checked against the host rules in the Rust core (`relay.rs`, `http.rs`).
+1. Redirects are not checked against the host rules in the Rust core (`relay.rs`, `http.rs`).
    Rust 核心里的网络跳转没有按主机规则检查。
-3. The player cache defaults (60 s / 100 MiB, 64 MiB on Android) and `demuxer-hysteresis` are untested against a 96 MiB budget; the Windows bridge still calls `glFinish` every frame. Both need measurements first.
+2. The player cache defaults (60 s / 100 MiB, 64 MiB on Android) and `demuxer-hysteresis` are untested against a 96 MiB budget; the Windows bridge still calls `glFinish` every frame. Both need measurements first.
    播放器缓冲默认值（60 秒 / 100 MiB，Android 64 MiB）和 `demuxer-hysteresis` 还没按 96 MiB 的目标测过；Windows 渲染桥每帧仍调用 `glFinish`。两项都要先实测。

@@ -1,0 +1,6 @@
+# Python for iOS from BeeWare's Python-Apple-support: the release, the
+# SHA-256 of its iOS support archive, and the archive. yt-dlp runs in it
+# inside the app. The weekly upstream check (.github/scripts/upstream.py)
+# moves it to the newest stable Python.
+# tag sha256 url
+3.15-b3 429080dcfab3778b75bbc6548cbfd754dc943cfc6092a92b72022541ff3212a0 https://github.com/beeware/Python-Apple-support/releases/download/3.15-b3/Python-3.15-iOS-support.b3.tar.gz

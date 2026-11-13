@@ -109,10 +109,10 @@ extension PlaybackOpening on AppController {
       if (resolved) {
         try {
           final streams = _repository!.streams;
-          // Android asks the core first: yt-dlp runs in Python there, which
-          // costs a phone seconds of work, so it only steps in when the core
-          // has no answer, and for live and members-only videos.
-          // iOS has no yt-dlp at all: the core is the only way.
+          // Phones ask the core first: yt-dlp runs in Python there (on iOS
+          // inside the app's own process), which costs a phone seconds of
+          // work, so it only steps in when the core has no answer, and for
+          // live and members-only videos.
           if (Platform.isAndroid || Platform.isIOS) {
             if (!item.isLive && !item.membersOnly) {
               try {

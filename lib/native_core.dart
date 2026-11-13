@@ -7,6 +7,7 @@ import 'dart:math';
 import 'package:ffi/ffi.dart';
 
 import 'android_python.dart';
+import 'ios_python.dart';
 import 'app_log.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
@@ -473,6 +474,7 @@ class ProcessTree implements Process {
   /// A [background] tree runs below normal priority, its first process in
   /// Windows' efficiency mode: for downloads, which nobody waits on.
   static Future<Process> start(String executable, List<String> arguments, {Map<String, String>? environment, String? workingDirectory, bool background = false}) async {
+    if (IosPython.runs(executable)) return IosPython.current!.start(executable, arguments, environment);
     (arguments, environment) = NetworkProxy.hideCredentials(arguments, environment);
     if (AndroidPython.runs(executable)) (executable, arguments, environment) = AndroidPython.current!.command(executable, arguments, environment);
     final process = await Process.start(executable, arguments, environment: environment, workingDirectory: workingDirectory);

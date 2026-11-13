@@ -205,6 +205,44 @@ def mpvkit(changes):
         rewrite(lock, lambda text: update(text, platform))
 
 
+IOS_PYTHON_LOCK = "ios/packaging/python.lock"
+
+
+def ios_python(changes, notes):
+    """Python for iOS (BeeWare Python-Apple-support): newer builds of the same
+    Python are taken; a newer Python is noted, since yt-dlp runs in it."""
+    def update(text):
+        line = re.search(r"^(\d+)\.(\d+)-b(\d+) [0-9a-f]{64} \S+$", text, re.M)
+        if not line:
+            return text
+        major, minor, build = map(int, line.groups())
+        tags = subprocess.run(
+            ["git", "ls-remote", "--tags", "--refs", "https://github.com/beeware/Python-Apple-support.git"],
+            check=True, capture_output=True, text=True,
+        ).stdout
+        stable = [tuple(map(int, t)) for t in re.findall(r"refs/tags/(\d+)\.(\d+)-b(\d+)$", tags, re.M)]
+        newer_python = sorted({(a, b) for a, b, _ in stable if (a, b) > (major, minor)})
+        if newer_python:
+            a, b = newer_python[-1]
+            notes.append(
+                f"- Python for iOS: BeeWare has Python {a}.{b} (ios/packaging/python.lock pins {major}.{minor}). "
+                "Move to it once yt-dlp supports it, and test on an iPhone."
+            )
+        same = max(n for a, b, n in stable if (a, b) == (major, minor))
+        if same <= build:
+            return text
+        tag = f"{major}.{minor}-b{same}"
+        name = f"Python-{major}.{minor}-iOS-support.b{same}.tar.gz"
+        release = get(f"https://api.github.com/repos/beeware/Python-Apple-support/releases/tags/{tag}")
+        asset = next((a for a in release["assets"] if a["name"] == name), None)
+        if asset is None:
+            print(f"Python-Apple-support {tag} has no {name}; skipped.")
+            return text
+        changes.append(f"iOS Python {major}.{minor}-b{build} -> {tag}")
+        return text.replace(line[0], f"{tag} {sha256(asset)} {asset['browser_download_url']}")
+    rewrite(IOS_PYTHON_LOCK, update)
+
+
 def vendored(notes):
     """The media_kit packages copied under vendor/ with Lumtub's changes."""
     for folder in sorted(os.listdir("vendor")):
@@ -244,6 +282,10 @@ def main():
             check(changes)
         except Exception as e:
             print(f"::warning::{check.__name__}: {e}")
+    try:
+        ios_python(changes, notes)
+    except Exception as e:
+        print(f"::warning::ios_python: {e}")
     vendored(notes)
     if changes:
         with open(os.path.join(TEMP, "upstream-commit.txt"), "w", encoding="utf-8") as f:

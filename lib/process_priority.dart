@@ -7,6 +7,8 @@ import 'app_log.dart';
 /// Does nothing when the process has already ended. On Linux and macOS it
 /// is a nice value of 5, which the processes it starts inherit.
 void lowerPriority(int pid) {
+  // iOS runs yt-dlp in the app's own process; there is no other to lower.
+  if (Platform.isIOS) return;
   if (Platform.isWindows) return _setPriority(pid, _belowNormalPriorityClass);
   try {
     _setPriorityUnix(_prioProcess, pid, 5);

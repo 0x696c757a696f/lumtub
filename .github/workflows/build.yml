@@ -1116,6 +1116,9 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
         run: flutter build ios --release --no-codesign --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE=ios --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
 
+      - name: iOS - add Python and yt-dlp
+        run: ios/packaging/python.sh build/ios/iphoneos/Runner.app "$RUNNER_TEMP/python"
+
       - name: iOS - package the IPA
         run: ios/packaging/package.sh build/ios/iphoneos/Runner.app "$LUMTUB_CORE" "Lumtub_${LUMTUB_VERSION}_ios.ipa"
 

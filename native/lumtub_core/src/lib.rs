@@ -33,6 +33,8 @@ pub mod pac;
 pub mod posts;
 pub mod process_cpu;
 pub mod process_tree;
+#[cfg(unix)]
+pub mod python;
 pub mod quick;
 pub mod record;
 pub mod redact;
@@ -56,5 +58,5 @@ pub mod web_account;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    46
+    47
 }

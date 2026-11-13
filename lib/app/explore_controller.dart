@@ -300,7 +300,7 @@ extension ExploreActions on AppController {
     // each video instead (VideoLanguages).
     final spoken = language != ExploreLanguage.any && VideoLanguages.available && _videoLanguages != null;
     final perChannel = <String, int>{};
-    final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality);
+    final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality, recent: exploreSection == ExploreSection.frontier);
     final taste = mode == ExploreMode.forYou ? _exploreTaste() : null;
     // The Home and Explore "For You" lists share these choices.  Explore has
     // its own loader, so it must apply the mix here instead of relying on

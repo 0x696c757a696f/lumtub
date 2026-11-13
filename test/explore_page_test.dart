@@ -141,7 +141,9 @@ void main() {
     await loadTranslations();
     expect(popularTopics.singleWhere((t) => t.label == 'Academia').opens, ExploreSection.humanities);
     expect(liveTopics.singleWhere((t) => t.label == 'Academia').opens, ExploreSection.academicLive);
-    expect(ExploreSection.academicTabs, everyElement(predicate<ExploreSection>((s) => s.isAcademic && s.tabs == ExploreSection.academicTabs)));
+    expect(ExploreSection.academicTabs, everyElement(predicate<ExploreSection>((s) => s.isAcademic && s.tabs!.every((t) => t.isAcademic && t.isLive == s.isLive))));
+    expect(ExploreSection.faithTabs, everyElement(predicate<ExploreSection>((s) => s.tabs!.every((t) => t.isFaith && t.isLive == s.isLive))));
+    expect(ExploreSection.humanities.tabs, contains(ExploreSection.frontier));
     expect(ExploreSection.academicTabs.where((s) => s.isLive), [ExploreSection.academicLive]);
     expect(humanitiesTopics.map((t) => t.label), containsAll(['Philosophy', 'Theology', 'History']));
     expect(socialScienceTopics.first.label, 'Psychology');

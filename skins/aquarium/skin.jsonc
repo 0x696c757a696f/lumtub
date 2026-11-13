@@ -78,7 +78,17 @@
     "ur": "ملینیم ایکویریم",
     "uz": "Ming yillik akvarium",
     "vi": "Bể cá thiên niên kỷ",
-    "zu": "Isiqukathi Senhlanzi Sekhulunyaka"
+    "zu": "Isiqukathi Senhlanzi Sekhulunyaka",
+    "sr": "Миленијумски акваријум",
+    "sr-Latn": "Milenijumski akvarijum",
+    "hr": "Milenijski akvarij",
+    "sl": "Tisočletni akvarij",
+    "bs": "Milenijumski akvarij",
+    "ca": "Aquari del mil·lenni",
+    "kk": "Мыңжылдық аквариумы",
+    "ky": "Миң жылдык аквариум",
+    "as": "সহস্ৰাব্দ একুৱেৰিয়াম",
+    "or": "ସହସ୍ରାବ୍ଦ ଆକ୍ୱାରିୟମ"
   },
   "description": "A collage of the 2000s: shining discs, a crystal ball with a city and fish, glass stars, gel balls and a silver boombox player",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "2000 کی دہائی کا کولاج: چمکتی ڈسکیں، شہر اور مچھلیوں والا کرسٹل گیند، شیشے کے ستارے، جیل کی گیندیں اور چاندی کا بوم باکس پلیئر",
     "uz": "2000-yillar kolaji: yaltirovchi disklar, ichida shahar va baliqlar bor kristall shar, shisha yulduzlar, jele sharlar va kumush boombox pleyer",
     "vi": "Bức ghép thập niên 2000: đĩa lấp lánh, quả cầu pha lê có thành phố và cá, sao thủy tinh, bi gel và máy nghe nhạc boombox bạc",
-    "zu": "Ingqikithi yawo-2000: amadiski akhazimulayo, ibhola likakristalu elinedolobha nenhlanzi, izinkanyezi zengilazi, amabhola ejeli nesidlali se-boombox esiliva"
+    "zu": "Ingqikithi yawo-2000: amadiski akhazimulayo, ibhola likakristalu elinedolobha nenhlanzi, izinkanyezi zengilazi, amabhola ejeli nesidlali se-boombox esiliva",
+    "sr": "Колаж из 2000-их: сјајни дискови, кристална кугла са градом и рибама, стаклене звезде, гел куглице и сребрни бумбокс плејер",
+    "sr-Latn": "Kolaž iz 2000-ih: sjajni diskovi, kristalna kugla sa gradom i ribama, staklene zvezde, gel kuglice i srebrni bumboks plejer",
+    "hr": "Kolaž iz 2000-ih: sjajni diskovi, kristalna kugla s gradom i ribama, staklene zvijezde, gel kuglice i srebrni boombox player",
+    "sl": "Kolaž iz 2000-ih: bleščeči diski, kristalna krogla z mestom in ribami, steklene zvezde, gelaste kroglice in srebrni predvajalnik boombox",
+    "bs": "Kolaž iz 2000-ih: sjajni diskovi, kristalna kugla s gradom i ribama, staklene zvijezde, gel kuglice i srebrni boombox plejer",
+    "ca": "Un collage dels anys 2000: discs brillants, una bola de cristall amb una ciutat i peixos, estrelles de vidre, boles de gel i un reproductor boombox platejat",
+    "kk": "2000-жылдардың коллажы: жарқыраған дискілер, қала мен балықтары бар хрусталь шар, шыны жұлдыздар, гель шариктер және күміс бумбокс-плеер",
+    "ky": "2000-жылдардын коллажы: жаркыраган дисктер, ичинде шаар жана балыктар бар хрусталь шар, айнек жылдыздар, гель шарчалар жана күмүш бумбокс-плеер",
+    "as": "2000-ৰ দশকৰ কোলাজ: জিলিকি থকা ডিস্ক, চহৰ আৰু মাছ থকা স্ফটিক গোলক, কাচৰ তাৰা, জেল বল আৰু ৰূপালী বুমবক্স প্লেয়াৰ",
+    "or": "2000 ଦଶକର କୋଲାଜ: ଝଲସୁଥିବା ଡିସ୍କ, ସହର ଓ ମାଛ ଥିବା ସ୍ଫଟିକ ଗୋଲକ, କାଚର ତାରା, ଜେଲ ବଲ ଏବଂ ରୂପେଲି ବୁମବକ୍ସ ପ୍ଲେୟାର"
   },
   "brightness": "auto",
   "text": {

@@ -78,7 +78,17 @@
     "ur": "گرتی پتیاں",
     "uz": "Sakura barglari",
     "vi": "Hoa anh đào rơi",
-    "zu": "Izimbali Ezibhidlikayo"
+    "zu": "Izimbali Ezibhidlikayo",
+    "sr": "Опадајуће латице",
+    "sr-Latn": "Opadajuće latice",
+    "hr": "Latice koje padaju",
+    "sl": "Padajoči cvetni listi",
+    "bs": "Latice koje padaju",
+    "ca": "Pètals que cauen",
+    "kk": "Түсіп жатқан жапырақшалар",
+    "ky": "Түшүп жаткан гүл жалбырактары",
+    "as": "সৰি পৰা পাহি",
+    "or": "ଝଡ଼ୁଥିବା ପାଖୁଡ଼ା"
   },
   "description": "Pale blush, with cards like white petals",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "ہلکا گلابی، سفید پنکھڑیوں جیسے کارڈز کے ساتھ",
     "uz": "Och pushti, oq gulbarglariga o'xshash kartalar bilan",
     "vi": "Hồng phấn nhạt, với những thẻ như cánh hoa trắng",
-    "zu": "Okubomvu okuphaphathekile, namakhadi anjengempaphe zezimbali ezimhlophe"
+    "zu": "Okubomvu okuphaphathekile, namakhadi anjengempaphe zezimbali ezimhlophe",
+    "sr": "Бледоружичаста, са картицама као беле латице",
+    "sr-Latn": "Bledoružičasta, sa karticama kao bele latice",
+    "hr": "Blijedoružičasta, s karticama poput bijelih latica",
+    "sl": "Bledo rožnata, s karticami kot beli cvetni listi",
+    "bs": "Blijedoružičasta, s karticama poput bijelih latica",
+    "ca": "Rosa pàl·lid, amb targetes com pètals blancs",
+    "kk": "Бозғылт қызғылт түс, карточкалары ақ гүл жапырақшалары тәрізді",
+    "ky": "Купкуу кызгылт түс, карточкалары ак гүл жалбырактарындай",
+    "as": "ফেকাসীয়া গোলাপী, কাৰ্ডবোৰ বগা ফুলৰ পাহিৰ দৰে",
+    "or": "ହାଲୁକା ଗୋଲାପୀ, କାର୍ଡଗୁଡ଼ିକ ଧଳା ପାଖୁଡ଼ା ପରି"
   },
   "author": "Lumtub",
   "version": "1.0",

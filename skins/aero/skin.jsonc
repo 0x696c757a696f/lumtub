@@ -78,7 +78,17 @@
     "ur": "بلبلہ جیل",
     "uz": "Pufakli jele",
     "vi": "Gel bong bóng",
-    "zu": "Ijeli Yamabhamuza"
+    "zu": "Ijeli Yamabhamuza",
+    "sr": "Гел мехури",
+    "sr-Latn": "Gel mehuri",
+    "hr": "Gel mjehurići",
+    "sl": "Gelasti mehurčki",
+    "bs": "Gel mjehurići",
+    "ca": "Gel de bombolles",
+    "kk": "Гельді көпіршіктер",
+    "ky": "Гель көбүкчөлөр",
+    "as": "বাবল জেল",
+    "or": "ବବଲ ଜେଲ"
   },
   "description": "Sky-blue glass, glossy gel buttons and floating water bubbles",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "آسمانی نیلا شیشہ، چمکدار جیل بٹن اور تیرتے ہوئے پانی کے بلبلے",
     "uz": "Moviy shisha, yaltiroq jele tugmalar va suzib yurgan suv pufakchalari",
     "vi": "Kính xanh da trời, nút gel bóng và bong bóng nước bồng bềnh",
-    "zu": "Ingilazi eluhlaza okwesibhakabhaka, izinkinobho zejeli ezikhazimulayo namabhamuza amanzi antanta"
+    "zu": "Ingilazi eluhlaza okwesibhakabhaka, izinkinobho zejeli ezikhazimulayo namabhamuza amanzi antanta",
+    "sr": "Небескоплаво стакло, сјајна гел дугмад и лебдећи водени мехурићи",
+    "sr-Latn": "Nebeskoplavo staklo, sjajna gel dugmad i lebdeći vodeni mehurići",
+    "hr": "Nebeskoplavo staklo, sjajni gel gumbi i lebdeći vodeni mjehurići",
+    "sl": "Nebesno modro steklo, sijoči gelasti gumbi in lebdeči vodni mehurčki",
+    "bs": "Nebeskoplavo staklo, sjajna gel dugmad i lebdeći vodeni mjehurići",
+    "ca": "Vidre blau cel, botons de gel brillants i bombolles d'aigua flotants",
+    "kk": "Аспан-көк шыны, жылтыр гель түймелер және қалқып жүрген су көпіршіктері",
+    "ky": "Асман-көк айнек, жалтырак гель баскычтар жана калкып жүргөн суу көбүкчөлөрү",
+    "as": "আকাশী নীলা কাচ, চকচকে জেল বুটাম আৰু ভাঁহি থকা পানীৰ বুদবুদ",
+    "or": "ଆକାଶୀ ନୀଳ କାଚ, ଚକଚକିଆ ଜେଲ ବଟନ ଏବଂ ଭାସୁଥିବା ପାଣି ବୁଦବୁଦା"
   },
   "brightness": "auto",
   "text": {

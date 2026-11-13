@@ -78,7 +78,17 @@
     "ur": "رات کا سفر",
     "uz": "Tungi sayohat",
     "vi": "Chuyến đêm",
-    "zu": "Uhambo Lobusuku"
+    "zu": "Uhambo Lobusuku",
+    "sr": "Ноћно путовање",
+    "sr-Latn": "Noćno putovanje",
+    "hr": "Noćno putovanje",
+    "sl": "Nočna plovba",
+    "bs": "Noćno putovanje",
+    "ca": "Viatge nocturn",
+    "kk": "Түнгі саяхат",
+    "ky": "Түнкү сапар",
+    "as": "ৰাতিৰ সমুদ্ৰযাত্ৰা",
+    "or": "ରାତ୍ରି ଯାତ୍ରା"
   },
   "description": "A navy cabin with amber lamps at night",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "رات کو عنبری لیمپوں والا گہرا نیلا کیبن",
     "uz": "Kechasi qahrabo chiroqlari yonib turgan to'q ko'k kayuta",
     "vi": "Một khoang tàu xanh hải quân với đèn hổ phách về đêm",
-    "zu": "Ikhabhini eluhlaza okwesibhakabhaka ngasolwandle namalambu e-amber ebusuku"
+    "zu": "Ikhabhini eluhlaza okwesibhakabhaka ngasolwandle namalambu e-amber ebusuku",
+    "sr": "Тамноплава кабина са ћилибарским лампама ноћу",
+    "sr-Latn": "Tamnoplava kabina sa ćilibarskim lampama noću",
+    "hr": "Mornarskoplava kabina s jantarnim svjetiljkama noću",
+    "sl": "Mornarsko modra kabina z jantarnimi svetilkami ponoči",
+    "bs": "Tamnoplava kabina s ćilibarskim lampama noću",
+    "ca": "Un camarot blau marí amb llums d'ambre a la nit",
+    "kk": "Түнде янтарь шамдары жанған қою көк каюта",
+    "ky": "Түндө янтарь чырактары күйгөн кою көк каюта",
+    "as": "ৰাতি এম্বাৰ বাতিৰে নেভি নীলা কেবিন",
+    "or": "ରାତିରେ ଏମ୍ବର ଲାଇଟ୍ ସହିତ ନୌସେନା ନୀଳ କେବିନ"
   },
   "author": "Lumtub",
   "version": "1.0",

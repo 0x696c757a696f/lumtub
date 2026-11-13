@@ -78,7 +78,17 @@
     "ur": "ملینیم پلیئر",
     "uz": "Ming yillik pleyer",
     "vi": "Máy nghe nhạc thiên niên kỷ",
-    "zu": "Isidlali Sekhulunyaka"
+    "zu": "Isidlali Sekhulunyaka",
+    "sr": "Миленијумски плејер",
+    "sr-Latn": "Milenijumski plejer",
+    "hr": "Milenijski player",
+    "sl": "Tisočletni predvajalnik",
+    "bs": "Milenijumski plejer",
+    "ca": "Reproductor del mil·lenni",
+    "kk": "Мыңжылдық плеері",
+    "ky": "Миң жылдык плеер",
+    "as": "সহস্ৰাব্দ প্লেয়াৰ",
+    "or": "ସହସ୍ରାବ୍ଦ ପ୍ଲେୟାର"
   },
   "description": "Gunmetal casing, a green LCD with a spectrum and rounded transport keys",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "گن میٹل کا خول، اسپیکٹرم والی سبز LCD اور گول کنٹرول کیز",
     "uz": "Kulrang metall korpus, spektrli yashil LCD va yumaloq boshqaruv tugmalari",
     "vi": "Vỏ màu xám thép, màn LCD xanh lục có phổ âm và các phím điều khiển bo tròn",
-    "zu": "Ikhesi lensimbi emnyama, i-LCD eluhlaza enesipektra nezinkinobho zokulawula ezisondelene"
+    "zu": "Ikhesi lensimbi emnyama, i-LCD eluhlaza enesipektra nezinkinobho zokulawula ezisondelene",
+    "sr": "Кућиште боје тамног челика, зелени LCD са спектром и заобљени тастери за управљање",
+    "sr-Latn": "Kućište boje tamnog čelika, zeleni LCD sa spektrom i zaobljeni tasteri za upravljanje",
+    "hr": "Kućište boje tamnog čelika, zeleni LCD sa spektrom i zaobljene tipke za upravljanje",
+    "sl": "Ohišje barve topovskega jekla, zeleni LCD s spektrom in zaobljene tipke za upravljanje",
+    "bs": "Kućište boje tamnog čelika, zeleni LCD sa spektrom i zaobljene tipke za upravljanje",
+    "ca": "Carcassa gris metall fosc, una pantalla LCD verda amb espectre i tecles de control arrodonides",
+    "kk": "Қара болат түсті корпус, спектрі бар жасыл LCD және дөңгелек басқару пернелері",
+    "ky": "Кара болот түстүү корпус, спектри бар жашыл LCD жана тегеректелген башкаруу баскычтары",
+    "as": "বন্দুকৰ ধাতুৰ ৰঙৰ খোল, স্পেক্ট্ৰামযুক্ত সেউজীয়া LCD আৰু গোলাকাৰ নিয়ন্ত্ৰণ বুটাম",
+    "or": "ଗନମେଟାଲ ରଙ୍ଗର କେସିଂ, ସ୍ପେକ୍ଟ୍ରମ ସହ ସବୁଜ LCD ଓ ଗୋଲାକାର ନିୟନ୍ତ୍ରଣ କି"
   },
   "brightness": "dark",
   "text": {

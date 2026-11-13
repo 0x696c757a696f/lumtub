@@ -78,7 +78,17 @@
     "ur": "چاول کا کاغذ",
     "uz": "Guanzhi qog'ozi",
     "vi": "Giấy tuyên",
-    "zu": "Iphepha Lelayisi"
+    "zu": "Iphepha Lelayisi",
+    "sr": "Пиринчани папир",
+    "sr-Latn": "Pirinčani papir",
+    "hr": "Rižin papir",
+    "sl": "Rižev papir",
+    "bs": "Rižin papir",
+    "ca": "Paper d'arròs",
+    "kk": "Күріш қағазы",
+    "ky": "Күрүч кагазы",
+    "as": "চাউলৰ কাগজ",
+    "or": "ଚାଉଳ କାଗଜ"
   },
   "description": "Warm paper with a vermilion seal and a deeper margin",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "گرم کاغذ، سندوری مہر اور گہرا حاشیہ",
     "uz": "Iliq qog'oz, qizil muhr va chuqurroq hoshiya",
     "vi": "Giấy ấm với con dấu đỏ son và lề đậm hơn",
-    "zu": "Iphepha elifudumele elinophawu olubomvu nomphetho ojulile"
+    "zu": "Iphepha elifudumele elinophawu olubomvu nomphetho ojulile",
+    "sr": "Топао папир са цинобер печатом и тамнијим маргинама",
+    "sr-Latn": "Topao papir sa cinober pečatom i tamnijim marginama",
+    "hr": "Topli papir s cinoberskim pečatom i tamnijim marginama",
+    "sl": "Topel papir s cinobrastim pečatom in temnejšim robom",
+    "bs": "Topli papir s cinoberskim pečatom i tamnijim marginama",
+    "ca": "Paper càlid amb un segell vermell cinabri i un marge més fosc",
+    "kk": "Қызыл киноварь мөрі бар жылы қағаз және қоюлау жиек",
+    "ky": "Кызыл киноварь мөөрү бар жылуу кагаз жана тереңирээк талаа",
+    "as": "সেন্দুৰীয়া সীলমোহৰ আৰু অধিক গাঢ় মাৰ্জিনৰ সৈতে উষ্ণ কাগজ",
+    "or": "ସିନ୍ଦୁରିଆ ମୋହର ଓ ଅଧିକ ଗାଢ଼ ମାର୍ଜିନ ସହିତ ଉଷ୍ଣ କାଗଜ"
   },
   "author": "Lumtub",
   "version": "1.0",

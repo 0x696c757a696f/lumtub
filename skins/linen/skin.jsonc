@@ -78,7 +78,17 @@
     "ur": "کتان اور چمڑا",
     "uz": "Zig'ir va charm",
     "vi": "Lanh và da",
-    "zu": "Ilineni Nesikhumba"
+    "zu": "Ilineni Nesikhumba",
+    "sr": "Лан и кожа",
+    "sr-Latn": "Lan i koža",
+    "hr": "Lan i koža",
+    "sl": "Lan in usnje",
+    "bs": "Lan i koža",
+    "ca": "Lli i cuir",
+    "kk": "Зығыр және былғары",
+    "ky": "Зыгыр жана булгаары",
+    "as": "লিনেন আৰু চামৰা",
+    "or": "ଲିନେନ ଓ ଚମଡ଼ା"
   },
   "description": "Grey linen behind everything, a stitched leather bar and glassy buttons, from the years when screens copied real materials",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "سب کے پیچھے سرمئی کتان، سلائی دار چمڑے کا بار اور شیشے جیسے بٹن، ان برسوں سے جب اسکرینیں اصل مواد کی نقل کرتی تھیں",
     "uz": "Hammasi ortida kulrang zig'ir, tikilgan charm panel va shisha kabi tugmalar, ekranlar haqiqiy materiallarga taqlid qilgan yillardan",
     "vi": "Vải lanh xám làm nền, thanh da có đường khâu và các nút kính bóng, từ những năm màn hình bắt chước chất liệu thật",
-    "zu": "Ilineni elimpunga ngemuva kwakho konke, ibha yesikhumba ethungiwe nezinkinobho ezinjengengilazi, evela eminyakeni lapho izikrini zikopisha izinto zangempela"
+    "zu": "Ilineni elimpunga ngemuva kwakho konke, ibha yesikhumba ethungiwe nezinkinobho ezinjengengilazi, evela eminyakeni lapho izikrini zikopisha izinto zangempela",
+    "sr": "Сиви лан иза свега, пришивена кожна трака и сјајна дугмад налик стаклу, из година када су екрани копирали праве материјале",
+    "sr-Latn": "Sivi lan iza svega, prišivena kožna traka i sjajna dugmad nalik staklu, iz godina kada su ekrani kopirali prave materijale",
+    "hr": "Sivi lan iza svega, prošivena kožna traka i staklasti gumbi, iz godina kad su zasloni kopirali prave materijale",
+    "sl": "Siv lan za vsem, našito usnjena vrstica in steklasti gumbi, iz let, ko so zasloni posnemali prave materiale",
+    "bs": "Sivi lan iza svega, prošivena kožna traka i staklasta dugmad, iz godina kada su ekrani kopirali prave materijale",
+    "ca": "Lli gris darrere de tot, una barra de cuir cosida i botons de vidre, dels anys en què les pantalles copiaven materials reals",
+    "kk": "Бәрінің артында сұр зығыр, тігісі бар былғары жолақ және шыныдай түймелер, экрандар нақты материалдарға еліктеген жылдардан",
+    "ky": "Баардыгынын артында боз зыгыр, тигилген булгаары тилке жана айнектей баскычтар, экрандар чыныгы материалдарга окшоп кеткен жылдардан",
+    "as": "সকলোৰে পিছত ধূসৰ লিনেন, চিলাই কৰা চামৰাৰ বাৰ আৰু কাচৰ দৰে বুটাম, পৰ্দাবোৰে প্ৰকৃত সামগ্ৰী নকল কৰা বছৰবোৰৰ পৰা",
+    "or": "ସବୁ ପଛରେ ଧୂସର ଲିନେନ, ସିଲେଇ କରାଯାଇଥିବା ଚମଡ଼ା ବାର ଏବଂ କାଚ ପରି ବଟନ, ସ୍କ୍ରିନ ଆସଲ ସାମଗ୍ରୀ ନକଲ କରୁଥିବା ବର୍ଷମାନଙ୍କରୁ"
   },
   "brightness": "auto",
   "colors": {

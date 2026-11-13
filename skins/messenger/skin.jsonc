@@ -78,7 +78,17 @@
     "ur": "ملینیم چیٹ",
     "uz": "Ming yillik chat",
     "vi": "Trò chuyện thiên niên kỷ",
-    "zu": "Ingxoxo Yekhulunyaka"
+    "zu": "Ingxoxo Yekhulunyaka",
+    "sr": "Миленијумски чет",
+    "sr-Latn": "Milenijumski čet",
+    "hr": "Milenijski chat",
+    "sl": "Tisočletni klepet",
+    "bs": "Milenijumski čet",
+    "ca": "Xat del mil·lenni",
+    "kk": "Мыңжылдық чаты",
+    "ky": "Миң жылдык чат",
+    "as": "সহস্ৰাব্দ চেট",
+    "or": "ସହସ୍ରାବ୍ଦ ଚାଟ୍"
   },
   "description": "Blue gradient windows and friendly buttons, like a 2004 chat program",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "نیلے گریڈیئنٹ ونڈوز اور دوستانہ بٹن، جیسے 2004 کا چیٹ پروگرام",
     "uz": "Ko'k gradientli oynalar va do'stona tugmalar, 2004-yilgi chat dasturi kabi",
     "vi": "Cửa sổ chuyển màu xanh lam và nút thân thiện, như chương trình trò chuyện năm 2004",
-    "zu": "Amawindi egrediyenti eluhlaza okwesibhakabhaka nezinkinobho ezinobungani, njengohlelo lwengxoxo lwango-2004"
+    "zu": "Amawindi egrediyenti eluhlaza okwesibhakabhaka nezinkinobho ezinobungani, njengohlelo lwengxoxo lwango-2004",
+    "sr": "Прозори са плавим градијентом и пријатељска дугмад, као у програму за ћаскање из 2004.",
+    "sr-Latn": "Prozori sa plavim gradijentom i prijateljska dugmad, kao u programu za ćaskanje iz 2004.",
+    "hr": "Prozori s plavim prijelazom i prijateljski gumbi, kao u programu za chat iz 2004.",
+    "sl": "Okna z modrim prelivom in prijazni gumbi, kot v klepetalnem programu iz leta 2004",
+    "bs": "Prozori s plavim prelazom i prijateljska dugmad, kao u programu za čet iz 2004.",
+    "ca": "Finestres amb degradat blau i botons amables, com un programa de xat del 2004",
+    "kk": "Көк градиентті терезелер мен ақжарқын түймелер, 2004 жылғы чат бағдарламасындай",
+    "ky": "Көк градиенттүү терезелер жана достук баскычтар, 2004-жылдагы чат программасындай",
+    "as": "নীলা গ্ৰেডিয়েণ্ট উইণ্ড' আৰু বন্ধুত্বপূৰ্ণ বুটাম, 2004 চনৰ চেট প্ৰগ্ৰামৰ দৰে",
+    "or": "ନୀଳ ଗ୍ରେଡିଏଣ୍ଟ ୱିଣ୍ଡୋ ଓ ବନ୍ଧୁତ୍ୱପୂର୍ଣ୍ଣ ବଟନ, 2004 ମସିହାର ଚାଟ୍ ପ୍ରୋଗ୍ରାମ ପରି"
   },
   "brightness": "light",
   "text": {

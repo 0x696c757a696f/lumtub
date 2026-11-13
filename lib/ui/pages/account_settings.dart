@@ -11,6 +11,7 @@ import 'cookie_sign_in_tile.dart';
 import 'channel_page.dart' show ChannelAvatar;
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
+import '../sign_in_row.dart';
 
 /// Google sign-in, sync and the OAuth client used for it.
 class AccountSettings extends StatelessWidget {
@@ -43,7 +44,7 @@ class AccountSettings extends StatelessWidget {
             children: [
               switch (account.state) {
                 AccountState.signedIn => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    ListTile(
+                    SignInRow(
                       leading: account.avatar == null
                           ? CircleAvatar(
                               backgroundColor: colors.primaryContainer,
@@ -51,12 +52,12 @@ class AccountSettings extends StatelessWidget {
                             )
                           : ChannelAvatar(name: account.name ?? '', image: account.avatar, radius: 20),
                       title: Text(account.name ?? tr('YouTube account')),
-                      trailing: account.canWrite ? null : FilledButton.tonal(onPressed: account.signIn, child: Text(tr('Sign in again to enable likes and comments'))),
                       subtitle: Text(account.syncing
                           ? tr('Syncing subscriptions and playlists…')
                           : account.lastSync == null
                               ? tr('Signed in, not synced yet')
                               : tr('Last synced: {0} {1}', [formatDate(account.lastSync!), _time(account.lastSync!)])),
+                      actions: [if (!account.canWrite) FilledButton.tonal(onPressed: account.signIn, child: Text(tr('Sign in again to enable likes and comments')))],
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -70,21 +71,23 @@ class AccountSettings extends StatelessWidget {
                       ]),
                     ),
                   ]),
-                AccountState.signingIn => ListTile(
+                AccountState.signingIn => SignInRow(
                     leading: const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
                     title: Text(tr('Finish signing in in your browser')),
                     subtitle: Text(tr("The Google sign-in page has opened in your default browser. You'll return here automatically when done.")),
-                    trailing: TextButton(onPressed: account.cancelSignIn, child: Text(tr('Cancel'))),
+                    actions: [TextButton(onPressed: account.cancelSignIn, child: Text(tr('Cancel')))],
                   ),
-                AccountState.signedOut => ListTile(
+                AccountState.signedOut => SignInRow(
                     leading: Icon(AppIcons.userCircle, color: colors.primary),
                     title: Text(tr('Signed out')),
                     subtitle: Text(account.client == null ? tr('This build has no built-in Google client. Enter your own client below first.') : tr('After signing in you can import subscriptions, playlists and liked videos, and also like, comment, save to playlists and subscribe.')),
-                    trailing: FilledButton.icon(
-                      onPressed: account.client == null ? null : account.signIn,
-                      icon: Icon(AppIcons.signIn),
-                      label: Text(tr('Sign in')),
-                    ),
+                    actions: [
+                      FilledButton.icon(
+                        onPressed: account.client == null ? null : account.signIn,
+                        icon: Icon(AppIcons.signIn),
+                        label: Text(tr('Sign in')),
+                      ),
+                    ],
                   ),
               },
               if (error != null)
@@ -239,11 +242,11 @@ class _TvSignInTile extends StatelessWidget {
     final code = sign.code;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       switch (sign.state) {
-        TvSignInState.signedIn => ListTile(
+        TvSignInState.signedIn => SignInRow(
             leading: Icon(AppIcons.thumbsUp, color: colors.primary),
             title: Text(sign.name ?? tr('Signed in with a TV code')),
             subtitle: Text(tr('You can like and dislike comments and community posts')),
-            trailing: Wrap(spacing: 8, children: [
+            actions: [
               if (saveSamples != null)
                 TextButton(
                   onPressed: () async {
@@ -254,28 +257,41 @@ class _TvSignInTile extends StatelessWidget {
                   child: Text(tr('Save TV samples')),
                 ),
               OutlinedButton(onPressed: sign.signOut, child: Text(tr('Exit'))),
+            ],
+          ),
+        // Laid out down the page, not as a list row: the code, the steps
+        // and the buttons each get the full width, which a phone needs.
+        TvSignInState.waiting => Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
+                const SizedBox(width: 12),
+                Expanded(child: Text(code == null ? tr('Getting a TV code…') : tr('TV code: '))),
+              ]),
+              if (code != null)
+                Row(children: [
+                  Flexible(child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: SelectableText(code, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 2)),
+                  )),
+                  IconButton(tooltip: tr('Copy'), icon: Icon(AppIcons.copySimple, size: 18), onPressed: () => copyText(context, code, tr('TV code copied'))),
+                ]),
+              const SizedBox(height: 4),
+              Text(tr('Open {0} in a browser, sign in to Google and enter the TV code above. This page continues by itself once you are done.', [sign.address]), style: context.text.bodySmall?.copyWith(color: colors.onSurfaceVariant)),
+              const SizedBox(height: 8),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                if (code != null) FilledButton.tonal(onPressed: () => openExternal(sign.address), child: Text(tr('Open page'))),
+                TextButton(onPressed: sign.cancel, child: Text(tr('Cancel'))),
+              ]),
             ]),
           ),
-        TvSignInState.waiting => ListTile(
-            leading: const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
-            title: code == null
-                ? Text(tr('Getting a TV code…'))
-                : Row(children: [
-                    Text(tr('TV code: ')),
-                    SelectableText(code, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 2)),
-                    IconButton(tooltip: tr('Copy'), icon: Icon(AppIcons.copySimple, size: 18), onPressed: () => copyText(context, code, tr('TV code copied'))),
-                  ]),
-            subtitle: Text(tr('Open {0} in a browser, sign in to Google and enter the TV code above. This page continues by itself once you are done.', [sign.address])),
-            trailing: Wrap(spacing: 8, children: [
-              if (code != null) FilledButton.tonal(onPressed: () => openExternal(sign.address), child: Text(tr('Open page'))),
-              TextButton(onPressed: sign.cancel, child: Text(tr('Cancel'))),
-            ]),
-          ),
-        TvSignInState.signedOut => ListTile(
+        TvSignInState.signedOut => SignInRow(
             leading: Icon(AppIcons.television, color: colors.primary),
             title: Text(tr('Signed out')),
             subtitle: Text(tr('Sign in by entering a TV code in a browser. No password or cookies; revoke it any time under third-party apps in your Google account.')),
-            trailing: FilledButton.tonal(onPressed: sign.signIn, child: Text(tr('Sign in with a TV code'))),
+            actions: [FilledButton.tonal(onPressed: sign.signIn, child: Text(tr('Sign in with a TV code')))],
           ),
       },
       if (error != null) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: ErrorBanner(error)),

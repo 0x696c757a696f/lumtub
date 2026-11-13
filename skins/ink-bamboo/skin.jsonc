@@ -78,7 +78,17 @@
     "ur": "سیاہی بانس",
     "uz": "Siyoh bambuk",
     "vi": "Mực trúc",
-    "zu": "Ibhamboo Elinomsizi"
+    "zu": "Ibhamboo Elinomsizi",
+    "sr": "Бамбус у тушу",
+    "sr-Latn": "Bambus u tušu",
+    "hr": "Bambus u tušu",
+    "sl": "Tuš in bambus",
+    "bs": "Bambus u tušu",
+    "ca": "Bambú de tinta",
+    "kk": "Сия бамбугі",
+    "ky": "Сыя бамбугу",
+    "as": "কালিৰ বাঁহ",
+    "or": "ଶିଆହୀ ବାଉଁଶ"
   },
   "description": "Plain white cards on bamboo green",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "بانس کے سبز رنگ پر سادہ سفید کارڈز",
     "uz": "Bambuk yashilidagi oddiy oq kartalar",
     "vi": "Thẻ trắng giản dị trên nền xanh trúc",
-    "zu": "Amakhadi amhlophe alula phezu kwemfunzi eluhlaza"
+    "zu": "Amakhadi amhlophe alula phezu kwemfunzi eluhlaza",
+    "sr": "Једноставне беле картице на бамбусово зеленој подлози",
+    "sr-Latn": "Jednostavne bele kartice na bambusovo zelenoj podlozi",
+    "hr": "Jednostavne bijele kartice na bambusovo zelenoj podlozi",
+    "sl": "Preproste bele kartice na bambusovo zeleni podlagi",
+    "bs": "Jednostavne bijele kartice na bambusovo zelenoj podlozi",
+    "ca": "Targetes blanques senzilles sobre verd bambú",
+    "kk": "Бамбук жасылы түсті фондағы қарапайым ақ карточкалар",
+    "ky": "Бамбук жашыл түстөгү фондогу жөнөкөй ак карточкалар",
+    "as": "বাঁহৰ সেউজীয়া ৰঙৰ ওপৰত সাধাৰণ বগা কাৰ্ড",
+    "or": "ବାଉଁଶ ସବୁଜ ଉପରେ ସାଦା ଧଳା କାର୍ଡ"
   },
   "author": "Lumtub",
   "version": "1.0",

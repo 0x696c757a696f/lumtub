@@ -78,7 +78,17 @@
     "ur": "برش شدہ دھات",
     "uz": "Silliqlangan metall",
     "vi": "Kim loại xước",
-    "zu": "Insimbi Egayiwe"
+    "zu": "Insimbi Egayiwe",
+    "sr": "Брушени метал",
+    "sr-Latn": "Brušeni metal",
+    "hr": "Brušeni metal",
+    "sl": "Brušena kovina",
+    "bs": "Brušeni metal",
+    "ca": "Metall raspallat",
+    "kk": "Шлифталған металл",
+    "ky": "Шлифтелген металл",
+    "as": "ব্ৰাছড ধাতু",
+    "or": "ବ୍ରଶ୍ଡ ଧାତୁ"
   },
   "description": "Brushed steel, glossy raised buttons and an orange glow on what is chosen, as the first touch phones had",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "برش شدہ فولاد، چمکدار ابھرے بٹن اور منتخب چیز پر نارنجی چمک، جیسے پہلے ٹچ فونز میں تھی",
     "uz": "Silliqlangan po'lat, yaltiroq bo'rtma tugmalar va tanlangan joyda to'q sariq nur, dastlabki sensorli telefonlar kabi",
     "vi": "Thép xước, nút nổi bóng loáng và ánh cam trên mục được chọn, như những chiếc điện thoại cảm ứng đầu tiên",
-    "zu": "Insimbi egayiwe, izinkinobho ezikhazimulayo eziphakanyisiwe nokukhanya okuwolintshi kokukhethiwe, njengamafoni okuqala asebenza ngokuthinta"
+    "zu": "Insimbi egayiwe, izinkinobho ezikhazimulayo eziphakanyisiwe nokukhanya okuwolintshi kokukhethiwe, njengamafoni okuqala asebenza ngokuthinta",
+    "sr": "Брушени челик, сјајна испупчена дугмад и наранџасти сјај на изабраном, као на првим телефонима на додир",
+    "sr-Latn": "Brušeni čelik, sjajna ispupčena dugmad i narandžasti sjaj na izabranom, kao na prvim telefonima na dodir",
+    "hr": "Brušeni čelik, sjajni izbočeni gumbi i narančasti sjaj na odabranom, kao na prvim telefonima na dodir",
+    "sl": "Brušeno jeklo, sijoči privzdignjeni gumbi in oranžen sij na izbranem, kot na prvih telefonih na dotik",
+    "bs": "Brušeni čelik, sjajna izbočena dugmad i narandžasti sjaj na odabranom, kao na prvim telefonima na dodir",
+    "ca": "Acer raspallat, botons en relleu brillants i un resplendor taronja en allò que se selecciona, com els primers telèfons tàctils",
+    "kk": "Шлифталған болат, жылтыр дөңес түймелер және таңдалғанда қызғылт сары жарқыл, алғашқы сенсорлы телефондардағыдай",
+    "ky": "Шлифтелген болот, жылтыр томпок баскычтар жана тандалганда кызгылт сары жаркыроо, алгачкы сенсордук телефондордогудай",
+    "as": "ব্ৰাছ কৰা ষ্টিল, চকচকে উঠা বুটাম আৰু নিৰ্বাচিত বস্তুত কমলা আভা, প্ৰথম স্পৰ্শ-ফোনবোৰৰ দৰে",
+    "or": "ବ୍ରଶ୍ କରାଯାଇଥିବା ଷ୍ଟିଲ, ଚକଚକିଆ ଉଠା ବଟନ ଏବଂ ବଛାଯାଇଥିବାରେ କମଳା ଆଭା, ପ୍ରଥମ ଟଚ୍ ଫୋନ ପରି"
   },
   "brightness": "light",
   "colors": {

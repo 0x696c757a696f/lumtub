@@ -78,7 +78,17 @@
     "ur": "دھوپ بھرا مرغزار",
     "uz": "Quyoshli o'tloq",
     "vi": "Đồng cỏ nắng",
-    "zu": "Amaxhaphozi Elanga"
+    "zu": "Amaxhaphozi Elanga",
+    "sr": "Сунчана ливада",
+    "sr-Latn": "Sunčana livada",
+    "hr": "Sunčana livada",
+    "sl": "Sončni travnik",
+    "bs": "Sunčana livada",
+    "ca": "Prat assolellat",
+    "kk": "Күнді шалғын",
+    "ky": "Күнөстүү шалбаа",
+    "as": "ৰ'দালী ঘাঁহনি",
+    "or": "ଖରାଦିଆ ଘାସପଡ଼ିଆ"
   },
   "description": "Blue sky over rolling green grass, lens glints and soft light",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "لہراتی سبز گھاس پر نیلا آسمان، لینس کی چمک اور نرم روشنی",
     "uz": "To'lqinsimon yashil o'tloq ustida ko'k osmon, linza yaltirashlari va yumshoq yorug'lik",
     "vi": "Bầu trời xanh trên đồng cỏ xanh lượn sóng, đốm sáng ống kính và ánh sáng dịu",
-    "zu": "Isibhakabhaka esiluhlaza okwesibhakabhaka phezu kotshani obuluhlaza obugobile, ukukhazimula kwelensi nokukhanya okuthambile"
+    "zu": "Isibhakabhaka esiluhlaza okwesibhakabhaka phezu kotshani obuluhlaza obugobile, ukukhazimula kwelensi nokukhanya okuthambile",
+    "sr": "Плаво небо изнад таласасте зелене траве, одсјаји сочива и мека светлост",
+    "sr-Latn": "Plavo nebo iznad talasaste zelene trave, odsjaji sočiva i meka svetlost",
+    "hr": "Plavo nebo iznad valovite zelene trave, odsjaji leće i meko svjetlo",
+    "sl": "Modro nebo nad valovito zeleno travo, bliski leče in mehka svetloba",
+    "bs": "Plavo nebo iznad valovite zelene trave, odsjaji sočiva i meka svjetlost",
+    "ca": "Cel blau sobre una herba verda ondulant, reflexos de lent i llum suau",
+    "kk": "Толқынды жасыл шөп үстіндегі көк аспан, объектив жарқылдары және жұмсақ жарық",
+    "ky": "Толкундуу жашыл чөп үстүндөгү көк асман, объективдин жаркылдары жана жумшак жарык",
+    "as": "ঢৌ খেলা সেউজীয়া ঘাঁহৰ ওপৰত নীলা আকাশ, লেঞ্চৰ জিলিকনি আৰু কোমল পোহৰ",
+    "or": "ଲହରିଆ ସବୁଜ ଘାସ ଉପରେ ନୀଳ ଆକାଶ, ଲେନ୍ସ ଝଲକ ଓ କୋମଳ ଆଲୋକ"
   },
   "brightness": "auto",
   "text": {

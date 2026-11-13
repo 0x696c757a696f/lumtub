@@ -78,7 +78,17 @@
     "ur": "لکڑی کی شیلف",
     "uz": "Yog'och javon",
     "vi": "Kệ gỗ",
-    "zu": "Ishalofu Lokhuni"
+    "zu": "Ishalofu Lokhuni",
+    "sr": "Дрвена полица",
+    "sr-Latn": "Drvena polica",
+    "hr": "Drvena polica",
+    "sl": "Lesena polica",
+    "bs": "Drvena polica",
+    "ca": "Prestatge de fusta",
+    "kk": "Ағаш сөре",
+    "ky": "Жыгач текче",
+    "as": "কাঠৰ তাক",
+    "or": "କାଠ ତାକ"
   },
   "description": "Warm wood grain, cream paper cards and a brushed metal slider on what is chosen",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "گرم لکڑی کے ریشے، کریم کاغذی کارڈز اور منتخب چیز پر برش شدہ دھات کا سلائیڈر",
     "uz": "Iliq yog'och tolalari, krem qog'oz kartalar va tanlangan joyda silliqlangan metall slayder",
     "vi": "Vân gỗ ấm, thẻ giấy màu kem và thanh trượt kim loại xước ở mục được chọn",
-    "zu": "Ukhuni olufudumele, amakhadi ephepha le-cream nesilayidi sensimbi egayiwe kokukhethiwe"
+    "zu": "Ukhuni olufudumele, amakhadi ephepha le-cream nesilayidi sensimbi egayiwe kokukhethiwe",
+    "sr": "Топла дрвена текстура, кремасте папирне картице и брушени метални клизач на изабраном",
+    "sr-Latn": "Topla drvena tekstura, kremaste papirne kartice i brušeni metalni klizač na izabranom",
+    "hr": "Topla drvena tekstura, krem papirnate kartice i brušeni metalni klizač na odabranom",
+    "sl": "Topla lesna tekstura, kremno papirnate kartice in brušen kovinski drsnik na izbranem",
+    "bs": "Topla drvena tekstura, krem papirne kartice i brušeni metalni klizač na odabranom",
+    "ca": "Veta de fusta càlida, targetes de paper color crema i un control lliscant de metall raspallat en allò que se selecciona",
+    "kk": "Жылы ағаш өрнегі, кремді қағаз карточкалар және таңдалғанда шлифталған металл жүгірткі",
+    "ky": "Жылуу жыгач тулкусу, крем түстүү кагаз карточкалар жана тандалганда шлифтелген металл жылгыч",
+    "as": "উষ্ণ কাঠৰ গঠন, ক্ৰীম ৰঙৰ কাগজৰ কাৰ্ড আৰু নিৰ্বাচিত বস্তুত ব্ৰাছ কৰা ধাতুৰ স্লাইডাৰ",
+    "or": "ଉଷ୍ଣ କାଠ ଗଠନ, କ୍ରିମ୍ ରଙ୍ଗର କାଗଜ କାର୍ଡ ଓ ବଛାଯାଇଥିବାରେ ବ୍ରଶ୍ ଧାତୁ ସ୍ଲାଇଡର"
   },
   "brightness": "light",
   "colors": {

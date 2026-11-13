@@ -78,7 +78,17 @@
     "ur": "ملینیم ڈیسک ٹاپ",
     "uz": "Ming yillik ish stoli",
     "vi": "Màn hình nền thiên niên kỷ",
-    "zu": "Ideskithophu Yekhulunyaka"
+    "zu": "Ideskithophu Yekhulunyaka",
+    "sr": "Миленијумска радна површина",
+    "sr-Latn": "Milenijumska radna površina",
+    "hr": "Milenijska radna površina",
+    "sl": "Tisočletno namizje",
+    "bs": "Milenijumska radna površina",
+    "ca": "Escriptori del mil·lenni",
+    "kk": "Мыңжылдық жұмыс үстелі",
+    "ky": "Миң жылдык иш столу",
+    "as": "সহস্ৰাব্দ ডেস্কটপ",
+    "or": "ସହସ୍ରାବ୍ଦ ଡେସ୍କଟପ"
   },
   "description": "Grey raised edges, blue title bars and a teal desk, as on late-90s computers",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "90 کی دہائی کے آخر کے کمپیوٹروں کی طرح سرمئی ابھرے کنارے، نیلے ٹائٹل بار اور فیروزی ڈیسک",
     "uz": "90-yillar oxiridagi kompyuterlar kabi kulrang bo'rtma chetlar, ko'k sarlavha panellari va firuza ish stoli",
     "vi": "Viền nổi màu xám, thanh tiêu đề xanh lam và bàn làm việc màu xanh mòng két, như máy tính cuối thập niên 90",
-    "zu": "Imiphetho ephakanyisiwe empunga, amabha esihloko aluhlaza okwesibhakabhaka nedeski eluhlaza okwesibhakabhaka, njengamakhompyutha asekupheleni kweminyaka yama-90"
+    "zu": "Imiphetho ephakanyisiwe empunga, amabha esihloko aluhlaza okwesibhakabhaka nedeski eluhlaza okwesibhakabhaka, njengamakhompyutha asekupheleni kweminyaka yama-90",
+    "sr": "Сиве истакнуте ивице, плаве насловне траке и тиркизна радна површина, као на рачунарима с краја 90-их",
+    "sr-Latn": "Sive istaknute ivice, plave naslovne trake i tirkizna radna površina, kao na računarima s kraja 90-ih",
+    "hr": "Sivi izdignuti rubovi, plave naslovne trake i tirkizna radna površina, kao na računalima s kraja 90-ih",
+    "sl": "Sivi privzdignjeni robovi, modre naslovne vrstice in turkizno namizje, kot na računalnikih iz konca 90. let",
+    "bs": "Sive izdignute ivice, plave naslovne trake i tirkizna radna površina, kao na računarima s kraja 90-ih",
+    "ca": "Vores grises en relleu, barres de títol blaves i un escriptori verd blavós, com als ordinadors de finals dels 90",
+    "kk": "Сұр дөңес жиектер, көк тақырып жолақтары және көгілдір-жасыл үстел, 90-жылдардың соңындағы компьютерлердегідей",
+    "ky": "Боз томпок четтер, көк аталыш тилкелери жана жашыл-көк иш столу, 90-жылдардын аягындагы компьютерлердегидей",
+    "as": "ধূসৰ উঠা ধাৰ, নীলা শীৰ্ষক বাৰ আৰু ফিৰোজা ৰঙৰ ডেস্ক, 90-ৰ দশকৰ শেষৰ কম্পিউটাৰৰ দৰে",
+    "or": "ଧୂସର ଉଠା ଧାର, ନୀଳ ଶୀର୍ଷକ ବାର ଓ ଫିରୋଜା ରଙ୍ଗର ଡେସ୍କ, 90 ଦଶକ ଶେଷର କମ୍ପ୍ୟୁଟର ପରି"
   },
   "brightness": "light",
   "text": {

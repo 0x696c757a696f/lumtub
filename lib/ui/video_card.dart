@@ -30,7 +30,11 @@ import '../feed_reason.dart';
 /// on the thumbnail, as Bilibili shows them.
 /// The text grows with [textScale] (the app's text size, Android's font
 /// size and a TV's larger text); the padding round it does not.
-double _cardInfoHeight(double textScale) => compactCards ? 10 + 60 * textScale : 14 + 62 * textScale;
+double _cardInfoHeight(double textScale, bool compact) => compact ? 10 + 60 * textScale : 14 + 62 * textScale;
+
+/// Whether video cards are drawn compact here: a skin that puts cards on a
+/// surface of its own keeps them full size.
+bool videoCardsCompact(BuildContext context) => compactCards && context.skin?.videoCard == null;
 
 /// How much larger than set the cards' text is drawn here.
 double cardTextScale(BuildContext context) => MediaQuery.textScalerOf(context).scale(14) / 14;
@@ -87,15 +91,16 @@ String titleFor(VideoItem item) => deArrow.titleOf(item.id, item.title);
 /// The watched line under a history card.
 const _reasonHeight = 20.0;
 
-/// [padding] is the space a skin leaves round each video card.
-({int columns, double itemHeight}) gridLayoutFor(double width, {double padding = 0, double textScale = 1}) {
+/// [padding] is the space a skin leaves round each video card; [compact]
+/// is whether the cards are drawn compact ([videoCardsCompact]).
+({int columns, double itemHeight}) gridLayoutFor(double width, {double padding = 0, double textScale = 1, bool? compact}) {
   // A TV is seen from across the room, so its few pixels across still fit
   // three or four cards a row, as TV video apps show them.
   final base = Device.tv ? min(videoCardMinWidth, 200.0) : videoCardMinWidth;
   final narrowest = compactCards ? base * _compactWidth : base;
   final columns = max(1, ((width + gridGap) / (narrowest + gridGap)).floor());
   final itemWidth = (width - gridGap * (columns - 1)) / columns;
-  return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight(textScale) + 2 * padding);
+  return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight(textScale, compact ?? compactCards) + 2 * padding);
 }
 
 /// The space the current skin leaves round each video card.
@@ -157,7 +162,7 @@ class SliverVideoGrid extends StatelessWidget {
                 ),
               )
             : SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context), textScale: cardTextScale(context));
+          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context), textScale: cardTextScale(context), compact: videoCardsCompact(context));
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: layout.columns,
@@ -387,7 +392,7 @@ class SliverSkeletonGrid extends StatelessWidget {
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context), textScale: cardTextScale(context));
+          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context), textScale: cardTextScale(context), compact: videoCardsCompact(context));
           final width = constraints.crossAxisExtent;
           return SliverToBoxAdapter(child: Skeleton(child: SizedBox(
             width: width,
@@ -540,7 +545,7 @@ class _VideoCardState extends State<VideoCard> {
     // unless a skin puts cards on a surface. Compact cards sit on a quiet
     // surface of their own, so tightly packed ones still read apart.
     final skin = context.skin;
-    final compact = compactCards && skin?.videoCard == null;
+    final compact = videoCardsCompact(context);
     final card = Card(
       color: compact ? colors.surfaceContainerLow : Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: AppStyle.cardRadius),

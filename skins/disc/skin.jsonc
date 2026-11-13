@@ -78,7 +78,17 @@
     "ur": "ڈسک مینو",
     "uz": "Disk menyusi",
     "vi": "Menu đĩa",
-    "zu": "Imenyu Yediski"
+    "zu": "Imenyu Yediski",
+    "sr": "Мени диска",
+    "sr-Latn": "Meni diska",
+    "hr": "Izbornik diska",
+    "sl": "Meni diska",
+    "bs": "Meni diska",
+    "ca": "Menú del disc",
+    "kk": "Диск мәзірі",
+    "ky": "Диск менюсу",
+    "as": "ডিস্ক মেনু",
+    "or": "ଡିସ୍କ ମେନୁ"
   },
   "description": "Deep blue haze, light streaks and glowing orbs, like a DVD or console menu",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "گہری نیلی دھند، روشنی کی لکیریں اور دمکتے گولے، جیسے DVD یا کنسول کا مینو",
     "uz": "Chuqur ko'k tuman, yorug'lik yo'llari va yarqiroq sharlar, DVD yoki konsol menyusi kabi",
     "vi": "Màn sương xanh thẫm, vệt sáng và quả cầu phát sáng, như menu DVD hay máy chơi game",
-    "zu": "Inkungu eluhlaza okwesibhakabhaka ejulile, imigqa yokukhanya namabhola akhanyayo, njengemenyu ye-DVD noma ye-konsoli"
+    "zu": "Inkungu eluhlaza okwesibhakabhaka ejulile, imigqa yokukhanya namabhola akhanyayo, njengemenyu ye-DVD noma ye-konsoli",
+    "sr": "Дубока плава измаглица, светлосне траке и сјајне кугле, као мени DVD-а или конзоле",
+    "sr-Latn": "Duboka plava izmaglica, svetlosne trake i sjajne kugle, kao meni DVD-a ili konzole",
+    "hr": "Duboka plava izmaglica, svjetlosne crte i užarene kugle, kao izbornik DVD-a ili konzole",
+    "sl": "Globoka modra megla, svetlobne proge in žareče krogle, kot meni DVD-ja ali konzole",
+    "bs": "Duboka plava izmaglica, svjetlosne trake i sjajne kugle, kao meni DVD-a ili konzole",
+    "ca": "Boira blau fosc, ratlles de llum i orbes lluents, com el menú d'un DVD o d'una consola",
+    "kk": "Қою көк тұман, жарық жолақтары және жарқыраған шарлар, DVD немесе консоль мәзіріндегідей",
+    "ky": "Терең көк туман, жарык тилкелери жана жаркыраган шарлар, DVD же консоль менюсундагыдай",
+    "as": "গাঢ় নীলা কুঁৱলী, পোহৰৰ ৰেখা আৰু জ্বলজ্বলীয়া গোলক, DVD বা কনছোলৰ মেনুৰ দৰে",
+    "or": "ଗାଢ଼ ନୀଳ କୁହେଳି, ଆଲୋକ ରେଖା ଓ ଜ୍ୱଳନ୍ତ ଗୋଲକ, DVD କିମ୍ବା କନସୋଲ ମେନୁ ପରି"
   },
   "brightness": "dark",
   "text": {

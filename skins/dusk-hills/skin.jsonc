@@ -78,7 +78,17 @@
     "ur": "شام کی پہاڑیاں",
     "uz": "Shom tog'lari",
     "vi": "Núi chiều",
-    "zu": "Intaba Zakusihlwa"
+    "zu": "Intaba Zakusihlwa",
+    "sr": "Брда у сумрак",
+    "sr-Latn": "Brda u sumrak",
+    "hr": "Brežuljci u sumrak",
+    "sl": "Griči v somraku",
+    "bs": "Brežuljci u sumrak",
+    "ca": "Turons al capvespre",
+    "kk": "Ымырт төбелері",
+    "ky": "Күүгүм адырлары",
+    "as": "গধূলিৰ পাহাৰ",
+    "or": "ସନ୍ଧ୍ୟା ପାହାଡ଼"
   },
   "description": "Grey-violet hills, with a sunset glow on what is chosen",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "سرمئی جامنی پہاڑیاں، منتخب چیز پر غروب آفتاب کی چمک",
     "uz": "Kulrang-binafsha tepaliklar, tanlangan joyda quyosh botishi nuri",
     "vi": "Những ngọn đồi xám tím, ánh hoàng hôn trên mục được chọn",
-    "zu": "Amagquma ampunga-nsomi, ukukhanya kwelanga eliphumayo kokukhethiwe"
+    "zu": "Amagquma ampunga-nsomi, ukukhanya kwelanga eliphumayo kokukhethiwe",
+    "sr": "Сиво-љубичасти брежуљци са сјајем заласка сунца на изабраном",
+    "sr-Latn": "Sivo-ljubičasti brežuljci sa sjajem zalaska sunca na izabranom",
+    "hr": "Sivoljubičasti brežuljci sa sjajem zalaska sunca na odabranom",
+    "sl": "Sivovijolični griči s sijajem sončnega zahoda na izbranem",
+    "bs": "Sivoljubičasti brežuljci sa sjajem zalaska sunca na odabranom",
+    "ca": "Turons gris violeta, amb un resplendor de posta de sol en allò que se selecciona",
+    "kk": "Сұр-күлгін төбелер, таңдалған нәрседе күн батқандағы сәуле",
+    "ky": "Боз-кызгылт адырлар, тандалганда күн батар кездеги нур",
+    "as": "ধূসৰ-বেঙুনীয়া পাহাৰ, নিৰ্বাচিত বস্তুত সূৰ্যাস্তৰ আভা",
+    "or": "ଧୂସର-ବାଇଗଣୀ ପାହାଡ଼, ବଛାଯାଇଥିବାରେ ସୂର୍ଯ୍ୟାସ୍ତର ଆଭା"
   },
   "author": "Lumtub",
   "version": "1.0",

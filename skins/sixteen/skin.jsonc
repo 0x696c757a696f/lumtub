@@ -78,7 +78,17 @@
     "ur": "سولہ رنگ",
     "uz": "O'n olti rang",
     "vi": "Mười sáu màu",
-    "zu": "Imibala Elishumi Nesithupha"
+    "zu": "Imibala Elishumi Nesithupha",
+    "sr": "Шеснаест боја",
+    "sr-Latn": "Šesnaest boja",
+    "hr": "Šesnaest boja",
+    "sl": "Šestnajst barv",
+    "bs": "Šesnaest boja",
+    "ca": "Setze colors",
+    "kk": "Он алты түс",
+    "ky": "Он алты түс",
+    "as": "ষোল ৰং",
+    "or": "ଷୋଳ ରଙ୍ଗ"
   },
   "description": "A flat teal desk, white windows with thick black frames and sixteen colours",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "سادہ فیروزی ڈیسک، موٹے سیاہ فریموں والی سفید ونڈوز اور سولہ رنگ",
     "uz": "Tekis firuza ish stoli, qalin qora ramkali oq oynalar va o'n olti rang",
     "vi": "Bàn làm việc xanh mòng két phẳng, cửa sổ trắng viền đen dày và mười sáu màu",
-    "zu": "Ideski eluhlaza okwesibhakabhaka eyisicaba, amawindi amhlophe anezinhlaka ezimnyama ezijiyile nemibala eyishumi nesithupha"
+    "zu": "Ideski eluhlaza okwesibhakabhaka eyisicaba, amawindi amhlophe anezinhlaka ezimnyama ezijiyile nemibala eyishumi nesithupha",
+    "sr": "Равна тиркизна радна површина, бели прозори са дебелим црним оквирима и шеснаест боја",
+    "sr-Latn": "Ravna tirkizna radna površina, beli prozori sa debelim crnim okvirima i šesnaest boja",
+    "hr": "Ravna tirkizna radna površina, bijeli prozori s debelim crnim okvirima i šesnaest boja",
+    "sl": "Ploskovno turkizno namizje, bela okna z debelimi črnimi okvirji in šestnajst barv",
+    "bs": "Ravna tirkizna radna površina, bijeli prozori s debelim crnim okvirima i šesnaest boja",
+    "ca": "Un escriptori verd blavós pla, finestres blanques amb marcs negres gruixuts i setze colors",
+    "kk": "Тегіс көгілдір-жасыл үстел, жуан қара жақтаулы ақ терезелер және он алты түс",
+    "ky": "Жалпак жашыл-көк иш столу, жоон кара алкактуу ак терезелер жана он алты түс",
+    "as": "সমতল ফিৰোজা ডেস্ক, ডাঠ ক'লা ফ্ৰেমযুক্ত বগা উইণ্ড' আৰু ষোলটা ৰং",
+    "or": "ସମତଳ ଫିରୋଜା ଡେସ୍କ, ମୋଟା କଳା ଫ୍ରେମ ଥିବା ଧଳା ୱିଣ୍ଡୋ ଏବଂ ଷୋଳ ରଙ୍ଗ"
   },
   "brightness": "light",
   "text": {

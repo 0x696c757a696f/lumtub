@@ -78,7 +78,17 @@
     "ur": "ہینڈ ہیلڈ",
     "uz": "Cho'ntak konsoli",
     "vi": "Máy cầm tay",
-    "zu": "Isidlali Esiphathekayo"
+    "zu": "Isidlali Esiphathekayo",
+    "sr": "Џепна конзола",
+    "sr-Latn": "Džepna konzola",
+    "hr": "Džepna konzola",
+    "sl": "Ročna konzola",
+    "bs": "Džepna konzola",
+    "ca": "Consola portàtil",
+    "kk": "Қалта консолі",
+    "ky": "Чөнтөк консолу",
+    "as": "হাতত লোৱা কনছোল",
+    "or": "ହାତ କନସୋଲ"
   },
   "description": "Four shades of green on a dot-matrix screen",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "ڈاٹ میٹرکس اسکرین پر سبز کے چار رنگ",
     "uz": "Nuqtali matritsa ekranida yashilning to'rt tusi",
     "vi": "Bốn sắc xanh lục trên màn hình ma trận điểm",
-    "zu": "Imibala emine eluhlaza esikrinini se-dot-matrix"
+    "zu": "Imibala emine eluhlaza esikrinini se-dot-matrix",
+    "sr": "Четири нијансе зелене на тачкасто-матричном екрану",
+    "sr-Latn": "Četiri nijanse zelene na tačkasto-matričnom ekranu",
+    "hr": "Četiri nijanse zelene na točkasto-matričnom zaslonu",
+    "sl": "Štirje odtenki zelene na matričnem zaslonu s pikami",
+    "bs": "Četiri nijanse zelene na tačkasto-matričnom ekranu",
+    "ca": "Quatre tonalitats de verd en una pantalla de matriu de punts",
+    "kk": "Нүктелі матрицалы экрандағы жасылдың төрт реңкі",
+    "ky": "Чекиттүү матрицалуу экрандагы жашылдын төрт түсү",
+    "as": "ডট-মেট্ৰিক্স পৰ্দাত সেউজীয়াৰ চাৰিটা ছেড",
+    "or": "ଡଟ-ମ୍ୟାଟ୍ରିକ୍ସ ସ୍କ୍ରିନରେ ସବୁଜର ଚାରି ଛାୟା"
   },
   "brightness": "light",
   "text": {

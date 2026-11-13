@@ -8,6 +8,7 @@ import '../common.dart';
 import '../theme.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
+import '../sign_in_row.dart';
 
 /// The cookie sign-in, for liking posts, voting in polls and writing under
 /// posts: signing in in a browser window of its own, or importing a
@@ -83,7 +84,7 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
       listenable: sign,
       builder: (context, _) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         if (sign.waiting)
-          ListTile(
+          SignInRow(
             leading: const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
             title: Text(sign.reading
                 ? tr('Reading the sign-in…')
@@ -91,23 +92,21 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
                     ? tr('Opening the browser…')
                     : tr('Sign in to YouTube in the {0} window', [sign.browser!])),
             subtitle: Text(tr("Once YouTube's home page shows, close this browser window and Lumtub reads the sign-in. It is a separate temporary window and never touches your usual browser's data.")),
-            isThreeLine: true,
-            trailing: sign.browser == null || sign.reading ? null : TextButton(onPressed: sign.cancel, child: Text(tr('Cancel'))),
+            actions: [if (sign.browser != null && !sign.reading) TextButton(onPressed: sign.cancel, child: Text(tr('Cancel')))],
           )
         else if (sign.signedIn)
-          ListTile(
+          SignInRow(
             leading: Icon(AppIcons.lock, color: colors.primary),
             title: Text(tr('Signed in with a browser')),
             subtitle: Text('${tr('You can like, vote in and comment on community posts')}\n${_guard(sign.guard)}'),
-            isThreeLine: true,
-            trailing: OutlinedButton(onPressed: sign.signOut, child: Text(tr('Exit'))),
+            actions: [OutlinedButton(onPressed: sign.signOut, child: Text(tr('Exit')))],
           )
         else ...[
-          ListTile(
+          SignInRow(
             leading: Icon(AppIcons.globe, color: colors.primary),
             title: Text(tr('Signed out')),
             subtitle: Text(tr("Sign in in a temporary browser window. Lumtub takes only the youtube.com cookies, keeps them encrypted, then deletes all of that window's data.")),
-            trailing: FilledButton.tonal(onPressed: () => sign.signInWithBrowser(presence: _presence), child: Text(tr('Sign in with a browser'))),
+            actions: [FilledButton.tonal(onPressed: () => sign.signInWithBrowser(presence: _presence), child: Text(tr('Sign in with a browser')))],
           ),
           if (presence != null)
             SwitchListTile(

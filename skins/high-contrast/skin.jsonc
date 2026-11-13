@@ -78,7 +78,17 @@
     "ur": "زیادہ کنٹراسٹ",
     "uz": "Yuqori kontrast",
     "vi": "Tương phản cao",
-    "zu": "Umehluko Ophakeme"
+    "zu": "Umehluko Ophakeme",
+    "sr": "Висок контраст",
+    "sr-Latn": "Visok kontrast",
+    "hr": "Visoki kontrast",
+    "sl": "Visok kontrast",
+    "bs": "Visoki kontrast",
+    "ca": "Alt contrast",
+    "kk": "Жоғары контраст",
+    "ky": "Жогорку контраст",
+    "as": "উচ্চ বৈপৰীত্য",
+    "or": "ଉଚ୍ଚ ବୈପରୀତ୍ୟ"
   },
   "description": "Pure black and white, the clearest text and borders",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "خالص سیاہ اور سفید، سب سے واضح متن اور کنارے",
     "uz": "Sof qora va oq, eng aniq matn va chegaralar",
     "vi": "Đen trắng tuyệt đối, chữ và viền rõ nhất",
-    "zu": "Okumnyama nokumhlophe kuphela, umbhalo nemiphetho ecace kakhulu"
+    "zu": "Okumnyama nokumhlophe kuphela, umbhalo nemiphetho ecace kakhulu",
+    "sr": "Чисто црна и бела, најјаснији текст и ивице",
+    "sr-Latn": "Čisto crna i bela, najjasniji tekst i ivice",
+    "hr": "Čisto crna i bijela, najjasniji tekst i rubovi",
+    "sl": "Čisto črna in bela, najjasnejše besedilo in robovi",
+    "bs": "Čisto crna i bijela, najjasniji tekst i ivice",
+    "ca": "Blanc i negre purs, el text i les vores més nítids",
+    "kk": "Таза қара және ақ, ең анық мәтін мен жиектер",
+    "ky": "Таза кара жана ак, эң даана текст жана четтер",
+    "as": "বিশুদ্ধ ক'লা আৰু বগা, আটাইতকৈ স্পষ্ট লিখনি আৰু ধাৰ",
+    "or": "ଶୁଦ୍ଧ କଳା ଓ ଧଳା, ସବୁଠୁ ସ୍ପଷ୍ଟ ଲେଖା ଓ ଧାର"
   },
   "author": "Lumtub",
   "version": "1.0",

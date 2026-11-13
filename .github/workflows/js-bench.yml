@@ -6,7 +6,7 @@ name: JS engine benchmark
 on:
   workflow_dispatch:
   pull_request:
-    paths: ['.github/js-bench/**', '.github/workflows/js-bench.yml']
+    paths: ['.github/js-bench/**', '.github/workflows/js-bench.yml', 'python/**', 'native/lumtub_core/src/js.rs']
 
 permissions:
   contents: read
@@ -41,3 +41,30 @@ jobs:
             "rquickjs=.github/js-bench/rq/target/release/rq {}" \
             "boa=timeout 600 .github/js-bench/boa/target/release/boa-run {}"
           cat "$RUNNER_TEMP/work/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+  plugin:
+    # yt-dlp with Lumtub's challenge plugin (python/lumtub_jsc.py) and the
+    # core's QuickJS, on a real video: the first run solves the full player,
+    # the second should use the preprocessed one it kept.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Build the core
+        run: cargo build --release --lib --manifest-path native/lumtub_core/Cargo.toml
+      - name: Install yt-dlp
+        run: pip install --quiet --upgrade "yt-dlp[default]"
+      - name: Run yt-dlp with the plugin
+        run: |
+          plugins="$RUNNER_TEMP/plugins/lumtub/yt_dlp_plugins/extractor"
+          mkdir -p "$plugins"
+          cp python/lumtub_jsc.py "$plugins/"
+          export LUMTUB_CORE="$PWD/native/lumtub_core/target/release/liblumtub_core.so"
+          for video in aqz-KE-bpKQ jNQXAC9IVRw; do
+            start=$(date +%s.%N)
+            yt-dlp -v --simulate --no-js-runtimes --plugin-dirs "$RUNNER_TEMP/plugins" --cache-dir "$RUNNER_TEMP/cache" \
+              --extractor-args "youtube:player_client=web" "https://www.youtube.com/watch?v=$video" > "$RUNNER_TEMP/$video.log" 2>&1 || true
+            end=$(date +%s.%N)
+            grep -E "JS Challenge Providers|Solving JS|QuickJS took|challenge|ERROR|n = " "$RUNNER_TEMP/$video.log" | head -20
+            echo "== $video took $(echo "$end - $start" | bc) s"
+          done
+          ls -la "$RUNNER_TEMP/cache/challenge-solver" || true

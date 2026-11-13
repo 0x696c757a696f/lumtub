@@ -24,6 +24,7 @@ pub mod hw_decode;
 pub mod innertube;
 pub mod insights;
 pub mod join;
+pub mod js;
 pub mod listing;
 pub mod lists;
 pub mod lists_update;
@@ -55,5 +56,5 @@ pub mod web_account;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    45
+    46
 }

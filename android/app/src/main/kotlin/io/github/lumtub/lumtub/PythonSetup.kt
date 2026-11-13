@@ -39,6 +39,7 @@ object PythonSetup {
         return buildMap {
             put("python", python.absolutePath)
             File(libraries, "libqjs.so").takeIf { it.exists() }?.let { put("quickjs", it.absolutePath) }
+            File(libraries, "liblumtub_core.so").takeIf { it.exists() }?.let { put("core", it.absolutePath) }
             put("home", usr.absolutePath)
             put("libraries", File(usr, "lib").absolutePath)
             put("certificates", File(usr, "etc/tls/cert.pem").absolutePath)

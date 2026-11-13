@@ -535,6 +535,7 @@ class _VideoCardState extends State<VideoCard> {
     final colors = context.colors;
     final metaStyle = TextStyle(fontSize: 12, color: colors.outline);
     final meta = MetaLine.of(item, style: metaStyle);
+    final views = MetaLine.viewsOf(item);
     // A picture and text on the page, as YouTube shows them: no box round,
     // unless a skin puts cards on a surface. Compact cards sit on a quiet
     // surface of their own, so tightly packed ones still read apart.
@@ -602,15 +603,16 @@ class _VideoCardState extends State<VideoCard> {
                       )),
                   ])),
                 ],
-                // Views and age over a shade at the foot of the picture,
-                // the length at its end.
-                if (meta.tail.isNotEmpty)
+                // Views over a shade at the foot of the picture, the length
+                // at its end; the age goes with the channel below, where a
+                // narrow card can't cut it off.
+                if (views != null)
                   const Positioned(left: 0, right: 0, bottom: 0, height: 48, child: IgnorePointer(child: DecoratedBox(decoration: BoxDecoration(
                     gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x00000000), Color(0x8C000000), Color(0xBF000000)], stops: [0, 0.6, 1]),
                   )))),
-                if (meta.tail.isNotEmpty)
+                if (views != null)
                   PositionedDirectional(start: 8, end: 80, bottom: 7, child: Text(
-                    meta.tail,
+                    views,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500, shadows: [Shadow(blurRadius: 3, color: Color(0x80000000))]),
@@ -638,7 +640,7 @@ class _VideoCardState extends State<VideoCard> {
               SizedBox(
                 height: 24,
                 child: Row(children: [
-                  Expanded(child: Text(meta.lead.isEmpty ? tr('YouTube') : meta.lead, maxLines: 1, overflow: TextOverflow.ellipsis, style: metaStyle)),
+                  Expanded(child: MetaLine(lead: meta.lead.isEmpty ? tr('YouTube') : meta.lead, tail: MetaLine.ageOf(item) ?? '', style: metaStyle)),
                   Builder(builder: (context) => IconButton(
                     tooltip: tr('More (Menu key)'),
                     onPressed: () => _menu(_centreOf(context)),
@@ -1099,16 +1101,22 @@ class MetaLine extends StatelessWidget {
     final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
     return MetaLine(
       lead: [if (upcomingStart != null) upcomingStart, if (item.channel.isNotEmpty) item.channel].join(' · '),
-      tail: [
-        if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
-        if (!item.isLive && !item.isUpcoming && item.published != null)
-          formatAgo(item.published!)
-        else if (!item.isLive && !item.isUpcoming && item.age != null)
-          item.age!,
-        if (extra != null) extra,
-      ].join(' · '),
+      tail: [viewsOf(item), ageOf(item), extra].nonNulls.join(' · '),
       style: style,
     );
+  }
+
+  /// "1.2K views", or watching for a live.
+  static String? viewsOf(VideoItem item) => switch (item.audience) {
+        final count? => tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
+        null => null,
+      };
+
+  /// How long ago it was uploaded; none for lives and upcoming ones.
+  static String? ageOf(VideoItem item) {
+    if (item.isLive || item.isUpcoming) return null;
+    if (item.published case final at?) return formatAgo(at);
+    return item.age;
   }
 
   final String lead;

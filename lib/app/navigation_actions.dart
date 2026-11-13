@@ -16,6 +16,7 @@ extension NavigationActions on AppController {
       _tracking = null;
       _recoveryTimer?.cancel();
       _recovery.reset();
+      _settled.stop();
       ++_playSerial;
     }
     if (target == PageMode.home) unawaited(refreshHomeFeed());
@@ -134,6 +135,22 @@ extension NavigationActions on AppController {
       return;
     }
     openChannel(ChannelRef(id, handle.replaceFirst(RegExp(r'^@'), '')));
+  }
+
+  /// Opens the channel of [item]. Some lists, such as YouTube's TV home,
+  /// name the channel without its id; then the id comes from the video's
+  /// own page, as playing it would read it.
+  Future<void> openChannelOf(VideoItem item) async {
+    if (item.channelRef case final ref?) return openChannel(ref);
+    final repository = _repository;
+    if (repository == null) return;
+    try {
+      final resolved = await repository.streams.resolve(item.id, _formatFor(item.id), formatSort: _formatSort, membersOnly: item.membersOnly);
+      if (resolved.details.channelId case final id? when ChannelRef.isValidId(id)) return openChannel(ChannelRef(id, resolved.details.channel));
+    } catch (e) {
+      logWarn('Could not find the channel of ${item.id}: $e');
+    }
+    _notice(tr('Could not find the channel {0}', [item.channel]));
   }
 
   void openChannel(ChannelRef ref) {

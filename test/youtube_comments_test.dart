@@ -24,7 +24,7 @@ Map<String, Object?> _entity(String id, String text, {String replies = '0'}) => 
         'commentEntityPayload': {
           'properties': {'commentId': id, 'content': {'content': text}, 'publishedTime': '3天前'},
           'author': {'displayName': '@作者$id', 'channelId': 'UCabcdefghijklmnopqrstuv', 'avatarThumbnailUrl': 'https://yt3.example/a.jpg', 'isCreator': id == 'b'},
-          'toolbar': {'likeCountNotliked': '1.2万', 'replyCount': replies},
+          'toolbar': {'likeCountNotliked': '1.2万', 'replyCount': replies, 'creatorThumbnailUrl': 'https://yt3.example/c.jpg', 'heartActiveTooltip': '@owner 送上了 ❤'},
         },
       },
     };
@@ -107,6 +107,7 @@ void main() {
     expect(page.comments.map((c) => c.id), ['a', 'b']);
     final a = page.comments.first;
     expect((a.text, a.author, a.likes, a.replyCount, a.repliesToken, a.pinned, a.hearted, a.byUploader), ('第一条 1:23', '@作者a', '1.2万', 12, 'REPLIES-A', true, true, false));
+    expect((a.heartAvatar, a.heartTooltip), ('https://yt3.example/c.jpg', '@owner 送上了 ❤'));
     expect((page.comments[1].repliesToken, page.comments[1].byUploader), (null, true));
     expect(page.continuation, 'PAGE-2');
   });

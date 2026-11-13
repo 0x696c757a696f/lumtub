@@ -81,6 +81,10 @@ extension LifecycleActions on AppController {
       // does not wait for them again.
       final platform = player.platform;
       if (platform is NativePlayer) {
+        if (Platform.isAndroid) {
+          final fonts = await AndroidSubtitleFonts.prepare('${directories.cache.path}/subtitle-fonts');
+          if (fonts != null) await platform.setProperty('sub-fonts-dir', fonts).catchError((Object e) => logDebug(() => 'Could not set the subtitle fonts: $e'));
+        }
         final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders');
         try {
           shaders.createSync(recursive: true);

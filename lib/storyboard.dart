@@ -10,6 +10,8 @@ import 'dart:ui' as ui;
 
 import 'package:http/http.dart' as http;
 
+import 'thumbnail_cache.dart';
+
 /// One sprite sheet: its address and how much of the video it covers.
 class StoryboardSheet {
   const StoryboardSheet(this.url, this.duration);
@@ -128,9 +130,11 @@ class StoryboardSheets {
 
   Future<ui.Image?> _load(String url) async {
     try {
-      final response = await _http.get(Uri.parse(url)).timeout(const Duration(seconds: 15));
-      if (response.statusCode != 200 || response.bodyBytes.isEmpty) return null;
-      final codec = await ui.instantiateImageCodec(response.bodyBytes);
+      // In turn with thumbnails and under their size cap, read as it
+      // arrives rather than buffered whole.
+      final (status, body) = await CachedThumbnail.download(_http, Uri.parse(url)).timeout(const Duration(seconds: 15));
+      if (status != 200 || body == null || body.isEmpty) return null;
+      final codec = await ui.instantiateImageCodec(body);
       final frame = await codec.getNextFrame();
       codec.dispose();
       return frame.image;

@@ -648,6 +648,33 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
     })
 }
 
+/// Words for "original" in the languages track names are shown in.
+const ORIGINAL: [&str; 16] = [
+    "original",
+    "オリジナル",
+    "原声",
+    "原聲",
+    "原始",
+    "원본",
+    "оригинал",
+    "orijinal",
+    "oryginał",
+    "asli",
+    "gốc",
+    "ต้นฉบับ",
+    "मूल",
+    "أصلي",
+    "מקורי",
+    "πρωτότυπ",
+];
+
+/// Whether the track name [name] (`English (United States) original`)
+/// says the track is the original sound.
+pub(crate) fn says_original(name: &str) -> bool {
+    let name = name.to_lowercase();
+    !name.contains("descriptive") && ORIGINAL.iter().any(|word| name.contains(word))
+}
+
 /// The language code of the original audio track among [formats], when
 /// the video has tracks in several languages: the one whose `xtags` say
 /// `acont=original`, else the one whose name says so, else the only
@@ -655,24 +682,6 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
 /// is looked for in a few; a default track is not taken for the original,
 /// as YouTube makes a dub in the viewer's language the default.
 fn original_audio(formats: &[Value]) -> Option<&str> {
-    const ORIGINAL: [&str; 16] = [
-        "original",
-        "オリジナル",
-        "原声",
-        "原聲",
-        "原始",
-        "원본",
-        "оригинал",
-        "orijinal",
-        "oryginał",
-        "asli",
-        "gốc",
-        "ต้นฉบับ",
-        "मूल",
-        "أصلي",
-        "מקורי",
-        "πρωτότυπ",
-    ];
     let tracks: Vec<(&str, &Value, &Value)> = formats
         .iter()
         .filter_map(|format| {
@@ -696,7 +705,7 @@ fn original_audio(formats: &[Value]) -> Option<&str> {
                 .and_then(Value::as_str)
                 .unwrap_or_default()
                 .to_lowercase();
-            !name.contains("descriptive") && ORIGINAL.iter().any(|word| name.contains(word))
+            says_original(&name)
         })
     };
     if let Some((code, _, _)) = tagged.or_else(named) {

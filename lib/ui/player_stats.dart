@@ -8,6 +8,9 @@ import '../l10n/l10n.dart';
 /// standalone mpv's stats page (key i), so the two can be compared directly.
 const _properties = [
   'video-codec',
+  // Newer libmpv, as on Android, has no video-codec; these name it instead.
+  'video-format',
+  'current-tracks/video/codec',
   'hwdec-current',
   'video-params/w',
   'video-params/h',
@@ -75,7 +78,12 @@ class _PlayerStatsState extends State<PlayerStats> {
 
   @override
   Widget build(BuildContext context) {
-    final rows = statsRows(_values);
+    final screen = View.of(context).display.refreshRate;
+    final rows = statsRows({
+      ..._values,
+      // The Android video output does not know the screen's refresh rate.
+      if (double.tryParse(_values['display-fps'] ?? '') case null || 0) 'display-fps': '$screen',
+    });
     return IgnorePointer(
       child: Container(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
@@ -119,7 +127,7 @@ List<(String, String)> statsRows(Map<String, String> v) {
   final height = value('video-params/h');
   final hwdec = value('hwdec-current');
   return [
-    (tr('Videos'), or(value('video-codec'))),
+    (tr('Videos'), or([value('video-codec'), value('video-format'), value('current-tracks/video/codec')].firstWhere((name) => name.isNotEmpty, orElse: () => ''))),
     (tr('Resolution'), width.isEmpty || height.isEmpty ? '—' : '${width}x$height'),
     (tr('Decoding'), hwdec.isEmpty || hwdec == 'no' ? tr('Software decoding') : tr('Hardware {0}', [hwdec])),
     (tr('Frame rate'), tr('{0} / source {1}', [number('estimated-vf-fps'), number('container-fps', digits: 3)])),

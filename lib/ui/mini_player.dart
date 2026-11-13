@@ -11,6 +11,7 @@
 // page, which is unmounted while the card shows.
 
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart' show Player;
@@ -154,7 +155,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
             // readable text would cover the picture.
             subtitleViewConfiguration: constraints.biggest.shortestSide < miniSubtitlesFrom
                 ? const SubtitleViewConfiguration(visible: false)
-                : subtitleViewFor(_controller.settings, smallWindow: constraints.biggest, secondary: _controller.secondarySubtitle?.label),
+                : subtitleViewFor(_controller.settings, smallWindow: constraints.biggest, secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid, libass: _controller.libassDraws),
           ),
         ),
       ),

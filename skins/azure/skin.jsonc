@@ -1,0 +1,795 @@
+// Azure Tomorrow: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 蔚蓝未来城：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "azure",
+  "name": "Azure Tomorrow",
+  "names": {
+    "zh-Hans": "蔚蓝未来城",
+    "zh-Hant": "蔚藍未來城",
+    "zh-HK": "蔚藍未來城",
+    "af": "Asuur Môre",
+    "am": "ሰማያዊ ነገ",
+    "ar": "الغد اللازوردي",
+    "az": "Göy Sabah",
+    "be": "Лазурнае заўтра",
+    "bg": "Лазурно утре",
+    "bn": "নীলাভ আগামীকাল",
+    "cs": "Azurové zítřky",
+    "da": "Azurblå i morgen",
+    "de": "Azurblaues Morgen",
+    "el": "Γαλάζιο Αύριο",
+    "eo": "Lazura Morgaŭo",
+    "es": "Mañana azul",
+    "et": "Taevasinine homne",
+    "eu": "Bihar urdina",
+    "fa": "فردای لاجوردی",
+    "fi": "Taivaansininen huominen",
+    "fil": "Bughaw na Bukas",
+    "fr": "Demain azur",
+    "gl": "Mañá azul",
+    "gu": "નીલમ આવતીકાલ",
+    "he": "מחר תכלכל",
+    "hi": "आसमानी आने वाला कल",
+    "hu": "Azúrkék holnap",
+    "hy": "Երկնագույն վաղը",
+    "id": "Esok Biru Langit",
+    "is": "Himinblár morgundagur",
+    "it": "Domani azzurro",
+    "ja": "紺碧の明日",
+    "jv": "Sesuk Biru Langit",
+    "ka": "ლაჟვარდოვანი ხვალ",
+    "km": "ថ្ងៃស្អែកពណ៌ផ្ទៃមេឃ",
+    "kn": "ನೀಲಾಕಾಶ ನಾಳೆ",
+    "ko": "푸른빛 내일",
+    "la": "Cras Caeruleum",
+    "lo": "ມື້ອື່ນສີຟ້າ",
+    "lt": "Žydras rytojus",
+    "lv": "Debeszila rītdiena",
+    "mk": "Лазурно утре",
+    "ml": "നീലാകാശ നാളെ",
+    "mn": "Хөх тэнгэрийн маргааш",
+    "mr": "आकाशी उद्याचे शहर",
+    "ms": "Esok Biru Langit",
+    "my": "ကောင်းကင်ပြာ မနက်ဖြန်",
+    "nb": "Asurblå i morgen",
+    "ne": "आकाशे भोलि",
+    "nl": "Azuurblauw morgen",
+    "pa": "ਅਸਮਾਨੀ ਕੱਲ੍ਹ",
+    "pl": "Lazurowe jutro",
+    "pt": "Amanhã azul",
+    "ro": "Mâine azuriu",
+    "ru": "Лазурное завтра",
+    "si": "නිල්ගුවන් හෙට",
+    "sk": "Azúrový zajtrajšok",
+    "sq": "Nesër azur",
+    "su": "Isukan Biru Langit",
+    "sv": "Azurblå morgondag",
+    "sw": "Kesho ya Bluu ya Anga",
+    "ta": "நீலவான நாளை",
+    "te": "నీలాకాశ రేపు",
+    "th": "วันพรุ่งนี้สีฟ้าคราม",
+    "ti": "ሰማያዊ ጽባሕ",
+    "tk": "Gök Ertir",
+    "tr": "Azur Yarın",
+    "uk": "Блакитне завтра",
+    "ur": "نیلگوں آنے والا کل",
+    "uz": "Zangori ertaga",
+    "vi": "Ngày mai xanh biếc",
+    "zu": "Kusasa Eliluhlaza Okwesibhakabhaka"
+  },
+  "description": "Glass spires by a clear lake, a maglev train gliding over white arches, a garden dome and floating soap bubbles: a bright tomorrow by day and a glowing city under the moon by night",
+  "descriptions": {
+    "zh-Hans": "玻璃尖塔矗立在澄澈的湖畔，磁悬浮列车滑过洁白的拱桥，还有花园穹顶和漂浮的肥皂泡：白天是明媚的未来，夜晚是月光下闪耀的城市",
+    "zh-Hant": "玻璃尖塔矗立在澄澈的湖畔，磁浮列車滑過潔白的拱橋，還有花園穹頂和漂浮的肥皂泡：白天是明媚的未來，夜晚是月光下閃耀的城市",
+    "zh-HK": "玻璃尖塔矗立喺澄澈嘅湖畔，磁浮列車滑過潔白嘅拱橋，仲有花園穹頂同漂浮嘅肥皂泡：日間係明媚嘅未來，夜晚係月光下閃耀嘅城市",
+    "af": "Glasspitse langs ’n helder meer, ’n maglev-trein wat oor wit boë gly, ’n tuinkoepel en swewende seepbelle: ’n helder môre by dag en ’n gloeiende stad onder die maan by nag",
+    "am": "በጠራ ሐይቅ ዳር የመስታወት ረጃጅም ማማዎች፣ በነጫጭ ቅስቶች ላይ የሚንሸራተት ማግሌቭ ባቡር፣ የአትክልት ጉልላት እና የሚንሳፈፉ የሳሙና አረፋዎች፤ በቀን ብሩህ ነገ፣ በሌሊት ደግሞ በጨረቃ ሥር የሚያበራ ከተማ",
+    "ar": "أبراج زجاجية بجوار بحيرة صافية، وقطار مغناطيسي ينساب فوق أقواس بيضاء، وقبة حديقة وفقاعات صابون عائمة: غدٌ مشرق في النهار، ومدينة متوهجة تحت القمر في الليل",
+    "az": "Təmiz göl kənarında şüşə qüllələr, ağ tağlar üzərində sürüşən maqlev qatarı, bağ günbəzi və uçuşan sabun köpükləri: gündüz parlaq sabah, gecə isə ay işığında parlayan şəhər",
+    "be": "Шкляныя шпілі ля празрыстага возера, маглеў, што коціцца па белых арках, садовы купал і лёгкія мыльныя бурбалкі: ззяючае заўтра днём і сяючы горад пад месяцам уначы",
+    "bg": "Стъклени шпилове край бистро езеро, магнитен влак, плъзгащ се над бели арки, градинен купол и плаващи сапунени мехурчета: светло утре през деня и сияещ град под луната нощем",
+    "bn": "স্বচ্ছ হ্রদের ধারে কাচের চূড়া, সাদা খিলানের ওপর দিয়ে ভেসে চলা ম্যাগলেভ ট্রেন, একটি বাগানের গম্বুজ ও ভাসমান সাবানের বুদবুদ: দিনে উজ্জ্বল আগামীকাল, রাতে চাঁদের নিচে আলোকিত শহর",
+    "cs": "Skleněné věže u průzračného jezera, maglev klouzající nad bílými oblouky, zahradní kupole a vznášející se mýdlové bubliny: ve dne jasné zítřky, v noci zářící město pod měsícem",
+    "da": "Glastårne ved en klar sø, et svævetog der glider over hvide buer, en havekuppel og svævende sæbebobler: en lys morgendag om dagen og en glødende by under månen om natten",
+    "de": "Glastürme an einem klaren See, ein Maglev-Zug, der über weiße Bögen gleitet, eine Gartenkuppel und schwebende Seifenblasen: ein helles Morgen bei Tag und eine leuchtende Stadt unter dem Mond bei Nacht",
+    "el": "Γυάλινοι πύργοι δίπλα σε μια διαυγή λίμνη, ένα τρένο μαγνητικής αιώρησης που γλιστρά πάνω από λευκές αψίδες, ένας θόλος-κήπος και αιωρούμενες σαπουνόφουσκες: ένα φωτεινό αύριο τη μέρα και μια λαμπερή πόλη κάτω από το φεγγάρι τη νύχτα",
+    "eo": "Vitraj turetoj apud klara lago, magnetlevita trajno glitanta super blankaj arkoj, ĝardena kupolo kaj flosantaj sapveziketoj: hela morgaŭo tage kaj lumanta urbo sub la luno nokte",
+    "es": "Torres de cristal junto a un lago cristalino, un tren de levitación magnética que se desliza sobre arcos blancos, una cúpula-jardín y pompas de jabón flotantes: un mañana luminoso de día y una ciudad resplandeciente bajo la luna de noche",
+    "et": "Klaastornid selge järve ääres, valgete kaarte kohal libisev magnetrong, aiakuppel ja hõljuvad seebimullid: päeval särav homne ja öösel kuu all helendav linn",
+    "eu": "Lakuaren ondoko kristalezko dorreak, arku zuriengan lerratzen den maglev trena, lorategi-kupula eta flotatzen dauden xaboi-burbuilak: egunez bihar distiratsua eta gauez ilargipean dizdizka dagoen hiria",
+    "fa": "برج‌های شیشه‌ای کنار دریاچه‌ای زلال، قطار مغناطیسی که روی طاق‌های سفید می‌لغزد، گنبدی باغی و حباب‌های صابون شناور: فردایی روشن در روز و شهری درخشان زیر نور ماه در شب",
+    "fi": "Lasitornit kirkkaan järven rannalla, valkoisten kaarisiltojen yllä liukuva maglev-juna, puutarhakupoli ja leijuvat saippuakuplat: valoisa huominen päivällä ja hehkuva kaupunki kuun alla yöllä",
+    "fil": "Mga glass na tore sa tabi ng malinaw na lawa, isang maglev na tren na dumadausdos sa ibabaw ng mga puting arko, isang hardin na simboryo at mga lumulutang na bula ng sabon: maliwanag na bukas sa araw at kumikinang na lungsod sa ilalim ng buwan sa gabi",
+    "fr": "Des flèches de verre au bord d’un lac limpide, un train à sustentation magnétique glissant sur des arches blanches, un dôme-jardin et des bulles de savon flottantes : un demain lumineux le jour et une cité scintillante sous la lune la nuit",
+    "gl": "Torres de cristal xunto a un lago cristalino, un tren maglev que se desliza sobre arcos brancos, unha cúpula xardín e pompas de xabón flotantes: un mañá luminoso de día e unha cidade resplandecente baixo a lúa de noite",
+    "gu": "સ્વચ્છ સરોવર પાસે કાચના મિનારા, સફેદ કમાનો ઉપરથી સરકતી મેગ્લેવ ટ્રેન, બગીચાનો ગુંબજ અને તરતા સાબુના પરપોટા: દિવસે ઝળહળતી આવતીકાલ અને રાત્રે ચંદ્ર નીચે ઝગમગતું શહેર",
+    "he": "צריחי זכוכית ליד אגם צלול, רכבת מגלב המחליקה מעל קשתות לבנות, כיפת גן ובועות סבון מרחפות: מחר בהיר ביום ועיר זוהרת תחת הירח בלילה",
+    "hi": "साफ झील के किनारे कांच की मीनारें, सफेद मेहराबों के ऊपर सरकती मैग्लेव ट्रेन, एक बगीचे का गुंबद और तैरते साबुन के बुलबुले: दिन में उज्ज्वल आने वाला कल और रात में चाँद के नीचे जगमगाता शहर",
+    "hu": "Üvegtornyok egy tiszta tó partján, fehér ívek felett suhanó maglev vonat, egy kertkupola és lebegő szappanbuborékok: ragyogó holnap nappal, és izzó város a hold alatt éjjel",
+    "hy": "Ապակե աշտարակներ վճիտ լճի ափին, սպիտակ կամարների վրայով սահող մագլև գնացք, այգու գմբեթ և լողացող օճառի փուչիկներ. պայծառ վաղը ցերեկը և լուսնի տակ փայլող քաղաք գիշերը",
+    "id": "Menara kaca di tepi danau yang jernih, kereta maglev yang meluncur di atas lengkungan putih, kubah taman, dan gelembung sabun yang melayang: hari esok yang cerah di siang hari dan kota berpendar di bawah bulan pada malam hari",
+    "is": "Glerturnar við tært stöðuvatn, svifbraut sem líður yfir hvíta boga, garðhvelfing og svífandi sápukúlur: bjartur morgundagur að degi og glóandi borg undir tunglinu að nóttu",
+    "it": "Guglie di vetro accanto a un lago limpido, un treno a levitazione magnetica che scivola sopra archi bianchi, una cupola-giardino e bolle di sapone fluttuanti: un domani luminoso di giorno e una città scintillante sotto la luna di notte",
+    "ja": "澄んだ湖のほとりに立つガラスの尖塔、白いアーチの上を滑るリニアモーターカー、庭園ドームと漂うシャボン玉：昼は明るい未来、夜は月明かりに輝く街",
+    "jv": "Menara kaca ing pinggir tlaga sing bening, sepur maglev sing nglayang ing ndhuwur lengkungan putih, kubah taman lan gelembung sabun sing ngambang: sesuk sing padhang ing wayah awan lan kutha sing sumunar ing sangisore rembulan ing wayah bengi",
+    "ka": "მინის შპილები ანკარა ტბის პირას, თეთრ თაღებზე მოსრიალე მაგლევი, ბაღის გუმბათი და მოლივლივე საპნის ბუშტები: დღისით ნათელი ხვალ, ღამით კი მთვარის ქვეშ მოელვარე ქალაქი",
+    "km": "ប៉មកញ្ចក់នៅក្បែរបឹងថ្លា រថភ្លើងម៉ាក់ឡេវរំកិលលើក្លោងពណ៌ស ដំបូលសួនច្បារ និងពពុះសាប៊ូអណ្តែត៖ ថ្ងៃស្អែកភ្លឺច្បាស់ពេលថ្ងៃ និងទីក្រុងដែលភ្លឺចែងចាំងក្រោមព្រះចន្ទពេលយប់",
+    "kn": "ಸ್ಪಷ್ಟ ಸರೋವರದ ಬಳಿ ಗಾಜಿನ ಗೋಪುರಗಳು, ಬಿಳಿ ಕಮಾನುಗಳ ಮೇಲೆ ಜಾರುವ ಮ್ಯಾಗ್ಲೆವ್ ರೈಲು, ಉದ್ಯಾನದ ಗುಮ್ಮಟ ಮತ್ತು ತೇಲುವ ಸಾಬೂನು ಗುಳ್ಳೆಗಳು: ಹಗಲಿನಲ್ಲಿ ಪ್ರಕಾಶಮಾನವಾದ ನಾಳೆ, ರಾತ್ರಿ ಚಂದ್ರನ ಕೆಳಗೆ ಹೊಳೆಯುವ ನಗರ",
+    "ko": "맑은 호수 옆의 유리 첨탑, 하얀 아치 위를 미끄러지는 자기부상열차, 정원 돔과 떠다니는 비눗방울: 낮에는 밝은 내일, 밤에는 달빛 아래 빛나는 도시",
+    "la": "Turres vitreae iuxta lacum limpidum, tramen magneticum super fornices candidos labens, tholus hortensis et bullae saponis volitantes: cras lucidum interdiu et urbs sub luna noctu fulgens",
+    "lo": "ຫໍຄອຍແກ້ວຢູ່ຂ້າງທະເລສາບໃສ, ລົດໄຟແມັກເລັບທີ່ແລ່ນລອຍຜ່ານຊຸ້ມສີຂາວ, ໂດມສວນ ແລະ ຟອງສະບູລອຍ: ມື້ອື່ນທີ່ສົດໃສໃນຕອນກາງເວັນ ແລະ ເມືອງທີ່ເຫຼື້ອມແສງພາຍໃຕ້ດວງຈັນໃນຕອນກາງຄືນ",
+    "lt": "Stikliniai bokštai prie skaidraus ežero, virš baltų arkų slystantis magnetinis traukinys, sodo kupolas ir plaukiojantys muilo burbulai: šviesus rytojus dieną ir mėnulio šviesoje žėrintis miestas naktį",
+    "lv": "Stikla smailes pie dzidra ezera, maglev vilciens, kas slīd pāri baltām arkām, dārza kupols un peldoši ziepju burbuļi: gaišs rīt dienā un mēness gaismā mirdzoša pilsēta naktī",
+    "mk": "Стаклени кули покрај бистро езеро, маглев воз што се лизга над бели лаци, градинарска купола и лебдечки сапунови меурчиња: светло утре преку ден и сјаен град под месечината ноќе",
+    "ml": "തെളിഞ്ഞ തടാകക്കരയിലെ ഗ്ലാസ് ഗോപുരങ്ങൾ, വെളുത്ത കമാനങ്ങൾക്കു മുകളിലൂടെ ഒഴുകുന്ന മാഗ്ലെവ് ട്രെയിൻ, ഒരു ഉദ്യാന താഴികക്കുടം, പൊങ്ങിക്കിടക്കുന്ന സോപ്പുകുമിളകൾ: പകൽ തിളങ്ങുന്ന നാളെയും രാത്രി ചന്ദ്രനു കീഴെ ജ്വലിക്കുന്ന നഗരവും",
+    "mn": "Тунгалаг нуурын эрэг дээрх шилэн цамхагууд, цагаан нуман гүүрээр гулсан өнгөрөх соронзон жийргэт галт тэрэг, цэцэрлэгт бумбын хаалт ба хөвөх саван хөөс: өдөр гэгээлэг маргааш, шөнө сарны доор гэрэлтэх хот",
+    "mr": "नितळ सरोवराजवळील काचेचे मनोरे, पांढऱ्या कमानींवरून सरकणारी मॅग्लेव्ह ट्रेन, बागेचा घुमट आणि तरंगणारे साबणाचे बुडबुडे: दिवसा उजळ उद्या आणि रात्री चंद्राखाली झगमगणारे शहर",
+    "ms": "Menara kaca di tepi tasik yang jernih, kereta api maglev yang meluncur di atas gerbang lengkung putih, kubah taman dan buih sabun yang terapung: hari esok yang cerah pada siang hari dan bandar yang bercahaya di bawah bulan pada waktu malam",
+    "my": "ရှင်းလင်းသော ကန်ဘေးရှိ ဖန်မျှော်စင်များ၊ အဖြူရောင်ပြောင်းများပေါ်မှ ပျံဝဲလျက်သွားသော မက်ဂ်လက်ဗ်ရထား၊ ဥယျာဉ်ခုံးအိမ်နှင့် ပေါလောပေါ်နေသော ဆပ်ပြာပူဖောင်းများ- နေ့အချိန်တွင် ထွန်းလင်းသော မနက်ဖြန်၊ ညအချိန်တွင် လပေါ်၌ တောက်ပသော မြို့တော်",
+    "nb": "Glasstårn ved en klar innsjø, et svevetog som glir over hvite buer, en hagekuppel og svevende såpebobler: en lys morgendag om dagen og en glødende by under månen om natten",
+    "ne": "सफा तालको छेउमा सिसाका स्तम्भहरू, सेता मेहराबमाथि सर्रर गुड्ने म्याग्लेभ रेल, बगैँचाको गुम्बज र तैरिरहेका साबुनका फोका: दिउँसो उज्यालो भोलि र रातमा जुनमुनि झलमल्ल सहर",
+    "nl": "Glazen torens aan een helder meer, een maglevtrein die over witte bogen glijdt, een tuinkoepel en zwevende zeepbellen: een stralend morgen overdag en een gloeiende stad onder de maan 's nachts",
+    "pa": "ਸਾਫ਼ ਝੀਲ ਕੋਲ ਸ਼ੀਸ਼ੇ ਦੇ ਮੀਨਾਰ, ਚਿੱਟੀਆਂ ਮਹਿਰਾਬਾਂ ਉੱਤੇ ਸਰਕਦੀ ਮੈਗਲੇਵ ਰੇਲ, ਬਾਗ਼ ਦਾ ਗੁੰਬਦ ਅਤੇ ਤੈਰਦੇ ਸਾਬਣ ਦੇ ਬੁਲਬੁਲੇ: ਦਿਨੇ ਚਮਕਦਾਰ ਕੱਲ੍ਹ ਅਤੇ ਰਾਤ ਨੂੰ ਚੰਨ ਹੇਠ ਜਗਮਗਾਉਂਦਾ ਸ਼ਹਿਰ",
+    "pl": "Szklane iglice nad przejrzystym jeziorem, kolej magnetyczna sunąca nad białymi łukami, ogrodowa kopuła i unoszące się bańki mydlane: jasne jutro za dnia i lśniące miasto pod księżycem nocą",
+    "pt": "Torres de vidro junto a um lago cristalino, um trem maglev deslizando sobre arcos brancos, uma cúpula-jardim e bolhas de sabão flutuantes: um amanhã luminoso de dia e uma cidade reluzente sob a lua à noite",
+    "ro": "Turnuri de sticlă lângă un lac limpede, un tren maglev care alunecă peste arcade albe, o cupolă-grădină și baloane de săpun plutitoare: un mâine luminos ziua și un oraș strălucitor sub lună noaptea",
+    "ru": "Стеклянные шпили у прозрачного озера, маглев, скользящий над белыми арками, сад под куполом и парящие мыльные пузыри: яркое завтра днём и сияющий под луной город ночью",
+    "si": "පැහැදිලි විල අසල වීදුරු කුළුණු, සුදු ආරුක්කු මත ලිස්සා යන මැග්ලෙව් දුම්රිය, උයන් ගෝලාකාර වහලය සහ පාවෙන සබන් බුබුළු: දවල් දීප්තිමත් හෙට දිනයක් සහ රාත්‍රියේ සඳ යට දිලිසෙන නගරයක්",
+    "sk": "Sklenené veže pri priezračnom jazere, maglev kĺzajúci sa nad bielymi oblúkmi, záhradná kupola a plávajúce mydlové bubliny: jasný zajtrajšok cez deň a žiariace mesto pod mesiacom v noci",
+    "sq": "Kulla prej xhami pranë një liqeni të pastër, një tren maglev që rrëshqet mbi harqe të bardha, një kupolë kopshti dhe flluska sapuni që notojnë: një nesër i ndritshëm ditën dhe një qytet që shkëlqen nën hënë natën",
+    "su": "Menara kaca di sisi situ anu herang, karéta maglev anu ngaluncur dina luhureun lengkung bodas, kubah taman jeung gelembung sabun ngambang: isukan anu caang beurang jeung kota anu hérang di handapeun bulan peuting",
+    "sv": "Glastorn vid en klar sjö, ett magnettåg som glider över vita bågar, en trädgårdskupol och svävande såpbubblor: en ljus morgondag på dagen och en glödande stad under månen på natten",
+    "sw": "Minara ya kioo kando ya ziwa safi, treni ya maglev inayoteleza juu ya matao meupe, kuba la bustani na mapovu ya sabuni yanayoelea: kesho angavu mchana na jiji linalong'aa chini ya mwezi usiku",
+    "ta": "தெளிந்த ஏரிக்கரையில் கண்ணாடி கோபுரங்கள், வெள்ளை வளைவுகளின் மேல் சறுக்கிச் செல்லும் மேக்லெவ் ரயில், ஒரு தோட்டக் குவிமாடம் மற்றும் மிதக்கும் சோப்புக் குமிழிகள்: பகலில் பிரகாசமான நாளை, இரவில் நிலவின் கீழ் ஒளிரும் நகரம்",
+    "te": "స్వచ్ఛమైన సరస్సు పక్కన గాజు గోపురాలు, తెల్లని తోరణాలపై జారిపోయే మాగ్లెవ్ రైలు, ఒక తోట గుమ్మటం మరియు తేలియాడే సబ్బు బుడగలు: పగలు ప్రకాశవంతమైన రేపు, రాత్రి చంద్రుని కింద మెరిసే నగరం",
+    "th": "ยอดแหลมกระจกริมทะเลสาบใส รถไฟแมกเลฟที่แล่นเลื่อนเหนือซุ้มโค้งสีขาว โดมสวน และฟองสบู่ที่ลอยล่องอยู่: วันพรุ่งนี้ที่สดใสในยามกลางวัน และเมืองที่เปล่งประกายใต้แสงจันทร์ในยามค่ำคืน",
+    "ti": "ኣብ ጥርዙ ጽሩይ ቀላይ ዝርከቡ ናይ ብርጭቆ ማዕበያት፣ ኣብ ልዕሊ ጻዕዳ ቀስትታት ዝንሸራተት ማግሌቭ ባቡር፣ ናይ ጀርዲን ጉልላትን ዝሳብሑ ናይ ሳሙና ጥብጣባትን፤ ብመዓልቲ ብሩህ ጽባሕ፣ ብለይቲ ድማ ኣብ ትሕቲ ወርሒ ዝበርቅ ከተማ",
+    "tk": "Päk köliň ýanynda aýna minaralar, ak arkalaryň üstünden süýşýän maglew otlusy, bag gümmezi we uçup ýören sabyn köpürjikleri: gündiz ýagty ertir, gije bolsa aýyň astynda ýalpyldaýan şäher",
+    "tr": "Berrak bir gölün kıyısında cam kuleler, beyaz kemerlerin üzerinde süzülen manyetik levitasyonlu tren, bir bahçe kubbesi ve süzülen sabun köpükleri: gündüz parlak bir yarın, gece ay ışığında parıldayan bir şehir",
+    "uk": "Скляні шпилі біля прозорого озера, маглев, що ковзає над білими арками, садовий купол і мильні бульбашки, що пливуть у повітрі: яскраве завтра вдень і сяйливе місто під місяцем уночі",
+    "ur": "شفاف جھیل کے کنارے شیشے کے مینار، سفید محرابوں پر پھسلتی میگلیو ٹرین، ایک باغ کا گنبد اور تیرتے صابن کے بلبلے: دن میں روشن آنے والا کل اور رات کو چاند تلے جگمگاتا شہر",
+    "uz": "Musaffo ko‘l bo‘yidagi shisha minoralar, oq archalar ustida sirpanib o‘tayotgan maglev poyezdi, bog‘ gumbazi va suzib yurgan sovun pufakchalari: kunduzi yorqin ertaga va tunda oy ostida charaqlab turgan shahar",
+    "vi": "Những tháp kính bên hồ nước trong vắt, chuyến tàu đệm từ lướt trên những vòm cong trắng, một mái vòm vườn và những bong bóng xà phòng bồng bềnh: một ngày mai rạng rỡ ban ngày và một thành phố lung linh dưới ánh trăng ban đêm",
+    "zu": "Izinqaba zengilazi eduze kechibini elicwebile, isitimela se-maglev esishelela phezu kwamabhuloho amhlophe, ikhubalo lensimu namagwebu ensipho agxumayo: ikusasa elikhanyayo emini nedolobha eligqamayo ngaphansi kwenyanga ebusuku"
+  },
+  "brightness": "auto",
+  "text": {
+    "displayFont": "Baloo 2",
+    "monoFont": "Audiowide"
+  },
+  "colors": {
+    "page": "#e9f3fb",
+    "text": "#080f14",
+    "muted": "#38434c",
+    "accent": "#1f537d",
+    "onAccent": "#ffffff",
+    "border": "#a8c6df",
+    "card": "#ffffff",
+    "selected": "#cbe1f3",
+    "onSelected": "#142330",
+    "reason": "#1f537d"
+  },
+  "shape": {
+    "cardRadius": 20,
+    "controlRadius": 99,
+    "thumbnailRadius": 14
+  },
+  "window": {
+    "glass": {
+      "min": 1.0
+    },
+    "background": [
+      {
+        "image": "day.jpg",
+        "fit": "cover"
+      }
+    ],
+    "decorations": [],
+    "menuBar": {},
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#ffffff",
+              "#e3f5ff",
+              "#c9eafa"
+            ]
+          }
+        },
+        "border": {
+          "color": "#8ccbe8",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#eef8fd"
+      },
+      "text": "#06121a",
+      "buttons": {
+        "size": [
+          36,
+          24
+        ],
+        "icon": "#0d4f73",
+        "surface": {
+          "fill": "transparent",
+          "radius": 13,
+          "hover": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#ffffff",
+                  "#b8e6fb"
+                ]
+              }
+            },
+            "gloss": 0.6
+          },
+          "pressed": {
+            "fill": "#9fd8f2"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "radius": 13,
+          "hover": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#ff9b9b",
+                  "#d4262e"
+                ]
+              }
+            },
+            "gloss": 0.6
+          },
+          "pressed": {
+            "fill": "#a81b22"
+          }
+        }
+      }
+    },
+    "topBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffffffe6",
+            "#e8f7ffcc"
+          ]
+        }
+      },
+      "border": {
+        "color": "#9fcfe6",
+        "sides": [
+          "bottom"
+        ]
+      },
+      "shadow": [
+        {
+          "color": "#1e78aa1f",
+          "y": 2,
+          "blur": 10
+        }
+      ]
+    },
+    "sideBar": {
+      "fill": "#ffffff73",
+      "border": {
+        "color": "#ffffffe6",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffffffd9",
+            "#d4eefad9"
+          ]
+        }
+      },
+      "border": {
+        "color": "#9fcfe6",
+        "sides": [
+          "top"
+        ]
+      }
+    },
+    "statusBarText": "#080f14",
+    "veil": 0.7
+  },
+  "controls": {
+    "button": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#fffffff2",
+            "#dcf2fce6"
+          ]
+        }
+      },
+      "border": "#a6d6ec",
+      "hover": {
+        "fill": "#ffffff"
+      }
+    },
+    "buttonText": "#0d2a3d",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#21557f",
+            "#113654"
+          ]
+        }
+      },
+      "gloss": 0.7,
+      "border": "#123a5a",
+      "hover": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#275f8c",
+              "#143d5f"
+            ]
+          }
+        }
+      }
+    },
+    "primaryButtonText": "#ffffff",
+    "chip": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#fffffff2",
+            "#e0f3fce6"
+          ]
+        }
+      },
+      "border": "#a6d6ec"
+    },
+    "chipSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#0f6aa6",
+            "#084a7a"
+          ]
+        }
+      },
+      "gloss": 0.7,
+      "border": "#0a5287"
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#fffffff2",
+            "#d6f0fd"
+          ]
+        }
+      },
+      "gloss": 0.5,
+      "border": "#ffffff",
+      "shadow": [
+        {
+          "color": "#1e8cc84d",
+          "y": 2,
+          "blur": 10
+        }
+      ]
+    },
+    "navSelectedText": "#16456b",
+    "navText": "#080f14"
+  },
+  "icons": {
+    "style": "fill",
+    "effect": "gel"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffff99",
+      "border": "#fffffff2",
+      "shadow": [
+        {
+          "color": "#1e78aa26",
+          "y": 6,
+          "blur": 16
+        }
+      ],
+      "hover": {
+        "border": {
+          "color": "#5ea0d6",
+          "width": 2
+        }
+      },
+      "focused": {
+        "border": {
+          "color": "#1f537d",
+          "width": 3
+        }
+      }
+    },
+    "padding": 8,
+    "panel": {
+      "fill": "#ffffffcc",
+      "border": "#ffffff"
+    },
+    "durationBadge": {
+      "fill": "#0d2a3dcc",
+      "border": "#ffffff80"
+    },
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "Lumtub",
+    "font": "Baloo 2",
+    "size": 26,
+    "fill": {
+      "linear": {
+        "angle": 180,
+        "colors": [
+          "#3a83bf",
+          "#16456b"
+        ]
+      }
+    },
+    "shadow": "#ffffff",
+    "badge": {
+      "fill": {
+        "radial": {
+          "center": [
+            0.5,
+            0.75
+          ],
+          "radius": 0.7,
+          "colors": [
+            "#bff3ff",
+            "#1272b8"
+          ]
+        }
+      },
+      "gloss": 0.8,
+      "border": "#ffffff"
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "player": {
+    // Brushed silver and white, slim as a hi-fi unit.
+    // 拉丝银加白色，扁平的高级音响样子。
+    "style": "deck",
+    "deck": {
+      "shape": "slab",
+      "body": ["#f4f6f8", "#d2d8de", "#aeb7c0"],
+      "rim": "#7f8a95",
+      "screen": "#0e2a38",
+      "screenText": "#9fe8ff",
+      "button": ["#ffffff", "#9aa6b2"],
+      "glyph": "#14324a",
+      "play": ["#d8edff", "#184b74"],
+      "playGlyph": "#ffffff",
+      "groove": "#8a96a2",
+      "fill": "#3ac4ff",
+      "speakers": true
+    },
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#38a8ff",
+          "#6aabe0",
+          "#8acaff"
+        ]
+      }
+    }
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0",
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#0a1530",
+        "text": "#f3f7fb",
+        "muted": "#dde6ef",
+        "accent": "#7cc4ff",
+        "onAccent": "#06121c",
+        "border": "#2a4670",
+        "card": "#0f0f0f",
+        "selected": "#16305a",
+        "onSelected": "#d6e9fb",
+        "reason": "#8fd0ff"
+      },
+      "window": {
+        "veil": 0.72,
+        "background": [
+          {
+            "image": "night.jpg",
+            "fit": "cover"
+          }
+        ],
+        "decorations": [],
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#0f0f0f",
+                  "#042233",
+                  "#0c3345"
+                ]
+              }
+            },
+            "border": {
+              "color": "#205a75",
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "inactive": {
+            "fill": "#081d27"
+          },
+          "text": "#dcecf5",
+          "buttons": {
+            "size": [
+              36,
+              24
+            ],
+            "icon": "#56849d",
+            "surface": {
+              "fill": "transparent",
+              "radius": 13,
+              "hover": {
+                "fill": {
+                  "linear": {
+                    "angle": 180,
+                    "colors": [
+                      "#ffffff",
+                      "#b8e6fb"
+                    ]
+                  }
+                },
+                "gloss": 0.6
+              },
+              "pressed": {
+                "fill": "#9fd8f2"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "radius": 13,
+              "hover": {
+                "fill": {
+                  "linear": {
+                    "angle": 180,
+                    "colors": [
+                      "#ff9b9b",
+                      "#d4262e"
+                    ]
+                  }
+                },
+                "gloss": 0.6
+              },
+              "pressed": {
+                "fill": "#a81b22"
+              }
+            }
+          }
+        },
+        "topBar": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f0f0fff",
+                "#04202ffc"
+              ]
+            }
+          },
+          "border": {
+            "color": "#224f65",
+            "sides": [
+              "bottom"
+            ]
+          },
+          "shadow": [
+            {
+              "color": "#1e78aa1f",
+              "y": 2,
+              "blur": 10
+            }
+          ]
+        },
+        "sideBar": {
+          "fill": "#0f0f0fa3",
+          "border": {
+            "color": "#0f0f0fff",
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f0f0fff",
+                "#0c2d3cff"
+              ]
+            }
+          },
+          "border": {
+            "color": "#224f65",
+            "sides": [
+              "top"
+            ]
+          }
+        },
+        "topBarText": "#bccfdf",
+        "statusBarText": "#f1f5f8"
+      },
+      "controls": {
+        "button": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f0f0fff",
+                "#092836ff"
+              ]
+            }
+          },
+          "border": "#1c4a60",
+          "hover": {
+            "fill": "#0f0f0f"
+          }
+        },
+        "buttonText": "#aed1e8",
+        "primaryButton": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#21557f",
+                "#113654"
+              ]
+            }
+          },
+          "gloss": 0.7,
+          "border": "#123a5a",
+          "hover": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#275f8c",
+                  "#143d5f"
+                ]
+              }
+            }
+          }
+        },
+        "primaryButtonText": "#ffffff",
+        "chip": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f0f0fff",
+                "#092533ff"
+              ]
+            }
+          },
+          "border": "#1c4a60"
+        },
+        "chipSelected": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f6aa6",
+                "#084a7a"
+              ]
+            }
+          },
+          "gloss": 0.7,
+          "border": "#0a5287"
+        },
+        "chipSelectedText": "#ffffff",
+        "navSelected": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#ffffffff",
+                "#d6f0fd"
+              ]
+            }
+          },
+          "gloss": 0.5,
+          "border": "#ffffff",
+          "shadow": [
+            {
+              "color": "#1e8cc87d",
+              "y": 2,
+              "blur": 10
+            }
+          ]
+        },
+        "navSelectedText": "#16456b",
+        "navText": "#f1f5f8"
+      },
+      "cards": {
+        "video": {
+          "fill": "#0f0f0fc9",
+          "border": "#0f0f0fff",
+          "shadow": [
+            {
+              "color": "#1e78aa26",
+              "y": 6,
+              "blur": 16
+            }
+          ],
+          "hover": {
+            "border": {
+              "color": "#336c9a",
+              "width": 2
+            }
+          },
+          "focused": {
+            "border": {
+              "color": "#7bacd4",
+              "width": 3
+            }
+          }
+        },
+        "padding": 8,
+        "panel": {
+          "fill": "#0f0f0ffc",
+          "border": "#0f0f0f"
+        },
+        "durationBadge": {
+          "fill": "#0d2a3dfc",
+          "border": "#ffffffb0"
+        },
+        "durationText": "#ffffff"
+      },
+      "logo": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#4685b9",
+              "#89b8de"
+            ]
+          }
+        },
+        "shadow": "#0f0f0f"
+      }
+    }
+  }
+}

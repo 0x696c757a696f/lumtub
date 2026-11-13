@@ -19,6 +19,7 @@ import '../../youtube_account.dart' show VideoRating;
 import '../comments_view.dart';
 import '../cast_ui.dart';
 import '../common.dart';
+import '../key_scroll.dart';
 import '../lights_off.dart';
 import '../live_chat_rows.dart';
 import '../linked_text.dart';
@@ -744,7 +745,7 @@ class _Player extends StatelessWidget {
                       ),
                     ),
                   ),
-                  subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label),
+                  subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label, byHeight: Platform.isAndroid, libass: controller.libassDraws),
                   onEnterFullscreen: () {
                     WindowChrome.fullscreen.value = true;
                     // Turned sideways: the bars hide, and the screen still
@@ -946,6 +947,18 @@ class _SidePanelState extends State<_SidePanel> with TickerProviderStateMixin {
     if (index >= 0 && tabs != null && tabs.index != index) tabs.animateTo(index);
   }
 
+  /// The tab last settled on, before a tap moves away from it.
+  int _settled = 0;
+  final _pageKeys = <String, GlobalKey>{};
+
+  /// A tap on the tab already shown takes its list back to the top.
+  void _tapped(int index, String id) {
+    if (index == _settled) {
+      final page = _pageKeys[id]?.currentContext;
+      if (page != null) KeyScroll.toTopAt(page);
+    }
+  }
+
   TabController _controllerFor(List<String> ids) {
     if (_tabs != null && listEquals(ids, _ids)) return _tabs!;
     final was = _tabs == null ? sidePanelTab.value : _ids[_tabs!.index];
@@ -953,8 +966,11 @@ class _SidePanelState extends State<_SidePanel> with TickerProviderStateMixin {
     _ids = ids;
     final tabs = TabController(length: ids.length, vsync: this, initialIndex: max(0, ids.indexOf(was ?? '')));
     tabs.addListener(() {
-      if (!tabs.indexIsChanging) sidePanelTab.value = _ids[tabs.index];
+      if (tabs.indexIsChanging) return;
+      sidePanelTab.value = _ids[tabs.index];
+      _settled = tabs.index;
     });
+    _settled = tabs.index;
     return _tabs = tabs;
   }
 
@@ -976,11 +992,11 @@ class _SidePanelState extends State<_SidePanel> with TickerProviderStateMixin {
     final tabController = _controllerFor([for (final (id, _, _) in tabs) id]);
     return Column(children: [
       Row(children: [
-        Expanded(child: TabBar(controller: tabController, isScrollable: tabs.length > 3, tabAlignment: tabs.length > 3 ? TabAlignment.start : null, dividerColor: Colors.transparent, tabs: [for (final (_, label, _) in tabs) Tab(height: widget.intro != null ? 48 : 40, text: label)])),
+        Expanded(child: TabBar(controller: tabController, onTap: (i) => _tapped(i, tabs[i].$1), isScrollable: tabs.length > 3, tabAlignment: tabs.length > 3 ? TabAlignment.start : null, dividerColor: Colors.transparent, tabs: [for (final (_, label, _) in tabs) Tab(height: widget.intro != null ? 48 : 40, text: label)])),
         if (widget.trailing case final trailing?) trailing,
       ]),
       const SizedBox(height: 8),
-      Expanded(child: TabBarView(controller: tabController, children: [for (final (_, _, view) in tabs) view])),
+      Expanded(child: TabBarView(controller: tabController, children: [for (final (id, _, view) in tabs) KeyedSubtree(key: _pageKeys.putIfAbsent(id, GlobalKey.new), child: view)])),
     ]);
   }
 }
@@ -1073,6 +1089,11 @@ final _chatRows = Expando<Widget>();
 @visibleForTesting
 Widget upNextForTest(AppController controller) => _UpNext(controller: controller);
 
+enum _Related { all, live, channel, others, forYou, recent, watched }
+
+/// Which related videos show, for the video it was picked on.
+final _relatedFilter = ValueNotifier<(String?, _Related)>((null, _Related.all));
+
 class _UpNext extends StatelessWidget {
   const _UpNext({required this.controller, this.shrinkWrap = false});
   final AppController controller;
@@ -1120,7 +1141,29 @@ class _UpNext extends StatelessWidget {
       if (controller.playingList == null && items.isNotEmpty) SliverList.builder(itemCount: items.length, itemBuilder: (context, i) => _tile(items[i], null)),
       if (related != null) ...[
         SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.only(top: 16), child: _header(context, tr('Related videos'), tr('Search by title')))),
-        SliverList.builder(itemCount: relatedItems.length, itemBuilder: (context, i) => _tile(relatedItems[i], relatedItems)),
+        ValueListenableBuilder(
+          valueListenable: _relatedFilter,
+          builder: (context, picked, _) {
+            final playing = controller.playing;
+            final choices = _relatedChoices(playing, relatedItems);
+            final (_, kind) = picked.$1 == playing?.id && choices.any((c) => c.$1 == picked.$2) ? picked : (playing?.id, _Related.all);
+            final shown = choices.firstWhere((c) => c.$1 == kind).$3;
+            return SliverMainAxisGroup(slivers: [
+              if (choices.length > 1)
+                SliverToBoxAdapter(child: SizedBox(
+                  height: 40,
+                  child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.fromLTRB(4, 0, 4, 8), children: [
+                    for (final (value, label, _) in choices)
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(end: 8),
+                        child: ChoiceChip(label: Text(label), selected: value == kind, onSelected: (_) => _relatedFilter.value = (playing?.id, value)),
+                      ),
+                  ]),
+                )),
+              SliverList.builder(itemCount: shown.length, itemBuilder: (context, i) => _tile(shown[i], shown)),
+            ]);
+          },
+        ),
       ],
       SliverList.list(children: tail),
     ];
@@ -1139,6 +1182,34 @@ class _UpNext extends StatelessWidget {
         ]),
       );
 
+  /// The ways the related videos can be narrowed, as YouTube offers them
+  /// beside a video, each with what it shows; only those that show
+  /// something, after 全部.
+  List<(_Related, String, List<VideoItem>)> _relatedChoices(VideoItem? playing, List<VideoItem> related) {
+    final channelId = playing?.channelId ?? controller.details?.channelId;
+    final channel = playing?.channel ?? '';
+    bool own(VideoItem item) => channelId != null && item.channelId != null ? item.channelId == channelId : channel.isNotEmpty && item.channel == channel;
+    final library = controller.library;
+    final monthAgo = DateTime.now().subtract(const Duration(days: 30));
+    final forYou = [for (final item in controller.homeFeed?.items ?? const <VideoItem>[]) if (item.id != playing?.id) item];
+    final choices = [
+      (_Related.all, tr('All'), related),
+      // Watching a live, other lives come next to it.
+      if (playing?.isLive ?? false) (_Related.live, tr('Live'), [for (final item in related) if (item.isLive) item]),
+      (_Related.channel, tr('From {0}', [channel]), [for (final item in related) if (own(item)) item]),
+      (_Related.others, tr('Related content'), [for (final item in related) if (!own(item)) item]),
+      (_Related.forYou, tr('For you'), forYou),
+      (_Related.recent, tr('Recently uploaded'), [for (final item in related) if (item.published?.isAfter(monthAgo) ?? false) item]),
+      (_Related.watched, tr('Watched'), [for (final item in related) if (library?.progressOf(item.id) != null) item]),
+      if (!(playing?.isLive ?? false)) (_Related.live, tr('Live'), [for (final item in related) if (item.isLive) item]),
+    ];
+    return [
+      for (final choice in choices)
+        if (choice.$1 == _Related.all || (choice.$3.isNotEmpty && choice.$3.length < related.length) || (choice.$1 == _Related.forYou && choice.$3.isNotEmpty))
+          if (choice.$1 != _Related.channel || channel.isNotEmpty) choice,
+    ];
+  }
+
   Widget _tile(VideoItem item, List<VideoItem>? list) =>
       CompactVideoTile(item: item, thumbnails: controller.thumbnailDirectory, onOpen: () => controller.play(item, from: list));
 }
@@ -1152,14 +1223,21 @@ class _UpNext extends StatelessWidget {
 /// becomes 5.5% of the short side, between 13 and 32 px.
 double smallSubtitleScale(Size size) => (size.shortestSide * 0.055).clamp(13.0, 32.0) / 32;
 
-SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary}) {
+/// The text scale for subtitles on Android in a player [size] tall, as
+/// ExoPlayer and YouTube's app size them on phones, tablets and TVs: 5.33%
+/// of the player's height times the caption size from Android's settings
+/// ([system]), never under 12 px. Scaling by area against 1080p would leave
+/// a phone's upright player with 9 px text.
+double androidSubtitleScale(Size size, [double system = 1]) => max(12.0, size.height * 0.0533 * system) / 32;
+
+SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass}) {
   // The view scales by area against 1080p, which makes the text tiny in a
   // small window. There a line is about a twentieth of the picture's
   // height, as on a TV, but never under 13 px, which stays readable, nor
   // over the full-size text.
-  final textScaler = smallWindow == null ? null : TextScaler.linear(smallSubtitleScale(smallWindow));
+  final textScaler = smallWindow == null || byHeight ? null : TextScaler.linear(smallSubtitleScale(smallWindow));
   final paddingScale = smallWindow == null ? 1.0 : (smallWindow.shortestSide / 720).clamp(0.3, 1.0);
-  if (settings.libassSubtitles) return const SubtitleViewConfiguration(visible: false);
+  if (libass ?? settings.libassSubtitles) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;
   TextStyle style(String font, double scale, int color, double opacity) => TextStyle(
         height: 1.3,
@@ -1184,6 +1262,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     secondaryStyle: style(settings.secondaryFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity),
     // sub-pos counts from the top; 100 is the bottom edge.
     textScaler: textScaler,
+    scaleFor: byHeight ? (size) => TextScaler.linear(androidSubtitleScale(size, Device.captionScale)) : null,
     spacing: 6,
     secondaryKey: secondary,
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),

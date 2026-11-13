@@ -58,7 +58,7 @@ jobs:
         run: python3 .github/scripts/canary.py native/lumtub_core/target/release/lumtub-canary "$RUNNER_TEMP/tools" $VIDEOS
 
   yt-dlp-notes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Report YouTube changes in a new yt-dlp release
         env:

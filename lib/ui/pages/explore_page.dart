@@ -137,7 +137,8 @@ class _ExplorePageState extends State<ExplorePage> {
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(AppStyle.pagePadding - 8, 0, AppStyle.pagePadding, 4),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Padding(
+              // A half with one tab, as live has, needs no row to pick it.
+              if (tabs.length > 1) Padding(
                 padding: const EdgeInsetsDirectional.only(start: 8),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,

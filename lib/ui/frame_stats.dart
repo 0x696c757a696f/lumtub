@@ -7,7 +7,7 @@ import '../app_log.dart';
 
 /// Counts the frames that took too long to build or draw and writes a line
 /// to the log once a minute when there were any, with the page that was
-/// open and how often the whole window was rebuilt, so a stutter the user
+/// open and how often the whole window and the page were rebuilt, so a stutter the user
 /// mentions can be found afterwards. It only reads the engine's timings.
 class FrameStats {
   FrameStats._(this._page, this._causes);
@@ -26,6 +26,7 @@ class FrameStats {
   int _frames = 0;
   int _slow = 0;
   int _rebuilds = 0;
+  int _pageRebuilds = 0;
   Duration _worstBuild = Duration.zero;
   Duration _worstRaster = Duration.zero;
   final _pages = <String, int>{};
@@ -43,6 +44,9 @@ class FrameStats {
 
   /// One rebuild of the whole window.
   void rebuilt() => _rebuilds++;
+
+  /// One rebuild of the page shown, without the window around it.
+  void pageRebuilt() => _pageRebuilds++;
 
   void _timings(List<FrameTiming> timings) {
     for (final timing in timings) {
@@ -67,10 +71,10 @@ class FrameStats {
       final where = (_pages.entries.toList()..sort((a, b) => b.value - a.value)).take(3).map((e) => '${e.key} ${e.value}').join(', ');
       final causes = _causes?.call() ?? const {};
       final by = (causes.entries.toList()..sort((a, b) => b.value - a.value)).take(5).map((e) => '${e.key} ${e.value}').join(', ');
-      logInfo('Frames: $_slow of $_frames slow (worst build ${_ms(_worstBuild)}, raster ${_ms(_worstRaster)}) on $where; window rebuilt $_rebuilds times in ${max(1, now.difference(_since).inSeconds)} s${by.isEmpty ? '' : ' ($by)'}');
+      logInfo('Frames: $_slow of $_frames slow (worst build ${_ms(_worstBuild)}, raster ${_ms(_worstRaster)}) on $where; window rebuilt $_rebuilds times, page $_pageRebuilds times in ${max(1, now.difference(_since).inSeconds)} s${by.isEmpty ? '' : ' ($by)'}');
     }
     _causes?.call().clear();
-    _frames = _slow = _rebuilds = 0;
+    _frames = _slow = _rebuilds = _pageRebuilds = 0;
     _worstBuild = _worstRaster = Duration.zero;
     _pages.clear();
     _since = now;

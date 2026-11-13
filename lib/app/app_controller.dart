@@ -609,7 +609,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     notifyListeners();
   }
 
-  /// What asked for the window to be rebuilt since the frame log last
+  /// What asked for the page to be rebuilt since the frame log last
   /// took the counts: a part of the app by name, or `app` for the rest.
   final rebuildCauses = <String, int>{};
   final _passers = <String, VoidCallback>{};

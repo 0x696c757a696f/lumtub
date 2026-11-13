@@ -329,6 +329,18 @@ own shapes; only the colours change. 跟随浅色/深色模式，保留 Lumtub �
 | `linen` | Linen & Leather | 亚麻皮革 | linen, stitched leather and glass buttons |
 | `shelf` | Wooden Shelf | 木纹书架 | wood grain, cream paper, a metal slider |
 | `handheld` | Handheld | 点阵掌机 | green dot-matrix handhelds, ~1989 |
+| `scholar` | Star Atlas | 学术星图 | star charts, a wireframe globe and gold rules, late-90s encyclopedia discs |
+| `softclub` | Soft Club | 柔光俱乐部 | pale teal and lilac haze, the calm side of the late 90s |
+| `obsidian` | Obsidian Glass | 黑曜玻璃 | glossy black glass with blue edges, late-2000s media players |
+| `hexatron` | Honeycomb Data | 蜂巢数据 | glowing hexagon grids, cyan lines, orange selection, mid-2000s |
+| `bento` | Bento | 便当格 | rounded boxes fitted side by side, today's product pages |
+| `livingroom` | Living Room | 白色客厅 | white and light grey rounded tiles, late-2000s game consoles |
+| `silkwave` | Silk Waves | 丝绸波浪 | a silky wave across a calm colour, late-2000s console menus |
+| `flourish` | Flourish | 花藤剪影 | vines, flowers and butterflies from the corners, mid-2000s wallpapers |
+| `homepage` | Homepage | 个人主页 | rainbow text, stars and pop-up windows, 2000s personal pages |
+| `cassette` | Cassette Future | 磁带未来 | beige hardware, amber terminal text, 1970s–80s visions of the future |
+| `clay` | Clay | 软陶 | soft puffy clay shapes, ~2021 |
+| `brutal` | Neo-Brutal | 新粗野 | thick black outlines, flat clashing colours, square corners |
 
 Fonts in [`fonts/`](fonts/) are under the SIL Open Font License 1.1; each
 licence is next to its font.

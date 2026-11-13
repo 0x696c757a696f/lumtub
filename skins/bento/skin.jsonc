@@ -1,0 +1,590 @@
+// Bento: a built-in Lumtub skin. Rounded boxes fitted side by side on a plain grey ground, after the tile layouts of product pages in the 2020s.
+// skins/template/skin.jsonc explains every field, and skins/README.md how to make your own.
+// 便当格：Lumtub 内置皮肤。浅灰底上并排拼好的圆角格子，致敬 2020 年代产品介绍页的格子排版。
+// 每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "bento",
+  "name": "Bento",
+  "names": {
+    "zh-Hans": "便当格",
+    "zh-Hant": "便當格",
+    "zh-HK": "便當格",
+    "af": "Bento",
+    "am": "ቤንቶ",
+    "ar": "بينتو",
+    "az": "Bento",
+    "be": "Бэнто",
+    "bg": "Бенто",
+    "bn": "বেন্টো",
+    "cs": "Bento",
+    "da": "Bento",
+    "de": "Bento",
+    "el": "Μπέντο",
+    "eo": "Bento",
+    "es": "Bento",
+    "et": "Bento",
+    "eu": "Bento",
+    "fa": "بنتو",
+    "fi": "Bento",
+    "fil": "Bento",
+    "fr": "Bento",
+    "gl": "Bento",
+    "gu": "બેન્ટો",
+    "he": "בנטו",
+    "hi": "बेंटो",
+    "hu": "Bento",
+    "hy": "Բենտո",
+    "id": "Bento",
+    "is": "Bento",
+    "it": "Bento",
+    "ja": "弁当ボックス",
+    "jv": "Bento",
+    "ka": "ბენტო",
+    "km": "បេនតូ",
+    "kn": "ಬೆಂಟೋ",
+    "ko": "벤토",
+    "la": "Bento",
+    "lo": "ເບັນໂຕະ",
+    "lt": "Bento",
+    "lv": "Bento",
+    "mk": "Бенто",
+    "ml": "ബെന്റോ",
+    "mn": "Бэнто",
+    "mr": "बेन्तो",
+    "ms": "Bento",
+    "my": "ဘန်တို",
+    "nb": "Bento",
+    "ne": "बेन्तो",
+    "nl": "Bento",
+    "pa": "ਬੈਂਟੋ",
+    "pl": "Bento",
+    "pt": "Bento",
+    "ro": "Bento",
+    "ru": "Бенто",
+    "si": "බෙන්ටෝ",
+    "sk": "Bento",
+    "sq": "Bento",
+    "su": "Bento",
+    "sv": "Bento",
+    "sw": "Bento",
+    "ta": "பெண்டோ",
+    "te": "బెంటో",
+    "th": "เบนโตะ",
+    "ti": "ቤንቶ",
+    "tk": "Bento",
+    "tr": "Bento",
+    "uk": "Бенто",
+    "ur": "بینتو",
+    "uz": "Bento",
+    "vi": "Bento",
+    "zu": "I-Bento",
+    "sr": "Бенто",
+    "sr-Latn": "Bento",
+    "hr": "Bento",
+    "sl": "Bento",
+    "bs": "Bento",
+    "ca": "Bento",
+    "kk": "Бенто",
+    "ky": "Бенто",
+    "as": "বেণ্টো",
+    "or": "ବେଣ୍ଟୋ"
+  },
+  "description": "Everything in neat rounded boxes fitted side by side, plain and tidy, as product pages look today",
+  "descriptions": {
+    "zh-Hans": "所有内容装进整齐的圆角格子里并排拼好，简洁利落，像如今的产品介绍页",
+    "zh-Hant": "所有內容裝進整齊的圓角格子裡並排拼好，簡潔俐落，像如今的產品介紹頁",
+    "zh-HK": "所有內容放進整齊的圓角格子內並排拼好，簡潔利落，像現今的產品介紹頁",
+    "af": "Alles in netjiese ronde blokkies langs mekaar, eenvoudig en versorg, soos produkbladsye vandag lyk",
+    "am": "ሁሉም ነገር በንጹሕ ክብ ሳጥኖች ጎን ለጎን ተደርድሮ፣ ቀላልና ሥርዓታማ፣ የዛሬ የምርት ገጾች እንደሚመስሉት",
+    "ar": "كل شيء في صناديق مستديرة مرتبة جنبًا إلى جنب، بسيط ومنظم، كما تبدو صفحات المنتجات اليوم",
+    "az": "Hər şey yan-yana düzülmüş səliqəli yumru qutularda, sadə və səliqəli, bu gün məhsul səhifələrinin göründüyü kimi",
+    "be": "Усё ў акуратных акруглых скрынках, складзеных побач, проста і ахайна, як выглядаюць старонкі прадуктаў сёння",
+    "bg": "Всичко в спретнати закръглени кутии една до друга, семпло и подредено, както изглеждат продуктовите страници днес",
+    "bn": "সবকিছু পাশাপাশি সাজানো পরিপাটি গোলাকার বাক্সে, সাদামাটা ও গোছানো, আজকের পণ্য-পাতার মতো",
+    "cs": "Vše v úhledných zaoblených boxech vedle sebe, prosté a upravené, jak dnes vypadají stránky produktů",
+    "da": "Alt i pæne afrundede bokse side om side, enkelt og ryddeligt, som produktsider ser ud i dag",
+    "de": "Alles in ordentlichen abgerundeten Boxen nebeneinander, schlicht und aufgeräumt, wie Produktseiten heute aussehen",
+    "el": "Όλα σε τακτικά στρογγυλεμένα κουτιά το ένα δίπλα στο άλλο, απλά και προσεγμένα, όπως δείχνουν σήμερα οι σελίδες προϊόντων",
+    "eo": "Ĉio en ordaj rondigitaj skatoloj unu apud la alia, simple kaj ordigite, kiel hodiaŭ aspektas produktaj paĝoj",
+    "es": "Todo en cajas redondeadas ordenadas, una junto a otra, sencillo y pulcro, como se ven hoy las páginas de producto",
+    "et": "Kõik korralikes ümardatud kastides kõrvuti, lihtne ja puhas, nagu tootelehed täna välja näevad",
+    "eu": "Dena kutxa biribil txukunetan, alboz albo, soila eta ordenatua, gaur egungo produktu-orriek duten itxura bezala",
+    "fa": "همه‌چیز در جعبه‌های گرد مرتب کنار هم، ساده و منظم، مثل صفحه‌های محصول امروزی",
+    "fi": "Kaikki siisteissä pyöristetyissä laatikoissa vierekkäin, selkeää ja siistiä, kuten tuotesivut nykyään näyttävät",
+    "fil": "Lahat ay nasa maayos na bilugang kahon na magkakatabi, simple at maayos, gaya ng itsura ng mga pahina ng produkto ngayon",
+    "fr": "Tout dans de jolies boîtes arrondies côte à côte, simple et ordonné, comme les pages produit d'aujourd'hui",
+    "gl": "Todo en caixas redondeadas ordenadas, unha xunto á outra, sinxelo e limpo, como se ven hoxe as páxinas de produto",
+    "gu": "બધું સરસ ગોળ ખાનાંમાં બાજુ બાજુમાં ગોઠવેલું, સાદું અને વ્યવસ્થિત, આજે પ્રોડક્ટ પેજ જેવાં દેખાય છે તેવું",
+    "he": "הכול בקופסאות מעוגלות מסודרות זו לצד זו, פשוט ומסודר, כמו שדפי מוצר נראים היום",
+    "hi": "सब कुछ करीने से गोल डिब्बों में अगल-बगल सजा, सादा और सुघड़, जैसे आज के प्रोडक्ट पेज दिखते हैं",
+    "hu": "Minden rendezett, lekerekített dobozokban egymás mellett, egyszerű és tiszta, ahogy ma a termékoldalak kinéznek",
+    "hy": "Ամեն ինչ կոկիկ կլորավուն արկղերում՝ կողք կողքի, պարզ և կոկիկ, ինչպես այսօր են թվում ապրանքների էջերը",
+    "id": "Semuanya dalam kotak membulat yang rapi berdampingan, sederhana dan tertata, seperti halaman produk masa kini",
+    "is": "Allt í snyrtilegum ávölum kössum hlið við hlið, einfalt og snyrtilegt, eins og vörusíður líta út í dag",
+    "it": "Tutto in ordinate scatole arrotondate affiancate, semplice e pulito, come appaiono oggi le pagine dei prodotti",
+    "ja": "すべてが角の丸いボックスに整然と並ぶ、素朴で端正な、今どきの製品ページ風",
+    "jv": "Kabeh ana ing kothak bunder sing rapi jejer-jejer, prasaja lan tertata, kaya kaca produk saiki",
+    "ka": "ყველაფერი მოვლებულ მომრგვალებულ ყუთებში გვერდიგვერდ, მარტივი და მოწესრიგებული, როგორც დღეს გამოიყურება პროდუქტის გვერდები",
+    "km": "អ្វីៗទាំងអស់នៅក្នុងប្រអប់មូលរៀបរយក្បែរគ្នា សាមញ្ញ និងស្អាតបាត ដូចទំព័រផលិតផលសព្វថ្ងៃ",
+    "kn": "ಎಲ್ಲವೂ ಅಚ್ಚುಕಟ್ಟಾದ ದುಂಡಾದ ಪೆಟ್ಟಿಗೆಗಳಲ್ಲಿ ಪಕ್ಕಪಕ್ಕ, ಸರಳ ಮತ್ತು ಶುಭ್ರ, ಇಂದಿನ ಉತ್ಪನ್ನ ಪುಟಗಳಂತೆ",
+    "ko": "모든 것이 말끔한 둥근 상자에 나란히 담긴, 단정하고 깔끔한 요즘 제품 페이지 느낌",
+    "la": "Omnia in arculis rotundatis ordinatis iuxta positis, simplex et nitidum, ut hodie paginae productorum apparent",
+    "lo": "ທຸກຢ່າງຢູ່ໃນກ່ອງມົນທີ່ຮຽບຮ້ອຍຈັດຊິດກັນ, ງ່າຍ ແລະ ເປັນລະບຽບ, ຄືໜ້າຜະລິດຕະພັນໃນປັດຈຸບັນ",
+    "lt": "Viskas tvarkingose suapvalintose dėžutėse greta, paprasta ir tvarkinga, kaip šiandien atrodo produktų puslapiai",
+    "lv": "Viss kārtīgās noapaļotās kastēs blakus, vienkārši un sakopti, kā šodien izskatās produktu lapas",
+    "mk": "Сè во уредни заоблени кутии една до друга, едноставно и средено, како што изгледаат страниците за производи денес",
+    "ml": "എല്ലാം വൃത്തിയുള്ള വൃത്താകൃതിയിലുള്ള പെട്ടികളിൽ അടുത്തടുത്ത്, ലളിതവും ഒതുക്കമുള്ളതും, ഇന്നത്തെ ഉൽപ്പന്ന പേജുകൾ പോലെ",
+    "mn": "Бүх зүйл эмх цэгцтэй дугуйрсан хайрцагнуудад зэрэгцэн байрласан, энгийн цэвэрхэн, одоогийн бүтээгдэхүүний хуудас шиг",
+    "mr": "सर्व काही नीटनेटक्या गोलाकार डब्यांत शेजारी शेजारी, साधे आणि सुबक, आजची प्रॉडक्ट पेजेस दिसतात तसे",
+    "ms": "Semuanya dalam kotak bulat yang kemas bersebelahan, ringkas dan tersusun, seperti rupa halaman produk hari ini",
+    "my": "အရာအားလုံး သပ်ရပ်သော ထောင့်ဝိုင်းဘူးများတွင် ဘေးချင်းကပ်ထား၊ ရိုးရှင်းသပ်ရပ်၊ ယခုခေတ် ကုန်ပစ္စည်းစာမျက်နှာများကဲ့သို့",
+    "nb": "Alt i ryddige avrundede bokser side om side, enkelt og ryddig, slik produktsider ser ut i dag",
+    "ne": "सबै कुरा सफा गोलाकार बाकसमा छेउछाउ मिलाइएको, सादा र व्यवस्थित, आजका उत्पादन पृष्ठ जस्तो",
+    "nl": "Alles in nette afgeronde vakken naast elkaar, eenvoudig en opgeruimd, zoals productpagina's er nu uitzien",
+    "pa": "ਸਭ ਕੁਝ ਸਾਫ਼-ਸੁਥਰੇ ਗੋਲ ਡੱਬਿਆਂ ਵਿੱਚ ਨਾਲ-ਨਾਲ, ਸਾਦਾ ਅਤੇ ਸਲੀਕੇ ਵਾਲਾ, ਅੱਜ ਦੇ ਉਤਪਾਦ ਪੰਨਿਆਂ ਵਰਗਾ",
+    "pl": "Wszystko w zgrabnych zaokrąglonych pudełkach obok siebie, prosto i schludnie, jak dziś wyglądają strony produktów",
+    "pt": "Tudo em caixas arredondadas organizadas lado a lado, simples e arrumado, como as páginas de produto de hoje",
+    "ro": "Totul în casete rotunjite ordonate, una lângă alta, simplu și curat, cum arată paginile de produs astăzi",
+    "ru": "Всё в аккуратных скруглённых коробках рядом друг с другом, просто и опрятно, как выглядят страницы товаров сегодня",
+    "si": "සියල්ල පිළිවෙළට වටකුරු පෙට්ටි තුළ එකිනෙක පසෙක, සරල හා පිළිවෙළයි, අද නිෂ්පාදන පිටු පෙනෙන ආකාරයට",
+    "sk": "Všetko v úhľadných zaoblených boxoch vedľa seba, jednoducho a upratane, ako dnes vyzerajú stránky produktov",
+    "sq": "Gjithçka në kuti të rrumbullakosura të rregullta pranë njëra-tjetrës, e thjeshtë dhe e rregullt, siç duken sot faqet e produkteve",
+    "su": "Sagalana dina kotak buleud nu rapih gigireun-gigireun, basajan jeung teratur, siga kaca produk ayeuna",
+    "sv": "Allt i prydliga rundade lådor sida vid sida, enkelt och städat, som produktsidor ser ut idag",
+    "sw": "Kila kitu katika visanduku vya mviringo vilivyopangwa kando kwa kando, rahisi na nadhifu, kama kurasa za bidhaa zinavyoonekana leo",
+    "ta": "எல்லாமே பக்கம் பக்கமாகப் பொருந்தும் நேர்த்தியான வட்டமான பெட்டிகளில், எளிமையாகவும் ஒழுங்காகவும், இன்றைய தயாரிப்புப் பக்கங்கள் போல",
+    "te": "అన్నీ పక్కపక్కన అమరిన చక్కని గుండ్రని పెట్టెల్లో, సరళంగా, క్రమబద్ధంగా, నేటి ప్రొడక్ట్ పేజీల లాగా",
+    "th": "ทุกอย่างอยู่ในกล่องมุมมนเรียบร้อยเรียงชิดกัน เรียบง่ายสะอาดตา เหมือนหน้าสินค้าในปัจจุบัน",
+    "ti": "ኩሉ ኣብ ጽቡቕ ዝተሰርዐ ክቡብ ሳጹናት ጎኒ ንጎኒ፡ ቀሊልን ንጹርን፡ ከም ናይ ሎሚ ገጻት ምህርቲ",
+    "tk": "Hemme zat ýanaşyk ýerleşen tertipli ýumurlanan gutularda, ýönekeý we arassa, şu günki önüm sahypalary ýaly",
+    "tr": "Her şey yan yana oturan düzenli yuvarlak kutularda, sade ve derli toplu, bugünün ürün sayfaları gibi",
+    "uk": "Усе в охайних заокруглених коробках упритул, просто й акуратно, як сьогоднішні сторінки товарів",
+    "ur": "سب کچھ ساتھ ساتھ جڑے صاف ستھرے گول ڈبوں میں، سادہ اور منظم، جیسے آج کے پروڈکٹ صفحات",
+    "uz": "Hammasi yonma-yon joylashgan saranjom yumaloq qutilarda, sodda va ozoda, bugungi mahsulot sahifalari kabi",
+    "vi": "Mọi thứ trong những chiếc hộp bo tròn gọn gàng xếp cạnh nhau, đơn giản và ngăn nắp, như các trang sản phẩm ngày nay",
+    "zu": "Konke ezinhlobonhlobo zamabhokisi ayindingilizi ahlelekile ahlala eceleni komunye, kulula futhi kuhlanzekile, njengamakhasi emikhiqizo esikhathini samanje",
+    "sr": "Све у уредним заобљеним кутијама једна уз другу, једноставно и уредно, као данашње странице производа",
+    "sr-Latn": "Sve u urednim zaobljenim kutijama jedna uz drugu, jednostavno i uredno, kao današnje stranice proizvoda",
+    "hr": "Sve u urednim zaobljenim kutijama jedna uz drugu, jednostavno i pregledno, kao današnje stranice proizvoda",
+    "sl": "Vse v lepih zaobljenih škatlicah drugo ob drugi, preprosto in urejeno, kot današnje strani izdelkov",
+    "bs": "Sve u urednim zaobljenim kutijama jedna uz drugu, jednostavno i pregledno, kao današnje stranice proizvoda",
+    "ca": "Tot en caixes arrodonides i ordenades, una al costat de l'altra, senzill i endreçat, com les pàgines de producte d'avui",
+    "kk": "Бәрі қатар тұрған ұқыпты дөңгелек қораптарда, қарапайым әрі жинақы, бүгінгі өнім беттері сияқты",
+    "ky": "Баары катар турган тыкан тегерек кутучаларда, жөнөкөй жана иреттүү, бүгүнкү өнүм беттериндей",
+    "as": "সকলো কাষত কাষত সজোৱা পৰিপাটী গোলাকাৰ বাকচত, সৰল আৰু নিৰ্মল, আজিৰ প্ৰডাক্ট পেজৰ দৰে",
+    "or": "ସବୁକିଛି ପାଖାପାଖି ସଜା ପରିପାଟୀ ଗୋଲାକାର ବାକ୍ସରେ, ସରଳ ଓ ସୁନ୍ଦର, ଆଜିର ପ୍ରୋଡକ୍ଟ ପେଜ୍ ପରି"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "colors": {
+    "page": "#eceef2",
+    "text": "#0f1115",
+    "muted": "#4f5663",
+    "accent": "#4f46e5",
+    "onAccent": "#ffffff",
+    "border": "#dfe2e8",
+    "card": "#ffffff",
+    "selected": "#e7e6ff",
+    "onSelected": "#1e1a7a",
+    "reason": "#3f37c9",
+    "chrome": "#eceef2"
+  },
+  "shape": {
+    "cardRadius": 22,
+    "controlRadius": 12,
+    "thumbnailRadius": 14
+  },
+  "window": {
+    "background": [
+      "#eceef2"
+    ],
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": "#eceef2"
+      },
+      "inactive": {
+        "fill": "#eceef2"
+      },
+      "text": "#0f1115",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#0f1115",
+        "surface": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#0000001a"
+          },
+          "pressed": {
+            "fill": "#00000033"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#e81123"
+          },
+          "pressed": {
+            "fill": "#e81123"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#eceef2"
+      },
+      "text": "#0f1115",
+      "highlight": {
+        "fill": "#0f1115"
+      },
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#fffffffa",
+        "border": "#dfe2e8",
+        "radius": 12
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": "#eceef2"
+    },
+    "sideBar": {
+      "fill": "#ffffff",
+      "radius": 22
+    },
+    "statusBar": {
+      "fill": "#eceef2"
+    },
+    "topBarText": "#0f1115",
+    "statusBarText": "#4f5663",
+    "tabs": {
+      "position": "bottom",
+      "surface": {
+        "fill": "#fffffff2",
+        "border": {
+          "color": "#dfe2e8",
+          "sides": [
+            "top"
+          ]
+        }
+      },
+      "text": "#4f5663",
+      "selectedText": "#ffffff",
+      "indicator": "#0f1115",
+      "selected": {
+        "fill": "#0f1115",
+        "radius": 12
+      }
+    }
+  },
+  "controls": {
+    "press": "wash",
+    "button": {
+      "fill": "#ffffff",
+      "shadow": [
+        {
+          "color": "#0f11150f",
+          "x": 0,
+          "y": 1,
+          "blur": 2
+        }
+      ],
+      "hover": {
+        "fill": "#f4f5f8"
+      }
+    },
+    "buttonText": "#0f1115",
+    "primaryButton": {
+      "fill": "#0f1115",
+      "hover": {
+        "fill": "#2a2d35"
+      }
+    },
+    "primaryButtonText": "#ffffff",
+    "chip": {
+      "fill": "#ffffff"
+    },
+    "chipSelected": {
+      "fill": "#0f1115"
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": "#0f1115",
+      "radius": 14
+    },
+    "navSelectedText": "#ffffff",
+    "navText": "#4f5663"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffff",
+      "radius": 22,
+      "shadow": [
+        {
+          "color": "#0f11150f",
+          "x": 0,
+          "y": 1,
+          "blur": 2
+        }
+      ],
+      "hover": {
+        "shadow": [
+          {
+            "color": "#0f111526",
+            "x": 0,
+            "y": 6,
+            "blur": 18
+          }
+        ]
+      },
+      "focused": {
+        "border": {
+          "color": "#4f46e5",
+          "width": 3
+        }
+      }
+    },
+    "padding": 10,
+    "panel": {
+      "fill": "#ffffff",
+      "radius": 22
+    },
+    "durationBadge": {
+      "fill": "#0f1115cc",
+      "radius": 8
+    },
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "Lumtub",
+    "size": 22,
+    "fill": "#0f1115",
+    "badge": {
+      "fill": "#0f1115",
+      "radius": 9
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "icons": {
+    "style": "regular",
+    "effect": "none"
+  },
+  "player": {
+    "progress": "#4f46e5"
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#0d0e11",
+        "text": "#f2f3f5",
+        "muted": "#a3a9b5",
+        "accent": "#8b85ff",
+        "onAccent": "#0d0b2e",
+        "border": "#24262c",
+        "card": "#17181c",
+        "selected": "#26244a",
+        "onSelected": "#e7e6ff",
+        "reason": "#a29dff",
+        "chrome": "#0d0e11"
+      },
+      "window": {
+        "background": [
+          "#0d0e11"
+        ],
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": "#0d0e11"
+          },
+          "inactive": {
+            "fill": "#0d0e11"
+          },
+          "text": "#f2f3f5",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#f2f3f5",
+            "surface": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#ffffff1a"
+              },
+              "pressed": {
+                "fill": "#ffffff2e"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#e81123"
+              },
+              "pressed": {
+                "fill": "#e81123"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": "#0d0e11"
+          },
+          "text": "#f2f3f5",
+          "highlight": {
+            "fill": "#f2f3f5"
+          },
+          "highlightText": "#0d0e11",
+          "menu": {
+            "fill": "#17181cfa",
+            "border": "#24262c",
+            "radius": 12
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": "#0d0e11"
+        },
+        "sideBar": {
+          "fill": "#17181c",
+          "radius": 22
+        },
+        "statusBar": {
+          "fill": "#0d0e11"
+        },
+        "topBarText": "#f2f3f5",
+        "statusBarText": "#a3a9b5",
+        "tabs": {
+          "position": "bottom",
+          "surface": {
+            "fill": "#17181cf2",
+            "border": {
+              "color": "#24262c",
+              "sides": [
+                "top"
+              ]
+            }
+          },
+          "text": "#a3a9b5",
+          "selectedText": "#0d0e11",
+          "indicator": "#f2f3f5",
+          "selected": {
+            "fill": "#f2f3f5",
+            "radius": 12
+          }
+        }
+      },
+      "controls": {
+        "press": "wash",
+        "button": {
+          "fill": "#17181c",
+          "hover": {
+            "fill": "#202227"
+          }
+        },
+        "buttonText": "#f2f3f5",
+        "primaryButton": {
+          "fill": "#f2f3f5",
+          "hover": {
+            "fill": "#d9dbe0"
+          }
+        },
+        "primaryButtonText": "#0d0e11",
+        "chip": {
+          "fill": "#17181c"
+        },
+        "chipSelected": {
+          "fill": "#f2f3f5"
+        },
+        "chipSelectedText": "#0d0e11",
+        "navSelected": {
+          "fill": "#f2f3f5",
+          "radius": 14
+        },
+        "navSelectedText": "#0d0e11",
+        "navText": "#a3a9b5"
+      },
+      "cards": {
+        "video": {
+          "fill": "#17181c",
+          "radius": 22,
+          "hover": {
+            "fill": "#1d1f24"
+          },
+          "focused": {
+            "border": {
+              "color": "#8b85ff",
+              "width": 3
+            }
+          }
+        },
+        "padding": 10,
+        "panel": {
+          "fill": "#17181c",
+          "radius": 22
+        },
+        "durationBadge": {
+          "fill": "#000000cc",
+          "radius": 8
+        },
+        "durationText": "#ffffff"
+      },
+      "logo": {
+        "text": "Lumtub",
+        "size": 22,
+        "fill": "#f2f3f5",
+        "badge": {
+          "fill": "#f2f3f5",
+          "radius": 9
+        },
+        "badgeIcon": "#0d0e11"
+      },
+      "icons": {
+        "style": "regular",
+        "effect": "none"
+      },
+      "player": {
+        "progress": "#8b85ff"
+      }
+    },
+    "tv": {
+      "cards": {
+        "video": {
+          "focused": {
+            "border": {
+              "color": "#4f46e5",
+              "width": 4
+            },
+            "glow": "#4f46e5"
+          }
+        }
+      },
+      "controls": {
+        "button": {
+          "focused": {
+            "border": {
+              "color": "#4f46e5",
+              "width": 3
+            }
+          }
+        },
+        "chip": {
+          "focused": {
+            "border": {
+              "color": "#4f46e5",
+              "width": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

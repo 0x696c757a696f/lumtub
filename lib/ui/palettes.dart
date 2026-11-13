@@ -118,7 +118,7 @@ ColorScheme paletteScheme(ColorScheme tonal, Palette palette, Brightness brightn
     onTertiaryContainer: t.text,
     surface: page,
     onSurface: t.text,
-    onSurfaceVariant: over(strong ? 0.85 : 0.70),
+    onSurfaceVariant: over(strong ? 0.85 : 0.74),
     surfaceDim: dark ? page : over(0.05),
     surfaceBright: dark ? over(0.12) : page,
     surfaceContainerLowest: t.card ?? page,

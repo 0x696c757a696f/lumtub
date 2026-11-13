@@ -1,0 +1,668 @@
+// Flourish: a built-in Lumtub skin. Vines, flowers, butterflies and notes in silhouette over a magenta glow, after mid-2000s phone wallpapers and music player ads.
+// skins/template/skin.jsonc explains every field, and skins/README.md how to make your own.
+// 花藤剪影：Lumtub 内置皮肤。洋红光晕上的藤蔓、花朵、蝴蝶和音符剪影，致敬 2000 年代中期的手机壁纸和 MP3 广告。
+// 每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "flourish",
+  "name": "Flourish",
+  "names": {
+    "zh-Hans": "花藤剪影",
+    "zh-Hant": "花藤剪影",
+    "zh-HK": "花藤剪影",
+    "af": "Krulwerk",
+    "am": "ጌጠኛ ዘንጎች",
+    "ar": "زخارف متعرجة",
+    "az": "Naxışlı gözəllik",
+    "be": "Завіткі",
+    "bg": "Завъртулки",
+    "bn": "লতাপাতার নকশা",
+    "cs": "Rozmarné ornamenty",
+    "da": "Snørkler",
+    "de": "Schnörkel",
+    "el": "Στολίδια",
+    "eo": "Ornamaĵoj",
+    "es": "Arabescos",
+    "et": "Keerdornament",
+    "eu": "Apaingarriak",
+    "fa": "گل‌وبوته",
+    "fi": "Koukerot",
+    "fil": "Palamuting Baging",
+    "fr": "Arabesques",
+    "gl": "Arabescos",
+    "gu": "વેલબૂટ્ટા",
+    "he": "עיטורים",
+    "hi": "बेल-बूटे",
+    "hu": "Díszítés",
+    "hy": "Զարդանախշեր",
+    "id": "Ornamen Sulur",
+    "is": "Skraut",
+    "it": "Arabeschi",
+    "ja": "唐草",
+    "jv": "Ukiran Sulur",
+    "ka": "ორნამენტები",
+    "km": "ផ្កាវល្លិ៍",
+    "kn": "ಬಳ್ಳಿ ಅಲಂಕಾರ",
+    "ko": "덩굴 장식",
+    "la": "Ornamenta Volutarum",
+    "lo": "ລວດລາຍເຄືອ",
+    "lt": "Vingiai",
+    "lv": "Rotājumi",
+    "mk": "Украсни лози",
+    "ml": "വള്ളിച്ചിത്രങ്ങൾ",
+    "mn": "Шовгор чимэг",
+    "mr": "वेलबुट्टी",
+    "ms": "Hiasan Pucuk",
+    "my": "နွယ်ပန်းအလှ",
+    "nb": "Snirkler",
+    "ne": "लहरे सजावट",
+    "nl": "Krullen",
+    "pa": "ਵੇਲ-ਬੂਟੇ",
+    "pl": "Zawijasy",
+    "pt": "Arabescos",
+    "ro": "Ornamente",
+    "ru": "Завитки",
+    "si": "වැල් සැරසිලි",
+    "sk": "Ornamenty",
+    "sq": "Zbukurime",
+    "su": "Ukiran Ranjang",
+    "sv": "Snirklar",
+    "sw": "Urembo wa Mizabibu",
+    "ta": "பூங்கொடி",
+    "te": "పూల లతలు",
+    "th": "เถาวัลย์ลายพริ้ว",
+    "ti": "ዕምባባ",
+    "tk": "Gyvrym",
+    "tr": "Kıvrım",
+    "uk": "Завитки",
+    "ur": "پیچ و خم",
+    "uz": "Tolalar",
+    "vi": "Hoa văn uốn lượn",
+    "zu": "Ukuhlobisa",
+    "sr": "Вињаге",
+    "sr-Latn": "Vinjage",
+    "hr": "Vitice",
+    "sl": "Zavite vitice",
+    "bs": "Vitice",
+    "ca": "Floritures",
+    "kk": "Оралма өрнек",
+    "ky": "Оромо чүймөлөр",
+    "as": "লতা-পাত",
+    "or": "ଲତାପତ୍ର"
+  },
+  "description": "Curling vines, flowers, butterflies and notes in silhouette over a magenta glow, like a 2000s phone wallpaper",
+  "descriptions": {
+    "zh-Hans": "洋红光晕上卷曲的藤蔓、花朵、蝴蝶和音符剪影，像 2000 年代的手机壁纸",
+    "zh-Hant": "洋紅光暈上捲曲的藤蔓、花朵、蝴蝶和音符剪影，像 2000 年代的手機桌布",
+    "zh-HK": "洋紅光暈上捲曲的藤蔓、花朵、蝴蝶和音符剪影，像 2000 年代的手機桌布",
+    "af": "Krulrankies, blomme, skoenlappers en note in silhoeët oor 'n magenta gloed, soos 'n foonagtergrond van die 2000's",
+    "am": "በማጀንታ ብርሃን ላይ የተጠማዘዙ ወይኖች፣ አበቦች፣ ቢራቢሮዎችና ኖታዎች በጥላ ቅርጽ፣ እንደ 2000ዎቹ የስልክ ልጣፍ",
+    "ar": "كروم ملتفة وأزهار وفراشات ونوتات بهيئة ظلال فوق وهج أرجواني، كخلفية هاتف من العقد الأول من الألفية",
+    "az": "Purpur parıltı üzərində qıvrım sarmaşıqlar, çiçəklər, kəpənəklər və notlar siluet şəklində, 2000-ci illərin telefon divar kağızı kimi",
+    "be": "Закручаныя лозы, кветкі, матылькі і ноты сілуэтамі на пурпурным ззянні, як шпалеры тэлефона 2000-х",
+    "bg": "Извити лози, цветя, пеперуди и ноти като силуети над маджентово сияние, като тапет на телефон от 2000-те",
+    "bn": "ম্যাজেন্টা আভার ওপর পেঁচানো লতা, ফুল, প্রজাপতি ও সুরের চিহ্ন ছায়ামূর্তিতে, দুই হাজারের দশকের ফোন ওয়ালপেপারের মতো",
+    "cs": "Kroutící se úponky, květiny, motýli a noty v siluetě na purpurové záři, jako tapeta telefonu z nultých let",
+    "da": "Snoede ranker, blomster, sommerfugle og noder som silhuetter over et magentaskær, som en telefonbaggrund fra 00'erne",
+    "de": "Geschwungene Ranken, Blumen, Schmetterlinge und Noten als Silhouetten über einem magentafarbenen Schimmer, wie ein Handy-Hintergrund der 2000er",
+    "el": "Κυρτά κλαδιά, λουλούδια, πεταλούδες και νότες σε σιλουέτα πάνω από μια ματζέντα λάμψη, σαν ταπετσαρία κινητού του 2000",
+    "eo": "Kurbiĝantaj lianoj, floroj, papilioj kaj notoj kiel siluetoj super magenta ardo, kiel telefona fonbildo de la 2000-aj jaroj",
+    "es": "Enredaderas rizadas, flores, mariposas y notas en silueta sobre un resplandor magenta, como un fondo de pantalla de móvil de los 2000",
+    "et": "Keerduvad viinapuud, lilled, liblikad ja noodid siluetina magenta hõõgusel, nagu 2000ndate telefoni taustapilt",
+    "eu": "Mihi kiribilduak, loreak, tximeletak eta notak silueta gisa magenta distira baten gainean, 2000ko hamarkadako telefono-horma-irudi bat bezala",
+    "fa": "پیچک‌های پیچان، گل‌ها، پروانه‌ها و نت‌ها به شکل سایه روی درخششی ارغوانی، مثل تصویر زمینه گوشی دهه ۲۰۰۰",
+    "fi": "Kiemurtelevia köynnöksiä, kukkia, perhosia ja nuotteja siluetteina magentan hehkun päällä, kuin 2000-luvun puhelimen taustakuva",
+    "fil": "Kulot na baging, bulaklak, paruparo at nota na silweta sa ibabaw ng magenta na ningning, parang wallpaper ng telepono noong dekada 2000",
+    "fr": "Vignes enroulées, fleurs, papillons et notes en silhouette sur une lueur magenta, comme un fond d'écran de téléphone des années 2000",
+    "gl": "Trepadeiras enroscadas, flores, bolboretas e notas en silueta sobre un resplandor maxenta, coma un fondo de pantalla de móbil dos 2000",
+    "gu": "જાંબલી-ગુલાબી ઝગમગાટ પર વળાંકવાળી વેલ, ફૂલ, પતંગિયાં અને સૂરના ચિહ્નો પડછાયા સ્વરૂપે, 2000ના દાયકાના ફોન વૉલપેપર જેવું",
+    "he": "גפנים מסתלסלות, פרחים, פרפרים ותווים בצללית מעל זוהר מג'נטה, כמו טפט לטלפון משנות ה-2000",
+    "hi": "मैजेंटा आभा पर घुमावदार बेलें, फूल, तितलियाँ और सुर-चिह्न छायाकृति में, 2000 के दशक के फ़ोन वॉलपेपर जैसा",
+    "hu": "Kunkorodó indák, virágok, pillangók és hangjegyek sziluettként bíborvörös fény előtt, mint egy 2000-es évekbeli telefonháttér",
+    "hy": "Գալարվող որթեր, ծաղիկներ, թիթեռներ և նոտաներ՝ ստվերանկարով, մանուշակագույն փայլի վրա, ինչպես 2000-ականների հեռախոսի պաստառ",
+    "id": "Sulur melengkung, bunga, kupu-kupu, dan not dalam siluet di atas pendar magenta, seperti wallpaper ponsel 2000-an",
+    "is": "Hlykkjóttir vafningar, blóm, fiðrildi og nótur sem skuggamyndir yfir magenta bjarma, eins og símabakgrunnur frá fyrsta áratug aldarinnar",
+    "it": "Rampicanti arricciati, fiori, farfalle e note in silhouette su un bagliore magenta, come uno sfondo di telefono degli anni 2000",
+    "ja": "マゼンタの輝きの上に、巻きつく蔓、花、蝶、音符のシルエット。2000年代のケータイ待受画面のよう",
+    "jv": "Sulur nglungker, kembang, kupu lan not awujud siluet ing sandhuwure cahya magenta, kaya wallpaper ponsel taun 2000-an",
+    "ka": "დახვეული ვაზები, ყვავილები, პეპლები და ნოტები სილუეტებად მაჟენტა ნათებაზე, 2000-იანების ტელეფონის ფონივით",
+    "km": "វល្លិ៍រួញ ផ្កា មេអំបៅ និងកំណត់សម្គាល់តន្ត្រីជារូបស្រមោលលើពន្លឺម៉ាហ្សង់តា ដូចផ្ទាំងរូបភាពទូរសព្ទនៃទសវត្ស 2000",
+    "kn": "ಮೆಜೆಂಟಾ ಹೊಳಪಿನ ಮೇಲೆ ಸುರುಳಿಯಾಕಾರದ ಬಳ್ಳಿಗಳು, ಹೂಗಳು, ಚಿಟ್ಟೆಗಳು ಮತ್ತು ಸ್ವರಗಳು ನೆರಳಿನ ರೂಪದಲ್ಲಿ, 2000ರ ದಶಕದ ಫೋನ್ ವಾಲ್‌ಪೇಪರ್‌ನಂತೆ",
+    "ko": "마젠타 빛 위에 휘감긴 덩굴, 꽃, 나비, 음표의 실루엣. 2000년대 휴대폰 배경화면 같은 느낌",
+    "la": "Pampini convoluti, flores, papiliones et notae in umbris super splendorem magenta, quasi tegumentum telephoni primi decennii saeculi XXI",
+    "lo": "ເຄືອມ້ວນ, ດອກໄມ້, ຜີເສື້ອ ແລະ ໂນດດົນຕີເປັນເງົາເທິງແສງສີບົວມ່ວງ, ຄືພາບພື້ນຫຼັງໂທລະສັບຊຸມປີ 2000",
+    "lt": "Susisukę vijokliai, gėlės, drugeliai ir natos siluetais virš purpurinio švytėjimo, tarsi pirmojo dešimtmečio telefono ekrano fonas",
+    "lv": "Vijīgi vīteņaugi, ziedi, tauriņi un notis siluetos virs fuksīnsarkana mirdzuma, kā 2000. gadu tālruņa fona attēls",
+    "mk": "Витки лози, цвеќиња, пеперутки и ноти во силуета над магента сјај, како позадина на телефон од 2000-тите",
+    "ml": "മജന്ത തിളക്കത്തിന് മുകളിൽ ചുരുണ്ട വള്ളികൾ, പൂക്കൾ, ചിത്രശലഭങ്ങൾ, സ്വരചിഹ്നങ്ങൾ എന്നിവ നിഴൽരൂപത്തിൽ, 2000-കളിലെ ഫോൺ വാൾപേപ്പർ പോലെ",
+    "mn": "Магента гэрэлтэлт дээр мурийсан усан үзмийн мөчир, цэцэг, эрвээхэй, нотууд сүүдэр хэлбэрээр, 2000-аад оны утасны ханын цаас шиг",
+    "mr": "मजेंटा तेजावर वेटोळे घेतलेल्या वेली, फुले, फुलपाखरे आणि स्वरचिन्हे छायाकृतीत, 2000 च्या दशकातील फोन वॉलपेपरसारखे",
+    "ms": "Pucuk menggulung, bunga, rama-rama dan not dalam bentuk siluet di atas cahaya magenta, seperti kertas dinding telefon 2000-an",
+    "my": "မဂျင်တာအရောင်တောက်ပမှုပေါ်၌ ကွေ့ကောက်သော နွယ်များ၊ ပန်းများ၊ လိပ်ပြာများနှင့် သီချင်းမှတ်စုများ အရိပ်ပုံစံဖြင့်၊ ၂၀၀၀ ပြည့်နှစ်များ ဖုန်းနောက်ခံပုံကဲ့သို့",
+    "nb": "Krøllende ranker, blomster, sommerfugler og noter som silhuetter over et magentaskjær, som en mobilbakgrunn fra 2000-tallet",
+    "ne": "म्याजेन्टा आभामाथि बेरिएका लहरा, फूल, पुतली र स्वरचिन्ह छायाँ रूपमा, २००० को दशकको फोन वालपेपर जस्तो",
+    "nl": "Krullende ranken, bloemen, vlinders en noten als silhouetten boven een magenta gloed, als een telefoonachtergrond uit de jaren 2000",
+    "pa": "ਮੈਜੈਂਟਾ ਚਮਕ ਉੱਤੇ ਵਲ ਖਾਂਦੀਆਂ ਵੇਲਾਂ, ਫੁੱਲ, ਤਿਤਲੀਆਂ ਅਤੇ ਸੁਰ-ਚਿੰਨ੍ਹ ਪਰਛਾਵੇਂ ਦੇ ਰੂਪ ਵਿੱਚ, 2000ਵਿਆਂ ਦੇ ਫ਼ੋਨ ਵਾਲਪੇਪਰ ਵਰਗਾ",
+    "pl": "Zwijane pnącza, kwiaty, motyle i nuty w sylwetkach na magentowej poświacie, jak tapeta telefonu z pierwszej dekady XXI wieku",
+    "pt": "Trepadeiras enroladas, flores, borboletas e notas em silhueta sobre um brilho magenta, como um papel de parede de celular dos anos 2000",
+    "ro": "Viță răsucită, flori, fluturi și note în siluetă peste o strălucire magenta, ca un fundal de telefon din anii 2000",
+    "ru": "Вьющиеся лозы, цветы, бабочки и ноты силуэтами на пурпурном сиянии, как обои телефона 2000-х",
+    "si": "මජෙන්ටා දිලිසීමක් මත ඇඹරුණු වැල්, මල්, සමනලුන් සහ සංගීත සටහන් සෙවණැලි ලෙස, 2000 දශකයේ දුරකථන වෝල්පේපරයක් මෙන්",
+    "sk": "Vlnité úponky, kvety, motýle a noty v silueta nad purpurovou žiarou, ako tapeta telefónu z nultých rokov",
+    "sq": "Hardhi të përdredhura, lule, flutura dhe nota në siluetë mbi një shkëlqim magenta, si një sfond telefoni i viteve 2000",
+    "su": "Ranjang ngagulung, kembang, kukupu jeung not dina wangun siluet luhureun cahaya magenta, siga wallpaper telepon taun 2000-an",
+    "sv": "Slingrande rankor, blommor, fjärilar och noter som silhuetter över ett magentaskimmer, som en mobilbakgrund från 00-talet",
+    "sw": "Mizabibu iliyojikunja, maua, vipepeo na noti kwa umbo la kivuli juu ya mng'ao wa magenta, kama mandhari ya simu ya miaka ya 2000",
+    "ta": "மெஜந்தா ஒளிக்கு மேல் சுருளும் கொடிகள், பூக்கள், பட்டாம்பூச்சிகள், இசைக்குறிகள் நிழலுருவில், 2000-களின் ஃபோன் வால்பேப்பர் போல",
+    "te": "మెజెంటా కాంతిపై మెలికలు తిరిగిన తీగలు, పూలు, సీతాకోకచిలుకలు, స్వరాలు సిల్హౌట్‌లో, 2000ల ఫోన్ వాల్‌పేపర్ లాగా",
+    "th": "เถาวัลย์เลื้อย ดอกไม้ ผีเสื้อ และโน้ตดนตรีเป็นภาพเงาเหนือแสงสีมาเจนตา เหมือนวอลเปเปอร์โทรศัพท์ยุค 2000",
+    "ti": "ኣብ ልዕሊ ማጀንታ ብርሃን ዝተጠማዘዘ ወይኒ፡ ዕምባባታት፡ ቢራቢሮታትን ኖታታትን ብጽላሎት፡ ከም ናይ 2000ታት ዎልፐይፐር ተሌፎን",
+    "tk": "Magenta şöhlesiniň üstünde gyvrylýan ýabyşgaklar, gülleriň, kebelekleriň we notalaryň siluetleri, 2000-nji ýyllaryň telefon fony ýaly",
+    "tr": "Macenta bir parıltı üzerinde kıvrılan asmalar, çiçekler, kelebekler ve nota silüetleri, 2000'lerin telefon duvar kâğıdı gibi",
+    "uk": "Звиваються лози, квіти, метелики й ноти силуетами над пурпуровим сяйвом, як шпалери телефона 2000-х",
+    "ur": "ارغوانی چمک پر بل کھاتی بیلیں، پھول، تتلیاں اور سُر سائے کی صورت میں، 2000 کی دہائی کے فون وال پیپر جیسا",
+    "uz": "Magenta nur ustida buralgan tok, gul, kapalak va notalar siluet shaklida, 2000-yillardagi telefon fon rasmi kabi",
+    "vi": "Dây leo cuộn, hoa, bướm và nốt nhạc dạng bóng đen trên nền ánh đỏ tươi, như hình nền điện thoại thập niên 2000",
+    "zu": "Izihlahla ezigoqekayo, izimbali, izimvemvane namanothi njengezithunzi phezu kokukhanya kwe-magenta, njengesithombe sangemuva sefoni sama-2000",
+    "sr": "Увијене лозе, цвеће, лептири и ноте у силуети преко магента сјаја, као позадина телефона из 2000-их",
+    "sr-Latn": "Uvijene loze, cveće, leptiri i note u siluetu preko magenta sjaja, kao pozadina telefona iz 2000-ih",
+    "hr": "Uvijene vitice, cvijeće, leptiri i note u siluetama preko magenta sjaja, poput pozadine telefona iz 2000-ih",
+    "sl": "Zvijajoče se vitice, cvetje, metulji in note v silhueti nad magenta sijem, kot ozadje telefona iz 2000-ih",
+    "bs": "Uvijene vitice, cvijeće, leptiri i note u siluetama preko magenta sjaja, poput pozadine telefona iz 2000-ih",
+    "ca": "Enfiladisses cargolades, flors, papallones i notes en silueta sobre un resplendor magenta, com un fons de pantalla de mòbil dels 2000",
+    "kk": "Қызыл күрең жарық үстінде иірілген бұталар, гүлдер, көбелектер мен ноталар силуэт түрінде, 2000-жылдардағы телефон тұсқағазы сияқты",
+    "ky": "Кызгылт күрөң жарыктын үстүндө ийрилген жыгачтар, гүлдөр, көпөлөктөр жана нота силуэттери, 2000-жылдардагы телефон тушкагазындай",
+    "as": "বেঙুনীয়া ৰঙা পোহৰৰ ওপৰত পেচ খোৱা লতা, ফুল, প্ৰজাপতি আৰু সুৰৰ চিহ্ন ছিলুয়েটত, ২০০০ৰ দশকৰ ফোনৰ ৱালপেপাৰৰ দৰে",
+    "or": "ବାଇଗଣି ଆଲୋକ ଉପରେ ଗୁଡ଼େଇ ହୋଇଥିବା ଲତା, ଫୁଲ, ପ୍ରଜାପତି ଓ ସ୍ୱର ଚିହ୍ନ ଛାୟାରୂପରେ, ୨୦୦୦ ଦଶକର ଫୋନ୍ ୱାଲପେପର୍ ପରି"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "text": {
+    "displayFont": "Comfortaa"
+  },
+  "colors": {
+    "page": "#fff4f9",
+    "text": "#3a0a2c",
+    "muted": "#5c2449",
+    "accent": "#b0105e",
+    "onAccent": "#ffffff",
+    "border": "#f0c2da",
+    "card": "#ffffff",
+    "selected": "#ffe0ef",
+    "onSelected": "#5a0a3a",
+    "reason": "#a0105a",
+    "chrome": "#fff4f9"
+  },
+  "shape": {
+    "cardRadius": 14,
+    "controlRadius": 99,
+    "thumbnailRadius": 10
+  },
+  "window": {
+    "background": [
+      "#fff4f9",
+      {
+        "image": "day.jpg",
+        "fit": "cover",
+        "focus": [
+          0.9,
+          0.5
+        ]
+      }
+    ],
+    "veil": 0.5,
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#b0105e",
+              "#6a0f7a"
+            ]
+          }
+        }
+      },
+      "inactive": {
+        "fill": {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#b0105e",
+              "#6a0f7a"
+            ]
+          }
+        }
+      },
+      "text": "#ffffff",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#ffffff",
+        "surface": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#ffffff26"
+          },
+          "pressed": {
+            "fill": "#ffffff40"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#e81123"
+          },
+          "pressed": {
+            "fill": "#e81123"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#fff4f9"
+      },
+      "text": "#3a0a2c",
+      "highlight": {
+        "fill": "#b0105e"
+      },
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#fffffffa",
+        "border": "#f0c2da",
+        "radius": 10
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": "#ffffffb3",
+      "border": {
+        "color": "#f0c2da",
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#ffffff8c",
+      "border": {
+        "color": "#f0c2da",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": "#ffffffb3",
+      "border": {
+        "color": "#f0c2da",
+        "sides": [
+          "top"
+        ]
+      }
+    },
+    "topBarText": "#3a0a2c",
+    "statusBarText": "#6e3358",
+    "tabs": {
+      "position": "bottom",
+      "surface": {
+        "fill": "#fff4f9f2",
+        "border": {
+          "color": "#f0c2da",
+          "sides": [
+            "top"
+          ]
+        }
+      },
+      "text": "#6e3358",
+      "selectedText": "#5a0a3a",
+      "indicator": "#b0105e"
+    }
+  },
+  "controls": {
+    "press": "ripple",
+    "button": {
+      "fill": "#ffffffcc",
+      "border": "#e8a8c8",
+      "hover": {
+        "border": "#b0105e"
+      }
+    },
+    "buttonText": "#3a0a2c",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 90,
+          "colors": [
+            "#c0156a",
+            "#8a0f6e"
+          ]
+        }
+      },
+      "hover": {
+        "glow": "#ff5ca8"
+      }
+    },
+    "primaryButtonText": "#ffffff",
+    "chip": {
+      "fill": "#ffffffb3",
+      "border": "#e8a8c8"
+    },
+    "chipSelected": {
+      "fill": "#3a0a2c"
+    },
+    "chipSelectedText": "#ffd84d",
+    "navSelected": {
+      "fill": "#3a0a2c",
+      "radius": 16
+    },
+    "navSelectedText": "#ffd84d",
+    "navText": "#5e2a4c"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffffe6",
+      "border": "#f0c2da",
+      "hover": {
+        "border": "#b0105e",
+        "glow": "#ff8cc466"
+      },
+      "focused": {
+        "border": {
+          "color": "#b0105e",
+          "width": 3
+        }
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#ffffffeb",
+      "border": "#f0c2da"
+    },
+    "durationBadge": {
+      "fill": "#3a0a2ccc",
+      "radius": 8
+    },
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "lumtub",
+    "font": "Comfortaa",
+    "size": 22,
+    "fill": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#b0105e",
+          "#6a0f7a"
+        ]
+      }
+    },
+    "badge": {
+      "fill": "#3a0a2c"
+    },
+    "badgeIcon": "#ffd84d"
+  },
+  "icons": {
+    "style": "regular",
+    "effect": "none"
+  },
+  "player": {
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#ff2d6f",
+          "#ffb000"
+        ]
+      }
+    }
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#2a0636",
+        "text": "#ffffff",
+        "muted": "#f2c9de",
+        "accent": "#ffd84d",
+        "onAccent": "#2a0632",
+        "border": "#5a2a66",
+        "card": "#12001a",
+        "selected": "#4a2a10",
+        "onSelected": "#ffd84d",
+        "reason": "#ffd84d",
+        "chrome": "#1a0020"
+      },
+      "window": {
+        "background": [
+          "#2a0636",
+          {
+            "image": "night.jpg",
+            "fit": "cover",
+            "focus": [
+              0.9,
+              0.5
+            ]
+          }
+        ],
+        "veil": 0.55,
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": "#1a0020"
+          },
+          "inactive": {
+            "fill": "#1a0020"
+          },
+          "text": "#ffffff",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#f6d6e6",
+            "surface": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#ffffff1f"
+              },
+              "pressed": {
+                "fill": "#ffffff33"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#e81123"
+              },
+              "pressed": {
+                "fill": "#e81123"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": "#1a0020"
+          },
+          "text": "#ffffff",
+          "highlight": {
+            "fill": "#ffd84d"
+          },
+          "highlightText": "#2a0632",
+          "menu": {
+            "fill": "#1a0020fa",
+            "border": "#ffffff40",
+            "radius": 10
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": "#14001ab3",
+          "border": {
+            "color": "#ffffff1f",
+            "sides": [
+              "bottom"
+            ]
+          }
+        },
+        "sideBar": {
+          "fill": "#14001a99",
+          "border": {
+            "color": "#ffffff14",
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": "#14001acc",
+          "border": {
+            "color": "#ffffff14",
+            "sides": [
+              "top"
+            ]
+          }
+        },
+        "topBarText": "#ffffff",
+        "statusBarText": "#f2c9de",
+        "tabs": {
+          "position": "bottom",
+          "surface": {
+            "fill": "#1a0020f2",
+            "border": {
+              "color": "#ffffff1f",
+              "sides": [
+                "top"
+              ]
+            }
+          },
+          "text": "#f2c9de",
+          "selectedText": "#ffd84d",
+          "indicator": "#ffd84d"
+        }
+      },
+      "controls": {
+        "press": "ripple",
+        "button": {
+          "fill": "#00000066",
+          "border": "#ffffff40",
+          "hover": {
+            "border": "#ffd84d"
+          }
+        },
+        "buttonText": "#ffffff",
+        "primaryButton": {
+          "fill": "#ffd84d",
+          "hover": {
+            "glow": "#ffd84d"
+          }
+        },
+        "primaryButtonText": "#2a0632",
+        "chip": {
+          "fill": "#00000059",
+          "border": "#ffffff40"
+        },
+        "chipSelected": {
+          "fill": "#ffd84d"
+        },
+        "chipSelectedText": "#2a0632",
+        "navSelected": {
+          "fill": "#ffd84d",
+          "radius": 16
+        },
+        "navSelectedText": "#2a0632",
+        "navText": "#f6d6e6"
+      },
+      "cards": {
+        "video": {
+          "fill": "#12001ad9",
+          "border": "#ffffff24",
+          "hover": {
+            "border": "#ffd84d",
+            "glow": "#ffd84d59"
+          },
+          "focused": {
+            "border": {
+              "color": "#ffd84d",
+              "width": 3
+            }
+          }
+        },
+        "padding": 6,
+        "panel": {
+          "fill": "#12001ae0",
+          "border": "#ffffff24"
+        },
+        "durationBadge": {
+          "fill": "#000000cc",
+          "radius": 8
+        },
+        "durationText": "#ffffff"
+      },
+      "logo": {
+        "text": "lumtub",
+        "font": "Comfortaa",
+        "size": 22,
+        "fill": "#ffffff",
+        "badge": {
+          "fill": "#ffd84d"
+        },
+        "badgeIcon": "#3a0846"
+      },
+      "icons": {
+        "style": "regular",
+        "effect": "none"
+      },
+      "player": {
+        "progress": {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#ff2d6f",
+              "#ffd84d"
+            ]
+          }
+        }
+      }
+    },
+    "tv": {
+      "cards": {
+        "video": {
+          "focused": {
+            "border": {
+              "color": "#b0105e",
+              "width": 4
+            },
+            "glow": "#b0105e"
+          }
+        }
+      },
+      "controls": {
+        "button": {
+          "focused": {
+            "border": {
+              "color": "#b0105e",
+              "width": 3
+            }
+          }
+        },
+        "chip": {
+          "focused": {
+            "border": {
+              "color": "#b0105e",
+              "width": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

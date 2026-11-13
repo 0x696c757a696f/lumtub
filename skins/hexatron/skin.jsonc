@@ -1,0 +1,680 @@
+// Honeycomb Data: a built-in Lumtub skin. A glowing honeycomb grid with cyan lines and orange for what is chosen, after mid-2000s console concepts and security software.
+// skins/template/skin.jsonc explains every field, and skins/README.md how to make your own.
+// 蜂巢数据：Lumtub 内置皮肤。发光的六边形蜂巢网格，青色线条，选中为橙色，致敬 2000 年代中期的主机概念图和安全软件。
+// 每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "hexatron",
+  "name": "Honeycomb Data",
+  "names": {
+    "zh-Hans": "蜂巢数据",
+    "zh-Hant": "蜂巢數據",
+    "zh-HK": "蜂巢數據",
+    "af": "Heuningkoekdata",
+    "am": "የማር ወለላ ዳታ",
+    "ar": "بيانات قرص العسل",
+    "az": "Pətək datası",
+    "be": "Сотавыя даныя",
+    "bg": "Пчелна пита от данни",
+    "bn": "মৌচাক ডেটা",
+    "cs": "Plástve dat",
+    "da": "Bikubedata",
+    "de": "Wabendaten",
+    "el": "Κηρήθρα δεδομένων",
+    "eo": "Abelĉelaj datumoj",
+    "es": "Datos en panal",
+    "et": "Kärgandmed",
+    "eu": "Erlauntz datuak",
+    "fa": "داده لانه زنبوری",
+    "fi": "Kennodata",
+    "fil": "Honeycomb na Data",
+    "fr": "Données en nid d'abeille",
+    "gl": "Datos en panal",
+    "gu": "મધપૂડા ડેટા",
+    "he": "נתוני חלות דבש",
+    "hi": "मधुकोश डेटा",
+    "hu": "Lépesadatok",
+    "hy": "Մեղրահացային տվյալներ",
+    "id": "Data Sarang Lebah",
+    "is": "Býkúpugögn",
+    "it": "Dati a nido d'ape",
+    "ja": "ハニカムデータ",
+    "jv": "Data Sarang Tawon",
+    "ka": "თაფლისჭურჭლის მონაცემები",
+    "km": "ទិន្នន័យសំបុកឃ្មុំ",
+    "kn": "ಜೇನುಗೂಡು ಡೇಟಾ",
+    "ko": "벌집 데이터",
+    "la": "Favi Datorum",
+    "lo": "ຂໍ້ມູນຮັງເຜິ້ງ",
+    "lt": "Koriniai duomenys",
+    "lv": "Šūnu dati",
+    "mk": "Саќе од податоци",
+    "ml": "തേനടയുടെ ഡാറ്റ",
+    "mn": "Зөгийн сархинагийн дата",
+    "mr": "मधाच्या पोळ्याचा डेटा",
+    "ms": "Data Sarang Lebah",
+    "my": "ပျားလပို့ ဒေတာ",
+    "nb": "Bikubedata",
+    "ne": "मौरीको घार डेटा",
+    "nl": "Honingraatdata",
+    "pa": "ਛੱਤੇ ਦਾ ਡਾਟਾ",
+    "pl": "Plaster danych",
+    "pt": "Dados em favo",
+    "ro": "Date în fagure",
+    "ru": "Сотовые данные",
+    "si": "මී වදයේ දත්ත",
+    "sk": "Plásty dát",
+    "sq": "Të dhëna huall",
+    "su": "Data Sayang Lebah",
+    "sv": "Bidata",
+    "sw": "Data ya Sega la Asali",
+    "ta": "தேன்கூட்டுத் தரவு",
+    "te": "తేనెపట్టు డేటా",
+    "th": "รังผึ้งข้อมูล",
+    "ti": "ዳታ ዕንጭራር ጠል",
+    "tk": "Bal öýi maglumaty",
+    "tr": "Petek Verisi",
+    "uk": "Стільники даних",
+    "ur": "شہد کے چھتے کا ڈیٹا",
+    "uz": "Ari uyasi ma'lumoti",
+    "vi": "Dữ liệu tổ ong",
+    "zu": "Idatha Yenyosi",
+    "sr": "Саће података",
+    "sr-Latn": "Saće podataka",
+    "hr": "Saće podataka",
+    "sl": "Satovje podatkov",
+    "bs": "Saće podataka",
+    "ca": "Dades de bresca",
+    "kk": "Ара ұясы деректері",
+    "ky": "Аары уясынын маалыматы",
+    "as": "মৌচাক ডাটা",
+    "or": "ମହୁଫେଣା ଡାଟା"
+  },
+  "description": "A glowing honeycomb grid, cyan lines and orange for what is chosen, the data-stream look of the mid-2000s",
+  "descriptions": {
+    "zh-Hans": "发光的六边形蜂巢网格，青色线条，选中的东西是橙色，2000 年代中期的数据流风格",
+    "zh-Hant": "發光的六邊形蜂巢網格，青色線條，選中的東西是橙色，2000 年代中期的資料流風格",
+    "zh-HK": "發光的六邊形蜂巢網格，青色線條，選中的項目是橙色，2000 年代中期的數據流風格",
+    "af": "'n Gloeiende heuningkoekrooster, siaanlyne en oranje vir wat gekies is, die datastroom-voorkoms van die middel-2000's",
+    "am": "የሚያበራ የማር ወለላ ፍርግርግ፣ ሲያን መስመሮችና ለተመረጠው ብርቱካናማ፣ የ2000ዎቹ አጋማሽ የዳታ ፍሰት ገጽታ",
+    "ar": "شبكة خلايا نحل متوهجة بخطوط سماوية ولون برتقالي للعنصر المحدد، مظهر تدفق البيانات في منتصف العقد الأول من الألفية",
+    "az": "Parlayan pətək şəbəkəsi, firuzəyi xətlər və seçilən üçün narıncı, 2000-ci illərin ortalarının data axını görünüşü",
+    "be": "Свяціцца сотавая сетка, бірузовыя лініі і аранжавы колер для выбранага, выгляд струменя даных сярэдзіны 2000-х",
+    "bg": "Светеща пчелна пита, циан линии и оранжево за избраното, видът на потока от данни от средата на 2000-те",
+    "bn": "জ্বলজ্বলে মৌচাক গ্রিড, সায়ান রেখা ও নির্বাচিতের জন্য কমলা, দুই হাজারের দশকের মাঝামাঝির ডেটা-প্রবাহের চেহারা",
+    "cs": "Zářící plástvová mřížka, azurové linky a oranžová pro vybrané, vzhled datového proudu z poloviny nultých let",
+    "da": "Et glødende bikubenet, cyanfarvede linjer og orange til det valgte, datastrøms-looket fra midten af 00'erne",
+    "de": "Ein leuchtendes Wabenraster, Cyanlinien und Orange für das Gewählte, der Datenstrom-Look der mittleren 2000er",
+    "el": "Ένα λαμπερό πλέγμα κηρήθρας, κυανές γραμμές και πορτοκαλί για το επιλεγμένο, η εμφάνιση ροής δεδομένων των μέσων του 2000",
+    "eo": "Brila abelĉela krado, cejanaj linioj kaj oranĝa por la elektita, la datumfluo-aspekto de la mezo de la 2000-aj jaroj",
+    "es": "Una cuadrícula de panal brillante, líneas cian y naranja para lo elegido, el aspecto de flujo de datos de mediados de los 2000",
+    "et": "Helendav kärgvõrk, tsüaansed jooned ja oranž valitu jaoks, 2000ndate keskpaiga andmevoo välimus",
+    "eu": "Erlauntz-sare distiratsua, marra ziana eta laranja hautatuarentzat, 2000ko hamarkadaren erdialdeko datu-jarioaren itxura",
+    "fa": "شبکه لانه زنبوری درخشان، خطوط فیروزه‌ای و نارنجی برای مورد انتخاب‌شده، ظاهر جریان داده اواسط دهه ۲۰۰۰",
+    "fi": "Hehkuva kennoruudukko, syaanit viivat ja oranssi valitulle, 2000-luvun puolivälin datavirran ilme",
+    "fil": "Kumikinang na honeycomb na grid, cyan na linya at orange para sa napili, ang itsura ng daloy ng data noong kalagitnaan ng dekada 2000",
+    "fr": "Une grille en nid d'abeille lumineuse, des lignes cyan et de l'orange pour la sélection, le style flux de données du milieu des années 2000",
+    "gl": "Unha reixa de panal brillante, liñas cian e laranxa para o escollido, o aspecto de fluxo de datos de mediados dos 2000",
+    "gu": "ચમકતી મધપૂડાની જાળી, સિયાન રેખાઓ અને પસંદ કરેલા માટે નારંગી, 2000ના દાયકાના મધ્યનો ડેટા-પ્રવાહનો દેખાવ",
+    "he": "רשת חלות דבש זוהרת, קווים בציאן וכתום לפריט הנבחר, מראה זרם הנתונים של אמצע שנות ה-2000",
+    "hi": "चमकता मधुमक्खी-छत्ते जैसा ग्रिड, सियान रेखाएँ और चुने हुए के लिए नारंगी, 2000 के दशक के मध्य का डेटा-प्रवाह वाला रूप",
+    "hu": "Izzó lépesrács, ciánkék vonalak és narancs a kiválasztottnak, a 2000-es évek közepének adatfolyam-megjelenése",
+    "hy": "Փայլող մեղրահացային ցանց, երկնագույն գծեր և նարնջագույն ընտրվածի համար, 2000-ականների կեսերի տվյալների հոսքի տեսքը",
+    "id": "Kisi sarang lebah yang bercahaya, garis cyan dan oranye untuk yang dipilih, tampilan aliran data pertengahan 2000-an",
+    "is": "Glóandi býkúpunet, blágrænar línur og appelsínugult fyrir það valda, gagnastraumsútlit um miðjan fyrsta áratug aldarinnar",
+    "it": "Una griglia a nido d'ape luminosa, linee ciano e arancione per ciò che è selezionato, lo stile a flusso di dati della metà degli anni 2000",
+    "ja": "光るハニカム状のグリッド、シアンの線、選択中はオレンジ。2000年代半ばのデータストリーム風",
+    "jv": "Kisi sarang tawon sing murub, garis cyan lan oranye kanggo sing dipilih, tampilan aliran data tengah taun 2000-an",
+    "ka": "მოციმციმე თაფლის სკის ბადე, ცისფერი ხაზები და ნარინჯისფერი არჩეულისთვის, 2000-იანების შუა ხანების მონაცემთა ნაკადის იერი",
+    "km": "ក្រឡាសំបុកឃ្មុំដែលភ្លឺ បន្ទាត់ស៊ីអាន និងពណ៌ទឹកក្រូចសម្រាប់ធាតុដែលបានជ្រើស រូបរាងលំហូរទិន្នន័យនៃពាក់កណ្តាលទសវត្ស 2000",
+    "kn": "ಹೊಳೆಯುವ ಜೇನುಗೂಡು ಗ್ರಿಡ್, ಸಯಾನ್ ರೇಖೆಗಳು ಮತ್ತು ಆಯ್ಕೆಮಾಡಿದ್ದಕ್ಕೆ ಕಿತ್ತಳೆ, 2000ರ ದಶಕದ ಮಧ್ಯದ ಡೇಟಾ-ಪ್ರವಾಹ ನೋಟ",
+    "ko": "빛나는 벌집 격자, 청록색 선, 선택 항목은 주황색. 2000년대 중반의 데이터 스트림 느낌",
+    "la": "Reticulum favorum fulgens, lineae cyaneae et aurantiacum pro electo, species fluxus datorum medii primi decennii saeculi XXI",
+    "lo": "ຕາຕະລາງຮັງເຜິ້ງທີ່ເຫຼື້ອມ, ເສັ້ນສີຟ້າຂຽວ ແລະ ສີສົ້ມສຳລັບສິ່ງທີ່ເລືອກ, ລັກສະນະກະແສຂໍ້ມູນກາງຊຸມປີ 2000",
+    "lt": "Šviečiantis korių tinklelis, žydros linijos ir oranžinė pasirinktam elementui, pirmojo dešimtmečio vidurio duomenų srauto išvaizda",
+    "lv": "Mirdzošs šūnu režģis, ciānkrāsas līnijas un oranžs izvēlētajam, 2000. gadu vidus datu plūsmas izskats",
+    "mk": "Светечка мрежа од саќе, цијан линии и портокалово за избраното, изглед на проток на податоци од средината на 2000-тите",
+    "ml": "തിളങ്ങുന്ന തേനീച്ചക്കൂട് ഗ്രിഡ്, സിയാൻ വരകളും തിരഞ്ഞെടുത്തതിന് ഓറഞ്ചും, 2000-കളുടെ മധ്യത്തിലെ ഡാറ്റാ പ്രവാഹ ശൈലി",
+    "mn": "Гэрэлтэх зөгийн сархинагийн тор, цайвар хөх шугам, сонгосонд улбар шар, 2000-аад оны дунд үеийн өгөгдлийн урсгалын төрх",
+    "mr": "चमकणारी मधाच्या पोळ्याची जाळी, सायन रेषा आणि निवडलेल्यासाठी नारिंगी, 2000 च्या दशकाच्या मध्याचा डेटा-प्रवाह लूक",
+    "ms": "Grid sarang lebah yang bercahaya, garisan cyan dan oren untuk yang dipilih, rupa aliran data pertengahan 2000-an",
+    "my": "တောက်ပသော ပျားလပို့ကွက်များ၊ စိမ်းပြာမျဉ်းများနှင့် ရွေးထားသည့်အရာအတွက် လိမ္မော်ရောင်၊ ၂၀၀၀ ပြည့်နှစ်များ အလယ်ပိုင်း ဒေတာစီးဆင်းမှုပုံစံ",
+    "nb": "Et glødende bikubenett, cyanfargede linjer og oransje for det valgte, datastrøm-looken fra midten av 2000-tallet",
+    "ne": "चम्किलो मौरीको घार ग्रिड, सायन रेखा र छानिएकोका लागि सुन्तला रङ, २००० को दशकको मध्यको डेटा-प्रवाह शैली",
+    "nl": "Een gloeiend honingraatraster, cyaanblauwe lijnen en oranje voor het gekozene, de datastroomlook van midden jaren 2000",
+    "pa": "ਚਮਕਦੀ ਸ਼ਹਿਦ ਦੇ ਛੱਤੇ ਵਾਲੀ ਗਰਿੱਡ, ਸਿਆਨ ਲਕੀਰਾਂ ਅਤੇ ਚੁਣੇ ਹੋਏ ਲਈ ਸੰਤਰੀ, 2000ਵਿਆਂ ਦੇ ਵਿਚਕਾਰਲੇ ਡਾਟਾ-ਪ੍ਰਵਾਹ ਵਾਲਾ ਰੂਪ",
+    "pl": "Świecąca plastrowa siatka, cyjanowe linie i pomarańcz dla wybranego, wygląd strumienia danych ze środka pierwszej dekady XXI wieku",
+    "pt": "Uma grade em favo brilhante, linhas ciano e laranja para o selecionado, o visual de fluxo de dados de meados dos anos 2000",
+    "ro": "O grilă luminoasă în formă de fagure, linii cian și portocaliu pentru ce e selectat, aspectul de flux de date de la mijlocul anilor 2000",
+    "ru": "Светящаяся сотовая сетка, голубые линии и оранжевый для выбранного, вид потока данных середины 2000-х",
+    "si": "දිදුලන මී වද ජාලකයක්, සියන් රේඛා සහ තෝරාගත් දෙයට තැඹිලි, 2000 දශකයේ මැද දත්ත ප්‍රවාහ පෙනුම",
+    "sk": "Žiariaca plástová mriežka, azúrové čiary a oranžová pre vybrané, vzhľad dátového toku zo stredu nultých rokov",
+    "sq": "Një rrjet huall i ndritshëm, vija cian dhe portokalli për të zgjedhurin, pamja e rrjedhës së të dhënave e mesit të viteve 2000",
+    "su": "Kisi sayang lebah nu bijil caang, garis cyan jeung oranyeu pikeun nu dipilih, rupa aliran data pertengahan taun 2000-an",
+    "sv": "Ett glödande bikakenät, cyanfärgade linjer och orange för det valda, dataströmslooken från mitten av 00-talet",
+    "sw": "Gridi ya sega la asali inayong'aa, mistari ya sayani na rangi ya machungwa kwa kilichochaguliwa, mwonekano wa mtiririko wa data wa katikati ya miaka ya 2000",
+    "ta": "ஒளிரும் தேன்கூட்டுக் கட்டம், சியான் கோடுகள், தேர்ந்தெடுத்தவற்றுக்கு ஆரஞ்சு, 2000-களின் நடுப்பகுதியின் தரவு ஓட்டத் தோற்றம்",
+    "te": "మెరిసే తేనెపట్టు గ్రిడ్, సియాన్ గీతలు, ఎంచుకున్నదానికి ఆరెంజ్, 2000ల మధ్య డేటా ప్రవాహ రూపం",
+    "th": "ตารางรังผึ้งเรืองแสง เส้นสีฟ้าไซแอน และสีส้มสำหรับสิ่งที่เลือก ลุคสายธารข้อมูลของกลางยุค 2000",
+    "ti": "ዝበርሕ ዕንጭራር ጠል መርበብ፡ ሲያን መስመራትን ንዝተመርጸ ብርቱኳንን፡ ናይ ማእከል 2000ታት ዳታ ፍሰት ዓይነት",
+    "tk": "Ýalpyldaýan bal öýi tory, mawy çyzyklar we saýlananlar üçin mämişi reňk, 2000-nji ýyllaryň ortasyndaky maglumat akymynyň görnüşi",
+    "tr": "Parlayan petek ızgara, camgöbeği çizgiler ve seçilen için turuncu, 2000'lerin ortasının veri akışı görünümü",
+    "uk": "Сяйна стільникова сітка, блакитні лінії та помаранчевий для вибраного, вигляд потоку даних середини 2000-х",
+    "ur": "دمکتا ہوا شہد کے چھتے کا گرڈ، آسمانی نیلی لکیریں اور منتخب کے لیے نارنجی، 2000 کی دہائی کے وسط کا ڈیٹا اسٹریم انداز",
+    "uz": "Yonib turgan ari uyasi to'ri, moviy chiziqlar va tanlanganlar uchun to'q sariq rang, 2000-yillar o'rtasidagi ma'lumotlar oqimi ko'rinishi",
+    "vi": "Lưới tổ ong phát sáng, các đường màu lục lam và màu cam cho mục được chọn, vẻ dòng dữ liệu giữa thập niên 2000",
+    "zu": "Igridi yenyosi evuthayo, imigqa ye-cyan ne-orenji yokukhethiwe, ukubukeka kokugeleza kwedatha kwenkathi ephakathi yeminyaka yama-2000",
+    "sr": "Сјајна мрежа саћа, цијан линије и наранџаста за изабрано, изглед тока података из средине 2000-их",
+    "sr-Latn": "Sjajna mreža saća, cijan linije i narandžasta za izabrano, izgled toka podataka iz sredine 2000-ih",
+    "hr": "Užarena mreža saća, cijan linije i narančasta za odabrano, izgled toka podataka iz sredine 2000-ih",
+    "sl": "Žareča satovna mreža, cian črte in oranžna za izbrano, videz toka podatkov iz sredine 2000-ih",
+    "bs": "Užarena mreža saća, cijan linije i narandžasta za odabrano, izgled toka podataka iz sredine 2000-ih",
+    "ca": "Una graella de bresca lluminosa, línies cian i taronja per al que s'ha triat, l'aspecte de flux de dades de mitjans dels 2000",
+    "kk": "Жарқыраған ара ұясы торы, көгілдір сызықтар және таңдалғанға қызғылт сары түс, 2000-жылдар ортасындағы деректер ағыны келбеті",
+    "ky": "Жаркыраган аары уясы тору, көгүлтүр сызыктар жана тандалганга кызгылт сары түс, 2000-жылдардын ортосундагы маалымат агымынын көрүнүшү",
+    "as": "জ্বলজ্বলীয়া মৌচাকৰ গ্ৰিড, নীলাভ-সেউজ ৰেখা আৰু বাছনি কৰাটোৰ বাবে কমলা, ২০০০ৰ দশকৰ মাজভাগৰ ডাটা প্ৰৱাহৰ ৰূপ",
+    "or": "ଜଳୁଥିବା ମହୁଫେଣା ଗ୍ରିଡ୍, ସିଆନ୍ ରେଖା ଓ ବାଛିଥିବା ପାଇଁ କମଳା, ୨୦୦୦ ଦଶକ ମଝିର ଡାଟା ପ୍ରବାହ ରୂପ"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "text": {
+    "displayFont": "Orbitron",
+    "monoFont": "Orbitron"
+  },
+  "colors": {
+    "page": "#e9eff5",
+    "text": "#0b1a2a",
+    "muted": "#3e5468",
+    "accent": "#b85600",
+    "onAccent": "#ffffff",
+    "border": "#a9c3d8",
+    "card": "#f7fafc",
+    "selected": "#ffe2c2",
+    "onSelected": "#3a1e00",
+    "reason": "#9a4800",
+    "chrome": "#f4f8fb"
+  },
+  "shape": {
+    "cardRadius": 0,
+    "controlRadius": 0,
+    "thumbnailRadius": 0
+  },
+  "window": {
+    "background": [
+      "#e9eff5",
+      {
+        "image": "hex-day.png",
+        "fit": "tile"
+      },
+      {
+        "radial": {
+          "center": [
+            0.75,
+            0.3
+          ],
+          "radius": 0.6,
+          "colors": [
+            "#5fb8ff29",
+            "#5fb8ff00"
+          ]
+        }
+      }
+    ],
+    "veil": 0.2,
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": "#f4f8fb",
+        "border": {
+          "color": "#1f6fb0",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#f4f8fb"
+      },
+      "text": "#0b1a2a",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#1f4e7a",
+        "surface": {
+          "fill": "transparent",
+          "radius": 0,
+          "hover": {
+            "fill": "#1f6fb01f"
+          },
+          "pressed": {
+            "fill": "#1f6fb040"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "radius": 0,
+          "hover": {
+            "fill": "#e81123"
+          },
+          "pressed": {
+            "fill": "#e81123"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#f4f8fb"
+      },
+      "text": "#0b1a2a",
+      "highlight": {
+        "fill": "#b85600"
+      },
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#f7fafcf7",
+        "border": "#1f6fb0",
+        "radius": 0
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": "#f7fafce6",
+      "border": {
+        "color": "#1f6fb099",
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#f4f8fbe6",
+      "border": {
+        "color": "#1f6fb059",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": "#f4f8fb",
+      "border": {
+        "color": "#1f6fb059",
+        "sides": [
+          "top"
+        ]
+      }
+    },
+    "topBarText": "#0b1a2a",
+    "statusBarText": "#3e5468",
+    "tabs": {
+      "position": "bottom",
+      "surface": {
+        "fill": "#f4f8fbf2",
+        "border": {
+          "color": "#1f6fb059",
+          "sides": [
+            "top"
+          ]
+        }
+      },
+      "text": "#3e5468",
+      "selectedText": "#0b1a2a",
+      "indicator": "#b85600"
+    }
+  },
+  "controls": {
+    "press": "glow",
+    "button": {
+      "fill": "#ffffff",
+      "border": "#1f6fb080",
+      "hover": {
+        "border": "#1f6fb0",
+        "glow": "#1f6fb04d"
+      }
+    },
+    "buttonText": "#0b1a2a",
+    "primaryButton": {
+      "fill": "#b85600",
+      "border": "#8a4000",
+      "hover": {
+        "fill": "#a04a00"
+      }
+    },
+    "primaryButtonText": "#ffffff",
+    "chip": {
+      "fill": "#ffffff",
+      "border": "#1f6fb059"
+    },
+    "chipSelected": {
+      "fill": "#b85600",
+      "border": "#8a4000"
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": "#b856001f",
+      "border": {
+        "color": "#b85600",
+        "width": 3,
+        "sides": [
+          "left"
+        ]
+      },
+      "radius": 0
+    },
+    "navSelectedText": "#7a3a00",
+    "navText": "#3e5468"
+  },
+  "cards": {
+    "video": {
+      "fill": "#f7fafcf2",
+      "border": "#1f6fb059",
+      "hover": {
+        "border": "#1f6fb0",
+        "glow": "#1f6fb040"
+      },
+      "focused": {
+        "border": {
+          "color": "#b85600",
+          "width": 3
+        }
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#f7fafcf2",
+      "border": "#1f6fb059"
+    },
+    "durationBadge": {
+      "fill": "#0b1a2ae6",
+      "radius": 0
+    },
+    "durationText": "#bfeaff"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "Orbitron",
+    "size": 18,
+    "fill": "#0b4f86",
+    "badge": {
+      "fill": "#1f6fb0",
+      "radius": 0
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "icons": {
+    "style": "regular",
+    "effect": "none"
+  },
+  "player": {
+    "progress": "#1f6fb0"
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#05080f",
+        "text": "#e4f6ff",
+        "muted": "#8fb3c8",
+        "accent": "#ff9a1f",
+        "onAccent": "#140900",
+        "border": "#12405a",
+        "card": "#08121f",
+        "selected": "#3a2408",
+        "onSelected": "#ffd9a8",
+        "reason": "#ffae4d",
+        "chrome": "#06101c"
+      },
+      "window": {
+        "background": [
+          "#05080f",
+          {
+            "image": "hex-night.png",
+            "fit": "tile"
+          },
+          {
+            "radial": {
+              "center": [
+                0.75,
+                0.3
+              ],
+              "radius": 0.6,
+              "colors": [
+                "#00a0ff29",
+                "#00a0ff00"
+              ]
+            }
+          }
+        ],
+        "veil": 0.2,
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": "#04080f",
+            "border": {
+              "color": "#00c8ff99",
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "inactive": {
+            "fill": "#04080f"
+          },
+          "text": "#e4f6ff",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#8fe6ff",
+            "surface": {
+              "fill": "transparent",
+              "radius": 0,
+              "hover": {
+                "fill": "#00c8ff26"
+              },
+              "pressed": {
+                "fill": "#00c8ff4d"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "radius": 0,
+              "hover": {
+                "fill": "#e81123"
+              },
+              "pressed": {
+                "fill": "#e81123"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": "#04080f"
+          },
+          "text": "#cfeeff",
+          "highlight": {
+            "fill": "#ff9a1f"
+          },
+          "highlightText": "#140900",
+          "menu": {
+            "fill": "#06101cf7",
+            "border": "#00c8ff99",
+            "radius": 0
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": "#06101ce6",
+          "border": {
+            "color": "#00c8ff73",
+            "sides": [
+              "bottom"
+            ]
+          }
+        },
+        "sideBar": {
+          "fill": "#040a14e6",
+          "border": {
+            "color": "#00c8ff4d",
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": "#04080f",
+          "border": {
+            "color": "#00c8ff4d",
+            "sides": [
+              "top"
+            ]
+          }
+        },
+        "topBarText": "#e4f6ff",
+        "statusBarText": "#8fb3c8",
+        "tabs": {
+          "position": "bottom",
+          "surface": {
+            "fill": "#06101cf2",
+            "border": {
+              "color": "#00c8ff4d",
+              "sides": [
+                "top"
+              ]
+            }
+          },
+          "text": "#8fb3c8",
+          "selectedText": "#e4f6ff",
+          "indicator": "#ff9a1f"
+        }
+      },
+      "controls": {
+        "press": "glow",
+        "button": {
+          "fill": "#00283f80",
+          "border": "#00c8ff66",
+          "hover": {
+            "border": "#00c8ff",
+            "glow": "#00c8ff66"
+          }
+        },
+        "buttonText": "#e4f6ff",
+        "primaryButton": {
+          "fill": "#ff9a1f",
+          "border": "#ffc27a",
+          "glow": "#ff9a1f59",
+          "hover": {
+            "glow": "#ff9a1f"
+          }
+        },
+        "primaryButtonText": "#140900",
+        "chip": {
+          "fill": "#00283f66",
+          "border": "#00c8ff59"
+        },
+        "chipSelected": {
+          "fill": "#ff9a1f",
+          "border": "#ffc27a"
+        },
+        "chipSelectedText": "#140900",
+        "navSelected": {
+          "fill": "#ff9a1f1f",
+          "border": {
+            "color": "#ff9a1f",
+            "width": 3,
+            "sides": [
+              "left"
+            ]
+          },
+          "radius": 0
+        },
+        "navSelectedText": "#ffae4d",
+        "navText": "#9ec3d6"
+      },
+      "cards": {
+        "video": {
+          "fill": "#08121fe6",
+          "border": "#00c8ff59",
+          "hover": {
+            "border": "#00c8ff",
+            "glow": "#00c8ff59"
+          },
+          "focused": {
+            "border": {
+              "color": "#ff9a1f",
+              "width": 3
+            }
+          }
+        },
+        "padding": 6,
+        "panel": {
+          "fill": "#06101cf2",
+          "border": "#00c8ff4d"
+        },
+        "durationBadge": {
+          "fill": "#000000d9",
+          "radius": 0
+        },
+        "durationText": "#8fe6ff"
+      },
+      "logo": {
+        "text": "LUMTUB",
+        "font": "Orbitron",
+        "size": 18,
+        "fill": "#6fe6ff",
+        "glow": "#00c8ffb3",
+        "badge": {
+          "fill": "#00c8ff",
+          "radius": 0
+        },
+        "badgeIcon": "#05080f"
+      },
+      "icons": {
+        "style": "regular",
+        "effect": "glow",
+        "glow": "#00c8ff"
+      },
+      "player": {
+        "progress": "#00c8ff"
+      }
+    },
+    "tv": {
+      "cards": {
+        "video": {
+          "focused": {
+            "border": {
+              "color": "#b85600",
+              "width": 4
+            },
+            "glow": "#b85600"
+          }
+        }
+      },
+      "controls": {
+        "button": {
+          "focused": {
+            "border": {
+              "color": "#b85600",
+              "width": 3
+            }
+          }
+        },
+        "chip": {
+          "focused": {
+            "border": {
+              "color": "#b85600",
+              "width": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -272,7 +272,8 @@ class _MiniPlayerState extends State<MiniPlayer> {
             },
             onDoubleTap: _controller.expandMini,
           ),
-          Positioned(left: 0, right: 0, bottom: 0, child: IgnorePointer(child: _ProgressLine(player: player))),
+          // Its own layer: it moves a few times a second while the rest stays still.
+          Positioned(left: 0, right: 0, bottom: 0, child: IgnorePointer(child: RepaintBoundary(child: _ProgressLine(player: player)))),
           IgnorePointer(
             ignoring: !_hovering,
             child: AnimatedOpacity(

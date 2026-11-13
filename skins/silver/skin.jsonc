@@ -78,7 +78,17 @@
     "ur": "برش شدہ چاندی",
     "uz": "Silliqlangan kumush",
     "vi": "Bạc xước",
-    "zu": "Isiliva Esigayiwe"
+    "zu": "Isiliva Esigayiwe",
+    "sr": "Брушено сребро",
+    "sr-Latn": "Brušeno srebro",
+    "hr": "Brušeno srebro",
+    "sl": "Brušeno srebro",
+    "bs": "Brušeno srebro",
+    "ca": "Plata raspallada",
+    "kk": "Шлифталған күміс",
+    "ky": "Шлифтелген күмүш",
+    "as": "ব্ৰাছড ৰূপা",
+    "or": "ବ୍ରଶ୍ଡ ରୂପା"
   },
   "description": "Smooth grey bars joined into one, a light menu bar along the top, red, amber and green buttons and a blue-grey sidebar, as desktops looked around 2008",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "ایک میں جڑے ہموار سرمئی بار، اوپر ہلکا مینو بار، سرخ، عنبری اور سبز بٹن اور نیلا سرمئی سائیڈ بار، جیسے 2008 کے آس پاس کے ڈیسک ٹاپس",
     "uz": "Bir butunga qo'shilgan silliq kulrang panellar, tepada ochiq menyu paneli, qizil, qahrabo va yashil tugmalar va ko'k-kulrang yon panel, 2008-yillardagi ish stollari kabi",
     "vi": "Các thanh xám mịn liền thành một, thanh menu sáng màu phía trên, nút đỏ, hổ phách, xanh lục và thanh bên xám xanh, như máy tính để bàn khoảng năm 2008",
-    "zu": "Amabha ampunga abushelelezi ajoyinwe abe munye, ibha yemenyu ekhanyayo phezulu, izinkinobho ezibomvu, ze-amber neziluhlaza nebha yohlangothi empunga eluhlaza okwesibhakabhaka, njengamadeskithophu angaphandle kuka-2008"
+    "zu": "Amabha ampunga abushelelezi ajoyinwe abe munye, ibha yemenyu ekhanyayo phezulu, izinkinobho ezibomvu, ze-amber neziluhlaza nebha yohlangothi empunga eluhlaza okwesibhakabhaka, njengamadeskithophu angaphandle kuka-2008",
+    "sr": "Глатке сиве траке спојене у једну, светла трака менија на врху, црвено, ћилибарско и зелено дугме и плавосива бочна трака, као радне површине око 2008.",
+    "sr-Latn": "Glatke sive trake spojene u jednu, svetla traka menija na vrhu, crveno, ćilibarsko i zeleno dugme i plavosiva bočna traka, kao radne površine oko 2008.",
+    "hr": "Glatke sive trake spojene u jednu, svijetla traka izbornika na vrhu, crveni, jantarni i zeleni gumbi i plavosiva bočna traka, kao radne površine oko 2008.",
+    "sl": "Gladke sive vrstice, zlite v eno, svetla menijska vrstica na vrhu, rdeči, jantarni in zeleni gumbi ter modrosiva stranska vrstica, kot so izgledala namizja okoli leta 2008",
+    "bs": "Glatke sive trake spojene u jednu, svijetla traka menija na vrhu, crvena, ćilibarska i zelena dugmad i plavosiva bočna traka, kao radne površine oko 2008.",
+    "ca": "Barres grises llises unides en una, una barra de menú clara a la part superior, botons vermell, ambre i verd, i una barra lateral blau grisenc, com els escriptoris cap al 2008",
+    "kk": "Біріктірілген тегіс сұр жолақтар, жоғарыда ашық мәзір жолағы, қызыл, янтарь және жасыл түймелер және көк-сұр бүйір панелі, 2008 жылдар шамасындағы жұмыс үстелдеріндей",
+    "ky": "Бирге кошулган жылмакай боз тилкелер, жогортодо ачык меню тилкеси, кызыл, янтарь жана жашыл баскычтар жана көк-боз капталдагы панель, 2008-жылдардагы иш столдордогудай",
+    "as": "এটাত লগ লগা মসৃণ ধূসৰ বাৰ, ওপৰত পাতল মেনু বাৰ, ৰঙা, এম্বাৰ আৰু সেউজীয়া বুটাম আৰু নীলা-ধূসৰ কাষৰ বাৰ, 2008 চনৰ ওচৰে-পাজৰে ডেস্কটপৰ দৰে",
+    "or": "ଗୋଟିଏରେ ଯୋଡ଼ା ହୋଇଥିବା ସୁଗମ ଧୂସର ବାର, ଉପରେ ହାଲୁକା ମେନୁ ବାର, ଲାଲ, ଏମ୍ବର ଓ ସବୁଜ ବଟନ ଏବଂ ନୀଳ-ଧୂସର ସାଇଡବାର, 2008 ଆଖପାଖର ଡେସ୍କଟପ ପରି"
   },
   "brightness": "auto",
   "colors": {

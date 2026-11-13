@@ -78,7 +78,17 @@
     "ur": "ایک بٹ",
     "uz": "Bir bit",
     "vi": "Một bit",
-    "zu": "I-Bit Eyodwa"
+    "zu": "I-Bit Eyodwa",
+    "sr": "Један бит",
+    "sr-Latn": "Jedan bit",
+    "hr": "Jedan bit",
+    "sl": "En bit",
+    "bs": "Jedan bit",
+    "ca": "Un bit",
+    "kk": "Бір бит",
+    "ky": "Бир бит",
+    "as": "এক বিট",
+    "or": "ଏକ ବିଟ୍"
   },
   "description": "Pure black and white: striped title bars, dotted desk and one-pixel lines",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "خالص سیاہ اور سفید: دھاری دار ٹائٹل بار، نقطے دار ڈیسک اور ایک پکسل کی لکیریں",
     "uz": "Sof qora va oq: yo'l-yo'l sarlavha panellari, nuqtali ish stoli va bir pikselli chiziqlar",
     "vi": "Đen trắng tuyệt đối: thanh tiêu đề kẻ sọc, bàn chấm bi và đường một pixel",
-    "zu": "Okumnyama nokumhlophe kuphela: amabha esihloko anemigqa, ideski enamachashaza nemigqa yephikseli elilodwa"
+    "zu": "Okumnyama nokumhlophe kuphela: amabha esihloko anemigqa, ideski enamachashaza nemigqa yephikseli elilodwa",
+    "sr": "Чисто црна и бела: пругасте насловне траке, тачкаста радна површина и линије од једног пиксела",
+    "sr-Latn": "Čisto crna i bela: prugaste naslovne trake, tačkasta radna površina i linije od jednog piksela",
+    "hr": "Čisto crna i bijela: prugaste naslovne trake, točkasta radna površina i linije od jednog piksela",
+    "sl": "Čisto črna in bela: črtaste naslovne vrstice, pikčasto namizje in črte debeline enega slikovnega pika",
+    "bs": "Čisto crna i bijela: prugaste naslovne trake, tačkasta radna površina i linije od jednog piksela",
+    "ca": "Blanc i negre purs: barres de títol ratllades, escriptori puntejat i línies d'un sol píxel",
+    "kk": "Таза қара және ақ: жолақты тақырып жолақтары, нүктелі үстел және бір пиксельдік сызықтар",
+    "ky": "Таза кара жана ак: сызыктуу аталыш тилкелери, чекиттүү иш столу жана бир пикселдик сызыктар",
+    "as": "বিশুদ্ধ ক'লা আৰু বগা: ডোৰাযুক্ত শীৰ্ষক বাৰ, বিন্দুযুক্ত ডেস্ক আৰু এক পিক্সেলৰ ৰেখা",
+    "or": "ଶୁଦ୍ଧ କଳା ଓ ଧଳା: ଧାରିଆ ଶୀର୍ଷକ ବାର, ବିନ୍ଦୁଯୁକ୍ତ ଡେସ୍କ ଓ ଏକ ପିକ୍ସେଲ ରେଖା"
   },
   "brightness": "light",
   "text": {

@@ -78,7 +78,17 @@
     "ur": "کینڈی خول",
     "uz": "Konfet qobig'i",
     "vi": "Vỏ kẹo",
-    "zu": "Igobolondo Likaswidi"
+    "zu": "Igobolondo Likaswidi",
+    "sr": "Бомбонска љуска",
+    "sr-Latn": "Bombonska ljuska",
+    "hr": "Bombonska ljuska",
+    "sl": "Bonbonasta školjka",
+    "bs": "Bombonska ljuska",
+    "ca": "Closca de caramel",
+    "kk": "Кәмпит қабық",
+    "ky": "Момпосуй кабыгы",
+    "as": "কেণ্ডী খোলা",
+    "or": "କ୍ୟାଣ୍ଡି ଖୋଳ"
   },
   "description": "See-through coloured plastic with fine stripes, like a translucent computer case",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "باریک دھاریوں والا شفاف رنگین پلاسٹک، جیسے شفاف کمپیوٹر کیس",
     "uz": "Ingichka yo'llari bor shaffof rangli plastik, shaffof kompyuter korpusi kabi",
     "vi": "Nhựa màu trong suốt có sọc mảnh, như vỏ máy tính trong",
-    "zu": "Uplastiki onemibala ocacile onemigqa emincane, njengebhokisi lekhompyutha eliyisibonakude"
+    "zu": "Uplastiki onemibala ocacile onemigqa emincane, njengebhokisi lekhompyutha eliyisibonakude",
+    "sr": "Провидна обојена пластика са танким пругама, као провидно кућиште рачунара",
+    "sr-Latn": "Providna obojena plastika sa tankim prugama, kao providno kućište računara",
+    "hr": "Prozirna obojena plastika s finim prugama, poput prozirnog kućišta računala",
+    "sl": "Prosojna barvna plastika s tankimi črtami, kot prosojno ohišje računalnika",
+    "bs": "Prozirna obojena plastika s finim prugama, poput prozirnog kućišta računara",
+    "ca": "Plàstic de colors transparent amb ratlles fines, com una carcassa d'ordinador translúcida",
+    "kk": "Жұқа жолақтары бар мөлдір түрлі-түсті пластик, компьютердің жартылай мөлдір корпусы сияқты",
+    "ky": "Ичи көрүнгөн ичке сызыктуу түстүү пластик, компьютердин жарым тунук корпусундай",
+    "as": "সৰু ডোৰ থকা স্বচ্ছ ৰঙীন প্লাষ্টিক, কম্পিউটাৰৰ স্বচ্ছ খোলাৰ দৰে",
+    "or": "ସରୁ ଧାରି ଥିବା ସ୍ୱଚ୍ଛ ରଙ୍ଗିନ ପ୍ଲାଷ୍ଟିକ, ସ୍ୱଚ୍ଛ କମ୍ପ୍ୟୁଟର କେସ୍ ପରି"
   },
   "brightness": "light",
   "text": {

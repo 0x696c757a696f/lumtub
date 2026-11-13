@@ -78,7 +78,17 @@
     "ur": "سبز آنے والا کل",
     "uz": "Yashil ertaga",
     "vi": "Ngày mai xanh",
-    "zu": "Kusasa Eliluhlaza"
+    "zu": "Kusasa Eliluhlaza",
+    "sr": "Зелено сутра",
+    "sr-Latn": "Zeleno sutra",
+    "hr": "Zeleno sutra",
+    "sl": "Zeleni jutri",
+    "bs": "Zeleno sutra",
+    "ca": "Demà verd",
+    "kk": "Жасыл ертең",
+    "ky": "Жашыл эртең",
+    "as": "সেউজীয়া আগামীকাইল",
+    "or": "ସବୁଜ ଆଗାମୀକାଲି"
   },
   "description": "Glass towers with gardens on their terraces, white wind turbines and a quiet train over green hills: a hopeful tomorrow where nature and machines get along",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "چھتوں پر باغات والے شیشے کے ٹاور، سفید ہوائی چکیاں اور سبز پہاڑیوں پر خاموشی سے گزرتی ریل: ایک پُرامید آنے والا کل جہاں فطرت اور مشینیں مل جل کر رہتی ہیں",
     "uz": "Teraslarida bog'i bor shisha minoralar, oq shamol turbinalari va yashil tepaliklar ustidan sokin o'tuvchi poyezd: tabiat va mashinalar til topishgan umidli ertaga",
     "vi": "Những tòa tháp kính có vườn trên sân thượng, tua-bin gió trắng và chuyến tàu êm lướt qua đồi xanh: một ngày mai đầy hy vọng, nơi thiên nhiên và máy móc hòa hợp",
-    "zu": "Izinqaba zengilazi ezinezingadi ezitendeni, izinjini zomoya ezimhlophe nesitimela esithule phezu kwamagquma aluhlaza: kusasa eliyithemba lapho imvelo nemishini kuvumelana"
+    "zu": "Izinqaba zengilazi ezinezingadi ezitendeni, izinjini zomoya ezimhlophe nesitimela esithule phezu kwamagquma aluhlaza: kusasa eliyithemba lapho imvelo nemishini kuvumelana",
+    "sr": "Стаклене куле са баштама на терасама, беле ветротурбине и тих воз изнад зелених брегова: сутра пуно наде у коме се природа и машине слажу",
+    "sr-Latn": "Staklene kule sa baštama na terasama, bele vetroturbine i tih voz iznad zelenih bregova: sutra puno nade u kome se priroda i mašine slažu",
+    "hr": "Stakleni neboderi s vrtovima na terasama, bijele vjetroturbine i tihi vlak preko zelenih brežuljaka: sutra puno nade u kojem se priroda i strojevi slažu",
+    "sl": "Stekleni stolpi z vrtovi na terasah, bele vetrnice in tih vlak čez zelene griče: upanja poln jutri, v katerem se narava in stroji razumejo",
+    "bs": "Stakleni tornjevi s baštama na terasama, bijele vjetroturbine i tih voz preko zelenih brežuljaka: sutra puno nade u kojem se priroda i mašine slažu",
+    "ca": "Torres de vidre amb jardins a les terrasses, molins de vent blancs i un tren silenciós sobre turons verds: un demà ple d'esperança on la natura i les màquines s'avenen",
+    "kk": "Террасаларында бақтары бар шыны мұнаралар, ақ жел қондырғылары және жасыл төбелер үстімен жүрген тыныш пойыз: табиғат пен машиналар тіл табысқан үмітті ертең",
+    "ky": "Террасаларында бактары бар айнек мунаралар, ак шамал турбиналары жана жашыл адырлардын үстүндө жүргөн тынч поезд: жаратылыш менен машиналар тил табышкан үмүттүү эртең",
+    "as": "বাৰাণ্ডাত বাগিচা থকা কাচৰ গগনচুম্বী অট্টালিকা, বগা বতাহ-টাৰবাইন আৰু সেউজীয়া পাহাৰৰ ওপৰেৰে যোৱা নীৰৱ ৰেল: প্ৰকৃতি আৰু যন্ত্ৰ মিলি থকা আশাৰ আগামীকাইল",
+    "or": "ଛାତରେ ବଗିଚା ଥିବା କାଚର ଟାୱାର, ଧଳା ପବନ ଟର୍ବାଇନ ଏବଂ ସବୁଜ ପାହାଡ଼ ଉପରେ ନୀରବ ଟ୍ରେନ: ପ୍ରକୃତି ଓ ଯନ୍ତ୍ର ମିଳିମିଶି ଚାଲୁଥିବା ଆଶାମୟ ଆଗାମୀକାଲି"
   },
   "brightness": "auto",
   "text": {

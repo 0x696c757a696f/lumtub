@@ -78,7 +78,17 @@
     "ur": "ریت کا پتھر",
     "uz": "Qumtosh",
     "vi": "Sa thạch",
-    "zu": "Itshe Lesihlabathi"
+    "zu": "Itshe Lesihlabathi",
+    "sr": "Пешчар",
+    "sr-Latn": "Peščar",
+    "hr": "Pješčenjak",
+    "sl": "Peščenjak",
+    "bs": "Pješčar",
+    "ca": "Pedra sorrenca",
+    "kk": "Құмтас",
+    "ky": "Кумташ",
+    "as": "বালিপাথৰ",
+    "or": "ବାଲି ପଥର"
   },
   "description": "Warm sand, with terracotta in what is raised",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "گرم ریت، ابھری ہوئی جگہوں پر ٹیراکوٹا",
     "uz": "Iliq qum, ko'tarilgan joylarda terrakota",
     "vi": "Cát ấm, với màu đất nung ở phần nổi lên",
-    "zu": "Isihlabathi esifudumele, nethekhotha lapho kuphakanyisiwe"
+    "zu": "Isihlabathi esifudumele, nethekhotha lapho kuphakanyisiwe",
+    "sr": "Топао песак са теракотом на узвишеним деловима",
+    "sr-Latn": "Topao pesak sa terakotom na uzvišenim delovima",
+    "hr": "Topli pijesak s terakotom na izdignutim dijelovima",
+    "sl": "Topel pesek s terakoto na privzdignjenih delih",
+    "bs": "Topli pijesak s terakotom na izdignutim dijelovima",
+    "ca": "Sorra càlida, amb terracota en allò que està en relleu",
+    "kk": "Жылы құм түсі, дөңес жерлерінде терракота",
+    "ky": "Жылуу кум түсү, томпок жерлеринде терракота",
+    "as": "উষ্ণ বালি, উঠা অংশত টেৰাকোটা",
+    "or": "ଉଷ୍ଣ ବାଲି, ଉଠା ଅଂଶରେ ଟେରାକୋଟା"
   },
   "author": "Lumtub",
   "version": "1.0",

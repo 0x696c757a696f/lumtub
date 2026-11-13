@@ -78,7 +78,17 @@
     "ur": "چیڑ کی کالک",
     "uz": "Qarag'ay tutuni",
     "vi": "Khói thông",
-    "zu": "Umsizi Wesihlahla"
+    "zu": "Umsizi Wesihlahla",
+    "sr": "Борова чађ",
+    "sr-Latn": "Borova čađ",
+    "hr": "Borova čađa",
+    "sl": "Borova saja",
+    "bs": "Borova čađ",
+    "ca": "Sutge de pi",
+    "kk": "Қарағай күйесі",
+    "ky": "Карагай күүсү",
+    "as": "পাইনৰ কজলা",
+    "or": "ପାଇନ କଜ୍ଜଳ"
   },
   "description": "Slate blue-grey, with a deeper side rail and top bar",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "سلیٹی نیلا سرمئی، گہرے سائیڈ بار اور اوپری بار کے ساتھ",
     "uz": "Shifer ko'k-kulrang, chuqurroq yon va yuqori panel bilan",
     "vi": "Xám xanh đá phiến, với thanh bên và thanh trên đậm hơn",
-    "zu": "Okuluhlaza okwesibhakabhaka-mpunga okufana nematshe, ngebha yohlangothi nebha ephezulu ejulile"
+    "zu": "Okuluhlaza okwesibhakabhaka-mpunga okufana nematshe, ngebha yohlangothi nebha ephezulu ejulile",
+    "sr": "Шкриљасто плавосива, са тамнијом бочном и горњом траком",
+    "sr-Latn": "Škriljasto plavosiva, sa tamnijom bočnom i gornjom trakom",
+    "hr": "Škriljastoplavosiva, s tamnijom bočnom i gornjom trakom",
+    "sl": "Skrilasto modrosiva, s temnejšo stransko in zgornjo vrstico",
+    "bs": "Škriljastoplavosiva, s tamnijom bočnom i gornjom trakom",
+    "ca": "Blau grisenc pissarra, amb una barra lateral i una barra superior més fosques",
+    "kk": "Тақтатас көк-сұр түс, бүйір және жоғарғы жолақтары қоюлау",
+    "ky": "Шифер көк-боз түс, капталдагы жана жогорку тилкелери тереңирээк",
+    "as": "শ্লেট নীলা-ধূসৰ, অধিক গাঢ় কাষৰ ৰেইল আৰু ওপৰৰ বাৰৰ সৈতে",
+    "or": "ସ୍ଲେଟ ନୀଳ-ଧୂସର, ଅଧିକ ଗାଢ଼ ପାର୍ଶ୍ୱ ରେଲ୍ ଓ ଉପର ବାର ସହିତ"
   },
   "author": "Lumtub",
   "version": "1.0",

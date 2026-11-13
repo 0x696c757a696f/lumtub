@@ -78,7 +78,17 @@
     "ur": "دھاری دار جیل",
     "uz": "Yo'l-yo'l jele",
     "vi": "Gel kẻ sọc",
-    "zu": "Ijeli Yemigqa Mincane"
+    "zu": "Ijeli Yemigqa Mincane",
+    "sr": "Гел с пругама",
+    "sr-Latn": "Gel s prugama",
+    "hr": "Gel s prugicama",
+    "sl": "Gel s črtami",
+    "bs": "Gel s prugicama",
+    "ca": "Gel de ratlles",
+    "kk": "Жолақты гель",
+    "ky": "Сызыктуу гель",
+    "as": "ডোৰাযুক্ত জেল",
+    "or": "ଧାରିଆ ଜେଲ"
   },
   "description": "Fine grey pinstripes, glossy blue gel buttons and soft drop shadows, as desktops looked around 2001",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "باریک سرمئی دھاریاں، چمکدار نیلے جیل بٹن اور نرم سائے، جیسے 2001 کے آس پاس کے ڈیسک ٹاپس",
     "uz": "Ingichka kulrang yo'llar, yaltiroq ko'k jele tugmalar va yumshoq soyalar, 2001-yillardagi ish stollari kabi",
     "vi": "Sọc kẻ mảnh màu xám, nút gel xanh bóng và bóng đổ mềm, như máy tính để bàn khoảng năm 2001",
-    "zu": "Imigqa emincane empunga, izinkinobho zejeli eziluhlaza okwesibhakabhaka ezikhazimulayo nemithunzi ethambile, njengamadeskithophu angaphandle kuka-2001"
+    "zu": "Imigqa emincane empunga, izinkinobho zejeli eziluhlaza okwesibhakabhaka ezikhazimulayo nemithunzi ethambile, njengamadeskithophu angaphandle kuka-2001",
+    "sr": "Танке сиве пруге, сјајна плава гел дугмад и меке сенке, као радне површине око 2001.",
+    "sr-Latn": "Tanke sive pruge, sjajna plava gel dugmad i meke senke, kao radne površine oko 2001.",
+    "hr": "Fine sive prugice, sjajni plavi gel gumbi i meke sjene, kao radne površine oko 2001.",
+    "sl": "Tanke sive črtice, sijoči modri gelasti gumbi in mehke sence, kot so izgledala namizja okoli leta 2001",
+    "bs": "Fine sive prugice, sjajna plava gel dugmad i meke sjene, kao radne površine oko 2001.",
+    "ca": "Ratlles grises fines, botons de gel blaus brillants i ombres suaus, com els escriptoris cap al 2001",
+    "kk": "Жұқа сұр жолақтар, жылтыр көк гель түймелер және жұмсақ көлеңкелер, 2001 жылдар шамасындағы жұмыс үстелдеріндей",
+    "ky": "Ичке боз сызыктар, жалтырак көк гель баскычтар жана жумшак көлөкөлөр, 2001-жылдардагы иш столдордогудай",
+    "as": "চিকণ ধূসৰ ডোৰ, চকচকে নীলা জেল বুটাম আৰু কোমল ছাঁ, 2001 চনৰ ওচৰে-পাজৰে ডেস্কটপৰ দৰে",
+    "or": "ସରୁ ଧୂସର ଧାରି, ଚକଚକିଆ ନୀଳ ଜେଲ ବଟନ ଓ ନରମ ଛାୟା, 2001 ଆଖପାଖର ଡେସ୍କଟପ ପରି"
   },
   "brightness": "light",
   "colors": {

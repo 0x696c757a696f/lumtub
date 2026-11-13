@@ -78,7 +78,17 @@
     "ur": "شمع کی روشنی",
     "uz": "Sham chiroqi",
     "vi": "Ánh nến",
-    "zu": "Ukukhanya Kwekhandlela"
+    "zu": "Ukukhanya Kwekhandlela",
+    "sr": "Светлост свеће",
+    "sr-Latn": "Svetlost sveće",
+    "hr": "Svjetlost svijeće",
+    "sl": "Svetloba sveče",
+    "bs": "Svjetlost svijeće",
+    "ca": "Llum d'espelma",
+    "kk": "Шам жарығы",
+    "ky": "Шам жарыгы",
+    "as": "চাকিৰ পোহৰ",
+    "or": "ମହମବତୀ ଆଲୋକ"
   },
   "description": "For evenings: little blue, a touch of amber everywhere",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "شاموں کے لیے: نیلا کم، ہر جگہ تھوڑا سا عنبری",
     "uz": "Kechqurunlar uchun: ko'k kam, hamma joyda ozgina qahrabo",
     "vi": "Cho buổi tối: ít ánh xanh, chỗ nào cũng thoảng chút hổ phách",
-    "zu": "Ngamakhona: okuluhlaza okwesibhakabhaka okuncane, ubuncane be-amber yonke indawo"
+    "zu": "Ngamakhona: okuluhlaza okwesibhakabhaka okuncane, ubuncane be-amber yonke indawo",
+    "sr": "За вечери: мало плавог, свуда додир ћилибара",
+    "sr-Latn": "Za večeri: malo plavog, svuda dodir ćilibara",
+    "hr": "Za večeri: malo plavog, posvuda dašak jantara",
+    "sl": "Za večere: malo modrega, povsod pridih jantarja",
+    "bs": "Za večeri: malo plavog, posvuda dašak ćilibara",
+    "ca": "Per als vespres: poc blau, un toc d'ambre arreu",
+    "kk": "Кештерге арналған: көк түс аз, барлық жерде бір тамшы янтарь",
+    "ky": "Кечтерге арналган: көк аз, бардык жерде бир аз янтарь өңү",
+    "as": "সন্ধ্যাৰ বাবে: নীলা কম, সকলোতে অলপ এম্বাৰৰ আভা",
+    "or": "ସନ୍ଧ୍ୟା ପାଇଁ: ନୀଳ କମ୍, ସବୁଠି ଟିକେ ଏମ୍ବର ଆଭା"
   },
   "author": "Lumtub",
   "version": "1.0",

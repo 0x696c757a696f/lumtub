@@ -78,7 +78,17 @@
     "ur": "کروم سائبر",
     "uz": "Xrom kiber",
     "vi": "Crôm mạng",
-    "zu": "I-Chrome Yesayibha"
+    "zu": "I-Chrome Yesayibha",
+    "sr": "Хромирани сајбер",
+    "sr-Latn": "Hromirani sajber",
+    "hr": "Kromirani cyber",
+    "sl": "Kromirani kiber",
+    "bs": "Kromirani sajber",
+    "ca": "Ciber cromat",
+    "kk": "Хромды кибер",
+    "ky": "Хромдолгон кибер",
+    "as": "ক্ৰোম চাইবাৰ",
+    "or": "କ୍ରୋମ ସାଇବର"
   },
   "description": "Black and violet with neon edges, a perspective grid and chrome letters",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "نیون کناروں والا سیاہ اور جامنی، پرسپیکٹو گرڈ اور کروم حروف",
     "uz": "Neon chetli qora va binafsha, perspektiv to'r va xrom harflar",
     "vi": "Đen và tím với viền neon, lưới phối cảnh và chữ crôm",
-    "zu": "Okumnyama nokunsomi okunamaphethelo e-neon, igridi yombono namagama e-chrome"
+    "zu": "Okumnyama nokunsomi okunamaphethelo e-neon, igridi yombono namagama e-chrome",
+    "sr": "Црна и љубичаста са неонским ивицама, перспективном мрежом и хромираним словима",
+    "sr-Latn": "Crna i ljubičasta sa neonskim ivicama, perspektivnom mrežom i hromiranim slovima",
+    "hr": "Crna i ljubičasta s neonskim rubovima, perspektivnom mrežom i kromiranim slovima",
+    "sl": "Črna in vijolična z neonskimi robovi, perspektivno mrežo in kromiranimi črkami",
+    "bs": "Crna i ljubičasta s neonskim rubovima, perspektivnom mrežom i kromiranim slovima",
+    "ca": "Negre i violeta amb vores de neó, una quadrícula en perspectiva i lletres cromades",
+    "kk": "Неон жиектері, перспективалық тор және хромдалған әріптері бар қара мен күлгін",
+    "ky": "Неон четтери, перспективалуу тор жана хромдолгон тамгалары бар кара жана фиолет",
+    "as": "নিয়ন ধাৰ, দৃষ্টিকোণ গ্ৰিড আৰু ক্ৰোমৰ আখৰ থকা ক'লা আৰু বেঙুনীয়া",
+    "or": "ନିଓନ ଧାର, ପରିପ୍ରେକ୍ଷୀ ଗ୍ରିଡ ଏବଂ କ୍ରୋମ ଅକ୍ଷର ସହିତ କଳା ଓ ବାଇଗଣୀ"
   },
   "brightness": "dark",
   "text": {

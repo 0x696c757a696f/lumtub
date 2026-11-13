@@ -78,7 +78,17 @@
     "ur": "برفیلا نیون",
     "uz": "Muz neon",
     "vi": "Neon băng",
-    "zu": "I-Neon Yeqhwa"
+    "zu": "I-Neon Yeqhwa",
+    "sr": "Ледени неон",
+    "sr-Latn": "Ledeni neon",
+    "hr": "Ledeni neon",
+    "sl": "Ledeni neon",
+    "bs": "Ledeni neon",
+    "ca": "Neó gelat",
+    "kk": "Мұздай неон",
+    "ky": "Муздай неон",
+    "as": "বৰফীয়া নিয়ন",
+    "or": "ବରଫୀ ନିଓନ"
   },
   "description": "Near-black panels, thin ice-blue lines and square edges, the dark sci-fi look of phones around 2012",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "تقریباً سیاہ پینل، باریک برفیلی نیلی لکیریں اور چوکور کنارے، 2012 کے آس پاس کے فونز کا گہرا سائنسی تخیلاتی انداز",
     "uz": "Qoraga yaqin panellar, ingichka muz-ko'k chiziqlar va to'rtburchak chetlar, 2012-yillardagi telefonlarning qorong'i ilmiy-fantastik ko'rinishi",
     "vi": "Bảng gần như đen, đường mảnh xanh băng và góc vuông vức, vẻ khoa học viễn tưởng tối của điện thoại khoảng năm 2012",
-    "zu": "Amaphaneli cishe amnyama, imigqa mincane eluhlaza okwesibhakabhaka eqhwa nemiphetho eyisikwele, ukubukeka kwesayensi eyinganekwane okumnyama kwamafoni angaphandle kuka-2012"
+    "zu": "Amaphaneli cishe amnyama, imigqa mincane eluhlaza okwesibhakabhaka eqhwa nemiphetho eyisikwele, ukubukeka kwesayensi eyinganekwane okumnyama kwamafoni angaphandle kuka-2012",
+    "sr": "Готово црни панели, танке ледено плаве линије и четвртасте ивице, тамни научнофантастични изглед телефона око 2012.",
+    "sr-Latn": "Gotovo crni paneli, tanke ledeno plave linije i četvrtaste ivice, tamni naučnofantastični izgled telefona oko 2012.",
+    "hr": "Gotovo crni paneli, tanke ledenoplave linije i četvrtasti rubovi, tamni znanstvenofantastični izgled telefona oko 2012.",
+    "sl": "Skoraj črne plošče, tanke ledenomodre črte in oglati robovi, temen znanstvenofantastični videz telefonov okoli leta 2012",
+    "bs": "Gotovo crni paneli, tanke ledenoplave linije i uglasti rubovi, tamni naučnofantastični izgled telefona oko 2012.",
+    "ca": "Panells gairebé negres, línies fines blau gel i vores quadrades, l'aspecte fosc de ciència-ficció dels telèfons d'al voltant del 2012",
+    "kk": "Қараға жақын панельдер, жұқа мұздай көк сызықтар және төртбұрышты жиектер, 2012 жылдар шамасындағы телефондардың қараңғы ғылыми-фантастикалық келбеті",
+    "ky": "Карага жакын панелдер, ичке муздай көк сызыктар жана төрт бурчтуу четтер, 2012-жылдардагы телефондордун караңгы илимий-фантастикалык көрүнүшү",
+    "as": "প্ৰায় ক'লা পেনেল, বৰফ-নীলা চিকণ ৰেখা আৰু চতুৰ্ভুজ ধাৰ, 2012 চনৰ ওচৰে-পাজৰে ফোনৰ গাঢ় বিজ্ঞান-কল্পকাহিনীৰ ৰূপ",
+    "or": "ପ୍ରାୟ କଳା ପ୍ୟାନେଲ, ବରଫ-ନୀଳ ପତଳା ରେଖା ଓ ଚଉକିଆ ଧାର, 2012 ମସିହା ଆଖପାଖ ଫୋନର ଗାଢ଼ ବିଜ୍ଞାନ-କଳ୍ପକାହାଣୀ ରୂପ"
   },
   "brightness": "auto",
   "colors": {

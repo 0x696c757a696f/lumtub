@@ -78,7 +78,17 @@
     "ur": "کاغذی کارڈ",
     "uz": "Qog'oz kartalar",
     "vi": "Thẻ giấy",
-    "zu": "Amakhadi Ephepha"
+    "zu": "Amakhadi Ephepha",
+    "sr": "Папирне картице",
+    "sr-Latn": "Papirne kartice",
+    "hr": "Papirnate kartice",
+    "sl": "Papirnate kartice",
+    "bs": "Papirne kartice",
+    "ca": "Targetes de paper",
+    "kk": "Қағаз карточкалар",
+    "ky": "Кагаз карточкалар",
+    "as": "কাগজৰ কাৰ্ড",
+    "or": "କାଗଜ କାର୍ଡ"
   },
   "description": "White paper cards with soft shadows, a bold coloured top bar and ripples where you tap, as phones looked around 2015",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "نرم سایوں والے سفید کاغذی کارڈ، نمایاں رنگین اوپری بار اور چھونے کی جگہ لہریں، جیسے 2015 کے آس پاس کے فونز",
     "uz": "Yumshoq soyali oq qog'oz kartalar, ko'zga tashlanadigan rangli yuqori panel va bosgan joyda to'lqinlar, 2015-yillardagi telefonlar kabi",
     "vi": "Thẻ giấy trắng với bóng đổ mềm, thanh trên cùng nhiều màu nổi bật và gợn sóng nơi bạn chạm, như điện thoại khoảng năm 2015",
-    "zu": "Amakhadi ephepha elimhlophe anemithunzi ethambile, ibha ephezulu enemibala ecacile namagagasi lapho uthinta khona, njengamafoni angaphandle kuka-2015"
+    "zu": "Amakhadi ephepha elimhlophe anemithunzi ethambile, ibha ephezulu enemibala ecacile namagagasi lapho uthinta khona, njengamafoni angaphandle kuka-2015",
+    "sr": "Беле папирне картице са меким сенкама, истакнута обојена горња трака и таласићи тамо где додирнете, као телефони око 2015.",
+    "sr-Latn": "Bele papirne kartice sa mekim senkama, istaknuta obojena gornja traka i talasići tamo gde dodirnete, kao telefoni oko 2015.",
+    "hr": "Bijele papirnate kartice s mekim sjenama, istaknuta obojena gornja traka i valovi tamo gdje dodirnete, kao što su telefoni izgledali oko 2015.",
+    "sl": "Bele papirnate kartice z mehkimi sencami, izrazita barvna zgornja vrstica in valovanje tam, kjer se dotaknete, kot so izgledali telefoni okoli leta 2015",
+    "bs": "Bijele papirne kartice s mekim sjenama, istaknuta obojena gornja traka i talasići tamo gdje dodirnete, kao što su telefoni izgledali oko 2015.",
+    "ca": "Targetes de paper blanques amb ombres suaus, una barra superior de color intens i ondulacions allà on toques, com eren els telèfons cap al 2015",
+    "kk": "Жұмсақ көлеңкелі ақ қағаз карточкалар, ашық түсті жоғарғы жолақ және түрткен жерде толқындар, 2015 жылдар шамасындағы телефондардай",
+    "ky": "Жумшак көлөкөлүү ак кагаз карточкалар, жаркын түстүү жогорку тилке жана тийген жерде толкундар, 2015-жылдардагы телефондордогудай",
+    "as": "কোমল ছাঁযুক্ত বগা কাগজৰ কাৰ্ড, গাঢ় ৰঙৰ ওপৰৰ বাৰ আৰু টেপ কৰা ঠাইত ঢৌ, 2015 চনৰ ওচৰে-পাজৰে ফোনবোৰৰ দৰে",
+    "or": "ନରମ ଛାୟା ଥିବା ଧଳା କାଗଜ କାର୍ଡ, ଗାଢ଼ ରଙ୍ଗର ଉପର ବାର ଏବଂ ଛୁଇଁଲେ ଲହରୀ, 2015 ଆଖପାଖର ଫୋନ ପରି"
   },
   "brightness": "auto",
   "colors": {

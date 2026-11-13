@@ -78,7 +78,17 @@
     "ur": "پلاٹینم",
     "uz": "Platina",
     "vi": "Bạch kim",
-    "zu": "Iplathinamu"
+    "zu": "Iplathinamu",
+    "sr": "Платина",
+    "sr-Latn": "Platina",
+    "hr": "Platina",
+    "sl": "Platina",
+    "bs": "Platina",
+    "ca": "Platí",
+    "kk": "Платина",
+    "ky": "Платина",
+    "as": "প্লেটিনাম",
+    "or": "ପ୍ଲାଟିନମ୍"
   },
   "description": "Soft grey bevels, grooved title bars and a lavender highlight",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "نرم سرمئی کنارے، لکیر دار ٹائٹل بار اور لیونڈر نمایاں رنگ",
     "uz": "Yumshoq kulrang qirralar, o'yiqli sarlavha panellari va lavanda ajratib ko'rsatish",
     "vi": "Cạnh vát xám dịu, thanh tiêu đề có rãnh và điểm nhấn màu oải hương",
-    "zu": "Imiphetho empunga ethambile, amabha esihloko anemigodi nokugqamisa okunsomi okukhanyayo"
+    "zu": "Imiphetho empunga ethambile, amabha esihloko anemigodi nokugqamisa okunsomi okukhanyayo",
+    "sr": "Меки сиви закошени рубови, рифлане насловне траке и истицање у боји лаванде",
+    "sr-Latn": "Meki sivi zakošeni rubovi, riflane naslovne trake i isticanje u boji lavande",
+    "hr": "Meki sivi zakošeni rubovi, narebrene naslovne trake i isticanje u boji lavande",
+    "sl": "Mehki sivi poševni robovi, narebrene naslovne vrstice in poudarek v barvi sivke",
+    "bs": "Meki sivi zakošeni rubovi, narebrene naslovne trake i isticanje u boji lavande",
+    "ca": "Bisells grisos suaus, barres de títol estriades i un ressaltat de color lavanda",
+    "kk": "Жұмсақ сұр қиғаш жиектер, ойықты тақырып жолақтары және лавандалы бөлектеу",
+    "ky": "Жумшак боз кыркылган четтер, оюктуу аталыш тилкелери жана лаванда түстүү бөлүп көрсөтүү",
+    "as": "কোমল ধূসৰ বেভেল, খাঁজকটা শীৰ্ষক বাৰ আৰু লেভেণ্ডাৰ ৰঙৰ হাইলাইট",
+    "or": "ନରମ ଧୂସର ବେଭେଲ, ଖାଞ୍ଜ କଟା ଶୀର୍ଷକ ବାର ଓ ଲାଭେଣ୍ଡର ରଙ୍ଗର ହାଇଲାଇଟ୍"
   },
   "brightness": "light",
   "text": {

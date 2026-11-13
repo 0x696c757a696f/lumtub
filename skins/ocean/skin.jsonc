@@ -78,7 +78,17 @@
     "ur": "سمندری شیشہ",
     "uz": "Okean shishasi",
     "vi": "Kính đại dương",
-    "zu": "Ingilazi Yolwandle"
+    "zu": "Ingilazi Yolwandle",
+    "sr": "Океанско стакло",
+    "sr-Latn": "Okeansko staklo",
+    "hr": "Oceansko staklo",
+    "sl": "Oceansko steklo",
+    "bs": "Okeansko staklo",
+    "ca": "Vidre oceànic",
+    "kk": "Мұхит шынысы",
+    "ky": "Океан айнеги",
+    "as": "মহাসাগৰ কাচ",
+    "or": "ମହାସାଗର କାଚ"
   },
   "description": "Teal water glass, rising bubbles and glossy waves",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "فیروزی پانی کا شیشہ، اٹھتے بلبلے اور چمکدار لہریں",
     "uz": "Firuza suv shishasi, ko'tarilayotgan pufakchalar va yaltiroq to'lqinlar",
     "vi": "Kính nước xanh mòng két, bong bóng bay lên và sóng nước bóng loáng",
-    "zu": "Ingilazi yamanzi aluhlaza okwesibhakabhaka, amabhamuza akhuphukayo namagagasi akhazimulayo"
+    "zu": "Ingilazi yamanzi aluhlaza okwesibhakabhaka, amabhamuza akhuphukayo namagagasi akhazimulayo",
+    "sr": "Тиркизно водено стакло, мехурићи који се уздижу и сјајни таласи",
+    "sr-Latn": "Tirkizno vodeno staklo, mehurići koji se uzdižu i sjajni talasi",
+    "hr": "Tirkizno vodeno staklo, mjehurići koji se dižu i sjajni valovi",
+    "sl": "Turkizno vodno steklo, dvigajoči se mehurčki in sijoči valovi",
+    "bs": "Tirkizno vodeno staklo, mjehurići koji se dižu i sjajni talasi",
+    "ca": "Vidre d'aigua verd blavós, bombolles que pugen i ones brillants",
+    "kk": "Көгілдір-жасыл су шыны, көтерілген көпіршіктер және жылтыр толқындар",
+    "ky": "Жашыл-көк суу айнеги, жогору көтөрүлгөн көбүкчөлөр жана жалтырак толкундар",
+    "as": "ফিৰোজা পানীৰ কাচ, ওপৰলৈ উঠা বুদবুদ আৰু চকচকে ঢৌ",
+    "or": "ଫିରୋଜା ଜଳ କାଚ, ଉପରକୁ ଉଠୁଥିବା ବୁଦବୁଦା ଓ ଚକଚକିଆ ଲହରୀ"
   },
   "brightness": "auto",
   "text": {

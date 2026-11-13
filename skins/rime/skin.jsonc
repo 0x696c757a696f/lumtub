@@ -78,7 +78,17 @@
     "ur": "برف پوش",
     "uz": "Qirov",
     "vi": "Sương muối",
-    "zu": "Umsentshane"
+    "zu": "Umsentshane",
+    "sr": "Иње",
+    "sr-Latn": "Inje",
+    "hr": "Inje",
+    "sl": "Slana",
+    "bs": "Inje",
+    "ca": "Gebre",
+    "kk": "Қырау",
+    "ky": "Кыроо",
+    "as": "হিম",
+    "or": "ହିମ"
   },
   "description": "Ice blue, with cards bright as frost",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "برفیلا نیلا، کارڈز پالے کی طرح روشن",
     "uz": "Muz ko'k, qirov kabi yorqin kartalar bilan",
     "vi": "Xanh băng, với những thẻ sáng như sương giá",
-    "zu": "Okuluhlaza okwesibhakabhaka okuqhwa, namakhadi akhanya njengeqhwa"
+    "zu": "Okuluhlaza okwesibhakabhaka okuqhwa, namakhadi akhanya njengeqhwa",
+    "sr": "Ледено плава, са картицама светлим као иње",
+    "sr-Latn": "Ledeno plava, sa karticama svetlim kao inje",
+    "hr": "Ledenoplava, s karticama sjajnim poput inja",
+    "sl": "Ledenomodra, s karticami, svetlimi kot slana",
+    "bs": "Ledenoplava, s karticama sjajnim poput inja",
+    "ca": "Blau gel, amb targetes lluminoses com la gebrada",
+    "kk": "Мұздай көк түс, карточкалары қырауша жарқын",
+    "ky": "Муздай көк түс, карточкалары кыроодой жаркын",
+    "as": "বৰফ-নীলা, হিমৰ দৰে উজ্জ্বল কাৰ্ড",
+    "or": "ବରଫ-ନୀଳ, ହିମ ପରି ଉଜ୍ଜ୍ୱଳ କାର୍ଡ"
   },
   "author": "Lumtub",
   "version": "1.0",

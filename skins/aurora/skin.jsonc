@@ -78,7 +78,17 @@
     "ur": "اورورا شیشہ",
     "uz": "Shimol nuri shishasi",
     "vi": "Kính cực quang",
-    "zu": "Ingilazi Yokukhanya Kwasenyakatho"
+    "zu": "Ingilazi Yokukhanya Kwasenyakatho",
+    "sr": "Стакло поларне светлости",
+    "sr-Latn": "Staklo polarne svetlosti",
+    "hr": "Staklo polarne svjetlosti",
+    "sl": "Polarno steklo",
+    "bs": "Staklo polarne svjetlosti",
+    "ca": "Vidre d'aurora",
+    "kk": "Солтүстік шұғыла шынысы",
+    "ky": "Түндүк шоокумунун айнеги",
+    "as": "অৰোৰা কাচ",
+    "or": "ଅରୋରା କାଚ"
   },
   "description": "Dark glass under green and blue northern lights, with glowing edges",
   "descriptions": {
@@ -153,7 +163,17 @@
     "ur": "سبز اور نیلی قطبی روشنیوں تلے گہرا شیشہ، دمکتے کناروں کے ساتھ",
     "uz": "Yashil va ko'k shimol nuri ostidagi to'q shisha, yarqirab turuvchi chetlar bilan",
     "vi": "Kính tối dưới cực quang xanh lục và xanh lam, viền phát sáng",
-    "zu": "Ingilazi emnyama ngaphansi kokukhanya kwasenyakatho okuluhlaza nokuluhlaza okwesibhakabhaka, namaphethelo akhanyayo"
+    "zu": "Ingilazi emnyama ngaphansi kokukhanya kwasenyakatho okuluhlaza nokuluhlaza okwesibhakabhaka, namaphethelo akhanyayo",
+    "sr": "Тамно стакло под зеленим и плавим поларним светлом, са сјајним ивицама",
+    "sr-Latn": "Tamno staklo pod zelenim i plavim polarnim svetlom, sa sjajnim ivicama",
+    "hr": "Tamno staklo pod zelenim i plavim sjevernim svjetlom, sa svjetlećim rubovima",
+    "sl": "Temno steklo pod zeleno in modro polarno svetlobo, s svetlečimi robovi",
+    "bs": "Tamno staklo pod zelenim i plavim sjevernim svjetlom, sa svjetlećim rubovima",
+    "ca": "Vidre fosc sota l'aurora boreal verda i blava, amb vores lluents",
+    "kk": "Жасыл және көк солтүстік шұғыла астындағы қараңғы шыны, жиектері жарқырап тұр",
+    "ky": "Жашыл жана көк түндүк шооку алдындагы караңгы айнек, четтери жаркырап турат",
+    "as": "সেউজীয়া আৰু নীলা মেৰুজ্যোতিৰ তলত গাঢ় কাচ, জিলিকি থকা ধাৰৰ সৈতে",
+    "or": "ସବୁଜ ଓ ନୀଳ ମେରୁଜ୍ୟୋତି ତଳେ ଗାଢ଼ କାଚ, ଉଜ୍ଜ୍ୱଳ ଧାର ସହିତ"
   },
   "brightness": "dark",
   "text": {

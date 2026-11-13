@@ -7,6 +7,7 @@ import '../../device.dart';
 import '../../app/app_controller.dart';
 import '../../explore_filters.dart';
 import '../../explore_topics.dart';
+import '../chip_strip.dart';
 import '../common.dart';
 import '../fitting_segments.dart';
 import '../../search_options.dart';
@@ -108,6 +109,128 @@ class _ExplorePageState extends State<ExplorePage> {
     });
   }
 
+  /// How many of the filters differ from their default.
+  int _changedFilters(bool live, ExploreMode mode) => [
+        controller.exploreFormat != controller.exploreFormats.first,
+        controller.exploreView != controller.exploreViews.first,
+        !live && mode != ExploreMode.long && controller.exploreDuration != SearchDuration.any,
+        controller.preferences.exploreRegion != ExploreRegion.any,
+        controller.preferences.exploreLanguage != ExploreLanguage.any,
+        controller.exploreQuality != SearchQuality.any,
+      ].where((changed) => changed).length;
+
+  /// A phone's filters, in a sheet that follows the page as they change.
+  Future<void> _showFilters(BuildContext context) => showModalBottomSheet<void>(
+        context: context,
+        useSafeArea: true,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (context) => ListenableBuilder(
+          listenable: controller,
+          builder: (context, _) => SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              Text(tr('Filters'), style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              Wrap(spacing: 8, runSpacing: 8, children: _filters(context)),
+            ]),
+          ),
+        ),
+      );
+
+  /// The period, filters and shuffle beside the order.
+  List<Widget> _filters(BuildContext context) {
+    final section = controller.exploreSection;
+    final topic = controller.exploreTopicNow;
+    final mode = controller.exploreMode;
+    final live = section.isLive;
+    final loader = controller.explore;
+    final loading = loader == null || loader.loading;
+    return [
+      if (mode.hasPeriod)
+        OptionChip(
+          icon: AppIcons.calendar,
+          value: controller.explorePeriod,
+          values: explorePeriods,
+          label: (v) => v.label,
+          item: (v) => v.label,
+          changed: false,
+          onSelected: (v) => controller.setExplore(period: v),
+        ),
+      OptionChip(
+        icon: AppIcons.shapes,
+        value: controller.exploreFormat,
+        values: controller.exploreFormats,
+        label: (v) => v == controller.exploreFormats.first ? tr('Type') : v.label,
+        item: (v) => v.label,
+        changed: controller.exploreFormat != controller.exploreFormats.first,
+        onSelected: (v) => controller.setExplore(format: v),
+      ),
+      OptionChip(
+        icon: AppIcons.eye,
+        value: controller.exploreView,
+        values: controller.exploreViews,
+        label: (v) => v == controller.exploreViews.first ? tr('Viewpoint') : v.label,
+        item: (v) => v.label,
+        changed: controller.exploreView != controller.exploreViews.first,
+        onSelected: (v) => controller.setExplore(view: v),
+      ),
+      if (!live && mode != ExploreMode.long)
+        OptionChip(
+          icon: AppIcons.timer,
+          value: controller.exploreDuration,
+          values: SearchDuration.values,
+          label: (v) => v == SearchDuration.any ? tr('Duration') : v.label,
+          item: (v) => v.label,
+          changed: controller.exploreDuration != SearchDuration.any,
+          onSelected: (v) => controller.setExplore(duration: v),
+        ),
+      OptionChip(
+        icon: AppIcons.globe,
+        value: controller.preferences.exploreRegion,
+        values: ExploreRegion.values,
+        label: (v) => v == ExploreRegion.any ? tr('Region') : v.label,
+        item: (v) => v.label,
+        changed: controller.preferences.exploreRegion != ExploreRegion.any,
+        onSelected: (v) => controller.setExplore(region: v),
+      ),
+      OptionChip(
+        icon: AppIcons.translate,
+        value: controller.preferences.exploreLanguage,
+        values: ExploreLanguage.values,
+        label: (v) => v == ExploreLanguage.any ? tr('Language') : v.label,
+        item: (v) => v.label,
+        changed: controller.preferences.exploreLanguage != ExploreLanguage.any,
+        onSelected: (v) => controller.setExplore(language: v),
+      ),
+      if (controller.preferences.exploreLanguage != ExploreLanguage.any)
+        Tooltip(
+          message: tr('Only videos whose original audio track or automatic captions confirm the language, not guessed from the title and description'),
+          child: FilterChip(
+            avatar: Icon(AppIcons.ear, size: 18, color: chipForeground(context, controller.preferences.exploreHeardOnly)),
+            label: Text(tr('Confirmed audio only')),
+            selected: controller.preferences.exploreHeardOnly,
+            onSelected: (v) => controller.setExplore(heardOnly: v),
+          ),
+        ),
+      OptionChip(
+        icon: AppIcons.highDefinition,
+        value: controller.exploreQuality,
+        values: SearchQuality.values,
+        label: (v) => v == SearchQuality.any ? tr('Quality') : v.label,
+        item: (v) => v.label,
+        changed: controller.exploreQuality != SearchQuality.any,
+        onSelected: (v) => controller.setExplore(quality: v),
+      ),
+      if (topic.mix)
+        ActionChip(
+          avatar: Icon(AppIcons.arrowsClockwise, size: 18),
+          label: Text(tr('Shuffle')),
+          onPressed: loading ? null : controller.refreshExplore,
+        ),
+    ];
+  }
+
   Widget _page(BuildContext context, {required List<VideoItem> items, required String? error, required bool loading, required String subtitle, required Widget? strip}) {
     final loader = controller.explore;
     final section = controller.exploreSection;
@@ -117,6 +240,7 @@ class _ExplorePageState extends State<ExplorePage> {
     final sub = controller.exploreSub;
     final subNow = controller.exploreSubNow;
     final leaf = controller.exploreLeaf;
+    final narrow = MediaQuery.sizeOf(context).width < 600;
     return NearEndListener(
       onNearEnd: () => loader?.loadMore(),
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
@@ -151,22 +275,20 @@ class _ExplorePageState extends State<ExplorePage> {
               const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsetsDirectional.only(start: 8),
-                child: FilterFlow(children: [
-                  for (final (i, faith) in controller.exploreTopicsFor(section).indexed)
-                    GestureDetector(
-                      onLongPress: faith.custom ? () => _removeTopic(context, section, faith) : null,
-                      onSecondaryTap: faith.custom ? () => _removeTopic(context, section, faith) : null,
-                      child: ChoiceChip(
-                        avatar: Icon(faith.icon, size: 18, color: chipForeground(context, i == controller.exploreTopic)),
-                        label: Text(faith.label),
-                        showCheckmark: false,
-                        selected: i == controller.exploreTopic,
-                        onSelected: (_) => controller.setExplore(topic: i),
-                      ),
-                    ),
-                  IconButton(tooltip: tr('Add'), icon: Icon(AppIcons.plus, size: 18), onPressed: () => _addTopic(context, section)),
-                  IconButton(tooltip: tr('Manage'), icon: Icon(AppIcons.slidersHorizontal, size: 18), onPressed: () => _manageTopics(context, section)),
-                ]),
+                child: Builder(builder: (context) {
+                  final topics = controller.exploreTopicsFor(section);
+                  return ChipStrip(
+                    title: section.label,
+                    choices: [for (final t in topics) (label: t.label, icon: t.icon)],
+                    selected: controller.exploreTopic,
+                    onSelected: (i) => controller.setExplore(topic: i),
+                    onLongPress: (i) { if (topics[i].custom) _removeTopic(context, section, topics[i]); },
+                    trailing: [
+                      IconButton(tooltip: tr('Add'), icon: Icon(AppIcons.plus, size: 18), onPressed: () => _addTopic(context, section)),
+                      IconButton(tooltip: tr('Manage'), icon: Icon(AppIcons.slidersHorizontal, size: 18), onPressed: () => _manageTopics(context, section)),
+                    ],
+                  );
+                }),
               ),
             ]),
           )),
@@ -174,119 +296,46 @@ class _ExplorePageState extends State<ExplorePage> {
         if (topic.subs.isNotEmpty)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 4, AppStyle.pagePadding, 0),
-            child: FilterFlow(children: [
-              for (final (i, label) in [tr('All'), for (final s in topic.subs) s.label].indexed)
-                ChoiceChip(label: Text(label), selected: sub == i, onSelected: (_) => controller.setExplore(sub: i)),
-            ]),
+            child: ChipStrip(
+              title: topic.label,
+              choices: [for (final label in [tr('All'), for (final s in topic.subs) s.label]) (label: label, icon: null)],
+              selected: sub,
+              onSelected: (i) => controller.setExplore(sub: i),
+            ),
           )),
         if (subNow != null && subNow.subs.isNotEmpty)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, 0),
-            child: FilterFlow(spacing: 6, children: [
-              for (final (i, label) in [tr('All {0}', [subNow.label]), for (final s in subNow.subs) s.label].indexed)
-                FilterChip(
-                  label: Text(label),
-                  visualDensity: VisualDensity.compact,
-                  showCheckmark: false,
-                  selected: leaf == i,
-                  onSelected: (_) => controller.setExplore(leaf: i),
-                ),
-            ]),
+            child: ChipStrip(
+              compact: true,
+              title: subNow.label,
+              choices: [for (final label in [tr('All {0}', [subNow.label]), for (final s in subNow.subs) s.label]) (label: label, icon: null)],
+              selected: leaf,
+              onSelected: (i) => controller.setExplore(leaf: i),
+            ),
           )),
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 12, AppStyle.pagePadding, 16),
-          child: FilterFlow(children: [
-            // On a narrow screen the row scrolls instead of each label
-            // breaking over two lines; on a TV the whole line scrolls.
-            _scrollsAlone(SegmentedButton<ExploreMode>(
-              showSelectedIcon: false,
-              style: const ButtonStyle(visualDensity: VisualDensity.compact),
-              segments: [for (final m in ExploreMode.of(section)) ButtonSegment(value: m, label: Text(m.label, maxLines: 1, softWrap: false))],
-              selected: {mode},
-              onSelectionChanged: (value) => controller.setExplore(mode: value.first),
-            )),
-            if (mode.hasPeriod)
-              OptionChip(
-                icon: AppIcons.calendar,
-                value: controller.explorePeriod,
-                values: explorePeriods,
-                label: (v) => v.label,
-                item: (v) => v.label,
-                changed: false,
-                onSelected: (v) => controller.setExplore(period: v),
-              ),
-            OptionChip(
-              icon: AppIcons.shapes,
-              value: controller.exploreFormat,
-              values: controller.exploreFormats,
-              label: (v) => v == controller.exploreFormats.first ? tr('Type') : v.label,
-              item: (v) => v.label,
-              changed: controller.exploreFormat != controller.exploreFormats.first,
-              onSelected: (v) => controller.setExplore(format: v),
-            ),
-            OptionChip(
-              icon: AppIcons.eye,
-              value: controller.exploreView,
-              values: controller.exploreViews,
-              label: (v) => v == controller.exploreViews.first ? tr('Viewpoint') : v.label,
-              item: (v) => v.label,
-              changed: controller.exploreView != controller.exploreViews.first,
-              onSelected: (v) => controller.setExplore(view: v),
-            ),
-            if (!live && mode != ExploreMode.long)
-              OptionChip(
-                icon: AppIcons.timer,
-                value: controller.exploreDuration,
-                values: SearchDuration.values,
-                label: (v) => v == SearchDuration.any ? tr('Duration') : v.label,
-                item: (v) => v.label,
-                changed: controller.exploreDuration != SearchDuration.any,
-                onSelected: (v) => controller.setExplore(duration: v),
-              ),
-            OptionChip(
-              icon: AppIcons.globe,
-              value: controller.preferences.exploreRegion,
-              values: ExploreRegion.values,
-              label: (v) => v == ExploreRegion.any ? tr('Region') : v.label,
-              item: (v) => v.label,
-              changed: controller.preferences.exploreRegion != ExploreRegion.any,
-              onSelected: (v) => controller.setExplore(region: v),
-            ),
-            OptionChip(
-              icon: AppIcons.translate,
-              value: controller.preferences.exploreLanguage,
-              values: ExploreLanguage.values,
-              label: (v) => v == ExploreLanguage.any ? tr('Language') : v.label,
-              item: (v) => v.label,
-              changed: controller.preferences.exploreLanguage != ExploreLanguage.any,
-              onSelected: (v) => controller.setExplore(language: v),
-            ),
-            if (controller.preferences.exploreLanguage != ExploreLanguage.any)
-              Tooltip(
-                message: tr('Only videos whose original audio track or automatic captions confirm the language, not guessed from the title and description'),
-                child: FilterChip(
-                  avatar: Icon(AppIcons.ear, size: 18, color: chipForeground(context, controller.preferences.exploreHeardOnly)),
-                  label: Text(tr('Confirmed audio only')),
-                  selected: controller.preferences.exploreHeardOnly,
-                  onSelected: (v) => controller.setExplore(heardOnly: v),
-                ),
-              ),
-            OptionChip(
-              icon: AppIcons.highDefinition,
-              value: controller.exploreQuality,
-              values: SearchQuality.values,
-              label: (v) => v == SearchQuality.any ? tr('Quality') : v.label,
-              item: (v) => v.label,
-              changed: controller.exploreQuality != SearchQuality.any,
-              onSelected: (v) => controller.setExplore(quality: v),
-            ),
-            if (topic.mix)
-              ActionChip(
-                avatar: Icon(AppIcons.arrowsClockwise, size: 18),
-                label: Text(tr('Shuffle')),
-                onPressed: loading ? null : controller.refreshExplore,
-              ),
-          ]),
+          child: narrow
+              // One line on a phone: the orders scroll, the filters wait in a sheet.
+              ? ChipStrip(
+                  compact: true,
+                  choices: [for (final m in ExploreMode.of(section)) (label: m.label, icon: null)],
+                  selected: ExploreMode.of(section).indexOf(mode),
+                  onSelected: (i) => controller.setExplore(mode: ExploreMode.of(section)[i]),
+                  trailing: [_FilterButton(changed: _changedFilters(live, mode), onPressed: () => _showFilters(context))],
+                )
+              : FilterFlow(children: [
+                  // On a TV the whole line scrolls.
+                  _scrollsAlone(SegmentedButton<ExploreMode>(
+                    showSelectedIcon: false,
+                    style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                    segments: [for (final m in ExploreMode.of(section)) ButtonSegment(value: m, label: Text(m.label, maxLines: 1, softWrap: false))],
+                    selected: {mode},
+                    onSelectionChanged: (value) => controller.setExplore(mode: value.first),
+                  )),
+                  ..._filters(context),
+                ]),
         )),
         if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
         if (loading) ...[
@@ -743,3 +792,21 @@ class _TopicTile extends StatelessWidget {
 /// [child] scrolling sideways on its own where a [FilterFlow] wraps, and
 /// as it is where the flow is one line that scrolls already.
 Widget _scrollsAlone(Widget child) => Device.tv ? child : SingleChildScrollView(scrollDirection: Axis.horizontal, child: child);
+
+/// Opens a phone's filters, counting the ones that are set.
+class _FilterButton extends StatelessWidget {
+  const _FilterButton({required this.changed, required this.onPressed});
+  final int changed;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsetsDirectional.only(start: 4),
+        child: IconButton(
+          tooltip: tr('Filters'),
+          onPressed: onPressed,
+          isSelected: changed > 0,
+          icon: Badge(isLabelVisible: changed > 0, label: Text('$changed'), child: Icon(AppIcons.funnel, size: 20)),
+        ),
+      );
+}

@@ -1,55 +1,47 @@
 import 'package:flutter/material.dart';
 
-/// A row of [SegmentedButton] segments that never hides one behind the edge
-/// without a way to see it. Every segment is as wide as the widest label, so
-/// six long labels can outgrow the window: then, while each segment still
-/// gets [minSegment], labels break over two lines to fit; on narrower
-/// screens the row scrolls and the selected segment is scrolled into view.
-class FittingSegments<T> extends StatefulWidget {
-  const FittingSegments({super.key, required this.values, required this.label, required this.selected, required this.onSelected, this.minSegment = 112});
+import 'chip_strip.dart';
+
+/// A [SegmentedButton] while every segment fits its label on one line, and
+/// text tabs in a [ChipStrip] once they would not: the segments are all as
+/// wide as the widest label, so six long labels outgrow a window long
+/// before tabs would, and a cut-off or crushed label is never shown.
+class FittingSegments<T> extends StatelessWidget {
+  const FittingSegments({super.key, required this.values, required this.label, required this.selected, required this.onSelected});
   final List<T> values;
   final String Function(T value) label;
   final T selected;
   final ValueChanged<T> onSelected;
-  final double minSegment;
 
-  @override
-  State<FittingSegments<T>> createState() => _FittingSegmentsState<T>();
-}
-
-class _FittingSegmentsState<T> extends State<FittingSegments<T>> {
-  final _selectedKey = GlobalKey();
-  T? _shown;
-
-  void _reveal() {
-    if (_shown == widget.selected) return;
-    _shown = widget.selected;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final context = _selectedKey.currentContext;
-      if (context != null && mounted) Scrollable.ensureVisible(context, alignment: 0.5, duration: const Duration(milliseconds: 200));
-    });
-  }
-
-  Widget _button(int lines) => SegmentedButton<T>(
-        showSelectedIcon: false,
-        segments: [
-          for (final v in widget.values)
-            ButtonSegment(
-              value: v,
-              label: Text(widget.label(v), key: v == widget.selected ? _selectedKey : null, maxLines: lines, softWrap: lines > 1, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
-            ),
-        ],
-        selected: {widget.selected},
-        onSelectionChanged: (value) => widget.onSelected(value.first),
-      );
+  /// A segment's padding and border beside its label.
+  static const _segmentExtra = 34.0;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
-        if (constraints.maxWidth / widget.values.length >= widget.minSegment) {
-          _shown = null;
-          return Align(alignment: AlignmentDirectional.centerStart, child: _button(2));
+        final style = Theme.of(context).textTheme.labelLarge;
+        final scaler = MediaQuery.textScalerOf(context);
+        var widest = 0.0;
+        for (final v in values) {
+          final painter = TextPainter(text: TextSpan(text: label(v), style: style), textDirection: Directionality.of(context), textScaler: scaler, maxLines: 1)..layout();
+          if (painter.width > widest) widest = painter.width;
+          painter.dispose();
         }
-        _reveal();
-        return SingleChildScrollView(scrollDirection: Axis.horizontal, child: _button(1));
+        if ((widest + _segmentExtra) * values.length <= constraints.maxWidth) {
+          return Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: SegmentedButton<T>(
+              showSelectedIcon: false,
+              segments: [for (final v in values) ButtonSegment(value: v, label: Text(label(v), maxLines: 1, softWrap: false))],
+              selected: {selected},
+              onSelectionChanged: (value) => onSelected(value.first),
+            ),
+          );
+        }
+        return ChipStrip(
+          tabs: true,
+          choices: [for (final v in values) (label: label(v), icon: null)],
+          selected: values.indexOf(selected),
+          onSelected: (i) => onSelected(values[i]),
+        );
       });
 }

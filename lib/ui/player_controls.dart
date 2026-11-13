@@ -33,6 +33,8 @@ import '../system_env.dart' show shareText;
 import '../youtube_account.dart' show VideoRating;
 import '../format_policy.dart';
 import '../player_settings.dart';
+import '../stream_resolver.dart' show AudioLanguage;
+import '../translation.dart' show TranslationLanguage;
 import '../widgets/mini_progress_line.dart';
 import '../widgets/position_ticks.dart' show coarse;
 import '../widgets/video_progress_bar.dart';
@@ -1241,7 +1243,24 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         values: [for (final q in AudioQuality.values) (q, q.label)],
         onSelected: (q) => unawaited(_controller.reloadVideo(_controller.settings.copyWith(audioQuality: q))),
       ),
-      if (audio.length > 1)
+      PanelChoices<DubbedAudio>(
+        label: tr('Dubbed audio'),
+        icon: AppIcons.musicNotes,
+        value: settings.dubbedAudio,
+        values: [for (final d in DubbedAudio.values) (d, d.label)],
+        collapsed: true,
+        onSelected: (d) => unawaited(_controller.reloadVideo(_controller.settings.copyWith(dubbedAudio: d))),
+      ),
+      if (_controller.availableAudioLanguages.length > 1)
+        PanelChoices<String>(
+          label: tr('Audio track'),
+          icon: AppIcons.musicNotes,
+          value: _audioLanguageChoice(_controller.availableAudioLanguages, _controller.audioLanguage),
+          values: [for (final l in _controller.availableAudioLanguages) (l.code, audioLanguageLabel(l))],
+          collapsed: true,
+          onSelected: (code) => unawaited(_controller.chooseAudioLanguage(_controller.availableAudioLanguages.firstWhere((l) => l.code == code).isOriginal ? '' : code)),
+        )
+      else if (audio.length > 1)
         StreamBuilder<Track>(
           stream: _player.stream.track,
           builder: (context, _) => PanelChoices<String>(
@@ -1771,6 +1790,28 @@ class _FeedbackBubble extends StatelessWidget {
 final _ytDlpAudio = RegExp(r'^(\d+)(-[\w-]+)? - audio only \((.*)\)$');
 
 /// A track's name in menus.
+/// The language of [languages] that [asked] (a language code, a prefix of
+/// one, or empty for the original) selects.
+String _audioLanguageChoice(List<AudioLanguage> languages, String asked) {
+  final lower = asked.toLowerCase();
+  final match = lower.isEmpty ? null : languages.where((l) => l.code.toLowerCase() == lower).firstOrNull ?? languages.where((l) => l.code.toLowerCase().startsWith(lower)).firstOrNull;
+  return (match ?? languages.firstWhere((l) => l.isOriginal, orElse: () => languages.first)).code;
+}
+
+/// An audio language for the player's menu: its name, marked when it is the
+/// original or an automatic dub.
+String audioLanguageLabel(AudioLanguage language) {
+  final parts = language.code.split('-');
+  final name = TranslationLanguage.ofTag(parts.first)?.label ?? language.code;
+  final region = parts.length > 1 ? ' (${parts.skip(1).join('-')})' : '';
+  final label = '$name$region';
+  return switch (language.kind) {
+    'original' => tr('{0} (original)', [label]),
+    'auto' => tr('{0} (automatic dub)', [label]),
+    _ => label,
+  };
+}
+
 String trackLabel(String id, String? title, String? language) {
   final match = title == null ? null : _ytDlpAudio.firstMatch(title);
   if (match != null) {

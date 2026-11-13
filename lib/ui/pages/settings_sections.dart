@@ -480,6 +480,18 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 onSelected: (v) => save(settings.copyWith(audioQuality: v)),
               ),
             )),
+        SettingEntry(tr('Dubbed audio'), (context) => NormalItem(
+              title: tr('Dubbed audio'),
+              subtitle: tr('Current: {0}', [settings.dubbedAudio.label]),
+              leading: _icon(AppIcons.musicNotes),
+              onTap: () => pickFromDialog<DubbedAudio>(
+                context,
+                title: tr('Dubbed audio'),
+                value: settings.dubbedAudio,
+                values: _enumValues(DubbedAudio.values, (d) => d.label),
+                onSelected: (v) => save(settings.copyWith(dubbedAudio: v)),
+              ),
+            )),
         SettingEntry(tr('Audio output device'), (context) {
           final devices = controller.audioDevices;
           String describe(String name) => name == 'auto'

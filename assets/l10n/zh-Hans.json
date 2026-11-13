@@ -3519,5 +3519,10 @@
   "Next up": "接着看",
   "Searched": "搜过",
   "You were here last time · Tap to refresh": "上次看到这里，点击刷新",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "播放器打不开视频流，也没说原因。可以在 设置 › 网络 › 网络诊断 里看是哪一环被拦住了。"
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "播放器打不开视频流，也没说原因。可以在 设置 › 网络 › 网络诊断 里看是哪一环被拦住了。",
+  "Dubbed audio": "配音",
+  "Original audio": "原声",
+  "Dub in my language, if any": "有则用我的语言配音",
+  "{0} (original)": "{0}（原声）",
+  "{0} (automatic dub)": "{0}（自动配音）"
 }

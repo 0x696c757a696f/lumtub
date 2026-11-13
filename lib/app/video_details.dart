@@ -62,12 +62,13 @@ extension VideoDetailsActions on AppController {
       } else {
         try {
           // The extraction playback uses carries the details too.
-          final resolved = await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort, membersOnly: item.membersOnly);
+          final resolved = await _repository!.streams.resolve(item.id, _formatFor(item.id), formatSort: _formatSort, membersOnly: item.membersOnly);
           loaded = resolved.details;
           if (serial == _playSerial) {
             _update(() {
               availableHeights = resolved.heightsFor(settings);
               availableFrameRates = resolved.frameRatesFor(settings);
+              availableAudioLanguages = resolved.audioLanguages;
             });
             final lost = resolved.lostToDisabled(settings, _playback.maxHeight);
             if (lost != null) {

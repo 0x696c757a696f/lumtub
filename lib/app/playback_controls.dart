@@ -247,6 +247,19 @@ extension PlaybackControls on AppController {
     if (await _open(item, _playSerial, start: position) && !wasPlaying) await player.pause();
   }
 
+  /// The audio language the playing video is asked for: the one chosen for
+  /// it here, else the one the settings give; empty for the original.
+  String get audioLanguage => _audioLanguageFor(playing?.id);
+
+  /// Plays the playing video in the audio language [language] ('' for its
+  /// original sound) from where it is, for this video only.
+  Future<void> chooseAudioLanguage(String language) async {
+    final id = playing?.id;
+    if (id == null) return;
+    _audioPick = (id, language);
+    await reloadVideo();
+  }
+
   Future<void> setAutoplayNext(bool value) => setPlayOrder(value ? PlayOrder.autoPlayRelated : PlayOrder.pause);
 
   Future<void> setPlayOrder(PlayOrder order) => saveSettings(settings.copyWith(playOrder: order));

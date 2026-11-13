@@ -37,6 +37,88 @@ pub struct Lost {
     pub playing: u32,
 }
 
+/// One language a video's sound is offered in.
+#[derive(Serialize, Debug, PartialEq)]
+pub struct AudioTrack {
+    /// As yt-dlp's `language` has it: `en`, `es-US`.
+    pub language: String,
+    /// `original`, `dub` (by the creator), `auto` (an automatic dub), or
+    /// empty when the format does not say.
+    pub kind: &'static str,
+}
+
+fn kind_rank(kind: &str) -> u8 {
+    match kind {
+        "original" => 0,
+        "dub" => 1,
+        "auto" => 2,
+        _ => 3,
+    }
+}
+
+/// The languages the audio-only formats in `info["formats"]` are in, the
+/// original first, then creators' dubs, automatic dubs and the rest; empty
+/// unless the video has sound in more than one. The kind comes from the
+/// `audio_content` the core's own answers carry (YouTube's `acont`), else
+/// from yt-dlp's `format_note`. Descriptive tracks are left out.
+pub fn audio_tracks(info: &Value) -> Vec<AudioTrack> {
+    let mut found: Vec<AudioTrack> = Vec::new();
+    for format in info
+        .get("formats")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let audio = format.get("vcodec").and_then(Value::as_str) == Some("none")
+            && format
+                .get("acodec")
+                .and_then(Value::as_str)
+                .is_some_and(|c| c != "none");
+        let Some(language) = format
+            .get("language")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|l| audio && !l.is_empty())
+        else {
+            continue;
+        };
+        let note = format
+            .get("format_note")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_lowercase();
+        let content = format
+            .get("audio_content")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        if content == "descriptive" || note.contains("descriptive") || language.contains("desc") {
+            continue;
+        }
+        let kind = match content {
+            "original" => "original",
+            "dubbed-auto" => "auto",
+            "dubbed" => "dub",
+            _ if note.contains("original") => "original",
+            _ if note.contains("auto") => "auto",
+            _ if note.contains("dub") => "dub",
+            _ => "",
+        };
+        match found.iter_mut().find(|t| t.language == language) {
+            Some(known) if kind_rank(kind) < kind_rank(known.kind) => known.kind = kind,
+            Some(_) => {}
+            None => found.push(AudioTrack {
+                language: language.to_owned(),
+                kind,
+            }),
+        }
+    }
+    if found.len() < 2 {
+        return Vec::new();
+    }
+    found.sort_by_key(|t| kind_rank(t.kind));
+    found
+}
+
 #[derive(Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Summary {
@@ -55,6 +137,9 @@ pub struct Summary {
     pub frame_rates: BTreeMap<u32, u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lost: Option<Lost>,
+    /// The languages the sound comes in, when more than one.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub audio_tracks: Vec<AudioTrack>,
     /// The picked streams, when mpv can open them directly; none for live
     /// streams and fragmented formats, which only ytdl_hook plays.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -239,6 +324,7 @@ pub fn summary(info: &Value, ask: &Ask) -> Summary {
         all_heights: all,
         frame_rates,
         lost,
+        audio_tracks: audio_tracks(info),
         streams: streams(info, &tracks),
         user_agent,
     }
@@ -336,6 +422,38 @@ mod tests {
             },
         );
         assert_eq!(s.frame_rates, BTreeMap::from([(720, 60)]));
+    }
+
+    #[test]
+    fn lists_the_audio_languages() {
+        let formats = |list: Value| json!({"formats": list});
+        let sound = |language: &str, note: &str, content: Option<&str>| {
+            let mut f = json!({"vcodec": "none", "acodec": "opus", "language": language, "format_note": note});
+            if let Some(content) = content {
+                f["audio_content"] = json!(content);
+            }
+            f
+        };
+        let info = formats(json!([
+            sound("it", "Italian auto-dubbed", Some("dubbed-auto")),
+            sound("en-US", "English (United States) original (default), low", None),
+            sound("en-US", "English (United States) original (default), medium", None),
+            sound("de", "German", Some("dubbed")),
+            sound("fr", "French dubbed", None),
+            sound("en-desc", "English descriptive", None),
+            {"format_id": "137", "height": 1080, "vcodec": "avc1", "acodec": "none", "language": "xx"}
+        ]));
+        let tracks = audio_tracks(&info);
+        let list: Vec<(&str, &str)> = tracks.iter().map(|t| (t.language.as_str(), t.kind)).collect();
+        assert_eq!(
+            list,
+            [("en-US", "original"), ("de", "dub"), ("fr", "dub"), ("it", "auto")]
+        );
+        let one = formats(json!([sound("en", "English original", None)]));
+        assert!(audio_tracks(&one).is_empty());
+        assert!(audio_tracks(&json!({})).is_empty());
+        let json = serde_json::to_value(summary(&info, &Ask::default())).unwrap();
+        assert_eq!(json["audioTracks"][0], json!({"language": "en-US", "kind": "original"}));
     }
 
     #[test]

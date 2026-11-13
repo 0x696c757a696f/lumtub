@@ -40,6 +40,17 @@ enum AudioQuality {
   String get label => tr(_label);
 }
 
+/// Which audio track plays when a video has dubs: its own sound, or a
+/// dub in the viewer's language.
+enum DubbedAudio {
+  original('Original audio'),
+  myLanguage('Dub in my language, if any');
+
+  const DubbedAudio(this._label);
+  final String _label;
+  String get label => tr(_label);
+}
+
 /// What happens when a video ends. Named and ordered like PiliNara's
 /// `PlayRepeat`.
 enum PlayOrder {
@@ -363,6 +374,11 @@ class PlayerSettings {
 
   static bool _sameCodecs(Set<VideoCodec> a, Set<VideoCodec> b) => a.length == b.length && a.containsAll(b);
   final AudioQuality audioQuality;
+  final DubbedAudio dubbedAudio;
+  /// The language of the dub to play, as YouTube starts its audio language
+  /// codes (`zh`, `it`), the first subtitle language's or else the
+  /// interface's; empty when [dubbedAudio] keeps the original.
+  String get dubLanguage => dubbedAudio == DubbedAudio.original ? '' : subtitleLanguage.translation.code.split('-').first;
   /// mpv's `audio-device` name, or `auto` for the Windows default.
   final String audioDevice;
   final VideoSync videoSync;
@@ -480,6 +496,7 @@ class PlayerSettings {
     this.strategy = PlaybackStrategy.auto,
     Set<VideoCodec>? disabledCodecs,
     this.audioQuality = AudioQuality.best,
+    this.dubbedAudio = DubbedAudio.original,
     this.audioDevice = 'auto',
     this.videoSync = VideoSync.audio,
     this.maxHeight = 0,
@@ -550,6 +567,7 @@ class PlayerSettings {
     PlaybackStrategy? strategy,
     Set<VideoCodec>? disabledCodecs,
     AudioQuality? audioQuality,
+    DubbedAudio? dubbedAudio,
     String? audioDevice,
     VideoSync? videoSync,
     int? maxHeight,
@@ -618,6 +636,7 @@ class PlayerSettings {
         strategy: strategy ?? this.strategy,
         disabledCodecs: automaticCodecs ? null : disabledCodecs ?? chosenCodecs,
         audioQuality: audioQuality ?? this.audioQuality,
+        dubbedAudio: dubbedAudio ?? this.dubbedAudio,
         audioDevice: audioDevice ?? this.audioDevice,
         videoSync: videoSync ?? this.videoSync,
         maxHeight: maxHeight ?? this.maxHeight,
@@ -687,6 +706,7 @@ class PlayerSettings {
         'strategy': strategy.name,
         'disabledCodecs': chosenCodecs == null ? null : [for (final c in VideoCodec.values) if (chosenCodecs!.contains(c)) c.name],
         'audioQuality': audioQuality.name,
+        'dubbedAudio': dubbedAudio.name,
         'audioDevice': audioDevice,
         'videoSync': videoSync.name,
         'maxHeight': maxHeight,
@@ -874,6 +894,7 @@ class PlayerSettings {
       strategy: strategy,
       disabledCodecs: disabled,
       audioQuality: _enumByName(AudioQuality.values, raw['audioQuality'], AudioQuality.best),
+      dubbedAudio: _enumByName(DubbedAudio.values, raw['dubbedAudio'], DubbedAudio.original),
       audioDevice: device.isEmpty || device.length > 200 || device.contains(RegExp(r'[\r\n]')) ? 'auto' : device,
       videoSync: _enumByName(VideoSync.values, raw['videoSync'], VideoSync.audio),
       maxHeight: raw['maxHeight'] is int && (raw['maxHeight'] as int) >= 0 && (raw['maxHeight'] as int) <= 4320 ? raw['maxHeight'] as int : 0,

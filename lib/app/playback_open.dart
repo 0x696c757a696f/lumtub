@@ -92,7 +92,7 @@ extension PlaybackOpening on AppController {
       } else if (local != null) {
         return await _openLocal(item, serial, local, start: start, play: play);
       }
-      final format = _format;
+      final format = _formatFor(item.id);
       final formatSort = _formatSort;
       _openedVia = null;
       if (resolved && piped) {
@@ -115,7 +115,7 @@ extension PlaybackOpening on AppController {
           if (Platform.isAndroid) {
             if (!item.isLive && !item.membersOnly) {
               try {
-                video = await streams.quick(item.id, format, FormatPolicy.settingsJson(_playback));
+                video = await streams.quick(item.id, format, FormatPolicy.settingsJson(_playback, audioLanguage: _audioLanguageFor(item.id)));
               } catch (e) {
                 logWarn('Quick start of ${item.id} failed: $e');
               }
@@ -132,7 +132,7 @@ extension PlaybackOpening on AppController {
             final full = pending;
             pending = Future.any([
               full,
-              streams.quick(item.id, format, FormatPolicy.settingsJson(_playback)).then((quick) {
+              streams.quick(item.id, format, FormatPolicy.settingsJson(_playback, audioLanguage: _audioLanguageFor(item.id))).then((quick) {
                 if (quick == null) return full;
                 streams.unhurried(item.id);
                 return quick;
@@ -216,6 +216,7 @@ extension PlaybackOpening on AppController {
         _update(() {
           availableHeights = video!.heightsFor(settings);
           availableFrameRates = video.frameRatesFor(settings);
+          availableAudioLanguages = video.audioLanguages;
         });
       }
       await AppController._forgetCrop(player);
@@ -353,6 +354,7 @@ extension PlaybackOpening on AppController {
       _update(() {
         availableHeights = video.heightsFor(settings);
         availableFrameRates = const {};
+        availableAudioLanguages = const [];
       });
       logInfo('Playing ${item.id} from $name ${video.server}, took ${watch.elapsedMilliseconds} ms');
       return address;

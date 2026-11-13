@@ -331,6 +331,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   Timer? _currentChatFlushTimer;
   final _currentChatPending = <LiveChatMessage>[];
   final _currentChatIds = <String>{};
+  /// The audio language chosen for one video in the player ('' for its
+  /// original sound), which lasts until another video plays.
+  (String, String)? _audioPick;
+  /// The audio languages the playing video offers; empty when it has one.
+  List<AudioLanguage> availableAudioLanguages = const [];
   /// Heights the playing video offers, highest first; empty until known.
   List<int> availableHeights = const [];
   /// The most frames a second of [availableHeights], where above 30.
@@ -844,7 +849,14 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The codec and height the playback test plays at, while it runs.
   PlayerSettings? _benchmark;
 
-  String get _format => FormatPolicy.expression(_playback);
+  String get _format => _formatFor(playing?.id);
+
+  /// The yt-dlp format expression for the video [id]: the audio language
+  /// chosen for it, else the one the settings ask for.
+  String _formatFor(String? id) => FormatPolicy.expression(_playback, audioLanguage: _audioLanguageFor(id));
+
+  /// The audio language for the video [id], empty for its original sound.
+  String _audioLanguageFor(String? id) => FormatPolicy.dubLanguage(settings, pick: id != null && _audioPick?.$1 == id ? _audioPick!.$2 : null);
 
   String? get _formatSort => FormatPolicy.formatSort(_playback);
 

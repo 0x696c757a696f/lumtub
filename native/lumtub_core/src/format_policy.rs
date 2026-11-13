@@ -87,6 +87,9 @@ pub struct Settings {
     /// 0 for no cap.
     pub max_height: u32,
     pub audio: Audio,
+    /// The language of the audio track to play instead of the original,
+    /// as YouTube names it (`it`, `es-US`); empty for the original.
+    pub audio_language: String,
     /// The tallest display in physical pixels; 0 when unknown.
     pub display: u32,
 }
@@ -188,6 +191,18 @@ impl Settings {
             .unwrap_or(0)
     }
 
+    /// [Settings::audio_language] as a filter on yt-dlp's `language` of an
+    /// audio format, none for the original audio. Descriptive tracks
+    /// (`en-desc`) are never a dub.
+    fn language_filter(&self) -> String {
+        let code = self.audio_language.trim();
+        let plain = code.chars().all(|c| c.is_ascii_alphanumeric() || c == '-');
+        if code.is_empty() || !plain {
+            return String::new();
+        }
+        format!("[language^={code}][language!*=desc]")
+    }
+
     /// Every alternative, the last `best` included, carries the exclude
     /// filters of the disabled codecs. The quality strategy is yt-dlp's own
     /// `bestvideo`, written `ytdl` when nothing restricts it.
@@ -207,15 +222,49 @@ impl Settings {
             Audio::Medium => "bestaudio[abr<=?128]",
             Audio::Low => "bestaudio[abr<=?64]",
         };
+        let language = self.language_filter();
+        let limit = audio.strip_prefix("bestaudio").unwrap_or_default().to_owned();
+        // The sound a video's own track says is the original comes before
+        // whatever yt-dlp ranks first: YouTube can flag an automatic dub as
+        // the default, and an old yt-dlp ranks by that.
+        let originals = |exclude: &str, height: &str, limit: &str| {
+            let mut out = vec![format!(
+                "bestvideo{exclude}{height}+bestaudio[format_note*=original]{limit}"
+            )];
+            if !limit.is_empty() {
+                out.push(format!(
+                    "bestvideo{exclude}{height}+bestaudio[format_note*=original]"
+                ));
+            }
+            out
+        };
+        // A dub in the language asked for comes first, then the original.
+        let mut dubs: Vec<String> = Vec::new();
+        if !language.is_empty() {
+            dubs.push(format!(
+                "bestvideo{exclude}{height}+bestaudio{language}{limit}"
+            ));
+            if !limit.is_empty() {
+                dubs.push(format!("bestvideo{exclude}{height}+bestaudio{language}"));
+            }
+        }
         if self.strategy == Strategy::Quality {
-            if height.is_empty() && exclude.is_empty() && self.audio == Audio::Best {
+            if height.is_empty()
+                && exclude.is_empty()
+                && self.audio == Audio::Best
+                && dubs.is_empty()
+            {
                 return "ytdl".into();
             }
-            return format!(
-                "bestvideo{exclude}{height}+{audio}/best{exclude}{height}/best{exclude}"
-            );
+            dubs.extend(originals(&exclude, &height, &limit));
+            dubs.push(format!("bestvideo{exclude}{height}+{audio}"));
+            dubs.push(format!("best{exclude}{height}"));
+            dubs.push(format!("best{exclude}"));
+            return dubs.join("/");
         }
-        let mut parts = vec![format!("bestvideo{exclude}{height}+{audio}")];
+        let mut parts = dubs;
+        parts.extend(originals(&exclude, &height, &limit));
+        parts.push(format!("bestvideo{exclude}{height}+{audio}"));
         if audio != "bestaudio" {
             parts.push(format!("bestvideo{exclude}{height}+bestaudio"));
         }
@@ -266,7 +315,7 @@ mod tests {
     fn auto_uses_h264_until_hardware_is_verified() {
         let s = settings("{}");
         assert_eq!(s.policy().order, ["h264", "vp9", "av1", "vp8"]);
-        assert!(s.expression().starts_with("bestvideo+bestaudio/"));
+        assert!(s.expression().starts_with("bestvideo+bestaudio[format_note*=original]/bestvideo+bestaudio/"));
         assert_eq!(
             settings(r#"{"hardware":["av1","vp9"]}"#).policy().order[..3],
             ["av1", "vp9", "h264"]
@@ -289,7 +338,7 @@ mod tests {
         assert_eq!(s.policy().order, ["vp9", "h264", "vp8"]);
         assert_eq!(
             s.expression(),
-            "bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio/best[vcodec!^=av01][vcodec!^=av1]/best[vcodec!^=av01][vcodec!^=av1]"
+            "bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio[format_note*=original]/bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio/best[vcodec!^=av01][vcodec!^=av1]/best[vcodec!^=av01][vcodec!^=av1]"
         );
     }
 
@@ -302,12 +351,35 @@ mod tests {
         assert_eq!(settings(r#"{"strategy":"quality"}"#).expression(), "ytdl");
         assert_eq!(
             settings(r#"{"strategy":"quality","maxHeight":480}"#).expression(),
-            "bestvideo[height<=?480]+bestaudio/best[height<=?480]/best"
+            "bestvideo[height<=?480]+bestaudio[format_note*=original]/bestvideo[height<=?480]+bestaudio/best[height<=?480]/best"
         );
         assert_eq!(settings(r#"{"strategy":"quality"}"#).format_sort(), None);
         assert_eq!(
             settings(r#"{"audio":"low"}"#).expression(),
-            "bestvideo+bestaudio[abr<=?64]/bestvideo+bestaudio/best/best"
+            "bestvideo+bestaudio[format_note*=original][abr<=?64]/bestvideo+bestaudio[format_note*=original]/bestvideo+bestaudio[abr<=?64]/bestvideo+bestaudio/best/best"
+        );
+    }
+
+    #[test]
+    fn a_dub_language_comes_before_the_original() {
+        let original = settings("{}").expression();
+        assert_eq!(settings(r#"{"audioLanguage":""}"#).expression(), original);
+        assert_eq!(
+            settings(r#"{"audioLanguage":"it"}"#).expression(),
+            "bestvideo+bestaudio[language^=it][language!*=desc]/bestvideo+bestaudio[format_note*=original]/bestvideo+bestaudio/best/best"
+        );
+        assert_eq!(
+            settings(r#"{"audioLanguage":"es-US","audio":"low","maxHeight":720}"#).expression(),
+            "bestvideo[height<=?720]+bestaudio[language^=es-US][language!*=desc][abr<=?64]/bestvideo[height<=?720]+bestaudio[language^=es-US][language!*=desc]/bestvideo[height<=?720]+bestaudio[format_note*=original][abr<=?64]/bestvideo[height<=?720]+bestaudio[format_note*=original]/bestvideo[height<=?720]+bestaudio[abr<=?64]/bestvideo[height<=?720]+bestaudio/best[height<=?720]/best"
+        );
+        assert_eq!(
+            settings(r#"{"audioLanguage":"it","strategy":"quality","disabled":["av1"]}"#)
+                .expression(),
+            "bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio[language^=it][language!*=desc]/bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio[format_note*=original]/bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio/best[vcodec!^=av01][vcodec!^=av1]/best[vcodec!^=av01][vcodec!^=av1]"
+        );
+        assert_eq!(
+            settings(r#"{"audioLanguage":"it]x"}"#).expression(),
+            original
         );
     }
 

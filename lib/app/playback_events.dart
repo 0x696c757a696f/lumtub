@@ -60,6 +60,8 @@ extension PlaybackEvents on AppController {
       replayChatError = null;
       availableHeights = const [];
       availableFrameRates = const {};
+      availableAudioLanguages = const [];
+      if (_audioPick?.$1 != item.id) _audioPick = null;
       related?.dispose();
       related = null;
       _segments = const [];

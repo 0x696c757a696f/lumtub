@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -74,7 +75,7 @@ void main() {
   group('auto', () {
     test('uses H.264 until a hardware codec was actually verified', () {
       expect(_order(const PlayerSettings(disabledCodecs: {})), [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1, VideoCodec.vp8]);
-      expect(_expression(const PlayerSettings(disabledCodecs: {})), startsWith('bestvideo+bestaudio/'));
+      expect(_expression(const PlayerSettings(disabledCodecs: {})), startsWith('bestvideo+bestaudio[format_note*=original]/bestvideo+bestaudio/'));
     });
 
     test('uses software AVC, VP9, then AV1 when hardware decoding is off', () {
@@ -92,12 +93,12 @@ void main() {
 
     test('does not promote software VP9 or AV1 just because the quality cap is tall', () {
       final expression = _expression(const PlayerSettings(disabledCodecs: {}, maxHeight: 2160));
-      expect(expression, startsWith('bestvideo[height<=?2160]+bestaudio/'));
+      expect(expression, startsWith('bestvideo[height<=?2160]+bestaudio[format_note*=original]/'));
     });
 
     test('never exceeds the user-selected default quality', () {
       const settings = PlayerSettings(disabledCodecs: {}, maxHeight: 720, decoderResults: {'av1': _hw});
-      expect(_expression(settings), startsWith('bestvideo[height<=?720]+bestaudio/'));
+      expect(_expression(settings), startsWith('bestvideo[height<=?720]+bestaudio[format_note*=original]/'));
       expect(FormatPolicy.formatSort(settings), 'res,fps,vcodec:av01');
     });
 
@@ -115,7 +116,7 @@ void main() {
 
     test('keeps the audio cap on the alternatives', () {
       final expression = _expression(const PlayerSettings(disabledCodecs: {}, audioQuality: AudioQuality.low));
-      expect(expression, startsWith('bestvideo+bestaudio[abr<=?64]/'));
+      expect(expression, startsWith('bestvideo+bestaudio[format_note*=original][abr<=?64]/'));
       expect(expression, endsWith('/bestvideo+bestaudio/best/best'));
     });
   });
@@ -132,17 +133,54 @@ void main() {
     });
   });
 
+  group('dubbed audio', () {
+    test('is the original by default and in the settings json', () {
+      const settings = PlayerSettings(disabledCodecs: {});
+      expect(settings.dubbedAudio, DubbedAudio.original);
+      expect(settings.dubLanguage, '');
+      expect(jsonDecode(FormatPolicy.settingsJson(settings))['audioLanguage'], '');
+      expect(FormatPolicy.dubLanguage(settings), '');
+    });
+
+    test('goes through json and copyWith, an unknown value meaning the original', () {
+      final settings = const PlayerSettings().copyWith(dubbedAudio: DubbedAudio.myLanguage);
+      expect(settings.toJson()['dubbedAudio'], 'myLanguage');
+      expect(PlayerSettings.fromJson(settings.toJson()).dubbedAudio, DubbedAudio.myLanguage);
+      expect(PlayerSettings.fromJson({'dubbedAudio': 'nonsense'}).dubbedAudio, DubbedAudio.original);
+      expect(PlayerSettings.fromJson(const {}).dubbedAudio, DubbedAudio.original);
+    });
+
+    test("asks for the first subtitle language's language, else the interface's", () {
+      final it = const PlayerSettings().copyWith(dubbedAudio: DubbedAudio.myLanguage, subtitleLanguage: SubtitleLanguage.it);
+      expect(it.dubLanguage, 'it');
+      expect(const PlayerSettings().copyWith(dubbedAudio: DubbedAudio.myLanguage, subtitleLanguage: SubtitleLanguage.zhHant).dubLanguage, 'zh');
+      expect(FormatPolicy.dubLanguage(it, pick: ''), '');
+      expect(FormatPolicy.dubLanguage(it, pick: 'es-US'), 'es-US');
+      expect(FormatPolicy.dubLanguage(it), 'it');
+    });
+
+    test('puts a dub in that language before the original in the expression', () {
+      const settings = PlayerSettings(disabledCodecs: {});
+      final plain = _expression(settings);
+      expect(FormatPolicy.expression(settings, audioLanguage: ''), plain);
+      final dub = FormatPolicy.expression(settings, audioLanguage: 'it');
+      expect(dub, startsWith('bestvideo+bestaudio[language^=it][language!*=desc]/'));
+      expect(dub, endsWith(plain));
+      expect(jsonDecode(FormatPolicy.settingsJson(settings, audioLanguage: 'it'))['audioLanguage'], 'it');
+    });
+  });
+
   group('quality', () {
     test("is yt-dlp's own ranking", () {
       expect(_expression(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality)), 'ytdl');
-      expect(_expression(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality, maxHeight: 480)), 'bestvideo[height<=?480]+bestaudio/best[height<=?480]/best');
+      expect(_expression(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality, maxHeight: 480)), 'bestvideo[height<=?480]+bestaudio[format_note*=original]/bestvideo[height<=?480]+bestaudio/best[height<=?480]/best');
     });
   });
 
   group('disabled codecs', () {
     test('filters disabled codecs before sorting by the verified decoder ladder', () {
       const settings = PlayerSettings(disabledCodecs: {VideoCodec.av1}, decoderResults: {'vp9': _hw});
-      expect(_expression(settings), startsWith('bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio/'));
+      expect(_expression(settings), startsWith('bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio[format_note*=original]/'));
       expect(FormatPolicy.formatSort(settings), 'res,fps,vcodec:vp9');
     });
 
@@ -181,7 +219,7 @@ void main() {
     test('quality strategy excludes them too, without the ytdl shortcut', () {
       const settings = PlayerSettings(strategy: PlaybackStrategy.quality, disabledCodecs: {VideoCodec.av1});
       const exclude = '[vcodec!^=av01][vcodec!^=av1]';
-      expect(_expression(settings), 'bestvideo$exclude+bestaudio/best$exclude/best$exclude');
+      expect(_expression(settings), 'bestvideo$exclude+bestaudio[format_note*=original]/bestvideo$exclude+bestaudio/best$exclude/best$exclude');
     });
 
     test('sorts highest resolution and frame rate before the hardware decoder preference', () {

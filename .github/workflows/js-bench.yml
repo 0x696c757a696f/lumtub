@@ -53,6 +53,13 @@ jobs:
         run: cargo build --release --lib --manifest-path native/lumtub_core/Cargo.toml
       - name: Install yt-dlp
         run: pip install --quiet --upgrade "yt-dlp[default]"
+      - name: Compare with Deno on today's player
+        run: |
+          curl -fsSL --retry 4 -o "$RUNNER_TEMP/deno.zip" https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip
+          unzip -q "$RUNNER_TEMP/deno.zip" -d "$RUNNER_TEMP/bin"
+          export PATH="$RUNNER_TEMP/bin:$PATH"
+          export LUMTUB_CORE="$PWD/native/lumtub_core/target/release/liblumtub_core.so"
+          python .github/js-bench/plugin_check.py "$RUNNER_TEMP/check" python/lumtub_jsc.py
       - name: Run yt-dlp with the plugin
         run: |
           plugins="$RUNNER_TEMP/plugins/lumtub/yt_dlp_plugins/extractor"

@@ -7,8 +7,9 @@ It also keeps the preprocessed player that the solver gives back, which
 yt-dlp's own providers do not: with it, a video after the first one of a
 player takes about a tenth of the time.
 
-Lumtub sets LUMTUB_CORE to the library's path and passes this file's
-folder with --plugin-dirs.
+Lumtub sets LUMTUB_CORE to the library's path. On Android it passes this
+file's folder with --plugin-dirs; on iOS, where every yt-dlp runs in the
+app's one Python, the runner imports it once (LUMTUB_JSC).
 """
 
 from __future__ import annotations

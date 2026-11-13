@@ -24,6 +24,7 @@ import 'ui/motion.dart';
 import 'ui/smooth_wheel.dart';
 import 'ui/palettes.dart';
 import 'ui/theme.dart';
+import 'ui/theme_cross_fade.dart';
 import 'ui/window_chrome.dart';
 import 'windows_shell.dart';
 import 'device.dart';
@@ -232,15 +233,23 @@ class _LumtubAppState extends State<LumtubApp> {
             darkTheme: _dark,
             highContrastTheme: _lightContrast,
             highContrastDarkTheme: _darkContrast,
+            // ThemeCrossFade switches the theme in one frame and fades the
+            // old one out over it.
+            themeAnimationDuration: Duration.zero,
             // The font size setting scales on top of Windows' text size.
             builder: (context, child) {
               final media = MediaQuery.of(context);
               _matchTitleBar(Theme.of(context));
               final chrome = WindowChrome(controller: widget.controller, title: appName, child: child!);
-              return MediaQuery(
-                // A TV is read from across the room: text a size larger.
-                data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale * (Device.tv ? _tvText : 1)), disableAnimations: media.disableAnimations || Motion.reduced),
-                child: Device.tv ? _TvFrame(child: chrome) : chrome,
+              return ThemeCrossFade(
+                // A video is a texture, which a picture of the window may
+                // leave out.
+                instant: _videoShown,
+                child: MediaQuery(
+                  // A TV is read from across the room: text a size larger.
+                  data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale * (Device.tv ? _tvText : 1)), disableAnimations: media.disableAnimations || Motion.reduced),
+                  child: Device.tv ? _TvFrame(child: chrome) : chrome,
+                ),
               );
             },
             home: _pages,
@@ -249,6 +258,8 @@ class _LumtubAppState extends State<LumtubApp> {
       );
 
   late final Widget _pages = AppShell(controller: widget.controller);
+
+  bool _videoShown() => widget.controller.playing != null;
 }
 
 /// [locale] where Flutter has its own dialogs, date pickers and tooltips

@@ -15,6 +15,44 @@ abstract final class Ease {
   static const move = Duration(milliseconds: 320);
 }
 
+/// Brings [child] in once, when it first appears: it fades in while growing
+/// from [scale] to its full size. With animations reduced it is simply there.
+class Entrance extends StatefulWidget {
+  const Entrance({super.key, this.duration = Ease.move, this.curve = Ease.curve, this.scale = 0.92, required this.child});
+  final Duration duration;
+  final Curve curve;
+  final double scale;
+  final Widget child;
+
+  @override
+  State<Entrance> createState() => _EntranceState();
+}
+
+class _EntranceState extends State<Entrance> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(vsync: this, duration: Motion.of(widget.duration));
+  late final Animation<double> _opacity = CurvedAnimation(parent: _controller, curve: widget.curve);
+  late final Animation<double> _scale = Tween(begin: widget.scale, end: 1.0).animate(_opacity);
+
+  @override
+  void initState() {
+    super.initState();
+    if (Motion.reduced) {
+      _controller.value = 1;
+    } else {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(opacity: _opacity, child: ScaleTransition(scale: _scale, child: widget.child));
+}
+
 /// 减少动画 for the whole app: page changes, expanding sections and hover
 /// effects finish at once. Animations that carry meaning while waiting,
 /// such as progress indicators, keep running.

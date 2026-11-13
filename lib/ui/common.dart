@@ -9,6 +9,7 @@ import '../device.dart';
 import '../l10n/l10n.dart';
 import '../system_env.dart';
 import 'app_icons.dart';
+import 'motion.dart';
 
 export '../models.dart' show formatBytes;
 
@@ -53,7 +54,8 @@ class StatusView extends StatelessWidget {
       padding: const EdgeInsets.all(32),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 460),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
+        // Comes in once, so the state reads as arrived rather than blinked in.
+        child: Entrance(child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(
             width: 72,
             height: 72,
@@ -67,7 +69,7 @@ class StatusView extends StatelessWidget {
             Text(message!, textAlign: TextAlign.center, maxLines: 6, overflow: TextOverflow.ellipsis, style: context.text.bodyMedium?.copyWith(color: colors.onSurfaceVariant, height: 1.5)),
           ],
           if (action != null) ...[const SizedBox(height: 16), action!],
-        ]),
+        ])),
       ),
     ));
   }

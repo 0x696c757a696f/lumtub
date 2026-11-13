@@ -537,7 +537,7 @@ class _PhoneDetailsState extends State<_PhoneDetails> {
       ),
       if (controller.loadingDetails && details == null) ...[
         const SizedBox(height: 8),
-        const Skeleton(child: SkeletonBox(width: 180, height: 12)),
+        const DelayedReveal(child: Skeleton(child: SkeletonBox(width: 180, height: 12))),
       ] else if (_open && description.isNotEmpty) ...[
         const SizedBox(height: 8),
         Translatable(
@@ -825,7 +825,7 @@ class _Details extends StatelessWidget {
       ]),
       const SizedBox(height: 12),
       if (controller.loadingDetails && details == null)
-        const Skeleton(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const DelayedReveal(child: Skeleton(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           SkeletonBox(width: 220, height: 14),
           SizedBox(height: 8),
           SkeletonBox(height: 12),
@@ -833,7 +833,7 @@ class _Details extends StatelessWidget {
           SkeletonBox(height: 12),
           SizedBox(height: 4),
           SkeletonBox(width: 260, height: 12),
-        ]))
+        ])))
       else if (meta.isNotEmpty || (details?.description.isNotEmpty ?? false))
         // As wide as the title and channel row, not as wide as its text.
         SizedBox(

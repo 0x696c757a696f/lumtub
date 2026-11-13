@@ -341,17 +341,20 @@ class _CommentTile extends StatelessWidget {
             ),
             if (comment.hearted) ...[
               const SizedBox(width: 12),
-              if (creator case final creator?)
-                // As YouTube shows it: the creator's picture with a heart.
-                Tooltip(
-                  message: tr('Liked by creator'),
+              // As YouTube shows it: the creator's picture with a heart.
+              Builder(builder: (context) {
+                final name = creator?.name;
+                final label = name != null && name.isNotEmpty ? tr('Hearted by {0}', [name]) : (comment.heartTooltip ?? tr('Liked by creator'));
+                final image = comment.heartAvatar ?? creator?.avatar;
+                return Tooltip(
+                  message: label,
                   child: Semantics(
-                    label: tr('Liked by creator'),
+                    label: label,
                     child: SizedBox(
                       width: 26,
                       height: 24,
                       child: Stack(clipBehavior: Clip.none, children: [
-                        ExcludeSemantics(child: ChannelAvatar(name: creator.name, image: creator.avatar, channelId: creator.id, radius: 11)),
+                        ExcludeSemantics(child: ChannelAvatar(name: name ?? '', image: image, channelId: creator?.id, radius: 11)),
                         PositionedDirectional(
                           end: 0,
                           bottom: -1,
@@ -360,12 +363,8 @@ class _CommentTile extends StatelessWidget {
                       ]),
                     ),
                   ),
-                )
-              else ...[
-                Icon(AppIcons.heartFill, size: 14, color: colors.error),
-                const SizedBox(width: 4),
-                Flexible(child: Text(tr('Liked by creator'), maxLines: 1, overflow: TextOverflow.ellipsis, style: small)),
-              ],
+                );
+              }),
             ],
             if (onReply != null) ...[
               const SizedBox(width: 8),

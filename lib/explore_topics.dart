@@ -21,6 +21,7 @@ enum ExploreSection {
   naturalSciences('Natural sciences', isAcademic: true),
   engineering('Engineering & technology', isAcademic: true),
   medicine('Medicine', isAcademic: true),
+  frontier('Frontier research', isAcademic: true),
   academicLive('Academic live', isLive: true, isAcademic: true);
 
   const ExploreSection(this._label, {this.isLive = false, this.isFaith = false, this.isAcademic = false});
@@ -34,14 +35,21 @@ enum ExploreSection {
   final bool isAcademic;
 
   static const faithTabs = [faith, faithStudy, faithArts, faithLive];
-  static const academicTabs = [humanities, socialSciences, naturalSciences, engineering, medicine, academicLive];
+  static const academicTabs = [humanities, socialSciences, naturalSciences, engineering, medicine, frontier, academicLive];
+
+  static const _faithVideoTabs = [faith, faithStudy, faithArts];
+  static const _faithLiveTabs = [faithLive];
+  static const _academicVideoTabs = [humanities, socialSciences, naturalSciences, engineering, medicine, frontier];
+  static const _academicLiveTabs = [academicLive];
 
   /// The tabs this section is one of, shown as a row above its zones; null
-  /// for the video and live halves, whose zones are a strip.
+  /// for the video and live halves, whose zones are a strip. Only the
+  /// tabs of the half it belongs to: videos never list a live tab, nor
+  /// streams a video one.
   List<ExploreSection>? get tabs => isFaith
-      ? faithTabs
+      ? (isLive ? _faithLiveTabs : _faithVideoTabs)
       : isAcademic
-          ? academicTabs
+          ? (isLive ? _academicLiveTabs : _academicVideoTabs)
           : null;
 }
 
@@ -589,6 +597,7 @@ List<ExploreTopic> exploreTopicsOf(ExploreSection section, [List<CustomTopic> cu
         ExploreSection.naturalSciences => naturalScienceTopics,
         ExploreSection.engineering => engineeringTopics,
         ExploreSection.medicine => medicineTopics,
+        ExploreSection.frontier => frontierTopics,
         ExploreSection.academicLive => academicLiveTopics,
       },
       for (final topic in custom)
@@ -670,9 +679,11 @@ String exploreParams(
   SearchUploadDate period = SearchUploadDate.month,
   SearchDuration duration = SearchDuration.any,
   SearchQuality quality = SearchQuality.any,
+  bool recent = false,
 }) =>
     switch (mode) {
-      ExploreMode.curated => searchParams(type: SearchFilter.videos, duration: duration, quality: quality)!,
+      // 前沿研究's 精选 is what is new: the most relevant of the past year.
+      ExploreMode.curated => searchParams(type: SearchFilter.videos, date: recent ? SearchUploadDate.year : SearchUploadDate.any, duration: duration, quality: quality)!,
       ExploreMode.popular => searchParams(type: SearchFilter.videos, sort: SearchSort.views, date: period, duration: duration, quality: quality)!,
       ExploreMode.latest => searchParams(type: SearchFilter.videos, sort: SearchSort.date, duration: duration, quality: quality)!,
       ExploreMode.forYou => searchParams(type: SearchFilter.videos, date: SearchUploadDate.month, duration: duration, quality: quality)!,

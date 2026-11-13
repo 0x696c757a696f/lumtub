@@ -35,6 +35,7 @@ pub mod process_tree;
 pub mod quick;
 pub mod record;
 pub mod redact;
+pub mod redirect;
 pub mod relay;
 pub mod relay_live;
 pub mod resolved;
@@ -55,5 +56,5 @@ pub mod web_account;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    45
+    47
 }

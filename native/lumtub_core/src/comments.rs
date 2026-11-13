@@ -302,6 +302,12 @@ pub struct Comment {
     pub replies_token: Option<String>,
     pub pinned: bool,
     pub hearted: bool,
+    /// The creator's picture and the website's "hearted by" tooltip, when
+    /// the response carries them.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub heart_avatar: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub heart_tooltip: Option<String>,
     pub by_uploader: bool,
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub emojis: Emojis,
@@ -398,6 +404,10 @@ fn comment(
                 .and_then(|t| t.get("heartState"))
                 .and_then(Value::as_str)
                 == Some("TOOLBAR_HEART_STATE_HEARTED"),
+            heart_avatar: field(&["toolbar", "creatorThumbnailUrl"]).and_then(|v| https(Some(v))),
+            heart_tooltip: field(&["toolbar", "heartActiveTooltip"])
+                .map(display)
+                .filter(|t| !t.is_empty()),
             by_uploader: of_author("isCreator") == Some(&Value::Bool(true)),
             emojis: attached_emojis(field(&["properties", "content"])),
             rating: view_model_rating(
@@ -443,6 +453,15 @@ fn comment(
     {
         rating.state = "like".to_owned();
     }
+    let heart = at(
+        renderer,
+        &[
+            "actionButtons",
+            "commentActionButtonsRenderer",
+            "creatorHeart",
+            "creatorHeartRenderer",
+        ],
+    );
     Some(Comment {
         id,
         author: plain_text(renderer.get("authorText")),
@@ -461,6 +480,14 @@ fn comment(
             "commentActionButtonsRenderer",
             "creatorHeart",
         ]) || hearted_anywhere(renderer),
+        heart_avatar: heart
+            .and_then(|h| at(h, &["creatorThumbnail", "thumbnails"]))
+            .and_then(Value::as_array)
+            .and_then(|t| t.last())
+            .and_then(|t| https(t.get("url"))),
+        heart_tooltip: heart
+            .map(|h| plain_text(h.get("heartedTooltip")))
+            .filter(|t| !t.is_empty()),
         by_uploader: renderer.get("authorIsChannelOwner") == Some(&Value::Bool(true)),
         emojis,
         rating,
@@ -612,7 +639,7 @@ mod tests {
                         "commentId": "old", "authorText": {"simpleText": "老用户"}, "contentText": {"runs": [{"text": "你"}, {"text": "好"}]},
                         "authorThumbnail": {"thumbnails": [{"url": "//small"}, {"url": "//yt3.ggpht.com/big"}]},
                         "authorEndpoint": {"browseEndpoint": {"browseId": "UCold"}}, "voteCount": {"simpleText": "5"}, "replyCount": 2,
-                        "authorIsChannelOwner": true, "actionButtons": {"commentActionButtonsRenderer": {"creatorHeart": {}}}
+                        "authorIsChannelOwner": true, "actionButtons": {"commentActionButtonsRenderer": {"creatorHeart": {"creatorHeartRenderer": {"isHearted": true, "creatorThumbnail": {"thumbnails": [{"url": "//yt3.ggpht.com/h"}]}, "heartedTooltip": {"simpleText": "@owner 送上了 ❤"}}}}}
                     }},
                     {"commentRenderer": {"commentId": "old"}},
                     {"continuationItemRenderer": {"continuationEndpoint": {"continuationCommand": {"token": "NEXT"}}}}
@@ -622,7 +649,7 @@ mod tests {
                 {"entityKey": "k1", "payload": {"commentEntityPayload": {
                     "properties": {"commentId": "new", "content": {"content": "内容"}, "publishedTime": "3天前"},
                     "author": {"displayName": "@someone", "avatarThumbnailUrl": "https://yt3.ggpht.com/a", "channelId": "UCnew", "isCreator": false},
-                    "toolbar": {"likeCountNotliked": " 12 ", "replyCount": "1,024"}
+                    "toolbar": {"likeCountNotliked": " 12 ", "replyCount": "1,024", "creatorThumbnailUrl": "https://yt3.ggpht.com/creator", "heartActiveTooltip": "@owner 送上了 ❤"}
                 }}},
                 {"entityKey": "t1", "payload": {"engagementToolbarStateEntityPayload": {"heartState": "TOOLBAR_HEART_STATE_HEARTED"}}}
             ]}}
@@ -649,6 +676,8 @@ mod tests {
                 replies_token: Some("REPLIES".into()),
                 pinned: true,
                 hearted: true,
+                heart_avatar: Some("https://yt3.ggpht.com/creator".into()),
+                heart_tooltip: Some("@owner 送上了 ❤".into()),
                 by_uploader: false,
                 emojis: Emojis::new(),
                 rating: None,
@@ -670,6 +699,8 @@ mod tests {
                 Some("UCold")
             )
         );
+        assert_eq!(old.heart_avatar.as_deref(), Some("https://yt3.ggpht.com/h"));
+        assert_eq!(old.heart_tooltip.as_deref(), Some("@owner 送上了 ❤"));
         assert!(old.hearted && old.by_uploader && !old.pinned && old.reply_count == 2);
     }
 

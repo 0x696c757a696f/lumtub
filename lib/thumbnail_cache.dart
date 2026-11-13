@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:http/http.dart' as http;
@@ -12,13 +14,14 @@ import 'native_http.dart';
 
 /// Loads a thumbnail from Lumtub's `thumbnails` cache folder, downloading it
 /// there on first use. Scrolling back or reopening the app then needs no
-/// network request.
+/// network request. With no [file] it is only downloaded, still within the
+/// size cap and the downloads at once.
 @immutable
 class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   const CachedThumbnail(this.url, this.file, {this.fallback});
 
   final String url;
-  final File file;
+  final File? file;
   /// Loaded instead when [url] fails, such as YouTube's own thumbnail
   /// when DeArrow's frame is not ready.
   final CachedThumbnail? fallback;
@@ -33,21 +36,31 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   static File fileFor(Directory directory, String videoId, [String size = 'hqdefault']) =>
       File('${directory.path}${Platform.pathSeparator}$videoId${size == 'hqdefault' ? '' : '_$size'}.jpg');
 
+  /// The cache file for a picture known only by its address, such as a
+  /// playlist's cover: named after a hash of it.
+  static File fileForUrl(Directory directory, String url) =>
+      File('${directory.path}${Platform.pathSeparator}cover_${sha1.convert(utf8.encode(url)).toString().substring(0, 20)}.jpg');
+
   @override
   Future<CachedThumbnail> obtainKey(ImageConfiguration configuration) => SynchronousFuture(this);
 
   @override
-  ImageStreamCompleter loadImage(CachedThumbnail key, ImageDecoderCallback decode) =>
-      MultiFrameImageStreamCompleter(codec: _load(decode), scale: 1.0, debugLabel: url);
+  ImageStreamCompleter loadImage(CachedThumbnail key, ImageDecoderCallback decode) {
+    late final _ThumbnailCompleter completer;
+    completer = _ThumbnailCompleter(codec: _load(decode, () => completer.wanted), debugLabel: url);
+    return completer;
+  }
 
-  Future<ui.Codec> _load(ImageDecoderCallback decode) async {
+  Future<ui.Codec> _load(ImageDecoderCallback decode, bool Function() wanted) async {
     final Uint8List bytes;
     try {
-      bytes = await _bytes();
+      bytes = await _bytes(wanted);
+    } on ThumbnailDropped {
+      rethrow;
     } catch (_) {
       final fallback = this.fallback;
       if (fallback == null) rethrow;
-      return fallback._load(decode);
+      return fallback._load(decode, wanted);
     }
     return decode(await ui.ImmutableBuffer.fromUint8List(bytes));
   }
@@ -74,14 +87,17 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   }
 
   /// The picture's bytes, from the cache file or downloaded into it.
-  Future<Uint8List> bytes() => _bytes();
+  Future<Uint8List> bytes() => _bytes(_always);
 
-  Future<Uint8List> _bytes() async {
+  static bool _always() => true;
+
+  Future<Uint8List> _bytes(bool Function() wanted) async {
+    final file = this.file;
     try {
-      if (await file.exists()) {
+      if (file != null && await file.exists()) {
         final bytes = await file.readAsBytes();
         if (bytes.isNotEmpty) {
-          _touch();
+          _touch(file);
           return bytes;
         }
       }
@@ -94,23 +110,25 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
     try {
       var status = 0;
       Uint8List? body;
-      await _slot();
+      await slot(wanted);
       try {
         for (final address in candidates(url)) {
           (status, body) = await fetch(_client, Uri.parse(address)).timeout(const Duration(seconds: 10));
           if (status != 404) break;
         }
       } finally {
-        _free();
+        free();
       }
       if (status != 200 || body == null || body.isEmpty) {
         _remember(const Duration(minutes: 10));
         throw HttpException('Thumbnail HTTP $status', uri: Uri.parse(url));
       }
       _failed.remove(url);
-      await _store(body);
+      if (file != null) await _store(file, body);
       return body;
     } on HttpException {
+      rethrow;
+    } on ThumbnailDropped {
       rethrow;
     } catch (_) {
       _remember(const Duration(seconds: 30));
@@ -124,23 +142,44 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   /// Downloads at a time, so a fast scroll does not open dozens at once.
   static const _parallel = 6;
   static int _running = 0;
-  static final _waiting = <Completer<void>>[];
+  static final _waiting = <(Completer<void>, bool Function())>[];
 
-  static Future<void> _slot() {
+  /// Waits for a download slot. A picture no one [wanted] any more by its
+  /// turn, as its card scrolled off screen, is dropped with
+  /// [ThumbnailDropped] instead of taking a slot from one on screen.
+  @visibleForTesting
+  static Future<void> slot(bool Function() wanted) {
     if (_running < _parallel) {
       _running++;
       return Future.value();
     }
     final turn = Completer<void>();
-    _waiting.add(turn);
+    _waiting.add((turn, wanted));
     return turn.future;
   }
 
-  static void _free() {
-    if (_waiting.isNotEmpty) {
-      _waiting.removeAt(0).complete();
-    } else {
-      _running--;
+  /// Downloads waiting for a slot.
+  @visibleForTesting
+  static int get waiting => _waiting.length;
+
+  @visibleForTesting
+  static void free() {
+    while (_waiting.isNotEmpty) {
+      final (turn, wanted) = _waiting.removeAt(0);
+      if (wanted()) return turn.complete();
+      turn.completeError(const ThumbnailDropped());
+    }
+    _running--;
+  }
+
+  /// [address]'s status and body, fetched in turn with thumbnails and
+  /// under the same size cap: for other pictures, such as storyboards.
+  static Future<(int, Uint8List?)> download(http.Client client, Uri address) async {
+    await slot(_always);
+    try {
+      return await fetch(client, address);
+    } finally {
+      free();
     }
   }
 
@@ -163,7 +202,7 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
 
   /// Marks the file as used, at most once a day, so trimming drops the
   /// pictures not seen for longest rather than the oldest downloads.
-  void _touch() {
+  void _touch(File file) {
     unawaited(() async {
       try {
         final now = DateTime.now();
@@ -182,7 +221,7 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
 
   /// Writes through a unique temporary file so two cards loading the same
   /// video never leave a half-written image behind. Failures only skip caching.
-  Future<void> _store(Uint8List bytes) async {
+  Future<void> _store(File file, Uint8List bytes) async {
     final temp = File('${file.path}.${_random.nextInt(1 << 32)}.part');
     try {
       await file.parent.create(recursive: true);
@@ -198,8 +237,51 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   }
 
   @override
-  bool operator ==(Object other) => other is CachedThumbnail && other.url == url && other.file.path == file.path;
+  bool operator ==(Object other) => other is CachedThumbnail && other.url == url && other.file?.path == file?.path;
 
   @override
-  int get hashCode => Object.hash(url, file.path);
+  int get hashCode => Object.hash(url, file?.path);
+}
+
+/// A thumbnail download skipped because no card shows it any more. The
+/// image cache forgets it, so a card scrolled back loads it again.
+class ThumbnailDropped implements Exception {
+  const ThumbnailDropped();
+
+  @override
+  String toString() => 'Thumbnail no longer shown';
+}
+
+/// Counts who waits for the picture. The image cache itself listens first
+/// to every load, until its first frame, so the picture is wanted only
+/// while someone else (a card, a precache) listens too.
+class _ThumbnailCompleter extends MultiFrameImageStreamCompleter {
+  _ThumbnailCompleter({required super.codec, required String super.debugLabel}) : super(scale: 1.0);
+
+  ImageStreamListener? _cache;
+  bool _seen = false;
+  int _others = 0;
+
+  bool get wanted => _others > 0;
+
+  @override
+  void addListener(ImageStreamListener listener) {
+    if (_seen) {
+      _others++;
+    } else {
+      _seen = true;
+      _cache = listener;
+    }
+    super.addListener(listener);
+  }
+
+  @override
+  void removeListener(ImageStreamListener listener) {
+    if (_cache != null && listener == _cache) {
+      _cache = null;
+    } else if (_others > 0) {
+      _others--;
+    }
+    super.removeListener(listener);
+  }
 }

@@ -10,6 +10,7 @@
 // instead of window_manager; the controls are a small set of buttons.
 
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -80,7 +81,7 @@ class _PipViewState extends State<PipView> {
     final player = _controller.player!;
     final scale = (MediaQuery.sizeOf(context).shortestSide / 280).clamp(0.6, 2.0);
     // The same subtitles as the player's, sized for the small window.
-    final subtitles = subtitleViewFor(_controller.settings, smallWindow: MediaQuery.sizeOf(context), secondary: _controller.secondarySubtitle?.label);
+    final subtitles = subtitleViewFor(_controller.settings, smallWindow: MediaQuery.sizeOf(context), secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid, libass: _controller.libassDraws);
     return CallbackShortcuts(
       bindings: {
         ...playerShortcuts(_controller, () => null),

@@ -163,6 +163,7 @@ void main() {
     expect(rows['Buffering'], '31.4 s');
     expect(rows['Download speed'], '3.0 MB/s');
     expect(Map.fromEntries(statsRows({'hwdec-current': 'no'}).map((r) => MapEntry(r.$1, r.$2)))['Decoding'], 'Software decoding');
+    expect(Map.fromEntries(statsRows({'video-format': 'vp9'}).map((r) => MapEntry(r.$1, r.$2)))['Videos'], 'vp9', reason: 'libmpv without video-codec, as on Android');
   });
 }
 

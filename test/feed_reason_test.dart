@@ -15,4 +15,9 @@ void main() {
     expect(find.text('Related'), findsOneWidget);
     expect(find.byTooltip('Viewers of "Identity" also watched'), findsOneWidget);
   });
+
+  testWidgets('on its own line under a card the tag shows the whole reason', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Center(child: SizedBox(width: 300, child: ReasonTag(FeedReason.of(ReasonKind.related, 'Viewers of "Identity" also watched'), wide: true))))));
+    expect(find.text('Viewers of "Identity" also watched'), findsOneWidget);
+  });
 }

@@ -17,6 +17,7 @@ import '../../thumbnail_cache.dart';
 import '../../video_repository.dart';
 import '../comments_view.dart';
 import '../common.dart';
+import '../key_scroll.dart';
 import '../rating_buttons.dart';
 import '../theme.dart';
 import '../translatable.dart';
@@ -55,6 +56,15 @@ class _ChannelPageState extends State<ChannelPage> {
   }
 
   void _closeComments() => setState(() => _commentsFor = null);
+
+  /// The tab already shown goes back to its top; another one opens.
+  void _pickTab(BuildContext context, ChannelTab value) {
+    if (controller.channelTab == value && controller.channelQuery == null) {
+      KeyScroll.toTopAt(context);
+    } else {
+      controller.setChannelTab(value);
+    }
+  }
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
@@ -106,7 +116,7 @@ class _ChannelPageState extends State<ChannelPage> {
                   for (final value in ChannelTab.values)
                     Padding(
                       padding: const EdgeInsetsDirectional.only(end: 8),
-                      child: ChoiceChip(label: Text(value.label), selected: tab == value, onSelected: (_) => controller.setChannelTab(value)),
+                      child: ChoiceChip(label: Text(value.label), selected: tab == value, onSelected: (_) => _pickTab(context, value)),
                     ),
                 ],
               ),
@@ -134,7 +144,7 @@ class _ChannelPageState extends State<ChannelPage> {
                   ])
                 : FilterFlow(children: [
                     for (final value in ChannelTab.values)
-                      ChoiceChip(label: Text(value.label), selected: tab == value, onSelected: (_) => controller.setChannelTab(value)),
+                      ChoiceChip(label: Text(value.label), selected: tab == value, onSelected: (_) => _pickTab(context, value)),
                     // A TV keeps the order on the same line, so the videos
                     // start higher.
                     if (Device.tv && sortable) ...[
@@ -257,7 +267,12 @@ class PostCommentsPanel extends StatelessWidget {
         Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 8, 4),
           child: Row(children: [
-            Expanded(child: Text(tr('Post comments'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
+            // A tap on the title goes back to the first comment.
+            Expanded(child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => KeyScroll.toTopAt(context),
+              child: Text(tr('Post comments'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+            )),
             IconButton(tooltip: tr('Close (Esc)'), icon: Icon(AppIcons.x), onPressed: onClose),
           ]),
         ),

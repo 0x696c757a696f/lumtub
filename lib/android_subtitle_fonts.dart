@@ -78,11 +78,18 @@ class AndroidSubtitleFonts {
   /// returns it; null when Android has no Noto Sans CJK.
   static Future<String?> prepare(String folder, {String system = _system}) async {
     try {
-      final names = [for (final f in Directory(system).listSync()) f.path.split('/').last]..sort();
+      final names = [for (final f in Directory(system).listSync()) f.path.split(RegExp(r'[/\\]')).last]..sort();
       final dir = Directory(folder);
       if (dir.existsSync()) dir.deleteSync(recursive: true);
       dir.createSync(recursive: true);
-      void link(String name) => Link('$folder/$name').createSync('$system/$name');
+      void link(String name) {
+        try {
+          Link('$folder/$name').createSync('$system/$name');
+        } on FileSystemException {
+          File('$system/$name').copySync('$folder/$name');
+        }
+      }
+
       final cjkFile = names.where((n) => n.startsWith('NotoSansCJK-Regular.tt')).firstOrNull;
       cjk = cjkFile != null;
       if (!cjk) return null;

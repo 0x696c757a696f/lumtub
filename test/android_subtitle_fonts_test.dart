@@ -46,7 +46,7 @@ void main() {
     }
     final folder = await AndroidSubtitleFonts.prepare('${root.path}/subs', system: system.path);
     expect(folder, '${root.path}/subs');
-    expect(Directory(folder!).listSync().map((f) => f.path.split('/').last).toSet(), {'NotoSansCJK-Regular.ttc', 'NotoNaskhArabic-Regular.ttf', 'NotoSansThai-Regular.ttf'});
+    expect(Directory(folder!).listSync().map((f) => f.path.split(RegExp(r'[/\\]')).last).toSet(), {'NotoSansCJK-Regular.ttc', 'NotoNaskhArabic-Regular.ttf', 'NotoSansThai-Regular.ttf'});
     expect(AndroidSubtitleFonts.families, {'Arabic': 'Noto Naskh Arabic', 'Thai': 'Noto Sans Thai'});
     File('${system.path}/NotoSansCJK-Regular.ttc').deleteSync();
     expect(await AndroidSubtitleFonts.prepare('${root.path}/subs', system: system.path), isNull, reason: 'without the CJK font libass gets nothing');

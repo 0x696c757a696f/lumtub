@@ -112,7 +112,8 @@ extension PlaybackOpening on AppController {
           // Android asks the core first: yt-dlp runs in Python there, which
           // costs a phone seconds of work, so it only steps in when the core
           // has no answer, and for live and members-only videos.
-          if (Platform.isAndroid) {
+          // iOS has no yt-dlp at all: the core is the only way.
+          if (Platform.isAndroid || Platform.isIOS) {
             if (!item.isLive && !item.membersOnly) {
               try {
                 video = await streams.quick(item.id, format, FormatPolicy.settingsJson(_playback));
@@ -127,7 +128,7 @@ extension PlaybackOpening on AppController {
           var pending = video != null ? Future.value(video) : streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly, live: item.isLive);
           // The first open of a video also asks YouTube directly; whichever
           // answers first starts it. A reopen after a failure waits for yt-dlp.
-          if (video == null && !Platform.isAndroid && _quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
+          if (video == null && !Platform.isAndroid && !Platform.isIOS && _quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
             _quickSerial = serial;
             final full = pending;
             pending = Future.any([
@@ -149,8 +150,8 @@ extension PlaybackOpening on AppController {
             if (serial == _playSerial) _fail(item, failure);
             return false;
           }
-          // libmpv cannot start yt-dlp on Android.
-          if (Platform.isAndroid) {
+          // libmpv cannot start yt-dlp on Android or iOS.
+          if (Platform.isAndroid || Platform.isIOS) {
             if (serial == _playSerial) _fail(item, failure);
             return false;
           }

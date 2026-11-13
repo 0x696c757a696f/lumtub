@@ -446,7 +446,7 @@ class _Toolbar extends StatelessWidget {
                     ),
             ),
           _ActionButton(tooltip: tr('Open in browser'), icon: Icon(AppIcons.arrowSquareOut), onPressed: () => openExternal(item.url)),
-          if (!Platform.isAndroid)
+          if (!Platform.isAndroid && !Platform.isIOS)
             IconButton(tooltip: tr('Keyboard shortcuts'), icon: Icon(AppIcons.keyboard), onPressed: () => showShortcutHelp(context, controller.preferences)),
         ],
       ),

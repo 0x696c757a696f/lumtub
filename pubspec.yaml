@@ -37,11 +37,13 @@ dependency_overrides:
   media_kit_libs_windows_video:
     path: vendor/media_kit_libs_windows_video
   # Newer libmpv than media-kit ships: Android from Predidit's builds, macOS
-  # linked from MPVKit; see each LUMTUB.md.
+  # and iOS linked from MPVKit; see each LUMTUB.md.
   media_kit_libs_android_video:
     path: vendor/media_kit_libs_android_video
   media_kit_libs_macos_video:
     path: vendor/media_kit_libs_macos_video
+  media_kit_libs_ios_video:
+    path: vendor/media_kit_libs_ios_video
 
 flutter:
   uses-material-design: true

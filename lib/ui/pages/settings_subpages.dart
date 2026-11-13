@@ -1160,7 +1160,7 @@ class _LogsPageState extends State<_LogsPage> {
             itemBuilder: (context) => [
               PopupMenuItem(value: 0, child: Text(tr('Copy log'))),
               PopupMenuItem(value: 1, child: Text(tr('Bug reports'))),
-              if (!Platform.isAndroid) PopupMenuItem(value: 2, child: Text(tr('Open log folder'))),
+              if (!Platform.isAndroid && !Platform.isIOS) PopupMenuItem(value: 2, child: Text(tr('Open log folder'))),
               PopupMenuItem(value: 3, child: Text(tr('Clear logs'))),
             ],
           ),

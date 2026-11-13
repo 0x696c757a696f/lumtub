@@ -137,7 +137,10 @@ def appimagetool(text, changes):
 
 
 ANDROID_GRADLE = "vendor/media_kit_libs_android_video/android/build.gradle"
-MPVKIT_LOCK = "vendor/media_kit_libs_macos_video/macos/mpvkit.lock"
+MPVKIT_LOCKS = (
+    "vendor/media_kit_libs_macos_video/macos/mpvkit.lock",
+    "vendor/media_kit_libs_ios_video/ios/mpvkit.lock",
+)
 
 
 def rewrite(path, update):
@@ -171,8 +174,8 @@ def android_libmpv(changes):
 
 
 def mpvkit(changes):
-    """macOS libmpv linked from MPVKit's static libraries, pinned by the checksums in its Package.swift."""
-    def update(text):
+    """macOS and iOS libmpv linked from MPVKit's static libraries, pinned by the checksums in its Package.swift."""
+    def update(text, platform):
         pinned = re.search(r"^# MPVKit release (\S+):", text, re.M)
         tags = subprocess.run(
             ["git", "ls-remote", "--tags", "--refs", "https://github.com/mpvkit/MPVKit.git"],
@@ -196,9 +199,10 @@ def mpvkit(changes):
                 print(f"MPVKit {newest} has no {m[1]}; skipped.")
                 return text
             lines.append(f"{m[1]} {sums[m[1]]} {targets[m[1]]}")
-        changes.append(f"macOS libmpv (MPVKit) {pinned[1]} -> {newest}")
+        changes.append(f"{platform} libmpv (MPVKit) {pinned[1]} -> {newest}")
         return "\n".join(lines) + "\n"
-    rewrite(MPVKIT_LOCK, update)
+    for lock, platform in zip(MPVKIT_LOCKS, ("macOS", "iOS")):
+        rewrite(lock, lambda text: update(text, platform))
 
 
 def vendored(notes):

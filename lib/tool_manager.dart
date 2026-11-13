@@ -98,7 +98,10 @@ class ToolManager {
     // Android: libmpv comes inside the APK; yt-dlp runs with the APK's
     // Python, and without it streams come from the core (quick.rs) alone.
     if (Platform.isAndroid) return ToolPaths(mpv: '', ytDlp: await _androidYtDlp(), deno: null);
-    if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) throw UnsupportedError('Lumtub runs on Windows, Linux, macOS and Android.');
+    // iOS: libmpv comes inside the app, and no other program may run, so
+    // streams come from the core alone.
+    if (Platform.isIOS) return const ToolPaths(mpv: '', ytDlp: '', deno: null);
+    if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) throw UnsupportedError('Lumtub runs on Windows, Linux, macOS, Android and iOS.');
     // The runner already loaded a downloaded libmpv when one was selected;
     // Dart has to open that same copy.
     final mpv = _systemMpv ? _linuxMpv : libmpv.loadedPath ?? _bundledMpv;

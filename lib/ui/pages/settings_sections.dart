@@ -1277,14 +1277,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: appearance.showStatusBar,
               onChanged: (v) => saveLooks(appearance.copyWith(showStatusBar: v)),
             )),
-        if (!Platform.isAndroid) SettingEntry(tr('Minimize to tray on close'), (context) => SwitchItem(
+        if (!Platform.isAndroid && !Platform.isIOS) SettingEntry(tr('Minimize to tray on close'), (context) => SwitchItem(
               title: tr('Minimize to tray on close'),
               subtitle: tr('The close button hides the window to the tray icon and playback continues; exit from the tray menu'),
               leading: _icon(AppIcons.layout),
               value: prefs.closeToTray,
               onChanged: (v) => savePrefs(prefs.copyWith(closeToTray: v)),
             ), subtitle: tr('tray background playback')),
-        if (!Platform.isAndroid) SettingEntry(tr('Minimize to tray'), (context) => SwitchItem(
+        if (!Platform.isAndroid && !Platform.isIOS) SettingEntry(tr('Minimize to tray'), (context) => SwitchItem(
               title: tr('Minimize to tray'),
               subtitle: tr('Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back'),
               leading: _icon(AppIcons.minus),
@@ -1338,7 +1338,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               subtitle: tr('{0}\nSettings, watch history, favorites and downloaded components are stored here and kept when you uninstall.', [controller.directories?.root.path ?? tr('Preparing…')]),
               leading: _icon(AppIcons.archive),
               // Android has no file manager to hand the folder to.
-              onTap: controller.directories == null || Platform.isAndroid ? null : () => unawaited(openInExplorer(controller.directories!.root.path)),
+              onTap: controller.directories == null || Platform.isAndroid || Platform.isIOS ? null : () => unawaited(openInExplorer(controller.directories!.root.path)),
             )),
         SettingEntry(tr('Export settings'), (context) => NormalItem(
               title: tr('Export settings'),

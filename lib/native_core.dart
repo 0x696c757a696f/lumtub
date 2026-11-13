@@ -281,6 +281,8 @@ class NativeCore {
       if (Platform.isLinux) '${File(Platform.resolvedExecutable).parent.path}/lib/$fileName',
       // The macOS app keeps it in Contents/Frameworks.
       if (Platform.isMacOS) '${File(Platform.resolvedExecutable).parent.parent.path}/Frameworks/$fileName',
+      // The iOS app keeps it as a framework in Frameworks, next to the program.
+      if (Platform.isIOS) '${File(Platform.resolvedExecutable).parent.path}/Frameworks/LumtubCore.framework/LumtubCore',
     ];
     for (final path in paths) {
       if (!File(path).existsSync()) continue;

@@ -125,7 +125,7 @@ class _AppShellState extends State<AppShell> {
         duration: const Duration(seconds: 8),
         // With an action Flutter keeps a snack bar until it is closed.
         persist: false,
-        action: Platform.isAndroid ? null : SnackBarAction(label: tr('Show in folder'), onPressed: () => unawaited(openInExplorer(path, select: true))),
+        action: Platform.isAndroid || Platform.isIOS ? null : SnackBarAction(label: tr('Show in folder'), onPressed: () => unawaited(openInExplorer(path, select: true))),
       ));
     });
   }

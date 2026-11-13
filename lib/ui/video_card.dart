@@ -47,6 +47,10 @@ double get _gridRowGap => compactCards ? Space.m : AppStyle.cardSpacing;
 /// The narrowest card in compact mode is this part of the chosen width.
 const _compactWidth = 0.8;
 
+/// Narrower than this, compact cards are at most [_phoneCompactWidth] wide.
+const _phoneGridWidth = 600.0;
+const _phoneCompactWidth = 136.0;
+
 /// [item]'s thumbnail, or DeArrow's frame for it when that is on and one
 /// was chosen. [size] is a smaller YouTube file for small tiles, so they
 /// do not download the large one the grid uses (newtube does the same).
@@ -97,7 +101,9 @@ const _reasonHeight = 20.0;
   // A TV is seen from across the room, so its few pixels across still fit
   // three or four cards a row, as TV video apps show them.
   final base = Device.tv ? min(videoCardMinWidth, 200.0) : videoCardMinWidth;
-  final narrowest = compactCards ? base * _compactWidth : base;
+  // On a phone the chosen width already fills the screen, so compact cards
+  // go two to a row there, as Bilibili's home shows them.
+  final narrowest = !compactCards ? base : width < _phoneGridWidth ? min(base * _compactWidth, _phoneCompactWidth) : base * _compactWidth;
   final columns = max(1, ((width + gridGap) / (narrowest + gridGap)).floor());
   final itemWidth = (width - gridGap * (columns - 1)) / columns;
   return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight(textScale, compact ?? compactCards) + 2 * padding);

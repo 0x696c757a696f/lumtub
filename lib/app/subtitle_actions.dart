@@ -558,6 +558,39 @@ extension SubtitleActions on AppController {
     unawaited(platform.setProperty('secondary-sub-pos', position.toStringAsFixed(1)).catchError((Object e) => logDebug(() => 'Could not move the second subtitle: $e')));
   }
 
+  /// On Android, where libmpv draws in one font with no fallback: the font
+  /// that has every character of [lines], or Flutter's view for the rest of
+  /// the video when no one font has.
+  void _fitSubtitleFont(Player player, List<String> lines) {
+    if (!Platform.isAndroid || !settings.libassSubtitles || libassCantDraw || !identical(player, this.player)) return;
+    final platform = player.platform;
+    final text = lines.join('\n').trim();
+    if (platform is! NativePlayer || text.isEmpty) return;
+    final family = AndroidSubtitleFonts.familyFor(text, language: player.state.track.subtitle.language ?? '');
+    if (family == null) {
+      logInfo('No one subtitle font draws "${text.length > 40 ? text.substring(0, 40) : text}"; Flutter draws this video\'s subtitles');
+      _update(() => libassCantDraw = true);
+      for (final name in ['sub-visibility', 'secondary-sub-visibility']) {
+        unawaited(platform.setProperty(name, 'no').catchError((Object e) => logDebug(() => 'Could not hide $name: $e')));
+      }
+      return;
+    }
+    if (family == _subtitleFamily) return;
+    _subtitleFamily = family;
+    unawaited(platform.setProperty('sub-font', family).catchError((Object e) => logDebug(() => 'Could not set the subtitle font: $e')));
+  }
+
+  /// A new video: libmpv draws its subtitles again, if it is meant to.
+  void _resetSubtitleFont() {
+    if (!libassCantDraw) return;
+    libassCantDraw = false;
+    final platform = player?.platform;
+    if (platform is! NativePlayer || !settings.libassSubtitles) return;
+    for (final name in ['sub-visibility', 'secondary-sub-visibility']) {
+      unawaited(platform.setProperty(name, 'yes').catchError((Object e) => logDebug(() => 'Could not show $name: $e')));
+    }
+  }
+
   /// Raises subtitles drawn by mpv by [percent] of the picture's height,
   /// above the player's controls while they show; 0 puts them back.
   void liftSubtitles(int percent) {

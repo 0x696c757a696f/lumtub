@@ -51,9 +51,9 @@ class FormatPolicy {
   /// The policy for [settings], worked out by lumtub_core
   /// (native/lumtub_core/src/format_policy.rs). Without the library
   /// yt-dlp's and mpv's defaults apply, minus the disabled codecs.
-  static _Policy _policy(PlayerSettings settings, {int displayHeight = 0}) {
+  static _Policy _policy(PlayerSettings settings, {int displayHeight = 0, String audioLanguage = ''}) {
     final core = NativeCore.instance;
-    final json = settingsJson(settings, displayHeight: displayHeight);
+    final json = settingsJson(settings, displayHeight: displayHeight, audioLanguage: audioLanguage);
     final answer = core?.take(core.withText(json, core.formatPolicy));
     if (answer == null) {
       return _Policy([for (final c in VideoCodec.values) if (allows(settings, c)) c], 'ytdl', null, 0);
@@ -68,14 +68,22 @@ class FormatPolicy {
   }
 
   /// [settings] as lumtub_core's format policy reads them.
-  static String settingsJson(PlayerSettings settings, {int displayHeight = 0}) => jsonEncode({
+  ///
+  /// [audioLanguage] is the language of the dub to play instead of the
+  /// original (see [dubLanguage]); empty for the original.
+  static String settingsJson(PlayerSettings settings, {int displayHeight = 0, String audioLanguage = ''}) => jsonEncode({
         'strategy': settings.strategy.name,
         'disabled': [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.name],
         'hardware': [for (final c in VideoCodec.values) if (hardware(settings, c)) c.name],
         'maxHeight': settings.maxHeight,
         'audio': settings.audioQuality.name,
+        'audioLanguage': audioLanguage,
         'display': max(0, displayHeight),
       });
+
+  /// The audio language to ask for: [pick], the language chosen for this
+  /// video ('' for its original sound), else what the settings say.
+  static String dubLanguage(PlayerSettings settings, {String? pick}) => pick ?? settings.dubLanguage;
 
   /// The allowed codecs, most preferred first.
   ///
@@ -110,7 +118,10 @@ class FormatPolicy {
   /// filters of the disabled codecs, so no fallback can pick one. The quality
   /// strategy is yt-dlp's own `bestvideo`, written `ytdl` when nothing
   /// restricts it.
-  static String expression(PlayerSettings settings) => _policy(settings).expression;
+  ///
+  /// With an [audioLanguage] a dub in that language is tried first and the
+  /// original sound after it.
+  static String expression(PlayerSettings settings, {String audioLanguage = ''}) => _policy(settings, audioLanguage: audioLanguage).expression;
 
   /// For a live stream: above 1080p, where YouTube has no stream with
   /// picture and sound together, the best picture in an allowed codec with

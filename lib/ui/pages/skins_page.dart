@@ -13,6 +13,7 @@ import '../../skins/skin_library.dart';
 import '../../window_frame.dart';
 import '../app_icons.dart';
 import '../common.dart';
+import '../theme_preset_card.dart';
 import '../motion.dart';
 import '../skin_paint.dart';
 import '../theme.dart';
@@ -85,18 +86,6 @@ class _SkinsPage extends StatelessWidget {
           return ListView(padding: const EdgeInsets.only(bottom: 40), children: [
             // Skins with both sides take light or dark from here.
             ...themeModeTiles(context, controller),
-            // The accent color of the standard look and of skins that leave
-            // colors to the app; a color scheme sets its own.
-            NormalItem(
-              title: tr('App theme'),
-              subtitle: switch (paletteForSkin(appearance.skin)) {
-                final palette? => tr('Set by the {0} color scheme', [palette.name]),
-                null => tr('Current: {0} · {1}', [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),
-              },
-              leading: Icon(AppIcons.eyedropper),
-              trailing: CircleAvatar(radius: 12, backgroundColor: controller.accentColor),
-              onTap: () => openColorSelect(context, controller),
-            ),
             if (context.skin?.glass ?? false)
               ListTile(
                 leading: Icon(AppIcons.drop),
@@ -120,6 +109,26 @@ class _SkinsPage extends StatelessWidget {
               ),
             _header(context, tr('Color schemes')),
             grid([for (final s in library.builtIn) if (schemes.contains(s.id)) s], standard: true),
+            // The standard look in one accent color each, beside the schemes.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+              child: Wrap(spacing: 12, runSpacing: 12, children: [
+                for (final preset in themePresets)
+                  ThemePresetCard(preset: preset, selected: preset.isApplied(appearance), onTap: () => controller.saveAppearance(preset.applyTo(controller.appearance))),
+              ]),
+            ),
+            // Any other color, the system's accent, and the accent of skins
+            // that leave colors to the app.
+            NormalItem(
+              title: tr('Custom color'),
+              subtitle: switch (paletteForSkin(appearance.skin)) {
+                final palette? => tr('Set by the {0} color scheme', [palette.name]),
+                null => tr('Current: {0} · {1}', [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),
+              },
+              leading: Icon(AppIcons.eyedropper),
+              trailing: CircleAvatar(radius: 12, backgroundColor: controller.accentColor),
+              onTap: () => openColorSelect(context, controller),
+            ),
             _tip(context, tr('These follow light and dark mode and keep Lumtub\'s own shapes; the colors change, and the title bar and menu bar take the same colors.')),
             _header(context, tr('Built-in skins')),
             grid([for (final s in library.builtIn) if (!schemes.contains(s.id)) s]),

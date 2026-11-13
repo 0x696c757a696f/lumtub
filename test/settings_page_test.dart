@@ -103,12 +103,11 @@ void main() {
 
   testWidgets('a theme preset sets the colour and palette style in one tap', (tester) async {
     await pump(tester);
-    // The app theme is chosen on the skins page.
+    // The presets sit with the color schemes on the skins page.
     await openRow(tester, SettingsCategory.style, 'Skins');
-    await tester.tap(find.text('App theme'));
-    await tester.pumpAndSettle();
-    expect(find.widgetWithText(AppBar, 'Choose app theme'), findsOneWidget);
     expect(find.text('Classic red'), findsOneWidget);
+    await tester.ensureVisible(find.text('Forest green'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Forest green'));
     await tester.pumpAndSettle();
     final appearance = controller.appearance;

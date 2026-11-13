@@ -14,6 +14,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../ai_filter.dart';
+import '../android_subtitle_fonts.dart';
 import '../app_directories.dart';
 import '../app_updater.dart';
 import '../app_log.dart';
@@ -330,6 +331,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   Timer? _currentChatFlushTimer;
   final _currentChatPending = <LiveChatMessage>[];
   final _currentChatIds = <String>{};
+  /// The audio language chosen for one video in the player ('' for its
+  /// original sound), which lasts until another video plays.
+  (String, String)? _audioPick;
+  /// The audio languages the playing video offers; empty when it has one.
+  List<AudioLanguage> availableAudioLanguages = const [];
   /// Heights the playing video offers, highest first; empty until known.
   List<int> availableHeights = const [];
   /// The most frames a second of [availableHeights], where above 30.
@@ -508,6 +514,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   Timer? _dropTimer;
   Timer? _thumbnailTrimTimer;
   final _recovery = PlaybackRecovery();
+  /// Holds back resolving the next video until this one plays steadily.
+  final _settled = SettledPlayback();
   /// The last position actually played, which survives a failed stream.
   Duration _lastPosition = Duration.zero;
   final _resumePoint = ResumePoint();
@@ -777,6 +785,14 @@ class AppController extends ChangeNotifier with _ExploreState {
   int _subtitleLift = 0;
   /// The main subtitle mpv shows now, for placing the second one.
   List<String> _mainSubtitle = const [];
+  /// The family libmpv draws subtitles in on Android, picked by their text.
+  String? _subtitleFamily;
+  /// On Android: libmpv met subtitles no one font can draw, so Flutter's
+  /// subtitle view draws this video's instead.
+  bool libassCantDraw = false;
+
+  /// Whether libmpv draws the subtitles now, not Flutter's view.
+  bool get libassDraws => settings.libassSubtitles && !libassCantDraw;
 
   bool _backgroundAudioOnly = false;
   bool _windowHidden = false;
@@ -835,7 +851,14 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The codec and height the playback test plays at, while it runs.
   PlayerSettings? _benchmark;
 
-  String get _format => FormatPolicy.expression(_playback);
+  String get _format => _formatFor(playing?.id);
+
+  /// The yt-dlp format expression for the video [id]: the audio language
+  /// chosen for it, else the one the settings ask for.
+  String _formatFor(String? id) => FormatPolicy.expression(_playback, audioLanguage: _audioLanguageFor(id));
+
+  /// The audio language for the video [id], empty for its original sound.
+  String _audioLanguageFor(String? id) => FormatPolicy.dubLanguage(settings, pick: id != null && _audioPick?.$1 == id ? _audioPick!.$2 : null);
 
   String? get _formatSort => FormatPolicy.formatSort(_playback);
 

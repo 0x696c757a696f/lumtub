@@ -142,3 +142,47 @@ class ResumePoint {
     _observedAt = now;
   }
 }
+
+/// Says once per video when its playback has settled: frames decoded and
+/// advancing for [needed] without buffering, with [ahead] already buffered
+/// or the rest of the video in. Work that would compete with the start of
+/// playback, such as resolving the next video, waits for it.
+class SettledPlayback {
+  SettledPlayback({this.needed = const Duration(seconds: 5), this.ahead = const Duration(seconds: 10)});
+
+  final Duration needed;
+  final Duration ahead;
+  bool _waiting = false;
+  Duration? _position;
+  Duration _progress = Duration.zero;
+
+  /// Starts watching a video that is opening.
+  void start() {
+    _waiting = true;
+    _position = null;
+    _progress = Duration.zero;
+  }
+
+  /// Nothing is played any more, so nothing settles.
+  void stop() => _waiting = false;
+
+  /// Whether playback settled with this position; true only once.
+  bool observe(Duration position, {required bool playing, required bool buffering, required bool decoded, required Duration buffered, Duration duration = Duration.zero}) {
+    if (!_waiting) return false;
+    final previous = _position;
+    _position = position;
+    if (previous == null) return false;
+    final advance = position - previous;
+    // A seek or a stall starts the count again.
+    if (!playing || buffering || !decoded || advance < Duration.zero || advance > const Duration(seconds: 2)) {
+      _progress = Duration.zero;
+      return false;
+    }
+    _progress += advance;
+    if (_progress < needed) return false;
+    final toEnd = duration > Duration.zero && buffered >= duration - const Duration(seconds: 1);
+    if (buffered - position < ahead && !toEnd) return false;
+    _waiting = false;
+    return true;
+  }
+}

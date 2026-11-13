@@ -28,9 +28,12 @@ import '../feed_reason.dart';
 /// Height of the text below a card's thumbnail: two title lines and one
 /// line with the reason, the channel and the menu. The views and age sit
 /// on the thumbnail, as Bilibili shows them.
-/// A TV's text is 1.15 times larger (main.dart), so two title lines need
-/// the room too.
-double get _cardInfoHeight => (compactCards ? 70.0 : 76.0) * (Device.tv ? 1.15 : 1);
+/// The text grows with [textScale] (the app's text size, Android's font
+/// size and a TV's larger text); the padding round it does not.
+double _cardInfoHeight(double textScale) => compactCards ? 10 + 60 * textScale : 14 + 62 * textScale;
+
+/// How much larger than set the cards' text is drawn here.
+double cardTextScale(BuildContext context) => MediaQuery.textScalerOf(context).scale(14) / 14;
 
 /// The gap between cards; tighter in compact mode, where cards sit on a
 /// surface of their own.
@@ -51,8 +54,9 @@ ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 4
     width,
     null,
     switch ((thumbnails, frame)) {
-      (null, null) => NetworkImage(url),
-      (null, final frame?) => NetworkImage(frame.toString()),
+      // Without the cache folder still within the download limits.
+      (null, null) => CachedThumbnail(url, null),
+      (null, final frame?) => CachedThumbnail(frame.toString(), null, fallback: CachedThumbnail(url, null)),
       (final dir?, null) => CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, file)),
       (final dir?, final frame?) => CachedThumbnail(frame.toString(), CachedThumbnail.fileFor(dir, item.id, 'dearrow_${frame.queryParameters['time']}'), fallback: CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, file))),
     },
@@ -84,14 +88,14 @@ String titleFor(VideoItem item) => deArrow.titleOf(item.id, item.title);
 const _reasonHeight = 20.0;
 
 /// [padding] is the space a skin leaves round each video card.
-({int columns, double itemHeight}) gridLayoutFor(double width, {double padding = 0}) {
+({int columns, double itemHeight}) gridLayoutFor(double width, {double padding = 0, double textScale = 1}) {
   // A TV is seen from across the room, so its few pixels across still fit
   // three or four cards a row, as TV video apps show them.
   final base = Device.tv ? min(videoCardMinWidth, 200.0) : videoCardMinWidth;
   final narrowest = compactCards ? base * _compactWidth : base;
   final columns = max(1, ((width + gridGap) / (narrowest + gridGap)).floor());
   final itemWidth = (width - gridGap * (columns - 1)) / columns;
-  return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight + 2 * padding);
+  return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight(textScale) + 2 * padding);
 }
 
 /// The space the current skin leaves round each video card.
@@ -130,6 +134,8 @@ class SliverVideoGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     // Room for the watched line only when some card has one.
     final watched = this.watched != null && items.any((item) => this.watched![item.id] != null) ? this.watched : null;
+    // Room for the reason line only when some card has a reason.
+    final reasoned = reasons != null && items.any((item) => (reasons![item.id] ?? '').isNotEmpty);
     return SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: videoLayout != VideoLayout.grid
@@ -151,13 +157,13 @@ class SliverVideoGrid extends StatelessWidget {
                 ),
               )
             : SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context));
+          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context), textScale: cardTextScale(context));
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: layout.columns,
               mainAxisSpacing: _gridRowGap,
               crossAxisSpacing: gridGap,
-              mainAxisExtent: layout.itemHeight + (watched == null ? 0 : _reasonHeight),
+              mainAxisExtent: layout.itemHeight + ((watched == null ? 0 : 1) + (reasoned ? 1 : 0)) * _reasonHeight * cardTextScale(context),
             ),
             delegate: SliverChildBuilderDelegate(
               (context, i) => VideoCard(
@@ -295,7 +301,7 @@ class SliverPlaylistGrid extends StatelessWidget {
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent);
+          final layout = gridLayoutFor(constraints.crossAxisExtent, textScale: cardTextScale(context));
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: layout.columns,
@@ -333,11 +339,10 @@ class PlaylistCard extends StatelessWidget {
               borderRadius: AppStyle.thumbnailRadius,
               child: Stack(fit: StackFit.expand, children: [
                 if (cover != null)
-                  LayoutBuilder(builder: (context, box) => Image.network(
+                  LayoutBuilder(builder: (context, box) => Image(
                     color: context.pictureWarmth,
                     colorBlendMode: BlendMode.multiply,
-                    cover,
-                    cacheWidth: thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context), largest: 480),
+                    image: ResizeImage.resizeIfNeeded(thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context), largest: 480), null, CachedThumbnail(cover, null)),
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stack) => ColoredBox(color: colors.surfaceContainerHighest),
                   ))
@@ -382,7 +387,7 @@ class SliverSkeletonGrid extends StatelessWidget {
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context));
+          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context), textScale: cardTextScale(context));
           final width = constraints.crossAxisExtent;
           return SliverToBoxAdapter(child: Skeleton(child: SizedBox(
             width: width,
@@ -495,7 +500,7 @@ class _VideoCardState extends State<VideoCard> {
     final url = 'https://i.ytimg.com/vi/${item.id}/mq$frame.jpg';
     final dir = widget.thumbnails;
     // mq frames are 320 wide; decoding them larger gains nothing.
-    return ResizeImage.resizeIfNeeded(320, null, dir == null ? NetworkImage(url) : CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, 'mq$frame')));
+    return ResizeImage.resizeIfNeeded(320, null, CachedThumbnail(url, dir == null ? null : CachedThumbnail.fileFor(dir, item.id, 'mq$frame')));
   }
 
   @override
@@ -626,14 +631,13 @@ class _VideoCardState extends State<VideoCard> {
             // title, so a row of cards lines up.
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: Align(alignment: AlignmentDirectional.topStart, child: Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: compact ? 13 : 14, height: compact ? 1.32 : 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)))),
-              // Why it is here, whose it is, and its menu.
+              // Why it is here, on a line of its own so it reads whole.
+              if (widget.reason case final reason? when reason.isNotEmpty)
+                SizedBox(height: _reasonHeight * cardTextScale(context), child: Align(alignment: AlignmentDirectional.centerStart, child: ReasonTag(reason, wide: true))),
+              // Whose it is, and its menu.
               SizedBox(
                 height: 24,
                 child: Row(children: [
-                  if (widget.reason case final reason? when reason.isNotEmpty) ...[
-                    ReasonTag(reason),
-                    const SizedBox(width: 6),
-                  ],
                   Expanded(child: Text(meta.lead.isEmpty ? tr('YouTube') : meta.lead, maxLines: 1, overflow: TextOverflow.ellipsis, style: metaStyle)),
                   Builder(builder: (context) => IconButton(
                     tooltip: tr('More (Menu key)'),
@@ -646,7 +650,7 @@ class _VideoCardState extends State<VideoCard> {
                   )),
                 ]),
               ),
-              if (widget.watched case final watched?) SizedBox(height: _reasonHeight, child: WatchedLine(watched)),
+              if (widget.watched case final watched?) SizedBox(height: _reasonHeight * cardTextScale(context), child: WatchedLine(watched)),
             ]),
           )),
         ]),
@@ -928,8 +932,8 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
         entry('queueLast', AppIcons.queue, tr('Add to play queue')),
       ],
       if (controller?.account?.signedIn ?? false) entry('youtube', AppIcons.filmReel, tr('Save to YouTube playlist…')),
+      if (controller != null) entry('channel', AppIcons.userCircle, tr('View channel')),
       if (controller != null && channel != null) ...[
-        entry('channel', AppIcons.userCircle, tr('View channel')),
         if (controller.preferences.isUnrecommended(channel.id))
           entry('recommend', AppIcons.thumbsUp, tr('Recommend this channel again'))
         else
@@ -968,7 +972,7 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
     case 'youtube':
       await showSaveToYoutube(context, controller!, item);
     case 'channel':
-      controller!.openChannel(channel!);
+      await controller!.openChannelOf(item);
     case 'recommend' || 'unrecommend':
       controller!.setRecommendChannel(channel!, choice == 'recommend');
     case 'block':
@@ -1145,8 +1149,12 @@ class MetaLine extends StatelessWidget {
 /// Why a recommended video is on the feed, as a small tag: a word or two,
 /// with the full reason when the pointer rests on it.
 class ReasonTag extends StatelessWidget {
-  const ReasonTag(this.reason, {super.key});
+  const ReasonTag(this.reason, {super.key, this.wide = false});
   final String reason;
+
+  /// Shows the whole reason across the width it is given, not a word for
+  /// its kind.
+  final bool wide;
 
   @override
   Widget build(BuildContext context) {
@@ -1155,12 +1163,12 @@ class ReasonTag extends StatelessWidget {
     return Tooltip(
       message: text,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 120),
+        constraints: BoxConstraints(maxWidth: wide ? double.infinity : 120),
         child: DecoratedBox(
           decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(4)),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            child: Text(kind?.label ?? text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, height: 1.3, fontWeight: FontWeight.w500, color: color)),
+            child: Text(wide ? text : kind?.label ?? text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, height: 1.3, fontWeight: FontWeight.w500, color: color)),
           ),
         ),
       ),

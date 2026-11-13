@@ -23,7 +23,7 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.actor.login == 'dependabot[bot]' &&
       startsWith(github.event.workflow_run.head_branch, 'dependabot/')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Merge
         env:
@@ -49,7 +49,7 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       (github.event.workflow_run.head_branch == 'deps/lockfiles' || github.event.workflow_run.head_branch == 'deps/upstream') &&
       github.event.workflow_run.triggering_actor.login == 'github-actions[bot]'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -72,7 +72,7 @@ jobs:
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.actor.login == 'weblate'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Merge
         env:

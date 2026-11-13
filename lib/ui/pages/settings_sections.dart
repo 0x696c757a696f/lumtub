@@ -480,6 +480,18 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 onSelected: (v) => save(settings.copyWith(audioQuality: v)),
               ),
             )),
+        SettingEntry(tr('Dubbed audio'), (context) => NormalItem(
+              title: tr('Dubbed audio'),
+              subtitle: tr('Current: {0}', [settings.dubbedAudio.label]),
+              leading: _icon(AppIcons.musicNotes),
+              onTap: () => pickFromDialog<DubbedAudio>(
+                context,
+                title: tr('Dubbed audio'),
+                value: settings.dubbedAudio,
+                values: _enumValues(DubbedAudio.values, (d) => d.label),
+                onSelected: (v) => save(settings.copyWith(dubbedAudio: v)),
+              ),
+            )),
         SettingEntry(tr('Audio output device'), (context) {
           final devices = controller.audioDevices;
           String describe(String name) => name == 'auto'
@@ -1101,7 +1113,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               onTap: () => openSkins(context, controller),
               // Theme mode and the app theme (accent color) are chosen on
               // the skins page.
-            ), subtitle: '${tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')} ${tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')} ${tr('App theme')} ${tr('theme color palette dynamic color')} ${tr('Theme mode')} ${tr('dark light sunrise sunset schedule night')}'),
+            ), subtitle: '${tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')} ${tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')} ${tr('Custom color')} ${tr('theme color palette dynamic color')} ${tr('Theme mode')} ${tr('dark light sunrise sunset schedule night')}'),
         if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid)
           SettingEntry(tr('App icon'), (context) => NormalItem(
                 title: tr('App icon'),

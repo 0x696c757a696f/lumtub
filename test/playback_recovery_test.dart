@@ -114,4 +114,58 @@ void main() {
     expect(PlaybackRecovery.graphicsLost('Failed to allocate hw frames.'), isFalse);
     expect(PlaybackRecovery.graphicsLost('Failure when receiving data from the peer'), isFalse);
   });
+  group('settled playback', () {
+    late SettledPlayback settled;
+    var at = Duration.zero;
+
+    /// Plays [seconds] more in quarter-second steps; whether it settled.
+    bool play(int seconds, {Duration ahead = const Duration(seconds: 30), bool decoded = true, bool buffering = false, Duration duration = const Duration(minutes: 10)}) {
+      var told = false;
+      for (var i = 0; i < seconds * 4; i++) {
+        at += const Duration(milliseconds: 250);
+        if (settled.observe(at, playing: true, buffering: buffering, decoded: decoded, buffered: at + ahead, duration: duration)) told = true;
+      }
+      return told;
+    }
+
+    setUp(() {
+      settled = SettledPlayback();
+      at = Duration.zero;
+      settled.start();
+    });
+
+    test('settles after five seconds of steady playback, once', () {
+      expect(play(4), isFalse);
+      expect(play(2), isTrue);
+      expect(play(10), isFalse);
+    });
+
+    test('waits for frames and an unbroken run', () {
+      expect(play(10, decoded: false), isFalse);
+      expect(play(3), isFalse);
+      expect(play(3, buffering: true), isFalse);
+      expect(play(4), isFalse);
+      expect(play(2), isTrue);
+    });
+
+    test('a seek starts the count again', () {
+      expect(play(4), isFalse);
+      at += const Duration(minutes: 1);
+      expect(play(4), isFalse);
+      expect(play(2), isTrue);
+    });
+
+    test('waits for the buffer to fill unless the video is all in', () {
+      expect(play(10, ahead: const Duration(seconds: 3)), isFalse);
+      expect(play(1), isTrue);
+      settled.start();
+      at = Duration.zero;
+      expect(play(6, ahead: const Duration(seconds: 3), duration: const Duration(seconds: 7)), isTrue);
+    });
+
+    test('a stopped video never settles', () {
+      settled.stop();
+      expect(play(20), isFalse);
+    });
+  });
 }

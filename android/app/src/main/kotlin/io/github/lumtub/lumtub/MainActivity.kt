@@ -30,6 +30,7 @@ import io.flutter.plugin.common.MethodChannel
  */
 private const val LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
 private const val WEB_SIGN_IN = 7341
+private const val SAVE_FILE = 7342
 
 class MainActivity : FlutterActivity() {
     private var channel: MethodChannel? = null
@@ -40,6 +41,9 @@ class MainActivity : FlutterActivity() {
 
     /** Waiting for WebSignInActivity: answered with its file, or null. */
     private var signingIn: MethodChannel.Result? = null
+
+    /** Waiting for the system's save picker: the bytes and who to answer. */
+    private var saving: Pair<ByteArray, MethodChannel.Result>? = null
 
     /** Gives the core's certificate check (rustls-platform-verifier) this app's context. */
     private external fun initTls(context: android.content.Context)
@@ -62,6 +66,16 @@ class MainActivity : FlutterActivity() {
                 signingIn = result
                 @Suppress("DEPRECATION")
                 startActivityForResult(Intent(this, WebSignInActivity::class.java), WEB_SIGN_IN)
+                return@setMethodCallHandler
+            }
+            if (call.method == "saveFile") {
+                saving?.second?.success(false)
+                saving = Pair(call.argument<ByteArray>("bytes") ?: ByteArray(0), result)
+                val pick = Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
+                    .setType(call.argument<String>("mime") ?: "application/octet-stream")
+                    .putExtra(Intent.EXTRA_TITLE, call.argument<String>("name"))
+                @Suppress("DEPRECATION")
+                startActivityForResult(pick, SAVE_FILE)
                 return@setMethodCallHandler
             }
             if (call.method == "hwDecoders") {
@@ -103,10 +117,22 @@ class MainActivity : FlutterActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         @Suppress("DEPRECATION")
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == SAVE_FILE) return saved(if (resultCode == RESULT_OK) data?.data else null)
         if (requestCode != WEB_SIGN_IN) return
         val path = if (resultCode == RESULT_OK) data?.getStringExtra(WebSignInActivity.PATH) else null
         signingIn?.success(path)
         signingIn = null
+    }
+
+    /** Writes the bytes waiting in [saving] to [uri], off the UI thread. */
+    private fun saved(uri: Uri?) {
+        val (bytes, result) = saving ?: return
+        saving = null
+        if (uri == null) return result.success(false)
+        Thread {
+            val done = runCatching { contentResolver.openOutputStream(uri, "wt")!!.use { it.write(bytes) } }
+            runOnUiThread { done.fold({ result.success(true) }, { result.error("saveFile", it.message ?: it.toString(), null) }) }
+        }.start()
     }
 
     /**
@@ -226,6 +252,10 @@ class MainActivity : FlutterActivity() {
             "moveToBack" -> moveTaskToBack(true)
             "setAppIcon" -> setAppIcon(call.arguments == "sunlight")
             "setFrameRate" -> fitFrameRate((call.arguments as? Number)?.toDouble() ?: 0.0)
+            // The caption size set in Android's accessibility settings, as
+            // ExoPlayer reads it: only while captions are turned on there.
+            "captionScale" -> return (getSystemService(CAPTIONING_SERVICE) as android.view.accessibility.CaptioningManager)
+                .let { if (it.isEnabled) it.fontScale.toDouble() else 1.0 }
             "isMetered" -> return (getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager).isActiveNetworkMetered
         }
         return null

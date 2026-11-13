@@ -86,6 +86,8 @@ class YoutubeComment {
     this.repliesToken,
     this.pinned = false,
     this.hearted = false,
+    this.heartAvatar,
+    this.heartTooltip,
     this.byUploader = false,
     this.emojis = const {},
     this.rating,
@@ -106,6 +108,9 @@ class YoutubeComment {
   final bool pinned;
   /// The uploader liked it.
   final bool hearted;
+  /// The picture of whoever hearted it and YouTube's own tooltip, when sent.
+  final String? heartAvatar;
+  final String? heartTooltip;
   final bool byUploader;
   /// Custom emoji in [text]: shortcut to picture address.
   final Map<String, String> emojis;
@@ -360,6 +365,8 @@ class YoutubeComments {
             repliesToken: c['repliesToken'] as String?,
             pinned: c['pinned'] as bool,
             hearted: c['hearted'] as bool,
+            heartAvatar: c['heartAvatar'] as String?,
+            heartTooltip: c['heartTooltip'] as String?,
             byUploader: c['byUploader'] as bool,
             emojis: (c['emojis'] as Map<String, dynamic>?)?.cast<String, String>() ?? const {},
             rating: CommentRating.fromJson(c['rating']),

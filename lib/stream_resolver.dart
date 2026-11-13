@@ -19,6 +19,19 @@ import 'video_facts_lookup.dart';
 /// What yt-dlp found for one video: every format, the ones picked for
 /// [format], and the metadata the watch page shows. What the formats offer
 /// is read by lumtub_core (native/lumtub_core/src/resolved.rs).
+/// One language a video's sound is offered in.
+class AudioLanguage {
+  const AudioLanguage(this.code, this.kind);
+
+  /// YouTube's code: `en`, `es-US`.
+  final String code;
+
+  /// `original`, `dub`, `auto` (an automatic dub), or empty when not said.
+  final String kind;
+
+  bool get isOriginal => kind == 'original';
+}
+
 class ResolvedVideo {
   ResolvedVideo(this.info, this.file, this.format, {DateTime? now, String? text})
       : fetched = now ?? DateTime.now(),
@@ -56,6 +69,13 @@ class ResolvedVideo {
     final at = _summary()?['expires'];
     return at is int ? DateTime.fromMillisecondsSinceEpoch(at * 1000) : fetched.add(const Duration(hours: 1));
   }
+
+  /// The languages the sound comes in, the original first; empty when the
+  /// video has one.
+  List<AudioLanguage> get audioLanguages => [
+        for (final t in (_summary()?['audioTracks'] as List?) ?? const [])
+          if (t is Map && t['language'] is String) AudioLanguage(t['language'] as String, '${t['kind']}'),
+      ];
 
   bool get fresh => DateTime.now().isBefore(expires);
 

@@ -52,6 +52,12 @@ struct Format<'a> {
     /// Marked `acont=original`: the video's own sound, whichever track
     /// YouTube calls the default.
     original: bool,
+    /// The language of the audio track, as yt-dlp's `language` has it.
+    language: Option<String>,
+    /// The `acont` of the format.
+    content: Option<String>,
+    /// A descriptive track or a loudness-normalised copy: never a dub.
+    plain: bool,
 }
 
 fn number(value: Option<&Value>) -> Option<u64> {
@@ -89,12 +95,26 @@ fn format(raw: &Value) -> Option<Format<'_>> {
         .get("xtags")
         .and_then(Value::as_str)
         .and_then(crate::innertube::audio_content);
-    let original = !drc && content.as_deref() == Some("original");
+    // Without an `acont`, the name of the track says (`... original`).
+    let named_original = content.is_none()
+        && track
+            .and_then(|t| t.get("displayName")?.as_str())
+            .is_some_and(crate::innertube::says_original);
+    let original = !drc && (content.as_deref() == Some("original") || named_original);
     let default_audio = original
         || (!drc
             && content.is_none()
             && track
                 .is_none_or(|t| t.get("audioIsDefault").and_then(Value::as_bool) == Some(true)));
+    let descriptive = content.as_deref() == Some("descriptive")
+        || track
+            .and_then(|t| t.get("displayName")?.as_str())
+            .is_some_and(|name| name.to_lowercase().contains("descriptive"));
+    let language = track
+        .and_then(|t| t.get("id")?.as_str())
+        .and_then(|id| id.split('.').next())
+        .filter(|code| !code.is_empty())
+        .map(str::to_owned);
     Some(Format {
         raw,
         itag: number(raw.get("itag"))?.to_string(),
@@ -108,7 +128,46 @@ fn format(raw: &Value) -> Option<Format<'_>> {
             .unwrap_or(0),
         default_audio,
         original,
+        language,
+        content,
+        plain: drc || descriptive,
     })
+}
+
+/// The best sound of [sounds] within [limit] bits a second, else the
+/// smallest.
+fn loudest<'a, 'b>(sounds: &[&'a Format<'b>], limit: u64) -> Option<&'a Format<'b>> {
+    sounds
+        .iter()
+        .copied()
+        .filter(|f| f.bitrate <= limit.saturating_add(limit / 10))
+        .max_by_key(|f| f.bitrate)
+        .or_else(|| sounds.iter().copied().min_by_key(|f| f.bitrate))
+}
+
+/// The audio formats in the language [wanted] (a prefix such as `it` or
+/// `es-US`) that are dubs or the video's own sound there, a creator's dub
+/// before an automatic one; empty when [wanted] is empty or there are none.
+fn dubs<'a>(formats: &'a [Format<'a>], wanted: &str) -> Vec<&'a Format<'a>> {
+    let wanted = wanted.trim().to_lowercase();
+    if wanted.is_empty() {
+        return Vec::new();
+    }
+    let matching: Vec<&Format> = formats
+        .iter()
+        .filter(|f| !f.video && !f.plain)
+        .filter(|f| {
+            f.language
+                .as_deref()
+                .is_some_and(|l| l.to_lowercase().starts_with(&wanted))
+        })
+        .collect();
+    let manual = |f: &&Format| f.content.as_deref() != Some("dubbed-auto");
+    if matching.iter().any(manual) {
+        matching.into_iter().filter(manual).collect()
+    } else {
+        matching
+    }
 }
 
 fn as_ytdlp(f: &Format) -> Value {
@@ -128,6 +187,19 @@ fn as_ytdlp(f: &Format) -> Value {
         out.insert("vcodec".into(), json!("none"));
         out.insert("acodec".into(), json!(f.codec));
         out.insert("abr".into(), json!(f.bitrate as f64 / 1000.0));
+        if let Some(language) = &f.language {
+            out.insert("language".into(), json!(language));
+        }
+        if let Some(content) = &f.content {
+            out.insert("audio_content".into(), json!(content));
+        }
+        if let Some(name) = f
+            .raw
+            .get("audioTrack")
+            .and_then(|t| t.get("displayName")?.as_str())
+        {
+            out.insert("format_note".into(), json!(name));
+        }
     }
     out.insert("tbr".into(), json!(f.bitrate as f64 / 1000.0));
     if let Some(size) = number(f.raw.get("contentLength")) {
@@ -174,18 +246,28 @@ pub fn info(player: &Value, settings: &Settings) -> Option<Value> {
         Audio::Medium => 128_000,
         Audio::Low => 64_000,
     };
+    // A dub in the language asked for, a creator's before an automatic one;
+    // none leaves the original.
+    let dub = dubs(&formats, &settings.audio_language);
     // A track marked original wins; without one, the default track, but
     // never a dubbed one (then yt-dlp is left to choose).
     let marked = formats.iter().any(|f| !f.video && f.original);
-    let sounds = || {
-        formats
-            .iter()
-            .filter(move |f| !f.video && if marked { f.original } else { f.default_audio })
-    };
-    let audio = sounds()
-        .filter(|f| f.bitrate <= limit.saturating_add(limit / 10))
-        .max_by_key(|f| f.bitrate)
-        .or_else(|| sounds().min_by_key(|f| f.bitrate))?;
+    // Nothing says which track is the original and there are tracks in
+    // several languages: the default flag may sit on a dub (YouTube makes
+    // a dub the default), so yt-dlp is left to choose.
+    let mut spoken: Vec<&str> = formats
+        .iter()
+        .filter(|f| !f.video && !f.plain)
+        .filter_map(|f| f.language.as_deref())
+        .collect();
+    spoken.sort_unstable();
+    spoken.dedup();
+    let unsure = !marked && spoken.len() > 1;
+    let own: Vec<&Format> = formats
+        .iter()
+        .filter(|f| !f.video && !unsure && if marked { f.original } else { f.default_audio })
+        .collect();
+    let audio = loudest(&dub, limit).or_else(|| loudest(&own, limit))?;
     Some(json!({
         "id": details.get("videoId"),
         "title": details.get("title"),
@@ -361,6 +443,116 @@ mod tests {
         list.push(original);
         let info = info(&p, &settings("{}")).unwrap();
         assert_eq!(info["requested_formats"][1]["abr"], json!(130.0));
+    }
+
+    fn dubbed(settings_json: &str) -> Value {
+        let mut p = player();
+        let list = p["streamingData"]["adaptiveFormats"]
+            .as_array_mut()
+            .unwrap();
+        list.retain(|f| f["mimeType"].as_str().unwrap().starts_with("video/"));
+        let tracks = [
+            (
+                251,
+                "en.4",
+                "acont=original:lang=en",
+                "English original",
+                130_000,
+            ),
+            (
+                252,
+                "it.3",
+                "acont=dubbed-auto:lang=it",
+                "Italian auto-dubbed",
+                140_000,
+            ),
+            (253, "de.3", "acont=dubbed:lang=de", "German", 120_000),
+            (
+                254,
+                "de.2",
+                "acont=dubbed-auto:lang=de",
+                "German auto-dubbed",
+                160_000,
+            ),
+        ];
+        for (itag, id, xtags, name, bitrate) in tracks {
+            let mut f = stream(itag, "audio/webm; codecs=\"opus\"", 0, bitrate);
+            f["audioTrack"] =
+                json!({"id": id, "displayName": name, "audioIsDefault": id == "en.4"});
+            f["xtags"] = json!(xtags);
+            list.push(f);
+        }
+        info(&p, &settings(settings_json)).unwrap()
+    }
+
+    #[test]
+    fn a_dub_flagged_default_never_beats_an_original_named_as_such() {
+        let mut p = player();
+        let list = p["streamingData"]["adaptiveFormats"]
+            .as_array_mut()
+            .unwrap();
+        list.retain(|f| f["mimeType"].as_str().unwrap().starts_with("video/"));
+        let mut hindi = stream(252, "audio/webm; codecs=\"opus\"", 0, 160_000);
+        hindi["audioTrack"] =
+            json!({"id": "hi.3", "displayName": "Hindi (India)", "audioIsDefault": true});
+        list.push(hindi);
+        let mut english = stream(251, "audio/webm; codecs=\"opus\"", 0, 130_000);
+        english["audioTrack"] = json!({"id": "en.4", "displayName": "English (United States) original", "audioIsDefault": false});
+        list.push(english);
+        let info = info(&p, &settings("{}")).unwrap();
+        assert_eq!(picked(&info)[1], "251");
+    }
+
+    #[test]
+    fn an_unmarked_default_among_several_languages_is_left_to_ytdlp() {
+        let mut p = player();
+        let list = p["streamingData"]["adaptiveFormats"]
+            .as_array_mut()
+            .unwrap();
+        list.retain(|f| f["mimeType"].as_str().unwrap().starts_with("video/"));
+        for (itag, id, default) in [(252, "hi.3", true), (251, "en.4", false)] {
+            let mut f = stream(itag, "audio/webm; codecs=\"opus\"", 0, 130_000);
+            f["audioTrack"] = json!({"id": id, "audioIsDefault": default});
+            list.push(f);
+        }
+        assert!(info(&p, &settings("{}")).is_none());
+        // Asking for Hindi still plays it.
+        let hindi = info(&p, &settings(r#"{"audioLanguage":"hi"}"#)).unwrap();
+        assert_eq!(picked(&hindi)[1], "252");
+    }
+
+    #[test]
+    fn plays_the_original_unless_a_dub_is_asked_for() {
+        assert_eq!(picked(&dubbed("{}"))[1], "251");
+        assert_eq!(picked(&dubbed(r#"{"audioLanguage":""}"#))[1], "251");
+    }
+
+    #[test]
+    fn plays_the_dub_in_the_language_chosen() {
+        assert_eq!(picked(&dubbed(r#"{"audioLanguage":"it"}"#))[1], "252");
+        assert_eq!(picked(&dubbed(r#"{"audioLanguage":"IT"}"#))[1], "252");
+        // The creator's dub beats an automatic one, whatever the bitrate.
+        assert_eq!(picked(&dubbed(r#"{"audioLanguage":"de"}"#))[1], "253");
+        // Asking for the original's own language plays the original.
+        assert_eq!(picked(&dubbed(r#"{"audioLanguage":"en"}"#))[1], "251");
+    }
+
+    #[test]
+    fn falls_back_to_the_original_without_a_dub_in_the_language() {
+        assert_eq!(picked(&dubbed(r#"{"audioLanguage":"ja"}"#))[1], "251");
+    }
+
+    #[test]
+    fn says_the_language_and_kind_of_each_audio_format() {
+        let info = dubbed("{}");
+        let notes: Vec<&str> = info["formats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|f| f["language"].as_str())
+            .collect();
+        assert_eq!(notes, ["en", "it", "de", "de"]);
+        assert_eq!(info["formats"][6]["audio_content"], json!("dubbed-auto"));
     }
 
     #[test]

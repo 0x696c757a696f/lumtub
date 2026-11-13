@@ -344,3 +344,46 @@ final academicLiveTopics = <ExploreTopic>[
   ExploreTopic('Thesis defenses', AppIcons.sealCheck, 'PhD defense live 博士答辩 直播'),
   ExploreTopic('Museum & library talks', AppIcons.bank, 'museum talk library lecture live 博物馆 讲座 直播'),
 ];
+
+/// 前沿研究: this year's research as the people doing it present it, in
+/// seminars, colloquia, conference talks and paper walkthroughs, rather
+/// than courses on settled knowledge. Searched within the past year.
+final frontierTopics = <ExploreTopic>[
+  ExploreTopic('AI & machine learning', AppIcons.robot, 'machine learning research talk paper NeurIPS ICML ICLR 人工智能 前沿', subs: [
+    ExploreSub('Large language models', 'large language models research talk paper 大模型 论文'),
+    ExploreSub('Reinforcement learning', 'reinforcement learning research talk paper'),
+    ExploreSub('Computer vision', 'computer vision research talk CVPR paper'),
+    ExploreSub('AI safety & alignment', 'AI alignment safety research talk'),
+    ExploreSub('Robotics', 'robotics research talk RSS CoRL paper 机器人 前沿'),
+  ]),
+  ExploreTopic('Physics', AppIcons.lightning, 'physics colloquium research seminar new results 物理 前沿', subs: [
+    ExploreSub('Particle physics', 'particle physics seminar CERN new results'),
+    ExploreSub('Quantum physics', 'quantum physics research seminar quantum computing results 量子'),
+    ExploreSub('Condensed matter', 'condensed matter physics seminar superconductivity'),
+    ExploreSub('Fusion & plasma', 'fusion energy plasma physics research update'),
+  ]),
+  ExploreTopic('Astronomy & space', AppIcons.moonStars, 'astronomy colloquium JWST new discovery research 天文 前沿', subs: [
+    ExploreSub('Cosmology', 'cosmology seminar new results dark energy dark matter'),
+    ExploreSub('Exoplanets', 'exoplanet research talk JWST'),
+    ExploreSub('Gravitational waves', 'gravitational waves LIGO research talk'),
+  ]),
+  ExploreTopic('Mathematics', AppIcons.graph, 'mathematics seminar new proof colloquium 数学 前沿'),
+  ExploreTopic('Life sciences', AppIcons.tree, 'biology research seminar new discovery 生命科学 前沿', subs: [
+    ExploreSub('Genetics & genomics', 'genomics CRISPR gene editing research talk 基因'),
+    ExploreSub('Neuroscience', 'neuroscience research seminar brain new findings 神经科学'),
+    ExploreSub('Evolution', 'evolutionary biology research talk new findings'),
+    ExploreSub('Synthetic biology', 'synthetic biology research talk'),
+  ]),
+  ExploreTopic('Medical research', AppIcons.heart, 'medical research clinical trial results grand rounds 医学 前沿', subs: [
+    ExploreSub('Cancer research', 'cancer research new treatment trial results talk'),
+    ExploreSub('Vaccines & infectious disease', 'vaccine infectious disease research talk'),
+    ExploreSub('Aging & longevity', 'aging longevity research talk'),
+  ]),
+  ExploreTopic('Chemistry & materials', AppIcons.flask, 'chemistry materials science research seminar new 材料 前沿'),
+  ExploreTopic('Climate & Earth', AppIcons.globe, 'climate science research talk new study 气候 前沿'),
+  ExploreTopic('Energy & engineering', AppIcons.gear, 'engineering research breakthrough battery energy research talk 工程 前沿'),
+  ExploreTopic('Computing', AppIcons.code, 'computer science research talk systems security paper 计算机 前沿'),
+  ExploreTopic('Social sciences', AppIcons.chartBar, 'social science research seminar new study economics psychology 社科 前沿'),
+  ExploreTopic('Humanities', AppIcons.scroll, 'humanities research lecture new findings archaeology discovery 人文 前沿'),
+  ExploreTopic('Theology & religious studies', AppIcons.handsPraying, 'theology research conference paper religious studies new scholarship 神学 研究'),
+];

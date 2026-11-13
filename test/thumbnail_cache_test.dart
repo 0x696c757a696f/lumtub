@@ -78,7 +78,9 @@ void main() {
     stream.addListener(card);
     final failed = Completer<Object>();
     stream.completer!.addEphemeralErrorListener((error, _) => failed.complete(error));
-    await pumpEventQueue();
+    while (CachedThumbnail.waiting == 0) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
     stream.removeListener(card);
     CachedThumbnail.free();
     expect(await failed.future, isA<ThumbnailDropped>());

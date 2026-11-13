@@ -158,6 +158,10 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
     return turn.future;
   }
 
+  /// Downloads waiting for a slot.
+  @visibleForTesting
+  static int get waiting => _waiting.length;
+
   @visibleForTesting
   static void free() {
     while (_waiting.isNotEmpty) {

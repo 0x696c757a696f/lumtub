@@ -988,6 +988,15 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 if (library != null) importSubscriptionsFromFile(context, library);
               },
             )),
+        SettingEntry(tr('Export subscriptions'), (context) => NormalItem(
+              title: tr('Export subscriptions'),
+              subtitle: tr('Saves your followed channels as a NewPipe file, which NewPipe, FreeTube and Lumtub can import. Exporting settings also includes them'),
+              leading: _icon(AppIcons.fileArrowUp),
+              onTap: () {
+                final library = controller.library;
+                if (library != null) exportSubscriptionsToFile(context, library);
+              },
+            ), subtitle: tr('Backup')),
     ],
     SettingsCategory.enhance => [
         SettingEntry(tr('SponsorBlock'), (context) => SwitchItem(
@@ -1342,7 +1351,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             )),
         SettingEntry(tr('Export settings'), (context) => NormalItem(
               title: tr('Export settings'),
-              subtitle: tr('Saves to a JSON file, without accounts, watch history or local paths'),
+              subtitle: tr('Saves to a JSON file with your subscriptions, favorites, Watch later and playlists, without accounts, watch history or local paths'),
               leading: _icon(AppIcons.fileArrowUp),
               onTap: () => _exportSettings(context, controller),
             ), subtitle: tr('Backup')),
@@ -1410,8 +1419,13 @@ Future<void> _importSettings(BuildContext context, AppController controller) asy
     if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr("Couldn't read file: {0}", [friendlyFileError(e)]))));
     return;
   }
-  final ok = await controller.importSettings(text);
-  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ok ? tr('Settings imported') : tr("This isn't a settings file exported by Lumtub"))));
+  final merge = await controller.importSettings(text);
+  final message = merge == null
+      ? tr("This isn't a settings file exported by Lumtub")
+      : merge.changed
+          ? tr('Settings imported; added {0} channels, {1} videos and {2} playlists', [merge.channels, merge.videos, merge.playlists])
+          : tr('Settings imported');
+  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }
 
 Future<void> _changeDownloadLocation(BuildContext context, AppController controller) async {

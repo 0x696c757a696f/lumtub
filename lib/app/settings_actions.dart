@@ -150,11 +150,13 @@ extension SettingsActions on AppController {
     if (color != null && color != windowsAccent) _update(() => windowsAccent = color);
   }
 
-  /// Settings as one JSON document, for backup. Values that belong to this
-  /// computer (cache folder, audio output, decoder results) are left out.
+  /// Settings and the library (followed channels, groups, favorites,
+  /// 稍后观看 and own playlists) as one JSON document, for backup. Values that
+  /// belong to this computer (cache folder, audio output, decoder results,
+  /// watch history and progress) are left out.
   String exportSettings() => const JsonEncoder.withIndent('  ').convert({
         'app': 'Lumtub',
-        'version': 1,
+        'version': 2,
         'exported': DateTime.now().toIso8601String(),
         'player': settings.toJson()
           ..remove('cachePath')
@@ -163,18 +165,20 @@ extension SettingsActions on AppController {
           ..remove('decoderResults'),
         'appearance': appearance.toJson(),
         'preferences': preferences.toJson(),
+        if (library != null) 'library': library!.backupJson(),
       });
 
-  /// Applies settings exported by [exportSettings]; false when [text] is not
-  /// such a file. This computer's own values are kept.
-  Future<bool> importSettings(String text) async {
+  /// Applies settings exported by [exportSettings] and adds the library
+  /// entries this computer lacks; null when [text] is not such a file. This
+  /// computer's own values are kept.
+  Future<LibraryMerge?> importSettings(String text) async {
     final Object? data;
     try {
       data = jsonDecode(text);
     } on FormatException {
-      return false;
+      return null;
     }
-    if (data is! Map || (data['app'] != 'Lumtub' && data['app'] != 'YTPlus')) return false;
+    if (data is! Map || (data['app'] != 'Lumtub' && data['app'] != 'YTPlus')) return null;
     final player = PlayerSettings.fromJson(data['player']).copyWith(
       cachePath: settings.cachePath,
       clearCachePath: settings.cachePath == null,
@@ -186,8 +190,9 @@ extension SettingsActions on AppController {
     await saveSettings(player);
     await saveAppearance(AppearanceSettings.fromJson(data['appearance']));
     await savePreferences(AppPreferences.fromJson(data['preferences']));
-    logInfo('Settings imported');
-    return true;
+    final merge = library?.restoreBackup(data['library']) ?? const LibraryMerge();
+    logInfo('Settings imported; ${merge.channels} channels, ${merge.videos} videos and ${merge.playlists} playlists added');
+    return merge;
   }
 
   /// Restores every default except this computer's cache folder and

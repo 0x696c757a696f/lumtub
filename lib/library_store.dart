@@ -40,6 +40,19 @@ class ChannelGroup {
   Map<String, dynamic> toJson() => {'name': name, 'channels': channels.toList()};
 }
 
+/// Playlists copied from the YouTube account have ids starting with this.
+const remotePlaylistPrefix = 'yt:';
+
+/// What restoring a backup added to the library.
+class LibraryMerge {
+  const LibraryMerge({this.channels = 0, this.videos = 0, this.playlists = 0});
+  final int channels;
+  final int videos;
+  final int playlists;
+
+  bool get changed => channels > 0 || videos > 0 || playlists > 0;
+}
+
 /// Favorites, playlists, followed channels and watch progress, stored only on
 /// this computer in `data/library.json`.
 class LibraryStore {
@@ -124,6 +137,68 @@ class LibraryStore {
       }
     }
     return items;
+  }
+
+  /// What a backup holds: followed channels and their groups, favorites,
+  /// 稍后观看 and the user's own playlists. Copies of the YouTube account's
+  /// playlists, watch progress and live marks belong to this computer.
+  Map<String, dynamic> backupJson() => {
+        'channels': channels.map((channel) => channel.toJson()).toList(),
+        'groups': channelGroups.map((group) => group.toJson()).toList(),
+        'favorites': favorites.map((item) => item.toJson()).toList(),
+        'watchLater': watchLater.map((item) => item.toJson()).toList(),
+        'playlists': [for (final playlist in playlists) if (!playlist.id.startsWith(remotePlaylistPrefix)) playlist.toJson()],
+      };
+
+  /// Adds what [raw] (from [backupJson]) has and this library lacks; nothing
+  /// here is removed or replaced.
+  LibraryMerge mergeBackup(Object? raw) {
+    if (raw is! Map) return const LibraryMerge();
+    var channelsAdded = 0;
+    for (final value in raw['channels'] is List ? raw['channels'] as List : const []) {
+      final channel = ChannelRef.fromJson(value);
+      if (channel == null || isFollowing(channel.id)) continue;
+      channels.add(channel);
+      channelsAdded++;
+    }
+    final followed = {for (final channel in channels) channel.id};
+    for (final value in raw['groups'] is List ? raw['groups'] as List : const []) {
+      if (value is! Map || value['name'] is! String || (value['name'] as String).trim().isEmpty) continue;
+      final name = (value['name'] as String).trim();
+      final ids = {for (final id in value['channels'] is List ? value['channels'] as List : const []) if (id is String && followed.contains(id)) id};
+      final group = channelGroups.where((group) => group.name == name).firstOrNull;
+      if (group == null) {
+        channelGroups.add(ChannelGroup(name, ids));
+      } else {
+        group.channels.addAll(ids);
+      }
+    }
+    var videosAdded = 0;
+    void addMissing(List<VideoItem> into, Object? from) {
+      final known = {for (final item in into) item.id};
+      for (final item in _items(from)) {
+        if (known.add(item.id)) {
+          into.add(item);
+          videosAdded++;
+        }
+      }
+    }
+
+    addMissing(favorites, raw['favorites']);
+    addMissing(watchLater, raw['watchLater']);
+    var playlistsAdded = 0;
+    for (final value in raw['playlists'] is List ? raw['playlists'] as List : const []) {
+      if (value is! Map || value['id'] is! String || (value['id'] as String).startsWith(remotePlaylistPrefix)) continue;
+      final id = value['id'] as String;
+      final playlist = playlists.where((playlist) => playlist.id == id).firstOrNull;
+      if (playlist == null) {
+        playlists.add(LocalPlaylist(id: id, name: value['name']?.toString() ?? tr('Playlist'), items: _items(value['items'])));
+        playlistsAdded++;
+      } else {
+        addMissing(playlist.items, value['items']);
+      }
+    }
+    return LibraryMerge(channels: channelsAdded, videos: videosAdded, playlists: playlistsAdded);
   }
 
   Map<String, dynamic> toJson() => {

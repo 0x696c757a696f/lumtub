@@ -104,6 +104,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
             ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
             : Row(mainAxisSize: MainAxisSize.min, children: [
                 IconButton(onPressed: () => importSubscriptionsFromFile(context, library), icon: Icon(AppIcons.downloadSimple), tooltip: tr('Import from file')),
+                IconButton(onPressed: () => exportSubscriptionsToFile(context, library), icon: Icon(AppIcons.fileArrowUp), tooltip: tr('Export subscriptions')),
                 TextButton.icon(onPressed: () => library.refreshFeed(force: true), icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
               ]),
       )),

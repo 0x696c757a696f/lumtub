@@ -932,8 +932,8 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
         entry('queueLast', AppIcons.queue, tr('Add to play queue')),
       ],
       if (controller?.account?.signedIn ?? false) entry('youtube', AppIcons.filmReel, tr('Save to YouTube playlist…')),
+      if (controller != null) entry('channel', AppIcons.userCircle, tr('View channel')),
       if (controller != null && channel != null) ...[
-        entry('channel', AppIcons.userCircle, tr('View channel')),
         if (controller.preferences.isUnrecommended(channel.id))
           entry('recommend', AppIcons.thumbsUp, tr('Recommend this channel again'))
         else
@@ -972,7 +972,7 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
     case 'youtube':
       await showSaveToYoutube(context, controller!, item);
     case 'channel':
-      controller!.openChannel(channel!);
+      await controller!.openChannelOf(item);
     case 'recommend' || 'unrecommend':
       controller!.setRecommendChannel(channel!, choice == 'recommend');
     case 'block':

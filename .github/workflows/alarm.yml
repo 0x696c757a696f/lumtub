@@ -22,7 +22,7 @@ jobs:
       startsWith(github.event.workflow_run.head_branch, 'deps/') ||
       startsWith(github.event.workflow_run.head_branch, 'v') ||
       (github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Retry or report
         env:

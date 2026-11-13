@@ -22,7 +22,7 @@ jobs:
     if: >-
       github.event_name == 'issues' &&
       contains(github.event.issue.labels.*.name, 'bug')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Ask for the log when it is missing
         env:
@@ -54,7 +54,7 @@ jobs:
       !github.event.issue.pull_request &&
       github.event.comment.user.login == github.event.issue.user.login &&
       contains(github.event.issue.labels.*.name, 'needs info')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: The reporter answered
         env:
@@ -67,7 +67,7 @@ jobs:
 
   stale:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
         with:

@@ -33,6 +33,26 @@ abstract final class KeyScroll {
     return true;
   }
 
+  /// Back to the top of the vertical list in [context] (the first one
+  /// under it), else of the one it sits in: what pressing a tab or a title
+  /// that is already shown does. False when there is no list to scroll.
+  static bool toTopAt(BuildContext context) {
+    ScrollableState? found;
+    void look(Element element) {
+      if (found != null) return;
+      if (element is StatefulElement && element.state is ScrollableState && (element.state as ScrollableState).position.axis == Axis.vertical) {
+        found = element.state as ScrollableState;
+        return;
+      }
+      element.visitChildElements(look);
+    }
+
+    context.visitChildElements(look);
+    final position = found?.position ?? Scrollable.maybeOf(context, axis: Axis.vertical)?.position;
+    if (position == null) return false;
+    return toEnd(false, of: position);
+  }
+
   /// To the top, or the bottom of what has loaded so far.
   static bool toEnd(bool bottom, {ScrollPosition? of}) {
     final position = of ?? target();

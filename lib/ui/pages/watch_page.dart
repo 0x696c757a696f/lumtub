@@ -19,6 +19,7 @@ import '../../youtube_account.dart' show VideoRating;
 import '../comments_view.dart';
 import '../cast_ui.dart';
 import '../common.dart';
+import '../key_scroll.dart';
 import '../lights_off.dart';
 import '../live_chat_rows.dart';
 import '../linked_text.dart';
@@ -946,6 +947,18 @@ class _SidePanelState extends State<_SidePanel> with TickerProviderStateMixin {
     if (index >= 0 && tabs != null && tabs.index != index) tabs.animateTo(index);
   }
 
+  /// The tab last settled on, before a tap moves away from it.
+  int _settled = 0;
+  final _pageKeys = <String, GlobalKey>{};
+
+  /// A tap on the tab already shown takes its list back to the top.
+  void _tapped(int index, String id) {
+    if (index == _settled) {
+      final page = _pageKeys[id]?.currentContext;
+      if (page != null) KeyScroll.toTopAt(page);
+    }
+  }
+
   TabController _controllerFor(List<String> ids) {
     if (_tabs != null && listEquals(ids, _ids)) return _tabs!;
     final was = _tabs == null ? sidePanelTab.value : _ids[_tabs!.index];
@@ -953,8 +966,11 @@ class _SidePanelState extends State<_SidePanel> with TickerProviderStateMixin {
     _ids = ids;
     final tabs = TabController(length: ids.length, vsync: this, initialIndex: max(0, ids.indexOf(was ?? '')));
     tabs.addListener(() {
-      if (!tabs.indexIsChanging) sidePanelTab.value = _ids[tabs.index];
+      if (tabs.indexIsChanging) return;
+      sidePanelTab.value = _ids[tabs.index];
+      _settled = tabs.index;
     });
+    _settled = tabs.index;
     return _tabs = tabs;
   }
 
@@ -976,11 +992,11 @@ class _SidePanelState extends State<_SidePanel> with TickerProviderStateMixin {
     final tabController = _controllerFor([for (final (id, _, _) in tabs) id]);
     return Column(children: [
       Row(children: [
-        Expanded(child: TabBar(controller: tabController, isScrollable: tabs.length > 3, tabAlignment: tabs.length > 3 ? TabAlignment.start : null, dividerColor: Colors.transparent, tabs: [for (final (_, label, _) in tabs) Tab(height: widget.intro != null ? 48 : 40, text: label)])),
+        Expanded(child: TabBar(controller: tabController, onTap: (i) => _tapped(i, tabs[i].$1), isScrollable: tabs.length > 3, tabAlignment: tabs.length > 3 ? TabAlignment.start : null, dividerColor: Colors.transparent, tabs: [for (final (_, label, _) in tabs) Tab(height: widget.intro != null ? 48 : 40, text: label)])),
         if (widget.trailing case final trailing?) trailing,
       ]),
       const SizedBox(height: 8),
-      Expanded(child: TabBarView(controller: tabController, children: [for (final (_, _, view) in tabs) view])),
+      Expanded(child: TabBarView(controller: tabController, children: [for (final (id, _, view) in tabs) KeyedSubtree(key: _pageKeys.putIfAbsent(id, GlobalKey.new), child: view)])),
     ]);
   }
 }

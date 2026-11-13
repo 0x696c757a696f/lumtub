@@ -109,7 +109,7 @@ impl Web {
             .no_gzip()
             .no_brotli()
             .no_deflate()
-            .redirect(reqwest::redirect::Policy::limited(10))
+            .redirect(crate::redirect::policy())
             // 加密 DNS, when it is on, finds YouTube's stream servers too.
             .dns_resolver(Arc::new(crate::dns::LiveResolver));
         builder = match proxy {

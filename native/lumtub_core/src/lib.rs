@@ -35,6 +35,7 @@ pub mod process_tree;
 pub mod quick;
 pub mod record;
 pub mod redact;
+pub mod redirect;
 pub mod relay;
 pub mod relay_live;
 pub mod resolved;

@@ -134,15 +134,5 @@ Each is fixed in its own change; remove the line when it is.
 
 代码里还没达到本规范的地方，按重要程度排列。逐条单独修，修完就删掉对应行。
 
-1. The stream resolver resolves the next video as soon as one opens; resolve it only after playback is stable (`lib/stream_resolver.dart`). It now keeps 4 answers (about 5 MB each), never drops the one asked for last, and lets them go when the app is hidden with nothing playing.
-   流解析器一打开视频就解析下一个，应改为播放稳定后再解析。现在只保留 4 个结果（每个约 5 MB），不会丢掉最后请求的那个，应用隐藏且没在播放时全部释放。
-2. Storyboards read whole response bodies; playlist covers and hover frames bypass the thumbnail cache and its limits (`lib/storyboard.dart`, `lib/ui/pages/library_pages.dart`).
-   故事板预览图整段读取响应；播放列表封面和悬停预览帧绕过了缩略图缓存及其上限。
-3. Thumbnails keep loading for cards scrolled off screen.
-   卡片滑出屏幕后缩略图仍在继续加载。
-4. Card height is fixed, so large text sizes crowd the card (`lib/ui/video_card.dart`, `_cardInfoHeight`).
-   卡片高度固定，系统字号调大时卡片会挤。
-5. Redirects are not checked against the host rules in the Rust core (`relay.rs`, `http.rs`).
-   Rust 核心里的网络跳转没有按主机规则检查。
-6. The player cache defaults (60 s / 100 MiB, 64 MiB on Android) and `demuxer-hysteresis` are untested against a 96 MiB budget; the Windows bridge still calls `glFinish` every frame. Both need measurements first.
+1. The player cache defaults (60 s / 100 MiB, 64 MiB on Android) and `demuxer-hysteresis` are untested against a 96 MiB budget; the Windows bridge still calls `glFinish` every frame. Both need measurements first.
    播放器缓冲默认值（60 秒 / 100 MiB，Android 64 MiB）和 `demuxer-hysteresis` 还没按 96 MiB 的目标测过；Windows 渲染桥每帧仍调用 `glFinish`。两项都要先实测。

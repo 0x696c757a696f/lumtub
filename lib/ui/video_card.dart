@@ -54,8 +54,9 @@ ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 4
     width,
     null,
     switch ((thumbnails, frame)) {
-      (null, null) => NetworkImage(url),
-      (null, final frame?) => NetworkImage(frame.toString()),
+      // Without the cache folder still within the download limits.
+      (null, null) => CachedThumbnail(url, null),
+      (null, final frame?) => CachedThumbnail(frame.toString(), null, fallback: CachedThumbnail(url, null)),
       (final dir?, null) => CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, file)),
       (final dir?, final frame?) => CachedThumbnail(frame.toString(), CachedThumbnail.fileFor(dir, item.id, 'dearrow_${frame.queryParameters['time']}'), fallback: CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, file))),
     },
@@ -338,11 +339,10 @@ class PlaylistCard extends StatelessWidget {
               borderRadius: AppStyle.thumbnailRadius,
               child: Stack(fit: StackFit.expand, children: [
                 if (cover != null)
-                  LayoutBuilder(builder: (context, box) => Image.network(
+                  LayoutBuilder(builder: (context, box) => Image(
                     color: context.pictureWarmth,
                     colorBlendMode: BlendMode.multiply,
-                    cover,
-                    cacheWidth: thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context), largest: 480),
+                    image: ResizeImage.resizeIfNeeded(thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context), largest: 480), null, CachedThumbnail(cover, null)),
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stack) => ColoredBox(color: colors.surfaceContainerHighest),
                   ))
@@ -500,7 +500,7 @@ class _VideoCardState extends State<VideoCard> {
     final url = 'https://i.ytimg.com/vi/${item.id}/mq$frame.jpg';
     final dir = widget.thumbnails;
     // mq frames are 320 wide; decoding them larger gains nothing.
-    return ResizeImage.resizeIfNeeded(320, null, dir == null ? NetworkImage(url) : CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, 'mq$frame')));
+    return ResizeImage.resizeIfNeeded(320, null, CachedThumbnail(url, dir == null ? null : CachedThumbnail.fileFor(dir, item.id, 'mq$frame')));
   }
 
   @override

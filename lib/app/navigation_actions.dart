@@ -16,6 +16,7 @@ extension NavigationActions on AppController {
       _tracking = null;
       _recoveryTimer?.cancel();
       _recovery.reset();
+      _settled.stop();
       ++_playSerial;
     }
     if (target == PageMode.home) unawaited(refreshHomeFeed());

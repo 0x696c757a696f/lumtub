@@ -1089,6 +1089,11 @@ final _chatRows = Expando<Widget>();
 @visibleForTesting
 Widget upNextForTest(AppController controller) => _UpNext(controller: controller);
 
+enum _Related { all, channel, others, forYou, recent, watched }
+
+/// Which related videos show, for the video it was picked on.
+final _relatedFilter = ValueNotifier<(String?, _Related)>((null, _Related.all));
+
 class _UpNext extends StatelessWidget {
   const _UpNext({required this.controller, this.shrinkWrap = false});
   final AppController controller;
@@ -1136,7 +1141,29 @@ class _UpNext extends StatelessWidget {
       if (controller.playingList == null && items.isNotEmpty) SliverList.builder(itemCount: items.length, itemBuilder: (context, i) => _tile(items[i], null)),
       if (related != null) ...[
         SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.only(top: 16), child: _header(context, tr('Related videos'), tr('Search by title')))),
-        SliverList.builder(itemCount: relatedItems.length, itemBuilder: (context, i) => _tile(relatedItems[i], relatedItems)),
+        ValueListenableBuilder(
+          valueListenable: _relatedFilter,
+          builder: (context, picked, _) {
+            final playing = controller.playing;
+            final choices = _relatedChoices(playing, relatedItems);
+            final (_, kind) = picked.$1 == playing?.id && choices.any((c) => c.$1 == picked.$2) ? picked : (playing?.id, _Related.all);
+            final shown = choices.firstWhere((c) => c.$1 == kind).$3;
+            return SliverMainAxisGroup(slivers: [
+              if (choices.length > 1)
+                SliverToBoxAdapter(child: SizedBox(
+                  height: 40,
+                  child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.fromLTRB(4, 0, 4, 8), children: [
+                    for (final (value, label, _) in choices)
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(end: 8),
+                        child: ChoiceChip(label: Text(label), selected: value == kind, onSelected: (_) => _relatedFilter.value = (playing?.id, value)),
+                      ),
+                  ]),
+                )),
+              SliverList.builder(itemCount: shown.length, itemBuilder: (context, i) => _tile(shown[i], shown)),
+            ]);
+          },
+        ),
       ],
       SliverList.list(children: tail),
     ];
@@ -1154,6 +1181,31 @@ class _UpNext extends StatelessWidget {
           if (trailing != null) trailing,
         ]),
       );
+
+  /// The ways the related videos can be narrowed, as YouTube offers them
+  /// beside a video, each with what it shows; only those that show
+  /// something, after 全部.
+  List<(_Related, String, List<VideoItem>)> _relatedChoices(VideoItem? playing, List<VideoItem> related) {
+    final channelId = playing?.channelId ?? controller.details?.channelId;
+    final channel = playing?.channel ?? '';
+    bool own(VideoItem item) => channelId != null && item.channelId != null ? item.channelId == channelId : channel.isNotEmpty && item.channel == channel;
+    final library = controller.library;
+    final monthAgo = DateTime.now().subtract(const Duration(days: 30));
+    final forYou = [for (final item in controller.homeFeed?.items ?? const <VideoItem>[]) if (item.id != playing?.id) item];
+    final choices = [
+      (_Related.all, tr('All'), related),
+      (_Related.channel, tr('From {0}', [channel]), [for (final item in related) if (own(item)) item]),
+      (_Related.others, tr('Related content'), [for (final item in related) if (!own(item)) item]),
+      (_Related.forYou, tr('For you'), forYou),
+      (_Related.recent, tr('Recently uploaded'), [for (final item in related) if (item.published?.isAfter(monthAgo) ?? false) item]),
+      (_Related.watched, tr('Watched'), [for (final item in related) if (library?.progressOf(item.id) != null) item]),
+    ];
+    return [
+      for (final choice in choices)
+        if (choice.$1 == _Related.all || (choice.$3.isNotEmpty && choice.$3.length < related.length) || (choice.$1 == _Related.forYou && choice.$3.isNotEmpty))
+          if (choice.$1 != _Related.channel || channel.isNotEmpty) choice,
+    ];
+  }
 
   Widget _tile(VideoItem item, List<VideoItem>? list) =>
       CompactVideoTile(item: item, thumbnails: controller.thumbnailDirectory, onOpen: () => controller.play(item, from: list));

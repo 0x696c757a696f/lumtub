@@ -256,19 +256,32 @@ class _TvSignInTile extends StatelessWidget {
               OutlinedButton(onPressed: sign.signOut, child: Text(tr('Exit'))),
             ]),
           ),
-        TvSignInState.waiting => ListTile(
-            leading: const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
-            title: code == null
-                ? Text(tr('Getting a TV code…'))
-                : Row(children: [
-                    Text(tr('TV code: ')),
-                    SelectableText(code, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 2)),
-                    IconButton(tooltip: tr('Copy'), icon: Icon(AppIcons.copySimple, size: 18), onPressed: () => copyText(context, code, tr('TV code copied'))),
-                  ]),
-            subtitle: Text(tr('Open {0} in a browser, sign in to Google and enter the TV code above. This page continues by itself once you are done.', [sign.address])),
-            trailing: Wrap(spacing: 8, children: [
-              if (code != null) FilledButton.tonal(onPressed: () => openExternal(sign.address), child: Text(tr('Open page'))),
-              TextButton(onPressed: sign.cancel, child: Text(tr('Cancel'))),
+        // Laid out down the page, not as a list row: the code, the steps
+        // and the buttons each get the full width, which a phone needs.
+        TvSignInState.waiting => Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
+                const SizedBox(width: 12),
+                Expanded(child: Text(code == null ? tr('Getting a TV code…') : tr('TV code: '))),
+              ]),
+              if (code != null)
+                Row(children: [
+                  Flexible(child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: SelectableText(code, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 2)),
+                  )),
+                  IconButton(tooltip: tr('Copy'), icon: Icon(AppIcons.copySimple, size: 18), onPressed: () => copyText(context, code, tr('TV code copied'))),
+                ]),
+              const SizedBox(height: 4),
+              Text(tr('Open {0} in a browser, sign in to Google and enter the TV code above. This page continues by itself once you are done.', [sign.address]), style: context.text.bodySmall?.copyWith(color: colors.onSurfaceVariant)),
+              const SizedBox(height: 8),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                if (code != null) FilledButton.tonal(onPressed: () => openExternal(sign.address), child: Text(tr('Open page'))),
+                TextButton(onPressed: sign.cancel, child: Text(tr('Cancel'))),
+              ]),
             ]),
           ),
         TvSignInState.signedOut => ListTile(

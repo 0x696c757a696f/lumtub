@@ -1351,6 +1351,9 @@ jobs:
           sparse-checkout: |
             release-notes
             native/lumtub_core
+            ios/packaging
+            pubspec.yaml
+          sparse-checkout-cone-mode: false
       - name: Packages built here
         if: needs.reuse.outputs.run == ''
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
@@ -1392,6 +1395,17 @@ jobs:
           rustup update stable
           shopt -s nullglob
           cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg dist/*.apk dist/*.ipa
+      - name: AltStore and SideStore source
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          # Added once in SideStore or AltStore, the source at
+          # releases/latest/download/altstore-source.json offers each new IPA.
+          shopt -s nullglob
+          ipas=(dist/*.ipa)
+          (( ${#ipas[@]} == 1 )) || { echo "No IPA in this release"; exit 0; }
+          version="${TAG#v}"
+          python3 ios/packaging/altstore-source.py "${ipas[0]}" "$TAG" "release-notes/${version%%-*}.md" dist/altstore-source.json
       - name: Publish the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

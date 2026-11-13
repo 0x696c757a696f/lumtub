@@ -13,6 +13,10 @@ class Device {
   /// A TV, Android TV or another Android TV box: no touch screen, a remote.
   static bool tv = false;
 
+  /// The caption size from Android's accessibility settings, 1 when
+  /// captions are not turned on there.
+  static double captionScale = 1;
+
   /// Asks the Android side once, before the first frame.
   static Future<void> load() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
@@ -21,6 +25,11 @@ class Device {
         tv = await const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('isTv') ?? false;
       } catch (e) {
         logWarn('Could not ask whether this is a TV: $e');
+      }
+      try {
+        captionScale = (await const MethodChannel('lumtub/windows_shell').invokeMethod<double>('captionScale') ?? 1).clamp(0.25, 4.0);
+      } catch (e) {
+        logWarn('Could not read the system caption size: $e');
       }
     }
     Skin.formFactor = tv ? 'tv' : tablet ? 'tablet' : 'mobile';

@@ -486,9 +486,13 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a finger\'s double tap on the sides skips 10 s', (tester) async {
+  testWidgets('a finger: a tap shows or hides the controls, a double tap anywhere pauses, a sideways slide seeks', (tester) async {
     await pump(tester);
     final rect = tester.getRect(find.byType(PlayerControls));
+    final playing = player.state.playing;
+    await tester.tapAt(rect.center, kind: PointerDeviceKind.touch);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(player.state.playing, playing, reason: 'one tap leaves playback alone');
     Future<void> doubleTap(Offset at) async {
       await tester.tapAt(at, kind: PointerDeviceKind.touch);
       await tester.pump(const Duration(milliseconds: 50));
@@ -497,9 +501,17 @@ void main() {
     }
 
     await doubleTap(rect.centerRight - const Offset(60, 0));
-    expect(player.seeks.last, const Duration(minutes: 1, seconds: 10));
-    await doubleTap(rect.centerLeft + const Offset(60, 0));
-    expect(player.seeks.last, const Duration(minutes: 1));
+    expect(player.state.playing, !playing, reason: 'a double tap at the side pauses too');
+    final seeks = player.seeks.length;
+    final finger = await tester.startGesture(rect.center, kind: PointerDeviceKind.touch);
+    for (var i = 0; i < 10; i++) {
+      await finger.moveBy(Offset(rect.width / 40, 0));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await finger.up();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(player.seeks.length, seeks + 1);
+    expect(player.seeks.last, greaterThan(const Duration(minutes: 1, seconds: 30)), reason: "a quarter of the width is about 45 s of the 3 minutes it spans");
     await tester.pump(const Duration(seconds: 10));
     expect(tester.takeException(), isNull);
   });

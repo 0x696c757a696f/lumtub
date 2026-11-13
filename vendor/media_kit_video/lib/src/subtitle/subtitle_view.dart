@@ -108,6 +108,7 @@ class SubtitleViewState extends State<SubtitleView> {
         final textScaleFactor = sqrt((nr / dr).clamp(0.0, 1.0));
 
         final textScaler = widget.configuration.textScaler ??
+            widget.configuration.scaleFor?.call(constraints.biggest) ??
             TextScaler.linear(textScaleFactor);
         return Material(
           color: Colors.transparent,
@@ -255,6 +256,10 @@ class SubtitleViewConfiguration {
   /// The padding to be used for the subtitles.
   final EdgeInsets padding;
 
+  /// Lumtub: the text scale for a view of the given size, used when
+  /// [textScaler] is null instead of scaling by area against 1080p.
+  final TextScaler Function(Size size)? scaleFor;
+
   /// Lumtub: the style of the secondary subtitle; null draws it like the
   /// main one.
   final TextStyle? secondaryStyle;
@@ -281,6 +286,7 @@ class SubtitleViewConfiguration {
     this.textAlign = TextAlign.center,
     this.textScaler,
     this.secondaryStyle,
+    this.scaleFor,
     this.spacing = 4.0,
     this.secondaryKey,
     this.padding = const EdgeInsets.fromLTRB(

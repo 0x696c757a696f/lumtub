@@ -226,6 +226,10 @@ class MainActivity : FlutterActivity() {
             "moveToBack" -> moveTaskToBack(true)
             "setAppIcon" -> setAppIcon(call.arguments == "sunlight")
             "setFrameRate" -> fitFrameRate((call.arguments as? Number)?.toDouble() ?: 0.0)
+            // The caption size set in Android's accessibility settings, as
+            // ExoPlayer reads it: only while captions are turned on there.
+            "captionScale" -> return (getSystemService(CAPTIONING_SERVICE) as android.view.accessibility.CaptioningManager)
+                .let { if (it.isEnabled) it.fontScale.toDouble() else 1.0 }
             "isMetered" -> return (getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager).isActiveNetworkMetered
         }
         return null

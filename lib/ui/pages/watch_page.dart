@@ -744,7 +744,7 @@ class _Player extends StatelessWidget {
                       ),
                     ),
                   ),
-                  subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label),
+                  subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label, byHeight: Platform.isAndroid, libass: controller.libassDraws),
                   onEnterFullscreen: () {
                     WindowChrome.fullscreen.value = true;
                     // Turned sideways: the bars hide, and the screen still
@@ -1152,14 +1152,21 @@ class _UpNext extends StatelessWidget {
 /// becomes 5.5% of the short side, between 13 and 32 px.
 double smallSubtitleScale(Size size) => (size.shortestSide * 0.055).clamp(13.0, 32.0) / 32;
 
-SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary}) {
+/// The text scale for subtitles on Android in a player [size] tall, as
+/// ExoPlayer and YouTube's app size them on phones, tablets and TVs: 5.33%
+/// of the player's height times the caption size from Android's settings
+/// ([system]), never under 12 px. Scaling by area against 1080p would leave
+/// a phone's upright player with 9 px text.
+double androidSubtitleScale(Size size, [double system = 1]) => max(12.0, size.height * 0.0533 * system) / 32;
+
+SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass}) {
   // The view scales by area against 1080p, which makes the text tiny in a
   // small window. There a line is about a twentieth of the picture's
   // height, as on a TV, but never under 13 px, which stays readable, nor
   // over the full-size text.
-  final textScaler = smallWindow == null ? null : TextScaler.linear(smallSubtitleScale(smallWindow));
+  final textScaler = smallWindow == null || byHeight ? null : TextScaler.linear(smallSubtitleScale(smallWindow));
   final paddingScale = smallWindow == null ? 1.0 : (smallWindow.shortestSide / 720).clamp(0.3, 1.0);
-  if (settings.libassSubtitles) return const SubtitleViewConfiguration(visible: false);
+  if (libass ?? settings.libassSubtitles) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;
   TextStyle style(String font, double scale, int color, double opacity) => TextStyle(
         height: 1.3,
@@ -1184,6 +1191,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     secondaryStyle: style(settings.secondaryFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity),
     // sub-pos counts from the top; 100 is the bottom edge.
     textScaler: textScaler,
+    scaleFor: byHeight ? (size) => TextScaler.linear(androidSubtitleScale(size, Device.captionScale)) : null,
     spacing: 6,
     secondaryKey: secondary,
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),

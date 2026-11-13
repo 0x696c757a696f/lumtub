@@ -741,7 +741,12 @@ class PlayerSettings {
 
   /// [font] as libass should ask for it here: the default Windows font
   /// becomes the system's own Chinese font on macOS and Linux.
+  /// The family libmpv draws subtitles with on Android at first, from the
+  /// system fonts AndroidSubtitleFonts gathers; it changes with the text.
+  static const androidSubtitleFont = 'Noto Sans CJK SC';
+
   static String fontForThisSystem(String font) {
+    if (Platform.isAndroid) return androidSubtitleFont;
     if (font != defaultSubtitleFont || Platform.isWindows) return font;
     return Platform.isMacOS ? 'PingFang SC' : 'Noto Sans CJK SC';
   }

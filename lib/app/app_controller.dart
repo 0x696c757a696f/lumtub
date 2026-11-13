@@ -14,6 +14,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../ai_filter.dart';
+import '../android_subtitle_fonts.dart';
 import '../app_directories.dart';
 import '../app_updater.dart';
 import '../app_log.dart';
@@ -777,6 +778,14 @@ class AppController extends ChangeNotifier with _ExploreState {
   int _subtitleLift = 0;
   /// The main subtitle mpv shows now, for placing the second one.
   List<String> _mainSubtitle = const [];
+  /// The family libmpv draws subtitles in on Android, picked by their text.
+  String? _subtitleFamily;
+  /// On Android: libmpv met subtitles no one font can draw, so Flutter's
+  /// subtitle view draws this video's instead.
+  bool libassCantDraw = false;
+
+  /// Whether libmpv draws the subtitles now, not Flutter's view.
+  bool get libassDraws => settings.libassSubtitles && !libassCantDraw;
 
   bool _backgroundAudioOnly = false;
   bool _windowHidden = false;

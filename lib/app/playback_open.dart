@@ -203,6 +203,7 @@ extension PlaybackOpening on AppController {
         await platform.setProperty('curl-max-request-size', _relayed == item.id ? '64MiB' : PlayerOptionApplicator.curlRequestSize);
       }
       _tracking = null;
+      _resetSubtitleFont();
       if (secondarySubtitle != null) {
         secondarySubtitle = null;
         if (platform is NativePlayer) unawaited(SecondarySubtitle.off(platform).catchError((_) {}));
@@ -258,6 +259,7 @@ extension PlaybackOpening on AppController {
     _openedVia = null;
     _openedResolved = null;
     _tracking = null;
+    _resetSubtitleFont();
     if (secondarySubtitle != null) {
       secondarySubtitle = null;
       final platform = player.platform;
@@ -307,6 +309,7 @@ extension PlaybackOpening on AppController {
       if (serial != _playSerial) return false;
       if (address == null) continue;
       _tracking = null;
+      _resetSubtitleFont();
       _lastPosition = start ?? Duration.zero;
       _resumePoint.start(_lastPosition);
       _openedResolved = null;

@@ -370,34 +370,51 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   /// A finger's double tap on the left or right third skips back or ahead
   /// 10 s, as in YouTube's phone app, and taps in a row add up; the middle
   /// plays or pauses. The mouse's double click toggles full screen.
+  /// A finger's double tap anywhere plays or pauses, as in Bilibili's and
+  /// other Chinese video apps; seeking is a sideways slide. A mouse's double
+  /// click toggles full screen.
   void _doubleTap() {
     final at = _doubleTapAt;
-    final width = context.size?.width ?? 0;
     final touch = at != null && (at.kind == PointerDeviceKind.touch || at.kind == PointerDeviceKind.stylus);
-    if (!touch || width <= 0) {
+    if (!touch) {
       unawaited(widget.state?.toggleFullscreen());
       return;
     }
-    final x = at.localPosition.dx;
-    if (x >= width / 3 && x <= width * 2 / 3) {
-      unawaited(HapticFeedback.selectionClick());
-      unawaited(_player.playOrPause());
-      _showFeedback(_player.state.playing ? AppIcons.pauseFill : AppIcons.playFill, _player.state.playing ? tr('Pause') : tr('Play'));
-      return;
-    }
-    final ahead = x > width / 2;
-    final now = DateTime.now();
-    // Taps soon after the last one, the same way, show the total skipped.
-    final run = _seekRunAt != null && now.difference(_seekRunAt!) < const Duration(milliseconds: 1200) && (_seekRun > 0) == ahead ? _seekRun : 0;
-    _seekRun = run + (ahead ? 10 : -10);
-    _seekRunAt = now;
     unawaited(HapticFeedback.selectionClick());
-    unawaited(_controller.seekBy(Duration(seconds: ahead ? 10 : -10)));
-    _showFeedback(ahead ? AppIcons.fastForwardFill : AppIcons.rewindFill, ahead ? tr('+10 s').replaceFirst('10', '$_seekRun') : tr('-10 s').replaceFirst('10', '${-_seekRun}'));
+    unawaited(_player.playOrPause());
+    _showFeedback(_player.state.playing ? AppIcons.pauseFill : AppIcons.playFill, _player.state.playing ? tr('Pause') : tr('Play'));
   }
 
-  int _seekRun = 0;
-  DateTime? _seekRunAt;
+  /// Where a sideways slide started, how far it went and where it seeks to.
+  Duration? _slideFrom, _slideTo;
+  double _slideX = 0;
+
+  void _seekSlideStart(DragStartDetails details) {
+    final length = _player.state.duration;
+    _slideFrom = length > Duration.zero ? _player.state.position : null;
+    _slideTo = _slideFrom;
+    _slideX = 0;
+  }
+
+  /// The player's width is three minutes, or the whole video when shorter.
+  void _seekSlideUpdate(DragUpdateDetails details) {
+    final from = _slideFrom, width = context.size?.width ?? 0;
+    if (from == null || width <= 0) return;
+    _slideX += details.primaryDelta ?? 0;
+    final length = _player.state.duration;
+    final span = length < const Duration(minutes: 3) ? length : const Duration(minutes: 3);
+    final to = from + span * (_slideX / width);
+    _slideTo = to < Duration.zero ? Duration.zero : (to > length ? length : to);
+    _showFeedback(_slideX >= 0 ? AppIcons.fastForwardFill : AppIcons.rewindFill, '${formatPlaybackTime(_slideTo!)} / ${formatPlaybackTime(length)}');
+  }
+
+  void _seekSlideEnd(DragEndDetails details) {
+    final to = _slideTo;
+    _slideFrom = _slideTo = null;
+    if (to != null) unawaited(_controller.seek(to));
+  }
+
+  PointerDeviceKind? _tapKind;
 
   /// Phones only: keeps the screen in the way it is held now, landscape or
   /// portrait, until unlocked.
@@ -600,10 +617,26 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                     onVerticalDragStart: _dragStart,
                     onVerticalDragUpdate: _dragUpdate,
                     onVerticalDragEnd: _dragEnd,
+                    onHorizontalDragStart: _seekSlideStart,
+                    onHorizontalDragUpdate: _seekSlideUpdate,
+                    onHorizontalDragEnd: _seekSlideEnd,
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
+                      onTapUp: (details) => _tapKind = details.kind,
                       onTap: () {
                         _focus.requestFocus();
+                        // A finger's tap shows or hides the controls, as in
+                        // phone video apps; a double tap in the middle
+                        // pauses. A mouse click pauses, as on YouTube.
+                        if (_tapKind == PointerDeviceKind.touch || _tapKind == PointerDeviceKind.stylus) {
+                          if (_animation.value > 0 && _animation.status != AnimationStatus.reverse) {
+                            _hideTimer?.cancel();
+                            _animation.reverse();
+                          } else {
+                            _show();
+                          }
+                          return;
+                        }
                         unawaited(_player.playOrPause());
                         _show();
                       },

@@ -16,7 +16,7 @@ class SubscriptionImport {
   final SubscriptionFormat? format;
 }
 
-enum SubscriptionFormat { newPipe, freeTube, youtubeJson, csv, opml }
+enum SubscriptionFormat { newPipe, freeTube, youtubeJson, csv, opml, lumtub }
 
 final _channelId = RegExp(r'^UC[\w-]{22}$');
 final _inUrl = RegExp(r'(?:/channel/|[?&]channel_id=)(UC[\w-]{22})');
@@ -27,8 +27,8 @@ const maxSubscriptionFileBytes = 20 << 20;
 /// [parseSubscriptions] off the UI thread, for files that can be large.
 Future<SubscriptionImport> parseSubscriptionsInBackground(List<int> bytes) => Isolate.run(() => parseSubscriptions(bytes));
 
-/// Reads a NewPipe, FreeTube or YouTube JSON export, a Google Takeout or
-/// FreeTube CSV, or an OPML file, deciding by the content. Never throws:
+/// Reads a NewPipe, FreeTube or YouTube JSON export, a Lumtub settings
+/// backup, a Google Takeout or FreeTube CSV, or an OPML file, deciding by the content. Never throws:
 /// unreadable input gives an empty list.
 SubscriptionImport parseSubscriptions(List<int> bytes) {
   var text = utf8.decode(bytes, allowMalformed: true);
@@ -40,6 +40,16 @@ SubscriptionImport parseSubscriptions(List<int> bytes) {
   if (first == '<') return _opml(text);
   return _csv(text);
 }
+
+/// [channels] (id and name) as a NewPipe subscriptions export, which
+/// NewPipe, FreeTube, LibreTube and Lumtub itself can import.
+String newPipeSubscriptions(Iterable<(String id, String name)> channels) => const JsonEncoder.withIndent('  ').convert({
+      'app_version': '0.27.6',
+      'app_version_int': 1004,
+      'subscriptions': [
+        for (final (id, name) in channels) {'service_id': 0, 'url': 'https://www.youtube.com/channel/$id', 'name': name},
+      ],
+    });
 
 String? _idFrom(Object? value) {
   if (value is! String) return null;
@@ -119,6 +129,9 @@ SubscriptionImport _json(String text) {
       if (subscriptions is List) {
         final newPipe = doc.containsKey('app_version') || (subscriptions.isNotEmpty && subscriptions.first is Map && (subscriptions.first as Map).containsKey('service_id'));
         list(subscriptions, newPipe ? SubscriptionFormat.newPipe : SubscriptionFormat.freeTube);
+      } else if (doc['library'] is Map && (doc['library'] as Map)['channels'] is List) {
+        // A Lumtub settings backup.
+        list((doc['library'] as Map)['channels'], SubscriptionFormat.lumtub);
       } else if (doc['items'] is List) {
         list(doc['items'], SubscriptionFormat.youtubeJson);
       } else {

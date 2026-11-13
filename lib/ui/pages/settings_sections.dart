@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +9,7 @@ import '../../app/app_controller.dart';
 import '../../blocked_groups.dart';
 import '../../feed_quality.dart';
 import '../../format_policy.dart';
+import '../../save_file.dart';
 import '../../sun_times.dart';
 import '../../app_log.dart';
 import '../../app_window.dart';
@@ -1000,6 +999,15 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 if (library != null) importSubscriptionsFromFile(context, library);
               },
             )),
+        SettingEntry(tr('Export subscriptions'), (context) => NormalItem(
+              title: tr('Export subscriptions'),
+              subtitle: tr('Saves your followed channels as a NewPipe file, which NewPipe, FreeTube and Lumtub can import. Exporting settings also includes them'),
+              leading: _icon(AppIcons.fileArrowUp),
+              onTap: () {
+                final library = controller.library;
+                if (library != null) exportSubscriptionsToFile(context, library);
+              },
+            ), subtitle: tr('Backup')),
     ],
     SettingsCategory.enhance => [
         SettingEntry(tr('SponsorBlock'), (context) => SwitchItem(
@@ -1354,7 +1362,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             )),
         SettingEntry(tr('Export settings'), (context) => NormalItem(
               title: tr('Export settings'),
-              subtitle: tr('Saves to a JSON file, without accounts, watch history or local paths'),
+              subtitle: tr('Saves to a JSON file with your subscriptions, favorites, Watch later and playlists, without accounts, watch history or local paths'),
               leading: _icon(AppIcons.fileArrowUp),
               onTap: () => _exportSettings(context, controller),
             ), subtitle: tr('Backup')),
@@ -1401,10 +1409,8 @@ TextStyle _note(BuildContext context) => TextStyle(color: context.colors.outline
 Future<void> _exportSettings(BuildContext context, AppController controller) async {
   final now = DateTime.now();
   final name = tr('Lumtub_settings_{0}{1}{2}.json', [now.year, now.month.toString().padLeft(2, '0'), now.day.toString().padLeft(2, '0')]);
-  final location = await getSaveLocation(suggestedName: name, acceptedTypeGroups: const [XTypeGroup(label: 'JSON', extensions: ['json'])]);
-  if (location == null) return;
   try {
-    await XFile.fromData(Uint8List.fromList(utf8.encode(controller.exportSettings())), mimeType: 'application/json', name: name).saveTo(location.path);
+    if (!await saveFileAs(name, await controller.exportSettings(), mime: 'application/json', label: 'JSON', extension: 'json')) return;
     if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Settings exported'))));
   } catch (e) {
     logError('Could not export settings', e);
@@ -1422,8 +1428,13 @@ Future<void> _importSettings(BuildContext context, AppController controller) asy
     if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr("Couldn't read file: {0}", [friendlyFileError(e)]))));
     return;
   }
-  final ok = await controller.importSettings(text);
-  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ok ? tr('Settings imported') : tr("This isn't a settings file exported by Lumtub"))));
+  final merge = await controller.importSettings(text);
+  final message = merge == null
+      ? tr("This isn't a settings file exported by Lumtub")
+      : merge.changed
+          ? tr('Settings imported; added {0} channels, {1} videos and {2} playlists', [merge.channels, merge.videos, merge.playlists])
+          : tr('Settings imported');
+  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }
 
 Future<void> _changeDownloadLocation(BuildContext context, AppController controller) async {

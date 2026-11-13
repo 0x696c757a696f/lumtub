@@ -705,7 +705,7 @@ class SliverVideoLayout extends StatelessWidget {
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent);
+          final layout = gridLayoutFor(constraints.crossAxisExtent, textScale: cardTextScale(context));
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: layout.columns,

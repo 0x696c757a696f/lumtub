@@ -28,9 +28,12 @@ import '../feed_reason.dart';
 /// Height of the text below a card's thumbnail: two title lines and one
 /// line with the reason, the channel and the menu. The views and age sit
 /// on the thumbnail, as Bilibili shows them.
-/// A TV's text is 1.15 times larger (main.dart), so two title lines need
-/// the room too.
-double get _cardInfoHeight => (compactCards ? 70.0 : 76.0) * (Device.tv ? 1.15 : 1);
+/// The text grows with [textScale] (the app's text size, Android's font
+/// size and a TV's larger text); the padding round it does not.
+double _cardInfoHeight(double textScale) => compactCards ? 10 + 60 * textScale : 14 + 62 * textScale;
+
+/// How much larger than set the cards' text is drawn here.
+double cardTextScale(BuildContext context) => MediaQuery.textScalerOf(context).scale(14) / 14;
 
 /// The gap between cards; tighter in compact mode, where cards sit on a
 /// surface of their own.
@@ -84,14 +87,14 @@ String titleFor(VideoItem item) => deArrow.titleOf(item.id, item.title);
 const _reasonHeight = 20.0;
 
 /// [padding] is the space a skin leaves round each video card.
-({int columns, double itemHeight}) gridLayoutFor(double width, {double padding = 0}) {
+({int columns, double itemHeight}) gridLayoutFor(double width, {double padding = 0, double textScale = 1}) {
   // A TV is seen from across the room, so its few pixels across still fit
   // three or four cards a row, as TV video apps show them.
   final base = Device.tv ? min(videoCardMinWidth, 200.0) : videoCardMinWidth;
   final narrowest = compactCards ? base * _compactWidth : base;
   final columns = max(1, ((width + gridGap) / (narrowest + gridGap)).floor());
   final itemWidth = (width - gridGap * (columns - 1)) / columns;
-  return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight + 2 * padding);
+  return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight(textScale) + 2 * padding);
 }
 
 /// The space the current skin leaves round each video card.
@@ -151,13 +154,13 @@ class SliverVideoGrid extends StatelessWidget {
                 ),
               )
             : SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context));
+          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context), textScale: cardTextScale(context));
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: layout.columns,
               mainAxisSpacing: _gridRowGap,
               crossAxisSpacing: gridGap,
-              mainAxisExtent: layout.itemHeight + (watched == null ? 0 : _reasonHeight),
+              mainAxisExtent: layout.itemHeight + (watched == null ? 0 : _reasonHeight * cardTextScale(context)),
             ),
             delegate: SliverChildBuilderDelegate(
               (context, i) => VideoCard(
@@ -295,7 +298,7 @@ class SliverPlaylistGrid extends StatelessWidget {
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent);
+          final layout = gridLayoutFor(constraints.crossAxisExtent, textScale: cardTextScale(context));
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: layout.columns,
@@ -382,7 +385,7 @@ class SliverSkeletonGrid extends StatelessWidget {
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context));
+          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context), textScale: cardTextScale(context));
           final width = constraints.crossAxisExtent;
           return SliverToBoxAdapter(child: Skeleton(child: SizedBox(
             width: width,
@@ -646,7 +649,7 @@ class _VideoCardState extends State<VideoCard> {
                   )),
                 ]),
               ),
-              if (widget.watched case final watched?) SizedBox(height: _reasonHeight, child: WatchedLine(watched)),
+              if (widget.watched case final watched?) SizedBox(height: _reasonHeight * cardTextScale(context), child: WatchedLine(watched)),
             ]),
           )),
         ]),

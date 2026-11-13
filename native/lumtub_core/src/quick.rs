@@ -452,14 +452,33 @@ mod tests {
             .unwrap();
         list.retain(|f| f["mimeType"].as_str().unwrap().starts_with("video/"));
         let tracks = [
-            (251, "en.4", "acont=original:lang=en", "English original", 130_000),
-            (252, "it.3", "acont=dubbed-auto:lang=it", "Italian auto-dubbed", 140_000),
+            (
+                251,
+                "en.4",
+                "acont=original:lang=en",
+                "English original",
+                130_000,
+            ),
+            (
+                252,
+                "it.3",
+                "acont=dubbed-auto:lang=it",
+                "Italian auto-dubbed",
+                140_000,
+            ),
             (253, "de.3", "acont=dubbed:lang=de", "German", 120_000),
-            (254, "de.2", "acont=dubbed-auto:lang=de", "German auto-dubbed", 160_000),
+            (
+                254,
+                "de.2",
+                "acont=dubbed-auto:lang=de",
+                "German auto-dubbed",
+                160_000,
+            ),
         ];
         for (itag, id, xtags, name, bitrate) in tracks {
             let mut f = stream(itag, "audio/webm; codecs=\"opus\"", 0, bitrate);
-            f["audioTrack"] = json!({"id": id, "displayName": name, "audioIsDefault": id == "en.4"});
+            f["audioTrack"] =
+                json!({"id": id, "displayName": name, "audioIsDefault": id == "en.4"});
             f["xtags"] = json!(xtags);
             list.push(f);
         }
@@ -474,7 +493,8 @@ mod tests {
             .unwrap();
         list.retain(|f| f["mimeType"].as_str().unwrap().starts_with("video/"));
         let mut hindi = stream(252, "audio/webm; codecs=\"opus\"", 0, 160_000);
-        hindi["audioTrack"] = json!({"id": "hi.3", "displayName": "Hindi (India)", "audioIsDefault": true});
+        hindi["audioTrack"] =
+            json!({"id": "hi.3", "displayName": "Hindi (India)", "audioIsDefault": true});
         list.push(hindi);
         let mut english = stream(251, "audio/webm; codecs=\"opus\"", 0, 130_000);
         english["audioTrack"] = json!({"id": "en.4", "displayName": "English (United States) original", "audioIsDefault": false});

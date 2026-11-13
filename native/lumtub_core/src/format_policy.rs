@@ -223,7 +223,10 @@ impl Settings {
             Audio::Low => "bestaudio[abr<=?64]",
         };
         let language = self.language_filter();
-        let limit = audio.strip_prefix("bestaudio").unwrap_or_default().to_owned();
+        let limit = audio
+            .strip_prefix("bestaudio")
+            .unwrap_or_default()
+            .to_owned();
         // The sound a video's own track says is the original comes before
         // whatever yt-dlp ranks first: YouTube can flag an automatic dub as
         // the default, and an old yt-dlp ranks by that.
@@ -315,7 +318,10 @@ mod tests {
     fn auto_uses_h264_until_hardware_is_verified() {
         let s = settings("{}");
         assert_eq!(s.policy().order, ["h264", "vp9", "av1", "vp8"]);
-        assert!(s.expression().starts_with("bestvideo+bestaudio[format_note*=original]/bestvideo+bestaudio/"));
+        assert!(
+            s.expression()
+                .starts_with("bestvideo+bestaudio[format_note*=original]/bestvideo+bestaudio/")
+        );
         assert_eq!(
             settings(r#"{"hardware":["av1","vp9"]}"#).policy().order[..3],
             ["av1", "vp9", "h264"]

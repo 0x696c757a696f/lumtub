@@ -444,16 +444,27 @@ mod tests {
             {"format_id": "137", "height": 1080, "vcodec": "avc1", "acodec": "none", "language": "xx"}
         ]));
         let tracks = audio_tracks(&info);
-        let list: Vec<(&str, &str)> = tracks.iter().map(|t| (t.language.as_str(), t.kind)).collect();
+        let list: Vec<(&str, &str)> = tracks
+            .iter()
+            .map(|t| (t.language.as_str(), t.kind))
+            .collect();
         assert_eq!(
             list,
-            [("en-US", "original"), ("de", "dub"), ("fr", "dub"), ("it", "auto")]
+            [
+                ("en-US", "original"),
+                ("de", "dub"),
+                ("fr", "dub"),
+                ("it", "auto")
+            ]
         );
         let one = formats(json!([sound("en", "English original", None)]));
         assert!(audio_tracks(&one).is_empty());
         assert!(audio_tracks(&json!({})).is_empty());
         let json = serde_json::to_value(summary(&info, &Ask::default())).unwrap();
-        assert_eq!(json["audioTracks"][0], json!({"language": "en-US", "kind": "original"}));
+        assert_eq!(
+            json["audioTracks"][0],
+            json!({"language": "en-US", "kind": "original"})
+        );
     }
 
     #[test]

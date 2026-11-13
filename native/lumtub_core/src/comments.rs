@@ -404,8 +404,7 @@ fn comment(
                 .and_then(|t| t.get("heartState"))
                 .and_then(Value::as_str)
                 == Some("TOOLBAR_HEART_STATE_HEARTED"),
-            heart_avatar: field(&["toolbar", "creatorThumbnailUrl"])
-                .and_then(|v| https(Some(v))),
+            heart_avatar: field(&["toolbar", "creatorThumbnailUrl"]).and_then(|v| https(Some(v))),
             heart_tooltip: field(&["toolbar", "heartActiveTooltip"])
                 .map(display)
                 .filter(|t| !t.is_empty()),

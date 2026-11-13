@@ -176,7 +176,7 @@ fn build(settings: &Settings) -> reqwest::Client {
         .tcp_nodelay(true)
         .tcp_keepalive(Duration::from_secs(60))
         .http2_adaptive_window(true)
-        .redirect(reqwest::redirect::Policy::limited(10));
+        .redirect(crate::redirect::policy());
     match settings.proxy.as_deref().filter(|p| !p.trim().is_empty()) {
         Some(address) => match reqwest::Proxy::all(address) {
             Ok(proxy) => builder = builder.proxy(proxy),
@@ -403,7 +403,7 @@ fn describe(error: &reqwest::Error) -> String {
     } else if error.is_connect() {
         "could not connect"
     } else if error.is_redirect() {
-        "too many redirects"
+        "redirect stopped"
     } else {
         "request failed"
     };

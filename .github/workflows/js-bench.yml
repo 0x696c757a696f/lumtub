@@ -1,7 +1,8 @@
 name: JS engine benchmark
 
-# Times yt-dlp's JS challenge solver with Deno, QuickJS-ng and rquickjs
-# (QuickJS inside Rust), to choose the engine for Android and iOS.
+# Times yt-dlp's JS challenge solver with Deno (with and without JIT),
+# QuickJS-ng, rquickjs and Boa
+# to choose the engine for Android and iOS.
 on:
   workflow_dispatch:
   pull_request:
@@ -26,14 +27,17 @@ jobs:
           "$RUNNER_TEMP/bin/qjs" --help | head -1 || true
           pip install --quiet --upgrade yt-dlp-ejs
           pip show yt-dlp-ejs | head -2
-      - name: Build rquickjs
+      - name: Build rquickjs and Boa
         run: |
           cargo build --release --manifest-path .github/js-bench/rq/Cargo.toml
-          grep -A1 'name = "rquickjs"' .github/js-bench/rq/Cargo.lock
+          cargo build --release --manifest-path .github/js-bench/boa/Cargo.toml
+          grep -A1 -E 'name = "(rquickjs|boa_engine)"' .github/js-bench/*/Cargo.lock
       - name: Run
         run: |
           python .github/js-bench/bench.py "$RUNNER_TEMP/work" \
             "deno=$RUNNER_TEMP/bin/deno run --no-prompt --no-remote --no-lock --node-modules-dir=none --no-config {}" \
+            "deno-jitless=$RUNNER_TEMP/bin/deno run --v8-flags=--jitless --no-prompt --no-remote --no-lock --node-modules-dir=none --no-config {}" \
             "quickjs-ng=$RUNNER_TEMP/bin/qjs --script {}" \
-            "rquickjs=.github/js-bench/rq/target/release/rq {}"
+            "rquickjs=.github/js-bench/rq/target/release/rq {}" \
+            "boa=timeout 600 .github/js-bench/boa/target/release/boa-run {}"
           cat "$RUNNER_TEMP/work/summary.md" >> "$GITHUB_STEP_SUMMARY"

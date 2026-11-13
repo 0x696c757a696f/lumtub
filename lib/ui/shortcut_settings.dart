@@ -7,12 +7,13 @@ import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../shortcut_bindings.dart';
 import 'app_icons.dart';
+import 'common.dart';
 import 'player_shortcuts.dart';
 
 /// The list of player actions with their keys: a key can be added, taken
 /// off, or moved over from another action.
 Future<void> showShortcutSettings(BuildContext context, AppController controller) =>
-    showDialog<void>(context: context, builder: (context) => _ShortcutSettings(controller: controller));
+    showSheet<void>(context, (context) => _ShortcutSettings(controller: controller));
 
 class _ShortcutSettings extends StatefulWidget {
   const _ShortcutSettings({required this.controller});
@@ -53,7 +54,7 @@ class _ShortcutSettingsState extends State<_ShortcutSettings> {
           final keys = shortcutKeys(prefs.shortcutKeys);
           final defaults = defaultShortcutKeys();
           final colors = Theme.of(context).colorScheme;
-          return AlertDialog(
+          return PanelDialog(
             scrollable: true,
             title: Text(tr('Customize shortcuts')),
             content: SizedBox(

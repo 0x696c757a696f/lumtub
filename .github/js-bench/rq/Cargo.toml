@@ -1,0 +1,13 @@
+[package]
+name = "rq"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+rquickjs = "0.14"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1

@@ -495,6 +495,8 @@
   "Backup & restore": "Varmuuskopiointi ja palautus",
   "Copied": "Kopioitu",
   "Copy log": "Kopioi loki",
+  "Export log": "Vie loki",
+  "Log exported": "Loki viety",
   "Copy diagnostics": "Kopioi diagnostiikkatiedot",
   "Copy link": "Kopioi linkki",
   "Easter": "Pääsiäinen",

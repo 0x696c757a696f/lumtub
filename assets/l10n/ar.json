@@ -495,6 +495,8 @@
   "Backup & restore": "النسخ الاحتياطي والاستعادة",
   "Copied": "تم النسخ",
   "Copy log": "نسخ السجل",
+  "Export log": "تصدير السجل",
+  "Log exported": "تم تصدير السجل",
   "Copy diagnostics": "نسخ معلومات التشخيص",
   "Copy link": "نسخ الرابط",
   "Easter": "عيد الفصح",

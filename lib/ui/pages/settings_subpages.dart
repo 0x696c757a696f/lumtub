@@ -11,11 +11,14 @@
 // dynamic colour on Android) are dropped or replaced by Windows ones.
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 
 import '../../app_updater.dart';
+import '../../friendly_error.dart';
+import '../../save_file.dart';
 import '../../app/app_controller.dart';
 import '../../app_log.dart';
 import '../../app_preferences.dart';
@@ -1124,6 +1127,21 @@ class _LogsPageState extends State<_LogsPage> {
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Cleared'))));
   }
 
+  /// Saves both logs, oldest first, as one text file where the person picks.
+  Future<void> _export() async {
+    final now = DateTime.now();
+    String two(int n) => n.toString().padLeft(2, '0');
+    final name = 'lumtub-log-${now.year}${two(now.month)}${two(now.day)}-${two(now.hour)}${two(now.minute)}.txt';
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      if (!await saveFileAs(name, utf8.encode(_text ?? ''), mime: 'text/plain', label: 'TXT', extension: 'txt')) return;
+      messenger.showSnackBar(SnackBar(content: Text(tr('Log exported'))));
+    } catch (e) {
+      logError('Could not export the log', e);
+      messenger.showSnackBar(SnackBar(content: Text(tr('Export failed: {0}', [friendlyFileError(e)]))));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final text = _text;
@@ -1153,12 +1171,14 @@ class _LogsPageState extends State<_LogsPage> {
           PopupMenuButton<int>(
             onSelected: (value) => switch (value) {
               0 => copyText(context, text ?? '', tr('Copied')),
+              4 => _export(),
               1 => openExternal('$_repository/issues/new/choose'),
               2 => _directory == null ? null : unawaited(openInExplorer(_directory!.path)),
               _ => _clear(),
             },
             itemBuilder: (context) => [
               PopupMenuItem(value: 0, child: Text(tr('Copy log'))),
+              PopupMenuItem(value: 4, child: Text(tr('Export log'))),
               PopupMenuItem(value: 1, child: Text(tr('Bug reports'))),
               if (!Platform.isAndroid) PopupMenuItem(value: 2, child: Text(tr('Open log folder'))),
               PopupMenuItem(value: 3, child: Text(tr('Clear logs'))),

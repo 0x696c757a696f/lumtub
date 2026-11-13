@@ -8,6 +8,7 @@ import '../../app/app_controller.dart';
 import '../../explore_filters.dart';
 import '../../explore_topics.dart';
 import '../common.dart';
+import '../fitting_segments.dart';
 import '../../search_options.dart';
 import '../theme.dart';
 import '../video_card.dart';
@@ -140,14 +141,11 @@ class _ExplorePageState extends State<ExplorePage> {
               // A half with one tab, as live has, needs no row to pick it.
               if (tabs.length > 1) Padding(
                 padding: const EdgeInsetsDirectional.only(start: 8),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SegmentedButton<ExploreSection>(
-                    showSelectedIcon: false,
-                    segments: [for (final s in tabs) ButtonSegment(value: s, label: Text(s.label))],
-                    selected: {section},
-                    onSelectionChanged: (value) => controller.setExplore(section: value.first),
-                  ),
+                child: FittingSegments<ExploreSection>(
+                  values: tabs,
+                  label: (s) => s.label,
+                  selected: section,
+                  onSelected: (s) => controller.setExplore(section: s),
                 ),
               ),
               const SizedBox(height: 10),

@@ -33,7 +33,6 @@ import '../../widgets/pilinara_settings_tiles.dart';
 import '../common.dart';
 import '../subtitle_style.dart';
 import '../theme.dart';
-import '../theme_preset_card.dart';
 import 'downloads_page.dart' show openInExplorer;
 import 'settings_sections.dart';
 import 'support_page.dart';
@@ -601,7 +600,7 @@ Future<void> openSponsorBlock(BuildContext context, AppController controller) =>
 
 // 外观设置 › 应用主题 (PiliNara's color_select.dart)
 
-Future<void> openColorSelect(BuildContext context, AppController controller) => _push(context, controller, tr('Choose app theme'), (context) {
+Future<void> openColorSelect(BuildContext context, AppController controller) => _push(context, controller, tr('Custom color'), (context) {
       final appearance = controller.appearance;
       final brightness = Theme.of(context).brightness;
       void save(AppearanceSettings next) => controller.saveAppearance(next);
@@ -617,15 +616,6 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
           );
       final windows = controller.windowsAccent;
       return [
-        _header(context, tr('Theme presets')),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Wrap(spacing: 12, runSpacing: 12, children: [
-            for (final preset in themePresets)
-              ThemePresetCard(preset: preset, selected: preset.isApplied(appearance), onTap: () => save(preset.applyTo(controller.appearance))),
-          ]),
-        ),
-        _tip(context, tr('Each theme has a light and a dark version; Theme mode below picks which.')),
         _header(context, tr('Custom')),
         PopupItem<ThemeMode>(
           title: tr('Theme mode'),

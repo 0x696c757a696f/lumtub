@@ -444,15 +444,18 @@ void main() {
     expect(controller.exploreMode, ExploreMode.curated);
     expect(controller.exploreTopicNow.label, 'Featured');
 
-    await tester.tap(find.text('Faith live'));
+    // Videos list no live tab; streams of faith are under Live.
+    expect(find.text('Faith live'), findsNothing);
+    await tester.tap(find.text('Live').first);
     await tester.pump(const Duration(milliseconds: 500));
+    await _reveal(tester, 'Religion & faith');
+    await tester.tap(find.text('Religion & faith'));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(controller.exploreSection, ExploreSection.faithLive);
+    expect(find.text('Study'), findsNothing);
     expect(controller.exploreMode, ExploreMode.liveViewers);
-    // The 类型 picked for videos applies to live streams too.
-    expect(controller.exploreFormat, FaithFormat.documentary);
-    await tester.tap(find.text('Documentary').first);
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.tap(find.text('Any').last);
-    await tester.pump(const Duration(milliseconds: 300));
+    // Another half starts without the videos' 类型.
+    expect(controller.exploreFormat, FaithFormat.any);
     await tester.tap(find.text('Upcoming'));
     await tester.pump();
     expect(controller.exploreMode, ExploreMode.liveUpcoming);
@@ -462,12 +465,10 @@ void main() {
     // one leaves it.
     expect(find.text('Religion & faith'), findsOneWidget);
     expect(find.text('All categories'), findsNothing);
-    await _reveal(tester, 'Education', back: true);
-    await tester.tap(find.text('Education'));
+    await tester.tap(find.text('Videos').first);
     await tester.pump(const Duration(milliseconds: 500));
     expect(controller.exploreSection, ExploreSection.popular);
     expect(controller.exploreMode, ExploreMode.popular);
-    expect(controller.exploreTopicNow.label, 'Education');
     expect(tester.takeException(), isNull);
   });
 

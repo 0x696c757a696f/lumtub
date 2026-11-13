@@ -116,7 +116,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
           _group = g;
           _selected = null;
         }),
-        onManage: () => showDialog<void>(context: context, builder: (_) => _ManageGroups(library: library, channels: channels)),
+        onManage: () => showSheet<void>(context, (_) => _ManageGroups(library: library, channels: channels)),
       )),
       if (strip != null) SliverToBoxAdapter(child: strip),
       if (selected != null)
@@ -155,7 +155,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
         SliverFillRemaining(hasScrollBody: false, child: StatusView(
           icon: AppIcons.folderOpen,
           title: tr('This group has no channels yet'),
-          action: FilledButton.tonal(onPressed: () => showDialog<void>(context: context, builder: (_) => _GroupChannels(library: library, group: group, channels: channels)), child: Text(tr('Choose channels'))),
+          action: FilledButton.tonal(onPressed: () => showSheet<void>(context, (_) => _GroupChannels(library: library, group: group, channels: channels)), child: Text(tr('Choose channels'))),
         ))
       else if (selected != null)
         SliverFillRemaining(hasScrollBody: false, child: StatusView(
@@ -225,7 +225,7 @@ class _ManageGroups extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListenableBuilder(
         listenable: library,
-        builder: (context, _) => AlertDialog(
+        builder: (context, _) => PanelDialog(
           title: Text(tr('Subscription groups')),
           content: SizedBox(
             width: dialogWidth(context, 420),
@@ -238,7 +238,7 @@ class _ManageGroups extends StatelessWidget {
                         leading: Icon(AppIcons.folder),
                         title: Text(group.name),
                         subtitle: Text(tr('{0} channels', [group.channels.length])),
-                        onTap: () => showDialog<void>(context: context, builder: (_) => _GroupChannels(library: library, group: group, channels: channels)),
+                        onTap: () => showSheet<void>(context, (_) => _GroupChannels(library: library, group: group, channels: channels)),
                         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                           IconButton(
                             tooltip: tr('Rename'),
@@ -259,7 +259,7 @@ class _ManageGroups extends StatelessWidget {
                 final name = await _askName(context);
                 if (name == null || name.trim().isEmpty || !context.mounted) return;
                 final group = library.addGroup(name);
-                await showDialog<void>(context: context, builder: (_) => _GroupChannels(library: library, group: group, channels: channels));
+                await showSheet<void>(context, (_) => _GroupChannels(library: library, group: group, channels: channels));
               },
               icon: Icon(AppIcons.plus),
               label: Text(tr('New group')),
@@ -291,7 +291,7 @@ class _GroupChannelsState extends State<_GroupChannels> {
     final shown = [for (final c in widget.channels) if (filter.isEmpty || c.name.toLowerCase().contains(filter)) c];
     return ListenableBuilder(
       listenable: widget.library,
-      builder: (context, _) => AlertDialog(
+      builder: (context, _) => PanelDialog(
         title: Text(tr('Channels in “{0}”', [group.name])),
         content: SizedBox(
           width: dialogWidth(context, 420),

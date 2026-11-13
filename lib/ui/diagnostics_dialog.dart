@@ -8,13 +8,14 @@ import '../app/app_controller.dart';
 import '../app_log.dart';
 import '../l10n/l10n.dart';
 import 'app_icons.dart';
+import 'common.dart';
 import 'theme.dart';
 
 /// 网络诊断 and the playback test: how each kind of request reaches
 /// YouTube, what the playing video is decoded with, and how H.264, VP9 and
 /// AV1 play on this computer.
 Future<void> showDiagnostics(BuildContext context, AppController controller, {bool playback = false}) =>
-    showDialog<void>(context: context, builder: (_) => _DiagnosticsDialog(controller: controller, playback: playback));
+    showSheet<void>(context, (_) => _DiagnosticsDialog(controller: controller, playback: playback));
 
 class _DiagnosticsDialog extends StatefulWidget {
   const _DiagnosticsDialog({required this.controller, required this.playback});
@@ -121,7 +122,7 @@ class _DiagnosticsDialogState extends State<_DiagnosticsDialog> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final muted = TextStyle(color: colors.onSurfaceVariant, height: 1.4);
-    return AlertDialog(
+    return PanelDialog(
       title: Text(tr('Diagnostics')),
       content: SizedBox(
         width: 560,

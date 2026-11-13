@@ -287,9 +287,9 @@ double? nextSpeed(List<double> speeds, double rate, int direction) {
 
 String _trim(double speed) => speed == speed.roundToDouble() ? speed.toStringAsFixed(1) : speed.toString();
 
-Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
+Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => showSheet<void>(
+      context,
+      (context) => PanelDialog(
         // The list is taller than a small window; it scrolls above the button.
         scrollable: true,
         title: Text(tr('Keyboard shortcuts')),

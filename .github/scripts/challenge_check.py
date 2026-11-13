@@ -3,7 +3,7 @@ yt-dlp's Deno provider, through yt-dlp's provider interface, and fails when
 the answers differ. Works where YouTube asks CI to sign in: only the player
 file is downloaded.
 
-    python plugin_check.py <cache folder> <lumtub_jsc.py>
+    python challenge_check.py <cache folder> <lumtub_jsc.py>
 """
 import importlib.util
 import random

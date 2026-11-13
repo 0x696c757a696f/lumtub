@@ -1319,8 +1319,8 @@ jobs:
   # Marks these files as built and passed, for the reuse job above.
   built:
     name: Mark the files built
-    needs: [reuse, windows, linux, macos, android]
-    if: ${{ !cancelled() && !failure() && needs.reuse.outputs.run == '' && needs.windows.result == 'success' && needs.linux.result == 'success' && needs.macos.result == 'success' && needs.android.result == 'success' }}
+    needs: [reuse, windows, linux, macos, ios, android]
+    if: ${{ !cancelled() && !failure() && needs.reuse.outputs.run == '' && needs.windows.result == 'success' && needs.linux.result == 'success' && needs.macos.result == 'success' && needs.ios.result == 'success' && needs.android.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -1340,7 +1340,7 @@ jobs:
 
   release:
     name: Release
-    needs: [reuse, windows, linux, macos, android]
+    needs: [reuse, windows, linux, macos, ios, android]
     # Skipped builds (reused from an earlier build) are not failures.
     if: ${{ !cancelled() && !failure() && startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-latest

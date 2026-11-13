@@ -1,0 +1,37 @@
+name: Challenges
+
+# Lumtub's yt-dlp challenge solver (python/lumtub_jsc.py with the core's
+# QuickJS, used on Android and iOS) must give Deno's answers on YouTube's
+# current player. Weekly, since the player changes without Lumtub changing.
+on:
+  pull_request:
+    paths: ['python/**', 'native/lumtub_core/src/js.rs', 'native/lumtub_core/Cargo.lock', '.github/scripts/challenge_check.py', '.github/workflows/challenges.yml']
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: challenges
+      - name: Build the core
+        run: cargo build --release --lib --manifest-path native/lumtub_core/Cargo.toml
+      - name: Install yt-dlp and Deno
+        run: |
+          pip install --quiet --upgrade --pre "yt-dlp[default]"
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -fsSL --retry 4 -o "$RUNNER_TEMP/deno.zip" https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip
+          unzip -q "$RUNNER_TEMP/deno.zip" -d "$RUNNER_TEMP/bin"
+      - name: Compare with Deno on today's player
+        run: |
+          export PATH="$RUNNER_TEMP/bin:$PATH"
+          export LUMTUB_CORE="$PWD/native/lumtub_core/target/release/liblumtub_core.so"
+          python .github/scripts/challenge_check.py "$RUNNER_TEMP/check" python/lumtub_jsc.py

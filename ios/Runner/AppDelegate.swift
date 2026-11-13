@@ -28,7 +28,11 @@ import UIKit
 
 /// The few system calls the Dart side asks for on 'lumtub/windows_shell',
 /// with the method names the Android version uses.
-final class LumtubShell: NSObject, FlutterPlugin {
+final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate {
+  /// The answer to the 'saveFile' call whose picker is open.
+  private var saving: FlutterResult?
+  private var savedFile: URL?
+
   static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "lumtub/windows_shell", binaryMessenger: registrar.messenger())
     registrar.addMethodCallDelegate(LumtubShell(), channel: channel)
@@ -58,11 +62,59 @@ final class LumtubShell: NSObject, FlutterPlugin {
       }
       root.present(sheet, animated: true)
       result(nil)
+    case "saveFile":
+      saveFile(call.arguments as? [String: Any], result: result)
     case "isTv":
       result(false)
     default:
       result(FlutterMethodNotImplemented)
     }
+  }
+
+  /// Hands {name, mime, bytes} to the system's "Save to Files" sheet;
+  /// answers true once saved, false when cancelled.
+  private func saveFile(_ arguments: [String: Any]?, result: @escaping FlutterResult) {
+    guard let name = arguments?["name"] as? String,
+      let bytes = arguments?["bytes"] as? FlutterStandardTypedData,
+      let root = LumtubShell.topController()
+    else {
+      result(FlutterError(code: "bad_arguments", message: "Nothing to save", details: nil))
+      return
+    }
+    if let pending = saving {
+      pending(false)
+    }
+    let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+    let file = folder.appendingPathComponent((name as NSString).lastPathComponent)
+    do {
+      try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+      try bytes.data.write(to: file, options: .atomic)
+    } catch {
+      result(FlutterError(code: "write_failed", message: "\(error)", details: nil))
+      return
+    }
+    saving = result
+    savedFile = file
+    let picker = UIDocumentPickerViewController(forExporting: [file], asCopy: true)
+    picker.delegate = self
+    root.present(picker, animated: true)
+  }
+
+  func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+    finishSaving(true)
+  }
+
+  func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+    finishSaving(false)
+  }
+
+  private func finishSaving(_ saved: Bool) {
+    saving?(saved)
+    saving = nil
+    if let file = savedFile {
+      try? FileManager.default.removeItem(at: file.deletingLastPathComponent())
+    }
+    savedFile = nil
   }
 
   private static func topController() -> UIViewController? {

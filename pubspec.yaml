@@ -64,6 +64,7 @@ flutter:
     - skins/ocean/
     - skins/meadow/
     - skins/city/
+    - skins/azure/
     - skins/aquarium/
     - skins/aurora/
     - skins/chrome/

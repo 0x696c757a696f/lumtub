@@ -158,6 +158,7 @@ extension SettingsActions on AppController {
   /// The library can hold thousands of videos, so the text is encoded away
   /// from the UI isolate.
   Future<String> exportSettings() {
+    final backup = library?.backup();
     final data = {
         'app': 'Lumtub',
         'version': 2,
@@ -169,9 +170,8 @@ extension SettingsActions on AppController {
           ..remove('decoderResults'),
         'appearance': appearance.toJson(),
         'preferences': preferences.toJson(),
-        if (library != null) 'library': library!.backupJson(),
       };
-    return Isolate.run(() => const JsonEncoder.withIndent('  ').convert(data));
+    return Isolate.run(() => const JsonEncoder.withIndent('  ').convert({...data, if (backup != null) 'library': backup.toJson()}));
   }
 
   /// Applies settings exported by [exportSettings] and adds the library
@@ -179,8 +179,12 @@ extension SettingsActions on AppController {
   /// computer's own values are kept.
   Future<LibraryMerge?> importSettings(String text) async {
     final Object? data;
+    final LibraryBackup backup;
     try {
-      data = await decodeJsonInBackground(text);
+      (data, backup) = await Isolate.run(() {
+        final data = jsonDecode(text);
+        return (data, LibraryBackup.parse(data is Map ? data['library'] : null));
+      });
     } on FormatException {
       return null;
     }
@@ -196,7 +200,7 @@ extension SettingsActions on AppController {
     await saveSettings(player);
     await saveAppearance(AppearanceSettings.fromJson(data['appearance']));
     await savePreferences(AppPreferences.fromJson(data['preferences']));
-    final merge = library?.restoreBackup(data['library']) ?? const LibraryMerge();
+    final merge = library?.restoreBackup(backup) ?? const LibraryMerge();
     logInfo('Settings imported; ${merge.channels} channels, ${merge.videos} videos and ${merge.playlists} playlists added');
     return merge;
   }

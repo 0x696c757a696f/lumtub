@@ -104,9 +104,10 @@ void main() {
     source.createPlaylist('Mine').items.add(video);
     source.playlists.add(LocalPlaylist(id: '${remotePlaylistPrefix}PL1', name: 'From YouTube', items: [other]));
     source.setProgress(video.id, const Duration(seconds: 90), const Duration(minutes: 3));
-    final backup = jsonDecode(jsonEncode(source.backupJson()));
-    expect((backup as Map).containsKey('progress'), isFalse);
-    expect(backup['playlists'], hasLength(1));
+    final json = jsonDecode(jsonEncode(source.backup().toJson()));
+    expect((json as Map).containsKey('progress'), isFalse);
+    expect(json['playlists'], hasLength(1));
+    final backup = LibraryBackup.parse(json);
 
     final target = store();
     target.favorites.add(video);
@@ -124,6 +125,6 @@ void main() {
     final again = target.mergeBackup(backup);
     expect(again.changed, isFalse);
     expect(target.channelGroups, hasLength(1));
-    expect(target.mergeBackup('not a map').changed, isFalse);
+    expect(target.mergeBackup(LibraryBackup.parse('not a map')).changed, isFalse);
   });
 }

@@ -209,13 +209,13 @@ class LibraryController extends ChangeNotifier {
     return added;
   }
 
-  /// Followed channels, groups, favorites, 稍后观看 and own playlists, for
-  /// the settings backup.
-  Map<String, dynamic> backupJson() => store.backupJson();
+  /// A copy of the followed channels, groups, favorites, 稍后观看 and own
+  /// playlists, for the settings backup.
+  LibraryBackup backup() => store.backup();
 
-  /// Adds what a backup from [backupJson] has and this library lacks.
-  LibraryMerge restoreBackup(Object? raw) {
-    final merge = store.mergeBackup(raw);
+  /// Adds what [backup] has and this library lacks.
+  LibraryMerge restoreBackup(LibraryBackup backup) {
+    final merge = store.mergeBackup(backup);
     if (merge.channels > 0) {
       _feedLoadedAt = null;
       unawaited(fillMissingAvatars());

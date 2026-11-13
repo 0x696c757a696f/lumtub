@@ -58,7 +58,14 @@ void main() {
     expect(saved.proxyAddress, 'http://127.0.0.1:7890');
     expect(PlayerSettings.fromJson({}).proxyMode, ProxyMode.system);
     final old = PlayerSettings.fromJson({'cacheSeconds': 30, 'cacheMemoryMb': 64});
-    expect((old.cacheSeconds, old.cacheMemoryMb), (60, 150));
+    expect((old.cacheSeconds, old.cacheMemoryMb), (60, 100));
+    expect(PlayerSettings.fromJson({'cacheMemoryMb': 150, 'bufferDefaults': 2}).cacheMemoryMb, 100);
+    expect(PlayerSettings.fromJson({'cacheMemoryMb': 150, 'bufferDefaults': 3}).cacheMemoryMb, 150);
+    PlayerSettings.smallMemory = true;
+    addTearDown(() => PlayerSettings.smallMemory = false);
+    expect(PlayerSettings.fromJson({'cacheMemoryMb': 150, 'bufferDefaults': 2}).cacheMemoryMb, 64);
+    expect(PlayerSettings.fromJson({'cacheMemoryMb': 200, 'bufferDefaults': 2}).cacheMemoryMb, 200);
+    expect(PlayerSettings.fromJson(PlayerSettings.fromJson({}).toJson()).cacheMemoryMb, 64);
     final chosen = PlayerSettings.fromJson({'cacheSeconds': 30, 'cacheMemoryMb': 64, 'bufferDefaults': 2});
     expect((chosen.cacheSeconds, chosen.cacheMemoryMb), (30, 64));
   });

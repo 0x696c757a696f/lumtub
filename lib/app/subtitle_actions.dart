@@ -292,6 +292,41 @@ extension SubtitleActions on AppController {
           if (line.trim().isNotEmpty) line.trim(),
       ].join('\n');
 
+  /// Turns the main subtitle off, or back on: the one shown before, else
+  /// the first one loaded, else the video's own language. Remembered for
+  /// later videos, as choosing in the subtitle panel is. True when it is
+  /// now on, false when off, null when there was nothing to show.
+  Future<bool?> toggleSubtitles() async {
+    final player = this.player;
+    if (player == null) return null;
+    final current = player.state.track.subtitle;
+    if (current.id != 'no' && current.id != 'auto') {
+      _subtitleBeforeOff = current.title;
+      await player.setSubtitleTrack(SubtitleTrack.no());
+      await rememberSubtitleChoice(primary: true);
+      return false;
+    }
+    final loaded = [for (final t in player.state.tracks.subtitle) if (t.id != 'no' && t.id != 'auto') t];
+    final before = _subtitleBeforeOff;
+    final track = loaded.where((t) => before != null && t.title == before).firstOrNull;
+    final details = this.details;
+    final option = before == null ? null : _shownOptions[before] ?? details?.subtitles.where((o) => o.label == before).firstOrNull;
+    if (track != null) {
+      await player.setSubtitleTrack(track);
+    } else if (option != null) {
+      await showSubtitle(option);
+    } else if (loaded.isNotEmpty) {
+      await player.setSubtitleTrack(loaded.first);
+    } else if (details != null && details.subtitles.isNotEmpty) {
+      await showSubtitle(originalSubtitle(details.subtitles, language: details.language) ?? details.subtitles.first);
+    } else {
+      return null;
+    }
+    final shown = player.state.track.subtitle.title;
+    await rememberSubtitleChoice(primary: true, option: _shownOptions[shown] ?? details?.subtitles.where((o) => o.label == shown).firstOrNull);
+    return true;
+  }
+
   /// Shows [option], adding it to the player first if it is not loaded.
   Future<void> showSubtitle(SubtitleOption option) async {
     final player = this.player;

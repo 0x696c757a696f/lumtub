@@ -34,6 +34,9 @@ import 'video_card.dart';
 import 'window_chrome.dart';
 import '../l10n/l10n.dart';
 import 'frame_stats.dart';
+import 'key_scroll.dart';
+import 'pull_to_refresh.dart';
+import '../shortcut_bindings.dart';
 import 'motion.dart';
 import 'player_shortcuts.dart';
 import 'app_icons.dart';
@@ -151,6 +154,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _focusSearch() {
+    if (_tvRail) return _tvSearch();
     _searchFocus.requestFocus();
     _searchText.selection = TextSelection(baseOffset: 0, extentOffset: _searchText.text.length);
   }
@@ -161,8 +165,40 @@ class _AppShellState extends State<AppShell> {
     unawaited(_controller.search(value));
   }
 
+  /// A TV has no bar across the top, as TV video apps have none: search,
+  /// settings and the account are the rail's first and last items, so the
+  /// page gets the whole height. Set while the plain rail is shown.
+  bool _tvRail = false;
+
+  /// The search field over the page, as a TV app opens it from its rail.
+  void _tvSearch() {
+    _searchText.selection = TextSelection(baseOffset: 0, extentOffset: _searchText.text.length);
+    unawaited(showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        alignment: Alignment.topCenter,
+        insetPadding: const EdgeInsets.fromLTRB(96, 32, 96, 32),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: SizedBox(height: 44, child: _SearchField(app: _controller, controller: _searchText, focusNode: _searchFocus, enabled: _controller.ready, autofocus: true, onSubmit: (value) {
+              if (value.trim().isEmpty) return;
+              Navigator.of(context).pop();
+              _submitSearch(value);
+            })),
+          ),
+        ),
+      ),
+    ));
+  }
+
   void _select(int index) {
     final target = _destinations[index].$1;
+    // Pressed again on its own page: to the top, and from the top, new
+    // videos.
+    final c = _controller;
+    if (target == c.mode && !c.onWatchPage && (target != PageMode.explore || c.query == null) && PullToRefresh.topOrRefresh(refresh: c.canRefreshPage)) return;
     if (target == PageMode.explore) {
       _controller.openExplore();
     } else {
@@ -193,13 +229,13 @@ class _AppShellState extends State<AppShell> {
     return [
       if (appMenu) SkinMenu(appName, [about, const SkinMenuEntry.divider(), settings, const SkinMenuEntry.divider(), exit], bold: true),
       SkinMenu(tr('&File'), [
-        SkinMenuEntry(tr('&Search or open a link…'), _focusSearch, shortcut: primary(LogicalKeyboardKey.keyK)),
+        SkinMenuEntry(tr('&Search or open a link…'), _focusSearch, shortcut: _keyOf(PlayerAction.search)),
         const SkinMenuEntry.divider(),
         SkinMenuEntry(tr('&Downloads'), () => c.navigate(PageMode.downloads)),
         SkinMenuEntry(tr('History'), () => c.navigate(PageMode.history)),
         SkinMenuEntry(tr('Playlist'), () => c.navigate(PageMode.playlists)),
         const SkinMenuEntry.divider(),
-        SkinMenuEntry(tr('&Incognito mode'), () => c.setIncognito(!c.incognito), shortcut: primary(LogicalKeyboardKey.keyN, shift: true), checked: c.incognito),
+        SkinMenuEntry(tr('&Incognito mode'), () => c.setIncognito(!c.incognito), shortcut: _keyOf(PlayerAction.incognito), checked: c.incognito),
         if (!appMenu) ...[
           const SkinMenuEntry.divider(),
           settings,
@@ -210,7 +246,7 @@ class _AppShellState extends State<AppShell> {
       SkinMenu(tr('&View'), [
         for (final (i, d) in _destinations.indexed) SkinMenuEntry(d.$4, () => _select(i), checked: _selectedIndex == i && !c.onWatchPage),
         const SkinMenuEntry.divider(),
-        SkinMenuEntry(tr('&Back'), _back, shortcut: const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true)),
+        SkinMenuEntry(tr('&Back'), _back, shortcut: _keyOf(PlayerAction.back)),
         const SkinMenuEntry.divider(),
         SkinMenuEntry(tr('&Compact mode'), () => save(appearance.copyWith(compact: !appearance.compact)), checked: appearance.compact),
         SkinMenuEntry(tr('&Status bar'), () => save(appearance.copyWith(showStatusBar: !appearance.showStatusBar)), checked: appearance.showStatusBar),
@@ -227,7 +263,7 @@ class _AppShellState extends State<AppShell> {
         }),
       ]),
       SkinMenu(tr('&Help'), [
-        SkinMenuEntry(tr('Keyboard shortcuts'), () => unawaited(showShortcutHelp(context, c.preferences))),
+        SkinMenuEntry(tr('Keyboard shortcuts'), () => unawaited(showShortcutHelp(context, c.preferences)), shortcut: _keyOf(PlayerAction.help)),
         SkinMenuEntry(tr('How to &make a skin'), () => unawaited(openExternal('https://github.com/0x696c757a696f/lumtub/blob/main/skins/README.md'))),
         SkinMenuEntry(tr('Report a bug or suggest an idea'), () => unawaited(openExternal('https://github.com/0x696c757a696f/lumtub/issues/new/choose'))),
         if (!appMenu) ...[
@@ -266,6 +302,47 @@ class _AppShellState extends State<AppShell> {
       SkinMenuEntry(tr('Cast'), () => unawaited(showCastDialog(context, c))),
       if (c.playingChannel case final channel?) SkinMenuEntry(tr('View channel'), () => c.openChannel(channel)),
     ];
+  }
+
+  /// The keys of the pages' own actions, as set in the shortcut settings.
+  /// Keys without Ctrl, Alt or ⌘ do nothing while typing.
+  Map<ShortcutActivator, VoidCallback> _pageShortcuts() {
+    void scroll(bool Function() move) {
+      // Space on a focused button or card presses it, as before.
+      final context = primaryFocus?.context;
+      final space = HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.space);
+      if (space && context != null && Actions.maybeFind<ActivateIntent>(context) != null) {
+        Actions.maybeInvoke(context, const ActivateIntent());
+        return;
+      }
+      move();
+    }
+    VoidCallback? run(PlayerAction action) => switch (action) {
+          PlayerAction.search => _focusSearch,
+          PlayerAction.incognito => () => _controller.setIncognito(!_controller.incognito),
+          PlayerAction.back => _back,
+          PlayerAction.top => () => scroll(() => KeyScroll.toEnd(false)),
+          PlayerAction.bottom => () => scroll(() => KeyScroll.toEnd(true)),
+          PlayerAction.pageDown => () => scroll(() => KeyScroll.byPage(1)),
+          PlayerAction.pageUp => () => scroll(() => KeyScroll.byPage(-1)),
+          PlayerAction.help => () => unawaited(showShortcutHelp(context, _controller.preferences)),
+          _ => null,
+        };
+    return {
+      for (final MapEntry(:key, :value) in shortcutKeys(_controller.preferences.shortcutKeys).entries)
+        if (key.page)
+          if (run(key) case final callback?)
+            for (final combo in value) (combo.control || combo.alt || combo.meta ? combo.activator : NotWhileTyping(combo.activator)): callback,
+    };
+  }
+
+  /// The first key of [action], for a menu to show.
+  SingleActivator? _keyOf(PlayerAction action) => shortcutKeys(_controller.preferences.shortcutKeys)[action]!.firstOrNull?.activator;
+
+  /// F5 or Ctrl+R: the page shown loaded again.
+  void _refreshPage() {
+    if (!_controller.canRefreshPage) return;
+    if (!PullToRefresh.refresh()) unawaited(_controller.refreshPage());
   }
 
   /// Goes back to the previous page or video.
@@ -317,10 +394,9 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) => CallbackShortcuts(
         bindings: {
-          // ⌘ on a Mac where Windows and Linux take Ctrl.
-          SingleActivator(LogicalKeyboardKey.keyK, control: !Platform.isMacOS, meta: Platform.isMacOS): _focusSearch,
-          SingleActivator(LogicalKeyboardKey.keyN, control: !Platform.isMacOS, meta: Platform.isMacOS, shift: true): () => _controller.setIncognito(!_controller.incognito),
-          const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): _back,
+          ..._pageShortcuts(),
+          const SingleActivator(LogicalKeyboardKey.f5): _refreshPage,
+          SingleActivator(LogicalKeyboardKey.keyR, control: !Platform.isMacOS, meta: Platform.isMacOS): _refreshPage,
           // Esc goes back too, except on the watch page, where it leaves
           // full screen and closes panels.
           const SingleActivator(LogicalKeyboardKey.escape): () {
@@ -361,7 +437,8 @@ class _AppShellState extends State<AppShell> {
                     selected: _bottomIndex,
                     onSelected: _selectBottom,
                   );
-              final watchingOnPhone = _controller.onWatchPage && isPhone(context);
+              final watchingOnPhone = _controller.onWatchPage && watchesLikePhone(context);
+              _tvRail = Device.tv && rail && !(skin?.drawsRail ?? false);
               final scaffold = Scaffold(
                 // The page under the bars is veiled on its own (_veiled).
                 backgroundColor: Colors.transparent,
@@ -370,7 +447,7 @@ class _AppShellState extends State<AppShell> {
                 body: SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [
                   // A phone's watch page starts with the player, as phone
                   // apps do; back is the player's arrow or the system's.
-                  if (!watchingOnPhone) _TopBar(
+                  if (!watchingOnPhone && !_tvRail) _TopBar(
                     wide: wide,
                     controller: _controller,
                     searchText: _searchText,
@@ -391,10 +468,22 @@ class _AppShellState extends State<AppShell> {
                         NavigationRail(
                           backgroundColor: context.tones.chrome,
                           selectedIndex: _selectedIndex,
-                          labelType: NavigationRailLabelType.all,
+                          // A TV's few hundred pixels of height hold the
+                          // pages, search and settings with only the chosen
+                          // page named, as TV apps' rails do.
+                          labelType: _tvRail ? NavigationRailLabelType.selected : NavigationRailLabelType.all,
                           minWidth: 76,
                           groupAlignment: -1,
                           onDestinationSelected: _select,
+                          leading: _tvRail ? IconButton(tooltip: tr('Search'), onPressed: _tvSearch, icon: Icon(AppIcons.magnifyingGlass)) : null,
+                          // The account is under Settings.
+                          trailing: _tvRail ? IconButton(
+                            tooltip: tr('Settings'),
+                            isSelected: _controller.mode == PageMode.settings && !_controller.onWatchPage,
+                            onPressed: () => openSettings(context, _controller),
+                            icon: Icon(AppIcons.gear),
+                            selectedIcon: const Icon(AppIcons.gearFill),
+                          ) : null,
                           destinations: [
                             for (final d in _destinations)
                               NavigationRailDestination(icon: Icon(d.$2), selectedIcon: Icon(d.$3), label: Text(d.$4)),
@@ -404,7 +493,7 @@ class _AppShellState extends State<AppShell> {
                         duration: Motion.of(Ease.fade),
                         // Keyed per page so each page's list keeps its scroll position
                         // (PageStorage) when the user comes back to it.
-                        child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _veiled(skin, !rail && !_controller.onWatchPage && _library.contains(_controller.mode) ? _libraryTabs(_content()) : _content()))),
+                        child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _veiled(skin, !rail && !_controller.onWatchPage && _library.contains(_controller.mode) ? _libraryTabs(_refreshable(_content())) : _refreshable(_content())))),
                       )),
                     ]),
                     // The video keeps playing over the pages; the watch page
@@ -468,6 +557,14 @@ class _AppShellState extends State<AppShell> {
         PageMode.explore when _controller.query != null => 'search:${_controller.query}',
         final mode => mode.name,
       };
+
+  /// Every page but the watch page can be pulled down; only those with
+  /// videos to load again refresh.
+  Widget _refreshable(Widget page) {
+    final c = _controller;
+    if (!c.ready || c.onWatchPage) return page;
+    return PullToRefresh(enabled: c.canRefreshPage, onRefresh: c.refreshPage, child: page);
+  }
 
   Widget _content() {
     final controller = _controller;
@@ -601,7 +698,8 @@ class _TopBar extends StatelessWidget {
 }
 
 class _SearchField extends StatefulWidget {
-  const _SearchField({required this.app, required this.controller, required this.focusNode, required this.enabled, required this.onSubmit});
+  const _SearchField({required this.app, required this.controller, required this.focusNode, required this.enabled, required this.onSubmit, this.autofocus = false});
+  final bool autofocus;
   final AppController app;
   final TextEditingController controller;
   final FocusNode focusNode;
@@ -705,6 +803,7 @@ class _SearchFieldState extends State<_SearchField> {
             fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) => TextField(
               controller: controller,
               focusNode: focusNode,
+              autofocus: widget.autofocus,
               enabled: widget.enabled,
               onSubmitted: (text) {
                 if (_picking) {

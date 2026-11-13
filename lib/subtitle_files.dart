@@ -77,7 +77,10 @@ class SubtitleFiles {
   }
 
   (String, Translator?) _keyOf(SubtitleOption option) {
-    final translator = _sourceOf(option) != null && byTranslator() ? _translator() : null;
+    final source = _sourceOf(option);
+    // YouTube translates automatic captions fragment by fragment, words of
+    // one sentence apart; here they are translated whole sentences at a time.
+    final translator = source != null && (byTranslator() || Uri.parse(source.url).queryParameters['kind'] == 'asr') ? _translator() : null;
     return (translator == null ? option.url : '${option.url}\u0000${identityHashCode(translator)}', translator);
   }
 
@@ -111,7 +114,10 @@ class SubtitleFiles {
       result = await _translate(await _get(source.url), source.target, translator, key, save);
     } else {
       try {
-        result = (text: await _get(option.url), rest: null);
+        final text = await _get(option.url);
+        // Automatic captions roll on fragment by fragment; they are shown
+        // as sentences, as their translation is.
+        result = (text: Uri.parse(option.url).queryParameters['kind'] == 'asr' ? WebVtt.asLines(text) : text, rest: null);
       } on _Refused {
         if (source == null) rethrow;
         result = await _translate(await _get(source.url), source.target, _translator(), key, save);
@@ -183,8 +189,14 @@ class SubtitleFiles {
   Future<({String text, Future<String?>? rest})> _translate(String vtt, String tlang, Translator translator, String key, Future<bool> Function(String text) save) async {
     // Whole sentences, not the fragments captions show, so each is
     // translated with all its words and never split between two requests.
-    final cues = WebVtt.sentences(WebVtt.cues(vtt));
-    if (cues.isEmpty) return (text: vtt, rest: null);
+    // Each translation shows whole for its sentence's time: cut back into
+    // the fragments it cannot be, since the two languages do not put their
+    // words in the same order, and the subtitle list shows the sentence as
+    // one row beside it.
+    final fragments = WebVtt.cues(vtt);
+    if (fragments.isEmpty) return (text: vtt, rest: null);
+    final spans = WebVtt.sentenceSpans(fragments, maxLength: sentenceTime, maxWidth: sentenceWidth);
+    final cues = [for (final (from, to) in spans) (timing: '${WebVtt._stamp(WebVtt.startOf(fragments[from].timing))} --> ${WebVtt._stamp(WebVtt.endOf(fragments[to - 1].timing))}', text: [for (final f in fragments.sublist(from, to)) f.text].reduce(WebVtt._join))];
     final target = TranslationLanguage.all.where((l) => l.youtube == tlang).firstOrNull?.code ?? tlang;
     final chunkLength = chunkLengthOf(translator);
     // Line groups of one request each, so a reply that drops the line break
@@ -241,7 +253,8 @@ class SubtitleFiles {
     String write() => WebVtt.write([
           for (final (i, (start, end)) in groups.indexed)
             if (translated[i] case final lines?)
-              for (var c = start; c < end; c++) (timing: cues[c].timing, text: lines[c - start].trim()),
+              for (var c = start; c < end; c++)
+                if (lines[c - start].trim() case final text when text.isNotEmpty) (timing: cues[c].timing, text: text),
         ]);
 
     // Enough to start with: the piece playing now and the next few.
@@ -287,6 +300,10 @@ class SubtitleFiles {
 
   /// How many sentences before a request AI is shown.
   static const contextSentences = 3;
+
+  /// How long and how wide a sentence sent for translation may grow.
+  static const sentenceTime = Duration(seconds: 30);
+  static const sentenceWidth = 400;
 
   static AiTranslator? _aiOf(Translator translator) => switch (translator) {
         AiTranslator() => translator.contextLines > 0 ? translator : null,
@@ -351,9 +368,27 @@ class WebVtt {
     Duration gap = const Duration(milliseconds: 1200),
     Duration maxLength = const Duration(seconds: 7),
     int maxWidth = 90,
+  }) =>
+      [
+        for (final (i, j) in sentenceSpans(cues, gap: gap, maxLength: maxLength, maxWidth: maxWidth))
+          j == i + 1
+              ? cues[i]
+              : (
+                  timing: '${_stamp(startOf(cues[i].timing))} --> ${_stamp(endOf(cues[j - 1].timing))}',
+                  text: [for (final c in cues.sublist(i, j)) c.text].reduce(_join),
+                ),
+      ];
+
+  /// Where the sentences of [sentences] start and end in [cues], as
+  /// (first cue, cue after the last).
+  static List<(int, int)> sentenceSpans(
+    List<({String timing, String text})> cues, {
+    Duration gap = const Duration(milliseconds: 1200),
+    Duration maxLength = const Duration(seconds: 7),
+    int maxWidth = 90,
   }) {
     int width(String text) => text.length + _cjk.allMatches(text).length;
-    final out = <({String timing, String text})>[];
+    final out = <(int, int)>[];
     for (var i = 0; i < cues.length;) {
       final start = startOf(cues[i].timing);
       var end = endOf(cues[i].timing);
@@ -368,11 +403,80 @@ class WebVtt {
         end = nextEnd;
         j++;
       }
-      out.add(j == i + 1 ? cues[i] : (timing: '${_stamp(start)} --> ${_stamp(end)}', text: text));
+      out.add((i, j));
       i = j;
     }
     return out;
   }
+
+  static final _clauseTail = RegExp(r'[;:,；：，、…)）」』"”]$');
+
+  /// How long and how wide a line on screen may grow.
+  static const lineTime = Duration(seconds: 7);
+  static const lineWidth = 84;
+
+  /// The text of [cues] from [from] up to [to] as one line.
+  static String textOf(List<({String timing, String text})> cues, int from, int to) => [for (final c in cues.sublist(from, to)) c.text].reduce(_join);
+
+  /// Sentence [span] of [cues] as the lines to show it in: all of it when
+  /// it fits [lineWidth] and [lineTime], else lines that do, each ending
+  /// after a comma where one is near the end, as (first cue, cue after
+  /// the last).
+  static List<(int, int)> lineSpans(List<({String timing, String text})> cues, (int, int) span) {
+    int width(String text) => text.length + _cjk.allMatches(text).length;
+    final (from, to) = span;
+    final out = <(int, int)>[];
+    for (var i = from; i < to;) {
+      final start = startOf(cues[i].timing);
+      var text = cues[i].text;
+      var j = i + 1;
+      // Where the line could end after a comma, and how wide it is there.
+      var comma = -1;
+      var commaWidth = 0;
+      while (j < to) {
+        final joined = _join(text, cues[j].text);
+        if (width(joined) > lineWidth || endOf(cues[j].timing) - start > lineTime) break;
+        if (_clauseTail.hasMatch(text)) {
+          comma = j;
+          commaWidth = width(text);
+        }
+        text = joined;
+        j++;
+      }
+      if (j < to && comma > i && commaWidth * 2 >= width(text)) j = comma;
+      out.add((i, j));
+      i = j;
+    }
+    return out;
+  }
+
+  /// The times of [lines] of [cues]: from the first cue's start to the last
+  /// one's end, or to the next line's start where automatic captions run
+  /// on over it, so two lines never show at once.
+  static List<String> lineTimings(List<({String timing, String text})> cues, List<(int, int)> lines) => [
+        for (final (k, (a, b)) in lines.indexed)
+          () {
+            final start = startOf(cues[a].timing);
+            var end = endOf(cues[b - 1].timing);
+            if (k + 1 < lines.length) {
+              final next = startOf(cues[lines[k + 1].$1].timing);
+              if (next < end && next > start) end = next;
+            }
+            return '${_stamp(start)} --> ${_stamp(end)}';
+          }(),
+      ];
+
+  /// Automatic captions [vtt] as sentences, in the lines of [lineSpans]:
+  /// the way their translations are shown, so each original line has its
+  /// translation beside it.
+  static String asLines(String vtt) {
+    final cues = WebVtt.cues(vtt);
+    if (cues.isEmpty) return vtt;
+    final lines = [for (final span in sentenceSpans(cues, maxLength: SubtitleFiles.sentenceTime, maxWidth: SubtitleFiles.sentenceWidth)) ...lineSpans(cues, span)];
+    final timings = lineTimings(cues, lines);
+    return write([for (final (k, (a, b)) in lines.indexed) (timing: timings[k], text: textOf(cues, a, b))]);
+  }
+
 
   /// [a] and [b] as one line: with a space, except between CJK characters.
   static String _join(String a, String b) {

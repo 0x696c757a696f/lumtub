@@ -46,14 +46,23 @@ void main() {
   });
 
   test('rows stop at a sentence length', () {
-    final main = [for (var i = 0; i < 10; i++) cue(i * 2000, i * 2000 + 2000, 'w$i')];
-    final paired = pairSubtitleCues(main, [cue(0, 20000, '很长')]);
-    expect(paired.every((p) => p.cue.end - p.cue.start <= const Duration(seconds: 15)), isTrue);
+    final main = [for (var i = 0; i < 20; i++) cue(i * 2000, i * 2000 + 2000, 'w$i')];
+    final paired = pairSubtitleCues(main, [cue(0, 40000, '很长')]);
+    expect(paired.every((p) => p.cue.end - p.cue.start <= const Duration(seconds: 30)), isTrue);
   });
 
   test('joins words with spaces and Chinese without', () {
     expect(joinCueText('hello', 'world'), 'hello world');
     expect(joinCueText('你好', '世界'), '你好世界');
     expect(joinCueText('时，', 'and'), '时，and');
+  });
+
+  test('a sentence shown whole on each of its lines is one row', () {
+    final paired = pairSubtitleCues(
+      [cue(0, 2000, 'Io ho'), cue(2000, 4000, 'sorriso.'), cue(5000, 6000, 'Poi')],
+      [cue(0, 2000, '我笑了。'), cue(2000, 4000, '我笑了。'), cue(5000, 6000, '然后')],
+    );
+    expect([for (final p in paired) p.cue.text], ['Io ho sorriso.', 'Poi']);
+    expect([for (final p in paired) p.second], ['我笑了。', '然后']);
   });
 }

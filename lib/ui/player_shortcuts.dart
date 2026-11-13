@@ -7,6 +7,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../app/app_controller.dart';
 import '../app_preferences.dart';
 import '../l10n/l10n.dart';
+import '../models.dart';
 import '../shortcut_bindings.dart';
 import 'lights_off.dart';
 import 'theater_mode.dart';
@@ -41,6 +42,21 @@ String shortcutActionLabel(PlayerAction action, AppPreferences prefs) => switch 
       PlayerAction.lightsOff => tr('Lights off'),
       PlayerAction.screenshot => tr('Screenshot'),
       PlayerAction.stats => tr('Show or hide playback stats'),
+      PlayerAction.captions => tr('Subtitles on or off'),
+      PlayerAction.captionsBigger => tr('Larger subtitles'),
+      PlayerAction.captionsSmaller => tr('Smaller subtitles'),
+      PlayerAction.miniPlayer => tr('Mini player'),
+      PlayerAction.danmaku => tr('Bullet chat on or off'),
+      PlayerAction.chapterBack => tr('Previous chapter'),
+      PlayerAction.chapterNext => tr('Next chapter'),
+      PlayerAction.search => tr('Search'),
+      PlayerAction.incognito => tr('Incognito mode'),
+      PlayerAction.back => tr('Go back'),
+      PlayerAction.top => tr('Scroll to the top'),
+      PlayerAction.bottom => tr('Scroll to the bottom'),
+      PlayerAction.pageDown => tr('Scroll down a page'),
+      PlayerAction.pageUp => tr('Scroll up a page'),
+      PlayerAction.help => tr('Keyboard shortcuts'),
     };
 
 /// Keys shown in the shortcut help, in display order, with the keys and
@@ -73,9 +89,17 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) {
     (of(PlayerAction.lightsOff), tr('Lights off')),
     (of(PlayerAction.screenshot), tr('Screenshot')),
     (of(PlayerAction.stats), tr('Show or hide playback stats')),
-    (keyNames(tr('Alt + ← / mouse back button')), tr('Go back')),
-    (keyNames('Ctrl + K'), tr('Search')),
-    (keyNames('Ctrl + Shift + N'), tr('Incognito mode')),
+    (of(PlayerAction.captions), tr('Subtitles on or off')),
+    (pair(PlayerAction.captionsBigger, PlayerAction.captionsSmaller), tr('Larger or smaller subtitles')),
+    (of(PlayerAction.miniPlayer), tr('Mini player')),
+    (of(PlayerAction.danmaku), tr('Bullet chat on or off')),
+    (pair(PlayerAction.chapterBack, PlayerAction.chapterNext), tr('Previous or next chapter')),
+    ([of(PlayerAction.back), tr('mouse back button')].where((k) => k.isNotEmpty).join(' / '), tr('Go back')),
+    (of(PlayerAction.search), tr('Search')),
+    (of(PlayerAction.incognito), tr('Incognito mode')),
+    (pair(PlayerAction.top, PlayerAction.bottom), tr('Scroll a list to the top or bottom')),
+    (pair(PlayerAction.pageUp, PlayerAction.pageDown), tr('Scroll a list up or down a page')),
+    (of(PlayerAction.help), tr('Show these shortcuts')),
   ];
   return [for (final row in rows) if (row.$1.isNotEmpty) row];
 }
@@ -156,7 +180,47 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
   void exitFullscreen() {
     final state = video();
     if (state != null && state.isFullscreen()) unawaited(state.exitFullscreen());
+  }  void captions() {
+    unawaited(controller.toggleSubtitles().then((on) {
+      if (on != null) onFeedback?.call(on ? AppIcons.closedCaptioningFill : AppIcons.subtitlesSlash, on ? tr('Subtitles on') : tr('Subtitles off'));
+    }));
   }
+  void captionSize(int direction) {
+    final now = controller.settings.subtitleScale;
+    final next = ((now * 10).round() + direction).clamp(5, 30) / 10;
+    if (next == now) return;
+    unawaited(controller.saveSettings(controller.settings.copyWith(subtitleScale: next)));
+    onFeedback?.call(AppIcons.closedCaptioningFill, '${next.toStringAsFixed(1)}×');
+  }
+  void mini() {
+    if (controller.mini) {
+      controller.expandMini();
+    } else {
+      exitFullscreen();
+      controller.enterMini();
+    }
+  }
+  void danmaku() {
+    if (!controller.hasDanmaku) return;
+    final settings = controller.preferences.danmaku;
+    unawaited(controller.setDanmaku(settings.copyWith(enabled: !settings.enabled)));
+    onFeedback?.call(settings.enabled ? AppIcons.chatCircleSlash : AppIcons.chatsFill, settings.enabled ? tr('Bullet chat off') : tr('Bullet chat on'));
+  }
+  void chapter(int direction) {
+    final chapters = controller.details?.chapters ?? const <Chapter>[];
+    if (chapters.isEmpty) return;
+    final position = player.state.position;
+    final current = Chapter.at(chapters, position);
+    final index = current == null ? -1 : chapters.indexOf(current);
+    // Back from more than 3 s into a chapter goes to its start, as YouTube does.
+    final target = direction > 0
+        ? (index + 1 < chapters.length ? chapters[index + 1] : null)
+        : (current != null && position - current.start > const Duration(seconds: 3) ? current : index > 0 ? chapters[index - 1] : current);
+    if (target == null) return;
+    unawaited(controller.seek(target.start));
+    onFeedback?.call(direction > 0 ? AppIcons.skipForwardFill : AppIcons.skipBackFill, target.title.isEmpty ? (direction > 0 ? tr('Next chapter') : tr('Previous chapter')) : target.title);
+  }
+
   VoidCallback? run(PlayerAction action) => switch (action) {
         PlayerAction.playPause => playOrPause,
         PlayerAction.seekBack => () => seek(-prefs.seekSeconds),
@@ -184,6 +248,15 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
         PlayerAction.lightsOff => () => lightsOff.value = !lightsOff.value,
         PlayerAction.screenshot => onScreenshot,
         PlayerAction.stats => controller.toggleStats,
+        PlayerAction.captions => captions,
+        PlayerAction.captionsBigger => () => captionSize(1),
+        PlayerAction.captionsSmaller => () => captionSize(-1),
+        PlayerAction.miniPlayer => mini,
+        PlayerAction.danmaku => danmaku,
+        PlayerAction.chapterBack => () => chapter(-1),
+        PlayerAction.chapterNext => () => chapter(1),
+        // Pages' own, bound by the app shell.
+        PlayerAction.search || PlayerAction.incognito || PlayerAction.back || PlayerAction.top || PlayerAction.bottom || PlayerAction.pageDown || PlayerAction.pageUp || PlayerAction.help => null,
       };
   const digits = [LogicalKeyboardKey.digit0, LogicalKeyboardKey.digit1, LogicalKeyboardKey.digit2, LogicalKeyboardKey.digit3, LogicalKeyboardKey.digit4, LogicalKeyboardKey.digit5, LogicalKeyboardKey.digit6, LogicalKeyboardKey.digit7, LogicalKeyboardKey.digit8, LogicalKeyboardKey.digit9];
   const numpad = [LogicalKeyboardKey.numpad0, LogicalKeyboardKey.numpad1, LogicalKeyboardKey.numpad2, LogicalKeyboardKey.numpad3, LogicalKeyboardKey.numpad4, LogicalKeyboardKey.numpad5, LogicalKeyboardKey.numpad6, LogicalKeyboardKey.numpad7, LogicalKeyboardKey.numpad8, LogicalKeyboardKey.numpad9];
@@ -229,11 +302,11 @@ Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => sho
                 child: Row(children: [
                   Expanded(child: Text(action)),
                   const SizedBox(width: 12),
-                  Container(
+                  Flexible(child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(6)),
-                    child: Text(keys, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                  ),
+                    child: Text(keys, textAlign: TextAlign.end, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  )),
                 ]),
               ),
           ]),

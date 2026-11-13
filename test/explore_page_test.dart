@@ -2,12 +2,14 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/academic_topics.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/blocked_groups.dart';
 import 'package:lumtub/explore_filters.dart';
 import 'package:lumtub/explore_topics.dart';
 import 'package:lumtub/faith_topics.dart';
+import 'package:lumtub/l10n/l10n.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/recommendations.dart';
 import 'package:lumtub/search_options.dart';
@@ -133,6 +135,35 @@ void main() {
     // Upcoming and past streams come from the newest videos.
     expect(exploreParams(ExploreMode.liveUpcoming), 'CAISAhAB');
     expect(exploreParams(ExploreMode.curated), 'EgIQAQ%253D%253D');
+  });
+
+  test('学术 has a tab per faculty and one for live, each zone named in Chinese', () async {
+    await loadTranslations();
+    expect(popularTopics.singleWhere((t) => t.label == 'Academia').opens, ExploreSection.humanities);
+    expect(liveTopics.singleWhere((t) => t.label == 'Academia').opens, ExploreSection.academicLive);
+    expect(ExploreSection.academicTabs, everyElement(predicate<ExploreSection>((s) => s.isAcademic && s.tabs == ExploreSection.academicTabs)));
+    expect(ExploreSection.academicTabs.where((s) => s.isLive), [ExploreSection.academicLive]);
+    expect(humanitiesTopics.map((t) => t.label), containsAll(['Philosophy', 'Theology', 'History']));
+    expect(socialScienceTopics.first.label, 'Psychology');
+    expect(ExploreMode.defaultOf(ExploreSection.humanities), ExploreMode.curated);
+    expect(ExploreMode.defaultOf(ExploreSection.academicLive), ExploreMode.liveViewers);
+    final chinese = translations['zh-Hans']!;
+    for (final section in ExploreSection.academicTabs) {
+      expect(chinese, contains(section.label), reason: section.name);
+      final queries = <String>[];
+      for (final topic in exploreTopicsOf(section)) {
+        expect(chinese, contains(topic.label));
+        for (final sub in topic.subs) {
+          expect(chinese, contains(sub.label));
+          queries.add(sub.query);
+          for (final leaf in sub.subs) {
+            expect(chinese, contains(leaf.label));
+            queries.add(leaf.query);
+          }
+        }
+      }
+      expect(queries.toSet(), hasLength(queries.length), reason: section.name);
+    }
   });
 
   test('宗教与信仰 leaves out bait and keeps a channel to three videos', () {

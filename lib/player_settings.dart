@@ -304,6 +304,16 @@ T _enumByName<T extends Enum>(List<T> values, Object? name, T fallback) =>
     values.where((value) => value.name == name).firstOrNull ?? fallback;
 
 class PlayerSettings {
+  /// Whether the device is a phone, tablet or TV, where the read-ahead
+  /// cache stays small: each MB of it is memory the system may take back by
+  /// closing the app in the background.
+  static bool smallMemory = Platform.isAndroid;
+
+  /// 100 MB on computers, 40 s of 4K at YouTube's rates and minutes of
+  /// 1080p (cache-secs stops it sooner there); 64 MB on phones and TVs. The
+  /// cache of what was played is a quarter of it.
+  static int get defaultBufferMb => smallMemory ? 64 : 100;
+
   final String hwdec;
   final String scale;
   final bool deband;
@@ -466,7 +476,7 @@ class PlayerSettings {
     this.secondaryOpacity = 0.95,
     this.cacheMode = 'auto',
     this.cacheSeconds = 60,
-    this.cacheMemoryMb = 150,
+    this.cacheMemoryMb = 100,
     this.strategy = PlaybackStrategy.auto,
     Set<VideoCodec>? disabledCodecs,
     this.audioQuality = AudioQuality.best,
@@ -672,7 +682,7 @@ class PlayerSettings {
         'cacheMode': cacheMode,
         'cacheSeconds': cacheSeconds,
         'cacheMemoryMb': cacheMemoryMb,
-        'bufferDefaults': 2,
+        'bufferDefaults': 3,
         'subtitleStyleVersion': 2,
         'strategy': strategy.name,
         'disabledCodecs': chosenCodecs == null ? null : [for (final c in VideoCodec.values) if (chosenCodecs!.contains(c)) c.name],
@@ -767,7 +777,7 @@ class PlayerSettings {
       '#${(opacity.clamp(0, 1) * 255).round().toRadixString(16).padLeft(2, '0')}${(rgb & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}'.toUpperCase();
 
   factory PlayerSettings.fromJson(Object? raw) {
-    if (raw is! Map) return const PlayerSettings();
+    if (raw is! Map) return const PlayerSettings().copyWith(cacheMemoryMb: defaultBufferMb);
     String choice(String key, Set<String> allowed, String fallback) {
       final value = raw[key]?.toString();
       return allowed.contains(value) ? value! : fallback;
@@ -830,7 +840,9 @@ class PlayerSettings {
     final playOrder = raw['playOrderDefault'] != 2 && savedOrder == PlayOrder.autoPlayRelated ? PlayOrder.pause : savedOrder;
     final path = raw['cachePath']?.toString();
     final device = raw['audioDevice']?.toString() ?? 'auto';
-    final oldBuffer = raw['bufferDefaults'] != 2;
+    final bufferVersion = raw['bufferDefaults'] is int ? raw['bufferDefaults'] as int : 1;
+    final oldBuffer = bufferVersion < 2;
+    final savedBuffer = raw['cacheMemoryMb'];
     final loaded = PlayerSettings(
       hwdec: validHwdec(raw['hwdec']?.toString()) ?? 'auto-safe',
       scale: choice('scale', {'spline36', 'bilinear', 'lanczos', 'ewa_lanczossharp'}, 'spline36'),
@@ -851,7 +863,9 @@ class PlayerSettings {
       // Builds before bufferDefaults 2 saved 30 s / 64 MB even when untouched;
       // those move to the larger defaults that ride out network hiccups.
       cacheSeconds: oldBuffer && raw['cacheSeconds'] == 30 ? 60 : number('cacheSeconds', 60, 1, 600),
-      cacheMemoryMb: oldBuffer && raw['cacheMemoryMb'] == 64 ? 150 : number('cacheMemoryMb', 150, 16, 1024),
+      // Builds before bufferDefaults 3 saved mpv's 150 MB even when
+      // untouched; it now uses less memory, less still on phones and TVs.
+      cacheMemoryMb: (oldBuffer && savedBuffer == 64) || (bufferVersion < 3 && savedBuffer == 150) ? defaultBufferMb : number('cacheMemoryMb', defaultBufferMb, 16, 1024),
       strategy: strategy,
       disabledCodecs: disabled,
       audioQuality: _enumByName(AudioQuality.values, raw['audioQuality'], AudioQuality.best),
@@ -956,12 +970,12 @@ class PlayerSettingsStore {
   PlayerSettingsStore(AppDirectories directories) : file = File('${directories.config.path}${Platform.pathSeparator}player_settings.json');
 
   Future<PlayerSettings> load() async {
-    if (!await file.exists()) return const PlayerSettings();
+    if (!await file.exists()) return const PlayerSettings().copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb);
     try {
       return PlayerSettings.fromJson(jsonDecode(await file.readAsString()));
     } catch (e) {
       await setBrokenFileAside(file, e);
-      return const PlayerSettings();
+      return const PlayerSettings().copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb);
     }
   }
 

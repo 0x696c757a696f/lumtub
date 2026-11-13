@@ -179,7 +179,7 @@ class _GroupChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 8),
-        child: Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+        child: FilterFlow(children: [
           if (groups.isNotEmpty) ...[
             ChoiceChip(label: Text(tr('All')), selected: selected == null, onSelected: (_) => onSelect(null)),
             for (final group in groups)
@@ -709,8 +709,8 @@ class SliverVideoLayout extends StatelessWidget {
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: layout.columns,
-              mainAxisSpacing: AppStyle.cardSpacing,
-              crossAxisSpacing: AppStyle.cardSpacing,
+              mainAxisSpacing: gridGap,
+              crossAxisSpacing: gridGap,
               mainAxisExtent: layout.itemHeight,
             ),
             delegate: SliverChildBuilderDelegate(builder, childCount: count),

@@ -97,6 +97,7 @@ void main() {
     expect(asked.last.queryParameters.containsKey('tlang'), isFalse);
     expect(translator.asked, ['hello world how & why']);
     expect(translator.targets, ['zh-CN']);
+    // Translated as one sentence and shown as one, over both lines' times.
     expect(await File(path).readAsString(), contains('00:00:00.000 --> 00:00:04.000\nHELLO WORLD HOW &amp; WHY\n'));
   });
 
@@ -195,6 +196,54 @@ void main() {
     expect(joined.length, greaterThan(1));
     expect(joined.every((c) => WebVtt.endOf(c.timing) - WebVtt.startOf(c.timing) <= const Duration(seconds: 7)), isTrue);
     expect(joined.every((c) => c.text.length <= 90), isTrue);
+  });
+
+  test('automatic captions show as sentences, a long one in lines broken at commas', () {
+    final vtt = StringBuffer('WEBVTT\n\n');
+    const words = ['Io conoscevo tutte le parole,', 'tutte, ma ho pensato così tanto alla', 'risposta', 'che lui ha ripetuto la domanda', 'più lentamente,', 'molto più lentamente,', 'come se stesse parlando con una bambina.', 'Io ho sorriso.'];
+    for (final (i, w) in words.indexed) {
+      // Each fragment runs on over the next, as YouTube's do.
+      vtt.write('00:01:${(17 + i * 2).toString().padLeft(2, '0')}.000 --> 00:01:${(20 + i * 2).toString().padLeft(2, '0')}.000\n$w\n\n');
+    }
+    final lines = WebVtt.cues(WebVtt.asLines('$vtt'));
+    expect([for (final l in lines) l.text], [
+      'Io conoscevo tutte le parole, tutte, ma ho pensato così tanto alla risposta',
+      'che lui ha ripetuto la domanda più lentamente,',
+      'molto più lentamente, come se stesse parlando con una bambina.',
+      'Io ho sorriso.',
+    ]);
+    // One line at a time: a line ends where the next begins.
+    for (var k = 0; k + 1 < lines.length; k++) {
+      expect(WebVtt.endOf(lines[k].timing), WebVtt.startOf(lines[k + 1].timing));
+    }
+  });
+
+  test('translates automatic captions by sentence, each translation shown for its whole sentence', () async {
+    const asr = '''WEBVTT
+
+00:00:00.000 --> 00:00:04.000
+ma Kennedy non ci crede e sospetta
+
+00:00:04.000 --> 00:00:08.000
+che stiano sviluppando armi.
+
+00:00:08.000 --> 00:00:10.000
+Ok, finita la chicca.
+''';
+    final asked = <Uri>[];
+    final client = MockClient((request) async {
+      asked.add(request.url);
+      return http.Response(asr, 200);
+    });
+    final translator = _Upper();
+    final files = SubtitleFiles(client, folder, () => translator);
+    const option = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=c&lang=it&kind=asr&tlang=zh-Hans', kind: SubtitleKind.translated);
+    final cues = WebVtt.cues(await File(await files.pathFor(option)).readAsString());
+    // YouTube's own translation is not asked for, the sentence goes whole.
+    expect(asked.map((u) => u.queryParameters.containsKey('tlang')), [false]);
+    expect(translator.asked.single.split('\n'), ['ma Kennedy non ci crede e sospetta che stiano sviluppando armi.', 'Ok, finita la chicca.']);
+    expect([for (final c in cues) (WebVtt.startOf(c.timing).inSeconds, WebVtt.endOf(c.timing).inSeconds)], [(0, 8), (8, 10)]);
+    expect([for (final c in cues) c.text], ['MA KENNEDY NON CI CREDE E SOSPETTA CHE STIANO SVILUPPANDO ARMI.', 'OK, FINITA LA CHICCA.']);
   });
 
   test('reads when a cue starts', () {

@@ -18,7 +18,9 @@ import '../skin_paint.dart';
 import '../theme.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import 'downloads_page.dart' show openInExplorer;
-import 'settings_sections.dart' show themeModes;
+import '../palettes.dart' show paletteForSkin;
+import 'settings_sections.dart' show themeModeTiles;
+import 'settings_subpages.dart' show openColorSelect;
 
 const _guide = 'https://github.com/0x696c757a696f/lumtub/blob/main/skins/README.md';
 
@@ -82,12 +84,18 @@ class _SkinsPage extends StatelessWidget {
           final schemes = SkinLibrary.colorSchemeIds.toSet();
           return ListView(padding: const EdgeInsets.only(bottom: 40), children: [
             // Skins with both sides take light or dark from here.
-            PopupItem<ThemeMode>(
-              title: tr('Theme mode'),
-              leading: Icon(AppIcons.sunHorizon),
-              value: appearance.themeMode,
-              values: themeModes,
-              onSelected: (mode) => controller.saveAppearance(controller.appearance.copyWith(themeMode: mode, darkSchedule: DarkSchedule.off)),
+            ...themeModeTiles(context, controller),
+            // The accent color of the standard look and of skins that leave
+            // colors to the app; a color scheme sets its own.
+            NormalItem(
+              title: tr('App theme'),
+              subtitle: switch (paletteForSkin(appearance.skin)) {
+                final palette? => tr('Set by the {0} color scheme', [palette.name]),
+                null => tr('Current: {0} · {1}', [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),
+              },
+              leading: Icon(AppIcons.eyedropper),
+              trailing: CircleAvatar(radius: 12, backgroundColor: controller.accentColor),
+              onTap: () => openColorSelect(context, controller),
             ),
             if (context.skin?.glass ?? false)
               ListTile(
@@ -100,7 +108,9 @@ class _SkinsPage extends StatelessWidget {
                   onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(glassOpacity: v)),
                 ),
               ),
-            if (context.skin != null)
+            // Only a skin with pictures or a landscape has a background to
+            // turn off; a color scheme is colors alone.
+            if (context.skin case final skin? when skin.decorations.isNotEmpty || skin.background.isNotEmpty)
               SwitchItem(
                 title: tr('Skin background'),
                 subtitle: tr("The skin's pictures and landscape behind the pages; off leaves a plain color"),

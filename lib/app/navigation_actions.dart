@@ -273,7 +273,8 @@ extension NavigationActions on AppController {
 
   /// Gathers recommendations again when they are old, or when [force]d;
   /// with [keep], the videos shown stay and new ones follow them.
-  Future<void> refreshHomeFeed({bool force = false, bool keep = false}) async {
+  /// With [ahead], new videos come first and those seen before follow.
+  Future<void> refreshHomeFeed({bool force = false, bool keep = false, bool ahead = false}) async {
     final feed = homeFeed;
     final repository = _repository;
     final library = this.library;
@@ -286,7 +287,73 @@ extension NavigationActions on AppController {
       await library.refreshFeed().timeout(const Duration(seconds: 20), onTimeout: () {});
     }
     feed.mix = preferences.feedMix;
-    await feed.refresh(await _homeSources(repository), filter: visible, keep: keep);
+    await feed.refresh(await _homeSources(repository), filter: visible, keep: keep, ahead: ahead);
+  }
+
+  /// Whether the page shown has something [refreshPage] loads again.
+  bool get canRefreshPage {
+    if (onWatchPage || !ready) return false;
+    return switch (mode) {
+      PageMode.home => homeFeed != null && preferences.homeShowRecommended && !preferences.focusHideHome,
+      PageMode.explore => true,
+      PageMode.subscriptions => library != null,
+      PageMode.channel => channel != null && channelQuery == null,
+      _ => false,
+    };
+  }
+
+  /// Loads the page shown again, for 下拉刷新, a second press of its
+  /// navigation button and F5. Done once the first videos are in, not
+  /// when every source has answered.
+  Future<void> refreshPage() async {
+    if (!canRefreshPage) return;
+    bool listed(VideoListLoader? list) => list != null && !list.loading && (list.items.isNotEmpty || list.error != null || !list.hasMore);
+    switch (mode) {
+      case PageMode.home:
+        final feed = homeFeed!;
+        final before = feed.loadedAt;
+        await Future.any([refreshHomeFeed(force: true, ahead: true), _until(() => feed.loadedAt != before)]);
+      case PageMode.explore when _query != null:
+        retrySearch();
+        await _until(() => listed(searchResults));
+      case PageMode.explore:
+        refreshExplore();
+        await _until(() => listed(explore));
+      case PageMode.subscriptions:
+        await library?.refreshFeed(force: true);
+      case PageMode.channel:
+        _reloadChannel();
+        await _until(() => channelPosts != null ? !channelPosts!.loading : listed(channelVideos));
+      default:
+    }
+  }
+
+  /// The open channel tab read again, in the same order.
+  void _reloadChannel() {
+    final repository = _repository;
+    final ref = channel;
+    if (repository == null || ref == null) return;
+    final sort = channelSort;
+    if (channelTab == ChannelTab.posts || sort == ChannelSort.latest) return setChannelTab(channelTab);
+    final tab = channelTab;
+    _update(() {
+      channelVideos?.dispose();
+      channelVideos = VideoListLoader(() => repository.channelTab(ref, tab, sort: sort))
+        ..addListener(_passOn('channel'))
+        ..loadMore();
+    });
+  }
+
+  /// Completes once [done] holds, checked whenever the controller changes,
+  /// or after [limit].
+  Future<void> _until(bool Function() done, {Duration limit = const Duration(seconds: 20)}) {
+    if (done()) return Future.value();
+    final finished = Completer<void>();
+    void check() {
+      if (!finished.isCompleted && done()) finished.complete();
+    }
+    addListener(check);
+    return finished.future.timeout(limit, onTimeout: () {}).whenComplete(() => removeListener(check));
   }
 
   /// The next page of 为你推荐, as the home page scrolls to its end.

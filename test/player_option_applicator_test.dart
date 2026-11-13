@@ -41,7 +41,7 @@ void main() {
     final lower = PlayerOptionApplicator.optionsFor(const PlayerSettings(strategy: PlaybackStrategy.lowResource, cacheSeconds: 10, cacheMemoryMb: 32));
     expect([lower['cache-secs'], lower['demuxer-max-bytes']], ['10', '32MiB']);
     final normal = PlayerOptionApplicator.optionsFor(const PlayerSettings());
-    expect([normal['cache-secs'], normal['demuxer-max-bytes'], normal['demuxer-max-back-bytes']], ['60', '150MiB', '37MiB']);
+    expect([normal['cache-secs'], normal['demuxer-max-bytes'], normal['demuxer-max-back-bytes']], ['60', '100MiB', '25MiB']);
   });
 
   test('single cycle loops the file in mpv', () {

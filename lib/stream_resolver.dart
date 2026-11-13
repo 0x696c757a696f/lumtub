@@ -14,6 +14,7 @@ import 'player_settings.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
 import 'video_codec.dart';
+import 'video_facts_lookup.dart';
 
 /// What yt-dlp found for one video: every format, the ones picked for
 /// [format], and the metadata the watch page shows. What the formats offer
@@ -40,7 +41,12 @@ class ResolvedVideo {
     return _summaries.putIfAbsent('${disabled.join(',')}/$cap', () {
       final core = NativeCore.instance;
       if (core == null) return null;
-      final answer = core.resolved(_text ??= jsonEncode(info), jsonEncode({'disabled': disabled, 'cap': cap, 'fetched': fetched.millisecondsSinceEpoch ~/ 1000}));
+      // yt-dlp's text is a second copy of [info] as large as a megabyte or
+      // more; it is let go once read, and written again if other settings
+      // ask.
+      final text = _text ?? jsonEncode(info);
+      _text = null;
+      final answer = core.resolved(text, jsonEncode({'disabled': disabled, 'cap': cap, 'fetched': fetched.millisecondsSinceEpoch ~/ 1000}));
       return answer == null ? null : jsonDecode(answer) as Map<String, dynamic>;
     });
   }
@@ -142,7 +148,12 @@ class StreamResolver {
   /// The cookie sign-in, for members-only videos.
   MembersCookies? Function()? members;
 
-  static const _keep = 12;
+  /// Each kept answer takes about 5 MB once decoded (measured with a 1 MB
+  /// answer: 55 MB for 12), so only the last few are kept.
+  static const _keep = 4;
+  /// The video last asked for in the foreground, kept whatever background
+  /// extractions come after it: it is likely the one playing.
+  String? _asked;
   final _results = <String, Future<ResolvedVideo>>{};
   /// The format each entry of [_results] is being resolved with.
   final _formats = <String, String>{};
@@ -179,6 +190,7 @@ class StreamResolver {
   /// [membersOnly] (as a list marked it) asks signed in from the start.
   /// [live]: see [arguments].
   Future<ResolvedVideo> resolve(String videoId, String format, {String? formatSort, bool membersOnly = false, bool live = false}) {
+    _asked = videoId;
     // A card prefetched in the background is now being waited on.
     final lowered = _lowered[videoId];
     if (lowered != null) restorePriority(lowered);
@@ -229,9 +241,10 @@ class StreamResolver {
         logInfo('Quick start of $videoId: /player answered HTTP ${response.statusCode}');
         return null;
       }
-      final text = core.quickInfo(utf8.decode(response.bodyBytes, allowMalformed: true), policy);
+      final answer = utf8.decode(response.bodyBytes, allowMalformed: true);
+      final text = core.quickInfo(answer, policy);
       if (text == null) {
-        logInfo('Quick start of $videoId: left to yt-dlp');
+        logInfo('Quick start of $videoId: left to yt-dlp (${VideoFactsLookup.playerWhy(answer)})');
         return null;
       }
       final info = jsonDecode(text) as Map<String, dynamic>;
@@ -267,6 +280,24 @@ class StreamResolver {
   /// Background extractions still running, by video id: their process ids.
   final _lowered = <String, int>{};
   (String, String, String?)? _nextPrefetch;
+
+  void _drop(String videoId) {
+    _formats.remove(videoId);
+    _formatSorts.remove(videoId);
+    _proxies.remove(videoId);
+    _lives.remove(videoId);
+    _results.remove(videoId);
+    _done.remove(videoId);
+    _deleteInfo(videoId);
+  }
+
+  /// Drops every finished answer but the one asked for last, when the app
+  /// goes to the background with nothing playing.
+  void trim() {
+    for (final id in [for (final id in _done.keys) if (id != _asked) id]) {
+      _drop(id);
+    }
+  }
 
   /// Drops what is known about [videoId], for example after its streams
   /// failed to play.
@@ -328,15 +359,12 @@ class StreamResolver {
     } else {
       _lives.remove(videoId);
     }
+    // Answers whose addresses expired are of no more use.
+    for (final id in [for (final e in _done.entries) if (!e.value.fresh && e.key != _asked && e.key != videoId) e.key]) {
+      _drop(id);
+    }
     while (_results.length > _keep) {
-      final oldest = _results.keys.first;
-      _formats.remove(oldest);
-      _formatSorts.remove(oldest);
-      _proxies.remove(oldest);
-      _lives.remove(oldest);
-      _results.remove(oldest);
-      _done.remove(oldest);
-      _deleteInfo(oldest);
+      _drop(_results.keys.firstWhere((id) => id != _asked && id != videoId));
     }
     // A failure is not kept, so the next attempt runs yt-dlp again.
     future.then((video) {

@@ -42,4 +42,19 @@ enum VideoCodec {
 }
 
 /// 1080p, or 1080p60 for more than 30 frames a second, as YouTube writes it.
-String heightLabel(int height, [num? fps, String p = 'p']) => fps != null && fps > 30.5 ? '$height$p${fps.round()}' : '$height$p';
+/// A portrait video ([aspect], width over height, below 1) is named by its
+/// width, as YouTube names it: 1080×1920 is 1080p, not 1920p.
+String heightLabel(int height, [num? fps, String p = 'p', double? aspect]) {
+  final size = aspect != null && aspect > 0 && aspect < 1 ? shortSide(height, aspect) : height;
+  return fps != null && fps > 30.5 ? '$size$p${fps.round()}' : '$size$p';
+}
+
+/// The width of a portrait picture [height] tall, snapped to the usual
+/// sizes it is near (YouTube's 1080×1920 may come as 1080×1918).
+int shortSide(int height, double aspect) {
+  final width = (height * aspect).round();
+  for (final usual in const [144, 240, 360, 480, 720, 1080, 1440, 2160, 4320]) {
+    if ((width - usual).abs() <= usual * 0.04) return usual;
+  }
+  return width;
+}

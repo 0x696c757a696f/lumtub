@@ -153,7 +153,7 @@ void main() {
     expect(find.text('Explore'), findsOneWidget);
     expect(find.text('Popular'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    expect(popularTopics.singleWhere((t) => t.opens != null).label, 'Religion & faith');
+    expect(popularTopics.singleWhere((t) => t.opens == ExploreSection.faith).label, 'Religion & faith');
     controller.setExplore(section: ExploreSection.faith);
     await tester.pump(const Duration(milliseconds: 500));
     await tester.tap(find.text('Catholic'));
@@ -164,6 +164,16 @@ void main() {
     await tester.tap(find.text('Live').last);
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Upcoming'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    controller.setExplore(section: ExploreSection.popular, topic: popularTopics.indexWhere((t) => t.opens == ExploreSection.humanities));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(controller.exploreSection, ExploreSection.humanities);
+    await tester.tap(find.text('Social sciences'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('Psychology'));
+    await tester.pump();
+    expect(find.text('Clinical psychology'), findsOneWidget);
+    expect(controller.exploreMode, ExploreMode.curated);
     expect(tester.takeException(), isNull);
   });
 

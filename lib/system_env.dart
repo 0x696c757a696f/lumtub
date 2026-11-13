@@ -58,6 +58,19 @@ Future<void> restartApp() async {
   exit(0);
 }
 
+/// Hands [text] to Android's share sheet; false where there is none, so
+/// the caller copies it instead.
+Future<bool> shareText(String text) async {
+  if (!Platform.isAndroid) return false;
+  try {
+    await const MethodChannel('lumtub/windows_shell').invokeMethod<void>('shareText', text);
+    return true;
+  } catch (e) {
+    logWarn('Could not open the share sheet: $e');
+    return false;
+  }
+}
+
 /// Opens [target], a web address, file or folder, with the desktop's
 /// default program (xdg-open). Does nothing on Windows, which has its own
 /// ways. On Android only web addresses open, in the browser; there is no

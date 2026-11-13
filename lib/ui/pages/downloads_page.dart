@@ -21,9 +21,9 @@ import '../app_icons.dart';
 Future<void> showDownloadChoice(BuildContext context, AppController controller, VideoItem item) async {
   // A live stream is recorded as it comes, in the best the settings allow.
   if (item.isLive) return controller.download(item, DownloadQuality.best);
-  final choice = await showDialog<DownloadChoice>(
-    context: context,
-    builder: (context) => DownloadDialog(
+  final choice = await showPanel<DownloadChoice>(
+    context,
+    (context) => DownloadDialog(
       title: item.title,
       loadFormats: () => controller.downloadFormats(item.id),
       defaults: controller.downloads?.defaults ?? const DownloadDefaults(),

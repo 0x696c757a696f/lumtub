@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../device.dart';
 import '../../app/app_controller.dart';
 import '../../app/posts_loader.dart';
 import '../../app/video_list_loader.dart';
@@ -83,6 +84,7 @@ class _ChannelPageState extends State<ChannelPage> {
     }
     final tab = controller.channelTab;
     final searching = controller.channelQuery != null;
+    final sortable = !searching && posts == null && (tab == ChannelTab.videos || tab == ChannelTab.shorts || tab == ChannelTab.live);
     return NearEndListener(
       onNearEnd: () {
         loader?.loadMore();
@@ -90,6 +92,31 @@ class _ChannelPageState extends State<ChannelPage> {
       },
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: ChannelHeader(controller: controller, channel: channel, onBack: controller.goBack)),
+        // On a phone the tabs are one row that scrolls sideways and stays
+        // at the top while the videos scroll, as phone video apps have it.
+        if (isPhone(context) && !searching) ...[
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _PinnedRow(
+              color: Theme.of(context).colorScheme.surface,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding, vertical: 8),
+                children: [
+                  for (final value in ChannelTab.values)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 8),
+                      child: ChoiceChip(label: Text(value.label), selected: tab == value, onSelected: (_) => controller.setChannelTab(value)),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(child: Padding(
+            padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 4, AppStyle.pagePadding, 12),
+            child: _ChannelSearchField(key: ValueKey((channel.id, controller.channelQuery == null)), controller: controller),
+          )),
+        ] else
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
           child: Row(children: [
@@ -105,15 +132,22 @@ class _ChannelPageState extends State<ChannelPage> {
                         onSelected: (_) => controller.searchChannel(controller.channelQuery!, within: value),
                       ),
                   ])
-                : Wrap(spacing: 8, runSpacing: 8, children: [
+                : FilterFlow(children: [
                     for (final value in ChannelTab.values)
                       ChoiceChip(label: Text(value.label), selected: tab == value, onSelected: (_) => controller.setChannelTab(value)),
+                    // A TV keeps the order on the same line, so the videos
+                    // start higher.
+                    if (Device.tv && sortable) ...[
+                      const SizedBox(width: 8),
+                      for (final value in ChannelSort.values)
+                        FilterChip(label: Text(value.label), showCheckmark: false, selected: controller.channelSort == value, onSelected: (_) => controller.setChannelSort(value)),
+                    ],
                   ])),
             const SizedBox(width: 12),
             SizedBox(width: math.min(240, MediaQuery.sizeOf(context).width * 0.4), child: _ChannelSearchField(key: ValueKey((channel.id, controller.channelQuery == null)), controller: controller)),
           ]),
         )),
-        if (!searching && posts == null && (tab == ChannelTab.videos || tab == ChannelTab.shorts || tab == ChannelTab.live))
+        if (sortable && !Device.tv)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
             child: Wrap(spacing: 8, runSpacing: 8, children: [
@@ -238,6 +272,7 @@ class PostCommentsPanel extends StatelessWidget {
             key: PageStorageKey('post-comments:${post.id}'),
             controller: controller,
             postId: post.id,
+            creator: controller.channel,
             scrollable: true,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           ),
@@ -458,21 +493,29 @@ class ChannelHeader extends StatelessWidget {
     final name = channel.name.isEmpty ? tr('YouTube channels') : channel.name;
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
-      child: Row(children: [
-        if (onBack != null) IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: onBack, icon: Icon(AppIcons.arrowLeft)),
-        const SizedBox(width: 8),
-        ChannelAvatar(name: name, radius: 28, image: channel.avatar, channelId: channel.id),
-        const SizedBox(width: 16),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 2),
-          Text(tr('YouTube channels'), style: TextStyle(color: colors.onSurfaceVariant)),
-        ])),
-        FollowButton(controller: controller, channel: channel),
-        const SizedBox(width: 8),
-        IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(channel.url), icon: Icon(AppIcons.arrowSquareOut)),
-        ChannelMenuButton(controller: controller, channel: channel),
-      ]),
+      child: LayoutBuilder(builder: (context, constraints) {
+        // On a phone the browser button moves into the menu and the
+        // picture shrinks, so the name keeps some room beside 关注.
+        final narrow = constraints.maxWidth < 480;
+        return Row(children: [
+          if (onBack != null) IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: onBack, icon: Icon(AppIcons.arrowLeft)),
+          SizedBox(width: narrow ? 4 : 8),
+          ChannelAvatar(name: name, radius: narrow ? 22 : 28, image: channel.avatar, channelId: channel.id),
+          SizedBox(width: narrow ? 12 : 16),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: (narrow ? context.text.titleLarge : context.text.headlineSmall)?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 2),
+            Text(tr('YouTube channels'), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurfaceVariant)),
+          ])),
+          const SizedBox(width: 8),
+          FollowButton(controller: controller, channel: channel),
+          if (!narrow) ...[
+            const SizedBox(width: 8),
+            IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(channel.url), icon: Icon(AppIcons.arrowSquareOut)),
+          ],
+          ChannelMenuButton(controller: controller, channel: channel, browser: narrow),
+        ]);
+      }),
     );
   }
 }
@@ -561,9 +604,11 @@ class ChannelResultTile extends StatelessWidget {
 /// 屏蔽此频道 and 不推荐此频道, or undoing them, for a channel page or the
 /// video playing.
 class ChannelMenuButton extends StatelessWidget {
-  const ChannelMenuButton({super.key, required this.controller, required this.channel});
+  const ChannelMenuButton({super.key, required this.controller, required this.channel, this.browser = false});
   final AppController controller;
   final ChannelRef channel;
+  /// Also offers 在浏览器中打开, for a header with no room for its button.
+  final bool browser;
 
   @override
   Widget build(BuildContext context) {
@@ -576,6 +621,7 @@ class ChannelMenuButton extends StatelessWidget {
       tooltip: tr('More'),
       icon: Icon(AppIcons.dotsThreeVertical),
       itemBuilder: (context) => [
+        if (browser) entry('browser', AppIcons.arrowSquareOut, tr('Open in browser')),
         unrecommended
             ? entry('recommend', AppIcons.thumbsUp, tr('Recommend this channel again'))
             : entry('unrecommend', AppIcons.thumbsDown, tr("Don't recommend this channel")),
@@ -583,6 +629,7 @@ class ChannelMenuButton extends StatelessWidget {
         entry('join', AppIcons.medal, tr('Join as a member on YouTube in your browser')),
       ],
       onSelected: (choice) => switch (choice) {
+        'browser' => unawaited(openExternal(channel.url)),
         'join' => unawaited(openExternal('${channel.url}/join')),
         'recommend' => controller.setRecommendChannel(channel, true),
         'unrecommend' => controller.setRecommendChannel(channel, false),
@@ -613,4 +660,24 @@ class FollowButton extends StatelessWidget {
         ? FilledButton.tonalIcon(onPressed: toggle, icon: Icon(AppIcons.check), label: Text(tr('Following')))
         : FilledButton.icon(onPressed: toggle, icon: Icon(AppIcons.plus), label: Text(tr('Follow')));
   }
+}
+
+/// A row kept at the top of the page while the list under it scrolls.
+class _PinnedRow extends SliverPersistentHeaderDelegate {
+  const _PinnedRow({required this.child, required this.color});
+  final Widget child;
+  final Color color;
+
+  static const height = 52.0;
+
+  @override
+  double get minExtent => height;
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => ColoredBox(color: color, child: child);
+
+  @override
+  bool shouldRebuild(_PinnedRow old) => old.child != child || old.color != color;
 }

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import '../app_log.dart';
 import '../feed_quality.dart';
+import '../feed_reason.dart';
 import '../library_store.dart' show WatchProgress;
 import '../models.dart';
 import '../recommendations.dart';
@@ -74,6 +75,11 @@ class HomeFeed extends ChangeNotifier {
   List<VideoItem> items = const [];
   /// Why each of [items] is suggested, by video id.
   Map<String, String> reasons = const {};
+  /// The first video seen before the last refresh with `ahead`, where
+  /// 上次看到这里 goes; null when the feed was not refreshed that way.
+  String? seenFrom;
+  /// Videos seen before such a refresh that stay below the new ones.
+  static const seenKept = pageSize * 2;
   bool loading = false;
   /// The first page is shown but slower sources are still answering.
   bool gathering = false;
@@ -172,8 +178,10 @@ class HomeFeed extends ChangeNotifier {
   }
 
   /// Gathers everything again; [filter] drops blocked or hidden videos.
-  /// With [keep], the videos shown stay and new ones follow them.
-  Future<void> refresh(HomeFeedSources sources, {List<VideoItem> Function(List<VideoItem>)? filter, bool keep = false}) async {
+  /// With [keep], the videos shown stay and new ones follow them; with
+  /// [ahead], a new page comes first and the videos seen before follow it,
+  /// below [seenFrom].
+  Future<void> refresh(HomeFeedSources sources, {List<VideoItem> Function(List<VideoItem>)? filter, bool keep = false, bool ahead = false}) async {
     final generation = ++_generation;
     _sources = sources;
     _filter = filter;
@@ -219,48 +227,48 @@ class HomeFeed extends ChangeNotifier {
     final now = DateTime.now();
     for (final item in sources.subscriptions.take(80)) {
       final isNew = item.published != null && now.difference(item.published!) < const Duration(hours: 48);
-      candidates[isNew ? FeedLane.fresh : FeedLane.longTerm]!.add(Candidate(item, RecommendSource.subscription, reason: isNew ? tr('{0} you follow just posted', [item.channel]) : tr('{0} you follow', [item.channel])));
+      candidates[isNew ? FeedLane.fresh : FeedLane.longTerm]!.add(Candidate(item, RecommendSource.subscription, reason: isNew ? FeedReason.of(ReasonKind.justPosted, tr('{0} you follow just posted', [item.channel])) : FeedReason.of(ReasonKind.following, tr('{0} you follow', [item.channel]))));
     }
     // What YouTube itself suggests to the signed-in account.
     if (sources.youtubeHome case final home?) {
-      jobs.add(gather(FeedLane.longTerm, home, RecommendSource.related, 1, 40, (_) => tr('Recommended by YouTube')));
+      jobs.add(gather(FeedLane.longTerm, home, RecommendSource.related, 1, 40, (_) => FeedReason.of(ReasonKind.youtube, tr('Recommended by YouTube'))));
     }
     // Recent: what the last few videos and the newest search were about.
     for (final (i, seed) in sources.history.take(3).indexed) {
       _expanded.add(seed.id);
-      jobs.add(gather(FeedLane.recent, () => sources.related(seed.id), RecommendSource.related, 1 - i * 0.1, 15, (_) => tr('Viewers of "{0}" also watched', [_short(seed.title)])));
+      jobs.add(gather(FeedLane.recent, () => sources.related(seed.id), RecommendSource.related, 1 - i * 0.1, 15, (_) => FeedReason.of(ReasonKind.related, tr('Viewers of "{0}" also watched', [_short(seed.title)]))));
     }
     // Long-term: older favourites and the channels watched most.
     final kept = <VideoItem>[...sources.favorites.take(3), ...sources.history.skip(3).take(3)];
     for (final seed in kept) {
       if (!_expanded.add(seed.id)) continue;
-      jobs.add(gather(FeedLane.longTerm, () => sources.related(seed.id), RecommendSource.related, 0.8, 10, (_) => tr('Similar to "{0}", which you liked', [_short(seed.title)])));
+      jobs.add(gather(FeedLane.longTerm, () => sources.related(seed.id), RecommendSource.related, 0.8, 10, (_) => FeedReason.of(ReasonKind.similar, tr('Similar to "{0}", which you liked', [_short(seed.title)]))));
     }
     var channels = 0;
     for (final key in long.topChannels(10)) {
       if (channels >= 3 || key.startsWith('name:') || followed.contains(key)) continue;
       final name = sources.history.where((item) => item.channelId == key).firstOrNull?.channel ?? '';
       channels++;
-      jobs.add(gather(FeedLane.longTerm, () => sources.channelUploads(ChannelRef(key, name)), RecommendSource.channel, 1, 8, (item) => tr('You often watch {0}', [item.channel.isEmpty ? name : item.channel])));
+      jobs.add(gather(FeedLane.longTerm, () => sources.channelUploads(ChannelRef(key, name)), RecommendSource.channel, 1, 8, (item) => FeedReason.of(ReasonKind.oftenWatched, tr('You often watch {0}', [item.channel.isEmpty ? name : item.channel]))));
     }
     // Searches each start yt-dlp and take seconds: after the HTTP sources.
     if (sources.searches.isNotEmpty) {
       final query = sources.searches.first;
-      jobs.add(gather(FeedLane.recent, () => sources.search(query), RecommendSource.topic, 0.9, 10, (_) => tr('You recently searched "{0}"', [query])));
+      jobs.add(gather(FeedLane.recent, () => sources.search(query), RecommendSource.topic, 0.9, 10, (_) => FeedReason.of(ReasonKind.searched, tr('You recently searched "{0}"', [query]))));
     }
     // Explore: the interests past the strongest few.
     final words = long.topWords(10);
     for (var i = 4; i + 1 < words.length && i < 8; i += 2) {
       final query = '${words[i]} ${words[i + 1]}';
-      jobs.add(gather(FeedLane.explore, () => sources.search(query), RecommendSource.topic, 1, 10, (_) => tr('Explore: "{0}"', [query])));
+      jobs.add(gather(FeedLane.explore, () => sources.search(query), RecommendSource.topic, 1, 10, (_) => FeedReason.of(ReasonKind.explore, tr('Explore: "{0}"', [query]))));
     }
     // New and popular: this week's most watched about the main interest,
     // and in general.
     if (words.length >= 2) {
       final query = '${words[0]} ${words[1]}';
-      jobs.add(gather(FeedLane.fresh, () => sources.search(query), RecommendSource.topic, 1, 10, (_) => tr('Popular this week: "{0}"', [query])));
+      jobs.add(gather(FeedLane.fresh, () => sources.search(query), RecommendSource.topic, 1, 10, (_) => FeedReason.of(ReasonKind.popular, tr('Popular this week: "{0}"', [query]))));
     }
-    jobs.add(gather(FeedLane.fresh, () => sources.search(tr('Popular')), RecommendSource.topic, 0.8, 12, (_) => tr('Popular this week')));
+    jobs.add(gather(FeedLane.fresh, () => sources.search(tr('Popular')), RecommendSource.topic, 0.8, 12, (_) => FeedReason.of(ReasonKind.popular, tr('Popular this week'))));
     final all = Future.wait(jobs);
     // Show a first page as soon as there is enough for one; the rest of the
     // sources are ranked in as they answer and fill the pages after it.
@@ -281,14 +289,23 @@ class HomeFeed extends ChangeNotifier {
       ..addAll(sources.history.take(200).map((item) => item.id));
     _placed.clear();
     _seed = 0;
-    if (keep) {
-      _taken.addAll(items.map((item) => item.id));
-    } else {
+    final seen = ahead && !keep ? items.take(seenKept).toList() : const <VideoItem>[];
+    final seenReasons = reasons;
+    if (keep || ahead) _taken.addAll(items.map((item) => item.id));
+    if (!keep) {
       items = const [];
       reasons = const {};
     }
+    seenFrom = null;
     _rankAll();
     _appendPage();
+    if (seen.isNotEmpty) {
+      final fresh = {for (final item in items) item.id};
+      final rest = [for (final item in seen) if (!fresh.contains(item.id)) item];
+      if (items.isNotEmpty && rest.isNotEmpty) seenFrom = rest.first.id;
+      items = [...items, ...rest];
+      reasons = {...seenReasons, ...reasons};
+    }
     loading = false;
     loadedAt = DateTime.now();
     gathering = true;
@@ -327,6 +344,7 @@ class HomeFeed extends ChangeNotifier {
     _taken.addAll(items.map((item) => item.id));
     _seed++;
     _placed.clear();
+    seenFrom = null;
     items = const [];
     reasons = const {};
     _rankAll();
@@ -354,7 +372,7 @@ class HomeFeed extends ChangeNotifier {
         final found = await sources.related(watched.id);
         if (_disposed) return;
         final list = _candidates.putIfAbsent(FeedLane.recent, () => []);
-        list.insertAll(0, found.take(15).map((item) => Candidate(item, RecommendSource.related, seedWeight: 1.2, reason: tr('Just watched "{0}", up next', [_short(watched.title)]))));
+        list.insertAll(0, found.take(15).map((item) => Candidate(item, RecommendSource.related, seedWeight: 1.2, reason: FeedReason.of(ReasonKind.nextUp, tr('Just watched "{0}", up next', [_short(watched.title)])))));
       } catch (e) {
         logWarn('Recommendation source failed: $e');
       }
@@ -446,7 +464,7 @@ class HomeFeed extends ChangeNotifier {
         if (generation != _generation) return;
         final close = (_recentTaste?.titleMatch(seed) ?? 0) > 0.3;
         _candidates.putIfAbsent(close ? FeedLane.recent : FeedLane.explore, () => []).addAll(found.take(12).map(
-              (item) => Candidate(item, RecommendSource.related, seedWeight: 0.7, reason: tr('More like "{0}"', [_short(seed.title)])),
+              (item) => Candidate(item, RecommendSource.related, seedWeight: 0.7, reason: FeedReason.of(ReasonKind.related, tr('More like "{0}"', [_short(seed.title)]))),
             ));
       } catch (e) {
         logWarn('Recommendation source failed: $e');

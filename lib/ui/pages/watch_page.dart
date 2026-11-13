@@ -5,9 +5,10 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show SystemChrome, SystemUiMode;
+import 'package:flutter/services.dart' show DeviceOrientation, SystemChrome, SystemUiMode;
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../../device.dart';
 import '../window_chrome.dart';
 import '../../app/app_controller.dart';
 import '../../appearance_settings.dart' show bundledFont;
@@ -120,10 +121,11 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
     _waitUpright = view != null && view.physicalSize.width > view.physicalSize.height;
   }
 
-  /// Enters fullscreen once per video when 自动全屏 is on.
+  /// Enters fullscreen once per video when 自动全屏 is on, and always on a TV.
   void _autoFullscreen(AppController controller) {
     final id = controller.playing?.id;
-    if (id == null || id == _fullscreenFor || !controller.preferences.autoFullscreen) return;
+    // A TV plays full screen, as TV video apps do; back shows the page.
+    if (id == null || id == _fullscreenFor || !(controller.preferences.autoFullscreen || Device.tv)) return;
     _fullscreenFor = id;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = _video.currentState;
@@ -164,7 +166,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
           final theater = theaterMode.value;
           // A phone keeps the player at the top and the rest in tabs under
           // it, as phone video apps do.
-          final phone = isPhone(context);
+          final phone = watchesLikePhone(context);
           final item = controller.playing;
           final hasChat = item?.isLive == true || item?.liveStatus == 'was_live';
           // 剧场模式 in a wide window keeps comments, up next and the chat
@@ -187,6 +189,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
                   key: ValueKey('comments:${item.id}'),
                   controller: controller,
                   videoId: item.id,
+                  creator: controller.playingChannel,
                   onSeek: (position) => controller.seek(position),
                   scrollable: wide || panelOpen || phone,
                   sliver: !wide && !panelOpen && !phone,
@@ -203,14 +206,29 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
                   comments: comments,
                   replayChat: replayChat,
                   chatFirst: item?.isLive == true,
-                  intro: ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, AppStyle.pagePadding), children: [
-                    _Toolbar(controller: controller),
-                    if (controller.playbackError != null && !controller.waitingForStart) ...[
-                      const SizedBox(height: 12),
-                      ErrorBanner(tr('Playback failed: {0}', [controller.playbackError]), onRetry: controller.retryPlayback),
-                    ],
-                    const SizedBox(height: 16),
-                    _Details(controller: controller),
+                  // As phone video apps lay it out: the channel, the
+                  // title with its description folded under it, a row of
+                  // the main actions, then what plays next.
+                  intro: CustomScrollView(slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 4, AppStyle.pagePadding, 0),
+                      sliver: SliverList.list(children: [
+                        _PhoneDetails(key: ValueKey('details:${item?.id}'), controller: controller),
+                        const SizedBox(height: 12),
+                        _PhoneActions(controller: controller),
+                        if (controller.playbackError != null && !controller.waitingForStart) ...[
+                          const SizedBox(height: 12),
+                          ErrorBanner(tr('Playback failed: {0}', [controller.playbackError]), onRetry: controller.retryPlayback),
+                        ],
+                        const SizedBox(height: 12),
+                        const Divider(height: 1),
+                        const SizedBox(height: 12),
+                      ]),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding),
+                      sliver: SliverMainAxisGroup(slivers: _UpNext(controller: controller, shrinkWrap: true).slivers(context)),
+                    ),
                   ]),
                 ),
               ),
@@ -304,8 +322,10 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
 /// not; rating needs the Google account. 踩's count is Return YouTube
 /// Dislike's estimate, when that is turned on.
 class _RatingButtons extends StatelessWidget {
-  const _RatingButtons({required this.controller});
+  const _RatingButtons({required this.controller, this.stacked = false});
   final AppController controller;
+  /// Each an icon over its count, sharing the row's width.
+  final bool stacked;
 
   @override
   Widget build(BuildContext context) {
@@ -319,6 +339,12 @@ class _RatingButtons extends StatelessWidget {
       final selected = signedIn && account!.ratingOf(item.id) == rating;
       final off = signedIn && account!.ratingOff(item.id);
       final shown = count == null || !signedIn ? count : (count + account!.ratingChange(item.id, rating)).clamp(0, 1 << 62);
+      final onPressed = off
+          ? null
+          : signedIn
+          ? () => account!.rate(item, rating)
+          : () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Sign in to Google to {0}', [label]))));
+      if (stacked) return Expanded(child: _StackedAction(icon: selected ? selectedIcon : icon, label: shown == null ? label : formatCount(shown), selected: selected, onPressed: onPressed));
       return Tooltip(
         message: [
           if (!signedIn) tr('Sign in to Google to {0}', [label]) else if (off) tr('The uploader turned off likes and dislikes for this video') else if (selected) tr('Cancel {0}', [label]) else label,
@@ -330,20 +356,16 @@ class _RatingButtons extends StatelessWidget {
             backgroundColor: colors.surfaceContainerHighest,
             padding: const EdgeInsets.symmetric(horizontal: 12),
           ),
-          onPressed: off
-              ? null
-              : signedIn
-              ? () => account!.rate(item, rating)
-              : () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Sign in to Google to {0}', [label])))),
+          onPressed: onPressed,
           icon: Icon(selected ? selectedIcon : icon, size: 20),
           label: Text(shown == null ? label : formatCount(shown)),
         ),
       );
     }
 
-    return Row(mainAxisSize: MainAxisSize.min, children: [
+    return Row(mainAxisSize: stacked ? MainAxisSize.max : MainAxisSize.min, children: [
       button(VideoRating.like, AppIcons.thumbsUp, AppIcons.thumbsUpFill, tr('Like'), likes),
-      const SizedBox(width: 4),
+      if (!stacked) const SizedBox(width: 4),
       button(VideoRating.dislike, AppIcons.thumbsDown, AppIcons.thumbsDownFill, tr('Dislike'), dislikes,
           note: dislikes == null ? null : tr("The dislike count is Return YouTube Dislike's estimate")),
     ]);
@@ -362,7 +384,7 @@ class _Toolbar extends StatelessWidget {
     final library = controller.library;
     final favorite = library?.isFavorite(item.id) ?? false;
     final later = library?.isWatchLater(item.id) ?? false;
-    final phone = isPhone(context);
+    final phone = watchesLikePhone(context);
     // A phone's buttons go in one row that scrolls sideways, each with its
     // name, as phone video apps lay them out.
     Widget layout(List<Widget> children) => phone
@@ -437,6 +459,190 @@ class _Toolbar extends StatelessWidget {
   }
 }
 
+/// A phone's channel, title and description: the title folded to two
+/// lines with how often and when it was watched under it; the arrow beside
+/// it unfolds the whole title and the description.
+class _PhoneDetails extends StatefulWidget {
+  const _PhoneDetails({super.key, required this.controller});
+  final AppController controller;
+
+  @override
+  State<_PhoneDetails> createState() => _PhoneDetailsState();
+}
+
+class _PhoneDetailsState extends State<_PhoneDetails> {
+  late bool _open = widget.controller.preferences.expandDescription;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = widget.controller;
+    final item = controller.playing!;
+    final details = controller.details;
+    final colors = context.colors;
+    final views = details?.viewCount ?? item.viewCount;
+    final meta = [
+      if (item.isUpcoming && item.scheduledStart != null) tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]),
+      if (item.isLive && item.watching != null) tr('{0} watching', [formatCount(item.watching!)])
+      else if (views != null) tr('{0} views', [formatCount(views)]),
+      if (details?.uploadDate != null) formatDate(details!.uploadDate!),
+    ].join(' · ');
+    final channel = details?.channel.isNotEmpty == true ? details!.channel : item.channel;
+    final channelRef = controller.playingChannel;
+    final description = details?.description ?? '';
+    final name = channel.isEmpty ? tr('YouTube') : channel;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        Expanded(
+          child: InkWell(
+            borderRadius: AppStyle.cardRadius,
+            onTap: channelRef != null ? () => controller.openChannel(channelRef) : details?.channelUrl != null ? () => openExternal(details!.channelUrl!) : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(children: [
+                ChannelAvatar(name: name, image: channelRef?.avatar, channelId: channelRef?.id),
+                const SizedBox(width: 10),
+                Flexible(child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall)),
+              ]),
+            ),
+          ),
+        ),
+        if (channelRef != null) ...[
+          const SizedBox(width: 8),
+          FollowButton(controller: controller, channel: channelRef),
+          ChannelMenuButton(controller: controller, channel: channelRef),
+        ],
+      ]),
+      const SizedBox(height: 8),
+      InkWell(
+        borderRadius: AppStyle.cardRadius,
+        onTap: () => setState(() => _open = !_open),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Translatable(
+              controller: controller,
+              text: deArrow.titleOf(item.id, details?.title.isNotEmpty == true ? details!.title : item.title),
+              builder: (context, title) => Text(title, maxLines: _open ? null : 2, overflow: _open ? null : TextOverflow.ellipsis, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.35)),
+            ),
+            if (meta.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(meta, style: TextStyle(fontSize: 12, color: colors.outline)),
+            ],
+          ])),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 8, top: 2),
+            child: Icon(_open ? AppIcons.caretUp : AppIcons.caretDown, size: 18, color: colors.outline, semanticLabel: _open ? tr('Collapse') : tr('Expand')),
+          ),
+        ]),
+      ),
+      if (controller.loadingDetails && details == null) ...[
+        const SizedBox(height: 8),
+        const Skeleton(child: SkeletonBox(width: 180, height: 12)),
+      ] else if (_open && description.isNotEmpty) ...[
+        const SizedBox(height: 8),
+        Translatable(
+          controller: controller,
+          text: description,
+          builder: (context, text) => SelectionArea(
+            child: LinkedText(text, style: TextStyle(height: 1.5, fontSize: 13, color: colors.onSurfaceVariant), onTime: (time) => unawaited(controller.seek(time)), onLink: openExternal),
+          ),
+        ),
+      ],
+    ]);
+  }
+}
+
+/// A phone's main actions spread over the width, each an icon over its
+/// count or name; the rest are under 更多.
+class _PhoneActions extends StatelessWidget {
+  const _PhoneActions({required this.controller});
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final item = controller.playing!;
+    final library = controller.library;
+    final favorite = library?.isFavorite(item.id) ?? false;
+    final later = library?.isWatchLater(item.id) ?? false;
+    final download = controller.downloads != null && (!item.isLive || controller.downloads!.canRecord);
+    return Row(children: [
+      Expanded(flex: 2, child: _RatingButtons(controller: controller, stacked: true)),
+      if (library != null) ...[
+        Expanded(child: _StackedAction(icon: favorite ? AppIcons.heartFill : AppIcons.heart, label: tr('Favorites'), selected: favorite, onPressed: () => library.toggleFavorite(item))),
+        Expanded(child: _StackedAction(icon: later ? AppIcons.clockFill : AppIcons.clock, label: tr('Watch later'), selected: later, onPressed: () => library.toggleWatchLater(item))),
+      ],
+      if (download) Expanded(child: _StackedAction(icon: item.isLive ? AppIcons.radioButton : AppIcons.downloadSimple, label: tr('Downloads'), onPressed: () => showDownloadChoice(context, controller, item))),
+      Expanded(child: _StackedAction(icon: AppIcons.dotsThreeVertical, label: tr('More'), onPressed: () => _more(context))),
+    ]);
+  }
+
+  Future<void> _more(BuildContext context) async {
+    final item = controller.playing;
+    if (item == null) return;
+    final library = controller.library;
+    final settings = controller.settings;
+    final position = controller.player?.state.position ?? Duration.zero;
+    final picked = await pickFromSheet<String>(context, [
+      if (library != null) (value: 'playlist', icon: AppIcons.listPlus, label: tr('Add to playlist'), selected: false),
+      if (library != null && (controller.account?.signedIn ?? false)) (value: 'youtube', icon: AppIcons.filmReel, label: tr('Save to YouTube playlist'), selected: false),
+      if (!item.isLive) (value: 'summary', icon: AppIcons.sparkle, label: tr('AI summary'), selected: false),
+      (value: 'link', icon: AppIcons.link, label: tr('Copy link'), selected: false),
+      if (!item.isLive && position.inSeconds > 0) (value: 'time', icon: AppIcons.timer, label: tr('Copy link at current time'), selected: false),
+      (value: 'browser', icon: AppIcons.arrowSquareOut, label: tr('Open in browser'), selected: false),
+      // 播放顺序, the chosen one ticked.
+      (value: null, icon: null, label: null, selected: false),
+      for (final order in PlayOrder.values) (value: 'order:${order.name}', icon: null, label: order.label, selected: order == settings.playOrder),
+    ]);
+    if (picked == null || !context.mounted) return;
+    if (picked.startsWith('order:')) {
+      final order = PlayOrder.values.byName(picked.substring(6));
+      controller.setPlayOrder(order);
+      return;
+    }
+    switch (picked) {
+      case 'playlist':
+        await showAddToPlaylist(context, controller, item);
+      case 'youtube':
+        await showSaveToYoutube(context, controller, item);
+      case 'summary':
+        await showVideoSummary(context, controller);
+      case 'link':
+        copyText(context, item.url, tr('Link copied'));
+      case 'time':
+        final link = timestampLink(item.id, position);
+        if (link != null) copyText(context, link, tr('Link copied'));
+      case 'browser':
+        await openExternal(item.url);
+    }
+  }
+}
+
+/// An icon over a short label, as a phone's row of actions has them.
+class _StackedAction extends StatelessWidget {
+  const _StackedAction({required this.icon, required this.label, required this.onPressed, this.selected = false});
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final color = onPressed == null ? colors.outline : selected ? colors.primary : colors.onSurfaceVariant;
+    return InkWell(
+      borderRadius: AppStyle.cardRadius,
+      onTap: onPressed,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 24, color: color),
+          const SizedBox(height: 4),
+          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: color)),
+        ]),
+      ),
+    );
+  }
+}
+
 /// A button of the watch page's row: an icon with a tooltip, or on a phone
 /// a pill with its [label] too.
 class _ActionButton extends StatelessWidget {
@@ -448,7 +654,7 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isPhone(context)) return IconButton(tooltip: tooltip, icon: icon, onPressed: onPressed);
+    if (!watchesLikePhone(context)) return IconButton(tooltip: tooltip, icon: icon, onPressed: onPressed);
     return TextButton.icon(
       style: TextButton.styleFrom(foregroundColor: context.colors.onSurface, backgroundColor: context.colors.surfaceContainerHighest, padding: const EdgeInsets.symmetric(horizontal: 12)),
       onPressed: onPressed,
@@ -544,6 +750,15 @@ class _Player extends StatelessWidget {
                     // Turned sideways: the bars hide, and the screen still
                     // turns with the phone, so turning it back leaves.
                     if (byRotation()) return SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky, overlays: []);
+                    // A video taller than wide fills an upright screen best,
+                    // so the phone is not turned for it.
+                    final width = controller.player?.state.width ?? 0, height = controller.player?.state.height ?? 0;
+                    if (touchFirst && width > 0 && height > width) {
+                      return Future.wait([
+                        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky, overlays: []),
+                        SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]),
+                      ]);
+                    }
                     return defaultEnterNativeFullscreen();
                   },
                   onExitFullscreen: () {
@@ -752,7 +967,8 @@ class _SidePanelState extends State<_SidePanel> with TickerProviderStateMixin {
     final tabs = [
       if (widget.intro case final intro?) ('intro', tr('Overview'), _KeepAlive(child: intro)),
       if (widget.chatFirst && chat != null) chat,
-      ('next', controller.playingList != null ? tr('Playlist') : tr('Up next'), _UpNext(controller: controller)),
+      // On a phone what plays next is under 简介.
+      if (widget.intro == null) ('next', controller.playingList != null ? tr('Playlist') : tr('Up next'), _UpNext(controller: controller)),
       if (widget.comments case final comments?) ('comments', tr('Comments'), _KeepAlive(child: comments)),
       if (!widget.chatFirst && chat != null) chat,
       if (subtitles) ('subtitles', tr('Subtitles'), _KeepAlive(child: Padding(padding: const EdgeInsets.only(top: 4), child: SubtitleList(key: ValueKey('subtitles:${controller.playing?.id}'), controller: controller, player: player)))),
@@ -973,3 +1189,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),
   );
 }
+
+/// A phone's channel, title and action row on their own, for tests.
+@visibleForTesting
+Widget debugPhoneIntro(AppController controller) => Column(children: [_PhoneDetails(controller: controller), const SizedBox(height: 12), _PhoneActions(controller: controller)]);

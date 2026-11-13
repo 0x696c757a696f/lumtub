@@ -197,15 +197,20 @@ pub fn info(player: &Value, settings: &Settings) -> Option<Value> {
     }))
 }
 
-/// The `/player` request body for the video id [id], as JSON. Free it with
-/// `lumtub_string_free`.
+/// The `/player` request for the video id [id], as JSON `{body, headers,
+/// tv: {body, headers}}`, `tv` being the signed-out TV client's request
+/// for when this one is refused. Free it with `lumtub_string_free`.
 ///
 /// # Safety
 /// [id] must point to [len] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_quick_request(id: *const u8, len: usize) -> *mut c_char {
     let id = unsafe { crate::taste::text(id, len) };
-    crate::taste::give_json(&json!({"body": request(id), "headers": headers()}))
+    crate::taste::give_json(&json!({
+        "body": request(id),
+        "headers": headers(),
+        "tv": crate::tv_history::anonymous_player(id)
+    }))
 }
 
 /// The headers the `/player` request goes with.

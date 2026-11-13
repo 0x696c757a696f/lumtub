@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/home_feed.dart';
+import 'package:lumtub/feed_reason.dart';
 import 'package:lumtub/library_store.dart' show WatchProgress;
 import 'package:lumtub/models.dart';
 import 'package:lumtub/native_core.dart';
@@ -470,6 +471,6 @@ void main() {
 
     final next = video('w2', title: '手冲 咖啡豆', channelId: 'UCbeans');
     await feed.learn(next, sources([next, ...watched]), skipped: false);
-    expect(feed.reasons[feed.items.first.id], startsWith('Just watched "手冲 咖啡豆"'));
+    expect(FeedReason.read(feed.reasons[feed.items.first.id]!), (ReasonKind.nextUp, 'Just watched "手冲 咖啡豆", up next'));
   });
 }

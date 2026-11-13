@@ -1,12 +1,47 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
+import 'common.dart';
 import 'motion.dart';
 import 'app_icons.dart';
 
 /// A panel that slides in from the player's right edge, for choices that
 /// apply at once while the video keeps playing (更多设置, 字幕).
-Future<void> showPlayerPanel(BuildContext context, {required String title, List<Widget> actions = const [], double width = 400, required WidgetBuilder builder}) => showGeneralDialog<void>(
+/// A phone held upright gets a sheet under the player instead, as phone
+/// video apps open their panels, so the video stays in view.
+Future<void> showPlayerPanel(BuildContext context, {required String title, List<Widget> actions = const [], double width = 400, required WidgetBuilder builder}) {
+  final size = MediaQuery.sizeOf(context);
+  if (watchesLikePhone(context) && size.height > size.width) {
+    final below = size.height - MediaQuery.paddingOf(context).top - size.width * 9 / 16;
+    return showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      useSafeArea: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      barrierColor: Colors.black26,
+      constraints: BoxConstraints(maxHeight: max(size.height * 0.5, below)),
+      builder: (context) => SizedBox(
+        height: max(size.height * 0.5, below),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 8, 4),
+            child: Row(children: [
+              Expanded(child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
+              ...actions,
+            ]),
+          ),
+          Expanded(child: builder(context)),
+        ]),
+      ),
+    );
+  }
+  return _sidePanel(context, title: title, actions: actions, width: width, builder: builder);
+}
+
+Future<void> _sidePanel(BuildContext context, {required String title, required List<Widget> actions, required double width, required WidgetBuilder builder}) => showGeneralDialog<void>(
       context: context,
       useRootNavigator: true,
       barrierDismissible: true,

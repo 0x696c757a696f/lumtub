@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'package:media_kit/media_kit.dart';
 
 import 'app_log.dart';
+import 'emoji_pictures.dart';
 import 'live_chat.dart';
 import 'native_core.dart';
 import 'player_settings.dart';
@@ -195,7 +196,7 @@ class DanmakuOverlay {
       final start = _live ? now : message.offset?.inMilliseconds.toDouble();
       if (start == null) continue;
       final entry = <String, Object>{'start_ms': start, 'text': text, 'paid': paid};
-      final parts = danmakuParts(text, message.emojis);
+      final parts = danmakuParts(text, EmojiPictures.fill(text, message.emojis));
       final painter = _painter;
       if (parts != null && painter != null) {
         final id = _nextPicture++;

@@ -1,30 +1,48 @@
 import 'package:flutter/widgets.dart' show IconData;
 
+import 'academic_topics.dart';
 import 'faith_topics.dart';
 import 'l10n/l10n.dart';
 import 'search_options.dart';
 import 'video_repository.dart';
 import 'ui/app_icons.dart';
 
-/// The parts of the explore page: videos, live streams, and the four tabs
-/// of 宗教与信仰.
+/// The parts of the explore page: videos, live streams, the four tabs of
+/// 宗教与信仰 and the tabs of 学术.
 enum ExploreSection {
   popular('Videos'),
   live('Live', isLive: true),
   faith('Traditions', isFaith: true),
   faithStudy('Study', isFaith: true),
   faithArts('Culture & art', isFaith: true),
-  faithLive('Faith live', isLive: true, isFaith: true);
+  faithLive('Faith live', isLive: true, isFaith: true),
+  humanities('Humanities', isAcademic: true),
+  socialSciences('Social sciences', isAcademic: true),
+  naturalSciences('Natural sciences', isAcademic: true),
+  engineering('Engineering & technology', isAcademic: true),
+  medicine('Medicine', isAcademic: true),
+  academicLive('Academic live', isLive: true, isAcademic: true);
 
-  const ExploreSection(this._label, {this.isLive = false, this.isFaith = false});
+  const ExploreSection(this._label, {this.isLive = false, this.isFaith = false, this.isAcademic = false});
   final String _label;
   String get label => tr(_label);
   /// Shows streams rather than videos.
   final bool isLive;
   /// One of 宗教与信仰's tabs.
   final bool isFaith;
+  /// One of 学术's tabs.
+  final bool isAcademic;
 
   static const faithTabs = [faith, faithStudy, faithArts, faithLive];
+  static const academicTabs = [humanities, socialSciences, naturalSciences, engineering, medicine, academicLive];
+
+  /// The tabs this section is one of, shown as a row above its zones; null
+  /// for the video and live halves, whose zones are a strip.
+  List<ExploreSection>? get tabs => isFaith
+      ? faithTabs
+      : isAcademic
+          ? academicTabs
+          : null;
 }
 
 /// A sub-category of a zone: its name, the words searched for, and its own
@@ -269,6 +287,7 @@ final popularTopics = <ExploreTopic>[
     ExploreSub('Debate', '辩论 debate'),
   ]),
   ExploreTopic('Religion & faith', AppIcons.church, '宗教 信仰', opens: ExploreSection.faith),
+  ExploreTopic('Academia', AppIcons.graduationCap, '学术 讲座 lecture', opens: ExploreSection.humanities),
   ExploreTopic('Science', AppIcons.flask, '科学', subs: [
     ExploreSub('Universe', '宇宙 天文'),
     ExploreSub('Physics', '物理'),
@@ -529,6 +548,7 @@ final liveTopics = <ExploreTopic>[
     ExploreSub('Dance workouts', 'dance workout live'),
   ]),
   ExploreTopic('Religion & faith', AppIcons.church, '宗教 直播', opens: ExploreSection.faithLive),
+  ExploreTopic('Academia', AppIcons.graduationCap, '学术 直播 lecture live', opens: ExploreSection.academicLive),
   ExploreTopic('24/7 live', AppIcons.radio, '24/7 live', subs: [
     ExploreSub('Radio for sleep', 'lofi radio 24/7', subs: [
       ExploreSub('Lo-Fi', 'lofi hip hop radio'),
@@ -564,6 +584,12 @@ List<ExploreTopic> exploreTopicsOf(ExploreSection section, [List<CustomTopic> cu
         ExploreSection.faithStudy => faithStudyTopics,
         ExploreSection.faithArts => faithArtsTopics,
         ExploreSection.faithLive => faithLiveTopics,
+        ExploreSection.humanities => humanitiesTopics,
+        ExploreSection.socialSciences => socialScienceTopics,
+        ExploreSection.naturalSciences => naturalScienceTopics,
+        ExploreSection.engineering => engineeringTopics,
+        ExploreSection.medicine => medicineTopics,
+        ExploreSection.academicLive => academicLiveTopics,
       },
       for (final topic in custom)
         if (topic.section == section) topic.topic,
@@ -607,12 +633,12 @@ enum ExploreMode {
   String get label => tr(_label);
   final bool live;
 
-  /// The modes [section] offers; 精选 is only for 宗教与信仰.
+  /// The modes [section] offers; 精选 is only for 宗教与信仰 and 学术.
   static List<ExploreMode> of(ExploreSection section) =>
-      values.where((m) => m.live == section.isLive && (m != curated || section.isFaith)).toList();
+      values.where((m) => m.live == section.isLive && (m != curated || section.tabs != null)).toList();
   static ExploreMode defaultOf(ExploreSection section) => section.isLive
       ? liveViewers
-      : section.isFaith
+      : section.tabs != null
           ? curated
           : popular;
 

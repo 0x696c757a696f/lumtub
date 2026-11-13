@@ -215,7 +215,7 @@ class _SubtitleListState extends State<SubtitleList> {
                           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             SizedBox(
                               width: 52,
-                              child: Text(formatClock(cue.start), style: TextStyle(fontSize: 12, color: playing ? colors.primary : colors.outline, fontFeatures: const [FontFeature.tabularFigures()])),
+                              child: Text(formatClock(cue.start), style: TextStyle(fontSize: 12, color: playing ? colors.onSecondaryContainer : colors.outline, fontFeatures: const [FontFeature.tabularFigures()])),
                             ),
                             Expanded(
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [

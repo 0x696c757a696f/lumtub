@@ -18,7 +18,7 @@ void main() {
     final client = MockClient((request) async {
       asked++;
       expect(request.url.path, '/youtubei/v1/navigation/resolve_url');
-      expect((jsonDecode(request.body) as Map)['url'], 'https://www.youtube.com/%40ThuyVanDo-v4p');
+      expect((jsonDecode(request.body) as Map)['url'], 'https://www.youtube.com/@ThuyVanDo-v4p');
       return http.Response(jsonEncode({'endpoint': {'browseEndpoint': {'browseId': 'UCaaaaaaaaaaaaaaaaaaaaaa'}}}), 200);
     });
     expect(await channelIdOfHandle(client, '@ThuyVanDo-v4p'), 'UCaaaaaaaaaaaaaaaaaaaaaa');
@@ -31,7 +31,7 @@ void main() {
 
   test('handles in other scripts are looked up', () async {
     final client = MockClient((request) async {
-      expect((jsonDecode(request.body) as Map)['url'], 'https://www.youtube.com/${Uri.encodeComponent('@黄总-🙂')}');
+      expect((jsonDecode(request.body) as Map)['url'], 'https://www.youtube.com/@${Uri.encodeComponent('黄总-🙂')}');
       return http.Response(jsonEncode({'endpoint': {'browseEndpoint': {'browseId': 'UCbbbbbbbbbbbbbbbbbbbbbb'}}}), 200);
     });
     expect(await channelIdOfHandle(client, '@黄总-🙂'), 'UCbbbbbbbbbbbbbbbbbbbbbb');

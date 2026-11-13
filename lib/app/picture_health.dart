@@ -46,7 +46,17 @@ extension PictureHealth on AppController {
     }
     try {
       await Future<void>.delayed(delay);
-      final codec = (await platform.getProperty('video-codec')).trim().toLowerCase();
+      // video-codec is gone from newer libmpv builds, such as Android's:
+      // there the codec's short name is read instead.
+      var codec = '';
+      for (final property in const ['video-codec', 'video-format', 'current-tracks/video/codec']) {
+        try {
+          codec = (await platform.getProperty(property)).trim().toLowerCase();
+        } catch (_) {
+          codec = '';
+        }
+        if (codec.isNotEmpty) break;
+      }
       final decoder = DecoderStatus.fromMpv(await platform.getProperty('hwdec-current'));
       final normalized = DecoderStatus.codecKey(codec);
       _update(() {

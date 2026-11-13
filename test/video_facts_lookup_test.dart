@@ -20,6 +20,39 @@ void main() {
     expect(facts.published, DateTime.parse('2026-10-30T05:00:00-07:00'));
     expect(VideoFacts.ofPlayer('{"videoDetails":{"lengthSeconds":"0","viewCount":"9"}}', DateTime.now())!.length, isNull);
     expect(VideoFacts.ofPlayer('{"playabilityStatus":{"status":"ERROR"}}', DateTime.now()), isNull);
+    expect(VideoFactsLookup.playerWhy('{"responseContext":{},"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"Sign in to confirm you’re not a bot"}}'), 'LOGIN_REQUIRED: Sign in to confirm you’re not a bot');
+    expect(VideoFactsLookup.playerWhy('HTTP 403'), 'HTTP 403');
+  });
+
+  test('a live the feed did not mark becomes one, and a live just ended takes its length from its streams', () async {
+    final live = VideoFacts.ofPlayer('{"streamingData":{"adaptiveFormats":[{"itag":136}]},"videoDetails":{"lengthSeconds":"0","isLive":true,"viewCount":"40"}}', DateTime.now())!;
+    expect((live.length, live.liveStatus), (null, 'is_live'));
+    expect(VideoFacts.ofPlayer('{"videoDetails":{"isUpcoming":true}}', DateTime.now())!.liveStatus, 'is_upcoming');
+    final ended = VideoFacts.ofPlayer('{"streamingData":{"adaptiveFormats":[{"approxDurationMs":"3605120"},{"approxDurationMs":"3605201"}]},"videoDetails":{"lengthSeconds":"0","isLiveContent":true,"viewCount":"9"}}', DateTime.now())!;
+    expect((ended.length, ended.liveStatus), (3605, null));
+    expect(VideoFacts.fromJson(live.toJson())!.liveStatus, 'is_live');
+
+    var time = DateTime.utc(2026, 11, 12, 10);
+    var answer = VideoFacts(views: 40, liveStatus: 'is_live', asked: time);
+    lookup.now = () => time;
+    addTearDown(() => lookup.now = DateTime.now);
+    final asked = <String>[];
+    lookup.use((id) async {
+      asked.add(id);
+      return answer;
+    }, null);
+    final item = feedItem('ccccccccccc');
+    lookup.of(item);
+    await Future<void>.delayed(Duration.zero);
+    expect(lookup.of(item).isLive, isTrue);
+    expect(asked, hasLength(1));
+    answer = VideoFacts(length: 3605, views: 50, asked: time);
+    time = time.add(const Duration(minutes: 30));
+    lookup.of(item);
+    await Future<void>.delayed(Duration.zero);
+    final done = lookup.of(item);
+    expect(asked, hasLength(2));
+    expect((done.durationLabel, done.isLive), ('1:00:05', false));
   });
 
   test('fills in what a card lacks once, keeps it on disk and never overrides the listing', () async {
@@ -65,5 +98,15 @@ void main() {
     final read = AppPreferences.fromJson(const AppPreferences(neverTranslate: ['ja', 'de']).toJson()..['neverTranslate'] = ['ja', 'de', 'xx']);
     expect(read.neverTranslate, ['ja', 'de']);
     expect(AppPreferences.fromJson(const <String, dynamic>{}).neverTranslate, isEmpty);
+  });
+
+  test('a search for the id gives the facts when /player wants sign-in', () {
+    final asked = DateTime.utc(2026, 11, 12);
+    const line = '{"_type": "url", "id": "LRvSRV4WeOg", "duration": 151.0, "view_count": 28000, "timestamp": 1794400000}';
+    final facts = VideoFactsLookup.factsOfListing(line, 'LRvSRV4WeOg', asked)!;
+    expect((facts.length, facts.views, facts.published), (151, 28000, DateTime.fromMillisecondsSinceEpoch(1794400000 * 1000, isUtc: true)));
+    expect(VideoFactsLookup.factsOfListing(line, 'otherVideo1', asked), isNull);
+    expect(VideoFactsLookup.factsOfListing('{"id": "LRvSRV4WeOg", "live_status": "is_live", "duration": 0}', 'LRvSRV4WeOg', asked)!.liveStatus, 'is_live');
+    expect(VideoFactsLookup.factsOfListing('not json', 'LRvSRV4WeOg', asked), isNull);
   });
 }

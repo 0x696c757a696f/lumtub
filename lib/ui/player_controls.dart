@@ -21,13 +21,16 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../device.dart';
 import '../app/app_controller.dart';
 import '../app_preferences.dart' show rateText;
 import '../heatmap.dart';
 import '../keep_awake.dart';
 import '../picture_transform.dart';
 import '../storyboard.dart';
-import '../models.dart' show Chapter;
+import '../models.dart' show Chapter, formatCount;
+import '../system_env.dart' show shareText;
+import '../youtube_account.dart' show VideoRating;
 import '../format_policy.dart';
 import '../player_settings.dart';
 import '../widgets/mini_progress_line.dart';
@@ -235,6 +238,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   /// The most subtitles move up while the controls show, as a share of the
   /// picture's height.
   static const _maxLift = 0.15;
+  /// In a picture shorter than this, such as a phone's held upright, the
+  /// subtitles move all the way above the bar, as phone video apps do;
+  /// lifted only part of the way they would sit on the time and buttons.
+  static const _clearBelow = 360.0;
   bool _lifted = false;
 
   /// Moves the subtitles above the bottom bar while it [shows], so it never
@@ -249,11 +256,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final size = shows ? (box as RenderBox).size : Size.zero;
     final w = _player.state.width ?? 0, h = _player.state.height ?? 0;
     final picture = w > 0 && h > 0 ? min(size.height, size.width * h / w) : size.height;
-    // Above the bar, but never far into the picture: in a small player,
-    // such as a phone's above the page, the bar covers a third of it, and
-    // subtitles lifted over all of it would sit in the middle.
-    final lift = shows ? min((bar as RenderBox).size.height, picture * _maxLift) : 0.0;
+    // Above the bar. In a large picture never more than a share of it, so
+    // a tall bar does not push them into the middle.
     final view = widget.state;
+    final barHeight = shows ? (bar as RenderBox).size.height : 0.0;
+    final lift = !shows ? 0.0 : picture < _clearBelow ? barHeight : min(barHeight, picture * _maxLift);
     if (view != null && view.mounted) view.setSubtitleViewPadding(view.widget.subtitleViewConfiguration.padding + EdgeInsets.only(bottom: lift));
     if (lift == 0) return _controller.liftSubtitles(0);
     _controller.liftSubtitles(picture > 0 ? (lift / picture * 100).ceil() : 0);
@@ -281,6 +288,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       if (_heldRate != null || !_player.state.playing) return;
       final rate = _heldRate = _player.state.rate;
       final fast = max(2.0, rate * 2).clamp(0.25, 4.0);
+      unawaited(HapticFeedback.lightImpact());
       unawaited(_player.setRate(fast));
       _showFeedback(AppIcons.fastForwardFill, tr('Playing at {0}x', [rateText(fast)]));
     } else if (_heldRate case final rate?) {
@@ -360,24 +368,40 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   TapDownDetails? _doubleTapAt;
 
   /// A finger's double tap on the left or right third skips back or ahead
-  /// 10 s, as in YouTube's phone app; the middle, and the mouse anywhere,
-  /// toggles full screen.
+  /// 10 s, as in YouTube's phone app, and taps in a row add up; the middle
+  /// plays or pauses. The mouse's double click toggles full screen.
   void _doubleTap() {
     final at = _doubleTapAt;
     final width = context.size?.width ?? 0;
     final touch = at != null && (at.kind == PointerDeviceKind.touch || at.kind == PointerDeviceKind.stylus);
-    if (touch && width > 0 && (at.localPosition.dx < width / 3 || at.localPosition.dx > width * 2 / 3)) {
-      final ahead = at.localPosition.dx > width / 2;
-      unawaited(_controller.seekBy(Duration(seconds: ahead ? 10 : -10)));
-      _showFeedback(ahead ? AppIcons.fastForwardFill : AppIcons.rewindFill, ahead ? tr('+10 s') : tr('-10 s'));
+    if (!touch || width <= 0) {
+      unawaited(widget.state?.toggleFullscreen());
       return;
     }
-    unawaited(widget.state?.toggleFullscreen());
+    final x = at.localPosition.dx;
+    if (x >= width / 3 && x <= width * 2 / 3) {
+      unawaited(HapticFeedback.selectionClick());
+      unawaited(_player.playOrPause());
+      _showFeedback(_player.state.playing ? AppIcons.pauseFill : AppIcons.playFill, _player.state.playing ? tr('Pause') : tr('Play'));
+      return;
+    }
+    final ahead = x > width / 2;
+    final now = DateTime.now();
+    // Taps soon after the last one, the same way, show the total skipped.
+    final run = _seekRunAt != null && now.difference(_seekRunAt!) < const Duration(milliseconds: 1200) && (_seekRun > 0) == ahead ? _seekRun : 0;
+    _seekRun = run + (ahead ? 10 : -10);
+    _seekRunAt = now;
+    unawaited(HapticFeedback.selectionClick());
+    unawaited(_controller.seekBy(Duration(seconds: ahead ? 10 : -10)));
+    _showFeedback(ahead ? AppIcons.fastForwardFill : AppIcons.rewindFill, ahead ? tr('+10 s').replaceFirst('10', '$_seekRun') : tr('-10 s').replaceFirst('10', '${-_seekRun}'));
   }
+
+  int _seekRun = 0;
+  DateTime? _seekRunAt;
 
   /// Phones only: keeps the screen in the way it is held now, landscape or
   /// portrait, until unlocked.
-  static final _phone = Platform.isAndroid || Platform.isIOS;
+  static bool get _phone => touchFirst && !Device.tv;
   bool _orientationLocked = false;
 
   void _toggleOrientation() {
@@ -473,6 +497,58 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     _dragLeft ? _brighten(whole) : _louder(whole.toDouble());
   }
 
+  /// A TV remote, as TV video apps take it: with the bars hidden, OK plays
+  /// or pauses, left and right seek and up or down bring the bars up on
+  /// their first button; with the bars up the arrows move between buttons.
+  KeyEventResult _remoteKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    final ok = key == LogicalKeyboardKey.select || key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter || key == LogicalKeyboardKey.gameButtonA;
+    final direction = switch (key) {
+      LogicalKeyboardKey.arrowUp => TraversalDirection.up,
+      LogicalKeyboardKey.arrowDown => TraversalDirection.down,
+      LogicalKeyboardKey.arrowLeft => TraversalDirection.left,
+      LogicalKeyboardKey.arrowRight => TraversalDirection.right,
+      _ => null,
+    };
+    if (!ok && direction == null) return KeyEventResult.ignored;
+    final shown = _animation.value > 0 && _animation.status != AnimationStatus.reverse;
+    var focused = FocusManager.instance.primaryFocus;
+    // A button the bars hid with them is not where the remote is.
+    if (!shown && focused != _focus) {
+      _focus.requestFocus();
+      focused = _focus;
+    }
+    final onButton = focused != _focus;
+    if (onButton) {
+      _show();
+      if (direction != null) focused?.focusInDirection(direction);
+      return direction != null ? KeyEventResult.handled : KeyEventResult.ignored;
+    }
+    if (ok) {
+      unawaited(_player.playOrPause());
+      _show();
+      return KeyEventResult.handled;
+    }
+    _show();
+    // Left and right seek through the player's own keys.
+    if (direction == TraversalDirection.left || direction == TraversalDirection.right) return KeyEventResult.ignored;
+    _firstButton()?.requestFocus();
+    return KeyEventResult.handled;
+  }
+
+  /// The bottom bar's first button: the lowest row's leftmost control.
+  FocusNode? _firstButton() {
+    FocusNode? best;
+    for (final node in _focus.traversalDescendants) {
+      if (!node.canRequestFocus || node.context == null) continue;
+      final rect = node.rect;
+      final b = best?.rect;
+      if (b == null || rect.bottom > b.bottom + 4 || ((rect.bottom - b.bottom).abs() <= 4 && rect.left < b.left)) best = node;
+    }
+    return best;
+  }
+
   /// Keeps the bars up while one of their menus is open.
   void _menuOpened() {
     _menus++;
@@ -498,6 +574,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       child: Focus(
         focusNode: _focus,
         autofocus: true,
+        onKeyEvent: Device.tv ? _remoteKey : null,
         child: ListenableBuilder(
           listenable: _controller,
           builder: (context, _) => MouseRegion(
@@ -557,7 +634,6 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                       ),
                     ),
                   ),
-                if (!_locked && _phone) _centerControls(),
                 if (!_locked) ...[
                   // In full screen the bars keep clear of a camera cutout.
                   Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: SafeArea(top: fullscreen, bottom: false, left: fullscreen, right: fullscreen, child: _topBar(context, fullscreen)))),
@@ -625,40 +701,6 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     );
   }
 
-  /// On a phone, as on phone players: previous, a large play/pause and
-  /// next in the middle of the picture, where a thumb reaches them. The
-  /// spinner takes the play button's place while loading.
-  Widget _centerControls() => Center(
-        child: AnimatedBuilder(
-          animation: _animation,
-          builder: (context, child) => IgnorePointer(ignoring: _animation.value < 0.5, child: Opacity(opacity: _animation.value, child: child)),
-          child: StreamBuilder<bool>(
-            stream: _player.stream.buffering,
-            initialData: _player.state.buffering,
-            builder: (context, snapshot) => Row(mainAxisSize: MainAxisSize.min, children: [
-              _RoundButton(
-                tooltip: tr('Previous video'),
-                icon: AppIcons.skipBackFill,
-                size: 52,
-                onTap: _controller.hasPrevious ? () => unawaited(_controller.playPrevious()) : null,
-              ),
-              const SizedBox(width: 28),
-              if (snapshot.data == true)
-                const SizedBox(width: 64, height: 64)
-              else
-                _PlayPauseButton(player: _player, big: true),
-              const SizedBox(width: 28),
-              _RoundButton(
-                tooltip: tr('Next (Shift+N)'),
-                icon: AppIcons.skipForwardFill,
-                size: 52,
-                onTap: _controller.hasNext ? () => unawaited(_controller.playNext()) : null,
-              ),
-            ]),
-          ),
-        ),
-      );
-
   Widget _buffering() => StreamBuilder<bool>(
         stream: _player.stream.buffering,
         initialData: _player.state.buffering,
@@ -701,6 +743,60 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   /// Laid out as PiliNara's: 返回 and 主页 on the left, the title, then a
   /// row of switches.
+  /// 点赞, 评论, 收藏 and 分享 with their counts, for a phone's full screen.
+  List<Widget> _fullscreenActions(BuildContext context, Future<void> Function() leaveFullscreen) {
+    final item = _controller.playing!;
+    final account = _controller.account;
+    final signedIn = account?.signedIn ?? false;
+    final library = _controller.library;
+    final liked = signedIn && account!.ratingOf(item.id) == VideoRating.like;
+    final likes = _controller.details?.likeCount ?? _controller.dislikes?.likes;
+    final shownLikes = likes == null || !signedIn ? likes : (likes + account!.ratingChange(item.id, VideoRating.like)).clamp(0, 1 << 62);
+    final favorite = library?.isFavorite(item.id) ?? false;
+    return [
+      _CountButton(
+        tooltip: tr('Like'),
+        icon: liked ? AppIcons.thumbsUpFill : AppIcons.thumbsUp,
+        count: shownLikes,
+        active: liked,
+        onTap: () {
+          if (signedIn && !account!.ratingOff(item.id)) {
+            unawaited(account.rate(item, VideoRating.like));
+          } else {
+            _showFeedback(AppIcons.thumbsUp, signedIn ? tr('The uploader turned off likes and dislikes for this video') : tr('Sign in to Google to {0}', [tr('Like')]));
+          }
+        },
+      ),
+      if (!_controller.preferences.focusHideComments)
+        _CountButton(
+          tooltip: tr('Comments'),
+          icon: AppIcons.chatCircle,
+          onTap: () async {
+            await leaveFullscreen();
+            sidePanelTab.value = null;
+            sidePanelTab.value = 'comments';
+          },
+        ),
+      if (library != null)
+        _CountButton(
+          tooltip: tr('Favorites'),
+          icon: favorite ? AppIcons.heartFill : AppIcons.heart,
+          active: favorite,
+          onTap: () => library.toggleFavorite(item),
+        ),
+      _CountButton(
+        tooltip: tr('Share'),
+        icon: AppIcons.share,
+        onTap: () async {
+          if (await shareText(item.url)) return;
+          await Clipboard.setData(ClipboardData(text: item.url));
+          _showFeedback(AppIcons.link, tr('Link copied'));
+        },
+      ),
+      const SizedBox(width: 8),
+    ];
+  }
+
   Widget _topBar(BuildContext context, bool fullscreen) {
     final item = _controller.playing;
     final details = _controller.details;
@@ -737,6 +833,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               Text(details?.channel ?? item!.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 12)),
           ]),
         ),
+        // A phone in full screen: the page's main actions, as phone video
+        // apps keep them by the title, so there is no need to leave.
+        if (_phone && fullscreen && item != null) ..._fullscreenActions(context, leaveFullscreen),
         // Switches that are on show here, so the state stays visible after
         // they moved into 更多设置.
         for (final (on, icon, tip) in [
@@ -804,6 +903,51 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     // settings panel, and the volume is the phone's own keys.
     final width = _phone ? 44.0 : fullscreen ? 42.0 : 35.0;
     final compact = _phone && !fullscreen;
+    final progress = _PositionBuilder(
+      player: _player,
+      active: !_animation.isDismissed,
+      builder: (context) => VideoProgressBar(
+        position: _player.state.position,
+        buffered: _player.state.buffer,
+        total: _player.state.duration,
+        color: primary,
+        playedGradient: playedGradient,
+        segments: segments,
+        chapterStarts: chapterStarts,
+        preview: _preview,
+        heatmap: _controller.preferences.showHeatmap ? _heatmap?.values : null,
+        labelOf: _chapters.isEmpty ? null : (time) => '${formatPlaybackTime(time)} · ${Chapter.at(_chapters, time)?.title ?? ''}',
+        onSeek: (time) => unawaited(_controller.seek(time)),
+      ),
+    );
+    final time = _PositionBuilder(
+      player: _player,
+      active: !_animation.isDismissed,
+      seconds: true,
+      builder: (context) => _controller.playing?.isLive == true
+          ? _LiveButton(
+              behind: _player.state.duration - _player.state.position > AppController.liveBehind,
+              onTap: () => unawaited(_controller.goLive()),
+            )
+          : Text(
+              '${formatPlaybackTime(_player.state.position)} / ${formatPlaybackTime(_player.state.duration)}',
+              style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
+            ),
+    );
+    // The small player above a phone's page: one thin row, as phone video
+    // apps have it, so the subtitles lifted above it stay low.
+    if (compact) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(4, 12, 4, 2),
+        child: Row(children: [
+          _PlayPauseButton(player: _player),
+          Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: progress)),
+          time,
+          _subtitleMenu(width),
+          _IconButton(tooltip: tr('Fullscreen (F)'), icon: AppIcons.cornersOut, size: 24, width: width, onTap: () => unawaited(widget.state?.toggleFullscreen())),
+        ]),
+      );
+    }
     // Keep the action cluster anchored to the physical bottom-right edge in
     // fullscreen. The progress and playback information remain on the left.
     return SafeArea(
@@ -813,45 +957,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         child: Column(mainAxisSize: MainAxisSize.min, children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: _PositionBuilder(
-            player: _player,
-            active: !_animation.isDismissed,
-            builder: (context) => VideoProgressBar(
-              position: _player.state.position,
-              buffered: _player.state.buffer,
-              total: _player.state.duration,
-              color: primary,
-              playedGradient: playedGradient,
-              segments: segments,
-              chapterStarts: chapterStarts,
-              preview: _preview,
-              heatmap: _controller.preferences.showHeatmap ? _heatmap?.values : null,
-              labelOf: _chapters.isEmpty ? null : (time) => '${formatPlaybackTime(time)} · ${Chapter.at(_chapters, time)?.title ?? ''}',
-              onSeek: (time) => unawaited(_controller.seek(time)),
-            ),
-          ),
+          child: progress,
         ),
         const SizedBox(height: 2),
         Row(children: [
-          if (!_phone) _PlayPauseButton(player: _player),
-          if (_controller.hasNext && !_phone)
+          // On a phone too the buttons are in the bar, as phone video apps
+          // have them in full screen, leaving the picture clear.
+          _PlayPauseButton(player: _player),
+          if (_controller.hasNext)
             _IconButton(tooltip: tr('Next (Shift+N)'), icon: AppIcons.skipForwardFill, size: 22, width: width, onTap: () => unawaited(_controller.playNext())),
           if (!_phone) _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
           SizedBox(width: _phone ? 8 : 4),
-          _PositionBuilder(
-            player: _player,
-            active: !_animation.isDismissed,
-            seconds: true,
-            builder: (context) => _controller.playing?.isLive == true
-                ? _LiveButton(
-                    behind: _player.state.duration - _player.state.position > AppController.liveBehind,
-                    onTap: () => unawaited(_controller.goLive()),
-                  )
-                : Text(
-                    '${formatPlaybackTime(_player.state.position)} / ${formatPlaybackTime(_player.state.duration)}',
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
-                  ),
-          ),
+          time,
           Expanded(child: Align(alignment: AlignmentDirectional.centerStart, child: _chapterMenu())),
           if (!compact) _danmakuButtons(width),
           _subtitleMenu(width),
@@ -876,16 +993,19 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             initialData: _player.state.height,
             builder: (context, _) {
               final height = _player.state.height ?? 0;
+              final width = _player.state.width ?? 0;
+              // Portrait videos are named by their width, as YouTube does.
+              final aspect = width > 0 && height > 0 ? width / height : null;
               final max = _controller.settings.maxHeight;
               final choices = _controller.qualityChoices;
               return _TextMenu<int>(
                 tooltip: tr('Quality'),
-                label: height > 0 ? heightLabel(height, _controller.availableFrameRates[height], 'P') : (max == 0 ? tr('Auto') : heightLabel(max, _controller.availableFrameRates[max], 'P')),
+                label: height > 0 ? heightLabel(height, _controller.availableFrameRates[height], 'P', aspect) : (max == 0 ? tr('Auto') : heightLabel(max, _controller.availableFrameRates[max], 'P', aspect)),
                 // A limit above what this video offers plays its highest.
                 // Lowered for dropped frames, 自动 is not ticked, so
                 // picking it lifts the limit.
                 value: max == 0 && _controller.droppedCap > 0 ? -1 : (choices.contains(max) ? max : height),
-                values: [for (final h in choices) (h, h == 0 ? tr('Auto') : heightLabel(h, _controller.availableFrameRates[h], 'P'))],
+                values: [for (final h in choices) (h, h == 0 ? tr('Auto') : heightLabel(h, _controller.availableFrameRates[h], 'P', aspect))],
                 onSelected: (h) => unawaited(_controller.setMaxHeight(h)),
                 onOpened: _menuOpened,
                 onClosed: _menuClosed,
@@ -1214,6 +1334,42 @@ class _IconButton extends StatelessWidget {
       );
 }
 
+/// An icon of a phone's full-screen top bar, with its count small at the
+/// top right, as phone video apps draw them.
+class _CountButton extends StatelessWidget {
+  const _CountButton({required this.tooltip, required this.icon, required this.onTap, this.count, this.active = false});
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onTap;
+  final int? count;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = active ? Theme.of(context).colorScheme.inversePrimary : Colors.white;
+    return Tooltip(
+      message: tooltip,
+      child: _Hover(
+        label: tooltip,
+        onTap: onTap,
+        child: SizedBox(
+          width: 52,
+          height: 44,
+          child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
+            Icon(icon, size: 24, color: color),
+            if (count case final count?)
+              PositionedDirectional(
+                top: 0,
+                start: 30,
+                child: Text(formatCount(count), maxLines: 1, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600, shadows: const [Shadow(blurRadius: 3)])),
+              ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
 /// A pressable area of the bars: the click cursor and a translucent
 /// rounded highlight while the mouse is over it.
 class _Hover extends StatefulWidget {
@@ -1326,10 +1482,8 @@ class _PositionBuilderState extends State<_PositionBuilder> {
 }
 
 class _PlayPauseButton extends StatefulWidget {
-  const _PlayPauseButton({required this.player, this.big = false});
+  const _PlayPauseButton({required this.player});
   final Player player;
-  /// The round one in the middle of a phone's picture.
-  final bool big;
 
   @override
   State<_PlayPauseButton> createState() => _PlayPauseButtonState();
@@ -1358,18 +1512,12 @@ class _PlayPauseButtonState extends State<_PlayPauseButton> with SingleTickerPro
         child: _Hover(
           label: tr('Play/Pause (Space)'),
           onTap: () => unawaited(widget.player.playOrPause()),
-          child: widget.big
-              ? Container(
-                  width: 64,
-                  height: 64,
-                  decoration: const BoxDecoration(color: Color(0x66000000), shape: BoxShape.circle),
-                  child: Center(child: AnimatedIcon(progress: _animation, icon: AnimatedIcons.play_pause, color: Colors.white, size: 36)),
-                )
-              : SizedBox(
-                  width: 42,
-                  height: 34,
-                  child: Center(child: AnimatedIcon(progress: _animation, icon: AnimatedIcons.play_pause, color: Colors.white, size: 20)),
-                ),
+          // A finger's size on a touch screen.
+          child: SizedBox(
+            width: touchFirst ? 48 : 42,
+            height: touchFirst ? 40 : 34,
+            child: Center(child: AnimatedIcon(progress: _animation, icon: AnimatedIcons.play_pause, color: Colors.white, size: touchFirst ? 26 : 20)),
+          ),
         ),
       );
 }
@@ -1394,7 +1542,8 @@ class _PopupMenu<T> extends StatelessWidget {
   final VoidCallback onClosed;
   final Widget child;
 
-  static const _itemHeight = 36.0;
+  /// A finger's height on a touch screen, and a remote's on a TV.
+  static double get _itemHeight => touchFirst ? 48.0 : 36.0;
   static const _padding = 6.0;
 
   /// Opens the list just above the button, as the bars sit at the bottom,
@@ -1601,34 +1750,4 @@ String trackLabel(String id, String? title, String? language) {
   }
   final parts = [if (title != null && title.isNotEmpty) title, if (language != null && language.isNotEmpty) language];
   return parts.isEmpty ? tr('Track {0}', [id]) : parts.join(' · ');
-}
-
-/// A round button over the middle of the picture; dimmed when [onTap] is
-/// null, so the row keeps its shape.
-class _RoundButton extends StatelessWidget {
-  const _RoundButton({required this.tooltip, required this.icon, required this.size, required this.onTap});
-  final String tooltip;
-  final IconData icon;
-  final double size;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-        message: tooltip,
-        child: Semantics(
-          button: true,
-          enabled: onTap != null,
-          label: tooltip,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onTap,
-            child: Container(
-              width: size,
-              height: size,
-              decoration: const BoxDecoration(color: Color(0x4D000000), shape: BoxShape.circle),
-              child: Icon(icon, color: onTap == null ? Colors.white38 : Colors.white, size: size * 0.46),
-            ),
-          ),
-        ),
-      );
 }

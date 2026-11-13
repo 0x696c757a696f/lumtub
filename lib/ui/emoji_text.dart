@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../emoji_pictures.dart';
+
 /// [text] with each emoji in [emojis] (a shortcut such as
 /// `:face-blue-smiling:`, or a Unicode emoji YouTube sent a picture of)
-/// drawn as its picture, the size of the text.
-List<InlineSpan> emojiSpans(BuildContext context, String text, Map<String, String> emojis, {TextStyle? style}) {
+/// drawn as its picture, the size of the text. YouTube's own emoji that
+/// came without a picture take one seen before; see [EmojiPictures].
+List<InlineSpan> emojiSpans(BuildContext context, String text, Map<String, String> given, {TextStyle? style}) {
+  final emojis = EmojiPictures.fill(text, given);
   if (emojis.isEmpty) return [TextSpan(text: text, style: style)];
   final size = (style?.fontSize ?? DefaultTextStyle.of(context).style.fontSize ?? 14) * 1.4;
   final pixels = (size * MediaQuery.devicePixelRatioOf(context)).round();

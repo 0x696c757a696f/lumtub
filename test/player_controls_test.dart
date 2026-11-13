@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:lumtub/device.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/l10n/l10n.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/player_settings.dart';
+import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/ui/lights_off.dart';
 import 'package:lumtub/ui/pip_view.dart';
 import 'package:lumtub/ui/player_controls.dart';
@@ -139,6 +141,26 @@ void main() {
     expect(find.text('1X'), findsOneWidget, reason: 'Speed');
     expect(find.text('1080P'), findsOneWidget, reason: 'Quality');
     expect(find.byIcon(AppIcons.cornersOut), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets("a phone's small player has play in its one-row bar, as phone video apps do, and nothing in the middle", (tester) async {
+    debugTouchFirst = true;
+    addTearDown(() => debugTouchFirst = null);
+    tester.view.physicalSize = const Size(412, 232);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(Colors.red, Brightness.light),
+      home: Scaffold(body: ColoredBox(color: Colors.black, child: PlayerControls(player: player, state: null, controller: controller))),
+    ));
+    await tester.pump();
+    expect(find.byTooltip('Previous video'), findsNothing);
+    final time = tester.getCenter(find.text('1:00 / 10:00'));
+    final play = tester.getCenter(find.byType(AnimatedIcon).hitTestable().first);
+    expect((play.dy - time.dy).abs(), lessThan(4), reason: 'Play sits in the same row as the time');
+    expect(play.dx, lessThan(time.dx));
+    expect(tester.getCenter(find.byType(VideoProgressBar)).dy, closeTo(time.dy, 8));
     expect(tester.takeException(), isNull);
   });
 
@@ -294,6 +316,37 @@ void main() {
     await tester.pump();
     expect(player.state.playing, before);
     semantics.dispose();
+  });
+
+  testWidgets('a TV remote plays with OK, seeks with left and right and walks the bar with the arrows', (tester) async {
+    Device.tv = true;
+    addTearDown(() => Device.tv = false);
+    await pump(tester);
+    final player0 = FocusManager.instance.primaryFocus;
+    final before = player.state.playing;
+    await tester.sendKeyEvent(LogicalKeyboardKey.select);
+    await tester.pump();
+    expect(player.state.playing, !before);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pump();
+    expect(find.textContaining('Forward'), findsOneWidget);
+    expect(FocusManager.instance.primaryFocus, player0);
+    // Down brings the remote onto the bar's first button, at its bottom left.
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    final first = FocusManager.instance.primaryFocus!;
+    expect(first, isNot(player0));
+    expect(first.rect.bottom, greaterThan(400));
+    expect(first.rect.left, lessThan(200));
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pump();
+    final second = FocusManager.instance.primaryFocus!;
+    expect(second, isNot(first));
+    expect(second.rect.left, greaterThan(first.rect.left));
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    await tester.pump();
+    expect(FocusManager.instance.primaryFocus, first);
+    await tester.pump(const Duration(seconds: 10));
   });
 
   testWidgets('Space still pauses when the picture, not a button, has focus', (tester) async {

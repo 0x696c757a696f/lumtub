@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'theme.dart';
+import '../device.dart';
 import '../l10n/l10n.dart';
 import '../system_env.dart';
 import 'app_icons.dart';
@@ -112,20 +113,55 @@ class PageHeader extends StatelessWidget {
   final String? subtitle;
   final Widget? trailing;
 
+  /// Narrower than this, the buttons go under the title, so on a phone
+  /// they do not squeeze it.
+  static const stackBelow = 560.0;
+
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, 16),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
-            if (subtitle != null) ...[
-              const SizedBox(height: 2),
-              Text(subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.bodyMedium?.copyWith(color: context.colors.onSurfaceVariant)),
-            ],
-          ])),
-          if (trailing != null) trailing!,
-        ]),
-      );
+  Widget build(BuildContext context) {
+    final heading = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+      // A TV's few hundred pixels of height go to the videos.
+      if (subtitle != null && !Device.tv) ...[
+        const SizedBox(height: 2),
+        Text(subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.bodyMedium?.copyWith(color: context.colors.onSurfaceVariant)),
+      ],
+    ]);
+    final trailing = this.trailing;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(AppStyle.pagePadding, Device.tv ? 0 : 8, AppStyle.pagePadding, Device.tv ? 8 : 16),
+      child: trailing == null
+          ? Row(children: [Expanded(child: heading)])
+          : LayoutBuilder(
+              builder: (context, constraints) => constraints.maxWidth < stackBelow
+                  ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      heading,
+                      const SizedBox(height: 4),
+                      SingleChildScrollView(scrollDirection: Axis.horizontal, child: trailing),
+                    ])
+                  : Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Expanded(child: heading), trailing]),
+            ),
+    );
+  }
+}
+
+/// Chips and filters: wrapped over as many lines as they need, or on a TV
+/// one line that scrolls sideways as the remote moves along it, as TV apps
+/// lay out their filters, so the videos start higher.
+class FilterFlow extends StatelessWidget {
+  const FilterFlow({super.key, required this.children, this.spacing = 8});
+  final List<Widget> children;
+  final double spacing;
+
+  @override
+  Widget build(BuildContext context) => Device.tv
+      ? SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(children: [
+            for (final (i, child) in children.indexed) Padding(padding: EdgeInsetsDirectional.only(end: i == children.length - 1 ? 0 : spacing), child: child),
+          ]),
+        )
+      : Wrap(spacing: spacing, runSpacing: spacing, crossAxisAlignment: WrapCrossAlignment.center, children: children);
 }
 
 String twoDigits(int n) => n.toString().padLeft(2, '0');
@@ -243,9 +279,18 @@ bool get touchFirst => debugTouchFirst ?? _touchFirst;
 final bool _touchFirst = Platform.isAndroid || Platform.isIOS;
 
 /// A phone held either way: a touch screen whose short side is under a
-/// tablet's. Its watch page is laid out as phone apps do: the player at
+/// tablet's, never a TV, whose screen is as few pixels across but far
+/// away. Its watch page is laid out as phone apps do: the player at
 /// the top edge, full screen when turned sideways.
-bool isPhone(BuildContext context) => touchFirst && MediaQuery.sizeOf(context).shortestSide < 600;
+bool isPhone(BuildContext context) => touchFirst && !Device.tv && MediaQuery.sizeOf(context).shortestSide < 600;
+
+/// A watch page laid out as a phone's: on a phone, and on a tablet held
+/// upright, where the player across the width leaves room for tabs under it.
+bool watchesLikePhone(BuildContext context) {
+  if (isPhone(context)) return true;
+  final size = MediaQuery.sizeOf(context);
+  return touchFirst && !Device.tv && size.height > size.width;
+}
 
 /// One row of [pickFromSheet]; a null label draws a divider.
 typedef SheetChoice<T> = ({T? value, IconData? icon, String? label, bool selected});

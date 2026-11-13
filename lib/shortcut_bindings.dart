@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show SingleActivator;
 
-/// A player action whose keys can be changed in the settings.
+/// An action whose keys can be changed in the settings: the player's,
+/// and from [search] on, the pages' ([page]). A key can belong to one
+/// player action and one page action; the player's wins on the watch page.
 enum PlayerAction {
   playPause,
   seekBack,
@@ -30,9 +32,27 @@ enum PlayerAction {
   theater,
   lightsOff,
   screenshot,
-  stats;
+  stats,
+  captions,
+  captionsBigger,
+  captionsSmaller,
+  miniPlayer,
+  danmaku,
+  chapterBack,
+  chapterNext,
+  search,
+  incognito,
+  back,
+  top,
+  bottom,
+  pageDown,
+  pageUp,
+  help;
 
   static PlayerAction? parse(String name) => values.where((a) => a.name == name).firstOrNull;
+
+  /// Whether this works on every page rather than on the player.
+  bool get page => index >= search.index;
 }
 
 /// One key with the modifiers held with it, saved as `ctrl+shift+<key id>`.
@@ -111,6 +131,10 @@ final _names = {
   LogicalKeyboardKey.escape: 'Esc',
   LogicalKeyboardKey.pageUp: 'PgUp',
   LogicalKeyboardKey.pageDown: 'PgDn',
+  LogicalKeyboardKey.home: 'Home',
+  LogicalKeyboardKey.end: 'End',
+  LogicalKeyboardKey.numpadAdd: 'Num +',
+  LogicalKeyboardKey.numpadSubtract: 'Num -',
 };
 
 final _modifiers = {
@@ -176,7 +200,24 @@ Map<PlayerAction, List<KeyCombo>> defaultShortcutKeys() {
     PlayerAction.theater: const [KeyCombo(LogicalKeyboardKey.keyT)],
     PlayerAction.lightsOff: const [KeyCombo(LogicalKeyboardKey.keyB)],
     PlayerAction.screenshot: const [KeyCombo(LogicalKeyboardKey.keyS)],
-    PlayerAction.stats: const [KeyCombo(LogicalKeyboardKey.keyI)],
+    PlayerAction.stats: const [KeyCombo(LogicalKeyboardKey.keyI, shift: true)],
+    // From here on as YouTube has them, and Bilibili's bullet chat key
+    // with Shift, as A and D step through subtitle lines.
+    PlayerAction.captions: const [KeyCombo(LogicalKeyboardKey.keyC)],
+    PlayerAction.captionsBigger: const [KeyCombo(LogicalKeyboardKey.equal, shift: true), KeyCombo(LogicalKeyboardKey.numpadAdd)],
+    PlayerAction.captionsSmaller: const [KeyCombo(LogicalKeyboardKey.minus), KeyCombo(LogicalKeyboardKey.numpadSubtract)],
+    PlayerAction.miniPlayer: const [KeyCombo(LogicalKeyboardKey.keyI)],
+    PlayerAction.danmaku: const [KeyCombo(LogicalKeyboardKey.keyD, shift: true)],
+    PlayerAction.chapterBack: [KeyCombo(LogicalKeyboardKey.arrowLeft, control: !mac, alt: mac)],
+    PlayerAction.chapterNext: [KeyCombo(LogicalKeyboardKey.arrowRight, control: !mac, alt: mac)],
+    PlayerAction.search: [KeyCombo(LogicalKeyboardKey.keyK, control: !mac, meta: mac), const KeyCombo(LogicalKeyboardKey.slash)],
+    PlayerAction.incognito: [KeyCombo(LogicalKeyboardKey.keyN, control: !mac, meta: mac, shift: true)],
+    PlayerAction.back: [const KeyCombo(LogicalKeyboardKey.arrowLeft, alt: true), if (mac) const KeyCombo(LogicalKeyboardKey.bracketLeft, meta: true)],
+    PlayerAction.top: const [KeyCombo(LogicalKeyboardKey.home)],
+    PlayerAction.bottom: const [KeyCombo(LogicalKeyboardKey.end)],
+    PlayerAction.pageDown: const [KeyCombo(LogicalKeyboardKey.pageDown), KeyCombo(LogicalKeyboardKey.space)],
+    PlayerAction.pageUp: const [KeyCombo(LogicalKeyboardKey.pageUp), KeyCombo(LogicalKeyboardKey.space, shift: true)],
+    PlayerAction.help: const [KeyCombo(LogicalKeyboardKey.slash, shift: true)],
   };
 }
 
@@ -187,19 +228,21 @@ Map<PlayerAction, List<KeyCombo>> shortcutKeys(Map<String, List<String>> saved) 
     for (final MapEntry(:key, :value) in saved.entries)
       if (PlayerAction.parse(key) case final action?) action: [for (final text in value) if (KeyCombo.parse(text) case final combo? when !fixedKey(combo)) combo],
   };
-  final taken = {for (final keys in chosen.values) ...keys};
+  Set<KeyCombo> taken(bool page) => {for (final MapEntry(:key, :value) in chosen.entries) if (key.page == page) ...value};
+  final takenBy = {false: taken(false), true: taken(true)};
   return {
-    for (final MapEntry(:key, :value) in defaultShortcutKeys().entries) key: chosen[key] ?? [for (final combo in value) if (!taken.contains(combo)) combo],
+    for (final MapEntry(:key, :value) in defaultShortcutKeys().entries) key: chosen[key] ?? [for (final combo in value) if (!takenBy[key.page]!.contains(combo)) combo],
   };
 }
 
 /// [saved] with [action] given [keys], which are taken off any other
-/// action; actions back at their defaults are left out.
+/// action of its kind (player or page); actions back at their defaults are
+/// left out.
 Map<String, List<String>> withShortcutKeys(Map<String, List<String>> saved, PlayerAction action, List<KeyCombo> keys) {
   final now = shortcutKeys(saved);
   now[action] = keys;
   for (final other in now.keys) {
-    if (other != action) now[other] = [for (final combo in now[other]!) if (!keys.contains(combo)) combo];
+    if (other != action && other.page == action.page) now[other] = [for (final combo in now[other]!) if (!keys.contains(combo)) combo];
   }
   return _saved(now);
 }
@@ -216,11 +259,12 @@ Map<String, List<String>> _saved(Map<PlayerAction, List<KeyCombo>> keys) {
     for (final MapEntry(:key, :value) in keys.entries)
       // An action left with its defaults less those others hold reads back
       // the same without being written out.
-      if (!same(value, [for (final combo in defaults[key]!) if (!keys.entries.any((e) => e.key != key && e.value.contains(combo))) combo]))
+      if (!same(value, [for (final combo in defaults[key]!) if (!keys.entries.any((e) => e.key != key && e.key.page == key.page && e.value.contains(combo))) combo]))
         key.name: [for (final combo in value) combo.id],
   };
 }
 
-/// The action [combo] belongs to in [keys], if any.
-PlayerAction? actionOfKey(Map<PlayerAction, List<KeyCombo>> keys, KeyCombo combo) =>
-    keys.entries.where((e) => e.value.contains(combo)).firstOrNull?.key;
+/// The action of the kind [page] says that [combo] belongs to in [keys],
+/// if any.
+PlayerAction? actionOfKey(Map<PlayerAction, List<KeyCombo>> keys, KeyCombo combo, {required bool page}) =>
+    keys.entries.where((e) => e.key.page == page && e.value.contains(combo)).firstOrNull?.key;

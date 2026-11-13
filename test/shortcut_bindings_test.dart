@@ -38,9 +38,25 @@ void main() {
     expect(keys[PlayerAction.seekBack], contains(bracketLeft));
     expect(keys[PlayerAction.previous], [const KeyCombo(LogicalKeyboardKey.keyP, shift: true)]);
     expect(keys[PlayerAction.next], [const KeyCombo(LogicalKeyboardKey.keyN, shift: true)]);
-    expect(actionOfKey(keys, bracketRight), PlayerAction.seekForward);
+    expect(actionOfKey(keys, bracketRight, page: false), PlayerAction.seekForward);
     // Only what changed is written out.
     expect(saved.keys.toSet(), {'seekBack', 'seekForward'});
+  });
+
+  test('a page action and a player action can share a key, and taking a key stays within its kind', () {
+    final keys = shortcutKeys(const {});
+    const space = KeyCombo(LogicalKeyboardKey.space);
+    expect(keys[PlayerAction.playPause], contains(space));
+    expect(keys[PlayerAction.pageDown], contains(space));
+    expect(keys[PlayerAction.top], [const KeyCombo(LogicalKeyboardKey.home)]);
+    expect(keys[PlayerAction.start], [const KeyCombo(LogicalKeyboardKey.home)]);
+    expect(actionOfKey(keys, space, page: true), PlayerAction.pageDown);
+    expect(actionOfKey(keys, space, page: false), PlayerAction.playPause);
+    final saved = withShortcutKeys(const {}, PlayerAction.help, [space]);
+    final after = shortcutKeys(saved);
+    expect(after[PlayerAction.pageDown], [const KeyCombo(LogicalKeyboardKey.pageDown)]);
+    expect(after[PlayerAction.playPause], contains(space));
+    expect(PlayerAction.values.where((a) => a.page).first, PlayerAction.search);
   });
 
   test('the shifted keys of ( ) work for volume and stay apart from 9 and 0', () {

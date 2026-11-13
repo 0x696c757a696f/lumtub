@@ -73,6 +73,9 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
     ];
   }
 
+  /// The picture's bytes, from the cache file or downloaded into it.
+  Future<Uint8List> bytes() => _bytes();
+
   Future<Uint8List> _bytes() async {
     try {
       if (await file.exists()) {

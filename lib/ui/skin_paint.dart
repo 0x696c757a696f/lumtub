@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui show Codec, ImmutableBuffer, TargetImageSize, TargetImageSizeCallback;
 import 'dart:ui' show PointMode;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../skins/skin.dart';
@@ -256,6 +257,9 @@ class SkinLayers extends StatelessWidget {
             LayoutBuilder(builder: (context, constraints) => Image(
                 image: _decodedFor(layer, constraints, MediaQuery.devicePixelRatioOf(context)),
                 opacity: layer.opacity < 1 ? AlwaysStoppedAnimation(layer.opacity) : null,
+                // A new size keeps the old picture up until it is decoded,
+                // rather than leaving the window bare for a frame.
+                gaplessPlayback: true,
                 fit: switch (layer.fit) {
                   'contain' => BoxFit.contain,
                   'fill' => BoxFit.fill,
@@ -299,8 +303,27 @@ class BoxDecodedImage extends ImageProvider<BoxDecodedKey> {
     return (math.max(1, (pictureWidth * scale).round()), math.max(1, (pictureHeight * scale).round()));
   }
 
+  // Answered at once when the picture's own key is, so a rebuild finds it
+  // in the cache in the same frame and nothing flashes.
   @override
-  Future<BoxDecodedKey> obtainKey(ImageConfiguration configuration) async => BoxDecodedKey(await image.obtainKey(configuration), width, height, cover);
+  Future<BoxDecodedKey> obtainKey(ImageConfiguration configuration) {
+    BoxDecodedKey keyOf(Object inner) => BoxDecodedKey(inner, width, height, cover);
+    final inner = image.obtainKey(configuration);
+    if (inner is SynchronousFuture<Object>) {
+      Object? found;
+      inner.then((key) => found = key);
+      return SynchronousFuture(keyOf(found!));
+    }
+    return inner.then(keyOf);
+  }
+
+  // Equal providers: a rebuild with the same picture and size is not a
+  // new picture to load.
+  @override
+  bool operator ==(Object other) => other is BoxDecodedImage && other.image == image && other.width == width && other.height == height && other.cover == cover;
+
+  @override
+  int get hashCode => Object.hash(image, width, height, cover);
 
   @override
   ImageStreamCompleter loadImage(BoxDecodedKey key, ImageDecoderCallback decode) {

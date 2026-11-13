@@ -29,6 +29,7 @@ import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
 import '../dearrow.dart';
+import '../emoji_pictures.dart';
 import '../downloads/download_formats.dart';
 import '../downloads/core_recorder.dart';
 import '../downloads/download_manager.dart';
@@ -85,6 +86,8 @@ import '../blocked_groups.dart';
 import '../explore_filters.dart';
 import '../explore_topics.dart';
 import '../faith_topics.dart';
+import '../feed_quality.dart';
+import '../portrait_thumbnails.dart';
 import '../storyboard.dart';
 import '../stream_resolver.dart';
 import '../subtitle_files.dart';
@@ -418,6 +421,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   static void _applyAppearanceGlobals(AppearanceSettings appearance) {
     VideoItem.thumbnailFile = appearance.effectiveThumbnails.file;
     videoCardMinWidth = appearance.cardWidth;
+    compactCards = appearance.compact;
     lowResourceMode = appearance.lowResource;
     videoLayout = appearance.layout;
   }
@@ -709,6 +713,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The subtitles shown in this video, by label, so a reopened video can
   /// show them again.
   final _shownOptions = <String, SubtitleOption>{};
+  /// The main subtitle's title when the subtitle key last turned it off.
+  String? _subtitleBeforeOff;
 
   /// The play whose first open already tried a quick start.
   int? _quickSerial;

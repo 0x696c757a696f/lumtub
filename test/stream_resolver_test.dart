@@ -61,6 +61,13 @@ void main() {
     expect(heightLabel(2160, 59.94, 'P'), '2160P60');
   });
 
+  test('a portrait video goes by its width, as YouTube names it', () {
+    expect(heightLabel(1920, 30, 'P', 1080 / 1920), '1080P');
+    expect(heightLabel(1280, 60, 'P', 720 / 1280), '720P60');
+    expect(heightLabel(1918, null, 'p', 1080 / 1918), '1080p');
+    expect(heightLabel(1080, null, 'p', 16 / 9), '1080p');
+  });
+
   test('leaves live and fragmented streams to ytdl_hook', () {
     expect(ResolvedVideo({..._info(), 'is_live': true}, file, 'f').directUrl, isNull);
     final fragmented = _info();
@@ -222,15 +229,28 @@ void main() {
     expect(old.existsSync(), isFalse);
     expect(recent.existsSync(), isTrue);
 
-    final ids = [for (var i = 0; i < 13; i++) 'video${i.toString().padLeft(6, '0')}'];
+    final ids = [for (var i = 0; i < 6; i++) 'video${i.toString().padLeft(6, '0')}'];
     for (final id in ids) {
       await resolver.resolve(id, 'ytdl');
     }
-    // Only the 12 kept entries still have a file.
-    expect(File('${info.path}/${ids.first}.json').existsSync(), isFalse);
-    for (final id in ids.skip(1)) {
-      expect(File('${info.path}/$id.json').existsSync(), isTrue);
+    // Only the 4 kept entries still have a file.
+    for (final id in ids) {
+      expect(File('${info.path}/$id.json').existsSync(), ids.indexOf(id) >= 2, reason: id);
     }
+    // Background extractions never push out the video asked for last.
+    final hovered = [for (var i = 0; i < 6; i++) 'hover${i.toString().padLeft(6, '0')}'];
+    for (final id in hovered) {
+      resolver.prefetch(id, 'ytdl');
+      await resolver.cached(id);
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(resolver.cached(ids.last), isNotNull);
+    expect(File('${info.path}/${ids.last}.json').existsSync(), isTrue);
+    expect(File('${info.path}/${ids[4]}.json').existsSync(), isFalse);
+    // Going to the background with nothing playing keeps only that one.
+    resolver.trim();
+    expect([for (final id in hovered) resolver.cached(id)], everyElement(isNull));
+    expect(resolver.cached(ids.last), isNotNull);
     resolver.forget(ids.last);
     expect(File('${info.path}/${ids.last}.json').existsSync(), isFalse);
   });

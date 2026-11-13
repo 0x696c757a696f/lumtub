@@ -35,7 +35,6 @@ import '../format_policy_dialogs.dart';
 import '../player_shortcuts.dart';
 import '../shortcut_settings.dart';
 import '../motion.dart';
-import '../palettes.dart';
 import '../../skins/skin_library.dart';
 import 'skins_page.dart';
 import '../theme.dart';
@@ -162,6 +161,49 @@ String _eyeCareLabel(AppearanceSettings a) => switch (a.eyeCare) {
     };
 
 /// Asks for a span of hours, which may run through midnight.
+/// Light, dark or following the system, the sun or set hours, and the
+/// hours when they are set; for the skins page.
+List<Widget> themeModeTiles(BuildContext context, AppController controller) {
+  final appearance = controller.appearance;
+  void saveLooks(AppearanceSettings next) => controller.saveAppearance(next);
+  return [
+    NormalItem(
+      title: tr('Theme mode'),
+      subtitle: _darkLabel(appearance),
+      leading: Icon(AppIcons.sunHorizon),
+      onTap: () => pickFromDialog<String>(
+        context,
+        title: tr('Theme mode'),
+        value: appearance.darkSchedule == DarkSchedule.off ? appearance.themeMode.name : appearance.darkSchedule.name,
+        values: [
+          for (final (mode, label) in themeModes) (mode.name, label),
+          (DarkSchedule.sun.name, tr('Dark from sunset to sunrise')),
+          (DarkSchedule.hours.name, tr('Dark during set hours')),
+        ],
+        onSelected: (choice) async {
+          if (choice == DarkSchedule.sun.name) return saveLooks(appearance.copyWith(darkSchedule: DarkSchedule.sun));
+          if (choice == DarkSchedule.hours.name) {
+            final hours = await _pickHours(context, tr('Dark hours'), appearance.darkStart, appearance.darkEnd);
+            if (hours != null) saveLooks(controller.appearance.copyWith(darkSchedule: DarkSchedule.hours, darkStart: hours.$1, darkEnd: hours.$2));
+            return;
+          }
+          saveLooks(appearance.copyWith(darkSchedule: DarkSchedule.off, themeMode: ThemeMode.values.byName(choice)));
+        },
+      ),
+    ),
+    if (appearance.darkSchedule == DarkSchedule.hours)
+      NormalItem(
+        title: tr('Dark hours'),
+        subtitle: _hoursLabel(appearance.darkStart, appearance.darkEnd),
+        leading: Icon(AppIcons.clock),
+        onTap: () async {
+          final hours = await _pickHours(context, tr('Dark hours'), appearance.darkStart, appearance.darkEnd);
+          if (hours != null) saveLooks(controller.appearance.copyWith(darkStart: hours.$1, darkEnd: hours.$2));
+        },
+      ),
+  ];
+}
+
 Future<(int, int)?> _pickHours(BuildContext context, String title, int start, int end) => showDialog<(int, int)>(
       context: context,
       builder: (context) {
@@ -784,7 +826,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr("shorts fewer don't recommend")),
         SettingEntry(tr('Vertical videos in For You'), (context) => NormalItem(
               title: tr('Vertical videos in For You'),
-              subtitle: tr('Now: {0}. A vertical video has known dimensions with height greater than width. It is separate from Shorts and affects For You on Home and Explore only', [labelOf(_feedLevels, prefs.feedVertical)]),
+              subtitle: tr('Now: {0}. Told by a frame taller than wide, or by the bars at the sides of the thumbnail. Separate from Shorts. Fewer applies to For You; Don\'t recommend also removes them from every Explore list', [labelOf(_feedLevels, prefs.feedVertical)]),
               leading: _icon(AppIcons.deviceMobileSpeaker),
               onTap: () => pickFromDialog<FeedLevel>(context, title: tr('Vertical videos in For You'), value: prefs.feedVertical, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedVertical: v))),
             ), subtitle: tr("vertical fewer don't recommend")),
@@ -1051,46 +1093,15 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               values: [for (final l in AppLanguage.selectable) (l, l.label)],
               onSelected: (language) => changeLanguage(context, appearance.copyWith(language: language)),
             ), subtitle: 'Language 语言 English 简体中文'),
-        SettingEntry(tr('Theme mode'), (context) => NormalItem(
-              title: tr('Theme mode'),
-              subtitle: _darkLabel(appearance),
-              leading: _icon(AppIcons.sunHorizon),
-              onTap: () => pickFromDialog<String>(
-                context,
-                title: tr('Theme mode'),
-                value: appearance.darkSchedule == DarkSchedule.off ? appearance.themeMode.name : appearance.darkSchedule.name,
-                values: [
-                  for (final (mode, label) in themeModes) (mode.name, label),
-                  (DarkSchedule.sun.name, tr('Dark from sunset to sunrise')),
-                  (DarkSchedule.hours.name, tr('Dark during set hours')),
-                ],
-                onSelected: (choice) async {
-                  if (choice == DarkSchedule.sun.name) return saveLooks(appearance.copyWith(darkSchedule: DarkSchedule.sun));
-                  if (choice == DarkSchedule.hours.name) {
-                    final hours = await _pickHours(context, tr('Dark hours'), appearance.darkStart, appearance.darkEnd);
-                    if (hours != null) saveLooks(controller.appearance.copyWith(darkSchedule: DarkSchedule.hours, darkStart: hours.$1, darkEnd: hours.$2));
-                    return;
-                  }
-                  saveLooks(appearance.copyWith(darkSchedule: DarkSchedule.off, themeMode: ThemeMode.values.byName(choice)));
-                },
-              ),
-            ), subtitle: tr('dark light sunrise sunset schedule night')),
-        if (appearance.darkSchedule == DarkSchedule.hours)
-          SettingEntry(tr('Dark hours'), (context) => NormalItem(
-                title: tr('Dark hours'),
-                subtitle: _hoursLabel(appearance.darkStart, appearance.darkEnd),
-                leading: _icon(AppIcons.clock),
-                onTap: () async {
-                  final hours = await _pickHours(context, tr('Dark hours'), appearance.darkStart, appearance.darkEnd);
-                  if (hours != null) saveLooks(controller.appearance.copyWith(darkStart: hours.$1, darkEnd: hours.$2));
-                },
-              )),
         SettingEntry(tr('Skins'), (context) => NormalItem(
               title: tr('Skins'),
               subtitle: tr('Current: {0}', [SkinLibrary.instance.byId(appearance.skin)?.nameIn(currentLanguage.tag) ?? tr('Standard')]),
               leading: _icon(AppIcons.paintBrush),
+              trailing: CircleAvatar(radius: 12, backgroundColor: controller.accentColor),
               onTap: () => openSkins(context, controller),
-            ), subtitle: '${tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')} ${tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')}'),
+              // Theme mode and the app theme (accent color) are chosen on
+              // the skins page.
+            ), subtitle: '${tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')} ${tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')} ${tr('App theme')} ${tr('theme color palette dynamic color')} ${tr('Theme mode')} ${tr('dark light sunrise sunset schedule night')}'),
         if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid)
           SettingEntry(tr('App icon'), (context) => NormalItem(
                 title: tr('App icon'),
@@ -1184,16 +1195,6 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: appearance.compact,
               onChanged: (v) => saveLooks(appearance.copyWith(compact: v)),
             ), subtitle: tr('spacing density')),
-        SettingEntry(tr('App theme'), (context) => NormalItem(
-              title: tr('App theme'),
-              subtitle: switch (paletteForSkin(appearance.skin)) {
-                final palette? => tr('Set by the {0} color scheme', [palette.name]),
-                null => tr('Current: {0} · {1}', [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),
-              },
-              leading: _icon(AppIcons.eyedropper),
-              trailing: CircleAvatar(radius: 12, backgroundColor: controller.accentColor),
-              onTap: () => openColorSelect(context, controller),
-            ), subtitle: tr('theme color palette dynamic color')),
         SettingEntry(tr('App font'), (context) => NormalItem(
               title: tr('App font'),
               subtitle: tr('{0} · font size {1}%', [fontChoices.where((f) => f.$1 == appearance.fontFamily).map((f) => f.$2).firstOrNull ?? tr('System default'), (appearance.textScale * 100).round()]),

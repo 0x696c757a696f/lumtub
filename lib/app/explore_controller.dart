@@ -21,7 +21,7 @@ mixin _ExploreState {
   /// The chosen zone's videos.
   VideoListLoader? explore;
 
-  (ExploreSection, int) _topicBeforeFaith = (ExploreSection.popular, 0);
+  (ExploreSection, int) _topicBeforeTabs = (ExploreSection.popular, 0);
 
   /// Lists of zones shown lately, so going back to one shows it again
   /// instead of searching anew. 全部 is left out, as each visit brings
@@ -163,8 +163,8 @@ extension ExploreActions on AppController {
     _loadExplore();
   }
 
-  /// 视频 or 直播, whichever 宗教信仰 was opened from while its tabs show.
-  ExploreSection get exploreHalf => exploreSection.isFaith ? _topicBeforeFaith.$1 : exploreSection;
+  /// 视频 or 直播, whichever 宗教信仰 or 学术 was opened from while its tabs show.
+  ExploreSection get exploreHalf => exploreSection.tabs != null ? _topicBeforeTabs.$1 : exploreSection;
 
   /// Shows another part, zone, sub-category, mode, period or filter of the
   /// explore page. A new part starts on its first zone, and on its usual
@@ -199,14 +199,14 @@ extension ExploreActions on AppController {
     // goes back to the zone shown before.
     final opens = topics[nextTopic].opens;
     if (opens != null) {
-      if (!exploreSection.isFaith) _topicBeforeFaith = (exploreSection, exploreTopic);
+      if (exploreSection.tabs == null) _topicBeforeTabs = (exploreSection, exploreTopic);
       setExplore(section: opens);
       return;
     }
     final nextSub = sub ?? (newSection || nextTopic != exploreTopic ? 0 : exploreSub);
     final nextLeaf = leaf ?? (newSection || nextTopic != exploreTopic || nextSub != exploreSub ? 0 : exploreLeaf);
     final modes = ExploreMode.of(nextSection);
-    final sameKind = nextSection.isFaith == exploreSection.isFaith && nextSection.isLive == exploreSection.isLive;
+    final sameKind = nextSection.tabs == exploreSection.tabs && nextSection.isLive == exploreSection.isLive;
     final nextMode = mode != null && modes.contains(mode)
         ? mode
         : !newSection || (sameKind && modes.contains(exploreMode))
@@ -306,6 +306,8 @@ extension ExploreActions on AppController {
     // its own loader, so it must apply the mix here instead of relying on
     // HomeFeed's ranking pass.
     final feedMix = mode == ExploreMode.forYou ? preferences.feedMix : null;
+    // Hiding vertical videos holds for every list of the explore page.
+    final dropVertical = preferences.feedVertical == FeedLevel.drop;
     final notInterested = homeFeed?.notInterested;
     final faith = exploreSection.isFaith ? faithFilter() : null;
     // A live stream goes on after it was watched: only videos are left out
@@ -346,6 +348,7 @@ extension ExploreActions on AppController {
         if (known.contains(TasteProfile.channelKey(item))) return drop('known channel');
       }
       if (mode == ExploreMode.curated && seconds != null && seconds < 240) return drop('too short');
+      if (dropVertical && isVertical(item)) return drop('vertical');
       if (!spoken && !language.matches(item.title)) return drop('language');
       // 全部 is for finding more: not what was watched or what 为你推荐
       // already shows. It keeps any one channel from filling it.
@@ -380,6 +383,12 @@ extension ExploreActions on AppController {
               for (final wider in broader) {
                 listing = listing.followedBy(() => searchIn([wider]), switched: () => logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$wider"'));
               }
+            }
+            // Search listings give no frame size: a vertical video is told
+            // by the bars at the sides of its thumbnail.
+            final thumbnails = thumbnailDirectory;
+            if (dropVertical && thumbnails != null) {
+              listing = listing.refined((lines) => PortraitThumbnails.drop(lines, (id) => PortraitThumbnails.check(id, thumbnails)));
             }
             final languages = _videoLanguages;
             return spoken && languages != null

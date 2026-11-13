@@ -78,8 +78,10 @@ class _TranslatableState extends State<Translatable> {
     final lines = text.split('\n').where((l) => l.trim().isNotEmpty);
     // 沉浸式翻译 also leaves alone the languages the user listed; a tap on
     // 翻译 translates them as asked.
+    // A tap also turns Chinese into the other script; only 沉浸式翻译 takes
+    // the two as one.
     final kept = quiet ? {language, ...prefs.neverTranslate} : {language};
-    bool reads(String l) => kept.any((k) => readsAs(l, k, chineseAsOne: prefs.chineseAsOne));
+    bool reads(String l) => kept.any((k) => readsAs(l, k, chineseAsOne: quiet && prefs.chineseAsOne));
     if (prefs.skipSameLanguage && reads(text) && lines.every((l) => reads(l) || !_hasLetters(l))) {
       if (quiet) return;
       return setState(() => _error = tr('Already in {0}, nothing to translate', [TranslationLanguage.byCode(language).label]));

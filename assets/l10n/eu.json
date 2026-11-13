@@ -1540,6 +1540,8 @@
   "A/V sync": "Audio-bideo sinkronizazioa",
   "Volume up/down {0}%": "Bolumena gehitu/murriztu %{0}",
   "Volume normalization": "Bolumen-berdinketa",
+  "Volume balance": "Bolumen-oreka",
+  "Evens out loudness between videos and within one; 0% turns it off": "Bideoen arteko eta bideo bakarraren barruko ozentasuna berdintzen du; % 0k desaktibatzen du",
   "Volume boost": "Bolumen-indartzea",
   "Volume step": "Bolumen-urratsa",
   "Audio": "Audioa",

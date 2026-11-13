@@ -10,7 +10,9 @@ extension DownloadActions on AppController {
         toolDirectories: paths.executableDirectories,
         proxy: () => proxy.ytDlpValue(this.settings.proxyMode),
         client: _http,
-      )..streams.members = () => webSignIn;
+      )
+        ..streams.members = (() => webSignIn)
+        ..streams.onLoudness = _onLoudness;
 
   DownloadManager _downloadsFor(ToolPaths paths, AppDirectories directories) => DownloadManager(
         file: File('${directories.data.path}${Platform.pathSeparator}downloads.json'),

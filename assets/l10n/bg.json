@@ -1540,6 +1540,8 @@
   "A/V sync": "Синхронизация на картина и звук",
   "Volume up/down {0}%": "Сила на звука ±{0}%",
   "Volume normalization": "Изравняване на силата на звука",
+  "Volume balance": "Изравняване на звука",
+  "Evens out loudness between videos and within one; 0% turns it off": "Изравнява силата на звука между видеоклиповете и в рамките на един; 0% го изключва",
   "Volume boost": "Усилване на звука",
   "Volume step": "Стъпка на промяна на силата на звука",
   "Audio": "Звук",

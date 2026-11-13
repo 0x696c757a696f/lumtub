@@ -1540,6 +1540,8 @@
   "A/V sync": "ምስምማዕ ስእሊን ድምጺን",
   "Volume up/down {0}%": "ድምጺ ወስኽ/ጉድል {0}%",
   "Volume normalization": "ምምዕዛዝ ድምጺ",
+  "Volume balance": "ምዕባለ ድምጺ",
+  "Evens out loudness between videos and within one; 0% turns it off": "ኣብ መንጎ ቪድዮታትን ኣብ ውሽጢ ሓደን ዓውታ ድምጺ የመዓራርዮ፤ 0% የጥፍኦ",
   "Volume boost": "ምዕባይ ድምጺ",
   "Volume step": "ስጉምቲ ድምጺ",
   "Audio": "ድምጺ",

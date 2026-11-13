@@ -1540,6 +1540,8 @@
   "A/V sync": "សមកាលកម្មរូប/សំឡេង",
   "Volume up/down {0}%": "កម្រិតសំឡេងឡើង/ចុះ {0}%",
   "Volume normalization": "ការធ្វើឱ្យកម្រិតសំឡេងស្មើគ្នា",
+  "Volume balance": "តុល្យភាពសំឡេង",
+  "Evens out loudness between videos and within one; 0% turns it off": "ធ្វើឲ្យកម្រិតសំឡេងស្មើគ្នារវាងវីដេអូ និងក្នុងវីដេអូតែមួយ; 0% បិទវា",
   "Volume boost": "ការពង្រឹងកម្រិតសំឡេង",
   "Volume step": "ជំហានកម្រិតសំឡេង",
   "Audio": "សំឡេង",

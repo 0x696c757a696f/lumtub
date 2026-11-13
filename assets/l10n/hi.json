@@ -1540,6 +1540,8 @@
   "A/V sync": "ऑडियो-वीडियो सिंक",
   "Volume up/down {0}%": "वॉल्यूम बढ़ाएँ/घटाएँ {0}%",
   "Volume normalization": "वॉल्यूम सामान्यीकरण",
+  "Volume balance": "वॉल्यूम संतुलन",
+  "Evens out loudness between videos and within one; 0% turns it off": "वीडियो के बीच और एक वीडियो के अंदर आवाज़ बराबर करता है; 0% इसे बंद करता है",
   "Volume boost": "वॉल्यूम बूस्ट",
   "Volume step": "वॉल्यूम स्टेप",
   "Audio": "ऑडियो",

@@ -1540,6 +1540,8 @@
   "A/V sync": "Hang-kép szinkron",
   "Volume up/down {0}%": "Hangerő növelése/csökkentése {0}%-kal",
   "Volume normalization": "Hangerő-kiegyenlítés",
+  "Volume balance": "Hangerő-kiegyenlítés",
+  "Evens out loudness between videos and within one; 0% turns it off": "Kiegyenlíti a hangosságot a videók között és egy videón belül; a 0% kikapcsolja",
   "Volume boost": "Hangerő-erősítés",
   "Volume step": "Hangerő lépésköze",
   "Audio": "Hang",

@@ -1540,6 +1540,8 @@
   "A/V sync": "Ukuvumelana komsindo nesithombe",
   "Volume up/down {0}%": "Ivolumu ngaphezulu/ngaphansi {0}%",
   "Volume normalization": "Ukulinganisa ivolumu",
+  "Volume balance": "Ukulinganisa ivolumu",
+  "Evens out loudness between videos and within one; 0% turns it off": "Ilinganisa ukuzwakala phakathi kwamavidiyo nangaphakathi kwelilodwa; u-0% uyakuvala",
   "Volume boost": "Ukwenyusa ivolumu",
   "Volume step": "Isinyathelo sevolumu",
   "Audio": "Umsindo",

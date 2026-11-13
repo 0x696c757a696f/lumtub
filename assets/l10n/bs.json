@@ -1543,6 +1543,8 @@
   "A/V sync": "A/V sinhronizacija",
   "Volume up/down {0}%": "Pojačaj/smanji jačinu zvuka za {0}%",
   "Volume normalization": "Normalizacija jačine zvuka",
+  "Volume balance": "Ujednačavanje jačine",
+  "Evens out loudness between videos and within one; 0% turns it off": "Ujednačava glasnoću između videa i unutar jednog; 0% isključuje",
   "Volume boost": "Pojačanje jačine zvuka",
   "Volume step": "Korak jačine zvuka",
   "Audio": "Zvuk",

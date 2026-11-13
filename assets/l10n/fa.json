@@ -1540,6 +1540,8 @@
   "A/V sync": "همگام‌سازی صدا و تصویر",
   "Volume up/down {0}%": "افزایش/کاهش صدا {0}٪",
   "Volume normalization": "یکنواخت‌سازی صدا",
+  "Volume balance": "تعادل صدا",
+  "Evens out loudness between videos and within one; 0% turns it off": "بلندی صدا را بین ویدیوها و درون یک ویدیو یکسان می‌کند؛ ۰٪ آن را خاموش می‌کند",
   "Volume boost": "تقویت صدا",
   "Volume step": "گام تغییر صدا",
   "Audio": "صدا",

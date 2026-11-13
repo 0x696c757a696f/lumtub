@@ -1540,6 +1540,8 @@
   "A/V sync": "ხმა-გამოსახულების სინქრონი",
   "Volume up/down {0}%": "ხმის გაზრდა/შემცირება {0}%-ით",
   "Volume normalization": "ხმის გათანაბრება",
+  "Volume balance": "ხმის დაბალანსება",
+  "Evens out loudness between videos and within one; 0% turns it off": "აბალანსებს ხმამაღლობას ვიდეოებს შორის და ერთი ვიდეოს შიგნით; 0% გამორთავს",
   "Volume boost": "ხმის გაძლიერება",
   "Volume step": "ხმის რეგულირების ნაბიჯი",
   "Audio": "აუდიო",

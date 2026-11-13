@@ -1540,6 +1540,8 @@
   "A/V sync": "Audio/video sinhronizācija",
   "Volume up/down {0}%": "Skaļums +/− {0}%",
   "Volume normalization": "Skaļuma izlīdzināšana",
+  "Volume balance": "Skaļuma līdzsvars",
+  "Evens out loudness between videos and within one; 0% turns it off": "Izlīdzina skaļumu starp video un viena video ietvaros; 0% izslēdz",
   "Volume boost": "Skaļuma pastiprināšana",
   "Volume step": "Skaļuma solis",
   "Audio": "Audio",

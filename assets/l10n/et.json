@@ -1540,6 +1540,8 @@
   "A/V sync": "Heli ja pildi sünkroonimine",
   "Volume up/down {0}%": "Helitugevus +/− {0}%",
   "Volume normalization": "Helitugevuse normaliseerimine",
+  "Volume balance": "Helitugevuse tasakaal",
+  "Evens out loudness between videos and within one; 0% turns it off": "Ühtlustab valjust videote vahel ja ühe video sees; 0% lülitab välja",
   "Volume boost": "Helitugevuse võimendus",
   "Volume step": "Helitugevuse samm",
   "Audio": "Heli",

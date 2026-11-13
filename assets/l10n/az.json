@@ -1540,6 +1540,8 @@
   "A/V sync": "Səs-görüntü sinxronizasiyası",
   "Volume up/down {0}%": "Səsi {0}% artır/azalt",
   "Volume normalization": "Səs normallaşdırması",
+  "Volume balance": "Səs balansı",
+  "Evens out loudness between videos and within one; 0% turns it off": "Videolar arasında və bir videonun içində səs yüksəkliyini bərabərləşdirir; 0% söndürür",
   "Volume boost": "Səs gücləndirmə",
   "Volume step": "Səs addımı",
   "Audio": "Səs",

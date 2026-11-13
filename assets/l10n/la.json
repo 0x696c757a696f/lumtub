@@ -1540,6 +1540,8 @@
   "A/V sync": "Synchronizatio soni/imaginis",
   "Volume up/down {0}%": "Sonum augere/minuere {0}%",
   "Volume normalization": "Normalizatio soni",
+  "Volume balance": "Aequatio voluminis",
+  "Evens out loudness between videos and within one; 0% turns it off": "Sonum inter pelliculas et intra unam aequat; 0% exstinguit",
   "Volume boost": "Augmentum soni",
   "Volume step": "Gradus soni",
   "Audio": "Sonus",

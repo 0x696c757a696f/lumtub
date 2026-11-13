@@ -1540,6 +1540,8 @@
   "A/V sync": "Sinkronisasi A/V",
   "Volume up/down {0}%": "Volume naik/turun {0}%",
   "Volume normalization": "Normalisasi volume",
+  "Volume balance": "Penyeimbang volume",
+  "Evens out loudness between videos and within one; 0% turns it off": "Menyamakan kenyaringan antarvideo dan di dalam satu video; 0% mematikannya",
   "Volume boost": "Penguatan volume",
   "Volume step": "Langkah volume",
   "Audio": "Audio",

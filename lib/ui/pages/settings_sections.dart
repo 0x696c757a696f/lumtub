@@ -527,6 +527,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.equalizer),
               onTap: () => _pickAudioFilter(context, controller),
             ), subtitle: tr('loudnorm dynaudnorm af loudness')),
+        SettingEntry(tr('Volume balance'), (context) => NormalItem(
+              title: tr('Volume balance'),
+              subtitle: '${settings.volumeBalance == 0 ? tr('Off') : '${settings.volumeBalance}%'} · ${tr('Evens out loudness between videos and within one; 0% turns it off')}',
+              leading: _icon(AppIcons.waveform),
+              onTap: () => pickWithSlider(context, title: tr('Volume balance'), value: settings.volumeBalance.toDouble(), min: 0, max: 100, divisions: 10, suffix: '%', onSelected: (v) => save(settings.copyWith(volumeBalance: v.round()))),
+            ), subtitle: tr('Evens out loudness between videos and within one; 0% turns it off')),
         SettingEntry(tr('Skip silence'), (context) => SwitchItem(
               title: tr('Skip silence'),
               subtitle: tr('Plays silent stretches of a video faster. Not used for livestreams; the speed menu may show 4X while it skips'),

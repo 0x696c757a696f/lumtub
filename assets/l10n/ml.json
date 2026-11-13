@@ -1540,6 +1540,8 @@
   "A/V sync": "A/V സിങ്ക്",
   "Volume up/down {0}%": "ശബ്ദം കൂട്ടുക/കുറയ്ക്കുക {0}%",
   "Volume normalization": "ശബ്ദ നോർമലൈസേഷൻ",
+  "Volume balance": "ശബ്ദ സന്തുലനം",
+  "Evens out loudness between videos and within one; 0% turns it off": "വീഡിയോകൾക്കിടയിലും ഒന്നിനുള്ളിലും ശബ്ദനില തുല്യമാക്കുന്നു; 0% ഓഫാക്കുന്നു",
   "Volume boost": "ശബ്ദ വർധന",
   "Volume step": "ശബ്ദ ക്രമീകരണ ഘട്ടം",
   "Audio": "ഓഡിയോ",

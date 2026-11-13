@@ -1540,6 +1540,8 @@
   "A/V sync": "การซิงก์ภาพกับเสียง",
   "Volume up/down {0}%": "เพิ่ม/ลดระดับเสียง {0}%",
   "Volume normalization": "การปรับระดับเสียงให้สม่ำเสมอ",
+  "Volume balance": "ปรับสมดุลเสียง",
+  "Evens out loudness between videos and within one; 0% turns it off": "ปรับความดังให้เท่ากันระหว่างวิดีโอและภายในวิดีโอเดียว 0% คือปิด",
   "Volume boost": "เพิ่มระดับเสียง",
   "Volume step": "ขั้นการปรับระดับเสียง",
   "Audio": "เสียง",

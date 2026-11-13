@@ -1540,6 +1540,8 @@
   "A/V sync": "Audio-video sinxronizatsiyasi",
   "Volume up/down {0}%": "Ovozni {0}% ga oshirish/kamaytirish",
   "Volume normalization": "Ovoz balansi",
+  "Volume balance": "Ovoz muvozanati",
+  "Evens out loudness between videos and within one; 0% turns it off": "Videolar orasida va bitta video ichida ovoz balandligini tenglashtiradi; 0% o‘chiradi",
   "Volume boost": "Ovozni kuchaytirish",
   "Volume step": "Ovoz qadami",
   "Audio": "Audio",

@@ -1543,6 +1543,8 @@
   "A/V sync": "Дыбыс-бейне синхрондау",
   "Volume up/down {0}%": "Дыбыс деңгейін {0}% көтеру/төмендету",
   "Volume normalization": "Дыбыс деңгейін қалыпқа келтіру",
+  "Volume balance": "Дыбыс теңгерімі",
+  "Evens out loudness between videos and within one; 0% turns it off": "Бейнелер арасындағы және бір бейне ішіндегі дыбыс қаттылығын теңестіреді; 0% өшіреді",
   "Volume boost": "Дыбысты күшейту",
   "Volume step": "Дыбыс деңгейі қадамы",
   "Audio": "Дыбыс",

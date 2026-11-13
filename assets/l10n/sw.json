@@ -1540,6 +1540,8 @@
   "A/V sync": "Usawazishaji wa sauti na picha",
   "Volume up/down {0}%": "Ongeza/punguza sauti {0}%",
   "Volume normalization": "Kusawazisha sauti",
+  "Volume balance": "Usawazishaji wa sauti",
+  "Evens out loudness between videos and within one; 0% turns it off": "Husawazisha sauti kati ya video na ndani ya video moja; 0% huizima",
   "Volume boost": "Kuongeza sauti",
   "Volume step": "Hatua ya sauti",
   "Audio": "Sauti",

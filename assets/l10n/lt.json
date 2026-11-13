@@ -1540,6 +1540,8 @@
   "A/V sync": "Garso ir vaizdo sinchronizavimas",
   "Volume up/down {0}%": "Garsumas +/− {0} %",
   "Volume normalization": "Garsumo išlyginimas",
+  "Volume balance": "Garsumo balansas",
+  "Evens out loudness between videos and within one; 0% turns it off": "Suvienodina garsumą tarp vaizdo įrašų ir viename įraše; 0 % išjungia",
   "Volume boost": "Garsumo stiprinimas",
   "Volume step": "Garsumo keitimo žingsnis",
   "Audio": "Garsas",

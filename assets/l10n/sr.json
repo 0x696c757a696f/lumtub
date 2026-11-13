@@ -1543,6 +1543,8 @@
   "A/V sync": "A/V синхронизација",
   "Volume up/down {0}%": "Јачина звука горе/доле {0}%",
   "Volume normalization": "Нормализација јачине звука",
+  "Volume balance": "Уједначавање јачине звука",
+  "Evens out loudness between videos and within one; 0% turns it off": "Уједначава јачину звука између видеа и унутар једног; 0% искључује",
   "Volume boost": "Појачање јачине звука",
   "Volume step": "Корак јачине звука",
   "Audio": "Звук",

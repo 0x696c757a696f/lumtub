@@ -1540,6 +1540,8 @@
   "A/V sync": "Sinkronisasi audio-gambar",
   "Volume up/down {0}%": "Sora tambah atawa kurang {0}%",
   "Volume normalization": "Pangaimbangan sora",
+  "Volume balance": "Kasaimbangan sora",
+  "Evens out loudness between videos and within one; 0% turns it off": "Nyaruakeun tarikna sora antar video jeung di jero hiji video; 0% mareuman",
   "Volume boost": "Panguat sora",
   "Volume step": "Lengkah panyaluyuan sora",
   "Audio": "Audio",

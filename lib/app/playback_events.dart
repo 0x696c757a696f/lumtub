@@ -87,6 +87,7 @@ extension PlaybackEvents on AppController {
       if (hold) unawaited(_playOnceSubtitlesReady(serial));
       await _applyChannelPlayback(item, player);
       unawaited(_syncSilenceSkipping(player));
+      unawaited(_syncVolumeBalance(player));
       // Marked live while it opened, when the list did not know.
       final opened = playing?.id == item.id ? playing! : item;
       if (preferences.recordHistory && !incognito) {

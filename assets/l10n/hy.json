@@ -1540,6 +1540,8 @@
   "A/V sync": "Պատկեր-ձայն համաժամացում",
   "Volume up/down {0}%": "Ձայնի բարձրացում/իջեցում {0}%",
   "Volume normalization": "Ձայնի հավասարեցում",
+  "Volume balance": "Ձայնի հավասարեցում",
+  "Evens out loudness between videos and within one; 0% turns it off": "Հավասարեցնում է բարձրությունը տեսանյութերի միջև և մեկի ներսում. 0%-ն անջատում է",
   "Volume boost": "Ձայնի ուժեղացում",
   "Volume step": "Ձայնի քայլ",
   "Audio": "Ձայն",

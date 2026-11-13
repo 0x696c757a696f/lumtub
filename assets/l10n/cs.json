@@ -1540,6 +1540,8 @@
   "A/V sync": "Synchronizace zvuku s obrazem",
   "Volume up/down {0}%": "Hlasitost +/− {0} %",
   "Volume normalization": "Vyrovnání hlasitosti",
+  "Volume balance": "Vyrovnání hlasitosti",
+  "Evens out loudness between videos and within one; 0% turns it off": "Vyrovnává hlasitost mezi videi i v rámci jednoho; 0 % vypne",
   "Volume boost": "Zesílení hlasitosti",
   "Volume step": "Krok hlasitosti",
   "Audio": "Zvuk",

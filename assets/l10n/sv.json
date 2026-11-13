@@ -1540,6 +1540,8 @@
   "A/V sync": "Ljud-/bildsynk",
   "Volume up/down {0}%": "Volym upp/ned {0} %",
   "Volume normalization": "Volymnormalisering",
+  "Volume balance": "Volymutjämning",
+  "Evens out loudness between videos and within one; 0% turns it off": "Jämnar ut ljudstyrkan mellan videor och inom en video; 0 % stänger av",
   "Volume boost": "Volymförstärkning",
   "Volume step": "Volymsteg",
   "Audio": "Ljud",

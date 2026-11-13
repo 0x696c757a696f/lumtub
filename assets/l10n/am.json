@@ -1540,6 +1540,8 @@
   "A/V sync": "የድምፅ-ምስል ማመሳሰል",
   "Volume up/down {0}%": "የድምፅ መጠን ጨምር/ቀንስ {0}%",
   "Volume normalization": "የድምፅ መጠን መደበኛ ማድረግ",
+  "Volume balance": "የድምፅ ሚዛን",
+  "Evens out loudness between videos and within one; 0% turns it off": "በቪዲዮዎች መካከልና በአንድ ቪዲዮ ውስጥ የድምፅ ጥንካሬን ያስተካክላል፤ 0% ያጠፋዋል",
   "Volume boost": "የድምፅ መጠን ማሳደግ",
   "Volume step": "የድምፅ መጠን ደረጃ",
   "Audio": "ድምፅ",

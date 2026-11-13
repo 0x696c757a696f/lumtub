@@ -1540,6 +1540,8 @@
   "A/V sync": "오디오 싱크",
   "Volume up/down {0}%": "볼륨 {0}% 조절",
   "Volume normalization": "볼륨 평준화",
+  "Volume balance": "음량 균형",
+  "Evens out loudness between videos and within one; 0% turns it off": "영상 사이와 한 영상 안의 음량 차이를 고르게 맞춥니다. 0%면 꺼집니다",
   "Volume boost": "볼륨 증폭",
   "Volume step": "볼륨 조절 단위",
   "Audio": "오디오",

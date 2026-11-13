@@ -1562,6 +1562,8 @@
   "A/V sync": "音画同步",
   "Volume up/down {0}%": "音量加减 {0}%",
   "Volume normalization": "音量均衡",
+  "Volume balance": "音量平衡",
+  "Evens out loudness between videos and within one; 0% turns it off": "拉平不同视频之间和同一视频内的音量差异；0% 为关闭",
   "Volume boost": "音量增强",
   "Volume step": "音量调节步长",
   "Audio": "音频",

@@ -1540,6 +1540,8 @@
   "A/V sync": "Дуу дүрсний синк",
   "Volume up/down {0}%": "Дууны хэмжээг {0}%-аар нэмэх/хасах",
   "Volume normalization": "Дууны хэмжээг тэнцвэржүүлэх",
+  "Volume balance": "Дууны тэнцвэр",
+  "Evens out loudness between videos and within one; 0% turns it off": "Видеонуудын хооронд болон нэг видеон дотор дууны чангыг тэгшитгэнэ; 0% унтраана",
   "Volume boost": "Дууны өсгөлт",
   "Volume step": "Дууны хэмжээний алхам",
   "Audio": "Дуу",

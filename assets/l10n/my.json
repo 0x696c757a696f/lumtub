@@ -1540,6 +1540,8 @@
   "A/V sync": "အသံ-ပုံ ထပ်တူကျမှု",
   "Volume up/down {0}%": "အသံ တိုး/လျှော့ {0}%",
   "Volume normalization": "အသံအတိုးအကျယ် ညှိနှိုင်းခြင်း",
+  "Volume balance": "အသံညှိခြင်း",
+  "Evens out loudness between videos and within one; 0% turns it off": "ဗီဒီယိုများကြားနှင့် ဗီဒီယိုတစ်ခုအတွင်း အသံကျယ်မှုကို ညီအောင်လုပ်သည်; 0% ဖြင့် ပိတ်သည်",
   "Volume boost": "အသံမြှင့်တင်ခြင်း",
   "Volume step": "အသံချိန်ညှိ အဆင့်",
   "Audio": "အသံ",

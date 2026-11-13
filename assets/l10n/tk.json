@@ -1540,6 +1540,8 @@
   "A/V sync": "Ses/surat sinhronlamasy",
   "Volume up/down {0}%": "Sesi {0}% artdyr/azalt",
   "Volume normalization": "Ses deňleşdirmesi",
+  "Volume balance": "Ses deňagramlylygy",
+  "Evens out loudness between videos and within one; 0% turns it off": "Wideolaryň arasynda we bir wideonyň içinde sesiň gatylygyny deňleşdirýär; 0% öçürýär",
   "Volume boost": "Sesi güýçlendirmek",
   "Volume step": "Ses üýtgetme ädimi",
   "Audio": "Ses",

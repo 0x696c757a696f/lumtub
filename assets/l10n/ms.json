@@ -1540,6 +1540,8 @@
   "A/V sync": "Penyegerakan A/V",
   "Volume up/down {0}%": "Naik/turun kelantangan {0}%",
   "Volume normalization": "Penormalan kelantangan",
+  "Volume balance": "Imbangan kelantangan",
+  "Evens out loudness between videos and within one; 0% turns it off": "Menyamakan kelantangan antara video dan dalam satu video; 0% mematikannya",
   "Volume boost": "Peningkatan kelantangan",
   "Volume step": "Langkah kelantangan",
   "Audio": "Audio",

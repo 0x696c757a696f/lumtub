@@ -1540,6 +1540,8 @@
   "A/V sync": "A/V సింక్",
   "Volume up/down {0}%": "వాల్యూమ్ పెంపు/తగ్గింపు {0}%",
   "Volume normalization": "వాల్యూమ్ సమీకరణ",
+  "Volume balance": "వాల్యూమ్ సమతుల్యం",
+  "Evens out loudness between videos and within one; 0% turns it off": "వీడియోల మధ్య మరియు ఒకదానిలో శబ్ద స్థాయిని సమానం చేస్తుంది; 0% ఆఫ్ చేస్తుంది",
   "Volume boost": "వాల్యూమ్ పెంపు",
   "Volume step": "వాల్యూమ్ మార్పు స్థాయి",
   "Audio": "ఆడియో",

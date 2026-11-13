@@ -15,6 +15,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import '../ai_filter.dart';
 import '../app_directories.dart';
+import '../background_json.dart';
 import '../app_updater.dart';
 import '../app_log.dart';
 import '../app_window.dart';

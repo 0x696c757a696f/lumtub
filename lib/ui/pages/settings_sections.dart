@@ -1,13 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../../ai_filter.dart';
 import '../../app/app_controller.dart';
+import '../../app_directories.dart';
 import '../../blocked_groups.dart';
 import '../../feed_quality.dart';
 import '../../format_policy.dart';
@@ -1401,7 +1400,7 @@ Future<void> _exportSettings(BuildContext context, AppController controller) asy
   final location = await getSaveLocation(suggestedName: name, acceptedTypeGroups: const [XTypeGroup(label: 'JSON', extensions: ['json'])]);
   if (location == null) return;
   try {
-    await XFile.fromData(Uint8List.fromList(utf8.encode(controller.exportSettings())), mimeType: 'application/json', name: name).saveTo(location.path);
+    await writeFileAtomic(File(location.path), await controller.exportSettings());
     if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Settings exported'))));
   } catch (e) {
     logError('Could not export settings', e);

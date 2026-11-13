@@ -1,10 +1,11 @@
-import 'dart:convert';
-import 'dart:typed_data';
+import 'dart:io';
+import 'dart:isolate';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/library_controller.dart';
+import '../../app_directories.dart';
 import '../../app_log.dart';
 import '../../app/subscription_import_actions.dart';
 import '../../l10n/l10n.dart';
@@ -54,7 +55,7 @@ Future<void> exportSubscriptionsToFile(BuildContext context, LibraryController l
   final location = await getSaveLocation(suggestedName: name, acceptedTypeGroups: const [XTypeGroup(label: 'JSON', extensions: ['json'])]);
   if (location == null) return;
   try {
-    await XFile.fromData(Uint8List.fromList(utf8.encode(newPipeSubscriptions(channels))), mimeType: 'application/json', name: name).saveTo(location.path);
+    await writeFileAtomic(File(location.path), await Isolate.run(() => newPipeSubscriptions(channels)));
     say(tr('Exported {0} channels', [channels.length]));
   } catch (e) {
     logError('Could not export subscriptions', e);

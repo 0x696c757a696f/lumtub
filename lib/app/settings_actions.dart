@@ -154,7 +154,11 @@ extension SettingsActions on AppController {
   /// 稍后观看 and own playlists) as one JSON document, for backup. Values that
   /// belong to this computer (cache folder, audio output, decoder results,
   /// watch history and progress) are left out.
-  String exportSettings() => const JsonEncoder.withIndent('  ').convert({
+  ///
+  /// The library can hold thousands of videos, so the text is encoded away
+  /// from the UI isolate.
+  Future<String> exportSettings() {
+    final data = {
         'app': 'Lumtub',
         'version': 2,
         'exported': DateTime.now().toIso8601String(),
@@ -166,7 +170,9 @@ extension SettingsActions on AppController {
         'appearance': appearance.toJson(),
         'preferences': preferences.toJson(),
         if (library != null) 'library': library!.backupJson(),
-      });
+      };
+    return Isolate.run(() => const JsonEncoder.withIndent('  ').convert(data));
+  }
 
   /// Applies settings exported by [exportSettings] and adds the library
   /// entries this computer lacks; null when [text] is not such a file. This
@@ -174,7 +180,7 @@ extension SettingsActions on AppController {
   Future<LibraryMerge?> importSettings(String text) async {
     final Object? data;
     try {
-      data = jsonDecode(text);
+      data = await decodeJsonInBackground(text);
     } on FormatException {
       return null;
     }

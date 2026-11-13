@@ -33,6 +33,7 @@ import 'theme.dart';
 import 'video_card.dart';
 import 'window_chrome.dart';
 import '../l10n/l10n.dart';
+import 'fill_icon.dart';
 import 'frame_stats.dart';
 import 'key_scroll.dart';
 import 'pull_to_refresh.dart';
@@ -524,7 +525,7 @@ class _AppShellState extends State<AppShell> {
                       selectedIndex: _bottomIndex,
                       onDestinationSelected: _selectBottom,
                       destinations: [
-                        for (final d in _bottomDestinations) NavigationDestination(icon: Icon(d.$2), selectedIcon: Icon(d.$3), label: d.$4),
+                        for (final (i, d) in _bottomDestinations.indexed) NavigationDestination(icon: FillIcon(d.$2, d.$3, selected: i == _bottomIndex), selectedIcon: FillIcon(d.$2, d.$3, selected: i == _bottomIndex), label: d.$4),
                       ],
                     ),
                   ),
@@ -600,8 +601,8 @@ class _AppShellState extends State<AppShell> {
           selectedIcon: const Icon(AppIcons.gearFill),
         ) : null,
         destinations: [
-          for (final d in _destinations)
-            NavigationRailDestination(icon: Icon(d.$2), selectedIcon: Icon(d.$3), label: Text(d.$4)),
+          for (final (i, d) in _destinations.indexed)
+            NavigationRailDestination(icon: FillIcon(d.$2, d.$3, selected: i == _selectedIndex), selectedIcon: FillIcon(d.$2, d.$3, selected: i == _selectedIndex), label: Text(d.$4)),
         ],
       );
 

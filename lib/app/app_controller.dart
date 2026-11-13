@@ -514,6 +514,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   Timer? _dropTimer;
   Timer? _thumbnailTrimTimer;
   final _recovery = PlaybackRecovery();
+  /// Holds back resolving the next video until this one plays steadily.
+  final _settled = SettledPlayback();
   /// The last position actually played, which survives a failed stream.
   Duration _lastPosition = Duration.zero;
   final _resumePoint = ResumePoint();

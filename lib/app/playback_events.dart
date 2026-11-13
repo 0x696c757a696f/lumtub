@@ -35,6 +35,7 @@ extension PlaybackEvents on AppController {
     final serial = ++_playSerial;
     _recoveryTimer?.cancel();
     _recovery.reset();
+    _settled.start();
     final resume = preferences.resumePlayback ? library?.progressOf(item.id) : null;
     final start = at ?? (resume != null && resume.resumable ? resume.position : null);
     _update(() {
@@ -95,8 +96,6 @@ extension PlaybackEvents on AppController {
         if (length != null && opened.duration == null && !opened.isLive) unawaited(_fillDuration(opened.id, serial, length));
       }
       if (start != null && at == null) _notice(tr('Resume from {0}', [AppController._clock(start)]));
-      final next = upNext.firstOrNull;
-      if (next != null) prefetch(next);
       if (opened.isLive) {
         _startCurrentChat(opened, serial);
       } else if (item.liveStatus == 'was_live') {
@@ -211,6 +210,17 @@ extension PlaybackEvents on AppController {
           }
           _lastPosition = position;
           _resumePoint.observe(position, rate: player.state.rate);
+        }
+        // The next video is resolved once this one plays steadily, so its
+        // yt-dlp run does not compete with the start of this one.
+        if (_settled.observe(position,
+          playing: player.state.playing,
+          buffering: player.state.buffering,
+          decoded: audioOnly || _backgroundAudioOnly || (player.state.width ?? 0) > 0,
+          buffered: player.state.buffer,
+          duration: player.state.duration,
+        )) {
+          if (upNext.firstOrNull case final next?) prefetch(next);
         }
         if (_decoderPending && position > const Duration(milliseconds: 500) && (player.state.width ?? 0) > 0) {
           _decoderPending = false;
@@ -450,6 +460,7 @@ extension PlaybackEvents on AppController {
     _recoveryTimer?.cancel();
     _startTimer?.cancel();
     _recovery.reset();
+    _settled.stop();
     ++_playSerial;
     _update(() {
       playing = null;

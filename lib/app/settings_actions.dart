@@ -155,9 +155,9 @@ extension SettingsActions on AppController {
   /// belong to this computer (cache folder, audio output, decoder results,
   /// watch history and progress) are left out.
   ///
-  /// The library can hold thousands of videos, so the text is encoded away
-  /// from the UI isolate.
-  Future<String> exportSettings() {
+  /// The library can hold thousands of videos, so the UTF-8 text is encoded
+  /// away from the UI isolate.
+  Future<Uint8List> exportSettings() {
     final backup = library?.backup();
     final data = {
         'app': 'Lumtub',
@@ -171,7 +171,7 @@ extension SettingsActions on AppController {
         'appearance': appearance.toJson(),
         'preferences': preferences.toJson(),
       };
-    return Isolate.run(() => const JsonEncoder.withIndent('  ').convert({...data, if (backup != null) 'library': backup.toJson()}));
+    return Isolate.run(() => utf8.encode(const JsonEncoder.withIndent('  ').convert({...data, if (backup != null) 'library': backup.toJson()})));
   }
 
   /// Applies settings exported by [exportSettings] and adds the library

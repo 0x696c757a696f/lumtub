@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 
 import '../../ai_filter.dart';
 import '../../app/app_controller.dart';
-import '../../app_directories.dart';
 import '../../blocked_groups.dart';
 import '../../feed_quality.dart';
 import '../../format_policy.dart';
+import '../../save_file.dart';
 import '../../sun_times.dart';
 import '../../app_log.dart';
 import '../../app_window.dart';
@@ -1409,10 +1409,8 @@ TextStyle _note(BuildContext context) => TextStyle(color: context.colors.outline
 Future<void> _exportSettings(BuildContext context, AppController controller) async {
   final now = DateTime.now();
   final name = tr('Lumtub_settings_{0}{1}{2}.json', [now.year, now.month.toString().padLeft(2, '0'), now.day.toString().padLeft(2, '0')]);
-  final location = await getSaveLocation(suggestedName: name, acceptedTypeGroups: const [XTypeGroup(label: 'JSON', extensions: ['json'])]);
-  if (location == null) return;
   try {
-    await writeFileAtomic(File(location.path), await controller.exportSettings());
+    if (!await saveFileAs(name, await controller.exportSettings(), mime: 'application/json', label: 'JSON', extension: 'json')) return;
     if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Settings exported'))));
   } catch (e) {
     logError('Could not export settings', e);

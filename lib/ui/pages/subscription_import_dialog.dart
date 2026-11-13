@@ -1,14 +1,14 @@
-import 'dart:io';
+import 'dart:convert';
 import 'dart:isolate';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/library_controller.dart';
-import '../../app_directories.dart';
 import '../../app_log.dart';
 import '../../app/subscription_import_actions.dart';
 import '../../l10n/l10n.dart';
+import '../../save_file.dart';
 import '../../subscription_import.dart';
 import '../../friendly_error.dart';
 
@@ -52,10 +52,9 @@ Future<void> exportSubscriptionsToFile(BuildContext context, LibraryController l
   }
   final now = DateTime.now();
   final name = 'Lumtub_subscriptions_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}.json';
-  final location = await getSaveLocation(suggestedName: name, acceptedTypeGroups: const [XTypeGroup(label: 'JSON', extensions: ['json'])]);
-  if (location == null) return;
   try {
-    await writeFileAtomic(File(location.path), await Isolate.run(() => newPipeSubscriptions(channels)));
+    final bytes = await Isolate.run(() => utf8.encode(newPipeSubscriptions(channels)));
+    if (!await saveFileAs(name, bytes, mime: 'application/json', label: 'JSON', extension: 'json')) return;
     say(tr('Exported {0} channels', [channels.length]));
   } catch (e) {
     logError('Could not export subscriptions', e);

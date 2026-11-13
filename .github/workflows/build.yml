@@ -383,7 +383,9 @@ jobs:
           # The Dart tests load it from here; packaging copies it next to lumtub.exe.
           "LUMTUB_CORE_DLL=$dll" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
+      # The Dart code is the same on every architecture; x64 runs the tests.
       - name: Windows - run unit tests
+        if: matrix.package_arch == 'x64'
         run: flutter test
 
       - name: Windows - determine package version
@@ -705,7 +707,9 @@ jobs:
       - name: Linux - get packages
         run: flutter pub get
 
+      # The Dart code is the same on every architecture; x64 runs the tests.
       - name: Linux - run unit tests
+        if: matrix.package_arch == 'x64'
         run: flutter test
 
       - name: Linux - determine package version

@@ -1090,6 +1090,8 @@ jobs:
 
       - name: iOS - build the Rust core
         run: |
+          # bindgen (QuickJS's bindings) needs the iPhone SDK's headers.
+          export BINDGEN_EXTRA_CLANG_ARGS_aarch64_apple_ios="-isysroot $(xcrun --sdk iphoneos --show-sdk-path)"
           IPHONEOS_DEPLOYMENT_TARGET=15.0 cargo build --manifest-path native/lumtub_core/Cargo.toml --release --lib --target aarch64-apple-ios
           core=native/lumtub_core/target/aarch64-apple-ios/release/liblumtub_core.dylib
           lipo -info "$core"

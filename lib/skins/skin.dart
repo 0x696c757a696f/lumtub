@@ -98,7 +98,33 @@ class Skin {
   late final double glassMin = (_num(_map(_window['glass'])['min']) ?? 0.3).clamp(0.3, 1).toDouble();
   /// How much of the page colour lies over the backdrop under the pages,
   /// 0 to 0.9, so text there reads over a busy picture: `window.veil`.
-  late final double veil = (_num(_window['veil']) ?? 0).clamp(0, 0.9).toDouble();
+  /// A plain or patterned backdrop that the text cannot be read on gets as
+  /// much veil as it takes, so lists such as 接下来播放 always read.
+  late final double veil = _readingVeil((_num(_window['veil']) ?? 0).clamp(0, 0.9).toDouble());
+
+  double _readingVeil(double asked) {
+    // Pictures and glass skins are checked against their pictures by tests.
+    if (glass || background.any((p) => p is ImagePaint)) return asked;
+    final page = colors.page;
+    var tones = <Color>[page];
+    for (final paint in background) {
+      tones = switch (paint) {
+        SolidPaint(:final color) => [Color.alphaBlend(color, page)],
+        LinearPaint(:final colors) || RadialPaint(:final colors) => [for (final under in tones) for (final c in colors) Color.alphaBlend(c, under)],
+        PatternPaint(:final color) => [...tones, for (final under in tones) Color.alphaBlend(color, under)],
+        _ => tones,
+      };
+    }
+    final foreground = <Color>[colors.text, if (colors.muted case final muted?) muted];
+    bool reads(double veil) => tones.every((under) {
+          final bg = Color.alphaBlend(page.withValues(alpha: veil), under);
+          return foreground.every((fg) => contrastRatio(fg, bg) >= 4.5);
+        });
+    for (var v = asked; v < 0.9; v += 0.05) {
+      if (reads(v)) return v;
+    }
+    return 0.9;
+  }
 
   void _glaze() {
     if (!glass) return;

@@ -1,0 +1,738 @@
+// Soft Club: a built-in Lumtub skin. Pale teal and lilac haze, soft light and small lowercase type, after the quiet side of late-90s club flyers and record sleeves.
+// skins/template/skin.jsonc explains every field, and skins/README.md how to make your own.
+// 柔光俱乐部：Lumtub 内置皮肤。浅青和淡紫的雾光、柔和光斑和小号小写字，致敬 90 年代末安静的唱片封套和传单。
+// 每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "softclub",
+  "name": "Soft Club",
+  "names": {
+    "zh-Hans": "柔光俱乐部",
+    "zh-Hant": "柔光俱樂部",
+    "zh-HK": "柔光俱樂部",
+    "af": "Sagte Klub",
+    "am": "ለስላሳ ክለብ",
+    "ar": "نادي ناعم",
+    "az": "Yumşaq klub",
+    "be": "Мяккі клуб",
+    "bg": "Мек клуб",
+    "bn": "কোমল ক্লাব",
+    "cs": "Jemný klub",
+    "da": "Blød klub",
+    "de": "Sanfter Klub",
+    "el": "Απαλό κλαμπ",
+    "eo": "Mola klubo",
+    "es": "Club suave",
+    "et": "Pehme klubi",
+    "eu": "Klub leuna",
+    "fa": "باشگاه نرم",
+    "fi": "Pehmeä klubi",
+    "fil": "Banayad na Club",
+    "fr": "Club doux",
+    "gl": "Club suave",
+    "gu": "નરમ ક્લબ",
+    "he": "מועדון רך",
+    "hi": "मुलायम क्लब",
+    "hu": "Lágy klub",
+    "hy": "Մեղմ ակումբ",
+    "id": "Klub Lembut",
+    "is": "Mjúkur klúbbur",
+    "it": "Club morbido",
+    "ja": "ソフトクラブ",
+    "jv": "Klub Alus",
+    "ka": "რბილი კლუბი",
+    "km": "ក្លឹបទន់ភ្លន់",
+    "kn": "ಮೃದು ಕ್ಲಬ್",
+    "ko": "소프트 클럽",
+    "la": "Club Mollis",
+    "lo": "ຄລັບອ່ອນນຸ້ມ",
+    "lt": "Švelnus klubas",
+    "lv": "Maigais klubs",
+    "mk": "Мек клуб",
+    "ml": "മൃദു ക്ലബ്ബ്",
+    "mn": "Зөөлөн клуб",
+    "mr": "मऊ क्लब",
+    "ms": "Kelab Lembut",
+    "my": "နူးညံ့သော ကလပ်",
+    "nb": "Myk klubb",
+    "ne": "कोमल क्लब",
+    "nl": "Zachte club",
+    "pa": "ਨਰਮ ਕਲੱਬ",
+    "pl": "Miękki klub",
+    "pt": "Clube suave",
+    "ro": "Club blând",
+    "ru": "Мягкий клуб",
+    "si": "මෘදු සමාජය",
+    "sk": "Jemný klub",
+    "sq": "Klubi i butë",
+    "su": "Klub Lemes",
+    "sv": "Mjuk klubb",
+    "sw": "Klabu Laini",
+    "ta": "மென்மையான கிளப்",
+    "te": "సాఫ్ట్ క్లబ్",
+    "th": "ซอฟต์คลับ",
+    "ti": "ልዑል ክለብ",
+    "tk": "Ýumşak klub",
+    "tr": "Soft Club",
+    "uk": "М'який клуб",
+    "ur": "نرم کلب",
+    "uz": "Yumshoq klub",
+    "vi": "Soft Club",
+    "zu": "Iklabhu Ethambile",
+    "sr": "Меки клуб",
+    "sr-Latn": "Meki klub",
+    "hr": "Meki klub",
+    "sl": "Mehki klub",
+    "bs": "Meki klub",
+    "ca": "Soft Club",
+    "kk": "Жұмсақ клуб",
+    "ky": "Жумшак клуб",
+    "as": "কোমল ক্লাব",
+    "or": "କୋମଳ କ୍ଲବ୍"
+  },
+  "description": "Quiet pale teal and lilac haze, soft spots of light and small lowercase type, the calm side of the late 90s",
+  "descriptions": {
+    "zh-Hans": "安静的浅青和淡紫雾光，柔和的光斑和小号小写字，90 年代末安静的那一面",
+    "zh-Hant": "安靜的淺青和淡紫霧光，柔和的光斑和小號小寫字，90 年代末安靜的那一面",
+    "zh-HK": "寧靜的淺青和淡紫霧光，柔和的光斑和小號小寫字，90 年代末寧靜的一面",
+    "af": "Stil ligte blougroen en lila newel, sagte kolle lig en klein kleinletters, die kalm kant van die laat 1990's",
+    "am": "ጸጥ ያለ ፈዛዛ ሰማያዊ-አረንጓዴና ሊላክ ጭጋግ፣ ለስላሳ የብርሃን ነጠብጣቦችና ትናንሽ ንዑስ ሆሄያት፣ የ1990ዎቹ መጨረሻ ረጋ ያለ ገጽታ",
+    "ar": "ضباب هادئ بين الأزرق المخضر الفاتح والبنفسجي الفاتح وبقع ضوء ناعمة وخط صغير بأحرف صغيرة، الجانب الهادئ من أواخر التسعينيات",
+    "az": "Sakit açıq firuzəyi və lilaç dumanı, yumşaq işıq ləkələri və kiçik kiçik hərflər, 1990-cı illərin sonunun sakit tərəfi",
+    "be": "Ціхі бледна-бірузовы і бэзавы туман, мяккія плямы святла і дробны шрыфт са малых літар, спакойны бок канца 1990-х",
+    "bg": "Тиха бледа синьо-зелена и люлякова омара, меки светлинни петна и дребен шрифт с малки букви, спокойната страна на края на 90-те",
+    "bn": "শান্ত ফ্যাকাশে নীলচে-সবুজ ও ল্যাভেন্ডার কুয়াশা, নরম আলোর ছোপ ও ছোট হাতের ছোট অক্ষর, নব্বইয়ের দশকের শেষের শান্ত দিক",
+    "cs": "Tichá bledě tyrkysová a šeříková mlha, měkké skvrny světla a drobné malé písmo, klidná tvář konce 90. let",
+    "da": "Stille bleg blågrøn og lilla dis, bløde lysplamager og lille skrift med små bogstaver, den rolige side af slutningen af 90'erne",
+    "de": "Stiller blasser Türkis- und Fliederdunst, weiche Lichtflecken und kleine Kleinbuchstaben, die ruhige Seite der späten 90er",
+    "el": "Ήσυχη χλωμή τιρκουάζ και λιλά ομίχλη, απαλές κηλίδες φωτός και μικρά πεζά γράμματα, η ήρεμη πλευρά των τελών του 90",
+    "eo": "Trankvila pala bluverda kaj lilaa nebuleto, molaj lummakuloj kaj malgrandaj minuskloj, la kvieta flanko de la malfruaj 1990-aj jaroj",
+    "es": "Calma neblina turquesa pálido y lila, suaves manchas de luz y pequeña letra minúscula, el lado tranquilo de finales de los 90",
+    "et": "Vaikne kahvatu türkiis ja lilla udu, pehmed valguslaigud ja väike väiketähtedega kiri, 90ndate lõpu rahulik pool",
+    "eu": "Turkesa zurbil eta lila lanbro lasaia, argi-orban leunak eta letra xehe txikiak, 90eko hamarkadaren amaierako alde lasaia",
+    "fa": "مه آرام فیروزه‌ای کم‌رنگ و یاسی، لکه‌های نور نرم و حروف کوچک ریز، روی آرام اواخر دهه ۹۰ میلادی",
+    "fi": "Hiljainen haalea sinivihreä ja liila usva, pehmeät valolaikut ja pieni pienaakkoskirjasin, 90-luvun lopun rauhallinen puoli",
+    "fil": "Tahimik na maputlang teal at lilac na ulap, malalambot na tuldok ng liwanag at maliit na titik na maliliit, ang kalmadong bahagi ng huling bahagi ng dekada 90",
+    "fr": "Brume calme turquoise pâle et lilas, douces taches de lumière et petits caractères en minuscules, le côté paisible de la fin des années 90",
+    "gl": "Néboa tranquila turquesa pálido e lila, suaves manchas de luz e letra pequena en minúsculas, o lado calmo de finais dos 90",
+    "gu": "શાંત આછો લીલો-વાદળી અને જાંબલી ધુમ્મસ, નરમ પ્રકાશના ટપકાં અને નાના નાના અક્ષરો, 1990ના દાયકાના અંતનો શાંત પાસો",
+    "he": "אובך שליו בטורקיז חיוור ולילך, כתמי אור רכים וכתב קטן באותיות קטנות, הצד השקט של סוף שנות ה-90",
+    "hi": "शांत हल्की फ़िरोज़ी और लाइलैक धुंध, नरम रोशनी के धब्बे और छोटे छोटे अक्षर, 90 के दशक के अंत का शांत पहलू",
+    "hu": "Csendes, halvány kékeszöld és orgonaszínű köd, lágy fényfoltok és apró kisbetűs szöveg, a 90-es évek végének nyugodt oldala",
+    "hy": "Հանգիստ գունատ փիրուզագույն և մանուշակագույն մշուշ, փափուկ լույսի բծեր և փոքր փոքրատառ գրվածք, 90-ականների վերջի հանգիստ կողմը",
+    "id": "Kabut tosca pucat dan lilac yang tenang, bercak cahaya lembut, dan huruf kecil mungil, sisi tenang dari akhir 90-an",
+    "is": "Hljóð fölgræn-blá og lilla þoka, mjúkir ljósblettir og lítill smástafaletur, rólega hlið loka tíunda áratugarins",
+    "it": "Quieta foschia turchese pallido e lilla, morbide macchie di luce e piccoli caratteri minuscoli, il lato calmo della fine degli anni 90",
+    "ja": "静かな淡いティールとライラックのもや、やわらかな光の斑点、小さな小文字の書体。90年代末の穏やかな一面",
+    "jv": "Pedhut tosca pucet lan lilac sing tenang, bintik cahya alus lan aksara cilik-cilik, sisih tenang pungkasan taun 90-an",
+    "ka": "მშვიდი ღია ფირუზისფერი და იასამნისფერი ნისლი, რბილი სინათლის ლაქები და წვრილი მცირე ასოები, 90-იანების ბოლოს მშვიდი მხარე",
+    "km": "អ័ព្ទពណ៌ត្រឡប់បៃតងស្លេក និងស្វាយស្រាលដ៏ស្ងប់ ចំណុចពន្លឺទន់ៗ និងអក្សរតូចៗ ជ្រុងស្ងប់នៃចុងទសវត្ស 1990",
+    "kn": "ಶಾಂತ ಮಸುಕು ಹಸಿರು-ನೀಲಿ ಮತ್ತು ನೇರಳೆ ಮಂಜು, ಮೃದು ಬೆಳಕಿನ ಚುಕ್ಕೆಗಳು ಮತ್ತು ಸಣ್ಣ ಅಕ್ಷರಗಳು, 1990ರ ದಶಕದ ಕೊನೆಯ ಶಾಂತ ಮುಖ",
+    "ko": "고요한 연한 청록과 라일락빛 안개, 부드러운 빛 얼룩과 작은 소문자 글꼴. 90년대 말의 차분한 면모",
+    "la": "Nebula tranquilla pallide turcina et liliacea, maculae lucis molles et litterae parvae minusculae, latus placidum exeuntis saeculi XX",
+    "lo": "ໝອກສີຟ້າອົມຂຽວອ່ອນ ແລະ ມ່ວງອ່ອນທີ່ສະຫງົບ, ຈຸດແສງອ່ອນໆ ແລະ ຕົວອັກສອນນ້ອຍໆ, ດ້ານທີ່ສະຫງົບຂອງທ້າຍຊຸມປີ 1990",
+    "lt": "Rami blyški žalsvai mėlyna ir alyvinė migla, švelnios šviesos dėmės ir smulkus mažųjų raidžių šriftas, rami dešimtojo dešimtmečio pabaigos pusė",
+    "lv": "Kluss bāli zilganzaļš un ceriņkrāsas dūmakas, maigi gaismas plankumi un sīks mazo burtu raksts, 90. gadu beigu mierīgā puse",
+    "mk": "Тивка бледа тиркизна и јоргованова магла, меки дамки светлина и ситно писмо со мали букви, мирната страна на крајот на 90-тите",
+    "ml": "ശാന്തമായ ഇളം നീലപ്പച്ചയും ലിലാക്ക് മൂടൽമഞ്ഞും, മൃദുവായ പ്രകാശപ്പൊട്ടുകളും ചെറിയ ചെറിയ അക്ഷരങ്ങളും, 90-കളുടെ അവസാനത്തെ ശാന്തമായ വശം",
+    "mn": "Нам гүм цайвар хөх ногоон ба голт гэгэн манан, зөөлөн гэрлийн толбо, жижиг жижиг үсэг, 90-ээд оны сүүлийн тайван тал",
+    "mr": "शांत फिकट हिरवट-निळे आणि जांभळट धुके, मऊ प्रकाशाचे ठिपके आणि लहान लहान अक्षरे, 90 च्या दशकाच्या अखेरीची शांत बाजू",
+    "ms": "Kabus hijau kebiruan pucat dan lilac yang tenang, bintik cahaya lembut dan tulisan huruf kecil yang kecil, sisi tenang akhir 90-an",
+    "my": "တိတ်ဆိတ်သော ဖျော့ပြာစိမ်းနှင့် ခရမ်းဖျော့ မြူများ၊ နူးညံ့သော အလင်းအစက်များနှင့် စာလုံးသေးသေးလေးများ၊ ၁၉၉၀ ခုနှစ်များ နှောင်းပိုင်း၏ ငြိမ်းချမ်းသောဘက်",
+    "nb": "Stille blek turkis og lilla dis, myke lysflekker og liten tekst med små bokstaver, den rolige siden av slutten av 90-tallet",
+    "ne": "शान्त फिक्का नीलो-हरियो र बैजनी कुहिरो, नरम उज्यालोका थोप्ला र साना अक्षर, ९० को दशकको अन्त्यको शान्त पक्ष",
+    "nl": "Stille bleke turkoois en lila nevel, zachte lichtvlekken en klein lettertype in kleine letters, de rustige kant van eind jaren 90",
+    "pa": "ਸ਼ਾਂਤ ਫਿੱਕੀ ਹਰੀ-ਨੀਲੀ ਅਤੇ ਜਾਮਨੀ ਧੁੰਦ, ਨਰਮ ਰੌਸ਼ਨੀ ਦੇ ਧੱਬੇ ਅਤੇ ਛੋਟੇ ਛੋਟੇ ਅੱਖਰ, 1990ਵਿਆਂ ਦੇ ਅੰਤ ਦਾ ਸ਼ਾਂਤ ਪਾਸਾ",
+    "pl": "Cicha blada turkusowa i liliowa mgiełka, miękkie plamy światła i drobny tekst małymi literami, spokojna strona końca lat 90.",
+    "pt": "Névoa tranquila em turquesa-claro e lilás, manchas de luz suaves e letras pequenas em minúsculas, o lado calmo do fim dos anos 90",
+    "ro": "Ceață liniștită turcoaz pal și liliachie, pete moi de lumină și text mic cu litere mici, partea calmă a sfârșitului anilor 90",
+    "ru": "Тихая бледно-бирюзовая и сиреневая дымка, мягкие пятна света и мелкий шрифт из строчных букв, спокойная сторона конца 90-х",
+    "si": "නිහඬ ලා නීල-කොළ සහ ලයිලැක් මීදුම, මෘදු ආලෝක ලප සහ කුඩා අකුරු, 1990 දශකයේ අගභාගයේ සන්සුන් පැත්ත",
+    "sk": "Tichá bledotyrkysová a orgovánová hmla, mäkké škvrny svetla a drobné písmo z malých písmen, pokojná stránka konca 90. rokov",
+    "sq": "Mjegull e qetë turkez i zbehtë dhe jargavan, njolla të buta drite dhe shkronja të vogla, ana e qetë e fundit të viteve '90",
+    "su": "Halimun tosca pucat jeung lilac nu tenang, bintik cahaya lemes jeung aksara leutik, sisi tenang ahir taun 90-an",
+    "sv": "Stilla blek turkos och lila dis, mjuka ljusfläckar och liten text med gemener, den lugna sidan av slutet av 90-talet",
+    "sw": "Ukungu tulivu wa kijani-buluu hafifu na lilaki, madoa laini ya mwanga na herufi ndogo ndogo, upande tulivu wa mwishoni mwa miaka ya 1990",
+    "ta": "அமைதியான வெளிர் நீலப்பச்சை மற்றும் இளஞ்சிவப்பு மூடுபனி, மென்மையான ஒளிப் புள்ளிகள், சிறிய சிற்றெழுத்து வடிவம், 90-களின் இறுதியின் அமைதியான பக்கம்",
+    "te": "ప్రశాంతమైన లేత టీల్, లిలక్ పొగమంచు, మృదువైన కాంతి మచ్చలు, చిన్న చిన్న అక్షరాల ఫాంట్, 90ల చివరి ప్రశాంత కోణం",
+    "th": "หมอกสีเขียวน้ำทะเลอ่อนและไลแลคแสนสงบ จุดแสงนุ่ม ๆ และตัวอักษรเล็กพิมพ์เล็ก ด้านที่เงียบสงบของปลายยุค 90",
+    "ti": "ህዱእ ፍኹስ ቲል ከምኡ ድማ ላይላክ ጭንጫዕ፡ ልስሉስ ነጥቢ ብርሃንን ንኣሽቱ ንኣሽቱ ፊደላትን፡ ህዱእ ወገን መወዳእታ 90ታት",
+    "tk": "Rahat açyk gök-ýaşyl we ýasemin dumany, ýumşak ýagtylyk tegmilleri we kiçi harply ownuk ýazgy, 90-njy ýyllaryň ahyrynyň asuda tarapy",
+    "tr": "Sakin soluk petrol yeşili ve lila pus, yumuşak ışık lekeleri ve küçük harfli ufak yazı, 90'ların sonunun sakin yüzü",
+    "uk": "Тиха бліда бірюза й бузкова імла, м'які плями світла та дрібний шрифт малими літерами, спокійний бік кінця 90-х",
+    "ur": "پرسکون ہلکا نیلگوں سبز اور بنفشی دھند، نرم روشنی کے دھبے اور چھوٹے چھوٹے حروف، 90 کی دہائی کے آخر کا پرسکون رخ",
+    "uz": "Sokin och moviy-yashil va binafsha tuman, yumshoq yorug'lik dog'lari va kichik harfli mayda yozuv, 90-yillar oxirining xotirjam tomoni",
+    "vi": "Sương xanh ngọc nhạt và tím oải hương êm dịu, những đốm sáng mềm và chữ nhỏ viết thường, mặt yên bình của cuối thập niên 90",
+    "zu": "Inkungu ethule ye-teal ephaphathekile ne-lilac, amabala okukhanya athambile nombhalo omncane wamabhalo amancane, uhlangothi oluthule lwasekupheleni kweminyaka yama-90",
+    "sr": "Тиха бледа тиркизна и љубичаста измаглица, меке мрље светлости и ситно писмо малим словима, мирна страна краја 90-их",
+    "sr-Latn": "Tiha bleda tirkizna i ljubičasta izmaglica, meke mrlje svetlosti i sitno pismo malim slovima, mirna strana kraja 90-ih",
+    "hr": "Tiha blijeda tirkizna i ljubičasta izmaglica, meke mrlje svjetla i sitno pismo malim slovima, mirna strana kraja 90-ih",
+    "sl": "Tiha bleda turkizna in lila meglica, mehke pege svetlobe in drobna pisava z malimi črkami, mirna plat konca 90. let",
+    "bs": "Tiha blijeda tirkizna i ljubičasta izmaglica, meke mrlje svjetlosti i sitno pismo malim slovima, mirna strana kraja 90-ih",
+    "ca": "Boirina tranquil·la de verd blavós pàl·lid i lila, taques de llum suaus i lletra petita en minúscules, el costat calmat de finals dels 90",
+    "kk": "Тыныш бозғылт көгілдір-жасыл және сирень тұман, жұмсақ жарық дақтары және кіші әріптермен жазылған ұсақ қаріп, 90-жылдар соңының тыныш жағы",
+    "ky": "Тынч кыязы көгүш-жашыл жана сирень туман, жумшак жарык тактары жана кичине тамгалар менен жазылган майда шрифт, 90-жылдардын аягынын тынч жагы",
+    "as": "শান্ত ফুঁহুৱা টিল আৰু লাইলাক কুঁৱলী, কোমল পোহৰৰ ফোট আৰু সৰু আখৰৰ ক্ষুদ্ৰ লিপি, ৯০ৰ দশকৰ শেষৰ শান্ত দিশ",
+    "or": "ଶାନ୍ତ ହାଲୁକା ନୀଳସବୁଜ ଓ ଲାଇଲାକ୍ କୁହୁଡ଼ି, କୋମଳ ଆଲୋକ ଦାଗ ଓ ଛୋଟ ଅକ୍ଷରର ସୂକ୍ଷ୍ମ ଲେଖା, ୯୦ ଦଶକ ଶେଷର ଶାନ୍ତ ଦିଗ"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "text": {
+    "displayFont": "Space Mono",
+    "monoFont": "Space Mono"
+  },
+  "colors": {
+    "page": "#eef1f1",
+    "text": "#1f3236",
+    "muted": "#465d61",
+    "accent": "#2f7178",
+    "onAccent": "#ffffff",
+    "border": "#c9d6d6",
+    "card": "#f8fafa",
+    "selected": "#d6ebea",
+    "onSelected": "#163a3e",
+    "reason": "#2a666c",
+    "chrome": "#f4f6f6"
+  },
+  "shape": {
+    "cardRadius": 2,
+    "controlRadius": 99,
+    "thumbnailRadius": 1
+  },
+  "window": {
+    "background": [
+      "#eef1f1",
+      {
+        "radial": {
+          "center": [
+            0.82,
+            0.18
+          ],
+          "radius": 0.45,
+          "colors": [
+            "#d6c4f0d9",
+            "#d6c4f000"
+          ]
+        }
+      },
+      {
+        "radial": {
+          "center": [
+            0.1,
+            0.92
+          ],
+          "radius": 0.5,
+          "colors": [
+            "#b0e2dee6",
+            "#b0e2de00"
+          ]
+        }
+      },
+      {
+        "radial": {
+          "center": [
+            0.5,
+            0.55
+          ],
+          "radius": 0.35,
+          "colors": [
+            "#f6d6e4b3",
+            "#f6d6e400"
+          ]
+        }
+      }
+    ],
+    "decorations": [
+      {
+        "type": "sparkles",
+        "count": 5,
+        "color": "#ffffff",
+        "glow": "#d6c4f0",
+        "seed": 3
+      }
+    ],
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": "#f4f6f6",
+        "border": {
+          "color": "#28474c1f",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#f4f6f6"
+      },
+      "text": "#1f3236",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#1f3236",
+        "surface": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#0000001a"
+          },
+          "pressed": {
+            "fill": "#00000033"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#e81123"
+          },
+          "pressed": {
+            "fill": "#e81123"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#f4f6f6"
+      },
+      "text": "#1f3236",
+      "highlight": {
+        "fill": "#2f7178"
+      },
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#f8fafaf7",
+        "border": "#c9d6d6",
+        "radius": 2
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": "#ffffff73",
+      "border": {
+        "color": "#28474c26",
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#ffffff52",
+      "border": {
+        "color": "#28474c1f",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": "#ffffff73",
+      "border": {
+        "color": "#28474c1f",
+        "sides": [
+          "top"
+        ]
+      }
+    },
+    "topBarText": "#1f3236",
+    "statusBarText": "#3c5357",
+    "tabs": {
+      "position": "bottom",
+      "surface": {
+        "fill": "#f4f6f6f2",
+        "border": {
+          "color": "#28474c26",
+          "sides": [
+            "top"
+          ]
+        }
+      },
+      "text": "#465d61",
+      "selectedText": "#163a3e",
+      "indicator": "#2f7178"
+    }
+  },
+  "controls": {
+    "press": "wash",
+    "button": {
+      "fill": "#ffffff8c",
+      "border": "#28474c4d",
+      "hover": {
+        "fill": "#ffffffd9"
+      }
+    },
+    "buttonText": "#1f3236",
+    "primaryButton": {
+      "fill": "#2f7178",
+      "hover": {
+        "fill": "#285f65"
+      }
+    },
+    "primaryButtonText": "#ffffff",
+    "chip": {
+      "fill": "#ffffff73",
+      "border": "#28474c4d"
+    },
+    "chipSelected": {
+      "fill": "#2f7178"
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": "#2f7178",
+      "radius": 2
+    },
+    "navSelectedText": "#ffffff",
+    "navText": "#3c5357"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffff99",
+      "border": "#ffffffd9",
+      "hover": {
+        "border": "#2f7178",
+        "fill": "#ffffffcc"
+      },
+      "focused": {
+        "border": {
+          "color": "#2f7178",
+          "width": 3
+        }
+      }
+    },
+    "padding": 8,
+    "panel": {
+      "fill": "#ffffffb3",
+      "border": "#ffffffd9"
+    },
+    "durationBadge": {
+      "fill": "#1f3236cc",
+      "radius": 1
+    },
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "lumtub",
+    "font": "Space Mono",
+    "size": 18,
+    "fill": "#28474c",
+    "badge": {
+      "fill": {
+        "radial": {
+          "center": [
+            0.4,
+            0.35
+          ],
+          "radius": 0.7,
+          "colors": [
+            "#ffffff",
+            "#bfe3e0",
+            "#9f8fd0"
+          ]
+        }
+      },
+      "glow": "#c9b7e8"
+    },
+    "badgeIcon": "#28474c"
+  },
+  "icons": {
+    "style": "regular",
+    "effect": "none"
+  },
+  "player": {
+    "progress": "#2f7178"
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#1c2326",
+        "text": "#e6eeee",
+        "muted": "#a6b8ba",
+        "accent": "#8fd0cf",
+        "onAccent": "#0f2a2c",
+        "border": "#34444a",
+        "card": "#232c30",
+        "selected": "#2c4244",
+        "onSelected": "#e6eeee",
+        "reason": "#9fd8d6",
+        "chrome": "#182023"
+      },
+      "window": {
+        "background": [
+          "#1c2326",
+          {
+            "radial": {
+              "center": [
+                0.82,
+                0.18
+              ],
+              "radius": 0.45,
+              "colors": [
+                "#5b4a7a8c",
+                "#5b4a7a00"
+              ]
+            }
+          },
+          {
+            "radial": {
+              "center": [
+                0.1,
+                0.92
+              ],
+              "radius": 0.5,
+              "colors": [
+                "#2f5f5c99",
+                "#2f5f5c00"
+              ]
+            }
+          },
+          {
+            "radial": {
+              "center": [
+                0.5,
+                0.55
+              ],
+              "radius": 0.35,
+              "colors": [
+                "#6a3f5566",
+                "#6a3f5500"
+              ]
+            }
+          }
+        ],
+        "decorations": [
+          {
+            "type": "sparkles",
+            "count": 5,
+            "color": "#ffffffb3",
+            "glow": "#8fd0cf",
+            "seed": 3
+          }
+        ],
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": "#182023",
+            "border": {
+              "color": "#ffffff14",
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "inactive": {
+            "fill": "#182023"
+          },
+          "text": "#e6eeee",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#c9d6d6",
+            "surface": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#ffffff1a"
+              },
+              "pressed": {
+                "fill": "#ffffff2e"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#e81123"
+              },
+              "pressed": {
+                "fill": "#e81123"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": "#182023"
+          },
+          "text": "#e6eeee",
+          "highlight": {
+            "fill": "#8fd0cf"
+          },
+          "highlightText": "#0f2a2c",
+          "menu": {
+            "fill": "#232c30f7",
+            "border": "#34444a",
+            "radius": 2
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": "#1820238c",
+          "border": {
+            "color": "#ffffff14",
+            "sides": [
+              "bottom"
+            ]
+          }
+        },
+        "sideBar": {
+          "fill": "#18202373",
+          "border": {
+            "color": "#ffffff12",
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": "#1820238c",
+          "border": {
+            "color": "#ffffff12",
+            "sides": [
+              "top"
+            ]
+          }
+        },
+        "topBarText": "#e6eeee",
+        "statusBarText": "#a6b8ba",
+        "tabs": {
+          "position": "bottom",
+          "surface": {
+            "fill": "#182023f2",
+            "border": {
+              "color": "#ffffff14",
+              "sides": [
+                "top"
+              ]
+            }
+          },
+          "text": "#a6b8ba",
+          "selectedText": "#e6eeee",
+          "indicator": "#8fd0cf"
+        }
+      },
+      "controls": {
+        "press": "wash",
+        "button": {
+          "fill": "#ffffff12",
+          "border": "#ffffff33",
+          "hover": {
+            "fill": "#ffffff24"
+          }
+        },
+        "buttonText": "#e6eeee",
+        "primaryButton": {
+          "fill": "#8fd0cf",
+          "hover": {
+            "fill": "#a6dcdb"
+          }
+        },
+        "primaryButtonText": "#0f2a2c",
+        "chip": {
+          "fill": "#ffffff0d",
+          "border": "#ffffff33"
+        },
+        "chipSelected": {
+          "fill": "#8fd0cf"
+        },
+        "chipSelectedText": "#0f2a2c",
+        "navSelected": {
+          "fill": "#8fd0cf",
+          "radius": 2
+        },
+        "navSelectedText": "#0f2a2c",
+        "navText": "#b4c4c6"
+      },
+      "cards": {
+        "video": {
+          "fill": "#232c30cc",
+          "border": "#ffffff1a",
+          "hover": {
+            "border": "#8fd0cf"
+          },
+          "focused": {
+            "border": {
+              "color": "#8fd0cf",
+              "width": 3
+            }
+          }
+        },
+        "padding": 8,
+        "panel": {
+          "fill": "#232c30e6",
+          "border": "#ffffff1a"
+        },
+        "durationBadge": {
+          "fill": "#000000b3",
+          "radius": 1
+        },
+        "durationText": "#ffffff"
+      },
+      "logo": {
+        "text": "lumtub",
+        "font": "Space Mono",
+        "size": 18,
+        "fill": "#d6e6e6",
+        "badge": {
+          "fill": {
+            "radial": {
+              "center": [
+                0.4,
+                0.35
+              ],
+              "radius": 0.7,
+              "colors": [
+                "#ffffff",
+                "#8fd0cf",
+                "#6a5a9a"
+              ]
+            }
+          },
+          "glow": "#6a5a9a"
+        },
+        "badgeIcon": "#16282a"
+      },
+      "icons": {
+        "style": "regular",
+        "effect": "none"
+      },
+      "player": {
+        "progress": "#8fd0cf"
+      }
+    },
+    "tv": {
+      "cards": {
+        "video": {
+          "focused": {
+            "border": {
+              "color": "#2f7178",
+              "width": 4
+            },
+            "glow": "#2f7178"
+          }
+        }
+      },
+      "controls": {
+        "button": {
+          "focused": {
+            "border": {
+              "color": "#2f7178",
+              "width": 3
+            }
+          }
+        },
+        "chip": {
+          "focused": {
+            "border": {
+              "color": "#2f7178",
+              "width": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

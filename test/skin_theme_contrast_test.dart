@@ -41,6 +41,10 @@ void main() {
           'rail icon, chosen': (theme.navigationRailTheme.selectedIconTheme!.color!, solid(theme.navigationRailTheme.indicatorColor!, page), 3),
           'secondary container': (scheme.onSecondaryContainer, solid(scheme.secondaryContainer, page), 4.5),
           'text on page': (scheme.onSurface, solid(scheme.surface, page), 4.5),
+          // Up next, cards and comments draw channel names and views in these.
+          'quiet text on page': (scheme.outline, page, 4.5),
+          'muted text on page': (scheme.onSurfaceVariant, page, 4.5),
+          'quiet text on cards': (scheme.outline, solid(scheme.surfaceContainerLow, page), 4.5),
         };
         for (final MapEntry(key: what, value: (fg, bg, min)) in pairs.entries) {
           expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(min - 0.05), reason: '$what in ${mode.name}');

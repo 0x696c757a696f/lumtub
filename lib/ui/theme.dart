@@ -204,7 +204,9 @@ ThemeData buildAppTheme(
       scheme = scheme.copyWith(
         onPrimary: c.onAccent,
         onSurfaceVariant: c.muted,
-        outline: c.muted,
+        // Channel names, view counts and other quiet text are drawn in
+        // outline, so it has to read as text, not only as a border.
+        outline: c.muted ?? scheme.onSurfaceVariant,
         outlineVariant: c.border,
         onSecondaryContainer: c.onSelected,
       );

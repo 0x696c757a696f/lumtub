@@ -17,7 +17,12 @@ void main() {
     expect(picture.focus.x, 0);
     expect(picture.focus.y, closeTo(-0.4, 1e-9));
     expect(parse({'background': [{'image': 'day.jpg', 'focus': [2, 0]}]}).warnings, contains(contains('focus')));
-    expect(parse({'background': ['#008080']}).warnings, contains(contains('on window.background')));
+    // Text that cannot be read on a plain backdrop gets a veil of the page
+    // colour, as much as it takes.
+    final teal = parse({'background': ['#008080']});
+    expect(teal.veil, greaterThan(0));
+    expect(teal.warnings.where((w) => w.contains('on window.background')), isEmpty);
+    expect(parse({'background': ['#ffffff']}).veil, 0);
     expect(parse({'background': ['#008080'], 'veil': 0.5}).warnings.where((w) => w.contains('on window.background')), isEmpty);
   });
 

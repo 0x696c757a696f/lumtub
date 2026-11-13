@@ -1,0 +1,900 @@
+// Clay: a built-in Lumtub skin. Soft pastel shapes puffed up like modelling clay, with deep gentle shadows, after the clay look of early-2020s icons and illustrations.
+// skins/template/skin.jsonc explains every field, and skins/README.md how to make your own.
+// 软陶：Lumtub 内置皮肤。像软陶一样鼓起来的粉彩色块和深而柔和的阴影，致敬 2020 年代初图标和插画里的软陶风。
+// 每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "clay",
+  "name": "Clay",
+  "names": {
+    "zh-Hans": "软陶",
+    "zh-Hant": "軟陶",
+    "zh-HK": "軟陶",
+    "af": "Klei",
+    "am": "ሸክላ",
+    "ar": "الصلصال",
+    "az": "Gil",
+    "be": "Гліна",
+    "bg": "Глина",
+    "bn": "কাদামাটি",
+    "cs": "Hlína",
+    "da": "Ler",
+    "de": "Ton",
+    "el": "Πηλός",
+    "eo": "Argilo",
+    "es": "Arcilla",
+    "et": "Savi",
+    "eu": "Buztina",
+    "fa": "خمیر بازی",
+    "fi": "Savi",
+    "fil": "Luwad",
+    "fr": "Argile",
+    "gl": "Arxila",
+    "gu": "માટી",
+    "he": "חימר",
+    "hi": "मिट्टी",
+    "hu": "Agyag",
+    "hy": "Կավ",
+    "id": "Tanah Liat",
+    "is": "Leir",
+    "it": "Argilla",
+    "ja": "粘土",
+    "jv": "Lempung",
+    "ka": "თიხა",
+    "km": "ដីឥដ្ឋ",
+    "kn": "ಜೇಡಿಮಣ್ಣು",
+    "ko": "점토",
+    "la": "Argilla",
+    "lo": "ດິນໜຽວ",
+    "lt": "Molis",
+    "lv": "Māls",
+    "mk": "Глина",
+    "ml": "കളിമണ്ണ്",
+    "mn": "Шавар",
+    "mr": "माती",
+    "ms": "Tanah Liat",
+    "my": "ရွှံ့စေး",
+    "nb": "Leire",
+    "ne": "माटो",
+    "nl": "Klei",
+    "pa": "ਮਿੱਟੀ",
+    "pl": "Glina",
+    "pt": "Argila",
+    "ro": "Lut",
+    "ru": "Глина",
+    "si": "මැටි",
+    "sk": "Hlina",
+    "sq": "Argjila",
+    "su": "Liat",
+    "sv": "Lera",
+    "sw": "Udongo",
+    "ta": "களிமண்",
+    "te": "మట్టి",
+    "th": "ดินน้ำมัน",
+    "ti": "ሲሚንቶ ጭቃ",
+    "tk": "Palçyk",
+    "tr": "Kil",
+    "uk": "Глина",
+    "ur": "مٹی",
+    "uz": "Loy",
+    "vi": "Đất sét",
+    "zu": "Ubumba",
+    "sr": "Глина",
+    "sr-Latn": "Glina",
+    "hr": "Glina",
+    "sl": "Glina",
+    "bs": "Glina",
+    "ca": "Argila",
+    "kk": "Саз балшық",
+    "ky": "Пластилин",
+    "as": "মাটি",
+    "or": "ମାଟି"
+  },
+  "description": "Soft pastel shapes that look puffed up like modelling clay, with deep gentle shadows",
+  "descriptions": {
+    "zh-Hans": "柔和的粉彩色块，像软陶一样鼓鼓的，配深而柔和的阴影",
+    "zh-Hant": "柔和的粉彩色塊，像軟陶一樣鼓鼓的，配深而柔和的陰影",
+    "zh-HK": "柔和的粉彩色塊，像軟陶一樣鼓鼓的，配深而柔和的陰影",
+    "af": "Sagte pastelvorms wat opgeblaas lyk soos boetseerklei, met diep sagte skaduwees",
+    "am": "እንደ ሞዴሊንግ ሸክላ የተነፉ የሚመስሉ ለስላሳ የፓስቴል ቅርጾች፣ ጥልቅና ለስላሳ ጥላዎች ያላቸው",
+    "ar": "أشكال باستيل ناعمة تبدو منفوخة كصلصال التشكيل، مع ظلال عميقة ولطيفة",
+    "az": "Modelləmə gili kimi şişmiş görünən yumşaq pastel formalar, dərin və mülayim kölgələrlə",
+    "be": "Мяккія пастэльныя формы, нібы надзутыя, як пластыліна, з глыбокімі мяккімі ценямі",
+    "bg": "Меки пастелни форми, които изглеждат издути като моделираща глина, с дълбоки нежни сенки",
+    "bn": "মডেলিং ক্লে-র মতো ফুলে ওঠা নরম প্যাস্টেল আকৃতি, গভীর ও কোমল ছায়াসহ",
+    "cs": "Měkké pastelové tvary, které vypadají nafouknuté jako modelína, s hlubokými jemnými stíny",
+    "da": "Bløde pastelformer, der ser oppustede ud som modellervoks, med dybe, bløde skygger",
+    "de": "Weiche Pastellformen, die aufgeblasen wirken wie Modelliermasse, mit tiefen sanften Schatten",
+    "el": "Απαλά παστέλ σχήματα που δείχνουν φουσκωμένα σαν πηλός μοντελισμού, με βαθιές απαλές σκιές",
+    "eo": "Molaj paŝtelaj formoj, kiuj aspektas ŝveligitaj kiel modela argilo, kun profundaj mildaj ombroj",
+    "es": "Formas pastel suaves que parecen infladas como plastilina, con sombras profundas y suaves",
+    "et": "Pehmed pastelsed vormid, mis näevad välja täis puhutud nagu voolimissavi, sügavate õrnade varjudega",
+    "eu": "Pastel-forma leunak, modelatzeko buztina bezala puztuta dirudienak, itzal sakon eta leunekin",
+    "fa": "شکل‌های ملایم پاستلی که مثل خمیر مجسمه‌سازی باد کرده‌اند، با سایه‌های عمیق و ملایم",
+    "fi": "Pehmeät pastellimuodot, jotka näyttävät pullistuneilta kuin muovailusavi, syvin lempein varjoin",
+    "fil": "Malalambot na pastel na hugis na mukhang pinalobo gaya ng modelling clay, may malalalim at banayad na anino",
+    "fr": "Formes pastel douces qui semblent gonflées comme de la pâte à modeler, avec des ombres profondes et douces",
+    "gl": "Formas pastel suaves que parecen inchadas coma plastilina, con sombras profundas e suaves",
+    "gu": "મૉડલિંગ ક્લેની જેમ ફૂલેલા લાગતા નરમ પેસ્ટલ આકાર, ઊંડા અને હળવા પડછાયા સાથે",
+    "he": "צורות פסטל רכות שנראות מנופחות כמו חימר דוגמנות, עם צללים עמוקים ועדינים",
+    "hi": "मॉडलिंग क्ले की तरह फूले हुए लगते मुलायम पेस्टल आकार, गहरी और कोमल परछाइयों के साथ",
+    "hu": "Lágy pasztellformák, amelyek gyurmaként felfújtnak tűnnek, mély, gyengéd árnyékokkal",
+    "hy": "Փափուկ պաստելային ձևեր, որ փքված են թվում ինչպես մոդելավորման կավ, խորը մեղմ ստվերներով",
+    "id": "Bentuk pastel lembut yang tampak menggembung seperti plastisin, dengan bayangan dalam yang lembut",
+    "is": "Mjúk pastellögun sem líta út fyrir að vera þanin eins og leir, með djúpum mildum skuggum",
+    "it": "Forme pastello morbide che sembrano gonfie come plastilina, con ombre profonde e delicate",
+    "ja": "油粘土のようにふくらんで見える、やわらかなパステルの形と、深くやさしい影",
+    "jv": "Wangun pastel alus sing katon kembung kaya lilin mainan, karo bayangan jero lan lembut",
+    "ka": "რბილი პასტელისფერი ფორმები, რომლებიც ამობერილი ჩანს, როგორც სალეპი თიხა, ღრმა და ნაზი ჩრდილებით",
+    "km": "រូបរាងផាស្តែលទន់ៗដែលមើលទៅហើមដូចដីឥដ្ឋសូនរូប ជាមួយស្រមោលជ្រៅ និងទន់ភ្លន់",
+    "kn": "ಮಾಡೆಲಿಂಗ್ ಕ್ಲೇಯಂತೆ ಉಬ್ಬಿದಂತೆ ಕಾಣುವ ಮೃದು ಪೇಸ್ಟಲ್ ಆಕಾರಗಳು, ಆಳವಾದ ಮೃದು ನೆರಳುಗಳೊಂದಿಗೆ",
+    "ko": "모델링 점토처럼 부풀어 보이는 부드러운 파스텔 도형과 깊고 은은한 그림자",
+    "la": "Formae molles coloribus pallidis quae inflatae videntur ut argilla fingenda, cum umbris profundis lenibus",
+    "lo": "ຮູບຮ່າງສີພາສເທວອ່ອນໆທີ່ເບິ່ງຄືພອງຄືດິນໜຽວປັ້ນ, ມີເງົາເລິກ ແລະ ອ່ອນໂຍນ",
+    "lt": "Švelnios pastelinės formos, atrodančios išpūstos kaip modelinas, su gilia švelnia šešėliu",
+    "lv": "Maigas pasteļkrāsu formas, kas izskatās uzpūstas kā modelēšanas māls, ar dziļām maigām ēnām",
+    "mk": "Меки пастелни облици што изгледаат надуени како моделарска глина, со длабоки нежни сенки",
+    "ml": "മോഡലിംഗ് ക്ലേ പോലെ വീർത്തതായി തോന്നുന്ന മൃദുവായ പാസ്റ്റൽ രൂപങ്ങൾ, ആഴമുള്ള മൃദുവായ നിഴലുകളോടെ",
+    "mn": "Загварчлах шавар шиг хөөсөрсөн мэт харагдах зөөлөн пастел хэлбэрүүд, гүн зөөлөн сүүдэртэй",
+    "mr": "मॉडेलिंग क्लेसारखे फुगलेले दिसणारे मऊ पेस्टल आकार, खोल आणि हळुवार सावल्यांसह",
+    "ms": "Bentuk pastel lembut yang kelihatan menggelembung seperti tanah liat pemodelan, dengan bayang dalam yang lembut",
+    "my": "စေးရွှံ့ပုံစံတူ ဖောင်းနေသယောင်ရှိသော နူးညံ့သည့် ပါစတယ်ပုံသဏ္ဍာန်များ၊ နက်ရှိုင်းနူးညံ့သော အရိပ်များနှင့်",
+    "nb": "Myke pastellformer som ser oppblåste ut som modelleire, med dype, myke skygger",
+    "ne": "मोडेलिङ क्ले जस्तै फुलेको देखिने नरम प्यास्टल आकार, गहिरा र कोमल छायाँसहित",
+    "nl": "Zachte pastelvormen die opgeblazen lijken als boetseerklei, met diepe zachte schaduwen",
+    "pa": "ਮਾਡਲਿੰਗ ਕਲੇ ਵਾਂਗ ਫੁੱਲੇ ਹੋਏ ਲੱਗਦੇ ਨਰਮ ਪੇਸਟਲ ਆਕਾਰ, ਡੂੰਘੇ ਅਤੇ ਕੋਮਲ ਪਰਛਾਵਿਆਂ ਨਾਲ",
+    "pl": "Miękkie pastelowe kształty wyglądające na nadęte jak modelina, z głębokimi łagodnymi cieniami",
+    "pt": "Formas pastel suaves que parecem infladas como massinha de modelar, com sombras profundas e suaves",
+    "ro": "Forme pastelate moi care par umflate ca plastilina, cu umbre adânci și blânde",
+    "ru": "Мягкие пастельные формы, которые выглядят надутыми, как пластилин, с глубокими нежными тенями",
+    "si": "ආකෘති මැටි මෙන් ඉදිමුණු බව පෙනෙන මෘදු පැස්ටල් හැඩතල, ගැඹුරු මෘදු සෙවණැලි සමඟ",
+    "sk": "Mäkké pastelové tvary, ktoré vyzerajú nafúknuté ako plastelína, s hlbokými jemnými tieňmi",
+    "sq": "Forma pastel të buta që duken të fryra si plastelinë, me hije të thella e të buta",
+    "su": "Wangun pastel lemes nu karasa gembung siga lilin kaulinan, jeung kalangkang jero nu lemes",
+    "sv": "Mjuka pastellformer som ser uppblåsta ut som modellera, med djupa mjuka skuggor",
+    "sw": "Maumbo laini ya pastel yanayoonekana kuvimba kama udongo wa kufinyanga, yenye vivuli virefu na vyepesi",
+    "ta": "மாடலிங் களிமண் போல உப்பிய மென்மையான வெளிர் வடிவங்கள், ஆழமான மெல்லிய நிழல்களுடன்",
+    "te": "మోడలింగ్ క్లే లాగా ఉబ్బినట్లు కనిపించే మృదువైన పాస్టెల్ ఆకారాలు, లోతైన సున్నితమైన నీడలతో",
+    "th": "รูปทรงพาสเทลนุ่มนิ่มที่ดูพองเหมือนดินน้ำมัน พร้อมเงาลึกอ่อนโยน",
+    "ti": "ከም ጭቃ ዝተነፍሐ ዝመስሉ ልሙድ ፓስተል ቅርጽታት፡ ምስ ዓሚቕ ልስሉስ ጽላሎታት",
+    "tk": "Heýkeltaraş palçygy ýaly çişen ýaly görünýän ýumşak pastel görnüşler, çuň mylaýym kölegeler bilen",
+    "tr": "Modelleme kili gibi şişkin görünen yumuşak pastel şekiller, derin ve yumuşak gölgelerle",
+    "uk": "М'які пастельні форми, що здаються надутими, як пластилін, з глибокими м'якими тінями",
+    "ur": "نرم پیسٹل شکلیں جو ماڈلنگ کلے کی طرح پھولی ہوئی لگتی ہیں، گہرے نرم سایوں کے ساتھ",
+    "uz": "Haykaltaroshlik loyi kabi shishgan ko'rinadigan yumshoq pastel shakllar, chuqur mayin soyalar bilan",
+    "vi": "Những hình khối pastel mềm mại trông phồng như đất sét nặn, với bóng đổ sâu và dịu",
+    "zu": "Ubumba oluthambile lwemibala ephaphathekile obubukeka bukhukhumele njengobumba lokubumba, nezithunzi ezijulile ezithambile",
+    "sr": "Меки пастелни облици који изгледају надувено као глинамол, са дубоким благим сенкама",
+    "sr-Latn": "Meki pastelni oblici koji izgledaju naduvano kao glinamol, sa dubokim blagim senkama",
+    "hr": "Meki pastelni oblici koji izgledaju napuhano poput modelirne gline, s dubokim blagim sjenama",
+    "sl": "Mehke pastelne oblike, videti napihnjene kot modelirna masa, z globokimi nežnimi sencami",
+    "bs": "Meki pastelni oblici koji izgledaju napuhano poput modelirne gline, s dubokim blagim sjenama",
+    "ca": "Formes pastel suaus que semblen inflades com plastilina, amb ombres profundes i suaus",
+    "kk": "Мүсіндік балшық сияқты қампиған көрінетін жұмсақ пастель пішіндер, терең жұмсақ көлеңкелермен",
+    "ky": "Мүсүндөө пластилининдей көпкөн көрүнгөн жумшак пастель формалар, терең жумшак көлөкөлөр менен",
+    "as": "মডেলিং ক্লেৰ দৰে ফুলি থকা যেন লগা কোমল পেষ্টেল আকৃতি, গভীৰ কোমল ছাঁৰ সৈতে",
+    "or": "ମଡେଲିଂ କ୍ଲେ ପରି ଫୁଲିଥିବା ଭଳି ଦିଶୁଥିବା କୋମଳ ପେଷ୍ଟେଲ୍ ଆକୃତି, ଗଭୀର କୋମଳ ଛାୟା ସହିତ"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "text": {
+    "displayFont": "Baloo 2"
+  },
+  "colors": {
+    "page": "#efe8fb",
+    "text": "#2b2350",
+    "muted": "#564d7c",
+    "accent": "#5b3fd0",
+    "onAccent": "#ffffff",
+    "border": "#ddd3f3",
+    "card": "#fbf9ff",
+    "selected": "#e6deff",
+    "onSelected": "#2b2350",
+    "reason": "#5236c8",
+    "chrome": "#efe8fb"
+  },
+  "shape": {
+    "cardRadius": 28,
+    "controlRadius": 18,
+    "thumbnailRadius": 20
+  },
+  "window": {
+    "background": [
+      "#efe8fb",
+      {
+        "radial": {
+          "center": [
+            0.88,
+            0.12
+          ],
+          "radius": 0.45,
+          "colors": [
+            "#ffe3d3e6",
+            "#ffe3d300"
+          ]
+        }
+      },
+      {
+        "radial": {
+          "center": [
+            0.1,
+            0.92
+          ],
+          "radius": 0.5,
+          "colors": [
+            "#d9f2e6e6",
+            "#d9f2e600"
+          ]
+        }
+      }
+    ],
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": "#efe8fb"
+      },
+      "inactive": {
+        "fill": "#efe8fb"
+      },
+      "text": "#2b2350",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#2b2350",
+        "surface": {
+          "fill": "transparent",
+          "radius": 10,
+          "hover": {
+            "fill": "#5b3fd01a"
+          },
+          "pressed": {
+            "fill": "#5b3fd033"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "radius": 10,
+          "hover": {
+            "fill": "#e81123"
+          },
+          "pressed": {
+            "fill": "#e81123"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#efe8fb"
+      },
+      "text": "#2b2350",
+      "highlight": {
+        "fill": "#e6deff"
+      },
+      "highlightText": "#2b2350",
+      "menu": {
+        "fill": "#fbf9fffa",
+        "border": "#ddd3f3",
+        "radius": 16
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": "#efe8fbd9"
+    },
+    "sideBar": {
+      "fill": "#efe8fb00"
+    },
+    "statusBar": {
+      "fill": "#efe8fbd9"
+    },
+    "topBarText": "#2b2350",
+    "statusBarText": "#564d7c",
+    "tabs": {
+      "position": "bottom",
+      "surface": {
+        "fill": "#fbf9fff2",
+        "border": {
+          "color": "#ddd3f3",
+          "sides": [
+            "top"
+          ]
+        }
+      },
+      "text": "#564d7c",
+      "selectedText": "#ffffff",
+      "indicator": "#5b3fd0",
+      "selected": {
+        "fill": {
+          "linear": {
+            "angle": 135,
+            "colors": [
+              "#6c4ee8",
+              "#4a2fb8"
+            ]
+          }
+        },
+        "radius": 16
+      }
+    }
+  },
+  "controls": {
+    "press": "wash",
+    "button": {
+      "fill": "#fbf9ff",
+      "border": {
+        "color": "#ffffff",
+        "width": 2
+      },
+      "shadow": [
+        {
+          "color": "#6e5aaa33",
+          "x": 4,
+          "y": 6,
+          "blur": 12
+        }
+      ],
+      "hover": {
+        "shadow": [
+          {
+            "color": "#6e5aaa4d",
+            "x": 6,
+            "y": 9,
+            "blur": 16
+          }
+        ]
+      },
+      "pressed": {
+        "shadow": [
+          {
+            "color": "#6e5aaa26",
+            "x": 1,
+            "y": 2,
+            "blur": 4
+          }
+        ]
+      }
+    },
+    "buttonText": "#2b2350",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 135,
+          "colors": [
+            "#6c4ee8",
+            "#4a2fb8"
+          ]
+        }
+      },
+      "gloss": 0.25,
+      "shadow": [
+        {
+          "color": "#5b3fd059",
+          "x": 4,
+          "y": 6,
+          "blur": 12
+        }
+      ],
+      "pressed": {
+        "shadow": [
+          {
+            "color": "#5b3fd033",
+            "x": 1,
+            "y": 2,
+            "blur": 4
+          }
+        ]
+      }
+    },
+    "primaryButtonText": "#ffffff",
+    "chip": {
+      "fill": "#fbf9ff",
+      "border": {
+        "color": "#ffffff",
+        "width": 2
+      },
+      "shadow": [
+        {
+          "color": "#6e5aaa26",
+          "x": 3,
+          "y": 4,
+          "blur": 10
+        }
+      ]
+    },
+    "chipSelected": {
+      "fill": {
+        "linear": {
+          "angle": 135,
+          "colors": [
+            "#6c4ee8",
+            "#4a2fb8"
+          ]
+        }
+      },
+      "gloss": 0.25,
+      "shadow": [
+        {
+          "color": "#5b3fd04d",
+          "x": 3,
+          "y": 5,
+          "blur": 10
+        }
+      ]
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": {
+        "linear": {
+          "angle": 135,
+          "colors": [
+            "#6c4ee8",
+            "#4a2fb8"
+          ]
+        }
+      },
+      "gloss": 0.25,
+      "radius": 20,
+      "shadow": [
+        {
+          "color": "#5b3fd059",
+          "x": 4,
+          "y": 6,
+          "blur": 12
+        }
+      ]
+    },
+    "navSelectedText": "#ffffff",
+    "navText": "#564d7c"
+  },
+  "cards": {
+    "video": {
+      "fill": "#fbf9ff",
+      "border": {
+        "color": "#ffffff",
+        "width": 2
+      },
+      "shadow": [
+        {
+          "color": "#6e5aaa38",
+          "x": 8,
+          "y": 12,
+          "blur": 24
+        }
+      ],
+      "hover": {
+        "shadow": [
+          {
+            "color": "#6e5aaa52",
+            "x": 10,
+            "y": 16,
+            "blur": 28
+          }
+        ]
+      },
+      "focused": {
+        "border": {
+          "color": "#9f88ff",
+          "width": 4
+        }
+      }
+    },
+    "padding": 10,
+    "panel": {
+      "fill": "#fbf9ff",
+      "border": {
+        "color": "#ffffff",
+        "width": 2
+      },
+      "shadow": [
+        {
+          "color": "#6e5aaa38",
+          "x": 8,
+          "y": 12,
+          "blur": 24
+        }
+      ]
+    },
+    "durationBadge": {
+      "fill": "#2b2350cc",
+      "radius": 10
+    },
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "Baloo 2",
+    "size": 26,
+    "fill": {
+      "linear": {
+        "angle": 180,
+        "colors": [
+          "#8b70ff",
+          "#5b3fd0"
+        ]
+      }
+    },
+    "badge": {
+      "fill": {
+        "linear": {
+          "angle": 135,
+          "colors": [
+            "#6c4ee8",
+            "#4a2fb8"
+          ]
+        }
+      },
+      "gloss": 0.5,
+      "shadow": [
+        {
+          "color": "#5b3fd059",
+          "x": 3,
+          "y": 4,
+          "blur": 8
+        }
+      ]
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "icons": {
+    "style": "fill",
+    "effect": "gel"
+  },
+  "player": {
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#ff8fab",
+          "#7a5cf5"
+        ]
+      }
+    }
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#1f1a33",
+        "text": "#f1ecff",
+        "muted": "#b9b0d9",
+        "accent": "#a996ff",
+        "onAccent": "#1a1240",
+        "border": "#3a3260",
+        "card": "#2a2445",
+        "selected": "#3b3270",
+        "onSelected": "#f1ecff",
+        "reason": "#c2b4ff",
+        "chrome": "#1f1a33"
+      },
+      "window": {
+        "background": [
+          "#1f1a33",
+          {
+            "radial": {
+              "center": [
+                0.88,
+                0.12
+              ],
+              "radius": 0.45,
+              "colors": [
+                "#5a3a4a99",
+                "#5a3a4a00"
+              ]
+            }
+          },
+          {
+            "radial": {
+              "center": [
+                0.1,
+                0.92
+              ],
+              "radius": 0.5,
+              "colors": [
+                "#2a4a4099",
+                "#2a4a4000"
+              ]
+            }
+          }
+        ],
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": "#1f1a33"
+          },
+          "inactive": {
+            "fill": "#1f1a33"
+          },
+          "text": "#f1ecff",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#f1ecff",
+            "surface": {
+              "fill": "transparent",
+              "radius": 10,
+              "hover": {
+                "fill": "#ffffff1a"
+              },
+              "pressed": {
+                "fill": "#ffffff2e"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "radius": 10,
+              "hover": {
+                "fill": "#e81123"
+              },
+              "pressed": {
+                "fill": "#e81123"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": "#1f1a33"
+          },
+          "text": "#f1ecff",
+          "highlight": {
+            "fill": "#3b3270"
+          },
+          "highlightText": "#f1ecff",
+          "menu": {
+            "fill": "#2a2445fa",
+            "border": "#3a3260",
+            "radius": 16
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": "#1f1a33d9"
+        },
+        "sideBar": {
+          "fill": "#1f1a3300"
+        },
+        "statusBar": {
+          "fill": "#1f1a33d9"
+        },
+        "topBarText": "#f1ecff",
+        "statusBarText": "#b9b0d9",
+        "tabs": {
+          "position": "bottom",
+          "surface": {
+            "fill": "#2a2445f2",
+            "border": {
+              "color": "#3a3260",
+              "sides": [
+                "top"
+              ]
+            }
+          },
+          "text": "#b9b0d9",
+          "selectedText": "#1a1240",
+          "indicator": "#a996ff",
+          "selected": {
+            "fill": "#a996ff",
+            "radius": 16
+          }
+        }
+      },
+      "controls": {
+        "press": "wash",
+        "button": {
+          "fill": "#2a2445",
+          "border": {
+            "color": "#ffffff14",
+            "width": 2
+          },
+          "shadow": [
+            {
+              "color": "#00000066",
+              "x": 4,
+              "y": 6,
+              "blur": 12
+            }
+          ],
+          "pressed": {
+            "shadow": [
+              {
+                "color": "#00000040",
+                "x": 1,
+                "y": 2,
+                "blur": 4
+              }
+            ]
+          }
+        },
+        "buttonText": "#f1ecff",
+        "primaryButton": {
+          "fill": {
+            "linear": {
+              "angle": 135,
+              "colors": [
+                "#b8a6ff",
+                "#9f88ff"
+              ]
+            }
+          },
+          "gloss": 0.25,
+          "shadow": [
+            {
+              "color": "#00000066",
+              "x": 4,
+              "y": 6,
+              "blur": 12
+            }
+          ]
+        },
+        "primaryButtonText": "#1a1240",
+        "chip": {
+          "fill": "#2a2445",
+          "border": {
+            "color": "#ffffff14",
+            "width": 2
+          },
+          "shadow": [
+            {
+              "color": "#0000004d",
+              "x": 3,
+              "y": 4,
+              "blur": 10
+            }
+          ]
+        },
+        "chipSelected": {
+          "fill": {
+            "linear": {
+              "angle": 135,
+              "colors": [
+                "#b8a6ff",
+                "#9f88ff"
+              ]
+            }
+          },
+          "gloss": 0.25
+        },
+        "chipSelectedText": "#1a1240",
+        "navSelected": {
+          "fill": {
+            "linear": {
+              "angle": 135,
+              "colors": [
+                "#b8a6ff",
+                "#9f88ff"
+              ]
+            }
+          },
+          "gloss": 0.25,
+          "radius": 20
+        },
+        "navSelectedText": "#1a1240",
+        "navText": "#c4bce2"
+      },
+      "cards": {
+        "video": {
+          "fill": "#2a2445",
+          "border": {
+            "color": "#ffffff12",
+            "width": 2
+          },
+          "shadow": [
+            {
+              "color": "#00000073",
+              "x": 8,
+              "y": 12,
+              "blur": 24
+            }
+          ],
+          "focused": {
+            "border": {
+              "color": "#a996ff",
+              "width": 4
+            }
+          }
+        },
+        "padding": 10,
+        "panel": {
+          "fill": "#2a2445",
+          "border": {
+            "color": "#ffffff12",
+            "width": 2
+          },
+          "shadow": [
+            {
+              "color": "#00000073",
+              "x": 8,
+              "y": 12,
+              "blur": 24
+            }
+          ]
+        },
+        "durationBadge": {
+          "fill": "#000000b3",
+          "radius": 10
+        },
+        "durationText": "#ffffff"
+      },
+      "logo": {
+        "text": "LUMTUB",
+        "font": "Baloo 2",
+        "size": 26,
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#d6ccff",
+              "#a996ff"
+            ]
+          }
+        },
+        "badge": {
+          "fill": {
+            "linear": {
+              "angle": 135,
+              "colors": [
+                "#b8a6ff",
+                "#7a5cf5"
+              ]
+            }
+          },
+          "gloss": 0.5
+        },
+        "badgeIcon": "#ffffff"
+      },
+      "icons": {
+        "style": "fill",
+        "effect": "gel"
+      },
+      "player": {
+        "progress": {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#ff8fab",
+              "#a996ff"
+            ]
+          }
+        }
+      }
+    },
+    "tv": {
+      "cards": {
+        "video": {
+          "focused": {
+            "border": {
+              "color": "#5b3fd0",
+              "width": 4
+            },
+            "glow": "#5b3fd0"
+          }
+        }
+      },
+      "controls": {
+        "button": {
+          "focused": {
+            "border": {
+              "color": "#5b3fd0",
+              "width": 3
+            }
+          }
+        },
+        "chip": {
+          "focused": {
+            "border": {
+              "color": "#5b3fd0",
+              "width": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

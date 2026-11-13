@@ -440,8 +440,9 @@ class _AppShellState extends State<AppShell> {
               final watchingOnPhone = _controller.onWatchPage && watchesLikePhone(context);
               _tvRail = Device.tv && rail && !(skin?.drawsRail ?? false);
               final scaffold = Scaffold(
-                // The page under the bars is veiled on its own (_veiled).
-                backgroundColor: Colors.transparent,
+                // Under a skin the page is its picture, veiled on its own
+                // (_veiled); without one, the theme's page colour.
+                backgroundColor: skin == null ? null : Colors.transparent,
                 // Below Android's status bar and camera cutout; the
                 // navigation bar keeps clear of the gesture bar itself.
                 body: SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [

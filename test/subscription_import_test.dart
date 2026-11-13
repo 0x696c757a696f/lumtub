@@ -99,4 +99,22 @@ void main() {
     expect(data.channels.map((ch) => ch.$1), [a, b]);
     expect(maxSubscriptionFileBytes, 20 << 20);
   });
+
+  test('the NewPipe export reads back, and a Lumtub settings backup imports too', () {
+    final exported = parse(newPipeSubscriptions([(a, 'A'), (b, 'B')]));
+    expect(exported.format, SubscriptionFormat.newPipe);
+    expect(exported.channels, [(a, 'A'), (b, 'B')]);
+    final backup = parse(jsonEncode({
+      'app': 'Lumtub',
+      'version': 2,
+      'player': {},
+      'library': {
+        'channels': [
+          {'id': c, 'name': 'C'},
+        ],
+      },
+    }));
+    expect(backup.format, SubscriptionFormat.lumtub);
+    expect(backup.channels, [(c, 'C')]);
+  });
 }

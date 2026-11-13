@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -92,5 +93,38 @@ void main() {
 
     await File('${dir.path}/library.json').writeAsString('{not json');
     await store().load();
+  });
+
+  test('a backup restores channels, groups, favorites and own playlists without duplicates', () {
+    final source = store();
+    source.channels.add(channel);
+    source.channelGroups.add(ChannelGroup('Music', {channel.id}));
+    source.favorites.add(video);
+    source.watchLater.add(other);
+    source.createPlaylist('Mine').items.add(video);
+    source.playlists.add(LocalPlaylist(id: '${remotePlaylistPrefix}PL1', name: 'From YouTube', items: [other]));
+    source.setProgress(video.id, const Duration(seconds: 90), const Duration(minutes: 3));
+    final json = jsonDecode(jsonEncode(source.backup().toJson()));
+    expect((json as Map).containsKey('progress'), isFalse);
+    expect(json['playlists'], hasLength(1));
+    final backup = LibraryBackup.parse(json);
+
+    final target = store();
+    target.favorites.add(video);
+    final merge = target.mergeBackup(backup);
+    expect(merge.channels, 1);
+    expect(merge.videos, 1);
+    expect(merge.playlists, 1);
+    expect(target.channels.single.id, channel.id);
+    expect(target.channelGroups.single.channels, {channel.id});
+    expect(target.favorites, hasLength(1));
+    expect(target.watchLater.single.id, other.id);
+    expect(target.playlists.single.name, 'Mine');
+
+    // Restoring again adds nothing.
+    final again = target.mergeBackup(backup);
+    expect(again.changed, isFalse);
+    expect(target.channelGroups, hasLength(1));
+    expect(target.mergeBackup(LibraryBackup.parse('not a map')).changed, isFalse);
   });
 }

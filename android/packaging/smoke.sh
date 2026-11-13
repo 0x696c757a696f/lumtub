@@ -16,7 +16,8 @@ adb logcat -d > "$out/logcat.txt"
 pid=$(adb shell pidof io.github.lumtub.lumtub | tr -d '\r')
 grep -E 'flutter|Lumtub|AndroidRuntime|DEBUG' "$out/logcat.txt" | tail -80
 if [ -z "$pid" ]; then echo "::error::Lumtub is not running 45 s after start"; exit 1; fi
-if grep -q 'FATAL EXCEPTION\|Fatal signal' "$out/logcat.txt"; then echo "::error::Lumtub crashed"; exit 1; fi
+# Only Lumtub's own crashes: the emulator's system apps sometimes crash too.
+if grep -A1 'FATAL EXCEPTION' "$out/logcat.txt" | grep -q 'Process: io.github.lumtub' || grep 'Fatal signal' "$out/logcat.txt" | grep -q 'lumtub'; then echo "::error::Lumtub crashed"; exit 1; fi
 echo "Lumtub is running (pid $pid)"
 # yt-dlp, run by the APK's Python, answers its version on first start.
 grep -E 'Lumtub: yt-dlp' "$out/logcat.txt" || true

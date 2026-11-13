@@ -161,7 +161,7 @@ class DownloadsPage extends StatelessWidget {
               label: Text(tr('Change location')),
             ),
             // Android has no file manager to hand the folder to.
-            if (!Platform.isAndroid) FilledButton.tonalIcon(
+            if (!Platform.isAndroid && !Platform.isIOS) FilledButton.tonalIcon(
               onPressed: () => unawaited(openInExplorer(manager.directory)),
               icon: Icon(AppIcons.arrowSquareOut),
               label: Text(tr('Open folder')),
@@ -285,7 +285,7 @@ class _DownloadTile extends StatelessWidget {
         if (task.status == DownloadStatus.paused && !task.item.isLive) button(AppIcons.playFill, tr('Resume'), () => manager.resume(task.id)),
         if ((task.active || task.status == DownloadStatus.paused) && !task.finishing) button(AppIcons.x, tr('Cancel'), () => manager.cancel(task.id)),
         if (failed || task.status == DownloadStatus.cancelled) button(AppIcons.arrowsClockwise, tr('Retry'), () => manager.retry(task.id)),
-        if (task.status == DownloadStatus.done && task.filePath != null && !Platform.isAndroid)
+        if (task.status == DownloadStatus.done && task.filePath != null && !Platform.isAndroid && !Platform.isIOS)
           button(AppIcons.folderOpen, tr('Show in folder'), () => unawaited(openInExplorer(task.filePath!, select: true))),
         if (!task.active) button(AppIcons.trash, tr('Delete'), () => _confirmDelete(context)),
       ]),

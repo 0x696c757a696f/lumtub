@@ -1053,6 +1053,84 @@ jobs:
           path: Lumtub_*_macos-x64.dmg
           if-no-files-found: error
 
+  ios:
+    name: iOS
+    needs: reuse
+    if: ${{ !cancelled() && needs.reuse.outputs.run == '' }}
+    # An unsigned IPA for SideStore, AltStore, Sideloadly or TrollStore:
+    # without an Apple developer account nothing else installs on an iPhone.
+    runs-on: macos-15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: iOS - read the Flutter version
+        shell: bash
+        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
+
+      - name: iOS - install Flutter stable SDK
+        run: |
+          archive="$RUNNER_TEMP/flutter.zip"
+          curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_$FLUTTER_VERSION-stable.zip"
+          unzip -q "$archive" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
+
+      - name: iOS - install the Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --target aarch64-apple-ios
+          rustup default stable
+
+      - name: iOS - cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: ios
+
+      - name: iOS - build the Rust core
+        run: |
+          # bindgen (QuickJS's bindings) needs the iPhone SDK's headers.
+          export BINDGEN_EXTRA_CLANG_ARGS_aarch64_apple_ios="-isysroot $(xcrun --sdk iphoneos --show-sdk-path)"
+          IPHONEOS_DEPLOYMENT_TARGET=15.0 cargo build --manifest-path native/lumtub_core/Cargo.toml --release --lib --target aarch64-apple-ios
+          core=native/lumtub_core/target/aarch64-apple-ios/release/liblumtub_core.dylib
+          lipo -info "$core"
+          echo "LUMTUB_CORE=$PWD/$core" >> "$GITHUB_ENV"
+
+      - name: iOS - get packages
+        run: flutter pub get
+
+      - name: iOS - determine package version
+        run: |
+          base=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml)
+          if [ "${GITHUB_REF#refs/tags/v}" != "$GITHUB_REF" ]; then
+            version="${GITHUB_REF#refs/tags/v}"
+          else
+            version="$base-$(git rev-parse --short=7 "HEAD^{tree}")"
+          fi
+          echo "$version" | grep -Eq '^[0-9A-Za-z.+-]+$' || { echo "Unexpected version: $version"; exit 1; }
+          echo "LUMTUB_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Version $version"
+
+      - name: iOS - build release
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
+        run: flutter build ios --release --no-codesign --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE=ios --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
+
+      - name: iOS - add Python and yt-dlp
+        run: ios/packaging/python.sh build/ios/iphoneos/Runner.app "$RUNNER_TEMP/python"
+
+      - name: iOS - package the IPA
+        run: ios/packaging/package.sh build/ios/iphoneos/Runner.app "$LUMTUB_CORE" "Lumtub_${LUMTUB_VERSION}_ios.ipa"
+
+      - name: iOS - upload IPA
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Lumtub-ios-ipa
+          path: Lumtub_*_ios.ipa
+          if-no-files-found: error
+
   android:
     name: Android
     needs: reuse
@@ -1241,8 +1319,8 @@ jobs:
   # Marks these files as built and passed, for the reuse job above.
   built:
     name: Mark the files built
-    needs: [reuse, windows, linux, macos, android]
-    if: ${{ !cancelled() && !failure() && needs.reuse.outputs.run == '' && needs.windows.result == 'success' && needs.linux.result == 'success' && needs.macos.result == 'success' && needs.android.result == 'success' }}
+    needs: [reuse, windows, linux, macos, ios, android]
+    if: ${{ !cancelled() && !failure() && needs.reuse.outputs.run == '' && needs.windows.result == 'success' && needs.linux.result == 'success' && needs.macos.result == 'success' && needs.ios.result == 'success' && needs.android.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -1262,7 +1340,7 @@ jobs:
 
   release:
     name: Release
-    needs: [reuse, windows, linux, macos, android]
+    needs: [reuse, windows, linux, macos, ios, android]
     # Skipped builds (reused from an earlier build) are not failures.
     if: ${{ !cancelled() && !failure() && startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-24.04
@@ -1275,19 +1353,22 @@ jobs:
           sparse-checkout: |
             release-notes
             native/lumtub_core
+            ios/packaging
+            pubspec.yaml
+          sparse-checkout-cone-mode: false
       - name: Packages built here
         if: needs.reuse.outputs.run == ''
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           path: dist
-          pattern: Lumtub-{windows,linux,macos,android}-*
+          pattern: Lumtub-{windows,linux,macos,ios,android}-*
           merge-multiple: true
       - name: Packages of the earlier build
         if: needs.reuse.outputs.run != ''
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           path: dist
-          pattern: Lumtub-{windows,linux,macos,android}-*
+          pattern: Lumtub-{windows,linux,macos,ios,android}-*
           merge-multiple: true
           run-id: ${{ needs.reuse.outputs.run }}
           github-token: ${{ github.token }}
@@ -1315,7 +1396,18 @@ jobs:
           fi
           rustup update stable
           shopt -s nullglob
-          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg dist/*.apk
+          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg dist/*.apk dist/*.ipa
+      - name: AltStore and SideStore source
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          # Added once in SideStore or AltStore, the source at
+          # releases/latest/download/altstore-source.json offers each new IPA.
+          shopt -s nullglob
+          ipas=(dist/*.ipa)
+          (( ${#ipas[@]} == 1 )) || { echo "No IPA in this release"; exit 0; }
+          version="${TAG#v}"
+          python3 ios/packaging/altstore-source.py "${ipas[0]}" "$TAG" "release-notes/${version%%-*}.md" dist/altstore-source.json
       - name: Publish the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

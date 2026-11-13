@@ -1089,7 +1089,7 @@ final _chatRows = Expando<Widget>();
 @visibleForTesting
 Widget upNextForTest(AppController controller) => _UpNext(controller: controller);
 
-enum _Related { all, channel, others, forYou, recent, watched }
+enum _Related { all, live, channel, others, forYou, recent, watched }
 
 /// Which related videos show, for the video it was picked on.
 final _relatedFilter = ValueNotifier<(String?, _Related)>((null, _Related.all));
@@ -1194,11 +1194,14 @@ class _UpNext extends StatelessWidget {
     final forYou = [for (final item in controller.homeFeed?.items ?? const <VideoItem>[]) if (item.id != playing?.id) item];
     final choices = [
       (_Related.all, tr('All'), related),
+      // Watching a live, other lives come next to it.
+      if (playing?.isLive ?? false) (_Related.live, tr('Live'), [for (final item in related) if (item.isLive) item]),
       (_Related.channel, tr('From {0}', [channel]), [for (final item in related) if (own(item)) item]),
       (_Related.others, tr('Related content'), [for (final item in related) if (!own(item)) item]),
       (_Related.forYou, tr('For you'), forYou),
       (_Related.recent, tr('Recently uploaded'), [for (final item in related) if (item.published?.isAfter(monthAgo) ?? false) item]),
       (_Related.watched, tr('Watched'), [for (final item in related) if (library?.progressOf(item.id) != null) item]),
+      if (!(playing?.isLive ?? false)) (_Related.live, tr('Live'), [for (final item in related) if (item.isLive) item]),
     ];
     return [
       for (final choice in choices)

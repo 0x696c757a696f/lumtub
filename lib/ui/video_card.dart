@@ -133,6 +133,8 @@ class SliverVideoGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     // Room for the watched line only when some card has one.
     final watched = this.watched != null && items.any((item) => this.watched![item.id] != null) ? this.watched : null;
+    // Room for the reason line only when some card has a reason.
+    final reasoned = reasons != null && items.any((item) => (reasons![item.id] ?? '').isNotEmpty);
     return SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: videoLayout != VideoLayout.grid
@@ -160,7 +162,7 @@ class SliverVideoGrid extends StatelessWidget {
               crossAxisCount: layout.columns,
               mainAxisSpacing: _gridRowGap,
               crossAxisSpacing: gridGap,
-              mainAxisExtent: layout.itemHeight + (watched == null ? 0 : _reasonHeight * cardTextScale(context)),
+              mainAxisExtent: layout.itemHeight + ((watched == null ? 0 : 1) + (reasoned ? 1 : 0)) * _reasonHeight * cardTextScale(context),
             ),
             delegate: SliverChildBuilderDelegate(
               (context, i) => VideoCard(
@@ -629,14 +631,13 @@ class _VideoCardState extends State<VideoCard> {
             // title, so a row of cards lines up.
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: Align(alignment: AlignmentDirectional.topStart, child: Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: compact ? 13 : 14, height: compact ? 1.32 : 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)))),
-              // Why it is here, whose it is, and its menu.
+              // Why it is here, on a line of its own so it reads whole.
+              if (widget.reason case final reason? when reason.isNotEmpty)
+                SizedBox(height: _reasonHeight * cardTextScale(context), child: Align(alignment: AlignmentDirectional.centerStart, child: ReasonTag(reason, wide: true))),
+              // Whose it is, and its menu.
               SizedBox(
                 height: 24,
                 child: Row(children: [
-                  if (widget.reason case final reason? when reason.isNotEmpty) ...[
-                    ReasonTag(reason),
-                    const SizedBox(width: 6),
-                  ],
                   Expanded(child: Text(meta.lead.isEmpty ? tr('YouTube') : meta.lead, maxLines: 1, overflow: TextOverflow.ellipsis, style: metaStyle)),
                   Builder(builder: (context) => IconButton(
                     tooltip: tr('More (Menu key)'),
@@ -1148,8 +1149,12 @@ class MetaLine extends StatelessWidget {
 /// Why a recommended video is on the feed, as a small tag: a word or two,
 /// with the full reason when the pointer rests on it.
 class ReasonTag extends StatelessWidget {
-  const ReasonTag(this.reason, {super.key});
+  const ReasonTag(this.reason, {super.key, this.wide = false});
   final String reason;
+
+  /// Shows the whole reason across the width it is given, not a word for
+  /// its kind.
+  final bool wide;
 
   @override
   Widget build(BuildContext context) {
@@ -1158,12 +1163,12 @@ class ReasonTag extends StatelessWidget {
     return Tooltip(
       message: text,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 120),
+        constraints: BoxConstraints(maxWidth: wide ? double.infinity : 120),
         child: DecoratedBox(
           decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(4)),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            child: Text(kind?.label ?? text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, height: 1.3, fontWeight: FontWeight.w500, color: color)),
+            child: Text(wide ? text : kind?.label ?? text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, height: 1.3, fontWeight: FontWeight.w500, color: color)),
           ),
         ),
       ),

@@ -13,6 +13,12 @@ String? userFolder(UserFolder kind, {Map<String, String>? environment, bool? win
   if (environment == null && windows == null && mac == null && Platform.isAndroid) {
     return '/storage/emulated/0/${kind == UserFolder.videos ? 'Movies' : 'Pictures'}';
   }
+  // iOS: the app's own Documents folder, which the Files app shows.
+  if (environment == null && windows == null && mac == null && Platform.isIOS) {
+    final home = Platform.environment['HOME'];
+    if (home == null || home.isEmpty) return null;
+    return '$home/Documents/${kind == UserFolder.videos ? 'Videos' : 'Pictures'}';
+  }
   final env = environment ?? Platform.environment;
   final isWindows = windows ?? Platform.isWindows;
   final isMac = mac ?? Platform.isMacOS;

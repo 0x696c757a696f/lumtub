@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'android_python.dart';
 import 'app_directories.dart';
 import 'app_log.dart';
+import 'ios_python.dart';
 import 'zip_archive.dart';
 import 'libmpv_updates.dart';
 import 'native_core.dart';
@@ -98,7 +99,11 @@ class ToolManager {
     // Android: libmpv comes inside the APK; yt-dlp runs with the APK's
     // Python, and without it streams come from the core (quick.rs) alone.
     if (Platform.isAndroid) return ToolPaths(mpv: '', ytDlp: await _androidYtDlp(), deno: null);
-    if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) throw UnsupportedError('Lumtub runs on Windows, Linux, macOS and Android.');
+    // iOS: libmpv comes inside the app, and no other program may run, so
+    // yt-dlp runs in the app's own Python; without it streams come from
+    // the core alone.
+    if (Platform.isIOS) return ToolPaths(mpv: '', ytDlp: await _iosYtDlp(), deno: null);
+    if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) throw UnsupportedError('Lumtub runs on Windows, Linux, macOS, Android and iOS.');
     // The runner already loaded a downloaded libmpv when one was selected;
     // Dart has to open that same copy.
     final mpv = _systemMpv ? _linuxMpv : libmpv.loadedPath ?? _bundledMpv;
@@ -144,9 +149,27 @@ class ToolManager {
       return '';
     }
     if (python == null) return '';
+    return _zipAppYtDlp(python.bundledYtDlp);
+  }
+
+  /// The newest yt-dlp, the one inside the app installed the first time;
+  /// '' when the app carries no Python.
+  Future<String> _iosYtDlp() async {
+    final IosPython? python;
+    try {
+      python = await IosPython.prepare('${root.path}${_separator}python-temp');
+    } catch (e) {
+      logWarn('Python for yt-dlp could not be prepared: $e');
+      return '';
+    }
+    if (python == null) return '';
+    return _zipAppYtDlp(python.bundledYtDlp);
+  }
+
+  /// The installed yt-dlp zip app, or [bundled] copied in as the first.
+  Future<String> _zipAppYtDlp(String? bundled) async {
     final found = discover()?.ytDlp;
     if (found != null && found.isNotEmpty) return found;
-    final bundled = python.bundledYtDlp;
     if (bundled == null) return '';
     try {
       status('Preparing yt-dlp…');
@@ -237,7 +260,7 @@ class ToolManager {
   /// release.
   bool get _ytDlpIsSingleFile {
     final yt = discover()?.ytDlp;
-    if (Platform.isAndroid || yt == null || yt.isEmpty) return false;
+    if (_zipApp || yt == null || yt.isEmpty) return false;
     return !Directory('${File(yt).parent.path}${_separator}_internal').existsSync();
   }
 
@@ -254,7 +277,7 @@ class ToolManager {
 
   Future<void> checkUpdates({bool force = false}) async {
     // Android has no Deno to keep current, and yt-dlp only with its Python.
-    if (Platform.isIOS || Platform.isAndroid && AndroidPython.current == null) return;
+    if (Platform.isIOS && IosPython.current == null || Platform.isAndroid && AndroidPython.current == null) return;
     final stamp = File('${root.path}${Platform.pathSeparator}last_update_check.txt');
     // The single-file yt-dlp is replaced as soon as possible, but a failed
     // try waits an hour, as does any check that failed, rather than costing
@@ -276,7 +299,7 @@ class ToolManager {
     final errors = <String>[];
     for (final task in <(String, Future<void> Function())>[
       ('yt-dlp', _installYtDlp),
-      if (!Platform.isAndroid) ('Deno', _installDeno),
+      if (!_zipApp) ('Deno', _installDeno),
       if (!_systemMpv) ('libmpv', _installLibmpv),
     ]) {
       try {
@@ -468,13 +491,13 @@ class ToolManager {
     final release = await _release('yt-dlp/yt-dlp-nightly-builds');
     final tag = _safeTag(release['tag_name']);
     final group = Directory('${root.path}${_separator}yt-dlp');
-    if (!Platform.isAndroid) await _removeSingleFileYtDlp(group);
+    if (!_zipApp) await _removeSingleFileYtDlp(group);
     var dest = Directory('${group.path}$_separator$tag');
     // A version rolled back by the user is not installed again.
     if (await File('${dest.path}$_separator$_failedMarker').exists()) return;
     if (await File('${dest.path}$_separator${_exe('yt-dlp')}').exists()) {
-      // Android's is the zip app, which Python runs as it is.
-      if (Platform.isAndroid) return;
+      // Android's and iOS's is the zip app, which Python runs as it is.
+      if (_zipApp) return;
       if (await Directory('${dest.path}${_separator}_internal').exists()) return;
       // The same release as the single-file build in use, unpacked, beside
       // it: the running one cannot be replaced, and the newer name wins.
@@ -502,7 +525,7 @@ class ToolManager {
   /// unpacks itself to a temp folder on every start, which costs a second
   /// of CPU and a second process for each search or channel page.
   Future<File> _downloadYtDlp(Map<String, dynamic> release, Directory into) async {
-    if (Platform.isAndroid) {
+    if (_zipApp) {
       final app = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset), Directory('${root.path}${_separator}downloads'));
       await into.create(recursive: true);
       return app.rename('${into.path}${_separator}yt-dlp');
@@ -537,7 +560,10 @@ class ToolManager {
     }
   }
 
-  static String get ytDlpFolderAsset => Platform.isAndroid
+  /// Whether yt-dlp is the zip app run by the app's own Python.
+  static bool get _zipApp => Platform.isAndroid || Platform.isIOS;
+
+  static String get ytDlpFolderAsset => _zipApp
       ? 'yt-dlp'
       : Platform.isWindows
       ? 'yt-dlp_win.zip'

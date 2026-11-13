@@ -336,7 +336,35 @@ fn model() -> String {
         .to_string()
 }
 
-#[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
+/// iOS and iPadOS: asked of VideoToolbox like macOS, without the
+/// supplemental decoders, which only macOS registers.
+#[cfg(target_os = "ios")]
+pub fn probe() -> Option<Decoders> {
+    #[link(name = "VideoToolbox", kind = "framework")]
+    unsafe extern "C" {
+        fn VTIsHardwareDecodeSupported(codec: u32) -> u8;
+    }
+    const H264: u32 = u32::from_be_bytes(*b"avc1");
+    const VP9: u32 = u32::from_be_bytes(*b"vp09");
+    const AV1: u32 = u32::from_be_bytes(*b"av01");
+
+    // SAFETY: a VideoToolbox function taking a four-character codec code.
+    let supported = |codec: u32, height: u32| -> u32 {
+        if unsafe { VTIsHardwareDecodeSupported(codec) } != 0 {
+            height
+        } else {
+            0
+        }
+    };
+    Some(Decoders {
+        adapter: "Apple VideoToolbox".into(),
+        h264: supported(H264, 2160),
+        vp9: supported(VP9, 2160),
+        av1: supported(AV1, 2160),
+    })
+}
+
+#[cfg(not(any(windows, target_os = "linux", target_os = "macos", target_os = "ios")))]
 pub fn probe() -> Option<Decoders> {
     None
 }

@@ -79,3 +79,9 @@ The changes, marked "Lumtub" in the code:
   `EGL_PLATFORM_ANGLE_D3D_LUID_*`), not on the system default. The graphics
   card setting (`GpuPreference` in the runner) then moves the video too,
   and a texture is never shared across two adapters.
+
+- `ios/`: the iOS plugin from 2.0.1, with `Classes/plugin/common` copied
+  from `common/darwin` (so it has the macOS fixes above), registered again
+  in `pubspec.yaml`. `TextureHW.swift` returns nil instead of ending the
+  app when libmpv cannot render with OpenGL ES, so the video falls back to
+  software like on macOS.

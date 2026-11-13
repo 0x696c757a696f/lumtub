@@ -61,7 +61,7 @@ Future<void> restartApp() async {
 /// Hands [text] to Android's share sheet; false where there is none, so
 /// the caller copies it instead.
 Future<bool> shareText(String text) async {
-  if (!Platform.isAndroid) return false;
+  if (!Platform.isAndroid && !Platform.isIOS) return false;
   try {
     await const MethodChannel('lumtub/windows_shell').invokeMethod<void>('shareText', text);
     return true;
@@ -77,7 +77,7 @@ Future<bool> shareText(String text) async {
 /// file manager to hand a folder to.
 Future<void> openWithDesktop(String target) async {
   if (Platform.isWindows) return;
-  if (Platform.isAndroid) {
+  if (Platform.isAndroid || Platform.isIOS) {
     if (!target.startsWith('http://') && !target.startsWith('https://')) return;
     try {
       await const MethodChannel('lumtub/windows_shell').invokeMethod<void>('openUrl', target);

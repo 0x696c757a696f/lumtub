@@ -189,6 +189,7 @@ Sponsors pay for the time to build it.
 
 <a href="https://github.com/sponsors/0x696c757a696f"><img src="https://img.shields.io/badge/Sponsor_on_GitHub-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub" height="44"></a>
 <a href="https://afdian.com/a/linmuqingfeng"><img src="https://img.shields.io/badge/Afdian_%E7%88%B1%E5%8F%91%E7%94%B5-%E2%9D%A4-946CE6?style=for-the-badge" alt="Afdian" height="44"></a>
+<a href="https://ko-fi.com/0x696c757a696f"><img src="https://img.shields.io/badge/Ko--fi-%E2%9D%A4-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white" alt="Ko-fi" height="44"></a>
 
 **Monthly sponsors** decide what comes next: a code-signing certificate so Windows stops warning on install, and Apple notarization.<br>
 Feature requests from sponsors carry the **sponsor priority** label and are worked on first.<br>
@@ -196,7 +197,7 @@ One-time gifts of any amount are just as welcome. The same page is in the app un
 
 </div>
 
-[Afdian](https://afdian.com/a/linmuqingfeng) takes Alipay and WeChat Pay. Other ways to give, crypto included, are in [SPONSORING.md](SPONSORING.md).
+[Ko-fi](https://ko-fi.com/0x696c757a696f) takes one-time gifts by PayPal or card, no GitHub account needed. [Afdian](https://afdian.com/a/linmuqingfeng) takes Alipay and WeChat Pay. Other ways to give, crypto included, are in [SPONSORING.md](SPONSORING.md).
 
 Can't give money? ⭐ Star the repository, tell a friend, [report a bug or suggest an idea](https://github.com/0x696c757a696f/lumtub/issues), [suggest a channel for the block lists](lists/README.md#suggesting-a-change), or [translate Lumtub](https://hosted.weblate.org/engage/lumtub/). It all helps.
 

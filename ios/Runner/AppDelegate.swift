@@ -1,4 +1,5 @@
 import AVFoundation
+import AuthenticationServices
 import Flutter
 import UIKit
 
@@ -28,10 +29,12 @@ import UIKit
 
 /// The few system calls the Dart side asks for on 'lumtub/windows_shell',
 /// with the method names the Android version uses.
-final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate {
+final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate, ASWebAuthenticationPresentationContextProviding {
   /// The answer to the 'saveFile' call whose picker is open.
   private var saving: FlutterResult?
   private var savedFile: URL?
+  /// Google's sign-in page, shown over the app while it is open.
+  private var signIn: ASWebAuthenticationSession?
 
   static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "lumtub/windows_shell", binaryMessenger: registrar.messenger())
@@ -64,6 +67,25 @@ final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate {
       result(nil)
     case "saveFile":
       saveFile(call.arguments as? [String: Any], result: result)
+    case "signInPage":
+      // Google sends the page back to a server Lumtub runs on 127.0.0.1.
+      // Safari would send Lumtub to the background, where iOS suspends it
+      // and the server cannot answer; this sheet keeps Lumtub in front.
+      guard let text = call.arguments as? String, let url = URL(string: text) else {
+        result(FlutterError(code: "bad_url", message: "Not an address", details: nil))
+        return
+      }
+      signIn?.cancel()
+      let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "lumtub") { [weak self] _, _ in
+        self?.signIn = nil
+      }
+      session.presentationContextProvider = self
+      signIn = session
+      result(session.start() ? nil : FlutterError(code: "not_opened", message: "The sign-in page did not open", details: nil))
+    case "closeSignInPage":
+      signIn?.cancel()
+      signIn = nil
+      result(nil)
     case "isTv":
       result(false)
     default:
@@ -115,6 +137,11 @@ final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate {
       try? FileManager.default.removeItem(at: file.deletingLastPathComponent())
     }
     savedFile = nil
+  }
+
+  func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+    let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+    return scenes.flatMap { $0.windows }.first { $0.isKeyWindow } ?? scenes.first?.windows.first ?? ASPresentationAnchor()
   }
 
   private static func topController() -> UIViewController? {

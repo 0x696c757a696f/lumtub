@@ -157,6 +157,15 @@ class _LumtubAppState extends State<LumtubApp> {
     // Google sign-in returns to a server in the app; on Android the app is
     // kept running while the browser is in front.
     if (Platform.isAndroid) GoogleAuth.keepAlive = (waiting) => const MethodChannel('lumtub/windows_shell').invokeMethod<void>('holdForSignIn', waiting);
+    // On iOS the page opens in a sheet over the app, which iOS does not
+    // suspend, and closes once the app has its answer.
+    if (Platform.isIOS) {
+      const shell = MethodChannel('lumtub/windows_shell');
+      GoogleAuth.signInPage = (uri) => shell.invokeMethod<void>('signInPage', uri.toString());
+      GoogleAuth.keepAlive = (waiting) async {
+        if (!waiting) await shell.invokeMethod<void>('closeSignInPage');
+      };
+    }
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid) _shell = WindowsShellSync(controller, WindowsShell());
     if (controller.appearance.systemAccent) unawaited(controller.refreshWindowsAccent());
     // Closing the window ends the process without disposing widgets, so the

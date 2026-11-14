@@ -61,7 +61,6 @@ class AppPreferences {
     this.hideShorts = false,
     this.aiFilter = AiFilterMode.off,
     this.logLevel = LogLevel.info,
-    this.exploreHeardOnly = true,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
     this.hideMembersOnly = false,
@@ -162,11 +161,6 @@ class AppPreferences {
   /// How much goes into the log.
   final LogLevel logLevel;
 
-  /// With a language picked in explore, only videos whose audio or
-  /// automatic captions confirm it, not their title and description,
-  /// which uploaders translate. On by default; kept under a new key, so
-  /// that it starts on also where the old default was saved.
-  final bool exploreHeardOnly;
   final int minDurationMinutes;
   final bool hideWatched;
   final bool hideMembersOnly;
@@ -444,7 +438,6 @@ class AppPreferences {
     bool? hideShorts,
     AiFilterMode? aiFilter,
     LogLevel? logLevel,
-    bool? exploreHeardOnly,
     int? minDurationMinutes,
     bool? hideWatched,
     bool? hideMembersOnly,
@@ -532,7 +525,6 @@ class AppPreferences {
         hideShorts: hideShorts ?? this.hideShorts,
         aiFilter: aiFilter ?? this.aiFilter,
         logLevel: logLevel ?? this.logLevel,
-        exploreHeardOnly: exploreHeardOnly ?? this.exploreHeardOnly,
         minDurationMinutes: minDurationMinutes ?? this.minDurationMinutes,
         hideWatched: hideWatched ?? this.hideWatched,
         hideMembersOnly: hideMembersOnly ?? this.hideMembersOnly,
@@ -621,7 +613,6 @@ class AppPreferences {
         'hideShorts': hideShorts,
         'aiFilter': aiFilter.name,
         'logLevel': logLevel.name,
-        'exploreHeardOnlyV2': exploreHeardOnly,
         'minDurationMinutes': minDurationMinutes,
         'hideWatched': hideWatched,
         'hideMembersOnly': hideMembersOnly,
@@ -756,7 +747,6 @@ class AppPreferences {
       hideShorts: flag('hideShorts', d.hideShorts),
       aiFilter: AiFilterMode.parse(raw['aiFilter']),
       logLevel: LogLevel.parse(raw['logLevel']),
-      exploreHeardOnly: flag('exploreHeardOnlyV2', d.exploreHeardOnly),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),
       hideMembersOnly: flag('hideMembersOnly', d.hideMembersOnly),

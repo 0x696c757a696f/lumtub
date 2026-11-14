@@ -39,8 +39,8 @@ class VideoLanguages {
   static const parallel = 6;
   static const _kept = 20000;
   static const giveUpAfterDefault = 240;
-  /// Videos answered before hearing alone is given up on, when fewer than
-  /// one in ten of them could be heard.
+  /// Answers after which the filter stops when none of them told by audio
+  /// or captions.
   static const unheardAfter = 40;
 
   static const _fields = 'videoDetails.title,videoDetails.shortDescription,captions.playerCaptionsTracklistRenderer.captionTracks.languageCode,'
@@ -48,9 +48,6 @@ class VideoLanguages {
   late final _probe = YoutubePlayerProbe(_client);
 
   Map<String, SpokenVideo>? _known;
-  /// The language the texts of a known answer were asked in, when not
-  /// English.
-  final _askedIn = <String, String>{};
   final _waiting = <Completer<void>>[];
   int _running = 0;
   Timer? _save;
@@ -61,21 +58,17 @@ class VideoLanguages {
   /// a null language when nothing in the video tells, and
   /// [ExploreLanguage.any] for a language explore does not offer.
   ///
-  /// [asking] is the language looked for. The title and description are
-  /// asked in it: asked in English, an uploader's English translation of
-  /// the title would make an Italian video read as English when nothing
-  /// else tells.
+  /// [asking] is the language looked for: the title comes in it, as the
+  /// person reading the list would want it.
+  ///
+  /// Only what audio or captions told is kept: an answer without either
+  /// is asked again next time, when YouTube may tell.
   Future<SpokenVideo?> of(String id, {ExploreLanguage asking = ExploreLanguage.any}) async {
     final known = _known ??= await (_loading ??= _load());
     final hl = asking == ExploreLanguage.any ? 'en' : asking.code;
-    if (known[id] case final found?) {
-      // Told by text read in English before titles were asked in the
-      // language looked for: asked again.
-      final stale = found.source == 'text' && found.language == ExploreLanguage.en && hl != 'en' && (_askedIn[id] ?? 'en') == 'en';
-      if (!stale) return found;
-    }
+    if (known[id] case final found?) return found;
     // YouTube stopped answering this app for now: asking more would only
-    // keep it refusing, playback included. Videos pass unchecked meanwhile.
+    // keep it refusing, playback included.
     if (_resting case final until? when DateTime.now().isBefore(until)) return null;
     while (_running >= parallel) {
       final turn = Completer<void>();
@@ -84,44 +77,25 @@ class VideoLanguages {
     }
     _running++;
     try {
-        final found = await _ask(id, hl);
-        if (found != null && (found.heard || found.language != null)) {
-          if (known.length >= _kept) {
-            final oldest = known.keys.first;
-            known.remove(oldest);
-            _askedIn.remove(oldest);
-          }
-          known[id] = found;
-          if (hl == 'en') {
-            _askedIn.remove(id);
-          } else {
-            _askedIn[id] = hl;
-          }
-          _save ??= Timer(const Duration(seconds: 5), _write);
-        }
-        return found;
-      } catch (e) {
-        logWarn('Could not tell the language of $id: $e');
-        return null;
+      final found = await _ask(id, hl);
+      if (found != null && found.heard) {
+        if (known.length >= _kept) known.remove(known.keys.first);
+        known[id] = found;
+        _save ??= Timer(const Duration(seconds: 5), _write);
+      }
+      return found;
+    } catch (e) {
+      logWarn('Could not tell the language of $id: $e');
+      return null;
     } finally {
       _running--;
       if (_waiting.isNotEmpty) _waiting.removeAt(0).complete();
     }
   }
 
-  /// Whether answers come whole: set once a whole answer has captions its
-  /// masked one left out.
-  static bool _maskDrops = false;
-
-  /// Whether the TV app is asked first: set once it has captions where
-  /// the website answered without them.
-  static bool _tvFirst = false;
-
-  /// Answers without captions asked again whole, to learn whether the
-  /// field mask loses them: a few each run. Every one is still asked of
-  /// the other app.
-  static int _compared = 0;
-  static const _compare = 8;
+  /// The app asked first: the one that last told a video by its captions
+  /// or audio. The others are asked when it does not tell.
+  static PlayerClient _first = PlayerClient.quick;
 
   /// Until when no video is asked about, after YouTube left the video out
   /// of half of the last answers.
@@ -135,58 +109,49 @@ class VideoLanguages {
     if (_recent.length < 20 || _recent.where((v) => !v).length < 10) return;
     _recent.clear();
     _resting = DateTime.now().add(rest);
-    logWarn('Video languages: YouTube left the video out of half of the last 20 answers; asking none for ${rest.inMinutes} minutes, videos pass unchecked meanwhile');
+    logWarn('Video languages: YouTube left the video out of half of the last 20 answers; asking none for ${rest.inMinutes} minutes');
   }
 
   @visibleForTesting
   static void reset() {
     _resting = null;
     _recent.clear();
-    _maskDrops = false;
-    _tvFirst = false;
-    _compared = 0;
+    _first = PlayerClient.quick;
   }
 
-  Future<_Read?> _fetch(String id, String hl, {required bool tv, bool whole = false}) async {
-    final read = await _readInBackground(await _probe.fetch(id, whole || _maskDrops ? null : _fields, expect: 'videoDetails', tv: tv, hl: hl));
-    if (read is! Map<String, dynamic>) return null;
-    return (spoken: _spoken(read), playable: read['playable'] != false);
+  Future<_Read?> _fetch(String id, String hl, PlayerClient client) async {
+    try {
+      final read = await _readInBackground(await _probe.fetchAs(client, id, _fields, expect: 'videoDetails', hl: hl));
+      if (read is! Map<String, dynamic>) return null;
+      return (spoken: _spoken(read), playable: read['playable'] != false);
+    } catch (e) {
+      logDebug(() => 'Video languages: ${client.name} gave no answer for $id: $e');
+      return null;
+    }
   }
 
+  /// Each app in turn until one tells by captions or audio: YouTube gives
+  /// them to one app and leaves them out for another, and which one
+  /// changes. An answer that does not tell is still better than none.
   Future<SpokenVideo?> _ask(String id, String hl) async {
-    final read = await _fetch(id, hl, tv: _tvFirst);
-    if (read == null) {
-      // No video in the answer at all, as when YouTube wants this app to
-      // prove it is not a bot: the other one is asked.
-      final other = await _fetch(id, hl, tv: !_tvFirst);
-      if (other != null && other.spoken.heard) {
-        _tvFirst = !_tvFirst;
-        logInfo('Video languages: ${_tvFirst ? 'the website' : 'the TV app'} answered without the video; asking ${_tvFirst ? 'the TV app' : 'the website'} first');
+    _Read? best;
+    var withVideo = false;
+    for (final client in [_first, ...PlayerClient.values.where((c) => c != _first)]) {
+      final read = await _fetch(id, hl, client);
+      if (read == null) continue;
+      withVideo = true;
+      if (read.spoken.heard) {
+        if (client != _first) {
+          logInfo('Video languages: the ${client.name} app tells by captions or audio where the ${_first.name} app does not; asking it first');
+          _first = client;
+        }
+        _answered(true);
+        return read.spoken;
       }
-      _answered(other != null);
-      return other?.spoken;
+      if (best == null || (!best.playable && read.playable)) best = read;
     }
-    _answered(true);
-    if (read.spoken.heard) return read.spoken;
-    // Most spoken videos have automatic captions. An answer without them
-    // may have lost them to the field mask, or to YouTube answering this
-    // app less than the other.
-    if (!_maskDrops && _compared < _compare && _probe.masks(_fields)) {
-      _compared++;
-      final whole = await _fetch(id, hl, tv: _tvFirst, whole: true);
-      if (whole != null && whole.spoken.heard) {
-        _maskDrops = true;
-        logInfo('The /player field mask left out captions; asking for whole answers');
-        return whole.spoken;
-      }
-    }
-    final other = await _fetch(id, hl, tv: !_tvFirst);
-    if (other != null && other.spoken.heard) {
-      _tvFirst = !_tvFirst;
-      logInfo('Video languages: ${_tvFirst ? 'the TV app' : 'the website'} answers with captions where ${_tvFirst ? 'the website' : 'the TV app'} does not; asking it first');
-      return other.spoken;
-    }
-    return !read.playable && other != null && other.playable ? other.spoken : read.spoken;
+    _answered(withVideo);
+    return best?.spoken;
   }
 
   static SpokenVideo _spoken(Map<String, dynamic> read) {
@@ -215,28 +180,22 @@ class VideoLanguages {
   Future<Map<String, SpokenVideo>> _load() async {
     final path = file?.path;
     if (path == null) return {};
-    final (known, askedIn) = await Isolate.run(() {
+    return Isolate.run(() {
       final file = File(path);
-      final none = (<String, SpokenVideo>{}, <String, String>{});
-      if (!file.existsSync()) return none;
+      if (!file.existsSync()) return <String, SpokenVideo>{};
       try {
         final raw = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
-        return (
-          {
-            for (final MapEntry(:key, :value) in raw.entries)
-              if (value is Map<String, dynamic>) key: _spoken(value),
-          },
-          {
-            for (final MapEntry(:key, :value) in raw.entries)
-              if (value is Map<String, dynamic> && value['hl'] is String) key: value['hl'] as String,
-          },
-        );
+        // Answers kept by earlier versions include guesses from titles,
+        // which no longer decide: only what audio or captions told is
+        // read back.
+        return {
+          for (final MapEntry(:key, :value) in raw.entries)
+            if (value is Map<String, dynamic> && _spoken(value).heard) key: _spoken(value),
+        };
       } catch (_) {
-        return none;
+        return <String, SpokenVideo>{};
       }
     });
-    _askedIn.addAll(askedIn);
-    return known;
   }
 
   void _write() {
@@ -254,7 +213,6 @@ class VideoLanguages {
           },
           'title': value.title,
           'source': value.source,
-          if (_askedIn[key] case final hl?) 'hl': hl,
         },
     };
     final path = file.path;
@@ -270,37 +228,22 @@ class VideoLanguages {
   }
 
   /// The lines of [lines] whose videos are spoken in [language], each
-  /// with the title the uploader wrote; channels and playlists pass.
-  /// Every video is asked about: a listed title, translated or the
-  /// uploader's own, need not be in the language spoken. A video whose
-  /// language could not be asked at all is kept unless [heardOnly] or its
-  /// listed title is plainly in a third language: listings are asked in
-  /// English, so an English title says nothing, and judging by it would
-  /// leave out every video while YouTube does not answer. Lines go out as
-  /// their answers come in, a few lookups ahead of the reader.
+  /// with the title YouTube gives in [language]; channels and playlists
+  /// pass. Lines go out as their answers come in, a few lookups ahead of
+  /// the reader. What decides is set out in docs/specs/explore-language.md
+  /// and in [passes].
   ///
-  /// With [heardOnly], a video passes when its audio or automatic captions
-  /// say so. Only when YouTube hardly ever tells does a title judge, and
-  /// then only one that is the same asked in English and in [language], so
-  /// never a translation, and [judgingByTitle] hears it, so the person can
-  /// be told. After [giveUpAfter] videos with none kept, it stops;
-  /// [done] hears how many were asked about and kept.
+  /// It stops after [giveUpAfter] videos with none kept, and after
+  /// [unheardAfter] answers of which none told by audio or captions;
+  /// [done] hears how many were asked about, kept and heard.
   Stream<String> only(
     Stream<String> lines,
     ExploreLanguage language, {
-    bool heardOnly = false,
     int giveUpAfter = giveUpAfterDefault,
-    void Function(int asked, int kept)? done,
-    void Function()? judgingByTitle,
+    void Function(LanguageCheck check)? done,
   }) async* {
     final pending = <_Pending>[];
-    var asked = 0, kept = 0, untold = 0, heard = 0, unasked = 0;
-    // YouTube often leaves captions and audio tracks out of the answers it
-    // gives this app: then hardly any video can be heard, and only
-    // hearing would keep none. Once that is plain, titles judge again, and
-    // the videos held back for want of hearing are let through.
-    var strict = heardOnly;
-    final held = <String>[];
+    var asked = 0, answered = 0, kept = 0, heard = 0;
     final told = <String, int>{};
     Iterable<String> ready() sync* {
       // As answered: a slow answer holds back no other.
@@ -310,79 +253,59 @@ class VideoLanguages {
       }
     }
 
-    Iterable<String> unstrict(int after) sync* {
-      final answered = asked - pending.length;
-      if (!strict || answered < after || heard * 10 >= answered) return;
-      strict = false;
-      judgingByTitle?.call();
-      logInfo('Language ${language.name}: YouTube told $heard of $answered videos by captions or audio; judging by title too');
-      kept += held.length;
-      yield* held;
-      held.clear();
-    }
+    bool deaf() => heard == 0 && answered >= unheardAfter;
 
     try {
-    await for (final line in lines) {
-      final item = parseListingEntry(line);
-      if (item is! VideoItem) {
-        yield line;
-        continue;
-      }
-      // Nothing in the first few hundred: the search found none to show.
-      if (asked >= giveUpAfter && kept == 0) break;
-      asked++;
-      pending.add(_Pending(of(item.id, asking: language).then((spoken) {
-        if (spoken == null || spoken.language == null) untold++;
-        if (spoken != null && spoken.heard) heard++;
-        told.update(spoken == null ? 'error' : spoken.heard ? spoken.source : '${spoken.source} ${spoken.language?.name ?? '?'}', (n) => n + 1, ifAbsent: () => 1);
-        final shown = spoken == null || spoken.title.isEmpty || spoken.title == item.title ? line : jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
-        if (spoken == null) unasked++;
-        final byText = spoken == null ? _mayBe(item.title, language) : spoken.language == language;
-        if (!byText) return null;
-        if (spoken != null && spoken.heard) {
+      await for (final line in lines) {
+        final item = parseListingEntry(line);
+        if (item is! VideoItem) {
+          yield line;
+          continue;
+        }
+        // Nothing in the first few hundred: the search found none to show.
+        if (asked >= giveUpAfter && kept == 0) break;
+        if (deaf()) break;
+        asked++;
+        pending.add(_Pending(of(item.id, asking: language).then((spoken) {
+          answered++;
+          if (spoken != null && spoken.heard) heard++;
+          final key = spoken == null ? 'no answer' : '${spoken.source} ${spoken.language?.name ?? '?'}';
+          told.update(key, (n) => n + 1, ifAbsent: () => 1);
+          if (!passes(spoken, language)) return null;
           kept++;
-          return shown;
+          return spoken == null || spoken.title.isEmpty || spoken.title == item.title ? line : jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
+        })));
+        yield* Stream.fromIterable(ready());
+        while (pending.length >= parallel * 3) {
+          await Future.any([for (final p in pending) p.future]);
+          yield* Stream.fromIterable(ready());
         }
-        // Asked in English and in [language], YouTube named the video
-        // differently: a translated title, which says nothing of the
-        // speech. Without hearing, such a video never passes.
-        if (heardOnly && (spoken == null || (spoken.title.isNotEmpty && spoken.title != item.title))) return null;
-        if (strict) {
-          held.add(shown);
-          return null;
-        }
-        kept++;
-        return shown;
-      })));
-      yield* Stream.fromIterable(ready());
-      yield* Stream.fromIterable(unstrict(unheardAfter));
-      while (pending.length >= parallel * 3) {
+      }
+      while (pending.isNotEmpty) {
         await Future.any([for (final p in pending) p.future]);
         yield* Stream.fromIterable(ready());
       }
-    }
-    while (pending.isNotEmpty) {
-      await Future.any([for (final p in pending) p.future]);
-      yield* Stream.fromIterable(ready());
-    }
-    yield* Stream.fromIterable(unstrict(10));
     } finally {
-      done?.call(asked, kept);
+      done?.call((asked: asked, kept: kept, heard: heard));
       if (asked > 0) {
         final by = [for (final MapEntry(:key, :value) in told.entries) '$key $value'].join(', ');
-        logInfo('Language ${language.name}: kept $kept of $asked videos ($untold not told, $unasked kept unchecked; by $by)');
+        logInfo('Language ${language.name}: kept $kept of $asked videos, '
+            '$heard told by audio or captions${deaf() ? ', stopped as none was' : ''}; $by');
       }
     }
   }
+
+  /// Whether a video answered with [spoken] (null when YouTube did not
+  /// answer) is shown for [language]: only when its original audio track
+  /// or its automatic captions say so. Titles and descriptions never
+  /// decide, as uploaders and YouTube translate them.
+  @visibleForTesting
+  static bool passes(SpokenVideo? spoken, ExploreLanguage language) => spoken != null && spoken.heard && spoken.language == language;
 }
 
-/// Whether a video listed as [title] may be spoken in [language] when
-/// nothing else tells: an English title may be YouTube's translation.
-bool _mayBe(String title, ExploreLanguage language) {
-  if (language.matches(title)) return true;
-  final read = titleLanguage(title);
-  return read == ExploreLanguage.en || read == ExploreLanguage.any;
-}
+/// What a language check went over: videos asked about, kept, and told
+/// by their audio or captions.
+typedef LanguageCheck = ({int asked, int kept, int heard});
 
 /// A line waiting for its video's language: [out] is the line to pass on,
 /// null when the video is left out.

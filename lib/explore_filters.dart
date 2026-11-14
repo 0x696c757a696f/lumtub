@@ -396,12 +396,29 @@ ExploreLanguage titleLanguage(String title) {
 
 final _languages = <String, ExploreLanguage>{};
 
-/// One search from words translated one by one: each kept once, as
-/// "园艺 gardening" translates to the same word twice.
-/// Whether [phrase] is translated for a search in another language: it
-/// has letters outside the Latin alphabet. Words in Latin letters are names
-/// and terms a search keeps (Blender, lofi, keynote).
+/// Whether [phrase] has letters outside the Latin alphabet.
 bool isTranslatedPhrase(String phrase) => nonLatinLetter.hasMatch(phrase);
+
+/// Lower-case words a search keeps in every language: titles write them
+/// the same everywhere.
+const keptSearchWords = {
+  'asmr', 'bhajan', 'blender', 'cosplay', 'esports', 'haul', 'hip', 'hop', 'imam', 'indie', 'jazz', 'khutbah', 'kirtan', 'lofi', //
+  'macos', 'manga', 'mandala', 'metal', 'mukbang', 'nasheed', 'nijisanji', 'podcast', 'pop', 'puja', 'qawwali', 'rabbi', 'rap', //
+  'rock', 'seerah', 'speedrun', 'swami', 'tafsir', 'thangka', 'unboxing', 'vlog', 'vtuber', 'yoga',
+};
+
+final _commonWord = RegExp(r"^[a-z][a-z'-]{2,}$");
+
+/// Whether [phrase] of a zone's search is put into [language] before it
+/// is searched: words in another script always, and for a language other
+/// than English, English words as well. "哲学 philosophy lecture" kept its
+/// English half in Italian and found English lectures. A run of names
+/// alone (Minecraft, Plato) or of [keptSearchWords] is searched as it is.
+bool translatesInto(String phrase, ExploreLanguage language) {
+  if (isTranslatedPhrase(phrase)) return true;
+  if (language == ExploreLanguage.en || language == ExploreLanguage.any) return false;
+  return phrase.split(RegExp(r'\s+')).any((word) => _commonWord.hasMatch(word) && !keptSearchWords.contains(word));
+}
 
 /// Search words put the same way in every language, as YouTube titles
 /// write them.
@@ -435,6 +452,8 @@ List<String> searchPhrasesOf(String query) {
   return phrases;
 }
 
+/// One search from words translated one by one: each kept once, as
+/// "园艺 gardening" translates to the same word twice.
 String searchWordsOf(List<String> translated) {
   final seen = <String>{};
   return [

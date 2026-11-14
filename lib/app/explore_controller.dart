@@ -30,7 +30,7 @@ mixin _ExploreState {
 
   /// How many videos the explore language filter asked about and kept,
   /// once it stopped; null while it is still looking or with no language.
-  ({int asked, int kept})? exploreLanguageCheck;
+  LanguageCheck? exploreLanguageCheck;
 
   /// How many times further the next explore load may look for videos in
   /// the language picked.
@@ -182,12 +182,9 @@ extension ExploreActions on AppController {
     WordFilter? view,
     ExploreRegion? region,
     ExploreLanguage? language,
-    bool? heardOnly,
   }) {
-    if ((region != null && region != preferences.exploreRegion) ||
-        (language != null && language != preferences.exploreLanguage) ||
-        (heardOnly != null && heardOnly != preferences.exploreHeardOnly)) {
-      unawaited(savePreferences(preferences.copyWith(exploreRegion: region, exploreLanguage: language, exploreHeardOnly: heardOnly)));
+    if ((region != null && region != preferences.exploreRegion) || (language != null && language != preferences.exploreLanguage)) {
+      unawaited(savePreferences(preferences.copyWith(exploreRegion: region, exploreLanguage: language)));
       explore?.dispose();
       explore = null;
     }
@@ -248,7 +245,7 @@ extension ExploreActions on AppController {
     _loadExplore();
   }
 
-  Object get _exploreKey => (exploreSection, exploreTopic, exploreSub, exploreLeaf, exploreMode, explorePeriod, exploreDuration, exploreQuality, exploreFormat, exploreView, preferences.exploreRegion, preferences.exploreLanguage, preferences.exploreHeardOnly);
+  Object get _exploreKey => (exploreSection, exploreTopic, exploreSub, exploreLeaf, exploreMode, explorePeriod, exploreDuration, exploreQuality, exploreFormat, exploreView, preferences.exploreRegion, preferences.exploreLanguage);
 
   void _putAwayExplore() {
     final loader = explore;
@@ -395,10 +392,8 @@ extension ExploreActions on AppController {
                 ? listing.refined((lines) => languages.only(
                       lines,
                       language,
-                      heardOnly: preferences.exploreHeardOnly,
                       giveUpAfter: VideoLanguages.giveUpAfterDefault * (depth + 1),
-                      done: (asked, kept) => _update(() => exploreLanguageCheck = (asked: asked, kept: kept)),
-                      judgingByTitle: () => _notice(tr("YouTube isn't saying which language these videos are spoken in, so untranslated titles are used as well.")),
+                      done: (check) => _update(() => exploreLanguageCheck = check),
                     ))
                 : listing;
           },
@@ -434,16 +429,13 @@ extension ExploreActions on AppController {
 
   /// [queries] in [language], translated where they are in another, or
   /// into [traditional] characters; a query that cannot be translated is
-  /// searched as it is. Only Chinese, Japanese and Korean words are
-  /// translated: words in Latin letters are names and terms a search
-  /// keeps (Blender, lofi, keynote), and a query of them alone is searched
-  /// as written.
+  /// searched as it is. Which words are translated: [translatesInto].
   Future<List<String>> _searchWordsIn(List<String> queries, ExploreLanguage language, {bool traditional = false}) {
     final target = traditional ? 'zh-TW' : language.code;
     Future<String> translate(String text) => _google.translate(text, target).timeout(const Duration(seconds: 10));
     return Future.wait([
       for (final query in queries)
-        if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language) || !searchPhrasesOf(query).any(isTranslatedPhrase))
+        if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language) || !searchPhrasesOf(query).any((w) => translatesInto(w, language)))
           Future.value(query)
         else
           () async {
@@ -452,12 +444,12 @@ extension ExploreActions on AppController {
               // as one sentence is "Revisione digitale della tecnologia",
               // which finds next to nothing.
               final words = searchPhrasesOf(query);
-              final asked = [for (final w in words) if (isTranslatedPhrase(w) && searchGlossary[w] == null) w];
+              final asked = [for (final w in words) if (translatesInto(w, language) && searchGlossary[w] == null) w];
               final lines = asked.isEmpty ? const <String>[] : (await translate(asked.join('\n'))).split('\n');
               if (lines.length != asked.length) throw StateError('${lines.length} lines for ${asked.length} phrases');
               var next = 0;
               final translated = searchWordsOf([
-                for (final w in words) !isTranslatedPhrase(w) ? w : searchGlossary[w] ?? lines[next++],
+                for (final w in words) !translatesInto(w, language) ? w : searchGlossary[w] ?? lines[next++],
               ]);
               logDebug(() => 'Explore searches "$query" in $target as "$translated"');
               return translated.isEmpty ? query : translated;

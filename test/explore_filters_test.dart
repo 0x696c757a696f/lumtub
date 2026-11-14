@@ -68,6 +68,18 @@ void main() {
     expect(searchGlossary['直播'], 'live');
   });
 
+  test('a search in a language other than English puts its English words into it too', () {
+    bool italian(String phrase) => translatesInto(phrase, ExploreLanguage.it);
+    expect(searchPhrasesOf('哲学 philosophy lecture').where(italian), ['哲学', 'philosophy lecture']);
+    expect(searchPhrasesOf('Presocratic philosophers').where(italian), ['Presocratic philosophers']);
+    // Names and words titles write the same everywhere stay.
+    expect(searchPhrasesOf('游戏 直播 Minecraft').where(italian), ['游戏', '直播']);
+    expect(italian('lofi'), isFalse);
+    expect(italian('Plato'), isFalse);
+    // In English only other scripts are translated.
+    expect(searchPhrasesOf('哲学 philosophy lecture').where((p) => translatesInto(p, ExploreLanguage.en)), ['哲学']);
+  });
+
   test('details take the translated title, description and chapter names', () {
     final details = VideoDetails(
       title: 'Original',

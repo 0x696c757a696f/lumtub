@@ -9,10 +9,13 @@ that promise. Code: `lib/video_languages.dart`, `lib/youtube_player_probe.dart`,
 ## Promise
 
 With a language picked, Explore shows only videos **spoken** in that
-language. A video whose spoken language cannot be confirmed is not shown.
-There is no switch to loosen this.
+language, never one in another. Videos confirmed by their audio come
+first; videos YouTube makes no automatic captions for (most Chinese
+videos, and many in other languages) follow when their own texts, not a
+translation of them, are in the language. There is no switch to loosen or
+tighten this.
 
-## What counts as confirmation
+## What decides
 
 From the video's own `/youtubei/v1/player` answer, in this order:
 
@@ -24,13 +27,24 @@ From the video's own `/youtubei/v1/player` answer, in this order:
    makes them from the audio, so their language is the spoken one. They
    are listed once, in the spoken language; translations are not in
    `captionTracks`.
+3. **Only when neither exists**, the title and description read
+   together, and only when the title is not a translation: the title
+   listed in English (search is asked with `hl=en`) is the same as the
+   one `/player` gives asked in the language picked. A title the uploader
+   or YouTube translated differs between the two, and such a video is
+   left out.
 
-What never decides, because uploaders and YouTube translate it:
+Whenever 1 or 2 exists it decides, whatever the texts say: an English
+lecture with an Italian title and English captions is left out. A video
+YouTube does not answer for is left out.
 
-- the title or description, in any language they are asked in;
-- the listed title (search is asked in English; YouTube may show a
-  translation there);
-- the region or the search words.
+Videos confirmed by 1 or 2 are shown as they come; videos let in by 3
+wait behind them and are shown 12 at a time, or when the search ends.
+
+Text is read by `title_language` in the Rust core: the script, then small
+words (`LATIN_WORDS`, which leave out words two languages share, such as
+`con`, `una`, `in`), then whatlang trigrams, which overrule small words
+only when sure and when the language they name has no fewer small words.
 
 ## Finding candidates
 
@@ -52,7 +66,9 @@ region is picked.
 - Each video is asked once per language check, at most 6 at a time.
 - The apps are asked in turn until one tells by audio or captions:
   the visionOS app a quick start uses, then the TV app, then the website.
-  Whichever told last is asked first from then on.
+  Whichever told last is asked first from then on. After 20 videos in a
+  row where the first app answered without captions and the others did
+  not tell either, only one video in 20 still asks the others.
 - The visitor id YouTube gives in its first answer is sent back with
   every later request, as a browser does with its cookie, together with
   the consent cookie (`SOCS`), which keeps requests from Europe from
@@ -74,17 +90,14 @@ each of its videos still has to be heard.
 
 ## Keeping answers
 
-Only answers told by audio or captions are kept, in memory and in
-`cache/heard_languages.json` (up to 20 000). An answer without either is
-asked again next time. Guesses from titles kept by earlier versions are
-not read back.
+Answers told by audio or captions are kept in memory and in
+`cache/heard_languages.json` (up to 20 000). Other answers are kept in
+memory only, until Lumtub is closed (up to 5 000), and asked again after
+that, as YouTube may tell by then. Guesses from titles kept by earlier
+versions are not read back.
 
-## When YouTube does not tell
+## When nothing is found
 
-- After 40 answers none of which told by audio or captions, the check
-  stops and the page says YouTube is not giving this app the audio tracks
-  or captions right now, with a Retry button. It does not fall back to
-  titles.
 - After 240 videos with none kept (more after Keep looking), it stops
   and offers to look further.
 - Every check writes one log line:

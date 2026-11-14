@@ -11,10 +11,10 @@ import 'package:lumtub/youtube_player_probe.dart';
 
 String _video(String id, String title) => jsonEncode({'id': id, 'title': title, 'channel': 'c'});
 
-Map<String, Object?> _player(String title, {String? asr, List<String> audio = const []}) => {
+Map<String, Object?> _player(String title, {String? asr, List<String> audio = const [], String description = ''}) => {
       'responseContext': {'visitorData': 'CgtWaXNpdG9yMTIz'},
       'playabilityStatus': {'status': 'OK'},
-      'videoDetails': {'title': title, 'shortDescription': ''},
+      'videoDetails': {'title': title, 'shortDescription': description},
       if (asr != null)
         'captions': {
           'playerCaptionsTracklistRenderer': {
@@ -48,21 +48,29 @@ void main() {
   });
 
   group('passes', () {
-    SpokenVideo spoken(ExploreLanguage? language, String source) => (language: language, title: 'Titolo', source: source);
+    SpokenVideo spoken(ExploreLanguage? language, String source, [String title = 'Lezione di filosofia']) => (language: language, title: title, source: source);
+    bool passes(SpokenVideo? s, String listed) => VideoLanguages.passes(s, ExploreLanguage.it, listed: listed);
 
-    test('audio or captions decide', () {
-      expect(VideoLanguages.passes(spoken(ExploreLanguage.it, 'captions'), ExploreLanguage.it), isTrue);
-      expect(VideoLanguages.passes(spoken(ExploreLanguage.it, 'audio'), ExploreLanguage.it), isTrue);
-      expect(VideoLanguages.passes(spoken(ExploreLanguage.en, 'captions'), ExploreLanguage.it), isFalse);
+    test('audio or captions decide, whatever the titles say', () {
+      expect(passes(spoken(ExploreLanguage.it, 'captions'), 'Philosophy lecture'), isTrue);
+      expect(passes(spoken(ExploreLanguage.it, 'audio'), 'Philosophy lecture'), isTrue);
+      expect(passes(spoken(ExploreLanguage.en, 'captions'), 'Lezione di filosofia'), isFalse);
+      // Dubbed into Italian, spoken in English.
+      expect(passes(spoken(ExploreLanguage.en, 'audio'), 'Lezione di filosofia'), isFalse);
     });
 
-    test('titles and descriptions never decide, nor does no answer', () {
-      // An English lecture whose uploader gave it an Italian title.
-      expect(VideoLanguages.passes(spoken(ExploreLanguage.it, 'text'), ExploreLanguage.it), isFalse);
-      expect(VideoLanguages.passes(spoken(null, 'none'), ExploreLanguage.it), isFalse);
-      expect(VideoLanguages.passes(null, ExploreLanguage.it), isFalse);
+    test('without audio or captions, only texts that are not a translation', () {
+      expect(passes(spoken(ExploreLanguage.it, 'text'), 'Lezione di filosofia'), isTrue);
+      // Listed differently in English: the title was translated one way or the other.
+      expect(passes(spoken(ExploreLanguage.it, 'text'), 'Philosophy lecture'), isFalse);
+      expect(passes(spoken(ExploreLanguage.en, 'text', 'Philosophy lecture'), 'Philosophy lecture'), isFalse);
+      expect(passes(spoken(null, 'none', ''), 'Lezione di filosofia'), isFalse);
     });
-  });
+
+    test('nothing passes without an answer', () {
+      expect(passes(null, 'Lezione di filosofia'), isFalse);
+    });
+  }, skip: core);
 
   test('keeps only videos whose captions or audio say the language, under the title asked in it', () async {
     final players = {
@@ -70,7 +78,9 @@ void main() {
       'bbbbbbbbbbb': _player('Introduzione a Nietzsche', asr: 'en'),
       // Dubbed into Italian, spoken in English.
       'ccccccccccc': _player('Aristotele in 7 minuti', audio: ['en', 'it']),
-      'ddddddddddd': _player('Platone, la Repubblica'),
+      'ddddddddddd': _player('Platone, la Repubblica', description: 'Una lezione sulla Repubblica di Platone e sulla sua idea di giustizia, con una lettura dei passi più importanti del libro.'),
+      // Its uploader translated the title into Italian; the listing shows the English one.
+      'fffffffffff': _player('La felicità secondo Aristotele', description: 'Una lezione sulla felicità e sulla virtù nella filosofia di Aristotele.'),
     };
     final hls = <String>{};
     final client = MockClient((request) async {
@@ -91,14 +101,16 @@ void main() {
             _video('ccccccccccc', 'Aristotle in 7 minutes'),
             _video('ddddddddddd', 'Platone, la Repubblica'),
             _video('eeeeeeeeeee', 'La filosofia di Spinoza'),
+            _video('fffffffffff', 'Happiness according to Aristotle'),
           ]),
           ExploreLanguage.it,
           done: (c) => check = c,
         )
         .toList();
-    expect([for (final line in kept) (jsonDecode(line) as Map)['title']], unorderedEquals(['A channel', 'Lezione di filosofia: Kant']));
+    // Heard first, then what only its own texts let in.
+    expect([for (final line in kept) (jsonDecode(line) as Map)['title']], ['A channel', 'Lezione di filosofia: Kant', 'Platone, la Repubblica']);
     expect(hls, {'it'});
-    expect(check, (asked: 5, kept: 1, heard: 3));
+    expect(check, (asked: 6, kept: 2, heard: 3));
   }, skip: core);
 
   test('asks the next app when one gives no captions, and asks it first from then on', () async {
@@ -129,7 +141,7 @@ void main() {
     expect(visitors, [null, 'CgtWaXNpdG9yMTIz']);
   }, skip: core);
 
-  test('keeps only heard answers, on disk and in memory', () async {
+  test('keeps heard answers on disk, others for this run only', () async {
     var calls = 0;
     final client = MockClient((request) async {
       calls++;
@@ -143,15 +155,22 @@ void main() {
       ..writeAsStringSync(jsonEncode({
         'zzzzzzzzzzz': {'language': ExploreLanguage.it.index, 'title': 'Titolo', 'source': 'text'},
       }));
-    final languages = VideoLanguages(client, file: file);
+    var languages = VideoLanguages(client, file: file);
     await languages.of('aaaaaaaaaaa', asking: ExploreLanguage.it);
     await languages.of('bbbbbbbbbbb', asking: ExploreLanguage.it);
+    calls = 0;
     await languages.of('zzzzzzzzzzz', asking: ExploreLanguage.it);
+    expect(calls, greaterThan(0), reason: 'a guess kept by an earlier version is asked again');
     calls = 0;
     expect((await languages.of('aaaaaaaaaaa', asking: ExploreLanguage.it))?.source, 'captions');
-    expect(calls, 0, reason: 'a heard answer is kept');
+    expect((await languages.of('bbbbbbbbbbb', asking: ExploreLanguage.it))?.source, 'text');
+    expect(calls, 0, reason: 'both are kept for this run');
+    await Future<void>.delayed(const Duration(seconds: 6));
+    languages = VideoLanguages(client, file: file);
+    await languages.of('aaaaaaaaaaa', asking: ExploreLanguage.it);
+    expect(calls, 0, reason: 'the heard one is kept on disk');
     await languages.of('bbbbbbbbbbb', asking: ExploreLanguage.it);
-    expect(calls, PlayerClient.values.length, reason: 'an unheard one is asked again, of every app');
+    expect(calls, greaterThan(0), reason: 'the other is asked again in a later run');
   }, skip: core);
 
   test('leaves out a channel plainly in another language without asking about its videos', () async {
@@ -180,22 +199,20 @@ void main() {
     expect(kept, hasLength(1));
   }, skip: core);
 
-  test('stops once YouTube tells none of the first answers by audio or captions', () async {
+  test('lets in videos without captions by their own texts, behind the heard ones, and stops asking the other apps when they never tell', () async {
     var calls = 0;
     final client = MockClient((request) async {
       calls++;
-      return _json(_player('Una passeggiata a Roma'));
+      final id = (jsonDecode(request.body) as Map)['videoId'] as String;
+      return _json(id.startsWith('h') ? _player('成都美食探店', asr: 'zh') : _player('成都美食探店'));
     });
     final languages = VideoLanguages(client);
-    String id(int i) => 'w${i.toString().padLeft(10, '0')}';
-    LanguageCheck? check;
-    final kept = await languages
-        .only(Stream.fromIterable([for (var i = 0; i < 200; i++) _video(id(i), 'Una passeggiata a Roma')]), ExploreLanguage.it, done: (c) => check = c)
-        .toList();
-    expect(kept, isEmpty);
-    expect(check?.heard, 0);
-    expect(check!.asked, lessThan(200));
-    expect(calls, lessThan(200 * PlayerClient.values.length));
+    String line(String id) => _video(id, '成都美食探店');
+    final ids = [for (var i = 0; i < 60; i++) 't${i.toString().padLeft(10, '0')}', 'h0000000001'];
+    final kept = await languages.only(Stream.fromIterable(ids.map(line)), ExploreLanguage.zh, heldUpTo: 100).toList();
+    expect(kept, hasLength(61));
+    expect((jsonDecode(kept.first) as Map)['id'], 'h0000000001', reason: 'heard ones go first');
+    expect(calls, lessThan(60 * PlayerClient.values.length ~/ 2), reason: 'the other apps are left alone once they never tell');
   }, skip: core);
 
   test('stops asking for a while once YouTube leaves the video out', () async {

@@ -268,14 +268,7 @@ class VideoFactsLookup extends ChangeNotifier {
   static Future<String?> _ask(http.Client client, Map<String, dynamic> parts) async {
     final headers = {'Content-Type': 'application/json', ...(parts['headers'] as Map).cast<String, String>()};
     final body = (parts['body'] as Map).cast<String, Object?>();
-    await YoutubePlayerProbe.addVisitor(client, headers, body);
-    final response = await client
-        .post(
-          Uri.parse('https://www.youtube.com/youtubei/v1/player?prettyPrint=false'),
-          headers: headers,
-          body: jsonEncode(body),
-        )
-        .timeout(const Duration(seconds: 8));
+    final response = await YoutubePlayerProbe.post(client, headers, body, timeout: const Duration(seconds: 8));
     if (response.statusCode != 200) return 'HTTP ${response.statusCode}';
     return utf8.decode(response.bodyBytes, allowMalformed: true);
   }

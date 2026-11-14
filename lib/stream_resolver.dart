@@ -264,14 +264,7 @@ class StreamResolver {
       final client = _quickClient ??= appHttpClient();
       final headers = {'Content-Type': 'application/json', ...(parts['headers'] as Map).cast<String, String>()};
       final body = (parts['body'] as Map).cast<String, Object?>();
-      await YoutubePlayerProbe.addVisitor(client, headers, body);
-      final response = await client
-          .post(
-            Uri.parse('https://www.youtube.com/youtubei/v1/player?prettyPrint=false'),
-            headers: headers,
-            body: jsonEncode(body),
-          )
-          .timeout(const Duration(seconds: 6));
+      final response = await YoutubePlayerProbe.post(client, headers, body, timeout: const Duration(seconds: 6));
       if (response.statusCode != 200) {
         logInfo('Quick start of $videoId: /player answered HTTP ${response.statusCode}');
         return null;

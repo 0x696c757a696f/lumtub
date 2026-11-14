@@ -97,8 +97,10 @@ void main() {
     expect(asked.last.queryParameters.containsKey('tlang'), isFalse);
     expect(translator.asked, ['hello world how & why']);
     expect(translator.targets, ['zh-CN']);
-    // Translated as one sentence and shown as one, over both lines' times.
-    expect(await File(path).readAsString(), contains('00:00:00.000 --> 00:00:04.000\nHELLO WORLD HOW &amp; WHY\n'));
+    // Translated as one sentence, shown in the lines the original shows.
+    final cues = WebVtt.cues(await File(path).readAsString());
+    expect([for (final c in cues) c.text], ['HELLO WORLD', 'HOW & WHY']);
+    expect(WebVtt.startOf(cues.last.timing), const Duration(milliseconds: 2010));
   });
 
   test('asks again in halves when a translation joins lines', () async {
@@ -218,7 +220,7 @@ void main() {
     }
   });
 
-  test('translates automatic captions by sentence, each translation shown for its whole sentence', () async {
+  test('translates automatic captions by sentence, each translation shown in the lines of its original', () async {
     const asr = '''WEBVTT
 
 00:00:00.000 --> 00:00:04.000
@@ -242,8 +244,24 @@ Ok, finita la chicca.
     // YouTube's own translation is not asked for, the sentence goes whole.
     expect(asked.map((u) => u.queryParameters.containsKey('tlang')), [false]);
     expect(translator.asked.single.split('\n'), ['ma Kennedy non ci crede e sospetta che stiano sviluppando armi.', 'Ok, finita la chicca.']);
-    expect([for (final c in cues) (WebVtt.startOf(c.timing).inSeconds, WebVtt.endOf(c.timing).inSeconds)], [(0, 8), (8, 10)]);
-    expect([for (final c in cues) c.text], ['MA KENNEDY NON CI CREDE E SOSPETTA CHE STIANO SVILUPPANDO ARMI.', 'OK, FINITA LA CHICCA.']);
+    expect([for (final c in cues) (WebVtt.startOf(c.timing).inSeconds, WebVtt.endOf(c.timing).inSeconds)], [(0, 4), (4, 8), (8, 10)]);
+    expect([for (final c in cues) c.text], ['MA KENNEDY NON CI CREDE E SOSPETTA', 'CHE STIANO SVILUPPANDO ARMI.', 'OK, FINITA LA CHICCA.']);
+    // Each line of the original has its translation at the same times.
+    final original = WebVtt.cues(WebVtt.asLines(asr));
+    expect([for (final c in original) c.timing], [for (final c in cues) c.timing]);
+  });
+
+  test('cuts a translation like the lines of its original', () {
+    expect(WebVtt.splitLike('one two, three four five six', [8, 20]), ['one two,', 'three four five six']);
+    expect(WebVtt.splitLike('我们今天去公园，然后回家吃饭', [10, 10]), ['我们今天去公园，', '然后回家吃饭']);
+    expect(WebVtt.splitLike('我们今天去公园然后回家吃饭睡觉', [1, 1, 1]).length, 3);
+    expect(WebVtt.splitLike('abcdef', [1, 1]), ['abcdef']);
+    final long = 'parola ' * 60;
+    final parts = WebVtt.splitLike(long, [30, 30, 30, 30]);
+    expect(parts.length, 4);
+    for (final p in parts) {
+      expect(p.length, inInclusiveRange(80, 120));
+    }
   });
 
   test('reads when a cue starts', () {

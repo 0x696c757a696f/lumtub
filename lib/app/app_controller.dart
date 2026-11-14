@@ -799,6 +799,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// id, with the track it copies and the style it has.
   final Map<String, ({String source, String key})> _styledSeconds = {};
   String? _styling;
+  Future<void> _styleQueue = Future.value();
   /// The family libmpv draws subtitles in on Android, picked by their text.
   String? _subtitleFamily;
   /// On Android: libmpv met subtitles no one font can draw, so Flutter's

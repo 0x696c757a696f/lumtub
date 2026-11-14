@@ -70,9 +70,12 @@ extension SubtitleActions on AppController {
       final added = (await tracks()).where((t) => '${t['id']}' != id).lastOrNull;
       if (added == null) return true;
       if (main == id) await platform.setProperty('sid', '${added['id']}');
-      // A second subtitle shown as a styled copy is copied again from the new track.
-      if (second == id || _styledSeconds[second]?.source == id) await platform.setProperty('secondary-sid', '${added['id']}');
+      if (second == id) await platform.setProperty('secondary-sid', '${added['id']}');
+      // A styled copy stays on screen until its copy of the new track replaces it.
+      final styled = _styledSeconds[second]?.source == id;
       await platform.command(['sub-remove', id]);
+      final player = this.player;
+      if (styled && player != null) await _styleSecond(player, from: '${added['id']}');
       if (main == id) await syncMainSubtitle();
       logInfo('Subtitle translation updated; track $id replaced by ${added['id']}');
       return true;
@@ -588,7 +591,10 @@ extension SubtitleActions on AppController {
     }
     if (family == _subtitleFamily) return;
     _subtitleFamily = family;
+    _libassSent['sub-font'] = family;
     unawaited(platform.setProperty('sub-font', family).catchError((Object e) => logDebug(() => 'Could not set the subtitle font: $e')));
+    // Its size follows.
+    _queueLibassLook();
   }
 
   /// A new video: libmpv draws its subtitles again, if it is meant to.

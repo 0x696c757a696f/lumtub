@@ -49,6 +49,11 @@ extension LibassLookActions on AppController {
       // Placed with the controls and the main subtitle's lines below.
       ..remove('sub-pos')
       ..remove('secondary-sub-pos');
+    // On Android the font that draws this video's script, at its own size.
+    if (_subtitleFamily case final family?) {
+      options['sub-font'] = family;
+      options['sub-font-size'] = look.fontSize(family).toStringAsFixed(1);
+    }
     if (_styledSeconds.containsKey(secondaryTrackId)) options['secondary-sub-scale'] = (look.em / secondEm).toStringAsFixed(3);
     for (final MapEntry(:key, :value) in options.entries) {
       if (_libassSent[key] == value) continue;
@@ -86,15 +91,26 @@ extension LibassLookActions on AppController {
   /// Shows the second subtitle in its own style while libmpv draws: a copy
   /// of its track as an ASS file in that font, color and opacity, put in
   /// its place. mpv styles both subtitles alike otherwise.
-  Future<void> _styleSecond(Player player) async {
+  ///
+  /// [from] is a new track of the shown copy's source, whose file grew (more
+  /// of a translation): the copy is made again from it and swapped in, so
+  /// the plain track never shows in between.
+  Future<void> _styleSecond(Player player, {String? from}) {
+    // One at a time: each starts from the copy the one before put on screen.
+    final run = _styleQueue.then((_) => _styleSecondNow(player, from: from));
+    _styleQueue = run.catchError((_) {});
+    return run;
+  }
+
+  Future<void> _styleSecondNow(Player player, {String? from}) async {
     final platform = player.platform;
     if (platform is! NativePlayer || !identical(player, this.player) || !libassDraws) return;
     final shown = secondaryTrackId;
     if (shown == 'no') return;
     final key = _secondStyleKey;
     final copy = _styledSeconds[shown];
-    if (copy != null && copy.key == key) return _queueLibassLook();
-    final source = copy?.source ?? shown;
+    if (from == null && copy != null && copy.key == key) return _queueLibassLook();
+    final source = from ?? copy?.source ?? shown;
     final job = '$source\u0000$key';
     if (_styling == job) return;
     _styling = job;
@@ -103,6 +119,7 @@ extension LibassLookActions on AppController {
       final made = _styledSeconds.entries.where((e) => e.value.source == source && e.value.key == key && tracks.containsKey(e.key)).firstOrNull;
       if (made != null) {
         await platform.setProperty('secondary-sid', made.key);
+        await _dropCopy(platform, shown, keep: made.key);
         return;
       }
       final track = tracks[source];
@@ -113,6 +130,7 @@ extension LibassLookActions on AppController {
       final folder = Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles');
       await folder.create(recursive: true);
       final file = File('${folder.path}${Platform.pathSeparator}second-${playing?.id ?? 'video'}-$source-${key.hashCode.toUnsigned(32)}.ass');
+      if (await file.exists()) await file.delete();
       await file.writeAsString(secondAss(cues, settings, outline: look.em > 0 ? look.border / look.em : 0));
       final main = await platform.getProperty('sid');
       await platform.command(['sub-add', file.path, 'auto', track.title ?? '', track.language ?? '']);
@@ -125,11 +143,26 @@ extension LibassLookActions on AppController {
       await platform.setProperty('secondary-sid', id);
       // mpv may have picked the copy as the main subtitle too.
       if (await platform.getProperty('sid') != main) await platform.setProperty('sid', main.isEmpty ? 'no' : main);
+      await _dropCopy(platform, shown, keep: id);
       logInfo('Second subtitle drawn in its own style (track $source as $id)');
     } catch (e) {
       logWarn('Could not style the second subtitle: $e');
+      // Better plain than gone.
+      if (from != null && secondaryTrackId == shown) await platform.setProperty('secondary-sid', from).catchError((_) {});
     } finally {
       if (_styling == job) _styling = null;
+    }
+  }
+
+  /// Removes the styled copy [id] once [keep] shows in its place: copies of
+  /// a growing translation would pile up in mpv's track list.
+  Future<void> _dropCopy(NativePlayer platform, String id, {required String keep}) async {
+    if (id == keep || !_styledSeconds.containsKey(id)) return;
+    _styledSeconds.remove(id);
+    try {
+      await platform.command(['sub-remove', id]);
+    } catch (e) {
+      logDebug(() => 'Could not remove the old styled copy $id: $e');
     }
   }
 }

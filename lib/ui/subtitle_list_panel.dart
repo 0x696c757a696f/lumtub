@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderAbstractViewport;
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 
@@ -117,21 +118,37 @@ class _SubtitleListState extends State<SubtitleList> {
 
   /// Scrolls the playing row to a third of the way down. Rows differ in
   /// height, so one not built yet is first jumped near by the average.
-  void _reveal(int index, int count) {
-    if (!mounted) return;
-    final built = _currentKey.currentContext;
-    if (built != null) {
-      unawaited(Scrollable.ensureVisible(built, alignment: 0.3, duration: Motion.of(const Duration(milliseconds: 250)), curve: Ease.curve));
+  /// Only this list moves: Scrollable.ensureVisible would also scroll the
+  /// page around it, as a phone's watch page.
+  void _reveal(int index, int count, {bool jump = false}) {
+    if (!mounted || !_scroll.hasClients) return;
+    if (_rowOffset() case final target?) {
+      final position = _scroll.position;
+      if ((target - position.pixels).abs() < 1) return;
+      final duration = jump ? Duration.zero : Motion.of(const Duration(milliseconds: 200));
+      duration == Duration.zero ? position.jumpTo(target) : unawaited(position.animateTo(target, duration: duration, curve: Ease.curve));
       return;
     }
-    if (!_scroll.hasClients || count == 0) return;
+    if (count == 0) return;
     final position = _scroll.position;
     final average = (position.maxScrollExtent + position.viewportDimension) / count;
-    _scroll.jumpTo((index * average - position.viewportDimension / 3).clamp(0.0, position.maxScrollExtent));
+    position.jumpTo((index * average - position.viewportDimension / 3).clamp(0.0, position.maxScrollExtent));
+    // Once built, the row is put exactly in place.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final row = _currentKey.currentContext;
-      if (row != null && mounted) unawaited(Scrollable.ensureVisible(row, alignment: 0.3));
+      final target = mounted && _scroll.hasClients ? _rowOffset() : null;
+      if (target != null) _scroll.position.jumpTo(target);
     });
+  }
+
+  /// Where this list scrolls to show the playing row a third of the way
+  /// down, or null when the row is not built.
+  double? _rowOffset() {
+    final row = _currentKey.currentContext?.findRenderObject();
+    if (row == null || !row.attached) return null;
+    final viewport = RenderAbstractViewport.maybeOf(row);
+    if (viewport == null) return null;
+    final position = _scroll.position;
+    return viewport.getOffsetToReveal(row, 0.3).offset.clamp(position.minScrollExtent, position.maxScrollExtent);
   }
 
   void _copy(PairedCue line) {
@@ -184,9 +201,11 @@ class _SubtitleListState extends State<SubtitleList> {
             ]),
           ),
           Expanded(
-            child: NotificationListener<UserScrollNotification>(
-              onNotification: (_) {
-                _follow = false;
+            child: NotificationListener<ScrollStartNotification>(
+              // Following stops when the person drags the list, not when it
+              // moves by itself or the page around it scrolls.
+              onNotification: (n) {
+                if (n.depth == 0 && n.dragDetails != null && _follow) setState(() => _follow = false);
                 return false;
               },
               child: ListView.builder(
@@ -207,7 +226,12 @@ class _SubtitleListState extends State<SubtitleList> {
                       color: playing ? colors.secondaryContainer : Colors.transparent,
                       child: InkWell(
                         onTap: () {
-                          _follow = true;
+                          // The tapped line lights up at once, before the
+                          // player gets there.
+                          setState(() {
+                            _follow = true;
+                            _current = i;
+                          });
                           unawaited(widget.controller.seek(cue.start));
                         },
                         child: Padding(
@@ -253,10 +277,10 @@ class _SubtitleListState extends State<SubtitleList> {
               padding: const EdgeInsets.all(8),
               child: Center(
                 child: FilledButton.tonalIcon(
-                  onPressed: () => setState(() {
-                    _follow = true;
-                    _current = -1;
-                  }),
+                  onPressed: () {
+                    setState(() => _follow = true);
+                    if (_current >= 0) WidgetsBinding.instance.addPostFrameCallback((_) => _reveal(_current, cues.length));
+                  },
                   icon: Icon(AppIcons.crosshair, size: 18),
                   label: Text(tr('Back to the current line')),
                 ),

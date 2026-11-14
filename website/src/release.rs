@@ -50,7 +50,7 @@ impl Release {
     pub fn asset(&self, suffix: &str) -> Option<String> {
         self.assets
             .iter()
-            .find(|(name, _)| name.ends_with(&format!("_{suffix}")))
+            .find(|(name, _)| name == suffix || name.ends_with(&format!("_{suffix}")))
             .map(|(_, url)| url.clone())
     }
 }
@@ -96,7 +96,8 @@ impl Os {
             Os::Mac => Some(1),
             Os::Linux | Os::LinuxArm => Some(2),
             Os::Android => Some(3),
-            Os::Ios | Os::Other => None,
+            Os::Ios => Some(4),
+            Os::Other => None,
         }
     }
 
@@ -104,10 +105,11 @@ impl Os {
         match self {
             Os::Windows => "windows-x64-v3-setup.exe",
             Os::Mac => "macos-arm64.dmg",
-            Os::Linux => "linux-x64.AppImage",
+            Os::Linux => "linux-x64-v3.AppImage",
             Os::LinuxArm => "linux-arm64.AppImage",
             Os::Android => "android-arm64-v8a.apk",
-            Os::Ios | Os::Other => "",
+            Os::Ios => "ios.ipa",
+            Os::Other => "",
         }
     }
 }

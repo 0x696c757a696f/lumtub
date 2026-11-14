@@ -827,6 +827,7 @@ name = "lumtub_website"
 version = "0.1.0"
 dependencies = [
  "gloo-net",
+ "js-sys",
  "leptos",
  "serde",
  "wasm-bindgen",

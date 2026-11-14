@@ -414,6 +414,9 @@
         "chipSelectedText": {
           "$ref": "#/$defs/color"
         },
+        "chipText": {
+          "$ref": "#/$defs/color"
+        },
         "field": {
           "$ref": "#/$defs/surface"
         },
@@ -1044,6 +1047,9 @@
                 "chipSelectedText": {
                   "$ref": "#/$defs/color"
                 },
+                "chipText": {
+                  "$ref": "#/$defs/color"
+                },
                 "field": {
                   "$ref": "#/$defs/surface"
                 },
@@ -1664,6 +1670,9 @@
                   "$ref": "#/$defs/surface"
                 },
                 "chipSelectedText": {
+                  "$ref": "#/$defs/color"
+                },
+                "chipText": {
                   "$ref": "#/$defs/color"
                 },
                 "field": {
@@ -2288,6 +2297,9 @@
                 "chipSelectedText": {
                   "$ref": "#/$defs/color"
                 },
+                "chipText": {
+                  "$ref": "#/$defs/color"
+                },
                 "field": {
                   "$ref": "#/$defs/surface"
                 },
@@ -2908,6 +2920,9 @@
                   "$ref": "#/$defs/surface"
                 },
                 "chipSelectedText": {
+                  "$ref": "#/$defs/color"
+                },
+                "chipText": {
                   "$ref": "#/$defs/color"
                 },
                 "field": {
@@ -3532,6 +3547,9 @@
                 "chipSelectedText": {
                   "$ref": "#/$defs/color"
                 },
+                "chipText": {
+                  "$ref": "#/$defs/color"
+                },
                 "field": {
                   "$ref": "#/$defs/surface"
                 },
@@ -4152,6 +4170,9 @@
                   "$ref": "#/$defs/surface"
                 },
                 "chipSelectedText": {
+                  "$ref": "#/$defs/color"
+                },
+                "chipText": {
                   "$ref": "#/$defs/color"
                 },
                 "field": {

@@ -49,6 +49,9 @@ void main() {
           // Links and times in descriptions and comments are words to read.
           'links on page': (linkColor(theme), page, 4.5),
           'links on cards': (linkColor(theme), solid(scheme.surfaceContainerLow, page), 4.5),
+          // Filter chips: Explore's and search's menus, off and on.
+          'chip label': (theme.chipTheme.labelStyle!.color!, solid(theme.chipTheme.backgroundColor!, page), 4.5),
+          'chip label, chosen': ((theme.chipTheme.labelStyle!.color! as WidgetStateColor).resolve(selected), solid(theme.chipTheme.selectedColor!, page), 4.5),
         };
         for (final MapEntry(key: what, value: (fg, bg, min)) in pairs.entries) {
           expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(min - 0.05), reason: '$what in ${mode.name}');

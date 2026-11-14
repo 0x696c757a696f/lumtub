@@ -123,7 +123,7 @@ editors and checkers.
    found. So a white label on a gradient that starts light fails, even if
    it ends dark. Pairs to watch: `colors.text`/`colors.page`,
    `buttonText`/`button`, `primaryButtonText`/`primaryButton`,
-   `chipSelectedText`/`chipSelected`, `navText`/`sideBar`,
+   `chipText`/`chip` (the page where the chip is see-through), `chipSelectedText`/`chipSelected`, `navText`/`sideBar`,
    `titleBar.text`/`titleBar.surface`, `titleBar.buttons.icon`, `topBarText`/`topBar`, `statusBarText`/`statusBar`,
    `menuBar.text`/`menuBar.surface`, `tabs.text`/`tabs.surface`, `tabs.selectedText`/`tabs.selected`.
 

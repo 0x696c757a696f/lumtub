@@ -171,7 +171,11 @@
     "text": "#10233a",
     // Secondary text. 次要文字。
     "muted": "#4a6278",
-    // What is chosen, playing or in progress. 选中、正在播放、进行中的颜色。
+    // What is chosen, playing or in progress; also links and times in
+    // descriptions and comments where it reads nearly as well as "text"
+    // (else those take "text", underlined in the accent).
+    // 选中、正在播放、进行中的颜色；描述和评论里的链接、时间点在它几乎和 "text" 一样清楚时
+    // 也用它，否则改用 "text" 加强调色下划线。
     "accent": "#0873ad",
     // Text on the accent. 强调色上的文字。
     "onAccent": "#ffffff",

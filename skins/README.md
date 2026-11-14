@@ -131,6 +131,18 @@ editors and checkers.
    文字要 4.5:1，图标和强调色要 3:1。不合格的会换成黑或白，并列在「发现的问题」里。
    所以浅色开头的渐变上放白字，即使结尾是深色也不合格。
 
+   Links and times in descriptions and comments are text, so they need
+   nearly the contrast of `colors.text`, not the accent's 3:1. They take
+   `colors.accent` only where it has that on the page and on cards; on a
+   skin with a picture behind a veil, or with a dark accent on a dark page,
+   they take `colors.text`, underlined in the accent. Pick an accent light
+   enough on dark skins (dark enough on light ones) if you want links in it.
+
+   描述和评论里的链接、时间点也是要读的文字，对比度要接近 `colors.text`，不是强调色的 3:1。
+   只有强调色在页面和卡片上都够清楚时，链接才用强调色；背景是图片加遮罩的皮肤，
+   或者深色页面配深色强调色时，链接改用 `colors.text`，再加一条强调色的下划线。
+   想让链接显示强调色，深色皮肤的强调色要够亮，浅色皮肤的要够深。
+
 2. **Dark skins: give every surface a foreground.** Icons disappear when a
    light, half-transparent fill lies over a light picture, or when you make
    a background dark but leave its text at the default. Keep translucent

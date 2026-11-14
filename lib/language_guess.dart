@@ -5,7 +5,14 @@ import 'native_core.dart';
 /// script, and for Latin-script and similar languages by word statistics
 /// once a line has a dozen letters. Without it, Latin-script languages are
 /// never skipped, except English text for English.
-bool looksLike(String text, String target) => NativeCore.instance?.looksLike(text, target) ?? dartLooksLike(text, target);
+bool looksLike(String text, String target) {
+  // A link's letters are no language: an English line ending in a long
+  // address read as some other language and was "translated" into itself.
+  text = text.replaceAll(_links, ' ');
+  return NativeCore.instance?.looksLike(text, target) ?? dartLooksLike(text, target);
+}
+
+final _links = RegExp(r'(?:https?://|www\.)\S+|\S+@\S+\.\S+|[@#][\w.-]+', unicode: true);
 
 /// [looksLike], with Simplified and Traditional Chinese taken as one
 /// language when [chineseAsOne]: a reader of either reads both.

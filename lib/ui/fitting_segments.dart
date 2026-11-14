@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'chip_strip.dart';
+import 'haptics.dart';
 
 /// A [SegmentedButton] while every segment fits its label on one line, and
 /// text tabs in a [ChipStrip] once they would not: the segments are all as
@@ -33,7 +34,10 @@ class FittingSegments<T> extends StatelessWidget {
               showSelectedIcon: false,
               segments: [for (final v in values) ButtonSegment(value: v, label: Text(label(v), maxLines: 1, softWrap: false))],
               selected: {selected},
-              onSelectionChanged: (value) => onSelected(value.first),
+              onSelectionChanged: (value) {
+                Haptics.select();
+                onSelected(value.first);
+              },
             ),
           );
         }

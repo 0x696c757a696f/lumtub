@@ -34,6 +34,7 @@ import 'video_card.dart';
 import 'window_chrome.dart';
 import '../l10n/l10n.dart';
 import 'fill_icon.dart';
+import 'haptics.dart';
 import 'frame_stats.dart';
 import 'key_scroll.dart';
 import 'pull_to_refresh.dart';
@@ -360,6 +361,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _selectBottom(int index) {
+    if (index != _bottomIndex) Haptics.select();
     if (index == _bottomDestinations.length - 1) {
       _controller.navigate(_library.contains(_controller.mode) ? _controller.mode : _lastLibrary);
     } else {
@@ -379,6 +381,7 @@ class _AppShellState extends State<AppShell> {
             ],
             selected: {_controller.mode},
             onSelectionChanged: (picked) {
+              Haptics.select();
               _lastLibrary = picked.first;
               _controller.navigate(picked.first);
             },
@@ -771,7 +774,14 @@ class _TopBar extends StatelessWidget {
             icon: Icon(AppIcons.gear),
             selectedIcon: const Icon(AppIcons.gearFill),
           ),
-          AccountButton(account: controller.account, onOpenSettings: () => openSettings(context, controller)),
+          AccountButton(
+            account: controller.account,
+            // A narrow window goes straight to the account's page; a wide
+            // one shows it beside the other settings.
+            onOpenSettings: () => MediaQuery.sizeOf(context).width < SettingsPage.wideWidth
+                ? openSettingsCategory(context, controller, SettingsCategory.account)
+                : openSettings(context, controller, category: SettingsCategory.account),
+          ),
         ]),
       ),
       ),

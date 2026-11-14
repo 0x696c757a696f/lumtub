@@ -56,7 +56,12 @@ void main() {
       browserPage = await response.transform(utf8.decoder).join();
       http.close();
     });
+    // The app is kept running while the browser is in front, then let go.
+    final held = <bool>[];
+    GoogleAuth.keepAlive = (waiting) async => held.add(waiting);
+    addTearDown(() => GoogleAuth.keepAlive = null);
     final tokens = await auth.signIn();
+    expect(held, [true, false]);
     expect(tokens.accessToken, 'access-1');
     expect(tokens.refreshToken, 'refresh-1');
     expect(tokens.expired, isFalse);

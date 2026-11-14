@@ -62,6 +62,11 @@ void main() {
           await tester.pump(const Duration(milliseconds: 100));
         }
         expect(tester.takeException(), isNull);
+        if (state == TvSignInState.waiting) {
+          // The code itself is on screen, as text a line tall.
+          expect(find.text('ABCD-EFGH-IJKL'), findsOneWidget);
+          expect(tester.getSize(find.text('ABCD-EFGH-IJKL')).height, lessThan(60));
+        }
       });
     }
   }

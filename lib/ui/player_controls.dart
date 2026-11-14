@@ -61,7 +61,6 @@ import '../skins/skin.dart';
 import '../l10n/l10n.dart';
 import '../video_codec.dart' show heightLabel;
 import 'motion.dart';
-import 'smooth_wheel.dart';
 import 'app_icons.dart';
 
 /// Picture sizing, from PiliNara's `VideoFitType`.
@@ -316,8 +315,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   void _changeVolume(PointerSignalEvent event) {
-    // One step per notch, however the wheel's glide is split up.
-    if (event is! PointerScrollEvent || SmoothWheel.isFollowUp(event)) return;
+    if (event is! PointerScrollEvent) return;
     final up = event.scrollDelta.dy < 0;
     // Ctrl + wheel steps through 倍速选项, as Enhancer for YouTube does.
     if (HardwareKeyboard.instance.isControlPressed || (Platform.isMacOS && HardwareKeyboard.instance.isMetaPressed)) {

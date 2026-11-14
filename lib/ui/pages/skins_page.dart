@@ -346,9 +346,10 @@ class SkinCard extends StatelessWidget {
               // forward a little.
               scale: focused ? 1.06 : hovered ? 1.03 : 1,
               duration: Motion.of(const Duration(milliseconds: 140)),
-              curve: Curves.easeOut,
+              curve: Ease.out,
               child: AnimatedContainer(
                 duration: Motion.of(const Duration(milliseconds: 140)),
+                curve: Ease.out,
                 height: 104,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),

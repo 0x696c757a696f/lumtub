@@ -31,6 +31,7 @@ ${entry('ddddddddddd', 'Old video', now.subtract(const Duration(days: 30)))}
     final asked = <String>[];
     final client = MockClient((request) async {
       if (request.url.path == '/feeds/videos.xml') return http.Response.bytes(utf8.encode(feed), 200);
+      if (request.method == 'GET') return http.Response('<script>ytcfg.set({"VISITOR_DATA":"CgtWaXNpdG9yMTIz"})</script>', 200);
       final id = (jsonDecode(request.body) as Map)['videoId'] as String;
       asked.add(id);
       expect(request.headers['X-Goog-FieldMask'], 'videoDetails.videoId,videoDetails.isLive,videoDetails.isUpcoming');
@@ -61,6 +62,7 @@ ${entry('ddddddddddd', 'Ended stream', now.subtract(const Duration(days: 30)))}
     final asked = <String>[];
     final client = MockClient((request) async {
       if (request.url.path == '/feeds/videos.xml') return http.Response.bytes(utf8.encode(feed), 200);
+      if (request.method == 'GET') return http.Response('<script>ytcfg.set({"VISITOR_DATA":"CgtWaXNpdG9yMTIz"})</script>', 200);
       final id = (jsonDecode(request.body) as Map)['videoId'] as String;
       asked.add(id);
       return http.Response(jsonEncode({

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/skins/jsonc.dart';
 import 'package:lumtub/skins/skin.dart';
 import 'package:lumtub/ui/skin_scenes.dart';
+import 'package:lumtub/ui/linked_text.dart';
 import 'package:lumtub/ui/theme.dart';
 
 /// The colours the app's widgets put on top of each other, for every
@@ -45,7 +46,30 @@ void main() {
           'quiet text on page': (scheme.outline, page, 4.5),
           'muted text on page': (scheme.onSurfaceVariant, page, 4.5),
           'quiet text on cards': (scheme.outline, solid(scheme.surfaceContainerLow, page), 4.5),
+          // Links and times in descriptions and comments are words to read.
+          'links on page': (linkColor(theme), page, 4.5),
+          'links on cards': (linkColor(theme), solid(scheme.surfaceContainerLow, page), 4.5),
+          // Filter chips: Explore's and search's menus, off and on.
+          'chip label': (theme.chipTheme.labelStyle!.color!, solid(theme.chipTheme.backgroundColor!, page), 4.5),
+          'chip label, chosen': ((theme.chipTheme.labelStyle!.color! as WidgetStateColor).resolve(selected), solid(theme.chipTheme.selectedColor!, page), 4.5),
         };
+        // Every control's words on the control as drawn over the page,
+        // every stop of a gradient and a see-through fill included.
+        final controls = <String, (Color?, SkinSurface?)>{
+          'button': (side.buttonText, side.button),
+          'main button': (side.primaryButtonText, side.primaryButton),
+          'chip': (side.chipText, side.chip),
+          'chosen chip': (side.chipSelectedText, side.chipSelected),
+          'chosen rail item': (side.navSelectedText, side.navSelected),
+          'rail item': (side.navText, side.sideBar),
+          'duration badge': (side.durationText, side.durationBadge),
+        };
+        for (final MapEntry(key: what, value: (fg, surface)) in controls.entries) {
+          if (fg == null || surface == null || surface.baseColor == null) continue;
+          for (final bg in surface.tones(page)) {
+            expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(4.45), reason: '$what text in ${mode.name}: $fg on $bg');
+          }
+        }
         for (final MapEntry(key: what, value: (fg, bg, min)) in pairs.entries) {
           expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(min - 0.05), reason: '$what in ${mode.name}');
         }
@@ -80,6 +104,7 @@ void main() {
             for (final under in behind) {
               final bg = Color.alphaBlend(page.withValues(alpha: side.veil), under);
               expect(contrastRatio(side.colors.text, bg), greaterThanOrEqualTo(4.45), reason: 'page text through the veil in ${mode.name}: on $bg');
+              expect(contrastRatio(linkColor(theme), bg), greaterThanOrEqualTo(4.45), reason: 'links through the veil in ${mode.name}: on $bg');
               if (side.colors.muted case final muted?) {
                 expect(contrastRatio(muted, bg), greaterThanOrEqualTo(4.45), reason: 'muted text through the veil in ${mode.name}: on $bg');
               }

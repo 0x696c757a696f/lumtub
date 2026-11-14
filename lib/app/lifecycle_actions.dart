@@ -69,6 +69,7 @@ extension LifecycleActions on AppController {
         logLevel: preferences.logLevel == LogLevel.debug ? MPVLogLevel.info : MPVLogLevel.warn,
       ));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
+      _optionsApplied(player);
       if (!Platform.isWindows && player.platform is NativePlayer) {
         try {
           manager.mpvVersion = await (player.platform as NativePlayer).getProperty('mpv-version');

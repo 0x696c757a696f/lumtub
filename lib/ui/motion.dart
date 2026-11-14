@@ -13,6 +13,10 @@ abstract final class Ease {
   static const curve = Cubic(0.22, 1, 0.36, 1);
   static const fade = Duration(milliseconds: 200);
   static const move = Duration(milliseconds: 320);
+
+  /// Quick settling, for content arriving and a press springing back.
+  static const out = Curves.easeOutCubic;
+  static const press = Duration(milliseconds: 120);
 }
 
 /// Brings [child] in once, when it first appears: it fades in while growing

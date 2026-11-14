@@ -324,16 +324,19 @@ class HomeFeed extends ChangeNotifier {
 
   /// The next page at the end of the feed, gathering more first when the
   /// lanes run low.
+  /// The list scrolling near its end calls this on every frame, so once
+  /// nothing is left to show or to gather from it changes nothing and
+  /// rebuilds nothing.
   Future<void> loadMore() async {
     if (loading || loadingMore || _longTaste == null) return;
-    if (_remaining < pageSize) {
-      loadingMore = true;
+    var expanded = false;
+    if (_remaining < pageSize && _sources != null && _seeds.isNotEmpty) {
+      loadingMore = expanded = true;
       _notify();
       await _expand();
       loadingMore = false;
     }
-    _appendPage();
-    _notify();
+    if (_appendPage() || expanded) _notify();
   }
 
   /// 换一批: a new first page, picked with different chance, without the
@@ -441,20 +444,26 @@ class HomeFeed extends ChangeNotifier {
     }
   }
 
-  void _appendPage() {
+  /// Whether a page came: an empty one leaves [items] as they were.
+  bool _appendPage() {
     final page = mixLanes(_queues, pageSize, taken: _taken, placed: _placed);
+    if (page.isEmpty) return false;
     final videos = page.map((r) => r.item).toList();
     final shown = _filter?.call(videos) ?? videos;
     items = [...items, ...shown];
     reasons = {...reasons, for (final r in page) r.item.id: r.reason};
+    return true;
   }
+
+  /// Videos shown whose neighbours [_expand] has not asked for yet.
+  Iterable<VideoItem> get _seeds => items.reversed.where((item) => !_expanded.contains(item.id));
 
   /// Asks for the suggestions next to a few videos already shown, so the
   /// feed can go on: close ones feed the recent lane, the rest explore.
   Future<void> _expand() async {
     final sources = _sources;
     if (sources == null) return;
-    final seeds = items.reversed.where((item) => !_expanded.contains(item.id)).take(4).toList();
+    final seeds = _seeds.take(4).toList();
     if (seeds.isEmpty) return;
     final generation = _generation;
     await Future.wait(seeds.map((seed) async {

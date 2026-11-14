@@ -123,13 +123,25 @@ editors and checkers.
    found. So a white label on a gradient that starts light fails, even if
    it ends dark. Pairs to watch: `colors.text`/`colors.page`,
    `buttonText`/`button`, `primaryButtonText`/`primaryButton`,
-   `chipSelectedText`/`chipSelected`, `navText`/`sideBar`,
+   `chipText`/`chip` (the page where the chip is see-through), `chipSelectedText`/`chipSelected`, `navText`/`sideBar`,
    `titleBar.text`/`titleBar.surface`, `titleBar.buttons.icon`, `topBarText`/`topBar`, `statusBarText`/`statusBar`,
    `menuBar.text`/`menuBar.surface`, `tabs.text`/`tabs.surface`, `tabs.selectedText`/`tabs.selected`.
 
    **对比度按「一对」检查。** Lumtub 会拿每个文字、图标颜色去比它实际所在的底色，渐变的每一段都算：
    文字要 4.5:1，图标和强调色要 3:1。不合格的会换成黑或白，并列在「发现的问题」里。
    所以浅色开头的渐变上放白字，即使结尾是深色也不合格。
+
+   Links and times in descriptions and comments are text, so they need
+   nearly the contrast of `colors.text`, not the accent's 3:1. They take
+   `colors.accent` only where it has that on the page and on cards; on a
+   skin with a picture behind a veil, or with a dark accent on a dark page,
+   they take `colors.text`, underlined in the accent. Pick an accent light
+   enough on dark skins (dark enough on light ones) if you want links in it.
+
+   描述和评论里的链接、时间点也是要读的文字，对比度要接近 `colors.text`，不是强调色的 3:1。
+   只有强调色在页面和卡片上都够清楚时，链接才用强调色；背景是图片加遮罩的皮肤，
+   或者深色页面配深色强调色时，链接改用 `colors.text`，再加一条强调色的下划线。
+   想让链接显示强调色，深色皮肤的强调色要够亮，浅色皮肤的要够深。
 
 2. **Dark skins: give every surface a foreground.** Icons disappear when a
    light, half-transparent fill lies over a light picture, or when you make

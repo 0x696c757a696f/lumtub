@@ -127,6 +127,11 @@ class GoogleAuth {
         'prompt': 'consent',
       });
 
+  /// Keeps the app running while the browser is in front ([true]) and lets
+  /// it rest again ([false]): Android freezes an app in the background,
+  /// and the browser's return to 127.0.0.1 then never gets an answer.
+  static Future<void> Function(bool waiting)? keepAlive;
+
   /// Opens the browser and waits for Google to send the user back.
   Future<OAuthTokens> signIn({Duration timeout = const Duration(minutes: 5)}) async {
     await cancel();
@@ -137,6 +142,7 @@ class GoogleAuth {
     // Listen before the browser opens, so a fast redirect is not missed.
     final callback = waitForCode(server, state);
     try {
+      await keepAlive?.call(true).catchError((Object _) {});
       try {
         await _openBrowser(authorizationUri(redirectUri: redirectUri, pkce: pkce, state: state));
       } catch (_) {
@@ -152,6 +158,7 @@ class GoogleAuth {
       });
     } finally {
       await cancel();
+      await keepAlive?.call(false).catchError((Object _) {});
     }
   }
 
@@ -223,7 +230,12 @@ class GoogleAuth {
     return tr('HTTP error');
   }
 
+  /// Shows Google's page inside the app instead of in the browser, where
+  /// the system supplies a sheet that keeps the app in front (iOS).
+  static Future<void> Function(Uri)? signInPage;
+
   static Future<void> _openInBrowser(Uri uri) async {
+    if (signInPage case final page?) return page(uri);
     if (Platform.isWindows) {
       // rundll32 passes the whole address to the default browser; explorer.exe
       // can drop everything after the first '&'.

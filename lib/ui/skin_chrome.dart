@@ -739,6 +739,7 @@ class _RailItemState extends State<_RailItem> {
           child: AnimatedScale(
             scale: _pressed ? 0.94 : _focused ? 1.04 : 1,
             duration: Motion.of(const Duration(milliseconds: 90)),
+            curve: Ease.out,
             child: SkinBox(
               surface: widget.surface?.forState(hovered: _hover, pressed: _pressed, focused: _focused),
               radius: widget.radius,
@@ -891,6 +892,7 @@ class _TabItemState extends State<_TabItem> {
                 child: AnimatedScale(
                   scale: _pressed ? 0.94 : 1,
                   duration: Motion.of(const Duration(milliseconds: 90)),
+                  curve: Ease.out,
                   child: SkinBox(
                     surface: widget.selected ? tabs.selected?.forState(hovered: _hover, pressed: _pressed) : null,
                     radius: widget.radius,

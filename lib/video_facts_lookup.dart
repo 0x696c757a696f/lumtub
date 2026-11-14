@@ -9,6 +9,7 @@ import 'app_log.dart';
 import 'models.dart';
 import 'native_core.dart';
 import 'youtube_listing.dart';
+import 'youtube_player_probe.dart';
 
 /// What a card shows of a video and its listing may leave out: the length,
 /// the views and the day it was published.
@@ -265,13 +266,9 @@ class VideoFactsLookup extends ChangeNotifier {
   static var _toldWhy = false;
 
   static Future<String?> _ask(http.Client client, Map<String, dynamic> parts) async {
-    final response = await client
-        .post(
-          Uri.parse('https://www.youtube.com/youtubei/v1/player?prettyPrint=false'),
-          headers: {'Content-Type': 'application/json', ...(parts['headers'] as Map).cast<String, String>()},
-          body: jsonEncode(parts['body']),
-        )
-        .timeout(const Duration(seconds: 8));
+    final headers = {'Content-Type': 'application/json', ...(parts['headers'] as Map).cast<String, String>()};
+    final body = (parts['body'] as Map).cast<String, Object?>();
+    final response = await YoutubePlayerProbe.post(client, headers, body, timeout: const Duration(seconds: 8));
     if (response.statusCode != 200) return 'HTTP ${response.statusCode}';
     return utf8.decode(response.bodyBytes, allowMalformed: true);
   }

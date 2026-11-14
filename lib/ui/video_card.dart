@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../device.dart';
@@ -15,6 +16,7 @@ import '../dearrow.dart';
 import '../thumbnail_cache.dart';
 import '../youtube_account.dart' show RemotePlaylist;
 import 'common.dart';
+import 'haptics.dart';
 import 'pages/downloads_page.dart';
 import 'skeleton.dart';
 import 'skin_paint.dart';
@@ -22,6 +24,7 @@ import 'theme.dart';
 import '../l10n/l10n.dart';
 import '../video_facts_lookup.dart';
 import 'motion.dart';
+import 'press_scale.dart';
 import 'app_icons.dart';
 import '../feed_reason.dart';
 
@@ -167,14 +170,12 @@ class SliverVideoGrid extends StatelessWidget {
                   childCount: items.length,
                 ),
               )
-            : SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context), textScale: cardTextScale(context), compact: videoCardsCompact(context));
-          return SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: layout.columns,
-              mainAxisSpacing: _gridRowGap,
-              crossAxisSpacing: gridGap,
-              mainAxisExtent: layout.itemHeight + ((watched == null ? 0 : 1) + (reasoned ? 1 : 0)) * _reasonHeight * cardTextScale(context),
+            : SliverGrid(
+            gridDelegate: VideoGridDelegate(
+              padding: skinCardPadding(context),
+              textScale: cardTextScale(context),
+              compact: videoCardsCompact(context),
+              extra: ((watched == null ? 0 : 1) + (reasoned ? 1 : 0)) * _reasonHeight * cardTextScale(context),
             ),
             delegate: SliverChildBuilderDelegate(
               (context, i) => VideoCard(
@@ -191,10 +192,39 @@ class SliverVideoGrid extends StatelessWidget {
               ),
               childCount: items.length,
             ),
-          );
-        }),
+          ),
       );
   }
+}
+
+/// Lays a video grid out as [gridLayoutFor] does for its width. A sliver
+/// layout builder would do the same but build its grid again, and every
+/// card shown with it, on each frame the list scrolls, as the scroll offset
+/// is part of a sliver's constraints.
+class VideoGridDelegate extends SliverGridDelegate {
+  const VideoGridDelegate({this.padding = 0, this.textScale = 1, this.compact, this.extra = 0, this.rowGap});
+  final double padding;
+  final double textScale;
+  final bool? compact;
+  /// Added to each card's height, for lines under it.
+  final double extra;
+  final double? rowGap;
+
+  @override
+  SliverGridLayout getLayout(SliverConstraints constraints) {
+    final layout = gridLayoutFor(constraints.crossAxisExtent, padding: padding, textScale: textScale, compact: compact);
+    return SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: layout.columns,
+      mainAxisSpacing: rowGap ?? _gridRowGap,
+      crossAxisSpacing: gridGap,
+      mainAxisExtent: layout.itemHeight + extra,
+    ).getLayout(constraints);
+  }
+
+  // The layout also follows settings read as it is made (the card width,
+  // compact cards), so a grid built again lays out again.
+  @override
+  bool shouldRelayout(VideoGridDelegate oldDelegate) => true;
 }
 
 /// What [SliverVideoGrid.watched] shows for each time: "3 days ago", made
@@ -240,11 +270,14 @@ class VideoRow extends StatelessWidget {
     final text = layout == VideoLayout.text;
     final status = item.isLive ? tr('Live now') : item.isUpcoming ? tr('Upcoming live') : null;
     final meta = MetaLine.of(item, extra: text && status == null && item.durationLabel.isNotEmpty ? item.durationLabel : null, style: TextStyle(fontSize: 12, color: colors.outline));
-    return InkWell(
+    return PressScale(child: InkWell(
       borderRadius: AppStyle.controlRadius,
       onTap: onOpen,
       onSecondaryTapUp: (details) => _menu(context, details.globalPosition),
-      onLongPress: () => _menu(context, _centreOf(context)),
+      onLongPress: () {
+        Haptics.menu();
+        _menu(context, _centreOf(context));
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: Space.s, horizontal: Space.xs),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -298,7 +331,7 @@ class VideoRow extends StatelessWidget {
           ])),
         ]),
       ),
-    );
+    ));
   }
 }
 
@@ -311,18 +344,10 @@ class SliverPlaylistGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-        sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, textScale: cardTextScale(context));
-          return SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: layout.columns,
-              mainAxisSpacing: _gridRowGap,
-              crossAxisSpacing: gridGap,
-              mainAxisExtent: layout.itemHeight,
-            ),
-            delegate: SliverChildBuilderDelegate((context, i) => PlaylistCard(item: items[i], onOpen: () => onOpen(items[i])), childCount: items.length),
-          );
-        }),
+        sliver: SliverGrid(
+          gridDelegate: VideoGridDelegate(textScale: cardTextScale(context)),
+          delegate: SliverChildBuilderDelegate((context, i) => PlaylistCard(item: items[i], onOpen: () => onOpen(items[i])), childCount: items.length),
+        ),
       );
 }
 
@@ -336,7 +361,7 @@ class PlaylistCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final cover = item.thumbnail;
-    return Card(
+    return PressScale(child: Card(
       color: Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: AppStyle.cardRadius),
       clipBehavior: Clip.none,
@@ -385,7 +410,7 @@ class PlaylistCard extends StatelessWidget {
           )),
         ]),
       ),
-    );
+    ));
   }
 }
 
@@ -398,10 +423,10 @@ class SliverSkeletonGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-        sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context), textScale: cardTextScale(context), compact: videoCardsCompact(context));
-          final width = constraints.crossAxisExtent;
-          return SliverToBoxAdapter(child: DelayedReveal(child: Skeleton(child: SizedBox(
+        sliver: SliverToBoxAdapter(child: LayoutBuilder(builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final layout = gridLayoutFor(width, padding: skinCardPadding(context), textScale: cardTextScale(context), compact: videoCardsCompact(context));
+          return DelayedReveal(child: Skeleton(child: SizedBox(
             width: width,
             child: Wrap(
               spacing: gridGap,
@@ -412,8 +437,8 @@ class SliverSkeletonGrid extends StatelessWidget {
                 child: const _CardSkeleton(),
               )),
             ),
-          ))));
-        }),
+          )));
+        })),
       );
 }
 
@@ -599,7 +624,10 @@ class _VideoCardState extends State<VideoCard> {
         onHover: _pointerOver,
         onFocusChange: _focus,
         onSecondaryTapUp: (details) => _menu(details.globalPosition),
-        onLongPress: () => _menu(_centreOf(context)),
+        onLongPress: () {
+          Haptics.menu();
+          _menu(_centreOf(context));
+        },
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           AspectRatio(
             aspectRatio: 16 / 9,
@@ -626,6 +654,8 @@ class _VideoCardState extends State<VideoCard> {
                 if (_frame > 0) ...[
                   AnimatedSwitcher(
                     duration: Motion.of(const Duration(milliseconds: 250)),
+                    switchInCurve: Ease.out,
+                    switchOutCurve: Ease.out,
                     child: Image(
                       color: context.pictureWarmth,
                       colorBlendMode: BlendMode.multiply,
@@ -663,7 +693,7 @@ class _VideoCardState extends State<VideoCard> {
                     views,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500, shadows: [Shadow(blurRadius: 3, color: Color(0x80000000))]),
+                    style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500, shadows: [Shadow(offset: Offset(0, 1), color: Color(0x80000000))]),
                   )),
                 if (item.isLive || item.isUpcoming)
                   PositionedDirectional(end: 8, bottom: 6, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
@@ -711,7 +741,7 @@ class _VideoCardState extends State<VideoCard> {
         const SingleActivator(LogicalKeyboardKey.contextMenu): _menu,
         const SingleActivator(LogicalKeyboardKey.f10, shift: true): _menu,
       },
-      child: Stack(children: [
+      child: PressScale(child: Stack(children: [
         if (skin?.videoCard case final surface?)
           SkinBox(
             surface: surface.forState(hovered: _hovered, focused: _focused),
@@ -726,7 +756,7 @@ class _VideoCardState extends State<VideoCard> {
             borderRadius: AppStyle.cardRadius,
             border: Border.all(color: colors.primary, width: 2),
           )))),
-      ]),
+      ])),
     );
   }
 }
@@ -883,11 +913,14 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
     _branding = _brandingNow();
     final colors = context.colors;
     final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
-    return InkWell(
+    return PressScale(child: InkWell(
       borderRadius: AppStyle.cardRadius,
       onTap: onOpen,
       onSecondaryTapUp: (details) => showVideoMenu(context, item, details.globalPosition, onOpen: onOpen),
-      onLongPress: () => showVideoMenu(context, item, _centreOf(context), onOpen: onOpen),
+      onLongPress: () {
+        Haptics.menu();
+        unawaited(showVideoMenu(context, item, _centreOf(context), onOpen: onOpen));
+      },
       child: Padding(
         padding: const EdgeInsets.all(4),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -928,7 +961,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
           ])),
         ]),
       ),
-    );
+    ));
   }
 }
 

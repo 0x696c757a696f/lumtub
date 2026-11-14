@@ -93,6 +93,14 @@ class _TranslatableState extends State<Translatable> {
     try {
       final result = await translateForeignLines(widget.controller.translator, text, language, (line) => reads(line) || !_hasLetters(line));
       if (!mounted || text != widget.text) return;
+      // The service gave the text back as it was: it is in that language.
+      if (_same(result, text)) {
+        if (quiet) return setState(() => _loading = false);
+        return setState(() {
+          _loading = false;
+          _error = tr('Already in {0}, nothing to translate', [TranslationLanguage.byCode(language).label]);
+        });
+      }
       setState(() {
         _translation = result;
         _language = language;
@@ -158,6 +166,8 @@ bool needsTranslation(AppController controller, String text) {
   final chineseAsOne = controller.preferences.chineseAsOne;
   return text.split('\n').any((line) => _hasLetters(line) && !known.any((language) => readsAs(line, language, chineseAsOne: chineseAsOne)));
 }
+
+bool _same(String a, String b) => a.replaceAll(RegExp(r'\s+'), ' ').trim() == b.replaceAll(RegExp(r'\s+'), ' ').trim();
 
 /// Whether [line] has a word in it, not just emoji, digits or a link.
 bool _hasLetters(String line) => RegExp(r'\p{L}{2,}', unicode: true).hasMatch(line.replaceAll(RegExp(r'https?://\S+'), ''));

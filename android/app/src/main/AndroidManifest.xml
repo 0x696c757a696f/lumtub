@@ -79,6 +79,10 @@
             android:name=".PlaybackService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback"/>
+        <service
+            android:name=".SignInService"
+            android:exported="false"
+            android:foregroundServiceType="shortService"/>
         <receiver android:name=".InstallResult" android:exported="false"/>
         <meta-data
             android:name="flutterEmbedding"

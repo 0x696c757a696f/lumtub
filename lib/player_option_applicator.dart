@@ -53,8 +53,6 @@ class PlayerOptionApplicator {
       // same letter size, room below and outline. The player's own size
       // refines these once it is laid out (AppController.subtitleViewChanged).
       ...libassOptions(settings, LibassLook.standard(position: settings.subtitlePosition, border: settings.subtitleBorder, byHeight: Platform.isAndroid, caption: Device.captionScale)),
-      'sub-border-style': settings.subtitleBackground ? 'background-box' : 'outline-and-shadow',
-      'sub-bold': settings.subtitleBold ? 'yes' : 'no',
       // Who draws the subtitles: libmpv (libass) or the Flutter view, which
       // reads sub-text either way. Set here, a switch applies at once.
       'sub-ass': settings.libassSubtitles ? 'yes' : 'no',
@@ -111,6 +109,8 @@ class PlayerOptionApplicator {
       'sub-border-color': PlayerSettings.mpvColor(0, opacity),
       'sub-back-color': PlayerSettings.mpvColor(0, 0.67 * opacity),
       'sub-shadow-offset': '0',
+      'sub-border-style': settings.subtitleBackground ? 'background-box' : 'outline-and-shadow',
+      'sub-bold': settings.subtitleBold ? 'yes' : 'no',
       // The 字幕位置 setting is the room below, as in the Flutter view; the
       // position moves the subtitles only above the player's controls.
       'sub-pos': '100',

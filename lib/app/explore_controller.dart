@@ -443,7 +443,7 @@ extension ExploreActions on AppController {
     Future<String> translate(String text) => _google.translate(text, target).timeout(const Duration(seconds: 10));
     return Future.wait([
       for (final query in queries)
-        if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language) || !searchPhrasesOf(query).any(isCjkPhrase))
+        if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language) || !searchPhrasesOf(query).any(isTranslatedPhrase))
           Future.value(query)
         else
           () async {
@@ -452,12 +452,12 @@ extension ExploreActions on AppController {
               // as one sentence is "Revisione digitale della tecnologia",
               // which finds next to nothing.
               final words = searchPhrasesOf(query);
-              final asked = [for (final w in words) if (isCjkPhrase(w) && searchGlossary[w] == null) w];
+              final asked = [for (final w in words) if (isTranslatedPhrase(w) && searchGlossary[w] == null) w];
               final lines = asked.isEmpty ? const <String>[] : (await translate(asked.join('\n'))).split('\n');
               if (lines.length != asked.length) throw StateError('${lines.length} lines for ${asked.length} phrases');
               var next = 0;
               final translated = searchWordsOf([
-                for (final w in words) !isCjkPhrase(w) ? w : searchGlossary[w] ?? lines[next++],
+                for (final w in words) !isTranslatedPhrase(w) ? w : searchGlossary[w] ?? lines[next++],
               ]);
               logDebug(() => 'Explore searches "$query" in $target as "$translated"');
               return translated.isEmpty ? query : translated;

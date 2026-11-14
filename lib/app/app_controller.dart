@@ -797,9 +797,14 @@ class AppController extends ChangeNotifier with _ExploreState {
   Timer? _libassLookTimer;
   /// Second subtitles drawn in their own font and color: each copy's track
   /// id, with the track it copies and the style it has.
-  final Map<String, ({String source, String key})> _styledSeconds = {};
-  String? _styling;
-  Future<void> _styleQueue = Future.value();
+  final Map<String, ({String source, String key, bool second, String file})> _subtitleCopies = {};
+  /// Tracks that fit on screen as they are while libmpv draws.
+  final Set<String> _plainFits = {};
+  Future<void> _restyling = Future.value();
+  int _copySerial = 0;
+  /// mpv's `sid` as it last said.
+  String _mainTrackId = 'no';
+  int _copyFiles = 0;
   /// The family libmpv draws subtitles in on Android, picked by their text.
   String? _subtitleFamily;
   /// On Android: libmpv met subtitles no one font can draw, so Flutter's

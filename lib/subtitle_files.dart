@@ -10,6 +10,7 @@ import 'translation_cache.dart';
 import 'translation_services.dart';
 import 'youtube_web.dart';
 import 'app_log.dart';
+import 'scripts.dart';
 
 /// Subtitles fetched by the app and handed to mpv as files.
 ///
@@ -356,11 +357,10 @@ class WebVtt {
   }
 
   static final _sentenceEnd = RegExp(r'[.!?。！？…]["”’」』)）]*$');
-  static final _cjk = RegExp(r'[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af\uf900-\ufaff]');
 
   /// [cues] joined into sentences: a cue runs on into the next while it has
   /// no sentence end, the next follows within [gap], and the sentence stays
-  /// short enough to read ([maxWidth], CJK characters counting double) and
+  /// short enough to read ([maxWidth], characters of Chinese, Japanese, Thai and other scripts without spaces counting double) and
   /// within [maxLength] on screen. Each spans from its first cue's start to
   /// its last cue's end.
   static List<({String timing, String text})> sentences(
@@ -387,7 +387,7 @@ class WebVtt {
     Duration maxLength = const Duration(seconds: 7),
     int maxWidth = 90,
   }) {
-    int width(String text) => text.length + _cjk.allMatches(text).length;
+    int width(String text) => text.length + unspacedScript.allMatches(text).length;
     final out = <(int, int)>[];
     for (var i = 0; i < cues.length;) {
       final start = startOf(cues[i].timing);
@@ -423,7 +423,7 @@ class WebVtt {
   /// after a comma where one is near the end, as (first cue, cue after
   /// the last).
   static List<(int, int)> lineSpans(List<({String timing, String text})> cues, (int, int) span) {
-    int width(String text) => text.length + _cjk.allMatches(text).length;
+    int width(String text) => text.length + unspacedScript.allMatches(text).length;
     final (from, to) = span;
     final out = <(int, int)>[];
     for (var i = from; i < to;) {
@@ -478,11 +478,12 @@ class WebVtt {
   }
 
 
-  /// [a] and [b] as one line: with a space, except between CJK characters.
+  /// [a] and [b] as one line: with a space, except between letters of
+  /// scripts written without spaces (Chinese, Japanese, Thai…).
   static String _join(String a, String b) {
     if (a.isEmpty || b.isEmpty) return a + b;
-    final cjk = _cjk.hasMatch(a[a.length - 1]) && _cjk.hasMatch(b[0]);
-    return cjk ? '$a$b' : '$a $b';
+    final unspaced = unspacedScript.hasMatch(a[a.length - 1]) && unspacedScript.hasMatch(b[0]);
+    return unspaced ? '$a$b' : '$a $b';
   }
 
   static String _stamp(Duration d) {

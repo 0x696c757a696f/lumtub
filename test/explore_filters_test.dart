@@ -59,8 +59,11 @@ void main() {
     expect(mixed.last, 'a0');
   });
 
-  test('only Chinese, Japanese and Korean words of a search are translated', () {
-    expect(searchPhrasesOf('blender 3D modeling live').where(isCjkPhrase), isEmpty);
+  test('only words outside the Latin alphabet of a search are translated', () {
+    expect(searchPhrasesOf('มวยไทย สด'), ['มวยไทย', 'สด']);
+    expect(searchPhrasesOf('живая музыка Blender'), ['живая музыка', 'Blender']);
+    expect(searchPhrasesOf('живая музыка Blender').where(isTranslatedPhrase), ['живая музыка']);
+    expect(searchPhrasesOf('blender 3D modeling live').where(isTranslatedPhrase), isEmpty);
     expect(searchPhrasesOf('游戏 直播 Minecraft'), ['游戏', '直播', 'Minecraft']);
     expect(searchGlossary['直播'], 'live');
   });

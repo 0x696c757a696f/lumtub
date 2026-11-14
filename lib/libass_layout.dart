@@ -1,6 +1,8 @@
 import 'dart:math';
-import 'dart:ui' show Size;
 
+import 'package:flutter/painting.dart';
+
+import 'appearance_settings.dart' show bundledFont;
 import 'player_settings.dart';
 import 'subtitle_cues.dart';
 
@@ -52,6 +54,40 @@ class LibassLayout {
     return lines;
   }
 
+  /// The ems of a line in libass's room for [aspect], with letters [em]
+  /// units wide at [scale].
+  static double roomEms({required double em, required double scale, double aspect = 16 / 9}) => (_canvas * max(aspect, 0.5) - 2 * _margin) / (em * scale);
+
+  /// [text] with line breaks where the Flutter subtitle view wraps it in
+  /// [room] ems of [font]. libass breaks lines only at spaces, so Chinese,
+  /// Japanese, Thai, Khmer, Burmese and other text written without them
+  /// would run off both edges; Flutter breaks by the script's own rules.
+  static String wrap(String text, double room, {String font = '', bool bold = false}) {
+    // Lines that fit with room to spare are left as they are.
+    if (room <= 2 || text.split('\n').every((line) => _ems(line) <= room * 0.9)) return text;
+    const size = 32.0;
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(fontSize: size, height: 1.3, fontFamily: font.isEmpty ? null : font, fontFamilyFallback: const [bundledFont], fontWeight: bold ? FontWeight.w700 : FontWeight.normal),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: room * size);
+    final lines = <String>[];
+    var offset = 0;
+    while (offset < text.length) {
+      final range = painter.getLineBoundary(TextPosition(offset: offset));
+      if (range.end <= offset) break;
+      lines.add(text.substring(offset, range.end).replaceAll('\n', '').trimRight());
+      offset = range.end;
+      // The break itself, when the text had one.
+      if (offset < text.length && text[offset] == '\n') offset++;
+    }
+    painter.dispose();
+    if (offset < text.length) lines.add(text.substring(offset));
+    return lines.join('\n');
+  }
+
   /// A rough width in ems: full-width characters (CJK, kana, Hangul) one
   /// each, Latin letters by their usual widths in a sans-serif font (i, l
   /// and punctuation narrow, m and w wide, capitals wider than small
@@ -59,10 +95,15 @@ class LibassLayout {
   static double _ems(String line) {
     var width = 0.0;
     for (final rune in line.runes) {
+      // Marks above and below a letter (Thai, Khmer, Devanagari vowels and
+      // tones) take no room of their own.
+      if (rune >= 0x300 && _mark.hasMatch(String.fromCharCode(rune))) continue;
       width += _wide(rune) ? 1.0 : _latin(rune);
     }
     return width;
   }
+
+  static final _mark = RegExp(r'[\p{Mn}\p{Me}]', unicode: true);
 
   /// Zero-width and direction marks, which take no room on screen.
   static final _invisible = RegExp('[\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]');
@@ -168,8 +209,8 @@ class LibassLook {
 /// size, outline and background, which mpv cannot set apart from the first
 /// subtitle's. Its letters are [secondEm] units at secondary-sub-scale 1;
 /// [outline] is the outline's width for a letter one unit wide.
-String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline}) {
-  final font = settings.secondaryFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.secondaryFont);
+String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font}) {
+  font ??= settings.secondaryFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.secondaryFont);
   final size = secondEm * settings.secondaryScale * LibassLook.lineEms(font);
   String colour(int rgb, double opacity) {
     final alpha = (255 * (1 - opacity.clamp(0, 1))).round();
@@ -204,7 +245,7 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
     ..writeln('Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text');
   for (final cue in cues) {
     // Braces would open override tags; line breaks are ASS's own.
-    final text = cue.text.replaceAll('{', '(').replaceAll('}', ')').replaceAll(RegExp(r'\r?\n'), r'\N');
+    final text = LibassLayout.wrap(cue.text, room, font: settings.secondaryFont, bold: settings.subtitleBold).replaceAll('{', '(').replaceAll('}', ')').replaceAll(RegExp(r'\r?\n'), r'\N');
     out.writeln('Dialogue: 0,${stamp(cue.start)},${stamp(cue.end)},Default,,0,0,0,,$text');
   }
   return out.toString();

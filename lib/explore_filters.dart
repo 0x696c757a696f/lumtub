@@ -1,5 +1,6 @@
 import 'l10n/l10n.dart';
 import 'native_core.dart';
+import 'scripts.dart';
 
 /// A 类型 or 视角 choice in explore: words added to the zone's search, so it
 /// leans the results rather than sorting them exactly.
@@ -397,31 +398,38 @@ final _languages = <String, ExploreLanguage>{};
 
 /// One search from words translated one by one: each kept once, as
 /// "园艺 gardening" translates to the same word twice.
-/// [query] in the pieces a translation keeps the sense of: each Chinese or
-/// Japanese keyword alone, as they are listed apart, and each run of words
-/// in a spaced script together, since "stand-up comedy live" word by word
-/// is "stare in piedi commedia vivere".
-final _cjk = RegExp(r'[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]');
-
-/// Whether [phrase] has Chinese, Japanese or Korean in it.
-bool isCjkPhrase(String phrase) => _cjk.hasMatch(phrase);
+/// Whether [phrase] is translated for a search in another language: it
+/// has letters outside the Latin alphabet. Words in Latin letters are names
+/// and terms a search keeps (Blender, lofi, keynote).
+bool isTranslatedPhrase(String phrase) => nonLatinLetter.hasMatch(phrase);
 
 /// Search words put the same way in every language, as YouTube titles
 /// write them.
 const searchGlossary = {'直播': 'live', '实况': 'live', '直播间': 'live'};
 
+/// [query] in the pieces a translation keeps the sense of: each keyword of
+/// a script written without spaces (Chinese, Japanese, Thai…) alone, as
+/// they are listed apart, and each run of words in a spaced script
+/// together, since "stand-up comedy live" word by word is "stare in piedi
+/// commedia vivere". Latin words and words to translate run apart.
 List<String> searchPhrasesOf(String query) {
-  final cjk = _cjk;
   final phrases = <String>[];
   var run = <String>[];
+  bool? translated;
   for (final word in query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty)) {
-    if (cjk.hasMatch(word)) {
+    final mine = isTranslatedPhrase(word);
+    if (unspacedScript.hasMatch(word)) {
       if (run.isNotEmpty) phrases.add(run.join(' '));
       run = [];
       phrases.add(word);
-    } else {
-      run.add(word);
+      continue;
     }
+    if (run.isNotEmpty && translated != mine) {
+      phrases.add(run.join(' '));
+      run = [];
+    }
+    translated = mine;
+    run.add(word);
   }
   if (run.isNotEmpty) phrases.add(run.join(' '));
   return phrases;

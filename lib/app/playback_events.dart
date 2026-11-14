@@ -166,13 +166,18 @@ extension PlaybackEvents on AppController {
       // media_kit waits for these listeners before it reads the next mpv
       // event, so they only schedule the work: awaiting the player here
       // would stall playback (and deadlock on the player's lock).
-      unawaited(platform.observeProperty('sid', (_) async => _followSubtitles(player)).catchError((Object e) => logWarn('Could not follow the subtitle: $e')));
+      unawaited(platform.observeProperty('sid', (value) async {
+        _mainTrackId = value.isEmpty || value == 'false' ? 'no' : value;
+        _followSubtitles(player);
+        // Only scheduled, as below.
+        _restyleSubtitles(player);
+      }).catchError((Object e) => logWarn('Could not follow the subtitle: $e')));
       unawaited(platform.observeProperty('secondary-sid', (value) async {
         secondaryTrackId = value.isEmpty || value == 'false' ? 'no' : value;
         _followSubtitles(player);
         // Only scheduled, as above.
         _queueLibassLook();
-        unawaited(Future(() => _styleSecond(player)));
+        _restyleSubtitles(player);
       }).catchError((Object e) => logWarn('Could not follow the second subtitle: $e')));
       // Only schedules the speed change, like the listeners above.
       unawaited(platform.observeProperty(SilenceSkipper.property, (value) async => _onSilenceMetadata(player, value)).catchError((Object e) => logWarn('Could not watch for silence: $e')));

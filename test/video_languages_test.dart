@@ -213,12 +213,16 @@ void main() {
     }
   }, skip: core);
 
-  test('keeps heard answers on disk, others for this run only', () async {
+  test('keeps heard answers on disk, those told by texts for a week, others for this run only', () async {
     var calls = 0;
     final client = MockClient((request) async {
       calls++;
       final id = (jsonDecode(request.body) as Map)['videoId'];
-      return _json(id == 'aaaaaaaaaaa' ? _player('Lezione', asr: 'it') : _player('Lezione senza sottotitoli'));
+      return _json(switch (id) {
+        'aaaaaaaaaaa' => _player('Lezione', asr: 'it'),
+        'ccccccccccc' => {'playabilityStatus': {'status': 'OK'}, 'videoDetails': {}},
+        _ => _player('Lezione senza sottotitoli'),
+      });
     });
     final folder = Directory.systemTemp.createTempSync('languages');
     addTearDown(() => folder.deleteSync(recursive: true));
@@ -236,13 +240,32 @@ void main() {
     calls = 0;
     expect((await languages.of('aaaaaaaaaaa', asking: ExploreLanguage.it))?.source, 'captions');
     expect((await languages.of('bbbbbbbbbbb', asking: ExploreLanguage.it))?.source, 'text');
-    expect(calls, 0, reason: 'both are kept for this run');
+    expect((await languages.of('ccccccccccc', asking: ExploreLanguage.it))?.source, 'none');
+    calls = 0;
+    await languages.of('ccccccccccc', asking: ExploreLanguage.it);
+    expect(calls, 0, reason: 'all are kept for this run');
     await Future<void>.delayed(const Duration(seconds: 6));
     languages = VideoLanguages(client, file: file);
     await languages.of('aaaaaaaaaaa', asking: ExploreLanguage.it);
     expect(calls, 0, reason: 'the heard one is kept on disk');
+    expect((await languages.of('bbbbbbbbbbb', asking: ExploreLanguage.it))?.source, 'text');
+    expect(calls, 0, reason: 'the one told by its texts is kept on disk too');
+    await languages.of('bbbbbbbbbbb', asking: ExploreLanguage.en);
+    expect(calls, greaterThan(0), reason: 'texts are kept for the language they were asked in');
+    calls = 0;
+    await languages.of('ccccccccccc', asking: ExploreLanguage.it);
+    expect(calls, greaterThan(0), reason: 'an answer that told nothing is asked again in a later run');
+    // A week later, texts are asked again: YouTube may have made captions.
+    final texts = File('${folder.path}/text_languages.json');
+    final kept = jsonDecode(texts.readAsStringSync()) as Map<String, dynamic>;
+    texts.writeAsStringSync(jsonEncode({
+      for (final MapEntry(:key, :value) in kept.entries) key: {...value as Map, 'at': DateTime.now().subtract(const Duration(days: 8)).millisecondsSinceEpoch ~/ 1000},
+    }));
+    VideoLanguages.reset();
+    languages = VideoLanguages(client, file: file);
+    calls = 0;
     await languages.of('bbbbbbbbbbb', asking: ExploreLanguage.it);
-    expect(calls, greaterThan(0), reason: 'the other is asked again in a later run');
+    expect(calls, greaterThan(0), reason: 'texts are kept for a week');
   }, skip: core);
 
   test('leaves out a channel plainly in another language without asking about its videos', () async {

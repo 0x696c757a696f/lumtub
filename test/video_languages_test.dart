@@ -186,6 +186,33 @@ void main() {
     expect(asked.skip(1).every((a) => a.$2 != null), isTrue, reason: 'masked again once the visitor is known');
   }, skip: core);
 
+  test('reads a live stream by its title when another app answers it with empty details', () async {
+    // Seen on 2026-11-14: visionOS answers a live stream with its title and
+    // no captions or audio tracks; the TV app with nothing in its details.
+    for (final tvStatus in ['OK', 'UNPLAYABLE']) {
+      VideoLanguages.reset();
+      final client = MockClient((request) async {
+        if (request.method == 'GET') return http.Response('', 404);
+        final id = (jsonDecode(request.body) as Map)['videoId'];
+        final name = _clientOf(request);
+        if (id == 'aaaaaaaaaaa') return _json(name == 'TVHTML5' ? _player('Lezione', asr: 'it') : _player('Lezione'));
+        if (name == 'VISIONOS') {
+          return _json({
+            'playabilityStatus': {'status': 'OK'},
+            'streamingData': {'adaptiveFormats': [{}, {}]},
+            'videoDetails': {'title': 'Tutte le news di Sky TG24', 'shortDescription': 'Per tutte le news visita il sito https://tg24.sky.it'},
+          });
+        }
+        return _json({'playabilityStatus': {'status': tvStatus}, 'videoDetails': {}});
+      });
+      final languages = VideoLanguages(client);
+      // The TV app told the last video, so it is asked first.
+      await languages.of('aaaaaaaaaaa', asking: ExploreLanguage.it);
+      final live = await languages.of('DBkiOifHkVE', asking: ExploreLanguage.it);
+      expect((live?.source, live?.language, live?.title), ('text', ExploreLanguage.it, 'Tutte le news di Sky TG24'), reason: 'TV answering $tvStatus');
+    }
+  }, skip: core);
+
   test('keeps heard answers on disk, others for this run only', () async {
     var calls = 0;
     final client = MockClient((request) async {

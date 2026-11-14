@@ -67,7 +67,13 @@ region is picked.
 - Each video is asked once per language check, at most 6 at a time.
 - The apps are asked in turn until one tells by audio or captions:
   the visionOS app a quick start uses, then the TV app, then the website.
-  Whichever told last is asked first from then on. After 20 videos in a
+  Whichever told last is asked first from then on. When none tells, the
+  answer kept is one with the video's title (its texts are read from it),
+  and of those one YouTube would play. Live streams never have automatic
+  captions or audio track languages, so they are always read by their
+  texts; visionOS gives their title and description, while the TV app
+  answers them with empty details (seen on 2026-11-14), which once made
+  every live stream unreadable. After 20 videos in a
   row where the first app answered without captions and the others did
   not tell either, only one video in 20 still asks the others.
 - Every signed-out `/player` request (language checks, quick starts,

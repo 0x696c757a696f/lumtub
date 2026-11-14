@@ -193,7 +193,7 @@ class VideoLanguages {
       // more for a while: most videos in Chinese and many other languages
       // have no automatic captions in any app. One video in
       // [_othersGiveUp] still asks them, in case that changed.
-      if (best != null && best.playable && _othersTold <= -_othersGiveUp && --_othersTold % _othersGiveUp != 0) break;
+      if (best != null && _rank(best) == 3 && _othersTold <= -_othersGiveUp && --_othersTold % _othersGiveUp != 0) break;
       final read = await _fetch(id, hl, client);
       if (read == null) continue;
       withVideo = true;
@@ -207,11 +207,17 @@ class VideoLanguages {
         return read.spoken;
       }
       if (best != null) _othersTold--;
-      if (best == null || (!best.playable && read.playable)) best = read;
+      if (best == null || _rank(read) > _rank(best)) best = read;
     }
     _answered(withVideo);
     return best?.spoken;
   }
+
+  /// How much an answer that does not tell by captions or audio is worth:
+  /// one with the video's title (which the texts are read from) over one
+  /// without, then one YouTube would play over one it would not. Some apps
+  /// answer a live stream with empty video details.
+  static int _rank(_Read read) => (read.spoken.title.isEmpty ? 0 : 2) + (read.playable ? 1 : 0);
 
   static SpokenVideo _spoken(Map<String, dynamic> read) {
     final index = (read['language'] as num?)?.toInt() ?? 0;

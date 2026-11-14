@@ -3,11 +3,13 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app/app_controller.dart';
 import 'app_directories.dart';
 import 'blocked_groups.dart';
+import 'google_auth.dart';
 import 'app_window.dart';
 import 'app_log.dart';
 import 'appearance_settings.dart';
@@ -152,6 +154,9 @@ class _LumtubAppState extends State<LumtubApp> {
         _now = now;
       }
     });
+    // Google sign-in returns to a server in the app; on Android the app is
+    // kept running while the browser is in front.
+    if (Platform.isAndroid) GoogleAuth.keepAlive = (waiting) => const MethodChannel('lumtub/windows_shell').invokeMethod<void>('holdForSignIn', waiting);
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid) _shell = WindowsShellSync(controller, WindowsShell());
     if (controller.appearance.systemAccent) unawaited(controller.refreshWindowsAccent());
     // Closing the window ends the process without disposing widgets, so the

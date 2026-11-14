@@ -214,6 +214,7 @@ class MainActivity : FlutterActivity() {
                 val duration = (call.argument<Number>("duration") ?: 0).toLong()
                 PlaybackService.update(this) { it.copy(position = position, duration = duration) }
             }
+            "holdForSignIn" -> if (call.arguments == true) SignInService.start(this) else SignInService.stop(this)
             "setKeepAwake" -> {
                 if (call.arguments == true) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

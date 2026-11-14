@@ -100,7 +100,9 @@ class YoutubePlayerProbe {
         final parts = jsonDecode(json) as Map<String, dynamic>;
         final body = (parts['body'] as Map).cast<String, Object?>();
         ((body['context'] as Map)['client'] as Map)['hl'] = hl;
-        return ({'Content-Type': 'application/json', 'Accept-Language': hl, ...(parts['headers'] as Map).cast<String, String>()}, body);
+        // The consent cookie too: from Europe, a request without one may
+        // be sent to the consent page instead of answered.
+        return ({'Content-Type': 'application/json', 'Accept-Language': hl, 'Cookie': YoutubeWeb.consentCookie, ...(parts['headers'] as Map).cast<String, String>()}, body);
       }
       client = PlayerClient.tv;
     }

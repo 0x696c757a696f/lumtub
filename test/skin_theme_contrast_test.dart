@@ -53,6 +53,23 @@ void main() {
           'chip label': (theme.chipTheme.labelStyle!.color!, solid(theme.chipTheme.backgroundColor!, page), 4.5),
           'chip label, chosen': ((theme.chipTheme.labelStyle!.color! as WidgetStateColor).resolve(selected), solid(theme.chipTheme.selectedColor!, page), 4.5),
         };
+        // Every control's words on the control as drawn over the page,
+        // every stop of a gradient and a see-through fill included.
+        final controls = <String, (Color?, SkinSurface?)>{
+          'button': (side.buttonText, side.button),
+          'main button': (side.primaryButtonText, side.primaryButton),
+          'chip': (side.chipText, side.chip),
+          'chosen chip': (side.chipSelectedText, side.chipSelected),
+          'chosen rail item': (side.navSelectedText, side.navSelected),
+          'rail item': (side.navText, side.sideBar),
+          'duration badge': (side.durationText, side.durationBadge),
+        };
+        for (final MapEntry(key: what, value: (fg, surface)) in controls.entries) {
+          if (fg == null || surface == null || surface.baseColor == null) continue;
+          for (final bg in surface.tones(page)) {
+            expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(4.45), reason: '$what text in ${mode.name}: $fg on $bg');
+          }
+        }
         for (final MapEntry(key: what, value: (fg, bg, min)) in pairs.entries) {
           expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(min - 0.05), reason: '$what in ${mode.name}');
         }

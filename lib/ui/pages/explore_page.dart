@@ -352,20 +352,7 @@ class _ExplorePageState extends State<ExplorePage> {
             child: ErrorBanner(items.isEmpty ? tr("Couldn't load: {0}", [error]) : tr("Couldn't load more: {0}", [error]), onRetry: () => loader?.loadMore(retry: true)),
           )),
         if (items.isEmpty && !loading && error == null)
-          if (controller.exploreLanguageCheck case final check? when check.asked > 0 && check.heard == 0)
-            // Nothing could be confirmed: saying so beats an empty page that
-            // reads as "no videos in this language".
-            SliverFillRemaining(hasScrollBody: false, child: StatusView(
-              icon: AppIcons.ear,
-              title: tr("YouTube didn't say what any of the {0} videos checked are spoken in", [check.asked]),
-              message: tr("A video is shown for a language only when its audio track or automatic captions confirm it, and YouTube isn't giving either to this app right now. Try again later."),
-              action: FilledButton.icon(
-                onPressed: controller.refreshExplore,
-                icon: Icon(AppIcons.arrowClockwise),
-                label: Text(tr('Retry')),
-              ),
-            ))
-          else if (controller.exploreLanguageCheck case final check? when check.asked > 0)
+          if (controller.exploreLanguageCheck case final check? when check.asked > 0)
             SliverFillRemaining(hasScrollBody: false, child: StatusView(
               icon: AppIcons.translate,
               title: tr('Checked {0} videos, none in {1}', [check.asked, controller.preferences.exploreLanguage.label]),

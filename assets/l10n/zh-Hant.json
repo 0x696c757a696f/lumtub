@@ -3559,7 +3559,5 @@
   "Original audio": "原聲",
   "Dub in my language, if any": "有則用我的語言配音",
   "{0} (original)": "{0}（原聲）",
-  "{0} (automatic dub)": "{0}（自動配音）",
-  "YouTube didn't say what any of the {0} videos checked are spoken in": "YouTube 沒有說明這 {0} 部影片中任何一部使用的是什麼語言",
-  "A video is shown for a language only when its audio track or automatic captions confirm it, and YouTube isn't giving either to this app right now. Try again later.": "只有音軌或自動字幕確認是這種語言的影片才會顯示，而 YouTube 現在沒有把這兩項資訊提供給本應用程式。請稍後再試。"
+  "{0} (automatic dub)": "{0}（自動配音）"
 }

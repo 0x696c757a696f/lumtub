@@ -12,7 +12,6 @@ import 'package:lumtub/youtube_player_probe.dart';
 String _video(String id, String title) => jsonEncode({'id': id, 'title': title, 'channel': 'c'});
 
 Map<String, Object?> _player(String title, {String? asr, List<String> audio = const [], String description = ''}) => {
-      'responseContext': {'visitorData': 'CgtWaXNpdG9yMTIz'},
       'playabilityStatus': {'status': 'OK'},
       'videoDetails': {'title': title, 'shortDescription': description},
       if (asr != null)
@@ -129,16 +128,28 @@ void main() {
     expect(asked, ['TVHTML5']);
   }, skip: core);
 
-  test('sends back the visitor id YouTube gave', () async {
+  test("asks as the visitor YouTube's own page names, with its cookies", () async {
     final visitors = <String?>[];
+    final cookies = <String?>[];
+    var pages = 0;
     final client = MockClient((request) async {
+      if (request.method == 'GET') {
+        pages++;
+        return http.Response.bytes(utf8.encode('<script>ytcfg.set({"VISITOR_DATA":"CgtWaXNpdG9yMTIz"})</script>'), 200,
+            headers: {'set-cookie': 'YSC=abc; Domain=.youtube.com; Path=/; Secure,VISITOR_INFO1_LIVE=xyz; Domain=.youtube.com; Path=/'});
+      }
       visitors.add(request.headers['X-Goog-Visitor-Id']);
+      cookies.add(request.headers['Cookie']);
+      final client = ((jsonDecode(request.body) as Map)['context'] as Map)['client'] as Map;
+      expect(client['visitorData'], 'CgtWaXNpdG9yMTIz');
       return _json(_player('Ricette di casa', asr: 'it'));
     });
     final languages = VideoLanguages(client);
     await languages.of('jjjjjjjjjjj', asking: ExploreLanguage.it);
     await languages.of('kkkkkkkkkkk', asking: ExploreLanguage.it);
-    expect(visitors, [null, 'CgtWaXNpdG9yMTIz']);
+    expect(pages, 1, reason: 'the page is opened once');
+    expect(visitors, ['CgtWaXNpdG9yMTIz', 'CgtWaXNpdG9yMTIz']);
+    expect(cookies.first, allOf(contains('SOCS=CAI'), contains('YSC=abc'), contains('VISITOR_INFO1_LIVE=xyz')));
   }, skip: core);
 
   test('keeps heard answers on disk, others for this run only', () async {

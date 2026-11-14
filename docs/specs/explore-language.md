@@ -24,9 +24,10 @@ From the video's own `/youtubei/v1/player` answer, in this order:
    name says "original"). A dub is never taken for the original, even
    when YouTube makes it the default.
 2. **The automatic captions** (`captionTracks[].kind == "asr"`). YouTube
-   makes them from the audio, so their language is the spoken one. They
-   are listed once, in the spoken language; translations are not in
-   `captionTracks`.
+   makes them from the audio, so their language is the spoken one;
+   translations are not in `captionTracks`. A video with automatic
+   captions in two languages (seen with dubbed videos) is not told by
+   them.
 3. **Only when neither exists**, the title and description read
    together, and only when the title is not a translation: the title
    listed in English (search is asked with `hl=en`) is the same as the
@@ -69,10 +70,13 @@ region is picked.
   Whichever told last is asked first from then on. After 20 videos in a
   row where the first app answered without captions and the others did
   not tell either, only one video in 20 still asks the others.
-- The visitor id YouTube gives in its first answer is sent back with
-  every later request, as a browser does with its cookie, together with
-  the consent cookie (`SOCS`), which keeps requests from Europe from
-  being sent to the consent page.
+- Every signed-out `/player` request (language checks, quick starts,
+  video facts) carries a visitor: the `VISITOR_DATA` and visitor cookies
+  of YouTube's home page, opened once every 30 minutes (again after 5
+  minutes if it failed), with the consent cookie (`SOCS`). Without one,
+  YouTube answers most videos with `LOGIN_REQUIRED` "Sign in to confirm
+  you're not a bot" (seen on 2026-11-14 for every app, on a home
+  connection in Germany; with any visitor data every answer was `OK`).
 - Answers are cut down with `X-Goog-FieldMask`; if the mask loses the
   video, whole answers are asked for.
 - Texts are asked in the language picked, so the title shown is the one

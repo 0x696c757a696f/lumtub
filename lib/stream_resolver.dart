@@ -15,6 +15,7 @@ import 'process_priority.dart';
 import 'process_runner.dart';
 import 'video_codec.dart';
 import 'video_facts_lookup.dart';
+import 'youtube_player_probe.dart';
 import 'volume_balance.dart';
 
 /// What yt-dlp found for one video: every format, the ones picked for
@@ -260,11 +261,15 @@ class StreamResolver {
     final watch = Stopwatch()..start();
     try {
       final parts = jsonDecode(request) as Map<String, dynamic>;
-      final response = await (_quickClient ??= appHttpClient())
+      final client = _quickClient ??= appHttpClient();
+      final headers = {'Content-Type': 'application/json', ...(parts['headers'] as Map).cast<String, String>()};
+      final body = (parts['body'] as Map).cast<String, Object?>();
+      await YoutubePlayerProbe.addVisitor(client, headers, body);
+      final response = await client
           .post(
             Uri.parse('https://www.youtube.com/youtubei/v1/player?prettyPrint=false'),
-            headers: {'Content-Type': 'application/json', ...(parts['headers'] as Map).cast<String, String>()},
-            body: jsonEncode(parts['body']),
+            headers: headers,
+            body: jsonEncode(body),
           )
           .timeout(const Duration(seconds: 6));
       if (response.statusCode != 200) {

@@ -23,11 +23,66 @@ class YoutubePlayerProbe {
   static const _tvVersion = '7.20260901.15.00';
   static const _tvUserAgent = 'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/25.lts.30.1034943-gold (unlike Gecko), Unknown_TV_Unknown_0/Unknown (Unknown, Unknown)';
 
-  static String? _visitor;
-  static final _visitorData = RegExp(r'"visitorData"\s*:\s*"([A-Za-z0-9_%=-]{10,200})"');
+  /// Who asks, as YouTube's own page told a visitor: its visitor data and
+  /// cookies. Signed-out requests without them are the first YouTube asks
+  /// to prove they are no bot; yt-dlp opens the page first for the same
+  /// reason.
+  static Future<_Visitor?>? _visitor;
+  static DateTime _visitorAt = DateTime(0);
+  static const _visitorFor = Duration(minutes: 30);
+  static const _visitorRetry = Duration(minutes: 5);
+  static final _visitorData = RegExp(r'"VISITOR_DATA"\s*:\s*"([A-Za-z0-9_%=-]{10,300})"');
+  static final _visitorCookie = RegExp(r'(VISITOR_INFO1_LIVE|VISITOR_PRIVACY_METADATA|YSC|__Secure-ROLLOUT_TOKEN)=([^;,\s]+)');
 
   @visibleForTesting
-  static void forgetVisitor() => _visitor = null;
+  static void forgetVisitor() {
+    _visitor = null;
+    _visitorAt = DateTime(0);
+  }
+
+  /// Adds the visitor YouTube's page names to a signed-out InnerTube
+  /// request's [headers] and [body], opening the page first when it was
+  /// not opened lately. Without one, YouTube answers `/player` for most
+  /// videos with "Sign in to confirm you're not a bot".
+  static Future<void> addVisitor(http.Client client, Map<String, String> headers, Map<String, Object?> body) async {
+    if (await _visitorNow(client) case final visitor?) {
+      headers['X-Goog-Visitor-Id'] = visitor.data;
+      headers['Cookie'] = visitor.cookies;
+      ((body['context'] as Map)['client'] as Map)['visitorData'] = visitor.data;
+    }
+  }
+
+  static Future<_Visitor?> _visitorNow(http.Client client) async {
+    final age = DateTime.now().difference(_visitorAt);
+    final known = _visitor;
+    if (known != null && age < _visitorFor) {
+      final visitor = await known;
+      if (visitor != null || age < _visitorRetry) return visitor;
+    }
+    _visitorAt = DateTime.now();
+    return _visitor = _openPage(client);
+  }
+
+  static Future<_Visitor?> _openPage(http.Client client) async {
+    try {
+      final response = await client
+          .get(Uri.parse('https://www.youtube.com/'), headers: {...YoutubeWeb.apiHeaders(), 'Accept': 'text/html'})
+          .timeout(const Duration(seconds: 15));
+      final data = _visitorData.firstMatch(utf8.decode(response.bodyBytes, allowMalformed: true))?.group(1);
+      if (response.statusCode != 200 || data == null) {
+        logWarn('YouTube page gave no visitor data (HTTP ${response.statusCode})');
+        return null;
+      }
+      final cookies = {
+        for (final m in _visitorCookie.allMatches(response.headers['set-cookie'] ?? '')) m.group(1)!: m.group(2)!,
+      };
+      logDebug(() => 'YouTube visitor from the page, with cookies ${cookies.keys.join(', ')}');
+      return (data: data, cookies: [YoutubeWeb.consentCookie, for (final MapEntry(:key, :value) in cookies.entries) '$key=$value'].join('; '));
+    } catch (e) {
+      logWarn('Could not open the YouTube page for visitor data: $e');
+      return null;
+    }
+  }
 
   /// Whether [fields] are still asked for as a mask.
   bool masks(String fields, {String endpoint = 'player'}) => !_refused.contains(endpoint) && !_refused.contains('$endpoint $fields');
@@ -56,26 +111,18 @@ class YoutubePlayerProbe {
   Future<List<int>> fetchAs(PlayerClient client, String id, String? fields, {String endpoint = 'player', String? expect, String hl = 'en'}) async {
     final masked = fields != null && masks(fields, endpoint: endpoint);
     final (headers, body) = _request(client, id, hl);
-    // The visitor id YouTube gave, sent back as a browser sends its cookie:
-    // a stranger with none is the first taken for a bot.
-    if (_visitor case final visitor?) {
-      headers['X-Goog-Visitor-Id'] = visitor;
-      ((body['context'] as Map)['client'] as Map)['visitorData'] = visitor;
-    }
+    await addVisitor(_client, headers, body);
     final response = await _client
         .post(
           Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?prettyPrint=false'),
           headers: {
             ...headers,
             // Only the few fields read, instead of a few hundred kilobytes.
-            if (masked) 'X-Goog-FieldMask': '$fields,responseContext.visitorData',
+            if (masked) 'X-Goog-FieldMask': fields,
           },
           body: jsonEncode(body),
         )
         .timeout(const Duration(seconds: 15));
-    if (_visitor == null && response.statusCode == 200) {
-      _visitor = _visitorData.firstMatch(utf8.decode(response.bodyBytes.take(4096).toList(), allowMalformed: true))?.group(1);
-    }
     if (response.statusCode == 400 && masked) {
       _refused.add(endpoint);
       logWarn('YouTube refused the field mask for /$endpoint; asking for whole answers');
@@ -123,6 +170,8 @@ class YoutubePlayerProbe {
     );
   }
 }
+
+typedef _Visitor = ({String data, String cookies});
 
 /// Which of YouTube's apps asks: the website, the TV app, or the app a
 /// quick start asks as (visionOS), whose answers YouTube refuses least.

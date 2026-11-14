@@ -559,13 +559,19 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
         ],
     )
     .and_then(Value::as_array);
-    let from_captions = captions
+    // Automatic captions in two languages (seen on videos that also have
+    // a dub) do not say which one is spoken.
+    let heard: Vec<Language> = captions
         .into_iter()
         .flatten()
-        .find(|track| track.get("kind").and_then(Value::as_str) == Some("asr"))
-        .and_then(|track| track.get("languageCode"))
-        .and_then(Value::as_str)
-        .and_then(language_of_code);
+        .filter(|track| track.get("kind").and_then(Value::as_str) == Some("asr"))
+        .filter_map(|track| track.get("languageCode").and_then(Value::as_str))
+        .filter_map(language_of_code)
+        .collect();
+    let from_captions = heard
+        .first()
+        .copied()
+        .filter(|first| heard.iter().all(|l| l == first));
     if let Some(language) = from_captions {
         return Some(Spoken {
             language: Some(language),
@@ -971,6 +977,31 @@ mod tests {
                 "UC--1M2MGDAWI1EBcEzWbKJQ".to_string()
             ]
         );
+    }
+
+    #[test]
+    fn automatic_captions_in_two_languages_leave_it_to_the_audio() {
+        // As YouTube answered for an Italian video with an English dub.
+        let two = |audio: bool| {
+            json!({
+                "videoDetails": {"title": "Ho seguito la routine perfetta", "shortDescription": ""},
+                "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [
+                    {"languageCode": "en", "kind": "asr"},
+                    {"languageCode": "it", "kind": "asr"}
+                ]}},
+                "streamingData": {"adaptiveFormats": if audio { json!([
+                    {"itag": 140, "audioTrack": {"id": "en-US.10", "displayName": "English (United States)"}, "xtags": "acont=dubbed-auto"},
+                    {"itag": 140, "audioTrack": {"id": "it.4", "displayName": "Italiano originale"}, "xtags": "acont=original"}
+                ]) } else { json!([]) }}
+            })
+        };
+        let with_audio = spoken_language(&two(true)).unwrap();
+        assert_eq!(
+            (with_audio.language, with_audio.source),
+            (Some(Language::It), "audio")
+        );
+        let without = spoken_language(&two(false)).unwrap();
+        assert_ne!(without.source, "captions");
     }
 
     #[test]

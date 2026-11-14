@@ -54,10 +54,9 @@ class _StylePanelState extends State<_StylePanel> {
   Widget _build(BuildContext context) {
     final s = _controller.settings;
     final colors = Theme.of(context).colorScheme;
-    // mpv draws the second subtitle in the first one's font and color, at
-    // its own size.
+    // Whoever draws them, libmpv or the Flutter view, both subtitles have
+    // every option of their own.
     final second = _second;
-    final styled = !second || !s.libassSubtitles;
     final font = second ? s.secondaryFont : s.subtitleFont;
     final scale = second ? s.secondaryScale : s.subtitleScale;
     final color = second ? s.secondaryColor : s.subtitleColor;
@@ -95,20 +94,15 @@ class _StylePanelState extends State<_StylePanel> {
           onSelectionChanged: (v) => setState(() => _second = v.first),
         ),
       ),
-      if (s.libassSubtitles && second)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Text(tr("While mpv draws subtitles, the second subtitle takes the first one's font and color; its size can be set."), style: TextStyle(fontSize: 12, color: colors.outline)),
-        ),
-      if (styled) ListTile(
+      ListTile(
         title: Text(tr('Font')),
         trailing: Text(subtitleFontLabel(font), style: TextStyle(color: colors.primary)),
         onTap: () => pickSubtitleFont(context, font, (v) => _save(look(_controller.settings, font: v))),
       ),
       label(tr('Size'), '${scale.toStringAsFixed(1)}×'),
       slider(value: scale, min: 0.5, max: 3, divisions: 25, apply: (v) => look(_controller.settings, scale: (v * 10).round() / 10)),
-      if (styled) label(tr('Color'), subtitleColorLabel(color)),
-      if (styled) Padding(
+      label(tr('Color'), subtitleColorLabel(color)),
+      Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
         child: Wrap(spacing: 8, runSpacing: 8, children: [
           for (final c in subtitleColors)
@@ -134,8 +128,8 @@ class _StylePanelState extends State<_StylePanel> {
           ),
         ]),
       ),
-      if (styled) label(tr('Opacity'), '${(opacity * 100).round()}%'),
-      if (styled) slider(value: opacity, min: 0.1, max: 1, divisions: 18, apply: (v) => look(_controller.settings, opacity: (v * 20).round() / 20)),
+      label(tr('Opacity'), '${(opacity * 100).round()}%'),
+      slider(value: opacity, min: 0.1, max: 1, divisions: 18, apply: (v) => look(_controller.settings, opacity: (v * 20).round() / 20)),
       const Divider(height: 24),
       label(tr('Subtitle position'), '${s.subtitlePosition}%'),
       slider(value: s.subtitlePosition.toDouble(), min: 0, max: 100, divisions: 100, apply: (v) => _controller.settings.copyWith(subtitlePosition: v.round())),

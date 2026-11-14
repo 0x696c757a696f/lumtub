@@ -132,7 +132,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
 
     final others = [
       for (final t in player.state.tracks.subtitle)
-        if (_real(t) && !labels.contains(t.title) && !nearLabels.contains(t.title) && listedAs(t) == null)
+        if (_real(t) && !widget.controller.isStyledSecond(t.id) && !labels.contains(t.title) && !nearLabels.contains(t.title) && listedAs(t) == null)
           (key: 't:${t.id}', label: _trackLabel(t), detail: null, option: null, track: t) as _Choice,
     ];
     final main = player.state.track.subtitle;

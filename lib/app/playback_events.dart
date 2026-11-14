@@ -157,6 +157,7 @@ extension PlaybackEvents on AppController {
     void videoSize(_) {
       _outputSize?.video = Size((player.state.width ?? 0).toDouble(), (player.state.height ?? 0).toDouble());
       if ((player.state.width ?? 0) > 0) _refitCrop(player);
+      _queueLibassLook();
     }
     final platform = player.platform;
     if (platform is NativePlayer) {
@@ -169,6 +170,9 @@ extension PlaybackEvents on AppController {
       unawaited(platform.observeProperty('secondary-sid', (value) async {
         secondaryTrackId = value.isEmpty || value == 'false' ? 'no' : value;
         _followSubtitles(player);
+        // Only scheduled, as above.
+        _queueLibassLook();
+        unawaited(Future(() => _styleSecond(player)));
       }).catchError((Object e) => logWarn('Could not follow the second subtitle: $e')));
       // Only schedules the speed change, like the listeners above.
       unawaited(platform.observeProperty(SilenceSkipper.property, (value) async => _onSilenceMetadata(player, value)).catchError((Object e) => logWarn('Could not watch for silence: $e')));

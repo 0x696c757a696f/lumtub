@@ -771,7 +771,14 @@ class _TopBar extends StatelessWidget {
             icon: Icon(AppIcons.gear),
             selectedIcon: const Icon(AppIcons.gearFill),
           ),
-          AccountButton(account: controller.account, onOpenSettings: () => openSettings(context, controller)),
+          AccountButton(
+            account: controller.account,
+            // A narrow window goes straight to the account's page; a wide
+            // one shows it beside the other settings.
+            onOpenSettings: () => MediaQuery.sizeOf(context).width < SettingsPage.wideWidth
+                ? openSettingsCategory(context, controller, SettingsCategory.account)
+                : openSettings(context, controller, category: SettingsCategory.account),
+          ),
         ]),
       ),
       ),

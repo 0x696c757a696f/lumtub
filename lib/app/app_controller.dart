@@ -31,6 +31,7 @@ import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
 import '../dearrow.dart';
+import '../device.dart';
 import '../emoji_pictures.dart';
 import '../downloads/download_formats.dart';
 import '../downloads/core_recorder.dart';
@@ -131,6 +132,7 @@ part 'playback_events.dart';
 part 'playback_controls.dart';
 part 'skip_silence_actions.dart';
 part 'volume_balance_actions.dart';
+part 'libass_look_actions.dart';
 part 'queue_actions.dart';
 part 'video_details.dart';
 part 'cast_actions.dart';
@@ -787,6 +789,16 @@ class AppController extends ChangeNotifier with _ExploreState {
   int _subtitleLift = 0;
   /// The main subtitle mpv shows now, for placing the second one.
   List<String> _mainSubtitle = const [];
+  /// The player the subtitles are drawn in, as the Flutter subtitle view
+  /// sizes text there; null until one is laid out.
+  ({Size view, double textScale, double paddingScale})? _subtitleView;
+  /// The subtitle options last sent to libmpv for the player's size.
+  Map<String, String> _libassSent = {};
+  Timer? _libassLookTimer;
+  /// Second subtitles drawn in their own font and color: each copy's track
+  /// id, with the track it copies and the style it has.
+  final Map<String, ({String source, String key})> _styledSeconds = {};
+  String? _styling;
   /// The family libmpv draws subtitles in on Android, picked by their text.
   String? _subtitleFamily;
   /// On Android: libmpv met subtitles no one font can draw, so Flutter's

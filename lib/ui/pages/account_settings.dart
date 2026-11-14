@@ -265,16 +265,21 @@ class _TvSignInTile extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
-                const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
-                const SizedBox(width: 12),
+                // Only while the code is coming; once it shows, the page waits on the person.
+                if (code == null) ...[
+                  const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
+                  const SizedBox(width: 12),
+                ],
                 Expanded(child: Text(code == null ? tr('Getting a TV code…') : tr('TV code: '))),
               ]),
               if (code != null)
                 Row(children: [
+                  // Plain text: selectable text under a FittedBox has no width
+                  // to lay out in and drew as an empty grey block.
                   Flexible(child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: AlignmentDirectional.centerStart,
-                    child: SelectableText(code, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 2)),
+                    child: Text(code, maxLines: 1, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 2)),
                   )),
                   IconButton(tooltip: tr('Copy'), icon: Icon(AppIcons.copySimple, size: 18), onPressed: () => copyText(context, code, tr('TV code copied'))),
                 ]),

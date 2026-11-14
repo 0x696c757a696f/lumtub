@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:media_kit/media_kit.dart';
 
+import 'device.dart';
 import 'libass_layout.dart';
 import 'player_settings.dart';
 import 'app_log.dart';
@@ -48,16 +49,10 @@ class PlayerOptionApplicator {
       if (settings.strategy == PlaybackStrategy.lowResource) ...fastRendering,
       // Interpolation works only when video is timed to the display.
       'video-sync': settings.interpolation && settings.videoSync == VideoSync.audio ? VideoSync.displayResample.mpvValue : settings.videoSync.mpvValue,
-      'sub-scale': settings.subtitleScale.toStringAsFixed(1),
-      'sub-font': settings.subtitleFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.subtitleFont),
-      'sub-color': PlayerSettings.mpvColor(settings.subtitleColor, settings.subtitleOpacity),
-      'sub-pos': settings.subtitlePosition.toString(),
-      // The secondary subtitle (libass) sits just above a one-line main one;
-      // the controller moves it as the main one gains lines.
-      'secondary-sub-pos': LibassLayout.secondaryPosition('', position: settings.subtitlePosition, scale: settings.subtitleScale).toStringAsFixed(1),
-      'secondary-sub-scale': settings.secondaryScale.toStringAsFixed(1),
-      'sub-margin-y': '${LibassLayout.marginY}',
-      'sub-border-size': settings.subtitleBorder.toStringAsFixed(1),
+      // Drawn by libmpv, subtitles look as the Flutter view draws them: the
+      // same letter size, room below and outline. The player's own size
+      // refines these once it is laid out (AppController.subtitleViewChanged).
+      ...libassOptions(settings, LibassLook.standard(position: settings.subtitlePosition, border: settings.subtitleBorder, byHeight: Platform.isAndroid, caption: Device.captionScale)),
       'sub-border-style': settings.subtitleBackground ? 'background-box' : 'outline-and-shadow',
       'sub-bold': settings.subtitleBold ? 'yes' : 'no',
       // Who draws the subtitles: libmpv (libass) or the Flutter view, which
@@ -101,6 +96,34 @@ class PlayerOptionApplicator {
       'audio-device': settings.audioDevice,
       'loop-file': settings.playOrder == PlayOrder.singleCycle ? 'inf' : 'no',
       ...settings.customOptions,
+    };
+  }
+
+  /// The subtitle options that make libmpv draw subtitles as [look] says.
+  static Map<String, String> libassOptions(PlayerSettings settings, LibassLook look, {String? lines}) {
+    final font = settings.subtitleFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.subtitleFont);
+    final opacity = settings.subtitleOpacity;
+    return {
+      'sub-scale': settings.subtitleScale.toStringAsFixed(2),
+      'sub-font': font,
+      'sub-font-size': look.fontSize(font).toStringAsFixed(1),
+      'sub-color': PlayerSettings.mpvColor(settings.subtitleColor, opacity),
+      'sub-border-color': PlayerSettings.mpvColor(0, opacity),
+      'sub-back-color': PlayerSettings.mpvColor(0, 0.67 * opacity),
+      'sub-shadow-offset': '0',
+      // The 字幕位置 setting is the room below, as in the Flutter view; the
+      // position moves the subtitles only above the player's controls.
+      'sub-pos': '100',
+      'sub-margin-y': '${look.margin}',
+      'sub-border-size': look.border.toStringAsFixed(1),
+      // The second subtitle sits just above a one-line main one; the
+      // controller moves it as the main one gains lines.
+      'secondary-sub-pos': LibassLayout.secondaryPosition(lines ?? '', position: 100, scale: settings.subtitleScale, fontSize: look.fontSize(font), em: look.em, margin: look.margin, gap: look.gap).toStringAsFixed(1),
+      // A second subtitle in its own font and color is an ASS file of
+      // Lumtub's, sized by secondary-sub-scale; a plain one takes the first
+      // one's style at its own size.
+      'secondary-sub-ass-override': 'scale',
+      'secondary-sub-scale': settings.secondaryScale.toStringAsFixed(2),
     };
   }
 

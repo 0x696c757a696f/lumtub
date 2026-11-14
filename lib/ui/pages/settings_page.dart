@@ -8,6 +8,8 @@
 // later. Changes: GetX routing is replaced with local state and a
 // MaterialPageRoute, and the groups are Lumtub's own.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
@@ -28,6 +30,17 @@ class SettingsPage extends StatefulWidget {
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
+}
+
+/// [category]'s settings on a page of their own, as a narrow window shows
+/// them.
+void openSettingsCategory(BuildContext context, AppController controller, SettingsCategory category) {
+  unawaited(Navigator.of(context).push(MaterialPageRoute<void>(
+    builder: (context) => Scaffold(
+      appBar: SkinAppBar(AppBar(title: Text(category.title))),
+      body: _Entries(controller: controller, category: category),
+    ),
+  )));
 }
 
 class _SettingsPageState extends State<SettingsPage> {
@@ -128,12 +141,7 @@ class _SettingsPageState extends State<SettingsPage> {
             _query = '';
           });
         } else {
-          Navigator.of(context).push(MaterialPageRoute<void>(
-            builder: (context) => Scaffold(
-              appBar: SkinAppBar(AppBar(title: Text(category.title))),
-              body: _Entries(controller: _controller, category: category),
-            ),
-          ));
+          openSettingsCategory(context, _controller, category);
         }
       },
     );

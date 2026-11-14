@@ -34,7 +34,8 @@ class ExplorePage extends StatefulWidget {
 }
 
 class _ExplorePageState extends State<ExplorePage> {
-  double _railWidth = 220;
+  /// Where a drag left the zone column; kept with the preferences when it ends.
+  late double _railWidth = widget.controller.preferences.exploreRailWidth;
 
   AppController get controller => widget.controller;
 
@@ -101,6 +102,7 @@ class _ExplorePageState extends State<ExplorePage> {
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
             onHorizontalDragUpdate: (details) => setState(() => _railWidth = (_railWidth + details.delta.dx).clamp(TopicStrip.railWidth, 360).toDouble()),
+            onHorizontalDragEnd: (_) => unawaited(controller.savePreferences(controller.preferences.copyWith(exploreRailWidth: _railWidth))),
             child: const SizedBox(width: 8),
           ),
         ),

@@ -201,7 +201,10 @@ class _SubtitleListState extends State<SubtitleList> {
             ]),
           ),
           Expanded(
-            child: NotificationListener<ScrollStartNotification>(
+            // The way back floats over the list, so it stays in sight however
+            // short the panel is.
+            child: Stack(children: [
+              Positioned.fill(child: NotificationListener<ScrollStartNotification>(
               // Following stops when the person drags the list, not when it
               // moves by itself or the page around it scrolls.
               onNotification: (n) {
@@ -210,6 +213,8 @@ class _SubtitleListState extends State<SubtitleList> {
               },
               child: ListView.builder(
                 controller: _scroll,
+                // Room under the last line for the way back to the playing one.
+                padding: const EdgeInsets.only(bottom: 64),
                 itemCount: shown.length,
                 itemBuilder: (context, k) {
                   final i = shown[k];
@@ -270,22 +275,25 @@ class _SubtitleListState extends State<SubtitleList> {
                   );
                 },
               ),
-            ),
-          ),
-          if (!_follow)
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Center(
-                child: FilledButton.tonalIcon(
-                  onPressed: () {
-                    setState(() => _follow = true);
-                    if (_current >= 0) WidgetsBinding.instance.addPostFrameCallback((_) => _reveal(_current, cues.length));
-                  },
-                  icon: Icon(AppIcons.crosshair, size: 18),
-                  label: Text(tr('Back to the current line')),
+            ),),
+              if (!_follow)
+                PositionedDirectional(
+                  start: 0,
+                  end: 0,
+                  bottom: 12,
+                  child: Center(
+                    child: FilledButton.tonalIcon(
+                      onPressed: () {
+                        setState(() => _follow = true);
+                        if (_current >= 0) WidgetsBinding.instance.addPostFrameCallback((_) => _reveal(_current, cues.length));
+                      },
+                      icon: Icon(AppIcons.crosshair, size: 18),
+                      label: Text(tr('Back to the current line')),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+            ]),
+          ),
         ]);
       },
     );

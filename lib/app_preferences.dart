@@ -130,6 +130,7 @@ class AppPreferences {
     this.translationStyle = TranslationStyle.quote,
     this.translationFirst = false,
     this.subtitleListMode = SubtitleListMode.firstOver,
+    this.exploreRailWidth = 220,
     this.skipSameLanguage = true,
     this.chineseAsOne = true,
     this.neverTranslate = const [],
@@ -310,6 +311,9 @@ class AppPreferences {
   final bool translationFirst;
   /// Which subtitles 字幕列表 shows while two are on.
   final SubtitleListMode subtitleListMode;
+
+  /// How wide the zone column down the left of 探索 was dragged.
+  final double exploreRailWidth;
   /// 翻译 does nothing for text already in the target language.
   final bool skipSameLanguage;
   /// 沉浸式翻译 takes Simplified and Traditional Chinese as one language,
@@ -509,6 +513,7 @@ class AppPreferences {
     TranslationStyle? translationStyle,
     bool? translationFirst,
     SubtitleListMode? subtitleListMode,
+    double? exploreRailWidth,
     bool? skipSameLanguage,
     bool? chineseAsOne,
     List<String>? neverTranslate,
@@ -596,6 +601,7 @@ class AppPreferences {
         translationStyle: translationStyle ?? this.translationStyle,
         translationFirst: translationFirst ?? this.translationFirst,
         subtitleListMode: subtitleListMode ?? this.subtitleListMode,
+        exploreRailWidth: exploreRailWidth ?? this.exploreRailWidth,
         skipSameLanguage: skipSameLanguage ?? this.skipSameLanguage,
         chineseAsOne: chineseAsOne ?? this.chineseAsOne,
         neverTranslate: neverTranslate ?? this.neverTranslate,
@@ -684,6 +690,7 @@ class AppPreferences {
         'translationStyle': translationStyle.name,
         'translationFirst': translationFirst,
         'subtitleListMode': subtitleListMode.name,
+        'exploreRailWidth': exploreRailWidth,
         'skipSameLanguage': skipSameLanguage,
         'chineseAsOne': chineseAsOne,
         'neverTranslate': neverTranslate,
@@ -817,6 +824,7 @@ class AppPreferences {
       translationStyle: TranslationStyle.values.where((v) => v.name == raw['translationStyle']).firstOrNull ?? d.translationStyle,
       translationFirst: flag('translationFirst', d.translationFirst),
       subtitleListMode: SubtitleListMode.values.where((v) => v.name == raw['subtitleListMode']).firstOrNull ?? d.subtitleListMode,
+      exploreRailWidth: raw['exploreRailWidth'] is num ? (raw['exploreRailWidth'] as num).toDouble().clamp(128.0, 360.0) : d.exploreRailWidth,
       skipSameLanguage: flag('skipSameLanguage', d.skipSameLanguage),
       chineseAsOne: flag('chineseAsOne', d.chineseAsOne),
       neverTranslate: [

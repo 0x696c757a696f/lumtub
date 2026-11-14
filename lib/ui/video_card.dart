@@ -47,6 +47,10 @@ double get _gridRowGap => compactCards ? Space.m : AppStyle.cardSpacing;
 /// The narrowest card in compact mode is this part of the chosen width.
 const _compactWidth = 0.8;
 
+/// Narrower than this, compact cards are at most [_phoneCompactWidth] wide.
+const _phoneGridWidth = 600.0;
+const _phoneCompactWidth = 136.0;
+
 /// [item]'s thumbnail, or DeArrow's frame for it when that is on and one
 /// was chosen. [size] is a smaller YouTube file for small tiles, so they
 /// do not download the large one the grid uses (newtube does the same).
@@ -97,7 +101,9 @@ const _reasonHeight = 20.0;
   // A TV is seen from across the room, so its few pixels across still fit
   // three or four cards a row, as TV video apps show them.
   final base = Device.tv ? min(videoCardMinWidth, 200.0) : videoCardMinWidth;
-  final narrowest = compactCards ? base * _compactWidth : base;
+  // On a phone the chosen width already fills the screen, so compact cards
+  // go two to a row there, as Bilibili's home shows them.
+  final narrowest = !compactCards ? base : width < _phoneGridWidth ? min(base * _compactWidth, _phoneCompactWidth) : base * _compactWidth;
   final columns = max(1, ((width + gridGap) / (narrowest + gridGap)).floor());
   final itemWidth = (width - gridGap * (columns - 1)) / columns;
   return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight(textScale, compact ?? compactCards) + 2 * padding);
@@ -383,7 +389,8 @@ class PlaylistCard extends StatelessWidget {
   }
 }
 
-/// Placeholder cards shown while results load.
+/// Placeholder cards shown while results load, once they have taken a
+/// moment.
 class SliverSkeletonGrid extends StatelessWidget {
   const SliverSkeletonGrid({super.key, this.rows = 3});
   final int rows;
@@ -394,7 +401,7 @@ class SliverSkeletonGrid extends StatelessWidget {
         sliver: SliverLayoutBuilder(builder: (context, constraints) {
           final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context), textScale: cardTextScale(context), compact: videoCardsCompact(context));
           final width = constraints.crossAxisExtent;
-          return SliverToBoxAdapter(child: Skeleton(child: SizedBox(
+          return SliverToBoxAdapter(child: DelayedReveal(child: Skeleton(child: SizedBox(
             width: width,
             child: Wrap(
               spacing: gridGap,
@@ -405,7 +412,7 @@ class SliverSkeletonGrid extends StatelessWidget {
                 child: const _CardSkeleton(),
               )),
             ),
-          )));
+          ))));
         }),
       );
 }
@@ -465,10 +472,49 @@ class _VideoCardState extends State<VideoCard> {
       _hovered = value;
       _frame = 0;
     });
-    _prefetch?.cancel();
-    _preview?.cancel();
+    _stopHoverWork();
     // 低占用模式 loads nothing until a video is opened.
     if (!value || !_pointer || lowResourceMode) return;
+    _startHoverWork();
+  }
+
+  /// The route animation that holds the hover work back, while it runs.
+  Animation<double>? _held;
+
+  /// The animation of this card's route while the route moves: being
+  /// pushed or popped, or another one going over it or away. Work started
+  /// then would compete with the transition's frames.
+  Animation<double>? _routeMoving() {
+    final route = ModalRoute.of(context);
+    final animation = route?.animation;
+    if (animation != null && animation.status != AnimationStatus.completed) return animation;
+    final secondary = route?.secondaryAnimation;
+    if (secondary != null && secondary.isAnimating) return secondary;
+    return null;
+  }
+
+  void _routeSettled(AnimationStatus _) {
+    _release();
+    if (mounted && _hovered && _pointer && !lowResourceMode) _startHoverWork();
+  }
+
+  void _release() {
+    _held?.removeStatusListener(_routeSettled);
+    _held = null;
+  }
+
+  void _stopHoverWork() {
+    _prefetch?.cancel();
+    _preview?.cancel();
+    _release();
+  }
+
+  void _startHoverWork() {
+    final moving = _routeMoving();
+    if (moving != null) {
+      (_held = moving).addStatusListener(_routeSettled);
+      return;
+    }
     if (!widget.item.membersOnly) _prefetch = Timer(const Duration(milliseconds: 700), () => VideoActions.of(context)?.prefetch(widget.item, hover: true));
     if (widget.item.isLive || widget.item.isUpcoming) return;
     _preview = Timer(const Duration(milliseconds: 700), () {
@@ -488,10 +534,7 @@ class _VideoCardState extends State<VideoCard> {
   void _focus(bool value) {
     setState(() => _focused = value);
     _hover(_pointer || _focused);
-    if (!_pointer) {
-      _prefetch?.cancel();
-      _preview?.cancel();
-    }
+    if (!_pointer) _stopHoverWork();
   }
 
   /// The menu, at the card's middle when opened from the keyboard.
@@ -527,8 +570,7 @@ class _VideoCardState extends State<VideoCard> {
   @override
   void dispose() {
     deArrow.removeListener(_branded);
-    _prefetch?.cancel();
-    _preview?.cancel();
+    _stopHoverWork();
     super.dispose();
   }
 
@@ -564,7 +606,8 @@ class _VideoCardState extends State<VideoCard> {
             child: ClipRRect(
               borderRadius: compact ? BorderRadius.zero : context.thumbnailRadius,
               child: Stack(fit: StackFit.expand, children: [
-                AnimatedScale(
+                // Its own layer: zooming on hover repaints only the picture.
+                RepaintBoundary(child: AnimatedScale(
                   scale: _hovered ? 1.04 : 1,
                   duration: Motion.of(Ease.fade),
                   curve: Ease.curve,
@@ -579,7 +622,7 @@ class _VideoCardState extends State<VideoCard> {
                       errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(AppIcons.televisionSimple, size: 40, color: colors.outline)),
                     ),
                   ),
-                ),
+                )),
                 if (_frame > 0) ...[
                   AnimatedSwitcher(
                     duration: Motion.of(const Duration(milliseconds: 250)),

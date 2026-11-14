@@ -15,6 +15,7 @@ import 'process_priority.dart';
 import 'process_runner.dart';
 import 'video_codec.dart';
 import 'video_facts_lookup.dart';
+import 'volume_balance.dart';
 
 /// What yt-dlp found for one video: every format, the ones picked for
 /// [format], and the metadata the watch page shows. What the formats offer
@@ -238,6 +239,15 @@ class StreamResolver {
 
   http.Client? _quickClient;
 
+  /// YouTube's measured loudness of videos a quick start asked about, in dB
+  /// above its reference level; read by 音量平衡.
+  final _loudness = <String, double>{};
+  double? loudnessOf(String videoId) => _loudness[videoId];
+
+  /// Told when [loudnessOf] learns a video's loudness, which can be after
+  /// yt-dlp has already started it.
+  void Function(String videoId)? onLoudness;
+
   /// A quick start for [videoId]: YouTube's visionOS client's streams,
   /// picked by the format policy [policy] (`FormatPolicy.settingsJson`),
   /// without yt-dlp. Null when the video cannot be started that way (live,
@@ -262,6 +272,11 @@ class StreamResolver {
         return null;
       }
       final answer = utf8.decode(response.bodyBytes, allowMalformed: true);
+      if (VolumeBalance.loudnessIn(answer) case final loudness?) {
+        _loudness[videoId] = loudness;
+        if (_loudness.length > 200) _loudness.remove(_loudness.keys.first);
+        onLoudness?.call(videoId);
+      }
       final text = core.quickInfo(answer, policy);
       if (text == null) {
         logInfo('Quick start of $videoId: left to yt-dlp (${VideoFactsLookup.playerWhy(answer)})');

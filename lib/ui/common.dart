@@ -9,6 +9,8 @@ import '../device.dart';
 import '../l10n/l10n.dart';
 import '../system_env.dart';
 import 'app_icons.dart';
+import 'motion.dart';
+import 'side_sheet.dart';
 
 export '../models.dart' show formatBytes;
 
@@ -53,7 +55,8 @@ class StatusView extends StatelessWidget {
       padding: const EdgeInsets.all(32),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 460),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
+        // Comes in once, so the state reads as arrived rather than blinked in.
+        child: Entrance(child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(
             width: 72,
             height: 72,
@@ -67,7 +70,7 @@ class StatusView extends StatelessWidget {
             Text(message!, textAlign: TextAlign.center, maxLines: 6, overflow: TextOverflow.ellipsis, style: context.text.bodyMedium?.copyWith(color: colors.onSurfaceVariant, height: 1.5)),
           ],
           if (action != null) ...[const SizedBox(height: 16), action!],
-        ]),
+        ])),
       ),
     ));
   }
@@ -320,10 +323,17 @@ Future<T?> pickFromSheet<T>(BuildContext context, List<SheetChoice<T>> choices, 
       ]),
     );
 
-/// A dialog on larger screens. On a phone a sheet that rises only to the
-/// bottom of the player, so the video stays in view while it is open.
+/// Whether panels open as a side sheet: a window wide enough to keep the
+/// page in view beside one, as wide as the shell's side rail needs. A phone
+/// keeps its sheet from the bottom whichever way it is held.
+bool opensSideSheet(BuildContext context) => !isPhone(context) && MediaQuery.sizeOf(context).width >= sideSheetBreakpoint;
+
+/// A panel of choices, details or a form: a side sheet from the end edge
+/// in a wide window, a dialog in a narrow one. On a phone a sheet that
+/// rises only to the bottom of the player, so the video stays in view
+/// while it is open. Lay its inside out with [PanelDialog].
 Future<T?> showPanel<T>(BuildContext context, WidgetBuilder builder) {
-  if (!isPhone(context)) return showDialog<T>(context: context, builder: builder);
+  if (!isPhone(context)) return showSheet<T>(context, builder);
   final size = MediaQuery.sizeOf(context);
   final below = size.height - MediaQuery.paddingOf(context).top - size.width * 9 / 16;
   return showModalBottomSheet<T>(
@@ -332,32 +342,57 @@ Future<T?> showPanel<T>(BuildContext context, WidgetBuilder builder) {
     isScrollControlled: true,
     showDragHandle: true,
     constraints: BoxConstraints(maxHeight: math.max(size.height * 0.5, below)),
-    builder: builder,
+    builder: (context) => SheetScope(child: Builder(builder: builder)),
   );
 }
 
-/// The inside of a [showPanel]: an [AlertDialog] on larger screens, on a
-/// phone the same title, content and buttons laid out in the sheet.
+/// A panel that stays a dialog on a phone and in a narrow window, and
+/// opens as a side sheet in a wide one. Lay its inside out with [PanelDialog].
+Future<T?> showSheet<T>(BuildContext context, WidgetBuilder builder) =>
+    opensSideSheet(context) ? showSideSheet<T>(context, builder) : showDialog<T>(context: context, builder: builder);
+
+/// The inside of a [showPanel] or [showSheet]: an [AlertDialog] in a
+/// dialog; in a sheet the same title, content and buttons laid out down it.
+/// [scrollable] scrolls the dialog's title and content together, and the
+/// content alone in a sheet.
 class PanelDialog extends StatelessWidget {
-  const PanelDialog({super.key, required this.title, required this.content, this.actions = const []});
+  const PanelDialog({super.key, required this.title, required this.content, this.actions = const [], this.scrollable = false});
   final Widget title;
   final Widget content;
   final List<Widget> actions;
+  final bool scrollable;
 
   @override
   Widget build(BuildContext context) {
-    if (!isPhone(context)) return AlertDialog(title: title, content: content, actions: actions);
-    return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-        child: DefaultTextStyle.merge(style: Theme.of(context).textTheme.titleLarge, child: title),
-      ),
-      Flexible(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: content)),
-      if (actions.isNotEmpty)
+    if (!inSheet(context)) return AlertDialog(scrollable: scrollable, title: title, content: content, actions: actions);
+    final theme = Theme.of(context);
+    final body = scrollable ? SingleChildScrollView(child: content) : content;
+    final buttons = actions.isEmpty ? null : OverflowBar(alignment: MainAxisAlignment.end, spacing: 8, children: actions);
+    if (isPhone(context)) {
+      return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: OverflowBar(alignment: MainAxisAlignment.end, spacing: 8, children: actions),
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+          child: DefaultTextStyle.merge(style: theme.textTheme.titleLarge, child: title),
         ),
+        Flexible(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: body)),
+        if (buttons != null) Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 8), child: buttons),
+      ]);
+    }
+    // A side sheet: the title with a close button at the top, the buttons
+    // along the bottom under a hairline.
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(24, 12, 12, 8),
+        child: Row(children: [
+          Expanded(child: DefaultTextStyle.merge(style: theme.textTheme.titleLarge, child: title)),
+          IconButton(tooltip: tr('Close'), onPressed: () => Navigator.of(context).maybePop(), icon: Icon(AppIcons.x)),
+        ]),
+      ),
+      Expanded(child: Padding(padding: const EdgeInsetsDirectional.symmetric(horizontal: 24), child: body)),
+      if (buttons != null) ...[
+        const Divider(height: 1),
+        Padding(padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 8), child: buttons),
+      ],
     ]);
   }
 }

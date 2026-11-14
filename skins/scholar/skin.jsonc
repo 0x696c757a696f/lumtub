@@ -1,0 +1,767 @@
+// Star Atlas: a built-in Lumtub skin. Star charts, a wireframe globe and fine gold rules on deep blue, after late-90s encyclopedia discs and museum kiosks.
+// skins/template/skin.jsonc explains every field, and skins/README.md how to make your own.
+// 学术星图：Lumtub 内置皮肤。深蓝底上的星图、线框地球仪和金色细线，致敬 90 年代末的百科光盘和博物馆触摸屏。
+// 每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "scholar",
+  "name": "Star Atlas",
+  "names": {
+    "zh-Hans": "学术星图",
+    "zh-Hant": "學術星圖",
+    "zh-HK": "學術星圖",
+    "af": "Sterrekaart",
+    "am": "የከዋክብት አትላስ",
+    "ar": "أطلس النجوم",
+    "az": "Ulduz atlası",
+    "be": "Зорны атлас",
+    "bg": "Звезден атлас",
+    "bn": "তারা-মানচিত্র",
+    "cs": "Hvězdný atlas",
+    "da": "Stjerneatlas",
+    "de": "Sternenatlas",
+    "el": "Άτλας αστεριών",
+    "eo": "Stelatlaso",
+    "es": "Atlas estelar",
+    "et": "Tähekaart",
+    "eu": "Izar-atlasa",
+    "fa": "اطلس ستارگان",
+    "fi": "Tähtiatlas",
+    "fil": "Star Atlas",
+    "fr": "Atlas stellaire",
+    "gl": "Atlas estelar",
+    "gu": "તારા-એટલાસ",
+    "he": "אטלס כוכבים",
+    "hi": "तारा एटलस",
+    "hu": "Csillagatlasz",
+    "hy": "Աստղային ատլաս",
+    "id": "Atlas Bintang",
+    "is": "Stjörnukort",
+    "it": "Atlante stellare",
+    "ja": "星図",
+    "jv": "Atlas Lintang",
+    "ka": "ვარსკვლავთა ატლასი",
+    "km": "ផែនទីផ្កាយ",
+    "kn": "ನಕ್ಷತ್ರ ಅಟ್ಲಾಸ್",
+    "ko": "별자리 도감",
+    "la": "Atlas Stellarum",
+    "lo": "ແຜນທີ່ດາວ",
+    "lt": "Žvaigždžių atlasas",
+    "lv": "Zvaigžņu atlants",
+    "mk": "Ѕвезден атлас",
+    "ml": "നക്ഷത്ര അറ്റ്ലസ്",
+    "mn": "Оддын атлас",
+    "mr": "तारा-नकाशा",
+    "ms": "Atlas Bintang",
+    "my": "ကြယ်ပုံစာတမ်း",
+    "nb": "Stjerneatlas",
+    "ne": "तारा एटलस",
+    "nl": "Sterrenatlas",
+    "pa": "ਤਾਰਾ ਐਟਲਸ",
+    "pl": "Atlas gwiazd",
+    "pt": "Atlas estelar",
+    "ro": "Atlas stelar",
+    "ru": "Звёздный атлас",
+    "si": "තාරකා ඇට්ලස්",
+    "sk": "Hviezdny atlas",
+    "sq": "Atlasi i yjeve",
+    "su": "Atlas Béntang",
+    "sv": "Stjärnatlas",
+    "sw": "Atlasi ya Nyota",
+    "ta": "விண்மீன் வரைபடம்",
+    "te": "నక్షత్ర పటాలు",
+    "th": "แผนที่ดวงดาว",
+    "ti": "ካርታ ከዋኽብቲ",
+    "tk": "Ýyldyz atlasy",
+    "tr": "Yıldız Atlası",
+    "uk": "Зоряний атлас",
+    "ur": "ستاروں کا اطلس",
+    "uz": "Yulduzlar atlasi",
+    "vi": "Bản đồ sao",
+    "zu": "Amamephu Ezinkanyezi",
+    "sr": "Звездани атлас",
+    "sr-Latn": "Zvezdani atlas",
+    "hr": "Zvjezdani atlas",
+    "sl": "Zvezdni atlas",
+    "bs": "Zvjezdani atlas",
+    "ca": "Atles estelar",
+    "kk": "Жұлдыздар атласы",
+    "ky": "Жылдыздар атласы",
+    "as": "তৰাৰ মানচিত্ৰ",
+    "or": "ତାରା ମାନଚିତ୍ର"
+  },
+  "description": "Deep blue night with star charts, a wireframe globe and fine gold rules, like a late-90s encyclopedia disc; by day, the same on old paper",
+  "descriptions": {
+    "zh-Hans": "深蓝夜空配星图、线框地球仪和金色细线，像 90 年代末的百科光盘；白天是旧纸上的同一幅星图",
+    "zh-Hant": "深藍夜空配星圖、線框地球儀和金色細線，像 90 年代末的百科光碟；白天是舊紙上的同一幅星圖",
+    "zh-HK": "深藍夜空配星圖、線框地球儀和金色細線，像 90 年代末的百科光碟；日間是舊紙上的同一幅星圖",
+    "af": "Diepblou nag met sterkaarte, 'n draadraam-wêreldbol en fyn goue lyne, soos 'n ensiklopedieskyf van die laat 1990's; bedags dieselfde op ou papier",
+    "am": "ጥልቅ ሰማያዊ ሌሊት ከከዋክብት ካርታዎች፣ ከሽቦ ክፈፍ ግሎብና ከቀጭን ወርቃማ መስመሮች ጋር፣ እንደ 1990ዎቹ መጨረሻ የኢንሳይክሎፔዲያ ዲስክ፤ በቀን ደግሞ ያው በአሮጌ ወረቀት ላይ",
+    "ar": "ليل أزرق داكن مع خرائط نجوم وكرة أرضية شبكية وخطوط ذهبية دقيقة، كأسطوانة موسوعة من أواخر التسعينيات؛ وفي النهار هي نفسها على ورق قديم",
+    "az": "Ulduz xəritələri, məftil çərçivəli qlobus və incə qızılı xətlərlə dərin mavi gecə, 1990-cı illərin sonundakı ensiklopediya diski kimi; gündüz isə eyni şey köhnə kağız üzərində",
+    "be": "Глыбокая сіняя ноч са зорнымі картамі, каркасным глобусам і тонкімі залатымі лініямі, як энцыклапедычны дыск канца 1990-х; удзень — тое самае на старой паперы",
+    "bg": "Дълбоконощно синьо със звездни карти, жичен глобус и фини златни линии, като енциклопедичен диск от края на 90-те; денем — същото върху стара хартия",
+    "bn": "গভীর নীল রাত, তারার মানচিত্র, তারের কাঠামোর গ্লোব ও সূক্ষ্ম সোনালি রেখা, নব্বইয়ের দশকের শেষের বিশ্বকোষ ডিস্কের মতো; দিনে একই জিনিস পুরনো কাগজে",
+    "cs": "Hluboká modrá noc s hvězdnými mapami, drátěným glóbem a jemnými zlatými linkami, jako encyklopedický disk z konce 90. let; ve dne totéž na starém papíru",
+    "da": "Dyb blå nat med stjernekort, en trådramme-globus og fine guldlinjer, som en encyklopædi-cd fra slutningen af 90'erne; om dagen det samme på gammelt papir",
+    "de": "Tiefblaue Nacht mit Sternkarten, einem Drahtgitter-Globus und feinen Goldlinien, wie eine Enzyklopädie-CD der späten 90er; tagsüber dasselbe auf altem Papier",
+    "el": "Βαθιά μπλε νύχτα με χάρτες άστρων, ένα σύρμα-υδρόγειο και λεπτές χρυσές γραμμές, σαν δίσκος εγκυκλοπαίδειας των τελών της δεκαετίας του 90· την ημέρα, το ίδιο σε παλιό χαρτί",
+    "eo": "Profunda blua nokto kun stelmapoj, drata globo kaj fajnaj oraj linioj, kiel enciklopedia disko de la malfruaj 1990-aj jaroj; tage la sama sur malnova papero",
+    "es": "Noche azul profundo con cartas estelares, un globo de alambre y finas líneas doradas, como un disco de enciclopedia de finales de los 90; de día, lo mismo sobre papel viejo",
+    "et": "Sügavsinine öö tähekaartide, traatraamiga gloobuse ja peente kuldsete joontega, nagu 90ndate lõpu entsüklopeediaketas; päeval sama vana paberi peal",
+    "eu": "Gau urdin sakona izar-mapekin, alanbre-globo batekin eta urrezko marra finekin, 90eko hamarkadaren amaierako entziklopedia-disko bat bezala; egunez, bera paper zaharrean",
+    "fa": "شب آبی تیره با نقشه ستارگان، کره زمین سیمی و خطوط ظریف طلایی، مثل دیسک دایره‌المعارف اواخر دهه ۹۰ میلادی؛ در روز همان طرح روی کاغذ کهنه",
+    "fi": "Syvänsininen yö tähtikarttoineen, rautalankaglobuksineen ja hienoine kultaviivoineen, kuin 90-luvun lopun tietosanakirjalevy; päivällä sama vanhalla paperilla",
+    "fil": "Malalim na asul na gabi na may mga mapa ng bituin, wireframe na globo at manipis na gintong guhit, parang disc ng ensiklopedya noong huling bahagi ng dekada 90; sa araw, ganoon din sa lumang papel",
+    "fr": "Nuit bleu profond avec cartes du ciel, globe filaire et fins filets dorés, comme un disque d'encyclopédie de la fin des années 90 ; de jour, la même chose sur du vieux papier",
+    "gl": "Noite azul profundo con cartas estelares, un globo de arame e finas liñas douradas, coma un disco de enciclopedia de finais dos 90; de día, o mesmo sobre papel vello",
+    "gu": "ઊંડી વાદળી રાત, તારાના નકશા, વાયરફ્રેમ ગ્લોબ અને બારીક સોનેરી રેખાઓ સાથે, 1990ના દાયકાના અંતની જ્ઞાનકોશ ડિસ્ક જેવી; દિવસે એ જ જૂના કાગળ પર",
+    "he": "לילה כחול עמוק עם מפות כוכבים, כדור ארץ שלדי וקווי זהב דקים, כמו דיסק אנציקלופדיה מסוף שנות ה-90; ביום, אותו דבר על נייר ישן",
+    "hi": "गहरी नीली रात, तारों के नक्शे, वायरफ़्रेम ग्लोब और बारीक सुनहरी रेखाओं के साथ, 90 के दशक के अंत की विश्वकोश डिस्क जैसा; दिन में वही पुराने कागज़ पर",
+    "hu": "Mélykék éjszaka csillagtérképekkel, drótvázas földgömbbel és finom arany vonalakkal, mint egy 90-es évek végi enciklopédialemez; nappal ugyanez régi papíron",
+    "hy": "Խորը կապույտ գիշեր աստղային քարտեզներով, թելային գլոբուսով և նուրբ ոսկե գծերով, ինչպես 90-ականների վերջի հանրագիտարանային սկավառակ. ցերեկը՝ նույնը հին թղթի վրա",
+    "id": "Malam biru tua dengan peta bintang, globe kerangka kawat, dan garis emas halus, seperti cakram ensiklopedia akhir 90-an; di siang hari, tampilan yang sama di atas kertas tua",
+    "is": "Djúpblá nótt með stjörnukortum, vírgrindarhnetti og fínum gullnum línum, eins og alfræðidiskur frá lokum tíunda áratugarins; að degi til það sama á gömlum pappír",
+    "it": "Notte blu intenso con carte del cielo, un globo a reticolo e sottili filetti dorati, come un disco di enciclopedia della fine degli anni 90; di giorno, lo stesso su carta antica",
+    "ja": "星図と線画の地球儀、細い金の罫線を配した濃紺の夜。90年代末の百科事典ディスクのよう。昼は古い紙の上の同じ図",
+    "jv": "Wengi biru tuwa kanthi peta lintang, globe kerangka kawat, lan garis emas alus, kaya cakram ensiklopedia pungkasan taun 90-an; ing awan, padha ing kertas lawas",
+    "ka": "ღრმა ლურჯი ღამე ვარსკვლავური რუკებით, კარკასული გლობუსით და წვრილი ოქროსფერი ხაზებით, 90-იანების ბოლოს ენციკლოპედიის დისკივით; დღისით იგივე ძველ ქაღალდზე",
+    "km": "យប់ពណ៌ខៀវងងឹតជាមួយផែនទីផ្កាយ ពិភពលោកស៊ុមខ្សែ និងបន្ទាត់មាសស្តើងៗ ដូចថាសសព្វវចនាធិប្បាយនៃចុងទសវត្ស 1990; នៅពេលថ្ងៃ គឺដូចគ្នានៅលើក្រដាសចាស់",
+    "kn": "ನಕ್ಷತ್ರ ನಕ್ಷೆಗಳು, ತಂತಿ-ಚೌಕಟ್ಟಿನ ಗ್ಲೋಬ್ ಮತ್ತು ತೆಳು ಚಿನ್ನದ ಗೆರೆಗಳೊಂದಿಗೆ ಗಾಢ ನೀಲಿ ರಾತ್ರಿ, 1990ರ ದಶಕದ ಕೊನೆಯ ವಿಶ್ವಕೋಶ ಡಿಸ್ಕ್‌ನಂತೆ; ಹಗಲಿನಲ್ಲಿ ಅದೇ ಹಳೆಯ ಕಾಗದದ ಮೇಲೆ",
+    "ko": "별자리 지도, 와이어프레임 지구본, 가는 금색 선이 있는 짙푸른 밤. 90년대 말의 백과사전 디스크 같고, 낮에는 오래된 종이 위의 같은 모습",
+    "la": "Nox caerulea profunda cum tabulis stellarum, globo reticulato et lineolis aureis tenuibus, quasi discus encyclopaediae exeuntis saeculi XX; interdiu idem in charta vetere",
+    "lo": "ຄືນສີຟ້າເຂັ້ມມີແຜນທີ່ດາວ, ລູກໂລກແບບໂຄງລວດ ແລະ ເສັ້ນທອງບາງໆ ຄືແຜ່ນສາລານຸກົມທ້າຍຊຸມປີ 1990; ກາງເວັນແມ່ນຢ່າງດຽວກັນເທິງເຈ້ຍເກົ່າ",
+    "lt": "Giliai mėlyna naktis su žvaigždėlapiais, vielinio rėmo gaubliu ir ploniais auksiniais brūkšniais, tarsi dešimtojo dešimtmečio pabaigos enciklopedijos diskas; dieną – tas pats ant seno popieriaus",
+    "lv": "Dziļi zila nakts ar zvaigžņu kartēm, stieples globusu un smalkām zelta līnijām, kā 90. gadu beigu enciklopēdijas disks; dienā tas pats uz vecas papīra lapas",
+    "mk": "Длабока сина ноќ со ѕвездени карти, жичан глобус и фини златни линии, како енциклопедиски диск од крајот на 90-тите; дење истото на стара хартија",
+    "ml": "നക്ഷത്ര ഭൂപടങ്ങളും വയർഫ്രെയിം ഗ്ലോബും നേർത്ത സ്വർണ്ണ വരകളുമുള്ള കടും നീല രാത്രി, 90-കളുടെ അവസാനത്തെ വിജ്ഞാനകോശ ഡിസ്ക് പോലെ; പകൽ അതുതന്നെ പഴയ കടലാസിൽ",
+    "mn": "Од хүрээлсэн газрын зураг, утсан хүрээт глобус, нарийн алтан шугамтай гүн цэнхэр шөнө, 90-ээд оны сүүлийн нэвтэрхий толь бичгийн диск шиг; өдөр нь хуучин цаасан дээрх яг үүнтэй адил",
+    "mr": "तारकांचे नकाशे, तारेच्या सांगाड्याचा ग्लोब आणि बारीक सोनेरी रेषांसह गडद निळी रात्र, 90 च्या दशकाच्या अखेरच्या ज्ञानकोश डिस्कसारखी; दिवसा तीच जुन्या कागदावर",
+    "ms": "Malam biru tua dengan peta bintang, glob rangka dawai dan garis emas halus, seperti cakera ensiklopedia akhir 90-an; pada siang hari, yang sama di atas kertas lama",
+    "my": "ကြယ်မြေပုံများ၊ ဝါယာဘောင် ကမ္ဘာလုံးနှင့် ပါးလွှာသော ရွှေရောင်မျဉ်းများပါ အပြာရင့်ညတစ်ညသည် ၁၉၉၀ ခုနှစ်များ နှောင်းပိုင်း စွယ်စုံကျမ်းဓာတ်ပြားနှင့်တူသည်၊ နေ့အချိန်တွင် အဟောင်းစက္ကူပေါ်၌ အတူတူပင်",
+    "nb": "Dyp blå natt med stjernekart, en trådramme-globus og fine gullinjer, som en leksikonplate fra slutten av 90-tallet; på dagtid det samme på gammelt papir",
+    "ne": "तारा नक्सा, तारको ढाँचाको ग्लोब र पातला सुनौला रेखासहित गाढा निलो रात, ९० को दशकको अन्त्यको विश्वकोश डिस्क जस्तो; दिउँसो त्यही पुरानो कागजमा",
+    "nl": "Diepblauwe nacht met sterrenkaarten, een draadmodel-wereldbol en fijne gouden lijnen, als een encyclopedieschijf van eind jaren 90; overdag hetzelfde op oud papier",
+    "pa": "ਤਾਰਿਆਂ ਦੇ ਨਕਸ਼ੇ, ਤਾਰ-ਢਾਂਚੇ ਵਾਲੇ ਗਲੋਬ ਅਤੇ ਬਰੀਕ ਸੁਨਹਿਰੀ ਲਕੀਰਾਂ ਨਾਲ ਗੂੜ੍ਹੀ ਨੀਲੀ ਰਾਤ, 1990ਵਿਆਂ ਦੇ ਅੰਤ ਦੀ ਵਿਸ਼ਵਕੋਸ਼ ਡਿਸਕ ਵਰਗੀ; ਦਿਨ ਵੇਲੇ ਉਹੀ ਪੁਰਾਣੇ ਕਾਗਜ਼ ਉੱਤੇ",
+    "pl": "Głęboka granatowa noc z mapami gwiazd, drucianym globusem i cienkimi złotymi liniami, jak płyta z encyklopedią z końca lat 90.; w dzień to samo na starym papierze",
+    "pt": "Noite azul-profundo com cartas celestes, um globo de arame e finas linhas douradas, como um disco de enciclopédia do fim dos anos 90; de dia, o mesmo sobre papel antigo",
+    "ro": "Noapte albastru închis cu hărți stelare, un glob din fire și linii aurii fine, ca un disc de enciclopedie de la sfârșitul anilor 90; ziua, același lucru pe hârtie veche",
+    "ru": "Глубокая синяя ночь со звёздными картами, каркасным глобусом и тонкими золотыми линиями, как энциклопедический диск конца 90-х; днём то же самое на старой бумаге",
+    "si": "තාරකා සිතියම්, කම්බි රාමු ගෝලයක් සහ සියුම් රන්වන් රේඛා සහිත ගැඹුරු නිල් රාත්‍රියක්, 1990 දශකයේ අග විශ්වකෝෂ තැටියක් මෙන්; දහවල් එයම පැරණි කඩදාසියක",
+    "sk": "Hlboká modrá noc s hviezdnymi mapami, drôteným glóbusom a jemnými zlatými líniami, ako encyklopedický disk z konca 90. rokov; cez deň to isté na starom papieri",
+    "sq": "Natë blu e thellë me harta yjesh, një glob me strukturë teli dhe vija të holla ari, si një disk enciklopedie i fundit të viteve '90; ditën, e njëjta gjë mbi letër të vjetër",
+    "su": "Peuting biru tua jeung peta béntang, globe kerangka kawat, jeung garis emas lemes, siga piringan énsiklopédi ahir taun 90-an; beurang, nu sarua dina kertas heubeul",
+    "sv": "Djupblå natt med stjärnkartor, en trådglob och fina guldlinjer, som en encyklopediskiva från slutet av 90-talet; på dagen samma sak på gammalt papper",
+    "sw": "Usiku wa buluu iliyokolea wenye ramani za nyota, globu ya fremu ya waya na mistari myembamba ya dhahabu, kama diski ya ensaiklopedia ya mwishoni mwa miaka ya 1990; mchana, ni ileile kwenye karatasi kuukuu",
+    "ta": "விண்மீன் வரைபடங்கள், கம்பிச்சட்ட உலகக்கோளம், மெல்லிய தங்கக் கோடுகளுடன் ஆழ்ந்த நீல இரவு, 90-களின் இறுதி கலைக்களஞ்சிய வட்டு போல; பகலில் அதே தோற்றம் பழைய காகிதத்தில்",
+    "te": "నక్షత్ర పటాలు, వైర్‌ఫ్రేమ్ గ్లోబ్, సన్నని బంగారు గీతలతో లోతైన నీలి రాత్రి, 90ల చివరి ఎన్‌సైక్లోపీడియా డిస్క్ లాగా; పగటిపూట అదే రూపం పాత కాగితంపై",
+    "th": "ราตรีสีน้ำเงินเข้มกับแผนภูมิดาว ลูกโลกโครงลวด และเส้นทองบางเฉียบ เหมือนแผ่นสารานุกรมปลายยุค 90 ส่วนตอนกลางวันเป็นแบบเดียวกันบนกระดาษเก่า",
+    "ti": "መዓልቲ ዓሚቝ ሰማያዊ ለይቲ ምስ ካርታታት ከዋኽብቲ፡ ሽቦ-ቅርጺ ዓለም ጥራይን ቀጫን ወርቃዊ መስመራትን፡ ከም ናይ መወዳእታ 90ታት ዲስክ ኢንሳይክሎፒድያ፤ ብመዓልቲ ከኣ እቲ ተመሳሳሊ ኣብ ኣረጊት ወረቐት",
+    "tk": "Ýyldyz kartalary, simli ýer şary we inçe altyn çyzyklar bilen çuň gök gije, 90-njy ýyllaryň ahyryndaky ensiklopediýa diski ýaly; gündiziň bolsa şol bir görnüş köne kagyzda",
+    "tr": "Yıldız haritaları, tel kafes küre ve ince altın çizgilerle derin mavi gece, 90'ların sonundan bir ansiklopedi diski gibi; gündüz aynısı eski kâğıt üzerinde",
+    "uk": "Глибока синя ніч із зоряними картами, каркасним глобусом і тонкими золотими лініями, як диск енциклопедії кінця 90-х; удень те саме на старому папері",
+    "ur": "گہری نیلی رات جس میں ستاروں کے نقشے، تاروں والا گلوب اور باریک سنہری لکیریں ہیں، 90 کی دہائی کے آخر کی انسائیکلوپیڈیا ڈسک جیسی؛ دن میں وہی منظر پرانے کاغذ پر",
+    "uz": "Yulduz xaritalari, sim karkasli globus va nozik oltin chiziqlar bilan chuqur ko'k tun, 90-yillar oxiridagi ensiklopediya diski kabi; kunduzi esa xuddi shu ko'rinish eski qog'ozda",
+    "vi": "Đêm xanh thẫm với bản đồ sao, quả địa cầu khung dây và những đường vàng mảnh, như đĩa bách khoa toàn thư cuối thập niên 90; ban ngày vẫn là hình ấy trên giấy cũ",
+    "zu": "Ubusuku obuluhlaza okwesibhakabhaka obujulile obunamamephu ezinkanyezi, iglobhu yocingo namalayini aphundu egolide, njengediski le-encyclopedia lasekupheleni kweminyaka yama-90; emini kuyafana, kodwa ephepheni elidala",
+    "sr": "Дубока плава ноћ са звезданим картама, жичаним глобусом и танким златним линијама, као диск енциклопедије с краја 90-их; дању исто то на старом папиру",
+    "sr-Latn": "Duboka plava noć sa zvezdanim kartama, žičanim globusom i tankim zlatnim linijama, kao disk enciklopedije s kraja 90-ih; danju isto to na starom papiru",
+    "hr": "Duboka plava noć sa zvjezdanim kartama, žičanim globusom i tankim zlatnim linijama, poput diska enciklopedije s kraja 90-ih; danju isto to na starom papiru",
+    "sl": "Globoka modra noč z zvezdnimi zemljevidi, žičnim globusom in tankimi zlatimi črtami, kot plošča enciklopedije s konca 90. let; podnevi isto na starem papirju",
+    "bs": "Duboka plava noć sa zvjezdanim kartama, žičanim globusom i tankim zlatnim linijama, poput diska enciklopedije s kraja 90-ih; danju isto to na starom papiru",
+    "ca": "Nit blava fosc amb mapes estel·lars, un globus de filferro i fines línies daurades, com un disc d'enciclopèdia de finals dels 90; de dia, el mateix sobre paper vell",
+    "kk": "Жұлдыз карталары, сымды глобус және жұқа алтын сызықтары бар терең көк түн, 90-жылдардың соңындағы энциклопедия дискісі сияқты; күндіз дәл сол көрініс ескі қағазда",
+    "ky": "Жылдыз карталары, зымдуу глобус жана ичке алтын сызыктар менен терең көк түн, 90-жылдардын аягындагы энциклопедия диски сыяктуу; күндүз ошол эле көрүнүш эски кагазда",
+    "as": "তৰাৰ মানচিত্ৰ, তাঁৰৰ কাঠামোৰ গ্লোব আৰু সৰু সোণালী ৰেখাৰে গভীৰ নীলা নিশা, ৯০ৰ দশকৰ শেষৰ বিশ্বকোষ ডিস্কৰ দৰে; দিনত সেই একেটাই পুৰণি কাগজত",
+    "or": "ତାରା ମାନଚିତ୍ର, ତାରଫ୍ରେମ୍ ଗ୍ଲୋବ୍ ଓ ସରୁ ସୁନେଲି ରେଖା ସହିତ ଗାଢ଼ ନୀଳ ରାତି, ୯୦ ଦଶକ ଶେଷର ଏନସାଇକ୍ଲୋପିଡିଆ ଡିସ୍କ ପରି; ଦିନରେ ସେଇୟା ପୁରୁଣା କାଗଜରେ"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "text": {
+    "displayFont": "Cinzel"
+  },
+  "colors": {
+    "page": "#f6efdc",
+    "text": "#1d2a4a",
+    "muted": "#4e5a78",
+    "accent": "#8a5a12",
+    "onAccent": "#ffffff",
+    "border": "#cdbb92",
+    "card": "#fffaf0",
+    "selected": "#ecdcb4",
+    "onSelected": "#1d2a4a",
+    "reason": "#7a4e0e",
+    "chrome": "#fbf6e8"
+  },
+  "shape": {
+    "cardRadius": 4,
+    "controlRadius": 3,
+    "thumbnailRadius": 2
+  },
+  "window": {
+    "background": [
+      "#f6efdc",
+      {
+        "image": "day.jpg",
+        "fit": "cover",
+        "focus": [
+          0.85,
+          0.5
+        ]
+      }
+    ],
+    "veil": 0.45,
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#1d2a4a",
+              "#14203c"
+            ]
+          }
+        },
+        "border": {
+          "color": "#8a5a12",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#1d2a4a",
+              "#14203c"
+            ]
+          }
+        }
+      },
+      "text": "#f6efdc",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#e8c877",
+        "surface": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#ffffff1f"
+          },
+          "pressed": {
+            "fill": "#ffffff33"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#e81123"
+          },
+          "pressed": {
+            "fill": "#e81123"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#14203c"
+      },
+      "text": "#f3ecd8",
+      "highlight": {
+        "fill": "#e8c877"
+      },
+      "highlightText": "#14203c",
+      "menu": {
+        "fill": "#fffaf0",
+        "border": "#8a5a12"
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": "#fbf6e8eb",
+      "border": {
+        "color": "#b89a5c",
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#f3ead2e6",
+      "border": {
+        "color": "#cdbb92",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": "#14203c"
+    },
+    "topBarText": "#1d2a4a",
+    "statusBarText": "#e8d6a8",
+    "tabs": {
+      "position": "bottom",
+      "surface": {
+        "fill": "#fbf6e8f2",
+        "border": {
+          "color": "#cdbb92",
+          "sides": [
+            "top"
+          ]
+        }
+      },
+      "text": "#4e5a78",
+      "selectedText": "#1d2a4a",
+      "indicator": "#8a5a12"
+    }
+  },
+  "controls": {
+    "press": "wash",
+    "button": {
+      "fill": "#fffaf0",
+      "border": "#b89a5c",
+      "hover": {
+        "border": "#8a5a12",
+        "fill": "#ffffff"
+      }
+    },
+    "buttonText": "#1d2a4a",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#25407a",
+            "#1a2e5c"
+          ]
+        }
+      },
+      "border": "#14203c",
+      "hover": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#2c4b8c",
+              "#1f3870"
+            ]
+          }
+        }
+      }
+    },
+    "primaryButtonText": "#f6e3a8",
+    "chip": {
+      "fill": "#fffaf0",
+      "border": "#cdbb92"
+    },
+    "chipSelected": {
+      "fill": "#1d2a4a",
+      "border": "#14203c"
+    },
+    "chipSelectedText": "#f6e3a8",
+    "navSelected": {
+      "fill": "#8a5a121f",
+      "border": {
+        "color": "#8a5a12",
+        "width": 2,
+        "sides": [
+          "left"
+        ]
+      },
+      "radius": 0
+    },
+    "navSelectedText": "#5c3a06",
+    "navText": "#4e5a78"
+  },
+  "cards": {
+    "video": {
+      "fill": "#fffaf0f2",
+      "border": "#cdbb92",
+      "hover": {
+        "border": "#8a5a12"
+      },
+      "focused": {
+        "border": {
+          "color": "#8a5a12",
+          "width": 3
+        }
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#fffaf0f2",
+      "border": "#cdbb92"
+    },
+    "durationBadge": {
+      "fill": "#14203cd9",
+      "radius": 2
+    },
+    "durationText": "#f6e3a8"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "Cinzel",
+    "size": 22,
+    "fill": "#1d2a4a",
+    "badge": {
+      "fill": {
+        "radial": {
+          "center": [
+            0.38,
+            0.32
+          ],
+          "radius": 0.75,
+          "colors": [
+            "#9fd0ff",
+            "#3a7bd5",
+            "#0b2a66"
+          ]
+        }
+      },
+      "border": "#8a5a12"
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "icons": {
+    "style": "regular",
+    "effect": "none"
+  },
+  "player": {
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#8a5a12",
+          "#c9a24a"
+        ]
+      }
+    }
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#0a1838",
+        "text": "#f3ecd8",
+        "muted": "#b3c0de",
+        "accent": "#e8c877",
+        "onAccent": "#1a1405",
+        "border": "#34477a",
+        "card": "#0e2149",
+        "selected": "#2c3a5c",
+        "onSelected": "#f6e3a8",
+        "reason": "#e8c877",
+        "chrome": "#081631"
+      },
+      "window": {
+        "background": [
+          "#0a1838",
+          {
+            "image": "night.jpg",
+            "fit": "cover",
+            "focus": [
+              0.85,
+              0.5
+            ]
+          }
+        ],
+        "veil": 0.5,
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#0c1d44",
+                  "#081631"
+                ]
+              }
+            },
+            "border": {
+              "color": "#e8c87773",
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "inactive": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#0c1d44",
+                  "#081631"
+                ]
+              }
+            }
+          },
+          "text": "#f3ecd8",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#e8c877",
+            "surface": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#ffffff1a"
+              },
+              "pressed": {
+                "fill": "#ffffff2e"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#e81123"
+              },
+              "pressed": {
+                "fill": "#e81123"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": "#081631"
+          },
+          "text": "#f3ecd8",
+          "highlight": {
+            "fill": "#e8c877"
+          },
+          "highlightText": "#14100a",
+          "menu": {
+            "fill": "#0e2149f7",
+            "border": "#e8c87799"
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": "#0a1838e6",
+          "border": {
+            "color": "#e8c87766",
+            "sides": [
+              "bottom"
+            ]
+          }
+        },
+        "sideBar": {
+          "fill": "#06112ae6",
+          "border": {
+            "color": "#e8c87740",
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": "#06112a",
+          "border": {
+            "color": "#e8c87740",
+            "sides": [
+              "top"
+            ]
+          }
+        },
+        "topBarText": "#f3ecd8",
+        "statusBarText": "#d9c48a",
+        "tabs": {
+          "position": "bottom",
+          "surface": {
+            "fill": "#06112af2",
+            "border": {
+              "color": "#e8c87740",
+              "sides": [
+                "top"
+              ]
+            }
+          },
+          "text": "#b3c0de",
+          "selectedText": "#f6e3a8",
+          "indicator": "#e8c877"
+        }
+      },
+      "controls": {
+        "press": "wash",
+        "button": {
+          "fill": "#0e2149",
+          "border": "#e8c87766",
+          "hover": {
+            "border": "#e8c877",
+            "fill": "#14295a"
+          }
+        },
+        "buttonText": "#f3ecd8",
+        "primaryButton": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#f0d690",
+                "#d4ad55"
+              ]
+            }
+          },
+          "border": "#f6e3a8",
+          "hover": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#f6e0a4",
+                  "#ddb965"
+                ]
+              }
+            }
+          }
+        },
+        "primaryButtonText": "#140f02",
+        "chip": {
+          "fill": "#0a1838",
+          "border": "#e8c87759"
+        },
+        "chipSelected": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#f0d690",
+                "#d4ad55"
+              ]
+            }
+          },
+          "border": "#f6e3a8"
+        },
+        "chipSelectedText": "#140f02",
+        "navSelected": {
+          "fill": "#e8c87729",
+          "border": {
+            "color": "#e8c877",
+            "width": 2,
+            "sides": [
+              "left"
+            ]
+          },
+          "radius": 0
+        },
+        "navSelectedText": "#f6e3a8",
+        "navText": "#b8c4e0"
+      },
+      "cards": {
+        "video": {
+          "fill": "#0e2149f0",
+          "border": "#e8c87747",
+          "hover": {
+            "border": "#e8c877"
+          },
+          "focused": {
+            "border": {
+              "color": "#e8c877",
+              "width": 3
+            }
+          }
+        },
+        "padding": 6,
+        "panel": {
+          "fill": "#0b1b40f2",
+          "border": "#e8c87747"
+        },
+        "durationBadge": {
+          "fill": "#000000cc",
+          "radius": 2
+        },
+        "durationText": "#f6e3a8"
+      },
+      "logo": {
+        "text": "LUMTUB",
+        "font": "Cinzel",
+        "size": 22,
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#f6e3a8",
+              "#d4ad55"
+            ]
+          }
+        },
+        "glow": "#e8c87740",
+        "badge": {
+          "fill": {
+            "radial": {
+              "center": [
+                0.38,
+                0.32
+              ],
+              "radius": 0.75,
+              "colors": [
+                "#9fd0ff",
+                "#3a7bd5",
+                "#0b2a66"
+              ]
+            }
+          },
+          "border": "#e8c877"
+        },
+        "badgeIcon": "#ffffff"
+      },
+      "icons": {
+        "style": "regular",
+        "effect": "none"
+      },
+      "player": {
+        "progress": {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#c9a24a",
+              "#f0d690"
+            ]
+          }
+        }
+      }
+    },
+    "tv": {
+      "cards": {
+        "video": {
+          "focused": {
+            "border": {
+              "color": "#8a5a12",
+              "width": 4
+            },
+            "glow": "#8a5a12"
+          }
+        }
+      },
+      "controls": {
+        "button": {
+          "focused": {
+            "border": {
+              "color": "#8a5a12",
+              "width": 3
+            }
+          }
+        },
+        "chip": {
+          "focused": {
+            "border": {
+              "color": "#8a5a12",
+              "width": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

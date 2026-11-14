@@ -1,0 +1,888 @@
+// Neo-Brutal: a built-in Lumtub skin. Thick black outlines, hard offset shadows and loud colours, after the deliberately rough web pages of the late 2010s and 2020s.
+// skins/template/skin.jsonc explains every field, and skins/README.md how to make your own.
+// 新粗野：Lumtub 内置皮肤。粗黑描边、硬投影和响亮的撞色，致敬 2010 年代末到 2020 年代刻意粗糙的网页。
+// 每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "brutal",
+  "name": "Neo-Brutal",
+  "names": {
+    "zh-Hans": "新粗野",
+    "zh-Hant": "新粗獷",
+    "zh-HK": "新粗獷",
+    "af": "Neo-brutalisme",
+    "am": "ኒዮ-ብሩታል",
+    "ar": "بروتالية جديدة",
+    "az": "Neo-brutal",
+    "be": "Нэабруталізм",
+    "bg": "Нео-брутализъм",
+    "bn": "নিও-ব্রুটাল",
+    "cs": "Neobrutalismus",
+    "da": "Neobrutal",
+    "de": "Neobrutal",
+    "el": "Νέο-μπρουταλ",
+    "eo": "Nov-bruta",
+    "es": "Neobrutal",
+    "et": "Neobrutaal",
+    "eu": "Neo-brutala",
+    "fa": "نوبروتال",
+    "fi": "Uusbrutalismi",
+    "fil": "Neo-Brutal",
+    "fr": "Néo-brutal",
+    "gl": "Neobrutal",
+    "gu": "નિયો-બ્રુટલ",
+    "he": "ניאו-ברוטלי",
+    "hi": "नियो-ब्रूटल",
+    "hu": "Neobrutál",
+    "hy": "Նեո-բրուտալ",
+    "id": "Neo-Brutal",
+    "is": "Nýbrútal",
+    "it": "Neobrutale",
+    "ja": "ネオブルータル",
+    "jv": "Neo-Brutal",
+    "ka": "ნეობრუტალი",
+    "km": "ណេអូ-ប្រ៊ូតាល់",
+    "kn": "ನಿಯೋ-ಬ್ರೂಟಲ್",
+    "ko": "네오 브루탈",
+    "la": "Neo-Brutalis",
+    "lo": "ນີໂອ-ບຣູທັລ",
+    "lt": "Neobrutalizmas",
+    "lv": "Neobrutālisms",
+    "mk": "Нео-бруталист",
+    "ml": "നിയോ-ബ്രൂട്ടൽ",
+    "mn": "Нео-брутал",
+    "mr": "निओ-ब्रुटल",
+    "ms": "Neo-Brutal",
+    "my": "နီယို-ဘရူးတယ်",
+    "nb": "Nybrutal",
+    "ne": "नियो-ब्रुटल",
+    "nl": "Neobrutaal",
+    "pa": "ਨਿਓ-ਬ੍ਰੂਟਲ",
+    "pl": "Neobrutalizm",
+    "pt": "Neobrutal",
+    "ro": "Neobrutal",
+    "ru": "Необрутализм",
+    "si": "නියෝ-බ්‍රූටල්",
+    "sk": "Neobrutalizmus",
+    "sq": "Neo-brutal",
+    "su": "Neo-Brutal",
+    "sv": "Nybrutal",
+    "sw": "Neo-Brutal",
+    "ta": "நியோ-புரூட்டல்",
+    "te": "నియో-బ్రూటల్",
+    "th": "นีโอบรูทัล",
+    "ti": "ኒዮ-ብሩታል",
+    "tk": "Neo-brutal",
+    "tr": "Neo-Brütal",
+    "uk": "Нео-брутал",
+    "ur": "نیو برٹل",
+    "uz": "Neo-brutal",
+    "vi": "Tân thô mộc",
+    "zu": "I-Neo-Brutal",
+    "sr": "Нео-бруталан",
+    "sr-Latn": "Neo-brutalan",
+    "hr": "Neobrutalizam",
+    "sl": "Neo-brutalno",
+    "bs": "Neobrutalizam",
+    "ca": "Neobrutal",
+    "kk": "Нео-брутал",
+    "ky": "Нео-брутал",
+    "as": "নিও-ব্ৰুটাল",
+    "or": "ନିଓ-ବ୍ରୁଟାଲ୍"
+  },
+  "description": "Thick black outlines, hard offset shadows and loud colours, made to look unfinished on purpose",
+  "descriptions": {
+    "zh-Hans": "粗黑描边、硬投影和响亮的撞色，刻意做得像没修饰完",
+    "zh-Hant": "粗黑描邊、硬投影和響亮的撞色，刻意做得像沒修飾完",
+    "zh-HK": "粗黑描邊、硬投影和響亮的撞色，刻意做得像未修飾完",
+    "af": "Dik swart buitelyne, harde verskuifde skaduwees en harde kleure, doelbewus onafgewerk gemaak",
+    "am": "ወፍራም ጥቁር ዝርዝሮች፣ ጠንካራ የተካካሱ ጥላዎችና ደማቅ ቀለሞች፣ ሆን ተብሎ ያልተጠናቀቀ እንዲመስል የተሠራ",
+    "ar": "خطوط سوداء سميكة وظلال حادة مزاحة وألوان صاخبة، مصممة لتبدو غير مكتملة عن قصد",
+    "az": "Qalın qara konturlar, sərt sürüşmüş kölgələr və gur rənglər, qəsdən bitməmiş görünmək üçün düzəldilib",
+    "be": "Тоўстыя чорныя контуры, рэзкія зрушаныя цені і гучныя колеры, наўмысна зроблена так, нібы не завершана",
+    "bg": "Дебели черни контури, твърди отместени сенки и силни цветове, нарочно направено да изглежда недовършено",
+    "bn": "মোটা কালো রূপরেখা, কড়া সরানো ছায়া ও জোরালো রং, ইচ্ছে করেই অসমাপ্ত দেখানো হয়েছে",
+    "cs": "Tlusté černé obrysy, tvrdé posunuté stíny a křiklavé barvy, záměrně vypadající nedokončeně",
+    "da": "Tykke sorte konturer, hårde forskudte skygger og højlydte farver, lavet til at se uafsluttet ud med vilje",
+    "de": "Dicke schwarze Umrisse, harte versetzte Schatten und laute Farben, absichtlich wie unfertig gestaltet",
+    "el": "Χοντρά μαύρα περιγράμματα, σκληρές μετατοπισμένες σκιές και φωνακλάδικα χρώματα, φτιαγμένο να δείχνει ατελές επίτηδες",
+    "eo": "Dikaj nigraj konturoj, malmolaj delokitaj ombroj kaj laŭtaj koloroj, intence faritaj aspekti nefinitaj",
+    "es": "Contornos negros gruesos, sombras duras desplazadas y colores chillones, hecho para parecer inacabado a propósito",
+    "et": "Paksud mustad piirjooned, kõvad nihkega varjud ja valjud värvid, tehtud meelega pooleli jäänud välimusega",
+    "eu": "Eduki beltz lodiak, itzal gogor desplazatuak eta kolore ozenak, nahita bukatu gabe dagoela ematera egina",
+    "fa": "خطوط ضخیم مشکی، سایه‌های سخت جابه‌جاشده و رنگ‌های پرسروصدا، عمداً ناتمام به نظر می‌رسد",
+    "fi": "Paksut mustat ääriviivat, kovat siirretyt varjot ja kovaääniset värit, tehty näyttämään tarkoituksella keskeneräiseltä",
+    "fil": "Makapal na itim na balangkas, matigas na naiwang anino at matitingkad na kulay, sadyang ginawang mukhang hindi pa tapos",
+    "fr": "Épais contours noirs, ombres décalées dures et couleurs criardes, volontairement conçu pour paraître inachevé",
+    "gl": "Contornos negros grosos, sombras duras desprazadas e cores chamativas, feito para parecer inacabado de propósito",
+    "gu": "જાડી કાળી રૂપરેખા, કઠોર ખસેલા પડછાયા અને તીવ્ર રંગો, ઇરાદાપૂર્વક અધૂરું લાગે તેમ બનાવેલું",
+    "he": "קווי מתאר שחורים עבים, צללים קשים מוזזים וצבעים צעקניים, נעשה כך שייראה לא גמור בכוונה",
+    "hi": "मोटी काली रूपरेखा, कठोर खिसकी परछाइयाँ और चटक रंग, जान-बूझकर अधूरा दिखने के लिए बनाया गया",
+    "hu": "Vastag fekete körvonalak, kemény eltolt árnyékok és harsány színek, szándékosan befejezetlennek tűnőre tervezve",
+    "hy": "Հաստ սև ուրվագծեր, կոշտ տեղաշարժված ստվերներ և աղմկոտ գույներ, միտումնավոր անավարտ տեսք ունենալու համար",
+    "id": "Garis tepi hitam tebal, bayangan keras yang bergeser, dan warna mencolok, sengaja dibuat tampak belum selesai",
+    "is": "Þykkar svartar útlínur, harðir hliðraðir skuggar og háværir litir, gert til að líta viljandi ókláruð út",
+    "it": "Spessi contorni neri, ombre dure sfalsate e colori squillanti, fatto per sembrare incompiuto di proposito",
+    "ja": "太い黒の輪郭線、くっきりずれた影、派手な色。わざと未完成に見せたデザイン",
+    "jv": "Garis pinggir ireng kandel, bayangan atos sing geser lan warna mencolok, digawe katon durung rampung kanthi sengaja",
+    "ka": "სქელი შავი კონტურები, მკაცრი გადაწეული ჩრდილები და ხმამაღალი ფერები, განზრახ დაუმთავრებელი იერით",
+    "km": "គ្រោងខ្មៅក្រាស់ ស្រមោលរឹងដែលរើ និងពណ៌ខ្លាំង ធ្វើឱ្យមើលទៅដូចមិនទាន់ចប់ដោយចេតនា",
+    "kn": "ದಪ್ಪ ಕಪ್ಪು ಬಾಹ್ಯರೇಖೆಗಳು, ಗಟ್ಟಿ ಸರಿದ ನೆರಳುಗಳು ಮತ್ತು ಗಡಸು ಬಣ್ಣಗಳು, ಉದ್ದೇಶಪೂರ್ವಕವಾಗಿ ಅಪೂರ್ಣವಾಗಿ ಕಾಣುವಂತೆ ಮಾಡಲಾಗಿದೆ",
+    "ko": "굵은 검은 윤곽선, 딱딱하게 어긋난 그림자, 강렬한 색. 일부러 미완성처럼 보이게 만든 느낌",
+    "la": "Lineamenta nigra crassa, umbrae durae translatae et colores clamosi, ut consulto imperfectum videatur",
+    "lo": "ເສັ້ນຂອບສີດຳໜາ, ເງົາແຂງທີ່ເລື່ອນ ແລະ ສີສົດແຮງ, ເຮັດໃຫ້ເບິ່ງຄືບໍ່ສຳເລັດໂດຍຕັ້ງໃຈ",
+    "lt": "Stori juodi kontūrai, kieti pastumti šešėliai ir šaukiančios spalvos, sąmoningai padaryta taip, kad atrodytų nebaigta",
+    "lv": "Resni melni kontūri, cietas nobīdītas ēnas un skaļas krāsas, ar nolūku veidots, lai šķistu nepabeigts",
+    "mk": "Дебели црни контури, цврсти поместени сенки и гласни бои, направено намерно да изгледа недовршено",
+    "ml": "കട്ടിയുള്ള കറുത്ത രൂപരേഖകൾ, കടുത്ത നീങ്ങിയ നിഴലുകൾ, ഉച്ചത്തിലുള്ള നിറങ്ങൾ, മനഃപൂർവം പൂർത്തിയാകാത്തതായി തോന്നിക്കാൻ ഉണ്ടാക്കിയത്",
+    "mn": "Зузаан хар хүрээ, хатуу шилжсэн сүүдэр, чанга өнгө, зориуд дуусаагүй мэт харагдуулахаар хийсэн",
+    "mr": "जाड काळ्या बाह्यरेषा, कठोर सरकलेल्या सावल्या आणि ठळक रंग, मुद्दाम अपूर्ण दिसावे असे केलेले",
+    "ms": "Garis luar hitam tebal, bayang keras yang beralih dan warna menonjol, sengaja dibuat kelihatan belum siap",
+    "my": "ထူထဲသော အနက်ရောင်ဘောင်များ၊ မာကျောသော ရွေ့လျားအရိပ်များနှင့် ထင်းသောအရောင်များ၊ ရည်ရွယ်ချက်ရှိရှိ မပြီးသေးသယောင် ပြုလုပ်ထားသည်",
+    "nb": "Tykke svarte omriss, harde forskjøvede skygger og høylytte farger, laget for å se uferdig ut med vilje",
+    "ne": "बाक्ला कालो रूपरेखा, कडा सरेका छायाँ र चर्का रङ, जानाजानी अधुरो देखिने गरी बनाइएको",
+    "nl": "Dikke zwarte contouren, harde verschoven schaduwen en luide kleuren, met opzet onaf gemaakt",
+    "pa": "ਮੋਟੀਆਂ ਕਾਲੀਆਂ ਰੂਪ-ਰੇਖਾਵਾਂ, ਕਠੋਰ ਖਿਸਕੇ ਪਰਛਾਵੇਂ ਅਤੇ ਤਿੱਖੇ ਰੰਗ, ਜਾਣ-ਬੁੱਝ ਕੇ ਅਧੂਰਾ ਦਿਖਾਈ ਦੇਣ ਲਈ ਬਣਾਇਆ",
+    "pl": "Grube czarne kontury, twarde przesunięte cienie i krzykliwe kolory, celowo zrobione tak, by wyglądało na nieskończone",
+    "pt": "Contornos pretos grossos, sombras duras deslocadas e cores gritantes, feito para parecer inacabado de propósito",
+    "ro": "Contururi negre groase, umbre dure decalate și culori țipătoare, făcut să pară neterminat intenționat",
+    "ru": "Толстые чёрные контуры, жёсткие смещённые тени и громкие цвета, нарочно сделано так, будто не закончено",
+    "si": "ඝන කළු දළ සටහන්, තද සෙලවුණු සෙවණැලි සහ හයියෙන් කතා කරන වර්ණ, හිතාමතා නිම නොකළ ලෙස පෙනෙන්නට සාදන ලද",
+    "sk": "Hrubé čierne obrysy, tvrdé posunuté tiene a výrazné farby, zámerne urobené tak, aby to vyzeralo nedokončene",
+    "sq": "Kontura të trasha të zeza, hije të forta të zhvendosura dhe ngjyra të zëshme, bërë që të duket i papërfunduar qëllimisht",
+    "su": "Garis tepi hideung kandel, kalangkang keras nu geser jeung warna nyolok, dijieun sangkan siga acan réngsé ngahaja",
+    "sv": "Tjocka svarta konturer, hårda förskjutna skuggor och högljudda färger, gjort för att se ofärdigt ut med flit",
+    "sw": "Mistari minene myeusi ya kingo, vivuli vigumu vilivyosogezwa na rangi kali, vimetengenezwa vionekane havijakamilika kwa makusudi",
+    "ta": "தடித்த கருப்பு வெளிக்கோடுகள், கடினமான இடம்பெயர்ந்த நிழல்கள், அதிரடி நிறங்கள், வேண்டுமென்றே முடிக்கப்படாதது போல",
+    "te": "మందపాటి నల్ల అంచులు, గట్టి ఆఫ్‌సెట్ నీడలు, ఘాటైన రంగులు, కావాలనే అసంపూర్తిగా కనిపించేలా చేసినది",
+    "th": "เส้นขอบสีดำหนา เงาเยื้องแข็งกระด้าง และสีสันจัดจ้าน ตั้งใจทำให้ดูเหมือนยังไม่เสร็จ",
+    "ti": "ጥቅጥቅ ጸሊም ዙርያታት፡ ሓያል ዝተለወጠ ጽላሎታትን ድምጺ ዘለዎ ቀለማትን፡ ብሕልንኡ ዘይተወድአ ዝመስል",
+    "tk": "Galyň gara çyzyklar, gaty süýşen kölegeler we ýanyp duran reňkler, bilkastlaýyn gutarylmadyk görnüşde ýasalan",
+    "tr": "Kalın siyah çerçeveler, sert kaymış gölgeler ve gür renkler, bilerek bitmemiş gösterilmiş",
+    "uk": "Товсті чорні контури, жорсткі зміщені тіні та гучні кольори, навмисно зроблені недокінченими",
+    "ur": "موٹی سیاہ حد بندیاں، سخت ہٹے ہوئے سائے اور تیز رنگ، جان بوجھ کر ادھورا دکھانے کے لیے بنایا گیا",
+    "uz": "Qalin qora kontur, qattiq siljigan soyalar va shovqinli ranglar, ataylab tugallanmagandek qilingan",
+    "vi": "Viền đen dày, bóng đổ lệch cứng và màu sắc rực rỡ, cố tình làm cho trông như chưa hoàn thiện",
+    "zu": "Imigqa emnyama eshubile, izithunzi eziqinile ezisusiwe nemibala ephezulu, kwenzelwe ukubukeka kungaqediwe ngamabomu",
+    "sr": "Дебеле црне ивице, оштре померене сенке и гласне боје, намерно направљено да изгледа недовршено",
+    "sr-Latn": "Debele crne ivice, oštre pomerene senke i glasne boje, namerno napravljeno da izgleda nedovršeno",
+    "hr": "Debeli crni obrisi, tvrde pomaknute sjene i glasne boje, namjerno napravljeno da izgleda nedovršeno",
+    "sl": "Debeli črni obrisi, trde zamaknjene sence in glasne barve, namenoma videti nedokončano",
+    "bs": "Debele crne ivice, tvrde pomjerene sjene i glasne boje, namjerno napravljeno da izgleda nedovršeno",
+    "ca": "Contorns negres gruixuts, ombres desplaçades i dures i colors cridaners, fet per semblar inacabat a propòsit",
+    "kk": "Қалың қара контурлар, қатты ығысқан көлеңкелер және қанық түстер, әдейі аяқталмаған етіп жасалған",
+    "ky": "Калың кара контурлар, катуу жылган көлөкөлөр жана катуу түстөр, атайылап бүтпөгөндөй кылып жасалган",
+    "as": "মোটা ক'লা ৰেখা, কঠিন আঁতৰি থকা ছাঁ আৰু উজ্জ্বল ৰং, ইচ্ছাকৃতভাৱে অসম্পূৰ্ণ যেন লগাকৈ বনোৱা",
+    "or": "ମୋଟା କଳା ଧାର, କଠିନ ସରିଥିବା ଛାୟା ଓ ଉଚ୍ଚ ରଙ୍ଗ, ଇଚ୍ଛାକୃତ ଭାବେ ଅସମ୍ପୂର୍ଣ୍ଣ ଦିଶିବା ପାଇଁ ତିଆରି"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "text": {
+    "displayFont": "Archivo Black"
+  },
+  "colors": {
+    "page": "#fff4d6",
+    "text": "#000000",
+    "muted": "#2b2b2b",
+    "accent": "#0047ff",
+    "onAccent": "#ffffff",
+    "border": "#000000",
+    "card": "#ffffff",
+    "selected": "#ffde3b",
+    "onSelected": "#000000",
+    "reason": "#000000",
+    "chrome": "#ffffff"
+  },
+  "shape": {
+    "cardRadius": 0,
+    "controlRadius": 0,
+    "thumbnailRadius": 0
+  },
+  "window": {
+    "background": [
+      "#fff4d6",
+      {
+        "pattern": {
+          "type": "dots",
+          "color": "#0000001a",
+          "spacing": 16,
+          "size": 2
+        }
+      }
+    ],
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": "#ffde3b",
+        "border": {
+          "color": "#000000",
+          "width": 3,
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#ffde3b"
+      },
+      "text": "#000000",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#000000",
+        "surface": {
+          "fill": "transparent",
+          "radius": 0,
+          "hover": {
+            "fill": "#00000026"
+          },
+          "pressed": {
+            "fill": "#00000040"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "radius": 0,
+          "hover": {
+            "fill": "#ff5c8a"
+          },
+          "pressed": {
+            "fill": "#ff5c8a"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#ffffff",
+        "border": {
+          "color": "#000000",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "text": "#000000",
+      "highlight": {
+        "fill": "#000000"
+      },
+      "highlightText": "#ffde3b",
+      "menu": {
+        "fill": "#ffffff",
+        "border": "#000000",
+        "radius": 0
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "width": 3,
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#7aa7ff",
+      "border": {
+        "color": "#000000",
+        "width": 3,
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": "#000000"
+    },
+    "topBarText": "#000000",
+    "statusBarText": "#fff4d6",
+    "tabs": {
+      "position": "bottom",
+      "surface": {
+        "fill": "#ffffff",
+        "border": {
+          "color": "#000000",
+          "sides": [
+            "top"
+          ]
+        }
+      },
+      "text": "#000000",
+      "selectedText": "#000000",
+      "indicator": "#000000",
+      "selected": {
+        "fill": "#ffde3b",
+        "border": {
+          "color": "#000000",
+          "width": 3
+        }
+      }
+    }
+  },
+  "controls": {
+    "press": "wash",
+    "button": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "width": 3
+      },
+      "shadow": [
+        {
+          "color": "#000000",
+          "x": 3,
+          "y": 3,
+          "blur": 0
+        }
+      ],
+      "hover": {
+        "fill": "#c9f5df"
+      },
+      "pressed": {
+        "shadow": [
+          {
+            "color": "#000000",
+            "x": 1,
+            "y": 1,
+            "blur": 0
+          }
+        ]
+      }
+    },
+    "buttonText": "#000000",
+    "primaryButton": {
+      "fill": "#ffde3b",
+      "border": {
+        "color": "#000000",
+        "width": 3
+      },
+      "shadow": [
+        {
+          "color": "#000000",
+          "x": 3,
+          "y": 3,
+          "blur": 0
+        }
+      ],
+      "hover": {
+        "fill": "#ffe866"
+      },
+      "pressed": {
+        "shadow": [
+          {
+            "color": "#000000",
+            "x": 1,
+            "y": 1,
+            "blur": 0
+          }
+        ]
+      }
+    },
+    "primaryButtonText": "#000000",
+    "chip": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "width": 2
+      },
+      "shadow": [
+        {
+          "color": "#000000",
+          "x": 2,
+          "y": 2,
+          "blur": 0
+        }
+      ]
+    },
+    "chipSelected": {
+      "fill": "#ffde3b",
+      "border": {
+        "color": "#000000",
+        "width": 2
+      },
+      "shadow": [
+        {
+          "color": "#000000",
+          "x": 2,
+          "y": 2,
+          "blur": 0
+        }
+      ]
+    },
+    "chipSelectedText": "#000000",
+    "navSelected": {
+      "fill": "#ffde3b",
+      "border": {
+        "color": "#000000",
+        "width": 3
+      },
+      "shadow": [
+        {
+          "color": "#000000",
+          "x": 3,
+          "y": 3,
+          "blur": 0
+        }
+      ]
+    },
+    "navSelectedText": "#000000",
+    "navText": "#000000"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "width": 3
+      },
+      "shadow": [
+        {
+          "color": "#000000",
+          "x": 6,
+          "y": 6,
+          "blur": 0
+        }
+      ],
+      "hover": {
+        "fill": "#c9f5df",
+        "shadow": [
+          {
+            "color": "#000000",
+            "x": 8,
+            "y": 8,
+            "blur": 0
+          }
+        ]
+      },
+      "focused": {
+        "border": {
+          "color": "#0047ff",
+          "width": 4
+        }
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "width": 3
+      },
+      "shadow": [
+        {
+          "color": "#000000",
+          "x": 6,
+          "y": 6,
+          "blur": 0
+        }
+      ]
+    },
+    "durationBadge": {
+      "fill": "#000000",
+      "radius": 0
+    },
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "Archivo Black",
+    "size": 22,
+    "fill": "#000000",
+    "badge": {
+      "fill": "#ff5c8a",
+      "border": {
+        "color": "#000000",
+        "width": 2
+      },
+      "radius": 0,
+      "shadow": [
+        {
+          "color": "#000000",
+          "x": 3,
+          "y": 3,
+          "blur": 0
+        }
+      ]
+    },
+    "badgeIcon": "#000000"
+  },
+  "icons": {
+    "style": "fill",
+    "effect": "none"
+  },
+  "player": {
+    "progress": "#0047ff"
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#121212",
+        "text": "#ffffff",
+        "muted": "#d4d4d4",
+        "accent": "#ffde3b",
+        "onAccent": "#000000",
+        "border": "#ffffff",
+        "card": "#1e1e1e",
+        "selected": "#ffde3b",
+        "onSelected": "#000000",
+        "reason": "#ffde3b",
+        "chrome": "#121212"
+      },
+      "window": {
+        "background": [
+          "#121212",
+          {
+            "pattern": {
+              "type": "dots",
+              "color": "#ffffff14",
+              "spacing": 16,
+              "size": 2
+            }
+          }
+        ],
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": "#ffde3b",
+            "border": {
+              "color": "#ffffff",
+              "width": 3,
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "inactive": {
+            "fill": "#ffde3b"
+          },
+          "text": "#000000",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#000000",
+            "surface": {
+              "fill": "transparent",
+              "radius": 0,
+              "hover": {
+                "fill": "#00000026"
+              },
+              "pressed": {
+                "fill": "#00000040"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "radius": 0,
+              "hover": {
+                "fill": "#ff5c8a"
+              },
+              "pressed": {
+                "fill": "#ff5c8a"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": "#121212",
+            "border": {
+              "color": "#ffffff",
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "text": "#ffffff",
+          "highlight": {
+            "fill": "#ffde3b"
+          },
+          "highlightText": "#000000",
+          "menu": {
+            "fill": "#1e1e1e",
+            "border": "#ffffff",
+            "radius": 0
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": "#121212",
+          "border": {
+            "color": "#ffffff",
+            "width": 3,
+            "sides": [
+              "bottom"
+            ]
+          }
+        },
+        "sideBar": {
+          "fill": "#2a1f8f",
+          "border": {
+            "color": "#ffffff",
+            "width": 3,
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": "#ffde3b"
+        },
+        "topBarText": "#ffffff",
+        "statusBarText": "#000000",
+        "tabs": {
+          "position": "bottom",
+          "surface": {
+            "fill": "#121212",
+            "border": {
+              "color": "#ffffff",
+              "sides": [
+                "top"
+              ]
+            }
+          },
+          "text": "#ffffff",
+          "selectedText": "#000000",
+          "indicator": "#ffde3b",
+          "selected": {
+            "fill": "#ffde3b",
+            "border": {
+              "color": "#ffffff",
+              "width": 3
+            }
+          }
+        }
+      },
+      "controls": {
+        "press": "wash",
+        "button": {
+          "fill": "#1e1e1e",
+          "border": {
+            "color": "#ffffff",
+            "width": 3
+          },
+          "shadow": [
+            {
+              "color": "#ff5c8a",
+              "x": 3,
+              "y": 3,
+              "blur": 0
+            }
+          ],
+          "hover": {
+            "fill": "#2a2a2a"
+          },
+          "pressed": {
+            "shadow": [
+              {
+                "color": "#ff5c8a",
+                "x": 1,
+                "y": 1,
+                "blur": 0
+              }
+            ]
+          }
+        },
+        "buttonText": "#ffffff",
+        "primaryButton": {
+          "fill": "#ffde3b",
+          "border": {
+            "color": "#ffffff",
+            "width": 3
+          },
+          "shadow": [
+            {
+              "color": "#ff5c8a",
+              "x": 3,
+              "y": 3,
+              "blur": 0
+            }
+          ],
+          "pressed": {
+            "shadow": [
+              {
+                "color": "#ff5c8a",
+                "x": 1,
+                "y": 1,
+                "blur": 0
+              }
+            ]
+          }
+        },
+        "primaryButtonText": "#000000",
+        "chip": {
+          "fill": "#1e1e1e",
+          "border": {
+            "color": "#ffffff",
+            "width": 2
+          },
+          "shadow": [
+            {
+              "color": "#ff5c8a",
+              "x": 2,
+              "y": 2,
+              "blur": 0
+            }
+          ]
+        },
+        "chipSelected": {
+          "fill": "#ffde3b",
+          "border": {
+            "color": "#ffffff",
+            "width": 2
+          },
+          "shadow": [
+            {
+              "color": "#ff5c8a",
+              "x": 2,
+              "y": 2,
+              "blur": 0
+            }
+          ]
+        },
+        "chipSelectedText": "#000000",
+        "navSelected": {
+          "fill": "#ffde3b",
+          "border": {
+            "color": "#ffffff",
+            "width": 3
+          },
+          "shadow": [
+            {
+              "color": "#ff5c8a",
+              "x": 3,
+              "y": 3,
+              "blur": 0
+            }
+          ]
+        },
+        "navSelectedText": "#000000",
+        "navText": "#ffffff"
+      },
+      "cards": {
+        "video": {
+          "fill": "#1e1e1e",
+          "border": {
+            "color": "#ffffff",
+            "width": 3
+          },
+          "shadow": [
+            {
+              "color": "#ffde3b",
+              "x": 6,
+              "y": 6,
+              "blur": 0
+            }
+          ],
+          "hover": {
+            "shadow": [
+              {
+                "color": "#ff5c8a",
+                "x": 8,
+                "y": 8,
+                "blur": 0
+              }
+            ]
+          },
+          "focused": {
+            "border": {
+              "color": "#5ce0a0",
+              "width": 4
+            }
+          }
+        },
+        "padding": 6,
+        "panel": {
+          "fill": "#1e1e1e",
+          "border": {
+            "color": "#ffffff",
+            "width": 3
+          },
+          "shadow": [
+            {
+              "color": "#ffde3b",
+              "x": 6,
+              "y": 6,
+              "blur": 0
+            }
+          ]
+        },
+        "durationBadge": {
+          "fill": "#000000",
+          "radius": 0
+        },
+        "durationText": "#ffffff"
+      },
+      "logo": {
+        "text": "LUMTUB",
+        "font": "Archivo Black",
+        "size": 22,
+        "fill": "#ffffff",
+        "badge": {
+          "fill": "#ff5c8a",
+          "border": {
+            "color": "#ffffff",
+            "width": 2
+          },
+          "radius": 0,
+          "shadow": [
+            {
+              "color": "#ffde3b",
+              "x": 3,
+              "y": 3,
+              "blur": 0
+            }
+          ]
+        },
+        "badgeIcon": "#000000"
+      },
+      "icons": {
+        "style": "fill",
+        "effect": "none"
+      },
+      "player": {
+        "progress": "#ffde3b"
+      }
+    },
+    "tv": {
+      "cards": {
+        "video": {
+          "focused": {
+            "border": {
+              "color": "#0047ff",
+              "width": 4
+            },
+            "glow": "#0047ff"
+          }
+        }
+      },
+      "controls": {
+        "button": {
+          "focused": {
+            "border": {
+              "color": "#0047ff",
+              "width": 3
+            }
+          }
+        },
+        "chip": {
+          "focused": {
+            "border": {
+              "color": "#0047ff",
+              "width": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

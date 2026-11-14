@@ -26,6 +26,7 @@ import '../video_facts_lookup.dart';
 import '../video_languages.dart';
 import '../playback_failure.dart';
 import '../skip_silence.dart';
+import '../volume_balance.dart';
 import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
@@ -129,6 +130,7 @@ part 'playback_open.dart';
 part 'playback_events.dart';
 part 'playback_controls.dart';
 part 'skip_silence_actions.dart';
+part 'volume_balance_actions.dart';
 part 'queue_actions.dart';
 part 'video_details.dart';
 part 'cast_actions.dart';
@@ -609,7 +611,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     notifyListeners();
   }
 
-  /// What asked for the window to be rebuilt since the frame log last
+  /// What asked for the page to be rebuilt since the frame log last
   /// took the counts: a part of the app by name, or `app` for the rest.
   final rebuildCauses = <String, int>{};
   final _passers = <String, VoidCallback>{};

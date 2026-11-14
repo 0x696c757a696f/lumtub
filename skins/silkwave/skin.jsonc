@@ -1,0 +1,594 @@
+// Silk Waves: a built-in Lumtub skin. Slow silky waves of light over deep blue and thin quiet icons, after the wave menus of 2000s handheld and home consoles.
+// skins/template/skin.jsonc explains every field, and skins/README.md how to make your own.
+// 丝绸波浪：Lumtub 内置皮肤。深蓝底上缓缓流过的丝绸光波和安静的细线图标，致敬 2000 年代掌机和主机的波浪菜单。
+// 每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "silkwave",
+  "name": "Silk Waves",
+  "names": {
+    "zh-Hans": "丝绸波浪",
+    "zh-Hant": "絲綢波浪",
+    "zh-HK": "絲綢波浪",
+    "af": "Sydegolwe",
+    "am": "የሐር ሞገዶች",
+    "ar": "أمواج الحرير",
+    "az": "İpək dalğalar",
+    "be": "Шаўковыя хвалі",
+    "bg": "Копринени вълни",
+    "bn": "রেশম ঢেউ",
+    "cs": "Hedvábné vlny",
+    "da": "Silkebølger",
+    "de": "Seidenwellen",
+    "el": "Κύματα μεταξιού",
+    "eo": "Silkaj ondoj",
+    "es": "Olas de seda",
+    "et": "Siidilained",
+    "eu": "Zeta-olatuak",
+    "fa": "امواج ابریشمی",
+    "fi": "Silkkiaallot",
+    "fil": "Mga Alon ng Seda",
+    "fr": "Vagues de soie",
+    "gl": "Ondas de seda",
+    "gu": "રેશમી તરંગો",
+    "he": "גלי משי",
+    "hi": "रेशमी लहरें",
+    "hu": "Selyemhullámok",
+    "hy": "Մետաքսե ալիքներ",
+    "id": "Gelombang Sutra",
+    "is": "Silkibylgjur",
+    "it": "Onde di seta",
+    "ja": "シルクウェーブ",
+    "jv": "Ombak Sutra",
+    "ka": "აბრეშუმის ტალღები",
+    "km": "រលកសូត្រ",
+    "kn": "ರೇಷ್ಮೆ ಅಲೆಗಳು",
+    "ko": "실크 물결",
+    "la": "Undae Sericae",
+    "lo": "ຄື້ນຜ້າໄໝ",
+    "lt": "Šilko bangos",
+    "lv": "Zīda viļņi",
+    "mk": "Свилени бранови",
+    "ml": "പട്ടുതിരകൾ",
+    "mn": "Торгон долгион",
+    "mr": "रेशमी लाटा",
+    "ms": "Ombak Sutera",
+    "my": "ပိုးသားလှိုင်းများ",
+    "nb": "Silkebølger",
+    "ne": "रेशमी छालहरू",
+    "nl": "Zijdegolven",
+    "pa": "ਰੇਸ਼ਮੀ ਲਹਿਰਾਂ",
+    "pl": "Jedwabne fale",
+    "pt": "Ondas de seda",
+    "ro": "Valuri de mătase",
+    "ru": "Шёлковые волны",
+    "si": "සේද රැළි",
+    "sk": "Hodvábne vlny",
+    "sq": "Valë mëndafshi",
+    "su": "Ombak Sutra",
+    "sv": "Silkesvågor",
+    "sw": "Mawimbi ya Hariri",
+    "ta": "பட்டு அலைகள்",
+    "te": "సిల్క్ అలలు",
+    "th": "คลื่นไหม",
+    "ti": "ሓርማዝ ማዕበል",
+    "tk": "Ýelmeşen tolkunlar",
+    "tr": "İpek Dalgalar",
+    "uk": "Шовкові хвилі",
+    "ur": "ریشمی لہریں",
+    "uz": "Ipak to'lqinlar",
+    "vi": "Sóng lụa",
+    "zu": "Amagagasi Esilika",
+    "sr": "Свилени таласи",
+    "sr-Latn": "Svileni talasi",
+    "hr": "Svilenkasti valovi",
+    "sl": "Svilnati valovi",
+    "bs": "Svilenkasti valovi",
+    "ca": "Ones de seda",
+    "kk": "Жібек толқындар",
+    "ky": "Жибек толкундар",
+    "as": "ৰেচম ঢৌ",
+    "or": "ରେଶମ ତରଙ୍ଗ"
+  },
+  "description": "Slow silky waves of light across a deep blue sky, with quiet thin icons",
+  "descriptions": {
+    "zh-Hans": "深蓝底上缓缓流过丝绸般的光波，配安静的细线图标",
+    "zh-Hant": "深藍底上緩緩流過絲綢般的光波，配安靜的細線圖示",
+    "zh-HK": "深藍底上緩緩流過絲綢般的光波，配寧靜的細線圖示",
+    "af": "Stadige syagtige golwe lig oor 'n diepblou lug, met stil dun ikone",
+    "am": "ጥልቅ ሰማያዊ ሰማይ ላይ ቀስ ብለው የሚፈስሱ እንደ ሐር ለስላሳ የብርሃን ሞገዶች፣ ከጸጥ ያሉ ቀጭን አዶዎች ጋር",
+    "ar": "أمواج ضوء حريرية بطيئة عبر سماء زرقاء داكنة، مع أيقونات رفيعة هادئة",
+    "az": "Dərin mavi səmada yavaş ipək kimi işıq dalğaları, sakit nazik ikonlarla",
+    "be": "Павольныя шаўкавістыя хвалі святла на глыбокім сінім небе, з ціхімі тонкімі значкамі",
+    "bg": "Бавни копринени вълни от светлина над дълбоко синьо небе, с тихи тънки икони",
+    "bn": "গভীর নীল আকাশজুড়ে ধীর রেশমি আলোর ঢেউ, সঙ্গে শান্ত সরু আইকন",
+    "cs": "Pomalé hedvábné vlny světla přes tmavě modrou oblohu, s tichými tenkými ikonami",
+    "da": "Langsomme silkebløde lysbølger hen over en dybblå himmel, med stille tynde ikoner",
+    "de": "Langsame seidige Lichtwellen über einem tiefblauen Himmel, mit ruhigen schmalen Symbolen",
+    "el": "Αργά μεταξένια κύματα φωτός σε έναν βαθύ μπλε ουρανό, με ήρεμα λεπτά εικονίδια",
+    "eo": "Malrapidaj silkecaj ondoj de lumo tra profunde blua ĉielo, kun trankvilaj maldikaj piktogramoj",
+    "es": "Lentas olas de luz sedosas sobre un cielo azul profundo, con iconos finos y discretos",
+    "et": "Aeglased siidised valguslained sügavsinisel taevas, vaikste õhukeste ikoonidega",
+    "eu": "Argi-olatu geldo eta zetazkoak zeru urdin sakon batean zehar, ikono mehe eta lasaiekin",
+    "fa": "امواج کند و ابریشمی نور در آسمانی آبی تیره، با آیکن‌های نازک و آرام",
+    "fi": "Hitaita silkkisiä valoaaltoja syvänsinisellä taivaalla, hiljaisin ohuin kuvakkein",
+    "fil": "Mabagal at malasutlang alon ng liwanag sa malalim na asul na langit, may tahimik na manipis na icon",
+    "fr": "Lentes vagues de lumière soyeuses sur un ciel bleu profond, avec de fines icônes discrètes",
+    "gl": "Lentas ondas de luz sedosas sobre un ceo azul profundo, con iconas finas e discretas",
+    "gu": "ઊંડા વાદળી આકાશમાં ધીમા રેશમી પ્રકાશ-તરંગો, શાંત પાતળા આઇકન સાથે",
+    "he": "גלי אור משיים איטיים על פני שמיים כחולים עמוקים, עם סמלים דקים ושקטים",
+    "hi": "गहरे नीले आसमान पर धीमी रेशमी रोशनी की लहरें, शांत पतले आइकनों के साथ",
+    "hu": "Lassú, selymes fényhullámok egy mélykék égbolton, csendes vékony ikonokkal",
+    "hy": "Խորը կապույտ երկնքով դանդաղ մետաքսանման լույսի ալիքներ՝ հանգիստ բարակ պատկերակներով",
+    "id": "Gelombang cahaya selembut sutra yang lambat di langit biru tua, dengan ikon tipis yang tenang",
+    "is": "Hægar silkimjúkar ljósbylgjur yfir djúpbláum himni, með rólegum þunnum táknum",
+    "it": "Lente onde di luce setose su un cielo blu intenso, con icone sottili e discrete",
+    "ja": "深い青空をゆったり流れる絹のような光の波と、静かな細線アイコン",
+    "jv": "Ombak cahya alus kaya sutra mlaku alon ing langit biru tuwa, karo ikon tipis sing tenang",
+    "ka": "ნელი აბრეშუმისებური სინათლის ტალღები ღრმა ლურჯ ცაზე, მშვიდი თხელი ხატულებით",
+    "km": "រលកពន្លឺទន់ដូចសូត្រហូរយឺតៗលើមេឃខៀវងងឹត ជាមួយរូបតំណាងស្តើងស្ងប់",
+    "kn": "ಗಾಢ ನೀಲಿ ಆಕಾಶದಲ್ಲಿ ನಿಧಾನವಾಗಿ ಸಾಗುವ ರೇಷ್ಮೆಯಂತಹ ಬೆಳಕಿನ ಅಲೆಗಳು, ಶಾಂತ ತೆಳು ಐಕಾನ್‌ಗಳೊಂದಿಗೆ",
+    "ko": "깊은 푸른 하늘 위로 느릿하게 흐르는 비단결 같은 빛의 물결과 조용한 가는 아이콘",
+    "la": "Undae lucis sericae lentae per caelum caeruleum profundum, cum imaginibus tenuibus quietis",
+    "lo": "ຄື້ນແສງອ່ອນນຸ້ມຄືຜ້າໄໝໄຫຼຊ້າໆຜ່ານທ້ອງຟ້າສີຟ້າເຂັ້ມ, ພ້ອມໄອຄອນບາງໆທີ່ສະຫງົບ",
+    "lt": "Lėtos šilkinės šviesos bangos virš giliai mėlyno dangaus, su ramiomis plonomis piktogramomis",
+    "lv": "Lēni zīdaini gaismas viļņi pāri tumši zilām debesīm, ar klusām plānām ikonām",
+    "mk": "Бавни свилени бранови светлина преку длабоко сино небо, со тивки тенки икони",
+    "ml": "കടും നീല ആകാശത്തിലൂടെ പതിയെ ഒഴുകുന്ന പട്ടുപോലുള്ള പ്രകാശത്തിരകൾ, ശാന്തമായ നേർത്ത ഐക്കണുകളോടെ",
+    "mn": "Гүн цэнхэр тэнгэрт удаан урсах торгомсог гэрлийн долгион, нам гүм нарийн дүрсүүдтэй",
+    "mr": "गडद निळ्या आकाशातून हळू वाहणाऱ्या रेशमी प्रकाशलाटा, शांत बारीक आयकॉनसह",
+    "ms": "Ombak cahaya selembut sutera yang perlahan merentasi langit biru tua, dengan ikon nipis yang tenang",
+    "my": "အပြာရင့်ရောင် ကောင်းကင်ပေါ်၌ ဖြည်းဖြည်းစီးဆင်းသော ပိုးသားကဲ့သို့ အလင်းလှိုင်းများ၊ တိတ်ဆိတ်ပါးလွှာသော သင်္ကေတများနှင့်အတူ",
+    "nb": "Langsomme silkemyke lysbølger over en dypblå himmel, med stille tynne ikoner",
+    "ne": "गाढा निलो आकाशमा बिस्तारै बग्ने रेशमी उज्यालोका छाल, शान्त पातला आइकनसहित",
+    "nl": "Langzame zijdezachte lichtgolven over een diepblauwe hemel, met rustige dunne pictogrammen",
+    "pa": "ਗੂੜ੍ਹੇ ਨੀਲੇ ਅਸਮਾਨ ਵਿੱਚ ਹੌਲੀ ਵਗਦੀਆਂ ਰੇਸ਼ਮ ਵਰਗੀਆਂ ਰੌਸ਼ਨੀ ਦੀਆਂ ਲਹਿਰਾਂ, ਸ਼ਾਂਤ ਪਤਲੇ ਆਈਕਨਾਂ ਨਾਲ",
+    "pl": "Powolne jedwabiste fale światła na głębokim niebieskim niebie, z cichymi cienkimi ikonami",
+    "pt": "Ondas de luz sedosas e lentas sobre um céu azul-profundo, com ícones finos e discretos",
+    "ro": "Valuri lente de lumină mătăsoase pe un cer albastru închis, cu pictograme subțiri și discrete",
+    "ru": "Медленные шелковистые волны света на глубоком синем небе, с тихими тонкими значками",
+    "si": "ගැඹුරු නිල් අහස හරහා සෙමින් ගලන සේද වැනි ආලෝක රැළි, නිහඬ සිහින් නිරූපක සමඟ",
+    "sk": "Pomalé hodvábne vlny svetla cez hlboko modrú oblohu, s tichými tenkými ikonami",
+    "sq": "Valë drite të ngadalta si mëndafsh mbi një qiell blu të thellë, me ikona të holla të qeta",
+    "su": "Ombak cahaya lemes siga sutra ngalir lalaunan dina langit biru tua, jeung ikon ipis nu tenang",
+    "sv": "Långsamma silkeslena ljusvågor över en djupblå himmel, med stilla tunna ikoner",
+    "sw": "Mawimbi ya mwanga laini kama hariri yakipita polepole juu ya anga la buluu iliyokolea, na ikoni nyembamba tulivu",
+    "ta": "ஆழ்ந்த நீல வானில் மெதுவான பட்டு போன்ற ஒளி அலைகள், அமைதியான மெல்லிய ஐகான்களுடன்",
+    "te": "లోతైన నీలి ఆకాశంలో నెమ్మదిగా కదిలే పట్టు లాంటి కాంతి అలలు, ప్రశాంతమైన సన్నని ఐకాన్లతో",
+    "th": "คลื่นแสงนุ่มลื่นดั่งผ้าไหมไหลช้า ๆ บนท้องฟ้าสีน้ำเงินเข้ม พร้อมไอคอนเส้นบางเงียบสงบ",
+    "ti": "ኣብ ዓሚቝ ሰማያዊ ሰማይ ህዱእ ሓርማዛዊ ማዕበል ብርሃን፡ ምስ ህዱእ ቀጫን ኣይኮናት",
+    "tk": "Çuň gök asmanda ýuwaş-ýuwaşdan akýan ýüpek ýaly yşyk tolkunlary, asuda inçe nyşanlar bilen",
+    "tr": "Derin mavi bir gökyüzünde yavaş, ipeksi ışık dalgaları ve sakin ince simgeler",
+    "uk": "Повільні шовкові хвилі світла на глибокому синьому небі, зі спокійними тонкими піктограмами",
+    "ur": "گہرے نیلے آسمان پر روشنی کی آہستہ ریشمی لہریں، پرسکون باریک آئیکنز کے ساتھ",
+    "uz": "Chuqur ko'k osmonda sekin oqayotgan ipak yorug'lik to'lqinlari, sokin ingichka piktogrammalar bilan",
+    "vi": "Những làn sóng ánh sáng mượt như lụa trôi chậm trên bầu trời xanh thẫm, cùng các biểu tượng mảnh yên tĩnh",
+    "zu": "Amagagasi okukhanya anjengesilika anyakaza kancane esibhakabhakeni esiluhlaza okwesibhakabhaka esijulile, namasithonjana aphundu athulile",
+    "sr": "Спори свилени таласи светлости преко дубоког плавог неба, са тихим танким иконама",
+    "sr-Latn": "Spori svileni talasi svetlosti preko dubokog plavog neba, sa tihim tankim ikonama",
+    "hr": "Spori svilenkasti valovi svjetla preko dubokog plavog neba, s tihim tankim ikonama",
+    "sl": "Počasni svilnati valovi svetlobe čez globoko modro nebo, s tihimi tankimi ikonami",
+    "bs": "Spori svilenkasti valovi svjetlosti preko dubokog plavog neba, s tihim tankim ikonama",
+    "ca": "Ones de llum sedoses i lentes sobre un cel blau profund, amb icones fines i tranquil·les",
+    "kk": "Терең көк аспанда баяу жібектей жарық толқындары, тыныш жіңішке белгішелермен",
+    "ky": "Терең көк асманда жай жибектей жарык толкундары, тынч ичке сүрөтчөлөр менен",
+    "as": "গভীৰ নীলা আকাশত পোহৰৰ লাহে লাহে বৈ যোৱা ৰেচমী ঢৌ, শান্ত পাতল আইকনৰ সৈতে",
+    "or": "ଗାଢ଼ ନୀଳ ଆକାଶରେ ଧୀରେ ଧୀରେ ବୋହିଯାଉଥିବା ରେଶମୀ ଆଲୋକ ତରଙ୍ଗ, ଶାନ୍ତ ସରୁ ଆଇକନ୍ ସହିତ"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "colors": {
+    "page": "#e4eef4",
+    "text": "#0d2638",
+    "muted": "#3c5a6e",
+    "accent": "#1f6f9e",
+    "onAccent": "#ffffff",
+    "border": "#b9cfdc",
+    "card": "#f4f8fb",
+    "selected": "#cfe3ef",
+    "onSelected": "#0d2638",
+    "reason": "#1f5f86",
+    "chrome": "#eef5f9"
+  },
+  "shape": {
+    "cardRadius": 6,
+    "controlRadius": 6,
+    "thumbnailRadius": 4
+  },
+  "window": {
+    "background": [
+      "#e4eef4",
+      {
+        "image": "day.jpg",
+        "fit": "cover",
+        "focus": [
+          0.6,
+          0.6
+        ]
+      }
+    ],
+    "veil": 0.3,
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": "#e4eef4"
+      },
+      "inactive": {
+        "fill": "#e4eef4"
+      },
+      "text": "#0d2638",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#0d2638",
+        "surface": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#0000001a"
+          },
+          "pressed": {
+            "fill": "#00000033"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#e81123"
+          },
+          "pressed": {
+            "fill": "#e81123"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#e4eef4"
+      },
+      "text": "#0d2638",
+      "highlight": {
+        "fill": "#0d2638"
+      },
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#f4f8fbfa",
+        "border": "#b9cfdc",
+        "radius": 6
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": "#ffffff4d"
+    },
+    "sideBar": {
+      "fill": "#ffffff33"
+    },
+    "statusBar": {
+      "fill": "#ffffff4d"
+    },
+    "topBarText": "#0d2638",
+    "statusBarText": "#3c5a6e",
+    "tabs": {
+      "position": "bottom",
+      "surface": {
+        "fill": "#eef5f9f2",
+        "border": {
+          "color": "#b9cfdc",
+          "sides": [
+            "top"
+          ]
+        }
+      },
+      "text": "#3c5a6e",
+      "selectedText": "#0d2638",
+      "indicator": "#0d2638"
+    }
+  },
+  "controls": {
+    "press": "glow",
+    "button": {
+      "fill": "#ffffff8c",
+      "border": "#0d263833",
+      "hover": {
+        "fill": "#ffffffd9"
+      }
+    },
+    "buttonText": "#0d2638",
+    "primaryButton": {
+      "fill": "#0d2638",
+      "hover": {
+        "fill": "#1a3a52"
+      }
+    },
+    "primaryButtonText": "#ffffff",
+    "chip": {
+      "fill": "transparent",
+      "border": "#0d263833"
+    },
+    "chipSelected": {
+      "fill": "#0d2638"
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": "#ffffffb3",
+      "border": "#0d263859",
+      "glow": "#ffffff"
+    },
+    "navSelectedText": "#0d2638",
+    "navText": "#2f4c60"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffff8c",
+      "border": "#ffffffd9",
+      "hover": {
+        "fill": "#ffffffd9",
+        "glow": "#ffffff"
+      },
+      "focused": {
+        "border": {
+          "color": "#1f6f9e",
+          "width": 3
+        },
+        "glow": "#ffffff"
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#ffffffb3",
+      "border": "#ffffffd9"
+    },
+    "durationBadge": {
+      "fill": "#0d2638cc",
+      "radius": 4
+    },
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "size": 18,
+    "fill": "#0d2638",
+    "badge": {
+      "fill": "transparent",
+      "border": {
+        "color": "#0d2638",
+        "width": 2
+      }
+    },
+    "badgeIcon": "#0d2638"
+  },
+  "icons": {
+    "style": "regular",
+    "effect": "none"
+  },
+  "player": {
+    "progress": "#1f6f9e"
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#0b3554",
+        "text": "#ffffff",
+        "muted": "#cfe2ee",
+        "accent": "#9fe0ff",
+        "onAccent": "#06263d",
+        "border": "#2d5f80",
+        "card": "#082a44",
+        "selected": "#1d5578",
+        "onSelected": "#ffffff",
+        "reason": "#bfe8ff",
+        "chrome": "#0b3554"
+      },
+      "window": {
+        "background": [
+          "#0b3554",
+          {
+            "image": "night.jpg",
+            "fit": "cover",
+            "focus": [
+              0.6,
+              0.6
+            ]
+          }
+        ],
+        "veil": 0.3,
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": "#0b3554"
+          },
+          "inactive": {
+            "fill": "#0b3554"
+          },
+          "text": "#ffffff",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#e6f2fa",
+            "surface": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#ffffff1f"
+              },
+              "pressed": {
+                "fill": "#ffffff33"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#e81123"
+              },
+              "pressed": {
+                "fill": "#e81123"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": "#0b3554"
+          },
+          "text": "#ffffff",
+          "highlight": {
+            "fill": "#ffffff33"
+          },
+          "highlightText": "#ffffff",
+          "menu": {
+            "fill": "#0b3554fa",
+            "border": "#ffffff59",
+            "radius": 6
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": "#06263d4d"
+        },
+        "sideBar": {
+          "fill": "#06263d33"
+        },
+        "statusBar": {
+          "fill": "#06263d4d"
+        },
+        "topBarText": "#ffffff",
+        "statusBarText": "#d2e4ef",
+        "tabs": {
+          "position": "bottom",
+          "surface": {
+            "fill": "#082a44f2",
+            "border": {
+              "color": "#ffffff33",
+              "sides": [
+                "top"
+              ]
+            }
+          },
+          "text": "#cfe2ee",
+          "selectedText": "#ffffff",
+          "indicator": "#ffffff"
+        }
+      },
+      "controls": {
+        "press": "glow",
+        "button": {
+          "fill": "#ffffff1a",
+          "border": "#ffffff4d",
+          "hover": {
+            "fill": "#ffffff2e",
+            "glow": "#ffffff66"
+          }
+        },
+        "buttonText": "#ffffff",
+        "primaryButton": {
+          "fill": "#ffffffeb",
+          "hover": {
+            "glow": "#ffffff"
+          }
+        },
+        "primaryButtonText": "#0b3554",
+        "chip": {
+          "fill": "transparent",
+          "border": "#ffffff40"
+        },
+        "chipSelected": {
+          "fill": "#ffffff"
+        },
+        "chipSelectedText": "#0b3554",
+        "navSelected": {
+          "fill": "#ffffff29",
+          "border": "#ffffff99",
+          "glow": "#ffffff59"
+        },
+        "navSelectedText": "#ffffff",
+        "navText": "#d2e4ef"
+      },
+      "cards": {
+        "video": {
+          "fill": "#04162680",
+          "border": "#ffffff24",
+          "hover": {
+            "border": "#ffffffd9",
+            "glow": "#bfe8ff"
+          },
+          "focused": {
+            "border": {
+              "color": "#ffffff",
+              "width": 3
+            },
+            "glow": "#bfe8ff"
+          }
+        },
+        "padding": 6,
+        "panel": {
+          "fill": "#04162699",
+          "border": "#ffffff33"
+        },
+        "durationBadge": {
+          "fill": "#000000b3",
+          "radius": 4
+        },
+        "durationText": "#ffffff"
+      },
+      "logo": {
+        "text": "LUMTUB",
+        "size": 18,
+        "fill": "#ffffff",
+        "glow": "#ffffff66",
+        "badge": {
+          "fill": "transparent",
+          "border": {
+            "color": "#ffffff",
+            "width": 2
+          }
+        },
+        "badgeIcon": "#ffffff"
+      },
+      "icons": {
+        "style": "regular",
+        "effect": "glow",
+        "glow": "#ffffff"
+      },
+      "player": {
+        "progress": "#ffffff"
+      }
+    },
+    "tv": {
+      "cards": {
+        "video": {
+          "focused": {
+            "border": {
+              "color": "#1f6f9e",
+              "width": 4
+            },
+            "glow": "#1f6f9e"
+          }
+        }
+      },
+      "controls": {
+        "button": {
+          "focused": {
+            "border": {
+              "color": "#1f6f9e",
+              "width": 3
+            }
+          }
+        },
+        "chip": {
+          "focused": {
+            "border": {
+              "color": "#1f6f9e",
+              "width": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

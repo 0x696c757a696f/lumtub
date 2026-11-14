@@ -1,0 +1,850 @@
+// Homepage: a built-in Lumtub skin. Star tiles, rainbow letters, chunky bevelled buttons and a status line, after hand-made personal home pages of the 2000s.
+// skins/template/skin.jsonc explains every field, and skins/README.md how to make your own.
+// 个人主页：Lumtub 内置皮肤。星星底纹、彩虹字、厚实的立体按钮和状态栏，致敬 2000 年代手做的个人主页。
+// 每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "homepage",
+  "name": "Homepage",
+  "names": {
+    "zh-Hans": "个人主页",
+    "zh-Hant": "個人首頁",
+    "zh-HK": "個人主頁",
+    "af": "Tuisblad",
+    "am": "መነሻ ገጽ",
+    "ar": "الصفحة الرئيسية",
+    "az": "Ana səhifə",
+    "be": "Хатняя старонка",
+    "bg": "Начална страница",
+    "bn": "হোমপেজ",
+    "cs": "Domovská stránka",
+    "da": "Hjemmeside",
+    "de": "Homepage",
+    "el": "Αρχική σελίδα",
+    "eo": "Hejmpaĝo",
+    "es": "Página personal",
+    "et": "Koduleht",
+    "eu": "Hasiera-orria",
+    "fa": "صفحه خانگی",
+    "fi": "Kotisivu",
+    "fil": "Homepage",
+    "fr": "Page perso",
+    "gl": "Páxina persoal",
+    "gu": "હોમપેજ",
+    "he": "דף הבית",
+    "hi": "होमपेज",
+    "hu": "Honlap",
+    "hy": "Գլխավոր էջ",
+    "id": "Beranda Pribadi",
+    "is": "Heimasíða",
+    "it": "Pagina personale",
+    "ja": "ホームページ",
+    "jv": "Kaca Ngarep",
+    "ka": "მთავარი გვერდი",
+    "km": "ទំព័រដើម",
+    "kn": "ಹೋಮ್‌ಪೇಜ್",
+    "ko": "홈페이지",
+    "la": "Pagina Domestica",
+    "lo": "ໜ້າຫຼັກສ່ວນຕົວ",
+    "lt": "Pagrindinis puslapis",
+    "lv": "Mājaslapa",
+    "mk": "Домашна страница",
+    "ml": "ഹോംപേജ്",
+    "mn": "Нүүр хуудас",
+    "mr": "होमपेज",
+    "ms": "Laman Utama",
+    "my": "ပင်မစာမျက်နှာ",
+    "nb": "Hjemmeside",
+    "ne": "होमपेज",
+    "nl": "Homepage",
+    "pa": "ਹੋਮਪੇਜ",
+    "pl": "Strona domowa",
+    "pt": "Página pessoal",
+    "ro": "Pagină personală",
+    "ru": "Домашняя страница",
+    "si": "මුල් පිටුව",
+    "sk": "Domovská stránka",
+    "sq": "Faqja kryesore",
+    "su": "Kaca Tepas",
+    "sv": "Hemsida",
+    "sw": "Ukurasa wa Mwanzo",
+    "ta": "முகப்புப் பக்கம்",
+    "te": "హోమ్‌పేజీ",
+    "th": "โฮมเพจ",
+    "ti": "ዋና ገጽ",
+    "tk": "Baş sahypa",
+    "tr": "Ana Sayfa",
+    "uk": "Домашня сторінка",
+    "ur": "ہوم پیج",
+    "uz": "Bosh sahifa",
+    "vi": "Trang chủ",
+    "zu": "Ikhasi Lasekhaya",
+    "sr": "Почетна страница",
+    "sr-Latn": "Početna stranica",
+    "hr": "Početna stranica",
+    "sl": "Domača stran",
+    "bs": "Početna stranica",
+    "ca": "Pàgina d'inici",
+    "kk": "Басты бет",
+    "ky": "Башкы бет",
+    "as": "হোমপেজ",
+    "or": "ହୋମ୍‌ପେଜ୍"
+  },
+  "description": "A starry tiled background, rainbow letters, chunky buttons and a scrolling status line, like a hand-made 2000s home page",
+  "descriptions": {
+    "zh-Hans": "星星底纹、彩虹字、厚实的按钮和滚动状态栏，像 2000 年代手做的个人主页",
+    "zh-Hant": "星星底紋、彩虹字、厚實的按鈕和捲動狀態列，像 2000 年代手作的個人首頁",
+    "zh-HK": "星星底紋、彩虹字、厚實的按鈕和捲動狀態列，像 2000 年代自製的個人主頁",
+    "af": "'n Sterbesaaide teëlagtergrond, reënboogletters, dik knoppies en 'n rollende statusbalk, soos 'n selfgemaakte tuisblad van die 2000's",
+    "am": "በከዋክብት የተሞላ ንጣፍ ዳራ፣ የቀስተ ደመና ፊደላት፣ ወፍራም አዝራሮችና የሚሸራተት የሁኔታ መስመር፣ እንደ በእጅ የተሠራ የ2000ዎቹ መነሻ ገጽ",
+    "ar": "خلفية مبلطة مرصعة بالنجوم وحروف بألوان قوس قزح وأزرار ضخمة وشريط حالة متحرك، كصفحة رئيسية مصنوعة يدويًا من العقد الأول من الألفية",
+    "az": "Ulduzlu kafel fon, göy qurşağı hərflər, qalın düymələr və sürüşən status xətti, əllə düzəldilmiş 2000-ci illər ana səhifəsi kimi",
+    "be": "Зорны плітачны фон, вясёлкавыя літары, тоўстыя кнопкі і бягучы радок стану, як хатняя старонка 2000-х, зробленая ўручную",
+    "bg": "Звезден плочков фон, дъгови букви, масивни бутони и движеща се лента за състоянието, като ръчно направена начална страница от 2000-те",
+    "bn": "তারা-ছাওয়া টাইল পটভূমি, রঙধনু অক্ষর, মোটা বোতাম ও চলমান স্ট্যাটাস লাইন, হাতে বানানো দুই হাজারের দশকের হোমপেজের মতো",
+    "cs": "Hvězdné dlaždicové pozadí, duhová písmena, tlusté tlačítka a posouvaný stavový řádek, jako ručně dělaná domovská stránka z nultých let",
+    "da": "En stjernespækket flisebaggrund, regnbuebogstaver, kraftige knapper og en rullende statuslinje, som en hjemmelavet hjemmeside fra 00'erne",
+    "de": "Ein sternenbesetzter Kachelhintergrund, Regenbogenbuchstaben, klobige Schaltflächen und eine laufende Statuszeile, wie eine selbstgebaute Homepage der 2000er",
+    "el": "Ένα αστρισμένο φόντο από πλακάκια, γράμματα ουράνιο τόξο, χοντρά κουμπιά και κινούμενη γραμμή κατάστασης, σαν χειροποίητη αρχική σελίδα του 2000",
+    "eo": "Stelplena kahela fono, ĉielarkaj literoj, dikaj butonoj kaj ruliĝanta stato-linio, kiel mane farita hejmpaĝo de la 2000-aj jaroj",
+    "es": "Un fondo de teselas con estrellas, letras de arcoíris, botones gruesos y una línea de estado en movimiento, como una página personal casera de los 2000",
+    "et": "Tähtedega plaaditud taust, vikerkaaretähed, paksud nupud ja liikuv olekurida, nagu käsitsi tehtud 2000ndate koduleht",
+    "eu": "Izarrez betetako mosaiko hondoa, ostadar-letrak, botoi lodiak eta egoera-lerro mugikorra, 2000ko hamarkadako eskuz egindako hasiera-orri bat bezala",
+    "fa": "پس‌زمینه کاشی‌کاری پرستاره، حروف رنگین‌کمانی، دکمه‌های کلفت و نوار وضعیت متحرک، مثل صفحه خانگی دست‌ساز دهه ۲۰۰۰",
+    "fi": "Tähtikuvioitu laatoitettu tausta, sateenkaarikirjaimet, paksut painikkeet ja vierivä tilarivi, kuin käsin tehty 2000-luvun kotisivu",
+    "fil": "Starry na tiled na background, rainbow na letra, makapal na button at gumagalaw na status line, parang gawang-kamay na homepage noong dekada 2000",
+    "fr": "Un fond en mosaïque étoilé, des lettres arc-en-ciel, de gros boutons et une barre d'état défilante, comme une page perso faite main des années 2000",
+    "gl": "Un fondo de tesselas con estrelas, letras de arco da vella, botóns grosos e unha liña de estado en movemento, coma unha páxina persoal feita a man dos 2000",
+    "gu": "તારાવાળી ટાઇલ પૃષ્ઠભૂમિ, મેઘધનુષી અક્ષરો, જાડાં બટન અને સરકતી સ્ટેટસ લાઇન, 2000ના દાયકાના હાથે બનાવેલા હોમપેજ જેવું",
+    "he": "רקע אריחים זרוע כוכבים, אותיות בצבעי קשת, כפתורים עבים ושורת מצב נגללת, כמו דף בית עשוי ביד משנות ה-2000",
+    "hi": "तारों भरा टाइल वाला बैकग्राउंड, इंद्रधनुषी अक्षर, मोटे बटन और सरकती स्टेटस लाइन, 2000 के दशक के हाथ से बने होमपेज जैसा",
+    "hu": "Csillagos csempehátter, szivárványbetűk, vaskos gombok és gördülő állapotsor, mint egy kézzel készített 2000-es évekbeli honlap",
+    "hy": "Աստղազարդ սալիկապատ ֆոն, ծիածանագույն տառեր, հաստ կոճակներ և սահող վիճակի տող, ինչպես 2000-ականների ձեռագործ գլխավոր էջ",
+    "id": "Latar ubin bertabur bintang, huruf pelangi, tombol tebal, dan baris status bergulir, seperti beranda buatan tangan era 2000-an",
+    "is": "Stjörnum prýddur flísabakgrunnur, regnbogastafir, þykkir hnappar og skrunandi stöðulína, eins og handgerð heimasíða frá fyrsta áratug aldarinnar",
+    "it": "Uno sfondo a piastrelle stellato, lettere arcobaleno, pulsanti spessi e una barra di stato scorrevole, come una pagina personale fatta a mano degli anni 2000",
+    "ja": "星柄のタイル背景、虹色の文字、ぶ厚いボタン、流れるステータス行。2000年代の手作りホームページのよう",
+    "jv": "Latar ubin kebak lintang, aksara pelangi, tombol kandel lan baris status sing obah, kaya kaca ngarep buatan tangan taun 2000-an",
+    "ka": "ვარსკვლავებიანი ფილებისებრი ფონი, ცისარტყელა ასოები, მსხვილი ღილაკები და მოძრავი სტატუსის ზოლი, 2000-იანების ხელით გაკეთებული მთავარი გვერდივით",
+    "km": "ផ្ទៃខាងក្រោយក្រឡាពេញដោយផ្កាយ អក្សរព្រួញឥន្ទធនូ ប៊ូតុងក្រាស់ និងបន្ទាត់ស្ថានភាពរមូរ ដូចទំព័រដើមធ្វើដោយដៃនៃទសវត្ស 2000",
+    "kn": "ನಕ್ಷತ್ರಗಳ ಟೈಲ್ ಹಿನ್ನೆಲೆ, ಮಳೆಬಿಲ್ಲಿನ ಅಕ್ಷರಗಳು, ದಪ್ಪ ಬಟನ್‌ಗಳು ಮತ್ತು ಸರಿಯುವ ಸ್ಥಿತಿ ಸಾಲು, 2000ರ ದಶಕದ ಕೈಯಿಂದ ಮಾಡಿದ ಹೋಮ್‌ಪೇಜ್‌ನಂತೆ",
+    "ko": "별이 흩뿌려진 타일 배경, 무지개 글자, 두툼한 버튼, 흐르는 상태 줄. 2000년대 직접 만든 홈페이지 같은 느낌",
+    "la": "Fundum tegulatum stellis refertum, litterae iridis colorum, bullae crassae et linea status volvens, quasi pagina domestica manu facta primi decennii saeculi XXI",
+    "lo": "ພື້ນຫຼັງກະເບື້ອງເຕັມໄປດ້ວຍດາວ, ຕົວອັກສອນສີຮຸ້ງ, ປຸ່ມໜາໆ ແລະ ແຖບສະຖານະເລື່ອນ, ຄືໜ້າຫຼັກທີ່ເຮັດດ້ວຍມືຊຸມປີ 2000",
+    "lt": "Žvaigždėtas plytelių fonas, vaivorykštinės raidės, stori mygtukai ir slenkanti būsenos eilutė, tarsi pirmojo dešimtmečio rankų darbo pagrindinis puslapis",
+    "lv": "Zvaigžņota flīžu fons, varavīksnes burti, resnas pogas un ritoša statusa josla, kā 2000. gadu pašdarināta mājaslapa",
+    "mk": "Позадина од плочки со ѕвезди, букви во боите на виножито, дебели копчиња и лента за статус што се движи, како рачно направена домашна страница од 2000-тите",
+    "ml": "നക്ഷത്രങ്ങൾ നിറഞ്ഞ ടൈൽ പശ്ചാത്തലം, മഴവിൽ അക്ഷരങ്ങൾ, തടിച്ച ബട്ടണുകൾ, നീങ്ങുന്ന സ്റ്റാറ്റസ് വരി, 2000-കളിലെ കൈകൊണ്ട് നിർമ്മിച്ച ഹോംപേജ് പോലെ",
+    "mn": "Одоор дүүрсэн хавтангийн дэвсгэр, солонгон үсэг, зузаан товч, гүйдэг төлөвийн мөр, 2000-аад оны гараар хийсэн нүүр хуудас шиг",
+    "mr": "ताऱ्यांनी भरलेली टाइल पार्श्वभूमी, इंद्रधनुष्यी अक्षरे, जाड बटणे आणि सरकणारी स्थिती ओळ, 2000 च्या दशकातील हाताने बनवलेल्या होमपेजसारखे",
+    "ms": "Latar jubin bertabur bintang, huruf pelangi, butang tebal dan baris status bergulir, seperti laman utama buatan tangan era 2000-an",
+    "my": "ကြယ်များပြည့်သော ကြွေပြားနောက်ခံ၊ သက်တန့်စာလုံးများ၊ ထူထဲသောခလုတ်များနှင့် လှိမ့်သွားသော အခြေအနေလိုင်း၊ ၂၀၀၀ ပြည့်နှစ်များ လက်ဖြင့်ပြုလုပ်သော ပင်မစာမျက်နှာကဲ့သို့",
+    "nb": "En stjernespekket flisbakgrunn, regnbuebokstaver, tykke knapper og en rullende statuslinje, som en hjemmelaget hjemmeside fra 2000-tallet",
+    "ne": "ताराले भरिएको टाइल पृष्ठभूमि, इन्द्रेणी अक्षर, बाक्लो बटन र सर्ने स्थिति रेखा, २००० को दशकको हातले बनाइएको होमपेज जस्तो",
+    "nl": "Een sterrenrijke tegelachtergrond, regenboogletters, dikke knoppen en een lopende statusregel, als een zelfgemaakte homepage uit de jaren 2000",
+    "pa": "ਤਾਰਿਆਂ ਭਰੀ ਟਾਈਲ ਪਿਛੋਕੜ, ਸਤਰੰਗੀ ਅੱਖਰ, ਮੋਟੇ ਬਟਨ ਅਤੇ ਸਰਕਦੀ ਸਥਿਤੀ ਲਾਈਨ, 2000ਵਿਆਂ ਦੇ ਹੱਥ ਨਾਲ ਬਣੇ ਹੋਮਪੇਜ ਵਰਗਾ",
+    "pl": "Gwiaździste kafelkowe tło, tęczowe litery, grube przyciski i przewijany pasek stanu, jak ręcznie zrobiona strona domowa z pierwszej dekady XXI wieku",
+    "pt": "Um fundo de ladrilhos estrelados, letras arco-íris, botões grossos e uma linha de status rolante, como uma página pessoal feita à mão dos anos 2000",
+    "ro": "Un fundal de plăci cu stele, litere curcubeu, butoane groase și o linie de stare derulantă, ca o pagină personală făcută de mână din anii 2000",
+    "ru": "Звёздный плиточный фон, радужные буквы, толстые кнопки и бегущая строка состояния, как самодельная домашняя страница 2000-х",
+    "si": "තරු පිරුණු උළු පසුබිමක්, දේදුනු අකුරු, ඝන බොත්තම් සහ ගමන් කරන තත්ත්ව රේඛාවක්, 2000 දශකයේ අතින් සාදන ලද මුල් පිටුවක් මෙන්",
+    "sk": "Hviezdne dlaždicové pozadie, dúhové písmená, hrubé tlačidlá a posúvaný stavový riadok, ako ručne robená domovská stránka z nultých rokov",
+    "sq": "Një sfond me pllaka plot yje, shkronja ylberi, butona të trashë dhe një rresht statusi që lëviz, si një faqe kryesore e bërë me dorë e viteve 2000",
+    "su": "Latar ubin pinuh béntang, aksara palangi, tombol kandel jeung baris status ngagulung, siga kaca tepas jieunan leungeun taun 2000-an",
+    "sv": "En stjärnströdd brickbakgrund, regnbågsbokstäver, tjocka knappar och en rullande statusrad, som en hemmagjord hemsida från 00-talet",
+    "sw": "Mandharinyuma ya vigae vyenye nyota, herufi za upinde wa mvua, vitufe vinene na mstari wa hali unaosogea, kama ukurasa wa mwanzo uliotengenezwa kwa mkono wa miaka ya 2000",
+    "ta": "நட்சத்திர ஓடுகள் பின்னணி, வானவில் எழுத்துகள், தடித்த பொத்தான்கள், ஓடும் நிலை வரி, கையால் செய்த 2000-களின் முகப்புப் பக்கம் போல",
+    "te": "నక్షత్రాల టైల్ నేపథ్యం, ఇంద్రధనుస్సు అక్షరాలు, లావు బటన్లు, కదిలే స్టేటస్ లైన్, చేతితో చేసిన 2000ల హోమ్ పేజీ లాగా",
+    "th": "พื้นหลังกระเบื้องดาว ตัวอักษรสีรุ้ง ปุ่มอ้วนหนา และแถบสถานะเลื่อน เหมือนโฮมเพจทำมือยุค 2000",
+    "ti": "ብከዋኽብቲ ዝተጠርበ ሰድሪ ድሕረ-ባይታ፡ ሕብሪ ቀስተ ደመና ፊደላት፡ ጥቅጥቅ ዝበሉ ቁልፍታት፡ ዝሰርር መስመር ኩነታት፡ ከም ብኢድ ዝተሰርሐ ዋና ገጽ 2000ታት",
+    "tk": "Ýyldyzly plitaly fon, ýaýdan harplar, gaty düwmeler we ylgaýan ýagdaý setiri, 2000-nji ýyllaryň elde ýasalan baş sahypasy ýaly",
+    "tr": "Yıldızlı karo arka plan, gökkuşağı harfler, iri düğmeler ve kayan durum satırı, elle yapılmış bir 2000'ler ana sayfası gibi",
+    "uk": "Зоряне плиткове тло, райдужні літери, масивні кнопки та рядок стану, що біжить, як саморобна домашня сторінка 2000-х",
+    "ur": "ستاروں والی ٹائل پس منظر، قوس قزح کے حروف، موٹے بٹن اور چلتی ہوئی اسٹیٹس لائن، 2000 کی دہائی کے ہاتھ سے بنے ہوم پیج جیسا",
+    "uz": "Yulduzli plitka fon, kamalak harflar, yirik tugmalar va yugurib turuvchi holat qatori, qo'lda yasalgan 2000-yillar bosh sahifasi kabi",
+    "vi": "Nền ô gạch đầy sao, chữ cầu vồng, nút bấm to bè và dòng trạng thái chạy ngang, như trang chủ tự làm thập niên 2000",
+    "zu": "Ingemuva yamathayela ezinkanyezi, amagama anombala wesivunguvungu, izinkinobho eziqinile nomugqa wesimo ogcwele, njengekhasi lasekhaya elenziwe ngesandla lama-2000",
+    "sr": "Звездана плочаста позадина, дугина слова, крупна дугмад и покретна статусна линија, као ручно прављена почетна страница из 2000-их",
+    "sr-Latn": "Zvezdana pločasta pozadina, dugina slova, krupna dugmad i pokretna statusna linija, kao ručno pravljena početna stranica iz 2000-ih",
+    "hr": "Zvjezdana pločasta pozadina, dugina slova, krupne tipke i pokretna statusna traka, poput ručno izrađene početne stranice iz 2000-ih",
+    "sl": "Zvezdnato ploščično ozadje, mavrične črke, močni gumbi in drseča vrstica stanja, kot ročno narejena domača stran iz 2000-ih",
+    "bs": "Zvjezdana pločasta pozadina, dugina slova, krupna dugmad i pokretna statusna linija, poput ručno izrađene početne stranice iz 2000-ih",
+    "ca": "Fons de rajoles estrellades, lletres d'arc de Sant Martí, botons grossos i una línia d'estat que es desplaça, com una pàgina d'inici feta a mà dels 2000",
+    "kk": "Жұлдызды тақта фон, кемпірқосақ әріптер, ірі батырмалар және жүгіріп тұратын күй жолы, қолмен жасалған 2000-жылдар басты беті сияқты",
+    "ky": "Жылдыздуу плитка фон, жаюу тамгалар, чоң баскычтар жана жылып турган абал сабы, кол менен жасалган 2000-жылдардын башкы бетиндей",
+    "as": "তৰাৰে ভৰা টাইল পটভূমি, ৰামধেনু আখৰ, মোটা বুটাম আৰু চলি থকা স্থিতি ৰেখা, হাতে সজা ২০০০ৰ দশকৰ হোমপেজৰ দৰে",
+    "or": "ତାରାଭରା ଟାଇଲ୍ ପୃଷ୍ଠଭୂମି, ଇନ୍ଦ୍ରଧନୁ ଅକ୍ଷର, ମୋଟା ବଟନ୍ ଓ ଚାଲୁଥିବା ସ୍ଥିତି ରେଖା, ହାତରେ ତିଆରି ୨୦୦୦ ଦଶକର ହୋମ୍ ପେଜ୍ ପରି"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "text": {
+    "displayFont": "Baloo 2",
+    "monoFont": "VT323"
+  },
+  "colors": {
+    "page": "#cfe6ff",
+    "text": "#14143a",
+    "muted": "#3d3d6b",
+    "accent": "#c4005e",
+    "onAccent": "#ffffff",
+    "border": "#7aa2f0",
+    "card": "#ffffff",
+    "selected": "#fff3a0",
+    "onSelected": "#14143a",
+    "reason": "#b4005a",
+    "chrome": "#ffffff"
+  },
+  "shape": {
+    "cardRadius": 0,
+    "controlRadius": 0,
+    "thumbnailRadius": 0
+  },
+  "window": {
+    "background": [
+      "#cfe6ff",
+      {
+        "image": "stars-day.png",
+        "fit": "tile"
+      }
+    ],
+    "veil": 0.15,
+    "decorations": [
+      {
+        "type": "sparkles",
+        "count": 6,
+        "color": "#ffe94d",
+        "glow": "#ff2d95",
+        "seed": 9
+      }
+    ],
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#2f6fd6",
+              "#1f5ac4",
+              "#1a4fb0"
+            ]
+          }
+        }
+      },
+      "inactive": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#2f6fd6",
+              "#1f5ac4",
+              "#1a4fb0"
+            ]
+          }
+        }
+      },
+      "text": "#ffffff",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#ffffff",
+        "surface": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#ffffff33"
+          },
+          "pressed": {
+            "fill": "#ffffff4d"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#e8283a"
+          },
+          "pressed": {
+            "fill": "#e8283a"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#fff7fc"
+      },
+      "text": "#14143a",
+      "highlight": {
+        "fill": "#cc1270"
+      },
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#fffffffa",
+        "border": "#3d6be0",
+        "radius": 0
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffffff",
+            "#e8f1ff"
+          ]
+        }
+      },
+      "border": {
+        "color": "#3d6be0",
+        "width": 3,
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#fff7fc",
+      "border": {
+        "color": "#ff8fc6",
+        "width": 2,
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": "#14143a"
+    },
+    "topBarText": "#14143a",
+    "statusBarText": "#ffe94d",
+    "tabs": {
+      "position": "bottom",
+      "surface": {
+        "fill": "#fff7fcf2",
+        "border": {
+          "color": "#ff8fc6",
+          "sides": [
+            "top"
+          ]
+        }
+      },
+      "text": "#3d3d6b",
+      "selectedText": "#14143a",
+      "indicator": "#ff2d95",
+      "selected": {
+        "fill": "#ffe94d"
+      }
+    }
+  },
+  "controls": {
+    "press": "wash",
+    "button": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffffff",
+            "#dde7f7"
+          ]
+        }
+      },
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#6b86c0",
+        "width": 2
+      },
+      "hover": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#ffffff",
+              "#eaf1ff"
+            ]
+          }
+        }
+      }
+    },
+    "buttonText": "#14143a",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#fff7b0",
+            "#ffe94d"
+          ]
+        }
+      },
+      "bevel": {
+        "light": "#fffbd8",
+        "dark": "#b89a00",
+        "width": 2
+      }
+    },
+    "primaryButtonText": "#14143a",
+    "chip": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffffff",
+            "#dde7f7"
+          ]
+        }
+      },
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#6b86c0",
+        "width": 2
+      }
+    },
+    "chipSelected": {
+      "fill": "#ffe94d",
+      "border": {
+        "color": "#ff2d95",
+        "width": 2
+      }
+    },
+    "chipSelectedText": "#14143a",
+    "navSelected": {
+      "fill": "#ffe94d",
+      "border": {
+        "color": "#ff2d95",
+        "width": 2
+      }
+    },
+    "navSelectedText": "#14143a",
+    "navText": "#3d3d6b"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#7aa2f0",
+        "width": 2
+      },
+      "hover": {
+        "border": {
+          "color": "#ff2d95",
+          "width": 2
+        }
+      },
+      "focused": {
+        "border": {
+          "color": "#ff2d95",
+          "width": 4
+        }
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#3d6be0",
+        "width": 2
+      }
+    },
+    "durationBadge": {
+      "fill": "#14143a",
+      "radius": 0
+    },
+    "durationText": "#7dff5a"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "Baloo 2",
+    "size": 26,
+    "fill": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#ff2d95",
+          "#ff8a00",
+          "#e6c200",
+          "#22b14c",
+          "#1e7bff",
+          "#8a3dff"
+        ]
+      }
+    },
+    "shadow": "#14143a",
+    "badge": {
+      "fill": {
+        "linear": {
+          "angle": 90,
+          "colors": [
+            "#ff2d95",
+            "#ff8a00",
+            "#e6c200",
+            "#22b14c",
+            "#1e7bff",
+            "#8a3dff"
+          ]
+        }
+      },
+      "border": "#14143a"
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "icons": {
+    "style": "fill",
+    "effect": "none"
+  },
+  "player": {
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#ff2d95",
+          "#ff8a00",
+          "#e6c200",
+          "#22b14c",
+          "#1e7bff",
+          "#8a3dff"
+        ]
+      }
+    }
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#0b0b2a",
+        "text": "#f2f2ff",
+        "muted": "#b8b8e0",
+        "accent": "#ff7ac0",
+        "onAccent": "#1a0010",
+        "border": "#3a3a7a",
+        "card": "#16163e",
+        "selected": "#3a3410",
+        "onSelected": "#ffe94d",
+        "reason": "#ff9ad0",
+        "chrome": "#16163e"
+      },
+      "window": {
+        "background": [
+          "#0b0b2a",
+          {
+            "image": "stars-night.png",
+            "fit": "tile"
+          }
+        ],
+        "veil": 0.15,
+        "decorations": [
+          {
+            "type": "sparkles",
+            "count": 6,
+            "color": "#ffe94d",
+            "glow": "#ff2d95",
+            "seed": 9
+          }
+        ],
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#3a2a9a",
+                  "#22186a"
+                ]
+              }
+            }
+          },
+          "inactive": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#3a2a9a",
+                  "#22186a"
+                ]
+              }
+            }
+          },
+          "text": "#ffffff",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#ffffff",
+            "surface": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#ffffff26"
+              },
+              "pressed": {
+                "fill": "#ffffff40"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#e8283a"
+              },
+              "pressed": {
+                "fill": "#e8283a"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": "#16163e"
+          },
+          "text": "#f2f2ff",
+          "highlight": {
+            "fill": "#cc1270"
+          },
+          "highlightText": "#ffffff",
+          "menu": {
+            "fill": "#16163efa",
+            "border": "#7a5cff",
+            "radius": 0
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": "#16163e",
+          "border": {
+            "color": "#7a5cff",
+            "width": 3,
+            "sides": [
+              "bottom"
+            ]
+          }
+        },
+        "sideBar": {
+          "fill": "#120f33",
+          "border": {
+            "color": "#ff5cae",
+            "width": 2,
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": "#000000"
+        },
+        "topBarText": "#f2f2ff",
+        "statusBarText": "#7dff5a",
+        "tabs": {
+          "position": "bottom",
+          "surface": {
+            "fill": "#120f33f2",
+            "border": {
+              "color": "#ff5cae",
+              "sides": [
+                "top"
+              ]
+            }
+          },
+          "text": "#b8b8e0",
+          "selectedText": "#14143a",
+          "indicator": "#ff5cae",
+          "selected": {
+            "fill": "#ffe94d"
+          }
+        }
+      },
+      "controls": {
+        "press": "wash",
+        "button": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#2a2a6a",
+                "#1a1a4a"
+              ]
+            }
+          },
+          "bevel": {
+            "light": "#5a5aaa",
+            "dark": "#05051a",
+            "width": 2
+          }
+        },
+        "buttonText": "#f2f2ff",
+        "primaryButton": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#fff7b0",
+                "#ffe94d"
+              ]
+            }
+          },
+          "bevel": {
+            "light": "#fffbd8",
+            "dark": "#8a7400",
+            "width": 2
+          }
+        },
+        "primaryButtonText": "#14143a",
+        "chip": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#2a2a6a",
+                "#1a1a4a"
+              ]
+            }
+          },
+          "bevel": {
+            "light": "#5a5aaa",
+            "dark": "#05051a",
+            "width": 2
+          }
+        },
+        "chipSelected": {
+          "fill": "#ffe94d",
+          "border": {
+            "color": "#ff5cae",
+            "width": 2
+          }
+        },
+        "chipSelectedText": "#14143a",
+        "navSelected": {
+          "fill": "#ffe94d",
+          "border": {
+            "color": "#ff5cae",
+            "width": 2
+          }
+        },
+        "navSelectedText": "#14143a",
+        "navText": "#c8c8ec"
+      },
+      "cards": {
+        "video": {
+          "fill": "#16163e",
+          "border": {
+            "color": "#5a5ab0",
+            "width": 2
+          },
+          "hover": {
+            "border": {
+              "color": "#ff5cae",
+              "width": 2
+            }
+          },
+          "focused": {
+            "border": {
+              "color": "#ffe94d",
+              "width": 4
+            }
+          }
+        },
+        "padding": 6,
+        "panel": {
+          "fill": "#16163e",
+          "border": {
+            "color": "#7a5cff",
+            "width": 2
+          }
+        },
+        "durationBadge": {
+          "fill": "#000000",
+          "radius": 0
+        },
+        "durationText": "#7dff5a"
+      },
+      "logo": {
+        "text": "LUMTUB",
+        "font": "Baloo 2",
+        "size": 26,
+        "fill": {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#ff2d95",
+              "#ff8a00",
+              "#e6c200",
+              "#22b14c",
+              "#1e7bff",
+              "#8a3dff"
+            ]
+          }
+        },
+        "shadow": "#000000",
+        "badge": {
+          "fill": {
+            "linear": {
+              "angle": 90,
+              "colors": [
+                "#ff2d95",
+                "#ff8a00",
+                "#e6c200",
+                "#22b14c",
+                "#1e7bff",
+                "#8a3dff"
+              ]
+            }
+          },
+          "border": "#ffffff"
+        },
+        "badgeIcon": "#ffffff"
+      },
+      "icons": {
+        "style": "fill",
+        "effect": "none"
+      },
+      "player": {
+        "progress": {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#ff2d95",
+              "#ff8a00",
+              "#e6c200",
+              "#22b14c",
+              "#1e7bff",
+              "#8a3dff"
+            ]
+          }
+        }
+      }
+    },
+    "tv": {
+      "cards": {
+        "video": {
+          "focused": {
+            "border": {
+              "color": "#c4005e",
+              "width": 4
+            },
+            "glow": "#c4005e"
+          }
+        }
+      },
+      "controls": {
+        "button": {
+          "focused": {
+            "border": {
+              "color": "#c4005e",
+              "width": 3
+            }
+          }
+        },
+        "chip": {
+          "focused": {
+            "border": {
+              "color": "#c4005e",
+              "width": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

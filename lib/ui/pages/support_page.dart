@@ -11,6 +11,9 @@ const sponsorsPage = 'https://github.com/sponsors/0x696c757a696f';
 
 /// Afdian (爱发电), which takes Alipay and WeChat Pay.
 const afdianPage = 'https://afdian.com/a/linmuqingfeng';
+
+/// Ko-fi: one-time gifts by PayPal or card, without a GitHub account.
+const kofiPage = 'https://ko-fi.com/0x696c757a696f';
 const _repository = 'https://github.com/0x696c757a696f/lumtub';
 
 /// A crypto address and the networks it takes.
@@ -144,6 +147,12 @@ class _Hero extends StatelessWidget {
             onPressed: () => openExternal(afdianPage),
             icon: Icon(AppIcons.heart, size: 20),
             label: const Text('爱发电 Afdian'),
+          ),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(foregroundColor: colors.onPrimaryContainer, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
+            onPressed: () => openExternal(kofiPage),
+            icon: Icon(AppIcons.heart, size: 20),
+            label: const Text('Ko-fi'),
           ),
           Text(tr('Monthly or one-time, any amount'), style: text.bodyMedium?.copyWith(color: colors.onPrimaryContainer.withValues(alpha: 0.75))),
         ]),

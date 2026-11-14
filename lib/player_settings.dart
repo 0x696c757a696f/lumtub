@@ -457,6 +457,8 @@ class PlayerSettings {
   final bool relayFallback;
   /// Skip silent stretches by playing them faster.
   final bool skipSilence;
+  /// 音量平衡 strength, 0 (off) to 100; see [VolumeBalance].
+  final int volumeBalance;
   /// The Piped API server for [PlaybackSource.pipedCustom].
   final String pipedServer;
   /// The Invidious instance for [PlaybackSource.invidiousCustom].
@@ -535,6 +537,7 @@ class PlayerSettings {
     this.playbackSource = PlaybackSource.youtube,
     this.relayFallback = true,
     this.skipSilence = false,
+    this.volumeBalance = 0,
     this.pipedServer = '',
     this.invidiousServer = '',
     this.directRendering = 'auto',
@@ -609,6 +612,7 @@ class PlayerSettings {
     PlaybackSource? playbackSource,
     bool? relayFallback,
     bool? skipSilence,
+    int? volumeBalance,
     String? pipedServer,
     String? invidiousServer,
     String? directRendering,
@@ -675,6 +679,7 @@ class PlayerSettings {
         playbackSource: playbackSource ?? this.playbackSource,
         relayFallback: relayFallback ?? this.relayFallback,
         skipSilence: skipSilence ?? this.skipSilence,
+        volumeBalance: volumeBalance ?? this.volumeBalance,
         pipedServer: pipedServer ?? this.pipedServer,
         invidiousServer: invidiousServer ?? this.invidiousServer,
         directRendering: directRendering ?? this.directRendering,
@@ -745,6 +750,7 @@ class PlayerSettings {
         'playbackSourceV2': playbackSource.name,
         'relayFallback': relayFallback,
         'skipSilence': skipSilence,
+        'volumeBalance': volumeBalance,
         'pipedServer': pipedServer,
         'invidiousServer': invidiousServer,
         'directRendering': directRendering,
@@ -930,6 +936,7 @@ class PlayerSettings {
       sponsorNotice: raw['sponsorNotice'] != false,
       relayFallback: raw['relayFallback'] != false,
       skipSilence: raw['skipSilence'] == true,
+      volumeBalance: raw['volumeBalance'] is num ? (raw['volumeBalance'] as num).round().clamp(0, 100) : 0,
       sponsorCut: raw['sponsorCut'] == true,
       cachePath: path != null && path.trim().isNotEmpty ? path : null,
       cacheLimitGb: raw['cacheLimitGb'] == null ? null : number('cacheLimitGb', 1, 1, 100),

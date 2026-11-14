@@ -21,7 +21,7 @@ class SkinLibrary extends ChangeNotifier {
   static const colorSchemeIds = ['rice-paper', 'candlelight', 'ink-bamboo', 'rime', 'pine-soot', 'night-voyage', 'dusk-hills', 'falling-petals', 'sandstone', 'high-contrast'];
 
   /// The built-in skins, in the order Settings shows them.
-  static const builtInIds = [...colorSchemeIds, 'aero', 'ocean', 'meadow', 'city', 'azure', 'aquarium', 'aurora', 'chrome', 'candy', 'disc', 'messenger', 'player', 'desktop', 'sixteen', 'onebit', 'platinum', 'pinstripe', 'silver', 'metal', 'holo', 'paper', 'linen', 'shelf', 'handheld'];
+  static const builtInIds = [...colorSchemeIds, 'aero', 'ocean', 'meadow', 'city', 'azure', 'aquarium', 'aurora', 'chrome', 'candy', 'disc', 'messenger', 'player', 'desktop', 'sixteen', 'onebit', 'platinum', 'pinstripe', 'silver', 'metal', 'holo', 'paper', 'linen', 'shelf', 'handheld', 'scholar', 'softclub', 'obsidian', 'hexatron', 'bento', 'livingroom', 'silkwave', 'flourish', 'homepage', 'cassette', 'clay', 'brutal'];
 
   List<Skin> _builtIn = const [];
   List<Skin> _user = const [];

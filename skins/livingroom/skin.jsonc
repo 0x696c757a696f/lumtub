@@ -1,0 +1,948 @@
+// Living Room: a built-in Lumtub skin. White rounded tiles on fine grey stripes, a light blue ring round what is chosen, after the friendly home menus of late-2000s game consoles.
+// skins/template/skin.jsonc explains every field, and skins/README.md how to make your own.
+// 白色客厅：Lumtub 内置皮肤。细灰条纹上的白色圆角方块，选中的套一圈浅蓝框，致敬 2000 年代末游戏机亲切的主菜单。
+// 每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "livingroom",
+  "name": "Living Room",
+  "names": {
+    "zh-Hans": "白色客厅",
+    "zh-Hant": "白色客廳",
+    "zh-HK": "白色客廳",
+    "af": "Sitkamer",
+    "am": "ሳሎን",
+    "ar": "غرفة المعيشة",
+    "az": "Qonaq otağı",
+    "be": "Гасцёўня",
+    "bg": "Дневна",
+    "bn": "বসার ঘর",
+    "cs": "Obývák",
+    "da": "Stue",
+    "de": "Wohnzimmer",
+    "el": "Σαλόνι",
+    "eo": "Salono",
+    "es": "Salón",
+    "et": "Elutuba",
+    "eu": "Egongela",
+    "fa": "اتاق نشیمن",
+    "fi": "Olohuone",
+    "fil": "Sala",
+    "fr": "Salon",
+    "gl": "Sala de estar",
+    "gu": "બેઠકખંડ",
+    "he": "סלון",
+    "hi": "बैठक",
+    "hu": "Nappali",
+    "hy": "Հյուրասենյակ",
+    "id": "Ruang Tamu",
+    "is": "Stofa",
+    "it": "Salotto",
+    "ja": "リビングルーム",
+    "jv": "Ruang Tamu",
+    "ka": "მისაღები ოთახი",
+    "km": "បន្ទប់ទទួលភ្ញៀវ",
+    "kn": "ಕುಳಿತುಕೊಳ್ಳುವ ಕೋಣೆ",
+    "ko": "거실",
+    "la": "Tablinum",
+    "lo": "ຫ້ອງຮັບແຂກ",
+    "lt": "Svetainė",
+    "lv": "Dzīvojamā istaba",
+    "mk": "Дневна соба",
+    "ml": "സ്വീകരണമുറി",
+    "mn": "Зочны өрөө",
+    "mr": "बैठकीची खोली",
+    "ms": "Ruang Tamu",
+    "my": "ဧည့်ခန်း",
+    "nb": "Stue",
+    "ne": "बैठक कोठा",
+    "nl": "Woonkamer",
+    "pa": "ਬੈਠਕ",
+    "pl": "Salon",
+    "pt": "Sala de estar",
+    "ro": "Living",
+    "ru": "Гостиная",
+    "si": "විසිත්ත කාමරය",
+    "sk": "Obývačka",
+    "sq": "Dhoma e ndenjes",
+    "su": "Rohang Tamu",
+    "sv": "Vardagsrum",
+    "sw": "Sebule",
+    "ta": "வரவேற்பறை",
+    "te": "లివింగ్ రూమ్",
+    "th": "ห้องนั่งเล่น",
+    "ti": "ሳሎን",
+    "tk": "Meýilhana",
+    "tr": "Oturma Odası",
+    "uk": "Вітальня",
+    "ur": "بیٹھک",
+    "uz": "Mehmonxona",
+    "vi": "Phòng khách",
+    "zu": "Igumbi Lokuhlala",
+    "sr": "Дневна соба",
+    "sr-Latn": "Dnevna soba",
+    "hr": "Dnevni boravak",
+    "sl": "Dnevna soba",
+    "bs": "Dnevni boravak",
+    "ca": "Sala d'estar",
+    "kk": "Қонақ бөлме",
+    "ky": "Конок бөлмө",
+    "as": "বৈঠকখানা",
+    "or": "ବୈଠକଖାନା"
+  },
+  "description": "White rounded tiles, fine grey stripes and a light blue ring round what is chosen, friendly like a game console's home menu",
+  "descriptions": {
+    "zh-Hans": "白色圆角方块、细灰条纹，选中的东西套一圈浅蓝框，像游戏机主菜单一样亲切",
+    "zh-Hant": "白色圓角方塊、細灰條紋，選中的東西套一圈淺藍框，像遊戲主機主選單一樣親切",
+    "zh-HK": "白色圓角方塊、細灰條紋，選中的項目套上一圈淺藍框，像遊戲機主選單一樣親切",
+    "af": "Wit ronde teëls, fyn grys strepe en 'n ligblou ring om wat gekies is, vriendelik soos 'n speletjiekonsole se tuiskieslys",
+    "am": "ነጭ ክብ ሰሌዳዎች፣ ቀጭን ግራጫ ሰንበሮችና በተመረጠው ዙሪያ ፈዛዛ ሰማያዊ ቀለበት፣ እንደ ጌም ኮንሶል መነሻ ምናሌ ወዳጃዊ",
+    "ar": "بلاطات بيضاء مستديرة وخطوط رمادية رفيعة وحلقة زرقاء فاتحة حول العنصر المحدد، ودّية كقائمة الشاشة الرئيسية لجهاز ألعاب",
+    "az": "Ağ yumru lövhələr, incə boz zolaqlar və seçilənin ətrafında açıq mavi halqa, oyun konsolunun əsas menyusu kimi səmimi",
+    "be": "Белыя акруглыя пліткі, тонкія шэрыя паласы і светла-блакітнае кола вакол выбранага, прыязна, як галоўнае меню гульнявой прыстаўкі",
+    "bg": "Бели закръглени плочки, фини сиви ивици и светлосин пръстен около избраното, приятелски като началното меню на игрова конзола",
+    "bn": "সাদা গোলাকার টাইল, সূক্ষ্ম ধূসর ডোরা ও নির্বাচিতের চারপাশে হালকা নীল বলয়, গেম কনসোলের হোম মেনুর মতো বন্ধুত্বপূর্ণ",
+    "cs": "Bílé zaoblené dlaždice, jemné šedé proužky a světle modrý kruh kolem vybraného, přátelské jako úvodní nabídka herní konzole",
+    "da": "Hvide afrundede fliser, fine grå striber og en lyseblå ring om det valgte, venlig som en spillekonsols startmenu",
+    "de": "Weiße abgerundete Kacheln, feine graue Streifen und ein hellblauer Ring um das Gewählte, freundlich wie das Startmenü einer Spielkonsole",
+    "el": "Λευκά στρογγυλεμένα πλακίδια, λεπτές γκρι ρίγες και ένας γαλάζιος κύκλος γύρω από το επιλεγμένο, φιλικό σαν το αρχικό μενού μιας κονσόλας παιχνιδιών",
+    "eo": "Blankaj rondigitaj kaheloj, fajnaj grizaj strioj kaj helblua ringo ĉirkaŭ la elektita, afabla kiel la hejma menuo de ludkonzolo",
+    "es": "Baldosas blancas redondeadas, finas rayas grises y un aro azul claro alrededor de lo elegido, amistoso como el menú de inicio de una consola",
+    "et": "Valged ümardatud plaadid, peened hallid triibud ja helesinine rõngas valitu ümber, sõbralik nagu mängukonsooli avamenüü",
+    "eu": "Lauza zuri biribilak, marra gris finak eta hautatuaren inguruan eraztun urdin argia, jokoen kontsola baten hasierako menua bezain atsegina",
+    "fa": "کاشی‌های گرد سفید، راه‌راه‌های ظریف خاکستری و حلقه آبی روشن دور مورد انتخاب‌شده، دوستانه مثل منوی اصلی کنسول بازی",
+    "fi": "Valkoiset pyöristetyt laatat, hienot harmaat raidat ja vaaleansininen rengas valitun ympärillä, ystävällinen kuin pelikonsolin aloitusvalikko",
+    "fil": "Puting bilugang tile, manipis na kulay-abong guhit at maliwanag na asul na bilog sa paligid ng napili, magiliw gaya ng home menu ng game console",
+    "fr": "Tuiles blanches arrondies, fines rayures grises et anneau bleu clair autour de la sélection, convivial comme le menu d'accueil d'une console de jeu",
+    "gl": "Tesselas brancas redondeadas, finas raias grises e un aro azul claro arredor do escollido, amigable coma o menú de inicio dunha consola",
+    "gu": "સફેદ ગોળ ટાઇલ્સ, બારીક રાખોડી પટ્ટા અને પસંદ કરેલાની આસપાસ આછું વાદળી વર્તુળ, ગેમ કન્સોલના હોમ મેનૂ જેવું મૈત્રીપૂર્ણ",
+    "he": "אריחים לבנים מעוגלים, פסים אפורים דקים וטבעת תכלת סביב הפריט הנבחר, ידידותי כמו תפריט הבית של קונסולת משחקים",
+    "hi": "सफ़ेद गोल टाइलें, बारीक स्लेटी धारियाँ और चुने हुए के चारों ओर हल्का नीला घेरा, गेम कंसोल के होम मेन्यू जैसा मिलनसार",
+    "hu": "Fehér lekerekített csempék, finom szürke csíkok és világoskék gyűrű a kiválasztott körül, barátságos, mint egy játékkonzol főmenüje",
+    "hy": "Սպիտակ կլորավուն սալիկներ, նուրբ մոխրագույն շերտեր և բաց կապույտ օղակ ընտրվածի շուրջ, ընկերական ինչպես խաղային կոնսոլի գլխավոր ընտրացանկը",
+    "id": "Ubin putih membulat, garis abu-abu halus, dan cincin biru muda di sekeliling yang dipilih, ramah seperti menu utama konsol game",
+    "is": "Hvítar ávalar flísar, fínar gráar rendur og ljósblár hringur um það valda, vinalegt eins og heimavalmynd leikjatölvu",
+    "it": "Riquadri bianchi arrotondati, sottili strisce grigie e un anello azzurro attorno alla selezione, accogliente come il menu iniziale di una console",
+    "ja": "白い角丸タイル、細いグレーの縞、選択中を囲む水色のリング。ゲーム機のホームメニューのような親しみやすさ",
+    "jv": "Ubin putih bunder, garis abu-abu alus lan bunderan biru enom ngubengi sing dipilih, ramah kaya menu utama konsol game",
+    "ka": "თეთრი მომრგვალებული ფილები, წვრილი რუხი ზოლები და ღია ცისფერი რგოლი არჩეულის გარშემო, მეგობრული, როგორც სათამაშო კონსოლის მთავარი მენიუ",
+    "km": "ក្រឡាមូលពណ៌ស បន្ទាត់ប្រផេះស្តើងៗ និងរង្វង់ខៀវស្រាលជុំវិញធាតុដែលបានជ្រើស រួសរាយដូចម៉ឺនុយដើមនៃកុងសូលហ្គេម",
+    "kn": "ಬಿಳಿ ದುಂಡಾದ ಟೈಲ್‌ಗಳು, ತೆಳು ಬೂದು ಪಟ್ಟಿಗಳು ಮತ್ತು ಆಯ್ಕೆಮಾಡಿದ್ದರ ಸುತ್ತ ತಿಳಿ ನೀಲಿ ಉಂಗುರ, ಗೇಮ್ ಕನ್ಸೋಲ್‌ನ ಹೋಮ್ ಮೆನುವಿನಂತೆ ಸ್ನೇಹಪರ",
+    "ko": "흰색 둥근 타일, 가는 회색 줄무늬, 선택 항목을 감싸는 연한 파란 고리. 게임기 홈 메뉴처럼 친근한 느낌",
+    "la": "Tegulae albae rotundatae, striae canae tenues et anulus caeruleus clarus circa electum, amicum quasi menu domesticum consolii ludorum",
+    "lo": "ກະເບື້ອງສີຂາວມົນ, ເສັ້ນລາຍສີເທົາບາງໆ ແລະ ວົງແຫວນສີຟ້າອ່ອນອ້ອມສິ່ງທີ່ເລືອກ, ເປັນມິດຄືເມນູຫຼັກຂອງເຄື່ອງຫຼິ້ນເກມ",
+    "lt": "Baltos suapvalintos plytelės, smulkios pilkos juostelės ir šviesiai mėlynas žiedas aplink pasirinktą elementą, draugiška kaip žaidimų konsolės pagrindinis meniu",
+    "lv": "Baltas noapaļotas flīzes, smalkas pelēkas svītras un gaiši zils gredzens ap izvēlēto, draudzīgi kā spēļu konsoles sākuma izvēlne",
+    "mk": "Бели заоблени плочки, фини сиви ленти и светлосин прстен околу избраното, пријателски како почетното мени на конзола за игри",
+    "ml": "വെളുത്ത വൃത്താകൃതിയുള്ള ടൈലുകൾ, നേർത്ത ചാരനിറ വരകൾ, തിരഞ്ഞെടുത്തതിന് ചുറ്റും ഇളം നീല വലയം, ഗെയിം കൺസോളിന്റെ ഹോം മെനു പോലെ സൗഹൃദപരം",
+    "mn": "Цагаан дугуйрсан хавтан, нарийн саарал судал, сонгосныг тойрсон цайвар цэнхэр цагираг, тоглоомын консолын үндсэн цэс шиг найрсаг",
+    "mr": "पांढऱ्या गोलाकार फरशा, बारीक राखाडी पट्टे आणि निवडलेल्याभोवती फिकट निळे वर्तुळ, गेम कन्सोलच्या होम मेनूसारखे मैत्रीपूर्ण",
+    "ms": "Jubin putih bulat, jalur kelabu halus dan cincin biru muda di sekeliling yang dipilih, mesra seperti menu utama konsol permainan",
+    "my": "အဖြူရောင် ထောင့်ဝိုင်းကြွေပြားများ၊ ပါးလွှာသော မီးခိုးရောင်ဖြောင့်ကြောင်းများနှင့် ရွေးထားသည့်အရာ၏ ပတ်လည် အပြာဖျော့ကွင်း၊ ဂိမ်းကွန်ဆိုးလ်၏ ပင်မမီနူးကဲ့သို့ ချစ်စဖွယ်",
+    "nb": "Hvite avrundede fliser, fine grå striper og en lyseblå ring rundt det valgte, vennlig som startmenyen på en spillkonsoll",
+    "ne": "सेता गोलाकार टाइल, पातला खैरा धर्सा र छानिएकोको वरिपरि हल्का निलो घेरा, गेम कन्सोलको होम मेनु जस्तै मिलनसार",
+    "nl": "Witte afgeronde tegels, fijne grijze strepen en een lichtblauwe ring om het gekozene, vriendelijk als het startmenu van een spelcomputer",
+    "pa": "ਚਿੱਟੀਆਂ ਗੋਲ ਟਾਈਲਾਂ, ਬਰੀਕ ਸਲੇਟੀ ਧਾਰੀਆਂ ਅਤੇ ਚੁਣੇ ਹੋਏ ਦੁਆਲੇ ਹਲਕਾ ਨੀਲਾ ਘੇਰਾ, ਗੇਮ ਕੰਸੋਲ ਦੇ ਹੋਮ ਮੀਨੂ ਵਾਂਗ ਮਿਲਣਸਾਰ",
+    "pl": "Białe zaokrąglone kafelki, cienkie szare paski i jasnoniebieski pierścień wokół wybranego, przyjazny jak menu główne konsoli do gier",
+    "pt": "Blocos brancos arredondados, listras cinza finas e um anel azul-claro em volta do selecionado, simpático como o menu inicial de um console de jogos",
+    "ro": "Plăci albe rotunjite, dungi fine cenușii și un inel albastru deschis în jurul a ceea ce e selectat, prietenos ca meniul principal al unei console de jocuri",
+    "ru": "Белые скруглённые плитки, тонкие серые полосы и светло-голубое кольцо вокруг выбранного, дружелюбно, как главное меню игровой консоли",
+    "si": "සුදු වටකුරු උළු, සියුම් අළු ඉරි සහ තෝරාගත් දෙය වටා ලා නිල් වළල්ලක්, ක්‍රීඩා කොන්සෝලයක මුල් මෙනුව මෙන් මිත්‍රශීලී",
+    "sk": "Biele zaoblené dlaždice, jemné sivé pruhy a svetlomodrý kruh okolo vybraného, priateľské ako úvodná ponuka hernej konzoly",
+    "sq": "Pllaka të bardha të rrumbullakosura, vija të holla gri dhe një unazë blu e hapur rreth të zgjedhurit, miqësore si menyja kryesore e një konsole lojërash",
+    "su": "Ubin bodas buleud, garis kulawu lemes jeung ring biru ngora nu ngurilingan nu dipilih, ramah siga ménu utama konsol kaulinan",
+    "sv": "Vita rundade brickor, fina grå ränder och en ljusblå ring runt det valda, vänligt som startmenyn på en spelkonsol",
+    "sw": "Vigae vyeupe vya mviringo, mistari myembamba ya kijivu na pete ya buluu hafifu kuzunguka kilichochaguliwa, ya kirafiki kama menyu kuu ya kiweko cha michezo",
+    "ta": "வெள்ளை வட்டமான ஓடுகள், மெல்லிய சாம்பல் கோடுகள், தேர்ந்தெடுத்ததைச் சுற்றி வெளிர் நீல வளையம், விளையாட்டுக் கன்சோலின் முகப்பு மெனு போல நட்பான தோற்றம்",
+    "te": "తెల్లని గుండ్రని టైల్స్, సన్నని బూడిద చారలు, ఎంచుకున్నదాని చుట్టూ లేత నీలి వలయం, గేమ్ కన్సోల్ హోమ్ మెనూ లాగా స్నేహపూర్వకంగా",
+    "th": "กระเบื้องมุมมนสีขาว ลายทางสีเทาบาง และวงแหวนสีฟ้าอ่อนรอบสิ่งที่เลือก เป็นมิตรเหมือนเมนูหลักของเกมคอนโซล",
+    "ti": "ጻዕዳ ክቡብ ሰድሪ፡ ቀጫን ሽበት መስመራት፡ ኣብ ዝተመርጸ ፍኹስ ሰማያዊ ቀለበት፡ ከም ናይ ጸወታ ኮንሶል ቀዳማይ ምናሌ ምቕራብ",
+    "tk": "Ak ýumurlanan plitalar, inçe çal zolaklar we saýlananyň daşynda açyk gök halka, oýun konsolynyň baş menýusy ýaly mähirli",
+    "tr": "Beyaz yuvarlak karolar, ince gri çizgiler ve seçilenin etrafında açık mavi halka, bir oyun konsolunun ana menüsü gibi sıcakkanlı",
+    "uk": "Білі заокруглені плитки, тонкі сірі смуги та світло-блакитне кільце навколо вибраного, привітно, як головне меню ігрової консолі",
+    "ur": "سفید گول ٹائلیں، باریک سرمئی دھاریاں اور منتخب کے گرد ہلکی نیلی انگوٹھی، گیم کنسول کے ہوم مینو کی طرح دوستانہ",
+    "uz": "Oq yumaloq plitkalar, nozik kulrang chiziqlar va tanlanganning atrofida och ko'k halqa, o'yin konsolining bosh menyusi kabi do'stona",
+    "vi": "Ô vuông trắng bo tròn, sọc xám mảnh và vòng xanh nhạt quanh mục được chọn, thân thiện như menu chính của máy chơi game",
+    "zu": "Amathayela amhlophe ayindingilizi, imivimbo ephundu empunga nendandatho eluhlaza okwesibhakabhaka ezungeze okukhethiwe, kuyakhululeka njengemenyu yasekhaya yekhonsoli yemidlalo",
+    "sr": "Беле заобљене плочице, танке сиве пруге и светлоплави прстен око изабраног, пријатељски као почетни мени конзоле за игре",
+    "sr-Latn": "Bele zaobljene pločice, tanke sive pruge i svetloplavi prsten oko izabranog, prijateljski kao početni meni konzole za igre",
+    "hr": "Bijele zaobljene pločice, tanke sive pruge i svijetloplavi prsten oko odabranog, prijateljski poput početnog izbornika igraće konzole",
+    "sl": "Bele zaobljene ploščice, tanki sivi pasovi in svetlomodri obroč okoli izbranega, prijazno kot domači meni igralne konzole",
+    "bs": "Bijele zaobljene pločice, tanke sive pruge i svijetloplavi prsten oko odabranog, prijateljski poput početnog menija igraće konzole",
+    "ca": "Rajoles blanques arrodonides, fines ratlles grises i un anell blau clar al voltant del que s'ha triat, amistós com el menú d'inici d'una consola",
+    "kk": "Ақ дөңгелек тақталар, жұқа сұр жолақтар және таңдалғанның айналасында ақшыл көк шеңбер, ойын консолінің басты мәзіріндей жылы шырайлы",
+    "ky": "Ак тегерек плиткалар, ичке боз тилкелер жана тандалганды курчаган ачык көк шакек, оюн консолунун башкы менюсундай ак ниет",
+    "as": "বগা গোলাকাৰ টাইল, সৰু ধূসৰ ডোখৰ আৰু বাছনি কৰাটোৰ চাৰিওফালে পাতল নীলা আঙঠি, গেম কনছ'লৰ হ'ম মেনুৰ দৰে বন্ধুত্বপূৰ্ণ",
+    "or": "ଧଳା ଗୋଲାକାର ଟାଇଲ୍, ସରୁ ଧୂସର ଧାରି ଓ ବାଛିଥିବା ଚାରିପାଖରେ ହାଲୁକା ନୀଳ ବଳୟ, ଗେମ୍ କନସୋଲର ହୋମ୍ ମେନୁ ପରି ବନ୍ଧୁତ୍ୱପୂର୍ଣ୍ଣ"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "text": {
+    "displayFont": "Baloo 2"
+  },
+  "colors": {
+    "page": "#f4f6f8",
+    "text": "#262d36",
+    "muted": "#535e6a",
+    "accent": "#0a72a6",
+    "onAccent": "#ffffff",
+    "border": "#d3d9e0",
+    "card": "#ffffff",
+    "selected": "#dff3fd",
+    "onSelected": "#0a4f73",
+    "reason": "#0b6f9f",
+    "chrome": "#ffffff"
+  },
+  "shape": {
+    "cardRadius": 20,
+    "controlRadius": 18,
+    "thumbnailRadius": 12
+  },
+  "window": {
+    "background": [
+      "#f4f6f8",
+      {
+        "pattern": {
+          "type": "lines",
+          "color": "#e3e8ed",
+          "spacing": 4,
+          "size": 1
+        }
+      }
+    ],
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#ffffff",
+              "#eef1f4"
+            ]
+          }
+        },
+        "border": {
+          "color": "#d3d9e0",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#ffffff",
+              "#eef1f4"
+            ]
+          }
+        }
+      },
+      "text": "#3c4652",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#3c4652",
+        "surface": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#0000001a"
+          },
+          "pressed": {
+            "fill": "#00000033"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#e81123"
+          },
+          "pressed": {
+            "fill": "#e81123"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#ffffff",
+              "#f4f6f8"
+            ]
+          }
+        }
+      },
+      "text": "#262d36",
+      "highlight": {
+        "fill": "#dff3fd"
+      },
+      "highlightText": "#0a4f73",
+      "menu": {
+        "fill": "#fffffffa",
+        "border": "#c5ccd5",
+        "radius": 14
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffffff",
+            "#eef1f4"
+          ]
+        }
+      },
+      "border": {
+        "color": "#d3d9e0",
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#ffffffd9",
+      "border": {
+        "color": "#d3d9e0",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#f4f6f8",
+            "#e4e8ec"
+          ]
+        }
+      },
+      "border": {
+        "color": "#d3d9e0",
+        "sides": [
+          "top"
+        ]
+      }
+    },
+    "topBarText": "#3c4652",
+    "statusBarText": "#535e6a",
+    "tabs": {
+      "position": "bottom",
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#ffffff",
+              "#eef1f4"
+            ]
+          }
+        },
+        "border": {
+          "color": "#d3d9e0",
+          "sides": [
+            "top"
+          ]
+        }
+      },
+      "text": "#535e6a",
+      "selectedText": "#0a4f73",
+      "indicator": "#34bdf2",
+      "selected": {
+        "fill": "#ffffff",
+        "border": {
+          "color": "#34bdf2",
+          "width": 3
+        },
+        "radius": 16
+      }
+    }
+  },
+  "controls": {
+    "press": "wash",
+    "button": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffffff",
+            "#eef1f4"
+          ]
+        }
+      },
+      "border": {
+        "color": "#c5ccd5",
+        "width": 2
+      },
+      "shadow": [
+        {
+          "color": "#d3d9e0",
+          "x": 0,
+          "y": 2,
+          "blur": 0
+        }
+      ],
+      "hover": {
+        "border": {
+          "color": "#34bdf2",
+          "width": 2
+        },
+        "glow": "#34bdf266"
+      }
+    },
+    "buttonText": "#262d36",
+    "primaryButton": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#34bdf2",
+        "width": 3
+      },
+      "shadow": [
+        {
+          "color": "#b8dff0",
+          "x": 0,
+          "y": 2,
+          "blur": 0
+        }
+      ],
+      "hover": {
+        "glow": "#34bdf2"
+      }
+    },
+    "primaryButtonText": "#0a5f8c",
+    "chip": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffffff",
+            "#f0f3f6"
+          ]
+        }
+      },
+      "border": {
+        "color": "#d3d9e0",
+        "width": 2
+      },
+      "shadow": [
+        {
+          "color": "#d3d9e0",
+          "x": 0,
+          "y": 2,
+          "blur": 0
+        }
+      ]
+    },
+    "chipSelected": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#34bdf2",
+        "width": 3
+      },
+      "shadow": [
+        {
+          "color": "#b8dff0",
+          "x": 0,
+          "y": 2,
+          "blur": 0
+        }
+      ]
+    },
+    "chipSelectedText": "#0a5f8c",
+    "navSelected": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#34bdf2",
+        "width": 3
+      },
+      "radius": 16,
+      "shadow": [
+        {
+          "color": "#34bdf240",
+          "x": 0,
+          "y": 0,
+          "blur": 8
+        }
+      ]
+    },
+    "navSelectedText": "#0a5f8c",
+    "navText": "#535e6a"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#dfe4ea",
+        "width": 3
+      },
+      "shadow": [
+        {
+          "color": "#d3d9e0",
+          "x": 0,
+          "y": 3,
+          "blur": 0
+        }
+      ],
+      "hover": {
+        "border": {
+          "color": "#34bdf2",
+          "width": 3
+        },
+        "glow": "#34bdf28c"
+      },
+      "focused": {
+        "border": {
+          "color": "#34bdf2",
+          "width": 4
+        },
+        "glow": "#34bdf2"
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#dfe4ea",
+        "width": 3
+      },
+      "shadow": [
+        {
+          "color": "#d3d9e0",
+          "x": 0,
+          "y": 3,
+          "blur": 0
+        }
+      ]
+    },
+    "durationBadge": {
+      "fill": "#262d36cc",
+      "radius": 8
+    },
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "Lumtub",
+    "font": "Baloo 2",
+    "size": 24,
+    "fill": "#3c4652",
+    "badge": {
+      "fill": {
+        "radial": {
+          "center": [
+            0.5,
+            0.3
+          ],
+          "radius": 0.75,
+          "colors": [
+            "#ffffff",
+            "#6fd0f7",
+            "#1a9fd8"
+          ]
+        }
+      },
+      "gloss": 0.7,
+      "border": "#ffffff"
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "icons": {
+    "style": "regular",
+    "effect": "none"
+  },
+  "player": {
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#1a9fd8",
+          "#7fdcff"
+        ]
+      }
+    }
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#1d2228",
+        "text": "#eef2f6",
+        "muted": "#a9b3be",
+        "accent": "#4cc3f5",
+        "onAccent": "#04202e",
+        "border": "#39424d",
+        "card": "#262c34",
+        "selected": "#163a4c",
+        "onSelected": "#d8f2ff",
+        "reason": "#6fd0f7",
+        "chrome": "#262c34"
+      },
+      "window": {
+        "background": [
+          "#1d2228",
+          {
+            "pattern": {
+              "type": "lines",
+              "color": "#22282f",
+              "spacing": 4,
+              "size": 1
+            }
+          }
+        ],
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#2c333c",
+                  "#262c34"
+                ]
+              }
+            },
+            "border": {
+              "color": "#39424d",
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "inactive": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#2c333c",
+                  "#262c34"
+                ]
+              }
+            }
+          },
+          "text": "#dfe6ee",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#dfe6ee",
+            "surface": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#ffffff1a"
+              },
+              "pressed": {
+                "fill": "#ffffff2e"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#e81123"
+              },
+              "pressed": {
+                "fill": "#e81123"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#2c333c",
+                  "#262c34"
+                ]
+              }
+            }
+          },
+          "text": "#eef2f6",
+          "highlight": {
+            "fill": "#163a4c"
+          },
+          "highlightText": "#d8f2ff",
+          "menu": {
+            "fill": "#262c34fa",
+            "border": "#46505c",
+            "radius": 14
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#2c333c",
+                "#262c34"
+              ]
+            }
+          },
+          "border": {
+            "color": "#39424d",
+            "sides": [
+              "bottom"
+            ]
+          }
+        },
+        "sideBar": {
+          "fill": "#262c34d9",
+          "border": {
+            "color": "#39424d",
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#262c34",
+                "#1d2228"
+              ]
+            }
+          },
+          "border": {
+            "color": "#39424d",
+            "sides": [
+              "top"
+            ]
+          }
+        },
+        "topBarText": "#dfe6ee",
+        "statusBarText": "#a9b3be",
+        "tabs": {
+          "position": "bottom",
+          "surface": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#2c333c",
+                  "#262c34"
+                ]
+              }
+            },
+            "border": {
+              "color": "#39424d",
+              "sides": [
+                "top"
+              ]
+            }
+          },
+          "text": "#a9b3be",
+          "selectedText": "#d8f2ff",
+          "indicator": "#34bdf2",
+          "selected": {
+            "fill": "#262c34",
+            "border": {
+              "color": "#34bdf2",
+              "width": 3
+            },
+            "radius": 16
+          }
+        }
+      },
+      "controls": {
+        "press": "wash",
+        "button": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#323942",
+                "#2a3038"
+              ]
+            }
+          },
+          "border": {
+            "color": "#46505c",
+            "width": 2
+          },
+          "shadow": [
+            {
+              "color": "#14181d",
+              "x": 0,
+              "y": 2,
+              "blur": 0
+            }
+          ],
+          "hover": {
+            "border": {
+              "color": "#34bdf2",
+              "width": 2
+            },
+            "glow": "#34bdf266"
+          }
+        },
+        "buttonText": "#eef2f6",
+        "primaryButton": {
+          "fill": "#262c34",
+          "border": {
+            "color": "#34bdf2",
+            "width": 3
+          },
+          "hover": {
+            "glow": "#34bdf2"
+          }
+        },
+        "primaryButtonText": "#8fdcff",
+        "chip": {
+          "fill": "#2a3038",
+          "border": {
+            "color": "#46505c",
+            "width": 2
+          }
+        },
+        "chipSelected": {
+          "fill": "#262c34",
+          "border": {
+            "color": "#34bdf2",
+            "width": 3
+          }
+        },
+        "chipSelectedText": "#8fdcff",
+        "navSelected": {
+          "fill": "#262c34",
+          "border": {
+            "color": "#34bdf2",
+            "width": 3
+          },
+          "radius": 16
+        },
+        "navSelectedText": "#8fdcff",
+        "navText": "#b4bdc7"
+      },
+      "cards": {
+        "video": {
+          "fill": "#262c34",
+          "border": {
+            "color": "#39424d",
+            "width": 3
+          },
+          "shadow": [
+            {
+              "color": "#14181d",
+              "x": 0,
+              "y": 3,
+              "blur": 0
+            }
+          ],
+          "hover": {
+            "border": {
+              "color": "#34bdf2",
+              "width": 3
+            },
+            "glow": "#34bdf266"
+          },
+          "focused": {
+            "border": {
+              "color": "#34bdf2",
+              "width": 4
+            },
+            "glow": "#34bdf2"
+          }
+        },
+        "padding": 6,
+        "panel": {
+          "fill": "#262c34",
+          "border": {
+            "color": "#39424d",
+            "width": 3
+          }
+        },
+        "durationBadge": {
+          "fill": "#000000b3",
+          "radius": 8
+        },
+        "durationText": "#ffffff"
+      },
+      "logo": {
+        "text": "Lumtub",
+        "font": "Baloo 2",
+        "size": 24,
+        "fill": "#dfe6ee",
+        "badge": {
+          "fill": {
+            "radial": {
+              "center": [
+                0.5,
+                0.3
+              ],
+              "radius": 0.75,
+              "colors": [
+                "#ffffff",
+                "#6fd0f7",
+                "#1a9fd8"
+              ]
+            }
+          },
+          "gloss": 0.7,
+          "border": "#dfe6ee"
+        },
+        "badgeIcon": "#ffffff"
+      },
+      "icons": {
+        "style": "regular",
+        "effect": "none"
+      },
+      "player": {
+        "progress": {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#1a9fd8",
+              "#7fdcff"
+            ]
+          }
+        }
+      }
+    },
+    "tv": {
+      "cards": {
+        "video": {
+          "focused": {
+            "border": {
+              "color": "#0a72a6",
+              "width": 4
+            },
+            "glow": "#0a72a6"
+          }
+        }
+      },
+      "controls": {
+        "button": {
+          "focused": {
+            "border": {
+              "color": "#0a72a6",
+              "width": 3
+            }
+          }
+        },
+        "chip": {
+          "focused": {
+            "border": {
+              "color": "#0a72a6",
+              "width": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

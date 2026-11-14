@@ -31,6 +31,19 @@ Future<AppController> _open(WidgetTester tester, {double width = 950}) async {
   return controller;
 }
 
+/// Topics, subtopics and their own lists are one scrolling line each: a chip
+/// past the line's edge is scrolled to before it is tapped.
+Future<void> _tapChip(WidgetTester tester, String label) async {
+  await tester.pump();
+  await tester.pump();
+  final chip = find.text(label).last;
+  final row = find.ancestor(of: chip, matching: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.right)).first;
+  // That line only: the page stays where it is.
+  await tester.state<ScrollableState>(row).position.ensureVisible(tester.renderObject(chip), alignment: 0.5);
+  await tester.pump();
+  await tester.tap(find.text(label).last);
+}
+
 /// Scrolls the zone strip with its arrow until [label] is in view.
 Future<void> _reveal(WidgetTester tester, String label, {bool back = false}) async {
   bool inView() {
@@ -408,7 +421,7 @@ void main() {
     final controller = await _open(tester);
     await tester.tap(find.text('Education'));
     await tester.pump();
-    await tester.tap(find.text('Math'));
+    await _tapChip(tester, 'Math');
     await tester.pump();
     await _reveal(tester, 'Religion & faith');
     await tester.tap(find.text('Religion & faith'));
@@ -421,7 +434,7 @@ void main() {
     await tester.tap(find.text('Catholic'));
     await tester.pump();
     expect(find.text('All Catholic'), findsOneWidget);
-    await tester.tap(find.text('Mass'));
+    await _tapChip(tester, 'Mass');
     await tester.pump();
     expect(controller.exploreQuery, 'Holy Mass 弥撒');
     expect(find.text('Christianity · Catholic · Mass · Relevant full-length videos, less clickbait, up to 3 per channel'), findsOneWidget);

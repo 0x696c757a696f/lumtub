@@ -1,0 +1,1016 @@
+// Obsidian Glass: a built-in Lumtub skin. Glossy black glass lit blue along its edges, after the dark themes of late-2000s media players and phones.
+// skins/template/skin.jsonc explains every field, and skins/README.md how to make your own.
+// 黑曜玻璃：Lumtub 内置皮肤。亮面黑玻璃，边缘透出蓝光，致敬 2000 年代末媒体播放器和手机的深色外观。
+// 每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "obsidian",
+  "name": "Obsidian Glass",
+  "names": {
+    "zh-Hans": "黑曜玻璃",
+    "zh-Hant": "黑曜玻璃",
+    "zh-HK": "黑曜玻璃",
+    "af": "Obsidiaanglas",
+    "am": "ኦብሲዲያን ብርጭቆ",
+    "ar": "زجاج السبج",
+    "az": "Obsidian şüşə",
+    "be": "Абсідыянавае шкло",
+    "bg": "Обсидианово стъкло",
+    "bn": "অবসিডিয়ান কাচ",
+    "cs": "Obsidiánové sklo",
+    "da": "Obsidianglas",
+    "de": "Obsidianglas",
+    "el": "Γυαλί οψιδιανού",
+    "eo": "Obsidiana vitro",
+    "es": "Cristal de obsidiana",
+    "et": "Obsidiaanklaas",
+    "eu": "Obsidiana beira",
+    "fa": "شیشه ابسیدین",
+    "fi": "Obsidiaanilasi",
+    "fil": "Obsidian na Salamin",
+    "fr": "Verre d'obsidienne",
+    "gl": "Vidro de obsidiana",
+    "gu": "ઓબ્સિડિયન કાચ",
+    "he": "זכוכית אובסידיאן",
+    "hi": "ऑब्सिडियन काँच",
+    "hu": "Obszidiánüveg",
+    "hy": "Օբսիդիանե ապակի",
+    "id": "Kaca Obsidian",
+    "is": "Hrafntinnugler",
+    "it": "Vetro d'ossidiana",
+    "ja": "黒曜ガラス",
+    "jv": "Kaca Obsidian",
+    "ka": "ობსიდიანის მინა",
+    "km": "កញ្ចក់អូប៊ីស៊ីឌាន",
+    "kn": "ಅಬ್ಸಿಡಿಯನ್ ಗಾಜು",
+    "ko": "흑요석 유리",
+    "la": "Vitrum Obsidianum",
+    "lo": "ແກ້ວອອບຊິດຽນ",
+    "lt": "Obsidiano stiklas",
+    "lv": "Obsidiāna stikls",
+    "mk": "Опсидијанско стакло",
+    "ml": "ഒബ്സിഡിയൻ ഗ്ലാസ്",
+    "mn": "Обсидиан шил",
+    "mr": "ऑब्सिडियन काच",
+    "ms": "Kaca Obsidian",
+    "my": "အော့ဘ်စီဒီယန် ဖန်ခွက်",
+    "nb": "Obsidianglass",
+    "ne": "अब्सिडियन सिसा",
+    "nl": "Obsidiaanglas",
+    "pa": "ਓਬਸੀਡੀਅਨ ਸ਼ੀਸ਼ਾ",
+    "pl": "Szkło obsydianowe",
+    "pt": "Vidro de obsidiana",
+    "ro": "Sticlă de obsidian",
+    "ru": "Обсидиановое стекло",
+    "si": "ඔබ්සිඩියන් වීදුරු",
+    "sk": "Obsidiánové sklo",
+    "sq": "Xhami obsidian",
+    "su": "Kaca Obsidian",
+    "sv": "Obsidianglas",
+    "sw": "Kioo cha Obsidiani",
+    "ta": "அப்சிடியன் கண்ணாடி",
+    "te": "అబ్సిడియన్ గ్లాస్",
+    "th": "กระจกออบซิเดียน",
+    "ti": "ኦብሲድያን ብርጭቆ",
+    "tk": "Obsidian aýna",
+    "tr": "Obsidyen Cam",
+    "uk": "Обсидіанове скло",
+    "ur": "اوبسیڈین شیشہ",
+    "uz": "Obsidian oyna",
+    "vi": "Kính obsidian",
+    "zu": "Ingilazi Ye-Obsidian",
+    "sr": "Опсидијан стакло",
+    "sr-Latn": "Opsidijan staklo",
+    "hr": "Opsidijan staklo",
+    "sl": "Obsidianovo steklo",
+    "bs": "Opsidijan staklo",
+    "ca": "Vidre d'obsidiana",
+    "kk": "Обсидиан әйнегі",
+    "ky": "Обсидиан айнек",
+    "as": "অবছিডিয়ান কাঁচ",
+    "or": "ଅବସିଡିଆନ୍ ଗ୍ଲାସ୍"
+  },
+  "description": "Glossy black glass with blue light along its edges, like a late-2000s media player in its dark theme",
+  "descriptions": {
+    "zh-Hans": "亮面黑玻璃，边缘透出蓝光，像 2000 年代末媒体播放器的深色外观",
+    "zh-Hant": "亮面黑玻璃，邊緣透出藍光，像 2000 年代末媒體播放器的深色外觀",
+    "zh-HK": "亮面黑玻璃，邊緣透出藍光，像 2000 年代末媒體播放器的深色外觀",
+    "af": "Blink swart glas met blou lig langs die rande, soos 'n mediaspeler van die laat 2000's in sy donker tema",
+    "am": "አንጸባራቂ ጥቁር ብርጭቆ ጠርዞቹ ላይ ሰማያዊ ብርሃን ያለው፣ እንደ 2000ዎቹ መጨረሻ ሚዲያ ማጫወቻ በጨለማ ገጽታው",
+    "ar": "زجاج أسود لامع بإضاءة زرقاء على حوافه، كمشغّل وسائط من أواخر العقد الأول من الألفية في سمته الداكنة",
+    "az": "Kənarları boyunca mavi işıq olan parlaq qara şüşə, 2000-ci illərin sonundakı media pleyerin tünd mövzusu kimi",
+    "be": "Глянцавае чорнае шкло з сінім святлом па краях, як медыяпрайгравальнік канца 2000-х у цёмнай тэме",
+    "bg": "Лъскаво черно стъкло със синя светлина по ръбовете, като медиен плейър от края на 2000-те в тъмната си тема",
+    "bn": "কিনারায় নীল আলোসহ চকচকে কালো কাচ, দুই হাজারের দশকের শেষের মিডিয়া প্লেয়ারের গাঢ় থিমের মতো",
+    "cs": "Lesklé černé sklo s modrým světlem podél hran, jako mediální přehrávač z konce nultých let v tmavém motivu",
+    "da": "Blankt sort glas med blåt lys langs kanterne, som en medieafspiller fra slutningen af 00'erne i sit mørke tema",
+    "de": "Glänzend schwarzes Glas mit blauem Licht an den Rändern, wie ein Medienplayer der späten 2000er in seinem dunklen Design",
+    "el": "Γυαλιστερό μαύρο γυαλί με μπλε φως στις άκρες, σαν media player των τελών της δεκαετίας του 2000 στο σκούρο θέμα του",
+    "eo": "Brila nigra vitro kun blua lumo laŭ siaj randoj, kiel aŭdvidaĵa ludilo de la malfruaj 2000-aj jaroj en sia malhela etoso",
+    "es": "Cristal negro brillante con luz azul en los bordes, como un reproductor multimedia de finales de los 2000 en su tema oscuro",
+    "et": "Läikiv must klaas sinise valgusega servades, nagu 2000ndate lõpu meediamängija tumedas teemas",
+    "eu": "Beira beltz distiratsua ertzetan argi urdinarekin, 2000ko hamarkadaren amaierako multimedia-erreproduzitzaile bat bezala bere gai ilunean",
+    "fa": "شیشه سیاه براق با نور آبی در لبه‌ها، مثل پخش‌کننده رسانه اواخر دهه ۲۰۰۰ در حالت تیره",
+    "fi": "Kiiltävää mustaa lasia sinisellä valolla reunoilla, kuin 2000-luvun lopun mediasoitin tummassa teemassaan",
+    "fil": "Makintab na itim na salamin na may asul na liwanag sa gilid, parang media player noong huling bahagi ng dekada 2000 sa madilim na tema nito",
+    "fr": "Verre noir brillant avec une lumière bleue sur les bords, comme un lecteur multimédia de la fin des années 2000 dans son thème sombre",
+    "gl": "Vidro negro brillante con luz azul nos bordos, coma un reprodutor multimedia de finais dos 2000 no seu tema escuro",
+    "gu": "કિનારીએ વાદળી પ્રકાશવાળો ચળકતો કાળો કાચ, 2000ના દાયકાના અંતના મીડિયા પ્લેયરની ઘેરી થીમ જેવો",
+    "he": "זכוכית שחורה מבריקה עם אור כחול לאורך הקצוות, כמו נגן מדיה מסוף שנות ה-2000 בעיצוב הכהה שלו",
+    "hi": "किनारों पर नीली रोशनी वाला चमकीला काला काँच, 2000 के दशक के अंत के मीडिया प्लेयर की गहरी थीम जैसा",
+    "hu": "Fényes fekete üveg kék fénnyel a szélein, mint egy 2000-es évek végi médialejátszó sötét témája",
+    "hy": "Փայլուն սև ապակի՝ եզրերին կապույտ լույսով, ինչպես 2000-ականների վերջի մեդիանվագարկիչ իր մութ թեմայով",
+    "id": "Kaca hitam mengilap dengan cahaya biru di tepinya, seperti pemutar media akhir 2000-an dalam tema gelapnya",
+    "is": "Gljáandi svart gler með bláu ljósi meðfram jöðrunum, eins og margmiðlunarspilari frá lokum fyrsta áratugar aldarinnar í dökku þema sínu",
+    "it": "Vetro nero lucido con luce blu lungo i bordi, come un lettore multimediale della fine degli anni 2000 nel suo tema scuro",
+    "ja": "縁に青い光が走る光沢のある黒いガラス。2000年代末のメディアプレーヤーのダークテーマのよう",
+    "jv": "Kaca ireng mengkilap kanthi cahya biru ing pinggire, kaya pamuter media pungkasan taun 2000-an ing tema peteng",
+    "ka": "მბზინავი შავი მინა კიდეებზე ლურჯი შუქით, 2000-იანების ბოლოს მედიაპლეერივით მუქ თემაში",
+    "km": "កញ្ចក់ខ្មៅរលោងមានពន្លឺខៀវតាមគែម ដូចកម្មវិធីចាក់មេឌៀនៃចុងទសវត្ស 2000 ក្នុងផ្ទៃងងឹត",
+    "kn": "ಅಂಚುಗಳಲ್ಲಿ ನೀಲಿ ಬೆಳಕಿರುವ ಹೊಳೆಯುವ ಕಪ್ಪು ಗಾಜು, 2000ರ ದಶಕದ ಕೊನೆಯ ಮೀಡಿಯಾ ಪ್ಲೇಯರ್‌ನ ಗಾಢ ಥೀಮ್‌ನಂತೆ",
+    "ko": "가장자리를 따라 푸른 빛이 도는 윤기 나는 검은 유리. 2000년대 말 미디어 플레이어의 어두운 테마 같은 느낌",
+    "la": "Vitrum nigrum nitidum cum luce caerulea per margines, quasi instrumentum mediorum ineuntis saeculi XXI in themate obscuro",
+    "lo": "ແກ້ວສີດຳເງົາທີ່ມີແສງສີຟ້າຕາມຂອບ, ຄືເຄື່ອງຫຼິ້ນມີເດຍທ້າຍຊຸມປີ 2000 ໃນໂໝດມືດ",
+    "lt": "Blizgus juodas stiklas su mėlyna šviesa pakraščiuose, tarsi naujojo amžiaus pirmojo dešimtmečio pabaigos medijų grotuvas tamsiąja tema",
+    "lv": "Spīdīgs melns stikls ar zilu gaismu gar malām, kā 2000. gadu beigu multivides atskaņotājs savā tumšajā tēmā",
+    "mk": "Сјајно црно стакло со сино светло по рабовите, како медиумски плеер од крајот на 2000-тите во својата темна тема",
+    "ml": "അരികുകളിൽ നീല വെളിച്ചമുള്ള തിളങ്ങുന്ന കറുത്ത ഗ്ലാസ്, 2000-കളുടെ അവസാനത്തെ മീഡിയ പ്ലേയറിന്റെ ഇരുണ്ട തീം പോലെ",
+    "mn": "Ирмэгийн дагуу цэнхэр гэрэлтэй гялгар хар шил, 2000-аад оны сүүлийн медиа тоглуулагчийн бараан загвар шиг",
+    "mr": "कडांवर निळा प्रकाश असलेली चकचकीत काळी काच, 2000 च्या दशकाच्या अखेरीच्या मीडिया प्लेयरच्या गडद थीमसारखी",
+    "ms": "Kaca hitam berkilat dengan cahaya biru di sepanjang tepinya, seperti pemain media akhir 2000-an dalam tema gelapnya",
+    "my": "အစွန်းတလျှောက် အပြာရောင်အလင်းပါ တောက်ပသော အနက်ရောင်ဖန်၊ ၂၀၀၀ ပြည့်နှစ်များ နှောင်းပိုင်း မီဒီယာပလေယာ၏ အမှောင်အသွင်ကဲ့သို့",
+    "nb": "Blankt svart glass med blått lys langs kantene, som en mediespiller fra slutten av 2000-tallet i mørk drakt",
+    "ne": "किनारामा निलो उज्यालो भएको चम्किलो कालो सिसा, २००० को दशकको अन्त्यको मिडिया प्लेयरको गाढा थिम जस्तो",
+    "nl": "Glanzend zwart glas met blauw licht langs de randen, als een mediaspeler van eind jaren 2000 in zijn donkere thema",
+    "pa": "ਕਿਨਾਰਿਆਂ ਉੱਤੇ ਨੀਲੀ ਰੌਸ਼ਨੀ ਵਾਲਾ ਚਮਕਦਾਰ ਕਾਲਾ ਸ਼ੀਸ਼ਾ, 2000ਵਿਆਂ ਦੇ ਅੰਤ ਦੇ ਮੀਡੀਆ ਪਲੇਅਰ ਦੀ ਗੂੜ੍ਹੀ ਥੀਮ ਵਰਗਾ",
+    "pl": "Błyszczące czarne szkło z niebieskim światłem wzdłuż krawędzi, jak odtwarzacz multimedialny z końca pierwszej dekady XXI wieku w ciemnym motywie",
+    "pt": "Vidro preto brilhante com luz azul nas bordas, como um reprodutor de mídia do fim dos anos 2000 no tema escuro",
+    "ro": "Sticlă neagră lucioasă cu lumină albastră pe margini, ca un player media de la sfârșitul anilor 2000 în tema sa întunecată",
+    "ru": "Глянцевое чёрное стекло с синим светом по краям, как медиаплеер конца 2000-х в тёмной теме",
+    "si": "කෙළවරේ නිල් ආලෝකය සහිත දිලිසෙන කළු වීදුරු, 2000 දශකයේ අග මාධ්‍ය වාදකයක අඳුරු තේමාව මෙන්",
+    "sk": "Lesklé čierne sklo s modrým svetlom pozdĺž hrán, ako multimediálny prehrávač z konca nultých rokov v tmavej téme",
+    "sq": "Xham i zi me shkëlqim me dritë blu përgjatë skajeve, si një luajtës mediash i fundit të viteve 2000 në temën e errët",
+    "su": "Kaca hideung mengkilap kalayan cahaya biru di sisina, siga pamutar média ahir taun 2000-an dina téma poékna",
+    "sv": "Blankt svart glas med blått ljus längs kanterna, som en mediespelare från slutet av 00-talet i sitt mörka tema",
+    "sw": "Kioo cheusi kinachong'aa chenye mwanga wa buluu kando kando, kama kicheza media cha mwishoni mwa miaka ya 2000 katika mandhari yake meusi",
+    "ta": "விளிம்புகளில் நீல ஒளியுடன் பளபளக்கும் கருப்புக் கண்ணாடி, 2000-களின் இறுதி மீடியா பிளேயரின் இருண்ட தீம் போல",
+    "te": "అంచుల వెంట నీలి కాంతితో మెరిసే నల్ల గాజు, 2000ల చివరి మీడియా ప్లేయర్ డార్క్ థీమ్ లాగా",
+    "th": "กระจกสีดำเงาวับ มีแสงสีน้ำเงินตามขอบ เหมือนมีเดียเพลเยอร์ปลายยุค 2000 ในธีมมืด",
+    "ti": "ኣብ ጫፋቱ ሰማያዊ ብርሃን ዘለዎ ጉልበት ሸኽ ጸሊም ብርጭቆ፡ ከም ናይ መወዳእታ 2000ታት ሚድያ ፕሌየር ኣብ ጸሊም ትሕዝቶኡ",
+    "tk": "Gyralarynda gök yşyk bolan ýalpyldawuk gara aýna, 2000-nji ýyllaryň ahyryndaky media pleýeriň garaňky temasy ýaly",
+    "tr": "Kenarlarında mavi ışık olan parlak siyah cam, 2000'lerin sonundan bir medya oynatıcının koyu teması gibi",
+    "uk": "Глянцеве чорне скло з синім світлом уздовж країв, як медіаплеєр кінця 2000-х у темній темі",
+    "ur": "کناروں پر نیلی روشنی کے ساتھ چمکدار سیاہ شیشہ، 2000 کی دہائی کے آخر کے میڈیا پلیئر کی تاریک تھیم جیسا",
+    "uz": "Chetlarida ko'k nur bo'lgan yaltiroq qora shisha, 2000-yillar oxiridagi media pleyerning qorong'i mavzusi kabi",
+    "vi": "Kính đen bóng với ánh sáng xanh dọc theo viền, như trình phát nhạc cuối thập niên 2000 ở giao diện tối",
+    "zu": "Ingilazi emnyama egudlile enokukhanya okuluhlaza okwesibhakabhaka emaphethelweni ayo, njengeplayeri yemidiya yasekupheleni kweminyaka yama-2000 kuyi-theme yayo emnyama",
+    "sr": "Сјајно црно стакло са плавом светлошћу дуж ивица, као медија плејер с краја 2000-их у тамној теми",
+    "sr-Latn": "Sjajno crno staklo sa plavom svetlošću duž ivica, kao medija plejer s kraja 2000-ih u tamnoj temi",
+    "hr": "Sjajno crno staklo s plavim svjetlom uz rubove, poput media playera s kraja 2000-ih u tamnoj temi",
+    "sl": "Sijoče črno steklo z modro svetlobo ob robovih, kot predvajalnik s konca 2000-ih v temni temi",
+    "bs": "Sjajno crno staklo s plavom svjetlošću uz rubove, poput media playera s kraja 2000-ih u tamnoj temi",
+    "ca": "Vidre negre brillant amb llum blava a les vores, com un reproductor multimèdia de finals dels 2000 amb el tema fosc",
+    "kk": "Шеттерінде көк жарығы бар жылтыр қара әйнек, 2000-жылдар соңындағы медиаплеердің қараңғы тақырыбы сияқты",
+    "ky": "Четтеринде көк жарыгы бар жылтыраган кара айнек, 2000-жылдардын аягындагы медиаплеердин караңгы темасы сыяктуу",
+    "as": "কিনাৰত নীলা পোহৰেৰে চিকমিকিয়া ক'লা কাঁচ, ২০০০ৰ দশকৰ শেষৰ মিডিয়া প্লেয়াৰৰ ডাৰ্ক থিমৰ দৰে",
+    "or": "ଧାରରେ ନୀଳ ଆଲୋକ ସହିତ ଚମକିଲା କଳା କାଚ, ୨୦୦୦ ଦଶକ ଶେଷର ମିଡିଆ ପ୍ଲେୟାରର ଡାର୍କ ଥିମ୍ ପରି"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "text": {
+    "displayFont": "Exo 2",
+    "monoFont": "Exo 2"
+  },
+  "colors": {
+    "page": "#e6eaee",
+    "text": "#0f1720",
+    "muted": "#46525e",
+    "accent": "#0a6ea8",
+    "onAccent": "#ffffff",
+    "border": "#b8c2cc",
+    "card": "#f6f8fa",
+    "selected": "#cfe8f7",
+    "onSelected": "#0a2a40",
+    "reason": "#0a5f92",
+    "chrome": "#dfe5eb"
+  },
+  "shape": {
+    "cardRadius": 8,
+    "controlRadius": 14,
+    "thumbnailRadius": 5
+  },
+  "window": {
+    "background": [
+      {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#eef1f4",
+            "#dde2e7"
+          ]
+        }
+      },
+      {
+        "radial": {
+          "center": [
+            0.5,
+            -0.1
+          ],
+          "radius": 0.6,
+          "colors": [
+            "#39c6ff26",
+            "#39c6ff00"
+          ]
+        }
+      }
+    ],
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#3a414b",
+              "#1a1e24",
+              "#07090c",
+              "#111419"
+            ],
+            "stops": [
+              0,
+              0.49,
+              0.51,
+              1
+            ]
+          }
+        },
+        "border": {
+          "color": "#000000",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#14181d"
+      },
+      "text": "#eef4fa",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#d6e2ee",
+        "surface": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#ffffff1f"
+          },
+          "pressed": {
+            "fill": "#39c6ff4d"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#e81123"
+          },
+          "pressed": {
+            "fill": "#e81123"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#0b0e12"
+      },
+      "text": "#e2ecf5",
+      "highlight": {
+        "fill": "#155a78"
+      },
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#14181df7",
+        "border": "#39c6ff80",
+        "radius": 4
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#3a414b",
+            "#1a1e24",
+            "#07090c",
+            "#111419"
+          ],
+          "stops": [
+            0,
+            0.49,
+            0.51,
+            1
+          ]
+        }
+      },
+      "border": {
+        "color": "#39c6ff59",
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": {
+        "linear": {
+          "angle": 90,
+          "colors": [
+            "#ffffffd9",
+            "#eef1f4d9"
+          ]
+        }
+      },
+      "border": {
+        "color": "#b8c2cc",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#1a1e24",
+            "#050607"
+          ]
+        }
+      }
+    },
+    "topBarText": "#eef4fa",
+    "statusBarText": "#9fb0c0",
+    "tabs": {
+      "position": "bottom",
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#3a414b",
+              "#1a1e24",
+              "#07090c",
+              "#111419"
+            ],
+            "stops": [
+              0,
+              0.49,
+              0.51,
+              1
+            ]
+          }
+        },
+        "border": {
+          "color": "#000000",
+          "sides": [
+            "top"
+          ]
+        }
+      },
+      "text": "#9fb0c0",
+      "selectedText": "#ffffff",
+      "indicator": "#39c6ff"
+    }
+  },
+  "controls": {
+    "press": "glow",
+    "button": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffffff",
+            "#eef1f4",
+            "#dfe4e9",
+            "#eef1f4"
+          ],
+          "stops": [
+            0,
+            0.49,
+            0.51,
+            1
+          ]
+        }
+      },
+      "border": "#a9b4bf",
+      "hover": {
+        "border": "#0a6ea8",
+        "glow": "#39c6ff66"
+      }
+    },
+    "buttonText": "#0f1720",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#1576aa",
+            "#063d60"
+          ]
+        }
+      },
+      "gloss": 0.6,
+      "border": "#0a4f7a",
+      "hover": {
+        "glow": "#39c6ff"
+      }
+    },
+    "primaryButtonText": "#ffffff",
+    "chip": {
+      "fill": "#ffffff",
+      "border": "#b8c2cc"
+    },
+    "chipSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#1576aa",
+            "#063d60"
+          ]
+        }
+      },
+      "gloss": 0.5,
+      "border": "#0a4f7a"
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#1576aa",
+            "#063d60"
+          ]
+        }
+      },
+      "gloss": 0.4,
+      "border": "#0a4f7a",
+      "radius": 8
+    },
+    "navSelectedText": "#ffffff",
+    "navText": "#3c4752"
+  },
+  "cards": {
+    "video": {
+      "fill": "#f6f8fa",
+      "border": "#c6cfd8",
+      "hover": {
+        "border": "#0a6ea8",
+        "glow": "#39c6ff59"
+      },
+      "focused": {
+        "border": {
+          "color": "#0a6ea8",
+          "width": 3
+        }
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#f6f8faf2",
+      "border": "#c6cfd8"
+    },
+    "durationBadge": {
+      "fill": "#07090cd9",
+      "radius": 4
+    },
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "Lumtub",
+    "font": "Exo 2",
+    "size": 22,
+    "fill": {
+      "linear": {
+        "angle": 180,
+        "colors": [
+          "#ffffff",
+          "#bfeeff"
+        ]
+      }
+    },
+    "glow": "#39c6ff99",
+    "badge": {
+      "fill": {
+        "radial": {
+          "center": [
+            0.5,
+            0.7
+          ],
+          "radius": 0.7,
+          "colors": [
+            "#7fe3ff",
+            "#0a86c9",
+            "#03243a"
+          ]
+        }
+      },
+      "gloss": 0.8,
+      "border": "#a7e8ff"
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "icons": {
+    "style": "regular",
+    "effect": "none"
+  },
+  "player": {
+    "style": "deck",
+    "deck": {
+      "shape": "slab",
+      "body": [
+        "#3a414b",
+        "#1a1e24",
+        "#07090c",
+        "#111419"
+      ],
+      "rim": "#000000",
+      "screen": "#04121c",
+      "screenText": "#7fdcff",
+      "button": [
+        "#3a4654",
+        "#0b1016"
+      ],
+      "glyph": "#d6ecff",
+      "play": [
+        "#4fd0ff",
+        "#0a4f7a"
+      ],
+      "playGlyph": "#ffffff",
+      "groove": "#000000",
+      "fill": "#39c6ff",
+      "glow": "#39c6ff"
+    },
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#0b6fa8",
+          "#5fd6ff"
+        ]
+      }
+    }
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#07090c",
+        "text": "#eef4fa",
+        "muted": "#9fb0c0",
+        "accent": "#39c6ff",
+        "onAccent": "#00131f",
+        "border": "#2a323c",
+        "card": "#11151a",
+        "selected": "#0e3550",
+        "onSelected": "#eaf7ff",
+        "reason": "#6fd6ff",
+        "chrome": "#111419"
+      },
+      "window": {
+        "background": [
+          {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0b0e13",
+                "#030405"
+              ]
+            }
+          },
+          {
+            "radial": {
+              "center": [
+                0.5,
+                -0.1
+              ],
+              "radius": 0.6,
+              "colors": [
+                "#39c6ff2e",
+                "#39c6ff00"
+              ]
+            }
+          },
+          {
+            "radial": {
+              "center": [
+                1,
+                1
+              ],
+              "radius": 0.5,
+              "colors": [
+                "#78ff5a14",
+                "#78ff5a00"
+              ]
+            }
+          }
+        ],
+        "decorations": [
+          {
+            "type": "beam",
+            "color": "#ffffff0d",
+            "angle": -25,
+            "position": 0.35
+          }
+        ],
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#3a414b",
+                  "#1a1e24",
+                  "#07090c",
+                  "#111419"
+                ],
+                "stops": [
+                  0,
+                  0.49,
+                  0.51,
+                  1
+                ]
+              }
+            },
+            "border": {
+              "color": "#000000",
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "inactive": {
+            "fill": "#14181d"
+          },
+          "text": "#eef4fa",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#d6e2ee",
+            "surface": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#ffffff1f"
+              },
+              "pressed": {
+                "fill": "#39c6ff4d"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "hover": {
+                "fill": "#e81123"
+              },
+              "pressed": {
+                "fill": "#e81123"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": "#0b0e12"
+          },
+          "text": "#e2ecf5",
+          "highlight": {
+            "fill": "#155a78"
+          },
+          "highlightText": "#ffffff",
+          "menu": {
+            "fill": "#14181df7",
+            "border": "#39c6ff80",
+            "radius": 4
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#3a414b",
+                "#1a1e24",
+                "#07090c",
+                "#111419"
+              ],
+              "stops": [
+                0,
+                0.49,
+                0.51,
+                1
+              ]
+            }
+          },
+          "border": {
+            "color": "#39c6ff59",
+            "sides": [
+              "bottom"
+            ]
+          }
+        },
+        "sideBar": {
+          "fill": {
+            "linear": {
+              "angle": 90,
+              "colors": [
+                "#ffffff0a",
+                "#00000033"
+              ]
+            }
+          },
+          "border": {
+            "color": "#ffffff14",
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#1a1e24",
+                "#050607"
+              ]
+            }
+          }
+        },
+        "topBarText": "#eef4fa",
+        "statusBarText": "#9fb0c0",
+        "tabs": {
+          "position": "bottom",
+          "surface": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#3a414b",
+                  "#1a1e24",
+                  "#07090c",
+                  "#111419"
+                ],
+                "stops": [
+                  0,
+                  0.49,
+                  0.51,
+                  1
+                ]
+              }
+            },
+            "border": {
+              "color": "#000000",
+              "sides": [
+                "top"
+              ]
+            }
+          },
+          "text": "#9fb0c0",
+          "selectedText": "#ffffff",
+          "indicator": "#39c6ff"
+        }
+      },
+      "controls": {
+        "press": "glow",
+        "button": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#ffffff1f",
+                "#ffffff08",
+                "#00000040",
+                "#ffffff0d"
+              ],
+              "stops": [
+                0,
+                0.49,
+                0.51,
+                1
+              ]
+            }
+          },
+          "border": "#ffffff29",
+          "hover": {
+            "border": "#6fd6ff",
+            "glow": "#39c6ff66"
+          }
+        },
+        "buttonText": "#eef4fa",
+        "primaryButton": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#1576aa",
+                "#063d60"
+              ]
+            }
+          },
+          "gloss": 0.6,
+          "border": "#7fdcff",
+          "glow": "#39c6ff66",
+          "hover": {
+            "glow": "#39c6ff"
+          }
+        },
+        "primaryButtonText": "#ffffff",
+        "chip": {
+          "fill": "#ffffff0f",
+          "border": "#ffffff29"
+        },
+        "chipSelected": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#1576aa",
+                "#063d60"
+              ]
+            }
+          },
+          "gloss": 0.5,
+          "border": "#7fdcff",
+          "glow": "#39c6ff66"
+        },
+        "chipSelectedText": "#ffffff",
+        "navSelected": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#39c6ff40",
+                "#0a3a5c99"
+              ]
+            }
+          },
+          "border": "#78dcffd9",
+          "glow": "#39c6ff59",
+          "radius": 8
+        },
+        "navSelectedText": "#ffffff",
+        "navText": "#a9bccb"
+      },
+      "cards": {
+        "video": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#ffffff17",
+                "#ffffff05",
+                "#00000040"
+              ]
+            }
+          },
+          "border": "#ffffff1f",
+          "hover": {
+            "border": "#6fd6ff",
+            "glow": "#39c6ff66"
+          },
+          "focused": {
+            "border": {
+              "color": "#39c6ff",
+              "width": 3
+            }
+          }
+        },
+        "padding": 6,
+        "panel": {
+          "fill": "#0f1318f2",
+          "border": "#ffffff1f"
+        },
+        "durationBadge": {
+          "fill": "#000000d9",
+          "radius": 4
+        },
+        "durationText": "#ffffff"
+      },
+      "logo": {
+        "text": "Lumtub",
+        "font": "Exo 2",
+        "size": 22,
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#ffffff",
+              "#9fe6ff"
+            ]
+          }
+        },
+        "glow": "#39c6ffb3",
+        "badge": {
+          "fill": {
+            "radial": {
+              "center": [
+                0.5,
+                0.7
+              ],
+              "radius": 0.7,
+              "colors": [
+                "#7fe3ff",
+                "#0a86c9",
+                "#03243a"
+              ]
+            }
+          },
+          "gloss": 0.8,
+          "border": "#a7e8ff"
+        },
+        "badgeIcon": "#ffffff"
+      },
+      "icons": {
+        "style": "regular",
+        "effect": "glow",
+        "glow": "#39c6ff"
+      },
+      "player": {
+        "style": "deck",
+        "deck": {
+          "shape": "slab",
+          "body": [
+            "#3a414b",
+            "#1a1e24",
+            "#07090c",
+            "#111419"
+          ],
+          "rim": "#000000",
+          "screen": "#04121c",
+          "screenText": "#7fdcff",
+          "button": [
+            "#3a4654",
+            "#0b1016"
+          ],
+          "glyph": "#d6ecff",
+          "play": [
+            "#4fd0ff",
+            "#0a4f7a"
+          ],
+          "playGlyph": "#ffffff",
+          "groove": "#000000",
+          "fill": "#39c6ff",
+          "glow": "#39c6ff"
+        },
+        "progress": {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#0b6fa8",
+              "#5fd6ff"
+            ]
+          }
+        }
+      }
+    },
+    "tv": {
+      "cards": {
+        "video": {
+          "focused": {
+            "border": {
+              "color": "#0a6ea8",
+              "width": 4
+            },
+            "glow": "#0a6ea8"
+          }
+        }
+      },
+      "controls": {
+        "button": {
+          "focused": {
+            "border": {
+              "color": "#0a6ea8",
+              "width": 3
+            }
+          }
+        },
+        "chip": {
+          "focused": {
+            "border": {
+              "color": "#0a6ea8",
+              "width": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

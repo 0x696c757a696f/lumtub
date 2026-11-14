@@ -33,11 +33,14 @@ import 'theme.dart';
 import 'video_card.dart';
 import 'window_chrome.dart';
 import '../l10n/l10n.dart';
+import 'fill_icon.dart';
 import 'frame_stats.dart';
 import 'key_scroll.dart';
 import 'pull_to_refresh.dart';
 import '../shortcut_bindings.dart';
-import 'motion.dart';
+import 'animated_visibility.dart';
+import 'page_switcher.dart';
+import 'select_builder.dart';
 import 'player_shortcuts.dart';
 import 'app_icons.dart';
 import 'skin_chrome.dart';
@@ -409,9 +412,12 @@ class _AppShellState extends State<AppShell> {
           onPointerDown: (event) {
             if (event.buttons == kBackMouseButton) _back();
           },
-          child: ListenableBuilder(
+          // The window is built again only when its layout changes; each
+          // part of it listens for what it shows itself.
+          child: SelectBuilder(
             listenable: _controller,
-            builder: (context, _) => LayoutBuilder(builder: (context, constraints) {
+            select: () => _layoutOf(_controller),
+            builder: (context, _, __) => LayoutBuilder(builder: (context, constraints) {
               _frames.rebuilt();
               if (_controller.ready && !_tvFocused) {
                 _tvFocused = true;
@@ -419,7 +425,7 @@ class _AppShellState extends State<AppShell> {
               }
               // Picture in picture shows the video alone.
               if (_controller.pip && _controller.playing != null && _controller.videoController != null) {
-                return PipView(controller: _controller);
+                return ListenableBuilder(listenable: _controller, builder: (context, _) => PipView(controller: _controller));
               }
               final wide = constraints.maxWidth >= 720;
               final skin = context.skin;
@@ -431,14 +437,20 @@ class _AppShellState extends State<AppShell> {
               final tabs = rail ? null : skin?.tabs;
               // The same pages as the plain bottom bar, the library ones
               // gathered under Library, so the labels fit a phone's width.
-              Widget tabBar(SkinTabs tabs) => SkinTabBar(
-                    tabs: tabs,
-                    destinations: [for (final d in _bottomDestinations) (d.$2, d.$3, d.$4)],
-                    selected: _bottomIndex,
-                    onSelected: _selectBottom,
+              Widget tabBar(SkinTabs tabs) => _region(
+                    () => (_bottomIndex, currentLanguage),
+                    (context) => SkinTabBar(
+                      tabs: tabs,
+                      destinations: [for (final d in _bottomDestinations) (d.$2, d.$3, d.$4)],
+                      selected: _bottomIndex,
+                      onSelected: _selectBottom,
+                    ),
                   );
               final watchingOnPhone = _controller.onWatchPage && watchesLikePhone(context);
-              _tvRail = Device.tv && rail && !(skin?.drawsRail ?? false);
+              final skinRail = skin != null && skin.drawsRail;
+              _tvRail = Device.tv && rail && !skinRail;
+              // The bar to show at the bottom, also while it slides away.
+              final bottomTabs = skin?.tabs;
               final scaffold = Scaffold(
                 // Under a skin the page is its picture, veiled on its own
                 // (_veiled); without one, the theme's page colour.
@@ -448,72 +460,75 @@ class _AppShellState extends State<AppShell> {
                 body: SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [
                   // A phone's watch page starts with the player, as phone
                   // apps do; back is the player's arrow or the system's.
-                  if (!watchingOnPhone && !_tvRail) _TopBar(
-                    wide: wide,
-                    controller: _controller,
-                    searchText: _searchText,
-                    searchFocus: _searchFocus,
-                    onSubmit: _submitSearch,
+                  if (!watchingOnPhone && !_tvRail) _region(
+                    () => _TopBar.shownOf(_controller),
+                    (context) => _TopBar(
+                      wide: wide,
+                      controller: _controller,
+                      searchText: _searchText,
+                      searchFocus: _searchFocus,
+                      onSubmit: _submitSearch,
+                    ),
                   ),
                   if (tabs != null && tabs.top) tabBar(tabs),
                   Expanded(child: Stack(children: [
                     Row(children: [
-                      if (rail && !watchingOnPhone && skin != null && skin.drawsRail)
-                        SkinRail(
-                          skin: skin,
-                          destinations: [for (final d in _destinations) (d.$2, d.$3, d.$4)],
-                          selected: _selectedIndex,
-                          onSelected: _select,
-                        )
-                      else if (rail && !watchingOnPhone)
-                        NavigationRail(
-                          backgroundColor: context.tones.chrome,
-                          selectedIndex: _selectedIndex,
-                          // A TV's few hundred pixels of height hold the
-                          // pages, search and settings with only the chosen
-                          // page named, as TV apps' rails do.
-                          labelType: _tvRail ? NavigationRailLabelType.selected : NavigationRailLabelType.all,
-                          minWidth: 76,
-                          groupAlignment: -1,
-                          onDestinationSelected: _select,
-                          leading: _tvRail ? IconButton(tooltip: tr('Search'), onPressed: _tvSearch, icon: Icon(AppIcons.magnifyingGlass)) : null,
-                          // The account is under Settings.
-                          trailing: _tvRail ? IconButton(
-                            tooltip: tr('Settings'),
-                            isSelected: _controller.mode == PageMode.settings && !_controller.onWatchPage,
-                            onPressed: () => openSettings(context, _controller),
-                            icon: Icon(AppIcons.gear),
-                            selectedIcon: const Icon(AppIcons.gearFill),
-                          ) : null,
-                          destinations: [
-                            for (final d in _destinations)
-                              NavigationRailDestination(icon: Icon(d.$2), selectedIcon: Icon(d.$3), label: Text(d.$4)),
-                          ],
+                      AnimatedVisibility.rail(
+                        visible: rail && !watchingOnPhone,
+                        child: _region(
+                          () => (_selectedIndex, _controller.mode == PageMode.settings && !_controller.onWatchPage, currentLanguage),
+                          (context) => skinRail ? SkinRail(
+                            skin: skin,
+                            destinations: [for (final d in _destinations) (d.$2, d.$3, d.$4)],
+                            selected: _selectedIndex,
+                            onSelected: _select,
+                          ) : _navigationRail(context),
                         ),
-                      Expanded(child: AnimatedSwitcher(
-                        duration: Motion.of(Ease.fade),
-                        // Keyed per page so each page's list keeps its scroll position
-                        // (PageStorage) when the user comes back to it.
-                        child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _veiled(skin, !rail && !_controller.onWatchPage && _library.contains(_controller.mode) ? _libraryTabs(_refreshable(_content())) : _refreshable(_content())))),
+                      ),
+                      Expanded(child: _region(
+                        () => (_pageKey, _slideIndex),
+                        (context) => PageSwitcher(
+                          // Keyed per page so each page's list keeps its scroll position
+                          // (PageStorage) when the user comes back to it.
+                          pageKey: _pageKey,
+                          index: _slideIndex,
+                          slides: !rail,
+                          child: _LivePage(
+                            controller: _controller,
+                            pageKey: _pageKey,
+                            shownKey: () => _pageKey,
+                            onBuilt: _frames.pageRebuilt,
+                            builder: (context) => VideoActions(controller: _controller, child: _veiled(skin, !rail && !_controller.onWatchPage && _library.contains(_controller.mode) ? _libraryTabs(_refreshable(_content())) : _refreshable(_content()))),
+                          ),
+                        ),
                       )),
                     ]),
                     // The video keeps playing over the pages; the watch page
                     // is not mounted meanwhile, so the card has the only Video.
                     if (_controller.mini && _controller.playing != null)
-                      Positioned.fill(child: MiniPlayer(controller: _controller)),
+                      Positioned.fill(child: ListenableBuilder(listenable: _controller, builder: (context, _) => MiniPlayer(controller: _controller))),
                   ])),
                   // No status line on phones, tablets and TVs: the room goes to the page.
-                  if (_controller.appearance.showStatusBar && !touchFirst) _StatusBar(controller: _controller),
+                  if (_controller.appearance.showStatusBar && !touchFirst) _region(
+                    () => _StatusBar.shownOf(_controller),
+                    (context) => _StatusBar(controller: _controller),
+                  ),
                 ])),
-                bottomNavigationBar: rail || watchingOnPhone || (tabs != null && tabs.top) ? null : tabs != null ? tabBar(tabs) : NavigationBar(
-                  height: 64,
-                  // Six labels do not fit a phone's width side by side.
-                  labelBehavior: MediaQuery.sizeOf(context).width < 600 ? NavigationDestinationLabelBehavior.onlyShowSelected : null,
-                  selectedIndex: _bottomIndex,
-                  onDestinationSelected: _selectBottom,
-                  destinations: [
-                    for (final d in _bottomDestinations) NavigationDestination(icon: Icon(d.$2), selectedIcon: Icon(d.$3), label: d.$4),
-                  ],
+                bottomNavigationBar: AnimatedVisibility.bottomBar(
+                  visible: !rail && !watchingOnPhone && !(tabs != null && tabs.top),
+                  child: bottomTabs != null && !bottomTabs.top ? tabBar(bottomTabs) : _region(
+                    () => (_bottomIndex, currentLanguage),
+                    (context) => NavigationBar(
+                      height: 64,
+                      // Six labels do not fit a phone's width side by side.
+                      labelBehavior: MediaQuery.sizeOf(context).width < 600 ? NavigationDestinationLabelBehavior.onlyShowSelected : null,
+                      selectedIndex: _bottomIndex,
+                      onDestinationSelected: _selectBottom,
+                      destinations: [
+                        for (final (i, d) in _bottomDestinations.indexed) NavigationDestination(icon: FillIcon(d.$2, d.$3, selected: i == _bottomIndex), selectedIcon: FillIcon(d.$2, d.$3, selected: i == _bottomIndex), label: d.$4),
+                      ],
+                    ),
+                  ),
                 ),
               );
               // 关灯 darkens the whole window but the player, under dialogs
@@ -529,18 +544,76 @@ class _AppShellState extends State<AppShell> {
                 // pages first; on the first page they leave the app.
                 child: WindowFrame.supported
                     ? scaffold
-                    : PopScope(
-                        canPop: !_controller.canGoBack,
-                        onPopInvokedWithResult: (didPop, _) {
-                          if (!didPop) _back();
-                        },
+                    : SelectBuilder(
+                        listenable: _controller,
+                        select: () => _controller.canGoBack,
                         child: scaffold,
+                        builder: (context, canGoBack, scaffold) => PopScope(
+                          canPop: !canGoBack,
+                          onPopInvokedWithResult: (didPop, _) {
+                            if (!didPop) _back();
+                          },
+                          child: scaffold!,
+                        ),
                       ),
               );
             }),
           ),
         ),
       );
+
+  /// What the window's layout is built from; the parts inside it listen
+  /// for the rest themselves.
+  static Object _layoutOf(AppController c) => (
+        c.ready,
+        c.pip,
+        c.playing != null,
+        c.videoController != null,
+        c.onWatchPage,
+        c.mini,
+        c.appearance.navigation,
+        c.appearance.showStatusBar,
+        c.preferences.lightsOffDim,
+      );
+
+  /// A part of the window built again only when [select] reads something
+  /// new from the controller.
+  Widget _region(Object? Function() select, WidgetBuilder builder) =>
+      SelectBuilder(listenable: _controller, select: select, builder: (context, _, __) => builder(context));
+
+  Widget _navigationRail(BuildContext context) => NavigationRail(
+        backgroundColor: context.tones.chrome,
+        selectedIndex: _selectedIndex,
+        // A TV's few hundred pixels of height hold the
+        // pages, search and settings with only the chosen
+        // page named, as TV apps' rails do.
+        labelType: _tvRail ? NavigationRailLabelType.selected : NavigationRailLabelType.all,
+        minWidth: 76,
+        groupAlignment: -1,
+        onDestinationSelected: _select,
+        leading: _tvRail ? IconButton(tooltip: tr('Search'), onPressed: _tvSearch, icon: Icon(AppIcons.magnifyingGlass)) : null,
+        // The account is under Settings.
+        trailing: _tvRail ? IconButton(
+          tooltip: tr('Settings'),
+          isSelected: _controller.mode == PageMode.settings && !_controller.onWatchPage,
+          onPressed: () => openSettings(context, _controller),
+          icon: Icon(AppIcons.gear),
+          selectedIcon: const Icon(AppIcons.gearFill),
+        ) : null,
+        destinations: [
+          for (final (i, d) in _destinations.indexed)
+            NavigationRailDestination(icon: FillIcon(d.$2, d.$3, selected: i == _selectedIndex), selectedIcon: FillIcon(d.$2, d.$3, selected: i == _selectedIndex), label: Text(d.$4)),
+        ],
+      );
+
+  /// The shown page's place in the bottom bar, for the way a phone's page
+  /// change slides; null for a page that is not one of its tabs.
+  int? get _slideIndex {
+    final c = _controller;
+    if (!c.ready || c.onWatchPage || (c.mode == PageMode.explore && c.query != null)) return null;
+    if (!_library.contains(c.mode) && !_bottomDestinations.any((d) => d.$1 == c.mode)) return null;
+    return _bottomIndex;
+  }
 
   /// A skin with a busy picture behind lays some of its page colour over
   /// it under the pages, so what is written on them reads.
@@ -619,6 +692,24 @@ class _TopBar extends StatelessWidget {
   final TextEditingController searchText;
   final FocusNode searchFocus;
   final ValueChanged<String> onSubmit;
+
+  /// Everything of [controller]'s the bar shows, to build it again when
+  /// any of it changes.
+  static Object shownOf(AppController controller) {
+    final account = controller.account;
+    return (
+      controller.ready,
+      controller.incognito,
+      controller.checking,
+      controller.mode == PageMode.settings && !controller.onWatchPage,
+      account,
+      account?.state,
+      account?.name,
+      account?.avatar,
+      account?.syncing,
+      currentLanguage,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -879,6 +970,60 @@ class _SearchFieldState extends State<_SearchField> {
       });
 }
 
+/// The page area's page, built again whenever the controller notifies
+/// while it is the page shown. One on its way out keeps what it showed
+/// last, so the next page's state never draws into it.
+class _LivePage extends StatefulWidget {
+  const _LivePage({required this.controller, required this.pageKey, required this.shownKey, required this.builder, this.onBuilt});
+  final AppController controller;
+  final String pageKey;
+  final String Function() shownKey;
+  final WidgetBuilder builder;
+  final VoidCallback? onBuilt;
+
+  @override
+  State<_LivePage> createState() => _LivePageState();
+}
+
+class _LivePageState extends State<_LivePage> {
+  Widget? _built;
+
+  bool get _shown => widget.shownKey() == widget.pageKey;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_changed);
+  }
+
+  @override
+  void didUpdateWidget(_LivePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller.removeListener(_changed);
+      widget.controller.addListener(_changed);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_changed);
+    super.dispose();
+  }
+
+  void _changed() {
+    if (_shown) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final built = _built;
+    if (built != null && !_shown) return built;
+    widget.onBuilt?.call();
+    return _built = widget.builder(context);
+  }
+}
+
 class _SetupView extends StatelessWidget {
   const _SetupView({required this.controller});
   final AppController controller;
@@ -907,6 +1052,8 @@ class _SetupView extends StatelessWidget {
 class _StatusBar extends StatelessWidget {
   const _StatusBar({required this.controller});
   final AppController controller;
+
+  static Object shownOf(AppController controller) => (controller.status, controller.ready, controller.paths, controller.tools?.libmpvLabel);
 
   @override
   Widget build(BuildContext context) {

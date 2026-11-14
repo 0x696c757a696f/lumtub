@@ -1,0 +1,915 @@
+// Cassette Future: a built-in Lumtub skin. Beige hardware with chunky keys round an amber screen, the future as the 70s and 80s imagined it, with tape and tubes.
+// skins/template/skin.jsonc explains every field, and skins/README.md how to make your own.
+// 磁带未来：Lumtub 内置皮肤。米色机壳和厚实按键围着琥珀色屏幕，70、80 年代用磁带和显像管想象出来的未来。
+// 每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "cassette",
+  "name": "Cassette Future",
+  "names": {
+    "zh-Hans": "磁带未来",
+    "zh-Hant": "磁帶未來",
+    "zh-HK": "磁帶未來",
+    "af": "Kasset-toekoms",
+    "am": "የካሴት ወደፊት",
+    "ar": "مستقبل الكاسيت",
+    "az": "Kaset gələcəyi",
+    "be": "Касетная будучыня",
+    "bg": "Касетно бъдеще",
+    "bn": "ক্যাসেট ভবিষ্যৎ",
+    "cs": "Kazetová budoucnost",
+    "da": "Kassettefremtid",
+    "de": "Kassettenzukunft",
+    "el": "Μέλλον κασέτας",
+    "eo": "Kasedo-estonteco",
+    "es": "Futuro de casete",
+    "et": "Kassettitulevik",
+    "eu": "Kasete etorkizuna",
+    "fa": "آینده کاستی",
+    "fi": "Kasettitulevaisuus",
+    "fil": "Kinabukasan ng Kaset",
+    "fr": "Futur cassette",
+    "gl": "Futuro de casete",
+    "gu": "કેસેટ ભવિષ્ય",
+    "he": "עתיד הקסטות",
+    "hi": "कैसेट भविष्य",
+    "hu": "Kazettajövő",
+    "hy": "Ձայներիզի ապագա",
+    "id": "Masa Depan Kaset",
+    "is": "Kassettuframtíð",
+    "it": "Futuro a cassetta",
+    "ja": "カセットフューチャー",
+    "jv": "Masa Ngarep Kaset",
+    "ka": "კასეტების მომავალი",
+    "km": "អនាគតខាសែត",
+    "kn": "ಕ್ಯಾಸೆಟ್ ಭವಿಷ್ಯ",
+    "ko": "카세트 퓨처",
+    "la": "Futurum Cassettae",
+    "lo": "ອະນາຄົດເທບ",
+    "lt": "Kasečių ateitis",
+    "lv": "Kasešu nākotne",
+    "mk": "Касетна иднина",
+    "ml": "കാസറ്റ് ഭാവി",
+    "mn": "Кассетын ирээдүй",
+    "mr": "कॅसेट भविष्य",
+    "ms": "Masa Depan Kaset",
+    "my": "ကက်ဆက် အနာဂတ်",
+    "nb": "Kassettfremtid",
+    "ne": "क्यासेट भविष्य",
+    "nl": "Cassettetoekomst",
+    "pa": "ਕੈਸੇਟ ਭਵਿੱਖ",
+    "pl": "Kasetowa przyszłość",
+    "pt": "Futuro em fita",
+    "ro": "Viitor pe casetă",
+    "ru": "Кассетное будущее",
+    "si": "කැසට් අනාගතය",
+    "sk": "Kazetová budúcnosť",
+    "sq": "E ardhmja kasetë",
+    "su": "Mangsa Hareup Kaset",
+    "sv": "Kassettframtid",
+    "sw": "Kesho ya Kaseti",
+    "ta": "கேசட் எதிர்காலம்",
+    "te": "క్యాసెట్ భవిష్యత్తు",
+    "th": "อนาคตตลับเทป",
+    "ti": "ካሴት መጻኢ",
+    "tk": "Kasseta geljegi",
+    "tr": "Kaset Geleceği",
+    "uk": "Касетне майбутнє",
+    "ur": "کیسٹ مستقبل",
+    "uz": "Kassetali kelajak",
+    "vi": "Tương lai băng cát-xét",
+    "zu": "Ikusasa Lekhasethi",
+    "sr": "Касетна будућност",
+    "sr-Latn": "Kasetna budućnost",
+    "hr": "Kasetna budućnost",
+    "sl": "Kasetna prihodnost",
+    "bs": "Kasetna budućnost",
+    "ca": "Futur de casset",
+    "kk": "Кассета болашағы",
+    "ky": "Кассета келечеги",
+    "as": "কেছেট ভৱিষ্যত",
+    "or": "କ୍ୟାସେଟ୍ ଭବିଷ୍ୟତ"
+  },
+  "description": "Beige hardware with chunky keys around an amber screen, the future as it was imagined with tape and tubes",
+  "descriptions": {
+    "zh-Hans": "米色机壳和厚实按键围着琥珀色屏幕，用磁带和显像管想象出来的未来",
+    "zh-Hant": "米色機殼和厚實按鍵圍著琥珀色螢幕，用磁帶和映像管想像出來的未來",
+    "zh-HK": "米色機殼和厚實按鍵圍著琥珀色螢幕，用磁帶和顯像管想像出來的未來",
+    "af": "Beige apparaat met dik sleutels om 'n amberkleurige skerm, die toekoms soos dit met band en buise voorgestel is",
+    "am": "ቢጫ-ቡናማ ሃርድዌር በአምበር ማያ ዙሪያ ወፍራም ቁልፎች ያሉት፣ በካሴትና በቫክዩም ቲዩብ የተመሰለ መጪው ጊዜ",
+    "ar": "أجهزة بيج بأزرار ضخمة حول شاشة كهرمانية، المستقبل كما تخيّلوه بالأشرطة والصمامات",
+    "az": "Kəhrəba rəngli ekranın ətrafında qalın düymələri olan bej cihaz, lent və lampalarla təsəvvür edilən gələcək",
+    "be": "Бэжавая тэхніка з тоўстымі клавішамі вакол бурштынавага экрана, будучыня, якой яе ўяўлялі са стужкамі і лямпамі",
+    "bg": "Бежова техника с масивни клавиши около кехлибарен екран, бъдещето, както е било представяно с ленти и лампи",
+    "bn": "অ্যাম্বার পর্দাকে ঘিরে মোটা বোতামের বেজ হার্ডওয়্যার, টেপ আর ভ্যাকুয়াম টিউব দিয়ে কল্পনা করা ভবিষ্যৎ",
+    "cs": "Béžový hardware s masivními klávesami kolem jantarové obrazovky, budoucnost, jak si ji představovali s páskou a elektronkami",
+    "da": "Beige hardware med store taster rundt om en ravgul skærm, fremtiden som den blev forestillet med bånd og rør",
+    "de": "Beige Hardware mit klobigen Tasten um einen bernsteinfarbenen Bildschirm, die Zukunft, wie man sie sich mit Band und Röhren vorstellte",
+    "el": "Μπεζ υλικό με χοντρά πλήκτρα γύρω από μια κεχριμπαρένια οθόνη, το μέλλον όπως φανταζόταν με ταινίες και λυχνίες",
+    "eo": "Bruna aparataro kun dikaj klavoj ĉirkaŭ sukcen-flava ekrano, la estonteco kiel oni imagis ĝin per bendo kaj tuboj",
+    "es": "Equipos beige con teclas grandes alrededor de una pantalla ámbar, el futuro tal como se imaginaba con cintas y válvulas",
+    "et": "Beež riistvara jämedate klahvidega merevaigukollase ekraani ümber, tulevik, nagu seda lindi ja lampidega ette kujutati",
+    "eu": "Hardware beixa tekla lodiekin anbar koloreko pantaila baten inguruan, zinta eta hodiekin irudikatu zen etorkizuna",
+    "fa": "سخت‌افزار بژ با کلیدهای کلفت دور صفحه کهربایی، آینده‌ای که با نوار و لامپ خلا تصور می‌شد",
+    "fi": "Beigeä laitteistoa paksuine näppäimineen meripihkanvärisen näytön ympärillä, tulevaisuus sellaisena kuin se kuviteltiin nauhoin ja putkin",
+    "fil": "Beige na hardware na may makapal na key sa paligid ng amber na screen, ang kinabukasang inakala noon gamit ang tape at tube",
+    "fr": "Matériel beige avec de grosses touches autour d'un écran ambré, le futur tel qu'on l'imaginait avec des bandes et des tubes",
+    "gl": "Equipos beixe con teclas grandes arredor dunha pantalla ámbar, o futuro tal como se imaxinaba con cintas e válvulas",
+    "gu": "એમ્બર સ્ક્રીનની આસપાસ જાડી કીવાળું બેજ હાર્ડવેર, ટેપ અને ટ્યૂબથી કલ્પેલું ભવિષ્ય",
+    "he": "חומרה בצבע בז' עם מקשים עבים סביב מסך ענבר, העתיד כפי שדמיינו אותו עם סרטים ונורות",
+    "hi": "एम्बर स्क्रीन के आसपास मोटी कुंजियों वाला बेज हार्डवेयर, टेप और ट्यूब से कल्पित भविष्य",
+    "hu": "Bézs hardver vaskos gombokkal egy borostyánszínű képernyő körül, a jövő úgy, ahogy szalaggal és csövekkel elképzelték",
+    "hy": "Բեժ սարքավորում հաստ ստեղներով սաթագույն էկրանի շուրջ, ապագան՝ ինչպես այն պատկերացնում էին ժապավենով ու լամպերով",
+    "id": "Perangkat krem dengan tombol tebal mengelilingi layar amber, masa depan seperti yang dibayangkan dengan pita dan tabung",
+    "is": "Beislit tæki með þykkum tökkum utan um gulbrúnan skjá, framtíðin eins og hún var ímynduð með segulböndum og lömpum",
+    "it": "Hardware beige con tasti grossi attorno a uno schermo ambra, il futuro come lo si immaginava con nastri e valvole",
+    "ja": "琥珀色の画面を囲む、大きなキーのベージュの機器。テープと真空管で想像された未来",
+    "jv": "Piranti krim kanthi tombol kandel ngubengi layar amber, masa ngarep kaya sing dibayangake nganggo pita lan tabung",
+    "ka": "ბეჟი ტექნიკა მსხვილი კლავიშებით ქარვისფერი ეკრანის გარშემო, მომავალი ისე, როგორც მას ლენტებითა და ნათურებით წარმოიდგენდნენ",
+    "km": "ឧបករណ៍ពណ៌ក្រែមមានគ្រាប់ចុចក្រាស់ព័ទ្ធជុំវិញអេក្រង់ពណ៌លឿងទុំ អនាគតដូចដែលគេស្រមៃដោយខ្សែអាត់ និងបំពង់",
+    "kn": "ಅಂಬರ್ ಪರದೆಯ ಸುತ್ತ ದಪ್ಪ ಕೀಗಳಿರುವ ಬೇಜ್ ಹಾರ್ಡ್‌ವೇರ್, ಟೇಪ್ ಮತ್ತು ಟ್ಯೂಬ್‌ಗಳಿಂದ ಕಲ್ಪಿಸಿದ ಭವಿಷ್ಯ",
+    "ko": "호박색 화면을 둘러싼 두툼한 키가 달린 베이지색 기기. 테이프와 진공관으로 상상했던 미래",
+    "la": "Instrumenta pallida cum clavibus crassis circum velum electrinum, futurum ut cum taenia et fistulis fingebatur",
+    "lo": "ອຸປະກອນສີຄຣີມທີ່ມີປຸ່ມໜາອ້ອມໜ້າຈໍສີອຳພັນ, ອະນາຄົດທີ່ຈິນຕະນາການດ້ວຍເທບ ແລະ ຫຼອດ",
+    "lt": "Smėlio spalvos aparatūra su stambiais klavišais aplink gintarinį ekraną, ateitis, kokia ji buvo įsivaizduojama su juosta ir lempomis",
+    "lv": "Bēša aparatūra ar resniem taustiņiem ap dzintarkrāsas ekrānu, nākotne, kādu to iztēlojās ar lentām un lampām",
+    "mk": "Беж опрема со дебели копчиња околу килибарен екран, иднината како што се замислуваше со ленти и цевки",
+    "ml": "ആമ്പർ സ്ക്രീനിന് ചുറ്റും തടിച്ച കീകളുള്ള ബേജ് ഹാർഡ്‌വെയർ, ടേപ്പും ട്യൂബും കൊണ്ട് ഭാവന ചെയ്ത ഭാവി",
+    "mn": "Хув шар дэлгэцийг тойрсон зузаан товчтой цайвар хүрэн төхөөрөмж, соронзон хальс, гэрлийн хоолойгоор төсөөлсөн ирээдүй",
+    "mr": "अंबर स्क्रीनभोवती जाड कळा असलेले बेज हार्डवेअर, टेप आणि ट्यूबने कल्पिलेले भविष्य",
+    "ms": "Perkakasan krim dengan kekunci tebal mengelilingi skrin amber, masa depan seperti yang dibayangkan dengan pita dan tiub",
+    "my": "ပယင်းရောင်မျက်နှာပြင်ကို ဝန်းရံထားသော ထူထဲသောခလုတ်များပါ ဘေ့ချ်ရောင်ကိရိယာ၊ တိပ်ခွေနှင့် ဗားကျူးအမ်ပြွန်များဖြင့် စိတ်ကူးထားသော အနာဂတ်",
+    "nb": "Beige maskinvare med tykke taster rundt en ravgul skjerm, fremtiden slik den ble forestilt med bånd og rør",
+    "ne": "एम्बर स्क्रिनको वरिपरि बाक्ला कुञ्जी भएको बेज हार्डवेयर, टेप र ट्युबले कल्पना गरिएको भविष्य",
+    "nl": "Beige apparatuur met dikke toetsen rond een amberkleurig scherm, de toekomst zoals die werd voorgesteld met tape en buizen",
+    "pa": "ਅੰਬਰ ਸਕ੍ਰੀਨ ਦੁਆਲੇ ਮੋਟੀਆਂ ਕੁੰਜੀਆਂ ਵਾਲਾ ਬੇਜ ਹਾਰਡਵੇਅਰ, ਟੇਪ ਅਤੇ ਟਿਊਬਾਂ ਨਾਲ ਕਲਪਿਆ ਭਵਿੱਖ",
+    "pl": "Beżowy sprzęt z grubymi klawiszami wokół bursztynowego ekranu, przyszłość taka, jaką wyobrażano sobie z taśmą i lampami",
+    "pt": "Equipamento bege com teclas grossas em volta de uma tela âmbar, o futuro como era imaginado com fitas e válvulas",
+    "ro": "Echipament bej cu taste mari în jurul unui ecran chihlimbariu, viitorul așa cum era imaginat cu benzi și tuburi",
+    "ru": "Бежевая техника с крупными клавишами вокруг янтарного экрана, будущее, каким его представляли с лентами и лампами",
+    "si": "ඇම්බර් තිරය වටා ඝන යතුරු සහිත බෙජ් දෘඩාංග, පටි සහ නළ සමඟ පරිකල්පනය කළ අනාගතය",
+    "sk": "Béžový hardvér s hrubými klávesmi okolo jantárovej obrazovky, budúcnosť, akú si predstavovali s páskou a elektrónkami",
+    "sq": "Pajisje bezhë me tasta të trashë rreth një ekrani qelibar, e ardhmja siç imagjinohej me shirita dhe tuba",
+    "su": "Parabot krim jeung kenop kandel ngurilingan layar amber, mangsa hareup nu dibayangkeun ku pita jeung tabung",
+    "sv": "Beige hårdvara med tjocka tangenter runt en bärnstensfärgad skärm, framtiden som den föreställdes med band och rör",
+    "sw": "Vifaa vya rangi ya krimu vyenye vitufe vinene kuzunguka skrini ya kaharabu, kesho kama ilivyofikiriwa kwa kanda na mirija",
+    "ta": "பழுப்பு வன்பொருள், தடித்த விசைகள், அம்பர் திரை; டேப்பும் குழாய்களும் கொண்டு கற்பனை செய்த எதிர்காலம்",
+    "te": "అంబర్ తెర చుట్టూ లావు కీలతో లేత గోధుమ హార్డ్‌వేర్, టేపులు, ట్యూబులతో ఊహించిన భవిష్యత్తు",
+    "th": "ฮาร์ดแวร์สีเบจ ปุ่มหนาเทอะทะล้อมจอสีอำพัน อนาคตอย่างที่เคยจินตนาการไว้ด้วยเทปและหลอดสุญญากาศ",
+    "ti": "ቤዥ ሃርድዌር ምስ ጥቅጥቅ ዝበሉ ቁልፍታት ኣብ ዙርያ ኣምበር ስክሪን፡ እቲ መጻኢ ከም ብቴፕን ቱቦታትን ዝተሓሰበ",
+    "tk": "Sary-gaýmak reňkli enjam, ýantar ekranyň töwereginde gaty düwmeler, lenta we lampalar bilen göz öňüne getirilen geljek",
+    "tr": "Kehribar rengi bir ekranın çevresinde iri tuşlu bej donanım, bant ve lambalarla hayal edilen gelecek",
+    "uk": "Бежеве обладнання з масивними клавішами навколо бурштинового екрана, майбутнє, яким його уявляли зі стрічками й лампами",
+    "ur": "عنبری اسکرین کے گرد موٹے بٹنوں والا بھورا ہارڈویئر، وہ مستقبل جیسا ٹیپ اور ٹیوبوں کے ساتھ تصور کیا گیا تھا",
+    "uz": "Qahrabo rangli ekran atrofida yirik tugmali bej uskuna, lenta va lampalar bilan tasavvur qilingan kelajak",
+    "vi": "Thiết bị màu be với phím to bè quanh màn hình màu hổ phách, tương lai như người ta từng hình dung với băng từ và đèn điện tử",
+    "zu": "Ihadiwe ye-beige enezinkinobho eziqinile zizungeze isikrini se-amber, ikusasa njengoba lalicatshangwa ngethephu namashubhu",
+    "sr": "Беж опрема са крупним тастерима око ћилибарског екрана, будућност каква је замишљана уз траке и лампе",
+    "sr-Latn": "Bež oprema sa krupnim tasterima oko ćilibarskog ekrana, budućnost kakva je zamišljana uz trake i lampe",
+    "hr": "Bež oprema s krupnim tipkama oko jantarnog zaslona, budućnost kakva se zamišljala uz vrpce i cijevi",
+    "sl": "Bež oprema z močnimi tipkami okoli jantarnega zaslona, prihodnost, kot so si jo zamišljali s trakovi in cevmi",
+    "bs": "Bež oprema s krupnim tipkama oko ćilibarskog ekrana, budućnost kakva se zamišljala uz trake i cijevi",
+    "ca": "Maquinari beix amb tecles grosses al voltant d'una pantalla ambre, el futur tal com s'imaginava amb cintes i vàlvules",
+    "kk": "Сары-ақшыл түсті жабдық, кәріптас экран айналасында ірі пернелер, таспа мен шамдар арқылы елестетілген болашақ",
+    "ky": "Янтарь экрандын тегерегинде чоң баскычтары бар саргыч жабдуу, лента жана лампалар менен элестетилген келечек",
+    "as": "এম্বাৰ পৰ্দাৰ চাৰিওফালে মোটা কীৰে বেইজ হাৰ্ডৱেৰ, টেপ আৰু টিউবেৰে কল্পনা কৰা ভৱিষ্যত",
+    "or": "ଅମ୍ବର୍ ସ୍କ୍ରିନ୍ ଚାରିପାଖରେ ମୋଟା କୀ ସହିତ ବେଜ୍ ହାର୍ଡୱେର୍, ଟେପ୍ ଓ ଟ୍ୟୁବ୍ ସହିତ କଳ୍ପନା କରାଯାଇଥିବା ଭବିଷ୍ୟତ"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "text": {
+    "displayFont": "VT323",
+    "monoFont": "VT323"
+  },
+  "colors": {
+    "page": "#f3eedd",
+    "text": "#1c1a14",
+    "muted": "#4a4433",
+    "accent": "#b8420e",
+    "onAccent": "#ffffff",
+    "border": "#b8ae93",
+    "card": "#fbf8ef",
+    "selected": "#f0dcc0",
+    "onSelected": "#3a1a00",
+    "reason": "#9a3a0a",
+    "chrome": "#cfc6ad"
+  },
+  "shape": {
+    "cardRadius": 2,
+    "controlRadius": 3,
+    "thumbnailRadius": 0
+  },
+  "window": {
+    "background": [
+      "#f3eedd",
+      {
+        "pattern": {
+          "type": "lines",
+          "color": "#0000000a",
+          "spacing": 24,
+          "size": 1
+        }
+      }
+    ],
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#ddd5bc",
+              "#c4bb9f"
+            ]
+          }
+        },
+        "border": {
+          "color": "#6d6551",
+          "width": 2,
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#ddd5bc",
+              "#c4bb9f"
+            ]
+          }
+        }
+      },
+      "text": "#1c1a14",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#1c1a14",
+        "surface": {
+          "fill": "transparent",
+          "radius": 0,
+          "hover": {
+            "fill": "#00000014"
+          },
+          "pressed": {
+            "fill": "#00000029"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "radius": 0,
+          "hover": {
+            "fill": "#e2541f"
+          },
+          "pressed": {
+            "fill": "#e2541f"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#cfc6ad"
+      },
+      "text": "#1c1a14",
+      "highlight": {
+        "fill": "#a83a0c"
+      },
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#efe8d4fa",
+        "border": "#6d6551",
+        "radius": 0
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ddd5bc",
+            "#c4bb9f"
+          ]
+        }
+      },
+      "border": {
+        "color": "#6d6551",
+        "width": 2,
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": {
+        "linear": {
+          "angle": 90,
+          "colors": [
+            "#c4bb9f",
+            "#d6ceb4"
+          ]
+        }
+      },
+      "border": {
+        "color": "#6d6551",
+        "width": 2,
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#c4bb9f",
+            "#aca286"
+          ]
+        }
+      }
+    },
+    "topBarText": "#1c1a14",
+    "statusBarText": "#1c1a14",
+    "tabs": {
+      "position": "bottom",
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#ddd5bc",
+              "#c4bb9f"
+            ]
+          }
+        },
+        "border": {
+          "color": "#6d6551",
+          "sides": [
+            "top"
+          ]
+        }
+      },
+      "text": "#2c281e",
+      "selectedText": "#ffb000",
+      "indicator": "#ffb000",
+      "selected": {
+        "fill": "#1c1a14",
+        "radius": 2
+      }
+    }
+  },
+  "controls": {
+    "press": "wash",
+    "button": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#efe8d4",
+            "#cfc6ad"
+          ]
+        }
+      },
+      "border": "#6d6551",
+      "shadow": [
+        {
+          "color": "#6d6551",
+          "x": 0,
+          "y": 3,
+          "blur": 0
+        }
+      ],
+      "pressed": {
+        "shadow": [
+          {
+            "color": "#6d6551",
+            "x": 0,
+            "y": 1,
+            "blur": 0
+          }
+        ]
+      }
+    },
+    "buttonText": "#1c1a14",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#f07a3c",
+            "#e2541f"
+          ]
+        }
+      },
+      "border": "#7a2a08",
+      "shadow": [
+        {
+          "color": "#7a2a08",
+          "x": 0,
+          "y": 3,
+          "blur": 0
+        }
+      ],
+      "pressed": {
+        "shadow": [
+          {
+            "color": "#7a2a08",
+            "x": 0,
+            "y": 1,
+            "blur": 0
+          }
+        ]
+      }
+    },
+    "primaryButtonText": "#1c0a00",
+    "chip": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#efe8d4",
+            "#cfc6ad"
+          ]
+        }
+      },
+      "border": "#6d6551",
+      "shadow": [
+        {
+          "color": "#6d6551",
+          "x": 0,
+          "y": 2,
+          "blur": 0
+        }
+      ]
+    },
+    "chipSelected": {
+      "fill": "#1c1a14",
+      "border": "#000000"
+    },
+    "chipSelectedText": "#ffb000",
+    "navSelected": {
+      "fill": "#1c1a14",
+      "radius": 2
+    },
+    "navSelectedText": "#ffb000",
+    "navText": "#2c281e"
+  },
+  "cards": {
+    "video": {
+      "fill": "#fbf8ef",
+      "border": "#b8ae93",
+      "hover": {
+        "border": "#b8420e"
+      },
+      "focused": {
+        "border": {
+          "color": "#b8420e",
+          "width": 3
+        }
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#fbf8ef",
+      "border": "#b8ae93"
+    },
+    "durationBadge": {
+      "fill": "#150c02",
+      "radius": 0
+    },
+    "durationText": "#ffb000"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "VT323",
+    "size": 28,
+    "fill": "#1c1a14",
+    "badge": {
+      "fill": "#e2541f",
+      "radius": 3,
+      "border": "#7a2a08"
+    },
+    "badgeIcon": "#1c0a00"
+  },
+  "icons": {
+    "style": "regular",
+    "effect": "none"
+  },
+  "player": {
+    "style": "lcd",
+    "frame": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ddd5bc",
+            "#c4bb9f",
+            "#b4aa8e"
+          ]
+        }
+      },
+      "border": "#6d6551",
+      "radius": 14
+    },
+    "lcd": {
+      "fill": "#150c02",
+      "border": "#3a3426",
+      "radius": 8
+    },
+    "lcdText": "#ffb000",
+    "lcdAccent": "#ff7a3a",
+    "spectrum": true,
+    "progress": "#ffb000"
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#150c02",
+        "text": "#ffb000",
+        "muted": "#d9961a",
+        "accent": "#ffb000",
+        "onAccent": "#140b00",
+        "border": "#4a3410",
+        "card": "#1c1104",
+        "selected": "#3a2604",
+        "onSelected": "#ffc23a",
+        "reason": "#ffc23a",
+        "chrome": "#1c1104"
+      },
+      "window": {
+        "background": [
+          "#150c02",
+          {
+            "radial": {
+              "center": [
+                0.55,
+                0.5
+              ],
+              "radius": 0.8,
+              "colors": [
+                "#ffb00014",
+                "#ffb00000"
+              ]
+            }
+          },
+          {
+            "pattern": {
+              "type": "scanlines",
+              "color": "#00000059",
+              "spacing": 3,
+              "size": 1
+            }
+          }
+        ],
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#ddd5bc",
+                  "#c4bb9f"
+                ]
+              }
+            },
+            "border": {
+              "color": "#6d6551",
+              "width": 2,
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "inactive": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#ddd5bc",
+                  "#c4bb9f"
+                ]
+              }
+            }
+          },
+          "text": "#1c1a14",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#1c1a14",
+            "surface": {
+              "fill": "transparent",
+              "radius": 0,
+              "hover": {
+                "fill": "#00000014"
+              },
+              "pressed": {
+                "fill": "#00000029"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "radius": 0,
+              "hover": {
+                "fill": "#e2541f"
+              },
+              "pressed": {
+                "fill": "#e2541f"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": "#cfc6ad"
+          },
+          "text": "#1c1a14",
+          "highlight": {
+            "fill": "#a83a0c"
+          },
+          "highlightText": "#ffffff",
+          "menu": {
+            "fill": "#1c1104fa",
+            "border": "#ffb000",
+            "radius": 0
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#ddd5bc",
+                "#c4bb9f"
+              ]
+            }
+          },
+          "border": {
+            "color": "#6d6551",
+            "width": 2,
+            "sides": [
+              "bottom"
+            ]
+          }
+        },
+        "sideBar": {
+          "fill": {
+            "linear": {
+              "angle": 90,
+              "colors": [
+                "#c4bb9f",
+                "#d6ceb4"
+              ]
+            }
+          },
+          "border": {
+            "color": "#6d6551",
+            "width": 2,
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#c4bb9f",
+                "#aca286"
+              ]
+            }
+          }
+        },
+        "topBarText": "#1c1a14",
+        "statusBarText": "#1c1a14",
+        "tabs": {
+          "position": "bottom",
+          "surface": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#ddd5bc",
+                  "#c4bb9f"
+                ]
+              }
+            },
+            "border": {
+              "color": "#6d6551",
+              "sides": [
+                "top"
+              ]
+            }
+          },
+          "text": "#2c281e",
+          "selectedText": "#ffb000",
+          "indicator": "#ffb000",
+          "selected": {
+            "fill": "#1c1a14",
+            "radius": 2
+          }
+        }
+      },
+      "controls": {
+        "press": "wash",
+        "button": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#efe8d4",
+                "#cfc6ad"
+              ]
+            }
+          },
+          "border": "#6d6551",
+          "shadow": [
+            {
+              "color": "#000000",
+              "x": 0,
+              "y": 3,
+              "blur": 0
+            }
+          ],
+          "pressed": {
+            "shadow": [
+              {
+                "color": "#000000",
+                "x": 0,
+                "y": 1,
+                "blur": 0
+              }
+            ]
+          }
+        },
+        "buttonText": "#1c1a14",
+        "primaryButton": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#f07a3c",
+                "#e2541f"
+              ]
+            }
+          },
+          "border": "#7a2a08",
+          "shadow": [
+            {
+              "color": "#000000",
+              "x": 0,
+              "y": 3,
+              "blur": 0
+            }
+          ],
+          "pressed": {
+            "shadow": [
+              {
+                "color": "#000000",
+                "x": 0,
+                "y": 1,
+                "blur": 0
+              }
+            ]
+          }
+        },
+        "primaryButtonText": "#1c0a00",
+        "chip": {
+          "fill": "transparent",
+          "border": "#ffb0008c"
+        },
+        "chipSelected": {
+          "fill": "#ffb000"
+        },
+        "chipSelectedText": "#140b00",
+        "navSelected": {
+          "fill": "#1c1a14",
+          "radius": 2,
+          "shadow": [
+            {
+              "color": "#00000080",
+              "x": 0,
+              "y": 0,
+              "blur": 4
+            }
+          ]
+        },
+        "navSelectedText": "#ffb000",
+        "navText": "#2c281e"
+      },
+      "cards": {
+        "video": {
+          "fill": "#1c1104",
+          "border": "#ffb00066",
+          "hover": {
+            "border": "#ffb000",
+            "glow": "#ffb00066"
+          },
+          "focused": {
+            "border": {
+              "color": "#ffb000",
+              "width": 3
+            },
+            "glow": "#ffb000"
+          }
+        },
+        "padding": 6,
+        "panel": {
+          "fill": "#120a02",
+          "border": "#ffb00059"
+        },
+        "durationBadge": {
+          "fill": "#000000",
+          "radius": 0
+        },
+        "durationText": "#ffb000"
+      },
+      "logo": {
+        "text": "LUMTUB",
+        "font": "VT323",
+        "size": 28,
+        "fill": "#1c1a14",
+        "badge": {
+          "fill": "#e2541f",
+          "radius": 3,
+          "border": "#7a2a08"
+        },
+        "badgeIcon": "#1c0a00"
+      },
+      "icons": {
+        "style": "regular",
+        "effect": "none"
+      },
+      "player": {
+        "style": "lcd",
+        "frame": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#ddd5bc",
+                "#c4bb9f",
+                "#b4aa8e"
+              ]
+            }
+          },
+          "border": "#6d6551",
+          "radius": 14
+        },
+        "lcd": {
+          "fill": "#150c02",
+          "border": "#3a3426",
+          "radius": 8
+        },
+        "lcdText": "#ffb000",
+        "lcdAccent": "#ff7a3a",
+        "spectrum": true,
+        "progress": "#ffb000"
+      }
+    },
+    "tv": {
+      "cards": {
+        "video": {
+          "focused": {
+            "border": {
+              "color": "#b8420e",
+              "width": 4
+            },
+            "glow": "#b8420e"
+          }
+        }
+      },
+      "controls": {
+        "button": {
+          "focused": {
+            "border": {
+              "color": "#b8420e",
+              "width": 3
+            }
+          }
+        },
+        "chip": {
+          "focused": {
+            "border": {
+              "color": "#b8420e",
+              "width": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

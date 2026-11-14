@@ -1,7 +1,7 @@
 name: lumtub
 description: A lightweight native Windows YouTube player built with Flutter and libmpv.
 publish_to: none
-version: 0.2.42+44
+version: 0.2.43+45
 
 environment:
   sdk: '>=3.6.0 <4.0.0'
@@ -88,6 +88,18 @@ flutter:
     - skins/linen/
     - skins/shelf/
     - skins/handheld/
+    - skins/scholar/
+    - skins/softclub/
+    - skins/obsidian/
+    - skins/hexatron/
+    - skins/bento/
+    - skins/livingroom/
+    - skins/silkwave/
+    - skins/flourish/
+    - skins/homepage/
+    - skins/cassette/
+    - skins/clay/
+    - skins/brutal/
     - skins/template/
   fonts:
     # One bundled default face keeps the Windows package small (SIL OFL 1.1,
@@ -123,6 +135,25 @@ flutter:
         - asset: skins/fonts/Exo2-ExtraBoldItalic.ttf
           weight: 800
           style: italic
+    # Cut to one weight and Latin letters.
+    - family: Cinzel
+      fonts:
+        - asset: skins/fonts/Cinzel-SemiBold.ttf
+          weight: 600
+    - family: Orbitron
+      fonts:
+        - asset: skins/fonts/Orbitron-Bold.ttf
+          weight: 700
+    - family: Comfortaa
+      fonts:
+        - asset: skins/fonts/Comfortaa-Bold.ttf
+          weight: 700
+    - family: Archivo Black
+      fonts:
+        - asset: skins/fonts/ArchivoBlack-Regular.ttf
+    - family: Space Mono
+      fonts:
+        - asset: skins/fonts/SpaceMono-Regular.ttf
     # Phosphor icons (MIT, assets/fonts/phosphor/LICENSE).
     - family: Phosphor
       fonts:

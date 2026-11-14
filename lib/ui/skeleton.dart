@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -72,4 +73,43 @@ class SkeletonBox extends StatelessWidget {
           borderRadius: BorderRadius.circular(radius),
         ),
       );
+}
+
+// Adapted from prism_ui (FlClash), GPL-3.0: the delayed loading status of
+// its NullStatusSwitcher.
+/// Shows [child], a loading placeholder, only once loading has taken longer
+/// than [delay]: a quick load then never flashes one. It comes in with a
+/// short fade and scale.
+class DelayedReveal extends StatefulWidget {
+  const DelayedReveal({super.key, this.delay = DelayedReveal.wait, required this.child});
+  final Duration delay;
+  final Widget child;
+
+  /// How long a load runs before its placeholder shows.
+  static const wait = Duration(milliseconds: 400);
+  static const enter = Duration(milliseconds: 300);
+
+  @override
+  State<DelayedReveal> createState() => _DelayedRevealState();
+}
+
+class _DelayedRevealState extends State<DelayedReveal> {
+  Timer? _timer;
+  late bool _shown = widget.delay <= Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_shown) _timer = Timer(widget.delay, () => setState(() => _shown = true));
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      _shown ? Entrance(duration: DelayedReveal.enter, curve: Easing.emphasizedDecelerate, child: widget.child) : const SizedBox.shrink();
 }

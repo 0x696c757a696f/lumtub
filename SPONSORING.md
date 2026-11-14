@@ -8,6 +8,10 @@ Lumtub is built by one developer, in the open, with no ads and no tracking. Spon
 
 The same page is in the app under Settings › About › Support development.
 
+## Ko-fi
+
+[Ko-fi](https://ko-fi.com/0x696c757a696f) takes one-time gifts in euros by PayPal or card, no GitHub account needed.
+
 ## Afdian (爱发电)
 
 [Afdian](https://afdian.com/a/linmuqingfeng) takes Alipay and WeChat Pay, for supporters in China: ¥6, ¥15, ¥30 or ¥100 a month. Supporters are named in the [list below](#supporters).

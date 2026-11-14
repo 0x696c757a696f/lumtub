@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
+import 'package:lumtub/appearance_settings.dart';
 import 'package:lumtub/main.dart';
 import 'package:lumtub/ui/animated_visibility.dart';
 import 'package:lumtub/ui/motion.dart';
@@ -13,7 +14,12 @@ void main() {
     if (platformBrightness != null) tester.platformDispatcher.platformBrightnessTestValue = platformBrightness;
     addTearDown(tester.view.reset);
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
-    final controller = AppController();
+    // Full motion whatever the machine says: on Windows with animations
+    // turned off, as some CI machines have it, the app would swap the bars
+    // at once and Flutter would run every animation 20 times faster.
+    tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures();
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    final controller = AppController(appearance: const AppearanceSettings(motion: MotionPreference.full));
     await tester.pumpWidget(LumtubApp(controller: controller));
     await tester.pump();
     return controller;

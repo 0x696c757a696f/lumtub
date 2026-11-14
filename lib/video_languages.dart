@@ -45,10 +45,14 @@ class VideoLanguages {
   late final _probe = YoutubePlayerProbe(_client);
 
   Map<String, SpokenVideo>? _known;
-  /// Answers without audio or captions, by video and language asked in,
-  /// for this run only: YouTube may tell next time.
+  /// Answers without audio or captions, by video and language asked in.
+  /// Those told by their texts are kept on disk for [textKeptFor] (when
+  /// they were asked is in [_textAt]), the rest for this run only: YouTube
+  /// may tell by audio or captions next time.
   final _unheard = <String, SpokenVideo>{};
+  final _textAt = <String, int>{};
   static const _unheardKept = 5000;
+  static const textKeptFor = Duration(days: 7);
 
   /// The channel of each known video, when the listing gave it.
   final _channelOf = <String, String>{};
@@ -95,8 +99,16 @@ class VideoLanguages {
         if (channel != null) _count(id, channel, found.language);
         _save ??= Timer(const Duration(seconds: 5), _write);
       } else if (found != null) {
-        if (_unheard.length >= _unheardKept) _unheard.remove(_unheard.keys.first);
+        if (_unheard.length >= _unheardKept) {
+          final oldest = _unheard.keys.first;
+          _unheard.remove(oldest);
+          _textAt.remove(oldest);
+        }
         _unheard['$id $hl'] = found;
+        if (found.source == 'text') {
+          _textAt['$id $hl'] = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+          _save ??= Timer(const Duration(seconds: 5), _write);
+        }
       }
       return found;
     } catch (e) {
@@ -245,6 +257,23 @@ class VideoLanguages {
   Future<Map<String, SpokenVideo>> _load() async {
     final path = file?.path;
     if (path == null) return {};
+    final texts = _textFile(path);
+    final oldest = DateTime.now().subtract(textKeptFor).millisecondsSinceEpoch ~/ 1000;
+    final read = await Isolate.run(() {
+      try {
+        final raw = jsonDecode(File(texts).readAsStringSync()) as Map<String, dynamic>;
+        return {
+          for (final MapEntry(:key, :value) in raw.entries)
+            if (value is Map<String, dynamic> && (value['at'] as num? ?? 0) >= oldest && value['source'] == 'text') key: value,
+        };
+      } catch (_) {
+        return <String, Map<String, dynamic>>{};
+      }
+    });
+    for (final MapEntry(:key, :value) in read.entries) {
+      _unheard[key] = _spoken(value);
+      _textAt[key] = (value['at'] as num).toInt();
+    }
     final (known, channels) = await Isolate.run(() {
       final file = File(path);
       final none = (<String, SpokenVideo>{}, <String, String>{});
@@ -283,27 +312,44 @@ class VideoLanguages {
     final raw = {
       for (final MapEntry(:key, :value) in known.entries)
         key: {
-          'language': switch (value.language) {
-            null => 0,
-            ExploreLanguage.any => -1,
-            final language => language.index,
-          },
-          'title': value.title,
-          'source': value.source,
+          ..._encode(value),
           if (_channelOf[key] case final channel?) 'channel': channel,
         },
     };
+    final texts = {
+      for (final MapEntry(:key, :value) in _textAt.entries)
+        if (_unheard[key] case final spoken?) key: {..._encode(spoken), 'at': value},
+    };
     final path = file.path;
+    final textPath = _textFile(path);
     // Thousands of answers: encoded and written off the UI thread.
     unawaited(Isolate.run(() {
-      final out = File(path);
-      out.parent.createSync(recursive: true);
-      // Written beside and then swapped in, so a crash mid-write leaves
-      // the last whole file.
-      final next = File('$path.tmp')..writeAsStringSync(jsonEncode(raw), flush: true);
-      next.renameSync(path);
+      void write(String path, Object value) {
+        final out = File(path);
+        out.parent.createSync(recursive: true);
+        // Written beside and then swapped in, so a crash mid-write leaves
+        // the last whole file.
+        final next = File('$path.tmp')..writeAsStringSync(jsonEncode(value), flush: true);
+        next.renameSync(path);
+      }
+
+      write(path, raw);
+      write(textPath, texts);
     }).catchError((Object e) => logWarn('Could not save video languages: $e')));
   }
+
+  /// Where the answers told by texts are kept, beside [path]'s.
+  static String _textFile(String path) => '${File(path).parent.path}${Platform.pathSeparator}text_languages.json';
+
+  static Map<String, Object> _encode(SpokenVideo spoken) => {
+        'language': switch (spoken.language) {
+          null => 0,
+          ExploreLanguage.any => -1,
+          final language => language.index,
+        },
+        'title': spoken.title,
+        'source': spoken.source,
+      };
 
   /// The lines of [lines] whose videos are spoken in [language], each
   /// with the title YouTube gives in [language]; channels and playlists

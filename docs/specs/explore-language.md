@@ -106,10 +106,12 @@ each of its videos still has to be heard.
 ## Keeping answers
 
 Answers told by audio or captions are kept in memory and in
-`cache/heard_languages.json` (up to 20 000). Other answers are kept in
-memory only, until Lumtub is closed (up to 5 000), and asked again after
-that, as YouTube may tell by then. Guesses from titles kept by earlier
-versions are not read back.
+`cache/heard_languages.json` (up to 20 000). Answers told by the video's
+texts are kept in `cache/text_languages.json` for the language they were
+asked in, for a week, then asked again, as YouTube may have made captions
+by then. Answers that told nothing are kept in memory only, until Lumtub
+is closed (up to 5 000 unheard answers in all). Guesses from titles kept
+by earlier versions in `heard_languages.json` are not read back.
 
 ## When nothing is found
 

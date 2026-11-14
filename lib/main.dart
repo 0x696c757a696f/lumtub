@@ -34,7 +34,6 @@ import 'device.dart';
 Future<void> main() async {
   FrameStats.sinceStart.start();
   WidgetsFlutterBinding.ensureInitialized();
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) SmoothWheel.install();
   // Before any HTTP client exists, so all of them follow the proxy setting.
   HttpOverrides.global = appHttpOverrides;
   final reportFlutterError = FlutterError.onError;
@@ -262,7 +261,7 @@ class _LumtubAppState extends State<LumtubApp> {
                 child: MediaQuery(
                   // A TV is read from across the room: text a size larger.
                   data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale * (Device.tv ? _tvText : 1)), disableAnimations: media.disableAnimations || Motion.reduced),
-                  child: Device.tv ? _TvFrame(child: chrome) : chrome,
+                  child: SmoothWheel(child: Device.tv ? _TvFrame(child: chrome) : chrome),
                 ),
               );
             },

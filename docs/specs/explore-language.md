@@ -54,13 +54,23 @@ region is picked.
   the visionOS app a quick start uses, then the TV app, then the website.
   Whichever told last is asked first from then on.
 - The visitor id YouTube gives in its first answer is sent back with
-  every later request, as a browser does with its cookie.
+  every later request, as a browser does with its cookie, together with
+  the consent cookie (`SOCS`), which keeps requests from Europe from
+  being sent to the consent page.
 - Answers are cut down with `X-Goog-FieldMask`; if the mask loses the
   video, whole answers are asked for.
 - Texts are asked in the language picked, so the title shown is the one
   a viewer in that language would see.
 - If YouTube leaves the video out of half of the last 20 answers (as when
   it asks this network to sign in), nothing is asked for 10 minutes.
+
+## Channels
+
+The videos heard of each channel are counted by language. A channel with
+at least 3 heard videos, all in one language other than the one picked,
+is left out without asking about its other videos. A channel heard in
+two languages is never skipped. A channel is never let in this way:
+each of its videos still has to be heard.
 
 ## Keeping answers
 

@@ -154,6 +154,32 @@ void main() {
     expect(calls, PlayerClient.values.length, reason: 'an unheard one is asked again, of every app');
   }, skip: core);
 
+  test('leaves out a channel plainly in another language without asking about its videos', () async {
+    final asked = <String>{};
+    final client = MockClient((request) async {
+      final id = (jsonDecode(request.body) as Map)['videoId'] as String;
+      asked.add(id);
+      return _json(_player('Lecture', asr: id.startsWith('e') ? 'en' : 'it'));
+    });
+    final folder = Directory.systemTemp.createTempSync('languages');
+    addTearDown(() => folder.deleteSync(recursive: true));
+    final file = File('${folder.path}/languages.json');
+    String line(String id, String channel) => jsonEncode({'id': id, 'title': 'Lecture', 'channel': 'c', 'channel_id': channel});
+    const english = 'UCaaaaaaaaaaaaaaaaaaaaaa', mixed = 'UCbbbbbbbbbbbbbbbbbbbbbb';
+    var languages = VideoLanguages(client, file: file);
+    await languages.only(Stream.fromIterable([for (var i = 0; i < VideoLanguages.channelSure; i++) line('e000000000$i', english)]), ExploreLanguage.it).toList();
+    await languages.only(Stream.fromIterable([line('e0000000009', mixed), line('i0000000009', mixed), line('e0000000008', mixed)]), ExploreLanguage.it).toList();
+    expect(languages.channelSpeaks(english), ExploreLanguage.en);
+    expect(languages.channelSpeaks(mixed), isNull, reason: 'heard in two languages');
+    // Kept on disk, so a later run knows the channel too.
+    await Future<void>.delayed(const Duration(seconds: 6));
+    languages = VideoLanguages(client, file: file);
+    asked.clear();
+    final kept = await languages.only(Stream.fromIterable([line('e0000000005', english), line('i0000000005', mixed)]), ExploreLanguage.it).toList();
+    expect(asked, {'i0000000005'});
+    expect(kept, hasLength(1));
+  }, skip: core);
+
   test('stops once YouTube tells none of the first answers by audio or captions', () async {
     var calls = 0;
     final client = MockClient((request) async {

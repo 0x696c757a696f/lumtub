@@ -48,6 +48,10 @@ class VideoLanguages {
   late final _probe = YoutubePlayerProbe(_client);
 
   Map<String, SpokenVideo>? _known;
+  /// The channel of each known video, when the listing gave it.
+  final _channelOf = <String, String>{};
+  /// How many known videos of each channel are spoken in each language.
+  final _channels = <String, Map<ExploreLanguage?, int>>{};
   final _waiting = <Completer<void>>[];
   int _running = 0;
   Timer? _save;
@@ -63,10 +67,13 @@ class VideoLanguages {
   ///
   /// Only what audio or captions told is kept: an answer without either
   /// is asked again next time, when YouTube may tell.
-  Future<SpokenVideo?> of(String id, {ExploreLanguage asking = ExploreLanguage.any}) async {
+  Future<SpokenVideo?> of(String id, {ExploreLanguage asking = ExploreLanguage.any, String? channel}) async {
     final known = _known ??= await (_loading ??= _load());
     final hl = asking == ExploreLanguage.any ? 'en' : asking.code;
-    if (known[id] case final found?) return found;
+    if (known[id] case final found?) {
+      if (channel != null && !_channelOf.containsKey(id)) _count(id, channel, found.language);
+      return found;
+    }
     // YouTube stopped answering this app for now: asking more would only
     // keep it refusing, playback included.
     if (_resting case final until? when DateTime.now().isBefore(until)) return null;
@@ -79,8 +86,9 @@ class VideoLanguages {
     try {
       final found = await _ask(id, hl);
       if (found != null && found.heard) {
-        if (known.length >= _kept) known.remove(known.keys.first);
+        if (known.length >= _kept) _forget(known.keys.first);
         known[id] = found;
+        if (channel != null) _count(id, channel, found.language);
         _save ??= Timer(const Duration(seconds: 5), _write);
       }
       return found;
@@ -91,6 +99,36 @@ class VideoLanguages {
       _running--;
       if (_waiting.isNotEmpty) _waiting.removeAt(0).complete();
     }
+  }
+
+  void _count(String id, String channel, ExploreLanguage? language) {
+    _channelOf[id] = channel;
+    final counts = _channels.putIfAbsent(channel, () => {});
+    counts[language] = (counts[language] ?? 0) + 1;
+  }
+
+  void _forget(String id) {
+    final language = _known?.remove(id)?.language;
+    final channel = _channelOf.remove(id);
+    final counts = channel == null ? null : _channels[channel];
+    if (counts == null) return;
+    if ((counts[language] = (counts[language] ?? 1) - 1) <= 0) counts.remove(language);
+    if (counts.isEmpty) _channels.remove(channel);
+  }
+
+  /// Videos of a channel heard, all in one language, before its other
+  /// videos are taken to be in it too.
+  static const channelSure = 3;
+
+  /// The language every video heard of [channel] is spoken in, once at
+  /// least [channelSure] were; null while that is not plain. Explore
+  /// leaves out a channel plainly in another language without asking
+  /// about its videos.
+  ExploreLanguage? channelSpeaks(String channel) {
+    final counts = _channels[channel];
+    if (counts == null || counts.length != 1) return null;
+    final MapEntry(:key, :value) = counts.entries.single;
+    return value >= channelSure ? key : null;
   }
 
   /// The app asked first: the one that last told a video by its captions
@@ -180,22 +218,34 @@ class VideoLanguages {
   Future<Map<String, SpokenVideo>> _load() async {
     final path = file?.path;
     if (path == null) return {};
-    return Isolate.run(() {
+    final (known, channels) = await Isolate.run(() {
       final file = File(path);
-      if (!file.existsSync()) return <String, SpokenVideo>{};
+      final none = (<String, SpokenVideo>{}, <String, String>{});
+      if (!file.existsSync()) return none;
       try {
         final raw = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
         // Answers kept by earlier versions include guesses from titles,
         // which no longer decide: only what audio or captions told is
         // read back.
-        return {
+        final heard = {
           for (final MapEntry(:key, :value) in raw.entries)
-            if (value is Map<String, dynamic> && _spoken(value).heard) key: _spoken(value),
+            if (value is Map<String, dynamic> && _spoken(value).heard) key: value,
         };
+        return (
+          {for (final MapEntry(:key, :value) in heard.entries) key: _spoken(value)},
+          {
+            for (final MapEntry(:key, :value) in heard.entries)
+              if (value['channel'] case final String channel) key: channel,
+          },
+        );
       } catch (_) {
-        return <String, SpokenVideo>{};
+        return none;
       }
     });
+    for (final MapEntry(:key, :value) in channels.entries) {
+      _count(key, value, known[key]?.language);
+    }
+    return known;
   }
 
   void _write() {
@@ -213,6 +263,7 @@ class VideoLanguages {
           },
           'title': value.title,
           'source': value.source,
+          if (_channelOf[key] case final channel?) 'channel': channel,
         },
     };
     final path = file.path;
@@ -254,6 +305,7 @@ class VideoLanguages {
     }
 
     bool deaf() => heard == 0 && answered >= unheardAfter;
+    _known ??= await (_loading ??= _load());
 
     try {
       await for (final line in lines) {
@@ -266,7 +318,14 @@ class VideoLanguages {
         if (asked >= giveUpAfter && kept == 0) break;
         if (deaf()) break;
         asked++;
-        pending.add(_Pending(of(item.id, asking: language).then((spoken) {
+        if (item.channelId case final channel?) {
+          // Plainly in another language: none of its videos is asked about.
+          if (channelSpeaks(channel) case final spoken? when spoken != language) {
+            told.update('channel ${spoken.name}', (n) => n + 1, ifAbsent: () => 1);
+            continue;
+          }
+        }
+        pending.add(_Pending(of(item.id, asking: language, channel: item.channelId).then((spoken) {
           answered++;
           if (spoken != null && spoken.heard) heard++;
           final key = spoken == null ? 'no answer' : '${spoken.source} ${spoken.language?.name ?? '?'}';

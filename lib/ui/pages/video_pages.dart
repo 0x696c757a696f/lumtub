@@ -5,6 +5,8 @@ import '../../models.dart';
 import '../../search_options.dart';
 import '../../video_repository.dart';
 import '../common.dart';
+import '../haptics.dart';
+import '../reveal.dart';
 import '../theme.dart';
 import '../pull_to_refresh.dart';
 import '../video_card.dart';
@@ -71,14 +73,14 @@ class HomeFeedPage extends StatelessWidget {
           for (final (i, part) in _seenSplit(feed.items, feed.seenFrom).indexed) ...[
             if (i == 1) SliverToBoxAdapter(child: _SeenHere(onTap: () => PullToRefresh.refresh())),
             if (part.isNotEmpty)
-              SliverVideoGrid(
+              SliverReveal(key: ValueKey('feed $i'), sliver: SliverVideoGrid(
                 items: part,
                 thumbnails: controller.thumbnailDirectory,
                 onOpen: (item) => controller.play(item, from: feed.items),
                 onRemove: controller.dismissRecommendation,
                 removeLabel: tr('Not interested'),
                 reasons: feed.reasons,
-              ),
+              )),
           ],
           if (feed.loading || feed.loadingMore) ...[
             if (feed.items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
@@ -261,7 +263,10 @@ class SearchResultsPage extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
           child: FilterFlow(children: [
             for (final value in SearchFilter.values)
-              ChoiceChip(label: Text(value.label), selected: filter == value, onSelected: (_) => controller.setSearchFilter(value)),
+              ChoiceChip(label: Text(value.label), selected: filter == value, onSelected: (_) {
+                if (filter != value) Haptics.select();
+                controller.setSearchFilter(value);
+              }),
             const SizedBox(width: 8),
             OptionChip(
               icon: AppIcons.sortDescending,
@@ -296,19 +301,19 @@ class SearchResultsPage extends StatelessWidget {
           SliverFillRemaining(hasScrollBody: false, child: status)
         else ...[
           if (channels.isNotEmpty)
-            SliverPadding(
+            SliverReveal(key: const ValueKey('channels'), sliver: SliverPadding(
               padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
               sliver: SliverList.separated(
                 itemCount: channels.length,
                 separatorBuilder: (context, i) => const SizedBox(height: 8),
                 itemBuilder: (context, i) => ChannelResultTile(controller: controller, result: channels[i]),
               ),
-            ),
+            )),
           if (playlists.isNotEmpty) ...[
-            SliverPlaylistGrid(items: playlists, onOpen: controller.openYoutubePlaylist),
+            SliverReveal(key: const ValueKey('playlists'), sliver: SliverPlaylistGrid(items: playlists, onOpen: controller.openYoutubePlaylist)),
             const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
           ],
-          if (results.isNotEmpty) SliverVideoGrid(items: results, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: results)),
+          if (results.isNotEmpty) SliverReveal(key: const ValueKey('videos'), sliver: SliverVideoGrid(items: results, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: results))),
           if (controller.searching) ...[
             if (!empty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
             SliverSkeletonGrid(rows: empty ? 3 : 1),

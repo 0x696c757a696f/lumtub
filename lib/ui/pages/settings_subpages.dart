@@ -643,6 +643,7 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
         ),
         AnimatedSize(
           duration: Motion.of(const Duration(milliseconds: 200)),
+          curve: Ease.out,
           child: appearance.systemAccent && windows != null
               ? const SizedBox(width: double.infinity)
               : Padding(

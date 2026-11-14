@@ -10,6 +10,8 @@ import '../../explore_topics.dart';
 import '../chip_strip.dart';
 import '../common.dart';
 import '../fitting_segments.dart';
+import '../haptics.dart';
+import '../reveal.dart';
 import '../../search_options.dart';
 import '../theme.dart';
 import '../video_card.dart';
@@ -257,7 +259,10 @@ class _ExplorePageState extends State<ExplorePage> {
             ],
             // 宗教与信仰 and 学术 show as part of the half they were opened from.
             selected: {controller.exploreHalf},
-            onSelectionChanged: (value) => controller.setExplore(section: value.first),
+            onSelectionChanged: (value) {
+              Haptics.select();
+              controller.setExplore(section: value.first);
+            },
           ),
         )),
         if (section.tabs case final tabs?)
@@ -284,7 +289,11 @@ class _ExplorePageState extends State<ExplorePage> {
                     choices: [for (final t in topics) (label: t.label, icon: t.icon)],
                     selected: controller.exploreTopic,
                     onSelected: (i) => controller.setExplore(topic: i),
-                    onLongPress: (i) { if (topics[i].custom) _removeTopic(context, section, topics[i]); },
+                    onLongPress: (i) {
+                      if (!topics[i].custom) return;
+                      Haptics.menu();
+                      _removeTopic(context, section, topics[i]);
+                    },
                     trailing: [
                       IconButton(tooltip: tr('Add'), icon: Icon(AppIcons.plus, size: 18), onPressed: () => _addTopic(context, section)),
                       IconButton(tooltip: tr('Manage'), icon: Icon(AppIcons.slidersHorizontal, size: 18), onPressed: () => _manageTopics(context, section)),
@@ -334,12 +343,15 @@ class _ExplorePageState extends State<ExplorePage> {
                     style: const ButtonStyle(visualDensity: VisualDensity.compact),
                     segments: [for (final m in ExploreMode.of(section)) ButtonSegment(value: m, label: Text(m.label, maxLines: 1, softWrap: false))],
                     selected: {mode},
-                    onSelectionChanged: (value) => controller.setExplore(mode: value.first),
+                    onSelectionChanged: (value) {
+                      Haptics.select();
+                      controller.setExplore(mode: value.first);
+                    },
                   )),
                   ..._filters(context),
                 ]),
         )),
-        if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
+        if (items.isNotEmpty) SliverReveal(key: const ValueKey('videos'), sliver: SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items))),
         if (loading) ...[
           if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
           SliverSkeletonGrid(rows: items.isEmpty ? 3 : 1),
@@ -735,7 +747,7 @@ class _RailTile extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
-        onLongPress: onRemove,
+        onLongPress: _long(onRemove),
         onSecondaryTap: onRemove,
         child: Container(
           height: 42,
@@ -746,6 +758,7 @@ class _RailTile extends StatelessWidget {
           child: Row(children: [
             AnimatedContainer(
               duration: Motion.of(Ease.fade),
+              curve: Ease.out,
               width: 3,
               height: selected ? 20 : 0,
               decoration: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(2)),
@@ -823,11 +836,12 @@ class _TopicTile extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
-        onLongPress: onRemove,
+        onLongPress: _long(onRemove),
         onSecondaryTap: onRemove,
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           AnimatedContainer(
             duration: Motion.of(Ease.fade),
+            curve: Ease.out,
             width: 44,
             height: 44,
             decoration: BoxDecoration(
@@ -873,3 +887,11 @@ class _FilterButton extends StatelessWidget {
         ),
       );
 }
+
+/// [remove] after the knock a long press gives on a phone.
+VoidCallback? _long(VoidCallback? remove) => remove == null
+    ? null
+    : () {
+        Haptics.menu();
+        remove();
+      };

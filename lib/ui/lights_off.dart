@@ -65,7 +65,7 @@ class _LightsOffLayerState extends State<LightsOffLayer> with SingleTickerProvid
           animation: _fade,
           builder: (context, _) => CustomPaint(
             size: Size.infinite,
-            painter: _DarkPainter(hole: widget.radius.toRRect(hole), color: Colors.black.withValues(alpha: widget.dim * _fade.value)),
+            painter: _DarkPainter(hole: widget.radius.toRRect(hole), color: Colors.black.withValues(alpha: widget.dim * Ease.out.transform(_fade.value))),
           ),
         ),
       )),

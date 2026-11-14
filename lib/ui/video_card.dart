@@ -16,6 +16,7 @@ import '../dearrow.dart';
 import '../thumbnail_cache.dart';
 import '../youtube_account.dart' show RemotePlaylist;
 import 'common.dart';
+import 'haptics.dart';
 import 'pages/downloads_page.dart';
 import 'skeleton.dart';
 import 'skin_paint.dart';
@@ -23,6 +24,7 @@ import 'theme.dart';
 import '../l10n/l10n.dart';
 import '../video_facts_lookup.dart';
 import 'motion.dart';
+import 'press_scale.dart';
 import 'app_icons.dart';
 import '../feed_reason.dart';
 
@@ -268,11 +270,14 @@ class VideoRow extends StatelessWidget {
     final text = layout == VideoLayout.text;
     final status = item.isLive ? tr('Live now') : item.isUpcoming ? tr('Upcoming live') : null;
     final meta = MetaLine.of(item, extra: text && status == null && item.durationLabel.isNotEmpty ? item.durationLabel : null, style: TextStyle(fontSize: 12, color: colors.outline));
-    return InkWell(
+    return PressScale(child: InkWell(
       borderRadius: AppStyle.controlRadius,
       onTap: onOpen,
       onSecondaryTapUp: (details) => _menu(context, details.globalPosition),
-      onLongPress: () => _menu(context, _centreOf(context)),
+      onLongPress: () {
+        Haptics.menu();
+        _menu(context, _centreOf(context));
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: Space.s, horizontal: Space.xs),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -326,7 +331,7 @@ class VideoRow extends StatelessWidget {
           ])),
         ]),
       ),
-    );
+    ));
   }
 }
 
@@ -356,7 +361,7 @@ class PlaylistCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final cover = item.thumbnail;
-    return Card(
+    return PressScale(child: Card(
       color: Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: AppStyle.cardRadius),
       clipBehavior: Clip.none,
@@ -405,7 +410,7 @@ class PlaylistCard extends StatelessWidget {
           )),
         ]),
       ),
-    );
+    ));
   }
 }
 
@@ -619,7 +624,10 @@ class _VideoCardState extends State<VideoCard> {
         onHover: _pointerOver,
         onFocusChange: _focus,
         onSecondaryTapUp: (details) => _menu(details.globalPosition),
-        onLongPress: () => _menu(_centreOf(context)),
+        onLongPress: () {
+          Haptics.menu();
+          _menu(_centreOf(context));
+        },
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           AspectRatio(
             aspectRatio: 16 / 9,
@@ -646,6 +654,8 @@ class _VideoCardState extends State<VideoCard> {
                 if (_frame > 0) ...[
                   AnimatedSwitcher(
                     duration: Motion.of(const Duration(milliseconds: 250)),
+                    switchInCurve: Ease.out,
+                    switchOutCurve: Ease.out,
                     child: Image(
                       color: context.pictureWarmth,
                       colorBlendMode: BlendMode.multiply,
@@ -731,7 +741,7 @@ class _VideoCardState extends State<VideoCard> {
         const SingleActivator(LogicalKeyboardKey.contextMenu): _menu,
         const SingleActivator(LogicalKeyboardKey.f10, shift: true): _menu,
       },
-      child: Stack(children: [
+      child: PressScale(child: Stack(children: [
         if (skin?.videoCard case final surface?)
           SkinBox(
             surface: surface.forState(hovered: _hovered, focused: _focused),
@@ -746,7 +756,7 @@ class _VideoCardState extends State<VideoCard> {
             borderRadius: AppStyle.cardRadius,
             border: Border.all(color: colors.primary, width: 2),
           )))),
-      ]),
+      ])),
     );
   }
 }
@@ -903,11 +913,14 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
     _branding = _brandingNow();
     final colors = context.colors;
     final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
-    return InkWell(
+    return PressScale(child: InkWell(
       borderRadius: AppStyle.cardRadius,
       onTap: onOpen,
       onSecondaryTapUp: (details) => showVideoMenu(context, item, details.globalPosition, onOpen: onOpen),
-      onLongPress: () => showVideoMenu(context, item, _centreOf(context), onOpen: onOpen),
+      onLongPress: () {
+        Haptics.menu();
+        unawaited(showVideoMenu(context, item, _centreOf(context), onOpen: onOpen));
+      },
       child: Padding(
         padding: const EdgeInsets.all(4),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -948,7 +961,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
           ])),
         ]),
       ),
-    );
+    ));
   }
 }
 

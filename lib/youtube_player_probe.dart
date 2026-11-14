@@ -31,7 +31,8 @@ class YoutubePlayerProbe {
   static DateTime _visitorAt = DateTime(0);
   static const _visitorFor = Duration(minutes: 30);
   static const _visitorRetry = Duration(minutes: 5);
-  static final _visitorData = RegExp(r'"VISITOR_DATA"\s*:\s*"([A-Za-z0-9_%=-]{10,300})"');
+  // The page writes it as a JSON string, which may escape characters.
+  static final _visitorData = RegExp(r'"(?:VISITOR_DATA|visitorData)"\s*:\s*"((?:[^"\\]|\\.){10,400})"');
   static final _visitorCookie = RegExp(r'(VISITOR_INFO1_LIVE|VISITOR_PRIVACY_METADATA|YSC|__Secure-ROLLOUT_TOKEN)=([^;,\s]+)');
 
   @visibleForTesting
@@ -43,12 +44,65 @@ class YoutubePlayerProbe {
   /// Adds the visitor YouTube's page names to a signed-out InnerTube
   /// request's [headers] and [body], opening the page first when it was
   /// not opened lately. Without one, YouTube answers `/player` for most
-  /// videos with "Sign in to confirm you're not a bot".
-  static Future<void> addVisitor(http.Client client, Map<String, String> headers, Map<String, Object?> body) async {
-    if (await _visitorNow(client) case final visitor?) {
-      headers['X-Goog-Visitor-Id'] = visitor.data;
-      headers['Cookie'] = visitor.cookies;
-      ((body['context'] as Map)['client'] as Map)['visitorData'] = visitor.data;
+  /// videos with "Sign in to confirm you're not a bot". False when no
+  /// visitor is known.
+  static Future<bool> addVisitor(http.Client client, Map<String, String> headers, Map<String, Object?> body) async {
+    final visitor = await _visitorNow(client);
+    if (visitor == null) return false;
+    headers['X-Goog-Visitor-Id'] = visitor.data;
+    headers['Cookie'] = visitor.cookies;
+    ((body['context'] as Map)['client'] as Map)['visitorData'] = visitor.data;
+    return true;
+  }
+
+  /// Posts a signed-out InnerTube request to [endpoint] as [addVisitor]
+  /// names the visitor. When none is known (YouTube's page did not name
+  /// one), the answer's own `responseContext.visitorData` is taken as the
+  /// visitor from then on, and a request YouTube refused for want of one
+  /// is asked again with it: an answer of "Sign in to confirm you're not a
+  /// bot" comes with visitor data, and with it the same request is
+  /// answered (seen on 2026-11-14). [mask] (an `X-Goog-FieldMask`) is sent
+  /// only with a visitor, as a masked answer leaves the visitor data out.
+  static Future<http.Response> post(
+    http.Client client,
+    Map<String, String> headers,
+    Map<String, Object?> body, {
+    String endpoint = 'player',
+    String? mask,
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
+    final known = await addVisitor(client, headers, body);
+    Future<http.Response> send({required bool masked}) => client
+        .post(
+          Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?prettyPrint=false'),
+          headers: {...headers, if (masked && mask != null) 'X-Goog-FieldMask': mask},
+          body: jsonEncode(body),
+        )
+        .timeout(timeout);
+    final response = await send(masked: known);
+    if (known || response.statusCode != 200) return response;
+    final answer = utf8.decode(response.bodyBytes, allowMalformed: true);
+    final data = _visitorIn(answer);
+    if (data == null) return response;
+    if (!await _isKnown()) {
+      _visitor = Future.value((data: data, cookies: YoutubeWeb.consentCookie));
+      _visitorAt = DateTime.now();
+      logInfo('YouTube visitor taken from a /$endpoint answer');
+    }
+    if (!answer.contains('"LOGIN_REQUIRED"')) return response;
+    if (!await addVisitor(client, headers, body)) return response;
+    return send(masked: true);
+  }
+
+  static Future<bool> _isKnown() async => await (_visitor ?? Future.value()) != null;
+
+  static String? _visitorIn(String text) {
+    final raw = _visitorData.firstMatch(text)?.group(1);
+    if (raw == null) return null;
+    try {
+      return jsonDecode('"$raw"') as String;
+    } catch (_) {
+      return null;
     }
   }
 
@@ -65,12 +119,20 @@ class YoutubePlayerProbe {
 
   static Future<_Visitor?> _openPage(http.Client client) async {
     try {
-      final response = await client
-          .get(Uri.parse('https://www.youtube.com/'), headers: {...YoutubeWeb.apiHeaders(), 'Accept': 'text/html'})
-          .timeout(const Duration(seconds: 15));
-      final data = _visitorData.firstMatch(utf8.decode(response.bodyBytes, allowMalformed: true))?.group(1);
-      if (response.statusCode != 200 || data == null) {
-        logWarn('YouTube page gave no visitor data (HTTP ${response.statusCode})');
+      // As a browser opens it: an API request's headers may get another page.
+      final response = await client.get(Uri.parse('https://www.youtube.com/'), headers: {
+        'User-Agent': YoutubeWeb.userAgent,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cookie': YoutubeWeb.consentCookie,
+      }).timeout(const Duration(seconds: 15));
+      final page = utf8.decode(response.bodyBytes, allowMalformed: true);
+      final data = response.statusCode == 200 ? _visitorIn(page) : null;
+      if (data == null) {
+        final host = response.request?.url.host ?? 'www.youtube.com';
+        logWarn('YouTube page gave no visitor data (HTTP ${response.statusCode}, ${page.length} characters'
+            '${host != 'www.youtube.com' ? ', from $host' : ''}'
+            '${page.contains('VISITOR_DATA') ? ', VISITOR_DATA unreadable' : ''}); taking it from YouTube\'s answers');
         return null;
       }
       final cookies = {
@@ -109,20 +171,10 @@ class YoutubePlayerProbe {
   /// [fetch] as [client] asks. [PlayerClient.quick] needs the Rust core:
   /// without it the TV app asks.
   Future<List<int>> fetchAs(PlayerClient client, String id, String? fields, {String endpoint = 'player', String? expect, String hl = 'en'}) async {
-    final masked = fields != null && masks(fields, endpoint: endpoint);
     final (headers, body) = _request(client, id, hl);
-    await addVisitor(_client, headers, body);
-    final response = await _client
-        .post(
-          Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?prettyPrint=false'),
-          headers: {
-            ...headers,
-            // Only the few fields read, instead of a few hundred kilobytes.
-            if (masked) 'X-Goog-FieldMask': fields,
-          },
-          body: jsonEncode(body),
-        )
-        .timeout(const Duration(seconds: 15));
+    // Only the few fields read, instead of a few hundred kilobytes.
+    final response = await post(_client, headers, body, endpoint: endpoint, mask: fields != null && masks(fields, endpoint: endpoint) ? fields : null);
+    final masked = response.request?.headers.containsKey('X-Goog-FieldMask') ?? false;
     if (response.statusCode == 400 && masked) {
       _refused.add(endpoint);
       logWarn('YouTube refused the field mask for /$endpoint; asking for whole answers');

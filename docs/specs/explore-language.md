@@ -73,7 +73,12 @@ region is picked.
 - Every signed-out `/player` request (language checks, quick starts,
   video facts) carries a visitor: the `VISITOR_DATA` and visitor cookies
   of YouTube's home page, opened once every 30 minutes (again after 5
-  minutes if it failed), with the consent cookie (`SOCS`). Without one,
+  minutes if it failed), with the consent cookie (`SOCS`). When the page
+  names none (seen on 2026-11-14: the page came back without readable
+  `VISITOR_DATA`), requests go without a field mask, the
+  `responseContext.visitorData` of the first answer becomes the visitor,
+  and a request refused with `LOGIN_REQUIRED` is asked once more with it
+  (verified the same day: such a visitor gets `OK`). Without one,
   YouTube answers most videos with `LOGIN_REQUIRED` "Sign in to confirm
   you're not a bot" (seen on 2026-11-14 for every app, on a home
   connection in Germany; with any visitor data every answer was `OK`).

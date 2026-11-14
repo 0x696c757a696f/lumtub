@@ -152,6 +152,40 @@ void main() {
     expect(cookies.first, allOf(contains('SOCS=CAI'), contains('YSC=abc'), contains('VISITOR_INFO1_LIVE=xyz')));
   }, skip: core);
 
+  test('reads visitor data the page writes with escapes', () async {
+    final visitors = <String?>[];
+    final client = MockClient((request) async {
+      if (request.method == 'GET') return http.Response(r'<script>ytcfg.set({"VISITOR_DATA":"CgtWaXNpdG9y\u003d\u003d"})</script>', 200);
+      visitors.add(request.headers['X-Goog-Visitor-Id']);
+      return _json(_player('Ricette di casa', asr: 'it'));
+    });
+    await VideoLanguages(client).of('lllllllllll', asking: ExploreLanguage.it);
+    expect(visitors, ['CgtWaXNpdG9y==']);
+  }, skip: core);
+
+  test("takes the visitor from YouTube's answer when the page names none, and asks a refused video again", () async {
+    final asked = <(String?, String?)>[];
+    final client = MockClient((request) async {
+      if (request.method == 'GET') return http.Response('<html>no config here</html>', 200);
+      final visitor = request.headers['X-Goog-Visitor-Id'];
+      asked.add((visitor, request.headers['X-Goog-FieldMask']));
+      if (visitor == null) {
+        return _json({
+          'responseContext': {'visitorData': 'CgtSZWZ1c2Vk'},
+          'playabilityStatus': {'status': 'LOGIN_REQUIRED', 'reason': "Sign in to confirm you're not a bot"},
+        });
+      }
+      expect(((jsonDecode(request.body) as Map)['context'] as Map)['client']['visitorData'], visitor);
+      return _json(_player('Ricette di casa', asr: 'it'));
+    });
+    final languages = VideoLanguages(client);
+    expect((await languages.of('mmmmmmmmmmm', asking: ExploreLanguage.it))?.source, 'captions');
+    await languages.of('nnnnnnnnnnn', asking: ExploreLanguage.it);
+    expect([for (final (visitor, _) in asked) visitor], [null, 'CgtSZWZ1c2Vk', 'CgtSZWZ1c2Vk']);
+    expect(asked.first.$2, isNull, reason: 'a masked answer would leave the visitor data out');
+    expect(asked.skip(1).every((a) => a.$2 != null), isTrue, reason: 'masked again once the visitor is known');
+  }, skip: core);
+
   test('keeps heard answers on disk, others for this run only', () async {
     var calls = 0;
     final client = MockClient((request) async {

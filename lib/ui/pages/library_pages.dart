@@ -706,18 +706,10 @@ class SliverVideoLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-        sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, textScale: cardTextScale(context));
-          return SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: layout.columns,
-              mainAxisSpacing: gridGap,
-              crossAxisSpacing: gridGap,
-              mainAxisExtent: layout.itemHeight,
-            ),
-            delegate: SliverChildBuilderDelegate(builder, childCount: count),
-          );
-        }),
+        sliver: SliverGrid(
+          gridDelegate: VideoGridDelegate(textScale: cardTextScale(context), rowGap: gridGap),
+          delegate: SliverChildBuilderDelegate(builder, childCount: count),
+        ),
       );
 }
 

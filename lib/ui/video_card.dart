@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../device.dart';
@@ -167,14 +168,12 @@ class SliverVideoGrid extends StatelessWidget {
                   childCount: items.length,
                 ),
               )
-            : SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context), textScale: cardTextScale(context), compact: videoCardsCompact(context));
-          return SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: layout.columns,
-              mainAxisSpacing: _gridRowGap,
-              crossAxisSpacing: gridGap,
-              mainAxisExtent: layout.itemHeight + ((watched == null ? 0 : 1) + (reasoned ? 1 : 0)) * _reasonHeight * cardTextScale(context),
+            : SliverGrid(
+            gridDelegate: VideoGridDelegate(
+              padding: skinCardPadding(context),
+              textScale: cardTextScale(context),
+              compact: videoCardsCompact(context),
+              extra: ((watched == null ? 0 : 1) + (reasoned ? 1 : 0)) * _reasonHeight * cardTextScale(context),
             ),
             delegate: SliverChildBuilderDelegate(
               (context, i) => VideoCard(
@@ -191,10 +190,39 @@ class SliverVideoGrid extends StatelessWidget {
               ),
               childCount: items.length,
             ),
-          );
-        }),
+          ),
       );
   }
+}
+
+/// Lays a video grid out as [gridLayoutFor] does for its width. A sliver
+/// layout builder would do the same but build its grid again, and every
+/// card shown with it, on each frame the list scrolls, as the scroll offset
+/// is part of a sliver's constraints.
+class VideoGridDelegate extends SliverGridDelegate {
+  const VideoGridDelegate({this.padding = 0, this.textScale = 1, this.compact, this.extra = 0, this.rowGap});
+  final double padding;
+  final double textScale;
+  final bool? compact;
+  /// Added to each card's height, for lines under it.
+  final double extra;
+  final double? rowGap;
+
+  @override
+  SliverGridLayout getLayout(SliverConstraints constraints) {
+    final layout = gridLayoutFor(constraints.crossAxisExtent, padding: padding, textScale: textScale, compact: compact);
+    return SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: layout.columns,
+      mainAxisSpacing: rowGap ?? _gridRowGap,
+      crossAxisSpacing: gridGap,
+      mainAxisExtent: layout.itemHeight + extra,
+    ).getLayout(constraints);
+  }
+
+  // The layout also follows settings read as it is made (the card width,
+  // compact cards), so a grid built again lays out again.
+  @override
+  bool shouldRelayout(VideoGridDelegate oldDelegate) => true;
 }
 
 /// What [SliverVideoGrid.watched] shows for each time: "3 days ago", made
@@ -311,18 +339,10 @@ class SliverPlaylistGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-        sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, textScale: cardTextScale(context));
-          return SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: layout.columns,
-              mainAxisSpacing: _gridRowGap,
-              crossAxisSpacing: gridGap,
-              mainAxisExtent: layout.itemHeight,
-            ),
-            delegate: SliverChildBuilderDelegate((context, i) => PlaylistCard(item: items[i], onOpen: () => onOpen(items[i])), childCount: items.length),
-          );
-        }),
+        sliver: SliverGrid(
+          gridDelegate: VideoGridDelegate(textScale: cardTextScale(context)),
+          delegate: SliverChildBuilderDelegate((context, i) => PlaylistCard(item: items[i], onOpen: () => onOpen(items[i])), childCount: items.length),
+        ),
       );
 }
 
@@ -398,10 +418,10 @@ class SliverSkeletonGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-        sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context), textScale: cardTextScale(context), compact: videoCardsCompact(context));
-          final width = constraints.crossAxisExtent;
-          return SliverToBoxAdapter(child: DelayedReveal(child: Skeleton(child: SizedBox(
+        sliver: SliverToBoxAdapter(child: LayoutBuilder(builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final layout = gridLayoutFor(width, padding: skinCardPadding(context), textScale: cardTextScale(context), compact: videoCardsCompact(context));
+          return DelayedReveal(child: Skeleton(child: SizedBox(
             width: width,
             child: Wrap(
               spacing: gridGap,
@@ -412,8 +432,8 @@ class SliverSkeletonGrid extends StatelessWidget {
                 child: const _CardSkeleton(),
               )),
             ),
-          ))));
-        }),
+          )));
+        })),
       );
 }
 

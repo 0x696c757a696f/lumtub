@@ -35,6 +35,7 @@ extension LibassLookActions on AppController {
   void _queueLibassLook({bool again = false}) {
     if (again) _libassSent = {};
     _libassLookTimer?.cancel();
+    if (!settings.libassSubtitles || player?.platform is! NativePlayer) return;
     _libassLookTimer = Timer(const Duration(milliseconds: 120), () => unawaited(_applyLibassLook()));
   }
 

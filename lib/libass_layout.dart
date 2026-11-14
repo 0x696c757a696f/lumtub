@@ -29,14 +29,15 @@ class LibassLayout {
   /// `secondary-sub-pos` for a main subtitle showing [main]. [fontSize] is
   /// `sub-font-size` (a line's height), [em] the width a letter is measured
   /// in, [margin] `sub-margin-y` and [gap] the room between the two, all in
-  /// mpv's units of a 720-tall picture.
-  static double secondaryPosition(String main, {required int position, required double scale, double aspect = 16 / 9, double fontSize = _font, double? em, int margin = marginY, double? gap}) {
+  /// mpv's units of a 720-tall picture. mpv places a plain subtitle in the
+  /// room above the margin, but an ASS one ([whole], Lumtub's styled second
+  /// subtitle) in the whole height.
+  static double secondaryPosition(String main, {required int position, required double scale, double aspect = 16 / 9, double fontSize = _font, double? em, int margin = marginY, double? gap, bool whole = false}) {
     final lines = max(1, lineCount(main, scale: scale, aspect: aspect, em: em ?? fontSize));
-    final line = fontSize / _canvas * 100;
-    final between = gap == null ? _gap : gap / _canvas * 100;
-    // Percent of the picture to percent of the room above the margin.
-    final raise = (lines * line * scale + between) / (1 - margin / _canvas);
-    return ((position - raise) * 10).floorToDouble().clamp(0, 1000) / 10;
+    final room = _canvas - margin;
+    // The main subtitle's top, then the second one's bottom just above it.
+    final bottom = room * position / 100 - lines * fontSize * scale - (gap ?? _gap * _canvas / 100);
+    return (bottom / (whole ? _canvas : room) * 1000).floorToDouble().clamp(0, 1000) / 10;
   }
 
   /// How many lines libass draws [text] on, wrapping at the canvas width.
@@ -155,7 +156,7 @@ class LibassLook {
         'arial' || 'liberation sans' || 'helvetica' => 1.117,
         'inter' => 1.21,
         'roboto' => 1.172,
-        'dejavu sans' => 1.164,
+        'dejavu sans' || 'dejavu serif' => 1.164,
         _ => 1.3,
       };
 

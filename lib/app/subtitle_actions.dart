@@ -563,6 +563,7 @@ extension SubtitleActions on AppController {
       em: look.em,
       margin: look.margin,
       gap: look.gap,
+      whole: _styledSeconds.containsKey(secondaryTrackId),
     );
     // Only scheduled: this runs while media_kit handles an mpv event.
     unawaited(platform.setProperty('secondary-sub-pos', position.toStringAsFixed(1)).catchError((Object e) => logDebug(() => 'Could not move the second subtitle: $e')));

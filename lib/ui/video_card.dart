@@ -683,7 +683,7 @@ class _VideoCardState extends State<VideoCard> {
                     views,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500, shadows: [Shadow(blurRadius: 3, color: Color(0x80000000))]),
+                    style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500, shadows: [Shadow(offset: Offset(0, 1), color: Color(0x80000000))]),
                   )),
                 if (item.isLive || item.isUpcoming)
                   PositionedDirectional(end: 8, bottom: 6, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))

@@ -978,6 +978,7 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   @override
   void dispose() {
+    _libassLookTimer?.cancel();
     _disposed = true;
     _stopCurrentChat();
     _danmaku?.stop();

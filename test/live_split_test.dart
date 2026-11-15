@@ -37,4 +37,21 @@ void main() {
     expect(LiveSplit.pick(info, const PlayerSettings(disabledCodecs: {VideoCodec.vp9})), isNull);
     expect(LiveSplit.pick({'formats': [info['formats'][0]]}, const PlayerSettings(disabledCodecs: {})), isNull);
   });
+
+  test('a phone gets the best HLS stream with picture and sound within the cap', () {
+    final hls = {
+      'formats': [
+        live('93', height: 360, vcodec: 'avc1.4d401e', acodec: 'mp4a.40.2', protocol: 'm3u8_native', fps: 30),
+        info['formats'][0],
+        live('308', height: 1440, vcodec: 'vp9'),
+        live('140', acodec: 'mp4a.40.2'),
+      ],
+    };
+    expect(LiveSplit.hls(hls, const PlayerSettings(disabledCodecs: {}))!['format_id'], '96');
+    expect(LiveSplit.hls(hls, const PlayerSettings(disabledCodecs: {}, maxHeight: 720))!['format_id'], '93');
+    // Below every stream's height: the smallest one rather than nothing.
+    expect(LiveSplit.hls(hls, const PlayerSettings(disabledCodecs: {}, maxHeight: 144))!['format_id'], '93');
+    expect(LiveSplit.hls(hls, const PlayerSettings(disabledCodecs: {VideoCodec.h264})), isNull);
+    expect(LiveSplit.hls({'formats': [], 'manifest_url': 'https://manifest'}, const PlayerSettings(disabledCodecs: {}))!['url'], 'https://manifest');
+  });
 }

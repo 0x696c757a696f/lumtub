@@ -57,6 +57,44 @@ class LiveSplit {
     return LiveSplit(videos.first, audios.first);
   }
 
+  /// The best live HLS stream in [info] with picture and sound together,
+  /// within [settings]' height cap and in a codec they allow: the address a
+  /// phone hands libmpv, which cannot start yt-dlp there to find it. Null
+  /// when [info] lists none.
+  static Map<String, dynamic>? hls(Map<String, dynamic> info, PlayerSettings settings) {
+    final cap = settings.maxHeight;
+    final order = FormatPolicy.codecOrder(settings);
+    int rank(VideoCodec? codec) {
+      final i = codec == null ? -1 : order.indexOf(codec);
+      return i < 0 ? order.length : i;
+    }
+
+    int height(Map<String, dynamic> f) => f['height'] is int ? f['height'] as int : 0;
+    final muxed = [
+      for (final f in (info['formats'] as List? ?? const []))
+        if (f is Map<String, dynamic> && '${f['protocol']}'.startsWith('m3u8') && f['url'] is String)
+          if (f['vcodec'] is String && f['vcodec'] != 'none' && f['acodec'] != 'none' && FormatPolicy.allowsName(settings, f['vcodec'])) f,
+    ];
+    final within = [for (final f in muxed) if (cap <= 0 || height(f) <= cap) f];
+    final candidates = within.isNotEmpty ? within : (muxed..sort((a, b) => height(a).compareTo(height(b)))).take(1).toList();
+    candidates.sort((a, b) {
+      final byHeight = height(b).compareTo(height(a));
+      if (byHeight != 0) return byHeight;
+      final byFps = _number(b['fps']).compareTo(_number(a['fps']));
+      if (byFps != 0) return byFps;
+      final byCodec = rank(VideoCodec.of(a['vcodec'])).compareTo(rank(VideoCodec.of(b['vcodec'])));
+      if (byCodec != 0) return byCodec;
+      return _number(b['tbr']).compareTo(_number(a['tbr']));
+    });
+    if (candidates.isNotEmpty) return candidates.first;
+    // yt-dlp's own pick, when the formats list is missing.
+    final url = info['url'];
+    if (url is String && '${info['protocol']}'.startsWith('m3u8')) return info;
+    final manifest = info['manifest_url'];
+    if (manifest is String) return {'url': manifest, 'http_headers': info['http_headers']};
+    return null;
+  }
+
   /// A live address answering one fragment per `sq`: plain HTTPS, no
   /// manifest, no fragment list.
   static bool _fragmented(Map<String, dynamic> format) {

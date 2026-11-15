@@ -3535,5 +3535,10 @@
   "Next up": "Selanjutnya",
   "Searched": "Dicari",
   "You were here last time · Tap to refresh": "Terakhir Anda sampai di sini · Ketuk untuk memuat ulang",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Pemutar tidak dapat membuka aliran video dan tidak memberi alasan. Setelan › Jaringan › Pemeriksaan jaringan menunjukkan bagian mana yang diblokir."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Pemutar tidak dapat membuka aliran video dan tidak memberi alasan. Setelan › Jaringan › Pemeriksaan jaringan menunjukkan bagian mana yang diblokir.",
+  "Volume": "Volume",
+  "Left half brightness, right half volume": "Separuh kiri kecerahan, separuh kanan volume",
+  "Scroll wheel over the video": "Roda mouse di atas video",
+  "Now: {0}. Ctrl + wheel always changes the speed": "Sekarang: {0}. Ctrl + roda selalu mengubah kecepatan",
+  "mouse wheel volume brightness": "mouse roda volume kecerahan"
 }

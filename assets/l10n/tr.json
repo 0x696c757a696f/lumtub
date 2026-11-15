@@ -3535,5 +3535,10 @@
   "Next up": "Sıradaki",
   "Searched": "Arananlar",
   "You were here last time · Tap to refresh": "Geçen sefer buradaydınız · Yenilemek için dokunun",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Oynatıcı video akışını açamadı ve bir neden bildirmedi. Ayarlar › Ağ › Ağ denetimi hangi bölümün engellendiğini gösterir."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Oynatıcı video akışını açamadı ve bir neden bildirmedi. Ayarlar › Ağ › Ağ denetimi hangi bölümün engellendiğini gösterir.",
+  "Volume": "Ses",
+  "Left half brightness, right half volume": "Sol yarı parlaklık, sağ yarı ses",
+  "Scroll wheel over the video": "Video üzerinde fare tekerleği",
+  "Now: {0}. Ctrl + wheel always changes the speed": "Şu an: {0}. Ctrl + tekerlek her zaman hızı değiştirir",
+  "mouse wheel volume brightness": "fare tekerlek ses parlaklık"
 }

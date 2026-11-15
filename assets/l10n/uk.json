@@ -3535,5 +3535,10 @@
   "Next up": "Далі",
   "Searched": "Шукали",
   "You were here last time · Tap to refresh": "Ви зупинилися тут · Натисніть, щоб оновити",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Програвач не зміг відкрити відеопотік і не назвав причини. У Налаштування › Мережа › Перевірка мережі можна побачити, що саме блокується."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Програвач не зміг відкрити відеопотік і не назвав причини. У Налаштування › Мережа › Перевірка мережі можна побачити, що саме блокується.",
+  "Volume": "Гучність",
+  "Left half brightness, right half volume": "Ліва половина — яскравість, права — гучність",
+  "Scroll wheel over the video": "Коліщатко миші над відео",
+  "Now: {0}. Ctrl + wheel always changes the speed": "Зараз: {0}. Ctrl + коліщатко завжди змінює швидкість",
+  "mouse wheel volume brightness": "миша коліщатко гучність яскравість"
 }

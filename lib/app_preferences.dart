@@ -14,6 +14,7 @@ import 'models.dart';
 import 'player_settings.dart' show interfaceTranslationLanguage;
 import 'progress_line.dart';
 import 'translation.dart';
+import 'wheel_gesture.dart';
 import 'translation_services.dart';
 import 'l10n/l10n.dart';
 
@@ -111,6 +112,7 @@ class AppPreferences {
     this.volumeStep = 5,
     this.shortcutKeys = const {},
     this.rightClickBack = false,
+    this.wheelGesture = WheelGesture.off,
     this.controlsHideSeconds = 3,
     this.showHeatmap = true,
     this.progressLine = ProgressLine.always,
@@ -260,6 +262,8 @@ class AppPreferences {
   final Map<String, List<String>> shortcutKeys;
   /// A right click on the video leaves fullscreen, or else goes back.
   final bool rightClickBack;
+  /// What the mouse wheel does over the video; off lets the page scroll.
+  final WheelGesture wheelGesture;
   final int controlsHideSeconds;
   /// The 最多重放 curve above the progress bar.
   final bool showHeatmap;
@@ -488,6 +492,7 @@ class AppPreferences {
     int? volumeStep,
     Map<String, List<String>>? shortcutKeys,
     bool? rightClickBack,
+    WheelGesture? wheelGesture,
     int? controlsHideSeconds,
     bool? showHeatmap,
     ProgressLine? progressLine,
@@ -575,6 +580,7 @@ class AppPreferences {
         volumeStep: volumeStep ?? this.volumeStep,
         shortcutKeys: shortcutKeys ?? this.shortcutKeys,
         rightClickBack: rightClickBack ?? this.rightClickBack,
+        wheelGesture: wheelGesture ?? this.wheelGesture,
         controlsHideSeconds: controlsHideSeconds ?? this.controlsHideSeconds,
         showHeatmap: showHeatmap ?? this.showHeatmap,
         progressLine: progressLine ?? this.progressLine,
@@ -663,6 +669,7 @@ class AppPreferences {
         'volumeStep': volumeStep,
         'shortcutKeys': shortcutKeys,
         'rightClickBack': rightClickBack,
+        'wheelGesture': wheelGesture.name,
         'controlsHideSeconds': controlsHideSeconds,
         'showHeatmap': showHeatmap,
         'progressLine': progressLine.name,
@@ -790,6 +797,7 @@ class AppPreferences {
       volumeStep: number('volumeStep', 5, 1, 25),
       shortcutKeys: keyLists('shortcutKeys'),
       rightClickBack: flag('rightClickBack', d.rightClickBack),
+      wheelGesture: WheelGesture.parse(raw['wheelGesture'], d.wheelGesture),
       controlsHideSeconds: number('controlsHideSeconds', 3, 1, 30),
       showHeatmap: flag('showHeatmap', d.showHeatmap),
       progressLine: ProgressLine.parse(raw['progressLine'], d.progressLine),

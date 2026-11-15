@@ -3535,5 +3535,10 @@
   "Next up": "Następne",
   "Searched": "Wyszukiwane",
   "You were here last time · Tap to refresh": "Ostatnio w tym miejscu · Dotknij, aby odświeżyć",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Odtwarzacz nie mógł otworzyć strumienia wideo i nie podał przyczyny. Ustawienia › Sieć › Sprawdzenie sieci pokaże, która część jest zablokowana."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Odtwarzacz nie mógł otworzyć strumienia wideo i nie podał przyczyny. Ustawienia › Sieć › Sprawdzenie sieci pokaże, która część jest zablokowana.",
+  "Volume": "Głośność",
+  "Left half brightness, right half volume": "Lewa połowa jasność, prawa połowa głośność",
+  "Scroll wheel over the video": "Kółko myszy nad filmem",
+  "Now: {0}. Ctrl + wheel always changes the speed": "Teraz: {0}. Ctrl + kółko zawsze zmienia prędkość",
+  "mouse wheel volume brightness": "mysz kółko głośność jasność"
 }

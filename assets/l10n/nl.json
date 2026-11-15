@@ -3535,5 +3535,10 @@
   "Next up": "Hierna",
   "Searched": "Gezocht",
   "You were here last time · Tap to refresh": "Je was hier de vorige keer · Tik om te vernieuwen",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "De speler kon de videostream niet openen en gaf geen reden. Onder Instellingen › Netwerk › Netwerkcontrole zie je welk onderdeel wordt geblokkeerd."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "De speler kon de videostream niet openen en gaf geen reden. Onder Instellingen › Netwerk › Netwerkcontrole zie je welk onderdeel wordt geblokkeerd.",
+  "Volume": "Volume",
+  "Left half brightness, right half volume": "Linkerhelft helderheid, rechterhelft volume",
+  "Scroll wheel over the video": "Scrollwiel boven de video",
+  "Now: {0}. Ctrl + wheel always changes the speed": "Nu: {0}. Ctrl + scrollwiel wijzigt altijd de snelheid",
+  "mouse wheel volume brightness": "muis scrollwiel volume helderheid"
 }

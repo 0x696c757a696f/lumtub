@@ -3535,5 +3535,10 @@
   "Next up": "Als Nächstes",
   "Searched": "Gesucht",
   "You were here last time · Tap to refresh": "Beim letzten Mal warst du hier · Zum Aktualisieren tippen",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Der Player konnte den Videostream nicht öffnen und hat keinen Grund genannt. Unter Einstellungen › Netzwerk › Netzwerkprüfung siehst du, welcher Teil blockiert ist."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Der Player konnte den Videostream nicht öffnen und hat keinen Grund genannt. Unter Einstellungen › Netzwerk › Netzwerkprüfung siehst du, welcher Teil blockiert ist.",
+  "Volume": "Lautstärke",
+  "Left half brightness, right half volume": "Linke Hälfte Helligkeit, rechte Hälfte Lautstärke",
+  "Scroll wheel over the video": "Mausrad über dem Video",
+  "Now: {0}. Ctrl + wheel always changes the speed": "Jetzt: {0}. Strg + Mausrad ändert immer die Geschwindigkeit",
+  "mouse wheel volume brightness": "Maus Mausrad Lautstärke Helligkeit"
 }

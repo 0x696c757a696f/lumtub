@@ -16,6 +16,7 @@ import 'package:lumtub/ui/pip_view.dart';
 import 'package:lumtub/ui/player_controls.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/widgets/video_progress_bar.dart';
+import 'package:lumtub/wheel_gesture.dart';
 import 'package:lumtub/ui/app_icons.dart';
 
 /// A player without libmpv: state changes are pushed through the streams
@@ -411,7 +412,41 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the wheel sets brightness on the left and volume on the right', (tester) async {
+  testWidgets('by default the wheel over the video changes nothing', (tester) async {
+    await pump(tester);
+    expect(controller.preferences.wheelGesture, WheelGesture.off);
+    player.state = player.state.copyWith(volume: 50);
+    final controls = tester.getRect(find.byType(PlayerControls));
+    for (final position in [controls.centerRight - const Offset(100, 0), controls.centerLeft + const Offset(100, 0)]) {
+      tester.binding.handlePointerEvent(PointerScrollEvent(position: position, scrollDelta: const Offset(0, -100)));
+      await tester.pump();
+    }
+    expect(player.state.volume, 50);
+    expect(controller.brightness, 0);
+    await tester.pump(const Duration(seconds: 2));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the wheel does what the setting says', (tester) async {
+    await controller.savePreferences(controller.preferences.copyWith(wheelGesture: WheelGesture.volume));
+    await pump(tester);
+    player.state = player.state.copyWith(volume: 50);
+    final controls = tester.getRect(find.byType(PlayerControls));
+    tester.binding.handlePointerEvent(PointerScrollEvent(position: controls.centerLeft + const Offset(100, 0), scrollDelta: const Offset(0, -100)));
+    await tester.pump();
+    expect(player.state.volume, greaterThan(50), reason: 'volume on either side');
+    expect(controller.brightness, 0);
+    await controller.savePreferences(controller.preferences.copyWith(wheelGesture: WheelGesture.brightness));
+    await tester.pump();
+    tester.binding.handlePointerEvent(PointerScrollEvent(timeStamp: const Duration(seconds: 1), position: controls.centerRight - const Offset(100, 0), scrollDelta: const Offset(0, -100)));
+    await tester.pump();
+    expect(controller.brightness, 5, reason: 'brightness on either side');
+    await tester.pump(const Duration(seconds: 2));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('split, the wheel sets brightness on the left and volume on the right', (tester) async {
+    await controller.savePreferences(controller.preferences.copyWith(wheelGesture: WheelGesture.split));
     await pump(tester);
     player.state = player.state.copyWith(volume: 50);
     final controls = tester.getRect(find.byType(PlayerControls));

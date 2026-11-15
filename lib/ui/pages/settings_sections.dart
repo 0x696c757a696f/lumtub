@@ -22,6 +22,7 @@ import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
 import '../../progress_line.dart';
+import '../../wheel_gesture.dart';
 import '../../shortcut_bindings.dart';
 import '../../video_codec.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
@@ -658,6 +659,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.speakerLow),
               onTap: () => pickWithSlider(context, title: tr('Volume step'), value: prefs.volumeStep.toDouble(), min: 1, max: 20, divisions: 19, suffix: '%', onSelected: (v) => savePrefs(prefs.copyWith(volumeStep: v.round()))),
             )),
+        SettingEntry(tr('Scroll wheel over the video'), (context) => NormalItem(
+              title: tr('Scroll wheel over the video'),
+              subtitle: tr('Now: {0}. Ctrl + wheel always changes the speed', [prefs.wheelGesture.label]),
+              leading: _icon(AppIcons.arrowsDownUp),
+              onTap: () => pickFromDialog<WheelGesture>(context, title: tr('Scroll wheel over the video'), value: prefs.wheelGesture, values: [for (final v in WheelGesture.values) (v, v.label)], onSelected: (v) => savePrefs(prefs.copyWith(wheelGesture: v))),
+            ), subtitle: tr('mouse wheel volume brightness')),
         SettingEntry(tr('Customize shortcuts'), (context) => NormalItem(
               title: tr('Customize shortcuts'),
               subtitle: tr('Choose the keys for seeking, volume, fullscreen and more'),

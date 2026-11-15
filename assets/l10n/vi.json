@@ -3535,5 +3535,10 @@
   "Next up": "Tiếp theo",
   "Searched": "Đã tìm",
   "You were here last time · Tap to refresh": "Lần trước bạn xem đến đây · Nhấn để làm mới",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Trình phát không mở được luồng video và không nêu lý do. Cài đặt › Mạng › Kiểm tra mạng cho biết phần nào đang bị chặn."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Trình phát không mở được luồng video và không nêu lý do. Cài đặt › Mạng › Kiểm tra mạng cho biết phần nào đang bị chặn.",
+  "Volume": "Âm lượng",
+  "Left half brightness, right half volume": "Nửa trái độ sáng, nửa phải âm lượng",
+  "Scroll wheel over the video": "Con lăn chuột trên video",
+  "Now: {0}. Ctrl + wheel always changes the speed": "Hiện tại: {0}. Ctrl + con lăn luôn đổi tốc độ",
+  "mouse wheel volume brightness": "chuột con lăn âm lượng độ sáng"
 }

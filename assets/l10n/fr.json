@@ -3535,5 +3535,10 @@
   "Next up": "À suivre",
   "Searched": "Recherchées",
   "You were here last time · Tap to refresh": "Vous en étiez là la dernière fois · Touchez pour actualiser",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Le lecteur n'a pas pu ouvrir le flux vidéo et n'a donné aucune raison. Paramètres › Réseau › Vérification du réseau indique quelle partie est bloquée."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Le lecteur n'a pas pu ouvrir le flux vidéo et n'a donné aucune raison. Paramètres › Réseau › Vérification du réseau indique quelle partie est bloquée.",
+  "Volume": "Volume",
+  "Left half brightness, right half volume": "Moitié gauche luminosité, moitié droite volume",
+  "Scroll wheel over the video": "Molette sur la vidéo",
+  "Now: {0}. Ctrl + wheel always changes the speed": "Actuellement : {0}. Ctrl + molette change toujours la vitesse",
+  "mouse wheel volume brightness": "souris molette volume luminosité"
 }

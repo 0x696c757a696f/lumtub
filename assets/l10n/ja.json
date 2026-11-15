@@ -3535,5 +3535,10 @@
   "Next up": "次に再生",
   "Searched": "検索履歴",
   "You were here last time · Tap to refresh": "前回はここまで見ていました · タップして更新",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "プレーヤーが動画ストリームを開けず、理由も示されませんでした。設定 › ネットワーク › ネットワーク診断 でどこがブロックされているか確認できます。"
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "プレーヤーが動画ストリームを開けず、理由も示されませんでした。設定 › ネットワーク › ネットワーク診断 でどこがブロックされているか確認できます。",
+  "Volume": "音量",
+  "Left half brightness, right half volume": "左半分で明るさ、右半分で音量",
+  "Scroll wheel over the video": "動画上のマウスホイール",
+  "Now: {0}. Ctrl + wheel always changes the speed": "現在：{0}。Ctrl + ホイールは常に再生速度を変更",
+  "mouse wheel volume brightness": "マウス ホイール 音量 明るさ"
 }

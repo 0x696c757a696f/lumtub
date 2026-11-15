@@ -20,6 +20,7 @@ import 'package:lumtub/ui/theater_mode.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/widgets/mini_progress_line.dart';
 import 'package:lumtub/widgets/video_progress_bar.dart';
+import 'package:lumtub/wheel_gesture.dart';
 
 import 'player_controls_test.dart' show FakePlayer;
 
@@ -171,6 +172,9 @@ void main() {
       expect(saved.showHeatmap, isFalse);
       expect(saved.progressLine, ProgressLine.fullscreen);
       expect(AppPreferences.fromJson({'progressLine': 'bogus'}).progressLine, ProgressLine.always);
+      expect(defaults.wheelGesture, WheelGesture.off);
+      expect(AppPreferences.fromJson(const AppPreferences(wheelGesture: WheelGesture.split).toJson()).wheelGesture, WheelGesture.split);
+      expect(AppPreferences.fromJson({'wheelGesture': 'bogus'}).wheelGesture, WheelGesture.off);
     });
 
     test('the progress line setting decides where it shows', () {

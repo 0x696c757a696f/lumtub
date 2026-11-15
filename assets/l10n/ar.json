@@ -3535,5 +3535,10 @@
   "Next up": "التالي",
   "Searched": "مُبحوث عنه",
   "You were here last time · Tap to refresh": "توقفت هنا في المرة السابقة · اضغط للتحديث",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "لم يتمكن المشغّل من فتح بث الفيديو ولم يذكر السبب. يوضح «الإعدادات › الشبكة › فحص الشبكة» أي جزء محجوب."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "لم يتمكن المشغّل من فتح بث الفيديو ولم يذكر السبب. يوضح «الإعدادات › الشبكة › فحص الشبكة» أي جزء محجوب.",
+  "Volume": "مستوى الصوت",
+  "Left half brightness, right half volume": "النصف الأيسر للسطوع، والأيمن لمستوى الصوت",
+  "Scroll wheel over the video": "عجلة الفأرة فوق الفيديو",
+  "Now: {0}. Ctrl + wheel always changes the speed": "الآن: {0}. ‏Ctrl + العجلة تغيّر السرعة دائمًا",
+  "mouse wheel volume brightness": "فأرة عجلة صوت سطوع"
 }

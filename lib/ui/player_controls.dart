@@ -60,6 +60,7 @@ import 'theme.dart';
 import '../skins/skin.dart';
 import '../l10n/l10n.dart';
 import '../video_codec.dart' show heightLabel;
+import '../wheel_gesture.dart';
 import 'motion.dart';
 import 'app_icons.dart';
 
@@ -309,24 +310,34 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   void _onScroll(PointerSignalEvent event) {
     if (event is! PointerScrollEvent) return;
-    // The wheel over the video sets the volume only: claiming the event
-    // keeps the page around the player from scrolling too.
-    GestureBinding.instance.pointerSignalResolver.register(event, _changeVolume);
+    // Claiming the event keeps the page around the player from scrolling;
+    // with the wheel gesture off only Ctrl + wheel is taken.
+    if (_controller.preferences.wheelGesture == WheelGesture.off && !_speedModifier) return;
+    GestureBinding.instance.pointerSignalResolver.register(event, _onWheel);
   }
 
-  void _changeVolume(PointerSignalEvent event) {
+  bool get _speedModifier => HardwareKeyboard.instance.isControlPressed || (Platform.isMacOS && HardwareKeyboard.instance.isMetaPressed);
+
+  void _onWheel(PointerSignalEvent event) {
     if (event is! PointerScrollEvent) return;
     final up = event.scrollDelta.dy < 0;
     // Ctrl + wheel steps through 倍速选项, as Enhancer for YouTube does.
-    if (HardwareKeyboard.instance.isControlPressed || (Platform.isMacOS && HardwareKeyboard.instance.isMetaPressed)) {
+    if (_speedModifier) {
       final speed = nextSpeed(_controller.settings.speeds, _player.state.rate, up ? 1 : -1);
       if (speed == null) return;
       unawaited(_player.setRate(speed));
       _showFeedback(up ? AppIcons.fastForwardFill : AppIcons.speedometer, '${trimSpeed(speed)}X');
       return;
     }
-    // The left half of the player sets the brightness, the right the volume.
-    if (_onLeft(event.localPosition)) {
+    final brightness = switch (_controller.preferences.wheelGesture) {
+      WheelGesture.off => null,
+      WheelGesture.volume => false,
+      WheelGesture.brightness => true,
+      // The left half of the player sets the brightness, the right the volume.
+      WheelGesture.split => _onLeft(event.localPosition),
+    };
+    if (brightness == null) return;
+    if (brightness) {
       _brighten(up ? _brightnessStep : -_brightnessStep);
     } else {
       final step = _controller.preferences.volumeStep.toDouble();

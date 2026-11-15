@@ -101,6 +101,7 @@ class _PipViewState extends State<PipView> {
             child: Stack(fit: StackFit.expand, children: [
               VideoBox(
                 controller: _controller,
+                smallSubtitles: true,
                 child: WarmLayer(
                   child: Video(
                     controller: _controller.videoController!,

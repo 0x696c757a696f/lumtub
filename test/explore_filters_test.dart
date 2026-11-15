@@ -59,10 +59,25 @@ void main() {
     expect(mixed.last, 'a0');
   });
 
-  test('only Chinese, Japanese and Korean words of a search are translated', () {
-    expect(searchPhrasesOf('blender 3D modeling live').where(isCjkPhrase), isEmpty);
+  test('only words outside the Latin alphabet of a search are translated', () {
+    expect(searchPhrasesOf('มวยไทย สด'), ['มวยไทย', 'สด']);
+    expect(searchPhrasesOf('живая музыка Blender'), ['живая музыка', 'Blender']);
+    expect(searchPhrasesOf('живая музыка Blender').where(isTranslatedPhrase), ['живая музыка']);
+    expect(searchPhrasesOf('blender 3D modeling live').where(isTranslatedPhrase), isEmpty);
     expect(searchPhrasesOf('游戏 直播 Minecraft'), ['游戏', '直播', 'Minecraft']);
     expect(searchGlossary['直播'], 'live');
+  });
+
+  test('a search in a language other than English puts its English words into it too', () {
+    bool italian(String phrase) => translatesInto(phrase, ExploreLanguage.it);
+    expect(searchPhrasesOf('哲学 philosophy lecture').where(italian), ['哲学', 'philosophy lecture']);
+    expect(searchPhrasesOf('Presocratic philosophers').where(italian), ['Presocratic philosophers']);
+    // Names and words titles write the same everywhere stay.
+    expect(searchPhrasesOf('游戏 直播 Minecraft').where(italian), ['游戏', '直播']);
+    expect(italian('lofi'), isFalse);
+    expect(italian('Plato'), isFalse);
+    // In English only other scripts are translated.
+    expect(searchPhrasesOf('哲学 philosophy lecture').where((p) => translatesInto(p, ExploreLanguage.en)), ['哲学']);
   });
 
   test('details take the translated title, description and chapter names', () {

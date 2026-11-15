@@ -113,7 +113,7 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
   void signInWithBrowser({bool presence = true}) {
     final native = _native;
     if (native == null || waiting) return;
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid || Platform.isIOS) {
       unawaited(_signInInApp());
       return;
     }
@@ -128,8 +128,8 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
     _start((port) => _withText(jsonEncode({'path': path, 'hello': presence, 'delete': delete}), (p, n) => native.import(port.sendPort.nativePort, p, n)));
   }
 
-  /// Android: no other app's cookies can be read, so Google's sign-in
-  /// opens in a page of Lumtub's own (WebSignInActivity.kt), which hands
+  /// Android and iOS: no other app's cookies can be read, so Google's sign-in
+  /// opens in a page of Lumtub's own (WebSignInActivity.kt, AppDelegate.swift), which hands
   /// over the youtube.com cookies as a file and then forgets them.
   Future<void> _signInInApp() async {
     error = null;

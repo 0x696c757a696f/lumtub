@@ -209,6 +209,7 @@ extension PictureHealth on AppController {
     if (_lightRendering == 'battery' && !Power.saving) {
       _lightRendering = null;
       await PlayerOptionApplicator.apply(player, settings);
+      _optionsApplied(player);
       _applied = settings;
       _refitCrop(player);
       logInfo('Plugged in again; scaling back to normal');

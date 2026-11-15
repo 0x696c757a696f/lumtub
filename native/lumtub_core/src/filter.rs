@@ -85,22 +85,25 @@ pub enum Language {
     Uz,
 }
 
-const VIETNAMESE: &str = "ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ";
+/// Letters only Vietnamese uses among explore's languages: not ă, â or
+/// ê alone, which Romanian and French write too.
+const VIETNAMESE: &str = "đơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ";
 
-/// Small words that mark a Latin-script language.
-const LATIN_WORDS: [(Language, &[&str]); 5] = [
+/// Small words that mark a Latin-script language. A word two of them
+/// share (in, con, una, e, da) marks neither.
+const LATIN_WORDS: [(Language, &[&str]); 7] = [
     (
         Language::En,
         &[
-            "the", "and", "of", "to", "in", "is", "for", "with", "how", "what", "why", "you", "my",
+            "the", "and", "of", "to", "is", "for", "with", "how", "what", "why", "you", "my",
             "this", "your", "from", "on", "are", "i", "we", "best", "vs",
         ],
     ),
     (
         Language::Es,
         &[
-            "el", "los", "las", "del", "y", "que", "con", "una", "por", "para", "es", "como", "mi",
-            "más", "qué", "cómo", "muy", "pero", "su",
+            "el", "los", "las", "y", "que", "por", "para", "es", "como", "mi", "más", "qué",
+            "cómo", "muy", "pero", "su",
         ],
     ),
     (
@@ -120,8 +123,23 @@ const LATIN_WORDS: [(Language, &[&str]); 5] = [
     (
         Language::Pt,
         &[
-            "o", "os", "do", "da", "dos", "das", "e", "que", "com", "um", "uma", "para", "não",
-            "é", "em", "no", "na", "mais", "você", "como",
+            "o", "os", "do", "dos", "das", "que", "com", "um", "uma", "para", "não", "é", "em",
+            "no", "na", "mais", "você", "como",
+        ],
+    ),
+    (
+        Language::It,
+        &[
+            "il", "di", "della", "delle", "dello", "dei", "degli", "gli", "che", "per", "nel",
+            "nella", "sul", "sulla", "alla", "allo", "agli", "è", "sono", "questo", "questa",
+            "anche", "molto", "perché", "più", "cosa", "come", "non",
+        ],
+    ),
+    (
+        Language::Ro,
+        &[
+            "și", "în", "cu", "pe", "care", "este", "din", "pentru", "sau", "despre", "cum", "ce",
+            "sunt", "acest", "această", "mai",
         ],
     ),
 ];
@@ -133,6 +151,7 @@ fn latin_letters(language: Language, lower: &str) -> bool {
         Language::Fr => lower.contains(['œ', 'ç', 'è', 'ù', 'û']),
         Language::De => lower.contains(['ä', 'ö', 'ü', 'ß']),
         Language::Pt => lower.contains(['ã', 'õ']) || lower.contains("ção"),
+        Language::Ro => lower.contains(['ș', 'ț', 'ş', 'ţ']),
         _ => false,
     }
 }
@@ -276,12 +295,27 @@ pub fn title_language(title: &str) -> Language {
     // Trigrams tell the other Latin-script languages, such as Italian or
     // Dutch, where there is text enough to go by.
     // A title of a word or two, such as a game's name, is too little.
+    // Small words of one language are overruled only by a sure reading,
+    // and not by a language whose own small words are fewer.
     let enough = if words.len() >= 4 { 0.2 } else { 0.5 };
-    if let Some(found) = latin_detector()
+    let listed = |language: Language| LATIN_WORDS.iter().any(|(l, _)| *l == language);
+    let score_of = |language: Language| {
+        LATIN_WORDS
+            .iter()
+            .find(|(l, _)| *l == language)
+            .map_or(0.0, |(_, small)| {
+                words.iter().filter(|w| small.contains(w)).count() as f64
+            })
+    };
+    if let Some(info) = latin_detector()
         .detect(title)
         .filter(|info| info.confidence() >= enough)
-        .and_then(|info| latin_language(info.lang()))
-        && (best_score < 2.0 || found == best)
+        && let Some(found) = latin_language(info.lang())
+        && (best_score == 0.0
+            || found == best
+            || (best_score < 2.0
+                && info.confidence() >= 0.5
+                && (!listed(found) || score_of(found) >= best_score)))
     {
         return found;
     }
@@ -627,6 +661,25 @@ mod tests {
         assert_eq!(title_language("How to build a PC in 2026"), Language::En);
         assert_eq!(title_language("Minecraft Speedrun"), Language::En);
         assert_eq!(title_language("Cómo hacer pan en casa"), Language::Es);
+        assert_eq!(title_language("Lezione di filosofia: Kant"), Language::It);
+        assert_eq!(
+            title_language("La filosofia di Spinoza spiegata in modo semplice"),
+            Language::It
+        );
+        assert_eq!(
+            title_language(
+                "Una lezione sulla Repubblica di Platone e sulla sua idea di giustizia, con una lettura dei passi più importanti del libro."
+            ),
+            Language::It
+        );
+        assert_eq!(
+            title_language("Ricette di casa: la pasta al forno della nonna"),
+            Language::It
+        );
+        assert_eq!(
+            title_language("Cum să faci cea mai bună pâine în casă"),
+            Language::Ro
+        );
         assert_eq!(
             title_language("Les meilleures recettes pour l'été"),
             Language::Fr

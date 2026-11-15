@@ -10,6 +10,7 @@ import '../../models.dart';
 import '../../thumbnail_cache.dart';
 import '../../youtube_tv_feed.dart';
 import '../common.dart';
+import '../haptics.dart';
 import '../playlist_length.dart';
 import '../theme.dart';
 import '../playlist_order_button.dart';
@@ -178,14 +179,19 @@ class _GroupChips extends StatelessWidget {
   final ValueChanged<ChannelGroup?> onSelect;
   final VoidCallback onManage;
 
+  void _pick(ChannelGroup? group) {
+    if (group != selected) Haptics.select();
+    onSelect(group);
+  }
+
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 8),
         child: FilterFlow(children: [
           if (groups.isNotEmpty) ...[
-            ChoiceChip(label: Text(tr('All')), selected: selected == null, onSelected: (_) => onSelect(null)),
+            ChoiceChip(label: Text(tr('All')), selected: selected == null, onSelected: (_) => _pick(null)),
             for (final group in groups)
-              ChoiceChip(label: Text('${group.name} · ${group.channels.length}'), selected: selected == group, onSelected: (_) => onSelect(selected == group ? null : group)),
+              ChoiceChip(label: Text('${group.name} · ${group.channels.length}'), selected: selected == group, onSelected: (_) => _pick(selected == group ? null : group)),
           ],
           TextButton.icon(
             onPressed: onManage,
@@ -706,18 +712,10 @@ class SliverVideoLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-        sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent, textScale: cardTextScale(context));
-          return SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: layout.columns,
-              mainAxisSpacing: gridGap,
-              crossAxisSpacing: gridGap,
-              mainAxisExtent: layout.itemHeight,
-            ),
-            delegate: SliverChildBuilderDelegate(builder, childCount: count),
-          );
-        }),
+        sliver: SliverGrid(
+          gridDelegate: VideoGridDelegate(textScale: cardTextScale(context), rowGap: gridGap),
+          delegate: SliverChildBuilderDelegate(builder, childCount: count),
+        ),
       );
 }
 

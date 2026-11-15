@@ -68,7 +68,7 @@
 //    drawn on: text needs 4.5:1, icons and the accent 3:1. A colour that
 //    fails is drawn black or white instead, and Settings lists it. Check
 //    pairs, not single colours: colors.text on colors.page, buttonText on
-//    button, chipSelectedText on chipSelected, navSelectedText on
+//    button, chipText on chip, chipSelectedText on chipSelected, navSelectedText on
 //    navSelected, titleBar.text on titleBar.surface, and so on.
 //    对比度：Lumtub 会把每个文字、图标颜色和它实际所在的底色配对检查，文字要 4.5:1，
 //    图标和强调色要 3:1。不合格的会被换成黑或白，并在设置里列出来。要检查的是「一对」颜色，
@@ -171,7 +171,11 @@
     "text": "#10233a",
     // Secondary text. 次要文字。
     "muted": "#4a6278",
-    // What is chosen, playing or in progress. 选中、正在播放、进行中的颜色。
+    // What is chosen, playing or in progress; also links and times in
+    // descriptions and comments where it reads nearly as well as "text"
+    // (else those take "text", underlined in the accent).
+    // 选中、正在播放、进行中的颜色；描述和评论里的链接、时间点在它几乎和 "text" 一样清楚时
+    // 也用它，否则改用 "text" 加强调色下划线。
     "accent": "#0873ad",
     // Text on the accent. 强调色上的文字。
     "onAccent": "#ffffff",
@@ -349,6 +353,10 @@
     "primaryButtonText": "#ffffff",
     // Filter tags such as on the explore page. 探索页那种筛选标签。
     "chip": { "fill": "#ffffff", "border": "#b9d4ea" },
+    // Words on a chip that is off; left out, the button text or the page
+    // text is used, whichever reads on the chip.
+    // 未选中标签上的文字；不写就用按钮文字或页面文字里在标签上看得清的那个。
+    "chipText": "#10233a",
     "chipSelected": { "fill": "#0873ad" },
     "chipSelectedText": "#ffffff",
     // The chosen page in the side bar, and the others' text.

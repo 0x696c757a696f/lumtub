@@ -49,4 +49,21 @@ void main() {
     expect(LibassLayout.lineCount('gute Erkennisse mit Manuel [musik]\nOstermann ungeskriptet.', scale: 1.5), 2);
     expect(LibassLayout.lineCount('mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm', scale: 1), 2);
   });
+
+  test('text without spaces is broken where it would run past the edges', () {
+    final wrapped = LibassLayout.wrap('字' * 25, 10);
+    expect(wrapped.split('\n').length, greaterThanOrEqualTo(3));
+    expect(wrapped.replaceAll('\n', ''), '字' * 25);
+    for (final line in wrapped.split('\n')) {
+      expect(line.runes.length, lessThanOrEqualTo(10));
+    }
+  });
+
+  test('Thai is broken too, and lines that fit stay as they are', () {
+    const thai = 'ภาษาไทยไม่มีการเว้นวรรคระหว่างคำทำให้ต้องตัดบรรทัดเองเมื่อข้อความยาวเกินไป';
+    expect(LibassLayout.wrap(thai, 8).contains('\n'), isTrue);
+    expect(LibassLayout.wrap(thai, 8).replaceAll('\n', ''), thai);
+    expect(LibassLayout.wrap('短句', 10), '短句');
+    expect(LibassLayout.wrap('one\ntwo', 10), 'one\ntwo');
+  });
 }

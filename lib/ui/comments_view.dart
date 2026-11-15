@@ -8,8 +8,10 @@ import '../app/comments_loader.dart';
 import '../models.dart';
 import '../youtube_comments.dart';
 import 'common.dart';
+import 'haptics.dart';
 import 'linked_text.dart';
 import 'rating_buttons.dart';
+import 'reveal.dart';
 import 'pages/channel_page.dart';
 import 'theme.dart';
 import 'translatable.dart';
@@ -45,6 +47,11 @@ class CommentsSection extends StatefulWidget {
 class _CommentsSectionState extends State<CommentsSection> {
   late final _loader = CommentsLoader(widget.controller.comments, videoId: widget.videoId, postId: widget.postId);
   bool _asked = false;
+  /// Whether comments were listed at the last build, and whether the
+  /// first ones are being built now: those come in where the spinner was;
+  /// ones scrolled to later are simply there.
+  bool _listed = false;
+  bool _arriving = false;
 
   @override
   void initState() {
@@ -220,7 +227,10 @@ class _CommentsSectionState extends State<CommentsSection> {
                 style: const ButtonStyle(visualDensity: VisualDensity.compact),
                 segments: [ButtonSegment(value: false, label: Text(tr('Popular'))), ButtonSegment(value: true, label: Text(tr('Latest')))],
                 selected: {loader.newest},
-                onSelectionChanged: (value) => loader.setNewest(value.first),
+                onSelectionChanged: (value) {
+                  Haptics.select();
+                  loader.setNewest(value.first);
+                },
               );
               final title = Text(loader.count.isEmpty ? tr('Comments') : tr('Comments · {0}', [loader.count]), style: Theme.of(context).textTheme.titleMedium);
               final search = IconButton(
@@ -239,6 +249,11 @@ class _CommentsSectionState extends State<CommentsSection> {
             if (_canWrite) CommentComposer(hint: tr('Add a comment…'), onSubmit: _post, thanksFor: widget.videoId)
             else if (loader.canCreate) CommentComposer(hint: tr('Add a comment…'), onSubmit: _create),
           ];
+          if (loader.comments.isNotEmpty && !_listed) {
+            _arriving = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) => _arriving = false);
+          }
+          _listed = loader.comments.isNotEmpty;
           final prefs = widget.controller.preferences;
           final shown = [for (final comment in loader.comments) if (!prefs.blocksCommenter(comment.author, comment.channelId) && (_words.isEmpty || _matches(comment))) comment];
           final footer = <Widget>[
@@ -258,7 +273,7 @@ class _CommentsSectionState extends State<CommentsSection> {
             if (!_asked) scheduleMicrotask(_load);
             if (index < header.length) return header[index];
             index -= header.length;
-            if (index < shown.length) return Column(crossAxisAlignment: CrossAxisAlignment.start, children: _thread(context, shown[index]));
+            if (index < shown.length) return Reveal(enabled: _arriving, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: _thread(context, shown[index])));
             return footer[index - shown.length];
           }
           final count = header.length + shown.length + footer.length;
@@ -266,7 +281,11 @@ class _CommentsSectionState extends State<CommentsSection> {
           if (!widget.scrollable) {
             return Padding(
               padding: widget.padding,
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [...header, for (final comment in shown) ..._thread(context, comment), ...footer]),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                ...header,
+                for (final comment in shown) Reveal(enabled: _arriving, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: _thread(context, comment))),
+                ...footer,
+              ]),
             );
           }
           return ListView.builder(padding: widget.padding, itemCount: count, itemBuilder: item);

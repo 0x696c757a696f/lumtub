@@ -69,9 +69,14 @@ extension SubtitleActions on AppController {
       await platform.command(['sub-add', path, 'auto', '${old['title'] ?? ''}', '${old['lang'] ?? ''}']);
       final added = (await tracks()).where((t) => '${t['id']}' != id).lastOrNull;
       if (added == null) return true;
-      if (main == id) await platform.setProperty('sid', '${added['id']}');
-      if (second == id) await platform.setProperty('secondary-sid', '${added['id']}');
+      final now = '${added['id']}';
+      if (main == id) await platform.setProperty('sid', now);
+      if (second == id) await platform.setProperty('secondary-sid', now);
+      // A copy stays on screen until its copy of the new track replaces it.
+      final copied = _subtitleCopies.values.any((c) => c.source == id);
       await platform.command(['sub-remove', id]);
+      final player = this.player;
+      if (copied && player != null) _restyleSubtitles(player, moved: (old: id, now: now));
       if (main == id) await syncMainSubtitle();
       logInfo('Subtitle translation updated; track $id replaced by ${added['id']}');
       return true;
@@ -248,6 +253,8 @@ extension SubtitleActions on AppController {
   Future<List<SubtitleCue>> _optionCues(SubtitleOption option) => _cached('${playing?.id}\u0000${option.url}', () async => File(await _subtitleFile(option)).readAsString());
 
   Future<List<SubtitleCue>> _trackCues(NativePlayer platform, SubtitleTrack track) async {
+    // Lumtub's copy of a track is read from the track it copies.
+    if (_subtitleCopies[track.id] case final copy?) track = (await mpvSubtitleTracks(platform))[copy.source] ?? track;
     final option = details?.subtitles.where((o) => o.label == track.title).firstOrNull;
     if (option != null) return _optionCues(option);
     final cues = await _cached('${playing?.id}\u0000${track.id}\u0000${track.title}', () async {
@@ -334,7 +341,7 @@ extension SubtitleActions on AppController {
     if (player == null || platform is! NativePlayer) return;
     _shownOptions[option.label] = option;
     try {
-      final loaded = subtitleTrackOf(await mpvSubtitleTracks(platform), option);
+      final loaded = subtitleTrackOf(await mpvSubtitleTracks(platform), option, leaving: _subtitleCopies.keys);
       if (loaded != null) {
         await player.setSubtitleTrack(loaded);
       } else {
@@ -517,6 +524,7 @@ extension SubtitleActions on AppController {
     if (player != null) await PlayerOptionApplicator.apply(player, next, previous: _applied ?? settings);
     _applied = next;
     _update(() => settings = next);
+    if (player != null) _optionsApplied(player);
     await _settingsStore?.save(next);
   }
 
@@ -527,10 +535,10 @@ extension SubtitleActions on AppController {
     if (option != null) _update(() => secondaryLoading = option);
     try {
       final platform = player.platform;
-      final loaded = option == null || platform is NativePlayer && subtitleTrackOf(await mpvSubtitleTracks(platform), option) != null;
+      final loaded = option == null || platform is NativePlayer && subtitleTrackOf(await mpvSubtitleTracks(platform), option, leaving: _subtitleCopies.keys) != null;
       final file = loaded ? null : await _subtitleFile(option);
       if (this.player != player) return;
-      if (!await SecondarySubtitle.set(player, option, file: file)) throw StateError('Subtitles not loaded');
+      if (!await SecondarySubtitle.set(player, option, file: file, leaving: [..._subtitleCopies.keys])) throw StateError('Subtitles not loaded');
       _update(() => secondarySubtitle = option);
     } catch (e) {
       logError('Could not set secondary subtitles ${option?.language}', e);
@@ -548,11 +556,18 @@ extension SubtitleActions on AppController {
     final platform = player.platform;
     if (platform is! NativePlayer) return;
     final width = player.state.width ?? 0, height = player.state.height ?? 0;
+    final look = _libassLook;
+    final font = settings.subtitleFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.subtitleFont);
     final position = LibassLayout.secondaryPosition(
       lines.isEmpty ? '' : lines.first,
-      position: (settings.subtitlePosition - _subtitleLift).clamp(0, 100),
+      position: (100 - _subtitleLift).clamp(0, 100),
       scale: settings.subtitleScale,
       aspect: width > 0 && height > 0 ? width / height : 16 / 9,
+      fontSize: look.fontSize(_subtitleFamily ?? font),
+      em: look.em,
+      margin: look.margin,
+      gap: look.gap,
+      whole: _subtitleCopies[secondaryTrackId]?.second ?? false,
     );
     // Only scheduled: this runs while media_kit handles an mpv event.
     unawaited(platform.setProperty('secondary-sub-pos', position.toStringAsFixed(1)).catchError((Object e) => logDebug(() => 'Could not move the second subtitle: $e')));
@@ -577,11 +592,16 @@ extension SubtitleActions on AppController {
     }
     if (family == _subtitleFamily) return;
     _subtitleFamily = family;
+    _libassSent['sub-font'] = family;
     unawaited(platform.setProperty('sub-font', family).catchError((Object e) => logDebug(() => 'Could not set the subtitle font: $e')));
+    // Its size follows.
+    _queueLibassLook();
   }
 
   /// A new video: libmpv draws its subtitles again, if it is meant to.
   void _resetSubtitleFont() {
+    _forgetSubtitleCopies();
+    _plainFits.clear();
     if (!libassCantDraw) return;
     libassCantDraw = false;
     final platform = player?.platform;
@@ -595,11 +615,14 @@ extension SubtitleActions on AppController {
   /// above the player's controls while they show; 0 puts them back.
   void liftSubtitles(int percent) {
     final player = this.player;
-    if (!settings.libassSubtitles || player == null || percent == _subtitleLift) return;
+    if (player == null || percent == _subtitleLift) return;
+    // Kept while the Flutter view draws, for when libmpv draws again.
     _subtitleLift = percent;
+    if (!settings.libassSubtitles) return;
     final platform = player.platform;
     if (platform is! NativePlayer) return;
-    final position = (settings.subtitlePosition - percent).clamp(0, 100);
+    // 字幕位置 is the margin below; this only lifts above the controls.
+    final position = (100 - percent).clamp(0, 100);
     unawaited(platform.setProperty('sub-pos', '$position').catchError((Object e) => logDebug(() => 'Could not move the subtitles: $e')));
     _placeSecondary(player, _mainSubtitle);
   }

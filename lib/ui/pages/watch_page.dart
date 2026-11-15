@@ -19,6 +19,9 @@ import '../../youtube_account.dart' show VideoRating;
 import '../comments_view.dart';
 import '../cast_ui.dart';
 import '../common.dart';
+import '../fill_icon.dart';
+import '../haptics.dart';
+import '../reveal.dart';
 import '../key_scroll.dart';
 import '../lights_off.dart';
 import '../live_chat_rows.dart';
@@ -345,7 +348,7 @@ class _RatingButtons extends StatelessWidget {
           : signedIn
           ? () => account!.rate(item, rating)
           : () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Sign in to Google to {0}', [label]))));
-      if (stacked) return Expanded(child: _StackedAction(icon: selected ? selectedIcon : icon, label: shown == null ? label : formatCount(shown), selected: selected, onPressed: onPressed));
+      if (stacked) return Expanded(child: _StackedAction(icon: icon, fill: selectedIcon, label: shown == null ? label : formatCount(shown), selected: selected, onPressed: onPressed));
       return Tooltip(
         message: [
           if (!signedIn) tr('Sign in to Google to {0}', [label]) else if (off) tr('The uploader turned off likes and dislikes for this video') else if (selected) tr('Cancel {0}', [label]) else label,
@@ -358,7 +361,7 @@ class _RatingButtons extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12),
           ),
           onPressed: onPressed,
-          icon: Icon(selected ? selectedIcon : icon, size: 20),
+          icon: IconTheme.merge(data: const IconThemeData(size: 20), child: FillIcon(icon, selectedIcon, selected: selected)),
           label: Text(shown == null ? label : formatCount(shown)),
         ),
       );
@@ -411,13 +414,13 @@ class _Toolbar extends StatelessWidget {
             _ActionButton(
               tooltip: favorite ? tr('Remove from favorites') : tr('Favorites'),
               label: tr('Favorites'),
-              icon: Icon(favorite ? AppIcons.heartFill : AppIcons.heart, color: favorite ? context.colors.primary : null),
+              icon: IconTheme.merge(data: IconThemeData(color: favorite ? context.colors.primary : null), child: FillIcon(AppIcons.heart, AppIcons.heartFill, selected: favorite)),
               onPressed: () => library.toggleFavorite(item),
             ),
             _ActionButton(
               tooltip: later ? tr('Remove from Watch later') : tr('Watch later'),
               label: tr('Watch later'),
-              icon: Icon(later ? AppIcons.clockFill : AppIcons.clock, color: later ? context.colors.primary : null),
+              icon: IconTheme.merge(data: IconThemeData(color: later ? context.colors.primary : null), child: FillIcon(AppIcons.clock, AppIcons.clockFill, selected: later)),
               onPressed: () => library.toggleWatchLater(item),
             ),
             _ActionButton(tooltip: tr('Add to playlist'), icon: Icon(AppIcons.listPlus), onPressed: () => showAddToPlaylist(context, controller, item)),
@@ -540,13 +543,13 @@ class _PhoneDetailsState extends State<_PhoneDetails> {
         const DelayedReveal(child: Skeleton(child: SkeletonBox(width: 180, height: 12))),
       ] else if (_open && description.isNotEmpty) ...[
         const SizedBox(height: 8),
-        Translatable(
+        Reveal(child: Translatable(
           controller: controller,
           text: description,
           builder: (context, text) => SelectionArea(
             child: LinkedText(text, style: TextStyle(height: 1.5, fontSize: 13, color: colors.onSurfaceVariant), onTime: (time) => unawaited(controller.seek(time)), onLink: openExternal),
           ),
-        ),
+        )),
       ],
     ]);
   }
@@ -568,8 +571,8 @@ class _PhoneActions extends StatelessWidget {
     return Row(children: [
       Expanded(flex: 2, child: _RatingButtons(controller: controller, stacked: true)),
       if (library != null) ...[
-        Expanded(child: _StackedAction(icon: favorite ? AppIcons.heartFill : AppIcons.heart, label: tr('Favorites'), selected: favorite, onPressed: () => library.toggleFavorite(item))),
-        Expanded(child: _StackedAction(icon: later ? AppIcons.clockFill : AppIcons.clock, label: tr('Watch later'), selected: later, onPressed: () => library.toggleWatchLater(item))),
+        Expanded(child: _StackedAction(icon: AppIcons.heart, fill: AppIcons.heartFill, label: tr('Favorites'), selected: favorite, onPressed: () => library.toggleFavorite(item))),
+        Expanded(child: _StackedAction(icon: AppIcons.clock, fill: AppIcons.clockFill, label: tr('Watch later'), selected: later, onPressed: () => library.toggleWatchLater(item))),
       ],
       if (download) Expanded(child: _StackedAction(icon: item.isLive ? AppIcons.radioButton : AppIcons.downloadSimple, label: tr('Downloads'), onPressed: () => showDownloadChoice(context, controller, item))),
       Expanded(child: _StackedAction(icon: AppIcons.dotsThreeVertical, label: tr('More'), onPressed: () => _more(context))),
@@ -617,10 +620,12 @@ class _PhoneActions extends StatelessWidget {
   }
 }
 
-/// An icon over a short label, as a phone's row of actions has them.
+/// An icon over a short label, as a phone's row of actions has them. With
+/// [fill], the icon fills in while [selected].
 class _StackedAction extends StatelessWidget {
-  const _StackedAction({required this.icon, required this.label, required this.onPressed, this.selected = false});
+  const _StackedAction({required this.icon, this.fill, required this.label, required this.onPressed, this.selected = false});
   final IconData icon;
+  final IconData? fill;
   final String label;
   final VoidCallback? onPressed;
   final bool selected;
@@ -635,7 +640,10 @@ class _StackedAction extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, size: 24, color: color),
+          IconTheme.merge(
+            data: IconThemeData(size: 24, color: color),
+            child: fill == null ? Icon(icon) : FillIcon(icon, fill!, selected: selected),
+          ),
           const SizedBox(height: 4),
           Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: color)),
         ]),
@@ -836,10 +844,10 @@ class _Details extends StatelessWidget {
         ])))
       else if (meta.isNotEmpty || (details?.description.isNotEmpty ?? false))
         // As wide as the title and channel row, not as wide as its text.
-        SizedBox(
+        Reveal(child: SizedBox(
           width: double.infinity,
           child: _Description(meta: meta, description: details?.description ?? '', expanded: controller.preferences.expandDescription, controller: controller),
-        ),
+        )),
     ]);
   }
 }
@@ -883,6 +891,7 @@ class _DescriptionState extends State<_Description> {
                 text: widget.description,
                 builder: (context, description) => AnimatedSize(
                   duration: Motion.of(Ease.fade),
+                  curve: Ease.out,
                   alignment: Alignment.topCenter,
                   // Times seek the video and links open in the browser, as in
                   // PiliNara; the expanded text can still be selected.
@@ -1156,11 +1165,14 @@ class _UpNext extends StatelessWidget {
                     for (final (value, label, _) in choices)
                       Padding(
                         padding: const EdgeInsetsDirectional.only(end: 8),
-                        child: ChoiceChip(label: Text(label), selected: value == kind, onSelected: (_) => _relatedFilter.value = (playing?.id, value)),
+                        child: ChoiceChip(label: Text(label), selected: value == kind, onSelected: (_) {
+                          if (value != kind) Haptics.select();
+                          _relatedFilter.value = (playing?.id, value);
+                        }),
                       ),
                   ]),
                 )),
-              SliverList.builder(itemCount: shown.length, itemBuilder: (context, i) => _tile(shown[i], shown)),
+              SliverReveal(key: ValueKey(shown.isEmpty), sliver: SliverList.builder(itemCount: shown.length, itemBuilder: (context, i) => _tile(shown[i], shown))),
             ]);
           },
         ),

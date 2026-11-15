@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="playback_channel">再生</string>
+    <string name="sign_in_waiting">Google ログインを待っています</string>
 </resources>

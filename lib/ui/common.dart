@@ -10,6 +10,7 @@ import '../l10n/l10n.dart';
 import '../system_env.dart';
 import 'app_icons.dart';
 import 'motion.dart';
+import 'reveal.dart';
 import 'side_sheet.dart';
 
 export '../models.dart' show formatBytes;
@@ -87,7 +88,7 @@ class ErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return Container(
+    return Reveal(child: Container(
       padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8),
       decoration: BoxDecoration(color: colors.errorContainer, borderRadius: AppStyle.cardRadius),
       child: Row(children: [
@@ -96,7 +97,7 @@ class ErrorBanner extends StatelessWidget {
         Expanded(child: SelectableText(message, minLines: 1, maxLines: 8, style: TextStyle(color: colors.onErrorContainer))),
         if (onRetry != null) TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('Retry'))),
       ]),
-    );
+    ));
   }
 }
 

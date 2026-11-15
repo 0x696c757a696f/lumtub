@@ -279,6 +279,7 @@ extension SettingsActions on AppController {
     if (this.player case final playing?) _refitCrop(playing);
     await store.save(next);
     _update(() => settings = next);
+    _optionsApplied(player);
     if (next.skipSilence != oldSettings.skipSilence || next.audioFilter != oldSettings.audioFilter) unawaited(_syncSilenceSkipping(player));
     if (next.volumeBalance != oldSettings.volumeBalance || next.audioFilter != oldSettings.audioFilter) unawaited(_syncVolumeBalance(player));
     // The video playing skips by the new SponsorBlock choice too.
@@ -317,7 +318,11 @@ extension SettingsActions on AppController {
   /// Shows [next] at once without saving or touching libmpv, while a
   /// slider of the subtitle style panel moves; [saveSettings] follows when
   /// it is let go.
-  void previewSettings(PlayerSettings next) => _update(() => settings = next);
+  void previewSettings(PlayerSettings next) {
+    _update(() => settings = next);
+    // Subtitles libmpv draws follow a slider as the Flutter view does.
+    _queueLibassLook();
+  }
 
   /// Sets one libmpv property without saving, for live previews such as
   /// the picture sliders.

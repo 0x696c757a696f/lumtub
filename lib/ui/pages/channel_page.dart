@@ -17,8 +17,11 @@ import '../../thumbnail_cache.dart';
 import '../../video_repository.dart';
 import '../comments_view.dart';
 import '../common.dart';
+import '../haptics.dart';
 import '../key_scroll.dart';
+import '../press_scale.dart';
 import '../rating_buttons.dart';
+import '../reveal.dart';
 import '../theme.dart';
 import '../translatable.dart';
 import '../video_card.dart';
@@ -62,8 +65,14 @@ class _ChannelPageState extends State<ChannelPage> {
     if (controller.channelTab == value && controller.channelQuery == null) {
       KeyScroll.toTopAt(context);
     } else {
+      Haptics.select();
       controller.setChannelTab(value);
     }
+  }
+
+  void _sort(ChannelSort value) {
+    if (controller.channelSort != value) Haptics.select();
+    controller.setChannelSort(value);
   }
 
   @override
@@ -139,7 +148,10 @@ class _ChannelPageState extends State<ChannelPage> {
                       ChoiceChip(
                         label: Text(value?.label ?? tr('All')),
                         selected: controller.channelSearchTab == value,
-                        onSelected: (_) => controller.searchChannel(controller.channelQuery!, within: value),
+                        onSelected: (_) {
+                          Haptics.select();
+                          controller.searchChannel(controller.channelQuery!, within: value);
+                        },
                       ),
                   ])
                 : FilterFlow(children: [
@@ -150,7 +162,7 @@ class _ChannelPageState extends State<ChannelPage> {
                     if (Device.tv && sortable) ...[
                       const SizedBox(width: 8),
                       for (final value in ChannelSort.values)
-                        FilterChip(label: Text(value.label), showCheckmark: false, selected: controller.channelSort == value, onSelected: (_) => controller.setChannelSort(value)),
+                        FilterChip(label: Text(value.label), showCheckmark: false, selected: controller.channelSort == value, onSelected: (_) => _sort(value)),
                     ],
                   ])),
             const SizedBox(width: 12),
@@ -162,7 +174,7 @@ class _ChannelPageState extends State<ChannelPage> {
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
             child: Wrap(spacing: 8, runSpacing: 8, children: [
               for (final value in ChannelSort.values)
-                ChoiceChip(label: Text(value.label), selected: controller.channelSort == value, onSelected: (_) => controller.setChannelSort(value)),
+                ChoiceChip(label: Text(value.label), selected: controller.channelSort == value, onSelected: (_) => _sort(value)),
             ]),
           )),
         if (posts != null) ..._postSlivers(context, posts, wide, shown) else ..._listingSlivers(context, loader!, tab, searching),
@@ -178,10 +190,10 @@ class _ChannelPageState extends State<ChannelPage> {
     final empty = items.isEmpty && playlists.isEmpty;
     return [
       if (playlists.isNotEmpty) ...[
-        SliverPlaylistGrid(items: playlists, onOpen: controller.openYoutubePlaylist),
+        SliverReveal(key: const ValueKey('playlists'), sliver: SliverPlaylistGrid(items: playlists, onOpen: controller.openYoutubePlaylist)),
         if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
       ],
-      if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
+      if (items.isNotEmpty) SliverReveal(key: const ValueKey('videos'), sliver: SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items))),
       if (loader.loading) ...[
         if (!empty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
         SliverSkeletonGrid(rows: empty ? 3 : 1),
@@ -208,7 +220,7 @@ class _ChannelPageState extends State<ChannelPage> {
           child: Align(alignment: AlignmentDirectional.centerStart, child: ImmersiveTranslationSwitch(controller: controller)),
         ),
       ),
-      SliverPadding(
+      SliverReveal(key: ValueKey(posts.isEmpty), sliver: SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: SliverList.separated(
           itemCount: posts.length,
@@ -228,7 +240,7 @@ class _ChannelPageState extends State<ChannelPage> {
             ),
           ),
         ),
-      ),
+      )),
       if (loader.loading)
         const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))),
       if (error != null)
@@ -595,7 +607,7 @@ class ChannelResultTile extends StatelessWidget {
     final ref = result.ref;
     final name = ref.name.isEmpty ? tr('YouTube channels') : ref.name;
     final meta = [if (result.handle != null) result.handle!, if (result.subscribers != null) result.subscribers!].join(' · ');
-    return Card(child: InkWell(
+    return PressScale(child: Card(child: InkWell(
       onTap: () => controller.openChannel(ref),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -612,7 +624,7 @@ class ChannelResultTile extends StatelessWidget {
           FollowButton(controller: controller, channel: ChannelRef(ref.id, ref.name, result.avatar ?? ref.avatar)),
         ]),
       ),
-    ));
+    )));
   }
 }
 
@@ -671,9 +683,10 @@ class FollowButton extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(now ? (youtube ? tr('Followed and subscribed on YouTube') : tr('Followed. New videos will appear in "Subscriptions"')) : (youtube ? tr('Unfollowed and unsubscribed on YouTube') : tr('Unfollowed')))));
     }
 
-    return following
-        ? FilledButton.tonalIcon(onPressed: toggle, icon: Icon(AppIcons.check), label: Text(tr('Following')))
-        : FilledButton.icon(onPressed: toggle, icon: Icon(AppIcons.plus), label: Text(tr('Follow')));
+    // The same button either way, so its colour and icon change in place.
+    final icon = Swap(child: Icon(following ? AppIcons.check : AppIcons.plus, key: ValueKey(following)));
+    final label = Text(following ? tr('Following') : tr('Follow'));
+    return following ? FilledButton.tonalIcon(onPressed: toggle, icon: icon, label: label) : FilledButton.icon(onPressed: toggle, icon: icon, label: label);
   }
 }
 

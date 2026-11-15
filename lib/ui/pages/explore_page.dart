@@ -10,6 +10,8 @@ import '../../explore_topics.dart';
 import '../chip_strip.dart';
 import '../common.dart';
 import '../fitting_segments.dart';
+import '../haptics.dart';
+import '../reveal.dart';
 import '../../search_options.dart';
 import '../theme.dart';
 import '../video_card.dart';
@@ -34,7 +36,8 @@ class ExplorePage extends StatefulWidget {
 }
 
 class _ExplorePageState extends State<ExplorePage> {
-  double _railWidth = 220;
+  /// Where a drag left the zone column; kept with the preferences when it ends.
+  late double _railWidth = widget.controller.preferences.exploreRailWidth;
 
   AppController get controller => widget.controller;
 
@@ -101,6 +104,7 @@ class _ExplorePageState extends State<ExplorePage> {
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
             onHorizontalDragUpdate: (details) => setState(() => _railWidth = (_railWidth + details.delta.dx).clamp(TopicStrip.railWidth, 360).toDouble()),
+            onHorizontalDragEnd: (_) => unawaited(controller.savePreferences(controller.preferences.copyWith(exploreRailWidth: _railWidth))),
             child: const SizedBox(width: 8),
           ),
         ),
@@ -203,16 +207,6 @@ class _ExplorePageState extends State<ExplorePage> {
         changed: controller.preferences.exploreLanguage != ExploreLanguage.any,
         onSelected: (v) => controller.setExplore(language: v),
       ),
-      if (controller.preferences.exploreLanguage != ExploreLanguage.any)
-        Tooltip(
-          message: tr('Only videos whose original audio track or automatic captions confirm the language, not guessed from the title and description'),
-          child: FilterChip(
-            avatar: Icon(AppIcons.ear, size: 18, color: chipForeground(context, controller.preferences.exploreHeardOnly)),
-            label: Text(tr('Confirmed audio only')),
-            selected: controller.preferences.exploreHeardOnly,
-            onSelected: (v) => controller.setExplore(heardOnly: v),
-          ),
-        ),
       OptionChip(
         icon: AppIcons.highDefinition,
         value: controller.exploreQuality,
@@ -255,7 +249,10 @@ class _ExplorePageState extends State<ExplorePage> {
             ],
             // 宗教与信仰 and 学术 show as part of the half they were opened from.
             selected: {controller.exploreHalf},
-            onSelectionChanged: (value) => controller.setExplore(section: value.first),
+            onSelectionChanged: (value) {
+              Haptics.select();
+              controller.setExplore(section: value.first);
+            },
           ),
         )),
         if (section.tabs case final tabs?)
@@ -282,7 +279,11 @@ class _ExplorePageState extends State<ExplorePage> {
                     choices: [for (final t in topics) (label: t.label, icon: t.icon)],
                     selected: controller.exploreTopic,
                     onSelected: (i) => controller.setExplore(topic: i),
-                    onLongPress: (i) { if (topics[i].custom) _removeTopic(context, section, topics[i]); },
+                    onLongPress: (i) {
+                      if (!topics[i].custom) return;
+                      Haptics.menu();
+                      _removeTopic(context, section, topics[i]);
+                    },
                     trailing: [
                       IconButton(tooltip: tr('Add'), icon: Icon(AppIcons.plus, size: 18), onPressed: () => _addTopic(context, section)),
                       IconButton(tooltip: tr('Manage'), icon: Icon(AppIcons.slidersHorizontal, size: 18), onPressed: () => _manageTopics(context, section)),
@@ -332,12 +333,15 @@ class _ExplorePageState extends State<ExplorePage> {
                     style: const ButtonStyle(visualDensity: VisualDensity.compact),
                     segments: [for (final m in ExploreMode.of(section)) ButtonSegment(value: m, label: Text(m.label, maxLines: 1, softWrap: false))],
                     selected: {mode},
-                    onSelectionChanged: (value) => controller.setExplore(mode: value.first),
+                    onSelectionChanged: (value) {
+                      Haptics.select();
+                      controller.setExplore(mode: value.first);
+                    },
                   )),
                   ..._filters(context),
                 ]),
         )),
-        if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
+        if (items.isNotEmpty) SliverReveal(key: const ValueKey('videos'), sliver: SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items))),
         if (loading) ...[
           if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
           SliverSkeletonGrid(rows: items.isEmpty ? 3 : 1),
@@ -605,6 +609,33 @@ class _TopicStripState extends State<TopicStrip> {
     unawaited(Motion.scrollTo(_scroll, target));
   }
 
+  /// Selects 全部 at [index] and shows every category in a grid: a sheet
+  /// from the bottom on a phone, a dialog elsewhere.
+  Future<void> _showAll(int index) async {
+    if (index != widget.selected) widget.onSelected(index);
+    Widget grid(BuildContext context) => _TopicGrid(topics: widget.topics, selected: index, extras: _extras);
+    final picked = isPhone(context)
+        ? await showModalBottomSheet<Object>(
+            context: context,
+            useSafeArea: true,
+            isScrollControlled: true,
+            showDragHandle: true,
+            constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.75),
+            builder: grid,
+          )
+        : await showDialog<Object>(
+            context: context,
+            builder: (context) => Dialog(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 560, maxHeight: 560), child: Padding(padding: const EdgeInsets.only(top: 16), child: grid(context)))),
+          );
+    if (!mounted) return;
+    switch (picked) {
+      case final int i when i != index:
+        widget.onSelected(i);
+      case final VoidCallback extra:
+        extra();
+    }
+  }
+
   Widget _rail(BuildContext context) {
     final remove = widget.onRemove;
     // Adding and managing stay in reach below the list, however long it is.
@@ -671,8 +702,10 @@ class _TopicStripState extends State<TopicStrip> {
                 return _TopicTile(
                   topic: topic,
                   selected: i == widget.selected,
-                  onTap: () => widget.onSelected(i),
+                  // 全部 also lays every category out at once, to pick from.
+                  onTap: topic.mix ? () => _showAll(i) : () => widget.onSelected(i),
                   onRemove: topic.custom && remove != null ? () => remove(topic) : null,
+                  opens: topic.mix,
                 );
               },
               ),
@@ -704,7 +737,7 @@ class _RailTile extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
-        onLongPress: onRemove,
+        onLongPress: _long(onRemove),
         onSecondaryTap: onRemove,
         child: Container(
           height: 42,
@@ -715,6 +748,7 @@ class _RailTile extends StatelessWidget {
           child: Row(children: [
             AnimatedContainer(
               duration: Motion.of(Ease.fade),
+              curve: Ease.out,
               width: 3,
               height: selected ? 20 : 0,
               decoration: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(2)),
@@ -747,12 +781,41 @@ class _Arrow extends StatelessWidget {
       );
 }
 
+/// Every category at once, as a grid of tiles under a title. Pops the
+/// picked category's index, or the callback of Add or Manage.
+class _TopicGrid extends StatelessWidget {
+  const _TopicGrid({required this.topics, required this.selected, required this.extras});
+  final List<ExploreTopic> topics;
+  final int selected;
+  final List<(ExploreTopic, VoidCallback)> extras;
+
+  @override
+  Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          child: Text(tr('All categories'), style: Theme.of(context).textTheme.titleMedium),
+        ),
+        Flexible(child: GridView(
+          shrinkWrap: true,
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 88, mainAxisExtent: 84),
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+          children: [
+            for (final (i, topic) in topics.indexed) _TopicTile(topic: topic, selected: i == selected, onTap: () => Navigator.pop(context, i)),
+            for (final (topic, onTap) in extras) _TopicTile(topic: topic, selected: false, onTap: () => Navigator.pop<Object>(context, onTap)),
+          ],
+        )),
+      ]);
+}
+
 class _TopicTile extends StatelessWidget {
-  const _TopicTile({required this.topic, required this.selected, required this.onTap, this.onRemove});
+  const _TopicTile({required this.topic, required this.selected, required this.onTap, this.onRemove, this.opens = false});
   final ExploreTopic topic;
   final bool selected;
   final VoidCallback onTap;
   final VoidCallback? onRemove;
+
+  /// Tapping shows every category: a small caret beside the label says so.
+  final bool opens;
 
   @override
   Widget build(BuildContext context) {
@@ -763,11 +826,12 @@ class _TopicTile extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
-        onLongPress: onRemove,
+        onLongPress: _long(onRemove),
         onSecondaryTap: onRemove,
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           AnimatedContainer(
             duration: Motion.of(Ease.fade),
+            curve: Ease.out,
             width: 44,
             height: 44,
             decoration: BoxDecoration(
@@ -777,12 +841,15 @@ class _TopicTile extends StatelessWidget {
             child: Icon(topic.icon, size: 22, color: selected ? colors.onPrimary : colors.onSurfaceVariant),
           ),
           const SizedBox(height: 4),
-          Text(
-            topic.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w600 : null, color: selected ? colors.primary : null),
-          ),
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            Flexible(child: Text(
+              topic.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w600 : null, color: selected ? colors.primary : null),
+            )),
+            if (opens) Icon(AppIcons.caretDown, size: 12, color: selected ? colors.primary : colors.onSurfaceVariant),
+          ]),
         ]),
       ),
     );
@@ -810,3 +877,11 @@ class _FilterButton extends StatelessWidget {
         ),
       );
 }
+
+/// [remove] after the knock a long press gives on a phone.
+VoidCallback? _long(VoidCallback? remove) => remove == null
+    ? null
+    : () {
+        Haptics.menu();
+        remove();
+      };

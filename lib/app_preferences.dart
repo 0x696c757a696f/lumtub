@@ -61,7 +61,6 @@ class AppPreferences {
     this.hideShorts = false,
     this.aiFilter = AiFilterMode.off,
     this.logLevel = LogLevel.info,
-    this.exploreHeardOnly = true,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
     this.hideMembersOnly = false,
@@ -130,6 +129,7 @@ class AppPreferences {
     this.translationStyle = TranslationStyle.quote,
     this.translationFirst = false,
     this.subtitleListMode = SubtitleListMode.firstOver,
+    this.exploreRailWidth = 220,
     this.skipSameLanguage = true,
     this.chineseAsOne = true,
     this.neverTranslate = const [],
@@ -161,11 +161,6 @@ class AppPreferences {
   /// How much goes into the log.
   final LogLevel logLevel;
 
-  /// With a language picked in explore, only videos whose audio or
-  /// automatic captions confirm it, not their title and description,
-  /// which uploaders translate. On by default; kept under a new key, so
-  /// that it starts on also where the old default was saved.
-  final bool exploreHeardOnly;
   final int minDurationMinutes;
   final bool hideWatched;
   final bool hideMembersOnly;
@@ -310,6 +305,9 @@ class AppPreferences {
   final bool translationFirst;
   /// Which subtitles 字幕列表 shows while two are on.
   final SubtitleListMode subtitleListMode;
+
+  /// How wide the zone column down the left of 探索 was dragged.
+  final double exploreRailWidth;
   /// 翻译 does nothing for text already in the target language.
   final bool skipSameLanguage;
   /// 沉浸式翻译 takes Simplified and Traditional Chinese as one language,
@@ -440,7 +438,6 @@ class AppPreferences {
     bool? hideShorts,
     AiFilterMode? aiFilter,
     LogLevel? logLevel,
-    bool? exploreHeardOnly,
     int? minDurationMinutes,
     bool? hideWatched,
     bool? hideMembersOnly,
@@ -509,6 +506,7 @@ class AppPreferences {
     TranslationStyle? translationStyle,
     bool? translationFirst,
     SubtitleListMode? subtitleListMode,
+    double? exploreRailWidth,
     bool? skipSameLanguage,
     bool? chineseAsOne,
     List<String>? neverTranslate,
@@ -527,7 +525,6 @@ class AppPreferences {
         hideShorts: hideShorts ?? this.hideShorts,
         aiFilter: aiFilter ?? this.aiFilter,
         logLevel: logLevel ?? this.logLevel,
-        exploreHeardOnly: exploreHeardOnly ?? this.exploreHeardOnly,
         minDurationMinutes: minDurationMinutes ?? this.minDurationMinutes,
         hideWatched: hideWatched ?? this.hideWatched,
         hideMembersOnly: hideMembersOnly ?? this.hideMembersOnly,
@@ -596,6 +593,7 @@ class AppPreferences {
         translationStyle: translationStyle ?? this.translationStyle,
         translationFirst: translationFirst ?? this.translationFirst,
         subtitleListMode: subtitleListMode ?? this.subtitleListMode,
+        exploreRailWidth: exploreRailWidth ?? this.exploreRailWidth,
         skipSameLanguage: skipSameLanguage ?? this.skipSameLanguage,
         chineseAsOne: chineseAsOne ?? this.chineseAsOne,
         neverTranslate: neverTranslate ?? this.neverTranslate,
@@ -615,7 +613,6 @@ class AppPreferences {
         'hideShorts': hideShorts,
         'aiFilter': aiFilter.name,
         'logLevel': logLevel.name,
-        'exploreHeardOnlyV2': exploreHeardOnly,
         'minDurationMinutes': minDurationMinutes,
         'hideWatched': hideWatched,
         'hideMembersOnly': hideMembersOnly,
@@ -684,6 +681,7 @@ class AppPreferences {
         'translationStyle': translationStyle.name,
         'translationFirst': translationFirst,
         'subtitleListMode': subtitleListMode.name,
+        'exploreRailWidth': exploreRailWidth,
         'skipSameLanguage': skipSameLanguage,
         'chineseAsOne': chineseAsOne,
         'neverTranslate': neverTranslate,
@@ -749,7 +747,6 @@ class AppPreferences {
       hideShorts: flag('hideShorts', d.hideShorts),
       aiFilter: AiFilterMode.parse(raw['aiFilter']),
       logLevel: LogLevel.parse(raw['logLevel']),
-      exploreHeardOnly: flag('exploreHeardOnlyV2', d.exploreHeardOnly),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),
       hideMembersOnly: flag('hideMembersOnly', d.hideMembersOnly),
@@ -817,6 +814,7 @@ class AppPreferences {
       translationStyle: TranslationStyle.values.where((v) => v.name == raw['translationStyle']).firstOrNull ?? d.translationStyle,
       translationFirst: flag('translationFirst', d.translationFirst),
       subtitleListMode: SubtitleListMode.values.where((v) => v.name == raw['subtitleListMode']).firstOrNull ?? d.subtitleListMode,
+      exploreRailWidth: raw['exploreRailWidth'] is num ? (raw['exploreRailWidth'] as num).toDouble().clamp(128.0, 360.0) : d.exploreRailWidth,
       skipSameLanguage: flag('skipSameLanguage', d.skipSameLanguage),
       chineseAsOne: flag('chineseAsOne', d.chineseAsOne),
       neverTranslate: [

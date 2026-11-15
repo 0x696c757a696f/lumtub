@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
 import 'app_icons.dart';
 import 'common.dart';
+import 'haptics.dart';
 import 'motion.dart';
 
 /// One choice in a [ChipStrip].
@@ -149,6 +150,11 @@ class _ChipStripState extends State<ChipStrip> {
     }
   }
 
+  void _pick(int i) {
+    if (i != widget.selected) Haptics.select();
+    widget.onSelected(i);
+  }
+
   Widget _chip(int i) {
     final choice = widget.choices[i];
     final selected = i == widget.selected;
@@ -157,10 +163,11 @@ class _ChipStripState extends State<ChipStrip> {
       return KeyedSubtree(
         key: _keys[i],
         child: InkWell(
-          onTap: () => widget.onSelected(i),
+          onTap: () => _pick(i),
           borderRadius: BorderRadius.circular(6),
           child: AnimatedContainer(
             duration: Motion.of(Ease.fade),
+            curve: Ease.out,
             padding: const EdgeInsets.fromLTRB(4, 10, 4, 8),
             decoration: BoxDecoration(border: Border(bottom: BorderSide(color: selected ? scheme.primary : Colors.transparent, width: 2.5))),
             child: Text(choice.label, maxLines: 1, style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -177,7 +184,7 @@ class _ChipStripState extends State<ChipStrip> {
       showCheckmark: false,
       visualDensity: widget.compact ? VisualDensity.compact : null,
       selected: selected,
-      onSelected: (_) => widget.onSelected(i),
+      onSelected: (_) => _pick(i),
     );
     final long = widget.onLongPress;
     return KeyedSubtree(

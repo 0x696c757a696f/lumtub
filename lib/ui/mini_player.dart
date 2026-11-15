@@ -146,6 +146,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
     if (controller == null) return const SizedBox.expand();
     return VideoBox(
       controller: _controller,
+      smallSubtitles: true,
       child: WarmLayer(
         child: LayoutBuilder(
           builder: (context, constraints) => Video(

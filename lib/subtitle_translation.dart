@@ -140,15 +140,16 @@ Future<Map<String, SubtitleTrack>> mpvSubtitleTracks(NativePlayer platform) asyn
 }
 
 /// [option]'s track among [tracks], if it is loaded.
-SubtitleTrack? subtitleTrackOf(Map<String, SubtitleTrack> tracks, SubtitleOption option) =>
-    tracks.values.where((t) => t.title == option.label).firstOrNull;
+/// [leaving] are Lumtub's copies of tracks, which share their titles.
+SubtitleTrack? subtitleTrackOf(Map<String, SubtitleTrack> tracks, SubtitleOption option, {Iterable<String> leaving = const []}) =>
+    tracks.values.where((t) => t.title == option.label && !leaving.contains(t.id)).firstOrNull;
 
 /// Sets and clears mpv's secondary subtitle.
 class SecondarySubtitle {
   /// Shows [option] as the secondary subtitle, adding the track to [player]
   /// first if it is not loaded; null turns the secondary subtitle off.
   /// Returns whether it worked. [file] holds the track, fetched already.
-  static Future<bool> set(Player player, SubtitleOption? option, {String? file}) async {
+  static Future<bool> set(Player player, SubtitleOption? option, {String? file, Iterable<String> leaving = const []}) async {
     final platform = player.platform;
     if (platform is! NativePlayer) return false;
     if (option == null) {
@@ -156,7 +157,7 @@ class SecondarySubtitle {
       return true;
     }
     final before = await platform.getProperty('sid');
-    var track = subtitleTrackOf(await mpvSubtitleTracks(platform), option);
+    var track = subtitleTrackOf(await mpvSubtitleTracks(platform), option, leaving: leaving);
     if (track == null) {
       // "auto" adds the track without choosing it as the main subtitle. A
       // file being replaced by more of its translation can't be opened for
@@ -168,7 +169,7 @@ class SecondarySubtitle {
         } catch (_) {
           if (attempt > 0) rethrow;
         }
-        track = subtitleTrackOf(await mpvSubtitleTracks(platform), option);
+        track = subtitleTrackOf(await mpvSubtitleTracks(platform), option, leaving: leaving);
       }
       if (track == null) return false;
     }

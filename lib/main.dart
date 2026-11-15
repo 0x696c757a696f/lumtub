@@ -3,11 +3,13 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app/app_controller.dart';
 import 'app_directories.dart';
 import 'blocked_groups.dart';
+import 'google_auth.dart';
 import 'app_window.dart';
 import 'app_log.dart';
 import 'appearance_settings.dart';
@@ -32,7 +34,6 @@ import 'device.dart';
 Future<void> main() async {
   FrameStats.sinceStart.start();
   WidgetsFlutterBinding.ensureInitialized();
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) SmoothWheel.install();
   // Before any HTTP client exists, so all of them follow the proxy setting.
   HttpOverrides.global = appHttpOverrides;
   final reportFlutterError = FlutterError.onError;
@@ -152,6 +153,18 @@ class _LumtubAppState extends State<LumtubApp> {
         _now = now;
       }
     });
+    // Google sign-in returns to a server in the app; on Android the app is
+    // kept running while the browser is in front.
+    if (Platform.isAndroid) GoogleAuth.keepAlive = (waiting) => const MethodChannel('lumtub/windows_shell').invokeMethod<void>('holdForSignIn', waiting);
+    // On iOS the page opens in a sheet over the app, which iOS does not
+    // suspend, and closes once the app has its answer.
+    if (Platform.isIOS) {
+      const shell = MethodChannel('lumtub/windows_shell');
+      GoogleAuth.signInPage = (uri) => shell.invokeMethod<void>('signInPage', uri.toString());
+      GoogleAuth.keepAlive = (waiting) async {
+        if (!waiting) await shell.invokeMethod<void>('closeSignInPage');
+      };
+    }
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid) _shell = WindowsShellSync(controller, WindowsShell());
     if (controller.appearance.systemAccent) unawaited(controller.refreshWindowsAccent());
     // Closing the window ends the process without disposing widgets, so the
@@ -248,7 +261,7 @@ class _LumtubAppState extends State<LumtubApp> {
                 child: MediaQuery(
                   // A TV is read from across the room: text a size larger.
                   data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale * (Device.tv ? _tvText : 1)), disableAnimations: media.disableAnimations || Motion.reduced),
-                  child: Device.tv ? _TvFrame(child: chrome) : chrome,
+                  child: SmoothWheel(child: Device.tv ? _TvFrame(child: chrome) : chrome),
                 ),
               );
             },

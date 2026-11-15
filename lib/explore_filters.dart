@@ -1,5 +1,6 @@
 import 'l10n/l10n.dart';
 import 'native_core.dart';
+import 'scripts.dart';
 
 /// A 类型 or 视角 choice in explore: words added to the zone's search, so it
 /// leans the results rather than sorting them exactly.
@@ -395,38 +396,64 @@ ExploreLanguage titleLanguage(String title) {
 
 final _languages = <String, ExploreLanguage>{};
 
-/// One search from words translated one by one: each kept once, as
-/// "园艺 gardening" translates to the same word twice.
-/// [query] in the pieces a translation keeps the sense of: each Chinese or
-/// Japanese keyword alone, as they are listed apart, and each run of words
-/// in a spaced script together, since "stand-up comedy live" word by word
-/// is "stare in piedi commedia vivere".
-final _cjk = RegExp(r'[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]');
+/// Whether [phrase] has letters outside the Latin alphabet.
+bool isTranslatedPhrase(String phrase) => nonLatinLetter.hasMatch(phrase);
 
-/// Whether [phrase] has Chinese, Japanese or Korean in it.
-bool isCjkPhrase(String phrase) => _cjk.hasMatch(phrase);
+/// Lower-case words a search keeps in every language: titles write them
+/// the same everywhere.
+const keptSearchWords = {
+  'asmr', 'bhajan', 'blender', 'cosplay', 'esports', 'haul', 'hip', 'hop', 'imam', 'indie', 'jazz', 'khutbah', 'kirtan', 'lofi', //
+  'macos', 'manga', 'mandala', 'metal', 'mukbang', 'nasheed', 'nijisanji', 'podcast', 'pop', 'puja', 'qawwali', 'rabbi', 'rap', //
+  'rock', 'seerah', 'speedrun', 'swami', 'tafsir', 'thangka', 'unboxing', 'vlog', 'vtuber', 'yoga',
+};
+
+final _commonWord = RegExp(r"^[a-z][a-z'-]{2,}$");
+
+/// Whether [phrase] of a zone's search is put into [language] before it
+/// is searched: words in another script always, and for a language other
+/// than English, English words as well. "哲学 philosophy lecture" kept its
+/// English half in Italian and found English lectures. A run of names
+/// alone (Minecraft, Plato) or of [keptSearchWords] is searched as it is.
+bool translatesInto(String phrase, ExploreLanguage language) {
+  if (isTranslatedPhrase(phrase)) return true;
+  if (language == ExploreLanguage.en || language == ExploreLanguage.any) return false;
+  return phrase.split(RegExp(r'\s+')).any((word) => _commonWord.hasMatch(word) && !keptSearchWords.contains(word));
+}
 
 /// Search words put the same way in every language, as YouTube titles
 /// write them.
 const searchGlossary = {'直播': 'live', '实况': 'live', '直播间': 'live'};
 
+/// [query] in the pieces a translation keeps the sense of: each keyword of
+/// a script written without spaces (Chinese, Japanese, Thai…) alone, as
+/// they are listed apart, and each run of words in a spaced script
+/// together, since "stand-up comedy live" word by word is "stare in piedi
+/// commedia vivere". Latin words and words to translate run apart.
 List<String> searchPhrasesOf(String query) {
-  final cjk = _cjk;
   final phrases = <String>[];
   var run = <String>[];
+  bool? translated;
   for (final word in query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty)) {
-    if (cjk.hasMatch(word)) {
+    final mine = isTranslatedPhrase(word);
+    if (unspacedScript.hasMatch(word)) {
       if (run.isNotEmpty) phrases.add(run.join(' '));
       run = [];
       phrases.add(word);
-    } else {
-      run.add(word);
+      continue;
     }
+    if (run.isNotEmpty && translated != mine) {
+      phrases.add(run.join(' '));
+      run = [];
+    }
+    translated = mine;
+    run.add(word);
   }
   if (run.isNotEmpty) phrases.add(run.join(' '));
   return phrases;
 }
 
+/// One search from words translated one by one: each kept once, as
+/// "园艺 gardening" translates to the same word twice.
 String searchWordsOf(List<String> translated) {
   final seen = <String>{};
   return [

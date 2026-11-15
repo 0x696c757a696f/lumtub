@@ -1,141 +1,81 @@
-import 'dart:ui' as ui;
+import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
 
 import 'motion.dart';
 
-/// Smooth mouse-wheel scrolling everywhere: each wheel notch reaches the
-/// app as a short run of smaller scroll signals that ease out, instead of
-/// one jump, so every list, grid and page scrolls with it unchanged.
-/// Touchpads (pan/zoom gestures) are left as they are, and with reduced
-/// motion the wheel jumps again.
-class SmoothWheel {
-  SmoothWheel._(this._forward);
+/// Smooth mouse-wheel scrolling for everything under it: a list a wheel
+/// notch jumps is put back and eased to where the notch sent it instead.
+/// Notches that come while it is still moving add to where it is heading,
+/// so a quick spin glides on rather than starting over. Whichever list
+/// takes the notch, nested or sideways, is the one that moves. Touchpads,
+/// touch and dragging are left alone, and with reduced motion the wheel
+/// jumps again.
+class SmoothWheel extends StatefulWidget {
+  const SmoothWheel({super.key, required this.child});
 
-  /// One that passes what it makes to [forward], for tests.
-  @visibleForTesting
-  SmoothWheel.to(ui.PointerDataPacketCallback forward) : _forward = forward;
+  final Widget child;
 
-  /// Takes a packet from the engine.
-  @visibleForTesting
-  void receive(ui.PointerDataPacket packet) => _receive(packet);
+  static const duration = Duration(milliseconds: 200);
+  static const curve = Curves.easeOutCubic;
 
-  static const duration = Duration(milliseconds: 220);
+  @override
+  State<SmoothWheel> createState() => _SmoothWheelState();
+}
 
-  static SmoothWheel? _instance;
+/// Where a list the wheel set moving is heading.
+class _Glide {
+  _Glide(this.target);
+  final double target;
+}
 
-  /// Signals this class made after the first one of a notch, by time stamp.
-  /// Handlers that count notches (the player's volume) skip them.
-  static final _followUps = <Duration>{};
+class _SmoothWheelState extends State<SmoothWheel> {
+  static final _gliding = Expando<_Glide>();
 
-  final ui.PointerDataPacketCallback _forward;
-  late final Ticker _ticker = Ticker(_tick);
-  ui.PointerData? _template;
-  double _x = 0, _y = 0;
-  double _sentFraction = 0;
-  Duration _started = Duration.zero;
+  /// Lists moved while a notch is handled, with where each one was before.
+  Map<ScrollPosition, double>? _moved;
 
-  /// Puts itself between the engine and the gesture binding; call once
-  /// after the binding is initialized.
-  static void install() {
-    if (_instance != null) return;
-    final dispatcher = ui.PlatformDispatcher.instance;
-    final forward = dispatcher.onPointerDataPacket;
-    if (forward == null) return;
-    final wheel = _instance = SmoothWheel._(forward);
-    dispatcher.onPointerDataPacket = wheel._receive;
+  void _onSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent || event.kind != PointerDeviceKind.mouse || Motion.reduced || _moved != null) return;
+    _moved = {};
+    // The list takes the notch after every listener on the way has seen it;
+    // what it did is looked at once the event is done.
+    scheduleMicrotask(_ease);
   }
 
-  /// Whether [event] continues a wheel notch already delivered.
-  static bool isFollowUp(PointerScrollEvent event) => _followUps.contains(event.timeStamp);
+  bool _onUpdate(ScrollUpdateNotification notification) {
+    final moved = _moved;
+    if (moved == null || notification.dragDetails != null) return false;
+    final position = Scrollable.maybeOf(notification.context!)?.position;
+    if (position != null) moved.putIfAbsent(position, () => notification.metrics.pixels - (notification.scrollDelta ?? 0));
+    return false;
+  }
 
-  static double _ease(double t) => 1 - (1 - t) * (1 - t) * (1 - t);
-
-  void _receive(ui.PointerDataPacket packet) {
-    if (Motion.reduced || !packet.data.any(_isWheel)) {
-      _forward(packet);
-      return;
+  void _ease() {
+    final moved = _moved;
+    _moved = null;
+    if (moved == null || !mounted) return;
+    for (final MapEntry(key: position, value: from) in moved.entries) {
+      if (!position.hasPixels || !position.hasContentDimensions) continue;
+      final step = position.pixels - from;
+      if (step == 0) continue;
+      final heading = _gliding[position]?.target;
+      // A notch the same way as the glide adds to it; turning back starts
+      // from where the list is.
+      final base = heading != null && (heading - from) * step > 0 ? heading : from;
+      final target = (base + step).clamp(position.minScrollExtent, position.maxScrollExtent);
+      final glide = _gliding[position] = _Glide(target);
+      position.jumpTo(from);
+      position.animateTo(target, duration: SmoothWheel.duration, curve: SmoothWheel.curve).whenComplete(() {
+        if (identical(_gliding[position], glide)) _gliding[position] = null;
+      });
     }
-    final rest = <ui.PointerData>[];
-    for (final datum in packet.data) {
-      if (!_isWheel(datum)) {
-        rest.add(datum);
-        continue;
-      }
-      if (rest.isNotEmpty) {
-        _forward(ui.PointerDataPacket(data: List.of(rest)));
-        rest.clear();
-      }
-      _start(datum);
-    }
-    if (rest.isNotEmpty) _forward(ui.PointerDataPacket(data: rest));
   }
 
-  static bool _isWheel(ui.PointerData datum) => datum.signalKind == ui.PointerSignalKind.scroll && datum.kind == ui.PointerDeviceKind.mouse;
-
-  void _start(ui.PointerData datum) {
-    final left = 1 - _sentFraction;
-    final sameWay = _template != null && _x * datum.scrollDeltaX >= 0 && _y * datum.scrollDeltaY >= 0;
-    // A notch during a glide carries on from what is left of it, the way it
-    // goes; turning the wheel back drops the rest.
-    _x = (sameWay ? _x * left : 0) + datum.scrollDeltaX;
-    _y = (sameWay ? _y * left : 0) + datum.scrollDeltaY;
-    _template = datum;
-    _sentFraction = 0;
-    _started = _ticker.isActive ? _elapsed : Duration.zero;
-    // The first piece goes now, as the notch itself, so the page answers at
-    // once and notch counters see each notch once.
-    _send(_ease(16 / duration.inMilliseconds), followUp: false);
-    if (!_ticker.isActive) _ticker.start();
-  }
-
-  Duration _elapsed = Duration.zero;
-
-  void _tick(Duration elapsed) {
-    _elapsed = elapsed;
-    final t = ((elapsed - _started).inMicroseconds / duration.inMicroseconds).clamp(0.0, 1.0);
-    _send(_ease(t), followUp: true);
-    if (t >= 1) _stop();
-  }
-
-  void _send(double fraction, {required bool followUp}) {
-    final template = _template;
-    if (template == null || fraction <= _sentFraction) return;
-    final step = fraction - _sentFraction;
-    _sentFraction = fraction;
-    var stamp = template.timeStamp + (followUp ? _elapsed - _started + const Duration(microseconds: 1) : Duration.zero);
-    if (followUp) {
-      while (_followUps.contains(stamp)) {
-        stamp += const Duration(microseconds: 1);
-      }
-      _followUps.add(stamp);
-      if (_followUps.length > 256) _followUps.remove(_followUps.first);
-    }
-    _forward(ui.PointerDataPacket(data: [
-      ui.PointerData(
-        viewId: template.viewId,
-        timeStamp: stamp,
-        change: template.change,
-        kind: template.kind,
-        signalKind: template.signalKind,
-        device: template.device,
-        pointerIdentifier: template.pointerIdentifier,
-        physicalX: template.physicalX,
-        physicalY: template.physicalY,
-        buttons: template.buttons,
-        scrollDeltaX: _x * step,
-        scrollDeltaY: _y * step,
-      ),
-    ]));
-  }
-
-  void _stop() {
-    _ticker.stop();
-    _template = null;
-    _x = _y = 0;
-    _sentFraction = 0;
-    _elapsed = Duration.zero;
-  }
+  @override
+  Widget build(BuildContext context) => Listener(
+        onPointerSignal: _onSignal,
+        child: NotificationListener<ScrollUpdateNotification>(onNotification: _onUpdate, child: widget.child),
+      );
 }

@@ -498,13 +498,11 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           setOpacity: (v) => save(now().copyWith(subtitleOpacity: v)),
         ),
         _header(context, tr('Second subtitle style')),
-        if (settings.libassSubtitles) _tip(context, tr("While mpv draws subtitles, the second subtitle takes the first one's font and color; its size can be set.")),
         ...look(
           font: settings.secondaryFont,
           scale: settings.secondaryScale,
           color: settings.secondaryColor,
           opacity: settings.secondaryOpacity,
-          enabled: !settings.libassSubtitles,
           setFont: (v) => save(now().copyWith(secondaryFont: v)),
           setScale: (v) => save(now().copyWith(secondaryScale: v)),
           setColor: (v) => save(now().copyWith(secondaryColor: v)),
@@ -645,6 +643,7 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
         ),
         AnimatedSize(
           duration: Motion.of(const Duration(milliseconds: 200)),
+          curve: Ease.out,
           child: appearance.systemAccent && windows != null
               ? const SizedBox(width: double.infinity)
               : Padding(

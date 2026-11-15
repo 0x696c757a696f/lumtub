@@ -1,83 +1,128 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/appearance_settings.dart';
 import 'package:lumtub/ui/motion.dart';
 import 'package:lumtub/ui/smooth_wheel.dart';
 
 void main() {
-  ui.PointerDataPacket wheel(double dy, {ui.PointerDeviceKind kind = ui.PointerDeviceKind.mouse, int at = 1000}) => ui.PointerDataPacket(data: [
-        ui.PointerData(timeStamp: Duration(milliseconds: at), change: ui.PointerChange.hover, kind: kind, signalKind: ui.PointerSignalKind.scroll, physicalX: 10, physicalY: 20, scrollDeltaY: dy),
-      ]);
-  double sum(List<ui.PointerDataPacket> sent) => sent.expand((p) => p.data).fold(0.0, (total, d) => total + d.scrollDeltaY);
-  bool followUp(ui.PointerData d) => SmoothWheel.isFollowUp(PointerScrollEvent(timeStamp: d.timeStamp, scrollDelta: Offset(0, d.scrollDeltaY)));
+  Widget list(ScrollController controller, {int count = 100, Widget? rail}) => MaterialApp(
+        home: SmoothWheel(
+          child: ListView(controller: controller, children: [
+            if (rail != null) rail,
+            for (var i = 0; i < count; i++) SizedBox(height: 50, child: Text('$i')),
+          ]),
+        ),
+      );
 
-  testWidgets('a notch glides in pieces that add up to it', (tester) async {
-    final sent = <ui.PointerDataPacket>[];
-    final wheel_ = SmoothWheel.to(sent.add);
-    wheel_.receive(wheel(120));
-    expect(sent, hasLength(1));
-    expect(sent.single.data.single.scrollDeltaY, inExclusiveRange(0, 60));
-    expect(followUp(sent.single.data.single), isFalse);
-    await tester.pump(const Duration(milliseconds: 50));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(sent.length, greaterThan(2));
-    expect(sum(sent), closeTo(120, 0.001));
-    expect(sent.skip(1).every((p) => followUp(p.data.single)), isTrue);
-    expect(sent.every((p) => p.data.single.physicalX == 10 && p.data.single.physicalY == 20), isTrue);
-  });
+  Future<void> wheel(WidgetTester tester, Offset delta, {Offset at = const Offset(100, 300), PointerDeviceKind kind = PointerDeviceKind.mouse}) async {
+    final pointer = TestPointer(1, kind);
+    await tester.sendEventToBinding(pointer.hover(at));
+    await tester.sendEventToBinding(pointer.scroll(delta));
+  }
 
-  testWidgets('a notch during a glide adds to what is left; turning back drops it', (tester) async {
-    final sent = <ui.PointerDataPacket>[];
-    final smooth = SmoothWheel.to(sent.add);
-    smooth.receive(wheel(100));
-    await tester.pump(const Duration(milliseconds: 50));
-    smooth.receive(wheel(100, at: 1050));
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(sum(sent), closeTo(200, 0.001));
-    expect(sent.where((p) => !followUp(p.data.single)), hasLength(2));
-
-    sent.clear();
-    smooth.receive(wheel(100, at: 2000));
-    await tester.pump(const Duration(milliseconds: 50));
-    final before = sum(sent);
-    smooth.receive(wheel(-100, at: 2050));
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(sum(sent), closeTo(before - 100, 0.001));
-  });
-
-  testWidgets('touchpads and reduced motion pass straight through', (tester) async {
-    final sent = <ui.PointerDataPacket>[];
-    final smooth = SmoothWheel.to(sent.add);
-    smooth.receive(wheel(120, kind: ui.PointerDeviceKind.trackpad));
-    expect(sum(sent), 120);
-    Motion.update(MotionPreference.reduced);
-    sent.clear();
-    smooth.receive(wheel(120));
-    expect(sum(sent), 120);
-    Motion.update(MotionPreference.full);
-  });
-
-  testWidgets('a list scrolls smoothly by the notch', (tester) async {
+  testWidgets('a wheel notch eases the list to where it sends it', (tester) async {
     final controller = ScrollController();
-    await tester.pumpWidget(MaterialApp(home: ListView(controller: controller, children: [for (var i = 0; i < 100; i++) SizedBox(height: 50, child: Text('$i'))])));
-    final dispatcher = tester.binding.platformDispatcher;
-    final smooth = SmoothWheel.to(dispatcher.onPointerDataPacket!);
-    final ratio = tester.view.devicePixelRatio;
-    smooth.receive(ui.PointerDataPacket(data: [
-      ui.PointerData(viewId: tester.view.viewId, change: ui.PointerChange.hover, kind: ui.PointerDeviceKind.mouse, signalKind: ui.PointerSignalKind.scroll, physicalX: 100 * ratio, physicalY: 100 * ratio, scrollDeltaY: 120 * ratio),
-    ]));
+    await tester.pumpWidget(list(controller));
+    await wheel(tester, const Offset(0, 120));
+    expect(controller.offset, 0);
+    final seen = <double>[];
+    for (var i = 0; i < 16; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      seen.add(controller.offset);
+    }
+    expect(seen.first, lessThan(120));
+    for (var i = 1; i < seen.length; i++) {
+      expect(seen[i], greaterThanOrEqualTo(seen[i - 1]));
+    }
+    expect(seen.where((o) => o > 0 && o < 120).length, greaterThan(3));
+    expect(controller.offset, 120);
+  });
+
+  testWidgets('notches in a row add up rather than start over', (tester) async {
+    final controller = ScrollController();
+    await tester.pumpWidget(list(controller));
+    await wheel(tester, const Offset(0, 100));
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 50));
+    final midway = controller.offset;
+    expect(midway, inExclusiveRange(0, 100));
+    await wheel(tester, const Offset(0, 100));
+    expect(controller.offset, midway);
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(controller.offset, greaterThan(midway));
+    await wheel(tester, const Offset(0, 100));
+    await tester.pumpAndSettle();
+    expect(controller.offset, 300);
+
+    // Turning back starts from where the list is.
+    await wheel(tester, const Offset(0, -100));
+    await tester.pumpAndSettle();
+    expect(controller.offset, 200);
+  });
+
+  testWidgets('stops at the ends', (tester) async {
+    final controller = ScrollController();
+    await tester.pumpWidget(list(controller, count: 20));
+    final end = controller.position.maxScrollExtent;
+    for (var i = 0; i < 5; i++) {
+      await wheel(tester, const Offset(0, 200));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await tester.pumpAndSettle();
+    expect(controller.offset, end);
+    await wheel(tester, const Offset(0, -2000));
+    await tester.pumpAndSettle();
+    expect(controller.offset, 0);
+  });
+
+  testWidgets('touchpads and reduced motion move at once', (tester) async {
+    final controller = ScrollController();
+    await tester.pumpWidget(list(controller));
+    await wheel(tester, const Offset(0, 120), kind: PointerDeviceKind.trackpad);
     await tester.pump();
-    expect(controller.offset, inExclusiveRange(0, 60));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(controller.offset, closeTo(120, 0.01));
+    expect(controller.offset, 120);
+
+    Motion.update(MotionPreference.reduced);
+    addTearDown(() => Motion.update(MotionPreference.full));
+    await wheel(tester, const Offset(0, 120));
+    await tester.pump();
+    expect(controller.offset, 240);
+  });
+
+  testWidgets('a sideways row inside the page eases on its own', (tester) async {
+    final page = ScrollController();
+    final row = ScrollController();
+    final rail = SizedBox(
+      height: 100,
+      child: ListView(controller: row, scrollDirection: Axis.horizontal, children: [for (var i = 0; i < 30; i++) SizedBox(width: 100, child: Text('r$i'))]),
+    );
+    await tester.pumpWidget(list(page, rail: rail));
+    await wheel(tester, const Offset(150, 0), at: const Offset(100, 50));
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(row.offset, inExclusiveRange(0, 150));
+    await tester.pumpAndSettle();
+    expect(row.offset, 150);
+    expect(page.offset, 0);
+
+    // With shift held a vertical notch goes sideways.
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await wheel(tester, const Offset(0, 100), at: const Offset(100, 10));
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(row.offset, inExclusiveRange(150, 250));
+    await tester.pumpAndSettle();
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    expect(row.offset, 250);
+    expect(page.offset, 0);
+
+    // A vertical notch over the row still scrolls the page.
+    await wheel(tester, const Offset(0, 100), at: const Offset(100, 50));
+    await tester.pumpAndSettle();
+    expect(page.offset, 100);
+    expect(row.offset, 250);
   });
 }

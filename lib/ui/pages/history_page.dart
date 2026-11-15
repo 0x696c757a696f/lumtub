@@ -7,6 +7,7 @@ import '../../l10n/l10n.dart';
 import '../../models.dart';
 import '../../video_repository.dart' show historyLimit;
 import '../common.dart';
+import '../haptics.dart';
 import '../theme.dart';
 import '../video_card.dart';
 import 'watch_stats_page.dart';
@@ -131,11 +132,17 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget _sourceChips() => Padding(
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 12),
         child: Wrap(spacing: 8, children: [
-          ChoiceChip(label: Text(tr('This computer')), selected: !_youtube, onSelected: (_) => setState(() => _youtube = false)),
-          ChoiceChip(label: Text(tr('YouTube account')), selected: _youtube, onSelected: (_) => setState(() {
-                _youtube = true;
-                _stopSelecting();
-              })),
+          ChoiceChip(label: Text(tr('This computer')), selected: !_youtube, onSelected: (_) {
+            if (_youtube) Haptics.select();
+            setState(() => _youtube = false);
+          }),
+          ChoiceChip(label: Text(tr('YouTube account')), selected: _youtube, onSelected: (_) {
+            if (!_youtube) Haptics.select();
+            setState(() {
+              _youtube = true;
+              _stopSelecting();
+            });
+          }),
         ]),
       );
 

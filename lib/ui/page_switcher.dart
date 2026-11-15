@@ -23,6 +23,10 @@ class PageSwitcher extends StatefulWidget {
   /// How far a page slides, as a part of its width.
   static const distance = 0.08;
 
+  /// Whether the page around [context] is still coming in: what it shows
+  /// then arrives with it, and needs no entrance of its own.
+  static bool entering(BuildContext context) => context.getInheritedWidgetOfExactType<_Entering>()?.animation.status == AnimationStatus.forward;
+
   @override
   State<PageSwitcher> createState() => _PageSwitcherState();
 }
@@ -59,16 +63,19 @@ class _PageSwitcherState extends State<PageSwitcher> {
     // The one coming in starts on its tab's side; the one leaving ends on
     // the other side.
     final dx = PageSwitcher.distance * way * (shown ? 1 : -1);
-    return TickerMode(
-      enabled: shown,
-      child: ExcludeFocus(
-        excluding: !shown,
-        child: FadeTransition(
-          opacity: animation,
-          child: SlideTransition(
-            position: animation.drive(Tween(begin: Offset(dx, 0), end: Offset.zero)),
-            textDirection: Directionality.maybeOf(context),
-            child: child,
+    return _Entering(
+      animation: animation,
+      child: TickerMode(
+        enabled: shown,
+        child: ExcludeFocus(
+          excluding: !shown,
+          child: FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: animation.drive(Tween(begin: Offset(dx, 0), end: Offset.zero)),
+              textDirection: Directionality.maybeOf(context),
+              child: child,
+            ),
           ),
         ),
       ),
@@ -88,4 +95,13 @@ class _PageSwitcherState extends State<PageSwitcher> {
       child: KeyedSubtree(key: PageStorageKey<String>(widget.pageKey), child: widget.child),
     );
   }
+}
+
+/// The animation a page comes in or leaves with, for [PageSwitcher.entering].
+class _Entering extends InheritedWidget {
+  const _Entering({required this.animation, required super.child});
+  final Animation<double> animation;
+
+  @override
+  bool updateShouldNotify(_Entering oldWidget) => false;
 }

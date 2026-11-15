@@ -1,6 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../skins/skin.dart' show contrastRatio;
+import 'theme.dart' show SkinTheme;
 import 'emoji_text.dart';
 
 /// A piece of text: plain, a time such as 1:23:45, or a web link.
@@ -91,7 +95,7 @@ class _LinkedTextState extends State<LinkedText> {
   @override
   Widget build(BuildContext context) {
     _clear();
-    final link = TextStyle(color: Theme.of(context).colorScheme.primary);
+    final link = linkStyle(Theme.of(context));
     return Text.rich(
       TextSpan(children: [
         for (final part in splitLinks(widget.text))
@@ -106,4 +110,28 @@ class _LinkedTextState extends State<LinkedText> {
       overflow: widget.maxLines == null ? null : TextOverflow.ellipsis,
     );
   }
+}
+
+/// The accent as links show it while it reads nearly as well as text,
+/// else the text colour (with [linkStyle]'s underline in the accent): a
+/// dark accent on a dark page, or on a skin's picture seen through the
+/// veil, made links look thin and faint beside the words around them.
+/// Every built-in skin is checked for it in skin_theme_contrast_test.
+Color linkColor(ThemeData theme) {
+  final colors = theme.colorScheme;
+  // Over a skin's picture the page behind changes from place to place.
+  final skin = theme.extension<SkinTheme>()?.skin?.forBrightness(theme.brightness);
+  if (skin != null && skin.veil > 0) return colors.onSurface;
+  final text = contrastRatio(colors.onSurface, colors.surface);
+  final wanted = min(text * 0.9, 6.0);
+  final worst = [colors.surface, colors.surfaceContainerLow].map((bg) => contrastRatio(colors.primary, bg)).reduce((a, b) => a < b ? a : b);
+  return worst >= wanted ? colors.primary : colors.onSurface;
+}
+
+/// How links and times show in text: in [linkColor], underlined in the
+/// accent where they take the text colour.
+TextStyle linkStyle(ThemeData theme) {
+  final colors = theme.colorScheme;
+  final color = linkColor(theme);
+  return color == colors.primary ? TextStyle(color: color) : TextStyle(color: color, decoration: TextDecoration.underline, decorationColor: colors.primary, decorationThickness: 1.5);
 }

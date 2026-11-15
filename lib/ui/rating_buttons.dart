@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
+import 'fill_icon.dart';
 import 'theme.dart';
 import 'app_icons.dart';
 
@@ -37,16 +38,20 @@ class RatingButtons extends StatelessWidget {
       if (failed != null && context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failed)));
     }
 
-    Widget button(String want, IconData off, IconData on, String tip) => IconButton(
-          tooltip: tip,
-          visualDensity: VisualDensity.compact,
-          iconSize: 16,
-          isSelected: state == want,
-          color: colors.outline,
-          selectedIcon: Icon(on, color: colors.primary),
-          icon: Icon(off),
-          onPressed: () => press(want),
-        );
+    Widget button(String want, IconData off, IconData on, String tip) {
+      // One icon for both states, so it fills in rather than swapping.
+      final icon = IconTheme.merge(data: IconThemeData(color: state == want ? colors.primary : colors.outline), child: FillIcon(off, on, selected: state == want));
+      return IconButton(
+        tooltip: tip,
+        visualDensity: VisualDensity.compact,
+        iconSize: 16,
+        isSelected: state == want,
+        color: colors.outline,
+        selectedIcon: icon,
+        icon: icon,
+        onPressed: () => press(want),
+      );
+    }
     return Row(mainAxisSize: MainAxisSize.min, children: [
       button('like', AppIcons.thumbsUp, AppIcons.thumbsUpFill, state == 'like' ? tr('Remove like') : tr('Like')),
       count,

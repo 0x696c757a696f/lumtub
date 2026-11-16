@@ -22,7 +22,6 @@ finish-args:
   - --own-name=org.mpris.MediaPlayer2.lumtub.*
   # The tray icon
   - --talk-name=org.kde.StatusNotifierWatcher
-  - --own-name=org.kde.StatusNotifierItem-*
   # Minimize to tray on KDE Plasma
   - --talk-name=org.kde.KWin
   # The sign-in is kept in the desktop's keyring

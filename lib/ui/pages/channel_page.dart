@@ -587,7 +587,9 @@ class ChannelHeader extends StatelessWidget {
             Text(tr('YouTube channels'), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurfaceVariant)),
           ])),
           const SizedBox(width: 8),
-          FollowButton(controller: controller, channel: channel),
+          // A long translation of 关注 is cut short rather than pushing the
+          // name out.
+          ConstrainedBox(constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.4), child: FollowButton(controller: controller, channel: channel)),
           if (!narrow) ...[
             const SizedBox(width: 8),
             IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(channel.url), icon: Icon(AppIcons.arrowSquareOut)),
@@ -738,7 +740,7 @@ class FollowButton extends StatelessWidget {
 
     // The same button either way, so its colour and icon change in place.
     final icon = Swap(child: Icon(following ? AppIcons.check : AppIcons.plus, key: ValueKey(following)));
-    final label = Text(following ? tr('Following') : tr('Follow'));
+    final label = Text(following ? tr('Following') : tr('Follow'), maxLines: 1, overflow: TextOverflow.ellipsis);
     return following ? FilledButton.tonalIcon(onPressed: toggle, icon: icon, label: label) : FilledButton.icon(onPressed: toggle, icon: icon, label: label);
   }
 }

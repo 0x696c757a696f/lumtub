@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import 'theme.dart';
@@ -143,10 +144,97 @@ class PageHeader extends StatelessWidget {
                       const SizedBox(height: 4),
                       SingleChildScrollView(scrollDirection: Axis.horizontal, child: trailing),
                     ])
-                  : Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Expanded(child: heading), trailing]),
+                  : HeadingLine(children: [heading, trailing]),
             ),
     );
   }
+}
+
+/// A title beside its buttons, bottoms lined up, or the buttons under the
+/// title when a translation makes them too wide to leave the title 160
+/// pixels beside them. [children] are the title, then the buttons.
+class HeadingLine extends MultiChildRenderObjectWidget {
+  const HeadingLine({super.key, required super.children}) : assert(children.length == 2);
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderHeadingLine(Directionality.of(context));
+
+  @override
+  void updateRenderObject(BuildContext context, RenderObject renderObject) => (renderObject as _RenderHeadingLine).direction = Directionality.of(context);
+}
+
+class _HeadingParentData extends ContainerBoxParentData<RenderBox> {}
+
+class _RenderHeadingLine extends RenderBox with ContainerRenderObjectMixin<RenderBox, _HeadingParentData>, RenderBoxContainerDefaultsMixin<RenderBox, _HeadingParentData> {
+  _RenderHeadingLine(this._direction);
+
+  static const _minTitle = 160.0;
+  static const _gap = 4.0;
+
+  TextDirection _direction;
+  set direction(TextDirection value) {
+    if (value == _direction) return;
+    _direction = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! _HeadingParentData) child.parentData = _HeadingParentData();
+  }
+
+  RenderBox get _title => firstChild!;
+  RenderBox get _buttons => lastChild!;
+
+  bool _stacks(double width) => _buttons.getMaxIntrinsicWidth(double.infinity) + _minTitle > width;
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) {
+    final width = constraints.maxWidth;
+    final buttons = _buttons.getDryLayout(BoxConstraints(maxWidth: width));
+    if (_stacks(width)) {
+      final title = _title.getDryLayout(BoxConstraints(maxWidth: width));
+      return constraints.constrain(Size(width, title.height + _gap + buttons.height));
+    }
+    final title = _title.getDryLayout(BoxConstraints.tightFor(width: width - buttons.width));
+    return constraints.constrain(Size(width, title.height > buttons.height ? title.height : buttons.height));
+  }
+
+  @override
+  void performLayout() {
+    final width = constraints.maxWidth;
+    _buttons.layout(BoxConstraints(maxWidth: width), parentUsesSize: true);
+    final buttons = _buttons.size;
+    final ltr = _direction == TextDirection.ltr;
+    final titleData = _title.parentData! as _HeadingParentData;
+    final buttonsData = _buttons.parentData! as _HeadingParentData;
+    if (_stacks(width)) {
+      _title.layout(BoxConstraints(maxWidth: width), parentUsesSize: true);
+      final title = _title.size;
+      titleData.offset = Offset(ltr ? 0 : width - title.width, 0);
+      buttonsData.offset = Offset(ltr ? 0 : width - buttons.width, title.height + _gap);
+      size = constraints.constrain(Size(width, title.height + _gap + buttons.height));
+      return;
+    }
+    _title.layout(BoxConstraints.tightFor(width: width - buttons.width), parentUsesSize: true);
+    final title = _title.size;
+    final height = title.height > buttons.height ? title.height : buttons.height;
+    titleData.offset = Offset(ltr ? 0 : buttons.width, height - title.height);
+    buttonsData.offset = Offset(ltr ? width - buttons.width : 0, height - buttons.height);
+    size = constraints.constrain(Size(width, height));
+  }
+
+  @override
+  double computeMinIntrinsicHeight(double width) => computeDryLayout(BoxConstraints(maxWidth: width)).height;
+
+  @override
+  double computeMaxIntrinsicHeight(double width) => computeMinIntrinsicHeight(width);
+
+  @override
+  void paint(PaintingContext context, Offset offset) => defaultPaint(context, offset);
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) => defaultHitTestChildren(result, position: position);
 }
 
 /// Chips and filters: wrapped over as many lines as they need, or on a TV

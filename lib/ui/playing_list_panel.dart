@@ -33,14 +33,19 @@ class PlayingListPanel extends StatelessWidget {
       ),
       Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(Space.xs, Space.xxs, 0, Space.xs),
-        child: Row(children: [
-          Text(
-            index < 0 ? tr('Playlist · {0} videos', [ordered.length]) : tr('Playlist · {0}/{1}', [index + 1, ordered.length]),
-            style: TextStyle(color: colors.outline, fontSize: 12),
-          ),
-          const SizedBox(width: Space.xs),
-          PlaylistOrderButton(controller: controller, id: list.id),
-          const Spacer(),
+        child: Wrap(alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.center, children: [
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            Flexible(
+              child: Text(
+                index < 0 ? tr('Playlist · {0} videos', [ordered.length]) : tr('Playlist · {0}/{1}', [index + 1, ordered.length]),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: colors.outline, fontSize: 12),
+              ),
+            ),
+            const SizedBox(width: Space.xs),
+            PlaylistOrderButton(controller: controller, id: list.id),
+          ]),
           trailing,
         ]),
       ),

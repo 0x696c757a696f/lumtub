@@ -31,6 +31,7 @@ import '../player_shortcuts.dart';
 import '../screenshot_action.dart';
 import '../summary_dialog.dart';
 import '../subtitle_list_panel.dart';
+import '../animated_visibility.dart';
 import '../theater_mode.dart';
 import '../skeleton.dart';
 import '../theme.dart';
@@ -198,9 +199,6 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
           final mainWidth = wide ? constraints.maxWidth - _sidePanelWidth - AppStyle.pagePadding * 3 : constraints.maxWidth - AppStyle.pagePadding * 2;
           // Keep the whole player visible: never taller than the window allows.
           final playerWidth = theater ? min(constraints.maxWidth, max(320.0, (constraints.maxHeight - 8) * 16 / 9)) : min(mainWidth, max(320.0, (constraints.maxHeight - 120) * 16 / 9));
-          // In 剧场模式 the player spans the whole width, black either side
-          // of a picture narrower than the window, as on YouTube.
-          final theaterHeight = playerWidth * 9 / 16;
           // In the side panel the comments scroll by themselves and build
           // only what is on screen.
           // 专注模式 can leave the comments out; then they are not loaded.
@@ -280,7 +278,15 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
             ];
             final page = CustomScrollView(slivers: [
               // In 剧场模式 the player goes edge to edge.
-              if (theater) SliverToBoxAdapter(child: _Player(controller: controller, videoKey: _video, byRotation: _enteredByRotation, onExit: _leftFullscreen, height: theaterHeight)),
+              // In 剧场模式 the player spans the whole width, black either
+              // side of a picture narrower than the window, as on YouTube.
+              // Sized by the room it has as that changes, so the player
+              // follows the side rail and the side panel as they slide.
+              if (theater)
+                SliverLayoutBuilder(builder: (context, box) {
+                  final width = min(box.crossAxisExtent, max(320.0, (constraints.maxHeight - 8) * 16 / 9));
+                  return SliverToBoxAdapter(child: _Player(controller: controller, videoKey: _video, byRotation: _enteredByRotation, onExit: _leftFullscreen, height: width * 9 / 16));
+                }),
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(margin, theater ? 12 : 0, margin, 0),
                 sliver: SliverList.list(children: theater ? main.skip(1).toList() : main),
@@ -294,11 +300,13 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
                 if (!panelOpen) ..._UpNext(controller: controller, shrinkWrap: true).slivers(context),
               ])),
             ]);
-            if (!panelOpen) return page;
+            if (!sidePanel) return page;
             // Folded, the player's own button unfolds it again.
             return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Expanded(child: page),
-              SizedBox(
+              AnimatedVisibility.side(
+                visible: panelOpen,
+                child: SizedBox(
                   width: _theaterChatWidth,
                   child: DecoratedBox(
                     decoration: BoxDecoration(border: Border(left: BorderSide(color: context.colors.outlineVariant))),
@@ -316,6 +324,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
                     ),
                   ),
                 ),
+              ),
             ]);
           }
           return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [

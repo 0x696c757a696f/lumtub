@@ -488,7 +488,7 @@ class _AppShellState extends State<AppShell> {
                 body: SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [
                   // A phone's watch page starts with the player, as phone
                   // apps do; back is the player's arrow or the system's.
-                  if (!watchingOnPhone && !_tvRail && !peekTopBar) topBar(),
+                  if (!watchingOnPhone && !_tvRail) AnimatedVisibility.topBar(visible: !peekTopBar, child: topBar()),
                   if (tabs != null && tabs.top) tabBar(tabs),
                   Expanded(child: Stack(children: [
                     Row(children: [
@@ -720,15 +720,23 @@ class _PeekingBar extends StatefulWidget {
 
 class _PeekingBarState extends State<_PeekingBar> {
   bool _hovered = false;
+  /// Set once the bar in the window's column has slid away, as the two
+  /// share the search field's focus and text.
+  bool _ready = false;
+  Timer? _wait;
 
   @override
   void initState() {
     super.initState();
     widget.focus.addListener(_changed);
+    _wait = Timer(Motion.of(AnimatedVisibility.duration + const Duration(milliseconds: 50)), () {
+      if (mounted) setState(() => _ready = true);
+    });
   }
 
   @override
   void dispose() {
+    _wait?.cancel();
     widget.focus.removeListener(_changed);
     super.dispose();
   }
@@ -743,6 +751,7 @@ class _PeekingBarState extends State<_PeekingBar> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_ready) return const SizedBox.shrink();
     final shown = _hovered || widget.focus.hasFocus;
     return MouseRegion(
       onEnter: (_) => _hover(true),
@@ -752,8 +761,8 @@ class _PeekingBarState extends State<_PeekingBar> {
           child: AnimatedAlign(
             alignment: Alignment.bottomCenter,
             heightFactor: shown ? 1 : 0,
-            duration: Motion.reduced ? Duration.zero : const Duration(milliseconds: 160),
-            curve: Curves.easeOutCubic,
+            duration: Motion.of(Ease.fade),
+            curve: Ease.curve,
             child: widget.child,
           ),
         ),

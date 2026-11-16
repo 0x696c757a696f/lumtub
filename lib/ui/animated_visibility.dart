@@ -9,6 +9,8 @@ import 'motion.dart';
 
 enum _Edge {
   start(Axis.horizontal, AlignmentDirectional.topStart, Offset(-1, 0)),
+  end(Axis.horizontal, AlignmentDirectional.topEnd, Offset(1, 0)),
+  top(Axis.vertical, AlignmentDirectional.bottomStart, Offset(0, -1)),
   bottom(Axis.vertical, AlignmentDirectional.bottomStart, Offset(0, 1));
 
   const _Edge(this.axis, this.alignment, this.hidden);
@@ -23,6 +25,10 @@ enum _Edge {
 /// built at all, so it takes no focus and says nothing to a screen reader.
 class AnimatedVisibility extends StatefulWidget {
   const AnimatedVisibility.rail({super.key, required this.visible, required this.child}) : _edge = _Edge.start;
+  /// A panel along the end edge, such as 剧场模式's column beside the video.
+  const AnimatedVisibility.side({super.key, required this.visible, required this.child}) : _edge = _Edge.end;
+  /// A bar along the top edge, such as the top bar leaving for 剧场模式.
+  const AnimatedVisibility.topBar({super.key, required this.visible, required this.child}) : _edge = _Edge.top;
   const AnimatedVisibility.bottomBar({super.key, required this.visible, required this.child}) : _edge = _Edge.bottom;
 
   final bool visible;

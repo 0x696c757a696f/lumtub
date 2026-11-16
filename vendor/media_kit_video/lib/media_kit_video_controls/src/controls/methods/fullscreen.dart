@@ -15,6 +15,10 @@ import 'package:media_kit_video/media_kit_video_controls/src/controls/widgets/vi
 bool isFullscreen(BuildContext context) =>
     FullscreenInheritedWidget.maybeOf(context) != null;
 
+/// Lumtub: how long the fullscreen view takes to come in and go; zero cuts
+/// straight to it. Read as the view opens.
+Duration Function() fullscreenTransition = () => Duration.zero;
+
 /// Makes the [Video] present in the current [BuildContext] enter fullscreen.
 Future<void> enterFullscreen(BuildContext context) {
   return lock.synchronized(() async {
@@ -79,8 +83,23 @@ Future<void> enterFullscreen(BuildContext context) {
                 ),
               ),
             ),
-            transitionDuration: Duration.zero,
-            reverseTransitionDuration: Duration.zero,
+            // Lumtub: fades in while growing to the window, when asked.
+            transitionDuration: fullscreenTransition(),
+            reverseTransitionDuration: fullscreenTransition(),
+            transitionsBuilder: (_, animation, __, child) {
+              final curved = CurvedAnimation(
+                parent: animation,
+                curve: const Cubic(0.22, 1, 0.36, 1),
+                reverseCurve: Curves.easeInCubic,
+              );
+              return FadeTransition(
+                opacity: curved,
+                child: ScaleTransition(
+                  scale: Tween(begin: 0.94, end: 1.0).animate(curved),
+                  child: child,
+                ),
+              );
+            },
           ),
         );
         await onEnterFullscreen(context)?.call();

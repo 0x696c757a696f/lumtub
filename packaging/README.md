@@ -1,6 +1,22 @@
 # Package manager manifests
 
-Manifests for WinGet, Scoop and the AUR. They are filled with version 0.2.29, a placeholder commit (`0000000`) and all-zero SHA-256 values, because the release is not out yet. Nothing here is published automatically.
+Manifests for WinGet, Scoop, the AUR and Flatpak, filled in for the latest release.
+
+After each release, the **Packages** workflow (`.github/workflows/packages.yml`) fills them in for that release and:
+
+- builds a Flatpak bundle for x86_64 and aarch64 and adds `Lumtub_<version>_linux-<arch>.flatpak` to the release;
+- opens a pull request to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) for the new version;
+- opens a pull request adding Lumtub to [ScoopInstaller/Extras](https://github.com/ScoopInstaller/Extras), once: after it is merged, Extras' own bot follows new releases;
+- pushes the new version to the AUR package `lumtub-bin`.
+
+The last three need secrets in the repository settings (Settings › Secrets and variables › Actions); without one, that step is skipped:
+
+| Secret | For | What it is |
+|---|---|---|
+| `PACKAGES_TOKEN` | WinGet, Scoop | A classic personal access token of the account the pull requests come from, with the scopes `public_repo` and `workflow`. The workflow forks the two repositories into that account. |
+| `AUR_SSH_KEY` | AUR | The private SSH key whose public key is in your aur.archlinux.org account. Variables `AUR_NAME` and `AUR_EMAIL` fill the PKGBUILD's Maintainer line. |
+
+To send a release again, run **Packages** by hand with its tag. A pull request that changes `packaging/` builds the Flatpak of the latest release without sending anything.
 
 ## Release tags and file names
 
@@ -19,7 +35,7 @@ packaging/update-manifests.sh v0.2.29-1a2b3c4              # downloads the asset
 packaging/update-manifests.sh v0.2.29-1a2b3c4 ~/Downloads  # or use assets you already have
 ```
 
-The script needs `bash`, `curl` and `python3`. It rewrites the version, URLs and SHA-256 values in place in all three manifests. Check the changes afterwards. For WinGet, also set `ReleaseDate` in `Lumtub.Lumtub.installer.yaml` by hand.
+The script needs `bash`, `curl` and `python3`. It rewrites the version, URLs, SHA-256 values and release date in place in all four manifests (the date is the release's, or `RELEASE_DATE`). Check the changes afterwards.
 
 ## WinGet
 
@@ -39,6 +55,14 @@ The manifest uses the portable ZIP. The ZIP contains a `portable.txt` marker, so
 3. Open a pull request. After it is merged, the Extras bot picks up new releases through `checkver` and `autoupdate`, so later releases normally need nothing from you.
 
 The Scoop version is `<version>-<commit>`, because the commit is part of the download URL. Lumtub's built-in updater does not know it was installed by Scoop, so tell Scoop users to update with `scoop update lumtub`.
+
+## Flatpak
+
+`flatpak/io.github.lumtub.lumtub.yml` puts the AppImage's files under `/app/lumtub` on the freedesktop runtime and starts them through `AppRun`. Inside the Flatpak, Lumtub's own updater stays off: it only replaces an AppImage. Install a bundle from the release with `flatpak install --user Lumtub_<version>_linux-x64.flatpak`.
+
+The Flatpak sees the Downloads, Videos and Pictures folders only, so signing in from a browser's cookies does not find the browser's data.
+
+For Flathub: fork [flathub/flathub](https://github.com/flathub/flathub), branch from `new-pr`, add the manifest, the metainfo, the desktop file and `lumtub.png`, and open a pull request to `new-pr`. Flathub checks that the app ID's `io.github.lumtub` belongs to whoever submits it, so the GitHub account or organization `lumtub` must be yours (or the app ID must change). Flathub may also ask for a build from source instead of the AppImage. Once accepted, `x-checker-data` lets Flathub's bot open update pull requests for new releases.
 
 ## AUR
 

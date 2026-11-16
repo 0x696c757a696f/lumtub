@@ -1,0 +1,173 @@
+name: Packages
+
+# After a release: Flatpak bundles on the release, and the release sent to
+# WinGet, Scoop and the AUR. A pull request touching packaging/ builds the
+# Flatpak of the latest release, to test the manifest, and sends nothing.
+on:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag, such as v0.2.49-17fb352 (empty: the latest release)'
+        required: false
+  pull_request:
+    branches: [main]
+    paths: ['packaging/**', '.github/workflows/packages.yml']
+
+concurrency:
+  group: packages-${{ github.event.pull_request.number || 'release' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  manifests:
+    # A Build run that published a release ran on its tag.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v'))
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      full: ${{ steps.tag.outputs.full }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          sparse-checkout: packaging
+      - name: Which release
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          RUN_TAG: ${{ github.event.workflow_run.head_branch }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          case $EVENT in
+            workflow_run) tag=$RUN_TAG ;;
+            *) tag=${INPUT_TAG:-$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)} ;;
+          esac
+          # The Build run of a tag that published no release (it failed
+          # before, or the tag is not a release) leaves nothing to do.
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" --silent
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "full=${tag#v}" >> "$GITHUB_OUTPUT"
+      - name: Fill in the manifests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: packaging/update-manifests.sh '${{ steps.tag.outputs.tag }}'
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: manifests
+          path: packaging
+          include-hidden-files: true
+
+  flatpak:
+    name: Flatpak ${{ matrix.arch }}
+    needs: manifests
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            package_arch: x64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            package_arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: manifests
+          path: packaging
+      - name: Check the metadata
+        run: |
+          if command -v appstreamcli > /dev/null; then
+            appstreamcli validate --no-net --explain packaging/flatpak/io.github.lumtub.lumtub.metainfo.xml
+          fi
+          if command -v desktop-file-validate > /dev/null; then
+            desktop-file-validate packaging/flatpak/io.github.lumtub.lumtub.desktop
+          fi
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: Lumtub_${{ needs.manifests.outputs.full }}_linux-${{ matrix.package_arch }}.flatpak
+          manifest-path: packaging/flatpak/io.github.lumtub.lumtub.yml
+          arch: ${{ matrix.arch }}
+          cache-key: flatpak-builder-${{ matrix.arch }}
+          upload-artifact: false
+      - name: Start it
+        run: |
+          # Installs the bundle and starts Lumtub. With no display here it stops,
+          # but no library it links may be missing.
+          set +e
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install -y --user --noninteractive Lumtub_*.flatpak
+          timeout 20 flatpak run --user io.github.lumtub.lumtub > run.log 2>&1
+          code=$?
+          cat run.log
+          set -e
+          if grep -E 'error while loading shared libraries|cannot open shared object file' run.log; then
+            echo "::error::A library is missing in the Flatpak"
+            exit 1
+          fi
+          echo "Exit code $code"
+          exit 0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: flatpak-${{ matrix.arch }}
+          path: Lumtub_*.flatpak
+          compression-level: 0
+
+  attach:
+    name: Flatpak on the release
+    needs: [manifests, flatpak]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: flatpak-*
+          path: dist
+          merge-multiple: true
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload '${{ needs.manifests.outputs.tag }}' dist/*.flatpak --clobber --repo "$GITHUB_REPOSITORY"
+
+  publish:
+    name: Send to ${{ matrix.target }}
+    needs: manifests
+    if: github.event_name != 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [winget, scoop, aur]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          sparse-checkout: packaging
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: manifests
+          path: packaging
+      - env:
+          TARGET: ${{ matrix.target }}
+          GH_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+          AUR_SSH_KEY: ${{ secrets.AUR_SSH_KEY }}
+          AUR_NAME: ${{ vars.AUR_NAME }}
+          AUR_EMAIL: ${{ vars.AUR_EMAIL }}
+        run: |
+          # Each one needs its secret; without it this release is not sent there.
+          if [[ $TARGET == aur && -z $AUR_SSH_KEY ]] || [[ $TARGET != aur && -z $GH_TOKEN ]]; then
+            echo "::notice::No secret for $TARGET; not sent."
+            exit 0
+          fi
+          bash packaging/publish.sh "$TARGET"

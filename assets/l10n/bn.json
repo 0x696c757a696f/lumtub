@@ -3535,5 +3535,7 @@
   "Next up": "এরপর",
   "Searched": "অনুসন্ধান করা",
   "You were here last time · Tap to refresh": "আপনি গতবার এখানে ছিলেন · রিফ্রেশ করতে ট্যাপ করুন",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "প্লেয়ার ভিডিও স্ট্রিম খুলতে পারেনি এবং কোনো কারণও জানায়নি। সেটিংস › নেটওয়ার্ক › নেটওয়ার্ক পরীক্ষা থেকে দেখা যায় কোন অংশ আটকে আছে।"
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "প্লেয়ার ভিডিও স্ট্রিম খুলতে পারেনি এবং কোনো কারণও জানায়নি। সেটিংস › নেটওয়ার্ক › নেটওয়ার্ক পরীক্ষা থেকে দেখা যায় কোন অংশ আটকে আছে।",
+  "Subtitles in picture in picture": "সাবটাইটেল (পিকচার-ইন-পিকচার)",
+  "Subtitles in the mini player": "সাবটাইটেল (অ্যাপের ভেতরে মিনি প্লেয়ার)"
 }

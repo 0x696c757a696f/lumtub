@@ -3535,5 +3535,7 @@
   "Next up": "Следно",
   "Searched": "Пребарувани",
   "You were here last time · Tap to refresh": "Застанавте тука · Допрете за освежување",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Плеерот не успеа да го отвори видео-протокот и не кажа причина. Во Поставки › Мрежа › Проверка на мрежата можете да видите кој дел е блокиран."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Плеерот не успеа да го отвори видео-протокот и не кажа причина. Во Поставки › Мрежа › Проверка на мрежата можете да видите кој дел е блокиран.",
+  "Subtitles in picture in picture": "Титлови (Слика во слика)",
+  "Subtitles in the mini player": "Титлови (Мини-плеер во апликацијата)"
 }

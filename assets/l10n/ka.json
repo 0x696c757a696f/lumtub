@@ -3535,5 +3535,7 @@
   "Next up": "შემდეგი",
   "Searched": "მოძებნილი",
   "You were here last time · Tap to refresh": "ბოლოს აქ გაჩერდით · შეეხეთ განახლებისთვის",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ფლეერმა ვიდეოს ნაკადი ვერ გახსნა და მიზეზი არ დაასახელა. პარამეტრები › ქსელი › ქსელის შემოწმება აჩვენებს, რომელი ნაწილია დაბლოკილი."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ფლეერმა ვიდეოს ნაკადი ვერ გახსნა და მიზეზი არ დაასახელა. პარამეტრები › ქსელი › ქსელის შემოწმება აჩვენებს, რომელი ნაწილია დაბლოკილი.",
+  "Subtitles in picture in picture": "სუბტიტრები (ეკრანი ეკრანში)",
+  "Subtitles in the mini player": "სუბტიტრები (აპის შიდა მინი-ფლეერი)"
 }

@@ -3535,5 +3535,7 @@
   "Next up": "Հաջորդը",
   "Searched": "Որոնվածներ",
   "You were here last time · Tap to refresh": "Վերջին անգամ կանգնել էիք այստեղ · Հպեք թարմացնելու համար",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Նվագարկիչը չկարողացավ բացել տեսահոսքը և պատճառ չնշեց։ Կարգավորումներ › Ցանց › Ցանցի ստուգում բաժնում կերևա, թե որ մասն է արգելափակված։"
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Նվագարկիչը չկարողացավ բացել տեսահոսքը և պատճառ չնշեց։ Կարգավորումներ › Ցանց › Ցանցի ստուգում բաժնում կերևա, թե որ մասն է արգելափակված։",
+  "Subtitles in picture in picture": "Ենթագրեր (Նկար նկարի մեջ)",
+  "Subtitles in the mini player": "Ենթագրեր (Հավելվածի ներսի մինի պատուհան)"
 }

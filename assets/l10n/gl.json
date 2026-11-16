@@ -3535,5 +3535,7 @@
   "Next up": "A seguir",
   "Searched": "Buscado",
   "You were here last time · Tap to refresh": "Quedaches por aquí a última vez · Toca para actualizar",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "O reprodutor non puido abrir o fluxo de vídeo e non deu ningún motivo. En Configuración › Rede › Comprobación da rede podes ver que parte está bloqueada."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "O reprodutor non puido abrir o fluxo de vídeo e non deu ningún motivo. En Configuración › Rede › Comprobación da rede podes ver que parte está bloqueada.",
+  "Subtitles in picture in picture": "Subtítulos (Imaxe en imaxe)",
+  "Subtitles in the mini player": "Subtítulos (Minirreprodutor na aplicación)"
 }

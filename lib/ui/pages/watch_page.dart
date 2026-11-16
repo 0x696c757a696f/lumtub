@@ -119,6 +119,16 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
     }
   }
 
+  /// Whether this full screen comes from turning the phone: only while the
+  /// screen is sideways. A turn that never reached full screen (the page
+  /// was busy, the phone was turned back at once) must not leave the
+  /// fullscreen button holding an upright screen with the sideways layout.
+  bool _enteredByRotation() {
+    final view = View.maybeOf(context);
+    if (view == null || view.physicalSize.width <= view.physicalSize.height) _byRotation = false;
+    return _byRotation;
+  }
+
   void _leftFullscreen() {
     _byRotation = false;
     final view = View.maybeOf(context);
@@ -202,7 +212,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
           final replayChat = hasChat ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide && !panelOpen && !phone) : null;
           if (phone) {
             return Column(children: [
-              _Player(controller: controller, videoKey: _video, byRotation: () => _byRotation, onExit: _leftFullscreen),
+              _Player(controller: controller, videoKey: _video, byRotation: _enteredByRotation, onExit: _leftFullscreen),
               CastBar(controller: controller),
               Expanded(
                 child: _SidePanel(
@@ -240,7 +250,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
           }
           final main = <Widget>[
             if (!theater) _BackRow(onBack: controller.goBack),
-            Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, byRotation: () => _byRotation, onExit: _leftFullscreen))),
+            Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, byRotation: _enteredByRotation, onExit: _leftFullscreen))),
             CastBar(controller: controller),
             if (!theater) const SizedBox(height: 12),
             _Toolbar(controller: controller),
@@ -263,7 +273,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
             ];
             final page = CustomScrollView(slivers: [
               // In 剧场模式 the player goes edge to edge.
-              if (theater) SliverToBoxAdapter(child: Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, byRotation: () => _byRotation, onExit: _leftFullscreen)))),
+              if (theater) SliverToBoxAdapter(child: Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, byRotation: _enteredByRotation, onExit: _leftFullscreen)))),
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(margin, theater ? 12 : 0, margin, 0),
                 sliver: SliverList.list(children: theater ? main.skip(1).toList() : main),
@@ -1239,8 +1249,10 @@ double smallSubtitleScale(Size size) => (size.shortestSide * 0.055).clamp(13.0, 
 /// ExoPlayer and YouTube's app size them on phones, tablets and TVs: 5.33%
 /// of the player's height times the caption size from Android's settings
 /// ([system]), never under 12 px. Scaling by area against 1080p would leave
-/// a phone's upright player with 9 px text.
-double androidSubtitleScale(Size size, [double system = 1]) => max(12.0, size.height * 0.0533 * system) / 32;
+/// a phone's upright player with 9 px text. A [small] window (picture in
+/// picture, the mini player) keeps the same share of its height down to
+/// 6 px, as ExoPlayer does there, so a line does not cover the picture.
+double androidSubtitleScale(Size size, [double system = 1, bool small = false]) => max(small ? 6.0 : 12.0, size.height * 0.0533 * system) / 32;
 
 SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass}) {
   // The view scales by area against 1080p, which makes the text tiny in a
@@ -1274,7 +1286,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     secondaryStyle: style(settings.secondaryFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity),
     // sub-pos counts from the top; 100 is the bottom edge.
     textScaler: textScaler,
-    scaleFor: byHeight ? (size) => TextScaler.linear(androidSubtitleScale(size, Device.captionScale)) : null,
+    scaleFor: byHeight ? (size) => TextScaler.linear(androidSubtitleScale(size, Device.captionScale, smallWindow != null)) : null,
     spacing: 6,
     secondaryKey: secondary,
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),

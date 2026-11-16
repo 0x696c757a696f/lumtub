@@ -3535,5 +3535,7 @@
   "Next up": "Proximum",
   "Searched": "Quaesita",
   "You were here last time · Tap to refresh": "Hic ultimo mansisti · Tange ut renoves",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Lusor fluxum visualem aperire non potuit, nec causam dixit. Optiones › Rete › Probatio retis ostendit quae pars impediatur."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Lusor fluxum visualem aperire non potuit, nec causam dixit. Optiones › Rete › Probatio retis ostendit quae pars impediatur.",
+  "Subtitles in picture in picture": "Subtitula (Imago in imagine)",
+  "Subtitles in the mini player": "Subtitula (Lusor parvus in applicatione)"
 }

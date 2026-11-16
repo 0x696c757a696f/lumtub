@@ -814,6 +814,12 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Whether libmpv draws the subtitles now, not Flutter's view.
   bool get libassDraws => settings.libassSubtitles && !libassCantDraw;
 
+  /// The views showing the video that leave subtitles out (picture in
+  /// picture or the mini player, by the settings): libmpv draws none while
+  /// any does.
+  final _subtitlesOffIn = <Object>{};
+  bool get subtitlesOff => _subtitlesOffIn.isNotEmpty;
+
   bool _backgroundAudioOnly = false;
   bool _windowHidden = false;
   bool? _efficient;

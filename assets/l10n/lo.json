@@ -3535,5 +3535,7 @@
   "Next up": "ຕໍ່ໄປ",
   "Searched": "ຄົ້ນຫາແລ້ວ",
   "You were here last time · Tap to refresh": "ຄັ້ງກ່ອນທ່ານມາຮອດບ່ອນນີ້ · ແຕະເພື່ອໂຫຼດໃໝ່",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ເຄື່ອງຫຼິ້ນເປີດສະຕຣີມວິດີໂອບໍ່ໄດ້ ແລະ ບໍ່ບອກເຫດຜົນ. ເບິ່ງໄດ້ທີ່ ການຕັ້ງຄ່າ › ເຄືອຂ່າຍ › ການກວດເຄືອຂ່າຍ ວ່າສ່ວນໃດຖືກບລັອກ."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ເຄື່ອງຫຼິ້ນເປີດສະຕຣີມວິດີໂອບໍ່ໄດ້ ແລະ ບໍ່ບອກເຫດຜົນ. ເບິ່ງໄດ້ທີ່ ການຕັ້ງຄ່າ › ເຄືອຂ່າຍ › ການກວດເຄືອຂ່າຍ ວ່າສ່ວນໃດຖືກບລັອກ.",
+  "Subtitles in picture in picture": "ຄຳບັນຍາຍ (ພາບຊ້ອນພາບ)",
+  "Subtitles in the mini player": "ຄຳບັນຍາຍ (ເຄື່ອງຫຼິ້ນຂະໜາດນ້ອຍໃນແອັບ)"
 }

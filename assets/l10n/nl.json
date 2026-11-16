@@ -3540,5 +3540,7 @@
   "Left half brightness, right half volume": "Linkerhelft helderheid, rechterhelft volume",
   "Scroll wheel over the video": "Scrollwiel boven de video",
   "Now: {0}. Ctrl + wheel always changes the speed": "Nu: {0}. Ctrl + scrollwiel wijzigt altijd de snelheid",
-  "mouse wheel volume brightness": "muis scrollwiel volume helderheid"
+  "mouse wheel volume brightness": "muis scrollwiel volume helderheid",
+  "Subtitles in picture in picture": "Ondertitels (Picture-in-picture)",
+  "Subtitles in the mini player": "Ondertitels (Minispeler in de app)"
 }

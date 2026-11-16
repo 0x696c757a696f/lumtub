@@ -3535,5 +3535,7 @@
   "Next up": "ถัดไป",
   "Searched": "ค้นหาแล้ว",
   "You were here last time · Tap to refresh": "คุณมาถึงตรงนี้เมื่อครั้งก่อน · แตะเพื่อรีเฟรช",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "เครื่องเล่นเปิดสตรีมวิดีโอไม่ได้และไม่แจ้งสาเหตุ ดูได้ที่ การตั้งค่า › เครือข่าย › ตรวจสอบเครือข่าย ว่าส่วนไหนถูกบล็อก"
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "เครื่องเล่นเปิดสตรีมวิดีโอไม่ได้และไม่แจ้งสาเหตุ ดูได้ที่ การตั้งค่า › เครือข่าย › ตรวจสอบเครือข่าย ว่าส่วนไหนถูกบล็อก",
+  "Subtitles in picture in picture": "คำบรรยาย (ภาพซ้อนภาพ)",
+  "Subtitles in the mini player": "คำบรรยาย (มินิเพลเยอร์ในแอป)"
 }

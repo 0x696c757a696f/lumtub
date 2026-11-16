@@ -3535,5 +3535,7 @@
   "Next up": "Järgmisena",
   "Searched": "Otsitud",
   "You were here last time · Tap to refresh": "Eelmine kord jõudsite siia · Puudutage värskendamiseks",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Mängija ei saanud videovoogu avada ega öelnud põhjust. Seaded › Võrk › Võrgukontroll näitab, milline osa on blokeeritud."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Mängija ei saanud videovoogu avada ega öelnud põhjust. Seaded › Võrk › Võrgukontroll näitab, milline osa on blokeeritud.",
+  "Subtitles in picture in picture": "Subtiitrid (Pilt pildis)",
+  "Subtitles in the mini player": "Subtiitrid (Rakenduse minipleier)"
 }

@@ -3540,5 +3540,7 @@
   "Left half brightness, right half volume": "Moitié gauche luminosité, moitié droite volume",
   "Scroll wheel over the video": "Molette sur la vidéo",
   "Now: {0}. Ctrl + wheel always changes the speed": "Actuellement : {0}. Ctrl + molette change toujours la vitesse",
-  "mouse wheel volume brightness": "souris molette volume luminosité"
+  "mouse wheel volume brightness": "souris molette volume luminosité",
+  "Subtitles in picture in picture": "Sous-titres (Picture-in-picture)",
+  "Subtitles in the mini player": "Sous-titres (Mini-lecteur dans l'application)"
 }

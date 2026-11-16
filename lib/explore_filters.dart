@@ -1,3 +1,6 @@
+export 'explore_pivots.dart';
+
+import 'explore_pivots.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
 import 'scripts.dart';
@@ -424,33 +427,13 @@ bool translatesInto(String phrase, ExploreLanguage language) {
 /// write them.
 const searchGlossary = {'直播': 'live', '实况': 'live', '直播间': 'live'};
 
-/// Zone keywords whose usual sense a translation word by word misses, in
-/// English, which is translated instead: 体育 alone is "educazione fisica"
-/// (the school subject) where sports are meant, 科普 "Scienza popolare",
-/// 教程 "Esercitazione" (seen on 2026-11-16). For English they are the
-/// words searched.
-const searchPivots = {
-  '体育': 'sports',
-  '科普': 'popular science',
-  '知识': 'knowledge',
-  '教程': 'tutorial',
-  '聊天': 'chatting',
-  '健身': 'fitness',
-  '手游': 'mobile games',
-  '评测': 'review',
-  '测评': 'review',
-  '攻略': 'game guide',
-  '公开课': 'open lecture',
-  '日常': 'daily vlog',
-  '数码': 'tech',
-  '家居': 'home',
-  '装修': 'home renovation',
-  '后端': 'back-end development',
-  '前端': 'front-end development',
-  '摇滚': 'rock music',
-  '购车': 'car buying',
-  '选车': 'choosing a car',
-};
+
+/// [query] with the zones' Chinese keywords in English ([searchPivots]);
+/// words searched the same in every language ([searchGlossary]) stay.
+String englishSearchOf(String query) => [
+      for (final word in query.split(RegExp(r'\s+')))
+        if (word.isNotEmpty) searchGlossary.containsKey(word) ? word : searchPivots[word] ?? word,
+    ].join(' ');
 
 /// [query] in the pieces a translation keeps the sense of: each keyword of
 /// a script written without spaces (Chinese, Japanese, Thai…) alone, as

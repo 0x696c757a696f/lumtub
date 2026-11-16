@@ -59,6 +59,15 @@ searching, so that the search finds videos in it to begin with:
   `lofi`, `vlog`, see `keptSearchWords`);
 - a zone of the person's own is searched as they wrote it.
 
+The zones' Chinese keywords are not translated themselves: each has its
+English in `searchPivots` (`lib/explore_pivots.dart`), which is translated
+instead, a run of English words at a time, and which an English search
+takes as it is. Translated one by one from Chinese, keywords lost their
+sense (体育 → "educazione fisica", 后端 → "rear end"). `直播` and other
+words of `searchGlossary` are searched as `live` everywhere. A test checks
+that every Chinese keyword of every zone, sub-category and filter has its
+English. Each word of the result is kept once.
+
 The search is also asked from the language's home country (`gl`) when no
 region is picked.
 

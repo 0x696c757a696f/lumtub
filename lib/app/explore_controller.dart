@@ -440,32 +440,33 @@ extension ExploreActions on AppController {
     Future<String> translate(String text) => _google.translate(text, target).timeout(const Duration(seconds: 10));
     return Future.wait([
       for (final query in queries)
-        if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language) || !searchPhrasesOf(query).any((w) => translatesInto(w, language)))
+        if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language))
           Future.value(query)
         else
           () async {
+            // The zones' Chinese keywords go by their English
+            // (searchPivots), which is translated instead and which an
+            // English search takes as it is.
+            final source = traditional ? query : englishSearchOf(query);
             try {
               // Keyword by keyword, as a search wants keywords: "科技 数码 评测"
               // as one sentence is "Revisione digitale della tecnologia",
               // which finds next to nothing.
-              final words = searchPhrasesOf(query);
-              // A keyword whose sense a translation misses goes by its
-              // English (searchPivots), which English searches as it is.
-              String source(String w) => traditional ? w : searchPivots[w] ?? w;
-              bool asks(String w) => translatesInto(w, language) && searchGlossary[w] == null && !(language == ExploreLanguage.en && searchPivots.containsKey(w) && !traditional);
-              final asked = [for (final w in words) if (asks(w)) source(w)];
+              final words = searchPhrasesOf(source);
+              bool asks(String w) => translatesInto(w, language) && searchGlossary[w] == null;
+              if (!words.any(asks) && source == query) return query;
+              final asked = [for (final w in words) if (asks(w)) w];
               final lines = asked.isEmpty ? const <String>[] : (await translate(asked.join('\n'))).split('\n');
               if (lines.length != asked.length) throw StateError('${lines.length} lines for ${asked.length} phrases');
               var next = 0;
               final translated = searchWordsOf([
-                for (final w in words)
-                  !translatesInto(w, language) ? w : searchGlossary[w] ?? (asks(w) ? lines[next++] : source(w)),
+                for (final w in words) searchGlossary[w] ?? (asks(w) ? lines[next++] : w),
               ]);
               logDebug(() => 'Explore searches "$query" in $target as "$translated"');
               return translated.isEmpty ? query : translated;
             } catch (e) {
               logWarn('Could not translate the explore search "$query" into $target: $e');
-              return query;
+              return source;
             }
           }(),
     ]);

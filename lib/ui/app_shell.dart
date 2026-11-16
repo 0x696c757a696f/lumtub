@@ -1029,7 +1029,11 @@ class _SearchFieldState extends State<_SearchField> {
               alignment: AlignmentDirectional.topStart,
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: Material(
+                // Drops in under the field, as a menu opens.
+                child: Entrance(
+                  duration: Ease.fade,
+                  scale: 0.97,
+                  child: Material(
                   elevation: 4,
                   shadowColor: Colors.black.withValues(alpha: 0.25),
                   shape: RoundedRectangleBorder(borderRadius: AppStyle.cardRadius, side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
@@ -1057,6 +1061,7 @@ class _SearchFieldState extends State<_SearchField> {
                       },
                     ),
                   ),
+                ),
                 ),
               ),
             ),

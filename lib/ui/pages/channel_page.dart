@@ -17,6 +17,7 @@ import '../../thumbnail_cache.dart';
 import '../../video_repository.dart';
 import '../comments_view.dart';
 import '../common.dart';
+import '../motion.dart';
 import '../haptics.dart';
 import '../key_scroll.dart';
 import '../press_scale.dart';
@@ -641,6 +642,7 @@ class ChannelAvatar extends StatelessWidget {
       width: radius * 2,
       height: radius * 2,
       fit: BoxFit.cover,
+      frameBuilder: (context, child, frame, sync) => fadeInFrame(child, frame, sync),
       errorBuilder: (context, error, stack) => fallback,
     ));
   }

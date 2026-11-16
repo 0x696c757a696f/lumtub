@@ -101,3 +101,11 @@ abstract final class Motion {
     return PlatformDispatcher.instance.accessibilityFeatures.disableAnimations;
   }
 }
+
+/// For an [Image]'s frameBuilder: a picture loaded from disk or the network
+/// fades in, over [under] when given; one already in memory is there at once.
+Widget fadeInFrame(Widget child, int? frame, bool sync, {Widget? under}) {
+  if (sync) return child;
+  final picture = AnimatedOpacity(opacity: frame == null ? 0 : 1, duration: Motion.of(Ease.fade), curve: Ease.out, child: child);
+  return under == null ? picture : Stack(fit: StackFit.expand, children: [under, picture]);
+}

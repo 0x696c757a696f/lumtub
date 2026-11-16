@@ -11,6 +11,7 @@ import 'common.dart';
 import 'haptics.dart';
 import 'linked_text.dart';
 import 'rating_buttons.dart';
+import 'motion.dart';
 import 'reveal.dart';
 import 'pages/channel_page.dart';
 import 'theme.dart';
@@ -190,12 +191,17 @@ class _CommentsSectionState extends State<CommentsSection> {
         ),
       // Replies sit together on a quiet panel under the comment they
       // answer, so a long thread still reads as one.
+      // The panel comes in, then grows as more replies arrive.
       if (thread != null)
-        Padding(
+        Reveal(child: Padding(
           padding: const EdgeInsetsDirectional.only(start: 44, bottom: 8),
           child: DecoratedBox(
             decoration: BoxDecoration(color: context.colors.onSurface.withValues(alpha: 0.05), borderRadius: AppStyle.cardRadius),
-            child: Padding(
+            child: AnimatedSize(
+              duration: Motion.of(Ease.move),
+              curve: Ease.curve,
+              alignment: Alignment.topCenter,
+              child: Padding(
               padding: const EdgeInsetsDirectional.fromSTEB(10, 2, 8, 2),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 for (final reply in thread.replies) tile(reply, reply: true),
@@ -208,8 +214,9 @@ class _CommentsSectionState extends State<CommentsSection> {
                             : const SizedBox.shrink(),
               ]),
             ),
+            ),
           ),
-        ),
+        )),
     ];
   }
 

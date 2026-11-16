@@ -34,4 +34,15 @@ void main() {
     expect(kept.viewCount, 5);
     expect(saysMore(kept, filledFromDetails(kept, details)), isFalse);
   });
+
+  test('channel and playlist links are told apart from searches', () {
+    expect(YoutubeLink.parse('https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw/videos'), isA<ChannelLink>().having((l) => l.id, 'id', 'UCuAXFkgsw1L7xaCfnd5JJOw'));
+    expect(YoutubeLink.parse('youtube.com/@LinusTechTips'), isA<HandleLink>().having((l) => l.handle, 'handle', '@LinusTechTips'));
+    expect(YoutubeLink.parse('https://m.youtube.com/@名字/featured'), isA<HandleLink>().having((l) => l.handle, 'handle', '@名字'));
+    expect(YoutubeLink.parse('https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI'), isA<PlaylistLink>().having((l) => l.id, 'id', 'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI'));
+    expect(YoutubeLink.parse('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), isNull);
+    expect(YoutubeLink.parse('lofi hip hop'), isNull);
+    expect(YoutubeLink.parse('https://example.com/@name'), isNull);
+    expect(YoutubeLink.parse('http://www.youtube.com/@name'), isNull);
+  });
 }

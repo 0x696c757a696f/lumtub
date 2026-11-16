@@ -13,6 +13,18 @@ extension SearchActions on AppController {
       await play(known ?? await linkVideo(_http, asUrl) ?? linkPlaceholder(asUrl));
       return;
     }
+    switch (YoutubeLink.parse(query)) {
+      case ChannelLink(:final id):
+        openChannelFromLink(ChannelRef(id, ''));
+        return;
+      case HandleLink(:final handle):
+        await openChannelByHandle(handle);
+        return;
+      case PlaylistLink(:final id):
+        openYoutubePlaylist(await linkPlaylist(_http, id) ?? PlaylistResult(id: id, title: tr('Playlist')));
+        return;
+      case null:
+    }
     if (query != _query || mode != PageMode.explore || onWatchPage) _remember();
     final keep = _keepsPlaying;
     if (!keep) _unload();

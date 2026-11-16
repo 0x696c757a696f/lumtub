@@ -5,6 +5,62 @@ import 'package:http/http.dart' as http;
 import 'l10n/l10n.dart';
 import 'models.dart';
 
+/// What a pasted youtube.com link other than a video's leads to.
+sealed class YoutubeLink {
+  const YoutubeLink();
+
+  /// The channel, playlist or nothing [input] links to; videos are
+  /// `AppController.parseYoutubeId`'s.
+  static YoutubeLink? parse(String input) {
+    final text = input.trim();
+    final url = Uri.tryParse(RegExp(r'^[a-z]+://', caseSensitive: false).hasMatch(text) ? text : 'https://$text');
+    if (url == null || url.scheme != 'https') return null;
+    if (!const {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com'}.contains(url.host)) return null;
+    final path = url.pathSegments.where((part) => part.isNotEmpty).toList();
+    if (path.isEmpty) return null;
+    if (path.first == 'playlist') {
+      final id = url.queryParameters['list'] ?? '';
+      return PlaylistResult.isValidId(id) ? PlaylistLink(id) : null;
+    }
+    if (path.first == 'channel' && path.length >= 2 && ChannelRef.isValidId(path[1])) return ChannelLink(path[1]);
+    if (path.first.startsWith('@') && RegExp(r'^@[^\s/?#&]{1,100}$').hasMatch(path.first)) return HandleLink(path.first);
+    return null;
+  }
+}
+
+/// A `/channel/UC…` link.
+class ChannelLink extends YoutubeLink {
+  const ChannelLink(this.id);
+  final String id;
+}
+
+/// A `/@name` link.
+class HandleLink extends YoutubeLink {
+  const HandleLink(this.handle);
+  final String handle;
+}
+
+/// A `/playlist?list=…` link.
+class PlaylistLink extends YoutubeLink {
+  const PlaylistLink(this.id);
+  final String id;
+}
+
+/// The title and owner of playlist [id] from YouTube's oEmbed answer, or
+/// null.
+Future<PlaylistResult?> linkPlaylist(http.Client client, String id, {Duration timeout = const Duration(seconds: 4)}) async {
+  try {
+    final address = Uri.https('www.youtube.com', '/oembed', {'url': 'https://www.youtube.com/playlist?list=$id', 'format': 'json'});
+    final reply = await client.get(address).timeout(timeout);
+    if (reply.statusCode != 200) return null;
+    final answer = jsonDecode(utf8.decode(reply.bodyBytes));
+    if (answer is! Map || answer['title'] is! String) return null;
+    return PlaylistResult(id: id, title: (answer['title'] as String).trim(), channel: answer['author_name'] is String ? (answer['author_name'] as String).trim() : '');
+  } catch (_) {
+    return null;
+  }
+}
+
 /// What a pasted youtube.com or youtu.be link to [id] is, before anything
 /// else is known: a card that names the video by its id.
 VideoItem linkPlaceholder(String id) => VideoItem(id: id, title: tr('YouTube video · {0}', [id]), channel: 'YouTube', url: 'https://www.youtube.com/watch?v=$id');

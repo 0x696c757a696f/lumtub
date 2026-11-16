@@ -3535,5 +3535,11 @@
   "Next up": "Hurrengoa",
   "Searched": "Bilatuta",
   "You were here last time · Tap to refresh": "Azkeneko aldian hemen geratu zinen · Sakatu freskatzeko",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Erreproduzitzaileak ezin izan du bideo-jarioa ireki, eta ez du arrazoirik eman. Ezarpenak › Sarea › Sare-egiaztapena atalean ikus dezakezu zein zati dagoen blokeatuta."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Erreproduzitzaileak ezin izan du bideo-jarioa ireki, eta ez du arrazoirik eman. Ezarpenak › Sarea › Sare-egiaztapena atalean ikus dezakezu zein zati dagoen blokeatuta.",
+  "Subtitles in picture in picture": "Azpitituluak (Irudia irudian)",
+  "Subtitles in the mini player": "Azpitituluak (Aplikazioko erreproduzitzaile txikia)",
+  "Fill the window": "Bete leihoa",
+  "Fill the window (W)": "Bete leihoa (W)",
+  "Hide the side rail while watching": "Ezkutatu alboko barra ikusten ari zarenean",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Bideoak bere lekua hartzen du, YouTuben bezala; zinema moduak beti ezkutatzen du"
 }

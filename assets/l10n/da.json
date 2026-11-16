@@ -3535,5 +3535,11 @@
   "Next up": "Næste",
   "Searched": "Søgt",
   "You were here last time · Tap to refresh": "Du var her sidste gang · Tryk for at opdatere",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Afspilleren kunne ikke åbne videostreamen og gav ingen årsag. Indstillinger › Netværk › Netværkstjek viser, hvilken del der er blokeret."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Afspilleren kunne ikke åbne videostreamen og gav ingen årsag. Indstillinger › Netværk › Netværkstjek viser, hvilken del der er blokeret.",
+  "Subtitles in picture in picture": "Undertekster (Billede-i-billede)",
+  "Subtitles in the mini player": "Undertekster (Miniafspiller i appen)",
+  "Fill the window": "Fyld vinduet",
+  "Fill the window (W)": "Fyld vinduet (W)",
+  "Hide the side rail while watching": "Skjul sidepanelet under afspilning",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Videoen får sin plads som på YouTube; biografvisning skjuler det altid"
 }

@@ -3535,5 +3535,16 @@
   "Next up": "Tiếp theo",
   "Searched": "Đã tìm",
   "You were here last time · Tap to refresh": "Lần trước bạn xem đến đây · Nhấn để làm mới",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Trình phát không mở được luồng video và không nêu lý do. Cài đặt › Mạng › Kiểm tra mạng cho biết phần nào đang bị chặn."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Trình phát không mở được luồng video và không nêu lý do. Cài đặt › Mạng › Kiểm tra mạng cho biết phần nào đang bị chặn.",
+  "Volume": "Âm lượng",
+  "Left half brightness, right half volume": "Nửa trái độ sáng, nửa phải âm lượng",
+  "Scroll wheel over the video": "Con lăn chuột trên video",
+  "Now: {0}. Ctrl + wheel always changes the speed": "Hiện tại: {0}. Ctrl + con lăn luôn đổi tốc độ",
+  "mouse wheel volume brightness": "chuột con lăn âm lượng độ sáng",
+  "Subtitles in picture in picture": "Phụ đề (Hình trong hình)",
+  "Subtitles in the mini player": "Phụ đề (Cửa sổ nhỏ trong ứng dụng)",
+  "Fill the window": "Lấp đầy cửa sổ",
+  "Fill the window (W)": "Lấp đầy cửa sổ (W)",
+  "Hide the side rail while watching": "Ẩn thanh bên khi xem",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video được nhiều chỗ hơn, như trên YouTube; chế độ rạp hát luôn ẩn thanh bên"
 }

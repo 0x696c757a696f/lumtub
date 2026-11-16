@@ -20,6 +20,23 @@ void main() {
     expect(px(852, 393, 1.5), closeTo(31.4, 0.1), reason: "Android's caption size setting counts");
   });
 
+  test("Android's picture in picture keeps the player's share of the height", () {
+    double px(double width, double height) => 32 * androidSubtitleScale(Size(width, height), 1, true);
+    expect(px(244, 137), closeTo(7.3, 0.1), reason: 'not the 12 px floor, which took two lines over half the window');
+    expect(px(120, 68), 6, reason: 'never under 6 px');
+    final view = subtitleViewFor(const PlayerSettings(), smallWindow: const Size(244, 137), byHeight: true);
+    expect(view.scaleFor?.call(const Size(244, 137)), TextScaler.linear(137 * 0.0533 / 32));
+  });
+
+  test('subtitles in picture in picture and the mini player are on until turned off', () {
+    const settings = PlayerSettings();
+    expect(settings.pipSubtitles, isTrue);
+    expect(settings.miniPlayerSubtitles, isTrue);
+    final off = PlayerSettings.fromJson(settings.copyWith(pipSubtitles: false, miniPlayerSubtitles: false).toJson());
+    expect(off.pipSubtitles, isFalse);
+    expect(off.miniPlayerSubtitles, isFalse);
+  });
+
   testWidgets('the watch page passes the height rule to the subtitle view', (tester) async {
     final view = subtitleViewFor(const PlayerSettings(), byHeight: true);
     expect(view.scaleFor?.call(const Size(852, 393)), TextScaler.linear(393 * 0.0533 / 32));

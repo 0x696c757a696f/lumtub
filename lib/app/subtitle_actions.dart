@@ -605,7 +605,7 @@ extension SubtitleActions on AppController {
     if (!libassCantDraw) return;
     libassCantDraw = false;
     final platform = player?.platform;
-    if (platform is! NativePlayer || !settings.libassSubtitles) return;
+    if (platform is! NativePlayer || !settings.libassSubtitles || subtitlesOff) return;
     for (final name in ['sub-visibility', 'secondary-sub-visibility']) {
       unawaited(platform.setProperty(name, 'yes').catchError((Object e) => logDebug(() => 'Could not show $name: $e')));
     }

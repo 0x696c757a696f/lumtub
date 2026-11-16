@@ -112,16 +112,16 @@ class SubtitleFiles {
     }
 
     if (translator != null && source != null) {
-      result = await _translate(await _get(source.url), source.target, translator, key, save);
+      result = await _translate(await _get(source.url), source.target, translator, key, save, asr: _isAsr(source.url));
     } else {
       try {
         final text = await _get(option.url);
         // Automatic captions roll on fragment by fragment; they are shown
         // as sentences, as their translation is.
-        result = (text: Uri.parse(option.url).queryParameters['kind'] == 'asr' ? WebVtt.asLines(text) : text, rest: null);
+        result = (text: _isAsr(option.url) ? WebVtt.asLines(text) : text, rest: null);
       } on _Refused {
         if (source == null) rethrow;
-        result = await _translate(await _get(source.url), source.target, _translator(), key, save);
+        result = await _translate(await _get(source.url), source.target, _translator(), key, save, asr: _isAsr(source.url));
       }
     }
     final text = result.text;
@@ -187,17 +187,26 @@ class SubtitleFiles {
   /// follows playback, handing each new stretch to [save], and completes
   /// with the whole track, or with null once [save] says it is no longer
   /// shown. [rest] is null when the text is all there.
-  Future<({String text, Future<String?>? rest})> _translate(String vtt, String tlang, Translator translator, String key, Future<bool> Function(String text) save) async {
+  static bool _isAsr(String url) => Uri.parse(url).queryParameters['kind'] == 'asr';
+
+  Future<({String text, Future<String?>? rest})> _translate(String vtt, String tlang, Translator translator, String key, Future<bool> Function(String text) save, {bool asr = false}) async {
     // Whole sentences, not the fragments captions show, so each is
     // translated with all its words and never split between two requests.
-    // Each translation shows whole for its sentence's time: cut back into
-    // the fragments it cannot be, since the two languages do not put their
-    // words in the same order, and the subtitle list shows the sentence as
-    // one row beside it.
+    // A sentence shown as several lines (automatic captions in [lineSpans],
+    // other tracks in their own cues) has its translation cut at the
+    // places nearest to where those lines end, each piece at its line's
+    // time, so a long sentence never stays on screen whole.
     final fragments = WebVtt.cues(vtt);
     if (fragments.isEmpty) return (text: vtt, rest: null);
     final spans = WebVtt.sentenceSpans(fragments, maxLength: sentenceTime, maxWidth: sentenceWidth);
     final cues = [for (final (from, to) in spans) (timing: '${WebVtt._stamp(WebVtt.startOf(fragments[from].timing))} --> ${WebVtt._stamp(WebVtt.endOf(fragments[to - 1].timing))}', text: [for (final f in fragments.sublist(from, to)) f.text].reduce(WebVtt._join))];
+    final shown = [for (final span in spans) asr ? WebVtt.lineSpans(fragments, span) : [for (var k = span.$1; k < span.$2; k++) (k, k + 1)]];
+    final allLines = [for (final lines in shown) ...lines];
+    final allTimings = asr ? WebVtt.lineTimings(fragments, allLines) : [for (final (a, _) in allLines) fragments[a].timing];
+    final pieces = <List<({String timing, int weight})>>[];
+    for (var c = 0, k = 0; c < shown.length; c++) {
+      pieces.add([for (final (a, b) in shown[c]) (timing: allTimings[k++], weight: WebVtt.width(WebVtt.textOf(fragments, a, b)))]);
+    }
     final target = TranslationLanguage.all.where((l) => l.youtube == tlang).firstOrNull?.code ?? tlang;
     final chunkLength = chunkLengthOf(translator);
     // Line groups of one request each, so a reply that drops the line break
@@ -251,11 +260,19 @@ class SubtitleFiles {
       return [for (final i in order(now)) if (translated[i] == null && (whole || near(i, now))) i];
     }
 
+    // The translation [text] of sentence [c] as the lines it shows in.
+    List<({String timing, String text})> shownAs(int c, String text) {
+      final lines = pieces[c];
+      final parts = lines.length > 1 ? WebVtt.splitLike(text, [for (final l in lines) l.weight]) : const <String>[];
+      if (parts.length != lines.length) return [(timing: cues[c].timing, text: text)];
+      return [for (final (n, part) in parts.indexed) (timing: lines[n].timing, text: part)];
+    }
+
     String write() => WebVtt.write([
           for (final (i, (start, end)) in groups.indexed)
             if (translated[i] case final lines?)
               for (var c = start; c < end; c++)
-                if (lines[c - start].trim() case final text when text.isNotEmpty) (timing: cues[c].timing, text: text),
+                if (lines[c - start].trim() case final text when text.isNotEmpty) ...shownAs(c, text),
         ]);
 
     // Enough to start with: the piece playing now and the next few.
@@ -415,6 +432,65 @@ class WebVtt {
   static const lineTime = Duration(seconds: 7);
   static const lineWidth = 84;
 
+  /// How wide [text] shows, in Latin letters: a letter of a script written
+  /// without spaces is about two.
+  static int width(String text) => text.length + unspacedScript.allMatches(text).length;
+
+  /// [text] cut into as many pieces as [weights], each about as wide as its
+  /// share: after punctuation where one is near, else at a space, else
+  /// between two letters of a script written without spaces. Just [text]
+  /// when there is nowhere to cut.
+  static List<String> splitLike(String text, List<int> weights) {
+    text = text.trim();
+    final total = weights.fold(0, (a, b) => a + b);
+    if (weights.length < 2 || total <= 0) return [text];
+    final chars = text.runes.map(String.fromCharCode).toList();
+    // Width of the text before each character.
+    final before = <int>[0];
+    for (final c in chars) {
+      before.add(before.last + width(c));
+    }
+    final full = before.last;
+    int quality(int k) {
+      final prev = chars[k - 1], next = chars[k];
+      if (_cjkStop.hasMatch(prev) && next.trim().isNotEmpty) return 3;
+      if (next.trim().isEmpty) return prev.trim().isEmpty ? 0 : (_clauseTail.hasMatch(prev) || _sentenceEnd.hasMatch(prev) ? 3 : 2);
+      if (unspacedScript.hasMatch(prev) && unspacedScript.hasMatch(next)) return 1;
+      return 0;
+    }
+
+    final share = full / weights.length;
+    final cuts = <int>[];
+    var used = 0;
+    for (var i = 0; i < weights.length - 1; i++) {
+      used += weights[i];
+      final target = full * used / total;
+      int? best;
+      var bestCost = double.infinity;
+      final last = cuts.isEmpty ? 0 : cuts.last;
+      for (var k = last + 1; k < chars.length; k++) {
+        final q = quality(k);
+        if (q == 0) continue;
+        final cost = (before[k] - target).abs() + (3 - q) * 0.15 * share;
+        if (cost < bestCost) {
+          bestCost = cost;
+          best = k;
+        }
+      }
+      if (best == null) return [text];
+      cuts.add(best);
+    }
+    final parts = <String>[];
+    var from = 0;
+    for (final k in [...cuts, chars.length]) {
+      parts.add(chars.sublist(from, k).join().trim());
+      from = k;
+    }
+    return parts.any((p) => p.isEmpty) ? [text] : parts;
+  }
+
+  static final _cjkStop = RegExp(r'[，。、！？；：…）」』]');
+
   /// The text of [cues] from [from] up to [to] as one line.
   static String textOf(List<({String timing, String text})> cues, int from, int to) => [for (final c in cues.sublist(from, to)) c.text].reduce(_join);
 
@@ -423,7 +499,6 @@ class WebVtt {
   /// after a comma where one is near the end, as (first cue, cue after
   /// the last).
   static List<(int, int)> lineSpans(List<({String timing, String text})> cues, (int, int) span) {
-    int width(String text) => text.length + unspacedScript.allMatches(text).length;
     final (from, to) = span;
     final out = <(int, int)>[];
     for (var i = from; i < to;) {

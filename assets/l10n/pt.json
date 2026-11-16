@@ -3535,5 +3535,16 @@
   "Next up": "A seguir",
   "Searched": "Pesquisados",
   "You were here last time · Tap to refresh": "Você parou aqui da última vez · Toque para atualizar",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "O player não conseguiu abrir o fluxo de vídeo e não informou o motivo. Configurações › Rede › Verificação de rede mostra qual parte está bloqueada."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "O player não conseguiu abrir o fluxo de vídeo e não informou o motivo. Configurações › Rede › Verificação de rede mostra qual parte está bloqueada.",
+  "Volume": "Volume",
+  "Left half brightness, right half volume": "Metade esquerda brilho, metade direita volume",
+  "Scroll wheel over the video": "Roda do mouse sobre o vídeo",
+  "Now: {0}. Ctrl + wheel always changes the speed": "Agora: {0}. Ctrl + roda sempre muda a velocidade",
+  "mouse wheel volume brightness": "mouse roda volume brilho",
+  "Subtitles in picture in picture": "Legendas (Picture-in-picture)",
+  "Subtitles in the mini player": "Legendas (Miniplayer no app)",
+  "Fill the window": "Preencher a janela",
+  "Fill the window (W)": "Preencher a janela (W)",
+  "Hide the side rail while watching": "Ocultar a barra lateral ao assistir",
+  "The video gets its room, as on YouTube; theater mode always hides it": "O vídeo ganha seu espaço, como no YouTube; o modo cinema sempre a oculta"
 }

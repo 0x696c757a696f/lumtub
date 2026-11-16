@@ -3559,5 +3559,16 @@
   "Original audio": "原声",
   "Dub in my language, if any": "有则用我的语言配音",
   "{0} (original)": "{0}（原声）",
-  "{0} (automatic dub)": "{0}（自动配音）"
+  "{0} (automatic dub)": "{0}（自动配音）",
+  "Volume": "音量",
+  "Left half brightness, right half volume": "左半边亮度，右半边音量",
+  "Scroll wheel over the video": "视频上的滚轮",
+  "Now: {0}. Ctrl + wheel always changes the speed": "当前：{0}。Ctrl + 滚轮始终调节倍速",
+  "mouse wheel volume brightness": "鼠标 滚轮 音量 亮度",
+  "Subtitles in picture in picture": "画中画显示字幕",
+  "Subtitles in the mini player": "应用内小窗显示字幕",
+  "Fill the window": "铺满窗口",
+  "Fill the window (W)": "铺满窗口 (W)",
+  "Hide the side rail while watching": "看视频时收起侧边栏",
+  "The video gets its room, as on YouTube; theater mode always hides it": "把位置让给视频，和 YouTube 网页版一样；剧场模式下总会收起"
 }

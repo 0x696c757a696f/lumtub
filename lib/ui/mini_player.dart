@@ -138,6 +138,10 @@ class _MiniPlayerState extends State<MiniPlayer> {
   /// Below this height the mini player shows no subtitles.
   static const miniSubtitlesFrom = 120.0;
 
+  /// The phone's mini bar is a thumbnail: even the smallest readable text
+  /// would cover the picture. Elsewhere the settings decide.
+  bool _subtitlesOff(Size box) => !_controller.settings.miniPlayerSubtitles || box.shortestSide < miniSubtitlesFrom;
+
   Widget _video(BuildContext context) {
     if (!_videoMounted) return const SizedBox.expand();
     final builder = widget.videoBuilder;
@@ -147,14 +151,13 @@ class _MiniPlayerState extends State<MiniPlayer> {
     return VideoBox(
       controller: _controller,
       smallSubtitles: true,
+      subtitlesOff: _subtitlesOff,
       child: WarmLayer(
         child: LayoutBuilder(
           builder: (context, constraints) => Video(
             controller: controller,
             controls: NoVideoControls,
-            // The phone's mini bar is a thumbnail: even the smallest
-            // readable text would cover the picture.
-            subtitleViewConfiguration: constraints.biggest.shortestSide < miniSubtitlesFrom
+            subtitleViewConfiguration: _subtitlesOff(constraints.biggest)
                 ? const SubtitleViewConfiguration(visible: false)
                 : subtitleViewFor(_controller.settings, smallWindow: constraints.biggest, secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid, libass: _controller.libassDraws),
           ),
@@ -167,7 +170,8 @@ class _MiniPlayerState extends State<MiniPlayer> {
   Widget build(BuildContext context) {
     final player = _controller.player;
     if (player == null) return const SizedBox.shrink();
-    if (isPhone(context)) return Align(alignment: Alignment.bottomCenter, child: _bar(context, player));
+    // Settles into place as the watch page gives way to it.
+    if (isPhone(context)) return Align(alignment: Alignment.bottomCenter, child: Entrance(scale: 0.96, child: _bar(context, player)));
     return LayoutBuilder(builder: (context, constraints) {
       final area = constraints.biggest;
       final size = miniSize(_controller.videoAspect, area);
@@ -181,7 +185,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
           top: offset.dy,
           width: size.width,
           height: size.height,
-          child: _card(context, player, area, size),
+          child: Entrance(child: _card(context, player, area, size)),
         ),
       ]);
     });

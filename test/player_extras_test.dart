@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app_preferences.dart';
+import 'package:lumtub/right_click.dart';
 import 'package:lumtub/heatmap.dart';
 import 'package:lumtub/keep_awake.dart';
 import 'package:lumtub/models.dart';
@@ -20,6 +21,7 @@ import 'package:lumtub/ui/theater_mode.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/widgets/mini_progress_line.dart';
 import 'package:lumtub/widgets/video_progress_bar.dart';
+import 'package:lumtub/wheel_gesture.dart';
 
 import 'player_controls_test.dart' show FakePlayer;
 
@@ -171,6 +173,9 @@ void main() {
       expect(saved.showHeatmap, isFalse);
       expect(saved.progressLine, ProgressLine.fullscreen);
       expect(AppPreferences.fromJson({'progressLine': 'bogus'}).progressLine, ProgressLine.always);
+      expect(defaults.wheelGesture, WheelGesture.off);
+      expect(AppPreferences.fromJson(const AppPreferences(wheelGesture: WheelGesture.split).toJson()).wheelGesture, WheelGesture.split);
+      expect(AppPreferences.fromJson({'wheelGesture': 'bogus'}).wheelGesture, WheelGesture.off);
     });
 
     test('the progress line setting decides where it shows', () {
@@ -250,7 +255,7 @@ void main() {
     testWidgets('keys chosen in the settings drive the player, and right click goes back', (tester) async {
       await controller.savePreferences(controller.preferences.copyWith(
         shortcutKeys: withShortcutKeys(const {}, PlayerAction.seekBack, [const KeyCombo(LogicalKeyboardKey.bracketLeft)]),
-        rightClickBack: true,
+        rightClick: RightClick.back,
       ));
       await pump(tester);
       final before = player.seeks.length;
@@ -293,6 +298,25 @@ void main() {
       await tester.tap(find.byTooltip('Exit theater mode (T)'));
       await tester.pump();
       expect(theaterMode.value, isFalse);
+    });
+
+    testWidgets('in theater mode the folded side panel unfolds from the bottom bar', (tester) async {
+      addTearDown(() {
+        theaterMode.value = false;
+        theaterChatOpen.value = true;
+        theaterPanelBeside = false;
+      });
+      theaterPanelBeside = true;
+      await pump(tester);
+      expect(find.byTooltip('Expand'), findsNothing, reason: 'not in theater mode');
+      expect(find.byTooltip('Fill the window (W)'), findsOneWidget);
+      theaterMode.value = true;
+      theaterChatOpen.value = false;
+      await tester.pump();
+      await tester.tap(find.byTooltip('Expand'));
+      await tester.pump();
+      expect(theaterChatOpen.value, isTrue);
+      expect(find.byTooltip('Expand'), findsNothing);
     });
 
     testWidgets('the thin progress line follows the setting', (tester) async {

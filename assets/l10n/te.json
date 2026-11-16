@@ -3535,5 +3535,11 @@
   "Next up": "తర్వాత",
   "Searched": "శోధించినవి",
   "You were here last time · Tap to refresh": "గత సారి మీరు ఇక్కడ ఉన్నారు · రిఫ్రెష్ చేయడానికి నొక్కండి",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ప్లేయర్ వీడియో స్ట్రీమ్‌ను తెరవలేకపోయింది, కారణం కూడా చెప్పలేదు. సెట్టింగ్‌లు › నెట్‌వర్క్ › నెట్‌వర్క్ తనిఖీ ఏ భాగం బ్లాక్ అయిందో చూపిస్తుంది."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ప్లేయర్ వీడియో స్ట్రీమ్‌ను తెరవలేకపోయింది, కారణం కూడా చెప్పలేదు. సెట్టింగ్‌లు › నెట్‌వర్క్ › నెట్‌వర్క్ తనిఖీ ఏ భాగం బ్లాక్ అయిందో చూపిస్తుంది.",
+  "Subtitles in picture in picture": "ఉపశీర్షికలు (పిక్చర్-ఇన్-పిక్చర్)",
+  "Subtitles in the mini player": "ఉపశీర్షికలు (యాప్‌లో మినీ ప్లేయర్)",
+  "Fill the window": "విండోను నింపండి",
+  "Fill the window (W)": "విండోను నింపండి (W)",
+  "Hide the side rail while watching": "చూస్తున్నప్పుడు సైడ్‌బార్ దాచండి",
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube లాగే వీడియోకు దాని స్థలం లభిస్తుంది; థియేటర్ మోడ్‌లో ఇది ఎల్లప్పుడూ దాచబడుతుంది"
 }

@@ -3535,5 +3535,11 @@
   "Next up": "Sekva",
   "Searched": "Serĉite",
   "You were here last time · Tap to refresh": "Vi estis ĉi tie lastfoje · Tuŝetu por aktualigi",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "La ludilo ne povis malfermi la videofluon kaj ne donis kialon. Agordoj › Reto › Reta kontrolo montras, kiu parto estas blokita."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "La ludilo ne povis malfermi la videofluon kaj ne donis kialon. Agordoj › Reto › Reta kontrolo montras, kiu parto estas blokita.",
+  "Subtitles in picture in picture": "Subtekstoj (Bildo en bildo)",
+  "Subtitles in the mini player": "Subtekstoj (Miniludilo en la aplikaĵo)",
+  "Fill the window": "Plenigi la fenestron",
+  "Fill the window (W)": "Plenigi la fenestron (W)",
+  "Hide the side rail while watching": "Kaŝi la flankan breton dum spektado",
+  "The video gets its room, as on YouTube; theater mode always hides it": "La video ricevas sian spacon, kiel en YouTube; teatra reĝimo ĉiam kaŝas ĝin"
 }

@@ -295,6 +295,7 @@ class VideoRow extends StatelessWidget {
                       image: thumbnailFor(item, thumbnails, width: 320, size: 'mqdefault'),
                       fit: BoxFit.cover,
                       gaplessPlayback: true,
+                      frameBuilder: (context, child, frame, sync) => fadeInFrame(child, frame, sync, under: ColoredBox(color: colors.surfaceContainerHighest)),
                       errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
                     ),
                     if (status != null)
@@ -646,7 +647,7 @@ class _VideoCardState extends State<VideoCard> {
                       image: thumbnailFor(item, widget.thumbnails, width: thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context))),
                       fit: BoxFit.cover,
                       gaplessPlayback: true,
-                      frameBuilder: (context, child, frame, sync) => sync || frame != null ? child : ColoredBox(color: colors.surfaceContainerHighest),
+                      frameBuilder: (context, child, frame, sync) => fadeInFrame(child, frame, sync, under: ColoredBox(color: colors.surfaceContainerHighest)),
                       errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(AppIcons.televisionSimple, size: 40, color: colors.outline)),
                     ),
                   ),
@@ -936,6 +937,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
                     colorBlendMode: BlendMode.multiply,
                     image: thumbnailFor(item, thumbnails, width: 320, size: 'mqdefault'),
                     fit: BoxFit.cover,
+                    frameBuilder: (context, child, frame, sync) => fadeInFrame(child, frame, sync, under: ColoredBox(color: colors.surfaceContainerHighest)),
                     errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
                   ),
                   if (item.isLive || item.isUpcoming)

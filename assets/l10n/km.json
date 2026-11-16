@@ -3535,5 +3535,11 @@
   "Next up": "បន្ទាប់",
   "Searched": "បានស្វែងរក",
   "You were here last time · Tap to refresh": "លើកមុនអ្នកនៅត្រឹមនេះ · ចុចដើម្បីផ្ទុកឡើងវិញ",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "កម្មវិធីចាក់បើកស្ទ្រីមវីដេអូមិនបាន ហើយមិនបានប្រាប់មូលហេតុទេ។ ការកំណត់ › បណ្ដាញ › ការពិនិត្យបណ្ដាញ បង្ហាញថាផ្នែកណាត្រូវបានទប់ស្កាត់។"
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "កម្មវិធីចាក់បើកស្ទ្រីមវីដេអូមិនបាន ហើយមិនបានប្រាប់មូលហេតុទេ។ ការកំណត់ › បណ្ដាញ › ការពិនិត្យបណ្ដាញ បង្ហាញថាផ្នែកណាត្រូវបានទប់ស្កាត់។",
+  "Subtitles in picture in picture": "ចំណងជើងរង (រូបក្នុងរូប)",
+  "Subtitles in the mini player": "ចំណងជើងរង (កម្មវិធីចាក់តូចក្នុងកម្មវិធី)",
+  "Fill the window": "ពេញវិនដូ",
+  "Fill the window (W)": "ពេញវិនដូ (W)",
+  "Hide the side rail while watching": "លាក់របារចំហៀងពេលមើល",
+  "The video gets its room, as on YouTube; theater mode always hides it": "វីដេអូទទួលបានទីតាំងរបស់វា ដូចនៅលើ YouTube; ម៉ូដល្ខោនលាក់វាជានិច្ច"
 }

@@ -3535,5 +3535,11 @@
   "Next up": "Inayofuata",
   "Searched": "Ulitafuta",
   "You were here last time · Tap to refresh": "Uliishia hapa mara ya mwisho · Gusa ili kuonyesha upya",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Kicheza hakikuweza kufungua mtiririko wa video, wala hakikutoa sababu. Mipangilio › Mtandao › Ukaguzi wa mtandao huonyesha sehemu ipi imezuiwa."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Kicheza hakikuweza kufungua mtiririko wa video, wala hakikutoa sababu. Mipangilio › Mtandao › Ukaguzi wa mtandao huonyesha sehemu ipi imezuiwa.",
+  "Subtitles in picture in picture": "Manukuu (Picha ndani ya picha)",
+  "Subtitles in the mini player": "Manukuu (Kicheza kidogo ndani ya programu)",
+  "Fill the window": "Jaza dirisha",
+  "Fill the window (W)": "Jaza dirisha (W)",
+  "Hide the side rail while watching": "Ficha upau wa pembeni unapotazama",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video hupata nafasi yake, kama kwenye YouTube; hali ya ukumbi huuficha kila mara"
 }

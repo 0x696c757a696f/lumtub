@@ -7,6 +7,7 @@ import '../skins/skin.dart';
 import '../window_frame.dart';
 import 'skin_chrome.dart';
 import 'skin_paint.dart';
+import 'theater_mode.dart';
 import 'theme.dart';
 
 /// What a skin draws round every page: its backdrop, its title bar and
@@ -32,7 +33,7 @@ class WindowChrome extends StatefulWidget {
 
 class _WindowChromeState extends State<WindowChrome> {
   bool? _customFrame;
-  late final _changes = Listenable.merge([widget.controller, WindowChrome.menus, WindowChrome.fullscreen]);
+  late final _changes = Listenable.merge([widget.controller, WindowChrome.menus, WindowChrome.fullscreen, fillingWindow]);
 
   /// Takes the system title bar away while a skin draws its own, and gives
   /// it back when not.
@@ -54,9 +55,12 @@ class _WindowChromeState extends State<WindowChrome> {
           // Picture in picture shows the video alone, in its own frame.
           if (c.pip && c.playing != null && c.videoController != null) return child!;
           final appearance = c.appearance;
-          final bare = WindowChrome.fullscreen.value;
+          // 铺满窗口 takes the system title bar away too, so only the video
+          // is left in the window; leaving it brings the bar back.
+          final filling = fillingWindow.value && WindowFrame.supported;
+          final bare = WindowChrome.fullscreen.value || filling;
           final ownTitleBar = usesSkinTitleBar(skin, systemTitleBar: appearance.systemTitleBar);
-          _useCustomFrame(ownTitleBar);
+          _useCustomFrame(ownTitleBar || filling);
           final menuBar = !bare && WindowFrame.supported && !appearance.systemTitleBar ? skin?.menuBar : null;
           final menus = menuBar == null ? const <SkinMenu>[] : WindowChrome.menus.value?.call(appMenu: menuBar.appMenu) ?? const <SkinMenu>[];
           Widget menuView(SkinMenuBar bar) => CallbackShortcuts(bindings: menuShortcuts(menus), child: SkinMenuBarView(bar: bar, menus: menus, clock: bar.clock));

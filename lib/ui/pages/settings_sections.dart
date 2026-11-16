@@ -21,7 +21,10 @@ import '../../native_core.dart';
 import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
+import '../../device.dart';
 import '../../progress_line.dart';
+import '../../right_click.dart';
+import '../../wheel_gesture.dart';
 import '../../shortcut_bindings.dart';
 import '../../video_codec.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
@@ -658,6 +661,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.speakerLow),
               onTap: () => pickWithSlider(context, title: tr('Volume step'), value: prefs.volumeStep.toDouble(), min: 1, max: 20, divisions: 19, suffix: '%', onSelected: (v) => savePrefs(prefs.copyWith(volumeStep: v.round()))),
             )),
+        SettingEntry(tr('Scroll wheel over the video'), (context) => NormalItem(
+              title: tr('Scroll wheel over the video'),
+              subtitle: tr('Now: {0}. Ctrl + wheel always changes the speed', [prefs.wheelGesture.label]),
+              leading: _icon(AppIcons.arrowsDownUp),
+              onTap: () => pickFromDialog<WheelGesture>(context, title: tr('Scroll wheel over the video'), value: prefs.wheelGesture, values: [for (final v in WheelGesture.values) (v, v.label)], onSelected: (v) => savePrefs(prefs.copyWith(wheelGesture: v))),
+            ), subtitle: tr('mouse wheel volume brightness')),
         SettingEntry(tr('Customize shortcuts'), (context) => NormalItem(
               title: tr('Customize shortcuts'),
               subtitle: tr('Choose the keys for seeking, volume, fullscreen and more'),
@@ -665,13 +674,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               enabled: prefs.keyboardShortcuts,
               onTap: () => showShortcutSettings(context, controller),
             ), subtitle: tr('Keyboard shortcuts')),
-        SettingEntry(tr('Right click on the video'), (context) => SwitchItem(
+        SettingEntry(tr('Right click on the video'), (context) => NormalItem(
               title: tr('Right click on the video'),
-              subtitle: tr('Exit fullscreen, or else go back'),
+              subtitle: prefs.rightClick.label,
               leading: _icon(AppIcons.handTap),
-              value: prefs.rightClickBack,
-              onChanged: (v) => savePrefs(prefs.copyWith(rightClickBack: v)),
-            ), subtitle: tr('mouse back')),
+              onTap: () => pickFromDialog<RightClick>(context, title: tr('Right click on the video'), value: prefs.rightClick, values: [for (final v in RightClick.values) (v, v.label)], onSelected: (v) => savePrefs(prefs.copyWith(rightClick: v))),
+            ), subtitle: '${tr('mouse back')} ${tr('Fill the window')}'),
         SettingEntry(tr('Keyboard shortcuts help'), (context) => NormalItem(
               title: tr('Keyboard shortcuts help'),
               subtitle: tr('View all player shortcuts'),
@@ -1263,6 +1271,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: appearance.navigation,
               values: _enumValues(NavigationStyle.values, (n) => n.label),
               onSelected: (v) => saveLooks(appearance.copyWith(navigation: v)),
+            ), subtitle: tr('sidebar bottom bar')),
+        // Phones and TVs watch without the rail already.
+        if (!touchFirst || Device.tablet) SettingEntry(tr('Hide the side rail while watching'), (context) => SwitchItem(
+              title: tr('Hide the side rail while watching'),
+              subtitle: tr('The video gets its room, as on YouTube; theater mode always hides it'),
+              leading: _icon(AppIcons.sidebar),
+              value: appearance.watchHidesRail,
+              onChanged: (v) => saveLooks(appearance.copyWith(watchHidesRail: v)),
             ), subtitle: tr('sidebar bottom bar')),
         SettingEntry(tr('Default start page'), (context) => PopupItem<String>(
               title: tr('Default start page'),

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app_preferences.dart';
+import 'package:lumtub/right_click.dart';
 import 'package:lumtub/shortcut_bindings.dart';
 import 'package:lumtub/ui/player_shortcuts.dart';
 import 'package:lumtub/ui/shortcut_settings.dart';
@@ -78,9 +79,13 @@ void main() {
 
   test('saved keys come back through the preferences file', () {
     final saved = withShortcutKeys(const {}, PlayerAction.seekBack, [bracketLeft]);
-    final prefs = AppPreferences.fromJson(const AppPreferences().copyWith(shortcutKeys: saved, rightClickBack: true).toJson());
+    final prefs = AppPreferences.fromJson(const AppPreferences().copyWith(shortcutKeys: saved, rightClick: RightClick.back).toJson());
     expect(shortcutKeys(prefs.shortcutKeys)[PlayerAction.seekBack], [bracketLeft]);
-    expect(prefs.rightClickBack, isTrue);
+    expect(prefs.rightClick, RightClick.back);
+    // Saved before the choice: a right click that went back still does,
+    // one that did nothing now fills the window.
+    expect(AppPreferences.fromJson(const {'rightClickBack': true}).rightClick, RightClick.back);
+    expect(AppPreferences.fromJson(const {'rightClickBack': false}).rightClick, RightClick.fillWindow);
     final help = playerShortcutHelp(prefs).map((e) => e.$1).join(' | ');
     expect(help, contains('[ / →'));
   });

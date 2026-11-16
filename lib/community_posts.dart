@@ -136,6 +136,40 @@ class CommunityPosts {
     return page;
   }
 
+  /// The post [id] and the channel that wrote it, from its own page, as a
+  /// pasted link opens it; null when YouTube has no such post.
+  Future<(CommunityPost, ChannelRef)?> single(String id) async {
+    final response = await _client.get(Uri.parse('https://www.youtube.com/post/$id?hl=$youtubeHl'), headers: _headers).timeout(const Duration(seconds: 20));
+    if (response.statusCode != 200) throw StateError(tr('YouTube returned {0}', [response.statusCode]));
+    final (page, author) = await Isolate.run(() {
+      final html = utf8.decode(response.bodyBytes, allowMalformed: true);
+      return (read(html), authorOf(html));
+    });
+    final posts = page?.posts ?? const <CommunityPost>[];
+    final post = posts.where((p) => p.id == id).firstOrNull ?? posts.firstOrNull;
+    if (post == null || author == null) return null;
+    return (post, author);
+  }
+
+  /// The channel that wrote the post on the post page [html]: the first
+  /// author link in it, with its name.
+  static ChannelRef? authorOf(String html) {
+    final at = html.indexOf('"authorEndpoint"');
+    if (at < 0) return null;
+    final near = html.substring(at, (at + 2000).clamp(0, html.length));
+    final id = RegExp(r'"browseId":"(UC[\w-]{22})"').firstMatch(near)?.group(1);
+    if (id == null) return null;
+    final before = html.substring((at - 2000).clamp(0, at), at);
+    final names = RegExp(r'"authorText":\{"runs":\[\{"text":"((?:[^"\\]|\\.)*)"').allMatches(before).toList();
+    var name = '';
+    if (names.isNotEmpty) {
+      try {
+        name = jsonDecode('"${names.last.group(1)}"') as String;
+      } catch (_) {}
+    }
+    return ChannelRef(id, name);
+  }
+
   /// The page after the one that gave [continuation].
   Future<PostPage> next(String continuation) async {
     final signIn = this.signIn;

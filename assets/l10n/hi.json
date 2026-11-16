@@ -3535,5 +3535,11 @@
   "Next up": "आगे",
   "Searched": "खोजा गया",
   "You were here last time · Tap to refresh": "आप पिछली बार यहाँ थे · रीफ़्रेश करने के लिए टैप करें",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "प्लेयर वीडियो स्ट्रीम नहीं खोल सका, और कोई कारण नहीं बताया। सेटिंग › नेटवर्क › नेटवर्क जाँच में दिखता है कि कौन-सा हिस्सा ब्लॉक है।"
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "प्लेयर वीडियो स्ट्रीम नहीं खोल सका, और कोई कारण नहीं बताया। सेटिंग › नेटवर्क › नेटवर्क जाँच में दिखता है कि कौन-सा हिस्सा ब्लॉक है।",
+  "Subtitles in picture in picture": "उपशीर्षक (पिक्चर-इन-पिक्चर)",
+  "Subtitles in the mini player": "उपशीर्षक (ऐप के अंदर मिनी प्लेयर)",
+  "Fill the window": "विंडो भरें",
+  "Fill the window (W)": "विंडो भरें (W)",
+  "Hide the side rail while watching": "देखते समय साइडबार छिपाएँ",
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube की तरह वीडियो को उसकी जगह मिलती है; थिएटर मोड में साइडबार हमेशा छिपा रहता है"
 }

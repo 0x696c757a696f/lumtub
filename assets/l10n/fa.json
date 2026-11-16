@@ -3535,5 +3535,11 @@
   "Next up": "بعدی",
   "Searched": "جست‌وجو شده",
   "You were here last time · Tap to refresh": "دفعه قبل اینجا بودید · برای تازه‌سازی بزنید",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "پخش‌کننده نتوانست جریان ویدیو را باز کند و دلیلی هم اعلام نکرد. در تنظیمات › شبکه › بررسی شبکه می‌توانید ببینید کدام بخش مسدود است."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "پخش‌کننده نتوانست جریان ویدیو را باز کند و دلیلی هم اعلام نکرد. در تنظیمات › شبکه › بررسی شبکه می‌توانید ببینید کدام بخش مسدود است.",
+  "Subtitles in picture in picture": "زیرنویس (تصویر در تصویر)",
+  "Subtitles in the mini player": "زیرنویس (پخش‌کننده کوچک درون برنامه)",
+  "Fill the window": "پر کردن پنجره",
+  "Fill the window (W)": "پر کردن پنجره (W)",
+  "Hide the side rail while watching": "پنهان کردن نوار کناری هنگام تماشا",
+  "The video gets its room, as on YouTube; theater mode always hides it": "ویدیو فضای خودش را می‌گیرد، مثل YouTube؛ در حالت سینمایی همیشه پنهان می‌شود"
 }

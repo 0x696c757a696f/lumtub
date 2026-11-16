@@ -3535,5 +3535,11 @@
   "Next up": "Keyingi",
   "Searched": "Qidirilganlar",
   "You were here last time · Tap to refresh": "Oxirgi marta shu yerda qolgansiz · Yangilash uchun bosing",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Pleyer video oqimini ocha olmadi va sabab ko'rsatmadi. Sozlamalar › Tarmoq › Tarmoq tekshiruvi qaysi qism bloklanganini ko'rsatadi."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Pleyer video oqimini ocha olmadi va sabab ko'rsatmadi. Sozlamalar › Tarmoq › Tarmoq tekshiruvi qaysi qism bloklanganini ko'rsatadi.",
+  "Subtitles in picture in picture": "Taglavhalar (Rasm ichida rasm)",
+  "Subtitles in the mini player": "Taglavhalar (Ilova ichidagi mini oyna)",
+  "Fill the window": "Oynani to‘ldirish",
+  "Fill the window (W)": "Oynani to‘ldirish (W)",
+  "Hide the side rail while watching": "Tomosha paytida yon panelni yashirish",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video YouTube’dagidek o‘z joyini oladi; kinoteatr rejimi uni doim yashiradi"
 }

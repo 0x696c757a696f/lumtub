@@ -31,6 +31,7 @@ import '../player_shortcuts.dart';
 import '../screenshot_action.dart';
 import '../summary_dialog.dart';
 import '../subtitle_list_panel.dart';
+import '../animated_visibility.dart';
 import '../theater_mode.dart';
 import '../skeleton.dart';
 import '../theme.dart';
@@ -119,6 +120,16 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
     }
   }
 
+  /// Whether this full screen comes from turning the phone: only while the
+  /// screen is sideways. A turn that never reached full screen (the page
+  /// was busy, the phone was turned back at once) must not leave the
+  /// fullscreen button holding an upright screen with the sideways layout.
+  bool _enteredByRotation() {
+    final view = View.maybeOf(context);
+    if (view == null || view.physicalSize.width <= view.physicalSize.height) _byRotation = false;
+    return _byRotation;
+  }
+
   void _leftFullscreen() {
     _byRotation = false;
     final view = View.maybeOf(context);
@@ -133,7 +144,10 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
     _fullscreenFor = id;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = _video.currentState;
-      if (mounted && state != null && !state.isFullscreen()) state.enterFullscreen();
+      if (mounted && state != null && !state.isFullscreen()) {
+        fillingWindow.value = false;
+        state.enterFullscreen();
+      }
     });
   }
 
@@ -177,6 +191,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
           // in a column beside the video, which can be folded away.
           final sidePanel = theater && outer.maxWidth >= 900;
           subtitleListBeside = sidePanel || (!theater && outer.maxWidth >= 1080);
+          theaterPanelBeside = sidePanel;
           final panelOpen = sidePanel && theaterChatOpen.value;
           final constraints = panelOpen ? outer.copyWith(maxWidth: outer.maxWidth - _theaterChatWidth) : outer;
           // 剧场模式 gives the video the whole width and stacks the panels below.
@@ -202,7 +217,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
           final replayChat = hasChat ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide && !panelOpen && !phone) : null;
           if (phone) {
             return Column(children: [
-              _Player(controller: controller, videoKey: _video, byRotation: () => _byRotation, onExit: _leftFullscreen),
+              _Player(controller: controller, videoKey: _video, byRotation: _enteredByRotation, onExit: _leftFullscreen),
               CastBar(controller: controller),
               Expanded(
                 child: _SidePanel(
@@ -240,7 +255,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
           }
           final main = <Widget>[
             if (!theater) _BackRow(onBack: controller.goBack),
-            Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, byRotation: () => _byRotation, onExit: _leftFullscreen))),
+            Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, byRotation: _enteredByRotation, onExit: _leftFullscreen))),
             CastBar(controller: controller),
             if (!theater) const SizedBox(height: 12),
             _Toolbar(controller: controller),
@@ -263,7 +278,15 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
             ];
             final page = CustomScrollView(slivers: [
               // In 剧场模式 the player goes edge to edge.
-              if (theater) SliverToBoxAdapter(child: Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, byRotation: () => _byRotation, onExit: _leftFullscreen)))),
+              // In 剧场模式 the player spans the whole width, black either
+              // side of a picture narrower than the window, as on YouTube.
+              // Sized by the room it has as that changes, so the player
+              // follows the side rail and the side panel as they slide.
+              if (theater)
+                SliverLayoutBuilder(builder: (context, box) {
+                  final width = min(box.crossAxisExtent, max(320.0, (constraints.maxHeight - 8) * 16 / 9));
+                  return SliverToBoxAdapter(child: _Player(controller: controller, videoKey: _video, byRotation: _enteredByRotation, onExit: _leftFullscreen, height: width * 9 / 16));
+                }),
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(margin, theater ? 12 : 0, margin, 0),
                 sliver: SliverList.list(children: theater ? main.skip(1).toList() : main),
@@ -278,10 +301,12 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
               ])),
             ]);
             if (!sidePanel) return page;
+            // Folded, the player's own button unfolds it again.
             return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Expanded(child: page),
-              if (panelOpen)
-                SizedBox(
+              AnimatedVisibility.side(
+                visible: panelOpen,
+                child: SizedBox(
                   width: _theaterChatWidth,
                   child: DecoratedBox(
                     decoration: BoxDecoration(border: Border(left: BorderSide(color: context.colors.outlineVariant))),
@@ -298,15 +323,8 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
                       ),
                     ),
                   ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(top: 4, end: 4),
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: IconButton(tooltip: tr('Expand'), icon: Icon(AppIcons.sidebar, size: 20), onPressed: () => theaterChatOpen.value = true),
-                  ),
                 ),
+              ),
             ]);
           }
           return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -688,8 +706,11 @@ class _BackRow extends StatelessWidget {
 }
 
 class _Player extends StatelessWidget {
-  const _Player({required this.controller, required this.videoKey, required this.byRotation, required this.onExit});
+  const _Player({required this.controller, required this.videoKey, required this.byRotation, required this.onExit, this.height});
   final AppController controller;
+  /// 剧场模式's height: the player then takes the whole width, square
+  /// cornered, rather than a 16:9 box.
+  final double? height;
   final GlobalKey<VideoState> videoKey;
   /// Whether the phone entering full screen was turned sideways.
   final bool Function() byRotation;
@@ -727,11 +748,13 @@ class _Player extends StatelessWidget {
     );
   }
 
-  Widget _picture(BuildContext context) => AspectRatio(
-        key: lightsOffHole,
-        aspectRatio: 16 / 9,
+  Widget _box({required Widget child}) => height == null
+      ? AspectRatio(key: lightsOffHole, aspectRatio: 16 / 9, child: child)
+      : SizedBox(key: lightsOffHole, width: double.infinity, height: height, child: child);
+
+  Widget _picture(BuildContext context) => _box(
         child: ClipRRect(
-          borderRadius: context.cardRadius,
+          borderRadius: height == null ? context.cardRadius : BorderRadius.zero,
           child: ColoredBox(
             color: Colors.black,
             // As in PiliNara: the video and its controls repaint apart, so
@@ -755,6 +778,8 @@ class _Player extends StatelessWidget {
                   ),
                   subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label, byHeight: Platform.isAndroid, libass: controller.libassDraws),
                   onEnterFullscreen: () {
+                    // 铺满窗口 keeps the window as it is.
+                    if (fillingWindow.value) return Future.value();
                     WindowChrome.fullscreen.value = true;
                     // Turned sideways: the bars hide, and the screen still
                     // turns with the phone, so turning it back leaves.
@@ -773,6 +798,10 @@ class _Player extends StatelessWidget {
                   onExitFullscreen: () {
                     WindowChrome.fullscreen.value = false;
                     onExit();
+                    if (fillingWindow.value) {
+                      fillingWindow.value = false;
+                      return Future.value();
+                    }
                     return defaultExitNativeFullscreen();
                   },
                 ),
@@ -1239,8 +1268,10 @@ double smallSubtitleScale(Size size) => (size.shortestSide * 0.055).clamp(13.0, 
 /// ExoPlayer and YouTube's app size them on phones, tablets and TVs: 5.33%
 /// of the player's height times the caption size from Android's settings
 /// ([system]), never under 12 px. Scaling by area against 1080p would leave
-/// a phone's upright player with 9 px text.
-double androidSubtitleScale(Size size, [double system = 1]) => max(12.0, size.height * 0.0533 * system) / 32;
+/// a phone's upright player with 9 px text. A [small] window (picture in
+/// picture, the mini player) keeps the same share of its height down to
+/// 6 px, as ExoPlayer does there, so a line does not cover the picture.
+double androidSubtitleScale(Size size, [double system = 1, bool small = false]) => max(small ? 6.0 : 12.0, size.height * 0.0533 * system) / 32;
 
 SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass}) {
   // The view scales by area against 1080p, which makes the text tiny in a
@@ -1274,7 +1305,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     secondaryStyle: style(settings.secondaryFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity),
     // sub-pos counts from the top; 100 is the bottom edge.
     textScaler: textScaler,
-    scaleFor: byHeight ? (size) => TextScaler.linear(androidSubtitleScale(size, Device.captionScale)) : null,
+    scaleFor: byHeight ? (size) => TextScaler.linear(androidSubtitleScale(size, Device.captionScale, smallWindow != null)) : null,
     spacing: 6,
     secondaryKey: secondary,
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),

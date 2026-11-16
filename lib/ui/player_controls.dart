@@ -54,12 +54,15 @@ import 'screenshot_action.dart';
 import 'storyboard_preview.dart';
 import 'lights_off.dart';
 import 'theater_mode.dart';
+import 'fill_window.dart';
+import '../right_click.dart';
 import 'video_box.dart';
 import 'video_aspect.dart';
 import 'theme.dart';
 import '../skins/skin.dart';
 import '../l10n/l10n.dart';
 import '../video_codec.dart' show heightLabel;
+import '../wheel_gesture.dart';
 import 'motion.dart';
 import 'app_icons.dart';
 
@@ -309,24 +312,34 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   void _onScroll(PointerSignalEvent event) {
     if (event is! PointerScrollEvent) return;
-    // The wheel over the video sets the volume only: claiming the event
-    // keeps the page around the player from scrolling too.
-    GestureBinding.instance.pointerSignalResolver.register(event, _changeVolume);
+    // Claiming the event keeps the page around the player from scrolling;
+    // with the wheel gesture off only Ctrl + wheel is taken.
+    if (_controller.preferences.wheelGesture == WheelGesture.off && !_speedModifier) return;
+    GestureBinding.instance.pointerSignalResolver.register(event, _onWheel);
   }
 
-  void _changeVolume(PointerSignalEvent event) {
+  bool get _speedModifier => HardwareKeyboard.instance.isControlPressed || (Platform.isMacOS && HardwareKeyboard.instance.isMetaPressed);
+
+  void _onWheel(PointerSignalEvent event) {
     if (event is! PointerScrollEvent) return;
     final up = event.scrollDelta.dy < 0;
     // Ctrl + wheel steps through 倍速选项, as Enhancer for YouTube does.
-    if (HardwareKeyboard.instance.isControlPressed || (Platform.isMacOS && HardwareKeyboard.instance.isMetaPressed)) {
+    if (_speedModifier) {
       final speed = nextSpeed(_controller.settings.speeds, _player.state.rate, up ? 1 : -1);
       if (speed == null) return;
       unawaited(_player.setRate(speed));
       _showFeedback(up ? AppIcons.fastForwardFill : AppIcons.speedometer, '${trimSpeed(speed)}X');
       return;
     }
-    // The left half of the player sets the brightness, the right the volume.
-    if (_onLeft(event.localPosition)) {
+    final brightness = switch (_controller.preferences.wheelGesture) {
+      WheelGesture.off => null,
+      WheelGesture.volume => false,
+      WheelGesture.brightness => true,
+      // The left half of the player sets the brightness, the right the volume.
+      WheelGesture.split => _onLeft(event.localPosition),
+    };
+    if (brightness == null) return;
+    if (brightness) {
       _brighten(up ? _brightnessStep : -_brightnessStep);
     } else {
       final step = _controller.preferences.volumeStep.toDouble();
@@ -377,7 +390,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final at = _doubleTapAt;
     final touch = at != null && (at.kind == PointerDeviceKind.touch || at.kind == PointerDeviceKind.stylus);
     if (!touch) {
-      unawaited(widget.state?.toggleFullscreen());
+      unawaited(toggleFullscreenFrom(widget.state));
       return;
     }
     unawaited(HapticFeedback.selectionClick());
@@ -415,6 +428,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   PointerDeviceKind? _tapKind;
+
+  /// A phone's screen held upright, too narrow for the full screen's rows.
+  bool _upright(BuildContext context) => _phone && MediaQuery.sizeOf(context).width < 600;
 
   /// Phones only: keeps the screen in the way it is held now, landscape or
   /// portrait, until unlocked.
@@ -647,9 +663,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                       onLongPressEnd: (_) => _holdSpeed(false),
                       onLongPressCancel: () => _holdSpeed(false),
                       // As in wiliwili: out of fullscreen first, then back.
-                      onSecondaryTap: !_controller.preferences.rightClickBack
-                          ? null
-                          : () => fullscreen ? unawaited(widget.state?.exitFullscreen()) : _controller.goBack(),
+                      onSecondaryTap: switch (_controller.preferences.rightClick) {
+                        RightClick.off => null,
+                        RightClick.back => () => fullscreen ? unawaited(widget.state?.exitFullscreen()) : _controller.goBack(),
+                        RightClick.fillWindow => () => unawaited(toggleFillWindow(widget.state)),
+                      },
                     ),
                   ),
                 _buffering(),
@@ -868,7 +886,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ),
         // A phone in full screen: the page's main actions, as phone video
         // apps keep them by the title, so there is no need to leave.
-        if (_phone && fullscreen && item != null) ..._fullscreenActions(context, leaveFullscreen),
+        if (_phone && fullscreen && item != null && !_upright(context)) ..._fullscreenActions(context, leaveFullscreen),
         // Switches that are on show here, so the state stays visible after
         // they moved into 更多设置.
         for (final (on, icon, tip) in [
@@ -936,6 +954,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     // settings panel, and the volume is the phone's own keys.
     final width = _phone ? 44.0 : fullscreen ? 42.0 : 35.0;
     final compact = _phone && !fullscreen;
+    // Full screen held upright (a portrait video, or a screen Android or
+    // iPadOS would not turn): the menus that do not fit are in the
+    // settings panel, as on the small player.
+    final narrow = compact || (fullscreen && _upright(context));
     final progress = _PositionBuilder(
       player: _player,
       active: !_animation.isDismissed,
@@ -1003,9 +1025,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           SizedBox(width: _phone ? 8 : 4),
           time,
           Expanded(child: Align(alignment: AlignmentDirectional.centerStart, child: _chapterMenu())),
-          if (!compact) _danmakuButtons(width),
+          // Live chat on an upright full screen keeps only its switch.
+          if (!compact) _danmakuButtons(width, withSettings: !narrow),
           _subtitleMenu(width),
-          if (!compact)
+          if (!narrow)
           StreamBuilder<double>(
             stream: _player.stream.rate,
             initialData: _player.state.rate,
@@ -1020,7 +1043,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             ),
           ),
           // Quality on the small player is in its settings panel.
-          if (!compact)
+          if (!narrow)
           StreamBuilder<int?>(
             stream: _player.stream.height,
             initialData: _player.state.height,
@@ -1045,6 +1068,15 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               );
             },
           ),
+          // The column beside the video, folded away in 剧场模式, unfolds
+          // from here, so it takes no strip of the page while folded.
+          if (!fullscreen && !_phone)
+            ListenableBuilder(
+              listenable: Listenable.merge([theaterMode, theaterChatOpen]),
+              builder: (context, _) => theaterMode.value && theaterPanelBeside && !theaterChatOpen.value
+                  ? _IconButton(tooltip: tr('Expand'), icon: AppIcons.sidebar, size: 22, width: width, onTap: () => theaterChatOpen.value = true)
+                  : const SizedBox.shrink(),
+            ),
           if (!fullscreen && !_phone)
             ValueListenableBuilder(
               valueListenable: theaterMode,
@@ -1057,12 +1089,25 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                 onTap: () => theaterMode.value = !theater,
               ),
             ),
+          // 铺满窗口, as Bilibili's web fullscreen beside its fullscreen.
+          // Phones and tablets have the whole screen already.
+          if (!touchFirst && (!fullscreen || fillingWindow.value))
+            _IconButton(
+              tooltip: tr('Fill the window (W)'),
+              icon: AppIcons.arrowsOutSimple,
+              size: 22,
+              width: width,
+              active: fillingWindow.value,
+              onTap: () => unawaited(toggleFillWindow(widget.state)),
+            ),
           _IconButton(
-            tooltip: fullscreen ? tr('Exit fullscreen (F)') : tr('Fullscreen (F)'),
-            icon: fullscreen ? AppIcons.cornersIn : AppIcons.cornersOut,
+            tooltip: fullscreen && !fillingWindow.value ? tr('Exit fullscreen (F)') : tr('Fullscreen (F)'),
+            icon: fullscreen && !fillingWindow.value ? AppIcons.cornersIn : AppIcons.cornersOut,
             size: 24,
             width: width,
-            onTap: () => unawaited(widget.state?.toggleFullscreen()),
+            onTap: () => unawaited(toggleFullscreenFrom(widget.state).whenComplete(() {
+              if (mounted) setState(() {});
+            })),
           ),
         ]),
         ]),
@@ -1071,7 +1116,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   /// 弹幕 on or off and their settings: a video's chat, or its timed comments.
-  Widget _danmakuButtons(double width) => ListenableBuilder(
+  Widget _danmakuButtons(double width, {bool withSettings = true}) => ListenableBuilder(
         listenable: _controller,
         builder: (context, _) {
           if (!_controller.hasDanmaku) return const SizedBox.shrink();
@@ -1084,7 +1129,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               active: settings.enabled,
               onTap: () => unawaited(_controller.setDanmaku(settings.copyWith(enabled: !settings.enabled))),
             ),
-            if (settings.enabled) _IconButton(tooltip: tr('Bullet chat settings'), width: width, icon: AppIcons.slidersHorizontal, onTap: () => unawaited(_openDanmaku(context))),
+            if (settings.enabled && withSettings) _IconButton(tooltip: tr('Bullet chat settings'), width: width, icon: AppIcons.slidersHorizontal, onTap: () => unawaited(_openDanmaku(context))),
           ]);
         },
       );

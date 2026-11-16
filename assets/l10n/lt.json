@@ -3535,5 +3535,11 @@
   "Next up": "Toliau",
   "Searched": "Ieškota",
   "You were here last time · Tap to refresh": "Paskutinį kartą buvote čia · Bakstelėkite, kad atnaujintumėte",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Grotuvui nepavyko atidaryti vaizdo srauto ir nenurodė priežasties. Nustatymai › Tinklas › Tinklo patikra parodo, kuri dalis užblokuota."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Grotuvui nepavyko atidaryti vaizdo srauto ir nenurodė priežasties. Nustatymai › Tinklas › Tinklo patikra parodo, kuri dalis užblokuota.",
+  "Subtitles in picture in picture": "Subtitrai (Paveikslėlis paveiksle)",
+  "Subtitles in the mini player": "Subtitrai (Programos mažas langas)",
+  "Fill the window": "Užpildyti langą",
+  "Fill the window (W)": "Užpildyti langą (W)",
+  "Hide the side rail while watching": "Slėpti šoninę juostą žiūrint",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Vaizdo įrašas gauna savo vietą kaip „YouTube“; kino teatro režimu juosta visada paslėpta"
 }

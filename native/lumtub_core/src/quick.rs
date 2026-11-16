@@ -82,19 +82,32 @@ fn format(raw: &Value) -> Option<Format<'_>> {
         .trim()
         .to_owned();
     let track = raw.get("audioTrack");
+    // Some clients leave `xtags` and `audioTrack` out of the format and
+    // only the address carries them (`xtags=acont=dubbed:lang=es`).
+    let url_tags = crate::relay::query(url, "xtags");
+    let url_tag = |name: &str| {
+        url_tags.as_deref().and_then(|tags| {
+            tags.split(':')
+                .find_map(|pair| pair.strip_prefix(name)?.strip_prefix('='))
+                .filter(|value| !value.is_empty())
+                .map(str::to_owned)
+        })
+    };
     // Dubbed tracks, and the loudness-normalised copies of a track, are
     // never the default; the original is, or the only one.
     let drc = raw.get("isDrc").and_then(Value::as_bool) == Some(true)
         || raw
             .get("xtags")
             .and_then(Value::as_str)
-            .is_some_and(|x| x.contains("drc"));
+            .is_some_and(|x| x.contains("drc"))
+        || url_tag("drc").as_deref() == Some("1");
     // YouTube can mark an automatic dub as the default track, so the
     // `acont` of the format decides first.
     let content = raw
         .get("xtags")
         .and_then(Value::as_str)
-        .and_then(crate::innertube::audio_content);
+        .and_then(crate::innertube::audio_content)
+        .or_else(|| url_tag("acont"));
     // Without an `acont`, the name of the track says (`... original`).
     let named_original = content.is_none()
         && track
@@ -114,7 +127,8 @@ fn format(raw: &Value) -> Option<Format<'_>> {
         .and_then(|t| t.get("id")?.as_str())
         .and_then(|id| id.split('.').next())
         .filter(|code| !code.is_empty())
-        .map(str::to_owned);
+        .map(str::to_owned)
+        .or_else(|| url_tag("lang"));
     Some(Format {
         raw,
         itag: number(raw.get("itag"))?.to_string(),
@@ -262,7 +276,17 @@ pub fn info(player: &Value, settings: &Settings) -> Option<Value> {
         .collect();
     spoken.sort_unstable();
     spoken.dedup();
-    let unsure = !marked && spoken.len() > 1;
+    // Several default-looking sound tracks of one itag: the same kind of
+    // stream in different languages, with nothing saying which is whose.
+    let mut defaults: Vec<&str> = formats
+        .iter()
+        .filter(|f| !f.video && !f.plain && f.default_audio)
+        .map(|f| f.itag.as_str())
+        .collect();
+    let all = defaults.len();
+    defaults.sort_unstable();
+    defaults.dedup();
+    let unsure = !marked && (spoken.len() > 1 || defaults.len() < all);
     let own: Vec<&Format> = formats
         .iter()
         .filter(|f| !f.video && !unsure && if marked { f.original } else { f.default_audio })
@@ -408,6 +432,50 @@ mod tests {
         assert_eq!(s.streams.unwrap().len(), 2);
         assert_eq!(s.all_heights, [2160, 1080, 720]);
         assert_eq!(s.user_agent.as_deref(), Some(USER_AGENT));
+    }
+
+    #[test]
+    fn reads_the_tracks_from_the_address_when_the_format_leaves_them_out() {
+        let mut p = player();
+        let list = p["streamingData"]["adaptiveFormats"]
+            .as_array_mut()
+            .unwrap();
+        list.retain(|f| f["mimeType"].as_str().unwrap().starts_with("video/"));
+        for (lang, content, bitrate) in [
+            ("ar", "dubbed", 128_800),
+            ("pt", "dubbed", 130_100),
+            ("es", "dubbed", 130_600),
+            ("en", "original", 124_300),
+        ] {
+            let mut f = stream(251, "audio/webm; codecs=\"opus\"", 0, bitrate);
+            let url = format!(
+                "{}&xtags=acont%3D{content}%3Alang%3D{lang}",
+                f["url"].as_str().unwrap()
+            );
+            f["url"] = json!(url);
+            list.push(f);
+        }
+        let mut drc = stream(251, "audio/webm; codecs=\"opus\"", 0, 140_000);
+        drc["url"] = json!(format!(
+            "{}&xtags=acont%3Doriginal%3Adrc%3D1%3Alang%3Den",
+            drc["url"].as_str().unwrap()
+        ));
+        list.push(drc);
+        let own = info(&p, &settings("{}")).unwrap();
+        assert_eq!(own["requested_formats"][1]["language"], json!("en"));
+        assert_eq!(own["requested_formats"][1]["abr"], json!(124.3));
+        let dub = info(&p, &settings(r#"{"audioLanguage":"es"}"#)).unwrap();
+        assert_eq!(dub["requested_formats"][1]["language"], json!("es"));
+    }
+
+    #[test]
+    fn same_itag_tracks_with_nothing_to_tell_them_apart_are_left_to_ytdlp() {
+        let mut p = player();
+        let list = p["streamingData"]["adaptiveFormats"]
+            .as_array_mut()
+            .unwrap();
+        list.push(stream(251, "audio/webm; codecs=\"opus\"", 0, 150_000));
+        assert!(info(&p, &settings("{}")).is_none());
     }
 
     #[test]

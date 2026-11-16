@@ -153,6 +153,23 @@ extension NavigationActions on AppController {
     _notice(tr('Could not find the channel {0}', [item.channel]));
   }
 
+  /// Opens a channel known only by its id, as a pasted link names it; its
+  /// name comes with the first page of its videos.
+  void openChannelFromLink(ChannelRef ref) {
+    openChannel(ref);
+    if (ref.name.isNotEmpty) return;
+    final loader = channelVideos;
+    if (loader == null) return;
+    void named() {
+      final name = loader.items.map((item) => item.channel).firstWhere((name) => name.isNotEmpty && name != 'YouTube', orElse: () => '');
+      if (name.isEmpty && loader.loading) return;
+      loader.removeListener(named);
+      if (name.isNotEmpty && channel?.id == ref.id && (channel?.name.isEmpty ?? false)) _update(() => channel = ChannelRef(ref.id, name, ref.avatar));
+    }
+
+    loader.addListener(named);
+  }
+
   void openChannel(ChannelRef ref) {
     final repository = _repository;
     if (repository == null) return;

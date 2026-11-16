@@ -3535,5 +3535,11 @@
   "Next up": "Следва",
   "Searched": "Търсени",
   "You were here last time · Tap to refresh": "Спряхте тук · Докоснете за опресняване",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Плейърът не успя да отвори видеопотока и не посочи причина. В Настройки › Мрежа › Проверка на мрежата можете да видите коя част е блокирана."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Плейърът не успя да отвори видеопотока и не посочи причина. В Настройки › Мрежа › Проверка на мрежата можете да видите коя част е блокирана.",
+  "Subtitles in picture in picture": "Субтитри (Картина в картината)",
+  "Subtitles in the mini player": "Субтитри (Миниплейър в приложението)",
+  "Fill the window": "Запълни прозореца",
+  "Fill the window (W)": "Запълни прозореца (W)",
+  "Hide the side rail while watching": "Скриване на страничната лента при гледане",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Видеото получава своето място, както в YouTube; в режим кино лентата винаги е скрита"
 }

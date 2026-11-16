@@ -163,6 +163,17 @@ extension PlaybackOpening on AppController {
       if (!item.isLive && video?.info['live_status'] == 'is_live') {
         item = item.withLiveStatus('is_live');
         if (playing?.id == item.id) _update(() => playing = item);
+        // Asked as a live stream, yt-dlp also asks the clients whose live
+        // addresses a phone can play (see StreamResolver.liveClients).
+        if ((Platform.isAndroid || Platform.isIOS) && LiveSplit.hls(video!.info, _playback) == null) {
+          logInfo('${item.id} turned out live; asking yt-dlp again for its live streams');
+          try {
+            video = await _repository!.streams.resolve(item.id, _formatFor(item.id), formatSort: _formatSort, live: true);
+          } catch (e) {
+            logWarn('Asking again for the live streams of ${item.id} failed: $e');
+          }
+          if (serial != _playSerial) return false;
+        }
       }
       final live = item.isLive;
       // A live stream starts at its live edge, not at a remembered spot.
@@ -182,6 +193,16 @@ extension PlaybackOpening on AppController {
       _openedDirect = direct != null ? item.id : null;
       final split = live && video != null && relay != null && _liveSplitOff != item.id ? _liveSplitAddress(video, relay) : null;
       _liveSplit = split != null ? item.id : null;
+      // libmpv cannot start yt-dlp on a phone, so a live stream's address
+      // is not left to its ytdl_hook there: mpv given the watch page itself
+      // answers "Failed to recognize file format".
+      final mobileLive = live && split == null && video != null && (Platform.isAndroid || Platform.isIOS) ? LiveSplit.hls(video.info, _playback) : null;
+      if (live && split == null && (Platform.isAndroid || Platform.isIOS) && mobileLive == null) {
+        final formats = [for (final f in (video?.info['formats'] as List? ?? const [])) if (f is Map) '${f['format_id']}:${f['protocol']}'];
+        logWarn('Live ${item.id}: no HLS stream among ${formats.length} formats ${formats.join(' ')}');
+        throw StateError('YouTube gave no live stream this version can play');
+      }
+      if (mobileLive != null) logInfo('Live ${item.id} plays HLS ${mobileLive['format_id'] ?? 'manifest'} (${mobileLive['height'] ?? '?'}p ${mobileLive['vcodec'] ?? ''})');
       // Which TLS carries the streams: only the core's relay uses the
       // post-quantum setting.
       final path = split != null || _relayed == item.id
@@ -197,7 +218,12 @@ extension PlaybackOpening on AppController {
         // drift out of sync, so they are taken only above it.
         await platform.setProperty('ytdl-format', live ? FormatPolicy.liveExpression(_playback, format) : format);
         await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: direct == null ? video?.file.path : null, proxy: proxy.ytDlpValue(settings.proxyMode), formatSort: _formatSort));
-        if (direct != null && agent != null) await platform.setProperty('user-agent', agent);
+        final liveAgent = (mobileLive?['http_headers'] as Map?)?['User-Agent'] as String? ?? agent;
+        if (direct != null && agent != null) {
+          await platform.setProperty('user-agent', agent);
+        } else if (mobileLive != null && liveAgent != null) {
+          await platform.setProperty('user-agent', liveAgent);
+        }
         // The relay asks YouTube in chunks and reads each reply to its end
         // itself; libmpv asking it in small pieces would only cut those
         // chunks short.
@@ -221,7 +247,7 @@ extension PlaybackOpening on AppController {
         });
       }
       await AppController._forgetCrop(player);
-      await player.open(Media(direct ?? split ?? item.url, start: start), play: play);
+      await player.open(Media(direct ?? split ?? mobileLive?['url'] as String? ?? item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
       _lastDrops = 0;

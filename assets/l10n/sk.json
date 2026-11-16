@@ -3535,5 +3535,11 @@
   "Next up": "Ďalej",
   "Searched": "Vyhľadané",
   "You were here last time · Tap to refresh": "Naposledy ste skončili tu · Ťuknutím obnovíte",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Prehrávač nedokázal otvoriť video stream a neuviedol dôvod. Nastavenia › Sieť › Kontrola siete ukáže, ktorá časť je zablokovaná."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Prehrávač nedokázal otvoriť video stream a neuviedol dôvod. Nastavenia › Sieť › Kontrola siete ukáže, ktorá časť je zablokovaná.",
+  "Subtitles in picture in picture": "Titulky (Obraz v obraze)",
+  "Subtitles in the mini player": "Titulky (Miniprehrávač v aplikácii)",
+  "Fill the window": "Vyplniť okno",
+  "Fill the window (W)": "Vyplniť okno (W)",
+  "Hide the side rail while watching": "Skryť bočný panel pri sledovaní",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video dostane svoje miesto ako na YouTube; v režime kina je panel vždy skrytý"
 }

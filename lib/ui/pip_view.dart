@@ -81,7 +81,9 @@ class _PipViewState extends State<PipView> {
     final player = _controller.player!;
     final scale = (MediaQuery.sizeOf(context).shortestSide / 280).clamp(0.6, 2.0);
     // The same subtitles as the player's, sized for the small window.
-    final subtitles = subtitleViewFor(_controller.settings, smallWindow: MediaQuery.sizeOf(context), secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid, libass: _controller.libassDraws);
+    final subtitles = !_controller.settings.pipSubtitles
+        ? const SubtitleViewConfiguration(visible: false)
+        : subtitleViewFor(_controller.settings, smallWindow: MediaQuery.sizeOf(context), secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid, libass: _controller.libassDraws);
     return CallbackShortcuts(
       bindings: {
         ...playerShortcuts(_controller, () => null),
@@ -102,6 +104,7 @@ class _PipViewState extends State<PipView> {
               VideoBox(
                 controller: _controller,
                 smallSubtitles: true,
+                subtitlesOff: (_) => !_controller.settings.pipSubtitles,
                 child: WarmLayer(
                   child: Video(
                     controller: _controller.videoController!,

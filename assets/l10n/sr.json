@@ -3535,5 +3535,11 @@
   "Next up": "Следеће",
   "Searched": "Претражено",
   "You were here last time · Tap to refresh": "Овде сте стали прошли пут · Додирните за освежавање",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Плејер није могао да отвори видео ток и није навео разлог. Подешавања › Мрежа › Провера мреже показује који део је блокиран."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Плејер није могао да отвори видео ток и није навео разлог. Подешавања › Мрежа › Провера мреже показује који део је блокиран.",
+  "Subtitles in picture in picture": "Титлови (Слика у слици)",
+  "Subtitles in the mini player": "Титлови (Мини плејер у апликацији)",
+  "Fill the window": "Попуни прозор",
+  "Fill the window (W)": "Попуни прозор (W)",
+  "Hide the side rail while watching": "Сакриј бочну траку током гледања",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Видео добија свој простор, као на YouTube-у; у режиму биоскопа је трака увек скривена"
 }

@@ -3535,5 +3535,11 @@
   "Next up": "Okulandelayo",
   "Searched": "Okusesheliwe",
   "You were here last time · Tap to refresh": "Ushiye lapha ngokugcina · Thepha ukuvuselela",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Umdlali ubengakwazi ukuvula umsinga wevidiyo, futhi akanikanga sizathu. Izilungiselelo › Inethiwekhi › Ukuhlolwa kwenethiwekhi kubonisa ukuthi iyiphi ingxenye evinjiwe."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Umdlali ubengakwazi ukuvula umsinga wevidiyo, futhi akanikanga sizathu. Izilungiselelo › Inethiwekhi › Ukuhlolwa kwenethiwekhi kubonisa ukuthi iyiphi ingxenye evinjiwe.",
+  "Subtitles in picture in picture": "Amagama-ngezansi (Isithombe-esithombeni)",
+  "Subtitles in the mini player": "Amagama-ngezansi (Isidlali esincane se-app)",
+  "Fill the window": "Gcwalisa iwindi",
+  "Fill the window (W)": "Gcwalisa iwindi (W)",
+  "Hide the side rail while watching": "Fihla ibha eseceleni ngenkathi ubukela",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Ividiyo ithola isikhala sayo, njengoba kwenza ku-YouTube; imodi yetiyetha ihlala iyifihla"
 }

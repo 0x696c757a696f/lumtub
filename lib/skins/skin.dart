@@ -148,6 +148,19 @@ class Skin {
   late final Color? primaryButtonText = _readable(colorOf(_controls['primaryButtonText']) ?? colors.onAccent, primaryButton, 'controls.primaryButtonText');
   late final SkinSurface? chip = SkinSurface.parse(_controls['chip'], this);
   late final SkinSurface? chipSelected = SkinSurface.parse(_controls['chipSelected'], this);
+  /// The words on a chip that is off: controls.chipText, else the button
+  /// text, else the page text, whichever reads on the chip (the page where
+  /// the chip is see-through); null leaves the theme's text colour.
+  late final Color? chipText = () {
+    final fill = chip?.baseColor;
+    final bgs = fill == null || fill.a == 0 ? [colors.page] : chip!.tones(colors.page);
+    double worst(Color c) => bgs.map((bg) => contrastRatio(Color.alphaBlend(c, bg), bg)).reduce((a, b) => a < b ? a : b);
+    if (colorOf(_controls['chipText']) case final own?) return readableOnAll(own, bgs, 'controls.chipText');
+    for (final c in [buttonText, colors.text]) {
+      if (c != null && worst(c) >= 4.5) return c;
+    }
+    return null;
+  }();
   late final Color? chipSelectedText = _readable(colorOf(_controls['chipSelectedText']), chipSelected, 'controls.chipSelectedText');
   late final SkinSurface? field = SkinSurface.parse(_controls['field'], this);
   late final SkinSurface? navSelected = SkinSurface.parse(_controls['navSelected'], this);
@@ -270,6 +283,7 @@ class Skin {
       ..player.deck?.glyph
       ..buttonText
       ..primaryButtonText
+      ..chipText
       ..chipSelectedText
       ..navSelectedText
       ..navText

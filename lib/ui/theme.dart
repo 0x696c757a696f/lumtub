@@ -422,7 +422,7 @@ ThemeData buildAppTheme(
       labelStyle: font(TextStyle(
         fontSize: 14,
         height: 20 / 14,
-        color: WidgetStateColor.resolveWith((states) => states.contains(WidgetState.selected) ? skin?.chipSelectedText ?? scheme.surface : skin?.buttonText ?? scheme.onSurface),
+        color: WidgetStateColor.resolveWith((states) => states.contains(WidgetState.selected) ? skin?.chipSelectedText ?? scheme.surface : skin?.chipText ?? scheme.onSurface),
       )),
       secondaryLabelStyle: font(TextStyle(fontSize: 14, height: 20 / 14, color: scheme.surface, fontWeight: FontWeight.w600)),
       padding: const EdgeInsets.symmetric(horizontal: Space.s),

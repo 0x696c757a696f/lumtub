@@ -10,6 +10,8 @@ void main() {
 
   test('treats other input as a search query', () {
     expect(AppController.parseYoutubeId('lofi hip hop'), isNull);
+    expect(AppController.parseYoutubeId('www.youtube.com/watch?v=dQw4w9WgXcQ&list=PL0123456789'), 'dQw4w9WgXcQ');
+    expect(AppController.parseYoutubeId('music.youtube.com/watch?v=dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
     expect(AppController.parseYoutubeId('http://www.youtube.com/watch?v=dQw4w9WgXcQ'), isNull);
     expect(AppController.parseYoutubeId('https://example.com/watch?v=dQw4w9WgXcQ'), isNull);
   });

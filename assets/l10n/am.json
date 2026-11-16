@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "ባለፈው እዚህ ደርሰው ነበር · ለማደስ ይንኩ",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ማጫወቻው የቪዲዮውን ዥረት መክፈት አልቻለም፣ ምክንያትም አልሰጠም። ቅንብሮች › አውታረ መረብ › የአውታረ መረብ ፍተሻ የትኛው ክፍል እንደታገደ ያሳያል።",
   "Subtitles in picture in picture": "የትርጉም ጽሑፍ (ሥዕል-በ-ሥዕል)",
-  "Subtitles in the mini player": "የትርጉም ጽሑፍ (በመተግበሪያ ውስጥ ሚኒ ማጫወቻ)"
+  "Subtitles in the mini player": "የትርጉም ጽሑፍ (በመተግበሪያ ውስጥ ሚኒ ማጫወቻ)",
+  "Fill the window": "መስኮቱን ሙላ",
+  "Hide the top bar in theater mode": "በሲኒማ ሁነታ የላይኛውን አሞሌ ደብቅ",
+  "The side rail always hides in theater mode; press T to bring them back": "የጎን አሞሌው በሲኒማ ሁነታ ሁልጊዜ ይደበቃል፤ ለመመለስ T ይጫኑ"
 }

@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Tu ste ostali zadnjič · Tapnite za osvežitev",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Predvajalnik ni mogel odpreti video toka in ni navedel razloga. Nastavitve › Omrežje › Preverjanje omrežja pokaže, kateri del je blokiran.",
   "Subtitles in picture in picture": "Podnapisi (Slika v sliki)",
-  "Subtitles in the mini player": "Podnapisi (Mini predvajalnik v aplikaciji)"
+  "Subtitles in the mini player": "Podnapisi (Mini predvajalnik v aplikaciji)",
+  "Fill the window": "Zapolni okno",
+  "Hide the top bar in theater mode": "Skrij zgornjo vrstico v kinematografskem načinu",
+  "The side rail always hides in theater mode; press T to bring them back": "Stranska vrstica je v kinematografskem načinu vedno skrita; pritisnite T, da ju vrnete"
 }

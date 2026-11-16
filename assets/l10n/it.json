@@ -3542,5 +3542,8 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "Ora: {0}. Ctrl + rotellina cambia sempre la velocità",
   "mouse wheel volume brightness": "mouse rotellina volume luminosità",
   "Subtitles in picture in picture": "Sottotitoli (Picture in picture)",
-  "Subtitles in the mini player": "Sottotitoli (Miniplayer nell'app)"
+  "Subtitles in the mini player": "Sottotitoli (Miniplayer nell'app)",
+  "Fill the window": "Riempi la finestra",
+  "Hide the top bar in theater mode": "Nascondi la barra superiore in modalità cinema",
+  "The side rail always hides in theater mode; press T to bring them back": "La barra laterale è sempre nascosta in modalità cinema; premi T per mostrarle di nuovo"
 }

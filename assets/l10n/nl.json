@@ -3542,5 +3542,8 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "Nu: {0}. Ctrl + scrollwiel wijzigt altijd de snelheid",
   "mouse wheel volume brightness": "muis scrollwiel volume helderheid",
   "Subtitles in picture in picture": "Ondertitels (Picture-in-picture)",
-  "Subtitles in the mini player": "Ondertitels (Minispeler in de app)"
+  "Subtitles in the mini player": "Ondertitels (Minispeler in de app)",
+  "Fill the window": "Venster vullen",
+  "Hide the top bar in theater mode": "Bovenbalk verbergen in theatermodus",
+  "The side rail always hides in theater mode; press T to bring them back": "De zijbalk wordt in theatermodus altijd verborgen; druk op T om ze terug te halen"
 }

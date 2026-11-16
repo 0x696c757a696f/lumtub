@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Jäit tähän viime kerralla · Napauta päivittääksesi",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Soitin ei voinut avata videovirtaa eikä kertonut syytä. Asetukset › Verkko › Verkkotarkistus näyttää, mikä osa on estetty.",
   "Subtitles in picture in picture": "Tekstitys (Kuva kuvassa)",
-  "Subtitles in the mini player": "Tekstitys (Sovelluksen sisäinen minisoitin)"
+  "Subtitles in the mini player": "Tekstitys (Sovelluksen sisäinen minisoitin)",
+  "Fill the window": "Täytä ikkuna",
+  "Hide the top bar in theater mode": "Piilota yläpalkki teatteritilassa",
+  "The side rail always hides in theater mode; press T to bring them back": "Sivupalkki piilotetaan aina teatteritilassa; palauta ne painamalla T"
 }

@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Овде сте стали прошли пут · Додирните за освежавање",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Плејер није могао да отвори видео ток и није навео разлог. Подешавања › Мрежа › Провера мреже показује који део је блокиран.",
   "Subtitles in picture in picture": "Титлови (Слика у слици)",
-  "Subtitles in the mini player": "Титлови (Мини плејер у апликацији)"
+  "Subtitles in the mini player": "Титлови (Мини плејер у апликацији)",
+  "Fill the window": "Попуни прозор",
+  "Hide the top bar in theater mode": "Сакриј горњу траку у режиму биоскопа",
+  "The side rail always hides in theater mode; press T to bring them back": "Бочна трака се увек скрива у режиму биоскопа; притисните T да их вратите"
 }

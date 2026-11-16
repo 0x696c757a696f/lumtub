@@ -3542,5 +3542,8 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "Şu an: {0}. Ctrl + tekerlek her zaman hızı değiştirir",
   "mouse wheel volume brightness": "fare tekerlek ses parlaklık",
   "Subtitles in picture in picture": "Altyazı (Pencere içinde pencere)",
-  "Subtitles in the mini player": "Altyazı (Uygulama içi mini oynatıcı)"
+  "Subtitles in the mini player": "Altyazı (Uygulama içi mini oynatıcı)",
+  "Fill the window": "Pencereyi doldur",
+  "Hide the top bar in theater mode": "Sinema modunda üst çubuğu gizle",
+  "The side rail always hides in theater mode; press T to bring them back": "Kenar çubuğu sinema modunda her zaman gizlenir; geri getirmek için T tuşuna basın"
 }

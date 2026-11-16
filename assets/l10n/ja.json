@@ -3542,5 +3542,8 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "現在：{0}。Ctrl + ホイールは常に再生速度を変更",
   "mouse wheel volume brightness": "マウス ホイール 音量 明るさ",
   "Subtitles in picture in picture": "ピクチャーインピクチャーで字幕を表示",
-  "Subtitles in the mini player": "アプリ内ミニプレーヤーで字幕を表示"
+  "Subtitles in the mini player": "アプリ内ミニプレーヤーで字幕を表示",
+  "Fill the window": "ウィンドウいっぱいに表示",
+  "Hide the top bar in theater mode": "シアターモードで上部バーを隠す",
+  "The side rail always hides in theater mode; press T to bring them back": "サイドレールはシアターモードでは常に非表示になります。Tキーで再表示できます"
 }

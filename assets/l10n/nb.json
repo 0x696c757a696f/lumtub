@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Du var her sist · Trykk for å oppdatere",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Spilleren kunne ikke åpne videostrømmen, og oppga ingen årsak. Innstillinger › Nettverk › Nettverkssjekk viser hvilken del som er blokkert.",
   "Subtitles in picture in picture": "Undertekster (Bilde-i-bilde)",
-  "Subtitles in the mini player": "Undertekster (Minispiller i appen)"
+  "Subtitles in the mini player": "Undertekster (Minispiller i appen)",
+  "Fill the window": "Fyll vinduet",
+  "Hide the top bar in theater mode": "Skjul toppfeltet i kinomodus",
+  "The side rail always hides in theater mode; press T to bring them back": "Sidefeltet skjules alltid i kinomodus; trykk T for å få dem tilbake"
 }

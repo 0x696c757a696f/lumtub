@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "तपाईं पछिल्लो पटक यहीँ हुनुहुन्थ्यो · रिफ्रेस गर्न ट्याप गर्नुहोस्",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "प्लेयरले भिडियो स्ट्रिम खोल्न सकेन, र कुनै कारण पनि दिएन। सेटिङ › नेटवर्क › नेटवर्क जाँचमा कुन भाग रोकिएको छ भन्ने देखिन्छ।",
   "Subtitles in picture in picture": "उपशीर्षक (पिक्चर-इन-पिक्चर)",
-  "Subtitles in the mini player": "उपशीर्षक (एपभित्रको मिनी प्लेयर)"
+  "Subtitles in the mini player": "उपशीर्षक (एपभित्रको मिनी प्लेयर)",
+  "Fill the window": "विन्डो भर्नुहोस्",
+  "Hide the top bar in theater mode": "थिएटर मोडमा माथिको बार लुकाउनुहोस्",
+  "The side rail always hides in theater mode; press T to bring them back": "थिएटर मोडमा साइड रेल सधैं लुकेको हुन्छ; तिनलाई फर्काउन T थिच्नुहोस्"
 }

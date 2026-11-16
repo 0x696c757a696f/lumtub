@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Paskutinį kartą buvote čia · Bakstelėkite, kad atnaujintumėte",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Grotuvui nepavyko atidaryti vaizdo srauto ir nenurodė priežasties. Nustatymai › Tinklas › Tinklo patikra parodo, kuri dalis užblokuota.",
   "Subtitles in picture in picture": "Subtitrai (Paveikslėlis paveiksle)",
-  "Subtitles in the mini player": "Subtitrai (Programos mažas langas)"
+  "Subtitles in the mini player": "Subtitrai (Programos mažas langas)",
+  "Fill the window": "Užpildyti langą",
+  "Hide the top bar in theater mode": "Slėpti viršutinę juostą kino teatro režimu",
+  "The side rail always hides in theater mode; press T to bring them back": "Šoninė juosta kino teatro režimu visada paslėpta; paspauskite T, kad jas grąžintumėte"
 }

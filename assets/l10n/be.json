@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Вы спыніліся тут · Націсніце, каб абнавіць",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Прайгравальнік не змог адкрыць відэапаток і не назваў прычыну. У Налады › Сетка › Праверка сеткі можна ўбачыць, што менавіта блакуецца.",
   "Subtitles in picture in picture": "Субцітры (Відэа ў відэа)",
-  "Subtitles in the mini player": "Субцітры (Міні-акно ў праграме)"
+  "Subtitles in the mini player": "Субцітры (Міні-акно ў праграме)",
+  "Fill the window": "Запоўніць акно",
+  "Hide the top bar in theater mode": "Хаваць верхнюю панэль у рэжыме кінатэатра",
+  "The side rail always hides in theater mode; press T to bring them back": "Бакавая панэль заўсёды хаваецца ў рэжыме кінатэатра; націсніце T, каб вярнуць іх"
 }

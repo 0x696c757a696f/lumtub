@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Quedaches por aquí a última vez · Toca para actualizar",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "O reprodutor non puido abrir o fluxo de vídeo e non deu ningún motivo. En Configuración › Rede › Comprobación da rede podes ver que parte está bloqueada.",
   "Subtitles in picture in picture": "Subtítulos (Imaxe en imaxe)",
-  "Subtitles in the mini player": "Subtítulos (Minirreprodutor na aplicación)"
+  "Subtitles in the mini player": "Subtítulos (Minirreprodutor na aplicación)",
+  "Fill the window": "Encher a xanela",
+  "Hide the top bar in theater mode": "Ocultar a barra superior no modo cine",
+  "The side rail always hides in theater mode; press T to bring them back": "A barra lateral sempre se oculta no modo cine; preme T para voltar amosalas"
 }

@@ -22,6 +22,7 @@ import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
 import '../../progress_line.dart';
+import '../../right_click.dart';
 import '../../wheel_gesture.dart';
 import '../../shortcut_bindings.dart';
 import '../../video_codec.dart';
@@ -672,13 +673,20 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               enabled: prefs.keyboardShortcuts,
               onTap: () => showShortcutSettings(context, controller),
             ), subtitle: tr('Keyboard shortcuts')),
-        SettingEntry(tr('Right click on the video'), (context) => SwitchItem(
+        SettingEntry(tr('Right click on the video'), (context) => NormalItem(
               title: tr('Right click on the video'),
-              subtitle: tr('Exit fullscreen, or else go back'),
+              subtitle: prefs.rightClick.label,
               leading: _icon(AppIcons.handTap),
-              value: prefs.rightClickBack,
-              onChanged: (v) => savePrefs(prefs.copyWith(rightClickBack: v)),
-            ), subtitle: tr('mouse back')),
+              onTap: () => pickFromDialog<RightClick>(context, title: tr('Right click on the video'), value: prefs.rightClick, values: [for (final v in RightClick.values) (v, v.label)], onSelected: (v) => savePrefs(prefs.copyWith(rightClick: v))),
+            ), subtitle: '${tr('mouse back')} ${tr('Fill the window')}'),
+        if (!touchFirst)
+          SettingEntry(tr('Hide the top bar in theater mode'), (context) => SwitchItem(
+                title: tr('Hide the top bar in theater mode'),
+                subtitle: tr('The side rail always hides in theater mode; press T to bring them back'),
+                leading: _icon(AppIcons.frameCorners),
+                value: prefs.theaterHidesTopBar,
+                onChanged: (v) => savePrefs(prefs.copyWith(theaterHidesTopBar: v)),
+              ), subtitle: tr('Theater mode')),
         SettingEntry(tr('Keyboard shortcuts help'), (context) => NormalItem(
               title: tr('Keyboard shortcuts help'),
               subtitle: tr('View all player shortcuts'),

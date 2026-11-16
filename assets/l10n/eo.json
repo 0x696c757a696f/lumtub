@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Vi estis ĉi tie lastfoje · Tuŝetu por aktualigi",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "La ludilo ne povis malfermi la videofluon kaj ne donis kialon. Agordoj › Reto › Reta kontrolo montras, kiu parto estas blokita.",
   "Subtitles in picture in picture": "Subtekstoj (Bildo en bildo)",
-  "Subtitles in the mini player": "Subtekstoj (Miniludilo en la aplikaĵo)"
+  "Subtitles in the mini player": "Subtekstoj (Miniludilo en la aplikaĵo)",
+  "Fill the window": "Plenigi la fenestron",
+  "Hide the top bar in theater mode": "Kaŝi la supran breton en teatra reĝimo",
+  "The side rail always hides in theater mode; press T to bring them back": "La flanka breto ĉiam kaŝiĝas en teatra reĝimo; premu T por reigi ilin"
 }

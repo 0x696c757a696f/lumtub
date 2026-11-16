@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Þú varst hér síðast · Ýttu til að endurnýja",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Spilarinn gat ekki opnað myndstrauminn og gaf enga ástæðu. Stillingar › Net › Netathugun sýnir hvaða hluti er lokaður.",
   "Subtitles in picture in picture": "Skjátextar (Mynd í mynd)",
-  "Subtitles in the mini player": "Skjátextar (Smáspilari í forritinu)"
+  "Subtitles in the mini player": "Skjátextar (Smáspilari í forritinu)",
+  "Fill the window": "Fylla gluggann",
+  "Hide the top bar in theater mode": "Fela efstu stikuna í bíóstillingu",
+  "The side rail always hides in theater mode; press T to bring them back": "Hliðarstikan er alltaf falin í bíóstillingu; ýttu á T til að birta þær aftur"
 }

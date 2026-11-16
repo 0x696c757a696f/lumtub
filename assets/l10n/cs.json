@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Naposledy jste skončili tady · Klepnutím obnovíte",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Přehrávač nemohl otevřít video stream a neuvedl důvod. V Nastavení › Síť › Kontrola sítě uvidíte, která část je blokovaná.",
   "Subtitles in picture in picture": "Titulky (Obraz v obraze)",
-  "Subtitles in the mini player": "Titulky (Minipřehrávač v aplikaci)"
+  "Subtitles in the mini player": "Titulky (Minipřehrávač v aplikaci)",
+  "Fill the window": "Vyplnit okno",
+  "Hide the top bar in theater mode": "Skrýt horní lištu v režimu kina",
+  "The side rail always hides in theater mode; press T to bring them back": "Boční panel se v režimu kina vždy skryje; stisknutím T je znovu zobrazíte"
 }

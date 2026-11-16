@@ -28,6 +28,7 @@ import 'pages/video_pages.dart';
 import 'pages/watch_page.dart';
 import 'pages/youtube_playlist_page.dart';
 import 'lights_off.dart';
+import 'theater_mode.dart';
 import 'mini_player.dart';
 import 'pip_view.dart';
 import 'theme.dart';
@@ -74,6 +75,7 @@ class _AppShellState extends State<AppShell> {
   Timer? _supportCheck;
 
   AppController get _controller => widget.controller;
+  late final _layoutChanges = Listenable.merge([_controller, theaterMode]);
   late final _frames = FrameStats.start(() => _controller.onWatchPage ? (_controller.mini ? 'mini player' : 'watch') : _controller.mode.name, causes: () => _controller.rebuildCauses);
 
   static List<(PageMode, IconData, IconData, String)> get _destinations => [
@@ -424,7 +426,7 @@ class _AppShellState extends State<AppShell> {
           // The window is built again only when its layout changes; each
           // part of it listens for what it shows itself.
           child: SelectBuilder(
-            listenable: _controller,
+            listenable: _layoutChanges,
             select: () => _layoutOf(_controller),
             builder: (context, _, __) => LayoutBuilder(builder: (context, constraints) {
               _frames.rebuilt();
@@ -456,6 +458,9 @@ class _AppShellState extends State<AppShell> {
                     ),
                   );
               final watchingOnPhone = _controller.onWatchPage && watchesLikePhone(context);
+              // 剧场模式 gives the video the side rail's room too, as YouTube
+              // hides its guide while watching, and the top bar's if asked.
+              final theater = theaterMode.value && _controller.onWatchPage && !_controller.mini;
               final skinRail = skin != null && skin.drawsRail;
               _tvRail = Device.tv && rail && !skinRail;
               // The bar to show at the bottom, also while it slides away.
@@ -469,7 +474,7 @@ class _AppShellState extends State<AppShell> {
                 body: SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [
                   // A phone's watch page starts with the player, as phone
                   // apps do; back is the player's arrow or the system's.
-                  if (!watchingOnPhone && !_tvRail) _region(
+                  if (!watchingOnPhone && !_tvRail && !(theater && _controller.preferences.theaterHidesTopBar)) _region(
                     () => _TopBar.shownOf(_controller),
                     (context) => _TopBar(
                       wide: wide,
@@ -483,7 +488,7 @@ class _AppShellState extends State<AppShell> {
                   Expanded(child: Stack(children: [
                     Row(children: [
                       AnimatedVisibility.rail(
-                        visible: rail && !watchingOnPhone,
+                        visible: rail && !watchingOnPhone && !theater,
                         child: _region(
                           () => (_selectedIndex, _controller.mode == PageMode.settings && !_controller.onWatchPage, currentLanguage),
                           (context) => skinRail ? SkinRail(
@@ -583,6 +588,8 @@ class _AppShellState extends State<AppShell> {
         c.appearance.navigation,
         c.appearance.showStatusBar,
         c.preferences.lightsOffDim,
+        theaterMode.value,
+        c.preferences.theaterHidesTopBar,
       );
 
   /// A part of the window built again only when [select] reads something

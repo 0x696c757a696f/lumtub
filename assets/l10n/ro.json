@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Ai rămas aici data trecută · Atinge pentru a reîmprospăta",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Playerul nu a putut deschide fluxul video și nu a dat niciun motiv. Setări › Rețea › Verificare rețea arată care parte este blocată.",
   "Subtitles in picture in picture": "Subtitrări (Imagine în imagine)",
-  "Subtitles in the mini player": "Subtitrări (Miniplayer în aplicație)"
+  "Subtitles in the mini player": "Subtitrări (Miniplayer în aplicație)",
+  "Fill the window": "Umple fereastra",
+  "Hide the top bar in theater mode": "Ascunde bara de sus în modul cinema",
+  "The side rail always hides in theater mode; press T to bring them back": "Bara laterală este întotdeauna ascunsă în modul cinema; apasă T pentru a le readuce"
 }

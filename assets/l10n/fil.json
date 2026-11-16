@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Dito ka huling tumigil · I-tap para mag-refresh",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Hindi mabuksan ng player ang video stream at walang ibinigay na dahilan. Ipinapakita ng Mga Setting › Network › Network check kung aling bahagi ang naka-block.",
   "Subtitles in picture in picture": "Mga subtitle (Picture-in-picture)",
-  "Subtitles in the mini player": "Mga subtitle (Mini player sa loob ng app)"
+  "Subtitles in the mini player": "Mga subtitle (Mini player sa loob ng app)",
+  "Fill the window": "Punuin ang window",
+  "Hide the top bar in theater mode": "Itago ang top bar sa theater mode",
+  "The side rail always hides in theater mode; press T to bring them back": "Laging nakatago ang side rail sa theater mode; pindutin ang T para ibalik ang mga ito"
 }

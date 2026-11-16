@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "കഴിഞ്ഞ തവണ നിങ്ങൾ ഇവിടെ ആയിരുന്നു · റിഫ്രഷ് ചെയ്യാൻ ടാപ്പ് ചെയ്യുക",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "പ്ലെയറിന് വീഡിയോ സ്ട്രീം തുറക്കാനായില്ല, കാരണവും നൽകിയില്ല. ക്രമീകരണങ്ങൾ › നെറ്റ്‌വർക്ക് › നെറ്റ്‌വർക്ക് പരിശോധന എന്നതിൽ ഏത് ഭാഗമാണ് തടഞ്ഞിരിക്കുന്നതെന്ന് കാണാം.",
   "Subtitles in picture in picture": "സബ്ടൈറ്റിലുകൾ (പിക്ചർ-ഇൻ-പിക്ചർ)",
-  "Subtitles in the mini player": "സബ്ടൈറ്റിലുകൾ (ആപ്പിനുള്ളിലെ മിനി പ്ലെയർ)"
+  "Subtitles in the mini player": "സബ്ടൈറ്റിലുകൾ (ആപ്പിനുള്ളിലെ മിനി പ്ലെയർ)",
+  "Fill the window": "വിൻഡോ നിറയ്ക്കുക",
+  "Hide the top bar in theater mode": "തിയേറ്റർ മോഡിൽ മുകളിലെ ബാർ മറയ്ക്കുക",
+  "The side rail always hides in theater mode; press T to bring them back": "തിയേറ്റർ മോഡിൽ സൈഡ് റെയിൽ എപ്പോഴും മറയ്ക്കപ്പെടും; അവ തിരികെ കൊണ്ടുവരാൻ T അമർത്തുക"
 }

@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "ຄັ້ງກ່ອນທ່ານມາຮອດບ່ອນນີ້ · ແຕະເພື່ອໂຫຼດໃໝ່",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ເຄື່ອງຫຼິ້ນເປີດສະຕຣີມວິດີໂອບໍ່ໄດ້ ແລະ ບໍ່ບອກເຫດຜົນ. ເບິ່ງໄດ້ທີ່ ການຕັ້ງຄ່າ › ເຄືອຂ່າຍ › ການກວດເຄືອຂ່າຍ ວ່າສ່ວນໃດຖືກບລັອກ.",
   "Subtitles in picture in picture": "ຄຳບັນຍາຍ (ພາບຊ້ອນພາບ)",
-  "Subtitles in the mini player": "ຄຳບັນຍາຍ (ເຄື່ອງຫຼິ້ນຂະໜາດນ້ອຍໃນແອັບ)"
+  "Subtitles in the mini player": "ຄຳບັນຍາຍ (ເຄື່ອງຫຼິ້ນຂະໜາດນ້ອຍໃນແອັບ)",
+  "Fill the window": "ເຕັມໜ້າຕ່າງ",
+  "Hide the top bar in theater mode": "ເຊື່ອງແຖບດ້ານເທິງໃນໂໝດໂຮງໜັງ",
+  "The side rail always hides in theater mode; press T to bring them back": "ແຖບດ້ານຂ້າງຖືກເຊື່ອງສະເໝີໃນໂໝດໂຮງໜັງ; ກົດ T ເພື່ອນຳກັບຄືນມາ"
 }

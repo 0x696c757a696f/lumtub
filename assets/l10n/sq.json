@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Ke mbetur këtu herën e fundit · Prek për të rifreskuar",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Luajtësi nuk e hapi dot rrjedhën e videos dhe nuk dha asnjë arsye. Cilësimet › Rrjeti › Kontrolli i rrjetit tregon cila pjesë është e bllokuar.",
   "Subtitles in picture in picture": "Titrat (Pamje brenda pamjes)",
-  "Subtitles in the mini player": "Titrat (Luajtës i vogël brenda aplikacionit)"
+  "Subtitles in the mini player": "Titrat (Luajtës i vogël brenda aplikacionit)",
+  "Fill the window": "Mbushe dritaren",
+  "Hide the top bar in theater mode": "Fshih shiritin e sipërm në modalitetin kinema",
+  "The side rail always hides in theater mode; press T to bring them back": "Shiriti anësor fshihet gjithmonë në modalitetin kinema; shtyp T për t'i kthyer"
 }

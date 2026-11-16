@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "যোৱাবাৰ আপুনি ইয়াতে আছিল · ৰিফ্ৰেচ কৰিবলৈ টেপ কৰক",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "প্লেয়াৰে ভিডিঅ' ষ্ট্ৰীমটো খুলিব নোৱাৰিলে, আৰু কোনো কাৰণ নিদিলে। ছেটিংছ › নেটৱৰ্ক › নেটৱৰ্ক পৰীক্ষাই দেখুৱায় কোনটো অংশ ব্লক হৈছে।",
   "Subtitles in picture in picture": "ছাবটাইটেল (পিকচাৰ ইন পিকচাৰ)",
-  "Subtitles in the mini player": "ছাবটাইটেল (এপৰ ভিতৰৰ মিনি প্লেয়াৰ)"
+  "Subtitles in the mini player": "ছাবটাইটেল (এপৰ ভিতৰৰ মিনি প্লেয়াৰ)",
+  "Fill the window": "উইন্ডো পূৰ্ণ কৰক",
+  "Hide the top bar in theater mode": "থিয়েটাৰ মোডত ওপৰৰ বাৰ লুকুৱাওক",
+  "The side rail always hides in theater mode; press T to bring them back": "থিয়েটাৰ মোডত কাষৰ ৰেইল সদায় লুকাই থাকে; সেইবোৰ ঘুৰাই আনিবলৈ T টিপক"
 }

@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Soňky gezek şu ýerdediňiz · Täzelemek üçin basyň",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Pleýer wideo akymyny açyp bilmedi we sebäp görkezmedi. Sazlamalar › Ulgam › Ulgam barlagy haýsy bölegiň bloklanandygyny görkezýär.",
   "Subtitles in picture in picture": "Subtitrler (Surat içinde surat)",
-  "Subtitles in the mini player": "Subtitrler (Programma içindäki kiçi pleýer)"
+  "Subtitles in the mini player": "Subtitrler (Programma içindäki kiçi pleýer)",
+  "Fill the window": "Penjiräni doldur",
+  "Hide the top bar in theater mode": "Teatr režimde ýokarky paneli ýaşyr",
+  "The side rail always hides in theater mode; press T to bring them back": "Teatr režimde ýan panel hemişe ýaşyrylýar; olary yzyna getirmek üçin T basyň"
 }

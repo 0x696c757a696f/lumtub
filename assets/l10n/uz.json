@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Oxirgi marta shu yerda qolgansiz · Yangilash uchun bosing",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Pleyer video oqimini ocha olmadi va sabab ko'rsatmadi. Sozlamalar › Tarmoq › Tarmoq tekshiruvi qaysi qism bloklanganini ko'rsatadi.",
   "Subtitles in picture in picture": "Taglavhalar (Rasm ichida rasm)",
-  "Subtitles in the mini player": "Taglavhalar (Ilova ichidagi mini oyna)"
+  "Subtitles in the mini player": "Taglavhalar (Ilova ichidagi mini oyna)",
+  "Fill the window": "Oynani to‘ldirish",
+  "Hide the top bar in theater mode": "Kinoteatr rejimida yuqori panelni yashirish",
+  "The side rail always hides in theater mode; press T to bring them back": "Yon panel kinoteatr rejimida doim yashirinadi; ularni qaytarish uchun T tugmasini bosing"
 }

@@ -3542,5 +3542,8 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "الآن: {0}. ‏Ctrl + العجلة تغيّر السرعة دائمًا",
   "mouse wheel volume brightness": "فأرة عجلة صوت سطوع",
   "Subtitles in picture in picture": "الترجمة (نافذة عائمة)",
-  "Subtitles in the mini player": "الترجمة (المشغّل المصغّر داخل التطبيق)"
+  "Subtitles in the mini player": "الترجمة (المشغّل المصغّر داخل التطبيق)",
+  "Fill the window": "ملء النافذة",
+  "Hide the top bar in theater mode": "إخفاء الشريط العلوي في وضع المسرح",
+  "The side rail always hides in theater mode; press T to bring them back": "يُخفى الشريط الجانبي دائمًا في وضع المسرح؛ اضغط T لإعادتهما"
 }

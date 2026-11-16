@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "గత సారి మీరు ఇక్కడ ఉన్నారు · రిఫ్రెష్ చేయడానికి నొక్కండి",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ప్లేయర్ వీడియో స్ట్రీమ్‌ను తెరవలేకపోయింది, కారణం కూడా చెప్పలేదు. సెట్టింగ్‌లు › నెట్‌వర్క్ › నెట్‌వర్క్ తనిఖీ ఏ భాగం బ్లాక్ అయిందో చూపిస్తుంది.",
   "Subtitles in picture in picture": "ఉపశీర్షికలు (పిక్చర్-ఇన్-పిక్చర్)",
-  "Subtitles in the mini player": "ఉపశీర్షికలు (యాప్‌లో మినీ ప్లేయర్)"
+  "Subtitles in the mini player": "ఉపశీర్షికలు (యాప్‌లో మినీ ప్లేయర్)",
+  "Fill the window": "విండోను నింపండి",
+  "Hide the top bar in theater mode": "థియేటర్ మోడ్‌లో పై బార్‌ను దాచండి",
+  "The side rail always hides in theater mode; press T to bring them back": "థియేటర్ మోడ్‌లో సైడ్ రైల్ ఎల్లప్పుడూ దాగి ఉంటుంది; వాటిని తిరిగి తీసుకురావడానికి T నొక్కండి"
 }

@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Du var här förra gången · Tryck för att uppdatera",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Spelaren kunde inte öppna videoströmmen och angav ingen orsak. Inställningar › Nätverk › Nätverkskontroll visar vilken del som är blockerad.",
   "Subtitles in picture in picture": "Undertexter (Bild-i-bild)",
-  "Subtitles in the mini player": "Undertexter (Minispelare i appen)"
+  "Subtitles in the mini player": "Undertexter (Minispelare i appen)",
+  "Fill the window": "Fyll fönstret",
+  "Hide the top bar in theater mode": "Dölj det övre fältet i bioläge",
+  "The side rail always hides in theater mode; press T to bring them back": "Sidofältet döljs alltid i bioläge; tryck på T för att visa dem igen"
 }

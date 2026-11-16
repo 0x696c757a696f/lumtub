@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Спряхте тук · Докоснете за опресняване",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Плейърът не успя да отвори видеопотока и не посочи причина. В Настройки › Мрежа › Проверка на мрежата можете да видите коя част е блокирана.",
   "Subtitles in picture in picture": "Субтитри (Картина в картината)",
-  "Subtitles in the mini player": "Субтитри (Миниплейър в приложението)"
+  "Subtitles in the mini player": "Субтитри (Миниплейър в приложението)",
+  "Fill the window": "Запълни прозореца",
+  "Hide the top bar in theater mode": "Скриване на горната лента в режим кино",
+  "The side rail always hides in theater mode; press T to bring them back": "Страничната лента винаги се скрива в режим кино; натиснете T, за да ги върнете"
 }

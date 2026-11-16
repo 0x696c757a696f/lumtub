@@ -3542,5 +3542,8 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "Сейчас: {0}. Ctrl + колёсико всегда меняет скорость",
   "mouse wheel volume brightness": "мышь колёсико громкость яркость",
   "Subtitles in picture in picture": "Субтитры (Картинка в картинке)",
-  "Subtitles in the mini player": "Субтитры (Мини-проигрыватель в приложении)"
+  "Subtitles in the mini player": "Субтитры (Мини-проигрыватель в приложении)",
+  "Fill the window": "Во всё окно",
+  "Hide the top bar in theater mode": "Скрывать верхнюю панель в режиме кино",
+  "The side rail always hides in theater mode; press T to bring them back": "Боковая панель в режиме кино скрывается всегда; нажмите T, чтобы вернуть их"
 }

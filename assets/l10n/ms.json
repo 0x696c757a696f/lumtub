@@ -3537,5 +3537,8 @@
   "You were here last time · Tap to refresh": "Kali terakhir anda berhenti di sini · Ketik untuk muat semula",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Pemain tidak dapat membuka strim video dan tidak memberi sebab. Tetapan › Rangkaian › Semakan rangkaian menunjukkan bahagian mana yang disekat.",
   "Subtitles in picture in picture": "Sari kata (Gambar dalam gambar)",
-  "Subtitles in the mini player": "Sari kata (Pemain mini dalam aplikasi)"
+  "Subtitles in the mini player": "Sari kata (Pemain mini dalam aplikasi)",
+  "Fill the window": "Penuhkan tetingkap",
+  "Hide the top bar in theater mode": "Sembunyikan bar atas dalam mod teater",
+  "The side rail always hides in theater mode; press T to bring them back": "Bar sisi sentiasa disembunyikan dalam mod teater; tekan T untuk memaparkannya semula"
 }

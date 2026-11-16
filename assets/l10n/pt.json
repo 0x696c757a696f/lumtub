@@ -3542,5 +3542,8 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "Agora: {0}. Ctrl + roda sempre muda a velocidade",
   "mouse wheel volume brightness": "mouse roda volume brilho",
   "Subtitles in picture in picture": "Legendas (Picture-in-picture)",
-  "Subtitles in the mini player": "Legendas (Miniplayer no app)"
+  "Subtitles in the mini player": "Legendas (Miniplayer no app)",
+  "Fill the window": "Preencher a janela",
+  "Hide the top bar in theater mode": "Ocultar a barra superior no modo cinema",
+  "The side rail always hides in theater mode; press T to bring them back": "A barra lateral é sempre ocultada no modo cinema; pressione T para exibi-las novamente"
 }

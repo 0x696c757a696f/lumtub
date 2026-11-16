@@ -3544,5 +3544,7 @@
   "Subtitles in picture in picture": "ピクチャーインピクチャーで字幕を表示",
   "Subtitles in the mini player": "アプリ内ミニプレーヤーで字幕を表示",
   "Fill the window": "ウィンドウいっぱいに表示",
-  "Fill the window (W)": "ウィンドウいっぱいに表示 (W)"
+  "Fill the window (W)": "ウィンドウいっぱいに表示 (W)",
+  "Hide the side rail while watching": "視聴中はサイドバーを隠す",
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube と同じように動画に広い場所を譲ります。シアターモードでは常に隠れます"
 }

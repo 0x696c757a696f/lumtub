@@ -464,6 +464,7 @@ class _AppShellState extends State<AppShell> {
               // well and slides back in at the window's top edge, or for
               // the search keys; a touch screen keeps it.
               final theater = theaterMode.value && _controller.onWatchPage && !_controller.mini;
+              final railAside = theater || (_controller.onWatchPage && !_controller.mini && _controller.appearance.watchHidesRail);
               final peekTopBar = theater && !touchFirst;
               Widget topBar() => _region(
                     () => _TopBar.shownOf(_controller),
@@ -493,7 +494,7 @@ class _AppShellState extends State<AppShell> {
                   Expanded(child: Stack(children: [
                     Row(children: [
                       AnimatedVisibility.rail(
-                        visible: rail && !watchingOnPhone && !theater,
+                        visible: rail && !watchingOnPhone && !railAside,
                         child: _region(
                           () => (_selectedIndex, _controller.mode == PageMode.settings && !_controller.onWatchPage, currentLanguage),
                           (context) => skinRail ? SkinRail(
@@ -595,6 +596,7 @@ class _AppShellState extends State<AppShell> {
         c.appearance.showStatusBar,
         c.preferences.lightsOffDim,
         theaterMode.value,
+        c.appearance.watchHidesRail,
       );
 
   /// A part of the window built again only when [select] reads something

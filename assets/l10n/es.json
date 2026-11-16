@@ -3544,5 +3544,7 @@
   "Subtitles in picture in picture": "Subtítulos (Imagen en imagen)",
   "Subtitles in the mini player": "Subtítulos (Minirreproductor en la aplicación)",
   "Fill the window": "Llenar la ventana",
-  "Fill the window (W)": "Llenar la ventana (W)"
+  "Fill the window (W)": "Llenar la ventana (W)",
+  "Hide the side rail while watching": "Ocultar la barra lateral al ver vídeos",
+  "The video gets its room, as on YouTube; theater mode always hides it": "El vídeo gana espacio, como en YouTube; el modo cine siempre la oculta"
 }

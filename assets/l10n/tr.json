@@ -3544,5 +3544,7 @@
   "Subtitles in picture in picture": "Altyazı (Pencere içinde pencere)",
   "Subtitles in the mini player": "Altyazı (Uygulama içi mini oynatıcı)",
   "Fill the window": "Pencereyi doldur",
-  "Fill the window (W)": "Pencereyi doldur (W)"
+  "Fill the window (W)": "Pencereyi doldur (W)",
+  "Hide the side rail while watching": "İzlerken kenar çubuğunu gizle",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video, YouTube'daki gibi kendi alanını alır; sinema modu her zaman gizler"
 }

@@ -3539,5 +3539,7 @@
   "Subtitles in picture in picture": "Tekstitys (Kuva kuvassa)",
   "Subtitles in the mini player": "Tekstitys (Sovelluksen sisäinen minisoitin)",
   "Fill the window": "Täytä ikkuna",
-  "Fill the window (W)": "Täytä ikkuna (W)"
+  "Fill the window (W)": "Täytä ikkuna (W)",
+  "Hide the side rail while watching": "Piilota sivupalkki katsellessa",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video saa tilansa kuten YouTubessa; teatteritila piilottaa sen aina"
 }

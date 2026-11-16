@@ -3544,5 +3544,7 @@
   "Subtitles in picture in picture": "الترجمة (نافذة عائمة)",
   "Subtitles in the mini player": "الترجمة (المشغّل المصغّر داخل التطبيق)",
   "Fill the window": "ملء النافذة",
-  "Fill the window (W)": "ملء النافذة (W)"
+  "Fill the window (W)": "ملء النافذة (W)",
+  "Hide the side rail while watching": "إخفاء الشريط الجانبي أثناء المشاهدة",
+  "The video gets its room, as on YouTube; theater mode always hides it": "يحصل الفيديو على مساحته كما في YouTube؛ ويُخفى دائمًا في وضع المسرح"
 }

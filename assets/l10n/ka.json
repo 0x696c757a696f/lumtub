@@ -3539,5 +3539,7 @@
   "Subtitles in picture in picture": "სუბტიტრები (ეკრანი ეკრანში)",
   "Subtitles in the mini player": "სუბტიტრები (აპის შიდა მინი-ფლეერი)",
   "Fill the window": "ფანჯრის შევსება",
-  "Fill the window (W)": "ფანჯრის შევსება (W)"
+  "Fill the window (W)": "ფანჯრის შევსება (W)",
+  "Hide the side rail while watching": "ყურების დროს გვერდითი პანელის დამალვა",
+  "The video gets its room, as on YouTube; theater mode always hides it": "ვიდეო თავის სივრცეს იღებს, როგორც YouTube-ზე; თეატრალური რეჟიმი მას ყოველთვის მალავს"
 }

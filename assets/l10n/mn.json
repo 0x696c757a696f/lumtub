@@ -3539,5 +3539,7 @@
   "Subtitles in picture in picture": "Хадмал (Дэлгэц доторх дэлгэц)",
   "Subtitles in the mini player": "Хадмал (Аппын доторх жижиг цонх)",
   "Fill the window": "Цонхыг дүүргэх",
-  "Fill the window (W)": "Цонхыг дүүргэх (W)"
+  "Fill the window (W)": "Цонхыг дүүргэх (W)",
+  "Hide the side rail while watching": "Үзэх үед хажуугийн самбарыг нуух",
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube шиг видео өөрийн талбайг авна; театрын горимд үргэлж нуугдана"
 }

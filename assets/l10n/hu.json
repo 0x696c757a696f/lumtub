@@ -3539,5 +3539,7 @@
   "Subtitles in picture in picture": "Feliratok (Kép a képben)",
   "Subtitles in the mini player": "Feliratok (Alkalmazáson belüli minilejátszó)",
   "Fill the window": "Ablak kitöltése",
-  "Fill the window (W)": "Ablak kitöltése (W)"
+  "Fill the window (W)": "Ablak kitöltése (W)",
+  "Hide the side rail while watching": "Oldalsáv elrejtése nézés közben",
+  "The video gets its room, as on YouTube; theater mode always hides it": "A videó megkapja a helyét, mint a YouTube-on; mozi módban az oldalsáv mindig el van rejtve"
 }

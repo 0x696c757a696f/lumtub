@@ -21,6 +21,7 @@ import '../../native_core.dart';
 import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
+import '../../device.dart';
 import '../../progress_line.dart';
 import '../../right_click.dart';
 import '../../wheel_gesture.dart';
@@ -1270,6 +1271,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: appearance.navigation,
               values: _enumValues(NavigationStyle.values, (n) => n.label),
               onSelected: (v) => saveLooks(appearance.copyWith(navigation: v)),
+            ), subtitle: tr('sidebar bottom bar')),
+        // Phones and TVs watch without the rail already.
+        if (!touchFirst || Device.tablet) SettingEntry(tr('Hide the side rail while watching'), (context) => SwitchItem(
+              title: tr('Hide the side rail while watching'),
+              subtitle: tr('The video gets its room, as on YouTube; theater mode always hides it'),
+              leading: _icon(AppIcons.sidebar),
+              value: appearance.watchHidesRail,
+              onChanged: (v) => saveLooks(appearance.copyWith(watchHidesRail: v)),
             ), subtitle: tr('sidebar bottom bar')),
         SettingEntry(tr('Default start page'), (context) => PopupItem<String>(
               title: tr('Default start page'),

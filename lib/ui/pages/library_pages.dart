@@ -10,6 +10,7 @@ import '../../models.dart';
 import '../../thumbnail_cache.dart';
 import '../../youtube_tv_feed.dart';
 import '../common.dart';
+import '../motion.dart';
 import '../haptics.dart';
 import '../playlist_length.dart';
 import '../theme.dart';
@@ -756,6 +757,7 @@ class _PlaylistCard extends StatelessWidget {
                     colorBlendMode: BlendMode.multiply,
                     image: thumbnailFor(items.first, thumbnails),
                     fit: BoxFit.cover,
+                    frameBuilder: (context, child, frame, sync) => fadeInFrame(child, frame, sync, under: ColoredBox(color: colors.surfaceContainerHighest)),
                     errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
                   ),
                 PositionedDirectional(

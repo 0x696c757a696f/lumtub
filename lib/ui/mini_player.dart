@@ -170,7 +170,8 @@ class _MiniPlayerState extends State<MiniPlayer> {
   Widget build(BuildContext context) {
     final player = _controller.player;
     if (player == null) return const SizedBox.shrink();
-    if (isPhone(context)) return Align(alignment: Alignment.bottomCenter, child: _bar(context, player));
+    // Settles into place as the watch page gives way to it.
+    if (isPhone(context)) return Align(alignment: Alignment.bottomCenter, child: Entrance(scale: 0.96, child: _bar(context, player)));
     return LayoutBuilder(builder: (context, constraints) {
       final area = constraints.biggest;
       final size = miniSize(_controller.videoAspect, area);
@@ -184,7 +185,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
           top: offset.dy,
           width: size.width,
           height: size.height,
-          child: _card(context, player, area, size),
+          child: Entrance(child: _card(context, player, area, size)),
         ),
       ]);
     });

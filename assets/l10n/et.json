@@ -3539,5 +3539,7 @@
   "Subtitles in picture in picture": "Subtiitrid (Pilt pildis)",
   "Subtitles in the mini player": "Subtiitrid (Rakenduse minipleier)",
   "Fill the window": "Täida aken",
-  "Fill the window (W)": "Täida aken (W)"
+  "Fill the window (W)": "Täida aken (W)",
+  "Hide the side rail while watching": "Peida külgriba vaatamise ajal",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video saab oma ruumi nagu YouTube'is; kinorežiimis on külgriba alati peidus"
 }

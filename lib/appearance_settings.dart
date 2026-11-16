@@ -227,6 +227,9 @@ class AppearanceSettings {
   final bool pureBlack;
   /// Smaller rows, menus and fields, so more fits on screen.
   final bool compact;
+  /// The side rail steps aside on the watch page, as YouTube's guide
+  /// does; 剧场模式 always hides it.
+  final bool watchHidesRail;
   final String? fontFamily;
   final double textScale;
   final PageTransition transition;
@@ -285,6 +288,7 @@ class AppearanceSettings {
     this.schemeVariant = DynamicSchemeVariant.tonalSpot,
     this.pureBlack = false,
     this.compact = false,
+    this.watchHidesRail = false,
     this.fontFamily = autoFont,
     this.textScale = 1.0,
     this.transition = PageTransition.fade,
@@ -366,6 +370,7 @@ class AppearanceSettings {
     DynamicSchemeVariant? schemeVariant,
     bool? pureBlack,
     bool? compact,
+    bool? watchHidesRail,
     String? fontFamily,
     bool clearFontFamily = false,
     double? textScale,
@@ -402,6 +407,7 @@ class AppearanceSettings {
         schemeVariant: schemeVariant ?? this.schemeVariant,
         pureBlack: pureBlack ?? this.pureBlack,
         compact: compact ?? this.compact,
+        watchHidesRail: watchHidesRail ?? this.watchHidesRail,
         fontFamily: clearFontFamily ? null : fontFamily ?? this.fontFamily,
         textScale: textScale ?? this.textScale,
         transition: transition ?? this.transition,
@@ -444,6 +450,7 @@ class AppearanceSettings {
         'schemeVariant': schemeVariant.name,
         'pureBlack': pureBlack,
         'compact': compact,
+        'watchHidesRail': watchHidesRail,
         'fontFamily': fontFamily ?? 'system',
         'fontVersion': 2,
         'textScale': textScale,
@@ -489,6 +496,7 @@ class AppearanceSettings {
       schemeVariant: _byName(DynamicSchemeVariant.values, raw['schemeVariant'], DynamicSchemeVariant.tonalSpot),
       pureBlack: raw['pureBlack'] == true,
       compact: raw['compact'] == true,
+      watchHidesRail: raw['watchHidesRail'] == true,
       // Earlier builds wrote nothing for the system font, and wrote the
       // bundled one as their default; both now mean automatic.
       fontFamily: font == 'system'

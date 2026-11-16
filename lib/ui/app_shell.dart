@@ -464,6 +464,7 @@ class _AppShellState extends State<AppShell> {
               // well and slides back in at the window's top edge, or for
               // the search keys; a touch screen keeps it.
               final theater = theaterMode.value && _controller.onWatchPage && !_controller.mini;
+              final railAside = theater || (_controller.onWatchPage && !_controller.mini && _controller.appearance.watchHidesRail);
               final peekTopBar = theater && !touchFirst;
               Widget topBar() => _region(
                     () => _TopBar.shownOf(_controller),
@@ -488,12 +489,12 @@ class _AppShellState extends State<AppShell> {
                 body: SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [
                   // A phone's watch page starts with the player, as phone
                   // apps do; back is the player's arrow or the system's.
-                  if (!watchingOnPhone && !_tvRail && !peekTopBar) topBar(),
+                  if (!watchingOnPhone && !_tvRail) AnimatedVisibility.topBar(visible: !peekTopBar, child: topBar()),
                   if (tabs != null && tabs.top) tabBar(tabs),
                   Expanded(child: Stack(children: [
                     Row(children: [
                       AnimatedVisibility.rail(
-                        visible: rail && !watchingOnPhone && !theater,
+                        visible: rail && !watchingOnPhone && !railAside,
                         child: _region(
                           () => (_selectedIndex, _controller.mode == PageMode.settings && !_controller.onWatchPage, currentLanguage),
                           (context) => skinRail ? SkinRail(
@@ -595,6 +596,7 @@ class _AppShellState extends State<AppShell> {
         c.appearance.showStatusBar,
         c.preferences.lightsOffDim,
         theaterMode.value,
+        c.appearance.watchHidesRail,
       );
 
   /// A part of the window built again only when [select] reads something
@@ -720,15 +722,26 @@ class _PeekingBar extends StatefulWidget {
 
 class _PeekingBarState extends State<_PeekingBar> {
   bool _hovered = false;
+  /// Folded away and done moving: then it is neither painted nor hit, but
+  /// kept, so the search keys can still reach its field.
+  bool _folded = true;
+  /// Set once the bar in the window's column has slid away, as the two
+  /// share the search field's focus and text.
+  bool _ready = false;
+  Timer? _wait;
 
   @override
   void initState() {
     super.initState();
     widget.focus.addListener(_changed);
+    _wait = Timer(Motion.of(AnimatedVisibility.duration + const Duration(milliseconds: 50)), () {
+      if (mounted) setState(() => _ready = true);
+    });
   }
 
   @override
   void dispose() {
+    _wait?.cancel();
     widget.focus.removeListener(_changed);
     super.dispose();
   }
@@ -741,9 +754,16 @@ class _PeekingBarState extends State<_PeekingBar> {
     if (_hovered != on) setState(() => _hovered = on);
   }
 
+  void _settled() {
+    final folded = !(_hovered || widget.focus.hasFocus);
+    if (folded != _folded) setState(() => _folded = folded);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (!_ready) return const SizedBox.shrink();
     final shown = _hovered || widget.focus.hasFocus;
+    if (shown) _folded = false;
     return MouseRegion(
       onEnter: (_) => _hover(true),
       onExit: (_) => _hover(false),
@@ -752,9 +772,10 @@ class _PeekingBarState extends State<_PeekingBar> {
           child: AnimatedAlign(
             alignment: Alignment.bottomCenter,
             heightFactor: shown ? 1 : 0,
-            duration: Motion.reduced ? Duration.zero : const Duration(milliseconds: 160),
-            curve: Curves.easeOutCubic,
-            child: widget.child,
+            duration: Motion.of(Ease.fade),
+            curve: Ease.curve,
+            onEnd: _settled,
+            child: Offstage(offstage: _folded, child: widget.child),
           ),
         ),
         // A thin strip along the top edge to reach for it.
@@ -1020,7 +1041,11 @@ class _SearchFieldState extends State<_SearchField> {
               alignment: AlignmentDirectional.topStart,
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: Material(
+                // Drops in under the field, as a menu opens.
+                child: Entrance(
+                  duration: Ease.fade,
+                  scale: 0.97,
+                  child: Material(
                   elevation: 4,
                   shadowColor: Colors.black.withValues(alpha: 0.25),
                   shape: RoundedRectangleBorder(borderRadius: AppStyle.cardRadius, side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
@@ -1048,6 +1073,7 @@ class _SearchFieldState extends State<_SearchField> {
                       },
                     ),
                   ),
+                ),
                 ),
               ),
             ),

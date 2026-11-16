@@ -26,6 +26,9 @@ The changes, marked "Lumtub" in the code:
   Flutter's raster thread could still read it, and the texture callback
   used `at()` on a map entry that was not stored yet; both crashed the app
   when a video opened or the player changed size.
+- `lib/media_kit_video_controls/src/controls/methods/fullscreen.dart`:
+  `fullscreenTransition` lets the app give the fullscreen view a fade and
+  zoom (Lumtub's 铺满窗口); it stays a cut by default.
 - `lib/src/subtitle/subtitle_view.dart`: the secondary subtitle (the second
   entry of `Player.state.subtitle`) is drawn above the main one, not below,
   in its own style when `SubtitleViewConfiguration.secondaryStyle` is set.

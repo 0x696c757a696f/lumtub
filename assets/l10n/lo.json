@@ -3539,5 +3539,7 @@
   "Subtitles in picture in picture": "ຄຳບັນຍາຍ (ພາບຊ້ອນພາບ)",
   "Subtitles in the mini player": "ຄຳບັນຍາຍ (ເຄື່ອງຫຼິ້ນຂະໜາດນ້ອຍໃນແອັບ)",
   "Fill the window": "ເຕັມໜ້າຕ່າງ",
-  "Fill the window (W)": "ເຕັມໜ້າຕ່າງ (W)"
+  "Fill the window (W)": "ເຕັມໜ້າຕ່າງ (W)",
+  "Hide the side rail while watching": "ເຊື່ອງແຖບຂ້າງເວລາເບິ່ງ",
+  "The video gets its room, as on YouTube; theater mode always hides it": "ວິດີໂອໄດ້ພື້ນທີ່ຂອງມັນ ຄືກັບ YouTube; ໂໝດໂຮງໜັງຈະເຊື່ອງມັນສະເໝີ"
 }

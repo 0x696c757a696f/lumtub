@@ -3539,5 +3539,7 @@
   "Subtitles in picture in picture": "คำบรรยาย (ภาพซ้อนภาพ)",
   "Subtitles in the mini player": "คำบรรยาย (มินิเพลเยอร์ในแอป)",
   "Fill the window": "เต็มหน้าต่าง",
-  "Fill the window (W)": "เต็มหน้าต่าง (W)"
+  "Fill the window (W)": "เต็มหน้าต่าง (W)",
+  "Hide the side rail while watching": "ซ่อนแถบด้านข้างขณะดูวิดีโอ",
+  "The video gets its room, as on YouTube; theater mode always hides it": "วิดีโอได้พื้นที่เต็มที่เหมือนบน YouTube และโหมดโรงภาพยนตร์จะซ่อนแถบเสมอ"
 }

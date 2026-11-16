@@ -7,6 +7,7 @@ import '../../l10n/l10n.dart';
 import '../../models.dart';
 import '../../video_repository.dart' show historyLimit;
 import '../common.dart';
+import '../motion.dart';
 import '../haptics.dart';
 import '../theme.dart';
 import '../video_card.dart';
@@ -239,6 +240,7 @@ class _SelectRow extends StatelessWidget {
                   colorBlendMode: BlendMode.multiply,
                   image: thumbnailFor(item, thumbnails, width: 320, size: 'mqdefault'),
                   fit: BoxFit.cover,
+                  frameBuilder: (context, child, frame, sync) => fadeInFrame(child, frame, sync, under: ColoredBox(color: colors.surfaceContainerHighest)),
                   errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
                 ),
               ),

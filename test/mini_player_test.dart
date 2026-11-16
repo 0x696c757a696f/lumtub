@@ -151,7 +151,8 @@ void main() {
       addTearDown(tester.view.reset);
       controller.mini = true;
       await tester.pumpWidget(card());
-      await tester.pump(const Duration(milliseconds: 300));
+      // Past the card settling into place.
+      await tester.pump(const Duration(milliseconds: 400));
     }
 
     Future<void> dragCard(WidgetTester tester, Offset by) async {

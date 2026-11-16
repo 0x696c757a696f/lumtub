@@ -3539,5 +3539,7 @@
   "Subtitles in picture in picture": "Субтитрлер (Сурет ішіндегі сурет)",
   "Subtitles in the mini player": "Субтитрлер (Қолданба ішіндегі шағын ойнатқыш)",
   "Fill the window": "Терезені толтыру",
-  "Fill the window (W)": "Терезені толтыру (W)"
+  "Fill the window (W)": "Терезені толтыру (W)",
+  "Hide the side rail while watching": "Көру кезінде бүйір тақтаны жасыру",
+  "The video gets its room, as on YouTube; theater mode always hides it": "Бейне өз орнын алады, YouTube сияқты; театр режимінде ол әрқашан жасырылады"
 }

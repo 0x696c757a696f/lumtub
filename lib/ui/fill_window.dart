@@ -1,5 +1,6 @@
 import 'package:media_kit_video/media_kit_video.dart';
 
+import 'motion.dart';
 import 'theater_mode.dart';
 import 'window_chrome.dart';
 
@@ -8,6 +9,9 @@ import 'window_chrome.dart';
 Future<void> toggleFillWindow(VideoState? state) async {
   if (state == null) return;
   if (state.isFullscreen()) return state.exitFullscreen();
+  // The window stays as it is, so the video can grow into it smoothly;
+  // real fullscreen still cuts, as the screen mode changes under it.
+  fullscreenTransition = () => fillingWindow.value ? Motion.of(Ease.move) : Duration.zero;
   fillingWindow.value = true;
   await state.enterFullscreen();
 }

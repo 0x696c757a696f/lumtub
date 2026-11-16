@@ -22,10 +22,22 @@ sealed class YoutubeLink {
       final id = url.queryParameters['list'] ?? '';
       return PlaylistResult.isValidId(id) ? PlaylistLink(id) : null;
     }
+    if (path.first == 'post' && path.length >= 2 && _postId.hasMatch(path[1])) return PostLink(path[1]);
+    // The old address of a post: the channel's community tab with `lb`.
+    final lb = url.queryParameters['lb'] ?? '';
+    if (_postId.hasMatch(lb) && path.contains('community')) return PostLink(lb);
     if (path.first == 'channel' && path.length >= 2 && ChannelRef.isValidId(path[1])) return ChannelLink(path[1]);
     if (path.first.startsWith('@') && RegExp(r'^@[^\s/?#&]{1,100}$').hasMatch(path.first)) return HandleLink(path.first);
     return null;
   }
+}
+
+final _postId = RegExp(r'^Ug[\w-]{10,}$');
+
+/// A `/post/Ugk…` link to one community post.
+class PostLink extends YoutubeLink {
+  const PostLink(this.id);
+  final String id;
 }
 
 /// A `/channel/UC…` link.

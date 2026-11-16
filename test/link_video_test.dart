@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/community_posts.dart';
 import 'package:lumtub/link_video.dart';
 import 'package:lumtub/models.dart';
 
@@ -44,5 +45,19 @@ void main() {
     expect(YoutubeLink.parse('lofi hip hop'), isNull);
     expect(YoutubeLink.parse('https://example.com/@name'), isNull);
     expect(YoutubeLink.parse('http://www.youtube.com/@name'), isNull);
+  });
+
+  test('post links open the post', () {
+    expect(YoutubeLink.parse('https://www.youtube.com/post/UgkxAbCdEfGhIjKlMnOpQrStUvWx'), isA<PostLink>().having((l) => l.id, 'id', 'UgkxAbCdEfGhIjKlMnOpQrStUvWx'));
+    expect(YoutubeLink.parse('youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw/community?lb=UgkxAbCdEfGhIjKlMnOpQrStUvWx'), isA<PostLink>());
+    expect(YoutubeLink.parse('https://www.youtube.com/post/nothing'), isNull);
+  });
+
+  test('the author of a post page is its channel', () {
+    const html = '{"authorText":{"runs":[{"text":"Some \\"Quoted\\" Channel"}]},"authorEndpoint":{"clickTrackingParams":"x","browseEndpoint":{"browseId":"UCuAXFkgsw1L7xaCfnd5JJOw"}}}';
+    final author = CommunityPosts.authorOf(html)!;
+    expect(author.id, 'UCuAXFkgsw1L7xaCfnd5JJOw');
+    expect(author.name, 'Some "Quoted" Channel');
+    expect(CommunityPosts.authorOf('<html></html>'), isNull);
   });
 }

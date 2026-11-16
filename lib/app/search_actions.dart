@@ -20,6 +20,19 @@ extension SearchActions on AppController {
       case HandleLink(:final handle):
         await openChannelByHandle(handle);
         return;
+      case PostLink(:final id):
+        try {
+          final found = await _posts.single(id);
+          if (found == null) {
+            _notice(tr('No community posts found'));
+          } else if (!_disposed) {
+            _linkedPosts.add(found);
+          }
+        } catch (e) {
+          logWarn('Could not open post $id: $e');
+          _notice(tr("Couldn't load community posts: {0}", ['$e']));
+        }
+        return;
       case PlaylistLink(:final id):
         openYoutubePlaylist(await linkPlaylist(_http, id) ?? PlaylistResult(id: id, title: tr('Playlist')));
         return;

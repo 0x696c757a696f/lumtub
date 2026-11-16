@@ -197,6 +197,7 @@ extension LifecycleActions on AppController {
         (blockListUpdates = BlockListUpdates(client: _http, data: directories.data, cache: directories.cache)).start(wanted: () => preferences.updateBlockLists);
         unawaited(_refreshCacheSize());
         unawaited(_trimThumbnails());
+        unawaited(_nameLinkedVideos());
       });
       unawaited(downloads?.load());
       unawaited(account?.load());

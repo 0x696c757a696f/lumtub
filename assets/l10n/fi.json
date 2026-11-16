@@ -3535,5 +3535,7 @@
   "Next up": "Seuraavaksi",
   "Searched": "Haettu",
   "You were here last time · Tap to refresh": "Jäit tähän viime kerralla · Napauta päivittääksesi",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Soitin ei voinut avata videovirtaa eikä kertonut syytä. Asetukset › Verkko › Verkkotarkistus näyttää, mikä osa on estetty."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Soitin ei voinut avata videovirtaa eikä kertonut syytä. Asetukset › Verkko › Verkkotarkistus näyttää, mikä osa on estetty.",
+  "Subtitles in picture in picture": "Tekstitys (Kuva kuvassa)",
+  "Subtitles in the mini player": "Tekstitys (Sovelluksen sisäinen minisoitin)"
 }

@@ -3535,5 +3535,7 @@
   "Next up": "ቀጥሎ",
   "Searched": "የተፈለጉ",
   "You were here last time · Tap to refresh": "ባለፈው እዚህ ደርሰው ነበር · ለማደስ ይንኩ",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ማጫወቻው የቪዲዮውን ዥረት መክፈት አልቻለም፣ ምክንያትም አልሰጠም። ቅንብሮች › አውታረ መረብ › የአውታረ መረብ ፍተሻ የትኛው ክፍል እንደታገደ ያሳያል።"
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ማጫወቻው የቪዲዮውን ዥረት መክፈት አልቻለም፣ ምክንያትም አልሰጠም። ቅንብሮች › አውታረ መረብ › የአውታረ መረብ ፍተሻ የትኛው ክፍል እንደታገደ ያሳያል።",
+  "Subtitles in picture in picture": "የትርጉም ጽሑፍ (ሥዕል-በ-ሥዕል)",
+  "Subtitles in the mini player": "የትርጉም ጽሑፍ (በመተግበሪያ ውስጥ ሚኒ ማጫወቻ)"
 }

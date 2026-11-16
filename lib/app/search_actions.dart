@@ -7,8 +7,36 @@ extension SearchActions on AppController {
     if (query.isEmpty || !ready) return;
     final asUrl = AppController.parseYoutubeId(query);
     if (asUrl != null) {
-      await play(VideoItem(id: asUrl, title: tr('YouTube video · {0}', [asUrl]), channel: 'YouTube', url: 'https://www.youtube.com/watch?v=$asUrl'));
+      // A link names no video: its title and channel are asked first, so
+      // the watch page, the history and the home page show them, not the id.
+      final known = [...history, if (playing case final p?) p].where((item) => item.id == asUrl && !isLinkPlaceholder(item)).firstOrNull;
+      await play(known ?? await linkVideo(_http, asUrl) ?? linkPlaceholder(asUrl));
       return;
+    }
+    switch (YoutubeLink.parse(query)) {
+      case ChannelLink(:final id):
+        openChannelFromLink(ChannelRef(id, ''));
+        return;
+      case HandleLink(:final handle):
+        await openChannelByHandle(handle);
+        return;
+      case PostLink(:final id):
+        try {
+          final found = await _posts.single(id);
+          if (found == null) {
+            _notice(tr('No community posts found'));
+          } else if (!_disposed) {
+            _linkedPosts.add(found);
+          }
+        } catch (e) {
+          logWarn('Could not open post $id: $e');
+          _notice(tr("Couldn't load community posts: {0}", ['$e']));
+        }
+        return;
+      case PlaylistLink(:final id):
+        openYoutubePlaylist(await linkPlaylist(_http, id) ?? PlaylistResult(id: id, title: tr('Playlist')));
+        return;
+      case null:
     }
     if (query != _query || mode != PageMode.explore || onWatchPage) _remember();
     final keep = _keepsPlaying;

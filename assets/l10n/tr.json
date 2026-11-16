@@ -3540,5 +3540,7 @@
   "Left half brightness, right half volume": "Sol yarı parlaklık, sağ yarı ses",
   "Scroll wheel over the video": "Video üzerinde fare tekerleği",
   "Now: {0}. Ctrl + wheel always changes the speed": "Şu an: {0}. Ctrl + tekerlek her zaman hızı değiştirir",
-  "mouse wheel volume brightness": "fare tekerlek ses parlaklık"
+  "mouse wheel volume brightness": "fare tekerlek ses parlaklık",
+  "Subtitles in picture in picture": "Altyazı (Pencere içinde pencere)",
+  "Subtitles in the mini player": "Altyazı (Uygulama içi mini oynatıcı)"
 }

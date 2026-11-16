@@ -163,6 +163,17 @@ extension PlaybackOpening on AppController {
       if (!item.isLive && video?.info['live_status'] == 'is_live') {
         item = item.withLiveStatus('is_live');
         if (playing?.id == item.id) _update(() => playing = item);
+        // Asked as a live stream, yt-dlp also asks the clients whose live
+        // addresses a phone can play (see StreamResolver.liveClients).
+        if ((Platform.isAndroid || Platform.isIOS) && LiveSplit.hls(video!.info, _playback) == null) {
+          logInfo('${item.id} turned out live; asking yt-dlp again for its live streams');
+          try {
+            video = await _repository!.streams.resolve(item.id, _formatFor(item.id), formatSort: _formatSort, live: true);
+          } catch (e) {
+            logWarn('Asking again for the live streams of ${item.id} failed: $e');
+          }
+          if (serial != _playSerial) return false;
+        }
       }
       final live = item.isLive;
       // A live stream starts at its live edge, not at a remembered spot.
@@ -187,6 +198,8 @@ extension PlaybackOpening on AppController {
       // answers "Failed to recognize file format".
       final mobileLive = live && split == null && video != null && (Platform.isAndroid || Platform.isIOS) ? LiveSplit.hls(video.info, _playback) : null;
       if (live && split == null && (Platform.isAndroid || Platform.isIOS) && mobileLive == null) {
+        final formats = [for (final f in (video?.info['formats'] as List? ?? const [])) if (f is Map) '${f['format_id']}:${f['protocol']}'];
+        logWarn('Live ${item.id}: no HLS stream among ${formats.length} formats ${formats.join(' ')}');
         throw StateError('YouTube gave no live stream this version can play');
       }
       if (mobileLive != null) logInfo('Live ${item.id} plays HLS ${mobileLive['format_id'] ?? 'manifest'} (${mobileLive['height'] ?? '?'}p ${mobileLive['vcodec'] ?? ''})');

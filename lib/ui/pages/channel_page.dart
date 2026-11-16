@@ -259,6 +259,57 @@ class _ChannelPageState extends State<ChannelPage> {
   }
 }
 
+/// [post], opened from a pasted link, on a page of its own with its
+/// comments under it and a way to its channel.
+Future<void> showLinkedPost(BuildContext context, AppController controller, CommunityPost post, ChannelRef channel) => Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (context) => Scaffold(
+        appBar: AppBar(
+          title: Text(tr('Post comments')),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                controller.openChannelFromLink(channel);
+              },
+              child: Text(channel.name.isEmpty ? tr('Open channel') : channel.name),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: CustomScrollView(slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  sliver: SliverToBoxAdapter(
+                    child: PostCard(
+                      controller: controller,
+                      post: post,
+                      channel: channel,
+                      onPlay: (video) {
+                        Navigator.of(context).pop();
+                        unawaited(controller.play(video));
+                      },
+                    ),
+                  ),
+                ),
+                CommentsSection(
+                  key: PageStorageKey('post-comments:${post.id}'),
+                  controller: controller,
+                  postId: post.id,
+                  creator: channel,
+                  sliver: true,
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    ));
+
 /// The comments under [post] as their own page, for narrow windows.
 Future<void> showPostComments(BuildContext context, AppController controller, CommunityPost post) => Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (context) => Scaffold(

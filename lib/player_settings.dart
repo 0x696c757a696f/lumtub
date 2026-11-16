@@ -412,6 +412,10 @@ class PlayerSettings {
   final double subtitleBorder;
   final bool subtitleBackground;
   final bool subtitleBold;
+  /// Subtitles show in the picture-in-picture window.
+  final bool pipSubtitles;
+  /// Subtitles show in the in-app mini player.
+  final bool miniPlayerSubtitles;
   /// Skip segments marked on SponsorBlock. Off by default because it asks a
   /// third-party server, even if only by an anonymous hash prefix.
   final bool sponsorBlock;
@@ -514,6 +518,8 @@ class PlayerSettings {
     this.subtitleBorder = 3,
     this.subtitleBackground = false,
     this.subtitleBold = false,
+    this.pipSubtitles = true,
+    this.miniPlayerSubtitles = true,
     this.sponsorBlock = false,
     this.returnDislike = false,
     this.decoderAdapter = '',
@@ -586,6 +592,8 @@ class PlayerSettings {
     double? subtitleBorder,
     bool? subtitleBackground,
     bool? subtitleBold,
+    bool? pipSubtitles,
+    bool? miniPlayerSubtitles,
     bool? sponsorBlock,
     bool? returnDislike,
     bool automaticCodecs = false,
@@ -656,6 +664,8 @@ class PlayerSettings {
         subtitleBorder: subtitleBorder ?? this.subtitleBorder,
         subtitleBackground: subtitleBackground ?? this.subtitleBackground,
         subtitleBold: subtitleBold ?? this.subtitleBold,
+        pipSubtitles: pipSubtitles ?? this.pipSubtitles,
+        miniPlayerSubtitles: miniPlayerSubtitles ?? this.miniPlayerSubtitles,
         sponsorBlock: sponsorBlock ?? this.sponsorBlock,
         returnDislike: returnDislike ?? this.returnDislike,
         decoderAdapter: decoderAdapter ?? this.decoderAdapter,
@@ -728,6 +738,8 @@ class PlayerSettings {
         'subtitleBorder': subtitleBorder,
         'subtitleBackground': subtitleBackground,
         'subtitleBold': subtitleBold,
+        'pipSubtitles': pipSubtitles,
+        'miniPlayerSubtitles': miniPlayerSubtitles,
         'sponsorBlock': sponsorBlock,
         'returnDislike': returnDislike,
         'decoderAdapter': decoderAdapter,
@@ -927,6 +939,8 @@ class PlayerSettings {
       subtitleBorder: decimal('subtitleBorder', 3, 0, 8),
       subtitleBackground: raw['subtitleBackground'] == true,
       subtitleBold: raw['subtitleBold'] == true,
+      pipSubtitles: raw['pipSubtitles'] != false,
+      miniPlayerSubtitles: raw['miniPlayerSubtitles'] != false,
       sponsorBlock: raw['sponsorBlock'] == true,
       returnDislike: raw['returnDislike'] == true,
       decoderAdapter: raw['decoderAdapter']?.toString() ?? '',

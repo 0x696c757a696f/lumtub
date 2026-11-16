@@ -16,6 +16,7 @@ import 'cast_ui.dart';
 import 'pages/settings_subpages.dart' show openLogs;
 import 'screenshot_action.dart';
 import 'pages/account_settings.dart';
+import '../community_posts.dart';
 import 'pages/channel_page.dart';
 import 'pages/downloads_page.dart';
 import 'pages/explore_page.dart';
@@ -68,6 +69,7 @@ class _AppShellState extends State<AppShell> {
   final _searchFocus = FocusNode(debugLabel: 'search');
   StreamSubscription<String>? _notices;
   StreamSubscription<void>? _waylandTop;
+  StreamSubscription<(CommunityPost, ChannelRef)>? _linkedPosts;
   StreamSubscription<DownloadTask>? _finished;
   Timer? _supportCheck;
 
@@ -101,6 +103,9 @@ class _AppShellState extends State<AppShell> {
     });
     _notices = _controller.notices.listen((message) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    });
+    _linkedPosts = _controller.linkedPosts.listen((found) {
+      if (mounted) unawaited(showLinkedPost(context, _controller, found.$1, found.$2));
     });
     _waylandTop = _controller.waylandTopNotes.listen((_) {
       if (!mounted) return;
@@ -139,6 +144,7 @@ class _AppShellState extends State<AppShell> {
     if (WindowChrome.menus.value == _menus) WindowChrome.menus.value = null;
     unawaited(_notices?.cancel());
     unawaited(_waylandTop?.cancel());
+    unawaited(_linkedPosts?.cancel());
     unawaited(_finished?.cancel());
     _supportCheck?.cancel();
     _searchText.dispose();

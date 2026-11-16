@@ -53,6 +53,7 @@ extension VideoDetailsActions on AppController {
   }
 
   Future<void> _loadDetails(VideoItem item, int serial) async {
+    int? length;
     try {
       VideoDetails loaded;
       final local = await downloads?.localVideo(item.id);
@@ -64,6 +65,7 @@ extension VideoDetailsActions on AppController {
           // The extraction playback uses carries the details too.
           final resolved = await _repository!.streams.resolve(item.id, _formatFor(item.id), formatSort: _formatSort, membersOnly: item.membersOnly);
           loaded = resolved.details;
+          if (resolved.info['duration'] case final num seconds when seconds > 0) length = seconds.round();
           if (serial == _playSerial) {
             _update(() {
               availableHeights = resolved.heightsFor(settings);
@@ -85,6 +87,7 @@ extension VideoDetailsActions on AppController {
       // A video with no subtitles keeps the ones 语音识别 made for it.
       final speech = await _speechOptionFor(item.id, loaded);
       if (speech != null) loaded = loaded.withSpeechSubtitle(speech);
+      if (serial == _playSerial) _fillPlaying(item, loaded, length);
       if (serial == _playSerial) {
         _update(() {
           details = loaded;
@@ -107,6 +110,52 @@ extension VideoDetailsActions on AppController {
       _subtitlesSettled(serial);
     } finally {
       if (serial == _playSerial) _update(() => loadingDetails = false);
+    }
+  }
+
+  /// The playing video, and its place in the history, with what its
+  /// details say and its card did not: a video opened from a link gets its
+  /// title and channel, others their channel's id, views and upload day.
+  void _fillPlaying(VideoItem item, VideoDetails loaded, int? length) {
+    final current = playing?.id == item.id ? playing! : item;
+    final filled = filledFromDetails(current, loaded, length: length);
+    if (!saysMore(current, filled)) return;
+    if (playing?.id == item.id) _update(() => playing = filled);
+    if (history.any((other) => other.id == item.id)) unawaited(_history?.update(filledFromDetails(history.firstWhere((other) => other.id == item.id), loaded, length: length)));
+  }
+
+  /// Videos in the history opened from a link before their title was
+  /// asked for: named by their id until now.
+  Future<void> _nameLinkedVideos() async {
+    final unnamed = [for (final item in history) if (isLinkPlaceholder(item)) item.id].take(50).toList();
+    if (unnamed.isEmpty) return;
+    var named = 0;
+    for (final id in unnamed) {
+      final found = await linkVideo(_http, id);
+      if (_disposed) return;
+      final at = history.indexWhere((item) => item.id == id);
+      if (found == null || at < 0) continue;
+      final old = history[at];
+      await _history?.update(VideoItem(
+        id: id,
+        title: found.title,
+        channel: found.channel,
+        duration: old.duration,
+        url: old.url,
+        viewCount: old.viewCount,
+        watching: old.watching,
+        channelId: old.channelId,
+        published: old.published,
+        liveStatus: old.liveStatus,
+        width: old.width,
+        height: old.height,
+      ));
+      if (playing?.id == id && isLinkPlaceholder(playing!)) _update(() => playing = history[at]);
+      named++;
+    }
+    if (named > 0) {
+      logInfo('Named $named video(s) in the history opened from a link');
+      _update(() {});
     }
   }
 

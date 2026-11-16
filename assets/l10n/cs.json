@@ -3535,5 +3535,7 @@
   "Next up": "Další",
   "Searched": "Hledané",
   "You were here last time · Tap to refresh": "Naposledy jste skončili tady · Klepnutím obnovíte",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Přehrávač nemohl otevřít video stream a neuvedl důvod. V Nastavení › Síť › Kontrola sítě uvidíte, která část je blokovaná."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Přehrávač nemohl otevřít video stream a neuvedl důvod. V Nastavení › Síť › Kontrola sítě uvidíte, která část je blokovaná.",
+  "Subtitles in picture in picture": "Titulky (Obraz v obraze)",
+  "Subtitles in the mini player": "Titulky (Minipřehrávač v aplikaci)"
 }

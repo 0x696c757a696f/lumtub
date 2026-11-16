@@ -48,6 +48,7 @@ import '../native_core.dart';
 import '../encrypted_dns.dart';
 import '../native_http.dart';
 import '../live_chat.dart';
+import '../link_video.dart';
 import '../models.dart';
 import '../network_proxy.dart';
 import '../socks_bridge.dart';
@@ -562,6 +563,10 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// One-off messages the UI shows as snack bars.
   Stream<String> get notices => _notices.stream;
+  final _linkedPosts = StreamController<(CommunityPost, ChannelRef)>.broadcast();
+  /// Posts opened from a pasted link, for the UI to show on a page of
+  /// their own.
+  Stream<(CommunityPost, ChannelRef)> get linkedPosts => _linkedPosts.stream;
   final _finishedDownloads = StreamController<DownloadTask>.broadcast();
   /// Downloads as they finish, for a notice that can open the file.
   Stream<DownloadTask> get finishedDownloads => _finishedDownloads.stream;
@@ -697,13 +702,15 @@ class AppController extends ChangeNotifier with _ExploreState {
   }
 
   static String? parseYoutubeId(String input) {
-    final url = Uri.tryParse(input);
-    if (url == null || !url.hasScheme || url.scheme != 'https') return null;
+    // A link copied without its scheme is the same video.
+    final text = input.trim();
+    final url = Uri.tryParse(RegExp(r'^[a-z]+://', caseSensitive: false).hasMatch(text) ? text : 'https://$text');
+    if (url == null || url.scheme != 'https') return null;
     if (url.host == 'youtu.be') {
       final id = url.pathSegments.isNotEmpty ? url.pathSegments.first : '';
       return RegExp(r'^[\w-]{11}$').hasMatch(id) ? id : null;
     }
-    if (url.host == 'youtube.com' || url.host == 'www.youtube.com' || url.host == 'm.youtube.com') {
+    if (const {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com'}.contains(url.host)) {
       final id = url.queryParameters['v'] ??
           ((url.pathSegments.length >= 2 && (url.pathSegments.first == 'shorts' || url.pathSegments.first == 'live')) ? url.pathSegments[1] : '');
       return RegExp(r'^[\w-]{11}$').hasMatch(id) ? id : null;
@@ -813,6 +820,12 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// Whether libmpv draws the subtitles now, not Flutter's view.
   bool get libassDraws => settings.libassSubtitles && !libassCantDraw;
+
+  /// The views showing the video that leave subtitles out (picture in
+  /// picture or the mini player, by the settings): libmpv draws none while
+  /// any does.
+  final _subtitlesOffIn = <Object>{};
+  bool get subtitlesOff => _subtitlesOffIn.isNotEmpty;
 
   bool _backgroundAudioOnly = false;
   bool _windowHidden = false;
@@ -1032,6 +1045,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (!_shutDown) unawaited(player?.dispose());
     _tools?.dispose();
     unawaited(_notices.close());
+    unawaited(_linkedPosts.close());
     unawaited(_waylandTopNotes.close());
     unawaited(_finishedDownloads.close());
     super.dispose();

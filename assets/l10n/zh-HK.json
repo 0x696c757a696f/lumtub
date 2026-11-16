@@ -3564,5 +3564,7 @@
   "Left half brightness, right half volume": "左半邊亮度，右半邊音量",
   "Scroll wheel over the video": "影片上的滾輪",
   "Now: {0}. Ctrl + wheel always changes the speed": "目前：{0}。Ctrl + 滾輪始終調節倍速",
-  "mouse wheel volume brightness": "滑鼠 滾輪 音量 亮度"
+  "mouse wheel volume brightness": "滑鼠 滾輪 音量 亮度",
+  "Subtitles in picture in picture": "畫中畫顯示字幕",
+  "Subtitles in the mini player": "應用程式內小視窗顯示字幕"
 }

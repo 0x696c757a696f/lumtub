@@ -172,6 +172,14 @@ void main() {
     await expectLater(resolver.resolve('dQw4w9WgXcQ', 'ytdl'), throwsA(isA<StateError>()));
   });
 
+  test('a live stream is also asked as the clients a phone can play', () {
+    final resolver = StreamResolver('yt-dlp', infoDirectory: Directory('x'))..liveClients = 'default,android_vr';
+    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', live: true), containsAllInOrder(['--extractor-args', 'youtube:formats=incomplete;player_client=default,android_vr']));
+    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl').join(' '), isNot(contains('player_client')));
+    resolver.liveClients = null;
+    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', live: true), containsAllInOrder(['--extractor-args', 'youtube:formats=incomplete']));
+  });
+
   test('points yt-dlp at Deno and retries a network error once', () async {
     expect(StreamResolver('yt-dlp', deno: r'C:\tools\deno.exe', infoDirectory: Directory('x')).arguments('dQw4w9WgXcQ', 'ytdl'),
         containsAllInOrder(['--js-runtimes', r'deno:C:\tools\deno.exe']));

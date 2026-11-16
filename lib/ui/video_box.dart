@@ -10,13 +10,17 @@ import 'pages/watch_page.dart' show androidSubtitleScale, smallSubtitleScale;
 /// Tells [controller] how large [child], which shows the video, is on
 /// screen, so libmpv draws the picture at that size.
 class VideoBox extends StatefulWidget {
-  const VideoBox({super.key, required this.controller, required this.child, this.smallSubtitles = false});
+  const VideoBox({super.key, required this.controller, required this.child, this.smallSubtitles = false, this.subtitlesOff});
   final AppController controller;
   final Widget child;
 
   /// Subtitles here are sized for a small window, as the mini player and
   /// picture-in-picture draw them.
   final bool smallSubtitles;
+
+  /// Whether subtitles are left out of a box this size: libmpv then draws
+  /// none either while this box shows the video.
+  final bool Function(Size box)? subtitlesOff;
 
   @override
   State<VideoBox> createState() => _VideoBoxState();
@@ -26,6 +30,7 @@ class _VideoBoxState extends State<VideoBox> {
   @override
   void dispose() {
     widget.controller.hideVideoIn(this);
+    widget.controller.subtitlesOffIn(this, false);
     super.dispose();
   }
 
@@ -38,8 +43,9 @@ class _VideoBoxState extends State<VideoBox> {
         widget.controller.showVideoIn(this, box * ratio);
         // Subtitles libmpv draws are sized as the Flutter view sizes them here.
         final small = widget.smallSubtitles;
-        final textScale = Platform.isAndroid ? androidSubtitleScale(box, Device.captionScale) : small ? smallSubtitleScale(box) : sqrt(box.width * box.height / (1920 * 1080));
+        final textScale = Platform.isAndroid ? androidSubtitleScale(box, Device.captionScale, small) : small ? smallSubtitleScale(box) : sqrt(box.width * box.height / (1920 * 1080));
         widget.controller.subtitleViewChanged(box, textScale, small ? (box.shortestSide / 720).clamp(0.3, 1.0) : 1);
+        widget.controller.subtitlesOffIn(this, widget.subtitlesOff?.call(box) ?? false);
       }
       return widget.child;
     });

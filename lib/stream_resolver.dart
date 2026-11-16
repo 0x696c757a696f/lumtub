@@ -161,6 +161,13 @@ class StreamResolver {
   /// The Deno yt-dlp solves YouTube's JavaScript challenges with. Without
   /// it the stream addresses are throttled to a crawl or left out.
   final String? deno;
+
+  /// The YouTube clients a live stream is also asked as, beside yt-dlp's
+  /// own. Phones add android_vr: yt-dlp's default clients give a live
+  /// stream's HLS address only once its JavaScript challenge is solved,
+  /// which a phone's JavaScript runtime may not manage, and the one client
+  /// that needs no JavaScript (visionos) lists no live formats at all.
+  String? liveClients = Platform.isAndroid || Platform.isIOS ? 'default,android_vr' : null;
   /// yt-dlp's `--proxy` value at the time of each call.
   final String? Function()? proxy;
   /// Where info files for `--load-info-json` are kept.
@@ -199,7 +206,7 @@ class StreamResolver {
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
         if (deno != null) ...['--js-runtimes', 'deno:${deno!}'],
         '--extractor-retries', '3',
-        if (live) ...['--extractor-args', 'youtube:formats=incomplete'],
+        if (live) ...['--extractor-args', 'youtube:formats=incomplete${liveClients == null ? '' : ';player_client=$liveClients'}'],
         '--no-playlist',
         '--dump-single-json',
         '--format', expressionOf(format),

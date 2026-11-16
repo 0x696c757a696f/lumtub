@@ -3540,5 +3540,7 @@
   "Left half brightness, right half volume": "Nửa trái độ sáng, nửa phải âm lượng",
   "Scroll wheel over the video": "Con lăn chuột trên video",
   "Now: {0}. Ctrl + wheel always changes the speed": "Hiện tại: {0}. Ctrl + con lăn luôn đổi tốc độ",
-  "mouse wheel volume brightness": "chuột con lăn âm lượng độ sáng"
+  "mouse wheel volume brightness": "chuột con lăn âm lượng độ sáng",
+  "Subtitles in picture in picture": "Phụ đề (Hình trong hình)",
+  "Subtitles in the mini player": "Phụ đề (Cửa sổ nhỏ trong ứng dụng)"
 }

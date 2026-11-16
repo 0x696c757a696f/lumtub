@@ -3540,5 +3540,7 @@
   "Left half brightness, right half volume": "Левая половина — яркость, правая — громкость",
   "Scroll wheel over the video": "Колёсико мыши над видео",
   "Now: {0}. Ctrl + wheel always changes the speed": "Сейчас: {0}. Ctrl + колёсико всегда меняет скорость",
-  "mouse wheel volume brightness": "мышь колёсико громкость яркость"
+  "mouse wheel volume brightness": "мышь колёсико громкость яркость",
+  "Subtitles in picture in picture": "Субтитры (Картинка в картинке)",
+  "Subtitles in the mini player": "Субтитры (Мини-проигрыватель в приложении)"
 }

@@ -3559,5 +3559,7 @@
   "Original audio": "原聲",
   "Dub in my language, if any": "有則用我的語言配音",
   "{0} (original)": "{0}（原聲）",
-  "{0} (automatic dub)": "{0}（自動配音）"
+  "{0} (automatic dub)": "{0}（自動配音）",
+  "Subtitles in picture in picture": "畫中畫顯示字幕",
+  "Subtitles in the mini player": "應用程式內小視窗顯示字幕"
 }

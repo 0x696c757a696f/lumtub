@@ -3535,5 +3535,7 @@
   "Next up": "A continuació",
   "Searched": "Cercats",
   "You were here last time · Tap to refresh": "L'última vegada et vas quedar aquí · Toca per actualitzar",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "El reproductor no ha pogut obrir el flux de vídeo i no n'ha donat cap motiu. Configuració › Xarxa › Comprovació de xarxa mostra quina part està bloquejada."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "El reproductor no ha pogut obrir el flux de vídeo i no n'ha donat cap motiu. Configuració › Xarxa › Comprovació de xarxa mostra quina part està bloquejada.",
+  "Subtitles in picture in picture": "Subtítols (Imatge en imatge)",
+  "Subtitles in the mini player": "Subtítols (Minireproductor a l'aplicació)"
 }

@@ -3540,5 +3540,7 @@
   "Left half brightness, right half volume": "Lewa połowa jasność, prawa połowa głośność",
   "Scroll wheel over the video": "Kółko myszy nad filmem",
   "Now: {0}. Ctrl + wheel always changes the speed": "Teraz: {0}. Ctrl + kółko zawsze zmienia prędkość",
-  "mouse wheel volume brightness": "mysz kółko głośność jasność"
+  "mouse wheel volume brightness": "mysz kółko głośność jasność",
+  "Subtitles in picture in picture": "Napisy (Obraz w obrazie)",
+  "Subtitles in the mini player": "Napisy (Miniokno w aplikacji)"
 }

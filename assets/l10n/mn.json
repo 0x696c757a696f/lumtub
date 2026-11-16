@@ -3535,5 +3535,7 @@
   "Next up": "Дараагийнх",
   "Searched": "Хайсан",
   "You were here last time · Tap to refresh": "Та өмнө нь энд зогссон · Шинэчлэхийн тулд дарна уу",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Тоглуулагч видео урсгалыг нээж чадсангүй, шалтгаанаа ч хэлсэнгүй. Тохиргоо › Сүлжээ › Сүлжээний шалгалт хэсэгт аль хэсэг хаагдсаныг харж болно."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Тоглуулагч видео урсгалыг нээж чадсангүй, шалтгаанаа ч хэлсэнгүй. Тохиргоо › Сүлжээ › Сүлжээний шалгалт хэсэгт аль хэсэг хаагдсаныг харж болно.",
+  "Subtitles in picture in picture": "Хадмал (Дэлгэц доторх дэлгэц)",
+  "Subtitles in the mini player": "Хадмал (Аппын доторх жижиг цонх)"
 }

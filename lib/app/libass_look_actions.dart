@@ -14,6 +14,23 @@ extension LibassLookActions on AppController {
     _queueLibassLook();
   }
 
+  /// [owner] shows the video with subtitles left out ([off]) or not.
+  void subtitlesOffIn(Object owner, bool off) {
+    final was = subtitlesOff;
+    off ? _subtitlesOffIn.add(owner) : _subtitlesOffIn.remove(owner);
+    if (was != subtitlesOff) _showLibassSubtitles();
+  }
+
+  /// Shows or hides what libmpv draws as [subtitlesOff] says, when it draws.
+  void _showLibassSubtitles() {
+    final platform = player?.platform;
+    if (platform is! NativePlayer || !libassDraws) return;
+    final value = subtitlesOff ? 'no' : 'yes';
+    for (final name in ['sub-visibility', 'secondary-sub-visibility']) {
+      unawaited(platform.setProperty(name, value).catchError((Object e) => logDebug(() => 'Could not set $name: $e')));
+    }
+  }
+
   /// Options were set from the settings alone: the look for the player's
   /// size goes back at once, and the copies are checked against them.
   void _optionsApplied(Player player) {
@@ -26,6 +43,7 @@ extension LibassLookActions on AppController {
         unawaited(platform.setProperty(name, 'no').catchError((Object e) => logDebug(() => 'Could not hide $name: $e')));
       }
     }
+    if (subtitlesOff) _showLibassSubtitles();
     _restyleSubtitles(player);
   }
 
@@ -167,7 +185,7 @@ extension LibassLookActions on AppController {
       await platform.setProperty(second ? 'secondary-sid' : 'sid', wanted);
       // mpv may have shown the track in the other place too.
       if (second && await platform.getProperty('sid') == wanted) await platform.setProperty('sid', source);
-      if (second) await platform.setProperty('secondary-sub-visibility', libassDraws ? 'yes' : 'no');
+      if (second) await platform.setProperty('secondary-sub-visibility', libassDraws && !subtitlesOff ? 'yes' : 'no');
       if (!second) await syncMainSubtitle();
     }
     // Copies neither subtitle shows any more: a growing translation would

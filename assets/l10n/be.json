@@ -3535,5 +3535,7 @@
   "Next up": "Далей",
   "Searched": "Шукалі",
   "You were here last time · Tap to refresh": "Вы спыніліся тут · Націсніце, каб абнавіць",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Прайгравальнік не змог адкрыць відэапаток і не назваў прычыну. У Налады › Сетка › Праверка сеткі можна ўбачыць, што менавіта блакуецца."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Прайгравальнік не змог адкрыць відэапаток і не назваў прычыну. У Налады › Сетка › Праверка сеткі можна ўбачыць, што менавіта блакуецца.",
+  "Subtitles in picture in picture": "Субцітры (Відэа ў відэа)",
+  "Subtitles in the mini player": "Субцітры (Міні-акно ў праграме)"
 }

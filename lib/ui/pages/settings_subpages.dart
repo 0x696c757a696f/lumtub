@@ -516,6 +516,18 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           value: settings.libassSubtitles,
           onChanged: (v) => save(settings.copyWith(libassSubtitles: v)),
         ),
+        SwitchItem(
+          title: tr('Subtitles in picture in picture'),
+          leading: Icon(AppIcons.pictureInpicture),
+          value: settings.pipSubtitles,
+          onChanged: (v) => save(settings.copyWith(pipSubtitles: v)),
+        ),
+        SwitchItem(
+          title: tr('Subtitles in the mini player'),
+          leading: Icon(AppIcons.closedCaptioning),
+          value: settings.miniPlayerSubtitles,
+          onChanged: (v) => save(settings.copyWith(miniPlayerSubtitles: v)),
+        ),
         NormalItem(
           title: tr('Subtitle position'),
           subtitle: tr('Current: {0}% (100 is the bottom of the frame)', [settings.subtitlePosition]),

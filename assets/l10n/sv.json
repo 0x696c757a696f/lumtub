@@ -3535,5 +3535,7 @@
   "Next up": "Nästa",
   "Searched": "Sökt",
   "You were here last time · Tap to refresh": "Du var här förra gången · Tryck för att uppdatera",
-  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Spelaren kunde inte öppna videoströmmen och angav ingen orsak. Inställningar › Nätverk › Nätverkskontroll visar vilken del som är blockerad."
+  "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Spelaren kunde inte öppna videoströmmen och angav ingen orsak. Inställningar › Nätverk › Nätverkskontroll visar vilken del som är blockerad.",
+  "Subtitles in picture in picture": "Undertexter (Bild-i-bild)",
+  "Subtitles in the mini player": "Undertexter (Minispelare i appen)"
 }

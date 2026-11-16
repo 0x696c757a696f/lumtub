@@ -427,6 +427,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   PointerDeviceKind? _tapKind;
 
+  /// A phone's screen held upright, too narrow for the full screen's rows.
+  bool _upright(BuildContext context) => _phone && MediaQuery.sizeOf(context).width < 600;
+
   /// Phones only: keeps the screen in the way it is held now, landscape or
   /// portrait, until unlocked.
   static bool get _phone => touchFirst && !Device.tv;
@@ -879,7 +882,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ),
         // A phone in full screen: the page's main actions, as phone video
         // apps keep them by the title, so there is no need to leave.
-        if (_phone && fullscreen && item != null) ..._fullscreenActions(context, leaveFullscreen),
+        if (_phone && fullscreen && item != null && !_upright(context)) ..._fullscreenActions(context, leaveFullscreen),
         // Switches that are on show here, so the state stays visible after
         // they moved into 更多设置.
         for (final (on, icon, tip) in [
@@ -947,6 +950,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     // settings panel, and the volume is the phone's own keys.
     final width = _phone ? 44.0 : fullscreen ? 42.0 : 35.0;
     final compact = _phone && !fullscreen;
+    // Full screen held upright (a portrait video, or a screen Android or
+    // iPadOS would not turn): the menus that do not fit are in the
+    // settings panel, as on the small player.
+    final narrow = compact || (fullscreen && _upright(context));
     final progress = _PositionBuilder(
       player: _player,
       active: !_animation.isDismissed,
@@ -1014,9 +1021,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           SizedBox(width: _phone ? 8 : 4),
           time,
           Expanded(child: Align(alignment: AlignmentDirectional.centerStart, child: _chapterMenu())),
-          if (!compact) _danmakuButtons(width),
+          // Live chat on an upright full screen keeps only its switch.
+          if (!compact) _danmakuButtons(width, withSettings: !narrow),
           _subtitleMenu(width),
-          if (!compact)
+          if (!narrow)
           StreamBuilder<double>(
             stream: _player.stream.rate,
             initialData: _player.state.rate,
@@ -1031,7 +1039,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             ),
           ),
           // Quality on the small player is in its settings panel.
-          if (!compact)
+          if (!narrow)
           StreamBuilder<int?>(
             stream: _player.stream.height,
             initialData: _player.state.height,
@@ -1082,7 +1090,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   /// 弹幕 on or off and their settings: a video's chat, or its timed comments.
-  Widget _danmakuButtons(double width) => ListenableBuilder(
+  Widget _danmakuButtons(double width, {bool withSettings = true}) => ListenableBuilder(
         listenable: _controller,
         builder: (context, _) {
           if (!_controller.hasDanmaku) return const SizedBox.shrink();
@@ -1095,7 +1103,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               active: settings.enabled,
               onTap: () => unawaited(_controller.setDanmaku(settings.copyWith(enabled: !settings.enabled))),
             ),
-            if (settings.enabled) _IconButton(tooltip: tr('Bullet chat settings'), width: width, icon: AppIcons.slidersHorizontal, onTap: () => unawaited(_openDanmaku(context))),
+            if (settings.enabled && withSettings) _IconButton(tooltip: tr('Bullet chat settings'), width: width, icon: AppIcons.slidersHorizontal, onTap: () => unawaited(_openDanmaku(context))),
           ]);
         },
       );

@@ -3540,5 +3540,7 @@
   "Left half brightness, right half volume": "Separuh kiri kecerahan, separuh kanan volume",
   "Scroll wheel over the video": "Roda mouse di atas video",
   "Now: {0}. Ctrl + wheel always changes the speed": "Sekarang: {0}. Ctrl + roda selalu mengubah kecepatan",
-  "mouse wheel volume brightness": "mouse roda volume kecerahan"
+  "mouse wheel volume brightness": "mouse roda volume kecerahan",
+  "Subtitles in picture in picture": "Subtitel (Picture-in-picture)",
+  "Subtitles in the mini player": "Subtitel (Pemutar mini dalam aplikasi)"
 }

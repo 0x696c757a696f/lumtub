@@ -48,6 +48,7 @@ import '../native_core.dart';
 import '../encrypted_dns.dart';
 import '../native_http.dart';
 import '../live_chat.dart';
+import '../link_video.dart';
 import '../models.dart';
 import '../network_proxy.dart';
 import '../socks_bridge.dart';
@@ -697,13 +698,15 @@ class AppController extends ChangeNotifier with _ExploreState {
   }
 
   static String? parseYoutubeId(String input) {
-    final url = Uri.tryParse(input);
-    if (url == null || !url.hasScheme || url.scheme != 'https') return null;
+    // A link copied without its scheme is the same video.
+    final text = input.trim();
+    final url = Uri.tryParse(RegExp(r'^[a-z]+://', caseSensitive: false).hasMatch(text) ? text : 'https://$text');
+    if (url == null || url.scheme != 'https') return null;
     if (url.host == 'youtu.be') {
       final id = url.pathSegments.isNotEmpty ? url.pathSegments.first : '';
       return RegExp(r'^[\w-]{11}$').hasMatch(id) ? id : null;
     }
-    if (url.host == 'youtube.com' || url.host == 'www.youtube.com' || url.host == 'm.youtube.com') {
+    if (const {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com'}.contains(url.host)) {
       final id = url.queryParameters['v'] ??
           ((url.pathSegments.length >= 2 && (url.pathSegments.first == 'shorts' || url.pathSegments.first == 'live')) ? url.pathSegments[1] : '');
       return RegExp(r'^[\w-]{11}$').hasMatch(id) ? id : null;

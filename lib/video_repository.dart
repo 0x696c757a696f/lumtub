@@ -572,6 +572,17 @@ class HistoryStore {
     return Future.value();
   }
 
+  /// Puts what is now known of a remembered video, such as the title and
+  /// channel of one opened from a link, in its place in the history.
+  Future<void> update(VideoItem item) {
+    final at = items.indexWhere((other) => other.id == item.id);
+    if (at < 0) return Future.value();
+    items[at] = item;
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 300), () => unawaited(_saveNow()));
+    return Future.value();
+  }
+
   /// Gives a remembered video the length its player found, when the list
   /// it came from had none.
   Future<void> fillDuration(String id, int seconds) {

@@ -7,7 +7,10 @@ extension SearchActions on AppController {
     if (query.isEmpty || !ready) return;
     final asUrl = AppController.parseYoutubeId(query);
     if (asUrl != null) {
-      await play(VideoItem(id: asUrl, title: tr('YouTube video · {0}', [asUrl]), channel: 'YouTube', url: 'https://www.youtube.com/watch?v=$asUrl'));
+      // A link names no video: its title and channel are asked first, so
+      // the watch page, the history and the home page show them, not the id.
+      final known = [...history, if (playing case final p?) p].where((item) => item.id == asUrl && !isLinkPlaceholder(item)).firstOrNull;
+      await play(known ?? await linkVideo(_http, asUrl) ?? linkPlaceholder(asUrl));
       return;
     }
     if (query != _query || mode != PageMode.explore || onWatchPage) _remember();

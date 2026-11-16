@@ -720,6 +720,9 @@ class _PeekingBar extends StatefulWidget {
 
 class _PeekingBarState extends State<_PeekingBar> {
   bool _hovered = false;
+  /// Folded away and done moving: then it is neither painted nor hit, but
+  /// kept, so the search keys can still reach its field.
+  bool _folded = true;
   /// Set once the bar in the window's column has slid away, as the two
   /// share the search field's focus and text.
   bool _ready = false;
@@ -749,10 +752,16 @@ class _PeekingBarState extends State<_PeekingBar> {
     if (_hovered != on) setState(() => _hovered = on);
   }
 
+  void _settled() {
+    final folded = !(_hovered || widget.focus.hasFocus);
+    if (folded != _folded) setState(() => _folded = folded);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_ready) return const SizedBox.shrink();
     final shown = _hovered || widget.focus.hasFocus;
+    if (shown) _folded = false;
     return MouseRegion(
       onEnter: (_) => _hover(true),
       onExit: (_) => _hover(false),
@@ -763,7 +772,8 @@ class _PeekingBarState extends State<_PeekingBar> {
             heightFactor: shown ? 1 : 0,
             duration: Motion.of(Ease.fade),
             curve: Ease.curve,
-            child: widget.child,
+            onEnd: _settled,
+            child: Offstage(offstage: _folded, child: widget.child),
           ),
         ),
         // A thin strip along the top edge to reach for it.

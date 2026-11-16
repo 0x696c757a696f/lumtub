@@ -78,7 +78,7 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 
 ### 🎬 Player
 - Hardware decoding matched to your GPU; live streams at their best quality, starting at the live edge.
-- Theater mode, mini player, borderless picture-in-picture, lights off, A-B loop, storyboard previews and the "most replayed" heatmap.
+- Theater mode, mini player, borderless picture-in-picture, lights off, A-B loop, storyboard previews and the "most replayed" heatmap. Subtitles in picture-in-picture and the mini player can be turned off.
 - Speed and volume remembered per channel; background playback with media keys and a tray icon.
 - **Volume balance** (off by default) evens out loudness between videos and within one, using the loudness YouTube measured.
 - The mouse wheel over the video can change the volume or brightness if you want it to (Settings › Controls & shortcuts); otherwise it just scrolls the page. Ctrl + wheel changes the speed.

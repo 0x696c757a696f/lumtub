@@ -1090,7 +1090,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               ),
             ),
           // 铺满窗口, as Bilibili's web fullscreen beside its fullscreen.
-          if (!_phone && (!fullscreen || fillingWindow.value))
+          // Phones and tablets have the whole screen already.
+          if (!touchFirst && (!fullscreen || fillingWindow.value))
             _IconButton(
               tooltip: tr('Fill the window (W)'),
               icon: AppIcons.arrowsOutSimple,

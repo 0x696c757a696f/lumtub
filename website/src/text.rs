@@ -181,8 +181,8 @@ pub static EN: Text = Text {
             alt: "Live chat flying across a live stream",
         },
         Highlight {
-            title: "24 skins and 10 color schemes",
-            body: "Skins change the whole look, from Y2K gloss and Frutiger Aero scenes to one bit pixels, with their own title bar and menu bar if you like. The newest, Azure Tomorrow, has glass towers by a clear lake by day and under the moon at night.",
+            title: "36 skins and 10 color schemes",
+            body: "Skins change the whole look, from Y2K gloss and Frutiger Aero scenes to one bit pixels, with their own title bar and menu bar if you like. Twelve new ones, from Star Atlas and Obsidian Glass to Clay and Neo-Brutal, each have a light and a dark side.",
             shot: "skin-aero.png",
             alt: "The home page in the Bubble Gel skin",
         },
@@ -197,7 +197,7 @@ pub static EN: Text = Text {
     ],
     features_title: "Everything else you'd expect, and more",
     features: [
-        Feature { icon: "play-circle", title: "Player", body: "Theater mode, mini player, borderless picture in picture, A to B loop, storyboard previews, the most replayed heatmap and skip silence. Speed and volume are remembered per channel." },
+        Feature { icon: "play-circle", title: "Player", body: "Theater mode, mini player, borderless picture in picture, A to B loop, storyboard previews, the most replayed heatmap and skip silence. Volume balance evens out loud and quiet videos, and speed and volume are remembered per channel." },
         Feature { icon: "download-simple", title: "Downloads", body: "Any format YouTube serves, joined without encoding again, with subtitles, title and cover inside. Record lives as they air, then play offline." },
         Feature { icon: "television-simple", title: "Cast to your TV", body: "Chromecast and DLNA from 720p up to 8K, AirPlay in preview." },
         Feature { icon: "speaker-high", title: "Dubbed audio", body: "Original track by default, an optional dub in your language, and an audio language choice per video, on every system." },
@@ -333,8 +333,8 @@ pub static ZH: Text = Text {
             alt: "直播聊天以弹幕形式飞过画面",
         },
         Highlight {
-            title: "24 套皮肤和 10 套配色",
-            body: "皮肤会改变整个界面，从千禧年果冻、Frutiger Aero 风景到黑白点阵都有，还能换标题栏和菜单栏。最新的「蔚蓝未来城」：白天是湖畔的玻璃高楼，夜里是月光下的城市。",
+            title: "36 套皮肤和 10 套配色",
+            body: "皮肤会改变整个界面，从千禧年果冻、Frutiger Aero 风景到黑白点阵都有，还能换标题栏和菜单栏。新加的十二套从「学术星图」「黑曜玻璃」到「软陶」「新粗野」，每套都有浅色和深色两面。",
             shot: "skin-aero.png",
             alt: "泡泡凝胶皮肤下的首页",
         },
@@ -349,7 +349,7 @@ pub static ZH: Text = Text {
     ],
     features_title: "该有的都有，还多一些",
     features: [
-        Feature { icon: "play-circle", title: "播放器", body: "剧场模式、小窗、无边框画中画、A-B 循环、进度条预览图、「最多重播」热度图和跳过静音。每个频道单独记住倍速和音量。" },
+        Feature { icon: "play-circle", title: "播放器", body: "剧场模式、小窗、无边框画中画、A-B 循环、进度条预览图、「最多重播」热度图和跳过静音。音量均衡让忽大忽小的视频听起来一样响，每个频道单独记住倍速和音量。" },
         Feature { icon: "download-simple", title: "下载", body: "YouTube 提供的任何格式都能下，不重新编码直接合并，字幕、标题和封面写进文件。直播可以边播边录，下完离线播放。" },
         Feature { icon: "television-simple", title: "投屏到电视", body: "Chromecast 和 DLNA 从 720p 到 8K，AirPlay 为预览版。" },
         Feature { icon: "speaker-high", title: "配音音轨", body: "默认原声，可选你的语言的配音，每个视频还能单独选音轨语言，所有平台都支持。" },

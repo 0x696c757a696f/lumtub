@@ -4,7 +4,7 @@
 
 **A YouTube client with mpv playback, on-device recommendations you can understand and control, bilingual subtitles and live chat as danmaku on the video.**<br>
 Watch without signing in; connect your account only when you want to interact.<br>
-For **Windows, Linux, macOS and Android** (phones, tablets and TVs).
+For **Windows, Linux, macOS and Android** (phones, tablets and TVs), with iPhone and iPad in preview.
 
 **English** · [简体中文](README.zh-Hans.md)
 
@@ -16,6 +16,7 @@ For **Windows, Linux, macOS and Android** (phones, tablets and TVs).
 ![Linux](https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-FCC624?logo=linux&logoColor=black)
 ![macOS](https://img.shields.io/badge/macOS-Apple%20silicon%20%7C%20Intel-000000?logo=apple)
 ![Android](https://img.shields.io/badge/Android-phone%20%7C%20tablet%20%7C%20TV-3DDC84?logo=android&logoColor=white)
+![iOS](https://img.shields.io/badge/iOS-iPhone%20%7C%20iPad%20(preview)-000000?logo=ios)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 
@@ -72,12 +73,15 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 - **Explore by category**, Bilibili style, sorted by For you, Popular, Latest, Hidden gems, New creators or Long videos. Filter by spoken language (checked from audio and captions), region, quality, length and type, and add your own zones.
 - **Channel pages** with videos, Shorts, live, playlists, podcasts and community posts, plus search inside the channel.
 - **Subscription groups**, playlists with total and remaining length, watch later and a play queue.
+- **Bring your subscriptions along** from NewPipe, FreeTube, Google Takeout or OPML without signing in, and export them again, or back up your whole library with your settings.
 - **Focus mode** hides the home feed, comments and related videos. **Watch statistics** stay on your computer.
 
 ### 🎬 Player
 - Hardware decoding matched to your GPU; live streams at their best quality, starting at the live edge.
 - Theater mode, mini player, borderless picture-in-picture, lights off, A-B loop, storyboard previews and the "most replayed" heatmap.
 - Speed and volume remembered per channel; background playback with media keys and a tray icon.
+- **Volume balance** (off by default) evens out loudness between videos and within one, using the loudness YouTube measured.
+- The mouse wheel over the video can change the volume or brightness if you want it to (Settings › Controls & shortcuts); otherwise it just scrolls the page. Ctrl + wheel changes the speed.
 - **Cast** to Chromecast and DLNA TVs, and to AirPlay receivers (preview).
 - **Diagnostics:** a network check of the proxy, exit addresses and each kind of request, and a built-in playback test of H.264, VP9 and AV1 on your computer (processor, memory, dropped frames).
 - **Downloads:** pick any format YouTube serves, joined without re-encoding, with subtitles, title and cover inside, sponsor segments cut out if you like, and play it offline in Lumtub. Live streams can be recorded as they air.
@@ -102,7 +106,7 @@ These are also found in other YouTube clients, and all are opt-in here:
 - **SponsorBlock**, **DeArrow** titles and thumbnails, **Return YouTube Dislike**, hide all Shorts, and an AI filter that hides videos labelled as AI and channels on community AI-slop lists.
 - Proxy support (system, HTTP or SOCKS5), optional encrypted DNS, and Piped or Invidious servers as a fallback.
 - **82 interface languages**, right to left included, following your system language. Improve them on [Weblate](https://hosted.weblate.org/engage/lumtub/).
-- **Skins** that change the whole look, 23 built in, from Y2K gloss and Frutiger Aero scenes to one-bit pixels, with their own title bar and menu bar if you like. Anyone can make one: a commented `skin.jsonc` file, checked for readable contrast. See [skins/README.md](skins/README.md).
+- **Skins** that change the whole look, 36 built in, from Y2K gloss and Frutiger Aero scenes to one-bit pixels, clay and neo-brutalism, with their own title bar and menu bar if you like. Anyone can make one: a commented `skin.jsonc` file, checked for readable contrast. See [skins/README.md](skins/README.md).
 - Ten colour schemes, light and dark, plus an optional warm light, fonts and card sizes.
 - Block any channel, or just stop it being recommended.
 - **Block lists** for controversial religious groups and state propaganda media, off until you turn them on. They are public files in [lists/](lists/), updated daily with signatures, and anyone can suggest a channel or report a mistake. See [lists/README.md](lists/README.md).
@@ -135,7 +139,7 @@ File names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1
 **Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place. If it says FUSE is missing, install your distribution's `fuse3` package, or start it with `--appimage-extract-and-run`.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.<br>
-**Android (preview):** open the APK and allow installing from your browser or file manager when asked. New versions install from inside Lumtub; Android asks you to confirm. Live streams and downloads work too, through the yt-dlp built into the app; members-only videos don't play on Android yet.
+**Android (preview):** open the APK and allow installing from your browser or file manager when asked. New versions install from inside Lumtub; Android asks you to confirm. Live streams and downloads work too, through the yt-dlp built into the app; members-only videos don't play on Android yet.<br>
 **iPhone and iPad (preview, not yet tested on a real device):** Lumtub isn't in the App Store, so install the IPA with [SideStore](https://sidestore.io), [AltStore](https://altstore.io) or Sideloadly using your own Apple ID, or with TrollStore. In SideStore or AltStore, add the source `https://github.com/0x696c757a696f/lumtub/releases/latest/download/altstore-source.json` to get new versions. yt-dlp runs inside the app with the Python it carries.
 
 **macOS:** open the DMG and drag Lumtub into Applications. Lumtub is not notarized by Apple yet, so macOS stops it the first time it opens. Either run this once in Terminal:
@@ -170,7 +174,7 @@ Everything is open source under the GPL, so none of this has to be taken on trus
 
 **Is everything free?** Lumtub is. Some optional AI features (translation, speech-to-text, summaries) use third-party services or your own API keys, and those providers may charge.
 
-**Where is my data?** On Windows in `%LOCALAPPDATA%\Lumtub`, or the `userdata` folder next to `lumtub.exe` for the portable version. On Linux in `~/.local/share/lumtub`, on macOS in `~/Library/Application Support/Lumtub`. Settings can be exported and imported.
+**Where is my data?** On Windows in `%LOCALAPPDATA%\Lumtub`, or the `userdata` folder next to `lumtub.exe` for the portable version. On Linux in `~/.local/share/lumtub`, on macOS in `~/Library/Application Support/Lumtub`. Settings, subscriptions and your library can be exported and imported.
 
 **Which Linux systems does it run on?** Any distribution with glibc 2.35 or newer: Ubuntu 22.04, Debian 12, Fedora 36 and later. Ubuntu 20.04 and older, and musl systems such as Alpine, are not supported. On NixOS start it with `appimage-run`.
 

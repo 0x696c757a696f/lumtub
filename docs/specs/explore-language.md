@@ -62,6 +62,11 @@ searching, so that the search finds videos in it to begin with:
 The search is also asked from the language's home country (`gl`) when no
 region is picked.
 
+A whole zone's words put into another language may find few videos or
+none (`知识 科普` as `conoscenza Scienza popolare` found none uploaded in
+the past month, seen on 2026-11-16). When its search runs out, the zone
+goes on with its sub-categories' searches, one after another.
+
 ## Asking YouTube
 
 - Each video is asked once per language check, at most 6 at a time.

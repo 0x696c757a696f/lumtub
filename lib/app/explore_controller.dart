@@ -85,7 +85,10 @@ extension ExploreActions on AppController {
 
   /// Wider searches than [exploreQuery], narrowest first, read once it
   /// runs out: the sub-category's, then the zone's, then the zone's
-  /// without the format and view words.
+  /// without the format and view words. With a language picked, the
+  /// zone's own words put into it may find few videos or none ("知识 科普"
+  /// as "conoscenza Scienza popolare" found none in a month, seen on
+  /// 2026-11-16): the whole zone then goes on with its sub-categories'.
   List<String> get exploreBroaderQueries {
     final words = [exploreFormat.words, exploreView.words].where((w) => w.isNotEmpty).join(' ');
     String withWords(String query) => words.isEmpty ? query : '$query $words';
@@ -94,6 +97,8 @@ extension ExploreActions on AppController {
       if (leaf != null && exploreSubNow != null) withWords(exploreSubNow!.query),
       withWords(exploreTopicNow.query),
       exploreTopicNow.query,
+      if (exploreSubNow == null && preferences.exploreLanguage != ExploreLanguage.any)
+        for (final sub in exploreTopicNow.subs) withWords(sub.query),
     }..remove(exploreQuery);
     return [for (final query in queries) if (query.trim().isNotEmpty) query];
   }

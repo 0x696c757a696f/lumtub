@@ -323,6 +323,8 @@ own shapes; only the colours change. 跟随浅色/深色模式，保留 Lumtub �
 | `ocean` | Ocean Glass | 海洋玻璃 | teal water glass, bubbles and waves |
 | `meadow` | Sunny Meadow | 晴空草原 | blue sky, green grass, lens glints |
 | `city` | Green Tomorrow | 绿色未来城 | glass towers with terrace gardens, wind turbines and a train over green hills |
+| `azure` | Azure Tomorrow | 蔚蓝未来城 | glass spires by a clear lake and a maglev train; a glowing city under the moon at night |
+| `aquarium` | Millennium Aquarium | 千禧水族箱 | a 2000s collage: shining discs, a crystal ball with fish, gel balls and a silver boombox |
 | `aurora` | Aurora Glass | 极光玻璃 | dark glass under northern lights |
 | `chrome` | Chrome Cyber | 镀铬赛博 | chrome, neon, perspective grid, ~2000 |
 | `candy` | Candy Shell | 糖果壳 | translucent coloured plastic, 1998–2001 |

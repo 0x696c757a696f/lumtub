@@ -1,12 +1,15 @@
 mod icons;
 mod motion;
+mod jsonc;
 mod release;
+mod skins;
 mod text;
 
 use leptos::mount::mount_to_body;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use release::{Os, Release};
+use skins::{SkinPreview, SkinState};
 use text::{ALTSTORE_SOURCE, Lang, Text};
 
 const REPO: &str = "https://github.com/0x696c757a696f/lumtub";
@@ -113,6 +116,7 @@ fn App() -> impl IntoView {
     let menu = RwSignal::new(false);
     let active = RwSignal::new(String::new());
     let ctx = Ctx { release: RwSignal::new(None), os: Os::detect() };
+    let skin = SkinState::new();
 
     spawn_local(async move {
         if let Some(r) = Release::fetch().await {
@@ -204,7 +208,7 @@ fn App() -> impl IntoView {
             </div>
             <main id="main">
                 <Hero t=t ctx=ctx/>
-                <Highlights t=t lang=l/>
+                <Highlights t=t lang=l skin=skin/>
                 <Tagline lang=l/>
                 <Steps t=t/>
                 <Features t=t/>
@@ -291,7 +295,7 @@ fn Hero(t: &'static Text, ctx: Ctx) -> impl IntoView {
 }
 
 #[component]
-fn Highlights(t: &'static Text, lang: Lang) -> impl IntoView {
+fn Highlights(t: &'static Text, lang: Lang, skin: SkinState) -> impl IntoView {
     view! {
         <section id="features" class="section">
             <div class="wrap">
@@ -300,19 +304,9 @@ fn Highlights(t: &'static Text, lang: Lang) -> impl IntoView {
                     <p class="body-3 muted">{t.why_lead}</p>
                 </header>
                 {t.highlights.iter().enumerate().map(|(i, h)| {
-                    let media = if i == t.highlights.len() - 1 {
-                        view! {
-                            <div class="skins">
-                                <figure class="wide"><img loading="lazy" src=shot(lang, "skin-aero.png") alt=t.skins_caption[0] width="1266" height="793"/><figcaption class="caption-1">{t.skins_caption[0]}</figcaption></figure>
-                                <figure><img loading="lazy" src=shot(lang, "skin-player.png") alt=t.skins_caption[1] width="1266" height="793"/><figcaption class="caption-1">{t.skins_caption[1]}</figcaption></figure>
-                                <figure><img loading="lazy" src=shot(lang, "skin-onebit.png") alt=t.skins_caption[2] width="1266" height="793"/><figcaption class="caption-1">{t.skins_caption[2]}</figcaption></figure>
-                                <figure class="wide azure">
-                                    <img loading="lazy" src="img/azure-day.webp" alt=t.skins_caption[3] width="1200" height="675"/>
-                                    <img loading="lazy" class="night" src="img/azure-night.webp" alt="" width="1200" height="675"/>
-                                    <figcaption class="caption-1">{t.skins_caption[3]}</figcaption>
-                                </figure>
-                            </div>
-                        }.into_any()
+                    let last = i == t.highlights.len() - 1;
+                    let media = if last {
+                        view! { <SkinPreview t=t lang=lang state=skin/> }.into_any()
                     } else {
                         let (w, hgt) = dims(h.shot);
                         view! {
@@ -320,7 +314,7 @@ fn Highlights(t: &'static Text, lang: Lang) -> impl IntoView {
                         }.into_any()
                     };
                     view! {
-                        <article class="highlight reveal" class:flip=i % 2 == 1>
+                        <article class="highlight reveal" class:flip=i % 2 == 1 && !last class:stack=last>
                             <div class="hl-text">
                                 <span class="index caption-3">{format!("0{}", i + 1)}</span>
                                 <h3 class="heading-5">{h.title}</h3>

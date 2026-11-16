@@ -29,6 +29,10 @@ finish-args:
 modules:
   - name: lumtub
     buildsystem: simple
+    # Prebuilt and already stripped: left as the AppImage has them.
+    build-options:
+      no-debuginfo: true
+      strip: false
     build-commands:
       - chmod +x lumtub.AppImage
       - ./lumtub.AppImage --appimage-extract > /dev/null

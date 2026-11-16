@@ -113,7 +113,6 @@ class AppPreferences {
     this.volumeStep = 5,
     this.shortcutKeys = const {},
     this.rightClick = RightClick.fillWindow,
-    this.theaterHidesTopBar = false,
     this.wheelGesture = WheelGesture.off,
     this.controlsHideSeconds = 3,
     this.showHeatmap = true,
@@ -264,8 +263,6 @@ class AppPreferences {
   final Map<String, List<String>> shortcutKeys;
   /// What a right click on the video does.
   final RightClick rightClick;
-  /// 剧场模式 hides the top bar as well as the side rail.
-  final bool theaterHidesTopBar;
   /// What the mouse wheel does over the video; off lets the page scroll.
   final WheelGesture wheelGesture;
   final int controlsHideSeconds;
@@ -496,7 +493,6 @@ class AppPreferences {
     int? volumeStep,
     Map<String, List<String>>? shortcutKeys,
     RightClick? rightClick,
-    bool? theaterHidesTopBar,
     WheelGesture? wheelGesture,
     int? controlsHideSeconds,
     bool? showHeatmap,
@@ -585,7 +581,6 @@ class AppPreferences {
         volumeStep: volumeStep ?? this.volumeStep,
         shortcutKeys: shortcutKeys ?? this.shortcutKeys,
         rightClick: rightClick ?? this.rightClick,
-        theaterHidesTopBar: theaterHidesTopBar ?? this.theaterHidesTopBar,
         wheelGesture: wheelGesture ?? this.wheelGesture,
         controlsHideSeconds: controlsHideSeconds ?? this.controlsHideSeconds,
         showHeatmap: showHeatmap ?? this.showHeatmap,
@@ -675,7 +670,6 @@ class AppPreferences {
         'volumeStep': volumeStep,
         'shortcutKeys': shortcutKeys,
         'rightClick': rightClick.name,
-        'theaterHidesTopBar': theaterHidesTopBar,
         'wheelGesture': wheelGesture.name,
         'controlsHideSeconds': controlsHideSeconds,
         'showHeatmap': showHeatmap,
@@ -804,7 +798,6 @@ class AppPreferences {
       volumeStep: number('volumeStep', 5, 1, 25),
       shortcutKeys: keyLists('shortcutKeys'),
       rightClick: RightClick.parse(raw['rightClick'], raw['rightClickBack']),
-      theaterHidesTopBar: flag('theaterHidesTopBar', d.theaterHidesTopBar),
       wheelGesture: WheelGesture.parse(raw['wheelGesture'], d.wheelGesture),
       controlsHideSeconds: number('controlsHideSeconds', 3, 1, 30),
       showHeatmap: flag('showHeatmap', d.showHeatmap),

@@ -28,6 +28,7 @@ import 'pages/video_pages.dart';
 import 'pages/watch_page.dart';
 import 'pages/youtube_playlist_page.dart';
 import 'lights_off.dart';
+import 'motion.dart';
 import 'theater_mode.dart';
 import 'mini_player.dart';
 import 'pip_view.dart';
@@ -459,8 +460,21 @@ class _AppShellState extends State<AppShell> {
                   );
               final watchingOnPhone = _controller.onWatchPage && watchesLikePhone(context);
               // 剧场模式 gives the video the side rail's room too, as YouTube
-              // hides its guide while watching, and the top bar's if asked.
+              // hides its guide while watching. The top bar steps aside as
+              // well and slides back in at the window's top edge, or for
+              // the search keys; a touch screen keeps it.
               final theater = theaterMode.value && _controller.onWatchPage && !_controller.mini;
+              final peekTopBar = theater && !touchFirst;
+              Widget topBar() => _region(
+                    () => _TopBar.shownOf(_controller),
+                    (context) => _TopBar(
+                      wide: wide,
+                      controller: _controller,
+                      searchText: _searchText,
+                      searchFocus: _searchFocus,
+                      onSubmit: _submitSearch,
+                    ),
+                  );
               final skinRail = skin != null && skin.drawsRail;
               _tvRail = Device.tv && rail && !skinRail;
               // The bar to show at the bottom, also while it slides away.
@@ -474,16 +488,7 @@ class _AppShellState extends State<AppShell> {
                 body: SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [
                   // A phone's watch page starts with the player, as phone
                   // apps do; back is the player's arrow or the system's.
-                  if (!watchingOnPhone && !_tvRail && !(theater && _controller.preferences.theaterHidesTopBar)) _region(
-                    () => _TopBar.shownOf(_controller),
-                    (context) => _TopBar(
-                      wide: wide,
-                      controller: _controller,
-                      searchText: _searchText,
-                      searchFocus: _searchFocus,
-                      onSubmit: _submitSearch,
-                    ),
-                  ),
+                  if (!watchingOnPhone && !_tvRail && !peekTopBar) topBar(),
                   if (tabs != null && tabs.top) tabBar(tabs),
                   Expanded(child: Stack(children: [
                     Row(children: [
@@ -521,6 +526,7 @@ class _AppShellState extends State<AppShell> {
                     // is not mounted meanwhile, so the card has the only Video.
                     if (_controller.mini && _controller.playing != null)
                       Positioned.fill(child: ListenableBuilder(listenable: _controller, builder: (context, _) => MiniPlayer(controller: _controller))),
+                    if (peekTopBar && !_tvRail) Positioned(left: 0, top: 0, right: 0, child: _PeekingBar(focus: _searchFocus, child: topBar())),
                   ])),
                   // No status line on phones, tablets and TVs: the room goes to the page.
                   if (_controller.appearance.showStatusBar && !touchFirst) _region(
@@ -589,7 +595,6 @@ class _AppShellState extends State<AppShell> {
         c.appearance.showStatusBar,
         c.preferences.lightsOffDim,
         theaterMode.value,
-        c.preferences.theaterHidesTopBar,
       );
 
   /// A part of the window built again only when [select] reads something
@@ -699,6 +704,64 @@ void openSettings(BuildContext context, AppController controller, {SettingsCateg
       );
     },
   )));
+}
+
+/// The top bar in 剧场模式: out of sight until the mouse reaches the top
+/// edge or the search field takes focus, gone again once the mouse leaves
+/// it and the field is left.
+class _PeekingBar extends StatefulWidget {
+  const _PeekingBar({required this.focus, required this.child});
+  final FocusNode focus;
+  final Widget child;
+
+  @override
+  State<_PeekingBar> createState() => _PeekingBarState();
+}
+
+class _PeekingBarState extends State<_PeekingBar> {
+  bool _hovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.focus.addListener(_changed);
+  }
+
+  @override
+  void dispose() {
+    widget.focus.removeListener(_changed);
+    super.dispose();
+  }
+
+  void _changed() {
+    if (mounted) setState(() {});
+  }
+
+  void _hover(bool on) {
+    if (_hovered != on) setState(() => _hovered = on);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = _hovered || widget.focus.hasFocus;
+    return MouseRegion(
+      onEnter: (_) => _hover(true),
+      onExit: (_) => _hover(false),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        ClipRect(
+          child: AnimatedAlign(
+            alignment: Alignment.bottomCenter,
+            heightFactor: shown ? 1 : 0,
+            duration: Motion.reduced ? Duration.zero : const Duration(milliseconds: 160),
+            curve: Curves.easeOutCubic,
+            child: widget.child,
+          ),
+        ),
+        // A thin strip along the top edge to reach for it.
+        if (!shown) const SizedBox(height: 4, width: double.infinity),
+      ]),
+    );
+  }
 }
 
 class _TopBar extends StatelessWidget {

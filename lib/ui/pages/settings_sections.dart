@@ -679,14 +679,6 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.handTap),
               onTap: () => pickFromDialog<RightClick>(context, title: tr('Right click on the video'), value: prefs.rightClick, values: [for (final v in RightClick.values) (v, v.label)], onSelected: (v) => savePrefs(prefs.copyWith(rightClick: v))),
             ), subtitle: '${tr('mouse back')} ${tr('Fill the window')}'),
-        if (!touchFirst)
-          SettingEntry(tr('Hide the top bar in theater mode'), (context) => SwitchItem(
-                title: tr('Hide the top bar in theater mode'),
-                subtitle: tr('The side rail always hides in theater mode; press T to bring them back'),
-                leading: _icon(AppIcons.frameCorners),
-                value: prefs.theaterHidesTopBar,
-                onChanged: (v) => savePrefs(prefs.copyWith(theaterHidesTopBar: v)),
-              ), subtitle: tr('Theater mode')),
         SettingEntry(tr('Keyboard shortcuts help'), (context) => NormalItem(
               title: tr('Keyboard shortcuts help'),
               subtitle: tr('View all player shortcuts'),

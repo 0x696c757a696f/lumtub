@@ -309,6 +309,7 @@ void main() {
       theaterPanelBeside = true;
       await pump(tester);
       expect(find.byTooltip('Expand'), findsNothing, reason: 'not in theater mode');
+      expect(find.byTooltip('Fill the window (W)'), findsOneWidget);
       theaterMode.value = true;
       theaterChatOpen.value = false;
       await tester.pump();

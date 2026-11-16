@@ -1089,6 +1089,16 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                 onTap: () => theaterMode.value = !theater,
               ),
             ),
+          // 铺满窗口, as Bilibili's web fullscreen beside its fullscreen.
+          if (!_phone && (!fullscreen || fillingWindow.value))
+            _IconButton(
+              tooltip: tr('Fill the window (W)'),
+              icon: AppIcons.arrowsOutSimple,
+              size: 22,
+              width: width,
+              active: fillingWindow.value,
+              onTap: () => unawaited(toggleFillWindow(widget.state)),
+            ),
           _IconButton(
             tooltip: fullscreen && !fillingWindow.value ? tr('Exit fullscreen (F)') : tr('Fullscreen (F)'),
             icon: fullscreen && !fillingWindow.value ? AppIcons.cornersIn : AppIcons.cornersOut,

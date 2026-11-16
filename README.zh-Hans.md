@@ -4,7 +4,7 @@
 
 **YouTube 客户端：mpv 播放，本机计算、看得懂也调得动的推荐，双语字幕，直播聊天变成弹幕。**<br>
 不登录也能看；只有想点赞、评论时才需要连接账号。<br>
-支持 **Windows、Linux、macOS 和 Android**（手机、平板和电视）。
+支持 **Windows、Linux、macOS 和 Android**（手机、平板和电视），iPhone 和 iPad 版为预览版。
 
 [English](README.md) · **简体中文**
 
@@ -16,6 +16,7 @@
 ![Linux](https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-FCC624?logo=linux&logoColor=black)
 ![macOS](https://img.shields.io/badge/macOS-Apple%20silicon%20%7C%20Intel-000000?logo=apple)
 ![Android](https://img.shields.io/badge/Android-%E6%89%8B%E6%9C%BA%20%7C%20%E5%B9%B3%E6%9D%BF%20%7C%20%E7%94%B5%E8%A7%86-3DDC84?logo=android&logoColor=white)
+![iOS](https://img.shields.io/badge/iOS-iPhone%20%7C%20iPad%EF%BC%88%E9%A2%84%E8%A7%88%EF%BC%89-000000?logo=ios)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![翻译状态](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 
@@ -61,12 +62,15 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 - **按分区探索**，类似 B 站，可按为你推荐、热门、最新、宝藏、新人和长视频排序。可按视频实际说的语言（从音频和字幕判断）、地区、画质、时长和类型筛选，也能添加自己的分区。
 - **频道页**包括视频、Shorts、直播、播放列表、播客和社区帖子，并可在频道内搜索。
 - **订阅分组**，播放列表显示总时长和剩余时长，稍后观看和播放队列。
+- **订阅随时搬家**：不用登录就能导入 NewPipe、FreeTube、Google Takeout 或 OPML 的订阅，也能再导出；还可以连同设置把整个媒体库一起备份。
 - **专注模式**隐藏首页推荐、评论和相关视频。**观看统计**只留在你的电脑上。
 
 ### 🎬 播放器
 - 按你的显卡选择硬件解码；直播以最高画质从最新处开始播放。
-- 剧场模式、小窗播放、无边框画中画、关灯模式、A-B 循环、进度条预览图和“最常重播”热度曲线。
+- 剧场模式、小窗播放、无边框画中画、关灯模式、A-B 循环、进度条预览图和“最常重播”热度曲线。画中画和应用内小窗里的字幕可以单独关掉。
 - 按频道记住播放速度和音量；后台播放，支持媒体键和托盘图标。
+- **音量均衡**（默认关闭）：根据 YouTube 测得的响度，拉平不同视频之间和同一视频内的音量差。
+- 视频上的鼠标滚轮可以按需设为调音量或亮度（设置 › 控制与快捷键），默认只滚动页面。Ctrl + 滚轮调倍速。
 - **投屏**到 Chromecast、DLNA 电视，以及 AirPlay 设备（预览版）。
 - **下载**：可选 YouTube 提供的任意格式，合并时不重新编码，并可在 Lumtub 里离线播放。
 - **诊断**：网络诊断逐项检查代理、出口地址和各类请求；内置播放测试比较 H.264、VP9 和 AV1 在这台电脑上的处理器占用、内存和丢帧。
@@ -91,7 +95,7 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 - **SponsorBlock**、**DeArrow** 标题和缩略图、**Return YouTube Dislike**、隐藏所有 Shorts，以及隐藏标注为 AI 生成的视频和社区 AI 垃圾内容名单上频道的 AI 过滤。
 - 代理（系统、HTTP 或 SOCKS5）、可选的加密 DNS，以及作为备用的 Piped 或 Invidious 服务器。
 - **82 种界面语言**，包括从右到左的文字，默认跟随系统语言。欢迎在 [Weblate](https://hosted.weblate.org/engage/lumtub/) 上改进翻译。
-- **皮肤**：换掉整个界面的样子，内置二十三套，从千禧年的光泽风格、Frutiger Aero 风景到黑白点阵，还可以用皮肤自己的标题栏和菜单栏。人人都能做皮肤：写一个带注释的 `skin.jsonc` 就行，颜色对比度会自动检查。见 [skins/README.md](skins/README.md)。
+- **皮肤**：换掉整个界面的样子，内置三十六套，从千禧年的光泽风格、Frutiger Aero 风景到黑白点阵、软陶和新粗野主义，还可以用皮肤自己的标题栏和菜单栏。人人都能做皮肤：写一个带注释的 `skin.jsonc` 就行，颜色对比度会自动检查。见 [skins/README.md](skins/README.md)。
 - 十套配色，浅色深色，可选护眼暖光、字体和卡片大小。
 - 屏蔽任意频道，或只是不再推荐它。
 - **屏蔽列表**：争议宗教团体和官方宣传媒体，默认不开，自己在设置里打开。列表是 [lists/](lists/) 里公开的文件，每天带签名自动更新，谁都可以建议加入频道或报告误列。见 [lists/README.md](lists/README.md#怎么贡献)。
@@ -118,12 +122,14 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 | `android-arm64-v8a` APK | 大多数 Android 手机、平板和电视（Android 7.0 及以上）。**不确定就选这个** |
 | `android-armeabi-v7a` APK | 较老的 32 位 Android 设备和不少廉价电视盒子 |
 | `android-x86_64` APK | Android 模拟器和 x86 Chromebook |
+| `ios` IPA | iOS 15 及以上的 iPhone 和 iPad（预览版，自签安装） |
 
 文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
 **Windows**：用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。<br>
 **Linux**：给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新。如果提示缺少 FUSE，请安装发行版的 `fuse3` 软件包，或用 `--appimage-extract-and-run` 参数启动。<br>
 第一次启动时会从 GitHub 下载 yt-dlp 和 Deno，之后 Lumtub 会自己保持更新。<br>
-**Android（预览版）**：打开 APK，按提示允许浏览器或文件管理器安装应用。新版本可以在 Lumtub 里直接安装，Android 会请你确认一次。直播和下载也都能用，靠的是应用里自带的 yt-dlp；会员专属视频在 Android 上暂时还不能看。
+**Android（预览版）**：打开 APK，按提示允许浏览器或文件管理器安装应用。新版本可以在 Lumtub 里直接安装，Android 会请你确认一次。直播和下载也都能用，靠的是应用里自带的 yt-dlp；会员专属视频在 Android 上暂时还不能看。<br>
+**iPhone 和 iPad（预览版，尚未在真机上测试）**：Lumtub 没有上架 App Store，请用 [SideStore](https://sidestore.io)、[AltStore](https://altstore.io) 或 Sideloadly 配合你自己的 Apple ID 安装 IPA，也可以用 TrollStore。在 SideStore 或 AltStore 里添加源 `https://github.com/0x696c757a696f/lumtub/releases/latest/download/altstore-source.json`，就能收到新版本。yt-dlp 用应用自带的 Python 在应用内运行。
 
 **macOS**：打开 DMG，把 Lumtub 拖进“应用程序”。Lumtub 还没有经过 Apple 公证，所以第一次打开时会被 macOS 拦下。可以在终端里运行一次：
 
@@ -156,7 +162,7 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 
 **所有功能都免费吗？** Lumtub 本身免费。部分可选的 AI 功能（翻译、语音转字幕、总结）使用第三方服务或你自己的 API 密钥，这些服务商可能收费。
 
-**数据存在哪里？** Windows 在 `%LOCALAPPDATA%\Lumtub`，便携版在 `lumtub.exe` 旁边的 `userdata` 文件夹。Linux 在 `~/.local/share/lumtub`，macOS 在 `~/Library/Application Support/Lumtub`。设置可以导出和导入。
+**数据存在哪里？** Windows 在 `%LOCALAPPDATA%\Lumtub`，便携版在 `lumtub.exe` 旁边的 `userdata` 文件夹。Linux 在 `~/.local/share/lumtub`，macOS 在 `~/Library/Application Support/Lumtub`。设置、订阅和媒体库都可以导出和导入。
 
 **支持哪些 Linux？** glibc 2.35 或更新的发行版：Ubuntu 22.04、Debian 12、Fedora 36 及以后。不支持 Ubuntu 20.04 及更早版本，也不支持 Alpine 等 musl 系统。NixOS 上请用 `appimage-run` 启动。
 

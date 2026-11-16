@@ -1,13 +1,14 @@
 name: Website
 
 # The project website on GitHub Pages: a Leptos app compiled to WebAssembly
-# with Trunk, from website/, using the README screenshots in docs/.
+# with Trunk, from website/, using the README screenshots in docs/ and the
+# skin files in skins/ for the live skin preview.
 on:
   push:
     branches: [main]
-    paths: ['website/**', 'docs/screenshots/**', '.github/workflows/pages.yml']
+    paths: ['website/**', 'docs/screenshots/**', 'skins/**', 'pubspec.yaml', '.github/workflows/pages.yml']
   pull_request:
-    paths: ['website/**', '.github/workflows/pages.yml']
+    paths: ['website/**', 'skins/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:

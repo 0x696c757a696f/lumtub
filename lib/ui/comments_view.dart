@@ -501,7 +501,7 @@ class _CommentComposerState extends State<CommentComposer> {
           ),
         ),
         const SizedBox(height: 4),
-        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+        Row(children: [
           if (!_sending) EmojiButton(field: _text, focus: _focus, size: 16),
           if (widget.thanksFor case final videoId?)
             IconButton(
@@ -509,15 +509,27 @@ class _CommentComposerState extends State<CommentComposer> {
               icon: Icon(AppIcons.handHeart, size: 16),
               onPressed: () => unawaited(openExternal('https://www.youtube.com/watch?v=$videoId')),
             ),
-          const Spacer(),
-          if (widget.onCancel != null) TextButton(style: _compact, onPressed: _sending ? null : widget.onCancel, child: Text(tr('Cancel'))),
-          const SizedBox(width: 4),
-          ListenableBuilder(
-            listenable: _text,
-            builder: (context, _) => FilledButton(
-              style: _compact,
-              onPressed: _sending || _text.text.trim().isEmpty ? null : _send,
-              child: _sending ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(tr('Publish')),
+          // Labels long in some languages go one under the other when the
+          // panel is narrow, and wrap inside the button if still too wide.
+          Expanded(
+            child: Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: OverflowBar(
+                spacing: 4,
+                overflowSpacing: 4,
+                overflowAlignment: OverflowBarAlignment.end,
+                children: [
+                  if (widget.onCancel != null) TextButton(style: _compact, onPressed: _sending ? null : widget.onCancel, child: Text(tr('Cancel'), textAlign: TextAlign.center)),
+                  ListenableBuilder(
+                    listenable: _text,
+                    builder: (context, _) => FilledButton(
+                      style: _compact,
+                      onPressed: _sending || _text.text.trim().isEmpty ? null : _send,
+                      child: _sending ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(tr('Publish'), textAlign: TextAlign.center),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ]),

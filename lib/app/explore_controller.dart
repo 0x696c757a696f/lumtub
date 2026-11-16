@@ -449,12 +449,17 @@ extension ExploreActions on AppController {
               // as one sentence is "Revisione digitale della tecnologia",
               // which finds next to nothing.
               final words = searchPhrasesOf(query);
-              final asked = [for (final w in words) if (translatesInto(w, language) && searchGlossary[w] == null) w];
+              // A keyword whose sense a translation misses goes by its
+              // English (searchPivots), which English searches as it is.
+              String source(String w) => traditional ? w : searchPivots[w] ?? w;
+              bool asks(String w) => translatesInto(w, language) && searchGlossary[w] == null && !(language == ExploreLanguage.en && searchPivots.containsKey(w) && !traditional);
+              final asked = [for (final w in words) if (asks(w)) source(w)];
               final lines = asked.isEmpty ? const <String>[] : (await translate(asked.join('\n'))).split('\n');
               if (lines.length != asked.length) throw StateError('${lines.length} lines for ${asked.length} phrases');
               var next = 0;
               final translated = searchWordsOf([
-                for (final w in words) !translatesInto(w, language) ? w : searchGlossary[w] ?? lines[next++],
+                for (final w in words)
+                  !translatesInto(w, language) ? w : searchGlossary[w] ?? (asks(w) ? lines[next++] : source(w)),
               ]);
               logDebug(() => 'Explore searches "$query" in $target as "$translated"');
               return translated.isEmpty ? query : translated;

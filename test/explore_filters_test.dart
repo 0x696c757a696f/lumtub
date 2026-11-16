@@ -174,5 +174,10 @@ void main() {
     expect(searchWordsOf(['giardinaggio', 'giardinaggio']), 'giardinaggio');
     expect(searchWordsOf(['tavola rotonda', 'discussione', 'Tavola rotonda ', '']), 'tavola rotonda discussione');
     expect(searchWordsOf(['tecnologia', 'digitale', 'recensione']), 'tecnologia digitale recensione');
+    // Each word once: the Chinese keyword and its English one translate alike.
+    expect(searchWordsOf(['forma fisica', 'live', 'forma fisica dal vivo']), 'forma fisica live dal vivo');
+    // Keywords a translation word by word takes in another sense go by their English.
+    expect(searchPivots['体育'], 'sports');
+    expect(searchPivots.keys.every((k) => isTranslatedPhrase(k)), isTrue);
   });
 }

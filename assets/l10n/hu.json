@@ -3537,5 +3537,7 @@
   "You were here last time · Tap to refresh": "Legutóbb itt tartott · Koppintson a frissítéshez",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "A lejátszó nem tudta megnyitni a videófolyamot, és nem adott okot. A Beállítások › Hálózat › Hálózatellenőrzés megmutatja, melyik rész van blokkolva.",
   "Subtitles in picture in picture": "Feliratok (Kép a képben)",
-  "Subtitles in the mini player": "Feliratok (Alkalmazáson belüli minilejátszó)"
+  "Subtitles in the mini player": "Feliratok (Alkalmazáson belüli minilejátszó)",
+  "Fill the window": "Ablak kitöltése",
+  "Fill the window (W)": "Ablak kitöltése (W)"
 }

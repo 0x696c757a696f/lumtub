@@ -3542,5 +3542,7 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "Ahora: {0}. Ctrl + rueda siempre cambia la velocidad",
   "mouse wheel volume brightness": "ratón rueda volumen brillo",
   "Subtitles in picture in picture": "Subtítulos (Imagen en imagen)",
-  "Subtitles in the mini player": "Subtítulos (Minirreproductor en la aplicación)"
+  "Subtitles in the mini player": "Subtítulos (Minirreproductor en la aplicación)",
+  "Fill the window": "Llenar la ventana",
+  "Fill the window (W)": "Llenar la ventana (W)"
 }

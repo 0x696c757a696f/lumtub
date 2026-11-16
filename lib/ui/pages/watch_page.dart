@@ -143,7 +143,10 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
     _fullscreenFor = id;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = _video.currentState;
-      if (mounted && state != null && !state.isFullscreen()) state.enterFullscreen();
+      if (mounted && state != null && !state.isFullscreen()) {
+        fillingWindow.value = false;
+        state.enterFullscreen();
+      }
     });
   }
 
@@ -187,6 +190,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
           // in a column beside the video, which can be folded away.
           final sidePanel = theater && outer.maxWidth >= 900;
           subtitleListBeside = sidePanel || (!theater && outer.maxWidth >= 1080);
+          theaterPanelBeside = sidePanel;
           final panelOpen = sidePanel && theaterChatOpen.value;
           final constraints = panelOpen ? outer.copyWith(maxWidth: outer.maxWidth - _theaterChatWidth) : outer;
           // 剧场模式 gives the video the whole width and stacks the panels below.
@@ -194,6 +198,9 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
           final mainWidth = wide ? constraints.maxWidth - _sidePanelWidth - AppStyle.pagePadding * 3 : constraints.maxWidth - AppStyle.pagePadding * 2;
           // Keep the whole player visible: never taller than the window allows.
           final playerWidth = theater ? min(constraints.maxWidth, max(320.0, (constraints.maxHeight - 8) * 16 / 9)) : min(mainWidth, max(320.0, (constraints.maxHeight - 120) * 16 / 9));
+          // In 剧场模式 the player spans the whole width, black either side
+          // of a picture narrower than the window, as on YouTube.
+          final theaterHeight = playerWidth * 9 / 16;
           // In the side panel the comments scroll by themselves and build
           // only what is on screen.
           // 专注模式 can leave the comments out; then they are not loaded.
@@ -273,7 +280,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
             ];
             final page = CustomScrollView(slivers: [
               // In 剧场模式 the player goes edge to edge.
-              if (theater) SliverToBoxAdapter(child: Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, byRotation: _enteredByRotation, onExit: _leftFullscreen)))),
+              if (theater) SliverToBoxAdapter(child: _Player(controller: controller, videoKey: _video, byRotation: _enteredByRotation, onExit: _leftFullscreen, height: theaterHeight)),
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(margin, theater ? 12 : 0, margin, 0),
                 sliver: SliverList.list(children: theater ? main.skip(1).toList() : main),
@@ -287,11 +294,11 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
                 if (!panelOpen) ..._UpNext(controller: controller, shrinkWrap: true).slivers(context),
               ])),
             ]);
-            if (!sidePanel) return page;
+            if (!panelOpen) return page;
+            // Folded, the player's own button unfolds it again.
             return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Expanded(child: page),
-              if (panelOpen)
-                SizedBox(
+              SizedBox(
                   width: _theaterChatWidth,
                   child: DecoratedBox(
                     decoration: BoxDecoration(border: Border(left: BorderSide(color: context.colors.outlineVariant))),
@@ -307,14 +314,6 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
                         trailing: IconButton(tooltip: tr('Collapse'), icon: Icon(AppIcons.caretRight, size: 18), onPressed: () => theaterChatOpen.value = false),
                       ),
                     ),
-                  ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(top: 4, end: 4),
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: IconButton(tooltip: tr('Expand'), icon: Icon(AppIcons.sidebar, size: 20), onPressed: () => theaterChatOpen.value = true),
                   ),
                 ),
             ]);
@@ -698,8 +697,11 @@ class _BackRow extends StatelessWidget {
 }
 
 class _Player extends StatelessWidget {
-  const _Player({required this.controller, required this.videoKey, required this.byRotation, required this.onExit});
+  const _Player({required this.controller, required this.videoKey, required this.byRotation, required this.onExit, this.height});
   final AppController controller;
+  /// 剧场模式's height: the player then takes the whole width, square
+  /// cornered, rather than a 16:9 box.
+  final double? height;
   final GlobalKey<VideoState> videoKey;
   /// Whether the phone entering full screen was turned sideways.
   final bool Function() byRotation;
@@ -737,11 +739,13 @@ class _Player extends StatelessWidget {
     );
   }
 
-  Widget _picture(BuildContext context) => AspectRatio(
-        key: lightsOffHole,
-        aspectRatio: 16 / 9,
+  Widget _box({required Widget child}) => height == null
+      ? AspectRatio(key: lightsOffHole, aspectRatio: 16 / 9, child: child)
+      : SizedBox(key: lightsOffHole, width: double.infinity, height: height, child: child);
+
+  Widget _picture(BuildContext context) => _box(
         child: ClipRRect(
-          borderRadius: context.cardRadius,
+          borderRadius: height == null ? context.cardRadius : BorderRadius.zero,
           child: ColoredBox(
             color: Colors.black,
             // As in PiliNara: the video and its controls repaint apart, so
@@ -765,6 +769,8 @@ class _Player extends StatelessWidget {
                   ),
                   subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label, byHeight: Platform.isAndroid, libass: controller.libassDraws),
                   onEnterFullscreen: () {
+                    // 铺满窗口 keeps the window as it is.
+                    if (fillingWindow.value) return Future.value();
                     WindowChrome.fullscreen.value = true;
                     // Turned sideways: the bars hide, and the screen still
                     // turns with the phone, so turning it back leaves.
@@ -783,6 +789,10 @@ class _Player extends StatelessWidget {
                   onExitFullscreen: () {
                     WindowChrome.fullscreen.value = false;
                     onExit();
+                    if (fillingWindow.value) {
+                      fillingWindow.value = false;
+                      return Future.value();
+                    }
                     return defaultExitNativeFullscreen();
                   },
                 ),

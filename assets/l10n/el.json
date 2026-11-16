@@ -3537,5 +3537,7 @@
   "You were here last time · Tap to refresh": "Είχατε σταματήσει εδώ την προηγούμενη φορά · Πατήστε για ανανέωση",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Ο αναπαραγωγέας δεν μπόρεσε να ανοίξει τη ροή βίντεο και δεν έδωσε λόγο. Στις Ρυθμίσεις › Δίκτυο › Έλεγχος δικτύου φαίνεται ποιο μέρος αποκλείεται.",
   "Subtitles in picture in picture": "Υπότιτλοι (Εικόνα σε εικόνα)",
-  "Subtitles in the mini player": "Υπότιτλοι (Μίνι αναπαραγωγέας εντός εφαρμογής)"
+  "Subtitles in the mini player": "Υπότιτλοι (Μίνι αναπαραγωγέας εντός εφαρμογής)",
+  "Fill the window": "Γέμισμα παραθύρου",
+  "Fill the window (W)": "Γέμισμα παραθύρου (W)"
 }

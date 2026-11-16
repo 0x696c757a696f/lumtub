@@ -3537,5 +3537,7 @@
   "You were here last time · Tap to refresh": "ඔබ පසුගිය වතාවේ සිටියේ මෙතැන · නැවුම් කිරීමට ඔබන්න",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ධාවකයට වීඩියෝ ප්‍රවාහය විවෘත කළ නොහැකි විය, හේතුවක්ද නොදුන්නේය. සැකසුම් › ජාලය › ජාල පරීක්ෂාව මගින් අවහිර වී ඇත්තේ කුමන කොටසද යන්න පෙන්වයි.",
   "Subtitles in picture in picture": "උපසිරැසි (පින්තූරය-තුළ-පින්තූරය)",
-  "Subtitles in the mini player": "උපසිරැසි (යෙදුම තුළ කුඩා ධාවකය)"
+  "Subtitles in the mini player": "උපසිරැසි (යෙදුම තුළ කුඩා ධාවකය)",
+  "Fill the window": "කවුළුව පුරවන්න",
+  "Fill the window (W)": "කවුළුව පුරවන්න (W)"
 }

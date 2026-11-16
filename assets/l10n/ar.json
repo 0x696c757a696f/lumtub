@@ -3542,5 +3542,7 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "الآن: {0}. ‏Ctrl + العجلة تغيّر السرعة دائمًا",
   "mouse wheel volume brightness": "فأرة عجلة صوت سطوع",
   "Subtitles in picture in picture": "الترجمة (نافذة عائمة)",
-  "Subtitles in the mini player": "الترجمة (المشغّل المصغّر داخل التطبيق)"
+  "Subtitles in the mini player": "الترجمة (المشغّل المصغّر داخل التطبيق)",
+  "Fill the window": "ملء النافذة",
+  "Fill the window (W)": "ملء النافذة (W)"
 }

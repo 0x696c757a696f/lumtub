@@ -3537,5 +3537,7 @@
   "You were here last time · Tap to refresh": "Tu ste ostali zadnjič · Tapnite za osvežitev",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Predvajalnik ni mogel odpreti video toka in ni navedel razloga. Nastavitve › Omrežje › Preverjanje omrežja pokaže, kateri del je blokiran.",
   "Subtitles in picture in picture": "Podnapisi (Slika v sliki)",
-  "Subtitles in the mini player": "Podnapisi (Mini predvajalnik v aplikaciji)"
+  "Subtitles in the mini player": "Podnapisi (Mini predvajalnik v aplikaciji)",
+  "Fill the window": "Zapolni okno",
+  "Fill the window (W)": "Zapolni okno (W)"
 }

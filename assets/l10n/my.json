@@ -3537,5 +3537,7 @@
   "You were here last time · Tap to refresh": "ယခင်တစ်ကြိမ် ဤနေရာအထိ ကြည့်ခဲ့သည် · နှိပ်၍ ပြန်လည်စတင်ရန်",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ပလေယာက ဗီဒီယိုစီးကြောင်းကို မဖွင့်နိုင်ဘဲ အကြောင်းရင်းလည်း မပြပါ။ ဆက်တင်များ › ကွန်ရက် › ကွန်ရက်စစ်ဆေးမှု တွင် မည်သည့်အပိုင်း ပိတ်ဆို့ခံထားရသည်ကို ကြည့်နိုင်သည်။",
   "Subtitles in picture in picture": "စာတန်းထိုး (ဗီဒီယိုအတွင်းဗီဒီယို (PiP))",
-  "Subtitles in the mini player": "စာတန်းထိုး (အက်ပ်အတွင်း မီနီပလေယာ)"
+  "Subtitles in the mini player": "စာတန်းထိုး (အက်ပ်အတွင်း မီနီပလေယာ)",
+  "Fill the window": "ဝင်းဒိုးပြည့်",
+  "Fill the window (W)": "ဝင်းဒိုးပြည့် (W)"
 }

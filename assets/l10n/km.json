@@ -3537,5 +3537,7 @@
   "You were here last time · Tap to refresh": "លើកមុនអ្នកនៅត្រឹមនេះ · ចុចដើម្បីផ្ទុកឡើងវិញ",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "កម្មវិធីចាក់បើកស្ទ្រីមវីដេអូមិនបាន ហើយមិនបានប្រាប់មូលហេតុទេ។ ការកំណត់ › បណ្ដាញ › ការពិនិត្យបណ្ដាញ បង្ហាញថាផ្នែកណាត្រូវបានទប់ស្កាត់។",
   "Subtitles in picture in picture": "ចំណងជើងរង (រូបក្នុងរូប)",
-  "Subtitles in the mini player": "ចំណងជើងរង (កម្មវិធីចាក់តូចក្នុងកម្មវិធី)"
+  "Subtitles in the mini player": "ចំណងជើងរង (កម្មវិធីចាក់តូចក្នុងកម្មវិធី)",
+  "Fill the window": "ពេញវិនដូ",
+  "Fill the window (W)": "ពេញវិនដូ (W)"
 }

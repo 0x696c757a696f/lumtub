@@ -3537,5 +3537,7 @@
   "You were here last time · Tap to refresh": "Pēdējoreiz pārtraucāt šeit · Pieskarieties, lai atsvaidzinātu",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Atskaņotājs nevarēja atvērt video straumi un nenorādīja iemeslu. Iestatījumi › Tīkls › Tīkla pārbaude parāda, kura daļa ir bloķēta.",
   "Subtitles in picture in picture": "Subtitri (Attēls attēlā)",
-  "Subtitles in the mini player": "Subtitri (Mini atskaņotājs lietotnē)"
+  "Subtitles in the mini player": "Subtitri (Mini atskaņotājs lietotnē)",
+  "Fill the window": "Aizpildīt logu",
+  "Fill the window (W)": "Aizpildīt logu (W)"
 }

@@ -18,3 +18,13 @@ final sidePanelTab = ValueNotifier<String?>(null);
 /// subtitle list, so the player opens the list there rather than over the
 /// video. Set by the watch page as it lays out.
 bool subtitleListBeside = false;
+
+/// Whether 剧场模式 shows comments, up next and chat beside the video, so
+/// the player offers the button that unfolds them. Set by the watch page
+/// as it lays out.
+bool theaterPanelBeside = false;
+
+/// 铺满窗口: the video has the whole window, the page round it hidden, but
+/// the window stays as it is rather than going fullscreen. It is the
+/// player's fullscreen view without the native fullscreen.
+final fillingWindow = ValueNotifier(false);

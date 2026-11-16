@@ -3537,5 +3537,7 @@
   "You were here last time · Tap to refresh": "Ötən dəfə buradaydınız · Yeniləmək üçün toxunun",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Pleyer video axınını aça bilmədi və səbəb bildirmədi. Ayarlar › Şəbəkə › Şəbəkə yoxlaması hansı hissənin bloklandığını göstərir.",
   "Subtitles in picture in picture": "Subtitrlər (Şəkil içində şəkil)",
-  "Subtitles in the mini player": "Subtitrlər (Tətbiqdaxili mini pleyer)"
+  "Subtitles in the mini player": "Subtitrlər (Tətbiqdaxili mini pleyer)",
+  "Fill the window": "Pəncərəni doldur",
+  "Fill the window (W)": "Pəncərəni doldur (W)"
 }

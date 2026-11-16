@@ -6,6 +6,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
 import '../app_preferences.dart';
+import '../right_click.dart';
 import '../l10n/l10n.dart';
 import '../models.dart';
 import '../shortcut_bindings.dart';
@@ -13,6 +14,7 @@ import 'lights_off.dart';
 import 'theater_mode.dart';
 import 'app_icons.dart';
 import 'common.dart';
+import 'fill_window.dart';
 
 /// What [action] does, as the settings and the help name it.
 String shortcutActionLabel(PlayerAction action, AppPreferences prefs) => switch (action) {
@@ -39,6 +41,7 @@ String shortcutActionLabel(PlayerAction action, AppPreferences prefs) => switch 
       PlayerAction.lineReplay => tr('Replay this line'),
       PlayerAction.copySubtitle => tr('Copy the current subtitle'),
       PlayerAction.theater => tr('Theater mode'),
+      PlayerAction.fillWindow => tr('Fill the window'),
       PlayerAction.lightsOff => tr('Lights off'),
       PlayerAction.screenshot => tr('Screenshot'),
       PlayerAction.stats => tr('Show or hide playback stats'),
@@ -76,7 +79,7 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) {
     (of(PlayerAction.mute), tr('Mute')),
     (of(PlayerAction.fullscreen), tr('Fullscreen')),
     (of(PlayerAction.exitFullscreen), tr('Exit fullscreen')),
-    if (prefs.rightClickBack) (tr('Right click on the video'), tr('Exit fullscreen, or else go back')),
+    if (prefs.rightClick != RightClick.off) (tr('Right click on the video'), prefs.rightClick.label),
     (of(PlayerAction.next), tr('Next video')),
     (of(PlayerAction.previous), tr('Previous video')),
     (pair(PlayerAction.frameBack, PlayerAction.frameForward), tr('Step back or forward one frame while paused')),
@@ -86,6 +89,7 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) {
     (of(PlayerAction.lineReplay), tr('Replay this line')),
     (of(PlayerAction.copySubtitle), tr('Copy the current subtitle')),
     (of(PlayerAction.theater), tr('Theater mode')),
+    (of(PlayerAction.fillWindow), tr('Fill the window')),
     (of(PlayerAction.lightsOff), tr('Lights off')),
     (of(PlayerAction.screenshot), tr('Screenshot')),
     (of(PlayerAction.stats), tr('Show or hide playback stats')),
@@ -232,7 +236,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
         PlayerAction.mute => mute,
         PlayerAction.slower => () => stepSpeed(-1),
         PlayerAction.faster => () => stepSpeed(1),
-        PlayerAction.fullscreen => () => unawaited(video()?.toggleFullscreen()),
+        PlayerAction.fullscreen => () => unawaited(toggleFullscreenFrom(video())),
         PlayerAction.exitFullscreen => exitFullscreen,
         PlayerAction.previous => previous,
         PlayerAction.next => next,
@@ -245,6 +249,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
         PlayerAction.lineReplay => () => subtitleStep(0),
         PlayerAction.copySubtitle => copySubtitle,
         PlayerAction.theater => () => theaterMode.value = !theaterMode.value,
+        PlayerAction.fillWindow => () => unawaited(toggleFillWindow(video())),
         PlayerAction.lightsOff => () => lightsOff.value = !lightsOff.value,
         PlayerAction.screenshot => onScreenshot,
         PlayerAction.stats => controller.toggleStats,

@@ -3542,5 +3542,7 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "Nu: {0}. Ctrl + scrollwiel wijzigt altijd de snelheid",
   "mouse wheel volume brightness": "muis scrollwiel volume helderheid",
   "Subtitles in picture in picture": "Ondertitels (Picture-in-picture)",
-  "Subtitles in the mini player": "Ondertitels (Minispeler in de app)"
+  "Subtitles in the mini player": "Ondertitels (Minispeler in de app)",
+  "Fill the window": "Venster vullen",
+  "Fill the window (W)": "Venster vullen (W)"
 }

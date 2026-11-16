@@ -3537,5 +3537,7 @@
   "You were here last time · Tap to refresh": "הייתם כאן בפעם הקודמת · הקישו לרענון",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "הנגן לא הצליח לפתוח את זרם הווידאו ולא ציין סיבה. ב\"הגדרות › רשת › בדיקת רשת\" אפשר לראות איזה חלק חסום.",
   "Subtitles in picture in picture": "כתוביות (תמונה בתוך תמונה)",
-  "Subtitles in the mini player": "כתוביות (נגן מיני בתוך האפליקציה)"
+  "Subtitles in the mini player": "כתוביות (נגן מיני בתוך האפליקציה)",
+  "Fill the window": "מילוי החלון",
+  "Fill the window (W)": "מילוי החלון (W)"
 }

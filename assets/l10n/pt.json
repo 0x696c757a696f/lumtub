@@ -3542,5 +3542,7 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "Agora: {0}. Ctrl + roda sempre muda a velocidade",
   "mouse wheel volume brightness": "mouse roda volume brilho",
   "Subtitles in picture in picture": "Legendas (Picture-in-picture)",
-  "Subtitles in the mini player": "Legendas (Miniplayer no app)"
+  "Subtitles in the mini player": "Legendas (Miniplayer no app)",
+  "Fill the window": "Preencher a janela",
+  "Fill the window (W)": "Preencher a janela (W)"
 }

@@ -3566,5 +3566,7 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "当前：{0}。Ctrl + 滚轮始终调节倍速",
   "mouse wheel volume brightness": "鼠标 滚轮 音量 亮度",
   "Subtitles in picture in picture": "画中画显示字幕",
-  "Subtitles in the mini player": "应用内小窗显示字幕"
+  "Subtitles in the mini player": "应用内小窗显示字幕",
+  "Fill the window": "铺满窗口",
+  "Fill the window (W)": "铺满窗口 (W)"
 }

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app_preferences.dart';
+import 'package:lumtub/right_click.dart';
 import 'package:lumtub/heatmap.dart';
 import 'package:lumtub/keep_awake.dart';
 import 'package:lumtub/models.dart';
@@ -254,7 +255,7 @@ void main() {
     testWidgets('keys chosen in the settings drive the player, and right click goes back', (tester) async {
       await controller.savePreferences(controller.preferences.copyWith(
         shortcutKeys: withShortcutKeys(const {}, PlayerAction.seekBack, [const KeyCombo(LogicalKeyboardKey.bracketLeft)]),
-        rightClickBack: true,
+        rightClick: RightClick.back,
       ));
       await pump(tester);
       final before = player.seeks.length;
@@ -297,6 +298,25 @@ void main() {
       await tester.tap(find.byTooltip('Exit theater mode (T)'));
       await tester.pump();
       expect(theaterMode.value, isFalse);
+    });
+
+    testWidgets('in theater mode the folded side panel unfolds from the bottom bar', (tester) async {
+      addTearDown(() {
+        theaterMode.value = false;
+        theaterChatOpen.value = true;
+        theaterPanelBeside = false;
+      });
+      theaterPanelBeside = true;
+      await pump(tester);
+      expect(find.byTooltip('Expand'), findsNothing, reason: 'not in theater mode');
+      expect(find.byTooltip('Fill the window (W)'), findsOneWidget);
+      theaterMode.value = true;
+      theaterChatOpen.value = false;
+      await tester.pump();
+      await tester.tap(find.byTooltip('Expand'));
+      await tester.pump();
+      expect(theaterChatOpen.value, isTrue);
+      expect(find.byTooltip('Expand'), findsNothing);
     });
 
     testWidgets('the thin progress line follows the setting', (tester) async {

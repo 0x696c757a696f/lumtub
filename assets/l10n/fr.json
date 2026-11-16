@@ -3542,5 +3542,7 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "Actuellement : {0}. Ctrl + molette change toujours la vitesse",
   "mouse wheel volume brightness": "souris molette volume luminosité",
   "Subtitles in picture in picture": "Sous-titres (Picture-in-picture)",
-  "Subtitles in the mini player": "Sous-titres (Mini-lecteur dans l'application)"
+  "Subtitles in the mini player": "Sous-titres (Mini-lecteur dans l'application)",
+  "Fill the window": "Remplir la fenêtre",
+  "Fill the window (W)": "Remplir la fenêtre (W)"
 }

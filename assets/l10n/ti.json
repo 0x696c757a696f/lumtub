@@ -3537,5 +3537,7 @@
   "You were here last time · Tap to refresh": "ዝሓለፈ ግዜ ኣብዚ በጺሕካ ነይርካ · ንምሕዳስ ጠውቕ",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "ተጻዋታይ ሰልፊ ቪድዮ ክኸፍት ኣይከኣለን፡ ምኽንያት ድማ ኣይሃበን። ቅጥዕታት › መርበብ › መርመራ መርበብ ኣየናይ ክፋል ከም ዝተዓጸወ የርእይ።",
   "Subtitles in picture in picture": "ትርጉም ጽሑፍ (ስእሊ-ኣብ-ስእሊ)",
-  "Subtitles in the mini player": "ትርጉም ጽሑፍ (ንኡስ መስኮት ኣብ ውሽጢ App)"
+  "Subtitles in the mini player": "ትርጉም ጽሑፍ (ንኡስ መስኮት ኣብ ውሽጢ App)",
+  "Fill the window": "መስኮት ምላእ",
+  "Fill the window (W)": "መስኮት ምላእ (W)"
 }

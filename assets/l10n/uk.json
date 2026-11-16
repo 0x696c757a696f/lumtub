@@ -3542,5 +3542,7 @@
   "Now: {0}. Ctrl + wheel always changes the speed": "Зараз: {0}. Ctrl + коліщатко завжди змінює швидкість",
   "mouse wheel volume brightness": "миша коліщатко гучність яскравість",
   "Subtitles in picture in picture": "Субтитри (Картинка в картинці)",
-  "Subtitles in the mini player": "Субтитри (Міні-вікно в застосунку)"
+  "Subtitles in the mini player": "Субтитри (Міні-вікно в застосунку)",
+  "Fill the window": "Заповнити вікно",
+  "Fill the window (W)": "Заповнити вікно (W)"
 }

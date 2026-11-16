@@ -54,6 +54,8 @@ import 'screenshot_action.dart';
 import 'storyboard_preview.dart';
 import 'lights_off.dart';
 import 'theater_mode.dart';
+import 'fill_window.dart';
+import '../right_click.dart';
 import 'video_box.dart';
 import 'video_aspect.dart';
 import 'theme.dart';
@@ -388,7 +390,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final at = _doubleTapAt;
     final touch = at != null && (at.kind == PointerDeviceKind.touch || at.kind == PointerDeviceKind.stylus);
     if (!touch) {
-      unawaited(widget.state?.toggleFullscreen());
+      unawaited(toggleFullscreenFrom(widget.state));
       return;
     }
     unawaited(HapticFeedback.selectionClick());
@@ -661,9 +663,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                       onLongPressEnd: (_) => _holdSpeed(false),
                       onLongPressCancel: () => _holdSpeed(false),
                       // As in wiliwili: out of fullscreen first, then back.
-                      onSecondaryTap: !_controller.preferences.rightClickBack
-                          ? null
-                          : () => fullscreen ? unawaited(widget.state?.exitFullscreen()) : _controller.goBack(),
+                      onSecondaryTap: switch (_controller.preferences.rightClick) {
+                        RightClick.off => null,
+                        RightClick.back => () => fullscreen ? unawaited(widget.state?.exitFullscreen()) : _controller.goBack(),
+                        RightClick.fillWindow => () => unawaited(toggleFillWindow(widget.state)),
+                      },
                     ),
                   ),
                 _buffering(),
@@ -1064,6 +1068,15 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               );
             },
           ),
+          // The column beside the video, folded away in 剧场模式, unfolds
+          // from here, so it takes no strip of the page while folded.
+          if (!fullscreen && !_phone)
+            ListenableBuilder(
+              listenable: Listenable.merge([theaterMode, theaterChatOpen]),
+              builder: (context, _) => theaterMode.value && theaterPanelBeside && !theaterChatOpen.value
+                  ? _IconButton(tooltip: tr('Expand'), icon: AppIcons.sidebar, size: 22, width: width, onTap: () => theaterChatOpen.value = true)
+                  : const SizedBox.shrink(),
+            ),
           if (!fullscreen && !_phone)
             ValueListenableBuilder(
               valueListenable: theaterMode,
@@ -1076,12 +1089,25 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                 onTap: () => theaterMode.value = !theater,
               ),
             ),
+          // 铺满窗口, as Bilibili's web fullscreen beside its fullscreen.
+          // Phones and tablets have the whole screen already.
+          if (!touchFirst && (!fullscreen || fillingWindow.value))
+            _IconButton(
+              tooltip: tr('Fill the window (W)'),
+              icon: AppIcons.arrowsOutSimple,
+              size: 22,
+              width: width,
+              active: fillingWindow.value,
+              onTap: () => unawaited(toggleFillWindow(widget.state)),
+            ),
           _IconButton(
-            tooltip: fullscreen ? tr('Exit fullscreen (F)') : tr('Fullscreen (F)'),
-            icon: fullscreen ? AppIcons.cornersIn : AppIcons.cornersOut,
+            tooltip: fullscreen && !fillingWindow.value ? tr('Exit fullscreen (F)') : tr('Fullscreen (F)'),
+            icon: fullscreen && !fillingWindow.value ? AppIcons.cornersIn : AppIcons.cornersOut,
             size: 24,
             width: width,
-            onTap: () => unawaited(widget.state?.toggleFullscreen()),
+            onTap: () => unawaited(toggleFullscreenFrom(widget.state).whenComplete(() {
+              if (mounted) setState(() {});
+            })),
           ),
         ]),
         ]),

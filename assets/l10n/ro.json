@@ -3537,5 +3537,7 @@
   "You were here last time · Tap to refresh": "Ai rămas aici data trecută · Atinge pentru a reîmprospăta",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Playerul nu a putut deschide fluxul video și nu a dat niciun motiv. Setări › Rețea › Verificare rețea arată care parte este blocată.",
   "Subtitles in picture in picture": "Subtitrări (Imagine în imagine)",
-  "Subtitles in the mini player": "Subtitrări (Miniplayer în aplicație)"
+  "Subtitles in the mini player": "Subtitrări (Miniplayer în aplicație)",
+  "Fill the window": "Umple fereastra",
+  "Fill the window (W)": "Umple fereastra (W)"
 }

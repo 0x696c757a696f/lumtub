@@ -3537,5 +3537,7 @@
   "You were here last time · Tap to refresh": "Соңғы рет осы жердесіз · Жаңарту үшін түртіңіз",
   "The player couldn't open the video stream, and gave no reason. Settings › Network › Network check shows which part is blocked.": "Ойнатқыш бейне ағынын аша алмады және себебін көрсетпеді. Баптаулар › Желі › Желіні тексеру қай бөліктің бұғатталғанын көрсетеді.",
   "Subtitles in picture in picture": "Субтитрлер (Сурет ішіндегі сурет)",
-  "Subtitles in the mini player": "Субтитрлер (Қолданба ішіндегі шағын ойнатқыш)"
+  "Subtitles in the mini player": "Субтитрлер (Қолданба ішіндегі шағын ойнатқыш)",
+  "Fill the window": "Терезені толтыру",
+  "Fill the window (W)": "Терезені толтыру (W)"
 }

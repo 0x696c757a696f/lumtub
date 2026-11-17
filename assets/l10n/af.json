@@ -3542,5 +3542,22 @@
   "Fill the window": "Vul die venster",
   "Fill the window (W)": "Vul die venster (W)",
   "Hide the side rail while watching": "Versteek die systrook terwyl jy kyk",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Die video kry sy ruimte, soos op YouTube; teatermodus versteek dit altyd"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Die video kry sy ruimte, soos op YouTube; teatermodus versteek dit altyd",
+  "Window transparency": "Venstertransparantheid",
+  "See the desktop through the window": "Sien die lessenaar deur die venster",
+  "See the wallpaper through the app": "Sien die muurpapier deur die program",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Die lessenaar skemer deur die raam rondom die bladsye, soos deur Windows 7-glas, in die kleure van enige skin.",
+  "Takes effect the next time Lumtub starts.": "Tree in werking die volgende keer wanneer Lumtub begin.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Hierdie lessenaar kan nie wys wat agter 'n venster is nie: dit het 'n samesteller (compositor) nodig.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Hierdie lessenaar kan nie vervaag wat agter is nie; die venster is net deurskynend.",
+  "The desktop shows through the window.": "Die lessenaar skemer deur die venster.",
+  "Transparency": "Deursigtigheid",
+  "Where it is see-through": "Waar dit deurskynend is",
+  "Frame only": "Net die raam",
+  "Whole window": "Hele venster",
+  "Blur what is behind": "Vervaag wat agter is",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Gefrost soos Windows 7; waar die lessenaar nie kan vervaag nie, is die venster net deurskynend.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Woorde bly leesbaar: hulle gloei op die raam, en die glas word nie helderder as wat teks oor enigiets agter dit leesbaar is nie, so met die hele venster deurskynend bly sommige skins taamlik vas. Video is altyd vas.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Glas soos Windows 7 onder enige skin; hoe helder, waar en vervaging is op die Skins-bladsy",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "deursigtig deurskynend glas vervaag gefrost lessenaar muurpapier aero acrylic mica"
 }

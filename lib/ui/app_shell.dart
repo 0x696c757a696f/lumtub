@@ -39,6 +39,7 @@ import '../l10n/l10n.dart';
 import 'fill_icon.dart';
 import 'haptics.dart';
 import 'frame_stats.dart';
+import 'glass_look.dart';
 import 'key_scroll.dart';
 import 'pull_to_refresh.dart';
 import '../shortcut_bindings.dart';
@@ -663,7 +664,11 @@ class _AppShellState extends State<AppShell> {
         ) : null,
         destinations: [
           for (final (i, d) in _destinations.indexed)
-            NavigationRailDestination(icon: FillIcon(d.$2, d.$3, selected: i == _selectedIndex), selectedIcon: FillIcon(d.$2, d.$3, selected: i == _selectedIndex), label: Text(d.$4)),
+            NavigationRailDestination(
+              icon: GlassPlate(child: FillIcon(d.$2, d.$3, selected: i == _selectedIndex)),
+              selectedIcon: GlassPlate(child: FillIcon(d.$2, d.$3, selected: i == _selectedIndex)),
+              label: GlassPlate(child: Text(d.$4)),
+            ),
         ],
       );
 
@@ -679,6 +684,9 @@ class _AppShellState extends State<AppShell> {
   /// A skin with a busy picture behind lays some of its page colour over
   /// it under the pages, so what is written on them reads.
   Widget _veiled(Skin? skin, Widget page) {
+    // Seeing the desktop: the pages solid in the glass's tint, as in a
+    // Windows 7 window, or glass themselves.
+    if (context.glass case final glass?) return glass.whole ? page : Material(color: glass.tint, child: page);
     // Kept in low resource mode: one flat colour costs nothing.
     if (skin == null || skin.veil == 0) return page;
     // A Material, not a ColoredBox, so list rows still show their ink on it.
@@ -862,7 +870,8 @@ class _TopBar extends StatelessWidget {
         skin?.topBar == null ? null : skin?.topBarText,
         Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(children: [
+        // Seeing the desktop, each thing on the bar glows to stay readable.
+        child: Row(children: GlassPlate.each(skin?.topBar, [
           InkWell(
             borderRadius: AppStyle.cardRadius,
             onTap: () => controller.navigate(PageMode.home),
@@ -885,7 +894,7 @@ class _TopBar extends StatelessWidget {
           SizedBox(width: wide ? 16 : 8),
           Expanded(child: Center(child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
-            child: SizedBox(height: 40, child: _SearchField(app: controller, controller: searchText, focusNode: searchFocus, enabled: ready, onSubmit: onSubmit)),
+            child: GlassPlate(surface: skin?.topBar, child: SizedBox(height: 40, child: _SearchField(app: controller, controller: searchText, focusNode: searchFocus, enabled: ready, onSubmit: onSubmit))),
           ))),
           SizedBox(width: wide ? 16 : 4),
           IconButton(
@@ -917,7 +926,7 @@ class _TopBar extends StatelessWidget {
                 ? openSettingsCategory(context, controller, SettingsCategory.account)
                 : openSettings(context, controller, category: SettingsCategory.account),
           ),
-        ]),
+        ])),
       ),
       ),
     );
@@ -1221,7 +1230,10 @@ class _StatusBar extends StatelessWidget {
         null => BoxDecoration(color: context.tones.chrome, border: Border(top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
       },
       alignment: AlignmentDirectional.centerStart,
-      child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.skin?.statusBarText ?? context.colors.outline, fontSize: 12, fontFamily: context.skin?.monoFont)),
+      child: GlassPlate(
+        surface: context.skin?.statusBar,
+        child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.skin?.statusBarText ?? context.colors.outline, fontSize: 12, fontFamily: context.skin?.monoFont)),
+      ),
     );
   }
 }

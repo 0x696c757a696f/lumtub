@@ -257,6 +257,17 @@ class AppearanceSettings {
   /// Whether a skin's pictures and landscape lie behind the pages; off
   /// leaves its page colour alone.
   final bool skinBackground;
+  /// 窗口透明: the desktop shows through the window, under any skin
+  /// (lib/window_glass.dart). Not a skin's [glassOpacity], which makes its
+  /// panes clearer over its own pictures.
+  final bool windowGlass;
+  /// How clear the glass is, 0 (solid) to 1 (as clear as words stay
+  /// readable over anything behind).
+  final double windowGlassClarity;
+  /// The pages are glass too, not only the frame round them.
+  final bool windowGlassWhole;
+  /// The system blurs what is behind, where it can.
+  final bool windowGlassBlur;
   final EyeCare eyeCare;
   /// How warm 护眼暖色 makes the window, 0.1 to 1: the colour
   /// temperature of the light, from 6040 K down to 1900 K
@@ -305,6 +316,10 @@ class AppearanceSettings {
     this.hideTitleBar = false,
     this.glassOpacity = 1,
     this.skinBackground = true,
+    this.windowGlass = false,
+    this.windowGlassClarity = 0.7,
+    this.windowGlassWhole = false,
+    this.windowGlassBlur = true,
     this.eyeCare = EyeCare.off,
     this.warmth = 0.4,
     this.eyeCareStart = 20,
@@ -388,6 +403,10 @@ class AppearanceSettings {
     bool? hideTitleBar,
     double? glassOpacity,
     bool? skinBackground,
+    bool? windowGlass,
+    double? windowGlassClarity,
+    bool? windowGlassWhole,
+    bool? windowGlassBlur,
     EyeCare? eyeCare,
     double? warmth,
     int? eyeCareStart,
@@ -424,6 +443,10 @@ class AppearanceSettings {
         hideTitleBar: hideTitleBar ?? this.hideTitleBar,
         glassOpacity: glassOpacity ?? this.glassOpacity,
         skinBackground: skinBackground ?? this.skinBackground,
+        windowGlass: windowGlass ?? this.windowGlass,
+        windowGlassClarity: windowGlassClarity ?? this.windowGlassClarity,
+        windowGlassWhole: windowGlassWhole ?? this.windowGlassWhole,
+        windowGlassBlur: windowGlassBlur ?? this.windowGlassBlur,
         eyeCare: eyeCare ?? this.eyeCare,
         warmth: warmth ?? this.warmth,
         eyeCareStart: eyeCareStart ?? this.eyeCareStart,
@@ -468,6 +491,10 @@ class AppearanceSettings {
         'hideTitleBar': hideTitleBar,
         'glassOpacity': glassOpacity,
         'skinBackground': skinBackground,
+        'windowGlass': windowGlass,
+        'windowGlassClarity': windowGlassClarity,
+        'windowGlassWhole': windowGlassWhole,
+        'windowGlassBlur': windowGlassBlur,
         'eyeCare': eyeCare.name,
         'warmth': warmth,
         'eyeCareStart': eyeCareStart,
@@ -524,6 +551,10 @@ class AppearanceSettings {
       hideTitleBar: raw['hideTitleBar'] == true,
       glassOpacity: raw['glassOpacity'] is num ? (raw['glassOpacity'] as num).toDouble().clamp(0.3, 1.0) : 1,
       skinBackground: raw['skinBackground'] != false,
+      windowGlass: raw['windowGlass'] == true,
+      windowGlassClarity: raw['windowGlassClarity'] is num ? (raw['windowGlassClarity'] as num).toDouble().clamp(0.0, 1.0) : 0.7,
+      windowGlassWhole: raw['windowGlassWhole'] == true,
+      windowGlassBlur: raw['windowGlassBlur'] != false,
       eyeCare: _byName(EyeCare.values, raw['eyeCare'], EyeCare.off),
       warmth: raw['warmth'] is num ? (raw['warmth'] as num).toDouble().clamp(0.1, 1.0) : 0.4,
       eyeCareStart: _hour(raw['eyeCareStart'], 20),

@@ -3542,5 +3542,22 @@
   "Fill the window": "Punuin ang window",
   "Fill the window (W)": "Punuin ang window (W)",
   "Hide the side rail while watching": "Itago ang sidebar habang nanonood",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Nakukuha ng video ang espasyo nito, tulad sa YouTube; palaging itinatago ito ng Theater mode"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Nakukuha ng video ang espasyo nito, tulad sa YouTube; palaging itinatago ito ng Theater mode",
+  "Window transparency": "Transparency ng window",
+  "See the desktop through the window": "Tingnan ang desktop sa pamamagitan ng window",
+  "See the wallpaper through the app": "Tingnan ang wallpaper sa pamamagitan ng app",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Lumilitaw ang desktop sa frame sa paligid ng mga pahina, parang salamin ng Windows 7, sa mga kulay ng anumang skin.",
+  "Takes effect the next time Lumtub starts.": "Magkakabisa sa susunod na pagsisimula ng Lumtub.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Hindi maipapakita ng desktop na ito ang nasa likod ng window: kailangan nito ng compositor.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Hindi malalabo ng desktop na ito ang nasa likod; see-through lang ang window.",
+  "The desktop shows through the window.": "Lumilitaw ang desktop sa window.",
+  "Transparency": "Transparency",
+  "Where it is see-through": "Kung saan ito see-through",
+  "Frame only": "Frame lang",
+  "Whole window": "Buong window",
+  "Blur what is behind": "I-blur ang nasa likod",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Frosted tulad ng Windows 7; kung hindi makapag-blur ang desktop, see-through lang ang window.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Nananatiling nababasa ang mga salita: kumikinang ang mga ito sa frame, at hindi lalabis ang linaw ng salamin kaysa sa kaya pang basahin ang teksto sa ibabaw ng anumang nasa likod, kaya kapag see-through ang buong window, may mga skin na nananatiling medyo solid. Laging solid ang video.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Salamin tulad ng Windows 7 sa ilalim ng anumang skin; ang linaw, saan, at blur ay nasa pahina ng Mga skin",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparent translucent salamin blur frosted desktop wallpaper see-through aero acrylic mica"
 }

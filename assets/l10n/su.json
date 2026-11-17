@@ -3542,5 +3542,22 @@
   "Fill the window": "Pinuhan jandela",
   "Fill the window (W)": "Pinuhan jandela (W)",
   "Hide the side rail while watching": "Sumputkeun bar sisi nalika nonton",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Vidéo meunang rohangna, siga di YouTube; mode bioskop salawasna nyumputkeunana"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Vidéo meunang rohangna, siga di YouTube; mode bioskop salawasna nyumputkeunana",
+  "Window transparency": "Transparansi jandela",
+  "See the desktop through the window": "Tingali desktop ngaliwatan jandela",
+  "See the wallpaper through the app": "Tingali wallpaper ngaliwatan aplikasi",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Desktop katémbong ngaliwatan pigura di sakuliah kaca, siga kaca Windows 7, migunakeun warna skin naon waé.",
+  "Takes effect the next time Lumtub starts.": "Bakal dilarapkeun nalika Lumtub dimimitian deui.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Desktop ieu teu bisa nembongkeun naon anu aya di tukangeun jandela: peryogi compositor.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Desktop ieu teu bisa ngaburkeun naon anu aya di tukang; jandelana ngan transparan.",
+  "The desktop shows through the window.": "Desktop katémbong ngaliwatan jandela.",
+  "Transparency": "Transparansi",
+  "Where it is see-through": "Di mana transparan",
+  "Frame only": "Pigura wungkul",
+  "Whole window": "Sakabéh jandela",
+  "Blur what is behind": "Burkeun anu aya di tukang",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Buram siga Windows 7; upami desktop teu bisa ngaburkeun, jandelana ngan transparan.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Tulisan tetep kaca: tulisan caang dina pigura, jeung kacana teu leuwih bening ti nu ngamungkinkeun téks kabaca dina luhur naon waé di tukang, ku kituna lamun sakabéh jandela transparan, sababaraha skin tetep rada pekat. Vidéo salawasna pekat.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Kaca siga Windows 7 handapeun skin naon waé; sabaraha bening, di mana, jeung pangaburan aya dina kaca Skin",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparan tembus pandang kaca kabur buram desktop wallpaper aero acrylic mica"
 }

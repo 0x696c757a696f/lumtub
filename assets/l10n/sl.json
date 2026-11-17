@@ -3542,5 +3542,22 @@
   "Fill the window": "Zapolni okno",
   "Fill the window (W)": "Zapolni okno (W)",
   "Hide the side rail while watching": "Skrij stransko vrstico med ogledom",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Videoposnetek dobi svoj prostor, kot na YouTubu; kinematografski način jo vedno skrije"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Videoposnetek dobi svoj prostor, kot na YouTubu; kinematografski način jo vedno skrije",
+  "Window transparency": "Prosojnost okna",
+  "See the desktop through the window": "Namizje naj se vidi skozi okno",
+  "See the wallpaper through the app": "Ozadje naj se vidi skozi aplikacijo",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Namizje se vidi skozi okvir okoli strani, kot skozi steklo Windows 7, v barvah katere koli preobleke.",
+  "Takes effect the next time Lumtub starts.": "Začne veljati ob naslednjem zagonu aplikacije Lumtub.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "To namizje ne more prikazati, kaj je za oknom: potrebuje kompozitor.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "To namizje ne more zamegliti, kar je zadaj; okno je le prosojno.",
+  "The desktop shows through the window.": "Namizje se vidi skozi okno.",
+  "Transparency": "Prosojnost",
+  "Where it is see-through": "Kje je prosojno",
+  "Frame only": "Samo okvir",
+  "Whole window": "Celotno okno",
+  "Blur what is behind": "Zamegli, kar je zadaj",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Mlečno steklo kot v sistemu Windows 7; kjer namizje ne more zamegliti, je okno le prosojno.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Besedilo ostane berljivo: na okvirju žari, steklo pa ni bolj čisto, kot dopušča branje besedila nad karkoli zadaj, zato nekatere preobleke ostanejo precej polne, če je prosojno celotno okno. Videoposnetek je vedno poln.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Steklo kot v sistemu Windows 7 pod katero koli preobleko; kako čisto, kje in zameglitev so na strani Preobleke",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "prosojen prosojnost polprosojen steklo zameglitev mlečno namizje ozadje aero acrylic mica"
 }

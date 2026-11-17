@@ -5,11 +5,26 @@ class MainFlutterWindow: NSWindow {
   private(set) var shell: MacShell?
   private var flutterViewController: FlutterViewController?
   var flutterView: NSView? { flutterViewController?.view }
+  /// The blurred desktop behind Flutter while the window lets it through.
+  private let behind = NSVisualEffectView()
 
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     self.flutterViewController = flutterViewController
-    self.contentViewController = flutterViewController
+    // Flutter's view sits in a plain container, over the desktop blur.
+    let container = NSViewController()
+    container.view = NSView(frame: flutterViewController.view.frame)
+    container.addChild(flutterViewController)
+    behind.frame = container.view.bounds
+    behind.autoresizingMask = [.width, .height]
+    behind.blendingMode = .behindWindow
+    behind.state = .active
+    behind.isHidden = true
+    container.view.addSubview(behind)
+    flutterViewController.view.frame = container.view.bounds
+    flutterViewController.view.autoresizingMask = [.width, .height]
+    container.view.addSubview(flutterViewController.view)
+    self.contentViewController = container
     self.initialFirstResponder = flutterViewController.view
     self.makeFirstResponder(flutterViewController.view)
     self.setFrame(MainFlutterWindow.firstFrame(for: self), display: true)
@@ -31,6 +46,23 @@ class MainFlutterWindow: NSWindow {
     var frame = window.frameRect(forContentRect: NSRect(origin: .zero, size: content))
     frame.origin = NSPoint(x: visible.midX - frame.width / 2, y: visible.midY - frame.height / 2)
     return frame
+  }
+
+  /// Lets the desktop show wherever Flutter leaves the window clear,
+  /// blurred when [blur]. The system's material stays neutral: Flutter lays
+  /// the skin's tint over it.
+  func setDesktopGlass(_ on: Bool, dark: Bool, blur: Bool) -> [String: Bool] {
+    // With Reduce transparency on, macOS draws the blur solid, which would
+    // hide the desktop asked for: the glass stays clear instead.
+    let blurred = on && blur && !NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
+    behind.material = .underWindowBackground
+    behind.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+    behind.isHidden = !blurred
+    isOpaque = !on
+    backgroundColor = on ? .clear : .windowBackgroundColor
+    flutterViewController?.backgroundColor = on ? .clear : .black
+    invalidateShadow()
+    return ["shown": on, "blurred": blurred]
   }
 
   // Picture in picture makes the window borderless, which by default

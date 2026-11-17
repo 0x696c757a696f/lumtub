@@ -3547,5 +3547,22 @@
   "Fill the window": "Remplir la fenêtre",
   "Fill the window (W)": "Remplir la fenêtre (W)",
   "Hide the side rail while watching": "Masquer la barre latérale pendant la lecture",
-  "The video gets its room, as on YouTube; theater mode always hides it": "La vidéo prend toute la place, comme sur YouTube ; le mode cinéma la masque toujours"
+  "The video gets its room, as on YouTube; theater mode always hides it": "La vidéo prend toute la place, comme sur YouTube ; le mode cinéma la masque toujours",
+  "Window transparency": "Transparence de la fenêtre",
+  "See the desktop through the window": "Voir le bureau à travers la fenêtre",
+  "See the wallpaper through the app": "Voir le fond d'écran à travers l'application",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Le bureau transparaît à travers le cadre autour des pages, comme à travers le verre de Windows 7, aux couleurs de n'importe quel thème.",
+  "Takes effect the next time Lumtub starts.": "Prend effet au prochain démarrage de Lumtub.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Ce bureau ne peut pas afficher ce qui se trouve derrière une fenêtre : il lui faut un compositeur.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Ce bureau ne peut pas flouter ce qui se trouve derrière ; la fenêtre est seulement transparente.",
+  "The desktop shows through the window.": "Le bureau transparaît à travers la fenêtre.",
+  "Transparency": "Transparence",
+  "Where it is see-through": "Où elle est transparente",
+  "Frame only": "Cadre uniquement",
+  "Whole window": "Toute la fenêtre",
+  "Blur what is behind": "Flouter ce qui est derrière",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Dépoli comme Windows 7 ; là où le bureau ne peut pas flouter, la fenêtre est seulement transparente.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Le texte reste lisible : il rayonne sur le cadre, et le verre n'est jamais plus clair que ce que permet la lecture du texte sur n'importe quoi derrière, donc avec toute la fenêtre transparente, certains thèmes restent assez opaques. La vidéo est toujours opaque.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Verre façon Windows 7 sous n'importe quel thème ; la clarté, la zone et le flou se règlent dans la page Thèmes",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparent translucide verre flou dépoli bureau fond d'écran aero acrylic mica"
 }

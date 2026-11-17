@@ -3542,5 +3542,22 @@
   "Fill the window": "Ablak kitöltése",
   "Fill the window (W)": "Ablak kitöltése (W)",
   "Hide the side rail while watching": "Oldalsáv elrejtése nézés közben",
-  "The video gets its room, as on YouTube; theater mode always hides it": "A videó megkapja a helyét, mint a YouTube-on; mozi módban az oldalsáv mindig el van rejtve"
+  "The video gets its room, as on YouTube; theater mode always hides it": "A videó megkapja a helyét, mint a YouTube-on; mozi módban az oldalsáv mindig el van rejtve",
+  "Window transparency": "Ablak átlátszósága",
+  "See the desktop through the window": "Az asztal látszik az ablakon át",
+  "See the wallpaper through the app": "A háttérkép látszik az alkalmazáson át",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Az asztal átlátszik az oldalak körüli kereten, mint a Windows 7 üvegén, bármelyik téma színeiben.",
+  "Takes effect the next time Lumtub starts.": "A Lumtub következő indításakor lép érvénybe.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Ez az asztal nem tudja megjeleníteni az ablak mögötti tartalmat: kompozitor kell hozzá.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Ez az asztal nem tudja elmosni a mögötte lévőt; az ablak csak átlátszó.",
+  "The desktop shows through the window.": "Az asztal átlátszik az ablakon.",
+  "Transparency": "Átlátszóság",
+  "Where it is see-through": "Hol átlátszó",
+  "Frame only": "Csak a keret",
+  "Whole window": "Az egész ablak",
+  "Blur what is behind": "A mögötte lévő elmosása",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Matt, mint a Windows 7-ben; ahol az asztal nem tud elmosni, az ablak csak átlátszó.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "A szöveg olvasható marad: fénylik a kereten, az üveg pedig nem lesz átlátszóbb annál, mint amennyire a szöveg bármi fölött olvasható marad, így ha az egész ablak átlátszó, egyes témák elég tömörek maradnak. A videó mindig tömör.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Windows 7-es üveg bármely téma alatt; az átlátszóság foka, helye és az elmosás a Témák oldalon van",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "átlátszó áttetsző üveg elmosás matt asztal háttérkép aero acrylic mica"
 }

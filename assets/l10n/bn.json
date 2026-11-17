@@ -3542,5 +3542,22 @@
   "Fill the window": "উইন্ডো পূর্ণ করুন",
   "Fill the window (W)": "উইন্ডো পূর্ণ করুন (W)",
   "Hide the side rail while watching": "দেখার সময় সাইডবার লুকান",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-এর মতো ভিডিও নিজের জায়গা পায়; থিয়েটার মোডে সাইডবার সবসময় লুকানো থাকে"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-এর মতো ভিডিও নিজের জায়গা পায়; থিয়েটার মোডে সাইডবার সবসময় লুকানো থাকে",
+  "Window transparency": "উইন্ডোর স্বচ্ছতা",
+  "See the desktop through the window": "উইন্ডোর ভেতর দিয়ে ডেস্কটপ দেখুন",
+  "See the wallpaper through the app": "অ্যাপের ভেতর দিয়ে ওয়ালপেপার দেখুন",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "পেজগুলোর চারপাশের ফ্রেমের ভেতর দিয়ে ডেস্কটপ দেখা যায়, Windows 7 গ্লাসের মতো, যেকোনো স্কিনের রঙে।",
+  "Takes effect the next time Lumtub starts.": "পরের বার Lumtub চালু হলে কার্যকর হবে।",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "এই ডেস্কটপ উইন্ডোর পেছনের জিনিস দেখাতে পারে না: এর জন্য একটি কম্পোজিটর দরকার।",
+  "This desktop cannot blur what is behind; the window is only see-through.": "এই ডেস্কটপ পেছনের জিনিস ঝাপসা করতে পারে না; উইন্ডো শুধু স্বচ্ছ হয়।",
+  "The desktop shows through the window.": "ডেস্কটপ উইন্ডোর ভেতর দিয়ে দেখা যাচ্ছে।",
+  "Transparency": "স্বচ্ছতা",
+  "Where it is see-through": "কোথায় স্বচ্ছ হবে",
+  "Frame only": "শুধু ফ্রেম",
+  "Whole window": "পুরো উইন্ডো",
+  "Blur what is behind": "পেছনের জিনিস ঝাপসা করুন",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7-এর মতো ফ্রস্টেড; ডেস্কটপ ঝাপসা করতে না পারলে উইন্ডো শুধু স্বচ্ছ হয়।",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "লেখা পড়ার মতো থাকে: ফ্রেমের ওপর সেগুলো জ্বলজ্বল করে, আর পেছনে যা-ই থাকুক তার ওপর লেখা পড়া যায় এর চেয়ে বেশি গ্লাস স্বচ্ছ হয় না, তাই পুরো উইন্ডো স্বচ্ছ করলে কিছু স্কিন বেশ অস্বচ্ছ থাকে। ভিডিও সবসময় অস্বচ্ছ।",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "যেকোনো স্কিনের নিচে Windows 7-এর মতো গ্লাস; কতটা স্বচ্ছ, কোথায় এবং ঝাপসা করা স্কিন পেজে আছে",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "স্বচ্ছ স্বচ্ছতা আধা-স্বচ্ছ গ্লাস ঝাপসা ফ্রস্টেড ডেস্কটপ ওয়ালপেপার aero acrylic mica"
 }

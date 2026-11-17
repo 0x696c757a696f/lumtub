@@ -13,8 +13,8 @@ Each picture is measured for magenta, (R + B) / 2 - G, in two places: the
 bottom of the side rail, part of the frame, and the middle of the pages.
 
 Exits 0 when, in each skin, the frame took on the magenta behind it while
-the pages stayed as they were without glass, and the whole window took it
-on too; 1 otherwise. Only Python's standard library is used.
+the pages took on none, and the whole window took it on too; 1 otherwise.
+Only Python's standard library is used.
 """
 
 import json
@@ -119,12 +119,14 @@ def main(folder):
         if off not in measured or frame not in measured:
             check(f"pictures {off} and {frame} taken", False)
             continue
-        (frame_off, pages_off), (frame_on, pages_on) = measured[off], measured[frame]
+        (frame_off, _), (frame_on, pages_on) = measured[off], measured[frame]
         check(f"{frame}: the desktop shows through the frame ({frame_on - frame_off:+.1f})", frame_on - frame_off >= 12)
-        check(f"{frame}: the pages stay solid ({pages_on - pages_off:+.1f})", abs(pages_on - pages_off) <= 6)
+        # The pages are the skin's page colour then, which has no magenta
+        # of its own; without glass they may show the skin's picture.
+        check(f"{frame}: the pages stay solid ({pages_on:+.1f})", pages_on <= 8)
         if whole and whole in measured:
             _, pages_whole = measured[whole]
-            check(f"{whole}: the desktop shows through the pages too ({pages_whole - pages_off:+.1f})", pages_whole - pages_off >= 6)
+            check(f"{whole}: the desktop shows through the pages too ({pages_whole - pages_on:+.1f})", pages_whole - pages_on >= 6)
     return 0 if ok else 1
 
 

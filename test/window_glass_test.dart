@@ -8,6 +8,7 @@ import 'package:lumtub/appearance_settings.dart';
 import 'package:lumtub/skins/jsonc.dart';
 import 'package:lumtub/skins/skin.dart';
 import 'package:lumtub/ui/glass_look.dart';
+import 'package:lumtub/ui/skin_chrome.dart';
 import 'package:lumtub/ui/skin_paint.dart';
 import 'package:lumtub/ui/theme.dart';
 
@@ -99,6 +100,27 @@ void main() {
     expect(skin.frameSurfaces.every((s) => s.frame), isTrue);
     expect(skin.videoCard?.frame ?? false, isFalse);
     expect(skin.topBar!.forState(hovered: true).frame, isTrue, reason: 'hovered bars stay glass');
+  });
+
+  testWidgets('the title glows behind its words only, not across the bar', (tester) async {
+    final skin = Skin.parse(decodeJsonc(File('skins/aero/skin.jsonc').readAsStringSync()), folder: 'skins/aero', builtIn: true);
+    final key = GlobalKey();
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData(extensions: const [GlassLook(alpha: 0.4, whole: false, tint: Colors.white)]),
+      home: Align(
+        alignment: Alignment.topLeft,
+        child: RepaintBoundary(key: key, child: SizedBox(width: 800, child: SkinTitleBarView(bar: skin.titleBar!, title: 'Lumtub'))),
+      ),
+    ));
+    final height = skin.titleBar!.height.round();
+    final image = await tester.runAsync(() async {
+      final boundary = key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+      final picture = await boundary.toImage();
+      return (await picture.toByteData(format: ui.ImageByteFormat.rawStraightRgba))!;
+    });
+    // Halfway along, between the title and the buttons: glass.
+    final alpha = image!.getUint8(((height ~/ 3) * 800 + 450) * 4 + 3) / 255;
+    expect(alpha, lessThan(0.6));
   });
 
   testWidgets('bars are drawn at the glass alpha, not the skin glass slider', (tester) async {

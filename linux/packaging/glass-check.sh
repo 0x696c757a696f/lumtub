@@ -18,7 +18,7 @@ cat > "$out/run.sh" <<'RUN'
 #!/usr/bin/env bash
 out=$1 appimage=$2
 # A compositor, so windows with an alpha channel blend with what is behind.
-picom --backend xrender --no-fading-openclose > "$out/picom.txt" 2>&1 &
+picom --backend xrender --no-fading-openclose --no-use-damage > "$out/picom.txt" 2>&1 &
 sleep 2
 # What should show through: a magenta window over the whole screen.
 display -geometry 1920x1200+0+0 -size 1920x1200 xc:magenta &
@@ -32,6 +32,9 @@ while kill -0 "$app" 2> /dev/null; do
     window=$(xdotool search --onlyvisible --name Lumtub | head -n 1)
     if [ -n "$window" ]; then
       eval "$(xdotool getwindowgeometry --shell "$window")"
+      # Something new on the screen makes the compositor draw again: the
+      # pointer, moved over the window and back off it.
+      xdotool mousemove $((X + WIDTH / 2)) $((Y + HEIGHT / 2)) sleep 0.5 mousemove 0 0 sleep 1
       # The screen as shown, compositor and all, where the window is.
       import -window root -crop "${WIDTH}x${HEIGHT}+${X}+${Y}" +repage -depth 8 "PNG24:$out/$name.tmp.png" 2> /dev/null && mv "$out/$name.tmp.png" "$out/$name.png"
     fi

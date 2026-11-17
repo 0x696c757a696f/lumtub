@@ -211,7 +211,7 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
                   const SizedBox(width: 8),
                   GlassPlate(surface: surface, child: close),
                   const SizedBox(width: 4),
-                  Expanded(child: bar.align == 'center' ? Center(child: title) : title),
+                  Expanded(child: bar.align == 'center' ? Center(child: title) : Align(alignment: AlignmentDirectional.centerStart, child: title)),
                   const SizedBox(width: 4),
                   ...split,
                   const SizedBox(width: 8),
@@ -227,14 +227,14 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
                 buttons,
                 if (bar.icon) ...appIcon,
                 const SizedBox(width: 8),
-                Expanded(child: bar.align == 'center' ? Center(child: title) : title),
+                Expanded(child: bar.align == 'center' ? Center(child: title) : Align(alignment: AlignmentDirectional.centerStart, child: title)),
                 // Balances the buttons so a centred title sits in the middle.
                 if (bar.align == 'center') SizedBox(width: bar.buttonSize.width * 3 + 23),
               ])
             : Row(children: [
                 if (bar.icon) ...appIcon,
                 const SizedBox(width: 8),
-                Expanded(child: bar.align == 'center' ? Center(child: title) : title),
+                Expanded(child: bar.align == 'center' ? Center(child: title) : Align(alignment: AlignmentDirectional.centerStart, child: title)),
                 buttons,
                 const SizedBox(width: 3),
               ]);

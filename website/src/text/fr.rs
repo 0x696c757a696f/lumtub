@@ -51,9 +51,9 @@ pub static FR: Text = Text {
         },
         Highlight {
             title: "36\u{a0}thèmes et 10\u{a0}palettes de couleurs",
-            body: "Les thèmes changent tout l'aspect, du brillant Y2K et des décors Frutiger Aero aux pixels 1\u{a0}bit, avec leur propre barre de titre et de menus si vous le souhaitez. Douze nouveaux, d'Atlas stellaire et Verre obsidienne à Argile et Néo-brutal, ont chacun une version claire et une sombre. Essayez-les ici même\u{a0}: la fenêtre ci-dessous est dessinée en direct à partir des mêmes fichiers de thème que ceux de l'application.",
+            body: "Les thèmes changent tout l'aspect, du brillant Y2K et des décors Frutiger Aero aux pixels 1\u{a0}bit, avec leur propre barre de titre et de menus si vous le souhaitez. Douze nouveaux, d'Atlas stellaire et Verre d'obsidienne à Argile et Néo-brutal, ont chacun une version claire et une sombre. Essayez-les ici même\u{a0}: la fenêtre ci-dessous est dessinée en direct à partir des mêmes fichiers de thème que ceux de l'application.",
             shot: "skin-aero.png",
-            alt: "La page d'accueil avec le thème Bubble Gel",
+            alt: "La page d'accueil avec le thème Gel bulles",
         },
     ],
     skin_mode: ["Clair ou sombre", "Clair", "Sombre"],

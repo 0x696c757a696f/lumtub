@@ -51,9 +51,9 @@ pub static DE: Text = Text {
         },
         Highlight {
             title: "36 Skins und 10 Farbschemata",
-            body: "Skins verändern den ganzen Look, von Y2K-Glanz und Frutiger-Aero-Szenen bis zu Ein-Bit-Pixeln, auf Wunsch mit eigener Titel- und Menüleiste. Zwölf neue, von Star Atlas und Obsidian Glass bis Clay und Neo-Brutal, haben jeweils eine helle und eine dunkle Seite. Probier sie gleich hier aus: Das Fenster unten wird live aus denselben Skin-Dateien gezeichnet, die auch die App liest.",
+            body: "Skins verändern den ganzen Look, von Y2K-Glanz und Frutiger-Aero-Szenen bis zu Ein-Bit-Pixeln, auf Wunsch mit eigener Titel- und Menüleiste. Zwölf neue, von Sternenatlas und Obsidianglas bis Ton und Neobrutal, haben jeweils eine helle und eine dunkle Seite. Probier sie gleich hier aus: Das Fenster unten wird live aus denselben Skin-Dateien gezeichnet, die auch die App liest.",
             shot: "skin-aero.png",
-            alt: "Die Startseite im Skin Bubble Gel",
+            alt: "Die Startseite im Skin Blasengel",
         },
     ],
     skin_mode: ["Hell oder dunkel", "Hell", "Dunkel"],

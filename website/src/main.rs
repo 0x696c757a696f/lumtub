@@ -147,6 +147,16 @@ fn App() -> impl IntoView {
             let _ = s.set_item("lang", next.code());
         }
         menu.set(false);
+        // A fresh load in the new language, so nothing on the page (or a
+        // browser's own page translation) is left over from the old one.
+        if let Some(w) = web_sys::window() {
+            let loc = w.location();
+            let hash = loc.hash().unwrap_or_default();
+            let path = loc.pathname().unwrap_or_default();
+            if loc.replace(&format!("{path}?lang={}{hash}", next.code())).is_ok() {
+                return;
+            }
+        }
         lang.set(next);
     };
 

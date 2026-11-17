@@ -27,7 +27,7 @@ pub static ES: Text = Text {
     highlights: [
         Highlight {
             title: "Recomendaciones que puedes leer y dirigir",
-            body: "El feed Para ti se calcula en tu ordenador a partir de tu propio historial. Cada tarjeta explica por qué está ahí, y «No me interesa» elimina ese motivo en lugar de ser ignorado.",
+            body: "La sección «Para ti» se calcula en tu ordenador a partir de tu propio historial. Cada tarjeta explica por qué está ahí, y «No me interesa» elimina ese motivo en lugar de ser ignorado.",
             shot: "home-reasons.png",
             alt: "Para ti, con el motivo bajo cada vídeo",
         },
@@ -51,9 +51,9 @@ pub static ES: Text = Text {
         },
         Highlight {
             title: "36 skins y 10 esquemas de color",
-            body: "Los skins cambian todo el aspecto, desde el brillo Y2K y las escenas Frutiger Aero hasta los píxeles de un bit, con su propia barra de título y de menús si quieres. Doce nuevos, de Star Atlas y Obsidian Glass a Clay y Neo-Brutal, tienen cada uno su lado claro y su lado oscuro. Pruébalos aquí mismo: la ventana de abajo se dibuja en vivo con los mismos archivos de skin que lee la app.",
+            body: "Los skins cambian todo el aspecto, desde el brillo Y2K y las escenas Frutiger Aero hasta los píxeles de un bit, con su propia barra de título y de menús si quieres. Doce nuevos, de Atlas estelar y Cristal de obsidiana a Arcilla y Neobrutal, tienen cada uno su lado claro y su lado oscuro. Pruébalos aquí mismo: la ventana de abajo se dibuja en vivo con los mismos archivos de skin que lee la app.",
             shot: "skin-aero.png",
-            alt: "La página de inicio con el skin Bubble Gel",
+            alt: "La página de inicio con el skin Gel burbuja",
         },
     ],
     skin_mode: ["Claro u oscuro", "Claro", "Oscuro"],
@@ -82,12 +82,12 @@ pub static ES: Text = Text {
         ],
         status: "libmpv listo  ·  decodificación por hardware activada",
     },
-    tagline: "Tu feed, tus idiomas, tu equipo. Nada en YouTube decide por ti.",
+    tagline: "Tus recomendaciones, tus idiomas, tu equipo. Nada en YouTube decide por ti.",
     steps_title: "En marcha en un minuto",
     steps: [
         ("Descarga y abre", "Elige el paquete para tu sistema. El primer arranque descarga yt-dlp y el reproductor, y después Lumtub los mantiene al día."),
         ("Trae tus canales", "Importa tu lista de seguidos desde NewPipe, FreeTube, Google Takeout u OPML, o sigue canales sobre la marcha. Sin iniciar sesión."),
-        ("Mira a tu manera", "El feed Para ti aprende de lo que ves en este ordenador. Elige skin, subtítulos y calidad una vez y Lumtub lo recuerda."),
+        ("Mira a tu manera", "La sección «Para ti» aprende de lo que ves en este ordenador. Elige skin, subtítulos y calidad una vez y Lumtub lo recuerda."),
     ],
     features_title: "Todo lo que esperas, y más",
     features: [

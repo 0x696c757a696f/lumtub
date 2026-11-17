@@ -66,8 +66,8 @@ class YoutubePlayerProbe {
   /// answered (seen on 2026-11-14). [mask] (an `X-Goog-FieldMask`) is sent
   /// only with a visitor, as a masked answer leaves the visitor data out.
   ///
-  /// [playing] is a video being started, which never waits: the lookups
-  /// made for lists (languages, lengths, live states) wait while one is
+  /// [playing] is a video being started, which never waits: the `/player`
+  /// lookups made for lists (languages, lengths, live states) wait while one is
   /// asked and go a few at a time, as YouTube answers a visitor that asks
   /// too much with "Sign in to confirm you're not a bot", playback
   /// included. A start refused that way asks again at once as the visitor
@@ -81,7 +81,7 @@ class YoutubePlayerProbe {
     Duration timeout = const Duration(seconds: 15),
     bool playing = false,
   }) async {
-    if (!playing) {
+    if (!playing && endpoint == 'player') {
       if (await _waitForPlayback()) return http.Response('', 429, reasonPhrase: 'Resting');
     } else {
       _playing++;

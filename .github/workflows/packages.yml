@@ -132,17 +132,34 @@ jobs:
     needs: [manifests, flatpak]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
+    # The update signing key lives in the "release" environment.
+    environment: release
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          sparse-checkout: native/lumtub_core
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: flatpak-*
           path: dist
           merge-multiple: true
+      - name: Sign the bundles
+        env:
+          LUMTUB_UPDATE_KEY: ${{ secrets.LUMTUB_UPDATE_KEY }}
+        run: |
+          # A .sig (Ed25519 + ML-DSA-65) next to each bundle, like every other package of the release.
+          if [[ -z "$LUMTUB_UPDATE_KEY" ]]; then
+            echo "::error::The LUMTUB_UPDATE_KEY secret is not set; the bundles would go out unsigned."
+            exit 1
+          fi
+          rustup update stable
+          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*.flatpak
+          ls -l dist
       - env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload '${{ needs.manifests.outputs.tag }}' dist/*.flatpak --clobber --repo "$GITHUB_REPOSITORY"
+        run: gh release upload '${{ needs.manifests.outputs.tag }}' dist/*.flatpak dist/*.flatpak.sig --clobber --repo "$GITHUB_REPOSITORY"
 
   publish:
     name: Send to ${{ matrix.target }}

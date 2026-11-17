@@ -33,8 +33,10 @@ while kill -0 "$app" 2> /dev/null; do
     if [ -n "$window" ]; then
       eval "$(xdotool getwindowgeometry --shell "$window")"
       # Something new on the window makes the compositor draw again: the
-      # pointer over a side rail item lights it, then leaves it.
-      xdotool mousemove $((X + 30)) $((Y + 120)) sleep 1 mousemove 0 0 sleep 2
+      # pointer over the side rail items lights them, then leaves them.
+      for _ in 1 2; do
+        xdotool mousemove $((X + 30)) $((Y + 120)) sleep 1 mousemove $((X + 30)) $((Y + 200)) sleep 1 mousemove 0 0 sleep 1
+      done
       # The screen as shown, compositor and all, where the window is.
       import -window root -crop "${WIDTH}x${HEIGHT}+${X}+${Y}" +repage -depth 8 "PNG24:$out/$name.tmp.png" 2> /dev/null && mv "$out/$name.tmp.png" "$out/$name.png"
     fi

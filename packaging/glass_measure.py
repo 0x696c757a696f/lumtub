@@ -109,6 +109,11 @@ def main(folder):
         # A coarse map of the picture, for reading in the log.
         for row in range(12):
             print("  " + " ".join(f"{magenta(rows, width, height, (col / 24, row / 12, (col + 1) / 24, (row + 1) / 12)):4.0f}" for col in range(24)))
+    if (folder / "screen.png").exists():
+        width, height, rows = read_png(folder / "screen.png")
+        print(f"the whole screen: {width}x{height}, magenta {magenta(rows, width, height, (0, 0, 1, 1)):.1f}")
+        for row in range(6):
+            print("  " + " ".join(f"{magenta(rows, width, height, (col / 12, row / 6, (col + 1) / 12, (row + 1) / 6)):4.0f}" for col in range(12)))
     ok = True
 
     def check(what, passed):

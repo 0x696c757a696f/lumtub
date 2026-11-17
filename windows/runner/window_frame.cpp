@@ -247,11 +247,13 @@ void WindowFrame::TraceCaptionClick(LPARAM lparam) {
 }
 
 // One pixel of glass keeps the shadow and, on Windows 11, the rounded
-// corners and border. With the desktop showing through, the glass covers
-// the whole window: Desktop Window Manager then mixes what Flutter draws
-// with what lies behind by its alpha.
+// corners and border. Windows 11's own acrylic shows only where the frame
+// covers the window, so then it covers all of it; the accent policy (clear
+// glass, and the blur before Windows 11) needs no frame, and the frame
+// alone would be drawn solid over the desktop.
 void WindowFrame::ApplyMargins() {
-  const MARGINS margins = glass_ ? MARGINS{-1, -1, -1, -1} : MARGINS{0, 0, custom_ ? 1 : 0, 0};
+  const bool backdrop = glass_ && glass_blur_ && WindowsBuild() >= kSystemBackdropBuild;
+  const MARGINS margins = backdrop ? MARGINS{-1, -1, -1, -1} : MARGINS{0, 0, custom_ ? 1 : 0, 0};
   ::DwmExtendFrameIntoClientArea(window_, &margins);
 }
 

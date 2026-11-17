@@ -10,6 +10,7 @@ New-Item -ItemType Directory -Force -Path $Out | Out-Null
 $Out = (Resolve-Path $Out).Path
 
 Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.Windows.Forms
 Add-Type @'
 using System;
 using System.Runtime.InteropServices;
@@ -67,6 +68,17 @@ while (-not $app.HasExited -and $clock.Elapsed.TotalSeconds -lt 300) {
         $graphics.Dispose()
         $bitmap.Dispose()
         Move-Item -Force $temp (Join-Path $Out "$name.png")
+        # Once, the whole screen: that the magenta is there at all.
+        $screenFile = Join-Path $Out 'screen.png'
+        if (-not (Test-Path $screenFile)) {
+          $bounds = [Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $screen = New-Object Drawing.Bitmap $bounds.Width, $bounds.Height, ([Drawing.Imaging.PixelFormat]::Format24bppRgb)
+          $g = [Drawing.Graphics]::FromImage($screen)
+          $g.CopyFromScreen($bounds.Left, $bounds.Top, 0, 0, $screen.Size)
+          $screen.Save($screenFile, [Drawing.Imaging.ImageFormat]::Png)
+          $g.Dispose()
+          $screen.Dispose()
+        }
       }
     }
     Remove-Item -Force $want.FullName

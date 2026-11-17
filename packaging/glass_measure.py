@@ -106,8 +106,8 @@ def main(folder):
         measured[name] = (magenta(rows, width, height, FRAME), magenta(rows, width, height, PAGES))
         print(f"{name}: {width}x{height}, magenta on the frame {measured[name][0]:.1f}, on the pages {measured[name][1]:.1f}, runner said {state.get(name)}")
         # A coarse map of the picture, for reading in the log.
-        for row in range(8):
-            print("  " + " ".join(f"{magenta(rows, width, height, (col / 12, row / 8, (col + 1) / 12, (row + 1) / 8)):4.0f}" for col in range(12)))
+        for row in range(12):
+            print("  " + " ".join(f"{magenta(rows, width, height, (col / 24, row / 12, (col + 1) / 24, (row + 1) / 12)):4.0f}" for col in range(24)))
     ok = True
 
     def check(what, passed):

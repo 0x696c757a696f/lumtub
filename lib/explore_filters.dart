@@ -452,6 +452,31 @@ String englishSearchOf(String query) {
   return out.join(' ');
 }
 
+/// Whether keywords no pivot covers go into English before [language]: a
+/// user's own zone in Chinese put straight into Italian made "体育"
+/// "educazione fisica" (school PE), through English it is "sport". Chinese,
+/// Japanese and Korean are put into each other directly.
+bool pivotsThroughEnglish(ExploreLanguage language) => switch (language) {
+      ExploreLanguage.any || ExploreLanguage.en || ExploreLanguage.zh || ExploreLanguage.ja || ExploreLanguage.ko => false,
+      _ => true,
+    };
+
+/// The phrases of [source] still in another script once the pivots are
+/// used: a user's own keywords, which go into English first.
+List<String> unpivotedPhrasesOf(String source) => [
+      for (final phrase in searchPhrasesOf(source))
+        if (isTranslatedPhrase(phrase) && searchGlossary[phrase] == null) phrase,
+    ];
+
+/// [source] with [english] in place of its [unpivotedPhrasesOf], in order.
+String withEnglishOf(String source, List<String> english) {
+  var next = 0;
+  return [
+    for (final phrase in searchPhrasesOf(source))
+      if (isTranslatedPhrase(phrase) && searchGlossary[phrase] == null) english[next++].trim() else phrase,
+  ].where((p) => p.isNotEmpty).join(' ');
+}
+
 /// [query] in the pieces a translation keeps the sense of: each keyword of
 /// a script written without spaces (Chinese, Japanese, Thai…) alone, as
 /// they are listed apart, and each run of words in a spaced script

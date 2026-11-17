@@ -447,8 +447,14 @@ extension ExploreActions on AppController {
             // The zones' Chinese keywords go by their English
             // (searchPivots), which is translated instead and which an
             // English search takes as it is.
-            final source = traditional ? query : englishSearchOf(query);
+            var source = traditional ? query : englishSearchOf(query);
             try {
+              final unpivoted = traditional || !pivotsThroughEnglish(language) ? const <String>[] : unpivotedPhrasesOf(source);
+              if (unpivoted.isNotEmpty) {
+                final english = (await _google.translate(unpivoted.join('\n'), 'en').timeout(const Duration(seconds: 10))).split('\n');
+                if (english.length != unpivoted.length) throw StateError('${english.length} lines for ${unpivoted.length} phrases');
+                source = withEnglishOf(source, english);
+              }
               // Keyword by keyword, as a search wants keywords: "科技 数码 评测"
               // as one sentence is "Revisione digitale della tecnologia",
               // which finds next to nothing.

@@ -68,6 +68,11 @@ words of `searchGlossary` are searched as `live` everywhere. A test checks
 that every Chinese keyword of every zone, sub-category and filter has its
 English. Each word of the result is kept once.
 
+Keywords no pivot covers, such as those of a zone the person added, go
+into English first and from there into the language picked, in the same
+way. Chinese, Japanese and Korean are put into each other directly. A
+search already in the language picked is not translated.
+
 The search is also asked from the language's home country (`gl`) when no
 region is picked.
 

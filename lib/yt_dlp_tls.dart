@@ -23,6 +23,19 @@ abstract final class YtDlpTls {
   /// Added to every yt-dlp run's environment.
   static Map<String, String> environment = const {};
 
+  /// What a yt-dlp run inside the app's own Python (iOS) is given: the
+  /// plugin is loaded once by the runner, and OPENSSL_CONF would come too
+  /// late, so Python sets the groups itself.
+  static Map<String, String> get inProcess {
+    final folder = plugins;
+    final sep = Platform.pathSeparator;
+    return {
+      for (final entry in environment.entries)
+        if (entry.key != 'OPENSSL_CONF') entry.key: entry.value,
+      if (folder != null) 'LUMTUB_TLS_PLUGIN': [folder, 'lumtub_tls', 'yt_dlp_plugins', 'extractor', 'lumtub_tls.py'].join(sep),
+    };
+  }
+
   static String? _source;
 
   /// Writes the plugin, the certificate list of [roots] and the OpenSSL

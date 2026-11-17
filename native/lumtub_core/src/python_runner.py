@@ -160,6 +160,25 @@ def _challenges():
         traceback.print_exc()
 
 
+def _tls(path):
+    """Loads Lumtub's TLS plugin (lumtub_tls.py) once: yt-dlp's HTTPS then
+    follows the app's certificate and post-quantum settings, which each
+    run passes in its environment."""
+    if not path or "lumtub_tls" in sys.modules or not os.path.exists(path):
+        return
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("lumtub_tls", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["lumtub_tls"] = module
+        spec.loader.exec_module(module)
+    except Exception:
+        import traceback
+
+        traceback.print_exc()
+
+
 def _version_of(app):
     with zipfile.ZipFile(app) as archive:
         source = archive.read("yt_dlp/version.py").decode()
@@ -168,9 +187,12 @@ def _version_of(app):
     return names["__version__"]
 
 
-def _main(run, app, argv):
+def _main(run, app, argv, environment=None):
     global _loaded
     _local.run = run
+    # The settings in force for this run; every run sets the same names.
+    if environment:
+        os.environ.update(environment)
     code = 0
     try:
         if _loaded not in (None, app) and argv == ["--version"]:
@@ -185,6 +207,7 @@ def _main(run, app, argv):
 
                     _challenges()
                     _loaded = app
+                _tls(os.environ.get("LUMTUB_TLS_PLUGIN"))
             import yt_dlp
 
             yt_dlp.main(argv)
@@ -218,7 +241,7 @@ def start(port, request):
     run = _Run(port)
     with _lock:
         _runs[port] = run
-    thread = threading.Thread(target=_main, args=(run, request["app"], request["argv"]), name=f"yt-dlp {port}", daemon=True)
+    thread = threading.Thread(target=_main, args=(run, request["app"], request["argv"], request.get("environment")), name=f"yt-dlp {port}", daemon=True)
     run.thread = thread
     thread.start()
 

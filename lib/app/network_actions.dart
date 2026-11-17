@@ -28,7 +28,7 @@ extension NetworkActions on AppController {
       quantum: settings.postQuantum,
     );
     final folder = directories?.data;
-    if (folder != null && !Platform.isIOS) await YtDlpTls.configure(folder, roots: settings.certificateRoots, quantum: settings.postQuantum);
+    if (folder != null) await YtDlpTls.configure(folder, roots: settings.certificateRoots, quantum: settings.postQuantum);
     if (next.url != proxy.url) logInfo(next.url == null ? 'Network: direct connection' : 'Network: using proxy ${next.redacted}');
     proxy = next;
     _chooseIpVersion();

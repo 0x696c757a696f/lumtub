@@ -110,10 +110,14 @@ jobs:
         run: |
           # The checks Flathub runs on a submission, on the manifest and on the built repo.
           flatpak install -y --user --noninteractive flathub org.flatpak.Builder
-          lint() { flatpak run --command=flatpak-builder-lint org.flatpak.Builder "$@"; }
+          # Screenshots are mirrored by Flathub's own build, not by this one.
+          local_only='appstream-external-screenshot-url|appstream-screenshots-not-mirrored-in-ostree'
           status=0
-          lint --exceptions manifest packaging/flatpak/io.github.lumtub.lumtub.yml || status=1
-          lint --exceptions repo repo || status=1
+          for target in "manifest packaging/flatpak/io.github.lumtub.lumtub.yml" "repo repo"; do
+            flatpak run --command=flatpak-builder-lint org.flatpak.Builder --exceptions $target > lint.json || true
+            cat lint.json
+            if python3 -c 'import json,re,sys; e=[x for x in json.load(open("lint.json")).get("errors",[]) if not re.fullmatch(sys.argv[1],x)]; print("\n".join(e)); sys.exit(1 if e else 0)' "$local_only"; then :; else status=1; fi
+          done
           exit $status
       - name: Start it
         run: |

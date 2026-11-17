@@ -66,6 +66,7 @@ pub struct Text {
     pub title: &'static str,
     pub other_lang: &'static str,
     pub skip: &'static str,
+    pub hero_alt: &'static str,
     pub menu: &'static str,
     pub nav: [&'static str; 5],
     pub nav_download: &'static str,
@@ -159,6 +160,7 @@ const fn package(i: usize, label: &'static str, note: &'static str) -> Package {
 pub static EN: Text = Text {
     title: "Lumtub · Watch YouTube your way",
     other_lang: "中文",
+    hero_alt: "Lumtub playing a video, with Up next beside it",
     skip: "Skip to content",
     menu: "Menu",
     nav: ["Features", "Download", "Privacy", "FAQ", "Support"],
@@ -342,6 +344,7 @@ pub static EN: Text = Text {
 pub static ZH: Text = Text {
     title: "Lumtub · 按你的方式看 YouTube",
     other_lang: "English",
+    hero_alt: "Lumtub 正在播放视频，旁边是接下来播放的列表",
     skip: "跳到正文",
     menu: "菜单",
     nav: ["功能", "下载", "隐私", "常见问题", "支持"],

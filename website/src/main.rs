@@ -20,7 +20,11 @@ const KOFI: &str = "https://ko-fi.com/0x696c757a696f";
 const WEBLATE: &str = "https://hosted.weblate.org/engage/lumtub/";
 const SECTIONS: [&str; 5] = ["features", "download", "privacy", "faq", "support"];
 
-const ZH_SHOTS: [&str; 5] = [
+const ZH_SHOTS: [&str; 9] = [
+    "watch.png",
+    "windows.png",
+    "macos.png",
+    "linux.png",
     "home-reasons.png",
     "subtitles.jpg",
     "explore-language.png",
@@ -208,12 +212,12 @@ fn App() -> impl IntoView {
                 <div class="menu-links">{links(true)}</div>
             </div>
             <main id="main">
-                <Hero t=t ctx=ctx/>
+                <Hero t=t ctx=ctx lang=l/>
                 <Highlights t=t lang=l skin=skin/>
                 <Tagline lang=l/>
                 <Steps t=t/>
                 <Features t=t/>
-                <Download t=t ctx=ctx/>
+                <Download t=t ctx=ctx lang=l/>
                 <Privacy t=t/>
                 <Faq t=t/>
                 <Final t=t ctx=ctx/>
@@ -255,7 +259,7 @@ fn primary_button(t: &'static Text, ctx: Ctx, large: bool) -> impl IntoView {
 }
 
 #[component]
-fn Hero(t: &'static Text, ctx: Ctx) -> impl IntoView {
+fn Hero(t: &'static Text, ctx: Ctx, lang: Lang) -> impl IntoView {
     let intel = (ctx.os == Os::Mac).then(|| {
         view! { <a class="text-link" href=ctx.link("macos-x64.dmg")>{t.mac_intel}</a> }
     });
@@ -288,7 +292,7 @@ fn Hero(t: &'static Text, ctx: Ctx) -> impl IntoView {
                     {t.proof.iter().map(|p| view! { <li class="caption-1">{icon("check", 16)}{*p}</li> }).collect_view()}
                 </ul>
                 <div class="hero-shot reveal">
-                    <img src=shot(Lang::En, "watch.png") alt="Lumtub playing a video, with Up next beside it" width="1280" height="720" fetchpriority="high"/>
+                    <img src=shot(lang, "watch.png") alt=t.hero_alt width="1280" height="720" fetchpriority="high"/>
                 </div>
             </div>
         </section>
@@ -398,7 +402,7 @@ fn Features(t: &'static Text) -> impl IntoView {
 }
 
 #[component]
-fn Download(t: &'static Text, ctx: Ctx) -> impl IntoView {
+fn Download(t: &'static Text, ctx: Ctx, lang: Lang) -> impl IntoView {
     let shots = [("windows.png", "Windows"), ("macos.png", "macOS"), ("linux.png", "Linux")];
     let copied = RwSignal::new(false);
     let copy = move |_| {
@@ -420,7 +424,7 @@ fn Download(t: &'static Text, ctx: Ctx) -> impl IntoView {
                         let (w, h) = dims(s);
                         view! {
                             <figure>
-                                <img loading="lazy" src=shot(Lang::En, s) alt=*name width=w height=h/>
+                                <img loading="lazy" src=shot(lang, s) alt=*name width=w height=h/>
                                 <figcaption class="caption-1">{*name}</figcaption>
                             </figure>
                         }

@@ -530,7 +530,7 @@ final liveTopics = <ExploreTopic>[
     ExploreSub('PC hardware', 'hardware build electronics live'),
   ]),
   ExploreTopic('Outdoor live', AppIcons.mountains, '户外 直播', subs: [
-    ExploreSub('IRL streams', 'IRL stream'),
+    ExploreSub('IRL streams', 'IRL 直播'),
     ExploreSub('Travel live streams', 'travel live stream'),
     ExploreSub('Street walks', 'walking live'),
     ExploreSub('Hiking & mountaineering', 'hiking live'),

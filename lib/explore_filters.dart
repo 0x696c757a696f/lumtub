@@ -406,8 +406,8 @@ bool isTranslatedPhrase(String phrase) => nonLatinLetter.hasMatch(phrase);
 /// the same everywhere.
 const keptSearchWords = {
   'asmr', 'bhajan', 'blender', 'cosplay', 'esports', 'haul', 'hip', 'hop', 'imam', 'indie', 'jazz', 'khutbah', 'kirtan', 'lofi', //
-  'macos', 'manga', 'mandala', 'metal', 'mukbang', 'nasheed', 'nijisanji', 'podcast', 'pop', 'puja', 'qawwali', 'rabbi', 'rap', //
-  'rock', 'seerah', 'speedrun', 'swami', 'tafsir', 'thangka', 'unboxing', 'vlog', 'vtuber', 'yoga',
+  'macos', 'mandala', 'manga', 'metal', 'mukbang', 'nasheed', 'nijisanji', 'podcast', 'pop', 'puja', 'qawwali', 'rabbi', 'rap', //
+  'rock', 'seerah', 'speedrun', 'swami', 'tafsir', 'thangka', 'unboxing', 'vlog', 'vtuber', 'walkthrough', 'writeup', 'yoga',
 };
 
 final _commonWord = RegExp(r"^[a-z][a-z'-]{2,}$");

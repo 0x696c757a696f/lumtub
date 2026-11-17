@@ -9,11 +9,12 @@
 //! pass through Dart. TLS is the operating system's (SChannel on Windows)
 //! unless another certificate list was chosen (see [crate::roots]).
 
+use crate::loopback::Loopback;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, VecDeque};
 use std::io::{BufRead, BufReader, ErrorKind, Read, Write};
-use std::net::{Shutdown, TcpListener, TcpStream};
+use std::net::{Shutdown, TcpStream};
 use std::os::raw::c_char;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
@@ -62,7 +63,7 @@ struct Shared {
 }
 
 pub struct Relay {
-    port: u16,
+    listener: Arc<Loopback>,
     shared: Arc<Mutex<Shared>>,
 }
 
@@ -211,45 +212,47 @@ impl Read for Reply {
 }
 
 impl Relay {
-    /// Listens on a random loopback port.
+    /// Listens on a random loopback port, and again when the system takes
+    /// the socket away (see [Loopback]).
     pub fn start(fetch: Arc<dyn Fetch>) -> std::io::Result<Relay> {
-        let listener = TcpListener::bind("127.0.0.1:0")?;
-        let port = listener.local_addr()?.port();
         let shared = Arc::new(Mutex::new(Shared::default()));
-        let relay = Relay {
-            port,
-            shared: shared.clone(),
-        };
-        std::thread::Builder::new()
-            .name("relay".into())
-            .spawn(move || {
-                let open = Arc::new(AtomicUsize::new(0));
-                for client in listener.incoming().flatten() {
-                    // libmpv keeps a few connections; anything past the cap is
-                    // another local program, turned away.
-                    if open.load(Ordering::Relaxed) >= MAX_CONNECTIONS {
-                        continue;
-                    }
-                    open.fetch_add(1, Ordering::Relaxed);
-                    let shared = shared.clone();
-                    let fetch = fetch.clone();
-                    let done = open.clone();
-                    let spawned = std::thread::Builder::new()
-                        .name("relay-client".into())
-                        .spawn(move || {
-                            serve(client, &shared, fetch.as_ref());
-                            done.fetch_sub(1, Ordering::Relaxed);
-                        });
-                    if spawned.is_err() {
-                        open.fetch_sub(1, Ordering::Relaxed);
-                    }
+        let open = Arc::new(AtomicUsize::new(0));
+        let serving = shared.clone();
+        let logged = Arc::downgrade(&shared);
+        let listener = Loopback::start(
+            "relay",
+            Box::new(move |client| {
+                // libmpv keeps a few connections; anything past the cap is
+                // another local program, turned away.
+                if open.load(Ordering::Relaxed) >= MAX_CONNECTIONS {
+                    return;
                 }
-            })?;
-        Ok(relay)
+                open.fetch_add(1, Ordering::Relaxed);
+                let shared = serving.clone();
+                let fetch = fetch.clone();
+                let done = open.clone();
+                let spawned = std::thread::Builder::new()
+                    .name("relay-client".into())
+                    .spawn(move || {
+                        serve(client, &shared, fetch.as_ref());
+                        done.fetch_sub(1, Ordering::Relaxed);
+                    });
+                if spawned.is_err() {
+                    open.fetch_sub(1, Ordering::Relaxed);
+                }
+            }),
+            Box::new(move |line| {
+                if let Some(shared) = logged.upgrade() {
+                    log(&shared, line);
+                }
+            }),
+        )?;
+        Ok(Relay { listener, shared })
     }
 
+    /// The port, listening again first when the socket was taken away.
     pub fn port(&self) -> u16 {
-        self.port
+        self.listener.ensure()
     }
 
     /// A loopback address that serves [target], or none when its size is
@@ -271,7 +274,8 @@ impl Relay {
                 shared.targets.remove(&old);
             }
         }
-        Some(format!("http://127.0.0.1:{}/{}", self.port, token))
+        drop(shared);
+        Some(format!("http://127.0.0.1:{}/{}", self.port(), token))
     }
 
     /// The log lines since the last call.
@@ -317,24 +321,27 @@ fn log(shared: &Mutex<Shared>, line: String) {
     shared.log.push_back(line);
 }
 
+/// A path no other program on this computer can guess: 128 random bits,
+/// so the relay serves only what the app itself registered. Without the
+/// system's randomness it falls back to a hash of the time and [url].
 fn token(url: &str) -> String {
-    static COUNT: AtomicU64 = AtomicU64::new(0);
-    let mut hash = Sha256::new();
-    hash.update(
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_nanos()
-            .to_le_bytes(),
-    );
-    hash.update(COUNT.fetch_add(1, Ordering::Relaxed).to_le_bytes());
-    hash.update(std::process::id().to_le_bytes());
-    hash.update(url.as_bytes());
-    hash.finalize()
-        .iter()
-        .take(8)
-        .map(|b| format!("{b:02x}"))
-        .collect()
+    let mut bytes = [0u8; 16];
+    if getrandom::fill(&mut bytes).is_err() {
+        static COUNT: AtomicU64 = AtomicU64::new(0);
+        let mut hash = Sha256::new();
+        hash.update(
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos()
+                .to_le_bytes(),
+        );
+        hash.update(COUNT.fetch_add(1, Ordering::Relaxed).to_le_bytes());
+        hash.update(std::process::id().to_le_bytes());
+        hash.update(url.as_bytes());
+        bytes.copy_from_slice(&hash.finalize()[..16]);
+    }
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
 /// The value of [name] in [url]'s query, percent-decoded.

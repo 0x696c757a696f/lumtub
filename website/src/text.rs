@@ -272,9 +272,9 @@ pub static EN: Text = Text {
         package(12, "AltStore source", "Add it to SideStore or AltStore to get new versions"),
     ],
     install_notes: [
-        ("Windows", "Run the installer, or unzip the portable version from the releases page. No administrator rights needed."),
+        ("Windows", "Run the installer, or unzip the portable version from the releases page. No administrator rights needed. Package managers (under review): winget install Lumtub.Lumtub, or scoop install extras/lumtub."),
         ("macOS", "Lumtub is not notarized yet. After dragging it into Applications, run xattr -dr com.apple.quarantine /Applications/Lumtub.app once, or choose Open Anyway in System Settings › Privacy & Security."),
-        ("Linux", "Make the AppImage executable (chmod +x) and run it. It updates itself in place. If FUSE is missing, install fuse3."),
+        ("Linux", "Make the AppImage executable (chmod +x) and run it. It updates itself in place. If FUSE is missing, install fuse3. Or take the .flatpak from the releases page: flatpak install --user Lumtub_*.flatpak (it does not update itself)."),
         ("Android", "Open the APK and allow installing from your browser or file manager. Later versions install from inside Lumtub."),
         ("iPhone and iPad", "Lumtub isn't in the App Store. Install the IPA with SideStore, AltStore or Sideloadly using your own Apple ID, or with TrollStore, and add the source below for updates."),
     ],
@@ -449,9 +449,9 @@ pub static ZH: Text = Text {
         package(12, "AltStore 源", "添加到 SideStore 或 AltStore 里即可收到新版本"),
     ],
     install_notes: [
-        ("Windows", "运行安装程序即可，或者在发布页下载便携版解压。不需要管理员权限。"),
+        ("Windows", "运行安装程序即可，或者在发布页下载便携版解压。不需要管理员权限。也可以用包管理器（正在审核）：winget install Lumtub.Lumtub，或 scoop install extras/lumtub。"),
         ("macOS", "Lumtub 还没有经过 Apple 公证。拖进「应用程序」后，在终端运行一次 xattr -dr com.apple.quarantine /Applications/Lumtub.app，或在「系统设置 › 隐私与安全性」里点「仍要打开」。"),
-        ("Linux", "给 AppImage 加上执行权限（chmod +x）后运行，之后会自动原地更新。提示缺少 FUSE 时安装 fuse3。"),
+        ("Linux", "给 AppImage 加上执行权限（chmod +x）后运行，之后会自动原地更新。提示缺少 FUSE 时安装 fuse3。也可以在发布页下载 .flatpak：flatpak install --user Lumtub_*.flatpak（不会自动更新）。"),
         ("Android", "打开 APK，按提示允许浏览器或文件管理器安装应用。之后的新版本在 Lumtub 里直接安装。"),
         ("iPhone 和 iPad", "Lumtub 不在 App Store 上。用 SideStore、AltStore 或 Sideloadly 配合你自己的 Apple ID 安装 IPA，或者用 TrollStore；再添加下面的源，就能收到更新。"),
     ],

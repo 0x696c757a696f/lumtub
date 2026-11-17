@@ -4,6 +4,7 @@
 //! recommendations; the process tree is used when the platform has one.
 
 pub mod airplay;
+pub mod ass;
 pub mod backup;
 pub mod browser_sign_in;
 pub mod cast;
@@ -29,6 +30,7 @@ pub mod listing;
 pub mod lists;
 pub mod lists_update;
 pub mod live_chat;
+pub mod loopback;
 pub mod pac;
 pub mod posts;
 pub mod process_cpu;

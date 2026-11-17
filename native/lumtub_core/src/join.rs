@@ -85,6 +85,14 @@ pub struct Text {
     pub language: String,
     #[serde(default)]
     pub name: String,
+    /// Each cue's lines kept apart, as in a bilingual track, instead of
+    /// joined into one.
+    #[serde(default)]
+    pub lines: bool,
+    /// The same lines styled as an ASS file, for Matroska's ASS track and
+    /// MP4's fonts and colors.
+    #[serde(default)]
+    pub ass: Option<String>,
 }
 
 /// What a joined file carries besides picture and sound.
@@ -118,14 +126,20 @@ impl Extra {
             .filter_map(|t| {
                 let source = std::fs::read(&t.path).ok()?;
                 let cues: Vec<(u64, u64, String)> =
-                    crate::subtitles::cues(&String::from_utf8_lossy(&source))
+                    crate::subtitles::cues_in(&String::from_utf8_lossy(&source), t.lines)
                         .into_iter()
                         .map(|c| (c.start, c.end, c.text))
                         .collect();
+                let styled = t
+                    .ass
+                    .as_ref()
+                    .and_then(|p| std::fs::read(p).ok())
+                    .and_then(|b| crate::ass::parse(&String::from_utf8_lossy(&b)));
                 (!cues.is_empty()).then(|| crate::cast::Subtitles {
                     language: t.language.clone(),
                     name: t.name.clone(),
                     cues,
+                    styled,
                 })
             })
             .collect();
@@ -199,7 +213,7 @@ pub fn join(
     result?;
     if !cuts.is_empty() {
         for text in &extra.subtitles {
-            shift_file(&text.path, &cuts);
+            shift_file(&text.path, text.lines, &cuts);
         }
     }
     Ok(Joined { path: out, cut })
@@ -207,14 +221,15 @@ pub fn join(
 
 /// Rewrites the subtitle file at `path` (kept beside the joined file) with
 /// its lines moved past what `cuts` left out, as WebVTT or, for `.srt`, SRT.
-fn shift_file(path: &str, cuts: &crate::cast::Cuts) {
+fn shift_file(path: &str, lines: bool, cuts: &crate::cast::Cuts) {
     let Ok(source) = std::fs::read(path) else {
         return;
     };
-    let cues: Vec<(u64, u64, String)> = crate::subtitles::cues(&String::from_utf8_lossy(&source))
-        .into_iter()
-        .map(|c| (c.start, c.end, c.text))
-        .collect();
+    let cues: Vec<(u64, u64, String)> =
+        crate::subtitles::cues_in(&String::from_utf8_lossy(&source), lines)
+            .into_iter()
+            .map(|c| (c.start, c.end, c.text))
+            .collect();
     if cues.is_empty() {
         return;
     }
@@ -294,16 +309,22 @@ mod tests {
                     path: format!("{dir}/en.vtt"),
                     language: "en".into(),
                     name: "English".into(),
+                    lines: false,
+                    ass: None,
                 },
                 Text {
                     path: format!("{dir}/de.srt"),
                     language: "de".into(),
                     name: "Deutsch".into(),
+                    lines: false,
+                    ass: None,
                 },
                 Text {
                     path: format!("{dir}/missing.vtt"),
                     language: "fr".into(),
                     name: String::new(),
+                    lines: false,
+                    ass: None,
                 },
             ],
             title: Some("A title".into()),
@@ -319,19 +340,66 @@ mod tests {
         let cuts = crate::cast::Cuts::snap(&[(2.0, 6.0)], &[0, 2000, 4000, 6000, 8000]);
         let vtt = dir.join("a.en.vtt").to_string_lossy().into_owned();
         std::fs::write(&vtt, "WEBVTT\n\n00:00:01.000 --> 00:00:01.500\nBefore\n\n00:00:03.000 --> 00:00:04.000\nCut\n\n00:00:07.000 --> 00:00:08.000\nAfter\n").unwrap();
-        shift_file(&vtt, &cuts);
+        shift_file(&vtt, false, &cuts);
         assert_eq!(
             std::fs::read_to_string(&vtt).unwrap(),
             "WEBVTT\n\n00:00:01.000 --> 00:00:01.500\nBefore\n\n00:00:03.000 --> 00:00:04.000\nAfter\n\n"
         );
         let srt = dir.join("a.de.srt").to_string_lossy().into_owned();
         std::fs::write(&srt, "1\n00:00:07,250 --> 00:00:09,000\nNach\n").unwrap();
-        shift_file(&srt, &cuts);
+        shift_file(&srt, false, &cuts);
         assert_eq!(
             std::fs::read_to_string(&srt).unwrap(),
             "1\n00:00:03,250 --> 00:00:05,000\nNach\n\n"
         );
+        let two = dir.join("a.zh-Hans+en.srt").to_string_lossy().into_owned();
+        std::fs::write(&two, "1\n00:00:07,000 --> 00:00:08,000\n之后\nAfter\n").unwrap();
+        shift_file(&two, true, &cuts);
+        assert_eq!(
+            std::fs::read_to_string(&two).unwrap(),
+            "1\n00:00:03,000 --> 00:00:04,000\n之后\nAfter\n\n"
+        );
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Joins `v.mp4` and `a.mp4` of LUMTUB_CAST_SAMPLES with a bilingual
+    /// track styled by an ASS file, into Matroska and MP4; the files are
+    /// left there for ffprobe.
+    #[test]
+    fn joins_styled_subtitles() {
+        let Ok(dir) = std::env::var("LUMTUB_CAST_SAMPLES") else {
+            return;
+        };
+        if !std::path::Path::new(&format!("{dir}/v.mp4")).exists() {
+            return;
+        }
+        std::fs::write(format!("{dir}/two.srt"), "1\n00:00:01,000 --> 00:00:03,000\n你好\nHello\n\n2\n00:00:04,000 --> 00:00:06,000\nWorld only\n").unwrap();
+        std::fs::write(
+            format!("{dir}/two.ass"),
+            "[Script Info]\nScriptType: v4.00+\nPlayResX: 1280\nPlayResY: 720\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,Microsoft YaHei,40,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,2,0,2,25,25,30,1\nStyle: Second,Segoe UI,30,&H0000E7FF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,2,25,25,30,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\nDialogue: 0,0:00:01.00,0:00:03.00,Default,,0,0,0,,你好\\N{\\rSecond}Hello\nDialogue: 0,0:00:04.00,0:00:06.00,Default,,0,0,0,,{\\rSecond}World only\n",
+        )
+        .unwrap();
+        for container in ["mkv", "mp4"] {
+            let extra = Extra {
+                subtitles: vec![Text {
+                    path: format!("{dir}/two.srt"),
+                    language: "zh-Hans".into(),
+                    name: "中文 / English".into(),
+                    lines: true,
+                    ass: Some(format!("{dir}/two.ass")),
+                }],
+                ..Extra::default()
+            };
+            let out = join(
+                &format!("{dir}/v.mp4"),
+                &format!("{dir}/a.mp4"),
+                &format!("{dir}/styled-{container}"),
+                container,
+                &extra,
+            )
+            .unwrap();
+            assert!(out.path.ends_with(container), "{}", out.path);
+        }
     }
 
     /// Joins the sample files of cast's test (LUMTUB_CAST_SAMPLES) from disk:

@@ -63,6 +63,7 @@ import '../skins/skin.dart';
 import '../l10n/l10n.dart';
 import '../video_codec.dart' show heightLabel;
 import '../wheel_gesture.dart';
+import '../window_frame.dart';
 import 'motion.dart';
 import 'app_icons.dart';
 
@@ -281,7 +282,17 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     _hideTimer = Timer(Duration(seconds: _controller.preferences.controlsHideSeconds), () {
       if (!mounted || !_player.state.playing || _menus > 0 || _hoveringBars) return;
       _animation.reverse();
+      _hidePointer();
     });
+  }
+
+  /// In fullscreen the pointer goes with the bars right away, not on its
+  /// next move (see [WindowFrame.hidePointer]).
+  void _hidePointer() {
+    if (!WindowFrame.supported || Device.tv || !isFullscreen(context)) return;
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return;
+    unawaited(WindowFrame.hidePointer(box.localToGlobal(Offset.zero) & box.size));
   }
 
   /// The rate before a long press sped playback up, while it is held.
@@ -755,7 +766,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   Widget _buffering() => StreamBuilder<bool>(
         stream: _player.stream.buffering,
         initialData: _player.state.buffering,
-        builder: (context, snapshot) => snapshot.data == true || _controller.waitingForSubtitles
+        builder: (context, snapshot) => _controller.playbackError == null && (snapshot.data == true || _controller.waitingForSubtitles)
             ? Center(
                 child: IgnorePointer(
                   child: Column(mainAxisSize: MainAxisSize.min, children: [

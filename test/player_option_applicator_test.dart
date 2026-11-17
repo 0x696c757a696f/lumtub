@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/player_option_applicator.dart';
 import 'package:lumtub/player_settings.dart';
 
@@ -24,15 +25,15 @@ void main() {
   });
   test('subtitle preferences become slang and yt-dlp options', () {
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['slang'], '');
-    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['ytdl-raw-options'], '');
+    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['ytdl-raw-options'], 'ignore-config=,no-plugin-dirs=');
     final options = PlayerOptionApplicator.optionsFor(const PlayerSettings(subtitleMode: SubtitleMode.always, subtitleLanguage: SubtitleLanguage.en));
     expect(options['slang'], startsWith('en,'));
-    expect(options['ytdl-raw-options'], 'sub-langs=en.*,write-auto-subs=');
+    expect(options['ytdl-raw-options'], 'ignore-config=,no-plugin-dirs=,sub-langs=en.*,write-auto-subs=');
     expect(
       PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), infoJson: r'C:\Users\A,B\info\dQw4w9WgXcQ.json'),
-      r'load-info-json=%34%C:\Users\A,B\info\dQw4w9WgXcQ.json',
+      r'ignore-config=,no-plugin-dirs=,load-info-json=%34%C:\Users\A,B\info\dQw4w9WgXcQ.json',
     );
-    expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), infoJson: '/tmp/x.json'), 'load-info-json=/tmp/x.json');
+    expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), infoJson: '/tmp/x.json'), 'ignore-config=,no-plugin-dirs=,load-info-json=/tmp/x.json');
   });
 
   test('the low-resource strategy reads less ahead and keeps less behind', () {
@@ -104,8 +105,14 @@ void main() {
     expect(stepDownHeight(360, [360, 240, 144]), isNull);
     expect(stepDownHeight(720, const []), isNull);
   });
+  test('yt-dlp runs ignore configuration files and plugins from outside the app', () {
+    expect(ProcessTree.isYtDlp(r'C:\Lumtub\tools\yt-dlp\2026.11.01\yt-dlp.exe'), isTrue);
+    expect(ProcessTree.isYtDlp('/data/app/lib/yt-dlp-bundled'), isTrue);
+    expect(ProcessTree.isYtDlp('/usr/bin/ffmpeg'), isFalse);
+    expect(ProcessTree.ytDlpIsolation, ['--ignore-config', '--no-plugin-dirs']);
+  });
   test('mpv resolving keeps the codec ranking and picks no stray subtitle', () {
-    expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), formatSort: 'res,fps,vcodec:avc'), 'format-sort=%18%res,fps,vcodec:avc');
+    expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), formatSort: 'res,fps,vcodec:avc'), 'ignore-config=,no-plugin-dirs=,format-sort=%18%res,fps,vcodec:avc');
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['subs-fallback'], 'default');
   });
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -31,8 +32,9 @@ class YoutubePlayerProbe {
   static DateTime _visitorAt = DateTime(0);
   static const _visitorFor = Duration(minutes: 30);
   static const _visitorRetry = Duration(minutes: 5);
-  // The page writes it as a JSON string, which may escape characters.
-  static final _visitorData = RegExp(r'"(?:VISITOR_DATA|visitorData)"\s*:\s*"((?:[^"\\]|\\.){10,400})"');
+  // The page writes it as a JSON string, which may escape characters. It
+  // ran to 548 characters on 2026-11-16.
+  static final _visitorData = RegExp(r'"(?:VISITOR_DATA|visitorData)"\s*:\s*"((?:[^"\\]|\\.){10,4000})"');
   static final _visitorCookie = RegExp(r'(VISITOR_INFO1_LIVE|VISITOR_PRIVACY_METADATA|YSC|__Secure-ROLLOUT_TOKEN)=([^;,\s]+)');
 
   @visibleForTesting
@@ -63,6 +65,13 @@ class YoutubePlayerProbe {
   /// bot" comes with visitor data, and with it the same request is
   /// answered (seen on 2026-11-14). [mask] (an `X-Goog-FieldMask`) is sent
   /// only with a visitor, as a masked answer leaves the visitor data out.
+  ///
+  /// [playing] is a video being started, which never waits: the `/player`
+  /// lookups made for lists (languages, lengths, live states) wait while one is
+  /// asked and go a few at a time, as YouTube answers a visitor that asks
+  /// too much with "Sign in to confirm you're not a bot", playback
+  /// included. A start refused that way asks again at once as the visitor
+  /// the refusal names, which playback keeps from then on.
   static Future<http.Response> post(
     http.Client client,
     Map<String, String> headers,
@@ -70,8 +79,113 @@ class YoutubePlayerProbe {
     String endpoint = 'player',
     String? mask,
     Duration timeout = const Duration(seconds: 15),
+    bool playing = false,
+  }) async {
+    if (!playing && endpoint == 'player') {
+      if (await _waitForPlayback()) return http.Response('', 429, reasonPhrase: 'Resting');
+    } else {
+      _playing++;
+    }
+    try {
+      final response = await _post(client, headers, body, endpoint: endpoint, mask: mask, timeout: timeout, playing: playing);
+      if (!playing && endpoint == 'player' && response.statusCode == 200) _backgroundAnswered(response);
+      return response;
+    } finally {
+      if (playing) {
+        _playing--;
+        _playedAt = DateTime.now();
+      }
+    }
+  }
+
+  /// Videos being started, and when the last start was answered.
+  static int _playing = 0;
+  static DateTime _playedAt = DateTime(0);
+  /// When the next lookup for a list may go.
+  static DateTime _nextLookup = DateTime(0);
+  /// Lookups for lists in a row YouTube took for a bot's, and until when
+  /// none is asked after too many.
+  static int _refusedInRow = 0;
+  static DateTime _restUntil = DateTime(0);
+
+  /// Lookups for lists go at most one per [lookupSpacing], and none while a
+  /// video starts or for [afterPlayback] after.
+  static const lookupSpacing = Duration(milliseconds: 150);
+  static const afterPlayback = Duration(seconds: 3);
+  /// After [refusalsBeforeRest] refusals in a row, lookups for lists rest
+  /// for [rest]: asking on only keeps YouTube refusing, playback too.
+  static const refusalsBeforeRest = 5;
+  static const rest = Duration(minutes: 10);
+
+  /// Holds a lookup for a list back; true when it is not to be asked at
+  /// all for now.
+  static Future<bool> _waitForPlayback() async {
+    while (true) {
+      final now = DateTime.now();
+      if (now.isBefore(_restUntil)) return true;
+      final free = _playedAt.add(afterPlayback);
+      if (_playing > 0 || now.isBefore(free)) {
+        await Future<void>.delayed(_playing > 0 ? const Duration(milliseconds: 200) : free.difference(now));
+        continue;
+      }
+      if (now.isBefore(_nextLookup)) {
+        final wait = _nextLookup.difference(now);
+        _nextLookup = _nextLookup.add(lookupSpacing);
+        await Future<void>.delayed(wait);
+        // A start may have come meanwhile.
+        if (_playing > 0) continue;
+        return DateTime.now().isBefore(_restUntil);
+      }
+      _nextLookup = now.add(lookupSpacing);
+      return false;
+    }
+  }
+
+  static void _backgroundAnswered(http.Response response) {
+    if (!_botCheck(response)) {
+      _refusedInRow = 0;
+      return;
+    }
+    if (++_refusedInRow < refusalsBeforeRest) return;
+    _refusedInRow = 0;
+    _restUntil = DateTime.now().add(rest);
+    logWarn('YouTube took $refusalsBeforeRest lookups in a row for a bot\'s; lookups for lists rest ${rest.inMinutes} minutes so playback is not refused too');
+  }
+
+  static bool _botCheck(http.Response response) {
+    // A refusal is a few kilobytes; an answer with the video is far longer
+    // and is not decoded here again.
+    if (response.bodyBytes.length > 32 << 10) return false;
+    final text = utf8.decode(response.bodyBytes, allowMalformed: true);
+    return text.contains('"LOGIN_REQUIRED"') && text.contains('bot');
+  }
+
+  /// The visitor playback asks as once YouTube refused it as the shared
+  /// one, by the visitor data the refusal named.
+  static String? _playVisitor;
+
+  @visibleForTesting
+  static void resetTraffic() {
+    _playing = 0;
+    _playedAt = DateTime(0);
+    _nextLookup = DateTime(0);
+    _refusedInRow = 0;
+    _restUntil = DateTime(0);
+    _playVisitor = null;
+  }
+
+  static Future<http.Response> _post(
+    http.Client client,
+    Map<String, String> headers,
+    Map<String, Object?> body, {
+    required String endpoint,
+    required String? mask,
+    required Duration timeout,
+    required bool playing,
   }) async {
     final known = await addVisitor(client, headers, body);
+    final own = playing ? _playVisitor : null;
+    if (own != null) _useVisitor(headers, body, own);
     Future<http.Response> send({required bool masked}) => client
         .post(
           Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?prettyPrint=false'),
@@ -80,6 +194,14 @@ class YoutubePlayerProbe {
         )
         .timeout(timeout);
     final response = await send(masked: known);
+    if (playing && known && response.statusCode == 200 && _botCheck(response)) {
+      final data = _visitorIn(utf8.decode(response.bodyBytes, allowMalformed: true));
+      if (data == null || data == (own ?? headers['X-Goog-Visitor-Id'])) return response;
+      _playVisitor = data;
+      logInfo('YouTube took the visitor for a bot; playback asks as the visitor its answer named');
+      _useVisitor(headers, body, data);
+      return send(masked: true);
+    }
     if (known || response.statusCode != 200) return response;
     final answer = utf8.decode(response.bodyBytes, allowMalformed: true);
     final data = _visitorIn(answer);
@@ -92,6 +214,13 @@ class YoutubePlayerProbe {
     if (!answer.contains('"LOGIN_REQUIRED"')) return response;
     if (!await addVisitor(client, headers, body)) return response;
     return send(masked: true);
+  }
+
+  static void _useVisitor(Map<String, String> headers, Map<String, Object?> body, String data) {
+    headers['X-Goog-Visitor-Id'] = data;
+    // The page's cookies name the other visitor.
+    headers['Cookie'] = YoutubeWeb.consentCookie;
+    ((body['context'] as Map)['client'] as Map)['visitorData'] = data;
   }
 
   static Future<bool> _isKnown() async => await (_visitor ?? Future.value()) != null;
@@ -126,13 +255,17 @@ class YoutubePlayerProbe {
         'Accept-Language': 'en-US,en;q=0.9',
         'Cookie': YoutubeWeb.consentCookie,
       }).timeout(const Duration(seconds: 15));
-      final page = utf8.decode(response.bodyBytes, allowMalformed: true);
-      final data = response.statusCode == 200 ? _visitorIn(page) : null;
-      if (data == null) {
+      // Close to a megabyte: read off the UI thread.
+      final bytes = response.bodyBytes;
+      final (data, length, named) = await Isolate.run(() {
+        final page = utf8.decode(bytes, allowMalformed: true);
+        return (_visitorIn(page), page.length, page.contains('VISITOR_DATA'));
+      });
+      if (response.statusCode != 200 || data == null) {
         final host = response.request?.url.host ?? 'www.youtube.com';
-        logWarn('YouTube page gave no visitor data (HTTP ${response.statusCode}, ${page.length} characters'
+        logWarn('YouTube page gave no visitor data (HTTP ${response.statusCode}, $length characters'
             '${host != 'www.youtube.com' ? ', from $host' : ''}'
-            '${page.contains('VISITOR_DATA') ? ', VISITOR_DATA unreadable' : ''}); taking it from YouTube\'s answers');
+            '${named ? ', VISITOR_DATA unreadable' : ''}); taking it from YouTube\'s answers');
         return null;
       }
       final cookies = {

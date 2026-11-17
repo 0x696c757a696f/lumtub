@@ -352,7 +352,9 @@ class _RatingButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final item = controller.playing!;
+    // Built once more while the video closes, when nothing plays.
+    final item = controller.playing;
+    if (item == null) return const SizedBox.shrink();
     final account = controller.account;
     final signedIn = account?.signedIn ?? false;
     final colors = context.colors;
@@ -401,7 +403,9 @@ class _Toolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final item = controller.playing!;
+    // Built once more while the video closes, when nothing plays.
+    final item = controller.playing;
+    if (item == null) return const SizedBox.shrink();
     final settings = controller.settings;
     final decoded = controller.currentCodec != tr('No video played yet');
     final library = controller.library;
@@ -412,6 +416,7 @@ class _Toolbar extends StatelessWidget {
     // name, as phone video apps lay them out.
     Widget layout(List<Widget> children) => phone
         ? SingleChildScrollView(
+            key: const PageStorageKey('actions'),
             scrollDirection: Axis.horizontal,
             child: Row(children: [for (final (i, c) in children.indexed) Padding(padding: EdgeInsetsDirectional.only(start: i == 0 ? 0 : 8), child: c)]),
           )
@@ -499,7 +504,9 @@ class _PhoneDetailsState extends State<_PhoneDetails> {
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
-    final item = controller.playing!;
+    // Built once more while the video closes, when nothing plays.
+    final item = controller.playing;
+    if (item == null) return const SizedBox.shrink();
     final details = controller.details;
     final colors = context.colors;
     final views = details?.viewCount ?? item.viewCount;
@@ -582,7 +589,9 @@ class _PhoneActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final item = controller.playing!;
+    // Built once more while the video closes, when nothing plays.
+    final item = controller.playing;
+    if (item == null) return const SizedBox.shrink();
     final library = controller.library;
     final favorite = library?.isFavorite(item.id) ?? false;
     final later = library?.isWatchLater(item.id) ?? false;
@@ -825,7 +834,9 @@ class _Details extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final item = controller.playing!;
+    // Built once more while the video closes, when nothing plays.
+    final item = controller.playing;
+    if (item == null) return const SizedBox.shrink();
     final details = controller.details;
     final views = details?.viewCount ?? item.viewCount;
     final meta = [
@@ -1191,7 +1202,7 @@ class _UpNext extends StatelessWidget {
               if (choices.length > 1)
                 SliverToBoxAdapter(child: SizedBox(
                   height: 40,
-                  child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.fromLTRB(4, 0, 4, 8), children: [
+                  child: ListView(key: const PageStorageKey('choices'), scrollDirection: Axis.horizontal, padding: const EdgeInsets.fromLTRB(4, 0, 4, 8), children: [
                     for (final (value, label, _) in choices)
                       Padding(
                         padding: const EdgeInsetsDirectional.only(end: 8),

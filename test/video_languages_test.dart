@@ -44,6 +44,7 @@ void main() {
   setUp(() {
     VideoLanguages.reset();
     YoutubePlayerProbe.forgetVisitor();
+    YoutubePlayerProbe.resetTraffic();
   });
 
   group('passes', () {
@@ -152,15 +153,17 @@ void main() {
     expect(cookies.first, allOf(contains('SOCS=CAI'), contains('YSC=abc'), contains('VISITOR_INFO1_LIVE=xyz')));
   }, skip: core);
 
-  test('reads visitor data the page writes with escapes', () async {
+  test('reads visitor data the page writes with escapes, however long', () async {
     final visitors = <String?>[];
+    // 548 characters, as on 2026-11-16.
+    final long = 'Cgt${'A' * 541}';
     final client = MockClient((request) async {
-      if (request.method == 'GET') return http.Response(r'<script>ytcfg.set({"VISITOR_DATA":"CgtWaXNpdG9y\u003d\u003d"})</script>', 200);
+      if (request.method == 'GET') return http.Response('<script>ytcfg.set({"VISITOR_DATA":"$long\\u003d\\u003d"})</script>', 200);
       visitors.add(request.headers['X-Goog-Visitor-Id']);
       return _json(_player('Ricette di casa', asr: 'it'));
     });
     await VideoLanguages(client).of('lllllllllll', asking: ExploreLanguage.it);
-    expect(visitors, ['CgtWaXNpdG9y==']);
+    expect(visitors, ['$long==']);
   }, skip: core);
 
   test("takes the visitor from YouTube's answer when the page names none, and asks a refused video again", () async {

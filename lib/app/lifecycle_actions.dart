@@ -6,6 +6,25 @@ extension LifecycleActions on AppController {
   /// [shutdown] (Android in the background).
   Future<void> flushHistory() => _history?.flush() ?? Future.value();
 
+  /// Makes the local relay listen again where the system took its socket
+  /// away, as iOS does to a suspended app; checked whenever the app comes
+  /// back to the foreground.
+  Future<void> reviveRelay() async {
+    _relayRevivedAt = DateTime.now();
+    try {
+      await _relay?.revive();
+    } catch (e) {
+      logWarn('Could not make the local relay listen again: $e');
+    }
+  }
+
+  /// Whether a refused relay may be revived and the video reopened: not
+  /// again within half a minute, so a relay that keeps failing is given up.
+  bool _mayReviveRelay() {
+    final last = _relayRevivedAt;
+    return last == null || DateTime.now().difference(last) > const Duration(seconds: 30);
+  }
+
   /// Starts Lumtub up: once at a time, and not again once it is ready.
   Future<void> initialize() {
     if (ready || _disposed) return Future.value();
@@ -226,7 +245,13 @@ extension LifecycleActions on AppController {
         logError('Initialization failed', e);
       });
     }
-    if (SmokeCheck.requested) unawaited(Platform.environment['LUMTUB_SHOWCASE']?.isNotEmpty == true ? runShowcase() : runSmokeCheck());
+    if (SmokeCheck.requested) {
+      unawaited(Platform.environment['LUMTUB_GLASS_CHECK'] == '1'
+          ? runGlassCheck()
+          : Platform.environment['LUMTUB_SHOWCASE']?.isNotEmpty == true
+              ? runShowcase()
+              : runSmokeCheck());
+    }
   }
 
   /// Checks for a new Lumtub now and downloads it, for the settings page.

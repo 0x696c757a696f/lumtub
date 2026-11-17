@@ -13,6 +13,7 @@ import 'google_auth.dart';
 import 'app_window.dart';
 import 'app_log.dart';
 import 'appearance_settings.dart';
+import 'ui/glass_look.dart';
 import 'ui/skin_paint.dart' show SkinGlass;
 import 'keep_awake.dart';
 import 'l10n/l10n.dart';
@@ -28,6 +29,7 @@ import 'ui/palettes.dart';
 import 'ui/theme.dart';
 import 'ui/theme_cross_fade.dart';
 import 'ui/window_chrome.dart';
+import 'window_glass.dart';
 import 'windows_shell.dart';
 import 'device.dart';
 
@@ -107,10 +109,19 @@ class _LumtubAppState extends State<LumtubApp> {
       ..maximumSizeBytes = (appearance.lowResource ? 24 : (phone ? 32 : 48)) << 20;
     final warmth = appearance.warmthAt(DateTime.now());
     final skin = SkinLibrary.instance.byId(appearance.skin);
-    final key = (appearance.themeKey(accent), Motion.reduced, warmth, SkinLibrary.instance.revision, skin, appearance.glassOpacity);
+    final glass = appearance.windowGlass && WindowGlass.state.value.shown;
+    final key = (
+      appearance.themeKey(accent),
+      Motion.reduced,
+      warmth,
+      SkinLibrary.instance.revision,
+      skin,
+      appearance.glassOpacity,
+      glass ? (appearance.windowGlassClarity, appearance.windowGlassWhole) : null,
+    );
     if (key == _themeKey) return;
     _themeKey = key;
-    ThemeData build(Brightness brightness, {bool highContrast = false}) => buildAppTheme(
+    ThemeData build(Brightness brightness, {bool highContrast = false}) => _glazed(glass ? appearance : null, buildAppTheme(
           accent,
           brightness,
           variant: appearance.schemeVariant,
@@ -123,13 +134,22 @@ class _LumtubAppState extends State<LumtubApp> {
           warmth: warmth,
           skin: highContrast ? null : skin?.forBrightness(brightness),
           plain: appearance.lowResource,
-        );
+        ));
     _useFilledIcons(skin?.icons.filled ?? false);
     _useGlass(skin?.glass ?? false ? appearance.glassOpacity.clamp(SkinGlass.min, 1).toDouble() : 1);
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);
     _lightContrast = build(Brightness.light, highContrast: true);
     _darkContrast = build(Brightness.dark, highContrast: true);
+  }
+
+  /// [theme] for a window the desktop shows through, when [appearance]
+  /// is given.
+  static ThemeData _glazed(AppearanceSettings? appearance, ThemeData theme) =>
+      appearance == null ? theme : withGlass(theme, transparency: appearance.windowGlassClarity, whole: appearance.windowGlassWhole);
+
+  void _glassChanged() {
+    if (mounted) setState(() => _themeKey = null);
   }
 
   void _skinsChanged() {
@@ -143,6 +163,7 @@ class _LumtubAppState extends State<LumtubApp> {
     _shown = _shownOf(controller);
     controller.addListener(_rebuildIfShownChanged);
     SkinLibrary.instance.addListener(_skinsChanged);
+    WindowGlass.state.addListener(_glassChanged);
     unawaited(controller.initialize());
     _clock = Timer.periodic(const Duration(minutes: 1), (_) {
       final appearance = controller.appearance;
@@ -188,10 +209,13 @@ class _LumtubAppState extends State<LumtubApp> {
           ..clearLiveImages();
         if (controller.playing == null) controller.releaseMemory();
         final player = controller.player;
-        if (!controller.preferences.pauseOnMinimize || player == null || !player.state.playing) return;
+        // A TV left for another app does not play on behind it.
+        if (!(controller.preferences.pauseOnMinimize || Device.tv) || player == null || !player.state.playing) return;
         _pausedByMinimize = true;
         unawaited(player.pause());
       },
+      // iOS takes the listening sockets of a suspended app away.
+      onResume: () => unawaited(controller.reviveRelay()),
       onShow: () {
         // “Show animations in Windows” may have changed meanwhile.
         if (widget.controller.appearance.motion == MotionPreference.system && Motion.systemPrefersReduced() != Motion.reduced) setState(() => _themeKey = null);
@@ -221,6 +245,7 @@ class _LumtubAppState extends State<LumtubApp> {
   void dispose() {
     widget.controller.removeListener(_rebuildIfShownChanged);
     SkinLibrary.instance.removeListener(_skinsChanged);
+    WindowGlass.state.removeListener(_glassChanged);
     _lifecycle.dispose();
     _clock?.cancel();
     _shell?.dispose();
@@ -253,6 +278,7 @@ class _LumtubAppState extends State<LumtubApp> {
             builder: (context, child) {
               final media = MediaQuery.of(context);
               _matchTitleBar(Theme.of(context));
+              _matchGlass(appearance, Theme.of(context).brightness);
               final chrome = WindowChrome(controller: widget.controller, title: appName, child: child!);
               return ThemeCrossFade(
                 // A video is a texture, which a picture of the window may
@@ -308,12 +334,22 @@ void _rebuildAll() {
   });
 }
 
+/// Lets the desktop through the window, or stops, as 窗口透明 says; the
+/// system's own blur shaded for [brightness].
+void _matchGlass(AppearanceSettings appearance, Brightness brightness) {
+  if (!WindowGlass.possible) return;
+  final on = appearance.windowGlass;
+  final blur = appearance.windowGlassBlur;
+  WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(WindowGlass.apply(on: on, dark: brightness == Brightness.dark, blur: blur)));
+}
+
 /// The Windows title bar in the page's own colours, so the window reads as
 /// one surface in light and dark themes.
 void _matchTitleBar(ThemeData theme) {
   if (!Platform.isWindows) return;
   final scheme = theme.colorScheme;
-  final caption = theme.extension<AppTones>()?.chrome ?? scheme.surface;
+  // Under glass the system's bar, which shows the glass too.
+  final caption = theme.extension<GlassLook>() != null ? Colors.transparent : theme.extension<AppTones>()?.chrome ?? scheme.surface;
   final key = (caption, scheme.onSurface, scheme.brightness);
   if (key == _titleBar) return;
   _titleBar = key;

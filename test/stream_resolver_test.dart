@@ -175,10 +175,33 @@ void main() {
   test('a live stream is also asked as the clients a phone can play', () {
     final resolver = StreamResolver('yt-dlp', infoDirectory: Directory('x'))..liveClients = 'default,android_vr';
     expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', live: true), containsAllInOrder(['--extractor-args', 'youtube:formats=incomplete;player_client=default,android_vr']));
-    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl').join(' '), isNot(contains('player_client')));
+    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl').join(' '), isNot(contains('android_vr')));
     resolver.liveClients = null;
     expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', live: true), containsAllInOrder(['--extractor-args', 'youtube:formats=incomplete']));
   });
+
+  test('leaves out the TV clients unless a run without them failed', () {
+    final resolver = StreamResolver('yt-dlp', infoDirectory: Directory('x'));
+    expect(resolver.avoidingTv, isTrue);
+    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl'), containsAllInOrder(['--extractor-args', StreamResolver.visionOnly]));
+    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', cookies: 'c.txt').join(' '), isNot(contains('visionos')), reason: 'signed in keeps its clients');
+    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', live: true).join(' '), isNot(contains('visionos')), reason: 'live streams keep their own clients');
+  });
+
+  test('a run without the TV clients that fails asks with them again', () async {
+    final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    final script = File('${dir.path}/fake-yt-dlp');
+    await script.writeAsString('#!/bin/sh\ncase "\$*" in *player_client=visionos*) echo "ERROR: [youtube] dQw4w9WgXcQ: Sign in to confirm you are not a bot" >&2; exit 1;; esac\necho \'{"id":"dQw4w9WgXcQ","formats":[]}\'\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'));
+    final video = await resolver.resolve('dQw4w9WgXcQ', 'ytdl');
+    expect(video.info['id'], 'dQw4w9WgXcQ');
+    expect(resolver.avoidingTv, isFalse);
+    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl').join(' '), isNot(contains('visionos')));
+    resolver.avoidTv();
+    expect(resolver.avoidingTv, isTrue, reason: 'refused TV addresses leave it out again');
+  }, skip: Platform.isWindows ? 'uses a shell script' : null);
 
   test('points yt-dlp at Deno and retries a network error once', () async {
     expect(StreamResolver('yt-dlp', deno: r'C:\tools\deno.exe', infoDirectory: Directory('x')).arguments('dQw4w9WgXcQ', 'ytdl'),

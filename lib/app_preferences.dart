@@ -103,6 +103,7 @@ class AppPreferences {
     this.exitFullscreenOnEnd = false,
     this.pauseOnMinimize = false,
     this.audioOnlyInBackground = false,
+    this.pipOnLeave = false,
     this.closeToTray = false,
     this.minimizeToTray = false,
     this.gpuPreference = 'system',
@@ -243,6 +244,9 @@ class AppPreferences {
   final bool pauseOnMinimize;
   /// Minimised or hidden to the tray, mpv decodes no picture.
   final bool audioOnlyInBackground;
+  /// Phones and tablets: leaving the app while a video plays on its page
+  /// keeps it in picture in picture. Off, the sound plays on alone.
+  final bool pipOnLeave;
   /// Closing the window hides it to the tray icon instead of exiting.
   final bool closeToTray;
   /// Minimising the window hides it to the tray icon.
@@ -483,6 +487,7 @@ class AppPreferences {
     bool? exitFullscreenOnEnd,
     bool? pauseOnMinimize,
     bool? audioOnlyInBackground,
+    bool? pipOnLeave,
     bool? closeToTray,
     bool? minimizeToTray,
     String? gpuPreference,
@@ -571,6 +576,7 @@ class AppPreferences {
         exitFullscreenOnEnd: exitFullscreenOnEnd ?? this.exitFullscreenOnEnd,
         pauseOnMinimize: pauseOnMinimize ?? this.pauseOnMinimize,
         audioOnlyInBackground: audioOnlyInBackground ?? this.audioOnlyInBackground,
+        pipOnLeave: pipOnLeave ?? this.pipOnLeave,
         closeToTray: closeToTray ?? this.closeToTray,
         minimizeToTray: minimizeToTray ?? this.minimizeToTray,
         gpuPreference: gpuPreference ?? this.gpuPreference,
@@ -660,6 +666,7 @@ class AppPreferences {
         'exitFullscreenOnEnd': exitFullscreenOnEnd,
         'pauseOnMinimize': pauseOnMinimize,
         'audioOnlyInBackground': audioOnlyInBackground,
+        'pipOnLeave': pipOnLeave,
         'closeToTray': closeToTray,
         'minimizeToTray': minimizeToTray,
         'gpuPreference': gpuPreference,
@@ -788,6 +795,7 @@ class AppPreferences {
       exitFullscreenOnEnd: flag('exitFullscreenOnEnd', d.exitFullscreenOnEnd),
       pauseOnMinimize: flag('pauseOnMinimize', d.pauseOnMinimize),
       audioOnlyInBackground: flag('audioOnlyInBackground', d.audioOnlyInBackground),
+      pipOnLeave: flag('pipOnLeave', d.pipOnLeave),
       closeToTray: flag('closeToTray', d.closeToTray),
       minimizeToTray: flag('minimizeToTray', d.minimizeToTray),
       gpuPreference: gpuPreferences.contains(raw['gpuPreference']) ? raw['gpuPreference'] as String : d.gpuPreference,

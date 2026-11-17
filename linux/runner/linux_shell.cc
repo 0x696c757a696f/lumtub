@@ -15,6 +15,7 @@
 #endif
 #ifdef GDK_WINDOWING_WAYLAND
 #include <gdk/gdkwayland.h>
+#include <wayland-client-core.h>
 #endif
 
 namespace {
@@ -36,6 +37,13 @@ constexpr int kStatusActive = 1;
 struct Shell {
   GtkWindow* window = nullptr;
   FlView* view = nullptr;
+  // While the pointer is hidden over the video (HidePointer): the pointer
+  // to give back once it moves, and where it was hidden.
+  guint pointer_watch = 0;
+  GdkCursor* pointer_before = nullptr;
+  GdkCursor* pointer_blank = nullptr;
+  int hidden_x = 0;
+  int hidden_y = 0;
   FlMethodChannel* channel = nullptr;
 
   bool close_to_tray = false;
@@ -701,6 +709,272 @@ void BeginFrameDrag(bool resize, GdkWindowEdge edge) {
   }
 }
 
+GdkDevice* Pointer(GdkWindow* window) {
+  return gdk_seat_get_pointer(gdk_display_get_default_seat(gdk_window_get_display(window)));
+}
+
+// Gives the pointer back once it moved, unless Flutter set another one
+// meanwhile: Flutter answers the move with the pointer it wants, which may
+// be the one it already had and so is not set again.
+gboolean WatchHiddenPointer(gpointer) {
+  GdkWindow* window = shell.window != nullptr ? gtk_widget_get_window(GTK_WIDGET(shell.window)) : nullptr;
+  int x = 0;
+  int y = 0;
+  if (window != nullptr) gdk_device_get_position(Pointer(window), nullptr, &x, &y);
+  if (window != nullptr && x == shell.hidden_x && y == shell.hidden_y) return G_SOURCE_CONTINUE;
+  if (window != nullptr && gdk_window_get_cursor(window) == shell.pointer_blank) gdk_window_set_cursor(window, shell.pointer_before);
+  g_clear_object(&shell.pointer_before);
+  shell.pointer_watch = 0;
+  return G_SOURCE_REMOVE;
+}
+
+// Hides the pointer while it rests in the box |area| (left, top, right,
+// bottom in logical pixels of Flutter's view), until it moves.
+void HidePointer(FlValue* area) {
+  if (area == nullptr || fl_value_get_type(area) != FL_VALUE_TYPE_LIST || fl_value_get_length(area) != 4) return;
+  if (shell.view == nullptr || shell.pointer_watch != 0 || !gtk_window_is_active(shell.window)) return;
+  double box[4];
+  for (size_t i = 0; i < 4; ++i) {
+    FlValue* item = fl_value_get_list_value(area, i);
+    const FlValueType type = fl_value_get_type(item);
+    box[i] = type == FL_VALUE_TYPE_FLOAT ? fl_value_get_float(item) : type == FL_VALUE_TYPE_INT ? static_cast<double>(fl_value_get_int(item)) : 0;
+  }
+  GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(shell.window));
+  if (window == nullptr) return;
+  int x = 0;
+  int y = 0;
+  gdk_window_get_device_position(window, Pointer(window), &x, &y, nullptr);
+  int view_x = 0;
+  int view_y = 0;
+  if (!gtk_widget_translate_coordinates(GTK_WIDGET(shell.window), GTK_WIDGET(shell.view), x, y, &view_x, &view_y)) return;
+  if (view_x < box[0] || view_y < box[1] || view_x >= box[2] || view_y >= box[3]) return;
+  if (shell.pointer_blank == nullptr) shell.pointer_blank = gdk_cursor_new_for_display(gdk_window_get_display(window), GDK_BLANK_CURSOR);
+  GdkCursor* before = gdk_window_get_cursor(window);
+  shell.pointer_before = before != nullptr ? GDK_CURSOR(g_object_ref(before)) : nullptr;
+  gdk_device_get_position(Pointer(window), nullptr, &shell.hidden_x, &shell.hidden_y);
+  gdk_window_set_cursor(window, shell.pointer_blank);
+  shell.pointer_watch = g_timeout_add(100, WatchHiddenPointer, nullptr);
+}
+
+// ---- Desktop glass ---------------------------------------------------------
+
+#ifdef GDK_WINDOWING_WAYLAND
+// Blur behind the window on Wayland, written out by hand so no generated
+// protocol code is needed. Two protocols:
+//  - ext_background_effect_v1 (wayland-protocols, staging), the standard
+//    one: KDE Plasma 6.7+, GNOME 51+, COSMIC, niri, Hyprland 0.56+;
+//  - org_kde_kwin_blur, KWin's own, for older Plasma.
+// libwayland-client is reached through GTK, which already loaded it, so
+// the runner is not linked against a copy older than libmpv's.
+const struct wl_interface* kNoTypes[] = {nullptr, nullptr};
+
+const struct wl_interface* kBlurRegionTypes[] = {nullptr};
+const struct wl_message kBlurRequests[] = {
+    {"commit", "", nullptr},
+    {"set_region", "?o", kBlurRegionTypes},
+    {"release", "", nullptr},
+};
+const struct wl_interface kBlurInterface = {"org_kde_kwin_blur", 1, 3, kBlurRequests, 0, nullptr};
+const struct wl_interface* kBlurCreateTypes[] = {&kBlurInterface, nullptr};
+const struct wl_interface* kBlurUnsetTypes[] = {nullptr};
+const struct wl_message kBlurManagerRequests[] = {
+    {"create", "no", kBlurCreateTypes},
+    {"unset", "o", kBlurUnsetTypes},
+};
+const struct wl_interface kBlurManagerInterface = {"org_kde_kwin_blur_manager", 1, 2, kBlurManagerRequests, 0, nullptr};
+
+const struct wl_interface* kEffectRegionTypes[] = {nullptr};
+const struct wl_message kEffectRequests[] = {
+    {"destroy", "", nullptr},
+    {"set_blur_region", "?o", kEffectRegionTypes},
+};
+const struct wl_interface kEffectInterface = {"ext_background_effect_surface_v1", 1, 2, kEffectRequests, 0, nullptr};
+const struct wl_interface* kEffectGetTypes[] = {&kEffectInterface, nullptr};
+const struct wl_message kEffectManagerRequests[] = {
+    {"destroy", "", nullptr},
+    {"get_background_effect", "no", kEffectGetTypes},
+};
+const struct wl_message kEffectManagerEvents[] = {
+    {"capabilities", "u", kNoTypes},
+};
+const struct wl_interface kEffectManagerInterface = {"ext_background_effect_manager_v1", 1, 2, kEffectManagerRequests, 1, kEffectManagerEvents};
+
+struct WaylandClient {
+  const struct wl_interface* registry_interface;
+  const struct wl_interface* compositor_interface;
+  const struct wl_interface* region_interface;
+  struct wl_event_queue* (*create_queue)(struct wl_display*);
+  int (*roundtrip_queue)(struct wl_display*, struct wl_event_queue*);
+  void (*destroy_queue)(struct wl_event_queue*);
+  int (*flush)(struct wl_display*);
+  int (*add_listener)(struct wl_proxy*, void (**)(void), void*);
+  void (*destroy)(struct wl_proxy*);
+  uint32_t (*version)(struct wl_proxy*);
+  void (*set_queue)(struct wl_proxy*, struct wl_event_queue*);
+  struct wl_proxy* (*marshal)(struct wl_proxy*, uint32_t, const struct wl_interface*, uint32_t, uint32_t, ...);
+};
+
+// The functions of the libwayland-client GTK uses; false when one is missing.
+bool LoadWaylandClient(WaylandClient& wl) {
+  void* library = dlopen("libwayland-client.so.0", RTLD_NOW | RTLD_NOLOAD);
+  if (library == nullptr) return false;
+  auto find = [library](const char* name) { return dlsym(library, name); };
+  auto surface = static_cast<const struct wl_interface*>(find("wl_surface_interface"));
+  wl.registry_interface = static_cast<const struct wl_interface*>(find("wl_registry_interface"));
+  wl.compositor_interface = static_cast<const struct wl_interface*>(find("wl_compositor_interface"));
+  wl.region_interface = static_cast<const struct wl_interface*>(find("wl_region_interface"));
+  wl.create_queue = reinterpret_cast<decltype(wl.create_queue)>(find("wl_display_create_queue"));
+  wl.roundtrip_queue = reinterpret_cast<decltype(wl.roundtrip_queue)>(find("wl_display_roundtrip_queue"));
+  wl.destroy_queue = reinterpret_cast<decltype(wl.destroy_queue)>(find("wl_event_queue_destroy"));
+  wl.flush = reinterpret_cast<decltype(wl.flush)>(find("wl_display_flush"));
+  wl.add_listener = reinterpret_cast<decltype(wl.add_listener)>(find("wl_proxy_add_listener"));
+  wl.destroy = reinterpret_cast<decltype(wl.destroy)>(find("wl_proxy_destroy"));
+  wl.version = reinterpret_cast<decltype(wl.version)>(find("wl_proxy_get_version"));
+  wl.set_queue = reinterpret_cast<decltype(wl.set_queue)>(find("wl_proxy_set_queue"));
+  wl.marshal = reinterpret_cast<decltype(wl.marshal)>(find("wl_proxy_marshal_flags"));
+  if (surface == nullptr || wl.registry_interface == nullptr || wl.compositor_interface == nullptr ||
+      wl.region_interface == nullptr || wl.create_queue == nullptr || wl.roundtrip_queue == nullptr ||
+      wl.destroy_queue == nullptr || wl.flush == nullptr || wl.add_listener == nullptr || wl.destroy == nullptr ||
+      wl.version == nullptr || wl.set_queue == nullptr || wl.marshal == nullptr) {
+    return false;
+  }
+  kBlurRegionTypes[0] = wl.region_interface;
+  kBlurCreateTypes[1] = surface;
+  kBlurUnsetTypes[0] = surface;
+  kEffectRegionTypes[0] = wl.region_interface;
+  kEffectGetTypes[1] = surface;
+  return true;
+}
+
+struct WaylandBlur {
+  bool looked = false;
+  WaylandClient wl{};
+  struct wl_proxy* compositor = nullptr;
+  struct wl_proxy* effects = nullptr;
+  struct wl_proxy* effect = nullptr;
+  struct wl_proxy* kde = nullptr;
+  struct wl_proxy* kde_blur = nullptr;
+};
+WaylandBlur wayland_blur;
+
+// wl_registry.bind (request 0), as wayland-client-protocol.h writes it.
+struct wl_proxy* Bind(struct wl_proxy* registry, uint32_t name, const struct wl_interface* interface, uint32_t version) {
+  return wayland_blur.wl.marshal(registry, 0, interface, version, 0, name, interface->name, version, nullptr);
+}
+
+void OnGlobal(void*, struct wl_proxy* registry, uint32_t name, const char* interface, uint32_t) {
+  if (g_strcmp0(interface, kEffectManagerInterface.name) == 0 && wayland_blur.effects == nullptr) {
+    wayland_blur.effects = Bind(registry, name, &kEffectManagerInterface, 1);
+  } else if (g_strcmp0(interface, kBlurManagerInterface.name) == 0 && wayland_blur.kde == nullptr) {
+    wayland_blur.kde = Bind(registry, name, &kBlurManagerInterface, 1);
+  } else if (g_strcmp0(interface, "wl_compositor") == 0 && wayland_blur.compositor == nullptr) {
+    wayland_blur.compositor = Bind(registry, name, wayland_blur.wl.compositor_interface, 1);
+  }
+}
+void OnGlobalRemove(void*, struct wl_proxy*, uint32_t) {}
+struct {
+  void (*global)(void*, struct wl_proxy*, uint32_t, const char*, uint32_t);
+  void (*global_remove)(void*, struct wl_proxy*, uint32_t);
+} kRegistryListener = {OnGlobal, OnGlobalRemove};
+
+// Asks the compositor to blur behind the whole window; false where it
+// offers neither protocol (Sway, older GNOME and others).
+bool SetWaylandBlur(GdkWindow* surface, bool on) {
+  struct wl_display* display = gdk_wayland_display_get_wl_display(gdk_window_get_display(surface));
+  struct wl_surface* wl_surface = gdk_wayland_window_get_wl_surface(surface);
+  if (display == nullptr || wl_surface == nullptr) return false;
+  WaylandClient& wl = wayland_blur.wl;
+  if (!wayland_blur.looked) {
+    wayland_blur.looked = true;
+    if (!LoadWaylandClient(wl)) return false;
+    // A queue of our own, so GTK's events are left to GTK.
+    struct wl_event_queue* queue = wl.create_queue(display);
+    // wl_display.get_registry (request 1).
+    auto* proxy_display = reinterpret_cast<struct wl_proxy*>(display);
+    struct wl_proxy* registry = wl.marshal(proxy_display, 1, wl.registry_interface, wl.version(proxy_display), 0, nullptr);
+    wl.set_queue(registry, queue);
+    wl.add_listener(registry, reinterpret_cast<void (**)(void)>(&kRegistryListener), nullptr);
+    wl.roundtrip_queue(display, queue);
+    for (struct wl_proxy* bound : {wayland_blur.effects, wayland_blur.kde, wayland_blur.compositor}) {
+      if (bound != nullptr) wl.set_queue(bound, nullptr);
+    }
+    wl.destroy(registry);
+    wl.destroy_queue(queue);
+  }
+  if (wayland_blur.effects != nullptr && wayland_blur.compositor != nullptr) {
+    const uint32_t version = wl.version(wayland_blur.effects);
+    if (wayland_blur.effect == nullptr) {
+      wayland_blur.effect = wl.marshal(wayland_blur.effects, 1 /* get_background_effect */, &kEffectInterface, version, 0, nullptr, wl_surface);
+    }
+    struct wl_proxy* region = nullptr;
+    if (on) {
+      // wl_compositor.create_region (1), then wl_region.add (1) over all of it.
+      region = wl.marshal(wayland_blur.compositor, 1, wl.region_interface, wl.version(wayland_blur.compositor), 0, nullptr);
+      wl.marshal(region, 1, nullptr, wl.version(region), 0, 0, 0, INT32_MAX, INT32_MAX);
+    }
+    // No region removes the blur.
+    wl.marshal(wayland_blur.effect, 1 /* set_blur_region */, nullptr, version, 0, region);
+    if (region != nullptr) wl.marshal(region, 0 /* destroy */, nullptr, wl.version(region), WL_MARSHAL_FLAG_DESTROY);
+  } else if (wayland_blur.kde != nullptr) {
+    const uint32_t version = wl.version(wayland_blur.kde);
+    if (wayland_blur.kde_blur != nullptr) {
+      wl.marshal(wayland_blur.kde_blur, 2 /* release */, nullptr, version, WL_MARSHAL_FLAG_DESTROY);
+      wayland_blur.kde_blur = nullptr;
+    }
+    if (on) {
+      wayland_blur.kde_blur = wl.marshal(wayland_blur.kde, 0 /* create */, &kBlurInterface, version, 0, nullptr, wl_surface);
+      // No region: the whole surface.
+      wl.marshal(wayland_blur.kde_blur, 0 /* commit */, nullptr, version, 0);
+    } else {
+      wl.marshal(wayland_blur.kde, 1 /* unset */, nullptr, version, 0, wl_surface);
+    }
+  } else {
+    return false;
+  }
+  // Both take effect with the surface's next commit: a new frame.
+  gdk_window_invalidate_rect(surface, nullptr, TRUE);
+  wl.flush(display);
+  return true;
+}
+#endif
+
+// The desktop shows wherever Flutter leaves the window clear: only with a
+// compositor, and with the alpha visual chosen at start
+// (linux_shell_use_alpha_visual). KWin blurs it, on X11 and Wayland.
+FlValue* SetDesktopGlass(bool on, bool blur) {
+  GtkWidget* window = GTK_WIDGET(shell.window);
+  GdkScreen* screen = gtk_widget_get_screen(window);
+  const bool possible = shell.view != nullptr && gdk_screen_is_composited(screen) &&
+                        gtk_widget_get_visual(window) == gdk_screen_get_rgba_visual(screen);
+  const bool clear = on && possible;
+  GdkRGBA background{0, 0, 0, clear ? 0.0 : 1.0};
+  if (shell.view != nullptr) fl_view_set_background_color(shell.view, &background);
+  bool blurred = false;
+  GdkWindow* surface = gtk_widget_get_window(window);
+#ifdef GDK_WINDOWING_X11
+  if (surface != nullptr && GDK_IS_X11_WINDOW(surface)) {
+    GdkAtom atom = gdk_atom_intern_static_string("_KDE_NET_WM_BLUR_BEHIND_REGION");
+    if (clear && blur) {
+      gdk_property_change(surface, atom, gdk_atom_intern_static_string("CARDINAL"), 32, GDK_PROP_MODE_REPLACE, nullptr, 0);
+      // KWin lists the atom among what it supports while its blur is on.
+      blurred = gdk_x11_screen_supports_net_wm_hint(screen, atom);
+    } else {
+      gdk_property_delete(surface, atom);
+    }
+  }
+#endif
+#ifdef GDK_WINDOWING_WAYLAND
+  if (surface != nullptr && GDK_IS_WAYLAND_WINDOW(surface)) {
+    blurred = SetWaylandBlur(surface, clear && blur) && clear && blur;
+  }
+#endif
+  gtk_widget_queue_draw(window);
+  FlValue* answer = fl_value_new_map();
+  fl_value_set_string_take(answer, "shown", fl_value_new_bool(clear));
+  fl_value_set_string_take(answer, "blurred", fl_value_new_bool(blurred));
+  return answer;
+}
+
 void HandleFrameCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
   const std::string method = fl_method_call_get_name(call);
   FlValue* args = fl_method_call_get_args(call);
@@ -714,6 +988,11 @@ void HandleFrameCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
     fl_value_set_string_take(state, "maximized", fl_value_new_bool(gtk_window_is_maximized(window)));
     fl_value_set_string_take(state, "active", fl_value_new_bool(gtk_window_is_active(window)));
     fl_method_call_respond_success(call, state, nullptr);
+    return;
+  }
+  if (method == "setDesktopGlass") {
+    g_autoptr(FlValue) answer = SetDesktopGlass(BoolArg(args, "on"), BoolArg(args, "blur"));
+    fl_method_call_respond_success(call, answer, nullptr);
     return;
   }
   if (method == "setCustom") {
@@ -734,6 +1013,8 @@ void HandleFrameCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
   } else if (method == "startResize") {
     const bool named = args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_STRING;
     BeginFrameDrag(true, EdgeOf(named ? fl_value_get_string(args) : ""));
+  } else if (method == "hidePointer") {
+    HidePointer(args);
   } else if (method == "setCaption") {
     // Hit-testing is Windows' own.
   } else {
@@ -886,6 +1167,18 @@ void linux_shell_connect(FlView* view) {
   shell.frame_channel = fl_method_channel_new(fl_engine_get_binary_messenger(engine), kFrameChannel, FL_METHOD_CODEC(codec));
   fl_method_channel_set_method_call_handler(shell.frame_channel, HandleFrameCall, nullptr, nullptr);
   g_signal_connect(view, "button-press-event", G_CALLBACK(OnViewButtonPress), nullptr);
+}
+
+void linux_shell_use_alpha_visual(GtkWindow* window) {
+  // A window with an alpha channel, so the desktop can show through when
+  // asked; Flutter paints it opaque until then. It has to be chosen
+  // before the window is realized.
+  GdkScreen* screen = gtk_window_get_screen(window);
+  GdkVisual* rgba = gdk_screen_get_rgba_visual(screen);
+  if (rgba != nullptr && gdk_screen_is_composited(screen)) {
+    gtk_widget_set_visual(GTK_WIDGET(window), rgba);
+    gtk_widget_set_app_paintable(GTK_WIDGET(window), TRUE);
+  }
 }
 
 void linux_shell_present() {

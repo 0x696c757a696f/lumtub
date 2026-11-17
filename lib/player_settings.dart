@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi' show Abi;
 import 'dart:io';
 import 'dart:ui' show Locale, PlatformDispatcher;
 
@@ -186,11 +187,39 @@ enum VideoSync {
 /// `HwDecType`. The setting is an ordered list; mpv tries them in turn.
 /// Decoders without "-copy" hand frames to the renderer in GPU memory (zero
 /// copy); "-copy" ones copy them back to system memory first.
-List<(String, String)> get hwdecChoices => Platform.isWindows
-    ? _windowsHwdec
-    : Platform.isMacOS
-        ? _macHwdec
-        : _linuxHwdec;
+List<(String, String)> get hwdecChoices => hwdecChoicesFor(Platform.operatingSystem, Abi.current());
+
+/// The decoders offered on [os]: only those mpv can use there.
+List<(String, String)> hwdecChoicesFor(String os, Abi abi) => switch (os) {
+      'windows' when abi == Abi.windowsArm64 => [
+          for (final choice in _windowsHwdec)
+            if (!_pcGpuOnly.contains(choice.$1)) choice,
+        ],
+      'windows' => _windowsHwdec,
+      'macos' => _macHwdec,
+      'ios' => _iosHwdec,
+      'android' => _androidHwdec,
+      _ => _linuxHwdec,
+    };
+
+/// Intel's decoders, which Windows on Arm PCs have no GPU for. NVIDIA and AMD
+/// ones stay for Arm chips with their graphics (RTX Spark, Sound Wave).
+const _pcGpuOnly = {'qsv', 'qsv-copy'};
+
+final _androidHwdec = <(String, String)>[
+  ('no', tr('Software decoding')),
+  ('auto', tr('Any available hardware decoder')),
+  ('auto-safe', tr('Best stable hardware decoder (default)')),
+  ('mediacodec', tr('MediaCodec (zero-copy)')),
+  ('mediacodec-copy', tr('MediaCodec (copy-back)')),
+];
+
+final _iosHwdec = <(String, String)>[
+  ('no', tr('Software decoding')),
+  ('auto-safe', tr('Best stable hardware decoder (default)')),
+  ('videotoolbox', tr('VideoToolbox (zero-copy)')),
+  ('videotoolbox-copy', tr('VideoToolbox (copy-back)')),
+];
 
 final _macHwdec = <(String, String)>[
   ('no', tr('Software decoding')),
@@ -271,7 +300,10 @@ const _blockedOptions = {
   'log-file', 'o', 'of', 'ofopts', 'ovc', 'ovcopts', 'oac', 'oacopts', 'stream-record', 'record-file',
   'input-conf', 'use-filedir-conf', 'watch-later-dir', 'watch-later-directory', 'screenshot-directory', 'screenshot-dir',
 };
-const _blockedPrefixes = ['script', 'load-', 'input-ipc', 'dump-', 'glsl-shader', 'lua'];
+/// `ytdl-raw-options` (and its -append/-add/-set forms) would let a line,
+/// or a settings backup someone shares, hand yt-dlp `exec=` or a config
+/// file, undoing ProcessTree.ytDlpIsolation.
+const _blockedPrefixes = ['script', 'load-', 'input-ipc', 'dump-', 'glsl-shader', 'lua', 'ytdl-raw-options'];
 
 /// One line of a custom mpv.conf that was not applied, and why.
 typedef RejectedOption = (String line, String reason);
@@ -980,10 +1012,11 @@ class PlayerSettings {
     return chosen != null ? loaded.withDisabledCodecs(chosen) : loaded;
   }
 
-  /// [value] if it is a comma list of known decoders, else null.
-  static String? validHwdec(String? value) {
+  /// [value] if it is a comma list of decoders offered on this platform
+  /// (or in [choices]), else null.
+  static String? validHwdec(String? value, {List<(String, String)>? choices}) {
     if (value == null) return null;
-    final known = {for (final (name, _) in [..._windowsHwdec, ..._linuxHwdec, ..._macHwdec]) name};
+    final known = {for (final (name, _) in choices ?? hwdecChoices) name};
     final parts = value.split(',').map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
     if (parts.isEmpty || parts.any((p) => !known.contains(p)) || parts.toSet().length != parts.length) return null;
     return parts.join(',');

@@ -2,6 +2,7 @@ name: Refresh lockfiles
 
 # Dependabot raises direct dependencies only; this moves every package in
 # pubspec.lock and Cargo.lock to the newest version the constraints allow,
+# except versions released less than a week ago (.github/scripts/cooldown.py),
 # takes the newest Chrome Root Store and the newest stable Flutter
 # (.flutter-version, read by every build job).
 # The result goes to the deps/lockfiles branch and Build checks it; Merge
@@ -40,6 +41,8 @@ jobs:
         run: |
           rustup update stable
           cargo update --manifest-path native/lumtub_core/Cargo.toml
+      - name: Hold back releases younger than a week
+        run: python3 .github/scripts/cooldown.py
       - name: Chrome Root Store
         run: native/lumtub_core/roots/update-chrome.sh
       - name: Push and build

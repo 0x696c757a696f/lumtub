@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi' show Abi;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/decoder_status.dart';
@@ -23,6 +24,8 @@ void main() {
     expect(PlayerSettings.isSafeCustomOption('scale', 'lanczos'), isTrue);
     expect(PlayerSettings.isSafeCustomOption('vo', 'gpu-next'), isFalse);
     expect(PlayerSettings.isSafeCustomOption('cache', 'yes; quit'), isFalse);
+    expect(PlayerSettings.isSafeCustomOption('ytdl-raw-options-append', 'exec=calc'), isFalse);
+    expect(PlayerSettings.isSafeCustomOption('ytdl-raw-options', 'ignore-config='), isFalse);
   });
 
   test('keeps only recorded results for supported codecs', () {
@@ -153,9 +156,25 @@ vo=gpu-next
   });
 
   test('hwdec is an ordered list of known decoders', () {
-    expect(PlayerSettings.fromJson({'hwdec': 'd3d11va,nvdec,auto-safe'}).hwdec, 'd3d11va,nvdec,auto-safe');
-    expect(PlayerSettings.fromJson({'hwdec': 'd3d11va,unknown'}).hwdec, 'auto-safe');
+    final windows = hwdecChoicesFor('windows', Abi.windowsX64);
+    expect(PlayerSettings.validHwdec('d3d11va,nvdec,auto-safe', choices: windows), 'd3d11va,nvdec,auto-safe');
+    expect(PlayerSettings.validHwdec('d3d11va,unknown', choices: windows), isNull);
+    expect(PlayerSettings.validHwdec('d3d11va,d3d11va', choices: windows), isNull);
+    expect(PlayerSettings.fromJson({'hwdec': 'auto,unknown'}).hwdec, 'auto-safe');
     expect(PlayerSettings.fromJson({'hwdec': 'no'}).hwdec, 'no');
+  });
+
+  test('each platform offers only its own decoders', () {
+    List<String> names(String os, Abi abi) => [for (final (name, _) in hwdecChoicesFor(os, abi)) name];
+    expect(names('android', Abi.androidArm64), ['no', 'auto', 'auto-safe', 'mediacodec', 'mediacodec-copy']);
+    expect(names('ios', Abi.iosArm64), ['no', 'auto-safe', 'videotoolbox', 'videotoolbox-copy']);
+    expect(names('macos', Abi.macosArm64), isNot(contains('vaapi')));
+    expect(names('linux', Abi.linuxX64), isNot(contains('d3d11va')));
+    expect(names('windows', Abi.windowsX64), containsAll(['d3d11va', 'nvdec', 'amf', 'qsv']));
+    expect(names('windows', Abi.windowsArm64), allOf(containsAll(['d3d11va', 'nvdec', 'amf']), isNot(contains('qsv'))));
+    // A decoder saved on another system goes back to the default.
+    expect(PlayerSettings.validHwdec('vaapi', choices: hwdecChoicesFor('android', Abi.androidArm64)), isNull);
+    expect(PlayerSettings.validHwdec('mediacodec', choices: hwdecChoicesFor('windows', Abi.windowsX64)), isNull);
   });
 
   test('earlier custom options become mpv.conf lines', () {
@@ -166,7 +185,7 @@ vo=gpu-next
 
   test('PiliNara mpv options survive a round trip', () {
     const original = PlayerSettings(
-      hwdec: 'd3d12va,d3d11va',
+      hwdec: 'auto,auto-safe',
       d3d11vaZeroCopy: true,
       directRendering: 'yes',
       autosync: 30,

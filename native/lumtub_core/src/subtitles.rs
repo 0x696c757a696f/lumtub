@@ -38,7 +38,13 @@ fn time(stamp: &str) -> Option<u64> {
     } else {
         0
     };
-    Some(((hours * 60 + minutes) * 60 + seconds) * 1000 + millis)
+    hours
+        .checked_mul(60)?
+        .checked_add(minutes)?
+        .checked_mul(60)?
+        .checked_add(seconds)?
+        .checked_mul(1000)?
+        .checked_add(millis)
 }
 
 /// The start and end of a `start --> end` line, which may carry settings after.
@@ -84,6 +90,12 @@ fn clean(line: &str) -> String {
 /// Automatic captions repeat the line before as the first line of the next
 /// cue; only new lines stay. Other formats give none.
 pub fn cues(source: &str) -> Vec<Cue> {
+    cues_in(source, false)
+}
+
+/// [cues], or with `keep_lines` each cue's lines kept as they are, joined by
+/// line breaks, for a file Lumtub wrote such as a bilingual track.
+pub fn cues_in(source: &str, keep_lines: bool) -> Vec<Cue> {
     let normalized = source.replace("\r\n", "\n").replace('\r', "\n");
     let mut out = Vec::new();
     let mut previous: Option<String> = None;
@@ -101,7 +113,7 @@ pub fn cues(source: &str) -> Vec<Cue> {
             .map(|l| clean(l))
             .filter(|l| !l.is_empty())
             .collect();
-        if previous.is_some() && body.first() == previous.as_ref() {
+        if !keep_lines && previous.is_some() && body.first() == previous.as_ref() {
             body.remove(0);
         }
         let Some(last) = body.last() else { continue };
@@ -109,7 +121,7 @@ pub fn cues(source: &str) -> Vec<Cue> {
         out.push(Cue {
             start,
             end,
-            text: body.join(" "),
+            text: body.join(if keep_lines { "\n" } else { " " }),
         });
     }
     out.sort_by_key(|c| c.start);
@@ -353,6 +365,15 @@ mod tests {
     }
 
     #[test]
+    fn keeps_the_lines_of_a_bilingual_track() {
+        let srt = "1\n00:00:01,000 --> 00:00:02,000\n你好\nHello\n\n2\n00:00:02,000 --> 00:00:03,000\nHello\nAgain\n";
+        let kept = cues_in(srt, true);
+        assert_eq!(kept[0].text, "你好\nHello");
+        assert_eq!(kept[1].text, "Hello\nAgain");
+        assert_eq!(cues(srt)[1].text, "Again");
+    }
+
+    #[test]
     fn guesses_languages_by_script() {
         assert!(looks_like("这个视频真不错，学到了", "zh-CN"));
         assert!(!looks_like("這個視頻真不錯，學到了", "zh-CN"));
@@ -376,5 +397,19 @@ mod tests {
             "fr"
         ));
         assert!(!looks_like("Sehr gut", "de"));
+    }
+
+    #[test]
+    fn a_time_too_large_to_count_is_skipped() {
+        let source = String::from_utf8_lossy(&[
+            0, 10, 0, 10, 0, 0, 7, 52, 10, 10, 0, 10, 0, 10, 10, 6, 8, 45, 45, 62, 95, 48, 48, 48,
+            48, 48, 48, 48, 48, 49, 52, 55, 50, 57, 62, 10, 48, 48, 48, 48, 78, 111, 45, 62, 74,
+            10, 51, 53, 54, 48, 48, 48, 48, 48, 48, 48, 49, 52, 55, 50, 57, 58, 56, 56, 44, 49, 45,
+            45, 62, 78, 111, 45, 62, 74, 10, 51, 53, 54, 50, 53, 58, 56, 56, 44, 49, 45, 45, 62,
+            78, 10, 9, 111, 10, 0, 10, 14, 45, 62, 10, 74,
+        ])
+        .into_owned();
+        let _ = cues(&source);
+        assert_eq!(time("99999999999999999:00:00.000"), None);
     }
 }

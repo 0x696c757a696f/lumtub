@@ -41,6 +41,69 @@ class NearEndListener extends StatelessWidget {
       );
 }
 
+/// Around a one-line text field in a page, such as a search: the arrow
+/// keys up and down (a TV remote's too) leave it for what is above or
+/// below once the caret is at that end of the text, and Esc leaves it for
+/// the page, as they would leave a button. Without it the field keeps the
+/// arrows and the focus is caught in it. While an input method is still
+/// composing, the keys are its own.
+class LeavesByKeys extends StatelessWidget {
+  const LeavesByKeys({super.key, required this.child});
+  final Widget child;
+
+  static KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    final up = key == LogicalKeyboardKey.arrowUp;
+    final down = key == LogicalKeyboardKey.arrowDown;
+    final escape = key == LogicalKeyboardKey.escape;
+    if (!up && !down && !escape) return KeyEventResult.ignored;
+    final focus = FocusManager.instance.primaryFocus;
+    final context = focus?.context;
+    if (focus == null || context == null) return KeyEventResult.ignored;
+    final editable = context.widget is EditableText ? (context as StatefulElement).state as EditableTextState : context.findAncestorStateOfType<EditableTextState>();
+    if (editable == null || editable.widget.maxLines != 1) return KeyEventResult.ignored;
+    final value = editable.textEditingValue;
+    if (value.composing.isValid && !value.composing.isCollapsed) return KeyEventResult.ignored;
+    if (escape) {
+      if (event is! KeyDownEvent) return KeyEventResult.ignored;
+      focus.unfocus(disposition: UnfocusDisposition.previouslyFocusedChild);
+      return KeyEventResult.handled;
+    }
+    final selection = value.selection;
+    final atEnd = !selection.isValid || (selection.isCollapsed && selection.baseOffset == (up ? 0 : value.text.length));
+    if (!atEnd) return KeyEventResult.ignored;
+    return focus.focusInDirection(up ? TraversalDirection.up : TraversalDirection.down) ? KeyEventResult.handled : KeyEventResult.ignored;
+  }
+
+  @override
+  Widget build(BuildContext context) => Focus(canRequestFocus: false, skipTraversal: true, onKeyEvent: _onKey, child: child);
+}
+
+/// What a page shows again when it comes back after the watch page or
+/// another page was over it, such as a picked channel or tab: kept by
+/// [name] in the storage the pages share, which lasts while the app runs.
+class PageMemory<T extends Object> {
+  PageMemory(this.name);
+  final String name;
+  PageStorageBucket? _bucket;
+  BuildContext? _context;
+
+  /// What was kept, if anything; also finds where to keep it.
+  T? recall(BuildContext context) {
+    _bucket = PageStorage.maybeOf(context);
+    _context = context;
+    final value = _bucket?.readState(context, identifier: name);
+    return value is T ? value : null;
+  }
+
+  void keep(T value) {
+    final bucket = _bucket;
+    final context = _context;
+    if (bucket != null && context != null) bucket.writeState(context, value, identifier: name);
+  }
+}
+
 /// Full-area message for empty, error and not-yet-available states.
 class StatusView extends StatelessWidget {
   const StatusView({super.key, required this.icon, required this.title, this.message, this.action, this.error = false});
@@ -142,7 +205,7 @@ class PageHeader extends StatelessWidget {
                   ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       heading,
                       const SizedBox(height: 4),
-                      SingleChildScrollView(scrollDirection: Axis.horizontal, child: trailing),
+                      SingleChildScrollView(key: const PageStorageKey('header-actions'), scrollDirection: Axis.horizontal, child: trailing),
                     ])
                   : HeadingLine(children: [heading, trailing]),
             ),
@@ -248,6 +311,7 @@ class FilterFlow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Device.tv
       ? SingleChildScrollView(
+          key: const PageStorageKey('filters'),
           scrollDirection: Axis.horizontal,
           child: Row(children: [
             for (final (i, child) in children.indexed) Padding(padding: EdgeInsetsDirectional.only(end: i == children.length - 1 ? 0 : spacing), child: child),

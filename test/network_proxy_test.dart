@@ -49,7 +49,7 @@ void main() {
     expect(const NetworkProxy('http://h:1').ytDlpValue(ProxyMode.custom), 'http://h:1');
     final resolver = StreamResolver('yt-dlp', proxy: () => 'socks5://h:2', infoDirectory: Directory('x'));
     expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl'), containsAllInOrder(['--proxy', 'socks5://h:2']));
-    expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), proxy: 'http://h:1'), 'proxy=http://h:1');
+    expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), proxy: 'http://h:1'), 'ignore-config=,no-plugin-dirs=,proxy=http://h:1');
   });
 
   test('the proxy setting is saved and moves old buffer defaults', () {

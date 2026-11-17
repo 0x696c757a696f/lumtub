@@ -29,6 +29,12 @@ The changes, marked "Lumtub" in the code:
 - `lib/media_kit_video_controls/src/controls/methods/fullscreen.dart`:
   `fullscreenTransition` lets the app give the fullscreen view a fade and
   zoom (Lumtub's 铺满窗口); it stays a cut by default.
+- `lib/src/video/video_obstruction.dart`, `video_texture.dart`: while a
+  side panel is open over the player, the app sets `videoObstruction` to
+  the screen area it covers, and each `Video` draws its picture and
+  subtitles (libass's, drawn into the picture, and Flutter's) in the room
+  left beside it, when that is at least 30 % of its width; the controls
+  keep the whole box.
 - `lib/src/subtitle/subtitle_view.dart`: the secondary subtitle (the second
   entry of `Player.state.subtitle`) is drawn above the main one, not below,
   in its own style when `SubtitleViewConfiguration.secondaryStyle` is set.
@@ -87,4 +93,6 @@ The changes, marked "Lumtub" in the code:
   from `common/darwin` (so it has the macOS fixes above), registered again
   in `pubspec.yaml`. `TextureHW.swift` returns nil instead of ending the
   app when libmpv cannot render with OpenGL ES, so the video falls back to
-  software like on macOS.
+  software like on macOS. It also draws no frame while the app is in the
+  background (`BackgroundState`): iOS ends an app that sends OpenGL ES
+  commands there.

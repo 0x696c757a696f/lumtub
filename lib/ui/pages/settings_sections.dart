@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
+import '../../window_glass.dart';
 import '../../ai_filter.dart';
 import '../../app/app_controller.dart';
 import '../../blocked_groups.dart';
@@ -344,16 +345,25 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.pauseOnMinimize,
               onChanged: (v) => savePrefs(prefs.copyWith(pauseOnMinimize: v)),
             ), subtitle: tr('Background playback')),
-        SettingEntry(tr('Audio only when minimized'), (context) => SwitchItem(
-              title: tr('Audio only when minimized'),
-              subtitle: prefs.pauseOnMinimize
-                  ? tr('Not needed while Pause when minimized is on')
-                  : tr('Decode no picture while the window is minimized or in the tray; restored with the window'),
-              leading: _icon(AppIcons.headphones),
-              value: prefs.audioOnlyInBackground,
-              enabled: !prefs.pauseOnMinimize,
-              onChanged: (v) => savePrefs(prefs.copyWith(audioOnlyInBackground: v)),
-            ), subtitle: tr('Background playback')),
+        if (Platform.isAndroid && !Device.tv)
+          SettingEntry(tr('Picture in picture when leaving the app'), (context) => SwitchItem(
+                title: tr('Picture in picture when leaving the app'),
+                subtitle: tr('Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background'),
+                leading: _icon(AppIcons.pictureInpicture),
+                value: prefs.pipOnLeave,
+                onChanged: (v) => savePrefs(prefs.copyWith(pipOnLeave: v)),
+              ), subtitle: tr('Background playback')),
+        if (!Platform.isAndroid && !Platform.isIOS)
+          SettingEntry(tr('Audio only when minimized'), (context) => SwitchItem(
+                title: tr('Audio only when minimized'),
+                subtitle: prefs.pauseOnMinimize
+                    ? tr('Not needed while Pause when minimized is on')
+                    : tr('Decode no picture while the window is minimized or in the tray; restored with the window'),
+                leading: _icon(AppIcons.headphones),
+                value: prefs.audioOnlyInBackground,
+                enabled: !prefs.pauseOnMinimize,
+                onChanged: (v) => savePrefs(prefs.copyWith(audioOnlyInBackground: v)),
+              ), subtitle: tr('Background playback')),
         SettingEntry(tr('Show related videos on the video page'), (context) => SwitchItem(
               title: tr('Show related videos on the video page'),
               subtitle: tr('Found by title search; when off, autoplay plays only the queue'),
@@ -1136,6 +1146,15 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               // Theme mode and the app theme (accent color) are chosen on
               // the skins page.
             ), subtitle: '${tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')} ${tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')} ${tr('Custom color')} ${tr('theme color palette dynamic color')} ${tr('Theme mode')} ${tr('dark light sunrise sunset schedule night')}'),
+        if (WindowGlass.possible)
+          SettingEntry(tr('Window transparency'), (context) => SwitchItem(
+                title: Platform.isAndroid ? tr('See the wallpaper through the app') : tr('See the desktop through the window'),
+                subtitle: tr('Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page'),
+                leading: _icon(AppIcons.browsers),
+                value: appearance.windowGlass,
+                onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(windowGlass: v)),
+                onTap: () => openSkins(context, controller),
+              ), subtitle: tr('transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through')),
         if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid)
           SettingEntry(tr('App icon'), (context) => NormalItem(
                 title: tr('App icon'),

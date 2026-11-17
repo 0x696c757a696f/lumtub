@@ -38,6 +38,7 @@ import '../downloads/core_recorder.dart';
 import '../downloads/download_manager.dart';
 import '../downloads/download_models.dart';
 import '../downloads/download_selection.dart';
+import '../downloads/download_subtitles.dart';
 import '../return_dislike.dart';
 import '../sponsor_block.dart';
 import '../appearance_settings.dart';
@@ -52,6 +53,7 @@ import '../link_video.dart';
 import '../models.dart';
 import '../network_proxy.dart';
 import '../socks_bridge.dart';
+import '../background_json.dart';
 import '../cast/cast_subtitles.dart';
 import '../cast/cast_controller.dart';
 import '../channel_avatar_lookup.dart';
@@ -107,6 +109,7 @@ import 'posts_loader.dart';
 import '../video_output_size.dart';
 import '../video_repository.dart';
 import '../system_env.dart';
+import '../window_glass.dart';
 import '../windows_video_info.dart';
 import 'account_controller.dart';
 import 'home_feed.dart';
@@ -529,6 +532,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// ytdl_hook, which then adds no subtitle tracks of its own.
   String? _openedDirect;
   String? _unrelayed;
+  DateTime? _relayRevivedAt;
   Timer? _stallTimer;
   Timer? _recoveryTimer;
   Timer? _startTimer;
@@ -737,6 +741,10 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// The play whose first open already tried a quick start.
   int? _quickSerial;
+  /// The play whose refused addresses were already resolved once more.
+  int? _resolvedAgain;
+  /// The answer the opened addresses came from.
+  ResolvedVideo? _openedVideo;
 
   /// The live stream opened as its picture and sound above 1080p, joined
   /// fragment by fragment in the relay (see [LiveSplit]).

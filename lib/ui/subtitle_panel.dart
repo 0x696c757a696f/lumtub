@@ -25,25 +25,21 @@ Future<void> showSubtitlePanel(BuildContext context, AppController controller, P
       title: tr('Subtitles'),
       width: 560,
       actions: [
-        Builder(
-          builder: (inner) => TextButton.icon(
-            onPressed: () {
-              Navigator.of(inner).pop();
-              onList != null ? onList() : unawaited(showSubtitleList(context, controller, player));
-            },
-            icon: Icon(AppIcons.textAlignLeft, size: 18),
-            label: Text(tr('Subtitle list')),
-          ),
+        PanelAction(
+          icon: AppIcons.textAlignLeft,
+          label: tr('Subtitle list'),
+          onPressed: (panel) {
+            Navigator.of(panel).pop();
+            onList != null ? onList() : unawaited(showSubtitleList(context, controller, player));
+          },
         ),
-        Builder(
-          builder: (context) => TextButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop();
-              onSettings();
-            },
-            icon: Icon(AppIcons.slidersHorizontal, size: 18),
-            label: Text(tr('Subtitle settings')),
-          ),
+        PanelAction(
+          icon: AppIcons.slidersHorizontal,
+          label: tr('Subtitle settings'),
+          onPressed: (panel) {
+            Navigator.of(panel).pop();
+            onSettings();
+          },
         ),
       ],
       builder: (context) => _SubtitlePanel(controller: controller, player: player),

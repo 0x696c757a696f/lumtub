@@ -329,6 +329,18 @@ extension PlaybackEvents on AppController {
       final item = playing!;
       final viaRelay = _openedVia == item.id;
       _openedVia = null;
+      // The relay's socket was taken away while the app was suspended (iOS):
+      // it listens again, and the same addresses open once more through it.
+      if (loopbackRefused(message) && (_relayed == item.id || _liveSplit == item.id) && _mayReviveRelay()) {
+        logWarn('The local relay refused libmpv ($message); listening again and reopening ${item.id}');
+        final serial = _playSerial;
+        final position = _lastPosition > Duration.zero ? _lastPosition : null;
+        unawaited(() async {
+          await reviveRelay();
+          if (serial == _playSerial) await _open(item, serial, start: position);
+        }());
+        return;
+      }
       // What a server's address says is not what YouTube said earlier.
       final failure = PlaybackFailure.classify(viaRelay ? [message] : [message, ..._recentErrors]);
       final position = _lastPosition > Duration.zero ? _lastPosition : null;
@@ -347,12 +359,27 @@ extension PlaybackEvents on AppController {
         return;
       }
       if (_openedResolved == item.id) {
-        // Addresses resolved ahead may have gone stale; let libmpv's
-        // ytdl_hook resolve the video itself once.
         _openedResolved = null;
-        _repository?.streams.forget(item.id);
-        logWarn('Prefetched address did not play ($message; $_openedOrigin); libmpv resolves ${item.id} again');
-        unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, resolved: false));
+        final streams = _repository?.streams;
+        final refused = _openedVideo;
+        // A yt-dlp answer still coming after a quick start is kept.
+        if (refused != null) streams?.forgetAnswer(item.id, refused);
+        final start = _lastPosition > Duration.zero ? _lastPosition : null;
+        // YouTube refuses the TV client's addresses for a while at a time;
+        // the next answers are asked for without it.
+        if (refused?.clients.contains('TVHTML5') ?? false) streams?.avoidTv();
+        // Resolved ahead and refused at once: asked again, the quick start
+        // too, which usually answers in a fraction of a second where
+        // yt-dlp takes several. Refused again, libmpv's ytdl_hook resolves
+        // the video itself.
+        if (_resolvedAgain != _playSerial) {
+          _resolvedAgain = _playSerial;
+          logWarn('Prefetched address did not play ($message; $_openedOrigin); resolving ${item.id} again');
+          unawaited(_open(item, _playSerial, start: start, quickAgain: true));
+        } else {
+          logWarn('Address resolved again did not play ($message; $_openedOrigin); libmpv resolves ${item.id} itself');
+          unawaited(_open(item, _playSerial, start: start, resolved: false));
+        }
         return;
       }
       // Resolved again and still refused: the servers are the last way.
@@ -407,7 +434,11 @@ extension PlaybackEvents on AppController {
 
   /// While the window is minimised or in the tray with the setting on, mpv
   /// decodes no picture; [hidden] false brings it back. A user's own 听视频
-  /// choice is left alone.
+  /// choice is left alone. On a phone or tablet (not a TV, which pauses)
+  /// the app in the background
+  /// always plays only the sound, unless it shows picture in picture: no
+  /// one sees the picture, and iOS ends an app that draws in the
+  /// background.
   Future<void> setBackgroundAudioOnly(bool hidden) async {
     _outputSize?.hidden = hidden;
     _windowHidden = hidden;
@@ -415,7 +446,8 @@ extension PlaybackEvents on AppController {
     final platform = player?.platform;
     if (platform is! NativePlayer) return;
     if (hidden) {
-      if (!preferences.audioOnlyInBackground || audioOnly || _backgroundAudioOnly || !player!.state.playing) return;
+      final wanted = preferences.audioOnlyInBackground || ((Platform.isAndroid || Platform.isIOS) && !Device.tv && !pip);
+      if (!wanted || audioOnly || _backgroundAudioOnly || !player!.state.playing) return;
       _backgroundAudioOnly = true;
       await platform.setProperty('vid', 'no');
     } else if (_backgroundAudioOnly) {

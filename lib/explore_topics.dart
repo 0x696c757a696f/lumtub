@@ -489,7 +489,7 @@ final liveTopics = <ExploreTopic>[
     ExploreSub('Fashion & beauty', 'makeup fashion 穿搭 美妆 live'),
     ExploreSub('Home renovation', 'home decor 家居 live'),
     ExploreSub('Pets', 'pets 宠物 live'),
-    ExploreSub('Vlogs', 'vlog live stream'),
+    ExploreSub('Vlogs', 'vlog live'),
     ExploreSub('Shopping', 'shopping haul live'),
   ]),
   ExploreTopic('Food & cooking', AppIcons.forkKnife, '美食 直播 cooking live', subs: [
@@ -530,8 +530,8 @@ final liveTopics = <ExploreTopic>[
     ExploreSub('PC hardware', 'hardware build electronics live'),
   ]),
   ExploreTopic('Outdoor live', AppIcons.mountains, '户外 直播', subs: [
-    ExploreSub('IRL streams', 'IRL stream'),
-    ExploreSub('Travel live streams', 'travel live stream'),
+    ExploreSub('IRL streams', 'IRL 直播'),
+    ExploreSub('Travel live streams', 'travel live'),
     ExploreSub('Street walks', 'walking live'),
     ExploreSub('Hiking & mountaineering', 'hiking live'),
     ExploreSub('Camping', 'camping live'),

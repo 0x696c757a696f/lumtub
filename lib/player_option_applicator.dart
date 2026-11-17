@@ -47,6 +47,13 @@ class PlayerOptionApplicator {
       // fast profile does: a 4K frame shrunk to a window is most of the GPU
       // work after decoding.
       if (settings.strategy == PlaybackStrategy.lowResource) ...fastRendering,
+      // iOS hands hardware-decoded frames to mpv's OpenGL ES renderer with
+      // the colour plane as a luminance-alpha texture (CoreVideo refuses a
+      // two-channel red-green one there). mpv's chroma scalers other than
+      // bilinear read that texture without swapping its channels, so both
+      // colour values come out the same and the picture turns green and
+      // purple. Bilinear chroma reads it through the right swizzle.
+      if (Platform.isIOS) 'cscale': 'bilinear',
       // Interpolation works only when video is timed to the display.
       'video-sync': settings.interpolation && settings.videoSync == VideoSync.audio ? VideoSync.displayResample.mpvValue : settings.videoSync.mpvValue,
       // Drawn by libmpv, subtitles look as the Flutter view draws them: the
@@ -134,12 +141,16 @@ class PlayerOptionApplicator {
   /// Options mpv's ytdl_hook passes to yt-dlp. [infoJson] is a file from an
   /// earlier extraction: yt-dlp then picks formats and subtitles from it
   /// without asking YouTube again.
-  static String ytdlRawOptions(PlayerSettings settings, {String? infoJson, String? proxy, String? formatSort}) {
+  static String ytdlRawOptions(PlayerSettings settings, {String? infoJson, String? proxy, String? formatSort, String? extractorArgs}) {
     final subtitles = settings.subtitleMode != SubtitleMode.off;
     // mpv's %length% quoting keeps a comma or equals sign, as a path may
     // have, from splitting the option.
     String quote(String value) => value.contains(RegExp('[,=%]')) || value.startsWith(RegExp(r'["\[]')) ? '%${utf8.encode(value).length}%$value' : value;
     return [
+      // No yt-dlp configuration file or plugin from outside the app, as
+      // for every other yt-dlp run (ProcessTree.ytDlpIsolation).
+      'ignore-config=',
+      'no-plugin-dirs=',
       // The video's own language: yt-dlp names its automatic captions
       // "<language>-orig"; an uploaded one in it is added once known.
       if (subtitles) 'sub-langs=${quote(settings.subtitleOriginal ? '.*-orig' : settings.subtitleLanguage.ytDlpLangs)}',
@@ -150,6 +161,7 @@ class PlayerOptionApplicator {
       if (formatSort != null) 'format-sort=${quote(formatSort)}',
       // Also for SOCKS proxies, which ytdl_hook does not take from http-proxy.
       if (proxy != null) 'proxy=${quote(proxy)}',
+      if (extractorArgs != null) 'extractor-args=${quote(extractorArgs)}',
     ].join(',');
   }
 

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import '../app_log.dart';
 import '../feed_quality.dart';
+import '../friendly_error.dart';
 import '../feed_reason.dart';
 import '../library_store.dart' show WatchProgress;
 import '../models.dart';
@@ -134,6 +135,15 @@ class HomeFeed extends ChangeNotifier {
   }
   bool _disposed = false;
 
+  /// Whether the last refresh found every source failing and is trying
+  /// once more: right after start-up or a network change (a VPN still
+  /// connecting) the first requests can all fail.
+  bool _retrying = false;
+
+  /// How long to wait before that second try.
+  @visibleForTesting
+  static Duration retryAfter = const Duration(seconds: 4);
+
   /// Whether this launch gathered the feed, rather than only restoring
   /// the last one, which has nothing more to show.
   bool get gathered => _longTaste != null;
@@ -194,6 +204,7 @@ class HomeFeed extends ChangeNotifier {
     final candidates = <FeedLane, List<Candidate>>{for (final lane in FeedLane.values) lane: []};
     final jobs = <Future<void>>[];
     var failures = 0;
+    Object? firstFailure;
     var answered = 0;
     final enough = Completer<void>();
     Future<void> gather(FeedLane lane, Future<List<VideoItem>> Function() load, RecommendSource source, double weight, int limit, String Function(VideoItem item) reason) async {
@@ -215,6 +226,7 @@ class HomeFeed extends ChangeNotifier {
         candidates[lane]!.addAll(found.take(limit).map((item) => Candidate(item, source, seedWeight: weight, reason: reason(item))));
       } catch (e) {
         failures++;
+        firstFailure ??= e;
         logWarn('Recommendation source failed: $e');
       } finally {
         _running--;
@@ -315,7 +327,19 @@ class HomeFeed extends ChangeNotifier {
     gathering = false;
     _rankAll();
     if (items.length < pageSize) _appendPage();
-    if (items.isEmpty && failures > 0 && failures == jobs.length) error = tr('None of the recommendation sources responded');
+    if (items.isEmpty && failures > 0 && failures == jobs.length) {
+      if (!_retrying) {
+        _retrying = true;
+        loading = true;
+        _notify();
+        logInfo('Every recommendation source failed; trying again in ${retryAfter.inSeconds} s');
+        await Future<void>.delayed(retryAfter);
+        if (generation != _generation || _disposed) return;
+        return refresh(sources, filter: filter, keep: keep, ahead: ahead);
+      }
+      error = '${tr('None of the recommendation sources responded')}: ${friendlyError(firstFailure!)}';
+    }
+    _retrying = false;
     _notify();
     unawaited(_save());
     // Explore a step further from what was just shown.

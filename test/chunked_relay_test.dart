@@ -9,6 +9,23 @@ void main() {
   for (final native in [false, true]) {
     group(native ? 'lumtub_core relay' : 'Dart relay', () => _tests(native));
   }
+
+  test('tells a refused relay from other refusals', () {
+    expect(loopbackRefused('tcp: Connection to tcp://127.0.0.1:49620 failed: Connection refused'), isTrue);
+    expect(loopbackRefused('Failed to open http://localhost:4000/abc: Connection refused'), isTrue);
+    expect(loopbackRefused('tcp: Connection to tcp://rr3---sn.googlevideo.com:443 failed: Connection refused'), isFalse);
+    expect(loopbackRefused('Failed to open http://127.0.0.1:49620/abc: HTTP 404'), isFalse);
+  });
+
+  test('a working relay keeps its addresses after a check', () async {
+    final relay = ChunkedRelay();
+    await relay.start();
+    final before = relay.register('https://example.invalid/v?clen=10', size: 10)!;
+    await relay.revive();
+    final after = relay.register('https://example.invalid/v?clen=10', size: 10)!;
+    expect(Uri.parse(after).port, Uri.parse(before).port);
+    await relay.close();
+  });
 }
 
 void _tests(bool native) {

@@ -59,6 +59,7 @@ static void my_application_activate(GApplication* application) {
     gtk_window_set_title(window, "Lumtub");
   }
 
+  linux_shell_use_alpha_visual(window);
   linux_shell_restore_window(window);
   gtk_widget_set_size_request(GTK_WIDGET(window), 480, 360);
 

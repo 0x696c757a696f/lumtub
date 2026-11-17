@@ -59,6 +59,70 @@ ContainerPlan planContainer(DownloadContainer wanted, VideoCodec video, List<Dow
   );
 }
 
+/// One subtitle picked in the download dialog: its language and whether it
+/// is the creator's, YouTube's automatic one or YouTube's translation.
+class SubtitlePick {
+  const SubtitlePick(this.language, this.kind);
+  final String language;
+  final SubtitleKind kind;
+
+  static SubtitlePick of(SubtitleOption option) => SubtitlePick(option.language, option.kind);
+
+  bool matches(SubtitleOption option) => option.language == language && option.kind == kind;
+
+  @override
+  bool operator ==(Object other) => other is SubtitlePick && other.language == language && other.kind == kind;
+
+  @override
+  int get hashCode => Object.hash(language, kind);
+
+  Object toJson() => [language, kind.name];
+
+  @override
+  String toString() => '$language (${kind.name})';
+
+  static SubtitlePick? fromJson(Object? raw) {
+    if (raw is! List || raw.length != 2 || raw[0] is! String) return null;
+    final kind = SubtitleKind.values.where((k) => k.name == raw[1]).firstOrNull;
+    return kind == null ? null : SubtitlePick(raw[0] as String, kind);
+  }
+}
+
+/// The subtitles put inside a downloaded video, each as its own track, and
+/// a bilingual track with [top]'s line above [bottom]'s. The files are
+/// also kept beside the video, as SRT when [srt], else WebVTT.
+class DownloadSubtitles {
+  const DownloadSubtitles({this.tracks = const [], this.top, this.bottom, this.srt = false});
+  final List<SubtitlePick> tracks;
+  final SubtitlePick? top;
+  final SubtitlePick? bottom;
+  final bool srt;
+
+  static const none = DownloadSubtitles();
+
+  bool get bilingual => top != null && bottom != null && top != bottom;
+
+  bool get isEmpty => tracks.isEmpty && !bilingual;
+
+  Map<String, dynamic> toJson() => {
+        'tracks': [for (final t in tracks) t.toJson()],
+        if (bilingual) 'bilingual': [top!.toJson(), bottom!.toJson()],
+        if (srt) 'srt': true,
+      };
+
+  static DownloadSubtitles? fromJson(Object? raw) {
+    if (raw is! Map) return null;
+    final tracks = [for (final t in raw['tracks'] is List ? raw['tracks'] as List : const []) SubtitlePick.fromJson(t)].whereType<SubtitlePick>().toList();
+    final pair = raw['bilingual'] is List && (raw['bilingual'] as List).length == 2 ? raw['bilingual'] as List : null;
+    return DownloadSubtitles(
+      tracks: tracks,
+      top: pair == null ? null : SubtitlePick.fromJson(pair[0]),
+      bottom: pair == null ? null : SubtitlePick.fromJson(pair[1]),
+      srt: raw['srt'] == true,
+    );
+  }
+}
+
 /// What the download dialog chose: locked format ids, and the container the
 /// streams are merged into.
 class DownloadSelection {
@@ -70,6 +134,7 @@ class DownloadSelection {
     this.audioId,
     this.container = DownloadContainer.mkv,
     this.size,
+    this.subtitles,
   });
 
   final bool audioOnly;
@@ -82,6 +147,22 @@ class DownloadSelection {
   final DownloadContainer container;
   /// Bytes in all, when known.
   final int? size;
+  /// The subtitles picked; null for a selection made before they could be,
+  /// which takes those of the subtitle settings.
+  final DownloadSubtitles? subtitles;
+
+  /// This selection with [subtitles], in MKV when it was to be WebM, which
+  /// holds no subtitles.
+  DownloadSelection withSubtitles(DownloadSubtitles subtitles) => DownloadSelection(
+        audioOnly: audioOnly,
+        codec: codec,
+        height: height,
+        videoId: videoId,
+        audioId: audioId,
+        container: !subtitles.isEmpty && container == DownloadContainer.webm ? DownloadContainer.mkv : container,
+        size: size,
+        subtitles: audioOnly ? null : subtitles,
+      );
 
   /// What the downloads list shows, such as `VP9 · 1080p · MP4`.
   String get label => audioOnly ? tr('Audio only') : '${codec?.label ?? ''} · ${height}p · ${container.label}';
@@ -110,6 +191,7 @@ class DownloadSelection {
         if (audioId != null) 'audio': audioId,
         'container': container.name,
         if (size != null) 'size': size,
+        if (subtitles != null) 'subtitles': subtitles!.toJson(),
       };
 
   /// The selection in [raw], or null when it holds no format to download.
@@ -128,6 +210,7 @@ class DownloadSelection {
       audioId: audio,
       container: container == DownloadContainer.auto ? DownloadContainer.mkv : container,
       size: raw['size'] is int ? raw['size'] as int : null,
+      subtitles: audioOnly ? null : DownloadSubtitles.fromJson(raw['subtitles']),
     );
   }
 }
@@ -153,11 +236,13 @@ DownloadPlan planDownload(DownloadFormats formats, {VideoCodec? codec, int? heig
 
 /// The dialog's last choices, offered again next time.
 class DownloadDefaults {
-  const DownloadDefaults({this.codec = auto, this.height, this.container = DownloadContainer.auto});
+  const DownloadDefaults({this.codec = auto, this.height, this.container = DownloadContainer.auto, this.subtitles});
   /// `auto`, [audioOnly], or a [VideoCodec] name.
   final String codec;
   final int? height;
   final DownloadContainer container;
+  /// The subtitles picked last; null before any were.
+  final DownloadSubtitles? subtitles;
 
   static const auto = 'auto';
   static const audioOnly = 'audio';
@@ -165,7 +250,12 @@ class DownloadDefaults {
   /// The remembered codec, null for auto and audio only.
   VideoCodec? get videoCodec => VideoCodec.byName(codec);
 
-  Map<String, dynamic> toJson() => {'codec': codec, if (height != null) 'height': height, 'container': container.name};
+  Map<String, dynamic> toJson() => {
+        'codec': codec,
+        if (height != null) 'height': height,
+        'container': container.name,
+        if (subtitles != null) 'subtitles': subtitles!.toJson(),
+      };
 
   static DownloadDefaults fromJson(Object? raw) {
     if (raw is! Map) return const DownloadDefaults();
@@ -175,6 +265,7 @@ class DownloadDefaults {
       codec: known ? codec! : auto,
       height: raw['height'] is int ? raw['height'] as int : null,
       container: DownloadContainer.byName(raw['container']),
+      subtitles: DownloadSubtitles.fromJson(raw['subtitles']),
     );
   }
 }

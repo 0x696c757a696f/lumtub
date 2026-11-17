@@ -18,7 +18,9 @@ import '../theme.dart';
 import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
+import '../common.dart';
 import '../skin_paint.dart';
+import '../update_notice.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, required this.controller, this.initial = SettingsCategory.account});
@@ -78,7 +80,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return ListView(padding: const EdgeInsets.only(bottom: 24), children: [
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: TextField(
+        child: LeavesByKeys(child: TextField(
           controller: _search,
           onChanged: (value) => setState(() => _query = value.trim().toLowerCase()),
           decoration: InputDecoration(
@@ -99,7 +101,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 : null,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(50), borderSide: BorderSide.none),
           ),
-        ),
+        )),
       ),
       // On narrow windows the matches replace the groups; wide windows show
       // them in the detail pane.
@@ -130,7 +132,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final theme = Theme.of(context);
     return ListTile(
       tileColor: wide && _query.isEmpty && category == _category ? theme.colorScheme.onInverseSurface : null,
-      leading: Icon(category.icon),
+      leading: category == SettingsCategory.about ? UpdateDot(controller: _controller, child: Icon(category.icon)) : Icon(category.icon),
       title: Text(category.title, style: theme.textTheme.titleMedium),
       subtitle: subtitle == null ? null : Text(subtitle, style: theme.textTheme.labelMedium!.copyWith(color: theme.colorScheme.outline)),
       onTap: () {

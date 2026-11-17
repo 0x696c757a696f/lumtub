@@ -85,6 +85,56 @@ extension SmokeCheck on AppController {
     exit(0);
   }
 
+  /// The window glass check (docs/specs/window-glass.md): with
+  /// LUMTUB_GLASS_CHECK=1 the app shows itself without glass, with a glass
+  /// frame and as a glass window, in a light and a dark skin, and asks the
+  /// build script (windows|linux|macos/packaging/glass-check.*) for a
+  /// picture of the screen under the window each time; the script tells
+  /// from them whether what is behind the window showed through.
+  Future<void> runGlassCheck() async {
+    final folder = Directory(_showcase!);
+    final answers = <String, Object?>{};
+    Future<void> shot(String name, AppearanceSettings look) async {
+      await saveAppearance(look);
+      // The runner answers, the theme follows, the compositor catches up.
+      await Future<void>.delayed(const Duration(seconds: 4));
+      final state = WindowGlass.state.value;
+      answers[name] = {'asked': look.windowGlass, 'shown': state.shown, 'blurred': state.blurred};
+      final picture = File('${folder.path}/$name.png');
+      await File('${folder.path}/want-$name').writeAsString(name);
+      final clock = Stopwatch()..start();
+      while (!picture.existsSync() && clock.elapsed < const Duration(seconds: 30)) {
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+      }
+      logInfo('Glass check $name: ${picture.existsSync() ? 'taken' : 'missed'}, $state');
+    }
+
+    try {
+      // Long enough for the first frame and the window to come up.
+      await Future<void>.delayed(const Duration(seconds: 8));
+      // Without the system's blur: what the app and the window manager do.
+      // CI machines have no graphics card, and macOS and Windows then draw
+      // their blur solid, so the blur is pictured on its own.
+      final light = appearance.copyWith(skin: 'aero', themeMode: ThemeMode.light, windowGlassClarity: 1, windowGlassBlur: false);
+      await shot('glass-off', light.copyWith(windowGlass: false));
+      await shot('glass-frame', light.copyWith(windowGlass: true, windowGlassWhole: false));
+      await shot('glass-whole', light.copyWith(windowGlass: true, windowGlassWhole: true));
+      await shot('glass-blur', light.copyWith(windowGlass: true, windowGlassWhole: false, windowGlassBlur: true));
+      final dark = light.copyWith(skin: 'obsidian', themeMode: ThemeMode.dark);
+      await shot('glass-dark-off', dark.copyWith(windowGlass: false));
+      await shot('glass-dark-frame', dark.copyWith(windowGlass: true, windowGlassWhole: false));
+      await File('${folder.path}/glass-state.json').writeAsString(jsonEncode(answers));
+    } catch (e) {
+      logError('Glass check failed', e);
+    }
+    try {
+      await shutdown(install: false).timeout(const Duration(seconds: 20));
+    } catch (e) {
+      logDebug(() => 'Shutdown after the glass check failed: $e');
+    }
+    exit(0);
+  }
+
   /// Channels followed and videos watched before the pictures, so 为你推荐
   /// has something to go on and its cards say why they are there.
   static const _showcaseChannels = [

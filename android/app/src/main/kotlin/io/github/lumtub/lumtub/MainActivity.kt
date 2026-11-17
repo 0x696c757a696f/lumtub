@@ -6,6 +6,8 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.media.MediaCodecInfo
 import android.media.MediaCodecList
 import android.media.MediaFormat
@@ -18,6 +20,7 @@ import android.view.Display
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterActivityLaunchConfigs.BackgroundMode
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -59,6 +62,14 @@ class MainActivity : FlutterActivity() {
         val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lumtub/windows_shell")
         this.channel = channel
         PlaybackService.listener = { method, argument -> runOnUiThread { channel.invokeMethod(method, argument) } }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lumtub/window_frame").setMethodCallHandler { call, result ->
+            when (call.method) {
+                "setDesktopGlass" -> result.success(
+                    setDesktopGlass(call.argument<Boolean>("on") ?: false, call.argument<Boolean>("dark") ?: false, call.argument<Boolean>("blur") ?: false),
+                )
+                else -> result.notImplemented()
+            }
+        }
         channel.setMethodCallHandler { call, result ->
             if (call.method == "askLocalNetwork") return@setMethodCallHandler askLocalNetwork(result)
             if (call.method == "webSignIn") {
@@ -111,6 +122,42 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         PlaybackService.createChannel(this)
+        // The wallpaper is there from the first frame, before Dart asks.
+        if (glassAtStart) showWallpaper(true, blur = getSharedPreferences("window", MODE_PRIVATE).getBoolean("glassBlur", true))
+    }
+
+    /**
+     * A see-through Flutter view costs a texture view instead of a surface
+     * view, so the app only starts see-through when it was see-through
+     * when last closed; switching it on takes effect at the next start.
+     */
+    private val glassAtStart by lazy { getSharedPreferences("window", MODE_PRIVATE).getBoolean("glass", false) }
+
+    override fun getBackgroundMode(): BackgroundMode = if (glassAtStart) BackgroundMode.transparent else BackgroundMode.opaque
+
+    /** Shows the home screen's wallpaper where Flutter leaves the app clear, blurred where the system can. */
+    private fun setDesktopGlass(on: Boolean, dark: Boolean, blur: Boolean): Map<String, Boolean> {
+        getSharedPreferences("window", MODE_PRIVATE).edit().putBoolean("glass", on).putBoolean("glassBlur", blur).apply()
+        val shown = on && glassAtStart
+        val blurred = if (shown) showWallpaper(true, blur) else {
+            showWallpaper(false, false)
+            window.setBackgroundDrawable(ColorDrawable(if (dark) Color.BLACK else Color.WHITE))
+            false
+        }
+        return mapOf("shown" to shown, "blurred" to blurred, "restart" to (on != glassAtStart))
+    }
+
+    private fun showWallpaper(on: Boolean, blur: Boolean): Boolean {
+        if (on) {
+            window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false
+        val blurred = on && blur && windowManager.isCrossWindowBlurEnabled
+        window.setBackgroundBlurRadius(if (blurred) 48 else 0)
+        return blurred
     }
 
     @Deprecated("Deprecated in Java")

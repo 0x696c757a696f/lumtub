@@ -98,7 +98,7 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) {
     (of(PlayerAction.miniPlayer), tr('Mini player')),
     (of(PlayerAction.danmaku), tr('Bullet chat on or off')),
     (pair(PlayerAction.chapterBack, PlayerAction.chapterNext), tr('Previous or next chapter')),
-    ([of(PlayerAction.back), tr('mouse back button')].where((k) => k.isNotEmpty).join(' / '), tr('Go back')),
+    ([of(PlayerAction.back), tr('mouse back button'), tr('two-finger swipe on a touchpad')].where((k) => k.isNotEmpty).join(' / '), tr('Go back')),
     (of(PlayerAction.search), tr('Search')),
     (of(PlayerAction.incognito), tr('Incognito mode')),
     (pair(PlayerAction.top, PlayerAction.bottom), tr('Scroll a list to the top or bottom')),

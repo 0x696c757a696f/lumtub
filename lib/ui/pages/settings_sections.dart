@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
+import '../../window_glass.dart';
 import '../../ai_filter.dart';
 import '../../app/app_controller.dart';
 import '../../blocked_groups.dart';
@@ -1145,6 +1146,15 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               // Theme mode and the app theme (accent color) are chosen on
               // the skins page.
             ), subtitle: '${tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')} ${tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')} ${tr('Custom color')} ${tr('theme color palette dynamic color')} ${tr('Theme mode')} ${tr('dark light sunrise sunset schedule night')}'),
+        if (WindowGlass.possible)
+          SettingEntry(tr('Window transparency'), (context) => SwitchItem(
+                title: Platform.isAndroid ? tr('See the wallpaper through the app') : tr('See the desktop through the window'),
+                subtitle: tr('Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page'),
+                leading: _icon(AppIcons.browsers),
+                value: appearance.windowGlass,
+                onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(windowGlass: v)),
+                onTap: () => openSkins(context, controller),
+              ), subtitle: tr('transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through')),
         if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid)
           SettingEntry(tr('App icon'), (context) => NormalItem(
                 title: tr('App icon'),

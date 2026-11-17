@@ -688,6 +688,7 @@ class _TopicStripState extends State<TopicStrip> {
                 return false;
               },
               child: ListView.builder(
+              key: const PageStorageKey('topics'),
               controller: _scroll,
               scrollDirection: Axis.horizontal,
               itemCount: widget.topics.length + _extras.length,
@@ -858,7 +859,7 @@ class _TopicTile extends StatelessWidget {
 
 /// [child] scrolling sideways on its own where a [FilterFlow] wraps, and
 /// as it is where the flow is one line that scrolls already.
-Widget _scrollsAlone(Widget child) => Device.tv ? child : SingleChildScrollView(scrollDirection: Axis.horizontal, child: child);
+Widget _scrollsAlone(Widget child) => Device.tv ? child : SingleChildScrollView(key: const PageStorageKey('modes'), scrollDirection: Axis.horizontal, child: child);
 
 /// Opens a phone's filters, counting the ones that are set.
 class _FilterButton extends StatelessWidget {

@@ -116,11 +116,13 @@ class _CommentsSectionState extends State<CommentsSection> {
         ),
         ),
         const SizedBox(height: 4),
-        Row(children: [
-          Expanded(child: Text(
+        // The button goes under the line when a translation leaves the line
+        // too little room beside it.
+        Wrap(alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.center, runSpacing: 2, children: [
+          Text(
             loader.loadingAll ? tr('Loading all comments… {0} so far', [loader.comments.length]) : tr('Searching the {0} comments loaded', [loader.comments.length]),
             style: TextStyle(color: colors.outline, fontSize: 12),
-          )),
+          ),
           if (loader.loadingAll)
             TextButton(onPressed: loader.stopLoadingAll, child: Text(tr('Stop')))
           else if (loader.hasMore)

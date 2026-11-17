@@ -699,7 +699,7 @@ class _VideoCardState extends State<VideoCard> {
                 if (item.isLive || item.isUpcoming)
                   PositionedDirectional(end: 8, bottom: 6, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
                 else if (item.durationLabel.isNotEmpty)
-                  PositionedDirectional(end: 8, bottom: 6, child: DurationBadge(item.durationLabel)),
+                  PositionedDirectional(end: 8, bottom: 6, child: DurationBadge(item.durationLabel, onShade: views != null)),
                 if (item.membersOnly) const PositionedDirectional(start: 8, top: 8, child: MembersOnlyBadge()),
                 _ProgressBar(item: item),
                 if (_hovered) PositionedDirectional(top: 8, end: 8, child: _QuickActions(item: item)),
@@ -825,14 +825,28 @@ class WithVideoFacts extends StatelessWidget {
 }
 
 class DurationBadge extends StatelessWidget {
-  const DurationBadge(this.label, {super.key, this.color});
+  const DurationBadge(this.label, {super.key, this.color, this.onShade = false});
   final String label;
   final Color? color;
+
+  /// Over the shade the views are written on: then it is written the same
+  /// way, without a box of its own, unless it has a colour or the skin
+  /// gives it a surface.
+  final bool onShade;
+
+  static const _shadow = [Shadow(offset: Offset(0, 1), color: Color(0x80000000))];
 
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
     final surface = color == null ? skin?.durationBadge : null;
+    if (onShade && color == null && surface == null) {
+      return Padding(
+        // Its foot level with the views'.
+        padding: const EdgeInsets.only(bottom: 1),
+        child: Text(label, style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500, fontFamily: skin?.monoFont, fontFeatures: const [FontFeature.tabularFigures()], shadows: _shadow)),
+      );
+    }
     final text = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       child: Text(label, style: TextStyle(fontSize: 12, color: surface != null ? skin!.durationText ?? Colors.white : Colors.white, fontWeight: FontWeight.w500, fontFamily: skin?.monoFont, fontFeatures: const [FontFeature.tabularFigures()])),

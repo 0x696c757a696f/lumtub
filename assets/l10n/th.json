@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "ฝ้าเหมือน Windows 7 หากเดสก์ท็อปเบลอไม่ได้ หน้าต่างจะโปร่งใสเท่านั้น",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "ข้อความยังอ่านง่าย ข้อความบนกรอบจะมีแสงเรือง และกระจกจะไม่ใสไปกว่าระดับที่ยังอ่านข้อความได้เหนือสิ่งใดก็ตามที่อยู่ด้านหลัง ดังนั้นเมื่อทั้งหน้าต่างโปร่งใส สกินบางแบบจะยังค่อนข้างทึบ วิดีโอจะทึบเสมอ",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "กระจกแบบ Windows 7 ใต้สกินใดก็ได้ ความใส ตำแหน่ง และการเบลอ ตั้งค่าได้ที่หน้าสกิน",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "โปร่งใส โปร่งแสง กระจก เบลอ ฝ้า เดสก์ท็อป วอลเปเปอร์ aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "โปร่งใส โปร่งแสง กระจก เบลอ ฝ้า เดสก์ท็อป วอลเปเปอร์ aero acrylic mica",
+  "Reading subtitles…": "กำลังอ่านคำบรรยาย…",
+  "Subtitles inside the video": "คำบรรยายในวิดีโอ",
+  "Translate into…": "แปลเป็น…",
+  "Bilingual subtitles": "คำบรรยายสองภาษา",
+  "One more track with two lines: the top language over the bottom one": "แทร็กเพิ่มอีกหนึ่งแทร็กที่มีสองบรรทัด: ภาษาบนอยู่เหนือภาษาล่าง",
+  "Top line": "บรรทัดบน",
+  "Bottom line": "บรรทัดล่าง",
+  "Save the subtitle files beside the video as SRT": "บันทึกไฟล์คำบรรยายไว้ข้างวิดีโอเป็น SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ไม่รองรับคำบรรยาย จึงบันทึกวิดีโอเป็น MKV"
 }

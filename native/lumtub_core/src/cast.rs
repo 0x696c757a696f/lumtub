@@ -58,6 +58,10 @@ pub struct Subtitles {
     #[serde(default)]
     pub name: String,
     pub cues: Vec<(u64, u64, String)>,
+    /// The same lines styled, for a saved file: an ASS track in Matroska,
+    /// fonts, sizes and colors in MP4.
+    #[serde(skip)]
+    pub styled: Option<crate::ass::Styled>,
 }
 
 #[derive(Deserialize)]
@@ -825,9 +829,21 @@ fn trak_box(timescale: u32, media: Media, entry: impl FnOnce(&mut Vec<u8>)) -> V
     trak
 }
 
-/// A timed text (`tx3g`) track's `trak`, at 1000 ticks a second: white
-/// text centred at the bottom.
-fn text_trak(language: &str) -> Vec<u8> {
+/// A timed text (`tx3g`) track's `trak`, at 1000 ticks a second: text
+/// centred at the bottom, white unless `styled` gives its look.
+fn text_trak(language: &str, styled: Option<&crate::ass::Styled>) -> Vec<u8> {
+    let look = styled.and_then(|s| s.main.as_ref().map(|l| (l, s.play_res_y)));
+    let (bold, size, color) = look.map_or((0, 18, 0xffff_ffff), |(l, y)| {
+        (u8::from(l.bold), crate::ass::tx3g_size(l, y), l.color)
+    });
+    let font = look.map_or("Serif", |(l, _)| {
+        if l.font.is_empty() {
+            "Serif"
+        } else {
+            l.font.as_str()
+        }
+    });
+    let font = &font.as_bytes()[..font.len().min(255)];
     trak_box(1000, Media::Text(language), |o| {
         put_box(o, b"tx3g", |o| {
             o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
@@ -835,12 +851,13 @@ fn text_trak(language: &str) -> Vec<u8> {
             o.extend_from_slice(&[1, 0xff]);
             o.extend_from_slice(&[0, 0, 0, 0]);
             o.extend_from_slice(&[0; 8]);
-            o.extend_from_slice(&[0, 0, 0, 0, 0, 1, 0, 18, 0xff, 0xff, 0xff, 0xff]);
+            o.extend_from_slice(&[0, 0, 0, 0, 0, 1, bold, size]);
+            o.extend_from_slice(&color.to_be_bytes());
             put_box(o, b"ftab", |o| {
                 o.extend_from_slice(&1u16.to_be_bytes());
                 o.extend_from_slice(&1u16.to_be_bytes());
-                o.push(5);
-                o.extend_from_slice(b"Serif");
+                o.push(font.len() as u8);
+                o.extend_from_slice(font);
             });
         });
     })
@@ -848,15 +865,35 @@ fn text_trak(language: &str) -> Vec<u8> {
 
 /// The text track's one fragment: each cue a sample, and the gaps between
 /// cues empty samples, so it covers the whole video from 0.
-fn text_fragment(cues: &[(u64, u64, String)]) -> Fragment {
+fn text_fragment(cues: &[(u64, u64, String)], styled: Option<&crate::ass::Styled>) -> Fragment {
     let mut data = Vec::new();
     let mut samples = Vec::new();
     let mut at = 0u64;
     let mut sample = |data: &mut Vec<u8>, text: &str, time: u64, duration: u64| {
         let start = data.len();
-        let text = &text.as_bytes()[..text.len().min(u16::MAX as usize)];
+        // A styled cue is an ASS event: its text, and the second
+        // language's look from where it starts.
+        let (plain, second) = match styled {
+            Some(s) if !text.is_empty() => {
+                let (plain, from) = crate::ass::plain(text);
+                let look = from.zip(s.second.as_ref());
+                (plain, look.map(|(from, l)| (from, l, s.play_res_y)))
+            }
+            _ => (text.to_string(), None),
+        };
+        let mut cut = plain.len().min(u16::MAX as usize);
+        while !plain.is_char_boundary(cut) {
+            cut -= 1;
+        }
+        let text = &plain.as_bytes()[..cut];
         data.extend_from_slice(&(text.len() as u16).to_be_bytes());
         data.extend_from_slice(text);
+        if let Some((from, look, y)) = second {
+            let to = plain[..cut].chars().count();
+            if from < to {
+                data.extend_from_slice(&crate::ass::styl(from, to, look, y));
+            }
+        }
         samples.push(Sample {
             at: start,
             size: data.len() - start,
@@ -1410,7 +1447,7 @@ fn renumbered(trak: &[u8], id: u32) -> Vec<u8> {
 fn mp4_head(
     video: &Track,
     audio: &Track,
-    texts: &[&str],
+    texts: &[(&str, Option<&crate::ass::Styled>)],
     title: Option<&str>,
     cover: Option<&[u8]>,
 ) -> Vec<u8> {
@@ -1431,8 +1468,8 @@ fn mp4_head(
         o.extend_from_slice(&mvhd);
         o.extend_from_slice(&renumbered(&video.trak, 1));
         o.extend_from_slice(&renumbered(&audio.trak, 2));
-        for (i, language) in texts.iter().enumerate() {
-            o.extend_from_slice(&renumbered(&text_trak(language), 3 + i as u32));
+        for (i, (language, styled)) in texts.iter().enumerate() {
+            o.extend_from_slice(&renumbered(&text_trak(language, *styled), 3 + i as u32));
         }
         o.extend_from_slice(&mp4_metadata(title, cover));
         put_box(o, b"mvex", |o| {
@@ -2384,9 +2421,15 @@ impl Session {
                     0.0
                 };
                 let texts = self.texts();
-                let names: Vec<(&str, &str)> = texts
+                let names: Vec<(&str, &str, Option<&str>)> = texts
                     .iter()
-                    .map(|t| (t.language.as_str(), t.name.as_str()))
+                    .map(|t| {
+                        (
+                            t.language.as_str(),
+                            t.name.as_str(),
+                            t.styled.as_ref().map(|s| s.header.as_str()),
+                        )
+                    })
                     .collect();
                 let extra = cast_mkv::Extra {
                     texts: &names,
@@ -2401,7 +2444,9 @@ impl Session {
                     .iter()
                     .enumerate()
                     .flat_map(|(i, t)| {
-                        t.cues
+                        t.styled
+                            .as_ref()
+                            .map_or(&t.cues, |s| &s.events)
                             .iter()
                             .map(move |c| (c.0, c.1, c.2.as_str(), cast_mkv::TEXT + i as u64))
                     })
@@ -2494,7 +2539,10 @@ impl Session {
             }
             Kind::Mp4 => {
                 let texts = self.texts();
-                let languages: Vec<&str> = texts.iter().map(|t| t.language.as_str()).collect();
+                let languages: Vec<(&str, Option<&crate::ass::Styled>)> = texts
+                    .iter()
+                    .map(|t| (t.language.as_str(), t.styled.as_ref()))
+                    .collect();
                 out.extend_from_slice(&mp4_head(
                     &self.video,
                     &self.audio,
@@ -2507,11 +2555,16 @@ impl Session {
                 // the picture and sound it goes with.
                 if file {
                     for (i, text) in texts.iter().enumerate() {
-                        let fragment = text_fragment(&if cuts.is_empty() {
-                            text.cues.clone()
-                        } else {
-                            cuts.cues(&text.cues)
-                        });
+                        let styled = text.styled.as_ref();
+                        let lines = styled.map_or(&text.cues, |s| &s.events);
+                        let fragment = text_fragment(
+                            &if cuts.is_empty() {
+                                lines.clone()
+                            } else {
+                                cuts.cues(lines)
+                            },
+                            styled,
+                        );
                         mp4_fragment(
                             &mut out,
                             sequence,
@@ -3331,6 +3384,7 @@ mod tests {
                     (500, 2_500, "First line".into()),
                     (8_000, 12_000, "Second\nline".into()),
                 ],
+                styled: None,
             })
         };
         for (picture, start, name) in [

@@ -3566,5 +3566,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Satinato come Windows 7; dove il desktop non può sfocare, la finestra è solo trasparente.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Il testo resta leggibile: risplende sulla cornice e il vetro non diventa più chiaro di quanto permetta di leggere il testo sopra qualsiasi cosa ci sia dietro, quindi con tutta la finestra trasparente alcuni temi restano piuttosto pieni. Il video è sempre pieno.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Vetro come Windows 7 sotto qualsiasi tema; quanto è chiaro, dove e la sfocatura sono nella pagina Temi",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "trasparente traslucido vetro sfocatura satinato desktop sfondo aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "trasparente traslucido vetro sfocatura satinato desktop sfondo aero acrylic mica",
+  "Reading subtitles…": "Lettura dei sottotitoli…",
+  "Subtitles inside the video": "Sottotitoli nel video",
+  "Translate into…": "Traduci in…",
+  "Bilingual subtitles": "Sottotitoli bilingue",
+  "One more track with two lines: the top language over the bottom one": "Una traccia in più con due righe: la lingua in alto sopra quella in basso",
+  "Top line": "Riga superiore",
+  "Bottom line": "Riga inferiore",
+  "Save the subtitle files beside the video as SRT": "Salva i file dei sottotitoli accanto al video come SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM non può contenere sottotitoli, quindi il video viene salvato come MKV"
 }

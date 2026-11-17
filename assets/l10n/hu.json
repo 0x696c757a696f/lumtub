@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Matt, mint a Windows 7-ben; ahol az asztal nem tud elmosni, az ablak csak átlátszó.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "A szöveg olvasható marad: fénylik a kereten, az üveg pedig nem lesz átlátszóbb annál, mint amennyire a szöveg bármi fölött olvasható marad, így ha az egész ablak átlátszó, egyes témák elég tömörek maradnak. A videó mindig tömör.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Windows 7-es üveg bármely téma alatt; az átlátszóság foka, helye és az elmosás a Témák oldalon van",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "átlátszó áttetsző üveg elmosás matt asztal háttérkép aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "átlátszó áttetsző üveg elmosás matt asztal háttérkép aero acrylic mica",
+  "Reading subtitles…": "Feliratok beolvasása…",
+  "Subtitles inside the video": "Videóba ágyazott feliratok",
+  "Translate into…": "Fordítás erre…",
+  "Bilingual subtitles": "Kétnyelvű feliratok",
+  "One more track with two lines: the top language over the bottom one": "Még egy kétsoros sáv: a felső nyelv az alsó fölött",
+  "Top line": "Felső sor",
+  "Bottom line": "Alsó sor",
+  "Save the subtitle files beside the video as SRT": "A feliratfájlok mentése a videó mellé SRT-ként",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "A WebM nem tud feliratokat tartalmazni, ezért a videó MKV-ként lesz mentve"
 }

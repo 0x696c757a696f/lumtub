@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Frosted tulad ng Windows 7; kung hindi makapag-blur ang desktop, see-through lang ang window.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Nananatiling nababasa ang mga salita: kumikinang ang mga ito sa frame, at hindi lalabis ang linaw ng salamin kaysa sa kaya pang basahin ang teksto sa ibabaw ng anumang nasa likod, kaya kapag see-through ang buong window, may mga skin na nananatiling medyo solid. Laging solid ang video.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Salamin tulad ng Windows 7 sa ilalim ng anumang skin; ang linaw, saan, at blur ay nasa pahina ng Mga skin",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparent translucent salamin blur frosted desktop wallpaper see-through aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparent translucent salamin blur frosted desktop wallpaper see-through aero acrylic mica",
+  "Reading subtitles…": "Binabasa ang mga subtitle…",
+  "Subtitles inside the video": "Mga subtitle sa loob ng video",
+  "Translate into…": "Isalin sa…",
+  "Bilingual subtitles": "Bilingual na subtitle",
+  "One more track with two lines: the top language over the bottom one": "Isa pang track na may dalawang linya: ang nasa itaas na wika ay nasa ibabaw ng nasa ibaba",
+  "Top line": "Itaas na linya",
+  "Bottom line": "Ibabang linya",
+  "Save the subtitle files beside the video as SRT": "I-save ang mga file ng subtitle sa tabi ng video bilang SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "Hindi kayang maglaman ng subtitle ng WebM, kaya ise-save ang video bilang MKV"
 }

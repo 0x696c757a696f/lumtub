@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 ਵਰਗਾ ਫ੍ਰੋਸਟਡ; ਜਿੱਥੇ ਡੈਸਕਟਾਪ ਧੁੰਦਲਾ ਨਹੀਂ ਕਰ ਸਕਦਾ, ਉੱਥੇ ਵਿੰਡੋ ਸਿਰਫ਼ ਪਾਰਦਰਸ਼ੀ ਹੈ।",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "ਸ਼ਬਦ ਪੜ੍ਹਨਯੋਗ ਰਹਿੰਦੇ ਹਨ: ਉਹ ਫ੍ਰੇਮ ਉੱਤੇ ਚਮਕਦੇ ਹਨ, ਅਤੇ ਸ਼ੀਸ਼ਾ ਓਨਾ ਹੀ ਸਾਫ਼ ਹੁੰਦਾ ਹੈ ਜਿੰਨੇ ਵਿੱਚ ਪਿੱਛੇ ਕਿਸੇ ਵੀ ਚੀਜ਼ ਉੱਤੇ ਟੈਕਸਟ ਪੜ੍ਹਿਆ ਜਾ ਸਕੇ, ਇਸ ਲਈ ਪੂਰੀ ਵਿੰਡੋ ਪਾਰਦਰਸ਼ੀ ਹੋਣ ਤੇ ਕੁਝ ਸਕਿਨਾਂ ਕਾਫ਼ੀ ਠੋਸ ਰਹਿੰਦੀਆਂ ਹਨ। ਵੀਡੀਓ ਹਮੇਸ਼ਾ ਠੋਸ ਹੁੰਦਾ ਹੈ।",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "ਕਿਸੇ ਵੀ ਸਕਿਨ ਹੇਠ Windows 7 ਵਰਗਾ ਸ਼ੀਸ਼ਾ; ਕਿੰਨਾ ਸਾਫ਼, ਕਿੱਥੇ ਅਤੇ ਧੁੰਦਲਾਪਨ ਸਕਿਨਾਂ ਪੰਨੇ ਉੱਤੇ ਹਨ",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ਪਾਰਦਰਸ਼ੀ ਅਰਧ-ਪਾਰਦਰਸ਼ੀ ਸ਼ੀਸ਼ਾ ਧੁੰਦਲਾ ਫ੍ਰੋਸਟਡ ਡੈਸਕਟਾਪ ਵਾਲਪੇਪਰ aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ਪਾਰਦਰਸ਼ੀ ਅਰਧ-ਪਾਰਦਰਸ਼ੀ ਸ਼ੀਸ਼ਾ ਧੁੰਦਲਾ ਫ੍ਰੋਸਟਡ ਡੈਸਕਟਾਪ ਵਾਲਪੇਪਰ aero acrylic mica",
+  "Reading subtitles…": "ਉਪਸਿਰਲੇਖ ਪੜ੍ਹੇ ਜਾ ਰਹੇ ਹਨ…",
+  "Subtitles inside the video": "ਵੀਡੀਓ ਦੇ ਅੰਦਰ ਉਪਸਿਰਲੇਖ",
+  "Translate into…": "ਇਸ ਵਿੱਚ ਅਨੁਵਾਦ ਕਰੋ…",
+  "Bilingual subtitles": "ਦੋਭਾਸ਼ੀ ਉਪਸਿਰਲੇਖ",
+  "One more track with two lines: the top language over the bottom one": "ਦੋ ਲਾਈਨਾਂ ਵਾਲਾ ਇੱਕ ਹੋਰ ਟਰੈਕ: ਉੱਪਰਲੀ ਭਾਸ਼ਾ ਹੇਠਲੀ ਭਾਸ਼ਾ ਦੇ ਉੱਪਰ",
+  "Top line": "ਉੱਪਰਲੀ ਲਾਈਨ",
+  "Bottom line": "ਹੇਠਲੀ ਲਾਈਨ",
+  "Save the subtitle files beside the video as SRT": "ਉਪਸਿਰਲੇਖ ਫ਼ਾਈਲਾਂ ਨੂੰ ਵੀਡੀਓ ਦੇ ਕੋਲ SRT ਵਜੋਂ ਸੁਰੱਖਿਅਤ ਕਰੋ",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ਉਪਸਿਰਲੇਖ ਨਹੀਂ ਰੱਖ ਸਕਦਾ, ਇਸ ਲਈ ਵੀਡੀਓ MKV ਵਜੋਂ ਸੁਰੱਖਿਅਤ ਕੀਤਾ ਜਾਵੇਗਾ"
 }

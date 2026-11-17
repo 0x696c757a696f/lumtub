@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 کی طرح فراسٹڈ؛ جہاں ڈیسک ٹاپ دھندلا نہیں کر سکتا وہاں ونڈو صرف شفاف رہتی ہے۔",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "الفاظ پڑھنے کے قابل رہتے ہیں: وہ فریم پر چمکتے ہیں، اور شیشہ پیچھے کسی بھی چیز پر متن پڑھے جانے کے قابل ہونے سے زیادہ صاف نہیں ہوتا، اس لیے پوری ونڈو شفاف ہونے پر کچھ تھیمز خاصی ٹھوس رہتی ہیں۔ ویڈیو ہمیشہ ٹھوس رہتی ہے۔",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "کسی بھی تھیم کے نیچے Windows 7 جیسا شیشہ؛ کتنا صاف، کہاں اور دھندلاپن تھیمز صفحے پر ہیں",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "شفاف نیم شفاف شیشہ دھندلا فراسٹڈ ڈیسک ٹاپ وال پیپر aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "شفاف نیم شفاف شیشہ دھندلا فراسٹڈ ڈیسک ٹاپ وال پیپر aero acrylic mica",
+  "Reading subtitles…": "سب ٹائٹلز پڑھے جا رہے ہیں…",
+  "Subtitles inside the video": "ویڈیو کے اندر سب ٹائٹلز",
+  "Translate into…": "اس میں ترجمہ کریں…",
+  "Bilingual subtitles": "دو لسانی سب ٹائٹلز",
+  "One more track with two lines: the top language over the bottom one": "دو لائنوں والا ایک اور ٹریک: اوپر کی زبان نیچے کی زبان کے اوپر",
+  "Top line": "اوپر کی لائن",
+  "Bottom line": "نیچے کی لائن",
+  "Save the subtitle files beside the video as SRT": "سب ٹائٹل فائلیں ویڈیو کے ساتھ SRT کے طور پر محفوظ کریں",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM سب ٹائٹلز نہیں رکھ سکتا، اس لیے ویڈیو MKV کے طور پر محفوظ ہوگی"
 }

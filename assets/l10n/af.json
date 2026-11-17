@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Gefrost soos Windows 7; waar die lessenaar nie kan vervaag nie, is die venster net deurskynend.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Woorde bly leesbaar: hulle gloei op die raam, en die glas word nie helderder as wat teks oor enigiets agter dit leesbaar is nie, so met die hele venster deurskynend bly sommige skins taamlik vas. Video is altyd vas.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Glas soos Windows 7 onder enige skin; hoe helder, waar en vervaging is op die Skins-bladsy",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "deursigtig deurskynend glas vervaag gefrost lessenaar muurpapier aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "deursigtig deurskynend glas vervaag gefrost lessenaar muurpapier aero acrylic mica",
+  "Reading subtitles…": "Onderskrifte word gelees…",
+  "Subtitles inside the video": "Onderskrifte in die video",
+  "Translate into…": "Vertaal na…",
+  "Bilingual subtitles": "Tweetalige onderskrifte",
+  "One more track with two lines: the top language over the bottom one": "Nog 'n snit met twee reëls: die boonste taal bo die onderste een",
+  "Top line": "Boonste reël",
+  "Bottom line": "Onderste reël",
+  "Save the subtitle files beside the video as SRT": "Stoor die onderskriflêers langs die video as SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM kan nie onderskrifte bevat nie, daarom word die video as MKV gestoor"
 }

@@ -3566,5 +3566,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Kính mờ như Windows 7; nơi màn hình nền không thể làm mờ, cửa sổ chỉ trong suốt.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Chữ vẫn dễ đọc: chữ phát sáng trên khung, và kính không bao giờ trong hơn mức còn đọc được chữ trên bất kỳ thứ gì phía sau, nên khi toàn bộ cửa sổ trong suốt, một số chủ đề vẫn khá đặc. Video luôn đặc.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Kính như Windows 7 dưới mọi chủ đề; độ trong, vùng áp dụng và độ mờ nằm ở trang Chủ đề",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "trong suốt bán trong suốt kính làm mờ mờ màn hình nền hình nền aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "trong suốt bán trong suốt kính làm mờ mờ màn hình nền hình nền aero acrylic mica",
+  "Reading subtitles…": "Đang đọc phụ đề…",
+  "Subtitles inside the video": "Phụ đề trong video",
+  "Translate into…": "Dịch sang…",
+  "Bilingual subtitles": "Phụ đề song ngữ",
+  "One more track with two lines: the top language over the bottom one": "Thêm một rãnh hai dòng: ngôn ngữ trên nằm phía trên ngôn ngữ dưới",
+  "Top line": "Dòng trên",
+  "Bottom line": "Dòng dưới",
+  "Save the subtitle files beside the video as SRT": "Lưu tệp phụ đề cạnh video dưới dạng SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM không thể chứa phụ đề nên video sẽ được lưu dưới dạng MKV"
 }

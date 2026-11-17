@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Սառցակալած՝ ինչպես Windows 7-ում․ որտեղ աշխատասեղանը չի կարող լղոզել, պատուհանը միայն թափանցիկ է։",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Բառերը մնում են ընթեռնելի․ դրանք փայլում են շրջանակի վրա, և ապակին ավելի թափանցիկ չի դառնում, քան թույլ է տալիս տեքստը կարդալ հետևի ցանկացած բանի վրա, ուստի երբ ամբողջ պատուհանը թափանցիկ է, որոշ սկիններ մնում են բավական անթափանց։ Տեսանյութը միշտ անթափանց է։",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Windows 7-ի նման ապակի ցանկացած սկինի տակ․ թափանցիկության աստիճանը, տեղը և լղոզումը Սկիններ էջում են",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "թափանցիկ կիսաթափանցիկ ապակի լղոզում սառցակալած աշխատասեղան պաստառ aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "թափանցիկ կիսաթափանցիկ ապակի լղոզում սառցակալած աշխատասեղան պաստառ aero acrylic mica",
+  "Reading subtitles…": "Ենթագրերը կարդացվում են…",
+  "Subtitles inside the video": "Տեսանյութի մեջ ներառված ենթագրեր",
+  "Translate into…": "Թարգմանել…",
+  "Bilingual subtitles": "Երկլեզու ենթագրեր",
+  "One more track with two lines: the top language over the bottom one": "Եվս մեկ ուղի երկու տողով՝ վերին լեզուն ստորինի վերևում",
+  "Top line": "Վերին տող",
+  "Bottom line": "Ստորին տող",
+  "Save the subtitle files beside the video as SRT": "Պահել ենթագրերի ֆայլերը տեսանյութի կողքին՝ որպես SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM-ը չի կարող ենթագրեր պարունակել, ուստի տեսանյութը կպահվի որպես MKV"
 }

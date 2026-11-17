@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "מט כמו ב-Windows 7; כשאין לשולחן העבודה אפשרות לטשטש, החלון שקוף בלבד.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "המילים נשארות קריאות: הן זוהרות על המסגרת, והזכוכית לא נעשית שקופה יותר ממה שמאפשר לקרוא טקסט מעל כל דבר שמאחוריה, ולכן כשכל החלון שקוף, כמה ערכות נושא נשארות די אטומות. וידאו תמיד אטום.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "זכוכית כמו ב-Windows 7 תחת כל ערכת נושא; מידת השקיפות, המיקום והטשטוש נמצאים בדף ערכות נושא",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "שקוף שקיפות שקוף למחצה זכוכית טשטוש מט שולחן עבודה טפט aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "שקוף שקיפות שקוף למחצה זכוכית טשטוש מט שולחן עבודה טפט aero acrylic mica",
+  "Reading subtitles…": "קורא כתוביות…",
+  "Subtitles inside the video": "כתוביות בתוך הסרטון",
+  "Translate into…": "תרגום ל…",
+  "Bilingual subtitles": "כתוביות דו-לשוניות",
+  "One more track with two lines: the top language over the bottom one": "רצועה נוספת עם שתי שורות: השפה העליונה מעל התחתונה",
+  "Top line": "שורה עליונה",
+  "Bottom line": "שורה תחתונה",
+  "Save the subtitle files beside the video as SRT": "שמירת קובצי הכתוביות לצד הסרטון בפורמט SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM אינו יכול להכיל כתוביות, ולכן הסרטון יישמר בפורמט MKV"
 }

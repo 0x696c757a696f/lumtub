@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "កញ្ចក់ព្រិលដូច Windows 7៖ កន្លែងណាដែលផ្ទៃតុមិនអាចធ្វើឱ្យស្រពិចស្រពិល វិនដូគ្រាន់តែថ្លាប៉ុណ្ណោះ។",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "អក្សរនៅតែអាចអានបាន៖ វាភ្លឺនៅលើស៊ុម ហើយកញ្ចក់មិនថ្លាជាងកម្រិតដែលអាចអានអក្សរលើអ្វីៗនៅខាងក្រោយបានឡើយ ដូច្នេះពេលវិនដូទាំងមូលថ្លា ស្គីនខ្លះនៅតែស្ទើរតែក្រាស់។ វីដេអូតែងតែក្រាស់។",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "កញ្ចក់ដូច Windows 7 ក្រោមស្គីនណាមួយ៖ កម្រិតថ្លា កន្លែង និងការធ្វើឱ្យស្រពិចស្រពិលនៅក្នុងទំព័រស្គីន",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ថ្លា តម្លាភាព ពាក់កណ្ដាលថ្លា កញ្ចក់ ស្រពិចស្រពិល ព្រិល ផ្ទៃតុ ផ្ទាំងរូបភាព aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ថ្លា តម្លាភាព ពាក់កណ្ដាលថ្លា កញ្ចក់ ស្រពិចស្រពិល ព្រិល ផ្ទៃតុ ផ្ទាំងរូបភាព aero acrylic mica",
+  "Reading subtitles…": "កំពុងអានចំណងជើងរង…",
+  "Subtitles inside the video": "ចំណងជើងរងក្នុងវីដេអូ",
+  "Translate into…": "បកប្រែជា…",
+  "Bilingual subtitles": "ចំណងជើងរងពីរភាសា",
+  "One more track with two lines: the top language over the bottom one": "ចំណងជើងរងមួយទៀតមានពីរបន្ទាត់៖ ភាសាខាងលើនៅលើភាសាខាងក្រោម",
+  "Top line": "បន្ទាត់ខាងលើ",
+  "Bottom line": "បន្ទាត់ខាងក្រោម",
+  "Save the subtitle files beside the video as SRT": "រក្សាទុកឯកសារចំណងជើងរងនៅក្បែរវីដេអូជា SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM មិនអាចផ្ទុកចំណងជើងរងបានទេ ដូច្នេះវីដេអូនឹងត្រូវរក្សាទុកជា MKV"
 }

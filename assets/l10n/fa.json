@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "مات مثل Windows 7؛ جایی که دسکتاپ نمی‌تواند محو کند، پنجره فقط شفاف است.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "نوشته‌ها خوانا می‌مانند: روی قاب می‌درخشند و شیشه شفاف‌تر از حدی نمی‌شود که نوشته روی هر چیزی در پشت آن خوانا باشد، پس وقتی کل پنجره شفاف است، برخی پوسته‌ها نسبتاً کدر می‌مانند. ویدیو همیشه کدر است.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "شیشه‌ای مثل Windows 7 زیر هر پوسته؛ میزان شفافیت، محل و محوشدگی در صفحهٔ پوسته‌ها است",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "شفاف نیمه‌شفاف شیشه محو محوشدگی مات دسکتاپ تصویر زمینه aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "شفاف نیمه‌شفاف شیشه محو محوشدگی مات دسکتاپ تصویر زمینه aero acrylic mica",
+  "Reading subtitles…": "در حال خواندن زیرنویس‌ها…",
+  "Subtitles inside the video": "زیرنویس‌های داخل ویدیو",
+  "Translate into…": "ترجمه به…",
+  "Bilingual subtitles": "زیرنویس دوزبانه",
+  "One more track with two lines: the top language over the bottom one": "یک مسیر دیگر با دو خط: زبان بالا روی زبان پایین",
+  "Top line": "خط بالا",
+  "Bottom line": "خط پایین",
+  "Save the subtitle files beside the video as SRT": "ذخیره فایل‌های زیرنویس کنار ویدیو با قالب SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM نمی‌تواند زیرنویس را در خود جای دهد، پس ویدیو با قالب MKV ذخیره می‌شود"
 }

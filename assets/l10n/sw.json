@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Kioo kilichoganda kama Windows 7; eneo-kazi lisipoweza kufifisha, dirisha ni la kuona-kupitia tu.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Maneno hubaki yanayosomeka: huangaza kwenye fremu, na kioo hakiwi safi zaidi ya kiwango ambacho maandishi yanaweza kusomwa juu ya chochote kilicho nyuma, kwa hivyo dirisha zima likiwa wazi, baadhi ya mandhari hubaki mazito. Video huwa nzito kila wakati.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Kioo kama Windows 7 chini ya mandhari yoyote; uwazi kiasi gani, wapi na ufifishaji vipo kwenye ukurasa wa Mandhari",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "wazi uwazi nusu-wazi kioo ukungu kufifisha eneo-kazi mandhari-nyuma aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "wazi uwazi nusu-wazi kioo ukungu kufifisha eneo-kazi mandhari-nyuma aero acrylic mica",
+  "Reading subtitles…": "Inasoma manukuu…",
+  "Subtitles inside the video": "Manukuu ndani ya video",
+  "Translate into…": "Tafsiri kwa…",
+  "Bilingual subtitles": "Manukuu ya lugha mbili",
+  "One more track with two lines: the top language over the bottom one": "Wimbo mmoja zaidi wenye mistari miwili: lugha ya juu juu ya ile ya chini",
+  "Top line": "Mstari wa juu",
+  "Bottom line": "Mstari wa chini",
+  "Save the subtitle files beside the video as SRT": "Hifadhi faili za manukuu kando ya video kama SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM haiwezi kuhifadhi manukuu, kwa hivyo video itahifadhiwa kama MKV"
 }

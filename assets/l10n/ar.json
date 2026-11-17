@@ -3566,5 +3566,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "زجاج مصنفر مثل Windows 7؛ وحيث لا يستطيع سطح المكتب التمويه، تكون النافذة شفافة فقط.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "تبقى الكلمات مقروءة: تتوهج على الإطار، ولا يصبح الزجاج أوضح مما يسمح بقراءة النص فوق أي شيء خلفه، لذا عند جعل النافذة كاملة شفافة تبقى بعض السمات معتمة نسبيًا. الفيديو دائمًا معتم.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "زجاج مثل Windows 7 تحت أي سمة؛ درجة الوضوح والموضع والتمويه في صفحة السمات",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "شفاف شفافية نصف شفاف زجاج تمويه مصنفر سطح المكتب خلفية aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "شفاف شفافية نصف شفاف زجاج تمويه مصنفر سطح المكتب خلفية aero acrylic mica",
+  "Reading subtitles…": "جارٍ قراءة الترجمات…",
+  "Subtitles inside the video": "الترجمات داخل الفيديو",
+  "Translate into…": "ترجمة إلى…",
+  "Bilingual subtitles": "ترجمة ثنائية اللغة",
+  "One more track with two lines: the top language over the bottom one": "مسار إضافي بسطرين: اللغة العليا فوق اللغة السفلى",
+  "Top line": "السطر العلوي",
+  "Bottom line": "السطر السفلي",
+  "Save the subtitle files beside the video as SRT": "حفظ ملفات الترجمة بجانب الفيديو بصيغة SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "لا يدعم WebM الترجمات، لذا سيُحفظ الفيديو بصيغة MKV"
 }

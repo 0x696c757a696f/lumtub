@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Himmeä kuten Windows 7:ssä; jos työpöytä ei voi sumentaa, ikkuna on vain läpikuultava.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Sanat pysyvät luettavina: ne hohtavat kehyksessä, eikä lasi muutu kirkkaammaksi kuin tekstin lukeminen minkä tahansa takana olevan päällä sallii, joten kun koko ikkuna on läpinäkyvä, jotkin teemat pysyvät melko umpinaisina. Video on aina umpinainen.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Lasi kuten Windows 7:ssä minkä tahansa teeman alla; kirkkaus, alue ja sumennus ovat Teemat-sivulla",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "läpinäkyvä läpikuultava lasi sumennus himmeä työpöytä taustakuva aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "läpinäkyvä läpikuultava lasi sumennus himmeä työpöytä taustakuva aero acrylic mica",
+  "Reading subtitles…": "Luetaan tekstityksiä…",
+  "Subtitles inside the video": "Videon sisäiset tekstitykset",
+  "Translate into…": "Käännä kielelle…",
+  "Bilingual subtitles": "Kaksikielinen tekstitys",
+  "One more track with two lines: the top language over the bottom one": "Yksi lisäraita, jossa on kaksi riviä: ylempi kieli alemman yläpuolella",
+  "Top line": "Ylärivi",
+  "Bottom line": "Alarivi",
+  "Save the subtitle files beside the video as SRT": "Tallenna tekstitystiedostot videon viereen SRT-muodossa",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ei voi sisältää tekstityksiä, joten video tallennetaan MKV-muodossa"
 }

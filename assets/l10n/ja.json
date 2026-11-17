@@ -3566,5 +3566,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 のようなすりガラス。デスクトップがぼかしに対応していない場合、ウィンドウは透過のみになります。",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "文字は読みやすいままです。フレーム上の文字は光彩で縁取られ、ガラスは背面に何があっても文字が読める範囲までしか透明になりません。そのため、ウィンドウ全体を透過にすると、スキンによってはかなり不透明なままになります。動画は常に不透明です。",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "どのスキンでも使える Windows 7 風のガラス。透明度、範囲、ぼかしは「スキン」ページで設定します",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "透明 半透明 ガラス ぼかし すりガラス デスクトップ 壁紙 透過 aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "透明 半透明 ガラス ぼかし すりガラス デスクトップ 壁紙 透過 aero acrylic mica",
+  "Reading subtitles…": "字幕を読み込み中…",
+  "Subtitles inside the video": "動画に埋め込む字幕",
+  "Translate into…": "翻訳先…",
+  "Bilingual subtitles": "二言語字幕",
+  "One more track with two lines: the top language over the bottom one": "上下2行の字幕トラックをもう1つ追加：上の行に上の言語、下の行に下の言語",
+  "Top line": "上の行",
+  "Bottom line": "下の行",
+  "Save the subtitle files beside the video as SRT": "字幕ファイルを動画と同じ場所にSRTとして保存",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebMには字幕を含められないため、動画はMKVで保存されます"
 }

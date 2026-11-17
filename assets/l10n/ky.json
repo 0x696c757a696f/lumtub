@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 сыяктуу бүдөмүк айнек; иш такта бүдөмүк кыла албаган жерде терезе тунук гана болот.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Жазуулар окулуучу бойдон калат: алар алкакта жаркырайт, ал эми айнек артындагы каалаган нерсенин үстүндө текстти окуганга мүмкүн болгондон тунук болбойт, ошондуктан бүт терезе тунук болгондо кээ бир скиндер бир кыйла тыгыз бойдон калат. Видео ар дайым тыгыз.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Каалаган скиндин астындагы Windows 7 сыяктуу айнек; канчалык тунук, кайсы жерде жана бүдөмүктөө Скиндер барагында",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "тунук жарым-тунук айнек бүдөмүк бүдөмүктөө иш-такта тушкагаз aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "тунук жарым-тунук айнек бүдөмүк бүдөмүктөө иш-такта тушкагаз aero acrylic mica",
+  "Reading subtitles…": "Субтитрлер окулууда…",
+  "Subtitles inside the video": "Видеонун ичиндеги субтитрлер",
+  "Translate into…": "Которуу…",
+  "Bilingual subtitles": "Эки тилдүү субтитрлер",
+  "One more track with two lines: the top language over the bottom one": "Эки сап менен дагы бир трек: жогорку тил төмөнкүнүн үстүндө",
+  "Top line": "Жогорку сап",
+  "Bottom line": "Төмөнкү сап",
+  "Save the subtitle files beside the video as SRT": "Субтитр файлдарын видеонун жанына SRT катары сактоо",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM субтитрлерди сактай албайт, ошондуктан видео MKV катары сакталат"
 }

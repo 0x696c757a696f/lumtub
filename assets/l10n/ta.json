@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 போன்ற உறைந்த கண்ணாடி; டெஸ்க்டாப்பால் மங்கலாக்க இயலாத இடத்தில் சாளரம் ஒளிஊடுருவலாக மட்டுமே இருக்கும்.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "சொற்கள் படிக்கக்கூடியவையாகவே இருக்கும்: அவை சட்டகத்தில் ஒளிரும், மேலும் பின்னால் எது இருந்தாலும் அதன் மேல் உரையைப் படிக்க முடிவதை விட கண்ணாடி தெளிவாகாது, எனவே முழு சாளரமும் ஒளிஊடுருவும்போது சில தீம்கள் ஓரளவு திடமாகவே இருக்கும். வீடியோ எப்போதும் திடமாக இருக்கும்.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "எந்தத் தீமின் கீழும் Windows 7 போன்ற கண்ணாடி; எவ்வளவு தெளிவு, எங்கே, மங்கலாக்கல் ஆகியவை தீம்கள் பக்கத்தில் உள்ளன",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ஒளிஊடுருவல் ஒளிஊடுருவும் கண்ணாடி மங்கலாக்கு உறைந்த டெஸ்க்டாப் வால்பேப்பர் aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ஒளிஊடுருவல் ஒளிஊடுருவும் கண்ணாடி மங்கலாக்கு உறைந்த டெஸ்க்டாப் வால்பேப்பர் aero acrylic mica",
+  "Reading subtitles…": "வசனங்களைப் படிக்கிறது…",
+  "Subtitles inside the video": "வீடியோவுக்குள் உள்ள வசனங்கள்",
+  "Translate into…": "இதற்கு மொழிபெயர்…",
+  "Bilingual subtitles": "இருமொழி வசனங்கள்",
+  "One more track with two lines: the top language over the bottom one": "இரண்டு வரிகள் கொண்ட மேலும் ஒரு டிராக்: மேல் மொழி கீழ் மொழிக்கு மேலே",
+  "Top line": "மேல் வரி",
+  "Bottom line": "கீழ் வரி",
+  "Save the subtitle files beside the video as SRT": "வசனக் கோப்புகளை வீடியோவின் அருகில் SRT ஆகச் சேமி",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM வசனங்களைக் கொண்டிருக்க முடியாது, எனவே வீடியோ MKV ஆகச் சேமிக்கப்படும்"
 }

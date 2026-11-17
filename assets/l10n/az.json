@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 kimi buzlu; masaüstü bulandıra bilmirsə, pəncərə yalnız şəffaf olur.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Sözlər oxunaqlı qalır: çərçivədə parlayırlar və şüşə mətnin arxadakı hər şeyin üzərində oxunacağından daha şəffaf olmur, ona görə bütün pəncərə şəffaf olanda bəzi skinlər kifayət qədər qatı qalır. Video həmişə qatıdır.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "İstənilən skinin altında Windows 7 kimi şüşə; şəffaflıq dərəcəsi, yer və bulanıqlıq Skinlər səhifəsindədir",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "şəffaf yarımşəffaf şüşə bulanıq buzlu masaüstü divar kağızı aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "şəffaf yarımşəffaf şüşə bulanıq buzlu masaüstü divar kağızı aero acrylic mica",
+  "Reading subtitles…": "Subtitrlər oxunur…",
+  "Subtitles inside the video": "Videonun daxilindəki subtitrlər",
+  "Translate into…": "Tərcümə et…",
+  "Bilingual subtitles": "İkidilli subtitrlər",
+  "One more track with two lines: the top language over the bottom one": "İki sətirli daha bir trek: yuxarıdakı dil aşağıdakının üstündə",
+  "Top line": "Yuxarı sətir",
+  "Bottom line": "Aşağı sətir",
+  "Save the subtitle files beside the video as SRT": "Subtitr fayllarını videonun yanında SRT kimi yadda saxla",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM subtitrləri saxlaya bilmir, buna görə video MKV kimi yadda saxlanılır"
 }

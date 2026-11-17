@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Αμμοβολή όπως στα Windows 7· όπου η επιφάνεια εργασίας δεν μπορεί να θολώσει, το παράθυρο είναι μόνο διαφανές.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Τα κείμενα παραμένουν ευανάγνωστα: λάμπουν πάνω στο πλαίσιο και το γυαλί δεν γίνεται πιο διαυγές απ' όσο επιτρέπει να διαβάζεται το κείμενο πάνω από οτιδήποτε υπάρχει πίσω, οπότε με διαφανές ολόκληρο το παράθυρο ορισμένα skins παραμένουν αρκετά συμπαγή. Το βίντεο είναι πάντα συμπαγές.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Γυαλί όπως στα Windows 7 κάτω από οποιοδήποτε skin· πόσο διαφανές, πού και το θόλωμα βρίσκονται στη σελίδα Skins",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "διαφανές διαφάνεια ημιδιαφανές γυαλί θόλωμα αμμοβολή επιφάνεια εργασίας ταπετσαρία aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "διαφανές διαφάνεια ημιδιαφανές γυαλί θόλωμα αμμοβολή επιφάνεια εργασίας ταπετσαρία aero acrylic mica",
+  "Reading subtitles…": "Ανάγνωση υποτίτλων…",
+  "Subtitles inside the video": "Υπότιτλοι μέσα στο βίντεο",
+  "Translate into…": "Μετάφραση σε…",
+  "Bilingual subtitles": "Δίγλωσσοι υπότιτλοι",
+  "One more track with two lines: the top language over the bottom one": "Ένα ακόμη κομμάτι με δύο γραμμές: η πάνω γλώσσα πάνω από την κάτω",
+  "Top line": "Επάνω γραμμή",
+  "Bottom line": "Κάτω γραμμή",
+  "Save the subtitle files beside the video as SRT": "Αποθήκευση των αρχείων υποτίτλων δίπλα στο βίντεο ως SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "Το WebM δεν μπορεί να περιλάβει υπότιτλους, γι' αυτό το βίντεο αποθηκεύεται ως MKV"
 }

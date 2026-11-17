@@ -3566,5 +3566,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Esmerilado como en Windows 7; donde el escritorio no puede desenfocar, la ventana solo es transparente.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Las palabras siguen siendo legibles: brillan sobre el marco y el cristal no es más claro de lo que permite leer el texto sobre cualquier cosa que haya detrás, así que con toda la ventana transparente algunos skins siguen siendo bastante opacos. El vídeo siempre es opaco.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Cristal como en Windows 7 bajo cualquier skin; cuánta transparencia, dónde y el desenfoque están en la página Skins",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparente translúcido cristal desenfoque esmerilado escritorio fondo de pantalla aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparente translúcido cristal desenfoque esmerilado escritorio fondo de pantalla aero acrylic mica",
+  "Reading subtitles…": "Leyendo subtítulos…",
+  "Subtitles inside the video": "Subtítulos dentro del vídeo",
+  "Translate into…": "Traducir a…",
+  "Bilingual subtitles": "Subtítulos bilingües",
+  "One more track with two lines: the top language over the bottom one": "Una pista más con dos líneas: el idioma superior sobre el inferior",
+  "Top line": "Línea superior",
+  "Bottom line": "Línea inferior",
+  "Save the subtitle files beside the video as SRT": "Guardar los archivos de subtítulos junto al vídeo como SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM no admite subtítulos, así que el vídeo se guarda como MKV"
 }

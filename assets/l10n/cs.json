@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Matné jako ve Windows 7; kde plocha neumí rozmazat, je okno jen průhledné.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Text zůstává čitelný: na rámci září a sklo nebude průhlednější, než aby šel text číst přes cokoli za ním, takže při průhledném celém okně zůstanou některé skiny dost neprůhledné. Video je vždy neprůhledné.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Sklo jako ve Windows 7 pod libovolným skinem; jak průhledné, kde a rozmazání nastavíte na stránce Skiny",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "průhledný průhlednost poloprůhledný sklo rozmazání matný plocha tapeta aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "průhledný průhlednost poloprůhledný sklo rozmazání matný plocha tapeta aero acrylic mica",
+  "Reading subtitles…": "Načítání titulků…",
+  "Subtitles inside the video": "Titulky ve videu",
+  "Translate into…": "Přeložit do…",
+  "Bilingual subtitles": "Dvojjazyčné titulky",
+  "One more track with two lines: the top language over the bottom one": "Další stopa se dvěma řádky: horní jazyk nad dolním",
+  "Top line": "Horní řádek",
+  "Bottom line": "Dolní řádek",
+  "Save the subtitle files beside the video as SRT": "Uložit soubory titulků vedle videa jako SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM nemůže obsahovat titulky, proto se video uloží jako MKV"
 }

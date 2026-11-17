@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Härmatis nagu Windows 7-s; kus töölaud ei saa hägustada, on aken ainult läbipaistev.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Sõnad jäävad loetavaks: need hõõguvad raamil ja klaas ei muutu selgemaks, kui lubab teksti lugeda üle mis tahes tagaoleva, nii et terve akna läbipaistvuse korral jäävad mõned skinid üsna läbipaistmatuks. Video on alati läbipaistmatu.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Klaas nagu Windows 7-s mis tahes skini all; läbipaistvus, ala ja hägustamine on lehel Skinid",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "läbipaistev poolläbipaistev klaas hägustamine härmatis töölaud taustapilt aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "läbipaistev poolläbipaistev klaas hägustamine härmatis töölaud taustapilt aero acrylic mica",
+  "Reading subtitles…": "Subtiitrite lugemine…",
+  "Subtitles inside the video": "Subtiitrid videos",
+  "Translate into…": "Tõlgi keelde…",
+  "Bilingual subtitles": "Kakskeelsed subtiitrid",
+  "One more track with two lines: the top language over the bottom one": "Veel üks kahe reaga rada: ülemine keel alumise kohal",
+  "Top line": "Ülemine rida",
+  "Bottom line": "Alumine rida",
+  "Save the subtitle files beside the video as SRT": "Salvesta subtiitrifailid video kõrvale SRT-vormingus",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ei saa subtiitreid sisaldada, seega salvestatakse video MKV-vormingus"
 }

@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Matirano kao u sistemu Windows 7; gde radna površina ne može da zamuti, prozor je samo providan.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Reči ostaju čitljive: sijaju na okviru, a staklo nije bistrije nego što dozvoljava čitanje teksta preko bilo čega iza, pa kada je ceo prozor providan, neki oblici ostaju prilično neprovidni. Video je uvek neprovidan.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Staklo kao u sistemu Windows 7 pod bilo kojim oblikom; koliko je bistro, gde i zamućenje nalaze se na stranici Oblici",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "providan providnost poluprovidan staklo zamućenje matirano radna površina pozadina aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "providan providnost poluprovidan staklo zamućenje matirano radna površina pozadina aero acrylic mica",
+  "Reading subtitles…": "Čitanje titlova…",
+  "Subtitles inside the video": "Titlovi unutar videa",
+  "Translate into…": "Prevedi na…",
+  "Bilingual subtitles": "Dvojezični titlovi",
+  "One more track with two lines: the top language over the bottom one": "Još jedna traka sa dva reda: gornji jezik iznad donjeg",
+  "Top line": "Gornji red",
+  "Bottom line": "Donji red",
+  "Save the subtitle files beside the video as SRT": "Sačuvaj datoteke titlova pored videa kao SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ne može da sadrži titlove, pa se video čuva kao MKV"
 }

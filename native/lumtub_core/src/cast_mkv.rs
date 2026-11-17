@@ -33,7 +33,8 @@ pub struct Head {
 /// (language and name, numbered from [TEXT]), a title and a cover.
 #[derive(Default, Clone, Copy)]
 pub struct Extra<'a> {
-    pub texts: &'a [(&'a str, &'a str)],
+    /// Language, name, and for an ASS track its header.
+    pub texts: &'a [(&'a str, &'a str, Option<&'a str>)],
     pub title: Option<&'a str>,
     pub cover: Option<&'a [u8]>,
 }
@@ -171,14 +172,20 @@ pub fn head(
                 }
             });
         }
-        for (i, &(language, name)) in extra.texts.iter().enumerate() {
+        for (i, &(language, name, ass)) in extra.texts.iter().enumerate() {
             master(o, 0xAE, |o| {
                 uint(o, 0xD7, TEXT + i as u64);
                 uint(o, 0x73C5, TEXT + i as u64);
                 uint(o, 0x83, 0x11);
                 uint(o, 0x9C, 0);
                 uint(o, 0x88, u64::from(i == 0));
-                element(o, 0x86, b"S_TEXT/UTF8");
+                match ass {
+                    Some(header) => {
+                        element(o, 0x86, b"S_TEXT/ASS");
+                        element(o, 0x63A2, header.as_bytes());
+                    }
+                    None => element(o, 0x86, b"S_TEXT/UTF8"),
+                }
                 if !name.is_empty() {
                     element(o, 0x536E, name.as_bytes());
                 }

@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Izoztua Windows 7 bezala; mahaigainak lausotu ezin duenean, leihoa gardena baino ez da.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Hitzak irakurgarri geratzen dira: markoan distira egiten dute, eta beira ez da atzean dagoen ezeren gainean testua irakurtzen uzten duena baino argiagoa, beraz leiho osoa gardena denean azal batzuk nahiko solidoak izaten dira. Bideoa beti solidoa da.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Windows 7ko beira edozein azalen azpian; zenbat garden, non eta lausotzea Azalak orrian daude",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "gardena erdi-gardena beira lausotu izoztua mahaigaina horma-papera aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "gardena erdi-gardena beira lausotu izoztua mahaigaina horma-papera aero acrylic mica",
+  "Reading subtitles…": "Azpitituluak irakurtzen…",
+  "Subtitles inside the video": "Bideoaren barruko azpitituluak",
+  "Translate into…": "Itzuli honetara…",
+  "Bilingual subtitles": "Bi hizkuntzatako azpitituluak",
+  "One more track with two lines: the top language over the bottom one": "Beste pista bat bi lerrokin: goiko hizkuntza beheko hizkuntzaren gainean",
+  "Top line": "Goiko lerroa",
+  "Bottom line": "Beheko lerroa",
+  "Save the subtitle files beside the video as SRT": "Gorde azpitituluen fitxategiak bideoaren ondoan SRT gisa",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM formatuak ezin ditu azpitituluak eduki; beraz, bideoa MKV gisa gordeko da"
 }

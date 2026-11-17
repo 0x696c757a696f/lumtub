@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Vitrogrunda kiel Windows 7; kie la labortablo ne povas malklarigi, la fenestro estas nur travidebla.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Vortoj restas legeblaj: ili brilas sur la kadro, kaj la vitro ne fariĝas pli klara ol tio, kion permesas legi tekston super io ajn malantaŭe, do kun tuta fenestro travidebla kelkaj haŭtoj restas sufiĉe solidaj. Video ĉiam estas solida.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Vitro kiel Windows 7 sub ajna haŭto; kiom klara, kie kaj malklarigo troviĝas en la paĝo Haŭtoj",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "travidebla diafana vitro malklarigi frostita labortablo fonbildo aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "travidebla diafana vitro malklarigi frostita labortablo fonbildo aero acrylic mica",
+  "Reading subtitles…": "Legado de subtekstoj…",
+  "Subtitles inside the video": "Subtekstoj en la video",
+  "Translate into…": "Traduki al…",
+  "Bilingual subtitles": "Dulingvaj subtekstoj",
+  "One more track with two lines: the top language over the bottom one": "Plia spuro kun du linioj: la supra lingvo super la suba",
+  "Top line": "Supra linio",
+  "Bottom line": "Suba linio",
+  "Save the subtitle files beside the video as SRT": "Konservi la subtekstajn dosierojn apud la video kiel SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ne povas enhavi subtekstojn, do la video estas konservata kiel MKV"
 }

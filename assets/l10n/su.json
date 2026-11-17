@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Buram siga Windows 7; upami desktop teu bisa ngaburkeun, jandelana ngan transparan.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Tulisan tetep kaca: tulisan caang dina pigura, jeung kacana teu leuwih bening ti nu ngamungkinkeun téks kabaca dina luhur naon waé di tukang, ku kituna lamun sakabéh jandela transparan, sababaraha skin tetep rada pekat. Vidéo salawasna pekat.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Kaca siga Windows 7 handapeun skin naon waé; sabaraha bening, di mana, jeung pangaburan aya dina kaca Skin",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparan tembus pandang kaca kabur buram desktop wallpaper aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparan tembus pandang kaca kabur buram desktop wallpaper aero acrylic mica",
+  "Reading subtitles…": "Maca subtitel…",
+  "Subtitles inside the video": "Subtitel di jero vidéo",
+  "Translate into…": "Tarjamahkeun ka…",
+  "Bilingual subtitles": "Subtitel dwibasa",
+  "One more track with two lines: the top language over the bottom one": "Hiji trek deui mibanda dua baris: basa luhur di luhur basa handap",
+  "Top line": "Baris luhur",
+  "Bottom line": "Baris handap",
+  "Save the subtitle files beside the video as SRT": "Simpen file subtitel di gigireun vidéo salaku SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM teu bisa ngandung subtitel, jadi vidéo disimpen salaku MKV"
 }

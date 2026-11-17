@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "ແກ້ວຂຸ່ນຄື Windows 7; ບ່ອນທີ່ເດັສທັອບເຮັດໃຫ້ມົວບໍ່ໄດ້, ໜ້າຕ່າງໂປ່ງໃສເທົ່ານັ້ນ.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "ຕົວໜັງສືຍັງອ່ານໄດ້: ມັນເຫຼື້ອມຢູ່ເທິງກອບ, ແລະແກ້ວບໍ່ໃສກວ່າລະດັບທີ່ອ່ານຂໍ້ຄວາມໄດ້ເທິງສິ່ງໃດກໍຕາມທີ່ຢູ່ຫຼັງ, ສະນັ້ນເມື່ອທັງໜ້າຕ່າງໂປ່ງໃສ ບາງສະກິນຍັງຂ້ອນຂ້າງທຶບ. ວິດີໂອທຶບສະເໝີ.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "ແກ້ວຄື Windows 7 ພາຍໃຕ້ສະກິນໃດກໍໄດ້; ໃສເທົ່າໃດ, ຢູ່ໃສ ແລະ ຄວາມມົວຢູ່ໜ້າສະກິນ",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ໂປ່ງໃສ ໂປ່ງແສງ ແກ້ວ ມົວ ຂຸ່ນ ເດັສທັອບ ພາບພື້ນຫຼັງ aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ໂປ່ງໃສ ໂປ່ງແສງ ແກ້ວ ມົວ ຂຸ່ນ ເດັສທັອບ ພາບພື້ນຫຼັງ aero acrylic mica",
+  "Reading subtitles…": "ກຳລັງອ່ານຄຳບັນຍາຍ…",
+  "Subtitles inside the video": "ຄຳບັນຍາຍໃນວິດີໂອ",
+  "Translate into…": "ແປເປັນ…",
+  "Bilingual subtitles": "ຄຳບັນຍາຍສອງພາສາ",
+  "One more track with two lines: the top language over the bottom one": "ແທຣັກເພີ່ມອີກອັນທີ່ມີສອງແຖວ: ພາສາເທິງຢູ່ເໜືອພາສາລຸ່ມ",
+  "Top line": "ແຖວເທິງ",
+  "Bottom line": "ແຖວລຸ່ມ",
+  "Save the subtitle files beside the video as SRT": "ບັນທຶກໄຟລ໌ຄຳບັນຍາຍໄວ້ຂ້າງວິດີໂອເປັນ SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ບໍ່ສາມາດໃສ່ຄຳບັນຍາຍໄດ້ ດັ່ງນັ້ນວິດີໂອຈະຖືກບັນທຶກເປັນ MKV"
 }

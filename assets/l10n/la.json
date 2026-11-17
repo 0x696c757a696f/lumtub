@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Pruinosum sicut Windows 7; ubi mensa obscurare non potest, fenestra tantum perlucida est.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Verba legibilia manent: in margine fulgent, nec vitrum clarius fit quam ut textus super quovis eorum quae post sunt legi possit; itaque tota fenestra perlucida quaedam pelles satis solidae manent. Video semper solidum est.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Vitrum sicut Windows 7 sub qualibet pelle; quam clarum, ubi, et obscuratio in pagina Pellium sunt",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "perlucidus perspicuus translucidus vitrum obscurare pruinosum mensa tapete aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "perlucidus perspicuus translucidus vitrum obscurare pruinosum mensa tapete aero acrylic mica",
+  "Reading subtitles…": "Subtitula leguntur…",
+  "Subtitles inside the video": "Subtitula intra video",
+  "Translate into…": "In… vertere",
+  "Bilingual subtitles": "Subtitula bilingua",
+  "One more track with two lines: the top language over the bottom one": "Alia via duobus versibus: lingua superior supra inferiorem",
+  "Top line": "Versus superior",
+  "Bottom line": "Versus inferior",
+  "Save the subtitle files beside the video as SRT": "Tabulas subtitulorum iuxta video ut SRT servare",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM subtitula capere non potest, itaque video ut MKV servatur"
 }

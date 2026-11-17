@@ -3566,5 +3566,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Buram seperti Windows 7; jika desktop tidak dapat mengaburkan, jendela hanya tembus pandang.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Teks tetap terbaca: teks bersinar di bingkai, dan kaca tidak menjadi lebih bening daripada batas agar teks tetap terbaca di atas apa pun di belakangnya, sehingga saat seluruh jendela tembus pandang, beberapa skin tetap cukup pekat. Video selalu pekat.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Kaca seperti Windows 7 di bawah skin apa pun; seberapa bening, di mana, dan pengaburan ada di halaman Skin",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparan tembus pandang semitransparan kaca kabur buram desktop wallpaper aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparan tembus pandang semitransparan kaca kabur buram desktop wallpaper aero acrylic mica",
+  "Reading subtitles…": "Membaca subtitel…",
+  "Subtitles inside the video": "Subtitel di dalam video",
+  "Translate into…": "Terjemahkan ke…",
+  "Bilingual subtitles": "Subtitel dwibahasa",
+  "One more track with two lines: the top language over the bottom one": "Satu trek lagi dengan dua baris: bahasa atas di atas bahasa bawah",
+  "Top line": "Baris atas",
+  "Bottom line": "Baris bawah",
+  "Save the subtitle files beside the video as SRT": "Simpan file subtitel di samping video sebagai SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM tidak dapat memuat subtitel, jadi video disimpan sebagai MKV"
 }

@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 പോലെ ഫ്രോസ്റ്റഡ്; ഡെസ്ക്ടോപ്പിന് മങ്ങിക്കാൻ കഴിയാത്തിടത്ത് വിൻഡോ സുതാര്യം മാത്രമാണ്.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "വാക്കുകൾ വായിക്കാനാകുന്നതായി തുടരും: അവ ഫ്രെയിമിൽ തിളങ്ങുന്നു, പിന്നിൽ എന്തുതന്നെയായാലും അതിന് മുകളിൽ വാചകം വായിക്കാവുന്നതിലധികം ഗ്ലാസ് തെളിയില്ല, അതിനാൽ മുഴുവൻ വിൻഡോ സുതാര്യമാക്കിയാൽ ചില സ്കിനുകൾ കുറച്ച് കട്ടിയായി തുടരും. വീഡിയോ എപ്പോഴും കട്ടിയാണ്.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "ഏത് സ്കിനിന്റെയും കീഴിൽ Windows 7 പോലെ ഗ്ലാസ്; എത്ര തെളിവ്, എവിടെ, മങ്ങൽ എന്നിവ സ്കിനുകൾ പേജിലാണ്",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "സുതാര്യം അർധസുതാര്യം ഗ്ലാസ് മങ്ങൽ ഫ്രോസ്റ്റഡ് ഡെസ്ക്ടോപ്പ് വാൾപേപ്പർ aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "സുതാര്യം അർധസുതാര്യം ഗ്ലാസ് മങ്ങൽ ഫ്രോസ്റ്റഡ് ഡെസ്ക്ടോപ്പ് വാൾപേപ്പർ aero acrylic mica",
+  "Reading subtitles…": "സബ്ടൈറ്റിലുകൾ വായിക്കുന്നു…",
+  "Subtitles inside the video": "വീഡിയോയ്ക്കുള്ളിലെ സബ്ടൈറ്റിലുകൾ",
+  "Translate into…": "ഇതിലേക്ക് വിവർത്തനം ചെയ്യുക…",
+  "Bilingual subtitles": "ദ്വിഭാഷാ സബ്ടൈറ്റിലുകൾ",
+  "One more track with two lines: the top language over the bottom one": "രണ്ട് വരികളുള്ള ഒരു ട്രാക്ക് കൂടി: മുകളിലെ ഭാഷ താഴത്തെ ഭാഷയ്ക്ക് മുകളിൽ",
+  "Top line": "മുകളിലെ വരി",
+  "Bottom line": "താഴത്തെ വരി",
+  "Save the subtitle files beside the video as SRT": "സബ്ടൈറ്റിൽ ഫയലുകൾ വീഡിയോയ്ക്ക് അടുത്ത് SRT ആയി സംരക്ഷിക്കുക",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM-ൽ സബ്ടൈറ്റിലുകൾ ഉൾപ്പെടുത്താൻ കഴിയില്ല, അതിനാൽ വീഡിയോ MKV ആയി സംരക്ഷിക്കും"
 }

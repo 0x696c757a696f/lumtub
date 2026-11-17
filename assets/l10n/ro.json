@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Sticlă mată ca în Windows 7; unde desktopul nu poate estompa, fereastra este doar transparentă.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Textul rămâne lizibil: strălucește pe cadru, iar sticla nu devine mai clară decât permite citirea textului peste orice se află în spate, așa că, cu toată fereastra transparentă, unele skinuri rămân destul de opace. Videoclipul este mereu opac.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Sticlă ca în Windows 7 sub orice skin; cât de clară, unde și estomparea sunt în pagina Skinuri",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparent translucid sticlă estompare mat desktop imagine de fundal aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparent translucid sticlă estompare mat desktop imagine de fundal aero acrylic mica",
+  "Reading subtitles…": "Se citesc subtitrările…",
+  "Subtitles inside the video": "Subtitrări în videoclip",
+  "Translate into…": "Tradu în…",
+  "Bilingual subtitles": "Subtitrări bilingve",
+  "One more track with two lines: the top language over the bottom one": "Încă o pistă cu două rânduri: limba de sus deasupra celei de jos",
+  "Top line": "Rândul de sus",
+  "Bottom line": "Rândul de jos",
+  "Save the subtitle files beside the video as SRT": "Salvează fișierele de subtitrări lângă videoclip ca SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM nu poate conține subtitrări, așa că videoclipul se salvează ca MKV"
 }

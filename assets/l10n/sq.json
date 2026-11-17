@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "I vrenjtur si Windows 7; ku desktopi nuk mund të turbullojë, dritarja është vetëm e tejdukshme.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Fjalët mbeten të lexueshme: shkëlqejnë mbi kornizë dhe xhami nuk bëhet më i pastër sesa lejon leximi i tekstit mbi çdo gjë që ka pas, kështu që kur e gjithë dritarja është e tejdukshme, disa skina mbeten mjaft të ngurta. Videoja është gjithmonë e ngurtë.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Xham si Windows 7 nën çdo skinë; sa i pastër, ku dhe turbullimi janë te faqja Skina",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "i tejdukshëm tejdukshmëri gjysmë-i-tejdukshëm xham turbullim i-vrenjtur desktop sfond aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "i tejdukshëm tejdukshmëri gjysmë-i-tejdukshëm xham turbullim i-vrenjtur desktop sfond aero acrylic mica",
+  "Reading subtitles…": "Po lexohen titrat…",
+  "Subtitles inside the video": "Titrat brenda videos",
+  "Translate into…": "Përkthe në…",
+  "Bilingual subtitles": "Titra dygjuhëshe",
+  "One more track with two lines: the top language over the bottom one": "Edhe një pistë me dy rreshta: gjuha e sipërme mbi atë të poshtmen",
+  "Top line": "Rreshti i sipërm",
+  "Bottom line": "Rreshti i poshtëm",
+  "Save the subtitle files beside the video as SRT": "Ruaji skedarët e titrave pranë videos si SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM nuk mund të përmbajë titra, prandaj videoja ruhet si MKV"
 }

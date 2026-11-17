@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 ýaly buzly; iş stoly bulaşdyryp bilmeýän ýerinde penjire diňe aýdyň bolýar.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Ýazgylar okalýan bolup galýar: olar çarçuwada ýalpyldaýar, aýna bolsa aňyrsyndaky islendik zadyň üstünde tekst okalaýjak derejeden artyk aýdyň bolmaýar, şonuň üçin doly penjire aýdyň bolanda käbir temalar entek-entek dykyz bolup galýar. Wideo hemişe dykyz.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Islendik temanyň aşagynda Windows 7 ýaly aýna; näçe aýdyň, nirede we bulaşdyrma Temalar sahypasynda",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "aýdyň ýalpyldawuk aýna bulaşdyrma buzly iş-stoly diwar-kagyzy aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "aýdyň ýalpyldawuk aýna bulaşdyrma buzly iş-stoly diwar-kagyzy aero acrylic mica",
+  "Reading subtitles…": "Subtitrler okalýar…",
+  "Subtitles inside the video": "Wideonyň içindäki subtitrler",
+  "Translate into…": "Terjime et…",
+  "Bilingual subtitles": "Iki dilli subtitrler",
+  "One more track with two lines: the top language over the bottom one": "Iki setirli ýene bir ýol: ýokarky dil aşakky diliň üstünde",
+  "Top line": "Ýokarky setir",
+  "Bottom line": "Aşakky setir",
+  "Save the subtitle files beside the video as SRT": "Subtitr faýllaryny wideonyň ýanynda SRT hökmünde sakla",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM subtitrleri saklap bilmeýär, şonuň üçin wideo MKV hökmünde saklanýar"
 }

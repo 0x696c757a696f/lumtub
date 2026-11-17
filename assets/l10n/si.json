@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 මෙන් ෆ්රොස්ටඩ්; ඩෙස්ක්ටොපයට බොඳ කළ නොහැකි තැන කවුළුව විනිවිද පෙනෙන්නක් පමණි.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "වචන කියවිය හැකි ලෙසම පවතී: ඒවා රාමුව මත දිලිසෙයි, පිටුපස ඇති ඕනෑම දෙයක් මත පෙළ කියවිය හැකි ප්‍රමාණයට වඩා වීදුරුව පැහැදිලි නොවේ, එබැවින් සම්පූර්ණ කවුළුව විනිවිද පෙනෙන විට සමහර ස්කින් තරමක් ඝනව පවතී. වීඩියෝව සැමවිටම ඝනයි.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "ඕනෑම ස්කින් එකක් යටතේ Windows 7 වැනි වීදුරුව; කොතරම් පැහැදිලිද, කොතැනද සහ බොඳ කිරීම ස්කින් පිටුවේ ඇත",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "විනිවිද පෙනෙන අර්ධ-විනිවිද වීදුරු බොඳ ෆ්රොස්ටඩ් ඩෙස්ක්ටොප් වෝල්පේපර් aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "විනිවිද පෙනෙන අර්ධ-විනිවිද වීදුරු බොඳ ෆ්රොස්ටඩ් ඩෙස්ක්ටොප් වෝල්පේපර් aero acrylic mica",
+  "Reading subtitles…": "උපසිරැසි කියවමින්…",
+  "Subtitles inside the video": "වීඩියෝව තුළ ඇති උපසිරැසි",
+  "Translate into…": "මෙයට පරිවර්තනය කරන්න…",
+  "Bilingual subtitles": "ද්විභාෂා උපසිරැසි",
+  "One more track with two lines: the top language over the bottom one": "පේළි දෙකක් සහිත තවත් ධාවන පථයක්: ඉහළ භාෂාව පහළ භාෂාවට ඉහළින්",
+  "Top line": "ඉහළ පේළිය",
+  "Bottom line": "පහළ පේළිය",
+  "Save the subtitle files beside the video as SRT": "උපසිරැසි ගොනු වීඩියෝව අසල SRT ලෙස සුරකින්න",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM හට උපසිරැසි ඇතුළත් කළ නොහැකි බැවින් වීඩියෝව MKV ලෙස සුරකිනු ලැබේ"
 }

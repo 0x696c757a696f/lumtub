@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 ကဲ့သို့ ဖန်ရည်ဖျော့၊ ဒက်စ်တော့က မှုန်ဝါးမလုပ်နိုင်လျှင် ဝင်းဒိုးသည် ဖောက်ထွင်းမြင်ရုံသာ ဖြစ်သည်။",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "စာလုံးများ ဖတ်လို့ရနေဆဲ ဖြစ်သည်- ဘောင်ပေါ်တွင် အလင်းပြောင်ပြီး ဖန်သည် နောက်ကွယ်ရှိ မည်သည့်အရာပေါ်တွင်မဆို စာဖတ်နိုင်သည့်အဆင့်ထက် ပိုမကြည်လင်ပါ၊ ထို့ကြောင့် ဝင်းဒိုးတစ်ခုလုံး ဖောက်ထွင်းမြင်ရသောအခါ စကင်အချို့ အတော်ထူထပ်နေဆဲ ဖြစ်သည်။ ဗီဒီယိုသည် အမြဲထူထပ်သည်။",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "မည်သည့်စကင်အောက်တွင်မဆို Windows 7 ကဲ့သို့ ဖန်၊ ဘယ်လောက်ကြည်လင်၊ ဘယ်နေရာနှင့် မှုန်ဝါးမှုတို့ကို စကင်များစာမျက်နှာတွင် ရှိသည်",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ဖောက်ထွင်းမြင် ဖန် မှုန်ဝါး ဖန်ရည်ဖျော့ ဒက်စ်တော့ နောက်ခံပုံ aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ဖောက်ထွင်းမြင် ဖန် မှုန်ဝါး ဖန်ရည်ဖျော့ ဒက်စ်တော့ နောက်ခံပုံ aero acrylic mica",
+  "Reading subtitles…": "စာတန်းထိုးများ ဖတ်နေသည်…",
+  "Subtitles inside the video": "ဗီဒီယိုအတွင်းရှိ စာတန်းထိုး",
+  "Translate into…": "ဘာသာပြန်ရန်…",
+  "Bilingual subtitles": "နှစ်ဘာသာစာတန်းထိုး",
+  "One more track with two lines: the top language over the bottom one": "နှစ်ကြောင်းပါ ထပ်တိုးထားသော တစ်ပုဒ်: အပေါ်ဘာသာစကားသည် အောက်ဘာသာစကားအပေါ်တွင်",
+  "Top line": "အပေါ်စာကြောင်း",
+  "Bottom line": "အောက်စာကြောင်း",
+  "Save the subtitle files beside the video as SRT": "စာတန်းထိုးဖိုင်များကို ဗီဒီယိုဘေးတွင် SRT အဖြစ် သိမ်းရန်",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM တွင် စာတန်းထိုး ထည့်၍မရသဖြင့် ဗီဒီယိုကို MKV အဖြစ် သိမ်းမည်"
 }

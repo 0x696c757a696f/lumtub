@@ -3585,5 +3585,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "像 Windows 7 一樣的霧面效果；桌面不支援模糊時，視窗只會半透明。",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "文字始終清晰：邊框上的文字帶有柔光底，玻璃最多只會透明到文字在任何背景上都能看清為止，所以整個視窗透明時，部分皮膚會比較不透明。影片一律不透明。",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "任何皮膚都能使用的 Windows 7 式玻璃；透明度、範圍和模糊可在「皮膚」頁面設定",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "透明 半透明 玻璃 毛玻璃 霧面 壓克力 雲母 模糊 桌面 桌布 透出 aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "透明 半透明 玻璃 毛玻璃 霧面 壓克力 雲母 模糊 桌面 桌布 透出 aero acrylic mica",
+  "Reading subtitles…": "正在讀取字幕…",
+  "Subtitles inside the video": "封入影片的字幕",
+  "Translate into…": "翻譯為…",
+  "Bilingual subtitles": "雙語字幕",
+  "One more track with two lines: the top language over the bottom one": "另加一條雙行字幕軌：上方語言在上，下方語言在下",
+  "Top line": "上方",
+  "Bottom line": "下方",
+  "Save the subtitle files beside the video as SRT": "影片旁的字幕檔存為 SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM 無法封入字幕，影片將改存為 MKV"
 }

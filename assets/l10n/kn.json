@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 ನಂತಹ ಫ್ರಾಸ್ಟೆಡ್; ಡೆಸ್ಕ್‌ಟಾಪ್ ಮಂಜುಗೊಳಿಸಲು ಸಾಧ್ಯವಾಗದಲ್ಲಿ ವಿಂಡೋ ಕೇವಲ ಪಾರದರ್ಶಕವಾಗಿರುತ್ತದೆ.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "ಪದಗಳು ಓದಲು ಸಾಧ್ಯವಾಗುವಂತೆ ಉಳಿಯುತ್ತವೆ: ಅವು ಚೌಕಟ್ಟಿನ ಮೇಲೆ ಹೊಳೆಯುತ್ತವೆ, ಮತ್ತು ಹಿಂದಿನ ಯಾವುದರ ಮೇಲೂ ಪಠ್ಯ ಓದಬಹುದಾದ್ದಕ್ಕಿಂತ ಗಾಜು ಹೆಚ್ಚು ಸ್ಪಷ್ಟವಾಗುವುದಿಲ್ಲ, ಆದ್ದರಿಂದ ಇಡೀ ವಿಂಡೋ ಪಾರದರ್ಶಕವಾದಾಗ ಕೆಲವು ಸ್ಕಿನ್‌ಗಳು ಸಾಕಷ್ಟು ಘನವಾಗಿ ಉಳಿಯುತ್ತವೆ. ವೀಡಿಯೊ ಯಾವಾಗಲೂ ಘನವಾಗಿರುತ್ತದೆ.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "ಯಾವುದೇ ಸ್ಕಿನ್ ಅಡಿಯಲ್ಲಿ Windows 7 ನಂತಹ ಗಾಜು; ಎಷ್ಟು ಸ್ಪಷ್ಟ, ಎಲ್ಲಿ ಮತ್ತು ಮಂಜುಗೊಳಿಸುವಿಕೆ ಸ್ಕಿನ್‌ಗಳು ಪುಟದಲ್ಲಿವೆ",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ಪಾರದರ್ಶಕ ಅರೆಪಾರದರ್ಶಕ ಗಾಜು ಮಂಜು ಫ್ರಾಸ್ಟೆಡ್ ಡೆಸ್ಕ್‌ಟಾಪ್ ವಾಲ್‌ಪೇಪರ್ aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ಪಾರದರ್ಶಕ ಅರೆಪಾರದರ್ಶಕ ಗಾಜು ಮಂಜು ಫ್ರಾಸ್ಟೆಡ್ ಡೆಸ್ಕ್‌ಟಾಪ್ ವಾಲ್‌ಪೇಪರ್ aero acrylic mica",
+  "Reading subtitles…": "ಉಪಶೀರ್ಷಿಕೆಗಳನ್ನು ಓದಲಾಗುತ್ತಿದೆ…",
+  "Subtitles inside the video": "ವೀಡಿಯೊ ಒಳಗಿನ ಉಪಶೀರ್ಷಿಕೆಗಳು",
+  "Translate into…": "ಇದಕ್ಕೆ ಅನುವಾದಿಸಿ…",
+  "Bilingual subtitles": "ದ್ವಿಭಾಷಾ ಉಪಶೀರ್ಷಿಕೆಗಳು",
+  "One more track with two lines: the top language over the bottom one": "ಎರಡು ಸಾಲಿನ ಇನ್ನೊಂದು ಟ್ರ್ಯಾಕ್: ಮೇಲಿನ ಭಾಷೆ ಕೆಳಗಿನ ಭಾಷೆಯ ಮೇಲೆ",
+  "Top line": "ಮೇಲಿನ ಸಾಲು",
+  "Bottom line": "ಕೆಳಗಿನ ಸಾಲು",
+  "Save the subtitle files beside the video as SRT": "ಉಪಶೀರ್ಷಿಕೆ ಫೈಲ್‌ಗಳನ್ನು ವೀಡಿಯೊ ಪಕ್ಕದಲ್ಲಿ SRT ಆಗಿ ಉಳಿಸಿ",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ಉಪಶೀರ್ಷಿಕೆಗಳನ್ನು ಹೊಂದಲು ಸಾಧ್ಯವಿಲ್ಲ, ಆದ್ದರಿಂದ ವೀಡಿಯೊವನ್ನು MKV ಆಗಿ ಉಳಿಸಲಾಗುತ್ತದೆ"
 }

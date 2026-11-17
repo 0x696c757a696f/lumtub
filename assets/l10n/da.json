@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Frostet som Windows 7; hvor skrivebordet ikke kan sløre, er vinduet kun gennemsigtigt.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Tekst forbliver læselig: den lyser på rammen, og glasset bliver ikke klarere, end at tekst kan læses over alt, der er bagved, så når hele vinduet er gennemsigtigt, forbliver nogle skins ret massive. Video er altid massiv.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Glas som Windows 7 under enhver skin; hvor klart, hvor og sløring findes på siden Skins",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "gennemsigtig gennemsigtighed halvgennemsigtig glas sløring frostet skrivebord baggrund aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "gennemsigtig gennemsigtighed halvgennemsigtig glas sløring frostet skrivebord baggrund aero acrylic mica",
+  "Reading subtitles…": "Læser undertekster…",
+  "Subtitles inside the video": "Undertekster i videoen",
+  "Translate into…": "Oversæt til…",
+  "Bilingual subtitles": "Tosprogede undertekster",
+  "One more track with two lines: the top language over the bottom one": "Endnu et spor med to linjer: det øverste sprog over det nederste",
+  "Top line": "Øverste linje",
+  "Bottom line": "Nederste linje",
+  "Save the subtitle files beside the video as SRT": "Gem undertekstfilerne ved siden af videoen som SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM kan ikke rumme undertekster, så videoen gemmes som MKV"
 }

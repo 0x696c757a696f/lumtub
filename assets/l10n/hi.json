@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 जैसा फ़्रॉस्टेड; जहाँ डेस्कटॉप धुंधला नहीं कर सकता, वहाँ विंडो सिर्फ़ पारदर्शी रहती है।",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "शब्द पढ़ने लायक़ रहते हैं: वे फ़्रेम पर चमकते हैं, और काँच उतना ही साफ़ होता है जितने में पीछे की किसी भी चीज़ पर टेक्स्ट पढ़ा जा सके, इसलिए पूरी विंडो पारदर्शी करने पर कुछ स्किन काफ़ी ठोस रहती हैं। वीडियो हमेशा ठोस रहता है।",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "किसी भी स्किन के नीचे Windows 7 जैसा काँच; कितना साफ़, कहाँ और धुंधलापन स्किन पेज पर हैं",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "पारदर्शी अर्धपारदर्शी काँच धुंधला फ़्रॉस्टेड डेस्कटॉप वॉलपेपर aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "पारदर्शी अर्धपारदर्शी काँच धुंधला फ़्रॉस्टेड डेस्कटॉप वॉलपेपर aero acrylic mica",
+  "Reading subtitles…": "उपशीर्षक पढ़े जा रहे हैं…",
+  "Subtitles inside the video": "वीडियो के अंदर उपशीर्षक",
+  "Translate into…": "इसमें अनुवाद करें…",
+  "Bilingual subtitles": "द्विभाषी उपशीर्षक",
+  "One more track with two lines: the top language over the bottom one": "दो पंक्तियों वाला एक और ट्रैक: ऊपर की भाषा नीचे की भाषा के ऊपर",
+  "Top line": "ऊपरी पंक्ति",
+  "Bottom line": "निचली पंक्ति",
+  "Save the subtitle files beside the video as SRT": "उपशीर्षक फ़ाइलें वीडियो के पास SRT के रूप में सहेजें",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM में उपशीर्षक नहीं रखे जा सकते, इसलिए वीडियो MKV के रूप में सहेजा जाएगा"
 }

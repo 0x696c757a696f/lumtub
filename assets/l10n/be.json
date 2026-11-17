@@ -3561,5 +3561,14 @@
   "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Матавае, як у Windows 7; калі працоўны стол не можа размываць, акно будзе толькі празрыстым.",
   "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Тэкст застаецца чытэльным: ён свеціцца на рамцы, а шкло не робіцца празрыстым мацней, чым дазваляе чытаць тэкст над чым заўгодна ззаду, таму калі празрыстае ўсё акно, некаторыя скіны застаюцца даволі суцэльнымі. Відэа заўсёды суцэльнае.",
   "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Шкло як у Windows 7 пад любым скінам; наколькі празрыста, дзе і размыццё наладжваюцца на старонцы «Скіны»",
-  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "празрысты празрыстасць паўпразрысты шкло размыццё матавы працоўны стол шпалеры aero acrylic mica"
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "празрысты празрыстасць паўпразрысты шкло размыццё матавы працоўны стол шпалеры aero acrylic mica",
+  "Reading subtitles…": "Чытанне субцітраў…",
+  "Subtitles inside the video": "Субцітры ўнутры відэа",
+  "Translate into…": "Перакласці на…",
+  "Bilingual subtitles": "Двухмоўныя субцітры",
+  "One more track with two lines: the top language over the bottom one": "Яшчэ адна дарожка з двума радкамі: верхняя мова над ніжняй",
+  "Top line": "Верхні радок",
+  "Bottom line": "Ніжні радок",
+  "Save the subtitle files beside the video as SRT": "Захаваць файлы субцітраў побач з відэа ў фармаце SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM не можа ўтрымліваць субцітры, таму відэа будзе захавана ў фармаце MKV"
 }

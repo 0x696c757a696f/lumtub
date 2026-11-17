@@ -5,10 +5,11 @@ import 'dart:typed_data';
 
 import '../app_log.dart';
 import 'cast_net.dart';
+import 'cast_parse.dart';
 
 // Minimal multicast DNS for finding Chromecasts and AirPlay receivers: one
-// PTR question for the service and a reader for the PTR, SRV, TXT, A and
-// AAAA records that come back.
+// PTR question for the service, and the PTR, SRV, TXT, A and AAAA records
+// that come back, read in the Rust core (cast_lan.rs).
 
 const googleCastService = '_googlecast._tcp.local';
 const airPlayService = '_airplay._tcp.local';
@@ -49,59 +50,39 @@ class MdnsCollector {
   final _txt = <String, Map<String, String>>{};
   final _addresses = <String, InternetAddress>{};
 
-  /// Reads one packet; malformed ones are ignored.
+  /// Reads one packet in the core; what a malformed one holds before the
+  /// damage is kept, the rest ignored.
   void add(Uint8List packet) {
+    final Object? read;
     try {
-      _read(ByteData.sublistView(packet), packet);
-    } on RangeError {
-      // Truncated packet.
+      read = readInCore('lumtub_mdns_records', packet);
     } on FormatException {
-      // Bad name.
+      return;
     }
-  }
-
-  void _read(ByteData data, Uint8List bytes) {
-    var offset = 12;
-    final questions = data.getUint16(4);
-    final records = data.getUint16(6) + data.getUint16(8) + data.getUint16(10);
-    for (var i = 0; i < questions; i++) {
-      offset = _skipName(bytes, offset) + 4;
+    if (read is! Map) return;
+    final records = read;
+    List<List<Object?>> rows(String key) => [for (final row in records[key] as List? ?? const []) if (row is List) row];
+    for (final row in rows('ptr')) {
+      if (row case [final String owner, final String target] when owner.toLowerCase() == service) _ptr.add(target);
     }
-    for (var i = 0; i < records; i++) {
-      final (name, afterName) = _readName(bytes, offset);
-      final type = data.getUint16(afterName);
-      final length = data.getUint16(afterName + 8);
-      final start = afterName + 10;
-      final end = start + length;
-      if (end > bytes.length) return;
-      switch (type) {
-        case 12 when name.toLowerCase() == service:
-          _ptr.add(_readName(bytes, start).$1);
-        case 33:
-          _srv[name] = (_readName(bytes, start + 6).$1.toLowerCase(), data.getUint16(start + 4));
-        case 16:
-          _txt[name] = _parseTxt(bytes, start, end);
-        case 1 when length == 4:
-          _addresses[name.toLowerCase()] = InternetAddress.fromRawAddress(Uint8List.sublistView(bytes, start, end));
-        case 28 when length == 16:
-          _addresses.putIfAbsent(name.toLowerCase(), () => InternetAddress.fromRawAddress(Uint8List.sublistView(bytes, start, end)));
+    for (final row in rows('srv')) {
+      if (row case [final String name, final String target, final num port]) _srv[name] = (target, port.toInt());
+    }
+    for (final row in rows('txt')) {
+      if (row case [final String name, final Map entries]) _txt[name] = {for (final MapEntry(:key, :value) in entries.entries) '$key': '$value'};
+    }
+    for (final row in rows('addresses')) {
+      if (row case [final String name, final String text]) {
+        final address = InternetAddress.tryParse(text);
+        if (address == null) continue;
+        // An IPv4 address wins over an IPv6 one for the same name.
+        if (address.type == InternetAddressType.IPv4) {
+          _addresses[name] = address;
+        } else {
+          _addresses.putIfAbsent(name, () => address);
+        }
       }
-      offset = end;
     }
-  }
-
-  Map<String, String> _parseTxt(Uint8List bytes, int start, int end) {
-    final out = <String, String>{};
-    var i = start;
-    while (i < end) {
-      final length = bytes[i++];
-      if (i + length > end) break;
-      final entry = utf8.decode(bytes.sublist(i, i + length), allowMalformed: true);
-      i += length;
-      final eq = entry.indexOf('=');
-      if (eq > 0) out[entry.substring(0, eq).toLowerCase()] = entry.substring(eq + 1);
-    }
-    return out;
   }
 
   /// The services whose records are all known, an IPv4 address preferred.
@@ -117,36 +98,6 @@ class MdnsCollector {
                 txt: _txt[instance] ?? const {},
               ),
       ];
-
-  static int _skipName(Uint8List bytes, int offset) {
-    while (true) {
-      final length = bytes[offset];
-      if (length == 0) return offset + 1;
-      if (length & 0xC0 == 0xC0) return offset + 2;
-      offset += length + 1;
-    }
-  }
-
-  /// A possibly compressed name, and the offset after it.
-  static (String, int) _readName(Uint8List bytes, int offset) {
-    final labels = <String>[];
-    int? after;
-    var hops = 0;
-    while (true) {
-      final length = bytes[offset];
-      if (length == 0) {
-        return (labels.join('.'), after ?? offset + 1);
-      }
-      if (length & 0xC0 == 0xC0) {
-        after ??= offset + 2;
-        offset = ((length & 0x3F) << 8) | bytes[offset + 1];
-        if (++hops > 20) throw const FormatException('name loop');
-        continue;
-      }
-      labels.add(utf8.decode(bytes.sublist(offset + 1, offset + 1 + length), allowMalformed: true));
-      offset += length + 1;
-    }
-  }
 }
 
 /// Asks the LAN for [service] for [timeout], emitting each device once.

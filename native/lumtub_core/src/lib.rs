@@ -8,6 +8,7 @@ pub mod ass;
 pub mod backup;
 pub mod browser_sign_in;
 pub mod cast;
+pub mod cast_lan;
 pub mod cast_mkv;
 pub mod cast_webm;
 pub mod comment_action;

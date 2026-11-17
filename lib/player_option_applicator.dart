@@ -47,6 +47,13 @@ class PlayerOptionApplicator {
       // fast profile does: a 4K frame shrunk to a window is most of the GPU
       // work after decoding.
       if (settings.strategy == PlaybackStrategy.lowResource) ...fastRendering,
+      // iOS hands hardware-decoded frames to mpv's OpenGL ES renderer with
+      // the colour plane as a luminance-alpha texture (CoreVideo refuses a
+      // two-channel red-green one there). mpv's chroma scalers other than
+      // bilinear read that texture without swapping its channels, so both
+      // colour values come out the same and the picture turns green and
+      // purple. Bilinear chroma reads it through the right swizzle.
+      if (Platform.isIOS) 'cscale': 'bilinear',
       // Interpolation works only when video is timed to the display.
       'video-sync': settings.interpolation && settings.videoSync == VideoSync.audio ? VideoSync.displayResample.mpvValue : settings.videoSync.mpvValue,
       // Drawn by libmpv, subtitles look as the Flutter view draws them: the

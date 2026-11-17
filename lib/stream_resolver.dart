@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'app_log.dart';
 import 'background_json.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
@@ -226,9 +227,81 @@ class StreamResolver {
   /// YouTube refused stream addresses yt-dlp took from a TV client the
   /// moment they were opened: the TV clients are left out again at once.
   void avoidTv() {
+    // visionOS's own addresses stop after 1 MiB here: the TV clients stay.
+    if (visionCut) return;
     if (!avoidingTv) logInfo("YouTube refused the TV client's stream addresses; asking yt-dlp as visionOS alone again");
     _tvNeededUntil = null;
   }
+
+  /// Some networks get a YouTube experiment (seen in November 2026) that
+  /// refuses visionOS's stream addresses past their first MiB, as it wants
+  /// a PO token for them there. A quick start would play a second and
+  /// stop, and so would yt-dlp asking as visionOS alone; while it lasts,
+  /// quick starts are skipped and yt-dlp asks its default clients.
+  bool get visionCut {
+    final until = _visionCutUntil;
+    return until != null && DateTime.now().isBefore(until) && _visionCutProxy == proxy?.call();
+  }
+
+  DateTime? _visionCutUntil;
+  String? _visionCutProxy;
+
+  /// When the cut was last looked for, and through which proxy.
+  DateTime _visionCheckedAt = DateTime(0);
+  String? _visionCheckedProxy;
+  bool _visionChecking = false;
+
+  /// How long a cut, or its absence, is trusted before it is looked for
+  /// again.
+  static const visionCheckFor = Duration(minutes: 30);
+
+  /// The first byte past the part YouTube lets through.
+  static const visionCutAt = 1024 * 1024;
+
+  /// Looks, in the background, whether the address of the quick start
+  /// [info] is refused past [visionCutAt], unless that was looked at
+  /// lately through the same proxy.
+  @visibleForTesting
+  Future<void> checkVisionCut(Map<String, dynamic> info) async {
+    final proxy = this.proxy?.call();
+    if (_visionChecking || (_visionCheckedProxy == proxy && DateTime.now().difference(_visionCheckedAt) < visionCheckFor)) return;
+    final formats = [...?(info['requested_formats'] as List?)?.whereType<Map>(), info];
+    final format = formats.firstWhere((f) => f['url'] is String && ((f['filesize'] as num?) ?? 0) > visionCutAt + 4096, orElse: () => const {});
+    final url = format['url'];
+    if (url is! String) return;
+    final headers = <String, String>{
+      ...?((format['http_headers'] ?? info['http_headers']) as Map?)?.cast<String, String>(),
+    };
+    _visionChecking = true;
+    {
+      try {
+        final client = _quickClient ??= appHttpClient();
+        final response = await client
+            .get(Uri.parse('$url&range=$visionCutAt-${visionCutAt + 4095}'), headers: headers)
+            .timeout(const Duration(seconds: 8));
+        final status = response.statusCode;
+        if (status != 200 && status != 206 && status != 403) return;
+        _visionCheckedAt = DateTime.now();
+        _visionCheckedProxy = proxy;
+        if (status == 403) {
+          _visionCutUntil = DateTime.now().add(visionCheckFor);
+          _visionCutProxy = proxy;
+          _tvNeededUntil = _visionCutUntil;
+          logWarn("YouTube refuses visionOS's stream addresses past 1 MiB on this network; quick starts are off and yt-dlp asks its default clients for ${visionCheckFor.inMinutes} minutes");
+        } else if (_visionCutUntil != null) {
+          _visionCutUntil = null;
+          logInfo("visionOS's stream addresses play past 1 MiB again");
+        }
+      } catch (e) {
+        logInfo('Could not check visionOS addresses past 1 MiB: $e');
+      } finally {
+        _visionChecking = false;
+      }
+    }
+  }
+
+  @visibleForTesting
+  set quickClient(http.Client client) => _quickClient = client;
 
   /// mpv's own default when no format was chosen.
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
@@ -303,6 +376,10 @@ class StreamResolver {
   /// ciphered, refused, not answered within a few seconds); [resolve]
   /// still has the whole answer.
   Future<ResolvedVideo?> quick(String videoId, String format, String policy) async {
+    if (visionCut) {
+      logInfo('Quick start of $videoId: skipped, visionOS addresses stop after 1 MiB here');
+      return null;
+    }
     final core = NativeCore.instance;
     final request = core?.quickRequest(videoId);
     if (core == null || request == null) return null;
@@ -336,6 +413,7 @@ class StreamResolver {
       }
       final info = jsonDecode(text) as Map<String, dynamic>;
       logInfo('Quick start of $videoId in ${watch.elapsedMilliseconds} ms');
+      unawaited(checkVisionCut(info));
       return ResolvedVideo(info, _infoFile(videoId), format, text: text);
     } catch (e) {
       logInfo('Quick start of $videoId failed: $e');
@@ -349,6 +427,8 @@ class StreamResolver {
   /// otherwise start one per card. While one runs, only the card asked for
   /// last waits its turn.
   void prefetch(String videoId, String format, {String? formatSort}) {
+    // The pointer is on a card: a click may follow.
+    _warm(format, formatSort);
     if (_results.containsKey(videoId) && _formats[videoId] == format && _formatSorts[videoId] == formatSort && _proxies[videoId] == proxy?.call()) return;
     if (_prefetching) {
       _nextPrefetch = (videoId, format, formatSort);
@@ -549,13 +629,19 @@ class StreamResolver {
   bool _failed(ProcessResult result) => result.exitCode != 0 || result.stdout.toString().trim().isEmpty;
 
   /// yt-dlp for [videoId]; [background] (the video id) runs it at low
-  /// priority until [resolve] asks for that video.
+  /// priority until [resolve] asks for that video. A video played in the
+  /// foreground goes to the standby yt-dlp when one with the same
+  /// arguments is waiting, and another is started for the next.
   Future<ProcessResult> _ytDlp(String videoId, String format, {String? formatSort, String? background, String? cookies, bool live = false}) async {
+    final plain = background == null && cookies == null && !live;
     try {
+      if (plain) {
+        if (await _fromStandby(videoId, format, formatSort) case final result?) return result;
+      }
       return await runWithTimeout(
         ytDlpPath,
         arguments(videoId, format, formatSort: formatSort, cookies: cookies, live: live),
-        timeout: const Duration(seconds: 45),
+        timeout: _timeout,
         environment: _environment,
         onStart: (process) {
           _working[videoId] = process.pid;
@@ -567,7 +653,94 @@ class StreamResolver {
     } finally {
       _working.remove(videoId);
       _lowered.remove(videoId);
+      if (plain) _warm(format, formatSort);
     }
+  }
+
+  static const _timeout = Duration(seconds: 45);
+
+  /// Whether a yt-dlp is kept started and waiting for the next video's
+  /// address, so a click does not wait for yt-dlp to start (about 2.6 s of
+  /// a 6 s run on a Windows PC, measured 2026-11-17: 6.17 s → 3.74 s).
+  /// Desktop only: the phones run yt-dlp inside the app's own Python.
+  /// Off under `flutter test`, whose fake yt-dlp scripts count their runs.
+  bool standbyEnabled = (Platform.isWindows || Platform.isLinux || Platform.isMacOS) && Platform.environment['FLUTTER_TEST'] != 'true';
+
+  /// How long a standby waits for a video before it is ended; the pointer
+  /// on a card starts one again.
+  static Duration standbyIdle = const Duration(minutes: 5);
+
+  _Standby? _standby;
+
+  /// What a standby was started with, so one started before the IPv4
+  /// setting changed is not used after.
+  static String _standbyKey(List<String> args) => '${ProcessTree.forceIpv4}\u0000${args.join('\u0000')}';
+  /// The arguments of the standby being started, so two calls start one.
+  String? _starting;
+
+  /// [arguments] for the standby: everything but the address, which it
+  /// reads from stdin.
+  List<String> standbyArguments(String format, String? formatSort) {
+    final all = arguments('', format, formatSort: formatSort);
+    return [...all.sublist(0, all.length - 2), '--batch-file', '-'];
+  }
+
+  /// Makes sure a standby with the arguments for [format] is waiting.
+  void _warm(String format, String? formatSort) {
+    if (!standbyEnabled) return;
+    final args = standbyArguments(format, formatSort);
+    final key = _standbyKey(args);
+    final standby = _standby;
+    if (standby != null && standby.key == key && !standby.collected.exited) {
+      standby.keep();
+      return;
+    }
+    if (_starting == key) return;
+    standby?.end();
+    _standby = null;
+    _starting = key;
+    unawaited(() async {
+      try {
+        final process = await ProcessTree.start(ytDlpPath, args, environment: _environment);
+        // On Windows it starts below normal priority, beside whatever is
+        // playing, and gets normal priority back when given a video;
+        // elsewhere a lowered priority could not be raised again.
+        if (Platform.isWindows) lowerPriority(process.pid);
+        final made = _Standby(key, CollectedProcess(process, ytDlpPath, args));
+        if (_starting != key) {
+          made.end();
+          return;
+        }
+        _standby = made;
+      } catch (e) {
+        logDebug(() => 'Could not start a standby yt-dlp: $e');
+      } finally {
+        if (_starting == key) _starting = null;
+      }
+    }());
+  }
+
+  /// [videoId] read by the standby, when one with the right arguments is
+  /// waiting; null otherwise.
+  Future<ProcessResult?> _fromStandby(String videoId, String format, String? formatSort) async {
+    final standby = _standby;
+    if (standby == null || standby.collected.exited || standby.key != _standbyKey(standbyArguments(format, formatSort))) return null;
+    _standby = null;
+    standby.taken();
+    final process = standby.collected.process;
+    restorePriority(process.pid);
+    try {
+      process.stdin.writeln('https://www.youtube.com/watch?v=$videoId');
+      await process.stdin.flush();
+      await process.stdin.close();
+    } catch (e) {
+      logDebug(() => 'The standby yt-dlp could not take $videoId: $e');
+      standby.end();
+      return null;
+    }
+    _working[videoId] = process.pid;
+    logDebug(() => 'Resolving $videoId with the standby yt-dlp');
+    return standby.collected.result(_timeout);
   }
 
   /// The yt-dlp running for each video.
@@ -581,5 +754,30 @@ class StreamResolver {
     if (pid == null || _lowered.containsKey(videoId)) return;
     lowerPriority(pid);
     _lowered[videoId] = pid;
+  }
+}
+
+/// A yt-dlp started with `--batch-file -`, its imports done, waiting for
+/// an address on stdin. Ended when unused for [StreamResolver.standbyIdle].
+class _Standby {
+  _Standby(this.key, this.collected) {
+    keep();
+  }
+
+  /// Its arguments, joined.
+  final String key;
+  final CollectedProcess collected;
+  Timer? _idle;
+
+  void keep() {
+    _idle?.cancel();
+    _idle = Timer(StreamResolver.standbyIdle, end);
+  }
+
+  void taken() => _idle?.cancel();
+
+  void end() {
+    _idle?.cancel();
+    if (!collected.exited) collected.process.kill();
   }
 }

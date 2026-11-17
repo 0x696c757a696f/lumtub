@@ -60,3 +60,10 @@ path = "fuzz_targets/update_signature.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "cast_lan"
+path = "fuzz_targets/cast_lan.rs"
+test = false
+doc = false
+bench = false

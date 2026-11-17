@@ -486,6 +486,11 @@ class PlayerSettings {
   /// The post-quantum key exchange on the core's connections: 'prefer',
   /// 'off' or 'require'.
   final String postQuantum;
+  /// When yt-dlp connects over IPv4 only (`--force-ipv4`): 'auto' when
+  /// IPv6 does not reach YouTube (checked at start), 'ipv4' always, 'any'
+  /// never. For networks whose IPv6 addresses go nowhere and make each run
+  /// wait for a time-out.
+  final String ipVersion;
   /// Where playback streams come from: YouTube directly by default.
   final PlaybackSource playbackSource;
   /// Play from public Piped or Invidious servers when YouTube refuses a
@@ -572,6 +577,7 @@ class PlayerSettings {
     this.dnsCustomUrl = '',
     this.certificateRoots = 'system',
     this.postQuantum = 'prefer',
+    this.ipVersion = 'auto',
     this.playbackSource = PlaybackSource.youtube,
     this.relayFallback = true,
     this.skipSilence = false,
@@ -649,6 +655,7 @@ class PlayerSettings {
     String? dnsCustomUrl,
     String? certificateRoots,
     String? postQuantum,
+    String? ipVersion,
     PlaybackSource? playbackSource,
     bool? relayFallback,
     bool? skipSilence,
@@ -718,6 +725,7 @@ class PlayerSettings {
         dnsCustomUrl: dnsCustomUrl ?? this.dnsCustomUrl,
         certificateRoots: certificateRoots ?? this.certificateRoots,
         postQuantum: postQuantum ?? this.postQuantum,
+        ipVersion: ipVersion ?? this.ipVersion,
         playbackSource: playbackSource ?? this.playbackSource,
         relayFallback: relayFallback ?? this.relayFallback,
         skipSilence: skipSilence ?? this.skipSilence,
@@ -791,6 +799,7 @@ class PlayerSettings {
         'dnsCustomUrl': dnsCustomUrl,
         'certificateRoots': certificateRoots,
         'postQuantum': postQuantum,
+        'ipVersion': ipVersion,
         'playbackSourceV2': playbackSource.name,
         'relayFallback': relayFallback,
         'skipSilence': skipSilence,
@@ -996,6 +1005,7 @@ class PlayerSettings {
       dnsCustomUrl: raw['dnsCustomUrl']?.toString() ?? '',
       certificateRoots: const ['mozilla', 'google'].contains(raw['certificateRoots']) ? raw['certificateRoots'] as String : 'system',
       postQuantum: const ['off', 'require'].contains(raw['postQuantum']) ? raw['postQuantum'] as String : 'prefer',
+      ipVersion: const ['ipv4', 'any'].contains(raw['ipVersion']) ? raw['ipVersion'] as String : 'auto',
       // V2: the default became direct YouTube (2026-10-21); the old key held
       // the old default for everyone who never chose.
       playbackSource: _enumByName(PlaybackSource.values, raw['playbackSourceV2'], PlaybackSource.youtube),

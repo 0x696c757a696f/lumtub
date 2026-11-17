@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import '../app_log.dart';
 import 'cast_device.dart';
+import 'cast_parse.dart';
 import 'mdns.dart';
 
 // Google Cast (CASTV2) sender: a TLS connection to port 8009 carrying
@@ -77,59 +78,29 @@ Uint8List frameCastMessage(CastMessage message) {
       .toBytes();
 }
 
-/// Reads a CastMessage; fields it does not use are skipped. Throws
-/// [FormatException] on a malformed one.
-CastMessage decodeCastMessage(Uint8List bytes) {
-  var i = 0;
-  int varint() {
-    var value = 0;
-    var shift = 0;
-    while (true) {
-      if (i >= bytes.length || shift > 63) throw const FormatException('bad varint');
-      final b = bytes[i++];
-      value |= (b & 0x7F) << shift;
-      if (b & 0x80 == 0) return value;
-      shift += 7;
-    }
-  }
-
-  final strings = <int, String>{};
-  while (i < bytes.length) {
-    final tag = varint();
-    switch (tag & 7) {
-      case 0:
-        varint();
-      case 2:
-        final length = varint();
-        if (length < 0 || length > bytes.length - i) throw const FormatException('truncated field');
-        if (tag >> 3 != 7) strings[tag >> 3] = utf8.decode(bytes.sublist(i, i + length), allowMalformed: true);
-        i += length;
-      case 1:
-        i += 8;
-      case 5:
-        i += 4;
-      default:
-        throw const FormatException('bad wire type');
-    }
-  }
-  return CastMessage(source: strings[2] ?? '', destination: strings[3] ?? '', namespace: strings[4] ?? '', payload: strings[6] ?? '');
+CastMessage _message(Object? json) {
+  if (json is! Map) throw const FormatException('bad message');
+  if (json['error'] case final String error) throw FormatException(error);
+  return CastMessage(source: '${json['source'] ?? ''}', destination: '${json['destination'] ?? ''}', namespace: '${json['namespace'] ?? ''}', payload: '${json['payload'] ?? ''}');
 }
 
-/// Splits the bytes of a socket into the messages they frame.
+/// Reads a CastMessage in the core; fields it does not use are skipped.
+/// Throws [FormatException] on a malformed one.
+CastMessage decodeCastMessage(Uint8List bytes) => _message(readInCore('lumtub_cast_message', bytes));
+
+/// Splits the bytes of a socket into the messages they frame, in the core.
 class CastFrameReader {
-  var _bytes = Uint8List(0);
+  final _bytes = BytesBuilder(copy: false);
 
   List<CastMessage> add(List<int> data) {
-    _bytes = Uint8List.fromList([..._bytes, ...data]);
-    final out = <CastMessage>[];
-    while (_bytes.length >= 4) {
-      final length = ByteData.sublistView(_bytes).getUint32(0);
-      if (length > 1 << 20) throw const FormatException('message too long');
-      if (_bytes.length < 4 + length) break;
-      out.add(decodeCastMessage(Uint8List.sublistView(_bytes, 4, 4 + length)));
-      _bytes = Uint8List.sublistView(_bytes, 4 + length);
-    }
-    return out;
+    _bytes.add(data);
+    final buffer = _bytes.takeBytes();
+    final answer = readInCore('lumtub_cast_frames', buffer);
+    if (answer is! Map) throw const FormatException('bad frames');
+    if (answer['error'] case final String error) throw FormatException(error);
+    final used = (answer['used'] as num?)?.toInt() ?? 0;
+    if (used < buffer.length) _bytes.add(Uint8List.sublistView(buffer, used));
+    return [for (final message in answer['messages'] as List? ?? const []) _message(message)];
   }
 }
 

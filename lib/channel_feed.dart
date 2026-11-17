@@ -1,6 +1,11 @@
+import 'dart:convert';
+import 'dart:ffi';
+
+import 'package:ffi/ffi.dart';
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
+import 'native_core.dart';
 import 'l10n/l10n.dart';
 import 'youtube_web.dart';
 
@@ -52,11 +57,37 @@ class ChannelFeed {
     return parse(response.body, channel);
   }
 
-  /// Parses the feed. The format is fixed and small, so a few patterns are
-  /// enough and no XML package is needed.
+  /// Parses the feed: in the Rust core (`lumtub_channel_feed`), which
+  /// decodes every XML character reference, else with a few patterns.
+  static List<VideoItem> parse(String xml, ChannelRef channel) => _nativeParse(xml, channel) ?? _parse(xml, channel);
+
+  static List<VideoItem>? _nativeParse(String xml, ChannelRef channel) {
+    final core = NativeCore.instance;
+    if (core == null || !core.library.providesSymbol('lumtub_channel_feed')) return null;
+    final call = _native ??= core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_channel_feed');
+    final text = core.take(core.withText(xml, call));
+    final list = text == null ? null : jsonDecode(text);
+    if (list is! List) return null;
+    return [
+      for (final entry in list.whereType<Map<String, dynamic>>())
+        VideoItem(
+          id: entry['id'] as String,
+          title: entry['title'] as String? ?? '',
+          channel: channel.name.isNotEmpty ? channel.name : entry['author'] as String? ?? '',
+          url: 'https://www.youtube.com/watch?v=${entry['id']}',
+          viewCount: (entry['views'] as num?)?.toInt(),
+          channelId: channel.id,
+          published: DateTime.tryParse(entry['published'] as String? ?? ''),
+          isShortListing: entry['short'] == true,
+        ),
+    ];
+  }
+
+  static Pointer<Utf8> Function(Pointer<Uint8>, int)? _native;
+
   static final _patterns = <String, RegExp>{};
 
-  static List<VideoItem> parse(String xml, ChannelRef channel) {
+  static List<VideoItem> _parse(String xml, ChannelRef channel) {
     final items = <VideoItem>[];
     for (final entry in RegExp(r'<entry>([\s\S]*?)</entry>').allMatches(xml)) {
       final body = entry.group(1)!;

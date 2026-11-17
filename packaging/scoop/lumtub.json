@@ -22,15 +22,15 @@
     "persist": "userdata",
     "checkver": {
         "github": "https://github.com/0x696c757a696f/lumtub",
-        "regex": "/releases/tag/v([\\d.]+-[0-9a-f]{7})"
+        "regex": "v([\\d.]+-[0-9a-f]{7})"
     },
     "autoupdate": {
         "architecture": {
             "64bit": {
-                "url": "https://github.com/0x696c757a696f/lumtub/releases/download/v$version/Lumtub_${version}_windows-x64.zip"
+                "url": "https://github.com/0x696c757a696f/lumtub/releases/download/v$version/Lumtub_$version_windows-x64.zip"
             },
             "arm64": {
-                "url": "https://github.com/0x696c757a696f/lumtub/releases/download/v$version/Lumtub_${version}_windows-arm64.zip"
+                "url": "https://github.com/0x696c757a696f/lumtub/releases/download/v$version/Lumtub_$version_windows-arm64.zip"
             }
         }
     }

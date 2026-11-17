@@ -137,7 +137,7 @@ These are also found in other YouTube clients, and all are opt-in here:
 | `ios` IPA | iPhone and iPad with iOS 15 or newer (preview, sideloaded) |
 
 File names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
-**Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. Package managers (under review, working once accepted): `winget install Lumtub.Lumtub`, or `scoop bucket add extras` then `scoop install lumtub`.<br>
+**Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. Package manager (under review, working once accepted): `winget install Lumtub.Lumtub`.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place. If it says FUSE is missing, install your distribution's `fuse3` package, or start it with `--appimage-extract-and-run`. Prefer Flatpak? `flatpak install --user Lumtub_*_linux-x64.flatpak`.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.<br>
 **Android (preview):** open the APK and allow installing from your browser or file manager when asked. New versions install from inside Lumtub; Android asks you to confirm. Live streams and downloads work too, through the yt-dlp built into the app; members-only videos don't play on Android yet.<br>

@@ -3542,5 +3542,22 @@
   "Fill the window": "מילוי החלון",
   "Fill the window (W)": "מילוי החלון (W)",
   "Hide the side rail while watching": "הסתרת סרגל הצד בזמן צפייה",
-  "The video gets its room, as on YouTube; theater mode always hides it": "הסרטון מקבל את המקום שלו, כמו ב-YouTube; במצב קולנוע הסרגל תמיד מוסתר"
+  "The video gets its room, as on YouTube; theater mode always hides it": "הסרטון מקבל את המקום שלו, כמו ב-YouTube; במצב קולנוע הסרגל תמיד מוסתר",
+  "Window transparency": "שקיפות החלון",
+  "See the desktop through the window": "לראות את שולחן העבודה דרך החלון",
+  "See the wallpaper through the app": "לראות את הטפט דרך האפליקציה",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "שולחן העבודה נראה דרך המסגרת סביב הדפים, כמו דרך זכוכית Windows 7, בצבעים של כל ערכת נושא.",
+  "Takes effect the next time Lumtub starts.": "ייכנס לתוקף בהפעלה הבאה של Lumtub.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "שולחן עבודה זה לא יכול להציג את מה שמאחורי החלון: נדרש מרכיב חלונות (compositor).",
+  "This desktop cannot blur what is behind; the window is only see-through.": "שולחן עבודה זה לא יכול לטשטש את מה שמאחור; החלון שקוף בלבד.",
+  "The desktop shows through the window.": "שולחן העבודה נראה דרך החלון.",
+  "Transparency": "שקיפות",
+  "Where it is see-through": "היכן זה שקוף",
+  "Frame only": "המסגרת בלבד",
+  "Whole window": "כל החלון",
+  "Blur what is behind": "טשטוש מה שמאחור",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "מט כמו ב-Windows 7; כשאין לשולחן העבודה אפשרות לטשטש, החלון שקוף בלבד.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "המילים נשארות קריאות: הן זוהרות על המסגרת, והזכוכית לא נעשית שקופה יותר ממה שמאפשר לקרוא טקסט מעל כל דבר שמאחוריה, ולכן כשכל החלון שקוף, כמה ערכות נושא נשארות די אטומות. וידאו תמיד אטום.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "זכוכית כמו ב-Windows 7 תחת כל ערכת נושא; מידת השקיפות, המיקום והטשטוש נמצאים בדף ערכות נושא",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "שקוף שקיפות שקוף למחצה זכוכית טשטוש מט שולחן עבודה טפט aero acrylic mica"
 }

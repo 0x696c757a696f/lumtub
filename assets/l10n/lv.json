@@ -3542,5 +3542,22 @@
   "Fill the window": "Aizpildīt logu",
   "Fill the window (W)": "Aizpildīt logu (W)",
   "Hide the side rail while watching": "Paslēpt sānjoslu skatīšanās laikā",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video iegūst savu vietu kā pakalpojumā YouTube; kinoteātra režīmā tā vienmēr ir paslēpta"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video iegūst savu vietu kā pakalpojumā YouTube; kinoteātra režīmā tā vienmēr ir paslēpta",
+  "Window transparency": "Loga caurspīdīgums",
+  "See the desktop through the window": "Redzēt darbvirsmu caur logu",
+  "See the wallpaper through the app": "Redzēt fona attēlu caur lietotni",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Darbvirsma redzama caur rāmi ap lapām, kā caur Windows 7 stiklu, jebkura apvalka krāsās.",
+  "Takes effect the next time Lumtub starts.": "Stāsies spēkā nākamreiz, kad tiks palaists Lumtub.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Šī darbvirsma nevar parādīt to, kas ir aiz loga: nepieciešams kompozitors.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Šī darbvirsma nevar izpludināt to, kas ir aizmugurē; logs ir tikai caurspīdīgs.",
+  "The desktop shows through the window.": "Darbvirsma redzama caur logu.",
+  "Transparency": "Caurspīdīgums",
+  "Where it is see-through": "Kur tas ir caurspīdīgs",
+  "Frame only": "Tikai rāmis",
+  "Whole window": "Viss logs",
+  "Blur what is behind": "Izpludināt to, kas ir aizmugurē",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Matēts kā Windows 7; ja darbvirsma nevar izpludināt, logs ir tikai caurspīdīgs.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Vārdi paliek lasāmi: tie spīd uz rāmja, un stikls nekļūst skaidrāks, nekā ļauj lasīt tekstu virs jebkā aizmugurē, tāpēc, ja viss logs ir caurspīdīgs, daži apvalki paliek diezgan blīvi. Video vienmēr ir blīvs.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Stikls kā Windows 7 zem jebkura apvalka; cik skaidrs, kur un izpludināšana ir lapā Apvalki",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "caurspīdīgs caurspīdīgums puscaurspīdīgs stikls izpludināt matēts darbvirsma fons aero acrylic mica"
 }

@@ -3542,5 +3542,22 @@
   "Fill the window": "சாளரத்தை நிரப்பு",
   "Fill the window (W)": "சாளரத்தை நிரப்பு (W)",
   "Hide the side rail while watching": "பார்க்கும்போது பக்கப்பட்டையை மறை",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-ல் போலவே வீடியோவுக்கு அதன் இடம் கிடைக்கும்; திரையரங்கு பயன்முறையில் அது எப்போதும் மறைக்கப்படும்"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-ல் போலவே வீடியோவுக்கு அதன் இடம் கிடைக்கும்; திரையரங்கு பயன்முறையில் அது எப்போதும் மறைக்கப்படும்",
+  "Window transparency": "சாளர ஒளிஊடுருவல்",
+  "See the desktop through the window": "சாளரத்தின் வழியே டெஸ்க்டாப்பைப் பார்க்கவும்",
+  "See the wallpaper through the app": "பயன்பாட்டின் வழியே வால்பேப்பரைப் பார்க்கவும்",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "பக்கங்களைச் சுற்றியுள்ள சட்டகத்தின் வழியே டெஸ்க்டாப் தெரியும், Windows 7 கண்ணாடி போல, எந்தத் தீமின் நிறங்களிலும்.",
+  "Takes effect the next time Lumtub starts.": "அடுத்த முறை Lumtub தொடங்கும்போது செயல்படும்.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "இந்த டெஸ்க்டாப்பால் சாளரத்தின் பின்னால் இருப்பதைக் காட்ட இயலாது: கம்போசிட்டர் தேவை.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "இந்த டெஸ்க்டாப்பால் பின்னால் இருப்பதை மங்கலாக்க இயலாது; சாளரம் ஒளிஊடுருவலாக மட்டுமே இருக்கும்.",
+  "The desktop shows through the window.": "டெஸ்க்டாப் சாளரத்தின் வழியே தெரிகிறது.",
+  "Transparency": "ஒளிஊடுருவல்",
+  "Where it is see-through": "எங்கே ஒளிஊடுருவ வேண்டும்",
+  "Frame only": "சட்டகம் மட்டும்",
+  "Whole window": "முழு சாளரம்",
+  "Blur what is behind": "பின்னால் இருப்பதை மங்கலாக்கு",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 போன்ற உறைந்த கண்ணாடி; டெஸ்க்டாப்பால் மங்கலாக்க இயலாத இடத்தில் சாளரம் ஒளிஊடுருவலாக மட்டுமே இருக்கும்.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "சொற்கள் படிக்கக்கூடியவையாகவே இருக்கும்: அவை சட்டகத்தில் ஒளிரும், மேலும் பின்னால் எது இருந்தாலும் அதன் மேல் உரையைப் படிக்க முடிவதை விட கண்ணாடி தெளிவாகாது, எனவே முழு சாளரமும் ஒளிஊடுருவும்போது சில தீம்கள் ஓரளவு திடமாகவே இருக்கும். வீடியோ எப்போதும் திடமாக இருக்கும்.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "எந்தத் தீமின் கீழும் Windows 7 போன்ற கண்ணாடி; எவ்வளவு தெளிவு, எங்கே, மங்கலாக்கல் ஆகியவை தீம்கள் பக்கத்தில் உள்ளன",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ஒளிஊடுருவல் ஒளிஊடுருவும் கண்ணாடி மங்கலாக்கு உறைந்த டெஸ்க்டாப் வால்பேப்பர் aero acrylic mica"
 }

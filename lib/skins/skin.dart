@@ -127,11 +127,20 @@ class Skin {
   }
 
   void _glaze() {
+    // The window's frame turns to glass when the desktop shows through
+    // (窗口透明), whatever the skin.
+    for (final s in frameSurfaces) {
+      s.frame = true;
+    }
     if (!glass) return;
     for (final s in [titleBar?.surface, titleBar?.inactive, menuBar?.surface, topBar, sideBar, statusBar, tabs?.bar, videoCard, panel]) {
       s?.glass = true;
     }
   }
+
+  /// The bars round the pages: title bar, menu bar, top bar, side rail,
+  /// status bar and a phone's tabs.
+  List<SkinSurface> get frameSurfaces => [titleBar?.surface, titleBar?.inactive, menuBar?.surface, topBar, sideBar, statusBar, tabs?.bar].nonNulls.toList();
 
   /// The row of pages on a phone, or in a narrow window, in place of the
   /// side rail; null keeps Lumtub's own bottom bar.
@@ -574,6 +583,9 @@ class SkinSurface {
   /// A pane of glass: the bars, side rail, cards and panels of a skin that
   /// lets its glass be made clearer ([Skin.glass]).
   bool glass = false;
+  /// Part of the window's frame ([Skin.frameSurfaces]), which lets the
+  /// desktop through when the window is see-through.
+  bool frame = false;
 
   static SkinSurface? parse(Object? value, Skin skin) {
     if (value == null) return null;
@@ -645,7 +657,9 @@ class SkinSurface {
           shadows: over.shadows.isNotEmpty ? over.shadows : shadows,
           gloss: over.gloss > 0 ? over.gloss : gloss,
           glow: over.glow ?? glow,
-        )..glass = glass);
+        )
+          ..glass = glass
+          ..frame = frame);
 
   /// The look while pointed at or pressed. A pressed bevel sinks in unless
   /// the skin says otherwise.
@@ -671,6 +685,14 @@ class SkinSurface {
     };
     return colors.isEmpty ? [under] : [for (final c in colors) Color.alphaBlend(c, under)];
   }
+
+  /// The colours of [fill]'s ground as given, see-through ones included.
+  List<Color> get groundColors => switch (_ground) {
+        SolidPaint(:final color) => [color],
+        LinearPaint(:final colors) => colors,
+        RadialPaint(:final colors) => colors,
+        _ => const <Color>[],
+      };
 
   /// The topmost layer that colours the whole surface; patterns and
   /// pictures over it only add lines and dots.

@@ -3542,5 +3542,22 @@
   "Fill the window": "መስኮቱን ሙላ",
   "Fill the window (W)": "መስኮቱን ሙላ (W)",
   "Hide the side rail while watching": "ሲመለከቱ የጎን አሞሌን ደብቅ",
-  "The video gets its room, as on YouTube; theater mode always hides it": "ቪዲዮው ቦታውን ያገኛል፣ ልክ እንደ YouTube፤ የሲኒማ ሁነታ ሁልጊዜ ይደብቀዋል"
+  "The video gets its room, as on YouTube; theater mode always hides it": "ቪዲዮው ቦታውን ያገኛል፣ ልክ እንደ YouTube፤ የሲኒማ ሁነታ ሁልጊዜ ይደብቀዋል",
+  "Window transparency": "የመስኮት ግልጽነት",
+  "See the desktop through the window": "ዴስክቶፑን በመስኮቱ ውስጥ ተመልከት",
+  "See the wallpaper through the app": "ልጣፉን በመተግበሪያው ውስጥ ተመልከት",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "ዴስክቶፑ በገጾቹ ዙሪያ ባለው ፍሬም በኩል ይታያል፣ ልክ እንደ Windows 7 ብርጭቆ፣ በማንኛውም ስኪን ቀለሞች።",
+  "Takes effect the next time Lumtub starts.": "Lumtub በሚቀጥለው ጊዜ ሲጀምር ተፈጻሚ ይሆናል።",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "ይህ ዴስክቶፕ ከመስኮት ጀርባ ያለውን ማሳየት አይችልም፤ ኮምፖዚተር ያስፈልገዋል።",
+  "This desktop cannot blur what is behind; the window is only see-through.": "ይህ ዴስክቶፕ ከጀርባ ያለውን ማደብዘዝ አይችልም፤ መስኮቱ ግልጽ ብቻ ነው።",
+  "The desktop shows through the window.": "ዴስክቶፑ በመስኮቱ ውስጥ ይታያል።",
+  "Transparency": "ግልጽነት",
+  "Where it is see-through": "ግልጽ የሚሆንበት",
+  "Frame only": "ፍሬሙ ብቻ",
+  "Whole window": "መላው መስኮት",
+  "Blur what is behind": "ከጀርባ ያለውን አደብዝዝ",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "እንደ Windows 7 የበረዶ ዓይነት፤ ዴስክቶፑ ማደብዘዝ በማይችልበት ጊዜ መስኮቱ ግልጽ ብቻ ነው።",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "ቃላት ሊነበቡ ይችላሉ፦ በፍሬሙ ላይ ያበራሉ፣ ብርጭቆውም ከጀርባ ባለ ማንኛውም ነገር ላይ ጽሑፍ ከሚነበብበት በላይ ግልጽ አይሆንም፤ ስለዚህ መላው መስኮት ግልጽ ሲሆን አንዳንድ ስኪኖች በትክክል ጠጣር ሆነው ይቀራሉ። ቪዲዮ ሁልጊዜ ጠጣር ነው።",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "እንደ Windows 7 ያለ ብርጭቆ በማንኛውም ስኪን ላይ፤ ምን ያህል ግልጽ፣ የት እና ማደብዘዝ በስኪኖች ገጽ ላይ ናቸው",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ግልጽ ብርሃን-አስተላላፊ ብርጭቆ ደብዛዛ በረዶ ዴስክቶፕ ልጣፍ aero acrylic mica"
 }

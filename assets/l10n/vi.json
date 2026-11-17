@@ -3547,5 +3547,22 @@
   "Fill the window": "Lấp đầy cửa sổ",
   "Fill the window (W)": "Lấp đầy cửa sổ (W)",
   "Hide the side rail while watching": "Ẩn thanh bên khi xem",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video được nhiều chỗ hơn, như trên YouTube; chế độ rạp hát luôn ẩn thanh bên"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video được nhiều chỗ hơn, như trên YouTube; chế độ rạp hát luôn ẩn thanh bên",
+  "Window transparency": "Độ trong suốt của cửa sổ",
+  "See the desktop through the window": "Nhìn thấy màn hình nền qua cửa sổ",
+  "See the wallpaper through the app": "Nhìn thấy hình nền qua ứng dụng",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Màn hình nền hiện qua khung quanh các trang, như qua kính của Windows 7, với màu của bất kỳ chủ đề nào.",
+  "Takes effect the next time Lumtub starts.": "Có hiệu lực vào lần khởi động Lumtub tiếp theo.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Màn hình nền này không thể hiển thị những gì phía sau cửa sổ: cần có trình tổng hợp (compositor).",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Màn hình nền này không thể làm mờ những gì phía sau; cửa sổ chỉ trong suốt.",
+  "The desktop shows through the window.": "Màn hình nền đang hiện qua cửa sổ.",
+  "Transparency": "Độ trong suốt",
+  "Where it is see-through": "Phần trong suốt",
+  "Frame only": "Chỉ khung",
+  "Whole window": "Toàn bộ cửa sổ",
+  "Blur what is behind": "Làm mờ những gì phía sau",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Kính mờ như Windows 7; nơi màn hình nền không thể làm mờ, cửa sổ chỉ trong suốt.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Chữ vẫn dễ đọc: chữ phát sáng trên khung, và kính không bao giờ trong hơn mức còn đọc được chữ trên bất kỳ thứ gì phía sau, nên khi toàn bộ cửa sổ trong suốt, một số chủ đề vẫn khá đặc. Video luôn đặc.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Kính như Windows 7 dưới mọi chủ đề; độ trong, vùng áp dụng và độ mờ nằm ở trang Chủ đề",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "trong suốt bán trong suốt kính làm mờ mờ màn hình nền hình nền aero acrylic mica"
 }

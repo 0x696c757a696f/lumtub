@@ -586,6 +586,23 @@ jobs:
           path: ${{ runner.temp }}/shots
           if-no-files-found: ignore
 
+      # The desktop shows through the window when 窗口透明 is on
+      # (docs/specs/window-glass.md), measured on the screen itself.
+      - name: Windows - window glass check
+        if: matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        run: |
+          $package = "Lumtub_$env:LUMTUB_VERSION`_windows-$env:PACKAGE_ARCH"
+          windows/packaging/glass-check.ps1 (Resolve-Path "$package/lumtub.exe").Path "$env:RUNNER_TEMP/glass"
+
+      - name: Windows - upload window glass check
+        if: always() && matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: glass-windows
+          path: ${{ runner.temp }}/glass
+          if-no-files-found: ignore
+
       - name: Windows - upload portable ZIP
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -813,6 +830,20 @@ jobs:
         run: |
           apt-install xvfb xauth libgl1-mesa-dri libegl1 libgles2 ffmpeg imagemagick gdb
           linux/packaging/smoke.sh Lumtub_*_linux-$PACKAGE_ARCH.AppImage "$RUNNER_TEMP/smoke"
+
+      - name: Linux - window glass check
+        if: matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
+        run: |
+          apt-install xdotool picom
+          linux/packaging/glass-check.sh Lumtub_*_linux-x64.AppImage "$RUNNER_TEMP/glass"
+
+      - name: Linux - upload window glass check
+        if: always() && matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: glass-linux
+          path: ${{ runner.temp }}/glass
+          if-no-files-found: ignore
 
       - name: Linux - README pictures
         if: matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
@@ -1055,6 +1086,18 @@ jobs:
       - name: macOS - smoke test the Apple silicon DMG
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: macos/packaging/smoke.sh Lumtub_*_macos-arm64.dmg "$RUNNER_TEMP/smoke"
+
+      - name: macOS - window glass check
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        run: macos/packaging/glass-check.sh Lumtub_*_macos-arm64.dmg "$RUNNER_TEMP/glass"
+
+      - name: macOS - upload window glass check
+        if: ${{ always() && !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: glass-macos
+          path: ${{ runner.temp }}/glass
+          if-no-files-found: ignore
 
       - name: macOS - smoke test the Intel DMG under Rosetta
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}

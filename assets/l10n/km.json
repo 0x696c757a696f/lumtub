@@ -3542,5 +3542,22 @@
   "Fill the window": "ពេញវិនដូ",
   "Fill the window (W)": "ពេញវិនដូ (W)",
   "Hide the side rail while watching": "លាក់របារចំហៀងពេលមើល",
-  "The video gets its room, as on YouTube; theater mode always hides it": "វីដេអូទទួលបានទីតាំងរបស់វា ដូចនៅលើ YouTube; ម៉ូដល្ខោនលាក់វាជានិច្ច"
+  "The video gets its room, as on YouTube; theater mode always hides it": "វីដេអូទទួលបានទីតាំងរបស់វា ដូចនៅលើ YouTube; ម៉ូដល្ខោនលាក់វាជានិច្ច",
+  "Window transparency": "តម្លាភាពនៃវិនដូ",
+  "See the desktop through the window": "មើលឃើញអេក្រង់ផ្ទៃតុតាមវិនដូ",
+  "See the wallpaper through the app": "មើលឃើញផ្ទាំងរូបភាពតាមកម្មវិធី",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "ផ្ទៃតុបង្ហាញតាមស៊ុមជុំវិញទំព័រ ដូចកញ្ចក់ Windows 7 ជាមួយពណ៌នៃស្គីនណាមួយ។",
+  "Takes effect the next time Lumtub starts.": "នឹងមានប្រសិទ្ធភាពពេលបើក Lumtub លើកក្រោយ។",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "ផ្ទៃតុនេះមិនអាចបង្ហាញអ្វីដែលនៅខាងក្រោយវិនដូបានទេ៖ ត្រូវការ compositor។",
+  "This desktop cannot blur what is behind; the window is only see-through.": "ផ្ទៃតុនេះមិនអាចធ្វើឱ្យស្រពិចស្រពិលអ្វីដែលនៅខាងក្រោយបានទេ៖ វិនដូគ្រាន់តែថ្លាប៉ុណ្ណោះ។",
+  "The desktop shows through the window.": "ផ្ទៃតុកំពុងបង្ហាញតាមវិនដូ។",
+  "Transparency": "តម្លាភាព",
+  "Where it is see-through": "កន្លែងដែលថ្លា",
+  "Frame only": "តែស៊ុមប៉ុណ្ណោះ",
+  "Whole window": "វិនដូទាំងមូល",
+  "Blur what is behind": "ធ្វើឱ្យស្រពិចស្រពិលអ្វីដែលនៅខាងក្រោយ",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "កញ្ចក់ព្រិលដូច Windows 7៖ កន្លែងណាដែលផ្ទៃតុមិនអាចធ្វើឱ្យស្រពិចស្រពិល វិនដូគ្រាន់តែថ្លាប៉ុណ្ណោះ។",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "អក្សរនៅតែអាចអានបាន៖ វាភ្លឺនៅលើស៊ុម ហើយកញ្ចក់មិនថ្លាជាងកម្រិតដែលអាចអានអក្សរលើអ្វីៗនៅខាងក្រោយបានឡើយ ដូច្នេះពេលវិនដូទាំងមូលថ្លា ស្គីនខ្លះនៅតែស្ទើរតែក្រាស់។ វីដេអូតែងតែក្រាស់។",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "កញ្ចក់ដូច Windows 7 ក្រោមស្គីនណាមួយ៖ កម្រិតថ្លា កន្លែង និងការធ្វើឱ្យស្រពិចស្រពិលនៅក្នុងទំព័រស្គីន",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ថ្លា តម្លាភាព ពាក់កណ្ដាលថ្លា កញ្ចក់ ស្រពិចស្រពិល ព្រិល ផ្ទៃតុ ផ្ទាំងរូបភាព aero acrylic mica"
 }

@@ -3125,6 +3125,7 @@
   "Lists of {0}; those of {1} are used after a restart": "Listas de {0}; as de {1} são usadas após reiniciar",
   "Skin background": "Fundo da skin",
   "The skin's pictures and landscape behind the pages; off leaves a plain color": "As imagens e a paisagem da skin atrás das páginas; desativado deixa uma cor lisa",
+  "Not shown while the window shows the desktop": "Não aparece enquanto a janela deixa ver a área de trabalho",
   "Suggest a channel or report a mistake": "Sugerir um canal ou comunicar um erro",
   "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "As listas são públicas no GitHub e qualquer pessoa pode contribuir. Cada entrada precisa de uma fonte pública",
   "Preparing yt-dlp…": "Preparando o yt-dlp…",

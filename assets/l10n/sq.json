@@ -3125,6 +3125,7 @@
   "Lists of {0}; those of {1} are used after a restart": "Listat e {0}; ato të {1} përdoren pas rinisjes",
   "Skin background": "Sfondi i skinit",
   "The skin's pictures and landscape behind the pages; off leaves a plain color": "Imazhet dhe peizazhi i skinit pas faqeve; i çaktivizuar lë një ngjyrë të thjeshtë",
+  "Not shown while the window shows the desktop": "Nuk shfaqet ndërsa dritarja tregon desktopin",
   "Suggest a channel or report a mistake": "Sugjeroni një kanal ose raportoni një gabim",
   "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listat janë publike në GitHub dhe çdokush mund të shtojë. Çdo regjistrim kërkon një burim publik",
   "Preparing yt-dlp…": "Po përgatitet yt-dlp…",

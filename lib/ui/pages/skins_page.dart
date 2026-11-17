@@ -101,11 +101,16 @@ class _SkinsPage extends StatelessWidget {
             // Only a skin with pictures or a landscape has a background to
             // turn off; a color scheme is colors alone.
             if (context.skin case final skin? when skin.decorations.isNotEmpty || skin.background.isNotEmpty)
+              // Seeing the desktop, the window is glass in the skin's
+              // colours and its pictures are not drawn.
               SwitchItem(
                 title: tr('Skin background'),
-                subtitle: tr("The skin's pictures and landscape behind the pages; off leaves a plain color"),
+                subtitle: appearance.windowGlass && WindowGlass.possible
+                    ? tr('Not shown while the window shows the desktop')
+                    : tr("The skin's pictures and landscape behind the pages; off leaves a plain color"),
                 leading: Icon(AppIcons.image),
                 value: appearance.skinBackground,
+                enabled: !(appearance.windowGlass && WindowGlass.possible),
                 onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(skinBackground: v)),
               ),
             if (WindowGlass.possible) ...windowGlassTiles(context, controller),

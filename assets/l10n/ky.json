@@ -3125,6 +3125,7 @@
   "Lists of {0}; those of {1} are used after a restart": "{0} тизмелери; {1} тизмелери кайра иштеткенден кийин колдонулат",
   "Skin background": "Скиндин фону",
   "The skin's pictures and landscape behind the pages; off leaves a plain color": "Барактардын артындагы скиндин сүрөттөрү жана пейзажы; өчүрсөңүз, жөнөкөй түс калат",
+  "Not shown while the window shows the desktop": "Терезе иш столун көрсөтүп турганда көрсөтүлбөйт",
   "Suggest a channel or report a mistake": "Канал сунуштоо же ката тууралуу кабарлоо",
   "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Тизмелер GitHub'та ачык жана аларга каалаган адам кошо алат. Ар бир жазууга ачык булак керек",
   "Preparing yt-dlp…": "yt-dlp даярдалууда…",

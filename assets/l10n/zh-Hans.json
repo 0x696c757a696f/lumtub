@@ -3570,5 +3570,22 @@
   "Fill the window": "铺满窗口",
   "Fill the window (W)": "铺满窗口 (W)",
   "Hide the side rail while watching": "看视频时收起侧边栏",
-  "The video gets its room, as on YouTube; theater mode always hides it": "把位置让给视频，和 YouTube 网页版一样；剧场模式下总会收起"
+  "The video gets its room, as on YouTube; theater mode always hides it": "把位置让给视频，和 YouTube 网页版一样；剧场模式下总会收起",
+  "Window transparency": "窗口透明",
+  "See the desktop through the window": "透出桌面",
+  "See the wallpaper through the app": "透出壁纸",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "像 Windows 7 的玻璃一样，页面四周的边框透出桌面，任何皮肤都可以，颜色跟随皮肤。",
+  "Takes effect the next time Lumtub starts.": "下次启动 Lumtub 时生效。",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "这个桌面无法显示窗口后面的内容：需要开启窗口合成器。",
+  "This desktop cannot blur what is behind; the window is only see-through.": "这个桌面不支持模糊背后的内容，窗口只会半透明。",
+  "The desktop shows through the window.": "窗口正在透出桌面。",
+  "Transparency": "透明度",
+  "Where it is see-through": "透明范围",
+  "Frame only": "仅边框",
+  "Whole window": "整个窗口",
+  "Blur what is behind": "模糊背后的内容",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "像 Windows 7 一样的磨砂效果；桌面不支持模糊时，窗口只会半透明。",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "文字始终清晰：边框上的文字带柔光底，玻璃最多只透明到文字在任何背景上都能看清为止，所以整个窗口透明时，有些皮肤会比较不透明。视频始终不透明。",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "任何皮肤都能用的 Windows 7 式玻璃；透明度、范围和模糊在「皮肤」页设置",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "透明 半透明 玻璃 毛玻璃 磨砂 亚克力 云母 模糊 桌面 壁纸 透出 aero acrylic mica"
 }

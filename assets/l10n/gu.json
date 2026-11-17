@@ -3541,5 +3541,22 @@
   "Fill the window": "વિન્ડો ભરો",
   "Fill the window (W)": "વિન્ડો ભરો (W)",
   "Hide the side rail while watching": "જોતી વખતે સાઇડબાર છુપાવો",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ની જેમ વિડિયોને તેની જગ્યા મળે છે; થિયેટર મોડમાં તે હંમેશાં છુપાયેલો રહે છે"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ની જેમ વિડિયોને તેની જગ્યા મળે છે; થિયેટર મોડમાં તે હંમેશાં છુપાયેલો રહે છે",
+  "Window transparency": "વિન્ડોની પારદર્શકતા",
+  "See the desktop through the window": "વિન્ડોમાંથી ડેસ્કટોપ જુઓ",
+  "See the wallpaper through the app": "એપમાંથી વૉલપેપર જુઓ",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "પૃષ્ઠોની આસપાસની ફ્રેમમાંથી ડેસ્કટોપ દેખાય છે, Windows 7 કાચની જેમ, કોઈપણ સ્કિનના રંગોમાં.",
+  "Takes effect the next time Lumtub starts.": "Lumtub આગલી વખતે શરૂ થશે ત્યારે લાગુ થશે.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "આ ડેસ્કટોપ વિન્ડોની પાછળનું બતાવી શકતું નથી: તેને કમ્પોઝિટરની જરૂર છે.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "આ ડેસ્કટોપ પાછળનું ઝાંખું કરી શકતું નથી; વિન્ડો માત્ર પારદર્શક છે.",
+  "The desktop shows through the window.": "ડેસ્કટોપ વિન્ડોમાંથી દેખાય છે.",
+  "Transparency": "પારદર્શકતા",
+  "Where it is see-through": "ક્યાં પારદર્શક રહેશે",
+  "Frame only": "માત્ર ફ્રેમ",
+  "Whole window": "આખી વિન્ડો",
+  "Blur what is behind": "પાછળનું ઝાંખું કરો",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 જેવું ફ્રોસ્ટેડ; જ્યાં ડેસ્કટોપ ઝાંખું કરી શકતું નથી, ત્યાં વિન્ડો માત્ર પારદર્શક છે.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "શબ્દો વાંચી શકાય તેવા રહે છે: તે ફ્રેમ પર ચમકે છે, અને કાચ પાછળની કોઈપણ વસ્તુ પર લખાણ વાંચી શકાય તેટલાથી વધુ સ્પષ્ટ થતો નથી, તેથી આખી વિન્ડો પારદર્શક હોય ત્યારે કેટલીક સ્કિન્સ ઠીક ઠીક ઘન રહે છે. વિડિઓ હંમેશાં ઘન રહે છે.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "કોઈપણ સ્કિન હેઠળ Windows 7 જેવો કાચ; કેટલું સ્પષ્ટ, ક્યાં અને ઝાંખપ સ્કિન્સ પૃષ્ઠ પર છે",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "પારદર્શક અર્ધપારદર્શક કાચ ઝાંખું ફ્રોસ્ટેડ ડેસ્કટોપ વૉલપેપર aero acrylic mica"
 }

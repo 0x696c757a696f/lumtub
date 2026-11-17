@@ -3541,5 +3541,22 @@
   "Fill the window": "विंडो भरा",
   "Fill the window (W)": "विंडो भरा (W)",
   "Hide the side rail while watching": "पाहताना साइडबार लपवा",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube प्रमाणे व्हिडिओला त्याची जागा मिळते; थिएटर मोडमध्ये साइडबार नेहमी लपवला जातो"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube प्रमाणे व्हिडिओला त्याची जागा मिळते; थिएटर मोडमध्ये साइडबार नेहमी लपवला जातो",
+  "Window transparency": "विंडो पारदर्शकता",
+  "See the desktop through the window": "विंडोमधून डेस्कटॉप पहा",
+  "See the wallpaper through the app": "अ‍ॅपमधून वॉलपेपर पहा",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "पृष्ठांभोवतीच्या फ्रेममधून डेस्कटॉप दिसतो, Windows 7 च्या काचेप्रमाणे, कोणत्याही स्किनच्या रंगांत.",
+  "Takes effect the next time Lumtub starts.": "पुढच्या वेळी Lumtub सुरू झाल्यावर लागू होईल.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "हा डेस्कटॉप विंडोच्या मागचे दाखवू शकत नाही: त्यासाठी कंपोझिटर लागतो.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "हा डेस्कटॉप मागचे अस्पष्ट करू शकत नाही; विंडो फक्त पारदर्शक असते.",
+  "The desktop shows through the window.": "डेस्कटॉप विंडोमधून दिसत आहे.",
+  "Transparency": "पारदर्शकता",
+  "Where it is see-through": "कुठे पारदर्शक",
+  "Frame only": "फक्त फ्रेम",
+  "Whole window": "संपूर्ण विंडो",
+  "Blur what is behind": "मागचे अस्पष्ट करा",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 सारखी फ्रॉस्टेड; जिथे डेस्कटॉप अस्पष्ट करू शकत नाही तिथे विंडो फक्त पारदर्शक असते.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "शब्द वाचण्यायोग्य राहतात: ते फ्रेमवर चमकतात, आणि मागे काहीही असले तरी त्यावर मजकूर वाचता येईल इतकीच काच स्वच्छ होते, त्यामुळे संपूर्ण विंडो पारदर्शक केल्यावर काही स्किन बऱ्यापैकी घन राहतात. व्हिडिओ नेहमी घन असतो.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "कोणत्याही स्किनखाली Windows 7 सारखी काच; किती स्पष्ट, कुठे आणि अस्पष्टता स्किन पृष्ठावर आहेत",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "पारदर्शक अर्धपारदर्शक काच अस्पष्ट फ्रॉस्टेड डेस्कटॉप वॉलपेपर aero acrylic mica"
 }

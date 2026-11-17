@@ -3541,5 +3541,22 @@
   "Fill the window": "ವಿಂಡೋ ತುಂಬಿಸಿ",
   "Fill the window (W)": "ವಿಂಡೋ ತುಂಬಿಸಿ (W)",
   "Hide the side rail while watching": "ವೀಕ್ಷಿಸುವಾಗ ಸೈಡ್‌ಬಾರ್ ಮರೆಮಾಡಿ",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ನಂತೆ ವೀಡಿಯೊಗೆ ಅದರ ಜಾಗ ಸಿಗುತ್ತದೆ; ಥಿಯೇಟರ್ ಮೋಡ್ ಅದನ್ನು ಯಾವಾಗಲೂ ಮರೆಮಾಡುತ್ತದೆ"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ನಂತೆ ವೀಡಿಯೊಗೆ ಅದರ ಜಾಗ ಸಿಗುತ್ತದೆ; ಥಿಯೇಟರ್ ಮೋಡ್ ಅದನ್ನು ಯಾವಾಗಲೂ ಮರೆಮಾಡುತ್ತದೆ",
+  "Window transparency": "ವಿಂಡೋ ಪಾರದರ್ಶಕತೆ",
+  "See the desktop through the window": "ವಿಂಡೋ ಮೂಲಕ ಡೆಸ್ಕ್‌ಟಾಪ್ ನೋಡಿ",
+  "See the wallpaper through the app": "ಆ್ಯಪ್ ಮೂಲಕ ವಾಲ್‌ಪೇಪರ್ ನೋಡಿ",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "ಪುಟಗಳ ಸುತ್ತಲಿನ ಚೌಕಟ್ಟಿನ ಮೂಲಕ ಡೆಸ್ಕ್‌ಟಾಪ್ ಕಾಣುತ್ತದೆ, Windows 7 ಗಾಜಿನಂತೆ, ಯಾವುದೇ ಸ್ಕಿನ್‌ನ ಬಣ್ಣಗಳಲ್ಲಿ.",
+  "Takes effect the next time Lumtub starts.": "Lumtub ಮುಂದಿನ ಬಾರಿ ಪ್ರಾರಂಭವಾದಾಗ ಜಾರಿಗೆ ಬರುತ್ತದೆ.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "ಈ ಡೆಸ್ಕ್‌ಟಾಪ್ ವಿಂಡೋದ ಹಿಂದಿರುವುದನ್ನು ತೋರಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ: ಅದಕ್ಕೆ ಕಂಪೋಸಿಟರ್ ಬೇಕು.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "ಈ ಡೆಸ್ಕ್‌ಟಾಪ್ ಹಿಂದಿರುವುದನ್ನು ಮಂಜುಗೊಳಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ; ವಿಂಡೋ ಕೇವಲ ಪಾರದರ್ಶಕವಾಗಿರುತ್ತದೆ.",
+  "The desktop shows through the window.": "ಡೆಸ್ಕ್‌ಟಾಪ್ ವಿಂಡೋ ಮೂಲಕ ಕಾಣುತ್ತಿದೆ.",
+  "Transparency": "ಪಾರದರ್ಶಕತೆ",
+  "Where it is see-through": "ಎಲ್ಲಿ ಪಾರದರ್ಶಕ",
+  "Frame only": "ಚೌಕಟ್ಟು ಮಾತ್ರ",
+  "Whole window": "ಇಡೀ ವಿಂಡೋ",
+  "Blur what is behind": "ಹಿಂದಿರುವುದನ್ನು ಮಂಜುಗೊಳಿಸಿ",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 ನಂತಹ ಫ್ರಾಸ್ಟೆಡ್; ಡೆಸ್ಕ್‌ಟಾಪ್ ಮಂಜುಗೊಳಿಸಲು ಸಾಧ್ಯವಾಗದಲ್ಲಿ ವಿಂಡೋ ಕೇವಲ ಪಾರದರ್ಶಕವಾಗಿರುತ್ತದೆ.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "ಪದಗಳು ಓದಲು ಸಾಧ್ಯವಾಗುವಂತೆ ಉಳಿಯುತ್ತವೆ: ಅವು ಚೌಕಟ್ಟಿನ ಮೇಲೆ ಹೊಳೆಯುತ್ತವೆ, ಮತ್ತು ಹಿಂದಿನ ಯಾವುದರ ಮೇಲೂ ಪಠ್ಯ ಓದಬಹುದಾದ್ದಕ್ಕಿಂತ ಗಾಜು ಹೆಚ್ಚು ಸ್ಪಷ್ಟವಾಗುವುದಿಲ್ಲ, ಆದ್ದರಿಂದ ಇಡೀ ವಿಂಡೋ ಪಾರದರ್ಶಕವಾದಾಗ ಕೆಲವು ಸ್ಕಿನ್‌ಗಳು ಸಾಕಷ್ಟು ಘನವಾಗಿ ಉಳಿಯುತ್ತವೆ. ವೀಡಿಯೊ ಯಾವಾಗಲೂ ಘನವಾಗಿರುತ್ತದೆ.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "ಯಾವುದೇ ಸ್ಕಿನ್ ಅಡಿಯಲ್ಲಿ Windows 7 ನಂತಹ ಗಾಜು; ಎಷ್ಟು ಸ್ಪಷ್ಟ, ಎಲ್ಲಿ ಮತ್ತು ಮಂಜುಗೊಳಿಸುವಿಕೆ ಸ್ಕಿನ್‌ಗಳು ಪುಟದಲ್ಲಿವೆ",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ಪಾರದರ್ಶಕ ಅರೆಪಾರದರ್ಶಕ ಗಾಜು ಮಂಜು ಫ್ರಾಸ್ಟೆಡ್ ಡೆಸ್ಕ್‌ಟಾಪ್ ವಾಲ್‌ಪೇಪರ್ aero acrylic mica"
 }

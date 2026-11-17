@@ -3541,5 +3541,22 @@
   "Fill the window": "Fylla gluggann",
   "Fill the window (W)": "Fylla gluggann (W)",
   "Hide the side rail while watching": "Fela hliðarstiku við áhorf",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Myndbandið fær sitt pláss, eins og á YouTube; bíóstilling felur hana alltaf"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Myndbandið fær sitt pláss, eins og á YouTube; bíóstilling felur hana alltaf",
+  "Window transparency": "Gegnsæi glugga",
+  "See the desktop through the window": "Sjá skjáborðið í gegnum gluggann",
+  "See the wallpaper through the app": "Sjá bakgrunnsmyndina í gegnum forritið",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Skjáborðið sést í gegnum rammann í kringum síðurnar, eins og í gegnum Windows 7-gler, í litum hvaða þema sem er.",
+  "Takes effect the next time Lumtub starts.": "Tekur gildi næst þegar Lumtub er ræst.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Þetta skjáborð getur ekki sýnt það sem er á bak við glugga: það þarf samsetningarforrit.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Þetta skjáborð getur ekki óskýrt það sem er á bak við; glugginn er aðeins gegnsær.",
+  "The desktop shows through the window.": "Skjáborðið sést í gegnum gluggann.",
+  "Transparency": "Gegnsæi",
+  "Where it is see-through": "Hvar það er gegnsætt",
+  "Frame only": "Aðeins ramminn",
+  "Whole window": "Allur glugginn",
+  "Blur what is behind": "Óskýra það sem er á bak við",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Matt eins og Windows 7; þar sem skjáborðið getur ekki óskýrt er glugginn aðeins gegnsær.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Orð haldast læsileg: þau lýsa á rammanum og glerið verður ekki tærara en svo að hægt sé að lesa texta yfir hverju sem er fyrir aftan, svo þegar allur glugginn er gegnsær haldast sum þemu nokkuð ógegnsæ. Myndskeið er alltaf ógegnsætt.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Gler eins og Windows 7 undir hvaða þema sem er; hversu tært, hvar og óskýring eru á síðunni Þemu",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "gegnsær gegnsæi hálfgegnsær gler óskýra matt skjáborð bakgrunnur aero acrylic mica"
 }

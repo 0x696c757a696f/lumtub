@@ -3541,5 +3541,22 @@
   "Fill the window": "Jaza dirisha",
   "Fill the window (W)": "Jaza dirisha (W)",
   "Hide the side rail while watching": "Ficha upau wa pembeni unapotazama",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video hupata nafasi yake, kama kwenye YouTube; hali ya ukumbi huuficha kila mara"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video hupata nafasi yake, kama kwenye YouTube; hali ya ukumbi huuficha kila mara",
+  "Window transparency": "Uwazi wa dirisha",
+  "See the desktop through the window": "Ona eneo-kazi kupitia dirisha",
+  "See the wallpaper through the app": "Ona mandhari-nyuma kupitia programu",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Eneo-kazi huonekana kupitia fremu inayozunguka kurasa, kama kupitia kioo cha Windows 7, kwa rangi za mandhari yoyote.",
+  "Takes effect the next time Lumtub starts.": "Itaanza kutumika Lumtub itakapoanza tena.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Eneo-kazi hili haliwezi kuonyesha kilicho nyuma ya dirisha: linahitaji kompositi.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Eneo-kazi hili haliwezi kufifisha kilicho nyuma; dirisha ni la kuona-kupitia tu.",
+  "The desktop shows through the window.": "Eneo-kazi linaonekana kupitia dirisha.",
+  "Transparency": "Uwazi",
+  "Where it is see-through": "Mahali panapoonekana kupitia",
+  "Frame only": "Fremu pekee",
+  "Whole window": "Dirisha zima",
+  "Blur what is behind": "Fifisha kilicho nyuma",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Kioo kilichoganda kama Windows 7; eneo-kazi lisipoweza kufifisha, dirisha ni la kuona-kupitia tu.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Maneno hubaki yanayosomeka: huangaza kwenye fremu, na kioo hakiwi safi zaidi ya kiwango ambacho maandishi yanaweza kusomwa juu ya chochote kilicho nyuma, kwa hivyo dirisha zima likiwa wazi, baadhi ya mandhari hubaki mazito. Video huwa nzito kila wakati.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Kioo kama Windows 7 chini ya mandhari yoyote; uwazi kiasi gani, wapi na ufifishaji vipo kwenye ukurasa wa Mandhari",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "wazi uwazi nusu-wazi kioo ukungu kufifisha eneo-kazi mandhari-nyuma aero acrylic mica"
 }

@@ -3541,5 +3541,22 @@
   "Fill the window": "Терезені толтыру",
   "Fill the window (W)": "Терезені толтыру (W)",
   "Hide the side rail while watching": "Көру кезінде бүйір тақтаны жасыру",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Бейне өз орнын алады, YouTube сияқты; театр режимінде ол әрқашан жасырылады"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Бейне өз орнын алады, YouTube сияқты; театр режимінде ол әрқашан жасырылады",
+  "Window transparency": "Терезе мөлдірлігі",
+  "See the desktop through the window": "Жұмыс үстелін терезе арқылы көру",
+  "See the wallpaper through the app": "Тұсқағазды қолданба арқылы көру",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Жұмыс үстелі беттердің айналасындағы жақтау арқылы, Windows 7 әйнегі сияқты, кез келген мәнердің түстерімен көрінеді.",
+  "Takes effect the next time Lumtub starts.": "Lumtub келесі рет іске қосылғанда күшіне енеді.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Бұл жұмыс үстелі терезенің артындағыны көрсете алмайды: композитор қажет.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Бұл жұмыс үстелі артындағыны бұлдырата алмайды; терезе тек мөлдір болады.",
+  "The desktop shows through the window.": "Жұмыс үстелі терезе арқылы көрінеді.",
+  "Transparency": "Мөлдірлік",
+  "Where it is see-through": "Қай жері мөлдір",
+  "Frame only": "Тек жақтау",
+  "Whole window": "Бүкіл терезе",
+  "Blur what is behind": "Артындағыны бұлдырату",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 сияқты қырау әйнек; жұмыс үстелі бұлдырата алмаған жерде терезе тек мөлдір болады.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Мәтін оқылымды болып қалады: ол жақтауда жарқырайды, ал әйнек артындағы кез келген нәрсенің үстінде мәтін оқылатындай ғана мөлдір болады, сондықтан бүкіл терезе мөлдір болғанда кейбір мәнерлер біршама тығыз болып қалады. Бейне әрқашан тығыз.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Кез келген мәнердің астындағы Windows 7 сияқты әйнек; мөлдірлік дәрежесі, аймағы және бұлдырату Мәнерлер бетінде",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "мөлдір жартылай-мөлдір әйнек бұлдырату қырау жұмыс-үстелі тұсқағаз aero acrylic mica"
 }

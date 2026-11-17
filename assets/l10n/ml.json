@@ -3541,5 +3541,22 @@
   "Fill the window": "വിൻഡോ നിറയ്ക്കുക",
   "Fill the window (W)": "വിൻഡോ നിറയ്ക്കുക (W)",
   "Hide the side rail while watching": "കാണുമ്പോൾ സൈഡ്‌ബാർ മറയ്ക്കുക",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-ലെ പോലെ വീഡിയോയ്ക്ക് അതിന്റെ സ്ഥലം ലഭിക്കുന്നു; തിയേറ്റർ മോഡ് എപ്പോഴും ഇത് മറയ്ക്കും"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-ലെ പോലെ വീഡിയോയ്ക്ക് അതിന്റെ സ്ഥലം ലഭിക്കുന്നു; തിയേറ്റർ മോഡ് എപ്പോഴും ഇത് മറയ്ക്കും",
+  "Window transparency": "വിൻഡോ സുതാര്യത",
+  "See the desktop through the window": "വിൻഡോയിലൂടെ ഡെസ്ക്ടോപ്പ് കാണുക",
+  "See the wallpaper through the app": "ആപ്പിലൂടെ വാൾപേപ്പർ കാണുക",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "പേജുകൾക്ക് ചുറ്റുമുള്ള ഫ്രെയിമിലൂടെ ഡെസ്ക്ടോപ്പ് കാണാം, Windows 7 ഗ്ലാസ് പോലെ, ഏത് സ്കിനിന്റെയും നിറങ്ങളിൽ.",
+  "Takes effect the next time Lumtub starts.": "അടുത്ത തവണ Lumtub ആരംഭിക്കുമ്പോൾ പ്രാബല്യത്തിലാകും.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "ഈ ഡെസ്ക്ടോപ്പിന് വിൻഡോയ്ക്ക് പിന്നിലുള്ളത് കാണിക്കാൻ കഴിയില്ല: ഒരു കമ്പോസിറ്റർ ആവശ്യമാണ്.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "ഈ ഡെസ്ക്ടോപ്പിന് പിന്നിലുള്ളത് മങ്ങിക്കാൻ കഴിയില്ല; വിൻഡോ സുതാര്യം മാത്രമാണ്.",
+  "The desktop shows through the window.": "ഡെസ്ക്ടോപ്പ് വിൻഡോയിലൂടെ കാണുന്നു.",
+  "Transparency": "സുതാര്യത",
+  "Where it is see-through": "എവിടെ സുതാര്യമാകണം",
+  "Frame only": "ഫ്രെയിം മാത്രം",
+  "Whole window": "മുഴുവൻ വിൻഡോ",
+  "Blur what is behind": "പിന്നിലുള്ളത് മങ്ങിക്കുക",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 പോലെ ഫ്രോസ്റ്റഡ്; ഡെസ്ക്ടോപ്പിന് മങ്ങിക്കാൻ കഴിയാത്തിടത്ത് വിൻഡോ സുതാര്യം മാത്രമാണ്.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "വാക്കുകൾ വായിക്കാനാകുന്നതായി തുടരും: അവ ഫ്രെയിമിൽ തിളങ്ങുന്നു, പിന്നിൽ എന്തുതന്നെയായാലും അതിന് മുകളിൽ വാചകം വായിക്കാവുന്നതിലധികം ഗ്ലാസ് തെളിയില്ല, അതിനാൽ മുഴുവൻ വിൻഡോ സുതാര്യമാക്കിയാൽ ചില സ്കിനുകൾ കുറച്ച് കട്ടിയായി തുടരും. വീഡിയോ എപ്പോഴും കട്ടിയാണ്.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "ഏത് സ്കിനിന്റെയും കീഴിൽ Windows 7 പോലെ ഗ്ലാസ്; എത്ര തെളിവ്, എവിടെ, മങ്ങൽ എന്നിവ സ്കിനുകൾ പേജിലാണ്",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "സുതാര്യം അർധസുതാര്യം ഗ്ലാസ് മങ്ങൽ ഫ്രോസ്റ്റഡ് ഡെസ്ക്ടോപ്പ് വാൾപേപ്പർ aero acrylic mica"
 }

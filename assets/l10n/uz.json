@@ -3541,5 +3541,22 @@
   "Fill the window": "Oynani to‘ldirish",
   "Fill the window (W)": "Oynani to‘ldirish (W)",
   "Hide the side rail while watching": "Tomosha paytida yon panelni yashirish",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video YouTube’dagidek o‘z joyini oladi; kinoteatr rejimi uni doim yashiradi"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video YouTube’dagidek o‘z joyini oladi; kinoteatr rejimi uni doim yashiradi",
+  "Window transparency": "Oyna shaffofligi",
+  "See the desktop through the window": "Ish stolini oyna orqali ko‘rish",
+  "See the wallpaper through the app": "Fon rasmini ilova orqali ko‘rish",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Ish stoli sahifalar atrofidagi ramka orqali, Windows 7 oynasi kabi, istalgan mavzu ranglarida ko‘rinadi.",
+  "Takes effect the next time Lumtub starts.": "Lumtub keyingi safar ishga tushganda kuchga kiradi.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Bu ish stoli oyna orqasidagini ko‘rsata olmaydi: kompozitor kerak.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Bu ish stoli orqadagini xiralashtira olmaydi; oyna faqat shaffof bo‘ladi.",
+  "The desktop shows through the window.": "Ish stoli oyna orqali ko‘rinmoqda.",
+  "Transparency": "Shaffoflik",
+  "Where it is see-through": "Qayerda shaffof bo‘lsin",
+  "Frame only": "Faqat ramka",
+  "Whole window": "Butun oyna",
+  "Blur what is behind": "Orqadagini xiralashtirish",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 kabi xira shisha; ish stoli xiralashtira olmaydigan joyda oyna faqat shaffof bo‘ladi.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Matn o‘qiladigan bo‘lib qoladi: u ramkada yaltiraydi, shisha esa orqadagi istalgan narsa ustida matnni o‘qish mumkin bo‘lgan darajadan ortiq tiniq bo‘lmaydi, shuning uchun butun oyna shaffof bo‘lganda ba’zi mavzular ancha zich bo‘lib qoladi. Video doim zich.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Istalgan mavzu ostida Windows 7 kabi shisha; qanchalik tiniq, qayerda va xiralashtirish Mavzular sahifasida",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "shaffof yarim-shaffof shisha xiralashtirish xira ish-stoli fon-rasmi aero acrylic mica"
 }

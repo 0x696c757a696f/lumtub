@@ -3541,5 +3541,22 @@
   "Fill the window": "Vyplniť okno",
   "Fill the window (W)": "Vyplniť okno (W)",
   "Hide the side rail while watching": "Skryť bočný panel pri sledovaní",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video dostane svoje miesto ako na YouTube; v režime kina je panel vždy skrytý"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video dostane svoje miesto ako na YouTube; v režime kina je panel vždy skrytý",
+  "Window transparency": "Priehľadnosť okna",
+  "See the desktop through the window": "Vidieť plochu cez okno",
+  "See the wallpaper through the app": "Vidieť tapetu cez aplikáciu",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Plocha presvitá cez rámik okolo stránok ako cez sklo Windows 7, v farbách ľubovoľného skinu.",
+  "Takes effect the next time Lumtub starts.": "Prejaví sa pri ďalšom spustení Lumtub.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Táto plocha nevie zobraziť, čo je za oknom: potrebuje kompozitor.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Táto plocha nevie rozmazať, čo je za oknom; okno je len priehľadné.",
+  "The desktop shows through the window.": "Plocha presvitá cez okno.",
+  "Transparency": "Priehľadnosť",
+  "Where it is see-through": "Kde je priehľadné",
+  "Frame only": "Iba rámik",
+  "Whole window": "Celé okno",
+  "Blur what is behind": "Rozmazať, čo je za oknom",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Matné ako vo Windows 7; kde plocha nevie rozmazať, okno je len priehľadné.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Text zostáva čitateľný: na rámiku žiari a sklo nebude priehľadnejšie, než umožňuje čítať text nad čímkoľvek za ním, takže pri priehľadnom celom okne zostanú niektoré skiny dosť nepriehľadné. Video je vždy nepriehľadné.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Sklo ako vo Windows 7 pod ľubovoľným skinom; ako priehľadné, kde a rozmazanie nastavíte na stránke Skiny",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "priehľadný priehľadnosť polopriehľadný sklo rozmazanie matný plocha tapeta aero acrylic mica"
 }

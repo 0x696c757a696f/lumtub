@@ -3541,5 +3541,22 @@
   "Fill the window": "ਵਿੰਡੋ ਭਰੋ",
   "Fill the window (W)": "ਵਿੰਡੋ ਭਰੋ (W)",
   "Hide the side rail while watching": "ਦੇਖਦੇ ਸਮੇਂ ਸਾਈਡਬਾਰ ਲੁਕਾਓ",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ਵਾਂਗ ਵੀਡੀਓ ਨੂੰ ਆਪਣੀ ਥਾਂ ਮਿਲਦੀ ਹੈ; ਥੀਏਟਰ ਮੋਡ ਵਿੱਚ ਇਹ ਹਮੇਸ਼ਾ ਲੁਕੀ ਰਹਿੰਦੀ ਹੈ"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ਵਾਂਗ ਵੀਡੀਓ ਨੂੰ ਆਪਣੀ ਥਾਂ ਮਿਲਦੀ ਹੈ; ਥੀਏਟਰ ਮੋਡ ਵਿੱਚ ਇਹ ਹਮੇਸ਼ਾ ਲੁਕੀ ਰਹਿੰਦੀ ਹੈ",
+  "Window transparency": "ਵਿੰਡੋ ਪਾਰਦਰਸ਼ਤਾ",
+  "See the desktop through the window": "ਵਿੰਡੋ ਵਿੱਚੋਂ ਡੈਸਕਟਾਪ ਵੇਖੋ",
+  "See the wallpaper through the app": "ਐਪ ਵਿੱਚੋਂ ਵਾਲਪੇਪਰ ਵੇਖੋ",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "ਪੰਨਿਆਂ ਦੇ ਆਲੇ-ਦੁਆਲੇ ਦੇ ਫ੍ਰੇਮ ਵਿੱਚੋਂ ਡੈਸਕਟਾਪ ਦਿਸਦਾ ਹੈ, Windows 7 ਦੇ ਸ਼ੀਸ਼ੇ ਵਾਂਗ, ਕਿਸੇ ਵੀ ਸਕਿਨ ਦੇ ਰੰਗਾਂ ਵਿੱਚ।",
+  "Takes effect the next time Lumtub starts.": "ਅਗਲੀ ਵਾਰ Lumtub ਸ਼ੁਰੂ ਹੋਣ ਤੇ ਲਾਗੂ ਹੋਵੇਗਾ।",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "ਇਹ ਡੈਸਕਟਾਪ ਵਿੰਡੋ ਦੇ ਪਿੱਛੇ ਵਾਲਾ ਨਹੀਂ ਦਿਖਾ ਸਕਦਾ: ਇਸ ਨੂੰ ਕੰਪੋਜ਼ੀਟਰ ਚਾਹੀਦਾ ਹੈ।",
+  "This desktop cannot blur what is behind; the window is only see-through.": "ਇਹ ਡੈਸਕਟਾਪ ਪਿੱਛੇ ਵਾਲੇ ਨੂੰ ਧੁੰਦਲਾ ਨਹੀਂ ਕਰ ਸਕਦਾ; ਵਿੰਡੋ ਸਿਰਫ਼ ਪਾਰਦਰਸ਼ੀ ਹੈ।",
+  "The desktop shows through the window.": "ਡੈਸਕਟਾਪ ਵਿੰਡੋ ਵਿੱਚੋਂ ਦਿਸ ਰਿਹਾ ਹੈ।",
+  "Transparency": "ਪਾਰਦਰਸ਼ਤਾ",
+  "Where it is see-through": "ਕਿੱਥੇ ਪਾਰਦਰਸ਼ੀ ਹੋਵੇ",
+  "Frame only": "ਸਿਰਫ਼ ਫ੍ਰੇਮ",
+  "Whole window": "ਪੂਰੀ ਵਿੰਡੋ",
+  "Blur what is behind": "ਪਿੱਛੇ ਵਾਲੇ ਨੂੰ ਧੁੰਦਲਾ ਕਰੋ",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 ਵਰਗਾ ਫ੍ਰੋਸਟਡ; ਜਿੱਥੇ ਡੈਸਕਟਾਪ ਧੁੰਦਲਾ ਨਹੀਂ ਕਰ ਸਕਦਾ, ਉੱਥੇ ਵਿੰਡੋ ਸਿਰਫ਼ ਪਾਰਦਰਸ਼ੀ ਹੈ।",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "ਸ਼ਬਦ ਪੜ੍ਹਨਯੋਗ ਰਹਿੰਦੇ ਹਨ: ਉਹ ਫ੍ਰੇਮ ਉੱਤੇ ਚਮਕਦੇ ਹਨ, ਅਤੇ ਸ਼ੀਸ਼ਾ ਓਨਾ ਹੀ ਸਾਫ਼ ਹੁੰਦਾ ਹੈ ਜਿੰਨੇ ਵਿੱਚ ਪਿੱਛੇ ਕਿਸੇ ਵੀ ਚੀਜ਼ ਉੱਤੇ ਟੈਕਸਟ ਪੜ੍ਹਿਆ ਜਾ ਸਕੇ, ਇਸ ਲਈ ਪੂਰੀ ਵਿੰਡੋ ਪਾਰਦਰਸ਼ੀ ਹੋਣ ਤੇ ਕੁਝ ਸਕਿਨਾਂ ਕਾਫ਼ੀ ਠੋਸ ਰਹਿੰਦੀਆਂ ਹਨ। ਵੀਡੀਓ ਹਮੇਸ਼ਾ ਠੋਸ ਹੁੰਦਾ ਹੈ।",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "ਕਿਸੇ ਵੀ ਸਕਿਨ ਹੇਠ Windows 7 ਵਰਗਾ ਸ਼ੀਸ਼ਾ; ਕਿੰਨਾ ਸਾਫ਼, ਕਿੱਥੇ ਅਤੇ ਧੁੰਦਲਾਪਨ ਸਕਿਨਾਂ ਪੰਨੇ ਉੱਤੇ ਹਨ",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ਪਾਰਦਰਸ਼ੀ ਅਰਧ-ਪਾਰਦਰਸ਼ੀ ਸ਼ੀਸ਼ਾ ਧੁੰਦਲਾ ਫ੍ਰੋਸਟਡ ਡੈਸਕਟਾਪ ਵਾਲਪੇਪਰ aero acrylic mica"
 }

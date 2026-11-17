@@ -3541,5 +3541,22 @@
   "Fill the window": "Терезени толтуруу",
   "Fill the window (W)": "Терезени толтуруу (W)",
   "Hide the side rail while watching": "Көрүп жатканда каптал панелин жашыруу",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Видео өз ордун алат, YouTube сыяктуу; кинотеатр режиминде ал дайыма жашырылат"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Видео өз ордун алат, YouTube сыяктуу; кинотеатр режиминде ал дайыма жашырылат",
+  "Window transparency": "Терезенин тунуктугу",
+  "See the desktop through the window": "Иш такта терезе аркылуу көрүнсүн",
+  "See the wallpaper through the app": "Тушкагаз колдонмо аркылуу көрүнсүн",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Иш такта барактардын тегерегиндеги алкак аркылуу, Windows 7 айнеги сыяктуу, каалаган скиндин түстөрүндө көрүнөт.",
+  "Takes effect the next time Lumtub starts.": "Lumtub кийинки жолу ишке киргенде күчүнө кирет.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Бул иш такта терезенин артындагын көрсөтө албайт: композитор керек.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Бул иш такта артындагын бүдөмүк кыла албайт; терезе тунук гана болот.",
+  "The desktop shows through the window.": "Иш такта терезе аркылуу көрүнүп турат.",
+  "Transparency": "Тунуктук",
+  "Where it is see-through": "Кайсы жери тунук",
+  "Frame only": "Алкак гана",
+  "Whole window": "Бүт терезе",
+  "Blur what is behind": "Артындагыны бүдөмүк кылуу",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 сыяктуу бүдөмүк айнек; иш такта бүдөмүк кыла албаган жерде терезе тунук гана болот.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Жазуулар окулуучу бойдон калат: алар алкакта жаркырайт, ал эми айнек артындагы каалаган нерсенин үстүндө текстти окуганга мүмкүн болгондон тунук болбойт, ошондуктан бүт терезе тунук болгондо кээ бир скиндер бир кыйла тыгыз бойдон калат. Видео ар дайым тыгыз.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Каалаган скиндин астындагы Windows 7 сыяктуу айнек; канчалык тунук, кайсы жерде жана бүдөмүктөө Скиндер барагында",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "тунук жарым-тунук айнек бүдөмүк бүдөмүктөө иш-такта тушкагаз aero acrylic mica"
 }

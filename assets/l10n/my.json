@@ -3541,5 +3541,22 @@
   "Fill the window": "ဝင်းဒိုးပြည့်",
   "Fill the window (W)": "ဝင်းဒိုးပြည့် (W)",
   "Hide the side rail while watching": "ကြည့်နေစဉ် ဘေးဘားကို ဖျောက်ရန်",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ကဲ့သို့ ဗီဒီယိုက နေရာရသည်၊ သီအိတာမုဒ်တွင် အမြဲ ဖျောက်ထားသည်"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ကဲ့သို့ ဗီဒီယိုက နေရာရသည်၊ သီအိတာမုဒ်တွင် အမြဲ ဖျောက်ထားသည်",
+  "Window transparency": "ဝင်းဒိုး ဖောက်ထွင်းမြင်ရမှု",
+  "See the desktop through the window": "ဝင်းဒိုးကို ဖြတ်၍ ဒက်စ်တော့ကို ကြည့်ပါ",
+  "See the wallpaper through the app": "အက်ပ်ကို ဖြတ်၍ နောက်ခံပုံကို ကြည့်ပါ",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "စာမျက်နှာများပတ်လည်ရှိ ဘောင်ကို ဖြတ်၍ ဒက်စ်တော့ကို Windows 7 ဖန်ကဲ့သို့ မည်သည့်စကင်၏ အရောင်များဖြင့်မဆို မြင်ရသည်။",
+  "Takes effect the next time Lumtub starts.": "နောက်တစ်ကြိမ် Lumtub စတင်သောအခါ အသက်ဝင်မည်။",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "ဤဒက်စ်တော့သည် ဝင်းဒိုးနောက်ကွယ်ရှိအရာကို မပြနိုင်ပါ- compositor လိုအပ်သည်။",
+  "This desktop cannot blur what is behind; the window is only see-through.": "ဤဒက်စ်တော့သည် နောက်ကွယ်ရှိအရာကို မှုန်ဝါးအောင် မလုပ်နိုင်ပါ၊ ဝင်းဒိုးသည် ဖောက်ထွင်းမြင်ရုံသာ ဖြစ်သည်။",
+  "The desktop shows through the window.": "ဒက်စ်တော့ကို ဝင်းဒိုးဖြတ်၍ မြင်နေရသည်။",
+  "Transparency": "ဖောက်ထွင်းမြင်ရမှု",
+  "Where it is see-through": "ဖောက်ထွင်းမြင်ရမည့်နေရာ",
+  "Frame only": "ဘောင်သာ",
+  "Whole window": "ဝင်းဒိုးတစ်ခုလုံး",
+  "Blur what is behind": "နောက်ကွယ်ရှိအရာကို မှုန်ဝါးစေရန်",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 ကဲ့သို့ ဖန်ရည်ဖျော့၊ ဒက်စ်တော့က မှုန်ဝါးမလုပ်နိုင်လျှင် ဝင်းဒိုးသည် ဖောက်ထွင်းမြင်ရုံသာ ဖြစ်သည်။",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "စာလုံးများ ဖတ်လို့ရနေဆဲ ဖြစ်သည်- ဘောင်ပေါ်တွင် အလင်းပြောင်ပြီး ဖန်သည် နောက်ကွယ်ရှိ မည်သည့်အရာပေါ်တွင်မဆို စာဖတ်နိုင်သည့်အဆင့်ထက် ပိုမကြည်လင်ပါ၊ ထို့ကြောင့် ဝင်းဒိုးတစ်ခုလုံး ဖောက်ထွင်းမြင်ရသောအခါ စကင်အချို့ အတော်ထူထပ်နေဆဲ ဖြစ်သည်။ ဗီဒီယိုသည် အမြဲထူထပ်သည်။",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "မည်သည့်စကင်အောက်တွင်မဆို Windows 7 ကဲ့သို့ ဖန်၊ ဘယ်လောက်ကြည်လင်၊ ဘယ်နေရာနှင့် မှုန်ဝါးမှုတို့ကို စကင်များစာမျက်နှာတွင် ရှိသည်",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "ဖောက်ထွင်းမြင် ဖန် မှုန်ဝါး ဖန်ရည်ဖျော့ ဒက်စ်တော့ နောက်ခံပုံ aero acrylic mica"
 }

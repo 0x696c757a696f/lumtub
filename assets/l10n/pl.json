@@ -3546,5 +3546,22 @@
   "Fill the window": "Wypełnij okno",
   "Fill the window (W)": "Wypełnij okno (W)",
   "Hide the side rail while watching": "Ukryj panel boczny podczas oglądania",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Wideo dostaje swoje miejsce, jak w YouTube; tryb kinowy zawsze go ukrywa"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Wideo dostaje swoje miejsce, jak w YouTube; tryb kinowy zawsze go ukrywa",
+  "Window transparency": "Przezroczystość okna",
+  "See the desktop through the window": "Pokaż pulpit przez okno",
+  "See the wallpaper through the app": "Pokaż tapetę przez aplikację",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Pulpit prześwituje przez ramkę wokół stron, jak przez szkło Windows 7, w kolorach dowolnej skórki.",
+  "Takes effect the next time Lumtub starts.": "Zadziała po następnym uruchomieniu Lumtub.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Ten pulpit nie potrafi pokazać tego, co jest za oknem: wymaga kompozytora.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Ten pulpit nie potrafi rozmyć tego, co jest z tyłu; okno jest tylko przezroczyste.",
+  "The desktop shows through the window.": "Pulpit prześwituje przez okno.",
+  "Transparency": "Przezroczystość",
+  "Where it is see-through": "Gdzie jest przezroczyste",
+  "Frame only": "Tylko ramka",
+  "Whole window": "Całe okno",
+  "Blur what is behind": "Rozmyj to, co jest z tyłu",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Matowe jak w Windows 7; tam, gdzie pulpit nie potrafi rozmywać, okno jest tylko przezroczyste.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Tekst pozostaje czytelny: świeci na ramce, a szkło nie jest bardziej przejrzyste, niż pozwala czytać tekst na tle czegokolwiek z tyłu, więc gdy całe okno jest przezroczyste, niektóre skórki pozostają dość lite. Wideo jest zawsze lite.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Szkło jak w Windows 7 pod dowolną skórką; jak przejrzyste, gdzie i rozmycie ustawisz na stronie Skórki",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "przezroczysty przezroczystość półprzezroczysty szkło rozmycie matowe pulpit tapeta aero acrylic mica"
 }

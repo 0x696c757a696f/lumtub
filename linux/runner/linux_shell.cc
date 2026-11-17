@@ -15,6 +15,7 @@
 #endif
 #ifdef GDK_WINDOWING_WAYLAND
 #include <gdk/gdkwayland.h>
+#include <wayland-client.h>
 #endif
 
 namespace {
@@ -701,6 +702,115 @@ void BeginFrameDrag(bool resize, GdkWindowEdge edge) {
   }
 }
 
+// ---- Desktop glass ---------------------------------------------------------
+
+#ifdef GDK_WINDOWING_WAYLAND
+// KWin's blur protocol (org_kde_kwin_blur from plasma-wayland-protocols,
+// version 1), written out by hand: two requests on the manager, three on
+// a blur.
+const struct wl_interface* kBlurRegionTypes[] = {&wl_region_interface};
+const struct wl_message kBlurRequests[] = {
+    {"commit", "", nullptr},
+    {"set_region", "?o", kBlurRegionTypes},
+    {"release", "", nullptr},
+};
+const struct wl_interface kBlurInterface = {"org_kde_kwin_blur", 1, 3, kBlurRequests, 0, nullptr};
+const struct wl_interface* kBlurCreateTypes[] = {&kBlurInterface, &wl_surface_interface};
+const struct wl_interface* kBlurUnsetTypes[] = {&wl_surface_interface};
+const struct wl_message kBlurManagerRequests[] = {
+    {"create", "no", kBlurCreateTypes},
+    {"unset", "o", kBlurUnsetTypes},
+};
+const struct wl_interface kBlurManagerInterface = {"org_kde_kwin_blur_manager", 1, 2, kBlurManagerRequests, 0, nullptr};
+
+struct WaylandBlur {
+  bool looked = false;
+  struct wl_proxy* manager = nullptr;
+  struct wl_proxy* blur = nullptr;
+};
+WaylandBlur wayland_blur;
+
+void OnGlobal(void*, struct wl_registry* registry, uint32_t name, const char* interface, uint32_t) {
+  if (g_strcmp0(interface, kBlurManagerInterface.name) == 0 && wayland_blur.manager == nullptr) {
+    wayland_blur.manager = static_cast<struct wl_proxy*>(wl_registry_bind(registry, name, &kBlurManagerInterface, 1));
+  }
+}
+void OnGlobalRemove(void*, struct wl_registry*, uint32_t) {}
+const struct wl_registry_listener kRegistryListener = {OnGlobal, OnGlobalRemove};
+
+// Asks KWin to blur behind the whole window; false where the compositor
+// offers no such thing (GNOME, Sway and most others).
+bool SetWaylandBlur(GdkWindow* surface, bool on) {
+  struct wl_display* display = gdk_wayland_display_get_wl_display(gdk_window_get_display(surface));
+  struct wl_surface* wl_surface = gdk_wayland_window_get_wl_surface(surface);
+  if (display == nullptr || wl_surface == nullptr) return false;
+  if (!wayland_blur.looked) {
+    wayland_blur.looked = true;
+    // A queue of our own, so GTK's events are left to GTK.
+    struct wl_event_queue* queue = wl_display_create_queue(display);
+    struct wl_registry* registry = wl_display_get_registry(display);
+    wl_proxy_set_queue(reinterpret_cast<struct wl_proxy*>(registry), queue);
+    wl_registry_add_listener(registry, &kRegistryListener, nullptr);
+    wl_display_roundtrip_queue(display, queue);
+    if (wayland_blur.manager != nullptr) wl_proxy_set_queue(wayland_blur.manager, nullptr);
+    wl_registry_destroy(registry);
+    wl_event_queue_destroy(queue);
+  }
+  if (wayland_blur.manager == nullptr) return false;
+  const uint32_t version = wl_proxy_get_version(wayland_blur.manager);
+  if (wayland_blur.blur != nullptr) {
+    wl_proxy_marshal_flags(wayland_blur.blur, 2 /* release */, nullptr, version, WL_MARSHAL_FLAG_DESTROY);
+    wayland_blur.blur = nullptr;
+  }
+  if (on) {
+    wayland_blur.blur = wl_proxy_marshal_flags(wayland_blur.manager, 0 /* create */, &kBlurInterface, version, 0, nullptr, wl_surface);
+    // No region: the whole surface.
+    wl_proxy_marshal_flags(wayland_blur.blur, 0 /* commit */, nullptr, version, 0);
+  } else {
+    wl_proxy_marshal_flags(wayland_blur.manager, 1 /* unset */, nullptr, version, 0, wl_surface);
+  }
+  wl_display_flush(display);
+  return true;
+}
+#endif
+
+// The desktop shows wherever Flutter leaves the window clear: only with a
+// compositor, and with the alpha visual chosen at start
+// (linux_shell_use_alpha_visual). KWin blurs it, on X11 and Wayland.
+FlValue* SetDesktopGlass(bool on, bool blur) {
+  GtkWidget* window = GTK_WIDGET(shell.window);
+  GdkScreen* screen = gtk_widget_get_screen(window);
+  const bool possible = shell.view != nullptr && gdk_screen_is_composited(screen) &&
+                        gtk_widget_get_visual(window) == gdk_screen_get_rgba_visual(screen);
+  const bool clear = on && possible;
+  GdkRGBA background{0, 0, 0, clear ? 0.0 : 1.0};
+  if (shell.view != nullptr) fl_view_set_background_color(shell.view, &background);
+  bool blurred = false;
+  GdkWindow* surface = gtk_widget_get_window(window);
+#ifdef GDK_WINDOWING_X11
+  if (surface != nullptr && GDK_IS_X11_WINDOW(surface)) {
+    GdkAtom atom = gdk_atom_intern_static_string("_KDE_NET_WM_BLUR_BEHIND_REGION");
+    if (clear && blur) {
+      gdk_property_change(surface, atom, gdk_atom_intern_static_string("CARDINAL"), 32, GDK_PROP_MODE_REPLACE, nullptr, 0);
+      // KWin lists the atom among what it supports while its blur is on.
+      blurred = gdk_x11_screen_supports_net_wm_hint(screen, atom);
+    } else {
+      gdk_property_delete(surface, atom);
+    }
+  }
+#endif
+#ifdef GDK_WINDOWING_WAYLAND
+  if (surface != nullptr && GDK_IS_WAYLAND_WINDOW(surface)) {
+    blurred = SetWaylandBlur(surface, clear && blur) && clear && blur;
+  }
+#endif
+  gtk_widget_queue_draw(window);
+  FlValue* answer = fl_value_new_map();
+  fl_value_set_string_take(answer, "shown", fl_value_new_bool(clear));
+  fl_value_set_string_take(answer, "blurred", fl_value_new_bool(blurred));
+  return answer;
+}
+
 void HandleFrameCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
   const std::string method = fl_method_call_get_name(call);
   FlValue* args = fl_method_call_get_args(call);
@@ -714,6 +824,11 @@ void HandleFrameCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
     fl_value_set_string_take(state, "maximized", fl_value_new_bool(gtk_window_is_maximized(window)));
     fl_value_set_string_take(state, "active", fl_value_new_bool(gtk_window_is_active(window)));
     fl_method_call_respond_success(call, state, nullptr);
+    return;
+  }
+  if (method == "setDesktopGlass") {
+    g_autoptr(FlValue) answer = SetDesktopGlass(BoolArg(args, "on"), BoolArg(args, "blur"));
+    fl_method_call_respond_success(call, answer, nullptr);
     return;
   }
   if (method == "setCustom") {
@@ -886,6 +1001,18 @@ void linux_shell_connect(FlView* view) {
   shell.frame_channel = fl_method_channel_new(fl_engine_get_binary_messenger(engine), kFrameChannel, FL_METHOD_CODEC(codec));
   fl_method_channel_set_method_call_handler(shell.frame_channel, HandleFrameCall, nullptr, nullptr);
   g_signal_connect(view, "button-press-event", G_CALLBACK(OnViewButtonPress), nullptr);
+}
+
+void linux_shell_use_alpha_visual(GtkWindow* window) {
+  // A window with an alpha channel, so the desktop can show through when
+  // asked; Flutter paints it opaque until then. It has to be chosen
+  // before the window is realized.
+  GdkScreen* screen = gtk_window_get_screen(window);
+  GdkVisual* rgba = gdk_screen_get_rgba_visual(screen);
+  if (rgba != nullptr && gdk_screen_is_composited(screen)) {
+    gtk_widget_set_visual(GTK_WIDGET(window), rgba);
+    gtk_widget_set_app_paintable(GTK_WIDGET(window), TRUE);
+  }
 }
 
 void linux_shell_present() {

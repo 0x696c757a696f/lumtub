@@ -3541,5 +3541,22 @@
   "Fill the window": "উইন্ডো পূৰ্ণ কৰক",
   "Fill the window (W)": "উইন্ডো পূৰ্ণ কৰক (W)",
   "Hide the side rail while watching": "চাওঁতে ছাইডবাৰ লুকুৱাওক",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ৰ দৰে ভিডিঅ'টোৱে নিজৰ ঠাই পায়; থিয়েটাৰ মোডত ই সদায় লুকাই থাকে"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ৰ দৰে ভিডিঅ'টোৱে নিজৰ ঠাই পায়; থিয়েটাৰ মোডত ই সদায় লুকাই থাকে",
+  "Window transparency": "উইণ্ড'ৰ স্বচ্ছতা",
+  "See the desktop through the window": "উইণ্ড'ৰ মাজেদি ডেস্কটপ চাওক",
+  "See the wallpaper through the app": "এপটোৰ মাজেদি ৱালপেপাৰ চাওক",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "পৃষ্ঠাবোৰৰ চাৰিওফালৰ ফ্ৰেমৰ মাজেদি ডেস্কটপ দেখা যায়, Windows 7 কাচৰ দৰে, যিকোনো স্কিনৰ ৰঙত।",
+  "Takes effect the next time Lumtub starts.": "পৰৱৰ্তী বাৰ Lumtub আৰম্ভ হ'লে কাৰ্যকৰী হ'ব।",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "এই ডেস্কটপে উইণ্ড'ৰ পিছত থকা বস্তু দেখুৱাব নোৱাৰে: ইয়াৰ কম্পজিটৰ লাগে।",
+  "This desktop cannot blur what is behind; the window is only see-through.": "এই ডেস্কটপে পিছত থকা বস্তু ধোঁৱাট কৰিব নোৱাৰে; উইণ্ড'টো কেৱল স্বচ্ছ হয়।",
+  "The desktop shows through the window.": "ডেস্কটপ উইণ্ড'ৰ মাজেদি দেখা গৈছে।",
+  "Transparency": "স্বচ্ছতা",
+  "Where it is see-through": "য'ত স্বচ্ছ হয়",
+  "Frame only": "কেৱল ফ্ৰেম",
+  "Whole window": "গোটেই উইণ্ড'",
+  "Blur what is behind": "পিছৰ বস্তু ধোঁৱাট কৰক",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 ৰ দৰে ফ্ৰষ্টেড; ডেস্কটপে ধোঁৱাট কৰিব নোৱাৰিলে উইণ্ড'টো কেৱল স্বচ্ছ হয়।",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "শব্দবোৰ পঢ়িব পৰা হৈ থাকে: সিহঁত ফ্ৰেমত উজলি থাকে, আৰু পিছত থকা যিকোনো বস্তুৰ ওপৰত লিখনি পঢ়িব পৰা সীমাতকৈ কাচ অধিক স্পষ্ট নহয়, গতিকে গোটেই উইণ্ড' স্বচ্ছ কৰিলে কিছুমান স্কিন তুলনামূলকভাৱে ঘন হৈ থাকে। ভিডিঅ' সদায় ঘন।",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "যিকোনো স্কিনৰ তলত Windows 7 ৰ দৰে কাচ; কিমান স্পষ্ট, য'ত আৰু ধোঁৱাট স্কিন পৃষ্ঠাত আছে",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "স্বচ্ছ অৰ্ধস্বচ্ছ কাচ ধোঁৱাট ফ্ৰষ্টেড ডেস্কটপ ৱালপেপাৰ aero acrylic mica"
 }

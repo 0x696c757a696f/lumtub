@@ -3541,5 +3541,22 @@
   "Fill the window": "Popuni prozor",
   "Fill the window (W)": "Popuni prozor (W)",
   "Hide the side rail while watching": "Sakrij bočnu traku tokom gledanja",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video dobija svoj prostor, kao na YouTube-u; u režimu bioskopa je traka uvek skrivena"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video dobija svoj prostor, kao na YouTube-u; u režimu bioskopa je traka uvek skrivena",
+  "Window transparency": "Providnost prozora",
+  "See the desktop through the window": "Vidi radnu površinu kroz prozor",
+  "See the wallpaper through the app": "Vidi pozadinu kroz aplikaciju",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Radna površina se vidi kroz okvir oko stranica, kao kroz Windows 7 staklo, u bojama bilo kog oblika.",
+  "Takes effect the next time Lumtub starts.": "Stupa na snagu pri sledećem pokretanju programa Lumtub.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Ova radna površina ne može da prikaže ono što je iza prozora: potreban je kompozitor.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Ova radna površina ne može da zamuti ono što je iza; prozor je samo providan.",
+  "The desktop shows through the window.": "Radna površina se vidi kroz prozor.",
+  "Transparency": "Providnost",
+  "Where it is see-through": "Gde je providno",
+  "Frame only": "Samo okvir",
+  "Whole window": "Ceo prozor",
+  "Blur what is behind": "Zamuti ono što je iza",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Matirano kao u sistemu Windows 7; gde radna površina ne može da zamuti, prozor je samo providan.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Reči ostaju čitljive: sijaju na okviru, a staklo nije bistrije nego što dozvoljava čitanje teksta preko bilo čega iza, pa kada je ceo prozor providan, neki oblici ostaju prilično neprovidni. Video je uvek neprovidan.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Staklo kao u sistemu Windows 7 pod bilo kojim oblikom; koliko je bistro, gde i zamućenje nalaze se na stranici Oblici",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "providan providnost poluprovidan staklo zamućenje matirano radna površina pozadina aero acrylic mica"
 }

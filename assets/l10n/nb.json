@@ -3541,5 +3541,22 @@
   "Fill the window": "Fyll vinduet",
   "Fill the window (W)": "Fyll vinduet (W)",
   "Hide the side rail while watching": "Skjul sidefeltet mens du ser på",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Videoen får plassen sin, som på YouTube; kinomodus skjuler det alltid"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Videoen får plassen sin, som på YouTube; kinomodus skjuler det alltid",
+  "Window transparency": "Vindusgjennomsiktighet",
+  "See the desktop through the window": "Se skrivebordet gjennom vinduet",
+  "See the wallpaper through the app": "Se bakgrunnsbildet gjennom appen",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Skrivebordet skinner gjennom rammen rundt sidene, som gjennom Windows 7-glass, i fargene til en hvilken som helst skin.",
+  "Takes effect the next time Lumtub starts.": "Trer i kraft neste gang Lumtub starter.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Dette skrivebordet kan ikke vise det som er bak et vindu: det krever en compositor.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Dette skrivebordet kan ikke gjøre det som er bak uskarpt; vinduet er bare gjennomsiktig.",
+  "The desktop shows through the window.": "Skrivebordet skinner gjennom vinduet.",
+  "Transparency": "Gjennomsiktighet",
+  "Where it is see-through": "Hvor det er gjennomsiktig",
+  "Frame only": "Bare rammen",
+  "Whole window": "Hele vinduet",
+  "Blur what is behind": "Gjør det som er bak uskarpt",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Frostet som Windows 7; der skrivebordet ikke kan gjøre uskarpt, er vinduet bare gjennomsiktig.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Tekst forblir lesbar: den lyser på rammen, og glasset blir ikke klarere enn at tekst kan leses over alt som er bak, så når hele vinduet er gjennomsiktig, forblir noen skins ganske massive. Video er alltid massiv.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Glass som Windows 7 under hvilken som helst skin; hvor klart, hvor og uskarphet finnes på Skin-siden",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "gjennomsiktig gjennomsiktighet halvgjennomsiktig glass uskarp frostet skrivebord bakgrunn aero acrylic mica"
 }

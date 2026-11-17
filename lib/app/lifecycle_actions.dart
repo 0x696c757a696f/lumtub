@@ -226,7 +226,13 @@ extension LifecycleActions on AppController {
         logError('Initialization failed', e);
       });
     }
-    if (SmokeCheck.requested) unawaited(Platform.environment['LUMTUB_SHOWCASE']?.isNotEmpty == true ? runShowcase() : runSmokeCheck());
+    if (SmokeCheck.requested) {
+      unawaited(Platform.environment['LUMTUB_GLASS_CHECK'] == '1'
+          ? runGlassCheck()
+          : Platform.environment['LUMTUB_SHOWCASE']?.isNotEmpty == true
+              ? runShowcase()
+              : runSmokeCheck());
+    }
   }
 
   /// Checks for a new Lumtub now and downloads it, for the settings page.

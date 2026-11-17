@@ -3541,5 +3541,22 @@
   "Fill the window": "Užpildyti langą",
   "Fill the window (W)": "Užpildyti langą (W)",
   "Hide the side rail while watching": "Slėpti šoninę juostą žiūrint",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Vaizdo įrašas gauna savo vietą kaip „YouTube“; kino teatro režimu juosta visada paslėpta"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Vaizdo įrašas gauna savo vietą kaip „YouTube“; kino teatro režimu juosta visada paslėpta",
+  "Window transparency": "Lango skaidrumas",
+  "See the desktop through the window": "Matyti darbalaukį pro langą",
+  "See the wallpaper through the app": "Matyti darbalaukio foną pro programą",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Darbalaukis matomas pro rėmelį aplink puslapius, tarsi pro „Windows 7“ stiklą, bet kurio dizaino spalvomis.",
+  "Takes effect the next time Lumtub starts.": "Įsigalios kitą kartą paleidus Lumtub.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Šis darbalaukis negali rodyti to, kas už lango: reikalingas kompozitorius.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Šis darbalaukis negali suliesinti to, kas už lango; langas tik permatomas.",
+  "The desktop shows through the window.": "Darbalaukis matomas pro langą.",
+  "Transparency": "Skaidrumas",
+  "Where it is see-through": "Kur permatoma",
+  "Frame only": "Tik rėmelis",
+  "Whole window": "Visas langas",
+  "Blur what is behind": "Suliesinti tai, kas už lango",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Matinis kaip „Windows 7“; kur darbalaukis negali suliesinti, langas tik permatomas.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Tekstas išlieka įskaitomas: jis švyti ant rėmelio, o stiklas nebūna skaidresnis, nei leidžia perskaityti tekstą virš bet ko už jo, todėl kai permatomas visas langas, kai kurie dizainai išlieka gana vientisi. Vaizdo įrašas visada vientisas.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Stiklas kaip „Windows 7“ po bet kuriuo dizainu; kiek skaidrus, kur ir suliejimas yra puslapyje Dizainai",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "skaidrus skaidrumas pusiau skaidrus stiklas suliejimas matinis darbalaukis fonas aero acrylic mica"
 }

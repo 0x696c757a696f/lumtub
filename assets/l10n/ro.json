@@ -3541,5 +3541,22 @@
   "Fill the window": "Umple fereastra",
   "Fill the window (W)": "Umple fereastra (W)",
   "Hide the side rail while watching": "Ascunde bara laterală în timpul vizionării",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Videoclipul primește spațiul său, ca pe YouTube; modul cinema o ascunde mereu"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Videoclipul primește spațiul său, ca pe YouTube; modul cinema o ascunde mereu",
+  "Window transparency": "Transparența ferestrei",
+  "See the desktop through the window": "Vezi desktopul prin fereastră",
+  "See the wallpaper through the app": "Vezi imaginea de fundal prin aplicație",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Desktopul se vede prin cadrul din jurul paginilor, ca prin sticla Windows 7, în culorile oricărui skin.",
+  "Takes effect the next time Lumtub starts.": "Se aplică la următoarea pornire a Lumtub.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Acest desktop nu poate afișa ce se află în spatele ferestrei: are nevoie de un compozitor.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Acest desktop nu poate estompa ce se află în spate; fereastra este doar transparentă.",
+  "The desktop shows through the window.": "Desktopul se vede prin fereastră.",
+  "Transparency": "Transparență",
+  "Where it is see-through": "Unde este transparent",
+  "Frame only": "Doar cadrul",
+  "Whole window": "Toată fereastra",
+  "Blur what is behind": "Estompează ce se află în spate",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Sticlă mată ca în Windows 7; unde desktopul nu poate estompa, fereastra este doar transparentă.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Textul rămâne lizibil: strălucește pe cadru, iar sticla nu devine mai clară decât permite citirea textului peste orice se află în spate, așa că, cu toată fereastra transparentă, unele skinuri rămân destul de opace. Videoclipul este mereu opac.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Sticlă ca în Windows 7 sub orice skin; cât de clară, unde și estomparea sunt în pagina Skinuri",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "transparent translucid sticlă estompare mat desktop imagine de fundal aero acrylic mica"
 }

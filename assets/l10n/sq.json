@@ -3541,5 +3541,22 @@
   "Fill the window": "Mbushe dritaren",
   "Fill the window (W)": "Mbushe dritaren (W)",
   "Hide the side rail while watching": "Fshih shiritin anësor gjatë shikimit",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Videoja merr hapësirën e vet, si në YouTube; modaliteti kinema e fsheh gjithmonë"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Videoja merr hapësirën e vet, si në YouTube; modaliteti kinema e fsheh gjithmonë",
+  "Window transparency": "Tejdukshmëria e dritares",
+  "See the desktop through the window": "Shiko desktopin përmes dritares",
+  "See the wallpaper through the app": "Shiko sfondin përmes aplikacionit",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Desktopi shihet përmes kornizës rreth faqeve, si përmes xhamit të Windows 7, me ngjyrat e çdo skine.",
+  "Takes effect the next time Lumtub starts.": "Hyn në fuqi herën tjetër që niset Lumtub.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Ky desktop nuk mund të shfaqë çfarë ka pas dritares: i duhet një kompozitor.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Ky desktop nuk mund ta turbullojë çfarë ka pas; dritarja është vetëm e tejdukshme.",
+  "The desktop shows through the window.": "Desktopi shihet përmes dritares.",
+  "Transparency": "Tejdukshmëria",
+  "Where it is see-through": "Ku është e tejdukshme",
+  "Frame only": "Vetëm korniza",
+  "Whole window": "Gjithë dritarja",
+  "Blur what is behind": "Turbullo çfarë ka pas",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "I vrenjtur si Windows 7; ku desktopi nuk mund të turbullojë, dritarja është vetëm e tejdukshme.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Fjalët mbeten të lexueshme: shkëlqejnë mbi kornizë dhe xhami nuk bëhet më i pastër sesa lejon leximi i tekstit mbi çdo gjë që ka pas, kështu që kur e gjithë dritarja është e tejdukshme, disa skina mbeten mjaft të ngurta. Videoja është gjithmonë e ngurtë.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Xham si Windows 7 nën çdo skinë; sa i pastër, ku dhe turbullimi janë te faqja Skina",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "i tejdukshëm tejdukshmëri gjysmë-i-tejdukshëm xham turbullim i-vrenjtur desktop sfond aero acrylic mica"
 }

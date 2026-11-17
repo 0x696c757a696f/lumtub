@@ -3546,5 +3546,22 @@
   "Fill the window": "ウィンドウいっぱいに表示",
   "Fill the window (W)": "ウィンドウいっぱいに表示 (W)",
   "Hide the side rail while watching": "視聴中はサイドバーを隠す",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube と同じように動画に広い場所を譲ります。シアターモードでは常に隠れます"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube と同じように動画に広い場所を譲ります。シアターモードでは常に隠れます",
+  "Window transparency": "ウィンドウの透過",
+  "See the desktop through the window": "ウィンドウ越しにデスクトップを見る",
+  "See the wallpaper through the app": "アプリ越しに壁紙を見る",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Windows 7 のガラスのように、ページの周りのフレームからデスクトップが透けて見えます。どのスキンでも、スキンの色で表示されます。",
+  "Takes effect the next time Lumtub starts.": "次回 Lumtub を起動したときに反映されます。",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "このデスクトップではウィンドウの背面を表示できません。コンポジターが必要です。",
+  "This desktop cannot blur what is behind; the window is only see-through.": "このデスクトップでは背面をぼかせません。ウィンドウは透過のみになります。",
+  "The desktop shows through the window.": "ウィンドウ越しにデスクトップが見えています。",
+  "Transparency": "透過",
+  "Where it is see-through": "透過する範囲",
+  "Frame only": "フレームのみ",
+  "Whole window": "ウィンドウ全体",
+  "Blur what is behind": "背面をぼかす",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Windows 7 のようなすりガラス。デスクトップがぼかしに対応していない場合、ウィンドウは透過のみになります。",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "文字は読みやすいままです。フレーム上の文字は光彩で縁取られ、ガラスは背面に何があっても文字が読める範囲までしか透明になりません。そのため、ウィンドウ全体を透過にすると、スキンによってはかなり不透明なままになります。動画は常に不透明です。",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "どのスキンでも使える Windows 7 風のガラス。透明度、範囲、ぼかしは「スキン」ページで設定します",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "透明 半透明 ガラス ぼかし すりガラス デスクトップ 壁紙 透過 aero acrylic mica"
 }

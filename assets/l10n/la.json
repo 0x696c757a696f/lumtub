@@ -3541,5 +3541,22 @@
   "Fill the window": "Fenestram implere",
   "Fill the window (W)": "Fenestram implere (W)",
   "Hide the side rail while watching": "Vectem lateralem in spectando celare",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video locum suum habet, ut in YouTube; modus theatri eam semper celat"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video locum suum habet, ut in YouTube; modus theatri eam semper celat",
+  "Window transparency": "Perspicuitas fenestrae",
+  "See the desktop through the window": "Videre mensam per fenestram",
+  "See the wallpaper through the app": "Videre tapete per applicationem",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Mensa per marginem circum paginas perlucet, sicut per vitrum Windows 7, coloribus cuiusvis pellis.",
+  "Takes effect the next time Lumtub starts.": "Valebit proximo Lumtub initio.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Haec mensa non potest ostendere quod post fenestram est: compositore eget.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Haec mensa non potest obscurare quod post est; fenestra tantum perlucida est.",
+  "The desktop shows through the window.": "Mensa per fenestram perlucet.",
+  "Transparency": "Perspicuitas",
+  "Where it is see-through": "Ubi perlucet",
+  "Frame only": "Margo tantum",
+  "Whole window": "Tota fenestra",
+  "Blur what is behind": "Obscurare quod post est",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Pruinosum sicut Windows 7; ubi mensa obscurare non potest, fenestra tantum perlucida est.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Verba legibilia manent: in margine fulgent, nec vitrum clarius fit quam ut textus super quovis eorum quae post sunt legi possit; itaque tota fenestra perlucida quaedam pelles satis solidae manent. Video semper solidum est.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Vitrum sicut Windows 7 sub qualibet pelle; quam clarum, ubi, et obscuratio in pagina Pellium sunt",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "perlucidus perspicuus translucidus vitrum obscurare pruinosum mensa tapete aero acrylic mica"
 }

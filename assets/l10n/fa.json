@@ -3541,5 +3541,22 @@
   "Fill the window": "پر کردن پنجره",
   "Fill the window (W)": "پر کردن پنجره (W)",
   "Hide the side rail while watching": "پنهان کردن نوار کناری هنگام تماشا",
-  "The video gets its room, as on YouTube; theater mode always hides it": "ویدیو فضای خودش را می‌گیرد، مثل YouTube؛ در حالت سینمایی همیشه پنهان می‌شود"
+  "The video gets its room, as on YouTube; theater mode always hides it": "ویدیو فضای خودش را می‌گیرد، مثل YouTube؛ در حالت سینمایی همیشه پنهان می‌شود",
+  "Window transparency": "شفافیت پنجره",
+  "See the desktop through the window": "دیدن دسکتاپ از میان پنجره",
+  "See the wallpaper through the app": "دیدن تصویر زمینه از میان برنامه",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "دسکتاپ از میان قاب دور صفحه‌ها دیده می‌شود، مثل شیشهٔ Windows 7، با رنگ‌های هر پوسته‌ای.",
+  "Takes effect the next time Lumtub starts.": "دفعهٔ بعد که Lumtub اجرا شود اعمال می‌شود.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "این دسکتاپ نمی‌تواند آنچه پشت پنجره است را نشان دهد: به یک کامپوزیتور نیاز دارد.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "این دسکتاپ نمی‌تواند آنچه پشت پنجره است را محو کند؛ پنجره فقط شفاف می‌شود.",
+  "The desktop shows through the window.": "دسکتاپ از میان پنجره دیده می‌شود.",
+  "Transparency": "شفافیت",
+  "Where it is see-through": "کجا شفاف باشد",
+  "Frame only": "فقط قاب",
+  "Whole window": "کل پنجره",
+  "Blur what is behind": "محو کردن آنچه پشت است",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "مات مثل Windows 7؛ جایی که دسکتاپ نمی‌تواند محو کند، پنجره فقط شفاف است.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "نوشته‌ها خوانا می‌مانند: روی قاب می‌درخشند و شیشه شفاف‌تر از حدی نمی‌شود که نوشته روی هر چیزی در پشت آن خوانا باشد، پس وقتی کل پنجره شفاف است، برخی پوسته‌ها نسبتاً کدر می‌مانند. ویدیو همیشه کدر است.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "شیشه‌ای مثل Windows 7 زیر هر پوسته؛ میزان شفافیت، محل و محوشدگی در صفحهٔ پوسته‌ها است",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "شفاف نیمه‌شفاف شیشه محو محوشدگی مات دسکتاپ تصویر زمینه aero acrylic mica"
 }

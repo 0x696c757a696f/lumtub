@@ -3541,5 +3541,22 @@
   "Fill the window": "Bete leihoa",
   "Fill the window (W)": "Bete leihoa (W)",
   "Hide the side rail while watching": "Ezkutatu alboko barra ikusten ari zarenean",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Bideoak bere lekua hartzen du, YouTuben bezala; zinema moduak beti ezkutatzen du"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Bideoak bere lekua hartzen du, YouTuben bezala; zinema moduak beti ezkutatzen du",
+  "Window transparency": "Leihoaren gardentasuna",
+  "See the desktop through the window": "Ikusi mahaigaina leihotik",
+  "See the wallpaper through the app": "Ikusi horma-papera aplikaziotik",
+  "The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.": "Mahaigaina orrien inguruko markoan zehar ikusten da, Windows 7ko beira bezala, edozein azalen koloreetan.",
+  "Takes effect the next time Lumtub starts.": "Lumtub hurrengoan abiarazten denean izango du eragina.",
+  "This desktop cannot show what is behind a window: it needs a compositor.": "Mahaigain honek ezin du leiho baten atzean dagoena erakutsi: konposatzaile bat behar du.",
+  "This desktop cannot blur what is behind; the window is only see-through.": "Mahaigain honek ezin du atzean dagoena lausotu; leihoa gardena baino ez da.",
+  "The desktop shows through the window.": "Mahaigaina leihoan zehar ikusten da.",
+  "Transparency": "Gardentasuna",
+  "Where it is see-through": "Non den gardena",
+  "Frame only": "Markoa soilik",
+  "Whole window": "Leiho osoa",
+  "Blur what is behind": "Lausotu atzean dagoena",
+  "Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.": "Izoztua Windows 7 bezala; mahaigainak lausotu ezin duenean, leihoa gardena baino ez da.",
+  "Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.": "Hitzak irakurgarri geratzen dira: markoan distira egiten dute, eta beira ez da atzean dagoen ezeren gainean testua irakurtzen uzten duena baino argiagoa, beraz leiho osoa gardena denean azal batzuk nahiko solidoak izaten dira. Bideoa beti solidoa da.",
+  "Glass like Windows 7 under any skin; how clear, where and blur are on the Skins page": "Windows 7ko beira edozein azalen azpian; zenbat garden, non eta lausotzea Azalak orrian daude",
+  "transparent translucent glass aero acrylic mica blur frosted desktop wallpaper see-through": "gardena erdi-gardena beira lausotu izoztua mahaigaina horma-papera aero acrylic mica"
 }

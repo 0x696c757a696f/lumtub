@@ -38,6 +38,8 @@ $form.ShowInTaskbar = $false
 $behind = Start-Process -FilePath powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $backdrop -PassThru
 Start-Sleep -Seconds 4
 
+$personalize = Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' -ErrorAction SilentlyContinue
+Write-Output "Windows $([Environment]::OSVersion.Version), transparency effects: $($personalize.EnableTransparency)"
 $env:LUMTUB_SHOWCASE = $Out
 $env:LUMTUB_GLASS_CHECK = '1'
 $app = Start-Process -FilePath $Exe -PassThru -RedirectStandardOutput (Join-Path $Out 'stdout.txt') -RedirectStandardError (Join-Path $Out 'stderr.txt')

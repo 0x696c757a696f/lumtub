@@ -7,8 +7,8 @@ lib/app/smoke_check.dart).
 
 The folder holds pictures of the screen under the window, taken by
 windows|linux|macos/packaging/glass-check.*, with a magenta window behind
-Lumtub: glass-off, glass-frame, glass-whole, glass-dark-off and
-glass-dark-frame (.png), and glass-state.json, what the runner answered.
+Lumtub: glass-off, glass-frame, glass-whole, glass-clear (no blur),
+glass-dark-off and glass-dark-frame (.png), and glass-state.json, what the runner answered.
 Each picture is measured for magenta, (R + B) / 2 - G, in two places: the
 bottom of the side rail, part of the frame, and the middle of the pages.
 
@@ -97,7 +97,7 @@ def main(folder):
     folder = Path(folder)
     state = json.loads((folder / "glass-state.json").read_text()) if (folder / "glass-state.json").exists() else {}
     measured = {}
-    for name in ["glass-off", "glass-frame", "glass-whole", "glass-dark-off", "glass-dark-frame"]:
+    for name in ["glass-off", "glass-frame", "glass-whole", "glass-clear", "glass-dark-off", "glass-dark-frame"]:
         path = folder / f"{name}.png"
         if not path.exists():
             print(f"{name}: no picture")
@@ -105,6 +105,9 @@ def main(folder):
         width, height, rows = read_png(path)
         measured[name] = (magenta(rows, width, height, FRAME), magenta(rows, width, height, PAGES))
         print(f"{name}: {width}x{height}, magenta on the frame {measured[name][0]:.1f}, on the pages {measured[name][1]:.1f}, runner said {state.get(name)}")
+        # A coarse map of the picture, for reading in the log.
+        for row in range(8):
+            print("  " + " ".join(f"{magenta(rows, width, height, (col / 12, row / 8, (col + 1) / 12, (row + 1) / 8)):4.0f}" for col in range(12)))
     ok = True
 
     def check(what, passed):
@@ -112,7 +115,7 @@ def main(folder):
         print(f"{'PASS' if passed else 'FAIL'}: {what}")
         ok = ok and passed
 
-    for off, frame, whole in [("glass-off", "glass-frame", "glass-whole"), ("glass-dark-off", "glass-dark-frame", None)]:
+    for off, frame, whole in [("glass-off", "glass-frame", "glass-whole"), ("glass-off", "glass-clear", None), ("glass-dark-off", "glass-dark-frame", None)]:
         if off not in measured or frame not in measured:
             check(f"pictures {off} and {frame} taken", False)
             continue

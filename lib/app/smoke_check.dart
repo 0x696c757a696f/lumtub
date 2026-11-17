@@ -116,6 +116,7 @@ extension SmokeCheck on AppController {
       await shot('glass-off', light.copyWith(windowGlass: false));
       await shot('glass-frame', light.copyWith(windowGlass: true, windowGlassWhole: false));
       await shot('glass-whole', light.copyWith(windowGlass: true, windowGlassWhole: true));
+      await shot('glass-clear', light.copyWith(windowGlass: true, windowGlassWhole: false, windowGlassBlur: false));
       final dark = light.copyWith(skin: 'obsidian', themeMode: ThemeMode.dark);
       await shot('glass-dark-off', dark.copyWith(windowGlass: false));
       await shot('glass-dark-frame', dark.copyWith(windowGlass: true, windowGlassWhole: false));

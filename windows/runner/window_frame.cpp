@@ -253,9 +253,20 @@ void WindowFrame::ApplyMargins() {
   ::DwmExtendFrameIntoClientArea(window_, &margins);
 }
 
+// Settings › Personalisation › Colours › Transparency effects. With them
+// off, Windows draws its blur as a solid colour, which would hide the
+// desktop the person asked to see, so the glass is left clear instead.
+static bool TransparencyEffectsOn() {
+  DWORD value = 1;
+  DWORD size = sizeof(value);
+  ::RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+                 L"EnableTransparency", RRF_RT_REG_DWORD, nullptr, &value, &size);
+  return value != 0;
+}
+
 EncodableValue WindowFrame::SetDesktopGlass(bool on, bool dark, bool blur) {
   glass_ = on;
-  glass_blur_ = on && blur;
+  glass_blur_ = on && blur && TransparencyEffectsOn();
   ApplyMargins();
   if (on) {
     // The acrylic's own shade follows the skin's side, not the system's.

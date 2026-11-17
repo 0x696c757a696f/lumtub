@@ -44,6 +44,10 @@ transparency when `WindowGlass.possible`:
 | macOS | clear window over an `NSVisualEffectView` | the view's behind-window blur (none: the view is hidden) |
 | Android phones and tablets | `BackgroundMode.transparent` + `FLAG_SHOW_WALLPAPER` | Android 12+: `setBackgroundBlurRadius` when cross-window blur is on |
 
+On Windows with Transparency effects turned off (Settings ›
+Personalisation › Colours), the system would draw its blur as a solid
+colour, so the glass stays clear and unblurred instead.
+
 Not TVs (no wallpaper behind apps) nor iOS. On Android the transparent
 background must be chosen when the activity starts, so a change takes
 effect at the next start and the setting says so (`restart`). On Linux
@@ -87,12 +91,14 @@ seen. It was never checked on a real desktop.
 ## CI check
 
 `LUMTUB_GLASS_CHECK=1` (`runGlassCheck` in `lib/app/smoke_check.dart`)
-takes five pictures with a magenta window behind Lumtub: glass off,
-frame, whole (Aero light, clarity 1), and off and frame in Obsidian dark.
+takes six pictures with a magenta window behind Lumtub: glass off,
+frame, whole, frame without blur (Aero light, clarity 1), and off and
+frame in Obsidian dark.
 `packaging/glass_measure.py` measures magenta ((R + B) / 2 − G) at the
 bottom of the side rail and in the middle of the pages, and fails unless
 the frame took on magenta (+12), the pages stayed as they were in frame
-mode (±6) and took it on in whole mode (+6). Scripts:
+mode (±6) and took it on in whole mode (+6). The log also shows a
+coarse map of each picture. Scripts:
 `windows/packaging/glass-check.ps1`, `linux/packaging/glass-check.sh`
 (picom), `macos/packaging/glass-check.sh`. The pictures are uploaded as
 `glass-*` artifacts.

@@ -7,6 +7,7 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/widgets.dart';
 
 import 'emoji_text.dart';
+import '../thumbnail_cache.dart';
 
 /// A piece of a 弹幕 message: text, a YouTube emoji picture, or a Unicode
 /// emoji drawn in colour.
@@ -151,7 +152,7 @@ class DanmakuPainter {
     final known = _pictures.remove(url);
     if (known != null) return _pictures[url] = known;
     final done = Completer<ui.Image?>();
-    final stream = NetworkImage(url).resolve(ImageConfiguration.empty);
+    final stream = CachedThumbnail(url, null).resolve(ImageConfiguration.empty);
     late final ImageStreamListener listener;
     void finish(ui.Image? image) {
       stream.removeListener(listener);

@@ -560,6 +560,7 @@ mod tests {
             proxy: None,
             chunk: crate::relay::CHUNK,
             live: Some("pair".into()),
+            hls: Default::default(),
         }
     }
 

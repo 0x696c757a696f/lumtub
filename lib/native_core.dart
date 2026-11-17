@@ -11,6 +11,7 @@ import 'ios_python.dart';
 import 'app_log.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
+import 'yt_dlp_tls.dart';
 
 /// A joined file, or why not, and the stretches (from, to) of the
 /// original left out of it.
@@ -388,6 +389,15 @@ class NativeCore {
     }
   }
 
+  /// The certificate authorities [roots] (`system`, `mozilla`, `google`)
+  /// names, as PEM text; null with none to give or a core without it.
+  static String? rootsPem(String roots) {
+    final core = instance;
+    if (core == null || !core.library.providesSymbol('lumtub_roots_pem')) return null;
+    final pem = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_roots_pem');
+    return core.withBytes(utf8.encode(roots), (p, n) => core.take(pem(p, n)));
+  }
+
   static bool get canJoin => instance?.library.providesSymbol('lumtub_join') ?? false;
 
   Pointer<Utf8> Function(Pointer<Uint8>, int)? _join;
@@ -476,6 +486,11 @@ class ProcessTree implements Process {
   static Future<Process> start(String executable, List<String> arguments, {Map<String, String>? environment, String? workingDirectory, bool background = false}) async {
     if (isYtDlp(executable)) arguments = [...ytDlpIsolation, if (forceIpv4) '--force-ipv4', ...arguments];
     if (IosPython.runs(executable)) return IosPython.current!.start(executable, arguments, environment);
+    // Its own HTTPS follows 证书来源 and 抗量子加密 (lib/yt_dlp_tls.dart).
+    if (isYtDlp(executable)) {
+      arguments = YtDlpTls.withPlugin(arguments, ytDlpIsolation.length);
+      environment = {...YtDlpTls.environment, ...?environment};
+    }
     (arguments, environment) = NetworkProxy.hideCredentials(arguments, environment);
     if (AndroidPython.runs(executable)) (executable, arguments, environment) = AndroidPython.current!.command(executable, arguments, environment);
     final process = await Process.start(executable, arguments, environment: environment, workingDirectory: workingDirectory);

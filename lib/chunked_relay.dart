@@ -23,6 +23,11 @@ abstract interface class StreamRelay {
   /// cannot serve live streams.
   String? registerLive(String url, {required String pair, String? userAgent, String? proxy});
 
+  /// A loopback address that serves the HLS playlist [url] with every
+  /// address in it through the relay too, so the core's TLS, proxy and
+  /// DNS carry the whole stream. Null when this relay cannot serve HLS.
+  String? registerHls(String url, {String? userAgent, String? proxy});
+
   /// Listens again when the system took the listening socket away, as iOS
   /// does to a suspended app: connections to the port are then refused.
   Future<void> revive();
@@ -97,6 +102,13 @@ class NativeRelay implements StreamRelay {
     return _core.take(_core.withText(json, _core.relayRegister));
   }
 
+  @override
+  String? registerHls(String url, {String? userAgent, String? proxy}) {
+    final json = jsonEncode({'url': url, 'size': 0, 'userAgent': userAgent, 'proxy': proxy, 'chunk': chunkSize, 'hls': 'playlist'});
+    _watchLog();
+    return _core.take(_core.withText(json, _core.relayRegister));
+  }
+
   /// The native relay runs until Lumtub exits.
   @override
   Future<void> close() async {
@@ -149,6 +161,9 @@ class ChunkedRelay implements StreamRelay {
 
   @override
   String? registerLive(String url, {required String pair, String? userAgent, String? proxy}) => null;
+
+  @override
+  String? registerHls(String url, {String? userAgent, String? proxy}) => null;
 
   /// Listens again, on the same port when it is free, when nothing takes
   /// connections there any more.

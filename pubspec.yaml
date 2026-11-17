@@ -51,6 +51,7 @@ flutter:
     - assets/l10n/
     # yt-dlp's challenge plugin for Android and iOS (lib/js_challenge_plugin.dart).
     - python/lumtub_jsc.py
+    - python/lumtub_tls.py
     # Settings › Appearance › App icon (lib/windows_shell.dart).
     - assets/app_icons/
     # Built-in skins and the template users start from (skins/README.md).

@@ -64,7 +64,10 @@ constexpr DWORD kAccentAcrylicBuild = 17134;
 enum Accent { kAccentNone = 0, kAccentClear = 2, kAccentBlur = 3, kAccentAcrylic = 4 };
 
 // The undocumented accent policy that TranslucentTB and the taskbar use.
-void SetAccent(HWND window, Accent state) {
+// [frost] is 0xAARRGGBB: the colour laid over the blur, as Windows 10's
+// own acrylic lays its tint, so the desktop behind reads as frosted glass
+// rather than as a sharp picture.
+void SetAccent(HWND window, Accent state, DWORD frost = 0) {
   struct AccentPolicy {
     int state;
     int flags;
@@ -80,11 +83,12 @@ void SetAccent(HWND window, Accent state) {
   static const auto set_composition = reinterpret_cast<SetComposition>(
       ::GetProcAddress(::GetModuleHandle(L"user32.dll"), "SetWindowCompositionAttribute"));
   if (!set_composition) return;
-  // Acrylic with an all-clear tint draws nothing; Flutter lays the skin's
-  // tint over it. Clear: a gradient of nothing (flag 2: use the colour),
-  // so the desktop shows as it is. Since Windows 8 the extended frame alone
-  // is drawn solid, without the accent.
-  AccentPolicy accent{state, state == kAccentClear ? 2 : 0, state == kAccentAcrylic ? 0x01000000u : 0u, 0};
+  // The policy wants 0xAABBGGRR. Clear: a gradient of nothing, so the
+  // desktop shows as it is (since Windows 8 the extended frame alone is
+  // drawn solid). Flag 2: use the colour.
+  const DWORD abgr = (frost & 0xFF00FF00u) | ((frost & 0xFFu) << 16) | ((frost >> 16) & 0xFFu);
+  const DWORD gradient = state == kAccentClear ? 0u : abgr;
+  AccentPolicy accent{state, state == kAccentNone ? 0 : 2, gradient, 0};
   CompositionData data{19 /* WCA_ACCENT_POLICY */, &accent, sizeof(accent)};
   set_composition(window, &data);
 }
@@ -148,7 +152,14 @@ void WindowFrame::HandleCall(const flutter::MethodCall<EncodableValue>& call,
       const bool* on = value ? std::get_if<bool>(value) : nullptr;
       return on && *on;
     };
-    result->Success(SetDesktopGlass(flag("on"), flag("dark"), flag("blur")));
+    // The skin's glass colour, 0xAARRGGBB; Dart ints arrive as 32 or 64 bits.
+    const EncodableValue* tint = Find(args, "tint");
+    int64_t colour = 0;
+    if (tint) {
+      if (const auto* small = std::get_if<int32_t>(tint)) colour = static_cast<uint32_t>(*small);
+      if (const auto* big = std::get_if<int64_t>(tint)) colour = *big;
+    }
+    result->Success(SetDesktopGlass(flag("on"), flag("dark"), flag("blur"), static_cast<DWORD>(colour)));
     return;
   } else if (method == "minimize") {
     // The shell sees the resulting WM_SIZE, so minimize-to-tray still applies.
@@ -271,8 +282,11 @@ static bool TransparencyEffectsOn() {
   return value != 0;
 }
 
-EncodableValue WindowFrame::SetDesktopGlass(bool on, bool dark, bool blur) {
+EncodableValue WindowFrame::SetDesktopGlass(bool on, bool dark, bool blur, DWORD tint) {
   glass_ = on;
+  // Half the skin's colour over the blur: frosted, as Windows 10's
+  // acrylic is, with Flutter's own tint on top.
+  glass_frost_ = (tint & 0x00FFFFFFu) | 0x80000000u;
   glass_blur_ = on && blur && TransparencyEffectsOn();
   ApplyMargins();
   if (on) {
@@ -308,7 +322,7 @@ void WindowFrame::ApplyBlur(bool moving) {
   if (!glass_blur_) {
     SetAccent(window_, glass_ ? kAccentClear : kAccentNone);
   } else {
-    SetAccent(window_, build >= kAccentAcrylicBuild && !moving ? kAccentAcrylic : kAccentBlur);
+    SetAccent(window_, build >= kAccentAcrylicBuild && !moving ? kAccentAcrylic : kAccentBlur, glass_frost_);
   }
 }
 

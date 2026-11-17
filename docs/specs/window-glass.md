@@ -37,7 +37,7 @@ transparency when `WindowGlass.possible`:
 | Platform | Through the window | Blur |
 | --- | --- | --- |
 | Windows 11 22H2+ | DWM frame over the whole client area | `DWMWA_SYSTEMBACKDROP_TYPE` acrylic |
-| Windows 10 1803+ | same | `SetWindowCompositionAttribute` acrylic accent, plain blur behind while moved or sized (acrylic lags) |
+| Windows 10 1803+ | same | `SetWindowCompositionAttribute` acrylic accent frosted with half the skin's page colour (as the system's own acrylic), plain blur behind while moved or sized (acrylic lags) |
 | Windows older | same | DWM blur behind |
 | Linux X11 | RGBA visual chosen before the window is realized | KDE: `_KDE_NET_WM_BLUR_BEHIND_REGION` |
 | Linux Wayland | RGBA surface | `ext_background_effect_v1` (KDE Plasma 6.7+, GNOME 51+, COSMIC, niri, Hyprland 0.56+), else KDE's `org_kde_kwin_blur` |

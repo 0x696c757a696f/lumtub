@@ -173,6 +173,34 @@ void main() {
       expect(feed.notInterested.videos, hasLength(1));
     });
 
+    test('tries once more when every source fails, then says why', () async {
+      HomeFeed.retryAfter = Duration.zero;
+      addTearDown(() => HomeFeed.retryAfter = const Duration(seconds: 4));
+      var calls = 0;
+      final feed = HomeFeed(NotInterested(null));
+      HomeFeedSources sources({required bool recover}) => HomeFeedSources(
+            history: const [],
+            related: (_) async => const [],
+            channelUploads: (_) async => const [],
+            search: (_) async {
+              calls++;
+              if (recover && calls > 1) return [video('back', channelId: 'UCback')];
+              throw TimeoutException('no answer');
+            },
+          );
+      await feed.refresh(sources(recover: false));
+      expect(calls, 2);
+      expect(feed.items, isEmpty);
+      expect(feed.error, contains('None of the recommendation sources responded'));
+      expect(feed.error, contains('timed out'));
+
+      calls = 0;
+      await feed.refresh(sources(recover: true));
+      expect(calls, 2);
+      expect(feed.error, isNull);
+      expect(feed.items.map((v) => v.id.replaceAll('_', '')), contains('back'));
+    });
+
     test('repeated refreshes share the source limit and drop older waiting sources', () async {
       final feed = HomeFeed(NotInterested(null));
       var running = 0;

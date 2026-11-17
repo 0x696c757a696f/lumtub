@@ -186,7 +186,7 @@ class _LumtubAppState extends State<LumtubApp> {
         if (!waiting) await shell.invokeMethod<void>('closeSignInPage');
       };
     }
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid) _shell = WindowsShellSync(controller, WindowsShell());
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid || Platform.isIOS) _shell = WindowsShellSync(controller, WindowsShell());
     if (controller.appearance.systemAccent) unawaited(controller.refreshWindowsAccent());
     // Closing the window ends the process without disposing widgets, so the
     // player and unsaved progress are released here first.

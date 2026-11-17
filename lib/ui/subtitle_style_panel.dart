@@ -17,15 +17,13 @@ Future<void> showSubtitleStylePanel(BuildContext context, AppController controll
       title: tr('Subtitle style'),
       width: 420,
       actions: [
-        Builder(
-          builder: (inner) => TextButton.icon(
-            onPressed: () {
-              Navigator.of(inner).pop();
-              openSubtitleSettings(context, controller);
-            },
-            icon: Icon(AppIcons.slidersHorizontal, size: 18),
-            label: Text(tr('All subtitle settings')),
-          ),
+        PanelAction(
+          icon: AppIcons.slidersHorizontal,
+          label: tr('All subtitle settings'),
+          onPressed: (panel) {
+            Navigator.of(panel).pop();
+            openSubtitleSettings(context, controller);
+          },
         ),
       ],
       builder: (context) => _StylePanel(controller: controller),

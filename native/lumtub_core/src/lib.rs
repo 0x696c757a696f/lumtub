@@ -17,6 +17,7 @@ pub mod danmaku;
 pub mod dns;
 pub mod downloads;
 pub mod embed;
+pub mod feed;
 pub mod filter;
 pub mod format_policy;
 pub mod hashes;
@@ -62,5 +63,5 @@ pub mod web_account;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    49
+    50
 }

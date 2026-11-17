@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'app_log.dart';
 import 'background_json.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
@@ -226,9 +227,81 @@ class StreamResolver {
   /// YouTube refused stream addresses yt-dlp took from a TV client the
   /// moment they were opened: the TV clients are left out again at once.
   void avoidTv() {
+    // visionOS's own addresses stop after 1 MiB here: the TV clients stay.
+    if (visionCut) return;
     if (!avoidingTv) logInfo("YouTube refused the TV client's stream addresses; asking yt-dlp as visionOS alone again");
     _tvNeededUntil = null;
   }
+
+  /// Some networks get a YouTube experiment (seen in November 2026) that
+  /// refuses visionOS's stream addresses past their first MiB, as it wants
+  /// a PO token for them there. A quick start would play a second and
+  /// stop, and so would yt-dlp asking as visionOS alone; while it lasts,
+  /// quick starts are skipped and yt-dlp asks its default clients.
+  bool get visionCut {
+    final until = _visionCutUntil;
+    return until != null && DateTime.now().isBefore(until) && _visionCutProxy == proxy?.call();
+  }
+
+  DateTime? _visionCutUntil;
+  String? _visionCutProxy;
+
+  /// When the cut was last looked for, and through which proxy.
+  DateTime _visionCheckedAt = DateTime(0);
+  String? _visionCheckedProxy;
+  bool _visionChecking = false;
+
+  /// How long a cut, or its absence, is trusted before it is looked for
+  /// again.
+  static const visionCheckFor = Duration(minutes: 30);
+
+  /// The first byte past the part YouTube lets through.
+  static const visionCutAt = 1024 * 1024;
+
+  /// Looks, in the background, whether the address of the quick start
+  /// [info] is refused past [visionCutAt], unless that was looked at
+  /// lately through the same proxy.
+  @visibleForTesting
+  Future<void> checkVisionCut(Map<String, dynamic> info) async {
+    final proxy = this.proxy?.call();
+    if (_visionChecking || (_visionCheckedProxy == proxy && DateTime.now().difference(_visionCheckedAt) < visionCheckFor)) return;
+    final formats = [...?(info['requested_formats'] as List?)?.whereType<Map>(), info];
+    final format = formats.firstWhere((f) => f['url'] is String && ((f['filesize'] as num?) ?? 0) > visionCutAt + 4096, orElse: () => const {});
+    final url = format['url'];
+    if (url is! String) return;
+    final headers = <String, String>{
+      ...?((format['http_headers'] ?? info['http_headers']) as Map?)?.cast<String, String>(),
+    };
+    _visionChecking = true;
+    {
+      try {
+        final client = _quickClient ??= appHttpClient();
+        final response = await client
+            .get(Uri.parse('$url&range=$visionCutAt-${visionCutAt + 4095}'), headers: headers)
+            .timeout(const Duration(seconds: 8));
+        final status = response.statusCode;
+        if (status != 200 && status != 206 && status != 403) return;
+        _visionCheckedAt = DateTime.now();
+        _visionCheckedProxy = proxy;
+        if (status == 403) {
+          _visionCutUntil = DateTime.now().add(visionCheckFor);
+          _visionCutProxy = proxy;
+          _tvNeededUntil = _visionCutUntil;
+          logWarn("YouTube refuses visionOS's stream addresses past 1 MiB on this network; quick starts are off and yt-dlp asks its default clients for ${visionCheckFor.inMinutes} minutes");
+        } else if (_visionCutUntil != null) {
+          _visionCutUntil = null;
+          logInfo("visionOS's stream addresses play past 1 MiB again");
+        }
+      } catch (e) {
+        logInfo('Could not check visionOS addresses past 1 MiB: $e');
+      } finally {
+        _visionChecking = false;
+      }
+    }
+  }
+
+  @visibleForTesting
+  set quickClient(http.Client client) => _quickClient = client;
 
   /// mpv's own default when no format was chosen.
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
@@ -303,6 +376,10 @@ class StreamResolver {
   /// ciphered, refused, not answered within a few seconds); [resolve]
   /// still has the whole answer.
   Future<ResolvedVideo?> quick(String videoId, String format, String policy) async {
+    if (visionCut) {
+      logInfo('Quick start of $videoId: skipped, visionOS addresses stop after 1 MiB here');
+      return null;
+    }
     final core = NativeCore.instance;
     final request = core?.quickRequest(videoId);
     if (core == null || request == null) return null;
@@ -336,6 +413,7 @@ class StreamResolver {
       }
       final info = jsonDecode(text) as Map<String, dynamic>;
       logInfo('Quick start of $videoId in ${watch.elapsedMilliseconds} ms');
+      unawaited(checkVisionCut(info));
       return ResolvedVideo(info, _infoFile(videoId), format, text: text);
     } catch (e) {
       logInfo('Quick start of $videoId failed: $e');

@@ -197,30 +197,33 @@ class StreamResolver {
   /// The entries of [_results] resolved with `live`.
   final _lives = <String>{};
 
-  /// Until when yt-dlp is asked without its TV clients (see [avoidTv]).
-  DateTime? _tvAvoidedUntil;
+  /// Until when yt-dlp is asked with its TV clients after a run without
+  /// them gave nothing (see [avoidingTv]).
+  DateTime? _tvNeededUntil;
 
-  /// How long the TV clients are left out after their addresses were
-  /// refused.
-  static const tvAvoidance = Duration(minutes: 30);
+  /// How long the TV clients are asked again after a run without them
+  /// failed.
+  static const tvNeededFor = Duration(minutes: 30);
 
   /// yt-dlp's `--extractor-args` value that leaves out its TV clients.
   static const noTvClients = 'youtube:player_client=default,-tv,-tv_samsung';
 
+  /// Whether yt-dlp leaves out its TV clients (`TVHTML5`), as it does
+  /// unless a run without them just failed. Measured on a Windows PC on
+  /// 2026-11-17 (yt-dlp 2026.11.16, five videos): the TV client's
+  /// JavaScript challenge took Deno 6–11 s on every run, and some of its
+  /// addresses answered 403 at once, while without it every run took
+  /// 5–6 s, gave the same heights and only addresses that played.
   bool get avoidingTv {
-    final until = _tvAvoidedUntil;
-    return until != null && DateTime.now().isBefore(until);
+    final until = _tvNeededUntil;
+    return until == null || !DateTime.now().isBefore(until);
   }
 
-  /// YouTube refused stream addresses yt-dlp took from a TV client
-  /// (`TVHTML5`) the moment they were opened. yt-dlp keeps only the first
-  /// client's copy of each format, and the TV client comes first, so the
-  /// next answer would hold the same kind of refused address and cost
-  /// another few seconds. For a while yt-dlp is asked without the TV
-  /// clients, which leaves it the other clients' copies of those formats.
+  /// YouTube refused stream addresses yt-dlp took from a TV client the
+  /// moment they were opened: the TV clients are left out again at once.
   void avoidTv() {
-    if (!avoidingTv) logInfo("YouTube refused the TV client's stream addresses; asking yt-dlp without it for ${tvAvoidance.inMinutes} minutes");
-    _tvAvoidedUntil = DateTime.now().add(tvAvoidance);
+    if (!avoidingTv) logInfo("YouTube refused the TV client's stream addresses; asking yt-dlp without it again");
+    _tvNeededUntil = null;
   }
 
   /// mpv's own default when no format was chosen.
@@ -238,7 +241,8 @@ class StreamResolver {
         '--extractor-retries', '3',
         if (live)
           ...['--extractor-args', 'youtube:formats=incomplete${liveClients == null ? '' : ';player_client=$liveClients'}']
-        else if (avoidingTv)
+        // A signed-in run keeps yt-dlp's own clients for signed-in users.
+        else if (cookies == null && avoidingTv)
           ...['--extractor-args', noTvClients],
         '--no-playlist',
         '--dump-single-json',
@@ -457,6 +461,11 @@ class StreamResolver {
   /// Errors a second attempt can get past, unlike a private or removed video.
   static final _transient = RegExp(r'HTTP Error 5\d\d|timed out|Connection (reset|aborted|refused)|Remote end closed|getaddrinfo|IncompleteRead', caseSensitive: false);
 
+  /// What yt-dlp says when the clients it asked gave nothing to play,
+  /// which the TV client may still give; a private, removed or
+  /// members-only video stays refused whichever client asks.
+  static final _tvMayHelp = RegExp(r'not a bot|Requested format is not available|No video formats found|Only images are available|PO Token', caseSensitive: false);
+
   /// Whether [error] is a network failure that resolving already retried.
   static bool isTransient(Object error) => _transient.hasMatch('$error');
 
@@ -477,11 +486,12 @@ class StreamResolver {
       await Future<void>.delayed(const Duration(seconds: 2));
       result = await run(signed: signed);
     }
-    if (_failed(result) && !live && avoidingTv) {
-      // The other clients may give nothing this video can play: the TV
-      // client is asked again from now on.
-      logWarn('Resolving $videoId without the TV client failed; asking with it again');
-      _tvAvoidedUntil = null;
+    if (_failed(result) && !live && !signed && avoidingTv && _tvMayHelp.hasMatch(result.stderr.toString())) {
+      // The other clients may give nothing this video can play (when
+      // YouTube takes them for a bot, say): the TV client is asked too
+      // for a while.
+      logWarn('Resolving $videoId without the TV client failed; asking with it for ${tvNeededFor.inMinutes} minutes');
+      _tvNeededUntil = DateTime.now().add(tvNeededFor);
       result = await run(signed: signed);
     }
     if (_failed(result) && !signed && signedIn && membersOnlyError.hasMatch(result.stderr.toString())) {

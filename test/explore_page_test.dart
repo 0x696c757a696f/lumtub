@@ -9,6 +9,7 @@ import 'package:lumtub/blocked_groups.dart';
 import 'package:lumtub/explore_filters.dart';
 import 'package:lumtub/explore_topics.dart';
 import 'package:lumtub/faith_topics.dart';
+import 'package:lumtub/faith_traditions.dart';
 import 'package:lumtub/l10n/l10n.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/recommendations.dart';
@@ -441,20 +442,22 @@ void main() {
     expect(find.text('All Catholic'), findsOneWidget);
     await _tapChip(tester, 'Mass');
     await tester.pump();
-    expect(controller.exploreQuery, 'Holy Mass 弥撒');
+    expect(controller.exploreQuery, 'Holy Mass 天主教 弥撒');
+    expect(controller.exploreTraditionNow, FaithTradition.catholic);
     expect(find.text('Christianity · Catholic · Mass · Relevant full-length videos, less clickbait, up to 3 per channel'), findsOneWidget);
 
     await tester.tap(find.text('Type'));
     await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(find.text('Documentary').last);
     await tester.pump(const Duration(milliseconds: 300));
-    expect(controller.exploreQuery, 'Holy Mass 弥撒 documentary 纪录片');
+    expect(controller.exploreQuery, 'Holy Mass 天主教 弥撒 documentary 纪录片');
 
     // Another sub-category starts on all of it.
     await tester.tap(find.text('Protestant'));
     await tester.pump();
     expect(controller.exploreLeaf, 0);
     expect(find.text('Evangelical'), findsOneWidget);
+    expect(controller.exploreTraditionNow, FaithTradition.protestant);
 
     await tester.tap(find.text('Study'));
     await tester.pump(const Duration(milliseconds: 500));

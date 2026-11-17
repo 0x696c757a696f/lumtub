@@ -75,6 +75,11 @@ extension ExploreActions on AppController {
     return exploreLeaf > 0 && exploreLeaf <= subs.length ? subs[exploreLeaf - 1] : null;
   }
 
+  /// The faith tradition the zone shown keeps to: the narrowest
+  /// sub-category's that names one. Only 宗教与信仰's zones name one.
+  FaithTradition? get exploreTraditionNow =>
+      exploreSection.isFaith ? FaithTradition.of([exploreLeafNow?.tradition, exploreSubNow?.tradition, exploreTopicNow.tradition]) : null;
+
   /// The words searched for: the narrowest sub-category's, or the whole
   /// zone's, with 宗教与信仰's filter words.
   String get exploreQuery => [
@@ -312,6 +317,12 @@ extension ExploreActions on AppController {
     final dropVertical = preferences.feedVertical == FeedLevel.drop;
     final notInterested = homeFeed?.notInterested;
     final faith = exploreSection.isFaith ? faithFilter() : null;
+    // A zone of one tradition keeps to it: a Catholic zone's search also
+    // brings Protestant sermons (see [FaithTradition]). Live streams are
+    // seldom titled by their church, so there only those naming another
+    // are left out.
+    final tradition = mix ? null : exploreTraditionNow;
+    final strictTradition = tradition != null && tradition.strict && !exploreSection.isLive && faithMarkerLanguages.contains(language);
     // A live stream goes on after it was watched: only videos are left out
     // of 全部 once seen.
     final seen = mix && !exploreSection.isLive ? {for (final item in history) item.id, ...?homeFeed?.items.map((item) => item.id)} : const <String>{};
@@ -356,6 +367,7 @@ extension ExploreActions on AppController {
       // already shows. It keeps any one channel from filling it.
       if (mix && seen.contains(item.id)) return drop('already seen');
       if (mix && (perChannel[TasteProfile.channelKey(item)] = (perChannel[TasteProfile.channelKey(item)] ?? 0) + 1) > 2) return drop('more than 2 per channel');
+      if (tradition != null && !tradition.admits(item, strict: strictTradition)) return drop('other tradition');
       // Last, as it counts the videos that show.
       return faith == null || faith(item) || drop('faith filter');
     }

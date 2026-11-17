@@ -15,7 +15,7 @@
 #endif
 #ifdef GDK_WINDOWING_WAYLAND
 #include <gdk/gdkwayland.h>
-#include <wayland-client.h>
+#include <wayland-client-core.h>
 #endif
 
 namespace {
@@ -707,36 +707,84 @@ void BeginFrameDrag(bool resize, GdkWindowEdge edge) {
 #ifdef GDK_WINDOWING_WAYLAND
 // KWin's blur protocol (org_kde_kwin_blur from plasma-wayland-protocols,
 // version 1), written out by hand: two requests on the manager, three on
-// a blur.
-const struct wl_interface* kBlurRegionTypes[] = {&wl_region_interface};
+// a blur. libwayland-client is reached through GTK, which already loaded
+// it, so the runner is not linked against a copy older than libmpv's.
+const struct wl_interface* kBlurRegionTypes[] = {nullptr};
 const struct wl_message kBlurRequests[] = {
     {"commit", "", nullptr},
     {"set_region", "?o", kBlurRegionTypes},
     {"release", "", nullptr},
 };
 const struct wl_interface kBlurInterface = {"org_kde_kwin_blur", 1, 3, kBlurRequests, 0, nullptr};
-const struct wl_interface* kBlurCreateTypes[] = {&kBlurInterface, &wl_surface_interface};
-const struct wl_interface* kBlurUnsetTypes[] = {&wl_surface_interface};
+const struct wl_interface* kBlurCreateTypes[] = {&kBlurInterface, nullptr};
+const struct wl_interface* kBlurUnsetTypes[] = {nullptr};
 const struct wl_message kBlurManagerRequests[] = {
     {"create", "no", kBlurCreateTypes},
     {"unset", "o", kBlurUnsetTypes},
 };
 const struct wl_interface kBlurManagerInterface = {"org_kde_kwin_blur_manager", 1, 2, kBlurManagerRequests, 0, nullptr};
 
+struct WaylandClient {
+  const struct wl_interface* registry_interface;
+  struct wl_event_queue* (*create_queue)(struct wl_display*);
+  int (*roundtrip_queue)(struct wl_display*, struct wl_event_queue*);
+  void (*destroy_queue)(struct wl_event_queue*);
+  int (*flush)(struct wl_display*);
+  int (*add_listener)(struct wl_proxy*, void (**)(void), void*);
+  void (*destroy)(struct wl_proxy*);
+  uint32_t (*version)(struct wl_proxy*);
+  void (*set_queue)(struct wl_proxy*, struct wl_event_queue*);
+  struct wl_proxy* (*marshal)(struct wl_proxy*, uint32_t, const struct wl_interface*, uint32_t, uint32_t, ...);
+};
+
+// The functions of the libwayland-client GTK uses; false when one is missing.
+bool LoadWaylandClient(WaylandClient& wl) {
+  void* library = dlopen("libwayland-client.so.0", RTLD_NOW | RTLD_NOLOAD);
+  if (library == nullptr) return false;
+  auto find = [library](const char* name) { return dlsym(library, name); };
+  auto region = static_cast<const struct wl_interface*>(find("wl_region_interface"));
+  auto surface = static_cast<const struct wl_interface*>(find("wl_surface_interface"));
+  wl.registry_interface = static_cast<const struct wl_interface*>(find("wl_registry_interface"));
+  wl.create_queue = reinterpret_cast<decltype(wl.create_queue)>(find("wl_display_create_queue"));
+  wl.roundtrip_queue = reinterpret_cast<decltype(wl.roundtrip_queue)>(find("wl_display_roundtrip_queue"));
+  wl.destroy_queue = reinterpret_cast<decltype(wl.destroy_queue)>(find("wl_event_queue_destroy"));
+  wl.flush = reinterpret_cast<decltype(wl.flush)>(find("wl_display_flush"));
+  wl.add_listener = reinterpret_cast<decltype(wl.add_listener)>(find("wl_proxy_add_listener"));
+  wl.destroy = reinterpret_cast<decltype(wl.destroy)>(find("wl_proxy_destroy"));
+  wl.version = reinterpret_cast<decltype(wl.version)>(find("wl_proxy_get_version"));
+  wl.set_queue = reinterpret_cast<decltype(wl.set_queue)>(find("wl_proxy_set_queue"));
+  wl.marshal = reinterpret_cast<decltype(wl.marshal)>(find("wl_proxy_marshal_flags"));
+  if (region == nullptr || surface == nullptr || wl.registry_interface == nullptr || wl.create_queue == nullptr ||
+      wl.roundtrip_queue == nullptr || wl.destroy_queue == nullptr || wl.flush == nullptr || wl.add_listener == nullptr ||
+      wl.destroy == nullptr || wl.version == nullptr || wl.set_queue == nullptr || wl.marshal == nullptr) {
+    return false;
+  }
+  kBlurRegionTypes[0] = region;
+  kBlurCreateTypes[1] = surface;
+  kBlurUnsetTypes[0] = surface;
+  return true;
+}
+
 struct WaylandBlur {
   bool looked = false;
+  WaylandClient wl{};
   struct wl_proxy* manager = nullptr;
   struct wl_proxy* blur = nullptr;
 };
 WaylandBlur wayland_blur;
 
-void OnGlobal(void*, struct wl_registry* registry, uint32_t name, const char* interface, uint32_t) {
+void OnGlobal(void*, struct wl_proxy* registry, uint32_t name, const char* interface, uint32_t) {
   if (g_strcmp0(interface, kBlurManagerInterface.name) == 0 && wayland_blur.manager == nullptr) {
-    wayland_blur.manager = static_cast<struct wl_proxy*>(wl_registry_bind(registry, name, &kBlurManagerInterface, 1));
+    const WaylandClient& wl = wayland_blur.wl;
+    // wl_registry.bind (request 0), as wayland-client-protocol.h writes it.
+    wayland_blur.manager = wl.marshal(registry, 0, &kBlurManagerInterface, 1, 0, name, kBlurManagerInterface.name, 1u, nullptr);
   }
 }
-void OnGlobalRemove(void*, struct wl_registry*, uint32_t) {}
-const struct wl_registry_listener kRegistryListener = {OnGlobal, OnGlobalRemove};
+void OnGlobalRemove(void*, struct wl_proxy*, uint32_t) {}
+struct {
+  void (*global)(void*, struct wl_proxy*, uint32_t, const char*, uint32_t);
+  void (*global_remove)(void*, struct wl_proxy*, uint32_t);
+} kRegistryListener = {OnGlobal, OnGlobalRemove};
 
 // Asks KWin to blur behind the whole window; false where the compositor
 // offers no such thing (GNOME, Sway and most others).
@@ -744,32 +792,36 @@ bool SetWaylandBlur(GdkWindow* surface, bool on) {
   struct wl_display* display = gdk_wayland_display_get_wl_display(gdk_window_get_display(surface));
   struct wl_surface* wl_surface = gdk_wayland_window_get_wl_surface(surface);
   if (display == nullptr || wl_surface == nullptr) return false;
+  WaylandClient& wl = wayland_blur.wl;
   if (!wayland_blur.looked) {
     wayland_blur.looked = true;
+    if (!LoadWaylandClient(wl)) return false;
     // A queue of our own, so GTK's events are left to GTK.
-    struct wl_event_queue* queue = wl_display_create_queue(display);
-    struct wl_registry* registry = wl_display_get_registry(display);
-    wl_proxy_set_queue(reinterpret_cast<struct wl_proxy*>(registry), queue);
-    wl_registry_add_listener(registry, &kRegistryListener, nullptr);
-    wl_display_roundtrip_queue(display, queue);
-    if (wayland_blur.manager != nullptr) wl_proxy_set_queue(wayland_blur.manager, nullptr);
-    wl_registry_destroy(registry);
-    wl_event_queue_destroy(queue);
+    struct wl_event_queue* queue = wl.create_queue(display);
+    // wl_display.get_registry (request 1).
+    auto* proxy_display = reinterpret_cast<struct wl_proxy*>(display);
+    struct wl_proxy* registry = wl.marshal(proxy_display, 1, wl.registry_interface, wl.version(proxy_display), 0, nullptr);
+    wl.set_queue(registry, queue);
+    wl.add_listener(registry, reinterpret_cast<void (**)(void)>(&kRegistryListener), nullptr);
+    wl.roundtrip_queue(display, queue);
+    if (wayland_blur.manager != nullptr) wl.set_queue(wayland_blur.manager, nullptr);
+    wl.destroy(registry);
+    wl.destroy_queue(queue);
   }
   if (wayland_blur.manager == nullptr) return false;
-  const uint32_t version = wl_proxy_get_version(wayland_blur.manager);
+  const uint32_t version = wl.version(wayland_blur.manager);
   if (wayland_blur.blur != nullptr) {
-    wl_proxy_marshal_flags(wayland_blur.blur, 2 /* release */, nullptr, version, WL_MARSHAL_FLAG_DESTROY);
+    wl.marshal(wayland_blur.blur, 2 /* release */, nullptr, version, WL_MARSHAL_FLAG_DESTROY);
     wayland_blur.blur = nullptr;
   }
   if (on) {
-    wayland_blur.blur = wl_proxy_marshal_flags(wayland_blur.manager, 0 /* create */, &kBlurInterface, version, 0, nullptr, wl_surface);
+    wayland_blur.blur = wl.marshal(wayland_blur.manager, 0 /* create */, &kBlurInterface, version, 0, nullptr, wl_surface);
     // No region: the whole surface.
-    wl_proxy_marshal_flags(wayland_blur.blur, 0 /* commit */, nullptr, version, 0);
+    wl.marshal(wayland_blur.blur, 0 /* commit */, nullptr, version, 0);
   } else {
-    wl_proxy_marshal_flags(wayland_blur.manager, 1 /* unset */, nullptr, version, 0, wl_surface);
+    wl.marshal(wayland_blur.manager, 1 /* unset */, nullptr, version, 0, wl_surface);
   }
-  wl_display_flush(display);
+  wl.flush(display);
   return true;
 }
 #endif

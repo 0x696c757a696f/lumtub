@@ -3575,5 +3575,7 @@
   "Top line": "Dòng trên",
   "Bottom line": "Dòng dưới",
   "Save the subtitle files beside the video as SRT": "Lưu tệp phụ đề cạnh video dưới dạng SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM không thể chứa phụ đề nên video sẽ được lưu dưới dạng MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM không thể chứa phụ đề nên video sẽ được lưu dưới dạng MKV",
+  "Picture in picture when leaving the app": "Hình trong hình khi rời khỏi ứng dụng",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Giữ video đang phát trong một cửa sổ nhỏ khi bạn chuyển sang ứng dụng khác; khi tắt, âm thanh vẫn phát nền"
 }

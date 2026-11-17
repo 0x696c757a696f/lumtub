@@ -3570,5 +3570,7 @@
   "Top line": "Felső sor",
   "Bottom line": "Alsó sor",
   "Save the subtitle files beside the video as SRT": "A feliratfájlok mentése a videó mellé SRT-ként",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "A WebM nem tud feliratokat tartalmazni, ezért a videó MKV-ként lesz mentve"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "A WebM nem tud feliratokat tartalmazni, ezért a videó MKV-ként lesz mentve",
+  "Picture in picture when leaving the app": "Kép a képben az alkalmazás elhagyásakor",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Kis ablakban folytatja a lejátszott videót, ha másik alkalmazásra váltasz; kikapcsolt állapotban a hang a háttérben szól tovább"
 }

@@ -3570,5 +3570,7 @@
   "Top line": "Mstari wa juu",
   "Bottom line": "Mstari wa chini",
   "Save the subtitle files beside the video as SRT": "Hifadhi faili za manukuu kando ya video kama SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM haiwezi kuhifadhi manukuu, kwa hivyo video itahifadhiwa kama MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM haiwezi kuhifadhi manukuu, kwa hivyo video itahifadhiwa kama MKV",
+  "Picture in picture when leaving the app": "Picha ndani ya picha unapoondoka kwenye programu",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Huweka video inayochezwa katika dirisha dogo unapobadili kwenda programu nyingine; ikizimwa, sauti yake huendelea kuchezwa chinichini"
 }

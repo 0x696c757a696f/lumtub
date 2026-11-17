@@ -3575,5 +3575,7 @@
   "Top line": "上の行",
   "Bottom line": "下の行",
   "Save the subtitle files beside the video as SRT": "字幕ファイルを動画と同じ場所にSRTとして保存",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebMには字幕を含められないため、動画はMKVで保存されます"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebMには字幕を含められないため、動画はMKVで保存されます",
+  "Picture in picture when leaving the app": "アプリを離れたらピクチャーインピクチャー",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "別のアプリに切り替えたとき、再生中の動画を小さなウィンドウで再生し続けます。オフの場合は、音声のみバックグラウンドで再生が続きます"
 }

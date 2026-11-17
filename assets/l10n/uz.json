@@ -3570,5 +3570,7 @@
   "Top line": "Yuqori qator",
   "Bottom line": "Pastki qator",
   "Save the subtitle files beside the video as SRT": "Taglavha fayllarini video yoniga SRT sifatida saqlash",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM taglavhalarni saqlay olmaydi, shuning uchun video MKV sifatida saqlanadi"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM taglavhalarni saqlay olmaydi, shuning uchun video MKV sifatida saqlanadi",
+  "Picture in picture when leaving the app": "Ilovadan chiqqanda rasm ichida rasm",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Boshqa ilovaga o'tganingizda ijro etilayotgan videoni kichik oynada saqlaydi; o'chiq bo'lsa, ovozi fonda ijro etilishda davom etadi"
 }

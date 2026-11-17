@@ -3570,5 +3570,7 @@
   "Top line": "Efri lína",
   "Bottom line": "Neðri lína",
   "Save the subtitle files beside the video as SRT": "Vista skjátextaskrár við hlið myndskeiðsins sem SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM getur ekki geymt skjátexta, því myndskeiðið er vistað sem MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM getur ekki geymt skjátexta, því myndskeiðið er vistað sem MKV",
+  "Picture in picture when leaving the app": "Mynd í mynd þegar forritið er yfirgefið",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Heldur myndskeiðinu sem er í spilun í litlum glugga þegar skipt er yfir í annað forrit; þegar slökkt er á þessu heldur hljóðið áfram að spilast í bakgrunni"
 }

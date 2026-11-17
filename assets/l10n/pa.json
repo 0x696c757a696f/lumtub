@@ -3570,5 +3570,7 @@
   "Top line": "ਉੱਪਰਲੀ ਲਾਈਨ",
   "Bottom line": "ਹੇਠਲੀ ਲਾਈਨ",
   "Save the subtitle files beside the video as SRT": "ਉਪਸਿਰਲੇਖ ਫ਼ਾਈਲਾਂ ਨੂੰ ਵੀਡੀਓ ਦੇ ਕੋਲ SRT ਵਜੋਂ ਸੁਰੱਖਿਅਤ ਕਰੋ",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ਉਪਸਿਰਲੇਖ ਨਹੀਂ ਰੱਖ ਸਕਦਾ, ਇਸ ਲਈ ਵੀਡੀਓ MKV ਵਜੋਂ ਸੁਰੱਖਿਅਤ ਕੀਤਾ ਜਾਵੇਗਾ"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ਉਪਸਿਰਲੇਖ ਨਹੀਂ ਰੱਖ ਸਕਦਾ, ਇਸ ਲਈ ਵੀਡੀਓ MKV ਵਜੋਂ ਸੁਰੱਖਿਅਤ ਕੀਤਾ ਜਾਵੇਗਾ",
+  "Picture in picture when leaving the app": "ਐਪ ਛੱਡਣ ਸਮੇਂ ਪਿਕਚਰ-ਇਨ-ਪਿਕਚਰ",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "ਦੂਜੀ ਐਪ 'ਤੇ ਜਾਣ 'ਤੇ ਚੱਲ ਰਹੀ ਵੀਡੀਓ ਨੂੰ ਛੋਟੀ ਵਿੰਡੋ ਵਿੱਚ ਚਲਦੀ ਰੱਖਦਾ ਹੈ; ਬੰਦ ਹੋਣ 'ਤੇ ਇਸਦੀ ਆਵਾਜ਼ ਬੈਕਗ੍ਰਾਊਂਡ ਵਿੱਚ ਚੱਲਦੀ ਰਹਿੰਦੀ ਹੈ"
 }

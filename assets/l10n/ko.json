@@ -3575,5 +3575,7 @@
   "Top line": "위쪽 줄",
   "Bottom line": "아래쪽 줄",
   "Save the subtitle files beside the video as SRT": "자막 파일을 동영상 옆에 SRT로 저장",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM은 자막을 담을 수 없으므로 동영상은 MKV로 저장됩니다"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM은 자막을 담을 수 없으므로 동영상은 MKV로 저장됩니다",
+  "Picture in picture when leaving the app": "앱을 나갈 때 화면 속 화면",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "다른 앱으로 전환하면 재생 중인 동영상을 작은 창으로 계속 보여 줍니다. 끄면 소리만 백그라운드에서 계속 재생됩니다"
 }

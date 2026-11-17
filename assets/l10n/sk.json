@@ -3570,5 +3570,7 @@
   "Top line": "Horný riadok",
   "Bottom line": "Dolný riadok",
   "Save the subtitle files beside the video as SRT": "Uložiť súbory titulkov vedľa videa ako SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM nemôže obsahovať titulky, preto sa video uloží ako MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM nemôže obsahovať titulky, preto sa video uloží ako MKV",
+  "Picture in picture when leaving the app": "Obraz v obraze pri opustení aplikácie",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Po prepnutí do inej aplikácie ponechá prehrávané video v malom okne; keď je vypnuté, jeho zvuk sa prehráva ďalej na pozadí"
 }

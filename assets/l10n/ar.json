@@ -3575,5 +3575,7 @@
   "Top line": "السطر العلوي",
   "Bottom line": "السطر السفلي",
   "Save the subtitle files beside the video as SRT": "حفظ ملفات الترجمة بجانب الفيديو بصيغة SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "لا يدعم WebM الترجمات، لذا سيُحفظ الفيديو بصيغة MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "لا يدعم WebM الترجمات، لذا سيُحفظ الفيديو بصيغة MKV",
+  "Picture in picture when leaving the app": "نافذة عائمة عند مغادرة التطبيق",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "يُبقي الفيديو قيد التشغيل في نافذة صغيرة عند التبديل إلى تطبيق آخر؛ وعند الإيقاف يستمر تشغيل صوته في الخلفية"
 }

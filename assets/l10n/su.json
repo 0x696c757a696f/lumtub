@@ -3570,5 +3570,7 @@
   "Top line": "Baris luhur",
   "Bottom line": "Baris handap",
   "Save the subtitle files beside the video as SRT": "Simpen file subtitel di gigireun vidéo salaku SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM teu bisa ngandung subtitel, jadi vidéo disimpen salaku MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM teu bisa ngandung subtitel, jadi vidéo disimpen salaku MKV",
+  "Picture in picture when leaving the app": "Gambar dina gambar nalika kaluar tina aplikasi",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Ngajaga video nu keur diputer dina jandela leutik nalika anjeun pindah ka aplikasi séjén; lamun pareum, sorana tetep diputer di tukang"
 }

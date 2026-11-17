@@ -3570,5 +3570,7 @@
   "Top line": "Rreshti i sipërm",
   "Bottom line": "Rreshti i poshtëm",
   "Save the subtitle files beside the video as SRT": "Ruaji skedarët e titrave pranë videos si SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM nuk mund të përmbajë titra, prandaj videoja ruhet si MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM nuk mund të përmbajë titra, prandaj videoja ruhet si MKV",
+  "Picture in picture when leaving the app": "Pamje brenda pamjes kur del nga aplikacioni",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "E mban videon që po luhet në një dritare të vogël kur kalon te një aplikacion tjetër; kur është çaktivizuar, zëri vazhdon të luhet në sfond"
 }

@@ -3570,5 +3570,7 @@
   "Top line": "ඉහළ පේළිය",
   "Bottom line": "පහළ පේළිය",
   "Save the subtitle files beside the video as SRT": "උපසිරැසි ගොනු වීඩියෝව අසල SRT ලෙස සුරකින්න",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM හට උපසිරැසි ඇතුළත් කළ නොහැකි බැවින් වීඩියෝව MKV ලෙස සුරකිනු ලැබේ"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM හට උපසිරැසි ඇතුළත් කළ නොහැකි බැවින් වීඩියෝව MKV ලෙස සුරකිනු ලැබේ",
+  "Picture in picture when leaving the app": "යෙදුමෙන් ඉවත් වන විට පින්තූරය-තුළ-පින්තූරය",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "වෙනත් යෙදුමකට මාරු වන විට වාදනය වන වීඩියෝව කුඩා කවුළුවක තබා ගනී; අක්‍රිය විට එහි ශබ්දය පසුබිමේ දිගටම වාදනය වේ"
 }

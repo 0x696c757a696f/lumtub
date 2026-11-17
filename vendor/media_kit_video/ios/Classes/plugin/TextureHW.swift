@@ -1,5 +1,40 @@
 import Flutter
 import OpenGLES
+import UIKit
+
+/// Lumtub: iOS ends an app that sends OpenGL ES commands while it is in
+/// the background, so no frame is drawn then; the app also stops decoding
+/// the picture there (vid=no), and a frame already on its way is dropped.
+final class BackgroundState {
+  static let shared = BackgroundState()
+
+  private let lock = NSLock()
+  private var background = false
+
+  private init() {
+    let center = NotificationCenter.default
+    center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: nil) { [weak self] _ in
+      self?.set(true)
+    }
+    center.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: nil) { [weak self] _ in
+      self?.set(false)
+    }
+    let read = { UIApplication.shared.applicationState == .background }
+    set(Thread.isMainThread ? read() : DispatchQueue.main.sync(execute: read))
+  }
+
+  private func set(_ value: Bool) {
+    lock.lock()
+    background = value
+    lock.unlock()
+  }
+
+  var inBackground: Bool {
+    lock.lock()
+    defer { lock.unlock() }
+    return background
+  }
+}
 
 public class TextureHW: NSObject, FlutterTexture, ResizableTextureProtocol {
   public typealias UpdateCallback = () -> Void
@@ -24,6 +59,7 @@ public class TextureHW: NSObject, FlutterTexture, ResizableTextureProtocol {
     self.textureCache = OpenGLESHelpers.createTextureCache(context)
 
     super.init()
+    _ = BackgroundState.shared
 
     // Lumtub: a libmpv built without OpenGL ES rendering falls back to
     // software rather than ending the app.
@@ -158,6 +194,9 @@ public class TextureHW: NSObject, FlutterTexture, ResizableTextureProtocol {
   }
 
   public func render(_ size: CGSize) {
+    if BackgroundState.shared.inBackground {
+      return
+    }
     let textureContext = textureContexts.nextAvailable()
     if textureContext == nil {
       return

@@ -3570,5 +3570,7 @@
   "Top line": "மேல் வரி",
   "Bottom line": "கீழ் வரி",
   "Save the subtitle files beside the video as SRT": "வசனக் கோப்புகளை வீடியோவின் அருகில் SRT ஆகச் சேமி",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM வசனங்களைக் கொண்டிருக்க முடியாது, எனவே வீடியோ MKV ஆகச் சேமிக்கப்படும்"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM வசனங்களைக் கொண்டிருக்க முடியாது, எனவே வீடியோ MKV ஆகச் சேமிக்கப்படும்",
+  "Picture in picture when leaving the app": "பயன்பாட்டை விட்டு வெளியேறும்போது பிக்சர் இன் பிக்சர்",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "வேறு பயன்பாட்டிற்கு மாறும்போது இயங்கும் வீடியோவை சிறிய சாளரத்தில் தொடர்ந்து காட்டும்; முடக்கப்பட்டிருந்தால் அதன் ஒலி பின்னணியில் தொடர்ந்து இயங்கும்"
 }

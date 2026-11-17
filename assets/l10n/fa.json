@@ -3570,5 +3570,7 @@
   "Top line": "خط بالا",
   "Bottom line": "خط پایین",
   "Save the subtitle files beside the video as SRT": "ذخیره فایل‌های زیرنویس کنار ویدیو با قالب SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM نمی‌تواند زیرنویس را در خود جای دهد، پس ویدیو با قالب MKV ذخیره می‌شود"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM نمی‌تواند زیرنویس را در خود جای دهد، پس ویدیو با قالب MKV ذخیره می‌شود",
+  "Picture in picture when leaving the app": "تصویر در تصویر هنگام خروج از برنامه",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "هنگام رفتن به برنامه‌ای دیگر، ویدیوی در حال پخش را در یک پنجرهٔ کوچک نگه می‌دارد؛ در حالت خاموش، صدای آن در پس‌زمینه پخش می‌شود"
 }

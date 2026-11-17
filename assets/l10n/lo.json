@@ -3570,5 +3570,7 @@
   "Top line": "ແຖວເທິງ",
   "Bottom line": "ແຖວລຸ່ມ",
   "Save the subtitle files beside the video as SRT": "ບັນທຶກໄຟລ໌ຄຳບັນຍາຍໄວ້ຂ້າງວິດີໂອເປັນ SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ບໍ່ສາມາດໃສ່ຄຳບັນຍາຍໄດ້ ດັ່ງນັ້ນວິດີໂອຈະຖືກບັນທຶກເປັນ MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ບໍ່ສາມາດໃສ່ຄຳບັນຍາຍໄດ້ ດັ່ງນັ້ນວິດີໂອຈະຖືກບັນທຶກເປັນ MKV",
+  "Picture in picture when leaving the app": "ພາບຊ້ອນພາບ ເມື່ອອອກຈາກແອັບ",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "ຮັກສາວິດີໂອທີ່ກຳລັງຫຼິ້ນໄວ້ໃນໜ້າຕ່າງນ້ອຍເມື່ອສະຫຼັບໄປແອັບອື່ນ; ເມື່ອປິດ ສຽງຂອງມັນຈະຫຼິ້ນຕໍ່ຢູ່ພື້ນຫຼັງ"
 }

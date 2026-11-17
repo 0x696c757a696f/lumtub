@@ -3575,5 +3575,7 @@
   "Top line": "Línea superior",
   "Bottom line": "Línea inferior",
   "Save the subtitle files beside the video as SRT": "Guardar los archivos de subtítulos junto al vídeo como SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM no admite subtítulos, así que el vídeo se guarda como MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM no admite subtítulos, así que el vídeo se guarda como MKV",
+  "Picture in picture when leaving the app": "Imagen en imagen al salir de la app",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Mantiene el vídeo en reproducción en una ventana pequeña cuando cambias a otra app; si está desactivado, su sonido sigue reproduciéndose en segundo plano"
 }

@@ -755,7 +755,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   Widget _buffering() => StreamBuilder<bool>(
         stream: _player.stream.buffering,
         initialData: _player.state.buffering,
-        builder: (context, snapshot) => snapshot.data == true || _controller.waitingForSubtitles
+        builder: (context, snapshot) => _controller.playbackError == null && (snapshot.data == true || _controller.waitingForSubtitles)
             ? Center(
                 child: IgnorePointer(
                   child: Column(mainAxisSize: MainAxisSize.min, children: [

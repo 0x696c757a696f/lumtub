@@ -3570,5 +3570,7 @@
   "Top line": "Supra linio",
   "Bottom line": "Suba linio",
   "Save the subtitle files beside the video as SRT": "Konservi la subtekstajn dosierojn apud la video kiel SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ne povas enhavi subtekstojn, do la video estas konservata kiel MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ne povas enhavi subtekstojn, do la video estas konservata kiel MKV",
+  "Picture in picture when leaving the app": "Bildo en bildo kiam vi forlasas la apon",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Tenas la ludatan videon en eta fenestro kiam vi ŝanĝas al alia apo; kiam malŝaltita, ĝia sono daŭre ludiĝas fone"
 }

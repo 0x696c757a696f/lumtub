@@ -3570,5 +3570,7 @@
   "Top line": "اوپر کی لائن",
   "Bottom line": "نیچے کی لائن",
   "Save the subtitle files beside the video as SRT": "سب ٹائٹل فائلیں ویڈیو کے ساتھ SRT کے طور پر محفوظ کریں",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM سب ٹائٹلز نہیں رکھ سکتا، اس لیے ویڈیو MKV کے طور پر محفوظ ہوگی"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM سب ٹائٹلز نہیں رکھ سکتا، اس لیے ویڈیو MKV کے طور پر محفوظ ہوگی",
+  "Picture in picture when leaving the app": "ایپ چھوڑتے وقت پکچر ان پکچر",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "دوسری ایپ پر جانے پر چلتی ویڈیو کو چھوٹی ونڈو میں جاری رکھتا ہے؛ بند ہونے پر اس کی آواز بیک گراؤنڈ میں چلتی رہتی ہے"
 }

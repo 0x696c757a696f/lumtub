@@ -3599,5 +3599,7 @@
   "Top line": "上方",
   "Bottom line": "下方",
   "Save the subtitle files beside the video as SRT": "影片旁的字幕檔存為 SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM 無法嵌入字幕，影片將改存為 MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM 無法嵌入字幕，影片將改存為 MKV",
+  "Picture in picture when leaving the app": "切換至其他應用程式時進入畫中畫",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "切換至其他應用程式時，正在播放的影片會以小視窗繼續播放；關閉時只會在後台繼續播放聲音"
 }

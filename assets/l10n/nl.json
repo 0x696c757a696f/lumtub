@@ -3575,5 +3575,7 @@
   "Top line": "Bovenste regel",
   "Bottom line": "Onderste regel",
   "Save the subtitle files beside the video as SRT": "Ondertitelbestanden naast de video opslaan als SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM kan geen ondertitels bevatten, dus de video wordt opgeslagen als MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM kan geen ondertitels bevatten, dus de video wordt opgeslagen als MKV",
+  "Picture in picture when leaving the app": "Picture-in-picture bij het verlaten van de app",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Houdt de video die wordt afgespeeld in een klein venster wanneer je naar een andere app overschakelt; als dit uit staat, wordt het geluid op de achtergrond afgespeeld"
 }

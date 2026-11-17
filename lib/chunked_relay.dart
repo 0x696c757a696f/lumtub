@@ -23,8 +23,16 @@ abstract interface class StreamRelay {
   /// cannot serve live streams.
   String? registerLive(String url, {required String pair, String? userAgent, String? proxy});
 
+  /// Listens again when the system took the listening socket away, as iOS
+  /// does to a suspended app: connections to the port are then refused.
+  Future<void> revive();
+
   Future<void> close();
 }
+
+/// Whether an mpv error says a loopback server, such as the relay, refused
+/// the connection.
+bool loopbackRefused(String message) => RegExp(r'(127\.0\.0\.1|localhost)[^\n]*refused', caseSensitive: false).hasMatch(message);
 
 /// The relay in lumtub_core: the stream's bytes are copied on native
 /// threads and never pass through Dart.
@@ -39,6 +47,14 @@ class NativeRelay implements StreamRelay {
   @override
   Future<void> start() async {
     if (_core.relayStart() == 0) throw const SocketException('lumtub_core could not listen on 127.0.0.1');
+  }
+
+  /// lumtub_core checks the port on every start and listens again when it
+  /// no longer takes connections.
+  @override
+  Future<void> revive() async {
+    _core.relayStart();
+    _drainLog();
   }
 
   /// Reads the relay's log while it serves streams; a minute without lines
@@ -133,6 +149,36 @@ class ChunkedRelay implements StreamRelay {
 
   @override
   String? registerLive(String url, {required String pair, String? userAgent, String? proxy}) => null;
+
+  /// Listens again, on the same port when it is free, when nothing takes
+  /// connections there any more.
+  @override
+  Future<void> revive() async {
+    final server = _server;
+    if (server == null) return;
+    final port = server.port;
+    try {
+      final probe = await Socket.connect(InternetAddress.loopbackIPv4, port, timeout: const Duration(milliseconds: 500));
+      probe.destroy();
+      return;
+    } on IOException catch (e) {
+      logWarn('The Dart relay on port $port stopped ($e); listening again');
+    }
+    _server = null;
+    try {
+      await server.close(force: true);
+    } catch (e) {
+      logDebug(() => 'Could not close the stopped relay: $e');
+    }
+    HttpServer next;
+    try {
+      next = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
+    } on IOException {
+      next = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    }
+    _server = next;
+    next.listen((request) => unawaited(_serve(request)));
+  }
 
   Future<void> _serve(HttpRequest request) async {
     final response = request.response;

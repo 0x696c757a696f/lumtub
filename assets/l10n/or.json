@@ -3570,5 +3570,7 @@
   "Top line": "ଉପର ଧାଡ଼ି",
   "Bottom line": "ତଳ ଧାଡ଼ି",
   "Save the subtitle files beside the video as SRT": "ସବ୍ଟାଇଟଲ ଫାଇଲଗୁଡ଼ିକୁ ଭିଡିଓ ପାଖରେ SRT ଭାବରେ ସେଭ୍ କରନ୍ତୁ",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ସବ୍ଟାଇଟଲ ରଖିପାରେ ନାହିଁ, ତେଣୁ ଭିଡିଓ MKV ଭାବରେ ସେଭ୍ ହେବ"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ସବ୍ଟାଇଟଲ ରଖିପାରେ ନାହିଁ, ତେଣୁ ଭିଡିଓ MKV ଭାବରେ ସେଭ୍ ହେବ",
+  "Picture in picture when leaving the app": "ଆପ ଛାଡ଼ିବା ସମୟରେ ପିକଚର ଇନ ପିକଚର",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "ଅନ୍ୟ ଆପକୁ ଗଲେ ଚାଲୁଥିବା ଭିଡିଓକୁ ଛୋଟ ୱିଣ୍ଡୋରେ ଚାଲୁ ରଖେ; ବନ୍ଦ ଥିଲେ ଏହାର ସ୍ୱର ବ୍ୟାକଗ୍ରାଉଣ୍ଡରେ ଚାଲିବ"
 }

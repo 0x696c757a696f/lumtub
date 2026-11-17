@@ -3570,5 +3570,7 @@
   "Top line": "Itaas na linya",
   "Bottom line": "Ibabang linya",
   "Save the subtitle files beside the video as SRT": "I-save ang mga file ng subtitle sa tabi ng video bilang SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "Hindi kayang maglaman ng subtitle ng WebM, kaya ise-save ang video bilang MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "Hindi kayang maglaman ng subtitle ng WebM, kaya ise-save ang video bilang MKV",
+  "Picture in picture when leaving the app": "Picture-in-picture kapag umalis sa app",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Pinapanatili ang nagpe-play na video sa maliit na window kapag lumipat ka sa ibang app; kapag naka-off, magpapatuloy ang tunog nito sa background"
 }

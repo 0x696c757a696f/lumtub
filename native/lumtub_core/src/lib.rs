@@ -30,6 +30,7 @@ pub mod listing;
 pub mod lists;
 pub mod lists_update;
 pub mod live_chat;
+pub mod loopback;
 pub mod pac;
 pub mod posts;
 pub mod process_cpu;

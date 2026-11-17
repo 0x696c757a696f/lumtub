@@ -3570,5 +3570,7 @@
   "Top line": "పై పంక్తి",
   "Bottom line": "కింది పంక్తి",
   "Save the subtitle files beside the video as SRT": "ఉపశీర్షిక ఫైళ్లను వీడియో పక్కన SRT గా సేవ్ చేయండి",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ఉపశీర్షికలను ఉంచలేదు, కాబట్టి వీడియో MKV గా సేవ్ అవుతుంది"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ఉపశీర్షికలను ఉంచలేదు, కాబట్టి వీడియో MKV గా సేవ్ అవుతుంది",
+  "Picture in picture when leaving the app": "యాప్ నుండి నిష్క్రమించినప్పుడు పిక్చర్-ఇన్-పిక్చర్",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "మరొక యాప్‌కు మారినప్పుడు ప్లే అవుతున్న వీడియోను చిన్న విండోలో కొనసాగిస్తుంది; ఆఫ్‌లో ఉంటే దాని ధ్వని బ్యాక్‌గ్రౌండ్‌లో ప్లే అవుతూనే ఉంటుంది"
 }

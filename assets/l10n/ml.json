@@ -3570,5 +3570,7 @@
   "Top line": "മുകളിലെ വരി",
   "Bottom line": "താഴത്തെ വരി",
   "Save the subtitle files beside the video as SRT": "സബ്ടൈറ്റിൽ ഫയലുകൾ വീഡിയോയ്ക്ക് അടുത്ത് SRT ആയി സംരക്ഷിക്കുക",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM-ൽ സബ്ടൈറ്റിലുകൾ ഉൾപ്പെടുത്താൻ കഴിയില്ല, അതിനാൽ വീഡിയോ MKV ആയി സംരക്ഷിക്കും"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM-ൽ സബ്ടൈറ്റിലുകൾ ഉൾപ്പെടുത്താൻ കഴിയില്ല, അതിനാൽ വീഡിയോ MKV ആയി സംരക്ഷിക്കും",
+  "Picture in picture when leaving the app": "ആപ്പ് വിടുമ്പോൾ പിക്ചർ-ഇൻ-പിക്ചർ",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "മറ്റൊരു ആപ്പിലേക്ക് മാറുമ്പോൾ പ്ലേ ചെയ്യുന്ന വീഡിയോ ചെറിയ വിൻഡോയിൽ തുടരുന്നു; ഓഫ് ആയിരിക്കുമ്പോൾ അതിന്റെ ശബ്ദം പശ്ചാത്തലത്തിൽ പ്ലേ ചെയ്യുന്നത് തുടരും"
 }

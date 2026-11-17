@@ -3570,5 +3570,7 @@
   "Top line": "Дээд мөр",
   "Bottom line": "Доод мөр",
   "Save the subtitle files beside the video as SRT": "Хадмал файлуудыг бичлэгийн хажууд SRT хэлбэрээр хадгалах",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM нь хадмал агуулж чадахгүй тул бичлэгийг MKV хэлбэрээр хадгална"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM нь хадмал агуулж чадахгүй тул бичлэгийг MKV хэлбэрээр хадгална",
+  "Picture in picture when leaving the app": "Апп-аас гарахад дэлгэц доторх дэлгэц",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Өөр апп руу шилжихэд тоглож буй видеог жижиг цонхонд үргэлжлүүлнэ; унтраалттай үед дууг нь далд үргэлжлүүлэн тоглуулна"
 }

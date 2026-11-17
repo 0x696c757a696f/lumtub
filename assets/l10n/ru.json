@@ -3575,5 +3575,7 @@
   "Top line": "Верхняя строка",
   "Bottom line": "Нижняя строка",
   "Save the subtitle files beside the video as SRT": "Сохранить файлы субтитров рядом с видео в формате SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM не может содержать субтитры, поэтому видео будет сохранено в формате MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM не может содержать субтитры, поэтому видео будет сохранено в формате MKV",
+  "Picture in picture when leaving the app": "Картинка в картинке при выходе из приложения",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Оставляет воспроизводимое видео в маленьком окне, когда вы переключаетесь на другое приложение; если выключено, звук продолжает играть в фоне"
 }

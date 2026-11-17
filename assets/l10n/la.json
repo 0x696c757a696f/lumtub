@@ -3570,5 +3570,7 @@
   "Top line": "Versus superior",
   "Bottom line": "Versus inferior",
   "Save the subtitle files beside the video as SRT": "Tabulas subtitulorum iuxta video ut SRT servare",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM subtitula capere non potest, itaque video ut MKV servatur"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM subtitula capere non potest, itaque video ut MKV servatur",
+  "Picture in picture when leaving the app": "Imago in imagine cum applicationem relinquis",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Video quod ludit in parva fenestra retinet cum ad aliam applicationem transis; cum exstinctum est, sonus eius in fundo ludere pergit"
 }

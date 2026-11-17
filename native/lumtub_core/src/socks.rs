@@ -6,12 +6,12 @@
 //!
 //! Every connection is copied on native threads, never through Dart.
 
+use crate::loopback::Loopback;
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read, Write};
-use std::net::{IpAddr, Shutdown, SocketAddr, TcpListener, TcpStream, ToSocketAddrs};
+use std::net::{IpAddr, Shutdown, SocketAddr, TcpStream, ToSocketAddrs};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
-use std::thread::JoinHandle;
 use std::time::Duration;
 
 const TIMEOUT: Duration = Duration::from_secs(15);
@@ -69,84 +69,77 @@ fn split_host_port(text: &str) -> Option<(String, u16)> {
 }
 
 pub struct Bridge {
-    port: u16,
+    listener: Arc<Loopback>,
     stop: Arc<AtomicBool>,
     open: Arc<Mutex<HashMap<u64, TcpStream>>>,
-    accept: Option<JoinHandle<()>>,
 }
 
 impl Bridge {
-    /// Listens on a random loopback port and forwards through [proxy].
+    /// Listens on a random loopback port, and again when the system takes
+    /// the socket away (see [Loopback]), and forwards through [proxy].
     pub fn start(proxy: Proxy) -> std::io::Result<Bridge> {
         let address = (proxy.host.as_str(), proxy.port)
             .to_socket_addrs()
             .ok()
             .and_then(|mut a| a.next());
-        let listener = TcpListener::bind("127.0.0.1:0")?;
-        let port = listener.local_addr()?.port();
         let stop = Arc::new(AtomicBool::new(false));
         let open = Arc::new(Mutex::new(HashMap::new()));
         let (stopping, tracked) = (stop.clone(), open.clone());
         let serving = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let accept = std::thread::Builder::new()
-            .name("socks-bridge".into())
-            .spawn(move || {
-                let ids = AtomicU64::new(0);
-                for client in listener.incoming() {
-                    if stopping.load(Ordering::SeqCst) {
-                        break;
-                    }
-                    let Ok(client) = client else { continue };
-                    let _ = client.set_nodelay(true);
-                    while serving.load(Ordering::SeqCst) >= MAX_CLIENTS
-                        && !stopping.load(Ordering::SeqCst)
-                    {
-                        std::thread::sleep(Duration::from_millis(20));
-                    }
-                    let id = ids.fetch_add(1, Ordering::Relaxed);
-                    if let Ok(copy) = client.try_clone() {
-                        tracked.lock().unwrap().insert(id, copy);
-                    }
-                    serving.fetch_add(1, Ordering::SeqCst);
-                    let (proxy, mine, count) = (proxy.clone(), tracked.clone(), serving.clone());
-                    let spawned = std::thread::Builder::new()
-                        .name("socks-client".into())
-                        .stack_size(STACK)
-                        .spawn(move || {
-                            handle(client, &proxy, address, &mine, id);
-                            mine.lock().unwrap().remove(&id);
-                            count.fetch_sub(1, Ordering::SeqCst);
-                        });
-                    if spawned.is_err() {
-                        // The client was moved into the closure that never
-                        // ran; its tracked copy closes the socket.
-                        if let Some(socket) = tracked.lock().unwrap().remove(&id) {
-                            let _ = socket.shutdown(Shutdown::Both);
-                        }
-                        serving.fetch_sub(1, Ordering::SeqCst);
-                    }
+        let ids = AtomicU64::new(0);
+        let listener = Loopback::start(
+            "socks-bridge",
+            Box::new(move |client| {
+                if stopping.load(Ordering::SeqCst) {
+                    return;
                 }
-            })?;
+                let _ = client.set_nodelay(true);
+                while serving.load(Ordering::SeqCst) >= MAX_CLIENTS
+                    && !stopping.load(Ordering::SeqCst)
+                {
+                    std::thread::sleep(Duration::from_millis(20));
+                }
+                let id = ids.fetch_add(1, Ordering::Relaxed);
+                if let Ok(copy) = client.try_clone() {
+                    tracked.lock().unwrap().insert(id, copy);
+                }
+                serving.fetch_add(1, Ordering::SeqCst);
+                let (proxy, mine, count) = (proxy.clone(), tracked.clone(), serving.clone());
+                let spawned = std::thread::Builder::new()
+                    .name("socks-client".into())
+                    .stack_size(STACK)
+                    .spawn(move || {
+                        handle(client, &proxy, address, &mine, id);
+                        mine.lock().unwrap().remove(&id);
+                        count.fetch_sub(1, Ordering::SeqCst);
+                    });
+                if spawned.is_err() {
+                    // The client was moved into the closure that never
+                    // ran; its tracked copy closes the socket.
+                    if let Some(socket) = tracked.lock().unwrap().remove(&id) {
+                        let _ = socket.shutdown(Shutdown::Both);
+                    }
+                    serving.fetch_sub(1, Ordering::SeqCst);
+                }
+            }),
+            Box::new(|_| {}),
+        )?;
         Ok(Bridge {
-            port,
+            listener,
             stop,
             open,
-            accept: Some(accept),
         })
     }
 
+    /// The port, listening again first when the socket was taken away.
     pub fn port(&self) -> u16 {
-        self.port
+        self.listener.ensure()
     }
 
     /// Stops listening and drops the connections still open.
     pub fn close(&mut self) {
         self.stop.store(true, Ordering::SeqCst);
-        // Wakes the accepting thread, which then sees [stop].
-        let _ = TcpStream::connect(("127.0.0.1", self.port));
-        if let Some(accept) = self.accept.take() {
-            let _ = accept.join();
-        }
+        self.listener.stop();
         for (_, socket) in self.open.lock().unwrap().drain() {
             let _ = socket.shutdown(Shutdown::Both);
         }
@@ -542,7 +535,7 @@ mod tests {
 
     #[test]
     fn a_dead_proxy_answers_502_and_nonsense_400() {
-        let dead = TcpListener::bind("127.0.0.1:0").unwrap();
+        let dead = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let port = dead.local_addr().unwrap().port();
         drop(dead);
         let bridge =

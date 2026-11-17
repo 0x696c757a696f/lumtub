@@ -410,8 +410,11 @@ extension PlaybackOpening on AppController {
         _waitForStart(item);
       default:
     }
+    // Nothing plays now, so nothing waits for the subtitle translation.
+    if (!_subtitlesReady.isCompleted) _subtitlesReady.complete();
     _update(() {
       playbackError = failure.message;
+      waitingForSubtitles = false;
       _waitingForStart = failure.kind == FailureKind.upcoming;
     });
   }
@@ -445,7 +448,12 @@ extension PlaybackOpening on AppController {
       return;
     }
     logWarn('Playback interrupted, reconnecting ${item.id} at ${AppController._clock(position)}: $message');
-    if (_relayed == item.id) {
+    // Refused by the relay itself, whose socket the system took away: it
+    // listens again and keeps serving this video.
+    final revived = loopbackRefused(message) && _relayed == item.id ? reviveRelay() : null;
+    if (revived != null) {
+      logWarn('The local relay refused libmpv; listening again');
+    } else if (_relayed == item.id) {
       _unrelayed = item.id;
       logWarn('Playing ${item.id} without the local chunked relay');
     }
@@ -468,6 +476,7 @@ extension PlaybackOpening on AppController {
       // A new open also asks yt-dlp again, which replaces stream addresses
       // that expired while the video sat paused.
       _repository?.streams.forget(item.id);
+      await revived;
       final opened = await _open(item, serial, start: position);
       if (!opened || serial != _playSerial) return;
       _recoveryTimer = Timer.periodic(PlaybackRecovery.stallTimeout, (_) {

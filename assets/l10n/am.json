@@ -3570,5 +3570,7 @@
   "Top line": "የላይኛው መስመር",
   "Bottom line": "የታችኛው መስመር",
   "Save the subtitle files beside the video as SRT": "የትርጉም ጽሑፍ ፋይሎችን ከቪዲዮው አጠገብ እንደ SRT አስቀምጥ",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM የትርጉም ጽሑፍ መያዝ ስለማይችል ቪዲዮው እንደ MKV ይቀመጣል"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM የትርጉም ጽሑፍ መያዝ ስለማይችል ቪዲዮው እንደ MKV ይቀመጣል",
+  "Picture in picture when leaving the app": "ከመተግበሪያው ሲወጡ ሥዕል-በ-ሥዕል",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "ወደ ሌላ መተግበሪያ ሲቀይሩ እየተጫወተ ያለውን ቪዲዮ በትንሽ መስኮት ያቆያል፤ ሲጠፋ ድምፁ በጀርባ መጫወቱን ይቀጥላል"
 }

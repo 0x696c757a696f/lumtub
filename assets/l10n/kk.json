@@ -3570,5 +3570,7 @@
   "Top line": "Жоғарғы жол",
   "Bottom line": "Төменгі жол",
   "Save the subtitle files beside the video as SRT": "Субтитр файлдарын бейненің жанына SRT ретінде сақтау",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM субтитрлерді сақтай алмайды, сондықтан бейне MKV ретінде сақталады"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM субтитрлерді сақтай алмайды, сондықтан бейне MKV ретінде сақталады",
+  "Picture in picture when leaving the app": "Қолданбадан шыққанда сурет ішіндегі сурет",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Басқа қолданбаға ауысқанда ойнатылып жатқан бейнені шағын терезеде сақтайды; өшірулі болса, дыбысы фонда ойнатыла береді"
 }

@@ -3570,5 +3570,7 @@
   "Top line": "บรรทัดบน",
   "Bottom line": "บรรทัดล่าง",
   "Save the subtitle files beside the video as SRT": "บันทึกไฟล์คำบรรยายไว้ข้างวิดีโอเป็น SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ไม่รองรับคำบรรยาย จึงบันทึกวิดีโอเป็น MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ไม่รองรับคำบรรยาย จึงบันทึกวิดีโอเป็น MKV",
+  "Picture in picture when leaving the app": "ภาพซ้อนภาพเมื่อออกจากแอป",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "คงวิดีโอที่กำลังเล่นไว้ในหน้าต่างเล็กเมื่อคุณสลับไปแอปอื่น หากปิดอยู่ เสียงจะเล่นต่อเบื้องหลัง"
 }

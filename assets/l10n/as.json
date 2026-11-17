@@ -3570,5 +3570,7 @@
   "Top line": "ওপৰৰ শাৰী",
   "Bottom line": "তলৰ শাৰী",
   "Save the subtitle files beside the video as SRT": "ছাবটাইটেল ফাইলবোৰ ভিডিঅ'ৰ কাষত SRT হিচাপে সংৰক্ষণ কৰক",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM-এ ছাবটাইটেল ধৰি ৰাখিব নোৱাৰে, গতিকে ভিডিঅ'টো MKV হিচাপে সংৰক্ষণ কৰা হ'ব"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM-এ ছাবটাইটেল ধৰি ৰাখিব নোৱাৰে, গতিকে ভিডিঅ'টো MKV হিচাপে সংৰক্ষণ কৰা হ'ব",
+  "Picture in picture when leaving the app": "এপ্ ত্যাগ কৰিলে পিকচাৰ ইন পিকচাৰ",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "আন এপলৈ সলনি কৰিলে চলি থকা ভিডিঅ'ক সৰু ৱিণ্ডোত চলাই ৰাখে; বন্ধ থাকিলে ইয়াৰ শব্দ নেপথ্যত চলি থাকে"
 }

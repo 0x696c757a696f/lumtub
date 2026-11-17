@@ -3570,5 +3570,7 @@
   "Top line": "Øverste linje",
   "Bottom line": "Nederste linje",
   "Save the subtitle files beside the video as SRT": "Gem undertekstfilerne ved siden af videoen som SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM kan ikke rumme undertekster, så videoen gemmes som MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM kan ikke rumme undertekster, så videoen gemmes som MKV",
+  "Picture in picture when leaving the app": "Billede-i-billede, når du forlader appen",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Beholder den afspillende video i et lille vindue, når du skifter til en anden app; når det er slået fra, fortsætter lyden i baggrunden"
 }

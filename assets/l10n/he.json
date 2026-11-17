@@ -3570,5 +3570,7 @@
   "Top line": "שורה עליונה",
   "Bottom line": "שורה תחתונה",
   "Save the subtitle files beside the video as SRT": "שמירת קובצי הכתוביות לצד הסרטון בפורמט SRT",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM אינו יכול להכיל כתוביות, ולכן הסרטון יישמר בפורמט MKV"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM אינו יכול להכיל כתוביות, ולכן הסרטון יישמר בפורמט MKV",
+  "Picture in picture when leaving the app": "תמונה בתוך תמונה בעזיבת האפליקציה",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "משאיר את הווידאו המתנגן בחלון קטן כשעוברים לאפליקציה אחרת; כשהאפשרות כבויה, הקול ממשיך להתנגן ברקע"
 }

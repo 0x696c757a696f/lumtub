@@ -3570,5 +3570,7 @@
   "Top line": "Yuxarı sətir",
   "Bottom line": "Aşağı sətir",
   "Save the subtitle files beside the video as SRT": "Subtitr fayllarını videonun yanında SRT kimi yadda saxla",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM subtitrləri saxlaya bilmir, buna görə video MKV kimi yadda saxlanılır"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM subtitrləri saxlaya bilmir, buna görə video MKV kimi yadda saxlanılır",
+  "Picture in picture when leaving the app": "Tətbiqdən çıxanda şəkil içində şəkil",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Başqa tətbiqə keçdikdə oxunan videonu kiçik pəncərədə saxlayır; söndürülü olduqda səsi arxa planda oxunmağa davam edir"
 }

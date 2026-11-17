@@ -3570,5 +3570,7 @@
   "Top line": "Жогорку сап",
   "Bottom line": "Төмөнкү сап",
   "Save the subtitle files beside the video as SRT": "Субтитр файлдарын видеонун жанына SRT катары сактоо",
-  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM субтитрлерди сактай албайт, ошондуктан видео MKV катары сакталат"
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM субтитрлерди сактай албайт, ошондуктан видео MKV катары сакталат",
+  "Picture in picture when leaving the app": "Колдонмодон чыкканда сүрөттө сүрөт",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Башка колдонмого өткөндө ойноп жаткан видеону кичине терезеде сактайт; өчүк болсо, анын үнү фондо ойной берет"
 }

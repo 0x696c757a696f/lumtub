@@ -209,10 +209,13 @@ class _LumtubAppState extends State<LumtubApp> {
           ..clearLiveImages();
         if (controller.playing == null) controller.releaseMemory();
         final player = controller.player;
-        if (!controller.preferences.pauseOnMinimize || player == null || !player.state.playing) return;
+        // A TV left for another app does not play on behind it.
+        if (!(controller.preferences.pauseOnMinimize || Device.tv) || player == null || !player.state.playing) return;
         _pausedByMinimize = true;
         unawaited(player.pause());
       },
+      // iOS takes the listening sockets of a suspended app away.
+      onResume: () => unawaited(controller.reviveRelay()),
       onShow: () {
         // “Show animations in Windows” may have changed meanwhile.
         if (widget.controller.appearance.motion == MotionPreference.system && Motion.systemPrefersReduced() != Motion.reduced) setState(() => _themeKey = null);

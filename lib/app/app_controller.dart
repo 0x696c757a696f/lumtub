@@ -51,6 +51,7 @@ import '../native_http.dart';
 import '../live_chat.dart';
 import '../link_video.dart';
 import '../models.dart';
+import '../ipv6_probe.dart';
 import '../network_proxy.dart';
 import '../socks_bridge.dart';
 import '../background_json.dart';

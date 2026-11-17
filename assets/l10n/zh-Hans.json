@@ -3603,6 +3603,9 @@
   "Picture in picture when leaving the app": "切到其他应用时进入画中画",
   "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "切到其他应用时，正在播放的视频以小窗继续；关闭时只在后台继续播放声音",
   "IPv4 only": "只用 IPv4",
-  "yt-dlp connects over IPv4 only. Turn it on if videos take long to start and your network has IPv6 addresses that don't work": "yt-dlp 只通过 IPv4 连接。如果视频起播很慢，而你的网络有 IPv6 地址但实际不通，就打开它",
-  "IPv4 IPv6 force-ipv4 slow start network": "IPv4 IPv6 force-ipv4 起播慢 网络"
+  "IPv4 IPv6 force-ipv4 slow start network": "IPv4 IPv6 force-ipv4 起播慢 网络",
+  "Automatic (default)": "自动（默认）",
+  "Now: {0}. Whether yt-dlp connects over IPv4 only. Automatic checks at start whether IPv6 reaches YouTube and keeps to IPv4 when it doesn't, so a network with IPv6 addresses that don't work doesn't slow every video down; behind a proxy the proxy decides": "当前：{0}。yt-dlp 是否只通过 IPv4 连接。自动：启动时检查 IPv6 能否连上 YouTube，连不上就只用 IPv4，这样 IPv6 地址不通的网络不会拖慢每个视频；使用代理时由代理决定",
+  "Always IPv4": "始终只用 IPv4",
+  "IPv4 and IPv6": "IPv4 和 IPv6 都用"
 }

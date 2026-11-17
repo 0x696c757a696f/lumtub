@@ -23,7 +23,10 @@ extension WindowActions on AppController {
 
   /// Shows [playing] on the watch page again, where it was.
   void expandMini() {
-    if (mini) _update(() => mini = false);
+    if (!mini) return;
+    // 返回 from the video comes back to the page it was opened over.
+    _remember();
+    _update(() => mini = false);
   }
 
   /// Puts the video on the watch page into the mini player (the 应用内小窗

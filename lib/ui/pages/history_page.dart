@@ -42,6 +42,19 @@ class _HistoryPageState extends State<HistoryPage> {
 
   AppController get controller => widget.controller;
 
+  /// The search typed and the history shown, there again after a video.
+  final _kept = PageMemory<(String, bool)>('history');
+
+  @override
+  void initState() {
+    super.initState();
+    if (_kept.recall(context) case (final query, final youtube)) {
+      _query = query;
+      _search.text = query;
+      _youtube = youtube;
+    }
+  }
+
   @override
   void dispose() {
     _search.dispose();
@@ -50,6 +63,7 @@ class _HistoryPageState extends State<HistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    _kept.keep((_query, _youtube));
     final all = controller.history;
     final signedIn = controller.tvFeed?.available ?? false;
     if (signedIn && _youtube) return _youtubeHistory(context);
@@ -85,7 +99,7 @@ class _HistoryPageState extends State<HistoryPage> {
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
         child: Align(alignment: AlignmentDirectional.centerStart, child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
-          child: TextField(
+          child: LeavesByKeys(child: TextField(
             controller: _search,
             decoration: InputDecoration(
               prefixIcon: Icon(AppIcons.magnifyingGlass),
@@ -97,7 +111,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   })),
             ),
             onChanged: (value) => setState(() => _query = value),
-          ),
+          )),
         )),
       )),
       if (all.isEmpty)

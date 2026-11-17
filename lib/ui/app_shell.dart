@@ -101,6 +101,7 @@ class _AppShellState extends State<AppShell> {
   void initState() {
     super.initState();
     _frames;
+    KeyScroll.watch();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) WindowChrome.menus.value = _menus;
     });
@@ -363,6 +364,34 @@ class _AppShellState extends State<AppShell> {
     if (_controller.canGoBack) _controller.goBack();
   }
 
+  /// A two-finger swipe on a touchpad towards the reading direction's end
+  /// goes back, as in browsers; not on the watch page, where the player
+  /// takes sideways swipes, nor once a sideways list moved with it.
+  Offset? _swipe;
+  bool _swipeScrolled = false;
+
+  void _swipeStart(PointerPanZoomStartEvent event) {
+    _swipe = _controller.onWatchPage ? null : Offset.zero;
+    _swipeScrolled = false;
+  }
+
+  void _swipeUpdate(PointerPanZoomUpdateEvent event) {
+    if (_swipe != null) _swipe = event.pan;
+  }
+
+  void _swipeEnd(PointerPanZoomEndEvent event) {
+    final swipe = _swipe;
+    _swipe = null;
+    if (swipe == null || _swipeScrolled || !mounted) return;
+    final towards = Directionality.of(context) == TextDirection.rtl ? -swipe.dx : swipe.dx;
+    if (towards > 160 && swipe.dy.abs() * 2 < towards) _back();
+  }
+
+  bool _onScroll(ScrollUpdateNotification notification) {
+    if (_swipe != null && notification.metrics.axis == Axis.horizontal && (notification.scrollDelta ?? 0) != 0) _swipeScrolled = true;
+    return false;
+  }
+
   int get _bottomIndex {
     if (_library.contains(_controller.mode)) return _bottomDestinations.length - 1;
     final index = _bottomDestinations.indexWhere((d) => d.$1 == _controller.mode);
@@ -411,6 +440,12 @@ class _AppShellState extends State<AppShell> {
         bindings: {
           ..._pageShortcuts(),
           const SingleActivator(LogicalKeyboardKey.f5): _refreshPage,
+          // Keys that are not set in the shortcut settings: the back key
+          // some keyboards have, and a TV remote's channel keys, which turn
+          // the page as TV apps take them.
+          const SingleActivator(LogicalKeyboardKey.browserBack): _back,
+          const SingleActivator(LogicalKeyboardKey.channelDown): () => KeyScroll.byPage(1),
+          const SingleActivator(LogicalKeyboardKey.channelUp): () => KeyScroll.byPage(-1),
           SingleActivator(LogicalKeyboardKey.keyR, control: !Platform.isMacOS, meta: Platform.isMacOS): _refreshPage,
           // Esc goes back too, except on the watch page, where it leaves
           // full screen and closes panels.
@@ -424,9 +459,12 @@ class _AppShellState extends State<AppShell> {
           onPointerDown: (event) {
             if (event.buttons == kBackMouseButton) _back();
           },
+          onPointerPanZoomStart: _swipeStart,
+          onPointerPanZoomUpdate: _swipeUpdate,
+          onPointerPanZoomEnd: _swipeEnd,
           // The window is built again only when its layout changes; each
           // part of it listens for what it shows itself.
-          child: SelectBuilder(
+          child: NotificationListener<ScrollUpdateNotification>(onNotification: _onScroll, child: SelectBuilder(
             listenable: _layoutChanges,
             select: () => _layoutOf(_controller),
             builder: (context, _, __) => LayoutBuilder(builder: (context, constraints) {
@@ -579,7 +617,7 @@ class _AppShellState extends State<AppShell> {
                       ),
               );
             }),
-          ),
+          )),
         ),
       );
 

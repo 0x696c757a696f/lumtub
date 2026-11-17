@@ -227,6 +227,7 @@ class _ChipStripState extends State<ChipStrip> {
                   ? child!
                   : ShaderMask(blendMode: BlendMode.dstIn, shaderCallback: (bounds) => _edges(bounds, fade), child: child),
               child: SingleChildScrollView(
+                key: const PageStorageKey('chips'),
                 controller: _scroll,
                 scrollDirection: Axis.horizontal,
                 child: Row(key: _contentKey, children: [

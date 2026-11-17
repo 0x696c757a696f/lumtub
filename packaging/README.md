@@ -18,6 +18,16 @@ The last three need secrets in the repository settings (Settings › Secrets and
 
 To send a release again, run **Packages** by hand with its tag. A pull request that changes `packaging/` builds the Flatpak of the latest release without sending anything.
 
+## Where Lumtub is listed
+
+| Where | State |
+|---|---|
+| WinGet (`Lumtub.Lumtub`) | First version sent 2026-11-17 ([winget-pkgs#482133](https://github.com/microsoft/winget-pkgs/pull/482133)); each release sends a new one. |
+| Scoop Extras (`extras/lumtub`) | Sent 2026-11-17 ([Extras#19396](https://github.com/ScoopInstaller/Extras/pull/19396)); Extras' bot follows releases once merged. |
+| Flatpak bundles | On every release since 0.2.49. |
+| AUR (`lumtub-bin`) | **Not yet.** AUR sign-ups were closed on 2026-11-17. To do: register at aur.archlinux.org, add the public key of `ssh-keygen -t mldsa44-ed25519` (or ed25519 if the AUR refuses it) to the account, save the private key as the `AUR_SSH_KEY` secret, then run **Packages** by hand. |
+| Flathub | **Not yet.** Needs the GitHub organization `lumtub` for the app ID (see Flatpak below). |
+
 ## Release tags and file names
 
 Releases are tagged `v<version>-<7-character commit>`, for example `v0.2.29-1a2b3c4`, and the assets are named with the whole `<version>-<commit>` part:

@@ -106,6 +106,29 @@ void main() {
     expect(count.readAsLinesSync(), hasLength(2));
   });
 
+  test('a standby yt-dlp started ahead reads the next video from stdin', () async {
+    if (Platform.isWindows) return;
+    final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    final log = File('${dir.path}/log');
+    final script = File('${dir.path}/fake-yt-dlp');
+    await script.writeAsString('#!/bin/sh\nfor last; do :; done\nif [ "\$last" = "-" ]; then echo standby >> ${log.path}; read url; echo "read \$url" >> ${log.path}; else echo "run \$last" >> ${log.path}; fi\n'
+        'cat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'))..standbyEnabled = true;
+    expect(resolver.standbyArguments('ytdl', null).sublist(resolver.standbyArguments('ytdl', null).length - 2), ['--batch-file', '-']);
+    await resolver.resolve('aaaaaaaaaaa', 'ytdl');
+    for (var i = 0; i < 50 && !(log.existsSync() && log.readAsLinesSync().contains('standby')); i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    final second = await resolver.resolve('bbbbbbbbbbb', 'ytdl');
+    expect(second.info['title'], 'Never Gonna Give You Up');
+    expect(log.readAsLinesSync().take(3), ['run https://www.youtube.com/watch?v=aaaaaaaaaaa', 'standby', 'read https://www.youtube.com/watch?v=bbbbbbbbbbb']);
+    // Another format needs other arguments: it runs on its own.
+    await resolver.resolve('ccccccccccc', 'bestvideo');
+    expect(log.readAsLinesSync(), contains('run https://www.youtube.com/watch?v=ccccccccccc'));
+  });
+
   test('prefetches one video at a time, then only the last one asked for', () async {
     if (Platform.isWindows) return;
     final dir = await Directory.systemTemp.createTemp('lumtub_resolve');

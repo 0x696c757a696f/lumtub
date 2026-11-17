@@ -1,0 +1,146 @@
+name: Checks
+
+# The quick checks every pull request gets: analysis, formatting, clippy, and
+# the Rust and Dart tests on Linux and Windows x64. They don't wait for other
+# runs, so pull requests are checked side by side. The full build of every
+# package (Build) runs on main after the merge, and on a pull request only
+# when asked for (see build.yml). On main, these runs also keep the caches
+# that pull requests start from.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'docs/**', 'website/**']
+  pull_request:
+    branches: [main]
+    paths-ignore: ['**.md', 'docs/**', 'website/**']
+  workflow_dispatch:
+
+concurrency:
+  group: checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  # Tests only: the packages keep fat LTO with one codegen unit
+  # (Cargo.toml); here the core compiles in a fraction of the time.
+  CARGO_PROFILE_RELEASE_LTO: 'off'
+  CARGO_PROFILE_RELEASE_CODEGEN_UNITS: '16'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install Flutter
+        run: |
+          version=$(tr -d '[:space:]' < .flutter-version)
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/flutter.tar.xz" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$version-stable.tar.xz"
+          tar -xJf "$RUNNER_TEMP/flutter.tar.xz" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+
+      - name: Rust formatting
+        run: cargo fmt --manifest-path native/lumtub_core/Cargo.toml --check
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Analyze the Dart sources
+        run: flutter analyze
+
+  linux:
+    name: Tests (Linux)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install Flutter
+        run: |
+          version=$(tr -d '[:space:]' < .flutter-version)
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/flutter.tar.xz" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$version-stable.tar.xz"
+          tar -xJf "$RUNNER_TEMP/flutter.tar.xz" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+
+      - name: Install the Rust toolchain
+        run: |
+          rustup update stable --no-self-update
+          rustup default stable
+          rustup component add clippy
+          rustc --version
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: checks-linux
+
+      - name: Clippy
+        run: cargo clippy --manifest-path native/lumtub_core/Cargo.toml --release --all-targets -- -D warnings
+
+      - name: Rust tests
+        run: cargo test --manifest-path native/lumtub_core/Cargo.toml --release
+
+      - name: Build the Rust core for the Dart tests
+        run: |
+          cargo build --manifest-path native/lumtub_core/Cargo.toml --release --lib
+          echo "LUMTUB_CORE_DLL=$PWD/native/lumtub_core/target/release/liblumtub_core.so" >> "$GITHUB_ENV"
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Dart tests
+        run: flutter test
+
+  windows:
+    name: Tests (Windows x64)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install Flutter
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = (Get-Content .flutter-version -Raw).Trim()
+          $archive = Join-Path $env:RUNNER_TEMP "flutter_windows_$version-stable.zip"
+          $destination = Join-Path $env:RUNNER_TEMP 'flutter-sdk'
+          Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_$version-stable.zip" -OutFile $archive
+          Expand-Archive -LiteralPath $archive -DestinationPath $destination -Force
+          (Join-Path $destination 'flutter/bin') | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Install the Rust toolchain
+        shell: pwsh
+        run: |
+          rustup update stable --no-self-update
+          rustup default stable
+          rustc --version
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: checks-windows
+
+      - name: Rust tests and the core for the Dart tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $manifest = 'native/lumtub_core/Cargo.toml'
+          cargo test --manifest-path $manifest --release
+          if ($LASTEXITCODE -ne 0) { throw 'Rust core tests failed.' }
+          cargo build --manifest-path $manifest --release --lib
+          if ($LASTEXITCODE -ne 0) { throw 'Rust core build failed.' }
+          $dll = (Resolve-Path 'native/lumtub_core/target/release/lumtub_core.dll').Path
+          "LUMTUB_CORE_DLL=$dll" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Dart tests
+        run: flutter test

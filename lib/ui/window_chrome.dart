@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../app/app_controller.dart';
 import '../skins/skin.dart';
 import '../window_frame.dart';
+import 'glass_look.dart';
 import 'skin_chrome.dart';
 import 'skin_paint.dart';
 import 'theater_mode.dart';
@@ -52,8 +53,10 @@ class _WindowChromeState extends State<WindowChrome> {
         builder: (context, child) {
           final c = widget.controller;
           final skin = context.skin;
-          // Picture in picture shows the video alone, in its own frame.
-          if (c.pip && c.playing != null && c.videoController != null) return child!;
+          final glass = context.glass;
+          // Picture in picture shows the video alone, in its own frame,
+          // solid even while the window is glass.
+          if (c.pip && c.playing != null && c.videoController != null) return glass == null ? child! : ColoredBox(color: Colors.black, child: child);
           final appearance = c.appearance;
           // 铺满窗口 takes the system title bar away too, so only the video
           // is left in the window; leaving it brings the bar back.
@@ -82,7 +85,13 @@ class _WindowChromeState extends State<WindowChrome> {
             ],
             Expanded(child: child!),
           ]);
-          if (skin != null) content = SkinBackdrop(skin: skin, plain: appearance.lowResource, pictures: appearance.skinBackground, child: content);
+          if (skin != null) {
+            content = SkinBackdrop(skin: skin, plain: appearance.lowResource, pictures: appearance.skinBackground, child: content);
+          } else if (glass != null) {
+            // The standard look has no backdrop of its own, only its page
+            // colour, which the glass takes.
+            content = Stack(fit: StackFit.expand, children: [GlassBackdrop(look: glass, plain: appearance.lowResource), content]);
+          }
           if (ownTitleBar && !bare) content = ResizeEdges(child: content);
           // Above the navigator there is no page yet: the bars get the text
           // style and ink a page would give them, and an overlay of their

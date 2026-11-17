@@ -11,6 +11,7 @@ import '../../l10n/l10n.dart';
 import '../../skins/skin.dart';
 import '../../skins/skin_library.dart';
 import '../../window_frame.dart';
+import '../../window_glass.dart';
 import '../app_icons.dart';
 import '../common.dart';
 import '../theme_preset_card.dart';
@@ -107,6 +108,7 @@ class _SkinsPage extends StatelessWidget {
                 value: appearance.skinBackground,
                 onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(skinBackground: v)),
               ),
+            if (WindowGlass.possible) ...windowGlassTiles(context, controller),
             _header(context, tr('Color schemes')),
             grid([for (final s in library.builtIn) if (schemes.contains(s.id)) s], standard: true),
             // The standard look in one accent color each, beside the schemes.
@@ -409,4 +411,72 @@ class _LiftState extends State<_Lift> {
 
   @override
   Widget build(BuildContext context) => Builder(builder: (context) => widget.builder(context, _hovered, _focused));
+}
+
+/// 窗口透明: the desktop through the window, under any skin
+/// (docs/specs/window-glass.md). Apart from a skin's Glass, which only
+/// makes its panes clearer over its own pictures.
+List<Widget> windowGlassTiles(BuildContext context, AppController controller) {
+  final appearance = controller.appearance;
+  void save(AppearanceSettings next) => controller.saveAppearance(next);
+  return [
+    _header(context, tr('Window transparency')),
+    ValueListenableBuilder(
+      valueListenable: WindowGlass.state,
+      builder: (context, state, _) {
+        final on = appearance.windowGlass;
+        final note = !on
+            ? tr('The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.')
+            : state.restart
+                ? tr('Takes effect the next time Lumtub starts.')
+                : !state.shown
+                    ? tr('This desktop cannot show what is behind a window: it needs a compositor.')
+                    : appearance.windowGlassBlur && !state.blurred
+                        ? tr('This desktop cannot blur what is behind; the window is only see-through.')
+                        : tr('The desktop shows through the window.');
+        return SwitchItem(
+          title: Platform.isAndroid ? tr('See the wallpaper through the app') : tr('See the desktop through the window'),
+          subtitle: note,
+          leading: Icon(AppIcons.browsers),
+          value: on,
+          onChanged: (v) => save(controller.appearance.copyWith(windowGlass: v)),
+        );
+      },
+    ),
+    if (appearance.windowGlass) ...[
+      ListTile(
+        leading: Icon(AppIcons.drop),
+        title: Text(tr('Transparency')),
+        subtitle: Slider(
+          value: appearance.windowGlassClarity,
+          divisions: 20,
+          label: '${(appearance.windowGlassClarity * 100).round()}%',
+          onChanged: (v) => save(controller.appearance.copyWith(windowGlassClarity: v)),
+        ),
+      ),
+      ListTile(
+        leading: Icon(AppIcons.frameCorners),
+        title: Text(tr('Where it is see-through')),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: SegmentedButton<bool>(
+            segments: [
+              ButtonSegment(value: false, label: Text(tr('Frame only'))),
+              ButtonSegment(value: true, label: Text(tr('Whole window'))),
+            ],
+            selected: {appearance.windowGlassWhole},
+            onSelectionChanged: (v) => save(controller.appearance.copyWith(windowGlassWhole: v.first)),
+          ),
+        ),
+      ),
+      SwitchItem(
+        title: tr('Blur what is behind'),
+        subtitle: tr('Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.'),
+        leading: Icon(AppIcons.sparkle),
+        value: appearance.windowGlassBlur,
+        onChanged: (v) => save(controller.appearance.copyWith(windowGlassBlur: v)),
+      ),
+      _tip(context, tr('Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.')),
+    ],
+  ];
 }

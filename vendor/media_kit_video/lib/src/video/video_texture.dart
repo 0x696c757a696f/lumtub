@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:media_kit_video/media_kit_video_controls/media_kit_video_controls.dart';
 
 import 'package:media_kit_video/src/subtitle/subtitle_view.dart';
+import 'package:media_kit_video/src/video/video_obstruction.dart';
 import 'package:media_kit_video/media_kit_video_controls/media_kit_video_controls.dart'
     as media_kit_video_controls;
 import 'package:media_kit_video/src/utils/dispose_safe_notifer.dart';
@@ -386,6 +387,13 @@ class VideoState extends State<Video> with WidgetsBindingObserver {
             child: Stack(
               fit: StackFit.expand,
               children: [
+                // Lumtub: the picture and its subtitles move out from under
+                // a side panel open over the player; the controls stay.
+                Positioned.fill(
+                  child: VideoObstructionAvoider(
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
                 ClipRect(
                   child: FittedBox(
                     fit: videoViewParameters.fit,
@@ -458,6 +466,10 @@ class VideoState extends State<Video> with WidgetsBindingObserver {
                           videoViewParameters.subtitleViewConfiguration,
                     ),
                   ),
+                      ],
+                    ),
+                  ),
+                ),
                 if (videoViewParameters.controls != null)
                   Positioned.fill(
                     child: videoViewParameters.controls!.call(this),

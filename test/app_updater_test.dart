@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -87,4 +88,146 @@ void main() {
     updater.dispose();
     await check;
   });
+
+  group('a newer release before the update is installed', () {
+    // The package must carry the version it is checked as, as the core's
+    // check_package demands.
+    String? verifier({required String file, required String name, required String signature, String? version, String? current}) =>
+        version != null && name.contains('_${version}_') ? null : 'The update\'s package is not the version offered';
+    Map<String, dynamic> releaseOf(String version) => {
+          'tag_name': 'v$version',
+          'html_url': 'https://github.com/0x696c757a696f/lumtub/releases/tag/v$version',
+          'published_at': built.toIso8601String(),
+          'assets': [
+            {'name': 'Lumtub_${version}_linux-x64.AppImage', 'digest': 'sha256:00'},
+            {'name': 'Lumtub_${version}_linux-x64.AppImage.sig', 'browser_download_url': 'https://github.com/x/Lumtub_${version}_linux-x64.AppImage.sig'},
+          ],
+        };
+    late String latest;
+    late Directory folder;
+    final client = MockClient((request) async {
+      if (request.url.host == 'api.github.com') return http.Response(jsonEncode(releaseOf(latest)), 200);
+      return http.Response('signature', 200);
+    });
+    setUp(() {
+      AppUpdater.debugCanInstall = true;
+      folder = Directory('${Directory.systemTemp.createTempSync('updater').path}/updates')..createSync();
+    });
+    tearDown(() {
+      AppUpdater.debugCanInstall = null;
+      folder.parent.deleteSync(recursive: true);
+    });
+    Future<File> fetch(Map<String, dynamic> asset, Directory into, void Function(int, int?) progress) async =>
+        File('${into.path}/${asset['name']}')..writeAsStringSync('package');
+    AppUpdater updater({Future<File> Function(Map<String, dynamic>, Directory, void Function(int, int?))? download}) =>
+        AppUpdater(client: client, directory: folder, download: download ?? fetch, verifier: verifier, current: '0.2.1-72ec49d', package: 'linux-x64');
+
+    test('replaces the downloaded package and tells again', () async {
+      final u = updater();
+      latest = '0.2.2-1111111';
+      await u.check(download: true);
+      expect(u.readyVersion, '0.2.2-1111111');
+      expect(u.noticeKey, '0.2.2-1111111 ready');
+      await u.dismissNotice();
+      expect(u.showsNotice, isFalse);
+      latest = '0.2.3-2222222';
+      await u.check(download: true);
+      expect(u.readyVersion, '0.2.3-2222222');
+      expect(u.ready!.path, endsWith('Lumtub_0.2.3-2222222_linux-x64.AppImage'));
+      expect(u.rejected, isNull);
+      expect(folder.listSync().map((f) => f.path.split(Platform.pathSeparator).last).toSet(), {'Lumtub_0.2.3-2222222_linux-x64.AppImage', 'Lumtub_0.2.3-2222222_linux-x64.AppImage.sig'});
+      expect(u.showsNotice, isTrue);
+    });
+
+    test('a release found during a download is downloaded right after it', () async {
+      final gate = Completer<void>();
+      var calls = 0;
+      final u = updater(download: (asset, into, progress) async {
+        if (calls++ == 0) await gate.future;
+        return fetch(asset, into, progress);
+      });
+      latest = '0.2.2-1111111';
+      final first = u.check(download: true);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(u.downloading, '0.2.2-1111111');
+      latest = '0.2.3-2222222';
+      await u.check(download: true);
+      // Meanwhile the older one is what installs: it is checked as its own version.
+      gate.complete();
+      await first;
+      expect(u.readyVersion, '0.2.3-2222222');
+      expect(File('${folder.path}/Lumtub_0.2.2-1111111_linux-x64.AppImage').existsSync(), isFalse);
+      expect(u.rejected, isNull);
+    });
+
+    test('a package not installed yet is kept across starts and used again', () async {
+      File('${folder.path}/Lumtub_0.2.2-1111111_linux-x64.AppImage').writeAsStringSync('package');
+      File('${folder.path}/Lumtub_0.2.2-1111111_linux-x64.AppImage.sig').writeAsStringSync('signature');
+      File('${folder.path}/Lumtub_0.2.1-72ec49d_linux-x64.AppImage').writeAsStringSync('installed');
+      File('${folder.path}/update.log').writeAsStringSync('updated');
+      latest = '0.2.2-1111111';
+      final u = updater();
+      u.start(download: () => false);
+      addTearDown(u.dispose);
+      for (var i = 0; i < 100 && u.readyVersion == null; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+      expect(u.readyVersion, '0.2.2-1111111');
+      expect(File('${folder.path}/Lumtub_0.2.1-72ec49d_linux-x64.AppImage').existsSync(), isFalse);
+      expect(File('${folder.path}/update.log').existsSync(), isFalse);
+    });
+
+    test('a closed notice stays closed after a restart', () async {
+      latest = '0.2.2-1111111';
+      final u = updater();
+      await u.check();
+      expect(u.noticeKey, '0.2.2-1111111 available');
+      await u.dismissNotice();
+      final again = updater();
+      again.start(download: () => false);
+      addTearDown(again.dispose);
+      for (var i = 0; i < 100 && again.available == null; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+      expect(again.showsNotice, isFalse);
+    });
+  }, skip: skip);
+
+  test('only plain package names and this project\'s pages are used', () {
+    expect(AppUpdater.safeName('Lumtub_0.2.3-abc1234_windows-x64-setup.exe'), isTrue);
+    expect(AppUpdater.safeName('Lumtub_../../evil.exe'), isFalse);
+    expect(AppUpdater.safeName(r'Lumtub_x\evil.exe'), isFalse);
+    expect(AppUpdater.safeName('evil.exe'), isFalse);
+    expect(AppUpdater.safeName(null), isFalse);
+    const releases = 'https://github.com/0x696c757a696f/lumtub/releases';
+    expect(AppUpdater.releasePage('$releases/tag/v0.2.3-abc1234'), '$releases/tag/v0.2.3-abc1234');
+    expect(AppUpdater.releasePage('https://evil.example/0x696c757a696f/lumtub/releases'), releases);
+    expect(AppUpdater.releasePage('https://github.com/someone/else/releases'), releases);
+    expect(AppUpdater.releasePage('http://github.com/0x696c757a696f/lumtub/releases'), releases);
+    expect(AppUpdater.releasePage(''), releases);
+  });
+
+  test('a link in place of a kept package is not used', () async {
+    if (Platform.isWindows) return;
+    final root = Directory.systemTemp.createTempSync('updater');
+    addTearDown(() => root.deleteSync(recursive: true));
+    final folder = Directory('${root.path}/updates')..createSync();
+    final elsewhere = File('${root.path}/other')..writeAsStringSync('package');
+    Link('${folder.path}/Lumtub_0.2.2-1111111_linux-x64.AppImage').createSync(elsewhere.path);
+    File('${folder.path}/Lumtub_0.2.2-1111111_linux-x64.AppImage.sig').writeAsStringSync('signature');
+    final client = MockClient((request) async => http.Response(jsonEncode({
+          'tag_name': 'v0.2.2-1111111',
+          'html_url': 'https://github.com/0x696c757a696f/lumtub/releases/tag/v0.2.2-1111111',
+          'published_at': built.toIso8601String(),
+          'assets': [
+            {'name': 'Lumtub_0.2.2-1111111_linux-x64.AppImage', 'digest': 'sha256:00'},
+            {'name': 'Lumtub_0.2.2-1111111_linux-x64.AppImage.sig'},
+          ],
+        }), 200));
+    String? accept({required String file, required String name, required String signature, String? version, String? current}) => null;
+    final u = AppUpdater(client: client, directory: folder, download: (asset, into, progress) async => throw UnimplementedError(), verifier: accept, current: '0.2.1-72ec49d', package: 'linux-x64');
+    await u.check();
+    expect(u.available, isNotNull);
+    expect(u.ready, isNull);
+  }, skip: skip);
 }

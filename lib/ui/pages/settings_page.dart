@@ -20,6 +20,7 @@ import '../../l10n/l10n.dart';
 import '../app_icons.dart';
 import '../common.dart';
 import '../skin_paint.dart';
+import '../update_notice.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, required this.controller, this.initial = SettingsCategory.account});
@@ -131,7 +132,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final theme = Theme.of(context);
     return ListTile(
       tileColor: wide && _query.isEmpty && category == _category ? theme.colorScheme.onInverseSurface : null,
-      leading: Icon(category.icon),
+      leading: category == SettingsCategory.about ? UpdateDot(controller: _controller, child: Icon(category.icon)) : Icon(category.icon),
       title: Text(category.title, style: theme.textTheme.titleMedium),
       subtitle: subtitle == null ? null : Text(subtitle, style: theme.textTheme.labelMedium!.copyWith(color: theme.colorScheme.outline)),
       onTap: () {

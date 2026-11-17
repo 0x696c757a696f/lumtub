@@ -3125,6 +3125,7 @@
   "Lists of {0}; those of {1} are used after a restart": "قوائم {0}؛ وتُستخدم قوائم {1} بعد إعادة التشغيل",
   "Skin background": "خلفية السمة",
   "The skin's pictures and landscape behind the pages; off leaves a plain color": "صور السمة ومناظرها خلف الصفحات؛ عند الإيقاف يبقى لون عادي",
+  "Not shown while the window shows the desktop": "لا تظهر أثناء إظهار النافذة لسطح المكتب",
   "Suggest a channel or report a mistake": "اقترح قناة أو أبلغ عن خطأ",
   "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "القوائم عامة على GitHub ويمكن لأي شخص الإضافة إليها. يتطلب كل إدخال مصدرًا عامًا",
   "Preparing yt-dlp…": "جارٍ تجهيز yt-dlp…",

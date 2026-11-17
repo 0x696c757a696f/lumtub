@@ -3126,6 +3126,7 @@
   "Lists of {0}; those of {1} are used after a restart": "Llistes de {0}; les de {1} s'usen després de reiniciar",
   "Skin background": "Fons de la pell",
   "The skin's pictures and landscape behind the pages; off leaves a plain color": "Les imatges i el paisatge de la pell darrere de les pàgines; si està desactivat, queda un color llis",
+  "Not shown while the window shows the desktop": "No es mostra mentre la finestra deixa veure l'escriptori",
   "Suggest a channel or report a mistake": "Suggereix un canal o informa d'un error",
   "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Les llistes són públiques a GitHub i qualsevol hi pot afegir. Cada entrada necessita una font pública",
   "Preparing yt-dlp…": "Preparant yt-dlp…",

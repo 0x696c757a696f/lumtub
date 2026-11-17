@@ -40,7 +40,7 @@ class WindowFrame {
   void SetCustom(bool on);
   // Lets the desktop show where Flutter leaves the window clear, blurred
   // when |blur| and the system can; answers what it managed.
-  flutter::EncodableValue SetDesktopGlass(bool on, bool dark, bool blur);
+  flutter::EncodableValue SetDesktopGlass(bool on, bool dark, bool blur, DWORD tint);
   // The system blur behind the window: acrylic, the older blur or none.
   void ApplyBlur(bool moving);
   // Sizes Flutter's view to the client area, which a frame change alters
@@ -69,6 +69,8 @@ class WindowFrame {
   bool custom_ = false;
   bool glass_ = false;
   bool glass_blur_ = false;
+  // 0xAARRGGBB laid over the blur before Windows 11 (SetAccent).
+  DWORD glass_frost_ = 0;
   double caption_height_ = 0;
   bool has_maximize_ = false;
   Box maximize_;

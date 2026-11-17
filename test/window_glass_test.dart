@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -56,42 +58,64 @@ void main() {
     });
   }
 
-  testWidgets('a plate covers what it glows behind', (tester) async {
-    final key = GlobalKey();
+  testWidgets('a plate covers round the letters it glows behind, and fades', (tester) async {
     const tint = Color(0xFF204020);
-    final theme = ThemeData(extensions: const [GlassLook(alpha: 0.4, whole: false, tint: tint)]);
-    await tester.pumpWidget(MaterialApp(
-      theme: theme,
-      home: Center(
-        child: RepaintBoundary(
-          key: key,
-          child: const Padding(
-            padding: EdgeInsets.all(20),
-            child: GlassPlate(child: SizedBox(width: 60, height: 14)),
+    const size = Size(120, 40);
+    Widget words(bool glass) => MaterialApp(
+          theme: ThemeData(extensions: [if (glass) const GlassLook(alpha: 0.4, whole: false, tint: tint)]),
+          home: Align(
+            alignment: Alignment.topLeft,
+            child: RepaintBoundary(
+              key: glass ? const ValueKey('glass') : const ValueKey('bare'),
+              child: SizedBox.fromSize(
+                size: size,
+                child: const Material(type: MaterialType.transparency, child: Center(child: GlassPlate(child: Text('文件 Hg', style: TextStyle(fontSize: 16, color: Colors.white))))),
+              ),
+            ),
           ),
-        ),
-      ),
-    ));
-    final image = await tester.runAsync(() async {
-      final boundary = key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-      final picture = await boundary.toImage();
-      return (await picture.toByteData(format: ui.ImageByteFormat.rawStraightRgba))!;
-    });
-    // The child's box: 20 px in from the boundary's edges, 60 × 14.
-    final width = 100;
-    for (var y = 20; y < 34; y++) {
-      for (var x = 20; x < 80; x++) {
-        final alpha = image!.getUint8((y * width + x) * 4 + 3) / 255;
-        expect(alpha, greaterThanOrEqualTo(GlassPlate.coverage - 0.01), reason: 'plate at $x,$y');
+        );
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetDevicePixelRatio);
+    Future<ByteData> render(bool glass) async {
+      await tester.pumpWidget(words(glass));
+      await tester.pumpAndSettle();
+      final boundary = tester.renderObject(find.byKey(ValueKey(glass ? 'glass' : 'bare')));
+      return (await tester.runAsync(() async {
+        final picture = await (boundary as RenderRepaintBoundary).toImage();
+        return (await picture.toByteData(format: ui.ImageByteFormat.rawStraightRgba))!;
+      }))!;
+    }
+    final bare = await render(false);
+    final glass = await render(true);
+    final w = size.width.toInt(), h = size.height.toInt();
+    bool ink(int x, int y) => x >= 0 && y >= 0 && x < w && y < h && bare.getUint8((y * w + x) * 4 + 3) > 128;
+    double alpha(int x, int y) => glass.getUint8((y * w + x) * 4 + 3) / 255;
+    var near = 0, far = 0;
+    for (var y = 0; y < h; y++) {
+      for (var x = 0; x < w; x++) {
+        if (ink(x, y)) continue;
+        var distance = 99;
+        for (var dy = -10; dy <= 10; dy++) {
+          for (var dx = -10; dx <= 10; dx++) {
+            if (ink(x + dx, y + dy)) distance = math.min(distance, math.max(dx.abs(), dy.abs()));
+          }
+        }
+        if (distance <= 2) {
+          near++;
+          expect(alpha(x, y), greaterThanOrEqualTo(distance == 1 ? GlassPlate.coverage - 0.01 : 0.93), reason: 'halo at $x,$y');
+        } else if (distance > 9) {
+          far++;
+          expect(alpha(x, y), lessThan(0.05), reason: 'glass at $x,$y');
+        }
       }
     }
-    // It fades out round the box: the glass shows beyond.
-    expect(image!.getUint8(3), lessThan(10));
+    expect(near, greaterThan(100));
+    expect(far, greaterThan(100), reason: 'the halo hugs the words, not a box round them');
   });
 
   testWidgets('no glass, no plate', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: GlassPlate(child: SizedBox(width: 10, height: 10))));
-    expect(find.byType(CustomPaint).evaluate().where((e) => (e.widget as CustomPaint).child is SizedBox), isEmpty);
+    expect(find.byWidgetPredicate((w) => w.runtimeType.toString() == '_Halo'), findsNothing);
   });
 
   test('the frame turns to glass, the cards do not', () {

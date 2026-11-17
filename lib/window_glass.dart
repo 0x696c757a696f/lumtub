@@ -50,13 +50,14 @@ abstract final class WindowGlass {
   /// What the runner said last.
   static final state = ValueNotifier<WindowGlassState>(const WindowGlassState());
 
-  static ({bool on, bool dark, bool blur})? _asked;
+  static ({bool on, bool dark, bool blur, int tint})? _asked;
 
   /// Asks the runner to let the desktop through, or to stop; [dark] shades
-  /// the system's own blur, [blur] asks for one. The answer lands in
-  /// [state]; asking the same again does nothing.
-  static Future<void> apply({required bool on, required bool dark, required bool blur}) async {
-    final ask = (on: on, dark: dark, blur: blur);
+  /// the system's own blur, [blur] asks for one, [tint] is the skin's page
+  /// colour, which frosts the blur where the system lays a colour over it.
+  /// The answer lands in [state]; asking the same again does nothing.
+  static Future<void> apply({required bool on, required bool dark, required bool blur, Color tint = const Color(0xFF000000)}) async {
+    final ask = (on: on, dark: dark, blur: blur, tint: tint.toARGB32());
     if (ask == _asked || !possible) return;
     // Nothing to undo at start while it was never on.
     if (_asked == null && !on) {
@@ -65,7 +66,7 @@ abstract final class WindowGlass {
     }
     _asked = ask;
     try {
-      final answer = await _channel.invokeMapMethod<String, Object?>('setDesktopGlass', {'on': on, 'dark': dark, 'blur': blur});
+      final answer = await _channel.invokeMapMethod<String, Object?>('setDesktopGlass', {'on': on, 'dark': dark, 'blur': blur, 'tint': ask.tint});
       if (_asked != ask) return;
       state.value = WindowGlassState(shown: answer?['shown'] == true, blurred: answer?['blurred'] == true, restart: answer?['restart'] == true);
       if (on) logInfo('Window glass: ${state.value}');

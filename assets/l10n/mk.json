@@ -3125,6 +3125,7 @@
   "Lists of {0}; those of {1} are used after a restart": "Листи од {0}; оние од {1} се користат по рестартирање",
   "Skin background": "Позадина на темата",
   "The skin's pictures and landscape behind the pages; off leaves a plain color": "Сликите и пејзажот на темата зад страниците; исклучено остава обична боја",
+  "Not shown while the window shows the desktop": "Не се прикажува додека прозорецот ја покажува работната површина",
   "Suggest a channel or report a mistake": "Предложете канал или пријавете грешка",
   "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Списоците се јавни на GitHub и секој може да додава. Секој запис бара јавен извор",
   "Preparing yt-dlp…": "Се подготвува yt-dlp…",

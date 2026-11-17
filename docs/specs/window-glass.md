@@ -37,7 +37,7 @@ transparency when `WindowGlass.possible`:
 | Platform | Through the window | Blur |
 | --- | --- | --- |
 | Windows 11 22H2+ | DWM frame over the whole client area | `DWMWA_SYSTEMBACKDROP_TYPE` acrylic |
-| Windows 10 1803+ | same | `SetWindowCompositionAttribute` acrylic accent, plain blur behind while moved or sized (acrylic lags) |
+| Windows 10 1803+ | same | `SetWindowCompositionAttribute` acrylic accent frosted with half the skin's page colour (as the system's own acrylic), plain blur behind while moved or sized (acrylic lags) |
 | Windows older | same | DWM blur behind |
 | Linux X11 | RGBA visual chosen before the window is realized | KDE: `_KDE_NET_WM_BLUR_BEHIND_REGION` |
 | Linux Wayland | RGBA surface | `ext_background_effect_v1` (KDE Plasma 6.7+, GNOME 51+, COSMIC, niri, Hyprland 0.56+), else KDE's `org_kde_kwin_blur` |
@@ -67,10 +67,14 @@ with a faint sheen. Over a desktop that can be any colour, words keep
 their contrast in two ways.
 
 **Plates.** Every word and icon on the frame sits on a `GlassPlate`: a
-soft glow of the bar's own colour around it, like the glow behind
-window titles on Windows 7. The plate covers 99% (`GlassPlate.coverage`)
-up to three sigma past the words' box. Items whose surface already has
-its own face (buttons, selected items) get none.
+soft halo of the bar's own colour that follows the shapes of the letters
+and icons, like the glow behind window titles on Windows 7. The strokes
+are widened by 4 px (`GlassPlate.spread`) and blurred (sigma 1.25), so
+the halo covers 99% (`GlassPlate.coverage`) one pixel from the ink, 94%
+two pixels out, and is gone about 8 px out. It is never a box round the
+words: a box over a busy desktop reads as a hard-edged patch. Items
+whose surface already has its own face (buttons, selected items) get
+none.
 
 **Floors.** `glassFloor(theme, whole:)` is the clearest alpha at which
 every writing of the skin (`glassWritings`) keeps its contrast (4.5:1,
@@ -82,7 +86,8 @@ pages in whole-window mode have no plates, so their floor is far higher
 price of readable pages.
 
 Tests check every skin in both brightnesses at clarity 0, 0.5 and 1 in
-both modes, and measure the plate's coverage in a rendered frame.
+both modes, and measure the halo round rendered letters: whole next to
+them, clear 10 px away.
 
 ## Why the first try failed
 

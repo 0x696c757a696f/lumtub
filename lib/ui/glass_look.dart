@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../skins/skin.dart';
 import 'linked_text.dart';
@@ -164,9 +165,10 @@ ThemeData withGlass(ThemeData theme, {required double transparency, required boo
   );
 }
 
-/// The glow of words on Windows 7's glass: a soft cloud of the bar's own
-/// colour behind [child] while the desktop shows through, so it reads
-/// whatever lies behind the window. Without glass it is [child] alone.
+/// The glow of words on Windows 7's glass: a soft halo of the bar's own
+/// colour that follows the shapes of [child]'s letters and icons while the
+/// desktop shows through, so they read whatever lies behind the window.
+/// Without glass it is [child] alone.
 class GlassPlate extends StatelessWidget {
   const GlassPlate({super.key, this.surface, required this.child});
 
@@ -181,38 +183,79 @@ class GlassPlate extends StatelessWidget {
           child is SizedBox || child is Spacer || child is Expanded || child is Flexible ? child : GlassPlate(surface: surface, child: child),
       ];
 
-  /// The blur of the plate's edge, as a gaussian sigma.
-  static const sigma = 3.0;
+  /// How far the strokes are widened before [sigma] softens the edge, in
+  /// pixels: the halo is nearly whole up to two pixels past the ink and
+  /// gone about [spread] plus three [sigma] out.
+  static const spread = 4.0;
 
-  /// How much of the plate covers every point of [child]: it reaches
-  /// three [sigma] past it, where a blurred edge has 99.87% of its
-  /// strength, so a corner still has 99.7%. Tested in
-  /// test/window_glass_test.dart.
+  /// The blur of the halo's edge, as a gaussian sigma.
+  static const sigma = 1.25;
+
+  /// How much of the halo covers every point one pixel from the ink
+  /// (0.94 two pixels out). Tested in test/window_glass_test.dart.
   static const coverage = 0.99;
 
   @override
   Widget build(BuildContext context) {
     final look = context.glass;
     if (look == null) return child;
-    return CustomPaint(painter: _PlatePainter(plateColor(look.tint, surface: surface, color: surface == null ? look.chrome : null)), child: child);
+    return _Halo(color: plateColor(look.tint, surface: surface, color: surface == null ? look.chrome : null).withValues(alpha: 1), child: child);
   }
 }
 
-class _PlatePainter extends CustomPainter {
-  _PlatePainter(this.color);
+class _Halo extends SingleChildRenderObjectWidget {
+  const _Halo({required this.color, required super.child});
   final Color color;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    const reach = GlassPlate.sigma * 3;
-    final box = RRect.fromRectAndRadius((Offset.zero & size).inflate(reach), const Radius.circular(reach + 2));
-    canvas.drawRRect(box, Paint()
-      ..color = color.withValues(alpha: 1)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, GlassPlate.sigma));
+  RenderObject createRenderObject(BuildContext context) => _RenderHalo(color);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderHalo renderObject) => renderObject.color = color;
+}
+
+/// Paints its child twice: once in the halo colour, widened and blurred,
+/// then as it is on top.
+class _RenderHalo extends RenderProxyBox {
+  _RenderHalo(this._color);
+
+  Color _color;
+  set color(Color value) {
+    if (value == _color) return;
+    _color = value;
+    markNeedsPaint();
+  }
+
+  // Widen the strokes, then soften the edge.
+  static final _filter = ui.ImageFilter.compose(
+    outer: ui.ImageFilter.blur(sigmaX: GlassPlate.sigma, sigmaY: GlassPlate.sigma),
+    inner: ui.ImageFilter.dilate(radiusX: GlassPlate.spread, radiusY: GlassPlate.spread),
+  );
+
+  final _blur = LayerHandle<ImageFilterLayer>();
+  final _tint = LayerHandle<ColorFilterLayer>();
+
+  @override
+  bool get alwaysNeedsCompositing => child != null;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final child = this.child;
+    if (child == null) return;
+    final blur = _blur.layer ??= ImageFilterLayer();
+    blur.imageFilter = _filter;
+    context.pushLayer(blur, (context, offset) {
+      _tint.layer = context.pushColorFilter(offset, ColorFilter.mode(_color, BlendMode.srcIn), (context, offset) => context.paintChild(child, offset), oldLayer: _tint.layer);
+    }, offset);
+    context.paintChild(child, offset);
   }
 
   @override
-  bool shouldRepaint(_PlatePainter old) => old.color != color;
+  void dispose() {
+    _blur.layer = null;
+    _tint.layer = null;
+    super.dispose();
+  }
 }
 
 /// The glass itself, under everything in the window: the tint at

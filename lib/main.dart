@@ -288,7 +288,7 @@ class _LumtubAppState extends State<LumtubApp> {
             builder: (context, child) {
               final media = MediaQuery.of(context);
               _matchTitleBar(Theme.of(context));
-              _matchGlass(appearance, Theme.of(context).brightness);
+              _matchGlass(appearance, Theme.of(context));
               final chrome = WindowChrome(controller: widget.controller, title: appName, child: child!);
               return ThemeCrossFade(
                 // A video is a texture, which a picture of the window may
@@ -346,11 +346,13 @@ void _rebuildAll() {
 
 /// Lets the desktop through the window, or stops, as 窗口透明 says; the
 /// system's own blur shaded for [brightness].
-void _matchGlass(AppearanceSettings appearance, Brightness brightness) {
+void _matchGlass(AppearanceSettings appearance, ThemeData theme) {
   if (!WindowGlass.possible) return;
   final on = appearance.windowGlass;
   final blur = appearance.windowGlassBlur;
-  WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(WindowGlass.apply(on: on, dark: brightness == Brightness.dark, blur: blur)));
+  final dark = theme.brightness == Brightness.dark;
+  final tint = glassTint(theme);
+  WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(WindowGlass.apply(on: on, dark: dark, blur: blur, tint: tint)));
 }
 
 /// The Windows title bar in the page's own colours, so the window reads as

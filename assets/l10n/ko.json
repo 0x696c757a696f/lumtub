@@ -3125,6 +3125,7 @@
   "Lists of {0}; those of {1} are used after a restart": "{0} 목록, {1} 목록은 다시 시작한 후 사용됩니다",
   "Skin background": "스킨 배경",
   "The skin's pictures and landscape behind the pages; off leaves a plain color": "페이지 뒤에 스킨의 그림과 풍경을 표시합니다. 끄면 단색이 됩니다",
+  "Not shown while the window shows the desktop": "창에 바탕 화면이 비치는 동안에는 표시되지 않습니다",
   "Suggest a channel or report a mistake": "채널 제안 또는 오류 신고",
   "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "목록은 GitHub에 공개되어 있으며 누구나 추가할 수 있습니다. 모든 항목에는 공개 출처가 필요합니다",
   "Preparing yt-dlp…": "yt-dlp 준비 중…",

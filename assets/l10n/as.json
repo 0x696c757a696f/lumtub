@@ -3125,6 +3125,7 @@
   "Lists of {0}; those of {1} are used after a restart": "{0} ৰ তালিকা; {1} ৰ তালিকা ৰিষ্টাৰ্টৰ পিছত ব্যৱহাৰ কৰা হয়",
   "Skin background": "স্কিনৰ পটভূমি",
   "The skin's pictures and landscape behind the pages; off leaves a plain color": "পৃষ্ঠাৰ পিছত স্কিনৰ ছবি আৰু দৃশ্য; বন্ধ কৰিলে এটা সাধাৰণ ৰং থাকে",
+  "Not shown while the window shows the desktop": "উইণ্ড'ই ডেস্কটপ দেখুওৱাৰ সময়ত দেখুওৱা নহয়",
   "Suggest a channel or report a mistake": "চেনেল চুপাৰিছ কৰক বা ভুল ৰিপৰ্ট কৰক",
   "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "তালিকাবোৰ GitHub ত পাব্লিক, আৰু যিকোনোৱে যোগ কৰিব পাৰে। প্ৰতিটো প্ৰৱিষ্টিৰ বাবে এটা পাব্লিক উৎস লাগে",
   "Preparing yt-dlp…": "yt-dlp সাজু কৰি আছে…",

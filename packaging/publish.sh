@@ -3,11 +3,9 @@
 # to a package repository.
 #
 #   publish.sh winget   pull request to microsoft/winget-pkgs, one per version
-#   publish.sh scoop    pull request to ScoopInstaller/Extras, only the first
-#                       time: Extras' own bot follows new releases afterwards
 #   publish.sh aur      push to the AUR package lumtub-bin
 #
-# winget and scoop need GH_TOKEN: a classic personal access token of the
+# winget needs GH_TOKEN: a classic personal access token of the
 # account the pull requests come from (scopes public_repo and workflow, as
 # the fork holds those repositories' workflows). aur needs AUR_SSH_KEY: the
 # private SSH key registered with the AUR account that owns lumtub-bin.
@@ -87,24 +85,6 @@ Three manifests (version, default locale, installer) for one package version, sc
       "$folder/Lumtub.Lumtub.locale.en-US.yaml" "$here/winget/Lumtub.Lumtub.locale.en-US.yaml" \
       "$folder/Lumtub.Lumtub.installer.yaml" "$here/winget/Lumtub.Lumtub.installer.yaml"
     ;;
-  scoop)
-    repo=ScoopInstaller/Extras
-    if gh api "repos/$repo/contents/bucket/lumtub.json" --silent 2>/dev/null; then
-      echo "Scoop Extras already has Lumtub; its bot follows new releases."
-      exit 0
-    fi
-    if open_pull_request "$repo" "lumtub: Add version"; then
-      echo "The pull request adding Lumtub is still open."
-      exit 0
-    fi
-    body="Lumtub is a desktop YouTube client (GPL-3.0-or-later) with mpv playback, local recommendations, bilingual subtitles and live chat as danmaku: https://github.com/0x696c757a696f/lumtub
-
-The manifest uses the portable ZIP, which keeps its data in \`userdata\` next to \`lumtub.exe\` (persisted). \`checkver\` and \`autoupdate\` follow the GitHub releases, whose tags carry the commit (\`v0.2.49-17fb352\`).
-
-Written following the [Contributing Guide](https://github.com/ScoopInstaller/.github/blob/main/.github/CONTRIBUTING.md)."
-    pull_request "$repo" "lumtub" "lumtub: Add version $full" "$body" \
-      "bucket/lumtub.json" "$here/scoop/lumtub.json"
-    ;;
   aur)
     : "${AUR_SSH_KEY:?AUR_SSH_KEY is not set}"
     work=$(mktemp -d)
@@ -129,7 +109,7 @@ Written following the [Contributing Guide](https://github.com/ScoopInstaller/.gi
     echo "Pushed lumtub-bin $version to the AUR."
     ;;
   *)
-    echo "Usage: $0 winget|scoop|aur" >&2
+    echo "Usage: $0 winget|aur" >&2
     exit 1
     ;;
 esac

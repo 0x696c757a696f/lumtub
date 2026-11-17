@@ -156,6 +156,8 @@ class _MiniPlayerState extends State<MiniPlayer> {
         child: LayoutBuilder(
           builder: (context, constraints) => Video(
             controller: controller,
+            // Background playback is decided in main.dart (onHide), not by the view.
+            pauseUponEnteringBackgroundMode: false,
             controls: NoVideoControls,
             subtitleViewConfiguration: _subtitlesOff(constraints.biggest)
                 ? const SubtitleViewConfiguration(visible: false)

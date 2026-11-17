@@ -191,8 +191,9 @@ List<(String, String)> hwdecChoicesFor(String os, Abi abi) => switch (os) {
       _ => _linuxHwdec,
     };
 
-/// NVIDIA, AMD and Intel decoders, which Windows on Arm PCs have no GPU for.
-const _pcGpuOnly = {'nvdec', 'nvdec-copy', 'cuda', 'cuda-copy', 'amf', 'amf-copy', 'qsv', 'qsv-copy'};
+/// AMD and Intel decoders, which Windows on Arm PCs have no GPU for. NVIDIA
+/// ones stay: Arm PCs with RTX graphics (RTX Spark) have NVDEC.
+const _pcGpuOnly = {'amf', 'amf-copy', 'qsv', 'qsv-copy'};
 
 final _androidHwdec = <(String, String)>[
   ('no', tr('Software decoding')),

@@ -169,7 +169,7 @@ vo=gpu-next
     expect(names('macos', Abi.macosArm64), isNot(contains('vaapi')));
     expect(names('linux', Abi.linuxX64), isNot(contains('d3d11va')));
     expect(names('windows', Abi.windowsX64), containsAll(['d3d11va', 'nvdec', 'amf', 'qsv']));
-    expect(names('windows', Abi.windowsArm64), allOf(contains('d3d11va'), isNot(contains('nvdec')), isNot(contains('amf')), isNot(contains('qsv'))));
+    expect(names('windows', Abi.windowsArm64), allOf(containsAll(['d3d11va', 'nvdec']), isNot(contains('amf')), isNot(contains('qsv'))));
     // A decoder saved on another system goes back to the default.
     expect(PlayerSettings.validHwdec('vaapi', choices: hwdecChoicesFor('android', Abi.androidArm64)), isNull);
     expect(PlayerSettings.validHwdec('mediacodec', choices: hwdecChoicesFor('windows', Abi.windowsX64)), isNull);

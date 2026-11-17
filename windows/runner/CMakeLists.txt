@@ -52,5 +52,10 @@ target_link_libraries(${BINARY_NAME} PRIVATE "delayimp.lib")
 target_link_options(${BINARY_NAME} PRIVATE "/DELAYLOAD:media_kit_video_plugin.dll")
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
+# Control Flow Guard: an indirect call may only go to a known function
+# start, which stops most code-reuse exploits of a memory bug.
+target_compile_options(${BINARY_NAME} PRIVATE /guard:cf)
+target_link_options(${BINARY_NAME} PRIVATE /guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT)
+
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)

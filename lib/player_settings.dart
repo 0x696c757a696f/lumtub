@@ -271,7 +271,10 @@ const _blockedOptions = {
   'log-file', 'o', 'of', 'ofopts', 'ovc', 'ovcopts', 'oac', 'oacopts', 'stream-record', 'record-file',
   'input-conf', 'use-filedir-conf', 'watch-later-dir', 'watch-later-directory', 'screenshot-directory', 'screenshot-dir',
 };
-const _blockedPrefixes = ['script', 'load-', 'input-ipc', 'dump-', 'glsl-shader', 'lua'];
+/// `ytdl-raw-options` (and its -append/-add/-set forms) would let a line,
+/// or a settings backup someone shares, hand yt-dlp `exec=` or a config
+/// file, undoing ProcessTree.ytDlpIsolation.
+const _blockedPrefixes = ['script', 'load-', 'input-ipc', 'dump-', 'glsl-shader', 'lua', 'ytdl-raw-options'];
 
 /// One line of a custom mpv.conf that was not applied, and why.
 typedef RejectedOption = (String line, String reason);

@@ -23,6 +23,8 @@ void main() {
     expect(PlayerSettings.isSafeCustomOption('scale', 'lanczos'), isTrue);
     expect(PlayerSettings.isSafeCustomOption('vo', 'gpu-next'), isFalse);
     expect(PlayerSettings.isSafeCustomOption('cache', 'yes; quit'), isFalse);
+    expect(PlayerSettings.isSafeCustomOption('ytdl-raw-options-append', 'exec=calc'), isFalse);
+    expect(PlayerSettings.isSafeCustomOption('ytdl-raw-options', 'ignore-config='), isFalse);
   });
 
   test('keeps only recorded results for supported codecs', () {

@@ -105,7 +105,7 @@ extension DownloadActions on AppController {
   /// Writes the subtitles [picked] for [task] beside [stem] and returns
   /// them, a bilingual track first. Read from the `.info.json` yt-dlp left
   /// there, else asked again.
-  Future<List<SavedSubtitle>> _saveDownloadSubtitles(DownloadTask task, String stem, DownloadSubtitles picked) async {
+  Future<List<SavedSubtitle>> _saveDownloadSubtitles(DownloadTask task, String stem, DownloadSubtitles picked, {bool styled = false}) async {
     SubtitleChoices? choices;
     try {
       final info = await decodeJsonInBackground(await File('$stem.info.json').readAsString());
@@ -140,15 +140,24 @@ extension DownloadActions on AppController {
       return '$name.${picked.srt ? 'srt' : 'vtt'}';
     }
 
+    // Styled as the subtitle settings show subtitles, for the file only.
+    Future<String?> styledCopy(String path, List<BilingualLine> lines) async {
+      if (!styled) return null;
+      final ass = '$path.ass.part';
+      await File(ass).writeAsString(styledAss(lines, settings));
+      return ass;
+    }
+
     if (picked.bilingual) {
       final top = await load(picked.top!), bottom = await load(picked.bottom!);
       if (top != null && bottom != null) {
-        final cues = bilingualCues(parseSubtitleCues(top.$2), parseSubtitleCues(bottom.$2));
-        if (cues.isNotEmpty) {
+        final lines = bilingualLines(parseSubtitleCues(top.$2), parseSubtitleCues(bottom.$2));
+        if (lines.isNotEmpty) {
+          final cues = [for (final l in lines) (start: l.start, end: l.end, text: [l.top, l.bottom].where((t) => t.isNotEmpty).join('\n'))];
           final path = fileFor('${top.$1.language}+${bottom.$1.language}');
           await File(path).writeAsString(picked.srt ? toSrt(cues) : toVtt(cues));
           final name = '${SubtitleChoices.languageOf(top.$1)} / ${SubtitleChoices.languageOf(bottom.$1)}';
-          saved.add((path: path, language: top.$1.language, name: name, lines: true));
+          saved.add((path: path, language: top.$1.language, name: name, lines: true, ass: await styledCopy(path, lines)));
         }
       }
     }
@@ -157,8 +166,10 @@ extension DownloadActions on AppController {
       if (track == null) continue;
       final (option, text) = track;
       final path = fileFor(option.language);
-      await File(path).writeAsString(picked.srt ? toSrt(parseSubtitleCues(text)) : text);
-      saved.add((path: path, language: option.language, name: SubtitleChoices.labelOf(option), lines: false));
+      final cues = parseSubtitleCues(text);
+      await File(path).writeAsString(picked.srt ? toSrt(cues) : text);
+      final lines = [for (final c in cues) (start: c.start, end: c.end, top: c.text, bottom: '')];
+      saved.add((path: path, language: option.language, name: SubtitleChoices.labelOf(option), lines: false, ass: await styledCopy(path, lines)));
     }
     return saved;
   }

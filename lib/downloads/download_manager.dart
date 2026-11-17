@@ -123,7 +123,8 @@ class _NoList {
 
 /// A subtitle file beside a download, put inside it as a track named
 /// [name]; [lines] keeps each cue's lines apart, as a bilingual track's.
-typedef SavedSubtitle = ({String path, String language, String name, bool lines});
+/// [ass] is the same track styled, read by the joiner and then deleted.
+typedef SavedSubtitle = ({String path, String language, String name, bool lines, String? ass});
 
 class DownloadManager extends ChangeNotifier {
   DownloadManager({
@@ -167,7 +168,8 @@ class DownloadManager extends ChangeNotifier {
   /// Writes the subtitles picked for [task] beside `stem` (the video's path
   /// without its extension) and returns them; for downloads whose
   /// selection names its subtitles.
-  final Future<List<SavedSubtitle>> Function(DownloadTask task, String stem, DownloadSubtitles picked)? saveSubtitles;
+  /// [styled] asks for ASS copies too, for a file joined into MKV or MP4.
+  final Future<List<SavedSubtitle>> Function(DownloadTask task, String stem, DownloadSubtitles picked, {bool styled})? saveSubtitles;
 
   /// Whether a live stream can be recorded.
   bool get canRecord => recorder != null && join != null;
@@ -710,20 +712,24 @@ class DownloadManager extends ChangeNotifier {
           logWarn('No cover for ${task.id} inside the file: $e');
         }
       }
+      final subtitles = await _subtitlesFor(task, stem, styled: container != 'webm');
       final joined = await join!(JoinRequest(
         video: printed.first,
         audio: printed.last,
         stem: stem,
         container: container,
-        subtitles: await _subtitlesFor(task, stem),
+        subtitles: subtitles,
         title: task.item.title,
         cover: coverFile?.path,
         cut: [for (final s in segments ?? const <SkipSegment>[]) (s.start, s.end)],
       ));
-      try {
-        await coverFile?.delete();
-      } on FileSystemException {
-        // Left for the user.
+      for (final path in [coverFile?.path, for (final s in subtitles) s.ass]) {
+        if (path == null) continue;
+        try {
+          await File(path).delete();
+        } on FileSystemException {
+          // Left for the user.
+        }
       }
       final out = joined.path;
       if (out == null) {
@@ -765,12 +771,12 @@ class DownloadManager extends ChangeNotifier {
 
   /// The subtitles of [task] beside [stem]: those picked in the dialog,
   /// written now, else those yt-dlp saved.
-  Future<List<SavedSubtitle>> _subtitlesFor(DownloadTask task, String stem) async {
+  Future<List<SavedSubtitle>> _subtitlesFor(DownloadTask task, String stem, {bool styled = false}) async {
     final picked = task.selection?.subtitles;
-    if (picked == null) return [for (final s in await subtitleFilesOf(stem)) (path: s.path, language: s.language, name: '', lines: false)];
+    if (picked == null) return [for (final s in await subtitleFilesOf(stem)) (path: s.path, language: s.language, name: '', lines: false, ass: null)];
     if (picked.isEmpty || saveSubtitles == null) return const [];
     try {
-      return await saveSubtitles!(task, stem, picked);
+      return await saveSubtitles!(task, stem, picked, styled: styled);
     } catch (e) {
       logWarn('No subtitles for ${task.id}: $e');
       return const [];
@@ -954,7 +960,7 @@ class JoinRequest {
         'out': stem,
         'container': container,
         'subtitles': [
-          for (final s in subtitles) {'path': s.path, 'language': s.language, if (s.name.isNotEmpty) 'name': s.name, if (s.lines) 'lines': true},
+          for (final s in subtitles) {'path': s.path, 'language': s.language, if (s.name.isNotEmpty) 'name': s.name, if (s.lines) 'lines': true, if (s.ass != null) 'ass': s.ass},
         ],
         if (title != null) 'title': title,
         if (cover != null) 'cover': cover,

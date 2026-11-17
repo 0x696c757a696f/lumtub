@@ -157,7 +157,7 @@ void main() {
       Future<List<int>?> Function(String id)? cover,
       bool cutSponsors = false,
       LiveRecorder? recorder,
-      Future<List<SavedSubtitle>> Function(DownloadTask task, String stem, DownloadSubtitles picked)? saveSubtitles,
+      Future<List<SavedSubtitle>> Function(DownloadTask task, String stem, DownloadSubtitles picked, {bool styled})? saveSubtitles,
     }) => _track(managers, DownloadManager(
           file: File('${dir.path}/downloads.json'),
           ytDlpPath: 'yt-dlp',
@@ -400,9 +400,14 @@ void main() {
           File(out).writeAsStringSync('joined');
           return (path: out, error: null, cut: const <(Duration, Duration)>[]);
         },
-        saveSubtitles: (task, stem, picked) async {
+        saveSubtitles: (task, stem, picked, {bool styled = false}) async {
           asked.add((task.id, stem, picked));
-          return [(path: '$stem.zh-Hans+en.srt', language: 'zh-Hans', name: '中文 / English', lines: true), (path: '$stem.en.srt', language: 'en', name: 'English', lines: false)];
+          expect(styled, isTrue, reason: 'MKV takes styled subtitles');
+          File('$stem.zh-Hans+en.srt.ass.part').writeAsStringSync('[Script Info]');
+          return [
+            (path: '$stem.zh-Hans+en.srt', language: 'zh-Hans', name: '中文 / English', lines: true, ass: '$stem.zh-Hans+en.srt.ass.part'),
+            (path: '$stem.en.srt', language: 'en', name: 'English', lines: false, ass: null),
+          ];
         },
       );
       const selection = DownloadSelection(codec: VideoCodec.vp9, height: 1080, videoId: '248', audioId: '251', container: DownloadContainer.webm);
@@ -426,9 +431,10 @@ void main() {
       expect(asked.single.$3.bilingual, isTrue);
       expect(requests.single.container, 'mkv');
       expect(requests.single.toJson()['subtitles'], [
-        {'path': '$stem.zh-Hans+en.srt', 'language': 'zh-Hans', 'name': '中文 / English', 'lines': true},
+        {'path': '$stem.zh-Hans+en.srt', 'language': 'zh-Hans', 'name': '中文 / English', 'lines': true, 'ass': '$stem.zh-Hans+en.srt.ass.part'},
         {'path': '$stem.en.srt', 'language': 'en', 'name': 'English'},
       ]);
+      expect(File('$stem.zh-Hans+en.srt.ass.part').existsSync(), isFalse, reason: 'the styled copy went inside the file');
     });
 
     test('cut sponsor segments leave the file, and the saved times move past them', () async {

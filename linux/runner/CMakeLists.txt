@@ -30,6 +30,6 @@ target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
 # Exploit mitigations: stack canaries, bounds-checked libc calls, and
 # relocations bound at start and then made read-only.
-target_compile_options(${BINARY_NAME} PRIVATE -fstack-protector-strong -fstack-clash-protection
+target_compile_options(${BINARY_NAME} PRIVATE -fstack-protector-strong
   "$<$<NOT:$<CONFIG:Debug>>:-U_FORTIFY_SOURCE;-D_FORTIFY_SOURCE=3>")
 target_link_options(${BINARY_NAME} PRIVATE -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack)

@@ -26,7 +26,7 @@ To send a release again, run **Packages** by hand with its tag. A pull request t
 | Scoop Extras (`extras/lumtub`) | Sent 2026-11-17 ([Extras#19396](https://github.com/ScoopInstaller/Extras/pull/19396)); Extras' bot follows releases once merged. |
 | Flatpak bundles | On every release since 0.2.49. |
 | AUR (`lumtub-bin`) | **Not yet.** AUR sign-ups were closed on 2026-11-17. To do: register at aur.archlinux.org, add the public key of `ssh-keygen -t mldsa44-ed25519` (or ed25519 if the AUR refuses it) to the account, save the private key as the `AUR_SSH_KEY` secret, then run **Packages** by hand. |
-| Flathub | **Not yet.** Needs the GitHub organization `lumtub` for the app ID (see Flatpak below). |
+| Flathub | **Not planned.** Flathub's [generative AI policy](https://docs.flathub.org/docs/for-app-authors/requirements#generative-ai-policy) rules out this repository's packaging; the first request (flathub/flathub#11236) was closed on 2026-11-17. Linux users get the Flatpak bundles and AppImages from the releases. |
 
 ## Release tags and file names
 
@@ -72,7 +72,7 @@ The Scoop version is `<version>-<commit>`, because the commit is part of the dow
 
 The Flatpak sees the Downloads, Videos and Pictures folders only, so signing in from a browser's cookies does not find the browser's data.
 
-For Flathub: fork [flathub/flathub](https://github.com/flathub/flathub), branch from `new-pr`, add the manifest, the metainfo, the desktop file and `lumtub.png`, and open a pull request to `new-pr`. Flathub checks that the app ID's `io.github.lumtub` belongs to whoever submits it, so the GitHub account or organization `lumtub` must be yours (or the app ID must change). Flathub may also ask for a build from source instead of the AppImage. Once accepted, `x-checker-data` lets Flathub's bot open update pull requests for new releases.
+Lumtub is not sent to Flathub (see the table above). The manifest is used only to build the bundles attached to each release.
 
 ## AUR
 

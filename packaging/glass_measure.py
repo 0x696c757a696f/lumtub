@@ -125,11 +125,11 @@ def main(folder):
         if off not in measured or frame not in measured:
             check(f"pictures {off} and {frame} taken", False)
             continue
-        (frame_off, _), (frame_on, pages_on) = measured[off], measured[frame]
+        (frame_off, pages_off), (frame_on, pages_on) = measured[off], measured[frame]
         check(f"{frame}: the desktop shows through the frame ({frame_on - frame_off:+.1f})", frame_on - frame_off >= 12)
-        # The pages are the skin's page colour then, which has no magenta
-        # of its own; without glass they may show the skin's picture.
-        check(f"{frame}: the pages stay solid ({pages_on:+.1f})", pages_on <= 8)
+        # Thumbnails on the pages bring magenta of their own, so the pages
+        # are measured against the same pages without glass.
+        check(f"{frame}: the pages stay solid ({pages_on - pages_off:+.1f})", pages_on - pages_off <= 8)
         if whole and whole in measured:
             _, pages_whole = measured[whole]
             check(f"{whole}: the desktop shows through the pages too ({pages_whole - pages_on:+.1f})", pages_whole - pages_on >= 6)

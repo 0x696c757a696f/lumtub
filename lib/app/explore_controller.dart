@@ -373,11 +373,9 @@ extension ExploreActions on AppController {
             final wordsIn = language != ExploreLanguage.any ? language : regional != ExploreLanguage.any ? regional : ui;
             // Taiwan and Hong Kong write traditional characters.
             final traditional = wordsIn == ExploreLanguage.zh && (region == 'TW' || region == 'HK');
-            // A zone of the user's own is searched as they wrote it: its
-            // words are not sent to be translated.
-            Listing searchIn(List<String> queries) => wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional) || exploreTopicNow.custom
-                ? search(queries)
-                : Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional)));
+            final translates = !(wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional));
+            Listing searchIn(List<String> queries) =>
+                translates ? Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional))) : search(queries);
             // A narrow search that runs out goes on with wider ones, so a
             // sub-category with few videos still fills the page.
             var listing = searchIn(queries);
@@ -385,6 +383,11 @@ extension ExploreActions on AppController {
               for (final wider in broader) {
                 listing = listing.followedBy(() => searchIn([wider]), switched: () => logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$wider"'));
               }
+            }
+            // A zone of the user's own is translated like the others; when
+            // that runs out, its words as written are searched as well.
+            if (!mix && exploreTopicNow.custom && translates) {
+              listing = listing.followedBy(() => search(queries), switched: () => logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$query" as written'));
             }
             // Search listings give no frame size: a vertical video is told
             // by the bars at the sides of its thumbnail.

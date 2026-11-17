@@ -57,7 +57,8 @@ searching, so that the search finds videos in it to begin with:
   (`哲学 philosophy lecture` → `filosofia lezione di filosofia`), except
   names and words titles write the same everywhere (`Minecraft`, `Plato`,
   `lofi`, `vlog`, see `keptSearchWords`);
-- a zone of the person's own is searched as they wrote it.
+- a zone of the person's own too; when its translated search runs out,
+  its words as written are searched as well.
 
 The zones' Chinese keywords are not translated themselves: each has its
 English in `searchPivots` (`lib/explore_pivots.dart`), which is translated

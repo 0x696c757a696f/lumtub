@@ -400,7 +400,9 @@ ThemeData buildAppTheme(
       closeIconColor: scheme.onSurfaceVariant,
       elevation: 6,
       shape: menuShape,
-      width: 480,
+      // A phone is narrower than 480: the bar then filled the screen edge
+      // to edge. There it keeps Flutter's margins instead.
+      width: Skin.formFactor == 'mobile' ? null : 480,
     ),
     tooltipTheme: TooltipThemeData(
       waitDuration: const Duration(milliseconds: 500),

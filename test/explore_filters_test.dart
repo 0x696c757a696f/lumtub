@@ -182,6 +182,9 @@ void main() {
     expect(searchPivots['体育'], 'sports');
     expect(englishSearchOf('后端 backend Java Go'), 'back-end development backend Java Go');
     expect(englishSearchOf('体育 直播'), 'sports 直播', reason: '直播 is searched as "live" in every language');
+    expect(englishSearchOf('AI 论文解读 paper explained'), 'AI paper explained');
+    expect(englishSearchOf('聊天 直播 just chatting'), '直播 just chatting');
+    expect(englishSearchOf('妇产科学 lecture'), 'obstetrics and gynecology lecture');
     expect(searchWordsOf(searchPhrasesOf(englishSearchOf('健身 训练 workout'))), 'fitness training workout');
   });
 

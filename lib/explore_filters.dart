@@ -429,11 +429,28 @@ const searchGlossary = {'直播': 'live', '实况': 'live', '直播间': 'live'}
 
 
 /// [query] with the zones' Chinese keywords in English ([searchPivots]);
-/// words searched the same in every language ([searchGlossary]) stay.
-String englishSearchOf(String query) => [
-      for (final word in query.split(RegExp(r'\s+')))
-        if (word.isNotEmpty) searchGlossary.containsKey(word) ? word : searchPivots[word] ?? word,
-    ].join(' ');
+/// words searched the same in every language ([searchGlossary]) stay. A
+/// keyword whose English the query already has is left out ("AI 论文解读
+/// paper explained" is "AI paper explained"), and so is a word repeated.
+String englishSearchOf(String query) {
+  final words = query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+  final seen = {for (final w in words) if (!isTranslatedPhrase(w)) w.toLowerCase()};
+  final out = <String>[];
+  final kept = <String>{};
+  final written = <String>{};
+  for (final word in words) {
+    final english = searchGlossary.containsKey(word) ? null : searchPivots[word];
+    if (english == null) {
+      if (written.add(word.toLowerCase())) out.add(word);
+      continue;
+    }
+    final parts = english.split(' ').map((w) => w.toLowerCase());
+    if (parts.every((w) => seen.contains(w) || kept.contains(w))) continue;
+    kept.addAll(parts);
+    out.add(english);
+  }
+  return out.join(' ');
+}
 
 /// [query] in the pieces a translation keeps the sense of: each keyword of
 /// a script written without spaces (Chinese, Japanese, Thai…) alone, as

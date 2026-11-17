@@ -9,7 +9,9 @@ import 'app_directories.dart';
 import 'channel_sort.dart';
 import 'app_log.dart';
 import 'background_json.dart';
+import 'library_store.dart';
 import 'live_chat_repository.dart';
+import 'local_db.dart';
 import 'models.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
@@ -508,23 +510,77 @@ class HistoryStore {
   final Map<String, DateTime> watched = {};
   final _writes = WriteQueue();
   Timer? _saveTimer;
+  /// With the Rust core the history is kept in `data/lumtub.db`; a
+  /// watch_history.json from an earlier version is read into it once and
+  /// then left as it was.
+  LocalDb? _db;
+  /// Each entry's body as last made, with the time it carries.
+  final _bodies = Expando<(DateTime?, String)>('history');
 
   Future<void> initialize() async {
     file = File('${directories.data.path}${Platform.pathSeparator}watch_history.json');
+    final db = _db = LocalDb.enabled ? LocalDb.beside(file) : null;
+    if (db == null) return _readJson();
+    try {
+      final found = await db.read(const ['history']);
+      if (found.meta['history'] == '1') {
+        for (final (_, body) in found.lists['history'] ?? const <(String, Object?)>[]) {
+          _add(body);
+        }
+        if (items.length > historyLimit) items.removeRange(historyLimit, items.length);
+        return;
+      }
+    } on LocalDbException catch (e) {
+      if (e.setAside == null) {
+        logError('Could not read the history database, using watch_history.json for now', e);
+        _db = null;
+        return _readJson();
+      }
+      logError('The history database was damaged, reading watch_history.json again', e);
+    }
+    await _readJson();
+    try {
+      await _writeDb(db);
+      logInfo('The watch history is now kept in lumtub.db');
+    } on LocalDbException catch (e) {
+      logError('Could not move the watch history into lumtub.db', e);
+    }
+  }
+
+  void _add(Object? value) {
+    try {
+      if (value is Map<String, dynamic>) {
+        final item = VideoItem.fromJson(value);
+        items.add(item);
+        if (DateTime.tryParse('${value['watched_at'] ?? ''}') case final at?) watched[item.id] = at.toLocal();
+      }
+    } catch (e) {
+      logWarn('Skipped an unreadable history entry: $e');
+    }
+  }
+
+  Future<void> _writeDb(LocalDb db) {
+    String body(VideoItem item) {
+      final at = watched[item.id];
+      final made = _bodies[item];
+      if (made != null && made.$1 == at) return made.$2;
+      final text = at == null ? encodedItem(item) : jsonEncode({...item.toJson(), 'watched_at': at.toUtc().toIso8601String()});
+      _bodies[item] = (at, text);
+      return text;
+    }
+
+    return db.write({
+      'history': [for (final item in items) (item.id, body(item))],
+    }, meta: const {'history': '1'});
+  }
+
+  Future<void> _readJson() async {
     if (!await file.exists()) return;
     try {
       final data = await decodeJsonInBackground(await file.readAsString());
       if (data is! List) throw const FormatException('The history is not a list');
       for (final value in data) {
-        try {
-          if (value is Map<String, dynamic>) {
-            final item = VideoItem.fromJson(value);
-            items.add(item);
-            if (DateTime.tryParse('${value['watched_at'] ?? ''}') case final at?) watched[item.id] = at.toLocal();
-          }
-        } catch (e) {
-          logWarn('Skipped an unreadable history entry: $e');
-        }
+        _add(value);
       }
       if (items.length > historyLimit) items.removeRange(historyLimit, items.length);
     } catch (e) {
@@ -602,6 +658,14 @@ class HistoryStore {
     _saveTimer?.cancel();
     _saveTimer = null;
     return _writes.run(() async {
+      if (_db case final db?) {
+        try {
+          await _writeDb(db);
+        } on LocalDbException catch (e) {
+          logError('Could not save the watch history', e);
+        }
+        return;
+      }
       try {
         final data = [
           for (final item in items) {...item.toJson(), if (watched[item.id] case final at?) 'watched_at': at.toUtc().toIso8601String()},

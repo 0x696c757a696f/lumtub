@@ -351,7 +351,9 @@ class _RatingButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final item = controller.playing!;
+    // Built once more while the video closes, when nothing plays.
+    final item = controller.playing;
+    if (item == null) return const SizedBox.shrink();
     final account = controller.account;
     final signedIn = account?.signedIn ?? false;
     final colors = context.colors;
@@ -400,7 +402,9 @@ class _Toolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final item = controller.playing!;
+    // Built once more while the video closes, when nothing plays.
+    final item = controller.playing;
+    if (item == null) return const SizedBox.shrink();
     final settings = controller.settings;
     final decoded = controller.currentCodec != tr('No video played yet');
     final library = controller.library;
@@ -498,7 +502,9 @@ class _PhoneDetailsState extends State<_PhoneDetails> {
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
-    final item = controller.playing!;
+    // Built once more while the video closes, when nothing plays.
+    final item = controller.playing;
+    if (item == null) return const SizedBox.shrink();
     final details = controller.details;
     final colors = context.colors;
     final views = details?.viewCount ?? item.viewCount;
@@ -581,7 +587,9 @@ class _PhoneActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final item = controller.playing!;
+    // Built once more while the video closes, when nothing plays.
+    final item = controller.playing;
+    if (item == null) return const SizedBox.shrink();
     final library = controller.library;
     final favorite = library?.isFavorite(item.id) ?? false;
     final later = library?.isWatchLater(item.id) ?? false;
@@ -824,7 +832,9 @@ class _Details extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final item = controller.playing!;
+    // Built once more while the video closes, when nothing plays.
+    final item = controller.playing;
+    if (item == null) return const SizedBox.shrink();
     final details = controller.details;
     final views = details?.viewCount ?? item.viewCount;
     final meta = [

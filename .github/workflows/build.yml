@@ -1440,8 +1440,10 @@ jobs:
   release:
     name: Release
     needs: [reuse, windows, linux, macos, ios, android]
-    # Skipped builds (reused from an earlier build) are not failures.
-    if: ${{ !cancelled() && !failure() && startsWith(github.ref, 'refs/tags/v') }}
+    # Skipped builds (reused from an earlier build) are not failures, but a
+    # cancelled one is: a macOS job no runner took is cancelled, not failed,
+    # and the release must not go out without its packages.
+    if: ${{ !cancelled() && !failure() && !contains(needs.*.result, 'cancelled') && startsWith(github.ref, 'refs/tags/v') }}
     # The update signing key lives in the "release" environment.
     environment: release
     runs-on: ubuntu-24.04

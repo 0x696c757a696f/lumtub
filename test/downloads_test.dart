@@ -240,8 +240,7 @@ void main() {
       expect(task.speed, 250.0);
       processes[0].out('lumtub-file|${file.path}');
       await processes[0].exit(0);
-      await settle();
-      expect(task.status, DownloadStatus.done);
+      await until(() => task.status == DownloadStatus.done);
       expect(task.filePath, file.path);
 
       final local = (await m.localVideo('aaaaaaaaaaa'))!;
@@ -609,6 +608,8 @@ void main() {
       final a = processes[started.indexWhere((args) => args.last.endsWith('aaaaaaaaaaa'))];
       a.out('lumtub-file|${file.path}');
       await a.exit(0);
+      // Done only once the offline info is saved, which takes real file work.
+      await until(() => m.taskFor('aaaaaaaaaaa')!.status == DownloadStatus.done);
       await settle();
       expect(processes, hasLength(2));
       processes.clear();

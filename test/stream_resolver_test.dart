@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/stream_resolver.dart';
 import 'package:lumtub/video_codec.dart';
@@ -106,6 +108,29 @@ void main() {
     expect(count.readAsLinesSync(), hasLength(2));
   });
 
+  test('a standby yt-dlp started ahead reads the next video from stdin', () async {
+    if (Platform.isWindows) return;
+    final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    final log = File('${dir.path}/log');
+    final script = File('${dir.path}/fake-yt-dlp');
+    await script.writeAsString('#!/bin/sh\nfor last; do :; done\nif [ "\$last" = "-" ]; then echo standby >> ${log.path}; read url; echo "read \$url" >> ${log.path}; else echo "run \$last" >> ${log.path}; fi\n'
+        'cat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'))..standbyEnabled = true;
+    expect(resolver.standbyArguments('ytdl', null).sublist(resolver.standbyArguments('ytdl', null).length - 2), ['--batch-file', '-']);
+    await resolver.resolve('aaaaaaaaaaa', 'ytdl');
+    for (var i = 0; i < 50 && !(log.existsSync() && log.readAsLinesSync().contains('standby')); i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    final second = await resolver.resolve('bbbbbbbbbbb', 'ytdl');
+    expect(second.info['title'], 'Never Gonna Give You Up');
+    expect(log.readAsLinesSync().take(3), ['run https://www.youtube.com/watch?v=aaaaaaaaaaa', 'standby', 'read https://www.youtube.com/watch?v=bbbbbbbbbbb']);
+    // Another format needs other arguments: it runs on its own.
+    await resolver.resolve('ccccccccccc', 'bestvideo');
+    expect(log.readAsLinesSync(), contains('run https://www.youtube.com/watch?v=ccccccccccc'));
+  });
+
   test('prefetches one video at a time, then only the last one asked for', () async {
     if (Platform.isWindows) return;
     final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
@@ -202,6 +227,49 @@ void main() {
     resolver.avoidTv();
     expect(resolver.avoidingTv, isTrue, reason: 'refused TV addresses leave it out again');
   }, skip: Platform.isWindows ? 'uses a shell script' : null);
+
+  test('visionOS addresses refused past 1 MiB turn quick starts off and bring the TV clients back', () async {
+    final resolver = StreamResolver('yt-dlp', infoDirectory: Directory('x'));
+    final asked = <http.Request>[];
+    resolver.quickClient = MockClient((request) async {
+      asked.add(request);
+      return http.Response('', 403);
+    });
+    final info = {
+      'requested_formats': [
+        {'url': 'https://r1.googlevideo.com/videoplayback?itag=137&c=VISIONOS', 'filesize': 9000000, 'http_headers': {'User-Agent': 'UA/1'}},
+        {'url': 'https://r1.googlevideo.com/videoplayback?itag=140&c=VISIONOS', 'filesize': 3000000},
+      ],
+    };
+    await resolver.checkVisionCut(info);
+    expect(asked.single.url.queryParameters['range'], '1048576-1052671');
+    expect(asked.single.url.queryParameters['itag'], '137');
+    expect(asked.single.headers['User-Agent'], 'UA/1');
+    expect(resolver.visionCut, isTrue);
+    expect(resolver.avoidingTv, isFalse);
+    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl').join(' '), isNot(contains('visionos')));
+    resolver.avoidTv();
+    expect(resolver.avoidingTv, isFalse, reason: 'visionOS alone would stop after 1 MiB');
+    expect(await resolver.quick('dQw4w9WgXcQ', 'ytdl', '{}'), isNull);
+
+    await resolver.checkVisionCut(info);
+    expect(asked, hasLength(1), reason: 'looked at once per half hour');
+  });
+
+  test('visionOS addresses that play on are left alone; small files are not looked at', () async {
+    final resolver = StreamResolver('yt-dlp', infoDirectory: Directory('x'));
+    final asked = <http.Request>[];
+    resolver.quickClient = MockClient((request) async {
+      asked.add(request);
+      return http.Response('', 206);
+    });
+    await resolver.checkVisionCut({'requested_formats': [{'url': 'https://r1.googlevideo.com/videoplayback?itag=18', 'filesize': 500000}]});
+    expect(asked, isEmpty);
+    await resolver.checkVisionCut({'requested_formats': [{'url': 'https://r1.googlevideo.com/videoplayback?itag=137', 'filesize': 9000000}]});
+    expect(asked, hasLength(1));
+    expect(resolver.visionCut, isFalse);
+    expect(resolver.avoidingTv, isTrue);
+  });
 
   test('points yt-dlp at Deno and retries a network error once', () async {
     expect(StreamResolver('yt-dlp', deno: r'C:\tools\deno.exe', infoDirectory: Directory('x')).arguments('dQw4w9WgXcQ', 'ytdl'),

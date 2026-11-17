@@ -9,7 +9,7 @@
 [English](README.md) · **简体中文**
 
 [![下载](https://img.shields.io/github/v/release/0x696c757a696f/lumtub?include_prereleases&label=%E4%B8%8B%E8%BD%BD&style=for-the-badge&color=E53935)](https://github.com/0x696c757a696f/lumtub/releases/latest)
-[![赞助](https://img.shields.io/badge/%E8%B5%9E%E5%8A%A9-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/0x696c757a696f)
+<a href="#支持-lumtub"><img src="docs/sponsor/sponsor-zh.svg" alt="赞助" height="28"></a>
 
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
 ![Windows](https://img.shields.io/badge/Windows-x64%20%7C%20ARM64-0078D4?logo=windows)
@@ -126,7 +126,7 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 | `ios` IPA | iOS 15 及以上的 iPhone 和 iPad（预览版，自签安装） |
 
 文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
-**Windows**：用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。也可以用包管理器（正在审核，通过后可用）：`winget install Lumtub.Lumtub`，或先 `scoop bucket add extras` 再 `scoop install lumtub`。<br>
+**Windows**：用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。也可以用包管理器（正在审核，通过后可用）：`winget install Lumtub.Lumtub`。<br>
 **Linux**：给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新。如果提示缺少 FUSE，请安装发行版的 `fuse3` 软件包，或用 `--appimage-extract-and-run` 参数启动。想用 Flatpak 的话：`flatpak install --user Lumtub_*_linux-x64.flatpak`。<br>
 第一次启动时会从 GitHub 下载 yt-dlp 和 Deno，之后 Lumtub 会自己保持更新。<br>
 **Android（预览版）**：打开 APK，按提示允许浏览器或文件管理器安装应用。新版本可以在 Lumtub 里直接安装，Android 会请你确认一次。直播和下载也都能用，靠的是应用里自带的 yt-dlp；会员专属视频在 Android 上暂时还不能看。<br>
@@ -177,12 +177,11 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 
 <div align="center">
 
-**Lumtub 由一位开发者公开开发，没有广告，也不追踪你。**<br>
-赞助支付的是开发它的时间。
+<a href="https://afdian.com/a/linmuqingfeng"><img src="docs/sponsor/banner-zh.svg" alt="让 Lumtub 一直免费下去。没有广告，没有追踪，没有付费版。一个人开发，完全开源。" width="100%"></a>
 
-<a href="https://github.com/sponsors/0x696c757a696f"><img src="https://img.shields.io/badge/%E5%9C%A8_GitHub_%E4%B8%8A%E8%B5%9E%E5%8A%A9-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="在 GitHub 上赞助" height="44"></a>
-<a href="https://afdian.com/a/linmuqingfeng"><img src="https://img.shields.io/badge/%E5%9C%A8%E7%88%B1%E5%8F%91%E7%94%B5%E4%B8%8A%E8%B5%9E%E5%8A%A9-%E2%9D%A4-946CE6?style=for-the-badge" alt="在爱发电上赞助" height="44"></a>
-<a href="https://ko-fi.com/0x696c757a696f"><img src="https://img.shields.io/badge/Ko--fi-%E2%9D%A4-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white" alt="Ko-fi" height="44"></a>
+<a href="https://afdian.com/a/linmuqingfeng"><img src="docs/sponsor/afdian-zh.svg" alt="在爱发电上赞助" height="64"></a>
+<a href="https://github.com/sponsors/0x696c757a696f"><img src="docs/sponsor/github-zh.svg" alt="在 GitHub 上赞助" height="64"></a>
+<a href="https://ko-fi.com/0x696c757a696f"><img src="docs/sponsor/kofi-zh.svg" alt="在 Ko-fi 上赞助" height="64"></a>
 
 **每月赞助者**决定接下来做什么：让 Windows 安装时不再警告的代码签名证书，以及 Apple 公证。<br>
 赞助者提的功能建议会打上 **sponsor priority** 标签，优先处理。<br>

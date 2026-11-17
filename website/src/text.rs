@@ -2,29 +2,60 @@
 pub enum Lang {
     En,
     Zh,
+    Es,
+    Fr,
+    De,
+    It,
 }
 
+mod de;
+mod es;
+mod fr;
+mod it;
+
 impl Lang {
+    pub const ALL: [Lang; 6] = [Lang::En, Lang::Es, Lang::Fr, Lang::De, Lang::It, Lang::Zh];
+
     pub fn code(self) -> &'static str {
         match self {
             Lang::En => "en",
             Lang::Zh => "zh-Hans",
+            Lang::Es => "es",
+            Lang::Fr => "fr",
+            Lang::De => "de",
+            Lang::It => "it",
         }
+    }
+
+    /// The language a code like "de-AT" or "zh-CN" asks for, if the site has it.
+    pub fn from_code(code: &str) -> Option<Lang> {
+        let code = code.to_lowercase();
+        let base = code.split(['-', '_']).next().unwrap_or("");
+        Lang::ALL.into_iter().find(|l| l.code().split('-').next() == Some(base))
     }
 
     pub fn text(self) -> &'static Text {
         match self {
             Lang::En => &EN,
             Lang::Zh => &ZH,
+            Lang::Es => &es::ES,
+            Lang::Fr => &fr::FR,
+            Lang::De => &de::DE,
+            Lang::It => &it::IT,
         }
+    }
+
+    pub fn cjk(self) -> bool {
+        self == Lang::Zh
     }
 
     /// The tagline split into the pieces that light up one by one.
     pub fn tagline_words(self) -> Vec<&'static str> {
         let t = self.text().tagline;
-        match self {
-            Lang::En => t.split(' ').collect(),
-            Lang::Zh => t.split('|').collect(),
+        if self.cjk() {
+            t.split('|').collect()
+        } else {
+            t.split(' ').collect()
         }
     }
 }
@@ -64,8 +95,9 @@ pub struct Mock {
 
 pub struct Text {
     pub title: &'static str,
-    pub other_lang: &'static str,
+    pub lang_name: &'static str,
     pub skip: &'static str,
+    pub hero_alt: &'static str,
     pub menu: &'static str,
     pub nav: [&'static str; 5],
     pub nav_download: &'static str,
@@ -116,6 +148,12 @@ pub struct Text {
     pub sponsor: &'static str,
     pub afdian: &'static str,
     pub kofi: &'static str,
+    pub support_eyebrow: &'static str,
+    pub sponsor_note: &'static str,
+    pub afdian_note: &'static str,
+    pub kofi_note: &'static str,
+    pub goals_label: &'static str,
+    pub goals: [&'static str; 3],
     pub other_ways: &'static str,
     pub star: &'static str,
     pub footer: &'static str,
@@ -152,7 +190,8 @@ const fn package(i: usize, label: &'static str, note: &'static str) -> Package {
 
 pub static EN: Text = Text {
     title: "Lumtub · Watch YouTube your way",
-    other_lang: "中文",
+    lang_name: "English",
+    hero_alt: "Lumtub playing a video, with Up next beside it",
     skip: "Skip to content",
     menu: "Menu",
     nav: ["Features", "Download", "Privacy", "FAQ", "Support"],
@@ -272,7 +311,7 @@ pub static EN: Text = Text {
         package(12, "AltStore source", "Add it to SideStore or AltStore to get new versions"),
     ],
     install_notes: [
-        ("Windows", "Run the installer, or unzip the portable version from the releases page. No administrator rights needed. Package managers (under review): winget install Lumtub.Lumtub, or scoop install extras/lumtub."),
+        ("Windows", "Run the installer, or unzip the portable version from the releases page. No administrator rights needed. Package manager (under review): winget install Lumtub.Lumtub."),
         ("macOS", "Lumtub is not notarized yet. After dragging it into Applications, run xattr -dr com.apple.quarantine /Applications/Lumtub.app once, or choose Open Anyway in System Settings › Privacy & Security."),
         ("Linux", "Make the AppImage executable (chmod +x) and run it. It updates itself in place. If FUSE is missing, install fuse3. Or take the .flatpak from the releases page: flatpak install --user Lumtub_*.flatpak (it does not update itself)."),
         ("Android", "Open the APK and allow installing from your browser or file manager. Later versions install from inside Lumtub."),
@@ -316,11 +355,17 @@ pub static EN: Text = Text {
     ],
     final_title: "Ready when you are",
     final_body: "Free, open source, and yours in a minute.",
-    support_title: "Keep Lumtub independent",
-    support_body: "Lumtub is built by one developer, in the open, with no ads and no tracking. Donations pay for the time to build it, a code signing certificate and Apple notarization.",
-    sponsor: "Sponsor on GitHub",
+    support_title: "Keep Lumtub free.",
+    support_body: "No ads, no tracking, no paid tier. Lumtub is built by one developer, in the open. Sponsors pay for the time it takes, and decide what comes next.",
+    sponsor: "GitHub Sponsors",
     afdian: "Afdian",
     kofi: "Ko-fi",
+    support_eyebrow: "Support Lumtub",
+    sponsor_note: "Monthly or one-time",
+    afdian_note: "Alipay · WeChat Pay",
+    kofi_note: "PayPal or card, no account",
+    goals_label: "Up next",
+    goals: ["Windows code signing", "Apple notarization", "Sponsor requests first"],
     other_ways: "Other ways, crypto included",
     star: "Star on GitHub",
     footer: "Lumtub is free software under the GPL 3.0 or later. Not affiliated with YouTube or Google.",
@@ -329,7 +374,8 @@ pub static EN: Text = Text {
 
 pub static ZH: Text = Text {
     title: "Lumtub · 按你的方式看 YouTube",
-    other_lang: "English",
+    lang_name: "中文",
+    hero_alt: "Lumtub 正在播放视频，旁边是接下来播放的列表",
     skip: "跳到正文",
     menu: "菜单",
     nav: ["功能", "下载", "隐私", "常见问题", "支持"],
@@ -449,7 +495,7 @@ pub static ZH: Text = Text {
         package(12, "AltStore 源", "添加到 SideStore 或 AltStore 里即可收到新版本"),
     ],
     install_notes: [
-        ("Windows", "运行安装程序即可，或者在发布页下载便携版解压。不需要管理员权限。也可以用包管理器（正在审核）：winget install Lumtub.Lumtub，或 scoop install extras/lumtub。"),
+        ("Windows", "运行安装程序即可，或者在发布页下载便携版解压。不需要管理员权限。也可以用包管理器（正在审核）：winget install Lumtub.Lumtub。"),
         ("macOS", "Lumtub 还没有经过 Apple 公证。拖进「应用程序」后，在终端运行一次 xattr -dr com.apple.quarantine /Applications/Lumtub.app，或在「系统设置 › 隐私与安全性」里点「仍要打开」。"),
         ("Linux", "给 AppImage 加上执行权限（chmod +x）后运行，之后会自动原地更新。提示缺少 FUSE 时安装 fuse3。也可以在发布页下载 .flatpak：flatpak install --user Lumtub_*.flatpak（不会自动更新）。"),
         ("Android", "打开 APK，按提示允许浏览器或文件管理器安装应用。之后的新版本在 Lumtub 里直接安装。"),
@@ -493,11 +539,17 @@ pub static ZH: Text = Text {
     ],
     final_title: "现在就试试",
     final_body: "免费、开源，一分钟装好。",
-    support_title: "支持 Lumtub 独立发展",
-    support_body: "Lumtub 由一个人开发，完全开源，没有广告也没有追踪。捐助的钱用来支付开发时间、代码签名证书和 Apple 公证。",
+    support_title: "让 Lumtub 一直免费下去",
+    support_body: "没有广告，没有追踪，没有付费版。Lumtub 由一个人开发，完全开源。赞助支付开发它的时间，也决定下一步做什么。",
     sponsor: "GitHub Sponsors",
     afdian: "爱发电",
     kofi: "Ko-fi",
+    support_eyebrow: "支持 Lumtub",
+    sponsor_note: "按月或一次性",
+    afdian_note: "支付宝 · 微信支付",
+    kofi_note: "PayPal 或银行卡",
+    goals_label: "下一步",
+    goals: ["Windows 代码签名", "Apple 公证", "赞助者需求优先"],
     other_ways: "其他方式（含加密货币）",
     star: "在 GitHub 点 Star",
     footer: "Lumtub 是自由软件，采用 GPL 3.0 或更高版本许可。与 YouTube 和 Google 无关。",

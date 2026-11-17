@@ -9,7 +9,7 @@ For **Windows, Linux, macOS and Android** (phones, tablets and TVs), with iPhone
 **English** · [简体中文](README.zh-Hans.md)
 
 [![Download](https://img.shields.io/github/v/release/0x696c757a696f/lumtub?include_prereleases&label=Download&style=for-the-badge&color=E53935)](https://github.com/0x696c757a696f/lumtub/releases/latest)
-[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/0x696c757a696f)
+<a href="#support-lumtub"><img src="docs/sponsor/sponsor-en.svg" alt="Sponsor" height="28"></a>
 
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
 ![Windows](https://img.shields.io/badge/Windows-x64%20%7C%20ARM64-0078D4?logo=windows)
@@ -137,7 +137,7 @@ These are also found in other YouTube clients, and all are opt-in here:
 | `ios` IPA | iPhone and iPad with iOS 15 or newer (preview, sideloaded) |
 
 File names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
-**Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. Package managers (under review, working once accepted): `winget install Lumtub.Lumtub`, or `scoop bucket add extras` then `scoop install lumtub`.<br>
+**Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. Package manager (under review, working once accepted): `winget install Lumtub.Lumtub`.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place. If it says FUSE is missing, install your distribution's `fuse3` package, or start it with `--appimage-extract-and-run`. Prefer Flatpak? `flatpak install --user Lumtub_*_linux-x64.flatpak`.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.<br>
 **Android (preview):** open the APK and allow installing from your browser or file manager when asked. New versions install from inside Lumtub; Android asks you to confirm. Live streams and downloads work too, through the yt-dlp built into the app; members-only videos don't play on Android yet.<br>
@@ -189,12 +189,11 @@ Everything is open source under the GPL, so none of this has to be taken on trus
 
 <div align="center">
 
-**Lumtub is built by one developer, in the open, with no ads and no tracking.**<br>
-Sponsors pay for the time to build it.
+<a href="https://github.com/sponsors/0x696c757a696f"><img src="docs/sponsor/banner-en.svg" alt="Keep Lumtub free. No ads, no tracking, no paid tier. One developer, in the open." width="100%"></a>
 
-<a href="https://github.com/sponsors/0x696c757a696f"><img src="https://img.shields.io/badge/Sponsor_on_GitHub-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub" height="44"></a>
-<a href="https://afdian.com/a/linmuqingfeng"><img src="https://img.shields.io/badge/Afdian_%E7%88%B1%E5%8F%91%E7%94%B5-%E2%9D%A4-946CE6?style=for-the-badge" alt="Afdian" height="44"></a>
-<a href="https://ko-fi.com/0x696c757a696f"><img src="https://img.shields.io/badge/Ko--fi-%E2%9D%A4-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white" alt="Ko-fi" height="44"></a>
+<a href="https://github.com/sponsors/0x696c757a696f"><img src="docs/sponsor/github-en.svg" alt="Sponsor on GitHub" height="64"></a>
+<a href="https://ko-fi.com/0x696c757a696f"><img src="docs/sponsor/kofi-en.svg" alt="Support on Ko-fi" height="64"></a>
+<a href="https://afdian.com/a/linmuqingfeng"><img src="docs/sponsor/afdian-en.svg" alt="Support on Afdian" height="64"></a>
 
 **Monthly sponsors** decide what comes next: a code-signing certificate so Windows stops warning on install, and Apple notarization.<br>
 Feature requests from sponsors carry the **sponsor priority** label and are worked on first.<br>

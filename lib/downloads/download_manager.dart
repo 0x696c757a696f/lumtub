@@ -459,6 +459,8 @@ class DownloadManager extends ChangeNotifier {
       '--extractor-retries', '3',
       '--retries', '10',
       '--fragment-retries', '10',
+      // Formats sent in pieces (HLS, DASH fragments) fetch four at a time.
+      '--concurrent-fragments', '4',
       if (o.cacheDirectory != null) ...['--cache-dir', o.cacheDirectory!],
       if (o.deno != null) ...['--js-runtimes', 'deno:${o.deno!}'],
       if (o.proxy != null) ...['--proxy', o.proxy!],
@@ -756,16 +758,18 @@ class DownloadManager extends ChangeNotifier {
     }
     // A single file keeps the subtitles picked beside it.
     if (!_joins(task) && task.selection?.subtitles != null) await _subtitlesFor(task, path.replaceFirst(RegExp(r'\.[^.\\/]+$'), ''));
-    task.filePath = path;
-    task.status = DownloadStatus.done;
-    task.speed = null;
-    task.eta = null;
-    task.downloaded = task.total ?? task.downloaded;
+    // The offline info is saved before the task says done, so whoever
+    // opens the finished file reads the whole sidecar, not one half written.
     try {
       await _writeSidecar(task, path, segments ?? await _segments(task), cut);
     } catch (e) {
       logError('Could not save the offline info of ${task.id}', e);
     }
+    task.filePath = path;
+    task.status = DownloadStatus.done;
+    task.speed = null;
+    task.eta = null;
+    task.downloaded = task.total ?? task.downloaded;
     onFinished?.call(task);
   }
 

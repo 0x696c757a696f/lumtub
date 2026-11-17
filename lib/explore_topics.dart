@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart' show IconData;
 
 import 'academic_topics.dart';
 import 'faith_topics.dart';
+import 'faith_traditions.dart';
 import 'l10n/l10n.dart';
 import 'search_options.dart';
 import 'video_repository.dart';
@@ -56,18 +57,23 @@ enum ExploreSection {
 /// A sub-category of a zone: its name, the words searched for, and its own
 /// sub-categories, if it is split further.
 class ExploreSub {
-  const ExploreSub(this._label, this.query, {this.subs = const []});
+  const ExploreSub(this._label, this.query, {this.subs = const [], this.tradition});
   final String _label;
   String get label => tr(_label);
   final String query;
   final List<ExploreSub> subs;
+  /// The faith tradition its videos must belong to; null to keep the
+  /// enclosing zone's.
+  final FaithTradition? tradition;
 }
 
 /// One explore zone, as Bilibili's 分区: what it is called, the search
 /// behind it and its sub-categories.
 class ExploreTopic {
-  const ExploreTopic(this._label, this.icon, this.query, {this.subs = const [], this.custom = false, this.opens, this.mix = false});
+  const ExploreTopic(this._label, this.icon, this.query, {this.subs = const [], this.custom = false, this.opens, this.mix = false, this.tradition});
   final String _label;
+  /// The faith tradition its videos must belong to (see [FaithTradition]).
+  final FaithTradition? tradition;
   /// The name shown; a user's own is shown as typed.
   String get label => custom ? _label : tr(_label);
   final IconData icon;

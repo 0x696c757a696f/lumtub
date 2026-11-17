@@ -44,14 +44,16 @@ for f in "${files[@]}"; do
 done
 sha[lumtub.png]=$(sha256sum "$here/aur/lumtub.png" | cut -d' ' -f1)
 sha[desktop]=$(sha256sum "$here/aur/io.github.lumtub.lumtub.desktop" | cut -d' ' -f1)
+# The release's day, else today (UTC): WinGet's ReleaseDate and the Flatpak's release entry.
+day=${RELEASE_DATE:-$(curl -fsSL "https://api.github.com/repos/$repo/releases/tags/$tag" 2>/dev/null | python3 -Ic 'import json,sys; print(json.load(sys.stdin)["published_at"][:10])' 2>/dev/null || date -u +%F)}
 
 sums=$(mktemp)
 trap 'rm -f "$sums"' EXIT
 for k in "${!sha[@]}"; do printf '%s %s\n' "$k" "${sha[$k]}" >> "$sums"; done
-export HERE=$here BASE=$base COMMIT=$commit FULL=$full TAG=$tag REPO=$repo SUMS=$sums
+export HERE=$here BASE=$base COMMIT=$commit FULL=$full TAG=$tag REPO=$repo SUMS=$sums DAY=$day
 python3 -I - <<'PY'
 import os, re, sys, json
-here, base, commit, full, tag, repo = (os.environ[k] for k in ("HERE", "BASE", "COMMIT", "FULL", "TAG", "REPO"))
+here, base, commit, full, tag, repo, day = (os.environ[k] for k in ("HERE", "BASE", "COMMIT", "FULL", "TAG", "REPO", "DAY"))
 with open(os.environ["SUMS"]) as fh:
     sha = dict(line.split() for line in fh if line.strip())
 rel = f"https://github.com/{repo}/releases/download/{tag}"
@@ -68,6 +70,7 @@ for name in ("Lumtub.Lumtub.yaml", "Lumtub.Lumtub.locale.en-US.yaml", "Lumtub.Lu
     def winget(t):
         t = re.sub(r"(?m)^PackageVersion: .*$", f"PackageVersion: {base}", t)
         t = re.sub(r"(?m)^ReleaseNotesUrl: .*$", f"ReleaseNotesUrl: https://github.com/{repo}/releases/tag/{tag}", t)
+        t = re.sub(r"(?m)^ReleaseDate: .*$", f"ReleaseDate: {day}", t)
         t = re.sub(r"(?m)^(\s*- DisplayVersion: ).*$", lambda m: m.group(1) + full, t)
         for arch in ("x64", "arm64"):
             f = f"Lumtub_{full}_windows-{arch}-setup.exe"
@@ -121,5 +124,22 @@ def srcinfo(t):
         out.append(line)
     return "\n".join(out)
 edit(os.path.join(here, "aur", ".SRCINFO"), srcinfo)
+
+# Flatpak: the AppImages it is made from, and the newest release in the metainfo
+def flatpak(t):
+    for pk in ("x64", "arm64"):
+        f = f"Lumtub_{full}_linux-{pk}.AppImage"
+        t = re.sub(rf"(        url: ).*_linux-{pk}\.AppImage\n(        sha256: ).*",
+                   lambda m: f"{m.group(1)}{rel}/{f}\n{m.group(2)}{sha[f]}", t)
+    return t
+edit(os.path.join(here, "flatpak", "io.github.lumtub.lumtub.yml"), flatpak)
+
+def metainfo(t):
+    entry = (f'    <release version="{base}" date="{day}">\n'
+             f'      <url type="details">https://github.com/{repo}/releases/tag/{tag}</url>\n'
+             f'    </release>\n')
+    t = re.sub(rf'    <release version="{re.escape(base)}" .*?</release>\n', "", t, flags=re.S)
+    return t.replace("  <releases>\n", "  <releases>\n" + entry, 1)
+edit(os.path.join(here, "flatpak", "io.github.lumtub.lumtub.metainfo.xml"), metainfo)
 PY
 echo "Updated manifests for $tag (version $base)."

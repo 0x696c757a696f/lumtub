@@ -75,6 +75,11 @@ final class MacShell: NSObject, NSWindowDelegate {
       if NSEvent.pressedMouseButtons & 1 != 0, let event = current { window.performDrag(with: event) }
     case "hidePointer":
       hidePointer(in: window, area: call.arguments as? [Double] ?? [])
+    case "setDesktopGlass":
+      let arguments = call.arguments as? [String: Any] ?? [:]
+      let flag = { (key: String) in arguments[key] as? Bool ?? false }
+      result((window as? MainFlutterWindow)?.setDesktopGlass(flag("on"), dark: flag("dark"), blur: flag("blur")) ?? ["shown": false, "blurred": false])
+      return
     case "startResize", "setCaption":
       break
     default:

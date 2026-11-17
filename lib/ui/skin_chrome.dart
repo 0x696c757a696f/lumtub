@@ -9,6 +9,7 @@ import '../skins/skin.dart';
 import '../window_frame.dart';
 import 'app_icons.dart';
 import 'motion.dart';
+import 'glass_look.dart';
 import 'skin_paint.dart';
 import 'theme.dart';
 
@@ -168,6 +169,8 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
         if (bar.titlePlate case final plate?) {
           title = ColoredBox(color: plate, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: title));
         }
+        // Seeing the desktop, the title glows as on Windows 7's glass.
+        title = GlassPlate(surface: surface, child: title);
         final minimize = _WindowButton(key: _minimize, bar: bar, icon: _Glyph.minimize, tooltip: MaterialLocalizations.of(context).collapsedHint, onPressed: WindowFrame.minimize);
         final maximize = ValueListenableBuilder(
           valueListenable: WindowFrame.maximized,
@@ -189,26 +192,26 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
         final buttons = MouseRegion(
           onEnter: (_) => _WindowButton.group.value = true,
           onExit: (_) => _WindowButton.group.value = false,
-          child: Row(
+          child: GlassPlate(surface: surface, child: Row(
             mainAxisSize: MainAxisSize.min,
             children: bar.buttonsLeft ? [close, gap, minimize, gap, maximize] : [minimize, gap, maximize, gap, close],
-          ),
+          )),
         );
         final appIcon = [
           const SizedBox(width: 6),
-          Icon(AppIcons.playFill, size: 16, color: text),
+          GlassPlate(surface: surface, child: Icon(AppIcons.playFill, size: 16, color: text)),
         ];
         final menus = widget.menus;
         // Close at the left, the other two at the right.
-        final split = [minimize, const SizedBox(width: 4), maximize];
+        final split = [GlassPlate(surface: surface, child: Row(mainAxisSize: MainAxisSize.min, children: [minimize, const SizedBox(width: 4), maximize]))];
         if (bar.buttonsSplit) {
           return _frame(surface, height, menus != null
-              ? Row(children: [const SizedBox(width: 8), close, const SizedBox(width: 8), Expanded(child: menus), ...split, const SizedBox(width: 8)])
+              ? Row(children: [const SizedBox(width: 8), GlassPlate(surface: surface, child: close), const SizedBox(width: 8), Expanded(child: menus), ...split, const SizedBox(width: 8)])
               : Row(children: [
                   const SizedBox(width: 8),
-                  close,
+                  GlassPlate(surface: surface, child: close),
                   const SizedBox(width: 4),
-                  Expanded(child: bar.align == 'center' ? Center(child: title) : title),
+                  Expanded(child: bar.align == 'center' ? Center(child: title) : Align(alignment: AlignmentDirectional.centerStart, child: title)),
                   const SizedBox(width: 4),
                   ...split,
                   const SizedBox(width: 8),
@@ -224,14 +227,14 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
                 buttons,
                 if (bar.icon) ...appIcon,
                 const SizedBox(width: 8),
-                Expanded(child: bar.align == 'center' ? Center(child: title) : title),
+                Expanded(child: bar.align == 'center' ? Center(child: title) : Align(alignment: AlignmentDirectional.centerStart, child: title)),
                 // Balances the buttons so a centred title sits in the middle.
                 if (bar.align == 'center') SizedBox(width: bar.buttonSize.width * 3 + 23),
               ])
             : Row(children: [
                 if (bar.icon) ...appIcon,
                 const SizedBox(width: 8),
-                Expanded(child: bar.align == 'center' ? Center(child: title) : title),
+                Expanded(child: bar.align == 'center' ? Center(child: title) : Align(alignment: AlignmentDirectional.centerStart, child: title)),
                 buttons,
                 const SizedBox(width: 3),
               ]);
@@ -601,11 +604,11 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
                           child: label(entry.label),
                         ),
                   ],
-                  child: label(menu.label, bold: menu.bold),
+                  child: GlassPlate(surface: widget.embedded ? null : bar.surface, child: label(menu.label, bold: menu.bold)),
                 ),
             ],
           )),
-          if (widget.clock) Padding(padding: const EdgeInsetsDirectional.only(end: 10), child: _Clock(color: bar.text)),
+          if (widget.clock) Padding(padding: const EdgeInsetsDirectional.only(end: 10), child: GlassPlate(surface: bar.surface, child: _Clock(color: bar.text))),
         ]),
       ),
     );
@@ -685,6 +688,7 @@ class SkinRail extends StatelessWidget {
                 surface: i == selected ? skin.navSelected ?? _wash(colors) : null,
                 color: i == selected ? skin.navSelectedText ?? colors.onSurface : skin.navText ?? colors.onSurfaceVariant,
                 radius: radius,
+                plate: skin.sideBar,
                 onTap: () => onSelected(i),
               ),
               const SizedBox(height: Space.xs),
@@ -699,7 +703,10 @@ class SkinRail extends StatelessWidget {
 }
 
 class _RailItem extends StatefulWidget {
-  const _RailItem({required this.icon, required this.label, required this.selected, required this.surface, required this.color, required this.radius, required this.onTap});
+  const _RailItem({required this.icon, required this.label, required this.selected, required this.surface, required this.color, required this.radius, required this.onTap, this.plate});
+  /// The rail, whose colour the glow behind icon and label takes while
+  /// the desktop shows through.
+  final SkinSurface? plate;
   final IconData icon;
   final String label;
   final bool selected;
@@ -716,6 +723,8 @@ class _RailItemState extends State<_RailItem> {
   bool _hover = false;
   bool _pressed = false;
   bool _focused = false;
+
+  Widget _plated(Widget child) => widget.surface?.baseColor != null ? child : GlassPlate(surface: widget.plate, child: child);
 
   @override
   Widget build(BuildContext context) {
@@ -752,13 +761,14 @@ class _RailItemState extends State<_RailItem> {
                 padding: const EdgeInsets.symmetric(vertical: Space.s),
                 width: double.infinity,
                 child: Column(children: [
-                  Icon(widget.icon, color: widget.color, size: 22),
+                  // Words on a chosen item lie on its own solid surface.
+                  _plated(Icon(widget.icon, color: widget.color, size: 22)),
                   const SizedBox(height: 2),
                   // Shrunk a little rather than cut, so a long word such as
                   // Subscriptions still reads in the narrow rail.
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: FittedBox(fit: BoxFit.scaleDown, child: Text(widget.label, maxLines: 1, style: TextStyle(fontSize: 12, color: widget.color, fontWeight: widget.selected ? FontWeight.w700 : null))),
+                    child: FittedBox(fit: BoxFit.scaleDown, child: _plated(Text(widget.label, maxLines: 1, style: TextStyle(fontSize: 12, color: widget.color, fontWeight: widget.selected ? FontWeight.w700 : null)))),
                   ),
                 ]),
               ),
@@ -862,12 +872,15 @@ class _TabItemState extends State<_TabItem> {
         fontWeight: widget.selected ? FontWeight.w700 : FontWeight.w500,
       ),
     );
+    // Words on a chosen tab lie on its own solid surface; the others glow
+    // on the bar while the desktop shows through.
+    Widget plated(Widget child) => widget.selected && tabs.selected?.baseColor != null ? child : GlassPlate(surface: tabs.bar, child: child);
     final content = tabs.textOnly
-        ? Center(child: label)
+        ? Center(child: plated(label))
         : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(widget.icon, color: color, size: 24),
+            plated(Icon(widget.icon, color: color, size: 24)),
             const SizedBox(height: 2),
-            label,
+            plated(label),
           ]);
     final line = tabs.indicator;
     return Semantics(

@@ -38,6 +38,11 @@ class WindowFrame {
                   std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   void Send(const char* method, flutter::EncodableValue argument);
   void SetCustom(bool on);
+  // Lets the desktop show where Flutter leaves the window clear, blurred
+  // when |blur| and the system can; answers what it managed.
+  flutter::EncodableValue SetDesktopGlass(bool on, bool dark, bool blur);
+  // The system blur behind the window: acrylic, the older blur or none.
+  void ApplyBlur(bool moving);
   // Sizes Flutter's view to the client area, which a frame change alters
   // without a WM_SIZE.
   void FitView();
@@ -62,6 +67,8 @@ class WindowFrame {
   HWND view_ = nullptr;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
   bool custom_ = false;
+  bool glass_ = false;
+  bool glass_blur_ = false;
   double caption_height_ = 0;
   bool has_maximize_ = false;
   Box maximize_;

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../skins/skin.dart';
 import 'skin_scenes.dart';
+import 'glass_look.dart';
 import 'theme.dart';
 
 /// Paints one [SkinPaint] layer (not pictures, which [SkinLayers] shows as
@@ -118,8 +119,12 @@ class SurfaceDecoration extends Decoration {
   final double clarity;
 
   /// [surface] in [context]'s 护眼暖色.
-  factory SurfaceDecoration.of(BuildContext context, SkinSurface surface, {double radius = 0}) =>
-      SurfaceDecoration(surface, radius: radius, warmth: context.pictureWarmth, clarity: surface.glass ? SkinGlass.opacity : 1);
+  /// Seeing the desktop, the bars round the pages are drawn at the
+  /// glass's alpha ([GlassLook]) instead of a glass skin's own clarity.
+  factory SurfaceDecoration.of(BuildContext context, SkinSurface surface, {double radius = 0}) {
+    final glass = surface.frame ? context.glass : null;
+    return SurfaceDecoration(surface, radius: radius, warmth: context.pictureWarmth, clarity: glass?.alpha ?? (surface.glass ? SkinGlass.opacity : 1));
+  }
 
   double get _radius => surface.radius ?? radius;
 
@@ -375,6 +380,12 @@ class SkinBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Seeing the desktop, the window is glass in the skin's colours: its
+    // pictures and ornaments would cover what shows through.
+    final glass = context.glass;
+    if (glass != null) {
+      return Stack(fit: StackFit.expand, children: [GlassBackdrop(look: glass, plain: plain), child]);
+    }
     final decorations = plain || !pictures ? const <SkinDecoration>[] : skin.decorations;
     final below = decorations.where((d) => !d.above).toList();
     final above = decorations.where((d) => d.above).toList();

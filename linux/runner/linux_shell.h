@@ -17,6 +17,10 @@ void linux_shell_attach(GtkWindow* window);
 // (size only on Wayland, which places windows itself).
 void linux_shell_restore_window(GtkWindow* window);
 
+// Gives [window] an alpha channel where a compositor runs, so the desktop
+// can show through it later (WindowGlass). Call before it is realized.
+void linux_shell_use_alpha_visual(GtkWindow* window);
+
 // Hooks the method channel up to the view's engine.
 void linux_shell_connect(FlView* view);
 

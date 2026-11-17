@@ -26,6 +26,8 @@ Future<void> showDownloadChoice(BuildContext context, AppController controller, 
     (context) => DownloadDialog(
       title: item.title,
       loadFormats: () => controller.downloadFormats(item.id),
+      loadSubtitles: () => controller.downloadSubtitleChoices(item),
+      subtitleLanguages: controller.downloadSubtitleLanguages,
       defaults: controller.downloads?.defaults ?? const DownloadDefaults(),
       onCover: () => unawaited(_saveExtra(context, controller, () => controller.saveCover(item))),
       onSubtitles: () => unawaited(_chooseSubtitle(context, controller, item)),

@@ -31,6 +31,7 @@ extension DownloadActions on AppController {
             : null,
         cover: _coverBytes,
         recorder: NativeCore.canRecord ? CoreRecorder(sources: _liveSources, proxy: () => proxy.url) : null,
+        saveSubtitles: _saveDownloadSubtitles,
         options: () => DownloadOptions(
           proxy: proxy.ytDlpValue(settings.proxyMode),
           deno: paths.deno,
@@ -87,6 +88,90 @@ extension DownloadActions on AppController {
     final target = settings.subtitleLanguage.translation;
     final translation = hasOwnSubtitle(offered, target) ? null : translationOf(offered, target, language: known?.language);
     return [if (translation != null) translation, ...offered.where((o) => o.kind != SubtitleKind.translated)];
+  }
+
+  /// The subtitles [item] can be downloaded with, for the download dialog.
+  Future<SubtitleChoices> downloadSubtitleChoices(VideoItem item) async {
+    final known = playing?.id == item.id ? details : null;
+    final repository = _repository;
+    final found = known ?? (repository == null ? null : await repository.details(item.id));
+    return SubtitleChoices(found?.subtitles ?? const [], language: found?.language);
+  }
+
+  /// The languages the download dialog offers first: 第一字幕语言, then
+  /// the second subtitle's.
+  List<TranslationLanguage> get downloadSubtitleLanguages => {settings.subtitleLanguage.translation, if (settings.secondaryTarget != null) settings.secondaryTarget!}.toList();
+
+  /// Writes the subtitles [picked] for [task] beside [stem] and returns
+  /// them, a bilingual track first. Read from the `.info.json` yt-dlp left
+  /// there, else asked again.
+  Future<List<SavedSubtitle>> _saveDownloadSubtitles(DownloadTask task, String stem, DownloadSubtitles picked, {bool styled = false}) async {
+    SubtitleChoices? choices;
+    try {
+      final info = await decodeJsonInBackground(await File('$stem.info.json').readAsString());
+      if (info is Map) choices = SubtitleChoices(SubtitleOption.listFrom(info['subtitles'], info['automatic_captions']), language: info['language']?.toString());
+    } catch (_) {
+      // Asked again below.
+    }
+    if (choices == null || choices.isEmpty) choices = await downloadSubtitleChoices(task.item);
+    final loaded = <SubtitlePick, (SubtitleOption, String)?>{};
+    Future<(SubtitleOption, String)?> load(SubtitlePick pick) async {
+      if (loaded.containsKey(pick)) return loaded[pick];
+      final option = choices!.resolve(pick);
+      (SubtitleOption, String)? result;
+      if (option != null) {
+        try {
+          result = (option, await File(await _subtitleFiles.wholePathFor(option)).readAsString());
+        } catch (e) {
+          logWarn('Subtitle ${pick.language} of ${task.id} not downloaded: $e');
+        }
+      }
+      return loaded[pick] = result;
+    }
+
+    final saved = <SavedSubtitle>[];
+    final names = <String>{};
+    String fileFor(String tag) {
+      var name = '$stem.$tag';
+      for (var i = 2; names.contains(name); i++) {
+        name = '$stem.$tag-$i';
+      }
+      names.add(name);
+      return '$name.${picked.srt ? 'srt' : 'vtt'}';
+    }
+
+    // Styled as the subtitle settings show subtitles, for the file only.
+    Future<String?> styledCopy(String path, List<BilingualLine> lines) async {
+      if (!styled) return null;
+      final ass = '$path.ass.part';
+      await File(ass).writeAsString(styledAss(lines, settings));
+      return ass;
+    }
+
+    if (picked.bilingual) {
+      final top = await load(picked.top!), bottom = await load(picked.bottom!);
+      if (top != null && bottom != null) {
+        final lines = bilingualLines(parseSubtitleCues(top.$2), parseSubtitleCues(bottom.$2));
+        if (lines.isNotEmpty) {
+          final cues = [for (final l in lines) (start: l.start, end: l.end, text: [l.top, l.bottom].where((t) => t.isNotEmpty).join('\n'))];
+          final path = fileFor('${top.$1.language}+${bottom.$1.language}');
+          await File(path).writeAsString(picked.srt ? toSrt(cues) : toVtt(cues));
+          final name = '${SubtitleChoices.languageOf(top.$1)} / ${SubtitleChoices.languageOf(bottom.$1)}';
+          saved.add((path: path, language: top.$1.language, name: name, lines: true, ass: await styledCopy(path, lines)));
+        }
+      }
+    }
+    for (final pick in picked.tracks) {
+      final track = await load(pick);
+      if (track == null) continue;
+      final (option, text) = track;
+      final path = fileFor(option.language);
+      final cues = parseSubtitleCues(text);
+      await File(path).writeAsString(picked.srt ? toSrt(cues) : text);
+      final lines = [for (final c in cues) (start: c.start, end: c.end, top: c.text, bottom: '')];
+      saved.add((path: path, language: option.language, name: SubtitleChoices.labelOf(option), lines: false, ass: await styledCopy(path, lines)));
+    }
+    return saved;
   }
 
   /// Saves [option] of [item] next to the downloads, as SRT or as WebVTT,

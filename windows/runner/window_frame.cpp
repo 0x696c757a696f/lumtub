@@ -44,6 +44,51 @@ bool ReadBox(const EncodableValue& value, double out[4]) {
   return true;
 }
 
+// The Windows build number; GetVersionEx answers what the manifest names.
+DWORD WindowsBuild() {
+  static const DWORD build = [] {
+    using RtlGetVersion = LONG(WINAPI*)(OSVERSIONINFOW*);
+    const auto get = reinterpret_cast<RtlGetVersion>(
+        ::GetProcAddress(::GetModuleHandle(L"ntdll.dll"), "RtlGetVersion"));
+    OSVERSIONINFOW info{sizeof(info)};
+    return get && get(&info) == 0 ? info.dwBuildNumber : 0;
+  }();
+  return build;
+}
+
+// Windows 11 22H2 and later draw an acrylic backdrop of their own.
+constexpr DWORD kSystemBackdropBuild = 22621;
+// Windows 10 1803 and later blur with acrylic through the accent policy.
+constexpr DWORD kAccentAcrylicBuild = 17134;
+
+enum Accent { kAccentNone = 0, kAccentClear = 2, kAccentBlur = 3, kAccentAcrylic = 4 };
+
+// The undocumented accent policy that TranslucentTB and the taskbar use.
+void SetAccent(HWND window, Accent state) {
+  struct AccentPolicy {
+    int state;
+    int flags;
+    DWORD gradient;
+    int animation;
+  };
+  struct CompositionData {
+    int attribute;
+    void* data;
+    SIZE_T size;
+  };
+  using SetComposition = BOOL(WINAPI*)(HWND, CompositionData*);
+  static const auto set_composition = reinterpret_cast<SetComposition>(
+      ::GetProcAddress(::GetModuleHandle(L"user32.dll"), "SetWindowCompositionAttribute"));
+  if (!set_composition) return;
+  // Acrylic with an all-clear tint draws nothing; Flutter lays the skin's
+  // tint over it. Clear: a gradient of nothing (flag 2: use the colour),
+  // so the desktop shows as it is. Since Windows 8 the extended frame alone
+  // is drawn solid, without the accent.
+  AccentPolicy accent{state, state == kAccentClear ? 2 : 0, state == kAccentAcrylic ? 0x01000000u : 0u, 0};
+  CompositionData data{19 /* WCA_ACCENT_POLICY */, &accent, sizeof(accent)};
+  set_composition(window, &data);
+}
+
 const EncodableValue* Find(const EncodableValue* arguments, const char* key) {
   const auto* map = arguments ? std::get_if<EncodableMap>(arguments) : nullptr;
   if (!map) return nullptr;
@@ -97,6 +142,14 @@ void WindowFrame::HandleCall(const flutter::MethodCall<EncodableValue>& call,
   if (method == "setCustom") {
     const auto* on = args ? std::get_if<bool>(args) : nullptr;
     SetCustom(on && *on);
+  } else if (method == "setDesktopGlass") {
+    auto flag = [&](const char* key) {
+      const EncodableValue* value = Find(args, key);
+      const bool* on = value ? std::get_if<bool>(value) : nullptr;
+      return on && *on;
+    };
+    result->Success(SetDesktopGlass(flag("on"), flag("dark"), flag("blur")));
+    return;
   } else if (method == "minimize") {
     // The shell sees the resulting WM_SIZE, so minimize-to-tray still applies.
     ::ShowWindow(window_, SW_MINIMIZE);
@@ -197,10 +250,66 @@ void WindowFrame::TraceCaptionClick(LPARAM lparam) {
 }
 
 // One pixel of glass keeps the shadow and, on Windows 11, the rounded
-// corners and border.
+// corners and border. Windows 11's own acrylic shows only where the frame
+// covers the window, so then it covers all of it; the accent policy (clear
+// glass, and the blur before Windows 11) needs no frame, and the frame
+// alone would be drawn solid over the desktop.
 void WindowFrame::ApplyMargins() {
-  const MARGINS margins{0, 0, custom_ ? 1 : 0, 0};
+  const bool backdrop = glass_ && glass_blur_ && WindowsBuild() >= kSystemBackdropBuild;
+  const MARGINS margins = backdrop ? MARGINS{-1, -1, -1, -1} : MARGINS{0, 0, custom_ ? 1 : 0, 0};
   ::DwmExtendFrameIntoClientArea(window_, &margins);
+}
+
+// Settings › Personalisation › Colours › Transparency effects. With them
+// off, Windows draws its blur as a solid colour, which would hide the
+// desktop the person asked to see, so the glass is left clear instead.
+static bool TransparencyEffectsOn() {
+  DWORD value = 1;
+  DWORD size = sizeof(value);
+  ::RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+                 L"EnableTransparency", RRF_RT_REG_DWORD, nullptr, &value, &size);
+  return value != 0;
+}
+
+EncodableValue WindowFrame::SetDesktopGlass(bool on, bool dark, bool blur) {
+  glass_ = on;
+  glass_blur_ = on && blur && TransparencyEffectsOn();
+  ApplyMargins();
+  if (on) {
+    // The acrylic's own shade follows the skin's side, not the system's.
+    const BOOL dark_mode = dark ? TRUE : FALSE;
+    ::DwmSetWindowAttribute(window_, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, &dark_mode, sizeof(dark_mode));
+  } else {
+    // Back to the system's light or dark title bar.
+    ::SendMessage(window_, WM_DWMCOLORIZATIONCOLORCHANGED, 0, 0);
+  }
+  ApplyBlur(false);
+  ::SetWindowPos(window_, nullptr, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+  ::InvalidateRect(window_, nullptr, TRUE);
+  return EncodableValue(EncodableMap{
+      {EncodableValue("shown"), EncodableValue(on)},
+      {EncodableValue("blurred"), EncodableValue(glass_blur_)},
+  });
+}
+
+// Windows 11 22H2 and later: the system's acrylic backdrop. Older ones:
+// acrylic through the accent policy, which lags behind the mouse while
+// the window is dragged or sized, so the plain blur stands in meanwhile;
+// before 1803, the plain blur only.
+void WindowFrame::ApplyBlur(bool moving) {
+  const DWORD build = WindowsBuild();
+  if (build >= kSystemBackdropBuild) {
+    const int backdrop = !glass_ ? 0 /* DWMSBT_AUTO */ : glass_blur_ ? 3 /* DWMSBT_TRANSIENTWINDOW */ : 1 /* DWMSBT_NONE */;
+    ::DwmSetWindowAttribute(window_, 38 /* DWMWA_SYSTEMBACKDROP_TYPE */, &backdrop, sizeof(backdrop));
+    SetAccent(window_, glass_ && !glass_blur_ ? kAccentClear : kAccentNone);
+    return;
+  }
+  if (!glass_blur_) {
+    SetAccent(window_, glass_ ? kAccentClear : kAccentNone);
+  } else {
+    SetAccent(window_, build >= kAccentAcrylicBuild && !moving ? kAccentAcrylic : kAccentBlur);
+  }
 }
 
 void WindowFrame::SetButton(int state) {
@@ -323,6 +432,12 @@ bool WindowFrame::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRES
       } else if (wparam == SIZE_RESTORED) {
         ReportMaximized(false);
       }
+      return false;
+    case WM_ENTERSIZEMOVE:
+      if (glass_blur_) ApplyBlur(true);
+      return false;
+    case WM_EXITSIZEMOVE:
+      if (glass_blur_) ApplyBlur(false);
       return false;
     case WM_ACTIVATE:
       ReportActive(LOWORD(wparam) != WA_INACTIVE);

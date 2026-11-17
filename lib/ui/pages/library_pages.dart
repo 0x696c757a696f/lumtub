@@ -41,10 +41,24 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
 
   AppController get controller => widget.controller;
 
+  /// The channel, group and rail width picked, there again after a video.
+  final _kept = PageMemory<(ChannelRef?, ChannelGroup?, double)>('subscriptions');
+
+  @override
+  void initState() {
+    super.initState();
+    if (_kept.recall(context) case (final selected, final group, final width)) {
+      _selected = selected;
+      _group = group;
+      _railWidth = width;
+    }
+  }
+
   void _select(ChannelRef? channel) => setState(() => _selected = channel == _selected ? null : channel);
 
   @override
   Widget build(BuildContext context) {
+    _kept.keep((_selected, _group, _railWidth));
     final library = controller.library;
     if (library == null) return const SizedBox.shrink();
     final channels = library.channels;
@@ -124,19 +138,23 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
       if (selected != null)
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
-          child: Row(children: [
-            Expanded(child: Text(
+          // The buttons go under the title when a translation or a narrow
+          // window leaves the title too little room beside them.
+          child: Wrap(alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.center, spacing: 8, runSpacing: 4, children: [
+            Text(
               tr('New from {0}', [selected.name.isEmpty ? selected.id : selected.name]),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-            )),
-            TextButton(onPressed: () => _select(null), child: Text(tr('Show all'))),
-            FilledButton.tonalIcon(
-              onPressed: () => controller.openChannel(selected),
-              icon: Icon(AppIcons.caretRight),
-              label: Text(tr('Open channel')),
             ),
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              TextButton(onPressed: () => _select(null), child: Text(tr('Show all'))),
+              FilledButton.tonalIcon(
+                onPressed: () => controller.openChannel(selected),
+                icon: Icon(AppIcons.caretRight),
+                label: Text(tr('Open channel')),
+              ),
+            ]),
           ]),
         )),
       if (library.feedFailures.isNotEmpty && selected == null)
@@ -454,6 +472,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
         child: Scrollbar(
           controller: _scroll,
           child: ListView(
+            key: const PageStorageKey('channel-strip'),
             controller: _scroll,
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsetsDirectional.only(start: AppStyle.pagePadding - 4),

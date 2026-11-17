@@ -39,6 +39,7 @@ import '../l10n/l10n.dart';
 import 'fill_icon.dart';
 import 'haptics.dart';
 import 'frame_stats.dart';
+import 'glass_look.dart';
 import 'key_scroll.dart';
 import 'pull_to_refresh.dart';
 import '../shortcut_bindings.dart';
@@ -53,6 +54,7 @@ import '../skins/skin_library.dart';
 import '../skins/skin.dart';
 import '../window_frame.dart';
 import '../device.dart';
+import 'update_notice.dart';
 
 const appName = 'Lumtub';
 
@@ -101,6 +103,7 @@ class _AppShellState extends State<AppShell> {
   void initState() {
     super.initState();
     _frames;
+    KeyScroll.watch();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) WindowChrome.menus.value = _menus;
     });
@@ -363,6 +366,34 @@ class _AppShellState extends State<AppShell> {
     if (_controller.canGoBack) _controller.goBack();
   }
 
+  /// A two-finger swipe on a touchpad towards the reading direction's end
+  /// goes back, as in browsers; not on the watch page, where the player
+  /// takes sideways swipes, nor once a sideways list moved with it.
+  Offset? _swipe;
+  bool _swipeScrolled = false;
+
+  void _swipeStart(PointerPanZoomStartEvent event) {
+    _swipe = _controller.onWatchPage ? null : Offset.zero;
+    _swipeScrolled = false;
+  }
+
+  void _swipeUpdate(PointerPanZoomUpdateEvent event) {
+    if (_swipe != null) _swipe = event.pan;
+  }
+
+  void _swipeEnd(PointerPanZoomEndEvent event) {
+    final swipe = _swipe;
+    _swipe = null;
+    if (swipe == null || _swipeScrolled || !mounted) return;
+    final towards = Directionality.of(context) == TextDirection.rtl ? -swipe.dx : swipe.dx;
+    if (towards > 160 && swipe.dy.abs() * 2 < towards) _back();
+  }
+
+  bool _onScroll(ScrollUpdateNotification notification) {
+    if (_swipe != null && notification.metrics.axis == Axis.horizontal && (notification.scrollDelta ?? 0) != 0) _swipeScrolled = true;
+    return false;
+  }
+
   int get _bottomIndex {
     if (_library.contains(_controller.mode)) return _bottomDestinations.length - 1;
     final index = _bottomDestinations.indexWhere((d) => d.$1 == _controller.mode);
@@ -411,6 +442,12 @@ class _AppShellState extends State<AppShell> {
         bindings: {
           ..._pageShortcuts(),
           const SingleActivator(LogicalKeyboardKey.f5): _refreshPage,
+          // Keys that are not set in the shortcut settings: the back key
+          // some keyboards have, and a TV remote's channel keys, which turn
+          // the page as TV apps take them.
+          const SingleActivator(LogicalKeyboardKey.browserBack): _back,
+          const SingleActivator(LogicalKeyboardKey.channelDown): () => KeyScroll.byPage(1),
+          const SingleActivator(LogicalKeyboardKey.channelUp): () => KeyScroll.byPage(-1),
           SingleActivator(LogicalKeyboardKey.keyR, control: !Platform.isMacOS, meta: Platform.isMacOS): _refreshPage,
           // Esc goes back too, except on the watch page, where it leaves
           // full screen and closes panels.
@@ -424,9 +461,12 @@ class _AppShellState extends State<AppShell> {
           onPointerDown: (event) {
             if (event.buttons == kBackMouseButton) _back();
           },
+          onPointerPanZoomStart: _swipeStart,
+          onPointerPanZoomUpdate: _swipeUpdate,
+          onPointerPanZoomEnd: _swipeEnd,
           // The window is built again only when its layout changes; each
           // part of it listens for what it shows itself.
-          child: SelectBuilder(
+          child: NotificationListener<ScrollUpdateNotification>(onNotification: _onScroll, child: SelectBuilder(
             listenable: _layoutChanges,
             select: () => _layoutOf(_controller),
             builder: (context, _, __) => LayoutBuilder(builder: (context, constraints) {
@@ -579,7 +619,7 @@ class _AppShellState extends State<AppShell> {
                       ),
               );
             }),
-          ),
+          )),
         ),
       );
 
@@ -620,12 +660,16 @@ class _AppShellState extends State<AppShell> {
           tooltip: tr('Settings'),
           isSelected: _controller.mode == PageMode.settings && !_controller.onWatchPage,
           onPressed: () => openSettings(context, _controller),
-          icon: Icon(AppIcons.gear),
+          icon: UpdateDot(controller: _controller, child: Icon(AppIcons.gear)),
           selectedIcon: const Icon(AppIcons.gearFill),
         ) : null,
         destinations: [
           for (final (i, d) in _destinations.indexed)
-            NavigationRailDestination(icon: FillIcon(d.$2, d.$3, selected: i == _selectedIndex), selectedIcon: FillIcon(d.$2, d.$3, selected: i == _selectedIndex), label: Text(d.$4)),
+            NavigationRailDestination(
+              icon: GlassPlate(child: FillIcon(d.$2, d.$3, selected: i == _selectedIndex)),
+              selectedIcon: GlassPlate(child: FillIcon(d.$2, d.$3, selected: i == _selectedIndex)),
+              label: GlassPlate(child: Text(d.$4)),
+            ),
         ],
       );
 
@@ -641,6 +685,9 @@ class _AppShellState extends State<AppShell> {
   /// A skin with a busy picture behind lays some of its page colour over
   /// it under the pages, so what is written on them reads.
   Widget _veiled(Skin? skin, Widget page) {
+    // Seeing the desktop: the pages solid in the glass's tint, as in a
+    // Windows 7 window, or glass themselves.
+    if (context.glass case final glass?) return glass.whole ? page : Material(color: glass.tint, child: page);
     // Kept in low resource mode: one flat colour costs nothing.
     if (skin == null || skin.veil == 0) return page;
     // A Material, not a ColoredBox, so list rows still show their ink on it.
@@ -668,7 +715,7 @@ class _AppShellState extends State<AppShell> {
     if (!controller.ready) return _SetupView(controller: controller);
     if (controller.onWatchPage && controller.videoController != null) return WatchPage(controller: controller);
     return switch (controller.mode) {
-      PageMode.home => HomeFeedPage(controller: controller, onFocusSearch: _focusSearch),
+      PageMode.home => UpdateNotice(controller: controller, child: HomeFeedPage(controller: controller, onFocusSearch: _focusSearch)),
       PageMode.explore => controller.query == null ? ExplorePage(controller: controller) : SearchResultsPage(controller: controller, onFocusSearch: _focusSearch),
       PageMode.history => HistoryPage(controller: controller),
       PageMode.subscriptions => SubscriptionsPage(controller: controller),
@@ -824,7 +871,8 @@ class _TopBar extends StatelessWidget {
         skin?.topBar == null ? null : skin?.topBarText,
         Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(children: [
+        // Seeing the desktop, each thing on the bar glows to stay readable.
+        child: Row(children: GlassPlate.each(skin?.topBar, [
           InkWell(
             borderRadius: AppStyle.cardRadius,
             onTap: () => controller.navigate(PageMode.home),
@@ -847,7 +895,7 @@ class _TopBar extends StatelessWidget {
           SizedBox(width: wide ? 16 : 8),
           Expanded(child: Center(child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
-            child: SizedBox(height: 40, child: _SearchField(app: controller, controller: searchText, focusNode: searchFocus, enabled: ready, onSubmit: onSubmit)),
+            child: GlassPlate(surface: skin?.topBar, child: SizedBox(height: 40, child: _SearchField(app: controller, controller: searchText, focusNode: searchFocus, enabled: ready, onSubmit: onSubmit))),
           ))),
           SizedBox(width: wide ? 16 : 4),
           IconButton(
@@ -868,7 +916,7 @@ class _TopBar extends StatelessWidget {
             tooltip: tr('Settings'),
             isSelected: controller.mode == PageMode.settings && !controller.onWatchPage,
             onPressed: () => openSettings(context, controller),
-            icon: Icon(AppIcons.gear),
+            icon: UpdateDot(controller: controller, child: Icon(AppIcons.gear)),
             selectedIcon: const Icon(AppIcons.gearFill),
           ),
           AccountButton(
@@ -879,7 +927,7 @@ class _TopBar extends StatelessWidget {
                 ? openSettingsCategory(context, controller, SettingsCategory.account)
                 : openSettings(context, controller, category: SettingsCategory.account),
           ),
-        ]),
+        ])),
       ),
       ),
     );
@@ -1183,7 +1231,10 @@ class _StatusBar extends StatelessWidget {
         null => BoxDecoration(color: context.tones.chrome, border: Border(top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
       },
       alignment: AlignmentDirectional.centerStart,
-      child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.skin?.statusBarText ?? context.colors.outline, fontSize: 12, fontFamily: context.skin?.monoFont)),
+      child: GlassPlate(
+        surface: context.skin?.statusBar,
+        child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.skin?.statusBarText ?? context.colors.outline, fontSize: 12, fontFamily: context.skin?.monoFont)),
+      ),
     );
   }
 }

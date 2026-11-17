@@ -205,15 +205,19 @@ class StreamResolver {
   /// failed.
   static const tvNeededFor = Duration(minutes: 30);
 
-  /// yt-dlp's `--extractor-args` value that leaves out its TV clients.
-  static const noTvClients = 'youtube:player_client=default,-tv,-tv_samsung';
+  /// yt-dlp's `--extractor-args` value that asks only the client a quick
+  /// start asks as (visionOS), leaving out the TV and web clients.
+  static const visionOnly = 'youtube:player_client=visionos';
 
-  /// Whether yt-dlp leaves out its TV clients (`TVHTML5`), as it does
-  /// unless a run without them just failed. Measured on a Windows PC on
-  /// 2026-11-17 (yt-dlp 2026.11.16, five videos): the TV client's
-  /// JavaScript challenge took Deno 6–11 s on every run, and some of its
-  /// addresses answered 403 at once, while without it every run took
-  /// 5–6 s, gave the same heights and only addresses that played.
+  /// Whether yt-dlp asks only the visionOS client, as it does unless a
+  /// run that way just failed. Measured on a Windows PC on 2026-11-17
+  /// (yt-dlp 2026.11.16, five videos, each client alone): with its default
+  /// clients a run took 15–24 s, 6–11 s of it Deno solving the TV client's
+  /// JavaScript challenge on every run, and some TV addresses answered 403
+  /// at once; visionOS alone took 4.3–5.1 s, needed no challenge, gave the
+  /// same heights (up to 2160p) and only addresses that played. The other
+  /// TV clients failed ("The page needs to be reloaded") and tv_simply and
+  /// android_vr gave 360p only without a PO token.
   bool get avoidingTv {
     final until = _tvNeededUntil;
     return until == null || !DateTime.now().isBefore(until);
@@ -222,7 +226,7 @@ class StreamResolver {
   /// YouTube refused stream addresses yt-dlp took from a TV client the
   /// moment they were opened: the TV clients are left out again at once.
   void avoidTv() {
-    if (!avoidingTv) logInfo("YouTube refused the TV client's stream addresses; asking yt-dlp without it again");
+    if (!avoidingTv) logInfo("YouTube refused the TV client's stream addresses; asking yt-dlp as visionOS alone again");
     _tvNeededUntil = null;
   }
 
@@ -243,7 +247,7 @@ class StreamResolver {
           ...['--extractor-args', 'youtube:formats=incomplete${liveClients == null ? '' : ';player_client=$liveClients'}']
         // A signed-in run keeps yt-dlp's own clients for signed-in users.
         else if (cookies == null && avoidingTv)
-          ...['--extractor-args', noTvClients],
+          ...['--extractor-args', visionOnly],
         '--no-playlist',
         '--dump-single-json',
         '--format', expressionOf(format),
@@ -321,6 +325,12 @@ class StreamResolver {
       }
       final text = core.quickInfo(answer, policy);
       if (text == null) {
+        // visionOS taken for a bot: yt-dlp asking only as visionOS would be
+        // too, so it asks its default clients for a while.
+        if (answer.contains('"LOGIN_REQUIRED"') && avoidingTv) {
+          _tvNeededUntil = DateTime.now().add(tvNeededFor);
+          logInfo("visionOS was taken for a bot; yt-dlp asks its default clients for ${tvNeededFor.inMinutes} minutes");
+        }
         logInfo('Quick start of $videoId: left to yt-dlp (${VideoFactsLookup.playerWhy(answer)})');
         return null;
       }
@@ -490,7 +500,7 @@ class StreamResolver {
       // The other clients may give nothing this video can play (when
       // YouTube takes them for a bot, say): the TV client is asked too
       // for a while.
-      logWarn('Resolving $videoId without the TV client failed; asking with it for ${tvNeededFor.inMinutes} minutes');
+      logWarn("Resolving $videoId as visionOS alone failed; asking yt-dlp's default clients for ${tvNeededFor.inMinutes} minutes");
       _tvNeededUntil = DateTime.now().add(tvNeededFor);
       result = await run(signed: signed);
     }

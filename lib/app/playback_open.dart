@@ -222,7 +222,7 @@ extension PlaybackOpening on AppController {
         final infoJson = direct == null ? video?.file.path : null;
         // ytdl_hook asking YouTube itself leaves out the TV clients too
         // while their addresses are being refused.
-        final extractorArgs = infoJson == null && !live && _repository?.streams.avoidingTv == true ? StreamResolver.noTvClients : null;
+        final extractorArgs = infoJson == null && !live && _repository?.streams.avoidingTv == true ? StreamResolver.visionOnly : null;
         await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: infoJson, proxy: proxy.ytDlpValue(settings.proxyMode), formatSort: _formatSort, extractorArgs: extractorArgs));
         final liveAgent = (mobileLive?['http_headers'] as Map?)?['User-Agent'] as String? ?? agent;
         if (direct != null && agent != null) {

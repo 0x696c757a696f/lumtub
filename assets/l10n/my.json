@@ -3541,5 +3541,7 @@
   "Fill the window": "ဝင်းဒိုးပြည့်",
   "Fill the window (W)": "ဝင်းဒိုးပြည့် (W)",
   "Hide the side rail while watching": "ကြည့်နေစဉ် ဘေးဘားကို ဖျောက်ရန်",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ကဲ့သို့ ဗီဒီယိုက နေရာရသည်၊ သီအိတာမုဒ်တွင် အမြဲ ဖျောက်ထားသည်"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ကဲ့သို့ ဗီဒီယိုက နေရာရသည်၊ သီအိတာမုဒ်တွင် အမြဲ ဖျောက်ထားသည်",
+  "Picture in picture when leaving the app": "အက်ပ်မှထွက်သောအခါ ဗီဒီယိုအတွင်းဗီဒီယို (PiP)",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "အခြားအက်ပ်သို့ ပြောင်းသောအခါ ဖွင့်နေသောဗီဒီယိုကို ဝင်းဒိုးသေးလေးဖြင့် ဆက်ပြထားပါသည်၊ ပိတ်ထားပါက အသံကို နောက်ခံတွင် ဆက်ဖွင့်ပေးပါသည်"
 }

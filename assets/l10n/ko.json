@@ -3546,5 +3546,7 @@
   "Fill the window": "창 가득 채우기",
   "Fill the window (W)": "창 가득 채우기 (W)",
   "Hide the side rail while watching": "시청 중 사이드바 숨기기",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube처럼 동영상에 공간을 내어줍니다. 극장 모드에서는 항상 숨겨집니다"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube처럼 동영상에 공간을 내어줍니다. 극장 모드에서는 항상 숨겨집니다",
+  "Picture in picture when leaving the app": "앱을 나갈 때 화면 속 화면",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "다른 앱으로 전환하면 재생 중인 동영상을 작은 창으로 계속 보여 줍니다. 끄면 소리만 백그라운드에서 계속 재생됩니다"
 }

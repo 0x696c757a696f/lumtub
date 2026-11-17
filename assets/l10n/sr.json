@@ -3541,5 +3541,7 @@
   "Fill the window": "Попуни прозор",
   "Fill the window (W)": "Попуни прозор (W)",
   "Hide the side rail while watching": "Сакриј бочну траку током гледања",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Видео добија свој простор, као на YouTube-у; у режиму биоскопа је трака увек скривена"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Видео добија свој простор, као на YouTube-у; у режиму биоскопа је трака увек скривена",
+  "Picture in picture when leaving the app": "Слика у слици при напуштању апликације",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Задржава видео који се репродукује у малом прозору када пређете на другу апликацију; када је искључено, звук се наставља у позадини"
 }

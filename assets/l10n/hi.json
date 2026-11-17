@@ -3541,5 +3541,7 @@
   "Fill the window": "विंडो भरें",
   "Fill the window (W)": "विंडो भरें (W)",
   "Hide the side rail while watching": "देखते समय साइडबार छिपाएँ",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube की तरह वीडियो को उसकी जगह मिलती है; थिएटर मोड में साइडबार हमेशा छिपा रहता है"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube की तरह वीडियो को उसकी जगह मिलती है; थिएटर मोड में साइडबार हमेशा छिपा रहता है",
+  "Picture in picture when leaving the app": "ऐप छोड़ने पर पिक्चर-इन-पिक्चर",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "दूसरे ऐप पर जाने पर चल रहे वीडियो को छोटी विंडो में चालू रखता है; बंद होने पर इसकी आवाज़ बैकग्राउंड में चलती रहती है"
 }

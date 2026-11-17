@@ -3541,5 +3541,7 @@
   "Fill the window": "Запълни прозореца",
   "Fill the window (W)": "Запълни прозореца (W)",
   "Hide the side rail while watching": "Скриване на страничната лента при гледане",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Видеото получава своето място, както в YouTube; в режим кино лентата винаги е скрита"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Видеото получава своето място, както в YouTube; в режим кино лентата винаги е скрита",
+  "Picture in picture when leaving the app": "Картина в картината при излизане от приложението",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Запазва възпроизвежданото видео в малък прозорец, когато превключите към друго приложение; когато е изключено, звукът продължава да се възпроизвежда на фона"
 }

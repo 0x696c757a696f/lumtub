@@ -3541,5 +3541,7 @@
   "Fill the window": "Encher a xanela",
   "Fill the window (W)": "Encher a xanela (W)",
   "Hide the side rail while watching": "Ocultar a barra lateral mentres miras",
-  "The video gets its room, as on YouTube; theater mode always hides it": "O vídeo gaña espazo, como en YouTube; o modo cine sempre a oculta"
+  "The video gets its room, as on YouTube; theater mode always hides it": "O vídeo gaña espazo, como en YouTube; o modo cine sempre a oculta",
+  "Picture in picture when leaving the app": "Imaxe en imaxe ao saír da aplicación",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Mantén o vídeo en reprodución nunha ventá pequena cando cambias a outra aplicación; se está desactivado, o son segue reproducíndose en segundo plano"
 }

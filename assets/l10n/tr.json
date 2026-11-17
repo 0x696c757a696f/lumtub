@@ -3546,5 +3546,7 @@
   "Fill the window": "Pencereyi doldur",
   "Fill the window (W)": "Pencereyi doldur (W)",
   "Hide the side rail while watching": "İzlerken kenar çubuğunu gizle",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video, YouTube'daki gibi kendi alanını alır; sinema modu her zaman gizler"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video, YouTube'daki gibi kendi alanını alır; sinema modu her zaman gizler",
+  "Picture in picture when leaving the app": "Uygulamadan çıkarken pencere içinde pencere",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Başka bir uygulamaya geçtiğinizde oynatılan videoyu küçük bir pencerede sürdürür; kapalıyken sesi arka planda çalmaya devam eder"
 }

@@ -3546,5 +3546,7 @@
   "Fill the window": "Lấp đầy cửa sổ",
   "Fill the window (W)": "Lấp đầy cửa sổ (W)",
   "Hide the side rail while watching": "Ẩn thanh bên khi xem",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video được nhiều chỗ hơn, như trên YouTube; chế độ rạp hát luôn ẩn thanh bên"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video được nhiều chỗ hơn, như trên YouTube; chế độ rạp hát luôn ẩn thanh bên",
+  "Picture in picture when leaving the app": "Hình trong hình khi rời khỏi ứng dụng",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Giữ video đang phát trong một cửa sổ nhỏ khi bạn chuyển sang ứng dụng khác; khi tắt, âm thanh vẫn phát nền"
 }

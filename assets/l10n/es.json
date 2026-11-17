@@ -3546,5 +3546,7 @@
   "Fill the window": "Llenar la ventana",
   "Fill the window (W)": "Llenar la ventana (W)",
   "Hide the side rail while watching": "Ocultar la barra lateral al ver vídeos",
-  "The video gets its room, as on YouTube; theater mode always hides it": "El vídeo gana espacio, como en YouTube; el modo cine siempre la oculta"
+  "The video gets its room, as on YouTube; theater mode always hides it": "El vídeo gana espacio, como en YouTube; el modo cine siempre la oculta",
+  "Picture in picture when leaving the app": "Imagen en imagen al salir de la app",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Mantiene el vídeo en reproducción en una ventana pequeña cuando cambias a otra app; si está desactivado, su sonido sigue reproduciéndose en segundo plano"
 }

@@ -3541,5 +3541,7 @@
   "Fill the window": "מילוי החלון",
   "Fill the window (W)": "מילוי החלון (W)",
   "Hide the side rail while watching": "הסתרת סרגל הצד בזמן צפייה",
-  "The video gets its room, as on YouTube; theater mode always hides it": "הסרטון מקבל את המקום שלו, כמו ב-YouTube; במצב קולנוע הסרגל תמיד מוסתר"
+  "The video gets its room, as on YouTube; theater mode always hides it": "הסרטון מקבל את המקום שלו, כמו ב-YouTube; במצב קולנוע הסרגל תמיד מוסתר",
+  "Picture in picture when leaving the app": "תמונה בתוך תמונה בעזיבת האפליקציה",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "משאיר את הווידאו המתנגן בחלון קטן כשעוברים לאפליקציה אחרת; כשהאפשרות כבויה, הקול ממשיך להתנגן ברקע"
 }

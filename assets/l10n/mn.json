@@ -3541,5 +3541,7 @@
   "Fill the window": "Цонхыг дүүргэх",
   "Fill the window (W)": "Цонхыг дүүргэх (W)",
   "Hide the side rail while watching": "Үзэх үед хажуугийн самбарыг нуух",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube шиг видео өөрийн талбайг авна; театрын горимд үргэлж нуугдана"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube шиг видео өөрийн талбайг авна; театрын горимд үргэлж нуугдана",
+  "Picture in picture when leaving the app": "Апп-аас гарахад дэлгэц доторх дэлгэц",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Өөр апп руу шилжихэд тоглож буй видеог жижиг цонхонд үргэлжлүүлнэ; унтраалттай үед дууг нь далд үргэлжлүүлэн тоглуулна"
 }

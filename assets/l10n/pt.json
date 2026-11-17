@@ -3546,5 +3546,7 @@
   "Fill the window": "Preencher a janela",
   "Fill the window (W)": "Preencher a janela (W)",
   "Hide the side rail while watching": "Ocultar a barra lateral ao assistir",
-  "The video gets its room, as on YouTube; theater mode always hides it": "O vídeo ganha seu espaço, como no YouTube; o modo cinema sempre a oculta"
+  "The video gets its room, as on YouTube; theater mode always hides it": "O vídeo ganha seu espaço, como no YouTube; o modo cinema sempre a oculta",
+  "Picture in picture when leaving the app": "Picture-in-picture ao sair do app",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Mantém o vídeo em reprodução em uma janela pequena quando você muda para outro app; quando desativado, o som continua sendo reproduzido em segundo plano"
 }

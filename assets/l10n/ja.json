@@ -3546,5 +3546,7 @@
   "Fill the window": "ウィンドウいっぱいに表示",
   "Fill the window (W)": "ウィンドウいっぱいに表示 (W)",
   "Hide the side rail while watching": "視聴中はサイドバーを隠す",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube と同じように動画に広い場所を譲ります。シアターモードでは常に隠れます"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube と同じように動画に広い場所を譲ります。シアターモードでは常に隠れます",
+  "Picture in picture when leaving the app": "アプリを離れたらピクチャーインピクチャー",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "別のアプリに切り替えたとき、再生中の動画を小さなウィンドウで再生し続けます。オフの場合は、音声のみバックグラウンドで再生が続きます"
 }

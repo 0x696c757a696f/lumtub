@@ -3541,5 +3541,7 @@
   "Fill the window": "Терезени толтуруу",
   "Fill the window (W)": "Терезени толтуруу (W)",
   "Hide the side rail while watching": "Көрүп жатканда каптал панелин жашыруу",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Видео өз ордун алат, YouTube сыяктуу; кинотеатр режиминде ал дайыма жашырылат"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Видео өз ордун алат, YouTube сыяктуу; кинотеатр режиминде ал дайыма жашырылат",
+  "Picture in picture when leaving the app": "Колдонмодон чыкканда сүрөттө сүрөт",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Башка колдонмого өткөндө ойноп жаткан видеону кичине терезеде сактайт; өчүк болсо, анын үнү фондо ойной берет"
 }

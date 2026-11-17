@@ -3541,5 +3541,7 @@
   "Fill the window": "කවුළුව පුරවන්න",
   "Fill the window (W)": "කවුළුව පුරවන්න (W)",
   "Hide the side rail while watching": "නරඹන විට පැති තීරුව සඟවන්න",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube හි මෙන් වීඩියෝවට එහි ඉඩ ලැබේ; සිනමා ප්‍රකාරයේදී එය සැමවිටම සැඟවේ"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube හි මෙන් වීඩියෝවට එහි ඉඩ ලැබේ; සිනමා ප්‍රකාරයේදී එය සැමවිටම සැඟවේ",
+  "Picture in picture when leaving the app": "යෙදුමෙන් ඉවත් වන විට පින්තූරය-තුළ-පින්තූරය",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "වෙනත් යෙදුමකට මාරු වන විට වාදනය වන වීඩියෝව කුඩා කවුළුවක තබා ගනී; අක්‍රිය විට එහි ශබ්දය පසුබිමේ දිගටම වාදනය වේ"
 }

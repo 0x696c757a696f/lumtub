@@ -3541,5 +3541,7 @@
   "Fill the window": "Запоўніць акно",
   "Fill the window (W)": "Запоўніць акно (W)",
   "Hide the side rail while watching": "Хаваць бакавую панэль падчас прагляду",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Відэа атрымлівае сваё месца, як на YouTube; у рэжыме кінатэатра панэль заўсёды схаваная"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Відэа атрымлівае сваё месца, як на YouTube; у рэжыме кінатэатра панэль заўсёды схаваная",
+  "Picture in picture when leaving the app": "Відэа ў відэа пры выхадзе з праграмы",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Захоўвае відэа, якое прайграецца, у маленькім акне, калі вы пераключаецеся на іншую праграму; калі выключана, яго гук працягвае гучаць у фоне"
 }

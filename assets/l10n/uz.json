@@ -3541,5 +3541,7 @@
   "Fill the window": "Oynani to‘ldirish",
   "Fill the window (W)": "Oynani to‘ldirish (W)",
   "Hide the side rail while watching": "Tomosha paytida yon panelni yashirish",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video YouTube’dagidek o‘z joyini oladi; kinoteatr rejimi uni doim yashiradi"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video YouTube’dagidek o‘z joyini oladi; kinoteatr rejimi uni doim yashiradi",
+  "Picture in picture when leaving the app": "Ilovadan chiqqanda rasm ichida rasm",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Boshqa ilovaga o'tganingizda ijro etilayotgan videoni kichik oynada saqlaydi; o'chiq bo'lsa, ovozi fonda ijro etilishda davom etadi"
 }

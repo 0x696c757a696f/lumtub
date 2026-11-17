@@ -3541,5 +3541,7 @@
   "Fill the window": "Jaza dirisha",
   "Fill the window (W)": "Jaza dirisha (W)",
   "Hide the side rail while watching": "Ficha upau wa pembeni unapotazama",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video hupata nafasi yake, kama kwenye YouTube; hali ya ukumbi huuficha kila mara"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video hupata nafasi yake, kama kwenye YouTube; hali ya ukumbi huuficha kila mara",
+  "Picture in picture when leaving the app": "Picha ndani ya picha unapoondoka kwenye programu",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Huweka video inayochezwa katika dirisha dogo unapobadili kwenda programu nyingine; ikizimwa, sauti yake huendelea kuchezwa chinichini"
 }

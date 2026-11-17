@@ -3541,5 +3541,7 @@
   "Fill the window": "Punuin ang window",
   "Fill the window (W)": "Punuin ang window (W)",
   "Hide the side rail while watching": "Itago ang sidebar habang nanonood",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Nakukuha ng video ang espasyo nito, tulad sa YouTube; palaging itinatago ito ng Theater mode"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Nakukuha ng video ang espasyo nito, tulad sa YouTube; palaging itinatago ito ng Theater mode",
+  "Picture in picture when leaving the app": "Picture-in-picture kapag umalis sa app",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Pinapanatili ang nagpe-play na video sa maliit na window kapag lumipat ka sa ibang app; kapag naka-off, magpapatuloy ang tunog nito sa background"
 }

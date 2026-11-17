@@ -3541,5 +3541,7 @@
   "Fill the window": "ពេញវិនដូ",
   "Fill the window (W)": "ពេញវិនដូ (W)",
   "Hide the side rail while watching": "លាក់របារចំហៀងពេលមើល",
-  "The video gets its room, as on YouTube; theater mode always hides it": "វីដេអូទទួលបានទីតាំងរបស់វា ដូចនៅលើ YouTube; ម៉ូដល្ខោនលាក់វាជានិច្ច"
+  "The video gets its room, as on YouTube; theater mode always hides it": "វីដេអូទទួលបានទីតាំងរបស់វា ដូចនៅលើ YouTube; ម៉ូដល្ខោនលាក់វាជានិច្ច",
+  "Picture in picture when leaving the app": "រូបក្នុងរូប នៅពេលចាកចេញពីកម្មវិធី",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "រក្សាវីដេអូដែលកំពុងចាក់ក្នុងផ្ទាំងតូច នៅពេលអ្នកប្តូរទៅកម្មវិធីផ្សេង; នៅពេលបិទ សំឡេងរបស់វានឹងបន្តចាក់នៅផ្ទៃខាងក្រោយ"
 }

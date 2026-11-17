@@ -3541,5 +3541,7 @@
   "Fill the window": "Penjiräni doldur",
   "Fill the window (W)": "Penjiräni doldur (W)",
   "Hide the side rail while watching": "Tomaşa edilende gapdal paneli gizle",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Wideo YouTube-daky ýaly öz ýerini alýar; teatr režimi ony hemişe gizleýär"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Wideo YouTube-daky ýaly öz ýerini alýar; teatr režimi ony hemişe gizleýär",
+  "Picture in picture when leaving the app": "Programmadan çykanyňyzda surat içinde surat",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Başga programma geçeniňizde oýnap duran wideony kiçi penjirede saklaýar; öçürilen bolsa, sesi arka planda oýnamagyny dowam etdirýär"
 }

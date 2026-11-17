@@ -87,4 +87,6 @@ The changes, marked "Lumtub" in the code:
   from `common/darwin` (so it has the macOS fixes above), registered again
   in `pubspec.yaml`. `TextureHW.swift` returns nil instead of ending the
   app when libmpv cannot render with OpenGL ES, so the video falls back to
-  software like on macOS.
+  software like on macOS. It also draws no frame while the app is in the
+  background (`BackgroundState`): iOS ends an app that sends OpenGL ES
+  commands there.

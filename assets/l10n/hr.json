@@ -3541,5 +3541,7 @@
   "Fill the window": "Ispuni prozor",
   "Fill the window (W)": "Ispuni prozor (W)",
   "Hide the side rail while watching": "Sakrij bočnu traku tijekom gledanja",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Videozapis dobiva svoj prostor, kao na YouTubeu; u kinoprikazu je traka uvijek skrivena"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Videozapis dobiva svoj prostor, kao na YouTubeu; u kinoprikazu je traka uvijek skrivena",
+  "Picture in picture when leaving the app": "Slika u slici pri napuštanju aplikacije",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Zadržava video koji se reproducira u malom prozoru kad prijeđete na drugu aplikaciju; kad je isključeno, zvuk se nastavlja reproducirati u pozadini"
 }

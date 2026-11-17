@@ -3541,5 +3541,7 @@
   "Fill the window": "Umple fereastra",
   "Fill the window (W)": "Umple fereastra (W)",
   "Hide the side rail while watching": "Ascunde bara laterală în timpul vizionării",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Videoclipul primește spațiul său, ca pe YouTube; modul cinema o ascunde mereu"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Videoclipul primește spațiul său, ca pe YouTube; modul cinema o ascunde mereu",
+  "Picture in picture when leaving the app": "Imagine în imagine la ieșirea din aplicație",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Păstrează videoclipul redat într-o fereastră mică atunci când treci la altă aplicație; când este dezactivat, sunetul continuă să fie redat în fundal"
 }

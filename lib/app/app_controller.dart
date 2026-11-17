@@ -529,6 +529,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// ytdl_hook, which then adds no subtitle tracks of its own.
   String? _openedDirect;
   String? _unrelayed;
+  DateTime? _relayRevivedAt;
   Timer? _stallTimer;
   Timer? _recoveryTimer;
   Timer? _startTimer;

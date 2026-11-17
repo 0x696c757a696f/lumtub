@@ -329,6 +329,18 @@ extension PlaybackEvents on AppController {
       final item = playing!;
       final viaRelay = _openedVia == item.id;
       _openedVia = null;
+      // The relay's socket was taken away while the app was suspended (iOS):
+      // it listens again, and the same addresses open once more through it.
+      if (loopbackRefused(message) && (_relayed == item.id || _liveSplit == item.id) && _mayReviveRelay()) {
+        logWarn('The local relay refused libmpv ($message); listening again and reopening ${item.id}');
+        final serial = _playSerial;
+        final position = _lastPosition > Duration.zero ? _lastPosition : null;
+        unawaited(() async {
+          await reviveRelay();
+          if (serial == _playSerial) await _open(item, serial, start: position);
+        }());
+        return;
+      }
       // What a server's address says is not what YouTube said earlier.
       final failure = PlaybackFailure.classify(viaRelay ? [message] : [message, ..._recentErrors]);
       final position = _lastPosition > Duration.zero ? _lastPosition : null;
@@ -407,7 +419,11 @@ extension PlaybackEvents on AppController {
 
   /// While the window is minimised or in the tray with the setting on, mpv
   /// decodes no picture; [hidden] false brings it back. A user's own 听视频
-  /// choice is left alone.
+  /// choice is left alone. On a phone or tablet (not a TV, which pauses)
+  /// the app in the background
+  /// always plays only the sound, unless it shows picture in picture: no
+  /// one sees the picture, and iOS ends an app that draws in the
+  /// background.
   Future<void> setBackgroundAudioOnly(bool hidden) async {
     _outputSize?.hidden = hidden;
     _windowHidden = hidden;
@@ -415,7 +431,8 @@ extension PlaybackEvents on AppController {
     final platform = player?.platform;
     if (platform is! NativePlayer) return;
     if (hidden) {
-      if (!preferences.audioOnlyInBackground || audioOnly || _backgroundAudioOnly || !player!.state.playing) return;
+      final wanted = preferences.audioOnlyInBackground || ((Platform.isAndroid || Platform.isIOS) && !Device.tv && !pip);
+      if (!wanted || audioOnly || _backgroundAudioOnly || !player!.state.playing) return;
       _backgroundAudioOnly = true;
       await platform.setProperty('vid', 'no');
     } else if (_backgroundAudioOnly) {

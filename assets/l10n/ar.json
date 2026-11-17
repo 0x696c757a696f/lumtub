@@ -3546,5 +3546,7 @@
   "Fill the window": "ملء النافذة",
   "Fill the window (W)": "ملء النافذة (W)",
   "Hide the side rail while watching": "إخفاء الشريط الجانبي أثناء المشاهدة",
-  "The video gets its room, as on YouTube; theater mode always hides it": "يحصل الفيديو على مساحته كما في YouTube؛ ويُخفى دائمًا في وضع المسرح"
+  "The video gets its room, as on YouTube; theater mode always hides it": "يحصل الفيديو على مساحته كما في YouTube؛ ويُخفى دائمًا في وضع المسرح",
+  "Picture in picture when leaving the app": "نافذة عائمة عند مغادرة التطبيق",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "يُبقي الفيديو قيد التشغيل في نافذة صغيرة عند التبديل إلى تطبيق آخر؛ وعند الإيقاف يستمر تشغيل صوته في الخلفية"
 }

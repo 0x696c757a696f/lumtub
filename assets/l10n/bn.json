@@ -3541,5 +3541,7 @@
   "Fill the window": "উইন্ডো পূর্ণ করুন",
   "Fill the window (W)": "উইন্ডো পূর্ণ করুন (W)",
   "Hide the side rail while watching": "দেখার সময় সাইডবার লুকান",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-এর মতো ভিডিও নিজের জায়গা পায়; থিয়েটার মোডে সাইডবার সবসময় লুকানো থাকে"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-এর মতো ভিডিও নিজের জায়গা পায়; থিয়েটার মোডে সাইডবার সবসময় লুকানো থাকে",
+  "Picture in picture when leaving the app": "অ্যাপ ছাড়ার সময় পিকচার-ইন-পিকচার",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "অন্য অ্যাপে গেলে চলমান ভিডিওটি ছোট উইন্ডোতে চালু রাখে; বন্ধ থাকলে এর শব্দ ব্যাকগ্রাউন্ডে চলতে থাকে"
 }

@@ -3541,5 +3541,7 @@
   "Fill the window": "Ablak kitöltése",
   "Fill the window (W)": "Ablak kitöltése (W)",
   "Hide the side rail while watching": "Oldalsáv elrejtése nézés közben",
-  "The video gets its room, as on YouTube; theater mode always hides it": "A videó megkapja a helyét, mint a YouTube-on; mozi módban az oldalsáv mindig el van rejtve"
+  "The video gets its room, as on YouTube; theater mode always hides it": "A videó megkapja a helyét, mint a YouTube-on; mozi módban az oldalsáv mindig el van rejtve",
+  "Picture in picture when leaving the app": "Kép a képben az alkalmazás elhagyásakor",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Kis ablakban folytatja a lejátszott videót, ha másik alkalmazásra váltasz; kikapcsolt állapotban a hang a háttérben szól tovább"
 }

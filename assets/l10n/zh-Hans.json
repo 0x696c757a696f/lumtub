@@ -3570,5 +3570,7 @@
   "Fill the window": "铺满窗口",
   "Fill the window (W)": "铺满窗口 (W)",
   "Hide the side rail while watching": "看视频时收起侧边栏",
-  "The video gets its room, as on YouTube; theater mode always hides it": "把位置让给视频，和 YouTube 网页版一样；剧场模式下总会收起"
+  "The video gets its room, as on YouTube; theater mode always hides it": "把位置让给视频，和 YouTube 网页版一样；剧场模式下总会收起",
+  "Picture in picture when leaving the app": "切到其他应用时进入画中画",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "切到其他应用时，正在播放的视频以小窗继续；关闭时只在后台继续播放声音"
 }

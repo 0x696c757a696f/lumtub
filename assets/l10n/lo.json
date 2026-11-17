@@ -3541,5 +3541,7 @@
   "Fill the window": "ເຕັມໜ້າຕ່າງ",
   "Fill the window (W)": "ເຕັມໜ້າຕ່າງ (W)",
   "Hide the side rail while watching": "ເຊື່ອງແຖບຂ້າງເວລາເບິ່ງ",
-  "The video gets its room, as on YouTube; theater mode always hides it": "ວິດີໂອໄດ້ພື້ນທີ່ຂອງມັນ ຄືກັບ YouTube; ໂໝດໂຮງໜັງຈະເຊື່ອງມັນສະເໝີ"
+  "The video gets its room, as on YouTube; theater mode always hides it": "ວິດີໂອໄດ້ພື້ນທີ່ຂອງມັນ ຄືກັບ YouTube; ໂໝດໂຮງໜັງຈະເຊື່ອງມັນສະເໝີ",
+  "Picture in picture when leaving the app": "ພາບຊ້ອນພາບ ເມື່ອອອກຈາກແອັບ",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "ຮັກສາວິດີໂອທີ່ກຳລັງຫຼິ້ນໄວ້ໃນໜ້າຕ່າງນ້ອຍເມື່ອສະຫຼັບໄປແອັບອື່ນ; ເມື່ອປິດ ສຽງຂອງມັນຈະຫຼິ້ນຕໍ່ຢູ່ພື້ນຫຼັງ"
 }

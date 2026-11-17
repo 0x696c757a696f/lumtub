@@ -344,16 +344,25 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.pauseOnMinimize,
               onChanged: (v) => savePrefs(prefs.copyWith(pauseOnMinimize: v)),
             ), subtitle: tr('Background playback')),
-        SettingEntry(tr('Audio only when minimized'), (context) => SwitchItem(
-              title: tr('Audio only when minimized'),
-              subtitle: prefs.pauseOnMinimize
-                  ? tr('Not needed while Pause when minimized is on')
-                  : tr('Decode no picture while the window is minimized or in the tray; restored with the window'),
-              leading: _icon(AppIcons.headphones),
-              value: prefs.audioOnlyInBackground,
-              enabled: !prefs.pauseOnMinimize,
-              onChanged: (v) => savePrefs(prefs.copyWith(audioOnlyInBackground: v)),
-            ), subtitle: tr('Background playback')),
+        if (Platform.isAndroid && !Device.tv)
+          SettingEntry(tr('Picture in picture when leaving the app'), (context) => SwitchItem(
+                title: tr('Picture in picture when leaving the app'),
+                subtitle: tr('Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background'),
+                leading: _icon(AppIcons.pictureInpicture),
+                value: prefs.pipOnLeave,
+                onChanged: (v) => savePrefs(prefs.copyWith(pipOnLeave: v)),
+              ), subtitle: tr('Background playback')),
+        if (!Platform.isAndroid && !Platform.isIOS)
+          SettingEntry(tr('Audio only when minimized'), (context) => SwitchItem(
+                title: tr('Audio only when minimized'),
+                subtitle: prefs.pauseOnMinimize
+                    ? tr('Not needed while Pause when minimized is on')
+                    : tr('Decode no picture while the window is minimized or in the tray; restored with the window'),
+                leading: _icon(AppIcons.headphones),
+                value: prefs.audioOnlyInBackground,
+                enabled: !prefs.pauseOnMinimize,
+                onChanged: (v) => savePrefs(prefs.copyWith(audioOnlyInBackground: v)),
+              ), subtitle: tr('Background playback')),
         SettingEntry(tr('Show related videos on the video page'), (context) => SwitchItem(
               title: tr('Show related videos on the video page'),
               subtitle: tr('Found by title search; when off, autoplay plays only the queue'),

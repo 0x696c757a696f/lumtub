@@ -3546,5 +3546,7 @@
   "Fill the window": "Во всё окно",
   "Fill the window (W)": "Во всё окно (W)",
   "Hide the side rail while watching": "Скрывать боковую панель при просмотре",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Видео получает больше места, как на YouTube; в режиме кино панель всегда скрыта"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Видео получает больше места, как на YouTube; в режиме кино панель всегда скрыта",
+  "Picture in picture when leaving the app": "Картинка в картинке при выходе из приложения",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Оставляет воспроизводимое видео в маленьком окне, когда вы переключаетесь на другое приложение; если выключено, звук продолжает играть в фоне"
 }

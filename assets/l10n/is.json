@@ -3541,5 +3541,7 @@
   "Fill the window": "Fylla gluggann",
   "Fill the window (W)": "Fylla gluggann (W)",
   "Hide the side rail while watching": "Fela hliðarstiku við áhorf",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Myndbandið fær sitt pláss, eins og á YouTube; bíóstilling felur hana alltaf"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Myndbandið fær sitt pláss, eins og á YouTube; bíóstilling felur hana alltaf",
+  "Picture in picture when leaving the app": "Mynd í mynd þegar forritið er yfirgefið",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Heldur myndskeiðinu sem er í spilun í litlum glugga þegar skipt er yfir í annað forrit; þegar slökkt er á þessu heldur hljóðið áfram að spilast í bakgrunni"
 }

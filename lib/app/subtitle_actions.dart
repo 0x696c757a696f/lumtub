@@ -486,7 +486,7 @@ extension SubtitleActions on AppController {
       await watch.cancel();
       if (waitingForSubtitles) _update(() => waitingForSubtitles = false);
     }
-    if (serial != _playSerial || this.player != player || started) return;
+    if (serial != _playSerial || this.player != player || started || playbackError != null) return;
     await player.play();
   }
 

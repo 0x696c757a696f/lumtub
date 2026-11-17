@@ -3541,5 +3541,7 @@
   "Fill the window": "Fyll fönstret",
   "Fill the window (W)": "Fyll fönstret (W)",
   "Hide the side rail while watching": "Dölj sidofältet under visning",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Videon får sitt utrymme, som på YouTube; bioläge döljer det alltid"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Videon får sitt utrymme, som på YouTube; bioläge döljer det alltid",
+  "Picture in picture when leaving the app": "Bild-i-bild när du lämnar appen",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Behåller videon som spelas upp i ett litet fönster när du byter till en annan app; när det är av fortsätter ljudet i bakgrunden"
 }

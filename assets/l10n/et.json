@@ -3541,5 +3541,7 @@
   "Fill the window": "Täida aken",
   "Fill the window (W)": "Täida aken (W)",
   "Hide the side rail while watching": "Peida külgriba vaatamise ajal",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video saab oma ruumi nagu YouTube'is; kinorežiimis on külgriba alati peidus"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video saab oma ruumi nagu YouTube'is; kinorežiimis on külgriba alati peidus",
+  "Picture in picture when leaving the app": "Pilt pildis rakendusest lahkumisel",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Hoiab esitatava video väikeses aknas, kui lülitute teisele rakendusele; väljalülitatuna jätkub selle heli esitus taustal"
 }

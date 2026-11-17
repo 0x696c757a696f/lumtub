@@ -3541,5 +3541,7 @@
   "Fill the window": "Vyplnit okno",
   "Fill the window (W)": "Vyplnit okno (W)",
   "Hide the side rail while watching": "Skrýt boční panel při sledování",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video dostane své místo jako na YouTube; v režimu kina je panel vždy skrytý"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video dostane své místo jako na YouTube; v režimu kina je panel vždy skrytý",
+  "Picture in picture when leaving the app": "Obraz v obraze při opuštění aplikace",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Při přepnutí do jiné aplikace nechá přehrávané video v malém okně; když je vypnuto, jeho zvuk hraje dál na pozadí"
 }

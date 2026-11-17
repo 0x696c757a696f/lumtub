@@ -3541,5 +3541,7 @@
   "Fill the window": "Užpildyti langą",
   "Fill the window (W)": "Užpildyti langą (W)",
   "Hide the side rail while watching": "Slėpti šoninę juostą žiūrint",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Vaizdo įrašas gauna savo vietą kaip „YouTube“; kino teatro režimu juosta visada paslėpta"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Vaizdo įrašas gauna savo vietą kaip „YouTube“; kino teatro režimu juosta visada paslėpta",
+  "Picture in picture when leaving the app": "Paveikslėlis paveiksle išeinant iš programos",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Perjungus į kitą programą, grojamas vaizdo įrašas lieka mažame lange; kai išjungta, jo garsas toliau groja fone"
 }

@@ -3541,5 +3541,7 @@
   "Fill the window": "Omple la finestra",
   "Fill the window (W)": "Omple la finestra (W)",
   "Hide the side rail while watching": "Amaga la barra lateral mentre mires",
-  "The video gets its room, as on YouTube; theater mode always hides it": "El vídeo té el seu espai, com a YouTube; el mode cinema sempre l'amaga"
+  "The video gets its room, as on YouTube; theater mode always hides it": "El vídeo té el seu espai, com a YouTube; el mode cinema sempre l'amaga",
+  "Picture in picture when leaving the app": "Imatge en imatge en sortir de l'aplicació",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Manté el vídeo en reproducció en una finestra petita quan canvies a una altra aplicació; si està desactivat, el so continua reproduint-se en segon pla"
 }

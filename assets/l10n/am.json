@@ -3541,5 +3541,7 @@
   "Fill the window": "መስኮቱን ሙላ",
   "Fill the window (W)": "መስኮቱን ሙላ (W)",
   "Hide the side rail while watching": "ሲመለከቱ የጎን አሞሌን ደብቅ",
-  "The video gets its room, as on YouTube; theater mode always hides it": "ቪዲዮው ቦታውን ያገኛል፣ ልክ እንደ YouTube፤ የሲኒማ ሁነታ ሁልጊዜ ይደብቀዋል"
+  "The video gets its room, as on YouTube; theater mode always hides it": "ቪዲዮው ቦታውን ያገኛል፣ ልክ እንደ YouTube፤ የሲኒማ ሁነታ ሁልጊዜ ይደብቀዋል",
+  "Picture in picture when leaving the app": "ከመተግበሪያው ሲወጡ ሥዕል-በ-ሥዕል",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "ወደ ሌላ መተግበሪያ ሲቀይሩ እየተጫወተ ያለውን ቪዲዮ በትንሽ መስኮት ያቆያል፤ ሲጠፋ ድምፁ በጀርባ መጫወቱን ይቀጥላል"
 }

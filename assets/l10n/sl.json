@@ -3541,5 +3541,7 @@
   "Fill the window": "Zapolni okno",
   "Fill the window (W)": "Zapolni okno (W)",
   "Hide the side rail while watching": "Skrij stransko vrstico med ogledom",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Videoposnetek dobi svoj prostor, kot na YouTubu; kinematografski način jo vedno skrije"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Videoposnetek dobi svoj prostor, kot na YouTubu; kinematografski način jo vedno skrije",
+  "Picture in picture when leaving the app": "Slika v sliki ob zapustitvi aplikacije",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Predvajani videoposnetek ostane v majhnem oknu, ko preklopite v drugo aplikacijo; ko je izklopljeno, se zvok še naprej predvaja v ozadju"
 }

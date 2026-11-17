@@ -7,6 +7,7 @@ import 'package:media_kit/media_kit.dart';
 import 'app/app_controller.dart';
 import 'app_window.dart';
 import 'appearance_settings.dart';
+import 'device.dart';
 import 'kwin_keep_above.dart';
 import 'l10n/l10n.dart';
 
@@ -193,8 +194,9 @@ class WindowsShellSync {
       }
     }
     // Android: going home while a video plays on the watch page keeps it
-    // in picture in picture.
-    final autoPip = Platform.isAndroid && video != null && controller.onWatchPage && !controller.mini && (player?.state.playing ?? false);
+    // in picture in picture, when chosen in the settings; otherwise its
+    // sound plays on in the background.
+    final autoPip = Platform.isAndroid && !Device.tv && controller.preferences.pipOnLeave && video != null && controller.onWatchPage && !controller.mini && (player?.state.playing ?? false);
     if (autoPip != _autoPip) {
       _autoPip = autoPip;
       AppWindow.setAutoPip(autoPip);

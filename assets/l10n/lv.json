@@ -3541,5 +3541,7 @@
   "Fill the window": "Aizpildīt logu",
   "Fill the window (W)": "Aizpildīt logu (W)",
   "Hide the side rail while watching": "Paslēpt sānjoslu skatīšanās laikā",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video iegūst savu vietu kā pakalpojumā YouTube; kinoteātra režīmā tā vienmēr ir paslēpta"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video iegūst savu vietu kā pakalpojumā YouTube; kinoteātra režīmā tā vienmēr ir paslēpta",
+  "Picture in picture when leaving the app": "Attēls attēlā, izejot no lietotnes",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Pārslēdzoties uz citu lietotni, atskaņojamais video paliek nelielā logā; ja izslēgts, tā skaņa turpina skanēt fonā"
 }

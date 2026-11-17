@@ -3541,5 +3541,7 @@
   "Fill the window": "Täytä ikkuna",
   "Fill the window (W)": "Täytä ikkuna (W)",
   "Hide the side rail while watching": "Piilota sivupalkki katsellessa",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video saa tilansa kuten YouTubessa; teatteritila piilottaa sen aina"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video saa tilansa kuten YouTubessa; teatteritila piilottaa sen aina",
+  "Picture in picture when leaving the app": "Kuva kuvassa sovelluksesta poistuttaessa",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Pitää toistettavan videon pienessä ikkunassa, kun vaihdat toiseen sovellukseen; kun asetus on pois päältä, sen ääni jatkuu taustalla"
 }

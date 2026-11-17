@@ -3541,5 +3541,7 @@
   "Fill the window": "Bete leihoa",
   "Fill the window (W)": "Bete leihoa (W)",
   "Hide the side rail while watching": "Ezkutatu alboko barra ikusten ari zarenean",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Bideoak bere lekua hartzen du, YouTuben bezala; zinema moduak beti ezkutatzen du"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Bideoak bere lekua hartzen du, YouTuben bezala; zinema moduak beti ezkutatzen du",
+  "Picture in picture when leaving the app": "Irudia irudian aplikaziotik irtetean",
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Erreproduzitzen ari den bideoa leiho txiki batean mantentzen du beste aplikazio batera aldatzean; desaktibatuta dagoenean, soinuak atzeko planoan jarraitzen du erreproduzitzen"
 }

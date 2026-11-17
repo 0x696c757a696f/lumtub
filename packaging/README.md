@@ -6,14 +6,13 @@ After each release, the **Packages** workflow (`.github/workflows/packages.yml`)
 
 - builds a Flatpak bundle for x86_64 and aarch64 and adds `Lumtub_<version>_linux-<arch>.flatpak` with its `.sig` (signed like every other package) to the release;
 - opens a pull request to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) for the new version;
-- opens a pull request adding Lumtub to [ScoopInstaller/Extras](https://github.com/ScoopInstaller/Extras), once: after it is merged, Extras' own bot follows new releases;
 - pushes the new version to the AUR package `lumtub-bin`.
 
 The last three need secrets in the repository settings (Settings › Secrets and variables › Actions); without one, that step is skipped:
 
 | Secret | For | What it is |
 |---|---|---|
-| `PACKAGES_TOKEN` | WinGet, Scoop | A classic personal access token of the account the pull requests come from, with the scopes `public_repo` and `workflow`. The workflow forks the two repositories into that account. |
+| `PACKAGES_TOKEN` | WinGet | A classic personal access token of the account the pull requests come from, with the scopes `public_repo` and `workflow`. The workflow forks winget-pkgs into that account. |
 | `AUR_SSH_KEY` | AUR | The private SSH key whose public key is in your aur.archlinux.org account: ed25519, or a post-quantum hybrid `mldsa44-ed25519` key if the AUR accepts one (that step runs in an Arch Linux container with the newest OpenSSH). Variables `AUR_NAME` and `AUR_EMAIL` fill the PKGBUILD's Maintainer line. |
 
 To send a release again, run **Packages** by hand with its tag. A pull request that changes `packaging/` builds the Flatpak of the latest release without sending anything.
@@ -23,7 +22,7 @@ To send a release again, run **Packages** by hand with its tag. A pull request t
 | Where | State |
 |---|---|
 | WinGet (`Lumtub.Lumtub`) | First version sent 2026-11-17 ([winget-pkgs#482133](https://github.com/microsoft/winget-pkgs/pull/482133)); each release sends a new one. |
-| Scoop Extras (`extras/lumtub`) | Sent 2026-11-17 ([Extras#19396](https://github.com/ScoopInstaller/Extras/pull/19396)); Extras' bot follows releases once merged. |
+| Scoop Extras (`extras/lumtub`) | **Not yet.** The first request ([Extras#19396](https://github.com/ScoopInstaller/Extras/pull/19396)) was closed on 2026-11-17: Extras takes projects that are reasonably well known (on GitHub, at least 100 stars or 50 forks). Once Lumtub is there, open a package request issue first, and send the manifest only after a maintainer agrees. Until then, Scoop users can install the manifest straight from this repository (see Scoop below). |
 | Flatpak bundles | On every release since 0.2.49. |
 | AUR (`lumtub-bin`) | **Not yet.** AUR sign-ups were closed on 2026-11-17. To do: register at aur.archlinux.org, add the public key of `ssh-keygen -t mldsa44-ed25519` (or ed25519 if the AUR refuses it) to the account, save the private key as the `AUR_SSH_KEY` secret, then run **Packages** by hand. |
 | Flathub | **Not planned.** Flathub's [generative AI policy](https://docs.flathub.org/docs/for-app-authors/requirements#generative-ai-policy) rules out this repository's packaging; the first request (flathub/flathub#11236) was closed on 2026-11-17. Linux users get the Flatpak bundles and AppImages from the releases. |
@@ -60,9 +59,13 @@ The installer is an Inno Setup program that installs for the current user only, 
 
 The manifest uses the portable ZIP. The ZIP contains a `portable.txt` marker, so Lumtub keeps its data in `userdata` next to `lumtub.exe`, and the manifest persists that folder across updates.
 
+It is kept up to date for every release but not sent anywhere on its own. Anyone can install it directly with `scoop install https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/packaging/scoop/lumtub.json`.
+
+To get it into Extras later:
+
 1. Test locally with `scoop install .\packaging\scoop\lumtub.json`.
-2. Fork [ScoopInstaller/Extras](https://github.com/ScoopInstaller/Extras) and add the file as `bucket/lumtub.json`.
-3. Open a pull request. After it is merged, the Extras bot picks up new releases through `checkver` and `autoupdate`, so later releases normally need nothing from you.
+2. Open a package request issue in [ScoopInstaller/Extras](https://github.com/ScoopInstaller/Extras/issues/new/choose) and wait for a maintainer to agree.
+3. Fork Extras, add the file as `bucket/lumtub.json` and open a pull request that links the issue (`Closes #<issue>`), titled `lumtub: Add version <version>`. After it is merged, the Extras bot picks up new releases through `checkver` and `autoupdate`, so later releases normally need nothing from you.
 
 The Scoop version is `<version>-<commit>`, because the commit is part of the download URL. Lumtub's built-in updater does not know it was installed by Scoop, so tell Scoop users to update with `scoop update lumtub`.
 

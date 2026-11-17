@@ -193,6 +193,11 @@ class _LumtubAppState extends State<LumtubApp> {
     _lifecycle = AppLifecycleListener(
       onExitRequested: () async {
         await controller.shutdown();
+        // Everything is saved and the player released. Left to the engine's
+        // own teardown, media_kit_video's plugin unregistered its channel
+        // from a messenger already gone, inside the window's destroy
+        // message, and Windows ended the process as crashed.
+        if (Platform.isWindows) exit(0);
         return AppExitResponse.exit;
       },
       // Minimising hides the window; "pause on minimise" resumes only what it

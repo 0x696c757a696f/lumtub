@@ -14,23 +14,31 @@ on:
     # Pictures, text and the website alone need no new build (tags are
     # built whatever they change).
     paths-ignore: ['**.md', 'docs/**', 'website/**']
+  # A pull request gets the quick checks (checks.yml); it builds every
+  # package here only when it carries the label "full build" or its newest
+  # commit message has [full] (or [showcase]). Dependabot's pull requests
+  # are always built, since they're merged once the build passes.
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, labeled]
     paths-ignore: ['**.md', 'docs/**', 'website/**']
   # Builds main once a day when no build on main has its files yet.
   schedule:
     - cron: '41 3 * * *'
 
-# A newer push to a pull request makes its earlier run moot.
+# A newer push to a pull request makes its earlier run moot. Adding any
+# label but "full build" changes nothing, so its run keeps a group of its own
+# and cancels nothing.
 concurrency:
-  group: build-${{ github.event.pull_request.number || github.ref }}
+  group: build-${{ github.event.pull_request.number || github.ref }}${{ github.event.action == 'labeled' && github.event.label.name != 'full build' && format('-{0}', github.run_id) || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Packages are named by the commit's files (its tree), and a build that
   # passes leaves a marker artifact named after that tree. A tree that was
   # built and passed already is not built again:
-  # - main reuses its pull request's build when the merge gave the same files;
+  # - main reuses its pull request's build when the merge gave the same files
+  #   (a pull request builds in full only when asked; see the trigger above);
   # - a release tag signs and publishes the packages of that build;
   # - the daily run builds main only when no build on main has its files yet,
   #   which keeps main's caches fresh for pull requests.
@@ -42,11 +50,44 @@ jobs:
       contents: read
     outputs:
       run: ${{ steps.find.outputs.run }}
+      build: ${{ steps.wanted.outputs.build }}
     steps:
+      - name: Decide whether to build
+        id: wanted
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          LABEL: ${{ github.event.label.name }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          build=true
+          if [[ "$EVENT" == pull_request ]]; then
+            message=$(gh api "repos/$GITHUB_REPOSITORY/commits/$HEAD" --jq .commit.message)
+            if [[ "$ACTION" == labeled && "$LABEL" != 'full build' ]]; then
+              build=false
+              echo "Another label; nothing to build."
+            elif [[ "$AUTHOR" == 'dependabot[bot]' ]]; then
+              echo "Dependabot's pull request: built in full."
+            elif jq -e 'index("full build")' <<< "$LABELS" > /dev/null; then
+              echo "Labelled \"full build\": built in full."
+            elif grep -qF -e '[full]' -e '[showcase]' <<< "$message"; then
+              echo "The commit asks for the full build."
+            else
+              build=false
+              echo "Quick checks only (Checks workflow); main builds every package after the merge."
+            fi
+          fi
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+
       # One full build at a time: a run waits until the Build runs started
       # before it have finished (each waits only for older runs, so two never
       # wait for each other).
       - name: Wait for earlier builds
+        if: steps.wanted.outputs.build == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -112,7 +153,7 @@ jobs:
   windows:
     name: Windows ${{ matrix.package_arch }}
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -562,7 +603,7 @@ jobs:
   linux:
     name: Linux ${{ matrix.package_arch }}
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -877,7 +918,7 @@ jobs:
   macos:
     name: macOS
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
     # The signing keys live in the "release" environment, which only main
     # and v* tags may use (docs/SECURITY.md); other branches and pull
     # requests build without them and sign with a debug key.
@@ -1067,7 +1108,7 @@ jobs:
   ios:
     name: iOS
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
     # An unsigned IPA for SideStore, AltStore, Sideloadly or TrollStore:
     # without an Apple developer account nothing else installs on an iPhone.
     runs-on: macos-15
@@ -1145,7 +1186,7 @@ jobs:
   android:
     name: Android
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
     # The signing keys live in the "release" environment, which only main
     # and v* tags may use (docs/SECURITY.md); other branches and pull
     # requests build without them and sign with a debug key.
@@ -1335,7 +1376,7 @@ jobs:
   built:
     name: Mark the files built
     needs: [reuse, windows, linux, macos, ios, android]
-    if: ${{ !cancelled() && !failure() && needs.reuse.outputs.run == '' && needs.windows.result == 'success' && needs.linux.result == 'success' && needs.macos.result == 'success' && needs.ios.result == 'success' && needs.android.result == 'success' }}
+    if: ${{ !cancelled() && !failure() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && needs.windows.result == 'success' && needs.linux.result == 'success' && needs.macos.result == 'success' && needs.ios.result == 'success' && needs.android.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -1453,8 +1494,26 @@ jobs:
           version="${TAG#v}"
           version="${version%%-*}"
           notes="release-notes/$version.md"
+          # Every release ends with which file to download, and the package
+          # managers that already list Lumtub.
+          managers=()
+          if gh api repos/microsoft/winget-pkgs/contents/manifests/l/Lumtub/Lumtub --silent 2>/dev/null; then
+            managers+=('- Windows: `winget install Lumtub.Lumtub`')
+          fi
+          if gh api repos/ScoopInstaller/Extras/contents/bucket/lumtub.json --silent 2>/dev/null; then
+            managers+=('- Windows: `scoop bucket add extras` then `scoop install lumtub`')
+          fi
+          footer="$RUNNER_TEMP/which-file.md"
+          python3 - "$footer" "${managers[@]}" <<'PY'
+          import sys
+          out, managers = sys.argv[1], sys.argv[2:]
+          text = open("release-notes/_which-file.md", encoding="utf-8").read()
+          block = "\nOr with a package manager:\n\n" + "\n".join(managers) + "\n" if managers else ""
+          open(out, "w", encoding="utf-8").write(text.replace("<!-- package managers -->\n", block))
+          PY
           if [[ -f "$notes" ]]; then
-            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "Lumtub $version" --notes-file "$notes"
+            cat "$notes" "$footer" > "$RUNNER_TEMP/notes.md"
+            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "Lumtub $version" --notes-file "$RUNNER_TEMP/notes.md"
           else
-            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "Lumtub $TAG" --generate-notes
+            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "Lumtub $TAG" --generate-notes --notes-file "$footer"
           fi

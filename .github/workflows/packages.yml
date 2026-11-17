@@ -105,6 +105,21 @@ jobs:
           flatpak build-bundle --arch=${{ matrix.arch }} --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo \
             repo "$BUNDLE" io.github.lumtub.lumtub stable
           ls -l "$BUNDLE"
+      - name: Flathub's linter
+        if: matrix.arch == 'x86_64'
+        run: |
+          # The checks Flathub runs on a submission, on the manifest and on the built repo.
+          flatpak install -y --user --noninteractive flathub org.flatpak.Builder
+          # Screenshots are mirrored by Flathub's own build, not by this one.
+          local_only='appstream-external-screenshot-url|appstream-screenshots-not-mirrored-in-ostree'
+          status=0
+          for target in "manifest packaging/flatpak/io.github.lumtub.lumtub.yml" "repo repo"; do
+            flatpak run --command=flatpak-builder-lint org.flatpak.Builder --exceptions $target > lint.json || true
+            # No output at all means nothing to report.
+            cat lint.json
+            if python3 -c 'import json,re,sys; t=open("lint.json").read().strip(); e=[x for x in (json.loads(t) if t else {}).get("errors",[]) if not re.fullmatch(sys.argv[1],x)]; print("\n".join(e)); sys.exit(1 if e else 0)' "$local_only"; then :; else status=1; fi
+          done
+          exit $status
       - name: Start it
         run: |
           # Installs the bundle and starts Lumtub on a virtual display for
@@ -163,12 +178,13 @@ jobs:
 
   publish:
     name: Send to ${{ matrix.target }}
-    needs: manifests
+    # After the Flatpak built and passed Flathub's linter.
+    needs: [manifests, flatpak]
     if: github.event_name != 'pull_request'
     strategy:
       fail-fast: false
       matrix:
-        target: [winget, scoop]
+        target: [winget, scoop, flathub]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

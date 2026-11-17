@@ -4,7 +4,7 @@
 # packaging/update-manifests.sh fills in the URLs and SHA-256 values.
 app-id: io.github.lumtub.lumtub
 runtime: org.freedesktop.Platform
-runtime-version: '25.08'
+runtime-version: '26.08'
 sdk: org.freedesktop.Sdk
 command: lumtub
 finish-args:

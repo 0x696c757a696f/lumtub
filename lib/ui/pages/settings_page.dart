@@ -18,6 +18,7 @@ import '../theme.dart';
 import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
+import '../common.dart';
 import '../skin_paint.dart';
 import '../update_notice.dart';
 
@@ -79,7 +80,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return ListView(padding: const EdgeInsets.only(bottom: 24), children: [
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: TextField(
+        child: LeavesByKeys(child: TextField(
           controller: _search,
           onChanged: (value) => setState(() => _query = value.trim().toLowerCase()),
           decoration: InputDecoration(
@@ -100,7 +101,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 : null,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(50), borderSide: BorderSide.none),
           ),
-        ),
+        )),
       ),
       // On narrow windows the matches replace the groups; wide windows show
       // them in the detail pane.

@@ -761,10 +761,10 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
                 _header(context, tr('Installed system fonts')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: TextField(
+                  child: LeavesByKeys(child: TextField(
                     onChanged: (value) => setState(() => _query = value),
                     decoration: InputDecoration(prefixIcon: Icon(AppIcons.magnifyingGlass), hintText: tr('Search installed fonts')),
-                  ),
+                  )),
                 ),
                 if (_systemFonts == null)
                   const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()))

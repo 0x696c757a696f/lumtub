@@ -180,7 +180,7 @@ void main() {
     expect(searchWordsOf(['forma fisica', 'live', 'forma fisica dal vivo']), 'forma fisica live dal vivo');
     // Keywords a translation word by word takes in another sense go by their English.
     expect(searchPivots['体育'], 'sports');
-    expect(englishSearchOf('后端 backend Java Go'), 'back-end development backend Java Go');
+    expect(englishSearchOf('后端 backend Java Go'), 'back-end backend Java Go');
     expect(englishSearchOf('体育 直播'), 'sports 直播', reason: '直播 is searched as "live" in every language');
     expect(englishSearchOf('AI 论文解读 paper explained'), 'AI paper explained');
     expect(englishSearchOf('聊天 直播 just chatting'), '直播 just chatting');

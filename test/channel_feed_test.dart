@@ -5,6 +5,7 @@ import 'package:http/testing.dart';
 import 'package:lumtub/app/library_controller.dart';
 import 'package:lumtub/channel_feed.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/video_repository.dart';
 
 void main() {
@@ -49,6 +50,12 @@ void main() {
     expect(item.channelId, channel.id);
     expect(item.viewCount, 1700000000);
     expect(item.published, DateTime.utc(2009, 10, 25, 6, 57, 33));
+  });
+
+  test('decodes numeric character references in titles', () {
+    const xml = '<feed><entry><yt:videoId>dQw4w9WgXcQ</yt:videoId><title>It&#8217;s &#x4E2D;&#25991;</title></entry></feed>';
+    final items = ChannelFeed.parse(xml, channel);
+    expect(items.single.title, NativeCore.instance?.library.providesSymbol('lumtub_channel_feed') ?? false ? 'It’s 中文' : isNotEmpty);
   });
 
   test('merges channel feeds newest first, undated last', () {

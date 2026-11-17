@@ -124,19 +124,23 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
       if (selected != null)
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
-          child: Row(children: [
-            Expanded(child: Text(
+          // The buttons go under the title when a translation or a narrow
+          // window leaves the title too little room beside them.
+          child: Wrap(alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.center, spacing: 8, runSpacing: 4, children: [
+            Text(
               tr('New from {0}', [selected.name.isEmpty ? selected.id : selected.name]),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-            )),
-            TextButton(onPressed: () => _select(null), child: Text(tr('Show all'))),
-            FilledButton.tonalIcon(
-              onPressed: () => controller.openChannel(selected),
-              icon: Icon(AppIcons.caretRight),
-              label: Text(tr('Open channel')),
             ),
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              TextButton(onPressed: () => _select(null), child: Text(tr('Show all'))),
+              FilledButton.tonalIcon(
+                onPressed: () => controller.openChannel(selected),
+                icon: Icon(AppIcons.caretRight),
+                label: Text(tr('Open channel')),
+              ),
+            ]),
           ]),
         )),
       if (library.feedFailures.isNotEmpty && selected == null)

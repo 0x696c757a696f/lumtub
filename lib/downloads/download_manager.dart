@@ -756,16 +756,18 @@ class DownloadManager extends ChangeNotifier {
     }
     // A single file keeps the subtitles picked beside it.
     if (!_joins(task) && task.selection?.subtitles != null) await _subtitlesFor(task, path.replaceFirst(RegExp(r'\.[^.\\/]+$'), ''));
-    task.filePath = path;
-    task.status = DownloadStatus.done;
-    task.speed = null;
-    task.eta = null;
-    task.downloaded = task.total ?? task.downloaded;
+    // The offline info is saved before the task says done, so whoever
+    // opens the finished file reads the whole sidecar, not one half written.
     try {
       await _writeSidecar(task, path, segments ?? await _segments(task), cut);
     } catch (e) {
       logError('Could not save the offline info of ${task.id}', e);
     }
+    task.filePath = path;
+    task.status = DownloadStatus.done;
+    task.speed = null;
+    task.eta = null;
+    task.downloaded = task.total ?? task.downloaded;
     onFinished?.call(task);
   }
 

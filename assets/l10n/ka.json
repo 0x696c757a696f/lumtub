@@ -3542,5 +3542,14 @@
   "Fill the window": "ფანჯრის შევსება",
   "Fill the window (W)": "ფანჯრის შევსება (W)",
   "Hide the side rail while watching": "ყურების დროს გვერდითი პანელის დამალვა",
-  "The video gets its room, as on YouTube; theater mode always hides it": "ვიდეო თავის სივრცეს იღებს, როგორც YouTube-ზე; თეატრალური რეჟიმი მას ყოველთვის მალავს"
+  "The video gets its room, as on YouTube; theater mode always hides it": "ვიდეო თავის სივრცეს იღებს, როგორც YouTube-ზე; თეატრალური რეჟიმი მას ყოველთვის მალავს",
+  "Reading subtitles…": "სუბტიტრების წაკითხვა…",
+  "Subtitles inside the video": "ვიდეოში ჩაშენებული სუბტიტრები",
+  "Translate into…": "თარგმნა…",
+  "Bilingual subtitles": "ორენოვანი სუბტიტრები",
+  "One more track with two lines: the top language over the bottom one": "კიდევ ერთი ტრეკი ორი ხაზით: ზედა ენა ქვედას ზემოთ",
+  "Top line": "ზედა ხაზი",
+  "Bottom line": "ქვედა ხაზი",
+  "Save the subtitle files beside the video as SRT": "სუბტიტრების ფაილების შენახვა ვიდეოს გვერდით SRT ფორმატში",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM სუბტიტრებს ვერ შეიცავს, ამიტომ ვიდეო შეინახება MKV ფორმატში"
 }

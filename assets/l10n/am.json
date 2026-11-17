@@ -3542,5 +3542,14 @@
   "Fill the window": "መስኮቱን ሙላ",
   "Fill the window (W)": "መስኮቱን ሙላ (W)",
   "Hide the side rail while watching": "ሲመለከቱ የጎን አሞሌን ደብቅ",
-  "The video gets its room, as on YouTube; theater mode always hides it": "ቪዲዮው ቦታውን ያገኛል፣ ልክ እንደ YouTube፤ የሲኒማ ሁነታ ሁልጊዜ ይደብቀዋል"
+  "The video gets its room, as on YouTube; theater mode always hides it": "ቪዲዮው ቦታውን ያገኛል፣ ልክ እንደ YouTube፤ የሲኒማ ሁነታ ሁልጊዜ ይደብቀዋል",
+  "Reading subtitles…": "የትርጉም ጽሑፍ በማንበብ ላይ…",
+  "Subtitles inside the video": "በቪዲዮው ውስጥ ያለ የትርጉም ጽሑፍ",
+  "Translate into…": "ወደ… ተርጉም",
+  "Bilingual subtitles": "ባለ ሁለት ቋንቋ የትርጉም ጽሑፍ",
+  "One more track with two lines: the top language over the bottom one": "አንድ ተጨማሪ ባለ ሁለት መስመር ትራክ፦ የላይኛው ቋንቋ ከታችኛው በላይ",
+  "Top line": "የላይኛው መስመር",
+  "Bottom line": "የታችኛው መስመር",
+  "Save the subtitle files beside the video as SRT": "የትርጉም ጽሑፍ ፋይሎችን ከቪዲዮው አጠገብ እንደ SRT አስቀምጥ",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM የትርጉም ጽሑፍ መያዝ ስለማይችል ቪዲዮው እንደ MKV ይቀመጣል"
 }

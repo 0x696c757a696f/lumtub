@@ -3547,5 +3547,14 @@
   "Fill the window": "ウィンドウいっぱいに表示",
   "Fill the window (W)": "ウィンドウいっぱいに表示 (W)",
   "Hide the side rail while watching": "視聴中はサイドバーを隠す",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube と同じように動画に広い場所を譲ります。シアターモードでは常に隠れます"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube と同じように動画に広い場所を譲ります。シアターモードでは常に隠れます",
+  "Reading subtitles…": "字幕を読み込み中…",
+  "Subtitles inside the video": "動画に埋め込む字幕",
+  "Translate into…": "翻訳先…",
+  "Bilingual subtitles": "二言語字幕",
+  "One more track with two lines: the top language over the bottom one": "上下2行の字幕トラックをもう1つ追加：上の行に上の言語、下の行に下の言語",
+  "Top line": "上の行",
+  "Bottom line": "下の行",
+  "Save the subtitle files beside the video as SRT": "字幕ファイルを動画と同じ場所にSRTとして保存",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebMには字幕を含められないため、動画はMKVで保存されます"
 }

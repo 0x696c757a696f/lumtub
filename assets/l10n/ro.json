@@ -3542,5 +3542,14 @@
   "Fill the window": "Umple fereastra",
   "Fill the window (W)": "Umple fereastra (W)",
   "Hide the side rail while watching": "Ascunde bara laterală în timpul vizionării",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Videoclipul primește spațiul său, ca pe YouTube; modul cinema o ascunde mereu"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Videoclipul primește spațiul său, ca pe YouTube; modul cinema o ascunde mereu",
+  "Reading subtitles…": "Se citesc subtitrările…",
+  "Subtitles inside the video": "Subtitrări în videoclip",
+  "Translate into…": "Tradu în…",
+  "Bilingual subtitles": "Subtitrări bilingve",
+  "One more track with two lines: the top language over the bottom one": "Încă o pistă cu două rânduri: limba de sus deasupra celei de jos",
+  "Top line": "Rândul de sus",
+  "Bottom line": "Rândul de jos",
+  "Save the subtitle files beside the video as SRT": "Salvează fișierele de subtitrări lângă videoclip ca SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM nu poate conține subtitrări, așa că videoclipul se salvează ca MKV"
 }

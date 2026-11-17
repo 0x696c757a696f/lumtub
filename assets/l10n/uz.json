@@ -3542,5 +3542,14 @@
   "Fill the window": "Oynani to‘ldirish",
   "Fill the window (W)": "Oynani to‘ldirish (W)",
   "Hide the side rail while watching": "Tomosha paytida yon panelni yashirish",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video YouTube’dagidek o‘z joyini oladi; kinoteatr rejimi uni doim yashiradi"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video YouTube’dagidek o‘z joyini oladi; kinoteatr rejimi uni doim yashiradi",
+  "Reading subtitles…": "Taglavhalar o'qilmoqda…",
+  "Subtitles inside the video": "Video ichidagi taglavhalar",
+  "Translate into…": "Tarjima qilish…",
+  "Bilingual subtitles": "Ikki tilli taglavhalar",
+  "One more track with two lines: the top language over the bottom one": "Ikki qatorli yana bitta trek: yuqoridagi til pastdagi til ustida",
+  "Top line": "Yuqori qator",
+  "Bottom line": "Pastki qator",
+  "Save the subtitle files beside the video as SRT": "Taglavha fayllarini video yoniga SRT sifatida saqlash",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM taglavhalarni saqlay olmaydi, shuning uchun video MKV sifatida saqlanadi"
 }

@@ -3542,5 +3542,14 @@
   "Fill the window": "Encher a xanela",
   "Fill the window (W)": "Encher a xanela (W)",
   "Hide the side rail while watching": "Ocultar a barra lateral mentres miras",
-  "The video gets its room, as on YouTube; theater mode always hides it": "O vídeo gaña espazo, como en YouTube; o modo cine sempre a oculta"
+  "The video gets its room, as on YouTube; theater mode always hides it": "O vídeo gaña espazo, como en YouTube; o modo cine sempre a oculta",
+  "Reading subtitles…": "Lendo os subtítulos…",
+  "Subtitles inside the video": "Subtítulos dentro do vídeo",
+  "Translate into…": "Traducir a…",
+  "Bilingual subtitles": "Subtítulos bilingües",
+  "One more track with two lines: the top language over the bottom one": "Unha pista máis con dúas liñas: o idioma de arriba sobre o de abaixo",
+  "Top line": "Liña superior",
+  "Bottom line": "Liña inferior",
+  "Save the subtitle files beside the video as SRT": "Gardar os ficheiros de subtítulos xunto ao vídeo como SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM non pode conter subtítulos, así que o vídeo gárdase como MKV"
 }

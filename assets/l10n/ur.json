@@ -3542,5 +3542,14 @@
   "Fill the window": "ونڈو بھریں",
   "Fill the window (W)": "ونڈو بھریں (W)",
   "Hide the side rail while watching": "دیکھتے وقت سائڈ بار چھپائیں",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube کی طرح ویڈیو کو اس کی جگہ ملتی ہے؛ تھیٹر موڈ میں یہ ہمیشہ چھپی رہتی ہے"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube کی طرح ویڈیو کو اس کی جگہ ملتی ہے؛ تھیٹر موڈ میں یہ ہمیشہ چھپی رہتی ہے",
+  "Reading subtitles…": "سب ٹائٹلز پڑھے جا رہے ہیں…",
+  "Subtitles inside the video": "ویڈیو کے اندر سب ٹائٹلز",
+  "Translate into…": "اس میں ترجمہ کریں…",
+  "Bilingual subtitles": "دو لسانی سب ٹائٹلز",
+  "One more track with two lines: the top language over the bottom one": "دو لائنوں والا ایک اور ٹریک: اوپر کی زبان نیچے کی زبان کے اوپر",
+  "Top line": "اوپر کی لائن",
+  "Bottom line": "نیچے کی لائن",
+  "Save the subtitle files beside the video as SRT": "سب ٹائٹل فائلیں ویڈیو کے ساتھ SRT کے طور پر محفوظ کریں",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM سب ٹائٹلز نہیں رکھ سکتا، اس لیے ویڈیو MKV کے طور پر محفوظ ہوگی"
 }

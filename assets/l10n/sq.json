@@ -3542,5 +3542,14 @@
   "Fill the window": "Mbushe dritaren",
   "Fill the window (W)": "Mbushe dritaren (W)",
   "Hide the side rail while watching": "Fshih shiritin anësor gjatë shikimit",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Videoja merr hapësirën e vet, si në YouTube; modaliteti kinema e fsheh gjithmonë"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Videoja merr hapësirën e vet, si në YouTube; modaliteti kinema e fsheh gjithmonë",
+  "Reading subtitles…": "Po lexohen titrat…",
+  "Subtitles inside the video": "Titrat brenda videos",
+  "Translate into…": "Përkthe në…",
+  "Bilingual subtitles": "Titra dygjuhëshe",
+  "One more track with two lines: the top language over the bottom one": "Edhe një pistë me dy rreshta: gjuha e sipërme mbi atë të poshtmen",
+  "Top line": "Rreshti i sipërm",
+  "Bottom line": "Rreshti i poshtëm",
+  "Save the subtitle files beside the video as SRT": "Ruaji skedarët e titrave pranë videos si SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM nuk mund të përmbajë titra, prandaj videoja ruhet si MKV"
 }

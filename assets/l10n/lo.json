@@ -3542,5 +3542,14 @@
   "Fill the window": "ເຕັມໜ້າຕ່າງ",
   "Fill the window (W)": "ເຕັມໜ້າຕ່າງ (W)",
   "Hide the side rail while watching": "ເຊື່ອງແຖບຂ້າງເວລາເບິ່ງ",
-  "The video gets its room, as on YouTube; theater mode always hides it": "ວິດີໂອໄດ້ພື້ນທີ່ຂອງມັນ ຄືກັບ YouTube; ໂໝດໂຮງໜັງຈະເຊື່ອງມັນສະເໝີ"
+  "The video gets its room, as on YouTube; theater mode always hides it": "ວິດີໂອໄດ້ພື້ນທີ່ຂອງມັນ ຄືກັບ YouTube; ໂໝດໂຮງໜັງຈະເຊື່ອງມັນສະເໝີ",
+  "Reading subtitles…": "ກຳລັງອ່ານຄຳບັນຍາຍ…",
+  "Subtitles inside the video": "ຄຳບັນຍາຍໃນວິດີໂອ",
+  "Translate into…": "ແປເປັນ…",
+  "Bilingual subtitles": "ຄຳບັນຍາຍສອງພາສາ",
+  "One more track with two lines: the top language over the bottom one": "ແທຣັກເພີ່ມອີກອັນທີ່ມີສອງແຖວ: ພາສາເທິງຢູ່ເໜືອພາສາລຸ່ມ",
+  "Top line": "ແຖວເທິງ",
+  "Bottom line": "ແຖວລຸ່ມ",
+  "Save the subtitle files beside the video as SRT": "ບັນທຶກໄຟລ໌ຄຳບັນຍາຍໄວ້ຂ້າງວິດີໂອເປັນ SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ບໍ່ສາມາດໃສ່ຄຳບັນຍາຍໄດ້ ດັ່ງນັ້ນວິດີໂອຈະຖືກບັນທຶກເປັນ MKV"
 }

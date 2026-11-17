@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import '../downloads/download_formats.dart';
 import '../downloads/download_models.dart';
 import '../downloads/download_selection.dart';
+import '../downloads/download_subtitles.dart';
 import '../l10n/l10n.dart';
+import '../models.dart';
+import '../translation.dart';
 import '../video_codec.dart';
 import 'common.dart';
 import 'theme.dart';
@@ -24,9 +27,22 @@ class DownloadChoice {
 /// Lets the user pick the codec, height and container of a download from the
 /// formats the video really has.
 class DownloadDialog extends StatefulWidget {
-  const DownloadDialog({super.key, required this.title, required this.loadFormats, this.defaults = const DownloadDefaults(), this.onCover, this.onSubtitles});
+  const DownloadDialog({
+    super.key,
+    required this.title,
+    required this.loadFormats,
+    this.loadSubtitles,
+    this.subtitleLanguages = const [],
+    this.defaults = const DownloadDefaults(),
+    this.onCover,
+    this.onSubtitles,
+  });
   final String title;
   final Future<DownloadFormats> Function() loadFormats;
+  /// The subtitles that can go inside the video; null offers none.
+  final Future<SubtitleChoices> Function()? loadSubtitles;
+  /// The languages picked first: 第一字幕语言, then the second subtitle's.
+  final List<TranslationLanguage> subtitleLanguages;
   final DownloadDefaults defaults;
   /// Saves just the cover or a subtitle instead; the dialog closes first.
   final VoidCallback? onCover;
@@ -50,6 +66,17 @@ class _DownloadDialogState extends State<DownloadDialog> {
   DownloadContainer _container = DownloadContainer.auto;
   String? _containerNote;
 
+  /// The video's subtitles, null while they are read or when they cannot be.
+  SubtitleChoices? _subtitles;
+  bool _subtitlesFailed = false;
+  /// Every subtitle offered: the video's own, then translations.
+  final List<SubtitleOption> _offered = [];
+  final Set<SubtitlePick> _tracks = {};
+  bool _bilingual = false;
+  SubtitlePick? _top;
+  SubtitlePick? _bottom;
+  bool _srt = false;
+
   @override
   void initState() {
     super.initState();
@@ -63,7 +90,74 @@ class _DownloadDialogState extends State<DownloadDialog> {
     }).catchError((Object e) {
       if (mounted) setState(() => _error = e);
     });
+    widget.loadSubtitles?.call().then((choices) {
+      if (mounted) setState(() => _applySubtitles(choices));
+    }).catchError((Object _) {
+      if (mounted) setState(() => _subtitlesFailed = true);
+    });
   }
+
+  /// Offers [choices], with the picks remembered from last time in the
+  /// languages they were in, else 第一字幕语言.
+  void _applySubtitles(SubtitleChoices choices) {
+    _subtitles = choices;
+    _offered.addAll(choices.own);
+    for (final target in widget.subtitleLanguages) {
+      if (choices.own.any((o) => SubtitleChoices.targetOf(o.language) == target)) continue;
+      final translation = choices.translation(target);
+      if (translation != null) _offer(translation);
+    }
+    SubtitlePick? find(String language) {
+      final option = choices.inLanguage(language);
+      if (option == null) return null;
+      _offer(option);
+      return SubtitlePick.of(option);
+    }
+
+    final remembered = widget.defaults.subtitles;
+    if (remembered != null) {
+      for (final pick in remembered.tracks) {
+        final found = find(pick.language);
+        if (found != null) _tracks.add(found);
+      }
+      _srt = remembered.srt;
+      if (remembered.bilingual) {
+        _top = find(remembered.top!.language);
+        _bottom = find(remembered.bottom!.language);
+        _bilingual = _top != null && _bottom != null && _top != _bottom;
+      }
+    } else if (widget.subtitleLanguages.isNotEmpty) {
+      final first = find(widget.subtitleLanguages.first.youtube);
+      if (first != null) _tracks.add(first);
+    }
+    // 第一字幕语言 over the language spoken.
+    if (widget.subtitleLanguages.isNotEmpty) _top ??= find(widget.subtitleLanguages.first.youtube);
+    _top ??= _offered.isEmpty ? null : SubtitlePick.of(_offered.first);
+    _bottom ??= _bottomFor(_top);
+  }
+
+  /// A line under [top]: the video's own language, else the second
+  /// subtitle language, else anything else.
+  SubtitlePick? _bottomFor(SubtitlePick? top) {
+    final original = _subtitles?.original;
+    final candidates = [
+      if (original != null) SubtitlePick.of(original),
+      for (final target in widget.subtitleLanguages.skip(1))
+        if (_offered.where((o) => SubtitleChoices.targetOf(o.language) == target).firstOrNull case final o?) SubtitlePick.of(o),
+      for (final o in _offered) SubtitlePick.of(o),
+    ];
+    return candidates.where((p) => p != top && (top == null || SubtitleChoices.targetOf(p.language) != SubtitleChoices.targetOf(top.language) || SubtitleChoices.targetOf(p.language) == null)).firstOrNull ??
+        candidates.where((p) => p != top).firstOrNull;
+  }
+
+  void _offer(SubtitleOption option) {
+    if (!_offered.any((o) => o.language == option.language && o.kind == option.kind)) _offered.add(option);
+  }
+
+  /// What goes inside the file, null when nothing was offered.
+  DownloadSubtitles? get _pickedSubtitles => _subtitles == null || _offered.isEmpty
+      ? null
+      : DownloadSubtitles(tracks: [for (final o in _offered) if (_tracks.contains(SubtitlePick.of(o))) SubtitlePick.of(o)], top: _bilingual ? _top : null, bottom: _bilingual ? _bottom : null, srt: _srt);
 
   void _applyDefaults(DownloadFormats formats) {
     final d = widget.defaults;
@@ -119,11 +213,18 @@ class _DownloadDialogState extends State<DownloadDialog> {
         codec: _audioOnly ? DownloadDefaults.audioOnly : _codec?.name ?? DownloadDefaults.auto,
         height: _wantedHeight,
         container: _container,
+        subtitles: _pickedSubtitles ?? widget.defaults.subtitles,
       );
+
+  /// [selection] with the subtitles picked.
+  DownloadSelection _withSubtitles(DownloadSelection selection) {
+    final picked = _pickedSubtitles;
+    return picked == null || selection.audioOnly ? selection : selection.withSubtitles(picked);
+  }
 
   void _submit(DownloadSelection selection) => Navigator.pop(
         context,
-        DownloadChoice(selection.audioOnly ? DownloadQuality.audio : DownloadQuality.best, selection: selection, defaults: _remember),
+        DownloadChoice(selection.audioOnly ? DownloadQuality.audio : DownloadQuality.best, selection: _withSubtitles(selection), defaults: _remember),
       );
 
   @override
@@ -222,8 +323,92 @@ class _DownloadDialogState extends State<DownloadDialog> {
             ),
         if (_containerNote != null) Padding(padding: const EdgeInsets.only(top: 4), child: Text(_containerNote!, style: context.text.bodySmall)),
       ],
+      if (!_audioOnly && widget.loadSubtitles != null) ...[
+        const SizedBox(height: 12),
+        _subtitleSection(context),
+      ],
       const SizedBox(height: 16),
-      if (plan?.selection != null) Text(_summary(plan!.selection!), style: context.text.titleSmall),
+      if (plan?.selection != null) Text(_summary(_withSubtitles(plan!.selection!)), style: context.text.titleSmall),
+    ]);
+  }
+
+  /// The subtitles put inside the video: tracks to switch between, a
+  /// bilingual track, and the file type of the copies kept beside it.
+  Widget _subtitleSection(BuildContext context) {
+    final choices = _subtitles;
+    if (choices == null || _offered.isEmpty) {
+      final note = _subtitlesFailed ? tr("Couldn't read the subtitle list") : choices == null ? tr('Reading subtitles…') : tr('This video has no subtitles');
+      return _section(context, tr('Subtitles'), [Text(note, style: context.text.bodySmall)]);
+    }
+    final translatable = [for (final l in TranslationLanguage.all) if (!_offered.any((o) => SubtitleChoices.targetOf(o.language) == l)) l];
+    Widget pairMenu(String label, SubtitlePick? value, ValueChanged<SubtitlePick> onPicked) => Row(children: [
+          SizedBox(width: 72, child: Text(label, style: context.text.bodyMedium)),
+          Expanded(
+            child: DropdownButton<SubtitlePick>(
+              isExpanded: true,
+              value: value != null && _offered.any(value.matches) ? value : null,
+              items: [for (final o in _offered) DropdownMenuItem(value: SubtitlePick.of(o), child: Text(SubtitleChoices.labelOf(o), overflow: TextOverflow.ellipsis))],
+              onChanged: (p) {
+                if (p != null) setState(() => onPicked(p));
+              },
+            ),
+          ),
+        ]);
+    final picked = _pickedSubtitles;
+    final plan = _plan?.selection;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _section(context, tr('Subtitles inside the video'), [
+        for (final o in _offered)
+          FilterChip(
+            label: Text(SubtitleChoices.labelOf(o)),
+            selected: _tracks.contains(SubtitlePick.of(o)),
+            onSelected: (on) => setState(() => on ? _tracks.add(SubtitlePick.of(o)) : _tracks.remove(SubtitlePick.of(o))),
+          ),
+        if (translatable.isNotEmpty)
+          PopupMenuButton<TranslationLanguage>(
+            tooltip: tr('Translate into…'),
+            itemBuilder: (context) => [for (final l in translatable) PopupMenuItem(value: l, child: Text(l.label))],
+            onSelected: (target) {
+              final option = choices.translation(target);
+              if (option == null) return;
+              setState(() {
+                _offer(option);
+                _tracks.add(SubtitlePick.of(option));
+              });
+            },
+            child: Chip(avatar: Icon(AppIcons.translate, size: 16), label: Text(tr('Translate into…'))),
+          ),
+      ]),
+      const SizedBox(height: 4),
+      SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        dense: true,
+        title: Text(tr('Bilingual subtitles')),
+        subtitle: Text(tr('One more track with two lines: the top language over the bottom one')),
+        value: _bilingual,
+        onChanged: _offered.length < 2 ? null : (on) => setState(() => _bilingual = on),
+      ),
+      if (_bilingual) ...[
+        pairMenu(tr('Top line'), _top, (p) {
+          _top = p;
+          if (_bottom == p) _bottom = _bottomFor(p);
+        }),
+        pairMenu(tr('Bottom line'), _bottom, (p) {
+          _bottom = p;
+          if (_top == p) _top = _bottomFor(p);
+        }),
+      ],
+      if (picked != null && !picked.isEmpty) ...[
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          controlAffinity: ListTileControlAffinity.leading,
+          title: Text(tr('Save the subtitle files beside the video as SRT')),
+          value: _srt,
+          onChanged: (on) => setState(() => _srt = on ?? false),
+        ),
+        if (plan?.container == DownloadContainer.webm) Text(tr('WebM cannot hold subtitles, so the video is saved as MKV'), style: context.text.bodySmall),
+      ],
     ]);
   }
 

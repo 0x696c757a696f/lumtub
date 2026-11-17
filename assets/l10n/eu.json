@@ -3542,5 +3542,14 @@
   "Fill the window": "Bete leihoa",
   "Fill the window (W)": "Bete leihoa (W)",
   "Hide the side rail while watching": "Ezkutatu alboko barra ikusten ari zarenean",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Bideoak bere lekua hartzen du, YouTuben bezala; zinema moduak beti ezkutatzen du"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Bideoak bere lekua hartzen du, YouTuben bezala; zinema moduak beti ezkutatzen du",
+  "Reading subtitles…": "Azpitituluak irakurtzen…",
+  "Subtitles inside the video": "Bideoaren barruko azpitituluak",
+  "Translate into…": "Itzuli honetara…",
+  "Bilingual subtitles": "Bi hizkuntzatako azpitituluak",
+  "One more track with two lines: the top language over the bottom one": "Beste pista bat bi lerrokin: goiko hizkuntza beheko hizkuntzaren gainean",
+  "Top line": "Goiko lerroa",
+  "Bottom line": "Beheko lerroa",
+  "Save the subtitle files beside the video as SRT": "Gorde azpitituluen fitxategiak bideoaren ondoan SRT gisa",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM formatuak ezin ditu azpitituluak eduki; beraz, bideoa MKV gisa gordeko da"
 }

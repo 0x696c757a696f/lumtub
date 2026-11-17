@@ -85,6 +85,10 @@ pub struct Text {
     pub language: String,
     #[serde(default)]
     pub name: String,
+    /// Each cue's lines kept apart, as in a bilingual track, instead of
+    /// joined into one.
+    #[serde(default)]
+    pub lines: bool,
 }
 
 /// What a joined file carries besides picture and sound.
@@ -118,7 +122,7 @@ impl Extra {
             .filter_map(|t| {
                 let source = std::fs::read(&t.path).ok()?;
                 let cues: Vec<(u64, u64, String)> =
-                    crate::subtitles::cues(&String::from_utf8_lossy(&source))
+                    crate::subtitles::cues_in(&String::from_utf8_lossy(&source), t.lines)
                         .into_iter()
                         .map(|c| (c.start, c.end, c.text))
                         .collect();
@@ -199,7 +203,7 @@ pub fn join(
     result?;
     if !cuts.is_empty() {
         for text in &extra.subtitles {
-            shift_file(&text.path, &cuts);
+            shift_file(&text.path, text.lines, &cuts);
         }
     }
     Ok(Joined { path: out, cut })
@@ -207,14 +211,15 @@ pub fn join(
 
 /// Rewrites the subtitle file at `path` (kept beside the joined file) with
 /// its lines moved past what `cuts` left out, as WebVTT or, for `.srt`, SRT.
-fn shift_file(path: &str, cuts: &crate::cast::Cuts) {
+fn shift_file(path: &str, lines: bool, cuts: &crate::cast::Cuts) {
     let Ok(source) = std::fs::read(path) else {
         return;
     };
-    let cues: Vec<(u64, u64, String)> = crate::subtitles::cues(&String::from_utf8_lossy(&source))
-        .into_iter()
-        .map(|c| (c.start, c.end, c.text))
-        .collect();
+    let cues: Vec<(u64, u64, String)> =
+        crate::subtitles::cues_in(&String::from_utf8_lossy(&source), lines)
+            .into_iter()
+            .map(|c| (c.start, c.end, c.text))
+            .collect();
     if cues.is_empty() {
         return;
     }
@@ -294,16 +299,19 @@ mod tests {
                     path: format!("{dir}/en.vtt"),
                     language: "en".into(),
                     name: "English".into(),
+                    lines: false,
                 },
                 Text {
                     path: format!("{dir}/de.srt"),
                     language: "de".into(),
                     name: "Deutsch".into(),
+                    lines: false,
                 },
                 Text {
                     path: format!("{dir}/missing.vtt"),
                     language: "fr".into(),
                     name: String::new(),
+                    lines: false,
                 },
             ],
             title: Some("A title".into()),
@@ -319,17 +327,24 @@ mod tests {
         let cuts = crate::cast::Cuts::snap(&[(2.0, 6.0)], &[0, 2000, 4000, 6000, 8000]);
         let vtt = dir.join("a.en.vtt").to_string_lossy().into_owned();
         std::fs::write(&vtt, "WEBVTT\n\n00:00:01.000 --> 00:00:01.500\nBefore\n\n00:00:03.000 --> 00:00:04.000\nCut\n\n00:00:07.000 --> 00:00:08.000\nAfter\n").unwrap();
-        shift_file(&vtt, &cuts);
+        shift_file(&vtt, false, &cuts);
         assert_eq!(
             std::fs::read_to_string(&vtt).unwrap(),
             "WEBVTT\n\n00:00:01.000 --> 00:00:01.500\nBefore\n\n00:00:03.000 --> 00:00:04.000\nAfter\n\n"
         );
         let srt = dir.join("a.de.srt").to_string_lossy().into_owned();
         std::fs::write(&srt, "1\n00:00:07,250 --> 00:00:09,000\nNach\n").unwrap();
-        shift_file(&srt, &cuts);
+        shift_file(&srt, false, &cuts);
         assert_eq!(
             std::fs::read_to_string(&srt).unwrap(),
             "1\n00:00:03,250 --> 00:00:05,000\nNach\n\n"
+        );
+        let two = dir.join("a.zh-Hans+en.srt").to_string_lossy().into_owned();
+        std::fs::write(&two, "1\n00:00:07,000 --> 00:00:08,000\n之后\nAfter\n").unwrap();
+        shift_file(&two, true, &cuts);
+        assert_eq!(
+            std::fs::read_to_string(&two).unwrap(),
+            "1\n00:00:03,000 --> 00:00:04,000\n之后\nAfter\n\n"
         );
         let _ = std::fs::remove_dir_all(&dir);
     }

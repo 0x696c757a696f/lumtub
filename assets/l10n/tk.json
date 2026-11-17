@@ -3542,5 +3542,14 @@
   "Fill the window": "Penjiräni doldur",
   "Fill the window (W)": "Penjiräni doldur (W)",
   "Hide the side rail while watching": "Tomaşa edilende gapdal paneli gizle",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Wideo YouTube-daky ýaly öz ýerini alýar; teatr režimi ony hemişe gizleýär"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Wideo YouTube-daky ýaly öz ýerini alýar; teatr režimi ony hemişe gizleýär",
+  "Reading subtitles…": "Subtitrler okalýar…",
+  "Subtitles inside the video": "Wideonyň içindäki subtitrler",
+  "Translate into…": "Terjime et…",
+  "Bilingual subtitles": "Iki dilli subtitrler",
+  "One more track with two lines: the top language over the bottom one": "Iki setirli ýene bir ýol: ýokarky dil aşakky diliň üstünde",
+  "Top line": "Ýokarky setir",
+  "Bottom line": "Aşakky setir",
+  "Save the subtitle files beside the video as SRT": "Subtitr faýllaryny wideonyň ýanynda SRT hökmünde sakla",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM subtitrleri saklap bilmeýär, şonuň üçin wideo MKV hökmünde saklanýar"
 }

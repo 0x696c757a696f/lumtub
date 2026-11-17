@@ -3542,5 +3542,14 @@
   "Fill the window": "መስኮት ምላእ",
   "Fill the window (W)": "መስኮት ምላእ (W)",
   "Hide the side rail while watching": "ኣብ እዋን ምርኣይ ጎኒ መስርዕ ሕባእ",
-  "The video gets its room, as on YouTube; theater mode always hides it": "ቪድዮ ቦታኡ ይረክብ፣ ከምቲ ኣብ YouTube፤ ሲኒማዊ ኩነታት ኩሉ ግዜ የሕብኦ"
+  "The video gets its room, as on YouTube; theater mode always hides it": "ቪድዮ ቦታኡ ይረክብ፣ ከምቲ ኣብ YouTube፤ ሲኒማዊ ኩነታት ኩሉ ግዜ የሕብኦ",
+  "Reading subtitles…": "ትርጉም ጽሑፍ ይንበብ ኣሎ…",
+  "Subtitles inside the video": "ኣብ ውሽጢ ቪድዮ ዘሎ ትርጉም ጽሑፍ",
+  "Translate into…": "ናብ… ተርጉም",
+  "Bilingual subtitles": "ክልተ ቋንቋ ትርጉም ጽሑፍ",
+  "One more track with two lines: the top language over the bottom one": "ሓደ ተወሳኺ ትራክ ክልተ መስመር ዘለዎ: ላዕለዋይ ቋንቋ ኣብ ልዕሊ ታሕተዋይ",
+  "Top line": "ላዕለዋይ መስመር",
+  "Bottom line": "ታሕተዋይ መስመር",
+  "Save the subtitle files beside the video as SRT": "ፋይላት ትርጉም ጽሑፍ ጥቓ ቪድዮ ከም SRT ኣቐምጥ",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ትርጉም ጽሑፍ ክሕዝ ስለዘይክእል ቪድዮ ከም MKV ይቕመጥ"
 }

@@ -3542,5 +3542,14 @@
   "Fill the window": "Užpildyti langą",
   "Fill the window (W)": "Užpildyti langą (W)",
   "Hide the side rail while watching": "Slėpti šoninę juostą žiūrint",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Vaizdo įrašas gauna savo vietą kaip „YouTube“; kino teatro režimu juosta visada paslėpta"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Vaizdo įrašas gauna savo vietą kaip „YouTube“; kino teatro režimu juosta visada paslėpta",
+  "Reading subtitles…": "Skaitomi subtitrai…",
+  "Subtitles inside the video": "Subtitrai vaizdo įraše",
+  "Translate into…": "Versti į…",
+  "Bilingual subtitles": "Dvikalbiai subtitrai",
+  "One more track with two lines: the top language over the bottom one": "Dar vienas takelis su dviem eilutėmis: viršutinė kalba virš apatinės",
+  "Top line": "Viršutinė eilutė",
+  "Bottom line": "Apatinė eilutė",
+  "Save the subtitle files beside the video as SRT": "Išsaugoti subtitrų failus šalia vaizdo įrašo kaip SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM negali talpinti subtitrų, todėl vaizdo įrašas bus išsaugotas kaip MKV"
 }

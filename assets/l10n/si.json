@@ -3542,5 +3542,14 @@
   "Fill the window": "කවුළුව පුරවන්න",
   "Fill the window (W)": "කවුළුව පුරවන්න (W)",
   "Hide the side rail while watching": "නරඹන විට පැති තීරුව සඟවන්න",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube හි මෙන් වීඩියෝවට එහි ඉඩ ලැබේ; සිනමා ප්‍රකාරයේදී එය සැමවිටම සැඟවේ"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube හි මෙන් වීඩියෝවට එහි ඉඩ ලැබේ; සිනමා ප්‍රකාරයේදී එය සැමවිටම සැඟවේ",
+  "Reading subtitles…": "උපසිරැසි කියවමින්…",
+  "Subtitles inside the video": "වීඩියෝව තුළ ඇති උපසිරැසි",
+  "Translate into…": "මෙයට පරිවර්තනය කරන්න…",
+  "Bilingual subtitles": "ද්විභාෂා උපසිරැසි",
+  "One more track with two lines: the top language over the bottom one": "පේළි දෙකක් සහිත තවත් ධාවන පථයක්: ඉහළ භාෂාව පහළ භාෂාවට ඉහළින්",
+  "Top line": "ඉහළ පේළිය",
+  "Bottom line": "පහළ පේළිය",
+  "Save the subtitle files beside the video as SRT": "උපසිරැසි ගොනු වීඩියෝව අසල SRT ලෙස සුරකින්න",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM හට උපසිරැසි ඇතුළත් කළ නොහැකි බැවින් වීඩියෝව MKV ලෙස සුරකිනු ලැබේ"
 }

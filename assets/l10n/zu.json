@@ -3542,5 +3542,14 @@
   "Fill the window": "Gcwalisa iwindi",
   "Fill the window (W)": "Gcwalisa iwindi (W)",
   "Hide the side rail while watching": "Fihla ibha eseceleni ngenkathi ubukela",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Ividiyo ithola isikhala sayo, njengoba kwenza ku-YouTube; imodi yetiyetha ihlala iyifihla"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Ividiyo ithola isikhala sayo, njengoba kwenza ku-YouTube; imodi yetiyetha ihlala iyifihla",
+  "Reading subtitles…": "Ifunda amagama-ngezansi…",
+  "Subtitles inside the video": "Amagama-ngezansi aphakathi kwevidiyo",
+  "Translate into…": "Humusha ku-…",
+  "Bilingual subtitles": "Amagama-ngezansi ezilimi ezimbili",
+  "One more track with two lines: the top language over the bottom one": "Ithrekhi eyodwa eyengeziwe enemigqa emibili: ulimi olungaphezulu ngaphezu kolungezansi",
+  "Top line": "Umugqa ongaphezulu",
+  "Bottom line": "Umugqa ongezansi",
+  "Save the subtitle files beside the video as SRT": "Londoloza amafayela amagama-ngezansi eduze kwevidiyo njenge-SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "I-WebM ayikwazi ukuphatha amagama-ngezansi, ngakho ividiyo ilondolozwa njenge-MKV"
 }

@@ -3542,5 +3542,14 @@
   "Fill the window": "Vul die venster",
   "Fill the window (W)": "Vul die venster (W)",
   "Hide the side rail while watching": "Versteek die systrook terwyl jy kyk",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Die video kry sy ruimte, soos op YouTube; teatermodus versteek dit altyd"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Die video kry sy ruimte, soos op YouTube; teatermodus versteek dit altyd",
+  "Reading subtitles…": "Onderskrifte word gelees…",
+  "Subtitles inside the video": "Onderskrifte in die video",
+  "Translate into…": "Vertaal na…",
+  "Bilingual subtitles": "Tweetalige onderskrifte",
+  "One more track with two lines: the top language over the bottom one": "Nog 'n snit met twee reëls: die boonste taal bo die onderste een",
+  "Top line": "Boonste reël",
+  "Bottom line": "Onderste reël",
+  "Save the subtitle files beside the video as SRT": "Stoor die onderskriflêers langs die video as SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM kan nie onderskrifte bevat nie, daarom word die video as MKV gestoor"
 }

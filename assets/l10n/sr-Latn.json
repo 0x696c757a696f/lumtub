@@ -3542,5 +3542,14 @@
   "Fill the window": "Popuni prozor",
   "Fill the window (W)": "Popuni prozor (W)",
   "Hide the side rail while watching": "Sakrij bočnu traku tokom gledanja",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video dobija svoj prostor, kao na YouTube-u; u režimu bioskopa je traka uvek skrivena"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video dobija svoj prostor, kao na YouTube-u; u režimu bioskopa je traka uvek skrivena",
+  "Reading subtitles…": "Čitanje titlova…",
+  "Subtitles inside the video": "Titlovi unutar videa",
+  "Translate into…": "Prevedi na…",
+  "Bilingual subtitles": "Dvojezični titlovi",
+  "One more track with two lines: the top language over the bottom one": "Još jedna traka sa dva reda: gornji jezik iznad donjeg",
+  "Top line": "Gornji red",
+  "Bottom line": "Donji red",
+  "Save the subtitle files beside the video as SRT": "Sačuvaj datoteke titlova pored videa kao SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ne može da sadrži titlove, pa se video čuva kao MKV"
 }

@@ -3542,5 +3542,14 @@
   "Fill the window": "Ablak kitöltése",
   "Fill the window (W)": "Ablak kitöltése (W)",
   "Hide the side rail while watching": "Oldalsáv elrejtése nézés közben",
-  "The video gets its room, as on YouTube; theater mode always hides it": "A videó megkapja a helyét, mint a YouTube-on; mozi módban az oldalsáv mindig el van rejtve"
+  "The video gets its room, as on YouTube; theater mode always hides it": "A videó megkapja a helyét, mint a YouTube-on; mozi módban az oldalsáv mindig el van rejtve",
+  "Reading subtitles…": "Feliratok beolvasása…",
+  "Subtitles inside the video": "Videóba ágyazott feliratok",
+  "Translate into…": "Fordítás erre…",
+  "Bilingual subtitles": "Kétnyelvű feliratok",
+  "One more track with two lines: the top language over the bottom one": "Még egy kétsoros sáv: a felső nyelv az alsó fölött",
+  "Top line": "Felső sor",
+  "Bottom line": "Alsó sor",
+  "Save the subtitle files beside the video as SRT": "A feliratfájlok mentése a videó mellé SRT-ként",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "A WebM nem tud feliratokat tartalmazni, ezért a videó MKV-ként lesz mentve"
 }

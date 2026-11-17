@@ -3547,5 +3547,14 @@
   "Fill the window": "Remplir la fenêtre",
   "Fill the window (W)": "Remplir la fenêtre (W)",
   "Hide the side rail while watching": "Masquer la barre latérale pendant la lecture",
-  "The video gets its room, as on YouTube; theater mode always hides it": "La vidéo prend toute la place, comme sur YouTube ; le mode cinéma la masque toujours"
+  "The video gets its room, as on YouTube; theater mode always hides it": "La vidéo prend toute la place, comme sur YouTube ; le mode cinéma la masque toujours",
+  "Reading subtitles…": "Lecture des sous-titres…",
+  "Subtitles inside the video": "Sous-titres dans la vidéo",
+  "Translate into…": "Traduire en…",
+  "Bilingual subtitles": "Sous-titres bilingues",
+  "One more track with two lines: the top language over the bottom one": "Une piste supplémentaire à deux lignes : la langue du haut au-dessus de celle du bas",
+  "Top line": "Ligne du haut",
+  "Bottom line": "Ligne du bas",
+  "Save the subtitle files beside the video as SRT": "Enregistrer les fichiers de sous-titres à côté de la vidéo au format SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ne peut pas contenir de sous-titres, la vidéo est donc enregistrée au format MKV"
 }

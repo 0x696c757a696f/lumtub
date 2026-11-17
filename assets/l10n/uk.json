@@ -3547,5 +3547,14 @@
   "Fill the window": "Заповнити вікно",
   "Fill the window (W)": "Заповнити вікно (W)",
   "Hide the side rail while watching": "Ховати бічну панель під час перегляду",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Відео отримує своє місце, як на YouTube; режим кінотеатру завжди її ховає"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Відео отримує своє місце, як на YouTube; режим кінотеатру завжди її ховає",
+  "Reading subtitles…": "Читання субтитрів…",
+  "Subtitles inside the video": "Субтитри всередині відео",
+  "Translate into…": "Перекласти…",
+  "Bilingual subtitles": "Двомовні субтитри",
+  "One more track with two lines: the top language over the bottom one": "Ще одна доріжка з двома рядками: верхня мова над нижньою",
+  "Top line": "Верхній рядок",
+  "Bottom line": "Нижній рядок",
+  "Save the subtitle files beside the video as SRT": "Зберегти файли субтитрів поруч із відео у форматі SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM не може містити субтитри, тому відео буде збережено у форматі MKV"
 }

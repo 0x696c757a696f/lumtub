@@ -3542,5 +3542,14 @@
   "Fill the window": "Исполни го прозорецот",
   "Fill the window (W)": "Исполни го прозорецот (W)",
   "Hide the side rail while watching": "Скриј ја страничната лента при гледање",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Видеото го добива својот простор, како на YouTube; театарскиот режим секогаш ја крие"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Видеото го добива својот простор, како на YouTube; театарскиот режим секогаш ја крие",
+  "Reading subtitles…": "Читање на титлови…",
+  "Subtitles inside the video": "Титлови во видеото",
+  "Translate into…": "Преведи на…",
+  "Bilingual subtitles": "Двојазични титлови",
+  "One more track with two lines: the top language over the bottom one": "Уште една патека со два реда: горниот јазик над долниот",
+  "Top line": "Горен ред",
+  "Bottom line": "Долен ред",
+  "Save the subtitle files beside the video as SRT": "Зачувај ги датотеките со титлови покрај видеото како SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM не може да содржи титлови, па видеото се зачувува како MKV"
 }

@@ -3542,5 +3542,14 @@
   "Fill the window": "מילוי החלון",
   "Fill the window (W)": "מילוי החלון (W)",
   "Hide the side rail while watching": "הסתרת סרגל הצד בזמן צפייה",
-  "The video gets its room, as on YouTube; theater mode always hides it": "הסרטון מקבל את המקום שלו, כמו ב-YouTube; במצב קולנוע הסרגל תמיד מוסתר"
+  "The video gets its room, as on YouTube; theater mode always hides it": "הסרטון מקבל את המקום שלו, כמו ב-YouTube; במצב קולנוע הסרגל תמיד מוסתר",
+  "Reading subtitles…": "קורא כתוביות…",
+  "Subtitles inside the video": "כתוביות בתוך הסרטון",
+  "Translate into…": "תרגום ל…",
+  "Bilingual subtitles": "כתוביות דו-לשוניות",
+  "One more track with two lines: the top language over the bottom one": "רצועה נוספת עם שתי שורות: השפה העליונה מעל התחתונה",
+  "Top line": "שורה עליונה",
+  "Bottom line": "שורה תחתונה",
+  "Save the subtitle files beside the video as SRT": "שמירת קובצי הכתוביות לצד הסרטון בפורמט SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM אינו יכול להכיל כתוביות, ולכן הסרטון יישמר בפורמט MKV"
 }

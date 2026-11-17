@@ -3542,5 +3542,14 @@
   "Fill the window": "Γέμισμα παραθύρου",
   "Fill the window (W)": "Γέμισμα παραθύρου (W)",
   "Hide the side rail while watching": "Απόκρυψη πλαϊνής γραμμής κατά την παρακολούθηση",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Το βίντεο παίρνει τον χώρο του, όπως στο YouTube· η λειτουργία κινηματογράφου την κρύβει πάντα"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Το βίντεο παίρνει τον χώρο του, όπως στο YouTube· η λειτουργία κινηματογράφου την κρύβει πάντα",
+  "Reading subtitles…": "Ανάγνωση υποτίτλων…",
+  "Subtitles inside the video": "Υπότιτλοι μέσα στο βίντεο",
+  "Translate into…": "Μετάφραση σε…",
+  "Bilingual subtitles": "Δίγλωσσοι υπότιτλοι",
+  "One more track with two lines: the top language over the bottom one": "Ένα ακόμη κομμάτι με δύο γραμμές: η πάνω γλώσσα πάνω από την κάτω",
+  "Top line": "Επάνω γραμμή",
+  "Bottom line": "Κάτω γραμμή",
+  "Save the subtitle files beside the video as SRT": "Αποθήκευση των αρχείων υποτίτλων δίπλα στο βίντεο ως SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "Το WebM δεν μπορεί να περιλάβει υπότιτλους, γι' αυτό το βίντεο αποθηκεύεται ως MKV"
 }

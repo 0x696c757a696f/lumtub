@@ -8,8 +8,10 @@ import 'package:lumtub/downloads/download_formats.dart';
 import 'package:lumtub/downloads/download_manager.dart';
 import 'package:lumtub/downloads/download_models.dart';
 import 'package:lumtub/downloads/download_selection.dart';
+import 'package:lumtub/downloads/download_subtitles.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/native_core.dart';
+import 'package:lumtub/translation.dart';
 import 'package:lumtub/ui/download_dialog.dart';
 import 'package:lumtub/video_codec.dart';
 
@@ -282,14 +284,20 @@ void main() {
   });
 
   group('dialog', () {
-    Future<void> open(WidgetTester tester, Future<DownloadFormats> Function() load, {DownloadDefaults defaults = const DownloadDefaults(), void Function(DownloadChoice?)? onClosed}) async {
+    Future<void> open(WidgetTester tester, Future<DownloadFormats> Function() load, {DownloadDefaults defaults = const DownloadDefaults(), void Function(DownloadChoice?)? onClosed, Future<SubtitleChoices> Function()? subtitles}) async {
       await tester.binding.setSurfaceSize(const Size(900, 1000));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(MaterialApp(
         home: Builder(
           builder: (context) => TextButton(
             onPressed: () async {
-              final choice = await showDialog<DownloadChoice>(context: context, builder: (_) => DownloadDialog(title: 'Title', loadFormats: load, defaults: defaults));
+              final choice = await showDialog<DownloadChoice>(context: context, builder: (_) => DownloadDialog(
+                    title: 'Title',
+                    loadFormats: load,
+                    defaults: defaults,
+                    loadSubtitles: subtitles,
+                    subtitleLanguages: TranslationLanguage.all.where((l) => l.code == 'zh-CN').toList(),
+                  ));
               onClosed?.call(choice);
             },
             child: const Text('open'),
@@ -360,6 +368,35 @@ void main() {
       expect(choice!.selection!.audioId, '140');
       expect(choice!.quality, DownloadQuality.best);
       expect((choice!.defaults!.codec, choice!.defaults!.height, choice!.defaults!.container), ('vp9', 1440, DownloadContainer.mp4));
+    });
+
+    testWidgets('subtitles: the first subtitle language is picked, and a bilingual track can be added', (tester) async {
+      DownloadChoice? choice;
+      await open(
+        tester,
+        () async => parsed(),
+        defaults: const DownloadDefaults(codec: 'vp9', container: DownloadContainer.webm),
+        onClosed: (c) => choice = c,
+        subtitles: () async => SubtitleChoices(const [
+          SubtitleOption(language: 'en', name: 'English', url: 'https://www.youtube.com/api/timedtext?v=x&lang=en&kind=asr', kind: SubtitleKind.automatic),
+        ], language: 'en'),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Subtitles inside the video'), findsOneWidget);
+      final chinese = find.widgetWithText(FilterChip, 'Chinese (Simplified) (auto-translated)');
+      expect(tester.widget<FilterChip>(chinese).selected, isTrue);
+      expect(tester.widget<FilterChip>(find.widgetWithText(FilterChip, 'English (auto-generated)')).selected, isFalse);
+      await tester.tap(find.text('Bilingual subtitles'));
+      await tester.pumpAndSettle();
+      expect(find.text('Top line'), findsOneWidget);
+      expect(find.text('WebM cannot hold subtitles, so the video is saved as MKV'), findsOneWidget);
+      await tester.tap(find.text('Start download'));
+      await tester.pumpAndSettle();
+      final picked = choice!.selection!.subtitles!;
+      expect(choice!.selection!.container, DownloadContainer.mkv);
+      expect(picked.tracks, [const SubtitlePick('zh-Hans', SubtitleKind.translated)]);
+      expect((picked.top, picked.bottom), (const SubtitlePick('zh-Hans', SubtitleKind.translated), const SubtitlePick('en', SubtitleKind.automatic)));
+      expect(choice!.defaults!.subtitles!.bilingual, isTrue);
     });
 
     testWidgets('a remembered container that does not fit goes back to auto, with a note', (tester) async {

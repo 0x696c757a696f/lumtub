@@ -3542,5 +3542,14 @@
   "Fill the window": "विन्डो भर्नुहोस्",
   "Fill the window (W)": "विन्डो भर्नुहोस् (W)",
   "Hide the side rail while watching": "हेर्दा साइडबार लुकाउनुहोस्",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube मा जस्तै भिडियोले आफ्नो ठाउँ पाउँछ; थिएटर मोडमा साइडबार सधैं लुकाइन्छ"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube मा जस्तै भिडियोले आफ्नो ठाउँ पाउँछ; थिएटर मोडमा साइडबार सधैं लुकाइन्छ",
+  "Reading subtitles…": "उपशीर्षक पढ्दै…",
+  "Subtitles inside the video": "भिडियोभित्रका उपशीर्षक",
+  "Translate into…": "यसमा अनुवाद गर्नुहोस्…",
+  "Bilingual subtitles": "द्विभाषी उपशीर्षक",
+  "One more track with two lines: the top language over the bottom one": "दुई पङ्क्तिको अर्को ट्र्याक: माथिको भाषा तलको भाषाको माथि",
+  "Top line": "माथिको पङ्क्ति",
+  "Bottom line": "तलको पङ्क्ति",
+  "Save the subtitle files beside the video as SRT": "उपशीर्षक फाइलहरू भिडियोको छेउमा SRT का रूपमा सुरक्षित गर्नुहोस्",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ले उपशीर्षक राख्न सक्दैन, त्यसैले भिडियो MKV का रूपमा सुरक्षित गरिनेछ"
 }

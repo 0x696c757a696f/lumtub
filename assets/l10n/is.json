@@ -3542,5 +3542,14 @@
   "Fill the window": "Fylla gluggann",
   "Fill the window (W)": "Fylla gluggann (W)",
   "Hide the side rail while watching": "Fela hliðarstiku við áhorf",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Myndbandið fær sitt pláss, eins og á YouTube; bíóstilling felur hana alltaf"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Myndbandið fær sitt pláss, eins og á YouTube; bíóstilling felur hana alltaf",
+  "Reading subtitles…": "Les skjátexta…",
+  "Subtitles inside the video": "Skjátextar í myndskeiðinu",
+  "Translate into…": "Þýða á…",
+  "Bilingual subtitles": "Tvítyngdir skjátextar",
+  "One more track with two lines: the top language over the bottom one": "Ein aukarás með tveimur línum: efra tungumálið ofan við það neðra",
+  "Top line": "Efri lína",
+  "Bottom line": "Neðri lína",
+  "Save the subtitle files beside the video as SRT": "Vista skjátextaskrár við hlið myndskeiðsins sem SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM getur ekki geymt skjátexta, því myndskeiðið er vistað sem MKV"
 }

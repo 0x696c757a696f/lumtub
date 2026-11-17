@@ -3542,5 +3542,14 @@
   "Fill the window": "ವಿಂಡೋ ತುಂಬಿಸಿ",
   "Fill the window (W)": "ವಿಂಡೋ ತುಂಬಿಸಿ (W)",
   "Hide the side rail while watching": "ವೀಕ್ಷಿಸುವಾಗ ಸೈಡ್‌ಬಾರ್ ಮರೆಮಾಡಿ",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ನಂತೆ ವೀಡಿಯೊಗೆ ಅದರ ಜಾಗ ಸಿಗುತ್ತದೆ; ಥಿಯೇಟರ್ ಮೋಡ್ ಅದನ್ನು ಯಾವಾಗಲೂ ಮರೆಮಾಡುತ್ತದೆ"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ನಂತೆ ವೀಡಿಯೊಗೆ ಅದರ ಜಾಗ ಸಿಗುತ್ತದೆ; ಥಿಯೇಟರ್ ಮೋಡ್ ಅದನ್ನು ಯಾವಾಗಲೂ ಮರೆಮಾಡುತ್ತದೆ",
+  "Reading subtitles…": "ಉಪಶೀರ್ಷಿಕೆಗಳನ್ನು ಓದಲಾಗುತ್ತಿದೆ…",
+  "Subtitles inside the video": "ವೀಡಿಯೊ ಒಳಗಿನ ಉಪಶೀರ್ಷಿಕೆಗಳು",
+  "Translate into…": "ಇದಕ್ಕೆ ಅನುವಾದಿಸಿ…",
+  "Bilingual subtitles": "ದ್ವಿಭಾಷಾ ಉಪಶೀರ್ಷಿಕೆಗಳು",
+  "One more track with two lines: the top language over the bottom one": "ಎರಡು ಸಾಲಿನ ಇನ್ನೊಂದು ಟ್ರ್ಯಾಕ್: ಮೇಲಿನ ಭಾಷೆ ಕೆಳಗಿನ ಭಾಷೆಯ ಮೇಲೆ",
+  "Top line": "ಮೇಲಿನ ಸಾಲು",
+  "Bottom line": "ಕೆಳಗಿನ ಸಾಲು",
+  "Save the subtitle files beside the video as SRT": "ಉಪಶೀರ್ಷಿಕೆ ಫೈಲ್‌ಗಳನ್ನು ವೀಡಿಯೊ ಪಕ್ಕದಲ್ಲಿ SRT ಆಗಿ ಉಳಿಸಿ",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ಉಪಶೀರ್ಷಿಕೆಗಳನ್ನು ಹೊಂದಲು ಸಾಧ್ಯವಿಲ್ಲ, ಆದ್ದರಿಂದ ವೀಡಿಯೊವನ್ನು MKV ಆಗಿ ಉಳಿಸಲಾಗುತ್ತದೆ"
 }

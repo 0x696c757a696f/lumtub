@@ -3542,5 +3542,14 @@
   "Fill the window": "Penuhkan tetingkap",
   "Fill the window (W)": "Penuhkan tetingkap (W)",
   "Hide the side rail while watching": "Sembunyikan bar sisi semasa menonton",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video mendapat ruangnya, seperti di YouTube; mod teater sentiasa menyembunyikannya"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video mendapat ruangnya, seperti di YouTube; mod teater sentiasa menyembunyikannya",
+  "Reading subtitles…": "Membaca sari kata…",
+  "Subtitles inside the video": "Sari kata dalam video",
+  "Translate into…": "Terjemah ke…",
+  "Bilingual subtitles": "Sari kata dwibahasa",
+  "One more track with two lines: the top language over the bottom one": "Satu lagi trek dengan dua baris: bahasa atas di atas bahasa bawah",
+  "Top line": "Baris atas",
+  "Bottom line": "Baris bawah",
+  "Save the subtitle files beside the video as SRT": "Simpan fail sari kata di sebelah video sebagai SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM tidak boleh memuatkan sari kata, jadi video disimpan sebagai MKV"
 }

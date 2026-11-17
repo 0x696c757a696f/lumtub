@@ -3542,5 +3542,14 @@
   "Fill the window": "Aizpildīt logu",
   "Fill the window (W)": "Aizpildīt logu (W)",
   "Hide the side rail while watching": "Paslēpt sānjoslu skatīšanās laikā",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video iegūst savu vietu kā pakalpojumā YouTube; kinoteātra režīmā tā vienmēr ir paslēpta"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video iegūst savu vietu kā pakalpojumā YouTube; kinoteātra režīmā tā vienmēr ir paslēpta",
+  "Reading subtitles…": "Notiek subtitru lasīšana…",
+  "Subtitles inside the video": "Subtitri videoklipā",
+  "Translate into…": "Tulkot valodā…",
+  "Bilingual subtitles": "Divvalodu subtitri",
+  "One more track with two lines: the top language over the bottom one": "Vēl viens celiņš ar divām rindām: augšējā valoda virs apakšējās",
+  "Top line": "Augšējā rinda",
+  "Bottom line": "Apakšējā rinda",
+  "Save the subtitle files beside the video as SRT": "Saglabāt subtitru failus blakus videoklipam kā SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM nevar saturēt subtitrus, tāpēc videoklips tiek saglabāts kā MKV"
 }

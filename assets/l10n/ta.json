@@ -3542,5 +3542,14 @@
   "Fill the window": "சாளரத்தை நிரப்பு",
   "Fill the window (W)": "சாளரத்தை நிரப்பு (W)",
   "Hide the side rail while watching": "பார்க்கும்போது பக்கப்பட்டையை மறை",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-ல் போலவே வீடியோவுக்கு அதன் இடம் கிடைக்கும்; திரையரங்கு பயன்முறையில் அது எப்போதும் மறைக்கப்படும்"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-ல் போலவே வீடியோவுக்கு அதன் இடம் கிடைக்கும்; திரையரங்கு பயன்முறையில் அது எப்போதும் மறைக்கப்படும்",
+  "Reading subtitles…": "வசனங்களைப் படிக்கிறது…",
+  "Subtitles inside the video": "வீடியோவுக்குள் உள்ள வசனங்கள்",
+  "Translate into…": "இதற்கு மொழிபெயர்…",
+  "Bilingual subtitles": "இருமொழி வசனங்கள்",
+  "One more track with two lines: the top language over the bottom one": "இரண்டு வரிகள் கொண்ட மேலும் ஒரு டிராக்: மேல் மொழி கீழ் மொழிக்கு மேலே",
+  "Top line": "மேல் வரி",
+  "Bottom line": "கீழ் வரி",
+  "Save the subtitle files beside the video as SRT": "வசனக் கோப்புகளை வீடியோவின் அருகில் SRT ஆகச் சேமி",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM வசனங்களைக் கொண்டிருக்க முடியாது, எனவே வீடியோ MKV ஆகச் சேமிக்கப்படும்"
 }

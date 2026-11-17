@@ -3542,5 +3542,14 @@
   "Fill the window": "ဝင်းဒိုးပြည့်",
   "Fill the window (W)": "ဝင်းဒိုးပြည့် (W)",
   "Hide the side rail while watching": "ကြည့်နေစဉ် ဘေးဘားကို ဖျောက်ရန်",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ကဲ့သို့ ဗီဒီယိုက နေရာရသည်၊ သီအိတာမုဒ်တွင် အမြဲ ဖျောက်ထားသည်"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube ကဲ့သို့ ဗီဒီယိုက နေရာရသည်၊ သီအိတာမုဒ်တွင် အမြဲ ဖျောက်ထားသည်",
+  "Reading subtitles…": "စာတန်းထိုးများ ဖတ်နေသည်…",
+  "Subtitles inside the video": "ဗီဒီယိုအတွင်းရှိ စာတန်းထိုး",
+  "Translate into…": "ဘာသာပြန်ရန်…",
+  "Bilingual subtitles": "နှစ်ဘာသာစာတန်းထိုး",
+  "One more track with two lines: the top language over the bottom one": "နှစ်ကြောင်းပါ ထပ်တိုးထားသော တစ်ပုဒ်: အပေါ်ဘာသာစကားသည် အောက်ဘာသာစကားအပေါ်တွင်",
+  "Top line": "အပေါ်စာကြောင်း",
+  "Bottom line": "အောက်စာကြောင်း",
+  "Save the subtitle files beside the video as SRT": "စာတန်းထိုးဖိုင်များကို ဗီဒီယိုဘေးတွင် SRT အဖြစ် သိမ်းရန်",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM တွင် စာတန်းထိုး ထည့်၍မရသဖြင့် ဗီဒီယိုကို MKV အဖြစ် သိမ်းမည်"
 }

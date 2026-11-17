@@ -3542,5 +3542,14 @@
   "Fill the window": "Omple la finestra",
   "Fill the window (W)": "Omple la finestra (W)",
   "Hide the side rail while watching": "Amaga la barra lateral mentre mires",
-  "The video gets its room, as on YouTube; theater mode always hides it": "El vídeo té el seu espai, com a YouTube; el mode cinema sempre l'amaga"
+  "The video gets its room, as on YouTube; theater mode always hides it": "El vídeo té el seu espai, com a YouTube; el mode cinema sempre l'amaga",
+  "Reading subtitles…": "S'estan llegint els subtítols…",
+  "Subtitles inside the video": "Subtítols dins del vídeo",
+  "Translate into…": "Tradueix a…",
+  "Bilingual subtitles": "Subtítols bilingües",
+  "One more track with two lines: the top language over the bottom one": "Una pista més amb dues línies: l'idioma superior sobre l'inferior",
+  "Top line": "Línia superior",
+  "Bottom line": "Línia inferior",
+  "Save the subtitle files beside the video as SRT": "Desa els fitxers de subtítols al costat del vídeo com a SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM no pot contenir subtítols, per això el vídeo es desa com a MKV"
 }

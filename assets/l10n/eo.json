@@ -3542,5 +3542,14 @@
   "Fill the window": "Plenigi la fenestron",
   "Fill the window (W)": "Plenigi la fenestron (W)",
   "Hide the side rail while watching": "Kaŝi la flankan breton dum spektado",
-  "The video gets its room, as on YouTube; theater mode always hides it": "La video ricevas sian spacon, kiel en YouTube; teatra reĝimo ĉiam kaŝas ĝin"
+  "The video gets its room, as on YouTube; theater mode always hides it": "La video ricevas sian spacon, kiel en YouTube; teatra reĝimo ĉiam kaŝas ĝin",
+  "Reading subtitles…": "Legado de subtekstoj…",
+  "Subtitles inside the video": "Subtekstoj en la video",
+  "Translate into…": "Traduki al…",
+  "Bilingual subtitles": "Dulingvaj subtekstoj",
+  "One more track with two lines: the top language over the bottom one": "Plia spuro kun du linioj: la supra lingvo super la suba",
+  "Top line": "Supra linio",
+  "Bottom line": "Suba linio",
+  "Save the subtitle files beside the video as SRT": "Konservi la subtekstajn dosierojn apud la video kiel SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ne povas enhavi subtekstojn, do la video estas konservata kiel MKV"
 }

@@ -121,6 +121,10 @@ class _NoList {
   const _NoList();
 }
 
+/// A subtitle file beside a download, put inside it as a track named
+/// [name]; [lines] keeps each cue's lines apart, as a bilingual track's.
+typedef SavedSubtitle = ({String path, String language, String name, bool lines});
+
 class DownloadManager extends ChangeNotifier {
   DownloadManager({
     required this.file,
@@ -135,6 +139,7 @@ class DownloadManager extends ChangeNotifier {
     this.join,
     this.cover,
     this.recorder,
+    this.saveSubtitles,
   })  : _directory = defaultDirectory,
         _start = start ?? _backgroundStart;
 
@@ -159,6 +164,10 @@ class DownloadManager extends ChangeNotifier {
   final Future<List<int>?> Function(String videoId)? cover;
   /// Records live streams; without it (or [join]) they cannot be saved.
   final LiveRecorder? recorder;
+  /// Writes the subtitles picked for [task] beside `stem` (the video's path
+  /// without its extension) and returns them; for downloads whose
+  /// selection names its subtitles.
+  final Future<List<SavedSubtitle>> Function(DownloadTask task, String stem, DownloadSubtitles picked)? saveSubtitles;
 
   /// Whether a live stream can be recorded.
   bool get canRecord => recorder != null && join != null;
@@ -462,7 +471,8 @@ class DownloadManager extends ChangeNotifier {
       // Files are kept as YouTube sends them, which the core reads; yt-dlp
       // never runs an ffmpeg it may find on PATH.
       '--fixup', 'never',
-      if (!audio && o.subtitleLanguages != null) ...[
+      // Subtitles picked in the dialog are saved by the app afterwards.
+      if (!audio && o.subtitleLanguages != null && task.selection?.subtitles == null) ...[
         '--write-subs',
         if (o.autoSubtitles) '--write-auto-subs',
         '--sub-langs', o.subtitleLanguages!,
@@ -705,7 +715,7 @@ class DownloadManager extends ChangeNotifier {
         audio: printed.last,
         stem: stem,
         container: container,
-        subtitles: await subtitleFilesOf(stem),
+        subtitles: await _subtitlesFor(task, stem),
         title: task.item.title,
         cover: coverFile?.path,
         cut: [for (final s in segments ?? const <SkipSegment>[]) (s.start, s.end)],
@@ -738,6 +748,8 @@ class DownloadManager extends ChangeNotifier {
       task.error = tr('The downloaded file was not found');
       return;
     }
+    // A single file keeps the subtitles picked beside it.
+    if (!_joins(task) && task.selection?.subtitles != null) await _subtitlesFor(task, path.replaceFirst(RegExp(r'\.[^.\\/]+$'), ''));
     task.filePath = path;
     task.status = DownloadStatus.done;
     task.speed = null;
@@ -749,6 +761,20 @@ class DownloadManager extends ChangeNotifier {
       logError('Could not save the offline info of ${task.id}', e);
     }
     onFinished?.call(task);
+  }
+
+  /// The subtitles of [task] beside [stem]: those picked in the dialog,
+  /// written now, else those yt-dlp saved.
+  Future<List<SavedSubtitle>> _subtitlesFor(DownloadTask task, String stem) async {
+    final picked = task.selection?.subtitles;
+    if (picked == null) return [for (final s in await subtitleFilesOf(stem)) (path: s.path, language: s.language, name: '', lines: false)];
+    if (picked.isEmpty || saveSubtitles == null) return const [];
+    try {
+      return await saveSubtitles!(task, stem, picked);
+    } catch (e) {
+      logWarn('No subtitles for ${task.id}: $e');
+      return const [];
+    }
   }
 
   /// The subtitle files yt-dlp saved beside [stem] (`stem.en.vtt`), each
@@ -915,7 +941,7 @@ class JoinRequest {
   final String stem;
   /// mp4, webm, mkv, or `auto` for the one that fits the streams.
   final String container;
-  final List<({String path, String language})> subtitles;
+  final List<SavedSubtitle> subtitles;
   final String? title;
   /// A JPEG file.
   final String? cover;
@@ -927,7 +953,9 @@ class JoinRequest {
         'audio': audio,
         'out': stem,
         'container': container,
-        'subtitles': [for (final s in subtitles) {'path': s.path, 'language': s.language}],
+        'subtitles': [
+          for (final s in subtitles) {'path': s.path, 'language': s.language, if (s.name.isNotEmpty) 'name': s.name, if (s.lines) 'lines': true},
+        ],
         if (title != null) 'title': title,
         if (cover != null) 'cover': cover,
         if (cut.isNotEmpty) 'cut': [for (final (from, to) in cut) [from.inMilliseconds / 1000, to.inMilliseconds / 1000]],

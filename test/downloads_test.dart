@@ -151,7 +151,14 @@ void main() {
     });
 
     final joined = <List<String>>[];
-    DownloadManager manager({List<SkipSegment> segments = const [], Future<Joined> Function(JoinRequest request)? join, Future<List<int>?> Function(String id)? cover, bool cutSponsors = false, LiveRecorder? recorder}) => _track(managers, DownloadManager(
+    DownloadManager manager({
+      List<SkipSegment> segments = const [],
+      Future<Joined> Function(JoinRequest request)? join,
+      Future<List<int>?> Function(String id)? cover,
+      bool cutSponsors = false,
+      LiveRecorder? recorder,
+      Future<List<SavedSubtitle>> Function(DownloadTask task, String stem, DownloadSubtitles picked)? saveSubtitles,
+    }) => _track(managers, DownloadManager(
           file: File('${dir.path}/downloads.json'),
           ytDlpPath: 'yt-dlp',
           defaultDirectory: '${dir.path}/videos',
@@ -168,6 +175,7 @@ void main() {
           join: join,
           cover: cover,
           recorder: recorder,
+          saveSubtitles: saveSubtitles,
         ));
 
     Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 80));
@@ -379,6 +387,48 @@ void main() {
       final failed = fails.taskFor('ccccccccccc')!;
       await until(() => failed.status == DownloadStatus.failed);
       expect(failed.error, 'sound other than AAC, Opus or Dolby');
+    });
+
+    test('subtitles picked in the dialog are written by the app and go inside the joined file', () async {
+      final requests = <JoinRequest>[];
+      final asked = <(String, String, DownloadSubtitles)>[];
+      const picked = DownloadSubtitles(tracks: [SubtitlePick('en', SubtitleKind.uploaded)], top: SubtitlePick('zh-Hans', SubtitleKind.translated), bottom: SubtitlePick('en', SubtitleKind.uploaded), srt: true);
+      final m = manager(
+        join: (r) async {
+          requests.add(r);
+          final out = '${r.stem}.mkv';
+          File(out).writeAsStringSync('joined');
+          return (path: out, error: null, cut: const <(Duration, Duration)>[]);
+        },
+        saveSubtitles: (task, stem, picked) async {
+          asked.add((task.id, stem, picked));
+          return [(path: '$stem.zh-Hans+en.srt', language: 'zh-Hans', name: '中文 / English', lines: true), (path: '$stem.en.srt', language: 'en', name: 'English', lines: false)];
+        },
+      );
+      const selection = DownloadSelection(codec: VideoCodec.vp9, height: 1080, videoId: '248', audioId: '251', container: DownloadContainer.webm);
+      final chosen = selection.withSubtitles(picked);
+      expect(chosen.container, DownloadContainer.mkv, reason: 'WebM holds no subtitles');
+      expect(DownloadSelection.fromJson(jsonDecode(jsonEncode(chosen.toJson())))!.subtitles!.toJson(), picked.toJson());
+      expect(selection.withSubtitles(DownloadSubtitles.none).container, DownloadContainer.webm);
+      final args = m.arguments(DownloadTask(item: video('ddddddddddd'), quality: DownloadQuality.best, directory: 'D', selection: chosen));
+      expect(args, isNot(contains('--write-subs')));
+
+      m.add(video('ddddddddddd'), DownloadQuality.best, selection: chosen);
+      await until(() => processes.isNotEmpty);
+      final p = File('${dir.path}/videos/Video [ddddddddddd].f248.webm')..createSync(recursive: true);
+      final a = File('${dir.path}/videos/Video [ddddddddddd].f251.webm')..createSync(recursive: true);
+      processes[0].out('lumtub-file|${p.path}');
+      processes[0].out('lumtub-file|${a.path}');
+      await processes[0].exit(0);
+      await until(() => m.taskFor('ddddddddddd')!.status == DownloadStatus.done);
+      final stem = '${dir.path}/videos/Video [ddddddddddd]';
+      expect(asked.single.$2, stem);
+      expect(asked.single.$3.bilingual, isTrue);
+      expect(requests.single.container, 'mkv');
+      expect(requests.single.toJson()['subtitles'], [
+        {'path': '$stem.zh-Hans+en.srt', 'language': 'zh-Hans', 'name': '中文 / English', 'lines': true},
+        {'path': '$stem.en.srt', 'language': 'en', 'name': 'English'},
+      ]);
     });
 
     test('cut sponsor segments leave the file, and the saved times move past them', () async {

@@ -3542,5 +3542,14 @@
   "Fill the window": "Täytä ikkuna",
   "Fill the window (W)": "Täytä ikkuna (W)",
   "Hide the side rail while watching": "Piilota sivupalkki katsellessa",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video saa tilansa kuten YouTubessa; teatteritila piilottaa sen aina"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video saa tilansa kuten YouTubessa; teatteritila piilottaa sen aina",
+  "Reading subtitles…": "Luetaan tekstityksiä…",
+  "Subtitles inside the video": "Videon sisäiset tekstitykset",
+  "Translate into…": "Käännä kielelle…",
+  "Bilingual subtitles": "Kaksikielinen tekstitys",
+  "One more track with two lines: the top language over the bottom one": "Yksi lisäraita, jossa on kaksi riviä: ylempi kieli alemman yläpuolella",
+  "Top line": "Ylärivi",
+  "Bottom line": "Alarivi",
+  "Save the subtitle files beside the video as SRT": "Tallenna tekstitystiedostot videon viereen SRT-muodossa",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ei voi sisältää tekstityksiä, joten video tallennetaan MKV-muodossa"
 }

@@ -3542,5 +3542,14 @@
   "Fill the window": "Цонхыг дүүргэх",
   "Fill the window (W)": "Цонхыг дүүргэх (W)",
   "Hide the side rail while watching": "Үзэх үед хажуугийн самбарыг нуух",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube шиг видео өөрийн талбайг авна; театрын горимд үргэлж нуугдана"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube шиг видео өөрийн талбайг авна; театрын горимд үргэлж нуугдана",
+  "Reading subtitles…": "Хадмал уншиж байна…",
+  "Subtitles inside the video": "Бичлэг доторх хадмал",
+  "Translate into…": "Орчуулах хэл…",
+  "Bilingual subtitles": "Хоёр хэлт хадмал",
+  "One more track with two lines: the top language over the bottom one": "Хоёр мөртэй нэг нэмэлт хадмал: дээд хэл доод хэлний дээр",
+  "Top line": "Дээд мөр",
+  "Bottom line": "Доод мөр",
+  "Save the subtitle files beside the video as SRT": "Хадмал файлуудыг бичлэгийн хажууд SRT хэлбэрээр хадгалах",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM нь хадмал агуулж чадахгүй тул бичлэгийг MKV хэлбэрээр хадгална"
 }

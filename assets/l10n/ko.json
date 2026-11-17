@@ -3547,5 +3547,14 @@
   "Fill the window": "창 가득 채우기",
   "Fill the window (W)": "창 가득 채우기 (W)",
   "Hide the side rail while watching": "시청 중 사이드바 숨기기",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube처럼 동영상에 공간을 내어줍니다. 극장 모드에서는 항상 숨겨집니다"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube처럼 동영상에 공간을 내어줍니다. 극장 모드에서는 항상 숨겨집니다",
+  "Reading subtitles…": "자막 읽는 중…",
+  "Subtitles inside the video": "동영상에 포함할 자막",
+  "Translate into…": "번역할 언어…",
+  "Bilingual subtitles": "이중 자막",
+  "One more track with two lines: the top language over the bottom one": "두 줄짜리 트랙 하나 더 추가: 위쪽 언어가 아래쪽 언어 위에 표시됩니다",
+  "Top line": "위쪽 줄",
+  "Bottom line": "아래쪽 줄",
+  "Save the subtitle files beside the video as SRT": "자막 파일을 동영상 옆에 SRT로 저장",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM은 자막을 담을 수 없으므로 동영상은 MKV로 저장됩니다"
 }

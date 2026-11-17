@@ -3542,5 +3542,14 @@
   "Fill the window": "Pinuhan jandela",
   "Fill the window (W)": "Pinuhan jandela (W)",
   "Hide the side rail while watching": "Sumputkeun bar sisi nalika nonton",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Vidéo meunang rohangna, siga di YouTube; mode bioskop salawasna nyumputkeunana"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Vidéo meunang rohangna, siga di YouTube; mode bioskop salawasna nyumputkeunana",
+  "Reading subtitles…": "Maca subtitel…",
+  "Subtitles inside the video": "Subtitel di jero vidéo",
+  "Translate into…": "Tarjamahkeun ka…",
+  "Bilingual subtitles": "Subtitel dwibasa",
+  "One more track with two lines: the top language over the bottom one": "Hiji trek deui mibanda dua baris: basa luhur di luhur basa handap",
+  "Top line": "Baris luhur",
+  "Bottom line": "Baris handap",
+  "Save the subtitle files beside the video as SRT": "Simpen file subtitel di gigireun vidéo salaku SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM teu bisa ngandung subtitel, jadi vidéo disimpen salaku MKV"
 }

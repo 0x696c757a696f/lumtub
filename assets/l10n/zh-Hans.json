@@ -3571,5 +3571,14 @@
   "Fill the window": "铺满窗口",
   "Fill the window (W)": "铺满窗口 (W)",
   "Hide the side rail while watching": "看视频时收起侧边栏",
-  "The video gets its room, as on YouTube; theater mode always hides it": "把位置让给视频，和 YouTube 网页版一样；剧场模式下总会收起"
+  "The video gets its room, as on YouTube; theater mode always hides it": "把位置让给视频，和 YouTube 网页版一样；剧场模式下总会收起",
+  "Reading subtitles…": "正在读取字幕…",
+  "Subtitles inside the video": "封入视频的字幕",
+  "Translate into…": "翻译为…",
+  "Bilingual subtitles": "双语字幕",
+  "One more track with two lines: the top language over the bottom one": "另加一条双行字幕轨：上方语言在上，下方语言在下",
+  "Top line": "上方",
+  "Bottom line": "下方",
+  "Save the subtitle files beside the video as SRT": "视频旁的字幕文件存为 SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM 无法封入字幕，视频将改存为 MKV"
 }

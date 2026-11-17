@@ -3542,5 +3542,14 @@
   "Fill the window": "Täida aken",
   "Fill the window (W)": "Täida aken (W)",
   "Hide the side rail while watching": "Peida külgriba vaatamise ajal",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video saab oma ruumi nagu YouTube'is; kinorežiimis on külgriba alati peidus"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video saab oma ruumi nagu YouTube'is; kinorežiimis on külgriba alati peidus",
+  "Reading subtitles…": "Subtiitrite lugemine…",
+  "Subtitles inside the video": "Subtiitrid videos",
+  "Translate into…": "Tõlgi keelde…",
+  "Bilingual subtitles": "Kakskeelsed subtiitrid",
+  "One more track with two lines: the top language over the bottom one": "Veel üks kahe reaga rada: ülemine keel alumise kohal",
+  "Top line": "Ülemine rida",
+  "Bottom line": "Alumine rida",
+  "Save the subtitle files beside the video as SRT": "Salvesta subtiitrifailid video kõrvale SRT-vormingus",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ei saa subtiitreid sisaldada, seega salvestatakse video MKV-vormingus"
 }

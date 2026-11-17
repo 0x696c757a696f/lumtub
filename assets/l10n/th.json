@@ -3542,5 +3542,14 @@
   "Fill the window": "เต็มหน้าต่าง",
   "Fill the window (W)": "เต็มหน้าต่าง (W)",
   "Hide the side rail while watching": "ซ่อนแถบด้านข้างขณะดูวิดีโอ",
-  "The video gets its room, as on YouTube; theater mode always hides it": "วิดีโอได้พื้นที่เต็มที่เหมือนบน YouTube และโหมดโรงภาพยนตร์จะซ่อนแถบเสมอ"
+  "The video gets its room, as on YouTube; theater mode always hides it": "วิดีโอได้พื้นที่เต็มที่เหมือนบน YouTube และโหมดโรงภาพยนตร์จะซ่อนแถบเสมอ",
+  "Reading subtitles…": "กำลังอ่านคำบรรยาย…",
+  "Subtitles inside the video": "คำบรรยายในวิดีโอ",
+  "Translate into…": "แปลเป็น…",
+  "Bilingual subtitles": "คำบรรยายสองภาษา",
+  "One more track with two lines: the top language over the bottom one": "แทร็กเพิ่มอีกหนึ่งแทร็กที่มีสองบรรทัด: ภาษาบนอยู่เหนือภาษาล่าง",
+  "Top line": "บรรทัดบน",
+  "Bottom line": "บรรทัดล่าง",
+  "Save the subtitle files beside the video as SRT": "บันทึกไฟล์คำบรรยายไว้ข้างวิดีโอเป็น SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ไม่รองรับคำบรรยาย จึงบันทึกวิดีโอเป็น MKV"
 }

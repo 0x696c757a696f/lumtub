@@ -3547,5 +3547,14 @@
   "Fill the window": "Lấp đầy cửa sổ",
   "Fill the window (W)": "Lấp đầy cửa sổ (W)",
   "Hide the side rail while watching": "Ẩn thanh bên khi xem",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video được nhiều chỗ hơn, như trên YouTube; chế độ rạp hát luôn ẩn thanh bên"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video được nhiều chỗ hơn, như trên YouTube; chế độ rạp hát luôn ẩn thanh bên",
+  "Reading subtitles…": "Đang đọc phụ đề…",
+  "Subtitles inside the video": "Phụ đề trong video",
+  "Translate into…": "Dịch sang…",
+  "Bilingual subtitles": "Phụ đề song ngữ",
+  "One more track with two lines: the top language over the bottom one": "Thêm một rãnh hai dòng: ngôn ngữ trên nằm phía trên ngôn ngữ dưới",
+  "Top line": "Dòng trên",
+  "Bottom line": "Dòng dưới",
+  "Save the subtitle files beside the video as SRT": "Lưu tệp phụ đề cạnh video dưới dạng SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM không thể chứa phụ đề nên video sẽ được lưu dưới dạng MKV"
 }

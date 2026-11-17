@@ -3542,5 +3542,14 @@
   "Fill the window": "Терезені толтыру",
   "Fill the window (W)": "Терезені толтыру (W)",
   "Hide the side rail while watching": "Көру кезінде бүйір тақтаны жасыру",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Бейне өз орнын алады, YouTube сияқты; театр режимінде ол әрқашан жасырылады"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Бейне өз орнын алады, YouTube сияқты; театр режимінде ол әрқашан жасырылады",
+  "Reading subtitles…": "Субтитрлер оқылуда…",
+  "Subtitles inside the video": "Бейне ішіндегі субтитрлер",
+  "Translate into…": "Мына тілге аудару…",
+  "Bilingual subtitles": "Екі тілді субтитрлер",
+  "One more track with two lines: the top language over the bottom one": "Екі жолды тағы бір трек: жоғарғы тіл төменгі тілдің үстінде",
+  "Top line": "Жоғарғы жол",
+  "Bottom line": "Төменгі жол",
+  "Save the subtitle files beside the video as SRT": "Субтитр файлдарын бейненің жанына SRT ретінде сақтау",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM субтитрлерді сақтай алмайды, сондықтан бейне MKV ретінде сақталады"
 }

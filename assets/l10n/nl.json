@@ -3547,5 +3547,14 @@
   "Fill the window": "Venster vullen",
   "Fill the window (W)": "Venster vullen (W)",
   "Hide the side rail while watching": "Zijbalk verbergen tijdens het kijken",
-  "The video gets its room, as on YouTube; theater mode always hides it": "De video krijgt zijn ruimte, zoals op YouTube; in theatermodus is de zijbalk altijd verborgen"
+  "The video gets its room, as on YouTube; theater mode always hides it": "De video krijgt zijn ruimte, zoals op YouTube; in theatermodus is de zijbalk altijd verborgen",
+  "Reading subtitles…": "Ondertitels lezen…",
+  "Subtitles inside the video": "Ondertitels in de video",
+  "Translate into…": "Vertalen naar…",
+  "Bilingual subtitles": "Tweetalige ondertitels",
+  "One more track with two lines: the top language over the bottom one": "Nog een track met twee regels: de bovenste taal boven de onderste",
+  "Top line": "Bovenste regel",
+  "Bottom line": "Onderste regel",
+  "Save the subtitle files beside the video as SRT": "Ondertitelbestanden naast de video opslaan als SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM kan geen ondertitels bevatten, dus de video wordt opgeslagen als MKV"
 }

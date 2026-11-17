@@ -3542,5 +3542,14 @@
   "Fill the window": "Fyld vinduet",
   "Fill the window (W)": "Fyld vinduet (W)",
   "Hide the side rail while watching": "Skjul sidepanelet under afspilning",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Videoen får sin plads som på YouTube; biografvisning skjuler det altid"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Videoen får sin plads som på YouTube; biografvisning skjuler det altid",
+  "Reading subtitles…": "Læser undertekster…",
+  "Subtitles inside the video": "Undertekster i videoen",
+  "Translate into…": "Oversæt til…",
+  "Bilingual subtitles": "Tosprogede undertekster",
+  "One more track with two lines: the top language over the bottom one": "Endnu et spor med to linjer: det øverste sprog over det nederste",
+  "Top line": "Øverste linje",
+  "Bottom line": "Nederste linje",
+  "Save the subtitle files beside the video as SRT": "Gem undertekstfilerne ved siden af videoen som SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM kan ikke rumme undertekster, så videoen gemmes som MKV"
 }

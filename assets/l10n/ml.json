@@ -3542,5 +3542,14 @@
   "Fill the window": "വിൻഡോ നിറയ്ക്കുക",
   "Fill the window (W)": "വിൻഡോ നിറയ്ക്കുക (W)",
   "Hide the side rail while watching": "കാണുമ്പോൾ സൈഡ്‌ബാർ മറയ്ക്കുക",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-ലെ പോലെ വീഡിയോയ്ക്ക് അതിന്റെ സ്ഥലം ലഭിക്കുന്നു; തിയേറ്റർ മോഡ് എപ്പോഴും ഇത് മറയ്ക്കും"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-ലെ പോലെ വീഡിയോയ്ക്ക് അതിന്റെ സ്ഥലം ലഭിക്കുന്നു; തിയേറ്റർ മോഡ് എപ്പോഴും ഇത് മറയ്ക്കും",
+  "Reading subtitles…": "സബ്ടൈറ്റിലുകൾ വായിക്കുന്നു…",
+  "Subtitles inside the video": "വീഡിയോയ്ക്കുള്ളിലെ സബ്ടൈറ്റിലുകൾ",
+  "Translate into…": "ഇതിലേക്ക് വിവർത്തനം ചെയ്യുക…",
+  "Bilingual subtitles": "ദ്വിഭാഷാ സബ്ടൈറ്റിലുകൾ",
+  "One more track with two lines: the top language over the bottom one": "രണ്ട് വരികളുള്ള ഒരു ട്രാക്ക് കൂടി: മുകളിലെ ഭാഷ താഴത്തെ ഭാഷയ്ക്ക് മുകളിൽ",
+  "Top line": "മുകളിലെ വരി",
+  "Bottom line": "താഴത്തെ വരി",
+  "Save the subtitle files beside the video as SRT": "സബ്ടൈറ്റിൽ ഫയലുകൾ വീഡിയോയ്ക്ക് അടുത്ത് SRT ആയി സംരക്ഷിക്കുക",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM-ൽ സബ്ടൈറ്റിലുകൾ ഉൾപ്പെടുത്താൻ കഴിയില്ല, അതിനാൽ വീഡിയോ MKV ആയി സംരക്ഷിക്കും"
 }

@@ -3542,5 +3542,14 @@
   "Fill the window": "Запълни прозореца",
   "Fill the window (W)": "Запълни прозореца (W)",
   "Hide the side rail while watching": "Скриване на страничната лента при гледане",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Видеото получава своето място, както в YouTube; в режим кино лентата винаги е скрита"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Видеото получава своето място, както в YouTube; в режим кино лентата винаги е скрита",
+  "Reading subtitles…": "Четене на субтитри…",
+  "Subtitles inside the video": "Субтитри във видеото",
+  "Translate into…": "Превод на…",
+  "Bilingual subtitles": "Двуезични субтитри",
+  "One more track with two lines: the top language over the bottom one": "Още една писта с два реда: горният език е над долния",
+  "Top line": "Горен ред",
+  "Bottom line": "Долен ред",
+  "Save the subtitle files beside the video as SRT": "Запазване на файловете със субтитри до видеото като SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM не може да съдържа субтитри, затова видеото се запазва като MKV"
 }

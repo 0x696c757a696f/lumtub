@@ -3542,5 +3542,14 @@
   "Fill the window": "విండోను నింపండి",
   "Fill the window (W)": "విండోను నింపండి (W)",
   "Hide the side rail while watching": "చూస్తున్నప్పుడు సైడ్‌బార్ దాచండి",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube లాగే వీడియోకు దాని స్థలం లభిస్తుంది; థియేటర్ మోడ్‌లో ఇది ఎల్లప్పుడూ దాచబడుతుంది"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube లాగే వీడియోకు దాని స్థలం లభిస్తుంది; థియేటర్ మోడ్‌లో ఇది ఎల్లప్పుడూ దాచబడుతుంది",
+  "Reading subtitles…": "ఉపశీర్షికలను చదువుతోంది…",
+  "Subtitles inside the video": "వీడియో లోపలి ఉపశీర్షికలు",
+  "Translate into…": "దీనికి అనువదించండి…",
+  "Bilingual subtitles": "ద్విభాషా ఉపశీర్షికలు",
+  "One more track with two lines: the top language over the bottom one": "రెండు పంక్తులతో మరో ట్రాక్: పై భాష కింది భాషకు పైన",
+  "Top line": "పై పంక్తి",
+  "Bottom line": "కింది పంక్తి",
+  "Save the subtitle files beside the video as SRT": "ఉపశీర్షిక ఫైళ్లను వీడియో పక్కన SRT గా సేవ్ చేయండి",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ఉపశీర్షికలను ఉంచలేదు, కాబట్టి వీడియో MKV గా సేవ్ అవుతుంది"
 }

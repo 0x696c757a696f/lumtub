@@ -3547,5 +3547,14 @@
   "Fill the window": "Pencereyi doldur",
   "Fill the window (W)": "Pencereyi doldur (W)",
   "Hide the side rail while watching": "İzlerken kenar çubuğunu gizle",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video, YouTube'daki gibi kendi alanını alır; sinema modu her zaman gizler"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video, YouTube'daki gibi kendi alanını alır; sinema modu her zaman gizler",
+  "Reading subtitles…": "Altyazılar okunuyor…",
+  "Subtitles inside the video": "Videonun içindeki altyazılar",
+  "Translate into…": "Şu dile çevir…",
+  "Bilingual subtitles": "İki dilli altyazı",
+  "One more track with two lines: the top language over the bottom one": "İki satırlı bir iz daha: üstteki dil alttakinin üzerinde",
+  "Top line": "Üst satır",
+  "Bottom line": "Alt satır",
+  "Save the subtitle files beside the video as SRT": "Altyazı dosyalarını videonun yanına SRT olarak kaydet",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM altyazı barındıramaz, bu yüzden video MKV olarak kaydedilir"
 }

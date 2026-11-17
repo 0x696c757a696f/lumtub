@@ -3542,5 +3542,14 @@
   "Fill the window": "Vyplniť okno",
   "Fill the window (W)": "Vyplniť okno (W)",
   "Hide the side rail while watching": "Skryť bočný panel pri sledovaní",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video dostane svoje miesto ako na YouTube; v režime kina je panel vždy skrytý"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video dostane svoje miesto ako na YouTube; v režime kina je panel vždy skrytý",
+  "Reading subtitles…": "Načítavanie titulkov…",
+  "Subtitles inside the video": "Titulky vo videu",
+  "Translate into…": "Preložiť do…",
+  "Bilingual subtitles": "Dvojjazyčné titulky",
+  "One more track with two lines: the top language over the bottom one": "Ďalšia stopa s dvoma riadkami: horný jazyk nad dolným",
+  "Top line": "Horný riadok",
+  "Bottom line": "Dolný riadok",
+  "Save the subtitle files beside the video as SRT": "Uložiť súbory titulkov vedľa videa ako SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM nemôže obsahovať titulky, preto sa video uloží ako MKV"
 }

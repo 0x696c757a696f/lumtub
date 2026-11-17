@@ -3542,5 +3542,14 @@
   "Fill the window": "Լցնել պատուհանը",
   "Fill the window (W)": "Լցնել պատուհանը (W)",
   "Hide the side rail while watching": "Թաքցնել կողագոտին դիտելիս",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Տեսանյութը ստանում է իր տեղը, ինչպես YouTube-ում; թատերական ռեժիմում այն միշտ թաքնվում է"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Տեսանյութը ստանում է իր տեղը, ինչպես YouTube-ում; թատերական ռեժիմում այն միշտ թաքնվում է",
+  "Reading subtitles…": "Ենթագրերը կարդացվում են…",
+  "Subtitles inside the video": "Տեսանյութի մեջ ներառված ենթագրեր",
+  "Translate into…": "Թարգմանել…",
+  "Bilingual subtitles": "Երկլեզու ենթագրեր",
+  "One more track with two lines: the top language over the bottom one": "Եվս մեկ ուղի երկու տողով՝ վերին լեզուն ստորինի վերևում",
+  "Top line": "Վերին տող",
+  "Bottom line": "Ստորին տող",
+  "Save the subtitle files beside the video as SRT": "Պահել ենթագրերի ֆայլերը տեսանյութի կողքին՝ որպես SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM-ը չի կարող ենթագրեր պարունակել, ուստի տեսանյութը կպահվի որպես MKV"
 }

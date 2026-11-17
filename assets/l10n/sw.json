@@ -3542,5 +3542,14 @@
   "Fill the window": "Jaza dirisha",
   "Fill the window (W)": "Jaza dirisha (W)",
   "Hide the side rail while watching": "Ficha upau wa pembeni unapotazama",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video hupata nafasi yake, kama kwenye YouTube; hali ya ukumbi huuficha kila mara"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video hupata nafasi yake, kama kwenye YouTube; hali ya ukumbi huuficha kila mara",
+  "Reading subtitles…": "Inasoma manukuu…",
+  "Subtitles inside the video": "Manukuu ndani ya video",
+  "Translate into…": "Tafsiri kwa…",
+  "Bilingual subtitles": "Manukuu ya lugha mbili",
+  "One more track with two lines: the top language over the bottom one": "Wimbo mmoja zaidi wenye mistari miwili: lugha ya juu juu ya ile ya chini",
+  "Top line": "Mstari wa juu",
+  "Bottom line": "Mstari wa chini",
+  "Save the subtitle files beside the video as SRT": "Hifadhi faili za manukuu kando ya video kama SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM haiwezi kuhifadhi manukuu, kwa hivyo video itahifadhiwa kama MKV"
 }

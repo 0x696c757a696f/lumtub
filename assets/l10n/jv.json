@@ -3542,5 +3542,14 @@
   "Fill the window": "Kebak jendhela",
   "Fill the window (W)": "Kebak jendhela (W)",
   "Hide the side rail while watching": "Singidake bar sisih nalika nonton",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Video entuk papane dhewe, kaya ing YouTube; mode bioskop tansah nyingidake"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Video entuk papane dhewe, kaya ing YouTube; mode bioskop tansah nyingidake",
+  "Reading subtitles…": "Lagi maca subtitel…",
+  "Subtitles inside the video": "Subtitel ing njero video",
+  "Translate into…": "Terjemahaké menyang…",
+  "Bilingual subtitles": "Subtitel dwibasa",
+  "One more track with two lines: the top language over the bottom one": "Siji trek maneh kanthi rong baris: basa ndhuwur ing ndhuwur basa ngisor",
+  "Top line": "Baris ndhuwur",
+  "Bottom line": "Baris ngisor",
+  "Save the subtitle files beside the video as SRT": "Simpen file subtitel ing jejer video minangka SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ora bisa ngemot subtitel, mula video disimpen minangka MKV"
 }

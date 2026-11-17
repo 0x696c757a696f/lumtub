@@ -3542,5 +3542,14 @@
   "Fill the window": "উইন্ডো পূর্ণ করুন",
   "Fill the window (W)": "উইন্ডো পূর্ণ করুন (W)",
   "Hide the side rail while watching": "দেখার সময় সাইডবার লুকান",
-  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-এর মতো ভিডিও নিজের জায়গা পায়; থিয়েটার মোডে সাইডবার সবসময় লুকানো থাকে"
+  "The video gets its room, as on YouTube; theater mode always hides it": "YouTube-এর মতো ভিডিও নিজের জায়গা পায়; থিয়েটার মোডে সাইডবার সবসময় লুকানো থাকে",
+  "Reading subtitles…": "সাবটাইটেল পড়া হচ্ছে…",
+  "Subtitles inside the video": "ভিডিওর ভেতরের সাবটাইটেল",
+  "Translate into…": "অনুবাদ করুন…",
+  "Bilingual subtitles": "দ্বিভাষিক সাবটাইটেল",
+  "One more track with two lines: the top language over the bottom one": "আরও একটি দুই লাইনের ট্র্যাক: উপরের ভাষা নিচের ভাষার ওপরে",
+  "Top line": "উপরের লাইন",
+  "Bottom line": "নিচের লাইন",
+  "Save the subtitle files beside the video as SRT": "সাবটাইটেল ফাইল ভিডিওর পাশে SRT হিসেবে সংরক্ষণ করুন",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM সাবটাইটেল ধারণ করতে পারে না, তাই ভিডিওটি MKV হিসেবে সংরক্ষিত হবে"
 }

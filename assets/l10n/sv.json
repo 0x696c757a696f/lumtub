@@ -3542,5 +3542,14 @@
   "Fill the window": "Fyll fönstret",
   "Fill the window (W)": "Fyll fönstret (W)",
   "Hide the side rail while watching": "Dölj sidofältet under visning",
-  "The video gets its room, as on YouTube; theater mode always hides it": "Videon får sitt utrymme, som på YouTube; bioläge döljer det alltid"
+  "The video gets its room, as on YouTube; theater mode always hides it": "Videon får sitt utrymme, som på YouTube; bioläge döljer det alltid",
+  "Reading subtitles…": "Läser undertexter…",
+  "Subtitles inside the video": "Undertexter i videon",
+  "Translate into…": "Översätt till…",
+  "Bilingual subtitles": "Tvåspråkiga undertexter",
+  "One more track with two lines: the top language over the bottom one": "Ytterligare ett spår med två rader: det övre språket ovanför det nedre",
+  "Top line": "Övre raden",
+  "Bottom line": "Nedre raden",
+  "Save the subtitle files beside the video as SRT": "Spara undertextfilerna bredvid videon som SRT",
+  "WebM cannot hold subtitles, so the video is saved as MKV": "WebM kan inte innehålla undertexter, så videon sparas som MKV"
 }

@@ -240,8 +240,7 @@ void main() {
       expect(task.speed, 250.0);
       processes[0].out('lumtub-file|${file.path}');
       await processes[0].exit(0);
-      await settle();
-      expect(task.status, DownloadStatus.done);
+      await until(() => task.status == DownloadStatus.done);
       expect(task.filePath, file.path);
 
       final local = (await m.localVideo('aaaaaaaaaaa'))!;

@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Pentru like, vot și comentarii la postările din comunitate, pentru scrisul în chatul live și pentru redarea videoclipurilor doar pentru membri",
   "VideoToolbox (zero-copy)": "VideoToolbox (zero-copy)",
   "VideoToolbox (copy-back)": "VideoToolbox (copiere inversă)",
+  "MediaCodec (zero-copy)": "MediaCodec (zero-copy)",
+  "MediaCodec (copy-back)": "MediaCodec (copiere inversă)",
   "The status updates only after a video in that format has played.": "Starea se actualizează doar după ce a fost redat un videoclip în formatul respectiv.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

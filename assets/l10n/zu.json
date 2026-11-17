@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Ukuthanda, ukuvotela nokuphawula ekuthunyelweni komphakathi, ukubhala engxoxweni yokusakaza bukhoma, nokudlala amavidiyo amalungu kuphela",
   "VideoToolbox (zero-copy)": "VideoToolbox (engenakhophi)",
   "VideoToolbox (copy-back)": "VideoToolbox (ikhophi ibuyela emuva)",
+  "MediaCodec (zero-copy)": "MediaCodec (engenakhophi)",
+  "MediaCodec (copy-back)": "MediaCodec (ikhophi ibuyela emuva)",
   "The status updates only after a video in that format has played.": "Isimo sivuseleleka kuphela ngemva kokuba ividiyo yefomethi efanayo isidlalwe.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

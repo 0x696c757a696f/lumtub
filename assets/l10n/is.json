@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Til að líka við, kjósa í og skrifa athugasemdir við færslur í samfélaginu, skrifa í bein spjöll og spila myndbönd sem eru aðeins fyrir meðlimi",
   "VideoToolbox (zero-copy)": "VideoToolbox (án afritunar)",
   "VideoToolbox (copy-back)": "VideoToolbox (með afritun til baka)",
+  "MediaCodec (zero-copy)": "MediaCodec (án afritunar)",
+  "MediaCodec (copy-back)": "MediaCodec (með afritun til baka)",
   "The status updates only after a video in that format has played.": "Staðan uppfærist aðeins eftir að myndband á því sniði hefur verið spilað.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

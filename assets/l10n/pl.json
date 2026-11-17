@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Do lubienia wpisów społeczności, głosowania i komentowania, pisania na czacie na żywo oraz odtwarzania filmów tylko dla członków",
   "VideoToolbox (zero-copy)": "VideoToolbox (zero-copy)",
   "VideoToolbox (copy-back)": "VideoToolbox (copy-back)",
+  "MediaCodec (zero-copy)": "MediaCodec (zero-copy)",
+  "MediaCodec (copy-back)": "MediaCodec (copy-back)",
   "The status updates only after a video in that format has played.": "Stan aktualizuje się dopiero po odtworzeniu filmu w danym formacie.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

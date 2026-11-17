@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Bruges til at synes godt om, stemme i og kommentere fællesskabsopslag, skrive i livechat og afspille videoer kun for medlemmer",
   "VideoToolbox (zero-copy)": "VideoToolbox (nulkopi)",
   "VideoToolbox (copy-back)": "VideoToolbox (kopi-tilbage)",
+  "MediaCodec (zero-copy)": "MediaCodec (nulkopi)",
+  "MediaCodec (copy-back)": "MediaCodec (kopi-tilbage)",
   "The status updates only after a video in that format has played.": "Status opdateres først, når en video i det format er blevet afspillet.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

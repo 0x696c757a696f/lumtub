@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Για «Μου αρέσει», ψηφοφορία και σχόλια σε αναρτήσεις κοινότητας, συμμετοχή στη ζωντανή συνομιλία και αναπαραγωγή βίντεο μόνο για μέλη",
   "VideoToolbox (zero-copy)": "VideoToolbox (μηδενική αντιγραφή)",
   "VideoToolbox (copy-back)": "VideoToolbox (αντιγραφή πίσω)",
+  "MediaCodec (zero-copy)": "MediaCodec (μηδενική αντιγραφή)",
+  "MediaCodec (copy-back)": "MediaCodec (αντιγραφή πίσω)",
   "The status updates only after a video in that format has played.": "Η κατάσταση ενημερώνεται μόνο αφού αναπαραχθεί ένα βίντεο στην αντίστοιχη μορφή.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "కమ్యూనిటీ పోస్ట్‌లను లైక్ చేయడం, వాటిలో ఓటు వేయడం మరియు వ్యాఖ్యానించడం, ప్రత్యక్ష చాట్‌లో వ్రాయడం మరియు సభ్యులకు మాత్రమే ఉన్న వీడియోలను ప్లే చేయడం కోసం",
   "VideoToolbox (zero-copy)": "VideoToolbox (జీరో-కాపీ)",
   "VideoToolbox (copy-back)": "VideoToolbox (కాపీ-బ్యాక్)",
+  "MediaCodec (zero-copy)": "MediaCodec (జీరో-కాపీ)",
+  "MediaCodec (copy-back)": "MediaCodec (కాపీ-బ్యాక్)",
   "The status updates only after a video in that format has played.": "ఆ ఫార్మాట్‌లో వీడియో ప్లే అయిన తర్వాత మాత్రమే స్థితి అప్‌డేట్ అవుతుంది.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

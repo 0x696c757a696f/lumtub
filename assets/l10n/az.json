@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "İcma yazılarını bəyənmək, onlarda səs vermək və şərh yazmaq, canlı çatda yazmaq və yalnız üzvlər üçün olan videoları oxutmaq üçün",
   "VideoToolbox (zero-copy)": "VideoToolbox (sıfır surət)",
   "VideoToolbox (copy-back)": "VideoToolbox (geri surət)",
+  "MediaCodec (zero-copy)": "MediaCodec (sıfır surət)",
+  "MediaCodec (copy-back)": "MediaCodec (geri surət)",
   "The status updates only after a video in that format has played.": "Status yalnız həmin formatda video oxudulduqdan sonra yenilənir.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

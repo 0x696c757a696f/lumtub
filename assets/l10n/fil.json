@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Para sa pag-like, pagboto at pagkomento sa mga post ng komunidad, pagsusulat sa live chat, at pag-play ng mga video para sa mga miyembro lang",
   "VideoToolbox (zero-copy)": "VideoToolbox (zero-copy)",
   "VideoToolbox (copy-back)": "VideoToolbox (copy-back)",
+  "MediaCodec (zero-copy)": "MediaCodec (zero-copy)",
+  "MediaCodec (copy-back)": "MediaCodec (copy-back)",
   "The status updates only after a video in that format has played.": "Nag-a-update lang ang status pagkatapos mag-play ng video sa format na iyon.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

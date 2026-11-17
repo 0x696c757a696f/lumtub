@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Paredzēts kopienas ierakstu atzīmēšanai ar „Patīk“, balsošanai tajos un komentēšanai, rakstīšanai tiešraides tērzēšanā un video tikai dalībniekiem atskaņošanai",
   "VideoToolbox (zero-copy)": "VideoToolbox (nulles kopēšana)",
   "VideoToolbox (copy-back)": "VideoToolbox (kopēšana atpakaļ)",
+  "MediaCodec (zero-copy)": "MediaCodec (nulles kopēšana)",
+  "MediaCodec (copy-back)": "MediaCodec (kopēšana atpakaļ)",
   "The status updates only after a video in that format has played.": "Statuss tiek atjaunināts tikai pēc tam, kad ir atskaņots video attiecīgajā formātā.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

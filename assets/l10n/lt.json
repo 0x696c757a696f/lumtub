@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Skirta bendruomenės įrašų pamėgimui, balsavimui ir komentavimui, rašymui tiesioginių transliacijų pokalbyje ir vaizdo įrašų tik nariams atkūrimui",
   "VideoToolbox (zero-copy)": "VideoToolbox (be kopijavimo)",
   "VideoToolbox (copy-back)": "VideoToolbox (su kopijavimu atgal)",
+  "MediaCodec (zero-copy)": "MediaCodec (be kopijavimo)",
+  "MediaCodec (copy-back)": "MediaCodec (su kopijavimu atgal)",
   "The status updates only after a video in that format has played.": "Būsena atnaujinama tik po to, kai buvo paleistas vaizdo įrašas tokiu formatu.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

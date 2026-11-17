@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Ad probandum, suffragandum et commentandum nuntios communitatis, in colloquio in vivo scribendum, et pelliculas sociis tantum ludendas",
   "VideoToolbox (zero-copy)": "VideoToolbox (sine copia)",
   "VideoToolbox (copy-back)": "VideoToolbox (cum copia retro)",
+  "MediaCodec (zero-copy)": "MediaCodec (sine copia)",
+  "MediaCodec (copy-back)": "MediaCodec (cum copia retro)",
   "The status updates only after a video in that format has played.": "Status tantum renovatur postquam pellicula in illa forma lusa est.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

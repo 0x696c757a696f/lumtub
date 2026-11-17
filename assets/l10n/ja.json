@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "コミュニティ投稿への高評価、投票、コメント、ライブチャットへの書き込み、メンバー限定動画の再生に使用します",
   "VideoToolbox (zero-copy)": "VideoToolbox（ゼロコピー）",
   "VideoToolbox (copy-back)": "VideoToolbox（コピーバック）",
+  "MediaCodec (zero-copy)": "MediaCodec（ゼロコピー）",
+  "MediaCodec (copy-back)": "MediaCodec（コピーバック）",
   "The status updates only after a video in that format has played.": "状態は、その形式の動画が実際に再生された後にのみ更新されます。",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

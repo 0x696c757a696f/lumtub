@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "សម្រាប់ការចូលចិត្ត បោះឆ្នោត និងបញ្ចេញមតិលើការបង្ហោះសហគមន៍ ការសរសេរក្នុងការជជែកផ្ទាល់ និងការចាក់វីដេអូសម្រាប់សមាជិក",
   "VideoToolbox (zero-copy)": "VideoToolbox (មិនចម្លង)",
   "VideoToolbox (copy-back)": "VideoToolbox (ចម្លងត្រឡប់)",
+  "MediaCodec (zero-copy)": "MediaCodec (មិនចម្លង)",
+  "MediaCodec (copy-back)": "MediaCodec (ចម្លងត្រឡប់)",
   "The status updates only after a video in that format has played.": "ស្ថានភាពអាប់ដេតតែបន្ទាប់ពីវីដេអូទ្រង់ទ្រាយនោះបានចាក់ប៉ុណ្ណោះ។",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

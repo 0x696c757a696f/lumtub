@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Yhteisön julkaisuista tykkäämiseen, niissä äänestämiseen ja niiden kommentointiin, live-chatiin kirjoittamiseen ja vain jäsenille tarkoitettujen videoiden toistoon",
   "VideoToolbox (zero-copy)": "VideoToolbox (nollakopiointi)",
   "VideoToolbox (copy-back)": "VideoToolbox (takaisinkopiointi)",
+  "MediaCodec (zero-copy)": "MediaCodec (nollakopiointi)",
+  "MediaCodec (copy-back)": "MediaCodec (takaisinkopiointi)",
   "The status updates only after a video in that format has played.": "Tila päivittyy vasta, kun kyseisen muotoinen video on toistettu.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

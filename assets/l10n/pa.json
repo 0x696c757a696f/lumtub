@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "ਕਮਿਊਨਿਟੀ ਪੋਸਟਾਂ ਨੂੰ ਪਸੰਦ ਕਰਨ, ਵੋਟ ਪਾਉਣ ਅਤੇ ਟਿੱਪਣੀ ਕਰਨ, ਲਾਈਵ ਚੈਟ ਵਿੱਚ ਲਿਖਣ ਅਤੇ ਸਿਰਫ਼ ਮੈਂਬਰਾਂ ਲਈ ਵੀਡੀਓ ਚਲਾਉਣ ਲਈ",
   "VideoToolbox (zero-copy)": "VideoToolbox (ਜ਼ੀਰੋ-ਕਾਪੀ)",
   "VideoToolbox (copy-back)": "VideoToolbox (ਕਾਪੀ-ਬੈਕ)",
+  "MediaCodec (zero-copy)": "MediaCodec (ਜ਼ੀਰੋ-ਕਾਪੀ)",
+  "MediaCodec (copy-back)": "MediaCodec (ਕਾਪੀ-ਬੈਕ)",
   "The status updates only after a video in that format has played.": "ਸਥਿਤੀ ਉਸ ਫਾਰਮੈਟ ਦਾ ਵੀਡੀਓ ਚੱਲਣ ਤੋਂ ਬਾਅਦ ਹੀ ਅੱਪਡੇਟ ਹੁੰਦੀ ਹੈ।",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

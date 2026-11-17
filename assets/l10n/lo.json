@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "ສຳລັບການຖືກໃຈ, ໂຫວດ ແລະ ຄອມເມັ້ນໂພສຊຸມຊົນ, ຂຽນໃນແຊັດສົດ, ແລະ ຫຼິ້ນວິດີໂອສະເພາະສະມາຊິກ",
   "VideoToolbox (zero-copy)": "VideoToolbox (ບໍ່ສຳເນົາ)",
   "VideoToolbox (copy-back)": "VideoToolbox (ສຳເນົາກັບ)",
+  "MediaCodec (zero-copy)": "MediaCodec (ບໍ່ສຳເນົາ)",
+  "MediaCodec (copy-back)": "MediaCodec (ສຳເນົາກັບ)",
   "The status updates only after a video in that format has played.": "ສະຖານະຈະອັບເດດຫຼັງຈາກວິດີໂອຮູບແບບນັ້ນຫຼິ້ນແລ້ວເທົ່ານັ້ນ.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

@@ -2788,6 +2788,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "برای پسندیدن، رأی دادن و نظر گذاشتن روی مطالب انجمن، نوشتن در گفتگوی زنده و پخش ویدیوهای ویژه اعضا",
   "VideoToolbox (zero-copy)": "VideoToolbox (بدون کپی)",
   "VideoToolbox (copy-back)": "VideoToolbox (با کپی برگشتی)",
+  "MediaCodec (zero-copy)": "MediaCodec (بدون کپی)",
+  "MediaCodec (copy-back)": "MediaCodec (با کپی برگشتی)",
   "The status updates only after a video in that format has played.": "وضعیت فقط پس از پخش واقعی ویدیویی با آن قالب به‌روز می‌شود.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

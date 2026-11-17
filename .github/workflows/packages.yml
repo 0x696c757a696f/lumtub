@@ -105,6 +105,16 @@ jobs:
           flatpak build-bundle --arch=${{ matrix.arch }} --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo \
             repo "$BUNDLE" io.github.lumtub.lumtub stable
           ls -l "$BUNDLE"
+      - name: Flathub's linter
+        if: matrix.arch == 'x86_64'
+        run: |
+          # The checks Flathub runs on a submission, on the manifest and on the built repo.
+          flatpak install -y --user --noninteractive flathub org.flatpak.Builder
+          lint() { flatpak run --command=flatpak-builder-lint org.flatpak.Builder "$@"; }
+          status=0
+          lint --exceptions manifest packaging/flatpak/io.github.lumtub.lumtub.yml || status=1
+          lint --exceptions repo repo || status=1
+          exit $status
       - name: Start it
         run: |
           # Installs the bundle and starts Lumtub on a virtual display for
@@ -163,12 +173,13 @@ jobs:
 
   publish:
     name: Send to ${{ matrix.target }}
-    needs: manifests
+    # After the Flatpak built and passed Flathub's linter.
+    needs: [manifests, flatpak]
     if: github.event_name != 'pull_request'
     strategy:
       fail-fast: false
       matrix:
-        target: [winget, scoop]
+        target: [winget, scoop, flathub]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

@@ -220,13 +220,18 @@ class _LumtubAppState extends State<LumtubApp> {
         unawaited(player.pause());
       },
       // iOS takes the listening sockets of a suspended app away.
-      onResume: () => unawaited(controller.reviveRelay()),
+      // The picture comes back here on iOS, once the app is active again:
+      // a decoder made while it is still in the background is invalid.
+      onResume: () {
+        unawaited(controller.reviveRelay());
+        if (Platform.isIOS) unawaited(controller.setBackgroundAudioOnly(false));
+      },
       onShow: () {
         // “Show animations in Windows” may have changed meanwhile.
         if (widget.controller.appearance.motion == MotionPreference.system && Motion.systemPrefersReduced() != Motion.reduced) setState(() => _themeKey = null);
         controller.cast.windowHidden = false;
         KeepAwake.hidden = false;
-        unawaited(controller.setBackgroundAudioOnly(false));
+        if (!Platform.isIOS) unawaited(controller.setBackgroundAudioOnly(false));
         if (!_pausedByMinimize) return;
         _pausedByMinimize = false;
         unawaited(controller.player?.play());

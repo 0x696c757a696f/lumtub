@@ -405,9 +405,9 @@ bool isTranslatedPhrase(String phrase) => nonLatinLetter.hasMatch(phrase);
 /// Lower-case words a search keeps in every language: titles write them
 /// the same everywhere.
 const keptSearchWords = {
-  'asmr', 'bhajan', 'blender', 'cosplay', 'esports', 'haul', 'hip', 'hop', 'imam', 'indie', 'jazz', 'khutbah', 'kirtan', 'lofi', //
+  'asmr', 'bhajan', 'blender', 'cosplay', 'esports', 'haul', 'hip', 'hololive', 'hop', 'imam', 'indie', 'jazz', 'khutbah', 'kirtan', 'lofi', //
   'macos', 'mandala', 'manga', 'metal', 'mukbang', 'nasheed', 'nijisanji', 'podcast', 'pop', 'puja', 'qawwali', 'rabbi', 'rap', //
-  'rock', 'seerah', 'speedrun', 'swami', 'tafsir', 'thangka', 'unboxing', 'vlog', 'vtuber', 'walkthrough', 'writeup', 'yoga',
+  'rock', 'seerah', 'speedrun', 'swami', 'tafsir', 'thangka', 'startup', 'tutorial', 'unboxing', 'vlog', 'vtuber', 'walkthrough', 'writeup', 'yoga',
 };
 
 final _commonWord = RegExp(r"^[a-z][a-z'-]{2,}$");
@@ -425,7 +425,11 @@ bool translatesInto(String phrase, ExploreLanguage language) {
 
 /// Search words put the same way in every language, as YouTube titles
 /// write them.
-const searchGlossary = {'直播': 'live', '实况': 'live', '直播间': 'live'};
+///
+/// "live" itself stays out of the words around it: "art live" put into
+/// Indonesian or Vietnamese was "the art of living", "Diwali live" into
+/// Dutch "Divali leeft" (seen on 2026-11-17 in 66 languages).
+const searchGlossary = {'直播': 'live', '实况': 'live', '直播间': 'live', 'live': 'live', 'Live': 'live', 'LIVE': 'live'};
 
 
 /// [query] with the zones' Chinese keywords in English ([searchPivots]);
@@ -488,7 +492,7 @@ List<String> searchPhrasesOf(String query) {
   bool? translated;
   for (final word in query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty)) {
     final mine = isTranslatedPhrase(word);
-    if (unspacedScript.hasMatch(word)) {
+    if (unspacedScript.hasMatch(word) || searchGlossary.containsKey(word)) {
       if (run.isNotEmpty) phrases.add(run.join(' '));
       run = [];
       phrases.add(word);

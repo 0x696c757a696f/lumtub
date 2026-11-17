@@ -65,7 +65,11 @@ English in `searchPivots` (`lib/explore_pivots.dart`), which is translated
 instead, a run of English words at a time, and which an English search
 takes as it is. Translated one by one from Chinese, keywords lost their
 sense (体育 → "educazione fisica", 后端 → "rear end"). `直播` and other
-words of `searchGlossary` are searched as `live` everywhere. A test checks
+words of `searchGlossary` are searched as `live` everywhere, and so is
+an English `live`, kept apart from the words around it (put into other
+languages with them it became "living": `art live` in Indonesian was
+"the art of living"). Jargon and names titles write in English
+(`tutorial`, `startup`, `writeup`, `hololive`…) are kept as they are. A test checks
 that every Chinese keyword of every zone, sub-category and filter has its
 English. Each word of the result is kept once.
 

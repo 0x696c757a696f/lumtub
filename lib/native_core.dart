@@ -474,7 +474,7 @@ class ProcessTree implements Process {
   /// A [background] tree runs below normal priority, its first process in
   /// Windows' efficiency mode: for downloads, which nobody waits on.
   static Future<Process> start(String executable, List<String> arguments, {Map<String, String>? environment, String? workingDirectory, bool background = false}) async {
-    if (isYtDlp(executable)) arguments = [...ytDlpIsolation, ...arguments];
+    if (isYtDlp(executable)) arguments = [...ytDlpIsolation, if (forceIpv4) '--force-ipv4', ...arguments];
     if (IosPython.runs(executable)) return IosPython.current!.start(executable, arguments, environment);
     (arguments, environment) = NetworkProxy.hideCredentials(arguments, environment);
     if (AndroidPython.runs(executable)) (executable, arguments, environment) = AndroidPython.current!.command(executable, arguments, environment);
@@ -488,6 +488,9 @@ class ProcessTree implements Process {
   /// folder of the computer's or the user's own, so a yt-dlp configuration
   /// or plugin left on the computer cannot change what Lumtub runs.
   static const ytDlpIsolation = ['--ignore-config', '--no-plugin-dirs'];
+
+  /// Whether every yt-dlp run connects over IPv4 only (网络 › 只用 IPv4).
+  static bool forceIpv4 = false;
 
   /// Whether [executable] is a yt-dlp, by its file name.
   static bool isYtDlp(String executable) {

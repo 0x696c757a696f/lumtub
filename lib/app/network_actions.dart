@@ -11,6 +11,7 @@ extension NetworkActions on AppController {
     final now = DateTime.now();
     if (ifStale && now.difference(_proxyRead) < const Duration(seconds: 30)) return;
     _proxyRead = now;
+    ProcessTree.forceIpv4 = settings.ipv4Only;
     final next = await NetworkProxy.resolve(settings.proxyMode, settings.proxyAddress);
     await _routeThroughBridge(next);
     appHttpOverrides.endpoint = proxyEndpoint;

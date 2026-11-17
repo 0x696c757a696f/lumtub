@@ -3601,5 +3601,8 @@
   "Save the subtitle files beside the video as SRT": "视频旁的字幕文件存为 SRT",
   "WebM cannot hold subtitles, so the video is saved as MKV": "WebM 无法封入字幕，视频将改存为 MKV",
   "Picture in picture when leaving the app": "切到其他应用时进入画中画",
-  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "切到其他应用时，正在播放的视频以小窗继续；关闭时只在后台继续播放声音"
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "切到其他应用时，正在播放的视频以小窗继续；关闭时只在后台继续播放声音",
+  "IPv4 only": "只用 IPv4",
+  "yt-dlp connects over IPv4 only. Turn it on if videos take long to start and your network has IPv6 addresses that don't work": "yt-dlp 只通过 IPv4 连接。如果视频起播很慢，而你的网络有 IPv6 地址但实际不通，就打开它",
+  "IPv4 IPv6 force-ipv4 slow start network": "IPv4 IPv6 force-ipv4 起播慢 网络"
 }

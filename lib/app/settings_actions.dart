@@ -293,7 +293,8 @@ extension SettingsActions on AppController {
         next.dnsServer != oldSettings.dnsServer ||
         next.dnsCustomUrl != oldSettings.dnsCustomUrl ||
         next.certificateRoots != oldSettings.certificateRoots ||
-        next.postQuantum != oldSettings.postQuantum) {
+        next.postQuantum != oldSettings.postQuantum ||
+        next.ipv4Only != oldSettings.ipv4Only) {
       await _refreshProxy();
     }
     _update(() {

@@ -459,6 +459,8 @@ class DownloadManager extends ChangeNotifier {
       '--extractor-retries', '3',
       '--retries', '10',
       '--fragment-retries', '10',
+      // Formats sent in pieces (HLS, DASH fragments) fetch four at a time.
+      '--concurrent-fragments', '4',
       if (o.cacheDirectory != null) ...['--cache-dir', o.cacheDirectory!],
       if (o.deno != null) ...['--js-runtimes', 'deno:${o.deno!}'],
       if (o.proxy != null) ...['--proxy', o.proxy!],

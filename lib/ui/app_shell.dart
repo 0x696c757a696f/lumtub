@@ -53,6 +53,7 @@ import '../skins/skin_library.dart';
 import '../skins/skin.dart';
 import '../window_frame.dart';
 import '../device.dart';
+import 'update_notice.dart';
 
 const appName = 'Lumtub';
 
@@ -620,7 +621,7 @@ class _AppShellState extends State<AppShell> {
           tooltip: tr('Settings'),
           isSelected: _controller.mode == PageMode.settings && !_controller.onWatchPage,
           onPressed: () => openSettings(context, _controller),
-          icon: Icon(AppIcons.gear),
+          icon: UpdateDot(controller: _controller, child: Icon(AppIcons.gear)),
           selectedIcon: const Icon(AppIcons.gearFill),
         ) : null,
         destinations: [
@@ -668,7 +669,7 @@ class _AppShellState extends State<AppShell> {
     if (!controller.ready) return _SetupView(controller: controller);
     if (controller.onWatchPage && controller.videoController != null) return WatchPage(controller: controller);
     return switch (controller.mode) {
-      PageMode.home => HomeFeedPage(controller: controller, onFocusSearch: _focusSearch),
+      PageMode.home => UpdateNotice(controller: controller, child: HomeFeedPage(controller: controller, onFocusSearch: _focusSearch)),
       PageMode.explore => controller.query == null ? ExplorePage(controller: controller) : SearchResultsPage(controller: controller, onFocusSearch: _focusSearch),
       PageMode.history => HistoryPage(controller: controller),
       PageMode.subscriptions => SubscriptionsPage(controller: controller),
@@ -868,7 +869,7 @@ class _TopBar extends StatelessWidget {
             tooltip: tr('Settings'),
             isSelected: controller.mode == PageMode.settings && !controller.onWatchPage,
             onPressed: () => openSettings(context, controller),
-            icon: Icon(AppIcons.gear),
+            icon: UpdateDot(controller: controller, child: Icon(AppIcons.gear)),
             selectedIcon: const Icon(AppIcons.gearFill),
           ),
           AccountButton(

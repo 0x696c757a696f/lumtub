@@ -955,14 +955,14 @@ List<SettingEntry> aboutEntries(AppController controller) => [
         final progress = updater?.progress;
         final String title, subtitle;
         if (updater?.ready != null) {
-          title = tr('Version {0} downloaded', [release?.version ?? '']);
+          title = tr('Version {0} downloaded', [updater?.readyVersion ?? release?.version ?? '']);
           subtitle = updater?.installError != null
               ? tr("The installer didn't start: {0}. Click to try again", [updater!.installError!])
               : Platform.isAndroid
                   ? tr('Tap to install it')
                   : tr('Installs when Lumtub closes; click to restart and update now');
         } else if (progress != null) {
-          title = tr('Downloading version {0}…', [release?.version ?? '']);
+          title = tr('Downloading version {0}…', [updater?.downloading ?? release?.version ?? '']);
           subtitle = '${(progress * 100).round()}%';
         } else if (updater?.checking ?? false) {
           title = tr('Checking for app updates…');
@@ -992,7 +992,7 @@ List<SettingEntry> aboutEntries(AppController controller) => [
             if (progress != null || (updater?.checking ?? false)) return;
             await controller.checkAppUpdate();
             final found = controller.appUpdater?.available;
-            if (found != null && (!AppUpdater.canInstall || found.asset == null || controller.appUpdater?.rejected == found.version)) openExternal(found.page.isEmpty ? '$_repository/releases' : found.page);
+            if (found != null && (!AppUpdater.canInstall || found.asset == null || controller.appUpdater?.rejected == found.version)) openExternal(AppUpdater.releasePage(found.page));
             if (found == null && context.mounted && controller.appUpdater?.error == null) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Lumtub is up to date'))));
             }

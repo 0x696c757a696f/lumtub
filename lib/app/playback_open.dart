@@ -19,11 +19,11 @@ extension PlaybackOpening on AppController {
     }
   }
 
-  Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
+  Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true, bool quickAgain = false}) async {
     // Opened again (reconnecting, another quality): the subtitles shown
     // come back, as the new file starts with none of the ones added.
     final kept = _tracking?.id == item.id ? _shownSubtitles() : null;
-    final opened = await _openOnce(item, serial, start: start, play: play, resolved: resolved, piped: piped, allowLocal: allowLocal);
+    final opened = await _openOnce(item, serial, start: start, play: play, resolved: resolved, piped: piped, allowLocal: allowLocal, quickAgain: quickAgain);
     if (opened && kept != null) unawaited(_restoreSubtitles(kept, serial));
     return opened;
   }
@@ -75,7 +75,9 @@ extension PlaybackOpening on AppController {
     unawaited(controller.platform.future.then((_) => logDebug(() => 'Video output made in ${made.elapsedMilliseconds} ms'), onError: (Object error) => logError('Video output failed', error)));
   }
 
-  Future<bool> _openOnce(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
+  /// [quickAgain] also asks YouTube directly on a reopen, after addresses
+  /// resolved ahead were refused.
+  Future<bool> _openOnce(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true, bool quickAgain = false}) async {
     final player = this.player!;
     _ensureVideo(player);
     try {
@@ -128,7 +130,7 @@ extension PlaybackOpening on AppController {
           var pending = video != null ? Future.value(video) : streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly, live: item.isLive);
           // The first open of a video also asks YouTube directly; whichever
           // answers first starts it. A reopen after a failure waits for yt-dlp.
-          if (video == null && !Platform.isAndroid && !Platform.isIOS && _quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
+          if (video == null && !Platform.isAndroid && !Platform.isIOS && (_quickSerial != serial || quickAgain) && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
             _quickSerial = serial;
             final full = pending;
             pending = Future.any([
@@ -217,7 +219,11 @@ extension PlaybackOpening on AppController {
         // together up to 1080p: a picture and a sound stream apart can
         // drift out of sync, so they are taken only above it.
         await platform.setProperty('ytdl-format', live ? FormatPolicy.liveExpression(_playback, format) : format);
-        await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: direct == null ? video?.file.path : null, proxy: proxy.ytDlpValue(settings.proxyMode), formatSort: _formatSort));
+        final infoJson = direct == null ? video?.file.path : null;
+        // ytdl_hook asking YouTube itself leaves out the TV clients too
+        // while their addresses are being refused.
+        final extractorArgs = infoJson == null && !live && _repository?.streams.avoidingTv == true ? StreamResolver.visionOnly : null;
+        await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: infoJson, proxy: proxy.ytDlpValue(settings.proxyMode), formatSort: _formatSort, extractorArgs: extractorArgs));
         final liveAgent = (mobileLive?['http_headers'] as Map?)?['User-Agent'] as String? ?? agent;
         if (direct != null && agent != null) {
           await platform.setProperty('user-agent', agent);
@@ -239,6 +245,7 @@ extension PlaybackOpening on AppController {
       _resumePoint.start(_lastPosition);
       _openedResolved = video == null ? null : item.id;
       _openedOrigin = video?.origin;
+      _openedVideo = video;
       if (video != null) {
         _update(() {
           availableHeights = video!.heightsFor(settings);

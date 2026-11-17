@@ -83,6 +83,10 @@ class ResolvedVideo {
 
   /// For the log when an address is refused: how old it is, and which
   /// YouTube client and formats yt-dlp took it from.
+  /// The YouTube clients (`c=` of each address) the picked streams came
+  /// from, such as `TVHTML5`.
+  List<String> get clients => [for (final c in (_summary()?['clients'] as List?) ?? const []) '$c'];
+
   String get origin {
     final summary = _summary();
     final clients = (summary?['clients'] as List?)?.join('/') ?? '?';
@@ -193,6 +197,39 @@ class StreamResolver {
   /// The entries of [_results] resolved with `live`.
   final _lives = <String>{};
 
+  /// Until when yt-dlp is asked with its TV clients after a run without
+  /// them gave nothing (see [avoidingTv]).
+  DateTime? _tvNeededUntil;
+
+  /// How long the TV clients are asked again after a run without them
+  /// failed.
+  static const tvNeededFor = Duration(minutes: 30);
+
+  /// yt-dlp's `--extractor-args` value that asks only the client a quick
+  /// start asks as (visionOS), leaving out the TV and web clients.
+  static const visionOnly = 'youtube:player_client=visionos';
+
+  /// Whether yt-dlp asks only the visionOS client, as it does unless a
+  /// run that way just failed. Measured on a Windows PC on 2026-11-17
+  /// (yt-dlp 2026.11.16, five videos, each client alone): with its default
+  /// clients a run took 15–24 s, 6–11 s of it Deno solving the TV client's
+  /// JavaScript challenge on every run, and some TV addresses answered 403
+  /// at once; visionOS alone took 4.3–5.1 s, needed no challenge, gave the
+  /// same heights (up to 2160p) and only addresses that played. The other
+  /// TV clients failed ("The page needs to be reloaded") and tv_simply and
+  /// android_vr gave 360p only without a PO token.
+  bool get avoidingTv {
+    final until = _tvNeededUntil;
+    return until == null || !DateTime.now().isBefore(until);
+  }
+
+  /// YouTube refused stream addresses yt-dlp took from a TV client the
+  /// moment they were opened: the TV clients are left out again at once.
+  void avoidTv() {
+    if (!avoidingTv) logInfo("YouTube refused the TV client's stream addresses; asking yt-dlp as visionOS alone again");
+    _tvNeededUntil = null;
+  }
+
   /// mpv's own default when no format was chosen.
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
 
@@ -206,7 +243,11 @@ class StreamResolver {
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
         if (deno != null) ...['--js-runtimes', 'deno:${deno!}'],
         '--extractor-retries', '3',
-        if (live) ...['--extractor-args', 'youtube:formats=incomplete${liveClients == null ? '' : ';player_client=$liveClients'}'],
+        if (live)
+          ...['--extractor-args', 'youtube:formats=incomplete${liveClients == null ? '' : ';player_client=$liveClients'}']
+        // A signed-in run keeps yt-dlp's own clients for signed-in users.
+        else if (cookies == null && avoidingTv)
+          ...['--extractor-args', visionOnly],
         '--no-playlist',
         '--dump-single-json',
         '--format', expressionOf(format),
@@ -271,7 +312,7 @@ class StreamResolver {
       final client = _quickClient ??= appHttpClient();
       final headers = {'Content-Type': 'application/json', ...(parts['headers'] as Map).cast<String, String>()};
       final body = (parts['body'] as Map).cast<String, Object?>();
-      final response = await YoutubePlayerProbe.post(client, headers, body, timeout: const Duration(seconds: 6));
+      final response = await YoutubePlayerProbe.post(client, headers, body, timeout: const Duration(seconds: 6), playing: true);
       if (response.statusCode != 200) {
         logInfo('Quick start of $videoId: /player answered HTTP ${response.statusCode}');
         return null;
@@ -284,6 +325,12 @@ class StreamResolver {
       }
       final text = core.quickInfo(answer, policy);
       if (text == null) {
+        // visionOS taken for a bot: yt-dlp asking only as visionOS would be
+        // too, so it asks its default clients for a while.
+        if (answer.contains('"LOGIN_REQUIRED"') && avoidingTv) {
+          _tvNeededUntil = DateTime.now().add(tvNeededFor);
+          logInfo("visionOS was taken for a bot; yt-dlp asks its default clients for ${tvNeededFor.inMinutes} minutes");
+        }
         logInfo('Quick start of $videoId: left to yt-dlp (${VideoFactsLookup.playerWhy(answer)})');
         return null;
       }
@@ -349,6 +396,12 @@ class StreamResolver {
     _proxies.remove(videoId);
     _lives.remove(videoId);
     _deleteInfo(videoId);
+  }
+
+  /// [forget]s [videoId] when [video] is its kept answer, whose addresses
+  /// were refused; an answer still being made, or another one, is kept.
+  void forgetAnswer(String videoId, ResolvedVideo video) {
+    if (identical(_done[videoId], video)) forget(videoId);
   }
 
   File _infoFile(String videoId) => File('${infoDirectory.path}${Platform.pathSeparator}$videoId.json');
@@ -418,6 +471,11 @@ class StreamResolver {
   /// Errors a second attempt can get past, unlike a private or removed video.
   static final _transient = RegExp(r'HTTP Error 5\d\d|timed out|Connection (reset|aborted|refused)|Remote end closed|getaddrinfo|IncompleteRead', caseSensitive: false);
 
+  /// What yt-dlp says when the clients it asked gave nothing to play,
+  /// which the TV client may still give; a private, removed or
+  /// members-only video stays refused whichever client asks.
+  static final _tvMayHelp = RegExp(r'not a bot|Requested format is not available|No video formats found|Only images are available|PO Token', caseSensitive: false);
+
   /// Whether [error] is a network failure that resolving already retried.
   static bool isTransient(Object error) => _transient.hasMatch('$error');
 
@@ -436,6 +494,14 @@ class StreamResolver {
     if (_failed(result) && _transient.hasMatch(result.stderr.toString())) {
       logWarn('Resolving $videoId hit a network error, retrying once');
       await Future<void>.delayed(const Duration(seconds: 2));
+      result = await run(signed: signed);
+    }
+    if (_failed(result) && !live && !signed && avoidingTv && _tvMayHelp.hasMatch(result.stderr.toString())) {
+      // The other clients may give nothing this video can play (when
+      // YouTube takes them for a bot, say): the TV client is asked too
+      // for a while.
+      logWarn("Resolving $videoId as visionOS alone failed; asking yt-dlp's default clients for ${tvNeededFor.inMinutes} minutes");
+      _tvNeededUntil = DateTime.now().add(tvNeededFor);
       result = await run(signed: signed);
     }
     if (_failed(result) && !signed && signedIn && membersOnlyError.hasMatch(result.stderr.toString())) {

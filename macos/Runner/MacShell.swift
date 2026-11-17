@@ -73,6 +73,8 @@ final class MacShell: NSObject, NSWindowDelegate {
     case "startDrag":
       let current = NSApp.currentEvent?.type == .leftMouseDown ? NSApp.currentEvent : lastPress
       if NSEvent.pressedMouseButtons & 1 != 0, let event = current { window.performDrag(with: event) }
+    case "hidePointer":
+      hidePointer(in: window, area: call.arguments as? [Double] ?? [])
     case "setDesktopGlass":
       let arguments = call.arguments as? [String: Any] ?? [:]
       let flag = { (key: String) in arguments[key] as? Bool ?? false }
@@ -85,6 +87,17 @@ final class MacShell: NSObject, NSWindowDelegate {
       return
     }
     result(nil)
+  }
+
+  /// Hides the pointer while it rests in [area] (left, top, right, bottom
+  /// from the content's top left), until it moves.
+  private func hidePointer(in window: NSWindow, area: [Double]) {
+    guard area.count == 4, window.isKeyWindow, let content = window.contentView else { return }
+    let point = content.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+    let x = Double(point.x)
+    let y = content.isFlipped ? Double(point.y) : Double(content.bounds.height - point.y)
+    guard x >= area[0], y >= area[1], x < area[2], y < area[3] else { return }
+    NSCursor.setHiddenUntilMouseMoves(true)
   }
 
   /// The title bar is hidden and the content runs under it, keeping the

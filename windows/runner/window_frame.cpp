@@ -123,6 +123,7 @@ LRESULT CALLBACK WindowFrame::ViewProc(HWND view, UINT message, WPARAM wparam, L
     // button or top edge for the same point.
     return HTTRANSPARENT;
   }
+  if (message == WM_MOUSEMOVE && frame->pointer_hidden_) frame->PointerMoved();
   if (message == WM_NCDESTROY) {
     ::RemoveWindowSubclass(view, ViewProc, id);
     frame->view_ = nullptr;
@@ -160,6 +161,8 @@ void WindowFrame::HandleCall(const flutter::MethodCall<EncodableValue>& call,
     ::PostMessage(window_, WM_CLOSE, 0, 0);
   } else if (method == "startDrag" || method == "startResize") {
     // Hit-testing moves and sizes the window.
+  } else if (method == "hidePointer") {
+    HidePointer(args);
   } else if (method == "setCaption") {
     const EncodableValue* height = Find(args, "height");
     caption_height_ = height ? Number(*height) : 0;
@@ -444,4 +447,31 @@ bool WindowFrame::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRES
       return false;
   }
   return false;
+}
+
+void WindowFrame::HidePointer(const EncodableValue* area) {
+  double box[4];
+  if (!view_ || !area || !ReadBox(*area, box) || ::GetForegroundWindow() != window_) return;
+  POINT point;
+  if (!::GetCursorPos(&point)) return;
+  const HWND under = ::WindowFromPoint(point);
+  if (under != view_ && under != window_) return;
+  POINT client = point;
+  if (!::ScreenToClient(view_, &client)) return;
+  const double scale = ScaleOf(window_);
+  const double x = client.x / scale;
+  const double y = client.y / scale;
+  if (x < box[0] || y < box[1] || x >= box[2] || y >= box[3]) return;
+  pointer_hidden_ = true;
+  hidden_at_ = point;
+  ::SetCursor(nullptr);
+}
+
+void WindowFrame::PointerMoved() {
+  POINT point;
+  if (!::GetCursorPos(&point) || (point.x == hidden_at_.x && point.y == hidden_at_.y)) return;
+  pointer_hidden_ = false;
+  // Flutter answers the move with the pointer it wants, which may be the
+  // one it already had and so is not sent again.
+  if (::GetCursor() == nullptr) ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
 }

@@ -254,6 +254,12 @@ pub fn xml_text(xml: &str, name: &str) -> Option<String> {
 /// The first element [name] (prefix ignored): its full tag name and raw
 /// content. An empty element `<name/>` has empty content.
 fn element<'a>(xml: &'a str, name: &str) -> Option<(&'a str, &'a str)> {
+    element_at(xml, name).map(|(full, body, _)| (full, body))
+}
+
+/// [element], and where in [xml] its content ends (for a self-closing
+/// tag, where the tag ends).
+fn element_at<'a>(xml: &'a str, name: &str) -> Option<(&'a str, &'a str, usize)> {
     let mut from = 0;
     while let Some(at) = xml[from..].find('<') {
         let start = from + at + 1;
@@ -268,10 +274,10 @@ fn element<'a>(xml: &'a str, name: &str) -> Option<(&'a str, &'a str)> {
         }
         let close = tag.find('>')?;
         if tag[..close].ends_with('/') {
-            return Some((full, ""));
+            return Some((full, "", start + close + 1));
         }
         let body = &tag[close + 1..];
-        return closing(body, name).map(|end| (full, &body[..end]));
+        return closing(body, name).map(|end| (full, &body[..end], start + close + 1 + end));
     }
     None
 }
@@ -299,10 +305,9 @@ fn closing(body: &str, name: &str) -> Option<usize> {
 fn elements<'a>(xml: &'a str, name: &str) -> Vec<&'a str> {
     let mut out = Vec::new();
     let mut rest = xml;
-    while let Some((_, body)) = element(rest, name) {
+    while let Some((_, body, end)) = element_at(rest, name) {
         out.push(body);
-        let offset = body.as_ptr() as usize - rest.as_ptr() as usize + body.len();
-        rest = &rest[offset..];
+        rest = &rest[end..];
         if rest.is_empty() {
             break;
         }
@@ -659,6 +664,18 @@ mod tests {
             json!({"code": "701", "description": "Transition not available"})
         );
         assert_eq!(soap("<x>")["args"], json!({}));
+    }
+
+    #[test]
+    fn self_closing_service_in_a_list_is_skipped() {
+        // Found by fuzzing: a self-closing <service/> before more text.
+        let text = "r<\u{1}\0\0\0\0\0\0\n<<<<<<<service//////></<<<r<r<FFFF<<9<<<\0<%\0<<<\0<%\0\u{2}0</\0<";
+        let _ = description(text);
+        let _ = soap(text);
+        assert_eq!(
+            elements("<a><service/>x<service>y</service></a>", "service"),
+            vec!["", "y"]
+        );
     }
 
     #[test]

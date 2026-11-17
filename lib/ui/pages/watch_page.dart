@@ -775,6 +775,8 @@ class _Player extends StatelessWidget {
                 child: Video(
                   key: videoKey,
                   controller: controller.videoController!,
+                  // Background playback is decided in main.dart (onHide), not by the view.
+                  pauseUponEnteringBackgroundMode: false,
                   // The controls cover the video here and in full screen, so
                   // they measure the size it is drawn at.
                   controls: (state) => VideoBox(

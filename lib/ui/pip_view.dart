@@ -108,6 +108,8 @@ class _PipViewState extends State<PipView> {
                 child: WarmLayer(
                   child: Video(
                     controller: _controller.videoController!,
+                    // Background playback is decided in main.dart (onHide), not by the view.
+                    pauseUponEnteringBackgroundMode: false,
                     controls: NoVideoControls,
                     subtitleViewConfiguration: subtitles,
                   ),

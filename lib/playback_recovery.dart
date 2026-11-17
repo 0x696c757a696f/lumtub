@@ -88,6 +88,10 @@ class PlaybackRecovery {
   /// Whether an mpv log line says the graphics device went away, as after
   /// a driver reset: hardware-decoded frames can no longer reach the
   /// picture, which then flickers or freezes until the output is made again.
+  /// VideoToolbox's decoder session was invalidated (kVTInvalidSessionErr),
+  /// as iOS does to an app's sessions while it is in the background.
+  static bool decoderSessionLost(String text) => text.contains('invalid session') || text.contains('-12903');
+
   static bool graphicsLost(String text) => text.contains('Mapping hardware decoded surface failed') || _deviceLost.hasMatch(text);
 }
 

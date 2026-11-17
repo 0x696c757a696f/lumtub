@@ -6,6 +6,7 @@ import 'background_json.dart';
 import 'models.dart';
 import 'l10n/l10n.dart';
 import 'app_log.dart';
+import 'local_db.dart';
 
 /// How far into a video playback stopped.
 class WatchProgress {
@@ -96,11 +97,24 @@ class LibraryBackup {
   }
 }
 
+/// [item] as JSON text, made once per item: items do not change, so a
+/// list written again only encodes the ones added since.
+String encodedItem(VideoItem item) => _encodedItems[item] ??= jsonEncode(item.toJson());
+final _encodedItems = Expando<String>('encoded');
+
 /// Favorites, playlists, followed channels and watch progress, stored only on
-/// this computer in `data/library.json`.
+/// this computer: in `data/lumtub.db` with the Rust core, otherwise in
+/// `data/library.json`. A library.json left by an earlier version is read
+/// into the database once and then left as it was.
 class LibraryStore {
-  LibraryStore(this.file);
+  LibraryStore(this.file) : _db = LocalDb.enabled ? LocalDb.beside(file) : null;
   final File file;
+  LocalDb? _db;
+
+  static const _lists = ['favorites', 'watchLater', 'playlists', 'channels', 'groups', 'live', 'progress'];
+  static const _playlistList = 'playlist:';
+  /// The playlists' item lists in the database at the last read or write.
+  final _playlistLists = <String>{};
 
   static const _maxProgress = 500;
 
@@ -119,6 +133,83 @@ class LibraryStore {
   final _writes = WriteQueue();
 
   Future<void> load() async {
+    final db = _db;
+    if (db == null) return _loadJson();
+    try {
+      final found = await db.read(_lists, prefixes: const [_playlistList]);
+      if (found.meta['library'] == '1') {
+        _fill(found.lists);
+        return;
+      }
+    } on LocalDbException catch (e) {
+      if (e.setAside == null) {
+        // Unreadable for now, not damaged: this session keeps the JSON file
+        // rather than writing over what the database holds.
+        logError('Could not read the library database, using library.json for now', e);
+        _db = null;
+        return _loadJson();
+      }
+      logError('The library database was damaged, reading library.json again', e);
+    }
+    await _loadJson();
+    try {
+      await _write(db);
+      logInfo('The library is now kept in lumtub.db');
+    } on LocalDbException catch (e) {
+      logError('Could not move the library into lumtub.db', e);
+    }
+  }
+
+  void _fill(Map<String, List<(String, Object?)>> lists) {
+    List<(String, Object?)> list(String name) => lists[name] ?? const [];
+    favorites.addAll(_items([for (final (_, body) in list('favorites')) body]));
+    watchLater.addAll(_items([for (final (_, body) in list('watchLater')) body]));
+    for (final (id, body) in list('playlists')) {
+      final name = body is Map ? body['name']?.toString() : null;
+      playlists.add(LocalPlaylist(id: id, name: name ?? tr('Playlist'), items: _items([for (final (_, item) in list('$_playlistList$id')) item])));
+    }
+    _playlistLists.addAll(lists.keys.where((name) => name.startsWith(_playlistList)));
+    for (final (_, body) in list('channels')) {
+      final channel = ChannelRef.fromJson(body);
+      if (channel != null && !channels.contains(channel)) channels.add(channel);
+    }
+    for (final (name, body) in list('groups')) {
+      if (name.trim().isEmpty) continue;
+      channelGroups.add(ChannelGroup(name.trim(), {for (final id in body is List ? body : const []) if (id is String) id}));
+    }
+    for (final (id, body) in list('live')) {
+      if (body is List && body.length == 2 && body[0] is String && (body[1] == 'is_live' || body[1] == 'is_upcoming')) {
+        liveVideos[id] = (body[0] as String, body[1] as String);
+      }
+    }
+    for (final (id, body) in list('progress')) {
+      if (body is List && body.length >= 2 && body[0] is num && body[1] is num) {
+        _progress[id] = ((body[0] as num).toInt(), (body[1] as num).toInt());
+      }
+    }
+    finishedVersion++;
+  }
+
+  /// Hands the whole library to [db], which writes only what changed.
+  Future<void> _write(LocalDb db) async {
+    final items = <String, List<(String, String)>>{
+      'favorites': [for (final item in favorites) (item.id, encodedItem(item))],
+      'watchLater': [for (final item in watchLater) (item.id, encodedItem(item))],
+      'playlists': [for (final playlist in playlists) (playlist.id, jsonEncode({'name': playlist.name}))],
+      for (final playlist in playlists) '$_playlistList${playlist.id}': [for (final item in playlist.items) (item.id, encodedItem(item))],
+      'channels': [for (final channel in channels) (channel.id, jsonEncode(channel.toJson()))],
+      'groups': [for (final group in channelGroups) (group.name, jsonEncode(group.channels.toList()))],
+      'live': [for (final MapEntry(:key, :value) in liveVideos.entries) (key, jsonEncode([value.$1, value.$2]))],
+      'progress': [for (final MapEntry(:key, :value) in _progress.entries) (key, '[${value.$1},${value.$2}]')],
+    };
+    final gone = _playlistLists.where((name) => !items.containsKey(name)).toList();
+    await db.write(items, drop: gone, meta: const {'library': '1'});
+    _playlistLists
+      ..removeAll(gone)
+      ..addAll(items.keys.where((name) => name.startsWith(_playlistList)));
+  }
+
+  Future<void> _loadJson() async {
     if (!await file.exists()) return;
     try {
       final data = await decodeJsonInBackground(await file.readAsString());
@@ -260,6 +351,15 @@ class LibraryStore {
   /// Saves run one after another and read the state when they start, so
   /// the latest state is written last.
   Future<void> save() => _writes.run(() async {
+        if (_db case final db?) {
+          try {
+            await _write(db);
+          } on LocalDbException catch (e) {
+            // Kept in memory; the next save sends everything again.
+            logError('Could not save the library', e);
+          }
+          return;
+        }
         await file.parent.create(recursive: true);
         final temp = File('${file.path}.tmp');
         await temp.writeAsString(jsonEncode(toJson()), flush: true);

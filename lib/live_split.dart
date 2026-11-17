@@ -95,6 +95,25 @@ class LiveSplit {
     return null;
   }
 
+  /// Whether yt-dlp, asked with [FormatPolicy.liveExpression], would join
+  /// an HLS picture taller than [muxed] and above 1080p with its sound.
+  static bool tallerSplitHls(Map<String, dynamic> info, PlayerSettings settings, Map<String, dynamic> muxed) {
+    final cap = settings.maxHeight;
+    if (cap > 0 && cap <= 1080) return false;
+    final mine = muxed['height'] is int ? muxed['height'] as int : 0;
+    return (info['formats'] as List? ?? const []).any((f) =>
+        f is Map<String, dynamic> &&
+        '${f['protocol']}'.startsWith('m3u8') &&
+        f['acodec'] == 'none' &&
+        f['vcodec'] is String &&
+        f['vcodec'] != 'none' &&
+        FormatPolicy.allowsName(settings, f['vcodec']) &&
+        f['height'] is int &&
+        (f['height'] as int) > 1080 &&
+        (f['height'] as int) > mine &&
+        (cap <= 0 || (f['height'] as int) <= cap));
+  }
+
   /// A live address answering one fragment per `sq`: plain HTTPS, no
   /// manifest, no fragment list.
   static bool _fragmented(Map<String, dynamic> format) {

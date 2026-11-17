@@ -9,8 +9,9 @@
 //! a server without it cannot be reached. The group each host agreed on is
 //! kept and shown in the settings (lumtub_tls_seen).
 //!
-//! Only these connections are covered: libmpv, yt-dlp and the rest of the
-//! system make their own.
+//! libmpv reads YouTube through the core's relay, live HLS included
+//! (crate::relay_hls). yt-dlp keeps its own OpenSSL, which the app points
+//! at the same certificate list (roots::pem) and key exchange groups.
 
 use crate::roots::Roots;
 use rustls::client::{

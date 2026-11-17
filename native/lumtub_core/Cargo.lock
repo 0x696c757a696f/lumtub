@@ -1235,6 +1235,7 @@ dependencies = [
  "rquickjs",
  "rusqlite",
  "rustls",
+ "rustls-native-certs",
  "rustls-platform-verifier",
  "security-framework",
  "serde",

@@ -48,6 +48,7 @@ import '../live_split.dart';
 import '../native_core.dart';
 import '../encrypted_dns.dart';
 import '../native_http.dart';
+import '../yt_dlp_tls.dart';
 import '../live_chat.dart';
 import '../link_video.dart';
 import '../models.dart';
@@ -898,6 +899,11 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// The yt-dlp format expression for the video [id]: the audio language
   /// chosen for it, else the one the settings ask for.
+  /// Whether 证书来源 or 抗量子加密 asks for more than libmpv's own HTTPS
+  /// gives: streams then always go through the core's relay, never
+  /// libmpv's own connection as a fallback.
+  bool get _strictTls => settings.certificateRoots != 'system' || settings.postQuantum == 'require';
+
   String _formatFor(String? id) => FormatPolicy.expression(_playback, audioLanguage: _audioLanguageFor(id));
 
   /// The audio language for the video [id], empty for its original sound.

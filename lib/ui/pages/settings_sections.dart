@@ -751,7 +751,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
           ];
           return NormalItem(
             title: tr('Certificate authorities'),
-            subtitle: tr("Now: {0}. With Mozilla or Google, only the certificate authorities on that list are trusted, not root certificates added to the system; where a company network, antivirus or proxy tool inspects HTTPS, connections fail, so keep System. Live streams and yt-dlp's own requests are not affected", [labelOf(roots, settings.certificateRoots)]),
+            subtitle: tr("Now: {0}. With Mozilla or Google, only the certificate authorities on that list are trusted, not root certificates added to the system; where a company network, antivirus or proxy tool inspects HTTPS, connections fail, so keep System. yt-dlp, videos and live streams follow it too; Piped and Invidious servers do not", [labelOf(roots, settings.certificateRoots)]),
             leading: _icon(AppIcons.sealCheck),
             onTap: () => pickFromDialog<String>(context, title: tr('Certificate authorities'), value: settings.certificateRoots, values: roots, onSelected: (value) => save(settings.copyWith(certificateRoots: value))),
           );
@@ -764,7 +764,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
           ];
           return NormalItem(
             title: tr('Post-quantum encryption'),
-            subtitle: tr("Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered", [labelOf(modes, settings.postQuantum)]),
+            subtitle: tr("Now: {0}. Lumtub's HTTPS connections (YouTube's pages and data, yt-dlp, videos and live streams, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Piped and Invidious servers are not covered", [labelOf(modes, settings.postQuantum)]),
             leading: _icon(AppIcons.lockSimple),
             onTap: () => pickFromDialog<String>(context, title: tr('Post-quantum encryption'), value: settings.postQuantum, values: modes, onSelected: (value) => save(settings.copyWith(postQuantum: value))),
           );

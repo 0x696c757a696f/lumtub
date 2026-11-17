@@ -77,7 +77,7 @@ class AndroidPython {
       [
         script,
         ...arguments.take(lead),
-        if (plugins != null && !arguments.contains('--plugin-dirs')) ...['--plugin-dirs', plugins!],
+        if (plugins != null && !arguments.contains(plugins)) ...['--plugin-dirs', plugins!],
         if (js != null && !arguments.contains('--js-runtimes')) ...['--js-runtimes', 'quickjs:$js'],
         ...arguments.skip(lead),
       ],

@@ -3253,6 +3253,7 @@ mod tests {
             proxy: None,
             chunk: 1 << 20,
             live: None,
+            hls: Default::default(),
         }
     }
 

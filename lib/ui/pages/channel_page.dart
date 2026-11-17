@@ -401,11 +401,10 @@ class PostCard extends StatelessWidget {
               separatorBuilder: (context, i) => const SizedBox(width: 8),
               itemBuilder: (context, i) => ClipRRect(
                 borderRadius: AppStyle.thumbnailRadius,
-                child: Image.network(
+                child: Image(
                   color: context.pictureWarmth,
                   colorBlendMode: BlendMode.multiply,
-                  post.images[i],
-                  cacheHeight: (240 * MediaQuery.devicePixelRatioOf(context)).ceil(),
+                  image: ResizeImage.resizeIfNeeded(null, (240 * MediaQuery.devicePixelRatioOf(context)).ceil(), CachedThumbnail(post.images[i], null)),
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stack) => const SizedBox(width: 240),
                 ),
@@ -642,7 +641,7 @@ class ChannelAvatar extends StatelessWidget {
     return ClipOval(child: Image(
       color: context.pictureWarmth,
       colorBlendMode: BlendMode.multiply,
-      image: ResizeImage.resizeIfNeeded((radius * 4).round(), null, file == null ? NetworkImage(url) : CachedThumbnail(url, file)),
+      image: ResizeImage.resizeIfNeeded((radius * 4).round(), null, CachedThumbnail(url, file)),
       width: radius * 2,
       height: radius * 2,
       fit: BoxFit.cover,

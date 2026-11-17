@@ -100,7 +100,8 @@ blur, and off and frame in Obsidian dark.
 `packaging/glass_measure.py` measures magenta ((R + B) / 2 − G) at the
 bottom of the side rail and in the middle of the pages, and fails unless
 the frame took on magenta (+12), the pages took on none in frame
-mode (8 at most) and took it on in whole mode (+6).
+mode (at most 8 more than without glass, since thumbnails bring magenta
+of their own) and took it on in whole mode (+6).
 CI machines have no graphics card, and Windows and macOS draw their blur
 solid there, so the blurred picture is reported but not required; the
 blur itself needs checking on a real machine. The log also shows a

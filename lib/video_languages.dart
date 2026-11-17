@@ -413,7 +413,7 @@ class VideoLanguages {
         }
         pending.add(_Pending(of(item.id, asking: language, channel: item.channelId).then((spoken) {
           if (spoken != null && spoken.heard) heard++;
-          final key = spoken == null ? 'no answer' : '${spoken.source} ${spoken.language?.name ?? '?'}';
+          final key = spoken == null ? 'no answer' : '${spoken.source} ${spoken.language?.code ?? '?'}';
           told.update(key, (n) => n + 1, ifAbsent: () => 1);
           if (!passes(spoken, language, listed: item.title)) return null;
           kept++;

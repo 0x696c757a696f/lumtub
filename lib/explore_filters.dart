@@ -1,3 +1,6 @@
+export 'explore_pivots.dart';
+
+import 'explore_pivots.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
 import 'scripts.dart';
@@ -402,9 +405,9 @@ bool isTranslatedPhrase(String phrase) => nonLatinLetter.hasMatch(phrase);
 /// Lower-case words a search keeps in every language: titles write them
 /// the same everywhere.
 const keptSearchWords = {
-  'asmr', 'bhajan', 'blender', 'cosplay', 'esports', 'haul', 'hip', 'hop', 'imam', 'indie', 'jazz', 'khutbah', 'kirtan', 'lofi', //
-  'macos', 'manga', 'mandala', 'metal', 'mukbang', 'nasheed', 'nijisanji', 'podcast', 'pop', 'puja', 'qawwali', 'rabbi', 'rap', //
-  'rock', 'seerah', 'speedrun', 'swami', 'tafsir', 'thangka', 'unboxing', 'vlog', 'vtuber', 'yoga',
+  'asmr', 'bhajan', 'blender', 'cosplay', 'esports', 'haul', 'hip', 'hololive', 'hop', 'imam', 'indie', 'jazz', 'khutbah', 'kirtan', 'lofi', //
+  'macos', 'mandala', 'manga', 'metal', 'mukbang', 'nasheed', 'nijisanji', 'podcast', 'pop', 'puja', 'qawwali', 'rabbi', 'rap', //
+  'rock', 'seerah', 'speedrun', 'swami', 'tafsir', 'thangka', 'startup', 'tutorial', 'unboxing', 'vlog', 'vtuber', 'walkthrough', 'writeup', 'yoga',
 };
 
 final _commonWord = RegExp(r"^[a-z][a-z'-]{2,}$");
@@ -422,7 +425,61 @@ bool translatesInto(String phrase, ExploreLanguage language) {
 
 /// Search words put the same way in every language, as YouTube titles
 /// write them.
-const searchGlossary = {'直播': 'live', '实况': 'live', '直播间': 'live'};
+///
+/// "live" itself stays out of the words around it: "art live" put into
+/// Indonesian or Vietnamese was "the art of living", "Diwali live" into
+/// Dutch "Divali leeft" (seen on 2026-11-17 in 66 languages).
+const searchGlossary = {'直播': 'live', '实况': 'live', '直播间': 'live', 'live': 'live', 'Live': 'live', 'LIVE': 'live'};
+
+
+/// [query] with the zones' Chinese keywords in English ([searchPivots]);
+/// words searched the same in every language ([searchGlossary]) stay. A
+/// keyword whose English the query already has is left out ("AI 论文解读
+/// paper explained" is "AI paper explained"), and so is a word repeated.
+String englishSearchOf(String query) {
+  final words = query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+  final seen = {for (final w in words) if (!isTranslatedPhrase(w)) w.toLowerCase()};
+  final out = <String>[];
+  final kept = <String>{};
+  final written = <String>{};
+  for (final word in words) {
+    final english = searchGlossary.containsKey(word) ? null : searchPivots[word];
+    if (english == null) {
+      if (written.add(word.toLowerCase())) out.add(word);
+      continue;
+    }
+    final parts = english.split(' ').map((w) => w.toLowerCase());
+    if (parts.every((w) => seen.contains(w) || kept.contains(w))) continue;
+    kept.addAll(parts);
+    out.add(english);
+  }
+  return out.join(' ');
+}
+
+/// Whether keywords no pivot covers go into English before [language]: a
+/// user's own zone in Chinese put straight into Italian made "体育"
+/// "educazione fisica" (school PE), through English it is "sport". Chinese,
+/// Japanese and Korean are put into each other directly.
+bool pivotsThroughEnglish(ExploreLanguage language) => switch (language) {
+      ExploreLanguage.any || ExploreLanguage.en || ExploreLanguage.zh || ExploreLanguage.ja || ExploreLanguage.ko => false,
+      _ => true,
+    };
+
+/// The phrases of [source] still in another script once the pivots are
+/// used: a user's own keywords, which go into English first.
+List<String> unpivotedPhrasesOf(String source) => [
+      for (final phrase in searchPhrasesOf(source))
+        if (isTranslatedPhrase(phrase) && searchGlossary[phrase] == null) phrase,
+    ];
+
+/// [source] with [english] in place of its [unpivotedPhrasesOf], in order.
+String withEnglishOf(String source, List<String> english) {
+  var next = 0;
+  return [
+    for (final phrase in searchPhrasesOf(source))
+      if (isTranslatedPhrase(phrase) && searchGlossary[phrase] == null) english[next++].trim() else phrase,
+  ].where((p) => p.isNotEmpty).join(' ');
+}
 
 /// [query] in the pieces a translation keeps the sense of: each keyword of
 /// a script written without spaces (Chinese, Japanese, Thai…) alone, as
@@ -435,7 +492,7 @@ List<String> searchPhrasesOf(String query) {
   bool? translated;
   for (final word in query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty)) {
     final mine = isTranslatedPhrase(word);
-    if (unspacedScript.hasMatch(word)) {
+    if (unspacedScript.hasMatch(word) || searchGlossary.containsKey(word)) {
       if (run.isNotEmpty) phrases.add(run.join(' '));
       run = [];
       phrases.add(word);
@@ -452,12 +509,15 @@ List<String> searchPhrasesOf(String query) {
   return phrases;
 }
 
-/// One search from words translated one by one: each kept once, as
-/// "园艺 gardening" translates to the same word twice.
+/// One search from words translated one by one: each word kept once, as
+/// "园艺 gardening" translates to the same word twice and "健身 fitness
+/// live" to "forma fisica" and "forma fisica dal vivo" (a search finds by
+/// words, in any order).
 String searchWordsOf(List<String> translated) {
   final seen = <String>{};
   return [
     for (final words in translated)
-      if (words.trim().isNotEmpty && seen.add(words.trim().toLowerCase())) words.trim(),
+      for (final word in words.trim().split(RegExp(r'\s+')))
+        if (word.isNotEmpty && seen.add(word.toLowerCase())) word,
   ].join(' ');
 }

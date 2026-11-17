@@ -378,6 +378,11 @@ void main() {
     await tester.pump();
     expect(find.text('Education · most watched This month'), findsOneWidget);
     expect(find.text('Shuffle'), findsNothing);
+    expect(controller.exploreBroaderQueries, isEmpty, reason: 'the zone is searched in its own words');
+    controller.preferences = controller.preferences.copyWith(exploreLanguage: ExploreLanguage.it);
+    // Put into Italian, the zone's words may find none: its sub-categories' follow.
+    expect(controller.exploreBroaderQueries, containsAllInOrder(['科普', '历史 纪录片']));
+    controller.preferences = controller.preferences.copyWith(exploreLanguage: ExploreLanguage.any);
 
     await tester.tap(find.text('History'));
     await tester.pump();

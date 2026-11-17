@@ -57,10 +57,34 @@ searching, so that the search finds videos in it to begin with:
   (`哲学 philosophy lecture` → `filosofia lezione di filosofia`), except
   names and words titles write the same everywhere (`Minecraft`, `Plato`,
   `lofi`, `vlog`, see `keptSearchWords`);
-- a zone of the person's own is searched as they wrote it.
+- a zone of the person's own too; when its translated search runs out,
+  its words as written are searched as well.
+
+The zones' Chinese keywords are not translated themselves: each has its
+English in `searchPivots` (`lib/explore_pivots.dart`), which is translated
+instead, a run of English words at a time, and which an English search
+takes as it is. Translated one by one from Chinese, keywords lost their
+sense (体育 → "educazione fisica", 后端 → "rear end"). `直播` and other
+words of `searchGlossary` are searched as `live` everywhere, and so is
+an English `live`, kept apart from the words around it (put into other
+languages with them it became "living": `art live` in Indonesian was
+"the art of living"). Jargon and names titles write in English
+(`tutorial`, `startup`, `writeup`, `hololive`…) are kept as they are. A test checks
+that every Chinese keyword of every zone, sub-category and filter has its
+English. Each word of the result is kept once.
+
+Keywords no pivot covers, such as those of a zone the person added, go
+into English first and from there into the language picked, in the same
+way. Chinese, Japanese and Korean are put into each other directly. A
+search already in the language picked is not translated.
 
 The search is also asked from the language's home country (`gl`) when no
 region is picked.
+
+A whole zone's words put into another language may find few videos or
+none (`知识 科普` as `conoscenza Scienza popolare` found none uploaded in
+the past month, seen on 2026-11-16). When its search runs out, the zone
+goes on with its sub-categories' searches, one after another.
 
 ## Asking YouTube
 

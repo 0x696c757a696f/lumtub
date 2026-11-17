@@ -85,7 +85,10 @@ extension ExploreActions on AppController {
 
   /// Wider searches than [exploreQuery], narrowest first, read once it
   /// runs out: the sub-category's, then the zone's, then the zone's
-  /// without the format and view words.
+  /// without the format and view words. With a language picked, the
+  /// zone's own words put into it may find few videos or none ("知识 科普"
+  /// as "conoscenza Scienza popolare" found none in a month, seen on
+  /// 2026-11-16): the whole zone then goes on with its sub-categories'.
   List<String> get exploreBroaderQueries {
     final words = [exploreFormat.words, exploreView.words].where((w) => w.isNotEmpty).join(' ');
     String withWords(String query) => words.isEmpty ? query : '$query $words';
@@ -94,6 +97,8 @@ extension ExploreActions on AppController {
       if (leaf != null && exploreSubNow != null) withWords(exploreSubNow!.query),
       withWords(exploreTopicNow.query),
       exploreTopicNow.query,
+      if (exploreSubNow == null && preferences.exploreLanguage != ExploreLanguage.any)
+        for (final sub in exploreTopicNow.subs) withWords(sub.query),
     }..remove(exploreQuery);
     return [for (final query in queries) if (query.trim().isNotEmpty) query];
   }
@@ -368,11 +373,9 @@ extension ExploreActions on AppController {
             final wordsIn = language != ExploreLanguage.any ? language : regional != ExploreLanguage.any ? regional : ui;
             // Taiwan and Hong Kong write traditional characters.
             final traditional = wordsIn == ExploreLanguage.zh && (region == 'TW' || region == 'HK');
-            // A zone of the user's own is searched as they wrote it: its
-            // words are not sent to be translated.
-            Listing searchIn(List<String> queries) => wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional) || exploreTopicNow.custom
-                ? search(queries)
-                : Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional)));
+            final translates = !(wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional));
+            Listing searchIn(List<String> queries) =>
+                translates ? Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional))) : search(queries);
             // A narrow search that runs out goes on with wider ones, so a
             // sub-category with few videos still fills the page.
             var listing = searchIn(queries);
@@ -380,6 +383,11 @@ extension ExploreActions on AppController {
               for (final wider in broader) {
                 listing = listing.followedBy(() => searchIn([wider]), switched: () => logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$wider"'));
               }
+            }
+            // A zone of the user's own is translated like the others; when
+            // that runs out, its words as written are searched as well.
+            if (!mix && exploreTopicNow.custom && translates) {
+              listing = listing.followedBy(() => search(queries), switched: () => logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$query" as written'));
             }
             // Search listings give no frame size: a vertical video is told
             // by the bars at the sides of its thumbnail.
@@ -435,27 +443,39 @@ extension ExploreActions on AppController {
     Future<String> translate(String text) => _google.translate(text, target).timeout(const Duration(seconds: 10));
     return Future.wait([
       for (final query in queries)
-        if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language) || !searchPhrasesOf(query).any((w) => translatesInto(w, language)))
+        if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language))
           Future.value(query)
         else
           () async {
+            // The zones' Chinese keywords go by their English
+            // (searchPivots), which is translated instead and which an
+            // English search takes as it is.
+            var source = traditional ? query : englishSearchOf(query);
             try {
+              final unpivoted = traditional || !pivotsThroughEnglish(language) ? const <String>[] : unpivotedPhrasesOf(source);
+              if (unpivoted.isNotEmpty) {
+                final english = (await _google.translate(unpivoted.join('\n'), 'en').timeout(const Duration(seconds: 10))).split('\n');
+                if (english.length != unpivoted.length) throw StateError('${english.length} lines for ${unpivoted.length} phrases');
+                source = withEnglishOf(source, english);
+              }
               // Keyword by keyword, as a search wants keywords: "科技 数码 评测"
               // as one sentence is "Revisione digitale della tecnologia",
               // which finds next to nothing.
-              final words = searchPhrasesOf(query);
-              final asked = [for (final w in words) if (translatesInto(w, language) && searchGlossary[w] == null) w];
+              final words = searchPhrasesOf(source);
+              bool asks(String w) => translatesInto(w, language) && searchGlossary[w] == null;
+              if (!words.any(asks) && source == query) return query;
+              final asked = [for (final w in words) if (asks(w)) w];
               final lines = asked.isEmpty ? const <String>[] : (await translate(asked.join('\n'))).split('\n');
               if (lines.length != asked.length) throw StateError('${lines.length} lines for ${asked.length} phrases');
               var next = 0;
               final translated = searchWordsOf([
-                for (final w in words) !translatesInto(w, language) ? w : searchGlossary[w] ?? lines[next++],
+                for (final w in words) searchGlossary[w] ?? (asks(w) ? lines[next++] : w),
               ]);
               logDebug(() => 'Explore searches "$query" in $target as "$translated"');
               return translated.isEmpty ? query : translated;
             } catch (e) {
               logWarn('Could not translate the explore search "$query" into $target: $e');
-              return query;
+              return source;
             }
           }(),
     ]);

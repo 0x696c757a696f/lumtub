@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -31,8 +32,9 @@ class YoutubePlayerProbe {
   static DateTime _visitorAt = DateTime(0);
   static const _visitorFor = Duration(minutes: 30);
   static const _visitorRetry = Duration(minutes: 5);
-  // The page writes it as a JSON string, which may escape characters.
-  static final _visitorData = RegExp(r'"(?:VISITOR_DATA|visitorData)"\s*:\s*"((?:[^"\\]|\\.){10,400})"');
+  // The page writes it as a JSON string, which may escape characters. It
+  // ran to 548 characters on 2026-11-16.
+  static final _visitorData = RegExp(r'"(?:VISITOR_DATA|visitorData)"\s*:\s*"((?:[^"\\]|\\.){10,4000})"');
   static final _visitorCookie = RegExp(r'(VISITOR_INFO1_LIVE|VISITOR_PRIVACY_METADATA|YSC|__Secure-ROLLOUT_TOKEN)=([^;,\s]+)');
 
   @visibleForTesting
@@ -126,13 +128,17 @@ class YoutubePlayerProbe {
         'Accept-Language': 'en-US,en;q=0.9',
         'Cookie': YoutubeWeb.consentCookie,
       }).timeout(const Duration(seconds: 15));
-      final page = utf8.decode(response.bodyBytes, allowMalformed: true);
-      final data = response.statusCode == 200 ? _visitorIn(page) : null;
-      if (data == null) {
+      // Close to a megabyte: read off the UI thread.
+      final bytes = response.bodyBytes;
+      final (data, length, named) = await Isolate.run(() {
+        final page = utf8.decode(bytes, allowMalformed: true);
+        return (_visitorIn(page), page.length, page.contains('VISITOR_DATA'));
+      });
+      if (response.statusCode != 200 || data == null) {
         final host = response.request?.url.host ?? 'www.youtube.com';
-        logWarn('YouTube page gave no visitor data (HTTP ${response.statusCode}, ${page.length} characters'
+        logWarn('YouTube page gave no visitor data (HTTP ${response.statusCode}, $length characters'
             '${host != 'www.youtube.com' ? ', from $host' : ''}'
-            '${page.contains('VISITOR_DATA') ? ', VISITOR_DATA unreadable' : ''}); taking it from YouTube\'s answers');
+            '${named ? ', VISITOR_DATA unreadable' : ''}); taking it from YouTube\'s answers');
         return null;
       }
       final cookies = {

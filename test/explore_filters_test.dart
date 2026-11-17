@@ -5,6 +5,8 @@ import 'dart:ui' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/explore_filters.dart';
+import 'package:lumtub/explore_topics.dart';
+import 'package:lumtub/faith_topics.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/l10n/l10n.dart';
 import 'package:lumtub/player_settings.dart';
@@ -168,11 +170,51 @@ void main() {
 
   test('a search translated word by word keeps each word once', () {
     expect(searchPhrasesOf('科技 数码 评测'), ['科技', '数码', '评测']);
-    expect(searchPhrasesOf('stand-up comedy live'), ['stand-up comedy live']);
-    expect(searchPhrasesOf('议会 国会 parliament live'), ['议会', '国会', 'parliament live']);
-    expect(searchPhrasesOf(' ゲーム 実況  live stream '), ['ゲーム', '実況', 'live stream']);
+    expect(searchPhrasesOf('stand-up comedy live'), ['stand-up comedy', 'live']);
+    expect(searchPhrasesOf('议会 国会 parliament live'), ['议会', '国会', 'parliament', 'live']);
+    expect(searchPhrasesOf(' ゲーム 実況  live stream '), ['ゲーム', '実況', 'live', 'stream']);
     expect(searchWordsOf(['giardinaggio', 'giardinaggio']), 'giardinaggio');
     expect(searchWordsOf(['tavola rotonda', 'discussione', 'Tavola rotonda ', '']), 'tavola rotonda discussione');
     expect(searchWordsOf(['tecnologia', 'digitale', 'recensione']), 'tecnologia digitale recensione');
+    // Each word once: the Chinese keyword and its English one translate alike.
+    expect(searchWordsOf(['forma fisica', 'live', 'forma fisica dal vivo']), 'forma fisica live dal vivo');
+    // Keywords a translation word by word takes in another sense go by their English.
+    expect(searchPivots['体育'], 'sports');
+    expect(englishSearchOf('后端 backend Java Go'), 'back-end backend Java Go');
+    // A user's own keywords, which no pivot covers, go into English first.
+    expect(unpivotedPhrasesOf('攀岩 直播 bouldering 中世纪 历史'), ['攀岩', '中世纪', '历史']);
+    expect(withEnglishOf('攀岩 直播 bouldering 中世纪 历史', ['rock climbing', 'medieval', 'history']), 'rock climbing 直播 bouldering medieval history');
+    expect(pivotsThroughEnglish(ExploreLanguage.it), isTrue);
+    expect(pivotsThroughEnglish(ExploreLanguage.ja), isFalse);
+    expect(englishSearchOf('体育 直播'), 'sports 直播', reason: '直播 is searched as "live" in every language');
+    expect(englishSearchOf('AI 论文解读 paper explained'), 'AI paper explained');
+    expect(englishSearchOf('聊天 直播 just chatting'), '直播 just chatting');
+    expect(englishSearchOf('妇产科学 lecture'), 'obstetrics and gynecology lecture');
+    expect(searchWordsOf(searchPhrasesOf(englishSearchOf('健身 训练 workout'))), 'fitness training workout');
+  });
+
+  test('every Chinese keyword of every zone and filter has its English', () {
+    final missing = <String>{};
+    void check(String query) {
+      for (final word in query.split(RegExp(r'\s+'))) {
+        if (RegExp(r'[\u4e00-\u9fff]').hasMatch(word) && !searchPivots.containsKey(word) && !searchGlossary.containsKey(word)) missing.add(word);
+      }
+    }
+
+    void sub(ExploreSub s) {
+      check(s.query);
+      s.subs.forEach(sub);
+    }
+
+    for (final filter in <WordFilter>[...ContentFormat.values, ...ContentView.values, ...FaithFormat.values, ...FaithView.values]) {
+      check(filter.words);
+    }
+    for (final section in ExploreSection.values) {
+      for (final topic in exploreTopicsOf(section)) {
+        check(topic.query);
+        topic.subs.forEach(sub);
+      }
+    }
+    expect(missing, isEmpty);
   });
 }

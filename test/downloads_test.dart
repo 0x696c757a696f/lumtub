@@ -609,6 +609,8 @@ void main() {
       final a = processes[started.indexWhere((args) => args.last.endsWith('aaaaaaaaaaa'))];
       a.out('lumtub-file|${file.path}');
       await a.exit(0);
+      // Done only once the offline info is saved, which takes real file work.
+      await until(() => m.taskFor('aaaaaaaaaaa')!.status == DownloadStatus.done);
       await settle();
       expect(processes, hasLength(2));
       processes.clear();

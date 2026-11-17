@@ -274,7 +274,10 @@ ThemeData buildAppTheme(
     final radius = surface.radius ?? controlRadius.topLeft.x;
     return style.copyWith(
       backgroundColor: const WidgetStatePropertyAll(Colors.transparent),
-      foregroundColor: text == null ? null : WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.disabled) ? text.withValues(alpha: 0.45) : text),
+      // Off, the skin's surface fades into the page and the label takes the
+      // page's text colour: the skin's own label colour is chosen for the
+      // full surface and would sink into a faded one.
+      foregroundColor: text == null ? null : WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.disabled) ? scheme.onSurface.withValues(alpha: 0.6) : text),
       overlayColor: const WidgetStatePropertyAll(Colors.transparent),
       side: focusRing,
       shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius))),
@@ -288,14 +291,11 @@ ThemeData buildAppTheme(
             : hovered && !pressed && surface.hover == null
                 ? Colors.white.withValues(alpha: 0.14)
                 : null;
-        return DecoratedBox(
-          decoration: SurfaceDecoration.of(context, surface.forState(hovered: hovered, pressed: pressed, focused: states.contains(WidgetState.focused)), radius: radius),
-          position: DecorationPosition.background,
-          child: DecoratedBox(
-            decoration: BoxDecoration(color: wash, borderRadius: BorderRadius.circular(radius)),
-            child: Opacity(opacity: states.contains(WidgetState.disabled) ? 0.5 : 1, child: child),
-          ),
-        );
+        final paint = DecoratedBox(decoration: SurfaceDecoration.of(context, surface.forState(hovered: hovered, pressed: pressed, focused: states.contains(WidgetState.focused)), radius: radius));
+        return Stack(fit: StackFit.passthrough, children: [
+          Positioned.fill(child: states.contains(WidgetState.disabled) ? Opacity(opacity: 0.3, child: paint) : paint),
+          DecoratedBox(decoration: BoxDecoration(color: wash, borderRadius: BorderRadius.circular(radius)), child: child),
+        ]);
       },
     );
   }

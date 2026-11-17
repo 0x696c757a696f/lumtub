@@ -20,6 +20,7 @@ import '../comments_view.dart';
 import '../cast_ui.dart';
 import '../common.dart';
 import '../fill_icon.dart';
+import '../fitting_tab_bar.dart';
 import '../haptics.dart';
 import '../reveal.dart';
 import '../key_scroll.dart';
@@ -1041,7 +1042,7 @@ class _SidePanelState extends State<_SidePanel> with TickerProviderStateMixin {
     final tabController = _controllerFor([for (final (id, _, _) in tabs) id]);
     return Column(children: [
       Row(children: [
-        Expanded(child: TabBar(controller: tabController, onTap: (i) => _tapped(i, tabs[i].$1), isScrollable: tabs.length > 3, tabAlignment: tabs.length > 3 ? TabAlignment.start : null, dividerColor: Colors.transparent, tabs: [for (final (_, label, _) in tabs) Tab(height: widget.intro != null ? 48 : 40, text: label)])),
+        Expanded(child: FittingTabBar(controller: tabController, onTap: (i) => _tapped(i, tabs[i].$1), height: widget.intro != null ? 48 : 40, labels: [for (final (_, label, _) in tabs) label])),
         if (widget.trailing case final trailing?) trailing,
       ]),
       const SizedBox(height: 8),
@@ -1155,7 +1156,7 @@ class _UpNext extends StatelessWidget {
     final queued = {for (final item in items) item.id};
     final relatedItems = [for (final item in controller.relatedItems) if (!queued.contains(item.id)) item];
     final autoplay = Row(mainAxisSize: MainAxisSize.min, children: [
-      Text(tr('Autoplay next'), style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
+      Flexible(child: Text(tr('Autoplay next'), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12))),
       Transform.scale(
         scale: 0.75,
         child: Switch(value: controller.settings.playOrder == PlayOrder.autoPlayRelated, onChanged: (on) => unawaited(controller.setAutoplayNext(on))),
@@ -1226,10 +1227,13 @@ class _UpNext extends StatelessWidget {
 
   Widget _header(BuildContext context, String title, String? note, {Widget? trailing}) => Padding(
         padding: EdgeInsetsDirectional.fromSTEB(4, 0, trailing == null ? 4 : 0, 8),
-        child: Row(children: [
-          Text(title, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-          if (note != null) ...[const SizedBox(width: 8), Text(note, style: TextStyle(color: context.colors.outline, fontSize: 12))],
-          const Spacer(),
+        // A long translation puts the switch on a line of its own rather
+        // than pushing it out of the panel.
+        child: Wrap(alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.center, children: [
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            Flexible(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
+            if (note != null) ...[const SizedBox(width: 8), Flexible(child: Text(note, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, fontSize: 12)))],
+          ]),
           if (trailing != null) trailing,
         ]),
       );

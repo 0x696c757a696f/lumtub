@@ -18,4 +18,13 @@ void main() {
     expect(sent, ['第一条']);
     expect(find.text('  第一条  '), findsNothing);
   });
+  testWidgets('long button labels fit a narrow panel', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Align(alignment: Alignment.topLeft, child: SizedBox(width: 200, child: CommentComposer(
+      hint: 'Add a reply…',
+      onSubmit: (_) async => true,
+      onCancel: () {},
+      thanksFor: 'x',
+    ))))));
+    expect(tester.takeException(), isNull);
+  });
 }

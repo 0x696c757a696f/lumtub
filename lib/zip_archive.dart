@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'file_mode.dart';
+
 /// CRC-32 (zip) of [data], continuing from [crc].
 int crc32(List<int> data, [int crc = 0]) {
   crc ^= 0xFFFFFFFF;
@@ -113,12 +115,8 @@ Future<List<String>> extractZip(File archive, Directory into, {String? Function(
       written.add(path);
       if (mode & 0x49 != 0) executable.add(target.path);
     }
-    if (!Platform.isWindows) {
-      for (var i = 0; i < executable.length; i += 200) {
-        final batch = executable.sublist(i, i + 200 > executable.length ? executable.length : i + 200);
-        final result = await Process.run('chmod', ['+x', ...batch]);
-        if (result.exitCode != 0) throw FileSystemException('Could not make files executable: ${result.stderr}');
-      }
+    for (final path in executable) {
+      makeExecutable(path);
     }
     return written;
   } finally {

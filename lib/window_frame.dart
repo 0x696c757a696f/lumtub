@@ -50,6 +50,13 @@ abstract final class WindowFrame {
 
   static Future<void> minimize() => _invoke('minimize');
 
+  /// Hides the pointer at once while it rests inside [area] (logical
+  /// pixels from the window's top left), until it moves. Flutter changes
+  /// the pointer only once it hears from the mouse again, and after the
+  /// window went fullscreen it may not, so the pointer would stay over the
+  /// picture until moved.
+  static Future<void> hidePointer(Rect area) => _invoke('hidePointer', [area.left, area.top, area.right, area.bottom]);
+
   static Future<void> toggleMaximize() => _invoke('toggleMaximize');
 
   /// Goes through the normal close path, so the exit request and

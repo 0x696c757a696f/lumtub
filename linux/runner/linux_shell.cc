@@ -36,6 +36,13 @@ constexpr int kStatusActive = 1;
 struct Shell {
   GtkWindow* window = nullptr;
   FlView* view = nullptr;
+  // While the pointer is hidden over the video (HidePointer): the pointer
+  // to give back once it moves, and where it was hidden.
+  guint pointer_watch = 0;
+  GdkCursor* pointer_before = nullptr;
+  GdkCursor* pointer_blank = nullptr;
+  int hidden_x = 0;
+  int hidden_y = 0;
   FlMethodChannel* channel = nullptr;
 
   bool close_to_tray = false;
@@ -701,6 +708,53 @@ void BeginFrameDrag(bool resize, GdkWindowEdge edge) {
   }
 }
 
+GdkDevice* Pointer(GdkWindow* window) {
+  return gdk_seat_get_pointer(gdk_display_get_default_seat(gdk_window_get_display(window)));
+}
+
+// Gives the pointer back once it moved, unless Flutter set another one
+// meanwhile: Flutter answers the move with the pointer it wants, which may
+// be the one it already had and so is not set again.
+gboolean WatchHiddenPointer(gpointer) {
+  GdkWindow* window = shell.window != nullptr ? gtk_widget_get_window(GTK_WIDGET(shell.window)) : nullptr;
+  int x = 0;
+  int y = 0;
+  if (window != nullptr) gdk_device_get_position(Pointer(window), nullptr, &x, &y);
+  if (window != nullptr && x == shell.hidden_x && y == shell.hidden_y) return G_SOURCE_CONTINUE;
+  if (window != nullptr && gdk_window_get_cursor(window) == shell.pointer_blank) gdk_window_set_cursor(window, shell.pointer_before);
+  g_clear_object(&shell.pointer_before);
+  shell.pointer_watch = 0;
+  return G_SOURCE_REMOVE;
+}
+
+// Hides the pointer while it rests in the box |area| (left, top, right,
+// bottom in logical pixels of Flutter's view), until it moves.
+void HidePointer(FlValue* area) {
+  if (area == nullptr || fl_value_get_type(area) != FL_VALUE_TYPE_LIST || fl_value_get_length(area) != 4) return;
+  if (shell.view == nullptr || shell.pointer_watch != 0 || !gtk_window_is_active(shell.window)) return;
+  double box[4];
+  for (size_t i = 0; i < 4; ++i) {
+    FlValue* item = fl_value_get_list_value(area, i);
+    const FlValueType type = fl_value_get_type(item);
+    box[i] = type == FL_VALUE_TYPE_FLOAT ? fl_value_get_float(item) : type == FL_VALUE_TYPE_INT ? static_cast<double>(fl_value_get_int(item)) : 0;
+  }
+  GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(shell.window));
+  if (window == nullptr) return;
+  int x = 0;
+  int y = 0;
+  gdk_window_get_device_position(window, Pointer(window), &x, &y, nullptr);
+  int view_x = 0;
+  int view_y = 0;
+  if (!gtk_widget_translate_coordinates(GTK_WIDGET(shell.window), GTK_WIDGET(shell.view), x, y, &view_x, &view_y)) return;
+  if (view_x < box[0] || view_y < box[1] || view_x >= box[2] || view_y >= box[3]) return;
+  if (shell.pointer_blank == nullptr) shell.pointer_blank = gdk_cursor_new_for_display(gdk_window_get_display(window), GDK_BLANK_CURSOR);
+  GdkCursor* before = gdk_window_get_cursor(window);
+  shell.pointer_before = before != nullptr ? GDK_CURSOR(g_object_ref(before)) : nullptr;
+  gdk_device_get_position(Pointer(window), nullptr, &shell.hidden_x, &shell.hidden_y);
+  gdk_window_set_cursor(window, shell.pointer_blank);
+  shell.pointer_watch = g_timeout_add(100, WatchHiddenPointer, nullptr);
+}
+
 void HandleFrameCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
   const std::string method = fl_method_call_get_name(call);
   FlValue* args = fl_method_call_get_args(call);
@@ -734,6 +788,8 @@ void HandleFrameCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
   } else if (method == "startResize") {
     const bool named = args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_STRING;
     BeginFrameDrag(true, EdgeOf(named ? fl_value_get_string(args) : ""));
+  } else if (method == "hidePointer") {
+    HidePointer(args);
   } else if (method == "setCaption") {
     // Hit-testing is Windows' own.
   } else {

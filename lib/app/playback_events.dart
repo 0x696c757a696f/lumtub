@@ -347,12 +347,27 @@ extension PlaybackEvents on AppController {
         return;
       }
       if (_openedResolved == item.id) {
-        // Addresses resolved ahead may have gone stale; let libmpv's
-        // ytdl_hook resolve the video itself once.
         _openedResolved = null;
-        _repository?.streams.forget(item.id);
-        logWarn('Prefetched address did not play ($message; $_openedOrigin); libmpv resolves ${item.id} again');
-        unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, resolved: false));
+        final streams = _repository?.streams;
+        final refused = _openedVideo;
+        // A yt-dlp answer still coming after a quick start is kept.
+        if (refused != null) streams?.forgetAnswer(item.id, refused);
+        final start = _lastPosition > Duration.zero ? _lastPosition : null;
+        // YouTube refuses the TV client's addresses for a while at a time;
+        // the next answers are asked for without it.
+        if (refused?.clients.contains('TVHTML5') ?? false) streams?.avoidTv();
+        // Resolved ahead and refused at once: asked again, the quick start
+        // too, which usually answers in a fraction of a second where
+        // yt-dlp takes several. Refused again, libmpv's ytdl_hook resolves
+        // the video itself.
+        if (_resolvedAgain != _playSerial) {
+          _resolvedAgain = _playSerial;
+          logWarn('Prefetched address did not play ($message; $_openedOrigin); resolving ${item.id} again');
+          unawaited(_open(item, _playSerial, start: start, quickAgain: true));
+        } else {
+          logWarn('Address resolved again did not play ($message; $_openedOrigin); libmpv resolves ${item.id} itself');
+          unawaited(_open(item, _playSerial, start: start, resolved: false));
+        }
         return;
       }
       // Resolved again and still refused: the servers are the last way.

@@ -83,6 +83,10 @@ class ResolvedVideo {
 
   /// For the log when an address is refused: how old it is, and which
   /// YouTube client and formats yt-dlp took it from.
+  /// The YouTube clients (`c=` of each address) the picked streams came
+  /// from, such as `TVHTML5`.
+  List<String> get clients => [for (final c in (_summary()?['clients'] as List?) ?? const []) '$c'];
+
   String get origin {
     final summary = _summary();
     final clients = (summary?['clients'] as List?)?.join('/') ?? '?';
@@ -193,6 +197,32 @@ class StreamResolver {
   /// The entries of [_results] resolved with `live`.
   final _lives = <String>{};
 
+  /// Until when yt-dlp is asked without its TV clients (see [avoidTv]).
+  DateTime? _tvAvoidedUntil;
+
+  /// How long the TV clients are left out after their addresses were
+  /// refused.
+  static const tvAvoidance = Duration(minutes: 30);
+
+  /// yt-dlp's `--extractor-args` value that leaves out its TV clients.
+  static const noTvClients = 'youtube:player_client=default,-tv,-tv_samsung';
+
+  bool get avoidingTv {
+    final until = _tvAvoidedUntil;
+    return until != null && DateTime.now().isBefore(until);
+  }
+
+  /// YouTube refused stream addresses yt-dlp took from a TV client
+  /// (`TVHTML5`) the moment they were opened. yt-dlp keeps only the first
+  /// client's copy of each format, and the TV client comes first, so the
+  /// next answer would hold the same kind of refused address and cost
+  /// another few seconds. For a while yt-dlp is asked without the TV
+  /// clients, which leaves it the other clients' copies of those formats.
+  void avoidTv() {
+    if (!avoidingTv) logInfo("YouTube refused the TV client's stream addresses; asking yt-dlp without it for ${tvAvoidance.inMinutes} minutes");
+    _tvAvoidedUntil = DateTime.now().add(tvAvoidance);
+  }
+
   /// mpv's own default when no format was chosen.
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
 
@@ -206,7 +236,10 @@ class StreamResolver {
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
         if (deno != null) ...['--js-runtimes', 'deno:${deno!}'],
         '--extractor-retries', '3',
-        if (live) ...['--extractor-args', 'youtube:formats=incomplete${liveClients == null ? '' : ';player_client=$liveClients'}'],
+        if (live)
+          ...['--extractor-args', 'youtube:formats=incomplete${liveClients == null ? '' : ';player_client=$liveClients'}']
+        else if (avoidingTv)
+          ...['--extractor-args', noTvClients],
         '--no-playlist',
         '--dump-single-json',
         '--format', expressionOf(format),
@@ -271,7 +304,7 @@ class StreamResolver {
       final client = _quickClient ??= appHttpClient();
       final headers = {'Content-Type': 'application/json', ...(parts['headers'] as Map).cast<String, String>()};
       final body = (parts['body'] as Map).cast<String, Object?>();
-      final response = await YoutubePlayerProbe.post(client, headers, body, timeout: const Duration(seconds: 6));
+      final response = await YoutubePlayerProbe.post(client, headers, body, timeout: const Duration(seconds: 6), playing: true);
       if (response.statusCode != 200) {
         logInfo('Quick start of $videoId: /player answered HTTP ${response.statusCode}');
         return null;
@@ -349,6 +382,12 @@ class StreamResolver {
     _proxies.remove(videoId);
     _lives.remove(videoId);
     _deleteInfo(videoId);
+  }
+
+  /// [forget]s [videoId] when [video] is its kept answer, whose addresses
+  /// were refused; an answer still being made, or another one, is kept.
+  void forgetAnswer(String videoId, ResolvedVideo video) {
+    if (identical(_done[videoId], video)) forget(videoId);
   }
 
   File _infoFile(String videoId) => File('${infoDirectory.path}${Platform.pathSeparator}$videoId.json');
@@ -436,6 +475,13 @@ class StreamResolver {
     if (_failed(result) && _transient.hasMatch(result.stderr.toString())) {
       logWarn('Resolving $videoId hit a network error, retrying once');
       await Future<void>.delayed(const Duration(seconds: 2));
+      result = await run(signed: signed);
+    }
+    if (_failed(result) && !live && avoidingTv) {
+      // The other clients may give nothing this video can play: the TV
+      // client is asked again from now on.
+      logWarn('Resolving $videoId without the TV client failed; asking with it again');
+      _tvAvoidedUntil = null;
       result = await run(signed: signed);
     }
     if (_failed(result) && !signed && signedIn && membersOnlyError.hasMatch(result.stderr.toString())) {

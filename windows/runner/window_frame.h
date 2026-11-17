@@ -49,6 +49,12 @@ class WindowFrame {
   static LRESULT CALLBACK ViewProc(HWND view, UINT message, WPARAM wparam, LPARAM lparam,
                                    UINT_PTR id, DWORD_PTR data);
   void SetButton(int state);
+  // Hides the pointer while it rests in |area| of Flutter's view, until it
+  // moves (see WindowFrame.hidePointer in lib/window_frame.dart).
+  void HidePointer(const flutter::EncodableValue* area);
+  // The pointer moved since HidePointer: shows it again unless Flutter set
+  // another one meanwhile.
+  void PointerMoved();
   void ReportMaximized(bool maximized);
   void ReportActive(bool active);
 
@@ -65,6 +71,8 @@ class WindowFrame {
   bool maximized_ = false;
   bool active_ = true;
   int traces_ = 0;
+  bool pointer_hidden_ = false;
+  POINT hidden_at_ = {};
 };
 
 #endif  // RUNNER_WINDOW_FRAME_H_

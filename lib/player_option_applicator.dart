@@ -134,7 +134,7 @@ class PlayerOptionApplicator {
   /// Options mpv's ytdl_hook passes to yt-dlp. [infoJson] is a file from an
   /// earlier extraction: yt-dlp then picks formats and subtitles from it
   /// without asking YouTube again.
-  static String ytdlRawOptions(PlayerSettings settings, {String? infoJson, String? proxy, String? formatSort}) {
+  static String ytdlRawOptions(PlayerSettings settings, {String? infoJson, String? proxy, String? formatSort, String? extractorArgs}) {
     final subtitles = settings.subtitleMode != SubtitleMode.off;
     // mpv's %length% quoting keeps a comma or equals sign, as a path may
     // have, from splitting the option.
@@ -154,6 +154,7 @@ class PlayerOptionApplicator {
       if (formatSort != null) 'format-sort=${quote(formatSort)}',
       // Also for SOCKS proxies, which ytdl_hook does not take from http-proxy.
       if (proxy != null) 'proxy=${quote(proxy)}',
+      if (extractorArgs != null) 'extractor-args=${quote(extractorArgs)}',
     ].join(',');
   }
 

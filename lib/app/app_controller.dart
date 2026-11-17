@@ -737,6 +737,10 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// The play whose first open already tried a quick start.
   int? _quickSerial;
+  /// The play whose refused addresses were already resolved once more.
+  int? _resolvedAgain;
+  /// The answer the opened addresses came from.
+  ResolvedVideo? _openedVideo;
 
   /// The live stream opened as its picture and sound above 1080p, joined
   /// fragment by fragment in the relay (see [LiveSplit]).

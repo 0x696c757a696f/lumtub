@@ -44,6 +44,7 @@ void main() {
   setUp(() {
     VideoLanguages.reset();
     YoutubePlayerProbe.forgetVisitor();
+    YoutubePlayerProbe.resetTraffic();
   });
 
   group('passes', () {

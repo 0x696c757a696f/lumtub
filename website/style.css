@@ -637,6 +637,9 @@ details p { padding: 0 var(--s-300) var(--s-300); overflow-wrap: anywhere; }
 .give-text { display: grid; text-align: left; }
 .give-name { font-size: 20px; line-height: 26px; font-weight: 800; }
 .give-note { font-size: 14px; line-height: 20px; opacity: 0.85; }
+.lang { position: relative; cursor: pointer; }
+.lang select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; appearance: none; border: 0; }
+.lang:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .nav-heart { color: #ea4aaa; }
 .nav-heart .icon { animation: beat 1.6s ease-in-out infinite; }
 .links { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s-75) var(--s-300); margin-top: var(--s-75); }

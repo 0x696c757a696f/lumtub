@@ -18,8 +18,8 @@ use crate::text::{Lang, Text};
 
 pub struct SkinInfo {
     pub id: &'static str,
+    pub names: &'static [(&'static str, &'static str)],
     pub en: &'static str,
-    pub zh: &'static str,
     /// light, dark or auto (both sides).
     pub side: &'static str,
     pub scheme: bool,
@@ -108,7 +108,7 @@ pub fn SkinPreview(t: &'static Text, lang: Lang, state: SkinState) -> impl IntoV
             .iter()
             .filter(move |s| s.scheme == scheme)
             .map(move |s| {
-                let name = if lang == Lang::Zh { s.zh } else { s.en };
+                let name = s.names.iter().find(|(c, _)| *c == lang.code()).map_or(s.en, |(_, n)| *n);
                 let (page, night) = (s.page, if s.side == "auto" { s.dark_page } else { s.page });
                 view! {
                     <button
@@ -138,7 +138,7 @@ pub fn SkinPreview(t: &'static Text, lang: Lang, state: SkinState) -> impl IntoV
                     let (first, rest) = label.split_at(label.chars().next().map_or(0, char::len_utf8));
                     view! {
                         <span class="lp-mi" class:bold=bold>
-                            {if underline && lang == Lang::En { view! { <u>{first.to_string()}</u> }.into_any() } else { first.to_string().into_any() }}
+                            {if underline && !lang.cjk() { view! { <u>{first.to_string()}</u> }.into_any() } else { first.to_string().into_any() }}
                             {rest.to_string()}
                         </span>
                     }
@@ -870,7 +870,7 @@ impl Look {
             let _ = writeln!(css, ".lp .lp-status{{color:{};{}}}", st.css(), cx.surface(status, 0.0));
         }
 
-        let name_key = if lang == Lang::Zh { "zh-Hans" } else { "en" };
+        let name_key = lang.code();
         let label = raw["names"][name_key].as_str().or(raw["name"].as_str()).unwrap_or(id).to_string();
         let description = raw["descriptions"][name_key].as_str().or(raw["description"].as_str()).unwrap_or("").to_string();
         Look {

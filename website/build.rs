@@ -1,5 +1,5 @@
 // Lists the built-in skins for the live preview: their ids in the order the
-// app ships them (pubspec.yaml), names in English and Chinese, and the two
+// app ships them (pubspec.yaml), names in the languages the site has, and the two
 // colours on each picker button. The preview reads the skin files themselves
 // at run time.
 
@@ -26,7 +26,10 @@ fn main() {
         println!("cargo:rerun-if-changed={path}");
         let json: Value = serde_json::from_str(&jsonc::strip(&fs::read_to_string(&path).expect(&path))).expect(&path);
         let name = json["name"].as_str().unwrap_or(id);
-        let zh = json["names"]["zh-Hans"].as_str().unwrap_or(name);
+        let names: Vec<(&str, &str)> = ["zh-Hans", "es", "fr", "de", "it"]
+            .into_iter()
+            .filter_map(|code| Some((code, json["names"][code].as_str()?)))
+            .collect();
         let side = json["brightness"].as_str().unwrap_or("light");
         // A colour scheme keeps Lumtub's own shapes: it draws no cards.
         let scheme = json.get("cards").is_none();
@@ -36,7 +39,7 @@ fn main() {
         let dark_page = json["overrides"]["dark"]["colors"]["page"].as_str().unwrap_or(page);
         writeln!(
             out,
-            "    SkinInfo {{ id: {id:?}, en: {name:?}, zh: {zh:?}, side: {side:?}, scheme: {scheme}, page: {page:?}, dark_page: {dark_page:?}, accent: {accent:?} }},"
+            "    SkinInfo {{ id: {id:?}, names: &{names:?}, en: {name:?}, side: {side:?}, scheme: {scheme}, page: {page:?}, dark_page: {dark_page:?}, accent: {accent:?} }},"
         )
         .unwrap();
     }

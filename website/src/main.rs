@@ -63,12 +63,7 @@ fn initial_lang() -> Lang {
         .and_then(|p| p.get("lang"));
     let saved = storage().and_then(|s| s.get_item("lang").ok().flatten());
     let browser = window.and_then(|w| w.navigator().language());
-    let pick = from_query.or(saved).or(browser).unwrap_or_default();
-    if pick.to_lowercase().starts_with("zh") {
-        Lang::Zh
-    } else {
-        Lang::En
-    }
+    [from_query, saved, browser].into_iter().flatten().find_map(|c| Lang::from_code(&c)).unwrap_or(Lang::En)
 }
 
 fn main() {
@@ -146,8 +141,8 @@ fn App() -> impl IntoView {
         }
     });
 
-    let toggle_lang = move |_| {
-        let next = if lang.get_untracked() == Lang::En { Lang::Zh } else { Lang::En };
+    let pick_lang = move |ev: leptos::ev::Event| {
+        let Some(next) = Lang::from_code(&event_target_value(&ev)) else { return };
         if let Some(s) = storage() {
             let _ = s.set_item("lang", next.code());
         }
@@ -188,10 +183,15 @@ fn App() -> impl IntoView {
                     </a>
                     <div class="nav-links">{links(false)}</div>
                     <div class="nav-actions">
-                        <button class="ghost lang" on:click=toggle_lang>
+                        <label class="ghost lang">
                             {icon("translate", 16)}
-                            <span>{t.other_lang}</span>
-                        </button>
+                            <span>{t.lang_name}</span>
+                            <select aria-label="Language" on:change=pick_lang>
+                                {Lang::ALL.into_iter().map(|o| view! {
+                                    <option value=o.code() selected=o == l>{o.text().lang_name}</option>
+                                }).collect_view()}
+                            </select>
+                        </label>
                         <a class="ghost square" href=REPO aria-label="GitHub">{icon("github-logo", 20)}</a>
                         <a class="ghost square nav-heart" href="#support" aria-label=t.support_eyebrow>{icon("heart", 20)}</a>
                         <a class="btn primary small nav-cta" href="#download">{t.nav_download}</a>
@@ -337,12 +337,12 @@ fn Highlights(t: &'static Text, lang: Lang, skin: SkinState) -> impl IntoView {
 #[component]
 fn Tagline(lang: Lang) -> impl IntoView {
     let words = lang.tagline_words();
-    let sep = if lang == Lang::En { " " } else { "" };
+    let sep = if lang.cjk() { "" } else { " " };
     let count = words.len();
     view! {
         <section class="tagline">
             <div class="wrap">
-                <p class="heading-2 tagline-text" class:cjk=lang == Lang::Zh>
+                <p class="heading-2 tagline-text" class:cjk=lang.cjk()>
                     {words.into_iter().enumerate().map(|(i, w)| view! {
                         <span class="word">{w}</span>
                         {(i + 1 < count).then(|| sep)}
@@ -563,10 +563,10 @@ fn Support(t: &'static Text, lang: Lang) -> impl IntoView {
     let sponsor = give("github", SPONSORS, GITHUB_MARK, t.sponsor, t.sponsor_note);
     let afdian = give("afdian", AFDIAN, AFDIAN_MARK, t.afdian, t.afdian_note);
     let kofi = give("kofi", KOFI, KOFI_MARK, t.kofi, t.kofi_note);
-    let buttons = if lang == Lang::Zh {
-        view! { {afdian}{sponsor}{kofi} }.into_any()
-    } else {
-        view! { {sponsor}{kofi}{afdian} }.into_any()
+    let buttons = match lang {
+        Lang::Zh => view! { {afdian}{sponsor}{kofi} }.into_any(),
+        Lang::En => view! { {sponsor}{kofi}{afdian} }.into_any(),
+        _ => view! { {kofi}{sponsor}{afdian} }.into_any(),
     };
     let goals = t.goals.iter().map(|g| view! { <li>{*g}</li> }).collect_view();
     view! {

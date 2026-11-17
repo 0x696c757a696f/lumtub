@@ -2,29 +2,60 @@
 pub enum Lang {
     En,
     Zh,
+    Es,
+    Fr,
+    De,
+    It,
 }
 
+mod de;
+mod es;
+mod fr;
+mod it;
+
 impl Lang {
+    pub const ALL: [Lang; 6] = [Lang::En, Lang::Es, Lang::Fr, Lang::De, Lang::It, Lang::Zh];
+
     pub fn code(self) -> &'static str {
         match self {
             Lang::En => "en",
             Lang::Zh => "zh-Hans",
+            Lang::Es => "es",
+            Lang::Fr => "fr",
+            Lang::De => "de",
+            Lang::It => "it",
         }
+    }
+
+    /// The language a code like "de-AT" or "zh-CN" asks for, if the site has it.
+    pub fn from_code(code: &str) -> Option<Lang> {
+        let code = code.to_lowercase();
+        let base = code.split(['-', '_']).next().unwrap_or("");
+        Lang::ALL.into_iter().find(|l| l.code().split('-').next() == Some(base))
     }
 
     pub fn text(self) -> &'static Text {
         match self {
             Lang::En => &EN,
             Lang::Zh => &ZH,
+            Lang::Es => &es::ES,
+            Lang::Fr => &fr::FR,
+            Lang::De => &de::DE,
+            Lang::It => &it::IT,
         }
+    }
+
+    pub fn cjk(self) -> bool {
+        self == Lang::Zh
     }
 
     /// The tagline split into the pieces that light up one by one.
     pub fn tagline_words(self) -> Vec<&'static str> {
         let t = self.text().tagline;
-        match self {
-            Lang::En => t.split(' ').collect(),
-            Lang::Zh => t.split('|').collect(),
+        if self.cjk() {
+            t.split('|').collect()
+        } else {
+            t.split(' ').collect()
         }
     }
 }
@@ -64,7 +95,7 @@ pub struct Mock {
 
 pub struct Text {
     pub title: &'static str,
-    pub other_lang: &'static str,
+    pub lang_name: &'static str,
     pub skip: &'static str,
     pub hero_alt: &'static str,
     pub menu: &'static str,
@@ -159,7 +190,7 @@ const fn package(i: usize, label: &'static str, note: &'static str) -> Package {
 
 pub static EN: Text = Text {
     title: "Lumtub · Watch YouTube your way",
-    other_lang: "中文",
+    lang_name: "English",
     hero_alt: "Lumtub playing a video, with Up next beside it",
     skip: "Skip to content",
     menu: "Menu",
@@ -343,7 +374,7 @@ pub static EN: Text = Text {
 
 pub static ZH: Text = Text {
     title: "Lumtub · 按你的方式看 YouTube",
-    other_lang: "English",
+    lang_name: "中文",
     hero_alt: "Lumtub 正在播放视频，旁边是接下来播放的列表",
     skip: "跳到正文",
     menu: "菜单",

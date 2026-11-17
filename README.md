@@ -128,6 +128,7 @@ These are also found in other YouTube clients, and all are opt-in here:
 | `linux-x64-v3` AppImage | Most 64-bit PCs from 2015 on (AVX2) with glibc 2.35 or newer — **pick this if unsure** |
 | `linux-x64` AppImage | 64-bit PCs with glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36 and later) |
 | `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 |
+| `linux-x64` / `linux-arm64` Flatpak | The same, as a Flatpak bundle (no self-update: install the next one by hand) |
 | `macos-arm64` DMG | Macs with Apple silicon (M1 and later) |
 | `macos-x64` DMG | Intel Macs |
 | `android-arm64-v8a` APK | Most Android phones, tablets and TVs (Android 7.0 or newer) — **pick this if unsure** |
@@ -136,8 +137,8 @@ These are also found in other YouTube clients, and all are opt-in here:
 | `ios` IPA | iPhone and iPad with iOS 15 or newer (preview, sideloaded) |
 
 File names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
-**Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed.<br>
-**Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place. If it says FUSE is missing, install your distribution's `fuse3` package, or start it with `--appimage-extract-and-run`.<br>
+**Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. Package managers (under review, working once accepted): `winget install Lumtub.Lumtub`, or `scoop bucket add extras` then `scoop install lumtub`.<br>
+**Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place. If it says FUSE is missing, install your distribution's `fuse3` package, or start it with `--appimage-extract-and-run`. Prefer Flatpak? `flatpak install --user Lumtub_*_linux-x64.flatpak`.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.<br>
 **Android (preview):** open the APK and allow installing from your browser or file manager when asked. New versions install from inside Lumtub; Android asks you to confirm. Live streams and downloads work too, through the yt-dlp built into the app; members-only videos don't play on Android yet.<br>
 **iPhone and iPad (preview, not yet tested on a real device):** Lumtub isn't in the App Store, so install the IPA with [SideStore](https://sidestore.io), [AltStore](https://altstore.io) or Sideloadly using your own Apple ID, or with TrollStore. In SideStore or AltStore, add the source `https://github.com/0x696c757a696f/lumtub/releases/latest/download/altstore-source.json` to get new versions. yt-dlp runs inside the app with the Python it carries.

@@ -1453,8 +1453,26 @@ jobs:
           version="${TAG#v}"
           version="${version%%-*}"
           notes="release-notes/$version.md"
+          # Every release ends with which file to download, and the package
+          # managers that already list Lumtub.
+          managers=()
+          if gh api repos/microsoft/winget-pkgs/contents/manifests/l/Lumtub/Lumtub --silent 2>/dev/null; then
+            managers+=('- Windows: `winget install Lumtub.Lumtub`')
+          fi
+          if gh api repos/ScoopInstaller/Extras/contents/bucket/lumtub.json --silent 2>/dev/null; then
+            managers+=('- Windows: `scoop bucket add extras` then `scoop install lumtub`')
+          fi
+          footer="$RUNNER_TEMP/which-file.md"
+          python3 - "$footer" "${managers[@]}" <<'PY'
+          import sys
+          out, managers = sys.argv[1], sys.argv[2:]
+          text = open("release-notes/_which-file.md", encoding="utf-8").read()
+          block = "\nOr with a package manager:\n\n" + "\n".join(managers) + "\n" if managers else ""
+          open(out, "w", encoding="utf-8").write(text.replace("<!-- package managers -->\n", block))
+          PY
           if [[ -f "$notes" ]]; then
-            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "Lumtub $version" --notes-file "$notes"
+            cat "$notes" "$footer" > "$RUNNER_TEMP/notes.md"
+            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "Lumtub $version" --notes-file "$RUNNER_TEMP/notes.md"
           else
-            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "Lumtub $TAG" --generate-notes
+            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "Lumtub $TAG" --generate-notes --notes-file "$footer"
           fi

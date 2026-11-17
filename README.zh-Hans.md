@@ -117,6 +117,7 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 | `linux-x64-v3` AppImage | 2015 年以后的大多数 64 位电脑（AVX2），glibc 2.35 或更新——**拿不准就选这个** |
 | `linux-x64` AppImage | glibc 2.35 或更新的 64 位电脑（Ubuntu 22.04、Debian 12、Fedora 36 及以后） |
 | `linux-arm64` AppImage | ARM64 Linux，例如树莓派 5 |
+| `linux-x64` / `linux-arm64` Flatpak | 同上，Flatpak 包（不会自动更新，新版本需要手动安装） |
 | `macos-arm64` DMG | Apple 芯片的 Mac（M1 及以后） |
 | `macos-x64` DMG | Intel 芯片的 Mac |
 | `android-arm64-v8a` APK | 大多数 Android 手机、平板和电视（Android 7.0 及以上）。**不确定就选这个** |
@@ -125,8 +126,8 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 | `ios` IPA | iOS 15 及以上的 iPhone 和 iPad（预览版，自签安装） |
 
 文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
-**Windows**：用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。<br>
-**Linux**：给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新。如果提示缺少 FUSE，请安装发行版的 `fuse3` 软件包，或用 `--appimage-extract-and-run` 参数启动。<br>
+**Windows**：用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。也可以用包管理器（正在审核，通过后可用）：`winget install Lumtub.Lumtub`，或先 `scoop bucket add extras` 再 `scoop install lumtub`。<br>
+**Linux**：给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新。如果提示缺少 FUSE，请安装发行版的 `fuse3` 软件包，或用 `--appimage-extract-and-run` 参数启动。想用 Flatpak 的话：`flatpak install --user Lumtub_*_linux-x64.flatpak`。<br>
 第一次启动时会从 GitHub 下载 yt-dlp 和 Deno，之后 Lumtub 会自己保持更新。<br>
 **Android（预览版）**：打开 APK，按提示允许浏览器或文件管理器安装应用。新版本可以在 Lumtub 里直接安装，Android 会请你确认一次。直播和下载也都能用，靠的是应用里自带的 yt-dlp；会员专属视频在 Android 上暂时还不能看。<br>
 **iPhone 和 iPad（预览版，尚未在真机上测试）**：Lumtub 没有上架 App Store，请用 [SideStore](https://sidestore.io)、[AltStore](https://altstore.io) 或 Sideloadly 配合你自己的 Apple ID 安装 IPA，也可以用 TrollStore。在 SideStore 或 AltStore 里添加源 `https://github.com/0x696c757a696f/lumtub/releases/latest/download/altstore-source.json`，就能收到新版本。yt-dlp 用应用自带的 Python 在应用内运行。

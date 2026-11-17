@@ -108,6 +108,17 @@ void main() {
       expect(player.state.playing, isFalse);
     });
 
+    test('back after expanding comes back to the page it was opened over', () {
+      controller.ready = true;
+      controller.navigate(PageMode.subscriptions);
+      controller.navigate(PageMode.history);
+      expect(controller.mini, isTrue);
+      controller.expandMini();
+      controller.goBack();
+      expect(controller.mini, isTrue);
+      expect(controller.mode, PageMode.history);
+    });
+
     test('going back to the same video expands it', () {
       controller.ready = true;
       controller.expandMini();

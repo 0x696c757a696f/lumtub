@@ -411,6 +411,7 @@ class _Toolbar extends StatelessWidget {
     // name, as phone video apps lay them out.
     Widget layout(List<Widget> children) => phone
         ? SingleChildScrollView(
+            key: const PageStorageKey('actions'),
             scrollDirection: Axis.horizontal,
             child: Row(children: [for (final (i, c) in children.indexed) Padding(padding: EdgeInsetsDirectional.only(start: i == 0 ? 0 : 8), child: c)]),
           )
@@ -1190,7 +1191,7 @@ class _UpNext extends StatelessWidget {
               if (choices.length > 1)
                 SliverToBoxAdapter(child: SizedBox(
                   height: 40,
-                  child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.fromLTRB(4, 0, 4, 8), children: [
+                  child: ListView(key: const PageStorageKey('choices'), scrollDirection: Axis.horizontal, padding: const EdgeInsets.fromLTRB(4, 0, 4, 8), children: [
                     for (final (value, label, _) in choices)
                       Padding(
                         padding: const EdgeInsetsDirectional.only(end: 8),

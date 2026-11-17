@@ -5,11 +5,12 @@ import 'dart:io';
 import '../app_log.dart';
 import '../network_proxy.dart' show isLocalHost;
 import 'cast_device.dart';
+import 'cast_parse.dart';
 import 'cast_net.dart';
 
 // DLNA / UPnP AV casting: SSDP search for MediaRenderers, then SOAP calls to
-// their AVTransport service. Only dart:io; the XML involved is small and
-// regular enough to read with a few patterns.
+// their AVTransport service. What devices send is read in the Rust core
+// (cast_lan.rs); sockets are dart:io.
 
 const mediaRendererType = 'urn:schemas-upnp-org:device:MediaRenderer:1';
 const avTransportPrefix = 'urn:schemas-upnp-org:service:AVTransport:';
@@ -32,16 +33,18 @@ class SsdpResponse {
 
 /// An SSDP search reply (or NOTIFY), or null when it names no http location.
 SsdpResponse? parseSsdpResponse(String text) {
-  final lines = const LineSplitter().convert(text);
-  if (lines.isEmpty || !(lines.first.startsWith('HTTP/1.1 200') || lines.first.startsWith('NOTIFY'))) return null;
-  final headers = <String, String>{};
-  for (final line in lines.skip(1)) {
-    final colon = line.indexOf(':');
-    if (colon > 0) headers[line.substring(0, colon).trim().toLowerCase()] = line.substring(colon + 1).trim();
+  final Object? read;
+  try {
+    read = readTextInCore('lumtub_ssdp', text);
+  } on FormatException {
+    return null;
   }
-  final location = Uri.tryParse(headers['location'] ?? '');
+  if (read is! Map) return null;
+  final headers = read;
+  String header(String name) => headers[name] is String ? headers[name] as String : '';
+  final location = Uri.tryParse(header('location'));
   if (location == null || !location.hasScheme || !location.scheme.startsWith('http') || location.host.isEmpty) return null;
-  return SsdpResponse(location: location, usn: headers['usn'] ?? '', st: headers['st'] ?? headers['nt'] ?? '');
+  return SsdpResponse(location: location, usn: header('usn'), st: headers['st'] is String ? header('st') : header('nt'));
 }
 
 String xmlEscape(String text) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
@@ -57,12 +60,6 @@ String xmlUnescape(String text) => text
       return valid ? String.fromCharCode(code) : m[0]!;
     })
     .replaceAll('&amp;', '&');
-
-/// The text of the first `<name>` element in [xml], ignoring namespace prefixes.
-String? xmlText(String xml, String name) {
-  final match = RegExp('<(?:\\w+:)?$name(?:\\s[^>]*)?>([\\s\\S]*?)</(?:\\w+:)?$name\\s*>').firstMatch(xml);
-  return match == null ? null : xmlUnescape(match[1]!.trim());
-}
 
 /// One service of a UPnP device.
 class UpnpService {
@@ -92,21 +89,22 @@ bool _sameHost(Uri a, Uri b) => a.host.toLowerCase() == b.host.toLowerCase() && 
 /// another host than [location] is ignored, so a device cannot point Lumtub
 /// at some other machine.
 DlnaDescription parseDeviceDescription(String xml, Uri location) {
-  final baseText = xmlText(xml, 'URLBase');
+  final read = readTextInCore('lumtub_upnp_description', xml);
+  final found = read is Map ? read : const {};
+  String? text(String name) => found[name] is String ? found[name] as String : null;
+  final baseText = text('URLBase');
   final named = baseText == null ? null : Uri.tryParse(baseText);
   final base = named != null && named.hasScheme && named.scheme.startsWith('http') && _sameHost(named, location) ? named : location;
   final services = <UpnpService>[];
-  for (final block in RegExp(r'<service(?:\s[^>]*)?>([\s\S]*?)</service>').allMatches(xml)) {
-    final type = xmlText(block[1]!, 'serviceType');
-    final control = xmlText(block[1]!, 'controlURL');
-    if (type == null || control == null || control.isEmpty) continue;
-    final address = controlAddress(base, control);
+  for (final service in found['services'] is List ? found['services'] as List : const []) {
+    if (service is! Map || service['type'] is! String || service['control'] is! String) continue;
+    final address = controlAddress(base, service['control'] as String);
     if (!address.scheme.startsWith('http') || !_sameHost(address, location)) continue;
-    services.add(UpnpService(type, address));
+    services.add(UpnpService(service['type'] as String, address));
   }
-  final name = xmlText(xml, 'friendlyName');
-  final about = [name, for (final tag in ['manufacturer', 'modelName', 'modelDescription']) xmlText(xml, tag)].whereType<String>().join(' ');
-  return DlnaDescription(name: name == null || name.isEmpty ? location.host : name, udn: xmlText(xml, 'UDN') ?? location.toString(), services: services, apple: looksApple(about));
+  final name = text('friendlyName');
+  final about = [name, for (final tag in ['manufacturer', 'modelName', 'modelDescription']) text(tag)].whereType<String>().join(' ');
+  return DlnaDescription(name: name == null || name.isEmpty ? location.host : name, udn: text('UDN') ?? location.toString(), services: services, apple: looksApple(about));
 }
 
 /// Where a service's [control] path points from [base]. Lebo (乐播)
@@ -133,22 +131,15 @@ String soapEnvelope(String serviceType, String action, Map<String, String> argum
 /// The output arguments of a SOAP response, or throws [CastException] with
 /// the UPnP error when the body is a fault.
 Map<String, String> parseSoapResponse(String xml) {
-  if (xml.contains('Fault>')) {
-    final code = xmlText(xml, 'errorCode');
-    final description = xmlText(xml, 'errorDescription') ?? xmlText(xml, 'faultstring') ?? '';
+  final read = readTextInCore('lumtub_soap_response', xml);
+  final answer = read is Map ? read : const {};
+  if (answer['fault'] case final Map fault) {
+    final code = fault['code'] is String ? fault['code'] as String : null;
+    final description = fault['description'] is String ? fault['description'] as String : '';
     throw CastException('UPnP ${code ?? 'error'}${description.isEmpty ? '' : ': $description'}');
   }
-  final response = RegExp(r'<(?:\w+:)?\w+Response(?:\s[^>]*)?>([\s\S]*?)</(?:\w+:)?\w+Response\s*>').firstMatch(xml);
-  final out = <String, String>{};
-  if (response == null) return out;
-  for (final m in RegExp(r'<(\w+)(?:\s[^>]*)?>([\s\S]*?)</\1>|<(\w+)\s*/>').allMatches(response[1]!)) {
-    if (m[3] != null) {
-      out[m[3]!] = '';
-    } else {
-      out[m[1]!] = xmlUnescape(m[2]!.trim());
-    }
-  }
-  return out;
+  final args = answer['args'];
+  return {if (args is Map) for (final MapEntry(:key, :value) in args.entries) '$key': '$value'};
 }
 
 /// DIDL-Lite metadata naming the video, which many renderers want. A

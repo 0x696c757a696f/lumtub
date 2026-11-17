@@ -769,6 +769,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             onTap: () => pickFromDialog<String>(context, title: tr('Post-quantum encryption'), value: settings.postQuantum, values: modes, onSelected: (value) => save(settings.copyWith(postQuantum: value))),
           );
         }, subtitle: tr('post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange')),
+        SettingEntry(tr('IPv4 only'), (context) => SwitchItem(
+              title: tr('IPv4 only'),
+              subtitle: tr("yt-dlp connects over IPv4 only. Turn it on if videos take long to start and your network has IPv6 addresses that don't work"),
+              leading: _icon(AppIcons.globe),
+              value: settings.ipv4Only,
+              onChanged: (v) => save(settings.copyWith(ipv4Only: v)),
+            ), subtitle: tr('IPv4 IPv6 force-ipv4 slow start network')),
         SettingEntry(tr('Key exchange by site'), (context) => NormalItem(
               title: tr('Key exchange by site'),
               subtitle: tr('What each site agreed on the last time Lumtub connected to it'),

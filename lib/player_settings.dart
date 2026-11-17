@@ -486,6 +486,9 @@ class PlayerSettings {
   /// The post-quantum key exchange on the core's connections: 'prefer',
   /// 'off' or 'require'.
   final String postQuantum;
+  /// yt-dlp connects over IPv4 only (`--force-ipv4`), for networks whose
+  /// IPv6 addresses go nowhere and make each run wait for a time-out.
+  final bool ipv4Only;
   /// Where playback streams come from: YouTube directly by default.
   final PlaybackSource playbackSource;
   /// Play from public Piped or Invidious servers when YouTube refuses a
@@ -572,6 +575,7 @@ class PlayerSettings {
     this.dnsCustomUrl = '',
     this.certificateRoots = 'system',
     this.postQuantum = 'prefer',
+    this.ipv4Only = false,
     this.playbackSource = PlaybackSource.youtube,
     this.relayFallback = true,
     this.skipSilence = false,
@@ -649,6 +653,7 @@ class PlayerSettings {
     String? dnsCustomUrl,
     String? certificateRoots,
     String? postQuantum,
+    bool? ipv4Only,
     PlaybackSource? playbackSource,
     bool? relayFallback,
     bool? skipSilence,
@@ -718,6 +723,7 @@ class PlayerSettings {
         dnsCustomUrl: dnsCustomUrl ?? this.dnsCustomUrl,
         certificateRoots: certificateRoots ?? this.certificateRoots,
         postQuantum: postQuantum ?? this.postQuantum,
+        ipv4Only: ipv4Only ?? this.ipv4Only,
         playbackSource: playbackSource ?? this.playbackSource,
         relayFallback: relayFallback ?? this.relayFallback,
         skipSilence: skipSilence ?? this.skipSilence,
@@ -791,6 +797,7 @@ class PlayerSettings {
         'dnsCustomUrl': dnsCustomUrl,
         'certificateRoots': certificateRoots,
         'postQuantum': postQuantum,
+        'ipv4Only': ipv4Only,
         'playbackSourceV2': playbackSource.name,
         'relayFallback': relayFallback,
         'skipSilence': skipSilence,
@@ -996,6 +1003,7 @@ class PlayerSettings {
       dnsCustomUrl: raw['dnsCustomUrl']?.toString() ?? '',
       certificateRoots: const ['mozilla', 'google'].contains(raw['certificateRoots']) ? raw['certificateRoots'] as String : 'system',
       postQuantum: const ['off', 'require'].contains(raw['postQuantum']) ? raw['postQuantum'] as String : 'prefer',
+      ipv4Only: raw['ipv4Only'] == true,
       // V2: the default became direct YouTube (2026-10-21); the old key held
       // the old default for everyone who never chose.
       playbackSource: _enumByName(PlaybackSource.values, raw['playbackSourceV2'], PlaybackSource.youtube),

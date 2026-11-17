@@ -593,6 +593,10 @@ class StreamResolver {
   static Duration standbyIdle = const Duration(minutes: 5);
 
   _Standby? _standby;
+
+  /// What a standby was started with, so one started before the IPv4
+  /// setting changed is not used after.
+  static String _standbyKey(List<String> args) => '${ProcessTree.forceIpv4}\u0000${args.join('\u0000')}';
   /// The arguments of the standby being started, so two calls start one.
   String? _starting;
 
@@ -607,7 +611,7 @@ class StreamResolver {
   void _warm(String format, String? formatSort) {
     if (!standbyEnabled) return;
     final args = standbyArguments(format, formatSort);
-    final key = args.join('\u0000');
+    final key = _standbyKey(args);
     final standby = _standby;
     if (standby != null && standby.key == key && !standby.collected.exited) {
       standby.keep();
@@ -642,7 +646,7 @@ class StreamResolver {
   /// waiting; null otherwise.
   Future<ProcessResult?> _fromStandby(String videoId, String format, String? formatSort) async {
     final standby = _standby;
-    if (standby == null || standby.collected.exited || standby.key != standbyArguments(format, formatSort).join('\u0000')) return null;
+    if (standby == null || standby.collected.exited || standby.key != _standbyKey(standbyArguments(format, formatSort))) return null;
     _standby = null;
     standby.taken();
     final process = standby.collected.process;

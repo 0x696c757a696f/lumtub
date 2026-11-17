@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lumtub/channel_feed.dart';
 import 'package:lumtub/library_store.dart';
-import 'package:lumtub/local_db.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/search_suggestions.dart';
 import 'package:lumtub/watch_time.dart';
@@ -40,9 +39,6 @@ void main() {
   });
 
   test('overlapping library saves leave the latest state', () async {
-    // The JSON file, as without the core.
-    LocalDb.enabledForTesting = false;
-    addTearDown(() => LocalDb.enabledForTesting = null);
     final file = File('${dir.path}/library.json');
     final library = LibraryStore(file);
     final first = library.save();

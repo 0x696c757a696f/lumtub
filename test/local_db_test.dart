@@ -7,10 +7,12 @@ import 'package:lumtub/app_log.dart';
 import 'package:lumtub/library_store.dart';
 import 'package:lumtub/local_db.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/video_repository.dart';
 
 void main() {
-  final skip = LocalDb.enabled ? false : 'needs lumtub_core (LUMTUB_CORE_DLL)';
+  LocalDb.enabledForTesting = true;
+  final skip = LocalDb.enabled && (NativeCore.instance?.library.providesSymbol('lumtub_store_write') ?? false) ? false : 'needs lumtub_core (LUMTUB_CORE_DLL)';
   late Directory root;
   late AppDirectories directories;
 

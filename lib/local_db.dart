@@ -30,12 +30,18 @@ class LocalDb {
 
   final String path;
 
-  /// Tests that look at the JSON files set this to false.
+  /// Overrides [enabled]. Under `flutter test` stores keep their JSON
+  /// files unless a test sets this to true: widget tests end while a
+  /// write may still be running on another isolate, and Windows cannot
+  /// delete a test's folder while the database is open.
   static bool? enabledForTesting;
 
   /// Whether stores keep their data here: the core is there and has the
   /// database. Without it they keep their JSON files.
-  static bool get enabled => enabledForTesting ?? (NativeCore.instance?.library.providesSymbol('lumtub_store_write') ?? false);
+  static bool get enabled =>
+      enabledForTesting ?? (!_underTest && (NativeCore.instance?.library.providesSymbol('lumtub_store_write') ?? false));
+
+  static final _underTest = Platform.environment['FLUTTER_TEST'] == 'true';
 
   /// The bodies each list had at the last write, by key, so the next one
   /// sends only what changed.

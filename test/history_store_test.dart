@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app_directories.dart';
 import 'package:lumtub/app_log.dart';
-import 'package:lumtub/local_db.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/video_repository.dart';
 
@@ -13,16 +12,12 @@ void main() {
   late Directory root;
   late AppDirectories directories;
   setUp(() async {
-    // These look at watch_history.json, the store without the core;
-    // local_db_test covers lumtub.db.
-    LocalDb.enabledForTesting = false;
     root = await Directory.systemTemp.createTemp('lumtub_history');
     directories = AppDirectories.at(root);
     await directories.data.create(recursive: true);
     await AppLog.open(directories.logs);
   });
   tearDown(() async {
-    LocalDb.enabledForTesting = null;
     await AppLog.current?.flush();
     AppLog.current = null;
     await root.delete(recursive: true);

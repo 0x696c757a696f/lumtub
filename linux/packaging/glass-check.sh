@@ -32,9 +32,9 @@ while kill -0 "$app" 2> /dev/null; do
     window=$(xdotool search --onlyvisible --name Lumtub | head -n 1)
     if [ -n "$window" ]; then
       eval "$(xdotool getwindowgeometry --shell "$window")"
-      # Something new on the screen makes the compositor draw again: the
-      # pointer, moved over the window and back off it.
-      xdotool mousemove $((X + WIDTH / 2)) $((Y + HEIGHT / 2)) sleep 0.5 mousemove 0 0 sleep 1
+      # Something new on the window makes the compositor draw again: the
+      # pointer over a side rail item lights it, then leaves it.
+      xdotool mousemove $((X + 30)) $((Y + 120)) sleep 1 mousemove 0 0 sleep 2
       # The screen as shown, compositor and all, where the window is.
       import -window root -crop "${WIDTH}x${HEIGHT}+${X}+${Y}" +repage -depth 8 "PNG24:$out/$name.tmp.png" 2> /dev/null && mv "$out/$name.tmp.png" "$out/$name.png"
     fi

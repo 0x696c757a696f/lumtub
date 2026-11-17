@@ -52,14 +52,17 @@ class MainFlutterWindow: NSWindow {
   /// blurred when [blur]. The system's material stays neutral: Flutter lays
   /// the skin's tint over it.
   func setDesktopGlass(_ on: Bool, dark: Bool, blur: Bool) -> [String: Bool] {
-    behind.material = .hudWindow
+    // With Reduce transparency on, macOS draws the blur solid, which would
+    // hide the desktop asked for: the glass stays clear instead.
+    let blurred = on && blur && !NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
+    behind.material = .underWindowBackground
     behind.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
-    behind.isHidden = !(on && blur)
+    behind.isHidden = !blurred
     isOpaque = !on
     backgroundColor = on ? .clear : .windowBackgroundColor
     flutterViewController?.backgroundColor = on ? .clear : .black
     invalidateShadow()
-    return ["shown": on, "blurred": on && blur]
+    return ["shown": on, "blurred": blurred]
   }
 
   // Picture in picture makes the window borderless, which by default

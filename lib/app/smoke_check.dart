@@ -112,11 +112,14 @@ extension SmokeCheck on AppController {
     try {
       // Long enough for the first frame and the window to come up.
       await Future<void>.delayed(const Duration(seconds: 8));
-      final light = appearance.copyWith(skin: 'aero', themeMode: ThemeMode.light, windowGlassClarity: 1, windowGlassBlur: true);
+      // Without the system's blur: what the app and the window manager do.
+      // CI machines have no graphics card, and macOS and Windows then draw
+      // their blur solid, so the blur is pictured on its own.
+      final light = appearance.copyWith(skin: 'aero', themeMode: ThemeMode.light, windowGlassClarity: 1, windowGlassBlur: false);
       await shot('glass-off', light.copyWith(windowGlass: false));
       await shot('glass-frame', light.copyWith(windowGlass: true, windowGlassWhole: false));
       await shot('glass-whole', light.copyWith(windowGlass: true, windowGlassWhole: true));
-      await shot('glass-clear', light.copyWith(windowGlass: true, windowGlassWhole: false, windowGlassBlur: false));
+      await shot('glass-blur', light.copyWith(windowGlass: true, windowGlassWhole: false, windowGlassBlur: true));
       final dark = light.copyWith(skin: 'obsidian', themeMode: ThemeMode.dark);
       await shot('glass-dark-off', dark.copyWith(windowGlass: false));
       await shot('glass-dark-frame', dark.copyWith(windowGlass: true, windowGlassWhole: false));

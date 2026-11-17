@@ -61,7 +61,7 @@ constexpr DWORD kSystemBackdropBuild = 22621;
 // Windows 10 1803 and later blur with acrylic through the accent policy.
 constexpr DWORD kAccentAcrylicBuild = 17134;
 
-enum Accent { kAccentNone = 0, kAccentBlur = 3, kAccentAcrylic = 4 };
+enum Accent { kAccentNone = 0, kAccentClear = 2, kAccentBlur = 3, kAccentAcrylic = 4 };
 
 // The undocumented accent policy that TranslucentTB and the taskbar use.
 void SetAccent(HWND window, Accent state) {
@@ -81,8 +81,10 @@ void SetAccent(HWND window, Accent state) {
       ::GetProcAddress(::GetModuleHandle(L"user32.dll"), "SetWindowCompositionAttribute"));
   if (!set_composition) return;
   // Acrylic with an all-clear tint draws nothing; Flutter lays the skin's
-  // tint over it.
-  AccentPolicy accent{state, 0, state == kAccentAcrylic ? 0x01000000u : 0u, 0};
+  // tint over it. Clear: a gradient of nothing (flag 2: use the colour),
+  // so the desktop shows as it is. Since Windows 8 the extended frame alone
+  // is drawn solid, without the accent.
+  AccentPolicy accent{state, state == kAccentClear ? 2 : 0, state == kAccentAcrylic ? 0x01000000u : 0u, 0};
   CompositionData data{19 /* WCA_ACCENT_POLICY */, &accent, sizeof(accent)};
   set_composition(window, &data);
 }
@@ -295,10 +297,11 @@ void WindowFrame::ApplyBlur(bool moving) {
   if (build >= kSystemBackdropBuild) {
     const int backdrop = !glass_ ? 0 /* DWMSBT_AUTO */ : glass_blur_ ? 3 /* DWMSBT_TRANSIENTWINDOW */ : 1 /* DWMSBT_NONE */;
     ::DwmSetWindowAttribute(window_, 38 /* DWMWA_SYSTEMBACKDROP_TYPE */, &backdrop, sizeof(backdrop));
+    SetAccent(window_, glass_ && !glass_blur_ ? kAccentClear : kAccentNone);
     return;
   }
   if (!glass_blur_) {
-    SetAccent(window_, kAccentNone);
+    SetAccent(window_, glass_ ? kAccentClear : kAccentNone);
   } else {
     SetAccent(window_, build >= kAccentAcrylicBuild && !moving ? kAccentAcrylic : kAccentBlur);
   }

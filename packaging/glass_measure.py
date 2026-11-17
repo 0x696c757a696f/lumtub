@@ -7,13 +7,14 @@ lib/app/smoke_check.dart).
 
 The folder holds pictures of the screen under the window, taken by
 windows|linux|macos/packaging/glass-check.*, with a magenta window behind
-Lumtub: glass-off, glass-frame, glass-whole, glass-clear (no blur),
-glass-dark-off and glass-dark-frame (.png), and glass-state.json, what the runner answered.
+Lumtub: glass-off, glass-frame, glass-whole, glass-blur, glass-dark-off and
+glass-dark-frame (.png), and glass-state.json, what the runner answered.
 Each picture is measured for magenta, (R + B) / 2 - G, in two places: the
 bottom of the side rail, part of the frame, and the middle of the pages.
 
 Exits 0 when, in each skin, the frame took on the magenta behind it while
-the pages took on none, and the whole window took it on too; 1 otherwise.
+the pages took on none, and the whole window took it on too, all without
+the system's blur; 1 otherwise. glass-blur, with it, is only reported.
 Only Python's standard library is used.
 """
 
@@ -97,7 +98,7 @@ def main(folder):
     folder = Path(folder)
     state = json.loads((folder / "glass-state.json").read_text()) if (folder / "glass-state.json").exists() else {}
     measured = {}
-    for name in ["glass-off", "glass-frame", "glass-whole", "glass-clear", "glass-dark-off", "glass-dark-frame"]:
+    for name in ["glass-off", "glass-frame", "glass-whole", "glass-blur", "glass-dark-off", "glass-dark-frame"]:
         path = folder / f"{name}.png"
         if not path.exists():
             print(f"{name}: no picture")
@@ -115,7 +116,7 @@ def main(folder):
         print(f"{'PASS' if passed else 'FAIL'}: {what}")
         ok = ok and passed
 
-    for off, frame, whole in [("glass-off", "glass-frame", "glass-whole"), ("glass-off", "glass-clear", None), ("glass-dark-off", "glass-dark-frame", None)]:
+    for off, frame, whole in [("glass-off", "glass-frame", "glass-whole"), ("glass-dark-off", "glass-dark-frame", None)]:
         if off not in measured or frame not in measured:
             check(f"pictures {off} and {frame} taken", False)
             continue
@@ -127,6 +128,11 @@ def main(folder):
         if whole and whole in measured:
             _, pages_whole = measured[whole]
             check(f"{whole}: the desktop shows through the pages too ({pages_whole - pages_on:+.1f})", pages_whole - pages_on >= 6)
+    # The system's blur, where the system draws one: machines without a
+    # graphics card (CI) draw it solid, so it is reported, not required.
+    if "glass-off" in measured and "glass-blur" in measured:
+        through = measured["glass-blur"][0] - measured["glass-off"][0]
+        print(f"{'SEEN' if through >= 12 else 'NOT SEEN'} (not required): the desktop through the system's blur ({through:+.1f})")
     return 0 if ok else 1
 
 

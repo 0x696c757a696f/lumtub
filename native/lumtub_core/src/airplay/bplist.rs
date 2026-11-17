@@ -161,38 +161,50 @@ struct Reader<'a> {
     data: &'a [u8],
     offsets: Vec<usize>,
     width: usize,
+    /// Objects still allowed: shared references could otherwise unfold a
+    /// small list into billions of values.
+    budget: std::cell::Cell<usize>,
 }
+
+/// Most objects one list may unfold into.
+const MOST_OBJECTS: usize = 100_000;
 
 fn uint(b: &[u8]) -> u64 {
     b.iter().fold(0, |n, &x| n << 8 | x as u64)
 }
 
 impl Reader<'_> {
+    /// [n] bytes from [at], or none when they run past the data.
+    fn span(&self, at: usize, n: usize) -> Option<&[u8]> {
+        self.data.get(at..at.checked_add(n)?)
+    }
+
     fn length(&self, at: usize, low: u8) -> Option<(usize, usize)> {
         if low != 0xF {
-            return Some((low as usize, at + 1));
+            return Some((low as usize, at.checked_add(1)?));
         }
-        let size = 1usize << (self.data.get(at + 1)? & 0xF);
+        let size = 1usize << (self.data.get(at.checked_add(1)?)? & 0xF);
+        let from = at.checked_add(2)?;
         Some((
-            uint(self.data.get(at + 2..at + 2 + size)?) as usize,
-            at + 2 + size,
+            uint(self.span(from, size)?) as usize,
+            from.checked_add(size)?,
         ))
     }
 
     fn refs(&self, at: usize, n: usize) -> Option<Vec<usize>> {
         (0..n)
             .map(|i| {
-                self.data
-                    .get(at + i * self.width..at + (i + 1) * self.width)
-                    .map(|b| uint(b) as usize)
+                let from = i.checked_mul(self.width)?.checked_add(at)?;
+                self.span(from, self.width).map(|b| uint(b) as usize)
             })
             .collect()
     }
 
     fn object(&self, id: usize, depth: u8) -> Option<Value> {
-        if depth > 32 {
+        if depth > 32 || self.budget.get() == 0 {
             return None;
         }
+        self.budget.set(self.budget.get() - 1);
         let at = *self.offsets.get(id)?;
         let byte = *self.data.get(at)?;
         let (kind, low) = (byte >> 4, byte & 0xF);
@@ -204,7 +216,7 @@ impl Reader<'_> {
             },
             0x1 => {
                 let size = 1usize << low;
-                let b = self.data.get(at + 1..at + 1 + size)?;
+                let b = self.span(at.checked_add(1)?, size)?;
                 Value::Int(if size == 8 {
                     i64::from_be_bytes(b.try_into().ok()?)
                 } else {
@@ -212,35 +224,35 @@ impl Reader<'_> {
                 })
             }
             0x2 => match low {
-                2 => Value::Real(
-                    f32::from_be_bytes(self.data.get(at + 1..at + 5)?.try_into().ok()?) as f64,
-                ),
+                2 => Value::Real(f32::from_be_bytes(
+                    self.span(at.checked_add(1)?, 4)?.try_into().ok()?,
+                ) as f64),
                 _ => Value::Real(f64::from_be_bytes(
-                    self.data.get(at + 1..at + 9)?.try_into().ok()?,
+                    self.span(at.checked_add(1)?, 8)?.try_into().ok()?,
                 )),
             },
             0x3 => Value::Real(f64::from_be_bytes(
-                self.data.get(at + 1..at + 9)?.try_into().ok()?,
+                self.span(at.checked_add(1)?, 8)?.try_into().ok()?,
             )),
             0x4 => {
                 let (n, from) = self.length(at, low)?;
-                Value::Data(self.data.get(from..from + n)?.to_vec())
+                Value::Data(self.span(from, n)?.to_vec())
             }
             0x5 => {
                 let (n, from) = self.length(at, low)?;
-                Value::String(String::from_utf8_lossy(self.data.get(from..from + n)?).into_owned())
+                Value::String(String::from_utf8_lossy(self.span(from, n)?).into_owned())
             }
             0x6 => {
                 let (n, from) = self.length(at, low)?;
                 let units: Vec<u16> = self
                     .data
-                    .get(from..from + n * 2)?
+                    .get(from..from.checked_add(n.checked_mul(2)?)?)?
                     .chunks(2)
                     .map(|c| u16::from_be_bytes([c[0], c[1]]))
                     .collect();
                 Value::String(String::from_utf16_lossy(&units))
             }
-            0x8 => Value::Int(uint(self.data.get(at + 1..at + 2 + low as usize)?) as i64),
+            0x8 => Value::Int(uint(self.span(at.checked_add(1)?, low as usize + 1)?) as i64),
             0xA | 0xC => {
                 let (n, from) = self.length(at, low)?;
                 Value::Array(
@@ -253,7 +265,7 @@ impl Reader<'_> {
             0xD => {
                 let (n, from) = self.length(at, low)?;
                 let keys = self.refs(from, n)?;
-                let values = self.refs(from + n * self.width, n)?;
+                let values = self.refs(from.checked_add(n.checked_mul(self.width)?)?, n)?;
                 let mut entries = Vec::with_capacity(n);
                 for (k, v) in keys.into_iter().zip(values) {
                     let Value::String(key) = self.object(k, depth + 1)? else {
@@ -283,7 +295,8 @@ pub fn read(data: &[u8]) -> Option<Value> {
     }
     let offsets = (0..objects)
         .map(|i| {
-            data.get(table + i * offset_width..table + (i + 1) * offset_width)
+            let from = i.checked_mul(offset_width)?.checked_add(table)?;
+            data.get(from..from.checked_add(offset_width)?)
                 .map(|b| uint(b) as usize)
         })
         .collect::<Option<Vec<_>>>()?;
@@ -291,6 +304,7 @@ pub fn read(data: &[u8]) -> Option<Value> {
         data,
         offsets,
         width,
+        budget: std::cell::Cell::new(MOST_OBJECTS),
     }
     .object(top, 0)
 }
@@ -332,5 +346,38 @@ mod tests {
         assert_eq!(value.get("position").and_then(Value::number), Some(3.0));
         assert_eq!(value.get("readyToPlay"), Some(&Value::Bool(true)));
         assert!(matches!(value.get("loadedTimeRanges"), Some(Value::Array(a)) if a.len() == 1));
+    }
+
+    #[test]
+    fn offsets_past_the_end_are_refused() {
+        assert_eq!(
+            read(&[
+                98, 112, 108, 105, 115, 116, 48, 48, 93, 125, 125, 125, 125, 125, 44, 125, 0, 0, 0,
+                0, 0, 0, 0, 10, 32, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255
+            ]),
+            None
+        );
+    }
+
+    #[test]
+    fn shared_references_cannot_unfold_without_end() {
+        // Each array holds its successor twice: 2^32 values if unfolded.
+        let mut objects: Vec<Vec<u8>> = (0..32u8).map(|i| vec![0xA2, i + 1, i + 1]).collect();
+        objects.push(vec![0x09]);
+        let mut data = b"bplist00".to_vec();
+        let mut offsets = Vec::new();
+        for object in &objects {
+            offsets.push(data.len() as u8);
+            data.extend_from_slice(object);
+        }
+        let table = data.len() as u64;
+        data.extend_from_slice(&offsets);
+        let mut trailer = vec![0u8; 6];
+        trailer.extend_from_slice(&[1, 1]);
+        trailer.extend_from_slice(&(objects.len() as u64).to_be_bytes());
+        trailer.extend_from_slice(&0u64.to_be_bytes());
+        trailer.extend_from_slice(&table.to_be_bytes());
+        data.extend_from_slice(&trailer);
+        assert_eq!(read(&data), None);
     }
 }

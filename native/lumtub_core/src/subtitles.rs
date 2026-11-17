@@ -38,7 +38,13 @@ fn time(stamp: &str) -> Option<u64> {
     } else {
         0
     };
-    Some(((hours * 60 + minutes) * 60 + seconds) * 1000 + millis)
+    hours
+        .checked_mul(60)?
+        .checked_add(minutes)?
+        .checked_mul(60)?
+        .checked_add(seconds)?
+        .checked_mul(1000)?
+        .checked_add(millis)
 }
 
 /// The start and end of a `start --> end` line, which may carry settings after.
@@ -376,5 +382,19 @@ mod tests {
             "fr"
         ));
         assert!(!looks_like("Sehr gut", "de"));
+    }
+
+    #[test]
+    fn a_time_too_large_to_count_is_skipped() {
+        let source = String::from_utf8_lossy(&[
+            0, 10, 0, 10, 0, 0, 7, 52, 10, 10, 0, 10, 0, 10, 10, 6, 8, 45, 45, 62, 95, 48, 48, 48,
+            48, 48, 48, 48, 48, 49, 52, 55, 50, 57, 62, 10, 48, 48, 48, 48, 78, 111, 45, 62, 74,
+            10, 51, 53, 54, 48, 48, 48, 48, 48, 48, 48, 49, 52, 55, 50, 57, 58, 56, 56, 44, 49, 45,
+            45, 62, 78, 111, 45, 62, 74, 10, 51, 53, 54, 50, 53, 58, 56, 56, 44, 49, 45, 45, 62,
+            78, 10, 9, 111, 10, 0, 10, 14, 45, 62, 10, 74,
+        ])
+        .into_owned();
+        let _ = cues(&source);
+        assert_eq!(time("99999999999999999:00:00.000"), None);
     }
 }

@@ -4,7 +4,7 @@ Manifests for WinGet, Scoop, the AUR and Flatpak, filled in for the latest relea
 
 After each release, the **Packages** workflow (`.github/workflows/packages.yml`) fills them in for that release and:
 
-- builds a Flatpak bundle for x86_64 and aarch64 and adds `Lumtub_<version>_linux-<arch>.flatpak` to the release;
+- builds a Flatpak bundle for x86_64 and aarch64 and adds `Lumtub_<version>_linux-<arch>.flatpak` with its `.sig` (signed like every other package) to the release;
 - opens a pull request to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) for the new version;
 - opens a pull request adding Lumtub to [ScoopInstaller/Extras](https://github.com/ScoopInstaller/Extras), once: after it is merged, Extras' own bot follows new releases;
 - pushes the new version to the AUR package `lumtub-bin`.

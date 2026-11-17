@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Hamjamiyat postlarini yoqtirish, ovoz berish va izoh qoldirish, jonli efir chatida yozish hamda faqat a'zolar uchun videolarni ijro etish uchun",
   "VideoToolbox (zero-copy)": "VideoToolbox (nusxasiz)",
   "VideoToolbox (copy-back)": "VideoToolbox (nusxa qaytariladi)",
+  "MediaCodec (zero-copy)": "MediaCodec (nusxasiz)",
+  "MediaCodec (copy-back)": "MediaCodec (nusxa qaytariladi)",
   "The status updates only after a video in that format has played.": "Holat faqat shu formatdagi video ijro etilgandan keyin yangilanadi.",
   "PingFang": "PingFang SC",
   "Hiragino Sans GB": "Hiragino Sans GB",

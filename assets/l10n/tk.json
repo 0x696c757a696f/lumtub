@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Jemgyýet pozisiýalaryny halamak, ses bermek we teswir ýazmak, göni ýaýlym çatynda ýazmak we diňe agzalar üçin wideolary oýnatmak üçin",
   "VideoToolbox (zero-copy)": "VideoToolbox (göçürmesiz)",
   "VideoToolbox (copy-back)": "VideoToolbox (yzyna göçürme)",
+  "MediaCodec (zero-copy)": "MediaCodec (göçürmesiz)",
+  "MediaCodec (copy-back)": "MediaCodec (yzyna göçürme)",
   "The status updates only after a video in that format has played.": "Ýagdaý diňe şol formatdaky wideo oýnadylandan soň täzelenýär.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

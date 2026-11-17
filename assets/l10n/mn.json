@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Нийгэмлэгийн нийтлэлд таалагдсан дарах, санал өгөх, сэтгэгдэл бичих, шууд чатад бичих, мөн зөвхөн гишүүдэд зориулсан видео тоглуулахад ашиглана",
   "VideoToolbox (zero-copy)": "VideoToolbox (хуулалтгүй)",
   "VideoToolbox (copy-back)": "VideoToolbox (буцаан хуулах)",
+  "MediaCodec (zero-copy)": "MediaCodec (хуулалтгүй)",
+  "MediaCodec (copy-back)": "MediaCodec (буцаан хуулах)",
   "The status updates only after a video in that format has played.": "Төлөв нь тухайн форматтай видео бодитоор тоглогдсоны дараа л шинэчлэгдэнэ.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

@@ -2822,6 +2822,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "用於給社群貼文讚好、投票和留言，在直播聊天室發言，以及播放會員專屬影片",
   "VideoToolbox (zero-copy)": "VideoToolbox（零拷貝）",
   "VideoToolbox (copy-back)": "VideoToolbox（回拷）",
+  "MediaCodec (zero-copy)": "MediaCodec（零拷貝）",
+  "MediaCodec (copy-back)": "MediaCodec（回拷）",
   "The status updates only after a video in that format has played.": "狀態只在實際播放對應編碼後更新。",
   "PingFang": "蘋方",
   "Hiragino Sans GB": "冬青黑體",

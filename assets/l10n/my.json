@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "အသိုင်းအဝိုင်းပို့စ်များကို ကြိုက်ခြင်း၊ မဲပေးခြင်းနှင့် မှတ်ချက်ပေးခြင်း၊ တိုက်ရိုက်ချတ်တွင် စာရေးခြင်းနှင့် အဖွဲ့ဝင်များသာ ဗီဒီယိုများ ဖွင့်ခြင်းတို့အတွက်",
   "VideoToolbox (zero-copy)": "VideoToolbox (zero-copy)",
   "VideoToolbox (copy-back)": "VideoToolbox (copy-back)",
+  "MediaCodec (zero-copy)": "MediaCodec (zero-copy)",
+  "MediaCodec (copy-back)": "MediaCodec (copy-back)",
   "The status updates only after a video in that format has played.": "ထိုဖော်မတ်ဖြင့် ဗီဒီယိုတစ်ခုကို တကယ်ဖွင့်ပြီးမှသာ အခြေအနေကို အပ်ဒိတ်လုပ်သည်။",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

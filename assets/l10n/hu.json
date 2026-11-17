@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Közösségi bejegyzések kedveléséhez, szavazáshoz és hozzászóláshoz, élő csevegésben való íráshoz és csak tagoknak szóló videók lejátszásához",
   "VideoToolbox (zero-copy)": "VideoToolbox (másolásmentes)",
   "VideoToolbox (copy-back)": "VideoToolbox (másolásos)",
+  "MediaCodec (zero-copy)": "MediaCodec (másolásmentes)",
+  "MediaCodec (copy-back)": "MediaCodec (másolásos)",
   "The status updates only after a video in that format has played.": "Az állapot csak az adott formátumú videó lejátszása után frissül.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

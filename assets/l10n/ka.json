@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "გამოიყენება საზოგადოების პოსტების მოსაწონებლად, მათში კენჭისყრისა და კომენტარისთვის, პირდაპირი ეთერის ჩატში დასაწერად და მხოლოდ წევრებისთვის განკუთვნილი ვიდეოების დასაკრავად",
   "VideoToolbox (zero-copy)": "VideoToolbox (კოპირების გარეშე)",
   "VideoToolbox (copy-back)": "VideoToolbox (უკან კოპირებით)",
+  "MediaCodec (zero-copy)": "MediaCodec (კოპირების გარეშე)",
+  "MediaCodec (copy-back)": "MediaCodec (უკან კოპირებით)",
   "The status updates only after a video in that format has played.": "სტატუსი განახლდება მხოლოდ მას შემდეგ, რაც ამ ფორმატის ვიდეო რეალურად დაიკვრება.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

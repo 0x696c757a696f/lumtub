@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Kanggo menehi seneng, milih ing polling lan komentar ing kirim komunitas, ngirim pesen ing obrolan siaran langsung, lan muter video khusus anggota",
   "VideoToolbox (zero-copy)": "VideoToolbox (zero-copy)",
   "VideoToolbox (copy-back)": "VideoToolbox (salin balik)",
+  "MediaCodec (zero-copy)": "MediaCodec (zero-copy)",
+  "MediaCodec (copy-back)": "MediaCodec (salin balik)",
   "The status updates only after a video in that format has played.": "Status mung dianyari sawisé video ing format kuwi bener-bener diputer.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

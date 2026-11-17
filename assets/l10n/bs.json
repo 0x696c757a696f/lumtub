@@ -2804,6 +2804,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Za lajkovanje, glasanje i komentiranje objava zajednice, pisanje u chatu uživo i reprodukciju videa samo za članove",
   "VideoToolbox (zero-copy)": "VideoToolbox (zero-copy)",
   "VideoToolbox (copy-back)": "VideoToolbox (copy-back)",
+  "MediaCodec (zero-copy)": "MediaCodec (zero-copy)",
+  "MediaCodec (copy-back)": "MediaCodec (copy-back)",
   "The status updates only after a video in that format has played.": "Status se ažurira tek nakon što se reproducira video u tom formatu.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

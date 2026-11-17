@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Na označovanie príspevkov komunity Páči sa mi, hlasovanie a komentovanie, písanie do chatu naživo a prehrávanie videí len pre členov",
   "VideoToolbox (zero-copy)": "VideoToolbox (bez kopírovania)",
   "VideoToolbox (copy-back)": "VideoToolbox (so spätným kopírovaním)",
+  "MediaCodec (zero-copy)": "MediaCodec (bez kopírovania)",
+  "MediaCodec (copy-back)": "MediaCodec (so spätným kopírovaním)",
   "The status updates only after a video in that format has played.": "Stav sa aktualizuje až po prehraní videa v danom formáte.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

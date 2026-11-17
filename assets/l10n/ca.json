@@ -2804,6 +2804,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Per fer m'agrada, votar i comentar a publicacions de la comunitat, escriure al xat en directe i reproduir vídeos exclusius per a membres",
   "VideoToolbox (zero-copy)": "VideoToolbox (còpia zero)",
   "VideoToolbox (copy-back)": "VideoToolbox (còpia enrere)",
+  "MediaCodec (zero-copy)": "MediaCodec (còpia zero)",
+  "MediaCodec (copy-back)": "MediaCodec (còpia enrere)",
   "The status updates only after a video in that format has played.": "L'estat només s'actualitza després de reproduir un vídeo en aquest format.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

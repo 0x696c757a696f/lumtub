@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "ใช้สำหรับกดถูกใจ โหวต และแสดงความคิดเห็นในโพสต์ในชุมชน พิมพ์ในแชตสด และเล่นวิดีโอเฉพาะสมาชิก",
   "VideoToolbox (zero-copy)": "VideoToolbox (ไม่คัดลอก)",
   "VideoToolbox (copy-back)": "VideoToolbox (คัดลอกกลับ)",
+  "MediaCodec (zero-copy)": "MediaCodec (ไม่คัดลอก)",
+  "MediaCodec (copy-back)": "MediaCodec (คัดลอกกลับ)",
   "The status updates only after a video in that format has played.": "สถานะจะอัปเดตหลังจากเล่นวิดีโอในรูปแบบนั้นจริงเท่านั้น",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

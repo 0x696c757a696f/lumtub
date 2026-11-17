@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Por ŝati, voĉdoni kaj komenti en komunumaj afiŝoj, skribi en rektaj babiloj, kaj ludi videojn nur por membroj",
   "VideoToolbox (zero-copy)": "VideoToolbox (sen kopiado)",
   "VideoToolbox (copy-back)": "VideoToolbox (kopio reen)",
+  "MediaCodec (zero-copy)": "MediaCodec (sen kopiado)",
+  "MediaCodec (copy-back)": "MediaCodec (kopio reen)",
   "The status updates only after a video in that format has played.": "La stato ĝisdatiĝas nur post kiam video en tiu formato ludiĝis.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Kogukonna postituste meeldimiste märkimiseks, hääletamiseks ja kommenteerimiseks, otsevestluses kirjutamiseks ning ainult liikmetele mõeldud videote esitamiseks",
   "VideoToolbox (zero-copy)": "VideoToolbox (nullkoopiaga)",
   "VideoToolbox (copy-back)": "VideoToolbox (tagasikopeerimisega)",
+  "MediaCodec (zero-copy)": "MediaCodec (nullkoopiaga)",
+  "MediaCodec (copy-back)": "MediaCodec (tagasikopeerimisega)",
   "The status updates only after a video in that format has played.": "Olek uueneb alles pärast selles vormingus video esitamist.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

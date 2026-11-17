@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "לסימון פוסטים בקהילה באהבתי, הצבעה והגבה, כתיבה בצ'אט חי והפעלת סרטונים לחברים בלבד",
   "VideoToolbox (zero-copy)": "VideoToolbox (ללא העתקה)",
   "VideoToolbox (copy-back)": "VideoToolbox (עם העתקה חוזרת)",
+  "MediaCodec (zero-copy)": "MediaCodec (ללא העתקה)",
+  "MediaCodec (copy-back)": "MediaCodec (עם העתקה חוזרת)",
   "The status updates only after a video in that format has played.": "המצב מתעדכן רק לאחר שסרטון בפורמט הזה הופעל.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

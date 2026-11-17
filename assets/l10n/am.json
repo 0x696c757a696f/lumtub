@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "በማኅበረሰብ ልጥፎች ላይ ላይክ ለማድረግ፣ ድምፅ ለመስጠት እና አስተያየት ለመስጠት፣ በቀጥታ ውይይት ውስጥ ለመጻፍ፣ እና ለአባላት ብቻ ቪዲዮዎችን ለመጫወት",
   "VideoToolbox (zero-copy)": "VideoToolbox (ያለ መቅዳት)",
   "VideoToolbox (copy-back)": "VideoToolbox (ወደ ኋላ መቅዳት)",
+  "MediaCodec (zero-copy)": "MediaCodec (ያለ መቅዳት)",
+  "MediaCodec (copy-back)": "MediaCodec (ወደ ኋላ መቅዳት)",
   "The status updates only after a video in that format has played.": "ሁኔታው የሚዘምነው በዚያ ቅርጸት ያለ ቪዲዮ ከተጫወተ በኋላ ብቻ ነው።",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

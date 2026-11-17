@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Komunitateko argitalpenei gustatu eman, haietan bozkatu eta iruzkintzeko, zuzeneko txatean idazteko eta bazkideentzako bideoak erreproduzitzeko",
   "VideoToolbox (zero-copy)": "VideoToolbox (kopiarik gabe)",
   "VideoToolbox (copy-back)": "VideoToolbox (atzera kopiatuz)",
+  "MediaCodec (zero-copy)": "MediaCodec (kopiarik gabe)",
+  "MediaCodec (copy-back)": "MediaCodec (atzera kopiatuz)",
   "The status updates only after a video in that format has played.": "Egoera formatu horretako bideo bat erreproduzitu ondoren bakarrik eguneratzen da.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

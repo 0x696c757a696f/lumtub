@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "کمیونٹی پوسٹس کو لائک کرنے، ان میں ووٹ دینے اور تبصرہ کرنے، لائیو چیٹ میں لکھنے اور صرف ممبرز کی ویڈیوز چلانے کے لیے",
   "VideoToolbox (zero-copy)": "VideoToolbox (زیرو کاپی)",
   "VideoToolbox (copy-back)": "VideoToolbox (کاپی بیک)",
+  "MediaCodec (zero-copy)": "MediaCodec (زیرو کاپی)",
+  "MediaCodec (copy-back)": "MediaCodec (کاپی بیک)",
   "The status updates only after a video in that format has played.": "حالت صرف تب اپ ڈیٹ ہوتی ہے جب اس فارمیٹ کی ویڈیو واقعی چل چکی ہو۔",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

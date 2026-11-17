@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Kwa kupenda, kupiga kura na kutoa maoni kwenye machapisho ya jumuiya, kuandika kwenye gumzo la moja kwa moja, na kucheza video za wanachama pekee",
   "VideoToolbox (zero-copy)": "VideoToolbox (bila nakala)",
   "VideoToolbox (copy-back)": "VideoToolbox (nakili-rudi)",
+  "MediaCodec (zero-copy)": "MediaCodec (bila nakala)",
+  "MediaCodec (copy-back)": "MediaCodec (nakili-rudi)",
   "The status updates only after a video in that format has played.": "Hali husasishwa tu baada ya video katika muundo huo kuchezwa.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

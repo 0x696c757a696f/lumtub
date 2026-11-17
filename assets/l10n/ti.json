@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "ንጽሑፋት ማሕበረሰብ ንምፍታው፣ ኣኽፍልን ርእይቶ ንምሃብን፣ ኣብ ቻት ቀጥታ ንምጽሓፍን፣ ከምኡውን ቪዲዮታት ኣባላት ንምጽዋት",
   "VideoToolbox (zero-copy)": "VideoToolbox (ብዘይ ምልጋስ)",
   "VideoToolbox (copy-back)": "VideoToolbox (ምልጋስ-ድሕሪት)",
+  "MediaCodec (zero-copy)": "MediaCodec (ብዘይ ምልጋስ)",
+  "MediaCodec (copy-back)": "MediaCodec (ምልጋስ-ድሕሪት)",
   "The status updates only after a video in that format has played.": "ኩነታት ድሕሪ ቪዲዮ ብእቲ ቅርጺ ምስ ተጻወተ ጥራይ ይሕደስ።",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

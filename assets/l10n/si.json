@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "ප්‍රජා පළකිරීම් ප්‍රිය කිරීම, ඡන්දය දීම සහ අදහස් දැක්වීම, සජීවී කතාබහේ ලිවීම සහ සාමාජිකයන්ට පමණක් වීඩියෝ ධාවනය කිරීම සඳහා",
   "VideoToolbox (zero-copy)": "VideoToolbox (පිටපත් රහිත)",
   "VideoToolbox (copy-back)": "VideoToolbox (පිටපත් කර ආපසු)",
+  "MediaCodec (zero-copy)": "MediaCodec (පිටපත් රහිත)",
+  "MediaCodec (copy-back)": "MediaCodec (පිටපත් කර ආපසු)",
   "The status updates only after a video in that format has played.": "එම ආකෘතියේ වීඩියෝවක් ධාවනය වූ පසු පමණක් තත්ත්වය යාවත්කාලීන වේ.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

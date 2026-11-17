@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Para curtir, votar e comentar em publicações da comunidade, escrever no chat ao vivo e reproduzir vídeos exclusivos para membros",
   "VideoToolbox (zero-copy)": "VideoToolbox (cópia zero)",
   "VideoToolbox (copy-back)": "VideoToolbox (cópia de retorno)",
+  "MediaCodec (zero-copy)": "MediaCodec (cópia zero)",
+  "MediaCodec (copy-back)": "MediaCodec (cópia de retorno)",
   "The status updates only after a video in that format has played.": "O status só é atualizado depois que um vídeo nesse formato é reproduzido.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

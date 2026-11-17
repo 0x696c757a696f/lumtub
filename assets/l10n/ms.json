@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Untuk menyukai, mengundi dan berkomen pada siaran komuniti, menulis dalam sembang langsung, dan memainkan video untuk ahli sahaja",
   "VideoToolbox (zero-copy)": "VideoToolbox (tanpa salinan)",
   "VideoToolbox (copy-back)": "VideoToolbox (salin balik)",
+  "MediaCodec (zero-copy)": "MediaCodec (tanpa salinan)",
+  "MediaCodec (copy-back)": "MediaCodec (salin balik)",
   "The status updates only after a video in that format has played.": "Status hanya dikemas kini selepas video dalam format itu dimainkan.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

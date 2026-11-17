@@ -2804,6 +2804,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Қауымдастық жазбаларын ұнату, оларға дауыс беру және пікір жазу, тікелей эфир чатына жазу және тек мүшелерге арналған бейнелерді ойнату үшін",
   "VideoToolbox (zero-copy)": "VideoToolbox (көшірмесіз)",
   "VideoToolbox (copy-back)": "VideoToolbox (көшіріп қайтару)",
+  "MediaCodec (zero-copy)": "MediaCodec (көшірмесіз)",
+  "MediaCodec (copy-back)": "MediaCodec (көшіріп қайтару)",
   "The status updates only after a video in that format has played.": "Күй осы пішімдегі бейне ойнатылғаннан кейін ғана жаңарады.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Vir hou van, stem in en kommentaar lewer op gemeenskapsplasings, skryf in regstreekse klets, en speel video's net vir lede",
   "VideoToolbox (zero-copy)": "VideoToolbox (nulkopie)",
   "VideoToolbox (copy-back)": "VideoToolbox (terugkopie)",
+  "MediaCodec (zero-copy)": "MediaCodec (nulkopie)",
+  "MediaCodec (copy-back)": "MediaCodec (terugkopie)",
   "The status updates only after a video in that format has played.": "Die status word eers opgedateer nadat 'n video in daardie formaat gespeel het.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

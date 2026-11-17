@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "കമ്മ്യൂണിറ്റി പോസ്റ്റുകൾ ലൈക്ക് ചെയ്യാനും വോട്ട് ചെയ്യാനും കമന്റ് ചെയ്യാനും, തത്സമയ ചാറ്റിൽ എഴുതാനും, അംഗങ്ങൾക്ക് മാത്രമുള്ള വീഡിയോകൾ പ്ലേ ചെയ്യാനും",
   "VideoToolbox (zero-copy)": "VideoToolbox (സീറോ-കോപ്പി)",
   "VideoToolbox (copy-back)": "VideoToolbox (കോപ്പി-ബാക്ക്)",
+  "MediaCodec (zero-copy)": "MediaCodec (സീറോ-കോപ്പി)",
+  "MediaCodec (copy-back)": "MediaCodec (കോപ്പി-ബാക്ക്)",
   "The status updates only after a video in that format has played.": "ആ ഫോർമാറ്റിലുള്ള ഒരു വീഡിയോ പ്ലേ ചെയ്തതിനു ശേഷം മാത്രമേ നില അപ്‌ഡേറ്റ് ആകൂ.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

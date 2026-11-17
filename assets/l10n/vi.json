@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Dùng để thích, bình chọn và bình luận bài đăng cộng đồng, nhắn trong trò chuyện trực tiếp và phát video dành riêng cho hội viên",
   "VideoToolbox (zero-copy)": "VideoToolbox (không sao chép)",
   "VideoToolbox (copy-back)": "VideoToolbox (sao chép ngược)",
+  "MediaCodec (zero-copy)": "MediaCodec (không sao chép)",
+  "MediaCodec (copy-back)": "MediaCodec (sao chép ngược)",
   "The status updates only after a video in that format has played.": "Trạng thái chỉ được cập nhật sau khi một video ở định dạng tương ứng đã được phát.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "சமூக இடுகைகளை விரும்ப, வாக்களிக்க, கருத்திட; நேரலை அரட்டையில் எழுத; உறுப்பினர்களுக்கு மட்டுமான வீடியோக்களை இயக்க",
   "VideoToolbox (zero-copy)": "VideoToolbox (பூஜ்ய-நகல்)",
   "VideoToolbox (copy-back)": "VideoToolbox (நகல்-திரும்பல்)",
+  "MediaCodec (zero-copy)": "MediaCodec (பூஜ்ய-நகல்)",
+  "MediaCodec (copy-back)": "MediaCodec (நகல்-திரும்பல்)",
   "The status updates only after a video in that format has played.": "அந்த வடிவில் ஒரு வீடியோ இயங்கிய பிறகே நிலை புதுப்பிக்கப்படும்.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

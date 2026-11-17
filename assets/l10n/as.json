@@ -2804,6 +2804,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "কমিউনিটী পোষ্টত লাইক, ভোট আৰু মন্তব্য কৰিবলৈ, লাইভ চেটত লিখিবলৈ আৰু কেৱল সদস্যৰ ভিডিঅ' প্লে কৰিবলৈ",
   "VideoToolbox (zero-copy)": "VideoToolbox (জিৰো-কপি)",
   "VideoToolbox (copy-back)": "VideoToolbox (কপি-বেক)",
+  "MediaCodec (zero-copy)": "MediaCodec (জিৰো-কপি)",
+  "MediaCodec (copy-back)": "MediaCodec (কপি-বেক)",
   "The status updates only after a video in that format has played.": "সেই ফৰ্মেটৰ ভিডিঅ' প্লে হোৱাৰ পিছতহে অৱস্থা আপডেট হয়।",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

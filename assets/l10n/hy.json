@@ -2801,6 +2801,8 @@
   "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos": "Օգտագործվում է համայնքի գրառումները հավանելու, քվեարկելու և մեկնաբանելու, ուղիղ եթերի զրույցում գրելու և միայն անդամների համար տեսանյութեր նվագարկելու համար",
   "VideoToolbox (zero-copy)": "VideoToolbox (առանց պատճենման)",
   "VideoToolbox (copy-back)": "VideoToolbox (պատճենումով)",
+  "MediaCodec (zero-copy)": "MediaCodec (առանց պատճենման)",
+  "MediaCodec (copy-back)": "MediaCodec (պատճենումով)",
   "The status updates only after a video in that format has played.": "Կարգավիճակը թարմացվում է միայն այդ ձևաչափով տեսանյութ նվագարկվելուց հետո։",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

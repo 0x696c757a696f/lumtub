@@ -14,7 +14,7 @@ The last three need secrets in the repository settings (Settings › Secrets and
 | Secret | For | What it is |
 |---|---|---|
 | `PACKAGES_TOKEN` | WinGet, Scoop | A classic personal access token of the account the pull requests come from, with the scopes `public_repo` and `workflow`. The workflow forks the two repositories into that account. |
-| `AUR_SSH_KEY` | AUR | The private SSH key whose public key is in your aur.archlinux.org account. Variables `AUR_NAME` and `AUR_EMAIL` fill the PKGBUILD's Maintainer line. |
+| `AUR_SSH_KEY` | AUR | The private SSH key whose public key is in your aur.archlinux.org account: ed25519, or a post-quantum hybrid `mldsa44-ed25519` key if the AUR accepts one (that step runs in an Arch Linux container with the newest OpenSSH). Variables `AUR_NAME` and `AUR_EMAIL` fill the PKGBUILD's Maintainer line. |
 
 To send a release again, run **Packages** by hand with its tag. A pull request that changes `packaging/` builds the Flatpak of the latest release without sending anything.
 

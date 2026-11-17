@@ -111,7 +111,7 @@ Written following the [Contributing Guide](https://github.com/ScoopInstaller/.gi
     trap 'rm -rf "$work"' EXIT
     printf '%s\n' "$AUR_SSH_KEY" > "$work/key"
     chmod 600 "$work/key"
-    ssh-keyscan -t ed25519,rsa aur.archlinux.org > "$work/known_hosts" 2>/dev/null
+    ssh-keyscan aur.archlinux.org > "$work/known_hosts" 2>/dev/null
     export GIT_SSH_COMMAND="ssh -i $work/key -o UserKnownHostsFile=$work/known_hosts -o IdentitiesOnly=yes"
     git clone -q ssh://aur@aur.archlinux.org/lumtub-bin.git "$work/aur"
     cp "$here/aur/PKGBUILD" "$here/aur/.SRCINFO" "$here/aur/lumtub.png" "$here/aur/io.github.lumtub.lumtub.desktop" "$work/aur/"

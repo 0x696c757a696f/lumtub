@@ -151,7 +151,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [winget, scoop, aur]
+        target: [winget, scoop]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -164,13 +164,45 @@ jobs:
       - env:
           TARGET: ${{ matrix.target }}
           GH_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+        run: |
+          # Needs its secret; without it this release is not sent there.
+          if [[ -z $GH_TOKEN ]]; then
+            echo "::notice::No PACKAGES_TOKEN; not sent to $TARGET."
+            exit 0
+          fi
+          bash packaging/publish.sh "$TARGET"
+
+  aur:
+    name: Send to the AUR
+    needs: manifests
+    runs-on: ubuntu-24.04
+    # Arch's own OpenSSH, the newest there is, so AUR_SSH_KEY may also be a
+    # post-quantum hybrid key (ssh-keygen -t mldsa44-ed25519) where the
+    # runner's OpenSSH would not know it.
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Install the tools
+        run: |
+          pacman -Syu --noconfirm --needed git openssh python
+          ssh -V
+          echo "Key types: $(ssh -Q key | paste -sd' ')"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          sparse-checkout: packaging
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: manifests
+          path: packaging
+      - if: github.event_name != 'pull_request'
+        env:
           AUR_SSH_KEY: ${{ secrets.AUR_SSH_KEY }}
           AUR_NAME: ${{ vars.AUR_NAME }}
           AUR_EMAIL: ${{ vars.AUR_EMAIL }}
         run: |
-          # Each one needs its secret; without it this release is not sent there.
-          if [[ $TARGET == aur && -z $AUR_SSH_KEY ]] || [[ $TARGET != aur && -z $GH_TOKEN ]]; then
-            echo "::notice::No secret for $TARGET; not sent."
+          # Needs its secret; without it this release is not sent there.
+          if [[ -z $AUR_SSH_KEY ]]; then
+            echo "::notice::No AUR_SSH_KEY; not sent to the AUR."
             exit 0
           fi
-          bash packaging/publish.sh "$TARGET"
+          bash packaging/publish.sh aur

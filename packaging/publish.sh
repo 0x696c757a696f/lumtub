@@ -6,11 +6,8 @@
 #   publish.sh scoop    pull request to ScoopInstaller/Extras, only the first
 #                       time: Extras' own bot follows new releases afterwards
 #   publish.sh aur      push to the AUR package lumtub-bin
-#   publish.sh flathub  pull request to flathub/flathub asking to add Lumtub,
-#                       only until Flathub has made io.github.lumtub.lumtub:
-#                       its own bot follows new releases from then on
 #
-# winget, scoop and flathub need GH_TOKEN: a classic personal access token of the
+# winget and scoop need GH_TOKEN: a classic personal access token of the
 # account the pull requests come from (scopes public_repo and workflow, as
 # the fork holds those repositories' workflows). aur needs AUR_SSH_KEY: the
 # private SSH key registered with the AUR account that owns lumtub-bin.
@@ -108,27 +105,6 @@ Written following the [Contributing Guide](https://github.com/ScoopInstaller/.gi
     pull_request "$repo" "lumtub" "lumtub: Add version $full" "$body" \
       "bucket/lumtub.json" "$here/scoop/lumtub.json"
     ;;
-  flathub)
-    repo=flathub/flathub
-    if gh api repos/flathub/io.github.lumtub.lumtub --silent 2>/dev/null; then
-      echo "Flathub already has io.github.lumtub.lumtub; its bot follows new releases."
-      exit 0
-    fi
-    if open_pull_request "$repo" "Add io.github.lumtub.lumtub"; then
-      echo "The pull request adding Lumtub to Flathub is still open."
-      exit 0
-    fi
-    body="Lumtub is a YouTube client (GPL-3.0-or-later) with mpv playback, on-device recommendations, bilingual subtitles and live chat drawn over the video: https://github.com/0x696c757a696f/lumtub
-
-The app ID's io.github.lumtub is the GitHub organization https://github.com/lumtub, owned by the upstream developer. The manifest repackages the upstream release's AppImage (x86_64 and aarch64), which bundles libmpv; x-checker-data follows new releases. The manifest is kept upstream in packaging/flatpak/ and checked there with flatpak-builder-lint on every change.
-
-Not affiliated with YouTube or Google."
-    BASE_BRANCH=new-pr pull_request "$repo" "add-lumtub" "Add io.github.lumtub.lumtub" "$body" \
-      "io.github.lumtub.lumtub.yml" "$here/flatpak/io.github.lumtub.lumtub.yml" \
-      "io.github.lumtub.lumtub.metainfo.xml" "$here/flatpak/io.github.lumtub.lumtub.metainfo.xml" \
-      "io.github.lumtub.lumtub.desktop" "$here/flatpak/io.github.lumtub.lumtub.desktop" \
-      "lumtub.png" "$here/flatpak/lumtub.png"
-    ;;
   aur)
     : "${AUR_SSH_KEY:?AUR_SSH_KEY is not set}"
     work=$(mktemp -d)
@@ -153,7 +129,7 @@ Not affiliated with YouTube or Google."
     echo "Pushed lumtub-bin $version to the AUR."
     ;;
   *)
-    echo "Usage: $0 winget|scoop|aur|flathub" >&2
+    echo "Usage: $0 winget|scoop|aur" >&2
     exit 1
     ;;
 esac

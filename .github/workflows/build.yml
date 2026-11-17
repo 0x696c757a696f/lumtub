@@ -371,8 +371,11 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $target = if ($env:PACKAGE_ARCH -eq 'arm64') { 'aarch64-pc-windows-msvc' } else { 'x86_64-pc-windows-msvc' }
-          # Each package is built for its own CPU level, as libmpv is.
-          if ($env:PACKAGE_ARCH -eq 'x64-v3') { $env:RUSTFLAGS = '-C target-cpu=x86-64-v3' }
+          # Control Flow Guard checks the core's indirect calls, as the
+          # runner's (windows/runner/CMakeLists.txt). Each package is built
+          # for its own CPU level, as libmpv is.
+          $env:RUSTFLAGS = '-C control-flow-guard'
+          if ($env:PACKAGE_ARCH -eq 'x64-v3') { $env:RUSTFLAGS += ' -C target-cpu=x86-64-v3' }
           $manifest = 'native/lumtub_core/Cargo.toml'
           cargo test --manifest-path $manifest --release --target $target
           if ($LASTEXITCODE -ne 0) { throw 'Rust core tests failed.' }
@@ -875,6 +878,10 @@ jobs:
     name: macOS
     needs: reuse
     if: ${{ !cancelled() && needs.reuse.outputs.run == '' }}
+    # The signing keys live in the "release" environment, which only main
+    # and v* tags may use (docs/SECURITY.md); other branches and pull
+    # requests build without them and sign with a debug key.
+    environment: ${{ (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && 'release' || '' }}
     # Pinned like the others; Apple silicon, building once for both CPUs and
     # packing a DMG thinned to each.
     runs-on: macos-15
@@ -1139,6 +1146,10 @@ jobs:
     name: Android
     needs: reuse
     if: ${{ !cancelled() && needs.reuse.outputs.run == '' }}
+    # The signing keys live in the "release" environment, which only main
+    # and v* tags may use (docs/SECURITY.md); other branches and pull
+    # requests build without them and sign with a debug key.
+    environment: ${{ (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && 'release' || '' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -1347,10 +1358,15 @@ jobs:
     needs: [reuse, windows, linux, macos, ios, android]
     # Skipped builds (reused from an earlier build) are not failures.
     if: ${{ !cancelled() && !failure() && startsWith(github.ref, 'refs/tags/v') }}
+    # The update signing key lives in the "release" environment.
+    environment: release
     runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: write
+      # Build provenance, signed through Sigstore with this run's identity.
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -1360,6 +1376,7 @@ jobs:
             release-notes
             native/lumtub_core
             ios/packaging
+            .github
       - name: Packages built here
         if: needs.reuse.outputs.run == ''
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
@@ -1401,6 +1418,14 @@ jobs:
           rustup update stable
           shopt -s nullglob
           cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg dist/*.apk dist/*.ipa
+      - name: Software bill of materials
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          # CycloneDX: every crate, Dart package, the Flutter SDK and the
+          # Linux libmpv build, by version and checksum.
+          version="${TAG#v}"
+          python3 .github/scripts/sbom.py "$version" "dist/Lumtub_${version}_sbom.cdx.json"
       - name: AltStore and SideStore source
         env:
           TAG: ${{ github.ref_name }}
@@ -1412,6 +1437,12 @@ jobs:
           (( ${#ipas[@]} == 1 )) || { echo "No IPA in this release"; exit 0; }
           version="${TAG#v}"
           python3 ios/packaging/altstore-source.py "${ipas[0]}" "$TAG" "release-notes/${version%%-*}.md" dist/altstore-source.json
+      - name: Build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          # Anyone can check a download came from this workflow:
+          # gh attestation verify <file> --repo 0x696c757a696f/lumtub
+          subject-path: dist/*
       - name: Publish the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

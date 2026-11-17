@@ -179,8 +179,10 @@ pub fn read_head(b: &[u8], total: u64) -> Read {
         return Read::Unusable("not WebM");
     };
     let Some(segment) = element(b, ebml.end).filter(|e| e.id == SEGMENT) else {
-        return if ebml.end + 12 > b.len() {
-            Read::More(ebml.end as u64 + 4096)
+        return if ebml.end == usize::MAX {
+            Read::Unusable("element of unknown size")
+        } else if ebml.end.saturating_add(12) > b.len() {
+            Read::More((ebml.end as u64).saturating_add(4096))
         } else {
             Read::Unusable("no segment")
         };
@@ -510,5 +512,13 @@ mod tests {
             0x1F, 0x43, 0xB6, 0x75, 0x89, 0xE7, 0x81, 0x00, 0xA3, 0x84, 0x81, 0x00, 0x00, 0x80,
         ];
         assert_eq!(frames(&whole, 1).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn an_ebml_header_of_unknown_size_is_refused() {
+        let data = [
+            26, 69, 223, 163, 255, 255, 255, 255, 255, 255, 26, 69, 1, 29, 29, 0, 0,
+        ];
+        assert!(matches!(read_head(&data, 17), Read::Unusable(_)));
     }
 }

@@ -108,6 +108,43 @@ pub fn verify_file(file: &str, name: &str, signature: &str) -> Result<(), String
     }
 }
 
+/// Opens the package [file] so that nothing else can write, rename or
+/// delete it while the returned handle lives (on Windows; elsewhere it is
+/// only opened), and checks it against the `.sig` file [signature] through
+/// that handle. Kept open while the installer starts, the file that runs
+/// is the file that was checked.
+pub fn hold_verified(file: &str, name: &str, signature: &str) -> Result<std::fs::File, String> {
+    hold_verified_with(PUBLIC_KEYS, file, name, signature)
+}
+
+fn hold_verified_with(
+    keys: &[u8],
+    file: &str,
+    name: &str,
+    signature: &str,
+) -> Result<std::fs::File, String> {
+    let signature =
+        std::fs::read(signature).map_err(|e| format!("Could not read the signature: {e}"))?;
+    let mut options = std::fs::OpenOptions::new();
+    options.read(true);
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::OpenOptionsExt;
+        // FILE_SHARE_READ alone: others may read, as the installer does.
+        options.share_mode(windows_sys::Win32::Storage::FileSystem::FILE_SHARE_READ);
+    }
+    let mut package = options
+        .open(file)
+        .map_err(|e| format!("Could not open the package: {e}"))?;
+    let sha256 = crate::hashes::sha256_of(&mut package)
+        .map_err(|e| format!("Could not read the package: {e}"))?;
+    if verify_with(keys, name, &sha256, &signature) {
+        Ok(package)
+    } else {
+        Err("The update's signature does not match".into())
+    }
+}
+
 /// Checks a downloaded update, [json] being `{file, name, signature}`
 /// (paths, and the package's name as the release lists it). Answers JSON
 /// `{"ok": true}` or `{"error": "..."}`. It reads the whole package, so
@@ -237,5 +274,29 @@ mod tests {
         let result = verify_file(file.to_str().unwrap(), NAME, signature.to_str().unwrap());
         std::fs::remove_dir_all(&folder).unwrap();
         assert_eq!(result, Err("The update's signature does not match".into()));
+    }
+
+    #[test]
+    fn holds_a_checked_package_that_others_cannot_change() {
+        let folder = std::env::temp_dir().join(format!("lumtub-hold-{}", std::process::id()));
+        std::fs::create_dir_all(&folder).unwrap();
+        let file = folder.join("package.exe");
+        std::fs::write(&file, b"test").unwrap();
+        let sha256 = crate::hashes::file_sha256(file.to_str().unwrap()).unwrap();
+        let signature = folder.join("package.exe.sig");
+        std::fs::write(&signature, sign(&SECRET, NAME, &sha256)).unwrap();
+        let keys = public_keys(&SECRET);
+        let (path, sig) = (file.to_str().unwrap(), signature.to_str().unwrap());
+        let held = hold_verified_with(&keys, path, NAME, sig).unwrap();
+        #[cfg(windows)]
+        {
+            assert!(std::fs::write(&file, b"swapped").is_err());
+            assert!(std::fs::remove_file(&file).is_err());
+        }
+        drop(held);
+        std::fs::write(&file, b"swapped").unwrap();
+        assert!(hold_verified_with(&keys, path, NAME, sig).is_err());
+        assert!(hold_verified(path, NAME, sig).is_err());
+        std::fs::remove_dir_all(&folder).unwrap();
     }
 }

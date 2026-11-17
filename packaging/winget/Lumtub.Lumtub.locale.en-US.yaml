@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
 PackageIdentifier: Lumtub.Lumtub
-PackageVersion: 0.2.29
+PackageVersion: 0.2.49
 PackageLocale: en-US
 Publisher: Lumtub
 PublisherUrl: https://github.com/0x696c757a696f/lumtub
@@ -18,6 +18,6 @@ Tags:
 - subtitles
 - yt-dlp
 - youtube
-ReleaseNotesUrl: https://github.com/0x696c757a696f/lumtub/releases/tag/v0.2.29-0000000
+ReleaseNotesUrl: https://github.com/0x696c757a696f/lumtub/releases/tag/v0.2.49-17fb352
 ManifestType: defaultLocale
 ManifestVersion: 1.6.0

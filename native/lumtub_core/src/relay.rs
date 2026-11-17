@@ -317,24 +317,27 @@ fn log(shared: &Mutex<Shared>, line: String) {
     shared.log.push_back(line);
 }
 
+/// A path no other program on this computer can guess: 128 random bits,
+/// so the relay serves only what the app itself registered. Without the
+/// system's randomness it falls back to a hash of the time and [url].
 fn token(url: &str) -> String {
-    static COUNT: AtomicU64 = AtomicU64::new(0);
-    let mut hash = Sha256::new();
-    hash.update(
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_nanos()
-            .to_le_bytes(),
-    );
-    hash.update(COUNT.fetch_add(1, Ordering::Relaxed).to_le_bytes());
-    hash.update(std::process::id().to_le_bytes());
-    hash.update(url.as_bytes());
-    hash.finalize()
-        .iter()
-        .take(8)
-        .map(|b| format!("{b:02x}"))
-        .collect()
+    let mut bytes = [0u8; 16];
+    if getrandom::fill(&mut bytes).is_err() {
+        static COUNT: AtomicU64 = AtomicU64::new(0);
+        let mut hash = Sha256::new();
+        hash.update(
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos()
+                .to_le_bytes(),
+        );
+        hash.update(COUNT.fetch_add(1, Ordering::Relaxed).to_le_bytes());
+        hash.update(std::process::id().to_le_bytes());
+        hash.update(url.as_bytes());
+        bytes.copy_from_slice(&hash.finalize()[..16]);
+    }
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
 /// The value of [name] in [url]'s query, percent-decoded.

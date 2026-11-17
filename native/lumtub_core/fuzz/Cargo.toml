@@ -1,0 +1,62 @@
+[package]
+name = "lumtub_core_fuzz"
+version = "0.0.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4.13"
+lumtub_core = { path = ".." }
+
+# Its own workspace, so cargo-fuzz's nightly-only flags stay out of the core.
+[workspace]
+members = ["."]
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "mp4_head"
+path = "fuzz_targets/mp4_head.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "webm"
+path = "fuzz_targets/webm.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "bplist"
+path = "fuzz_targets/bplist.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "pac"
+path = "fuzz_targets/pac.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "subtitles"
+path = "fuzz_targets/subtitles.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "update_signature"
+path = "fuzz_targets/update_signature.rs"
+test = false
+doc = false
+bench = false

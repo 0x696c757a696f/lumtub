@@ -274,8 +274,18 @@ class AppUpdater extends ChangeNotifier {
         if (relaunch) await relaunchAfterExit(image, pid);
       } else if (!portable) {
         final folder = File(executable).parent.path;
-        final result = launchInstaller(package: file.path, folder: folder, processId: pid, relaunch: relaunch);
+        final name = available?.asset?['name']?.toString() ?? file.path.split(Platform.pathSeparator).last;
+        final result = launchInstaller(package: file.path, folder: folder, processId: pid, relaunch: relaunch, name: name, signature: '${file.path}.sig');
         if (result == null) throw StateError('No native core');
+        if (result['rejected'] == true) {
+          logWarn('The downloaded Lumtub update failed its check before installing: ${result['error']}');
+          await _discard(file);
+          rejected = available?.version;
+          ready = null;
+          installError = tr('see the logs for details');
+          _notify();
+          return false;
+        }
         if (result['ok'] != true) {
           logWarn('Could not start the Lumtub installer${result['elevated'] == true ? ' as administrator' : ''}: ${result['error']}');
           installError = result['elevated'] == true ? tr('Administrator rights are needed to install into this folder') : tr('see the logs for details');
@@ -477,11 +487,13 @@ String? verifyUpdate({required String file, required String name, required Strin
 }
 
 /// Starts the installer [package] into [folder]; see `lumtub_update_launch`.
-/// Null without the native core.
-Map<String, dynamic>? launchInstaller({required String package, required String folder, required int processId, required bool relaunch}) {
+/// With [name] and [signature] the core checks the package once more
+/// through a handle that keeps it from changing until the installer has
+/// started. Null without the native core.
+Map<String, dynamic>? launchInstaller({required String package, required String folder, required int processId, required bool relaunch, String? name, String? signature}) {
   final core = NativeCore.instance;
   if (core == null) return null;
-  final ask = jsonEncode({'package': package, 'folder': folder, 'processId': processId, 'relaunch': relaunch});
+  final ask = jsonEncode({'package': package, 'folder': folder, 'processId': processId, 'relaunch': relaunch, if (name != null) 'name': name, if (signature != null) 'signature': signature});
   return jsonDecode(core.take(core.withText(ask, core.updateLaunch)) ?? 'null') as Map<String, dynamic>?;
 }
 

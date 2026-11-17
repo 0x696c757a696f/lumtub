@@ -474,6 +474,7 @@ class ProcessTree implements Process {
   /// A [background] tree runs below normal priority, its first process in
   /// Windows' efficiency mode: for downloads, which nobody waits on.
   static Future<Process> start(String executable, List<String> arguments, {Map<String, String>? environment, String? workingDirectory, bool background = false}) async {
+    if (isYtDlp(executable)) arguments = [...ytDlpIsolation, ...arguments];
     if (IosPython.runs(executable)) return IosPython.current!.start(executable, arguments, environment);
     (arguments, environment) = NetworkProxy.hideCredentials(arguments, environment);
     if (AndroidPython.runs(executable)) (executable, arguments, environment) = AndroidPython.current!.command(executable, arguments, environment);
@@ -481,6 +482,18 @@ class ProcessTree implements Process {
     final tree = adopt(process);
     if (background && tree is ProcessTree) NativeCore.instance?._background(tree._job, process.pid);
     return tree;
+  }
+
+  /// What every yt-dlp run starts with: no configuration file and no plugin
+  /// folder of the computer's or the user's own, so a yt-dlp configuration
+  /// or plugin left on the computer cannot change what Lumtub runs.
+  static const ytDlpIsolation = ['--ignore-config', '--no-plugin-dirs'];
+
+  /// Whether [executable] is a yt-dlp, by its file name.
+  static bool isYtDlp(String executable) {
+    var name = executable.split(RegExp(r'[/\\]')).last.toLowerCase();
+    if (name.endsWith('.exe')) name = name.substring(0, name.length - 4);
+    return name == 'yt-dlp' || name == 'yt-dlp-bundled';
   }
 
   /// [process] in a tree of its own, or [process] itself where there is

@@ -390,11 +390,29 @@ pub unsafe extern "C" fn lumtub_update_launch(json: *const u8, length: usize) ->
         folder: String,
         process_id: u32,
         relaunch: bool,
+        /// The package's name as the release lists it and its `.sig` file:
+        /// checked again here, through a handle that keeps the file from
+        /// changing until the installer has started.
+        name: Option<String>,
+        signature: Option<String>,
     }
     let Ok(launch) = serde_json::from_str::<Launch>(unsafe { text(json, length) }) else {
         return std::ptr::null_mut();
     };
     let elevate = !writable(&launch.folder);
+    let _held = match (&launch.name, &launch.signature) {
+        (Some(name), Some(signature)) => {
+            match crate::signing::hold_verified(&launch.package, name, signature) {
+                Ok(file) => Some(file),
+                Err(error) => {
+                    return give_json(
+                        &serde_json::json!({"error": error, "elevated": elevate, "rejected": true}),
+                    );
+                }
+            }
+        }
+        _ => None,
+    };
     let arguments = setup_arguments(
         &launch.package,
         &launch.folder,

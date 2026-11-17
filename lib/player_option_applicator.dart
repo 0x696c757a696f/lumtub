@@ -140,6 +140,10 @@ class PlayerOptionApplicator {
     // have, from splitting the option.
     String quote(String value) => value.contains(RegExp('[,=%]')) || value.startsWith(RegExp(r'["\[]')) ? '%${utf8.encode(value).length}%$value' : value;
     return [
+      // No yt-dlp configuration file or plugin from outside the app, as
+      // for every other yt-dlp run (ProcessTree.ytDlpIsolation).
+      'ignore-config=',
+      'no-plugin-dirs=',
       // The video's own language: yt-dlp names its automatic captions
       // "<language>-orig"; an uploaded one in it is added once known.
       if (subtitles) 'sub-langs=${quote(settings.subtitleOriginal ? '.*-orig' : settings.subtitleLanguage.ytDlpLangs)}',

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 
 import 'js_challenge_plugin.dart';
+import 'native_core.dart';
 
 /// yt-dlp on Android: Android lets an app start only the programs in its
 /// own library folder, so yt-dlp (a Python zip app kept with the other
@@ -68,13 +69,17 @@ class AndroidPython {
   /// [arguments] and [environment].
   (String, List<String>, Map<String, String>) command(String script, List<String> arguments, Map<String, String>? environment) {
     final js = quickJs;
+    // Lumtub's plugin folder goes after --no-plugin-dirs, which would
+    // otherwise clear it.
+    final lead = arguments.takeWhile(ProcessTree.ytDlpIsolation.contains).length;
     return (
       python,
       [
         script,
+        ...arguments.take(lead),
         if (plugins != null && !arguments.contains('--plugin-dirs')) ...['--plugin-dirs', plugins!],
         if (js != null && !arguments.contains('--js-runtimes')) ...['--js-runtimes', 'quickjs:$js'],
-        ...arguments,
+        ...arguments.skip(lead),
       ],
       {...?environment, ...this.environment},
     );

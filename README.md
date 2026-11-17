@@ -9,7 +9,7 @@ For **Windows, Linux, macOS and Android** (phones, tablets and TVs), with iPhone
 **English** · [简体中文](README.zh-Hans.md)
 
 [![Download](https://img.shields.io/github/v/release/0x696c757a696f/lumtub?include_prereleases&label=Download&style=for-the-badge&color=E53935)](https://github.com/0x696c757a696f/lumtub/releases/latest)
-[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/0x696c757a696f)
+<a href="#support-lumtub"><img src="docs/sponsor/sponsor-en.svg" alt="Sponsor" height="28"></a>
 
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
 ![Windows](https://img.shields.io/badge/Windows-x64%20%7C%20ARM64-0078D4?logo=windows)
@@ -189,12 +189,11 @@ Everything is open source under the GPL, so none of this has to be taken on trus
 
 <div align="center">
 
-**Lumtub is built by one developer, in the open, with no ads and no tracking.**<br>
-Sponsors pay for the time to build it.
+<a href="https://github.com/sponsors/0x696c757a696f"><img src="docs/sponsor/banner-en.svg" alt="Keep Lumtub free. No ads, no tracking, no paid tier. One developer, in the open." width="100%"></a>
 
-<a href="https://github.com/sponsors/0x696c757a696f"><img src="https://img.shields.io/badge/Sponsor_on_GitHub-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub" height="44"></a>
-<a href="https://afdian.com/a/linmuqingfeng"><img src="https://img.shields.io/badge/Afdian_%E7%88%B1%E5%8F%91%E7%94%B5-%E2%9D%A4-946CE6?style=for-the-badge" alt="Afdian" height="44"></a>
-<a href="https://ko-fi.com/0x696c757a696f"><img src="https://img.shields.io/badge/Ko--fi-%E2%9D%A4-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white" alt="Ko-fi" height="44"></a>
+<a href="https://github.com/sponsors/0x696c757a696f"><img src="docs/sponsor/github-en.svg" alt="Sponsor on GitHub" height="64"></a>
+<a href="https://ko-fi.com/0x696c757a696f"><img src="docs/sponsor/kofi-en.svg" alt="Support on Ko-fi" height="64"></a>
+<a href="https://afdian.com/a/linmuqingfeng"><img src="docs/sponsor/afdian-en.svg" alt="Support on Afdian" height="64"></a>
 
 **Monthly sponsors** decide what comes next: a code-signing certificate so Windows stops warning on install, and Apple notarization.<br>
 Feature requests from sponsors carry the **sponsor priority** label and are worked on first.<br>

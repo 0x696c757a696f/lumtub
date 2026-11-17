@@ -9,7 +9,7 @@
 [English](README.md) · **简体中文**
 
 [![下载](https://img.shields.io/github/v/release/0x696c757a696f/lumtub?include_prereleases&label=%E4%B8%8B%E8%BD%BD&style=for-the-badge&color=E53935)](https://github.com/0x696c757a696f/lumtub/releases/latest)
-[![赞助](https://img.shields.io/badge/%E8%B5%9E%E5%8A%A9-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/0x696c757a696f)
+<a href="#支持-lumtub"><img src="docs/sponsor/sponsor-zh.svg" alt="赞助" height="28"></a>
 
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
 ![Windows](https://img.shields.io/badge/Windows-x64%20%7C%20ARM64-0078D4?logo=windows)
@@ -177,12 +177,11 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 
 <div align="center">
 
-**Lumtub 由一位开发者公开开发，没有广告，也不追踪你。**<br>
-赞助支付的是开发它的时间。
+<a href="https://afdian.com/a/linmuqingfeng"><img src="docs/sponsor/banner-zh.svg" alt="让 Lumtub 一直免费下去。没有广告，没有追踪，没有付费版。一个人开发，完全开源。" width="100%"></a>
 
-<a href="https://github.com/sponsors/0x696c757a696f"><img src="https://img.shields.io/badge/%E5%9C%A8_GitHub_%E4%B8%8A%E8%B5%9E%E5%8A%A9-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="在 GitHub 上赞助" height="44"></a>
-<a href="https://afdian.com/a/linmuqingfeng"><img src="https://img.shields.io/badge/%E5%9C%A8%E7%88%B1%E5%8F%91%E7%94%B5%E4%B8%8A%E8%B5%9E%E5%8A%A9-%E2%9D%A4-946CE6?style=for-the-badge" alt="在爱发电上赞助" height="44"></a>
-<a href="https://ko-fi.com/0x696c757a696f"><img src="https://img.shields.io/badge/Ko--fi-%E2%9D%A4-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white" alt="Ko-fi" height="44"></a>
+<a href="https://afdian.com/a/linmuqingfeng"><img src="docs/sponsor/afdian-zh.svg" alt="在爱发电上赞助" height="64"></a>
+<a href="https://github.com/sponsors/0x696c757a696f"><img src="docs/sponsor/github-zh.svg" alt="在 GitHub 上赞助" height="64"></a>
+<a href="https://ko-fi.com/0x696c757a696f"><img src="docs/sponsor/kofi-zh.svg" alt="在 Ko-fi 上赞助" height="64"></a>
 
 **每月赞助者**决定接下来做什么：让 Windows 安装时不再警告的代码签名证书，以及 Apple 公证。<br>
 赞助者提的功能建议会打上 **sponsor priority** 标签，优先处理。<br>

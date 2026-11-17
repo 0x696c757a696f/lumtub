@@ -8,7 +8,7 @@ name: Retry and report
 # closes it.
 on:
   workflow_run:
-    workflows: [Build, Refresh lockfiles, Audit, Create release, Block lists, YouTube canary, Upstream updates]
+    workflows: [Build, Refresh lockfiles, Audit, Create release, Block lists, YouTube canary, Upstream updates, Fuzz]
     types: [completed]
 
 permissions:

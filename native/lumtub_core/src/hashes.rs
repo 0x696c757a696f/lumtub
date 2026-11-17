@@ -140,8 +140,11 @@ pub fn branding(answer: &Value, video_id: &str) -> Branding {
 
 /// The SHA-256 of the file at [path] in lowercase hex.
 pub fn file_sha256(path: &str) -> std::io::Result<String> {
-    use std::io::Read;
-    let mut file = std::fs::File::open(path)?;
+    sha256_of(&mut std::fs::File::open(path)?)
+}
+
+/// The SHA-256 of everything [reader] gives, in lowercase hex.
+pub fn sha256_of(file: &mut impl std::io::Read) -> std::io::Result<String> {
     let mut hasher = Sha256::new();
     let mut buffer = vec![0; 1 << 20];
     loop {

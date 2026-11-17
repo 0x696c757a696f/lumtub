@@ -124,9 +124,9 @@ void LoadPreferredLibmpv() {
     WriteText(directory + L"pending.txt", path + L"\n" + std::to_wstring(launches + 1) + L"\n", false);
   }
 
-  // LOAD_WITH_ALTERED_SEARCH_PATH resolves the DLL's own dependencies from
-  // its folder rather than the executable's.
-  if (::LoadLibraryExW(path.c_str(), nullptr, LOAD_WITH_ALTERED_SEARCH_PATH) == nullptr) {
+  // The DLL's own dependencies resolve from its folder, then Lumtub's
+  // folder and System32; never from PATH or the current folder.
+  if (::LoadLibraryExW(path.c_str(), nullptr, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS) == nullptr) {
     MarkFailed(directory, path);
     return;
   }

@@ -72,8 +72,26 @@ std::string ReadGpuPreference() {
 
 }  // namespace
 
+// DLLs load only from Lumtub's own folder, System32 and folders added
+// with AddDllDirectory, never from the current folder or PATH, where a
+// planted DLL of the same name would run inside Lumtub. Images from
+// network shares or with a low integrity label are refused.
+void HardenProcess() {
+  ::SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_APPLICATION_DIR |
+                             LOAD_LIBRARY_SEARCH_SYSTEM32 |
+                             LOAD_LIBRARY_SEARCH_USER_DIRS);
+  ::SetDllDirectoryW(L"");
+  PROCESS_MITIGATION_IMAGE_LOAD_POLICY images{};
+  images.NoRemoteImages = 1;
+  images.NoLowMandatoryLabelImages = 1;
+  ::SetProcessMitigationPolicy(ProcessImageLoadPolicy, &images,
+                               sizeof(images));
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
+  HardenProcess();
+
   // Attach to console when present (e.g., 'flutter run') or create a
   // new console when running with a debugger.
   if (!::AttachConsole(ATTACH_PARENT_PROCESS) && ::IsDebuggerPresent()) {

@@ -47,8 +47,14 @@ WizardStyle=modern
 CloseApplications=yes
 
 [Languages]
+; The first language is the one used when none matches Windows.
+Name: "english"; MessagesFile: "compiler:Default.isl"
+; Inno Setup 6 ships no Simplified Chinese, so the translation from its
+; unofficial set is kept here for compilers without one.
 #if FileExists(CompilerPath + "Languages\ChineseSimplified.isl")
 Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+#else
+Name: "chinesesimplified"; MessagesFile: "Languages\ChineseSimplified.isl"
 #endif
 #if FileExists(CompilerPath + "Languages\Japanese.isl")
 Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
@@ -71,7 +77,6 @@ Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortugue
 #if FileExists(CompilerPath + "Languages\Russian.isl")
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 #endif
-Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [CustomMessages]
 Downgrade=Lumtub %1 is installed, which is newer than this installer's %2.%n%nInstall the older version anyway? Your settings and library are kept.
@@ -79,13 +84,11 @@ OtherInstall=Lumtub is also installed for all users in:%n%1%n%nThis installer pu
 RunningElsewhere=Lumtub is running from another folder, likely a portable copy:%n%1%n%nClose it first, or the installed copy and that one may both run at once.%n%nContinue?
 NeedsAdmin=Installing into this folder needs administrator rights:%n%1%n%nStart the installer again as administrator?
 NeedsAdminFolder=Lumtub cannot write to %1 without administrator rights. Run the installer as administrator, or install into another folder.
-#if FileExists(CompilerPath + "Languages\ChineseSimplified.isl")
 chinesesimplified.Downgrade=已安装的 Lumtub %1 比这个安装包的 %2 更新。%n%n仍要安装旧版本吗？设置和资料库会保留。
 chinesesimplified.OtherInstall=Lumtub 还为所有用户装在：%n%1%n%n这个安装包会在你的账户里另装一份。另一份可以在 Windows 设置 › 应用 中卸载。%n%n继续吗？
 chinesesimplified.RunningElsewhere=有一个 Lumtub 正在从别的文件夹运行，可能是便携版：%n%1%n%n请先关掉它，否则安装版和它可能同时运行。%n%n继续吗？
 chinesesimplified.NeedsAdmin=安装到这个文件夹需要管理员权限：%n%1%n%n以管理员身份重新启动安装程序吗？
 chinesesimplified.NeedsAdminFolder=没有管理员权限，Lumtub 无法写入 %1。请以管理员身份运行安装程序，或者装到别的文件夹。
-#endif
 #if FileExists(CompilerPath + "Languages\Japanese.isl")
 japanese.Downgrade=インストール済みの Lumtub %1 は、このインストーラーの %2 より新しいバージョンです。%n%n古いバージョンをインストールしますか？設定とライブラリは残ります。
 japanese.OtherInstall=Lumtub はすべてのユーザー用に次の場所にもインストールされています:%n%1%n%nこのインストーラーはあなたのアカウントにもう 1 つインストールします。もう一方は Windows の設定 › アプリ からアンインストールできます。%n%n続行しますか？

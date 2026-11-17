@@ -120,6 +120,7 @@ class _ChannelPageState extends State<ChannelPage> {
             delegate: _PinnedRow(
               color: Theme.of(context).colorScheme.surface,
               child: ListView(
+                key: const PageStorageKey('channel-tabs'),
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding, vertical: 8),
                 children: [
@@ -394,6 +395,7 @@ class PostCard extends StatelessWidget {
           SizedBox(
             height: 240,
             child: ListView.separated(
+              key: PageStorageKey('post-images:${post.id}'),
               scrollDirection: Axis.horizontal,
               itemCount: post.images.length,
               separatorBuilder: (context, i) => const SizedBox(width: 8),
@@ -532,7 +534,7 @@ class _ChannelSearchFieldState extends State<_ChannelSearchField> {
   }
 
   @override
-  Widget build(BuildContext context) => TextField(
+  Widget build(BuildContext context) => LeavesByKeys(child: TextField(
         controller: _text,
         textInputAction: TextInputAction.search,
         // Typed on the 社区 tab, it searches the posts; otherwise the
@@ -556,7 +558,7 @@ class _ChannelSearchFieldState extends State<_ChannelSearchField> {
                   ),
           ),
         ),
-      );
+      ));
 }
 
 /// Channel name, follow button and a link to the channel on YouTube.

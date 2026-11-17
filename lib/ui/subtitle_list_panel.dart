@@ -186,7 +186,7 @@ class _SubtitleListState extends State<SubtitleList> {
             padding: EdgeInsetsDirectional.fromSTEB(16, 0, _bothOn ? 4 : 16, 8),
             child: Row(children: [
               Expanded(
-                child: TextField(
+                child: LeavesByKeys(child: TextField(
                   decoration: InputDecoration(isDense: true, prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Search subtitles')),
                   onChanged: (v) {
                     // Filtering thousands of lines waits for a pause in typing.
@@ -195,7 +195,7 @@ class _SubtitleListState extends State<SubtitleList> {
                       if (mounted) setState(() => _query = v.trim().toLowerCase());
                     });
                   },
-                ),
+                )),
               ),
               if (_bothOn) _modeMenu(colors),
             ]),

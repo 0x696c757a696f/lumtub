@@ -115,8 +115,9 @@ jobs:
           status=0
           for target in "manifest packaging/flatpak/io.github.lumtub.lumtub.yml" "repo repo"; do
             flatpak run --command=flatpak-builder-lint org.flatpak.Builder --exceptions $target > lint.json || true
+            # No output at all means nothing to report.
             cat lint.json
-            if python3 -c 'import json,re,sys; e=[x for x in json.load(open("lint.json")).get("errors",[]) if not re.fullmatch(sys.argv[1],x)]; print("\n".join(e)); sys.exit(1 if e else 0)' "$local_only"; then :; else status=1; fi
+            if python3 -c 'import json,re,sys; t=open("lint.json").read().strip(); e=[x for x in (json.loads(t) if t else {}).get("errors",[]) if not re.fullmatch(sys.argv[1],x)]; print("\n".join(e)); sys.exit(1 if e else 0)' "$local_only"; then :; else status=1; fi
           done
           exit $status
       - name: Start it

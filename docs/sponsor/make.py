@@ -71,6 +71,7 @@ def is_cjk(ch):
 
 
 def runs(text):
+    """Splits text into Latin and Chinese runs, dropping spaces between the two."""
     out = []
     for ch in text:
         kind = "cjk" if is_cjk(ch) else "latin"
@@ -78,24 +79,42 @@ def runs(text):
             out[-1][1] += ch
         else:
             out.append([kind, ch])
-    return out
+    for i, run in enumerate(out):
+        if run[0] == "latin":
+            if i > 0:
+                run[1] = run[1].lstrip(" ")
+            if i < len(out) - 1:
+                run[1] = run[1].rstrip(" ")
+    return [r for r in out if r[1]]
 
 
 def _num(v):
     return f"{v:.1f}".rstrip("0").rstrip(".")
 
 
-def shape(text, weight, size, tracking=0.0):
-    """Returns (path data, advance width) for text drawn from x=0, baseline y=0."""
+def shape(text, weight, size, tracking=0.0, cjk_tracking=0.0):
+    """Returns (path data, advance width) for text drawn from x=0, baseline y=0.
+
+    Chinese and Latin runs get a quarter em between them, the way the
+    text-autospace rule of CSS spaces them.
+    """
     pieces = []
     x = 0.0
+    last = None
     for kind, part in runs(text):
+        if last is not None and last != kind:
+            x += size * 0.25 + tracking
+        last = kind
         f = face(kind, weight)
         buf = hb.Buffer()
         buf.add_str(part)
         buf.guess_segment_properties()
-        hb.shape(f.hb, buf, {"kern": True, "liga": True})
+        features = {"kern": True, "liga": True}
+        if kind == "cjk":
+            features["chws"] = True
+        hb.shape(f.hb, buf, features)
         scale = size / f.upem
+        step = tracking + (cjk_tracking * size if kind == "cjk" else 0.0)
         for info, pos in zip(buf.glyph_infos, buf.glyph_positions):
             name = f.order[info.codepoint]
             pen = SVGPathPen(f.glyphs, ntos=_num)
@@ -105,12 +124,13 @@ def shape(text, weight, size, tracking=0.0):
             d = pen.getCommands()
             if d:
                 pieces.append(d)
-            x += pos.x_advance * scale + tracking
-    return " ".join(pieces), x - tracking if text else 0.0
+            x += pos.x_advance * scale + step
+        x -= step
+    return " ".join(pieces), x
 
 
-def text(s, x, y, weight, size, fill, anchor="start", tracking=0.0, extra=""):
-    d, width = shape(s, weight, size, tracking)
+def text(s, x, y, weight, size, fill, anchor="start", tracking=0.0, extra="", cjk_tracking=0.0):
+    d, width = shape(s, weight, size, tracking, cjk_tracking)
     if anchor == "middle":
         x -= width / 2
     elif anchor == "end":
@@ -222,21 +242,21 @@ def banner(lang):
     out.append(f'<circle class="dot" cx="{tx + 6}" cy="86" r="6" fill="#EA4AAA"/>')
     el, _ = text(eyebrow, tx + 22, 93, 800, 20, "#EA8BC8", tracking=3.2)
     out.append(el)
-    el, _ = text(head, tx, 162, 800, 64 if lang == "en" else 58, "url(#headfill)", tracking=-1.0 if lang == "en" else 0)
+    el, _ = text(head, tx, 162, 800, 64 if lang == "en" else 58, "url(#headfill)", tracking=-1.0 if lang == "en" else 0, cjk_tracking=0.02)
     out.append(el)
-    el, _ = text(sub, tx, 212, 500, 25, "#D5DCE4")
+    el, _ = text(sub, tx, 212, 500, 25, "#D5DCE4", cjk_tracking=0.04)
     out.append(el)
-    el, _ = text(sub2, tx, 248, 500, 25, "#9AA6B2")
+    el, _ = text(sub2, tx, 248, 500, 25, "#9AA6B2", cjk_tracking=0.04)
     out.append(el)
 
     cx = tx
-    el, lw = text(chip_label, cx, 318, 800, 18, "#57D5B9", tracking=1.0)
+    el, lw = text(chip_label, cx, 318, 800, 18, "#57D5B9", tracking=1.0, cjk_tracking=0.04)
     out.append(el)
     cx += lw + 18
     for chip in chips:
-        _, cw = shape(chip, 500, 19)
+        _, cw = shape(chip, 500, 19, cjk_tracking=0.03)
         out.append(f'<rect x="{cx}" y="292" width="{cw + 36:.1f}" height="38" rx="19" fill="#57D5B9" fill-opacity=".08" stroke="#57D5B9" stroke-opacity=".55" stroke-width="1.5"/>')
-        el, _ = text(chip, cx + 18, 318, 500, 19, "#BFF5E7")
+        el, _ = text(chip, cx + 18, 318, 500, 19, "#BFF5E7", cjk_tracking=0.03)
         out.append(el)
         cx += cw + 36 + 12
 
@@ -267,12 +287,12 @@ def button(kind, lang):
     top, bottom, mark = BUTTONS[kind]
     title, note = LABELS[(kind, lang)]
     w, h = 300, 76
-    _, tw = shape(title, 800, 23)
-    _, nw = shape(note, 500, 15)
+    _, tw = shape(title, 800, 23, cjk_tracking=0.06)
+    _, nw = shape(note, 500, 15, cjk_tracking=0.05)
     content = 40 + 14 + max(tw, nw)
     x0 = (w - content) / 2
-    t1, _ = text(title, x0 + 54, 36, 800, 23, "#fff")
-    t2, _ = text(note, x0 + 54, 58, 500, 15, "#fff", extra='fill-opacity=".82" ')
+    t1, _ = text(title, x0 + 54, 36, 800, 23, "#fff", cjk_tracking=0.06)
+    t2, _ = text(note, x0 + 54, 58, 500, 15, "#fff", extra='fill-opacity=".82" ', cjk_tracking=0.05)
     return "\n".join([
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">',
         "<defs>",

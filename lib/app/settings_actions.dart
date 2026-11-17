@@ -294,7 +294,7 @@ extension SettingsActions on AppController {
         next.dnsCustomUrl != oldSettings.dnsCustomUrl ||
         next.certificateRoots != oldSettings.certificateRoots ||
         next.postQuantum != oldSettings.postQuantum ||
-        next.ipv4Only != oldSettings.ipv4Only) {
+        next.ipVersion != oldSettings.ipVersion) {
       await _refreshProxy();
     }
     _update(() {

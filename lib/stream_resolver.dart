@@ -206,8 +206,10 @@ class StreamResolver {
   static const tvNeededFor = Duration(minutes: 30);
 
   /// yt-dlp's `--extractor-args` value that asks only the client a quick
-  /// start asks as (visionOS), leaving out the TV and web clients.
-  static const visionOnly = 'youtube:player_client=visionos';
+  /// start asks as (visionOS), leaving out the TV and web clients. Its
+  /// addresses need no JavaScript, so YouTube's player script is not read
+  /// either.
+  static const visionOnly = 'youtube:player_client=visionos;player_skip=js';
 
   /// Whether yt-dlp asks only the visionOS client, as it does unless a
   /// run that way just failed. Measured on a Windows PC on 2026-11-17

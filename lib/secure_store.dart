@@ -5,6 +5,7 @@ import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
+import 'file_mode.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
 
@@ -132,8 +133,7 @@ class SecureJsonFile {
     if (!Platform.isWindows) {
       // Readable by the user alone before anything is in it.
       await temporary.writeAsBytes(const [], flush: true);
-      final chmod = await Process.run('chmod', ['600', temporary.path]);
-      if (chmod.exitCode != 0) throw FileSystemException('chmod failed: ${chmod.stderr}', temporary.path);
+      setFileMode(temporary.path, ownerOnlyMode);
     }
     await temporary.writeAsBytes(sealed, flush: true);
     await temporary.rename(file.path);

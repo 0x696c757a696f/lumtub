@@ -72,6 +72,13 @@ class MainActivity : FlutterActivity() {
         }
         channel.setMethodCallHandler { call, result ->
             if (call.method == "askLocalNetwork") return@setMethodCallHandler askLocalNetwork(result)
+            if (call.method == "relaunch") {
+                // The new task outlives this process, which Dart ends next.
+                val launch = packageManager.getLaunchIntentForPackage(packageName)?.component
+                    ?: return@setMethodCallHandler result.error("relaunch", "No launch activity", null)
+                startActivity(Intent.makeRestartActivityTask(launch))
+                return@setMethodCallHandler result.success(null)
+            }
             if (call.method == "webSignIn") {
                 signingIn?.success(null)
                 signingIn = result

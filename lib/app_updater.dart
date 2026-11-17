@@ -9,6 +9,7 @@ import 'package:flutter/services.dart' show MethodChannel, PlatformException;
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'file_mode.dart';
 import 'friendly_error.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
@@ -592,10 +593,11 @@ class AppUpdater extends ChangeNotifier {
 Future<void> replaceAppImage(File update, String image) async {
   final next = File('$image.update');
   await update.copy(next.path);
-  final chmod = await Process.run('chmod', ['755', next.path]);
-  if (chmod.exitCode != 0) {
+  try {
+    setFileMode(next.path, executableMode);
+  } catch (_) {
     await next.delete();
-    throw StateError('chmod failed: ${chmod.stderr}');
+    rethrow;
   }
   await next.rename(image);
   await update.delete();

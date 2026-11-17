@@ -284,7 +284,11 @@ extension PlaybackEvents on AppController {
         if (lost) _streamLostIn = _playSerial;
         // Data cut off mid-frame, after curl lost a stream, leaves the
         // decoder failing on every frame over a still picture.
-        if (log.prefix == 'vd' && text.startsWith('Error while decoding frame')) {
+        // iOS invalidates VideoToolbox's sessions while the app is in the
+        // background: the decoder fails on every frame from then on and the
+        // picture goes. A new decoder fixes it; reopening the stream does not.
+        if (Platform.isIOS && PlaybackRecovery.decoderSessionLost(text)) unawaited(renewVideoDecoder());
+        if (log.prefix == 'vd' && text.startsWith('Error while decoding frame') && DateTime.now().difference(_lastDecoderRenewal) > const Duration(seconds: 5)) {
           final now = DateTime.now();
           _decodeErrors
             ..add(now)
@@ -447,7 +451,9 @@ extension PlaybackEvents on AppController {
     if (platform is! NativePlayer) return;
     if (hidden) {
       final wanted = preferences.audioOnlyInBackground || ((Platform.isAndroid || Platform.isIOS) && !Device.tv && !pip);
-      if (!wanted || audioOnly || _backgroundAudioOnly || !player!.state.playing) return;
+      // On iOS the decoder goes even while paused: VideoToolbox's session
+      // would not survive the background.
+      if (!wanted || audioOnly || _backgroundAudioOnly || (!player!.state.playing && !Platform.isIOS)) return;
       _backgroundAudioOnly = true;
       await platform.setProperty('vid', 'no');
     } else if (_backgroundAudioOnly) {
@@ -462,6 +468,26 @@ extension PlaybackEvents on AppController {
       } catch (e) {
         logWarn('Could not refresh the picture after restoring: $e');
       }
+    }
+  }
+
+  /// Makes the video decoder again, as after the background: the picture
+  /// comes back at this position without opening the stream again. At most
+  /// once in 5 seconds; nothing while the picture is off anyway.
+  Future<void> renewVideoDecoder() async {
+    final platform = player?.platform;
+    if (platform is! NativePlayer || audioOnly || _backgroundAudioOnly || _windowHidden) return;
+    final now = DateTime.now();
+    if (now.difference(_lastDecoderRenewal) < const Duration(seconds: 5)) return;
+    _lastDecoderRenewal = now;
+    _decodeErrors.clear();
+    logWarn('The video decoder stopped working; making it again');
+    try {
+      await platform.setProperty('vid', 'no');
+      await platform.setProperty('vid', 'auto');
+      await platform.command(['seek', '0', 'relative+exact']);
+    } catch (e) {
+      logWarn('Could not make the video decoder again: $e');
     }
   }
 

@@ -1,6 +1,7 @@
 import AVFoundation
 import AuthenticationServices
 import Flutter
+import MediaPlayer
 import UIKit
 import WebKit
 
@@ -39,9 +40,23 @@ final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate, ASWe
   /// The page signing in to YouTube for its cookies, while it is open.
   private var webSignIn: WebSignInController?
 
+  /// Now Playing: the Lock Screen, Control Center, the Dynamic Island and
+  /// headphone buttons, as on macOS (MacShell.swift).
+  private let channel: FlutterMethodChannel
+  private var info: [String: Any] = [:]
+  private var artworkAddress = ""
+  private var playing = false
+
+  init(channel: FlutterMethodChannel) {
+    self.channel = channel
+    super.init()
+  }
+
   static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "lumtub/windows_shell", binaryMessenger: registrar.messenger())
-    registrar.addMethodCallDelegate(LumtubShell(), channel: channel)
+    let shell = LumtubShell(channel: channel)
+    registrar.addMethodCallDelegate(shell, channel: channel)
+    shell.attachCommands()
   }
 
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -103,6 +118,37 @@ final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate, ASWe
       }
       webSignIn = page
       root.present(page.wrapped, animated: true)
+    case "setMetadata":
+      let arguments = call.arguments as? [String: Any] ?? [:]
+      info[MPMediaItemPropertyTitle] = arguments["title"] as? String ?? ""
+      info[MPMediaItemPropertyArtist] = arguments["artist"] as? String ?? ""
+      info.removeValue(forKey: MPMediaItemPropertyArtwork)
+      loadArtwork(arguments["thumbnail"] as? String ?? "")
+      publish()
+      result(nil)
+    case "setStatus":
+      let status = call.arguments as? String ?? "stopped"
+      playing = status == "playing"
+      if status != "playing" && status != "paused" { info = [:] }
+      publish()
+      result(nil)
+    case "setButtons":
+      let arguments = call.arguments as? [String: Any] ?? [:]
+      let commands = MPRemoteCommandCenter.shared()
+      commands.nextTrackCommand.isEnabled = arguments["next"] as? Bool ?? false
+      commands.previousTrackCommand.isEnabled = arguments["previous"] as? Bool ?? false
+      result(nil)
+    case "setTimeline":
+      let arguments = call.arguments as? [String: Any] ?? [:]
+      let duration = Double(arguments["duration"] as? Int ?? 0) / 1000
+      info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = Double(arguments["position"] as? Int ?? 0) / 1000
+      if duration > 0 {
+        info[MPMediaItemPropertyPlaybackDuration] = duration
+      } else {
+        info.removeValue(forKey: MPMediaItemPropertyPlaybackDuration)
+      }
+      publish()
+      result(nil)
     case "isTv":
       result(false)
     default:
@@ -159,6 +205,60 @@ final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate, ASWe
   func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
     let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
     return scenes.flatMap { $0.windows }.first { $0.isKeyWindow } ?? scenes.first?.windows.first ?? ASPresentationAnchor()
+  }
+
+  private func publish() {
+    if info.isEmpty {
+      MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+      return
+    }
+    info[MPNowPlayingInfoPropertyPlaybackRate] = playing ? 1.0 : 0.0
+    info[MPNowPlayingInfoPropertyMediaType] = MPNowPlayingInfoMediaType.video.rawValue
+    MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+  }
+
+  private func loadArtwork(_ address: String) {
+    artworkAddress = address
+    guard let url = URL(string: address), url.scheme == "https" else { return }
+    URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+      guard let data, let image = UIImage(data: data) else { return }
+      DispatchQueue.main.async {
+        guard let self, self.artworkAddress == address, !self.info.isEmpty else { return }
+        self.info[MPMediaItemPropertyArtwork] = LumtubShell.artwork(image)
+        self.publish()
+      }
+    }.resume()
+  }
+
+  /// Made outside the main queue's closures: MediaPlayer asks for the
+  /// picture on a queue of its own.
+  private nonisolated static func artwork(_ image: UIImage) -> MPMediaItemArtwork {
+    MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+  }
+
+  private func attachCommands() {
+    let commands = MPRemoteCommandCenter.shared()
+    let buttons: [(MPRemoteCommand, String)] = [
+      (commands.playCommand, "play"),
+      (commands.pauseCommand, "pause"),
+      (commands.togglePlayPauseCommand, "playpause"),
+      (commands.stopCommand, "stop"),
+      (commands.nextTrackCommand, "next"),
+      (commands.previousTrackCommand, "previous"),
+    ]
+    for (command, button) in buttons {
+      command.isEnabled = button != "next" && button != "previous"
+      command.addTarget { [weak self] _ in
+        self?.channel.invokeMethod("button", arguments: button)
+        return .success
+      }
+    }
+    commands.changePlaybackPositionCommand.isEnabled = true
+    commands.changePlaybackPositionCommand.addTarget { [weak self] event in
+      guard let event = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
+      self?.channel.invokeMethod("seek", arguments: Int(event.positionTime * 1000))
+      return .success
+    }
   }
 
   private static func topController() -> UIViewController? {

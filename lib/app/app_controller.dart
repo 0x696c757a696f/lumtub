@@ -966,6 +966,10 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// When a lost stream or broken video data last opened the video again.
   DateTime _lastBrokenReopen = DateTime(2000);
 
+  /// When VideoToolbox's decoder was last made again after iOS invalidated
+  /// it (see renewVideoDecoder).
+  DateTime _lastDecoderRenewal = DateTime(2000);
+
   /// The open in which the decoder was restarted for a stalled picture.
   int? _pictureRestartedIn;
 

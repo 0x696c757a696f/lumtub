@@ -42,6 +42,20 @@ void addToPath(Iterable<String> directories) {
 /// Starts Lumtub again and ends this process, such as after the language
 /// changed.
 Future<void> restartApp() async {
+  if (Platform.isAndroid || Platform.isIOS) {
+    // Neither lets an app start a program. Android opens Lumtub again in a
+    // new task; iOS has no way to, so Lumtub closes and is opened again
+    // from the home screen.
+    await AppLog.current?.flush();
+    if (Platform.isAndroid) {
+      try {
+        await const MethodChannel('lumtub/windows_shell').invokeMethod<void>('relaunch');
+      } catch (e) {
+        logWarn('Could not start Lumtub again: $e');
+      }
+    }
+    exit(0);
+  }
   if (Platform.isWindows) {
     // The new copy waits for this one to end: only one Lumtub runs at a time.
     await Process.start(Platform.resolvedExecutable, ['--restart-after=$pid'], mode: ProcessStartMode.detached);

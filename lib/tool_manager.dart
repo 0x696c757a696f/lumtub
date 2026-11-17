@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'android_python.dart';
 import 'app_directories.dart';
 import 'app_log.dart';
+import 'file_mode.dart';
 import 'ios_python.dart';
 import 'zip_archive.dart';
 import 'libmpv_updates.dart';
@@ -49,9 +50,7 @@ class ToolManager {
   /// [name] as an executable's file name on this system.
   /// Lets [path] run off Windows, whatever mode the archive gave it.
   static Future<void> _makeExecutable(String path) async {
-    if (Platform.isWindows) return;
-    final chmod = await Process.run('chmod', ['755', path]);
-    if (chmod.exitCode != 0) throw StateError('chmod $path failed: ${chmod.stderr}');
+    setFileMode(path, executableMode);
   }
 
   static String _exe(String name) => Platform.isWindows ? '$name.exe' : name;

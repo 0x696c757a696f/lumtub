@@ -114,6 +114,11 @@ void main() {
     expect(PlaybackRecovery.graphicsLost('Failed to allocate hw frames.'), isFalse);
     expect(PlaybackRecovery.graphicsLost('Failure when receiving data from the peer'), isFalse);
   });
+  test('tells an invalidated VideoToolbox session', () {
+    expect(PlaybackRecovery.decoderSessionLost('av1: Failed to decode frame (invalid session, -12903)'), isTrue);
+    expect(PlaybackRecovery.decoderSessionLost('av1: vt decoder cb: output image buffer is null: -12903, reconfig 1'), isTrue);
+    expect(PlaybackRecovery.decoderSessionLost('av1: HW accel end frame fail.'), isFalse);
+  });
   group('settled playback', () {
     late SettledPlayback settled;
     var at = Duration.zero;

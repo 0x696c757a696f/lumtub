@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'models.dart';
 import 'native_core.dart';
 import 'native_http.dart';
+import 'playback_failure.dart';
 import 'player_settings.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
@@ -430,6 +431,7 @@ class StreamResolver {
     // The pointer is on a card: a click may follow.
     _warm(format, formatSort);
     if (_results.containsKey(videoId) && _formats[videoId] == format && _formatSorts[videoId] == formatSort && _proxies[videoId] == proxy?.call()) return;
+    if (!prefetchAllowed(videoId)) return;
     if (_prefetching) {
       _nextPrefetch = (videoId, format, formatSort);
       return;
@@ -441,6 +443,49 @@ class StreamResolver {
       _nextPrefetch = null;
       if (next != null) prefetch(next.$1, next.$2, formatSort: next.$3);
     }));
+  }
+
+  /// How long a video that failed to resolve is not prefetched again.
+  static const failureMemory = Duration(seconds: 30);
+
+  /// How long prefetching pauses after YouTube asked for a "not a bot"
+  /// check or answered 429: every background run would only be refused
+  /// too, and more requests keep the address flagged longer.
+  static const refusalPause = Duration(minutes: 10);
+
+  /// When each video last failed to resolve, while [failureMemory] lasts.
+  final _failedAt = <String, DateTime>{};
+
+  /// Until when prefetching is paused, after YouTube refused this address.
+  DateTime? _refusedUntil;
+
+  /// Whether a background extraction of [videoId] is worth starting now.
+  /// Opening a video always resolves it; only guesses wait.
+  bool prefetchAllowed(String videoId) {
+    final now = DateTime.now();
+    if (_refusedUntil case final until? when now.isBefore(until)) return false;
+    final failed = _failedAt[videoId];
+    return failed == null || now.difference(failed) >= failureMemory;
+  }
+
+  void _noteFailure(String videoId, Object error) {
+    final now = DateTime.now();
+    _failedAt.removeWhere((_, at) => now.difference(at) >= failureMemory);
+    _failedAt[videoId] = now;
+    final kind = PlaybackFailure.classify(['$error']).kind;
+    if (kind == FailureKind.botCheck || kind == FailureKind.rateLimited) {
+      final paused = _refusedUntil != null && now.isBefore(_refusedUntil!);
+      _refusedUntil = now.add(refusalPause);
+      if (!paused) logWarn('YouTube refused this address (${kind.name}); prefetching pauses for ${refusalPause.inMinutes} minutes');
+    }
+  }
+
+  void _noteSuccess(String videoId) {
+    _failedAt.remove(videoId);
+    if (_refusedUntil != null) {
+      _refusedUntil = null;
+      logInfo('YouTube answers this address again; prefetching resumes');
+    }
   }
 
   bool _prefetching = false;
@@ -541,8 +586,10 @@ class StreamResolver {
     }
     // A failure is not kept, so the next attempt runs yt-dlp again.
     future.then((video) {
+      _noteSuccess(videoId);
       if (identical(_results[videoId], future)) _done[videoId] = video;
-    }, onError: (_) {
+    }, onError: (Object e) {
+      _noteFailure(videoId, e);
       if (identical(_results[videoId], future)) forget(videoId);
     });
     return future;

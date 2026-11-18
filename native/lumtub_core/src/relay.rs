@@ -181,6 +181,16 @@ impl Web {
             .map_err(|_| "no answer in 20 s".to_string())?
             .map_err(|e| e.to_string())?;
         let status = reply.status().as_u16();
+        if matches!(status, 200 | 206) {
+            let header = |name: &str| reply.headers().get(name).and_then(|v| v.to_str().ok());
+            if let Some(why) = misfit(
+                url,
+                header("content-type"),
+                header("content-length").and_then(|v| v.trim().parse().ok()),
+            ) {
+                return Err(why);
+            }
+        }
         let head = reply
             .headers()
             .get("x-head-seqnum")
@@ -194,6 +204,36 @@ impl Web {
                 piece: bytes::Bytes::new(),
             }),
         ))
+    }
+}
+
+/// Why a 200 or 206 reply from a googlevideo media address cannot be the
+/// bytes asked for: a text page
+/// (googlevideo's error documents) instead of media, or more bytes than the
+/// `range` in [url] covers, which means the range was ignored and the body
+/// starts at the beginning of the file.
+pub(crate) fn misfit(url: &str, kind: Option<&str>, length: Option<u64>) -> Option<String> {
+    // Playlists and other pages are text by nature; only media addresses
+    // are judged.
+    if !url.contains("/videoplayback") {
+        return None;
+    }
+    if let Some(kind) = kind {
+        let kind = kind.trim().to_ascii_lowercase();
+        if kind.starts_with("text/") || kind.starts_with("application/json") {
+            return Some(format!("YouTube answered with a page ({kind}) instead of media"));
+        }
+    }
+    let wanted = query(url, "range").and_then(|range| {
+        let (from, to) = range.split_once('-')?;
+        let (from, to): (u64, u64) = (from.parse().ok()?, to.parse().ok()?);
+        to.checked_sub(from).map(|n| n + 1)
+    })?;
+    match length {
+        Some(length) if length > wanted => Some(format!(
+            "YouTube sent {length} bytes for a range of {wanted}"
+        )),
+        _ => None,
     }
 }
 
@@ -1054,6 +1094,21 @@ pub extern "C" fn lumtub_relay_log() -> *mut c_char {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn misfit_replies() {
+        let url = "https://r1.googlevideo.com/videoplayback?id=x&range=100-199";
+        assert_eq!(misfit(url, Some("video/mp4"), Some(100)), None);
+        assert_eq!(misfit(url, Some("audio/webm"), Some(40)), None);
+        assert_eq!(misfit(url, None, None), None);
+        assert!(misfit(url, Some("video/mp4"), Some(5000)).is_some());
+        assert!(misfit(url, Some("text/plain; charset=utf-8"), Some(10)).is_some());
+        assert!(misfit(url, Some("TEXT/HTML"), None).is_some());
+        let live = "https://r1.googlevideo.com/videoplayback?id=x&sq=5";
+        assert_eq!(misfit(live, Some("video/webm"), Some(1 << 20)), None);
+        let playlist = "https://manifest.googlevideo.com/api/manifest/hls_playlist/id/x/index.m3u8";
+        assert_eq!(misfit(playlist, Some("text/plain"), Some(900)), None);
+    }
     use std::io::Cursor;
 
     /// Fetches over real HTTPS through LUMTUB_TEST_PROXY, which may inspect

@@ -98,3 +98,16 @@ The changes, marked "Lumtub" in the code:
   commands there. `VideoOutput` neither resizes nor draws until the app is
   active again (`didBecomeActive`, which posts `BackgroundState.resumed`
   and draws what waited).
+- `ios/Classes/plugin/PlayerLayer.swift`, `common/MediaKitVideoPlugin.swift`,
+  `lib/src/ios_video_layer.dart`, `native_video_controller/real.dart`,
+  `video_texture.dart`: on iOS the picture is libmpv's `avfoundation`
+  video output (media_kit_libs_ios_video's patched libmpv) instead of an
+  OpenGL ES texture. Each player gets an AVSampleBufferDisplayLayer, kept
+  while the app runs (mpv holds its address as `--wid`), shown in a
+  platform view (`UiKitView` with view type
+  `com.alexmercerind/media_kit_video/layer`) that Flutter lays out where the
+  texture went. Subtitles and overlays are drawn into the frames
+  (`avfoundation-composite-osd`). `IosVideoLayer` opens iOS picture in
+  picture on that layer, arms it for going home, passes the window's play,
+  pause and skip buttons on, and keeps the layer's clock at the player's
+  position for the window's progress bar.

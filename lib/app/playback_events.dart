@@ -450,7 +450,13 @@ extension PlaybackEvents on AppController {
     final platform = player?.platform;
     if (platform is! NativePlayer) return;
     if (hidden) {
-      final wanted = preferences.audioOnlyInBackground || ((Platform.isAndroid || Platform.isIOS) && !Device.tv && !pip);
+      // iOS opens picture in picture on going home (when chosen), a moment
+      // after the app is hidden: the picture stays on for its window.
+      if (Platform.isIOS && !IosVideoLayer.active.value && _iosAutoPip) {
+        await Future.delayed(const Duration(milliseconds: 1200));
+        if (!_windowHidden) return;
+      }
+      final wanted = preferences.audioOnlyInBackground || ((Platform.isAndroid || Platform.isIOS) && !Device.tv && !pip && !IosVideoLayer.active.value);
       // On iOS the decoder goes even while paused: VideoToolbox's session
       // would not survive the background.
       if (!wanted || audioOnly || _backgroundAudioOnly || (!player!.state.playing && !Platform.isIOS)) return;

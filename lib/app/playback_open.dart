@@ -70,6 +70,7 @@ extension PlaybackOpening on AppController {
     if (videoController != null) return;
     final made = Stopwatch()..start();
     final controller = videoController = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
+    _watchIosPip(player);
     // It is made after the next frame, and an idle window draws none.
     WidgetsBinding.instance.scheduleFrame();
     unawaited(controller.platform.future.then((_) => logDebug(() => 'Video output made in ${made.elapsedMilliseconds} ms'), onError: (Object error) => logError('Video output failed', error)));

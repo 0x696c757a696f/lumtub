@@ -5,6 +5,7 @@
 /// Use of this source code is governed by MIT license that can be found in the LICENSE file.
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit_video/media_kit_video_controls/media_kit_video_controls.dart';
@@ -425,12 +426,30 @@ class VideoState extends State<Video> with WidgetsBindingObserver {
                                           children: [
                                             const SizedBox(),
                                             Positioned.fill(
-                                              child: Texture(
-                                                textureId: id,
-                                                filterQuality:
-                                                    videoViewParameters
-                                                        .filterQuality,
-                                              ),
+                                              // Lumtub: on iOS the picture
+                                              // is a layer in a platform
+                                              // view (IosVideoLayer).
+                                              child: notifier.layerHandle !=
+                                                      null
+                                                  ? UiKitView(
+                                                      viewType:
+                                                          'com.alexmercerind/media_kit_video/layer',
+                                                      creationParams: {
+                                                        'handle': notifier
+                                                            .layerHandle,
+                                                      },
+                                                      creationParamsCodec:
+                                                          const StandardMessageCodec(),
+                                                      hitTestBehavior:
+                                                          PlatformViewHitTestBehavior
+                                                              .transparent,
+                                                    )
+                                                  : Texture(
+                                                      textureId: id,
+                                                      filterQuality:
+                                                          videoViewParameters
+                                                              .filterQuality,
+                                                    ),
                                             ),
                                             // Keep the |Texture| hidden before the first frame renders. In native implementation, if no default frame size is passed (through VideoController), a starting 1 pixel sized texture/surface is created to initialize the render context & check for H/W support.
                                             // This is then resized based on the video dimensions & accordingly texture ID, texture, EGLDisplay, EGLSurface etc. (depending upon platform) are also changed. Just don't show that 1 pixel texture to the UI.

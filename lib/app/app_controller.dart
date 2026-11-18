@@ -976,6 +976,10 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// it (see renewVideoDecoder).
   DateTime _lastDecoderRenewal = DateTime(2000);
 
+  /// iOS invalidated the decoder while the app was away: it is made again
+  /// when the app is active.
+  bool _decoderLostAway = false;
+
   /// The open in which the decoder was restarted for a stalled picture.
   int? _pictureRestartedIn;
 

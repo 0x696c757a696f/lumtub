@@ -455,10 +455,16 @@ extension PlaybackEvents on AppController {
       // would not survive the background.
       if (!wanted || audioOnly || _backgroundAudioOnly || (!player!.state.playing && !Platform.isIOS)) return;
       _backgroundAudioOnly = true;
+      logInfo('Picture off while Lumtub is in the background');
       await platform.setProperty('vid', 'no');
+    } else if (_decoderLostAway && !_backgroundAudioOnly) {
+      _decoderLostAway = false;
+      await renewVideoDecoder();
     } else if (_backgroundAudioOnly) {
       _backgroundAudioOnly = false;
+      _decoderLostAway = false;
       if (audioOnly) return;
+      logInfo('Picture back after the background');
       await platform.setProperty('vid', 'auto');
       // The decoder starts again at the next keyframe, which in a stream can
       // be far off: until then the last picture stays. An exact seek to
@@ -476,7 +482,13 @@ extension PlaybackEvents on AppController {
   /// once in 5 seconds; nothing while the picture is off anyway.
   Future<void> renewVideoDecoder() async {
     final platform = player?.platform;
-    if (platform is! NativePlayer || audioOnly || _backgroundAudioOnly || _windowHidden) return;
+    if (platform is! NativePlayer || audioOnly) return;
+    if (_backgroundAudioOnly || _windowHidden) {
+      // Made when the app is back (setBackgroundAudioOnly(false)): iOS
+      // makes no working decoder for an app in the background.
+      _decoderLostAway = true;
+      return;
+    }
     final now = DateTime.now();
     if (now.difference(_lastDecoderRenewal) < const Duration(seconds: 5)) return;
     _lastDecoderRenewal = now;

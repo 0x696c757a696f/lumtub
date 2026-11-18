@@ -95,4 +95,6 @@ The changes, marked "Lumtub" in the code:
   app when libmpv cannot render with OpenGL ES, so the video falls back to
   software like on macOS. It also draws no frame while the app is in the
   background (`BackgroundState`): iOS ends an app that sends OpenGL ES
-  commands there.
+  commands there. `VideoOutput` neither resizes nor draws until the app is
+  active again (`didBecomeActive`, which posts `BackgroundState.resumed`
+  and draws what waited).

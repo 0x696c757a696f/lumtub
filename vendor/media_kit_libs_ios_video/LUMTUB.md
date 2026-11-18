@@ -16,10 +16,14 @@ libmpv itself is MPVKit's, built again with the patches in `ios/patch/`
 (`ios/build_libmpv.sh`, run by the Makefile before the framework is
 linked): `0004-avfoundation-video-output.patch` adds the `avfoundation`
 video output from [Streamyfin's MPVKit fork](https://github.com/streamyfin/MPVKit)
-(LGPL 2.1 or later, as mpv), rebased onto mpv 0.41, with one change: a layer
-that iOS interrupted in the background is flushed before the next frame. It
-draws into an AVSampleBufferDisplayLayer (`--wid`), which iOS picture in
-picture takes; VideoToolbox's frames go to it as they are. The build uses
+(LGPL 2.1 or later, as mpv), rebased onto mpv 0.41 and rewritten as plain C
+(no Objective-C, so nothing depends on mpv building it without ARC): it
+hands each picture (a CVPixelBuffer, as VideoToolbox decodes it) and a
+picture of the subtitles and OSD (a CGImage) to the app through a struct of
+function pointers whose address it takes as `--wid`
+(`struct lumtub_vo_host`; media_kit_video's `VideoSink.swift` makes it and
+shows them in an AVSampleBufferDisplayLayer, which iOS picture in picture
+takes). The build uses
 MPVKit's own build script at the locked release, compiling libmpv only:
 FFmpeg and the other libraries come from that release's prebuilt archives.
 lumtub-media-builds builds this recipe (the lock file, the script and the

@@ -1,10 +1,11 @@
 // Lumtub: libmpv's avfoundation video output (vo=avfoundation, see
-// media_kit_libs_ios_video/ios/patch) shows the picture in an
-// AVSampleBufferDisplayLayer instead of an OpenGL ES texture. That layer is
-// what iOS picture in picture takes, and frames decoded by VideoToolbox go
-// to it as they are. Each player has one layer, shown in whichever
-// `PlayerLayerView` Flutter made last, and kept for as long as the app runs:
-// mpv holds its address (--wid) for as long as the player lives.
+// media_kit_libs_ios_video/ios/patch) hands its pictures to a `VideoSink`,
+// which shows them in an AVSampleBufferDisplayLayer instead of an OpenGL ES
+// texture. That layer is what iOS picture in picture takes, and frames
+// decoded by VideoToolbox go to it as they are. Each player has one layer,
+// shown in whichever `PlayerLayerView` Flutter made last, and kept for as
+// long as the app runs: mpv holds the sink's address (--wid) for as long as
+// the player lives.
 
 import AVFoundation
 import AVKit
@@ -14,11 +15,13 @@ import UIKit
 final class PlayerLayer: NSObject {
   typealias EventSink = (_ event: String, _ seconds: Double?) -> Void
 
-  let displayLayer = AVSampleBufferDisplayLayer()
+  let displayLayer: AVSampleBufferDisplayLayer
   /// Holds `displayLayer`, moved into the newest host view.
   let surface = PlayerSurface()
+  /// What libmpv's video output draws through.
+  private let sink: VideoSink
   private let events: EventSink
-  private var timebase: CMTimebase?
+  private let timebase: CMTimebase?
   private var hosts = [WeakHost]()
 
   private var duration = 0.0
@@ -28,7 +31,7 @@ final class PlayerLayer: NSObject {
 
   init(events: @escaping EventSink) {
     self.events = events
-    super.init()
+    let displayLayer = AVSampleBufferDisplayLayer()
     displayLayer.videoGravity = .resizeAspect
     displayLayer.backgroundColor = UIColor.black.cgColor
     var timebase: CMTimebase?
@@ -41,9 +44,13 @@ final class PlayerLayer: NSObject {
       CMTimebaseSetTime(timebase, time: .zero)
       CMTimebaseSetRate(timebase, rate: 0)
       displayLayer.controlTimebase = timebase
-      self.timebase = timebase
     }
+    self.displayLayer = displayLayer
+    self.timebase = timebase
+    sink = VideoSink(displayLayer: displayLayer, timebase: timebase)
+    super.init()
     surface.displayLayer = displayLayer
+    surface.subtitleLayer = sink.subtitles
     NotificationCenter.default.addObserver(
       self,
       selector: #selector(didBecomeActive),
@@ -52,9 +59,9 @@ final class PlayerLayer: NSObject {
     )
   }
 
-  /// The address mpv takes as --wid.
+  /// The address mpv takes as --wid: the sink's host, not a layer.
   var address: Int64 {
-    Int64(Int(bitPattern: Unmanaged.passUnretained(displayLayer).toOpaque()))
+    Int64(Int(bitPattern: sink.host))
   }
 
   // MARK: Host views
@@ -102,25 +109,22 @@ final class PlayerLayer: NSObject {
     surface.setWarmth(argb: argb)
   }
 
-  /// Mirrors the picture: done by libmpv's video output, which reads this
-  /// flag from the layer for each frame (mpv's hflip filter can't take
-  /// VideoToolbox frames).
+  /// Mirrors the picture (mpv's hflip filter can't take VideoToolbox
+  /// frames).
   func setMirror(_ on: Bool) {
-    displayLayer.setValue(on, forKey: "lumtubMirror")
+    sink.setMirror(on)
   }
 
-  /// Subtitles are drawn by libmpv in a layer of their own above the picture;
-  /// picture in picture shows only the picture, so while it is open the video
-  /// output draws them into the frames instead.
+  /// Subtitles are drawn by libmpv and shown in a layer of their own above
+  /// the picture; picture in picture shows only the picture, so while it is
+  /// open they go into the frames instead.
   private func compositeSubtitles(_ on: Bool) {
-    displayLayer.setValue(on, forKey: "lumtubComposite")
+    sink.setCompositing(on)
   }
 
   @objc private func didBecomeActive() {
     // iOS interrupts the layer while the app is in the background.
-    var flush = displayLayer.status == .failed
-    if #available(iOS 14.0, *) { flush = flush || displayLayer.requiresFlushToResumeDecoding }
-    if flush { displayLayer.flush() }
+    sink.resume()
   }
 
   // MARK: Picture in picture
@@ -273,7 +277,15 @@ final class PlayerSurface: UIView {
   var displayLayer: AVSampleBufferDisplayLayer? {
     didSet {
       oldValue?.removeFromSuperlayer()
-      if let displayLayer { layer.insertSublayer(displayLayer, below: warm) }
+      if let displayLayer { layer.insertSublayer(displayLayer, at: 0) }
+    }
+  }
+
+  /// The subtitles, above the picture and below the warm light.
+  var subtitleLayer: CALayer? {
+    didSet {
+      oldValue?.removeFromSuperlayer()
+      if let subtitleLayer { layer.insertSublayer(subtitleLayer, below: warm) }
     }
   }
 
@@ -316,6 +328,7 @@ final class PlayerSurface: UIView {
     CATransaction.begin()
     CATransaction.setDisableActions(true)
     displayLayer?.frame = bounds
+    subtitleLayer?.frame = bounds
     warm.frame = bounds
     CATransaction.commit()
   }

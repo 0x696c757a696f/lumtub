@@ -6,12 +6,12 @@ index fb10be5..c02552e 100644
      sources += files('audio/out/ao_avfoundation.m')
  endif
  
-+vo_avfoundation = dependency('appleframeworks', modules: ['AVFoundation', 'CoreMedia', 'CoreVideo'],
++vo_avfoundation = dependency('appleframeworks', modules: ['CoreFoundation', 'CoreVideo', 'CoreGraphics'],
 +                             required: get_option('vo-avfoundation'))
 +features += {'vo-avfoundation': vo_avfoundation.found()}
 +if features['vo-avfoundation']
 +    dependencies += vo_avfoundation
-+    sources += files('video/out/vo_avfoundation.m')
++    sources += files('video/out/vo_avfoundation.c')
 +endif
 +
  coreaudio = dependency('appleframeworks', modules: ['CoreFoundation', 'CoreAudio',
@@ -51,12 +51,12 @@ index c9cde30..9f88028 100644
  #if HAVE_SDL2_VIDEO
      &video_out_sdl,
  #endif
-diff --git a/video/out/vo_avfoundation.m b/video/out/vo_avfoundation.m
+diff --git a/video/out/vo_avfoundation.c b/video/out/vo_avfoundation.c
 new file mode 100644
-index 0000000..eb388a1
+index 0000000..1111111
 --- /dev/null
-+++ b/video/out/vo_avfoundation.m
-@@ -0,0 +1,1158 @@
++++ b/video/out/vo_avfoundation.c
+@@ -0,0 +1,585 @@
 +/*
 + * This file is part of mpv.
 + *
@@ -74,97 +74,88 @@ index 0000000..eb388a1
 + * License along with mpv.  If not, see <http://www.gnu.org/licenses/>.
 + */
 +
++/*
++ * Lumtub: a video output that hands each picture (a CVPixelBuffer, as
++ * VideoToolbox decodes it or uploaded from software decoding) and a picture
++ * of the subtitles and OSD (a CGImage) to the app, which shows them in an
++ * AVSampleBufferDisplayLayer (media_kit_video's PlayerLayer.swift; iOS
++ * picture in picture takes that layer). Everything with Objective-C or
++ * Swift objects lives in the app; this file is plain C on Core Foundation,
++ * Core Video and Core Graphics, each object released where it is made.
++ *
++ * Based on the avfoundation video output of Streamyfin's MPVKit fork.
++ */
++
 +#include <math.h>
++#include <stdint.h>
 +#include <libavutil/hwcontext.h>
 +#include <libavutil/hwcontext_videotoolbox.h>
 +
 +#include "common/common.h"
++#include "common/msg.h"
 +#include "options/m_option.h"
 +#include "options/options.h"
-+#include "osdep/timer.h"
 +#include "vo.h"
 +#include "video/mp_image.h"
 +#include "video/hwdec.h"
 +#include "sub/osd.h"
 +
-+#import <CoreMedia/CoreMedia.h>
-+#import <AVFoundation/AVFoundation.h>
-+#import <CoreGraphics/CoreGraphics.h>
-+#import <CoreImage/CoreImage.h>
-+#import <QuartzCore/QuartzCore.h>
-+#import <Metal/Metal.h>
-+#import <TargetConditionals.h>
++#include <CoreFoundation/CoreFoundation.h>
++#include <CoreVideo/CoreVideo.h>
++#include <CoreGraphics/CoreGraphics.h>
 +
-+#if TARGET_OS_IPHONE
-+#import <UIKit/UIKit.h>
-+#else
-+#import <AppKit/AppKit.h>
-+#endif
++// "LUMTUBV1": the app's host is this version of the struct below.
++#define LUMTUB_VO_MAGIC UINT64_C(0x4C554D5455425631)
++
++// What the app hands over as --wid: the address of this struct, which the
++// app makes and keeps for as long as it runs. Every call comes from mpv's
++// VO thread, one at a time; objects passed are the caller's, and the app
++// retains what it keeps.
++struct lumtub_vo_host {
++    uint64_t magic;
++    void *ctx;
++    // Shows a picture (a CVPixelBufferRef), turned clockwise by rotate
++    // degrees (0, 90, 180, 270) and zoomed by zoom; NULL shows the last
++    // one again (the subtitles or the turn changed while paused). False
++    // when it could not be shown.
++    bool (*frame)(void *ctx, void *picture, int64_t rotate, double zoom);
++    // The subtitles and OSD: image (a CGImageRef, NULL for none) covers
++    // x, y, w, h (from the top left) of a canvas canvas_w by canvas_h, the
++    // shape of the turned picture.
++    void (*overlay)(void *ctx, void *image, double x, double y, double w,
++                    double h, double canvas_w, double canvas_h);
++    // Playback was reset (a seek, a new file): pictures waiting are dropped.
++    // With remove, the picture shown goes too (the video output closes).
++    void (*clear)(void *ctx, bool remove);
++    // The tallest the subtitles are drawn: the screen's short side in
++    // pixels (0: the picture's height).
++    int64_t max_height;
++};
++
++_Static_assert(sizeof(struct lumtub_vo_host) == 48,
++               "struct lumtub_vo_host is laid out in PlayerLayer.swift");
 +
 +struct priv {
 +    struct mp_hwdec_ctx hwctx;
++    struct lumtub_vo_host *host;
 +
-+    struct mp_image *next_image;
-+    double next_pts;
-+    __strong AVSampleBufferDisplayLayer *displayLayer;
-+    
-+    // OSD/Subtitle support (CALayer mode)
-+    __strong CALayer *osdLayer;
++    // The overlay the app has: change id and whether there is one.
 +    int64_t osd_change_id;
++    bool has_overlay;
 +    int osd_w, osd_h;
-+    
-+    // Compositing mode support
-+    bool composite_osd;
-+    // Lumtub: whether the OSD goes into the frames now: always with
-+    // composite-osd, else while the display layer's "lumtubComposite" is
-+    // set (picture in picture shows the frames alone). Otherwise a layer
-+    // over the picture holds it, drawn only when it changes.
-+    bool compositing;
-+    // Lumtub: the picture mirrored (the display layer's "lumtubMirror"):
-+    // vf=hflip can't take VideoToolbox's frames.
-+    bool mirror;
-+    __strong id<MTLDevice> mtlDevice;
-+    __strong CIContext *ciContext;
-+    CVPixelBufferPoolRef outputPool;
-+    int output_pool_w, output_pool_h;
-+    CGImageRef cachedSubtitleImage;
-+    // Lumtub: the subtitles' picture covers only where they are drawn, at
-+    // its place in the OSD canvas (Core Image coordinates); made once per
-+    // change so Core Image keeps its texture between frames.
-+    // Held with CFBridgingRetain: mpv builds this file without ARC, and an
-+    // autoreleased image went with draw_frame's pool (picture in picture
-+    // then ended the app on its next frame).
-+    CFTypeRef subtitleCI;
-+    bool has_subtitle;
-+    
-+    // Software frame upload support
-+    CVPixelBufferPoolRef swUploadPool;
-+    int sw_pool_w, sw_pool_h;
-+    OSType sw_pool_format;
-+    
-+    // Frame counter for periodic maintenance
-+    int frame_count;
-+    
-+    // Track if OSD callback was invoked this frame
-+    bool osd_callback_invoked;
-+    
-+    // Display resolution for scaling subtitles (0 = no upscaling)
-+    int display_height;
-+};
 +
-+// Helper to sync OSD layer frame with display layer bounds
-+static void sync_osd_layer_frame(struct priv *p)
-+{
-+    if (!p->osdLayer || !p->displayLayer)
-+        return;
-+    // Lumtub: blocks hold the layers, never p, which is freed with the VO
-+    // (vid=no in the background) while they may still wait.
-+    CALayer *osd = p->osdLayer;
-+    CALayer *display = p->displayLayer;
-+    dispatch_async(dispatch_get_main_queue(), ^{
-+        osd.frame = display.bounds;
-+    });
-+}
++    // How the last picture was sent.
++    int sent_rotate;
++    double sent_zoom;
++    bool sent;
++
++    // Software-decoded frames are copied into these.
++    CVPixelBufferPoolRef upload_pool;
++    int upload_w, upload_h;
++    OSType upload_format;
++
++    int frame_count;
++};
 +
 +static AVBufferRef *create_videotoolbox_device_ref(struct vo *vo)
 +{
@@ -173,300 +164,204 @@ index 0000000..eb388a1
 +        MP_ERR(vo, "Failed to allocate VideoToolbox device\n");
 +        return NULL;
 +    }
-+
 +    if (av_hwdevice_ctx_init(device_ref) < 0) {
 +        MP_ERR(vo, "Failed to init VideoToolbox device\n");
 +        av_buffer_unref(&device_ref);
 +        return NULL;
 +    }
-+
 +    return device_ref;
 +}
 +
-+// Generic pixel buffer pool creation helper
-+static bool create_pixel_buffer_pool(struct vo *vo, CVPixelBufferPoolRef *poolRef,
-+                                     int *cached_w, int *cached_h, OSType *cached_fmt,
-+                                     int w, int h, OSType format, const char *name)
++static CFNumberRef number_i64(int64_t value)
 +{
-+    // Don't recreate if dimensions and format match
-+    if (*poolRef && *cached_w == w && *cached_h == h && 
-+        (!cached_fmt || *cached_fmt == format))
++    return CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &value);
++}
++
++// The pool of buffers software-decoded frames are copied into, made again
++// when the size or format changes.
++static bool ensure_upload_pool(struct vo *vo, int w, int h, OSType format)
++{
++    struct priv *p = vo->priv;
++
++    if (p->upload_pool && p->upload_w == w && p->upload_h == h &&
++        p->upload_format == format)
 +        return true;
-+    
-+    // Release old pool
-+    if (*poolRef) {
-+        CVPixelBufferPoolFlush(*poolRef, kCVPixelBufferPoolFlushExcessBuffers);
-+        CVPixelBufferPoolRelease(*poolRef);
-+        *poolRef = NULL;
++
++    if (p->upload_pool) {
++        CVPixelBufferPoolFlush(p->upload_pool, kCVPixelBufferPoolFlushExcessBuffers);
++        CVPixelBufferPoolRelease(p->upload_pool);
++        p->upload_pool = NULL;
 +    }
-+    
-+    NSDictionary *poolAttrs = @{
-+        (id)kCVPixelBufferPoolMinimumBufferCountKey: @3,
-+        (id)kCVPixelBufferPoolMaximumBufferAgeKey: @1.0
-+    };
-+    
-+    NSDictionary *bufferAttrs = @{
-+        (id)kCVPixelBufferPixelFormatTypeKey: @(format),
-+        (id)kCVPixelBufferWidthKey: @(w),
-+        (id)kCVPixelBufferHeightKey: @(h),
-+        (id)kCVPixelBufferMetalCompatibilityKey: @YES,
-+        (id)kCVPixelBufferIOSurfacePropertiesKey: @{}
-+    };
-+    
-+    CVReturn status = CVPixelBufferPoolCreate(kCFAllocatorDefault,
-+        (__bridge CFDictionaryRef)poolAttrs,
-+        (__bridge CFDictionaryRef)bufferAttrs, poolRef);
-+    
-+    if (status != kCVReturnSuccess) {
-+        MP_ERR(vo, "Failed to create %s pool: %d\n", name, status);
++
++    double max_age = 1.0;
++    CFNumberRef min_count = number_i64(3);
++    CFNumberRef age = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &max_age);
++    CFNumberRef fmt = number_i64(format);
++    CFNumberRef width = number_i64(w);
++    CFNumberRef height = number_i64(h);
++    CFDictionaryRef surface = CFDictionaryCreate(kCFAllocatorDefault, NULL, NULL, 0,
++        &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
++
++    CFDictionaryRef pool_attrs = NULL, buffer_attrs = NULL;
++    if (min_count && age) {
++        const void *keys[] = {
++            kCVPixelBufferPoolMinimumBufferCountKey,
++            kCVPixelBufferPoolMaximumBufferAgeKey,
++        };
++        const void *values[] = { min_count, age };
++        pool_attrs = CFDictionaryCreate(kCFAllocatorDefault, keys, values, 2,
++            &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
++    }
++    if (fmt && width && height && surface) {
++        const void *keys[] = {
++            kCVPixelBufferPixelFormatTypeKey,
++            kCVPixelBufferWidthKey,
++            kCVPixelBufferHeightKey,
++            kCVPixelBufferMetalCompatibilityKey,
++            kCVPixelBufferIOSurfacePropertiesKey,
++        };
++        const void *values[] = { fmt, width, height, kCFBooleanTrue, surface };
++        buffer_attrs = CFDictionaryCreate(kCFAllocatorDefault, keys, values, 5,
++            &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
++    }
++
++    CVReturn status = kCVReturnAllocationFailed;
++    if (pool_attrs && buffer_attrs)
++        status = CVPixelBufferPoolCreate(kCFAllocatorDefault, pool_attrs,
++                                         buffer_attrs, &p->upload_pool);
++
++    CFTypeRef made[] = { min_count, age, fmt, width, height, surface,
++                         pool_attrs, buffer_attrs };
++    for (size_t i = 0; i < MP_ARRAY_SIZE(made); i++) {
++        if (made[i])
++            CFRelease(made[i]);
++    }
++
++    if (status != kCVReturnSuccess || !p->upload_pool) {
++        MP_ERR(vo, "Failed to create the upload pool: %d\n", (int)status);
++        p->upload_pool = NULL;
 +        return false;
 +    }
-+    
-+    *cached_w = w;
-+    *cached_h = h;
-+    if (cached_fmt)
-+        *cached_fmt = format;
-+    
-+    MP_VERBOSE(vo, "Created %s pool: %dx%d format=%d\n", name, w, h, (int)format);
++    p->upload_w = w;
++    p->upload_h = h;
++    p->upload_format = format;
++    MP_VERBOSE(vo, "Upload pool %dx%d format %u\n", w, h, (unsigned)format);
 +    return true;
 +}
 +
-+
-+// Create output pool matching the source format to preserve quality
-+// Strategy: Use BGRA for 8-bit SDR (matches subtitle format, avoids half-float precision loss)
-+//           Use RGBA half-float for 10-bit HDR (necessary for HDR precision)
-+static bool create_output_pool(struct vo *vo, int w, int h, OSType format, bool hdr)
-+{
-+    struct priv *p = vo->priv;
-+    
-+    OSType outputFormat;
-+    
-+    // For 10-bit HDR content (P010), use RGBA half-float to preserve HDR precision
-+    // (Lumtub: only when it is HDR; 10-bit SDR, as YouTube's AV1 is, goes
-+    // to BGRA at half the memory)
-+    if (hdr && (format == kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange ||
-+        format == kCVPixelFormatType_420YpCbCr10BiPlanarFullRange)) {
-+        outputFormat = kCVPixelFormatType_64RGBAHalf;
-+    }
-+    // For 8-bit SDR content, use BGRA (matches subtitle format, avoids half-float precision issues)
-+    // This minimizes format conversions and preserves quality better than RGBA half-float
-+    else if (format == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange ||
-+             format == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange ||
-+             format == kCVPixelFormatType_420YpCbCr8Planar) {
-+        outputFormat = kCVPixelFormatType_32BGRA;
-+    }
-+    // Default to RGBA half-float for unknown formats (HDR-safe fallback)
-+    else {
-+        outputFormat = kCVPixelFormatType_64RGBAHalf;
-+    }
-+    
-+    return create_pixel_buffer_pool(vo, &p->outputPool, &p->output_pool_w, 
-+        &p->output_pool_h, NULL, w, h, outputFormat, "composite output");
-+}
-+
-+// Copy HDR metadata from source to destination pixel buffer
-+// The picture's color space, from its attachments (CVImageBufferGetColorSpace
-+// is macOS only before iOS 26); the caller releases it.
-+static CGColorSpaceRef copy_color_space(CVImageBufferRef buffer)
-+{
-+    CFDictionaryRef attachments = CVBufferCopyAttachments(buffer, kCVAttachmentMode_ShouldPropagate);
-+    if (!attachments)
-+        return NULL;
-+    CGColorSpaceRef space = CVImageBufferCreateColorSpaceFromAttachments(attachments);
-+    CFRelease(attachments);
-+    return space;
-+}
-+
-+static void copy_hdr_metadata(CVPixelBufferRef src, CVPixelBufferRef dst)
-+{
-+    const CFStringRef keys[] = {
-+        kCVImageBufferTransferFunctionKey,      // PQ for HDR10/DolbyVision, HLG for HLG
-+        kCVImageBufferColorPrimariesKey,        // BT.2020 for HDR
-+        kCVImageBufferYCbCrMatrixKey,
-+        kCVImageBufferMasteringDisplayColorVolumeKey,  // HDR10 static metadata
-+        kCVImageBufferContentLightLevelInfoKey,        // MaxCLL, MaxFALL
-+    };
-+    
-+    for (size_t i = 0; i < MP_ARRAY_SIZE(keys); i++) {
-+        CFTypeRef value = CVBufferGetAttachment(src, keys[i], NULL);
-+        if (value) {
-+            CVBufferSetAttachment(dst, keys[i], value, kCVAttachmentMode_ShouldPropagate);
-+        }
-+    }
-+}
-+
-+// Map mpv image format to CVPixelBuffer format
-+static OSType get_cv_pixel_format(int imgfmt)
++static OSType cv_format(int imgfmt)
 +{
 +    switch (imgfmt) {
-+        case IMGFMT_NV12:
-+            return kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
-+        case IMGFMT_420P:
-+            return kCVPixelFormatType_420YpCbCr8Planar;
-+        case IMGFMT_P010:
-+            return kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange;
-+        default:
-+            return 0;
++    case IMGFMT_NV12:
++        return kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
++    case IMGFMT_P010:
++        return kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange;
++    default:
++        return 0;
 +    }
 +}
 +
-+// Create software upload pool
-+static bool create_sw_upload_pool(struct vo *vo, int w, int h, OSType format)
-+{
-+    struct priv *p = vo->priv;
-+    return create_pixel_buffer_pool(vo, &p->swUploadPool, &p->sw_pool_w,
-+        &p->sw_pool_h, &p->sw_pool_format, w, h, format, "software upload");
-+}
-+
-+// Upload a software-decoded frame to CVPixelBuffer
++// A software-decoded frame copied into a pixel buffer (the caller releases
++// it).
 +static CVPixelBufferRef upload_software_frame(struct vo *vo, struct mp_image *mpi)
 +{
 +    struct priv *p = vo->priv;
-+    
-+    OSType cvFormat = get_cv_pixel_format(mpi->imgfmt);
-+    if (!cvFormat) {
-+        MP_ERR(vo, "Unsupported software format: %d\n", mpi->imgfmt);
++
++    OSType format = cv_format(mpi->imgfmt);
++    if (!format) {
++        MP_ERR(vo, "Unsupported software format: %s\n", mp_imgfmt_to_name(mpi->imgfmt));
 +        return NULL;
 +    }
-+    
-+    int w = mpi->w;
-+    int h = mpi->h;
-+    
-+    if (!create_sw_upload_pool(vo, w, h, cvFormat))
++    if (!ensure_upload_pool(vo, mpi->w, mpi->h, format))
 +        return NULL;
-+    
-+    CVPixelBufferRef pixbuf = NULL;
-+    CVReturn status = CVPixelBufferPoolCreatePixelBuffer(
-+        kCFAllocatorDefault, p->swUploadPool, &pixbuf);
-+    
-+    if (status != kCVReturnSuccess || !pixbuf) {
-+        MP_ERR(vo, "Failed to get upload buffer: %d\n", status);
++
++    CVPixelBufferRef buffer = NULL;
++    CVReturn status = CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault,
++                                                         p->upload_pool, &buffer);
++    if (status != kCVReturnSuccess || !buffer) {
++        MP_ERR(vo, "Failed to get an upload buffer: %d\n", (int)status);
 +        return NULL;
 +    }
-+    
-+    CVPixelBufferLockBaseAddress(pixbuf, 0);
-+    
-+    size_t planeCount = CVPixelBufferGetPlaneCount(pixbuf);
-+    
-+    if (planeCount == 0) {
-+        // Non-planar format
-+        void *dst = CVPixelBufferGetBaseAddress(pixbuf);
-+        size_t dstStride = CVPixelBufferGetBytesPerRow(pixbuf);
-+        size_t srcStride = mpi->stride[0];
-+        
-+        // Fast path: single memcpy if strides match
-+        if (dstStride == srcStride) {
-+            memcpy(dst, mpi->planes[0], dstStride * h);
-+        } else {
-+            size_t copyBytes = MPMIN(dstStride, srcStride);
-+            for (int y = 0; y < h; y++) {
-+                memcpy((uint8_t *)dst + y * dstStride,
-+                       mpi->planes[0] + y * srcStride,
-+                       copyBytes);
-+            }
-+        }
-+    } else {
-+        // Planar format (NV12, YUV420P, P010)
-+        for (size_t plane = 0; plane < planeCount && plane < MP_MAX_PLANES; plane++) {
-+            void *dst = CVPixelBufferGetBaseAddressOfPlane(pixbuf, plane);
-+            size_t dstStride = CVPixelBufferGetBytesPerRowOfPlane(pixbuf, plane);
-+            size_t dstHeight = CVPixelBufferGetHeightOfPlane(pixbuf, plane);
-+            
-+            uint8_t *src = mpi->planes[plane];
-+            size_t srcStride = mpi->stride[plane];
-+            
-+            if (!src)
-+                continue;
-+            
-+            // Fast path: single memcpy if strides match
-+            if (dstStride == srcStride) {
-+                memcpy(dst, src, dstStride * dstHeight);
-+            } else {
-+                size_t copyBytes = MPMIN(dstStride, srcStride);
-+                for (size_t y = 0; y < dstHeight; y++) {
-+                    memcpy((uint8_t *)dst + y * dstStride,
-+                           src + y * srcStride,
-+                           copyBytes);
-+                }
-+            }
-+        }
++
++    if (CVPixelBufferLockBaseAddress(buffer, 0) != kCVReturnSuccess) {
++        CVPixelBufferRelease(buffer);
++        return NULL;
 +    }
-+    
-+    CVPixelBufferUnlockBaseAddress(pixbuf, 0);
-+    
-+    return pixbuf;
++    size_t planes = CVPixelBufferGetPlaneCount(buffer);
++    for (size_t plane = 0; plane < planes && plane < MP_MAX_PLANES; plane++) {
++        uint8_t *dst = CVPixelBufferGetBaseAddressOfPlane(buffer, plane);
++        size_t dst_stride = CVPixelBufferGetBytesPerRowOfPlane(buffer, plane);
++        size_t rows = CVPixelBufferGetHeightOfPlane(buffer, plane);
++        const uint8_t *src = mpi->planes[plane];
++        if (!dst || !src || mpi->stride[plane] <= 0)
++            continue;
++        size_t src_stride = mpi->stride[plane];
++        // Never more rows than the image has in this plane.
++        rows = MPMIN(rows, (size_t)mp_image_plane_h(mpi, plane));
++        size_t bytes = MPMIN(dst_stride, src_stride);
++        bytes = MPMIN(bytes, (size_t)mp_image_plane_w(mpi, plane) *
++                             mpi->fmt.bpp[plane] / 8);
++        for (size_t y = 0; y < rows; y++)
++            memcpy(dst + y * dst_stride, src + y * src_stride, bytes);
++    }
++    CVPixelBufferUnlockBaseAddress(buffer, 0);
++    return buffer;
 +}
 +
-+// Lumtub: every OSD part of one frame (the subtitle, the second subtitle,
-+// bullet chat, the OSD) drawn into one CGImage. osd_draw() hands the parts
-+// over one object at a time, and keeping only the last one left a single
-+// subtitle in picture in picture.
++// Every OSD part of one kind (the subtitle, the second subtitle, bullet
++// chat, the OSD) drawn into the context, whose origin is the canvas's
++// bottom left.
 +static void draw_sub_bitmaps(CGContextRef context, int h, struct sub_bitmaps *imgs,
 +                             CGColorSpaceRef rgb)
 +{
 +    for (int i = 0; i < imgs->num_parts; i++) {
 +        struct sub_bitmap *sb = &imgs->parts[i];
-+
-+        if (!sb->bitmap || sb->w <= 0 || sb->h <= 0)
++        if (!sb->bitmap || sb->w <= 0 || sb->h <= 0 || sb->stride <= 0)
 +            continue;
 +
 +        CGDataProviderRef provider = CGDataProviderCreateWithData(
-+            NULL, sb->bitmap, sb->stride * sb->h, NULL);
-+
++            NULL, sb->bitmap, (size_t)sb->stride * sb->h, NULL);
 +        if (!provider)
 +            continue;
 +
-+        CGRect destRect = CGRectMake(sb->x, h - sb->y - sb->dh, sb->dw, sb->dh);
++        CGRect dest = CGRectMake(sb->x, h - sb->y - sb->dh, sb->dw, sb->dh);
 +        if (imgs->format == SUBBITMAP_BGRA) {
-+            CGImageRef partImage = CGImageCreate(
++            CGImageRef part = CGImageCreate(
 +                sb->w, sb->h, 8, 32, sb->stride, rgb,
 +                kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little,
 +                provider, NULL, false, kCGRenderingIntentDefault);
-+
-+            if (partImage) {
-+                CGContextDrawImage(context, destRect, partImage);
-+                CGImageRelease(partImage);
++            if (part) {
++                CGContextDrawImage(context, dest, part);
++                CGImageRelease(part);
 +            }
 +        } else if (imgs->format == SUBBITMAP_LIBASS) {
-+            // Invert decode array: libass uses 255=opaque, but CGImageMask uses 0=paint
++            // libass's 255 is opaque; a mask paints where it is 0.
 +            CGFloat decode[] = {1, 0};
 +            CGImageRef mask = CGImageMaskCreate(
 +                sb->w, sb->h, 8, 8, sb->stride, provider, decode, false);
-+
 +            if (mask) {
 +                CGContextSaveGState(context);
-+                CGContextClipToMask(context, destRect, mask);
-+
++                CGContextClipToMask(context, dest, mask);
 +                uint32_t c = sb->libass.color;
-+                float r = ((c >> 24) & 0xFF) / 255.0f;
-+                float g = ((c >> 16) & 0xFF) / 255.0f;
-+                float b = ((c >> 8) & 0xFF) / 255.0f;
-+                float a = 1.0f - ((c >> 0) & 0xFF) / 255.0f;
-+
-+                CGContextSetRGBFillColor(context, r, g, b, a);
-+                CGContextFillRect(context, destRect);
++                CGContextSetRGBFillColor(context,
++                    ((c >> 24) & 0xFF) / 255.0, ((c >> 16) & 0xFF) / 255.0,
++                    ((c >> 8) & 0xFF) / 255.0, 1.0 - (c & 0xFF) / 255.0);
++                CGContextFillRect(context, dest);
 +                CGContextRestoreGState(context);
 +                CGImageRelease(mask);
 +            }
 +        }
-+
 +        CGDataProviderRelease(provider);
 +    }
 +}
 +
-+static CGImageRef render_subtitle_image(struct vo *vo, struct sub_bitmap_list *list,
-+                                        CGRect *where)
++// The parts drawn into one picture covering only the box around them (a
++// whole canvas is up to a screen's worth of pixels per change); *where is
++// that box from the canvas's top left. The caller releases the image.
++static CGImageRef render_overlay_image(struct priv *p, struct sub_bitmap_list *list,
++                                       CGRect *where)
 +{
-+    struct priv *p = vo->priv;
-+
-+    int w = p->osd_w;
-+    int h = p->osd_h;
-+
-+    if (w <= 0 || h <= 0)
-+        return NULL;
-+
-+    // Lumtub: only the box around every part is drawn (a full 4K canvas
-+    // is 33 MB per change, and Core Image then blends all of it each frame).
++    int w = p->osd_w, h = p->osd_h;
 +    int x0 = w, y0 = h, x1 = 0, y1 = 0;
 +    for (int n = 0; n < list->num_items; n++) {
 +        struct sub_bitmaps *imgs = list->items[n];
@@ -488,418 +383,113 @@ index 0000000..eb388a1
 +        return NULL;
 +    int bw = x1 - x0, bh = y1 - y0;
 +
-+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-+    if (!colorSpace)
++    CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
++    if (!rgb)
 +        return NULL;
-+
-+    CGContextRef context = CGBitmapContextCreate(
-+        NULL, bw, bh, 8, bw * 4, colorSpace,
-+        kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big
-+    );
-+
++    CGContextRef context = CGBitmapContextCreate(NULL, bw, bh, 8, (size_t)bw * 4, rgb,
++        kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
 +    if (!context) {
-+        CGColorSpaceRelease(colorSpace);
++        CGColorSpaceRelease(rgb);
 +        return NULL;
 +    }
-+
 +    CGContextClearRect(context, CGRectMake(0, 0, bw, bh));
 +    // Parts are placed in the whole canvas; the box's corner moves to 0,0.
 +    CGContextTranslateCTM(context, -x0, -(h - y1));
 +    for (int n = 0; n < list->num_items; n++)
-+        draw_sub_bitmaps(context, h, list->items[n], colorSpace);
-+    CGColorSpaceRelease(colorSpace);
++        draw_sub_bitmaps(context, h, list->items[n], rgb);
++    CGColorSpaceRelease(rgb);
 +
-+    CGImageRef result = CGBitmapContextCreateImage(context);
++    CGImageRef image = CGBitmapContextCreateImage(context);
 +    CGContextRelease(context);
-+
-+    // Bottom-left origin, as Core Graphics and Core Image count.
-+    *where = CGRectMake(x0, h - y1, bw, bh);
-+    return result;
++    *where = CGRectMake(x0, y0, bw, bh);
++    return image;
 +}
 +
-+static void clear_subtitle_image(struct priv *p)
++static void clear_overlay(struct priv *p)
 +{
-+    if (!p->has_subtitle)
-+        return;
-+    p->has_subtitle = false;
++    if (p->has_overlay)
++        p->host->overlay(p->host->ctx, NULL, 0, 0, 0, 0, p->osd_w, p->osd_h);
++    p->has_overlay = false;
 +    p->osd_change_id = 0;
-+    if (p->cachedSubtitleImage) {
-+        CGImageRelease(p->cachedSubtitleImage);
-+        p->cachedSubtitleImage = NULL;
-+    }
-+    if (p->subtitleCI)
-+        CFRelease(p->subtitleCI);
-+    p->subtitleCI = NULL;
-+    if (p->osdLayer) {
-+        CALayer *osd = p->osdLayer;
-+        dispatch_async(dispatch_get_main_queue(), ^{
-+            [CATransaction begin];
-+            [CATransaction setDisableActions:YES];
-+            osd.contents = nil;
-+            [CATransaction commit];
-+        });
-+    }
 +}
 +
-+// Render OSD/subtitles
-+static void render_osd(struct vo *vo, double pts)
++// Sends the subtitles and OSD to the app when they changed; true if they
++// did.
++static bool update_overlay(struct vo *vo, double pts)
 +{
 +    struct priv *p = vo->priv;
 +
-+    if (!vo->osd)
-+        return;
-+
-+    // In composite mode, we don't need the osdLayer
-+    if (!p->compositing && !p->osdLayer)
-+        return;
-+
-+    int w = vo->params ? vo->params->w : 0;
-+    int h = vo->params ? vo->params->h : 0;
-+    // Lumtub: the picture turned sideways (video-rotate) is that wide.
-+    if (vo->params && (vo->params->rotate % 180) == 90)
++    if (!vo->osd || !vo->params)
++        return false;
++    int w = vo->params->w, h = vo->params->h;
++    // The picture turned sideways is that wide.
++    if (vo->params->rotate % 180 == 90)
 +        MPSWAP(int, w, h);
-+
 +    if (w <= 0 || h <= 0)
-+        return;
++        return false;
 +
-+    // In composite mode, render subtitles at display resolution for crisp text
-+    int render_w = w;
-+    int render_h = h;
-+    // Lumtub: never more than the screen shows (a 4K canvas on a phone is
-+    // four times the pixels for nothing).
-+    if (p->display_height > 0 && h > p->display_height) {
-+        render_w = (int)((int64_t)w * p->display_height / h);
-+        render_h = p->display_height;
-+    } else if (p->compositing && p->display_height > 0 && h < p->display_height) {
-+        float scale = (float)p->display_height / (float)h;
-+        render_w = (int)(w * scale);
-+        render_h = p->display_height;
++    // Drawn at the screen's size: crisp when the picture is smaller, and no
++    // more pixels than the screen shows when it is larger.
++    int max_height = (int)MPCLAMP(p->host->max_height, 0, 16384);
++    int cw = w, ch = h;
++    if (max_height > 0 && h != max_height) {
++        cw = (int)MPMAX(1, (int64_t)w * max_height / h);
++        ch = max_height;
++    }
++    if (cw != p->osd_w || ch != p->osd_h) {
++        p->osd_w = cw;
++        p->osd_h = ch;
++        p->osd_change_id = 0;
 +    }
 +
-+    p->osd_w = render_w;
-+    p->osd_h = render_h;
-+
-+    struct mp_osd_res osd_res = {
-+        .w = render_w,
-+        .h = render_h,
-+        .display_par = 1.0,
-+    };
-+
++    struct mp_osd_res res = { .w = cw, .h = ch, .display_par = 1.0 };
 +    static const bool formats[SUBBITMAP_COUNT] = {
 +        [SUBBITMAP_BGRA] = true,
 +        [SUBBITMAP_LIBASS] = true,
 +    };
-+
-+    struct sub_bitmap_list *list = osd_render(vo->osd, osd_res, pts, 0, formats);
++    struct sub_bitmap_list *list = osd_render(vo->osd, res, pts, 0, formats);
 +    if (!list)
-+        return;
++        return false;
 +
++    bool changed = false;
 +    int parts = 0;
 +    for (int n = 0; n < list->num_items; n++)
 +        parts += list->items[n]->num_parts;
 +
 +    if (parts == 0) {
-+        clear_subtitle_image(p);
-+    } else if (!(p->has_subtitle && list->change_id == p->osd_change_id)) {
++        changed = p->has_overlay;
++        clear_overlay(p);
++    } else if (!p->has_overlay || list->change_id != p->osd_change_id) {
 +        CGRect where = CGRectZero;
-+        CGImageRef subtitleImage = render_subtitle_image(vo, list, &where);
-+        if (!subtitleImage) {
-+            clear_subtitle_image(p);
-+        } else if (!p->compositing) {
-+            // The layer shows the whole canvas: the box goes in a full one.
-+            CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
-+            CGContextRef full = rgb ? CGBitmapContextCreate(NULL, p->osd_w, p->osd_h, 8, p->osd_w * 4, rgb,
-+                kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big) : NULL;
-+            if (rgb)
-+                CGColorSpaceRelease(rgb);
-+            CGImageRef boxed = subtitleImage;
-+            subtitleImage = NULL;
-+            if (full) {
-+                CGContextClearRect(full, CGRectMake(0, 0, p->osd_w, p->osd_h));
-+                CGContextDrawImage(full, where, boxed);
-+                subtitleImage = CGBitmapContextCreateImage(full);
-+                CGContextRelease(full);
-+            }
-+            CGImageRelease(boxed);
-+        }
-+        if (subtitleImage) {
++        CGImageRef image = render_overlay_image(p, list, &where);
++        changed = true;
++        if (image) {
++            p->host->overlay(p->host->ctx, (void *)image, where.origin.x, where.origin.y,
++                             where.size.width, where.size.height, cw, ch);
++            CGImageRelease(image);
++            p->has_overlay = true;
 +            p->osd_change_id = list->change_id;
-+            p->has_subtitle = true;
-+            if (p->compositing) {
-+                if (p->cachedSubtitleImage)
-+                    CGImageRelease(p->cachedSubtitleImage);
-+                p->cachedSubtitleImage = subtitleImage;
-+                if (p->subtitleCI)
-+                    CFRelease(p->subtitleCI);
-+                p->subtitleCI = CFBridgingRetain([[CIImage imageWithCGImage:subtitleImage]
-+                    imageByApplyingTransform:CGAffineTransformMakeTranslation(
-+                        where.origin.x, where.origin.y)]);
-+            } else {
-+                CALayer *osd = p->osdLayer;
-+                dispatch_async(dispatch_get_main_queue(), ^{
-+                    [CATransaction begin];
-+                    [CATransaction setDisableActions:YES];
-+                    osd.contents = (__bridge id)subtitleImage;
-+                    CGImageRelease(subtitleImage);
-+                    [CATransaction commit];
-+                });
-+            }
++        } else {
++            clear_overlay(p);
 +        }
 +    }
 +
 +    talloc_free(list);
-+}
-+
-+// Composite subtitle onto video frame using Core Image (GPU) - HDR compatible
-+static CVPixelBufferRef composite_frame(struct vo *vo, CVPixelBufferRef videoBuffer)
-+{
-+    struct priv *p = vo->priv;
-+    
-+    // Lumtub: subtitles go in only while compositing; turning, mirroring
-+    // and zooming (video-rotate, lumtubMirror, video-zoom) go in always,
-+    // as the layer shows frames as they are.
-+    bool subs = p->compositing && p->subtitleCI && p->has_subtitle &&
-+                p->osd_w > 0 && p->osd_h > 0;
-+    int rotate = vo->params ? ((vo->params->rotate % 360) + 360) % 360 : 0;
-+    double zoom = exp2(vo->opts->zoom);
-+    bool turned = rotate != 0 || p->mirror || fabs(zoom - 1) > 1e-3;
-+    if (!subs && !turned)
-+        return NULL;
-+    
-+    size_t videoW = CVPixelBufferGetWidth(videoBuffer);
-+    size_t videoH = CVPixelBufferGetHeight(videoBuffer);
-+    
-+    // Upscale to display resolution for crisp subtitles
-+    // (Lumtub: and down to it, never more: a 4K frame made anew for each
-+    // frame is 33-66 MB a buffer, and iOS ends an app in the background,
-+    // as in picture in picture, that holds a few of them)
-+    size_t outW = videoW;
-+    size_t outH = videoH;
-+    if (p->display_height > 0 &&
-+        (videoH > (size_t)p->display_height || (subs && videoH < (size_t)p->display_height))) {
-+        CGFloat scale = (CGFloat)p->display_height / (CGFloat)videoH;
-+        outW = (size_t)(videoW * scale) & ~(size_t)1;
-+        outH = (size_t)p->display_height;
-+    }
-+    bool sideways = rotate == 90 || rotate == 270;
-+    size_t frameW = sideways ? outH : outW;
-+    size_t frameH = sideways ? outW : outH;
-+    
-+    // Detect original pixel format to preserve quality
-+    OSType sourceFormat = CVPixelBufferGetPixelFormatType(videoBuffer);
-+    
-+    // Ensure output pool matches dimensions and format
-+    CFTypeRef transfer = CVBufferCopyAttachment(videoBuffer, kCVImageBufferTransferFunctionKey, NULL);
-+    bool hdr = transfer && (CFEqual(transfer, kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ) ||
-+                            CFEqual(transfer, kCVImageBufferTransferFunction_ITU_R_2100_HLG));
-+    if (transfer)
-+        CFRelease(transfer);
-+    if (!create_output_pool(vo, (int)frameW, (int)frameH, sourceFormat, hdr))
-+        return NULL;
-+    
-+    // Get output buffer from pool
-+    CVPixelBufferRef outputBuffer = NULL;
-+    CVReturn status = CVPixelBufferPoolCreatePixelBuffer(
-+        kCFAllocatorDefault, p->outputPool, &outputBuffer);
-+    
-+    if (status != kCVReturnSuccess || !outputBuffer) {
-+        MP_ERR(vo, "Failed to get output buffer from pool: %d\n", status);
-+        return NULL;
-+    }
-+    
-+    // Copy HDR metadata from input to output buffer BEFORE rendering
-+    copy_hdr_metadata(videoBuffer, outputBuffer);
-+    
-+    // Use autoreleasepool to ensure CIImage objects are released promptly
-+    @autoreleasepool {
-+        // Create CIImages - preserve color space from source for HDR
-+        CGColorSpaceRef videoColorSpace = copy_color_space(videoBuffer);
-+        CGColorSpaceRef srcColorSpace = videoColorSpace;
-+        CGColorSpaceRef fallbackColorSpace = NULL;
-+        if (!srcColorSpace) {
-+            fallbackColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
-+            srcColorSpace = fallbackColorSpace;
-+        }
-+        
-+        CIImage *videoImage;
-+        if (srcColorSpace) {
-+            NSDictionary *videoOptions = @{
-+                kCIImageColorSpace: (__bridge id)srcColorSpace
-+            };
-+            videoImage = [CIImage imageWithCVPixelBuffer:videoBuffer options:videoOptions];
-+        } else {
-+            videoImage = [CIImage imageWithCVPixelBuffer:videoBuffer];
-+        }
-+        
-+        if (fallbackColorSpace)
-+            CGColorSpaceRelease(fallbackColorSpace);
-+        
-+        if (!videoImage) {
-+            if (videoColorSpace)
-+                CGColorSpaceRelease(videoColorSpace);
-+            CVPixelBufferRelease(outputBuffer);
-+            return NULL;
-+        }
-+        
-+        // Scale video to output dimensions if upscaling
-+        if (outW != videoW || outH != videoH) {
-+            CGFloat scaleX = (CGFloat)outW / (CGFloat)videoW;
-+            CGFloat scaleY = (CGFloat)outH / (CGFloat)videoH;
-+            videoImage = [videoImage imageByApplyingTransform:
-+                CGAffineTransformMakeScale(scaleX, scaleY)];
-+        }
-+
-+        // Lumtub: video-rotate turns clockwise.
-+        if (rotate) {
-+            CGImagePropertyOrientation turn = rotate == 90 ? kCGImagePropertyOrientationRight
-+                : rotate == 180 ? kCGImagePropertyOrientationDown : kCGImagePropertyOrientationLeft;
-+            videoImage = [videoImage imageByApplyingCGOrientation:turn];
-+            videoImage = [videoImage imageByApplyingTransform:CGAffineTransformMakeTranslation(
-+                -videoImage.extent.origin.x, -videoImage.extent.origin.y)];
-+        }
-+        if (p->mirror) {
-+            videoImage = [videoImage imageByApplyingTransform:
-+                CGAffineTransformMake(-1, 0, 0, 1, (CGFloat)frameW, 0)];
-+        }
-+        if (fabs(zoom - 1) > 1e-3) {
-+            CGAffineTransform t = CGAffineTransformMakeTranslation(frameW / 2.0, frameH / 2.0);
-+            t = CGAffineTransformScale(t, zoom, zoom);
-+            t = CGAffineTransformTranslate(t, -(CGFloat)frameW / 2.0, -(CGFloat)frameH / 2.0);
-+            videoImage = [[videoImage imageByApplyingTransform:t]
-+                imageByCroppingToRect:CGRectMake(0, 0, frameW, frameH)];
-+        }
-+
-+        CIImage *composited = videoImage;
-+        if (subs) {
-+            CIImage *subtitleImage = (__bridge CIImage *)p->subtitleCI;
-+
-+            // The OSD canvas to the output's size
-+            if (p->osd_w != (int)frameW || p->osd_h != (int)frameH) {
-+                CGFloat scaleX = (CGFloat)frameW / (CGFloat)p->osd_w;
-+                CGFloat scaleY = (CGFloat)frameH / (CGFloat)p->osd_h;
-+                subtitleImage = [subtitleImage imageByApplyingTransform:
-+                    CGAffineTransformMakeScale(scaleX, scaleY)];
-+            }
-+
-+            // Composite subtitle over video
-+            composited = [subtitleImage imageByCompositingOverImage:videoImage];
-+        }
-+        
-+        // Render to output buffer, preserving color space
-+        CGColorSpaceRef outputColorSpace = videoColorSpace;
-+        if (outputColorSpace) {
-+            [p->ciContext render:composited 
-+                 toCVPixelBuffer:outputBuffer 
-+                          bounds:CGRectMake(0, 0, frameW, frameH)
-+                      colorSpace:outputColorSpace];
-+        } else {
-+            [p->ciContext render:composited toCVPixelBuffer:outputBuffer];
-+        }
-+        if (videoColorSpace)
-+            CGColorSpaceRelease(videoColorSpace);
-+    }
-+    
-+    return outputBuffer;
++    return changed;
 +}
 +
 +static int preinit(struct vo *vo)
 +{
 +    struct priv *p = vo->priv;
 +
-+    if (!vo->opts->WinID) {
-+        MP_ERR(vo, "No AVSampleBufferDisplayLayer provided via --wid\n");
++    struct lumtub_vo_host *host = (struct lumtub_vo_host *)(intptr_t)vo->opts->WinID;
++    if (!host || host->magic != LUMTUB_VO_MAGIC || !host->frame ||
++        !host->overlay || !host->clear) {
++        MP_ERR(vo, "--wid is not the app's video host\n");
 +        return -1;
 +    }
-+    
-+    p->displayLayer = (__bridge AVSampleBufferDisplayLayer *)(intptr_t)(vo->opts->WinID);
-+    
-+    MP_VERBOSE(vo, "displayLayer: %p, composite_osd: %s\n", 
-+               p->displayLayer, p->composite_osd ? "yes" : "no");
-+    p->compositing = p->composite_osd;
-+
-+    // Setup Metal and Core Image for compositing mode (HDR-compatible)
-+    // (Lumtub: always, as picture in picture turns compositing on)
-+    {
-+        p->mtlDevice = MTLCreateSystemDefaultDevice();
-+        if (!p->mtlDevice) {
-+            MP_ERR(vo, "Failed to create Metal device\n");
-+            return -1;
-+        }
-+        
-+        // Use extended linear Display P3 color space for HDR compositing
-+        // This color space can represent values > 1.0 needed for HDR
-+        CGColorSpaceRef workingColorSpace = CGColorSpaceCreateWithName(
-+            kCGColorSpaceExtendedLinearDisplayP3);
-+        if (!workingColorSpace) {
-+            workingColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceExtendedSRGB);
-+        }
-+        if (!workingColorSpace) {
-+            workingColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
-+        }
-+        
-+        NSDictionary *ciOptions = workingColorSpace ? @{
-+            kCIContextWorkingColorSpace: (__bridge id)workingColorSpace,
-+            kCIContextHighQualityDownsample: @NO,
-+            kCIContextUseSoftwareRenderer: @NO
-+        } : @{
-+            kCIContextHighQualityDownsample: @NO,
-+            kCIContextUseSoftwareRenderer: @NO
-+        };
-+        
-+        p->ciContext = [CIContext contextWithMTLDevice:p->mtlDevice options:ciOptions];
-+        
-+        if (workingColorSpace)
-+            CGColorSpaceRelease(workingColorSpace);
-+        
-+        if (!p->ciContext) {
-+            MP_ERR(vo, "Failed to create CIContext\n");
-+            return -1;
-+        }
-+        // Lumtub: held for the VO's life whether or not the file is built
-+        // with ARC (mpv builds it without), released in uninit.
-+        CFRetain((__bridge CFTypeRef)p->ciContext);
-+        
-+        MP_VERBOSE(vo, "HDR-compatible compositing mode enabled with Metal\n");
-+        
-+        // Get display resolution for subtitle upscaling
-+#if TARGET_OS_IPHONE
-+        // Lumtub: the short side, which a picture's height fills at most.
-+        CGRect screenBounds = [UIScreen mainScreen].nativeBounds;
-+        p->display_height = (int)MPMIN(screenBounds.size.width, screenBounds.size.height);
-+#else
-+        NSScreen *screen = [NSScreen mainScreen];
-+        CGFloat scaleFactor = screen.backingScaleFactor;
-+        p->display_height = (int)(screen.frame.size.height * scaleFactor);
-+#endif
-+        MP_VERBOSE(vo, "Display height for subtitle scaling: %d\n", p->display_height);
-+    }
-+
-+    // Lumtub: the OSD layer always, for when the frames don't carry it
-+    {
-+        // Made here, placed on the main thread without waiting for it
-+        // (Lumtub: not dispatch_sync, which waits on a main thread that may
-+        // itself be waiting on mpv). The blocks hold the layers, not p.
-+        CALayer *osd = [CALayer layer];
-+        // Held until uninit has taken it off the display layer.
-+        CFRetain((__bridge CFTypeRef)osd);
-+        osd.anchorPoint = CGPointMake(0.5, 0.5);
-+        osd.backgroundColor = NULL;
-+        osd.opaque = NO;
-+        osd.contentsGravity = kCAGravityResizeAspect;
-+        p->osdLayer = osd;
-+        CALayer *display = p->displayLayer;
-+        dispatch_async(dispatch_get_main_queue(), ^{
-+            CGRect bounds = display.bounds;
-+            osd.frame = bounds;
-+            osd.position = CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
-+#if TARGET_OS_IPHONE
-+            osd.contentsScale = [UIScreen mainScreen].scale;
-+#else
-+            osd.contentsScale = [NSScreen mainScreen].backingScaleFactor;
-+#endif
-+            [display addSublayer:osd];
-+        });
-+    }
++    p->host = host;
++    p->sent_zoom = 1;
 +
 +    vo->hwdec_devs = hwdec_devices_create();
 +    p->hwctx = (struct mp_hwdec_ctx){
@@ -908,284 +498,130 @@ index 0000000..eb388a1
 +        .hw_imgfmt = IMGFMT_VIDEOTOOLBOX,
 +    };
 +    hwdec_devices_add(vo->hwdec_devs, &p->hwctx);
-+
 +    return 0;
++}
++
++static bool draw_frame(struct vo *vo, struct vo_frame *frame)
++{
++    struct priv *p = vo->priv;
++    struct mp_image *mpi = frame->current;
++
++    if (!mpi)
++        return true;
++    // The same picture again with nothing over it changed: still shown.
++    if (frame->repeat && !frame->redraw)
++        return true;
++
++    int rotate = vo->params ? ((vo->params->rotate % 360) + 360) % 360 : 0;
++    double zoom = exp2(vo->opts->zoom);
++    bool overlay_changed = update_overlay(vo, mpi->pts);
++
++    if (frame->redraw) {
++        // Paused or between frames: shown again only if something over or
++        // around it changed.
++        if (p->sent && (overlay_changed || rotate != p->sent_rotate ||
++                        zoom != p->sent_zoom)) {
++            p->host->frame(p->host->ctx, NULL, rotate, zoom);
++            p->sent_rotate = rotate;
++            p->sent_zoom = zoom;
++        }
++        return true;
++    }
++
++    CVPixelBufferRef buffer = NULL;
++    bool uploaded = false;
++    if (mpi->imgfmt == IMGFMT_VIDEOTOOLBOX) {
++        buffer = (CVPixelBufferRef)mpi->planes[3];
++    } else {
++        buffer = upload_software_frame(vo, mpi);
++        uploaded = true;
++    }
++    if (!buffer) {
++        MP_ERR(vo, "No picture to show\n");
++        return false;
++    }
++
++    bool shown = p->host->frame(p->host->ctx, (void *)buffer, rotate, zoom);
++    p->sent = true;
++    p->sent_rotate = rotate;
++    p->sent_zoom = zoom;
++    if (uploaded)
++        CVPixelBufferRelease(buffer);
++    return shown;
 +}
 +
 +static void flip_page(struct vo *vo)
 +{
 +    struct priv *p = vo->priv;
-+    
-+    // In CALayer mode, render OSD here (video was enqueued in draw_frame)
-+    if (!p->compositing) {
-+        render_osd(vo, p->next_pts);
-+    }
-+    
-+    // Flush excess buffers every ~60 frames to prevent memory growth
-+    // without causing buffer churn on every frame
++
++    // Buffers the pool no longer needs go now and then, not every frame.
 +    if (++p->frame_count >= 60) {
 +        p->frame_count = 0;
-+        if (p->outputPool)
-+            CVPixelBufferPoolFlush(p->outputPool, kCVPixelBufferPoolFlushExcessBuffers);
-+        if (p->swUploadPool)
-+            CVPixelBufferPoolFlush(p->swUploadPool, kCVPixelBufferPoolFlushExcessBuffers);
-+    }
-+    
-+    mp_image_unrefp(&p->next_image);
-+}
-+
-+static bool draw_frame(struct vo *vo, struct vo_frame *frame)
-+{
-+    @autoreleasepool {
-+        struct priv *p = vo->priv;
-+
-+        mp_image_t *mpi = NULL;
-+        if (!frame->redraw && !frame->repeat)
-+            mpi = mp_image_new_ref(frame->current);
-+
-+        talloc_free(p->next_image);
-+        
-+        if (!mpi) {
-+            p->next_image = NULL;
-+            return true;
-+        }
-+        
-+        double pts = mpi->pts;
-+        if (pts == MP_NOPTS_VALUE && frame->current)
-+            pts = frame->current->pts;
-+        if (pts == MP_NOPTS_VALUE)
-+            pts = frame->pts;
-+        
-+        p->next_pts = pts;
-+        
-+        CVPixelBufferRef pixbuf = NULL;
-+        bool pixbufNeedsRelease = false;
-+        
-+        // Handle different input formats
-+        if (mpi->imgfmt == IMGFMT_VIDEOTOOLBOX) {
-+            // Hardware decoded: zero-copy passthrough
-+            pixbuf = (CVPixelBufferRef)mpi->planes[3];
-+        } else {
-+            // Software decoded: upload to CVPixelBuffer
-+            pixbuf = upload_software_frame(vo, mpi);
-+            if (!pixbuf) {
-+                MP_ERR(vo, "Failed to upload software frame\n");
-+                mp_image_unrefp(&mpi);
-+                return false;
-+            }
-+            pixbufNeedsRelease = true;
-+        }
-+        
-+        CVPixelBufferRef finalBuffer = pixbuf;
-+        bool needsRelease = false;
-+        
-+        // Lumtub: what the display layer asks for now.
-+        bool want = p->composite_osd ||
-+            [[p->displayLayer valueForKey:@"lumtubComposite"] boolValue];
-+        p->mirror = [[p->displayLayer valueForKey:@"lumtubMirror"] boolValue];
-+        if (want != p->compositing) {
-+            // Drawn again in the other place.
-+            p->has_subtitle = true;
-+            clear_subtitle_image(p);
-+            p->compositing = want;
-+        }
-+
-+        // In composite mode, render OSD and composite onto frame
-+        if (p->compositing)
-+            render_osd(vo, pts);
-+        CVPixelBufferRef composited = composite_frame(vo, pixbuf);
-+        if (composited) {
-+            finalBuffer = composited;
-+            needsRelease = true;
-+        }
-+        
-+        // Create and enqueue sample buffer
-+        CMTimebaseRef timebase = [p->displayLayer controlTimebase];
-+        CMTime presentationTime = timebase ? CMTimebaseGetTime(timebase) : kCMTimeInvalid;
-+        
-+        CMSampleTimingInfo info = {
-+            .presentationTimeStamp = presentationTime,
-+            .duration = kCMTimeInvalid,
-+            .decodeTimeStamp = kCMTimeInvalid
-+        };
-+
-+        CMSampleBufferRef buf = NULL;
-+        CMFormatDescriptionRef format = NULL;
-+        OSStatus err = CMVideoFormatDescriptionCreateForImageBuffer(NULL, finalBuffer, &format);
-+        if (err != noErr || !format) {
-+            MP_ERR(vo, "Failed to create format description: %d\n", (int)err);
-+            if (needsRelease)
-+                CVPixelBufferRelease(finalBuffer);
-+            if (pixbufNeedsRelease)
-+                CVPixelBufferRelease(pixbuf);
-+            mp_image_unrefp(&mpi);
-+            return false;
-+        }
-+        
-+        err = CMSampleBufferCreateReadyWithImageBuffer(NULL, finalBuffer, format, &info, &buf);
-+        CFRelease(format);
-+        
-+        if (err != noErr || !buf) {
-+            MP_ERR(vo, "Failed to create sample buffer: %d\n", (int)err);
-+            if (needsRelease)
-+                CVPixelBufferRelease(finalBuffer);
-+            if (pixbufNeedsRelease)
-+                CVPixelBufferRelease(pixbuf);
-+            mp_image_unrefp(&mpi);
-+            return false;
-+        }
-+
-+        if (!timebase) {
-+            CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(buf, YES);
-+            CFDictionarySetValue(
-+                (CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0),
-+                kCMSampleAttachmentKey_DisplayImmediately,
-+                kCFBooleanTrue
-+            );
-+        }
-+
-+        // Lumtub: a layer that failed (iOS interrupts it while the app is
-+        // in the background) shows nothing more until it is flushed.
-+        bool flush = p->displayLayer.status == AVQueuedSampleBufferRenderingStatusFailed;
-+        if (@available(iOS 14.0, macOS 11.0, tvOS 14.0, *))
-+            flush = flush || p->displayLayer.requiresFlushToResumeDecoding;
-+        if (flush) {
-+            MP_VERBOSE(vo, "flushing the display layer (%s)\n",
-+                       p->displayLayer.error.localizedDescription.UTF8String ?: "no error");
-+            [p->displayLayer flush];
-+        }
-+
-+        [p->displayLayer enqueueSampleBuffer:buf];
-+        CFRelease(buf);
-+        
-+        // Release composited output buffer (always owned by us)
-+        if (needsRelease)
-+            CVPixelBufferRelease(finalBuffer);
-+        
-+        // Release uploaded software frame buffer (owned by us, not by mpi)
-+        if (pixbufNeedsRelease)
-+            CVPixelBufferRelease(pixbuf);
-+        
-+        p->next_image = mpi;
-+
-+        return true;
++        if (p->upload_pool)
++            CVPixelBufferPoolFlush(p->upload_pool, kCVPixelBufferPoolFlushExcessBuffers);
 +    }
 +}
 +
 +static int query_format(struct vo *vo, int format)
 +{
 +    switch (format) {
-+        case IMGFMT_VIDEOTOOLBOX:  // Hardware decoded (zero-copy)
-+        // Software decoded. Planar YUV420P is left to mpv to convert to
-+        // NV12: Core Image and the display layer show no picture from a
-+        // three-plane buffer.
-+        case IMGFMT_NV12:
-+        case IMGFMT_P010:          // 10-bit (HDR software decode)
-+            return 1;
-+        default:
-+            return 0;
-+    }
-+}
-+
-+// Helper to clear all subtitle state (called on video change/stop)
-+static void clear_subtitle_state(struct vo *vo)
-+{
-+    struct priv *p = vo->priv;
-+    
-+    if (p->cachedSubtitleImage) {
-+        CGImageRelease(p->cachedSubtitleImage);
-+        p->cachedSubtitleImage = NULL;
-+    }
-+    if (p->subtitleCI)
-+        CFRelease(p->subtitleCI);
-+    p->subtitleCI = NULL;
-+    p->has_subtitle = false;
-+    p->osd_change_id = 0;
-+    
-+    if (p->osdLayer) {
-+        CALayer *osd = p->osdLayer;
-+        dispatch_async(dispatch_get_main_queue(), ^{
-+            [CATransaction begin];
-+            [CATransaction setDisableActions:YES];
-+            osd.contents = nil;
-+            [CATransaction commit];
-+        });
++    case IMGFMT_VIDEOTOOLBOX:
++    // Software decoded. Planar 4:2:0 is left to mpv to convert to NV12: the
++    // display layer shows no picture from a three-plane buffer.
++    case IMGFMT_NV12:
++    case IMGFMT_P010:
++        return 1;
++    default:
++        return 0;
 +    }
 +}
 +
 +static int reconfig(struct vo *vo, struct mp_image_params *params)
 +{
 +    struct priv *p = vo->priv;
-+    
++
 +    MP_VERBOSE(vo, "reconfig: %dx%d\n", params->w, params->h);
-+    
-+    // Clear subtitles when video configuration changes
-+    clear_subtitle_state(vo);
-+    sync_osd_layer_frame(p);
-+    
++    clear_overlay(p);
 +    return 0;
 +}
 +
 +static void uninit(struct vo *vo)
 +{
 +    struct priv *p = vo->priv;
-+    
-+    mp_image_unrefp(&p->next_image);
-+    [p->displayLayer flushAndRemoveImage];
-+    
-+    if (p->cachedSubtitleImage) {
-+        CGImageRelease(p->cachedSubtitleImage);
-+        p->cachedSubtitleImage = NULL;
-+    }
-+    if (p->subtitleCI)
-+        CFRelease(p->subtitleCI);
-+    p->subtitleCI = NULL;
-+    
-+    if (p->outputPool) {
-+        CVPixelBufferPoolRelease(p->outputPool);
-+        p->outputPool = NULL;
-+    }
-+    
-+    if (p->swUploadPool) {
-+        CVPixelBufferPoolRelease(p->swUploadPool);
-+        p->swUploadPool = NULL;
-+    }
-+    
-+    if (p->osdLayer) {
-+        // Lumtub: not dispatch_sync, which waits on a main thread that
-+        // may itself be waiting on mpv.
-+        CALayer *osd = p->osdLayer;
-+        p->osdLayer = nil;
-+        dispatch_async(dispatch_get_main_queue(), ^{
-+            [osd removeFromSuperlayer];
-+            CFRelease((__bridge CFTypeRef)osd);
-+        });
-+    }
-+    
-+    if (p->ciContext)
-+        CFRelease((__bridge CFTypeRef)p->ciContext);
-+    p->ciContext = nil;
-+    p->mtlDevice = nil;
 +
-+    hwdec_devices_remove(vo->hwdec_devs, &p->hwctx);
++    if (p->host) {
++        clear_overlay(p);
++        p->host->clear(p->host->ctx, true);
++    }
++    if (p->upload_pool) {
++        CVPixelBufferPoolRelease(p->upload_pool);
++        p->upload_pool = NULL;
++    }
++    if (vo->hwdec_devs) {
++        hwdec_devices_remove(vo->hwdec_devs, &p->hwctx);
++        hwdec_devices_destroy(vo->hwdec_devs);
++        vo->hwdec_devs = NULL;
++    }
 +    av_buffer_unref(&p->hwctx.av_device_ref);
 +}
 +
 +static int control(struct vo *vo, uint32_t request, void *data)
 +{
 +    struct priv *p = vo->priv;
-+    
++
 +    switch (request) {
 +    case VOCTRL_SET_PANSCAN:
-+        sync_osd_layer_frame(p);
++        // video-zoom changed: shown again even while paused.
++        vo->want_redraw = true;
 +        return VO_TRUE;
 +    case VOCTRL_RESET:
-+        // Called when playback stops or video changes
-+        clear_subtitle_state(vo);
-+        [p->displayLayer flushAndRemoveImage];
++        // A seek or a new file: the old subtitles go, the picture shown
++        // stays until the next one.
++        clear_overlay(p);
++        p->host->clear(p->host->ctx, false);
++        p->sent = false;
 +        return VO_TRUE;
 +    case VOCTRL_REDRAW:
-+        p->osd_change_id = 0;
 +        return VO_TRUE;
 +    case VOCTRL_UPDATE_WINDOW_TITLE:
 +        return VO_TRUE;
@@ -1193,17 +629,10 @@ index 0000000..eb388a1
 +    return VO_NOTIMPL;
 +}
 +
-+
-+#define OPT_BASE_STRUCT struct priv
-+static const struct m_option options[] = {
-+    {"composite-osd", OPT_BOOL(composite_osd)},
-+    {0},
-+};
-+
 +const struct vo_driver video_out_avfoundation = {
-+    .description = "AVFoundation AVSampleBufferDisplayLayer (macOS/iOS)",
++    .description = "AVFoundation AVSampleBufferDisplayLayer, shown by the app",
 +    .name = "avfoundation",
-+    .caps = VO_CAP_NORETAIN | VO_CAP_ROTATE90,
++    .caps = VO_CAP_ROTATE90,
 +    .preinit = preinit,
 +    .query_format = query_format,
 +    .control = control,
@@ -1212,6 +641,4 @@ index 0000000..eb388a1
 +    .reconfig = reconfig,
 +    .uninit = uninit,
 +    .priv_size = sizeof(struct priv),
-+    .options = options,
-+    .options_prefix = "avfoundation",
 +};

@@ -1272,6 +1272,16 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: iOS - newest Xcode
+        # The newest release (not beta) Xcode the runner has, so the plugin's
+        # Swift is built by the newest Swift compiler there.
+        run: |
+          set -euo pipefail
+          xcode=$(ls -d /Applications/Xcode_*.app 2>/dev/null | grep -Eiv 'beta|_rc|release_candidate' | sort -V | tail -1 || true)
+          if [ -n "$xcode" ]; then sudo xcode-select -s "$xcode/Contents/Developer"; fi
+          xcodebuild -version
+          swift --version
+
       - name: iOS - read the Flutter version
         shell: bash
         run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"

@@ -10,6 +10,7 @@ import '../appearance_settings.dart';
 import '../downloads/download_models.dart';
 import '../native_core.dart';
 import 'common.dart';
+import 'edge_swipe_back.dart';
 import '../models.dart';
 import '../timestamp_link.dart';
 import 'cast_ui.dart';
@@ -466,7 +467,7 @@ class _AppShellState extends State<AppShell> {
           onPointerPanZoomEnd: _swipeEnd,
           // The window is built again only when its layout changes; each
           // part of it listens for what it shows itself.
-          child: NotificationListener<ScrollUpdateNotification>(onNotification: _onScroll, child: SelectBuilder(
+          child: EdgeSwipeBack(enabled: Platform.isIOS, canGoBack: () => _controller.canGoBack, onBack: _back, child: NotificationListener<ScrollUpdateNotification>(onNotification: _onScroll, child: SelectBuilder(
             listenable: _layoutChanges,
             select: () => _layoutOf(_controller),
             builder: (context, _, __) => LayoutBuilder(builder: (context, constraints) {
@@ -619,7 +620,7 @@ class _AppShellState extends State<AppShell> {
                       ),
               );
             }),
-          )),
+          ))),
         ),
       );
 

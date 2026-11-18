@@ -6,9 +6,10 @@
 #![allow(clippy::missing_safety_doc)]
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::ffi::c_char;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Codec {
     Av1,
@@ -84,6 +85,10 @@ pub struct Settings {
     pub disabled: Vec<Codec>,
     /// Codecs whose hardware decoding was verified, with hardware decoding on.
     pub hardware: Vec<Codec>,
+    /// The tallest picture each of [Settings::hardware] decodes in
+    /// hardware, where the probe measured it (a phone's VP9 decoder may stop
+    /// at 1080p while its screen and YouTube go higher).
+    pub hardware_heights: HashMap<Codec, u32>,
     /// 0 for no cap.
     pub max_height: u32,
     pub audio: Audio,
@@ -125,6 +130,35 @@ impl Settings {
         codec != Codec::Vp8 && self.hardware.contains(&codec)
     }
 
+    /// How tall [codec] decodes in hardware; 0 when unknown.
+    fn hardware_height(&self, codec: Codec) -> u32 {
+        self.hardware_heights.get(&codec).copied().unwrap_or(0)
+    }
+
+    /// The tallest picture VP9 or AV1 decodes in hardware, when every one
+    /// of them decoding in hardware has a measured height; else 0.
+    fn tallest_hardware(&self) -> u32 {
+        let heights: Vec<u32> = [Codec::Vp9, Codec::Av1]
+            .into_iter()
+            .filter(|&c| self.allows(c) && self.hardware(c))
+            .map(|c| self.hardware_height(c))
+            .collect();
+        if heights.is_empty() || heights.contains(&0) {
+            return 0;
+        }
+        heights.into_iter().max().unwrap_or(0)
+    }
+
+    /// AV1 in hardware goes before VP9 in hardware unless its decoder stops
+    /// lower than VP9's, as both measured.
+    fn av1_first(&self) -> bool {
+        let (av1, vp9) = (
+            self.hardware_height(Codec::Av1),
+            self.hardware_height(Codec::Vp9),
+        );
+        !(self.hardware(Codec::Vp9) && av1 > 0 && vp9 > av1)
+    }
+
     /// - auto: AV1 hardware decoding, then VP9 hardware decoding, then H.264;
     ///   without verified hardware decoding H.264 first, then VP9 and AV1.
     /// - lowResource: H.264, then codecs with verified hardware decoding,
@@ -144,8 +178,11 @@ impl Settings {
         let front: Vec<Codec> = match self.strategy {
             Strategy::Quality if self.hardware(Codec::Av1) => vec![],
             Strategy::Quality => vec![Codec::Vp9],
-            Strategy::Auto if self.hardware(Codec::Av1) => {
+            Strategy::Auto if self.hardware(Codec::Av1) && self.av1_first() => {
                 [vec![Codec::Av1, Codec::Vp9], h264].concat()
+            }
+            Strategy::Auto if self.hardware(Codec::Av1) => {
+                [vec![Codec::Vp9, Codec::Av1], h264].concat()
             }
             Strategy::Auto if self.hardware(Codec::Vp9) => {
                 [vec![Codec::Vp9], h264, vec![Codec::Av1]].concat()
@@ -174,8 +211,13 @@ impl Settings {
         }
         const LADDER: [u32; 5] = [720, 1080, 1440, 2160, 4320];
         let modern = self.hardware(Codec::Vp9) || self.hardware(Codec::Av1);
+        // Without VP9 or AV1 in hardware, 1080p (H.264); with them, as tall
+        // as their hardware decoders go, so a taller picture never falls
+        // to the CPU.
         let decoder = if self.strategy == Strategy::Auto && !modern {
             1080
+        } else if modern {
+            self.tallest_hardware()
         } else {
             0
         };
@@ -428,6 +470,30 @@ mod tests {
             settings(r#"{"audioLanguage":"it]x"}"#).expression(),
             original
         );
+    }
+
+    #[test]
+    fn hardware_heights_cap_and_order() {
+        let phone = settings(
+            r#"{"display":2160,"hardware":["vp9","av1"],"hardwareHeights":{"vp9":2160,"av1":1080}}"#,
+        );
+        assert_eq!(phone.display_height(), 2160);
+        assert_eq!(phone.policy().order[..3], ["vp9", "av1", "h264"]);
+        let small =
+            settings(r#"{"display":2160,"hardware":["vp9"],"hardwareHeights":{"vp9":1440}}"#);
+        assert_eq!(small.display_height(), 1440);
+        let low = settings(
+            r#"{"strategy":"lowResource","hardware":["vp9"],"hardwareHeights":{"vp9":1440}}"#,
+        );
+        assert_eq!(low.display_height(), 1440);
+        // A height not measured leaves the cap to the display.
+        let unknown =
+            settings(r#"{"display":2160,"hardware":["vp9","av1"],"hardwareHeights":{"vp9":1440}}"#);
+        assert_eq!(unknown.display_height(), 2160);
+        assert_eq!(unknown.policy().order[0], "av1");
+        let chosen =
+            settings(r#"{"maxHeight":2160,"hardware":["vp9"],"hardwareHeights":{"vp9":1440}}"#);
+        assert_eq!(chosen.display_height(), 0);
     }
 
     #[test]

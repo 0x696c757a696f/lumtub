@@ -226,7 +226,16 @@ void main() {
       expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {})), 'res,fps,hdr:sdr,vcodec:avc');
       expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw})), 'res,fps,hdr:sdr,vcodec:vp9');
       expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, decoderResults: {'av1': _hw})), 'res,fps,hdr:sdr,vcodec:av01');
-      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality)), isNull);
+      // Quality first keeps yt-dlp's ranking, with VP9 over software AV1.
+      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality)), 'res,fps,hdr:12,vcodec:vp9.2');
+      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality, decoderResults: {'av1': _hw})), isNull);
+    });
+
+    test('automatic quality stays within what the hardware decoders measured', () {
+      const phone = PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': DecoderStatus.hardware('mediacodec', height: 1440)});
+      expect(FormatPolicy.forDisplay(phone, 2160).maxHeight, 1440);
+      const unmeasured = PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw});
+      expect(FormatPolicy.forDisplay(unmeasured, 2160).maxHeight, 2160);
     });
 
     test('summary and names list them', () {

@@ -21,13 +21,13 @@ extension PictureHealth on AppController {
       if (adapter.isEmpty) return;
       int height(String key) => (probe[key] as num?)?.toInt() ?? 0;
       final results = {
-        for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? DecoderStatus.hardware(Platform.isWindows ? 'd3d11va' : Platform.isMacOS || Platform.isIOS ? 'videotoolbox' : Platform.isAndroid ? 'mediacodec' : 'vaapi') : const DecoderStatus.software(),
+        for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? DecoderStatus.hardware(Platform.isWindows ? 'd3d11va' : Platform.isMacOS || Platform.isIOS ? 'videotoolbox' : Platform.isAndroid ? 'mediacodec' : 'vaapi', height: height(key)) : const DecoderStatus.software(),
       };
       // Asked again at every start: a result saved earlier may have been
       // a one-off, such as a video decoded in software after the graphics
       // device was lost, and the automatic codecs would stay off for good.
       final same = adapter == settings.decoderAdapter &&
-          results.entries.every((e) => (settings.decoderResults[e.key]?.isHardware ?? false) == e.value.isHardware);
+          results.entries.every((e) => (settings.decoderResults[e.key]?.isHardware ?? false) == e.value.isHardware && (settings.decoderResults[e.key]?.height ?? 0) == e.value.height);
       if (same) return;
       logInfo('Hardware decoding on $adapter: H.264 ${height('h264')}p, VP9 ${height('vp9')}p, AV1 ${height('av1')}p');
       _update(() => decodeStates = results);
@@ -75,7 +75,7 @@ extension PictureHealth on AppController {
       // the GPU.
       final measured = normalized != null && settings.decoderAdapter.isNotEmpty && (settings.decoderResults[normalized]?.isHardware ?? false);
       if (normalized != null && !(measured && decoder.kind != DecoderKind.hardware)) {
-        settings = settings.copyWith(decoderResults: {...settings.decoderResults, normalized: decoder});
+        settings = settings.copyWith(decoderResults: {...settings.decoderResults, normalized: decoder.keeping(settings.decoderResults[normalized])});
         unawaited(_settingsStore?.save(settings));
       }
       // A download older than its codec in the sidecar: only libmpv can

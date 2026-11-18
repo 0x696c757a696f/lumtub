@@ -832,15 +832,15 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             final safe = EdgeInsets.fromViewPadding(view.viewPadding, view.devicePixelRatio);
             final rtl = Directionality.of(context) == TextDirection.rtl;
             final start = max(side, rtl ? safe.right : safe.left) + 12;
-            final top = max(above + 8, max(fullscreen ? safe.top : 0, fullscreen ? 64.0 : 52.0));
+            final top = max(above + 8, max(fullscreen ? safe.top : 0.0, fullscreen ? 64.0 : 52.0));
             return Stack(children: [
               PositionedDirectional(
                 start: start,
                 top: top,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth: max(0, box.maxWidth - start - max(side, 12)),
-                    maxHeight: max(0, box.maxHeight - top - max(above, 8)),
+                    maxWidth: max(0.0, box.maxWidth - start - max(side, 12.0)),
+                    maxHeight: max(0.0, box.maxHeight - top - max(above, 8.0)),
                   ),
                   child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.topStart, child: PlayerStats(player: _player)),
                 ),

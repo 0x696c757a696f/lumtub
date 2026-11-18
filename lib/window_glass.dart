@@ -69,7 +69,7 @@ abstract final class WindowGlass {
       final answer = await _channel.invokeMapMethod<String, Object?>('setDesktopGlass', {'on': on, 'dark': dark, 'blur': blur, 'tint': ask.tint});
       if (_asked != ask) return;
       state.value = WindowGlassState(shown: answer?['shown'] == true, blurred: answer?['blurred'] == true, restart: answer?['restart'] == true);
-      if (on) logInfo('Window glass: ${state.value}');
+      if (on) logInfo('Window glass: ${state.value}, system ${answer?['system'] ?? '-'}, build ${answer?['build'] ?? '-'}');
     } on MissingPluginException {
       state.value = const WindowGlassState();
     } on PlatformException catch (e) {

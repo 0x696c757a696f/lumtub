@@ -25,10 +25,15 @@ permissions:
 
 jobs:
   manifests:
-    # A Build run that published a release ran on its tag.
+    # A Build run that published a release ran on its tag (pushed, or
+    # dispatched by Create release): a fork's pull request from a branch
+    # named like a tag is not one.
     if: >-
       github.event_name != 'workflow_run' ||
-      (github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v'))
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event != 'pull_request' &&
+       github.event.workflow_run.head_repository.full_name == github.repository &&
+       startsWith(github.event.workflow_run.head_branch, 'v'))
     runs-on: ubuntu-24.04
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
@@ -36,6 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           sparse-checkout: packaging
       - name: Which release
         id: tag
@@ -57,7 +63,8 @@ jobs:
       - name: Fill in the manifests
         env:
           GH_TOKEN: ${{ github.token }}
-        run: packaging/update-manifests.sh '${{ steps.tag.outputs.tag }}'
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: packaging/update-manifests.sh "$TAG"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: manifests
@@ -154,6 +161,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           sparse-checkout: native/lumtub_core
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
@@ -174,7 +182,8 @@ jobs:
           ls -l dist
       - env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload '${{ needs.manifests.outputs.tag }}' dist/*.flatpak dist/*.flatpak.sig --clobber --repo "$GITHUB_REPOSITORY"
+          TAG: ${{ needs.manifests.outputs.tag }}
+        run: gh release upload "$TAG" dist/*.flatpak dist/*.flatpak.sig --clobber --repo "$GITHUB_REPOSITORY"
 
   publish:
     name: Send to ${{ matrix.target }}
@@ -189,6 +198,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           sparse-checkout: packaging
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
@@ -213,7 +223,8 @@ jobs:
     # post-quantum hybrid key (ssh-keygen -t mldsa44-ed25519) where the
     # runner's OpenSSH would not know it.
     container:
-      image: archlinux:latest
+      # Arch is a rolling release: a pinned digest would hold back the OpenSSH this job wants.
+      image: archlinux:latest # zizmor: ignore[unpinned-images]
     steps:
       - name: Install the tools
         run: |
@@ -222,6 +233,7 @@ jobs:
           echo "Key types: $(ssh -Q key | paste -sd' ')"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           sparse-checkout: packaging
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:

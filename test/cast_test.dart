@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/cast/cast_controller.dart';
 import 'package:lumtub/cast/cast_device.dart';
+import 'package:lumtub/cast/cast_net.dart';
 import 'package:lumtub/cast/cast_stream.dart';
 import 'package:lumtub/cast/chromecast.dart';
 import 'package:lumtub/cast/dlna.dart';
@@ -105,6 +106,35 @@ void main() {
       expect(parseSsdpResponse('HTTP/1.1 500 Error\r\n\r\n'), isNull);
       expect(parseSsdpResponse('HTTP/1.1 200 OK\r\nST: x\r\n\r\n'), isNull);
       expect(ssdpSearchRequest(), allOf(contains('M-SEARCH * HTTP/1.1'), contains('ST: $mediaRendererType'), endsWith('\r\n\r\n')));
+    });
+
+    test('asks a device only at the address it answered from', () {
+      final from = InternetAddress('192.168.1.20');
+      expect(sameAddress('192.168.1.20', from), isTrue);
+      expect(sameAddress('127.0.0.1', from), isFalse);
+      expect(sameAddress('192.168.1.1', from), isFalse);
+      expect(sameAddress('tv.local', from), isFalse);
+      expect(sameAddress('[fe80::1]', InternetAddress('fe80::1')), isTrue);
+    });
+
+    test('reads a device reply only up to its limit', () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(() => server.close(force: true));
+      server.listen((request) {
+        final size = int.parse(request.uri.queryParameters['size']!);
+        request.response
+          ..write('x' * size)
+          ..close();
+      });
+      final client = HttpClient();
+      addTearDown(() => client.close(force: true));
+      Future<String> read(int size) async {
+        final request = await client.getUrl(Uri.parse('http://127.0.0.1:${server.port}/?size=$size'));
+        return readDeviceReply(await request.close(), limit: 1000);
+      }
+
+      expect(await read(1000), hasLength(1000));
+      await expectLater(read(1001), throwsA(isA<HttpException>()));
     });
 
     test('reads a device description', () {

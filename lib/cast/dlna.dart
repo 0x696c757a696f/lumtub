@@ -47,6 +47,12 @@ SsdpResponse? parseSsdpResponse(String text) {
   return SsdpResponse(location: location, usn: header('usn'), st: headers['st'] is String ? header('st') : header('nt'));
 }
 
+/// Whether [host] (from an address) is [address].
+bool sameAddress(String host, InternetAddress address) {
+  final ip = InternetAddress.tryParse(host.startsWith('[') ? host.substring(1, host.length - 1) : host);
+  return ip != null && ip.address == address.address;
+}
+
 String xmlEscape(String text) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
 
 String xmlUnescape(String text) => text
@@ -212,10 +218,11 @@ class DlnaDevice implements CastDevice {
       request.headers
         ..set('Content-Type', 'text/xml; charset="utf-8"')
         ..set('SOAPACTION', '"$serviceType#$action"', preserveHeaderCase: true);
+      request.followRedirects = false;
       request.contentLength = body.length;
       request.add(body);
       final response = await request.close().timeout(const Duration(seconds: 8));
-      final text = await utf8.decodeStream(response).timeout(const Duration(seconds: 8));
+      final text = await readDeviceReply(response).timeout(const Duration(seconds: 8));
       if (response.statusCode >= 400 && !text.contains('Fault>')) throw CastException('HTTP ${response.statusCode}');
       return parseSoapResponse(text);
     } on SocketException catch (e) {
@@ -300,9 +307,11 @@ Stream<CastDevice> discoverDlna({Duration timeout = const Duration(seconds: 6)})
   Future<void> describe(SsdpResponse found) async {
     try {
       final request = await http.getUrl(found.location);
+      // A device describes itself; it does not send Lumtub elsewhere.
+      request.followRedirects = false;
       final response = await request.close().timeout(const Duration(seconds: 4));
       if (response.statusCode != 200) return;
-      final xml = await utf8.decodeStream(response).timeout(const Duration(seconds: 4));
+      final xml = await readDeviceReply(response).timeout(const Duration(seconds: 4));
       final description = parseDeviceDescription(xml, found.location);
       final service = description.avTransport;
       if (service == null || !seen.add(description.udn) || controller.isClosed) return;
@@ -334,8 +343,12 @@ Stream<CastDevice> discoverDlna({Duration timeout = const Duration(seconds: 6)})
           if (event != RawSocketEvent.read) return;
           final packet = socket.receive();
           final found = packet == null ? null : parseSsdpResponse(utf8.decode(packet.data, allowMalformed: true));
-          // Only devices on this network are asked for their description.
-          if (found != null && isLocalHost(found.location.host) && locations.add(found.location.toString())) unawaited(describe(found));
+          // Only a device on this network is asked for its description, and
+          // only at its own address: a reply naming another host (this
+          // computer, the router) would have Lumtub fetch that for it.
+          if (found != null && isLocalHost(found.location.host) && sameAddress(found.location.host, packet!.address) && locations.add(found.location.toString())) {
+            unawaited(describe(found));
+          }
         });
       } on SocketException catch (e) {
         logWarn('DLNA discovery cannot use $address: ${e.message}');

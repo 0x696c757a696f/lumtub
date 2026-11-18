@@ -19,6 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: true  # zizmor: ignore[artipacked] this job pushes with git
           ref: main
           fetch-depth: 0
 
@@ -84,7 +85,8 @@ jobs:
         if: steps.prepare.outputs.release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.prepare.outputs.tag }}
         run: |
-          gh workflow run build.yml --ref "${{ steps.prepare.outputs.tag }}"
+          gh workflow run build.yml --ref "$TAG"
           echo 'The tagged Windows build was dispatched.'
           echo 'That workflow builds the ZIP and installer, then creates the GitHub Release with generated release notes.'

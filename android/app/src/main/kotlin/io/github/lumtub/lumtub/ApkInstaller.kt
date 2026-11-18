@@ -34,6 +34,7 @@ object ApkInstaller {
                         session.fsync(output)
                     }
                 }
+                // security-lint: allow mutable-intent (PackageInstaller fills in the result; the intent is explicit, to an unexported receiver)
                 val flags = PendingIntent.FLAG_UPDATE_CURRENT or
                     (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0)
                 val done = PendingIntent.getBroadcast(context, id, Intent(context, InstallResult::class.java), flags)

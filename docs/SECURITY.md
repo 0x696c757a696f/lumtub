@@ -45,6 +45,11 @@ package by version and checksum, the Flutter SDK and the Linux libmpv build.
   Rust core's advisories and sources; the parsers of outside data are fuzzed
   every night.
 
+## For contributors
+
+The rules code and workflows follow are in [SECURE-CODING.md](SECURE-CODING.md);
+the Security job of Checks enforces the ones a machine can check.
+
 ## For maintainers: the "release" environment
 
 The signing keys belong in a GitHub environment that only `main` and release

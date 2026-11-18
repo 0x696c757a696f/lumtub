@@ -14,12 +14,13 @@ on:
     workflows: [Build, Checks]
     types: [completed]
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
   merge:
+    permissions:
+      contents: write
+      pull-requests: write
     if: >-
       github.event.workflow_run.name == 'Build' &&
       github.event.workflow_run.event == 'pull_request' &&
@@ -47,6 +48,8 @@ jobs:
           gh pr merge "$number" --repo "$REPO" --squash --delete-branch --match-head-commit "$SHA"
 
   lockfiles:
+    permissions:
+      contents: write
     if: >-
       github.event.workflow_run.name == 'Build' &&
       github.event.workflow_run.event == 'workflow_dispatch' &&
@@ -57,6 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: true  # zizmor: ignore[artipacked] this job pushes with git
           ref: main
           fetch-depth: 0
       - name: Bring into main
@@ -72,6 +76,9 @@ jobs:
           git push origin --delete "$BRANCH"
 
   translations:
+    permissions:
+      contents: write
+      pull-requests: write
     if: >-
       github.event.workflow_run.name == 'Checks' &&
       github.event.workflow_run.event == 'pull_request' &&

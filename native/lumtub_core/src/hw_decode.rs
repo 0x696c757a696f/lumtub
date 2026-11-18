@@ -128,7 +128,9 @@ pub fn probe() -> Option<Decoders> {
     probe_nvdec().or_else(probe_vaapi)
 }
 
-/// A dlopen handle, closed when dropped.
+/// A dlopen handle, closed when dropped. Opened with RTLD_NODELETE: the
+/// libraries stay loaded after, as unloading libva once its driver had
+/// been loaded (or had failed to load) crashed inside dlclose.
 #[cfg(target_os = "linux")]
 struct Library(*mut std::ffi::c_void);
 
@@ -142,7 +144,12 @@ impl Drop for Library {
 
 #[cfg(target_os = "linux")]
 unsafe fn open(name: &std::ffi::CStr) -> Option<Library> {
-    let library = unsafe { libc::dlopen(name.as_ptr(), libc::RTLD_NOW | libc::RTLD_LOCAL) };
+    let library = unsafe {
+        libc::dlopen(
+            name.as_ptr(),
+            libc::RTLD_NOW | libc::RTLD_LOCAL | libc::RTLD_NODELETE,
+        )
+    };
     (!library.is_null()).then_some(Library(library))
 }
 

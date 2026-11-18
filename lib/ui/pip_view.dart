@@ -83,7 +83,7 @@ class _PipViewState extends State<PipView> {
     // The same subtitles as the player's, sized for the small window.
     final subtitles = !_controller.settings.pipSubtitles
         ? const SubtitleViewConfiguration(visible: false)
-        : subtitleViewFor(_controller.settings, smallWindow: MediaQuery.sizeOf(context), secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid, libass: _controller.libassDraws);
+        : subtitleViewFor(_controller.settings, smallWindow: MediaQuery.sizeOf(context), secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: _controller.libassDraws);
     return CallbackShortcuts(
       bindings: {
         ...playerShortcuts(_controller, () => null),

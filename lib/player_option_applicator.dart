@@ -69,7 +69,7 @@ class PlayerOptionApplicator {
       // Drawn by libmpv, subtitles look as the Flutter view draws them: the
       // same letter size, room below and outline. The player's own size
       // refines these once it is laid out (AppController.subtitleViewChanged).
-      ...libassOptions(settings, LibassLook.standard(position: settings.subtitlePosition, border: settings.subtitleBorder, byHeight: Platform.isAndroid, caption: Device.captionScale)),
+      ...libassOptions(settings, LibassLook.standard(position: settings.subtitlePosition, border: settings.subtitleBorder, byHeight: Platform.isAndroid || Platform.isIOS, caption: Device.captionScale)),
       // Who draws the subtitles: libmpv (libass) or the Flutter view, which
       // reads sub-text either way. Set here, a switch applies at once.
       'sub-ass': settings.libassSubtitles ? 'yes' : 'no',

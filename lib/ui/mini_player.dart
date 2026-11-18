@@ -161,7 +161,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
             controls: NoVideoControls,
             subtitleViewConfiguration: _subtitlesOff(constraints.biggest)
                 ? const SubtitleViewConfiguration(visible: false)
-                : subtitleViewFor(_controller.settings, smallWindow: constraints.biggest, secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid, libass: _controller.libassDraws),
+                : subtitleViewFor(_controller.settings, smallWindow: constraints.biggest, secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: _controller.libassDraws),
           ),
         ),
       ),

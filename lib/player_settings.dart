@@ -869,7 +869,7 @@ class PlayerSettings {
       '#${(opacity.clamp(0, 1) * 255).round().toRadixString(16).padLeft(2, '0')}${(rgb & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}'.toUpperCase();
 
   factory PlayerSettings.fromJson(Object? raw) {
-    if (raw is! Map) return const PlayerSettings().copyWith(cacheMemoryMb: defaultBufferMb);
+    if (raw is! Map) return const PlayerSettings().copyWith(cacheMemoryMb: defaultBufferMb, libassSubtitles: Platform.isIOS);
     String choice(String key, Set<String> allowed, String fallback) {
       final value = raw[key]?.toString();
       return allowed.contains(value) ? value! : fallback;
@@ -1007,7 +1007,9 @@ class PlayerSettings {
       mpvConf: conf,
       decoderResults: results,
       d3d11vaZeroCopy: raw['d3d11vaZeroCopy'] == true,
-      libassSubtitles: raw['libassSubtitles'] == true,
+      // Always on iOS: Flutter's subtitles over the video's platform view
+      // leave ghosts of earlier lines there.
+      libassSubtitles: Platform.isIOS || raw['libassSubtitles'] == true,
       proxyMode: _enumByName(ProxyMode.values, raw['proxyMode'], ProxyMode.system),
       proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
       dnsServer: raw['dnsServer']?.toString() ?? '',
@@ -1069,12 +1071,12 @@ class PlayerSettingsStore {
   PlayerSettingsStore(AppDirectories directories) : file = File('${directories.config.path}${Platform.pathSeparator}player_settings.json');
 
   Future<PlayerSettings> load() async {
-    if (!await file.exists()) return const PlayerSettings().copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb);
+    if (!await file.exists()) return const PlayerSettings().copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb, libassSubtitles: Platform.isIOS);
     try {
       return PlayerSettings.fromJson(jsonDecode(await file.readAsString()));
     } catch (e) {
       await setBrokenFileAside(file, e);
-      return const PlayerSettings().copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb);
+      return const PlayerSettings().copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb, libassSubtitles: Platform.isIOS);
     }
   }
 

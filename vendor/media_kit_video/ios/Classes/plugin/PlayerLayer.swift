@@ -102,6 +102,20 @@ final class PlayerLayer: NSObject {
     surface.setWarmth(argb: argb)
   }
 
+  /// Mirrors the picture: done by libmpv's video output, which reads this
+  /// flag from the layer for each frame (mpv's hflip filter can't take
+  /// VideoToolbox frames).
+  func setMirror(_ on: Bool) {
+    displayLayer.setValue(on, forKey: "lumtubMirror")
+  }
+
+  /// Subtitles are drawn by libmpv in a layer of their own above the picture;
+  /// picture in picture shows only the picture, so while it is open the video
+  /// output draws them into the frames instead.
+  private func compositeSubtitles(_ on: Bool) {
+    displayLayer.setValue(on, forKey: "lumtubComposite")
+  }
+
   @objc private func didBecomeActive() {
     // iOS interrupts the layer while the app is in the background.
     var flush = displayLayer.status == .failed
@@ -220,6 +234,7 @@ extension PlayerLayer: AVPictureInPictureSampleBufferPlaybackDelegate {
 @available(iOS 15.0, *)
 extension PlayerLayer: AVPictureInPictureControllerDelegate {
   func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+    compositeSubtitles(true)
     events("willStart", nil)
   }
 
@@ -231,10 +246,12 @@ extension PlayerLayer: AVPictureInPictureControllerDelegate {
     _ pictureInPictureController: AVPictureInPictureController,
     failedToStartPictureInPictureWithError error: Error
   ) {
+    compositeSubtitles(false)
     events("failed:\(error.localizedDescription)", nil)
   }
 
   func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+    compositeSubtitles(false)
     events("stopped", nil)
   }
 

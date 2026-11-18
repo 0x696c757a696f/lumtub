@@ -183,7 +183,7 @@ class NativeVideoController extends PlatformVideoController {
       await controller.setProperties(
         {
           'wid': address.toString(),
-          'avfoundation-composite-osd': 'yes',
+          'avfoundation-composite-osd': 'no',
           'vo': 'avfoundation',
           'hwdec': configuration.hwdec!,
           'vid': 'auto',

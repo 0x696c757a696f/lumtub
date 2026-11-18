@@ -105,32 +105,9 @@ extension IosPipActions on AppController {
   /// The window closed while Lumtub is in the background: from then on only
   /// the sound plays there, as without picture in picture.
   void _iosPipActiveChanged() {
-    unawaited(_setPipLibass(IosVideoLayer.active.value));
     if (IosVideoLayer.active.value || !_windowHidden) return;
     final restored = _iosPip?.restoredAt;
     if (restored != null && DateTime.now().difference(restored) < const Duration(seconds: 3)) return;
     unawaited(setBackgroundAudioOnly(true));
-  }
-
-  /// The window shows the video layer alone, so the subtitles must be drawn
-  /// into the frames: mpv draws them (both, in Lumtub's look) while it is
-  /// open, and the Flutter view takes over again after. Only in memory: the
-  /// saved settings stay as they are.
-  Future<void> _setPipLibass(bool open) async {
-    final player = this.player;
-    if (player == null) return;
-    final on = open && settings.pipSubtitles && !settings.libassSubtitles;
-    if (on == _pipLibass) return;
-    _pipLibass = on;
-    final next = settings.copyWith(libassSubtitles: on);
-    try {
-      await PlayerOptionApplicator.apply(player, next, previous: _applied ?? settings);
-    } catch (e) {
-      logDebug(() => 'Could not switch the subtitles for picture in picture: $e');
-    }
-    _applied = next;
-    _update(() => settings = next);
-    _optionsApplied(player);
-    logInfo(on ? 'Subtitles drawn by mpv for picture in picture' : 'Subtitles drawn by Lumtub again');
   }
 }

@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart' show IosVideoLayer;
 
 /// Mirroring, rotating and zooming of the picture through libmpv
 /// (`vf=hflip`, `video-rotate`, `video-zoom`). They belong to one video:
@@ -34,7 +35,13 @@ class PictureTransform extends ChangeNotifier {
   Future<void> setMirrored(bool value) async {
     mirrored = value;
     notifyListeners();
-    await _set('vf', value ? 'hflip' : '');
+    // On iOS the video output mirrors the frames itself: mpv's hflip filter
+    // can't take VideoToolbox frames.
+    if (IosVideoLayer.available) {
+      await IosVideoLayer.setMirror(value);
+    } else {
+      await _set('vf', value ? 'hflip' : '');
+    }
   }
 
   Future<void> setRotation(int degrees) async {

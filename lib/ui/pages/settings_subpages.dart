@@ -509,7 +509,8 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           setOpacity: (v) => save(now().copyWith(secondaryOpacity: v)),
         ),
         _header(context, tr('General')),
-        SwitchItem(
+        // Always on iOS (see PlayerSettings.fromJson).
+        if (!Platform.isIOS) SwitchItem(
           title: tr('Subtitles rendered by mpv (libass)'),
           subtitle: tr('Supports styled subtitles; when off, the UI draws them, using fewer resources'),
           leading: Icon(AppIcons.stack),

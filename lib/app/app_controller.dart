@@ -874,7 +874,6 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// mpv draws the subtitles while iOS's picture in picture is open (the
   /// window shows only the video layer), for settings that have the Flutter
   /// view draw them; not saved.
-  bool _pipLibass = false;
   bool _windowHidden = false;
   bool? _efficient;
 

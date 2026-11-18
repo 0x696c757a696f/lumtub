@@ -81,6 +81,14 @@ class IosVideoLayer {
     await _channel.invokeMethod('Layer.Warmth', _args({'argb': argb}));
   }
 
+  /// Mirrors the picture in libmpv's video output (mpv's hflip filter
+  /// can't take VideoToolbox frames). Stays for the player's life, so it is
+  /// set again whenever it may have changed.
+  static Future<void> setMirror(bool on) async {
+    if (!available) return;
+    await _channel.invokeMethod('Layer.Mirror', _args({'on': on}));
+  }
+
   static Future<bool> supported() async => available && (await _channel.invokeMethod<bool>('Layer.PipSupported', _args()) ?? false);
 
   static final _byName = {for (final e in IosPipEvent.values) e.name: e};

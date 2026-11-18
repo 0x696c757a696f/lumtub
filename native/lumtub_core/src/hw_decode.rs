@@ -128,28 +128,16 @@ pub fn probe() -> Option<Decoders> {
     probe_nvdec().or_else(probe_vaapi)
 }
 
-/// A dlopen handle, closed when dropped. Opened with RTLD_NODELETE: the
-/// libraries stay loaded after, as unloading libva once its driver had
-/// been loaded (or had failed to load) crashed inside dlclose.
+/// A dlopen handle. Never closed: the probe runs once a start, and
+/// dlclose crashed inside ld.so for libraries whose initialisation had
+/// started threads or failed half way (libcuda without a device, libva
+/// after a driver that did not load).
 #[cfg(target_os = "linux")]
 struct Library(*mut std::ffi::c_void);
 
 #[cfg(target_os = "linux")]
-impl Drop for Library {
-    fn drop(&mut self) {
-        // SAFETY: [self.0] came from dlopen and is closed only here.
-        unsafe { libc::dlclose(self.0) };
-    }
-}
-
-#[cfg(target_os = "linux")]
 unsafe fn open(name: &std::ffi::CStr) -> Option<Library> {
-    let library = unsafe {
-        libc::dlopen(
-            name.as_ptr(),
-            libc::RTLD_NOW | libc::RTLD_LOCAL | libc::RTLD_NODELETE,
-        )
-    };
+    let library = unsafe { libc::dlopen(name.as_ptr(), libc::RTLD_NOW | libc::RTLD_LOCAL) };
     (!library.is_null()).then_some(Library(library))
 }
 
@@ -197,6 +185,11 @@ fn probe_nvdec() -> Option<Decoders> {
     // cuda.h and nvcuvid.h give; the context is current while asked and
     // destroyed after.
     unsafe {
+        // Only with NVIDIA's kernel driver running: elsewhere libcuda may
+        // be a stub (containers, Flatpak runtimes) with no device behind.
+        if !std::path::Path::new("/proc/driver/nvidia/version").exists() {
+            return None;
+        }
         let cuda = open(c"libcuda.so.1")?;
         let cuvid = open(c"libnvcuvid.so.1")?;
         let init: unsafe extern "C" fn(c_uint) -> c_int = symbol(&cuda, c"cuInit")?;

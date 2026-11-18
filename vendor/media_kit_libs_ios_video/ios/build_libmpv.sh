@@ -64,6 +64,10 @@ s = open(path).read()
 # The device only: platform=ios would add the simulator.
 swap('options.platforms += [PlatformType.ios, PlatformType.isimulator]',
      'options.platforms += [PlatformType.ios]')
+# No Package.swift for MPVKit's own releases: it downloads checksums that
+# the FFmpeg archive above has none of.
+swap('    func generatePackageManagerFile() throws {\n',
+     '    func generatePackageManagerFile() throws {\n        return\n')
 open(path, 'w').write(s)
 PY
 

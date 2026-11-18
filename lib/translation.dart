@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'l10n/l10n.dart';
+import 'language_guess.dart';
 
 /// A language text can be translated into. [code] is Google Translate's;
 /// [youtube] is the `tlang` YouTube's auto-translated captions use; [tags]
@@ -186,10 +187,25 @@ class GoogleTranslator implements Translator {
   Future<String> _request(String chunk, String target) async {
     if (chunk.trim().isEmpty) return chunk;
     final result = await _ask(chunk, target, 'auto');
-    // Its guess at the language sometimes goes wrong on chatty English with
-    // emoji, and the text comes back as it was: once more as English.
-    if (target != 'en' && _unchanged(result, chunk) && _latin(chunk)) return _ask(chunk, target, 'en');
-    return result;
+    // Its guess at the language sometimes goes wrong (chatty text with
+    // emoji), and the text comes back as it was: once more, in the language
+    // the letters say it is in.
+    if (!_unchanged(result, chunk)) return result;
+    final source = _guessSource(chunk, target);
+    return source == null ? result : _ask(chunk, target, source);
+  }
+
+  /// The language [text] seems to be written in, other than [target]: from
+  /// its script, and English from its common words. Null when the letters
+  /// can't tell (French and German share English's).
+  static String? _guessSource(String text, String target) {
+    for (final code in const ['ja', 'ko', 'ru', 'ar', 'th', 'hi', 'zh-CN', 'zh-TW', 'en']) {
+      if (code == target || (code.startsWith('zh') && target.startsWith('zh'))) continue;
+      if (looksLike(text, code)) return code;
+    }
+    // Mostly Latin letters but no common English word seen: English is still
+    // the likeliest for a YouTube comment.
+    return target != 'en' && _latin(text) && !looksLike(text, target) ? 'en' : null;
   }
 
   static bool _unchanged(String a, String b) => a.replaceAll(RegExp(r'\s+'), ' ').trim() == b.replaceAll(RegExp(r'\s+'), ' ').trim();

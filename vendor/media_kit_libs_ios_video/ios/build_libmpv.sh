@@ -75,7 +75,9 @@ swift run --build-path ./.build --package-path Sources/BuildScripts build platfo
 
 thin=dist/libmpv/ios/thin/arm64
 [ -f "$thin/lib/libmpv.a" ] || { echo "libmpv.a was not built" >&2; ls -R dist/libmpv | head -50 >&2; exit 1; }
-if ! nm "$thin/lib/libmpv.a" 2>/dev/null | grep -q '_video_out_avfoundation'; then
+# grep reads all of nm's output: with -q it would stop early, and pipefail
+# would take nm's broken pipe for a missing symbol.
+if ! nm "$thin/lib/libmpv.a" 2>/dev/null | grep '_video_out_avfoundation' >/dev/null; then
   echo "libmpv.a has no avfoundation video output" >&2
   exit 1
 fi

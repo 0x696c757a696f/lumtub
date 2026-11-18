@@ -60,6 +60,11 @@ void main() {
     }
   });
 
+  test('broken lines come out about as long as each other', () {
+    final wrapped = LibassLayout.wrap('字' * 12, 10);
+    expect(wrapped.split('\n').map((line) => line.runes.length).toList(), [6, 6]);
+  });
+
   test('Thai is broken too, and lines that fit stay as they are', () {
     const thai = 'ภาษาไทยไม่มีการเว้นวรรคระหว่างคำทำให้ต้องตัดบรรทัดเองเมื่อข้อความยาวเกินไป';
     expect(LibassLayout.wrap(thai, 8).contains('\n'), isTrue);

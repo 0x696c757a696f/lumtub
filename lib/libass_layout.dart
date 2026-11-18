@@ -78,19 +78,43 @@ class LibassLayout {
         style: TextStyle(fontSize: size, height: 1.3, fontFamily: font.isEmpty ? null : font, fontFamilyFallback: const [bundledFont], fontWeight: bold ? FontWeight.w700 : FontWeight.normal),
       ),
       textDirection: TextDirection.ltr,
-    )..layout(maxWidth: room * size);
-    final lines = <String>[];
-    var offset = 0;
-    while (offset < text.length) {
-      final range = painter.getLineBoundary(TextPosition(offset: offset));
-      if (range.end <= offset) break;
-      lines.add(text.substring(offset, range.end).replaceAll('\n', '').trimRight());
-      offset = range.end;
-      // The break itself, when the text had one.
-      if (offset < text.length && text[offset] == '\n') offset++;
+    );
+    List<String> linesAt(double ems) {
+      painter.layout(maxWidth: ems * size);
+      final lines = <String>[];
+      var offset = 0;
+      while (offset < text.length) {
+        final range = painter.getLineBoundary(TextPosition(offset: offset));
+        if (range.end <= offset) break;
+        lines.add(text.substring(offset, range.end).replaceAll('\n', '').trimRight());
+        offset = range.end;
+        // The break itself, when the text had one.
+        if (offset < text.length && text[offset] == '\n') offset++;
+      }
+      if (offset < text.length) lines.add(text.substring(offset));
+      return lines;
+    }
+
+    // A little spare: libass draws in the system's font, measured here in
+    // Flutter's, and the two are never quite as wide.
+    final width = room * 0.92;
+    var lines = linesAt(width);
+    // Balanced, as subtitles are set by hand: the narrowest width that
+    // keeps as many lines, so they come out about as long as each other
+    // instead of a full line and a stub.
+    if (lines.length > 1) {
+      var narrow = width / lines.length, wide = width;
+      for (var i = 0; i < 10; i++) {
+        final middle = (narrow + wide) / 2;
+        if (linesAt(middle).length <= lines.length) {
+          wide = middle;
+        } else {
+          narrow = middle;
+        }
+      }
+      lines = linesAt(wide);
     }
     painter.dispose();
-    if (offset < text.length) lines.add(text.substring(offset));
     return lines.join('\n');
   }
 

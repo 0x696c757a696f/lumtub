@@ -120,11 +120,139 @@ pub fn probe() -> Option<Decoders> {
     }
 }
 
-/// Linux: asked of VA-API (libva, loaded when the system has it), the
-/// interface libmpv's vaapi uses, on the first render node that answers.
-/// NVIDIA's own driver has no VA-API and is not measured.
+/// Linux: NVIDIA's own driver answers through NVDEC (libnvcuvid), which
+/// libmpv tries before VA-API; every other GPU (and NVIDIA with
+/// nvidia-vaapi-driver but no CUDA) through VA-API.
 #[cfg(target_os = "linux")]
 pub fn probe() -> Option<Decoders> {
+    probe_nvdec().or_else(probe_vaapi)
+}
+
+/// A dlopen handle, closed when dropped.
+#[cfg(target_os = "linux")]
+struct Library(*mut std::ffi::c_void);
+
+#[cfg(target_os = "linux")]
+impl Drop for Library {
+    fn drop(&mut self) {
+        // SAFETY: [self.0] came from dlopen and is closed only here.
+        unsafe { libc::dlclose(self.0) };
+    }
+}
+
+#[cfg(target_os = "linux")]
+unsafe fn open(name: &std::ffi::CStr) -> Option<Library> {
+    let library = unsafe { libc::dlopen(name.as_ptr(), libc::RTLD_NOW | libc::RTLD_LOCAL) };
+    (!library.is_null()).then_some(Library(library))
+}
+
+#[cfg(target_os = "linux")]
+unsafe fn symbol<T>(library: &Library, name: &std::ffi::CStr) -> Option<T> {
+    let found = unsafe { libc::dlsym(library.0, name.as_ptr()) };
+    // SAFETY: T is the function pointer type of [name].
+    (!found.is_null())
+        .then(|| unsafe { std::mem::transmute_copy::<*mut std::ffi::c_void, T>(&found) })
+}
+
+/// NVIDIA's driver: asked of NVDEC for each codec's largest picture, on
+/// the first CUDA device. None without the driver's libraries or a device.
+#[cfg(target_os = "linux")]
+fn probe_nvdec() -> Option<Decoders> {
+    use std::ffi::{CStr, c_int, c_uint, c_void};
+
+    /// CUVIDDECODECAPS from nvcuvid.h.
+    #[repr(C)]
+    #[derive(Default)]
+    struct Caps {
+        codec: c_int,
+        chroma: c_int,
+        bit_depth_minus8: c_uint,
+        reserved1: [c_uint; 3],
+        supported: u8,
+        engines: u8,
+        output_formats: u16,
+        max_width: c_uint,
+        max_height: c_uint,
+        max_macroblocks: c_uint,
+        min_width: u16,
+        min_height: u16,
+        histogram: u8,
+        counter_bit_depth: u8,
+        histogram_bins: u16,
+        reserved3: [c_uint; 10],
+    }
+    const H264: c_int = 4;
+    const VP9: c_int = 10;
+    const AV1: c_int = 11;
+    const YUV420: c_int = 1;
+
+    // SAFETY: the CUDA driver API and nvcuvid functions with the types
+    // cuda.h and nvcuvid.h give; the context is current while asked and
+    // destroyed after.
+    unsafe {
+        let cuda = open(c"libcuda.so.1")?;
+        let cuvid = open(c"libnvcuvid.so.1")?;
+        let init: unsafe extern "C" fn(c_uint) -> c_int = symbol(&cuda, c"cuInit")?;
+        let device_get: unsafe extern "C" fn(*mut c_int, c_int) -> c_int =
+            symbol(&cuda, c"cuDeviceGet")?;
+        let device_name: unsafe extern "C" fn(*mut std::ffi::c_char, c_int, c_int) -> c_int =
+            symbol(&cuda, c"cuDeviceGetName")?;
+        let driver_version: unsafe extern "C" fn(*mut c_int) -> c_int =
+            symbol(&cuda, c"cuDriverGetVersion")?;
+        let create: unsafe extern "C" fn(*mut *mut c_void, c_uint, c_int) -> c_int =
+            symbol(&cuda, c"cuCtxCreate_v2")?;
+        let destroy: unsafe extern "C" fn(*mut c_void) -> c_int =
+            symbol(&cuda, c"cuCtxDestroy_v2")?;
+        let caps_of: unsafe extern "C" fn(*mut Caps) -> c_int =
+            symbol(&cuvid, c"cuvidGetDecoderCaps")?;
+        if init(0) != 0 {
+            return None;
+        }
+        let mut device = 0;
+        if device_get(&mut device, 0) != 0 {
+            return None;
+        }
+        let mut name = [0 as std::ffi::c_char; 128];
+        if device_name(name.as_mut_ptr(), name.len() as c_int, device) != 0 {
+            name[0] = 0;
+        }
+        let name = CStr::from_ptr(name.as_ptr()).to_string_lossy().into_owned();
+        let mut version = 0;
+        driver_version(&mut version);
+        let mut context = std::ptr::null_mut();
+        if create(&mut context, 0, device) != 0 || context.is_null() {
+            return None;
+        }
+        let height = |codec: c_int| -> u32 {
+            let mut caps = Caps {
+                codec,
+                chroma: YUV420,
+                ..Caps::default()
+            };
+            if caps_of(&mut caps) != 0 || caps.supported == 0 {
+                return 0;
+            }
+            tallest(|w, h| w <= caps.max_width && h <= caps.max_height)
+        };
+        let decoders = Decoders {
+            adapter: format!(
+                "{name} NVDEC (CUDA {}.{})",
+                version / 1000,
+                version % 1000 / 10
+            ),
+            h264: height(H264),
+            vp9: height(VP9),
+            av1: height(AV1),
+        };
+        destroy(context);
+        Some(decoders)
+    }
+}
+
+/// VA-API (libva, loaded when the system has it), the interface libmpv's
+/// vaapi uses, on the first render node that answers.
+#[cfg(target_os = "linux")]
+fn probe_vaapi() -> Option<Decoders> {
     use std::ffi::{CStr, c_int, c_void};
     use std::os::fd::AsRawFd;
 
@@ -141,24 +269,6 @@ pub fn probe() -> Option<Decoders> {
     const H264_HIGH: c_int = 7;
     const VP9_PROFILE0: c_int = 19;
     const AV1_PROFILE0: c_int = 32;
-
-    /// A dlopen handle, closed when dropped.
-    struct Library(*mut c_void);
-    impl Drop for Library {
-        fn drop(&mut self) {
-            // SAFETY: [self.0] came from dlopen and is closed only here.
-            unsafe { libc::dlclose(self.0) };
-        }
-    }
-    unsafe fn open(name: &CStr) -> Option<Library> {
-        let library = unsafe { libc::dlopen(name.as_ptr(), libc::RTLD_NOW | libc::RTLD_LOCAL) };
-        (!library.is_null()).then_some(Library(library))
-    }
-    unsafe fn symbol<T>(library: &Library, name: &CStr) -> Option<T> {
-        let found = unsafe { libc::dlsym(library.0, name.as_ptr()) };
-        // SAFETY: T is the function pointer type of [name].
-        (!found.is_null()).then(|| unsafe { std::mem::transmute_copy::<*mut c_void, T>(&found) })
-    }
 
     // SAFETY: libva's documented C functions, called with the types va.h gives.
     unsafe {

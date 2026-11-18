@@ -91,6 +91,56 @@ void main() {
     expect(right.offset, 0);
   });
 
+  group('with no list under the mouse or the focus', () {
+    // A navigation column that cannot scroll, beside the page area with a
+    // narrow list in its middle and empty room on both sides.
+    Widget app(ScrollController main, ScrollController side) => MaterialApp(
+          home: Row(children: [
+            SizedBox(width: 100, child: ListView(key: const Key('nav'), children: [for (var i = 0; i < 3; i++) SizedBox(height: 40, child: Text('N$i'))])),
+            Expanded(child: KeyedSubtree(key: KeyScroll.area, child: Row(children: [
+              const Expanded(child: SizedBox.expand(key: Key('gap'))),
+              SizedBox(width: 300, child: ListView.builder(controller: main, itemCount: 100, itemExtent: 50, itemBuilder: (context, i) => Text('M$i'))),
+              SizedBox(width: 80, child: ListView.builder(controller: side, itemCount: 100, itemExtent: 50, itemBuilder: (context, i) => Text('S$i'))),
+            ]))),
+          ]),
+        );
+
+    for (final over in ['nav', 'gap']) {
+      testWidgets("the page's main list turns, with the mouse over the $over", (tester) async {
+        final main = ScrollController();
+        final side = ScrollController();
+        await tester.pumpWidget(app(main, side));
+        final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        await mouse.addPointer(location: tester.getCenter(find.byKey(Key(over))));
+        await mouse.moveBy(const Offset(1, 1));
+        await tester.pump();
+        expect(KeyScroll.byPage(1), isTrue);
+        await tester.pumpAndSettle();
+        expect(main.offset, greaterThan(0));
+        expect(side.offset, 0);
+        expect(KeyScroll.toEnd(true), isTrue);
+        await tester.pumpAndSettle();
+        expect(main.offset, main.position.maxScrollExtent);
+        await mouse.removePointer();
+      });
+    }
+
+    testWidgets('a list under the mouse still turns itself', (tester) async {
+      final main = ScrollController();
+      final side = ScrollController();
+      await tester.pumpWidget(app(main, side));
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: tester.getCenter(find.text('S2')));
+      await mouse.moveBy(const Offset(1, 1));
+      await tester.pump();
+      KeyScroll.byPage(1);
+      await tester.pumpAndSettle();
+      expect(side.offset, greaterThan(0));
+      expect(main.offset, 0);
+      await mouse.removePointer();
+    });
+  });
+
   testWidgets('arrow keys leave a one-line field once at its end, Esc leaves it', (tester) async {
     final field = FocusNode();
     final below = FocusNode();
@@ -135,6 +185,28 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: SizedBox()));
     await tester.pumpWidget(MaterialApp(home: page()));
     expect(kept, [null, 'picked']);
+  });
+
+  testWidgets('a search field in a page list leaves the list its place, coming back twice', (tester) async {
+    final list = ScrollController();
+    Widget page(bool shown) => MaterialApp(home: Scaffold(body: shown
+        ? ListView(key: const PageStorageKey('list'), controller: list, children: [
+            for (var i = 0; i < 20; i++) SizedBox(height: 50, child: Text('$i')),
+            // In sight at the place kept.
+            const LeavesByKeys(child: TextField()),
+            for (var i = 20; i < 100; i++) SizedBox(height: 50, child: Text('$i')),
+          ])
+        : const SizedBox()));
+    await tester.pumpWidget(page(true));
+    list.jumpTo(800);
+    await tester.pump();
+    list.position.didEndScroll();
+    for (var i = 0; i < 2; i++) {
+      await tester.pumpWidget(page(false));
+      await tester.pumpWidget(page(true));
+      await tester.pumpAndSettle();
+      expect(list.offset, 800);
+    }
   });
 
   testWidgets('a sideways strip in a page list keeps its own scroll position', (tester) async {

@@ -335,24 +335,27 @@ class _AppShellState extends State<AppShell> {
   /// The keys of the pages' own actions, as set in the shortcut settings.
   /// Keys without Ctrl, Alt or ⌘ do nothing while typing.
   Map<ShortcutActivator, VoidCallback> _pageShortcuts() {
+    bool space() => HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.space);
     void scroll(bool Function() move) {
       // Space on a focused button or card presses it, as before.
       final context = primaryFocus?.context;
-      final space = HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.space);
-      if (space && context != null && Actions.maybeFind<ActivateIntent>(context) != null) {
+      if (space() && context != null && Actions.maybeFind<ActivateIntent>(context) != null) {
         Actions.maybeInvoke(context, const ActivateIntent());
         return;
       }
       move();
     }
+    // Space on the watch page belongs to the player: it turns only a list
+    // the mouse or the focus is in, never the page's own.
+    bool main() => !(_controller.onWatchPage && space());
     VoidCallback? run(PlayerAction action) => switch (action) {
           PlayerAction.search => _focusSearch,
           PlayerAction.incognito => () => _controller.setIncognito(!_controller.incognito),
           PlayerAction.back => _back,
           PlayerAction.top => () => scroll(() => KeyScroll.toEnd(false)),
           PlayerAction.bottom => () => scroll(() => KeyScroll.toEnd(true)),
-          PlayerAction.pageDown => () => scroll(() => KeyScroll.byPage(1)),
-          PlayerAction.pageUp => () => scroll(() => KeyScroll.byPage(-1)),
+          PlayerAction.pageDown => () => scroll(() => KeyScroll.byPage(1, main: main())),
+          PlayerAction.pageUp => () => scroll(() => KeyScroll.byPage(-1, main: main())),
           PlayerAction.help => () => unawaited(showShortcutHelp(context, _controller.preferences)),
           _ => null,
         };
@@ -557,7 +560,7 @@ class _AppShellState extends State<AppShell> {
                           ) : _navigationRail(context),
                         ),
                       ),
-                      Expanded(child: _region(
+                      Expanded(child: KeyedSubtree(key: KeyScroll.area, child: _region(
                         () => (_pageKey, _slideIndex),
                         (context) => PageSwitcher(
                           // Keyed per page so each page's list keeps its scroll position
@@ -573,7 +576,7 @@ class _AppShellState extends State<AppShell> {
                             builder: (context) => VideoActions(controller: _controller, child: _veiled(skin, !rail && !_controller.onWatchPage && _library.contains(_controller.mode) ? _libraryTabs(_refreshable(_content())) : _refreshable(_content()))),
                           ),
                         ),
-                      )),
+                      ))),
                     ]),
                     // The video keeps playing over the pages; the watch page
                     // is not mounted meanwhile, so the card has the only Video.

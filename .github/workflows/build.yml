@@ -1187,7 +1187,9 @@ jobs:
       - name: iOS - install Flutter stable SDK
         run: |
           archive="$RUNNER_TEMP/flutter.zip"
-          curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_$FLUTTER_VERSION-stable.zip"
+          # The Flutter SDK for this Mac's CPU (Apple silicon or Intel).
+          case "$(uname -m)" in arm64) sdk=macos_arm64 ;; *) sdk=macos ;; esac
+          curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_${sdk}_$FLUTTER_VERSION-stable.zip"
           unzip -q "$archive" -d "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/flutter/bin/flutter" --version

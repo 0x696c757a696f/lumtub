@@ -1172,7 +1172,7 @@ jobs:
     if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
     # An unsigned IPA for SideStore, AltStore, Sideloadly or TrollStore:
     # without an Apple developer account nothing else installs on an iPhone.
-    runs-on: macos-15
+    runs-on: macos-15-intel
     permissions:
       contents: read
     steps:

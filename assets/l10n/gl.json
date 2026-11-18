@@ -3576,5 +3576,8 @@
   "Picture in picture when leaving the app": "Imaxe en imaxe ao saír da aplicación",
   "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Mantén o vídeo en reprodución nunha ventá pequena cando cambias a outra aplicación; se está desactivado, o son segue reproducíndose en segundo plano",
   "Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.": "A calidade automática queda en 1080p: este dispositivo non pode decodificar VP9 nin AV1 por hardware, e YouTube non ten outra cousa por riba de 1080p. Aínda podes escoller unha calidade superior ou «Prioridade á calidade»; entón decodifícase por software, o que gasta máis batería e quenta máis.",
-  "Off: nothing is recorded": "Desactivado: non se rexistra nada"
+  "Off: nothing is recorded": "Desactivado: non se rexistra nada",
+  "Mix with other apps": "Mesturar con outras aplicacións",
+  "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "O son doutras aplicacións segue sonando co vídeo. Entón iOS non mostra Lumtub na pantalla de bloqueo nin na Dynamic Island",
+  "mix audio other apps music": "Mesturar con outras aplicacións mix audio other apps music"
 }

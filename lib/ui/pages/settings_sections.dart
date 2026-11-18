@@ -553,6 +553,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: settings.skipSilence,
               onChanged: (v) => save(settings.copyWith(skipSilence: v)),
             ), subtitle: tr('Silence skip silent pauses faster')),
+        if (Platform.isIOS)
+          SettingEntry(tr('Mix with other apps'), (context) => SwitchItem(
+                title: tr('Mix with other apps'),
+                subtitle: tr("Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island"),
+                leading: _icon(AppIcons.equalizer),
+                value: settings.mixWithOthers,
+                onChanged: (v) => save(settings.copyWith(mixWithOthers: v)),
+              ), subtitle: tr('mix audio other apps music')),
     ],
     SettingsCategory.picture => [
         SettingEntry(tr('Video scaling algorithm'), (context) => NormalItem(

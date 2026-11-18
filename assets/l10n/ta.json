@@ -3576,5 +3576,8 @@
   "Picture in picture when leaving the app": "பயன்பாட்டை விட்டு வெளியேறும்போது பிக்சர் இன் பிக்சர்",
   "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "வேறு பயன்பாட்டிற்கு மாறும்போது இயங்கும் வீடியோவை சிறிய சாளரத்தில் தொடர்ந்து காட்டும்; முடக்கப்பட்டிருந்தால் அதன் ஒலி பின்னணியில் தொடர்ந்து இயங்கும்",
   "Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.": "தானியங்கு தரம் 1080p-இல் நிற்கும்: இந்தச் சாதனத்தால் VP9 அல்லது AV1-ஐ வன்பொருளில் டிகோட் செய்ய முடியாது, YouTube-இல் 1080p-க்கு மேல் வேறு வடிவம் இல்லை. இருப்பினும் உயர் தரத்தை அல்லது «படத்தரத்துக்கு முன்னுரிமை» என்பதைத் தேர்வுசெய்யலாம்; அப்போது மென்பொருளில் டிகோட் ஆகும், இது அதிக பேட்டரியைப் பயன்படுத்தி அதிகம் சூடாகும்.",
-  "Off: nothing is recorded": "அணை: எதுவும் பதிவு செய்யப்படாது"
+  "Off: nothing is recorded": "அணை: எதுவும் பதிவு செய்யப்படாது",
+  "Mix with other apps": "பிற ஆப்ஸுடன் கலக்கவும்",
+  "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "பிற ஆப்ஸின் ஒலி வீடியோவுடன் தொடர்ந்து இயங்கும். அப்போது iOS Lumtub ஐ பூட்டுத் திரையிலும் Dynamic Island இலும் காட்டாது",
+  "mix audio other apps music": "பிற ஆப்ஸுடன் கலக்கவும் mix audio other apps music"
 }

@@ -498,6 +498,9 @@ class PlayerSettings {
   final bool relayFallback;
   /// Skip silent stretches by playing them faster.
   final bool skipSilence;
+  /// iOS: play along with other apps' sound instead of stopping it. iOS
+  /// then leaves Lumtub out of Now Playing (Lock Screen, Dynamic Island).
+  final bool mixWithOthers;
   /// 音量平衡 strength, 0 (off) to 100; see [VolumeBalance].
   final int volumeBalance;
   /// The Piped API server for [PlaybackSource.pipedCustom].
@@ -581,6 +584,7 @@ class PlayerSettings {
     this.playbackSource = PlaybackSource.youtube,
     this.relayFallback = true,
     this.skipSilence = false,
+    this.mixWithOthers = false,
     this.volumeBalance = 0,
     this.pipedServer = '',
     this.invidiousServer = '',
@@ -659,6 +663,7 @@ class PlayerSettings {
     PlaybackSource? playbackSource,
     bool? relayFallback,
     bool? skipSilence,
+    bool? mixWithOthers,
     int? volumeBalance,
     String? pipedServer,
     String? invidiousServer,
@@ -729,6 +734,7 @@ class PlayerSettings {
         playbackSource: playbackSource ?? this.playbackSource,
         relayFallback: relayFallback ?? this.relayFallback,
         skipSilence: skipSilence ?? this.skipSilence,
+        mixWithOthers: mixWithOthers ?? this.mixWithOthers,
         volumeBalance: volumeBalance ?? this.volumeBalance,
         pipedServer: pipedServer ?? this.pipedServer,
         invidiousServer: invidiousServer ?? this.invidiousServer,
@@ -803,6 +809,7 @@ class PlayerSettings {
         'playbackSourceV2': playbackSource.name,
         'relayFallback': relayFallback,
         'skipSilence': skipSilence,
+        'mixWithOthers': mixWithOthers,
         'volumeBalance': volumeBalance,
         'pipedServer': pipedServer,
         'invidiousServer': invidiousServer,
@@ -992,6 +999,7 @@ class PlayerSettings {
       sponsorNotice: raw['sponsorNotice'] != false,
       relayFallback: raw['relayFallback'] != false,
       skipSilence: raw['skipSilence'] == true,
+      mixWithOthers: raw['mixWithOthers'] == true,
       volumeBalance: raw['volumeBalance'] is num ? (raw['volumeBalance'] as num).round().clamp(0, 100) : 0,
       sponsorCut: raw['sponsorCut'] == true,
       cachePath: path != null && path.trim().isNotEmpty ? path : null,

@@ -3600,5 +3600,8 @@
   "Picture in picture when leaving the app": "切換到其他應用程式時進入畫中畫",
   "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "切換到其他應用程式時，正在播放的影片會以小視窗繼續播放；關閉時只會在後臺繼續播放聲音",
   "Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.": "自動畫質停在 1080p：這個裝置無法用硬體解碼 VP9 或 AV1，而 YouTube 在 1080p 以上只有這兩種格式。你仍然可以手動選擇更高畫質或「畫質優先」，這時會使用軟體解碼，更耗電、也更容易發熱。",
-  "Off: nothing is recorded": "關閉：完全不記錄"
+  "Off: nothing is recorded": "關閉：完全不記錄",
+  "Mix with other apps": "與其他 App 混音",
+  "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "其他 App 的聲音會隨影片繼續播放。此時 iOS 不會在鎖定畫面和動態島上顯示 Lumtub",
+  "mix audio other apps music": "混音 其他 App 音樂 聲音 mix audio"
 }

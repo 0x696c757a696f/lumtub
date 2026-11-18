@@ -63,8 +63,9 @@ class PlayerOptionApplicator {
       // mpv's iOS audio output opens the audio session as "mix with
       // others" unless exclusive. iOS shows only apps that do not mix in
       // Now Playing (the Lock Screen, Control Center, the Dynamic Island),
-      // and another app's music would play on underneath the video.
-      if (Platform.isIOS) 'audio-exclusive': 'yes',
+      // and another app's music would play on underneath the video; mixing
+      // is the person's choice (混音).
+      if (Platform.isIOS) 'audio-exclusive': settings.mixWithOthers ? 'no' : 'yes',
       // AV1's film grain is noise added to every frame after decoding.
       // Where the renderer cannot add it, mpv's automatic choice has the
       // CPU do it, frame by frame, on top of decoding. On a phone or

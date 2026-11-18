@@ -3611,5 +3611,8 @@
   "Always IPv4": "始终只用 IPv4",
   "IPv4 and IPv6": "IPv4 和 IPv6 都用",
   "Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.": "自动画质停在 1080p：这台设备不能硬件解码 VP9 或 AV1，而 YouTube 在 1080p 以上只有这两种格式。你仍然可以手动选更高画质或选「画质优先」，这时会用软件解码，更耗电、更容易发热。",
-  "Off: nothing is recorded": "关闭：完全不记录"
+  "Off: nothing is recorded": "关闭：完全不记录",
+  "Mix with other apps": "与其他 App 混音",
+  "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "其他 App 的声音会随视频继续播放。此时 iOS 不会在锁屏和灵动岛上显示 Lumtub",
+  "mix audio other apps music": "混音 其他 App 音乐 声音 mix audio"
 }

@@ -96,6 +96,12 @@ final class PlayerLayer: NSObject {
     }
   }
 
+  /// The eye-care warm light, multiplied over the picture (opaque white:
+  /// none); see `PlayerSurface.warm`.
+  func setWarmth(argb: UInt32) {
+    surface.setWarmth(argb: argb)
+  }
+
   @objc private func didBecomeActive() {
     // iOS interrupts the layer while the app is in the background.
     var flush = displayLayer.status == .failed
@@ -250,15 +256,38 @@ final class PlayerSurface: UIView {
   var displayLayer: AVSampleBufferDisplayLayer? {
     didSet {
       oldValue?.removeFromSuperlayer()
-      if let displayLayer { layer.addSublayer(displayLayer) }
+      if let displayLayer { layer.insertSublayer(displayLayer, below: warm) }
     }
   }
+
+  /// The eye-care warm light: a colour multiplied into the picture by Core
+  /// Animation, so black stays black and white takes the colour. Above the
+  /// display layer, not in it: picture in picture shows the picture as it
+  /// is.
+  private let warm = CALayer()
 
   override init(frame: CGRect) {
     super.init(frame: frame)
     backgroundColor = .black
     isUserInteractionEnabled = false
     autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    warm.compositingFilter = "multiplyBlendMode"
+    warm.isHidden = true
+    layer.addSublayer(warm)
+  }
+
+  func setWarmth(argb: UInt32) {
+    let white = argb & 0x00FF_FFFF == 0x00FF_FFFF
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    warm.isHidden = white
+    warm.backgroundColor = UIColor(
+      red: CGFloat((argb >> 16) & 0xFF) / 255,
+      green: CGFloat((argb >> 8) & 0xFF) / 255,
+      blue: CGFloat(argb & 0xFF) / 255,
+      alpha: 1
+    ).cgColor
+    CATransaction.commit()
   }
 
   required init?(coder: NSCoder) {
@@ -270,6 +299,7 @@ final class PlayerSurface: UIView {
     CATransaction.begin()
     CATransaction.setDisableActions(true)
     displayLayer?.frame = bounds
+    warm.frame = bounds
     CATransaction.commit()
   }
 }

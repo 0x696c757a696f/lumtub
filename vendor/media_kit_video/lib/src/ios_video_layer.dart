@@ -68,6 +68,19 @@ class IosVideoLayer {
     if (available) await _channel.invokeMethod('Layer.AutoPip', _args({'on': on}));
   }
 
+  static int _warmth = 0xFFFFFFFF;
+
+  /// The eye-care warm light over the picture, as the colour white becomes
+  /// (opaque white: none). It is multiplied into the picture by Core
+  /// Animation above the layer: Flutter draws over the platform view and
+  /// has nothing of the picture to multiply. Picture in picture shows the
+  /// layer alone, unwarmed.
+  static Future<void> setWarmth(int argb) async {
+    if (!available || argb == _warmth) return;
+    _warmth = argb;
+    await _channel.invokeMethod('Layer.Warmth', _args({'argb': argb}));
+  }
+
   static Future<bool> supported() async => available && (await _channel.invokeMethod<bool>('Layer.PipSupported', _args()) ?? false);
 
   static final _byName = {for (final e in IosPipEvent.values) e.name: e};

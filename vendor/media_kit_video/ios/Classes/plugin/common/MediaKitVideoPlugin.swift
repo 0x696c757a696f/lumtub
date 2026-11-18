@@ -113,6 +113,9 @@ public class MediaKitVideoPlugin: NSObject, FlutterPlugin {
           live: args["live"] as? Bool ?? false
         )
         result(nil)
+      case "Layer.Warmth":
+        layer.setWarmth(argb: (args["argb"] as? NSNumber)?.uint32Value ?? 0xFFFF_FFFF)
+        result(nil)
       case "Layer.StartPip":
         result(layer.startPip())
       case "Layer.StopPip":

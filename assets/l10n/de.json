@@ -3579,5 +3579,6 @@
   "Save the subtitle files beside the video as SRT": "Untertiteldateien neben dem Video als SRT speichern",
   "WebM cannot hold subtitles, so the video is saved as MKV": "WebM kann keine Untertitel enthalten, daher wird das Video als MKV gespeichert",
   "Picture in picture when leaving the app": "Bild-in-Bild beim Verlassen der App",
-  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Zeigt das laufende Video in einem kleinen Fenster, wenn du zu einer anderen App wechselst; ist die Option aus, läuft der Ton im Hintergrund weiter"
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Zeigt das laufende Video in einem kleinen Fenster, wenn du zu einer anderen App wechselst; ist die Option aus, läuft der Ton im Hintergrund weiter",
+  "Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.": "Die automatische Qualität bleibt bei 1080p: Dieses Gerät kann VP9 oder AV1 nicht per Hardware dekodieren, und YouTube bietet über 1080p nichts anderes. Du kannst trotzdem eine höhere Qualität oder „Qualität zuerst“ wählen; dann wird per Software dekodiert, was mehr Akku verbraucht und das Gerät wärmer macht."
 }

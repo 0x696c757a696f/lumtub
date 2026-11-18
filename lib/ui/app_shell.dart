@@ -75,6 +75,7 @@ class _AppShellState extends State<AppShell> {
   final _searchFocus = FocusNode(debugLabel: 'search');
   StreamSubscription<String>? _notices;
   StreamSubscription<void>? _waylandTop;
+  StreamSubscription<void>? _softwareQuality;
   StreamSubscription<(CommunityPost, ChannelRef)>? _linkedPosts;
   StreamSubscription<DownloadTask>? _finished;
   Timer? _supportCheck;
@@ -115,6 +116,14 @@ class _AppShellState extends State<AppShell> {
     _linkedPosts = _controller.linkedPosts.listen((found) {
       if (mounted) unawaited(showLinkedPost(context, _controller, found.$1, found.$2));
     });
+    _softwareQuality = _controller.softwareQualityNotes.listen((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(tr("Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.")),
+        duration: const Duration(seconds: 15),
+        showCloseIcon: true,
+      ));
+    });
     _waylandTop = _controller.waylandTopNotes.listen((_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -152,6 +161,7 @@ class _AppShellState extends State<AppShell> {
     if (WindowChrome.menus.value == _menus) WindowChrome.menus.value = null;
     unawaited(_notices?.cancel());
     unawaited(_waylandTop?.cancel());
+    unawaited(_softwareQuality?.cancel());
     unawaited(_linkedPosts?.cancel());
     unawaited(_finished?.cancel());
     _supportCheck?.cancel();

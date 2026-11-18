@@ -336,8 +336,10 @@ fn model() -> String {
         .to_string()
 }
 
-/// iOS and iPadOS: asked of VideoToolbox like macOS, without the
-/// supplemental decoders, which only macOS registers.
+/// iOS and iPadOS: asked of VideoToolbox like macOS. The supplemental VP9
+/// and AV1 decoders are registered first where iOS lets apps do so (26.2
+/// and later); the function is looked up at run time, as older iOS has
+/// none. The app registers them at launch too, before libmpv starts.
 #[cfg(target_os = "ios")]
 pub fn probe() -> Option<Decoders> {
     #[link(name = "VideoToolbox", kind = "framework")]
@@ -347,6 +349,20 @@ pub fn probe() -> Option<Decoders> {
     const H264: u32 = u32::from_be_bytes(*b"avc1");
     const VP9: u32 = u32::from_be_bytes(*b"vp09");
     const AV1: u32 = u32::from_be_bytes(*b"av01");
+
+    // SAFETY: dlsym with the default handle and a NUL-terminated name; the
+    // symbol, when present, is VideoToolbox's `void (CMVideoCodecType)`.
+    unsafe {
+        let symbol = libc::dlsym(
+            libc::RTLD_DEFAULT,
+            c"VTRegisterSupplementalVideoDecoderIfAvailable".as_ptr(),
+        );
+        if !symbol.is_null() {
+            let register: unsafe extern "C" fn(u32) = std::mem::transmute(symbol);
+            register(VP9);
+            register(AV1);
+        }
+    }
 
     // SAFETY: a VideoToolbox function taking a four-character codec code.
     let supported = |codec: u32, height: u32| -> u32 {

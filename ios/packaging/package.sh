@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Finishes Runner.app and packs it in an IPA for sideloading.
 #
-#   package.sh <Runner.app> <liblumtub_core.dylib> <ipa>
+#   package.sh <Runner.app> <liblumtub_core.dylib> <ipa> [entitlements]
 #
+# With [entitlements] the app is signed carrying them: the TrollStore
+# build (.tipa) asks for VideoToolbox's VP9 decoder that way.
 # Without an Apple developer account the app is signed ad hoc only:
 # SideStore, AltStore, Sideloadly and TrollStore sign it again with the
 # user's own Apple ID (or, in TrollStore's case, install it as it is).
@@ -11,6 +13,7 @@ set -euo pipefail
 app=$1
 core=$2
 ipa=$3
+entitlements=${4:-}
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../.." && pwd)
 min_ios=$(/usr/libexec/PlistBuddy -c 'Print :MinimumOSVersion' "$app/Info.plist")
@@ -48,7 +51,12 @@ for binary in "$app/Frameworks/"*.framework; do
   lipo -info "$binary/$name"
   codesign --force --sign - "$binary"
 done
-codesign --force --sign - "$app"
+if [[ -n "$entitlements" ]]; then
+  codesign --force --sign - --entitlements "$entitlements" "$app"
+  codesign -d --entitlements - "$app"
+else
+  codesign --force --sign - "$app"
+fi
 codesign --verify --deep --strict "$app"
 
 stage=$(mktemp -d)

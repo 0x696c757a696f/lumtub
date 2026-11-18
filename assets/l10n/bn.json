@@ -3573,5 +3573,6 @@
   "Save the subtitle files beside the video as SRT": "সাবটাইটেল ফাইল ভিডিওর পাশে SRT হিসেবে সংরক্ষণ করুন",
   "WebM cannot hold subtitles, so the video is saved as MKV": "WebM সাবটাইটেল ধারণ করতে পারে না, তাই ভিডিওটি MKV হিসেবে সংরক্ষিত হবে",
   "Picture in picture when leaving the app": "অ্যাপ ছাড়ার সময় পিকচার-ইন-পিকচার",
-  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "অন্য অ্যাপে গেলে চলমান ভিডিওটি ছোট উইন্ডোতে চালু রাখে; বন্ধ থাকলে এর শব্দ ব্যাকগ্রাউন্ডে চলতে থাকে"
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "অন্য অ্যাপে গেলে চলমান ভিডিওটি ছোট উইন্ডোতে চালু রাখে; বন্ধ থাকলে এর শব্দ ব্যাকগ্রাউন্ডে চলতে থাকে",
+  "Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.": "স্বয়ংক্রিয় মান 1080p-তে থামে: এই ডিভাইস হার্ডওয়্যারে VP9 বা AV1 ডিকোড করতে পারে না, আর YouTube-এ 1080p-এর বেশি অন্য কিছু নেই। তবুও আপনি উচ্চতর মান বা «মান আগে» বেছে নিতে পারেন; তখন সফটওয়্যারে ডিকোড হয়, যাতে বেশি ব্যাটারি খরচ হয় এবং গরম হয়।"
 }

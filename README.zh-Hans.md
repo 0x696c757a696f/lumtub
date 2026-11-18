@@ -17,7 +17,7 @@
 ![macOS](https://img.shields.io/badge/macOS-Apple%20silicon%20%7C%20Intel-000000?logo=apple)
 ![Android](https://img.shields.io/badge/Android-%E6%89%8B%E6%9C%BA%20%7C%20%E5%B9%B3%E6%9D%BF%20%7C%20%E7%94%B5%E8%A7%86-3DDC84?logo=android&logoColor=white)
 ![iOS](https://img.shields.io/badge/iOS-iPhone%20%7C%20iPad%EF%BC%88%E9%A2%84%E8%A7%88%EF%BC%89-000000?logo=ios)
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
 [![翻译状态](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 
 [有什么不同](#有什么不同) · [功能](#功能) · [下载](#下载) · [隐私](#隐私哪些留在本机哪些会发出去) · [常见问题](#常见问题) · [支持](#支持-lumtub)
@@ -141,6 +141,16 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 
 或者先打开一次，点“完成”，再到 **系统设置 › 隐私与安全性** 里 Lumtub 旁边点“仍要打开”。之后的更新都能正常打开。
 
+### 只认官方渠道
+
+Lumtub 是免费的，只从以下渠道发布：
+- 本仓库的 [GitHub Releases](https://github.com/0x696c757a696f/lumtub/releases)；
+- 官网 [0x696c757a696f.github.io/lumtub](https://0x696c757a696f.github.io/lumtub/)（下载的是同一批文件）；
+- Lumtub 内置的自动更新（也从上面的 Releases 下载）；
+- 上面的 SideStore/AltStore 源，以及审核通过后的 `winget install Lumtub.Lumtub`。
+
+如果有人向你收费出售 Lumtub，或者换个名字卖却不提供源代码，那就不是本项目发布的，安装包也可能被动过手脚。Lumtub 的许可证（AGPL）允许别人转发甚至出售副本，但必须把完整源代码以同样的许可证一并提供给你，并保留版权声明。收费又闭源的副本违反了许可证。遇到这种情况，请把链接[提交到 issue](https://github.com/0x696c757a696f/lumtub/issues/new)，以便发起下架。
+
 ## 隐私：哪些留在本机，哪些会发出去
 
 留在你电脑上的：观看记录、统计、“不感兴趣”的选择，以及推荐模型本身。推荐在本机计算。Lumtub 从不读取浏览器的 Cookie 或配置文件。可选的浏览器登录会打开一个独立的临时窗口，只保留 YouTube 的 Cookie，加密保存在你的电脑上，其余全部删除。观看记录同步到 YouTube 默认关闭，除非你自己打开。
@@ -152,7 +162,7 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 - **SponsorBlock、DeArrow 和 Return YouTube Dislike** 开启后会连接它们自己的服务器，服务支持的话只发送视频 ID 的一小段哈希前缀。
 - **更新**从 GitHub 下载。
 
-所有代码都以 GPL 开源，这些都不需要只靠信任。
+所有代码都以 AGPL 开源，这些都不需要只靠信任。
 
 ## 常见问题
 
@@ -202,9 +212,9 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 
 ## 许可与致谢
 
-Lumtub 以 GNU 通用公共许可证第 3 版或更新版本（`GPL-3.0-or-later`）发布。
+Lumtub 以 GNU Affero 通用公共许可证第 3 版或更新版本（`AGPL-3.0-or-later`）发布。修改后的 Lumtub 如果作为网络服务提供给别人使用，也必须向这些用户提供源代码。0.2.51 及更早的版本以 `GPL-3.0-or-later` 发布。
 
-`lib/widgets/pilinara_settings_tiles.dart` 中的设置项改编自 [PiliNara](https://github.com/Starfallan/PiliNara)，版权归其贡献者所有，仍以 GPL-3.0-or-later 发布；Lumtub 的部分界面参考了 PiliNara 的设计。`vendor/pilinara-settings/` 是未经修改的 PiliNara 快照，仅供参考，不参与构建；PiliNara 的其余部分见上面链接的仓库。`vendor/media_kit_video/` 是修改过的 media_kit_video（见其中的 `LUMTUB.md`）。
+`lib/widgets/pilinara_settings_tiles.dart` 中的设置项改编自 [PiliNara](https://github.com/Starfallan/PiliNara)，版权归其贡献者所有，仍以 GPL-3.0-or-later 发布（可与 AGPL 合并使用）；Lumtub 的部分界面参考了 PiliNara 的设计。`vendor/pilinara-settings/` 是未经修改的 PiliNara 快照，仅供参考，不参与构建；PiliNara 的其余部分见上面链接的仓库。`vendor/media_kit_video/` 是修改过的 media_kit_video（见其中的 `LUMTUB.md`）。
 
 基于 [media_kit](https://github.com/media-kit/media-kit)、[mpv](https://mpv.io)、[yt-dlp](https://github.com/yt-dlp/yt-dlp) 和 [FFmpeg](https://ffmpeg.org) 构建。AI 频道名单来自 [KillSlop](https://killslop.app)（CC BY-SA 4.0）和 [AiSList](https://github.com/Override92/AiSList)（CC BY-NC 4.0），在运行时下载，不随 Lumtub 分发。内置的 Noto Sans SC 字体采用 SIL Open Font License 1.1（`assets/fonts/OFL.txt`）；Phosphor 图标字体采用 MIT 许可证（`assets/fonts/phosphor/LICENSE`）。其他软件包和组件保留各自的许可证；再分发前请参阅 `NOTICE`。
 

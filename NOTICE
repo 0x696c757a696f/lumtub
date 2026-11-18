@@ -1,3 +1,14 @@
+Lumtub is free software: you can redistribute it and/or modify it under the
+terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version. See LICENSE. Versions up to and including 0.2.51 were released
+under the GNU General Public License, version 3 or later.
+
+Files adapted from other projects keep their own licence: the PiliNara and
+prism_ui (FlClash) code below is under the GNU General Public License version
+3 (or later, where its source says so), which section 13 of both licences
+allows to be combined with the GNU Affero General Public License.
+
 Lumtub contains settings and player UI adapted from PiliNara.
 
 PiliNara: https://github.com/Starfallan/PiliNara

@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 e lart, pa kopjim)",
   "DirectX 12 (copy-back)": "DirectX 12 (me kopjim kthyes)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (më i qartë, ngarkesë e lartë për GPU)",
-  "GPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "GPLv3; një pjesë e ndërfaqes është përshtatur nga PiliNara, luajtja bazohet te mpv, media_kit dhe yt-dlp",
+  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; një pjesë e ndërfaqes është përshtatur nga PiliNara, luajtja bazohet te mpv, media_kit dhe yt-dlp",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU mënyra aktuale e dekodimit VP9 AV1 shtesa video",
   "GitHub source code": "Kodi burimor në GitHub",
   "GitHub repository": "Depoja në GitHub",

@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 සහ ඊට පසු, පිටපත් රහිත)",
   "DirectX 12 (copy-back)": "DirectX 12 (පිටපත් කර ආපසු)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (වඩාත් තියුණු, GPU භාරය ඉහළ)",
-  "GPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "GPLv3; අතුරුමුහුණතේ කොටස් PiliNara වෙතින් අනුවර්තනය කර ඇත, ධාවනය mpv, media_kit සහ yt-dlp මත ගොඩනගා ඇත",
+  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; අතුරුමුහුණතේ කොටස් PiliNara වෙතින් අනුවර්තනය කර ඇත, ධාවනය mpv, media_kit සහ yt-dlp මත ගොඩනගා ඇත",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU වත්මන් විකේතන ක්‍රමය VP9 AV1 වීඩියෝ දිගු",
   "GitHub source code": "GitHub මූල කේතය",
   "GitHub repository": "GitHub ගබඩාව",

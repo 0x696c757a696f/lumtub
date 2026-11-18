@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:flutter/painting.dart';
@@ -214,7 +215,7 @@ class LibassLook {
 /// size, outline and background, which mpv cannot set apart from the first
 /// subtitle's. Its letters are [secondEm] units at secondary-sub-scale 1;
 /// [outline] is the outline's width for a letter one unit wide.
-String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font, MainUnder? main}) {
+String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font, MainUnder? main, double aspect = 16 / 9}) {
   font ??= settings.secondaryFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.secondaryFont);
   final size = secondEm * settings.secondaryScale * LibassLook.lineEms(font);
   String colour(int rgb, double opacity) {
@@ -237,7 +238,9 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
   final out = StringBuffer()
     ..writeln('[Script Info]')
     ..writeln('ScriptType: v4.00+')
-    ..writeln('PlayResX: 1280')
+    // As wide as the picture, as mpv makes it for the main subtitle: lines
+    // then wrap at the same width in both (a portrait video's too).
+    ..writeln('PlayResX: ${(720 * aspect.clamp(0.3, 4.0)).round()}')
     ..writeln('PlayResY: 720')
     ..writeln('ScaledBorderAndShadow: yes')
     ..writeln('WrapStyle: 0')
@@ -266,10 +269,12 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
   final mainTag = '{\\fn${main.font.replaceAll(RegExp(r'[{}\\,]'), ' ')}\\fs${mainSize.toStringAsFixed(2)}\\b${settings.subtitleBold ? 1 : 0}}';
   // The gap the Flutter view leaves between the two, as a line that tall.
   final gap = '{\\alpha&HFF&\\fs${(secondEm * 6 / 32).toStringAsFixed(2)}}\\h';
-  final mainText = <SubtitleCue, String>{for (final cue in main.cues) cue: ass(LibassLayout.wrap(cue.text, main.room, font: main.wrapFont, bold: settings.subtitleBold))};
-  final secondText = <SubtitleCue, String>{for (final cue in cues) cue: second(cue.text)};
+  // Broken as Lumtub's copy of the main subtitle breaks them, blank lines
+  // left out as there.
+  final mainText = [for (final cue in main.cues) ass(LibassLayout.wrap(cue.text, main.room, font: main.wrapFont, bold: settings.subtitleBold).replaceAll(RegExp(r'\n\s*\n'), '\n'))];
+  final secondText = [for (final cue in cues) second(cue.text)];
   final times = <Duration>{for (final cue in cues) ...[cue.start, cue.end], for (final cue in main.cues) ...[cue.start, cue.end]}.toList()..sort();
-  bool on(SubtitleCue cue, Duration from, Duration to) => cue.start <= from && cue.end >= to;
+  final seconds = _Showing(cues), mains = _Showing(main.cues);
   String? last;
   Duration? lastStart, lastEnd;
   void flush() {
@@ -280,9 +285,9 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
     final from = times[i], to = times[i + 1];
     if (to <= from) continue;
     // libass stacks a later event above an earlier one.
-    final seconds = [for (final cue in cues.reversed) if (on(cue, from, to) && cue.text.trim().isNotEmpty) secondText[cue]!];
-    final mains = [for (final cue in main.cues.reversed) if (on(cue, from, to) && cue.text.trim().isNotEmpty) mainText[cue]!];
-    final text = seconds.isEmpty ? null : mains.isEmpty ? seconds.join(r'\N') : '${seconds.join(r'\N')}\\N$gap\\N{\\alpha&HFF&}$mainTag${mains.join(r'\N')}';
+    final above = [for (final i in seconds.at(from).toList().reversed) secondText[i]];
+    final under = [for (final i in mains.at(from).toList().reversed) mainText[i]];
+    final text = above.isEmpty ? null : under.isEmpty ? above.join(r'\N') : '${above.join(r'\N')}\\N$gap\\N{\\alpha&HFF&}$mainTag${under.join(r'\N')}';
     if (text == last && lastEnd == from) {
       lastEnd = to;
       continue;
@@ -294,6 +299,28 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
   }
   flush();
   return out.toString();
+}
+
+/// The cues of a list showing from one time on, for times asked in order:
+/// one pass over the list, as a long video has thousands.
+class _Showing {
+  _Showing(this.cues) : _byStart = List.generate(cues.length, (i) => i)..sort((a, b) => cues[a].start.compareTo(cues[b].start));
+
+  final List<SubtitleCue> cues;
+  final List<int> _byStart;
+  final _now = SplayTreeSet<int>();
+  var _next = 0;
+
+  /// The cues (by index, in list order) shown from [time] to the next time
+  /// any cue starts or ends.
+  Iterable<int> at(Duration time) {
+    while (_next < _byStart.length && cues[_byStart[_next]].start <= time) {
+      final i = _byStart[_next++];
+      if (cues[i].text.trim().isNotEmpty) _now.add(i);
+    }
+    _now.removeWhere((i) => cues[i].end <= time);
+    return _now;
+  }
 }
 
 /// The main subtitle drawn invisible under the second one in [secondAss]:

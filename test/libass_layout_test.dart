@@ -103,5 +103,26 @@ void main() {
       final ass = secondAss([(start: s(1), end: s(3), text: 'x')], settings, outline: 0, main: (cues: const [], font: 'Arial', room: 60.0, wrapFont: ''));
       expect(events(ass), ['Dialogue: 0,0:00:01.00,0:00:03.00,Default,,0,0,0,,x']);
     });
+
+    test('is as wide as the picture, so lines wrap where the main one does', () {
+      expect(secondAss(const [], settings, outline: 0, aspect: 9 / 16), contains('PlayResX: 405'));
+      expect(secondAss(const [], settings, outline: 0), contains('PlayResX: 1280'));
+    });
+
+    test('blank lines in the main subtitle are left out, as in its copy', () {
+      final ass = secondAss([(start: s(0), end: s(1), text: 'x')], settings, outline: 0, main: (cues: [(start: s(0), end: s(1), text: 'a\n\nb')], font: 'Arial', room: 60.0, wrapFont: ''));
+      expect(events(ass).single, endsWith(r'a\Nb'));
+    });
+
+    test('thousands of overlapping cues take one pass', () {
+      final many = [for (var i = 0; i < 6000; i++) (start: s(i * 1.0), end: s(i + 2.5), text: 'line $i')];
+      final watch = Stopwatch()..start();
+      final ass = secondAss(many, settings, outline: 0, main: (cues: many, font: 'Arial', room: 60.0, wrapFont: ''));
+      expect(watch.elapsedMilliseconds, lessThan(3000));
+      final lines = events(ass);
+      expect(lines.length, greaterThan(6000));
+      // From 10.5 s to 11 s lines 9 and 10 show: the later one on top.
+      expect(lines.firstWhere((l) => l.contains('0:00:10.50,0:00:11.00')), contains(r',line 10\Nline 9\N'));
+    });
   });
 }

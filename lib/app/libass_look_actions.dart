@@ -123,6 +123,7 @@ extension LibassLookActions on AppController {
       settings.subtitleScale,
       _mainFont,
       _roomEms(settings.subtitleScale),
+      _videoAspect.toStringAsFixed(2),
       // The outline is in the copy's letters, which follow the player's size.
       (look.em > 0 ? look.border / look.em * 100 : 0).round(),
     ].join('|');
@@ -234,7 +235,7 @@ extension LibassLookActions on AppController {
       final mainCues = mainTrack == null ? const <SubtitleCue>[] : await _trackCues(platform, mainTrack);
       if (!current()) return source;
       final main = (cues: mainCues, font: _mainFont, room: _roomEms(settings.subtitleScale).toDouble(), wrapFont: settings.subtitleFont);
-      text = secondAss(cues, settings, outline: look.em > 0 ? look.border / look.em : 0, room: room.toDouble(), font: font, main: main);
+      text = secondAss(cues, settings, outline: look.em > 0 ? look.border / look.em : 0, room: room.toDouble(), font: font, main: main, aspect: _videoAspect);
     } else {
       final room = _roomEms(settings.subtitleScale).toDouble();
       final wrapped = [for (final c in cues) LibassLayout.wrap(c.text, room, font: settings.subtitleFont, bold: settings.subtitleBold)];

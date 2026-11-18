@@ -1192,6 +1192,25 @@ jobs:
           lipo -info "$core"
           echo "LUMTUB_CORE=$PWD/$core" >> "$GITHUB_ENV"
 
+      # libmpv with the avfoundation video output (picture in picture),
+      # built from MPVKit's sources; only libmpv itself is compiled.
+      - name: iOS - cache the patched libmpv
+        id: libmpv
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: vendor/media_kit_libs_ios_video/ios/.libmpv
+          key: ios-libmpv-${{ hashFiles('vendor/media_kit_libs_ios_video/ios/mpvkit.lock', 'vendor/media_kit_libs_ios_video/ios/build_libmpv.sh', 'vendor/media_kit_libs_ios_video/ios/patch/*.patch') }}
+
+      - name: iOS - build the patched libmpv
+        run: |
+          cd vendor/media_kit_libs_ios_video/ios
+          if [ -f .libmpv/libmpv.a ]; then
+            # Restored from the cache: newer than the checkout, so make keeps it.
+            touch .libmpv/libmpv.a
+          else
+            make .libmpv/libmpv.a
+          fi
+
       - name: iOS - get packages
         run: flutter pub get
 

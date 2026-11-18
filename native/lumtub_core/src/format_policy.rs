@@ -279,7 +279,18 @@ impl Settings {
         parts.join("/")
     }
 
-    /// Picture quality first, then the preferred codec as a tie-break.
+    /// Whether HDR pictures rank above standard range ones of the same size
+    /// and frame rate: only with the quality strategy.
+    pub(crate) fn prefers_hdr(&self) -> bool {
+        self.strategy == Strategy::Quality
+    }
+
+    /// Picture quality first, then standard range before HDR, then the
+    /// preferred codec as a tie-break. The picture reaches the screen
+    /// through an 8-bit standard range texture, so HDR only costs: a
+    /// 10-bit decode (VP9 profile 2, which some hardware decoders lack,
+    /// sending it to the CPU) and tone mapping on the GPU every frame.
+    /// YouTube has every HDR video in standard range too.
     /// The quality strategy keeps yt-dlp's own ranking, but without AV1
     /// hardware decoding VP9 (HDR VP9 too) ranks above AV1 of the same
     /// size and frame rate; a size only AV1 has still wins.
@@ -292,7 +303,7 @@ impl Settings {
         }
         self.codec_order()
             .first()
-            .map(|c| format!("res,fps,vcodec:{}", c.sort_name()))
+            .map(|c| format!("res,fps,hdr:sdr,vcodec:{}", c.sort_name()))
     }
 
     pub fn policy(&self) -> Policy {
@@ -343,7 +354,7 @@ mod tests {
             settings(r#"{"hardware":["av1"],"maxHeight":720}"#)
                 .format_sort()
                 .unwrap(),
-            "res,fps,vcodec:av01"
+            "res,fps,hdr:sdr,vcodec:av01"
         );
     }
 

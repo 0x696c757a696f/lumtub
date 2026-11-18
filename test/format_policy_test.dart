@@ -81,7 +81,7 @@ void main() {
     test('uses software AVC, VP9, then AV1 when hardware decoding is off', () {
       const settings = PlayerSettings(disabledCodecs: {}, hwdec: 'no', decoderResults: {'av1': _hw, 'vp9': _hw});
       expect(_order(settings).take(3), [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1]);
-      expect(FormatPolicy.formatSort(settings), 'res,fps,vcodec:avc');
+      expect(FormatPolicy.formatSort(settings), 'res,fps,hdr:sdr,vcodec:avc');
     });
 
     test('uses AV1, then VP9, then H.264 when AV1 hardware decoding is verified', () {
@@ -99,7 +99,7 @@ void main() {
     test('never exceeds the user-selected default quality', () {
       const settings = PlayerSettings(disabledCodecs: {}, maxHeight: 720, decoderResults: {'av1': _hw});
       expect(_expression(settings), startsWith('bestvideo[height<=?720]+bestaudio[format_note*=original]/'));
-      expect(FormatPolicy.formatSort(settings), 'res,fps,vcodec:av01');
+      expect(FormatPolicy.formatSort(settings), 'res,fps,hdr:sdr,vcodec:av01');
     });
 
     test('puts AV1 before H.264 only with verified hardware decoding', () {
@@ -181,7 +181,7 @@ void main() {
     test('filters disabled codecs before sorting by the verified decoder ladder', () {
       const settings = PlayerSettings(disabledCodecs: {VideoCodec.av1}, decoderResults: {'vp9': _hw});
       expect(_expression(settings), startsWith('bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio[format_note*=original]/'));
-      expect(FormatPolicy.formatSort(settings), 'res,fps,vcodec:vp9');
+      expect(FormatPolicy.formatSort(settings), 'res,fps,hdr:sdr,vcodec:vp9');
     });
 
     test('never appear in the order or in any alternative of any strategy', () {
@@ -223,9 +223,9 @@ void main() {
     });
 
     test('sorts highest resolution and frame rate before the hardware decoder preference', () {
-      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {})), 'res,fps,vcodec:avc');
-      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw})), 'res,fps,vcodec:vp9');
-      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, decoderResults: {'av1': _hw})), 'res,fps,vcodec:av01');
+      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {})), 'res,fps,hdr:sdr,vcodec:avc');
+      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw})), 'res,fps,hdr:sdr,vcodec:vp9');
+      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, decoderResults: {'av1': _hw})), 'res,fps,hdr:sdr,vcodec:av01');
       expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality)), isNull);
     });
 

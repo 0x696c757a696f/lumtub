@@ -47,6 +47,8 @@ struct Format<'a> {
     video: bool,
     height: u32,
     fps: u32,
+    /// A high dynamic range picture (PQ or HLG, `2160p60 HDR`).
+    hdr: bool,
     bitrate: u64,
     default_audio: bool,
     /// Marked `acont=original`: the video's own sound, whichever track
@@ -137,6 +139,14 @@ fn format(raw: &Value) -> Option<Format<'_>> {
         video,
         height: number(raw.get("height")).unwrap_or(0) as u32,
         fps: number(raw.get("fps")).unwrap_or(0) as u32,
+        hdr: raw
+            .get("colorInfo")
+            .and_then(|c| c.get("transferCharacteristics")?.as_str())
+            .is_some_and(|t| t.contains("2084") || t.contains("B67"))
+            || raw
+                .get("qualityLabel")
+                .and_then(Value::as_str)
+                .is_some_and(|l| l.contains("HDR")),
         bitrate: number(raw.get("bitrate"))
             .or_else(|| number(raw.get("averageBitrate")))
             .unwrap_or(0),
@@ -246,12 +256,16 @@ pub fn info(player: &Value, settings: &Settings) -> Option<Value> {
     let order = settings.codec_order();
     let rank = |f: &Format| Codec::of(&f.codec).and_then(|c| order.iter().position(|o| *o == c));
     let cap = settings.max_height;
+    // The same picture in standard range before HDR (see
+    // Settings::format_sort), except for the quality strategy.
+    let sdr = |f: &Format| !settings.prefers_hdr() && !f.hdr;
     let video = formats
         .iter()
         .filter(|f| f.video && f.height > 0 && (cap == 0 || f.height <= cap) && rank(f).is_some())
         .max_by(|a, b| {
             (a.height, a.fps)
                 .cmp(&(b.height, b.fps))
+                .then(sdr(a).cmp(&sdr(b)))
                 .then(rank(b).cmp(&rank(a)))
                 .then(a.bitrate.cmp(&b.bitrate))
         })?;
@@ -416,6 +430,31 @@ mod tests {
         assert_eq!(picked(&no_vp9), ["399", "251"]);
         let low = info(&player(), &settings(r#"{"maxHeight":720,"audio":"low"}"#)).unwrap();
         assert_eq!(picked(&low), ["136", "250"]);
+    }
+
+    #[test]
+    fn standard_range_before_hdr_unless_quality_first() {
+        let mut p = player();
+        let mut hdr = stream(
+            337,
+            "video/webm; codecs=\"vp09.02.51.10.01.09.16.09.00\"",
+            2160,
+            30_000_000,
+        );
+        hdr["colorInfo"] =
+            json!({"transferCharacteristics": "COLOR_TRANSFER_CHARACTERISTICS_SMPTEST2084"});
+        p["streamingData"]["adaptiveFormats"]
+            .as_array_mut()
+            .unwrap()
+            .push(hdr);
+        let auto = info(&p, &settings(r#"{"hardware":["vp9"]}"#)).unwrap();
+        assert_eq!(picked(&auto), ["313", "251"]);
+        let quality = info(
+            &p,
+            &settings(r#"{"strategy":"quality","hardware":["vp9"]}"#),
+        )
+        .unwrap();
+        assert_eq!(picked(&quality)[0], "337");
     }
 
     #[test]

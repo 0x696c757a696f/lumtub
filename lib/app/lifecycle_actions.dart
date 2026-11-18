@@ -60,6 +60,7 @@ extension LifecycleActions on AppController {
       final (_, _, _, settings, preferences, _, _, _) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load(), channelPlayback.load(), watchTime.load(), supportReminder.load()).wait;
       this.supportReminder = supportReminder..used(DateTime.now());
       AppLog.level = preferences.logLevel;
+      unawaited(writeLogsOff(preferences.logLevel == LogLevel.off));
       this.channelPlayback = channelPlayback;
       this.watchTime = watchTime;
       speechStore = SpeechSubtitleStore(Directory('${directories.data.path}${Platform.pathSeparator}speech'));

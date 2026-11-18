@@ -8,6 +8,7 @@ extension SettingsActions on AppController {
     _update(() => preferences = next);
     if (next.logLevel != AppLog.level) {
       AppLog.level = next.logLevel;
+      unawaited(writeLogsOff(next.logLevel == LogLevel.off));
       logInfo('Log level ${next.logLevel.name}');
       // libmpv's own notes follow at once, not after a restart.
       if (player?.platform case final NativePlayer native) unawaited(native.requestLogMessages(next.logLevel == LogLevel.debug ? MPVLogLevel.info : MPVLogLevel.warn));
@@ -19,6 +20,24 @@ extension SettingsActions on AppController {
       await _preferencesStore?.save(next);
     } on FileSystemException {
       _notice(tr("Couldn't save settings. They still apply for this session."));
+    }
+  }
+
+  /// The Windows runner writes a crash dump to the logs folder unless
+  /// `config\logs-off` says the log is off.
+  Future<void> writeLogsOff(bool off) async {
+    final config = directories?.config;
+    if (config == null || !Platform.isWindows) return;
+    final file = File('${config.path}${Platform.pathSeparator}logs-off');
+    try {
+      if (!off) {
+        if (await file.exists()) await file.delete();
+      } else {
+        await config.create(recursive: true);
+        await file.writeAsString('');
+      }
+    } on FileSystemException {
+      // The crash dump setting follows at the next change.
     }
   }
 

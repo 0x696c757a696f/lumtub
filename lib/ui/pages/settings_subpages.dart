@@ -1059,6 +1059,7 @@ List<SettingEntry> aboutEntries(AppController controller) => [
     ];
 
 List<(LogLevel, String)> get _logLevels => [
+      (LogLevel.off, tr('Off: nothing is recorded')),
       (LogLevel.error, tr('Errors: only problems Lumtub could not get past')),
       (LogLevel.warn, tr('Warnings: also problems Lumtub worked around')),
       (LogLevel.info, tr('Info: also what Lumtub did (default)')),
@@ -1085,7 +1086,7 @@ class _LogsPageState extends State<_LogsPage> {
 
   static LogLevel _levelOf(String rest) {
     for (final level in LogLevel.values) {
-      if (rest.startsWith(level.tag.trim())) return level;
+      if (level != LogLevel.off && rest.startsWith(level.tag.trim())) return level;
     }
     // Lines from before levels were written, such as 错误 ones.
     return rest.startsWith('错误') ? LogLevel.error : LogLevel.info;
@@ -1214,7 +1215,7 @@ class _LogsPageState extends State<_LogsPage> {
                         LogLevel.error => context.colors.error,
                         LogLevel.warn => context.colors.tertiary,
                         LogLevel.debug => context.colors.outline,
-                        LogLevel.info => null,
+                        LogLevel.info || LogLevel.off => null,
                       };
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),

@@ -102,7 +102,7 @@ class _CommentsSectionState extends State<CommentsSection> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         CallbackShortcuts(
           bindings: {const SingleActivator(LogicalKeyboardKey.escape): _toggleSearch},
-          child: TextField(
+          child: OwnScrollMemory(child: TextField(
           controller: _search,
           autofocus: true,
           decoration: InputDecoration(
@@ -113,7 +113,7 @@ class _CommentsSectionState extends State<CommentsSection> {
             suffixIcon: IconButton(tooltip: tr('Close search'), icon: Icon(AppIcons.x, size: 18), onPressed: _toggleSearch),
           ),
           onChanged: (text) => setState(() => _words = commentQueryWords(text)),
-        ),
+        )),
         ),
         const SizedBox(height: 4),
         // The button goes under the line when a translation leaves the line
@@ -483,7 +483,7 @@ class _CommentComposerState extends State<CommentComposer> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        TextField(
+        OwnScrollMemory(child: TextField(
           controller: _text,
           focusNode: _focus,
           autofocus: widget.autofocus,
@@ -501,7 +501,7 @@ class _CommentComposerState extends State<CommentComposer> {
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             border: const OutlineInputBorder(),
           ),
-        ),
+        )),
         const SizedBox(height: 4),
         Row(children: [
           if (!_sending) EmojiButton(field: _text, focus: _focus, size: 16),

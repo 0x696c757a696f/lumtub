@@ -113,6 +113,12 @@ flutter:
     - family: Lumtub Quotes
       fonts:
         - asset: assets/fonts/LumtubQuotes-Regular.ttf
+    # Empty glyphs for invisible characters (Hangul fillers, zero-width
+    # spaces, direction marks) that iOS draws as a box when no font has
+    # them; made by assets/fonts/make_blank_font.py.
+    - family: Lumtub Blank
+      fonts:
+        - asset: assets/fonts/LumtubBlank-Regular.ttf
     # Display faces for the built-in skins (SIL OFL 1.1, skins/fonts/OFL-*.txt).
     # Baloo 2 and Exo 2 are cut to one weight and Latin letters.
     - family: Audiowide

@@ -1,0 +1,19 @@
+# zizmor (https://docs.zizmor.sh) checks the workflows in Checks. Each rule
+# turned off here was looked at; the reason is next to it.
+rules:
+  cache-poisoning:
+    ignore:
+      # Release tags skip every cache step (if: !startsWith(github.ref,
+      # 'refs/tags/')), which zizmor does not read; main's caches are filled
+      # only by main's own runs.
+      - build.yml
+  dangerous-triggers:
+    ignore:
+      # Each job checks the run it reacts to (event, actor, repository of
+      # the branch) and none checks out or runs a pull request's code.
+      - alarm.yml
+      - dependabot-merge.yml
+      - packages.yml
+      # issue_comment: only removes a label, through gh, with the issue's
+      # number; the comment's text is never read.
+      - issues.yml

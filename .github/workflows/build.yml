@@ -118,8 +118,15 @@ jobs:
             local id
             for id in $(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=built-$tree&per_page=20" \
                 --jq '[.artifacts[] | select(.expired | not) | .workflow_run.id] | unique | reverse | .[]'); do
-              read -r event branch conclusion <<< "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq '"\(.event) \(.head_branch) \(.conclusion)"')"
+              read -r event branch conclusion repo path <<< "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq '"\(.event) \(.head_branch) \(.conclusion) \(.head_repository.full_name) \(.path)"')"
               [[ "$conclusion" == success ]] || continue
+              # Only a run of this repository's own Build, on a branch of this
+              # repository: a fork's pull request runs its own copy of the
+              # workflows and could upload a marker and packages for any tree.
+              if [[ "$repo" != "$GITHUB_REPOSITORY" || "$path" != .github/workflows/build.yml ]]; then
+                echo "Not reusing run $id ($event from $repo, $path)."
+                continue
+              fi
               # The daily run wants a build made on main, for main's caches.
               if [[ "$EVENT" == schedule ]] && ! [[ "$event" == push || "$event" == schedule ]]; then continue; fi
               names=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts?per_page=100" \
@@ -188,6 +195,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
@@ -287,7 +295,7 @@ jobs:
 
       - name: Windows ARM64 - restore ANGLE
         id: angle-cache
-        if: matrix.package_arch == 'arm64'
+        if: matrix.package_arch == 'arm64' && !startsWith(github.ref, 'refs/tags/')
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/angle-arm64
@@ -296,12 +304,14 @@ jobs:
       - name: Windows ARM64 - build ANGLE
         if: matrix.package_arch == 'arm64' && steps.angle-cache.outputs.cache-hit != 'true'
         shell: pwsh
+        env:
+          VCPKG_ROOT_DIR: ${{ steps.vcpkg.outputs.root }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $vcpkg = Join-Path '${{ steps.vcpkg.outputs.root }}' 'vcpkg.exe'
+          $vcpkg = Join-Path $env:VCPKG_ROOT_DIR 'vcpkg.exe'
           & $vcpkg install angle:arm64-windows --clean-after-build
           if ($LASTEXITCODE -ne 0) { throw 'vcpkg could not build ANGLE for arm64.' }
-          $installed = Join-Path '${{ steps.vcpkg.outputs.root }}' 'installed/arm64-windows'
+          $installed = Join-Path $env:VCPKG_ROOT_DIR 'installed/arm64-windows'
           $out = Join-Path $env:RUNNER_TEMP 'angle-arm64'
           New-Item -ItemType Directory -Force -Path (Join-Path $out 'lib') | Out-Null
           Copy-Item (Join-Path $installed 'bin/*.dll') $out
@@ -384,6 +394,7 @@ jobs:
 
       # Keyed by the toolchain installed above, so a new stable starts a fresh cache.
       - name: Windows - cache Rust dependencies
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: native/lumtub_core
@@ -677,6 +688,7 @@ jobs:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
@@ -708,6 +720,7 @@ jobs:
           "$HOME/.cargo/bin/rustc" --version
 
       - name: Linux - cache Rust dependencies
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: native/lumtub_core
@@ -735,6 +748,7 @@ jobs:
 
       # GitHub's release downloads time out now and then; keep them between runs.
       - name: Linux - cache downloads
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .linux-downloads
@@ -893,6 +907,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: true  # zizmor: ignore[artipacked] this job pushes with git
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Check whether pictures are wanted
         id: wanted
@@ -962,6 +977,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
@@ -985,6 +1001,7 @@ jobs:
           rustup default stable
 
       - name: macOS - cache Rust dependencies
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: native/lumtub_core
@@ -1010,6 +1027,7 @@ jobs:
       # vendor/media_kit_libs_macos_video/LUMTUB.md). The podspec would run the
       # same make during pod install, but with its output hidden.
       - name: macOS - cache MPVKit downloads
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: vendor/media_kit_libs_macos_video/macos/.cache
@@ -1159,6 +1177,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: iOS - read the Flutter version
         shell: bash
@@ -1178,6 +1198,7 @@ jobs:
           rustup default stable
 
       - name: iOS - cache Rust dependencies
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: native/lumtub_core
@@ -1239,6 +1260,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: true  # zizmor: ignore[artipacked] this job pushes with git
 
       - name: Android - read the Flutter version
         shell: bash
@@ -1268,6 +1291,7 @@ jobs:
           cargo install cargo-ndk --locked
 
       - name: Android - cache Rust dependencies
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: native/lumtub_core
@@ -1456,6 +1480,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           # Cone mode: files at the top, such as pubspec.yaml, come along;
           # cargo can't list the core's files in a non-cone checkout.
           sparse-checkout: |

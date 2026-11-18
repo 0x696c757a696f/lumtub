@@ -54,6 +54,12 @@ class PlayerOptionApplicator {
       // colour values come out the same and the picture turns green and
       // purple. Bilinear chroma reads it through the right swizzle.
       if (Platform.isIOS) 'cscale': 'bilinear',
+      // mpv's OpenGL ES bridge for VideoToolbox frames takes 8-bit NV12
+      // only: a 10-bit HDR picture (P010) fails there ("Format
+      // unsupported") and the video shows as a flat blue. VideoToolbox
+      // hands every picture over as NV12 instead; mpv still tone-maps it
+      // from the colours the stream says.
+      if (Platform.isIOS) 'hwdec-image-format': 'nv12',
       // AV1's film grain is noise added to every frame after decoding.
       // Where the renderer cannot add it, mpv's automatic choice has the
       // CPU do it, frame by frame, on top of decoding. On a phone or

@@ -34,6 +34,11 @@ abstract class PlatformVideoController {
   /// [Rect] of the video output, received from the native implementation.
   final ValueNotifier<Rect?> rect = ValueNotifier<Rect?>(null);
 
+  /// Lumtub: on iOS the picture is not a texture but libmpv's avfoundation
+  /// video output, a layer shown in a platform view; this is the player's
+  /// handle the view asks for (see [IosVideoLayer]). Null with a texture.
+  int? layerHandle;
+
   /// {@macro platform_video_controller}
   PlatformVideoController(
     this.player,

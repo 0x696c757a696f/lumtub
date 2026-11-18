@@ -150,6 +150,7 @@ part 'search_actions.dart';
 part 'lifecycle_actions.dart';
 part 'account_actions.dart';
 part 'window_actions.dart';
+part 'ios_pip_actions.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
 
@@ -866,6 +867,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool get subtitlesOff => _subtitlesOffIn.isNotEmpty;
 
   bool _backgroundAudioOnly = false;
+  /// iPhone and iPad: following the player for picture in picture.
+  _IosPipSync? _iosPip;
+  bool _iosAutoPip = false;
   bool _windowHidden = false;
   bool? _efficient;
 

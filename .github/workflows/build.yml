@@ -8,16 +8,23 @@ on:
         type: choice
         options: [latest, media_kit]
         default: latest
+      platforms:
+        description: 'Packages to build: every platform, or one alone'
+        type: choice
+        options: [all, windows, linux, macos, ios, android]
+        default: all
   push:
     branches: [main]
     tags: ['v*']
     # Pictures, text and the website alone need no new build (tags are
     # built whatever they change).
     paths-ignore: ['**.md', 'docs/**', 'website/**']
-  # A pull request gets the quick checks (checks.yml); it builds every
-  # package here only when it carries the label "full build" or its newest
-  # commit message has [full] (or [showcase]). Dependabot's pull requests
-  # are always built, since they're merged once the build passes.
+  # A pull request gets the quick checks (checks.yml); it builds packages
+  # here only when it carries the label "full build" or its newest commit
+  # message asks: [full] builds the platforms whose files the push changed,
+  # [ios], [android] and the like that one alone, [all] or [showcase] every
+  # one (docs/CI.md). Dependabot's pull requests are always built in full,
+  # since they're merged once the build passes.
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, labeled]
@@ -48,10 +55,20 @@ jobs:
     permissions:
       actions: read
       contents: read
+      pull-requests: read
     outputs:
       run: ${{ steps.find.outputs.run }}
       build: ${{ steps.wanted.outputs.build }}
+      # The platforms to build, as a JSON list (see "Which platforms").
+      platforms: ${{ steps.wanted.outputs.platforms }}
     steps:
+      # The workflow's own copy of the script that maps paths to platforms.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: true
+
       - name: Decide whether to build
         id: wanted
         env:
@@ -62,9 +79,15 @@ jobs:
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
           HEAD: ${{ github.event.pull_request.head.sha }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          BEFORE: ${{ github.event.before }}
+          CHOSEN: ${{ inputs.platforms }}
         run: |
           set -euo pipefail
+          every='["windows","linux","macos","ios","android"]'
           build=true
+          platforms=
+          message=
           if [[ "$EVENT" == pull_request ]]; then
             message=$(gh api "repos/$GITHUB_REPOSITORY/commits/$HEAD" --jq .commit.message)
             if [[ "$ACTION" == labeled && "$LABEL" != 'full build' ]]; then
@@ -72,16 +95,56 @@ jobs:
               echo "Another label; nothing to build."
             elif [[ "$AUTHOR" == 'dependabot[bot]' ]]; then
               echo "Dependabot's pull request: built in full."
+              platforms=$every
             elif jq -e 'index("full build")' <<< "$LABELS" > /dev/null; then
-              echo "Labelled \"full build\": built in full."
-            elif grep -qF -e '[full]' -e '[showcase]' <<< "$message"; then
-              echo "The commit asks for the full build."
+              echo "Labelled \"full build\"."
+            elif grep -qE '\[(full|all|showcase|windows|linux|macos|ios|android)\]' <<< "$message"; then
+              echo "The commit asks for a build."
             else
               build=false
-              echo "Quick checks only (Checks workflow); main builds every package after the merge."
+              echo "Quick checks only (Checks workflow); main builds what the merge changed."
             fi
           fi
+
+          # Which platforms: one named in the commit message ([ios] ...) or
+          # chosen for a manual run; every one for [all], [showcase], the
+          # daily run and release tags; otherwise those whose files the
+          # change touched (.github/scripts/build_platforms.py).
+          named=$(grep -oE '\[(windows|linux|macos|ios|android)\]' <<< "$message" | head -n1 | tr -d '[]' || true)
+          if [[ "$build" != true || -n "$platforms" ]]; then
+            :
+          elif [[ -n "$named" ]]; then
+            platforms="[\"$named\"]"
+          elif [[ "$EVENT" == workflow_dispatch ]]; then
+            if [[ -z "$CHOSEN" || "$CHOSEN" == all ]]; then platforms=$every; else platforms="[\"$CHOSEN\"]"; fi
+          elif [[ "$EVENT" == schedule || "$GITHUB_REF" == refs/tags/v* ]] || grep -qE '\[(all|showcase)\]' <<< "$message"; then
+            platforms=$every
+          else
+            files=
+            if [[ "$EVENT" == pull_request && "$ACTION" == synchronize && -n "$BEFORE" ]] || [[ "$EVENT" == push && -n "$BEFORE" && ! "$BEFORE" =~ ^0+$ ]]; then
+              # What this push changed.
+              after=${HEAD:-$GITHUB_SHA}
+              files=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BEFORE...$after" --jq 'if (.files | length) >= 300 then "*" else .files[].filename end' || echo '*')
+            elif [[ "$EVENT" == pull_request ]]; then
+              # A pull request opened or labelled: all it changes.
+              files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$NUMBER/files?per_page=100" --jq '.[].filename' || echo '*')
+            else
+              files='*'
+            fi
+            if grep -qx '\*' <<< "$files"; then
+              platforms=$every
+            else
+              platforms=$(python3 -I .github/scripts/build_platforms.py <<< "$files")
+            fi
+            echo "Changed files:"; head -n 50 <<< "$files"
+          fi
+          if [[ "$build" == true && "$platforms" == '[]' ]]; then
+            build=false
+            echo "Nothing a package carries changed; nothing to build."
+          fi
+          echo "Platforms: ${platforms:-none}"
           echo "build=$build" >> "$GITHUB_OUTPUT"
+          echo "platforms=${platforms:-$every}" >> "$GITHUB_OUTPUT"
 
       # One full build at a time: a run waits until the Build runs started
       # before it have finished (each waits only for older runs, so two never
@@ -160,7 +223,7 @@ jobs:
   windows:
     name: Windows ${{ matrix.package_arch }}
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'windows') }}
     strategy:
       fail-fast: false
       matrix:
@@ -631,7 +694,7 @@ jobs:
   linux:
     name: Linux ${{ matrix.package_arch }}
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'linux') }}
     strategy:
       fail-fast: false
       matrix:
@@ -964,7 +1027,7 @@ jobs:
   macos:
     name: macOS
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'macos') }}
     # The signing keys live in the "release" environment, which only main
     # and v* tags may use (docs/SECURITY.md); other branches and pull
     # requests build without them and sign with a debug key.
@@ -1169,10 +1232,10 @@ jobs:
   ios:
     name: iOS
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'ios') }}
     # An unsigned IPA for SideStore, AltStore, Sideloadly or TrollStore:
     # without an Apple developer account nothing else installs on an iPhone.
-    runs-on: macos-15
+    runs-on: macos-15-intel
     permissions:
       contents: read
     steps:
@@ -1187,7 +1250,9 @@ jobs:
       - name: iOS - install Flutter stable SDK
         run: |
           archive="$RUNNER_TEMP/flutter.zip"
-          curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_$FLUTTER_VERSION-stable.zip"
+          # The Flutter SDK for this Mac's CPU (Apple silicon or Intel).
+          case "$(uname -m)" in arm64) sdk=macos_arm64 ;; *) sdk=macos ;; esac
+          curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_${sdk}_$FLUTTER_VERSION-stable.zip"
           unzip -q "$archive" -d "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/flutter/bin/flutter" --version
@@ -1212,6 +1277,25 @@ jobs:
           core=native/lumtub_core/target/aarch64-apple-ios/release/liblumtub_core.dylib
           lipo -info "$core"
           echo "LUMTUB_CORE=$PWD/$core" >> "$GITHUB_ENV"
+
+      # libmpv with the avfoundation video output (picture in picture),
+      # built from MPVKit's sources; only libmpv itself is compiled.
+      - name: iOS - cache the patched libmpv
+        id: libmpv
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: vendor/media_kit_libs_ios_video/ios/.libmpv
+          key: ios-libmpv-${{ hashFiles('vendor/media_kit_libs_ios_video/ios/mpvkit.lock', 'vendor/media_kit_libs_ios_video/ios/build_libmpv.sh', 'vendor/media_kit_libs_ios_video/ios/patch/*.patch') }}
+
+      - name: iOS - build the patched libmpv
+        run: |
+          cd vendor/media_kit_libs_ios_video/ios
+          if [ -f .libmpv/libmpv.a ]; then
+            # Restored from the cache: newer than the checkout, so make keeps it.
+            touch .libmpv/libmpv.a
+          else
+            make .libmpv/libmpv.a
+          fi
 
       - name: iOS - get packages
         run: flutter pub get
@@ -1257,7 +1341,7 @@ jobs:
   android:
     name: Android
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'android') }}
     # The signing keys live in the "release" environment, which only main
     # and v* tags may use (docs/SECURITY.md); other branches and pull
     # requests build without them and sign with a debug key.

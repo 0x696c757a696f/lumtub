@@ -193,13 +193,17 @@ class WindowsShellSync {
         _status(player?.state.playing ?? false);
       }
     }
-    // Android: going home while a video plays on the watch page keeps it
-    // in picture in picture, when chosen in the settings; otherwise its
-    // sound plays on in the background.
-    final autoPip = Platform.isAndroid && !Device.tv && controller.preferences.pipOnLeave && video != null && controller.onWatchPage && !controller.mini && (player?.state.playing ?? false);
+    // Android, iPhone and iPad: going home while a video plays on the watch
+    // page keeps it in picture in picture, when chosen in the settings;
+    // otherwise its sound plays on in the background.
+    final autoPip = (Platform.isAndroid || Platform.isIOS) && !Device.tv && controller.preferences.pipOnLeave && video != null && controller.onWatchPage && !controller.mini && (player?.state.playing ?? false);
     if (autoPip != _autoPip) {
       _autoPip = autoPip;
-      AppWindow.setAutoPip(autoPip);
+      if (Platform.isIOS) {
+        controller.setIosAutoPip(autoPip);
+      } else {
+        AppWindow.setAutoPip(autoPip);
+      }
     }
     if (Platform.isAndroid) _fitFrameRate();
     final hasNext = video != null && controller.hasNext, hasPrevious = controller.hasPrevious;

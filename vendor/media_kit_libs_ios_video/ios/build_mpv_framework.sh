@@ -49,6 +49,11 @@ while read -r name sum url; do
   if [ "$name" = Libmpv ]; then
     mpv="$lib"
     headers="$framework/Headers"
+    # Lumtub: MPVKit's libmpv built again with patch/ (build_libmpv.sh).
+    if [ -n "${LIBMPV:-}" ]; then
+      mpv="$LIBMPV/libmpv.a"
+      headers="$LIBMPV/include"
+    fi
   else
     libs+=("$lib")
   fi
@@ -82,7 +87,7 @@ xcrun --sdk iphoneos clang -dynamiclib \
   -Wl,-dead_strip \
   -framework AVFoundation -framework AudioToolbox -framework CoreAudio \
   -framework CoreFoundation -framework CoreGraphics -framework CoreMedia \
-  -framework CoreText -framework CoreVideo -framework Foundation \
+  -framework CoreImage -framework CoreText -framework CoreVideo -framework Foundation \
   -framework IOSurface -framework Metal -framework OpenGLES \
   -framework QuartzCore -framework Security -framework SystemConfiguration \
   -framework UIKit -framework VideoToolbox \

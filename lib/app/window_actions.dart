@@ -39,6 +39,15 @@ extension WindowActions on AppController {
   }
 
   void setPip(bool on) {
+    // iPhone and iPad: iOS's own floating window; the app stays as it is.
+    if (Platform.isIOS) {
+      if (on) {
+        unawaited(_startIosPip());
+      } else {
+        unawaited(IosVideoLayer.stop());
+      }
+      return;
+    }
     if (on == pip) return;
     final ok = on ? AppWindow.enterPip(aspect: videoAspect) : AppWindow.exitPip(keepOnTop: pinned);
     if (on && !ok) return _notice(tr('Could not open picture in picture'));

@@ -345,7 +345,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.pauseOnMinimize,
               onChanged: (v) => savePrefs(prefs.copyWith(pauseOnMinimize: v)),
             ), subtitle: tr('Background playback')),
-        if (Platform.isAndroid && !Device.tv)
+        if ((Platform.isAndroid || Platform.isIOS) && !Device.tv)
           SettingEntry(tr('Picture in picture when leaving the app'), (context) => SwitchItem(
                 title: tr('Picture in picture when leaving the app'),
                 subtitle: tr('Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background'),

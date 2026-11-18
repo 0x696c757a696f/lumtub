@@ -11,3 +11,16 @@ weekly upstream check moves `mpvkit.lock` here and in
 media_kit_libs_macos_video to MPVKit's newest release together.
 
 The simulator is not built for.
+
+libmpv itself is MPVKit's, built again with the patches in `ios/patch/`
+(`ios/build_libmpv.sh`, run by the Makefile before the framework is
+linked): `0004-avfoundation-video-output.patch` adds the `avfoundation`
+video output from [Streamyfin's MPVKit fork](https://github.com/streamyfin/MPVKit)
+(LGPL 2.1 or later, as mpv), rebased onto mpv 0.41, with one change: a layer
+that iOS interrupted in the background is flushed before the next frame. It
+draws into an AVSampleBufferDisplayLayer (`--wid`), which iOS picture in
+picture takes; VideoToolbox's frames go to it as they are. The build uses
+MPVKit's own build script at the locked release, compiling libmpv only:
+FFmpeg and the other libraries come from that release's prebuilt archives.
+CI keeps the result in its cache, keyed on the lock file, the script and the
+patches.

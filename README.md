@@ -225,7 +225,7 @@ Can't give money? ⭐ Star the repository, tell a friend, [report a bug or sugge
 
 ### Building
 
-Every push and pull request to `main` builds on GitHub Actions (`.github/workflows/build.yml`): a verified libmpv per CPU, the Rust core in `native/lumtub_core` (fat LTO), `flutter analyze`, the unit tests, a portable ZIP and an Inno Setup installer for x64, x64-v3 and arm64. Releases are made by the Create release workflow and carry signed packages.
+Every push and pull request to `main` builds on GitHub Actions (`.github/workflows/build.yml`): a verified libmpv per CPU, the Rust core in `native/lumtub_core` (fat LTO), `flutter analyze`, the unit tests, a portable ZIP and an Inno Setup installer for x64, x64-v3 and arm64. Releases are made by the Create release workflow and carry signed packages. Which platforms a change builds, and how to build one alone: [docs/CI.md](docs/CI.md).
 
 Locally you need Flutter 3.47, Visual Studio with the C++ desktop workload, and Rust:
 

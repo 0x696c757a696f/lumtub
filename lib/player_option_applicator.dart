@@ -47,19 +47,10 @@ class PlayerOptionApplicator {
       // fast profile does: a 4K frame shrunk to a window is most of the GPU
       // work after decoding.
       if (settings.strategy == PlaybackStrategy.lowResource) ...fastRendering,
-      // iOS hands hardware-decoded frames to mpv's OpenGL ES renderer with
-      // the colour plane as a luminance-alpha texture (CoreVideo refuses a
-      // two-channel red-green one there). mpv's chroma scalers other than
-      // bilinear read that texture without swapping its channels, so both
-      // colour values come out the same and the picture turns green and
-      // purple. Bilinear chroma reads it through the right swizzle.
-      if (Platform.isIOS) 'cscale': 'bilinear',
-      // mpv's OpenGL ES bridge for VideoToolbox frames takes 8-bit NV12
-      // only: a 10-bit HDR picture (P010) fails there ("Format
-      // unsupported") and the video shows as a flat blue. VideoToolbox
-      // hands every picture over as NV12 instead; mpv still tone-maps it
-      // from the colours the stream says.
-      if (Platform.isIOS) 'hwdec-image-format': 'nv12',
+      // iOS shows the picture through libmpv's avfoundation video output
+      // (an AVSampleBufferDisplayLayer, for picture in picture), not mpv's
+      // OpenGL ES renderer: VideoToolbox's frames, 10-bit HDR ones too, go
+      // to the layer as they are, and Core Animation draws them.
       // mpv's iOS audio output opens the audio session as "mix with
       // others" unless exclusive. iOS shows only apps that do not mix in
       // Now Playing (the Lock Screen, Control Center, the Dynamic Island),

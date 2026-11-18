@@ -9,7 +9,8 @@ use serde::Serialize;
 use serde_json::{Map, Value, json};
 use std::os::raw::c_char;
 
-use crate::innertube::{at, seconds, text_of};
+use crate::counts;
+use crate::innertube::{self, at, seconds, text_of};
 use crate::listing::count;
 use crate::taste::{give_json, text};
 
@@ -96,32 +97,41 @@ pub fn video(tile: &Value) -> Option<Value> {
     let lines = metadata.and_then(|m| m.get("lines"));
     let mut entry = Map::new();
     entry.insert("id".into(), id.into());
-    entry.insert(
-        "title".into(),
-        text_of(metadata.and_then(|m| m.get("title"))).into(),
-    );
-    entry.insert("channel".into(), line(lines, 0).join(" ").into());
+    // Most tiles: the channel, then "358K views • 3 months ago". Tiles
+    // that open a podcast or a show (a browse endpoint, no watch endpoint)
+    // carry the show's name as the title, then the episode and the channel.
+    let select = tile.get("onSelectCommand");
+    let episode = select
+        .is_some_and(|c| c.get("watchEndpoint").is_none() && c.get("browseEndpoint").is_some())
+        && !line(lines, 0).is_empty()
+        && !line(lines, 1).is_empty()
+        && !line(lines, 1)
+            .iter()
+            .any(|t| t.chars().any(|c| c.is_ascii_digit()));
+    let (title, channel, details) = if episode {
+        (
+            line(lines, 0).join(" "),
+            line(lines, 1).join(" "),
+            line(lines, 2),
+        )
+    } else {
+        (
+            text_of(metadata.and_then(|m| m.get("title"))),
+            line(lines, 0).join(" "),
+            line(lines, 1),
+        )
+    };
+    entry.insert("title".into(), title.into());
+    entry.insert("channel".into(), channel.into());
     if let Some(channel) = channel_id(tile) {
         entry.insert("channel_id".into(), channel.into());
     }
-    let details = line(lines, 1);
-    let views = details.iter().position(|t| {
-        count(t).is_some()
-            && t.chars().any(|c| c.is_ascii_digit())
-            && (details.len() > 1 || !t.contains(':'))
-    });
-    if let Some(views) = views.and_then(|i| count(&details[i])) {
+    let (views, age) = views_and_age(&details);
+    if let Some(views) = views {
         entry.insert("view_count".into(), views.into());
     }
-    // "3 months ago", "2 天前": the other item with a number that is not a length.
-    if let Some(age) = details.iter().enumerate().find_map(|(i, t)| {
-        (Some(i) != views
-            && t.chars().any(|c| c.is_ascii_digit())
-            && t.chars().count() > 2
-            && seconds(t).is_none())
-        .then_some(t)
-    }) {
-        entry.insert("age".into(), age.clone().into());
+    if let Some(age) = age {
+        entry.insert("age".into(), age.into());
     }
     let overlays =
         at(tile, &["header", "tileHeaderRenderer", "thumbnailOverlays"]).and_then(Value::as_array);
@@ -184,6 +194,27 @@ pub fn video(tile: &Value) -> Option<Value> {
         entry.insert("lumtub_feedback".into(), token.into());
     }
     Some(Value::Object(entry))
+}
+
+/// The views and the age in a tile's line of details, in the account's
+/// language: "10.9万次观看 • 4天前", "358K views • 3 months ago". Of the
+/// items with a number that are not a length, the first is the views and
+/// the next the age; one alone is the views only when it says so (or is a
+/// bare count such as "2.9万"), as "4天前" also has a number.
+fn views_and_age(details: &[String]) -> (Option<u64>, Option<String>) {
+    let numbered: Vec<&String> = details
+        .iter()
+        .filter(|t| t.chars().any(|c| c.is_ascii_digit()) && seconds(t).is_none())
+        .collect();
+    match numbered.as_slice() {
+        [] => (None, None),
+        [only] => match innertube::count(only).or_else(|| innertube::bare_count(only)) {
+            Some(views) => (Some(views), None),
+            None if counts::has_unit(only) => (counts::count(only), None),
+            None => (None, Some((*only).clone())),
+        },
+        [views, age, ..] => (counts::count(views), Some((*age).clone())),
+    }
 }
 
 /// What a video tile without a length is made of, for the log: the kind,
@@ -522,6 +553,51 @@ mod tests {
         );
         assert!(shape.contains("watch=[videoId]"), "{shape}");
         assert!(shape.contains("358K views"), "{shape}");
+    }
+
+    #[test]
+    fn reads_chinese_views_and_ages() {
+        let with = |items: Value| {
+            let mut t = tile("chinesetile", json!([]));
+            t["tileRenderer"]["metadata"]["tileMetadataRenderer"]["lines"][1]["lineRenderer"]["items"] =
+                items;
+            video(&t["tileRenderer"]).unwrap()
+        };
+        let item = |text: &str| json!({"lineItemRenderer": {"text": {"simpleText": text}}});
+        let both = with(json!([item("10.9万次观看"), item("•"), item("4天前")]));
+        assert_eq!(both["view_count"], 109_000);
+        assert_eq!(both["age"], "4天前");
+        let hant = with(json!([item("5.1萬次觀看"), item("•"), item("3 週前")]));
+        assert_eq!(hant["view_count"], 51_000);
+        let age_only = with(json!([item("3周前")]));
+        assert!(age_only.get("view_count").is_none());
+        assert_eq!(age_only["age"], "3周前");
+        let views_only = with(json!([item("1,234次观看")]));
+        assert_eq!(views_only["view_count"], 1234);
+        assert!(views_only.get("age").is_none());
+    }
+
+    #[test]
+    fn reads_podcast_episode_tiles() {
+        let t = json!({
+            "style": "TILE_STYLE_YTLR_DEFAULT", "contentId": "episode0001", "contentType": "TILE_CONTENT_TYPE_VIDEO",
+            "header": {"tileHeaderRenderer": {"thumbnailOverlays": [{"thumbnailOverlayTimeStatusRenderer": {"style": "DEFAULT"}}]}},
+            "metadata": {"tileMetadataRenderer": {
+                "title": {"simpleText": "The Gray Area"},
+                "lines": [
+                    {"lineRenderer": {"items": [{"lineItemRenderer": {"text": {"simpleText": "The Gray Area | Yuval Noah Harari on the AI revolution"}}}]}},
+                    {"lineRenderer": {"items": [{"lineItemRenderer": {"text": {"simpleText": "Vox"}}}]}}
+                ]
+            }},
+            "onSelectCommand": {"browseEndpoint": {"browseId": "VLPLxxxx"}}
+        });
+        let entry = video(&t).unwrap();
+        assert_eq!(
+            entry["title"],
+            "The Gray Area | Yuval Noah Harari on the AI revolution"
+        );
+        assert_eq!(entry["channel"], "Vox");
+        assert!(entry.get("view_count").is_none());
     }
 
     #[test]

@@ -13,6 +13,7 @@ pub mod cast_mkv;
 pub mod cast_webm;
 pub mod comment_action;
 pub mod comments;
+pub mod counts;
 pub mod cut;
 pub mod danmaku;
 pub mod dns;

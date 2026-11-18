@@ -13,7 +13,7 @@ packages only when asked:
 | --- | --- |
 | nothing | no packages, quick checks only |
 | `[full]`, or the label `full build` | the platforms whose files that push changed |
-| `[ios]`, `[android]`, `[macos]`, `[linux]` or `[windows]` | that platform alone, whatever changed |
+| `[ios]`, `[android]`, `[macos]`, `[linux]` or `[windows]` | that platform alone, whatever changed (`[ios] [windows]`: those two) |
 | `[all]` or `[showcase]` | every platform |
 
 "Whose files that push changed" comes from `.github/scripts/build_platforms.py`:

@@ -106,15 +106,15 @@ jobs:
             fi
           fi
 
-          # Which platforms: one named in the commit message ([ios] ...) or
+          # Which platforms: those named in the commit message ([ios] ...) or
           # chosen for a manual run; every one for [all], [showcase], the
           # daily run and release tags; otherwise those whose files the
           # change touched (.github/scripts/build_platforms.py).
-          named=$(grep -oE '\[(windows|linux|macos|ios|android)\]' <<< "$message" | head -n1 | tr -d '[]' || true)
+          named=$(grep -oE '\[(windows|linux|macos|ios|android)\]' <<< "$message" | tr -d '[]' | sort -u | jq -R . | jq -sc 'select(length > 0)' || true)
           if [[ "$build" != true || -n "$platforms" ]]; then
             :
           elif [[ -n "$named" ]]; then
-            platforms="[\"$named\"]"
+            platforms=$named
           elif [[ "$EVENT" == workflow_dispatch ]]; then
             if [[ -z "$CHOSEN" || "$CHOSEN" == all ]]; then platforms=$every; else platforms="[\"$CHOSEN\"]"; fi
           elif [[ "$EVENT" == schedule || "$GITHUB_REF" == refs/tags/v* ]] || grep -qE '\[(all|showcase)\]' <<< "$message"; then

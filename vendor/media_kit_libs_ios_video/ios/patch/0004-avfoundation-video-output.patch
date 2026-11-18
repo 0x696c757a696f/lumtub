@@ -56,7 +56,7 @@ new file mode 100644
 index 0000000..eb388a1
 --- /dev/null
 +++ b/video/out/vo_avfoundation.m
-@@ -0,0 +1,1014 @@
+@@ -0,0 +1,1033 @@
 +/*
 + * This file is part of mpv.
 + *
@@ -242,6 +242,18 @@ index 0000000..eb388a1
 +}
 +
 +// Copy HDR metadata from source to destination pixel buffer
++// The picture's color space, from its attachments (CVImageBufferGetColorSpace
++// is macOS only before iOS 26); the caller releases it.
++static CGColorSpaceRef copy_color_space(CVImageBufferRef buffer)
++{
++    CFDictionaryRef attachments = CVBufferCopyAttachments(buffer, kCVAttachmentMode_ShouldPropagate);
++    if (!attachments)
++        return NULL;
++    CGColorSpaceRef space = CVImageBufferCreateColorSpaceFromAttachments(attachments);
++    CFRelease(attachments);
++    return space;
++}
++
 +static void copy_hdr_metadata(CVPixelBufferRef src, CVPixelBufferRef dst)
 +{
 +    const CFStringRef keys[] = {
@@ -624,7 +636,8 @@ index 0000000..eb388a1
 +    // Use autoreleasepool to ensure CIImage objects are released promptly
 +    @autoreleasepool {
 +        // Create CIImages - preserve color space from source for HDR
-+        CGColorSpaceRef srcColorSpace = CVImageBufferGetColorSpace(videoBuffer);
++        CGColorSpaceRef videoColorSpace = copy_color_space(videoBuffer);
++        CGColorSpaceRef srcColorSpace = videoColorSpace;
 +        CGColorSpaceRef fallbackColorSpace = NULL;
 +        if (!srcColorSpace) {
 +            fallbackColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
@@ -645,6 +658,8 @@ index 0000000..eb388a1
 +            CGColorSpaceRelease(fallbackColorSpace);
 +        
 +        if (!videoImage) {
++            if (videoColorSpace)
++                CGColorSpaceRelease(videoColorSpace);
 +            CVPixelBufferRelease(outputBuffer);
 +            return NULL;
 +        }
@@ -660,6 +675,8 @@ index 0000000..eb388a1
 +        CIImage *subtitleImage = [CIImage imageWithCGImage:p->cachedSubtitleImage];
 +        
 +        if (!subtitleImage) {
++            if (videoColorSpace)
++                CGColorSpaceRelease(videoColorSpace);
 +            CVPixelBufferRelease(outputBuffer);
 +            return NULL;
 +        }
@@ -678,7 +695,7 @@ index 0000000..eb388a1
 +        CIImage *composited = [subtitleImage imageByCompositingOverImage:videoImage];
 +        
 +        // Render to output buffer, preserving color space
-+        CGColorSpaceRef outputColorSpace = CVImageBufferGetColorSpace(videoBuffer);
++        CGColorSpaceRef outputColorSpace = videoColorSpace;
 +        if (outputColorSpace) {
 +            [p->ciContext render:composited 
 +                 toCVPixelBuffer:outputBuffer 
@@ -687,6 +704,8 @@ index 0000000..eb388a1
 +        } else {
 +            [p->ciContext render:composited toCVPixelBuffer:outputBuffer];
 +        }
++        if (videoColorSpace)
++            CGColorSpaceRelease(videoColorSpace);
 +    }
 +    
 +    return outputBuffer;

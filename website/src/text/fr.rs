@@ -155,6 +155,7 @@ pub static FR: Text = Text {
     faq_title: "Questions",
     faq: [
         ("C'est gratuit\u{a0}?", "Oui, et ça le restera. Pas de pub, pas d'offre payante, aucune donnée vendue. Le projet vit de dons. Certaines fonctions IA facultatives utilisent des services tiers ou votre propre clé API, et ceux-ci peuvent être payants."),
+        ("Quelqu'un vend Lumtub. Est-ce officiel\u{a0}?", "Non. Lumtub est gratuit et n'est publié que sur GitHub Releases, ce site et la mise à jour intégrée. La GPL permet à d'autres de partager des copies, mais avec le code source complet sous la même licence. Une copie payante et fermée enfreint la licence\u{a0}: signalez-la sur GitHub."),
         ("Faut-il un compte Google\u{a0}?", "Non. Recherche, lecture, abonnements et recommandations fonctionnent sans connexion. Connectez-vous seulement pour les j'aime, commentaires, playlists et vidéos réservées aux membres."),
         ("Puis-je reprendre mes abonnements d'une autre appli\u{a0}?", "Oui. Importez un fichier NewPipe, FreeTube, Google Takeout ou OPML depuis la page Abonnements ou les Réglages, sans vous connecter. L'export fonctionne de la même façon."),
         ("Cela cassera-t-il quand YouTube change quelque chose\u{a0}?", "Parfois, brièvement. Lumtub met yt-dlp à jour tout seul, donc la plupart des pannes sont corrigées sans attendre une nouvelle version de Lumtub."),

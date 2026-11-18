@@ -152,6 +152,16 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 or open it, click **Done**, and choose **Open Anyway** next to Lumtub in **System Settings › Privacy & Security**. Updates after that open normally.
 
 
+### Official downloads only
+
+Lumtub is free. It comes only from:
+- [GitHub Releases](https://github.com/0x696c757a696f/lumtub/releases) of this repository,
+- the website [0x696c757a696f.github.io/lumtub](https://0x696c757a696f.github.io/lumtub/), which links to the same files,
+- Lumtub's built-in updater, which downloads from those releases,
+- the SideStore/AltStore source above, and `winget install Lumtub.Lumtub` once it's accepted.
+
+If anyone asks you to pay for Lumtub, or sells a renamed copy without its source code, it doesn't come from this project and may have been tampered with. The GPL lets others share and even sell copies, but only if they give you the complete source code under the same license and keep the copyright notices. A paid closed-source copy breaks the license. Please [report it in an issue](https://github.com/0x696c757a696f/lumtub/issues/new) with a link, so it can be taken down.
+
 ## Privacy: what stays local and what doesn't
 
 Stays on your computer: your watch history, statistics, "Not interested" choices and the recommendation model itself. Recommendations are computed locally. Lumtub never reads your browser's cookies or profiles. The optional browser sign-in opens a separate, temporary window, keeps only YouTube's cookies, encrypts them on your computer and deletes everything else. Syncing your watch history to YouTube is off unless you turn it on.

@@ -140,7 +140,7 @@ pub struct Text {
     pub leaves: [&'static str; 5],
     pub privacy_more: &'static str,
     pub faq_title: &'static str,
-    pub faq: [(&'static str, &'static str); 10],
+    pub faq: [(&'static str, &'static str); 11],
     pub final_title: &'static str,
     pub final_body: &'static str,
     pub support_title: &'static str,
@@ -343,6 +343,7 @@ pub static EN: Text = Text {
     faq_title: "Questions",
     faq: [
         ("Is it free?", "Yes, and it stays free. No ads, no paid tier, no data sold. It's funded by donations. Some optional AI features use third party services or your own API key, and those may charge."),
+        ("Someone is selling Lumtub. Is that real?", "No. Lumtub is free, and it comes only from GitHub Releases, this website and the built-in updater. The GPL lets others share copies, but they must give you the full source code under the same license. A paid closed-source copy breaks the license, so please report it on GitHub."),
         ("Do I need a Google account?", "No. Search, playback, subscriptions and recommendations work signed out. Sign in only for likes, comments, playlists and members only videos."),
         ("Can I bring my subscriptions from another app?", "Yes. Import a NewPipe, FreeTube, Google Takeout or OPML file from the Subscriptions page or Settings, without signing in. Export works the same way."),
         ("Will it break when YouTube changes something?", "Sometimes, briefly. Lumtub updates yt-dlp on its own, so most breakages are fixed without waiting for a new Lumtub version."),
@@ -527,6 +528,7 @@ pub static ZH: Text = Text {
     faq_title: "常见问题",
     faq: [
         ("免费吗？", "免费，而且会一直免费。没有广告、没有付费版，也不卖数据，靠捐助维持。部分可选的 AI 功能要用第三方服务或你自己的 API key，这些服务可能收费。"),
+        ("有人在卖 Lumtub，是真的吗？", "不是。Lumtub 免费，只通过 GitHub Releases、本网站和应用内更新发布。GPL 允许别人转发副本，但必须以同样的许可证提供完整源代码。收费又闭源的副本违反许可证，请到 GitHub 提交 issue 举报。"),
         ("需要 Google 账号吗？", "不需要。搜索、播放、订阅和推荐都不用登录。只有点赞、评论、播放列表和会员视频需要登录。"),
         ("能把别的应用里的订阅搬过来吗？", "能。在订阅页或设置里导入 NewPipe、FreeTube、Google Takeout 或 OPML 文件即可，不用登录。导出也一样方便。"),
         ("YouTube 一改版会不会就用不了？", "偶尔会短暂失效。Lumtub 会自己更新 yt-dlp，大多数时候不用等新版本就能恢复。"),

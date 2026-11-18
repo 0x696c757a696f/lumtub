@@ -140,6 +140,16 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 
 或者先打开一次，点“完成”，再到 **系统设置 › 隐私与安全性** 里 Lumtub 旁边点“仍要打开”。之后的更新都能正常打开。
 
+### 只认官方渠道
+
+Lumtub 是免费的，只从以下渠道发布：
+- 本仓库的 [GitHub Releases](https://github.com/0x696c757a696f/lumtub/releases)；
+- 官网 [0x696c757a696f.github.io/lumtub](https://0x696c757a696f.github.io/lumtub/)（下载的是同一批文件）；
+- Lumtub 内置的自动更新（也从上面的 Releases 下载）；
+- 上面的 SideStore/AltStore 源，以及审核通过后的 `winget install Lumtub.Lumtub`。
+
+如果有人向你收费出售 Lumtub，或者换个名字卖却不提供源代码，那就不是本项目发布的，安装包也可能被动过手脚。GPL 允许别人转发甚至出售副本，但必须把完整源代码以同样的许可证一并提供给你，并保留版权声明。收费又闭源的副本违反了许可证。遇到这种情况，请把链接[提交到 issue](https://github.com/0x696c757a696f/lumtub/issues/new)，以便发起下架。
+
 ## 隐私：哪些留在本机，哪些会发出去
 
 留在你电脑上的：观看记录、统计、“不感兴趣”的选择，以及推荐模型本身。推荐在本机计算。Lumtub 从不读取浏览器的 Cookie 或配置文件。可选的浏览器登录会打开一个独立的临时窗口，只保留 YouTube 的 Cookie，加密保存在你的电脑上，其余全部删除。观看记录同步到 YouTube 默认关闭，除非你自己打开。

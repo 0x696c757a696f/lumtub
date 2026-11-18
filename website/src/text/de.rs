@@ -155,6 +155,7 @@ pub static DE: Text = Text {
     faq_title: "Fragen",
     faq: [
         ("Ist es kostenlos?", "Ja, und das bleibt so. Keine Werbung, keine Bezahlstufe, kein Datenverkauf. Finanziert wird es durch Spenden. Einige optionale KI-Funktionen nutzen Drittanbieter oder deinen eigenen API-Schlüssel, und die können Geld kosten."),
+        ("Jemand verkauft Lumtub. Ist das echt?", "Nein. Lumtub ist kostenlos und kommt nur von GitHub Releases, dieser Website und dem eingebauten Updater. Die GPL erlaubt anderen, Kopien weiterzugeben, aber nur mit dem vollständigen Quellcode unter derselben Lizenz. Eine kostenpflichtige Kopie ohne Quellcode verstößt gegen die Lizenz. Bitte melde sie auf GitHub."),
         ("Brauche ich ein Google-Konto?", "Nein. Suche, Wiedergabe, Abos und Empfehlungen funktionieren abgemeldet. Melde dich nur für Likes, Kommentare, Playlists und Videos nur für Mitglieder an."),
         ("Kann ich meine Abos aus einer anderen App mitbringen?", "Ja. Importiere eine NewPipe-, FreeTube-, Google-Takeout- oder OPML-Datei auf der Seite Abos oder in den Einstellungen, ohne Anmeldung. Der Export funktioniert genauso."),
         ("Geht es kaputt, wenn YouTube etwas ändert?", "Manchmal, aber nur kurz. Lumtub aktualisiert yt-dlp selbstständig, daher werden die meisten Probleme behoben, ohne auf eine neue Lumtub-Version zu warten."),

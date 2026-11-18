@@ -8,7 +8,8 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       home: EdgeSwipeBack(enabled: true, canGoBack: () => canGoBack, onBack: () => backs++, child: const SizedBox.expand()),
     ));
-    await tester.dragFrom(from, Offset(by, 0));
+    // Slow, so only the distance decides.
+    await tester.timedDragFrom(from, Offset(by, 0), const Duration(seconds: 1));
     await tester.pumpAndSettle();
     return backs;
   }

@@ -3574,5 +3574,10 @@
   "Save the subtitle files beside the video as SRT": "Запазване на файловете със субтитри до видеото като SRT",
   "WebM cannot hold subtitles, so the video is saved as MKV": "WebM не може да съдържа субтитри, затова видеото се запазва като MKV",
   "Picture in picture when leaving the app": "Картина в картината при излизане от приложението",
-  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Запазва възпроизвежданото видео в малък прозорец, когато превключите към друго приложение; когато е изключено, звукът продължава да се възпроизвежда на фона"
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Запазва възпроизвежданото видео в малък прозорец, когато превключите към друго приложение; когато е изключено, звукът продължава да се възпроизвежда на фона",
+  "Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.": "Автоматичното качество остава на 1080p: това устройство не може да декодира VP9 или AV1 хардуерно, а YouTube няма друг формат над 1080p. Все пак можете да изберете по-високо качество или „Приоритет на качеството“; тогава декодирането е софтуерно, което харчи повече батерия и загрява.",
+  "Off: nothing is recorded": "Изключено: нищо не се записва",
+  "Mix with other apps": "Смесване с други приложения",
+  "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "Звукът от другите приложения продължава да се чува заедно с видеото. Тогава iOS не показва Lumtub на заключения екран и в Dynamic Island",
+  "mix audio other apps music": "Смесване с други приложения mix audio other apps music"
 }

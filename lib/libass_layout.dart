@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:flutter/painting.dart';
@@ -33,10 +34,15 @@ class LibassLayout {
   /// in, [margin] `sub-margin-y` and [gap] the room between the two, all in
   /// mpv's units of a 720-tall picture. mpv places a plain subtitle in the
   /// room above the margin, but an ASS one ([whole], Lumtub's styled second
-  /// subtitle) in the whole height.
+  /// subtitle) in the whole height; that one already holds the main
+  /// subtitle's lines (see [secondAss]), so it goes where the main one does.
   static double secondaryPosition(String main, {required int position, required double scale, double aspect = 16 / 9, double fontSize = _font, double? em, int margin = marginY, double? gap, bool whole = false}) {
-    final lines = max(1, lineCount(main, scale: scale, aspect: aspect, em: em ?? fontSize));
     final room = _canvas - margin;
+    // Lumtub's copy holds the main subtitle too, drawn invisible under the
+    // second one: libass itself makes the room for it, in the fonts it
+    // really draws with, so the two share one bottom edge.
+    if (whole) return (room * position / 100 / _canvas * 1000).floorToDouble().clamp(0, 1000) / 10;
+    final lines = max(1, lineCount(main, scale: scale, aspect: aspect, em: em ?? fontSize));
     // The main subtitle's top, then the second one's bottom just above it.
     final bottom = room * position / 100 - lines * fontSize * scale - (gap ?? _gap * _canvas / 100);
     return (bottom / (whole ? _canvas : room) * 1000).floorToDouble().clamp(0, 1000) / 10;
@@ -209,7 +215,7 @@ class LibassLook {
 /// size, outline and background, which mpv cannot set apart from the first
 /// subtitle's. Its letters are [secondEm] units at secondary-sub-scale 1;
 /// [outline] is the outline's width for a letter one unit wide.
-String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font}) {
+String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font, MainUnder? main, double aspect = 16 / 9}) {
   font ??= settings.secondaryFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.secondaryFont);
   final size = secondEm * settings.secondaryScale * LibassLook.lineEms(font);
   String colour(int rgb, double opacity) {
@@ -232,7 +238,9 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
   final out = StringBuffer()
     ..writeln('[Script Info]')
     ..writeln('ScriptType: v4.00+')
-    ..writeln('PlayResX: 1280')
+    // As wide as the picture, as mpv makes it for the main subtitle: lines
+    // then wrap at the same width in both (a portrait video's too).
+    ..writeln('PlayResX: ${(720 * aspect.clamp(0.3, 4.0)).round()}')
     ..writeln('PlayResY: 720')
     ..writeln('ScaledBorderAndShadow: yes')
     ..writeln('WrapStyle: 0')
@@ -243,13 +251,82 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
     ..writeln()
     ..writeln('[Events]')
     ..writeln('Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text');
-  for (final cue in cues) {
-    // Braces would open override tags; line breaks are ASS's own.
-    final text = LibassLayout.wrap(cue.text, room, font: settings.secondaryFont, bold: settings.subtitleBold).replaceAll('{', '(').replaceAll('}', ')').replaceAll(RegExp(r'\r?\n'), r'\N');
-    out.writeln('Dialogue: 0,${stamp(cue.start)},${stamp(cue.end)},Default,,0,0,0,,$text');
+  // Braces would open override tags; line breaks are ASS's own.
+  String ass(String text) => text.replaceAll('{', '(').replaceAll('}', ')').replaceAll(RegExp(r'\r?\n'), r'\N');
+  String second(String text) => ass(LibassLayout.wrap(text, room, font: settings.secondaryFont, bold: settings.subtitleBold));
+  if (main == null || main.cues.isEmpty) {
+    for (final cue in cues) {
+      out.writeln('Dialogue: 0,${stamp(cue.start)},${stamp(cue.end)},Default,,0,0,0,,${second(cue.text)}');
+    }
+    return out.toString();
   }
+  // The main subtitle's lines under the second one's, invisible, at the
+  // main subtitle's font and size: libass stacks the second one above them
+  // however tall its fonts really draw, whatever the player's size. One
+  // event for each stretch of time in which the same lines show, so libass
+  // never stacks two events of this copy on each other.
+  final mainSize = secondEm * settings.subtitleScale * LibassLook.lineEms(main.font);
+  final mainTag = '{\\fn${main.font.replaceAll(RegExp(r'[{}\\,]'), ' ')}\\fs${mainSize.toStringAsFixed(2)}\\b${settings.subtitleBold ? 1 : 0}}';
+  // The gap the Flutter view leaves between the two, as a line that tall.
+  final gap = '{\\alpha&HFF&\\fs${(secondEm * 6 / 32).toStringAsFixed(2)}}\\h';
+  // Broken as Lumtub's copy of the main subtitle breaks them, blank lines
+  // left out as there.
+  final mainText = [for (final cue in main.cues) ass(LibassLayout.wrap(cue.text, main.room, font: main.wrapFont, bold: settings.subtitleBold).replaceAll(RegExp(r'\n\s*\n'), '\n'))];
+  final secondText = [for (final cue in cues) second(cue.text)];
+  final times = <Duration>{for (final cue in cues) ...[cue.start, cue.end], for (final cue in main.cues) ...[cue.start, cue.end]}.toList()..sort();
+  final seconds = _Showing(cues), mains = _Showing(main.cues);
+  String? last;
+  Duration? lastStart, lastEnd;
+  void flush() {
+    if (last != null) out.writeln('Dialogue: 0,${stamp(lastStart!)},${stamp(lastEnd!)},Default,,0,0,0,,$last');
+  }
+
+  for (var i = 0; i + 1 < times.length; i++) {
+    final from = times[i], to = times[i + 1];
+    if (to <= from) continue;
+    // libass stacks a later event above an earlier one.
+    final above = [for (final i in seconds.at(from).toList().reversed) secondText[i]];
+    final under = [for (final i in mains.at(from).toList().reversed) mainText[i]];
+    final text = above.isEmpty ? null : under.isEmpty ? above.join(r'\N') : '${above.join(r'\N')}\\N$gap\\N{\\alpha&HFF&}$mainTag${under.join(r'\N')}';
+    if (text == last && lastEnd == from) {
+      lastEnd = to;
+      continue;
+    }
+    flush();
+    last = text;
+    lastStart = from;
+    lastEnd = to;
+  }
+  flush();
   return out.toString();
 }
+
+/// The cues of a list showing from one time on, for times asked in order:
+/// one pass over the list, as a long video has thousands.
+class _Showing {
+  _Showing(this.cues) : _byStart = List.generate(cues.length, (i) => i)..sort((a, b) => cues[a].start.compareTo(cues[b].start));
+
+  final List<SubtitleCue> cues;
+  final List<int> _byStart;
+  final _now = SplayTreeSet<int>();
+  var _next = 0;
+
+  /// The cues (by index, in list order) shown from [time] to the next time
+  /// any cue starts or ends.
+  Iterable<int> at(Duration time) {
+    while (_next < _byStart.length && cues[_byStart[_next]].start <= time) {
+      final i = _byStart[_next++];
+      if (cues[i].text.trim().isNotEmpty) _now.add(i);
+    }
+    _now.removeWhere((i) => cues[i].end <= time);
+    return _now;
+  }
+}
+
+/// The main subtitle drawn invisible under the second one in [secondAss]:
+/// its [cues], in [font] (as libmpv draws it), broken into lines as for
+/// [room] ems of [wrapFont] (the 字幕字体 setting).
+typedef MainUnder = ({List<SubtitleCue> cues, String font, double room, String wrapFont});
 
 /// A letter of [secondAss] at secondary-sub-scale 1, in mpv's units.
 const secondEm = 20.0;

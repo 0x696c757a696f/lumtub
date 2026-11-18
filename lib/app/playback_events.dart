@@ -455,14 +455,27 @@ extension PlaybackEvents on AppController {
       // would not survive the background.
       if (!wanted || audioOnly || _backgroundAudioOnly || (!player!.state.playing && !Platform.isIOS)) return;
       _backgroundAudioOnly = true;
+      logInfo('Picture off while Lumtub is in the background');
       await platform.setProperty('vid', 'no');
+    } else if (_decoderLostAway && !_backgroundAudioOnly) {
+      _decoderLostAway = false;
+      await renewVideoDecoder();
     } else if (_backgroundAudioOnly) {
       _backgroundAudioOnly = false;
+      _decoderLostAway = false;
       if (audioOnly) return;
+      logInfo('Picture back after the background');
       await platform.setProperty('vid', 'auto');
-      // The decoder starts again at the next keyframe, which in a stream can
-      // be far off: until then the last picture stays. An exact seek to
-      // here decodes up to now at once.
+      // A seekable stream needs nothing more: mpv reads the video again from
+      // the keyframe before here while the sound plays on, and the picture is
+      // back a moment later. A seek would stop the sound and show loading
+      // until the video arrived. A live stream can't be read back, so its
+      // picture would wait for the next keyframe: there an exact seek
+      // decodes up to now at once.
+      if (await platform.getProperty('seekable').catchError((_) => 'no') == 'yes') {
+        logDebug(() => 'Picture back without a seek');
+        return;
+      }
       try {
         await platform.command(['seek', '0', 'relative+exact']);
       } catch (e) {
@@ -476,7 +489,13 @@ extension PlaybackEvents on AppController {
   /// once in 5 seconds; nothing while the picture is off anyway.
   Future<void> renewVideoDecoder() async {
     final platform = player?.platform;
-    if (platform is! NativePlayer || audioOnly || _backgroundAudioOnly || _windowHidden) return;
+    if (platform is! NativePlayer || audioOnly) return;
+    if (_backgroundAudioOnly || _windowHidden) {
+      // Made when the app is back (setBackgroundAudioOnly(false)): iOS
+      // makes no working decoder for an app in the background.
+      _decoderLostAway = true;
+      return;
+    }
     final now = DateTime.now();
     if (now.difference(_lastDecoderRenewal) < const Duration(seconds: 5)) return;
     _lastDecoderRenewal = now;

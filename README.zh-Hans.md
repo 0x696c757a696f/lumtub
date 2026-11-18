@@ -124,6 +124,7 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 | `android-armeabi-v7a` APK | 较老的 32 位 Android 设备和不少廉价电视盒子 |
 | `android-x86_64` APK | Android 模拟器和 x86 Chromebook |
 | `ios` IPA | iOS 15 及以上的 iPhone 和 iPad（预览版，自签安装） |
+| `ios-trollstore` TIPA | 同上，给 [TrollStore](https://github.com/opa334/TrollStore) 用：iOS 26.2 之前也会向系统要 VP9 硬件解码 |
 
 文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
 **Windows**：用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。也可以用包管理器（正在审核，通过后可用）：`winget install Lumtub.Lumtub`。<br>
@@ -174,6 +175,8 @@ Lumtub 是免费的，只从以下渠道发布：
 **所有功能都免费吗？** Lumtub 本身免费。部分可选的 AI 功能（翻译、语音转字幕、总结）使用第三方服务或你自己的 API 密钥，这些服务商可能收费。
 
 **数据存在哪里？** Windows 在 `%LOCALAPPDATA%\Lumtub`，便携版在 `lumtub.exe` 旁边的 `userdata` 文件夹。Linux 在 `~/.local/share/lumtub`，macOS 在 `~/Library/Application Support/Lumtub`。设置、订阅和媒体库都可以导出和导入。
+
+**为什么在旧电脑或手机上最高只有 1080p？** YouTube 在 1080p 以上只有 VP9 和 AV1 两种格式。Lumtub 每次启动都会检查设备能不能硬件解码它们；两种都不能时，自动画质会停在 1080p（H.264，所有设备都能硬件解码），并提示你一次。你仍然可以手动选 1440p 或 4K，或把播放策略改成「画质优先」，这时画面用软件解码，更耗电、更容易发热。iPhone 和 iPad 上，iOS 26.2 及以上会让 Lumtub 用芯片自带的 VP9 和 AV1 硬件解码（AV1 要 iPhone 15 Pro 及更新机型）；26.2 之前只有 TrollStore 版能向系统要 VP9 硬解。播放器的「播放信息」会显示实际用的是哪种。
 
 **支持哪些 Linux？** glibc 2.35 或更新的发行版：Ubuntu 22.04、Debian 12、Fedora 36 及以后。不支持 Ubuntu 20.04 及更早版本，也不支持 Alpine 等 musl 系统。NixOS 上请用 `appimage-run` 启动。
 

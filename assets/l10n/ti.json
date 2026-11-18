@@ -3573,5 +3573,10 @@
   "Save the subtitle files beside the video as SRT": "ፋይላት ትርጉም ጽሑፍ ጥቓ ቪድዮ ከም SRT ኣቐምጥ",
   "WebM cannot hold subtitles, so the video is saved as MKV": "WebM ትርጉም ጽሑፍ ክሕዝ ስለዘይክእል ቪድዮ ከም MKV ይቕመጥ",
   "Picture in picture when leaving the app": "ካብ መተግበሪ ክትወጽእ ከለኻ ስእሊ-ኣብ-ስእሊ",
-  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "ናብ ካልእ መተግበሪ ምስ ትሰጋገር እናጸወተ ዘሎ ቪድዮ ኣብ ንእሽቶ መስኮት የቐጽሎ፤ ምስ ጠፍአ ድምጹ ኣብ ድሕረ-ባይታ ምጽዋት ይቕጽል"
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "ናብ ካልእ መተግበሪ ምስ ትሰጋገር እናጸወተ ዘሎ ቪድዮ ኣብ ንእሽቶ መስኮት የቐጽሎ፤ ምስ ጠፍአ ድምጹ ኣብ ድሕረ-ባይታ ምጽዋት ይቕጽል",
+  "Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.": "ባዕላዊ ጽሬት ኣብ 1080p ይቕመጥ፦ እዚ መሳርሒ VP9 ወይ AV1 ብሃርድዌር ከፍታሕ ኣይክእልን፣ YouTube ድማ ልዕሊ 1080p ካልእ ቅርጺ የብሉን። ዝለዓለ ጽሬት ወይ «ጽሬት ቀዳምነት» ክትመርጽ ትኽእል ኢኻ፤ ብሶፍትዌር ይፍታሕ፣ ባትሪ ልዑል ይበልዕ ከምኡውን የሙቕ።",
+  "Off: nothing is recorded": "ጠፊኡ፦ ዋላ ሓንቲ ኣይምዝገብን",
+  "Mix with other apps": "ምስ ካልኦት መተግበሪታት ቀላቕል",
+  "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "ድምጺ ካልኦት መተግበሪታት ምስ ቪድዮ ይቕጽል። ድሕሪኡ iOS Lumtub ኣብ መቆለፊ ስክሪንን Dynamic Island ን ኣየርእዮን",
+  "mix audio other apps music": "ምስ ካልኦት መተግበሪታት ቀላቕል mix audio other apps music"
 }

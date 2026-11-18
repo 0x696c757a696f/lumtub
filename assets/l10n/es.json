@@ -3579,5 +3579,10 @@
   "Save the subtitle files beside the video as SRT": "Guardar los archivos de subtítulos junto al vídeo como SRT",
   "WebM cannot hold subtitles, so the video is saved as MKV": "WebM no admite subtítulos, así que el vídeo se guarda como MKV",
   "Picture in picture when leaving the app": "Imagen en imagen al salir de la app",
-  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Mantiene el vídeo en reproducción en una ventana pequeña cuando cambias a otra app; si está desactivado, su sonido sigue reproduciéndose en segundo plano"
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Mantiene el vídeo en reproducción en una ventana pequeña cuando cambias a otra app; si está desactivado, su sonido sigue reproduciéndose en segundo plano",
+  "Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.": "La calidad automática se queda en 1080p: este dispositivo no puede decodificar VP9 ni AV1 por hardware, y YouTube no tiene nada más por encima de 1080p. Aún puedes elegir una calidad superior o «Prioridad a la calidad»; entonces se decodifica por software, lo que gasta más batería y calienta más.",
+  "Off: nothing is recorded": "Desactivado: no se registra nada",
+  "Mix with other apps": "Mezclar con otras apps",
+  "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "El sonido de otras apps sigue sonando con el vídeo. Entonces iOS no muestra Lumtub en la pantalla bloqueada ni en la Dynamic Island",
+  "mix audio other apps music": "Mezclar con otras apps mix audio other apps music"
 }

@@ -423,7 +423,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   /// The player's width is three minutes, or the whole video when shorter.
   void _seekSlideUpdate(DragUpdateDetails details) {
     final from = _slideFrom, width = context.size?.width ?? 0;
-    if (from == null || width <= 0) return;
+    if (from == null || width <= 0 || _pinching) return;
     _slideX += details.primaryDelta ?? 0;
     final length = _player.state.duration;
     final span = length < const Duration(minutes: 3) ? length : const Duration(minutes: 3);
@@ -435,7 +435,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   void _seekSlideEnd(DragEndDetails details) {
     final to = _slideTo;
     _slideFrom = _slideTo = null;
-    if (to != null) unawaited(_controller.seek(to));
+    if (to != null && !_pinching) unawaited(_controller.seek(to));
   }
 
   PointerDeviceKind? _tapKind;
@@ -505,6 +505,47 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ),
       );
 
+  /// Fingers on the player, for a pinch: two fingers spread apart in full
+  /// screen crop the picture to fill the screen, pinched together show it
+  /// whole again, as in phone video apps. Read from the raw touches, so the
+  /// one-finger slides keep their gestures.
+  final _fingers = <int, Offset>{};
+  double? _pinchFrom;
+  bool _pinching = false;
+
+  void _pinchDown(PointerDownEvent event) {
+    _fingers[event.pointer] = event.position;
+    if (_fingers.length == 2 && !_locked && isFullscreen(context)) {
+      _pinchFrom = _spread();
+      _pinching = true;
+    }
+  }
+
+  void _pinchMove(PointerMoveEvent event) {
+    if (_fingers.containsKey(event.pointer)) _fingers[event.pointer] = event.position;
+  }
+
+  void _pinchUp(PointerEvent event) {
+    final from = _pinchFrom;
+    if (from != null && _fingers.length == 2 && from > 0) {
+      final ratio = _spread() / from;
+      final fit = ratio > 1.2 ? VideoFit.cover : ratio < 0.83 ? VideoFit.contain : null;
+      if (fit != null && fit != videoFit.value) {
+        videoFit.value = fit;
+        _showFeedback(fit == VideoFit.cover ? AppIcons.cornersOut : AppIcons.cornersIn, fit.label);
+      }
+      _pinchFrom = null;
+    }
+    _fingers.remove(event.pointer);
+    // The slides start again with every finger lifted.
+    if (_fingers.isEmpty) _pinching = false;
+  }
+
+  double _spread() {
+    final [a, b] = _fingers.values.take(2).toList();
+    return (a - b).distance;
+  }
+
   /// On a phone outside full screen a slide is not brightness or volume
   /// but where the player goes: up into full screen, down into the mini
   /// player, as in phone video apps.
@@ -519,13 +560,14 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   void _dragEnd(DragEndDetails details) {
-    if (!_slideMoves) return;
+    if (!_slideMoves || _pinching) return;
     final speed = details.primaryVelocity ?? 0;
     if (_slid < -48 || speed < -400) unawaited(widget.state?.enterFullscreen());
     if (_slid > 48 || speed > 400) _controller.goBack();
   }
 
   void _dragUpdate(DragUpdateDetails details) {
+    if (_pinching) return;
     if (_slideMoves) {
       _slid += details.primaryDelta ?? 0;
       return;
@@ -631,7 +673,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               onPointerDown: (event) {
                 final touch = event.kind == PointerDeviceKind.touch || event.kind == PointerDeviceKind.stylus;
                 if (touch != _touched) setState(() => _touched = touch);
+                if (event.kind == PointerDeviceKind.touch) _pinchDown(event);
               },
+              onPointerMove: _pinchMove,
+              onPointerUp: _pinchUp,
+              onPointerCancel: _pinchUp,
               child: Stack(fit: StackFit.expand, children: [
                 if (_locked)
                   GestureDetector(behavior: HitTestBehavior.opaque, onTap: _show)

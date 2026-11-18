@@ -311,6 +311,10 @@ class MainActivity : FlutterActivity() {
             // ExoPlayer reads it: only while captions are turned on there.
             "captionScale" -> return (getSystemService(CAPTIONING_SERVICE) as android.view.accessibility.CaptioningManager)
                 .let { if (it.isEnabled) it.fontScale.toDouble() else 1.0 }
+            // Battery saver, or a phone hot enough that Android slows it.
+            "powerSaving" -> return (getSystemService(POWER_SERVICE) as android.os.PowerManager).let {
+                it.isPowerSaveMode || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && it.currentThermalStatus >= android.os.PowerManager.THERMAL_STATUS_SEVERE)
+            }
             "isMetered" -> return (getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager).isActiveNetworkMetered
         }
         return null

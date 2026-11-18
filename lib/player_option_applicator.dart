@@ -54,6 +54,25 @@ class PlayerOptionApplicator {
       // colour values come out the same and the picture turns green and
       // purple. Bilinear chroma reads it through the right swizzle.
       if (Platform.isIOS) 'cscale': 'bilinear',
+      // mpv's OpenGL ES bridge for VideoToolbox frames takes 8-bit NV12
+      // only: a 10-bit HDR picture (P010) fails there ("Format
+      // unsupported") and the video shows as a flat blue. VideoToolbox
+      // hands every picture over as NV12 instead; mpv still tone-maps it
+      // from the colours the stream says.
+      if (Platform.isIOS) 'hwdec-image-format': 'nv12',
+      // mpv's iOS audio output opens the audio session as "mix with
+      // others" unless exclusive. iOS shows only apps that do not mix in
+      // Now Playing (the Lock Screen, Control Center, the Dynamic Island),
+      // and another app's music would play on underneath the video; mixing
+      // is the person's choice (混音).
+      if (Platform.isIOS) 'audio-exclusive': settings.mixWithOthers ? 'no' : 'yes',
+      // AV1's film grain is noise added to every frame after decoding.
+      // Where the renderer cannot add it, mpv's automatic choice has the
+      // CPU do it, frame by frame, on top of decoding. On a phone or
+      // tablet, and with 低资源占用优先, it goes to the renderer only: one
+      // that can draws it, one that cannot leaves it out (a little less
+      // grain, much less CPU).
+      'vd-lavc-film-grain': settings.strategy == PlaybackStrategy.quality || !(light || Platform.isIOS || Platform.isAndroid) ? 'auto' : 'gpu',
       // Interpolation works only when video is timed to the display.
       'video-sync': settings.interpolation && settings.videoSync == VideoSync.audio ? VideoSync.displayResample.mpvValue : settings.videoSync.mpvValue,
       // Drawn by libmpv, subtitles look as the Flutter view draws them: the

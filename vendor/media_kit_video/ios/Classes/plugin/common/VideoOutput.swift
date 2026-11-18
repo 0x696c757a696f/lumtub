@@ -57,9 +57,16 @@ public class VideoOutput: NSObject {
     worker.enqueue {
       self._init()
     }
+    // Lumtub: what was put off in the background is done now.
+    resumedObserver = NotificationCenter.default.addObserver(forName: BackgroundState.resumed, object: nil, queue: nil) { [weak self] _ in
+      self?.updateCallback()
+    }
   }
 
+  private var resumedObserver: NSObjectProtocol?
+
   deinit {
+    if let resumedObserver { NotificationCenter.default.removeObserver(resumedObserver) }
     worker.cancel()
 
     disposed = true
@@ -153,6 +160,12 @@ public class VideoOutput: NSObject {
   }
 
   private func _updateCallback() {
+    // Lumtub: a new size makes OpenGL ES framebuffers, and iOS ends an app
+    // that touches OpenGL ES in the background (the size changes there, as
+    // the app draws small while hidden). Done once the app is back.
+    if BackgroundState.shared.inBackground {
+      return
+    }
     let size = videoSize
 
     if size.width == 0 || size.height == 0 {

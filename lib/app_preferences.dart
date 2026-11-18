@@ -106,6 +106,7 @@ class AppPreferences {
     this.pipOnLeave = false,
     this.closeToTray = false,
     this.minimizeToTray = false,
+    this.softwareQualityTold = false,
     this.gpuPreference = 'system',
     this.matchFrameRate = true,
     this.keyboardShortcuts = true,
@@ -251,6 +252,9 @@ class AppPreferences {
   final bool closeToTray;
   /// Minimising the window hides it to the tray icon.
   final bool minimizeToTray;
+  /// Lumtub has said once why automatic quality stays at 1080p on a device
+  /// that decodes neither VP9 nor AV1 in hardware.
+  final bool softwareQualityTold;
   /// Windows: the graphics card Lumtub draws and decodes on, read by the
   /// runner from `config\gpu.txt` before the engine starts: `system` (as
   /// Windows decides), `low-power` (integrated) or `high-performance`.
@@ -490,6 +494,7 @@ class AppPreferences {
     bool? pipOnLeave,
     bool? closeToTray,
     bool? minimizeToTray,
+    bool? softwareQualityTold,
     String? gpuPreference,
     bool? matchFrameRate,
     bool? keyboardShortcuts,
@@ -579,6 +584,7 @@ class AppPreferences {
         pipOnLeave: pipOnLeave ?? this.pipOnLeave,
         closeToTray: closeToTray ?? this.closeToTray,
         minimizeToTray: minimizeToTray ?? this.minimizeToTray,
+        softwareQualityTold: softwareQualityTold ?? this.softwareQualityTold,
         gpuPreference: gpuPreference ?? this.gpuPreference,
         matchFrameRate: matchFrameRate ?? this.matchFrameRate,
         keyboardShortcuts: keyboardShortcuts ?? this.keyboardShortcuts,
@@ -669,6 +675,7 @@ class AppPreferences {
         'pipOnLeave': pipOnLeave,
         'closeToTray': closeToTray,
         'minimizeToTray': minimizeToTray,
+        'softwareQualityTold': softwareQualityTold,
         'gpuPreference': gpuPreference,
         'matchFrameRate': matchFrameRate,
         'keyboardShortcuts': keyboardShortcuts,
@@ -798,6 +805,7 @@ class AppPreferences {
       pipOnLeave: flag('pipOnLeave', d.pipOnLeave),
       closeToTray: flag('closeToTray', d.closeToTray),
       minimizeToTray: flag('minimizeToTray', d.minimizeToTray),
+      softwareQualityTold: flag('softwareQualityTold', d.softwareQualityTold),
       gpuPreference: gpuPreferences.contains(raw['gpuPreference']) ? raw['gpuPreference'] as String : d.gpuPreference,
       matchFrameRate: flag('matchFrameRate', d.matchFrameRate),
       keyboardShortcuts: flag('keyboardShortcuts', d.keyboardShortcuts),

@@ -11,7 +11,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../../device.dart';
 import '../window_chrome.dart';
 import '../../app/app_controller.dart';
-import '../../appearance_settings.dart' show bundledFont;
+import '../../appearance_settings.dart' show blankFont, bundledFont;
 import '../../models.dart';
 import '../../player_settings.dart';
 import '../../timestamp_link.dart';
@@ -1304,7 +1304,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
         fontSize: 32 * scale,
         fontFamily: font.isEmpty ? null : font,
         // Where the font is missing (another system), the bundled one.
-        fontFamilyFallback: const [bundledFont],
+        fontFamilyFallback: const [bundledFont, blankFont],
         letterSpacing: 0.0,
         wordSpacing: 0.0,
         color: Color(0xFF000000 | color).withValues(alpha: opacity),

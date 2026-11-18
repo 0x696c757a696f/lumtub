@@ -18,7 +18,24 @@ import WebKit
     } catch {
       NSLog("Lumtub: could not set the audio session: \(error)")
     }
+    registerSupplementalDecoders()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  /// iOS 26.2 and later let apps use the hardware VP9 and AV1 decoders,
+  /// once registered in the process (VTRegisterSupplementalVideoDecoder-
+  /// IfAvailable, macOS-only before). FFmpeg registers them only on macOS,
+  /// so libmpv's videotoolbox finds them only after this. Looked up at run
+  /// time: older iOS has no such function, and nothing changes there.
+  private func registerSupplementalDecoders() {
+    guard let videoToolbox = dlopen("/System/Library/Frameworks/VideoToolbox.framework/VideoToolbox", RTLD_NOW),
+          let symbol = dlsym(videoToolbox, "VTRegisterSupplementalVideoDecoderIfAvailable") else { return }
+    typealias Register = @convention(c) (UInt32) -> Void
+    let register = unsafeBitCast(symbol, to: Register.self)
+    for codec in ["vp09", "av01"] {
+      register(codec.utf8.reduce(UInt32(0)) { $0 << 8 | UInt32($1) })
+    }
+    NSLog("Lumtub: registered the VP9 and AV1 decoders VideoToolbox has")
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
@@ -151,6 +168,10 @@ final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate, ASWe
       result(nil)
     case "isTv":
       result(false)
+    case "powerSaving":
+      // Low Power Mode, or a phone hot enough that iOS is about to slow it.
+      let thermal = ProcessInfo.processInfo.thermalState
+      result(ProcessInfo.processInfo.isLowPowerModeEnabled || thermal == .serious || thermal == .critical)
     default:
       result(FlutterMethodNotImplemented)
     }

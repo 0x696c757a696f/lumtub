@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Lets VideoToolbox hand the app its VP9 (and AV1) hardware decoders
+       on iOS before 26.2, as Safari gets them. A private entitlement: only
+       TrollStore installs an app that carries it; SideStore, AltStore and
+       Sideloadly sign with the user's Apple ID and cannot grant it. -->
+  <key>com.apple.coremedia.allow-alternate-video-decoder-selection</key>
+  <true/>
+</dict>
+</plist>

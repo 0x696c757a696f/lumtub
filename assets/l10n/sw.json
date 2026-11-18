@@ -3574,5 +3574,10 @@
   "Save the subtitle files beside the video as SRT": "Hifadhi faili za manukuu kando ya video kama SRT",
   "WebM cannot hold subtitles, so the video is saved as MKV": "WebM haiwezi kuhifadhi manukuu, kwa hivyo video itahifadhiwa kama MKV",
   "Picture in picture when leaving the app": "Picha ndani ya picha unapoondoka kwenye programu",
-  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Huweka video inayochezwa katika dirisha dogo unapobadili kwenda programu nyingine; ikizimwa, sauti yake huendelea kuchezwa chinichini"
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "Huweka video inayochezwa katika dirisha dogo unapobadili kwenda programu nyingine; ikizimwa, sauti yake huendelea kuchezwa chinichini",
+  "Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.": "Ubora wa kiotomatiki unabaki 1080p: kifaa hiki hakiwezi kusimbua VP9 au AV1 kwa maunzi, na YouTube haina umbizo lingine juu ya 1080p. Bado unaweza kuchagua ubora wa juu zaidi au «Ubora kwanza»; kisha husimbuliwa kwa programu, jambo linalotumia betri zaidi na kupata joto zaidi.",
+  "Off: nothing is recorded": "Imezimwa: hakuna kinachorekodiwa",
+  "Mix with other apps": "Changanya na programu zingine",
+  "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "Sauti ya programu zingine inaendelea kucheza pamoja na video. Kisha iOS haionyeshi Lumtub kwenye Skrini ya Kufunga na Dynamic Island",
+  "mix audio other apps music": "Changanya na programu zingine mix audio other apps music"
 }

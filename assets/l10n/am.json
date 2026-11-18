@@ -3573,5 +3573,10 @@
   "Save the subtitle files beside the video as SRT": "የትርጉም ጽሑፍ ፋይሎችን ከቪዲዮው አጠገብ እንደ SRT አስቀምጥ",
   "WebM cannot hold subtitles, so the video is saved as MKV": "WebM የትርጉም ጽሑፍ መያዝ ስለማይችል ቪዲዮው እንደ MKV ይቀመጣል",
   "Picture in picture when leaving the app": "ከመተግበሪያው ሲወጡ ሥዕል-በ-ሥዕል",
-  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "ወደ ሌላ መተግበሪያ ሲቀይሩ እየተጫወተ ያለውን ቪዲዮ በትንሽ መስኮት ያቆያል፤ ሲጠፋ ድምፁ በጀርባ መጫወቱን ይቀጥላል"
+  "Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background": "ወደ ሌላ መተግበሪያ ሲቀይሩ እየተጫወተ ያለውን ቪዲዮ በትንሽ መስኮት ያቆያል፤ ሲጠፋ ድምፁ በጀርባ መጫወቱን ይቀጥላል",
+  "Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.": "ራስ-ሰር ጥራት በ1080p ይቆማል፦ ይህ መሣሪያ VP9 ወይም AV1ን በሃርድዌር መፍታት አይችልም፣ YouTube ከ1080p በላይ ሌላ ቅርጸት የለውም። አሁንም ከፍተኛ ጥራት ወይም «ጥራት ቅድሚያ» መምረጥ ይችላሉ፤ ይህ በሶፍትዌር ይፈታል፣ ባትሪ ይበላል እና ይሞቃል።",
+  "Off: nothing is recorded": "ጠፍቷል፦ ምንም አይመዘገብም",
+  "Mix with other apps": "ከሌሎች መተግበሪያዎች ጋር ቀላቅል",
+  "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "የሌሎች መተግበሪያዎች ድምፅ ከቪዲዮው ጋር መጫወቱን ይቀጥላል። ከዚያ iOS Lumtub ን ከመቆለፊያ ማያ እና ከDynamic Island ያስወጣዋል",
+  "mix audio other apps music": "ከሌሎች መተግበሪያዎች ጋር ቀላቅል mix audio other apps music"
 }

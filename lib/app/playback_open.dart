@@ -260,6 +260,7 @@ extension PlaybackOpening on AppController {
           availableFrameRates = video.frameRatesFor(settings);
           availableAudioLanguages = video.audioLanguages;
         });
+        _tellSoftwareQuality();
       }
       await AppController._forgetCrop(player);
       await player.open(Media(direct ?? split ?? relayedLive ?? mobileLive?['url'] as String? ?? item.url, start: start), play: play);
@@ -412,6 +413,7 @@ extension PlaybackOpening on AppController {
         availableFrameRates = const {};
         availableAudioLanguages = const [];
       });
+      _tellSoftwareQuality();
       logInfo('Playing ${item.id} from $name ${video.server}, took ${watch.elapsedMilliseconds} ms');
       return address;
     } catch (e) {

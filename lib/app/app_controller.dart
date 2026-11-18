@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../apple_chip.dart';
 import '../ai_filter.dart';
 import '../android_subtitle_fonts.dart';
 import '../app_directories.dart';
@@ -285,6 +286,32 @@ class AppController extends ChangeNotifier with _ExploreState {
   }
 
   final _waylandTopNotes = StreamController<void>.broadcast();
+
+  /// Once ever, when a video has more than 1080p and automatic quality
+  /// keeps to 1080p because this device decodes neither VP9 nor AV1 in
+  /// hardware (older PCs, phones without either decoder): YouTube has
+  /// nothing but those above 1080p, so taller means software decoding.
+  final _softwareQualityNotes = StreamController<void>.broadcast();
+  Stream<void> get softwareQualityNotes => _softwareQualityNotes.stream;
+  bool _softwareQualityTelling = false;
+
+  void _tellSoftwareQuality() {
+    if (_softwareQualityTelling || _disposed || preferences.softwareQualityTold) return;
+    if (settings.maxHeight != 0 || settings.strategy != PlaybackStrategy.auto || settings.hwdec == 'no') return;
+    if (!availableHeights.any((h) => h > 1080)) return;
+    // On an iPhone or iPad only where the chip has no VP9 decoder (before
+    // the A12): a newer chip has one, which iOS 26.2 opens to apps and the
+    // TrollStore build reaches before it.
+    if (Platform.isIOS && AppleChip.hasVp9(AppleChip.model) != false) return;
+    // Both measured, neither in hardware: the start-up probe says so.
+    for (final codec in [VideoCodec.vp9, VideoCodec.av1]) {
+      final status = settings.decoderResults[FormatPolicy.decoderKey(codec)];
+      if (status == null || !status.isVerified || status.isHardware) return;
+    }
+    _softwareQualityTelling = true;
+    _softwareQualityNotes.add(null);
+    unawaited(savePreferences(preferences.copyWith(softwareQualityTold: true)));
+  }
 
   /// Said when a window should stay on top on a Wayland desktop that does
   /// not allow it; the page offers [switchToX11].
@@ -976,6 +1003,10 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// it (see renewVideoDecoder).
   DateTime _lastDecoderRenewal = DateTime(2000);
 
+  /// iOS invalidated the decoder while the app was away: it is made again
+  /// when the app is active.
+  bool _decoderLostAway = false;
+
   /// The open in which the decoder was restarted for a stalled picture.
   int? _pictureRestartedIn;
 
@@ -1067,6 +1098,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     unawaited(_notices.close());
     unawaited(_linkedPosts.close());
     unawaited(_waylandTopNotes.close());
+    unawaited(_softwareQualityNotes.close());
     unawaited(_finishedDownloads.close());
     super.dispose();
   }

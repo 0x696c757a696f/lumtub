@@ -21,13 +21,13 @@ extension PictureHealth on AppController {
       if (adapter.isEmpty) return;
       int height(String key) => (probe[key] as num?)?.toInt() ?? 0;
       final results = {
-        for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? DecoderStatus.hardware(Platform.isWindows ? 'd3d11va' : Platform.isMacOS || Platform.isIOS ? 'videotoolbox' : Platform.isAndroid ? 'mediacodec' : 'vaapi') : const DecoderStatus.software(),
+        for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? DecoderStatus.hardware(Platform.isWindows ? 'd3d11va' : Platform.isMacOS || Platform.isIOS ? 'videotoolbox' : Platform.isAndroid ? 'mediacodec' : adapter.contains('NVDEC') ? 'nvdec' : 'vaapi', height: height(key)) : const DecoderStatus.software(),
       };
       // Asked again at every start: a result saved earlier may have been
       // a one-off, such as a video decoded in software after the graphics
       // device was lost, and the automatic codecs would stay off for good.
       final same = adapter == settings.decoderAdapter &&
-          results.entries.every((e) => (settings.decoderResults[e.key]?.isHardware ?? false) == e.value.isHardware);
+          results.entries.every((e) => (settings.decoderResults[e.key]?.isHardware ?? false) == e.value.isHardware && (settings.decoderResults[e.key]?.height ?? 0) == e.value.height);
       if (same) return;
       logInfo('Hardware decoding on $adapter: H.264 ${height('h264')}p, VP9 ${height('vp9')}p, AV1 ${height('av1')}p');
       _update(() => decodeStates = results);
@@ -65,13 +65,17 @@ extension PictureHealth on AppController {
         if (normalized != null) decodeStates = {...decodeStates, normalized: decoder};
       });
       await _fitCrop(platform, hardware: decoder.kind == DecoderKind.hardware);
+      // A tall picture decoded on the CPU gets the cheap scaling at once,
+      // not after it has dropped frames; one decoded in hardware again
+      // gets the normal scaling back.
+      if (decoder.kind != DecoderKind.unverified) await _lightenIfBusy(platform, null, software: decoder.kind == DecoderKind.software);
       // Kept as what this PC can do only when it decoded in hardware, or
       // nothing measured it: one video in software, as after a lost
       // graphics device or with hardware decoding off, says nothing about
       // the GPU.
       final measured = normalized != null && settings.decoderAdapter.isNotEmpty && (settings.decoderResults[normalized]?.isHardware ?? false);
       if (normalized != null && !(measured && decoder.kind != DecoderKind.hardware)) {
-        settings = settings.copyWith(decoderResults: {...settings.decoderResults, normalized: decoder});
+        settings = settings.copyWith(decoderResults: {...settings.decoderResults, normalized: decoder.keeping(settings.decoderResults[normalized])});
         unawaited(_settingsStore?.save(settings));
       }
       // A download older than its codec in the sidecar: only libmpv can
@@ -200,26 +204,35 @@ extension PictureHealth on AppController {
   bool get _fastScaling => _lightRendering != null || (settings.strategy == PlaybackStrategy.lowResource && !settings.customOptions.containsKey('scale'));
 
   /// In 智能自动, switches mpv to the cheapest scaling (as 低资源占用优先
-  /// does) on battery or with battery saver, and once drawing a frame takes
-  /// most of its time: on a weak or busy GPU the filters cost dropped
-  /// frames, and at window size the difference is hard to see.
-  Future<void> _lightenIfBusy(NativePlayer platform, String? frames) async {
+  /// does) on battery or with battery saver, while a picture taller than
+  /// 1080p (on a phone or tablet, from 1080p) is decoded on the CPU, and
+  /// once drawing a frame takes most of its time: on a weak or busy GPU
+  /// the filters cost dropped frames, the CPU decoding the picture needs
+  /// all the time it can get, and at window size the difference is hard
+  /// to see. [software] is set when the decoder was just read: true for a
+  /// CPU decoder, false for a hardware one.
+  Future<void> _lightenIfBusy(NativePlayer platform, String? frames, {bool? software}) async {
     final player = this.player;
     if (player == null) return;
-    if (_lightRendering == 'battery' && !Power.saving) {
+    final unplugged = _lightRendering == 'battery' && !Power.saving;
+    if (unplugged || (_lightRendering == 'software' && software == false)) {
       _lightRendering = null;
       await PlayerOptionApplicator.apply(player, settings);
       _optionsApplied(player);
       _applied = settings;
       _refitCrop(player);
-      logInfo('Plugged in again; scaling back to normal');
+      logInfo(unplugged ? 'Plugged in again; scaling back to normal' : 'Decoding in hardware again; scaling back to normal');
       return;
     }
     // Filters the person turned on are kept.
     if (_lightRendering != null || settings.strategy != PlaybackStrategy.auto || settings.scale != const PlayerSettings().scale || settings.deband || settings.interpolation) return;
     String reason;
+    final mobile = Platform.isIOS || Platform.isAndroid;
+    final height = software == true ? int.tryParse(await platform.getProperty('video-params/h')) ?? 0 : 0;
     if (Power.saving) {
       reason = 'battery';
+    } else if (software == true && (height > 1080 || (mobile && height >= 1080))) {
+      reason = 'software';
     } else {
       final busy = frames == null ? null : drawBusy(frames, double.tryParse(await platform.getProperty('container-fps')) ?? 0);
       if (busy == null) return;
@@ -236,7 +249,11 @@ extension PictureHealth on AppController {
       }
     }
     _refitCrop(player);
-    logInfo(reason == 'battery' ? 'On battery; scaling switched to the fast kind' : 'Scaling switched to the fast kind');
+    logInfo(switch (reason) {
+      'battery' => 'On battery; scaling switched to the fast kind',
+      'software' => 'Decoding ${height}p on the CPU; scaling switched to the fast kind',
+      _ => 'Scaling switched to the fast kind',
+    });
   }
 
   /// With automatic quality, a video that keeps dropping frames (a tenth

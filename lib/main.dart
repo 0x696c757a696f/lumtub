@@ -219,6 +219,11 @@ class _LumtubAppState extends State<LumtubApp> {
         _pausedByMinimize = true;
         unawaited(player.pause());
       },
+      // Phones leave the app often; the log shows when, next to what the
+      // player did then.
+      onStateChange: (state) {
+        if (Platform.isIOS || Platform.isAndroid) logInfo('App ${state.name}');
+      },
       // iOS takes the listening sockets of a suspended app away.
       // The picture comes back here on iOS, once the app is active again:
       // a decoder made while it is still in the background is invalid.

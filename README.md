@@ -135,6 +135,7 @@ These are also found in other YouTube clients, and all are opt-in here:
 | `android-armeabi-v7a` APK | Older 32-bit Android devices and many low-cost TV boxes |
 | `android-x86_64` APK | Android emulators and x86 Chromebooks |
 | `ios` IPA | iPhone and iPad with iOS 15 or newer (preview, sideloaded) |
+| `ios-trollstore` TIPA | The same for [TrollStore](https://github.com/opa334/TrollStore): also asks iOS for VP9 hardware decoding before iOS 26.2 |
 
 File names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
 **Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. Package manager (under review, working once accepted): `winget install Lumtub.Lumtub`.<br>
@@ -186,6 +187,8 @@ Everything is open source under the AGPL, so none of this has to be taken on tru
 **Is everything free?** Lumtub is. Some optional AI features (translation, speech-to-text, summaries) use third-party services or your own API keys, and those providers may charge.
 
 **Where is my data?** On Windows in `%LOCALAPPDATA%\Lumtub`, or the `userdata` folder next to `lumtub.exe` for the portable version. On Linux in `~/.local/share/lumtub`, on macOS in `~/Library/Application Support/Lumtub`. Settings, subscriptions and your library can be exported and imported.
+
+**Why does it stop at 1080p on my older PC or phone?** Above 1080p YouTube only has VP9 and AV1. Lumtub checks at every start whether your device decodes them in hardware; if it decodes neither, automatic quality stays at 1080p (H.264, decoded in hardware everywhere) and Lumtub tells you once. You can still pick 1440p or 4K, or set the playback strategy to Quality first: the picture is then decoded in software, which uses more battery and gets warmer. On iPhone and iPad, iOS 26.2 and later let Lumtub use the VP9 and AV1 hardware decoders the chip has (AV1: iPhone 15 Pro and newer); before 26.2 only the TrollStore build can ask for VP9. Playback info in the player shows what is in use.
 
 **Which Linux systems does it run on?** Any distribution with glibc 2.35 or newer: Ubuntu 22.04, Debian 12, Fedora 36 and later. Ubuntu 20.04 and older, and musl systems such as Alpine, are not supported. On NixOS start it with `appimage-run`.
 

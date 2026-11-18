@@ -1219,11 +1219,18 @@ jobs:
       - name: iOS - package the IPA
         run: ios/packaging/package.sh build/ios/iphoneos/Runner.app "$LUMTUB_CORE" "Lumtub_${LUMTUB_VERSION}_ios.ipa"
 
+      - name: iOS - package the TrollStore build
+        # The same app carrying the private entitlement that unlocks VP9
+        # hardware decoding before iOS 26.2; only TrollStore installs it.
+        run: ios/packaging/package.sh build/ios/iphoneos/Runner.app "$LUMTUB_CORE" "Lumtub_${LUMTUB_VERSION}_ios-trollstore.tipa" ios/packaging/trollstore.entitlements
+
       - name: iOS - upload IPA
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: Lumtub-ios-ipa
-          path: Lumtub_*_ios.ipa
+          path: |
+            Lumtub_*_ios.ipa
+            Lumtub_*_ios-trollstore.tipa
           if-no-files-found: error
 
   android:
@@ -1503,7 +1510,7 @@ jobs:
           fi
           rustup update stable
           shopt -s nullglob
-          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg dist/*.apk dist/*.ipa
+          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg dist/*.apk dist/*.ipa dist/*.tipa
       - name: Software bill of materials
         env:
           TAG: ${{ github.ref_name }}

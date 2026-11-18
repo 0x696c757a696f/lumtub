@@ -72,6 +72,7 @@ extension VideoDetailsActions on AppController {
               availableFrameRates = resolved.frameRatesFor(settings);
               availableAudioLanguages = resolved.audioLanguages;
             });
+            _tellSoftwareQuality();
             final lost = resolved.lostToDisabled(settings, _playback.maxHeight);
             if (lost != null) {
               _notice(tr("This video's {0}p is only in {1}, which is disabled; playing {2}p", [lost.height, lost.codecs.map((c) => c.label).join(' / '), lost.playing]));

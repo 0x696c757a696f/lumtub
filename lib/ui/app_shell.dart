@@ -9,7 +9,9 @@ import '../app/app_controller.dart';
 import '../appearance_settings.dart';
 import '../downloads/download_models.dart';
 import '../native_core.dart';
+import '../system_env.dart' show moveAppToBack;
 import 'common.dart';
+import 'edge_swipe_back.dart';
 import '../models.dart';
 import '../timestamp_link.dart';
 import 'cast_ui.dart';
@@ -73,6 +75,7 @@ class _AppShellState extends State<AppShell> {
   final _searchFocus = FocusNode(debugLabel: 'search');
   StreamSubscription<String>? _notices;
   StreamSubscription<void>? _waylandTop;
+  StreamSubscription<void>? _softwareQuality;
   StreamSubscription<(CommunityPost, ChannelRef)>? _linkedPosts;
   StreamSubscription<DownloadTask>? _finished;
   Timer? _supportCheck;
@@ -113,6 +116,14 @@ class _AppShellState extends State<AppShell> {
     _linkedPosts = _controller.linkedPosts.listen((found) {
       if (mounted) unawaited(showLinkedPost(context, _controller, found.$1, found.$2));
     });
+    _softwareQuality = _controller.softwareQualityNotes.listen((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(tr("Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.")),
+        duration: const Duration(seconds: 15),
+        showCloseIcon: true,
+      ));
+    });
     _waylandTop = _controller.waylandTopNotes.listen((_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -150,6 +161,7 @@ class _AppShellState extends State<AppShell> {
     if (WindowChrome.menus.value == _menus) WindowChrome.menus.value = null;
     unawaited(_notices?.cancel());
     unawaited(_waylandTop?.cancel());
+    unawaited(_softwareQuality?.cancel());
     unawaited(_linkedPosts?.cancel());
     unawaited(_finished?.cancel());
     _supportCheck?.cancel();
@@ -466,7 +478,7 @@ class _AppShellState extends State<AppShell> {
           onPointerPanZoomEnd: _swipeEnd,
           // The window is built again only when its layout changes; each
           // part of it listens for what it shows itself.
-          child: NotificationListener<ScrollUpdateNotification>(onNotification: _onScroll, child: SelectBuilder(
+          child: EdgeSwipeBack(enabled: Platform.isIOS, canGoBack: () => _controller.canGoBack, onBack: _back, child: NotificationListener<ScrollUpdateNotification>(onNotification: _onScroll, child: SelectBuilder(
             listenable: _layoutChanges,
             select: () => _layoutOf(_controller),
             builder: (context, _, __) => LayoutBuilder(builder: (context, constraints) {
@@ -602,7 +614,8 @@ class _AppShellState extends State<AppShell> {
                   if (off && watching) Positioned.fill(child: LightsOffLayer(dim: _controller.preferences.lightsOffDim / 100)),
                 ]),
                 // Android's back button and gesture go back through the
-                // pages first; on the first page they leave the app.
+                // pages first; on the first page they send the app to the
+                // background, as Home does, so playing goes on.
                 child: WindowFrame.supported
                     ? scaffold
                     : SelectBuilder(
@@ -610,16 +623,23 @@ class _AppShellState extends State<AppShell> {
                         select: () => _controller.canGoBack,
                         child: scaffold,
                         builder: (context, canGoBack, scaffold) => PopScope(
-                          canPop: !canGoBack,
+                          canPop: !canGoBack && !Platform.isAndroid,
                           onPopInvokedWithResult: (didPop, _) {
-                            if (!didPop) _back();
+                            if (didPop) return;
+                            if (canGoBack) {
+                              _back();
+                            } else {
+                              unawaited(moveAppToBack().then((moved) {
+                                if (!moved) unawaited(SystemNavigator.pop());
+                              }));
+                            }
                           },
                           child: scaffold!,
                         ),
                       ),
               );
             }),
-          )),
+          ))),
         ),
       );
 

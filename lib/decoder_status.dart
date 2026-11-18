@@ -12,10 +12,19 @@ class DecoderStatus {
   /// The libmpv `hwdec-current` value, only set for [DecoderKind.hardware].
   final String? hwdec;
 
-  const DecoderStatus._(this.kind, [this.hwdec]);
+  /// The tallest 16:9 picture the hardware decoder takes, as the start-up
+  /// probe measured it; 0 when unknown.
+  final int height;
+
+  const DecoderStatus._(this.kind, [this.hwdec, this.height = 0]);
   const DecoderStatus.unverified() : this._(DecoderKind.unverified);
   const DecoderStatus.software() : this._(DecoderKind.software);
-  const DecoderStatus.hardware(String hwdec) : this._(DecoderKind.hardware, hwdec);
+  const DecoderStatus.hardware(String hwdec, {int height = 0}) : this._(DecoderKind.hardware, hwdec, height);
+
+  /// This status with the probe's [height] of [measured] kept, for a
+  /// decoder libmpv reports (which says nothing of sizes).
+  DecoderStatus keeping(DecoderStatus? measured) =>
+      isHardware && height == 0 && (measured?.height ?? 0) > 0 ? DecoderStatus.hardware(hwdec!, height: measured!.height) : this;
 
   static const codecs = ['h264', 'vp9', 'av1'];
 
@@ -31,10 +40,11 @@ class DecoderStatus {
     if (raw is Map) {
       final kind = DecoderKind.values.where((k) => k.name == raw['kind']).firstOrNull;
       final hwdec = raw['hwdec']?.toString();
+      final height = raw['height'] is num ? (raw['height'] as num).toInt().clamp(0, 8640) : 0;
       return switch (kind) {
         DecoderKind.unverified => const DecoderStatus.unverified(),
         DecoderKind.software => const DecoderStatus.software(),
-        DecoderKind.hardware when _validHwdec(hwdec) => DecoderStatus.hardware(hwdec!),
+        DecoderKind.hardware when _validHwdec(hwdec) => DecoderStatus.hardware(hwdec!, height: height),
         _ => null,
       };
     }
@@ -90,17 +100,18 @@ class DecoderStatus {
         DecoderKind.hardware => hwdec!,
       };
 
-  Map<String, String> toJson() => {
+  Map<String, Object> toJson() => {
         'kind': kind.name,
         if (hwdec != null) 'hwdec': hwdec!,
+        if (height > 0) 'height': height,
       };
 
   @override
-  bool operator ==(Object other) => other is DecoderStatus && other.kind == kind && other.hwdec == hwdec;
+  bool operator ==(Object other) => other is DecoderStatus && other.kind == kind && other.hwdec == hwdec && other.height == height;
 
   @override
-  int get hashCode => Object.hash(kind, hwdec);
+  int get hashCode => Object.hash(kind, hwdec, height);
 
   @override
-  String toString() => 'DecoderStatus(${kind.name}${hwdec == null ? '' : ', $hwdec'})';
+  String toString() => 'DecoderStatus(${kind.name}${hwdec == null ? '' : ', $hwdec'}${height == 0 ? '' : ', ${height}p'})';
 }

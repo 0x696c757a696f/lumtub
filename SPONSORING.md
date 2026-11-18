@@ -38,4 +38,4 @@ Star the repository, tell a friend, [report a bug or suggest an idea](https://gi
 
 Thank you to everyone who supports Lumtub. Names are added here by hand, so tell us if yours is missing.
 
-- Be the first.
+- jay

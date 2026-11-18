@@ -210,7 +210,8 @@ Everything is open source under the AGPL, so none of this has to be taken on tru
 
 Your support pays for build servers, test devices and developer accounts. First up: a paid Apple Developer account, so sideloaded iOS installs last a full year instead of 7 days.<br>
 Feature requests from sponsors carry the **sponsor priority** label and are worked on first.<br>
-One-time gifts of any amount are just as welcome. The same page is in the app under Settings › About › Support development.
+One-time gifts of any amount are just as welcome. The same page is in the app under Settings › About › Support development.<br>
+Thank you to our [supporters](SPONSORING.md#supporters): jay.
 
 </div>
 

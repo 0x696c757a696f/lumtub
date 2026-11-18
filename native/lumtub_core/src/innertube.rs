@@ -184,6 +184,18 @@ fn members_only_in(map: &Map<String, Value>) -> bool {
     })
 }
 
+/// Whether a `style` or `badgeStyle` under [node] is [style].
+fn has_style(node: Option<&Value>, style: &str) -> bool {
+    match node {
+        Some(Value::Object(map)) => map.iter().any(|(key, value)| {
+            (matches!(key.as_str(), "style" | "badgeStyle") && value.as_str() == Some(style))
+                || has_style(Some(value), style)
+        }),
+        Some(Value::Array(list)) => list.iter().any(|v| has_style(Some(v), style)),
+        _ => false,
+    }
+}
+
 fn video_id(node: &Map<String, Value>, key: &str) -> Option<String> {
     node.get(key)
         .and_then(Value::as_str)
@@ -209,8 +221,14 @@ fn compact(node: &Map<String, Value>) -> Option<Video> {
         channel: text_of(byline),
         channel_id: browse_id(byline),
         duration: seconds(&text_of(node.get("lengthText"))),
-        view_count: count(&text_of(node.get("viewCountText"))),
-        live: badges.contains("直播") || badges.to_uppercase().contains("LIVE") || watching,
+        view_count: count(&text_of(node.get("viewCountText")))
+            .or_else(|| crate::counts::count(&text_of(node.get("viewCountText")))),
+        // The badge's style says live whatever the language.
+        live: badges.contains("直播")
+            || badges.to_uppercase().contains("LIVE")
+            || watching
+            || has_style(node.get("badges"), "BADGE_STYLE_TYPE_LIVE_NOW")
+            || has_style(node.get("thumbnailOverlays"), "LIVE"),
         members_only: members_only_in(node),
         age: Some(text_of(node.get("publishedTimeText"))).filter(|t| !t.is_empty()),
     })
@@ -241,7 +259,15 @@ fn lockup(value: &Value) -> Option<Video> {
     let channel = parts.first().cloned().unwrap_or_default();
     // YouTube may write the views as a bare number ("2.9万") here.
     let views = |part: &String| count(part).or_else(|| bare_count(part));
-    let view_count = parts.iter().skip(1).find_map(views);
+    // In other languages ("1,2 Mio. Aufrufe") the views are the second
+    // part with a number, before the age.
+    let view_count = parts.iter().skip(1).find_map(views).or_else(|| {
+        parts
+            .get(1)
+            .filter(|_| parts.len() >= 3)
+            .filter(|p| p.chars().any(|c| c.is_ascii_digit()))
+            .and_then(|p| crate::counts::count(p))
+    });
     // After the views comes the age, which holds no count of its own.
     let age = parts
         .iter()
@@ -249,7 +275,15 @@ fn lockup(value: &Value) -> Option<Video> {
         .skip_while(|part| views(part).is_none())
         .skip(1)
         .find(|part| views(part).is_none())
-        .cloned();
+        .cloned()
+        .or_else(|| {
+            parts
+                .get(2)
+                .filter(|_| {
+                    view_count.is_some() && !parts.iter().skip(1).any(|p| views(p).is_some())
+                })
+                .cloned()
+        });
     let mut badges = Vec::new();
     fn badges_in(node: &Value, out: &mut Vec<String>) {
         match node {
@@ -275,7 +309,11 @@ fn lockup(value: &Value) -> Option<Video> {
         view_count,
         live: badges
             .iter()
-            .any(|b| b.contains("直播") || b.to_uppercase() == "LIVE"),
+            .any(|b| b.contains("直播") || b.to_uppercase() == "LIVE")
+            || has_style(
+                node.get("contentImage"),
+                "THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE",
+            ),
         members_only: members_only(value),
         age,
     })
@@ -357,6 +395,26 @@ impl<'a> Parts<'a> {
         }
     }
 
+    fn facts(&self, now: u64) -> Facts {
+        let Some(primary) = self.primary else {
+            return Facts::default();
+        };
+        let counter = primary
+            .get("viewCount")
+            .and_then(|v| v.get("videoViewCountRenderer"));
+        let views = counter
+            .and_then(|c| c.get("originalViewCount"))
+            .and_then(|v| match v {
+                Value::String(s) => s.parse().ok(),
+                Value::Number(n) => n.as_u64(),
+                _ => None,
+            })
+            .or_else(|| count(&text_of(counter.and_then(|c| c.get("viewCount")))));
+        let published = english_date(&text_of(primary.get("dateText")), now)
+            .or_else(|| english_date(&text_of(primary.get("relativeDateText")), now));
+        Facts { views, published }
+    }
+
     fn localized(&self) -> Option<Localized> {
         let title = text_of(self.primary.and_then(|p| p.get("title")))
             .trim()
@@ -375,6 +433,58 @@ impl<'a> Parts<'a> {
             likes: self.likes(),
         })
     }
+}
+
+/// What a `/next` response asked in English says of its video under the
+/// player: the views and the day it came out, for a card whose listing
+/// left them out.
+#[derive(Serialize, Debug, Default, PartialEq)]
+pub struct Facts {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub views: Option<u64>,
+    /// Seconds since 1970 (UTC), at midnight of the day shown, or as long
+    /// ago as a fresh video's "3 hours ago" says.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub published: Option<u64>,
+}
+
+/// Days from 1970-01-01 to [year]-[month]-[day] (proleptic Gregorian).
+fn days_from_civil(year: i64, month: u32, day: u32) -> i64 {
+    let y = if month <= 2 { year - 1 } else { year };
+    let era = y.div_euclid(400);
+    let yoe = y - era * 400;
+    let m = month as i64;
+    let doy = (153 * (if m > 2 { m - 3 } else { m + 9 }) + 2) / 5 + day as i64 - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    era * 146_097 + doe - 719_468
+}
+
+/// "Nov 3, 2026", "Premiered Nov 3, 2026", "Streamed live on Mar 1, 2025"
+/// as seconds since 1970; relative ones ("Streamed live 5 hours ago") as
+/// that long before [now].
+fn english_date(text: &str, now: u64) -> Option<u64> {
+    if let Some(ago) = crate::listing::ago(text) {
+        return now.checked_sub(ago);
+    }
+    const MONTHS: [&str; 12] = [
+        "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec",
+    ];
+    let words: Vec<&str> = text
+        .split(|c: char| c.is_whitespace() || c == ',')
+        .filter(|w| !w.is_empty())
+        .collect();
+    words.windows(3).find_map(|w| {
+        let lower = w[0].to_ascii_lowercase();
+        let month = MONTHS.iter().position(|m| lower.starts_with(m))? as u32 + 1;
+        let day: u32 = w[1].parse().ok().filter(|d| (1..=31).contains(d))?;
+        let year: i64 = w[2].parse().ok().filter(|y| (2005..=2100).contains(y))?;
+        u64::try_from(days_from_civil(year, month, day) * 86_400).ok()
+    })
+}
+
+/// The views and the day of a `/next` response; see [Facts].
+pub fn facts(data: &Value, now: u64) -> Facts {
+    Parts::of(data).facts(now)
 }
 
 /// The videos in a `/next` response, in YouTube's order: the older
@@ -413,15 +523,21 @@ pub unsafe extern "C" fn lumtub_youtube_next(body: *const u8, length: usize) -> 
     struct Next {
         related: Vec<Video>,
         text: Option<Localized>,
+        facts: Facts,
     }
     let Ok(data) = serde_json::from_str::<Value>(unsafe { text(body, length) }) else {
         return std::ptr::null_mut();
     };
     let parts = Parts::of(&data);
     let text = parts.localized();
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs());
+    let facts = parts.facts(now);
     give_json(&Next {
         related: parts.related,
         text,
+        facts,
     })
 }
 
@@ -1314,5 +1430,58 @@ mod tests {
             })
         );
         assert_eq!(localized(&json!({})), None);
+    }
+
+    #[test]
+    fn reads_the_views_and_the_day_under_the_player() {
+        let data = json!({"contents": {"twoColumnWatchNextResults": {"results": {"results": {"contents": [{"videoPrimaryInfoRenderer": {
+            "title": {"runs": [{"text": "A"}]},
+            "viewCount": {"videoViewCountRenderer": {"viewCount": {"simpleText": "109,123 views"}, "originalViewCount": "109123"}},
+            "dateText": {"simpleText": "Premiered Nov 3, 2026"},
+            "relativeDateText": {"simpleText": "2 weeks ago"}
+        }}]}}}}});
+        let f = facts(&data, 1_800_000_000);
+        assert_eq!(f.views, Some(109_123));
+        assert_eq!(f.published, Some(1_793_664_000));
+        let fresh = json!({"videoPrimaryInfoRenderer": {
+            "viewCount": {"videoViewCountRenderer": {"viewCount": {"simpleText": "1,234 views"}}},
+            "dateText": {"simpleText": "Streamed live 5 hours ago"}
+        }});
+        let f = facts(&fresh, 1_800_000_000);
+        assert_eq!(f.views, Some(1234));
+        assert_eq!(f.published, Some(1_800_000_000 - 5 * 3600));
+        assert_eq!(english_date("Mar 1, 2025", 0), Some(1_740_787_200));
+        assert_eq!(english_date("yesterday", 0), None);
+    }
+
+    #[test]
+    fn reads_related_views_in_other_languages() {
+        let data = json!({"lockupViewModel": {
+            "contentId": "abcdefghijk", "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+            "metadata": {"lockupMetadataViewModel": {
+                "title": {"content": "T"},
+                "metadata": {"contentMetadataViewModel": {"metadataRows": [
+                    {"metadataParts": [{"text": {"content": "Kanal"}}]},
+                    {"metadataParts": [{"text": {"content": "1,2 Mio. Aufrufe"}}, {"text": {"content": "vor 3 Tagen"}}]}
+                ]}}
+            }}
+        }});
+        let video = lockup(&data["lockupViewModel"]).unwrap();
+        assert_eq!(video.view_count, Some(1_200_000));
+        assert_eq!(video.age.as_deref(), Some("vor 3 Tagen"));
+    }
+
+    #[test]
+    fn knows_a_live_by_its_badge_style_in_any_language() {
+        let compact_live = json!({"videoId": "abcdefghijk", "title": {"simpleText": "T"},
+            "viewCountText": {"simpleText": "1.234 Zuschauer"},
+            "badges": [{"metadataBadgeRenderer": {"style": "BADGE_STYLE_TYPE_LIVE_NOW", "label": "Live jetzt"}}]});
+        let video = compact(compact_live.as_object().unwrap()).unwrap();
+        assert!(video.live);
+        assert_eq!(video.view_count, Some(1234));
+        let lockup_live = json!({"contentId": "abcdefghijk", "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+            "contentImage": {"thumbnailViewModel": {"overlays": [{"thumbnailOverlayBadgeViewModel": {"thumbnailBadges": [
+                {"thumbnailBadgeViewModel": {"text": "EN DIRECT", "badgeStyle": "THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE"}}]}}]}}});
+        assert!(lockup(&lockup_live).unwrap().live);
     }
 }

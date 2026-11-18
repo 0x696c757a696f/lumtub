@@ -138,7 +138,7 @@ pub(crate) fn post(port: i64, items: Vec<Item>) -> bool {
     unsafe { send(port, &mut message) }
 }
 
-#[derive(Deserialize, Default)]
+#[derive(Deserialize, Default, Clone)]
 struct Settings {
     /// `http://host:port` or `socks5://…`; none for a direct connection.
     proxy: Option<String>,
@@ -442,6 +442,22 @@ pub unsafe extern "C" fn lumtub_http_configure(json: *const u8, length: usize) {
     crate::tls::set(settings.tls());
     crate::dns::set(settings.dns.clone());
     *CLIENT.write().unwrap_or_else(|e| e.into_inner()) = build(&settings);
+    *LAST.write().unwrap_or_else(|e| e.into_inner()) = Some(settings);
+    // Started with the first settings, so it watches from app start.
+    crate::netwatch::generation();
+}
+
+/// The settings [CLIENT] was last built from.
+static LAST: LazyLock<RwLock<Option<Settings>>> = LazyLock::new(|| RwLock::new(None));
+
+/// Called by [crate::netwatch] on a new network: [CLIENT] is built again,
+/// so its pool keeps no connection from the old route and a system proxy
+/// the new network brought is read.
+pub(crate) fn network_changed() {
+    let last = LAST.read().unwrap_or_else(|e| e.into_inner()).clone();
+    if let Some(settings) = last {
+        *CLIENT.write().unwrap_or_else(|e| e.into_inner()) = build(&settings);
+    }
 }
 
 /// Starts request [id], described by JSON `{"method", "url", "headers": [[name, value], …]}`

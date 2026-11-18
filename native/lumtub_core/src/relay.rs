@@ -94,6 +94,8 @@ pub trait Fetch: Send + Sync {
 #[derive(Default)]
 pub struct Web {
     clients: Mutex<HashMap<(Option<String>, crate::tls::Tls), reqwest::Client>>,
+    /// The [crate::netwatch::generation] the clients were made on.
+    network: AtomicU64,
 }
 
 /// How long YouTube may take to start answering.
@@ -104,6 +106,11 @@ impl Web {
         let tls = crate::tls::current();
         let key = (proxy.clone(), tls);
         let mut clients = self.clients.lock().unwrap_or_else(|e| e.into_inner());
+        // A new network: the pools hold connections over the old route.
+        let network = crate::netwatch::generation();
+        if self.network.swap(network, Ordering::AcqRel) != network {
+            clients.clear();
+        }
         if let Some(client) = clients.get(&key) {
             return Ok(client.clone());
         }
@@ -202,6 +209,7 @@ impl Web {
             Box::new(Reply {
                 reply,
                 piece: bytes::Bytes::new(),
+                network: crate::netwatch::generation(),
             }),
         ))
     }
@@ -221,7 +229,9 @@ pub(crate) fn misfit(url: &str, kind: Option<&str>, length: Option<u64>) -> Opti
     if let Some(kind) = kind {
         let kind = kind.trim().to_ascii_lowercase();
         if kind.starts_with("text/") || kind.starts_with("application/json") {
-            return Some(format!("YouTube answered with a page ({kind}) instead of media"));
+            return Some(format!(
+                "YouTube answered with a page ({kind}) instead of media"
+            ));
         }
     }
     let wanted = query(url, "range").and_then(|range| {
@@ -241,15 +251,28 @@ pub(crate) fn misfit(url: &str, kind: Option<&str>, length: Option<u64>) -> Opti
 struct Reply {
     reply: reqwest::Response,
     piece: bytes::Bytes,
+    /// The network the reply came over; a read gives up once it changed.
+    network: u64,
 }
+
+/// How often a waiting read looks whether the network changed.
+const NETWORK_CHECK: Duration = Duration::from_secs(1);
 
 impl Read for Reply {
     fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
         while self.piece.is_empty() {
-            match crate::http::runtime().block_on(self.reply.chunk()) {
-                Ok(Some(piece)) => self.piece = piece,
-                Ok(None) => return Ok(0),
-                Err(e) => return Err(std::io::Error::other(e)),
+            // Not ready within the check: nothing of the body is lost, the
+            // next call waits for the same piece.
+            let next = crate::http::runtime()
+                .block_on(async { tokio::time::timeout(NETWORK_CHECK, self.reply.chunk()).await });
+            match next {
+                Ok(Ok(Some(piece))) => self.piece = piece,
+                Ok(Ok(None)) => return Ok(0),
+                Ok(Err(e)) => return Err(std::io::Error::other(e)),
+                Err(_) if crate::netwatch::generation() != self.network => {
+                    return Err(std::io::Error::other("the network changed"));
+                }
+                Err(_) => {}
             }
         }
         let n = buffer.len().min(self.piece.len());
@@ -332,6 +355,7 @@ impl Relay {
     pub fn take_log(&self) -> Vec<String> {
         let mut lines: Vec<String> = self.shared.lock().unwrap().log.drain(..).collect();
         lines.extend(crate::backup::take_log());
+        lines.extend(crate::netwatch::take_log());
         lines
     }
 }

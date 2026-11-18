@@ -22,5 +22,9 @@ draws into an AVSampleBufferDisplayLayer (`--wid`), which iOS picture in
 picture takes; VideoToolbox's frames go to it as they are. The build uses
 MPVKit's own build script at the locked release, compiling libmpv only:
 FFmpeg and the other libraries come from that release's prebuilt archives.
-CI keeps the result in its cache, keyed on the lock file, the script and the
-patches.
+lumtub-media-builds builds this recipe (the lock file, the script and the
+patches, read from Lumtub's main branch) once a day and releases it as
+`libmpv-ios-<MPVKit release>-<hash of the recipe>`; CI downloads that
+release when `.github/pins.env` pins it (the weekly upstream check pins a
+new one by checksum) and otherwise builds the recipe itself, keeping the
+result in its cache.

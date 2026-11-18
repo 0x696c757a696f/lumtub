@@ -336,11 +336,40 @@ jobs:
           $dartVersion = (& dart --version 2>&1 | Out-String)
           if ($dartVersion -notmatch 'windows_arm64') { throw "Expected the ARM64 Dart runtime, got: $dartVersion" }
 
-      # media_kit publishes ANGLE only for x64. vcpkg builds it from source
-      # for arm64 once; the result is cached by vcpkg commit.
+      # media_kit publishes ANGLE only for x64. The arm64 build comes
+      # ready-made from lumtub-media-builds (vcpkg's angle port, released
+      # once per port version, pinned by checksum in pins.env). With no pin,
+      # vcpkg builds it here, cached by vcpkg commit.
+      - name: Windows ARM64 - download ANGLE
+        id: angle-prebuilt
+        if: matrix.package_arch == 'arm64'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ProgressPreference = 'SilentlyContinue'
+          $pins = @{}
+          foreach ($line in Get-Content -LiteralPath '.github/pins.env') {
+            if ($line -match '^([A-Z0-9_]+)=(.*)$') { $pins[$Matches[1]] = $Matches[2] }
+          }
+          $tag = $pins['ANGLE_ARM64_RELEASE']
+          if (-not $tag -or $tag -eq 'none') { Write-Host 'No ANGLE pinned; vcpkg builds it.'; exit 0 }
+          if ($tag -notmatch '^angle-arm64-windows-[0-9A-Za-z._-]+$') { throw "Unexpected ANGLE release: $tag" }
+          $archive = Join-Path $env:RUNNER_TEMP 'angle-arm64.tar.gz'
+          Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 10 -Uri "https://github.com/0x696c757a696f/lumtub-media-builds/releases/download/$tag/$tag.tar.gz" -OutFile $archive
+          $sum = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sum -ne $pins['ANGLE_ARM64_SHA256']) { throw "$tag failed its checksum: $sum" }
+          $out = Join-Path $env:RUNNER_TEMP 'angle-arm64'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          & tar.exe -xzf $archive -C $out
+          if ($LASTEXITCODE -ne 0) { throw "Could not extract $tag." }
+          foreach ($name in 'libEGL.dll', 'libGLESv2.dll', 'lib/libEGL.dll.lib', 'lib/libGLESv2.dll.lib') {
+            if (-not (Test-Path -LiteralPath (Join-Path $out $name))) { throw "$tag has no $name." }
+          }
+          "done=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
       - name: Windows ARM64 - prepare vcpkg
         id: vcpkg
-        if: matrix.package_arch == 'arm64'
+        if: matrix.package_arch == 'arm64' && steps.angle-prebuilt.outputs.done != 'true'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -358,14 +387,14 @@ jobs:
 
       - name: Windows ARM64 - restore ANGLE
         id: angle-cache
-        if: matrix.package_arch == 'arm64' && !startsWith(github.ref, 'refs/tags/')
+        if: matrix.package_arch == 'arm64' && steps.angle-prebuilt.outputs.done != 'true' && !startsWith(github.ref, 'refs/tags/')
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/angle-arm64
           key: angle-arm64-windows-${{ steps.vcpkg.outputs.commit }}
 
       - name: Windows ARM64 - build ANGLE
-        if: matrix.package_arch == 'arm64' && steps.angle-cache.outputs.cache-hit != 'true'
+        if: matrix.package_arch == 'arm64' && steps.angle-prebuilt.outputs.done != 'true' && steps.angle-cache.outputs.cache-hit != 'true'
         shell: pwsh
         env:
           VCPKG_ROOT_DIR: ${{ steps.vcpkg.outputs.root }}
@@ -1278,9 +1307,37 @@ jobs:
           lipo -info "$core"
           echo "LUMTUB_CORE=$PWD/$core" >> "$GITHUB_ENV"
 
-      # libmpv with the avfoundation video output (picture in picture),
-      # built from MPVKit's sources; only libmpv itself is compiled.
+      # libmpv with the avfoundation video output (picture in picture). It
+      # comes ready-made from lumtub-media-builds, which builds this recipe
+      # (mpvkit.lock, build_libmpv.sh, patch/) once a day; the release is
+      # named after the recipe's hash and pinned by checksum in pins.env.
+      # A recipe not released yet (one this change edits) is built here.
+      - name: iOS - read the pinned downloads
+        run: grep -E '^[A-Z0-9_]+=' .github/pins.env >> "$GITHUB_ENV"
+
+      - name: iOS - download the patched libmpv
+        id: prebuilt
+        run: |
+          set -euo pipefail
+          cd vendor/media_kit_libs_ios_video/ios
+          release=$(awk '$1 == "Libmpv" { print $3 }' mpvkit.lock | sed -n 's#.*/releases/download/\([^/]*\)/.*#\1#p')
+          tag="libmpv-ios-$release-$(cat mpvkit.lock build_libmpv.sh patch/*.patch | shasum -a 256 | cut -c1-10)"
+          if [ "$tag" != "$IOS_LIBMPV_RELEASE" ]; then
+            echo "This recipe is $tag; pins.env has $IOS_LIBMPV_RELEASE. Building it here."
+            exit 0
+          fi
+          curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$RUNNER_TEMP/libmpv.tar.gz" \
+            "https://github.com/0x696c757a696f/lumtub-media-builds/releases/download/$tag/$tag.tar.gz"
+          echo "$IOS_LIBMPV_SHA256  $RUNNER_TEMP/libmpv.tar.gz" | shasum -a 256 -c -
+          rm -rf .libmpv
+          mkdir -p .libmpv
+          tar -xzf "$RUNNER_TEMP/libmpv.tar.gz" -C .libmpv
+          # Newer than the recipe, so make keeps it.
+          touch .libmpv/libmpv.a
+          echo "done=true" >> "$GITHUB_OUTPUT"
+
       - name: iOS - cache the patched libmpv
+        if: steps.prebuilt.outputs.done != 'true'
         id: libmpv
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -1288,6 +1345,7 @@ jobs:
           key: ios-libmpv-${{ hashFiles('vendor/media_kit_libs_ios_video/ios/mpvkit.lock', 'vendor/media_kit_libs_ios_video/ios/build_libmpv.sh', 'vendor/media_kit_libs_ios_video/ios/patch/*.patch') }}
 
       - name: iOS - build the patched libmpv
+        if: steps.prebuilt.outputs.done != 'true'
         run: |
           cd vendor/media_kit_libs_ios_video/ios
           if [ -f .libmpv/libmpv.a ]; then

@@ -2,10 +2,12 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 
 /// Whether the computer runs on battery (or, on Windows, with battery saver
-/// on), when Lumtub does less in the background and draws the picture the
-/// cheap way.
+/// on; on a phone or tablet, with Low Power Mode or battery saver on, or
+/// running hot), when Lumtub does less in the background and draws the
+/// picture the cheap way.
 abstract final class Power {
   static final _getSystemPowerStatus = Platform.isWindows
       ? DynamicLibrary.open('kernel32.dll').lookupFunction<Int32 Function(Pointer<Uint8>), int Function(Pointer<Uint8>)>('GetSystemPowerStatus')
@@ -25,6 +27,7 @@ abstract final class Power {
   static bool _read() {
     if (Platform.isLinux) return _readLinux();
     if (Platform.isMacOS) return _readMac();
+    if (Platform.isIOS || Platform.isAndroid) return _readPhone();
     final call = _getSystemPowerStatus;
     if (call == null) return false;
     // SYSTEM_POWER_STATUS: ACLineStatus, BatteryFlag, BatteryLifePercent,
@@ -61,6 +64,22 @@ abstract final class Power {
     } catch (_) {
       return '';
     }
+  }
+
+  static bool _savingPhone = false;
+  static bool _askingPhone = false;
+
+  /// iOS and Android: asked of the app's shell in the background, as on
+  /// macOS; until it answers, the answer before stands.
+  static bool _readPhone() {
+    if (!_askingPhone) {
+      _askingPhone = true;
+      const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('powerSaving').then((value) {
+        _savingPhone = value ?? false;
+        _last = (DateTime.now(), _savingPhone);
+      }, onError: (Object _) {}).whenComplete(() => _askingPhone = false);
+    }
+    return _savingPhone;
   }
 
   static bool _onBatteryMac = false;

@@ -168,6 +168,10 @@ final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate, ASWe
       result(nil)
     case "isTv":
       result(false)
+    case "powerSaving":
+      // Low Power Mode, or a phone hot enough that iOS is about to slow it.
+      let thermal = ProcessInfo.processInfo.thermalState
+      result(ProcessInfo.processInfo.isLowPowerModeEnabled || thermal == .serious || thermal == .critical)
     default:
       result(FlutterMethodNotImplemented)
     }

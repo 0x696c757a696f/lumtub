@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../apple_chip.dart';
 import '../ai_filter.dart';
 import '../android_subtitle_fonts.dart';
 import '../app_directories.dart';
@@ -294,21 +295,14 @@ class AppController extends ChangeNotifier with _ExploreState {
   Stream<void> get softwareQualityNotes => _softwareQualityNotes.stream;
   bool _softwareQualityTelling = false;
 
-  static bool _iosAtLeast(int major, int minor) {
-    // "Version 26.1 (Build 23B85)"
-    final match = RegExp(r'(\d+)(?:\.(\d+))?').firstMatch(Platform.operatingSystemVersion);
-    if (match == null) return false;
-    final a = int.parse(match.group(1)!), b = int.tryParse(match.group(2) ?? '') ?? 0;
-    return a > major || (a == major && b >= minor);
-  }
-
   void _tellSoftwareQuality() {
     if (_softwareQualityTelling || _disposed || preferences.softwareQualityTold) return;
     if (settings.maxHeight != 0 || settings.strategy != PlaybackStrategy.auto || settings.hwdec == 'no') return;
     if (!availableHeights.any((h) => h > 1080)) return;
-    // Only where the answer is the hardware's: iOS before 26.2 gives apps
-    // no VP9 or AV1 decoder however capable the chip.
-    if (Platform.isIOS && !_iosAtLeast(26, 2)) return;
+    // On an iPhone or iPad only where the chip has no VP9 decoder (before
+    // the A12): a newer chip has one, which iOS 26.2 opens to apps and the
+    // TrollStore build reaches before it.
+    if (Platform.isIOS && AppleChip.hasVp9(AppleChip.model) != false) return;
     // Both measured, neither in hardware: the start-up probe says so.
     for (final codec in [VideoCodec.vp9, VideoCodec.av1]) {
       final status = settings.decoderResults[FormatPolicy.decoderKey(codec)];

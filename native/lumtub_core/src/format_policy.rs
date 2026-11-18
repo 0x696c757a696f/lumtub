@@ -130,7 +130,9 @@ impl Settings {
     /// - lowResource: H.264, then codecs with verified hardware decoding,
     ///   then the rest. Above 1080p the verified ones go first, as H.264
     ///   cannot reach that height.
-    /// - quality: no preference (VP9, AV1, H.264, VP8 as a tie-break).
+    /// - quality: no preference (VP9, AV1, H.264, VP8 as a tie-break),
+    ///   except that without AV1 hardware decoding VP9 comes first: at the
+    ///   same size and frame rate it looks as good and costs the CPU less.
     pub fn codec_order(&self) -> Vec<Codec> {
         let all: Vec<Codec> = Codec::ALL.into_iter().filter(|&c| self.allows(c)).collect();
         let verified: Vec<Codec> = all
@@ -140,7 +142,8 @@ impl Settings {
             .collect();
         let h264: Vec<Codec> = all.iter().copied().filter(|&c| c == Codec::H264).collect();
         let front: Vec<Codec> = match self.strategy {
-            Strategy::Quality => vec![],
+            Strategy::Quality if self.hardware(Codec::Av1) => vec![],
+            Strategy::Quality => vec![Codec::Vp9],
             Strategy::Auto if self.hardware(Codec::Av1) => {
                 [vec![Codec::Av1, Codec::Vp9], h264].concat()
             }
@@ -277,9 +280,15 @@ impl Settings {
     }
 
     /// Picture quality first, then the preferred codec as a tie-break.
+    /// The quality strategy keeps yt-dlp's own ranking, but without AV1
+    /// hardware decoding VP9 (HDR VP9 too) ranks above AV1 of the same
+    /// size and frame rate; a size only AV1 has still wins.
     pub fn format_sort(&self) -> Option<String> {
         if self.strategy == Strategy::Quality {
-            return None;
+            if self.hardware(Codec::Av1) || !self.allows(Codec::Vp9) {
+                return None;
+            }
+            return Some("res,fps,hdr:12,vcodec:vp9.2".into());
         }
         self.codec_order()
             .first()
@@ -359,7 +368,28 @@ mod tests {
             settings(r#"{"strategy":"quality","maxHeight":480}"#).expression(),
             "bestvideo[height<=?480]+bestaudio[format_note*=original]/bestvideo[height<=?480]+bestaudio/best[height<=?480]/best"
         );
-        assert_eq!(settings(r#"{"strategy":"quality"}"#).format_sort(), None);
+        assert_eq!(
+            settings(r#"{"strategy":"quality"}"#).format_sort().unwrap(),
+            "res,fps,hdr:12,vcodec:vp9.2"
+        );
+        assert_eq!(
+            settings(r#"{"strategy":"quality"}"#).policy().order[0],
+            "vp9"
+        );
+        assert_eq!(
+            settings(r#"{"strategy":"quality","hardware":["av1"]}"#).format_sort(),
+            None
+        );
+        assert_eq!(
+            settings(r#"{"strategy":"quality","hardware":["av1"]}"#)
+                .policy()
+                .order,
+            ["av1", "vp9", "h264", "vp8"]
+        );
+        assert_eq!(
+            settings(r#"{"strategy":"quality","disabled":["vp9"]}"#).format_sort(),
+            None
+        );
         assert_eq!(
             settings(r#"{"audio":"low"}"#).expression(),
             "bestvideo+bestaudio[format_note*=original][abr<=?64]/bestvideo+bestaudio[format_note*=original]/bestvideo+bestaudio[abr<=?64]/bestvideo+bestaudio/best/best"

@@ -54,6 +54,13 @@ class PlayerOptionApplicator {
       // colour values come out the same and the picture turns green and
       // purple. Bilinear chroma reads it through the right swizzle.
       if (Platform.isIOS) 'cscale': 'bilinear',
+      // AV1's film grain is noise added to every frame after decoding.
+      // Where the renderer cannot add it, mpv's automatic choice has the
+      // CPU do it, frame by frame, on top of decoding. On a phone or
+      // tablet, and with 低资源占用优先, it goes to the renderer only: one
+      // that can draws it, one that cannot leaves it out (a little less
+      // grain, much less CPU).
+      'vd-lavc-film-grain': settings.strategy == PlaybackStrategy.quality || !(light || Platform.isIOS || Platform.isAndroid) ? 'auto' : 'gpu',
       // Interpolation works only when video is timed to the display.
       'video-sync': settings.interpolation && settings.videoSync == VideoSync.audio ? VideoSync.displayResample.mpvValue : settings.videoSync.mpvValue,
       // Drawn by libmpv, subtitles look as the Flutter view draws them: the

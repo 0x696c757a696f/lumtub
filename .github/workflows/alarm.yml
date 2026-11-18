@@ -17,11 +17,15 @@ permissions:
 
 jobs:
   watch:
+    # Never a pull request's run: its branch name is anyone's choice, and a
+    # fork's run would be retried with this workflow's token.
     if: >-
-      github.event.workflow_run.event == 'schedule' ||
-      startsWith(github.event.workflow_run.head_branch, 'deps/') ||
-      startsWith(github.event.workflow_run.head_branch, 'v') ||
-      (github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main')
+      github.event.workflow_run.event != 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      (github.event.workflow_run.event == 'schedule' ||
+       startsWith(github.event.workflow_run.head_branch, 'deps/') ||
+       startsWith(github.event.workflow_run.head_branch, 'v') ||
+       (github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main'))
     runs-on: ubuntu-24.04
     steps:
       - name: Retry or report

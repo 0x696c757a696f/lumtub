@@ -109,4 +109,12 @@ void main() {
     expect(VideoFactsLookup.factsOfListing('{"id": "LRvSRV4WeOg", "live_status": "is_live", "duration": 0}', 'LRvSRV4WeOg', asked)!.liveStatus, 'is_live');
     expect(VideoFactsLookup.factsOfListing('not json', 'LRvSRV4WeOg', asked), isNull);
   });
+
+  test('the watch page gives the views and the day when /player wants sign-in', () {
+    final asked = DateTime.utc(2026, 11, 18);
+    final facts = VideoFactsLookup.factsOfNext({'views': 109123, 'published': 1793664000}, asked)!;
+    expect((facts.length, facts.views, facts.published), (null, 109123, DateTime.utc(2026, 11, 3)));
+    expect(VideoFactsLookup.factsOfNext(const <String, Object?>{}, asked), isNull);
+    expect(VideoFactsLookup.factsOfNext(null, asked), isNull);
+  });
 }

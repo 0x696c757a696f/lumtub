@@ -17,6 +17,7 @@ import 'ui/glass_look.dart';
 import 'ui/skin_paint.dart' show SkinGlass;
 import 'keep_awake.dart';
 import 'l10n/l10n.dart';
+import 'native_core.dart';
 import 'network_proxy.dart';
 import 'player_settings.dart';
 import 'skins/skin_library.dart';
@@ -71,6 +72,7 @@ Future<void> main() async {
     logWarn('Startup could not load the settings or skins: $e');
   }
   setLanguage(appearance.language);
+  NativeCore.tellLanguage(youtubeHl);
   runApp(LumtubApp(controller: AppController(appearance: appearance, appearanceStore: store)));
   unawaited(WidgetsBinding.instance.waitUntilFirstFrameRasterized.then((_) => logInfo('First frame shown ${FrameStats.sinceStart.elapsedMilliseconds} ms after start')));
 }

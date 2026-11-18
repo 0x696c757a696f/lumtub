@@ -252,6 +252,19 @@ class NativeCore {
   /// Windows' efficiency mode for Lumtub itself: lower clocks, efficient
   /// cores. For while it is hidden and not playing.
   static void efficiencyMode(bool on) => instance?._efficiencyMode(on);
+
+  /// Tells the core the language YouTube is asked in ([youtubeHl]), so it
+  /// reads the counts YouTube writes in it ("1,2 Mio.", "35 B" in Turkish).
+  static void tellLanguage(String hl) {
+    final core = instance;
+    if (core == null) return;
+    try {
+      final call = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_set_language');
+      core.withText(hl, call);
+    } catch (e) {
+      logWarn('The core cannot be told the language: $e');
+    }
+  }
   final bool Function(int job, int code) _kill;
   final void Function(int job) _close;
 

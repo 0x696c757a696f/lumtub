@@ -70,6 +70,18 @@ pub fn count(text: &str) -> Option<u64> {
         .unwrap_or(rest.len());
     let number = &rest[..end];
     let after = rest[end..].trim_start();
+    // What the TV app writes in East Asian languages: "10.9万次观看",
+    // "3.4億 回視聴", "1.2만회".
+    let east = match after.chars().next() {
+        Some('万' | '萬' | '만') => Some(1e4),
+        Some('亿' | '億' | '억') => Some(1e8),
+        Some('千' | '천') => Some(1e3),
+        _ => None,
+    };
+    if let Some(factor) = east {
+        let value: f64 = number.replace(',', "").parse().ok()?;
+        return Some((value * factor).round() as u64);
+    }
     let unit = after
         .split(|c: char| !c.is_ascii_alphabetic())
         .next()
@@ -853,6 +865,12 @@ mod tests {
         assert_eq!(count("No views"), Some(0));
         assert_eq!(count("1.5K watching"), Some(1500));
         assert_eq!(count("@handle"), None);
+        assert_eq!(count("10.9万次观看"), Some(109_000));
+        assert_eq!(count("5.1万次观看"), Some(51_000));
+        assert_eq!(count("12萬次觀看"), Some(120_000));
+        assert_eq!(count("3.4億 回視聴"), Some(340_000_000));
+        assert_eq!(count("1.2만회"), Some(12_000));
+        assert_eq!(count("1,234次观看"), Some(1234));
     }
 
     fn search_response() -> Value {

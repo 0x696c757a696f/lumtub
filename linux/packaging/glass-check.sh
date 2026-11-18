@@ -37,6 +37,17 @@ while kill -0 "$app" 2> /dev/null; do
       for _ in 1 2; do
         xdotool mousemove $((X + 30)) $((Y + 120)) sleep 1 mousemove $((X + 30)) $((Y + 200)) sleep 1 mousemove 0 0 sleep 1
       done
+      # Not every skin lights the rail under the pointer, and picom can
+      # show a window one change late: a small window shown and closed in
+      # a corner, away from Lumtub, makes it draw the whole screen anew.
+      for _ in 1 2; do
+        display -geometry 8x8+1900+1180 xc:black &
+        nudge=$!
+        sleep 1
+        kill "$nudge" 2> /dev/null
+        wait "$nudge" 2> /dev/null
+        sleep 1
+      done
       # The screen as shown, compositor and all, where the window is.
       import -window root -crop "${WIDTH}x${HEIGHT}+${X}+${Y}" +repage -depth 8 "PNG24:$out/$name.tmp.png" 2> /dev/null && mv "$out/$name.tmp.png" "$out/$name.png"
     fi

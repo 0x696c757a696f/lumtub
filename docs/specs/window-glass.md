@@ -109,8 +109,10 @@ mode (at most 8 more than without glass, since thumbnails bring magenta
 of their own) and took it on in whole mode (+6).
 CI machines have no graphics card, and Windows and macOS draw their blur
 solid there, so the blurred picture is reported but not required; the
-blur itself needs checking on a real machine. The log also shows a
-coarse map of each picture. Scripts:
+blur itself needs checking on a real machine. Before each picture on Linux, a small window is shown and closed in a
+corner so picom draws the whole screen anew (it can show a window one
+change late), and the app draws a frame after every runner answer. The
+log also shows a coarse map of each picture. Scripts:
 `windows/packaging/glass-check.ps1`, `linux/packaging/glass-check.sh`
 (picom), `macos/packaging/glass-check.sh`. The pictures are uploaded as
 `glass-*` artifacts.

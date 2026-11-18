@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import 'app_log.dart';
@@ -69,6 +70,11 @@ abstract final class WindowGlass {
       final answer = await _channel.invokeMapMethod<String, Object?>('setDesktopGlass', {'on': on, 'dark': dark, 'blur': blur, 'tint': ask.tint});
       if (_asked != ask) return;
       state.value = WindowGlassState(shown: answer?['shown'] == true, blurred: answer?['blurred'] == true, restart: answer?['restart'] == true);
+      // The runner changed what lies under Flutter's picture (a clear
+      // background on Linux, the frame and accent on Windows), which only
+      // shows once Flutter draws again. The frame that asked may well have
+      // been the last one, so ask for another.
+      SchedulerBinding.instance.scheduleForcedFrame();
       if (on) logInfo('Window glass: ${state.value}, system ${answer?['system'] ?? '-'}, build ${answer?['build'] ?? '-'}');
     } on MissingPluginException {
       state.value = const WindowGlassState();

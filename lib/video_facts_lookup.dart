@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -10,6 +11,7 @@ import 'models.dart';
 import 'native_core.dart';
 import 'youtube_listing.dart';
 import 'youtube_player_probe.dart';
+import 'youtube_web.dart';
 
 /// What a card shows of a video and its listing may leave out: the length,
 /// the views and the day it was published.
@@ -196,7 +198,7 @@ class VideoFactsLookup extends ChangeNotifier {
   /// instead, and /player is left alone for a while.
   static Future<VideoFacts?> askYoutube(http.Client client, String id) async {
     final refused = _playerRefused;
-    if (refused != null && DateTime.now().difference(refused) < playerRestFor) return ofSearch(client, id);
+    if (refused != null && DateTime.now().difference(refused) < playerRestFor) return _withoutPlayer(client, id);
     final request = NativeCore.instance?.quickRequest(id);
     if (request == null) return null;
     final parts = jsonDecode(request) as Map<String, dynamic>;
@@ -206,13 +208,71 @@ class VideoFactsLookup extends ChangeNotifier {
     final second = await _ask(client, (parts['tv'] as Map).cast<String, dynamic>());
     final tv = second == null ? null : VideoFacts.ofPlayer(second, DateTime.now());
     if (tv != null) return tv;
-    final searched = await ofSearch(client, id);
+    final found = await _withoutPlayer(client, id);
     if (!_toldWhy) {
       _toldWhy = true;
-      logInfo('Video facts of $id: quick start client gave none (${first == null ? 'no answer' : playerWhy(first)}), TV client neither (${second == null ? 'no answer' : playerWhy(second)}), search ${searched == null ? 'neither' : 'did'}');
+      logInfo('Video facts of $id: quick start client gave none (${first == null ? 'no answer' : playerWhy(first)}), TV client neither (${second == null ? 'no answer' : playerWhy(second)}), watch page and search ${found == null ? 'neither' : 'did'}');
     }
     if (second != null && second.contains('"LOGIN_REQUIRED"')) _playerRefused = DateTime.now();
-    return searched;
+    return found;
+  }
+
+  /// The facts of [id] without /player, which YouTube may keep for signed-in
+  /// viewers: the views and the day from the watch page's `/next` (not held
+  /// back from bots), and the length from a search for the id.
+  static Future<VideoFacts?> _withoutPlayer(http.Client client, String id) async {
+    final next = await ofNext(client, id);
+    if (next == null) return ofSearch(client, id);
+    final searched = await ofSearch(client, id);
+    return VideoFacts(
+      length: searched?.length,
+      views: next.views ?? searched?.views,
+      published: next.published ?? searched?.published,
+      liveStatus: searched?.liveStatus,
+      asked: next.asked,
+    );
+  }
+
+  /// The views and the day of [id] as its watch page shows them under the
+  /// player, asked in English so the day reads the same everywhere; null
+  /// when the page has neither.
+  static Future<VideoFacts?> ofNext(http.Client client, String id) async {
+    if (NativeCore.instance == null) return null;
+    try {
+      final response = await client
+          .post(
+            Uri.parse('https://www.youtube.com/youtubei/v1/next?prettyPrint=false'),
+            headers: YoutubeWeb.apiHeaders(),
+            body: jsonEncode({
+              'context': {
+                'client': {'clientName': 'WEB', 'clientVersion': YoutubeWeb.clientVersion, 'hl': 'en', 'gl': 'US'},
+              },
+              'videoId': id,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode != 200) return null;
+      final bytes = response.bodyBytes;
+      final facts = await Isolate.run(() {
+        final core = NativeCore.instance;
+        final answer = core == null ? null : jsonDecode(core.take(core.withBytes(bytes, core.youtubeNext)) ?? 'null');
+        return answer is Map ? answer['facts'] : null;
+      });
+      return factsOfNext(facts, DateTime.now());
+    } catch (e) {
+      logDebug(() => 'Video facts of $id from the watch page: $e');
+      return null;
+    }
+  }
+
+  /// The facts the core read from a `/next` answer, `{views, published}`.
+  @visibleForTesting
+  static VideoFacts? factsOfNext(Object? facts, DateTime asked) {
+    if (facts is! Map) return null;
+    final views = (facts['views'] as num?)?.toInt();
+    final stamp = (facts['published'] as num?)?.toInt();
+    if (views == null && stamp == null) return null;
+    return VideoFacts(views: views, published: stamp == null ? null : DateTime.fromMillisecondsSinceEpoch(stamp * 1000, isUtc: true), asked: asked);
   }
 
   /// How long /player is left alone once it wants sign-in.

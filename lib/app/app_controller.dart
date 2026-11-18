@@ -870,6 +870,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// iPhone and iPad: following the player for picture in picture.
   _IosPipSync? _iosPip;
   bool _iosAutoPip = false;
+
+  /// mpv draws the subtitles while iOS's picture in picture is open (the
+  /// window shows only the video layer), for settings that have the Flutter
+  /// view draw them; not saved.
+  bool _pipLibass = false;
   bool _windowHidden = false;
   bool? _efficient;
 

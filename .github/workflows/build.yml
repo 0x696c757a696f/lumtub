@@ -8,18 +8,23 @@ on:
         type: choice
         options: [latest, media_kit]
         default: latest
+      platforms:
+        description: 'Packages to build: every platform, or one alone'
+        type: choice
+        options: [all, windows, linux, macos, ios, android]
+        default: all
   push:
     branches: [main]
     tags: ['v*']
     # Pictures, text and the website alone need no new build (tags are
     # built whatever they change).
     paths-ignore: ['**.md', 'docs/**', 'website/**']
-  # A pull request gets the quick checks (checks.yml); it builds every
-  # package here only when it carries the label "full build" or its newest
-  # commit message has [full] (or [showcase]). [windows], [linux], [macos],
-  # [ios] or [android] in the message builds that platform's package alone.
-  # Dependabot's pull requests are always built, since they're merged once
-  # the build passes.
+  # A pull request gets the quick checks (checks.yml); it builds packages
+  # here only when it carries the label "full build" or its newest commit
+  # message asks: [full] builds the platforms whose files the push changed,
+  # [ios], [android] and the like that one alone, [all] or [showcase] every
+  # one (docs/CI.md). Dependabot's pull requests are always built in full,
+  # since they're merged once the build passes.
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, labeled]
@@ -50,13 +55,20 @@ jobs:
     permissions:
       actions: read
       contents: read
+      pull-requests: read
     outputs:
       run: ${{ steps.find.outputs.run }}
       build: ${{ steps.wanted.outputs.build }}
-      # One platform alone ([windows], [linux], [macos], [ios] or [android]
-      # in a pull request's commit message), or empty for every package.
-      only: ${{ steps.wanted.outputs.only }}
+      # The platforms to build, as a JSON list (see "Which platforms").
+      platforms: ${{ steps.wanted.outputs.platforms }}
     steps:
+      # The workflow's own copy of the script that maps paths to platforms.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: true
+
       - name: Decide whether to build
         id: wanted
         env:
@@ -67,32 +79,72 @@ jobs:
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
           HEAD: ${{ github.event.pull_request.head.sha }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          BEFORE: ${{ github.event.before }}
+          CHOSEN: ${{ inputs.platforms }}
         run: |
           set -euo pipefail
+          every='["windows","linux","macos","ios","android"]'
           build=true
-          only=
+          platforms=
+          message=
           if [[ "$EVENT" == pull_request ]]; then
             message=$(gh api "repos/$GITHUB_REPOSITORY/commits/$HEAD" --jq .commit.message)
-            platform=$(grep -oE '\[(windows|linux|macos|ios|android)\]' <<< "$message" | head -n1 | tr -d '[]' || true)
             if [[ "$ACTION" == labeled && "$LABEL" != 'full build' ]]; then
               build=false
               echo "Another label; nothing to build."
-            elif [[ -n "$platform" ]]; then
-              only=$platform
-              echo "The commit asks for the $platform package alone."
             elif [[ "$AUTHOR" == 'dependabot[bot]' ]]; then
               echo "Dependabot's pull request: built in full."
+              platforms=$every
             elif jq -e 'index("full build")' <<< "$LABELS" > /dev/null; then
-              echo "Labelled \"full build\": built in full."
-            elif grep -qF -e '[full]' -e '[showcase]' <<< "$message"; then
-              echo "The commit asks for the full build."
+              echo "Labelled \"full build\"."
+            elif grep -qE '\[(full|all|showcase|windows|linux|macos|ios|android)\]' <<< "$message"; then
+              echo "The commit asks for a build."
             else
               build=false
-              echo "Quick checks only (Checks workflow); main builds every package after the merge."
+              echo "Quick checks only (Checks workflow); main builds what the merge changed."
             fi
           fi
+
+          # Which platforms: one named in the commit message ([ios] ...) or
+          # chosen for a manual run; every one for [all], [showcase], the
+          # daily run and release tags; otherwise those whose files the
+          # change touched (.github/scripts/build_platforms.py).
+          named=$(grep -oE '\[(windows|linux|macos|ios|android)\]' <<< "$message" | head -n1 | tr -d '[]' || true)
+          if [[ "$build" != true || -n "$platforms" ]]; then
+            :
+          elif [[ -n "$named" ]]; then
+            platforms="[\"$named\"]"
+          elif [[ "$EVENT" == workflow_dispatch ]]; then
+            if [[ -z "$CHOSEN" || "$CHOSEN" == all ]]; then platforms=$every; else platforms="[\"$CHOSEN\"]"; fi
+          elif [[ "$EVENT" == schedule || "$GITHUB_REF" == refs/tags/v* ]] || grep -qE '\[(all|showcase)\]' <<< "$message"; then
+            platforms=$every
+          else
+            files=
+            if [[ "$EVENT" == pull_request && "$ACTION" == synchronize && -n "$BEFORE" ]] || [[ "$EVENT" == push && -n "$BEFORE" && ! "$BEFORE" =~ ^0+$ ]]; then
+              # What this push changed.
+              after=${HEAD:-$GITHUB_SHA}
+              files=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BEFORE...$after" --jq 'if (.files | length) >= 300 then "*" else .files[].filename end' || echo '*')
+            elif [[ "$EVENT" == pull_request ]]; then
+              # A pull request opened or labelled: all it changes.
+              files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$NUMBER/files?per_page=100" --jq '.[].filename' || echo '*')
+            else
+              files='*'
+            fi
+            if grep -qx '\*' <<< "$files"; then
+              platforms=$every
+            else
+              platforms=$(python3 -I .github/scripts/build_platforms.py <<< "$files")
+            fi
+            echo "Changed files:"; head -n 50 <<< "$files"
+          fi
+          if [[ "$build" == true && "$platforms" == '[]' ]]; then
+            build=false
+            echo "Nothing a package carries changed; nothing to build."
+          fi
+          echo "Platforms: ${platforms:-none}"
           echo "build=$build" >> "$GITHUB_OUTPUT"
-          echo "only=$only" >> "$GITHUB_OUTPUT"
+          echo "platforms=${platforms:-$every}" >> "$GITHUB_OUTPUT"
 
       # One full build at a time: a run waits until the Build runs started
       # before it have finished (each waits only for older runs, so two never
@@ -171,7 +223,7 @@ jobs:
   windows:
     name: Windows ${{ matrix.package_arch }}
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && (needs.reuse.outputs.only == '' || needs.reuse.outputs.only == 'windows') }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'windows') }}
     strategy:
       fail-fast: false
       matrix:
@@ -642,7 +694,7 @@ jobs:
   linux:
     name: Linux ${{ matrix.package_arch }}
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && (needs.reuse.outputs.only == '' || needs.reuse.outputs.only == 'linux') }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'linux') }}
     strategy:
       fail-fast: false
       matrix:
@@ -975,7 +1027,7 @@ jobs:
   macos:
     name: macOS
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && (needs.reuse.outputs.only == '' || needs.reuse.outputs.only == 'macos') }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'macos') }}
     # The signing keys live in the "release" environment, which only main
     # and v* tags may use (docs/SECURITY.md); other branches and pull
     # requests build without them and sign with a debug key.
@@ -1180,7 +1232,7 @@ jobs:
   ios:
     name: iOS
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && (needs.reuse.outputs.only == '' || needs.reuse.outputs.only == 'ios') }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'ios') }}
     # An unsigned IPA for SideStore, AltStore, Sideloadly or TrollStore:
     # without an Apple developer account nothing else installs on an iPhone.
     runs-on: macos-15-intel
@@ -1289,7 +1341,7 @@ jobs:
   android:
     name: Android
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && (needs.reuse.outputs.only == '' || needs.reuse.outputs.only == 'android') }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'android') }}
     # The signing keys live in the "release" environment, which only main
     # and v* tags may use (docs/SECURITY.md); other branches and pull
     # requests build without them and sign with a debug key.

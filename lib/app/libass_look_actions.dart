@@ -118,10 +118,21 @@ extension LibassLookActions on AppController {
       settings.secondaryOpacity,
       settings.subtitleBold,
       settings.subtitleBackground,
+      // The main subtitle's lines it holds, invisible, and their size.
+      _mainSource,
+      settings.subtitleScale,
+      _mainFont,
+      _roomEms(settings.subtitleScale),
       // The outline is in the copy's letters, which follow the player's size.
       (look.em > 0 ? look.border / look.em * 100 : 0).round(),
     ].join('|');
   }
+
+  /// The track the main subtitle shows the lines of, or 'no'.
+  String get _mainSource => _subtitleCopies[_mainTrackId]?.source ?? _mainTrackId;
+
+  /// The font libmpv draws the main subtitle in.
+  String get _mainFont => _subtitleFamily ?? (settings.subtitleFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.subtitleFont));
 
   /// Whether the subtitle track [id] is Lumtub's copy of another, which
   /// track lists leave out.
@@ -219,7 +230,11 @@ extension LibassLookActions on AppController {
     if (second) {
       final room = _roomEms(settings.secondaryScale);
       final font = Platform.isAndroid ? AndroidSubtitleFonts.familyFor(cues.take(40).map((c) => c.text).join('\n'), language: track.language ?? '') : null;
-      text = secondAss(cues, settings, outline: look.em > 0 ? look.border / look.em : 0, room: room.toDouble(), font: font);
+      final mainTrack = tracks[_mainSource];
+      final mainCues = mainTrack == null ? const <SubtitleCue>[] : await _trackCues(platform, mainTrack);
+      if (!current()) return source;
+      final main = (cues: mainCues, font: _mainFont, room: _roomEms(settings.subtitleScale).toDouble(), wrapFont: settings.subtitleFont);
+      text = secondAss(cues, settings, outline: look.em > 0 ? look.border / look.em : 0, room: room.toDouble(), font: font, main: main);
     } else {
       final room = _roomEms(settings.subtitleScale).toDouble();
       final wrapped = [for (final c in cues) LibassLayout.wrap(c.text, room, font: settings.subtitleFont, bold: settings.subtitleBold)];

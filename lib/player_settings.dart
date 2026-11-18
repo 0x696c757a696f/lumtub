@@ -827,7 +827,8 @@ class PlayerSettings {
   static String fontForThisSystem(String font) {
     if (Platform.isAndroid) return androidSubtitleFont;
     if (font != defaultSubtitleFont || Platform.isWindows) return font;
-    return Platform.isMacOS ? 'PingFang SC' : 'Noto Sans CJK SC';
+    // iOS has PingFang as macOS does, and no Noto fonts.
+    return Platform.isMacOS || Platform.isIOS ? 'PingFang SC' : 'Noto Sans CJK SC';
   }
 
   /// These settings with the subtitle style of a fresh install.

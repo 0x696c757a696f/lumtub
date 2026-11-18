@@ -9,6 +9,7 @@ import '../app/app_controller.dart';
 import '../appearance_settings.dart';
 import '../downloads/download_models.dart';
 import '../native_core.dart';
+import '../system_env.dart' show moveAppToBack;
 import 'common.dart';
 import 'edge_swipe_back.dart';
 import '../models.dart';
@@ -603,7 +604,8 @@ class _AppShellState extends State<AppShell> {
                   if (off && watching) Positioned.fill(child: LightsOffLayer(dim: _controller.preferences.lightsOffDim / 100)),
                 ]),
                 // Android's back button and gesture go back through the
-                // pages first; on the first page they leave the app.
+                // pages first; on the first page they send the app to the
+                // background, as Home does, so playing goes on.
                 child: WindowFrame.supported
                     ? scaffold
                     : SelectBuilder(
@@ -611,9 +613,16 @@ class _AppShellState extends State<AppShell> {
                         select: () => _controller.canGoBack,
                         child: scaffold,
                         builder: (context, canGoBack, scaffold) => PopScope(
-                          canPop: !canGoBack,
+                          canPop: !canGoBack && !Platform.isAndroid,
                           onPopInvokedWithResult: (didPop, _) {
-                            if (!didPop) _back();
+                            if (didPop) return;
+                            if (canGoBack) {
+                              _back();
+                            } else {
+                              unawaited(moveAppToBack().then((moved) {
+                                if (!moved) unawaited(SystemNavigator.pop());
+                              }));
+                            }
                           },
                           child: scaffold!,
                         ),

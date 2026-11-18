@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:media_kit_video/media_kit_video.dart' show IosVideoLayer;
 
 import '../appearance_settings.dart';
 import 'motion.dart';
@@ -43,6 +44,10 @@ class WarmLayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // On iOS the picture is a native layer (a platform view) under
+    // Flutter's drawing: a multiply there has nothing of Flutter's to
+    // multiply, and covered the whole picture in the warm colour.
+    if (IosVideoLayer.available) return child;
     final warmth = Theme.of(context).extension<AppTones>()?.warmth ?? 0;
     final light = Positioned.fill(
       child: IgnorePointer(

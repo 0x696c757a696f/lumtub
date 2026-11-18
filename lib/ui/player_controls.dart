@@ -469,8 +469,28 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     );
   }
 
-  Widget _lockButton() => PositionedDirectional(
-        start: 12,
+  /// How far the picture stands in from the screen's sides, beyond the
+  /// notch's own inset, in full screen: the controls keep to the picture,
+  /// not the black bars beside it.
+  double _besidePicture(bool fullscreen) {
+    if (!fullscreen) return 0;
+    final width = _player.state.width ?? 0, height = _player.state.height ?? 0;
+    final screen = MediaQuery.sizeOf(context);
+    if (width <= 0 || height <= 0 || screen.isEmpty) return 0;
+    final scale = min(screen.width / width, screen.height / height);
+    final side = (screen.width - width * scale) / 2;
+    final view = View.of(context);
+    final safe = EdgeInsets.fromViewPadding(view.viewPadding, view.devicePixelRatio);
+    return max(0.0, side - max(safe.left, safe.right));
+  }
+
+  Widget _onPicture(bool fullscreen, Widget child) {
+    final extra = _besidePicture(fullscreen);
+    return extra <= 0 ? child : Padding(padding: EdgeInsets.symmetric(horizontal: extra), child: child);
+  }
+
+  Widget _lockButton(bool fullscreen) => PositionedDirectional(
+        start: 12 + _besidePicture(fullscreen),
         top: 0,
         bottom: 0,
         child: SafeArea(
@@ -744,12 +764,12 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                   ),
                 if (!_locked) ...[
                   // In full screen the bars keep clear of a camera cutout.
-                  Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: SafeArea(top: fullscreen, bottom: false, left: fullscreen, right: fullscreen, child: _topBar(context, fullscreen)))),
-                  Positioned(left: 0, right: 0, bottom: 0, child: KeyedSubtree(key: _bottomBarKey, child: _bar(top: false, child: _bottomBar(context, fullscreen)))),
+                  Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _onPicture(fullscreen, SafeArea(top: fullscreen, bottom: false, left: fullscreen, right: fullscreen, child: _topBar(context, fullscreen))))),
+                  Positioned(left: 0, right: 0, bottom: 0, child: KeyedSubtree(key: _bottomBarKey, child: _bar(top: false, child: _onPicture(fullscreen, _bottomBar(context, fullscreen))))),
                 ],
                 // On a phone, only in full screen: over the small player above the
                 // page it covers the picture and has nothing to lock.
-                if (_locked || fullscreen || (_touched && !_phone)) _lockButton(),
+                if (_locked || fullscreen || (_touched && !_phone)) _lockButton(fullscreen),
               ]),
             ),
           ),

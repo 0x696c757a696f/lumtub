@@ -11,6 +11,7 @@ import 'app_log.dart';
 import 'js_challenge_plugin.dart';
 import 'native_core.dart';
 import 'native_http.dart';
+import 'yt_dlp_tls.dart';
 
 /// yt-dlp on iOS: an iOS app may not start other programs, so the core
 /// runs yt-dlp (the zip app) in the app's own process with the Python the
@@ -83,7 +84,7 @@ class IosPython {
       ...arguments,
     ];
     final process = IosPythonProcess._(_bindings);
-    final request = utf8.encode(jsonEncode({'app': app, 'argv': argv}));
+    final request = utf8.encode(jsonEncode({'app': app, 'argv': argv, 'environment': YtDlpTls.inProcess}));
     if (!_withBytes(request, (p, n) => _bindings.start(process._port.sendPort.nativePort, p, n))) {
       process._fail('yt-dlp could not be started in Python');
     }

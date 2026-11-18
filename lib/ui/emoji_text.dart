@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../emoji_pictures.dart';
+import '../thumbnail_cache.dart';
 
 /// [text] with each emoji in [emojis] (a shortcut such as
 /// `:face-blue-smiling:`, or a Unicode emoji YouTube sent a picture of)
@@ -22,7 +23,7 @@ List<InlineSpan> emojiSpans(BuildContext context, String text, Map<String, Strin
       child: Tooltip(
         message: name,
         child: Image(
-          image: ResizeImage(NetworkImage(emojis[name]!), width: pixels, height: pixels),
+          image: ResizeImage(CachedThumbnail(emojis[name]!, null), width: pixels, height: pixels),
           width: size,
           height: size,
           semanticLabel: name,

@@ -12,6 +12,7 @@ import 'emoji_text.dart';
 import 'live_chat_input.dart';
 import 'pages/channel_page.dart';
 import 'theme.dart';
+import '../thumbnail_cache.dart';
 
 /// Whether Super Chats show in their amount's colour, followed by the rows
 /// kept between rebuilds; [syncSuperChatHighlights] follows the preference.
@@ -119,12 +120,11 @@ class ChatMessageRow extends StatelessWidget {
         if (message.stickerUrl != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: Image.network(
+            child: Image(
               color: context.pictureWarmth,
               colorBlendMode: BlendMode.multiply,
-              message.stickerUrl!,
+              image: ResizeImage.resizeIfNeeded(null, (56 * MediaQuery.devicePixelRatioOf(context)).round(), CachedThumbnail(message.stickerUrl!, null)),
               height: 56,
-              cacheHeight: (56 * MediaQuery.devicePixelRatioOf(context)).round(),
               errorBuilder: (context, error, stack) => const SizedBox.shrink(),
             ),
           ),

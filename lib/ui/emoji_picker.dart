@@ -4,6 +4,7 @@ import '../l10n/l10n.dart';
 import '../live_chat_composer.dart';
 import 'app_icons.dart';
 import 'theme.dart';
+import '../thumbnail_cache.dart';
 
 /// The emoji offered, by group: the ones people use most in comments and
 /// chats, drawn by the system's emoji font.
@@ -106,7 +107,7 @@ class _EmojiGrid extends StatelessWidget {
                 onTap: emoji.locked ? null : () => pick(emoji.shortcut),
                 child: Opacity(
                   opacity: emoji.locked ? 0.35 : 1,
-                  child: Image.network(emoji.url, width: 24, height: 24, cacheWidth: (24 * MediaQuery.devicePixelRatioOf(context)).round(), cacheHeight: (24 * MediaQuery.devicePixelRatioOf(context)).round(), errorBuilder: (context, _, __) => Text(emoji.shortcut, style: const TextStyle(fontSize: 9))),
+                  child: Image(image: ResizeImage.resizeIfNeeded((24 * MediaQuery.devicePixelRatioOf(context)).round(), (24 * MediaQuery.devicePixelRatioOf(context)).round(), CachedThumbnail(emoji.url, null)), width: 24, height: 24, errorBuilder: (context, _, __) => Text(emoji.shortcut, style: const TextStyle(fontSize: 9))),
                 ),
               ),
           ]),

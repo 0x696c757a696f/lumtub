@@ -15,6 +15,7 @@ import '../download_dialog.dart';
 import '../common.dart';
 import '../theme.dart';
 import '../app_icons.dart';
+import '../../thumbnail_cache.dart';
 
 /// Asks what to download [item] as, then queues it; a live stream starts
 /// recording.
@@ -264,11 +265,10 @@ class _DownloadTile extends StatelessWidget {
         child: SizedBox(
           width: 96,
           height: 54,
-          child: Image.network(
+          child: Image(
             color: context.pictureWarmth,
             colorBlendMode: BlendMode.multiply,
-            item.thumbnail,
-            cacheWidth: (96 * MediaQuery.devicePixelRatioOf(context)).ceil(),
+            image: ResizeImage.resizeIfNeeded((96 * MediaQuery.devicePixelRatioOf(context)).ceil(), null, CachedThumbnail(item.thumbnail, null)),
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => ColoredBox(color: colors.surfaceContainerHighest),
           ),

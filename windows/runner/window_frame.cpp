@@ -156,8 +156,8 @@ void WindowFrame::HandleCall(const flutter::MethodCall<EncodableValue>& call,
     const EncodableValue* tint = Find(args, "tint");
     int64_t colour = 0;
     if (tint) {
-      if (const auto* small = std::get_if<int32_t>(tint)) colour = static_cast<uint32_t>(*small);
-      if (const auto* big = std::get_if<int64_t>(tint)) colour = *big;
+      if (const auto* narrow = std::get_if<int32_t>(tint)) colour = static_cast<uint32_t>(*narrow);
+      if (const auto* wide = std::get_if<int64_t>(tint)) colour = *wide;
     }
     result->Success(SetDesktopGlass(flag("on"), flag("dark"), flag("blur"), static_cast<DWORD>(colour)));
     return;

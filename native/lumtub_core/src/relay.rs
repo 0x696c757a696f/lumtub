@@ -47,6 +47,9 @@ pub struct Target {
     /// start at the same fragment (see [crate::relay_live]).
     #[serde(default)]
     pub live: Option<String>,
+    /// An HLS playlist, or a part one named (see [crate::relay_hls]).
+    #[serde(default)]
+    pub hls: crate::relay_hls::Hls,
 }
 
 fn chunk() -> u64 {
@@ -60,6 +63,11 @@ struct Shared {
     log: VecDeque<String>,
     /// The fragment each live pair starts at, by its shared name.
     live_starts: VecDeque<(String, u64)>,
+    /// What HLS playlists named, by token, and each address's token, so a
+    /// playlist fetched again names the same ones.
+    parts: HashMap<String, Target>,
+    part_tokens: HashMap<String, String>,
+    part_order: VecDeque<String>,
 }
 
 pub struct Relay {
@@ -258,7 +266,9 @@ impl Relay {
     /// A loopback address that serves [target], or none when its size is
     /// unknown (it is needed for seeking).
     pub fn register(&self, mut target: Target) -> Option<String> {
-        if (target.size == 0 && target.live.is_none()) || target.url.is_empty() || target.chunk == 0
+        if (target.size == 0 && target.live.is_none() && target.hls == crate::relay_hls::Hls::No)
+            || target.url.is_empty()
+            || target.chunk == 0
         {
             return None;
         }
@@ -284,6 +294,37 @@ impl Relay {
         lines.extend(crate::backup::take_log());
         lines
     }
+}
+
+/// Addresses HLS playlists named that are kept; a live stream's
+/// playlists name a few new segments every few seconds.
+const PARTS_KEPT: usize = 4096;
+
+/// The loopback address on [port] that serves [part], an address an HLS
+/// playlist named; the same one each time the playlist names it.
+fn register_part(shared: &Mutex<Shared>, port: u16, part: Target) -> String {
+    let mut shared = shared.lock().unwrap();
+    let key = format!("{:?} {}", part.hls, part.url);
+    let token = match shared.part_tokens.get(&key) {
+        Some(token) if shared.parts.contains_key(token) => token.clone(),
+        _ => {
+            let token = token(&part.url);
+            shared.parts.insert(token.clone(), part);
+            shared.part_tokens.insert(key, token.clone());
+            shared.part_order.push_back(token.clone());
+            while shared.part_order.len() > PARTS_KEPT {
+                if let Some(old) = shared.part_order.pop_front()
+                    && let Some(gone) = shared.parts.remove(&old)
+                {
+                    shared
+                        .part_tokens
+                        .remove(&format!("{:?} {}", gone.hls, gone.url));
+                }
+            }
+            token
+        }
+    };
+    format!("http://127.0.0.1:{port}/{token}")
 }
 
 /// The fragment the live pair [pair] starts at: [behind] fragments before
@@ -446,12 +487,15 @@ fn answer(
         let keep_open = !headers
             .get("connection")
             .is_some_and(|v| v.eq_ignore_ascii_case("close"));
-        let target = shared
-            .lock()
-            .unwrap()
-            .targets
-            .get(path.trim_start_matches('/'))
-            .cloned();
+        let target = {
+            let shared = shared.lock().unwrap();
+            let token = path.trim_start_matches('/');
+            shared
+                .targets
+                .get(token)
+                .or_else(|| shared.parts.get(token))
+                .cloned()
+        };
         let Some(target) = target.filter(|_| method == "GET" || method == "HEAD") else {
             let _ = writer.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n");
             if !keep_open {
@@ -459,6 +503,20 @@ fn answer(
             }
             continue;
         };
+        if target.hls != crate::relay_hls::Hls::No {
+            if method == "GET" {
+                let port = writer.local_addr().map_or(0, |a| a.port());
+                let register = |part: Target| Some(register_part(shared, port, part));
+                crate::relay_hls::serve(writer, &target, fetch, &register, &|line| {
+                    log(shared, line)
+                });
+            } else {
+                let _ = writer.write_all(
+                    b"HTTP/1.1 200 OK\r\nContent-Type: application/vnd.apple.mpegurl\r\nConnection: close\r\n\r\n",
+                );
+            }
+            return;
+        }
         if let Some(pair) = target.live.clone() {
             if method == "GET" {
                 let start =
@@ -1012,6 +1070,7 @@ mod tests {
             proxy,
             chunk: chunk(),
             live: None,
+            hls: Default::default(),
         };
         let (status, mut body) = Web::default()
             .get(
@@ -1084,6 +1143,7 @@ mod tests {
             proxy: None,
             chunk: CHUNK,
             live: None,
+            hls: Default::default(),
         }
     }
 
@@ -1241,6 +1301,65 @@ mod tests {
         assert!(
             !detail.contains("SECRET") && !detail.contains("abc"),
             "{detail}"
+        );
+    }
+
+    #[test]
+    fn serves_hls_through_itself() {
+        struct Pages(HashMap<String, (u16, Vec<u8>)>, Mutex<Vec<String>>);
+        impl Fetch for Pages {
+            fn get(&self, _: &Target, url: &str) -> Result<(u16, Box<dyn Read + Send>), String> {
+                self.1.lock().unwrap().push(url.to_string());
+                let (status, body) = self.0.get(url).cloned().ok_or("unknown")?;
+                Ok((status, Box::new(Cursor::new(body))))
+            }
+        }
+        let segment: Vec<u8> = (0..300_000).map(|i| (i % 253) as u8).collect();
+        let pages = Arc::new(Pages(
+            HashMap::from([
+                (
+                    "https://m.example/variant/index.m3u8".to_string(),
+                    (200, b"#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1\nhttps://m.example/playlist/index\n".to_vec()),
+                ),
+                (
+                    "https://m.example/playlist/index".to_string(),
+                    (200, b"#EXTM3U\n#EXT-X-MEDIA-SEQUENCE:7\n#EXTINF:5,\n/sq/7/seg.ts\n#EXTINF:5,\nhttps://gone.example/x.ts\n".to_vec()),
+                ),
+                ("https://m.example/sq/7/seg.ts".to_string(), (200, segment.clone())),
+                ("https://gone.example/x.ts".to_string(), (403, Vec::new())),
+            ]),
+            Mutex::new(vec![]),
+        ));
+        let relay = Relay::start(pages.clone()).unwrap();
+        let mut master = target(0);
+        master.url = "https://m.example/variant/index.m3u8".into();
+        master.hls = crate::relay_hls::Hls::Playlist;
+        let address = relay.register(master).unwrap();
+        let (head, body) = get(&address, None);
+        assert!(head.starts_with("HTTP/1.1 200"), "{head}");
+        assert!(head.contains("mpegurl"), "{head}");
+        let body = String::from_utf8(body).unwrap();
+        let variant = body.lines().nth(2).unwrap().to_string();
+        assert!(variant.starts_with("http://127.0.0.1:"), "{body}");
+        // The same playlist fetched again names the same addresses.
+        let (_, again) = get(&address, None);
+        assert_eq!(String::from_utf8(again).unwrap(), body);
+        let (_, media) = get(&variant, None);
+        let media = String::from_utf8(media).unwrap();
+        let parts: Vec<&str> = media.lines().filter(|l| l.starts_with("http")).collect();
+        assert_eq!(parts.len(), 2, "{media}");
+        assert!(media.contains("#EXT-X-MEDIA-SEQUENCE:7"));
+        let (head, bytes) = get(parts[0], None);
+        assert!(head.starts_with("HTTP/1.1 200"), "{head}");
+        assert!(bytes == segment);
+        let (head, _) = get(parts[1], None);
+        assert!(head.starts_with("HTTP/1.1 403"), "{head}");
+        assert!(
+            pages
+                .1
+                .lock()
+                .unwrap()
+                .contains(&"https://m.example/sq/7/seg.ts".to_string())
         );
     }
 

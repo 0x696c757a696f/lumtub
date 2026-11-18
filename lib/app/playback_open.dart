@@ -157,6 +157,11 @@ extension PlaybackOpening on AppController {
             if (serial == _playSerial) _fail(item, failure);
             return false;
           }
+          // libmpv's own connections would not keep to 证书来源 or 必须抗量子.
+          if (_strictTls) {
+            if (serial == _playSerial) _fail(item, failure);
+            return false;
+          }
           logError('Prefetching ${item.id} failed, letting libmpv resolve it', e);
         }
         if (serial != _playSerial) return false;
@@ -191,15 +196,18 @@ extension PlaybackOpening on AppController {
       final direct = video != null && video.format == format && !live
           ? video.directAddress(relay: relay == null ? null : (url, size) => relay.register(url, size: size, userAgent: agent, proxy: proxy.url))
           : null;
-      _relayed = direct != null && relay != null ? item.id : null;
       _openedDirect = direct != null ? item.id : null;
       final split = live && video != null && relay != null && _liveSplitOff != item.id ? _liveSplitAddress(video, relay) : null;
       _liveSplit = split != null ? item.id : null;
+      // A live stream's HLS through the relay too, so its playlists and
+      // segments use the core's TLS rather than libmpv's own.
+      final relayedLive = live && split == null && video != null && relay != null ? _liveHlsAddress(video, relay) : null;
+      _relayed = (direct != null || relayedLive != null) && relay != null ? item.id : null;
       // libmpv cannot start yt-dlp on a phone, so a live stream's address
       // is not left to its ytdl_hook there: mpv given the watch page itself
       // answers "Failed to recognize file format".
-      final mobileLive = live && split == null && video != null && (Platform.isAndroid || Platform.isIOS) ? LiveSplit.hls(video.info, _playback) : null;
-      if (live && split == null && (Platform.isAndroid || Platform.isIOS) && mobileLive == null) {
+      final mobileLive = live && split == null && relayedLive == null && video != null && (Platform.isAndroid || Platform.isIOS) ? LiveSplit.hls(video.info, _playback) : null;
+      if (live && split == null && relayedLive == null && (Platform.isAndroid || Platform.isIOS) && mobileLive == null) {
         final formats = [for (final f in (video?.info['formats'] as List? ?? const [])) if (f is Map) '${f['format_id']}:${f['protocol']}'];
         logWarn('Live ${item.id}: no HLS stream among ${formats.length} formats ${formats.join(' ')}');
         throw StateError('YouTube gave no live stream this version can play');
@@ -254,7 +262,7 @@ extension PlaybackOpening on AppController {
         });
       }
       await AppController._forgetCrop(player);
-      await player.open(Media(direct ?? split ?? mobileLive?['url'] as String? ?? item.url, start: start), play: play);
+      await player.open(Media(direct ?? split ?? relayedLive ?? mobileLive?['url'] as String? ?? item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
       _lastDrops = 0;
@@ -285,6 +293,20 @@ extension PlaybackOpening on AppController {
     if (picture == null || sound == null) return null;
     logInfo('Live ${video.info['id']} plays ${split.label} through the relay');
     return NativeCore.instance?.edl([picture, sound]);
+  }
+
+  /// A loopback address playing [video]'s live HLS through [relay], or
+  /// null when it has none. On a computer, a picture above 1080p that
+  /// yt-dlp would join with its sound stays with libmpv's ytdl_hook.
+  String? _liveHlsAddress(ResolvedVideo video, StreamRelay relay) {
+    final hls = LiveSplit.hls(video.info, _playback);
+    final url = hls?['url'];
+    if (hls == null || url is! String) return null;
+    if (!_strictTls && !Platform.isAndroid && !Platform.isIOS && LiveSplit.tallerSplitHls(video.info, _playback, hls)) return null;
+    final agent = (hls['http_headers'] as Map?)?['User-Agent'] as String? ?? video.userAgent;
+    final address = relay.registerHls(url, userAgent: agent, proxy: proxy.url);
+    if (address != null) logInfo('Live ${video.info['id']} plays HLS ${hls['format_id'] ?? 'manifest'} (${hls['height'] ?? '?'}p ${hls['vcodec'] ?? ''}) through the relay');
+    return address;
   }
 
   /// Plays the downloaded file of [item] instead of asking YouTube.
@@ -460,7 +482,7 @@ extension PlaybackOpening on AppController {
     final revived = loopbackRefused(message) && _relayed == item.id ? reviveRelay() : null;
     if (revived != null) {
       logWarn('The local relay refused libmpv; listening again');
-    } else if (_relayed == item.id) {
+    } else if (_relayed == item.id && !_strictTls) {
       _unrelayed = item.id;
       logWarn('Playing ${item.id} without the local chunked relay');
     }

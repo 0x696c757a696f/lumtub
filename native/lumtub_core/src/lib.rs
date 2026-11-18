@@ -44,6 +44,7 @@ pub mod record;
 pub mod redact;
 pub mod redirect;
 pub mod relay;
+pub mod relay_hls;
 pub mod relay_live;
 pub mod resolved;
 pub mod roots;

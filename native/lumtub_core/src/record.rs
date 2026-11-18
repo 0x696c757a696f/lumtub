@@ -691,6 +691,7 @@ mod tests {
             proxy: None,
             chunk: 1 << 20,
             live: Some("pair".into()),
+            hls: Default::default(),
         }
     }
 

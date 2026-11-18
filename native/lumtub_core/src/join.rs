@@ -64,6 +64,7 @@ impl Files {
             proxy: None,
             chunk: 8 << 20,
             live: None,
+            hls: Default::default(),
         })
     }
 }

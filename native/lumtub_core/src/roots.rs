@@ -38,6 +38,15 @@ static GOOGLE: LazyLock<Arc<RootCertStore>> =
 /// Android 14). Mozilla's list when neither can be read.
 #[cfg(target_os = "android")]
 static ANDROID: LazyLock<Arc<RootCertStore>> = LazyLock::new(|| {
+    let certs = android_certs();
+    if certs.is_empty() {
+        return MOZILLA.clone();
+    }
+    store(certs)
+});
+
+#[cfg(target_os = "android")]
+fn android_certs() -> Vec<CertificateDer<'static>> {
     let mut certs = Vec::new();
     for folder in [
         "/apex/com.android.conscrypt/cacerts",
@@ -55,11 +64,8 @@ static ANDROID: LazyLock<Arc<RootCertStore>> = LazyLock::new(|| {
             break;
         }
     }
-    if certs.is_empty() {
-        return MOZILLA.clone();
-    }
-    store(certs)
-});
+    certs
+}
 
 /// Whether Android's own certificate check has the app's context
 /// (tls::Java_io_github_lumtub_lumtub_MainActivity_initTls).
@@ -83,6 +89,92 @@ pub(crate) fn list(roots: Roots) -> Option<Arc<RootCertStore>> {
         Roots::System => None,
         Roots::Mozilla => Some(MOZILLA.clone()),
         Roots::Google => Some(GOOGLE.clone()),
+    }
+}
+
+/// The authorities [roots] names as PEM text, for programs with a TLS of
+/// their own (yt-dlp). For the system, the certificates in its store,
+/// read now; none where they cannot be read (iOS keeps them to itself).
+pub fn pem(roots: Roots) -> Option<String> {
+    let certs: Vec<CertificateDer<'static>> = match roots {
+        Roots::Mozilla => webpki_root_certs::TLS_SERVER_ROOT_CERTS.to_vec(),
+        Roots::Google => return Some(String::from_utf8_lossy(CHROME).into_owned()),
+        Roots::System => system()?,
+    };
+    if certs.is_empty() {
+        return None;
+    }
+    let mut text = String::new();
+    for cert in &certs {
+        text.push_str("-----BEGIN CERTIFICATE-----\n");
+        let encoded = base64(cert.as_ref());
+        for line in encoded.as_bytes().chunks(64) {
+            text.push_str(std::str::from_utf8(line).unwrap_or_default());
+            text.push('\n');
+        }
+        text.push_str("-----END CERTIFICATE-----\n");
+    }
+    Some(text)
+}
+
+#[cfg(any(windows, target_os = "macos", target_os = "linux"))]
+fn system() -> Option<Vec<CertificateDer<'static>>> {
+    Some(rustls_native_certs::load_native_certs().certs)
+}
+
+#[cfg(target_os = "android")]
+fn system() -> Option<Vec<CertificateDer<'static>>> {
+    Some(android_certs())
+}
+
+#[cfg(not(any(
+    windows,
+    target_os = "macos",
+    target_os = "linux",
+    target_os = "android"
+)))]
+fn system() -> Option<Vec<CertificateDer<'static>>> {
+    None
+}
+
+fn base64(bytes: &[u8]) -> String {
+    const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
+    for chunk in bytes.chunks(3) {
+        let b = [
+            chunk[0],
+            *chunk.get(1).unwrap_or(&0),
+            *chunk.get(2).unwrap_or(&0),
+        ];
+        let n = (u32::from(b[0]) << 16) | (u32::from(b[1]) << 8) | u32::from(b[2]);
+        for i in 0..4 {
+            if i <= chunk.len() {
+                out.push(ALPHABET[(n >> (18 - 6 * i) & 63) as usize] as char);
+            } else {
+                out.push('=');
+            }
+        }
+    }
+    out
+}
+
+/// [pem] for the list named in [name] (`system`, `mozilla`, `google`),
+/// null when there is none. Free it with lumtub_string_free.
+///
+/// # Safety
+/// [name] points to [len] bytes of UTF-8.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_roots_pem(
+    name: *const u8,
+    len: usize,
+) -> *mut std::os::raw::c_char {
+    let name = unsafe { crate::taste::text(name, len) };
+    match serde_json::from_value::<Roots>(serde_json::Value::String(name.to_string()))
+        .ok()
+        .and_then(pem)
+    {
+        Some(text) => crate::taste::give(text),
+        None => std::ptr::null_mut(),
     }
 }
 
@@ -119,6 +211,32 @@ mod tests {
                 .map(|b| format!("{b:02x}"))
                 .collect();
             assert_eq!(&digest, hash);
+        }
+    }
+
+    #[test]
+    fn writes_each_list_as_pem() {
+        for roots in [Roots::Mozilla, Roots::Google] {
+            let text = pem(roots).unwrap();
+            let back: Vec<CertificateDer> = CertificateDer::pem_slice_iter(text.as_bytes())
+                .flatten()
+                .collect();
+            let list = list(roots).unwrap();
+            assert_eq!(back.len(), list.len(), "{roots:?}");
+        }
+        let text = pem(Roots::Mozilla).unwrap();
+        let back: Vec<CertificateDer> = CertificateDer::pem_slice_iter(text.as_bytes())
+            .flatten()
+            .collect();
+        assert_eq!(back, webpki_root_certs::TLS_SERVER_ROOT_CERTS.to_vec());
+        for (bytes, encoded) in [
+            (&b""[..], ""),
+            (b"f", "Zg=="),
+            (b"fo", "Zm8="),
+            (b"foo", "Zm9v"),
+            (b"foob", "Zm9vYg=="),
+        ] {
+            assert_eq!(base64(bytes), encoded);
         }
     }
 

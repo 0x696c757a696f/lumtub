@@ -17,7 +17,7 @@ For **Windows, Linux, macOS and Android** (phones, tablets and TVs), with iPhone
 ![macOS](https://img.shields.io/badge/macOS-Apple%20silicon%20%7C%20Intel-000000?logo=apple)
 ![Android](https://img.shields.io/badge/Android-phone%20%7C%20tablet%20%7C%20TV-3DDC84?logo=android&logoColor=white)
 ![iOS](https://img.shields.io/badge/iOS-iPhone%20%7C%20iPad%20(preview)-000000?logo=ios)
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
 [![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 
 https://github.com/user-attachments/assets/97e3ce09-8e66-43fe-9125-bff1b3dcb3fe
@@ -152,6 +152,16 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 or open it, click **Done**, and choose **Open Anyway** next to Lumtub in **System Settings › Privacy & Security**. Updates after that open normally.
 
 
+### Official downloads only
+
+Lumtub is free. It comes only from:
+- [GitHub Releases](https://github.com/0x696c757a696f/lumtub/releases) of this repository,
+- the website [0x696c757a696f.github.io/lumtub](https://0x696c757a696f.github.io/lumtub/), which links to the same files,
+- Lumtub's built-in updater, which downloads from those releases,
+- the SideStore/AltStore source above, and `winget install Lumtub.Lumtub` once it's accepted.
+
+If anyone asks you to pay for Lumtub, or sells a renamed copy without its source code, it doesn't come from this project and may have been tampered with. Lumtub's license (AGPL) lets others share and even sell copies, but only if they give you the complete source code under the same license and keep the copyright notices. A paid closed-source copy breaks the license. Please [report it in an issue](https://github.com/0x696c757a696f/lumtub/issues/new) with a link, so it can be taken down.
+
 ## Privacy: what stays local and what doesn't
 
 Stays on your computer: your watch history, statistics, "Not interested" choices and the recommendation model itself. Recommendations are computed locally. Lumtub never reads your browser's cookies or profiles. The optional browser sign-in opens a separate, temporary window, keeps only YouTube's cookies, encrypts them on your computer and deletes everything else. Syncing your watch history to YouTube is off unless you turn it on.
@@ -163,7 +173,7 @@ Leaves your computer, because the feature needs it:
 - **SponsorBlock, DeArrow and Return YouTube Dislike** contact their own servers when enabled, using a short hash prefix of the video id where the service supports it.
 - **Updates** download from GitHub.
 
-Everything is open source under the GPL, so none of this has to be taken on trust.
+Everything is open source under the AGPL, so none of this has to be taken on trust.
 
 ## FAQ
 
@@ -237,9 +247,9 @@ Source strings are English wrapped in `tr('…')`; translations, simplified Chin
 
 ## License and attribution
 
-Lumtub is licensed under the GNU General Public License, version 3 or later (`GPL-3.0-or-later`).
+Lumtub is licensed under the GNU Affero General Public License, version 3 or later (`AGPL-3.0-or-later`). Anyone who runs a modified Lumtub as a network service must also offer its source code to the people who use it. Versions up to and including 0.2.51 were released under `GPL-3.0-or-later`.
 
-The settings tiles in `lib/widgets/pilinara_settings_tiles.dart` are adapted from [PiliNara](https://github.com/Starfallan/PiliNara), copyright its contributors, and remain under GPL-3.0-or-later; parts of Lumtub's interface follow PiliNara's design. `vendor/pilinara-settings/` is an unmodified PiliNara snapshot kept for reference and not built; the rest of PiliNara is at the repository linked above. `vendor/media_kit_video/` is a modified copy of media_kit_video (see its `LUMTUB.md`).
+The settings tiles in `lib/widgets/pilinara_settings_tiles.dart` are adapted from [PiliNara](https://github.com/Starfallan/PiliNara), copyright its contributors, and remain under GPL-3.0-or-later, which may be combined with the AGPL; parts of Lumtub's interface follow PiliNara's design. `vendor/pilinara-settings/` is an unmodified PiliNara snapshot kept for reference and not built; the rest of PiliNara is at the repository linked above. `vendor/media_kit_video/` is a modified copy of media_kit_video (see its `LUMTUB.md`).
 
 Built on [media_kit](https://github.com/media-kit/media-kit), [mpv](https://mpv.io), [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [FFmpeg](https://ffmpeg.org). AI channel lists come from [KillSlop](https://killslop.app) (CC BY-SA 4.0) and [AiSList](https://github.com/Override92/AiSList) (CC BY-NC 4.0), downloaded at runtime and not shipped with Lumtub. The bundled Noto Sans SC font is under the SIL Open Font License 1.1 (`assets/fonts/OFL.txt`); the Phosphor icon fonts are under the MIT License (`assets/fonts/phosphor/LICENSE`). Other packages and components keep their own licenses; see `NOTICE` before redistributing.
 

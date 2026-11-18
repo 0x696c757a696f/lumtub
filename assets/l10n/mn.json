@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 болон түүнээс дээш, хуулалтгүй)",
   "DirectX 12 (copy-back)": "DirectX 12 (буцаан хуулах)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (хамгийн тод, GPU ачаалал өндөр)",
-  "GPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "GPLv3; интерфейсийн зарим хэсгийг PiliNara-аас өөрчилсөн, тоглуулалт нь mpv, media_kit болон yt-dlp дээр суурилсан",
+  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; интерфейсийн зарим хэсгийг PiliNara-аас өөрчилсөн, тоглуулалт нь mpv, media_kit болон yt-dlp дээр суурилсан",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU одоогийн декодчилол VP9 AV1 видео өргөтгөл",
   "GitHub source code": "GitHub эх код",
   "GitHub repository": "GitHub репозитори",

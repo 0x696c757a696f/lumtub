@@ -6,7 +6,7 @@ pkgrel=1
 pkgdesc='Desktop YouTube client with mpv playback, local recommendations, bilingual subtitles and live danmaku'
 arch=('x86_64' 'aarch64')
 url='https://github.com/0x696c757a696f/lumtub'
-license=('GPL-3.0-or-later')
+license=('AGPL-3.0-or-later')
 # Unpacked here, so no FUSE is needed. The AppImage carries libmpv and
 # what it needs; GTK, the graphics and the sound stacks are the system's.
 depends=('glibc' 'gtk3' 'fontconfig' 'libglvnd' 'libxkbcommon' 'alsa-lib' 'libpulse')

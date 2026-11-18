@@ -2,7 +2,7 @@
     "version": "0.2.49-17fb352",
     "description": "Desktop YouTube client with mpv playback, local recommendations, bilingual subtitles and live danmaku",
     "homepage": "https://github.com/0x696c757a696f/lumtub",
-    "license": "GPL-3.0-or-later",
+    "license": "AGPL-3.0-or-later",
     "architecture": {
         "64bit": {
             "url": "https://github.com/0x696c757a696f/lumtub/releases/download/v0.2.49-17fb352/Lumtub_0.2.49-17fb352_windows-x64.zip",

@@ -10,7 +10,7 @@ pub static IT: Text = Text {
     nav_download: "Scarica",
     hero_title: ["Guarda YouTube", "a modo tuo"],
     hero_body: "Un'app gratuita per YouTube che riproduce con mpv, sceglie i consigli sul tuo computer e mostra due sottotitoli insieme. Per guardare non serve alcun account.",
-    proof: ["Windows, macOS, Linux, Android e iOS", "82 lingue dell'interfaccia", "Open source, GPL 3.0"],
+    proof: ["Windows, macOS, Linux, Android e iOS", "82 lingue dell'interfaccia", "Open source, AGPL 3.0"],
     download_for: [
         "Scarica per Windows",
         "Scarica per macOS",
@@ -155,6 +155,7 @@ pub static IT: Text = Text {
     faq_title: "Domande",
     faq: [
         ("È gratuito?", "Sì, e lo resterà. Niente pubblicità, niente piano a pagamento, nessun dato venduto. Si regge sulle donazioni. Alcune funzioni AI facoltative usano servizi di terze parti o la tua chiave API, e potrebbero essere a pagamento."),
+        ("Qualcuno vende Lumtub. È originale?", "No. Lumtub è gratuito ed è pubblicato solo su GitHub Releases, questo sito e l'aggiornamento integrato. L'AGPL permette ad altri di condividerne copie, ma con il codice sorgente completo e la stessa licenza. Una copia a pagamento e chiusa viola la licenza: segnalala su GitHub."),
         ("Mi serve un account Google?", "No. Ricerca, riproduzione, iscrizioni e consigli funzionano senza accesso. Accedi solo per mi piace, commenti, playlist e video per soli membri."),
         ("Posso portare le iscrizioni da un'altra app?", "Sì. Importa un file NewPipe, FreeTube, Google Takeout o OPML dalla pagina Iscrizioni o dalle Impostazioni, senza accedere. L'esportazione funziona allo stesso modo."),
         ("Si rompe quando YouTube cambia qualcosa?", "A volte, per poco. Lumtub aggiorna yt-dlp da solo, quindi la maggior parte dei guasti si risolve senza aspettare una nuova versione di Lumtub."),
@@ -180,6 +181,6 @@ pub static IT: Text = Text {
     goals: ["Firma del codice per Windows", "Notarizzazione Apple", "Prima le richieste degli sponsor"],
     other_ways: "Altri modi, crypto comprese",
     star: "Stella su GitHub",
-    footer: "Lumtub è software libero sotto GPL 3.0 o successiva. Non affiliato a YouTube o Google.",
+    footer: "Lumtub è software libero sotto AGPL 3.0 o successiva. Non affiliato a YouTube o Google.",
     footer_links: ["Sorgente", "Segnala un problema", "Traduci", "Privacy"],
 };

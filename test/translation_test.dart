@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -34,6 +36,19 @@ void main() {
     expect(chunks.every((c) => c.length <= 100), isTrue);
     expect(chunks.join(), text);
     expect(GoogleTranslator.splitText('x' * 250, max: 100).join(), 'x' * 250);
+  });
+
+  test('English given back as it was is asked again as English', () async {
+    final sources = <String>[];
+    final translator = GoogleTranslator(MockClient((request) async {
+      final source = request.url.queryParameters['sl']!;
+      sources.add(source);
+      final text = request.url.queryParameters['q']!;
+      final answer = source == 'en' ? '那么告诉我' : text;
+      return http.Response(jsonEncode([[[answer, text]]]), 200, headers: {'content-type': 'application/json; charset=utf-8'});
+    }));
+    expect(await translator.translate('So tell me which phone you bought 😁', 'zh-CN'), '那么告诉我');
+    expect(sources, ['auto', 'en']);
   });
 
   test('asks the endpoint with the target language and caches the answer', () async {

@@ -185,7 +185,23 @@ class GoogleTranslator implements Translator {
 
   Future<String> _request(String chunk, String target) async {
     if (chunk.trim().isEmpty) return chunk;
-    final uri = Uri.https('translate.googleapis.com', '/translate_a/single', {'client': 'gtx', 'sl': 'auto', 'tl': target, 'dt': 't', 'q': chunk});
+    final result = await _ask(chunk, target, 'auto');
+    // Its guess at the language sometimes goes wrong on chatty English with
+    // emoji, and the text comes back as it was: once more as English.
+    if (target != 'en' && _unchanged(result, chunk) && _latin(chunk)) return _ask(chunk, target, 'en');
+    return result;
+  }
+
+  static bool _unchanged(String a, String b) => a.replaceAll(RegExp(r'\s+'), ' ').trim() == b.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  /// Mostly Latin letters, as English is written.
+  static bool _latin(String text) {
+    final letters = RegExp(r'\p{L}', unicode: true).allMatches(text).length;
+    return letters >= 4 && RegExp(r'[A-Za-z]').allMatches(text).length >= letters * 0.8;
+  }
+
+  Future<String> _ask(String chunk, String target, String source) async {
+    final uri = Uri.https('translate.googleapis.com', '/translate_a/single', {'client': 'gtx', 'sl': source, 'tl': target, 'dt': 't', 'q': chunk});
     try {
       final response = await _client.get(uri).timeout(const Duration(seconds: 15));
       if (response.statusCode == 429) throw TranslationException(tr('Too many translation requests. Please try again later.'));

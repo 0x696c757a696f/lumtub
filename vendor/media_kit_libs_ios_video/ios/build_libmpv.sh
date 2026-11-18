@@ -15,8 +15,9 @@
 
 set -euo pipefail
 
-LOCK="$1"
-OUT="$2"
+# Absolute: the build runs in a folder of its own.
+LOCK="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+OUT="$(mkdir -p "$2" && cd "$2" && pwd)"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 # The MPVKit release: the tag in the Libmpv URL of the lock file.

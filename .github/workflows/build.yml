@@ -16,8 +16,10 @@ on:
     paths-ignore: ['**.md', 'docs/**', 'website/**']
   # A pull request gets the quick checks (checks.yml); it builds every
   # package here only when it carries the label "full build" or its newest
-  # commit message has [full] (or [showcase]). Dependabot's pull requests
-  # are always built, since they're merged once the build passes.
+  # commit message has [full] (or [showcase]). [windows], [linux], [macos],
+  # [ios] or [android] in the message builds that platform's package alone.
+  # Dependabot's pull requests are always built, since they're merged once
+  # the build passes.
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, labeled]
@@ -51,6 +53,9 @@ jobs:
     outputs:
       run: ${{ steps.find.outputs.run }}
       build: ${{ steps.wanted.outputs.build }}
+      # One platform alone ([windows], [linux], [macos], [ios] or [android]
+      # in a pull request's commit message), or empty for every package.
+      only: ${{ steps.wanted.outputs.only }}
     steps:
       - name: Decide whether to build
         id: wanted
@@ -65,11 +70,16 @@ jobs:
         run: |
           set -euo pipefail
           build=true
+          only=
           if [[ "$EVENT" == pull_request ]]; then
             message=$(gh api "repos/$GITHUB_REPOSITORY/commits/$HEAD" --jq .commit.message)
+            platform=$(grep -oE '\[(windows|linux|macos|ios|android)\]' <<< "$message" | head -n1 | tr -d '[]' || true)
             if [[ "$ACTION" == labeled && "$LABEL" != 'full build' ]]; then
               build=false
               echo "Another label; nothing to build."
+            elif [[ -n "$platform" ]]; then
+              only=$platform
+              echo "The commit asks for the $platform package alone."
             elif [[ "$AUTHOR" == 'dependabot[bot]' ]]; then
               echo "Dependabot's pull request: built in full."
             elif jq -e 'index("full build")' <<< "$LABELS" > /dev/null; then
@@ -82,6 +92,7 @@ jobs:
             fi
           fi
           echo "build=$build" >> "$GITHUB_OUTPUT"
+          echo "only=$only" >> "$GITHUB_OUTPUT"
 
       # One full build at a time: a run waits until the Build runs started
       # before it have finished (each waits only for older runs, so two never
@@ -160,7 +171,7 @@ jobs:
   windows:
     name: Windows ${{ matrix.package_arch }}
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && (needs.reuse.outputs.only == '' || needs.reuse.outputs.only == 'windows') }}
     strategy:
       fail-fast: false
       matrix:
@@ -631,7 +642,7 @@ jobs:
   linux:
     name: Linux ${{ matrix.package_arch }}
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && (needs.reuse.outputs.only == '' || needs.reuse.outputs.only == 'linux') }}
     strategy:
       fail-fast: false
       matrix:
@@ -964,7 +975,7 @@ jobs:
   macos:
     name: macOS
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && (needs.reuse.outputs.only == '' || needs.reuse.outputs.only == 'macos') }}
     # The signing keys live in the "release" environment, which only main
     # and v* tags may use (docs/SECURITY.md); other branches and pull
     # requests build without them and sign with a debug key.
@@ -1169,7 +1180,7 @@ jobs:
   ios:
     name: iOS
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && (needs.reuse.outputs.only == '' || needs.reuse.outputs.only == 'ios') }}
     # An unsigned IPA for SideStore, AltStore, Sideloadly or TrollStore:
     # without an Apple developer account nothing else installs on an iPhone.
     runs-on: macos-15-intel
@@ -1278,7 +1289,7 @@ jobs:
   android:
     name: Android
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && (needs.reuse.outputs.only == '' || needs.reuse.outputs.only == 'android') }}
     # The signing keys live in the "release" environment, which only main
     # and v* tags may use (docs/SECURITY.md); other branches and pull
     # requests build without them and sign with a debug key.

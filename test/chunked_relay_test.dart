@@ -50,6 +50,8 @@ void _tests(bool native) {
         return;
       }
       final [from, to] = range.split('-').map(int.parse).toList();
+      // As googlevideo labels media; the relay refuses text pages.
+      request.response.headers.contentType = ContentType('video', 'mp4');
       if (cutOnce > 0) {
         // Promises the whole piece, then drops the connection partway.
         final cut = cutOnce;

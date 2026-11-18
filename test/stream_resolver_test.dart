@@ -108,6 +108,31 @@ void main() {
     expect(count.readAsLinesSync(), hasLength(2));
   });
 
+  test('a failed video is not prefetched again for a while, and a bot check pauses prefetching', () async {
+    if (Platform.isWindows) return;
+    final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    final script = File('${dir.path}/fake-yt-dlp');
+    await script.writeAsString('#!/bin/sh\nfor last; do :; done\n'
+        'case "\$last" in *aaaaaaaaaaa) echo "ERROR: [youtube] aaaaaaaaaaa: Private video" >&2; exit 1;; '
+        '*bbbbbbbbbbb) echo "ERROR: [youtube] bbbbbbbbbbb: Sign in to confirm you\'re not a bot" >&2; exit 1;; esac\n'
+        'cat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'));
+    await expectLater(resolver.resolve('aaaaaaaaaaa', 'ytdl'), throwsA(anything));
+    await Future<void>.delayed(Duration.zero);
+    expect(resolver.prefetchAllowed('aaaaaaaaaaa'), isFalse);
+    expect(resolver.prefetchAllowed('ccccccccccc'), isTrue);
+    await expectLater(resolver.resolve('bbbbbbbbbbb', 'ytdl'), throwsA(anything));
+    await Future<void>.delayed(Duration.zero);
+    expect(resolver.prefetchAllowed('ccccccccccc'), isFalse);
+    // Opening a video still resolves it, and an answer lifts the pause.
+    await resolver.resolve('ccccccccccc', 'ytdl');
+    await Future<void>.delayed(Duration.zero);
+    expect(resolver.prefetchAllowed('ddddddddddd'), isTrue);
+    expect(resolver.prefetchAllowed('aaaaaaaaaaa'), isFalse);
+  });
+
   test('a standby yt-dlp started ahead reads the next video from stdin', () async {
     if (Platform.isWindows) return;
     final dir = await Directory.systemTemp.createTemp('lumtub_resolve');

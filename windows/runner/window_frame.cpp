@@ -284,9 +284,10 @@ static bool TransparencyEffectsOn() {
 
 EncodableValue WindowFrame::SetDesktopGlass(bool on, bool dark, bool blur, DWORD tint) {
   glass_ = on;
-  // Half the skin's colour over the blur: frosted, as Windows 10's
-  // acrylic is, with Flutter's own tint on top.
-  glass_frost_ = (tint & 0x00FFFFFFu) | 0x80000000u;
+  // Three quarters of the skin's colour over the blur: Windows 10's
+  // accent blurs little, so less would leave the words of the windows
+  // behind readable. Flutter's own tint goes on top.
+  glass_frost_ = (tint & 0x00FFFFFFu) | 0xC0000000u;
   glass_blur_ = on && blur && TransparencyEffectsOn();
   ApplyMargins();
   if (on) {
@@ -304,6 +305,12 @@ EncodableValue WindowFrame::SetDesktopGlass(bool on, bool dark, bool blur, DWORD
   return EncodableValue(EncodableMap{
       {EncodableValue("shown"), EncodableValue(on)},
       {EncodableValue("blurred"), EncodableValue(glass_blur_)},
+      // For the log: which Windows, and how it blurs.
+      {EncodableValue("build"), EncodableValue(static_cast<int64_t>(WindowsBuild()))},
+      {EncodableValue("system"), EncodableValue(!glass_blur_ ? "clear"
+                                                : WindowsBuild() >= kSystemBackdropBuild ? "backdrop"
+                                                : WindowsBuild() >= kAccentAcrylicBuild ? "acrylic"
+                                                : "blur")},
   });
 }
 

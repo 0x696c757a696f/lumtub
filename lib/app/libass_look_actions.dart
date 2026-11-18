@@ -263,6 +263,9 @@ extension LibassLookActions on AppController {
     _subtitleCopies[id] = (source: source, key: key, second: second, file: file.path);
     if (!current()) return source;
     logInfo(second ? 'Second subtitle drawn in its own style (track $source as $id)' : 'Subtitle lines broken for libmpv (track $source as $id)');
+    // Its size (secondary-sub-scale) is sent with the player's look, which
+    // may have gone out before this copy was there.
+    if (second) _queueLibassLook();
     return id;
   }
 }

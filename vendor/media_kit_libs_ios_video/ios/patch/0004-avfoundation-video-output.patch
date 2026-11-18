@@ -56,7 +56,7 @@ new file mode 100644
 index 0000000..eb388a1
 --- /dev/null
 +++ b/video/out/vo_avfoundation.m
-@@ -0,0 +1,1139 @@
+@@ -0,0 +1,1158 @@
 +/*
 + * This file is part of mpv.
 + *
@@ -131,7 +131,10 @@ index 0000000..eb388a1
 +    // Lumtub: the subtitles' picture covers only where they are drawn, at
 +    // its place in the OSD canvas (Core Image coordinates); made once per
 +    // change so Core Image keeps its texture between frames.
-+    __strong CIImage *subtitleCI;
++    // Held with CFBridgingRetain: mpv builds this file without ARC, and an
++    // autoreleased image went with draw_frame's pool (picture in picture
++    // then ended the app on its next frame).
++    CFTypeRef subtitleCI;
 +    bool has_subtitle;
 +    
 +    // Software frame upload support
@@ -524,7 +527,9 @@ index 0000000..eb388a1
 +        CGImageRelease(p->cachedSubtitleImage);
 +        p->cachedSubtitleImage = NULL;
 +    }
-+    p->subtitleCI = nil;
++    if (p->subtitleCI)
++        CFRelease(p->subtitleCI);
++    p->subtitleCI = NULL;
 +    if (p->osdLayer) {
 +        CALayer *osd = p->osdLayer;
 +        dispatch_async(dispatch_get_main_queue(), ^{
@@ -624,9 +629,11 @@ index 0000000..eb388a1
 +                if (p->cachedSubtitleImage)
 +                    CGImageRelease(p->cachedSubtitleImage);
 +                p->cachedSubtitleImage = subtitleImage;
-+                p->subtitleCI = [[CIImage imageWithCGImage:subtitleImage]
++                if (p->subtitleCI)
++                    CFRelease(p->subtitleCI);
++                p->subtitleCI = CFBridgingRetain([[CIImage imageWithCGImage:subtitleImage]
 +                    imageByApplyingTransform:CGAffineTransformMakeTranslation(
-+                        where.origin.x, where.origin.y)];
++                        where.origin.x, where.origin.y)]);
 +            } else {
 +                CALayer *osd = p->osdLayer;
 +                dispatch_async(dispatch_get_main_queue(), ^{
@@ -764,7 +771,7 @@ index 0000000..eb388a1
 +
 +        CIImage *composited = videoImage;
 +        if (subs) {
-+            CIImage *subtitleImage = p->subtitleCI;
++            CIImage *subtitleImage = (__bridge CIImage *)p->subtitleCI;
 +
 +            // The OSD canvas to the output's size
 +            if (p->osd_w != (int)frameW || p->osd_h != (int)frameH) {
@@ -848,6 +855,9 @@ index 0000000..eb388a1
 +            MP_ERR(vo, "Failed to create CIContext\n");
 +            return -1;
 +        }
++        // Lumtub: held for the VO's life whether or not the file is built
++        // with ARC (mpv builds it without), released in uninit.
++        CFRetain((__bridge CFTypeRef)p->ciContext);
 +        
 +        MP_VERBOSE(vo, "HDR-compatible compositing mode enabled with Metal\n");
 +        
@@ -870,6 +880,8 @@ index 0000000..eb388a1
 +        // (Lumtub: not dispatch_sync, which waits on a main thread that may
 +        // itself be waiting on mpv). The blocks hold the layers, not p.
 +        CALayer *osd = [CALayer layer];
++        // Held until uninit has taken it off the display layer.
++        CFRetain((__bridge CFTypeRef)osd);
 +        osd.anchorPoint = CGPointMake(0.5, 0.5);
 +        osd.backgroundColor = NULL;
 +        osd.opaque = NO;
@@ -1084,7 +1096,9 @@ index 0000000..eb388a1
 +        CGImageRelease(p->cachedSubtitleImage);
 +        p->cachedSubtitleImage = NULL;
 +    }
-+    p->subtitleCI = nil;
++    if (p->subtitleCI)
++        CFRelease(p->subtitleCI);
++    p->subtitleCI = NULL;
 +    p->has_subtitle = false;
 +    p->osd_change_id = 0;
 +    
@@ -1123,7 +1137,9 @@ index 0000000..eb388a1
 +        CGImageRelease(p->cachedSubtitleImage);
 +        p->cachedSubtitleImage = NULL;
 +    }
-+    p->subtitleCI = nil;
++    if (p->subtitleCI)
++        CFRelease(p->subtitleCI);
++    p->subtitleCI = NULL;
 +    
 +    if (p->outputPool) {
 +        CVPixelBufferPoolRelease(p->outputPool);
@@ -1142,9 +1158,12 @@ index 0000000..eb388a1
 +        p->osdLayer = nil;
 +        dispatch_async(dispatch_get_main_queue(), ^{
 +            [osd removeFromSuperlayer];
++            CFRelease((__bridge CFTypeRef)osd);
 +        });
 +    }
 +    
++    if (p->ciContext)
++        CFRelease((__bridge CFTypeRef)p->ciContext);
 +    p->ciContext = nil;
 +    p->mtlDevice = nil;
 +

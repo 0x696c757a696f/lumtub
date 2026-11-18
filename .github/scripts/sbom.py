@@ -110,7 +110,7 @@ def main(version, output):
                 "type": "application",
                 "name": "Lumtub",
                 "version": version,
-                "licenses": [{"license": {"id": "GPL-3.0-or-later"}}],
+                "licenses": [{"license": {"id": "AGPL-3.0-or-later"}}],
                 "purl": f"pkg:github/0x696c757a696f/lumtub@v{version}",
             },
         },

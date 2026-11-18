@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 فما فوق، بلا نسخ)",
   "DirectX 12 (copy-back)": "DirectX 12 (مع إعادة النسخ)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (الأوضح، حمل مرتفع على GPU)",
-  "GPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "GPLv3؛ بعض أجزاء الواجهة مقتبسة من PiliNara، والتشغيل مبني على mpv وmedia_kit وyt-dlp",
+  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3؛ بعض أجزاء الواجهة مقتبسة من PiliNara، والتشغيل مبني على mpv وmedia_kit وyt-dlp",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU طريقة فك الترميز الحالية VP9 AV1 امتدادات الفيديو",
   "GitHub source code": "الشيفرة المصدرية على GitHub",
   "GitHub repository": "مستودع GitHub",

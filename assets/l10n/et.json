@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 ja uuem, nullkoopiaga)",
   "DirectX 12 (copy-back)": "DirectX 12 (tagasikopeerimisega)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (kõige teravam, suur GPU koormus)",
-  "GPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "GPLv3; osa liidest on kohandatud PiliNarast, taasesitus põhineb mpv-l, media_kitil ja yt-dlp-l",
+  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; osa liidest on kohandatud PiliNarast, taasesitus põhineb mpv-l, media_kitil ja yt-dlp-l",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU praegune dekodeerimisviis VP9 AV1 videolaiendid",
   "GitHub source code": "GitHubi lähtekood",
   "GitHub repository": "GitHubi hoidla",

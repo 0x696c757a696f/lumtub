@@ -10,7 +10,7 @@ pub static DE: Text = Text {
     nav_download: "Download",
     hero_title: ["YouTube schauen", "auf deine Art"],
     hero_body: "Eine kostenlose YouTube-App, die über mpv abspielt, Empfehlungen auf deinem eigenen Rechner auswählt und zwei Untertitel gleichzeitig zeigt. Zum Schauen brauchst du kein Konto.",
-    proof: ["Windows, macOS, Linux, Android und iOS", "82 Oberflächensprachen", "Open Source, GPL 3.0"],
+    proof: ["Windows, macOS, Linux, Android und iOS", "82 Oberflächensprachen", "Open Source, AGPL 3.0"],
     download_for: [
         "Download für Windows",
         "Download für macOS",
@@ -155,7 +155,7 @@ pub static DE: Text = Text {
     faq_title: "Fragen",
     faq: [
         ("Ist es kostenlos?", "Ja, und das bleibt so. Keine Werbung, keine Bezahlstufe, kein Datenverkauf. Finanziert wird es durch Spenden. Einige optionale KI-Funktionen nutzen Drittanbieter oder deinen eigenen API-Schlüssel, und die können Geld kosten."),
-        ("Jemand verkauft Lumtub. Ist das echt?", "Nein. Lumtub ist kostenlos und kommt nur von GitHub Releases, dieser Website und dem eingebauten Updater. Die GPL erlaubt anderen, Kopien weiterzugeben, aber nur mit dem vollständigen Quellcode unter derselben Lizenz. Eine kostenpflichtige Kopie ohne Quellcode verstößt gegen die Lizenz. Bitte melde sie auf GitHub."),
+        ("Jemand verkauft Lumtub. Ist das echt?", "Nein. Lumtub ist kostenlos und kommt nur von GitHub Releases, dieser Website und dem eingebauten Updater. Die AGPL erlaubt anderen, Kopien weiterzugeben, aber nur mit dem vollständigen Quellcode unter derselben Lizenz. Eine kostenpflichtige Kopie ohne Quellcode verstößt gegen die Lizenz. Bitte melde sie auf GitHub."),
         ("Brauche ich ein Google-Konto?", "Nein. Suche, Wiedergabe, Abos und Empfehlungen funktionieren abgemeldet. Melde dich nur für Likes, Kommentare, Playlists und Videos nur für Mitglieder an."),
         ("Kann ich meine Abos aus einer anderen App mitbringen?", "Ja. Importiere eine NewPipe-, FreeTube-, Google-Takeout- oder OPML-Datei auf der Seite Abos oder in den Einstellungen, ohne Anmeldung. Der Export funktioniert genauso."),
         ("Geht es kaputt, wenn YouTube etwas ändert?", "Manchmal, aber nur kurz. Lumtub aktualisiert yt-dlp selbstständig, daher werden die meisten Probleme behoben, ohne auf eine neue Lumtub-Version zu warten."),
@@ -181,6 +181,6 @@ pub static DE: Text = Text {
     goals: ["Code-Signierung für Windows", "Apple-Notarisierung", "Sponsoren-Wünsche zuerst"],
     other_ways: "Weitere Wege, auch Krypto",
     star: "Stern auf GitHub",
-    footer: "Lumtub ist freie Software unter der GPL 3.0 oder neuer. Nicht mit YouTube oder Google verbunden.",
+    footer: "Lumtub ist freie Software unter der AGPL 3.0 oder neuer. Nicht mit YouTube oder Google verbunden.",
     footer_links: ["Quellcode", "Problem melden", "Übersetzen", "Datenschutz"],
 };

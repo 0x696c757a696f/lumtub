@@ -1052,7 +1052,7 @@ List<SettingEntry> aboutEntries(AppController controller) => [
           ), subtitle: tr('feedback issues')),
       SettingEntry(tr('Open source licenses'), (context) => NormalItem(
             title: tr('Open source licenses'),
-            subtitle: tr('GPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp'),
+            subtitle: tr('AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp'),
             leading: Icon(AppIcons.gavel),
             onTap: () => showLicensePage(context: context, applicationName: 'Lumtub', applicationVersion: appVersion),
           ), subtitle: 'PiliNara mpv media_kit yt-dlp license'),

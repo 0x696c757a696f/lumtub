@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 మరియు తర్వాతివి, జీరో-కాపీ)",
   "DirectX 12 (copy-back)": "DirectX 12 (కాపీ-బ్యాక్)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (అత్యంత స్పష్టమైనది, GPU భారం ఎక్కువ)",
-  "GPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "GPLv3; ఇంటర్‌ఫేస్‌లో కొంత భాగం PiliNara నుండి స్వీకరించబడింది, ప్లేబ్యాక్ mpv, media_kit మరియు yt-dlp ఆధారంగా పనిచేస్తుంది",
+  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; ఇంటర్‌ఫేస్‌లో కొంత భాగం PiliNara నుండి స్వీకరించబడింది, ప్లేబ్యాక్ mpv, media_kit మరియు yt-dlp ఆధారంగా పనిచేస్తుంది",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU ప్రస్తుత డీకోడింగ్ పద్ధతి VP9 AV1 వీడియో ఎక్స్‌టెన్షన్‌లు",
   "GitHub source code": "GitHub సోర్స్ కోడ్",
   "GitHub repository": "GitHub రిపాజిటరీ",

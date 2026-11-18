@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 و بالاتر، بدون کپی)",
   "DirectX 12 (copy-back)": "DirectX 12 (با کپی برگشتی)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (واضح‌ترین، بار زیاد GPU)",
-  "GPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "GPLv3؛ بخشی از رابط کاربری از PiliNara اقتباس شده و پخش بر پایه mpv، media_kit و yt-dlp است",
+  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3؛ بخشی از رابط کاربری از PiliNara اقتباس شده و پخش بر پایه mpv، media_kit و yt-dlp است",
   "GPU current decoding mode VP9 AV1 video extensions": "روش فعلی رمزگشایی GPU VP9 AV1 افزونه ویدیو",
   "GitHub source code": "کد منبع GitHub",
   "GitHub repository": "مخزن GitHub",

@@ -10,7 +10,7 @@ pub static ES: Text = Text {
     nav_download: "Descargar",
     hero_title: ["Mira YouTube", "a tu manera"],
     hero_body: "Una app gratuita de YouTube que reproduce con mpv, elige las recomendaciones en tu propio ordenador y muestra dos subtítulos a la vez. No necesitas cuenta para ver vídeos.",
-    proof: ["Windows, macOS, Linux, Android e iOS", "82 idiomas de interfaz", "Código abierto, GPL 3.0"],
+    proof: ["Windows, macOS, Linux, Android e iOS", "82 idiomas de interfaz", "Código abierto, AGPL 3.0"],
     download_for: [
         "Descargar para Windows",
         "Descargar para macOS",
@@ -155,7 +155,7 @@ pub static ES: Text = Text {
     faq_title: "Preguntas",
     faq: [
         ("¿Es gratis?", "Sí, y seguirá siéndolo. Sin anuncios, sin nivel de pago, sin venta de datos. Se financia con donaciones. Algunas funciones opcionales de IA usan servicios de terceros o tu propia clave de API, y esos pueden cobrar."),
-        ("Alguien está vendiendo Lumtub. ¿Es real?", "No. Lumtub es gratis y solo se publica en GitHub Releases, esta web y el actualizador integrado. La GPL permite que otros compartan copias, pero deben darte el código fuente completo con la misma licencia. Una copia de pago y cerrada incumple la licencia, así que denúnciala en GitHub."),
+        ("Alguien está vendiendo Lumtub. ¿Es real?", "No. Lumtub es gratis y solo se publica en GitHub Releases, esta web y el actualizador integrado. La AGPL permite que otros compartan copias, pero deben darte el código fuente completo con la misma licencia. Una copia de pago y cerrada incumple la licencia, así que denúnciala en GitHub."),
         ("¿Necesito una cuenta de Google?", "No. La búsqueda, la reproducción, las suscripciones y las recomendaciones funcionan sin iniciar sesión. Inicia sesión solo para likes, comentarios, listas y vídeos solo para miembros."),
         ("¿Puedo traer mis suscripciones de otra app?", "Sí. Importa un archivo de NewPipe, FreeTube, Google Takeout u OPML desde la página Suscripciones o desde Ajustes, sin iniciar sesión. Exportar funciona igual."),
         ("¿Se romperá cuando YouTube cambie algo?", "A veces, por poco tiempo. Lumtub actualiza yt-dlp por su cuenta, así que la mayoría de los fallos se arreglan sin esperar a una nueva versión de Lumtub."),
@@ -181,6 +181,6 @@ pub static ES: Text = Text {
     goals: ["Firma de código en Windows", "Notarización de Apple", "Primero, las peticiones de patrocinadores"],
     other_ways: "Otras formas, con criptomonedas",
     star: "Dar estrella en GitHub",
-    footer: "Lumtub es software libre bajo la GPL 3.0 o posterior. Sin relación con YouTube ni Google.",
+    footer: "Lumtub es software libre bajo la AGPL 3.0 o posterior. Sin relación con YouTube ni Google.",
     footer_links: ["Código", "Informar de un problema", "Traducir", "Privacidad"],
 };

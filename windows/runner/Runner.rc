@@ -94,7 +94,7 @@ BEGIN
             VALUE "FileDescription", "Lumtub" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "lumtub" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 Lumtub contributors. GPL-3.0-or-later." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Lumtub contributors. AGPL-3.0-or-later." "\0"
             VALUE "OriginalFilename", "lumtub.exe" "\0"
             VALUE "ProductName", "Lumtub" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

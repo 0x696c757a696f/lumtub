@@ -466,9 +466,16 @@ extension PlaybackEvents on AppController {
       if (audioOnly) return;
       logInfo('Picture back after the background');
       await platform.setProperty('vid', 'auto');
-      // The decoder starts again at the next keyframe, which in a stream can
-      // be far off: until then the last picture stays. An exact seek to
-      // here decodes up to now at once.
+      // A seekable stream needs nothing more: mpv reads the video again from
+      // the keyframe before here while the sound plays on, and the picture is
+      // back a moment later. A seek would stop the sound and show loading
+      // until the video arrived. A live stream can't be read back, so its
+      // picture would wait for the next keyframe: there an exact seek
+      // decodes up to now at once.
+      if (await platform.getProperty('seekable').catchError((_) => 'no') == 'yes') {
+        logDebug(() => 'Picture back without a seek');
+        return;
+      }
       try {
         await platform.command(['seek', '0', 'relative+exact']);
       } catch (e) {

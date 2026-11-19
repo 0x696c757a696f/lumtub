@@ -4,6 +4,9 @@ part of 'app_controller.dart';
 /// in the same player: one set of settings, whoever draws. The letter size,
 /// room below and outline follow the player's size; the second subtitle
 /// gets its own font, color and opacity from a styled copy of its track.
+/// Ends the key of a second subtitle copied only for the lines around now.
+const _quickMark = '|quick';
+
 extension LibassLookActions on AppController {
   /// The player showing subtitles was laid out at [view], where the Flutter
   /// view scales text by [textScale] and its padding by [paddingScale].
@@ -206,7 +209,10 @@ extension LibassLookActions on AppController {
     if (platform is! NativePlayer || !current()) return;
     await _askSecondScale(player, platform);
     if (!current()) return;
-    for (final second in [false, true]) {
+    // The second one first: it is hidden until its copy is on, while the
+    // main one shows meanwhile, only with its lines not yet broken.
+    var quick = false;
+    for (final second in [true, false]) {
       final shown = await platform.getProperty(second ? 'secondary-sid' : 'sid');
       if (!current()) return;
       if (shown.isEmpty || shown == 'no' || shown == 'false') continue;
@@ -214,6 +220,7 @@ extension LibassLookActions on AppController {
       var source = copy?.source ?? shown;
       if (moved != null && source == moved.old) source = moved.now;
       final wanted = libassDraws ? await _copyFor(platform, source, second: second, current: current) : source;
+      if (second && _subtitleCopies[wanted]?.key.endsWith(_quickMark) == true) quick = true;
       if (!current()) return;
       if (wanted != shown) {
         await platform.setProperty(second ? 'secondary-sid' : 'sid', wanted);
@@ -225,6 +232,9 @@ extension LibassLookActions on AppController {
       // now in its own style, or as it is where no copy could be made.
       if (second) await platform.setProperty('secondary-sub-visibility', libassDraws && !subtitlesOff ? 'yes' : 'no');
     }
+    // The second subtitle went on with the lines around now only: the
+    // whole track follows (the restyle sees the quick copy's key).
+    if (quick && current()) _restyleSubtitles(player);
     // Copies neither subtitle shows any more: a growing translation would
     // pile them up in mpv's track list.
     final main = await platform.getProperty('sid'), secondShown = await platform.getProperty('secondary-sid');
@@ -243,21 +253,34 @@ extension LibassLookActions on AppController {
   /// The track to show for [source]: its copy, made now if need be, or the
   /// track itself where it needs none or none can be made.
   Future<String> _copyFor(NativePlayer platform, String source, {required bool second, required bool Function() current}) async {
-    final key = second ? _secondCopyKey : _mainCopyKey;
+    var key = second ? _secondCopyKey : _mainCopyKey;
     final tracks = await mpvSubtitleTracks(platform);
     final made = _subtitleCopies.entries.where((e) => e.value.source == source && e.value.key == key && tracks.containsKey(e.key)).firstOrNull;
     if (made != null) return made.key;
     final track = tracks[source];
     if (track == null || !second && _plainFits.contains('$source|$key')) return source;
-    final cues = await _trackCues(platform, track);
+    var cues = await _trackCues(platform, track);
     if (cues.isEmpty || !current()) return source;
+    // The second subtitle is hidden until its copy is on. A long track is
+    // first copied for the lines around now, which takes a moment where
+    // laying out all of them took a second or more on a phone; the whole
+    // copy replaces it right after.
+    bool near(SubtitleCue c) => c.end >= _quickFrom && c.start <= _quickFrom + const Duration(seconds: 90);
+    final hasQuick = _subtitleCopies.values.any((c) => c.source == source && c.key == '$key$_quickMark');
+    if (second && cues.length > 60 && !hasQuick) {
+      _quickFrom = (player?.state.position ?? Duration.zero) - const Duration(seconds: 5);
+      cues = cues.where(near).toList();
+      key = '$key$_quickMark';
+      if (cues.isEmpty) return source;
+    }
     final look = _libassLook;
     final String text;
     if (second) {
       final room = _roomEms(settings.secondaryScale);
       final font = Platform.isAndroid || Platform.isIOS ? AndroidSubtitleFonts.familyFor(cues.take(40).map((c) => c.text).join('\n'), language: track.language ?? '') : null;
       final mainTrack = tracks[_mainSource];
-      final mainCues = mainTrack == null ? const <SubtitleCue>[] : await _trackCues(platform, mainTrack);
+      var mainCues = mainTrack == null ? const <SubtitleCue>[] : await _trackCues(platform, mainTrack);
+      if (key.endsWith(_quickMark)) mainCues = mainCues.where(near).toList();
       if (!current()) return source;
       final main = (cues: mainCues, font: _mainFont, room: _roomEms(settings.subtitleScale).toDouble(), wrapFont: settings.subtitleFont);
       text = secondAss(cues, settings, outline: look.em > 0 ? look.border / look.em : 0, room: room.toDouble(), font: font, main: main, aspect: _videoAspect, scale: _secondCopyScale);

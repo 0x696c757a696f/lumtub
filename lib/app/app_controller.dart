@@ -887,6 +887,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Second subtitles drawn in their own font and color: each copy's track
   /// id, with the track it copies and the style it has.
   final Map<String, ({String source, String key, bool second, String file})> _subtitleCopies = {};
+  /// Where the quick copy of the second subtitle starts (_copyFor).
+  Duration _quickFrom = Duration.zero;
   /// Tracks that fit on screen as they are while libmpv draws.
   final Set<String> _plainFits = {};
   Future<void> _restyling = Future.value();

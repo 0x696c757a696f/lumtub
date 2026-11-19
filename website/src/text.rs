@@ -126,7 +126,7 @@ pub struct Text {
     pub platforms_title: &'static str,
     pub platforms_body: &'static str,
     pub table_head: [&'static str; 2],
-    pub packages: [Package; 13],
+    pub packages: [Package; 14],
     pub install_notes: [(&'static str, &'static str); 5],
     pub altstore_label: &'static str,
     pub copy: &'static str,
@@ -163,7 +163,7 @@ pub struct Text {
 pub const ALTSTORE_SOURCE: &str =
     "https://github.com/0x696c757a696f/lumtub/releases/latest/download/altstore-source.json";
 
-const PACKAGE_SUFFIXES: [(&str, &str); 13] = [
+const PACKAGE_SUFFIXES: [(&str, &str); 14] = [
     ("Windows", "windows-x64-v3-setup.exe"),
     ("Windows", "windows-x64-setup.exe"),
     ("Windows", "windows-arm64-setup.exe"),
@@ -176,6 +176,7 @@ const PACKAGE_SUFFIXES: [(&str, &str); 13] = [
     ("Android", "android-armeabi-v7a.apk"),
     ("Android", "android-x86_64.apk"),
     ("iOS", "ios.ipa"),
+    ("iOS", "ios-trollstore.tipa"),
     ("iOS", "altstore-source.json"),
 ];
 
@@ -308,7 +309,8 @@ pub static EN: Text = Text {
         package(9, "Android armeabi v7a", "Older 32 bit devices and many low cost TV boxes"),
         package(10, "Android x86_64", "Emulators and x86 Chromebooks"),
         package(11, "iPhone and iPad IPA", "iOS 15 or newer, sideloaded (preview, not yet tested on a real device)"),
-        package(12, "AltStore source", "Add it to SideStore or AltStore to get new versions"),
+        package(12, "TrollStore TIPA", "For TrollStore. No Apple ID needed"),
+        package(13, "AltStore source", "Add it to SideStore or AltStore to get new versions"),
     ],
     install_notes: [
         ("Windows", "Run the installer, or unzip the portable version from the releases page. No administrator rights needed. Package manager (under review): winget install Lumtub.Lumtub."),
@@ -493,7 +495,8 @@ pub static ZH: Text = Text {
         package(9, "Android armeabi v7a", "较老的 32 位设备和很多低价电视盒子"),
         package(10, "Android x86_64", "模拟器和 x86 Chromebook"),
         package(11, "iPhone 和 iPad IPA", "iOS 15 及以上，自签安装（预览版，尚未在真机上测试）"),
-        package(12, "AltStore 源", "添加到 SideStore 或 AltStore 里即可收到新版本"),
+        package(12, "TrollStore TIPA", "用 TrollStore 安装，不需要 Apple ID"),
+        package(13, "AltStore 源", "添加到 SideStore 或 AltStore 里即可收到新版本"),
     ],
     install_notes: [
         ("Windows", "运行安装程序即可，或者在发布页下载便携版解压。不需要管理员权限。也可以用包管理器（正在审核）：winget install Lumtub.Lumtub。"),

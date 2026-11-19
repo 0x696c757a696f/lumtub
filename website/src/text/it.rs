@@ -120,7 +120,8 @@ pub static IT: Text = Text {
         package(9, "Android armeabi v7a", "Dispositivi a 32 bit più vecchi e molti box TV economici"),
         package(10, "Android x86_64", "Emulatori e Chromebook x86"),
         package(11, "IPA per iPhone e iPad", "iOS 15 o più recente, installato in sideload (anteprima, non ancora provato su un dispositivo reale)"),
-        package(12, "Sorgente AltStore", "Aggiungilo a SideStore o AltStore per ricevere le nuove versioni"),
+        package(12, "TIPA per TrollStore", "Per TrollStore, senza ID Apple"),
+        package(13, "Sorgente AltStore", "Aggiungilo a SideStore o AltStore per ricevere le nuove versioni"),
     ],
     install_notes: [
         ("Windows", "Esegui l'installer, oppure decomprimi la versione portabile dalla pagina delle release. Non servono i diritti di amministratore. Gestori di pacchetti (in revisione): winget install Lumtub.Lumtub, oppure scoop install extras/lumtub."),

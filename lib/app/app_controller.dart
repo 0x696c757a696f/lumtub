@@ -6,7 +6,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart' show Color, PaintingBinding, Size;
-import 'package:flutter/services.dart' show MethodChannel;
+import 'package:flutter/services.dart' show MethodChannel, rootBundle;
 import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:http/http.dart' as http;

@@ -1,6 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/explore_filters.dart';
+import 'package:lumtub/explore_topics.dart';
+import 'package:lumtub/faith_topics.dart';
 import 'package:lumtub/search_phrases.dart';
 import 'package:lumtub/translation.dart';
 
@@ -42,5 +45,40 @@ void main() {
     final out = await SearchPhrases(fake).translate(words, 'es');
     expect(out.length, 70);
     expect(fake.asked.map((a) => a.split('\n').length), [30, 30, 10]);
+  });
+
+  test('bundled phrases are used before the disk and the translator', () async {
+    final fake = _Fake();
+    final phrases = SearchPhrases(fake, bundled: () async => '{"it": {"sports": "sport"}}');
+    expect(await phrases.translate(['sports', 'chess'], 'it'), {'sports': 'sport', 'chess': 'it:chess'});
+    expect(fake.asked, ['chess']);
+  });
+
+  test('the phrase list the bundle is made from has every phrase the zones search', () {
+    final listed = File('.github/search_phrases/phrases.txt').readAsLinesSync().toSet();
+    final missing = <String>{};
+    void add(String query) {
+      for (final w in searchPhrasesOf(englishSearchOf(query))) {
+        if (translatesInto(w, ExploreLanguage.it) && searchGlossary[w] == null && !listed.contains(w)) missing.add(w);
+      }
+    }
+
+    void sub(ExploreSub s) {
+      add(s.query);
+      s.subs.forEach(sub);
+    }
+
+    for (final f in <WordFilter>[...ContentFormat.values, ...ContentView.values, ...FaithFormat.values, ...FaithView.values]) {
+      if (f.words.isNotEmpty) add(f.words);
+    }
+    for (final section in ExploreSection.values) {
+      for (final topic in exploreTopicsOf(section)) {
+        add(topic.query);
+        topic.subs.forEach(sub);
+      }
+    }
+    // Add them to .github/search_phrases/phrases.txt; the Search phrases
+    // workflow then translates them into assets/search_phrases.json.
+    expect(missing, isEmpty);
   });
 }

@@ -1,0 +1,41 @@
+name: Search phrases
+
+# Translates Explore's built-in search phrases (.github/search_phrases/) into
+# every language of the language filter and commits assets/search_phrases.json
+# to the branch, so the app searches in a language without asking a
+# translator (.github/scripts/search_phrases.py).
+on:
+  push:
+    branches-ignore: [main]
+    paths: ['.github/search_phrases/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: search-phrases-${{ github.ref }}
+
+jobs:
+  translate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: true  # zizmor: ignore[artipacked] this job pushes with git
+      - name: Translate
+        run: python3 .github/scripts/search_phrases.py
+      - name: Commit
+        if: always()
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- assets/search_phrases.json && git ls-files --error-unmatch assets/search_phrases.json >/dev/null 2>&1; then
+            echo "Nothing new."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/search_phrases.json
+          git commit -m "Search phrases translated"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

@@ -455,6 +455,7 @@ extension ExploreActions on AppController {
     final phrases = _searchPhrases ??= SearchPhrases(
       _microsoftFirst,
       file: directories == null ? null : File('${directories!.cache.path}${Platform.pathSeparator}search_phrases.json'),
+      bundled: () => rootBundle.loadString('assets/search_phrases.json'),
     );
     Object? refused;
     void failed(Object e) => refused ??= e;

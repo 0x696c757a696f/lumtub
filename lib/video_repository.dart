@@ -232,12 +232,12 @@ class VideoRepository {
   /// Search results; one yt-dlp process serves every page. [region] is
   /// YouTube's country code (`gl`) to search as from, if not the one the
   /// connection gives.
-  Listing search(String query, {SearchFilter filter = SearchFilter.all, String? sp, String? region, String? hl}) {
+  Listing search(String query, {SearchFilter filter = SearchFilter.all, String? sp, String? region}) {
     final url = searchUrl(query.trim(), filter: filter, sp: sp);
     Stream<String> ytDlp() => region == null || region.isEmpty ? _lines(listingArguments(url)) : _regionLines(url, region);
     final web = this.web;
     if (web == null || !YoutubeListing.available) return Listing(ytDlp);
-    return Listing(() => YoutubeListing.orElse(() => web.search(query.trim(), sp: sp ?? filter.sp, region: region, hl: hl), ytDlp, videos: true));
+    return Listing(() => YoutubeListing.orElse(() => web.search(query.trim(), sp: sp ?? filter.sp, region: region), ytDlp, videos: true));
   }
 
   /// The videos [first] finds, or a search for [query] when it finds none
@@ -250,8 +250,8 @@ class VideoRepository {
 
   /// Several searches at once, a few results of each in turn, for a mix
   /// of zones. A search that fails drops out; the mix fails only if all do.
-  Listing searchMix(List<String> queries, {String? sp, String? region, String? hl}) =>
-      Listing(() => interleave([for (final q in queries) () => search(q, sp: sp, region: region, hl: hl)._open()]));
+  Listing searchMix(List<String> queries, {String? sp, String? region}) =>
+      Listing(() => interleave([for (final q in queries) () => search(q, sp: sp, region: region)._open()]));
 
   /// Lines from each of [sources] in turn, up to [run] at a time from each.
   /// Up to [parallel] sources are read at once and a source with nothing

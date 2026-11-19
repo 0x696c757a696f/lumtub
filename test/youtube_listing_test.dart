@@ -67,13 +67,8 @@ void main() {
     expect(bodies.first['query'], 'cats');
     expect(bodies.first['params'], 'EgIQAQ%3D%3D');
     expect((bodies.first['context'] as Map)['client'], containsPair('gl', 'JP'));
-    expect((bodies.first['context'] as Map)['client'], containsPair('hl', 'en'));
     expect(bodies.last['continuation'], 'NEXT');
     expect(listing.done, isTrue);
-    // Asked in the language looked for, every page.
-    bodies.clear();
-    await repository.search('gatti', region: 'it', hl: 'it').next(10).toList();
-    expect([for (final b in bodies) ((b['context'] as Map)['client'] as Map)['hl']], ['it', 'it']);
   }, skip: skip);
 
   test('a page with no new videos does not end a search that goes on', () async {

@@ -113,18 +113,16 @@ void main() {
     expect(check, (asked: 6, kept: 2, heard: 3));
   }, skip: core);
 
-  test("takes views and publishing time from the answer, as a search asked in another language writes them its own way", () async {
-    final client = MockClient((request) async => _json({
-          ..._player('Lezione di filosofia', asr: 'it'),
-          'videoDetails': {'title': 'Lezione di filosofia', 'shortDescription': '', 'viewCount': '1234567'},
-          'microformat': {'playerMicroformatRenderer': {'publishDate': '2026-10-01T05:00:00-07:00'}},
-        }));
+  test('a search that brings only videos in other languages gives up after a quarter of the usual', () async {
+    final client = MockClient((request) async => _json(_player('A lecture', asr: 'en')));
     final languages = VideoLanguages(client);
-    final line = jsonEncode({'id': 'vvvvvvvvvvv', 'title': 'Lezione di filosofia', 'channel': 'c', 'view_count': 12});
-    final kept = await languages.only(Stream.fromIterable([line]), ExploreLanguage.it).toList();
-    final entry = jsonDecode(kept.single) as Map;
-    expect(entry['view_count'], 1234567);
-    expect(entry['timestamp'], DateTime.parse('2026-10-01T12:00:00Z').millisecondsSinceEpoch ~/ 1000);
+    LanguageCheck? check;
+    final ids = [for (var i = 0; i < 200; i++) 'x${i.toString().padLeft(10, '0')}'];
+    // Each from its own channel, so that no channel is known yet.
+    String line(String id) => jsonEncode({'id': id, 'title': 'A lecture', 'channel': id, 'channel_id': 'UC${id.padRight(22, 'x')}'});
+    final kept = await languages.only(Stream.fromIterable(ids.map(line)), ExploreLanguage.it, done: (c) => check = c).toList();
+    expect(kept, isEmpty);
+    expect(check!.asked, lessThan(VideoLanguages.giveUpAfterDefault ~/ 4 + VideoLanguages.parallel * 3 + 2));
   }, skip: core);
 
   test('asks the next app when one gives no captions, and asks it first from then on', () async {

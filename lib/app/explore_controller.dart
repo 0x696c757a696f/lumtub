@@ -374,11 +374,8 @@ extension ExploreActions on AppController {
 
     _update(() => explore = VideoListLoader(
           () {
-            // YouTube ranks a search by the language it is asked in.
-            final hl = spoken ? language.youtubeHl : null;
-            Listing search(List<String> queries) => queries.length > 1
-                ? repository.searchMix(queries, sp: sp, region: region, hl: hl)
-                : repository.search(queries.single, sp: sp, region: region, hl: hl);
+            Listing search(List<String> queries) =>
+                queries.length > 1 ? repository.searchMix(queries, sp: sp, region: region) : repository.search(queries.single, sp: sp, region: region);
             final queries = mix ? exploreMixQueries(exploreSection) : [query];
             // The zones' search words are Chinese, which finds Chinese
             // videos: they are put in the language picked, else the
@@ -389,8 +386,33 @@ extension ExploreActions on AppController {
             // Taiwan and Hong Kong write traditional characters.
             final traditional = wordsIn == ExploreLanguage.zh && (region == 'TW' || region == 'HK');
             final translates = !(wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional));
+            // Each search is checked on its own: one that brings only
+            // videos in other languages gives up early (VideoLanguages.only)
+            // and the next, wider one starts, instead of the whole page
+            // reading hundreds of videos it then drops.
+            final thumbnails = thumbnailDirectory;
+            final languages = _videoLanguages;
+            var total = (asked: 0, kept: 0, heard: 0);
+            Listing checked(Listing listing) {
+              // Search listings give no frame size: a vertical video is told
+              // by the bars at the sides of its thumbnail.
+              if (dropVertical && thumbnails != null) {
+                listing = listing.refined((lines) => PortraitThumbnails.drop(lines, (id) => PortraitThumbnails.check(id, thumbnails)));
+              }
+              if (!spoken || languages == null) return listing;
+              return listing.refined((lines) => languages.only(
+                    lines,
+                    language,
+                    giveUpAfter: VideoLanguages.giveUpAfterDefault * (depth + 1),
+                    done: (check) {
+                      total = (asked: total.asked + check.asked, kept: total.kept + check.kept, heard: total.heard + check.heard);
+                      _update(() => exploreLanguageCheck = total);
+                    },
+                  ));
+            }
+
             Listing searchIn(List<String> queries) =>
-                translates ? Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional))) : search(queries);
+                checked(translates ? Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional))) : search(queries));
             // A narrow search that runs out goes on with wider ones, so a
             // sub-category with few videos still fills the page.
             var listing = searchIn(queries);
@@ -402,23 +424,9 @@ extension ExploreActions on AppController {
             // A zone of the user's own is translated like the others; when
             // that runs out, its words as written are searched as well.
             if (!mix && exploreTopicNow.custom && translates) {
-              listing = listing.followedBy(() => search(queries), switched: () => logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$query" as written'));
+              listing = listing.followedBy(() => checked(search(queries)), switched: () => logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$query" as written'));
             }
-            // Search listings give no frame size: a vertical video is told
-            // by the bars at the sides of its thumbnail.
-            final thumbnails = thumbnailDirectory;
-            if (dropVertical && thumbnails != null) {
-              listing = listing.refined((lines) => PortraitThumbnails.drop(lines, (id) => PortraitThumbnails.check(id, thumbnails)));
-            }
-            final languages = _videoLanguages;
-            return spoken && languages != null
-                ? listing.refined((lines) => languages.only(
-                      lines,
-                      language,
-                      giveUpAfter: VideoLanguages.giveUpAfterDefault * (depth + 1),
-                      done: (check) => _update(() => exploreLanguageCheck = check),
-                    ))
-                : listing;
+            return listing;
           },
           where: where,
           fill: switch (mode) {

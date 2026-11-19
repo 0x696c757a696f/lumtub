@@ -328,14 +328,6 @@ enum ExploreLanguage {
         _ => name,
       };
 
-  /// The language YouTube is asked in for a search in it, as YouTube
-  /// spells its interface languages.
-  String get youtubeHl => switch (this) {
-        tl => 'fil',
-        he => 'iw',
-        _ => code,
-      };
-
   /// The country most of the language's videos come from, searched as
   /// from when no region is picked; null where no one country leads.
   String? get homeCountry => switch (this) {

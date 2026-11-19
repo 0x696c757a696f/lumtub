@@ -29,7 +29,7 @@ No account needed to watch.
 
 https://github.com/user-attachments/assets/97e3ce09-8e66-43fe-9125-bff1b3dcb3fe
 
-[Screenshots](#screenshots) · [Features](#features) · [Get it](#get-it) · [Data](#where-the-data-comes-from) · [Privacy](#privacy-what-stays-local-and-what-doesnt) · [FAQ](#faq) · [Support](#support-lumtub)
+[Learn languages](#-learn-languages-from-real-videos) · [Screenshots](#screenshots) · [Features](#features) · [Get it](#get-it) · [Data](#where-the-data-comes-from) · [Privacy](#privacy-what-stays-local-and-what-doesnt) · [FAQ](#faq) · [Support](#support-lumtub)
 
 </div>
 ---
@@ -43,6 +43,18 @@ https://github.com/user-attachments/assets/97e3ce09-8e66-43fe-9125-bff1b3dcb3fe
 - **No account to watch.** Search, playback, subscriptions and recommendations work signed out. Sign in only for likes, comments, playlists, members-only videos and other interaction.
 
 Lumtub is free and open source, with no ads, no accounts of its own and no telemetry.
+
+## 🆕 Learn languages from real videos
+
+Free for everyone, in the Subtitles menu under **Language learning**:
+
+- **Pause after each line** (Q): playback stops when a line ends, so you have time to understand it before you move on.
+- **Blur the translation** (V): the second subtitle stays blurred until you hover it, tap it or press the key. Guess first, then check.
+- **Replay, loop and step through lines** (R, Shift+R, A, D): every jump goes by subtitle line and starts playing.
+- **Shadowing** (E): record yourself saying the line, then hear the original and your take one after the other. Recordings stay on your device.
+- **Export the subtitle list as CSV**, every line with its translation, for Anki or a spreadsheet.
+
+Combined with two subtitles at once and Explore by spoken language, this turns any video into listening practice. Touch screens and TV remotes get buttons for all of it.
 
 ## Screenshots
 

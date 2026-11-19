@@ -83,6 +83,28 @@
     }
   },
   {
+    "id": "danmaku",
+    "shot": {
+      "en": "cards/shots/danmaku.png",
+      "zh": "cards/shots/danmaku.png"
+    },
+    "window": {
+      "left": 175,
+      "top": 330,
+      "width": 1250
+    },
+    "en": {
+      "eyebrow": "Live",
+      "title": "Live chat flies across the video",
+      "text": "Bullet chat for live streams and chat replays, with the full chat beside it. Off by default."
+    },
+    "zh": {
+      "eyebrow": "直播",
+      "title": "直播聊天，变成弹幕",
+      "text": "直播和聊天回放都能开弹幕，右边还有完整聊天，默认关闭。"
+    }
+  },
+  {
     "id": "reasons",
     "shot": {
       "en": "cards/shots/home-en.png",

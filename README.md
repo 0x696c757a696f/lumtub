@@ -90,7 +90,7 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 
 ### 💬 Subtitles and translation
 - **Bilingual subtitles** with styles you can tune live, and one-click translation of chapter names.
-- **AI translation** through machine translation services or any OpenAI-compatible model you choose.
+- **AI translation** through machine translation services (🆕 MyMemory included, free and without a key) or any OpenAI-compatible model you choose.
 - **Speech-to-text subtitles** (Groq, OpenAI or your own endpoint) and **AI summaries** of a video from its subtitles. These need a service or API key that you provide, and some providers charge.
 
 ### 🔴 Live
@@ -99,14 +99,15 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 - Super Chat and channel memberships open YouTube's payment pages in your browser.
 
 ### 🔐 Accounts only if you want them
-- Google, TV-code or browser sign-in for subscriptions, playlists, likes, comments, community posts, polls and **members-only videos** you have access to.
+- 🆕 **One sign-in**: sign in once in a browser window, and your home feed, history, Watch Later, playlists, likes, comments, subscriptions, community posts, polls and **members-only videos** you have access to all work. Google sign-in with your own client stays optional.
 - Credentials are encrypted on your computer, protected by TPM or Windows Hello on Windows and the keyring on Linux and macOS.
 - 🆕 **Post-quantum encryption:** HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) use the hybrid X25519MLKEM768 key exchange where the server supports it, as YouTube's do. Settings › Network shows what each site agreed on, and can require it or turn it off. The video player's and yt-dlp's own connections are not covered.
 
 ### Also built in
 These are also found in other YouTube clients, and all are opt-in here:
 - **SponsorBlock**, **DeArrow** titles and thumbnails, **Return YouTube Dislike**, hide all Shorts, and an AI filter that hides videos labelled as AI and channels on community AI-slop lists.
-- Proxy support (system, HTTP or SOCKS5), optional encrypted DNS, and Piped or Invidious servers as a fallback.
+- Proxy support (system, HTTP or SOCKS5), optional encrypted DNS, and Piped or Invidious servers as a fallback. 🆕 When YouTube shows a bot check, Lumtub switches between IPv4 and IPv6 by itself.
+- 🆕 YouTube's JavaScript challenges are solved inside Lumtub with its built-in QuickJS on computers, with Deno as a fallback.
 - **82 interface languages**, right to left included, following your system language. Improve them on [Weblate](https://hosted.weblate.org/engage/lumtub/).
 - **Skins** that change the whole look, 36 built in, from Y2K gloss and Frutiger Aero scenes to one-bit pixels, clay and neo-brutalism, with their own title bar and menu bar if you like. Anyone can make one: a commented `skin.jsonc` file, checked for readable contrast. See [skins/README.md](skins/README.md).
 - Ten colour schemes, light and dark, plus an optional warm light, fonts and card sizes.

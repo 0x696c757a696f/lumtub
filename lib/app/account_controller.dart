@@ -255,6 +255,14 @@ class AccountController extends ChangeNotifier {
     }
   }
 
+  /// Deletes the copies of the account's playlists, Liked videos among
+  /// them, that syncing made in the library; the user's own lists stay.
+  void forgetSynced() {
+    likesPlaylist = null;
+    library.mirrorRemotePlaylists(const {});
+    notifyListeners();
+  }
+
   /// The liked videos copied from YouTube, for recommendations.
   List<VideoItem> get likedVideos {
     final id = likesPlaylist;

@@ -14,9 +14,12 @@ import '../sign_in_row.dart';
 /// posts: signing in in a browser window of its own, or importing a
 /// cookies.txt.
 class CookieSignInTile extends StatefulWidget {
-  const CookieSignInTile(this.sign, {super.key, required this.note});
+  const CookieSignInTile(this.sign, {super.key, required this.note, this.onSignOut});
   final YoutubeWebSignIn sign;
   final TextStyle note;
+
+  /// Asks and signs out; without it the button signs out at once.
+  final Future<void> Function(BuildContext context)? onSignOut;
 
   @override
   State<CookieSignInTile> createState() => _CookieSignInTileState();
@@ -99,7 +102,7 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
             leading: Icon(AppIcons.lock, color: colors.primary),
             title: Text(tr('Signed in with a browser')),
             subtitle: Text('${tr('Lumtub uses this sign-in for your account')}\n${_guard(sign.guard)}'),
-            actions: [OutlinedButton(onPressed: sign.signOut, child: Text(tr('Exit')))],
+            actions: [OutlinedButton(onPressed: widget.onSignOut == null ? sign.signOut : () => widget.onSignOut!(context), child: Text(tr('Exit')))],
           )
         else ...[
           SignInRow(

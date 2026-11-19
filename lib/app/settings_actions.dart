@@ -428,6 +428,22 @@ extension SettingsActions on AppController {
     }
   }
 
+  /// What Lumtub learned about videos and channels, kept beside the cache
+  /// folders: languages heard, facts, pictures, AI labels. What is loaded
+  /// now stays until Lumtub restarts.
+  Future<void> _clearLookupFiles() async {
+    final folder = directories?.cache.path;
+    if (folder == null) return;
+    for (final name in const ['heard_languages.json', 'text_languages.json', 'video_facts.json', 'channel_avatars.json', 'portrait_thumbnails.json', 'emoji_pictures.json', 'ai_labels.json', 'ai_channels.json']) {
+      try {
+        final file = File('$folder${Platform.pathSeparator}$name');
+        if (await file.exists()) await file.delete();
+      } on FileSystemException catch (e) {
+        logWarn('Could not delete $name: $e');
+      }
+    }
+  }
+
   /// 清除本地数据: removes the chosen [kinds] from this computer. Favourites,
   /// playlists and followed channels are never touched here.
   Future<void> clearLocalData(Set<LocalData> kinds) async {
@@ -439,10 +455,12 @@ extension SettingsActions on AppController {
           case LocalData.history:
             await _history?.clear();
             await searchHistory?.clear();
+            watchTime?.clear();
           case LocalData.progress:
             library?.clearProgress();
           case LocalData.recommendations:
             await homeFeed?.notInterested.clear();
+            await homeFeed?.forgetSaved();
           case LocalData.cache:
             await _translationCache.clear();
             final manager = _cacheManager;
@@ -450,8 +468,12 @@ extension SettingsActions on AppController {
               await _clearCacheFolders(manager);
               cacheBytes = await manager.size(settings);
             }
+            await _clearLookupFiles();
           case LocalData.account:
-            await account?.signOut();
+            webSignIn?.signOut();
+            if (account?.signedIn ?? false) await account?.signOut();
+            if (directories case final folders?) _forgetTvSignIn(folders.data.path);
+            await airPlayPairings.clear();
           case LocalData.keys:
             translationKeys = const {};
             _useTranslator();
@@ -460,6 +482,7 @@ extension SettingsActions on AppController {
             await saveSettings(PlayerSettings(cachePath: settings.cachePath, cacheLimitGb: settings.cacheLimitGb, decoderResults: settings.decoderResults));
             await saveAppearance(const AppearanceSettings());
             await savePreferences(const AppPreferences());
+            channelPlayback?.clear();
         }
       } catch (e) {
         logError('Could not clear ${kind.name}', e);

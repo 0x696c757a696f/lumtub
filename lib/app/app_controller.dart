@@ -1176,11 +1176,11 @@ class AppController extends ChangeNotifier with _ExploreState {
 
 /// What 清除本地数据 can remove.
 enum LocalData {
-  history('Watch history and searches'),
+  history('Watch history, searches and watch statistics'),
   progress('Playback progress'),
   recommendations('“Not interested” marks'),
   cache('Cache (video, thumbnails, translations)'),
-  account('Google account sign-in'),
+  account('Sign-ins (browser and Google) and AirPlay pairings'),
   keys('Translation service API keys'),
   settings('All settings (back to defaults)');
 

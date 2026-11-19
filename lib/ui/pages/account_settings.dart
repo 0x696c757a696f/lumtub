@@ -40,7 +40,14 @@ class AccountSettings extends StatelessWidget {
               signedIn: web.signedIn,
               expanded: true,
               children: [
-                CookieSignInTile(web, note: note),
+                CookieSignInTile(web, note: note, onSignOut: (context) async {
+                  final forget = await confirmSignOut(context,
+                      title: tr('Sign out of the browser sign-in?'),
+                      content: tr('The cookies saved on this device are deleted. Followed channels and playlists stay on this device.'));
+                  if (forget == null) return;
+                  web.signOut();
+                  if (forget) account.forgetSynced();
+                }),
                 if (web.signedIn) _WebSync(account),
               ],
             ),
@@ -122,18 +129,43 @@ class AccountSettings extends StatelessWidget {
   static String _time(DateTime time) => '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
 
   Future<void> _confirmSignOut(BuildContext context, AccountController account) async {
-    final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-              title: Text(tr('Sign out of Google?')),
-              content: Text(tr("This deletes the sign-in credentials saved on this device and asks Google to revoke Lumtub's access. Imported followed channels and playlists are kept.")),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
-                FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Sign out'))),
-              ],
-            ));
-    if (confirmed == true) await account.signOut();
+    final forget = await confirmSignOut(context,
+        title: tr('Sign out of Google?'),
+        content: tr("This deletes the sign-in credentials saved on this device and asks Google to revoke Lumtub's access. Imported followed channels and playlists are kept."));
+    if (forget == null) return;
+    await account.signOut();
+    if (forget) account.forgetSynced();
   }
+}
+
+/// Asks before signing out, with a box (off by default) to also delete the
+/// playlists syncing copied from YouTube. Null when cancelled, else whether
+/// the box was ticked.
+Future<bool?> confirmSignOut(BuildContext context, {required String title, required String content}) {
+  var forget = false;
+  return showDialog<bool>(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: Text(title),
+        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(content),
+          const SizedBox(height: 8),
+          CheckboxListTile(
+            value: forget,
+            onChanged: (value) => setState(() => forget = value ?? false),
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: Text(tr('Also delete the playlists synced from YouTube')),
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(context, forget), child: Text(tr('Sign out'))),
+        ],
+      ),
+    ),
+  );
 }
 
 /// What the sign-ins are for, above them.

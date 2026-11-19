@@ -57,6 +57,12 @@ class AirPlayPairings {
     await file?.write(all);
   }
 
+  /// Forgets every receiver.
+  Future<void> clear() async {
+    _all = <String, dynamic>{};
+    await file?.delete();
+  }
+
   Future<void> forget(String id) async {
     final all = await _read();
     if (all.remove(id) != null) await file?.write(all);

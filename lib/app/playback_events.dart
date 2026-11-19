@@ -452,6 +452,7 @@ extension PlaybackEvents on AppController {
   Future<void> setBackgroundAudioOnly(bool hidden) async {
     _outputSize?.hidden = hidden;
     _windowHidden = hidden;
+    _noteBackgroundPlay(hidden);
     _updateEfficiency();
     final platform = player?.platform;
     if (platform is! NativePlayer) return;

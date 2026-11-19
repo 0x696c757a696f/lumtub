@@ -3579,5 +3579,8 @@
   "Off: nothing is recorded": "გამორთული: არაფერი იწერება",
   "Mix with other apps": "სხვა აპებთან შერევა",
   "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "სხვა აპების ხმა ვიდეოსთან ერთად აგრძელებს დაკვრას. ამ შემთხვევაში iOS Lumtub-ს არ აჩვენებს ჩაკეტილ ეკრანზე და Dynamic Island-ზე",
-  "mix audio other apps music": "სხვა აპებთან შერევა mix audio other apps music"
+  "mix audio other apps music": "სხვა აპებთან შერევა mix audio other apps music",
+  "Keep playing in the background": "ფონურ რეჟიმში დაკვრის გაგრძელება",
+  "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "ზოგიერთი ტელეფონი ბატარეის დასაზოგად ხურავს ფონურ რეჟიმში მოთამაშე აპებს. ნება მიეცით Lumtub-ს იმუშაოს ბატარეის შეზღუდვების გარეშე, რომ დაკვრა არ შეწყდეს.",
+  "Allow": "დაშვება"
 }

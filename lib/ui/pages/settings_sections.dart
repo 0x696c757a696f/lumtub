@@ -455,6 +455,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 value: prefs.matchFrameRate,
                 onChanged: (v) => savePrefs(prefs.copyWith(matchFrameRate: v)),
               ), subtitle: tr('refresh rate fps TV')),
+        if (Platform.isAndroid && !Device.tv)
+          SettingEntry(tr('Keep playing in the background'), (context) => NormalItem(
+                title: tr('Keep playing in the background'),
+                subtitle: tr('Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.'),
+                leading: _icon(AppIcons.lightning),
+                onTap: () => unawaited(controller.askBatteryUnrestricted()),
+              ), subtitle: 'battery'),
         SettingEntry(tr('Playback test'), (context) => NormalItem(
               title: tr('Playback test'),
               subtitle: tr('Plays a test video as H.264, VP9 and AV1 and measures processor use, memory, dropped frames and the decoder used'),

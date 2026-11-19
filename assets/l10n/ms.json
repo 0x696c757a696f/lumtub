@@ -3579,5 +3579,8 @@
   "Off: nothing is recorded": "Mati: tiada apa yang direkodkan",
   "Mix with other apps": "Campur dengan apl lain",
   "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "Bunyi apl lain terus dimainkan bersama video. iOS kemudian tidak memaparkan Lumtub pada Skrin Kunci dan Dynamic Island",
-  "mix audio other apps music": "Campur dengan apl lain mix audio other apps music"
+  "mix audio other apps music": "Campur dengan apl lain mix audio other apps music",
+  "Keep playing in the background": "Terus main di latar belakang",
+  "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Sesetengah telefon menutup apl yang dimainkan di latar belakang untuk menjimatkan bateri. Benarkan Lumtub berjalan tanpa had bateri supaya main balik tidak terputus.",
+  "Allow": "Benarkan"
 }

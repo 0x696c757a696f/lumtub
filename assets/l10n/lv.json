@@ -3579,5 +3579,8 @@
   "Off: nothing is recorded": "Izslēgts: nekas netiek reģistrēts",
   "Mix with other apps": "Miksēt ar citām lietotnēm",
   "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "Citu lietotņu skaņa turpina skanēt kopā ar video. Tad iOS nerāda lietotni Lumtub bloķēšanas ekrānā un Dynamic Island",
-  "mix audio other apps music": "Miksēt ar citām lietotnēm mix audio other apps music"
+  "mix audio other apps music": "Miksēt ar citām lietotnēm mix audio other apps music",
+  "Keep playing in the background": "Turpināt atskaņot fonā",
+  "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Daži tālruņi aizver fonā atskaņojošas lietotnes, lai taupītu akumulatoru. Ļaujiet Lumtub darboties bez akumulatora ierobežojumiem, lai atskaņošana nepārtrūktu.",
+  "Allow": "Atļaut"
 }

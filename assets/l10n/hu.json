@@ -3579,5 +3579,8 @@
   "Off: nothing is recorded": "Ki: semmi sem kerül naplózásra",
   "Mix with other apps": "Keverés más alkalmazásokkal",
   "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "Más alkalmazások hangja tovább szól a videóval együtt. Ilyenkor az iOS nem jeleníti meg a Lumtub alkalmazást a zárolási képernyőn és a Dynamic Islanden",
-  "mix audio other apps music": "Keverés más alkalmazásokkal mix audio other apps music"
+  "mix audio other apps music": "Keverés más alkalmazásokkal mix audio other apps music",
+  "Keep playing in the background": "Lejátszás folytatása a háttérben",
+  "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Egyes telefonok az akkumulátor kímélése érdekében bezárják a háttérben lejátszó alkalmazásokat. Engedd, hogy a Lumtub akkumulátorkorlátozás nélkül fusson, így a lejátszás nem szakad meg.",
+  "Allow": "Engedélyezés"
 }

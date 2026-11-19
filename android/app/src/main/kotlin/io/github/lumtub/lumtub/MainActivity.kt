@@ -316,6 +316,27 @@ class MainActivity : FlutterActivity() {
                 it.isPowerSaveMode || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && it.currentThermalStatus >= android.os.PowerManager.THERMAL_STATUS_SEVERE)
             }
             "isMetered" -> return (getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager).isActiveNetworkMetered
+            // Whether Android's battery optimisation leaves Lumtub alone;
+            // phone makers' own savers close optimised apps playing in the
+            // background despite the media service.
+            "batteryUnrestricted" -> return Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+                (getSystemService(POWER_SERVICE) as android.os.PowerManager).isIgnoringBatteryOptimizations(packageName)
+            // Android's own question for this app; its list of apps where
+            // a phone maker left that out.
+            "askBatteryUnrestricted" -> {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
+                val ask = Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName"))
+                val list = Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                for (intent in listOf(ask, list)) {
+                    try {
+                        startActivity(intent)
+                        return true
+                    } catch (e: Exception) {
+                        // Not on this phone: the next way.
+                    }
+                }
+                return false
+            }
         }
         return null
     }

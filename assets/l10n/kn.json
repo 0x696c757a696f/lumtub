@@ -3578,5 +3578,8 @@
   "Off: nothing is recorded": "ಆಫ್: ಏನನ್ನೂ ದಾಖಲಿಸಲಾಗುವುದಿಲ್ಲ",
   "Mix with other apps": "ಇತರ ಆ್ಯಪ್‌ಗಳೊಂದಿಗೆ ಮಿಶ್ರಣ ಮಾಡಿ",
   "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "ಇತರ ಆ್ಯಪ್‌ಗಳ ಧ್ವನಿ ವೀಡಿಯೊ ಜೊತೆಗೆ ಪ್ಲೇ ಆಗುತ್ತಲೇ ಇರುತ್ತದೆ. ಆಗ iOS Lumtub ಅನ್ನು ಲಾಕ್ ಸ್ಕ್ರೀನ್ ಮತ್ತು Dynamic Island ನಲ್ಲಿ ತೋರಿಸುವುದಿಲ್ಲ",
-  "mix audio other apps music": "ಇತರ ಆ್ಯಪ್‌ಗಳೊಂದಿಗೆ ಮಿಶ್ರಣ ಮಾಡಿ mix audio other apps music"
+  "mix audio other apps music": "ಇತರ ಆ್ಯಪ್‌ಗಳೊಂದಿಗೆ ಮಿಶ್ರಣ ಮಾಡಿ mix audio other apps music",
+  "Keep playing in the background": "ಹಿನ್ನೆಲೆಯಲ್ಲಿ ಪ್ಲೇ ಮಾಡುವುದನ್ನು ಮುಂದುವರಿಸಿ",
+  "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "ಕೆಲವು ಫೋನ್‌ಗಳು ಬ್ಯಾಟರಿ ಉಳಿಸಲು ಹಿನ್ನೆಲೆಯಲ್ಲಿ ಪ್ಲೇ ಆಗುತ್ತಿರುವ ಆ್ಯಪ್‌ಗಳನ್ನು ಮುಚ್ಚುತ್ತವೆ. ಪ್ಲೇಬ್ಯಾಕ್ ನಿಲ್ಲದಂತೆ Lumtub ಅನ್ನು ಬ್ಯಾಟರಿ ಮಿತಿಯಿಲ್ಲದೆ ಓಡಲು ಬಿಡಿ.",
+  "Allow": "ಅನುಮತಿಸಿ"
 }

@@ -3578,5 +3578,8 @@
   "Off: nothing is recorded": "Öçük: hiç zat ýazylmaýar",
   "Mix with other apps": "Başga programmalar bilen garyşdyr",
   "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "Başga programmalaryň sesi wideo bilen bilelikde çalmagyny dowam etdirýär. Şonda iOS Lumtub programmasyny Gulp ekranynda we Dynamic Island-da görkezmeýär",
-  "mix audio other apps music": "Başga programmalar bilen garyşdyr mix audio other apps music"
+  "mix audio other apps music": "Başga programmalar bilen garyşdyr mix audio other apps music",
+  "Keep playing in the background": "Fonda oýnatmagy dowam et",
+  "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Käbir telefonlar batareýany tygşytlamak üçin fonda oýnaýan programmalary ýapýar. Oýnatma kesilmez ýaly Lumtub-a batareýa çäklendirmesiz işlemäge rugsat beriň.",
+  "Allow": "Rugsat ber"
 }

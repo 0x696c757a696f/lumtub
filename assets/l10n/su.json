@@ -3578,5 +3578,8 @@
   "Off: nothing is recorded": "Pareum: teu aya nu dicatet",
   "Mix with other apps": "Campur jeung aplikasi séjén",
   "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "Sora aplikasi séjén tetep disada babarengan jeung video. iOS lajeng henteu nembongkeun Lumtub dina Layar Konci jeung Dynamic Island",
-  "mix audio other apps music": "Campur jeung aplikasi séjén mix audio other apps music"
+  "mix audio other apps music": "Campur jeung aplikasi séjén mix audio other apps music",
+  "Keep playing in the background": "Teruskeun muter di latar tukang",
+  "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Sababaraha telepon nutup aplikasi nu keur muter di latar tukang pikeun ngahémat batré. Idinan Lumtub jalan tanpa watesan batré supados puteran henteu pegat.",
+  "Allow": "Idinan"
 }

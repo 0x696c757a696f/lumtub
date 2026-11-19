@@ -41,7 +41,8 @@ class VideoLanguages {
   static const giveUpAfterDefault = 240;
 
   static const _fields = 'videoDetails.title,videoDetails.shortDescription,captions.playerCaptionsTracklistRenderer.captionTracks.languageCode,'
-      'captions.playerCaptionsTracklistRenderer.captionTracks.kind,streamingData.adaptiveFormats.audioTrack,streamingData.adaptiveFormats.xtags,playabilityStatus.status';
+      'captions.playerCaptionsTracklistRenderer.captionTracks.kind,streamingData.adaptiveFormats.audioTrack,streamingData.adaptiveFormats.xtags,playabilityStatus.status,'
+      'videoDetails.viewCount,microformat.playerMicroformatRenderer.publishDate';
   late final _probe = YoutubePlayerProbe(_client);
 
   Map<String, SpokenVideo>? _known;
@@ -51,6 +52,13 @@ class VideoLanguages {
   /// may tell by audio or captions next time.
   final _unheard = <String, SpokenVideo>{};
   final _textAt = <String, int>{};
+
+  /// Views and when published (seconds since 1970), as the `/player`
+  /// answers give them in any language: a search asked in another language
+  /// than English writes both its own way, which listings read only in
+  /// English. When published is kept on disk with the answer.
+  final _views = <String, int>{};
+  final _published = <String, int>{};
   static const _unheardKept = 5000;
   static const textKeptFor = Duration(days: 7);
 
@@ -127,6 +135,8 @@ class VideoLanguages {
   }
 
   void _forget(String id) {
+    _published.remove(id);
+    _views.remove(id);
     final language = _known?.remove(id)?.language;
     final channel = _channelOf.remove(id);
     final counts = channel == null ? null : _channels[channel];
@@ -185,8 +195,10 @@ class VideoLanguages {
 
   Future<_Read?> _fetch(String id, String hl, PlayerClient client) async {
     try {
-      final read = await _readInBackground(await _probe.fetchAs(client, id, _fields, expect: 'videoDetails', hl: hl));
+      final bytes = await _probe.fetchAs(client, id, _fields, expect: 'videoDetails', hl: hl);
+      final read = await _readInBackground(bytes);
       if (read is! Map<String, dynamic>) return null;
+      _factsOf(id, bytes);
       return (spoken: _spoken(read), playable: read['playable'] != false);
     } catch (e) {
       logDebug(() => 'Video languages: ${client.name} gave no answer for $id: $e');
@@ -223,6 +235,40 @@ class VideoLanguages {
     }
     _answered(withVideo);
     return best?.spoken;
+  }
+
+  static final _viewCount = RegExp(r'"viewCount"\s*:\s*"(\d+)"');
+  static final _publishDate = RegExp(r'"publishDate"\s*:\s*"([^"]+)"');
+
+  void _factsOf(String id, List<int> bytes) {
+    // Masked answers are a few kilobytes; a whole one is looked through once.
+    final text = utf8.decode(bytes, allowMalformed: true);
+    if (_views.length >= _kept) _views.remove(_views.keys.first);
+    if (_viewCount.firstMatch(text)?[1] case final views?) _views[id] = int.parse(views);
+    if (_publishDate.firstMatch(text)?[1] case final date?) {
+      if (DateTime.tryParse(date) case final at?) _published[id] = at.millisecondsSinceEpoch ~/ 1000;
+    }
+  }
+
+  /// [line] with the views of its video [id] as its answer gave them, and
+  /// when it was published where the line lacks it.
+  String _withFacts(String line, String id) {
+    final views = _views[id];
+    final published = _published[id];
+    if (views == null && published == null) return line;
+    final entry = jsonDecode(line) as Map<String, dynamic>;
+    var changed = false;
+    // The answer's count is exact; a listing asked in another language may
+    // have written it in a way read wrongly ("1,2 Mln").
+    if (views != null && entry['view_count'] != views) {
+      entry['view_count'] = views;
+      changed = true;
+    }
+    if (published != null && entry['timestamp'] == null && entry['release_timestamp'] == null) {
+      entry['timestamp'] = published;
+      changed = true;
+    }
+    return changed ? jsonEncode(entry) : line;
   }
 
   /// How much an answer that does not tell by captions or audio is worth:
@@ -274,9 +320,9 @@ class VideoLanguages {
       _unheard[key] = _spoken(value);
       _textAt[key] = (value['at'] as num).toInt();
     }
-    final (known, channels) = await Isolate.run(() {
+    final (known, channels, published) = await Isolate.run(() {
       final file = File(path);
-      final none = (<String, SpokenVideo>{}, <String, String>{});
+      final none = (<String, SpokenVideo>{}, <String, String>{}, <String, int>{});
       if (!file.existsSync()) return none;
       try {
         final raw = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
@@ -293,6 +339,10 @@ class VideoLanguages {
             for (final MapEntry(:key, :value) in heard.entries)
               if (value['channel'] case final String channel) key: channel,
           },
+          {
+            for (final MapEntry(:key, :value) in heard.entries)
+              if (value['published'] case final num at) key: at.toInt(),
+          },
         );
       } catch (_) {
         return none;
@@ -301,6 +351,7 @@ class VideoLanguages {
     for (final MapEntry(:key, :value) in channels.entries) {
       _count(key, value, known[key]?.language);
     }
+    _published.addAll(published);
     return known;
   }
 
@@ -314,6 +365,7 @@ class VideoLanguages {
         key: {
           ..._encode(value),
           if (_channelOf[key] case final channel?) 'channel': channel,
+          if (_published[key] case final at?) 'published': at,
         },
     };
     final texts = {
@@ -363,16 +415,24 @@ class VideoLanguages {
   ///
   /// It stops after [giveUpAfter] videos with none kept; [done] hears how
   /// many were asked about, kept and heard.
+  ///
+  /// [listedInLanguage]: the listing was asked in [language], so its titles
+  /// are already the reader's. Each video is then asked about in English,
+  /// for [passes] to compare titles given in two languages.
   Stream<String> only(
     Stream<String> lines,
     ExploreLanguage language, {
+    bool listedInLanguage = false,
     int giveUpAfter = giveUpAfterDefault,
     int heldUpTo = 12,
     void Function(LanguageCheck check)? done,
   }) async* {
     final pending = <_Pending>[];
     final held = <String>[];
-    var asked = 0, kept = 0, heard = 0;
+    var asked = 0, kept = 0, heard = 0, byChannel = 0;
+    // How long the reader waited: for the first video shown, and in all.
+    final clock = Stopwatch()..start();
+    int? firstShown;
     final told = <String, int>{};
     Iterable<String> ready() sync* {
       // As answered: a slow answer holds back no other.
@@ -380,6 +440,7 @@ class VideoLanguages {
         pending.remove(done);
         switch (done.out) {
           case (final line, heard: true):
+            firstShown ??= clock.elapsedMilliseconds;
             yield line;
           case (final line, heard: false):
             held.add(line);
@@ -387,6 +448,7 @@ class VideoLanguages {
         }
       }
       if (held.length >= heldUpTo) {
+        firstShown ??= clock.elapsedMilliseconds;
         final out = [...held];
         held.clear();
         yield* out;
@@ -403,21 +465,30 @@ class VideoLanguages {
         }
         // Nothing in the first few hundred: the search found none to show.
         if (asked >= giveUpAfter && kept == 0) break;
+        // A quarter of that, nearly all answered as another language: the
+        // search brings videos in other languages, and reading on costs
+        // seconds for nothing (Italian 基督宗教 read 240, all English, four
+        // times over, 2026-11-19). A wider search takes over.
+        final answered = asked - pending.length;
+        if (kept == 0 && answered >= giveUpAfter ~/ 4 && (heard + byChannel) * 4 >= answered * 3) break;
         asked++;
         if (item.channelId case final channel?) {
           // Plainly in another language: none of its videos is asked about.
           if (channelSpeaks(channel) case final spoken? when spoken != language) {
             told.update('channel ${spoken.name}', (n) => n + 1, ifAbsent: () => 1);
+            byChannel++;
             continue;
           }
         }
-        pending.add(_Pending(of(item.id, asking: language, channel: item.channelId).then((spoken) {
+        final asking = listedInLanguage ? ExploreLanguage.any : language;
+        pending.add(_Pending(of(item.id, asking: asking, channel: item.channelId).then((spoken) {
           if (spoken != null && spoken.heard) heard++;
           final key = spoken == null ? 'no answer' : '${spoken.source} ${spoken.language?.code ?? '?'}';
           told.update(key, (n) => n + 1, ifAbsent: () => 1);
           if (!passes(spoken, language, listed: item.title)) return null;
           kept++;
-          final shown = spoken == null || spoken.title.isEmpty || spoken.title == item.title ? line : jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
+          final titled = listedInLanguage || spoken == null || spoken.title.isEmpty || spoken.title == item.title ? line : jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
+          final shown = _withFacts(titled, item.id);
           return (shown, heard: spoken!.heard);
         })));
         yield* Stream.fromIterable(ready());
@@ -430,13 +501,18 @@ class VideoLanguages {
         await Future.any([for (final p in pending) p.future]);
         yield* Stream.fromIterable(ready());
       }
+      if (held.isNotEmpty) firstShown ??= clock.elapsedMilliseconds;
       yield* Stream.fromIterable([...held]);
       held.clear();
     } finally {
       done?.call((asked: asked, kept: kept, heard: heard));
       if (asked > 0) {
         final by = [for (final MapEntry(:key, :value) in told.entries) '$key $value'].join(', ');
-        logInfo('Language ${language.name}: kept $kept of $asked videos, $heard told by audio or captions; $by');
+        final seconds = clock.elapsedMilliseconds / 1000;
+        final pace = seconds > 0 ? (asked / seconds).toStringAsFixed(1) : '-';
+        final first = firstShown == null ? 'none shown' : 'first shown after ${(firstShown! / 1000).toStringAsFixed(1)} s';
+        logInfo('Language ${language.name}: kept $kept of $asked videos in ${seconds.toStringAsFixed(1)} s ($pace a second, $first), '
+            '$heard told by audio or captions; $by');
       }
     }
   }
@@ -449,7 +525,8 @@ class VideoLanguages {
   /// * Without either (YouTube makes no automatic captions for Chinese and
   ///   many other languages), its own title and description decide, read
   ///   together, and only when they are not a translation: the title is
-  ///   the same listed in English as asked in [language]. A title the
+  ///   the same listed in English as asked in [language] (or listed in
+  ///   [language] as asked in English). A title the
   ///   uploader or YouTube translated differs between the two.
   /// * Without an answer it is left out.
   @visibleForTesting

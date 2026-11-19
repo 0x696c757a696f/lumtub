@@ -65,9 +65,23 @@ pub fn count(text: &str) -> Option<u64> {
     }
     let start = text.find(|c: char| c.is_ascii_digit())?;
     let rest = &text[start..];
-    let end = rest
-        .find(|c: char| !(c.is_ascii_digit() || c == '.' || c == ','))
-        .unwrap_or(rest.len());
+    // A search asked in French, Russian or Swedish groups thousands with
+    // a (narrow, no-break) space: "1 234 567 vues".
+    let mut end = 0;
+    for (at, c) in rest.char_indices() {
+        if c.is_ascii_digit() || c == '.' || c == ',' || c == '\'' {
+            end = at + c.len_utf8();
+            continue;
+        }
+        let next = &rest.as_bytes()[at + c.len_utf8()..];
+        let grouped = matches!(c, ' ' | '\u{a0}' | '\u{202f}' | '\u{2009}')
+            && next.len() >= 3
+            && next[..3].iter().all(u8::is_ascii_digit)
+            && !next.get(3).is_some_and(u8::is_ascii_digit);
+        if !grouped {
+            break;
+        }
+    }
     let number = &rest[..end];
     let after = rest[end..].trim_start();
     // What the TV app writes in East Asian languages: "10.9万次观看",
@@ -881,6 +895,11 @@ mod tests {
         assert_eq!(count("12K subscribers"), Some(12_000));
         assert_eq!(count("3.4B views"), Some(3_400_000_000));
         assert_eq!(count("No views"), Some(0));
+        assert_eq!(count("1 234 567 vues"), Some(1_234_567));
+        assert_eq!(count("1\u{a0}234\u{a0}567 просмотров"), Some(1_234_567));
+        assert_eq!(count("1.234.567 visualizzazioni"), Some(1_234_567));
+        assert_eq!(count("1'234 Aufrufe"), Some(1_234));
+        assert_eq!(count("12 videos 3 views"), Some(12));
         assert_eq!(count("1.5K watching"), Some(1500));
         assert_eq!(count("@handle"), None);
         assert_eq!(count("10.9万次观看"), Some(109_000));

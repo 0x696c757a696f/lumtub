@@ -30,6 +30,19 @@ class _Joining implements Translator {
   }
 }
 
+/// Answers that it has too many requests [busy] times, then uppercases.
+class _Busy implements Translator {
+  _Busy(this.busy);
+  int busy;
+  var asked = 0;
+  @override
+  Future<String> translate(String text, String target) async {
+    asked++;
+    if (busy-- > 0) throw TranslationException.busy();
+    return text.toUpperCase();
+  }
+}
+
 /// Uppercases after a short wait, recording how many requests overlap.
 class _Slow implements Translator {
   _Slow(this.running, this.set);
@@ -302,5 +315,28 @@ Ok, finita la chicca.
     translator = _Upper();
     await files.pathFor(option);
     expect(translator.asked, hasLength(1));
+  });
+
+  test('asks a busy translation service again after a pause', () async {
+    final client = MockClient((request) async => http.Response(_auto, 200));
+    final translator = _Busy(2);
+    final files = SubtitleFiles(client, folder, () => translator, busyPauses: const [Duration.zero, Duration.zero, Duration.zero]);
+    const option = SubtitleOption(language: 'ja', name: '', url: 'https://www.youtube.com/api/timedtext?v=b&lang=en&kind=asr&tlang=ja', kind: SubtitleKind.translated);
+    expect(await File(await files.pathFor(option)).readAsString(), contains('HELLO WORLD'));
+    expect(translator.asked, 3);
+  });
+
+  test("falls back to YouTube's translation while the service stays busy", () async {
+    final asked = <Uri>[];
+    final client = MockClient((request) async {
+      asked.add(request.url);
+      return http.Response(request.url.queryParameters.containsKey('tlang') ? _auto.replaceAll('hello', 'konnichiwa') : _auto, 200);
+    });
+    final translator = _Busy(99);
+    final files = SubtitleFiles(client, folder, () => translator, busyPauses: const [Duration.zero]);
+    const option = SubtitleOption(language: 'ja', name: '', url: 'https://www.youtube.com/api/timedtext?v=c&lang=en&kind=asr&tlang=ja', kind: SubtitleKind.translated);
+    expect(await File(await files.pathFor(option)).readAsString(), contains('konnichiwa'));
+    expect(asked.map((u) => u.queryParameters.containsKey('tlang')), [false, true]);
+    expect(translator.asked, 2);
   });
 }

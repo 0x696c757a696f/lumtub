@@ -74,7 +74,8 @@ void main() {
   });
 
   test('turns failures into short messages', () async {
-    expect(GoogleTranslator(MockClient((_) async => http.Response('', 429))).translate('x', 'en'), throwsA(isA<TranslationException>()));
+    await expectLater(GoogleTranslator(MockClient((_) async => http.Response('', 429))).translate('x', 'en'), throwsA(isA<TranslationException>()));
+    GoogleTranslator.resetPacing();
     expect(GoogleTranslator(MockClient((_) async => throw http.ClientException('offline'))).translate('x', 'en'), throwsA(isA<TranslationException>()));
   });
 

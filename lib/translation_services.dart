@@ -62,7 +62,7 @@ Future<String> _post(http.Client client, Uri uri, Map<String, String> headers, S
   final status = response.statusCode;
   if (status == 200) return utf8.decode(response.bodyBytes);
   if (errors.containsKey(status)) throw TranslationException(errors[status]!);
-  if (status == 429) throw TranslationException(tr('Too many translation requests. Please try again later.'));
+  if (status == 429) throw TranslationException.busy();
   throw TranslationException(tr('Translation service temporarily unavailable ({0})', [status]));
 }
 
@@ -322,9 +322,10 @@ class BaiduTranslator extends _LineTranslator {
     );
     final data = _decode(reply);
     if (data is Map && data['error_code'] != null && '${data['error_code']}' != '52000') {
-      throw TranslationException(switch ('${data['error_code']}') {
+      final code = '${data['error_code']}';
+      if (code == '54003' || code == '54005') throw TranslationException.busy();
+      throw TranslationException(switch (code) {
         '52003' || '54001' => tr('The Baidu Translate APP ID or key is invalid'),
-        '54003' || '54005' => tr('Too many translation requests. Please try again later.'),
         '54004' => tr('The Baidu Translate account is out of credit'),
         final code => tr('Translation service temporarily unavailable ({0})', [code]),
       });

@@ -157,9 +157,12 @@ jobs:
           set -euo pipefail
           created=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq .created_at)
           deadline=$(( $(date +%s) + 5 * 60 * 60 ))
+          # A run held back by its concurrency group (pending) or by an
+          # environment (waiting) may be waiting for this one: never wait
+          # for it, or the two wait for each other until the deadline.
           while :; do
             earlier=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/build.yml/runs?per_page=50" \
-              --jq "[.workflow_runs[] | select(.status != \"completed\" and .id != $GITHUB_RUN_ID and .created_at < \"$created\") | .html_url] | .[]")
+              --jq "[.workflow_runs[] | select((.status | IN(\"completed\", \"pending\", \"waiting\") | not) and .id != $GITHUB_RUN_ID and .created_at < \"$created\") | .html_url] | .[]")
             [[ -n "$earlier" && $(date +%s) -lt $deadline ]] || break
             echo "Waiting for:"; echo "$earlier"
             sleep 60

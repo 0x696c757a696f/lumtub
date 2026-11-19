@@ -68,13 +68,12 @@ pub fn count(text: &str) -> Option<u64> {
     // A search asked in French, Russian or Swedish groups thousands with
     // a (narrow, no-break) space: "1 234 567 vues".
     let mut end = 0;
-    let mut chars = rest.char_indices().peekable();
-    while let Some((at, c)) = chars.next() {
+    for (at, c) in rest.char_indices() {
         if c.is_ascii_digit() || c == '.' || c == ',' || c == '\'' {
             end = at + c.len_utf8();
             continue;
         }
-        let next = rest[at + c.len_utf8()..].as_bytes();
+        let next = &rest.as_bytes()[at + c.len_utf8()..];
         let grouped = matches!(c, ' ' | '\u{a0}' | '\u{202f}' | '\u{2009}')
             && next.len() >= 3
             && next[..3].iter().all(u8::is_ascii_digit)

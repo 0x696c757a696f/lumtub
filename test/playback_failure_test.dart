@@ -92,4 +92,11 @@ void main() {
     expect(other.detail, 'Could not create device');
     expect(other.message, isNot(contains('Network check')));
   });
+
+  test('shows the line that names the cause, not the warnings before it', () {
+    final failure = PlaybackFailure.classify(["Bad state: WARNING: [youtube] No title found in player responses; falling back to title from initial data. Other metadata may also be missing\nERROR: [youtube] abc: Sign in to confirm you're not a bot. Use --cookies-from-browser"]);
+    expect(failure.kind, FailureKind.botCheck);
+    expect(failure.detail, "[youtube] abc: Sign in to confirm you're not a bot. Use --cookies-from-browser");
+    expect(PlaybackFailure.classify(['HTTP Error 429']).detail, 'HTTP Error 429');
+  });
 }

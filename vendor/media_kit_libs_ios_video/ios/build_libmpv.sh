@@ -32,7 +32,20 @@ WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 git clone --quiet --depth 1 --branch "$release" https://github.com/mpvkit/MPVKit.git "$WORK/MPVKit"
 cd "$WORK/MPVKit"
-cp "$HERE"/patch/*.patch Sources/BuildScripts/patch/libmpv/
+# A backport names the mpv release that has it ("Upstream since: v0.42.0");
+# once MPVKit builds that release or a newer one the patch is left out, so
+# moving to a newer MPVKit needs no change here.
+mpv_version=$(awk '/case .libmpv:/ { getline; gsub(/[^0-9.]/, ""); print; exit }' Sources/BuildScripts/XCFrameworkBuild/main.swift)
+[ -n "$mpv_version" ] || { echo "No mpv version in MPVKit's main.swift" >&2; exit 1; }
+echo "MPVKit $release builds mpv $mpv_version"
+for patch in "$HERE"/patch/*.patch; do
+  since=$(sed -n 's/^Upstream since: v\{0,1\}\([0-9.]*\).*/\1/p' "$patch" | head -n 1)
+  if [ -n "$since" ] && [ "$(printf '%s\n%s\n' "$since" "$mpv_version" | sort -V | head -n 1)" = "$since" ]; then
+    echo "Left out $(basename "$patch"): mpv $mpv_version has it (since $since)"
+    continue
+  fi
+  cp "$patch" Sources/BuildScripts/patch/libmpv/
+done
 
 python3 - "$release" <<'PY'
 import re, sys

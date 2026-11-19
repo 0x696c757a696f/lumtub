@@ -1,5 +1,6 @@
 Backport of mpv 8ab3f8b6 (mpv 0.42) "options: add secondary-sub-scale" to mpv 0.41:
 secondary subtitles scaled apart from the main ones.
+Upstream since: v0.42.0
 
 diff --git a/options/options.c b/options/options.c
 index 716c3e6f..a7779e65 100644

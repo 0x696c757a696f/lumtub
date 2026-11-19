@@ -108,6 +108,9 @@ flutter:
     # One bundled default face keeps the Windows package small (SIL OFL 1.1,
     # assets/fonts/OFL.txt). Flutter uses this Regular face for every weight;
     # Windows fonts remain the fallback for characters it does not include.
+    # Its lone combining accents are taken out of its character map
+    # (assets/fonts/drop_combining_marks.py), so Polish ś or ż come whole
+    # from the system's font instead of as s or z plus a misplaced accent.
     - family: Noto Sans CJK SC
       fonts:
         - asset: assets/fonts/NotoSansSC-Regular.ttf

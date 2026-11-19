@@ -13,6 +13,9 @@ All are Noto fonts under the SIL Open Font License 1.1
   (Sans/SubsetOTF/KR)
 - NotoSans<Script>-Regular.ttf: https://github.com/notofonts/notofonts.github.io
   (fonts/NotoSans<Script>/hinted/ttf)
+- NotoSans-Regular.ttf: the same, fonts/NotoSans/hinted/ttf. Latin, Greek
+  and Cyrillic with every accented letter (Polish, Czech, Vietnamese,
+  Ukrainian and so on), which Noto Sans SC lacks.
 
 SHA-256:
 
@@ -26,6 +29,7 @@ d3e33254b09e7bb2c5cf0f17e554b80462056c5a107097f258d495168c3a9346  NotoSansGeorgi
 9b5a7aaeeb649a2e75a49d8b006a1f87db1b61c0df3b001609f4e0725d88dbf6  NotoSansGujarati-Regular.ttf
 658d0207da305a1411c539a8b0bbeda64d4146e54fb4827facddb890b6b90d74  NotoSansGurmukhi-Regular.ttf
 cdefaf8efd47045f6820928eba84db5bed7557539328952b5f828315485e02ee  NotoSansHebrew-Regular.ttf
+478c558ea716033cd60c03438f628dfa75694dcf6b5f6d505a2f05fd2b4f3823  NotoSans-Regular.ttf
 69975a0ac8472717870aefeab0a4d52739308d90856b9955313b2ad5e0148d68  NotoSansKR-Regular.otf
 9ad74dc64838c6855b96f671fc08e425a58921b9d0c71712ea79c328a27e6e38  NotoSansKannada-Regular.ttf
 e66675f2082788f0511a714bef5a1748928294b38c8e286a96ea73a864b5e605  NotoSansKhmer-Regular.ttf

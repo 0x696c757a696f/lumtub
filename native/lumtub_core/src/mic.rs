@@ -27,7 +27,8 @@ impl Heard {
     /// Adds [frames] of [channels] interleaved samples as mono.
     fn add<S: Copy>(&mut self, frames: &[S], channels: usize, to_i16: impl Fn(S) -> i16) {
         let channels = channels.max(1);
-        let room = (self.rate.max(8000) as usize * LONGEST_SECONDS).saturating_sub(self.samples.len());
+        let room =
+            (self.rate.max(8000) as usize * LONGEST_SECONDS).saturating_sub(self.samples.len());
         for frame in frames.chunks(channels).take(room) {
             let sum: i32 = frame.iter().map(|&s| to_i16(s) as i32).sum();
             self.samples.push((sum / frame.len() as i32) as i16);
@@ -63,7 +64,11 @@ pub fn start() -> Result<(), String> {
     };
     match started.recv_timeout(std::time::Duration::from_secs(10)) {
         Ok(Ok(())) => {
-            *recording = Some(Recording { stop, heard, thread: Some(thread) });
+            *recording = Some(Recording {
+                stop,
+                heard,
+                thread: Some(thread),
+            });
             Ok(())
         }
         Ok(Err(e)) => {
@@ -135,7 +140,9 @@ pub unsafe extern "C" fn lumtub_mic_stop(path: *const u8, length: usize) -> *mut
         return give_json(&serde_json::json!({ "error": "nothing was heard" }));
     }
     match std::fs::write(path, wav(&samples, rate)) {
-        Ok(()) => give_json(&serde_json::json!({ "seconds": samples.len() as f64 / rate as f64, "rate": rate })),
+        Ok(()) => give_json(
+            &serde_json::json!({ "seconds": samples.len() as f64 / rate as f64, "rate": rate }),
+        ),
         Err(e) => give_json(&serde_json::json!({ "error": e.to_string() })),
     }
 }
@@ -180,7 +187,9 @@ mod platform {
     }
 
     fn open(heard: Arc<Mutex<Heard>>) -> Result<cpal::Stream, String> {
-        let device = cpal::default_host().default_input_device().ok_or("no microphone")?;
+        let device = cpal::default_host()
+            .default_input_device()
+            .ok_or("no microphone")?;
         let config = device.default_input_config().map_err(|e| e.to_string())?;
         let channels = config.channels() as usize;
         heard.lock().map_err(|e| e.to_string())?.rate = config.sample_rate();
@@ -222,7 +231,8 @@ mod platform {
     use std::os::raw::{c_int, c_long, c_uint, c_ulong};
 
     type Open = unsafe extern "C" fn(*mut *mut c_void, *const c_char, c_int, c_int) -> c_int;
-    type SetParams = unsafe extern "C" fn(*mut c_void, c_int, c_int, c_uint, c_uint, c_int, c_uint) -> c_int;
+    type SetParams =
+        unsafe extern "C" fn(*mut c_void, c_int, c_int, c_uint, c_uint, c_int, c_uint) -> c_int;
     type Read = unsafe extern "C" fn(*mut c_void, *mut c_void, c_ulong) -> c_long;
     type Recover = unsafe extern "C" fn(*mut c_void, c_int, c_int) -> c_int;
     type Close = unsafe extern "C" fn(*mut c_void) -> c_int;
@@ -238,7 +248,12 @@ mod platform {
     }
 
     pub(super) fn capture(stop: Arc<AtomicBool>, heard: Arc<Mutex<Heard>>, ready: Ready) {
-        let library = unsafe { libc::dlopen(c"libasound.so.2".as_ptr(), libc::RTLD_NOW | libc::RTLD_LOCAL) };
+        let library = unsafe {
+            libc::dlopen(
+                c"libasound.so.2".as_ptr(),
+                libc::RTLD_NOW | libc::RTLD_LOCAL,
+            )
+        };
         if library.is_null() {
             let _ = ready.send(Err("libasound.so.2 is not installed".into()));
             return;
@@ -252,7 +267,8 @@ mod platform {
                 symbol::<Close>(library, b"snd_pcm_close\0"),
             )
         };
-        let (Some(open), Some(set_params), Some(read), Some(recover), Some(close)) = functions else {
+        let (Some(open), Some(set_params), Some(read), Some(recover), Some(close)) = functions
+        else {
             let _ = ready.send(Err("libasound is missing functions".into()));
             return;
         };
@@ -266,7 +282,9 @@ mod platform {
         let set = unsafe { set_params(pcm, S16_LE, RW_INTERLEAVED, 1, RATE, 1, 500_000) };
         if set < 0 {
             unsafe { close(pcm) };
-            let _ = ready.send(Err(format!("the microphone refused 16-bit mono (ALSA error {set})")));
+            let _ = ready.send(Err(format!(
+                "the microphone refused 16-bit mono (ALSA error {set})"
+            )));
             return;
         }
         if let Ok(mut heard) = heard.lock() {
@@ -275,7 +293,13 @@ mod platform {
         let _ = ready.send(Ok(()));
         let mut buffer = vec![0i16; 2048];
         while !stop.load(Ordering::SeqCst) {
-            let got = unsafe { read(pcm, buffer.as_mut_ptr() as *mut c_void, buffer.len() as c_ulong) };
+            let got = unsafe {
+                read(
+                    pcm,
+                    buffer.as_mut_ptr() as *mut c_void,
+                    buffer.len() as c_ulong,
+                )
+            };
             if got < 0 {
                 if unsafe { recover(pcm, got as c_int, 1) } < 0 {
                     break;
@@ -335,7 +359,21 @@ mod platform {
                 symbol::<StreamCall>(library, b"AAudioStream_getSampleRate\0"),
             )
         };
-        let (Some(create), Some(direction), Some(format), Some(channels), Some(rate), Some(open), Some(delete), Some(start), Some(read), Some(stop_stream), Some(close), Some(sample_rate)) = f else {
+        let (
+            Some(create),
+            Some(direction),
+            Some(format),
+            Some(channels),
+            Some(rate),
+            Some(open),
+            Some(delete),
+            Some(start),
+            Some(read),
+            Some(stop_stream),
+            Some(close),
+            Some(sample_rate),
+        ) = f
+        else {
             let _ = ready.send(Err("AAudio is missing functions".into()));
             return;
         };
@@ -361,7 +399,9 @@ mod platform {
         let started = unsafe { start(stream) };
         if started < 0 {
             unsafe { close(stream) };
-            let _ = ready.send(Err(format!("the microphone did not start (AAudio error {started})")));
+            let _ = ready.send(Err(format!(
+                "the microphone did not start (AAudio error {started})"
+            )));
             return;
         }
         if let Ok(mut heard) = heard.lock() {
@@ -371,7 +411,14 @@ mod platform {
         let mut buffer = vec![0i16; 2048];
         while !stop.load(Ordering::SeqCst) {
             // A tenth of a second at most, so stopping is quick.
-            let got = unsafe { read(stream, buffer.as_mut_ptr() as *mut c_void, buffer.len() as i32, 100_000_000) };
+            let got = unsafe {
+                read(
+                    stream,
+                    buffer.as_mut_ptr() as *mut c_void,
+                    buffer.len() as i32,
+                    100_000_000,
+                )
+            };
             if got < 0 {
                 break;
             }
@@ -386,7 +433,13 @@ mod platform {
     }
 }
 
-#[cfg(not(any(windows, target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android")))]
+#[cfg(not(any(
+    windows,
+    target_os = "macos",
+    target_os = "ios",
+    target_os = "linux",
+    target_os = "android"
+)))]
 mod platform {
     use super::*;
 
@@ -416,7 +469,10 @@ mod tests {
 
     #[test]
     fn channels_become_one_and_long_takes_stop_growing() {
-        let mut heard = Heard { samples: Vec::new(), rate: 8000 };
+        let mut heard = Heard {
+            samples: Vec::new(),
+            rate: 8000,
+        };
         heard.add(&[100i16, 300, -100, -300], 2, |s| s);
         assert_eq!(heard.samples, vec![200, -200]);
         heard.add(&[0.5f32, 0.5], 1, |s: f32| (s * 32767.0) as i16);

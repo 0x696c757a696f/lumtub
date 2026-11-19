@@ -383,21 +383,22 @@ void main() {
   });
 
   group('new services', () {
-    test('Microsoft without a key signs in with an Edge token, once', () async {
+    test("Microsoft without a key asks Edge's translatetext address with the texts as strings", () async {
       final requests = <http.Request>[];
       final client = MockClient((request) async {
         requests.add(request);
-        if (request.url.host == 'edge.microsoft.com') return http.Response('token-1', 200);
-        final texts = (jsonDecode(request.body) as List).map((e) => (e as Map)['Text']).toList();
-        return _json([for (final t in texts) {'translations': [{'text': '译$t'}]}]);
+        final texts = (jsonDecode(request.body) as List).cast<String>();
+        return _json([for (final t in texts) {'translations': [{'text': '译$t', 'to': 'zh-Hans'}]}]);
       });
       final translator = MicrosoftTranslator(client);
       expect(await translator.translate('a\nb', 'zh-CN'), '译a\n译b');
-      expect(await translator.translate('c', 'zh-CN'), '译c');
-      expect(requests.where((r) => r.url.host == 'edge.microsoft.com').length, 1);
-      final api = requests.lastWhere((r) => r.url.host != 'edge.microsoft.com');
-      expect(api.url.host, 'api-edge.cognitive.microsofttranslator.com');
-      expect(api.headers['Authorization'], 'Bearer token-1');
+      final api = requests.single;
+      expect(api.url.host, 'edge.microsoft.com');
+      expect(api.url.path, '/translate/translatetext');
+      expect(api.url.queryParameters, {'to': 'zh-Hans', 'isEnterpriseClient': 'false'});
+      expect(api.headers['User-Agent'], contains('Edg/'));
+      expect(api.headers.containsKey('Authorization'), isFalse);
+      expect(MicrosoftTranslator.parseReply(['x', 'y']), ['x', 'y']);
     });
 
     test('DeepLX joins lines and falls back to one request per line', () async {

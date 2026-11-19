@@ -452,7 +452,7 @@ extension ExploreActions on AppController {
   /// searched as it is. Which words are translated: [translatesInto].
   Future<List<String>> _searchWordsIn(List<String> queries, ExploreLanguage language, {bool traditional = false}) {
     final target = traditional ? 'zh-TW' : language.code;
-    Future<String> translate(String text) => _google.translate(text, target).timeout(const Duration(seconds: 10));
+    Future<String> translate(String text) => _microsoftFirst.translate(text, target).timeout(const Duration(seconds: 10));
     return Future.wait([
       for (final query in queries)
         if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language))
@@ -466,7 +466,7 @@ extension ExploreActions on AppController {
             try {
               final unpivoted = traditional || !pivotsThroughEnglish(language) ? const <String>[] : unpivotedPhrasesOf(source);
               if (unpivoted.isNotEmpty) {
-                final english = (await _google.translate(unpivoted.join('\n'), 'en').timeout(const Duration(seconds: 10))).split('\n');
+                final english = (await _microsoftFirst.translate(unpivoted.join('\n'), 'en').timeout(const Duration(seconds: 10))).split('\n');
                 if (english.length != unpivoted.length) throw StateError('${english.length} lines for ${unpivoted.length} phrases');
                 source = withEnglishOf(source, english);
               }

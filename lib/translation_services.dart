@@ -180,23 +180,6 @@ class MicrosoftTranslator extends _LineTranslator {
   final String key;
   final String region;
 
-  String? _token;
-  DateTime _tokenUntil = DateTime.fromMillisecondsSinceEpoch(0);
-
-  Future<String> _edgeToken() async {
-    final token = _token;
-    if (token != null && DateTime.now().isBefore(_tokenUntil)) return token;
-    final http.Response response;
-    try {
-      response = await client.get(Uri.https('edge.microsoft.com', '/translate/auth')).timeout(const Duration(seconds: 15));
-    } catch (_) {
-      throw TranslationException(tr('Translation failed. Check your network or proxy.'));
-    }
-    if (response.statusCode != 200 || response.body.trim().isEmpty) throw TranslationException(tr('Translation service temporarily unavailable ({0})', [response.statusCode]));
-    _tokenUntil = DateTime.now().add(const Duration(minutes: 8));
-    return _token = response.body.trim();
-  }
-
   @override
   int get batchSize => 100;
 
@@ -213,9 +196,15 @@ class MicrosoftTranslator extends _LineTranslator {
   @override
   Future<List<String>> translateBatch(List<String> lines, String target) async {
     final free = key.trim().isEmpty;
-    final uri = Uri.https(free ? 'api-edge.cognitive.microsofttranslator.com' : 'api.cognitive.microsofttranslator.com', '/translate', {'api-version': '3.0', 'to': languageCode(target)});
+    // Without a key: the address Microsoft Edge translates pages with since
+    // its token address (edge.microsoft.com/translate/auth) went away in
+    // 2026. It takes the texts as a JSON array of strings, needs no token,
+    // and detects the source itself (a `from` of auto is refused).
+    final uri = free
+        ? Uri.https('edge.microsoft.com', '/translate/translatetext', {'to': languageCode(target), 'isEnterpriseClient': 'false'})
+        : Uri.https('api.cognitive.microsofttranslator.com', '/translate', {'api-version': '3.0', 'to': languageCode(target)});
     final headers = {
-      if (free) 'Authorization': 'Bearer ${await _edgeToken()}' else 'Ocp-Apim-Subscription-Key': key.trim(),
+      if (free) 'User-Agent': edgeUserAgent else 'Ocp-Apim-Subscription-Key': key.trim(),
       if (!free && region.trim().isNotEmpty) 'Ocp-Apim-Subscription-Region': region.trim(),
       'Content-Type': 'application/json',
     };
@@ -223,22 +212,36 @@ class MicrosoftTranslator extends _LineTranslator {
       client,
       uri,
       headers,
-      jsonEncode([for (final line in lines) {'Text': line}]),
+      jsonEncode(free ? lines : [for (final line in lines) {'Text': line}]),
       {401: tr('The Microsoft Translator key is not valid')},
       const Duration(seconds: 30),
     );
-    final data = _decode(reply);
-    if (data is List) {
-      final out = <String>[];
-      for (final item in data) {
-        final translations = item is Map ? item['translations'] : null;
-        if (translations is List && translations.isNotEmpty && translations.first is Map && (translations.first as Map)['text'] is String) {
-          out.add((translations.first as Map)['text'] as String);
-        }
-      }
-      return out;
-    }
+    final out = parseReply(_decode(reply));
+    if (out != null) return out;
     throw _unrecognized();
+  }
+
+  /// A browser's, which the keyless address asks for.
+  static const edgeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0';
+
+  /// The translated texts of a reply: Translator v3's
+  /// `[{"translations": [{"text": …}]}, …]`, or plain strings.
+  static List<String>? parseReply(Object? data) {
+    if (data is! List) return null;
+    final out = <String>[];
+    for (final item in data) {
+      if (item is String) {
+        out.add(item);
+        continue;
+      }
+      final translations = item is Map ? item['translations'] : null;
+      if (translations is List && translations.isNotEmpty && translations.first is Map && (translations.first as Map)['text'] is String) {
+        out.add((translations.first as Map)['text'] as String);
+      } else if (item is Map && item['text'] is String) {
+        out.add(item['text'] as String);
+      }
+    }
+    return out;
   }
 }
 

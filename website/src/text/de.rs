@@ -28,25 +28,25 @@ pub static DE: Text = Text {
         Highlight {
             title: "Empfehlungen, die du verstehst und lenkst",
             body: "Der Feed „Für dich“ wird auf deinem Rechner aus deinem eigenen Verlauf berechnet. Jede Karte nennt ihren Grund, und „Kein Interesse“ entfernt genau diesen Grund, statt einfach ignoriert zu werden.",
-            shot: "home-reasons.png",
+            shot: "app/home.jpg",
             alt: "Für dich, mit dem Grund unter jedem Video",
         },
         Highlight {
             title: "Native Wiedergabe, passend zu deiner Hardware",
             body: "Videos laufen über mpv, nicht über eine Webseite. Lumtub prüft, welche Codecs deine Grafikkarte wirklich dekodiert, und bevorzugt diese Formate, bis 8K, damit die Lüfter leise bleiben. Livestreams starten am Live-Rand, auch über 1080p.",
-            shot: "macos.png",
-            alt: "Ein Video läuft unter macOS",
+            shot: "app/theater.jpg",
+            alt: "Ein Video im Kinomodus",
         },
         Highlight {
             title: "Schauen in jeder Sprache",
             body: "Zuerst läuft der Originalton, nie eine KI-Synchro, die YouTube für dich ausgesucht hat. Eine Synchro in deiner Sprache ist einen Klick entfernt. Zeige zwei Untertitel zeilenweise gleichzeitig und übersetze Titel, Kommentare und Chat.",
-            shot: "subtitles.jpg",
+            shot: "app/subtitles.jpg",
             alt: "Der Originaluntertitel mit einer Übersetzung darüber",
         },
         Highlight {
             title: "Livechat als Bullet-Kommentare",
             body: "Chat und Chat-Wiederholungen fliegen im Bilibili-Stil übers Bild, Emojis inklusive. Oder lass den Chat in einem Seitenpanel stehen, das beim Lesen nicht wackelt.",
-            shot: "danmaku.jpg",
+            shot: "app/danmaku.jpg",
             alt: "Livechat fliegt über einen Livestream",
         },
         Highlight {

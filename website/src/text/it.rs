@@ -28,25 +28,25 @@ pub static IT: Text = Text {
         Highlight {
             title: "Consigli che puoi leggere e orientare",
             body: "«Consigliati per te» viene calcolato sul tuo computer a partire dalla tua cronologia. Ogni scheda dice perché è lì, e «Non mi interessa» elimina quel motivo invece di essere ignorato.",
-            shot: "home-reasons.png",
+            shot: "app/home.jpg",
             alt: "Consigliati per te, con il motivo sotto ogni video",
         },
         Highlight {
             title: "Riproduzione nativa su misura per il tuo hardware",
             body: "I video passano da mpv, non da una pagina web. Lumtub verifica quali codec la tua scheda grafica decodifica davvero e preferisce quei formati, fino all'8K, così le ventole restano silenziose. Le dirette partono dal punto live, anche oltre i 1080p.",
-            shot: "macos.png",
-            alt: "Un video in riproduzione su macOS",
+            shot: "app/theater.jpg",
+            alt: "Un video in modalità cinema",
         },
         Highlight {
             title: "Guarda in qualsiasi lingua",
             body: "Parte prima l'audio originale, mai un doppiaggio AI scelto da YouTube per te, e il doppiaggio nella tua lingua è a un clic. Mostra due sottotitoli insieme, riga per riga, e traduci titoli, commenti e chat.",
-            shot: "subtitles.jpg",
+            shot: "app/subtitles.jpg",
             alt: "Il sottotitolo originale con una traduzione sopra",
         },
         Highlight {
             title: "Chat live come commenti volanti",
             body: "La chat e i suoi replay scorrono sull'immagine, in stile Bilibili, emoji comprese. Oppure tieni la chat in un pannello laterale che sta fermo mentre leggi.",
-            shot: "danmaku.jpg",
+            shot: "app/danmaku.jpg",
             alt: "La chat live che scorre su una diretta",
         },
         Highlight {

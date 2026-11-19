@@ -95,7 +95,7 @@ class AndroidSubtitleFonts {
       if (dir.existsSync()) dir.deleteSync(recursive: true);
       dir.createSync(recursive: true);
       Link('$folder/$sc').createSync('$flutterFonts/$sc');
-      final names = Directory(bundled).existsSync() ? ([for (final f in Directory(bundled).listSync()) f.path.split('/').last]..sort()) : <String>[];
+      final names = Directory(bundled).existsSync() ? ([for (final f in Directory(bundled).listSync()) f.path.split(RegExp(r'[/\\]')).last]..sort()) : <String>[];
       families.clear();
       var korean = false;
       for (final name in names) {

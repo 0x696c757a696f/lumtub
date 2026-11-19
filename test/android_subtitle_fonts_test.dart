@@ -64,7 +64,7 @@ void main() {
     final android = AndroidSubtitleFonts.cjkFamilies;
     addTearDown(() => AndroidSubtitleFonts.cjkFamilies = android);
     final folder = await AndroidSubtitleFonts.prepareIos('${root.path}/subs', flutterFonts: flutter.path, bundled: bundled.path);
-    expect(Directory(folder!).listSync().map((f) => f.path.split('/').last).toSet(), {'NotoSansSC-Regular.ttf', 'NotoSansKR-Regular.otf', 'NotoSansArabic-Regular.ttf', 'NotoSansThai-Regular.ttf'});
+    expect(Directory(folder!).listSync().map((f) => f.path.split(RegExp(r'[/\\]')).last).toSet(), {'NotoSansSC-Regular.ttf', 'NotoSansKR-Regular.otf', 'NotoSansArabic-Regular.ttf', 'NotoSansThai-Regular.ttf'});
     expect(File('$folder/NotoSansKR-Regular.otf').readAsStringSync(), 'x');
     expect(AndroidSubtitleFonts.families, {'Arabic': 'Noto Sans Arabic', 'Thai': 'Noto Sans Thai'});
     expect(AndroidSubtitleFonts.familyFor('안녕하세요 hello'), 'Noto Sans KR');

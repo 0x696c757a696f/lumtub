@@ -64,6 +64,8 @@ p { margin: 14px auto 0; font-size: 26px; line-height: 1.45; color: #a1a1aa; max
 
 def card_html(card, lang):
     t = card[lang]
+    if "grid" in card:
+        return grid_html(card, lang, t)
     src = SHOTS / card["shot"][lang]
     sw, sh = Image.open(src).size
     win = card["window"]
@@ -94,6 +96,32 @@ def card_html(card, lang):
             + "</div>"
             + (f'<span class="tag" style="left:{z["left"] + 20}px;top:{z["top"]}px">{t["tag"]}</span>' if t.get("tag") else "")
         )
+    return page(lang, parts)
+
+
+def grid_html(card, lang, t):
+    g = card["grid"]
+    parts = [
+        f'<div class="head"><div class="eyebrow"><img src="{(HERE / "icon.png").as_uri()}">{t["eyebrow"]}</div>',
+        f'<h1>{t["title"]}</h1><p>{t["text"]}</p></div>',
+    ]
+    w, gap = g["width"], g["gap"]
+    left0 = (W - 2 * w - gap) / 2
+    for i, item in enumerate(g["shots"]):
+        sw, sh = Image.open(SHOTS / item["shot"]).size
+        h = w * sh / sw
+        x = left0 + (i % 2) * (w + gap)
+        y = g["top"] + (i // 2) * (h + gap)
+        parts.append(
+            f'<div class="win" style="left:{x}px;top:{y}px;width:{w}px;border-radius:12px;border-bottom:1px solid rgba(255,255,255,.16)">'
+            f'<img src="{(SHOTS / item["shot"]).as_uri()}"></div>'
+            +
+            (f'<span class="tag" style="left:{x + 16}px;top:{y + h - 6}px;transform:translateY(-100%)">{item[lang]}</span>' if item.get(lang) else "")
+        )
+    return page(lang, parts)
+
+
+def page(lang, parts):
     font = "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+SC:wght@400;600;800&display=block"
     return (
         f'<!doctype html><html lang="{"zh" if lang == "zh" else "en"}"><head><meta charset="utf-8">'

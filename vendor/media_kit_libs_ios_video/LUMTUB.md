@@ -23,7 +23,9 @@ picture of the subtitles and OSD (a CGImage) to the app through a struct of
 function pointers whose address it takes as `--wid`
 (`struct lumtub_vo_host`; media_kit_video's `VideoSink.swift` makes it and
 shows them in an AVSampleBufferDisplayLayer, which iOS picture in picture
-takes). The build uses
+takes). `0005-secondary-sub-scale.patch` is mpv 0.42's own
+`secondary-sub-scale` (mpv commit 8ab3f8b6) on 0.41, so the second
+subtitle is sized as on the desktop builds. The build uses
 MPVKit's own build script at the locked release, compiling libmpv only:
 FFmpeg and the other libraries come from that release's prebuilt archives.
 lumtub-media-builds builds this recipe (the lock file, the script and the

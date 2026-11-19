@@ -20,17 +20,7 @@ const KOFI: &str = "https://ko-fi.com/0x696c757a696f";
 const WEBLATE: &str = "https://hosted.weblate.org/engage/lumtub/";
 const SECTIONS: [&str; 5] = ["features", "download", "privacy", "faq", "support"];
 
-const ZH_SHOTS: [&str; 9] = [
-    "watch.png",
-    "windows.png",
-    "macos.png",
-    "linux.png",
-    "home-reasons.png",
-    "subtitles.jpg",
-    "explore-language.png",
-    "skin-aero.png",
-    "skin-player.png",
-];
+const ZH_SHOTS: [&str; 2] = ["app/watch.jpg", "app/home.jpg"];
 
 fn shot(lang: Lang, name: &str) -> String {
     if lang == Lang::Zh && ZH_SHOTS.contains(&name) {
@@ -40,13 +30,11 @@ fn shot(lang: Lang, name: &str) -> String {
     }
 }
 
-fn dims(name: &str) -> (u32, u32) {
-    match name {
-        "watch.png" | "home-reasons.png" | "linux.png" | "search.png" | "explore-language.png" => (1280, 720),
-        "macos.png" => (1052, 737),
-        "danmaku.jpg" => (1646, 926),
-        "subtitles.jpg" => (1450, 816),
-        _ => (1266, 793),
+fn dims(lang: Lang, name: &str) -> (u32, u32) {
+    if lang == Lang::Zh && name == "app/watch.jpg" {
+        (1600, 938)
+    } else {
+        (1600, 1002)
     }
 }
 
@@ -227,7 +215,7 @@ fn App() -> impl IntoView {
                 <Tagline lang=l/>
                 <Steps t=t/>
                 <Features t=t/>
-                <Download t=t ctx=ctx lang=l/>
+                <Download t=t ctx=ctx/>
                 <Privacy t=t/>
                 <Faq t=t/>
                 <Final t=t ctx=ctx/>
@@ -302,7 +290,10 @@ fn Hero(t: &'static Text, ctx: Ctx, lang: Lang) -> impl IntoView {
                     {t.proof.iter().map(|p| view! { <li class="caption-1">{icon("check", 16)}{*p}</li> }).collect_view()}
                 </ul>
                 <div class="hero-shot reveal">
-                    <img src=shot(lang, "watch.png") alt=t.hero_alt width="1280" height="720" fetchpriority="high"/>
+                    {
+                        let (w, h) = dims(lang, "app/watch.jpg");
+                        view! { <img src=shot(lang, "app/watch.jpg") alt=t.hero_alt width=w height=h fetchpriority="high"/> }
+                    }
                 </div>
             </div>
         </section>
@@ -323,7 +314,7 @@ fn Highlights(t: &'static Text, lang: Lang, skin: SkinState) -> impl IntoView {
                     let media = if last {
                         view! { <SkinPreview t=t lang=lang state=skin/> }.into_any()
                     } else {
-                        let (w, hgt) = dims(h.shot);
+                        let (w, hgt) = dims(lang, h.shot);
                         view! {
                             <img class="shot" loading="lazy" src=shot(lang, h.shot) alt=h.alt width=w height=hgt/>
                         }.into_any()
@@ -412,8 +403,7 @@ fn Features(t: &'static Text) -> impl IntoView {
 }
 
 #[component]
-fn Download(t: &'static Text, ctx: Ctx, lang: Lang) -> impl IntoView {
-    let shots = [("windows.png", "Windows"), ("macos.png", "macOS"), ("linux.png", "Linux")];
+fn Download(t: &'static Text, ctx: Ctx) -> impl IntoView {
     let copied = RwSignal::new(false);
     let copy = move |_| {
         if let Some(w) = web_sys::window() {
@@ -429,17 +419,6 @@ fn Download(t: &'static Text, ctx: Ctx, lang: Lang) -> impl IntoView {
                     <h2 class="heading-3">{t.platforms_title}</h2>
                     <p class="body-3 muted">{t.platforms_body}</p>
                 </header>
-                <div class="platforms reveal">
-                    {shots.iter().map(|(s, name)| {
-                        let (w, h) = dims(s);
-                        view! {
-                            <figure>
-                                <img loading="lazy" src=shot(lang, s) alt=*name width=w height=h/>
-                                <figcaption class="caption-1">{*name}</figcaption>
-                            </figure>
-                        }
-                    }).collect_view()}
-                </div>
                 <div class="table reveal">
                     <div class="row head caption-3">
                         <span>{t.table_head[0]}</span>

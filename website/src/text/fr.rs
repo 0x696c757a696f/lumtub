@@ -28,25 +28,25 @@ pub static FR: Text = Text {
         Highlight {
             title: "Des recommandations lisibles et pilotables",
             body: "Le fil Pour vous est calculé sur votre ordinateur à partir de votre propre historique. Chaque carte indique pourquoi elle est là, et «\u{a0}Pas intéressé\u{a0}» supprime cette raison au lieu d'être ignoré.",
-            shot: "home-reasons.png",
+            shot: "app/home.jpg",
             alt: "Pour vous, avec la raison sous chaque vidéo",
         },
         Highlight {
             title: "Une lecture native adaptée à votre matériel",
             body: "Les vidéos sont lues par mpv, pas par une page web. Lumtub teste quels codecs votre carte graphique décode vraiment et privilégie ces formats, jusqu'en 8K, pour que les ventilateurs restent silencieux. Les directs démarrent au direct, même au-delà de 1080p.",
-            shot: "macos.png",
-            alt: "Une vidéo en lecture sur macOS",
+            shot: "app/theater.jpg",
+            alt: "Une vidéo en mode cinéma",
         },
         Highlight {
             title: "Regardez dans toutes les langues",
             body: "L'audio original passe en premier, jamais un doublage IA choisi par YouTube, et un doublage dans votre langue est à un clic. Affichez deux sous-titres à la fois, ligne par ligne, et traduisez titres, commentaires et chat.",
-            shot: "subtitles.jpg",
+            shot: "app/subtitles.jpg",
             alt: "Le sous-titre original avec sa traduction au-dessus",
         },
         Highlight {
             title: "Le chat en direct en commentaires volants",
             body: "Le chat et les rediffusions de chat défilent sur l'image, façon Bilibili, émojis compris. Ou gardez le chat dans un panneau latéral qui reste fixe pendant que vous lisez.",
-            shot: "danmaku.jpg",
+            shot: "app/danmaku.jpg",
             alt: "Le chat en direct défilant sur un live",
         },
         Highlight {

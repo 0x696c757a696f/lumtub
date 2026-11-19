@@ -217,25 +217,25 @@ pub static EN: Text = Text {
         Highlight {
             title: "Recommendations you can read and steer",
             body: "The For you feed is worked out on your computer from your own history. Every card says why it is there, and Not interested removes that reason instead of being ignored.",
-            shot: "home-reasons.png",
+            shot: "app/home.jpg",
             alt: "For you, with the reason under every video",
         },
         Highlight {
             title: "Native playback that suits your hardware",
             body: "Videos play through mpv, not a web page. Lumtub tests which codecs your graphics card really decodes and prefers those formats, up to 8K, so the fans stay quiet. Lives start at the live edge, above 1080p too.",
-            shot: "macos.png",
-            alt: "A video playing on macOS",
+            shot: "app/theater.jpg",
+            alt: "A video playing in theater mode",
         },
         Highlight {
             title: "Watch in any language",
             body: "The original audio plays first, never an AI dub YouTube picked for you, and a dub in your language is one click away. Show two subtitles at once, line by line, and translate titles, comments and chat.",
-            shot: "subtitles.jpg",
+            shot: "app/subtitles.jpg",
             alt: "The original subtitle with a translation above it",
         },
         Highlight {
             title: "Live chat as bullet comments",
             body: "Chat and chat replays fly across the picture, Bilibili style, emoji included. Or keep the chat in a side panel that holds still while you read.",
-            shot: "danmaku.jpg",
+            shot: "app/danmaku.jpg",
             alt: "Live chat flying across a live stream",
         },
         Highlight {
@@ -403,25 +403,25 @@ pub static ZH: Text = Text {
         Highlight {
             title: "看得懂、调得动的推荐",
             body: "「为你推荐」在本机根据你的观看记录计算，每张卡片都写着推荐理由。点「不感兴趣」会真正去掉那个理由，而不是被无视。",
-            shot: "home-reasons.png",
+            shot: "app/home.jpg",
             alt: "为你推荐，每个视频下方写着推荐理由",
         },
         Highlight {
             title: "原生播放，按你的硬件来",
             body: "视频用 mpv 播放，不是网页。Lumtub 会实测你的显卡能硬解哪些编码，优先选这些格式，最高 8K，风扇也不用狂转。直播从最新处开始，也支持 1080p 以上。",
-            shot: "macos.png",
-            alt: "在 macOS 上播放视频",
+            shot: "app/theater.jpg",
+            alt: "剧场模式下播放视频",
         },
         Highlight {
             title: "什么语言都能看",
             body: "默认播放原声，不会被 YouTube 塞一条 AI 配音；想听你的语言的配音，点一下就换。两条字幕同时显示、逐句对齐，标题、评论、直播聊天都能翻译。",
-            shot: "subtitles.jpg",
+            shot: "app/subtitles.jpg",
             alt: "原文字幕上方显示中文翻译",
         },
         Highlight {
             title: "直播聊天变弹幕",
             body: "直播聊天和聊天回放可以像 B 站一样从画面上飞过，表情也能显示；也可以放在侧边栏，阅读时不乱跳。",
-            shot: "danmaku.jpg",
+            shot: "app/danmaku.jpg",
             alt: "直播聊天以弹幕形式飞过画面",
         },
         Highlight {

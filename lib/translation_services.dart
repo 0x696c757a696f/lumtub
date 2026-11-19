@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:crypto/crypto.dart' show md5;
 import 'package:http/http.dart' as http;
 
+import 'app_log.dart';
 import 'l10n/l10n.dart';
 import 'translation.dart';
 import 'translation_cache.dart';
@@ -995,9 +996,22 @@ class FallbackTranslator implements Translator {
   Future<String> translate(String text, String target) async {
     try {
       return await first.translate(text, target);
-    } on TranslationException {
+    } on TranslationException catch (e) {
+      _tell(first, e);
       return then.translate(text, target);
     }
+  }
+
+  /// When each service's refusal was last written down: once a minute is
+  /// enough to see in the log why another service took the text.
+  static final _told = <Type, DateTime>{};
+
+  static void _tell(Translator service, TranslationException e) {
+    final now = DateTime.now();
+    final last = _told[service.runtimeType];
+    if (last != null && now.difference(last) < const Duration(minutes: 1)) return;
+    _told[service.runtimeType] = now;
+    logInfo('${service.runtimeType} could not translate, passing on: $e');
   }
 }
 

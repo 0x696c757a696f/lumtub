@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "הורדות בו־זמניות",
   "downloads at the same time parallel concurrent": "בו זמנית מקביל הורדות מספר downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "עד {0} סרטונים יורדים בו־זמנית; הקלטות של שידורים חיים לא נספרות",
-  "{0} (default)": "{0} (ברירת מחדל)"
+  "{0} (default)": "{0} (ברירת מחדל)",
+  "Also delete the playlists synced from YouTube": "למחוק גם את הפלייליסטים שסונכרנו מ-YouTube",
+  "Sign out of the browser sign-in?": "להתנתק מההתחברות באמצעות דפדפן?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "קובצי ה-cookie ששמורים במכשיר הזה יימחקו. ערוצים שאתם עוקבים אחריהם ופלייליסטים יישארו במכשיר הזה.",
+  "Watch history, searches and watch statistics": "היסטוריית צפייה, חיפושים וסטטיסטיקות צפייה",
+  "Sign-ins (browser and Google) and AirPlay pairings": "התחברויות (באמצעות דפדפן ו-Google) וצימודי AirPlay"
 }

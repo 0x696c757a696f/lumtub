@@ -3617,5 +3617,10 @@
   "Simultaneous downloads": "በአንድ ጊዜ የሚወርዱ",
   "downloads at the same time parallel concurrent": "በአንድ ጊዜ ትይዩ ማውረድ ብዛት downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "በአንድ ጊዜ እስከ {0} ቪዲዮዎች ይወርዳሉ፤ የቀጥታ ቀረጻዎች አይቆጠሩም",
-  "{0} (default)": "{0} (ነባሪ)"
+  "{0} (default)": "{0} (ነባሪ)",
+  "Also delete the playlists synced from YouTube": "ከYouTube የተመሳሰሉ አጫዋች ዝርዝሮችንም ሰርዝ",
+  "Sign out of the browser sign-in?": "ከአሳሽ መግቢያ ይውጡ?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "በዚህ መሣሪያ ላይ የተቀመጡት ኩኪዎች ይሰረዛሉ። የተከተሏቸው ቻናሎች እና አጫዋች ዝርዝሮች በዚህ መሣሪያ ላይ ይቆያሉ።",
+  "Watch history, searches and watch statistics": "የእይታ ታሪክ፣ ፍለጋዎች እና የእይታ ስታቲስቲክስ",
+  "Sign-ins (browser and Google) and AirPlay pairings": "መግቢያዎች (አሳሽ እና Google) እና የAirPlay ጥምረቶች"
 }

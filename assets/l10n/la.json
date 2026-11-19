@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "Depromptiones simul",
   "downloads at the same time parallel concurrent": "simul parallele depromptiones numerus downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Ad {0} videos simul depromuntur; inscriptiones rerum directarum non numerantur",
-  "{0} (default)": "{0} (praedefinitum)"
+  "{0} (default)": "{0} (praedefinitum)",
+  "Also delete the playlists synced from YouTube": "Indices pellicularum ex YouTube synchronizatos etiam delere",
+  "Sign out of the browser sign-in?": "Ab ingressu per navigatrum egredi?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Crustula in hoc instrumento servata delentur. Canales quos sequeris et indices pellicularum in hoc instrumento manent.",
+  "Watch history, searches and watch statistics": "Historia spectandi, quaestiones et statisticae spectandi",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Ingressus (per navigatrum et Google) et copulationes AirPlay"
 }

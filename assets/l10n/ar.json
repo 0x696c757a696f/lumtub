@@ -3623,5 +3623,10 @@
   "Simultaneous downloads": "التنزيلات المتزامنة",
   "downloads at the same time parallel concurrent": "متزامن متوازي تنزيل عدد downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "يُنزَّل حتى {0} فيديوهات في وقت واحد، ولا تُحتسب تسجيلات البث المباشر",
-  "{0} (default)": "{0} (افتراضي)"
+  "{0} (default)": "{0} (افتراضي)",
+  "Also delete the playlists synced from YouTube": "احذف أيضًا قوائم التشغيل التي تمت مزامنتها من YouTube",
+  "Sign out of the browser sign-in?": "هل تريد تسجيل الخروج من تسجيل الدخول عبر المتصفح؟",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "سيتم حذف ملفات تعريف الارتباط المحفوظة على هذا الجهاز. تبقى القنوات المتابَعة وقوائم التشغيل على هذا الجهاز.",
+  "Watch history, searches and watch statistics": "سجل المشاهدة وعمليات البحث وإحصاءات المشاهدة",
+  "Sign-ins (browser and Google) and AirPlay pairings": "عمليات تسجيل الدخول (عبر المتصفح وGoogle) وعمليات اقتران AirPlay"
 }

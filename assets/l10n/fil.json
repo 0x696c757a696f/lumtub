@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "Sabay-sabay na pag-download",
   "downloads at the same time parallel concurrent": "sabay-sabay parallel download bilang downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Hanggang {0} video ang dina-download nang sabay; hindi kasama ang mga live recording",
-  "{0} (default)": "{0} (default)"
+  "{0} (default)": "{0} (default)",
+  "Also delete the playlists synced from YouTube": "Tanggalin din ang mga playlist na na-sync mula sa YouTube",
+  "Sign out of the browser sign-in?": "Mag-sign out sa browser sign-in?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Made-delete ang mga cookie na naka-save sa device na ito. Mananatili sa device na ito ang mga sinusundang channel at playlist.",
+  "Watch history, searches and watch statistics": "History ng panonood, mga hinanap, at mga istatistika ng panonood",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Mga sign-in (browser at Google) at mga pairing ng AirPlay"
 }

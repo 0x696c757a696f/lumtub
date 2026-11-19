@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "Descărcări simultane",
   "downloads at the same time parallel concurrent": "simultan paralel descărcări număr downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Se descarcă până la {0} videoclipuri simultan; înregistrările live nu se pun la socoteală",
-  "{0} (default)": "{0} (implicit)"
+  "{0} (default)": "{0} (implicit)",
+  "Also delete the playlists synced from YouTube": "Șterge și listele de redare sincronizate de pe YouTube",
+  "Sign out of the browser sign-in?": "Te deconectezi de la conectarea prin browser?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Cookie-urile salvate pe acest dispozitiv sunt șterse. Canalele urmărite și listele de redare rămân pe acest dispozitiv.",
+  "Watch history, searches and watch statistics": "Istoric de vizionare, căutări și statistici de vizionare",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Conectări (prin browser și Google) și asocieri AirPlay"
 }

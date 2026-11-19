@@ -3623,5 +3623,10 @@
   "Simultaneous downloads": "Jednoczesne pobierania",
   "downloads at the same time parallel concurrent": "jednocześnie równolegle pobieranie liczba downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Jednocześnie pobieranych jest do {0} filmów; nagrania transmisji na żywo nie są liczone",
-  "{0} (default)": "{0} (domyślnie)"
+  "{0} (default)": "{0} (domyślnie)",
+  "Also delete the playlists synced from YouTube": "Usuń także playlisty zsynchronizowane z YouTube",
+  "Sign out of the browser sign-in?": "Wylogować się z logowania przez przeglądarkę?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Pliki cookie zapisane na tym urządzeniu zostaną usunięte. Obserwowane kanały i playlisty pozostaną na tym urządzeniu.",
+  "Watch history, searches and watch statistics": "Historia oglądania, wyszukiwania i statystyki oglądania",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Logowania (przez przeglądarkę i Google) oraz parowania AirPlay"
 }

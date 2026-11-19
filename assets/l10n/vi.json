@@ -3623,5 +3623,10 @@
   "Simultaneous downloads": "Số lượt tải xuống đồng thời",
   "downloads at the same time parallel concurrent": "đồng thời song song tải xuống số lượng downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Tải xuống tối đa {0} video cùng lúc; bản ghi trực tiếp không được tính",
-  "{0} (default)": "{0} (mặc định)"
+  "{0} (default)": "{0} (mặc định)",
+  "Also delete the playlists synced from YouTube": "Xóa cả các danh sách phát đã đồng bộ từ YouTube",
+  "Sign out of the browser sign-in?": "Đăng xuất khỏi phiên đăng nhập bằng trình duyệt?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Cookie đã lưu trên thiết bị này sẽ bị xóa. Các kênh đã theo dõi và danh sách phát vẫn được giữ trên thiết bị này.",
+  "Watch history, searches and watch statistics": "Nhật ký xem, lịch sử tìm kiếm và thống kê xem",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Đăng nhập (bằng trình duyệt và Google) và các lần ghép nối AirPlay"
 }

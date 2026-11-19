@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "Vipakuliwa kwa wakati mmoja",
   "downloads at the same time parallel concurrent": "wakati mmoja sambamba kupakua idadi downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Hadi video {0} hupakuliwa kwa wakati mmoja; rekodi za matangazo ya moja kwa moja hazihesabiwi",
-  "{0} (default)": "{0} (chaguomsingi)"
+  "{0} (default)": "{0} (chaguomsingi)",
+  "Also delete the playlists synced from YouTube": "Futa pia orodha za kucheza zilizosawazishwa kutoka YouTube",
+  "Sign out of the browser sign-in?": "Ungependa kuondoka kwenye kuingia kwa kivinjari?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Vidakuzi vilivyohifadhiwa kwenye kifaa hiki vinafutwa. Vituo unavyofuatilia na orodha za kucheza zinabaki kwenye kifaa hiki.",
+  "Watch history, searches and watch statistics": "Historia ya kutazama, utafutaji na takwimu za kutazama",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Kuingia (kwa kivinjari na Google) na uoanishaji wa AirPlay"
 }

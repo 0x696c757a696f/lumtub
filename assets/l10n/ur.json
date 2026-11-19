@@ -3617,5 +3617,10 @@
   "Simultaneous downloads": "بیک وقت ڈاؤن لوڈز",
   "downloads at the same time parallel concurrent": "بیک وقت متوازی ڈاؤن لوڈ تعداد downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "ایک وقت میں زیادہ سے زیادہ {0} ویڈیوز ڈاؤن لوڈ ہوتی ہیں؛ لائیو ریکارڈنگز شمار نہیں ہوتیں",
-  "{0} (default)": "{0} (ڈیفالٹ)"
+  "{0} (default)": "{0} (ڈیفالٹ)",
+  "Also delete the playlists synced from YouTube": "YouTube سے سنک کی گئی پلے لسٹس بھی حذف کریں",
+  "Sign out of the browser sign-in?": "براؤزر سائن ان سے سائن آؤٹ کریں؟",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "اس آلے پر محفوظ کردہ کوکیز حذف ہو جاتی ہیں۔ فالو کیے گئے چینلز اور پلے لسٹس اس آلے پر برقرار رہتے ہیں۔",
+  "Watch history, searches and watch statistics": "دیکھنے کی ہسٹری، تلاشیں اور دیکھنے کے اعداد و شمار",
+  "Sign-ins (browser and Google) and AirPlay pairings": "سائن ان (براؤزر اور Google) اور AirPlay پیئرنگز"
 }

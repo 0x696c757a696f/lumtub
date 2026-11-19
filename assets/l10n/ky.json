@@ -3617,5 +3617,10 @@
   "Simultaneous downloads": "Бир убакта жүктөөлөр",
   "downloads at the same time parallel concurrent": "бир убакта параллель жүктөө саны downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Бир убакта {0} видеого чейин жүктөлөт; түз эфир жазуулары эсепке кирбейт",
-  "{0} (default)": "{0} (демейки)"
+  "{0} (default)": "{0} (демейки)",
+  "Also delete the playlists synced from YouTube": "YouTube'дан шайкештирилген ойнотуу тизмелерин да өчүрүү",
+  "Sign out of the browser sign-in?": "Серепчи аркылуу кирүүдөн чыгасызбы?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Бул түзмөктө сакталган куки файлдары өчүрүлөт. Жазылган каналдар жана ойнотуу тизмелери бул түзмөктө кала берет.",
+  "Watch history, searches and watch statistics": "Көрүү жана издөө тарыхы жана көрүү статистикасы",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Кирүүлөр (серепчи жана Google аркылуу) жана AirPlay байланыштары"
 }

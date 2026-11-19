@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "Shkarkime të njëkohshme",
   "downloads at the same time parallel concurrent": "njëkohshëm paralel shkarkime numri downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Shkarkohen deri në {0} video njëkohësisht; regjistrimet e drejtpërdrejta nuk llogariten",
-  "{0} (default)": "{0} (parazgjedhur)"
+  "{0} (default)": "{0} (parazgjedhur)",
+  "Also delete the playlists synced from YouTube": "Fshi edhe luajlistat e sinkronizuara nga YouTube",
+  "Sign out of the browser sign-in?": "Të dilet nga hyrja me shfletues?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Cookie-t e ruajtura në këtë pajisje fshihen. Kanalet e ndjekura dhe luajlistat mbeten në këtë pajisje.",
+  "Watch history, searches and watch statistics": "Historiku i shikimit dhe kërkimet, si dhe statistikat e shikimit",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Hyrjet (me shfletues dhe Google) dhe çiftimet e AirPlay"
 }

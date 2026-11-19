@@ -3617,5 +3617,10 @@
   "Simultaneous downloads": "ብሓደ ግዜ ዝወርዱ",
   "downloads at the same time parallel concurrent": "ብሓደ ግዜ ተመሳሳሊ ምውራድ ብዝሒ downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "ብሓደ ግዜ ክሳብ {0} ቪድዮታት ይወርዱ፤ ቀጥታ ቅዳሕ ኣይቑፀርን",
-  "{0} (default)": "{0} (ነባሪ)"
+  "{0} (default)": "{0} (ነባሪ)",
+  "Also delete the playlists synced from YouTube": "ካብ YouTube ዝተሰማምዑ ዝርዝራት ጸወታ'ውን ሰርዝ",
+  "Sign out of the browser sign-in?": "ካብ እቶት ብብሮውዘር ክትወጽእ ትደሊ ዲኻ?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "ኣብዚ መሳርሒ ዝተዐቀቡ ኩኪታት ይጠፍኡ። ዝተኸተልካዮም ቻነላትን ዝርዝራት ጸወታን ኣብዚ መሳርሒ ይተርፉ።",
+  "Watch history, searches and watch statistics": "ታሪኽ ምርኣይን ድለያታትን ስታቲስቲክስ ምርኣይን",
+  "Sign-ins (browser and Google) and AirPlay pairings": "እቶታት (ብብሮውዘርን Google) ከምኡውን ምጥማር AirPlay"
 }

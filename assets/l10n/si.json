@@ -3617,5 +3617,10 @@
   "Simultaneous downloads": "එකවර බාගැනීම්",
   "downloads at the same time parallel concurrent": "එකවර සමාන්තර බාගැනීම් ගණන downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "එකවර වීඩියෝ {0}ක් දක්වා බාගත වේ; සජීවී පටිගත කිරීම් ගණන් නොගැනේ",
-  "{0} (default)": "{0} (පෙරනිමි)"
+  "{0} (default)": "{0} (පෙරනිමි)",
+  "Also delete the playlists synced from YouTube": "YouTube වෙතින් සමමුහුර්ත කළ ධාවන ලැයිස්තුද මකන්න",
+  "Sign out of the browser sign-in?": "බ්‍රවුසර පුරනය වීමෙන් වරන්න ද?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "මෙම උපාංගයේ සුරැකි කුකීස් මකා දමනු ලැබේ. අනුගමනය කරන නාලිකා සහ ධාවන ලැයිස්තු මෙම උපාංගයේම පවතී.",
+  "Watch history, searches and watch statistics": "නැරඹුම් ඉතිහාසය, සෙවුම් සහ නැරඹුම් සංඛ්‍යාලේඛන",
+  "Sign-ins (browser and Google) and AirPlay pairings": "පුරනය වීම් (බ්‍රවුසරය සහ Google) සහ AirPlay යුගල කිරීම්"
 }

@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "Միաժամանակյա ներբեռնումներ",
   "downloads at the same time parallel concurrent": "միաժամանակ զուգահեռ ներբեռնում քանակ downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Միաժամանակ ներբեռնվում է մինչև {0} տեսանյութ․ ուղիղ եթերի ձայնագրությունները չեն հաշվվում",
-  "{0} (default)": "{0} (կանխադրված)"
+  "{0} (default)": "{0} (կանխադրված)",
+  "Also delete the playlists synced from YouTube": "Ջնջել նաև YouTube-ից համաժամեցված նվագացանկերը",
+  "Sign out of the browser sign-in?": "Դուրս գա՞լ դիտարկիչով մուտքից",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Այս սարքում պահված cookie-ները կջնջվեն։ Հետևվող ալիքները և նվագացանկերը կմնան այս սարքում։",
+  "Watch history, searches and watch statistics": "Դիտումների պատմություն, որոնումներ և դիտման վիճակագրություն",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Մուտքեր (դիտարկիչով և Google-ով) և AirPlay զուգակցումներ"
 }

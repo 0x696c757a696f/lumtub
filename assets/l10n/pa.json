@@ -3617,5 +3617,10 @@
   "Simultaneous downloads": "ਇੱਕੋ ਸਮੇਂ ਡਾਊਨਲੋਡ",
   "downloads at the same time parallel concurrent": "ਇੱਕੋ ਸਮੇਂ ਸਮਾਨਾਂਤਰ ਡਾਊਨਲੋਡ ਗਿਣਤੀ downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "ਇੱਕੋ ਸਮੇਂ {0} ਤੱਕ ਵੀਡੀਓ ਡਾਊਨਲੋਡ ਹੁੰਦੇ ਹਨ; ਲਾਈਵ ਰਿਕਾਰਡਿੰਗਾਂ ਨਹੀਂ ਗਿਣੀਆਂ ਜਾਂਦੀਆਂ",
-  "{0} (default)": "{0} (ਪੂਰਵ-ਨਿਰਧਾਰਤ)"
+  "{0} (default)": "{0} (ਪੂਰਵ-ਨਿਰਧਾਰਤ)",
+  "Also delete the playlists synced from YouTube": "YouTube ਤੋਂ ਸਿੰਕ ਕੀਤੀਆਂ ਪਲੇਲਿਸਟਾਂ ਵੀ ਮਿਟਾਓ",
+  "Sign out of the browser sign-in?": "ਬ੍ਰਾਊਜ਼ਰ ਸਾਈਨ ਇਨ ਤੋਂ ਸਾਈਨ ਆਊਟ ਕਰਨਾ ਹੈ?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "ਇਸ ਡੀਵਾਈਸ 'ਤੇ ਰੱਖਿਅਤ ਕੀਤੀਆਂ ਕੂਕੀਜ਼ ਮਿਟਾ ਦਿੱਤੀਆਂ ਜਾਂਦੀਆਂ ਹਨ। ਫਾਲੋ ਕੀਤੇ ਚੈਨਲ ਅਤੇ ਪਲੇਲਿਸਟਾਂ ਇਸ ਡੀਵਾਈਸ 'ਤੇ ਰਹਿੰਦੇ ਹਨ।",
+  "Watch history, searches and watch statistics": "ਦੇਖਣ ਦਾ ਇਤਿਹਾਸ, ਖੋਜਾਂ ਅਤੇ ਦੇਖਣ ਦੇ ਅੰਕੜੇ",
+  "Sign-ins (browser and Google) and AirPlay pairings": "ਸਾਈਨ ਇਨ (ਬ੍ਰਾਊਜ਼ਰ ਅਤੇ Google) ਅਤੇ AirPlay ਪੇਅਰਿੰਗ"
 }

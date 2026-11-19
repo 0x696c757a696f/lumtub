@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "Vienlaicīgas lejupielādes",
   "downloads at the same time parallel concurrent": "vienlaicīgi paralēli lejupielādes skaits downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Vienlaikus tiek lejupielādēti līdz {0} videoklipiem; tiešraižu ieraksti netiek skaitīti",
-  "{0} (default)": "{0} (noklusējums)"
+  "{0} (default)": "{0} (noklusējums)",
+  "Also delete the playlists synced from YouTube": "Dzēst arī atskaņošanas sarakstus, kas sinhronizēti no YouTube",
+  "Sign out of the browser sign-in?": "Izrakstīties no pierakstīšanās ar pārlūkprogrammu?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Šajā ierīcē saglabātie sīkfaili tiek dzēsti. Sekotie kanāli un atskaņošanas saraksti paliek šajā ierīcē.",
+  "Watch history, searches and watch statistics": "Skatīšanās vēsture, meklējumi un skatīšanās statistika",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Pierakstīšanās (pārlūkprogrammā un Google) un AirPlay pārī savienojumi"
 }

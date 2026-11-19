@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "Egyidejű letöltések",
   "downloads at the same time parallel concurrent": "egyidejű párhuzamos letöltés szám downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Egyszerre legfeljebb {0} videó töltődik le; az élő közvetítések felvétele nem számít bele",
-  "{0} (default)": "{0} (alapértelmezett)"
+  "{0} (default)": "{0} (alapértelmezett)",
+  "Also delete the playlists synced from YouTube": "A YouTube-ról szinkronizált lejátszási listák törlése is",
+  "Sign out of the browser sign-in?": "Kijelentkezel a böngészős bejelentkezésből?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Az ezen az eszközön mentett sütik törlődnek. A követett csatornák és a lejátszási listák megmaradnak ezen az eszközön.",
+  "Watch history, searches and watch statistics": "Megtekintési előzmények, keresések és megtekintési statisztika",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Bejelentkezések (böngésző és Google) és AirPlay-párosítások"
 }

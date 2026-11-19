@@ -3623,5 +3623,10 @@
   "Simultaneous downloads": "동시 다운로드 수",
   "downloads at the same time parallel concurrent": "동시 병렬 다운로드 개수 downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "한 번에 최대 {0}개의 동영상을 다운로드합니다. 라이브 녹화는 포함되지 않습니다",
-  "{0} (default)": "{0}(기본값)"
+  "{0} (default)": "{0}(기본값)",
+  "Also delete the playlists synced from YouTube": "YouTube에서 동기화한 재생목록도 삭제",
+  "Sign out of the browser sign-in?": "브라우저 로그인에서 로그아웃할까요?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "이 기기에 저장된 쿠키가 삭제됩니다. 팔로우한 채널과 재생목록은 이 기기에 그대로 남습니다.",
+  "Watch history, searches and watch statistics": "시청 기록, 검색 기록 및 시청 통계",
+  "Sign-ins (browser and Google) and AirPlay pairings": "로그인(브라우저 및 Google)과 AirPlay 페어링"
 }

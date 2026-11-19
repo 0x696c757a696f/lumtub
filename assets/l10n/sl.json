@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "Hkratni prenosi",
   "downloads at the same time parallel concurrent": "hkrati vzporedno prenosi število downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Hkrati se prenaša do {0} videoposnetkov; snemanja v živo se ne štejejo",
-  "{0} (default)": "{0} (privzeto)"
+  "{0} (default)": "{0} (privzeto)",
+  "Also delete the playlists synced from YouTube": "Izbriši tudi sezname predvajanja, sinhronizirane z YouTuba",
+  "Sign out of the browser sign-in?": "Se želite odjaviti iz prijave z brskalnikom?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Piškotki, shranjeni v tej napravi, se izbrišejo. Spremljani kanali in seznami predvajanja ostanejo v tej napravi.",
+  "Watch history, searches and watch statistics": "Zgodovina ogledov in iskanj ter statistika ogledov",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Prijave (z brskalnikom in Googlom) ter seznanitve AirPlay"
 }

@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "دانلودهای هم‌زمان",
   "downloads at the same time parallel concurrent": "هم‌زمان موازی دانلود تعداد downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "حداکثر {0} ویدیو هم‌زمان دانلود می‌شود؛ ضبط‌های زنده حساب نمی‌شوند",
-  "{0} (default)": "{0} (پیش‌فرض)"
+  "{0} (default)": "{0} (پیش‌فرض)",
+  "Also delete the playlists synced from YouTube": "فهرست‌های پخش همگام‌شده از YouTube هم حذف شوند",
+  "Sign out of the browser sign-in?": "از ورود با مرورگر خارج می‌شوید؟",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "کوکی‌های ذخیره‌شده در این دستگاه حذف می‌شوند. کانال‌های دنبال‌شده و فهرست‌های پخش در این دستگاه باقی می‌مانند.",
+  "Watch history, searches and watch statistics": "سابقه تماشا، جستجوها و آمار تماشا",
+  "Sign-ins (browser and Google) and AirPlay pairings": "ورودها (با مرورگر و Google) و جفت‌سازی‌های AirPlay"
 }

@@ -3623,5 +3623,10 @@
   "Simultaneous downloads": "Одночасні завантаження",
   "downloads at the same time parallel concurrent": "одночасно паралельно завантаження кількість downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Одночасно завантажується до {0} відео; записи трансляцій не враховуються",
-  "{0} (default)": "{0} (за замовчуванням)"
+  "{0} (default)": "{0} (за замовчуванням)",
+  "Also delete the playlists synced from YouTube": "Також видалити плейлисти, синхронізовані з YouTube",
+  "Sign out of the browser sign-in?": "Вийти з облікового запису (вхід через браузер)?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Файли cookie, збережені на цьому пристрої, буде видалено. Канали, за якими ви стежите, і плейлисти залишаться на цьому пристрої.",
+  "Watch history, searches and watch statistics": "Історія переглядів і пошуку та статистика переглядів",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Входи (через браузер і Google) та прив’язки AirPlay"
 }

@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "Samtempaj elŝutoj",
   "downloads at the same time parallel concurrent": "samtempe paralele elŝutoj nombro downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Ĝis {0} videoj elŝutiĝas samtempe; registradoj de rektaj elsendoj ne kalkuliĝas",
-  "{0} (default)": "{0} (defaŭlta)"
+  "{0} (default)": "{0} (defaŭlta)",
+  "Also delete the playlists synced from YouTube": "Forigi ankaŭ la ludlistojn sinkronigitajn de YouTube",
+  "Sign out of the browser sign-in?": "Elsaluti el la ensaluto per retumilo?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "La kukioj konservitaj en ĉi tiu aparato estas forigitaj. Sekvataj kanaloj kaj ludlistoj restas en ĉi tiu aparato.",
+  "Watch history, searches and watch statistics": "Spektohistorio, serĉoj kaj spektostatistikoj",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Ensalutoj (per retumilo kaj Google) kaj AirPlay-parigoj"
 }

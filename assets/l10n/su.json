@@ -3617,5 +3617,10 @@
   "Simultaneous downloads": "Undeuran sakaligus",
   "downloads at the same time parallel concurrent": "sakaligus paralel undeuran jumlah downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Nepi ka {0} video diundeur sakaligus; rékaman siaran langsung teu diitung",
-  "{0} (default)": "{0} (standar)"
+  "{0} (default)": "{0} (standar)",
+  "Also delete the playlists synced from YouTube": "Piceun ogé daptar puter anu disinkronkeun tina YouTube",
+  "Sign out of the browser sign-in?": "Kaluar tina asup nganggo pangbuka?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Cookie anu disimpen dina alat ieu dipiceun. Saluran anu diturutan jeung daptar puter tetep aya dina alat ieu.",
+  "Watch history, searches and watch statistics": "Riwayat nonton, paluruh, jeung statistik nonton",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Asup (pangbuka jeung Google) jeung pasangan AirPlay"
 }

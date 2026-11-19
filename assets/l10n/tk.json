@@ -3617,5 +3617,10 @@
   "Simultaneous downloads": "Bir wagtda göçürip almalar",
   "downloads at the same time parallel concurrent": "bir wagtda parallel göçürip almak sany downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Bir wagtda {0} wideo çenli göçürilýär; göni ýaýlym ýazgylary hasaba alynmaýar",
-  "{0} (default)": "{0} (deslapky)"
+  "{0} (default)": "{0} (deslapky)",
+  "Also delete the playlists synced from YouTube": "YouTube-dan sinhronlanan pleýlistleri hem poz",
+  "Sign out of the browser sign-in?": "Brauzer bilen girişden çykylsynmy?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Bu enjamda saklanan kukiler pozulýar. Yzarlanýan kanallar we pleýlistler bu enjamda galýar.",
+  "Watch history, searches and watch statistics": "Tomaşa taryhy, gözlegler we tomaşa statistikasy",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Girişler (brauzer we Google) we AirPlay jübütlemeleri"
 }

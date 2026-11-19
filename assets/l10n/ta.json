@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "ஒரே நேர பதிவிறக்கங்கள்",
   "downloads at the same time parallel concurrent": "ஒரே நேரம் இணை பதிவிறக்கம் எண்ணிக்கை downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "ஒரே நேரத்தில் {0} வீடியோக்கள் வரை பதிவிறக்கப்படும்; நேரலைப் பதிவுகள் கணக்கில் வராது",
-  "{0} (default)": "{0} (இயல்பு)"
+  "{0} (default)": "{0} (இயல்பு)",
+  "Also delete the playlists synced from YouTube": "YouTube இலிருந்து ஒத்திசைத்த பிளேலிஸ்ட்களையும் நீக்கு",
+  "Sign out of the browser sign-in?": "உலாவி உள்நுழைவிலிருந்து வெளியேறவா?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "இந்தச் சாதனத்தில் சேமிக்கப்பட்ட குக்கீகள் நீக்கப்படும். பின்தொடரும் சேனல்களும் பிளேலிஸ்ட்களும் இந்தச் சாதனத்திலேயே இருக்கும்.",
+  "Watch history, searches and watch statistics": "பார்த்த வரலாறு, தேடல்கள் மற்றும் பார்வைப் புள்ளிவிவரங்கள்",
+  "Sign-ins (browser and Google) and AirPlay pairings": "உள்நுழைவுகள் (உலாவி மற்றும் Google) மற்றும் AirPlay இணைப்புகள்"
 }

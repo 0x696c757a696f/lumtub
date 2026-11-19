@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "Vienu metu atsisiunčiama",
   "downloads at the same time parallel concurrent": "vienu metu lygiagrečiai atsisiuntimai skaičius downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Vienu metu atsisiunčiama iki {0} vaizdo įrašų; tiesioginių transliacijų įrašai neskaičiuojami",
-  "{0} (default)": "{0} (numatytasis)"
+  "{0} (default)": "{0} (numatytasis)",
+  "Also delete the playlists synced from YouTube": "Taip pat ištrinti iš YouTube sinchronizuotus grojaraščius",
+  "Sign out of the browser sign-in?": "Atsijungti nuo prisijungimo naršykle?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Šiame įrenginyje išsaugoti slapukai bus ištrinti. Sekami kanalai ir grojaraščiai liks šiame įrenginyje.",
+  "Watch history, searches and watch statistics": "Žiūrėjimo istorija, paieškos ir žiūrėjimo statistika",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Prisijungimai (naršykle ir Google) ir AirPlay susiejimai"
 }

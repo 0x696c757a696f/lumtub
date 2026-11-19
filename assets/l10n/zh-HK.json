@@ -3647,5 +3647,10 @@
   "Simultaneous downloads": "同時下載數",
   "downloads at the same time parallel concurrent": "同時 並行 並發 下載 數量 downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "最多同時下載 {0} 段影片，直播錄影不計在內",
-  "{0} (default)": "{0}（預設）"
+  "{0} (default)": "{0}（預設）",
+  "Also delete the playlists synced from YouTube": "同時刪除從 YouTube 同步的播放清單",
+  "Sign out of the browser sign-in?": "退出瀏覽器登入？",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "此裝置上儲存的 Cookie 會被刪除。關注的頻道和播放清單會保留在此裝置上。",
+  "Watch history, searches and watch statistics": "觀看記錄、搜尋記錄和觀看統計",
+  "Sign-ins (browser and Google) and AirPlay pairings": "登入資料（瀏覽器和 Google）及 AirPlay 配對"
 }

@@ -3623,5 +3623,10 @@
   "Simultaneous downloads": "Unduhan bersamaan",
   "downloads at the same time parallel concurrent": "bersamaan paralel unduhan jumlah downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Hingga {0} video diunduh sekaligus; rekaman siaran langsung tidak dihitung",
-  "{0} (default)": "{0} (default)"
+  "{0} (default)": "{0} (default)",
+  "Also delete the playlists synced from YouTube": "Hapus juga playlist yang disinkronkan dari YouTube",
+  "Sign out of the browser sign-in?": "Keluar dari sesi masuk dengan browser?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Cookie yang tersimpan di perangkat ini dihapus. Saluran yang diikuti dan playlist tetap ada di perangkat ini.",
+  "Watch history, searches and watch statistics": "Riwayat tontonan, penelusuran, dan statistik tontonan",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Info masuk (browser dan Google) dan pemasangan AirPlay"
 }

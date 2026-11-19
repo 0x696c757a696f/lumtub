@@ -3618,5 +3618,10 @@
   "Simultaneous downloads": "Истовремена преузимања",
   "downloads at the same time parallel concurrent": "истовремено паралелно преузимање број downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Истовремено се преузима до {0} видео снимака; снимања уживо се не рачунају",
-  "{0} (default)": "{0} (подразумевано)"
+  "{0} (default)": "{0} (подразумевано)",
+  "Also delete the playlists synced from YouTube": "Обриши и плејлисте синхронизоване са YouTube-а",
+  "Sign out of the browser sign-in?": "Одјавити се из пријаве помоћу прегледача?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Колачићи сачувани на овом уређају биће обрисани. Праћени канали и плејлисте остају на овом уређају.",
+  "Watch history, searches and watch statistics": "Историја гледања и претраге и статистика гледања",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Пријаве (помоћу прегледача и Google-а) и AirPlay упаривања"
 }

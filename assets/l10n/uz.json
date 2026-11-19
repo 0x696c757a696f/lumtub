@@ -3617,5 +3617,10 @@
   "Simultaneous downloads": "Bir vaqtda yuklab olishlar",
   "downloads at the same time parallel concurrent": "bir vaqtda parallel yuklab olish soni downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "Bir vaqtda {0} tagacha video yuklab olinadi; jonli efir yozuvlari hisobga olinmaydi",
-  "{0} (default)": "{0} (standart)"
+  "{0} (default)": "{0} (standart)",
+  "Also delete the playlists synced from YouTube": "YouTube'dan sinxronlangan pleylistlarni ham o'chirish",
+  "Sign out of the browser sign-in?": "Brauzer orqali kirishdan chiqilsinmi?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Ushbu qurilmada saqlangan cookie fayllari o'chiriladi. Kuzatilayotgan kanallar va pleylistlar bu qurilmada qoladi.",
+  "Watch history, searches and watch statistics": "Ko'rish tarixi, qidiruv yozuvlari va ko'rish statistikasi",
+  "Sign-ins (browser and Google) and AirPlay pairings": "Kirishlar (brauzer va Google orqali) va AirPlay ulanishlari"
 }

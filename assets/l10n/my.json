@@ -3617,5 +3617,10 @@
   "Simultaneous downloads": "တစ်ပြိုင်နက် ဒေါင်းလုဒ်များ",
   "downloads at the same time parallel concurrent": "တစ်ပြိုင်နက် အပြိုင် ဒေါင်းလုဒ် အရေအတွက် downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "တစ်ကြိမ်လျှင် ဗီဒီယို {0} ခုအထိ ဒေါင်းလုဒ်လုပ်သည်။ တိုက်ရိုက်ထုတ်လွှင့်မှု မှတ်တမ်းတင်ခြင်းကို မရေတွက်ပါ",
-  "{0} (default)": "{0} (မူလ)"
+  "{0} (default)": "{0} (မူလ)",
+  "Also delete the playlists synced from YouTube": "YouTube မှ ထပ်တူကူးထားသော ဖွင့်ရန်စာရင်းများကိုပါ ဖျက်ရန်",
+  "Sign out of the browser sign-in?": "ဘရောက်ဇာဖြင့် လက်မှတ်ထိုးဝင်ခြင်းမှ ထွက်မလား။",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "ဤစက်ပေါ်တွင် သိမ်းထားသော ကွတ်ကီးများကို ဖျက်ပါမည်။ စောင့်ကြည့်ထားသော ချန်နယ်များနှင့် ဖွင့်ရန်စာရင်းများသည် ဤစက်ပေါ်တွင် ဆက်ရှိနေပါမည်။",
+  "Watch history, searches and watch statistics": "ကြည့်ရှုမှတ်တမ်း၊ ရှာဖွေမှုများနှင့် ကြည့်ရှုစာရင်းအင်း",
+  "Sign-ins (browser and Google) and AirPlay pairings": "လက်မှတ်ထိုးဝင်မှုများ (ဘရောက်ဇာနှင့် Google) နှင့် AirPlay ချိတ်ဆက်မှုများ"
 }

@@ -3617,5 +3617,10 @@
   "Simultaneous downloads": "ການດາວໂຫຼດພ້ອມກັນ",
   "downloads at the same time parallel concurrent": "ພ້ອມກັນ ຂະໜານ ດາວໂຫຼດ ຈຳນວນ downloads at the same time parallel concurrent",
   "Up to {0} videos download at a time; live recordings are not counted": "ດາວໂຫຼດວິດີໂອໄດ້ສູງສຸດ {0} ອັນພ້ອມກັນ; ການບັນທຶກສົດບໍ່ນັບລວມ",
-  "{0} (default)": "{0} (ຄ່າເລີ່ມຕົ້ນ)"
+  "{0} (default)": "{0} (ຄ່າເລີ່ມຕົ້ນ)",
+  "Also delete the playlists synced from YouTube": "ລຶບລາຍການຫຼິ້ນທີ່ຊິ້ງຈາກ YouTube ນຳ",
+  "Sign out of the browser sign-in?": "ອອກຈາກການເຂົ້າສູ່ລະບົບດ້ວຍບຣາວເຊີບໍ?",
+  "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "ຄຸກກີທີ່ບັນທຶກໄວ້ໃນອຸປະກອນນີ້ຈະຖືກລຶບ. ຊ່ອງທີ່ຕິດຕາມ ແລະ ລາຍການຫຼິ້ນຍັງຢູ່ໃນອຸປະກອນນີ້.",
+  "Watch history, searches and watch statistics": "ປະຫວັດການເບິ່ງ, ການຄົ້ນຫາ ແລະ ສະຖິຕິການເບິ່ງ",
+  "Sign-ins (browser and Google) and AirPlay pairings": "ການເຂົ້າສູ່ລະບົບ (ບຣາວເຊີ ແລະ Google) ແລະ ການຈັບຄູ່ AirPlay"
 }

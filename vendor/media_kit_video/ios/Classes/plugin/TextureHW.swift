@@ -26,7 +26,12 @@ final class BackgroundState {
       NotificationCenter.default.post(name: BackgroundState.resumed, object: nil)
     }
     let read = { UIApplication.shared.applicationState == .background }
-    set(Thread.isMainThread ? read() : DispatchQueue.main.sync(execute: read))
+    // Never waits for the main thread, which may itself be waiting for mpv.
+    if Thread.isMainThread {
+      set(read())
+    } else {
+      DispatchQueue.main.async { [weak self] in self?.set(read()) }
+    }
   }
 
   private func set(_ value: Bool) {

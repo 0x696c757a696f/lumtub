@@ -163,7 +163,10 @@ public class VideoOutput: NSObject {
       currentSize = size
 
       texture.resize(size)
-      DispatchQueue.main.sync { [weak self] in
+      // Lumtub: async, as is everything below; this thread never waits for
+      // the main thread, which may be waiting for mpv, which may be waiting
+      // for this thread. The main queue keeps the order.
+      DispatchQueue.main.async { [weak self] in
         guard let that = self else { return }
         // textureUpdateCallback must run on the main thread
         that.textureUpdateCallback(that.textureId, size)
@@ -175,7 +178,7 @@ public class VideoOutput: NSObject {
     }
 
     texture.render(size)
-    DispatchQueue.main.sync { [weak self] in
+    DispatchQueue.main.async { [weak self] in
       guard let that = self else { return }
       // Textures must be marked as available from the main thread
       that.registry.textureFrameAvailable(that.textureId)

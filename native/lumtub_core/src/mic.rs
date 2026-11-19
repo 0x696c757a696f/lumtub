@@ -147,8 +147,10 @@ pub fn read_wav(bytes: &[u8]) -> Result<(Vec<i16>, u32), String> {
                 (body + size).min(bytes.len())
             };
             let frames: Vec<i16> = bytes[body..end]
-                .chunks_exact(2)
-                .map(|b| i16::from_le_bytes([b[0], b[1]]))
+                .as_chunks::<2>()
+                .0
+                .iter()
+                .map(|b| i16::from_le_bytes(*b))
                 .collect();
             let mut heard = Heard {
                 samples: Vec::with_capacity(frames.len() / channels as usize),

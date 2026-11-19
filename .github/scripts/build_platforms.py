@@ -32,6 +32,7 @@ NOTHING_FILES = {
     "NOTICE",
     "PROJECT_NOTES.txt",
     ".github/dependabot.yml",
+    ".github/FUNDING.yml",
 }
 
 

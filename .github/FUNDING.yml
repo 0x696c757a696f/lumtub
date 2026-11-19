@@ -1,3 +1,4 @@
-github: 0x696c757a696f
-ko_fi: 0x696c757a696f
-custom: ["https://afdian.com/a/linmuqingfeng", "https://github.com/0x696c757a696f/lumtub#support"]
+# Quoted, or YAML reads 0x696c757a696f as a hexadecimal number and GitHub drops it.
+github: "0x696c757a696f"
+ko_fi: "0x696c757a696f"
+custom: ["https://afdian.com/a/linmuqingfeng"]

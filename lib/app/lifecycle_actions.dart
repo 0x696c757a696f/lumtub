@@ -108,13 +108,26 @@ extension LifecycleActions on AppController {
           if (fonts != null) await platform.setProperty('sub-fonts-dir', fonts).catchError((Object e) => logDebug(() => 'Could not set the subtitle fonts: $e'));
         }
         if (Platform.isIOS) {
-          // The fonts Flutter bundles (Noto Sans SC among them), for libass:
-          // it then draws Chinese whatever fonts Core Text offers it.
-          final fonts = '${File(Platform.resolvedExecutable).parent.path}/Frameworks/App.framework/flutter_assets/assets/fonts';
-          if (File('$fonts/NotoSansSC-Regular.ttf').existsSync()) {
-            await platform.setProperty('sub-fonts-dir', fonts).catchError((Object e) => logDebug(() => 'Could not set the subtitle fonts: $e'));
+          // libass draws in the app's own fonts only, as on Android, picked
+          // by the script of the text. Looking through Core Text instead ran
+          // for seconds on mpv's video thread on iOS 27, holding the OSD lock
+          // (the crash report: core and main thread waiting on it), which
+          // stalled playback and got the app killed in the background.
+          final app = File(Platform.resolvedExecutable).parent.path;
+          final fonts = await AndroidSubtitleFonts.prepareIos('${directories.cache.path}/subtitle-fonts', flutterFonts: '$app/Frameworks/App.framework/flutter_assets/assets/fonts', bundled: '$app/SubtitleFonts');
+          if (fonts == null) {
+            logInfo('No bundled subtitle fonts in $app');
           } else {
-            logInfo('No bundled subtitle font at $fonts');
+            for (final MapEntry(:key, :value) in {
+              'sub-font-provider': 'none',
+              'sub-fonts-dir': fonts,
+              // The bullet chat is drawn as OSD.
+              'osd-font-provider': 'none',
+              'osd-fonts-dir': fonts,
+              'osd-font': PlayerSettings.iosSubtitleFont,
+            }.entries) {
+              await platform.setProperty(key, value).catchError((Object e) => logDebug(() => 'Could not set $key: $e'));
+            }
           }
         }
         final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders');

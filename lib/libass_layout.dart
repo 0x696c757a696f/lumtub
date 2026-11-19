@@ -219,7 +219,7 @@ class LibassLook {
   /// Read from the fonts' OS/2 tables; others are taken as 1.3.
   static double lineEms(String font) => switch (font.toLowerCase()) {
         'microsoft yahei' || 'microsoft yahei ui' || '微软雅黑' => 1.32,
-        'noto sans cjk sc' || 'noto sans cjk tc' || 'noto sans cjk jp' || 'noto sans cjk kr' || 'noto sans sc' || 'source han sans sc' || 'source han sans' => 1.448,
+        'noto sans cjk sc' || 'noto sans cjk tc' || 'noto sans cjk jp' || 'noto sans cjk kr' || 'noto sans sc' || 'noto sans kr' || 'source han sans sc' || 'source han sans' => 1.448,
         'noto serif cjk sc' || 'noto serif cjk tc' || 'source han serif sc' => 1.438,
         'pingfang sc' || 'pingfang tc' || 'pingfang hk' => 1.4,
         'simhei' || 'simsun' || 'nsimsun' || 'kaiti' || 'fangsong' => 1.0,

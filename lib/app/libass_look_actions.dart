@@ -252,7 +252,7 @@ extension LibassLookActions on AppController {
     final String text;
     if (second) {
       final room = _roomEms(settings.secondaryScale);
-      final font = Platform.isAndroid ? AndroidSubtitleFonts.familyFor(cues.take(40).map((c) => c.text).join('\n'), language: track.language ?? '') : null;
+      final font = Platform.isAndroid || Platform.isIOS ? AndroidSubtitleFonts.familyFor(cues.take(40).map((c) => c.text).join('\n'), language: track.language ?? '') : null;
       final mainTrack = tracks[_mainSource];
       final mainCues = mainTrack == null ? const <SubtitleCue>[] : await _trackCues(platform, mainTrack);
       if (!current()) return source;

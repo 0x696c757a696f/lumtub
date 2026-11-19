@@ -837,12 +837,11 @@ class PlayerSettings {
 
   static String fontForThisSystem(String font) {
     if (Platform.isAndroid) return androidSubtitleFont;
-    if (font != defaultSubtitleFont || Platform.isWindows) return font;
-    // On iOS libmpv draws in the app's own Noto Sans SC (sub-fonts-dir, see
-    // LifecycleActions), not a system font libass has to find through Core
-    // Text: on an iPhone with iOS 27.2.1 it found none for Chinese and drew
-    // boxes.
+    // On iOS libmpv has the app's own fonts only (sub-font-provider none,
+    // see LifecycleActions): Noto Sans SC, or the one AndroidSubtitleFonts
+    // picks for the text.
     if (Platform.isIOS) return iosSubtitleFont;
+    if (font != defaultSubtitleFont || Platform.isWindows) return font;
     // macOS has PingFang, and no Noto fonts.
     return Platform.isMacOS ? 'PingFang SC' : 'Noto Sans CJK SC';
   }

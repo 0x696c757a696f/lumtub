@@ -15,18 +15,9 @@ List<(String, String?)> get subtitleFonts => Platform.isMacOS ? _macFonts : Plat
 /// same everywhere) is another font off Windows.
 String _drawnFont(String font) => Platform.isIOS || Platform.isMacOS || Platform.isLinux ? PlayerSettings.fontForThisSystem(font) : font;
 
-/// libmpv draws the app's own Noto Sans SC unless another font is picked;
-/// no 'Default' here, as libass then looks for a system font through Core
-/// Text, which found none for Chinese on iOS 27.
+/// libmpv has only the app's own fonts on iOS, Noto Sans SC first.
 const _iosFonts = [
   ('Noto Sans SC', null),
-  ('PingFang SC', 'PingFang'),
-  ('PingFang TC', 'PingFang (Traditional)'),
-  ('Hiragino Sans', null),
-  ('Apple SD Gothic Neo', null),
-  ('Helvetica Neue', null),
-  ('Arial', null),
-  ('Georgia', null),
 ];
 
 const _macFonts = [

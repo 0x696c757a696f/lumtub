@@ -51,4 +51,27 @@ void main() {
     File('${system.path}/NotoSansCJK-Regular.ttc').deleteSync();
     expect(await AndroidSubtitleFonts.prepare('${root.path}/subs', system: system.path), isNull, reason: 'without the CJK font libass gets nothing');
   });
+
+  test("on iOS the folder links the app's own fonts, Korean in Noto Sans KR", () async {
+    final root = Directory.systemTemp.createTempSync('fonts');
+    addTearDown(() => root.deleteSync(recursive: true));
+    final flutter = Directory('${root.path}/flutter')..createSync();
+    final bundled = Directory('${root.path}/bundled')..createSync();
+    File('${flutter.path}/NotoSansSC-Regular.ttf').writeAsStringSync('x');
+    for (final name in ['NotoSansKR-Regular.otf', 'NotoSansArabic-Regular.ttf', 'NotoSansThai-Regular.ttf', 'SOURCES.md']) {
+      File('${bundled.path}/$name').writeAsStringSync('x');
+    }
+    final android = AndroidSubtitleFonts.cjkFamilies;
+    addTearDown(() => AndroidSubtitleFonts.cjkFamilies = android);
+    final folder = await AndroidSubtitleFonts.prepareIos('${root.path}/subs', flutterFonts: flutter.path, bundled: bundled.path);
+    expect(Directory(folder!).listSync().map((f) => f.path.split('/').last).toSet(), {'NotoSansSC-Regular.ttf', 'NotoSansKR-Regular.otf', 'NotoSansArabic-Regular.ttf', 'NotoSansThai-Regular.ttf'});
+    expect(File('$folder/NotoSansKR-Regular.otf').readAsStringSync(), 'x');
+    expect(AndroidSubtitleFonts.families, {'Arabic': 'Noto Sans Arabic', 'Thai': 'Noto Sans Thai'});
+    expect(AndroidSubtitleFonts.familyFor('안녕하세요 hello'), 'Noto Sans KR');
+    expect(AndroidSubtitleFonts.familyFor('そして最初に'), 'Noto Sans SC');
+    expect(AndroidSubtitleFonts.familyFor('因此 so'), 'Noto Sans SC');
+    expect(AndroidSubtitleFonts.familyFor('สวัสดี'), 'Noto Sans Thai');
+    File('${flutter.path}/NotoSansSC-Regular.ttf').deleteSync();
+    expect(await AndroidSubtitleFonts.prepareIos('${root.path}/subs', flutterFonts: flutter.path, bundled: bundled.path), isNull);
+  });
 }

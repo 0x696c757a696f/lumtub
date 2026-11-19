@@ -12,6 +12,9 @@ import 'app_log.dart';
 /// each other script, and the font is picked by the script of the text on
 /// screen. Text no one of them can draw whole, such as Arabic over Chinese,
 /// is left to Flutter's subtitle view, which falls back by itself.
+///
+/// iOS works the same way with the app's own fonts ([prepareIos]): libass
+/// looking through Core Text there stalled mpv's video thread for seconds.
 class AndroidSubtitleFonts {
   AndroidSubtitleFonts._();
 
@@ -74,6 +77,44 @@ class AndroidSubtitleFonts {
   /// Whether Noto Sans CJK was found.
   static bool cjk = false;
 
+  /// The family drawing Chinese, Japanese and Korean text as each language
+  /// writes it: Android's Noto Sans CJK, or the iPhone app's own fonts.
+  static Map<String, String> cjkFamilies = _androidCjk;
+
+  static const _androidCjk = {'ja': 'Noto Sans CJK JP', 'ko': 'Noto Sans CJK KR', 'zh-Hant': 'Noto Sans CJK TC', 'zh': 'Noto Sans CJK SC'};
+
+  /// On iOS: makes [folder] hold links to the app's own fonts, Noto Sans SC
+  /// in [flutterFonts] (with Latin, Greek, Cyrillic and kana) and the
+  /// others in [bundled] (Korean and one for each other script), and
+  /// returns it; null when Noto Sans SC is not there.
+  static Future<String?> prepareIos(String folder, {required String flutterFonts, required String bundled}) async {
+    try {
+      const sc = 'NotoSansSC-Regular.ttf';
+      if (!File('$flutterFonts/$sc').existsSync()) return null;
+      final dir = Directory(folder);
+      if (dir.existsSync()) dir.deleteSync(recursive: true);
+      dir.createSync(recursive: true);
+      Link('$folder/$sc').createSync('$flutterFonts/$sc');
+      final names = Directory(bundled).existsSync() ? ([for (final f in Directory(bundled).listSync()) f.path.split('/').last]..sort()) : <String>[];
+      families.clear();
+      var korean = false;
+      for (final name in names) {
+        if (!RegExp(r'\.[ot]tf$').hasMatch(name)) continue;
+        Link('$folder/$name').createSync('$bundled/$name');
+        if (name.startsWith('NotoSansKR-')) korean = true;
+        for (final MapEntry(key: script, value: prefixes) in _scriptFiles.entries) {
+          if (prefixes.any(name.startsWith)) families.putIfAbsent(script, () => familyOf(name));
+        }
+      }
+      cjk = true;
+      cjkFamilies = {'ja': 'Noto Sans SC', 'ko': korean ? 'Noto Sans KR' : 'Noto Sans SC', 'zh-Hant': 'Noto Sans SC', 'zh': 'Noto Sans SC'};
+      return folder;
+    } catch (e) {
+      logWarn('Could not gather the subtitle fonts: $e');
+      return null;
+    }
+  }
+
   /// Makes [folder] hold links to the system fonts libass may use and
   /// returns it; null when Android has no Noto Sans CJK.
   static Future<String?> prepare(String folder, {String system = _system}) async {
@@ -92,6 +133,7 @@ class AndroidSubtitleFonts {
 
       final cjkFile = names.where((n) => n.startsWith('NotoSansCJK-Regular.tt')).firstOrNull;
       cjk = cjkFile != null;
+      cjkFamilies = _androidCjk;
       if (!cjk) return null;
       link(cjkFile!);
       families.clear();
@@ -133,9 +175,9 @@ class AndroidSubtitleFonts {
     if (needed.length == 1) return families[needed.first];
     if (!cjk) return null;
     // Han characters are drawn in the shapes of the language read.
-    if (_kana.hasMatch(text) || language.startsWith('ja')) return 'Noto Sans CJK JP';
-    if (_hangul.hasMatch(text) || language.startsWith('ko')) return 'Noto Sans CJK KR';
-    if (RegExp(r'^zh-(Hant|TW|HK|MO)').hasMatch(language)) return 'Noto Sans CJK TC';
-    return 'Noto Sans CJK SC';
+    if (_kana.hasMatch(text) || language.startsWith('ja')) return cjkFamilies['ja'];
+    if (_hangul.hasMatch(text) || language.startsWith('ko')) return cjkFamilies['ko'];
+    if (RegExp(r'^zh-(Hant|TW|HK|MO)').hasMatch(language)) return cjkFamilies['zh-Hant'];
+    return cjkFamilies['zh'];
   }
 }

@@ -55,7 +55,8 @@ final class VideoSink: @unchecked Sendable {
   /// Above the picture; hidden while the frames carry the subtitles.
   let subtitles = SubtitleLayer()
 
-  private let queue = DispatchQueue(label: "lumtub.video-sink", qos: .userInteractive)
+  private let queue = DispatchQueue(
+    label: "lumtub.video-sink", qos: .userInteractive, autoreleaseFrequency: .workItem)
   private let displayLayer: AVSampleBufferDisplayLayer
   private let timebase: CMTimebase?
   /// The screen's short side in pixels: no frame made here is taller, and
@@ -90,20 +91,26 @@ final class VideoSink: @unchecked Sendable {
       guard let context else { return false }
       let sink = Unmanaged<VideoSink>.fromOpaque(context).takeUnretainedValue()
       let buffer = picture.map { Unmanaged<CVPixelBuffer>.fromOpaque($0).takeUnretainedValue() }
-      return sink.frame(buffer, rotate: Int(rotate), zoom: zoom)
+      // mpv's thread never drains an autorelease pool of its own: without
+      // this, what Core Image and Core Media leave autoreleased for each
+      // frame is kept until iOS ends the app for its memory.
+      return autoreleasepool { sink.frame(buffer, rotate: Int(rotate), zoom: zoom) }
     }
     let overlay: OverlayCall = { context, image, x, y, width, height, canvasWidth, canvasHeight in
       guard let context else { return }
       let sink = Unmanaged<VideoSink>.fromOpaque(context).takeUnretainedValue()
-      sink.setOverlay(Overlay(
-        image: image.map { Unmanaged<CGImage>.fromOpaque($0).takeUnretainedValue() },
-        box: CGRect(x: x, y: y, width: width, height: height),
-        canvas: CGSize(width: canvasWidth, height: canvasHeight)
-      ))
+      autoreleasepool {
+        sink.setOverlay(Overlay(
+          image: image.map { Unmanaged<CGImage>.fromOpaque($0).takeUnretainedValue() },
+          box: CGRect(x: x, y: y, width: width, height: height),
+          canvas: CGSize(width: canvasWidth, height: canvasHeight)
+        ))
+      }
     }
     let clear: ClearCall = { context, remove in
       guard let context else { return }
-      Unmanaged<VideoSink>.fromOpaque(context).takeUnretainedValue().clear(remove: remove)
+      let sink = Unmanaged<VideoSink>.fromOpaque(context).takeUnretainedValue()
+      autoreleasepool { sink.clear(remove: remove) }
     }
 
     host.storeBytes(of: Host.magic, toByteOffset: Host.magicOffset, as: UInt64.self)

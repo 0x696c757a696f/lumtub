@@ -469,4 +469,11 @@ void main() {
       expect((wild.aiTone, wild.aiTemperature, wild.aiContext), ('default', 1.5, 10));
     });
   });
+
+  test('a fallback translator asks the second service when the first fails', () async {
+    final busy = MockClient((_) async => http.Response('', 429));
+    final ok = MockClient((request) async => http.Response(jsonEncode([[['gut', 'good']]]), 200));
+    final translator = FallbackTranslator(MicrosoftTranslator(busy, key: 'k'), GoogleTranslator(ok));
+    expect(await translator.translate('good', 'de'), 'gut');
+  });
 }

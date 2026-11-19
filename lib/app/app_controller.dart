@@ -533,6 +533,16 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Behind 翻译 buttons and translated subtitles: the service 翻译服务
   /// names; called only when something is to be translated.
   late Translator translator = CachingTranslator(_google, _translationCache, preferences.translation.cacheScope, batch: true);
+  /// Behind comments, descriptions, chapter titles and chat: [translator],
+  /// except that with Google's free endpoint chosen it is Microsoft's free
+  /// one first, so subtitles, which ask Google for whole sentences at a
+  /// time, keep Google's allowance for themselves.
+  late Translator textTranslator = _textTranslatorOf(translator);
+  late final _microsoftFree = MicrosoftTranslator(_http);
+
+  Translator _textTranslatorOf(Translator translator) => preferences.translation.service == TranslationService.google
+      ? CachingTranslator(FallbackTranslator(_microsoftFree, _google), _translationCache, preferences.translation.cacheScope, batch: true)
+      : translator;
   /// The translation services' API keys, by [TranslationService.name],
   /// kept encrypted with DPAPI apart from the settings.
   Map<String, String> translationKeys = const {};

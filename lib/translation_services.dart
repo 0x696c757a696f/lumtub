@@ -817,6 +817,23 @@ bool _listEquals(List<Object?> a, List<Object?> b) {
   return true;
 }
 
+/// [first], and [then] when [first] fails: two services, so one refusing
+/// (or out of reach) does not leave the text untranslated.
+class FallbackTranslator implements Translator {
+  const FallbackTranslator(this.first, this.then);
+  final Translator first;
+  final Translator then;
+
+  @override
+  Future<String> translate(String text, String target) async {
+    try {
+      return await first.translate(text, target);
+    } on TranslationException {
+      return then.translate(text, target);
+    }
+  }
+}
+
 class _FailingTranslator implements Translator {
   const _FailingTranslator(this.message);
   final String message;

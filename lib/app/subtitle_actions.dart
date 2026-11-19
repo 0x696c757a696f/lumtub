@@ -205,7 +205,7 @@ extension SubtitleActions on AppController {
     chaptersChanged.value++;
     try {
       final titles = [for (final c in chapters) c.title.replaceAll('\n', ' ')];
-      final lines = (await translateForeignLines(translator, titles.join('\n'), language, (line) => readsAs(line, language, chineseAsOne: preferences.chineseAsOne))).split('\n');
+      final lines = (await translateForeignLines(textTranslator, titles.join('\n'), language, (line) => readsAs(line, language, chineseAsOne: preferences.chineseAsOne))).split('\n');
       if (playing?.id != id) return;
       _update(() {
         chapterTranslation = lines.length == titles.length ? lines : titles;

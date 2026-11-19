@@ -164,17 +164,7 @@ class SubtitleViewState extends State<SubtitleView> {
     Widget second = SubtitleLine(secondary, style: secondaryStyle, textAlign: configuration.textAlign, textScaler: textScaler);
     final shown = configuration.secondaryShown;
     if (configuration.blurSecondary && shown != null && !configuration.ghost) {
-      final sigma = textScaler.scale(secondaryStyle.fontSize ?? 14) * blurSigmaEms;
-      final plain = second;
-      second = ValueListenableBuilder<bool>(
-        valueListenable: shown,
-        builder: (context, shown, _) => shown
-            ? plain
-            : ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma, tileMode: TileMode.decal),
-                child: plain,
-              ),
-      );
+      second = BlurredUntilShown(shown: shown, sigma: textScaler.scale(secondaryStyle.fontSize ?? 14) * blurSigmaEms, child: second);
     }
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -277,6 +267,28 @@ class _Fit {
 ///
 /// Configurable options for customizing the [SubtitleView] behaviour.
 /// {@endtemplate}
+/// Lumtub: [child] blurred while [shown] is false. The blur only paints:
+/// the line takes the same room and wraps the same either way.
+class BlurredUntilShown extends StatelessWidget {
+  const BlurredUntilShown({super.key, required this.shown, required this.sigma, required this.child});
+
+  final ValueListenable<bool> shown;
+  final double sigma;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<bool>(
+        valueListenable: shown,
+        builder: (context, shown, child) => shown
+            ? child!
+            : ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma, tileMode: TileMode.decal),
+                child: child,
+              ),
+        child: child,
+      );
+}
+
 class SubtitleViewConfiguration {
   /// Whether the subtitles should be visible or not.
   final bool visible;

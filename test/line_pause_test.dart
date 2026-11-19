@@ -7,7 +7,7 @@ import 'package:lumtub/line_pause.dart';
 import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/shortcut_bindings.dart';
 import 'package:lumtub/subtitle_cues.dart';
-import 'package:media_kit_video/media_kit_video.dart' show SecondaryRevealArea, SubtitleViewConfiguration;
+import 'package:media_kit_video/media_kit_video.dart' show BlurredUntilShown, SecondaryRevealArea, SubtitleLine, SubtitleViewConfiguration;
 
 Duration ms(int value) => Duration(milliseconds: value);
 
@@ -239,6 +239,57 @@ void main() {
       await tester.tapAt(const Offset(400, 300));
       expect(taps, 0);
       expect(controlTaps, 1);
+    });
+  });
+
+  group('Blurred translation, as Flutter draws it', () {
+    const lines = [
+      '这是一句非常非常长而且完全没有空格的中文字幕用来测试换行是否始终留在画面里面不会超出边缘',
+      'これはスペースのないとても長い日本語の字幕で画面の中で正しく折り返されるかどうかを確かめるためのものです',
+      'นี่คือคำบรรยายภาษาไทยที่ยาวมากและไม่มีช่องว่างเลยเพื่อทดสอบว่าการตัดบรรทัดยังอยู่ในกรอบภาพ',
+    ];
+
+    Future<Size> lay(WidgetTester tester, String text, {ValueNotifier<bool>? shown}) async {
+      final line = SubtitleLine(text, style: const TextStyle(fontSize: 28), textAlign: TextAlign.center, textScaler: TextScaler.noScaling);
+      await tester.pumpWidget(MaterialApp(
+        home: Center(
+          child: SizedBox(
+            width: 360,
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              KeyedSubtree(key: const Key('line'), child: shown == null ? line : BlurredUntilShown(shown: shown, sigma: 5, child: line)),
+            ]),
+          ),
+        ),
+      ));
+      return tester.getSize(find.byKey(const Key('line')));
+    }
+
+    for (final text in lines) {
+      testWidgets('a long unspaced line wraps the same blurred, shown and plain: ${text.substring(0, 6)}', (tester) async {
+        final plain = await lay(tester, text);
+        expect(tester.takeException(), isNull);
+        expect(plain.width, lessThanOrEqualTo(360));
+        expect(plain.height, greaterThan(28 * 1.5), reason: 'it wraps onto more than one line');
+        final shown = ValueNotifier(false);
+        expect(await lay(tester, text, shown: shown), plain);
+        expect(find.byType(ImageFiltered), findsOneWidget);
+        shown.value = true;
+        await tester.pump();
+        expect(find.byType(ImageFiltered), findsNothing);
+        expect(tester.getSize(find.byKey(const Key('line'))), plain);
+        shown.value = false;
+        await tester.pump();
+        expect(find.byType(ImageFiltered), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    test('off by default: the subtitles are as they were', () {
+      const configuration = SubtitleViewConfiguration();
+      expect(configuration.blurSecondary, isFalse);
+      expect(configuration.ghost, isFalse);
+      expect(PlayerSettings.fromJson(const {}).blurSecondary, isFalse);
+      expect(PlayerSettings.fromJson(const {}).pauseEachLine, isFalse);
     });
   });
 }

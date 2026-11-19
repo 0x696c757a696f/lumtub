@@ -1,0 +1,61 @@
+[
+  {
+    "id": "subtitles",
+    "shot": {
+      "en": "zh/subtitles.jpg",
+      "zh": "zh/subtitles.jpg"
+    },
+    "window": {
+      "left": 175,
+      "top": 330,
+      "width": 1250
+    },
+    "en": {
+      "eyebrow": "Subtitles",
+      "title": "Two subtitles at once",
+      "text": "The original line with a whole-sentence translation above it, in any pair of languages.",
+      "tag": "Translation + original"
+    },
+    "zh": {
+      "eyebrow": "双语字幕",
+      "title": "原文和译文，一起看",
+      "text": "整句翻译，不是逐词拼凑。任意两种语言自由搭配。",
+      "tag": "中文译文 + 意大利语原文"
+    }
+  },
+  {
+    "id": "reasons",
+    "shot": {
+      "en": "home-reasons.png",
+      "zh": "zh/home-reasons.png"
+    },
+    "window": {
+      "left": 175,
+      "top": 330,
+      "width": 1250
+    },
+    "zoom": {
+      "crop": [
+        96,
+        302,
+        580,
+        82
+      ],
+      "factor": 1.25,
+      "left": 760,
+      "top": 760
+    },
+    "en": {
+      "eyebrow": "For you",
+      "title": "Every recommendation says why",
+      "text": "Picked on your own computer from what you watch. No account, no tracking.",
+      "tag": "Why it's here"
+    },
+    "zh": {
+      "eyebrow": "为你推荐",
+      "title": "每条推荐，都告诉你为什么",
+      "text": "在你自己的电脑上按观看兴趣挑选，不用登录，不被追踪。",
+      "tag": "推荐原因"
+    }
+  }
+]

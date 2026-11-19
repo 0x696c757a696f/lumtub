@@ -215,12 +215,15 @@ extension LibassLookActions on AppController {
       if (moved != null && source == moved.old) source = moved.now;
       final wanted = libassDraws ? await _copyFor(platform, source, second: second, current: current) : source;
       if (!current()) return;
-      if (wanted == shown) continue;
-      await platform.setProperty(second ? 'secondary-sid' : 'sid', wanted);
-      // mpv may have shown the track in the other place too.
-      if (second && await platform.getProperty('sid') == wanted) await platform.setProperty('sid', source);
+      if (wanted != shown) {
+        await platform.setProperty(second ? 'secondary-sid' : 'sid', wanted);
+        // mpv may have shown the track in the other place too.
+        if (second && await platform.getProperty('sid') == wanted) await platform.setProperty('sid', source);
+        if (!second) await syncMainSubtitle();
+      }
+      // Hidden while its copy was made (the secondary-sid listener); shown
+      // now in its own style, or as it is where no copy could be made.
       if (second) await platform.setProperty('secondary-sub-visibility', libassDraws && !subtitlesOff ? 'yes' : 'no');
-      if (!second) await syncMainSubtitle();
     }
     // Copies neither subtitle shows any more: a growing translation would
     // pile them up in mpv's track list.

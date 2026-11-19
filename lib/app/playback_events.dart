@@ -174,6 +174,12 @@ extension PlaybackEvents on AppController {
       }).catchError((Object e) => logWarn('Could not follow the subtitle: $e')));
       unawaited(platform.observeProperty('secondary-sid', (value) async {
         secondaryTrackId = value.isEmpty || value == 'false' ? 'no' : value;
+        // A track not yet in its own style would show for a moment in the
+        // main one's (white) before its copy (yellow) replaces it: it stays
+        // hidden until _restyleNow has the copy on.
+        if (libassDraws && secondaryTrackId != 'no' && _subtitleCopies[secondaryTrackId]?.second != true) {
+          unawaited(platform.setProperty('secondary-sub-visibility', 'no').catchError((Object _) {}));
+        }
         _followSubtitles(player);
         // Only scheduled, as above.
         _queueLibassLook();

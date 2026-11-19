@@ -78,7 +78,7 @@ extension SettingsActions on AppController {
   }
 
   void _useTranslator() {
-    final inner = translatorFor(preferences.translation, translationKeys, _http, fallback: _google);
+    final inner = translatorFor(preferences.translation, translationKeys, _http, fallback: _googleFirst);
     // A language model may join or split lines, so it gets each text alone.
     translator = CachingTranslator(inner, _translationCache, preferences.translation.cacheScope, batch: inner is! AiTranslator);
     textTranslator = _textTranslatorOf(translator);

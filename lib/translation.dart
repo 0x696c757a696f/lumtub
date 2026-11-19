@@ -228,13 +228,19 @@ class GoogleTranslator implements Translator {
   /// a 429 none go out for a while, longer each time it answers so, so a
   /// refusal is not met with a burst of asking again.
   static DateTime _next = DateTime.fromMillisecondsSinceEpoch(0);
+  static DateTime _coolUntil = DateTime.fromMillisecondsSinceEpoch(0);
   static int _refusals = 0;
+
+  /// Whether the endpoint said it was busy a moment ago: until then a
+  /// request fails at once, so another service can take it.
+  static bool get coolingDown => DateTime.now().isBefore(_coolUntil);
   static const _spacing = Duration(milliseconds: 300);
   static const _cooldowns = [Duration(seconds: 5), Duration(seconds: 15), Duration(seconds: 45), Duration(minutes: 2)];
 
   /// Forgets earlier refusals and spacing, for tests.
   static void resetPacing() {
     _next = DateTime.fromMillisecondsSinceEpoch(0);
+    _coolUntil = DateTime.fromMillisecondsSinceEpoch(0);
     _refusals = 0;
   }
 
@@ -249,12 +255,14 @@ class GoogleTranslator implements Translator {
     final cooldown = _cooldowns[_refusals.clamp(0, _cooldowns.length - 1)];
     _refusals++;
     final until = DateTime.now().add(cooldown);
+    _coolUntil = until;
     if (until.isAfter(_next)) _next = until;
     logWarn('Google Translate refused a request (429); pausing ${cooldown.inSeconds} s');
   }
 
   Future<String> _ask(String chunk, String target, String source) async {
     final uri = Uri.https('translate.googleapis.com', '/translate_a/single', {'client': 'gtx', 'sl': source, 'tl': target, 'dt': 't', 'q': chunk});
+    if (coolingDown) throw TranslationException.busy();
     try {
       await _turn();
       final response = await _client.get(uri).timeout(const Duration(seconds: 15));

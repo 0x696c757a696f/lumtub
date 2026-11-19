@@ -476,4 +476,24 @@ void main() {
     final translator = FallbackTranslator(MicrosoftTranslator(busy, key: 'k'), GoogleTranslator(ok));
     expect(await translator.translate('good', 'de'), 'gut');
   });
+
+  test('while Google cools down after a 429 the other service takes over, and Google is asked again afterwards', () async {
+    GoogleTranslator.resetPacing();
+    var googleAsked = 0;
+    var refuse = true;
+    final google = GoogleTranslator(MockClient((request) async {
+      googleAsked++;
+      return refuse ? http.Response('', 429) : http.Response(jsonEncode([[['von Google', 'x']]]), 200);
+    }));
+    final other = MockClient((request) async => http.Response(jsonEncode([{'translations': [{'text': 'von Microsoft'}]}]), 200));
+    final translator = FallbackTranslator(google, MicrosoftTranslator(other, key: 'k'));
+    expect(await translator.translate('a', 'de'), 'von Microsoft');
+    expect(await translator.translate('b', 'de'), 'von Microsoft');
+    expect(googleAsked, 1);
+    expect(GoogleTranslator.coolingDown, isTrue);
+    GoogleTranslator.resetPacing();
+    refuse = false;
+    expect(await translator.translate('c', 'de'), 'von Google');
+    expect(googleAsked, 2);
+  });
 }

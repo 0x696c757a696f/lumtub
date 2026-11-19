@@ -196,9 +196,10 @@ Lumtub 是免费的，只从以下渠道发布：
 <a href="https://github.com/sponsors/0x696c757a696f"><img src="docs/sponsor/github-zh.svg" alt="在 GitHub 上赞助" height="64"></a>
 <a href="https://ko-fi.com/0x696c757a696f"><img src="docs/sponsor/kofi-zh.svg" alt="在 Ko-fi 上赞助" height="64"></a>
 
-**每月赞助者**决定接下来做什么：让 Windows 安装时不再警告的代码签名证书，以及 Apple 公证。<br>
+赞助用来支付构建服务器、测试设备和开发者账号。第一个目标是付费的 Apple 开发者账号，这样侧载安装的 iOS 版能用一整年，不用每 7 天重装。<br>
 赞助者提的功能建议会打上 **sponsor priority** 标签，优先处理。<br>
-任何金额的一次性赞助同样欢迎。应用里的 设置 › 关于 › 支持开发 也是同一个页面。
+任何金额的一次性赞助同样欢迎。应用里的 设置 › 关于 › 支持开发 也是同一个页面。<br>
+感谢[支持者](SPONSORING.md#supporters)：jay。
 
 </div>
 

@@ -208,9 +208,10 @@ Everything is open source under the AGPL, so none of this has to be taken on tru
 <a href="https://ko-fi.com/0x696c757a696f"><img src="docs/sponsor/kofi-en.svg" alt="Support on Ko-fi" height="64"></a>
 <a href="https://afdian.com/a/linmuqingfeng"><img src="docs/sponsor/afdian-en.svg" alt="Support on Afdian" height="64"></a>
 
-**Monthly sponsors** decide what comes next: a code-signing certificate so Windows stops warning on install, and Apple notarization.<br>
+Your support pays for build servers, test devices and developer accounts. First up: a paid Apple Developer account, so sideloaded iOS installs last a full year instead of 7 days.<br>
 Feature requests from sponsors carry the **sponsor priority** label and are worked on first.<br>
-One-time gifts of any amount are just as welcome. The same page is in the app under Settings › About › Support development.
+One-time gifts of any amount are just as welcome. The same page is in the app under Settings › About › Support development.<br>
+Thank you to our [supporters](SPONSORING.md#supporters): jay.
 
 </div>
 

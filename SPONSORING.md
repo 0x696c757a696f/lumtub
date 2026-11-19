@@ -4,7 +4,7 @@ Lumtub is built by one developer, in the open, with no ads and no tracking. Spon
 
 ## GitHub Sponsors
 
-[Sponsor on GitHub](https://github.com/sponsors/0x696c757a696f), monthly or once. Monthly sponsors decide what comes next: Android, a code-signing certificate so Windows stops warning on install, and Apple notarization.
+[Sponsor on GitHub](https://github.com/sponsors/0x696c757a696f), monthly or once. Your support pays for build servers, test devices and developer accounts. First up: a paid Apple Developer account, so sideloaded iOS installs last a full year instead of 7 days.
 
 The same page is in the app under Settings › About › Support development.
 
@@ -38,4 +38,4 @@ Star the repository, tell a friend, [report a bug or suggest an idea](https://gi
 
 Thank you to everyone who supports Lumtub. Names are added here by hand, so tell us if yours is missing.
 
-- Be the first.
+- jay

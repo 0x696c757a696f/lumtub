@@ -178,7 +178,7 @@ pub static ES: Text = Text {
     afdian_note: "Alipay · WeChat Pay",
     kofi_note: "PayPal o tarjeta, sin cuenta",
     goals_label: "A continuación",
-    goals: ["Firma de código en Windows", "Notarización de Apple", "Primero, las peticiones de patrocinadores"],
+    goals: ["Instalaciones de iOS por un año", "Dispositivos de prueba", "Primero, las peticiones de patrocinadores"],
     other_ways: "Otras formas, con criptomonedas",
     star: "Dar estrella en GitHub",
     footer: "Lumtub es software libre bajo la AGPL 3.0 o posterior. Sin relación con YouTube ni Google.",

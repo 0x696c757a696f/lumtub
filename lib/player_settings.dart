@@ -825,6 +825,10 @@ class PlayerSettings {
   /// that read well over video.
   static const defaultSubtitleFont = 'Microsoft YaHei';
 
+  /// The family name inside assets/fonts/NotoSansSC-Regular.ttf, which
+  /// libmpv loads on iOS from the app's bundle.
+  static const iosSubtitleFont = 'Noto Sans SC';
+
   /// [font] as libass should ask for it here: the default Windows font
   /// becomes the system's own Chinese font on macOS and Linux.
   /// The family libmpv draws subtitles with on Android at first, from the
@@ -834,8 +838,13 @@ class PlayerSettings {
   static String fontForThisSystem(String font) {
     if (Platform.isAndroid) return androidSubtitleFont;
     if (font != defaultSubtitleFont || Platform.isWindows) return font;
-    // iOS has PingFang as macOS does, and no Noto fonts.
-    return Platform.isMacOS || Platform.isIOS ? 'PingFang SC' : 'Noto Sans CJK SC';
+    // On iOS libmpv draws in the app's own Noto Sans SC (sub-fonts-dir, see
+    // LifecycleActions), not a system font libass has to find through Core
+    // Text: on an iPhone with iOS 27.2.1 it found none for Chinese and drew
+    // boxes.
+    if (Platform.isIOS) return iosSubtitleFont;
+    // macOS has PingFang, and no Noto fonts.
+    return Platform.isMacOS ? 'PingFang SC' : 'Noto Sans CJK SC';
   }
 
   /// These settings with the subtitle style of a fresh install.

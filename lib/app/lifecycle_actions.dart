@@ -107,6 +107,16 @@ extension LifecycleActions on AppController {
           final fonts = await AndroidSubtitleFonts.prepare('${directories.cache.path}/subtitle-fonts');
           if (fonts != null) await platform.setProperty('sub-fonts-dir', fonts).catchError((Object e) => logDebug(() => 'Could not set the subtitle fonts: $e'));
         }
+        if (Platform.isIOS) {
+          // The fonts Flutter bundles (Noto Sans SC among them), for libass:
+          // it then draws Chinese whatever fonts Core Text offers it.
+          final fonts = '${File(Platform.resolvedExecutable).parent.path}/Frameworks/App.framework/flutter_assets/assets/fonts';
+          if (File('$fonts/NotoSansSC-Regular.ttf').existsSync()) {
+            await platform.setProperty('sub-fonts-dir', fonts).catchError((Object e) => logDebug(() => 'Could not set the subtitle fonts: $e'));
+          } else {
+            logInfo('No bundled subtitle font at $fonts');
+          }
+        }
         final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders');
         try {
           shaders.createSync(recursive: true);

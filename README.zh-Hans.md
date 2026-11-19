@@ -58,7 +58,8 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 <td align="center" width="50%"><img src="docs/screenshots/cards/skins-zh.jpg" alt="四套皮肤并排" width="100%"></td>
 </tr>
 <tr>
-<td align="center" width="50%" colspan="2"><img src="docs/screenshots/cards/cast-zh.jpg" alt="投屏到电视，最高 8K" width="50%"></td>
+<td align="center" width="50%"><img src="docs/screenshots/cards/download-zh.jpg" alt="下载时自己选编码和画质" width="100%"></td>
+<td align="center" width="50%"><img src="docs/screenshots/cards/cast-zh.jpg" alt="投屏到电视，最高 8K" width="100%"></td>
 </tr>
 </table>
 

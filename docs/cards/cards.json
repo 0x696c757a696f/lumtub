@@ -283,5 +283,40 @@
       "text": "支持 Chromecast 和 DLNA 电视，最高 8K；AirPlay 为预览版。",
       "tag": "最高 8K"
     }
+  },
+  {
+    "id": "download",
+    "shot": {
+      "en": "cards/shots/download.png",
+      "zh": "cards/shots/download.png"
+    },
+    "window": {
+      "left": 120,
+      "top": 330,
+      "width": 1250
+    },
+    "zoom": {
+      "crop": [
+        1360,
+        470,
+        880,
+        170
+      ],
+      "factor": 0.95,
+      "left": 170,
+      "top": 760
+    },
+    "en": {
+      "eyebrow": "Downloads",
+      "title": "Keep it, in the quality you want",
+      "text": "Any format YouTube serves, up to 8K, joined without re-encoding, with subtitles and cover. Plays offline in Lumtub.",
+      "tag": "Pick codec and quality"
+    },
+    "zh": {
+      "eyebrow": "下载",
+      "title": "想要什么画质，就存什么画质",
+      "text": "YouTube 提供的格式随便选，最高 8K，合并不重新编码，带字幕和封面，下好就能离线看。",
+      "tag": "编码、画质自己选"
+    }
   }
 ]

@@ -61,7 +61,10 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 </tr>
 <tr>
 <td align="center" width="50%"><img src="docs/screenshots/cards/skins-en.jpg" alt="Four skins side by side" width="100%"></td>
-<td align="center" width="50%"><img src="docs/screenshots/cards/cast-en.jpg" alt="Casting to a TV in up to 8K" width="100%"></td>
+<td align="center" width="50%"><img src="docs/screenshots/cards/download-en.jpg" alt="Choosing the codec and quality of a download" width="100%"></td>
+</tr>
+<tr>
+<td align="center" width="50%" colspan="2"><img src="docs/screenshots/cards/cast-en.jpg" alt="Casting to a TV in up to 8K" width="50%"></td>
 </tr>
 </table>
 

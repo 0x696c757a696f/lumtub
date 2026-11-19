@@ -131,7 +131,7 @@ class DownloadManager extends ChangeNotifier {
     required this.file,
     required this.ytDlpPath,
     required String defaultDirectory,
-    this.maxConcurrent = 2,
+    int maxConcurrent = 2,
     ProcessStarter? start,
     this.environment,
     this.options,
@@ -142,6 +142,7 @@ class DownloadManager extends ChangeNotifier {
     this.recorder,
     this.saveSubtitles,
   })  : _directory = defaultDirectory,
+        _maxConcurrent = maxConcurrent.clamp(1, maxConcurrentLimit),
         _start = start ?? _backgroundStart;
 
   static Future<Process> _backgroundStart(String executable, List<String> arguments, {Map<String, String>? environment}) =>
@@ -150,7 +151,6 @@ class DownloadManager extends ChangeNotifier {
   /// Where the list and the folder setting are saved.
   final File file;
   final String ytDlpPath;
-  final int maxConcurrent;
   final ProcessStarter _start;
   final Map<String, String> Function()? environment;
   final DownloadOptions Function()? options;
@@ -190,6 +190,7 @@ class DownloadManager extends ChangeNotifier {
   bool _closing = false;
 
   String _directory;
+  int _maxConcurrent;
   DownloadDefaults _defaults = const DownloadDefaults();
   final List<DownloadTask> tasks = [];
   final _active = <String>{};
@@ -208,6 +209,12 @@ class DownloadManager extends ChangeNotifier {
 
   /// Where new downloads are saved.
   String get directory => _directory;
+
+  /// How many videos download at once; live recordings are not counted.
+  int get maxConcurrent => _maxConcurrent;
+
+  /// The most [maxConcurrent] can be set to.
+  static const maxConcurrentLimit = 5;
 
   /// What the download dialog chose last, offered again next time.
   DownloadDefaults get defaults => _defaults;
@@ -240,6 +247,8 @@ class DownloadManager extends ChangeNotifier {
       if (data is Map) {
         final dir = data['directory']?.toString();
         if (dir != null && dir.isNotEmpty) _directory = dir;
+        final concurrent = data['concurrent'];
+        if (concurrent is int) _maxConcurrent = concurrent.clamp(1, maxConcurrentLimit);
         _defaults = DownloadDefaults.fromJson(data['defaults']);
         for (final raw in data['tasks'] as List? ?? const []) {
           final task = DownloadTask.fromJson(raw);
@@ -294,7 +303,7 @@ class DownloadManager extends ChangeNotifier {
 
   Future<void> _write() async {
     try {
-      await writeFileAtomic(file, jsonEncode({'directory': _directory, 'defaults': _defaults.toJson(), 'tasks': tasks.map((t) => t.toJson()).toList()}));
+      await writeFileAtomic(file, jsonEncode({'directory': _directory, 'concurrent': _maxConcurrent, 'defaults': _defaults.toJson(), 'tasks': tasks.map((t) => t.toJson()).toList()}));
     } on FileSystemException catch (e) {
       logError('Could not save the download list', e);
     }
@@ -303,6 +312,15 @@ class DownloadManager extends ChangeNotifier {
   Future<void> setDirectory(String path) async {
     _directory = path;
     notifyListeners();
+    await _save();
+  }
+
+  /// Lets [count] videos download at once. Running downloads above a lower
+  /// limit finish; queued ones wait for a free place.
+  Future<void> setMaxConcurrent(int count) async {
+    _maxConcurrent = count.clamp(1, maxConcurrentLimit);
+    notifyListeners();
+    _pump();
     await _save();
   }
 

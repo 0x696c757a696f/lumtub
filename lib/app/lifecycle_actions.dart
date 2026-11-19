@@ -77,6 +77,7 @@ extension LifecycleActions on AppController {
       // The proxy comes before the component downloads, which use it too.
       await (_refreshProxy(), cacheManager.prepare(settings), manager.initialize()).wait;
       await YtDlpTls.configure(directories.data, roots: settings.certificateRoots, quantum: settings.postQuantum);
+      await JsChallengePlugin.prepare(directories.data.path);
       final paths = await manager.ensureReady();
       addToPath(paths.executableDirectories);
       MediaKit.ensureInitialized(libmpv: paths.mpv.isEmpty ? null : paths.mpv);
@@ -201,15 +202,15 @@ extension LifecycleActions on AppController {
           library: library,
           notice: _notice,
         )..addListener(_passOn('account'));
-        final tv = tvSignIn = YoutubeTvSignIn(folder: directories.data.path)..addListener(_tvSignInChanged);
-        comments.signIn = tv;
+        // Before the first home feed, which mixes in YouTube's own.
         final web = webSignIn = YoutubeWebSignIn(folder: directories.data.path)..addListener(_webSignInChanged);
         comments.web = web;
+        account!.web = web;
         web.load();
-        tvFeed = YoutubeTvFeed(tv);
-        // Before the first home feed, which mixes in YouTube's own.
-        tv.load();
-        _tvWasSignedIn = tv.signedIn;
+        accountFeed = YoutubeAccountFeed(web);
+        _webWasSignedIn = web.signedIn;
+        _webSignIns = web.signIns;
+        _forgetTvSignIn(directories.data.path);
         this.player = player;
         madePlayer = null;
         madeRelay = null;

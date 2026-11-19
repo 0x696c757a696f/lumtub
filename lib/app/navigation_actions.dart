@@ -233,7 +233,7 @@ extension NavigationActions on AppController {
     _remember();
     youtubePlaylistVideos?.dispose();
     youtubePlaylist = playlist;
-    final feed = tvFeed;
+    final feed = accountFeed;
     final signedIn = feed != null && feed.available && _isAccountPlaylist(playlist);
     youtubePlaylistVideos = VideoListLoader(() => signedIn ? Listing(() => feed.lines('VL${playlist.id}', pages: 50)) : repository.playlist(playlist.id), pageSize: 50)
       ..addListener(_passOn('channel'))
@@ -420,10 +420,10 @@ extension NavigationActions on AppController {
   }
 
   /// 观看记录同步到 YouTube: adds the video just left to the account's
-  /// history, as SmartTube does: from the start for the first three minutes,
-  /// else where it was left; nearly finished marks it watched.
+  /// history, as the website does: from the start for the first three
+  /// minutes, else where it was left; nearly finished marks it watched.
   void _reportWatchedToYoutube(VideoItem item) {
-    final sign = tvSignIn;
+    final sign = webSignIn;
     final player = this.player;
     if (sign == null || !sign.signedIn || player == null || !preferences.syncHistoryToYoutube || !preferences.recordHistory || incognito) return;
     final to = player.state.position.inMilliseconds / 1000;
@@ -445,7 +445,7 @@ extension NavigationActions on AppController {
         followed: library?.channels ?? const [],
         subscriptions: library?.feed ?? const [],
         searches: preferences.recordHistory ? await searchHistory?.items() ?? const [] : const [],
-        youtubeHome: tvFeed?.available ?? false ? () => tvFeed!.videos(YoutubeTvFeed.home, limit: 40) : null,
+        youtubeHome: accountFeed?.available ?? false ? () => accountFeed!.videos(YoutubeAccountFeed.home, limit: 40) : null,
         related: relatedVideos.forVideo,
         channelUploads: library?.uploadsOf ?? (_) async => const [],
         search: (query) async {
@@ -467,7 +467,7 @@ extension NavigationActions on AppController {
     if (library == null) return false;
     final following = library.toggleFollow(channel);
     final account = this.account;
-    if (account != null && account.canWrite && preferences.syncFollowToYoutube) unawaited(account.setSubscribed(channel, following));
+    if (account != null && account.canAct && preferences.syncFollowToYoutube) unawaited(account.setSubscribed(channel, following));
     return following;
   }
 

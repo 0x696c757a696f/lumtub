@@ -1275,7 +1275,7 @@ Future<void> openPrivacyConnections(BuildContext context, AppController controll
         row(AppIcons.hardDrives, tr('Encrypted DNS'), dns?.url ?? tr('Not in use'), tr('Looks up host names on a direct connection; the DNS server learns which sites you visit, not what you do there'), state: dns == null ? tr('Close') : tr('In use')),
         row(AppIcons.userCircle, tr('Google account'), 'accounts.google.com · oauth2.googleapis.com · www.googleapis.com', tr('Only after signing in, to sync subscriptions, playlists, likes and comments'),
             state: controller.account?.signedIn ?? false ? tr('Signed in') : tr('Signed out')),
-        row(AppIcons.television, tr('TV-code sign-in'), 'www.youtube.com/o/oauth2 · www.youtube.com/youtubei', tr("Only after signing in: likes and dislikes on comments and posts, requested as YouTube's TV app"),
-            state: controller.tvSignIn?.signedIn ?? false ? tr('Signed in') : tr('Signed out')),
+        row(AppIcons.globe, tr('Browser sign-in'), 'www.youtube.com/youtubei', tr('Only after signing in: your YouTube pages, likes, comments, subscriptions and playlists, requested as the YouTube website'),
+            state: controller.webSignIn?.signedIn ?? false ? tr('Signed in') : tr('Signed out')),
       ];
     });

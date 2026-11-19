@@ -132,20 +132,21 @@ class _CommentsSectionState extends State<CommentsSection> {
     );
   }
 
-  /// Video comments are written with the Google sign-in; posts, which
-  /// YouTube's API has nothing for, with the cookie sign-in.
-  bool get _canWrite => widget.videoId != null && (widget.controller.account?.signedIn ?? false);
+  /// Video comments are written with the account (the browser sign-in, or
+  /// Google's); posts, which YouTube's API has nothing for, with the
+  /// browser sign-in alone.
+  bool get _canWrite => widget.videoId != null && (widget.controller.account?.active ?? false);
 
   YoutubeComment _own(String text) => YoutubeComment(
         id: 'own:${DateTime.now().microsecondsSinceEpoch}',
-        author: widget.controller.account?.name ?? tr('Me'),
-        avatar: widget.controller.account?.avatar,
+        author: widget.controller.account?.accountName ?? tr('Me'),
+        avatar: widget.controller.account?.accountAvatar,
         text: text,
         published: tr('Just now'),
       );
 
   Future<bool> _post(String text) async {
-    final posted = await widget.controller.account?.postComment(videoId: widget.videoId!, text: text) ?? false;
+    final posted = await widget.controller.account?.postComment(videoId: widget.videoId!, text: text, createParams: _loader.createParams) ?? false;
     if (posted) _loader.addOwn(_own(text.trim()));
     return posted;
   }
@@ -162,7 +163,7 @@ class _CommentsSectionState extends State<CommentsSection> {
   }
 
   Future<bool> _reply(YoutubeComment parent, String text) async {
-    final posted = await widget.controller.account?.postComment(videoId: widget.videoId!, parentId: parent.id, text: text) ?? false;
+    final posted = await widget.controller.account?.postComment(videoId: widget.videoId!, parentId: parent.id, text: text, replyParams: parent.replyParams) ?? false;
     if (posted) {
       _loader.addOwnReply(parent, _own(text.trim()));
       if (mounted) setState(() => _replyingTo = null);

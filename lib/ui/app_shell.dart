@@ -886,8 +886,8 @@ class _TopBar extends StatelessWidget {
       controller.mode == PageMode.settings && !controller.onWatchPage,
       account,
       account?.state,
-      account?.name,
-      account?.avatar,
+      account?.accountName,
+      account?.accountAvatar,
       account?.syncing,
       currentLanguage,
     );

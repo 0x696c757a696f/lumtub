@@ -916,7 +916,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   List<Widget> _fullscreenActions(BuildContext context, Future<void> Function() leaveFullscreen) {
     final item = _controller.playing!;
     final account = _controller.account;
-    final signedIn = account?.signedIn ?? false;
+    final signedIn = account?.active ?? false;
     final library = _controller.library;
     final liked = signedIn && account!.ratingOf(item.id) == VideoRating.like;
     final likes = _controller.details?.likeCount ?? _controller.dislikes?.likes;
@@ -932,7 +932,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           if (signedIn && !account!.ratingOff(item.id)) {
             unawaited(account.rate(item, VideoRating.like));
           } else {
-            _showFeedback(AppIcons.thumbsUp, signedIn ? tr('The uploader turned off likes and dislikes for this video') : tr('Sign in to Google to {0}', [tr('Like')]));
+            _showFeedback(AppIcons.thumbsUp, signedIn ? tr('The uploader turned off likes and dislikes for this video') : tr('Sign in to YouTube to {0}', [tr('Like')]));
           }
         },
       ),

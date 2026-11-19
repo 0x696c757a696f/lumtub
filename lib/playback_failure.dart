@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'l10n/l10n.dart';
 /// Why a video could not be resolved or played, read from yt-dlp's and
 /// libmpv's messages, so each cause is handled its own way instead of all
@@ -70,9 +72,19 @@ class PlaybackFailure {
     final all = [...given.where((m) => !isBareOpenFailure(m)), ...given.where(isBareOpenFailure)];
     for (final (kind, pattern) in _patterns) {
       final hit = all.where(pattern.hasMatch).firstOrNull;
-      if (hit != null) return PlaybackFailure(kind, hit.trim());
+      if (hit != null) return PlaybackFailure(kind, _lineOf(hit, pattern));
     }
     return PlaybackFailure(FailureKind.unknown, all.isEmpty ? '' : all.first.trim());
+  }
+
+  /// The line of [message] that names the cause: yt-dlp's stderr starts
+  /// with warnings ("No title found in player responses") that the error
+  /// line after them explains.
+  static String _lineOf(String message, RegExp pattern) {
+    final lines = const LineSplitter().convert(message.trim());
+    if (lines.length < 2) return message.trim();
+    final line = lines.firstWhere(pattern.hasMatch, orElse: () => message);
+    return line.trim().replaceFirst(RegExp(r'^(Bad state: )?ERROR: '), '');
   }
 
   /// Whether reopening the video, or resolving it another way, can help.

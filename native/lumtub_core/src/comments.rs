@@ -317,6 +317,9 @@ pub struct Comment {
     /// it comes with its like buttons when the list leaves them out.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub detail_token: Option<String>,
+    /// The token (`createReplyParams`) to reply to this comment with, when
+    /// the response was loaded signed in.
+    pub reply_params: Option<String>,
 }
 
 #[derive(Serialize, Debug, PartialEq, Default)]
@@ -415,6 +418,9 @@ fn comment(
                 entity(model, "toolbarStateKey"),
             ),
             detail_token: None,
+            reply_params: entity(model, "toolbarSurfaceKey")
+                .and_then(|e| e.get("engagementToolbarSurfaceEntityPayload"))
+                .and_then(|surface| find_string(surface, "createReplyParams")),
         });
     }
     let renderer = at(node, &["comment", "commentRenderer"])
@@ -492,6 +498,7 @@ fn comment(
         emojis,
         rating,
         detail_token,
+        reply_params: find_string(renderer, "createReplyParams"),
     })
 }
 
@@ -682,6 +689,7 @@ mod tests {
                 emojis: Emojis::new(),
                 rating: None,
                 detail_token: None,
+                reply_params: None,
             }
         );
         let old = &page.comments[1];
@@ -869,5 +877,29 @@ mod tests {
     #[test]
     fn reads_nothing_from_other_responses() {
         assert_eq!(page(&json!({})), Page::default());
+    }
+
+    #[test]
+    fn finds_the_token_to_reply_with() {
+        let reply = |p: &str| json!({"createCommentReplyDialogEndpoint": {"dialog": {"commentReplyDialogRenderer": {"replyButton": {"buttonRenderer": {"serviceEndpoint": {"createCommentReplyEndpoint": {"createReplyParams": p}}}}}}}});
+        let response = json!({
+            "frameworkUpdates": {"entityBatchUpdate": {"mutations": [
+                {"entityKey": "c", "payload": {"commentEntityPayload": {"properties": {"commentId": "C1", "content": {"content": "x"}}}}},
+                {"entityKey": "t", "payload": {"engagementToolbarSurfaceEntityPayload": {"replyCommand": {"innertubeCommand": reply("NEW")}}}},
+                {"entityKey": "c2", "payload": {"commentEntityPayload": {"properties": {"commentId": "C4", "content": {"content": "x"}}}}},
+            ]}},
+            "onResponseReceivedEndpoints": [{"appendContinuationItemsAction": {"continuationItems": [
+                {"commentThreadRenderer": {"commentViewModel": {"commentViewModel": {"commentKey": "c", "toolbarSurfaceKey": "t"}}}},
+                {"commentThreadRenderer": {"commentViewModel": {"commentViewModel": {"commentKey": "c2", "toolbarSurfaceKey": "gone"}}}},
+                {"commentRenderer": {"commentId": "C2", "actionButtons": {"commentActionButtonsRenderer": {"replyButton": {"buttonRenderer": {"navigationEndpoint": reply("OLD")}}}}}},
+                {"commentRenderer": {"commentId": "C3"}},
+            ]}}],
+        });
+        let page = page(&response);
+        let params = |i: usize| page.comments[i].reply_params.as_deref();
+        assert_eq!(params(0), Some("NEW"));
+        assert_eq!(params(1), None);
+        assert_eq!(params(2), Some("OLD"));
+        assert_eq!(params(3), None);
     }
 }

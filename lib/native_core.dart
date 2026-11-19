@@ -8,6 +8,7 @@ import 'package:ffi/ffi.dart';
 
 import 'android_python.dart';
 import 'ios_python.dart';
+import 'js_challenge_plugin.dart';
 import 'app_log.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
@@ -272,6 +273,15 @@ class NativeCore {
   /// LUMTUB_CORE_DLL points at another copy (tests and `flutter run`).
   static final NativeCore? instance = _load();
 
+  /// Where the library was loaded from; null on Android, where it is
+  /// loaded by name, or when it is not loaded.
+  static String? get path {
+    instance;
+    return _path;
+  }
+
+  static String? _path;
+
   static String get fileName => Platform.isWindows ? 'lumtub_core.dll' : Platform.isMacOS ? 'liblumtub_core.dylib' : 'liblumtub_core.so';
 
   /// What Lumtub says when the library is missing.
@@ -304,6 +314,7 @@ class NativeCore {
       try {
         final core = NativeCore._(DynamicLibrary.open(path));
         AppLog.nativeRedact = (message) => core.take(core.withText(message, core.redact)) ?? message;
+        _path = File(path).absolute.path;
         return core;
       } catch (e) {
         logWarn('Could not load $path: $e');
@@ -497,12 +508,18 @@ class ProcessTree implements Process {
   /// A [background] tree runs below normal priority, its first process in
   /// Windows' efficiency mode: for downloads, which nobody waits on.
   static Future<Process> start(String executable, List<String> arguments, {Map<String, String>? environment, String? workingDirectory, bool background = false}) async {
-    if (isYtDlp(executable)) arguments = [...ytDlpIsolation, if (forceIpv4) '--force-ipv4', ...arguments];
+    if (isYtDlp(executable)) arguments = [...ytDlpIsolation, ...familyArguments, ...arguments];
     if (IosPython.runs(executable)) return IosPython.current!.start(executable, arguments, environment);
     // Its own HTTPS follows 证书来源 and 抗量子加密 (lib/yt_dlp_tls.dart).
     if (isYtDlp(executable)) {
       arguments = YtDlpTls.withPlugin(arguments, ytDlpIsolation.length);
       environment = {...YtDlpTls.environment, ...?environment};
+      // On computers the core's QuickJS solves YouTube's challenges; Deno,
+      // still passed with --js-runtimes, takes over where it cannot.
+      if (JsChallengePlugin.desktop case (final folder, final core)) {
+        arguments = [...arguments.take(ytDlpIsolation.length), '--plugin-dirs', folder, ...arguments.skip(ytDlpIsolation.length)];
+        environment = {...environment, 'LUMTUB_CORE': core};
+      }
     }
     (arguments, environment) = NetworkProxy.hideCredentials(arguments, environment);
     if (AndroidPython.runs(executable)) (executable, arguments, environment) = AndroidPython.current!.command(executable, arguments, environment);
@@ -519,6 +536,29 @@ class ProcessTree implements Process {
 
   /// Whether every yt-dlp run connects over IPv4 only (网络 › 只用 IPv4).
   static bool forceIpv4 = false;
+
+  /// The address family ('4' or '6') yt-dlp keeps to for a while after
+  /// YouTube took the other one for a bot: it rates IPv4 addresses and
+  /// IPv6 /64 networks apart, so one is often let through when the other
+  /// is not.
+  static String? _family;
+  static DateTime _familyUntil = DateTime(0);
+
+  /// Keeps yt-dlp to IPv[family] for [period]; null goes back to the setting.
+  static void switchFamily(String? family, [Duration period = const Duration(minutes: 30)]) {
+    _family = family;
+    _familyUntil = family == null ? DateTime(0) : DateTime.now().add(period);
+  }
+
+  /// The family a bot check switched to, while it holds.
+  static String? get switchedFamily => _family != null && DateTime.now().isBefore(_familyUntil) ? _family : null;
+
+  /// What each yt-dlp run is told about the address family.
+  static List<String> get familyArguments => switch (switchedFamily) {
+        '6' => const ['--force-ipv6'],
+        '4' => const ['--force-ipv4'],
+        _ => forceIpv4 ? const ['--force-ipv4'] : const [],
+      };
 
   /// Whether [executable] is a yt-dlp, by its file name.
   static bool isYtDlp(String executable) {

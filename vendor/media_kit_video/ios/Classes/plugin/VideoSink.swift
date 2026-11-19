@@ -13,9 +13,9 @@ import CoreImage
 import Metal
 import UIKit
 
-/// `struct lumtub_vo_host` in the patch: six 8-byte slots.
+/// `struct lumtub_vo_host` in the patch: seven 8-byte slots.
 private enum Host {
-  static let size = 48
+  static let size = 56
   /// "LUMTUBV1": the output checks it before it calls anything.
   static let magic: UInt64 = 0x4C55_4D54_5542_5631
   static let magicOffset = 0
@@ -24,6 +24,8 @@ private enum Host {
   static let overlayOffset = 24
   static let clearOffset = 32
   static let maxHeightOffset = 40
+  /// The view's shape, which the subtitles' canvas takes (0: the picture's).
+  static let canvasAspectOffset = 48
 }
 
 private typealias FrameCall = @convention(c) (
@@ -40,7 +42,8 @@ struct Overlay: @unchecked Sendable {
   var image: CGImage?
   /// Where the image goes in the canvas, from its top left.
   var box = CGRect.zero
-  /// The canvas: the turned picture's shape.
+  /// The canvas: the turned picture's shape, or the view's with the
+  /// picture in its middle.
   var canvas = CGSize.zero
 }
 
@@ -78,6 +81,8 @@ final class VideoSink: @unchecked Sendable {
   private var poolHeight = 0
   private var poolFormat: OSType = 0
   private var frames = 0
+  /// The subtitle layer's shape, on the main thread.
+  private var viewAspect = 0.0
 
   init(displayLayer: AVSampleBufferDisplayLayer, timebase: CMTimebase?) {
     self.displayLayer = displayLayer
@@ -121,7 +126,24 @@ final class VideoSink: @unchecked Sendable {
     host.storeBytes(of: unsafeBitCast(overlay, to: UInt.self), toByteOffset: Host.overlayOffset, as: UInt.self)
     host.storeBytes(of: unsafeBitCast(clear, to: UInt.self), toByteOffset: Host.clearOffset, as: UInt.self)
     host.storeBytes(of: Int64(maxHeight), toByteOffset: Host.maxHeightOffset, as: Int64.self)
+    host.storeBytes(of: 0.0, toByteOffset: Host.canvasAspectOffset, as: Double.self)
+    subtitles.resized = { [weak self] size in
+      self?.viewAspect = size.width > 0 && size.height > 0 ? Double(size.width / size.height) : 0
+      self?.storeCanvas()
+    }
   }
+
+  /// The subtitles are drawn on a canvas the shape of the view the picture
+  /// is fitted into, so they can use the bars beside a portrait picture.
+  /// While picture in picture is open the frames carry them, and the canvas
+  /// is the picture's own shape. Main thread only; the output reads it at
+  /// its next picture.
+  private func storeCanvas() {
+    host.storeBytes(of: compositingShown ? 0 : viewAspect, toByteOffset: Host.canvasAspectOffset, as: Double.self)
+  }
+
+  /// [compositing] as last set from the main thread.
+  private var compositingShown = false
 
   // MARK: From libmpv's video output thread
 
@@ -193,6 +215,8 @@ final class VideoSink: @unchecked Sendable {
     CATransaction.setDisableActions(true)
     subtitles.isHidden = on
     CATransaction.commit()
+    compositingShown = on
+    storeCanvas()
   }
 
   /// The app came back: iOS may have interrupted the layer.
@@ -415,6 +439,9 @@ final class VideoSink: @unchecked Sendable {
 final class SubtitleLayer: CALayer, @unchecked Sendable {
   private let content = CALayer()
   private var overlay = Overlay()
+  /// Called with the layer's size whenever it is laid out at another.
+  var resized: ((CGSize) -> Void)?
+  private var laidOut = CGSize.zero
 
   override init() {
     super.init()
@@ -444,6 +471,10 @@ final class SubtitleLayer: CALayer, @unchecked Sendable {
 
   override func layoutSublayers() {
     super.layoutSublayers()
+    if bounds.size != laidOut {
+      laidOut = bounds.size
+      resized?(bounds.size)
+    }
     CATransaction.begin()
     CATransaction.setDisableActions(true)
     place()

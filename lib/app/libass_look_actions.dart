@@ -37,6 +37,7 @@ extension LibassLookActions on AppController {
   /// Options were set from the settings alone: the look for the player's
   /// size goes back at once, and the copies are checked against them.
   void _optionsApplied(Player player) {
+    _syncSubtitleCanvas();
     _libassSent = {};
     unawaited(_applyLibassLook());
     final platform = player.platform;
@@ -54,12 +55,36 @@ extension LibassLookActions on AppController {
   LibassLook get _libassLook {
     final view = _subtitleView;
     if (view == null) return LibassLook.standard(position: settings.subtitlePosition, border: settings.subtitleBorder, byHeight: Platform.isAndroid || Platform.isIOS, caption: Device.captionScale);
-    return LibassLook.of(view: view.view, aspect: _videoAspect, textScale: view.textScale, paddingScale: view.paddingScale, position: settings.subtitlePosition, border: settings.subtitleBorder);
+    return LibassLook.of(view: view.view, aspect: _canvasAspect, textScale: view.textScale, paddingScale: view.paddingScale, position: settings.subtitlePosition, border: settings.subtitleBorder);
   }
 
   double get _videoAspect {
     final w = player?.state.width ?? 0, h = player?.state.height ?? 0;
     return w > 0 && h > 0 ? w / h : 16 / 9;
+  }
+
+  /// The shape libmpv draws subtitles in: the whole player where the
+  /// picture is fitted into it with bars, so lines can run into the bars
+  /// beside a portrait picture as in the Flutter view, else the picture.
+  /// On iOS the player's layer fills a fitted player (not while picture in
+  /// picture, where the frames carry the subtitles); elsewhere the drawing
+  /// takes the player's shape while libmpv draws subtitles.
+  double get _canvasAspect {
+    final view = _subtitleView?.view;
+    final whole = Platform.isIOS ? !_coverVideo && !IosVideoLayer.active.value : _outputSize?.canvasShaped ?? false;
+    if (!whole || view == null || view.isEmpty) return _videoAspect;
+    return view.width / view.height;
+  }
+
+  /// The drawing takes the player's shape while libmpv draws subtitles on
+  /// a desktop.
+  void _syncSubtitleCanvas() {
+    final output = _outputSize;
+    if (output != null) {
+      output.canvas = !Platform.isIOS && libassDraws;
+      pictureShapedByPlayer.value = output.canvasShaped;
+    }
+    _queueLibassLook();
   }
 
   /// Sends the look once resizing settles: a window dragged wider lays the
@@ -108,7 +133,7 @@ extension LibassLookActions on AppController {
   }
 
   /// The room a line has, in letters: copies are wrapped to it.
-  int _roomEms(double scale) => LibassLayout.roomEms(em: _libassLook.em, scale: scale, aspect: _videoAspect).floor();
+  int _roomEms(double scale) => LibassLayout.roomEms(em: _libassLook.em, scale: scale, aspect: _canvasAspect).floor();
 
   /// What the copy of the main subtitle depends on: where it wraps.
   String get _mainCopyKey => 'main|${_roomEms(settings.subtitleScale)}';

@@ -21,6 +21,36 @@ void main() {
     expect(VideoOutputSize.target(const Size(1280, 720), const [Size(1920, 1080)], cover: true), isNull);
   });
 
+  test('draws the player\'s shape for subtitles beside a picture of another shape', () {
+    // A portrait video in a wide player: the whole player, the picture in
+    // its middle at the fitted size.
+    expect(VideoOutputSize.target(const Size(1080, 1920), const [Size(1280, 720)], canvas: true), (1280, 720));
+    // A player larger than the picture: the picture at its own size, the
+    // drawing still the player's shape.
+    expect(VideoOutputSize.target(const Size(720, 1280), const [Size(2560, 1440)], canvas: true), (2276, 1280));
+    // The same shape: as without.
+    expect(VideoOutputSize.target(const Size(1920, 1080), const [Size(3840, 2160)], canvas: true), isNull);
+    expect(VideoOutputSize.target(const Size(1920, 1080), const [Size(1280, 720)], canvas: true), (1280, 720));
+    // Covering the player wins.
+    expect(VideoOutputSize.target(const Size(1080, 1920), const [Size(1280, 720)], canvas: true, cover: true), isNull);
+  });
+
+  test('takes the player\'s shape at once when subtitles are drawn by libmpv', () async {
+    final applied = <(int?, int?)>[];
+    final size = VideoOutputSize((w, h) async => applied.add((w, h)), delay: const Duration(milliseconds: 1));
+    size.video = const Size(1080, 1920);
+    size.show(Object(), const Size(1280, 720));
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(applied.last, (406, 720));
+    size.canvas = true;
+    expect(size.canvasShaped, isTrue);
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(applied.last, (1280, 720));
+    size.cover = true;
+    expect(size.canvasShaped, isFalse);
+    size.dispose();
+  });
+
   test('applies the size once things settle, and keeps it while a page covers the video', () async {
     final applied = <(int?, int?)>[];
     final size = VideoOutputSize((w, h) async => applied.add((w, h)), delay: const Duration(milliseconds: 10));

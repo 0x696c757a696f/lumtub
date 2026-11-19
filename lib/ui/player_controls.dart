@@ -144,6 +144,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   void initState() {
     super.initState();
     videoFit.addListener(_applyFit);
+    _controller.pictureShapedByPlayer.addListener(_applyFit);
     _controller.coverVideo = videoFit.value != VideoFit.contain;
     _controller.addListener(_syncVideo);
     KeepAwake.hold(this, _player.state.playing && !_controller.audioOnly);
@@ -180,6 +181,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   @override
   void dispose() {
     videoFit.removeListener(_applyFit);
+    _controller.pictureShapedByPlayer.removeListener(_applyFit);
     _controller.removeListener(_syncVideo);
     KeepAwake.hold(this, false);
     _holdSpeed(false);
@@ -235,8 +237,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final fit = videoFit.value;
     _controller.coverVideo = fit != VideoFit.contain;
     // update() cannot clear an aspect ratio, so the automatic modes pass
-    // the video's own one.
-    final ratio = videoAspectFor(fit.aspectRatio, _player.state.width, _player.state.height);
+    // the video's own one, or 0 (the drawing's own shape) while libmpv
+    // draws it the player's shape for subtitles beside the picture.
+    final ratio = fit == VideoFit.contain && _controller.pictureShapedByPlayer.value ? 0.0 : videoAspectFor(fit.aspectRatio, _player.state.width, _player.state.height);
     widget.state?.update(fit: fit.fit, aspectRatio: ratio);
   }
 

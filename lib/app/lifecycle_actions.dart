@@ -217,6 +217,8 @@ extension LifecycleActions on AppController {
         // Android draws into a surface of its own size; media_kit has no
         // output size there.
         _outputSize = Platform.isAndroid ? null : VideoOutputSize((width, height) async => videoController?.setSize(width: width, height: height), onError: (e) => logWarn('Could not size the video output: $e'));
+        _outputSize?.cover = _coverVideo;
+        _syncSubtitleCanvas();
         _listenTo(player);
         _dropTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkDrops());
         _thumbnailTrimTimer?.cancel();

@@ -565,14 +565,13 @@ extension SubtitleActions on AppController {
     if (!settings.libassSubtitles || secondaryTrackId == 'no' || !identical(player, this.player)) return;
     final platform = player.platform;
     if (platform is! NativePlayer) return;
-    final width = player.state.width ?? 0, height = player.state.height ?? 0;
     final look = _libassLook;
     final font = settings.subtitleFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.subtitleFont);
     final position = LibassLayout.secondaryPosition(
       lines.isEmpty ? '' : lines.first,
       position: (100 - _subtitleLift).clamp(0, 100),
       scale: settings.subtitleScale,
-      aspect: width > 0 && height > 0 ? width / height : 16 / 9,
+      aspect: _canvasAspect,
       fontSize: look.fontSize(_subtitleFamily ?? font),
       em: look.em,
       margin: look.margin,

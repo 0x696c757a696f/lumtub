@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "ከአሳሽ መግቢያ ይውጡ?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "በዚህ መሣሪያ ላይ የተቀመጡት ኩኪዎች ይሰረዛሉ። የተከተሏቸው ቻናሎች እና አጫዋች ዝርዝሮች በዚህ መሣሪያ ላይ ይቆያሉ።",
   "Watch history, searches and watch statistics": "የእይታ ታሪክ፣ ፍለጋዎች እና የእይታ ስታቲስቲክስ",
-  "Sign-ins (browser and Google) and AirPlay pairings": "መግቢያዎች (አሳሽ እና Google) እና የAirPlay ጥምረቶች"
+  "Sign-ins (browser and Google) and AirPlay pairings": "መግቢያዎች (አሳሽ እና Google) እና የAirPlay ጥምረቶች",
+  "Pause after each line": "ከእያንዳንዱ መስመር በኋላ አቁም",
+  "Playback pauses as each subtitle line ends.": "እያንዳንዱ የትርጉም ጽሑፍ መስመር ሲያልቅ ማጫወት ይቆማል።",
+  "Blur the translation": "ትርጉሙን ደብዝዝ",
+  "Hover over the second subtitle or tap it to see it.": "ሁለተኛውን የትርጉም ጽሑፍ ላይ ያንዣብቡ ወይም ለማየት ይንኩት።",
+  "Show the translation": "ትርጉሙን አሳይ",
+  "Hide the translation": "ትርጉሙን ደብቅ",
+  "Pause after each line on": "ከእያንዳንዱ መስመር በኋላ ማቆም በርቷል",
+  "Pause after each line off": "ከእያንዳንዱ መስመር በኋላ ማቆም ጠፍቷል",
+  "Pause after each line on or off": "ከእያንዳንዱ መስመር በኋላ ማቆምን አብራ ወይም አጥፋ",
+  "Show or hide the translation": "ትርጉሙን አሳይ ወይም ደብቅ",
+  "Loop this line": "ይህን መስመር ደጋግም",
+  "Line loop off": "የመስመር ድግግሞሽ ጠፍቷል",
+  "Loop this line on or off": "የመስመር ድግግሞሽን አብራ ወይም አጥፋ"
 }

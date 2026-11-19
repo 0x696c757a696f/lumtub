@@ -3623,5 +3623,18 @@
   "Sign out of the browser sign-in?": "Izrakstīties no pierakstīšanās ar pārlūkprogrammu?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Šajā ierīcē saglabātie sīkfaili tiek dzēsti. Sekotie kanāli un atskaņošanas saraksti paliek šajā ierīcē.",
   "Watch history, searches and watch statistics": "Skatīšanās vēsture, meklējumi un skatīšanās statistika",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Pierakstīšanās (pārlūkprogrammā un Google) un AirPlay pārī savienojumi"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Pierakstīšanās (pārlūkprogrammā un Google) un AirPlay pārī savienojumi",
+  "Pause after each line": "Pauze pēc katras rindas",
+  "Playback pauses as each subtitle line ends.": "Atskaņošana tiek pauzēta, kad beidzas katra subtitru rinda.",
+  "Blur the translation": "Izplūdināt tulkojumu",
+  "Hover over the second subtitle or tap it to see it.": "Virziet kursoru virs otrajiem subtitriem vai pieskarieties tiem, lai tos redzētu.",
+  "Show the translation": "Rādīt tulkojumu",
+  "Hide the translation": "Paslēpt tulkojumu",
+  "Pause after each line on": "Pauze pēc katras rindas ieslēgta",
+  "Pause after each line off": "Pauze pēc katras rindas izslēgta",
+  "Pause after each line on or off": "Ieslēgt vai izslēgt pauzi pēc katras rindas",
+  "Show or hide the translation": "Rādīt vai paslēpt tulkojumu",
+  "Loop this line": "Atkārtot šo rindu cilpā",
+  "Line loop off": "Rindas cilpa izslēgta",
+  "Loop this line on or off": "Ieslēgt vai izslēgt rindas cilpu"
 }

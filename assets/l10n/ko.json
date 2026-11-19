@@ -3628,5 +3628,18 @@
   "Sign out of the browser sign-in?": "브라우저 로그인에서 로그아웃할까요?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "이 기기에 저장된 쿠키가 삭제됩니다. 팔로우한 채널과 재생목록은 이 기기에 그대로 남습니다.",
   "Watch history, searches and watch statistics": "시청 기록, 검색 기록 및 시청 통계",
-  "Sign-ins (browser and Google) and AirPlay pairings": "로그인(브라우저 및 Google)과 AirPlay 페어링"
+  "Sign-ins (browser and Google) and AirPlay pairings": "로그인(브라우저 및 Google)과 AirPlay 페어링",
+  "Pause after each line": "문장마다 일시정지",
+  "Playback pauses as each subtitle line ends.": "자막 문장이 끝날 때마다 재생이 일시정지됩니다.",
+  "Blur the translation": "번역 흐리게",
+  "Hover over the second subtitle or tap it to see it.": "보조 자막에 마우스를 올리거나 탭하면 보입니다.",
+  "Show the translation": "번역 표시",
+  "Hide the translation": "번역 숨기기",
+  "Pause after each line on": "문장마다 일시정지 켜짐",
+  "Pause after each line off": "문장마다 일시정지 꺼짐",
+  "Pause after each line on or off": "문장마다 일시정지 켜기/끄기",
+  "Show or hide the translation": "번역 표시/숨기기",
+  "Loop this line": "이 문장 반복",
+  "Line loop off": "문장 반복 꺼짐",
+  "Loop this line on or off": "문장 반복 켜기/끄기"
 }

@@ -3623,5 +3623,18 @@
   "Sign out of the browser sign-in?": "Logga ut från webbläsarinloggningen?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Cookies som sparats på den här enheten tas bort. Följda kanaler och spellistor finns kvar på den här enheten.",
   "Watch history, searches and watch statistics": "Visningshistorik, sökningar och tittarstatistik",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Inloggningar (webbläsare och Google) och AirPlay-kopplingar"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Inloggningar (webbläsare och Google) och AirPlay-kopplingar",
+  "Pause after each line": "Pausa efter varje rad",
+  "Playback pauses as each subtitle line ends.": "Uppspelningen pausas när varje undertextrad slutar.",
+  "Blur the translation": "Gör översättningen suddig",
+  "Hover over the second subtitle or tap it to see it.": "Håll pekaren över andra undertexten eller tryck på den för att se den.",
+  "Show the translation": "Visa översättningen",
+  "Hide the translation": "Dölj översättningen",
+  "Pause after each line on": "Paus efter varje rad på",
+  "Pause after each line off": "Paus efter varje rad av",
+  "Pause after each line on or off": "Paus efter varje rad på eller av",
+  "Show or hide the translation": "Visa eller dölj översättningen",
+  "Loop this line": "Upprepa den här raden",
+  "Line loop off": "Radupprepning av",
+  "Loop this line on or off": "Radupprepning på eller av"
 }

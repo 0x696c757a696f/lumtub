@@ -3623,5 +3623,18 @@
   "Sign out of the browser sign-in?": "Αποσύνδεση από τη σύνδεση μέσω προγράμματος περιήγησης;",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Τα cookies που έχουν αποθηκευτεί σε αυτήν τη συσκευή διαγράφονται. Τα κανάλια που ακολουθείτε και οι λίστες αναπαραγωγής παραμένουν σε αυτήν τη συσκευή.",
   "Watch history, searches and watch statistics": "Ιστορικό παρακολούθησης, αναζητήσεις και στατιστικά παρακολούθησης",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Συνδέσεις (προγράμματος περιήγησης και Google) και αντιστοιχίσεις AirPlay"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Συνδέσεις (προγράμματος περιήγησης και Google) και αντιστοιχίσεις AirPlay",
+  "Pause after each line": "Παύση μετά από κάθε γραμμή",
+  "Playback pauses as each subtitle line ends.": "Η αναπαραγωγή σταματά προσωρινά όταν τελειώνει κάθε γραμμή υποτίτλων.",
+  "Blur the translation": "Θόλωμα της μετάφρασης",
+  "Hover over the second subtitle or tap it to see it.": "Περάστε το ποντίκι πάνω από τον δεύτερο υπότιτλο ή πατήστε τον για να τον δείτε.",
+  "Show the translation": "Εμφάνιση της μετάφρασης",
+  "Hide the translation": "Απόκρυψη της μετάφρασης",
+  "Pause after each line on": "Η παύση μετά από κάθε γραμμή ενεργοποιήθηκε",
+  "Pause after each line off": "Η παύση μετά από κάθε γραμμή απενεργοποιήθηκε",
+  "Pause after each line on or off": "Ενεργοποίηση ή απενεργοποίηση της παύσης μετά από κάθε γραμμή",
+  "Show or hide the translation": "Εμφάνιση ή απόκρυψη της μετάφρασης",
+  "Loop this line": "Συνεχής επανάληψη αυτής της γραμμής",
+  "Line loop off": "Η συνεχής επανάληψη γραμμής απενεργοποιήθηκε",
+  "Loop this line on or off": "Ενεργοποίηση ή απενεργοποίηση της συνεχούς επανάληψης γραμμής"
 }

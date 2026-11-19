@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "ব্ৰাউজাৰ ছাইন ইনৰ পৰা ছাইন আউট কৰিবনে?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "এই ডিভাইচত সংৰক্ষণ কৰা কুকীবোৰ মচি পেলোৱা হ'ব। অনুসৰণ কৰা চেনেল আৰু প্লেলিষ্টবোৰ এই ডিভাইচতে থাকিব।",
   "Watch history, searches and watch statistics": "চোৱাৰ ইতিহাস, সন্ধান আৰু চোৱাৰ পৰিসংখ্যা",
-  "Sign-ins (browser and Google) and AirPlay pairings": "ছাইন ইন (ব্ৰাউজাৰ আৰু Google) আৰু AirPlay পেয়াৰিং"
+  "Sign-ins (browser and Google) and AirPlay pairings": "ছাইন ইন (ব্ৰাউজাৰ আৰু Google) আৰু AirPlay পেয়াৰিং",
+  "Pause after each line": "প্ৰতিটো শাৰীৰ পাছত বিৰতি",
+  "Playback pauses as each subtitle line ends.": "প্ৰতিটো ছাবটাইটেল শাৰী শেষ হ'লে প্লেবেক বিৰতি হয়।",
+  "Blur the translation": "অনুবাদ অস্পষ্ট কৰক",
+  "Hover over the second subtitle or tap it to see it.": "দ্বিতীয় ছাবটাইটেলৰ ওপৰত হোভাৰ কৰক বা চাবলৈ টিপক।",
+  "Show the translation": "অনুবাদ দেখুৱাওক",
+  "Hide the translation": "অনুবাদ লুকুৱাওক",
+  "Pause after each line on": "প্ৰতিটো শাৰীৰ পাছত বিৰতি অন",
+  "Pause after each line off": "প্ৰতিটো শাৰীৰ পাছত বিৰতি অফ",
+  "Pause after each line on or off": "প্ৰতিটো শাৰীৰ পাছত বিৰতি অন বা অফ",
+  "Show or hide the translation": "অনুবাদ দেখুৱাওক বা লুকুৱাওক",
+  "Loop this line": "এই শাৰী লুপ কৰক",
+  "Line loop off": "শাৰী লুপ অফ",
+  "Loop this line on or off": "শাৰী লুপ অন বা অফ"
 }

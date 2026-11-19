@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "Браузер арқылы кіруден шығу керек пе?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Осы құрылғыда сақталған cookie файлдары жойылады. Бақыланатын арналар мен ойнату тізімдері осы құрылғыда қалады.",
   "Watch history, searches and watch statistics": "Көру тарихы, іздеулер және көру статистикасы",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Кіру деректері (браузер және Google арқылы) және AirPlay жұптары"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Кіру деректері (браузер және Google арқылы) және AirPlay жұптары",
+  "Pause after each line": "Әр жолдан кейін кідірту",
+  "Playback pauses as each subtitle line ends.": "Субтитрдің әр жолы біткенде ойнату кідіреді.",
+  "Blur the translation": "Аударманы бұлдырату",
+  "Hover over the second subtitle or tap it to see it.": "Екінші субтитрге меңзерді апарыңыз немесе көру үшін түртіңіз.",
+  "Show the translation": "Аударманы көрсету",
+  "Hide the translation": "Аударманы жасыру",
+  "Pause after each line on": "Әр жолдан кейін кідірту қосулы",
+  "Pause after each line off": "Әр жолдан кейін кідірту өшірулі",
+  "Pause after each line on or off": "Әр жолдан кейін кідіртуді қосу/өшіру",
+  "Show or hide the translation": "Аударманы көрсету/жасыру",
+  "Loop this line": "Бұл жолды циклге қою",
+  "Line loop off": "Жол циклі өшірулі",
+  "Loop this line on or off": "Жол циклін қосу/өшіру"
 }

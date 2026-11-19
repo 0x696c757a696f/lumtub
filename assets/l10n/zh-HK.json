@@ -3652,5 +3652,18 @@
   "Sign out of the browser sign-in?": "退出瀏覽器登入？",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "此裝置上儲存的 Cookie 會被刪除。關注的頻道和播放清單會保留在此裝置上。",
   "Watch history, searches and watch statistics": "觀看記錄、搜尋記錄和觀看統計",
-  "Sign-ins (browser and Google) and AirPlay pairings": "登入資料（瀏覽器和 Google）及 AirPlay 配對"
+  "Sign-ins (browser and Google) and AirPlay pairings": "登入資料（瀏覽器和 Google）及 AirPlay 配對",
+  "Pause after each line": "每句說完暫停",
+  "Playback pauses as each subtitle line ends.": "每句字幕說完就自動暫停。",
+  "Blur the translation": "模糊翻譯",
+  "Hover over the second subtitle or tap it to see it.": "滑鼠移到第二字幕上或點一下才顯示。",
+  "Show the translation": "顯示翻譯",
+  "Hide the translation": "隱藏翻譯",
+  "Pause after each line on": "每句暫停已開",
+  "Pause after each line off": "每句暫停已關",
+  "Pause after each line on or off": "開關每句暫停",
+  "Show or hide the translation": "顯示或隱藏翻譯",
+  "Loop this line": "單句循環",
+  "Line loop off": "單句循環已關",
+  "Loop this line on or off": "開關單句循環"
 }

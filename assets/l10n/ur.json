@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "براؤزر سائن ان سے سائن آؤٹ کریں؟",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "اس آلے پر محفوظ کردہ کوکیز حذف ہو جاتی ہیں۔ فالو کیے گئے چینلز اور پلے لسٹس اس آلے پر برقرار رہتے ہیں۔",
   "Watch history, searches and watch statistics": "دیکھنے کی ہسٹری، تلاشیں اور دیکھنے کے اعداد و شمار",
-  "Sign-ins (browser and Google) and AirPlay pairings": "سائن ان (براؤزر اور Google) اور AirPlay پیئرنگز"
+  "Sign-ins (browser and Google) and AirPlay pairings": "سائن ان (براؤزر اور Google) اور AirPlay پیئرنگز",
+  "Pause after each line": "ہر سطر کے بعد روکیں",
+  "Playback pauses as each subtitle line ends.": "ہر سب ٹائٹل سطر ختم ہونے پر پلے بیک رک جاتا ہے۔",
+  "Blur the translation": "ترجمہ دھندلا کریں",
+  "Hover over the second subtitle or tap it to see it.": "دوسرے سب ٹائٹل پر ماؤس لے جائیں یا دیکھنے کے لیے ٹیپ کریں۔",
+  "Show the translation": "ترجمہ دکھائیں",
+  "Hide the translation": "ترجمہ چھپائیں",
+  "Pause after each line on": "ہر سطر کے بعد روکنا آن",
+  "Pause after each line off": "ہر سطر کے بعد روکنا آف",
+  "Pause after each line on or off": "ہر سطر کے بعد روکنا آن یا آف کریں",
+  "Show or hide the translation": "ترجمہ دکھائیں یا چھپائیں",
+  "Loop this line": "یہ سطر دہرائیں",
+  "Line loop off": "سطر دہرائی آف",
+  "Loop this line on or off": "سطر دہرائی آن یا آف کریں"
 }

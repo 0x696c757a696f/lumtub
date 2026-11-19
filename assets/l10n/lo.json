@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "ອອກຈາກການເຂົ້າສູ່ລະບົບດ້ວຍບຣາວເຊີບໍ?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "ຄຸກກີທີ່ບັນທຶກໄວ້ໃນອຸປະກອນນີ້ຈະຖືກລຶບ. ຊ່ອງທີ່ຕິດຕາມ ແລະ ລາຍການຫຼິ້ນຍັງຢູ່ໃນອຸປະກອນນີ້.",
   "Watch history, searches and watch statistics": "ປະຫວັດການເບິ່ງ, ການຄົ້ນຫາ ແລະ ສະຖິຕິການເບິ່ງ",
-  "Sign-ins (browser and Google) and AirPlay pairings": "ການເຂົ້າສູ່ລະບົບ (ບຣາວເຊີ ແລະ Google) ແລະ ການຈັບຄູ່ AirPlay"
+  "Sign-ins (browser and Google) and AirPlay pairings": "ການເຂົ້າສູ່ລະບົບ (ບຣາວເຊີ ແລະ Google) ແລະ ການຈັບຄູ່ AirPlay",
+  "Pause after each line": "ຢຸດຊົ່ວຄາວຫຼັງແຕ່ລະແຖວ",
+  "Playback pauses as each subtitle line ends.": "ການຫຼິ້ນຈະຢຸດຊົ່ວຄາວເມື່ອແຕ່ລະແຖວຂອງຄຳບັນຍາຍຈົບ.",
+  "Blur the translation": "ເຮັດໃຫ້ຄຳແປມົວ",
+  "Hover over the second subtitle or tap it to see it.": "ເອົາເມົ້າໄປວາງເທິງຄຳບັນຍາຍທີສອງ ຫຼື ແຕະເພື່ອເບິ່ງ.",
+  "Show the translation": "ສະແດງຄຳແປ",
+  "Hide the translation": "ເຊື່ອງຄຳແປ",
+  "Pause after each line on": "ເປີດການຢຸດຊົ່ວຄາວຫຼັງແຕ່ລະແຖວແລ້ວ",
+  "Pause after each line off": "ປິດການຢຸດຊົ່ວຄາວຫຼັງແຕ່ລະແຖວແລ້ວ",
+  "Pause after each line on or off": "ເປີດ ຫຼື ປິດການຢຸດຊົ່ວຄາວຫຼັງແຕ່ລະແຖວ",
+  "Show or hide the translation": "ສະແດງ ຫຼື ເຊື່ອງຄຳແປ",
+  "Loop this line": "ວົນແຖວນີ້",
+  "Line loop off": "ປິດການວົນແຖວແລ້ວ",
+  "Loop this line on or off": "ເປີດ ຫຼື ປິດການວົນແຖວ"
 }

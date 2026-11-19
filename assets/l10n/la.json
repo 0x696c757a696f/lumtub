@@ -3623,5 +3623,18 @@
   "Sign out of the browser sign-in?": "Ab ingressu per navigatrum egredi?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Crustula in hoc instrumento servata delentur. Canales quos sequeris et indices pellicularum in hoc instrumento manent.",
   "Watch history, searches and watch statistics": "Historia spectandi, quaestiones et statisticae spectandi",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Ingressus (per navigatrum et Google) et copulationes AirPlay"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Ingressus (per navigatrum et Google) et copulationes AirPlay",
+  "Pause after each line": "Post singulas lineas intermittere",
+  "Playback pauses as each subtitle line ends.": "Ludus intermittitur cum singulae lineae subtitulorum finiuntur.",
+  "Blur the translation": "Translationem obscurare",
+  "Hover over the second subtitle or tap it to see it.": "Cursorem super subtitulum alterum move vel id tange ut videatur.",
+  "Show the translation": "Translationem ostendere",
+  "Hide the translation": "Translationem celare",
+  "Pause after each line on": "Intermissio post singulas lineas incensa",
+  "Pause after each line off": "Intermissio post singulas lineas exstincta",
+  "Pause after each line on or off": "Intermissionem post singulas lineas incendere vel exstinguere",
+  "Show or hide the translation": "Translationem ostendere vel celare",
+  "Loop this line": "Hanc lineam in orbem repetere",
+  "Line loop off": "Circuitus lineae exstinctus",
+  "Loop this line on or off": "Circuitum lineae incendere vel exstinguere"
 }

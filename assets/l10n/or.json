@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "ବ୍ରାଉଜର ସାଇନ୍ ଇନ୍‌ରୁ ସାଇନ୍ ଆଉଟ କରିବେ?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "ଏହି ଡିଭାଇସରେ ସେଭ ହୋଇଥିବା କୁକିଗୁଡ଼ିକ ଡିଲିଟ ହୁଏ। ଅନୁସୃତ ଚ୍ୟାନେଲ ଓ ପ୍ଲେଲିଷ୍ଟ ଏହି ଡିଭାଇସରେ ରହିବ।",
   "Watch history, searches and watch statistics": "ଦେଖିବା ଇତିହାସ, ସନ୍ଧାନ ଓ ଦେଖିବା ପରିସଂଖ୍ୟାନ",
-  "Sign-ins (browser and Google) and AirPlay pairings": "ସାଇନ୍ ଇନ୍ (ବ୍ରାଉଜର ଓ Google) ଏବଂ AirPlay ପେୟାରିଂ"
+  "Sign-ins (browser and Google) and AirPlay pairings": "ସାଇନ୍ ଇନ୍ (ବ୍ରାଉଜର ଓ Google) ଏବଂ AirPlay ପେୟାରିଂ",
+  "Pause after each line": "ପ୍ରତ୍ୟେକ ଧାଡ଼ି ପରେ ବିରତି",
+  "Playback pauses as each subtitle line ends.": "ପ୍ରତ୍ୟେକ ସବ୍ଟାଇଟଲ ଧାଡ଼ି ଶେଷ ହେଲେ ପ୍ଲେବ୍ୟାକ ବିରତ ହୁଏ।",
+  "Blur the translation": "ଅନୁବାଦକୁ ଅସ୍ପଷ୍ଟ କରନ୍ତୁ",
+  "Hover over the second subtitle or tap it to see it.": "ଦ୍ୱିତୀୟ ସବ୍ଟାଇଟଲ ଉପରେ ହୋଭର କରନ୍ତୁ ବା ଦେଖିବାକୁ ଟାପ୍ କରନ୍ତୁ।",
+  "Show the translation": "ଅନୁବାଦ ଦେଖାନ୍ତୁ",
+  "Hide the translation": "ଅନୁବାଦ ଲୁଚାନ୍ତୁ",
+  "Pause after each line on": "ପ୍ରତ୍ୟେକ ଧାଡ଼ି ପରେ ବିରତି ଚାଲୁ",
+  "Pause after each line off": "ପ୍ରତ୍ୟେକ ଧାଡ଼ି ପରେ ବିରତି ବନ୍ଦ",
+  "Pause after each line on or off": "ପ୍ରତ୍ୟେକ ଧାଡ଼ି ପରେ ବିରତି ଚାଲୁ ବା ବନ୍ଦ",
+  "Show or hide the translation": "ଅନୁବାଦ ଦେଖାନ୍ତୁ ବା ଲୁଚାନ୍ତୁ",
+  "Loop this line": "ଏହି ଧାଡ଼ି ଲୁପ କରନ୍ତୁ",
+  "Line loop off": "ଧାଡ଼ି ଲୁପ ବନ୍ଦ",
+  "Loop this line on or off": "ଧାଡ଼ି ଲୁପ ଚାଲୁ ବା ବନ୍ଦ"
 }

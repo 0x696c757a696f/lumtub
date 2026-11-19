@@ -3623,5 +3623,18 @@
   "Sign out of the browser sign-in?": "Mag-sign out sa browser sign-in?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Made-delete ang mga cookie na naka-save sa device na ito. Mananatili sa device na ito ang mga sinusundang channel at playlist.",
   "Watch history, searches and watch statistics": "History ng panonood, mga hinanap, at mga istatistika ng panonood",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Mga sign-in (browser at Google) at mga pairing ng AirPlay"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Mga sign-in (browser at Google) at mga pairing ng AirPlay",
+  "Pause after each line": "I-pause pagkatapos ng bawat linya",
+  "Playback pauses as each subtitle line ends.": "Napo-pause ang playback kapag natapos ang bawat linya ng subtitle.",
+  "Blur the translation": "I-blur ang pagsasalin",
+  "Hover over the second subtitle or tap it to see it.": "I-hover ang pangalawang subtitle o i-tap ito para makita.",
+  "Show the translation": "Ipakita ang pagsasalin",
+  "Hide the translation": "Itago ang pagsasalin",
+  "Pause after each line on": "Naka-on ang pause pagkatapos ng bawat linya",
+  "Pause after each line off": "Naka-off ang pause pagkatapos ng bawat linya",
+  "Pause after each line on or off": "Buksan o isara ang pause pagkatapos ng bawat linya",
+  "Show or hide the translation": "Ipakita o itago ang pagsasalin",
+  "Loop this line": "I-loop ang linyang ito",
+  "Line loop off": "Naka-off ang line loop",
+  "Loop this line on or off": "Buksan o isara ang line loop"
 }

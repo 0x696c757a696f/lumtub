@@ -3623,5 +3623,18 @@
   "Sign out of the browser sign-in?": "Vols tancar la sessió de l'inici de sessió amb navegador?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Se suprimiran les galetes desades en aquest dispositiu. Els canals seguits i les llistes de reproducció es mantenen en aquest dispositiu.",
   "Watch history, searches and watch statistics": "Historial de reproducció, cerques i estadístiques de visualització",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Inicis de sessió (navegador i Google) i vinculacions d'AirPlay"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Inicis de sessió (navegador i Google) i vinculacions d'AirPlay",
+  "Pause after each line": "Pausa després de cada línia",
+  "Playback pauses as each subtitle line ends.": "La reproducció es posa en pausa quan acaba cada línia de subtítol.",
+  "Blur the translation": "Difumina la traducció",
+  "Hover over the second subtitle or tap it to see it.": "Passa el cursor per sobre del segon subtítol o toca'l per veure'l.",
+  "Show the translation": "Mostra la traducció",
+  "Hide the translation": "Amaga la traducció",
+  "Pause after each line on": "Pausa després de cada línia activada",
+  "Pause after each line off": "Pausa després de cada línia desactivada",
+  "Pause after each line on or off": "Activa o desactiva la pausa després de cada línia",
+  "Show or hide the translation": "Mostra o amaga la traducció",
+  "Loop this line": "Repeteix aquesta línia en bucle",
+  "Line loop off": "Bucle de línia desactivat",
+  "Loop this line on or off": "Activa o desactiva el bucle de línia"
 }

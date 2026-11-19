@@ -3623,5 +3623,18 @@
   "Sign out of the browser sign-in?": "Одјава од најавата преку прелистувач?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Колачињата зачувани на овој уред се бришат. Следените канали и плејлисти остануваат на овој уред.",
   "Watch history, searches and watch statistics": "Историја на гледање и пребарувања и статистика на гледање",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Најави (преку прелистувач и Google) и спојувања со AirPlay"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Најави (преку прелистувач и Google) и спојувања со AirPlay",
+  "Pause after each line": "Паузирај по секој ред",
+  "Playback pauses as each subtitle line ends.": "Репродукцијата се паузира кога ќе заврши секој ред од титлот.",
+  "Blur the translation": "Замати го преводот",
+  "Hover over the second subtitle or tap it to see it.": "Задржете го покажувачот врз вториот титл или допрете го за да го видите.",
+  "Show the translation": "Прикажи го преводот",
+  "Hide the translation": "Сокриј го преводот",
+  "Pause after each line on": "Паузата по секој ред е вклучена",
+  "Pause after each line off": "Паузата по секој ред е исклучена",
+  "Pause after each line on or off": "Вклучи или исклучи пауза по секој ред",
+  "Show or hide the translation": "Прикажи или сокриј го преводот",
+  "Loop this line": "Повторувај го овој ред",
+  "Line loop off": "Повторувањето на редот е исклучено",
+  "Loop this line on or off": "Вклучи или исклучи повторување на ред"
 }

@@ -3628,5 +3628,18 @@
   "Sign out of the browser sign-in?": "هل تريد تسجيل الخروج من تسجيل الدخول عبر المتصفح؟",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "سيتم حذف ملفات تعريف الارتباط المحفوظة على هذا الجهاز. تبقى القنوات المتابَعة وقوائم التشغيل على هذا الجهاز.",
   "Watch history, searches and watch statistics": "سجل المشاهدة وعمليات البحث وإحصاءات المشاهدة",
-  "Sign-ins (browser and Google) and AirPlay pairings": "عمليات تسجيل الدخول (عبر المتصفح وGoogle) وعمليات اقتران AirPlay"
+  "Sign-ins (browser and Google) and AirPlay pairings": "عمليات تسجيل الدخول (عبر المتصفح وGoogle) وعمليات اقتران AirPlay",
+  "Pause after each line": "إيقاف مؤقت بعد كل سطر",
+  "Playback pauses as each subtitle line ends.": "يتوقف التشغيل مؤقتًا عند انتهاء كل سطر من الترجمة.",
+  "Blur the translation": "طمس الترجمة",
+  "Hover over the second subtitle or tap it to see it.": "مرّر المؤشر فوق الترجمة الثانية أو انقر عليها لعرضها.",
+  "Show the translation": "إظهار الترجمة",
+  "Hide the translation": "إخفاء الترجمة",
+  "Pause after each line on": "الإيقاف المؤقت بعد كل سطر قيد التشغيل",
+  "Pause after each line off": "الإيقاف المؤقت بعد كل سطر متوقف",
+  "Pause after each line on or off": "تشغيل الإيقاف المؤقت بعد كل سطر أو إيقافه",
+  "Show or hide the translation": "إظهار الترجمة أو إخفاؤها",
+  "Loop this line": "تكرار هذا السطر",
+  "Line loop off": "تكرار السطر متوقف",
+  "Loop this line on or off": "تشغيل تكرار السطر أو إيقافه"
 }

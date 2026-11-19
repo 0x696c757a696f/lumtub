@@ -3623,5 +3623,18 @@
   "Sign out of the browser sign-in?": "Se želite odjaviti iz prijave z brskalnikom?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Piškotki, shranjeni v tej napravi, se izbrišejo. Spremljani kanali in seznami predvajanja ostanejo v tej napravi.",
   "Watch history, searches and watch statistics": "Zgodovina ogledov in iskanj ter statistika ogledov",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Prijave (z brskalnikom in Googlom) ter seznanitve AirPlay"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Prijave (z brskalnikom in Googlom) ter seznanitve AirPlay",
+  "Pause after each line": "Premor po vsaki vrstici",
+  "Playback pauses as each subtitle line ends.": "Predvajanje se začasno ustavi, ko se konča vsaka vrstica podnapisa.",
+  "Blur the translation": "Zamegli prevod",
+  "Hover over the second subtitle or tap it to see it.": "Z miško se pomaknite na drugi podnapis ali se ga dotaknite, da ga vidite.",
+  "Show the translation": "Pokaži prevod",
+  "Hide the translation": "Skrij prevod",
+  "Pause after each line on": "Premor po vsaki vrstici vklopljen",
+  "Pause after each line off": "Premor po vsaki vrstici izklopljen",
+  "Pause after each line on or off": "Vklop ali izklop premora po vsaki vrstici",
+  "Show or hide the translation": "Pokaži ali skrij prevod",
+  "Loop this line": "Ponavljaj to vrstico v zanki",
+  "Line loop off": "Zanka vrstice izklopljena",
+  "Loop this line on or off": "Vklop ali izklop zanke vrstice"
 }

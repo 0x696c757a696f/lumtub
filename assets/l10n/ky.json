@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "Серепчи аркылуу кирүүдөн чыгасызбы?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Бул түзмөктө сакталган куки файлдары өчүрүлөт. Жазылган каналдар жана ойнотуу тизмелери бул түзмөктө кала берет.",
   "Watch history, searches and watch statistics": "Көрүү жана издөө тарыхы жана көрүү статистикасы",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Кирүүлөр (серепчи жана Google аркылуу) жана AirPlay байланыштары"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Кирүүлөр (серепчи жана Google аркылуу) жана AirPlay байланыштары",
+  "Pause after each line": "Ар бир саптан кийин тындыруу",
+  "Playback pauses as each subtitle line ends.": "Субтитрдин ар бир сабы бүткөндө ойнотуу тындырылат.",
+  "Blur the translation": "Которууну бүдөмүктөө",
+  "Hover over the second subtitle or tap it to see it.": "Экинчи субтитрдин үстүнө жылдырыңыз же көрүү үчүн таптаңыз.",
+  "Show the translation": "Которууну көрсөтүү",
+  "Hide the translation": "Которууну жашыруу",
+  "Pause after each line on": "Ар бир саптан кийин тындыруу күйүк",
+  "Pause after each line off": "Ар бир саптан кийин тындыруу өчүк",
+  "Pause after each line on or off": "Ар бир саптан кийин тындырууну күйгүзүү/өчүрүү",
+  "Show or hide the translation": "Которууну көрсөтүү/жашыруу",
+  "Loop this line": "Бул сапты кайталоо",
+  "Line loop off": "Сап кайталоо өчүк",
+  "Loop this line on or off": "Сап кайталоону күйгүзүү/өчүрүү"
 }

@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "Brauzer bilen girişden çykylsynmy?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Bu enjamda saklanan kukiler pozulýar. Yzarlanýan kanallar we pleýlistler bu enjamda galýar.",
   "Watch history, searches and watch statistics": "Tomaşa taryhy, gözlegler we tomaşa statistikasy",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Girişler (brauzer we Google) we AirPlay jübütlemeleri"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Girişler (brauzer we Google) we AirPlay jübütlemeleri",
+  "Pause after each line": "Her sözlemden soň bes et",
+  "Playback pauses as each subtitle line ends.": "Her subtitr sözlemi gutarandan soň oýnatma durýar.",
+  "Blur the translation": "Terjimäni bulançyla",
+  "Hover over the second subtitle or tap it to see it.": "Ikinji subtitriň üstüne syçanjygy getiriň ýa-da görmek üçin basyň.",
+  "Show the translation": "Terjimäni görkez",
+  "Hide the translation": "Terjimäni gizle",
+  "Pause after each line on": "Her sözlemden soň bes etmek açyk",
+  "Pause after each line off": "Her sözlemden soň bes etmek öçük",
+  "Pause after each line on or off": "Her sözlemden soň bes etmegi aç ýa-da öçür",
+  "Show or hide the translation": "Terjimäni görkez ýa-da gizle",
+  "Loop this line": "Bu sözlemi gaýtala",
+  "Line loop off": "Sözlem gaýtalamasy öçük",
+  "Loop this line on or off": "Sözlem gaýtalamasyny aç ýa-da öçür"
 }

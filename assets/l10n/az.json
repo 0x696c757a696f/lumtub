@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "Brauzerlə girişdən çıxılsın?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Bu cihazda saxlanmış kukilər silinir. İzlənən kanallar və pleylistlər bu cihazda qalır.",
   "Watch history, searches and watch statistics": "İzləmə tarixçəsi, axtarışlar və izləmə statistikası",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Girişlər (brauzer və Google) və AirPlay cütləşmələri"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Girişlər (brauzer və Google) və AirPlay cütləşmələri",
+  "Pause after each line": "Hər sətirdən sonra dayandır",
+  "Playback pauses as each subtitle line ends.": "Hər subtitr sətri bitəndə oxutma dayanır.",
+  "Blur the translation": "Tərcüməni bulanıqlaşdır",
+  "Hover over the second subtitle or tap it to see it.": "İkinci subtitrin üzərinə gətirin və ya görmək üçün toxunun.",
+  "Show the translation": "Tərcüməni göstər",
+  "Hide the translation": "Tərcüməni gizlət",
+  "Pause after each line on": "Hər sətirdən sonra dayandırma açıqdır",
+  "Pause after each line off": "Hər sətirdən sonra dayandırma söndürülüb",
+  "Pause after each line on or off": "Hər sətirdən sonra dayandırmanı aç və ya söndür",
+  "Show or hide the translation": "Tərcüməni göstər və ya gizlət",
+  "Loop this line": "Bu sətri təkrarla",
+  "Line loop off": "Sətir təkrarı söndürülüb",
+  "Loop this line on or off": "Sətir təkrarını aç və ya söndür"
 }

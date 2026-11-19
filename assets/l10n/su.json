@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "Kaluar tina asup nganggo pangbuka?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Cookie anu disimpen dina alat ieu dipiceun. Saluran anu diturutan jeung daptar puter tetep aya dina alat ieu.",
   "Watch history, searches and watch statistics": "Riwayat nonton, paluruh, jeung statistik nonton",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Asup (pangbuka jeung Google) jeung pasangan AirPlay"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Asup (pangbuka jeung Google) jeung pasangan AirPlay",
+  "Pause after each line": "Eureun sanggeus unggal kalimat",
+  "Playback pauses as each subtitle line ends.": "Pamutaran eureun nalika unggal kalimat subtitel réngsé.",
+  "Blur the translation": "Burékeun tarjamah",
+  "Hover over the second subtitle or tap it to see it.": "Arahkeun kursor kana subtitel kadua atawa ketok pikeun nempo.",
+  "Show the translation": "Témbongkeun tarjamah",
+  "Hide the translation": "Sumputkeun tarjamah",
+  "Pause after each line on": "Eureun sanggeus unggal kalimat hurung",
+  "Pause after each line off": "Eureun sanggeus unggal kalimat pareum",
+  "Pause after each line on or off": "Hurungkeun atawa pareumkeun eureun sanggeus unggal kalimat",
+  "Show or hide the translation": "Témbongkeun atawa sumputkeun tarjamah",
+  "Loop this line": "Loop kalimat ieu",
+  "Line loop off": "Loop kalimat pareum",
+  "Loop this line on or off": "Hurungkeun atawa pareumkeun loop kalimat"
 }

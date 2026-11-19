@@ -3628,5 +3628,18 @@
   "Sign out of the browser sign-in?": "Uscire dall'accesso con browser?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "I cookie salvati su questo dispositivo vengono eliminati. I canali seguiti e le playlist restano su questo dispositivo.",
   "Watch history, searches and watch statistics": "Cronologia visualizzazioni e ricerche e statistiche di visione",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Accessi (browser e Google) e associazioni AirPlay"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Accessi (browser e Google) e associazioni AirPlay",
+  "Pause after each line": "Pausa dopo ogni riga",
+  "Playback pauses as each subtitle line ends.": "La riproduzione va in pausa alla fine di ogni riga dei sottotitoli.",
+  "Blur the translation": "Sfoca la traduzione",
+  "Hover over the second subtitle or tap it to see it.": "Passa il mouse sul secondo sottotitolo o toccalo per vederlo.",
+  "Show the translation": "Mostra la traduzione",
+  "Hide the translation": "Nascondi la traduzione",
+  "Pause after each line on": "Pausa dopo ogni riga attivata",
+  "Pause after each line off": "Pausa dopo ogni riga disattivata",
+  "Pause after each line on or off": "Attiva o disattiva la pausa dopo ogni riga",
+  "Show or hide the translation": "Mostra o nascondi la traduzione",
+  "Loop this line": "Ripeti questa riga in loop",
+  "Line loop off": "Ripetizione riga disattivata",
+  "Loop this line on or off": "Attiva o disattiva la ripetizione della riga"
 }

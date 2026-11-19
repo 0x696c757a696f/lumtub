@@ -476,7 +476,8 @@ class VideoState extends State<Video> with WidgetsBindingObserver {
                 ),
                 // Lumtub: the configuration alone says whether this view
                 // draws, as libass can be switched while the player runs.
-                if (videoViewParameters.subtitleViewConfiguration.visible)
+                if (videoViewParameters.subtitleViewConfiguration.visible ||
+                    videoViewParameters.subtitleViewConfiguration.ghost)
                   Positioned.fill(
                     child: SubtitleView(
                       controller: widget.controller,
@@ -492,6 +493,20 @@ class VideoState extends State<Video> with WidgetsBindingObserver {
                 if (videoViewParameters.controls != null)
                   Positioned.fill(
                     child: videoViewParameters.controls!.call(this),
+                  ),
+                // Lumtub: a blurred secondary subtitle shows when the
+                // pointer is over it or it is tapped, over the controls.
+                if (videoViewParameters
+                        .subtitleViewConfiguration.blurSecondary &&
+                    (videoViewParameters.subtitleViewConfiguration.visible ||
+                        videoViewParameters.subtitleViewConfiguration.ghost))
+                  Positioned.fill(
+                    child: SecondaryRevealArea(
+                      rect: () =>
+                          _subtitleViewKey.currentState?.secondaryRect(),
+                      configuration:
+                          videoViewParameters.subtitleViewConfiguration,
+                    ),
                   ),
               ],
             ),

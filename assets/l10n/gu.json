@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "બ્રાઉઝર સાઇન-ઇનમાંથી સાઇન આઉટ કરવું છે?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "આ ડિવાઇસ પર સાચવેલી કુકીઝ કાઢી નાખવામાં આવશે. ફૉલો કરેલી ચેનલો અને પ્લેલિસ્ટ આ ડિવાઇસ પર જ રહેશે.",
   "Watch history, searches and watch statistics": "જોવાનો ઇતિહાસ, શોધ અને જોવાના આંકડા",
-  "Sign-ins (browser and Google) and AirPlay pairings": "સાઇન-ઇન (બ્રાઉઝર અને Google) અને AirPlay જોડાણો"
+  "Sign-ins (browser and Google) and AirPlay pairings": "સાઇન-ઇન (બ્રાઉઝર અને Google) અને AirPlay જોડાણો",
+  "Pause after each line": "દરેક લીટી પછી થોભો",
+  "Playback pauses as each subtitle line ends.": "દરેક સબટાઇટલ લીટી પૂરી થાય ત્યારે પ્લેબેક થોભે છે.",
+  "Blur the translation": "અનુવાદ ઝાંખો કરો",
+  "Hover over the second subtitle or tap it to see it.": "બીજા સબટાઇટલ પર હોવર કરો અથવા જોવા માટે ટેપ કરો.",
+  "Show the translation": "અનુવાદ બતાવો",
+  "Hide the translation": "અનુવાદ છુપાવો",
+  "Pause after each line on": "દરેક લીટી પછી થોભો ચાલુ",
+  "Pause after each line off": "દરેક લીટી પછી થોભો બંધ",
+  "Pause after each line on or off": "દરેક લીટી પછી થોભો ચાલુ અથવા બંધ",
+  "Show or hide the translation": "અનુવાદ બતાવો અથવા છુપાવો",
+  "Loop this line": "આ લીટી પુનરાવર્તિત કરો",
+  "Line loop off": "લીટી પુનરાવર્તન બંધ",
+  "Loop this line on or off": "લીટી પુનરાવર્તન ચાલુ અથવા બંધ"
 }

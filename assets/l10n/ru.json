@@ -3628,5 +3628,18 @@
   "Sign out of the browser sign-in?": "Выйти из аккаунта (вход через браузер)?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Файлы cookie, сохранённые на этом устройстве, удаляются. Каналы, на которые вы подписаны, и плейлисты останутся на этом устройстве.",
   "Watch history, searches and watch statistics": "История просмотров и поиска и статистика просмотров",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Входы (через браузер и Google) и привязки AirPlay"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Входы (через браузер и Google) и привязки AirPlay",
+  "Pause after each line": "Пауза после каждой строки",
+  "Playback pauses as each subtitle line ends.": "Воспроизведение приостанавливается в конце каждой строки субтитров.",
+  "Blur the translation": "Размыть перевод",
+  "Hover over the second subtitle or tap it to see it.": "Наведите курсор на второй субтитр или коснитесь его, чтобы увидеть.",
+  "Show the translation": "Показать перевод",
+  "Hide the translation": "Скрыть перевод",
+  "Pause after each line on": "Пауза после каждой строки включена",
+  "Pause after each line off": "Пауза после каждой строки выключена",
+  "Pause after each line on or off": "Включить или выключить паузу после каждой строки",
+  "Show or hide the translation": "Показать или скрыть перевод",
+  "Loop this line": "Зациклить эту строку",
+  "Line loop off": "Зацикливание строки выключено",
+  "Loop this line on or off": "Включить или выключить зацикливание строки"
 }

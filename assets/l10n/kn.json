@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "ಬ್ರೌಸರ್ ಸೈನ್ ಇನ್‌ನಿಂದ ಸೈನ್ ಔಟ್ ಮಾಡಬೇಕೆ?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "ಈ ಸಾಧನದಲ್ಲಿ ಉಳಿಸಿದ ಕುಕೀಗಳನ್ನು ಅಳಿಸಲಾಗುತ್ತದೆ. ಅನುಸರಿಸಿದ ಚಾನಲ್‌ಗಳು ಮತ್ತು ಪ್ಲೇಲಿಸ್ಟ್‌ಗಳು ಈ ಸಾಧನದಲ್ಲಿಯೇ ಉಳಿಯುತ್ತವೆ.",
   "Watch history, searches and watch statistics": "ವೀಕ್ಷಣೆ ಇತಿಹಾಸ, ಹುಡುಕಾಟಗಳು ಮತ್ತು ವೀಕ್ಷಣಾ ಅಂಕಿಅಂಶ",
-  "Sign-ins (browser and Google) and AirPlay pairings": "ಸೈನ್ ಇನ್‌ಗಳು (ಬ್ರೌಸರ್ ಮತ್ತು Google) ಮತ್ತು AirPlay ಜೋಡಣೆಗಳು"
+  "Sign-ins (browser and Google) and AirPlay pairings": "ಸೈನ್ ಇನ್‌ಗಳು (ಬ್ರೌಸರ್ ಮತ್ತು Google) ಮತ್ತು AirPlay ಜೋಡಣೆಗಳು",
+  "Pause after each line": "ಪ್ರತಿ ಸಾಲಿನ ನಂತರ ವಿರಾಮ",
+  "Playback pauses as each subtitle line ends.": "ಪ್ರತಿ ಉಪಶೀರ್ಷಿಕೆ ಸಾಲು ಮುಗಿದಾಗ ಪ್ಲೇಬ್ಯಾಕ್ ವಿರಾಮಗೊಳ್ಳುತ್ತದೆ.",
+  "Blur the translation": "ಅನುವಾದವನ್ನು ಮಸುಕುಗೊಳಿಸಿ",
+  "Hover over the second subtitle or tap it to see it.": "ಎರಡನೇ ಉಪಶೀರ್ಷಿಕೆಯ ಮೇಲೆ ಹೋವರ್ ಮಾಡಿ ಅಥವಾ ನೋಡಲು ಟ್ಯಾಪ್ ಮಾಡಿ.",
+  "Show the translation": "ಅನುವಾದವನ್ನು ತೋರಿಸಿ",
+  "Hide the translation": "ಅನುವಾದವನ್ನು ಮರೆಮಾಡಿ",
+  "Pause after each line on": "ಪ್ರತಿ ಸಾಲಿನ ನಂತರ ವಿರಾಮ ಆನ್",
+  "Pause after each line off": "ಪ್ರತಿ ಸಾಲಿನ ನಂತರ ವಿರಾಮ ಆಫ್",
+  "Pause after each line on or off": "ಪ್ರತಿ ಸಾಲಿನ ನಂತರ ವಿರಾಮ ಆನ್ ಅಥವಾ ಆಫ್",
+  "Show or hide the translation": "ಅನುವಾದವನ್ನು ತೋರಿಸಿ ಅಥವಾ ಮರೆಮಾಡಿ",
+  "Loop this line": "ಈ ಸಾಲನ್ನು ಲೂಪ್ ಮಾಡಿ",
+  "Line loop off": "ಸಾಲು ಲೂಪ್ ಆಫ್",
+  "Loop this line on or off": "ಸಾಲು ಲೂಪ್ ಆನ್ ಅಥವಾ ಆಫ್"
 }

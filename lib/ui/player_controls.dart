@@ -1117,6 +1117,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: progress)),
           time,
           _subtitleMenu(width),
+          _learningButtons(width, few: true),
           _IconButton(tooltip: tr('Fullscreen (F)'), icon: AppIcons.cornersOut, size: 24, width: width, onTap: () => unawaited(widget.state?.toggleFullscreen())),
         ]),
       );
@@ -1146,6 +1147,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           // Live chat on an upright full screen keeps only its switch.
           if (!compact) _danmakuButtons(width, withSettings: !narrow),
           _subtitleMenu(width),
+          _learningButtons(width, few: narrow),
           if (!narrow)
           StreamBuilder<double>(
             stream: _player.stream.rate,
@@ -1232,6 +1234,53 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       ),
     );
   }
+
+  /// 学外语 for a finger or a TV remote: with 每句说完暂停 on, 上一句, 重听这一句,
+  /// 下一句 and 单句循环 ([few] keeps 重听 alone); with 模糊翻译 on and a second
+  /// subtitle shown, the button that shows it.
+  Widget _learningButtons(double width, {bool few = false}) => ListenableBuilder(
+        listenable: Listenable.merge([_controller, _controller.translationShown]),
+        builder: (context, _) {
+          final settings = _controller.settings;
+          final lines = settings.pauseEachLine && (_player.state.track.subtitle.id != 'no' || _controller.secondaryTrackId != 'no');
+          final blurred = settings.blurSecondary && _controller.secondaryTrackId != 'no';
+          if (!lines && !blurred) return const SizedBox.shrink();
+          final shown = _controller.translationShown.value;
+          void step(int skip) {
+            _show();
+            unawaited(_controller.stepLine(skip));
+          }
+          return Row(mainAxisSize: MainAxisSize.min, children: [
+            if (lines && !few) _IconButton(tooltip: tr('Previous line'), width: width, icon: AppIcons.skipBackFill, size: 20, onTap: () => step(-1)),
+            if (lines) _IconButton(tooltip: tr('Replay this line'), width: width, icon: AppIcons.arrowCounterClockwiseFill, size: 20, onTap: () => step(0)),
+            if (lines && !few) _IconButton(tooltip: tr('Next line'), width: width, icon: AppIcons.skipForwardFill, size: 20, onTap: () => step(1)),
+            if (lines && !few)
+              _IconButton(
+                tooltip: tr('Loop this line'),
+                width: width,
+                icon: AppIcons.repeatOnce,
+                size: 20,
+                active: _controller.loopB != null,
+                onTap: () {
+                  _show();
+                  unawaited(_controller.toggleLineLoop());
+                },
+              ),
+            if (blurred)
+              _IconButton(
+                tooltip: shown ? tr('Hide the translation') : tr('Show the translation'),
+                width: width,
+                icon: shown ? AppIcons.eye : AppIcons.eyeSlash,
+                size: 20,
+                active: shown,
+                onTap: () {
+                  _show();
+                  _controller.toggleTranslation();
+                },
+              ),
+          ]);
+        },
+      );
 
   /// 弹幕 on or off and their settings: a video's chat, or its timed comments.
   Widget _danmakuButtons(double width, {bool withSettings = true}) => ListenableBuilder(

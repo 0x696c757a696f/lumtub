@@ -3623,5 +3623,18 @@
   "Sign out of the browser sign-in?": "Nabigatzailearekin hasitako saioa itxi nahi duzu?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Gailu honetan gordetako cookieak ezabatuko dira. Jarraitutako kanalak eta erreprodukzio-zerrendak gailu honetan geratuko dira.",
   "Watch history, searches and watch statistics": "Ikusitakoen historia, bilaketak eta ikusketa-estatistikak",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Saio-hasierak (nabigatzailea eta Google) eta AirPlay bikotatzeak"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Saio-hasierak (nabigatzailea eta Google) eta AirPlay bikotatzeak",
+  "Pause after each line": "Gelditu lerro bakoitzaren ondoren",
+  "Playback pauses as each subtitle line ends.": "Azpititulu-lerro bakoitza amaitzean erreprodukzioa gelditzen da.",
+  "Blur the translation": "Lausotu itzulpena",
+  "Hover over the second subtitle or tap it to see it.": "Jarri erakuslea bigarren azpitituluaren gainean edo ukitu ikusteko.",
+  "Show the translation": "Erakutsi itzulpena",
+  "Hide the translation": "Ezkutatu itzulpena",
+  "Pause after each line on": "Gelditzea lerro bakoitzaren ondoren aktibatuta",
+  "Pause after each line off": "Gelditzea lerro bakoitzaren ondoren desaktibatuta",
+  "Pause after each line on or off": "Aktibatu edo desaktibatu gelditzea lerro bakoitzaren ondoren",
+  "Show or hide the translation": "Erakutsi edo ezkutatu itzulpena",
+  "Loop this line": "Errepikatu lerro hau begizta moduan",
+  "Line loop off": "Lerro-begizta desaktibatuta",
+  "Loop this line on or off": "Aktibatu edo desaktibatu lerro-begizta"
 }

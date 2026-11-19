@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "ब्राउझर साइन इनमधून साइन आउट करायचे?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "या डिव्हाइसवर सेव्ह केलेल्या कुकीज हटवल्या जातात. फॉलो केलेले चॅनल आणि प्लेलिस्ट या डिव्हाइसवर राहतात.",
   "Watch history, searches and watch statistics": "पाहण्याचा इतिहास, शोध आणि पाहण्याची आकडेवारी",
-  "Sign-ins (browser and Google) and AirPlay pairings": "साइन इन (ब्राउझर आणि Google) आणि AirPlay पेअरिंग"
+  "Sign-ins (browser and Google) and AirPlay pairings": "साइन इन (ब्राउझर आणि Google) आणि AirPlay पेअरिंग",
+  "Pause after each line": "प्रत्येक ओळीनंतर थांबा",
+  "Playback pauses as each subtitle line ends.": "प्रत्येक उपशीर्षक ओळ संपली की प्लेबॅक थांबतो.",
+  "Blur the translation": "भाषांतर अस्पष्ट करा",
+  "Hover over the second subtitle or tap it to see it.": "दुसऱ्या उपशीर्षकावर फिरवा किंवा ते पाहण्यासाठी टॅप करा.",
+  "Show the translation": "भाषांतर दाखवा",
+  "Hide the translation": "भाषांतर लपवा",
+  "Pause after each line on": "प्रत्येक ओळीनंतर थांबा चालू",
+  "Pause after each line off": "प्रत्येक ओळीनंतर थांबा बंद",
+  "Pause after each line on or off": "प्रत्येक ओळीनंतर थांबा चालू किंवा बंद",
+  "Show or hide the translation": "भाषांतर दाखवा किंवा लपवा",
+  "Loop this line": "ही ओळ लूप करा",
+  "Line loop off": "ओळ लूप बंद",
+  "Loop this line on or off": "ओळ लूप चालू किंवा बंद"
 }

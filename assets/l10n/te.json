@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "బ్రౌజర్ సైన్-ఇన్ నుండి సైన్ అవుట్ చేయాలా?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "ఈ పరికరంలో సేవ్ చేసిన కుక్కీలు తొలగించబడతాయి. అనుసరిస్తున్న ఛానెల్‌లు మరియు ప్లేలిస్ట్‌లు ఈ పరికరంలోనే ఉంటాయి.",
   "Watch history, searches and watch statistics": "వీక్షణ చరిత్ర, శోధనలు మరియు వీక్షణ గణాంకాలు",
-  "Sign-ins (browser and Google) and AirPlay pairings": "సైన్-ఇన్‌లు (బ్రౌజర్ మరియు Google) మరియు AirPlay పెయిరింగ్‌లు"
+  "Sign-ins (browser and Google) and AirPlay pairings": "సైన్-ఇన్‌లు (బ్రౌజర్ మరియు Google) మరియు AirPlay పెయిరింగ్‌లు",
+  "Pause after each line": "ప్రతి లైన్ తర్వాత పాజ్ చేయండి",
+  "Playback pauses as each subtitle line ends.": "ప్రతి ఉపశీర్షిక లైన్ ముగిసినప్పుడు ప్లేబ్యాక్ పాజ్ అవుతుంది.",
+  "Blur the translation": "అనువాదాన్ని బ్లర్ చేయండి",
+  "Hover over the second subtitle or tap it to see it.": "రెండవ ఉపశీర్షికపై హోవర్ చేయండి లేదా చూడటానికి ట్యాప్ చేయండి.",
+  "Show the translation": "అనువాదాన్ని చూపించండి",
+  "Hide the translation": "అనువాదాన్ని దాచండి",
+  "Pause after each line on": "ప్రతి లైన్ తర్వాత పాజ్ ఆన్",
+  "Pause after each line off": "ప్రతి లైన్ తర్వాత పాజ్ ఆఫ్",
+  "Pause after each line on or off": "ప్రతి లైన్ తర్వాత పాజ్ ఆన్ లేదా ఆఫ్",
+  "Show or hide the translation": "అనువాదాన్ని చూపించండి లేదా దాచండి",
+  "Loop this line": "ఈ లైన్‌ను లూప్ చేయండి",
+  "Line loop off": "లైన్ లూప్ ఆఫ్",
+  "Loop this line on or off": "లైన్ లూప్ ఆన్ లేదా ఆఫ్"
 }

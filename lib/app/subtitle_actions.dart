@@ -55,6 +55,7 @@ extension SubtitleActions on AppController {
     if (platform is! NativePlayer) return false;
     // The subtitle list reads the file again.
     _cues.clear();
+    _cueGeneration++;
     try {
       Future<List<Map<dynamic, dynamic>>> tracks() async {
         final list = jsonDecode(await platform.getProperty('track-list'));
@@ -610,6 +611,7 @@ extension SubtitleActions on AppController {
   /// A new video: libmpv draws its subtitles again, if it is meant to.
   void _resetSubtitleFont() {
     _forgetSubtitleCopies();
+    _forgetReveal();
     _plainFits.clear();
     if (!libassCantDraw) return;
     libassCantDraw = false;

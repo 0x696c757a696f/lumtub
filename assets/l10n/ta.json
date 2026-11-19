@@ -3623,5 +3623,18 @@
   "Sign out of the browser sign-in?": "உலாவி உள்நுழைவிலிருந்து வெளியேறவா?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "இந்தச் சாதனத்தில் சேமிக்கப்பட்ட குக்கீகள் நீக்கப்படும். பின்தொடரும் சேனல்களும் பிளேலிஸ்ட்களும் இந்தச் சாதனத்திலேயே இருக்கும்.",
   "Watch history, searches and watch statistics": "பார்த்த வரலாறு, தேடல்கள் மற்றும் பார்வைப் புள்ளிவிவரங்கள்",
-  "Sign-ins (browser and Google) and AirPlay pairings": "உள்நுழைவுகள் (உலாவி மற்றும் Google) மற்றும் AirPlay இணைப்புகள்"
+  "Sign-ins (browser and Google) and AirPlay pairings": "உள்நுழைவுகள் (உலாவி மற்றும் Google) மற்றும் AirPlay இணைப்புகள்",
+  "Pause after each line": "ஒவ்வொரு வரிக்குப் பிறகும் இடைநிறுத்து",
+  "Playback pauses as each subtitle line ends.": "ஒவ்வொரு வசன வரியும் முடியும்போது பிளேபேக் இடைநிற்கும்.",
+  "Blur the translation": "மொழிபெயர்ப்பை மங்கலாக்கு",
+  "Hover over the second subtitle or tap it to see it.": "இரண்டாம் வசனத்தின் மேல் சுட்டியை வைக்கவும் அல்லது பார்க்க தட்டவும்.",
+  "Show the translation": "மொழிபெயர்ப்பைக் காட்டு",
+  "Hide the translation": "மொழிபெயர்ப்பை மறை",
+  "Pause after each line on": "ஒவ்வொரு வரிக்குப் பிறகும் இடைநிறுத்தம் இயக்கத்தில்",
+  "Pause after each line off": "ஒவ்வொரு வரிக்குப் பிறகும் இடைநிறுத்தம் நிறுத்தத்தில்",
+  "Pause after each line on or off": "ஒவ்வொரு வரிக்குப் பிறகும் இடைநிறுத்தத்தை இயக்கு / நிறுத்து",
+  "Show or hide the translation": "மொழிபெயர்ப்பைக் காட்டு / மறை",
+  "Loop this line": "இந்த வரியைச் சுழற்று",
+  "Line loop off": "வரி சுழற்சி நிறுத்தத்தில்",
+  "Loop this line on or off": "வரி சுழற்சியை இயக்கு / நிறுத்து"
 }

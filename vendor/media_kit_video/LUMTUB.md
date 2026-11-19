@@ -118,3 +118,9 @@ The changes, marked "Lumtub" in the code:
   picture on that layer, arms it for going home, passes the window's play,
   pause and skip buttons on, and keeps the layer's clock at the player's
   position for the window's progress bar.
+- `SubtitleView` can blur the secondary line (`blurSecondary`, shown plainly
+  while `secondaryShown` is true) and can lay its lines out unseen (`ghost`)
+  while libmpv draws them, so the secondary line's place is known.
+  `SecondaryRevealArea`, above the controls in `video_texture.dart`, takes
+  hovering and taps over that line only and passes every other pointer
+  event on to the controls.

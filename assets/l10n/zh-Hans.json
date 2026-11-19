@@ -3658,5 +3658,18 @@
   "Sign out of the browser sign-in?": "退出浏览器登录？",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "将删除此设备上保存的 Cookie。关注的频道和播放列表会保留在此设备上。",
   "Watch history, searches and watch statistics": "观看历史、搜索记录和观看统计",
-  "Sign-ins (browser and Google) and AirPlay pairings": "登录信息（浏览器和 Google）及 AirPlay 配对"
+  "Sign-ins (browser and Google) and AirPlay pairings": "登录信息（浏览器和 Google）及 AirPlay 配对",
+  "Pause after each line": "每句说完暂停",
+  "Playback pauses as each subtitle line ends.": "每句字幕说完就自动暂停。",
+  "Blur the translation": "模糊翻译",
+  "Hover over the second subtitle or tap it to see it.": "鼠标移到第二字幕上或点一下才显示。",
+  "Show the translation": "显示翻译",
+  "Hide the translation": "隐藏翻译",
+  "Pause after each line on": "每句暂停已开",
+  "Pause after each line off": "每句暂停已关",
+  "Pause after each line on or off": "开关每句暂停",
+  "Show or hide the translation": "显示或隐藏翻译",
+  "Loop this line": "单句循环",
+  "Line loop off": "单句循环已关",
+  "Loop this line on or off": "开关单句循环"
 }

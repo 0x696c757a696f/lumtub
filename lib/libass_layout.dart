@@ -240,7 +240,7 @@ class LibassLook {
 /// subtitle's. Its letters are [secondEm] units at secondary-sub-scale 1;
 /// [outline] is the outline's width for a letter one unit wide. [scale]
 /// sizes everything in it, for a libmpv without secondary-sub-scale.
-String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font, MainUnder? main, double aspect = 16 / 9, double scale = 1}) {
+String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font, MainUnder? main, double aspect = 16 / 9, double scale = 1, bool blurred = false}) {
   font ??= settings.secondaryFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.secondaryFont);
   final unit = secondEm * scale;
   final size = unit * settings.secondaryScale * LibassLook.lineEms(font);
@@ -279,7 +279,10 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
     ..writeln('Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text');
   // Braces would open override tags; line breaks are ASS's own.
   String ass(String text) => text.replaceAll('{', '(').replaceAll('}', ')').replaceAll(RegExp(r'\r?\n'), r'\N');
-  String second(String text) => ass(LibassLayout.wrap(text, room, font: settings.secondaryFont, bold: settings.subtitleBold));
+  // 模糊翻译: libass blurs the outline alone when there is one, so the
+  // letters lose it and are blurred themselves, as the Flutter view blurs.
+  final blur = blurred ? '{\\bord0\\shad0\\blur${(size * blurEms).toStringAsFixed(1)}}' : '';
+  String second(String text) => '$blur${ass(LibassLayout.wrap(text, room, font: settings.secondaryFont, bold: settings.subtitleBold))}';
   if (main == null || main.cues.isEmpty) {
     for (final cue in cues) {
       out.writeln('Dialogue: 0,${stamp(cue.start)},${stamp(cue.end)},Default,,0,0,0,,${second(cue.text)}');
@@ -356,3 +359,7 @@ typedef MainUnder = ({List<SubtitleCue> cues, String font, double room, String w
 
 /// A letter of [secondAss] at secondary-sub-scale 1, in mpv's units.
 const secondEm = 20.0;
+
+/// How far 模糊翻译 blurs the second subtitle, in letters: libass's \\blur
+/// for its line height. The Flutter view's blur matches it.
+const blurEms = 0.25;

@@ -3623,5 +3623,18 @@
   "Sign out of the browser sign-in?": "Դուրս գա՞լ դիտարկիչով մուտքից",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Այս սարքում պահված cookie-ները կջնջվեն։ Հետևվող ալիքները և նվագացանկերը կմնան այս սարքում։",
   "Watch history, searches and watch statistics": "Դիտումների պատմություն, որոնումներ և դիտման վիճակագրություն",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Մուտքեր (դիտարկիչով և Google-ով) և AirPlay զուգակցումներ"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Մուտքեր (դիտարկիչով և Google-ով) և AirPlay զուգակցումներ",
+  "Pause after each line": "Դադար յուրաքանչյուր տողից հետո",
+  "Playback pauses as each subtitle line ends.": "Նվագարկումը դադարում է ենթագրի յուրաքանչյուր տողի ավարտին։",
+  "Blur the translation": "Աղոտել թարգմանությունը",
+  "Hover over the second subtitle or tap it to see it.": "Սավառնեք երկրորդ ենթագրի վրա կամ հպեք դրան՝ տեսնելու համար։",
+  "Show the translation": "Ցույց տալ թարգմանությունը",
+  "Hide the translation": "Թաքցնել թարգմանությունը",
+  "Pause after each line on": "Դադարն ամեն տողից հետո միացված է",
+  "Pause after each line off": "Դադարն ամեն տողից հետո անջատված է",
+  "Pause after each line on or off": "Միացնել/անջատել դադարն ամեն տողից հետո",
+  "Show or hide the translation": "Ցույց տալ կամ թաքցնել թարգմանությունը",
+  "Loop this line": "Կրկնել այս տողն անընդհատ",
+  "Line loop off": "Տողի կրկնությունն անջատված է",
+  "Loop this line on or off": "Միացնել/անջատել տողի կրկնությունը"
 }

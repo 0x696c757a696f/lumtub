@@ -3622,5 +3622,18 @@
   "Sign out of the browser sign-in?": "Phuma ekungeneni ngebhrawuza?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Ama-cookie alondolozwe kule divayisi ayasuswa. Iziteshi ozilandelayo nezinhlu zokudlala ziyahlala kule divayisi.",
   "Watch history, searches and watch statistics": "Umlando wokubuka, ukusesha nezibalo zokubuka",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Ukungena (ngebhrawuza ne-Google) nokuhlanganisa kwe-AirPlay"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Ukungena (ngebhrawuza ne-Google) nokuhlanganisa kwe-AirPlay",
+  "Pause after each line": "Misa ngemva komugqa ngamunye",
+  "Playback pauses as each subtitle line ends.": "Ukudlala kuyama lapho umugqa ngamunye wamagama-ngezansi uphela.",
+  "Blur the translation": "Fiphaza ukuhumusha",
+  "Hover over the second subtitle or tap it to see it.": "Beka isikhombi phezu kwegama-ngezansi lesibili noma uthinte ukuze ulibone.",
+  "Show the translation": "Bonisa ukuhumusha",
+  "Hide the translation": "Fihla ukuhumusha",
+  "Pause after each line on": "Ukumisa ngemva komugqa ngamunye kuvuliwe",
+  "Pause after each line off": "Ukumisa ngemva komugqa ngamunye kuvaliwe",
+  "Pause after each line on or off": "Vula noma vala ukumisa ngemva komugqa ngamunye",
+  "Show or hide the translation": "Bonisa noma fihla ukuhumusha",
+  "Loop this line": "Phinda lo mugqa",
+  "Line loop off": "Ukuphinda umugqa kuvaliwe",
+  "Loop this line on or off": "Vula noma vala ukuphinda umugqa"
 }

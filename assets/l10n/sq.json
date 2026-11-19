@@ -3623,5 +3623,18 @@
   "Sign out of the browser sign-in?": "Të dilet nga hyrja me shfletues?",
   "The cookies saved on this device are deleted. Followed channels and playlists stay on this device.": "Cookie-t e ruajtura në këtë pajisje fshihen. Kanalet e ndjekura dhe luajlistat mbeten në këtë pajisje.",
   "Watch history, searches and watch statistics": "Historiku i shikimit dhe kërkimet, si dhe statistikat e shikimit",
-  "Sign-ins (browser and Google) and AirPlay pairings": "Hyrjet (me shfletues dhe Google) dhe çiftimet e AirPlay"
+  "Sign-ins (browser and Google) and AirPlay pairings": "Hyrjet (me shfletues dhe Google) dhe çiftimet e AirPlay",
+  "Pause after each line": "Pauzë pas çdo rreshti",
+  "Playback pauses as each subtitle line ends.": "Luajtja ndalon pas çdo rreshti të titrave.",
+  "Blur the translation": "Turbullo përkthimin",
+  "Hover over the second subtitle or tap it to see it.": "Kalo kursorin mbi titrën e dytë ose preke për ta parë.",
+  "Show the translation": "Shfaq përkthimin",
+  "Hide the translation": "Fshih përkthimin",
+  "Pause after each line on": "Pauza pas çdo rreshti aktive",
+  "Pause after each line off": "Pauza pas çdo rreshti joaktive",
+  "Pause after each line on or off": "Pauza pas çdo rreshti aktive ose joaktive",
+  "Show or hide the translation": "Shfaq ose fshih përkthimin",
+  "Loop this line": "Përsërit këtë rresht në cikël",
+  "Line loop off": "Cikli i rreshtit joaktiv",
+  "Loop this line on or off": "Cikli i rreshtit aktiv ose joaktiv"
 }

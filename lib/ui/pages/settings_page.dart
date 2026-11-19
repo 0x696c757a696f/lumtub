@@ -113,13 +113,14 @@ class _SettingsPageState extends State<SettingsPage> {
         // Like PiliNara, the account and about rows sit at the bottom
         // without a subtitle, with sign-out between them when signed in.
         _tile(context, SettingsCategory.account, wide: wide),
-        if (_controller.account?.signedIn ?? false)
+        if (_controller.account?.active ?? false)
           ListTile(
             leading: Icon(AppIcons.signOut),
             title: Text(tr('Sign out'), style: theme.textTheme.titleMedium),
             onTap: () async {
-              if (await confirmDialog(context, title: tr('Sign out?'), content: tr('The Google sign-in credentials saved on this device will be deleted. Subscriptions and playlists stay on this device.'), confirm: tr('Sign out'))) {
-                await _controller.account?.signOut();
+              if (await confirmDialog(context, title: tr('Sign out?'), content: tr('The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.'), confirm: tr('Sign out'))) {
+                _controller.webSignIn?.signOut();
+                if (_controller.account?.signedIn ?? false) await _controller.account?.signOut();
               }
             },
           ),

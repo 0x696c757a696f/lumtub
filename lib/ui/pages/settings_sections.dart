@@ -68,7 +68,7 @@ enum SettingsCategory {
   privacy('Privacy settings', 'Incognito mode, watch history, playback progress, connected servers'),
   style('Appearance', 'Language, theme, skins, fonts, warm light, layout, tray'),
   storage('Storage & updates', 'Components, updates, cache, download and data locations, backup'),
-  account('YouTube account', 'Google sign-in, TV-code sign-in, syncing subscriptions and playlists'),
+  account('YouTube account', 'Browser sign-in, Google sign-in, syncing subscriptions and playlists'),
   about('About', 'Version, logs, diagnostics, open-source licenses');
 
   const SettingsCategory(this._title, this._subtitle);
@@ -1458,7 +1458,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('Restore default')),
     ],
     SettingsCategory.account => [
-        SettingEntry(tr('YouTube account'), (context) => AccountSettings(account: controller.account, tvSignIn: controller.tvSignIn, webSignIn: controller.webSignIn, saveTvSamples: controller.saveTvSamples, note: _note(context)), subtitle: tr('Google sign-in, TV code sign-in, browser sign-in, sync, sign out, custom client')),
+        SettingEntry(tr('YouTube account'), (context) => AccountSettings(account: controller.account, webSignIn: controller.webSignIn, note: _note(context)), subtitle: tr('Browser sign-in, Google sign-in, sync, sign out, custom client')),
         SettingEntry(tr('Subscribe when following'), (context) => SwitchItem(
               title: tr('Also subscribe on YouTube when you follow a channel'),
               subtitle: tr('When signed in, following and unfollowing also subscribes or unsubscribes on your YouTube account'),
@@ -1468,7 +1468,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             )),
         SettingEntry(tr('Sync watch history to YouTube'), (context) => SwitchItem(
               title: tr('Sync watch history to YouTube'),
-              subtitle: tr('With the TV-code sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off'),
+              subtitle: tr('With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off'),
               leading: _icon(AppIcons.clockCounterClockwiseFill),
               value: prefs.syncHistoryToYoutube,
               onChanged: (v) => savePrefs(prefs.copyWith(syncHistoryToYoutube: v)),

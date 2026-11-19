@@ -690,6 +690,15 @@ fn contents(list: &[Value], page: &mut Page) {
                 .get("richSectionRenderer")
                 .and_then(|s| s.get("content"))
         }) {
+            // The watch history's sections are its days ("Today").
+            let day = section.get("header").and_then(|h| {
+                text_of(h.get("itemSectionHeaderRenderer")?, &["title", "text"]).or_else(|| {
+                    at(h, &["sectionHeaderViewModel", "headline", "content"])
+                        .and_then(Value::as_str)
+                        .map(str::to_owned)
+                })
+            });
+            let before = page.entries.len();
             for item in section
                 .get("contents")
                 .and_then(Value::as_array)
@@ -748,6 +757,15 @@ fn contents(list: &[Value], page: &mut Page) {
                     page.entries.push(entry);
                 } else if let Some(token) = continuation(item) {
                     page.continuation = Some(token);
+                }
+            }
+            if let Some(day) = day {
+                for entry in &mut page.entries[before..] {
+                    if let Some(entry) = entry.as_object_mut() {
+                        entry
+                            .entry("shelf")
+                            .or_insert_with(|| Value::String(day.clone()));
+                    }
                 }
             }
         } else if let Some(grid) = content.get("richGridRenderer") {
@@ -1067,6 +1085,28 @@ mod tests {
             ]}}]}),
         );
         assert_eq!(more.entries[0]["id"], "PLgridgrid02");
+    }
+
+    #[test]
+    fn keeps_the_day_of_each_history_section() {
+        let response = json!({"contents": {"twoColumnBrowseResultsRenderer": {"tabs": [{"tabRenderer": {"selected": true, "content": {"sectionListRenderer": {"contents": [
+            {"itemSectionRenderer": {
+                "header": {"itemSectionHeaderRenderer": {"title": {"runs": [{"text": "Today"}]}}},
+                "contents": [{"videoRenderer": {"videoId": "historyvid1", "title": {"simpleText": "One"}}}]
+            }},
+            {"itemSectionRenderer": {
+                "header": {"itemSectionHeaderRenderer": {"title": {"simpleText": "Yesterday"}}},
+                "contents": [{"videoRenderer": {"videoId": "historyvid2", "title": {"simpleText": "Two"}}}]
+            }},
+            {"itemSectionRenderer": {"contents": [{"videoRenderer": {"videoId": "historyvid3", "title": {"simpleText": "Three"}}}]}}
+        ]}}}}]}}});
+        let page = page(&response);
+        let days: Vec<_> = page
+            .entries
+            .iter()
+            .map(|e| e.get("shelf").and_then(Value::as_str))
+            .collect();
+        assert_eq!(days, [Some("Today"), Some("Yesterday"), None]);
     }
 
     #[test]

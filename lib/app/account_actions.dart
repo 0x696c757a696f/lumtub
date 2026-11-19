@@ -29,12 +29,18 @@ extension AccountActions on AppController {
     _update(() {});
   }
 
-  /// Settings › Google 账号 › 保存电视版样本.
-  Future<String> saveTvSamples() async {
-    final sign = tvSignIn;
-    final logs = directories?.logs;
-    if (sign == null || !sign.signedIn || logs == null) return tr('Sign in with a TV code in Settings › YouTube account first');
-    return tv_samples.saveTvSamples(sign, logs);
+  /// The TV-code sign-in is gone since 0.2.54: its saved token is deleted
+  /// once, so it is not kept on the device for nothing.
+  void _forgetTvSignIn(String folder) {
+    final file = File('$folder${Platform.pathSeparator}youtube-tv.bin');
+    try {
+      if (file.existsSync()) {
+        file.deleteSync();
+        logInfo('Deleted the TV-code sign-in, which Lumtub no longer uses');
+      }
+    } on FileSystemException catch (e) {
+      logWarn('Could not delete the TV-code sign-in: $e');
+    }
   }
 
   void _webSignInChanged() {
@@ -44,44 +50,40 @@ extension AccountActions on AppController {
       _webSignIns = web.signIns;
       comments.webRefused = false;
     }
-    notifyListeners();
-  }
-
-  void _tvSignInChanged() {
-    final signedIn = tvSignIn?.signedIn ?? false;
-    if (signedIn) comments.refused = false;
-    if (signedIn != _tvWasSignedIn) {
-      _tvWasSignedIn = signedIn;
+    final signedIn = web?.signedIn ?? false;
+    if (signedIn != _webWasSignedIn) {
+      _webWasSignedIn = signedIn;
       youtubeHistory?.dispose();
       youtubeHistory = null;
-      tvPlaylists = const [];
-      _tvPlaylistsRead = false;
+      youtubePlaylists = const [];
+      _youtubePlaylistsRead = false;
       // Signed in just now: YouTube's own suggestions join the feed.
       if (signedIn && homeFeed != null) unawaited(refreshHomeFeed(force: true, keep: true));
     }
+    account?.webChanged();
     notifyListeners();
   }
 
   /// Reads the account's YouTube playlists the first time 播放列表 shows.
-  void ensureTvPlaylists() {
-    if (_tvPlaylistsRead || !(tvFeed?.available ?? false)) return;
-    _tvPlaylistsRead = true;
-    unawaited(loadTvPlaylists());
+  void ensureYoutubePlaylists() {
+    if (_youtubePlaylistsRead || !(accountFeed?.available ?? false)) return;
+    _youtubePlaylistsRead = true;
+    unawaited(loadYoutubePlaylists());
   }
 
   /// Reads the account's YouTube playlists again.
-  Future<void> loadTvPlaylists() async {
-    final feed = tvFeed;
-    if (feed == null || !feed.available || tvPlaylistsLoading) return;
-    tvPlaylistsLoading = true;
+  Future<void> loadYoutubePlaylists() async {
+    final feed = accountFeed;
+    if (feed == null || !feed.available || youtubePlaylistsLoading) return;
+    youtubePlaylistsLoading = true;
     notifyListeners();
     try {
       final found = await feed.accountPlaylists();
-      if (feed.available) tvPlaylists = found;
+      if (feed.available) youtubePlaylists = found;
     } catch (e) {
       logWarn('Could not read the YouTube playlists: $e');
     } finally {
-      tvPlaylistsLoading = false;
+      youtubePlaylistsLoading = false;
       if (!_disposed) notifyListeners();
     }
   }
@@ -89,18 +91,18 @@ extension AccountActions on AppController {
   /// 观看历史 › YouTube: the account's history on YouTube, loaded the first
   /// time it is shown.
   VideoListLoader? openYoutubeHistory({bool reload = false}) {
-    final feed = tvFeed;
+    final feed = accountFeed;
     if (feed == null || !feed.available) return null;
     if (reload) {
       youtubeHistory?.dispose();
       youtubeHistory = null;
     }
-    return youtubeHistory ??= VideoListLoader(() => Listing(() => feed.lines(YoutubeTvFeed.history)), pageSize: 40, name: 'YouTube history')
+    return youtubeHistory ??= VideoListLoader(() => Listing(() => feed.lines(YoutubeAccountFeed.history)), pageSize: 40, name: 'YouTube history')
       ..addListener(_passOn('youtube history'))
       ..loadMore();
   }
 
   /// Whether [playlist] is the account's own, read signed in.
   bool _isAccountPlaylist(PlaylistResult playlist) =>
-      playlist.id == YoutubeTvFeed.watchLaterId || tvPlaylists.any((list) => list.id == playlist.id);
+      playlist.id == YoutubeAccountFeed.watchLaterId || playlist.id == YoutubeAccountFeed.likedId || youtubePlaylists.any((list) => list.id == playlist.id);
 }

@@ -16,9 +16,24 @@ class RemotePlaylist {
 /// How the signed-in user rated a video.
 enum VideoRating { like, dislike, none }
 
+/// What the account does for the user, with either sign-in.
+abstract interface class AccountApi {
+  /// The account's channel name, its picture and its "liked videos" playlist.
+  Future<({String name, String? avatar, String? likes})> me();
+  Future<List<ChannelRef>> subscriptions();
+  Future<List<RemotePlaylist>> playlists();
+  Future<List<VideoItem>> playlistItems(String playlistId);
+  Future<VideoRating> rating(String videoId);
+  Future<void> rate(String videoId, VideoRating rating);
+  Future<void> addToPlaylist(String playlistId, String videoId);
+  Future<RemotePlaylist> createPlaylist(String title);
+  Future<void> subscribe(String channelId);
+  Future<void> unsubscribe(String channelId);
+}
+
 /// The parts of the YouTube Data API that Lumtub uses for a signed-in user.
 /// A read costs one unit of the client's daily quota, a change about 50.
-class YouTubeAccountApi {
+class YouTubeAccountApi implements AccountApi {
   YouTubeAccountApi(this._client, this._accessToken);
   final http.Client _client;
   final Future<String> Function() _accessToken;
@@ -27,6 +42,7 @@ class YouTubeAccountApi {
   static const maxPlaylistItems = 500;
 
   /// The account's channel name, its picture and its "liked videos" playlist.
+  @override
   Future<({String name, String? avatar, String? likes})> me() async {
     final data = await _get('channels', {'part': 'snippet,contentDetails', 'mine': 'true'});
     final items = data['items'];
@@ -44,6 +60,7 @@ class YouTubeAccountApi {
     );
   }
 
+  @override
   Future<List<ChannelRef>> subscriptions() async {
     final channels = <ChannelRef>[];
     await _pages('subscriptions', {'part': 'snippet', 'mine': 'true', 'order': 'alphabetical'}, (item) {
@@ -53,6 +70,7 @@ class YouTubeAccountApi {
     return channels;
   }
 
+  @override
   Future<List<RemotePlaylist>> playlists() async {
     final playlists = <RemotePlaylist>[];
     await _pages('playlists', {'part': 'snippet,contentDetails', 'mine': 'true'}, (item) {
@@ -62,6 +80,7 @@ class YouTubeAccountApi {
     return playlists;
   }
 
+  @override
   Future<List<VideoItem>> playlistItems(String playlistId) async {
     final videos = <VideoItem>[];
     await _pages('playlistItems', {'part': 'snippet,contentDetails', 'playlistId': playlistId}, (item) {
@@ -71,6 +90,7 @@ class YouTubeAccountApi {
     return videos;
   }
 
+  @override
   Future<VideoRating> rating(String videoId) async {
     final data = await _get('videos/getRating', {'id': videoId});
     final items = data['items'];
@@ -78,6 +98,7 @@ class YouTubeAccountApi {
     return VideoRating.values.where((r) => r.name == rating).firstOrNull ?? VideoRating.none;
   }
 
+  @override
   Future<void> rate(String videoId, VideoRating rating) => _send('POST', 'videos/rate', {'id': videoId, 'rating': rating.name});
 
   /// Posts a top-level comment under [videoId]; returns its id.
@@ -101,6 +122,7 @@ class YouTubeAccountApi {
     return data['id']?.toString();
   }
 
+  @override
   Future<void> addToPlaylist(String playlistId, String videoId) => _send('POST', 'playlistItems', {'part': 'snippet'}, {
         'snippet': {
           'playlistId': playlistId,
@@ -109,6 +131,7 @@ class YouTubeAccountApi {
       });
 
   /// Creates a private playlist; returns it.
+  @override
   Future<RemotePlaylist> createPlaylist(String title) async {
     final data = await _send('POST', 'playlists', {'part': 'snippet,status'}, {
       'snippet': {'title': title},
@@ -126,6 +149,7 @@ class YouTubeAccountApi {
     return items is List && items.isNotEmpty && items.first is Map ? (items.first as Map)['id']?.toString() : null;
   }
 
+  @override
   Future<void> subscribe(String channelId) async {
     try {
       await _send('POST', 'subscriptions', {'part': 'snippet'}, {
@@ -138,6 +162,7 @@ class YouTubeAccountApi {
     }
   }
 
+  @override
   Future<void> unsubscribe(String channelId) async {
     final id = await subscriptionTo(channelId);
     if (id != null) await _send('DELETE', 'subscriptions', {'id': id});

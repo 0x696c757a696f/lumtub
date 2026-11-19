@@ -6,9 +6,9 @@ import 'package:http/testing.dart';
 import 'package:lumtub/app/comments_loader.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/youtube_comments.dart';
-import 'package:lumtub/youtube_tv_sign_in.dart';
+import 'package:lumtub/youtube_web_sign_in.dart';
 
-class _FakeSignIn implements SignedInnerTube {
+class _FakeSignIn implements WebInnerTube {
   _FakeSignIn(this.answer);
   final Map<String, Object?> Function(String endpoint, Map<String, Object?> body) answer;
   final actions = <Object?>[];
@@ -17,7 +17,7 @@ class _FakeSignIn implements SignedInnerTube {
   bool get signedIn => true;
 
   @override
-  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body) async {
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false, String? hl}) async {
     if (endpoint == 'comment/perform_comment_action') actions.add((body['actions'] as List).single);
     return (status: 200, body: Uint8List.fromList(utf8.encode(jsonEncode(answer(endpoint, body)))));
   }
@@ -54,9 +54,9 @@ Map<String, Object?> _comment(String id, {bool buttons = false, String? detail})
 Map<String, Object?> _page(List<Map<String, Object?>> comments) => {'continuationContents': {'itemSectionContinuation': {'contents': comments}}};
 
 void main() {
-  test('likes comments whose buttons the TV app leaves out of its lists', () async {
-    final sign = _FakeSignIn((endpoint, body) => switch (body['continuation'] ?? body['videoId']) {
-          'dQw4w9WgXcQ' => {'engagementPanels': [
+  test('likes comments whose buttons a list leaves out, from their own page', () async {
+    final sign = _FakeSignIn((endpoint, body) => switch (body['continuation']) {
+          final String token when token == YoutubeComments.videoSectionToken('dQw4w9WgXcQ') => {'engagementPanels': [
               {'engagementPanelSectionListRenderer': {'panelIdentifier': 'comment-item-section', 'header': {'engagementPanelTitleHeaderRenderer': {'menu': {'sortFilterSubMenuRenderer': {'subMenuItems': [
                 {'continuation': {'reloadContinuationData': {'continuation': 'TOP'}}},
               ]}}}}}},
@@ -65,7 +65,7 @@ void main() {
           'DETAIL' => _page([_comment('UgxParent', buttons: true, detail: 'DETAIL'), _comment('UgxParent.reply')]),
           _ => const {},
         });
-    final source = YoutubeComments(MockClient((request) async => fail('signed out request')))..signIn = sign;
+    final source = YoutubeComments(MockClient((request) async => fail('signed out request')))..web = sign;
     final loader = CommentsLoader(source, videoId: 'dQw4w9WgXcQ');
     await loader.loadMore();
     final parent = loader.comments.single;

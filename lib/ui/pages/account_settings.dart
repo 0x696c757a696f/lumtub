@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../app/account_controller.dart';
 import '../../google_auth.dart';
 import '../../youtube_account.dart';
-import '../../youtube_tv_sign_in.dart';
 import '../../youtube_web_sign_in.dart';
 import '../common.dart';
 import '../theme.dart';
@@ -13,34 +12,44 @@ import '../../l10n/l10n.dart';
 import '../app_icons.dart';
 import '../sign_in_row.dart';
 
-/// Google sign-in, sync and the OAuth client used for it.
+/// The browser sign-in, the optional Google sign-in, sync, and the OAuth
+/// client Google's uses.
 class AccountSettings extends StatelessWidget {
-  const AccountSettings({super.key, required this.account, this.tvSignIn, this.webSignIn, this.saveTvSamples, required this.note});
+  const AccountSettings({super.key, required this.account, this.webSignIn, required this.note});
   final AccountController? account;
-  final YoutubeTvSignIn? tvSignIn;
   final YoutubeWebSignIn? webSignIn;
-  final Future<String> Function()? saveTvSamples;
   final TextStyle note;
 
   @override
   Widget build(BuildContext context) {
     final account = this.account;
     if (account == null) return ListTile(title: Text(tr('Preparing…')));
-    final tv = tvSignIn;
     final web = webSignIn;
     return ListenableBuilder(
-      listenable: Listenable.merge([account, if (tv != null) tv, if (web != null) web]),
+      listenable: Listenable.merge([account, if (web != null) web]),
       builder: (context, _) {
         final colors = context.colors;
         final error = account.error;
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           const _Intro(),
+          if (web != null)
+            _Section(
+              number: 1,
+              title: tr('Browser sign-in'),
+              purpose: tr('Recommended. Your YouTube home feed, history, Watch Later and playlists; like, comment, subscribe and save to playlists; community posts, live chat and members-only videos'),
+              signedIn: web.signedIn,
+              expanded: true,
+              children: [
+                CookieSignInTile(web, note: note),
+                if (web.signedIn) _WebSync(account),
+              ],
+            ),
           _Section(
-            number: 1,
+            number: web == null ? 1 : 2,
             title: tr('Google sign-in'),
-            purpose: tr('Sync subscriptions and playlists; like, comment and subscribe. Recommended; most people need only this one'),
+            purpose: tr('Optional. Does the same through YouTube\'s official API, if the browser sign-in does not work for you; it needs a Google Cloud client and has a daily limit'),
             signedIn: account.signedIn,
-            expanded: true,
+            expanded: account.signedIn || account.state == AccountState.signingIn || error != null || web == null,
             children: [
               switch (account.state) {
                 AccountState.signedIn => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -98,49 +107,16 @@ class AccountSettings extends StatelessWidget {
               _ClientSettings(account: account, note: note),
             ],
           ),
-          if (tv != null)
-            _Section(
-              number: 2,
-              title: tr('TV-code sign-in'),
-              purpose: tr("YouTube's home feed and watch history; like comments"),
-              signedIn: tv.signedIn,
-              expanded: tv.signedIn || tv.state == TvSignInState.waiting || tv.error != null,
-              children: [
-                _TvSignInTile(tv, saveSamples: saveTvSamples, note: note),
-                if (_differentAccounts(account, tv) case final names?)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: ErrorBanner(tr('The two sign-ins show different accounts (Google: {0}, TV code: {1}). If they are not the same account, subscriptions and likes end up split between them; sign out of one and sign in again.', [names.$1, names.$2])),
-                  ),
-              ],
-            ),
-          if (web != null)
-            _Section(
-              number: tv == null ? 2 : 3,
-              title: tr('Browser sign-in'),
-              purpose: tr('For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos'),
-              signedIn: web.signedIn,
-              expanded: web.signedIn || web.waiting || web.error != null,
-              children: [CookieSignInTile(web, note: note)],
-            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Text(
-              tr('Use the same Google account for each sign-in. Sign-ins are kept encrypted on this PC. Lumtub changes your account only when you like, comment, save or subscribe in it, and never uploads your local watch history. Playback does not use an account, so members-only or age-restricted videos may not play.'),
+              tr('If you use both, sign in to the same Google account in each; the browser sign-in is used first. Sign-ins are kept encrypted on this device. Lumtub changes your account only when you like, comment, save or subscribe in it, and never uploads your local watch history unless you turn that on. Playback does not use an account unless you allow it.'),
               style: note,
             ),
           ),
         ]);
       },
     );
-  }
-
-  /// The two names when both sign-ins show one and they differ.
-  static (String, String)? _differentAccounts(AccountController account, YoutubeTvSignIn tv) {
-    final google = account.signedIn ? account.name?.trim() : null;
-    final television = tv.signedIn ? tv.name?.trim() : null;
-    if (google == null || television == null || google.isEmpty || television.isEmpty) return null;
-    return google.toLowerCase() == television.toLowerCase() ? null : (google, television);
   }
 
   static String _time(DateTime time) => '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
@@ -170,7 +146,7 @@ class _Intro extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(tr('Signing in is optional'), style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 2),
-          Text(tr('Search and playback work without it. Sign in only to the one with the feature you want; ticked ones are signed in.'), style: context.text.bodySmall?.copyWith(color: context.colors.onSurfaceVariant)),
+          Text(tr('Search and playback work without it. Most people need only the browser sign-in; ticked ones are signed in.'), style: context.text.bodySmall?.copyWith(color: context.colors.onSurfaceVariant)),
         ]),
       );
 }
@@ -228,79 +204,32 @@ class _Section extends StatelessWidget {
   }
 }
 
-/// The TV-code sign-in, for liking and disliking comments and posts.
-class _TvSignInTile extends StatelessWidget {
-  const _TvSignInTile(this.sign, {this.saveSamples, required this.note});
-  final YoutubeTvSignIn sign;
-  final Future<String> Function()? saveSamples;
-  final TextStyle note;
+/// The browser sign-in's account and its sync into the library.
+class _WebSync extends StatelessWidget {
+  const _WebSync(this.account);
+  final AccountController account;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final error = sign.error;
-    final code = sign.code;
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      switch (sign.state) {
-        TvSignInState.signedIn => SignInRow(
-            leading: Icon(AppIcons.thumbsUp, color: colors.primary),
-            title: Text(sign.name ?? tr('Signed in with a TV code')),
-            subtitle: Text(tr('You can like and dislike comments and community posts')),
-            actions: [
-              if (saveSamples != null)
-                TextButton(
-                  onPressed: () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    final result = await saveSamples!();
-                    messenger.showSnackBar(SnackBar(content: Text(result)));
-                  },
-                  child: Text(tr('Save TV samples')),
-                ),
-              OutlinedButton(onPressed: sign.signOut, child: Text(tr('Exit'))),
-            ],
-          ),
-        // Laid out down the page, not as a list row: the code, the steps
-        // and the buttons each get the full width, which a phone needs.
-        TvSignInState.waiting => Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                // Only while the code is coming; once it shows, the page waits on the person.
-                if (code == null) ...[
-                  const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
-                  const SizedBox(width: 12),
-                ],
-                Expanded(child: Text(code == null ? tr('Getting a TV code…') : tr('TV code: '))),
-              ]),
-              if (code != null)
-                Row(children: [
-                  // Plain text: selectable text under a FittedBox has no width
-                  // to lay out in and drew as an empty grey block.
-                  Flexible(child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Text(code, maxLines: 1, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 2)),
-                  )),
-                  IconButton(tooltip: tr('Copy'), icon: Icon(AppIcons.copySimple, size: 18), onPressed: () => copyText(context, code, tr('TV code copied'))),
-                ]),
-              const SizedBox(height: 4),
-              Text(tr('Open {0} in a browser, sign in to Google and enter the TV code above. This page continues by itself once you are done.', [sign.address]), style: context.text.bodySmall?.copyWith(color: colors.onSurfaceVariant)),
-              const SizedBox(height: 8),
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                if (code != null) FilledButton.tonal(onPressed: () => openExternal(sign.address), child: Text(tr('Open page'))),
-                TextButton(onPressed: sign.cancel, child: Text(tr('Cancel'))),
-              ]),
-            ]),
-          ),
-        TvSignInState.signedOut => SignInRow(
-            leading: Icon(AppIcons.television, color: colors.primary),
-            title: Text(tr('Signed out')),
-            subtitle: Text(tr('Sign in by entering a TV code in a browser. No password or cookies; revoke it any time under third-party apps in your Google account.')),
-            actions: [FilledButton.tonal(onPressed: sign.signIn, child: Text(tr('Sign in with a TV code')))],
-          ),
-      },
-      if (error != null) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: ErrorBanner(error)),
-    ]);
+    final last = account.lastSync;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+        FilledButton.tonalIcon(
+          onPressed: account.syncing ? null : account.sync,
+          icon: account.syncing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.arrowsCounterClockwise),
+          label: Text(tr('Sync now')),
+        ),
+        Text(
+          account.syncing
+              ? tr('Syncing subscriptions and playlists…')
+              : last == null
+                  ? tr('Signed in, not synced yet')
+                  : tr('Last synced: {0} {1}', [formatDate(last), AccountSettings._time(last)]),
+          style: context.text.bodySmall?.copyWith(color: context.colors.onSurfaceVariant),
+        ),
+      ]),
+    );
   }
 }
 
@@ -407,11 +336,12 @@ class AccountButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final account = this.account;
-    final signedIn = account?.signedIn ?? false;
-    final name = account?.name ?? '';
-    final avatar = signedIn && account?.avatar != null
+    final signedIn = account?.active ?? false;
+    final name = account?.accountName ?? '';
+    final picture = account?.accountAvatar;
+    final avatar = signedIn && picture != null
         // The picture, or the name's first letter while it cannot load.
-        ? ChannelAvatar(name: name, image: account!.avatar, radius: 16)
+        ? ChannelAvatar(name: name, image: picture, radius: 16)
         : CircleAvatar(
             radius: 16,
             backgroundColor: signedIn ? colors.primaryContainer : colors.surfaceContainerHighest,
@@ -420,7 +350,7 @@ class AccountButton extends StatelessWidget {
                 : Icon(AppIcons.user, size: 20, color: colors.onSurfaceVariant),
           );
     if (account == null || !signedIn) {
-      return IconButton(tooltip: tr('Sign in with Google (optional)'), onPressed: onOpenSettings, icon: avatar);
+      return IconButton(tooltip: tr('Sign in (optional)'), onPressed: onOpenSettings, icon: avatar);
     }
     return PopupMenuButton<String>(
       tooltip: name.isEmpty ? tr('Account') : name,

@@ -7,7 +7,6 @@ import 'package:http/testing.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/youtube_comments.dart';
 import 'package:lumtub/app/comments_loader.dart';
-import 'package:lumtub/youtube_tv_sign_in.dart';
 import 'package:lumtub/youtube_web_sign_in.dart';
 
 Map<String, Object?> _continuation(String token) => {
@@ -218,7 +217,7 @@ void main() {
     final comments = YoutubeComments(MockClient((request) async {
       signedOut.add(request.url.path);
       return http.Response.bytes(ratingPage, 200);
-    }))..signIn = sign;
+    }))..web = sign;
     final rating = (await comments.more('X')).comments.single.rating!;
     expect((rating.state, rating.actionFor('like', 'like'), rating.actionFor('', 'like'), rating.actionFor('like', 'dislike')), ('like', 'UNLIKE', 'LIKE', null));
     await comments.rate('UNLIKE');
@@ -227,12 +226,12 @@ void main() {
     sign.answer = (endpoint, body) => (status: 400, body: Uint8List(0));
     expect((await comments.more('X')).comments, hasLength(1));
     expect(signedOut, ['/youtubei/v1/next']);
-    expect(comments.refused, isTrue);
+    expect(comments.webRefused, isTrue);
   }, skip: NativeCore.instance == null);
 
-  test('signed in, comments come from the TV app\'s watch page and its comment pages', () async {
+  test('signed in, a video\'s comments load as the website', () async {
     final sign = _FakeSignIn((endpoint, body) {
-      final data = body.containsKey('videoId')
+      final data = body['continuation'] == YoutubeComments.videoSectionToken('dQw4w9WgXcQ')
           ? {'engagementPanels': [
               {'engagementPanelSectionListRenderer': {'panelIdentifier': 'comment-item-section', 'header': {'engagementPanelTitleHeaderRenderer': {'menu': {'sortFilterSubMenuRenderer': {'subMenuItems': [
                 {'continuation': {'reloadContinuationData': {'continuation': 'TOP'}}},
@@ -243,9 +242,9 @@ void main() {
             ]}}};
       return (status: 200, body: Uint8List.fromList(utf8.encode(jsonEncode(data))));
     });
-    final comments = YoutubeComments(MockClient((request) async => fail('signed out request')))..signIn = sign;
+    final comments = YoutubeComments(MockClient((request) async => fail('signed out request')))..web = sign;
     final page = await comments.video('dQw4w9WgXcQ');
-    expect(sign.bodies.map((b) => b['videoId'] ?? b['continuation']), ['dQw4w9WgXcQ', 'TOP']);
+    expect(sign.bodies.map((b) => b['continuation']), [YoutubeComments.videoSectionToken('dQw4w9WgXcQ'), 'TOP']);
     expect(page.comments.single.text, '电视');
   }, skip: NativeCore.instance == null);
 
@@ -283,7 +282,7 @@ void main() {
   }, skip: NativeCore.instance == null);
 }
 
-class _FakeSignIn implements SignedInnerTube {
+class _FakeSignIn implements WebInnerTube {
   _FakeSignIn(this.answer);
   SignedAnswer Function(String endpoint, Map<String, Object?> body) answer;
   final asked = <String>[];
@@ -293,7 +292,7 @@ class _FakeSignIn implements SignedInnerTube {
   bool get signedIn => true;
 
   @override
-  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body) async {
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false, String? hl}) async {
     asked.add(endpoint);
     bodies.add(body);
     return answer(endpoint, body);
@@ -309,7 +308,7 @@ class _FakeWeb implements WebInnerTube {
   bool get signedIn => true;
 
   @override
-  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false}) async {
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false, String? hl}) async {
     bodies.add((endpoint, body, ask));
     return answer(endpoint, body);
   }

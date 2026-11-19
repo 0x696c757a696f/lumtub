@@ -218,7 +218,7 @@ class AppPreferences {
   /// 关注 also subscribes on YouTube when signed in.
   final bool syncFollowToYoutube;
   /// Videos watched here are added to the YouTube account's history, with
-  /// the TV-code sign-in. Off unless turned on.
+  /// the browser sign-in. Off unless turned on.
   final bool syncHistoryToYoutube;
   final String startPage;
   final bool feedAutoRefresh;

@@ -29,7 +29,7 @@ class RatingButtons extends StatelessWidget {
     final onRate = this.onRate;
     if (onRate == null) {
       return Tooltip(
-        message: tr('Likes. Sign in under Settings › YouTube account to like and dislike: with a TV code for video comments, with a browser for posts'),
+        message: tr('Likes. Sign in with a browser under Settings › YouTube account to like and dislike'),
         child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(AppIcons.thumbsUp, size: 14, color: colors.outline), const SizedBox(width: 4), count]),
       );
     }

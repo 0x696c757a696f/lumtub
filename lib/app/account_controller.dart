@@ -11,15 +11,19 @@ import '../google_auth.dart';
 import '../models.dart';
 import '../secure_store.dart';
 import '../youtube_account.dart';
+import '../youtube_account_feed.dart';
+import '../youtube_web_account.dart';
+import '../youtube_web_sign_in.dart';
 import 'library_controller.dart';
 import '../l10n/l10n.dart';
 
 enum AccountState { signedOut, signingIn, signedIn }
 
-/// The optional Google sign-in: copies the account's YouTube subscriptions
-/// and playlists into the local library, and makes the likes, comments,
-/// playlist saves and subscriptions the user asks for. Playback never uses
-/// it, and without it everything else works the same.
+/// The YouTube account: copies its subscriptions and playlists into the
+/// local library, and makes the likes, comments, playlist saves and
+/// subscriptions the user asks for. It acts with the browser sign-in
+/// ([web]) when there is one, else with the optional Google sign-in.
+/// Playback never uses it, and without it everything else works the same.
 class AccountController extends ChangeNotifier {
   AccountController({
     required this.clientFile,
@@ -60,7 +64,59 @@ class AccountController extends ChangeNotifier {
   /// The client in use: the user's own, else the one built into this copy.
   OAuthClientConfig? get client => customClient ?? (OAuthClientConfig.builtIn.isValid ? OAuthClientConfig.builtIn : null);
 
+  /// Signed in with Google.
   bool get signedIn => state == AccountState.signedIn;
+
+  /// The browser sign-in, which the account acts with first.
+  WebInnerTube? web;
+
+  /// The browser sign-in's account name and picture, once read.
+  String? webName;
+  String? webAvatar;
+  bool _webRead = false;
+
+  /// Whether the account acts with the browser sign-in.
+  bool get viaWeb => web?.signedIn ?? false;
+
+  /// Whether either sign-in is there to act with.
+  bool get active => viaWeb || signedIn;
+
+  /// Whether likes, comments, saves and subscriptions can be made.
+  bool get canAct => viaWeb || canWrite;
+
+  /// The name and picture of the account acted with.
+  String? get accountName => viaWeb ? webName ?? name : name;
+  String? get accountAvatar => viaWeb ? webAvatar ?? avatar : avatar;
+
+  AccountApi get _actor => viaWeb ? WebAccountApi(web!) : _api;
+
+  /// The browser sign-in changed: a new one reads its name and copies the
+  /// account into the library, as a Google sign-in does.
+  void webChanged() {
+    if (!viaWeb) {
+      webName = webAvatar = null;
+      _webRead = false;
+      _ratings.clear();
+      _loadedRatings.clear();
+      notifyListeners();
+      return;
+    }
+    if (_webRead) return;
+    _webRead = true;
+    _ratings.clear();
+    _loadedRatings.clear();
+    unawaited(() async {
+      try {
+        final me = await WebAccountApi(web!).me();
+        webName = me.name;
+        webAvatar = me.avatar;
+        notifyListeners();
+        await sync(likes: me.likes);
+      } catch (e) {
+        logWarn('Could not read the browser sign-in\'s account: $e');
+      }
+    }());
+  }
 
   /// Signed in with the permission to like, comment, save and subscribe.
   bool get canWrite => signedIn && canWriteWith(scope);
@@ -157,17 +213,20 @@ class AccountController extends ChangeNotifier {
   /// Follows every subscribed channel and mirrors the account's playlists,
   /// including liked videos, into the local library.
   Future<void> sync({String? likes}) async {
-    if (!signedIn || syncing) return;
+    if (!active || syncing) return;
     syncing = true;
     error = null;
     notifyListeners();
     try {
-      final api = _api;
+      final web = viaWeb;
+      final api = _actor;
       final channels = await api.subscriptions();
       final added = library.followAll(channels);
       var likesId = likes;
       // Sign-ins from before the picture was kept learn it at their next sync.
-      if (likesId == null || avatar == null) {
+      if (web) {
+        likesId ??= YoutubeAccountFeed.likedId;
+      } else if (likesId == null || avatar == null) {
         final me = await api.me();
         likesId ??= me.likes;
         name = me.name;
@@ -183,7 +242,7 @@ class AccountController extends ChangeNotifier {
       }
       library.mirrorRemotePlaylists(mirrored);
       lastSync = DateTime.now();
-      await _save();
+      if (!web) await _save();
       logInfo('YouTube sync done: ${channels.length} subscriptions, ${mirrored.length} playlists');
       notice(tr('Sync complete: {0} subscriptions ({1} new), {2} playlists', [channels.length, added, mirrored.length]));
     } catch (e) {
@@ -221,9 +280,9 @@ class AccountController extends ChangeNotifier {
   }
 
   Future<void> loadRating(String videoId) async {
-    if (!canWrite || _ratings.containsKey(videoId)) return;
+    if (!canAct || _ratings.containsKey(videoId)) return;
     try {
-      _ratings[videoId] = _loadedRatings[videoId] = await _api.rating(videoId);
+      _ratings[videoId] = _loadedRatings[videoId] = await _actor.rating(videoId);
       notifyListeners();
     } catch (e) {
       logWarn('Could not read the like status: $e');
@@ -239,7 +298,7 @@ class AccountController extends ChangeNotifier {
     _ratings[item.id] = next;
     notifyListeners();
     try {
-      await _api.rate(item.id, next);
+      await _actor.rate(item.id, next);
       _mirrorLike(item, next == VideoRating.like);
       notice(switch (next) {
         VideoRating.like => tr('Liked'),
@@ -269,11 +328,17 @@ class AccountController extends ChangeNotifier {
   }
 
   /// Posts [text] under [videoId], or as a reply to [parentId]. Returns
-  /// whether it was posted.
-  Future<bool> postComment({required String videoId, String? parentId, required String text}) async {
+  /// whether it was posted. The browser sign-in writes in the comment box
+  /// the comments page named: [createParams] for the video's,
+  /// [replyParams] for the comment's.
+  Future<bool> postComment({required String videoId, String? parentId, required String text, String? createParams, String? replyParams}) async {
     if (!_writable() || text.trim().isEmpty) return false;
+    final params = parentId == null ? createParams : replyParams;
     try {
-      if (parentId == null) {
+      if (viaWeb && (params != null || !canWrite)) {
+        if (params == null) throw StateError(tr('YouTube did not offer a comment box here'));
+        await WebAccountApi(web!).comment(params, text.trim(), reply: parentId != null);
+      } else if (parentId == null) {
         await _api.comment(videoId, text.trim());
       } else {
         await _api.reply(parentId, text.trim());
@@ -290,7 +355,7 @@ class AccountController extends ChangeNotifier {
   Future<List<RemotePlaylist>> remotePlaylists() async {
     if (!_writable()) return const [];
     try {
-      return await _api.playlists();
+      return await _actor.playlists();
     } catch (e) {
       _failed(tr("Couldn't read YouTube playlists"), e);
       return const [];
@@ -302,8 +367,9 @@ class AccountController extends ChangeNotifier {
   Future<void> saveToPlaylist(VideoItem item, {RemotePlaylist? playlist, String? newTitle}) async {
     if (!_writable()) return;
     try {
-      final target = playlist ?? await _api.createPlaylist(newTitle!.trim());
-      await _api.addToPlaylist(target.id, item.id);
+      final api = _actor;
+      final target = playlist ?? await api.createPlaylist(newTitle!.trim());
+      await api.addToPlaylist(target.id, item.id);
       final local = library.playlists.where((p) => p.id == '${LibraryController.remotePrefix}${target.id}').firstOrNull;
       library.mirrorRemotePlaylist(target.id, target.title, [...?local?.items.where((v) => v.id != item.id), item]);
       notice(tr('Saved to YouTube playlist "{0}"', [target.title]));
@@ -314,12 +380,12 @@ class AccountController extends ChangeNotifier {
 
   /// Subscribes to or unsubscribes from [channel] on YouTube.
   Future<void> setSubscribed(ChannelRef channel, bool subscribed) async {
-    if (!canWrite) return;
+    if (!canAct) return;
     try {
       if (subscribed) {
-        await _api.subscribe(channel.id);
+        await _actor.subscribe(channel.id);
       } else {
-        await _api.unsubscribe(channel.id);
+        await _actor.unsubscribe(channel.id);
       }
     } catch (e) {
       _failed(subscribed ? tr('YouTube subscription failed') : tr("Couldn't unsubscribe on YouTube"), e);
@@ -327,8 +393,8 @@ class AccountController extends ChangeNotifier {
   }
 
   bool _writable() {
-    if (canWrite) return true;
-    notice(signedIn ? tr('Sign in to Google again to grant permissions for likes, comments and more') : tr('Sign in to your Google account in Settings first'));
+    if (canAct) return true;
+    notice(signedIn ? tr('Sign in to Google again to grant permissions for likes, comments and more') : tr('Sign in with a browser (cookies) in Settings › YouTube account first'));
     return false;
   }
 

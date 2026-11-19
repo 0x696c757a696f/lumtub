@@ -74,10 +74,8 @@ import '../piped_streams.dart';
 import '../search_options.dart';
 import '../search_suggestions.dart';
 import '../youtube_comments.dart';
-import '../youtube_tv_feed.dart';
-import '../youtube_tv_sign_in.dart';
+import '../youtube_account_feed.dart';
 import '../youtube_web_sign_in.dart';
-import '../tv_samples.dart' as tv_samples;
 import '../youtube_related.dart';
 import '../recommendations.dart';
 import '../chunked_relay.dart';
@@ -203,23 +201,20 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Favorites, playlists, followed channels and progress; set once ready.
   LibraryController? library;
 
-  /// The optional Google sign-in for importing subscriptions and playlists.
+  /// The YouTube account: acts with [webSignIn], or the optional Google
+  /// sign-in.
   AccountController? account;
 
-  /// The TV-code sign-in that YouTube's own pages take, for liking comments
-  /// and posts.
-  YoutubeTvSignIn? tvSignIn;
-
-  /// The cookie sign-in, for liking posts, voting in polls and writing
-  /// under posts, which the TV-code sign-in cannot reach.
+  /// The browser (cookie) sign-in: the account's own pages, likes,
+  /// comments, subscriptions, posts, live chat and members-only videos.
   YoutubeWebSignIn? webSignIn;
 
-  /// The account's own YouTube pages, read with [tvSignIn].
-  YoutubeTvFeed? tvFeed;
+  /// The account's own YouTube pages, read with [webSignIn].
+  YoutubeAccountFeed? accountFeed;
 
   /// The account's YouTube playlists, once read; empty when signed out.
-  List<PlaylistResult> tvPlaylists = const [];
-  bool tvPlaylistsLoading = false;
+  List<PlaylistResult> youtubePlaylists = const [];
+  bool youtubePlaylistsLoading = false;
 
   /// The account's YouTube watch history, while 观看历史 shows it.
   VideoListLoader? youtubeHistory;
@@ -251,7 +246,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   late final _posts = CommunityPosts(_http, signIn: comments);
 
   /// Comments under videos and posts, and liking them and posts, signed in
-  /// with the TV code when there is one.
+  /// with the browser sign-in when there is one.
   late final comments = YoutubeComments(_http);
 
   /// Whether the statistics overlay is shown over the video.
@@ -743,11 +738,11 @@ class AppController extends ChangeNotifier with _ExploreState {
     };
   }
 
-  bool _tvWasSignedIn = false;
+  bool _webWasSignedIn = false;
 
   int _webSignIns = 0;
 
-  bool _tvPlaylistsRead = false;
+  bool _youtubePlaylistsRead = false;
 
   void _notice(String message) {
     if (!_disposed) _notices.add(message);
@@ -1149,7 +1144,6 @@ class AppController extends ChangeNotifier with _ExploreState {
     unawaited(_bridge?.close());
     cast.dispose();
     account?.dispose();
-    tvSignIn?.cancel();
     webSignIn?.cancel();
     downloads?.dispose();
     homeFeed?.dispose();

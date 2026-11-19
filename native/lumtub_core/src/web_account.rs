@@ -326,7 +326,7 @@ struct Request {
 }
 
 /// Endpoints Dart may call through the sign-in; anything else is refused.
-const ENDPOINTS: [&str; 12] = [
+const ENDPOINTS: [&str; 16] = [
     "next",
     "live_chat/get_live_chat",
     "live_chat/send_message",
@@ -339,6 +339,10 @@ const ENDPOINTS: [&str; 12] = [
     "like/dislike",
     "like/removelike",
     "feedback",
+    "subscription/subscribe",
+    "subscription/unsubscribe",
+    "browse/edit_playlist",
+    "playlist/create",
 ];
 
 /// The website's InnerTube request body: its client and [body]'s fields.
@@ -358,6 +362,27 @@ fn sensitive(text: &str) -> Option<HeaderValue> {
     let mut value = HeaderValue::from_str(text).ok()?;
     value.set_sensitive(true);
     Some(value)
+}
+
+/// The `Cookie` and `Authorization` headers of an open sign-in, made now,
+/// and the address requests go to.
+fn signed_headers() -> Option<(HeaderValue, HeaderValue, String)> {
+    let seconds = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let session = session();
+    let headers = session.open.as_ref().and_then(|(secret, _)| {
+        secret.reveal(|header| {
+            let jar = read_cookies(std::str::from_utf8(header).unwrap_or(""));
+            let cookie = Zeroizing::new(jar.header());
+            let authorization =
+                Zeroizing::new(authorization(&jar, seconds, "https://www.youtube.com")?);
+            Some((sensitive(&cookie)?, sensitive(&authorization)?))
+        })
+    });
+    let (cookie, authorization) = headers.flatten()?;
+    Some((cookie, authorization, session.base.clone()))
 }
 
 /// Answers on [port]: `[status, body_bytes]`, `[-1]` signed out, `[-4]`
@@ -389,24 +414,7 @@ async fn innertube(port: i64, request: Request) {
         Ok(Err(Shut::Broken(why))) => return fail(-3, Some(why)),
         Err(e) => return fail(-3, Some(e.to_string())),
     }
-    let seconds = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
-    let (headers, base) = {
-        let session = session();
-        let headers = session.open.as_ref().and_then(|(secret, _)| {
-            secret.reveal(|header| {
-                let jar = read_cookies(std::str::from_utf8(header).unwrap_or(""));
-                let cookie = Zeroizing::new(jar.header());
-                let authorization =
-                    Zeroizing::new(authorization(&jar, seconds, "https://www.youtube.com")?);
-                Some((sensitive(&cookie)?, sensitive(&authorization)?))
-            })
-        });
-        (headers.flatten(), session.base.clone())
-    };
-    let Some((cookie, authorization)) = headers else {
+    let Some((cookie, authorization, base)) = signed_headers() else {
         return fail(-1, None);
     };
     let body = web_body(&request.body, &request.hl, &request.client_version);
@@ -746,9 +754,185 @@ pub unsafe extern "C" fn lumtub_web_innertube(port: i64, json: *const u8, length
     true
 }
 
+/// What is watched, to add to the account's history as the website does.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WatchedRequest {
+    #[serde(flatten)]
+    watched: crate::tv_history::Watched,
+    client_version: String,
+}
+
+/// [base] (a `playbackTracking` address) with the website's own fields for
+/// one record: `ver`, `cpn`, and where watching stood; [watchtime] adds
+/// where it started and stopped.
+pub fn stats_url(
+    base: &str,
+    cpn: &str,
+    from: f64,
+    to: f64,
+    length: f64,
+    watchtime: bool,
+) -> String {
+    let done = length > 0.0 && length - to < 0.05 * length;
+    let (from, to) = if done { (length, length) } else { (from, to) };
+    let mut url = format!("{base}&ver=2&cpn={cpn}&el=detailpage&cmt={to:.3}");
+    if watchtime {
+        url.push_str(&format!("&st={from:.3}&et={to:.3}&len={length:.3}"));
+    }
+    if done {
+        url.push_str("&final=1");
+    }
+    url
+}
+
+async fn watched(port: i64, request: WatchedRequest) {
+    let fail = |why: String| {
+        post(port, vec![Item::Int(0), Item::Text(why)]);
+    };
+    // Never asks the user: it runs after a video, not for something they did.
+    match runtime().spawn_blocking(move || unlock(false)).await {
+        Ok(Ok(())) => {}
+        Ok(Err(Shut::SignedOut)) => return fail("signed out".into()),
+        Ok(Err(Shut::Declined)) => return fail("locked".into()),
+        Ok(Err(Shut::Broken(why))) => return fail(why),
+        Err(e) => return fail(e.to_string()),
+    }
+    let Some((cookie, authorization, base)) = signed_headers() else {
+        return fail("signed out".into());
+    };
+    let watched = request.watched;
+    let nonce = crate::tv_history::cpn();
+    let body = web_body(
+        &json!({
+            "videoId": watched.video_id,
+            "cpn": nonce,
+            "playbackContext": {"contentPlaybackContext": {"html5Preference": "HTML5_PREF_WANTS"}},
+            "racyCheckOk": true,
+            "contentCheckOk": true,
+        }),
+        &watched.hl,
+        &request.client_version,
+    );
+    let sent = client()
+        .post(format!("{base}/youtubei/v1/player?prettyPrint=false"))
+        .header("Cookie", cookie.clone())
+        .header("Authorization", authorization)
+        .header("X-Origin", "https://www.youtube.com")
+        .header("Origin", "https://www.youtube.com")
+        .header("X-Goog-AuthUser", "0")
+        .header("X-Youtube-Client-Name", "1")
+        .header("X-Youtube-Client-Version", request.client_version.as_str())
+        .header("Content-Type", "application/json")
+        .body(body.to_string())
+        .timeout(Duration::from_secs(20))
+        .send()
+        .await;
+    let player = match sent {
+        Ok(response) if response.status().is_success() => {
+            renew(&response);
+            response
+                .bytes()
+                .await
+                .ok()
+                .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
+        }
+        Ok(response) => return fail(format!("player answered {}", response.status().as_u16())),
+        Err(e) => return fail(e.without_url().to_string()),
+    };
+    let address = |key: &str| {
+        player
+            .as_ref()
+            .and_then(|p| crate::innertube::at(p, &["playbackTracking", key, "baseUrl"]))
+            .and_then(Value::as_str)
+            .filter(|url| url.starts_with("https://") && url.contains('?'))
+            .map(str::to_owned)
+    };
+    let (Some(playback), Some(watchtime)) = (
+        address("videostatsPlaybackUrl"),
+        address("videostatsWatchtimeUrl"),
+    ) else {
+        return fail(format!(
+            "no tracking in the player answer ({})",
+            player
+                .as_ref()
+                .map(crate::tv_history::why_not)
+                .unwrap_or_else(|| "not JSON".into())
+        ));
+    };
+    let length = if watched.length > 0.0 {
+        watched.length
+    } else {
+        player
+            .as_ref()
+            .and_then(|p| crate::innertube::at(p, &["videoDetails", "lengthSeconds"]))
+            .and_then(Value::as_str)
+            .and_then(|t| t.parse().ok())
+            .unwrap_or(0.0)
+    };
+    for url in [
+        stats_url(&playback, &nonce, watched.from, watched.to, length, false),
+        stats_url(&watchtime, &nonce, watched.from, watched.to, length, true),
+    ] {
+        match client()
+            .get(url)
+            .header("Cookie", cookie.clone())
+            .header("Origin", "https://www.youtube.com")
+            .timeout(Duration::from_secs(20))
+            .send()
+            .await
+        {
+            Ok(response) if response.status().is_success() => {}
+            Ok(response) => return fail(format!("stats answered {}", response.status().as_u16())),
+            Err(e) => return fail(e.without_url().to_string()),
+        }
+    }
+    post(port, vec![Item::Int(1)]);
+}
+
+/// Adds [json] `{"video_id", "from", "to", "length", "hl", "clientVersion"}`
+/// to the signed-in account's watch history, answering `[1]` on [port], or
+/// `[0, why]`. It never brings up the system's prompt to open the cookies.
+///
+/// # Safety
+/// [json] must point to [length] bytes of UTF-8.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_web_watched(port: i64, json: *const u8, length: usize) -> bool {
+    let Ok(request) = serde_json::from_str::<WatchedRequest>(unsafe { text(json, length) }) else {
+        return false;
+    };
+    runtime().spawn(watched(port, request));
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn stats_addresses_say_where_watching_stood() {
+        let url = stats_url(
+            "https://s.youtube.com/api/stats/watchtime?ns=yt&docid=x",
+            "CPN",
+            10.0,
+            70.5,
+            600.0,
+            true,
+        );
+        assert_eq!(
+            url,
+            "https://s.youtube.com/api/stats/watchtime?ns=yt&docid=x&ver=2&cpn=CPN&el=detailpage&cmt=70.500&st=10.000&et=70.500&len=600.000"
+        );
+        let done = stats_url(
+            "https://s.youtube.com/api/stats/playback?ns=yt",
+            "C",
+            0.0,
+            595.0,
+            600.0,
+            false,
+        );
+        assert!(done.ends_with("&cmt=600.000&final=1"), "{done}");
+    }
 
     #[test]
     fn writes_cookies_txt_that_reads_back() {

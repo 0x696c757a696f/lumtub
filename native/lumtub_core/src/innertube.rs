@@ -327,6 +327,100 @@ struct Parts<'a> {
     primary: Option<&'a Map<String, Value>>,
     secondary: Option<&'a Map<String, Value>>,
     like: Option<&'a Map<String, Value>>,
+    viewer: Viewer,
+}
+
+/// What a signed-in `/next` response says of the viewer; the first of each
+/// kind found wins.
+#[derive(Default)]
+struct Viewer {
+    rating: Option<&'static str>,
+    like_toggled: Option<bool>,
+    dislike_toggled: Option<bool>,
+    subscribed: Option<bool>,
+    subscribe_params: Option<String>,
+    unsubscribe_params: Option<String>,
+}
+
+fn rating_of(status: &str) -> Option<&'static str> {
+    match status {
+        "LIKE" => Some("like"),
+        "DISLIKE" => Some("dislike"),
+        "INDIFFERENT" => Some("none"),
+        _ => None,
+    }
+}
+
+impl Viewer {
+    /// Reads whatever of the viewer's state [map] holds in its own keys.
+    fn read(&mut self, map: &Map<String, Value>) {
+        let toggled = |node: &Value| {
+            at(
+                node,
+                &[
+                    "toggleButtonViewModel",
+                    "toggleButtonViewModel",
+                    "isToggled",
+                ],
+            )
+            .and_then(Value::as_bool)
+        };
+        if self.rating.is_none() {
+            let status = map
+                .get("likeStatusEntity")
+                .and_then(|e| e.get("likeStatus"))
+                .or_else(|| {
+                    map.get("likeButtonRenderer")
+                        .and_then(|b| b.get("likeStatus"))
+                })
+                .and_then(Value::as_str);
+            self.rating = status.and_then(rating_of);
+        }
+        if self.like_toggled.is_none() {
+            self.like_toggled = map.get("likeButtonViewModel").and_then(toggled);
+        }
+        if self.dislike_toggled.is_none() {
+            self.dislike_toggled = map.get("dislikeButtonViewModel").and_then(toggled);
+        }
+        if self.subscribed.is_none() {
+            self.subscribed = map
+                .get("subscribeButtonRenderer")
+                .and_then(|b| b.get("subscribed"))
+                .or_else(|| {
+                    map.get("subscriptionStateEntity")
+                        .and_then(|e| e.get("subscribed"))
+                })
+                .and_then(Value::as_bool);
+        }
+        for (slot, key) in [
+            (&mut self.subscribe_params, "subscribeEndpoint"),
+            (&mut self.unsubscribe_params, "unsubscribeEndpoint"),
+        ] {
+            if slot.is_none()
+                && let Some(Value::String(params)) =
+                    at(map.get(key).unwrap_or(&Value::Null), &["params"])
+            {
+                *slot = Some(params.clone());
+            }
+        }
+    }
+
+    fn rating(&self) -> Option<&'static str> {
+        self.rating
+            .or(match (self.like_toggled, self.dislike_toggled) {
+                (Some(true), _) => Some("like"),
+                (_, Some(true)) => Some("dislike"),
+                (Some(false), Some(false)) => Some("none"),
+                _ => None,
+            })
+    }
+
+    fn wants_more(&self) -> bool {
+        self.rating().is_none()
+            || self.subscribed.is_none()
+            || (self.subscribed.is_some()
+                && (self.subscribe_params.is_none() || self.unsubscribe_params.is_none()))
+    }
 }
 
 impl<'a> Parts<'a> {
@@ -350,6 +444,7 @@ impl<'a> Parts<'a> {
                         *slot = Some(found);
                     }
                 }
+                self.viewer.read(map);
                 let mut collect = collect;
                 if collect {
                     let found = if let Some(Value::Object(c)) = map.get("compactVideoRenderer") {
@@ -384,7 +479,10 @@ impl<'a> Parts<'a> {
     }
 
     fn wants_more(&self) -> bool {
-        self.primary.is_none() || self.secondary.is_none() || self.like.is_none()
+        self.primary.is_none()
+            || self.secondary.is_none()
+            || self.like.is_none()
+            || self.viewer.wants_more()
     }
 
     fn likes(&self) -> Option<i64> {
@@ -396,8 +494,15 @@ impl<'a> Parts<'a> {
     }
 
     fn facts(&self, now: u64) -> Facts {
+        let viewer = Facts {
+            rating: self.viewer.rating(),
+            subscribed: self.viewer.subscribed,
+            subscribe_params: self.viewer.subscribe_params.clone(),
+            unsubscribe_params: self.viewer.unsubscribe_params.clone(),
+            ..Facts::default()
+        };
         let Some(primary) = self.primary else {
-            return Facts::default();
+            return viewer;
         };
         let counter = primary
             .get("viewCount")
@@ -412,7 +517,11 @@ impl<'a> Parts<'a> {
             .or_else(|| count(&text_of(counter.and_then(|c| c.get("viewCount")))));
         let published = english_date(&text_of(primary.get("dateText")), now)
             .or_else(|| english_date(&text_of(primary.get("relativeDateText")), now));
-        Facts { views, published }
+        Facts {
+            views,
+            published,
+            ..viewer
+        }
     }
 
     fn localized(&self) -> Option<Localized> {
@@ -439,6 +548,7 @@ impl<'a> Parts<'a> {
 /// player: the views and the day it came out, for a card whose listing
 /// left them out.
 #[derive(Serialize, Debug, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct Facts {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub views: Option<u64>,
@@ -446,6 +556,15 @@ pub struct Facts {
     /// ago as a fresh video's "3 hours ago" says.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub published: Option<u64>,
+    /// The viewer's own rating: "like", "dislike" or "none"; null when the
+    /// answer does not say (signed out).
+    pub rating: Option<&'static str>,
+    /// Whether the viewer subscribes to the channel; null when unsaid.
+    pub subscribed: Option<bool>,
+    /// The `params` of the channel's subscribe endpoint, null when absent.
+    pub subscribe_params: Option<String>,
+    /// The `params` of the channel's unsubscribe endpoint, null when absent.
+    pub unsubscribe_params: Option<String>,
 }
 
 /// Days from 1970-01-01 to [year]-[month]-[day] (proleptic Gregorian).
@@ -1483,5 +1602,46 @@ mod tests {
             "contentImage": {"thumbnailViewModel": {"overlays": [{"thumbnailOverlayBadgeViewModel": {"thumbnailBadges": [
                 {"thumbnailBadgeViewModel": {"text": "EN DIRECT", "badgeStyle": "THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE"}}]}}]}}});
         assert!(lockup(&lockup_live).unwrap().live);
+    }
+
+    #[test]
+    fn reads_the_viewers_rating_and_subscription() {
+        let entity = json!({"frameworkUpdates": {"entityBatchUpdate": {"mutations": [
+            {"payload": {"likeStatusEntity": {"key": "k", "likeStatus": "DISLIKE"}}},
+            {"payload": {"subscriptionStateEntity": {"key": "s", "subscribed": true}}}
+        ]}}});
+        let f = facts(&entity, 0);
+        assert_eq!(f.rating, Some("dislike"));
+        assert_eq!(f.subscribed, Some(true));
+        assert_eq!(f.subscribe_params, None);
+
+        let old = json!({"a": [
+            {"likeButtonRenderer": {"likeStatus": "LIKE"}},
+            {"subscribeButtonRenderer": {"subscribed": false,
+                "onSubscribeEndpoints": [{"subscribeEndpoint": {"params": "sub"}}],
+                "onUnsubscribeEndpoints": [{"signalServiceEndpoint": {"actions": [{"x": {"unsubscribeEndpoint": {"params": "unsub"}}}]}}]}}
+        ]});
+        let f = facts(&old, 0);
+        assert_eq!(f.rating, Some("like"));
+        assert_eq!(f.subscribed, Some(false));
+        assert_eq!(f.subscribe_params.as_deref(), Some("sub"));
+        assert_eq!(f.unsubscribe_params.as_deref(), Some("unsub"));
+
+        let toggles = json!({"likeButtonViewModel": {"toggleButtonViewModel": {"toggleButtonViewModel": {"isToggled": false}}},
+            "dislikeButtonViewModel": {"toggleButtonViewModel": {"toggleButtonViewModel": {"isToggled": true}}}});
+        assert_eq!(facts(&toggles, 0).rating, Some("dislike"));
+        let off = json!({"likeStatusEntity": {"likeStatus": "INDIFFERENT"}});
+        assert_eq!(facts(&off, 0).rating, Some("none"));
+    }
+
+    #[test]
+    fn leaves_the_viewer_null_when_signed_out() {
+        let data =
+            json!({"contents": {"videoPrimaryInfoRenderer": {"title": {"simpleText": "T"}}}});
+        let f = facts(&data, 0);
+        assert_eq!(f.rating, None);
+        assert_eq!(f.subscribed, None);
+        assert_eq!(f.unsubscribe_params, None);
+        assert_eq!(serde_json::to_value(&f).unwrap()["rating"], Value::Null);
     }
 }

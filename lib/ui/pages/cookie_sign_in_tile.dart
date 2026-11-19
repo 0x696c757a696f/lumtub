@@ -98,7 +98,7 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
           SignInRow(
             leading: Icon(AppIcons.lock, color: colors.primary),
             title: Text(tr('Signed in with a browser')),
-            subtitle: Text('${tr('You can like, vote in and comment on community posts')}\n${_guard(sign.guard)}'),
+            subtitle: Text('${tr('Lumtub uses this sign-in for your account')}\n${_guard(sign.guard)}'),
             actions: [OutlinedButton(onPressed: sign.signOut, child: Text(tr('Exit')))],
           )
         else ...[

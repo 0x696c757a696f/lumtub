@@ -1030,7 +1030,7 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
         entry('queueNext', AppIcons.playlist, tr('Play next')),
         entry('queueLast', AppIcons.queue, tr('Add to play queue')),
       ],
-      if (controller?.account?.signedIn ?? false) entry('youtube', AppIcons.filmReel, tr('Save to YouTube playlist…')),
+      if (controller?.account?.active ?? false) entry('youtube', AppIcons.filmReel, tr('Save to YouTube playlist…')),
       if (controller != null) entry('channel', AppIcons.userCircle, tr('View channel')),
       if (controller != null && channel != null) ...[
         if (controller.preferences.isUnrecommended(channel.id))

@@ -33,7 +33,7 @@ pub struct Watched {
 }
 
 /// A client playback nonce: 16 characters of `A-Za-z0-9-_`.
-fn cpn() -> String {
+pub(crate) fn cpn() -> String {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
     let seed = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

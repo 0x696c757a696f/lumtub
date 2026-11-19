@@ -222,11 +222,15 @@ final class VideoSink: @unchecked Sendable {
     // At most the screen's height (a 4K frame made anew for each frame is
     // 33-66 MB, and iOS ends an app in the background, as in picture in
     // picture, that holds a few), and up to it for crisp subtitles.
+    // The picture in picture window is a few hundred points tall at its
+    // largest: 720 lines are crisp there at less than half the memory,
+    // which keeps older iPhones with 2 or 3 GB from being ended for it.
+    let limit = compositing ? min(maxHeight, 720) : maxHeight
     var width = videoWidth
     var height = videoHeight
-    if maxHeight > 0, videoHeight > maxHeight || (subs != nil && videoHeight < maxHeight) {
-      width = max(2, (videoWidth * maxHeight / videoHeight) & ~1)
-      height = maxHeight
+    if limit > 0, videoHeight > limit || (subs != nil && videoHeight < limit) {
+      width = max(2, (videoWidth * limit / videoHeight) & ~1)
+      height = limit
     }
     let sideways = rotate == 90 || rotate == 270
     let frameWidth = sideways ? height : width

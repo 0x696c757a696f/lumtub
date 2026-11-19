@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'app_directories.dart';
+import 'device_memory.dart';
 import 'decoder_status.dart';
 import 'network_proxy.dart';
 import 'piped_streams.dart';
@@ -350,12 +351,17 @@ class PlayerSettings {
   /// Whether the device is a phone, tablet or TV, where the read-ahead
   /// cache stays small: each MB of it is memory the system may take back by
   /// closing the app in the background.
-  static bool smallMemory = Platform.isAndroid;
+  static bool smallMemory = Platform.isAndroid || Platform.isIOS;
+
+  /// A phone, tablet or TV with 3 GB of memory or less, where even 64 MB
+  /// is much ([DeviceMemory.low]).
+  static bool lowMemory = smallMemory && DeviceMemory.low;
 
   /// 100 MB on computers, 40 s of 4K at YouTube's rates and minutes of
-  /// 1080p (cache-secs stops it sooner there); 64 MB on phones and TVs. The
-  /// cache of what was played is a quarter of it.
-  static int get defaultBufferMb => smallMemory ? 64 : 100;
+  /// 1080p (cache-secs stops it sooner there); 64 MB on phones and TVs, 32
+  /// MB on those with little memory. The cache of what was played is a
+  /// quarter of it.
+  static int get defaultBufferMb => lowMemory ? 32 : smallMemory ? 64 : 100;
 
   final String hwdec;
   final String scale;
@@ -762,7 +768,7 @@ class PlayerSettings {
         'cacheMode': cacheMode,
         'cacheSeconds': cacheSeconds,
         'cacheMemoryMb': cacheMemoryMb,
-        'bufferDefaults': 3,
+        'bufferDefaults': 4,
         'subtitleStyleVersion': 2,
         'strategy': strategy.name,
         'disabledCodecs': chosenCodecs == null ? null : [for (final c in VideoCodec.values) if (chosenCodecs!.contains(c)) c.name],
@@ -965,7 +971,9 @@ class PlayerSettings {
       cacheSeconds: oldBuffer && raw['cacheSeconds'] == 30 ? 60 : number('cacheSeconds', 60, 1, 600),
       // Builds before bufferDefaults 3 saved mpv's 150 MB even when
       // untouched; it now uses less memory, less still on phones and TVs.
-      cacheMemoryMb: (oldBuffer && savedBuffer == 64) || (bufferVersion < 3 && savedBuffer == 150) ? defaultBufferMb : number('cacheMemoryMb', defaultBufferMb, 16, 1024),
+      // Before bufferDefaults 4 iPhones and iPads saved the computers' 100
+      // MB, and devices with little memory the phones' 64 MB.
+      cacheMemoryMb: (oldBuffer && savedBuffer == 64) || (bufferVersion < 3 && savedBuffer == 150) || (bufferVersion < 4 && ((savedBuffer == 100 && smallMemory) || (savedBuffer == 64 && lowMemory))) ? defaultBufferMb : number('cacheMemoryMb', defaultBufferMb, 16, 1024),
       strategy: strategy,
       disabledCodecs: disabled,
       audioQuality: _enumByName(AudioQuality.values, raw['audioQuality'], AudioQuality.best),

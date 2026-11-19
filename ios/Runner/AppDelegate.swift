@@ -346,7 +346,8 @@ final class WebSignInController: UIViewController, WKNavigationDelegate, UIAdapt
 
   func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
     let scheme = navigationAction.request.url?.scheme?.lowercased()
-    decisionHandler(scheme == "https" || scheme == "http" || scheme == "about" ? .allow : .cancel)
+    // The sign-in pages are all https; nothing in plain text, as on Android.
+    decisionHandler(scheme == "https" || scheme == "about" ? .allow : .cancel)
   }
 
   func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {

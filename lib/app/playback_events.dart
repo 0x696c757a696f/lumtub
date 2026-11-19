@@ -449,6 +449,7 @@ extension PlaybackEvents on AppController {
     _updateEfficiency();
     final platform = player?.platform;
     if (platform is! NativePlayer) return;
+    await _backgroundCache(platform, hidden);
     if (hidden) {
       // iOS opens picture in picture on going home (when chosen), a moment
       // after the app is hidden: the picture stays on for its window.
@@ -487,6 +488,20 @@ extension PlaybackEvents on AppController {
       } catch (e) {
         logWarn('Could not refresh the picture after restoring: $e');
       }
+    }
+  }
+
+  /// A phone or tablet in the background reads less ahead and keeps less
+  /// of what was played ([PlayerOptionApplicator.cacheOptions]): the system
+  /// ends the background apps holding the most memory first, and older
+  /// devices have little. The cache grows back when the app does.
+  Future<void> _backgroundCache(NativePlayer platform, bool hidden) async {
+    if (!(Platform.isAndroid || Platform.isIOS) || Device.tv || hidden == _smallCache) return;
+    _smallCache = hidden;
+    final options = PlayerOptionApplicator.cacheOptions(settings, background: hidden);
+    logDebug(() => 'Cache ${hidden ? 'for the background' : 'back'}: $options');
+    for (final MapEntry(:key, :value) in options.entries) {
+      await platform.setProperty(key, value).catchError((Object e) => logDebug(() => 'Could not set $key: $e'));
     }
   }
 
@@ -575,6 +590,17 @@ extension PlaybackEvents on AppController {
 
   /// Hands memory freed by closed videos back to the system, after letting
   /// go of the yt-dlp answers no video is playing from.
+  /// The system is short of memory (iOS sends this before it ends apps,
+  /// Android when trimming): decoded pictures go (Flutter's own handler),
+  /// idle memory is given back and, on a phone or tablet, the player's
+  /// cache shrinks to the background's until the app is next shown.
+  void onMemoryPressure() {
+    logInfo('The system is short of memory (${ProcessInfo.currentRss >> 20} MB in use)');
+    releaseMemory();
+    final platform = player?.platform;
+    if (platform is NativePlayer) unawaited(_backgroundCache(platform, true));
+  }
+
   void releaseMemory() {
     final before = ProcessInfo.currentRss;
     _repository?.streams.trim();

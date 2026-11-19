@@ -22,6 +22,26 @@ class PlayerOptionApplicator {
     return FileSystemEntity.typeSync('$runtime/$remote') != FileSystemEntityType.notFound;
   }();
 
+  /// How far ahead mpv reads and how much of what was played it keeps.
+  /// 低资源占用优先 reads at most 30 s and 64 MiB ahead and keeps 16 MiB of
+  /// what was played; lower settings stay as they are. What was played is
+  /// kept for seeking back (mpv keeps 50 MiB), on top of the forward cache.
+  /// A phone or tablet with the app in the background, where iOS and
+  /// Android end the apps that hold the most memory first, reads at most
+  /// 30 s and 24 MiB ahead and keeps 4 MiB: plenty to ride out the network
+  /// while no one seeks.
+  static Map<String, String> cacheOptions(PlayerSettings settings, {bool background = false}) {
+    final light = settings.strategy == PlaybackStrategy.lowResource;
+    final seconds = light || background ? math.min(settings.cacheSeconds, 30) : settings.cacheSeconds;
+    final ahead = background ? math.min(settings.cacheMemoryMb, 24) : light ? math.min(settings.cacheMemoryMb, 64) : settings.cacheMemoryMb;
+    final back = background ? 4 : light ? 16 : (settings.cacheMemoryMb ~/ 4).clamp(PlayerSettings.lowMemory ? 8 : 16, 50);
+    return {
+      'cache-secs': '$seconds',
+      'demuxer-max-bytes': '${ahead}MiB',
+      'demuxer-max-back-bytes': '${back}MiB',
+    };
+  }
+
   static Map<String, String> optionsFor(PlayerSettings settings) {
     final light = settings.strategy == PlaybackStrategy.lowResource;
     final subtitles = settings.subtitleMode != SubtitleMode.off;
@@ -95,13 +115,7 @@ class PlayerOptionApplicator {
       // been sent in full before reading pauses and none is cut; 10 MiB
       // pieces were still cut every 2 MB.
       'curl-max-request-size': curlRequestSize,
-      // 低资源占用优先 reads at most 30 s and 64 MiB ahead and keeps 16 MiB
-      // of what was played; lower settings stay as they are.
-      'cache-secs': (light ? math.min(settings.cacheSeconds, 30) : settings.cacheSeconds).toString(),
-      'demuxer-max-bytes': '${light ? math.min(settings.cacheMemoryMb, 64) : settings.cacheMemoryMb}MiB',
-      // What was played is kept for seeking back; mpv keeps 50 MiB, which
-      // goes on top of the forward cache above.
-      'demuxer-max-back-bytes': '${light ? 16 : (settings.cacheMemoryMb ~/ 4).clamp(16, 50)}MiB',
+      ...cacheOptions(settings),
       // Without this mpv lends the back cache whatever of the forward cache
       // cache-secs leaves unused, so what was played grew to the whole
       // 150 MiB plus the above (the user's log: 187 MB on a live; checked

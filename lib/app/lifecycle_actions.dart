@@ -139,6 +139,7 @@ extension LifecycleActions on AppController {
         }
       }
       _lightRendering = null;
+      _smallCache = false;
       await _applyProxy(player);
       unawaited(_relay?.close());
       _relay = madeRelay = await _startRelay();

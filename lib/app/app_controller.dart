@@ -872,6 +872,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool get subtitlesOff => _subtitlesOffIn.isNotEmpty;
 
   bool _backgroundAudioOnly = false;
+  /// The background cache is in force (_backgroundCache).
+  bool _smallCache = false;
   /// iPhone and iPad: following the player for picture in picture.
   _IosPipSync? _iosPip;
   bool _iosAutoPip = false;

@@ -74,10 +74,11 @@ pub fn count(text: &str) -> Option<u64> {
             end = at + c.len_utf8();
             continue;
         }
+        let next = rest[at + c.len_utf8()..].as_bytes();
         let grouped = matches!(c, ' ' | '\u{a0}' | '\u{202f}' | '\u{2009}')
-            && rest[at + c.len_utf8()..].len() >= 3
-            && rest[at + c.len_utf8()..].bytes().take(3).all(|b| b.is_ascii_digit())
-            && !rest[at + c.len_utf8()..].as_bytes().get(3).is_some_and(u8::is_ascii_digit);
+            && next.len() >= 3
+            && next[..3].iter().all(u8::is_ascii_digit)
+            && !next.get(3).is_some_and(u8::is_ascii_digit);
         if !grouped {
             break;
         }

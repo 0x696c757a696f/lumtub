@@ -365,7 +365,11 @@ void _matchGlass(AppearanceSettings appearance, ThemeData theme) {
   final on = appearance.windowGlass;
   final blur = appearance.windowGlassBlur;
   final dark = theme.brightness == Brightness.dark;
-  final tint = glassTint(theme);
+  // How thick Windows 10 frosts its blur, which on its own blurs little:
+  // thinner the clearer 透明度 asks for, so the slider runs from frosted
+  // to see-through (Windows 11 and other systems blur well and ignore it).
+  final frost = 0.9 - 0.65 * appearance.windowGlassClarity.clamp(0.0, 1.0);
+  final tint = glassTint(theme).withValues(alpha: frost);
   WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(WindowGlass.apply(on: on, dark: dark, blur: blur, tint: tint)));
 }
 

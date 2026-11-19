@@ -46,7 +46,8 @@ extension AccountActions on AppController {
   void _webSignInChanged() {
     final web = webSignIn;
     // A new sign-in is tried again even after YouTube refused the old one.
-    if (web != null && web.signIns != _webSignIns) {
+    final fresh = web != null && web.signIns != _webSignIns;
+    if (fresh) {
       _webSignIns = web.signIns;
       comments.webRefused = false;
     }
@@ -60,7 +61,7 @@ extension AccountActions on AppController {
       // Signed in just now: YouTube's own suggestions join the feed.
       if (signedIn && homeFeed != null) unawaited(refreshHomeFeed(force: true, keep: true));
     }
-    account?.webChanged();
+    account?.webChanged(fresh: fresh);
     notifyListeners();
   }
 

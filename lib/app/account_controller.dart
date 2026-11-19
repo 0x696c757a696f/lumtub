@@ -90,9 +90,10 @@ class AccountController extends ChangeNotifier {
 
   AccountApi get _actor => viaWeb ? WebAccountApi(web!) : _api;
 
-  /// The browser sign-in changed: a new one reads its name and copies the
-  /// account into the library, as a Google sign-in does.
-  void webChanged() {
+  /// The browser sign-in changed: it reads the account's name and picture,
+  /// and a [fresh] sign-in copies the account into the library, as a Google
+  /// sign-in does.
+  void webChanged({bool fresh = false}) {
     if (!viaWeb) {
       webName = webAvatar = null;
       _webRead = false;
@@ -101,7 +102,7 @@ class AccountController extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    if (_webRead) return;
+    if (_webRead && !fresh) return;
     _webRead = true;
     _ratings.clear();
     _loadedRatings.clear();
@@ -111,7 +112,7 @@ class AccountController extends ChangeNotifier {
         webName = me.name;
         webAvatar = me.avatar;
         notifyListeners();
-        await sync(likes: me.likes);
+        if (fresh) await sync(likes: me.likes);
       } catch (e) {
         logWarn('Could not read the browser sign-in\'s account: $e');
       }

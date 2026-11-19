@@ -7,6 +7,10 @@ libmpv for Android and macOS is moved in its vendor/ copy. Each change is
 described in $RUNNER_TEMP/upstream-commit.txt. Pieces that
 need reading first (the media_kit copies under vendor/, which carry Lumtub's
 own changes) are listed in $RUNNER_TEMP/upstream-notes.md.
+
+With the argument "ios" only the iOS libmpv is looked at: lumtub-media-builds
+builds it once a day from main's recipe, and upstream.yml pins it the same
+day instead of at the next weekly run.
 """
 
 import glob
@@ -15,6 +19,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import urllib.request
 
 BUILD = ".github/pins.env"
@@ -332,6 +337,18 @@ def vendored(notes):
             )
 
 
+def ios_only():
+    changes = []
+    try:
+        ios_libmpv(changes)
+    except Exception as e:
+        print(f"::warning::ios_libmpv: {e}")
+    if changes:
+        with open(os.path.join(TEMP, "upstream-commit.txt"), "w", encoding="utf-8") as f:
+            f.write("Upstream updates: " + "; ".join(changes) + "\n")
+    print("\n".join(changes) or "The iOS libmpv is current.")
+
+
 def main():
     with open(BUILD, encoding="utf-8") as f:
         text = f.read()
@@ -362,4 +379,7 @@ def main():
     print("\n".join(changes + notes) or "Everything is current.")
 
 
-main()
+if sys.argv[1:] == ["ios"]:
+    ios_only()
+else:
+    main()

@@ -228,6 +228,9 @@ class StreamResolver {
   /// start asks as (visionOS), leaving out the TV and web clients.
   static const visionOnly = 'youtube:player_client=visionos';
 
+  /// The clients a run with the browser sign-in's cookies asks.
+  static const signedClients = 'youtube:player_client=default,tv_samsung';
+
   /// Whether yt-dlp asks only the visionOS client, as it does unless a
   /// run that way just failed. Measured on a Windows PC on 2026-11-17
   /// (yt-dlp 2026.11.16, five videos, each client alone): with its default
@@ -336,8 +339,13 @@ class StreamResolver {
         '--extractor-retries', '3',
         if (live)
           ...['--extractor-args', 'youtube:formats=incomplete${liveClients == null ? '' : ';player_client=$liveClients'}']
-        // A signed-in run keeps yt-dlp's own clients for signed-in users.
-        else if (cookies == null && avoidingTv)
+        // A signed-in run keeps yt-dlp's own clients for signed-in users,
+        // and asks the Samsung TV client too: on an address YouTube takes
+        // for a bot it was let through signed in every time where the
+        // others mostly were not (SimpMusic issue 2861, 2026-11-11).
+        else if (cookies != null)
+          ...['--extractor-args', signedClients]
+        else if (avoidingTv)
           ...['--extractor-args', visionOnly],
         '--no-playlist',
         '--dump-single-json',

@@ -42,9 +42,14 @@ def main():
     phrases = [p for p in open(f'{HERE}/phrases.txt', encoding='utf-8').read().splitlines() if p.strip()]
     languages = [l for l in open(f'{HERE}/languages.txt', encoding='utf-8').read().splitlines() if l.strip()]
     try:
-        known = json.load(open(OUT, encoding='utf-8'))
+        stored = json.load(open(OUT, encoding='utf-8'))
     except FileNotFoundError:
-        known = {}
+        stored = {}
+    # Stored as the phrase list once and, per language, its translations in
+    # the same order ('' where there is none).
+    order = stored.pop('phrases', None)
+    known = {lang: (dict(zip(order, lines)) if order is not None else lines) for lang, lines in stored.items()}
+    known = {lang: {p: t for p, t in pairs.items() if t} for lang, pairs in known.items()}
     failed = []
     for target in languages:
         have = known.setdefault(target, {})
@@ -61,10 +66,12 @@ def main():
             time.sleep(1)
         print(f'{target}: {len(have)} of {len(phrases)}')
     # Phrases no zone searches any more are dropped.
-    wanted = set(phrases)
-    known = {lang: {p: t for p, t in sorted(known[lang].items()) if p in wanted} for lang in languages if lang in known}
+    out = {'phrases': phrases}
+    for lang in languages:
+        if lang in known:
+            out[lang] = [known[lang].get(p, '') for p in phrases]
     with open(OUT, 'w', encoding='utf-8') as f:
-        json.dump(known, f, ensure_ascii=False, indent=0, sort_keys=True)
+        json.dump(out, f, ensure_ascii=False, separators=(',', ':'))
         f.write('\n')
     if failed:
         print('Not finished: ' + ' '.join(failed), file=sys.stderr)

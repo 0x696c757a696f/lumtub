@@ -27,7 +27,16 @@ class SearchPhrases {
     final read = _bundledText;
     if (read == null) return const {};
     try {
-      return _mapsOf(jsonDecode(await read()));
+      // The phrase list once, then each language's translations in its
+      // order ('' for none).
+      final data = jsonDecode(await read());
+      if (data is! Map || data['phrases'] is! List) return _mapsOf(data);
+      final phrases = (data['phrases'] as List).whereType<String>().toList();
+      return {
+        for (final MapEntry(:key, :value) in data.entries)
+          if (key is String && key != 'phrases' && value is List && value.length == phrases.length)
+            key: {for (final (i, t) in value.indexed) if (t is String && t.isNotEmpty) phrases[i]: t},
+      };
     } catch (e) {
       logWarn('Could not read the bundled explore search phrases: $e');
       return const {};

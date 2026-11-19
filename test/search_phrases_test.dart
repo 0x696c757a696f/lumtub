@@ -49,7 +49,7 @@ void main() {
 
   test('bundled phrases are used before the disk and the translator', () async {
     final fake = _Fake();
-    final phrases = SearchPhrases(fake, bundled: () async => '{"it": {"sports": "sport"}}');
+    final phrases = SearchPhrases(fake, bundled: () async => '{"phrases": ["sports", "chess"], "it": ["sport", ""]}');
     expect(await phrases.translate(['sports', 'chess'], 'it'), {'sports': 'sport', 'chess': 'it:chess'});
     expect(fake.asked, ['chess']);
   });
@@ -80,5 +80,16 @@ void main() {
     // Add them to .github/search_phrases/phrases.txt; the Search phrases
     // workflow then translates them into assets/search_phrases.json.
     expect(missing, isEmpty);
+  });
+
+  test('the bundled file has every listed phrase in every language', () async {
+    final fake = _Fake();
+    final phrases = SearchPhrases(fake, bundled: () async => File('assets/search_phrases.json').readAsStringSync());
+    final listed = File('.github/search_phrases/phrases.txt').readAsLinesSync().where((l) => l.trim().isNotEmpty).toList();
+    for (final language in File('.github/search_phrases/languages.txt').readAsLinesSync().where((l) => l.isNotEmpty)) {
+      expect((await phrases.translate(listed, language)).length, listed.length, reason: language);
+    }
+    expect(fake.asked, isEmpty);
+    expect((await phrases.translate(['sports'], 'it'))['sports'], 'sport');
   });
 }

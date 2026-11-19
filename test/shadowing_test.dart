@@ -1,7 +1,4 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,29 +10,31 @@ class FakeMicrophone implements Microphone {
   FakeMicrophone({this.allow = true, this.fails = false});
   final bool allow;
   final bool fails;
-  StreamController<Uint8List>? controller;
-  int? rate;
-  bool stopped = false;
-  bool disposed = false;
+  bool started = false;
+  bool released = false;
+
+  /// What the next stop writes, in bytes after the header.
+  int heard = 0;
 
   @override
   Future<bool> allowed() async => allow;
 
   @override
-  Future<Stream<Uint8List>> start({required int sampleRate}) async {
+  Future<void> start() async {
     if (fails) throw StateError('no input device');
-    rate = sampleRate;
-    return (controller = StreamController<Uint8List>()).stream;
+    started = true;
   }
 
   @override
-  Future<void> stop() async {
-    stopped = true;
-    await controller?.close();
+  Future<double?> stopInto(File file) async {
+    started = false;
+    if (heard == 0) return null;
+    await file.writeAsBytes(Uint8List(44 + heard));
+    return heard / 88200;
   }
 
   @override
-  Future<void> dispose() async => disposed = true;
+  Future<void> release() async => released = true;
 }
 
 void main() {
@@ -45,42 +44,22 @@ void main() {
     if (folder.existsSync()) folder.deleteSync(recursive: true);
   });
 
-  test('a WAV header that says what follows', () {
-    final pcm = Uint8List.fromList(List.generate(1001, (i) => i % 256));
-    final wav = wavBytes(pcm, sampleRate: 44100);
-    final data = ByteData.sublistView(wav);
-    expect(ascii.decode(wav.sublist(0, 4)), 'RIFF');
-    expect(ascii.decode(wav.sublist(8, 16)), 'WAVEfmt ');
-    expect(data.getUint16(20, Endian.little), 1);
-    expect(data.getUint16(22, Endian.little), 1);
-    expect(data.getUint32(24, Endian.little), 44100);
-    expect(data.getUint32(28, Endian.little), 88200);
-    expect(data.getUint16(34, Endian.little), 16);
-    expect(ascii.decode(wav.sublist(36, 40)), 'data');
-    // An odd last byte is half a sample and is left out.
-    expect(data.getUint32(40, Endian.little), 1000);
-    expect(data.getUint32(4, Endian.little), 1036);
-    expect(wav.length, 1044);
-    expect(wav.sublist(44), pcm.sublist(0, 1000));
-  });
-
-  test('a take is what the microphone heard, saved as WAV', () async {
+  test('a take is what the microphone heard, kept as a file', () async {
     final mic = FakeMicrophone();
     final shadowing = Shadowing(folder, microphone: mic);
     await shadowing.start();
     expect(shadowing.recording, isTrue);
-    expect(mic.rate, Shadowing.sampleRate);
-    for (var i = 0; i < 10; i++) {
-      mic.controller!.add(Uint8List(4410));
-    }
+    expect(mic.started, isTrue);
+    mic.heard = 88200;
     final take = await shadowing.stop();
-    expect(mic.stopped, isTrue);
+    expect(mic.started, isFalse);
     expect(shadowing.recording, isFalse);
     expect(take, isNotNull);
-    expect(take!.lengthSync(), 44 + 44100);
+    expect(take!.lengthSync(), 44 + 88200);
     expect(shadowing.take?.path, take.path);
+    expect(shadowing.takeLength, const Duration(seconds: 1));
     await shadowing.dispose();
-    expect(mic.disposed, isTrue);
+    expect(mic.released, isTrue);
     expect(take.existsSync(), isFalse);
   });
 
@@ -88,27 +67,32 @@ void main() {
     final mic = FakeMicrophone();
     final shadowing = Shadowing(folder, microphone: mic);
     await shadowing.start();
-    mic.controller!.add(Uint8List(100));
+    mic.heard = 100;
     expect(await shadowing.stop(), isNull);
     expect(shadowing.take, isNull);
+    expect(folder.listSync(), isEmpty);
+    await shadowing.start();
+    expect(await shadowing.stop(), isNull);
   });
 
   test('a denied or missing microphone says why', () async {
     await expectLater(Shadowing(folder, microphone: FakeMicrophone(allow: false)).start(), throwsA(isA<ShadowException>().having((e) => e.denied, 'denied', isTrue)));
+    final failing = Shadowing(folder, microphone: FakeMicrophone(fails: true));
     await expectLater(
-      Shadowing(folder, microphone: FakeMicrophone(fails: true)).start(),
+      failing.start(),
       throwsA(isA<ShadowException>().having((e) => e.denied, 'denied', isFalse).having((e) => e.detail, 'detail', contains('no input device'))),
     );
+    expect(failing.recording, isFalse);
   });
 
   test('a new take replaces the last one', () async {
     final mic = FakeMicrophone();
     final shadowing = Shadowing(folder, microphone: mic);
     await shadowing.start();
-    mic.controller!.add(Uint8List(20000));
+    mic.heard = 20000;
     final first = await shadowing.stop();
     await shadowing.start();
-    mic.controller!.add(Uint8List(30000));
+    mic.heard = 30000;
     final second = await shadowing.stop();
     expect(second!.path, first!.path);
     expect(second.lengthSync(), 44 + 30000);

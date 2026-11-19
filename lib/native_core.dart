@@ -266,6 +266,29 @@ class NativeCore {
       logWarn('The core cannot be told the language: $e');
     }
   }
+
+  /// 跟读录音: starts recording the microphone (native/lumtub_core/src/
+  /// mic.rs). Null when it did, else why not. Blocks until the microphone
+  /// is open, so run it on another isolate.
+  static String? micStart() {
+    final core = instance;
+    if (core == null) return 'the Lumtub core is missing';
+    final call = core.library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_mic_start');
+    final answer = core.take(call());
+    if (answer == null) return null;
+    return (jsonDecode(answer) as Map)['error']?.toString() ?? answer;
+  }
+
+  /// Stops recording and writes the take to [path] as WAV: how many
+  /// seconds it is, or why there is none.
+  static ({double? seconds, String? error}) micStop(String path) {
+    final core = instance;
+    if (core == null) return (seconds: null, error: 'the Lumtub core is missing');
+    final call = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_mic_stop');
+    final answer = jsonDecode(core.take(core.withText(path, call)) ?? '{}') as Map;
+    return (seconds: (answer['seconds'] as num?)?.toDouble(), error: answer['error']?.toString());
+  }
+
   final bool Function(int job, int code) _kill;
   final void Function(int job) _close;
 

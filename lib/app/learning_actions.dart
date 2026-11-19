@@ -177,7 +177,7 @@ extension LearningActions on AppController {
     }
     if (player.state.playing) await player.pause();
     final folder = Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub shadowing');
-    final shadowing = _shadowing ??= Shadowing(folder, microphone: RecordMicrophone(mixWithOthers: settings.mixWithOthers));
+    final shadowing = _shadowing ??= Shadowing(folder, microphone: CoreMicrophone(mixWithOthers: settings.mixWithOthers));
     try {
       await shadowing.start(onTooLong: () => unawaited(_stopShadowing()));
     } on ShadowException catch (e) {
@@ -235,7 +235,7 @@ extension LearningActions on AppController {
       final mine = _shadowPlayer ??= Player();
       await mine.setVolume(player.state.volume);
       await mine.open(Media(take.uri.toString()));
-      final length = Duration(milliseconds: ((await take.length() - 44) / (Shadowing.sampleRate * 2) * 1000).round());
+      final length = _shadowing?.takeLength ?? Duration.zero;
       await mine.stream.completed.firstWhere((done) => done).timeout(length + const Duration(seconds: 2), onTimeout: () => true);
     } catch (e) {
       logWarn('Could not play the recording back: $e');

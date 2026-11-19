@@ -52,6 +52,62 @@ void main() {
     expect(updater.available?.version, first?.version);
   });
 
+  test('reads the release from github.com when the API limits this address', () async {
+    final asked = <String>[];
+    final api = MockClient((request) async {
+      asked.add(request.url.toString());
+      if (request.url.host == 'api.github.com') return http.Response('{"message":"API rate limit exceeded"}', 403);
+      return http.Response('<feed><entry><link rel="alternate" href="https://github.com/0x696c757a696f/lumtub/releases/tag/v9.9.9-1234567"/><updated>2026-11-19T09:00:00Z</updated></entry></feed>', 200);
+    });
+    MockClient pages(int status) => MockClient((request) async {
+          asked.add(request.url.toString());
+          return http.Response('', status, headers: {if (status == 302) 'location': 'https://github.com/0x696c757a696f/lumtub/releases/tag/v9.9.9-1234567'});
+        });
+    final folder = Directory.systemTemp.createTempSync('updater');
+    addTearDown(() => folder.deleteSync(recursive: true));
+    var updater = AppUpdater(client: api, directory: folder, download: (asset, into, onProgress) async => throw UnimplementedError(), plainClient: () => pages(302));
+    await updater.check();
+    expect(updater.error, isNull);
+    expect(asked, contains('https://github.com/0x696c757a696f/lumtub/releases/latest'));
+    expect(asked, contains('https://github.com/0x696c757a696f/lumtub/releases.atom'));
+
+    updater = AppUpdater(client: api, directory: folder, download: (asset, into, onProgress) async => throw UnimplementedError(), plainClient: () => pages(500));
+    await updater.check();
+    expect(updater.error, contains('GitHub'));
+    expect(updater.error, contains('403'));
+    expect(updater.error, isNot(contains('YouTube')));
+  });
+
+  test('names GitHub when it answers something else', () async {
+    final folder = Directory.systemTemp.createTempSync('updater');
+    addTearDown(() => folder.deleteSync(recursive: true));
+    final updater = AppUpdater(client: MockClient((_) async => http.Response('', 502)), directory: folder, download: (asset, into, onProgress) async => throw UnimplementedError());
+    await updater.check();
+    expect(updater.error, contains('GitHub'));
+    expect(updater.error, contains('502'));
+  });
+
+  test('reads the tag, time and package names of a release from its pages', () {
+    expect(releaseTagOfRedirect('0x696c757a696f/lumtub', 'https://github.com/0x696c757a696f/lumtub/releases/tag/v0.2.53-588804e'), 'v0.2.53-588804e');
+    expect(releaseTagOfRedirect('0x696c757a696f/lumtub', 'https://github.com/0x696c757a696f/lumtub/releases'), isNull);
+    expect(releaseTagOfRedirect('0x696c757a696f/lumtub', 'https://example.com/0x696c757a696f/lumtub/releases/tag/v1'), isNull);
+    expect(releaseTagOfRedirect('0x696c757a696f/lumtub', null), isNull);
+    const feed = '<feed><entry><link rel="alternate" type="text/html" href="https://github.com/0x696c757a696f/lumtub/releases/tag/v0.2.53-aaaaaaa"/><updated>2026-11-18T01:00:00Z</updated></entry>'
+        '<entry><link rel="alternate" type="text/html" href="https://github.com/0x696c757a696f/lumtub/releases/tag/v0.2.53-588804e"/><updated>2026-11-19T09:00:00Z</updated></entry></feed>';
+    expect(publishedInFeed(feed, 'v0.2.53-588804e'), '2026-11-19T09:00:00Z');
+    expect(publishedInFeed(feed, 'v0.2.52-1111111'), isNull);
+    String name(String package, {bool portable = false}) => ((releaseOfTag('v0.2.53-588804e', package: package, portable: portable)['assets'] as List).first as Map)['name'] as String;
+    expect(name('linux-x64'), 'Lumtub_0.2.53-588804e_linux-x64.AppImage');
+    expect(name('macos-arm64'), 'Lumtub_0.2.53-588804e_macos-arm64.dmg');
+    expect(name('android-arm64-v8a'), 'Lumtub_0.2.53-588804e_android-arm64-v8a.apk');
+    expect(name('windows-x64'), 'Lumtub_0.2.53-588804e_windows-x64-setup.exe');
+    expect(name('windows-x64', portable: true), 'Lumtub_0.2.53-588804e_windows-x64.zip');
+    final release = releaseOfTag('v0.2.53-588804e', package: 'linux-x64', portable: false, published: '2026-11-19T09:00:00Z');
+    expect(release['published_at'], '2026-11-19T09:00:00Z');
+    expect(((release['assets'] as List)[1] as Map)['browser_download_url'], 'https://github.com/0x696c757a696f/lumtub/releases/download/v0.2.53-588804e/Lumtub_0.2.53-588804e_linux-x64.AppImage.sig');
+    expect(releaseOfTag('v1.0.0-1234567', package: '', portable: false)['assets'], isEmpty);
+  });
+
   test('does not offer the running or an older release', () {
     final later = built.add(const Duration(hours: 1));
     expect(offerOf(release('v0.2.1-72ec49d', later), current: '0.2.1-72ec49d', built: built), isNull);

@@ -16,7 +16,8 @@ enum TranslationService {
   deeplx('DeepLX (no key)'),
   baidu('Baidu Translate'),
   libre('LibreTranslate'),
-  ai('AI model');
+  ai('AI model'),
+  mymemory('MyMemory (free, short texts)');
 
   const TranslationService(this._label);
   final String _label;
@@ -26,6 +27,21 @@ enum TranslationService {
   /// DeepLX's and Microsoft's are optional, and an AI endpoint on this
   /// computer or a custom one may need none.
   bool get needsKey => this == deepl || this == baidu || this == ai;
+
+  /// Whether subtitles stay with Google's free endpoint (Microsoft's while
+  /// it refuses) when this service is chosen: MyMemory's daily allowance is
+  /// too small for them.
+  bool get subtitlesOnGoogle => this == google || this == mymemory;
+
+  /// What kind of interface it is, for 设置: an official API, an unofficial
+  /// web endpoint, or a server of one's own. Empty where the page says it.
+  String get kind => switch (this) {
+        google || deeplx => tr('Unofficial web interface: free and needs no key, but it may be limited or stop working without notice.'),
+        mymemory => tr('Public API with a small free daily allowance (about 5,000 characters, more with your email). Used only for short texts such as comments and titles; subtitles keep Google Translate.'),
+        deepl || baidu => tr('Official API: needs your own key; the provider sets its free allowance and prices.'),
+        libre => tr('Open-source service: use your own server, or a public one you trust.'),
+        microsoft || ai => '',
+      };
 }
 
 /// A ready-made AI endpoint.
@@ -62,7 +78,7 @@ Future<String> _post(http.Client client, Uri uri, Map<String, String> headers, S
   final status = response.statusCode;
   if (status == 200) return utf8.decode(response.bodyBytes);
   if (errors.containsKey(status)) throw TranslationException(errors[status]!);
-  if (status == 429) throw TranslationException(tr('Too many translation requests. Please try again later.'));
+  if (status == 429) throw TranslationException.busy();
   throw TranslationException(tr('Translation service temporarily unavailable ({0})', [status]));
 }
 
@@ -180,23 +196,6 @@ class MicrosoftTranslator extends _LineTranslator {
   final String key;
   final String region;
 
-  String? _token;
-  DateTime _tokenUntil = DateTime.fromMillisecondsSinceEpoch(0);
-
-  Future<String> _edgeToken() async {
-    final token = _token;
-    if (token != null && DateTime.now().isBefore(_tokenUntil)) return token;
-    final http.Response response;
-    try {
-      response = await client.get(Uri.https('edge.microsoft.com', '/translate/auth')).timeout(const Duration(seconds: 15));
-    } catch (_) {
-      throw TranslationException(tr('Translation failed. Check your network or proxy.'));
-    }
-    if (response.statusCode != 200 || response.body.trim().isEmpty) throw TranslationException(tr('Translation service temporarily unavailable ({0})', [response.statusCode]));
-    _tokenUntil = DateTime.now().add(const Duration(minutes: 8));
-    return _token = response.body.trim();
-  }
-
   @override
   int get batchSize => 100;
 
@@ -213,9 +212,15 @@ class MicrosoftTranslator extends _LineTranslator {
   @override
   Future<List<String>> translateBatch(List<String> lines, String target) async {
     final free = key.trim().isEmpty;
-    final uri = Uri.https(free ? 'api-edge.cognitive.microsofttranslator.com' : 'api.cognitive.microsofttranslator.com', '/translate', {'api-version': '3.0', 'to': languageCode(target)});
+    // Without a key: the address Microsoft Edge translates pages with since
+    // its token address (edge.microsoft.com/translate/auth) went away in
+    // 2026. It takes the texts as a JSON array of strings, needs no token,
+    // and detects the source itself (a `from` of auto is refused).
+    final uri = free
+        ? Uri.https('edge.microsoft.com', '/translate/translatetext', {'to': languageCode(target), 'isEnterpriseClient': 'false'})
+        : Uri.https('api.cognitive.microsofttranslator.com', '/translate', {'api-version': '3.0', 'to': languageCode(target)});
     final headers = {
-      if (free) 'Authorization': 'Bearer ${await _edgeToken()}' else 'Ocp-Apim-Subscription-Key': key.trim(),
+      if (free) 'User-Agent': edgeUserAgent else 'Ocp-Apim-Subscription-Key': key.trim(),
       if (!free && region.trim().isNotEmpty) 'Ocp-Apim-Subscription-Region': region.trim(),
       'Content-Type': 'application/json',
     };
@@ -223,22 +228,36 @@ class MicrosoftTranslator extends _LineTranslator {
       client,
       uri,
       headers,
-      jsonEncode([for (final line in lines) {'Text': line}]),
+      jsonEncode(free ? lines : [for (final line in lines) {'Text': line}]),
       {401: tr('The Microsoft Translator key is not valid')},
       const Duration(seconds: 30),
     );
-    final data = _decode(reply);
-    if (data is List) {
-      final out = <String>[];
-      for (final item in data) {
-        final translations = item is Map ? item['translations'] : null;
-        if (translations is List && translations.isNotEmpty && translations.first is Map && (translations.first as Map)['text'] is String) {
-          out.add((translations.first as Map)['text'] as String);
-        }
-      }
-      return out;
-    }
+    final out = parseReply(_decode(reply));
+    if (out != null) return out;
     throw _unrecognized();
+  }
+
+  /// A browser's, which the keyless address asks for.
+  static const edgeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0';
+
+  /// The translated texts of a reply: Translator v3's
+  /// `[{"translations": [{"text": …}]}, …]`, or plain strings.
+  static List<String>? parseReply(Object? data) {
+    if (data is! List) return null;
+    final out = <String>[];
+    for (final item in data) {
+      if (item is String) {
+        out.add(item);
+        continue;
+      }
+      final translations = item is Map ? item['translations'] : null;
+      if (translations is List && translations.isNotEmpty && translations.first is Map && (translations.first as Map)['text'] is String) {
+        out.add((translations.first as Map)['text'] as String);
+      } else if (item is Map && item['text'] is String) {
+        out.add(item['text'] as String);
+      }
+    }
+    return out;
   }
 }
 
@@ -322,9 +341,10 @@ class BaiduTranslator extends _LineTranslator {
     );
     final data = _decode(reply);
     if (data is Map && data['error_code'] != null && '${data['error_code']}' != '52000') {
-      throw TranslationException(switch ('${data['error_code']}') {
+      final code = '${data['error_code']}';
+      if (code == '54003' || code == '54005') throw TranslationException.busy();
+      throw TranslationException(switch (code) {
         '52003' || '54001' => tr('The Baidu Translate APP ID or key is invalid'),
-        '54003' || '54005' => tr('Too many translation requests. Please try again later.'),
         '54004' => tr('The Baidu Translate account is out of credit'),
         final code => tr('Translation service temporarily unavailable ({0})', [code]),
       });
@@ -345,18 +365,72 @@ class LibreTranslator extends _LineTranslator {
   @override
   int get batchSize => 100;
 
-  static String languageCode(String target) => switch (target) {
-        'zh-CN' => 'zh-Hans',
-        'zh-TW' => 'zh-Hant',
-        'iw' => 'he',
-        'tl' => 'fil',
-        'jw' => 'jv',
-        'no' => 'nb',
-        _ => target,
+  /// The codes LibreTranslate may know [target] (Google's code) by, the
+  /// current one first: servers before 1.6 call Chinese `zh` and `zt`.
+  static List<String> languageCodes(String target) => switch (target) {
+        'zh-CN' => const ['zh-Hans', 'zh', 'zh-CN'],
+        'zh-TW' => const ['zh-Hant', 'zt', 'zh-TW'],
+        'iw' => const ['he', 'iw'],
+        'jw' => const ['jv', 'jw'],
+        'no' => const ['nb', 'no'],
+        'tl' => const ['tl', 'fil'],
+        'pt' => const ['pt', 'pt-BR'],
+        _ => [target, if (target.contains('-')) target.split('-').first],
       };
 
+  static String languageCode(String target) => languageCodes(target).first;
+
+  /// The target languages each server lists at `/languages`, asked once;
+  /// a failed ask is tried again after ten minutes.
+  static final _languages = <String, Set<String>>{};
+  static final _languagesFailed = <String, DateTime>{};
+
+  /// The code this server knows [target] by: the first of [languageCodes]
+  /// its `/languages` lists, or the first when the list can't be had. Null
+  /// when the server lists languages and this one is not among them.
+  Future<String?> codeFor(String target) async {
+    final codes = languageCodes(target);
+    final known = await _knownLanguages();
+    if (known == null) return codes.first;
+    for (final code in codes) {
+      if (known.contains(code)) return code;
+    }
+    return null;
+  }
+
+  Future<Set<String>?> _knownLanguages() async {
+    final base = _base;
+    final have = _languages[base];
+    if (have != null) return have;
+    final failed = _languagesFailed[base];
+    if (failed != null && DateTime.now().difference(failed) < const Duration(minutes: 10)) return null;
+    try {
+      final response = await client.get(Uri.parse('$base/languages')).timeout(const Duration(seconds: 15));
+      final data = response.statusCode == 200 ? jsonDecode(utf8.decode(response.bodyBytes)) : null;
+      final codes = parseLanguages(data);
+      if (codes != null && codes.isNotEmpty) return _languages[base] = codes;
+    } catch (_) {}
+    _languagesFailed[base] = DateTime.now();
+    return null;
+  }
+
+  /// Every code a `/languages` answer lists, as a language or a target.
+  static Set<String>? parseLanguages(Object? data) {
+    if (data is! List) return null;
+    final out = <String>{};
+    for (final item in data) {
+      if (item is! Map) continue;
+      if (item['code'] is String) out.add(item['code'] as String);
+      final targets = item['targets'];
+      if (targets is List) out.addAll(targets.whereType<String>());
+    }
+    return out;
+  }
+
+  String get _base => server.trim().replaceAll(RegExp(r'/+$'), '');
+
   Uri get endpoint {
-    final base = server.trim().replaceAll(RegExp(r'/+$'), '');
+    final base = _base;
     final uri = Uri.tryParse('$base/translate');
     if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) {
       throw TranslationException(tr('Fill in the LibreTranslate server address'));
@@ -367,10 +441,12 @@ class LibreTranslator extends _LineTranslator {
   @override
   Future<List<String>> translateBatch(List<String> lines, String target) async {
     final uri = endpoint;
+    final code = await codeFor(target);
+    if (code == null) throw TranslationException(tr('{0} does not support this language', ['LibreTranslate']));
     final body = {
       'q': lines,
       'source': 'auto',
-      'target': languageCode(target),
+      'target': code,
       'format': 'text',
       if (key.trim().isNotEmpty) 'api_key': key.trim(),
     };
@@ -382,6 +458,98 @@ class LibreTranslator extends _LineTranslator {
       if (result is List && result.every((e) => e is String)) return result.cast<String>();
     }
     throw _unrecognized();
+  }
+}
+
+/// MyMemory's public API (api.mymemory.translated.net): no key, a small
+/// daily allowance per address (more with an email), at most 500 bytes a
+/// request. It is for short texts only; longer ones are refused so that
+/// the next service takes them.
+class MyMemoryTranslator extends _CachedTranslator {
+  MyMemoryTranslator(super.client, {String Function()? email}) : _email = email ?? (() => '');
+  final String Function() _email;
+
+  /// The most bytes a request may carry, and a text may have in all.
+  static const requestBytes = 500, textBytes = 1500;
+
+  /// Until when the allowance is used up: the next midnight UTC, when it
+  /// starts again. Shared by every instance, like the address it counts.
+  static DateTime? _coolUntil;
+  static bool get coolingDown => _coolUntil != null && DateTime.now().toUtc().isBefore(_coolUntil!);
+  static void resetPacing() => _coolUntil = null;
+
+  static String languageCode(String target) => switch (target) {
+        'iw' => 'he',
+        'jw' => 'jv',
+        _ => target,
+      };
+
+  /// [text] in requests of at most [requestBytes]: by line, and a line by
+  /// sentence. Null when a sentence alone is too long.
+  static List<String>? piecesOf(String text) {
+    int size(String s) => utf8.encode(s).length;
+    final pieces = <String>[];
+    for (final line in text.split('\n')) {
+      if (size(line) <= requestBytes) {
+        pieces.add(line);
+        continue;
+      }
+      var part = '';
+      for (final sentence in RegExp(r'[^.!?。！？]+[.!?。！？]*\s*').allMatches(line).map((m) => m[0]!)) {
+        if (size(sentence) > requestBytes) return null;
+        if (size(part + sentence) > requestBytes) {
+          pieces.add(part);
+          part = '';
+        }
+        part += sentence;
+      }
+      if (part.isNotEmpty) pieces.add(part);
+    }
+    return pieces;
+  }
+
+  @override
+  Future<String> translateUncached(String text, String target) async {
+    if (coolingDown) throw TranslationException.busy();
+    if (utf8.encode(text).length > textBytes) throw TranslationException(tr('This text is too long for {0}', ['MyMemory']));
+    final pieces = piecesOf(text);
+    if (pieces == null) throw TranslationException(tr('This text is too long for {0}', ['MyMemory']));
+    final out = <String>[];
+    // Lines that end up in one request stay joined; the rest keep their breaks.
+    for (final piece in pieces) {
+      out.add(piece.trim().isEmpty ? piece : await _one(piece, target));
+    }
+    return out.join('\n');
+  }
+
+  Future<String> _one(String text, String target) async {
+    final email = _email().trim();
+    final uri = Uri.https('api.mymemory.translated.net', '/get', {'q': text, 'langpair': 'autodetect|${languageCode(target)}', if (email.contains('@')) 'de': email});
+    final http.Response response;
+    try {
+      response = await client.get(uri).timeout(const Duration(seconds: 20));
+    } catch (_) {
+      throw TranslationException(tr('Translation failed. Check your network or proxy.'));
+    }
+    final data = response.statusCode == 200 || response.statusCode == 429 || response.statusCode == 403 ? _decode(utf8.decode(response.bodyBytes)) : null;
+    if (data is! Map) {
+      if (response.statusCode == 429) _usedUp();
+      throw TranslationException(tr('Translation service temporarily unavailable ({0})', [response.statusCode]));
+    }
+    final status = '${data['responseStatus']}';
+    final details = '${data['responseDetails'] ?? ''}';
+    if (data['quotaFinished'] == true || status == '429' || details.toUpperCase().contains('USED ALL AVAILABLE FREE TRANSLATIONS')) _usedUp();
+    final translated = data['responseData'] is Map ? (data['responseData'] as Map)['translatedText'] : null;
+    if (status != '200' || translated is! String) {
+      throw TranslationException(tr('Translation service temporarily unavailable ({0})', [status]));
+    }
+    return translated;
+  }
+
+  static Never _usedUp() {
+    final now = DateTime.now().toUtc();
+    _coolUntil = DateTime.utc(now.year, now.month, now.day + 1);
+    throw TranslationException.busy();
   }
 }
 
@@ -816,6 +984,23 @@ bool _listEquals(List<Object?> a, List<Object?> b) {
   return true;
 }
 
+/// [first], and [then] when [first] fails: two services, so one refusing
+/// (or out of reach) does not leave the text untranslated.
+class FallbackTranslator implements Translator {
+  const FallbackTranslator(this.first, this.then);
+  final Translator first;
+  final Translator then;
+
+  @override
+  Future<String> translate(String text, String target) async {
+    try {
+      return await first.translate(text, target);
+    } on TranslationException {
+      return then.translate(text, target);
+    }
+  }
+}
+
 class _FailingTranslator implements Translator {
   const _FailingTranslator(this.message);
   final String message;
@@ -833,12 +1018,14 @@ bool _isLocalUrl(String url) {
 }
 
 /// The translator [config] asks for, with its secret from [keys] (by
-/// [TranslationService.name]). Google's is [fallback].
+/// [TranslationService.name]). Google's is [fallback], which MyMemory
+/// leaves subtitles to (see [TranslationService.subtitlesOnGoogle]).
 Translator translatorFor(TranslationConfig config, Map<String, String> keys, http.Client client, {required Translator fallback}) {
   final service = config.service;
   final key = (service == TranslationService.ai ? aiKeyFor(config, keys) : keys[service.name] ?? '').trim();
   switch (service) {
     case TranslationService.google:
+    case TranslationService.mymemory:
       return fallback;
     case TranslationService.deepl:
       if (key.isEmpty) return _FailingTranslator(tr('Fill in the key for {0} in Settings first', [service.label]));

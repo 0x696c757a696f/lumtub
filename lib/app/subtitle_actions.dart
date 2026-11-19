@@ -112,6 +112,15 @@ extension SubtitleActions on AppController {
     }
   }
 
+  /// What to tell when a subtitle could not be shown: translation services
+  /// that refused (all of them, after their pauses) are said to be busy,
+  /// another translation failure gives its own reason.
+  String _subtitleFailure(Object e) => switch (e) {
+        TranslationException(busy: true) => tr('The translation services are busy right now. Try these subtitles again in a minute.'),
+        TranslationException(:final message) => message,
+        _ => tr("Couldn't load these subtitles"),
+      };
+
   /// [option] as a local file, fetched with retries; see [SubtitleFiles].
   Future<String> _subtitleFile(SubtitleOption option) async {
     try {
@@ -205,7 +214,7 @@ extension SubtitleActions on AppController {
     chaptersChanged.value++;
     try {
       final titles = [for (final c in chapters) c.title.replaceAll('\n', ' ')];
-      final lines = (await translateForeignLines(translator, titles.join('\n'), language, (line) => readsAs(line, language, chineseAsOne: preferences.chineseAsOne))).split('\n');
+      final lines = (await translateForeignLines(textTranslator, titles.join('\n'), language, (line) => readsAs(line, language, chineseAsOne: preferences.chineseAsOne))).split('\n');
       if (playing?.id != id) return;
       _update(() {
         chapterTranslation = lines.length == titles.length ? lines : titles;
@@ -352,7 +361,7 @@ extension SubtitleActions on AppController {
       }
     } catch (e) {
       logError('Could not load subtitles ${option.language}', e);
-      _notice(tr("Couldn't load these subtitles"));
+      _notice(_subtitleFailure(e));
     }
   }
 
@@ -542,7 +551,7 @@ extension SubtitleActions on AppController {
       _update(() => secondarySubtitle = option);
     } catch (e) {
       logError('Could not set secondary subtitles ${option?.language}', e);
-      _notice(tr("Couldn't load these subtitles"));
+      _notice(_subtitleFailure(e));
     } finally {
       if (identical(secondaryLoading, option)) _update(() => secondaryLoading = null);
     }

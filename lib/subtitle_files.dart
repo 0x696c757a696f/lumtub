@@ -28,13 +28,17 @@ import 'scripts.dart';
 /// The whole track is translated when it is asked for whole.
 class SubtitleFiles {
   SubtitleFiles(this._client, this._folder, this._translator,
-      {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3, Duration Function()? position, this.onUpdated, this.poll = const Duration(seconds: 5)})
+      {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.busyPauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3, Duration Function()? position, this.onUpdated, this.poll = const Duration(seconds: 5)})
       : _position = position ?? _start;
   final http.Client _client;
   final Directory _folder;
   /// The translator chosen now; a new one translates again.
   final Translator Function() _translator;
   final List<Duration> pauses;
+
+  /// Pauses before asking a translation service again that answered it
+  /// had too many requests.
+  final List<Duration> busyPauses;
   final bool Function() byTranslator;
   /// Translation requests in flight at once for one track.
   final int concurrency;
@@ -112,7 +116,21 @@ class SubtitleFiles {
     }
 
     if (translator != null && source != null) {
-      result = await _translate(await _get(source.url), source.target, translator, key, save, asr: _isAsr(source.url));
+      try {
+        result = await _translate(await _get(source.url), source.target, translator, key, save, asr: _isAsr(source.url));
+      } on TranslationException catch (e) {
+        // The service still refuses after its pauses: YouTube's own
+        // translation, fragment by fragment, rather than none.
+        if (!e.busy || Uri.parse(option.url).scheme == 'file') rethrow;
+        logWarn('Translation service busy; using YouTube\'s translation of ${option.language}');
+        final String text;
+        try {
+          text = await _get(option.url);
+        } on _Refused {
+          throw e;
+        }
+        result = (text: _isAsr(option.url) ? WebVtt.asLines(text) : text, rest: null);
+      }
     } else {
       try {
         final text = await _get(option.url);
@@ -246,7 +264,7 @@ class SubtitleFiles {
           final (start, end) = groups[i];
           // The sentences just before the piece go along for AI to read.
           final before = [for (final cue in cues.sublist(start > contextSentences ? start - contextSentences : 0, start)) cue.text];
-          translated[i] = await _translateLines([for (final cue in cues.sublist(start, end)) cue.text], target, translator, before);
+          translated[i] = await _patiently(() => _translateLines([for (final cue in cues.sublist(start, end)) cue.text], target, translator, before));
         }
       }
 
@@ -302,6 +320,21 @@ class SubtitleFiles {
   /// [texts] translated line for line. A reply with more or fewer lines
   /// (machine translation joins short caption fragments) is asked again in
   /// halves, down to single lines.
+  /// [ask] again after each of [busyPauses] while the service answers that
+  /// it has too many requests; free services (Google's public endpoint
+  /// above all) refuse a burst for a short while.
+  Future<T> _patiently<T>(Future<T> Function() ask) async {
+    for (var attempt = 0;; attempt++) {
+      try {
+        return await ask();
+      } on TranslationException catch (e) {
+        if (!e.busy || attempt >= busyPauses.length) rethrow;
+        logDebug(() => 'Translation service busy; asking again in ${busyPauses[attempt].inSeconds} s');
+        await Future<void>.delayed(busyPauses[attempt]);
+      }
+    }
+  }
+
   static Future<List<String>> _translateLines(List<String> texts, String target, Translator translator, List<String> before) async {
     final ai = _aiOf(translator);
     final text = texts.join('\n');

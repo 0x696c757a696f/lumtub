@@ -532,7 +532,26 @@ class AppController extends ChangeNotifier with _ExploreState {
   TranslationCache _translationCache = TranslationCache();
   /// Behind 翻译 buttons and translated subtitles: the service 翻译服务
   /// names; called only when something is to be translated.
-  late Translator translator = CachingTranslator(_google, _translationCache, preferences.translation.cacheScope, batch: true);
+  late Translator translator = CachingTranslator(_googleFirst, _translationCache, preferences.translation.cacheScope, batch: true);
+  /// Behind comments, descriptions, chapter titles, chat and search words:
+  /// [translator], except that with Google's free endpoint chosen it is
+  /// Microsoft's free one first, so subtitles, which ask Google for whole
+  /// sentences at a time, keep Google's allowance for themselves. Either
+  /// free service takes over while the other refuses or fails, and the
+  /// first is asked again on the next text.
+  late Translator textTranslator = _textTranslatorOf(translator);
+  late final _microsoftFree = MicrosoftTranslator(_http);
+  late final _googleFirst = FallbackTranslator(_google, _microsoftFree);
+  /// MyMemory takes short texts last, when both others refuse; its email
+  /// (optional, for a larger allowance) is kept with the keys.
+  late final _myMemory = MyMemoryTranslator(_http, email: () => translationKeys[TranslationService.mymemory.name] ?? '');
+  late final _microsoftFirst = FallbackTranslator(_microsoftFree, FallbackTranslator(_google, _myMemory));
+
+  Translator _textTranslatorOf(Translator translator) => switch (preferences.translation.service) {
+        TranslationService.google => CachingTranslator(_microsoftFirst, _translationCache, preferences.translation.cacheScope, batch: true),
+        TranslationService.mymemory => CachingTranslator(FallbackTranslator(_myMemory, _microsoftFirst), _translationCache, preferences.translation.cacheScope, batch: true),
+        _ => translator,
+      };
   /// The translation services' API keys, by [TranslationService.name],
   /// kept encrypted with DPAPI apart from the settings.
   Map<String, String> translationKeys = const {};
@@ -842,7 +861,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     _http,
     Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles'),
     () => translator,
-    byTranslator: () => preferences.subtitlesByService && preferences.translation.service != TranslationService.google,
+    byTranslator: () => preferences.subtitlesByService && !preferences.translation.service.subtitlesOnGoogle,
     position: () => player?.state.position ?? Duration.zero,
     onUpdated: _subtitleFileUpdated,
   );

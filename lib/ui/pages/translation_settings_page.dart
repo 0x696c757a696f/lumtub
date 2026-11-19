@@ -81,6 +81,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
       values: [for (final s in TranslationService.values) (s, s.label)],
       onSelected: (v) => saveConfig((c) => c.copyWith(service: v)),
     ),
+    if (service.kind.isNotEmpty) tip(service.kind),
     PopupItem<String>(
       title: tr('Translation target language'),
       leading: Icon(AppIcons.translate),
@@ -90,12 +91,12 @@ List<Widget> _items(BuildContext context, AppController controller) {
     ),
     SwitchItem(
       title: tr('Translate subtitles with this service too'),
-      subtitle: service == TranslationService.google
+      subtitle: service.subtitlesOnGoogle
           ? tr("Available once another service is chosen; YouTube's own auto-translate is used by default")
           : tr("When off, YouTube's own auto-translate is used, and this service only when YouTube refuses"),
       leading: Icon(AppIcons.subtitles),
-      value: prefs.subtitlesByService && service != TranslationService.google,
-      enabled: service != TranslationService.google,
+      value: prefs.subtitlesByService && !service.subtitlesOnGoogle,
+      enabled: !service.subtitlesOnGoogle,
       onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(subtitlesByService: v)),
     ),
     if (service == TranslationService.microsoft) ...[
@@ -120,6 +121,22 @@ List<Widget> _items(BuildContext context, AppController controller) {
       header('DeepL'),
       keyItem(service),
       tip(tr('Free keys end in :fx and use the free endpoint automatically.')),
+    ],
+    if (service == TranslationService.mymemory) ...[
+      header('MyMemory'),
+      NormalItem(
+        title: tr('Email (optional)'),
+        subtitle: (controller.translationKeys[service.name] ?? '').isEmpty ? tr('Not set') : controller.translationKeys[service.name]!,
+        leading: Icon(AppIcons.identificationBadge),
+        onTap: () async {
+          final saved = controller.translationKeys[service.name] ?? '';
+          final typed = await showDialog<String>(
+            context: context,
+            builder: (context) => TextEditDialog(title: tr('Email (optional)'), initialText: saved, hintText: tr('Raises the daily allowance; sent only to MyMemory')),
+          );
+          if (typed != null) await controller.saveApiKey(service.name, typed.trim());
+        },
+      ),
     ],
     if (service == TranslationService.libre) ...[
       header('LibreTranslate'),
@@ -151,12 +168,18 @@ List<Widget> _items(BuildContext context, AppController controller) {
           icon: Icon(AppIcons.listDashes),
           onPressed: () => _pickModel(context, controller, (v) => saveConfig((c) => c.copyWith(aiModel: v))),
         ),
+        // The endpoint's own list first; typing a name when it lists none,
+        // can't be reached, or the one wanted is not in it.
         onTap: () async {
-          final typed = await showDialog<String>(
-            context: context,
-            builder: (context) => TextEditDialog(title: tr('Model'), initialText: config.aiModel, hintText: ai.model.isEmpty ? tr('Model name') : ai.model),
-          );
-          if (typed != null) saveConfig((c) => c.copyWith(aiModel: typed.trim()));
+          Future<void> type() async {
+            final typed = await showDialog<String>(
+              context: context,
+              builder: (context) => TextEditDialog(title: tr('Model'), initialText: config.aiModel, hintText: ai.model.isEmpty ? tr('Model name') : ai.model),
+            );
+            if (typed != null) saveConfig((c) => c.copyWith(aiModel: typed.trim()));
+          }
+
+          await _pickModel(context, controller, (v) => saveConfig((c) => c.copyWith(aiModel: v)), orType: type);
         },
       ),
       keyItem(TranslationService.ai, optional: ai.id == 'ollama' || ai.id == 'custom', name: aiKeyName(config)),
@@ -459,25 +482,36 @@ class _KeyDialogState extends State<_KeyDialog> {
       );
 }
 
-Future<void> _pickModel(BuildContext context, AppController controller, ValueChanged<String> onSelected) async {
+/// The models the AI endpoint lists, to pick one; with [orType], a last
+/// entry to type a name instead, and typing straight away when the list
+/// can't be had.
+Future<void> _pickModel(BuildContext context, AppController controller, ValueChanged<String> onSelected, {Future<void> Function()? orType}) async {
+  const typeOwn = '\u0000type';
   final config = controller.preferences.translation;
   final messenger = ScaffoldMessenger.of(context);
   List<String> models;
   try {
     models = await controller.listAiModels();
   } on TranslationException catch (e) {
+    if (orType != null && context.mounted) return orType();
     messenger.showSnackBar(SnackBar(content: Text(e.message)));
     return;
   }
   if (!context.mounted) return;
   if (models.isEmpty) {
+    if (orType != null) return orType();
     messenger.showSnackBar(SnackBar(content: Text(tr('The endpoint listed no models; type one in instead'))));
     return;
   }
   final chosen = await showDialog<String>(
     context: context,
-    builder: (context) => SelectDialog<String>(title: tr('Model'), value: config.effectiveAiModel, values: [for (final m in models) (m, m)]),
+    builder: (context) => SelectDialog<String>(
+      title: tr('Model'),
+      value: config.effectiveAiModel,
+      values: [for (final m in models) (m, m), if (orType != null) (typeOwn, '${tr('Model name')}…')],
+    ),
   );
+  if (chosen == typeOwn) return orType?.call();
   if (chosen != null) onSelected(chosen);
 }
 

@@ -248,5 +248,40 @@
       "text": "视频、短视频、直播、频道、播放列表，按时间和时长随你筛。",
       "tag": "想找什么就点什么"
     }
+  },
+  {
+    "id": "cast",
+    "shot": {
+      "en": "cards/shots/cast.png",
+      "zh": "cards/shots/cast.png"
+    },
+    "window": {
+      "left": 120,
+      "top": 330,
+      "width": 1250
+    },
+    "zoom": {
+      "crop": [
+        1937,
+        186,
+        280,
+        446
+      ],
+      "factor": 0.95,
+      "left": 905,
+      "top": 575
+    },
+    "en": {
+      "eyebrow": "Cast",
+      "title": "Send it to the big screen",
+      "text": "Cast to Chromecast and DLNA TVs in up to 8K, and to AirPlay in preview.",
+      "tag": "Up to 8K"
+    },
+    "zh": {
+      "eyebrow": "投屏",
+      "title": "一键投到电视上",
+      "text": "支持 Chromecast 和 DLNA 电视，最高 8K；AirPlay 为预览版。",
+      "tag": "最高 8K"
+    }
   }
 ]

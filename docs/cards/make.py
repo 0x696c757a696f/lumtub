@@ -1,4 +1,4 @@
-"""Render the feature cards in docs/cards/out from docs/screenshots.
+"""Render the feature cards in docs/screenshots/cards from docs/screenshots.
 
 Every card is 1600x1000: a short headline, one line of detail, the app in a
 window frame, and an optional magnified callout of the detail that matters.
@@ -15,7 +15,7 @@ import subprocess
 
 HERE = pathlib.Path(__file__).resolve().parent
 SHOTS = HERE.parent
-OUT = HERE / "out"
+OUT = HERE.parent / "screenshots" / "cards"
 W, H = 1600, 1000
 
 CSS = """

@@ -497,7 +497,7 @@ class ProcessTree implements Process {
   /// A [background] tree runs below normal priority, its first process in
   /// Windows' efficiency mode: for downloads, which nobody waits on.
   static Future<Process> start(String executable, List<String> arguments, {Map<String, String>? environment, String? workingDirectory, bool background = false}) async {
-    if (isYtDlp(executable)) arguments = [...ytDlpIsolation, if (forceIpv4) '--force-ipv4', ...arguments];
+    if (isYtDlp(executable)) arguments = [...ytDlpIsolation, ...familyArguments, ...arguments];
     if (IosPython.runs(executable)) return IosPython.current!.start(executable, arguments, environment);
     // Its own HTTPS follows 证书来源 and 抗量子加密 (lib/yt_dlp_tls.dart).
     if (isYtDlp(executable)) {
@@ -519,6 +519,29 @@ class ProcessTree implements Process {
 
   /// Whether every yt-dlp run connects over IPv4 only (网络 › 只用 IPv4).
   static bool forceIpv4 = false;
+
+  /// The address family ('4' or '6') yt-dlp keeps to for a while after
+  /// YouTube took the other one for a bot: it rates IPv4 addresses and
+  /// IPv6 /64 networks apart, so one is often let through when the other
+  /// is not.
+  static String? _family;
+  static DateTime _familyUntil = DateTime(0);
+
+  /// Keeps yt-dlp to IPv[family] for [period]; null goes back to the setting.
+  static void switchFamily(String? family, [Duration period = const Duration(minutes: 30)]) {
+    _family = family;
+    _familyUntil = family == null ? DateTime(0) : DateTime.now().add(period);
+  }
+
+  /// The family a bot check switched to, while it holds.
+  static String? get switchedFamily => _family != null && DateTime.now().isBefore(_familyUntil) ? _family : null;
+
+  /// What each yt-dlp run is told about the address family.
+  static List<String> get familyArguments => switch (switchedFamily) {
+        '6' => const ['--force-ipv6'],
+        '4' => const ['--force-ipv4'],
+        _ => forceIpv4 ? const ['--force-ipv4'] : const [],
+      };
 
   /// Whether [executable] is a yt-dlp, by its file name.
   static bool isYtDlp(String executable) {

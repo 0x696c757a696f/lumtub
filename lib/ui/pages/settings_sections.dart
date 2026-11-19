@@ -797,6 +797,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             onTap: () => pickFromDialog<String>(context, title: tr('IPv4 only'), value: settings.ipVersion, values: modes, onSelected: (value) => save(settings.copyWith(ipVersion: value))),
           );
         }, subtitle: tr('IPv4 IPv6 force-ipv4 slow start network')),
+        SettingEntry(tr('Ask again with my account when blocked'), (context) => SwitchItem(
+              title: tr('Ask again with my account when blocked'),
+              subtitle: tr("When YouTube takes this network for a bot, the video you open is asked for once more with the browser sign-in's account (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too"),
+              leading: _icon(AppIcons.keyFill),
+              value: settings.signInWhenBlocked,
+              onChanged: (v) => save(settings.copyWith(signInWhenBlocked: v)),
+            ), subtitle: tr('bot not a bot blocked sign in cookies account')),
         SettingEntry(tr('Key exchange by site'), (context) => NormalItem(
               title: tr('Key exchange by site'),
               subtitle: tr('What each site agreed on the last time Lumtub connected to it'),

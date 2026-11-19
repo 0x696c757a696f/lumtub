@@ -497,6 +497,11 @@ class PlayerSettings {
   /// never. For networks whose IPv6 addresses go nowhere and make each run
   /// wait for a time-out.
   final String ipVersion;
+  /// Whether a video YouTube refuses as from a bot is asked once more with
+  /// the browser sign-in's cookies (off by default): YouTube then knows the
+  /// account watched it, and an account used often from a shared address
+  /// may be flagged too.
+  final bool signInWhenBlocked;
   /// Where playback streams come from: YouTube directly by default.
   final PlaybackSource playbackSource;
   /// Play from public Piped or Invidious servers when YouTube refuses a
@@ -587,6 +592,7 @@ class PlayerSettings {
     this.certificateRoots = 'system',
     this.postQuantum = 'prefer',
     this.ipVersion = 'auto',
+    this.signInWhenBlocked = false,
     this.playbackSource = PlaybackSource.youtube,
     this.relayFallback = true,
     this.skipSilence = false,
@@ -666,6 +672,7 @@ class PlayerSettings {
     String? certificateRoots,
     String? postQuantum,
     String? ipVersion,
+    bool? signInWhenBlocked,
     PlaybackSource? playbackSource,
     bool? relayFallback,
     bool? skipSilence,
@@ -737,6 +744,7 @@ class PlayerSettings {
         certificateRoots: certificateRoots ?? this.certificateRoots,
         postQuantum: postQuantum ?? this.postQuantum,
         ipVersion: ipVersion ?? this.ipVersion,
+        signInWhenBlocked: signInWhenBlocked ?? this.signInWhenBlocked,
         playbackSource: playbackSource ?? this.playbackSource,
         relayFallback: relayFallback ?? this.relayFallback,
         skipSilence: skipSilence ?? this.skipSilence,
@@ -812,6 +820,7 @@ class PlayerSettings {
         'certificateRoots': certificateRoots,
         'postQuantum': postQuantum,
         'ipVersion': ipVersion,
+        'signInWhenBlocked': signInWhenBlocked,
         'playbackSourceV2': playbackSource.name,
         'relayFallback': relayFallback,
         'skipSilence': skipSilence,
@@ -1033,6 +1042,7 @@ class PlayerSettings {
       certificateRoots: const ['mozilla', 'google'].contains(raw['certificateRoots']) ? raw['certificateRoots'] as String : 'system',
       postQuantum: const ['off', 'require'].contains(raw['postQuantum']) ? raw['postQuantum'] as String : 'prefer',
       ipVersion: const ['ipv4', 'any'].contains(raw['ipVersion']) ? raw['ipVersion'] as String : 'auto',
+      signInWhenBlocked: raw['signInWhenBlocked'] == true,
       // V2: the default became direct YouTube (2026-10-21); the old key held
       // the old default for everyone who never chose.
       playbackSource: _enumByName(PlaybackSource.values, raw['playbackSourceV2'], PlaybackSource.youtube),

@@ -168,12 +168,52 @@ final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate, ASWe
       result(nil)
     case "isTv":
       result(false)
+    case "microphone":
+      let arguments = call.arguments as? [String: Any]
+      microphone(on: arguments?["on"] as? Bool ?? false, mix: arguments?["mix"] as? Bool ?? false, result: result)
     case "powerSaving":
       // Low Power Mode, or a phone hot enough that iOS is about to slow it.
       let thermal = ProcessInfo.processInfo.thermalState
       result(ProcessInfo.processInfo.isLowPowerModeEnabled || thermal == .serious || thermal == .critical)
     default:
       result(FlutterMethodNotImplemented)
+    }
+  }
+
+  /// 跟读录音: before recording, asks for the microphone and moves the
+  /// audio session to one that records; after, back to the one videos
+  /// play in (AppDelegate), mixing with other apps when [mix]. Answers
+  /// whether the core may record.
+  private func microphone(on: Bool, mix: Bool, result: @escaping FlutterResult) {
+    let session = AVAudioSession.sharedInstance()
+    guard on else {
+      do {
+        try session.setCategory(.playback, mode: .moviePlayback, options: mix ? [.mixWithOthers] : [])
+      } catch {
+        NSLog("Lumtub: could not set the audio session back: \(error)")
+      }
+      result(true)
+      return
+    }
+    let answer: (Bool) -> Void = { granted in
+      DispatchQueue.main.async {
+        guard granted else {
+          result(false)
+          return
+        }
+        do {
+          try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+          try session.setActive(true)
+          result(true)
+        } catch {
+          result(FlutterError(code: "session", message: "\(error)", details: nil))
+        }
+      }
+    }
+    if #available(iOS 17.0, *) {
+      AVAudioApplication.requestRecordPermission(completionHandler: answer)
+    } else {
+      session.requestRecordPermission(answer)
     }
   }
 

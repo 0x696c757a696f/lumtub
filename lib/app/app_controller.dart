@@ -22,6 +22,9 @@ import '../app_log.dart';
 import '../app_window.dart';
 import '../app_preferences.dart';
 import '../libass_layout.dart';
+import '../line_pause.dart';
+import '../save_file.dart';
+import '../shadowing.dart';
 import '../play_queue.dart';
 import '../video_facts_lookup.dart';
 import '../video_languages.dart';
@@ -151,6 +154,7 @@ part 'lifecycle_actions.dart';
 part 'account_actions.dart';
 part 'window_actions.dart';
 part 'ios_pip_actions.dart';
+part 'learning_actions.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
 
@@ -865,6 +869,29 @@ class AppController extends ChangeNotifier with _ExploreState {
   );
 
   final _cues = <String, List<SubtitleCue>>{};
+  /// Bumped when a subtitle file was read again, as the lines in it grew.
+  int _cueGeneration = 0;
+  /// The lines 每句说完暂停 and stepping by line go by, and what they were
+  /// read for (LearningActions).
+  List<SubtitleCue> _learningLines = const [];
+  String? _learningLinesKey;
+  DateTime _learningLinesAsked = DateTime(0);
+  final _linePause = LinePause();
+  final _reveal = TranslationReveal();
+  /// Whether the blurred second subtitle (模糊翻译) shows plainly now.
+  final translationShown = ValueNotifier<bool>(false);
+  /// 跟读录音: the take and the microphone, made when first used.
+  Shadowing? _shadowing;
+  /// The line the take is of, and the player that plays the take.
+  SubtitleCue? _shadowLine;
+  Player? _shadowPlayer;
+  int _shadowSerial = 0;
+  /// What 跟读录音 is doing now.
+  final shadowStage = ValueNotifier(ShadowStage.idle);
+
+  /// Changes each time a take is kept or the takes go, for the subtitle
+  /// list's marks.
+  final shadowTakes = ValueNotifier(0);
 
   /// The chapter titles of [chapterTranslationOf] translated, one for
   /// each chapter, once asked for; untouched ones stay as they are.
@@ -1126,6 +1153,11 @@ class AppController extends ChangeNotifier with _ExploreState {
     _danmaku?.stop();
     chatMessages.dispose();
     speechJob.dispose();
+    translationShown.dispose();
+    unawaited(_forgetShadowing().whenComplete(() {
+      shadowStage.dispose();
+      shadowTakes.dispose();
+    }));
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     _startTimer?.cancel();

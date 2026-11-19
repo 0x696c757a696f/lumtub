@@ -788,7 +788,13 @@ class _Player extends StatelessWidget {
                       ),
                     ),
                   ),
-                  subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: controller.libassDraws),
+                  subtitleViewConfiguration: subtitleViewFor(
+                    controller.settings,
+                    secondary: controller.secondarySubtitle?.label,
+                    byHeight: Platform.isAndroid || Platform.isIOS,
+                    libass: controller.libassDraws,
+                    reveal: (shown: controller.translationShown, hover: controller.hoverTranslation, tap: controller.toggleTranslation),
+                  ),
                   onEnterFullscreen: () {
                     // 铺满窗口 keeps the window as it is.
                     if (fillingWindow.value) return Future.value();
@@ -1290,14 +1296,22 @@ double smallSubtitleScale(Size size) => (size.shortestSide * 0.055).clamp(13.0, 
 /// 6 px, as ExoPlayer does there, so a line does not cover the picture.
 double androidSubtitleScale(Size size, [double system = 1, bool small = false]) => max(small ? 6.0 : 12.0, size.height * 0.0533 * system) / 32;
 
-SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass}) {
+/// What 模糊翻译 needs from the player: whether the second subtitle shows
+/// plainly now, and what hovering and tapping it do.
+typedef TranslationRevealing = ({ValueListenable<bool> shown, ValueChanged<bool> hover, VoidCallback tap});
+
+SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass, TranslationRevealing? reveal}) {
   // The view scales by area against 1080p, which makes the text tiny in a
   // small window. There a line is about a twentieth of the picture's
   // height, as on a TV, but never under 13 px, which stays readable, nor
   // over the full-size text.
   final textScaler = smallWindow == null || byHeight ? null : TextScaler.linear(smallSubtitleScale(smallWindow));
   final paddingScale = smallWindow == null ? 1.0 : (smallWindow.shortestSide / 720).clamp(0.3, 1.0);
-  if (libass ?? settings.libassSubtitles) return const SubtitleViewConfiguration(visible: false);
+  final ghost = libass ?? settings.libassSubtitles;
+  final blur = reveal != null && settings.blurSecondary && secondary != null;
+  // libmpv draws, blurred too; the view lays the lines out unseen only
+  // for 模糊翻译, which needs the second line's place.
+  if (ghost && !blur) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;
   TextStyle style(String font, double scale, int color, double opacity) => TextStyle(
         height: 1.3,
@@ -1325,6 +1339,11 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     scaleFor: byHeight ? (size) => TextScaler.linear(androidSubtitleScale(size, Device.captionScale, smallWindow != null)) : null,
     spacing: 6,
     secondaryKey: secondary,
+    ghost: ghost,
+    blurSecondary: blur,
+    secondaryShown: reveal?.shown,
+    onSecondaryHover: reveal?.hover,
+    onSecondaryTap: reveal?.tap,
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),
   );
 }

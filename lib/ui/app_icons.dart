@@ -178,6 +178,7 @@ abstract final class AppIcons {
   static IconData get magnifyingGlassPlus => filled ? const IconData(0xe310, fontFamily: 'Phosphor Fill') : const IconData(0xe310, fontFamily: 'Phosphor');
   static IconData get medal => filled ? const IconData(0xe320, fontFamily: 'Phosphor Fill') : const IconData(0xe320, fontFamily: 'Phosphor');
   static IconData get megaphone => filled ? const IconData(0xe324, fontFamily: 'Phosphor Fill') : const IconData(0xe324, fontFamily: 'Phosphor');
+  static const microphoneFill = IconData(0xe326, fontFamily: 'Phosphor Fill');
   static IconData get microphoneStage => filled ? const IconData(0xe75c, fontFamily: 'Phosphor Fill') : const IconData(0xe75c, fontFamily: 'Phosphor');
   static IconData get minus => filled ? const IconData(0xe32a, fontFamily: 'Phosphor Fill') : const IconData(0xe32a, fontFamily: 'Phosphor');
   static IconData get minusCircle => filled ? const IconData(0xe32c, fontFamily: 'Phosphor Fill') : const IconData(0xe32c, fontFamily: 'Phosphor');
@@ -269,6 +270,7 @@ abstract final class AppIcons {
   static const stackSimpleFill = IconData(0xe468, fontFamily: 'Phosphor Fill');
   static IconData get star => filled ? const IconData(0xe46a, fontFamily: 'Phosphor Fill') : const IconData(0xe46a, fontFamily: 'Phosphor');
   static const starFill = IconData(0xe46a, fontFamily: 'Phosphor Fill');
+  static const stopFill = IconData(0xe46c, fontFamily: 'Phosphor Fill');
   static IconData get stop => filled ? const IconData(0xe46c, fontFamily: 'Phosphor Fill') : const IconData(0xe46c, fontFamily: 'Phosphor');
   static IconData get subtitles => filled ? const IconData(0xe1a8, fontFamily: 'Phosphor Fill') : const IconData(0xe1a8, fontFamily: 'Phosphor');
   static IconData get subtitlesSlash => filled ? const IconData(0xe1a6, fontFamily: 'Phosphor Fill') : const IconData(0xe1a6, fontFamily: 'Phosphor');

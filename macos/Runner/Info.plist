@@ -57,6 +57,8 @@
 	<string>NSApplication</string>
 	<key>NSSupportsAutomaticGraphicsSwitching</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Lumtub records you saying a subtitle line, only when you ask, so you can compare it with the video. The recording stays on this device.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Lumtub looks for TVs and speakers on your network to cast videos to.</string>
 	<key>NSBonjourServices</key>

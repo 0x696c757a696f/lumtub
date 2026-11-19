@@ -34,6 +34,7 @@ pub mod lists;
 pub mod lists_update;
 pub mod live_chat;
 pub mod loopback;
+pub mod mic;
 pub mod netwatch;
 pub mod pac;
 pub mod posts;
@@ -67,5 +68,5 @@ pub mod web_account;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    52
+    53
 }

@@ -72,6 +72,7 @@ class MainActivity : FlutterActivity() {
         }
         channel.setMethodCallHandler { call, result ->
             if (call.method == "askLocalNetwork") return@setMethodCallHandler askLocalNetwork(result)
+            if (call.method == "microphone") return@setMethodCallHandler askMicrophone((call.arguments as? Map<*, *>)?.get("on") == true, result)
             if (call.method == "relaunch") {
                 // The new task outlives this process, which Dart ends next.
                 val launch = packageManager.getLaunchIntentForPackage(packageName)?.component
@@ -423,11 +424,28 @@ class MainActivity : FlutterActivity() {
         requestPermissions(arrayOf(LOCAL_NETWORK), 2)
     }
 
+    private var microphoneAnswer: MethodChannel.Result? = null
+
+    /** 跟读录音: whether the core may record now (asked [on] recording). */
+    private fun askMicrophone(on: Boolean, result: MethodChannel.Result) {
+        if (!on || checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            return result.success(true)
+        }
+        if (microphoneAnswer != null) return result.success(false)
+        microphoneAnswer = result
+        requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 3)
+    }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
         if (requestCode == 2) {
-            localNetworkAnswer?.success(grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED)
+            localNetworkAnswer?.success(granted)
             localNetworkAnswer = null
+        }
+        if (requestCode == 3) {
+            microphoneAnswer?.success(granted)
+            microphoneAnswer = null
         }
     }
 

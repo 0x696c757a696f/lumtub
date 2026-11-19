@@ -191,3 +191,21 @@ String joinCueText(String a, String b) {
 }
 
 final _wide = RegExp(r'[　-ヿ㐀-鿿豈-﫿＀-￯]');
+
+/// [rows] as a CSV file: start, end, the line and what the second subtitle
+/// says with it, one row each, times as `h:mm:ss.mmm`. Starts with a byte
+/// order mark, so spreadsheet programs read it as UTF-8.
+String pairedCuesCsv(List<PairedCue> rows) {
+  String time(Duration d) => '${d.inHours}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}.${(d.inMilliseconds % 1000).toString().padLeft(3, '0')}';
+  String field(String text) {
+    final clean = text.replaceAll('\r\n', '\n');
+    return RegExp(r'[",\n\r]').hasMatch(clean) || clean != clean.trim() ? '"${clean.replaceAll('"', '""')}"' : clean;
+  }
+
+  final out = StringBuffer('﻿start,end,text,translation\r\n');
+  for (final row in rows) {
+    out.write([time(row.cue.start), time(row.cue.end), field(row.cue.text), field(row.second ?? '')].join(','));
+    out.write('\r\n');
+  }
+  return out.toString();
+}

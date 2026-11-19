@@ -450,6 +450,10 @@ class PlayerSettings {
   final double subtitleBorder;
   final bool subtitleBackground;
   final bool subtitleBold;
+  /// Playback pauses as each subtitle line ends (学外语).
+  final bool pauseEachLine;
+  /// The second subtitle, a translation, is blurred until asked for.
+  final bool blurSecondary;
   /// Subtitles show in the picture-in-picture window.
   final bool pipSubtitles;
   /// Subtitles show in the in-app mini player.
@@ -569,6 +573,8 @@ class PlayerSettings {
     this.subtitleBorder = 3,
     this.subtitleBackground = false,
     this.subtitleBold = false,
+    this.pauseEachLine = false,
+    this.blurSecondary = false,
     this.pipSubtitles = true,
     this.miniPlayerSubtitles = true,
     this.sponsorBlock = false,
@@ -646,6 +652,8 @@ class PlayerSettings {
     double? subtitleBorder,
     bool? subtitleBackground,
     bool? subtitleBold,
+    bool? pauseEachLine,
+    bool? blurSecondary,
     bool? pipSubtitles,
     bool? miniPlayerSubtitles,
     bool? sponsorBlock,
@@ -721,6 +729,8 @@ class PlayerSettings {
         subtitleBorder: subtitleBorder ?? this.subtitleBorder,
         subtitleBackground: subtitleBackground ?? this.subtitleBackground,
         subtitleBold: subtitleBold ?? this.subtitleBold,
+        pauseEachLine: pauseEachLine ?? this.pauseEachLine,
+        blurSecondary: blurSecondary ?? this.blurSecondary,
         pipSubtitles: pipSubtitles ?? this.pipSubtitles,
         miniPlayerSubtitles: miniPlayerSubtitles ?? this.miniPlayerSubtitles,
         sponsorBlock: sponsorBlock ?? this.sponsorBlock,
@@ -798,6 +808,8 @@ class PlayerSettings {
         'subtitleBorder': subtitleBorder,
         'subtitleBackground': subtitleBackground,
         'subtitleBold': subtitleBold,
+        'pauseEachLine': pauseEachLine,
+        'blurSecondary': blurSecondary,
         'pipSubtitles': pipSubtitles,
         'miniPlayerSubtitles': miniPlayerSubtitles,
         'sponsorBlock': sponsorBlock,
@@ -1013,6 +1025,8 @@ class PlayerSettings {
       subtitleBorder: decimal('subtitleBorder', 3, 0, 8),
       subtitleBackground: raw['subtitleBackground'] == true,
       subtitleBold: raw['subtitleBold'] == true,
+      pauseEachLine: raw['pauseEachLine'] == true,
+      blurSecondary: raw['blurSecondary'] == true,
       pipSubtitles: raw['pipSubtitles'] != false,
       miniPlayerSubtitles: raw['miniPlayerSubtitles'] != false,
       sponsorBlock: raw['sponsorBlock'] == true,

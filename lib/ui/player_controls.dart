@@ -25,6 +25,7 @@ import '../device.dart';
 import '../app/app_controller.dart';
 import '../app_preferences.dart' show rateText;
 import '../heatmap.dart';
+import '../shadowing.dart' show ShadowExport, ShadowStage;
 import '../keep_awake.dart';
 import '../picture_transform.dart';
 import '../storyboard.dart';
@@ -1117,6 +1118,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: progress)),
           time,
           _subtitleMenu(width),
+          _learningButtons(width, few: true),
           _IconButton(tooltip: tr('Fullscreen (F)'), icon: AppIcons.cornersOut, size: 24, width: width, onTap: () => unawaited(widget.state?.toggleFullscreen())),
         ]),
       );
@@ -1146,6 +1148,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           // Live chat on an upright full screen keeps only its switch.
           if (!compact) _danmakuButtons(width, withSettings: !narrow),
           _subtitleMenu(width),
+          _learningButtons(width, few: narrow),
           if (!narrow)
           StreamBuilder<double>(
             stream: _player.stream.rate,
@@ -1231,6 +1234,109 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ]),
       ),
     );
+  }
+
+  /// 学外语 for a finger or a TV remote: with 每句说完暂停 on, 上一句, 重听这一句,
+  /// 下一句 and 单句循环 ([few] keeps 重听 alone); with 模糊翻译 on and a second
+  /// subtitle shown, the button that shows it.
+  Widget _learningButtons(double width, {bool few = false}) => ListenableBuilder(
+        listenable: Listenable.merge([_controller, _controller.translationShown, _controller.shadowStage]),
+        builder: (context, _) {
+          final settings = _controller.settings;
+          final lines = settings.pauseEachLine && (_player.state.track.subtitle.id != 'no' || _controller.secondaryTrackId != 'no');
+          final blurred = settings.blurSecondary && _controller.secondaryTrackId != 'no';
+          if (!lines && !blurred) return const SizedBox.shrink();
+          final shown = _controller.translationShown.value;
+          void step(int skip) {
+            _show();
+            unawaited(_controller.stepLine(skip));
+          }
+          return Row(mainAxisSize: MainAxisSize.min, children: [
+            if (lines && !few) _IconButton(tooltip: tr('Previous line'), width: width, icon: AppIcons.skipBackFill, size: 20, onTap: () => step(-1)),
+            if (lines) _IconButton(tooltip: tr('Replay this line'), width: width, icon: AppIcons.arrowCounterClockwiseFill, size: 20, onTap: () => step(0)),
+            if (lines && !few) _IconButton(tooltip: tr('Next line'), width: width, icon: AppIcons.skipForwardFill, size: 20, onTap: () => step(1)),
+            if (lines && !few)
+              _IconButton(
+                tooltip: tr('Loop this line'),
+                width: width,
+                icon: AppIcons.repeatOnce,
+                size: 20,
+                active: _controller.loopB != null,
+                onTap: () {
+                  _show();
+                  unawaited(_controller.toggleLineLoop());
+                },
+              ),
+            if (lines) ..._shadowButtons(width),
+            if (blurred)
+              _IconButton(
+                tooltip: shown ? tr('Hide the translation') : tr('Show the translation'),
+                width: width,
+                icon: shown ? AppIcons.eye : AppIcons.eyeSlash,
+                size: 20,
+                active: shown,
+                onTap: () {
+                  _show();
+                  _controller.toggleTranslation();
+                },
+              ),
+          ]);
+        },
+      );
+
+  /// 跟读录音: the microphone, red while recording, and with a take, the
+  /// way to hear the line and the take again.
+  List<Widget> _shadowButtons(double width) {
+    final stage = _controller.shadowStage.value;
+    final recording = stage == ShadowStage.recording;
+    final comparing = stage == ShadowStage.original || stage == ShadowStage.mine;
+    return [
+      Tooltip(
+        message: recording ? tr('Stop recording') : tr('Record yourself saying this line'),
+        child: _Hover(
+          label: recording ? tr('Stop recording') : tr('Record yourself saying this line'),
+          onTap: () {
+            _show();
+            unawaited(_controller.toggleShadowing());
+          },
+          child: SizedBox(
+            width: touchFirst ? max(width, 44) : width,
+            height: touchFirst ? 44 : 34,
+            child: Icon(recording ? AppIcons.stopFill : AppIcons.microphoneFill, size: 20, color: recording ? const Color(0xFFFF4D4F) : Colors.white),
+          ),
+        ),
+      ),
+      if (_controller.hasShadowTake && !recording)
+        _IconButton(
+          tooltip: tr('Compare with the original'),
+          width: width,
+          icon: AppIcons.userSound,
+          size: 20,
+          active: comparing,
+          onTap: () {
+            _show();
+            unawaited(comparing ? _controller.toggleShadowing() : _controller.compareShadowing());
+          },
+        ),
+      if (_controller.hasShadowTake && !recording)
+        _PopupMenu<int>(
+          tooltip: tr('Save the recording'),
+          value: -1,
+          items: [
+            (ShadowExport.mine.index, tr('Only my recording')),
+            (ShadowExport.withLine.index, tr('The line, then my recording')),
+            if (_controller.shadowTakeCount > 1) (ShadowExport.all.index, tr('All {0} lines I recorded, each then mine', ['${_controller.shadowTakeCount}'])),
+          ],
+          onSelected: (i) => unawaited(_controller.saveShadowTake(ShadowExport.values[i])),
+          onOpened: _menuOpened,
+          onClosed: _menuClosed,
+          child: SizedBox(
+            width: touchFirst ? max(width, 44) : width,
+            height: touchFirst ? 44 : 34,
+            child: Icon(AppIcons.downloadSimple, size: 20, color: Colors.white),
+          ),
+        ),
+    ];
   }
 
   /// 弹幕 on or off and their settings: a video's chat, or its timed comments.

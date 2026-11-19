@@ -39,6 +39,10 @@ String shortcutActionLabel(PlayerAction action, AppPreferences prefs) => switch 
       PlayerAction.lineBack => tr('Previous line'),
       PlayerAction.lineNext => tr('Next line'),
       PlayerAction.lineReplay => tr('Replay this line'),
+      PlayerAction.lineLoop => tr('Loop this line on or off'),
+      PlayerAction.shadow => tr('Record yourself saying this line'),
+      PlayerAction.linePause => tr('Pause after each line on or off'),
+      PlayerAction.revealTranslation => tr('Show or hide the translation'),
       PlayerAction.copySubtitle => tr('Copy the current subtitle'),
       PlayerAction.theater => tr('Theater mode'),
       PlayerAction.fillWindow => tr('Fill the window'),
@@ -87,6 +91,10 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) {
     (pair(PlayerAction.start, PlayerAction.end), tr('Jump to the start or end')),
     (pair(PlayerAction.lineBack, PlayerAction.lineNext), tr('Previous or next subtitle line')),
     (of(PlayerAction.lineReplay), tr('Replay this line')),
+    (of(PlayerAction.lineLoop), tr('Loop this line on or off')),
+    (of(PlayerAction.shadow), tr('Record yourself saying this line')),
+    (of(PlayerAction.linePause), tr('Pause after each line on or off')),
+    (of(PlayerAction.revealTranslation), tr('Show or hide the translation')),
     (of(PlayerAction.copySubtitle), tr('Copy the current subtitle')),
     (of(PlayerAction.theater), tr('Theater mode')),
     (of(PlayerAction.fillWindow), tr('Fill the window')),
@@ -155,15 +163,29 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     unawaited(platform.command([forward ? 'frame-step' : 'frame-back-step']).catchError((_) {}));
     onFeedback?.call(forward ? AppIcons.skipForwardFill : AppIcons.skipBackFill, forward ? tr('Next frame') : tr('Previous frame'));
   }
-  // Line by line through the main subtitle, as Language Reactor's A and D.
+  // Line by line through the subtitles, as Language Reactor's A and D.
   void subtitleStep(int skip) {
-    final platform = player.platform;
-    if (platform is! NativePlayer || player.state.track.subtitle.id == 'no') return;
-    unawaited(platform.command(['sub-seek', '$skip']).catchError((_) {}));
-    onFeedback?.call(
-      skip < 0 ? AppIcons.skipBackFill : skip > 0 ? AppIcons.skipForwardFill : AppIcons.arrowCounterClockwiseFill,
-      skip < 0 ? tr('Previous line') : skip > 0 ? tr('Next line') : tr('Replay this line'),
-    );
+    unawaited(controller.stepLine(skip).then((moved) {
+      if (!moved) return;
+      onFeedback?.call(
+        skip < 0 ? AppIcons.skipBackFill : skip > 0 ? AppIcons.skipForwardFill : AppIcons.arrowCounterClockwiseFill,
+        skip < 0 ? tr('Previous line') : skip > 0 ? tr('Next line') : tr('Replay this line'),
+      );
+    }));
+  }
+  void lineLoop() {
+    unawaited(controller.toggleLineLoop().then((on) {
+      if (on != null) onFeedback?.call(AppIcons.repeatOnce, on ? tr('Loop this line') : tr('Line loop off'));
+    }));
+  }
+  void linePause() {
+    unawaited(controller.togglePauseEachLine().then((on) {
+      onFeedback?.call(on ? AppIcons.pauseFill : AppIcons.playFill, on ? tr('Pause after each line on') : tr('Pause after each line off'));
+    }));
+  }
+  void revealTranslation() {
+    if (controller.secondaryTrackId == 'no') return;
+    controller.toggleTranslation();
   }
   void copySubtitle() {
     final text = controller.currentSubtitleText;
@@ -247,6 +269,10 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
         PlayerAction.lineBack => () => subtitleStep(-1),
         PlayerAction.lineNext => () => subtitleStep(1),
         PlayerAction.lineReplay => () => subtitleStep(0),
+        PlayerAction.lineLoop => lineLoop,
+        PlayerAction.shadow => () => unawaited(controller.toggleShadowing()),
+        PlayerAction.linePause => linePause,
+        PlayerAction.revealTranslation => revealTranslation,
         PlayerAction.copySubtitle => copySubtitle,
         PlayerAction.theater => () => theaterMode.value = !theaterMode.value,
         PlayerAction.fillWindow => () => unawaited(toggleFillWindow(video())),

@@ -78,6 +78,11 @@ into English first and from there into the language picked, in the same
 way. Chinese, Japanese and Korean are put into each other directly. A
 search already in the language picked is not translated.
 
+Translated phrases are kept in `cache/search_phrases.json` (language →
+phrase → translation) and never asked again; one page's phrases go in
+one request, 30 lines at most. A phrase no translator would take is
+searched in English, and the log says how many were left so and why.
+
 The search is also asked from the language's home country (`gl`) when no
 region is picked.
 

@@ -72,6 +72,7 @@ import '../cast/dlna.dart';
 import '../invidious_streams.dart';
 import '../piped_streams.dart';
 import '../search_options.dart';
+import '../search_phrases.dart';
 import '../search_suggestions.dart';
 import '../youtube_comments.dart';
 import '../youtube_tv_feed.dart';
@@ -587,6 +588,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool _updateCheckedForChallenge = false;
   /// The spoken language of explore's videos, for its language filter.
   VideoLanguages? _videoLanguages;
+  SearchPhrases? _searchPhrases;
   AiFilter? _aiFilter;
 
   int _lastDrops = 0;

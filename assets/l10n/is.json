@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Ekki tókst að hefja upptöku: {0}",
   "Nothing was recorded. Check the microphone.": "Ekkert var tekið upp. Athugaðu hljóðnemann.",
   "Export as CSV": "Flytja út sem CSV",
-  "Subtitles exported": "Skjátextar fluttir út"
+  "Subtitles exported": "Skjátextar fluttir út",
+  "Save the recording": "Vista upptökuna",
+  "Recording saved": "Upptakan var vistuð"
 }

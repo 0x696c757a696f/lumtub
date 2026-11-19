@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "Yazı başlamadı: {0}",
   "Nothing was recorded. Check the microphone.": "Heç nə yazılmadı. Mikrofonu yoxlayın.",
   "Export as CSV": "CSV kimi ixrac et",
-  "Subtitles exported": "Subtitrlər ixrac edildi"
+  "Subtitles exported": "Subtitrlər ixrac edildi",
+  "Save the recording": "Səs yazısını saxla",
+  "Recording saved": "Səs yazısı saxlanıldı"
 }

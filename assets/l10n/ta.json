@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "பதிவைத் தொடங்க முடியவில்லை: {0}",
   "Nothing was recorded. Check the microphone.": "எதுவும் பதிவாகவில்லை. மைக்ரோஃபோனைச் சரிபார்க்கவும்.",
   "Export as CSV": "CSV ஆக ஏற்றுமதி செய்",
-  "Subtitles exported": "வசனங்கள் ஏற்றுமதி செய்யப்பட்டன"
+  "Subtitles exported": "வசனங்கள் ஏற்றுமதி செய்யப்பட்டன",
+  "Save the recording": "பதிவைச் சேமி",
+  "Recording saved": "பதிவு சேமிக்கப்பட்டது"
 }

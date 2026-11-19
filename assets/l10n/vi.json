@@ -3649,5 +3649,7 @@
   "Could not start recording: {0}": "Không thể bắt đầu ghi âm: {0}",
   "Nothing was recorded. Check the microphone.": "Không ghi được gì. Hãy kiểm tra micrô.",
   "Export as CSV": "Xuất dưới dạng CSV",
-  "Subtitles exported": "Đã xuất phụ đề"
+  "Subtitles exported": "Đã xuất phụ đề",
+  "Save the recording": "Lưu bản ghi âm",
+  "Recording saved": "Đã lưu bản ghi âm"
 }

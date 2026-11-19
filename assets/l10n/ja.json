@@ -3649,5 +3649,7 @@
   "Could not start recording: {0}": "録音を開始できませんでした：{0}",
   "Nothing was recorded. Check the microphone.": "何も録音されませんでした。マイクを確認してください。",
   "Export as CSV": "CSVでエクスポート",
-  "Subtitles exported": "字幕をエクスポートしました"
+  "Subtitles exported": "字幕をエクスポートしました",
+  "Save the recording": "録音を保存",
+  "Recording saved": "録音を保存しました"
 }

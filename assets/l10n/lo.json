@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "ບໍ່ສາມາດເລີ່ມບັນທຶກສຽງໄດ້: {0}",
   "Nothing was recorded. Check the microphone.": "ບໍ່ໄດ້ບັນທຶກຫຍັງເລີຍ. ກະລຸນາກວດເບິ່ງໄມໂຄຣໂຟນ.",
   "Export as CSV": "ສົ່ງອອກເປັນ CSV",
-  "Subtitles exported": "ສົ່ງອອກຄຳບັນຍາຍແລ້ວ"
+  "Subtitles exported": "ສົ່ງອອກຄຳບັນຍາຍແລ້ວ",
+  "Save the recording": "ບັນທຶກການອັດສຽງ",
+  "Recording saved": "ບັນທຶກການອັດສຽງແລ້ວ"
 }

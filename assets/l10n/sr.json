@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Снимање није могло да почне: {0}",
   "Nothing was recorded. Check the microphone.": "Ништа није снимљено. Провери микрофон.",
   "Export as CSV": "Извези као CSV",
-  "Subtitles exported": "Титлови су извезени"
+  "Subtitles exported": "Титлови су извезени",
+  "Save the recording": "Сачувај снимак",
+  "Recording saved": "Снимак је сачуван"
 }

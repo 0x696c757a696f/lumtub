@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Nauhoitusta ei voitu aloittaa: {0}",
   "Nothing was recorded. Check the microphone.": "Mitään ei nauhoitettu. Tarkista mikrofoni.",
   "Export as CSV": "Vie CSV-muodossa",
-  "Subtitles exported": "Tekstitys viety"
+  "Subtitles exported": "Tekstitys viety",
+  "Save the recording": "Tallenna äänite",
+  "Recording saved": "Äänite tallennettu"
 }

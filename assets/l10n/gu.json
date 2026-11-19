@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "રેકોર્ડિંગ શરૂ કરી શકાયું નહીં: {0}",
   "Nothing was recorded. Check the microphone.": "કંઈ રેકોર્ડ થયું નથી. માઇક્રોફોન તપાસો.",
   "Export as CSV": "CSV તરીકે નિકાસ કરો",
-  "Subtitles exported": "સબટાઇટલ નિકાસ થયા"
+  "Subtitles exported": "સબટાઇટલ નિકાસ થયા",
+  "Save the recording": "રેકોર્ડિંગ સાચવો",
+  "Recording saved": "રેકોર્ડિંગ સાચવ્યું"
 }

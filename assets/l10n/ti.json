@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "ቀረጻ ምጅማር ኣይተኻኣለን፦ {0}",
   "Nothing was recorded. Check the microphone.": "ዋላ ሓንቲ ኣይተቐድሐትን። ማይክሮፎን ፈትሽ።",
   "Export as CSV": "ከም CSV ኣውጽእ",
-  "Subtitles exported": "ትርጉም ጽሑፍ ተወጺኡ"
+  "Subtitles exported": "ትርጉም ጽሑፍ ተወጺኡ",
+  "Save the recording": "ቅዳሕ ኣቐምጥ",
+  "Recording saved": "ቅዳሕ ተቐሚጡ"
 }

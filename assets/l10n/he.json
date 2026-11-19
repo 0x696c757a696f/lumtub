@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "לא ניתן היה להתחיל בהקלטה: {0}",
   "Nothing was recorded. Check the microphone.": "לא הוקלט דבר. יש לבדוק את המיקרופון.",
   "Export as CSV": "ייצוא כ-CSV",
-  "Subtitles exported": "הכתוביות יוצאו"
+  "Subtitles exported": "הכתוביות יוצאו",
+  "Save the recording": "שמירת ההקלטה",
+  "Recording saved": "ההקלטה נשמרה"
 }

@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Записът не можа да започне: {0}",
   "Nothing was recorded. Check the microphone.": "Нищо не е записано. Проверете микрофона.",
   "Export as CSV": "Експортиране като CSV",
-  "Subtitles exported": "Субтитрите са експортирани"
+  "Subtitles exported": "Субтитрите са експортирани",
+  "Save the recording": "Запазване на записа",
+  "Recording saved": "Записът е запазен"
 }

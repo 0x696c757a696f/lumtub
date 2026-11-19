@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Regjistrimi nuk mund të nisej: {0}",
   "Nothing was recorded. Check the microphone.": "Nuk u regjistrua asgjë. Kontrollo mikrofonin.",
   "Export as CSV": "Eksporto si CSV",
-  "Subtitles exported": "Titrat u eksportuan"
+  "Subtitles exported": "Titrat u eksportuan",
+  "Save the recording": "Ruaj regjistrimin",
+  "Recording saved": "Regjistrimi u ruajt"
 }

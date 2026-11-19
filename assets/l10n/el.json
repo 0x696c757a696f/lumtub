@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Δεν ήταν δυνατή η έναρξη της ηχογράφησης: {0}",
   "Nothing was recorded. Check the microphone.": "Δεν ηχογραφήθηκε τίποτα. Ελέγξτε το μικρόφωνο.",
   "Export as CSV": "Εξαγωγή ως CSV",
-  "Subtitles exported": "Οι υπότιτλοι εξήχθησαν"
+  "Subtitles exported": "Οι υπότιτλοι εξήχθησαν",
+  "Save the recording": "Αποθήκευση ηχογράφησης",
+  "Recording saved": "Η ηχογράφηση αποθηκεύτηκε"
 }

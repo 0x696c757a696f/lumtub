@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "Ayikwazanga ukuqala ukuqopha: {0}",
   "Nothing was recorded. Check the microphone.": "Akukho okuqoshiwe. Hlola imakrofoni.",
   "Export as CSV": "Thumela njenge-CSV",
-  "Subtitles exported": "Amagama-ngezansi athunyelwe"
+  "Subtitles exported": "Amagama-ngezansi athunyelwe",
+  "Save the recording": "Londoloza okuqoshiwe",
+  "Recording saved": "Okuqoshiwe kulondoloziwe"
 }

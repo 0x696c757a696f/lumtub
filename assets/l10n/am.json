@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "ቀረጻውን መጀመር አልተቻለም፦ {0}",
   "Nothing was recorded. Check the microphone.": "ምንም አልተቀረጸም። ማይክሮፎኑን ያረጋግጡ።",
   "Export as CSV": "እንደ CSV ላክ",
-  "Subtitles exported": "የትርጉም ጽሑፍ ተልኳል"
+  "Subtitles exported": "የትርጉም ጽሑፍ ተልኳል",
+  "Save the recording": "ቅጂውን አስቀምጥ",
+  "Recording saved": "ቅጂው ተቀምጧል"
 }

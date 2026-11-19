@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "রেকর্ডিং শুরু করা যায়নি: {0}",
   "Nothing was recorded. Check the microphone.": "কিছুই রেকর্ড হয়নি। মাইক্রোফোন পরীক্ষা করুন।",
   "Export as CSV": "CSV হিসেবে এক্সপোর্ট করুন",
-  "Subtitles exported": "সাবটাইটেল এক্সপোর্ট হয়েছে"
+  "Subtitles exported": "সাবটাইটেল এক্সপোর্ট হয়েছে",
+  "Save the recording": "রেকর্ডিং সংরক্ষণ করুন",
+  "Recording saved": "রেকর্ডিং সংরক্ষিত হয়েছে"
 }

@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "เริ่มอัดเสียงไม่ได้: {0}",
   "Nothing was recorded. Check the microphone.": "ไม่มีการบันทึกเสียง โปรดตรวจสอบไมโครโฟน",
   "Export as CSV": "ส่งออกเป็น CSV",
-  "Subtitles exported": "ส่งออกคำบรรยายแล้ว"
+  "Subtitles exported": "ส่งออกคำบรรยายแล้ว",
+  "Save the recording": "บันทึกเสียงที่อัดไว้",
+  "Recording saved": "บันทึกเสียงที่อัดไว้แล้ว"
 }

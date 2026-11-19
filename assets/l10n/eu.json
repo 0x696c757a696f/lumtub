@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Ezin izan da grabazioa hasi: {0}",
   "Nothing was recorded. Check the microphone.": "Ez da ezer grabatu. Egiaztatu mikrofonoa.",
   "Export as CSV": "Esportatu CSV gisa",
-  "Subtitles exported": "Azpitituluak esportatu dira"
+  "Subtitles exported": "Azpitituluak esportatu dira",
+  "Save the recording": "Gorde grabazioa",
+  "Recording saved": "Grabazioa gorde da"
 }

@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Nahrávání se nepodařilo spustit: {0}",
   "Nothing was recorded. Check the microphone.": "Nic se nenahrálo. Zkontrolujte mikrofon.",
   "Export as CSV": "Exportovat jako CSV",
-  "Subtitles exported": "Titulky exportovány"
+  "Subtitles exported": "Titulky exportovány",
+  "Save the recording": "Uložit nahrávku",
+  "Recording saved": "Nahrávka uložena"
 }

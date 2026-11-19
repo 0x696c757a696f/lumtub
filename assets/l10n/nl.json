@@ -3649,5 +3649,7 @@
   "Could not start recording: {0}": "Opname kon niet worden gestart: {0}",
   "Nothing was recorded. Check the microphone.": "Er is niets opgenomen. Controleer de microfoon.",
   "Export as CSV": "Exporteren als CSV",
-  "Subtitles exported": "Ondertitels geëxporteerd"
+  "Subtitles exported": "Ondertitels geëxporteerd",
+  "Save the recording": "Opname opslaan",
+  "Recording saved": "Opname opgeslagen"
 }

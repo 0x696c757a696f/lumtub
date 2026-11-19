@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "Жазуды бастау мүмкін болмады: {0}",
   "Nothing was recorded. Check the microphone.": "Ештеңе жазылмады. Микрофонды тексеріңіз.",
   "Export as CSV": "CSV ретінде экспорттау",
-  "Subtitles exported": "Субтитрлер экспортталды"
+  "Subtitles exported": "Субтитрлер экспортталды",
+  "Save the recording": "Жазбаны сақтау",
+  "Recording saved": "Жазба сақталды"
 }

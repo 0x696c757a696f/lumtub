@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Tidak dapat memulakan rakaman: {0}",
   "Nothing was recorded. Check the microphone.": "Tiada apa yang dirakam. Semak mikrofon.",
   "Export as CSV": "Eksport sebagai CSV",
-  "Subtitles exported": "Sari kata dieksport"
+  "Subtitles exported": "Sari kata dieksport",
+  "Save the recording": "Simpan rakaman",
+  "Recording saved": "Rakaman disimpan"
 }

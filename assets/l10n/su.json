@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "Gagal ngamimitian rékaman: {0}",
   "Nothing was recorded. Check the microphone.": "Euweuh nu karékam. Pariksa mikropon.",
   "Export as CSV": "Ékspor salaku CSV",
-  "Subtitles exported": "Subtitel geus diékspor"
+  "Subtitles exported": "Subtitel geus diékspor",
+  "Save the recording": "Simpen rékaman",
+  "Recording saved": "Rékaman geus disimpen"
 }

@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Не ўдалося пачаць запіс: {0}",
   "Nothing was recorded. Check the microphone.": "Нічога не запісана. Праверце мікрафон.",
   "Export as CSV": "Экспартаваць як CSV",
-  "Subtitles exported": "Субцітры экспартаваны"
+  "Subtitles exported": "Субцітры экспартаваны",
+  "Save the recording": "Захаваць запіс",
+  "Recording saved": "Запіс захаваны"
 }

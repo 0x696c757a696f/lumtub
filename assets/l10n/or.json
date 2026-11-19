@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "ରେକର୍ଡିଂ ଆରମ୍ଭ କରାଯାଇପାରିଲା ନାହିଁ: {0}",
   "Nothing was recorded. Check the microphone.": "କିଛି ରେକର୍ଡ ହୋଇନାହିଁ। ମାଇକ୍ରୋଫୋନ ଯାଞ୍ଚ କରନ୍ତୁ।",
   "Export as CSV": "CSV ଭାବେ ଏକ୍ସପୋର୍ଟ କରନ୍ତୁ",
-  "Subtitles exported": "ସବ୍ଟାଇଟଲ ଏକ୍ସପୋର୍ଟ ହେଲା"
+  "Subtitles exported": "ସବ୍ଟାଇଟଲ ଏକ୍ସପୋର୍ଟ ହେଲା",
+  "Save the recording": "ରେକର୍ଡିଂ ସେଭ୍ କରନ୍ତୁ",
+  "Recording saved": "ରେକର୍ଡିଂ ସେଭ୍ ହେଲା"
 }

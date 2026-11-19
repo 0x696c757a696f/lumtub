@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "రికార్డింగ్ ప్రారంభించడం సాధ్యం కాలేదు: {0}",
   "Nothing was recorded. Check the microphone.": "ఏమీ రికార్డ్ కాలేదు. మైక్రోఫోన్‌ను తనిఖీ చేయండి.",
   "Export as CSV": "CSVగా ఎగుమతి చేయండి",
-  "Subtitles exported": "ఉపశీర్షికలు ఎగుమతి అయ్యాయి"
+  "Subtitles exported": "ఉపశీర్షికలు ఎగుమతి అయ్యాయి",
+  "Save the recording": "రికార్డింగ్‌ను సేవ్ చేయండి",
+  "Recording saved": "రికార్డింగ్ సేవ్ చేయబడింది"
 }

@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Det gick inte att starta inspelningen: {0}",
   "Nothing was recorded. Check the microphone.": "Inget spelades in. Kontrollera mikrofonen.",
   "Export as CSV": "Exportera som CSV",
-  "Subtitles exported": "Undertexter exporterade"
+  "Subtitles exported": "Undertexter exporterade",
+  "Save the recording": "Spara inspelningen",
+  "Recording saved": "Inspelningen har sparats"
 }

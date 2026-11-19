@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "A felvételt nem sikerült elindítani: {0}",
   "Nothing was recorded. Check the microphone.": "Nem készült felvétel. Ellenőrizd a mikrofont.",
   "Export as CSV": "Exportálás CSV-ként",
-  "Subtitles exported": "Feliratok exportálva"
+  "Subtitles exported": "Feliratok exportálva",
+  "Save the recording": "Felvétel mentése",
+  "Recording saved": "Felvétel mentve"
 }

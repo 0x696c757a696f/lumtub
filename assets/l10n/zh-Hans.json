@@ -3679,5 +3679,7 @@
   "Could not start recording: {0}": "无法开始录音：{0}",
   "Nothing was recorded. Check the microphone.": "没有录到声音，请检查麦克风。",
   "Export as CSV": "导出为 CSV",
-  "Subtitles exported": "字幕已导出"
+  "Subtitles exported": "字幕已导出",
+  "Save the recording": "保存录音",
+  "Recording saved": "录音已保存"
 }

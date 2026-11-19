@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Չհաջողվեց սկսել ձայնագրումը՝ {0}",
   "Nothing was recorded. Check the microphone.": "Ոչինչ չձայնագրվեց։ Ստուգեք խոսափողը։",
   "Export as CSV": "Արտահանել որպես CSV",
-  "Subtitles exported": "Ենթագրերն արտահանվեցին"
+  "Subtitles exported": "Ենթագրերն արտահանվեցին",
+  "Save the recording": "Պահել ձայնագրությունը",
+  "Recording saved": "Ձայնագրությունը պահվեց"
 }

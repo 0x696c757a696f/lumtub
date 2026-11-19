@@ -3649,5 +3649,7 @@
   "Could not start recording: {0}": "تعذّر بدء التسجيل: {0}",
   "Nothing was recorded. Check the microphone.": "لم يتم تسجيل أي شيء. تحقق من الميكروفون.",
   "Export as CSV": "تصدير بصيغة CSV",
-  "Subtitles exported": "تم تصدير الترجمة"
+  "Subtitles exported": "تم تصدير الترجمة",
+  "Save the recording": "حفظ التسجيل",
+  "Recording saved": "تم حفظ التسجيل"
 }

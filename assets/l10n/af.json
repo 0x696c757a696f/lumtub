@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Kon nie opname begin nie: {0}",
   "Nothing was recorded. Check the microphone.": "Niks is opgeneem nie. Gaan die mikrofoon na.",
   "Export as CSV": "Voer uit as CSV",
-  "Subtitles exported": "Onderskrifte uitgevoer"
+  "Subtitles exported": "Onderskrifte uitgevoer",
+  "Save the recording": "Stoor die opname",
+  "Recording saved": "Opname gestoor"
 }

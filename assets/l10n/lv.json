@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Ierakstīšanu neizdevās sākt: {0}",
   "Nothing was recorded. Check the microphone.": "Nekas netika ierakstīts. Pārbaudiet mikrofonu.",
   "Export as CSV": "Eksportēt kā CSV",
-  "Subtitles exported": "Subtitri eksportēti"
+  "Subtitles exported": "Subtitri eksportēti",
+  "Save the recording": "Saglabāt ierakstu",
+  "Recording saved": "Ieraksts saglabāts"
 }

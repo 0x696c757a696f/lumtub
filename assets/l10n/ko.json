@@ -3649,5 +3649,7 @@
   "Could not start recording: {0}": "녹음을 시작하지 못했습니다: {0}",
   "Nothing was recorded. Check the microphone.": "녹음된 내용이 없습니다. 마이크를 확인해 주세요.",
   "Export as CSV": "CSV로 내보내기",
-  "Subtitles exported": "자막을 내보냈습니다"
+  "Subtitles exported": "자막을 내보냈습니다",
+  "Save the recording": "녹음 저장",
+  "Recording saved": "녹음을 저장했습니다"
 }

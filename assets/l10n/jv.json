@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "Ora bisa miwiti rekaman: {0}",
   "Nothing was recorded. Check the microphone.": "Ora ana sing kerekam. Priksa mikrofon.",
   "Export as CSV": "Ekspor minangka CSV",
-  "Subtitles exported": "Subtitel wis diekspor"
+  "Subtitles exported": "Subtitel wis diekspor",
+  "Save the recording": "Simpen rekaman",
+  "Recording saved": "Rekaman wis disimpen"
 }

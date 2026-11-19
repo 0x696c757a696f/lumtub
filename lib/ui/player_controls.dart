@@ -1318,6 +1318,17 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             unawaited(comparing ? _controller.toggleShadowing() : _controller.compareShadowing());
           },
         ),
+      if (_controller.hasShadowTake && !recording)
+        _IconButton(
+          tooltip: tr('Save the recording'),
+          width: width,
+          icon: AppIcons.downloadSimple,
+          size: 20,
+          onTap: () {
+            _show();
+            unawaited(_controller.saveShadowTake());
+          },
+        ),
     ];
   }
 

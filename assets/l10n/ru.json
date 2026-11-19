@@ -3649,5 +3649,7 @@
   "Could not start recording: {0}": "Не удалось начать запись: {0}",
   "Nothing was recorded. Check the microphone.": "Ничего не записано. Проверьте микрофон.",
   "Export as CSV": "Экспортировать как CSV",
-  "Subtitles exported": "Субтитры экспортированы"
+  "Subtitles exported": "Субтитры экспортированы",
+  "Save the recording": "Сохранить запись",
+  "Recording saved": "Запись сохранена"
 }

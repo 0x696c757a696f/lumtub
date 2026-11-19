@@ -23,6 +23,7 @@ import '../app_window.dart';
 import '../app_preferences.dart';
 import '../libass_layout.dart';
 import '../line_pause.dart';
+import '../save_file.dart';
 import '../shadowing.dart';
 import '../play_queue.dart';
 import '../video_facts_lookup.dart';

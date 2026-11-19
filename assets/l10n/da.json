@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Optagelsen kunne ikke startes: {0}",
   "Nothing was recorded. Check the microphone.": "Intet blev optaget. Tjek mikrofonen.",
   "Export as CSV": "Eksportér som CSV",
-  "Subtitles exported": "Undertekster eksporteret"
+  "Subtitles exported": "Undertekster eksporteret",
+  "Save the recording": "Gem optagelsen",
+  "Recording saved": "Optagelsen er gemt"
 }

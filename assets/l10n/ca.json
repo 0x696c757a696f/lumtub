@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "No s'ha pogut iniciar la gravació: {0}",
   "Nothing was recorded. Check the microphone.": "No s'ha gravat res. Comprova el micròfon.",
   "Export as CSV": "Exporta com a CSV",
-  "Subtitles exported": "Subtítols exportats"
+  "Subtitles exported": "Subtítols exportats",
+  "Save the recording": "Desa l'enregistrament",
+  "Recording saved": "S'ha desat l'enregistrament"
 }

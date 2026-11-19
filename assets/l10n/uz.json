@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "Yozishni boshlab bo'lmadi: {0}",
   "Nothing was recorded. Check the microphone.": "Hech narsa yozilmadi. Mikrofonni tekshiring.",
   "Export as CSV": "CSV sifatida eksport qilish",
-  "Subtitles exported": "Taglavhalar eksport qilindi"
+  "Subtitles exported": "Taglavhalar eksport qilindi",
+  "Save the recording": "Yozuvni saqlash",
+  "Recording saved": "Yozuv saqlandi"
 }

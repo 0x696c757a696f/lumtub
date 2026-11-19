@@ -3649,5 +3649,7 @@
   "Could not start recording: {0}": "Aufnahme konnte nicht gestartet werden: {0}",
   "Nothing was recorded. Check the microphone.": "Es wurde nichts aufgenommen. Bitte das Mikrofon prüfen.",
   "Export as CSV": "Als CSV exportieren",
-  "Subtitles exported": "Untertitel exportiert"
+  "Subtitles exported": "Untertitel exportiert",
+  "Save the recording": "Aufnahme speichern",
+  "Recording saved": "Aufnahme gespeichert"
 }

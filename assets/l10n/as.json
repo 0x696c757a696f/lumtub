@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "ৰেকৰ্ডিং আৰম্ভ কৰিব পৰা নগ'ল: {0}",
   "Nothing was recorded. Check the microphone.": "একো ৰেকৰ্ড কৰা নহ'ল। মাইক্ৰ'ফোন পৰীক্ষা কৰক।",
   "Export as CSV": "CSV হিচাপে ৰপ্তানি কৰক",
-  "Subtitles exported": "ছাবটাইটেল ৰপ্তানি কৰা হ'ল"
+  "Subtitles exported": "ছাবটাইটেল ৰপ্তানি কৰা হ'ল",
+  "Save the recording": "ৰেকৰ্ডিংটো সাঁচি ৰাখক",
+  "Recording saved": "ৰেকৰ্ডিং সাঁচি ৰখা হ'ল"
 }

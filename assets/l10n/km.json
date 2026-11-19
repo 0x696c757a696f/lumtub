@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "មិនអាចចាប់ផ្តើមថតបានទេ៖ {0}",
   "Nothing was recorded. Check the microphone.": "មិនបានថតអ្វីទេ។ សូមពិនិត្យមីក្រូហ្វូន។",
   "Export as CSV": "នាំចេញជា CSV",
-  "Subtitles exported": "បាននាំចេញចំណងជើងរង"
+  "Subtitles exported": "បាននាំចេញចំណងជើងរង",
+  "Save the recording": "រក្សាទុកការថត",
+  "Recording saved": "បានរក្សាទុកការថត"
 }

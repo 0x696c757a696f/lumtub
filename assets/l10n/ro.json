@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Înregistrarea nu a putut porni: {0}",
   "Nothing was recorded. Check the microphone.": "Nu s-a înregistrat nimic. Verifică microfonul.",
   "Export as CSV": "Exportă ca CSV",
-  "Subtitles exported": "Subtitrări exportate"
+  "Subtitles exported": "Subtitrări exportate",
+  "Save the recording": "Salvează înregistrarea",
+  "Recording saved": "Înregistrarea a fost salvată"
 }

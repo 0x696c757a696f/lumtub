@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Ne eblis komenci registradon: {0}",
   "Nothing was recorded. Check the microphone.": "Nenio estis registrita. Kontrolu la mikrofonon.",
   "Export as CSV": "Eksporti kiel CSV",
-  "Subtitles exported": "Subtekstoj eksportitaj"
+  "Subtitles exported": "Subtekstoj eksportitaj",
+  "Save the recording": "Konservi la registraĵon",
+  "Recording saved": "Registraĵo konservita"
 }

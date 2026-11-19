@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "ჩაწერის დაწყება ვერ მოხერხდა: {0}",
   "Nothing was recorded. Check the microphone.": "არაფერი ჩაწერილა. შეამოწმეთ მიკროფონი.",
   "Export as CSV": "ექსპორტი CSV-ად",
-  "Subtitles exported": "სუბტიტრები ექსპორტირებულია"
+  "Subtitles exported": "სუბტიტრები ექსპორტირებულია",
+  "Save the recording": "ჩანაწერის შენახვა",
+  "Recording saved": "ჩანაწერი შენახულია"
 }

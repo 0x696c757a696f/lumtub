@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "ರೆಕಾರ್ಡಿಂಗ್ ಪ್ರಾರಂಭಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ: {0}",
   "Nothing was recorded. Check the microphone.": "ಏನೂ ರೆಕಾರ್ಡ್ ಆಗಿಲ್ಲ. ಮೈಕ್ರೊಫೋನ್ ಪರಿಶೀಲಿಸಿ.",
   "Export as CSV": "CSV ಆಗಿ ರಫ್ತು ಮಾಡಿ",
-  "Subtitles exported": "ಉಪಶೀರ್ಷಿಕೆಗಳನ್ನು ರಫ್ತು ಮಾಡಲಾಗಿದೆ"
+  "Subtitles exported": "ಉಪಶೀರ್ಷಿಕೆಗಳನ್ನು ರಫ್ತು ಮಾಡಲಾಗಿದೆ",
+  "Save the recording": "ರೆಕಾರ್ಡಿಂಗ್ ಉಳಿಸಿ",
+  "Recording saved": "ರೆಕಾರ್ಡಿಂಗ್ ಉಳಿಸಲಾಗಿದೆ"
 }

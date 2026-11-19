@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Recordatio incipi non potuit: {0}",
   "Nothing was recorded. Check the microphone.": "Nihil recordatum est. Microphonum inspice.",
   "Export as CSV": "Exportare ut CSV",
-  "Subtitles exported": "Subtitula exportata"
+  "Subtitles exported": "Subtitula exportata",
+  "Save the recording": "Inscriptionem vocis serva",
+  "Recording saved": "Inscriptio vocis servata"
 }

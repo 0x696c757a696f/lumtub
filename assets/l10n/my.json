@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "အသံဖမ်းခြင်း စတင်၍ မရပါ- {0}",
   "Nothing was recorded. Check the microphone.": "ဘာမျှ မဖမ်းရပါ။ မိုက်ခရိုဖုန်းကို စစ်ဆေးပါ။",
   "Export as CSV": "CSV အဖြစ် ထုတ်ယူရန်",
-  "Subtitles exported": "စာတန်းထိုး ထုတ်ယူပြီး"
+  "Subtitles exported": "စာတန်းထိုး ထုတ်ယူပြီး",
+  "Save the recording": "အသံဖမ်းချက်ကို သိမ်းရန်",
+  "Recording saved": "အသံဖမ်းချက်ကို သိမ်းပြီးပါပြီ"
 }

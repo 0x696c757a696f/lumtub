@@ -244,6 +244,25 @@ extension LearningActions on AppController {
     }
   }
 
+  /// Saves the last take as a WAV file where the person picks; false when
+  /// they cancelled or there is none.
+  Future<bool> saveShadowTake() async {
+    final take = _shadowing?.take;
+    final line = _shadowLine;
+    if (take == null || line == null || !await take.exists()) return false;
+    final at = line.start.inSeconds;
+    final name = 'lumtub-shadowing-${playing?.id ?? 'video'}-${at ~/ 60}m${(at % 60).toString().padLeft(2, '0')}s.wav';
+    try {
+      if (!await saveFileAs(name, await take.readAsBytes(), mime: 'audio/wav', label: 'WAV', extension: 'wav')) return false;
+      _notice(tr('Recording saved'));
+      return true;
+    } catch (e) {
+      logWarn('Could not save the recording: $e');
+      _notice(tr('Export failed: {0}', [friendlyFileError(e)]));
+      return false;
+    }
+  }
+
   Future<void> _stopComparing() async {
     _shadowSerial++;
     shadowStage.value = ShadowStage.idle;

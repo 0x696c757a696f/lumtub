@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "Бичлэг эхлүүлж чадсангүй: {0}",
   "Nothing was recorded. Check the microphone.": "Юу ч бичигдсэнгүй. Микрофоноо шалгана уу.",
   "Export as CSV": "CSV болгон экспортлох",
-  "Subtitles exported": "Хадмал экспортлогдлоо"
+  "Subtitles exported": "Хадмал экспортлогдлоо",
+  "Save the recording": "Бичлэгийг хадгалах",
+  "Recording saved": "Бичлэг хадгалагдлаа"
 }

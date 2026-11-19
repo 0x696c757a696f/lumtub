@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "ریکارڈنگ شروع نہیں ہو سکی: {0}",
   "Nothing was recorded. Check the microphone.": "کچھ بھی ریکارڈ نہیں ہوا۔ مائیکروفون چیک کریں۔",
   "Export as CSV": "CSV کے طور پر برآمد کریں",
-  "Subtitles exported": "سب ٹائٹلز برآمد ہو گئے"
+  "Subtitles exported": "سب ٹائٹلز برآمد ہو گئے",
+  "Save the recording": "ریکارڈنگ محفوظ کریں",
+  "Recording saved": "ریکارڈنگ محفوظ ہو گئی"
 }

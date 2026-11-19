@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "شروع ضبط ممکن نشد: {0}",
   "Nothing was recorded. Check the microphone.": "چیزی ضبط نشد. میکروفون را بررسی کنید.",
   "Export as CSV": "خروجی گرفتن به‌صورت CSV",
-  "Subtitles exported": "از زیرنویس خروجی گرفته شد"
+  "Subtitles exported": "از زیرنویس خروجی گرفته شد",
+  "Save the recording": "ذخیرهٔ ضبط",
+  "Recording saved": "ضبط ذخیره شد"
 }

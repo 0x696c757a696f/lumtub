@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Imeshindwa kuanza kurekodi: {0}",
   "Nothing was recorded. Check the microphone.": "Hakuna kilichorekodiwa. Angalia maikrofoni.",
   "Export as CSV": "Hamisha kama CSV",
-  "Subtitles exported": "Manukuu yamehamishwa"
+  "Subtitles exported": "Manukuu yamehamishwa",
+  "Save the recording": "Hifadhi rekodi",
+  "Recording saved": "Rekodi imehifadhiwa"
 }

@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "रेकर्डिङ सुरु गर्न सकिएन: {0}",
   "Nothing was recorded. Check the microphone.": "केही रेकर्ड भएन। माइक्रोफोन जाँच गर्नुहोस्।",
   "Export as CSV": "CSV को रूपमा निर्यात गर्नुहोस्",
-  "Subtitles exported": "उपशीर्षक निर्यात भयो"
+  "Subtitles exported": "उपशीर्षक निर्यात भयो",
+  "Save the recording": "रेकर्डिङ सेभ गर्नुहोस्",
+  "Recording saved": "रेकर्डिङ सेभ भयो"
 }

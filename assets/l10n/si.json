@@ -3643,5 +3643,7 @@
   "Could not start recording: {0}": "පටිගත කිරීම ආරම්භ කළ නොහැකි විය: {0}",
   "Nothing was recorded. Check the microphone.": "කිසිවක් පටිගත නොවිණි. මයික්‍රොෆෝනය පරීක්ෂා කරන්න.",
   "Export as CSV": "CSV ලෙස අපනයනය කරන්න",
-  "Subtitles exported": "උපසිරැසි අපනයනය කළා"
+  "Subtitles exported": "උපසිරැසි අපනයනය කළා",
+  "Save the recording": "පටිගත කිරීම සුරකින්න",
+  "Recording saved": "පටිගත කිරීම සුරැකිණි"
 }

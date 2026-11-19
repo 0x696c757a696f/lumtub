@@ -3644,5 +3644,7 @@
   "Could not start recording: {0}": "Salvestamist ei õnnestunud alustada: {0}",
   "Nothing was recorded. Check the microphone.": "Midagi ei salvestatud. Kontrolli mikrofoni.",
   "Export as CSV": "Ekspordi CSV-vormingus",
-  "Subtitles exported": "Subtiitrid eksporditud"
+  "Subtitles exported": "Subtiitrid eksporditud",
+  "Save the recording": "Salvesta salvestis",
+  "Recording saved": "Salvestis on salvestatud"
 }

@@ -176,7 +176,7 @@ pub static IT: Text = Text {
     kofi: "Ko-fi",
     support_eyebrow: "Sostieni Lumtub",
     sponsor_note: "Mensile o una tantum",
-    afdian_note: "Alipay · WeChat Pay",
+    afdian_note: "Alipay · WeChat Pay · senza rinnovo",
     kofi_note: "PayPal o carta, senza account",
     goals_label: "Prossimamente",
     goals: ["Installazioni iOS per un anno", "Dispositivi di test", "Prima le richieste degli sponsor"],

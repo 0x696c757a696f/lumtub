@@ -14,7 +14,7 @@ The same page is in the app under Settings › About › Support development.
 
 ## Afdian (爱发电)
 
-[Afdian](https://afdian.com/a/linmuqingfeng) takes Alipay and WeChat Pay, for supporters in China: ¥6, ¥15, ¥30 or ¥100 a month. Supporters are named in the [list below](#supporters).
+[Afdian](https://afdian.com/a/linmuqingfeng) takes Alipay and WeChat Pay, for supporters in China: ¥6, ¥15, ¥30 or ¥100 for a month, or any amount you choose. Afdian never renews on its own: each payment covers one month and then simply ends, so a "monthly" plan is really a one-time payment. Supporters are named in the [list below](#supporters).
 
 ## Crypto
 

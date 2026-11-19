@@ -234,7 +234,7 @@ Thank you to our [supporters](SPONSORING.md#supporters): jay.
 
 </div>
 
-[Ko-fi](https://ko-fi.com/0x696c757a696f) takes one-time gifts by PayPal or card, no GitHub account needed. [Afdian](https://afdian.com/a/linmuqingfeng) takes Alipay and WeChat Pay. Other ways to give, crypto included, are in [SPONSORING.md](SPONSORING.md).
+[Ko-fi](https://ko-fi.com/0x696c757a696f) takes one-time gifts by PayPal or card, no GitHub account needed. [Afdian](https://afdian.com/a/linmuqingfeng) takes Alipay and WeChat Pay and never renews on its own: a "monthly" plan is one payment for one month, and a custom amount is a one-time gift. Other ways to give, crypto included, are in [SPONSORING.md](SPONSORING.md).
 
 Can't give money? ⭐ Star the repository, tell a friend, [report a bug or suggest an idea](https://github.com/0x696c757a696f/lumtub/issues), [suggest a channel for the block lists](lists/README.md#suggesting-a-change), or [translate Lumtub](https://hosted.weblate.org/engage/lumtub/). It all helps.
 

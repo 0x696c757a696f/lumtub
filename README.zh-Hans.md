@@ -228,7 +228,7 @@ Lumtub 支持 82 种界面语言，全部由志愿者在 [Weblate](https://hoste
 
 </div>
 
-国内用户可以用[爱发电](https://afdian.com/a/linmuqingfeng)，支持支付宝和微信支付，每月 6、15、30 或 100 元，名字会写进 [支持者名单](SPONSORING.md#supporters)。海外用户也可以用 [Ko-fi](https://ko-fi.com/0x696c757a696f)，PayPal 或银行卡一次性赞助，不需要 GitHub 账号。其他赞助方式（包括加密货币）见 [SPONSORING.md](SPONSORING.md)。
+国内用户可以用[爱发电](https://afdian.com/a/linmuqingfeng)，支持支付宝和微信支付。爱发电**不会自动续费**：页面上写的“每月 6、15、30 或 100 元”其实是付一次、管一个月，到期就结束，不会再扣钱；也可以选“自选金额”，随便给多少都行，就是一次性打赏。名字会写进 [支持者名单](SPONSORING.md#supporters)。海外用户也可以用 [Ko-fi](https://ko-fi.com/0x696c757a696f)，PayPal 或银行卡一次性赞助，不需要 GitHub 账号。其他赞助方式（包括加密货币）见 [SPONSORING.md](SPONSORING.md)。
 
 不方便出钱？给仓库点个 ⭐，推荐给朋友，[报告问题或提建议](https://github.com/0x696c757a696f/lumtub/issues)，[给屏蔽列表推荐频道](lists/README.md#怎么贡献)，或者[帮忙翻译 Lumtub](https://hosted.weblate.org/engage/lumtub/)，都很有帮助。
 

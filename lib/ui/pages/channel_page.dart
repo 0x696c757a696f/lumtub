@@ -735,7 +735,7 @@ class FollowButton extends StatelessWidget {
     final following = library.isFollowing(channel.id);
     void toggle() {
       final now = controller.toggleFollow(channel);
-      final youtube = (controller.account?.canWrite ?? false) && controller.preferences.syncFollowToYoutube;
+      final youtube = (controller.account?.canAct ?? false) && controller.preferences.syncFollowToYoutube;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(now ? (youtube ? tr('Followed and subscribed on YouTube') : tr('Followed. New videos will appear in "Subscriptions"')) : (youtube ? tr('Unfollowed and unsubscribed on YouTube') : tr('Unfollowed')))));
     }
 

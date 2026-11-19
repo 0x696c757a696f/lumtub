@@ -91,7 +91,7 @@ class _TranslatableState extends State<Translatable> {
       _error = null;
     });
     try {
-      final result = await translateForeignLines(widget.controller.translator, text, language, (line) => reads(line) || !_hasLetters(line));
+      final result = await translateForeignLines(widget.controller.textTranslator, text, language, (line) => reads(line) || !_hasLetters(line));
       if (!mounted || text != widget.text) return;
       // The service gave the text back as it was: it is in that language.
       if (_same(result, text)) {

@@ -7,13 +7,19 @@ libmpv for Android and macOS is moved in its vendor/ copy. Each change is
 described in $RUNNER_TEMP/upstream-commit.txt. Pieces that
 need reading first (the media_kit copies under vendor/, which carry Lumtub's
 own changes) are listed in $RUNNER_TEMP/upstream-notes.md.
+
+With the argument "ios" only the iOS libmpv is looked at: lumtub-media-builds
+builds it once a day from main's recipe, and upstream.yml pins it the same
+day instead of at the next weekly run.
 """
 
+import glob
 import hashlib
 import json
 import os
 import re
 import subprocess
+import sys
 import urllib.request
 
 BUILD = ".github/pins.env"
@@ -68,6 +74,72 @@ def mpv_prebuilt(text, changes):
         text = re.sub(rf"^(MPV_SHA256_{key}=)[0-9a-f]{{64}}$", rf"\g<1>{sha256(assets[name])}", text, flags=re.M)
     changes.append(f"Linux libmpv {pinned[1]} -> {tag}")
     return text
+
+
+def angle_prebuilt(text, changes):
+    """ANGLE for Windows on Arm from lumtub-media-builds, the newest release."""
+    pinned = re.search(r"^ANGLE_ARM64_RELEASE=(\S+)$", text, re.M)
+    if not pinned:
+        return text
+    for release in get(f"https://api.github.com/repos/{MEDIA_BUILDS}/releases?per_page=30"):
+        tag = release["tag_name"]
+        if release["draft"] or release["prerelease"] or not re.fullmatch(r"angle-arm64-windows-[0-9A-Za-z._-]+", tag):
+            continue
+        assets = {a["name"]: a for a in release["assets"]}
+        if f"{tag}.tar.gz" in assets:
+            break
+    else:
+        print("lumtub-media-builds has no ANGLE for Windows on Arm yet; skipped.")
+        return text
+    if tag == pinned[1]:
+        return text
+    text = text.replace(pinned[0], f"ANGLE_ARM64_RELEASE={tag}")
+    text = re.sub(r"^(ANGLE_ARM64_SHA256=)[0-9a-f]{64}$", rf"\g<1>{sha256(assets[f'{tag}.tar.gz'])}", text, flags=re.M)
+    changes.append(f"ANGLE arm64 {pinned[1]} -> {tag}")
+    return text
+
+
+IOS_RECIPE = "vendor/media_kit_libs_ios_video/ios"
+
+
+def ios_libmpv_tag():
+    """The release name lumtub-media-builds gives the iOS libmpv of this recipe."""
+    with open(os.path.join(IOS_RECIPE, "mpvkit.lock"), encoding="utf-8") as f:
+        lock = f.read()
+    release = re.search(r"^Libmpv \S+ \S*/releases/download/([^/]+)/", lock, re.M)
+    digest = hashlib.sha256()
+    patches = sorted(glob.glob(os.path.join(IOS_RECIPE, "patch", "*.patch")))
+    for path in [os.path.join(IOS_RECIPE, "mpvkit.lock"), os.path.join(IOS_RECIPE, "build_libmpv.sh")] + patches:
+        with open(path, "rb") as f:
+            digest.update(f.read())
+    return f"libmpv-ios-{release[1]}-{digest.hexdigest()[:10]}"
+
+
+def ios_libmpv(changes):
+    """iOS libmpv (picture in picture), built by lumtub-media-builds from this
+    repository's recipe; pinned once that build is released."""
+    with open(BUILD, encoding="utf-8") as f:
+        text = f.read()
+    pinned = re.search(r"^IOS_LIBMPV_RELEASE=(\S+)$", text, re.M)
+    if not pinned:
+        return
+    tag = ios_libmpv_tag()
+    if tag == pinned[1]:
+        return
+    try:
+        release = get(f"https://api.github.com/repos/{MEDIA_BUILDS}/releases/tags/{tag}")
+    except Exception:
+        print(f"lumtub-media-builds has not released {tag} yet; skipped.")
+        return
+    assets = {a["name"]: a for a in release["assets"]}
+    if f"{tag}.tar.gz" not in assets:
+        print(f"{tag} has no {tag}.tar.gz; skipped.")
+        return
+    text = text.replace(pinned[0], f"IOS_LIBMPV_RELEASE={tag}")
+    text = re.sub(r"^(IOS_LIBMPV_SHA256=)[0-9a-f]{64}$", rf"\g<1>{sha256(assets[f'{tag}.tar.gz'])}", text, flags=re.M)
+    with open(BUILD, "w", encoding="utf-8") as f:
+        f.write(text)
+    changes.append(f"iOS libmpv {pinned[1]} -> {tag}")
 
 
 def ffmpeg(text, changes):
@@ -265,11 +337,23 @@ def vendored(notes):
             )
 
 
+def ios_only():
+    changes = []
+    try:
+        ios_libmpv(changes)
+    except Exception as e:
+        print(f"::warning::ios_libmpv: {e}")
+    if changes:
+        with open(os.path.join(TEMP, "upstream-commit.txt"), "w", encoding="utf-8") as f:
+            f.write("Upstream updates: " + "; ".join(changes) + "\n")
+    print("\n".join(changes) or "The iOS libmpv is current.")
+
+
 def main():
     with open(BUILD, encoding="utf-8") as f:
         text = f.read()
     changes, notes = [], []
-    for check in (mpv_prebuilt, ffmpeg, ffmpeg_prebuilt, appimagetool):
+    for check in (mpv_prebuilt, angle_prebuilt, ffmpeg, ffmpeg_prebuilt, appimagetool):
         try:
             text = check(text, changes)
         except Exception as e:
@@ -277,7 +361,7 @@ def main():
     if changes:
         with open(BUILD, "w", encoding="utf-8") as f:
             f.write(text)
-    for check in (android_libmpv, mpvkit):
+    for check in (android_libmpv, mpvkit, ios_libmpv):
         try:
             check(changes)
         except Exception as e:
@@ -295,4 +379,7 @@ def main():
     print("\n".join(changes + notes) or "Everything is current.")
 
 
-main()
+if sys.argv[1:] == ["ios"]:
+    ios_only()
+else:
+    main()

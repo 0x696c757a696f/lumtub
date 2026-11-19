@@ -24,9 +24,11 @@ class WindowsVideoInfo {
 
   static Future<ExtensionStatus> _extensionStatus(String name) async {
     try {
+      // The name goes in by environment, never into the command text.
       final result = await Process.run(
         'powershell.exe',
-        ['-NoProfile', '-NonInteractive', '-Command', "if (Get-AppxPackage -Name '$name' -ErrorAction SilentlyContinue) { 'present' } else { 'missing' }"],
+        ['-NoProfile', '-NonInteractive', '-Command', r"if (Get-AppxPackage -Name $env:LUMTUB_PACKAGE -ErrorAction SilentlyContinue) { 'present' } else { 'missing' }"],
+        environment: {'LUMTUB_PACKAGE': name},
       ).timeout(const Duration(seconds: 8));
       if (result.exitCode != 0) return ExtensionStatus.unknown;
       return result.stdout.toString().trim() == 'present' ? ExtensionStatus.present : ExtensionStatus.missing;

@@ -64,7 +64,9 @@ class AppUpdater extends ChangeNotifier {
     @visibleForTesting UpdateVerifier verifier = verifyUpdate,
     @visibleForTesting String? current,
     @visibleForTesting String? package,
+    @visibleForTesting http.Client Function()? plainClient,
   })  : _client = client,
+        _plainClient = plainClient ?? http.Client.new,
         _package = package ?? updatePackage,
         _directory = directory,
         _download = download,
@@ -73,6 +75,9 @@ class AppUpdater extends ChangeNotifier {
         _noticeFile = File('${directory.parent.path}${Platform.pathSeparator}update-notice.txt');
 
   final http.Client _client;
+  /// A dart:io client, for the one request whose redirect is read rather
+  /// than followed.
+  final http.Client Function() _plainClient;
   /// Where packages are downloaded to.
   final Directory _directory;
   final Future<File> Function(Map<String, dynamic> asset, Directory into, void Function(int received, int? total) onProgress) _download;
@@ -155,6 +160,34 @@ class AppUpdater extends ChangeNotifier {
     _timer = Timer.periodic(const Duration(hours: 6), (_) => check(download: download(), automatic: true));
   }
 
+  static const _repository = '0x696c757a696f/lumtub';
+
+  /// The latest release as the API would describe it, from github.com: its
+  /// tag from where `releases/latest` points, its time from the releases
+  /// feed, and the package for this build with its `.sig` file by name.
+  Future<Map<String, dynamic>> _releaseFromPages() async {
+    final request = http.Request('GET', Uri.https('github.com', '/$_repository/releases/latest'))
+      ..followRedirects = false
+      ..headers['User-Agent'] = 'Lumtub/$appVersion';
+    final String tag;
+    final plain = _plainClient();
+    try {
+      final answer = await plain.send(request).timeout(const Duration(seconds: 15));
+      await answer.stream.drain<void>();
+      tag = releaseTagOfRedirect(_repository, answer.headers['location']) ?? (throw const HttpException('No latest release redirect'));
+    } finally {
+      plain.close();
+    }
+    String? published;
+    try {
+      final feed = await _client.get(Uri.https('github.com', '/$_repository/releases.atom'), headers: {'User-Agent': 'Lumtub/$appVersion'}).timeout(const Duration(seconds: 15));
+      if (feed.statusCode == 200) published = publishedInFeed(feed.body, tag);
+    } catch (e) {
+      logDebug(() => 'Could not read the releases feed: $e');
+    }
+    return releaseOfTag(tag, package: _package, portable: portable, published: published);
+  }
+
   /// Asks GitHub for the latest release and, with [download], fetches its
   /// package in the background; an [automatic] one not over a metered
   /// (mobile) connection on Android.
@@ -168,11 +201,23 @@ class AppUpdater extends ChangeNotifier {
         Uri.https('api.github.com', '/repos/0x696c757a696f/lumtub/releases/latest'),
         headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'Lumtub/$appVersion', if (_etag != null && _latest != null) 'If-None-Match': _etag!},
       ).timeout(const Duration(seconds: 15));
-      final Object? json;
+      Object? json;
       if (response.statusCode == 304 && _latest != null) {
         json = _latest;
+      } else if (response.statusCode == 403 || response.statusCode == 429) {
+        // The API allows 60 unsigned requests an hour per address, which an
+        // address shared through a VPN or proxy soon uses up: the release
+        // is then read from github.com's pages, which have no such limit.
+        // A package found this way is still checked against its signature.
+        logInfo('GitHub API answered ${response.statusCode}; reading the latest release from github.com');
+        try {
+          json = await _releaseFromPages();
+        } catch (e) {
+          logDebug(() => 'Could not read the release from github.com: $e');
+          throw UpdateCheckException(tr('GitHub is limiting update checks from this network for now (HTTP {0}); try again later or use another proxy', [response.statusCode]));
+        }
       } else {
-        if (response.statusCode != 200) throw HttpException('GitHub returned HTTP ${response.statusCode}');
+        if (response.statusCode != 200) throw UpdateCheckException(tr('GitHub could not be asked for updates (HTTP {0}); try again later', [response.statusCode]));
         json = jsonDecode(response.body);
         if (json is Map<String, dynamic>) {
           _latest = json;
@@ -191,7 +236,7 @@ class AppUpdater extends ChangeNotifier {
       if (progress == null) await _prune();
       logInfo(offer != null ? 'Lumtub update available: ${offer.version}' : 'Lumtub is up to date ($_current)');
     } catch (e) {
-      error = friendlyError(e);
+      error = e is UpdateCheckException ? e.message : friendlyError(e);
       logWarn('Could not check Lumtub updates: $e');
     } finally {
       checking = false;
@@ -666,6 +711,70 @@ Future<void> replaceMacApp(File update, String app) async {
       logDebug(() => 'Could not remove the update mount folder: $e');
     }
   }
+}
+
+/// Why an update check failed, already in words for the person.
+class UpdateCheckException implements Exception {
+  const UpdateCheckException(this.message);
+  final String message;
+  @override
+  String toString() => message;
+}
+
+/// The tag a github.com `releases/latest` redirect of [repository] points at.
+String? releaseTagOfRedirect(String repository, String? location) {
+  if (location == null) return null;
+  final uri = Uri.tryParse(location);
+  if (uri == null || uri.host != 'github.com') return null;
+  final prefix = '$repository/releases/tag'.split('/');
+  final parts = uri.pathSegments;
+  if (parts.length != prefix.length + 1) return null;
+  for (var i = 0; i < prefix.length; i++) {
+    if (parts[i].toLowerCase() != prefix[i].toLowerCase()) return null;
+  }
+  return parts.last.isEmpty ? null : Uri.decodeComponent(parts.last);
+}
+
+/// When the release [tag] was last updated, from a github.com releases
+/// Atom feed: the `<updated>` of the entry that links to its page.
+@visibleForTesting
+String? publishedInFeed(String atom, String tag) {
+  for (final entry in RegExp(r'<entry>([\s\S]*?)</entry>').allMatches(atom)) {
+    final body = entry[1]!;
+    final link = RegExp(r'<link[^>]*href="([^"]+)"').firstMatch(body)?[1];
+    if (link == null || !link.endsWith('/releases/tag/$tag')) continue;
+    return RegExp(r'<updated>([^<]+)</updated>').firstMatch(body)?[1]?.trim();
+  }
+  return null;
+}
+
+/// A release shaped like the API's for [tag], listing the package for
+/// [package] and its `.sig` file by the names releases give them.
+@visibleForTesting
+Map<String, dynamic> releaseOfTag(String tag, {required String package, required bool portable, String? published}) {
+  final version = tag.startsWith('v') ? tag.substring(1) : tag;
+  final base = 'https://github.com/0x696c757a696f/lumtub/releases/download/${Uri.encodeComponent(tag)}';
+  final ending = package.startsWith('linux-')
+      ? '.AppImage'
+      : package.startsWith('macos-')
+          ? '.dmg'
+          : package.startsWith('android-')
+              ? '.apk'
+              : portable
+                  ? '.zip'
+                  : '-setup.exe';
+  final file = 'Lumtub_${version}_$package$ending';
+  return {
+    'tag_name': tag,
+    'html_url': 'https://github.com/0x696c757a696f/lumtub/releases/tag/${Uri.encodeComponent(tag)}',
+    if (published != null) 'published_at': published,
+    'assets': [
+      if (package.isNotEmpty) ...[
+        {'name': file, 'browser_download_url': '$base/${Uri.encodeComponent(file)}'},
+        {'name': '$file.sig', 'browser_download_url': '$base/${Uri.encodeComponent('$file.sig')}'},
+      ],
+    ],
+  };
 }
 
 /// The update [release] (GitHub's JSON) offers a build of [current] made at

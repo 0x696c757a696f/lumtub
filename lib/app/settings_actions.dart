@@ -8,6 +8,7 @@ extension SettingsActions on AppController {
     _update(() => preferences = next);
     if (next.logLevel != AppLog.level) {
       AppLog.level = next.logLevel;
+      unawaited(writeLogsOff(next.logLevel == LogLevel.off));
       logInfo('Log level ${next.logLevel.name}');
       // libmpv's own notes follow at once, not after a restart.
       if (player?.platform case final NativePlayer native) unawaited(native.requestLogMessages(next.logLevel == LogLevel.debug ? MPVLogLevel.info : MPVLogLevel.warn));
@@ -19,6 +20,24 @@ extension SettingsActions on AppController {
       await _preferencesStore?.save(next);
     } on FileSystemException {
       _notice(tr("Couldn't save settings. They still apply for this session."));
+    }
+  }
+
+  /// The Windows runner writes a crash dump to the logs folder unless
+  /// `config\logs-off` says the log is off.
+  Future<void> writeLogsOff(bool off) async {
+    final config = directories?.config;
+    if (config == null || !Platform.isWindows) return;
+    final file = File('${config.path}${Platform.pathSeparator}logs-off');
+    try {
+      if (!off) {
+        if (await file.exists()) await file.delete();
+      } else {
+        await config.create(recursive: true);
+        await file.writeAsString('');
+      }
+    } on FileSystemException {
+      // The crash dump setting follows at the next change.
     }
   }
 
@@ -59,9 +78,10 @@ extension SettingsActions on AppController {
   }
 
   void _useTranslator() {
-    final inner = translatorFor(preferences.translation, translationKeys, _http, fallback: _google);
+    final inner = translatorFor(preferences.translation, translationKeys, _http, fallback: _googleFirst);
     // A language model may join or split lines, so it gets each text alone.
     translator = CachingTranslator(inner, _translationCache, preferences.translation.cacheScope, batch: inner is! AiTranslator);
+    textTranslator = _textTranslatorOf(translator);
     logInfo('Translating with ${preferences.translation.service.name}');
   }
 
@@ -281,6 +301,10 @@ extension SettingsActions on AppController {
     _update(() => settings = next);
     _optionsApplied(player);
     if (next.skipSilence != oldSettings.skipSilence || next.audioFilter != oldSettings.audioFilter) unawaited(_syncSilenceSkipping(player));
+    // The audio session is opened with the audio output: opened again now.
+    if (next.mixWithOthers != oldSettings.mixWithOthers && player.platform is NativePlayer) {
+      unawaited((player.platform as NativePlayer).command(['ao-reload']).catchError((Object e) => logDebug(() => 'Could not reopen the audio output: $e')));
+    }
     if (next.volumeBalance != oldSettings.volumeBalance || next.audioFilter != oldSettings.audioFilter) unawaited(_syncVolumeBalance(player));
     // The video playing skips by the new SponsorBlock choice too.
     if (next.sponsorBlock != oldSettings.sponsorBlock || !setEquals(next.sponsorCategories, oldSettings.sponsorCategories)) {
@@ -404,6 +428,22 @@ extension SettingsActions on AppController {
     }
   }
 
+  /// What Lumtub learned about videos and channels, kept beside the cache
+  /// folders: languages heard, facts, pictures, AI labels. What is loaded
+  /// now stays until Lumtub restarts.
+  Future<void> _clearLookupFiles() async {
+    final folder = directories?.cache.path;
+    if (folder == null) return;
+    for (final name in const ['heard_languages.json', 'text_languages.json', 'video_facts.json', 'channel_avatars.json', 'portrait_thumbnails.json', 'emoji_pictures.json', 'ai_labels.json', 'ai_channels.json']) {
+      try {
+        final file = File('$folder${Platform.pathSeparator}$name');
+        if (await file.exists()) await file.delete();
+      } on FileSystemException catch (e) {
+        logWarn('Could not delete $name: $e');
+      }
+    }
+  }
+
   /// 清除本地数据: removes the chosen [kinds] from this computer. Favourites,
   /// playlists and followed channels are never touched here.
   Future<void> clearLocalData(Set<LocalData> kinds) async {
@@ -415,10 +455,12 @@ extension SettingsActions on AppController {
           case LocalData.history:
             await _history?.clear();
             await searchHistory?.clear();
+            watchTime?.clear();
           case LocalData.progress:
             library?.clearProgress();
           case LocalData.recommendations:
             await homeFeed?.notInterested.clear();
+            await homeFeed?.forgetSaved();
           case LocalData.cache:
             await _translationCache.clear();
             final manager = _cacheManager;
@@ -426,8 +468,12 @@ extension SettingsActions on AppController {
               await _clearCacheFolders(manager);
               cacheBytes = await manager.size(settings);
             }
+            await _clearLookupFiles();
           case LocalData.account:
-            await account?.signOut();
+            webSignIn?.signOut();
+            if (account?.signedIn ?? false) await account?.signOut();
+            if (directories case final folders?) _forgetTvSignIn(folders.data.path);
+            await airPlayPairings.clear();
           case LocalData.keys:
             translationKeys = const {};
             _useTranslator();
@@ -436,6 +482,7 @@ extension SettingsActions on AppController {
             await saveSettings(PlayerSettings(cachePath: settings.cachePath, cacheLimitGb: settings.cacheLimitGb, decoderResults: settings.decoderResults));
             await saveAppearance(const AppearanceSettings());
             await savePreferences(const AppPreferences());
+            channelPlayback?.clear();
         }
       } catch (e) {
         logError('Could not clear ${kind.name}', e);

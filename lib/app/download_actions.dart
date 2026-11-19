@@ -12,6 +12,9 @@ extension DownloadActions on AppController {
         client: _http,
       )
         ..streams.members = (() => webSignIn)
+        ..streams.bothFamilies = (() => _bothFamilies)
+        ..streams.signInWhenBlocked = (() => this.settings.signInWhenBlocked)
+        ..streams.onSignedInPlay = ((_) => _notice(tr('YouTube took this network for a bot, so this video was asked for with your account')))
         ..streams.onLoudness = _onLoudness;
 
   DownloadManager _downloadsFor(ToolPaths paths, AppDirectories directories) => DownloadManager(

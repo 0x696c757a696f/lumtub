@@ -106,6 +106,8 @@ class AppPreferences {
     this.pipOnLeave = false,
     this.closeToTray = false,
     this.minimizeToTray = false,
+    this.softwareQualityTold = false,
+    this.batteryAsked = false,
     this.gpuPreference = 'system',
     this.matchFrameRate = true,
     this.keyboardShortcuts = true,
@@ -216,7 +218,7 @@ class AppPreferences {
   /// 关注 also subscribes on YouTube when signed in.
   final bool syncFollowToYoutube;
   /// Videos watched here are added to the YouTube account's history, with
-  /// the TV-code sign-in. Off unless turned on.
+  /// the browser sign-in. Off unless turned on.
   final bool syncHistoryToYoutube;
   final String startPage;
   final bool feedAutoRefresh;
@@ -251,6 +253,12 @@ class AppPreferences {
   final bool closeToTray;
   /// Minimising the window hides it to the tray icon.
   final bool minimizeToTray;
+  /// Lumtub has said once why automatic quality stays at 1080p on a device
+  /// that decodes neither VP9 nor AV1 in hardware.
+  final bool softwareQualityTold;
+  /// Android: Lumtub has asked once, after playing in the background, to
+  /// run free of battery optimisation.
+  final bool batteryAsked;
   /// Windows: the graphics card Lumtub draws and decodes on, read by the
   /// runner from `config\gpu.txt` before the engine starts: `system` (as
   /// Windows decides), `low-power` (integrated) or `high-performance`.
@@ -490,6 +498,8 @@ class AppPreferences {
     bool? pipOnLeave,
     bool? closeToTray,
     bool? minimizeToTray,
+    bool? softwareQualityTold,
+    bool? batteryAsked,
     String? gpuPreference,
     bool? matchFrameRate,
     bool? keyboardShortcuts,
@@ -579,6 +589,8 @@ class AppPreferences {
         pipOnLeave: pipOnLeave ?? this.pipOnLeave,
         closeToTray: closeToTray ?? this.closeToTray,
         minimizeToTray: minimizeToTray ?? this.minimizeToTray,
+        softwareQualityTold: softwareQualityTold ?? this.softwareQualityTold,
+        batteryAsked: batteryAsked ?? this.batteryAsked,
         gpuPreference: gpuPreference ?? this.gpuPreference,
         matchFrameRate: matchFrameRate ?? this.matchFrameRate,
         keyboardShortcuts: keyboardShortcuts ?? this.keyboardShortcuts,
@@ -669,6 +681,8 @@ class AppPreferences {
         'pipOnLeave': pipOnLeave,
         'closeToTray': closeToTray,
         'minimizeToTray': minimizeToTray,
+        'softwareQualityTold': softwareQualityTold,
+        'batteryAsked': batteryAsked,
         'gpuPreference': gpuPreference,
         'matchFrameRate': matchFrameRate,
         'keyboardShortcuts': keyboardShortcuts,
@@ -798,6 +812,8 @@ class AppPreferences {
       pipOnLeave: flag('pipOnLeave', d.pipOnLeave),
       closeToTray: flag('closeToTray', d.closeToTray),
       minimizeToTray: flag('minimizeToTray', d.minimizeToTray),
+      softwareQualityTold: flag('softwareQualityTold', d.softwareQualityTold),
+      batteryAsked: flag('batteryAsked', d.batteryAsked),
       gpuPreference: gpuPreferences.contains(raw['gpuPreference']) ? raw['gpuPreference'] as String : d.gpuPreference,
       matchFrameRate: flag('matchFrameRate', d.matchFrameRate),
       keyboardShortcuts: flag('keyboardShortcuts', d.keyboardShortcuts),

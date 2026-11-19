@@ -13,8 +13,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
-import '../../widgets/pilinara_settings_tiles.dart';
 import '../theme.dart';
+import 'account_settings.dart' show confirmSignOut;
 import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
@@ -113,14 +113,16 @@ class _SettingsPageState extends State<SettingsPage> {
         // Like PiliNara, the account and about rows sit at the bottom
         // without a subtitle, with sign-out between them when signed in.
         _tile(context, SettingsCategory.account, wide: wide),
-        if (_controller.account?.signedIn ?? false)
+        if (_controller.account?.active ?? false)
           ListTile(
             leading: Icon(AppIcons.signOut),
             title: Text(tr('Sign out'), style: theme.textTheme.titleMedium),
             onTap: () async {
-              if (await confirmDialog(context, title: tr('Sign out?'), content: tr('The Google sign-in credentials saved on this device will be deleted. Subscriptions and playlists stay on this device.'), confirm: tr('Sign out'))) {
-                await _controller.account?.signOut();
-              }
+              final forget = await confirmSignOut(context, title: tr('Sign out?'), content: tr('The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.'));
+              if (forget == null) return;
+              _controller.webSignIn?.signOut();
+              if (_controller.account?.signedIn ?? false) await _controller.account?.signOut();
+              if (forget) _controller.account?.forgetSynced();
             },
           ),
         _tile(context, SettingsCategory.about, wide: wide),

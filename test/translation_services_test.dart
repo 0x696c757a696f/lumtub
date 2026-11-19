@@ -191,6 +191,99 @@ void main() {
     });
   });
 
+  group('LibreTranslator languages', () {
+    test('asks the server which code it knows a language by', () async {
+      final targets = <String>[];
+      final client = MockClient((request) async {
+        if (request.url.path.endsWith('/languages')) {
+          return _json([
+            {'code': 'en', 'name': 'English', 'targets': ['en', 'zh', 'zt', 'tl']},
+            {'code': 'zh', 'name': 'Chinese', 'targets': ['en', 'zh', 'zt']},
+          ]);
+        }
+        targets.add(jsonDecode(request.body)['target'] as String);
+        return _json({'translatedText': ['x']});
+      });
+      final libre = LibreTranslator(client, server: 'https://old-libre.example.com');
+      await libre.translate('a', 'zh-CN');
+      await libre.translate('b', 'zh-TW');
+      await libre.translate('c', 'tl');
+      expect(targets, ['zh', 'zt', 'tl']);
+      expect(await _fails(libre.translate('d', 'ja')), tr('{0} does not support this language', ['LibreTranslate']));
+    });
+
+    test('reads codes and targets from /languages', () {
+      expect(LibreTranslator.parseLanguages([
+        {'code': 'zh-Hans', 'targets': ['zh-Hant', 'en']},
+      ]), {'zh-Hans', 'zh-Hant', 'en'});
+      expect(LibreTranslator.parseLanguages({'error': 'x'}), isNull);
+      expect(LibreTranslator.languageCode('zh-TW'), 'zh-Hant');
+      expect(LibreTranslator.languageCode('tl'), 'tl');
+    });
+  });
+
+  group('MyMemoryTranslator', () {
+    setUp(MyMemoryTranslator.resetPacing);
+    tearDown(MyMemoryTranslator.resetPacing);
+
+    test('asks with autodetect, one request per piece, and the email when given', () async {
+      final seen = <Uri>[];
+      final client = MockClient((request) async {
+        seen.add(request.url);
+        return _json({'responseData': {'translatedText': '译${request.url.queryParameters['q']}'}, 'quotaFinished': false, 'responseStatus': 200});
+      });
+      final translator = MyMemoryTranslator(client, email: () => 'me@example.com');
+      expect(await translator.translate('a\nb', 'iw'), '译a\n译b');
+      expect(seen.first.host, 'api.mymemory.translated.net');
+      expect(seen.first.queryParameters['langpair'], 'autodetect|he');
+      expect(seen.first.queryParameters['de'], 'me@example.com');
+      final plain = MockClient((request) async {
+        seen.add(request.url);
+        return _json({'responseData': {'translatedText': 'x'}, 'responseStatus': 200});
+      });
+      await MyMemoryTranslator(plain).translate('c', 'fr');
+      expect(seen.last.queryParameters.containsKey('de'), isFalse);
+    });
+
+    test('refuses long texts so the next service takes them', () async {
+      var asked = 0;
+      final client = MockClient((_) async {
+        asked++;
+        return _json({'responseData': {'translatedText': 'x'}, 'responseStatus': 200});
+      });
+      final long = List.filled(400, 'word').join(' ');
+      expect(await _fails(MyMemoryTranslator(client).translate(long, 'fr')), tr('This text is too long for {0}', ['MyMemory']));
+      expect(asked, 0);
+      final pieces = MyMemoryTranslator.piecesOf('${List.filled(60, 'Sentence one.').join(' ')}\nshort')!;
+      expect(pieces.every((p) => utf8.encode(p).length <= MyMemoryTranslator.requestBytes), isTrue);
+      expect(pieces.last, 'short');
+    });
+
+    test('a used-up allowance is busy until the next day, without asking again', () async {
+      var asked = 0;
+      final client = MockClient((_) async {
+        asked++;
+        return _json({'responseData': {'translatedText': 'MYMEMORY WARNING: YOU USED ALL AVAILABLE FREE TRANSLATIONS FOR TODAY'}, 'quotaFinished': true, 'responseStatus': 429});
+      });
+      final translator = MyMemoryTranslator(client);
+      expect(await _fails(translator.translate('a', 'fr')), TranslationException.busy().message);
+      expect(MyMemoryTranslator.coolingDown, isTrue);
+      expect(await _fails(translator.translate('b', 'fr')), TranslationException.busy().message);
+      expect(asked, 1);
+    });
+
+    test('is chosen for short texts only; subtitles stay with Google', () {
+      final fallback = MockClient((_) async => _json({}));
+      final google = GoogleTranslator(fallback);
+      expect(translatorFor(const TranslationConfig(service: TranslationService.mymemory), {}, fallback, fallback: google), same(google));
+      expect(TranslationService.mymemory.subtitlesOnGoogle, isTrue);
+      expect(TranslationService.deepl.subtitlesOnGoogle, isFalse);
+      for (final service in TranslationService.values) {
+        expect(service.kind, isA<String>());
+      }
+    });
+  });
+
   group('AiTranslator', () {
     http.Response reply(String content) => _json({'choices': [{'message': {'role': 'assistant', 'content': content}}]});
 
@@ -383,21 +476,22 @@ void main() {
   });
 
   group('new services', () {
-    test('Microsoft without a key signs in with an Edge token, once', () async {
+    test("Microsoft without a key asks Edge's translatetext address with the texts as strings", () async {
       final requests = <http.Request>[];
       final client = MockClient((request) async {
         requests.add(request);
-        if (request.url.host == 'edge.microsoft.com') return http.Response('token-1', 200);
-        final texts = (jsonDecode(request.body) as List).map((e) => (e as Map)['Text']).toList();
-        return _json([for (final t in texts) {'translations': [{'text': '译$t'}]}]);
+        final texts = (jsonDecode(request.body) as List).cast<String>();
+        return _json([for (final t in texts) {'translations': [{'text': '译$t', 'to': 'zh-Hans'}]}]);
       });
       final translator = MicrosoftTranslator(client);
       expect(await translator.translate('a\nb', 'zh-CN'), '译a\n译b');
-      expect(await translator.translate('c', 'zh-CN'), '译c');
-      expect(requests.where((r) => r.url.host == 'edge.microsoft.com').length, 1);
-      final api = requests.lastWhere((r) => r.url.host != 'edge.microsoft.com');
-      expect(api.url.host, 'api-edge.cognitive.microsofttranslator.com');
-      expect(api.headers['Authorization'], 'Bearer token-1');
+      final api = requests.single;
+      expect(api.url.host, 'edge.microsoft.com');
+      expect(api.url.path, '/translate/translatetext');
+      expect(api.url.queryParameters, {'to': 'zh-Hans', 'isEnterpriseClient': 'false'});
+      expect(api.headers['User-Agent'], contains('Edg/'));
+      expect(api.headers.containsKey('Authorization'), isFalse);
+      expect(MicrosoftTranslator.parseReply(['x', 'y']), ['x', 'y']);
     });
 
     test('DeepLX joins lines and falls back to one request per line', () async {
@@ -468,5 +562,32 @@ void main() {
       final wild = TranslationConfig.fromJson({'aiTone': 'x', 'aiTemperature': 9, 'aiContext': 99});
       expect((wild.aiTone, wild.aiTemperature, wild.aiContext), ('default', 1.5, 10));
     });
+  });
+
+  test('a fallback translator asks the second service when the first fails', () async {
+    final busy = MockClient((_) async => http.Response('', 429));
+    final ok = MockClient((request) async => http.Response(jsonEncode([[['gut', 'good']]]), 200));
+    final translator = FallbackTranslator(MicrosoftTranslator(busy, key: 'k'), GoogleTranslator(ok));
+    expect(await translator.translate('good', 'de'), 'gut');
+  });
+
+  test('while Google cools down after a 429 the other service takes over, and Google is asked again afterwards', () async {
+    GoogleTranslator.resetPacing();
+    var googleAsked = 0;
+    var refuse = true;
+    final google = GoogleTranslator(MockClient((request) async {
+      googleAsked++;
+      return refuse ? http.Response('', 429) : http.Response(jsonEncode([[['von Google', 'x']]]), 200);
+    }));
+    final other = MockClient((request) async => http.Response(jsonEncode([{'translations': [{'text': 'von Microsoft'}]}]), 200));
+    final translator = FallbackTranslator(google, MicrosoftTranslator(other, key: 'k'));
+    expect(await translator.translate('a', 'de'), 'von Microsoft');
+    expect(await translator.translate('b', 'de'), 'von Microsoft');
+    expect(googleAsked, 1);
+    expect(GoogleTranslator.coolingDown, isTrue);
+    GoogleTranslator.resetPacing();
+    refuse = false;
+    expect(await translator.translate('c', 'de'), 'von Google');
+    expect(googleAsked, 2);
   });
 }

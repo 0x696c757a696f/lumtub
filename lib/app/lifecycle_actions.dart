@@ -60,6 +60,7 @@ extension LifecycleActions on AppController {
       final (_, _, _, settings, preferences, _, _, _) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load(), channelPlayback.load(), watchTime.load(), supportReminder.load()).wait;
       this.supportReminder = supportReminder..used(DateTime.now());
       AppLog.level = preferences.logLevel;
+      unawaited(writeLogsOff(preferences.logLevel == LogLevel.off));
       this.channelPlayback = channelPlayback;
       this.watchTime = watchTime;
       speechStore = SpeechSubtitleStore(Directory('${directories.data.path}${Platform.pathSeparator}speech'));
@@ -76,6 +77,7 @@ extension LifecycleActions on AppController {
       // The proxy comes before the component downloads, which use it too.
       await (_refreshProxy(), cacheManager.prepare(settings), manager.initialize()).wait;
       await YtDlpTls.configure(directories.data, roots: settings.certificateRoots, quantum: settings.postQuantum);
+      await JsChallengePlugin.prepare(directories.data.path);
       final paths = await manager.ensureReady();
       addToPath(paths.executableDirectories);
       MediaKit.ensureInitialized(libmpv: paths.mpv.isEmpty ? null : paths.mpv);
@@ -106,6 +108,29 @@ extension LifecycleActions on AppController {
           final fonts = await AndroidSubtitleFonts.prepare('${directories.cache.path}/subtitle-fonts');
           if (fonts != null) await platform.setProperty('sub-fonts-dir', fonts).catchError((Object e) => logDebug(() => 'Could not set the subtitle fonts: $e'));
         }
+        if (Platform.isIOS) {
+          // libass draws in the app's own fonts only, as on Android, picked
+          // by the script of the text. Looking through Core Text instead ran
+          // for seconds on mpv's video thread on iOS 27, holding the OSD lock
+          // (the crash report: core and main thread waiting on it), which
+          // stalled playback and got the app killed in the background.
+          final app = File(Platform.resolvedExecutable).parent.path;
+          final fonts = await AndroidSubtitleFonts.prepareIos('${directories.cache.path}/subtitle-fonts', flutterFonts: '$app/Frameworks/App.framework/flutter_assets/assets/fonts', bundled: '$app/SubtitleFonts');
+          if (fonts == null) {
+            logInfo('No bundled subtitle fonts in $app');
+          } else {
+            for (final MapEntry(:key, :value) in {
+              'sub-font-provider': 'none',
+              'sub-fonts-dir': fonts,
+              // The bullet chat is drawn as OSD.
+              'osd-font-provider': 'none',
+              'osd-fonts-dir': fonts,
+              'osd-font': PlayerSettings.iosSubtitleFont,
+            }.entries) {
+              await platform.setProperty(key, value).catchError((Object e) => logDebug(() => 'Could not set $key: $e'));
+            }
+          }
+        }
         final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders');
         try {
           shaders.createSync(recursive: true);
@@ -115,6 +140,7 @@ extension LifecycleActions on AppController {
         }
       }
       _lightRendering = null;
+      _smallCache = false;
       await _applyProxy(player);
       unawaited(_relay?.close());
       _relay = madeRelay = await _startRelay();
@@ -176,15 +202,15 @@ extension LifecycleActions on AppController {
           library: library,
           notice: _notice,
         )..addListener(_passOn('account'));
-        final tv = tvSignIn = YoutubeTvSignIn(folder: directories.data.path)..addListener(_tvSignInChanged);
-        comments.signIn = tv;
+        // Before the first home feed, which mixes in YouTube's own.
         final web = webSignIn = YoutubeWebSignIn(folder: directories.data.path)..addListener(_webSignInChanged);
         comments.web = web;
+        account!.web = web;
         web.load();
-        tvFeed = YoutubeTvFeed(tv);
-        // Before the first home feed, which mixes in YouTube's own.
-        tv.load();
-        _tvWasSignedIn = tv.signedIn;
+        accountFeed = YoutubeAccountFeed(web);
+        _webWasSignedIn = web.signedIn;
+        _webSignIns = web.signIns;
+        _forgetTvSignIn(directories.data.path);
         this.player = player;
         madePlayer = null;
         madeRelay = null;

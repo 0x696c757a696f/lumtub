@@ -6,13 +6,14 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart' show Color, PaintingBinding, Size;
-import 'package:flutter/services.dart' show MethodChannel;
+import 'package:flutter/services.dart' show MethodChannel, rootBundle;
 import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../apple_chip.dart';
 import '../ai_filter.dart';
 import '../android_subtitle_fonts.dart';
 import '../app_directories.dart';
@@ -48,6 +49,7 @@ import '../live_split.dart';
 import '../native_core.dart';
 import '../encrypted_dns.dart';
 import '../native_http.dart';
+import '../js_challenge_plugin.dart';
 import '../yt_dlp_tls.dart';
 import '../live_chat.dart';
 import '../link_video.dart';
@@ -71,12 +73,11 @@ import '../cast/dlna.dart';
 import '../invidious_streams.dart';
 import '../piped_streams.dart';
 import '../search_options.dart';
+import '../search_phrases.dart';
 import '../search_suggestions.dart';
 import '../youtube_comments.dart';
-import '../youtube_tv_feed.dart';
-import '../youtube_tv_sign_in.dart';
+import '../youtube_account_feed.dart';
 import '../youtube_web_sign_in.dart';
-import '../tv_samples.dart' as tv_samples;
 import '../youtube_related.dart';
 import '../recommendations.dart';
 import '../chunked_relay.dart';
@@ -149,6 +150,7 @@ part 'search_actions.dart';
 part 'lifecycle_actions.dart';
 part 'account_actions.dart';
 part 'window_actions.dart';
+part 'ios_pip_actions.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
 
@@ -201,23 +203,20 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Favorites, playlists, followed channels and progress; set once ready.
   LibraryController? library;
 
-  /// The optional Google sign-in for importing subscriptions and playlists.
+  /// The YouTube account: acts with [webSignIn], or the optional Google
+  /// sign-in.
   AccountController? account;
 
-  /// The TV-code sign-in that YouTube's own pages take, for liking comments
-  /// and posts.
-  YoutubeTvSignIn? tvSignIn;
-
-  /// The cookie sign-in, for liking posts, voting in polls and writing
-  /// under posts, which the TV-code sign-in cannot reach.
+  /// The browser (cookie) sign-in: the account's own pages, likes,
+  /// comments, subscriptions, posts, live chat and members-only videos.
   YoutubeWebSignIn? webSignIn;
 
-  /// The account's own YouTube pages, read with [tvSignIn].
-  YoutubeTvFeed? tvFeed;
+  /// The account's own YouTube pages, read with [webSignIn].
+  YoutubeAccountFeed? accountFeed;
 
   /// The account's YouTube playlists, once read; empty when signed out.
-  List<PlaylistResult> tvPlaylists = const [];
-  bool tvPlaylistsLoading = false;
+  List<PlaylistResult> youtubePlaylists = const [];
+  bool youtubePlaylistsLoading = false;
 
   /// The account's YouTube watch history, while 观看历史 shows it.
   VideoListLoader? youtubeHistory;
@@ -249,7 +248,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   late final _posts = CommunityPosts(_http, signIn: comments);
 
   /// Comments under videos and posts, and liking them and posts, signed in
-  /// with the TV code when there is one.
+  /// with the browser sign-in when there is one.
   late final comments = YoutubeComments(_http);
 
   /// Whether the statistics overlay is shown over the video.
@@ -285,6 +284,70 @@ class AppController extends ChangeNotifier with _ExploreState {
   }
 
   final _waylandTopNotes = StreamController<void>.broadcast();
+
+  /// Once ever, when a video has more than 1080p and automatic quality
+  /// keeps to 1080p because this device decodes neither VP9 nor AV1 in
+  /// hardware (older PCs, phones without either decoder): YouTube has
+  /// nothing but those above 1080p, so taller means software decoding.
+  final _softwareQualityNotes = StreamController<void>.broadcast();
+  Stream<void> get softwareQualityNotes => _softwareQualityNotes.stream;
+  bool _softwareQualityTelling = false;
+
+  void _tellSoftwareQuality() {
+    if (_softwareQualityTelling || _disposed || preferences.softwareQualityTold) return;
+    if (settings.maxHeight != 0 || settings.strategy != PlaybackStrategy.auto || settings.hwdec == 'no') return;
+    if (!availableHeights.any((h) => h > 1080)) return;
+    // On an iPhone or iPad only where the chip has no VP9 decoder (before
+    // the A12): a newer chip has one, which iOS 26.2 opens to apps and the
+    // TrollStore build reaches before it.
+    if (Platform.isIOS && AppleChip.hasVp9(AppleChip.model) != false) return;
+    // Both measured, neither in hardware: the start-up probe says so.
+    for (final codec in [VideoCodec.vp9, VideoCodec.av1]) {
+      final status = settings.decoderResults[FormatPolicy.decoderKey(codec)];
+      if (status == null || !status.isVerified || status.isHardware) return;
+    }
+    _softwareQualityTelling = true;
+    _softwareQualityNotes.add(null);
+    unawaited(savePreferences(preferences.copyWith(softwareQualityTold: true)));
+  }
+
+  /// Android, once ever: after the first video played in the background,
+  /// when the app is back and Android still optimises its battery use.
+  /// Phone makers' battery savers close such apps playing in the
+  /// background despite the media service; the page offers
+  /// [askBatteryUnrestricted].
+  final _batteryNotes = StreamController<void>.broadcast();
+  Stream<void> get batteryNotes => _batteryNotes.stream;
+  bool _batteryPending = false;
+
+  void _noteBackgroundPlay(bool hidden) {
+    if (!Platform.isAndroid || Device.tv || preferences.batteryAsked) return;
+    if (hidden) {
+      if (player?.state.playing ?? false) _batteryPending = true;
+      return;
+    }
+    if (!_batteryPending) return;
+    _batteryPending = false;
+    unawaited(() async {
+      final free = await const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('batteryUnrestricted').catchError((Object e) {
+        logDebug(() => 'Could not ask about battery optimisation: $e');
+        return true;
+      });
+      if (_disposed || preferences.batteryAsked) return;
+      if (free != true) _batteryNotes.add(null);
+      await savePreferences(preferences.copyWith(batteryAsked: true));
+    }());
+  }
+
+  /// Opens Android's question whether Lumtub may run free of battery
+  /// optimisation (or its list of apps).
+  Future<void> askBatteryUnrestricted() async {
+    try {
+      await const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('askBatteryUnrestricted');
+    } catch (e) {
+      logWarn('Could not open the battery settings: $e');
+    }
+  }
 
   /// Said when a window should stay on top on a Wayland desktop that does
   /// not allow it; the page offers [switchToX11].
@@ -466,7 +529,26 @@ class AppController extends ChangeNotifier with _ExploreState {
   TranslationCache _translationCache = TranslationCache();
   /// Behind 翻译 buttons and translated subtitles: the service 翻译服务
   /// names; called only when something is to be translated.
-  late Translator translator = CachingTranslator(_google, _translationCache, preferences.translation.cacheScope, batch: true);
+  late Translator translator = CachingTranslator(_googleFirst, _translationCache, preferences.translation.cacheScope, batch: true);
+  /// Behind comments, descriptions, chapter titles, chat and search words:
+  /// [translator], except that with Google's free endpoint chosen it is
+  /// Microsoft's free one first, so subtitles, which ask Google for whole
+  /// sentences at a time, keep Google's allowance for themselves. Either
+  /// free service takes over while the other refuses or fails, and the
+  /// first is asked again on the next text.
+  late Translator textTranslator = _textTranslatorOf(translator);
+  late final _microsoftFree = MicrosoftTranslator(_http);
+  late final _googleFirst = FallbackTranslator(_google, _microsoftFree);
+  /// MyMemory takes short texts last, when both others refuse; its email
+  /// (optional, for a larger allowance) is kept with the keys.
+  late final _myMemory = MyMemoryTranslator(_http, email: () => translationKeys[TranslationService.mymemory.name] ?? '');
+  late final _microsoftFirst = FallbackTranslator(_microsoftFree, FallbackTranslator(_google, _myMemory));
+
+  Translator _textTranslatorOf(Translator translator) => switch (preferences.translation.service) {
+        TranslationService.google => CachingTranslator(_microsoftFirst, _translationCache, preferences.translation.cacheScope, batch: true),
+        TranslationService.mymemory => CachingTranslator(FallbackTranslator(_myMemory, _microsoftFirst), _translationCache, preferences.translation.cacheScope, batch: true),
+        _ => translator,
+      };
   /// The translation services' API keys, by [TranslationService.name],
   /// kept encrypted with DPAPI apart from the settings.
   Map<String, String> translationKeys = const {};
@@ -502,6 +584,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool _updateCheckedForChallenge = false;
   /// The spoken language of explore's videos, for its language filter.
   VideoLanguages? _videoLanguages;
+  SearchPhrases? _searchPhrases;
   AiFilter? _aiFilter;
 
   int _lastDrops = 0;
@@ -658,11 +741,11 @@ class AppController extends ChangeNotifier with _ExploreState {
     };
   }
 
-  bool _tvWasSignedIn = false;
+  bool _webWasSignedIn = false;
 
   int _webSignIns = 0;
 
-  bool _tvPlaylistsRead = false;
+  bool _youtubePlaylistsRead = false;
 
   void _notice(String message) {
     if (!_disposed) _notices.add(message);
@@ -776,7 +859,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     _http,
     Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles'),
     () => translator,
-    byTranslator: () => preferences.subtitlesByService && preferences.translation.service != TranslationService.google,
+    byTranslator: () => preferences.subtitlesByService && !preferences.translation.service.subtitlesOnGoogle,
     position: () => player?.state.position ?? Duration.zero,
     onUpdated: _subtitleFileUpdated,
   );
@@ -813,9 +896,16 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The subtitle options last sent to libmpv for the player's size.
   Map<String, String> _libassSent = {};
   Timer? _libassLookTimer;
+  /// The player whose libmpv was asked whether it has secondary-sub-scale
+  /// (mpv 0.42 on; the iOS and Android builds are older), and the answer.
+  /// Without it the second subtitle's copy carries its own size.
+  Player? _secondScaleAsked;
+  bool _secondScaleMissing = false;
   /// Second subtitles drawn in their own font and color: each copy's track
   /// id, with the track it copies and the style it has.
   final Map<String, ({String source, String key, bool second, String file})> _subtitleCopies = {};
+  /// Where the quick copy of the second subtitle starts (_copyFor).
+  Duration _quickFrom = Duration.zero;
   /// Tracks that fit on screen as they are while libmpv draws.
   final Set<String> _plainFits = {};
   Future<void> _restyling = Future.value();
@@ -839,6 +929,15 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool get subtitlesOff => _subtitlesOffIn.isNotEmpty;
 
   bool _backgroundAudioOnly = false;
+  /// The background cache is in force (_backgroundCache).
+  bool _smallCache = false;
+  /// iPhone and iPad: following the player for picture in picture.
+  _IosPipSync? _iosPip;
+  bool _iosAutoPip = false;
+
+  /// mpv draws the subtitles while iOS's picture in picture is open (the
+  /// window shows only the video layer), for settings that have the Flutter
+  /// view draw them; not saved.
   bool _windowHidden = false;
   bool? _efficient;
 
@@ -976,6 +1075,10 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// it (see renewVideoDecoder).
   DateTime _lastDecoderRenewal = DateTime(2000);
 
+  /// iOS invalidated the decoder while the app was away: it is made again
+  /// when the app is active.
+  bool _decoderLostAway = false;
+
   /// The open in which the decoder was restarted for a stalled picture.
   int? _pictureRestartedIn;
 
@@ -1044,7 +1147,6 @@ class AppController extends ChangeNotifier with _ExploreState {
     unawaited(_bridge?.close());
     cast.dispose();
     account?.dispose();
-    tvSignIn?.cancel();
     webSignIn?.cancel();
     downloads?.dispose();
     homeFeed?.dispose();
@@ -1067,6 +1169,8 @@ class AppController extends ChangeNotifier with _ExploreState {
     unawaited(_notices.close());
     unawaited(_linkedPosts.close());
     unawaited(_waylandTopNotes.close());
+    unawaited(_softwareQualityNotes.close());
+    unawaited(_batteryNotes.close());
     unawaited(_finishedDownloads.close());
     super.dispose();
   }
@@ -1074,11 +1178,11 @@ class AppController extends ChangeNotifier with _ExploreState {
 
 /// What 清除本地数据 can remove.
 enum LocalData {
-  history('Watch history and searches'),
+  history('Watch history, searches and watch statistics'),
   progress('Playback progress'),
   recommendations('“Not interested” marks'),
   cache('Cache (video, thumbnails, translations)'),
-  account('Google account sign-in'),
+  account('Sign-ins (browser and Google) and AirPlay pairings'),
   keys('Translation service API keys'),
   settings('All settings (back to defaults)');
 

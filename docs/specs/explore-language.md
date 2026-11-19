@@ -78,6 +78,15 @@ into English first and from there into the language picked, in the same
 way. Chinese, Japanese and Korean are put into each other directly. A
 search already in the language picked is not translated.
 
+The built-in zones' phrases come translated with the app
+(`assets/search_phrases.json`): `.github/search_phrases/phrases.txt` lists
+them (a test checks every zone's phrase is there), and the Search phrases
+workflow translates the list into every language of the filter and
+commits the file. Other translated phrases are kept in `cache/search_phrases.json` (language →
+phrase → translation) and never asked again; one page's phrases go in
+one request, 30 lines at most. A phrase no translator would take is
+searched in English, and the log says how many were left so and why.
+
 The search is also asked from the language's home country (`gl`) when no
 region is picked.
 

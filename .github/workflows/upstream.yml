@@ -7,9 +7,14 @@ name: Upstream updates
 # dependency updates brings them into main once it passes. The media_kit
 # copies under vendor/ carry Lumtub's own changes, so a newer media_kit
 # opens an issue instead.
+#
+# Every day, after lumtub-media-builds' daily run (04:47) has built the iOS
+# libmpv of main's recipe, the iOS libmpv alone is pinned too, so a recipe
+# change is in use the next day; only iOS is built for it.
 on:
   schedule:
     - cron: '37 5 * * 2'
+    - cron: '17 8 * * *'
   workflow_dispatch:
 
 permissions:
@@ -23,14 +28,31 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: true  # zizmor: ignore[artipacked] this job pushes with git
           ref: main
       - name: Look for newer versions
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 .github/scripts/upstream.py
+          GH_REPO: ${{ github.repository }}
+          DAILY: ${{ github.event.schedule == '17 8 * * *' }}
+        run: |
+          set -euo pipefail
+          if [[ "$DAILY" != true ]]; then
+            python3 .github/scripts/upstream.py
+            exit 0
+          fi
+          # The weekly updates still waiting on deps/upstream are not
+          # pushed over; they carry the iOS libmpv along when they merge.
+          ahead=$(gh api "repos/$GH_REPO/compare/main...deps/upstream" --jq .ahead_by 2>/dev/null || echo 0)
+          if [[ "$ahead" != 0 ]]; then
+            echo "deps/upstream still waits to merge; the iOS libmpv is left to it."
+            exit 0
+          fi
+          python3 .github/scripts/upstream.py ios
       - name: Push and build
         env:
           GH_TOKEN: ${{ github.token }}
+          DAILY: ${{ github.event.schedule == '17 8 * * *' }}
         run: |
           set -euo pipefail
           if git diff --quiet; then exit 0; fi
@@ -40,8 +62,14 @@ jobs:
           git switch -c deps/upstream
           git commit -qaF "$RUNNER_TEMP/upstream-commit.txt"
           git push --force origin deps/upstream
-          gh workflow run build.yml --ref deps/upstream
+          # The daily run changes only the iOS libmpv: only iOS is built.
+          if [[ "$DAILY" == true ]]; then
+            gh workflow run build.yml --ref deps/upstream -f platforms=ios
+          else
+            gh workflow run build.yml --ref deps/upstream
+          fi
       - name: Report what needs reading
+        if: github.event.schedule != '17 8 * * *'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}

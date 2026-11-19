@@ -17,6 +17,7 @@ import 'ui/glass_look.dart';
 import 'ui/skin_paint.dart' show SkinGlass;
 import 'keep_awake.dart';
 import 'l10n/l10n.dart';
+import 'native_core.dart';
 import 'network_proxy.dart';
 import 'player_settings.dart';
 import 'skins/skin_library.dart';
@@ -71,6 +72,7 @@ Future<void> main() async {
     logWarn('Startup could not load the settings or skins: $e');
   }
   setLanguage(appearance.language);
+  NativeCore.tellLanguage(youtubeHl);
   runApp(LumtubApp(controller: AppController(appearance: appearance, appearanceStore: store)));
   unawaited(WidgetsBinding.instance.waitUntilFirstFrameRasterized.then((_) => logInfo('First frame shown ${FrameStats.sinceStart.elapsedMilliseconds} ms after start')));
 }
@@ -83,7 +85,7 @@ class LumtubApp extends StatefulWidget {
   State<LumtubApp> createState() => _LumtubAppState();
 }
 
-class _LumtubAppState extends State<LumtubApp> {
+class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
   // Building a ColorScheme from a seed is not free; the controller notifies on
   // every search result, so themes are rebuilt only when their inputs change.
   Object? _themeKey;
@@ -103,10 +105,12 @@ class _LumtubAppState extends State<LumtubApp> {
     Motion.update(appearance.effectiveMotion);
     // Decoded thumbnails and avatars; pages rebuild them from the disk
     // cache quickly, so few are kept, fewer on phones and in 低占用模式.
+    // A phone with 3 GB or less keeps as few as 低占用模式.
     final phone = PlayerSettings.smallMemory;
+    final small = appearance.lowResource || PlayerSettings.lowMemory;
     PaintingBinding.instance.imageCache
-      ..maximumSize = appearance.lowResource ? 120 : (phone ? 200 : 300)
-      ..maximumSizeBytes = (appearance.lowResource ? 24 : (phone ? 32 : 48)) << 20;
+      ..maximumSize = small ? 120 : (phone ? 200 : 300)
+      ..maximumSizeBytes = (small ? 24 : (phone ? 32 : 48)) << 20;
     final warmth = appearance.warmthAt(DateTime.now());
     final skin = SkinLibrary.instance.byId(appearance.skin);
     final glass = appearance.windowGlass && WindowGlass.state.value.shown;
@@ -190,6 +194,7 @@ class _LumtubAppState extends State<LumtubApp> {
     if (controller.appearance.systemAccent) unawaited(controller.refreshWindowsAccent());
     // Closing the window ends the process without disposing widgets, so the
     // player and unsaved progress are released here first.
+    WidgetsBinding.instance.addObserver(this);
     _lifecycle = AppLifecycleListener(
       onExitRequested: () async {
         await controller.shutdown();
@@ -219,6 +224,11 @@ class _LumtubAppState extends State<LumtubApp> {
         _pausedByMinimize = true;
         unawaited(player.pause());
       },
+      // Phones leave the app often; the log shows when, next to what the
+      // player did then.
+      onStateChange: (state) {
+        if (Platform.isIOS || Platform.isAndroid) logInfo('App ${state.name}');
+      },
       // iOS takes the listening sockets of a suspended app away.
       // The picture comes back here on iOS, once the app is active again:
       // a decoder made while it is still in the background is invalid.
@@ -239,6 +249,9 @@ class _LumtubAppState extends State<LumtubApp> {
     );
   }
 
+  @override
+  void didHaveMemoryPressure() => widget.controller.onMemoryPressure();
+
   /// What the window around the pages is built from: the controller
   /// notifies on every list and player change, which the shell listens to
   /// itself, so the app around it rebuilds only when one of these changes.
@@ -256,6 +269,7 @@ class _LumtubAppState extends State<LumtubApp> {
     widget.controller.removeListener(_rebuildIfShownChanged);
     SkinLibrary.instance.removeListener(_skinsChanged);
     WindowGlass.state.removeListener(_glassChanged);
+    WidgetsBinding.instance.removeObserver(this);
     _lifecycle.dispose();
     _clock?.cancel();
     _shell?.dispose();

@@ -174,6 +174,12 @@ extension PlaybackEvents on AppController {
       }).catchError((Object e) => logWarn('Could not follow the subtitle: $e')));
       unawaited(platform.observeProperty('secondary-sid', (value) async {
         secondaryTrackId = value.isEmpty || value == 'false' ? 'no' : value;
+        // A track not yet in its own style would show for a moment in the
+        // main one's (white) before its copy (yellow) replaces it: it stays
+        // hidden until _restyleNow has the copy on.
+        if (libassDraws && secondaryTrackId != 'no' && _subtitleCopies[secondaryTrackId]?.second != true) {
+          unawaited(platform.setProperty('secondary-sub-visibility', 'no').catchError((Object _) {}));
+        }
         _followSubtitles(player);
         // Only scheduled, as above.
         _queueLibassLook();
@@ -446,23 +452,44 @@ extension PlaybackEvents on AppController {
   Future<void> setBackgroundAudioOnly(bool hidden) async {
     _outputSize?.hidden = hidden;
     _windowHidden = hidden;
+    _noteBackgroundPlay(hidden);
     _updateEfficiency();
     final platform = player?.platform;
     if (platform is! NativePlayer) return;
+    await _backgroundCache(platform, hidden);
     if (hidden) {
-      final wanted = preferences.audioOnlyInBackground || ((Platform.isAndroid || Platform.isIOS) && !Device.tv && !pip);
+      // iOS opens picture in picture on going home (when chosen), a moment
+      // after the app is hidden: the picture stays on for its window.
+      if (Platform.isIOS && !IosVideoLayer.active.value && _iosAutoPip) {
+        await Future.delayed(const Duration(milliseconds: 1200));
+        if (!_windowHidden) return;
+      }
+      final wanted = preferences.audioOnlyInBackground || ((Platform.isAndroid || Platform.isIOS) && !Device.tv && !pip && !IosVideoLayer.active.value);
       // On iOS the decoder goes even while paused: VideoToolbox's session
       // would not survive the background.
       if (!wanted || audioOnly || _backgroundAudioOnly || (!player!.state.playing && !Platform.isIOS)) return;
       _backgroundAudioOnly = true;
+      logInfo('Picture off while Lumtub is in the background');
       await platform.setProperty('vid', 'no');
+    } else if (_decoderLostAway && !_backgroundAudioOnly) {
+      _decoderLostAway = false;
+      await renewVideoDecoder();
     } else if (_backgroundAudioOnly) {
       _backgroundAudioOnly = false;
+      _decoderLostAway = false;
       if (audioOnly) return;
+      logInfo('Picture back after the background');
       await platform.setProperty('vid', 'auto');
-      // The decoder starts again at the next keyframe, which in a stream can
-      // be far off: until then the last picture stays. An exact seek to
-      // here decodes up to now at once.
+      // A seekable stream needs nothing more: mpv reads the video again from
+      // the keyframe before here while the sound plays on, and the picture is
+      // back a moment later. A seek would stop the sound and show loading
+      // until the video arrived. A live stream can't be read back, so its
+      // picture would wait for the next keyframe: there an exact seek
+      // decodes up to now at once.
+      if (await platform.getProperty('seekable').catchError((_) => 'no') == 'yes') {
+        logDebug(() => 'Picture back without a seek');
+        return;
+      }
       try {
         await platform.command(['seek', '0', 'relative+exact']);
       } catch (e) {
@@ -471,12 +498,32 @@ extension PlaybackEvents on AppController {
     }
   }
 
+  /// A phone or tablet in the background reads less ahead and keeps less
+  /// of what was played ([PlayerOptionApplicator.cacheOptions]): the system
+  /// ends the background apps holding the most memory first, and older
+  /// devices have little. The cache grows back when the app does.
+  Future<void> _backgroundCache(NativePlayer platform, bool hidden) async {
+    if (!(Platform.isAndroid || Platform.isIOS) || Device.tv || hidden == _smallCache) return;
+    _smallCache = hidden;
+    final options = PlayerOptionApplicator.cacheOptions(settings, background: hidden);
+    logDebug(() => 'Cache ${hidden ? 'for the background' : 'back'}: $options');
+    for (final MapEntry(:key, :value) in options.entries) {
+      await platform.setProperty(key, value).catchError((Object e) => logDebug(() => 'Could not set $key: $e'));
+    }
+  }
+
   /// Makes the video decoder again, as after the background: the picture
   /// comes back at this position without opening the stream again. At most
   /// once in 5 seconds; nothing while the picture is off anyway.
   Future<void> renewVideoDecoder() async {
     final platform = player?.platform;
-    if (platform is! NativePlayer || audioOnly || _backgroundAudioOnly || _windowHidden) return;
+    if (platform is! NativePlayer || audioOnly) return;
+    if (_backgroundAudioOnly || _windowHidden) {
+      // Made when the app is back (setBackgroundAudioOnly(false)): iOS
+      // makes no working decoder for an app in the background.
+      _decoderLostAway = true;
+      return;
+    }
     final now = DateTime.now();
     if (now.difference(_lastDecoderRenewal) < const Duration(seconds: 5)) return;
     _lastDecoderRenewal = now;
@@ -550,6 +597,17 @@ extension PlaybackEvents on AppController {
 
   /// Hands memory freed by closed videos back to the system, after letting
   /// go of the yt-dlp answers no video is playing from.
+  /// The system is short of memory (iOS sends this before it ends apps,
+  /// Android when trimming): decoded pictures go (Flutter's own handler),
+  /// idle memory is given back and, on a phone or tablet, the player's
+  /// cache shrinks to the background's until the app is next shown.
+  void onMemoryPressure() {
+    logInfo('The system is short of memory (${ProcessInfo.currentRss >> 20} MB in use)');
+    releaseMemory();
+    final platform = player?.platform;
+    if (platform is NativePlayer) unawaited(_backgroundCache(platform, true));
+  }
+
   void releaseMemory() {
     final before = ProcessInfo.currentRss;
     _repository?.streams.trim();

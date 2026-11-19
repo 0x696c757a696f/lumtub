@@ -125,6 +125,11 @@ const bundledFont = 'Noto Sans CJK SC';
 /// Proportional ‘ ’ “ ” taken from the bundled face's pwid forms.
 const quotesFont = 'Lumtub Quotes';
 
+/// Last before the system's fonts: invisible characters some names carry
+/// (a Hangul filler, a zero-width space) as nothing, where iOS would draw
+/// a box.
+const blankFont = 'Lumtub Blank';
+
 /// The default choice: [bundledFont] when the system language is
 /// simplified Chinese,
 /// which it is made for, else the system UI font.

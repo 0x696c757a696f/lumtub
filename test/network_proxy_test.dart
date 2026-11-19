@@ -65,6 +65,8 @@ void main() {
     addTearDown(() => PlayerSettings.smallMemory = false);
     expect(PlayerSettings.fromJson({'cacheMemoryMb': 150, 'bufferDefaults': 2}).cacheMemoryMb, 64);
     expect(PlayerSettings.fromJson({'cacheMemoryMb': 200, 'bufferDefaults': 2}).cacheMemoryMb, 200);
+    expect(PlayerSettings.fromJson({'cacheMemoryMb': 100, 'bufferDefaults': 3}).cacheMemoryMb, 64, reason: "an iPhone's untouched computer default");
+    expect(PlayerSettings.fromJson({'cacheMemoryMb': 100, 'bufferDefaults': 4}).cacheMemoryMb, 100, reason: 'chosen');
     expect(PlayerSettings.fromJson(PlayerSettings.fromJson({}).toJson()).cacheMemoryMb, 64);
     final chosen = PlayerSettings.fromJson({'cacheSeconds': 30, 'cacheMemoryMb': 64, 'bufferDefaults': 2});
     expect((chosen.cacheSeconds, chosen.cacheMemoryMb), (30, 64));

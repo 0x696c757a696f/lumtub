@@ -8,7 +8,7 @@ import '../../app/library_controller.dart';
 import '../../library_store.dart';
 import '../../models.dart';
 import '../../thumbnail_cache.dart';
-import '../../youtube_tv_feed.dart';
+import '../../youtube_account_feed.dart';
 import '../common.dart';
 import '../motion.dart';
 import '../haptics.dart';
@@ -66,10 +66,10 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
       return StatusView(
         icon: AppIcons.stack,
         title: tr('No followed channels yet'),
-        message: tr('Tap "Follow" on a player or channel page, and the channel\'s new videos will show up here. You can also import your follow list from a NewPipe, FreeTube or Google Takeout file, or sign in with Google to import your YouTube subscriptions. Your follow list is stored only on this device.'),
+        message: tr('Tap "Follow" on a player or channel page, and the channel\'s new videos will show up here. You can also import your follow list from a NewPipe, FreeTube or Google Takeout file, or sign in to YouTube to import your subscriptions. Your follow list is stored only on this device.'),
         action: Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: [
           FilledButton.icon(onPressed: () => importSubscriptionsFromFile(context, library), icon: Icon(AppIcons.downloadSimple), label: Text(tr('Import from file'))),
-          if (!(controller.account?.signedIn ?? false))
+          if (!(controller.account?.active ?? false))
             FilledButton.tonalIcon(onPressed: () => controller.navigate(PageMode.settings), icon: Icon(AppIcons.signIn), label: Text(tr('Sign in and import subscriptions'))),
         ]),
       );
@@ -683,25 +683,26 @@ class PlaylistsPage extends StatelessWidget {
           padding: const EdgeInsets.all(AppStyle.pagePadding),
           child: Text(tr('Right-click any video to add it to favorites or a playlist.'), style: TextStyle(color: context.colors.onSurfaceVariant)),
         )),
-      if (controller.tvFeed?.available ?? false) ..._youtubePlaylists(context),
+      if (controller.accountFeed?.available ?? false) ..._youtubePlaylists(context),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
   }
 
-  /// The account's playlists on YouTube, read with the TV-code sign-in.
+  /// The account's playlists on YouTube, read with the browser sign-in.
   List<Widget> _youtubePlaylists(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => controller.ensureTvPlaylists());
+    WidgetsBinding.instance.addPostFrameCallback((_) => controller.ensureYoutubePlaylists());
     final lists = [
-      PlaylistResult(id: YoutubeTvFeed.watchLaterId, title: tr('Watch later')),
-      ...controller.tvPlaylists,
+      PlaylistResult(id: YoutubeAccountFeed.watchLaterId, title: tr('Watch later')),
+      PlaylistResult(id: YoutubeAccountFeed.likedId, title: tr('Liked videos')),
+      ...controller.youtubePlaylists,
     ];
     return [
       SliverToBoxAdapter(child: PageHeader(
         tr('YouTube account'),
         subtitle: tr('Playlists saved on YouTube'),
-        trailing: controller.tvPlaylistsLoading
+        trailing: controller.youtubePlaylistsLoading
             ? const Padding(padding: EdgeInsets.all(8), child: SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)))
-            : TextButton.icon(onPressed: controller.loadTvPlaylists, icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
+            : TextButton.icon(onPressed: controller.loadYoutubePlaylists, icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
       )),
       SliverVideoLayout(
         count: lists.length,
@@ -713,7 +714,7 @@ class PlaylistsPage extends StatelessWidget {
             remote: true,
             count: list.count,
             thumbnailUrl: list.thumbnail,
-            icon: list.id == YoutubeTvFeed.watchLaterId ? AppIcons.clockFill : AppIcons.monitorPlay,
+            icon: switch (list.id) { YoutubeAccountFeed.watchLaterId => AppIcons.clockFill, YoutubeAccountFeed.likedId => AppIcons.thumbsUpFill, _ => AppIcons.monitorPlay },
             thumbnails: controller.thumbnailDirectory,
             onOpen: () => controller.openYoutubePlaylist(list),
           );

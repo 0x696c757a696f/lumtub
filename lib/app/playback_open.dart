@@ -70,6 +70,7 @@ extension PlaybackOpening on AppController {
     if (videoController != null) return;
     final made = Stopwatch()..start();
     final controller = videoController = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
+    _watchIosPip(player);
     // It is made after the next frame, and an idle window draws none.
     WidgetsBinding.instance.scheduleFrame();
     unawaited(controller.platform.future.then((_) => logDebug(() => 'Video output made in ${made.elapsedMilliseconds} ms'), onError: (Object error) => logError('Video output failed', error)));
@@ -260,6 +261,7 @@ extension PlaybackOpening on AppController {
           availableFrameRates = video.frameRatesFor(settings);
           availableAudioLanguages = video.audioLanguages;
         });
+        _tellSoftwareQuality();
       }
       await AppController._forgetCrop(player);
       await player.open(Media(direct ?? split ?? relayedLive ?? mobileLive?['url'] as String? ?? item.url, start: start), play: play);
@@ -412,6 +414,7 @@ extension PlaybackOpening on AppController {
         availableFrameRates = const {};
         availableAudioLanguages = const [];
       });
+      _tellSoftwareQuality();
       logInfo('Playing ${item.id} from $name ${video.server}, took ${watch.elapsedMilliseconds} ms');
       return address;
     } catch (e) {

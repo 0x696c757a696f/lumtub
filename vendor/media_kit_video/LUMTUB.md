@@ -95,4 +95,26 @@ The changes, marked "Lumtub" in the code:
   app when libmpv cannot render with OpenGL ES, so the video falls back to
   software like on macOS. It also draws no frame while the app is in the
   background (`BackgroundState`): iOS ends an app that sends OpenGL ES
-  commands there.
+  commands there. `VideoOutput` neither resizes nor draws until the app is
+  active again (`didBecomeActive`, which posts `BackgroundState.resumed`
+  and draws what waited).
+- `ios/Classes/plugin/PlayerLayer.swift`, `VideoSink.swift`,
+  `common/MediaKitVideoPlugin.swift`,
+  `lib/src/ios_video_layer.dart`, `native_video_controller/real.dart`,
+  `video_texture.dart`: on iOS the picture is libmpv's `avfoundation`
+  video output (media_kit_libs_ios_video's patched libmpv) instead of an
+  OpenGL ES texture. That output is plain C: it hands each picture
+  (CVPixelBuffer) and a picture of the subtitles and OSD (CGImage) to
+  `VideoSink` through a struct of function pointers whose address mpv takes
+  as `--wid` (`struct lumtub_vo_host`, laid out the same in the patch and
+  in `VideoSink.swift`, checked by a magic number). `VideoSink` turns,
+  mirrors and zooms the picture, enqueues it in the player's
+  AVSampleBufferDisplayLayer (kept while the app runs), shows the
+  subtitles in a layer above it, and draws them into the frames while
+  picture in picture is open. The layer is shown in a
+  platform view (`UiKitView` with view type
+  `com.alexmercerind/media_kit_video/layer`) that Flutter lays out where the
+  texture went. `IosVideoLayer` opens iOS picture in
+  picture on that layer, arms it for going home, passes the window's play,
+  pause and skip buttons on, and keeps the layer's clock at the player's
+  position for the window's progress bar.

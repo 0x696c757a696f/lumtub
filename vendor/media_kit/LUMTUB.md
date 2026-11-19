@@ -14,3 +14,13 @@ The change, marked "Lumtub" in the code:
 - `lib/src/player/native/player/real.dart`: `NativePlayer.requestLogMessages`
   changes the level of libmpv messages passed on while the player runs, so
   switching the log level to debug includes libmpv's notes without a restart.
+- `lib/src/player/native/player/real.dart`: `NativePlayer.setProperty` and
+  `getProperty` are asynchronous (`mpv_set_property_async`,
+  `mpv_get_property_async`, the reply read with the events) and
+  `observeProperty` takes the value with the event (`MPV_FORMAT_STRING`), so
+  the app's main thread never waits for mpv's core lock: on iOS, where Dart
+  runs on the main thread, a busy core froze the app until the system's
+  watchdog killed it. Calls made while an event is being handled (observer
+  callbacks, on-load hooks) stay synchronous, as events are handled one at a
+  time and a reply would never be read there. Pending calls are answered
+  when the player is disposed.

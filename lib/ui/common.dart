@@ -41,6 +41,26 @@ class NearEndListener extends StatelessWidget {
       );
 }
 
+/// Keeps a text field's own scrolling out of the page's memory. A field
+/// scrolls its text, and with no key of its own it would share where it
+/// was kept with the list it sits in: it reads the list's place back, finds
+/// it far past its end, settles at the start and keeps that, so the list
+/// came back at the top the next time.
+class OwnScrollMemory extends StatefulWidget {
+  const OwnScrollMemory({super.key, required this.child});
+  final Widget child;
+
+  @override
+  State<OwnScrollMemory> createState() => _OwnScrollMemoryState();
+}
+
+class _OwnScrollMemoryState extends State<OwnScrollMemory> {
+  final _bucket = PageStorageBucket();
+
+  @override
+  Widget build(BuildContext context) => PageStorage(bucket: _bucket, child: widget.child);
+}
+
 /// Around a one-line text field in a page, such as a search: the arrow
 /// keys up and down (a TV remote's too) leave it for what is above or
 /// below once the caret is at that end of the text, and Esc leaves it for
@@ -77,7 +97,7 @@ class LeavesByKeys extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Focus(canRequestFocus: false, skipTraversal: true, onKeyEvent: _onKey, child: child);
+  Widget build(BuildContext context) => Focus(canRequestFocus: false, skipTraversal: true, onKeyEvent: _onKey, child: OwnScrollMemory(child: child));
 }
 
 /// What a page shows again when it comes back after the watch page or

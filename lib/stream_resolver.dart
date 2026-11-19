@@ -183,6 +183,23 @@ class StreamResolver {
   /// The cookie sign-in, for members-only videos.
   MembersCookies? Function()? members;
 
+  /// Whether both IPv4 and IPv6 reach YouTube with no proxy between, so a
+  /// video taken for a bot over one is asked again over the other.
+  bool Function()? bothFamilies;
+
+  /// Whether a video taken for a bot is asked once more with the cookie
+  /// sign-in (设置 › 账号, off by default). Only a video played in the
+  /// foreground, at most [signedRetriesPerHour] times an hour.
+  bool Function()? signInWhenBlocked;
+  static const signedRetriesPerHour = 20;
+  final _signedRetries = <DateTime>[];
+
+  /// Told when a video plays only because it was asked signed in.
+  void Function(String videoId)? onSignedInPlay;
+
+  /// What yt-dlp says when YouTube takes the address for a bot.
+  static final botCheck = RegExp(r"not a bot|confirm you.?re not|Sign in to confirm", caseSensitive: false);
+
   /// Each kept answer takes about 5 MB once decoded (measured with a 1 MB
   /// answer: 55 MB for 12), so only the last few are kept.
   static const _keep = 4;
@@ -210,6 +227,9 @@ class StreamResolver {
   /// yt-dlp's `--extractor-args` value that asks only the client a quick
   /// start asks as (visionOS), leaving out the TV and web clients.
   static const visionOnly = 'youtube:player_client=visionos';
+
+  /// The clients a run with the browser sign-in's cookies asks.
+  static const signedClients = 'youtube:player_client=default,tv_samsung';
 
   /// Whether yt-dlp asks only the visionOS client, as it does unless a
   /// run that way just failed. Measured on a Windows PC on 2026-11-17
@@ -319,8 +339,13 @@ class StreamResolver {
         '--extractor-retries', '3',
         if (live)
           ...['--extractor-args', 'youtube:formats=incomplete${liveClients == null ? '' : ';player_client=$liveClients'}']
-        // A signed-in run keeps yt-dlp's own clients for signed-in users.
-        else if (cookies == null && avoidingTv)
+        // A signed-in run keeps yt-dlp's own clients for signed-in users,
+        // and asks the Samsung TV client too: on an address YouTube takes
+        // for a bot it was let through signed in every time where the
+        // others mostly were not (SimpMusic issue 2861, 2026-11-11).
+        else if (cookies != null)
+          ...['--extractor-args', signedClients]
+        else if (avoidingTv)
           ...['--extractor-args', visionOnly],
         '--no-playlist',
         '--dump-single-json',
@@ -631,10 +656,37 @@ class StreamResolver {
       _tvNeededUntil = DateTime.now().add(tvNeededFor);
       result = await run(signed: signed);
     }
+    if (_failed(result) && !signed && botCheck.hasMatch(result.stderr.toString()) && ProcessTree.switchedFamily == null && (bothFamilies?.call() ?? false)) {
+      // YouTube rates IPv4 addresses and IPv6 networks apart: the other
+      // family is asked once, and kept for a while when it gets through.
+      final other = ProcessTree.familyArguments.contains('--force-ipv4') ? '6' : '4';
+      logWarn('Resolving $videoId was taken for a bot; asking again over IPv$other');
+      ProcessTree.switchFamily(other);
+      final again = await run(signed: signed);
+      if (_failed(again)) {
+        ProcessTree.switchFamily(null);
+      } else {
+        logInfo('IPv$other got $videoId through; yt-dlp keeps to it for 30 minutes');
+      }
+      result = again;
+    }
     if (_failed(result) && !signed && signedIn && membersOnlyError.hasMatch(result.stderr.toString())) {
       logInfo('$videoId is members-only, asking again signed in');
       signed = true;
       result = await run(signed: true);
+    }
+    if (_failed(result) && !signed && !background && signedIn && botCheck.hasMatch(result.stderr.toString()) && (signInWhenBlocked?.call() ?? false)) {
+      final now = DateTime.now();
+      _signedRetries.removeWhere((at) => now.difference(at) > const Duration(hours: 1));
+      if (_signedRetries.length < signedRetriesPerHour) {
+        _signedRetries.add(now);
+        logInfo('$videoId was taken for a bot; asking again signed in (${_signedRetries.length} this hour)');
+        signed = true;
+        result = await run(signed: true);
+        if (!_failed(result)) onSignedInPlay?.call(videoId);
+      } else {
+        logWarn('$videoId was taken for a bot; signed-in retries are used up for this hour');
+      }
     }
     final output = result.stdout.toString().trim();
     final err = result.stderr.toString().trim();
@@ -721,7 +773,7 @@ class StreamResolver {
 
   /// What a standby was started with, so one started before the IPv4
   /// setting changed is not used after.
-  static String _standbyKey(List<String> args) => '${ProcessTree.forceIpv4}\u0000${args.join('\u0000')}';
+  static String _standbyKey(List<String> args) => '${ProcessTree.familyArguments.join()}\u0000${args.join('\u0000')}';
   /// The arguments of the standby being started, so two calls start one.
   String? _starting;
 

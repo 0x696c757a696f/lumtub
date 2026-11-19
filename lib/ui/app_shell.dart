@@ -9,7 +9,9 @@ import '../app/app_controller.dart';
 import '../appearance_settings.dart';
 import '../downloads/download_models.dart';
 import '../native_core.dart';
+import '../system_env.dart' show moveAppToBack;
 import 'common.dart';
+import 'edge_swipe_back.dart';
 import '../models.dart';
 import '../timestamp_link.dart';
 import 'cast_ui.dart';
@@ -73,6 +75,8 @@ class _AppShellState extends State<AppShell> {
   final _searchFocus = FocusNode(debugLabel: 'search');
   StreamSubscription<String>? _notices;
   StreamSubscription<void>? _waylandTop;
+  StreamSubscription<void>? _softwareQuality;
+  StreamSubscription<void>? _battery;
   StreamSubscription<(CommunityPost, ChannelRef)>? _linkedPosts;
   StreamSubscription<DownloadTask>? _finished;
   Timer? _supportCheck;
@@ -113,6 +117,24 @@ class _AppShellState extends State<AppShell> {
     _linkedPosts = _controller.linkedPosts.listen((found) {
       if (mounted) unawaited(showLinkedPost(context, _controller, found.$1, found.$2));
     });
+    _softwareQuality = _controller.softwareQualityNotes.listen((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(tr("Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.")),
+        duration: const Duration(seconds: 15),
+        showCloseIcon: true,
+      ));
+    });
+    _battery = _controller.batteryNotes.listen((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(tr('Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.')),
+        duration: const Duration(seconds: 15),
+        showCloseIcon: true,
+        persist: false,
+        action: SnackBarAction(label: tr('Allow'), onPressed: () => unawaited(_controller.askBatteryUnrestricted())),
+      ));
+    });
     _waylandTop = _controller.waylandTopNotes.listen((_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -150,6 +172,8 @@ class _AppShellState extends State<AppShell> {
     if (WindowChrome.menus.value == _menus) WindowChrome.menus.value = null;
     unawaited(_notices?.cancel());
     unawaited(_waylandTop?.cancel());
+    unawaited(_softwareQuality?.cancel());
+    unawaited(_battery?.cancel());
     unawaited(_linkedPosts?.cancel());
     unawaited(_finished?.cancel());
     _supportCheck?.cancel();
@@ -323,24 +347,27 @@ class _AppShellState extends State<AppShell> {
   /// The keys of the pages' own actions, as set in the shortcut settings.
   /// Keys without Ctrl, Alt or ⌘ do nothing while typing.
   Map<ShortcutActivator, VoidCallback> _pageShortcuts() {
+    bool space() => HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.space);
     void scroll(bool Function() move) {
       // Space on a focused button or card presses it, as before.
       final context = primaryFocus?.context;
-      final space = HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.space);
-      if (space && context != null && Actions.maybeFind<ActivateIntent>(context) != null) {
+      if (space() && context != null && Actions.maybeFind<ActivateIntent>(context) != null) {
         Actions.maybeInvoke(context, const ActivateIntent());
         return;
       }
       move();
     }
+    // Space on the watch page belongs to the player: it turns only a list
+    // the mouse or the focus is in, never the page's own.
+    bool main() => !(_controller.onWatchPage && space());
     VoidCallback? run(PlayerAction action) => switch (action) {
           PlayerAction.search => _focusSearch,
           PlayerAction.incognito => () => _controller.setIncognito(!_controller.incognito),
           PlayerAction.back => _back,
           PlayerAction.top => () => scroll(() => KeyScroll.toEnd(false)),
           PlayerAction.bottom => () => scroll(() => KeyScroll.toEnd(true)),
-          PlayerAction.pageDown => () => scroll(() => KeyScroll.byPage(1)),
-          PlayerAction.pageUp => () => scroll(() => KeyScroll.byPage(-1)),
+          PlayerAction.pageDown => () => scroll(() => KeyScroll.byPage(1, main: main())),
+          PlayerAction.pageUp => () => scroll(() => KeyScroll.byPage(-1, main: main())),
           PlayerAction.help => () => unawaited(showShortcutHelp(context, _controller.preferences)),
           _ => null,
         };
@@ -466,7 +493,7 @@ class _AppShellState extends State<AppShell> {
           onPointerPanZoomEnd: _swipeEnd,
           // The window is built again only when its layout changes; each
           // part of it listens for what it shows itself.
-          child: NotificationListener<ScrollUpdateNotification>(onNotification: _onScroll, child: SelectBuilder(
+          child: EdgeSwipeBack(enabled: Platform.isIOS, canGoBack: () => _controller.canGoBack, onBack: _back, child: NotificationListener<ScrollUpdateNotification>(onNotification: _onScroll, child: SelectBuilder(
             listenable: _layoutChanges,
             select: () => _layoutOf(_controller),
             builder: (context, _, __) => LayoutBuilder(builder: (context, constraints) {
@@ -545,7 +572,7 @@ class _AppShellState extends State<AppShell> {
                           ) : _navigationRail(context),
                         ),
                       ),
-                      Expanded(child: _region(
+                      Expanded(child: KeyedSubtree(key: KeyScroll.area, child: _region(
                         () => (_pageKey, _slideIndex),
                         (context) => PageSwitcher(
                           // Keyed per page so each page's list keeps its scroll position
@@ -561,7 +588,7 @@ class _AppShellState extends State<AppShell> {
                             builder: (context) => VideoActions(controller: _controller, child: _veiled(skin, !rail && !_controller.onWatchPage && _library.contains(_controller.mode) ? _libraryTabs(_refreshable(_content())) : _refreshable(_content()))),
                           ),
                         ),
-                      )),
+                      ))),
                     ]),
                     // The video keeps playing over the pages; the watch page
                     // is not mounted meanwhile, so the card has the only Video.
@@ -602,7 +629,8 @@ class _AppShellState extends State<AppShell> {
                   if (off && watching) Positioned.fill(child: LightsOffLayer(dim: _controller.preferences.lightsOffDim / 100)),
                 ]),
                 // Android's back button and gesture go back through the
-                // pages first; on the first page they leave the app.
+                // pages first; on the first page they send the app to the
+                // background, as Home does, so playing goes on.
                 child: WindowFrame.supported
                     ? scaffold
                     : SelectBuilder(
@@ -610,16 +638,23 @@ class _AppShellState extends State<AppShell> {
                         select: () => _controller.canGoBack,
                         child: scaffold,
                         builder: (context, canGoBack, scaffold) => PopScope(
-                          canPop: !canGoBack,
+                          canPop: !canGoBack && !Platform.isAndroid,
                           onPopInvokedWithResult: (didPop, _) {
-                            if (!didPop) _back();
+                            if (didPop) return;
+                            if (canGoBack) {
+                              _back();
+                            } else {
+                              unawaited(moveAppToBack().then((moved) {
+                                if (!moved) unawaited(SystemNavigator.pop());
+                              }));
+                            }
                           },
                           child: scaffold!,
                         ),
                       ),
               );
             }),
-          )),
+          ))),
         ),
       );
 
@@ -851,8 +886,8 @@ class _TopBar extends StatelessWidget {
       controller.mode == PageMode.settings && !controller.onWatchPage,
       account,
       account?.state,
-      account?.name,
-      account?.avatar,
+      account?.accountName,
+      account?.accountAvatar,
       account?.syncing,
       currentLanguage,
     );

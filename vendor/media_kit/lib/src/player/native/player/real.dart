@@ -103,6 +103,20 @@ class NativePlayer extends PlatformPlayer {
 
       Initializer(mpv).dispose(ctx);
 
+      // Lumtub: no reply comes after this; nothing waits for one forever.
+      for (final completer in _setPropertyRequests.values) {
+        if (!completer.isCompleted) completer.complete(-1);
+      }
+      for (final completer in _commandRequests.values) {
+        if (!completer.isCompleted) completer.complete(-1);
+      }
+      for (final completer in _getPropertyRequests.values) {
+        if (!completer.isCompleted) completer.complete('');
+      }
+      _setPropertyRequests.clear();
+      _commandRequests.clear();
+      _getPropertyRequests.clear();
+
       Future.delayed(const Duration(seconds: 5), () {
         mpv.mpv_terminate_destroy(ctx);
       });
@@ -1234,15 +1248,38 @@ class NativePlayer extends PlatformPlayer {
       await waitForVideoControllerInitializationIfAttached;
     }
 
+    // Lumtub: asynchronous, as libmpv advises for a client's own thread:
+    // the synchronous call waits for mpv's core lock, and the app's main
+    // thread (Dart's on iOS) then stalls for as long as the core is busy,
+    // up to the system killing the app (iOS watchdog, 0x8BADF00D). Errors
+    // are ignored, as before.
     final name = property.toNativeUtf8();
     final data = value.toNativeUtf8();
-    mpv.mpv_set_property_string(
+    if (Zone.current[_inEvent] == true) {
+      mpv.mpv_set_property_string(ctx, name.cast(), data.cast());
+      calloc.free(name);
+      calloc.free(data);
+      return;
+    }
+    final ptr = calloc<Pointer<Void>>(1)..value = data.cast();
+    final requestNumber = _asyncRequestNumber++;
+    final reply = _setPropertyRequests[requestNumber] = Completer<int>();
+    final immediate = mpv.mpv_set_property_async(
       ctx,
+      requestNumber,
       name.cast(),
-      data.cast(),
+      generated.mpv_format.MPV_FORMAT_STRING,
+      ptr.cast(),
     );
+    // libmpv copies the value before returning.
+    calloc.free(ptr);
     calloc.free(name);
     calloc.free(data);
+    if (immediate < 0) {
+      _setPropertyRequests.remove(requestNumber);
+      return;
+    }
+    await reply.future;
   }
 
   /// Lumtub: the lowest level of libmpv's own messages passed on, which
@@ -1275,17 +1312,31 @@ class NativePlayer extends PlatformPlayer {
       await waitForVideoControllerInitializationIfAttached;
     }
 
+    // Lumtub: asynchronous, for the reason given in [setProperty]. An
+    // unknown or unavailable property still gives "".
     final name = property.toNativeUtf8();
-    final value = mpv.mpv_get_property_string(ctx, name.cast());
-    if (value != nullptr) {
-      final result = value.cast<Utf8>().toDartString();
+    if (Zone.current[_inEvent] == true) {
+      final value = mpv.mpv_get_property_string(ctx, name.cast());
       calloc.free(name);
+      if (value == nullptr) return "";
+      final result = value.cast<Utf8>().toDartString();
       mpv.mpv_free(value.cast());
-
       return result;
     }
-
-    return "";
+    final requestNumber = _asyncRequestNumber++;
+    final reply = _getPropertyRequests[requestNumber] = Completer<String>();
+    final immediate = mpv.mpv_get_property_async(
+      ctx,
+      requestNumber,
+      name.cast(),
+      generated.mpv_format.MPV_FORMAT_STRING,
+    );
+    calloc.free(name);
+    if (immediate < 0) {
+      _getPropertyRequests.remove(requestNumber);
+      return "";
+    }
+    return reply.future;
   }
 
   /// Observes property for the internal libmpv instance of this [Player].
@@ -1319,11 +1370,13 @@ class NativePlayer extends PlatformPlayer {
     final reply = property.hashCode;
     observed[property] = listener;
     final name = property.toNativeUtf8();
+    // Lumtub: the value comes with the event, not read back synchronously
+    // (see [setProperty]).
     mpv.mpv_observe_property(
       ctx,
       reply,
       name.cast(),
-      generated.mpv_format.MPV_FORMAT_NONE,
+      generated.mpv_format.MPV_FORMAT_STRING,
     );
     calloc.free(name);
   }
@@ -1453,6 +1506,20 @@ class NativePlayer extends PlatformPlayer {
             'Warning: Received MPV_EVENT_SET_PROPERTY_REPLY with unregistered ID ${event.ref.reply_userdata}');
       } else {
         completer.complete(event.ref.error);
+      }
+    }
+    if (event.ref.event_id ==
+        generated.mpv_event_id.MPV_EVENT_GET_PROPERTY_REPLY) {
+      final completer = _getPropertyRequests.remove(event.ref.reply_userdata);
+      if (completer != null) {
+        final prop = event.ref.data.cast<generated.mpv_event_property>();
+        var value = '';
+        if (event.ref.error >= 0 &&
+            prop.ref.format == generated.mpv_format.MPV_FORMAT_STRING) {
+          final data = prop.ref.data.cast<Pointer<Utf8>>().value;
+          if (data != nullptr) value = data.toDartString();
+        }
+        completer.complete(value);
       }
     }
     if (event.ref.event_id == generated.mpv_event_id.MPV_EVENT_COMMAND_REPLY) {
@@ -2059,18 +2126,17 @@ class NativePlayer extends PlatformPlayer {
         }
       }
       if (observed.containsKey(prop.ref.name.cast<Utf8>().toDartString())) {
-        if (prop.ref.format == generated.mpv_format.MPV_FORMAT_NONE) {
+        // Lumtub: observed as strings; NONE is a property not available.
+        if (prop.ref.format == generated.mpv_format.MPV_FORMAT_STRING) {
           final fn = observed[prop.ref.name.cast<Utf8>().toDartString()];
-          if (fn != null) {
-            final data = mpv.mpv_get_property_string(ctx, prop.ref.name);
-            if (data != nullptr) {
-              try {
-                await fn.call(data.cast<Utf8>().toDartString());
-              } catch (exception, stacktrace) {
-                print(exception);
-                print(stacktrace);
-              }
-              mpv.mpv_free(data.cast());
+          final data = prop.ref.data.cast<Pointer<Utf8>>().value;
+          if (fn != null && data != nullptr) {
+            final value = data.toDartString();
+            try {
+              await fn.call(value);
+            } catch (exception, stacktrace) {
+              print(exception);
+              print(stacktrace);
             }
           }
         }
@@ -2369,7 +2435,9 @@ class NativePlayer extends PlatformPlayer {
       }
 
       ctx = await Initializer(mpv).create(
-        _handler,
+        // Lumtub: marked, so that calls made while an event is handled stay
+        // synchronous (see [_inEvent]).
+        (event) => runZoned(() => _handler(event), zoneValues: {_inEvent: true}),
         options: options,
       );
 
@@ -2548,14 +2616,21 @@ class NativePlayer extends PlatformPlayer {
   }
 
   int _asyncRequestNumber = 0;
+
+  /// Lumtub: set in the zone mpv's events are handled in. Events are
+  /// handled one at a time, each awaited before the next is read, so a
+  /// reply to an asynchronous call made there would never be read: such
+  /// calls (an observer's, an on-load hook's) stay synchronous.
+  static final Object _inEvent = Object();
   final Map<int, Completer<int>> _setPropertyRequests = {};
+  final Map<int, Completer<String>> _getPropertyRequests = {};
   final Map<int, Completer<int>> _commandRequests = {};
 
   Future<void> _setProperty(String name, int format, Pointer<Void> data) async {
     final requestNumber = _asyncRequestNumber++;
     final completer = _setPropertyRequests[requestNumber] = Completer<int>();
     final namePtr = name.toNativeUtf8();
-    if (configuration.async) {
+    if (configuration.async && Zone.current[_inEvent] != true) {
       final immediate = mpv.mpv_set_property_async(
         ctx,
         requestNumber,
@@ -2632,7 +2707,7 @@ class NativePlayer extends PlatformPlayer {
       (arr + i).value = pointers[i];
     }
 
-    if (configuration.async) {
+    if (configuration.async && Zone.current[_inEvent] != true) {
       final requestNumber = _asyncRequestNumber++;
       final completer = _commandRequests[requestNumber] = Completer<int>();
       final immediate = mpv.mpv_command_async(ctx, requestNumber, arr.cast());

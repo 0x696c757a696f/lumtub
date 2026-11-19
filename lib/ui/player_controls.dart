@@ -423,7 +423,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   /// The player's width is three minutes, or the whole video when shorter.
   void _seekSlideUpdate(DragUpdateDetails details) {
     final from = _slideFrom, width = context.size?.width ?? 0;
-    if (from == null || width <= 0) return;
+    if (from == null || width <= 0 || _pinching) return;
     _slideX += details.primaryDelta ?? 0;
     final length = _player.state.duration;
     final span = length < const Duration(minutes: 3) ? length : const Duration(minutes: 3);
@@ -435,7 +435,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   void _seekSlideEnd(DragEndDetails details) {
     final to = _slideTo;
     _slideFrom = _slideTo = null;
-    if (to != null) unawaited(_controller.seek(to));
+    if (to != null && !_pinching) unawaited(_controller.seek(to));
   }
 
   PointerDeviceKind? _tapKind;
@@ -469,8 +469,28 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     );
   }
 
-  Widget _lockButton() => PositionedDirectional(
-        start: 12,
+  /// How far the picture stands in from the screen's sides, beyond the
+  /// notch's own inset, in full screen: the controls keep to the picture,
+  /// not the black bars beside it.
+  double _besidePicture(bool fullscreen) {
+    if (!fullscreen) return 0;
+    final width = _player.state.width ?? 0, height = _player.state.height ?? 0;
+    final screen = MediaQuery.sizeOf(context);
+    if (width <= 0 || height <= 0 || screen.isEmpty) return 0;
+    final scale = min(screen.width / width, screen.height / height);
+    final side = (screen.width - width * scale) / 2;
+    final view = View.of(context);
+    final safe = EdgeInsets.fromViewPadding(view.viewPadding, view.devicePixelRatio);
+    return max(0.0, side - max(safe.left, safe.right));
+  }
+
+  Widget _onPicture(bool fullscreen, Widget child) {
+    final extra = _besidePicture(fullscreen);
+    return extra <= 0 ? child : Padding(padding: EdgeInsets.symmetric(horizontal: extra), child: child);
+  }
+
+  Widget _lockButton(bool fullscreen) => PositionedDirectional(
+        start: 12 + _besidePicture(fullscreen),
         top: 0,
         bottom: 0,
         child: SafeArea(
@@ -505,6 +525,47 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ),
       );
 
+  /// Fingers on the player, for a pinch: two fingers spread apart in full
+  /// screen crop the picture to fill the screen, pinched together show it
+  /// whole again, as in phone video apps. Read from the raw touches, so the
+  /// one-finger slides keep their gestures.
+  final _fingers = <int, Offset>{};
+  double? _pinchFrom;
+  bool _pinching = false;
+
+  void _pinchDown(PointerDownEvent event) {
+    _fingers[event.pointer] = event.position;
+    if (_fingers.length == 2 && !_locked && isFullscreen(context)) {
+      _pinchFrom = _spread();
+      _pinching = true;
+    }
+  }
+
+  void _pinchMove(PointerMoveEvent event) {
+    if (_fingers.containsKey(event.pointer)) _fingers[event.pointer] = event.position;
+  }
+
+  void _pinchUp(PointerEvent event) {
+    final from = _pinchFrom;
+    if (from != null && _fingers.length == 2 && from > 0) {
+      final ratio = _spread() / from;
+      final fit = ratio > 1.2 ? VideoFit.cover : ratio < 0.83 ? VideoFit.contain : null;
+      if (fit != null && fit != videoFit.value) {
+        videoFit.value = fit;
+        _showFeedback(fit == VideoFit.cover ? AppIcons.cornersOut : AppIcons.cornersIn, fit.label);
+      }
+      _pinchFrom = null;
+    }
+    _fingers.remove(event.pointer);
+    // The slides start again with every finger lifted.
+    if (_fingers.isEmpty) _pinching = false;
+  }
+
+  double _spread() {
+    final [a, b] = _fingers.values.take(2).toList();
+    return (a - b).distance;
+  }
+
   /// On a phone outside full screen a slide is not brightness or volume
   /// but where the player goes: up into full screen, down into the mini
   /// player, as in phone video apps.
@@ -519,13 +580,14 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   void _dragEnd(DragEndDetails details) {
-    if (!_slideMoves) return;
+    if (!_slideMoves || _pinching) return;
     final speed = details.primaryVelocity ?? 0;
     if (_slid < -48 || speed < -400) unawaited(widget.state?.enterFullscreen());
     if (_slid > 48 || speed > 400) _controller.goBack();
   }
 
   void _dragUpdate(DragUpdateDetails details) {
+    if (_pinching) return;
     if (_slideMoves) {
       _slid += details.primaryDelta ?? 0;
       return;
@@ -631,7 +693,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               onPointerDown: (event) {
                 final touch = event.kind == PointerDeviceKind.touch || event.kind == PointerDeviceKind.stylus;
                 if (touch != _touched) setState(() => _touched = touch);
+                if (event.kind == PointerDeviceKind.touch) _pinchDown(event);
               },
+              onPointerMove: _pinchMove,
+              onPointerUp: _pinchUp,
+              onPointerCancel: _pinchUp,
               child: Stack(fit: StackFit.expand, children: [
                 if (_locked)
                   GestureDetector(behavior: HitTestBehavior.opaque, onTap: _show)
@@ -683,7 +749,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                   ),
                 _buffering(),
                 if (_feedback case (final icon, final text)) Center(child: IgnorePointer(child: _FeedbackBubble(icon: icon, text: text))),
-                if (_controller.showStats) PositionedDirectional(start: 12, top: fullscreen ? 64 : 52, child: PlayerStats(player: _player)),
+                if (_controller.showStats) Positioned.fill(child: _stats(fullscreen)),
                 if (_controller.preferences.progressLine.shows(fullscreen: fullscreen))
                   Positioned(
                     left: 0,
@@ -698,12 +764,12 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                   ),
                 if (!_locked) ...[
                   // In full screen the bars keep clear of a camera cutout.
-                  Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: SafeArea(top: fullscreen, bottom: false, left: fullscreen, right: fullscreen, child: _topBar(context, fullscreen)))),
-                  Positioned(left: 0, right: 0, bottom: 0, child: KeyedSubtree(key: _bottomBarKey, child: _bar(top: false, child: _bottomBar(context, fullscreen)))),
+                  Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _onPicture(fullscreen, SafeArea(top: fullscreen, bottom: false, left: fullscreen, right: fullscreen, child: _topBar(context, fullscreen))))),
+                  Positioned(left: 0, right: 0, bottom: 0, child: KeyedSubtree(key: _bottomBarKey, child: _bar(top: false, child: _onPicture(fullscreen, _bottomBar(context, fullscreen))))),
                 ],
                 // On a phone, only in full screen: over the small player above the
                 // page it covers the picture and has nothing to lock.
-                if (_locked || fullscreen || (_touched && !_phone)) _lockButton(),
+                if (_locked || fullscreen || (_touched && !_phone)) _lockButton(fullscreen),
               ]),
             ),
           ),
@@ -763,6 +829,47 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     );
   }
 
+  /// The playback info panel, kept on the picture (not on the black bars
+  /// beside it, where its dark background can't be seen) and out of the
+  /// notch, and made smaller when the player is too small for it, as on a
+  /// phone held upright.
+  Widget _stats(bool fullscreen) => IgnorePointer(
+        child: StreamBuilder<int?>(
+          stream: _player.stream.width,
+          builder: (context, _) => LayoutBuilder(builder: (context, box) {
+            final width = _player.state.width ?? 0;
+            final height = _player.state.height ?? 0;
+            var side = 0.0;
+            var above = 0.0;
+            if (width > 0 && height > 0 && box.maxWidth.isFinite && box.maxHeight.isFinite) {
+              final scale = min(box.maxWidth / width, box.maxHeight / height);
+              side = (box.maxWidth - width * scale) / 2;
+              above = (box.maxHeight - height * scale) / 2;
+            }
+            // The screen's own notch or camera hole, read from the view: a
+            // SafeArea above may have taken it out of MediaQuery.
+            final view = View.of(context);
+            final safe = EdgeInsets.fromViewPadding(view.viewPadding, view.devicePixelRatio);
+            final rtl = Directionality.of(context) == TextDirection.rtl;
+            final start = max(side, rtl ? safe.right : safe.left) + 12;
+            final top = max(above + 8, max(fullscreen ? safe.top : 0.0, fullscreen ? 64.0 : 52.0));
+            return Stack(children: [
+              PositionedDirectional(
+                start: start,
+                top: top,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: max(0.0, box.maxWidth - start - max(side, 12.0)),
+                    maxHeight: max(0.0, box.maxHeight - top - max(above, 8.0)),
+                  ),
+                  child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.topStart, child: PlayerStats(player: _player)),
+                ),
+              ),
+            ]);
+          }),
+        ),
+      );
+
   Widget _buffering() => StreamBuilder<bool>(
         stream: _player.stream.buffering,
         initialData: _player.state.buffering,
@@ -809,7 +916,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   List<Widget> _fullscreenActions(BuildContext context, Future<void> Function() leaveFullscreen) {
     final item = _controller.playing!;
     final account = _controller.account;
-    final signedIn = account?.signedIn ?? false;
+    final signedIn = account?.active ?? false;
     final library = _controller.library;
     final liked = signedIn && account!.ratingOf(item.id) == VideoRating.like;
     final likes = _controller.details?.likeCount ?? _controller.dislikes?.likes;
@@ -825,7 +932,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           if (signedIn && !account!.ratingOff(item.id)) {
             unawaited(account.rate(item, VideoRating.like));
           } else {
-            _showFeedback(AppIcons.thumbsUp, signedIn ? tr('The uploader turned off likes and dislikes for this video') : tr('Sign in to Google to {0}', [tr('Like')]));
+            _showFeedback(AppIcons.thumbsUp, signedIn ? tr('The uploader turned off likes and dislikes for this video') : tr('Sign in to YouTube to {0}', [tr('Like')]));
           }
         },
       ),

@@ -11,7 +11,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../../device.dart';
 import '../window_chrome.dart';
 import '../../app/app_controller.dart';
-import '../../appearance_settings.dart' show bundledFont;
+import '../../appearance_settings.dart' show blankFont, bundledFont;
 import '../../models.dart';
 import '../../player_settings.dart';
 import '../../timestamp_link.dart';
@@ -356,7 +356,7 @@ class _RatingButtons extends StatelessWidget {
     final item = controller.playing;
     if (item == null) return const SizedBox.shrink();
     final account = controller.account;
-    final signedIn = account?.signedIn ?? false;
+    final signedIn = account?.active ?? false;
     final colors = context.colors;
     final likes = controller.details?.likeCount ?? controller.dislikes?.likes;
     final dislikes = controller.dislikes?.dislikes;
@@ -368,11 +368,11 @@ class _RatingButtons extends StatelessWidget {
           ? null
           : signedIn
           ? () => account!.rate(item, rating)
-          : () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Sign in to Google to {0}', [label]))));
+          : () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Sign in to YouTube to {0}', [label]))));
       if (stacked) return Expanded(child: _StackedAction(icon: icon, fill: selectedIcon, label: shown == null ? label : formatCount(shown), selected: selected, onPressed: onPressed));
       return Tooltip(
         message: [
-          if (!signedIn) tr('Sign in to Google to {0}', [label]) else if (off) tr('The uploader turned off likes and dislikes for this video') else if (selected) tr('Cancel {0}', [label]) else label,
+          if (!signedIn) tr('Sign in to YouTube to {0}', [label]) else if (off) tr('The uploader turned off likes and dislikes for this video') else if (selected) tr('Cancel {0}', [label]) else label,
           if (note != null) note,
         ].join('\n'),
         child: TextButton.icon(
@@ -448,7 +448,7 @@ class _Toolbar extends StatelessWidget {
               onPressed: () => library.toggleWatchLater(item),
             ),
             _ActionButton(tooltip: tr('Add to playlist'), icon: Icon(AppIcons.listPlus), onPressed: () => showAddToPlaylist(context, controller, item)),
-            if (controller.account?.signedIn ?? false)
+            if (controller.account?.active ?? false)
               _ActionButton(tooltip: tr('Save to YouTube playlist'), label: tr('Save'), icon: Icon(AppIcons.filmReel), onPressed: () => showSaveToYoutube(context, controller, item)),
           ],
           if (controller.downloads != null && !item.isLive)
@@ -615,7 +615,7 @@ class _PhoneActions extends StatelessWidget {
     final position = controller.player?.state.position ?? Duration.zero;
     final picked = await pickFromSheet<String>(context, [
       if (library != null) (value: 'playlist', icon: AppIcons.listPlus, label: tr('Add to playlist'), selected: false),
-      if (library != null && (controller.account?.signedIn ?? false)) (value: 'youtube', icon: AppIcons.filmReel, label: tr('Save to YouTube playlist'), selected: false),
+      if (library != null && (controller.account?.active ?? false)) (value: 'youtube', icon: AppIcons.filmReel, label: tr('Save to YouTube playlist'), selected: false),
       if (!item.isLive) (value: 'summary', icon: AppIcons.sparkle, label: tr('AI summary'), selected: false),
       (value: 'link', icon: AppIcons.link, label: tr('Copy link'), selected: false),
       if (!item.isLive && position.inSeconds > 0) (value: 'time', icon: AppIcons.timer, label: tr('Copy link at current time'), selected: false),
@@ -788,7 +788,7 @@ class _Player extends StatelessWidget {
                       ),
                     ),
                   ),
-                  subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label, byHeight: Platform.isAndroid, libass: controller.libassDraws),
+                  subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: controller.libassDraws),
                   onEnterFullscreen: () {
                     // 铺满窗口 keeps the window as it is.
                     if (fillingWindow.value) return Future.value();
@@ -1304,7 +1304,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
         fontSize: 32 * scale,
         fontFamily: font.isEmpty ? null : font,
         // Where the font is missing (another system), the bundled one.
-        fontFamilyFallback: const [bundledFont],
+        fontFamilyFallback: const [bundledFont, blankFont],
         letterSpacing: 0.0,
         wordSpacing: 0.0,
         color: Color(0xFF000000 | color).withValues(alpha: opacity),

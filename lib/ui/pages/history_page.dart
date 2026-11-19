@@ -65,7 +65,7 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget build(BuildContext context) {
     _kept.keep((_query, _youtube));
     final all = controller.history;
-    final signedIn = controller.tvFeed?.available ?? false;
+    final signedIn = controller.accountFeed?.available ?? false;
     if (signedIn && _youtube) return _youtubeHistory(context);
     if (all.isEmpty && !signedIn) {
       return StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('No watch history yet'), message: tr('Played videos are saved on this device, up to {0} entries.', [historyLimit]));
@@ -161,8 +161,15 @@ class _HistoryPageState extends State<HistoryPage> {
         ]),
       );
 
-  /// The account's history as YouTube keeps it, read with the TV-code
+  /// The account's history as YouTube keeps it, read with the browser
   /// sign-in. Read only: deleting goes through YouTube itself.
+  /// The day each video was watched, as the history's sections say it.
+  static Map<String, String>? _days(Map<String, int>? days) {
+    if (days == null) return null;
+    final now = DateTime.now();
+    return {for (final MapEntry(:key, :value) in days.entries) key: value == 0 ? tr('Today') : formatAgo(now.subtract(Duration(days: value)), now: now)};
+  }
+
   Widget _youtubeHistory(BuildContext context) {
     final loader = controller.youtubeHistory;
     if (loader == null) {
@@ -185,7 +192,7 @@ class _HistoryPageState extends State<HistoryPage> {
           ]),
         )),
         SliverToBoxAdapter(child: _sourceChips()),
-        if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items), watched: controller.tvFeed?.historyDays),
+        if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items), watched: _days(controller.accountFeed?.historyDays)),
         if (loader.loading) ...[
           if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
           SliverSkeletonGrid(rows: items.isEmpty ? 3 : 1),

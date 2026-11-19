@@ -48,7 +48,10 @@
 //                    "bevel":  { "light": "#fff", "dark": "#808080", "width": 1,
 //                                "innerLight": "#dfdfdf", "innerDark": "#404040" },
 //                              — the raised edge of 90s desktops; pressed, it sinks.
-//                                90 年代桌面那种立体边，按下时自动变凹。
+//                                "sunken": true draws it pressed in from the start
+//                                (wells, text boxes).
+//                                90 年代桌面那种立体边，按下时自动变凹；"sunken": true
+//                                一开始就是凹进去的（凹槽、输入框）。
 //                    "radius": 8,          — overrides shape.* for this box 单独指定圆角
 //                    "shadow": [{ "color": "#0003", "x": 0, "y": 4, "blur": 12, "spread": 0 }],
 //                    "gloss":  0.6,        — 0–1, the white shine of gel buttons 果冻高光
@@ -222,6 +225,14 @@
     // meadow, sky, underwater, aurora or city; "night": true for its night.
     // { "type": "scene", "scene": "meadow" } 画一整幅景色：meadow 草原、sky 蓝天、
     // underwater 水下、aurora 极光、city 未来城；"night": true 是夜晚版。
+    // Each type's own fields 各类型自己的字段:
+    //   bubbles / sparkles / waves / scene: "count", "seed" (another seed
+    //     scatters them differently 换个数字换一种分布); sparkles "glow";
+    //     waves and beam "position" 0–1 (how far down 位置高低); beam "angle"
+    //   perspectiveGrid: "spacing", "horizon" 0–1 (where the grid meets the
+    //     sky 地平线高度)
+    //   pattern: the pattern fields above, "fade": "top" | "bottom" (fades
+    //     out towards that edge 朝那条边渐隐)
     "decorations": [
       { "type": "bubbles", "count": 6, "color": "#78dcff59" },
       { "type": "sparkles", "count": 4, "color": "#ffffff", "glow": "#7fd0ff" }
@@ -244,6 +255,9 @@
       // While the window is in the background. 窗口不在前台时。
       "inactive": { "fill": "#e8f1f8" },
       "text": "#10233a",
+      // The title while the window is in the background; needs 3:1 on
+      // "inactive". 窗口不在前台时的标题颜色，在 "inactive" 上要有 3:1 对比度。
+      "inactiveText": "#5d7389",
       // left or center 标题靠左或居中
       "align": "left",
       "icon": true,
@@ -329,6 +343,7 @@
       "selected": { "fill": "#cfe6fb", "radius": 6 },
       "text": "#4a6278",
       "selectedText": "#0b4f8a",
+      "indicator": "#0873ad",
       "labels": "below",
       "caps": false,
       "height": 56
@@ -408,10 +423,21 @@
     "progress": { "linear": { "angle": 90, "colors": ["#19b8ff", "#8df27a"] } }
     // With "style": "deck" 用 deck 样式时写 "deck": { "shape": "capsule" | "slab" |
     // "wave" | "boombox" | "oval", "body": [colours top to bottom 从上到下],
-    // "clear": 0-0.8, "screen", "screenText", "button": [light, deep 浅, 深],
+    // "clear": 0-0.8, "rim", "screen", "screenText", "button": [light, deep 浅, 深],
     // "glyph", "play": [light, deep], "playGlyph", "groove", "fill",
     // "speakers": true, "glow" }. Sign colours need 3:1 on the deep colour.
-    // 按钮符号要在深色上有 3:1 对比度。
+    // 按钮符号要在深色上有 3:1 对比度。For example 例如:
+    // "deck": {
+    //   "shape": "capsule",
+    //   "body": ["#f4f8fc", "#b9c9d8"],   — the body, top to bottom 机身
+    //   "rim": "#7f8c9c",                  — its outline 机身轮廓
+    //   "clear": 0.2,                      — how see-through 透明度
+    //   "screen": "#0b3a66", "screenText": "#9fe8ff",  — the time display 时间屏
+    //   "button": ["#ffffff", "#c9d6e2"], "glyph": "#20303f",  — small buttons 小按钮
+    //   "play": ["#5fd0ff", "#0874b8"], "playGlyph": "#ffffff", — the big play key 大播放键
+    //   "groove": "#5a6878", "fill": "#3ab0ff",  — the progress slot 进度槽
+    //   "speakers": true, "glow": "#3ab0ff"
+    // }
     // With "style": "lcd" 用 lcd 样式时还可以写：
     // "frame":    { ..surface.. },  — round the picture 画面外框
     // "lcd":      { ..surface.. },  — the display 显示屏

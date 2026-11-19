@@ -19,6 +19,7 @@ import '../../appearance_settings.dart';
 import '../../decoder_status.dart';
 import '../../encrypted_dns.dart';
 import '../../native_core.dart';
+import '../../downloads/download_manager.dart' show DownloadManager;
 import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
@@ -68,7 +69,7 @@ enum SettingsCategory {
   privacy('Privacy settings', 'Incognito mode, watch history, playback progress, connected servers'),
   style('Appearance', 'Language, theme, skins, fonts, warm light, layout, tray'),
   storage('Storage & updates', 'Components, updates, cache, download and data locations, backup'),
-  account('YouTube account', 'Google sign-in, TV-code sign-in, syncing subscriptions and playlists'),
+  account('YouTube account', 'Browser sign-in, Google sign-in, syncing subscriptions and playlists'),
   about('About', 'Version, logs, diagnostics, open-source licenses');
 
   const SettingsCategory(this._title, this._subtitle);
@@ -345,7 +346,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.pauseOnMinimize,
               onChanged: (v) => savePrefs(prefs.copyWith(pauseOnMinimize: v)),
             ), subtitle: tr('Background playback')),
-        if (Platform.isAndroid && !Device.tv)
+        if ((Platform.isAndroid || Platform.isIOS) && !Device.tv)
           SettingEntry(tr('Picture in picture when leaving the app'), (context) => SwitchItem(
                 title: tr('Picture in picture when leaving the app'),
                 subtitle: tr('Keeps the playing video in a small window when you switch to another app; when off, its sound plays on in the background'),
@@ -455,6 +456,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 value: prefs.matchFrameRate,
                 onChanged: (v) => savePrefs(prefs.copyWith(matchFrameRate: v)),
               ), subtitle: tr('refresh rate fps TV')),
+        if (Platform.isAndroid && !Device.tv)
+          SettingEntry(tr('Keep playing in the background'), (context) => NormalItem(
+                title: tr('Keep playing in the background'),
+                subtitle: tr('Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.'),
+                leading: _icon(AppIcons.lightning),
+                onTap: () => unawaited(controller.askBatteryUnrestricted()),
+              ), subtitle: 'battery'),
         SettingEntry(tr('Playback test'), (context) => NormalItem(
               title: tr('Playback test'),
               subtitle: tr('Plays a test video as H.264, VP9 and AV1 and measures processor use, memory, dropped frames and the decoder used'),
@@ -553,6 +561,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: settings.skipSilence,
               onChanged: (v) => save(settings.copyWith(skipSilence: v)),
             ), subtitle: tr('Silence skip silent pauses faster')),
+        if (Platform.isIOS)
+          SettingEntry(tr('Mix with other apps'), (context) => SwitchItem(
+                title: tr('Mix with other apps'),
+                subtitle: tr("Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island"),
+                leading: _icon(AppIcons.equalizer),
+                value: settings.mixWithOthers,
+                onChanged: (v) => save(settings.copyWith(mixWithOthers: v)),
+              ), subtitle: tr('mix audio other apps music')),
     ],
     SettingsCategory.picture => [
         SettingEntry(tr('Video scaling algorithm'), (context) => NormalItem(
@@ -782,6 +798,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             onTap: () => pickFromDialog<String>(context, title: tr('IPv4 only'), value: settings.ipVersion, values: modes, onSelected: (value) => save(settings.copyWith(ipVersion: value))),
           );
         }, subtitle: tr('IPv4 IPv6 force-ipv4 slow start network')),
+        SettingEntry(tr('Ask again with my account when blocked'), (context) => SwitchItem(
+              title: tr('Ask again with my account when blocked'),
+              subtitle: tr("When YouTube takes this network for a bot, the video you open is asked for once more with the browser sign-in's account (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too"),
+              leading: _icon(AppIcons.keyFill),
+              value: settings.signInWhenBlocked,
+              onChanged: (v) => save(settings.copyWith(signInWhenBlocked: v)),
+            ), subtitle: tr('bot not a bot blocked sign in cookies account')),
         SettingEntry(tr('Key exchange by site'), (context) => NormalItem(
               title: tr('Key exchange by site'),
               subtitle: tr('What each site agreed on the last time Lumtub connected to it'),
@@ -1407,6 +1430,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.arrowCircleDown),
               onTap: controller.downloads == null ? null : () => _changeDownloadLocation(context, controller),
             ), subtitle: tr('downloads save location folder')),
+        SettingEntry(tr('Simultaneous downloads'), (context) => _concurrentDownloads(context, controller), subtitle: tr('downloads at the same time parallel concurrent')),
         SettingEntry(tr('Data location'), (context) => NormalItem(
               title: tr('Data location'),
               subtitle: tr('{0}\nSettings, watch history, favorites and downloaded components are stored here and kept when you uninstall.', [controller.directories?.root.path ?? tr('Preparing…')]),
@@ -1436,7 +1460,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('Restore default')),
     ],
     SettingsCategory.account => [
-        SettingEntry(tr('YouTube account'), (context) => AccountSettings(account: controller.account, tvSignIn: controller.tvSignIn, webSignIn: controller.webSignIn, saveTvSamples: controller.saveTvSamples, note: _note(context)), subtitle: tr('Google sign-in, TV code sign-in, browser sign-in, sync, sign out, custom client')),
+        SettingEntry(tr('YouTube account'), (context) => AccountSettings(account: controller.account, webSignIn: controller.webSignIn, note: _note(context)), subtitle: tr('Browser sign-in, Google sign-in, sync, sign out, custom client')),
         SettingEntry(tr('Subscribe when following'), (context) => SwitchItem(
               title: tr('Also subscribe on YouTube when you follow a channel'),
               subtitle: tr('When signed in, following and unfollowing also subscribes or unsubscribes on your YouTube account'),
@@ -1446,7 +1470,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             )),
         SettingEntry(tr('Sync watch history to YouTube'), (context) => SwitchItem(
               title: tr('Sync watch history to YouTube'),
-              subtitle: tr('With the TV-code sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off'),
+              subtitle: tr('With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off'),
               leading: _icon(AppIcons.clockCounterClockwiseFill),
               value: prefs.syncHistoryToYoutube,
               onChanged: (v) => savePrefs(prefs.copyWith(syncHistoryToYoutube: v)),
@@ -1489,6 +1513,25 @@ Future<void> _importSettings(BuildContext context, AppController controller) asy
           ? tr('Settings imported; added {0} channels, {1} videos and {2} playlists', [merge.channels, merge.videos, merge.playlists])
           : tr('Settings imported');
   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+}
+
+Widget _concurrentDownloads(BuildContext context, AppController controller) {
+  final manager = controller.downloads;
+  if (manager == null) {
+    return NormalItem(title: tr('Simultaneous downloads'), subtitle: tr('Preparing…'), leading: _icon(AppIcons.stack));
+  }
+  final values = [
+    for (var n = 1; n <= DownloadManager.maxConcurrentLimit; n++) (n, n == 2 ? tr('{0} (default)', [n]) : '$n'),
+  ];
+  return ListenableBuilder(
+    listenable: manager,
+    builder: (context, _) => NormalItem(
+      title: tr('Simultaneous downloads'),
+      subtitle: tr('Up to {0} videos download at a time; live recordings are not counted', [manager.maxConcurrent]),
+      leading: _icon(AppIcons.stack),
+      onTap: () => pickFromDialog<int>(context, title: tr('Simultaneous downloads'), value: manager.maxConcurrent, values: values, onSelected: (v) => unawaited(manager.setMaxConcurrent(v))),
+    ),
+  );
 }
 
 Future<void> _changeDownloadLocation(BuildContext context, AppController controller) async {

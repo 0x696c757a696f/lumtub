@@ -7,16 +7,23 @@ import 'motion.dart';
 /// Scrolling a page from the keyboard, as a browser does: a page at a
 /// time or to either end, eased. A key held down carries on from where the
 /// last press was heading instead of starting over, so it does not stutter.
-/// The list moved is the one under the mouse, as the wheel would move,
-/// unless the keyboard moved the focus since the mouse last moved; then it
-/// is the list the focus is in. A focus the page left behind is brought
-/// to the first item in sight, so the arrow keys go on from what is shown.
+/// The list moved is the one under the mouse when it can scroll, as the
+/// wheel would move, unless the keyboard moved the focus since the mouse
+/// last moved; then it is the list the focus is in. Anywhere else, over the
+/// navigation, the title bar or a gap between cards, with no focus in a
+/// list, it is the page's main list, as a browser turns its page. A focus
+/// the page left behind is brought to the first item in sight, so the
+/// arrow keys go on from what is shown.
 abstract final class KeyScroll {
   /// The part of the view one page moves.
   static const page = 0.85;
   static const duration = Duration(milliseconds: 180);
 
   static final _heading = Expando<double>();
+
+  /// Marks the page area, from the app's shell: the lists a key may move
+  /// are the ones in it.
+  static final area = GlobalKey(debugLabel: 'page area');
 
   static Offset? _pointer;
   static int _pointerView = 0;
@@ -65,18 +72,32 @@ abstract final class KeyScroll {
   static ScrollPosition? underPointer() {
     final at = _pointer;
     if (at == null) return null;
+    return _listAt(at, _pointerView, scrollable: false);
+  }
+
+  static ScrollPosition? _listAt(Offset at, int view, {required bool scrollable, RenderObject? within}) {
     final result = HitTestResult();
-    RendererBinding.instance.hitTestInView(result, at, _pointerView);
+    RendererBinding.instance.hitTestInView(result, at, view);
     ScrollPosition? first;
     for (final entry in result.path) {
       final target = entry.target;
       if (target is! RenderViewportBase || target.axis != Axis.vertical) continue;
       final offset = target.offset;
       if (offset is! ScrollPosition || !offset.hasContentDimensions) continue;
-      if (offset.maxScrollExtent > offset.minScrollExtent) return offset;
-      first ??= offset;
+      if (within != null && !_inside(target, within)) continue;
+      if (_canScroll(offset)) return offset;
+      if (!scrollable) first ??= offset;
     }
     return first;
+  }
+
+  static bool _canScroll(ScrollPosition position) => position.maxScrollExtent > position.minScrollExtent;
+
+  static bool _inside(RenderObject object, RenderObject ancestor) {
+    for (RenderObject? at = object; at != null; at = at.parent) {
+      if (identical(at, ancestor)) return true;
+    }
+    return false;
   }
 
   /// The vertical list the focus is in, if any.
@@ -85,13 +106,45 @@ abstract final class KeyScroll {
     return context == null ? null : Scrollable.maybeOf(context, axis: Axis.vertical)?.position;
   }
 
-  /// The list a key moves: the one under the mouse or the one the focus
-  /// is in, whichever moved last; else the page's main one. Null when
-  /// there is none.
-  static ScrollPosition? target() {
+  /// The page's main list: the largest one in the page area that can
+  /// scroll, found where it shows, so a page on its way out, one kept out
+  /// of sight and anything over the page are passed by.
+  static ScrollPosition? mainList() {
+    final context = area.currentContext;
+    final box = context?.findRenderObject();
+    if (context == null || box is! RenderBox || !box.attached || !box.hasSize || box.size.isEmpty) return null;
+    final view = View.maybeOf(context)?.viewId;
+    if (view == null) return null;
+    ScrollPosition? best;
+    var bestArea = 0.0;
+    for (final x in const [0.5, 0.25, 0.75, 0.1, 0.9]) {
+      for (final y in const [0.5, 0.25, 0.75, 0.1, 0.9]) {
+        final at = box.localToGlobal(Offset(box.size.width * x, box.size.height * y));
+        final position = _listAt(at, view, scrollable: true, within: box);
+        if (position == null || identical(position, best)) continue;
+        final list = position.context.notificationContext?.findRenderObject();
+        final size = list is RenderBox && list.hasSize ? list.size.width * list.size.height : 0.0;
+        if (size > bestArea) {
+          best = position;
+          bestArea = size;
+        }
+      }
+    }
+    return best;
+  }
+
+  /// The list a key moves: the one under the mouse in the page area that
+  /// can scroll or the one the focus is in, whichever moved last; else the
+  /// page's main one, unless [main] is false. Null when there is none.
+  static ScrollPosition? target({bool main = true}) {
     final focused = _focused();
-    if (focused == null || _pointerMoved > _focusMoved) {
-      if (underPointer() case final pointed?) return pointed;
+    final usable = focused != null && _canScroll(focused) ? focused : null;
+    if (usable == null || _pointerMoved > _focusMoved) {
+      if (_pointed() case final pointed?) return pointed;
+    }
+    if (usable != null) return usable;
+    if (main) {
+      if (mainList() case final list?) return list;
     }
     if (focused != null) return focused;
     final context = primaryFocus?.context;
@@ -99,6 +152,19 @@ abstract final class KeyScroll {
     final primary = PrimaryScrollController.maybeOf(context);
     if (primary == null || !primary.hasClients) return null;
     return primary.positions.where((p) => p.axis == Axis.vertical).lastOrNull;
+  }
+
+  /// The list under the mouse that can scroll. Over the page area only
+  /// one in it counts, so the navigation and the title bar turn the page
+  /// itself; over a dialog on top, any in it.
+  static ScrollPosition? _pointed() {
+    final at = _pointer;
+    if (at == null) return null;
+    final context = area.currentContext;
+    final box = context?.findRenderObject();
+    if (context == null || box is! RenderBox || !box.attached) return _listAt(at, _pointerView, scrollable: true);
+    final onTop = ModalRoute.of(context)?.isCurrent ?? true;
+    return _listAt(at, _pointerView, scrollable: true, within: onTop ? box : null);
   }
 
   /// When the focus was in [position]'s list and has scrolled out of
@@ -133,8 +199,10 @@ abstract final class KeyScroll {
   }
 
   /// Down (positive) or up a page; false when there is nothing to scroll.
-  static bool byPage(int direction) {
-    final position = target();
+  /// [main] lets a key with no list under the mouse or the focus turn the
+  /// page's main list.
+  static bool byPage(int direction, {bool main = true}) {
+    final position = target(main: main);
     if (position == null) return false;
     final from = position.isScrollingNotifier.value ? _heading[position] ?? position.pixels : position.pixels;
     _go(position, from + direction * position.viewportDimension * page);

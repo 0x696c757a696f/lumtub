@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 /// A skin: a whole look for the window, read from a `skin.jsonc` file.
-/// docs/skins.md describes every field; skins/template/skin.jsonc is a
+/// skins/README.md describes every field; skins/template/skin.jsonc is a
 /// commented starting point. Every field is optional except `id`, `name`
 /// and `brightness`; what a skin leaves out stays as Lumtub draws it.
 class Skin {

@@ -9,7 +9,6 @@ import 'package:http/http.dart' as http;
 import 'app_log.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
-import 'youtube_tv_sign_in.dart';
 import 'youtube_web.dart';
 import 'youtube_web_sign_in.dart';
 
@@ -92,6 +91,7 @@ class YoutubeComment {
     this.emojis = const {},
     this.rating,
     this.detailToken,
+    this.replyParams,
   });
 
   final String id;
@@ -118,6 +118,8 @@ class YoutubeComment {
   /// The TV app's page for this one comment, which has its like buttons
   /// when the list it came in does not; read through [YoutubeComments.more].
   final String? detailToken;
+  /// Its reply box, for the browser sign-in to write a reply in.
+  final String? replyParams;
 }
 
 /// One page of comments, the token for the next, and from the first page
@@ -153,37 +155,28 @@ class YoutubeComments {
   String? _clientVersion;
   String? _visitorData;
 
-  /// The TV-code sign-in, so pages come with the like and dislike buttons
-  /// of the signed-in user.
-  SignedInnerTube? signIn;
-
-  /// YouTube did not take the sign-in; comments load signed out for the
-  /// rest of the run.
-  bool refused = false;
-
-  bool get signedIn => !refused && (signIn?.signedIn ?? false);
-
-  /// The cookie sign-in, which posts and their comments are loaded with,
-  /// so they come with the buttons, the poll and the comment box.
+  /// The browser sign-in, which comments are loaded with, so they come
+  /// with the like buttons, the poll and the comment box.
   WebInnerTube? web;
 
-  /// YouTube did not take the cookies; posts load without them for the
+  /// YouTube did not take the cookies; comments load without them for the
   /// rest of the run.
   bool webRefused = false;
 
   bool get webSignedIn => !webRefused && (web?.signedIn ?? false);
 
-  /// The sign-in requests for a video ([post] false) or a post go with.
-  SignedInnerTube? _via(bool post) => post && webSignedIn ? web : signedIn ? signIn : null;
+  /// Whether comments load signed in.
+  bool get signedIn => webSignedIn;
+
+  /// The sign-in requests go with.
+  WebInnerTube? get _via => webSignedIn ? web : null;
 
   /// The first page of comments under [videoId], top comments first unless
   /// [newest].
   Future<CommentPage> video(String videoId, {bool newest = false}) async {
-    // Signed in, the TV app's own watch page names its comment section, as
-    // SmartTube reads it; the website's section token is built here.
-    final header = !signedIn
-        ? await _request('next', {'continuation': videoSectionToken(videoId)})
-        : await _request('next', {'videoId': videoId}, fallback: {'continuation': videoSectionToken(videoId)});
+    // The website's section token is built here; signed in, the page
+    // comes with the like buttons and the comment box.
+    final header = await _request('next', {'continuation': videoSectionToken(videoId)});
     return _sorted(header, 'next', newest);
   }
 
@@ -233,18 +226,18 @@ class YoutubeComments {
   /// Posts [body] to [endpoint], signed in when there is a sign-in YouTube
   /// takes; when it does not, posts [fallback] (or [body]) signed out.
   Future<CommentPage> _request(String endpoint, Map<String, Object?> body, {Map<String, Object?>? fallback, bool signedOut = false, bool post = false}) async {
-    final SignedInnerTube? via = signedOut ? null : _via(post);
+    final via = signedOut ? null : _via;
     if (via != null) {
       final answer = await via.post(endpoint, body);
       if (answer != null) {
         if (answer.status >= 400 && answer.status < 500) {
-          identical(via, web) ? refuseWeb(answer.status, answer.body) : refuse(answer.status, answer.body);
+          refuseWeb(answer.status, answer.body);
           return _request(endpoint, fallback ?? body, signedOut: true, post: post);
         }
         if (answer.status != 200) throw StateError(tr('YouTube returned {0}', [answer.status]));
         final page = await _readInBackground(answer.body);
         if (page.comments.isNotEmpty || page.continuation != null || page.topToken != null || page.count.isNotEmpty) return page;
-        logWarn('The TV app was answered no comments; trying signed out · ${_start(answer.body)}');
+        logWarn('Signed in, YouTube answered no comments; trying signed out · ${_start(answer.body)}');
       }
     }
     final response = await _post(endpoint, via == null ? fallback ?? body : body);
@@ -257,16 +250,10 @@ class YoutubeComments {
     return start.length > 300 ? start.substring(0, 300) : start;
   }
 
-  /// Stops sending the sign-in after YouTube answered [status] to it.
-  void refuse(int status, [List<int> body = const []]) {
-    refused = true;
-    logWarn('YouTube answered $status to the TV-code sign-in on InnerTube; comments load signed out · ${_start(body)}');
-  }
-
   /// Stops sending the cookies after YouTube answered [status] to them.
   void refuseWeb(int status, [List<int> body = const []]) {
     webRefused = true;
-    logWarn('YouTube answered $status to the cookie sign-in; posts load signed out · ${_start(body)}');
+    logWarn('YouTube answered $status to the cookie sign-in; comments load signed out · ${_start(body)}');
   }
 
   /// Likes, dislikes or takes back either, by the [action] of a
@@ -274,15 +261,8 @@ class YoutubeComments {
   /// same way. [post] is for posts and their comments, which take the
   /// cookie sign-in.
   Future<void> rate(String action, {bool post = false}) async {
-    final via = _via(post);
-    final answer = via == null
-        ? null
-        : identical(via, web)
-            ? await web!.post('comment/perform_comment_action', {'actions': [action]}, ask: true)
-            : await via.post('comment/perform_comment_action', {'actions': [action]});
-    if (answer == null) {
-      throw StateError(post ? tr('Sign in with a browser (cookies) in Settings › YouTube account first') : tr('Sign in with a TV code in Settings › YouTube account first'));
-    }
+    final answer = await _via?.post('comment/perform_comment_action', {'actions': [action]}, ask: true);
+    if (answer == null) throw StateError(tr('Sign in with a browser (cookies) in Settings › YouTube account first'));
     _check(answer, 'a comment action');
   }
 
@@ -371,6 +351,7 @@ class YoutubeComments {
             emojis: (c['emojis'] as Map<String, dynamic>?)?.cast<String, String>() ?? const {},
             rating: CommentRating.fromJson(c['rating']),
             detailToken: c['detailToken'] as String?,
+            replyParams: c['replyParams'] as String?,
           ),
       ],
       page['continuation'] as String?,

@@ -72,6 +72,21 @@ Future<void> restartApp() async {
   exit(0);
 }
 
+/// Android: sends Lumtub to the background, as Home does, rather than
+/// closing it, so a back press on the first page never stops what plays
+/// (Android 11 and older would close the app, Android 12 and later already
+/// do this). False where it could not.
+Future<bool> moveAppToBack() async {
+  if (!Platform.isAndroid) return false;
+  try {
+    await const MethodChannel('lumtub/windows_shell').invokeMethod<void>('moveToBack');
+    return true;
+  } catch (e) {
+    logWarn('Could not move Lumtub to the background: $e');
+    return false;
+  }
+}
+
 /// Hands [text] to Android's share sheet; false where there is none, so
 /// the caller copies it instead.
 Future<bool> shareText(String text) async {

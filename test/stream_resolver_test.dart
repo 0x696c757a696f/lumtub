@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/stream_resolver.dart';
 import 'package:lumtub/video_codec.dart';
@@ -237,6 +238,58 @@ void main() {
     expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', cookies: 'c.txt').join(' '), isNot(contains('visionos')), reason: 'signed in keeps its clients');
     expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', live: true).join(' '), isNot(contains('visionos')), reason: 'live streams keep their own clients');
   });
+
+  test('a video taken for a bot is asked again over the other address family, which is kept', () async {
+    final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    addTearDown(() => ProcessTree.switchFamily(null));
+    final log = File('${dir.path}/log');
+    final script = File('${dir.path}/yt-dlp');
+    await script.writeAsString('#!/bin/sh\necho "\$*" >> ${log.path}\ncase "\$*" in *--force-ipv4*) ;; *) echo "ERROR: [youtube] dQw4w9WgXcQ: Sign in to confirm you\'re not a bot" >&2; exit 1;; esac\n'
+        'cat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await Process.run('chmod', ['+x', script.path]);
+    var both = false;
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'))..bothFamilies = (() => both);
+    await expectLater(resolver.resolve('dQw4w9WgXcQ', 'ytdl'), throwsA(isA<StateError>()), reason: 'one family only: nothing to switch to');
+    expect(log.readAsLinesSync().where((l) => l.contains('--force-ipv4')), isEmpty);
+    both = true;
+    resolver.forget('dQw4w9WgXcQ');
+    final video = await resolver.resolve('dQw4w9WgXcQ', 'ytdl');
+    expect(video.info['id'], 'dQw4w9WgXcQ');
+    expect(ProcessTree.switchedFamily, '4');
+    expect(ProcessTree.familyArguments, ['--force-ipv4']);
+    ProcessTree.switchFamily(null);
+    expect(ProcessTree.familyArguments, isEmpty);
+  }, skip: Platform.isWindows ? 'uses a shell script' : null);
+
+  test('asks again signed in when taken for a bot only with the setting on, in the foreground', () async {
+    final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    final script = File('${dir.path}/fake-yt-dlp');
+    await script.writeAsString('#!/bin/sh\n'
+        'case "\$*" in *--cookies*) ;; *) echo "ERROR: [youtube] dQw4w9WgXcQ: Sign in to confirm you\'re not a bot" >&2; exit 1;; esac\n'
+        'cat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final cookies = _FakeCookies();
+    var on = false;
+    final played = <String>[];
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'))
+      ..members = (() => cookies)
+      ..signInWhenBlocked = (() => on)
+      ..onSignedInPlay = played.add;
+    await expectLater(resolver.resolve('dQw4w9WgXcQ', 'ytdl'), throwsA(isA<StateError>()));
+    expect(cookies.written, isEmpty, reason: 'off by default');
+    on = true;
+    resolver.forget('dQw4w9WgXcQ');
+    final video = await resolver.resolve('dQw4w9WgXcQ', 'ytdl');
+    expect(video.info['id'], 'dQw4w9WgXcQ');
+    expect(cookies.written, hasLength(1));
+    expect(cookies.wiped, cookies.written);
+    expect(played, ['dQw4w9WgXcQ']);
+    resolver.prefetch('aaaaaaaaaaa', 'ytdl');
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    expect(cookies.written, hasLength(1), reason: 'prefetches never use the account');
+  }, skip: Platform.isWindows ? 'uses a shell script' : null);
 
   test('a run without the TV clients that fails asks with them again', () async {
     final dir = await Directory.systemTemp.createTemp('lumtub_resolve');

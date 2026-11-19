@@ -1,0 +1,113 @@
+Backport of mpv 8ab3f8b6 (mpv 0.42) "options: add secondary-sub-scale" to mpv 0.41:
+secondary subtitles scaled apart from the main ones.
+Upstream since: v0.42.0
+
+diff --git a/options/options.c b/options/options.c
+index 716c3e6f..a7779e65 100644
+--- a/options/options.c
++++ b/options/options.c
+@@ -310,7 +310,6 @@ const struct m_sub_options mp_subtitle_sub_opts = {
+         {"sub-gauss", OPT_FLOAT(sub_gauss), M_RANGE(0.0, 3.0)},
+         {"sub-gray", OPT_BOOL(sub_gray)},
+         {"sub-ass", OPT_BOOL(ass_enabled), .flags = UPDATE_SUB_HARD},
+-        {"sub-scale", OPT_FLOAT(sub_scale), M_RANGE(0, 100)},
+         {"sub-scale-signs", OPT_BOOL(sub_scale_signs)},
+         {"sub-line-spacing", OPT_FLOAT(sub_line_spacing), M_RANGE(-1000, 1000)},
+         {"sub-ass-line-spacing", OPT_REPLACED("sub-line-spacing")},
+@@ -360,7 +359,6 @@ const struct m_sub_options mp_subtitle_sub_opts = {
+         .sub_scale_with_window = true,
+         .ass_prune_delay = -1.0,
+         .teletext_page = 0,
+-        .sub_scale = 1,
+         .ass_vsfilter_color_compat = 1,
+         .ass_use_video_data = 2,
+         .ass_video_aspect = 0,
+@@ -379,6 +377,8 @@ const struct m_sub_options mp_subtitle_shared_sub_opts = {
+         {"secondary-sub-delay", OPT_FLOAT(sub_delay[1])},
+         {"sub-pos", OPT_FLOAT(sub_pos[0]), M_RANGE(0.0, 150.0)},
+         {"secondary-sub-pos", OPT_FLOAT(sub_pos[1]), M_RANGE(0.0, 150.0)},
++        {"sub-scale", OPT_FLOAT(sub_scale[0]), M_RANGE(0, 100)},
++        {"secondary-sub-scale", OPT_FLOAT(sub_scale[1]), M_RANGE(0, 100)},
+         {"sub-visibility", OPT_BOOL(sub_visibility[0])},
+         {"secondary-sub-visibility", OPT_BOOL(sub_visibility[1])},
+         {"sub-ass-override", OPT_CHOICE(ass_style_override[0],
+@@ -402,6 +402,8 @@ const struct m_sub_options mp_subtitle_shared_sub_opts = {
+         .sub_visibility[0] = true,
+         .sub_visibility[1] = true,
+         .sub_pos[0] = 100,
++        .sub_scale[0] = 1,
++        .sub_scale[1] = 1,
+         .ass_style_override[0] = ASS_STYLE_OVERRIDE_SCALE,
+         .ass_style_override[1] = ASS_STYLE_OVERRIDE_STRIP,
+     },
+@@ -1169,6 +1171,7 @@ static const struct MPOpts mp_default_opts = {
+         "secondary-sid",
+         "secondary-sub-delay",
+         "secondary-sub-pos",
++        "secondary-sub-scale",
+         "secondary-sub-ass-override",
+         "secondary-sub-visibility",
+         "ab-loop-a",
+diff --git a/options/options.h b/options/options.h
+index 12dafea1..2613a6a8 100644
+--- a/options/options.h
++++ b/options/options.h
+@@ -109,7 +109,6 @@ struct mp_subtitle_opts {
+     bool sub_scale_with_window;
+     bool ass_scale_with_window;
+     struct osd_style_opts *sub_style;
+-    float sub_scale;
+     bool sub_scale_signs;
+     float sub_gauss;
+     bool sub_gray;
+@@ -140,6 +139,7 @@ struct mp_subtitle_opts {
+ struct mp_subtitle_shared_opts {
+     float sub_delay[2];
+     float sub_pos[2];
++    float sub_scale[2];
+     bool sub_visibility[2];
+     int ass_style_override[2];
+ };
+diff --git a/player/command.c b/player/command.c
+index 96bc06a0..6333f7b8 100644
+--- a/player/command.c
++++ b/player/command.c
+@@ -4826,6 +4826,7 @@ static const struct property_osd_display {
+       "${?secondary-sub-visibility==yes:visible${?secondary-sid==no: (but no secondary subtitles selected)}}"},
+     {"sub-forced-events-only", "Forced sub only"},
+     {"sub-scale", "Sub Scale"},
++    {"secondary-sub-scale", "Secondary sub scale"},
+     {"sub-ass-use-video-data", "Subtitle using video properties"},
+     {"sub-ass-video-aspect-override", "Subtitle aspect override"},
+     {"sub-ass-override", "ASS subtitle style override"},
+diff --git a/sub/sd_ass.c b/sub/sd_ass.c
+index ece372a2..5fb0bf78 100644
+--- a/sub/sd_ass.c
++++ b/sub/sd_ass.c
+@@ -555,7 +555,7 @@ static void configure_ass(struct sd *sd, struct mp_osd_res *dim,
+         set_hinting = opts->sub_hinting;
+     }
+     if (total_override || shared_opts->ass_style_override[sd->order] == ASS_STYLE_OVERRIDE_SCALE) {
+-        set_font_scale = opts->sub_scale;
++        set_font_scale = shared_opts->sub_scale[sd->order];
+     }
+     if (set_scale_with_window) {
+         set_font_scale *= dim->h / MPMAX(get_libass_scale_height(dim, set_use_margins), 1);
+diff --git a/sub/sd_lavc.c b/sub/sd_lavc.c
+index 5cbc6d0a..5096648c 100644
+--- a/sub/sd_lavc.c
++++ b/sub/sd_lavc.c
+@@ -526,11 +526,11 @@ static struct sub_bitmaps *get_bitmaps(struct sd *sd, struct mp_osd_res d,
+ 
+     osd_rescale_bitmaps(res, w, h, d, video_par);
+ 
+-    if (opts->sub_scale != 1.0 && shared_opts->ass_style_override[sd->order]) {
++    if (shared_opts->sub_scale[sd->order] != 1.0 && shared_opts->ass_style_override[sd->order]) {
+         for (int n = 0; n < res->num_parts; n++) {
+             struct sub_bitmap *sub = &res->parts[n];
+ 
+-            float shit = (opts->sub_scale - 1.0f) / 2;
++            float shit = (shared_opts->sub_scale[sd->order] - 1.0f) / 2;
+ 
+             // Fortunately VO isn't supposed to give a FUCKING FUCK about
+             // whether the sub might e.g. go outside of the screen.

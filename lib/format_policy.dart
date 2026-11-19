@@ -75,6 +75,10 @@ class FormatPolicy {
         'strategy': settings.strategy.name,
         'disabled': [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.name],
         'hardware': [for (final c in VideoCodec.values) if (hardware(settings, c)) c.name],
+        'hardwareHeights': {
+          for (final c in VideoCodec.values)
+            if (hardware(settings, c) && (settings.decoderResults[decoderKey(c)]?.height ?? 0) > 0) c.name: settings.decoderResults[decoderKey(c)]!.height,
+        },
         'maxHeight': settings.maxHeight,
         'audio': settings.audioQuality.name,
         'audioLanguage': audioLanguage,

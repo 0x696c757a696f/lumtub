@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -36,6 +38,19 @@ void main() {
     expect(GoogleTranslator.splitText('x' * 250, max: 100).join(), 'x' * 250);
   });
 
+  test('English given back as it was is asked again as English', () async {
+    final sources = <String>[];
+    final translator = GoogleTranslator(MockClient((request) async {
+      final source = request.url.queryParameters['sl']!;
+      sources.add(source);
+      final text = request.url.queryParameters['q']!;
+      final answer = source == 'en' ? '那么告诉我' : text;
+      return http.Response(jsonEncode([[[answer, text]]]), 200, headers: {'content-type': 'application/json; charset=utf-8'});
+    }));
+    expect(await translator.translate('So tell me which phone you bought 😁', 'zh-CN'), '那么告诉我');
+    expect(sources, ['auto', 'en']);
+  });
+
   test('asks the endpoint with the target language and caches the answer', () async {
     final requests = <Uri>[];
     final translator = GoogleTranslator(MockClient((request) async {
@@ -59,7 +74,8 @@ void main() {
   });
 
   test('turns failures into short messages', () async {
-    expect(GoogleTranslator(MockClient((_) async => http.Response('', 429))).translate('x', 'en'), throwsA(isA<TranslationException>()));
+    await expectLater(GoogleTranslator(MockClient((_) async => http.Response('', 429))).translate('x', 'en'), throwsA(isA<TranslationException>()));
+    GoogleTranslator.resetPacing();
     expect(GoogleTranslator(MockClient((_) async => throw http.ClientException('offline'))).translate('x', 'en'), throwsA(isA<TranslationException>()));
   });
 
@@ -168,7 +184,8 @@ void main() {
 
   testWidgets('沉浸式翻译 shows foreign text with its translation unasked', (tester) async {
     final fake = _Fake();
-    final controller = AppController()..translator = fake;
+    final controller = AppController()..translator = fake
+      ..textTranslator = fake;
     controller.preferences = controller.preferences.copyWith(translateLanguage: 'ja', immersiveLanguage: 'zh-CN', immersiveTranslation: true, bilingualTranslation: false);
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Column(children: [
       Translatable(controller: controller, text: 'Hello there', builder: (context, text) => Text(text)),
@@ -187,7 +204,8 @@ void main() {
 
   testWidgets('a tap turns Traditional Chinese into Simplified even when the two count as one', (tester) async {
     final fake = _Fake();
-    final controller = AppController()..translator = fake;
+    final controller = AppController()..translator = fake
+      ..textTranslator = fake;
     controller.preferences = controller.preferences.copyWith(translateLanguage: 'zh-CN', immersiveLanguage: 'zh-CN', immersiveTranslation: true, bilingualTranslation: false);
     expect(controller.preferences.chineseAsOne, isTrue);
     const text = '這樣的國家還會說這些話';
@@ -205,7 +223,8 @@ void main() {
 
   testWidgets('translates on tap, shows the original again and reports errors', (tester) async {
     final fake = _Fake();
-    final controller = AppController()..translator = fake;
+    final controller = AppController()..translator = fake
+      ..textTranslator = fake;
     controller.preferences = controller.preferences.copyWith(translateLanguage: 'zh-CN');
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(controller: controller, text: 'Hello', builder: (context, text) => Text(text)))));
     expect(find.text('Hello'), findsOneWidget);
@@ -238,6 +257,7 @@ void main() {
 
     final failing = _Fake()..fail = true;
     controller.translator = failing;
+    controller.textTranslator = failing;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(key: const ValueKey('b'), controller: controller, text: 'Other', builder: (context, text) => Text(text)))));
     await tester.tap(find.text('Translation'));
     await tester.pump();

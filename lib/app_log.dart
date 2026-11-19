@@ -9,6 +9,9 @@ const appVersion = String.fromEnvironment('LUMTUB_VERSION', defaultValue: 'å¼€å
 
 /// How much goes into the log: each level keeps those above it too.
 enum LogLevel {
+  /// Nothing at all: no log file is written (and on Windows no crash dump).
+  off('OFF  '),
+
   /// Failures the user notices, such as a video that will not play.
   error('ERROR'),
 
@@ -46,7 +49,24 @@ class AppLog {
   static const maxBytes = 1024 * 1024;
 
   /// The least important level written; lines below it are dropped.
-  static LogLevel level = LogLevel.info;
+  /// Until the saved level is read at start, lines wait in memory, so
+  /// with [LogLevel.off] not even the start is written.
+  static LogLevel get level => _level;
+  static LogLevel _level = LogLevel.info;
+  static bool _levelKnown = false;
+  static set level(LogLevel value) {
+    _level = value;
+    _levelKnown = true;
+    final log = current;
+    if (log == null) return;
+    if (value == LogLevel.off) {
+      log._pending.clear();
+      log._timer?.cancel();
+      log._timer = null;
+    } else if (log._pending.isNotEmpty) {
+      log._timer ??= Timer(flushDelay, () => unawaited(log.flush()));
+    }
+  }
 
   /// Starts the log, keeping the previous one as `lumtub.old.log` once it
   /// grows past [maxBytes].
@@ -59,7 +79,13 @@ class AppLog {
         if (await previous.exists()) await previous.delete();
         await file.rename(previous.path);
       }
-      return current = AppLog(file, size: await file.exists() ? await file.length() : 0);
+      final log = current = AppLog(file, size: await file.exists() ? await file.length() : 0);
+      // A start that never got as far as reading the saved level still
+      // leaves its lines.
+      Timer(const Duration(seconds: 10), () {
+        if (!_levelKnown) level = _level;
+      });
+      return log;
     } on FileSystemException {
       return null;
     }
@@ -75,8 +101,9 @@ class AppLog {
   /// Queues a line; lines are written together shortly after, or at once
   /// for errors, without blocking the caller.
   void write(LogLevel level, String message) {
-    if (level.index > AppLog.level.index) return;
+    if (level == LogLevel.off || level.index > AppLog.level.index || AppLog.level == LogLevel.off) return;
     _pending.write('${DateTime.now().toIso8601String()} ${level.tag} ${redact(inEnglish(message))}\n');
+    if (!_levelKnown) return;
     if (level == LogLevel.error) {
       unawaited(flush());
     } else {

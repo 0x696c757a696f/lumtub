@@ -1,0 +1,58 @@
+name: iOS packages into a release
+
+# Puts the iOS packages (.ipa and TrollStore .tipa) of a finished Build run
+# into an existing release, named for that release, and writes its AltStore
+# source again: an iOS fix shipped without a new version. The other
+# platforms' files are left as they are.
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Build run whose Lumtub-ios-ipa artifact goes in"
+        required: true
+      tag:
+        description: "Release tag, such as v0.2.52-b37a5a0"
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-into-release
+  cancel-in-progress: false
+
+jobs:
+  attach:
+    name: Attach
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Packages and AltStore source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ inputs.run_id }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          [[ $RUN =~ ^[0-9]{1,20}$ ]] || { echo "Unexpected run id: $RUN"; exit 1; }
+          [[ $TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{7,40}$ ]] || { echo "Unexpected tag: $TAG"; exit 1; }
+          gh release view "$TAG" -R "$GITHUB_REPOSITORY" > /dev/null
+          gh run download "$RUN" -R "$GITHUB_REPOSITORY" -n Lumtub-ios-ipa -D "$RUNNER_TEMP/in"
+          shopt -s nullglob
+          ipas=("$RUNNER_TEMP"/in/*_ios.ipa)
+          tipas=("$RUNNER_TEMP"/in/*_ios-trollstore.tipa)
+          (( ${#ipas[@]} == 1 && ${#tipas[@]} == 1 )) || { echo "The artifact has no single .ipa and .tipa"; ls -la "$RUNNER_TEMP/in"; exit 1; }
+          version="${TAG#v}"
+          mkdir -p dist
+          cp -- "${ipas[0]}" "dist/Lumtub_${version}_ios.ipa"
+          cp -- "${tipas[0]}" "dist/Lumtub_${version}_ios-trollstore.tipa"
+          python3 ios/packaging/altstore-source.py "dist/Lumtub_${version}_ios.ipa" "$TAG" "release-notes/${version%%-*}.md" dist/altstore-source.json
+          ls -la dist
+          gh release upload "$TAG" -R "$GITHUB_REPOSITORY" --clobber -- dist/*

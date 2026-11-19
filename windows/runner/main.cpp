@@ -23,6 +23,13 @@ std::wstring CrashLogDirectory() {
 }
 
 LONG WINAPI WriteCrashDump(EXCEPTION_POINTERS* exception) {
+  // Logging turned off in the settings (lib/app/settings_actions.dart
+  // writes config\logs-off): no crash dump either.
+  if (DataRoot().empty() ||
+      ::GetFileAttributesW((DataRoot() + L"\\config\\logs-off").c_str()) !=
+          INVALID_FILE_ATTRIBUTES) {
+    return EXCEPTION_CONTINUE_SEARCH;
+  }
   const std::wstring logs = CrashLogDirectory();
   if (logs.empty()) return EXCEPTION_CONTINUE_SEARCH;
 

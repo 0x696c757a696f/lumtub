@@ -1,29 +1,35 @@
 <div align="center">
 
-# ▶ Lumtub：按你的方式看 YouTube
+<img src="website/public/icon.png" alt="" width="104">
 
-**YouTube 客户端：mpv 播放，本机计算、看得懂也调得动的推荐，双语字幕，直播聊天变成弹幕。**<br>
-不登录也能看；只有想点赞、评论时才需要连接账号。<br>
-支持 **Windows、Linux、macOS 和 Android**（手机、平板和电视），iPhone 和 iPad 版为预览版。
+# Lumtub
+
+**按你的方式看 YouTube。**<br>
+没有广告，mpv 播放，推荐写明原因，双语字幕，直播聊天变弹幕。<br>
+不用登录也能看。
 
 [English](README.md) · **简体中文**
 
-[![下载](https://img.shields.io/github/v/release/0x696c757a696f/lumtub?include_prereleases&label=%E4%B8%8B%E8%BD%BD&style=for-the-badge&color=E53935)](https://github.com/0x696c757a696f/lumtub/releases/latest)
-<a href="#支持-lumtub"><img src="docs/sponsor/sponsor-zh.svg" alt="赞助" height="28"></a>
-
+[![版本](https://img.shields.io/github/v/release/0x696c757a696f/lumtub?include_prereleases&label=%E7%89%88%E6%9C%AC&color=E53935)](https://github.com/0x696c757a696f/lumtub/releases/latest)
+[![下载量](https://img.shields.io/github/downloads/0x696c757a696f/lumtub/total?label=%E4%B8%8B%E8%BD%BD%E9%87%8F&color=2DD4BF)](https://github.com/0x696c757a696f/lumtub/releases)
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
-![Windows](https://img.shields.io/badge/Windows-x64%20%7C%20ARM64-0078D4?logo=windows)
-![Linux](https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-FCC624?logo=linux&logoColor=black)
-![macOS](https://img.shields.io/badge/macOS-Apple%20silicon%20%7C%20Intel-000000?logo=apple)
-![Android](https://img.shields.io/badge/Android-%E6%89%8B%E6%9C%BA%20%7C%20%E5%B9%B3%E6%9D%BF%20%7C%20%E7%94%B5%E8%A7%86-3DDC84?logo=android&logoColor=white)
-![iOS](https://img.shields.io/badge/iOS-iPhone%20%7C%20iPad%EF%BC%88%E9%A2%84%E8%A7%88%EF%BC%89-000000?logo=ios)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
 [![翻译状态](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
+<a href="#支持-lumtub"><img src="docs/sponsor/sponsor-zh.svg" alt="赞助" height="20"></a>
 
-[有什么不同](#有什么不同) · [功能](#功能) · [下载](#下载) · [隐私](#隐私哪些留在本机哪些会发出去) · [常见问题](#常见问题) · [支持](#支持-lumtub)
+#### 下载
+
+<a href="https://github.com/0x696c757a696f/lumtub/releases/latest"><img src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="下载 Windows" height="36"></a>
+<a href="https://github.com/0x696c757a696f/lumtub/releases/latest"><img src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-macOS-000000?style=for-the-badge&logo=apple&logoColor=white" alt="下载 macOS" height="36"></a>
+<a href="https://github.com/0x696c757a696f/lumtub/releases/latest"><img src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="下载 Linux" height="36"></a>
+<a href="https://github.com/0x696c757a696f/lumtub/releases/latest"><img src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="下载 Android" height="36"></a>
+<a href="https://github.com/0x696c757a696f/lumtub/releases/latest"><img src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-iPhone%20%E5%92%8C%20iPad-555555?style=for-the-badge&logo=ios&logoColor=white" alt="下载 iPhone 和 iPad" height="36"></a>
+
+<sub>免费开源，不收集遥测数据。不知道选哪个文件？看<a href="#下载">下载</a>一节。iPhone 和 iPad 版为预览版。</sub>
+
+[截图](#截图) · [功能](#功能) · [下载](#下载) · [数据来源](#数据来源) · [隐私](#隐私哪些留在本机哪些会发出去) · [常见问题](#常见问题) · [支持](#支持-lumtub)
 
 </div>
-
 ---
 
 ## 有什么不同
@@ -36,33 +42,35 @@
 
 Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集遥测数据。
 
-## 功能
+## 截图
 
 <table>
 <tr>
-<td align="center" width="50%"><img src="docs/screenshots/zh/home-reasons.png" alt="为你推荐，每个视频下面写着推荐原因"><br><b>每条推荐都写明原因</b></td>
-<td align="center" width="50%"><img src="docs/screenshots/danmaku.jpg" alt="直播聊天变成弹幕从画面上飞过"><br><b>直播聊天变弹幕</b></td>
+<td align="center" width="50%"><img src="docs/screenshots/cards/watch-zh.jpg" alt="没有广告，点开就看：mpv 播放 4K" width="100%"></td>
+<td align="center" width="50%"><img src="docs/screenshots/cards/subtitles-zh.jpg" alt="双语字幕：中文译文在上，英文原文在下" width="100%"></td>
 </tr>
 <tr>
-<td align="center" width="50%"><img src="docs/screenshots/zh/explore-language.png" alt="探索页的科学分区，只看说日语的视频"><br><b>按视频里真正说的语言探索</b></td>
-<td align="center" width="50%"><img src="docs/screenshots/tour.gif" alt="在十套配色间切换"><br><b>十套配色，浅色深色</b></td>
+<td align="center" width="50%"><img src="docs/screenshots/cards/danmaku-zh.jpg" alt="直播聊天变成弹幕从画面上飞过，右边是聊天栏" width="100%"></td>
+<td align="center" width="50%"><img src="docs/screenshots/cards/reasons-zh.jpg" alt="每条推荐都写明原因" width="100%"></td>
 </tr>
 <tr>
-<td align="center"><img src="docs/screenshots/watch.png" alt="播放视频，旁边是接下来播放"><br><b>mpv 播放</b></td>
-<td align="center"><img src="docs/screenshots/search.png" alt="搜索结果里也有频道和播放列表"><br><b>搜索也能找到频道和播放列表</b></td>
+<td align="center" width="50%"><img src="docs/screenshots/cards/search-zh.jpg" alt="搜索结果里有频道，还能按类型筛选" width="100%"></td>
+<td align="center" width="50%"><img src="docs/screenshots/cards/skins-zh.jpg" alt="四套皮肤并排" width="100%"></td>
 </tr>
 <tr>
-<td align="center"><img src="docs/screenshots/zh/skin-aero.png" alt="泡泡凝胶皮肤下的首页"><br><b>皮肤：泡泡凝胶</b></td>
-<td align="center"><img src="docs/screenshots/zh/skin-player.png" alt="千禧播放器皮肤，带液晶屏"><br><b>千禧播放器，带液晶屏</b></td>
+<td align="center" width="50%"><img src="docs/screenshots/cards/download-zh.jpg" alt="下载时自己选编码和画质" width="100%"></td>
+<td align="center" width="50%"><img src="docs/screenshots/cards/cast-zh.jpg" alt="投屏到电视，最高 8K" width="100%"></td>
 </tr>
 </table>
+
+## 功能
 
 ### 🧠 推荐与发现
 - **本机计算的“为你推荐”**，混合长期兴趣、近期兴趣、探索和热门，每个视频都标明推荐原因。
 - **按分区探索**，类似 B 站，可按为你推荐、热门、最新、宝藏、新人和长视频排序。可按视频实际说的语言（从音频和字幕判断）、地区、画质、时长和类型筛选，也能添加自己的分区。
 - **频道页**包括视频、Shorts、直播、播放列表、播客和社区帖子，并可在频道内搜索。
 - **订阅分组**，播放列表显示总时长和剩余时长，稍后观看和播放队列。
-- **订阅随时搬家**：不用登录就能导入 NewPipe、FreeTube、Google Takeout 或 OPML 的订阅，也能再导出；还可以连同设置把整个媒体库一起备份。
+- 🆕 **订阅随时搬家**：不用登录就能导入 NewPipe、FreeTube、Google Takeout 或 OPML 的订阅，也能再导出；还可以连同设置把整个媒体库一起备份。
 - **专注模式**隐藏首页推荐、评论和相关视频。**观看统计**只留在你的电脑上。
 
 ### 🎬 播放器
@@ -72,12 +80,12 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 - **音量均衡**（默认关闭）：根据 YouTube 测得的响度，拉平不同视频之间和同一视频内的音量差。
 - 视频上的鼠标滚轮可以按需设为调音量或亮度（设置 › 控制与快捷键），默认只滚动页面。Ctrl + 滚轮调倍速。
 - **投屏**到 Chromecast、DLNA 电视，以及 AirPlay 设备（预览版）。
-- **下载**：可选 YouTube 提供的任意格式，合并时不重新编码，并可在 Lumtub 里离线播放。
+- 🆕 **下载**：可选 YouTube 提供的任意格式，合并时不重新编码，并可在 Lumtub 里离线播放。
 - **诊断**：网络诊断逐项检查代理、出口地址和各类请求；内置播放测试比较 H.264、VP9 和 AV1 在这台电脑上的处理器占用、内存和丢帧。
 
 ### 💬 字幕与翻译
 - **双语字幕**，样式可边看边调，章节名一键翻译。
-- **AI 翻译**，可用机器翻译服务，或你选择的任何兼容 OpenAI 的模型。
+- **AI 翻译**，可用机器翻译服务（🆕 包括免费、不用密钥的 MyMemory），或你选择的任何兼容 OpenAI 的模型。
 - **语音转字幕**（Groq、OpenAI 或你自己的接口）和基于字幕的 **AI 视频总结**。这些需要你自己提供服务或 API 密钥，部分服务商会收费。
 
 ### 🔴 直播
@@ -86,17 +94,19 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 - Super Chat 和加入会员会在浏览器中打开 YouTube 的付款页面。
 
 ### 🔐 账号只在你需要时使用
-- 支持 Google、电视验证码或浏览器登录，用于订阅、播放列表、点赞、评论、社区帖子、投票，以及你有权观看的**会员专属视频**。
+- 🆕 **一次登录全搞定**：在浏览器窗口里登录一次，首页推荐、观看记录、稍后观看、播放列表、点赞、评论、订阅、社区帖子、投票，以及你有权观看的**会员专属视频**就都能用。用自己的 Google 客户端登录仍可选。
 - 登录凭据加密保存在你的电脑上：Windows 用 TPM 或 Windows Hello 保护，Linux 和 macOS 用系统钥匙串。
-- **抗量子加密**：Lumtub 自己发起的 HTTPS 连接（YouTube 页面和数据、视频中转、加密 DNS、更新）在服务器支持时使用 X25519MLKEM768 混合密钥交换，YouTube 已经支持。设置 › 网络里能看到每个网站商定的方式，也可以改成必须或关闭。播放器和 yt-dlp 自己的连接不在其中。
+- 🆕 **抗量子加密**：Lumtub 自己发起的 HTTPS 连接（YouTube 页面和数据、视频中转、加密 DNS、更新）在服务器支持时使用 X25519MLKEM768 混合密钥交换，YouTube 已经支持。设置 › 网络里能看到每个网站商定的方式，也可以改成必须或关闭。播放器和 yt-dlp 自己的连接不在其中。
 
 ### 其他内置功能
 这些在别的 YouTube 客户端里也有，在这里都需要手动开启：
 - **SponsorBlock**、**DeArrow** 标题和缩略图、**Return YouTube Dislike**、隐藏所有 Shorts，以及隐藏标注为 AI 生成的视频和社区 AI 垃圾内容名单上频道的 AI 过滤。
-- 代理（系统、HTTP 或 SOCKS5）、可选的加密 DNS，以及作为备用的 Piped 或 Invidious 服务器。
+- 代理（系统、HTTP 或 SOCKS5）、可选的加密 DNS，以及作为备用的 Piped 或 Invidious 服务器。🆕 YouTube 弹出机器人验证时，Lumtub 会自己在 IPv4 和 IPv6 之间切换。
+- 🆕 电脑版用内置的 QuickJS 直接解 YouTube 的 JavaScript 验证，Deno 作为备用。
 - **82 种界面语言**，包括从右到左的文字，默认跟随系统语言。欢迎在 [Weblate](https://hosted.weblate.org/engage/lumtub/) 上改进翻译。
 - **皮肤**：换掉整个界面的样子，内置三十六套，从千禧年的光泽风格、Frutiger Aero 风景到黑白点阵、软陶和新粗野主义，还可以用皮肤自己的标题栏和菜单栏。人人都能做皮肤：写一个带注释的 `skin.jsonc` 就行，颜色对比度会自动检查。见 [skins/README.md](skins/README.md)。
 - 十套配色，浅色深色，可选护眼暖光、字体和卡片大小。
+- 🆕 **窗口透明**：像玻璃一样透出桌面，任何皮肤都能用，可加模糊。
 - 屏蔽任意频道，或只是不再推荐它。
 - **屏蔽列表**：争议宗教团体和官方宣传媒体，默认不开，自己在设置里打开。列表是 [lists/](lists/) 里公开的文件，每天带签名自动更新，谁都可以建议加入频道或报告误列。见 [lists/README.md](lists/README.md#怎么贡献)。
 - 应用、yt-dlp 和 libmpv 都有签名的自动更新，新组件出问题时会自动回退。
@@ -124,6 +134,7 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 | `android-armeabi-v7a` APK | 较老的 32 位 Android 设备和不少廉价电视盒子 |
 | `android-x86_64` APK | Android 模拟器和 x86 Chromebook |
 | `ios` IPA | iOS 15 及以上的 iPhone 和 iPad（预览版，自签安装） |
+| `ios-trollstore` TIPA | 同上，给 [TrollStore](https://github.com/opa334/TrollStore) 用：iOS 26.2 之前也会向系统要 VP9 硬件解码 |
 
 文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
 **Windows**：用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。也可以用包管理器（正在审核，通过后可用）：`winget install Lumtub.Lumtub`。<br>
@@ -150,6 +161,15 @@ Lumtub 是免费的，只从以下渠道发布：
 
 如果有人向你收费出售 Lumtub，或者换个名字卖却不提供源代码，那就不是本项目发布的，安装包也可能被动过手脚。Lumtub 的许可证（AGPL）允许别人转发甚至出售副本，但必须把完整源代码以同样的许可证一并提供给你，并保留版权声明。收费又闭源的副本违反了许可证。遇到这种情况，请把链接[提交到 issue](https://github.com/0x696c757a696f/lumtub/issues/new)，以便发起下架。
 
+## 数据来源
+
+- **视频、搜索、频道、评论和直播聊天**直接来自 YouTube，通过 [yt-dlp](https://github.com/yt-dlp/yt-dlp) 和 YouTube 自己的网页接口获取。看视频不需要 API 密钥。
+- **账号功能**（点赞、评论、播放列表、订阅）用你自己的登录，通过 YouTube 的 API 或 YouTube 网站完成。
+- **Piped 或 Invidious** 服务器只在需要时作为备用，可以关掉。
+- **SponsorBlock、DeArrow 和 Return YouTube Dislike** 在你打开后使用它们的公开接口。
+- **AI 频道名单**来自 [KillSlop](https://killslop.app) 和 [AiSList](https://github.com/Override92/AiSList)，只在打开 AI 过滤后下载。
+- **翻译、语音转字幕和总结**用你自己选的服务或模型。
+
 ## 隐私：哪些留在本机，哪些会发出去
 
 留在你电脑上的：观看记录、统计、“不感兴趣”的选择，以及推荐模型本身。推荐在本机计算。Lumtub 从不读取浏览器的 Cookie 或配置文件。可选的浏览器登录会打开一个独立的临时窗口，只保留 YouTube 的 Cookie，加密保存在你的电脑上，其余全部删除。观看记录同步到 YouTube 默认关闭，除非你自己打开。
@@ -175,6 +195,8 @@ Lumtub 是免费的，只从以下渠道发布：
 
 **数据存在哪里？** Windows 在 `%LOCALAPPDATA%\Lumtub`，便携版在 `lumtub.exe` 旁边的 `userdata` 文件夹。Linux 在 `~/.local/share/lumtub`，macOS 在 `~/Library/Application Support/Lumtub`。设置、订阅和媒体库都可以导出和导入。
 
+**为什么在旧电脑或手机上最高只有 1080p？** YouTube 在 1080p 以上只有 VP9 和 AV1 两种格式。Lumtub 每次启动都会检查设备能不能硬件解码它们；两种都不能时，自动画质会停在 1080p（H.264，所有设备都能硬件解码），并提示你一次。你仍然可以手动选 1440p 或 4K，或把播放策略改成「画质优先」，这时画面用软件解码，更耗电、更容易发热。iPhone 和 iPad 上，iOS 26.2 及以上会让 Lumtub 用芯片自带的 VP9 和 AV1 硬件解码（AV1 要 iPhone 15 Pro 及更新机型）；26.2 之前只有 TrollStore 版能向系统要 VP9 硬解。播放器的「播放信息」会显示实际用的是哪种。
+
 **支持哪些 Linux？** glibc 2.35 或更新的发行版：Ubuntu 22.04、Debian 12、Fedora 36 及以后。不支持 Ubuntu 20.04 及更早版本，也不支持 Alpine 等 musl 系统。NixOS 上请用 `appimage-run` 启动。
 
 **为什么 GNOME 上没有托盘图标？** GNOME 只有装了 AppIndicator 扩展才显示托盘图标。Ubuntu 已经自带；Fedora 等原版 GNOME 请安装 [AppIndicator and KStatusNotifierItem Support](https://extensions.gnome.org/extension/615/appindicator-support/)。没有它时，关闭或最小化到托盘会改为普通的最小化。
@@ -182,6 +204,12 @@ Lumtub 是免费的，只从以下渠道发布：
 **为什么 Linux 上会忘记登录？** Lumtub 把登录信息加密存在系统钥匙串（GNOME Keyring 或 KWallet）里。没有钥匙串的桌面，例如只装了窗口管理器的系统，需要安装并运行 `gnome-keyring` 或 `kwallet`。
 
 **它以前叫 YTPlus 吗？** 是的，2026 年 10 月之前叫 YTPlus。更新后设置、媒体库和登录都会保留。
+
+## 参与翻译
+
+Lumtub 支持 82 种界面语言，全部由志愿者在 [Weblate](https://hosted.weblate.org/engage/lumtub/) 上翻译。缺你的语言，或者发现翻错了？直接去那里改，不用会编程。详见 [TRANSLATING.md](TRANSLATING.md)。
+
+[![翻译状态](https://hosted.weblate.org/widget/lumtub/multi-auto.svg)](https://hosted.weblate.org/engage/lumtub/)
 
 ## 支持 Lumtub
 
@@ -193,15 +221,20 @@ Lumtub 是免费的，只从以下渠道发布：
 <a href="https://github.com/sponsors/0x696c757a696f"><img src="docs/sponsor/github-zh.svg" alt="在 GitHub 上赞助" height="64"></a>
 <a href="https://ko-fi.com/0x696c757a696f"><img src="docs/sponsor/kofi-zh.svg" alt="在 Ko-fi 上赞助" height="64"></a>
 
-**每月赞助者**决定接下来做什么：让 Windows 安装时不再警告的代码签名证书，以及 Apple 公证。<br>
+赞助用来支付构建服务器、测试设备和开发者账号。第一个目标是付费的 Apple 开发者账号，这样侧载安装的 iOS 版能用一整年，不用每 7 天重装。<br>
 赞助者提的功能建议会打上 **sponsor priority** 标签，优先处理。<br>
-任何金额的一次性赞助同样欢迎。应用里的 设置 › 关于 › 支持开发 也是同一个页面。
+任何金额的一次性赞助同样欢迎。应用里的 设置 › 关于 › 支持开发 也是同一个页面。<br>
+感谢[支持者](SPONSORING.md#supporters)：jay。
 
 </div>
 
-国内用户可以用[爱发电](https://afdian.com/a/linmuqingfeng)，支持支付宝和微信支付，每月 6、15、30 或 100 元，名字会写进 [支持者名单](SPONSORING.md#supporters)。海外用户也可以用 [Ko-fi](https://ko-fi.com/0x696c757a696f)，PayPal 或银行卡一次性赞助，不需要 GitHub 账号。其他赞助方式（包括加密货币）见 [SPONSORING.md](SPONSORING.md)。
+国内用户可以用[爱发电](https://afdian.com/a/linmuqingfeng)，支持支付宝和微信支付。爱发电**不会自动续费**：页面上写的“每月 6、15、30 或 100 元”其实是付一次、管一个月，到期就结束，不会再扣钱；也可以选“自选金额”，随便给多少都行，就是一次性打赏。名字会写进 [支持者名单](SPONSORING.md#supporters)。海外用户也可以用 [Ko-fi](https://ko-fi.com/0x696c757a696f)，PayPal 或银行卡一次性赞助，不需要 GitHub 账号。其他赞助方式（包括加密货币）见 [SPONSORING.md](SPONSORING.md)。
 
 不方便出钱？给仓库点个 ⭐，推荐给朋友，[报告问题或提建议](https://github.com/0x696c757a696f/lumtub/issues)，[给屏蔽列表推荐频道](lists/README.md#怎么贡献)，或者[帮忙翻译 Lumtub](https://hosted.weblate.org/engage/lumtub/)，都很有帮助。
+
+## 免责声明
+
+Lumtub 是独立项目，与 YouTube 或 Google 无关，未获得其认可或赞助。Lumtub 不托管任何视频，它和浏览器一样，只是显示 YouTube 提供给你的内容。下载仅限在法律和 YouTube 条款允许的范围内个人使用。如果可以，请通过会员、Super Chat 或 YouTube Premium 支持你喜欢的创作者。本软件按“原样”提供，不附带任何担保，详见 [LICENSE](LICENSE)。
 
 ---
 
@@ -214,5 +247,3 @@ Lumtub 以 GNU Affero 通用公共许可证第 3 版或更新版本（`AGPL-3.0-
 `lib/widgets/pilinara_settings_tiles.dart` 中的设置项改编自 [PiliNara](https://github.com/Starfallan/PiliNara)，版权归其贡献者所有，仍以 GPL-3.0-or-later 发布（可与 AGPL 合并使用）；Lumtub 的部分界面参考了 PiliNara 的设计。`vendor/pilinara-settings/` 是未经修改的 PiliNara 快照，仅供参考，不参与构建；PiliNara 的其余部分见上面链接的仓库。`vendor/media_kit_video/` 是修改过的 media_kit_video（见其中的 `LUMTUB.md`）。
 
 基于 [media_kit](https://github.com/media-kit/media-kit)、[mpv](https://mpv.io)、[yt-dlp](https://github.com/yt-dlp/yt-dlp) 和 [FFmpeg](https://ffmpeg.org) 构建。AI 频道名单来自 [KillSlop](https://killslop.app)（CC BY-SA 4.0）和 [AiSList](https://github.com/Override92/AiSList)（CC BY-NC 4.0），在运行时下载，不随 Lumtub 分发。内置的 Noto Sans SC 字体采用 SIL Open Font License 1.1（`assets/fonts/OFL.txt`）；Phosphor 图标字体采用 MIT 许可证（`assets/fonts/phosphor/LICENSE`）。其他软件包和组件保留各自的许可证；再分发前请参阅 `NOTICE`。
-
-Lumtub 与 YouTube 或 Google 无关，也未获得其认可。

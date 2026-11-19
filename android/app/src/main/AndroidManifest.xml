@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+    <!-- Asks once whether playback may run free of battery optimisation. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
     <!-- In-app updates: the downloaded, signature-checked APK goes to Android's installer. -->
@@ -24,6 +26,7 @@
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true"
         android:extractNativeLibs="true">
+        <!-- security-lint: allow exported (the launcher starts it; it reads nothing from the intent) -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -42,6 +45,7 @@
         </activity>
         <!-- The launcher entries: Settings › Appearance › App icon turns
              one on and the other off (MainActivity.setAppIcon). -->
+        <!-- security-lint: allow exported (launcher entry of MainActivity) -->
         <activity-alias
             android:name=".ClassicIcon"
             android:targetActivity=".MainActivity"
@@ -55,6 +59,7 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
             </intent-filter>
         </activity-alias>
+        <!-- security-lint: allow exported (launcher entry of MainActivity) -->
         <activity-alias
             android:name=".SunlightIcon"
             android:targetActivity=".MainActivity"

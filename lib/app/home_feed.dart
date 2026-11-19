@@ -187,6 +187,15 @@ class HomeFeed extends ChangeNotifier {
     }
   }
 
+  /// Deletes the feed kept for the next launch.
+  Future<void> forgetSaved() async {
+    try {
+      await cacheFile?.delete();
+    } on FileSystemException {
+      // None kept.
+    }
+  }
+
   /// Gathers everything again; [filter] drops blocked or hidden videos.
   /// With [keep], the videos shown stay and new ones follow them; with
   /// [ahead], a new page comes first and the videos seen before follow it,

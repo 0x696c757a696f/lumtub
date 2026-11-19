@@ -12,6 +12,7 @@ import 'package:synchronized/synchronized.dart';
 
 import 'package:media_kit/media_kit.dart';
 
+import 'package:media_kit_video/src/ios_video_layer.dart';
 import 'package:media_kit_video/src/utils/query_decoders.dart';
 import 'package:media_kit_video/src/video_controller/platform_video_controller.dart';
 
@@ -98,6 +99,16 @@ class NativeVideoController extends PlatformVideoController {
         videoParamsWidth = width;
         videoParamsHeight = height;
 
+        // Lumtub: the iOS layer takes the video's own size; nothing native
+        // to resize.
+        if (layerHandle != null) {
+          rect.value = Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble());
+          if (!waitUntilFirstFrameRenderedCompleter.isCompleted) {
+            waitUntilFirstFrameRenderedCompleter.complete();
+          }
+          return;
+        }
+
         // Lumtub: a size set through [setSize] stays when the video changes.
         if (this.width != null && this.height != null) {
           return;
@@ -158,6 +169,31 @@ class NativeVideoController extends PlatformVideoController {
     // Store the [NativeVideoController] in the [_controllers].
     _controllers[handle] = controller;
 
+    // Lumtub: on iOS libmpv's avfoundation video output hands its pictures
+    // to the plugin's VideoSink (its address as --wid), which shows them in
+    // an AVSampleBufferDisplayLayer: picture in picture takes that layer, and
+    // VideoToolbox's frames go to it as they are. Subtitles are shown in a
+    // layer above it, and drawn into the frames while picture in picture is
+    // open.
+    if (Platform.isIOS) {
+      final address = await _channel.invokeMethod<int>(
+        'Layer.Create',
+        {'handle': handle.toString()},
+      );
+      controller.layerHandle = handle;
+      IosVideoLayer.current = handle;
+      await controller.setProperties(
+        {
+          'wid': address.toString(),
+          'vo': 'avfoundation',
+          'hwdec': configuration.hwdec!,
+          'vid': 'auto',
+        },
+      );
+      controller.id.value = 0;
+      return controller;
+    }
+
     // Lumtub: on Windows only the Direct3D 11 interop is loaded unless
     // zero-copy DXVA2 is asked for. Loading every interop made a Direct3D 9
     // device too, which held up drawing the window.
@@ -216,6 +252,7 @@ class NativeVideoController extends PlatformVideoController {
     int? height,
   }) async {
     final handle = await player.handle;
+    if (layerHandle != null) return;
     if (this.width == width && this.height == height) {
       // No need to resize if the requested size is same as the current size.
       return;
@@ -259,6 +296,8 @@ class NativeVideoController extends PlatformVideoController {
     await videoParamsSubscription?.cancel();
     final handle = await player.handle;
     _controllers.remove(handle);
+    // Lumtub: the layer stays, as mpv holds its address.
+    if (layerHandle != null) return;
     await _channel.invokeMethod(
       'VideoOutputManager.Dispose',
       {
@@ -301,6 +340,15 @@ class NativeVideoController extends PlatformVideoController {
                         completer?.complete();
                       }
                     }
+                    break;
+                  }
+                case 'Layer.Pip':
+                  {
+                    IosVideoLayer.handleEvent(
+                      call.arguments['handle'] as int,
+                      call.arguments['event'] as String,
+                      (call.arguments['seconds'] as num?)?.toDouble(),
+                    );
                     break;
                   }
                 default:

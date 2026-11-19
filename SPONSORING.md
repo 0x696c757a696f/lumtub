@@ -4,7 +4,7 @@ Lumtub is built by one developer, in the open, with no ads and no tracking. Spon
 
 ## GitHub Sponsors
 
-[Sponsor on GitHub](https://github.com/sponsors/0x696c757a696f), monthly or once. Monthly sponsors decide what comes next: Android, a code-signing certificate so Windows stops warning on install, and Apple notarization.
+[Sponsor on GitHub](https://github.com/sponsors/0x696c757a696f), monthly or once. Your support pays for build servers, test devices and developer accounts. First up: a paid Apple Developer account, so sideloaded iOS installs last a full year instead of 7 days.
 
 The same page is in the app under Settings › About › Support development.
 
@@ -14,7 +14,7 @@ The same page is in the app under Settings › About › Support development.
 
 ## Afdian (爱发电)
 
-[Afdian](https://afdian.com/a/linmuqingfeng) takes Alipay and WeChat Pay, for supporters in China: ¥6, ¥15, ¥30 or ¥100 a month. Supporters are named in the [list below](#supporters).
+[Afdian](https://afdian.com/a/linmuqingfeng) takes Alipay and WeChat Pay, for supporters in China: ¥6, ¥15, ¥30 or ¥100 for a month, or any amount you choose. Afdian never renews on its own: each payment covers one month and then simply ends, so a "monthly" plan is really a one-time payment. Supporters are named in the [list below](#supporters).
 
 ## Crypto
 
@@ -38,4 +38,4 @@ Star the repository, tell a friend, [report a bug or suggest an idea](https://gi
 
 Thank you to everyone who supports Lumtub. Names are added here by hand, so tell us if yours is missing.
 
-- Be the first.
+- jay

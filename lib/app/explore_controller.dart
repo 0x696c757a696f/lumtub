@@ -450,47 +450,53 @@ extension ExploreActions on AppController {
   /// [queries] in [language], translated where they are in another, or
   /// into [traditional] characters; a query that cannot be translated is
   /// searched as it is. Which words are translated: [translatesInto].
-  Future<List<String>> _searchWordsIn(List<String> queries, ExploreLanguage language, {bool traditional = false}) {
+  Future<List<String>> _searchWordsIn(List<String> queries, ExploreLanguage language, {bool traditional = false}) async {
     final target = traditional ? 'zh-TW' : language.code;
-    Future<String> translate(String text) => _google.translate(text, target).timeout(const Duration(seconds: 10));
-    return Future.wait([
-      for (final query in queries)
-        if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language))
-          Future.value(query)
-        else
-          () async {
-            // The zones' Chinese keywords go by their English
-            // (searchPivots), which is translated instead and which an
-            // English search takes as it is.
-            var source = traditional ? query : englishSearchOf(query);
-            try {
-              final unpivoted = traditional || !pivotsThroughEnglish(language) ? const <String>[] : unpivotedPhrasesOf(source);
-              if (unpivoted.isNotEmpty) {
-                final english = (await _google.translate(unpivoted.join('\n'), 'en').timeout(const Duration(seconds: 10))).split('\n');
-                if (english.length != unpivoted.length) throw StateError('${english.length} lines for ${unpivoted.length} phrases');
-                source = withEnglishOf(source, english);
-              }
-              // Keyword by keyword, as a search wants keywords: "科技 数码 评测"
-              // as one sentence is "Revisione digitale della tecnologia",
-              // which finds next to nothing.
-              final words = searchPhrasesOf(source);
-              bool asks(String w) => translatesInto(w, language) && searchGlossary[w] == null;
-              if (!words.any(asks) && source == query) return query;
-              final asked = [for (final w in words) if (asks(w)) w];
-              final lines = asked.isEmpty ? const <String>[] : (await translate(asked.join('\n'))).split('\n');
-              if (lines.length != asked.length) throw StateError('${lines.length} lines for ${asked.length} phrases');
-              var next = 0;
-              final translated = searchWordsOf([
-                for (final w in words) searchGlossary[w] ?? (asks(w) ? lines[next++] : w),
-              ]);
-              logDebug(() => 'Explore searches "$query" in $target as "$translated"');
-              return translated.isEmpty ? query : translated;
-            } catch (e) {
-              logWarn('Could not translate the explore search "$query" into $target: $e');
-              return source;
-            }
-          }(),
-    ]);
+    final phrases = _searchPhrases ??= SearchPhrases(
+      _microsoftFirst,
+      file: directories == null ? null : File('${directories!.cache.path}${Platform.pathSeparator}search_phrases.json'),
+      bundled: () => rootBundle.loadString('assets/search_phrases.json'),
+    );
+    Object? refused;
+    void failed(Object e) => refused ??= e;
+    final asIs = [for (final q in queries) q.trim().isEmpty || (!traditional && titleLanguage(q) == language)];
+    // The zones' Chinese keywords go by their English (searchPivots),
+    // which is translated instead and which an English search takes as it
+    // is; keywords no pivot covers (a zone of the user's own) are put into
+    // English first.
+    final sources = [for (final (i, q) in queries.indexed) asIs[i] || traditional ? q : englishSearchOf(q)];
+    if (!traditional && pivotsThroughEnglish(language)) {
+      final unpivoted = [for (final (i, s) in sources.indexed) if (!asIs[i]) ...unpivotedPhrasesOf(s)];
+      if (unpivoted.isNotEmpty) {
+        final english = await phrases.translate(unpivoted, 'en', failure: failed);
+        for (final (i, s) in sources.indexed) {
+          final own = asIs[i] ? const <String>[] : unpivotedPhrasesOf(s);
+          if (own.isNotEmpty && own.every(english.containsKey)) sources[i] = withEnglishOf(s, [for (final p in own) english[p]!]);
+        }
+      }
+    }
+    // Keyword by keyword, as a search wants keywords: "科技 数码 评测" as one
+    // sentence is "Revisione digitale della tecnologia", which finds next
+    // to nothing. Every query's phrases go in one request.
+    bool asks(String w) => translatesInto(w, language) && searchGlossary[w] == null;
+    final words = [for (final s in sources) searchPhrasesOf(s)];
+    final asked = {for (final (i, w) in words.indexed) if (!asIs[i]) ...w.where(asks)};
+    final translated = asked.isEmpty ? const <String, String>{} : await phrases.translate(asked, target, failure: failed);
+    final out = <String>[];
+    for (final (i, query) in queries.indexed) {
+      if (asIs[i] || (!words[i].any(asks) && sources[i] == query)) {
+        out.add(query);
+        continue;
+      }
+      final result = searchWordsOf([for (final w in words[i]) searchGlossary[w] ?? (asks(w) ? translated[w] ?? w : w)]);
+      logDebug(() => 'Explore searches "$query" in $target as "$result"');
+      out.add(result.isEmpty ? query : result);
+    }
+    if (refused != null) {
+      final left = asked.where((w) => !translated.containsKey(w)).length;
+      logWarn('Could not translate $left of ${asked.length} explore search phrases into $target: $refused');
+    }
+    return out;
   }
 
   /// 全部's searches: zones of [section] picked at random each time, so

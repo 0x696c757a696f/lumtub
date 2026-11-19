@@ -39,14 +39,17 @@ class WebSignInActivity : Activity() {
         this.web = web
         web.settings.javaScriptEnabled = true
         web.settings.domStorageEnabled = true
+        // Google's pages only: nothing on the phone is theirs to read.
+        web.settings.allowFileAccess = false
+        web.settings.allowContentAccess = false
         // Google turns away pages that call themselves an app's web view;
         // this one is only the sign-in, as in the phone's own browser.
         web.settings.userAgentString = web.settings.userAgentString.replace("; wv", "")
         CookieManager.getInstance().setAcceptCookie(true)
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                val scheme = request?.url?.scheme ?: return true
-                return scheme != "https" && scheme != "http"
+                // Every page of the sign-in is https; nothing else opens here.
+                return request?.url?.scheme != "https"
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {

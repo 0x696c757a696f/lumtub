@@ -509,7 +509,8 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           setOpacity: (v) => save(now().copyWith(secondaryOpacity: v)),
         ),
         _header(context, tr('General')),
-        SwitchItem(
+        // Always on iOS (see PlayerSettings.fromJson).
+        if (!Platform.isIOS) SwitchItem(
           title: tr('Subtitles rendered by mpv (libass)'),
           subtitle: tr('Supports styled subtitles; when off, the UI draws them, using fewer resources'),
           leading: Icon(AppIcons.stack),
@@ -1059,6 +1060,7 @@ List<SettingEntry> aboutEntries(AppController controller) => [
     ];
 
 List<(LogLevel, String)> get _logLevels => [
+      (LogLevel.off, tr('Off: nothing is recorded')),
       (LogLevel.error, tr('Errors: only problems Lumtub could not get past')),
       (LogLevel.warn, tr('Warnings: also problems Lumtub worked around')),
       (LogLevel.info, tr('Info: also what Lumtub did (default)')),
@@ -1085,7 +1087,7 @@ class _LogsPageState extends State<_LogsPage> {
 
   static LogLevel _levelOf(String rest) {
     for (final level in LogLevel.values) {
-      if (rest.startsWith(level.tag.trim())) return level;
+      if (level != LogLevel.off && rest.startsWith(level.tag.trim())) return level;
     }
     // Lines from before levels were written, such as 错误 ones.
     return rest.startsWith('错误') ? LogLevel.error : LogLevel.info;
@@ -1214,7 +1216,7 @@ class _LogsPageState extends State<_LogsPage> {
                         LogLevel.error => context.colors.error,
                         LogLevel.warn => context.colors.tertiary,
                         LogLevel.debug => context.colors.outline,
-                        LogLevel.info => null,
+                        LogLevel.info || LogLevel.off => null,
                       };
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1273,7 +1275,7 @@ Future<void> openPrivacyConnections(BuildContext context, AppController controll
         row(AppIcons.hardDrives, tr('Encrypted DNS'), dns?.url ?? tr('Not in use'), tr('Looks up host names on a direct connection; the DNS server learns which sites you visit, not what you do there'), state: dns == null ? tr('Close') : tr('In use')),
         row(AppIcons.userCircle, tr('Google account'), 'accounts.google.com · oauth2.googleapis.com · www.googleapis.com', tr('Only after signing in, to sync subscriptions, playlists, likes and comments'),
             state: controller.account?.signedIn ?? false ? tr('Signed in') : tr('Signed out')),
-        row(AppIcons.television, tr('TV-code sign-in'), 'www.youtube.com/o/oauth2 · www.youtube.com/youtubei', tr("Only after signing in: likes and dislikes on comments and posts, requested as YouTube's TV app"),
-            state: controller.tvSignIn?.signedIn ?? false ? tr('Signed in') : tr('Signed out')),
+        row(AppIcons.globe, tr('Browser sign-in'), 'www.youtube.com/youtubei', tr('Only after signing in: your YouTube pages, likes, comments, subscriptions and playlists, requested as the YouTube website'),
+            state: controller.webSignIn?.signedIn ?? false ? tr('Signed in') : tr('Signed out')),
       ];
     });

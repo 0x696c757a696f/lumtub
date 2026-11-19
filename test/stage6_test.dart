@@ -44,6 +44,19 @@ void main() {
       AppLog.current = null;
     });
 
+    test('off writes nothing, not even lines from before the level was read', () async {
+      final dir = await Directory.systemTemp.createTemp('lumtub_log');
+      addTearDown(() => _deleteSoon(dir));
+      final log = (await AppLog.open(dir))!;
+      log.write(LogLevel.info, 'started');
+      AppLog.level = LogLevel.off;
+      log.write(LogLevel.error, 'failed');
+      await log.flush();
+      expect(await log.file.exists(), isFalse);
+      AppLog.level = LogLevel.info;
+      AppLog.current = null;
+    });
+
     test('writes only lines at or above the chosen level', () async {
       final dir = await Directory.systemTemp.createTemp('lumtub_log');
       addTearDown(() => _deleteSoon(dir));

@@ -22,6 +22,26 @@ class PlayerOptionApplicator {
     return FileSystemEntity.typeSync('$runtime/$remote') != FileSystemEntityType.notFound;
   }();
 
+  /// How far ahead mpv reads and how much of what was played it keeps.
+  /// 低资源占用优先 reads at most 30 s and 64 MiB ahead and keeps 16 MiB of
+  /// what was played; lower settings stay as they are. What was played is
+  /// kept for seeking back (mpv keeps 50 MiB), on top of the forward cache.
+  /// A phone or tablet with the app in the background, where iOS and
+  /// Android end the apps that hold the most memory first, reads at most
+  /// 30 s and 24 MiB ahead and keeps 4 MiB: plenty to ride out the network
+  /// while no one seeks.
+  static Map<String, String> cacheOptions(PlayerSettings settings, {bool background = false}) {
+    final light = settings.strategy == PlaybackStrategy.lowResource;
+    final seconds = light || background ? math.min(settings.cacheSeconds, 30) : settings.cacheSeconds;
+    final ahead = background ? math.min(settings.cacheMemoryMb, 24) : light ? math.min(settings.cacheMemoryMb, 64) : settings.cacheMemoryMb;
+    final back = background ? 4 : light ? 16 : (settings.cacheMemoryMb ~/ 4).clamp(PlayerSettings.lowMemory ? 8 : 16, 50);
+    return {
+      'cache-secs': '$seconds',
+      'demuxer-max-bytes': '${ahead}MiB',
+      'demuxer-max-back-bytes': '${back}MiB',
+    };
+  }
+
   static Map<String, String> optionsFor(PlayerSettings settings) {
     final light = settings.strategy == PlaybackStrategy.lowResource;
     final subtitles = settings.subtitleMode != SubtitleMode.off;
@@ -47,19 +67,29 @@ class PlayerOptionApplicator {
       // fast profile does: a 4K frame shrunk to a window is most of the GPU
       // work after decoding.
       if (settings.strategy == PlaybackStrategy.lowResource) ...fastRendering,
-      // iOS hands hardware-decoded frames to mpv's OpenGL ES renderer with
-      // the colour plane as a luminance-alpha texture (CoreVideo refuses a
-      // two-channel red-green one there). mpv's chroma scalers other than
-      // bilinear read that texture without swapping its channels, so both
-      // colour values come out the same and the picture turns green and
-      // purple. Bilinear chroma reads it through the right swizzle.
-      if (Platform.isIOS) 'cscale': 'bilinear',
+      // iOS shows the picture through libmpv's avfoundation video output
+      // (an AVSampleBufferDisplayLayer, for picture in picture), not mpv's
+      // OpenGL ES renderer: VideoToolbox's frames, 10-bit HDR ones too, go
+      // to the layer as they are, and Core Animation draws them.
+      // mpv's iOS audio output opens the audio session as "mix with
+      // others" unless exclusive. iOS shows only apps that do not mix in
+      // Now Playing (the Lock Screen, Control Center, the Dynamic Island),
+      // and another app's music would play on underneath the video; mixing
+      // is the person's choice (混音).
+      if (Platform.isIOS) 'audio-exclusive': settings.mixWithOthers ? 'no' : 'yes',
+      // AV1's film grain is noise added to every frame after decoding.
+      // Where the renderer cannot add it, mpv's automatic choice has the
+      // CPU do it, frame by frame, on top of decoding. On a phone or
+      // tablet, and with 低资源占用优先, it goes to the renderer only: one
+      // that can draws it, one that cannot leaves it out (a little less
+      // grain, much less CPU).
+      'vd-lavc-film-grain': settings.strategy == PlaybackStrategy.quality || !(light || Platform.isIOS || Platform.isAndroid) ? 'auto' : 'gpu',
       // Interpolation works only when video is timed to the display.
       'video-sync': settings.interpolation && settings.videoSync == VideoSync.audio ? VideoSync.displayResample.mpvValue : settings.videoSync.mpvValue,
       // Drawn by libmpv, subtitles look as the Flutter view draws them: the
       // same letter size, room below and outline. The player's own size
       // refines these once it is laid out (AppController.subtitleViewChanged).
-      ...libassOptions(settings, LibassLook.standard(position: settings.subtitlePosition, border: settings.subtitleBorder, byHeight: Platform.isAndroid, caption: Device.captionScale)),
+      ...libassOptions(settings, LibassLook.standard(position: settings.subtitlePosition, border: settings.subtitleBorder, byHeight: Platform.isAndroid || Platform.isIOS, caption: Device.captionScale)),
       // Who draws the subtitles: libmpv (libass) or the Flutter view, which
       // reads sub-text either way. Set here, a switch applies at once.
       'sub-ass': settings.libassSubtitles ? 'yes' : 'no',
@@ -85,13 +115,7 @@ class PlayerOptionApplicator {
       // been sent in full before reading pauses and none is cut; 10 MiB
       // pieces were still cut every 2 MB.
       'curl-max-request-size': curlRequestSize,
-      // 低资源占用优先 reads at most 30 s and 64 MiB ahead and keeps 16 MiB
-      // of what was played; lower settings stay as they are.
-      'cache-secs': (light ? math.min(settings.cacheSeconds, 30) : settings.cacheSeconds).toString(),
-      'demuxer-max-bytes': '${light ? math.min(settings.cacheMemoryMb, 64) : settings.cacheMemoryMb}MiB',
-      // What was played is kept for seeking back; mpv keeps 50 MiB, which
-      // goes on top of the forward cache above.
-      'demuxer-max-back-bytes': '${light ? 16 : (settings.cacheMemoryMb ~/ 4).clamp(16, 50)}MiB',
+      ...cacheOptions(settings),
       // Without this mpv lends the back cache whatever of the forward cache
       // cache-secs leaves unused, so what was played grew to the whole
       // 150 MiB plus the above (the user's log: 187 MB on a live; checked

@@ -3,10 +3,13 @@ import OpenGLES
 import UIKit
 
 /// Lumtub: iOS ends an app that sends OpenGL ES commands while it is in
-/// the background, so no frame is drawn then; the app also stops decoding
-/// the picture there (vid=no), and a frame already on its way is dropped.
+/// the background, so nothing is drawn or resized then (VideoOutput); the
+/// app also stops decoding the picture there (vid=no), and a frame
+/// already on its way is dropped.
 final class BackgroundState {
   static let shared = BackgroundState()
+  /// Posted on the main thread once drawing is allowed again.
+  static let resumed = Notification.Name("LumtubVideoDrawingResumed")
 
   private let lock = NSLock()
   private var background = false
@@ -16,11 +19,19 @@ final class BackgroundState {
     center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: nil) { [weak self] _ in
       self?.set(true)
     }
-    center.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: nil) { [weak self] _ in
+    // Drawing resumes once the app is active again, as Apple asks of
+    // OpenGL ES apps; whatever waited for it is drawn then.
+    center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: nil) { [weak self] _ in
       self?.set(false)
+      NotificationCenter.default.post(name: BackgroundState.resumed, object: nil)
     }
     let read = { UIApplication.shared.applicationState == .background }
-    set(Thread.isMainThread ? read() : DispatchQueue.main.sync(execute: read))
+    // Never waits for the main thread, which may itself be waiting for mpv.
+    if Thread.isMainThread {
+      set(read())
+    } else {
+      DispatchQueue.main.async { [weak self] in self?.set(read()) }
+    }
   }
 
   private func set(_ value: Bool) {

@@ -8,16 +8,23 @@ on:
         type: choice
         options: [latest, media_kit]
         default: latest
+      platforms:
+        description: 'Packages to build: every platform, or one alone'
+        type: choice
+        options: [all, windows, linux, macos, ios, android]
+        default: all
   push:
     branches: [main]
     tags: ['v*']
     # Pictures, text and the website alone need no new build (tags are
     # built whatever they change).
     paths-ignore: ['**.md', 'docs/**', 'website/**']
-  # A pull request gets the quick checks (checks.yml); it builds every
-  # package here only when it carries the label "full build" or its newest
-  # commit message has [full] (or [showcase]). Dependabot's pull requests
-  # are always built, since they're merged once the build passes.
+  # A pull request gets the quick checks (checks.yml); it builds packages
+  # here only when it carries the label "full build" or its newest commit
+  # message asks: [full] builds the platforms whose files the push changed,
+  # [ios], [android] and the like that one alone, [all] or [showcase] every
+  # one (docs/CI.md). Dependabot's pull requests are always built in full,
+  # since they're merged once the build passes.
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, labeled]
@@ -48,10 +55,20 @@ jobs:
     permissions:
       actions: read
       contents: read
+      pull-requests: read
     outputs:
       run: ${{ steps.find.outputs.run }}
       build: ${{ steps.wanted.outputs.build }}
+      # The platforms to build, as a JSON list (see "Which platforms").
+      platforms: ${{ steps.wanted.outputs.platforms }}
     steps:
+      # The workflow's own copy of the script that maps paths to platforms.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: true
+
       - name: Decide whether to build
         id: wanted
         env:
@@ -62,9 +79,15 @@ jobs:
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
           HEAD: ${{ github.event.pull_request.head.sha }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          BEFORE: ${{ github.event.before }}
+          CHOSEN: ${{ inputs.platforms }}
         run: |
           set -euo pipefail
+          every='["windows","linux","macos","ios","android"]'
           build=true
+          platforms=
+          message=
           if [[ "$EVENT" == pull_request ]]; then
             message=$(gh api "repos/$GITHUB_REPOSITORY/commits/$HEAD" --jq .commit.message)
             if [[ "$ACTION" == labeled && "$LABEL" != 'full build' ]]; then
@@ -72,16 +95,56 @@ jobs:
               echo "Another label; nothing to build."
             elif [[ "$AUTHOR" == 'dependabot[bot]' ]]; then
               echo "Dependabot's pull request: built in full."
+              platforms=$every
             elif jq -e 'index("full build")' <<< "$LABELS" > /dev/null; then
-              echo "Labelled \"full build\": built in full."
-            elif grep -qF -e '[full]' -e '[showcase]' <<< "$message"; then
-              echo "The commit asks for the full build."
+              echo "Labelled \"full build\"."
+            elif grep -qE '\[(full|all|showcase|windows|linux|macos|ios|android)\]' <<< "$message"; then
+              echo "The commit asks for a build."
             else
               build=false
-              echo "Quick checks only (Checks workflow); main builds every package after the merge."
+              echo "Quick checks only (Checks workflow); main builds what the merge changed."
             fi
           fi
+
+          # Which platforms: those named in the commit message ([ios] ...) or
+          # chosen for a manual run; every one for [all], [showcase], the
+          # daily run and release tags; otherwise those whose files the
+          # change touched (.github/scripts/build_platforms.py).
+          named=$(grep -oE '\[(windows|linux|macos|ios|android)\]' <<< "$message" | tr -d '[]' | sort -u | jq -R . | jq -sc 'select(length > 0)' || true)
+          if [[ "$build" != true || -n "$platforms" ]]; then
+            :
+          elif [[ -n "$named" ]]; then
+            platforms=$named
+          elif [[ "$EVENT" == workflow_dispatch ]]; then
+            if [[ -z "$CHOSEN" || "$CHOSEN" == all ]]; then platforms=$every; else platforms="[\"$CHOSEN\"]"; fi
+          elif [[ "$EVENT" == schedule || "$GITHUB_REF" == refs/tags/v* ]] || grep -qE '\[(all|showcase)\]' <<< "$message"; then
+            platforms=$every
+          else
+            files=
+            if [[ "$EVENT" == pull_request && "$ACTION" == synchronize && -n "$BEFORE" ]] || [[ "$EVENT" == push && -n "$BEFORE" && ! "$BEFORE" =~ ^0+$ ]]; then
+              # What this push changed.
+              after=${HEAD:-$GITHUB_SHA}
+              files=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BEFORE...$after" --jq 'if (.files | length) >= 300 then "*" else .files[].filename end' || echo '*')
+            elif [[ "$EVENT" == pull_request ]]; then
+              # A pull request opened or labelled: all it changes.
+              files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$NUMBER/files?per_page=100" --jq '.[].filename' || echo '*')
+            else
+              files='*'
+            fi
+            if grep -qx '\*' <<< "$files"; then
+              platforms=$every
+            else
+              platforms=$(python3 -I .github/scripts/build_platforms.py <<< "$files")
+            fi
+            echo "Changed files:"; head -n 50 <<< "$files"
+          fi
+          if [[ "$build" == true && "$platforms" == '[]' ]]; then
+            build=false
+            echo "Nothing a package carries changed; nothing to build."
+          fi
+          echo "Platforms: ${platforms:-none}"
           echo "build=$build" >> "$GITHUB_OUTPUT"
+          echo "platforms=${platforms:-$every}" >> "$GITHUB_OUTPUT"
 
       # One full build at a time: a run waits until the Build runs started
       # before it have finished (each waits only for older runs, so two never
@@ -118,8 +181,15 @@ jobs:
             local id
             for id in $(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=built-$tree&per_page=20" \
                 --jq '[.artifacts[] | select(.expired | not) | .workflow_run.id] | unique | reverse | .[]'); do
-              read -r event branch conclusion <<< "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq '"\(.event) \(.head_branch) \(.conclusion)"')"
+              read -r event branch conclusion repo path <<< "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq '"\(.event) \(.head_branch) \(.conclusion) \(.head_repository.full_name) \(.path)"')"
               [[ "$conclusion" == success ]] || continue
+              # Only a run of this repository's own Build, on a branch of this
+              # repository: a fork's pull request runs its own copy of the
+              # workflows and could upload a marker and packages for any tree.
+              if [[ "$repo" != "$GITHUB_REPOSITORY" || "$path" != .github/workflows/build.yml ]]; then
+                echo "Not reusing run $id ($event from $repo, $path)."
+                continue
+              fi
               # The daily run wants a build made on main, for main's caches.
               if [[ "$EVENT" == schedule ]] && ! [[ "$event" == push || "$event" == schedule ]]; then continue; fi
               names=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts?per_page=100" \
@@ -153,7 +223,7 @@ jobs:
   windows:
     name: Windows ${{ matrix.package_arch }}
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'windows') }}
     strategy:
       fail-fast: false
       matrix:
@@ -188,6 +258,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
@@ -265,11 +336,40 @@ jobs:
           $dartVersion = (& dart --version 2>&1 | Out-String)
           if ($dartVersion -notmatch 'windows_arm64') { throw "Expected the ARM64 Dart runtime, got: $dartVersion" }
 
-      # media_kit publishes ANGLE only for x64. vcpkg builds it from source
-      # for arm64 once; the result is cached by vcpkg commit.
+      # media_kit publishes ANGLE only for x64. The arm64 build comes
+      # ready-made from lumtub-media-builds (vcpkg's angle port, released
+      # once per port version, pinned by checksum in pins.env). With no pin,
+      # vcpkg builds it here, cached by vcpkg commit.
+      - name: Windows ARM64 - download ANGLE
+        id: angle-prebuilt
+        if: matrix.package_arch == 'arm64'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ProgressPreference = 'SilentlyContinue'
+          $pins = @{}
+          foreach ($line in Get-Content -LiteralPath '.github/pins.env') {
+            if ($line -match '^([A-Z0-9_]+)=(.*)$') { $pins[$Matches[1]] = $Matches[2] }
+          }
+          $tag = $pins['ANGLE_ARM64_RELEASE']
+          if (-not $tag -or $tag -eq 'none') { Write-Host 'No ANGLE pinned; vcpkg builds it.'; exit 0 }
+          if ($tag -notmatch '^angle-arm64-windows-[0-9A-Za-z._-]+$') { throw "Unexpected ANGLE release: $tag" }
+          $archive = Join-Path $env:RUNNER_TEMP 'angle-arm64.tar.gz'
+          Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 10 -Uri "https://github.com/0x696c757a696f/lumtub-media-builds/releases/download/$tag/$tag.tar.gz" -OutFile $archive
+          $sum = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sum -ne $pins['ANGLE_ARM64_SHA256']) { throw "$tag failed its checksum: $sum" }
+          $out = Join-Path $env:RUNNER_TEMP 'angle-arm64'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          & tar.exe -xzf $archive -C $out
+          if ($LASTEXITCODE -ne 0) { throw "Could not extract $tag." }
+          foreach ($name in 'libEGL.dll', 'libGLESv2.dll', 'lib/libEGL.dll.lib', 'lib/libGLESv2.dll.lib') {
+            if (-not (Test-Path -LiteralPath (Join-Path $out $name))) { throw "$tag has no $name." }
+          }
+          "done=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
       - name: Windows ARM64 - prepare vcpkg
         id: vcpkg
-        if: matrix.package_arch == 'arm64'
+        if: matrix.package_arch == 'arm64' && steps.angle-prebuilt.outputs.done != 'true'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -287,21 +387,23 @@ jobs:
 
       - name: Windows ARM64 - restore ANGLE
         id: angle-cache
-        if: matrix.package_arch == 'arm64'
+        if: matrix.package_arch == 'arm64' && steps.angle-prebuilt.outputs.done != 'true' && !startsWith(github.ref, 'refs/tags/')
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/angle-arm64
           key: angle-arm64-windows-${{ steps.vcpkg.outputs.commit }}
 
       - name: Windows ARM64 - build ANGLE
-        if: matrix.package_arch == 'arm64' && steps.angle-cache.outputs.cache-hit != 'true'
+        if: matrix.package_arch == 'arm64' && steps.angle-prebuilt.outputs.done != 'true' && steps.angle-cache.outputs.cache-hit != 'true'
         shell: pwsh
+        env:
+          VCPKG_ROOT_DIR: ${{ steps.vcpkg.outputs.root }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $vcpkg = Join-Path '${{ steps.vcpkg.outputs.root }}' 'vcpkg.exe'
+          $vcpkg = Join-Path $env:VCPKG_ROOT_DIR 'vcpkg.exe'
           & $vcpkg install angle:arm64-windows --clean-after-build
           if ($LASTEXITCODE -ne 0) { throw 'vcpkg could not build ANGLE for arm64.' }
-          $installed = Join-Path '${{ steps.vcpkg.outputs.root }}' 'installed/arm64-windows'
+          $installed = Join-Path $env:VCPKG_ROOT_DIR 'installed/arm64-windows'
           $out = Join-Path $env:RUNNER_TEMP 'angle-arm64'
           New-Item -ItemType Directory -Force -Path (Join-Path $out 'lib') | Out-Null
           Copy-Item (Join-Path $installed 'bin/*.dll') $out
@@ -384,6 +486,7 @@ jobs:
 
       # Keyed by the toolchain installed above, so a new stable starts a fresh cache.
       - name: Windows - cache Rust dependencies
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: native/lumtub_core
@@ -620,7 +723,7 @@ jobs:
   linux:
     name: Linux ${{ matrix.package_arch }}
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'linux') }}
     strategy:
       fail-fast: false
       matrix:
@@ -656,15 +759,20 @@ jobs:
     steps:
       - name: Linux - install build tools
         run: |
-          # Ubuntu's archive is sometimes unreachable from the runners: retry,
-          # then switch to the Azure mirror the hosted runners use.
+          # The hosted runners sit in Azure, whose Ubuntu mirror is fast; the
+          # main archive can crawl (47 kB/s, 17 minutes for the package lists
+          # on 2026-11-19). Start on the Azure mirror, go back to the main
+          # archive if it fails, and give every attempt a time limit so a
+          # stalled mirror can't hold the job. arm64 (ports.ubuntu.com) has an
+          # Azure mirror too: azure.ports.ubuntu.com.
           echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80retries
+          sed -i -e 's#http://\(archive\|security\).ubuntu.com#http://azure.archive.ubuntu.com#' -e 's#http://ports.ubuntu.com#http://azure.ports.ubuntu.com#' /etc/apt/sources.list
           cat > /usr/local/bin/apt-install <<'SH'
           #!/bin/sh
           for attempt in 1 2 3; do
-            apt-get update && apt-get install -y --no-install-recommends "$@" && exit 0
-            if [ "$attempt" = 2 ] && grep -q 'archive.ubuntu.com' /etc/apt/sources.list; then
-              sed -i 's#http://\(archive\|security\).ubuntu.com#http://azure.archive.ubuntu.com#' /etc/apt/sources.list
+            timeout 300 apt-get update && timeout 900 apt-get install -y --no-install-recommends "$@" && exit 0
+            if [ "$attempt" = 1 ]; then
+              sed -i 's#http://azure\.\(archive\|ports\)\.ubuntu\.com#http://\1.ubuntu.com#' /etc/apt/sources.list
             fi
             sleep 10
           done
@@ -677,6 +785,7 @@ jobs:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
@@ -708,6 +817,7 @@ jobs:
           "$HOME/.cargo/bin/rustc" --version
 
       - name: Linux - cache Rust dependencies
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: native/lumtub_core
@@ -735,6 +845,7 @@ jobs:
 
       # GitHub's release downloads time out now and then; keep them between runs.
       - name: Linux - cache downloads
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .linux-downloads
@@ -893,6 +1004,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: true  # zizmor: ignore[artipacked] this job pushes with git
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Check whether pictures are wanted
         id: wanted
@@ -949,7 +1061,7 @@ jobs:
   macos:
     name: macOS
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'macos') }}
     # The signing keys live in the "release" environment, which only main
     # and v* tags may use (docs/SECURITY.md); other branches and pull
     # requests build without them and sign with a debug key.
@@ -962,6 +1074,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
@@ -985,6 +1098,7 @@ jobs:
           rustup default stable
 
       - name: macOS - cache Rust dependencies
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: native/lumtub_core
@@ -1010,6 +1124,7 @@ jobs:
       # vendor/media_kit_libs_macos_video/LUMTUB.md). The podspec would run the
       # same make during pod install, but with its output hidden.
       - name: macOS - cache MPVKit downloads
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: vendor/media_kit_libs_macos_video/macos/.cache
@@ -1151,14 +1266,23 @@ jobs:
   ios:
     name: iOS
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'ios') }}
     # An unsigned IPA for SideStore, AltStore, Sideloadly or TrollStore:
     # without an Apple developer account nothing else installs on an iPhone.
-    runs-on: macos-15
+    runs-on: macos-15-intel
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: iOS - Xcode and Swift
+        # The runner image's default Xcode, as releases are built with. The
+        # newest one there (26.3) came with Chinese text shown as boxes.
+        run: |
+          xcodebuild -version
+          swift --version
 
       - name: iOS - read the Flutter version
         shell: bash
@@ -1167,7 +1291,9 @@ jobs:
       - name: iOS - install Flutter stable SDK
         run: |
           archive="$RUNNER_TEMP/flutter.zip"
-          curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_$FLUTTER_VERSION-stable.zip"
+          # The Flutter SDK for this Mac's CPU (Apple silicon or Intel).
+          case "$(uname -m)" in arm64) sdk=macos_arm64 ;; *) sdk=macos ;; esac
+          curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_${sdk}_$FLUTTER_VERSION-stable.zip"
           unzip -q "$archive" -d "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/flutter/bin/flutter" --version
@@ -1178,6 +1304,7 @@ jobs:
           rustup default stable
 
       - name: iOS - cache Rust dependencies
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: native/lumtub_core
@@ -1191,6 +1318,54 @@ jobs:
           core=native/lumtub_core/target/aarch64-apple-ios/release/liblumtub_core.dylib
           lipo -info "$core"
           echo "LUMTUB_CORE=$PWD/$core" >> "$GITHUB_ENV"
+
+      # libmpv with the avfoundation video output (picture in picture). It
+      # comes ready-made from lumtub-media-builds, which builds this recipe
+      # (mpvkit.lock, build_libmpv.sh, patch/) once a day; the release is
+      # named after the recipe's hash and pinned by checksum in pins.env.
+      # A recipe not released yet (one this change edits) is built here.
+      - name: iOS - read the pinned downloads
+        run: grep -E '^[A-Z0-9_]+=' .github/pins.env >> "$GITHUB_ENV"
+
+      - name: iOS - download the patched libmpv
+        id: prebuilt
+        run: |
+          set -euo pipefail
+          cd vendor/media_kit_libs_ios_video/ios
+          release=$(awk '$1 == "Libmpv" { print $3 }' mpvkit.lock | sed -n 's#.*/releases/download/\([^/]*\)/.*#\1#p')
+          tag="libmpv-ios-$release-$(cat mpvkit.lock build_libmpv.sh patch/*.patch | shasum -a 256 | cut -c1-10)"
+          if [ "$tag" != "$IOS_LIBMPV_RELEASE" ]; then
+            echo "This recipe is $tag; pins.env has $IOS_LIBMPV_RELEASE. Building it here."
+            exit 0
+          fi
+          curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$RUNNER_TEMP/libmpv.tar.gz" \
+            "https://github.com/0x696c757a696f/lumtub-media-builds/releases/download/$tag/$tag.tar.gz"
+          echo "$IOS_LIBMPV_SHA256  $RUNNER_TEMP/libmpv.tar.gz" | shasum -a 256 -c -
+          rm -rf .libmpv
+          mkdir -p .libmpv
+          tar -xzf "$RUNNER_TEMP/libmpv.tar.gz" -C .libmpv
+          # Newer than the recipe, so make keeps it.
+          touch .libmpv/libmpv.a
+          echo "done=true" >> "$GITHUB_OUTPUT"
+
+      - name: iOS - cache the patched libmpv
+        if: steps.prebuilt.outputs.done != 'true'
+        id: libmpv
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: vendor/media_kit_libs_ios_video/ios/.libmpv
+          key: ios-libmpv-${{ hashFiles('vendor/media_kit_libs_ios_video/ios/mpvkit.lock', 'vendor/media_kit_libs_ios_video/ios/build_libmpv.sh', 'vendor/media_kit_libs_ios_video/ios/patch/*.patch') }}
+
+      - name: iOS - build the patched libmpv
+        if: steps.prebuilt.outputs.done != 'true'
+        run: |
+          cd vendor/media_kit_libs_ios_video/ios
+          if [ -f .libmpv/libmpv.a ]; then
+            # Restored from the cache: newer than the checkout, so make keeps it.
+            touch .libmpv/libmpv.a
+          else
+            make .libmpv/libmpv.a
+          fi
 
       - name: iOS - get packages
         run: flutter pub get
@@ -1219,17 +1394,24 @@ jobs:
       - name: iOS - package the IPA
         run: ios/packaging/package.sh build/ios/iphoneos/Runner.app "$LUMTUB_CORE" "Lumtub_${LUMTUB_VERSION}_ios.ipa"
 
+      - name: iOS - package the TrollStore build
+        # The same app carrying the private entitlement that unlocks VP9
+        # hardware decoding before iOS 26.2; only TrollStore installs it.
+        run: ios/packaging/package.sh build/ios/iphoneos/Runner.app "$LUMTUB_CORE" "Lumtub_${LUMTUB_VERSION}_ios-trollstore.tipa" ios/packaging/trollstore.entitlements
+
       - name: iOS - upload IPA
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: Lumtub-ios-ipa
-          path: Lumtub_*_ios.ipa
+          path: |
+            Lumtub_*_ios.ipa
+            Lumtub_*_ios-trollstore.tipa
           if-no-files-found: error
 
   android:
     name: Android
     needs: reuse
-    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' }}
+    if: ${{ !cancelled() && needs.reuse.outputs.build == 'true' && needs.reuse.outputs.run == '' && contains(fromJSON(needs.reuse.outputs.platforms), 'android') }}
     # The signing keys live in the "release" environment, which only main
     # and v* tags may use (docs/SECURITY.md); other branches and pull
     # requests build without them and sign with a debug key.
@@ -1239,6 +1421,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: true  # zizmor: ignore[artipacked] this job pushes with git
 
       - name: Android - read the Flutter version
         shell: bash
@@ -1268,6 +1452,7 @@ jobs:
           cargo install cargo-ndk --locked
 
       - name: Android - cache Rust dependencies
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: native/lumtub_core
@@ -1456,6 +1641,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           # Cone mode: files at the top, such as pubspec.yaml, come along;
           # cargo can't list the core's files in a non-cone checkout.
           sparse-checkout: |
@@ -1503,7 +1689,7 @@ jobs:
           fi
           rustup update stable
           shopt -s nullglob
-          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg dist/*.apk dist/*.ipa
+          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg dist/*.apk dist/*.ipa dist/*.tipa
       - name: Software bill of materials
         env:
           TAG: ${{ github.ref_name }}

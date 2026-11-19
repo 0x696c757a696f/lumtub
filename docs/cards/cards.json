@@ -1,61 +1,41 @@
 [
   {
-    "id": "subtitles",
-    "shot": {
-      "en": "zh/subtitles.jpg",
-      "zh": "zh/subtitles.jpg"
+    "id": "watch",
+    "shot": {"en": "cards/shots/watch-en.png", "zh": "cards/shots/watch-zh.png"},
+    "window": {"left": 175, "top": 330, "width": 1250},
+    "zoom": {
+      "en": {"crop": [997, 912, 440, 56], "factor": 1.5, "left": 880, "top": 830},
+      "zh": {"crop": [1150, 1050, 560, 66], "factor": 1.2, "left": 860, "top": 830}
     },
-    "window": {
-      "left": 175,
-      "top": 330,
-      "width": 1250
-    },
-    "en": {
-      "eyebrow": "Subtitles",
-      "title": "Two subtitles at once",
-      "text": "The original line with a whole-sentence translation above it, in any pair of languages.",
-      "tag": "Translation + original"
-    },
-    "zh": {
-      "eyebrow": "双语字幕",
-      "title": "原文和译文，一起看",
-      "text": "整句翻译，不是逐词拼凑。任意两种语言自由搭配。",
-      "tag": "中文译文 + 意大利语原文"
-    }
+    "en": {"eyebrow": "Playback", "title": "No ads. Just the video.",
+           "text": "Up to 8K and 60 fps through mpv, with hardware decoding that keeps your laptop cool.", "tag": "4K, hardware decoded"},
+    "zh": {"eyebrow": "播放", "title": "没有广告，点开就看",
+           "text": "mpv 播放，最高 8K 60 帧，硬件解码，笔记本也不发烫。", "tag": "4K 60 帧"}
   },
   {
     "id": "reasons",
-    "shot": {
-      "en": "home-reasons.png",
-      "zh": "zh/home-reasons.png"
-    },
-    "window": {
-      "left": 175,
-      "top": 330,
-      "width": 1250
-    },
+    "shot": {"en": "cards/shots/home-en.png", "zh": "cards/shots/home-zh.png"},
+    "window": {"left": 175, "top": 330, "width": 1250},
     "zoom": {
-      "crop": [
-        96,
-        302,
-        580,
-        82
-      ],
-      "factor": 1.25,
-      "left": 760,
-      "top": 760
+      "en": {"crop": [202, 651, 474, 137], "factor": 1.3, "left": 860, "top": 760},
+      "zh": {"crop": [172, 651, 488, 135], "factor": 1.3, "left": 860, "top": 760}
     },
-    "en": {
-      "eyebrow": "For you",
-      "title": "Every recommendation says why",
-      "text": "Picked on your own computer from what you watch. No account, no tracking.",
-      "tag": "Why it's here"
+    "en": {"eyebrow": "For you", "title": "Every recommendation says why",
+           "text": "Picked on your own computer from what you watch. No account, no tracking.", "tag": "Why it's here"},
+    "zh": {"eyebrow": "为你推荐", "title": "每条推荐，都告诉你为什么",
+           "text": "在你自己的电脑上按观看兴趣挑选，不用登录，不被追踪。", "tag": "推荐原因"}
+  },
+  {
+    "id": "explore",
+    "shot": {"en": "cards/shots/explore-en.png", "zh": "cards/shots/explore-zh.png"},
+    "window": {"left": 175, "top": 330, "width": 1250},
+    "zoom": {
+      "en": {"crop": [1313, 435, 700, 66], "factor": 1.1, "left": 760, "top": 820},
+      "zh": {"crop": [770, 435, 830, 66], "factor": 1.0, "left": 680, "top": 820}
     },
-    "zh": {
-      "eyebrow": "为你推荐",
-      "title": "每条推荐，都告诉你为什么",
-      "text": "在你自己的电脑上按观看兴趣挑选，不用登录，不被追踪。",
-      "tag": "推荐原因"
-    }
+    "en": {"eyebrow": "Explore", "title": "Find more than what's trending",
+           "text": "Twelve zones, hidden gems and new creators. Filter by region, quality and the language actually spoken.", "tag": "Filter by spoken language"},
+    "zh": {"eyebrow": "探索", "title": "不只是热门榜",
+           "text": "十几个分区，冷门宝藏和新人新作。按地区、画质，和视频里真正说的语言筛选。", "tag": "按真正说的语言筛"}
   }
 ]

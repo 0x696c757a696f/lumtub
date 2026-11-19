@@ -14,7 +14,7 @@ from PIL import Image
 import subprocess
 
 HERE = pathlib.Path(__file__).resolve().parent
-SHOTS = HERE.parent / "screenshots"
+SHOTS = HERE.parent
 OUT = HERE / "out"
 W, H = 1600, 1000
 
@@ -75,6 +75,8 @@ def card_html(card, lang):
         f'<img src="{src.as_uri()}">',
     ]
     z = card.get("zoom")
+    if z and lang in z:
+        z = z[lang]
     if z:
         x, y, w, h = z["crop"]
         parts.append(

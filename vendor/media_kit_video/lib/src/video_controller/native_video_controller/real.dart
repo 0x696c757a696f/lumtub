@@ -169,10 +169,12 @@ class NativeVideoController extends PlatformVideoController {
     // Store the [NativeVideoController] in the [_controllers].
     _controllers[handle] = controller;
 
-    // Lumtub: on iOS libmpv draws into an AVSampleBufferDisplayLayer
-    // (vo=avfoundation, its address as --wid): picture in picture takes that
-    // layer, and VideoToolbox's frames go to it as they are. Subtitles and
-    // overlays are drawn into the frames, so picture in picture shows them.
+    // Lumtub: on iOS libmpv's avfoundation video output hands its pictures
+    // to the plugin's VideoSink (its address as --wid), which shows them in
+    // an AVSampleBufferDisplayLayer: picture in picture takes that layer, and
+    // VideoToolbox's frames go to it as they are. Subtitles are shown in a
+    // layer above it, and drawn into the frames while picture in picture is
+    // open.
     if (Platform.isIOS) {
       final address = await _channel.invokeMethod<int>(
         'Layer.Create',
@@ -183,7 +185,6 @@ class NativeVideoController extends PlatformVideoController {
       await controller.setProperties(
         {
           'wid': address.toString(),
-          'avfoundation-composite-osd': 'yes',
           'vo': 'avfoundation',
           'hwdec': configuration.hwdec!,
           'vid': 'auto',

@@ -3579,5 +3579,8 @@
   "Off: nothing is recorded": "Joaktiv: asgjë nuk regjistrohet",
   "Mix with other apps": "Përzieje me aplikacione të tjera",
   "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "Zëri i aplikacioneve të tjera vazhdon të luhet me videon. Atëherë iOS nuk e shfaq Lumtub në ekranin e kyçjes dhe në Dynamic Island",
-  "mix audio other apps music": "Përzieje me aplikacione të tjera mix audio other apps music"
+  "mix audio other apps music": "Përzieje me aplikacione të tjera mix audio other apps music",
+  "Keep playing in the background": "Vazhdo luajtjen në sfond",
+  "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Disa telefona mbyllin aplikacionet që luajnë në sfond për të kursyer baterinë. Lejoje Lumtub të punojë pa kufizime baterie që luajtja të mos ndërpritet.",
+  "Allow": "Lejo"
 }

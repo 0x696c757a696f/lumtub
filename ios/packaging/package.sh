@@ -46,6 +46,11 @@ PLIST
 
 cp "$root/LICENSE" "$root/NOTICE" "$app/"
 
+# Fonts libmpv draws subtitles in besides Noto Sans SC (subtitle-fonts/SOURCES.md).
+rm -rf "$app/SubtitleFonts"
+mkdir "$app/SubtitleFonts"
+cp "$here"/subtitle-fonts/*.[ot]tf "$app/SubtitleFonts/"
+
 for binary in "$app/Frameworks/"*.framework; do
   name=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$binary/Info.plist")
   lipo -info "$binary/$name"

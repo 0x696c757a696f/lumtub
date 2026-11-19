@@ -76,6 +76,7 @@ class _AppShellState extends State<AppShell> {
   StreamSubscription<String>? _notices;
   StreamSubscription<void>? _waylandTop;
   StreamSubscription<void>? _softwareQuality;
+  StreamSubscription<void>? _battery;
   StreamSubscription<(CommunityPost, ChannelRef)>? _linkedPosts;
   StreamSubscription<DownloadTask>? _finished;
   Timer? _supportCheck;
@@ -124,6 +125,16 @@ class _AppShellState extends State<AppShell> {
         showCloseIcon: true,
       ));
     });
+    _battery = _controller.batteryNotes.listen((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(tr('Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.')),
+        duration: const Duration(seconds: 15),
+        showCloseIcon: true,
+        persist: false,
+        action: SnackBarAction(label: tr('Allow'), onPressed: () => unawaited(_controller.askBatteryUnrestricted())),
+      ));
+    });
     _waylandTop = _controller.waylandTopNotes.listen((_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -162,6 +173,7 @@ class _AppShellState extends State<AppShell> {
     unawaited(_notices?.cancel());
     unawaited(_waylandTop?.cancel());
     unawaited(_softwareQuality?.cancel());
+    unawaited(_battery?.cancel());
     unawaited(_linkedPosts?.cancel());
     unawaited(_finished?.cancel());
     _supportCheck?.cancel();

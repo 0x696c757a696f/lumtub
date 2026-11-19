@@ -573,11 +573,11 @@ extension SubtitleActions on AppController {
     unawaited(platform.setProperty('secondary-sub-pos', position.toStringAsFixed(1)).catchError((Object e) => logDebug(() => 'Could not move the second subtitle: $e')));
   }
 
-  /// On Android, where libmpv draws in one font with no fallback: the font
+  /// On Android and iOS, where libmpv draws in one font with no fallback: the font
   /// that has every character of [lines], or Flutter's view for the rest of
   /// the video when no one font has.
   void _fitSubtitleFont(Player player, List<String> lines) {
-    if (!Platform.isAndroid || !settings.libassSubtitles || libassCantDraw || !identical(player, this.player)) return;
+    if (!(Platform.isAndroid || Platform.isIOS) || !settings.libassSubtitles || libassCantDraw || !identical(player, this.player)) return;
     final platform = player.platform;
     final text = lines.join('\n').trim();
     if (platform is! NativePlayer || text.isEmpty) return;

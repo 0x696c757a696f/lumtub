@@ -3579,5 +3579,8 @@
   "Off: nothing is recorded": "Imezimwa: hakuna kinachorekodiwa",
   "Mix with other apps": "Changanya na programu zingine",
   "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "Sauti ya programu zingine inaendelea kucheza pamoja na video. Kisha iOS haionyeshi Lumtub kwenye Skrini ya Kufunga na Dynamic Island",
-  "mix audio other apps music": "Changanya na programu zingine mix audio other apps music"
+  "mix audio other apps music": "Changanya na programu zingine mix audio other apps music",
+  "Keep playing in the background": "Endelea kucheza chinichini",
+  "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Baadhi ya simu hufunga programu zinazocheza chinichini ili kuokoa betri. Ruhusu Lumtub iendeshwe bila vikwazo vya betri ili uchezaji usikatike.",
+  "Allow": "Ruhusu"
 }

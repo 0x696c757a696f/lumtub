@@ -3579,5 +3579,8 @@
   "Off: nothing is recorded": "Ανενεργό: δεν καταγράφεται τίποτα",
   "Mix with other apps": "Ανάμιξη με άλλες εφαρμογές",
   "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "Ο ήχος άλλων εφαρμογών συνεχίζει να παίζει μαζί με το βίντεο. Τότε το iOS δεν εμφανίζει το Lumtub στην οθόνη κλειδώματος και στο Dynamic Island",
-  "mix audio other apps music": "Ανάμιξη με άλλες εφαρμογές mix audio other apps music"
+  "mix audio other apps music": "Ανάμιξη με άλλες εφαρμογές mix audio other apps music",
+  "Keep playing in the background": "Συνέχιση αναπαραγωγής στο παρασκήνιο",
+  "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Ορισμένα τηλέφωνα κλείνουν εφαρμογές που παίζουν στο παρασκήνιο για εξοικονόμηση μπαταρίας. Επιτρέψτε στο Lumtub να λειτουργεί χωρίς περιορισμούς μπαταρίας, ώστε η αναπαραγωγή να μη διακόπτεται.",
+  "Allow": "Να επιτρέπεται"
 }

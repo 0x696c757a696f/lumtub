@@ -469,8 +469,28 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     );
   }
 
-  Widget _lockButton() => PositionedDirectional(
-        start: 12,
+  /// How far the picture stands in from the screen's sides, beyond the
+  /// notch's own inset, in full screen: the controls keep to the picture,
+  /// not the black bars beside it.
+  double _besidePicture(bool fullscreen) {
+    if (!fullscreen) return 0;
+    final width = _player.state.width ?? 0, height = _player.state.height ?? 0;
+    final screen = MediaQuery.sizeOf(context);
+    if (width <= 0 || height <= 0 || screen.isEmpty) return 0;
+    final scale = min(screen.width / width, screen.height / height);
+    final side = (screen.width - width * scale) / 2;
+    final view = View.of(context);
+    final safe = EdgeInsets.fromViewPadding(view.viewPadding, view.devicePixelRatio);
+    return max(0.0, side - max(safe.left, safe.right));
+  }
+
+  Widget _onPicture(bool fullscreen, Widget child) {
+    final extra = _besidePicture(fullscreen);
+    return extra <= 0 ? child : Padding(padding: EdgeInsets.symmetric(horizontal: extra), child: child);
+  }
+
+  Widget _lockButton(bool fullscreen) => PositionedDirectional(
+        start: 12 + _besidePicture(fullscreen),
         top: 0,
         bottom: 0,
         child: SafeArea(
@@ -729,7 +749,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                   ),
                 _buffering(),
                 if (_feedback case (final icon, final text)) Center(child: IgnorePointer(child: _FeedbackBubble(icon: icon, text: text))),
-                if (_controller.showStats) PositionedDirectional(start: 12, top: fullscreen ? 64 : 52, child: PlayerStats(player: _player)),
+                if (_controller.showStats) Positioned.fill(child: _stats(fullscreen)),
                 if (_controller.preferences.progressLine.shows(fullscreen: fullscreen))
                   Positioned(
                     left: 0,
@@ -744,12 +764,12 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                   ),
                 if (!_locked) ...[
                   // In full screen the bars keep clear of a camera cutout.
-                  Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: SafeArea(top: fullscreen, bottom: false, left: fullscreen, right: fullscreen, child: _topBar(context, fullscreen)))),
-                  Positioned(left: 0, right: 0, bottom: 0, child: KeyedSubtree(key: _bottomBarKey, child: _bar(top: false, child: _bottomBar(context, fullscreen)))),
+                  Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _onPicture(fullscreen, SafeArea(top: fullscreen, bottom: false, left: fullscreen, right: fullscreen, child: _topBar(context, fullscreen))))),
+                  Positioned(left: 0, right: 0, bottom: 0, child: KeyedSubtree(key: _bottomBarKey, child: _bar(top: false, child: _onPicture(fullscreen, _bottomBar(context, fullscreen))))),
                 ],
                 // On a phone, only in full screen: over the small player above the
                 // page it covers the picture and has nothing to lock.
-                if (_locked || fullscreen || (_touched && !_phone)) _lockButton(),
+                if (_locked || fullscreen || (_touched && !_phone)) _lockButton(fullscreen),
               ]),
             ),
           ),
@@ -808,6 +828,47 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       ),
     );
   }
+
+  /// The playback info panel, kept on the picture (not on the black bars
+  /// beside it, where its dark background can't be seen) and out of the
+  /// notch, and made smaller when the player is too small for it, as on a
+  /// phone held upright.
+  Widget _stats(bool fullscreen) => IgnorePointer(
+        child: StreamBuilder<int?>(
+          stream: _player.stream.width,
+          builder: (context, _) => LayoutBuilder(builder: (context, box) {
+            final width = _player.state.width ?? 0;
+            final height = _player.state.height ?? 0;
+            var side = 0.0;
+            var above = 0.0;
+            if (width > 0 && height > 0 && box.maxWidth.isFinite && box.maxHeight.isFinite) {
+              final scale = min(box.maxWidth / width, box.maxHeight / height);
+              side = (box.maxWidth - width * scale) / 2;
+              above = (box.maxHeight - height * scale) / 2;
+            }
+            // The screen's own notch or camera hole, read from the view: a
+            // SafeArea above may have taken it out of MediaQuery.
+            final view = View.of(context);
+            final safe = EdgeInsets.fromViewPadding(view.viewPadding, view.devicePixelRatio);
+            final rtl = Directionality.of(context) == TextDirection.rtl;
+            final start = max(side, rtl ? safe.right : safe.left) + 12;
+            final top = max(above + 8, max(fullscreen ? safe.top : 0.0, fullscreen ? 64.0 : 52.0));
+            return Stack(children: [
+              PositionedDirectional(
+                start: start,
+                top: top,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: max(0.0, box.maxWidth - start - max(side, 12.0)),
+                    maxHeight: max(0.0, box.maxHeight - top - max(above, 8.0)),
+                  ),
+                  child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.topStart, child: PlayerStats(player: _player)),
+                ),
+              ),
+            ]);
+          }),
+        ),
+      );
 
   Widget _buffering() => StreamBuilder<bool>(
         stream: _player.stream.buffering,

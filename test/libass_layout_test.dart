@@ -60,6 +60,11 @@ void main() {
     }
   });
 
+  test('broken lines come out about as long as each other', () {
+    final wrapped = LibassLayout.wrap('字' * 12, 10);
+    expect(wrapped.split('\n').map((line) => line.runes.length).toList(), [6, 6]);
+  });
+
   test('Thai is broken too, and lines that fit stay as they are', () {
     const thai = 'ภาษาไทยไม่มีการเว้นวรรคระหว่างคำทำให้ต้องตัดบรรทัดเองเมื่อข้อความยาวเกินไป';
     expect(LibassLayout.wrap(thai, 8).contains('\n'), isTrue);
@@ -88,6 +93,15 @@ void main() {
       expect(lines[0], endsWith(r'你好\N{\alpha&HFF&\fs3.75}\h\N{\alpha&HFF&}{\fnArial\fs33.51\b0}Hello there'));
       expect(lines[1], startsWith('Dialogue: 0,0:00:02.00,0:00:03.00,'));
       expect(lines[1], endsWith('General Kenobi'));
+    });
+
+    test('carries its own size for a libmpv without secondary-sub-scale', () {
+      final ass = secondAss([(start: s(1), end: s(3), text: '你好')], settings.copyWith(subtitleScale: 1.5), outline: 0.1, main: main, scale: 2);
+      expect(events(ass).first, endsWith(r'你好\N{\alpha&HFF&\fs7.50}\h\N{\alpha&HFF&}{\fnArial\fs67.02\b0}Hello there'));
+      final one = secondAss(const [], settings, outline: 0.1), two = secondAss(const [], settings, outline: 0.1, scale: 2);
+      double field(String ass, int i) => double.parse(ass.split('\n').firstWhere((l) => l.startsWith('Style: ')).split(',')[i]);
+      expect(field(two, 2), closeTo(2 * field(one, 2), 0.02));
+      expect(field(two, 16), closeTo(2 * field(one, 16), 0.02));
     });
 
     test('no event overlaps another, and stretches without main lines show the second alone', () {

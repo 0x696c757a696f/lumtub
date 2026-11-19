@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:media_kit_video/media_kit_video.dart' show IosVideoLayer;
 
 import '../appearance_settings.dart';
 import 'motion.dart';
@@ -44,6 +46,22 @@ class WarmLayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final warmth = Theme.of(context).extension<AppTones>()?.warmth ?? 0;
+    // On iOS the picture is a native layer (a platform view) under
+    // Flutter's drawing: a multiply there has nothing of Flutter's to
+    // multiply and covers the whole picture in the warm colour. Core
+    // Animation multiplies it over the layer instead.
+    if (IosVideoLayer.available) {
+      return TweenAnimationBuilder<double>(
+        tween: Tween(end: warmth),
+        duration: Motion.of(const Duration(milliseconds: 1200)),
+        curve: Curves.easeInOut,
+        child: child,
+        builder: (context, value, child) {
+          unawaited(IosVideoLayer.setWarmth((value <= 0.001 ? const Color(0xFFFFFFFF) : tint(value)).toARGB32()).catchError((_) {}));
+          return child!;
+        },
+      );
+    }
     final light = Positioned.fill(
       child: IgnorePointer(
         child: TweenAnimationBuilder<double>(

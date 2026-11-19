@@ -3608,5 +3608,8 @@
   "Off: nothing is recorded": "關閉：完全不記錄",
   "Mix with other apps": "與其他 App 混音",
   "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "其他 App 嘅聲音會隨影片繼續播放。此時 iOS 唔會喺鎖定畫面同動態島顯示 Lumtub",
-  "mix audio other apps music": "與其他 App 混音 mix audio other apps music"
+  "mix audio other apps music": "與其他 App 混音 mix audio other apps music",
+  "Keep playing in the background": "在背景繼續播放",
+  "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "部分手機為咗慳電，會關閉喺背景播放嘅 App。允許 Lumtub 唔受電池限制運行，播放就唔會中斷。",
+  "Allow": "允許"
 }

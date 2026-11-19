@@ -788,7 +788,7 @@ class _Player extends StatelessWidget {
                       ),
                     ),
                   ),
-                  subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label, byHeight: Platform.isAndroid, libass: controller.libassDraws),
+                  subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: controller.libassDraws),
                   onEnterFullscreen: () {
                     // 铺满窗口 keeps the window as it is.
                     if (fillingWindow.value) return Future.value();

@@ -107,6 +107,29 @@ extension LifecycleActions on AppController {
           final fonts = await AndroidSubtitleFonts.prepare('${directories.cache.path}/subtitle-fonts');
           if (fonts != null) await platform.setProperty('sub-fonts-dir', fonts).catchError((Object e) => logDebug(() => 'Could not set the subtitle fonts: $e'));
         }
+        if (Platform.isIOS) {
+          // libass draws in the app's own fonts only, as on Android, picked
+          // by the script of the text. Looking through Core Text instead ran
+          // for seconds on mpv's video thread on iOS 27, holding the OSD lock
+          // (the crash report: core and main thread waiting on it), which
+          // stalled playback and got the app killed in the background.
+          final app = File(Platform.resolvedExecutable).parent.path;
+          final fonts = await AndroidSubtitleFonts.prepareIos('${directories.cache.path}/subtitle-fonts', flutterFonts: '$app/Frameworks/App.framework/flutter_assets/assets/fonts', bundled: '$app/SubtitleFonts');
+          if (fonts == null) {
+            logInfo('No bundled subtitle fonts in $app');
+          } else {
+            for (final MapEntry(:key, :value) in {
+              'sub-font-provider': 'none',
+              'sub-fonts-dir': fonts,
+              // The bullet chat is drawn as OSD.
+              'osd-font-provider': 'none',
+              'osd-fonts-dir': fonts,
+              'osd-font': PlayerSettings.iosSubtitleFont,
+            }.entries) {
+              await platform.setProperty(key, value).catchError((Object e) => logDebug(() => 'Could not set $key: $e'));
+            }
+          }
+        }
         final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders');
         try {
           shaders.createSync(recursive: true);
@@ -116,6 +139,7 @@ extension LifecycleActions on AppController {
         }
       }
       _lightRendering = null;
+      _smallCache = false;
       await _applyProxy(player);
       unawaited(_relay?.close());
       _relay = madeRelay = await _startRelay();

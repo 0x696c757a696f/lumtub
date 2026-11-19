@@ -314,6 +314,44 @@ class AppController extends ChangeNotifier with _ExploreState {
     unawaited(savePreferences(preferences.copyWith(softwareQualityTold: true)));
   }
 
+  /// Android, once ever: after the first video played in the background,
+  /// when the app is back and Android still optimises its battery use.
+  /// Phone makers' battery savers close such apps playing in the
+  /// background despite the media service; the page offers
+  /// [askBatteryUnrestricted].
+  final _batteryNotes = StreamController<void>.broadcast();
+  Stream<void> get batteryNotes => _batteryNotes.stream;
+  bool _batteryPending = false;
+
+  void _noteBackgroundPlay(bool hidden) {
+    if (!Platform.isAndroid || Device.tv || preferences.batteryAsked) return;
+    if (hidden) {
+      if (player?.state.playing ?? false) _batteryPending = true;
+      return;
+    }
+    if (!_batteryPending) return;
+    _batteryPending = false;
+    unawaited(() async {
+      final free = await const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('batteryUnrestricted').catchError((Object e) {
+        logDebug(() => 'Could not ask about battery optimisation: $e');
+        return true;
+      });
+      if (_disposed || preferences.batteryAsked) return;
+      if (free != true) _batteryNotes.add(null);
+      await savePreferences(preferences.copyWith(batteryAsked: true));
+    }());
+  }
+
+  /// Opens Android's question whether Lumtub may run free of battery
+  /// optimisation (or its list of apps).
+  Future<void> askBatteryUnrestricted() async {
+    try {
+      await const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('askBatteryUnrestricted');
+    } catch (e) {
+      logWarn('Could not open the battery settings: $e');
+    }
+  }
+
   /// Said when a window should stay on top on a Wayland desktop that does
   /// not allow it; the page offers [switchToX11].
   Stream<void> get waylandTopNotes => _waylandTopNotes.stream;
@@ -841,9 +879,16 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The subtitle options last sent to libmpv for the player's size.
   Map<String, String> _libassSent = {};
   Timer? _libassLookTimer;
+  /// The player whose libmpv was asked whether it has secondary-sub-scale
+  /// (mpv 0.42 on; the iOS and Android builds are older), and the answer.
+  /// Without it the second subtitle's copy carries its own size.
+  Player? _secondScaleAsked;
+  bool _secondScaleMissing = false;
   /// Second subtitles drawn in their own font and color: each copy's track
   /// id, with the track it copies and the style it has.
   final Map<String, ({String source, String key, bool second, String file})> _subtitleCopies = {};
+  /// Where the quick copy of the second subtitle starts (_copyFor).
+  Duration _quickFrom = Duration.zero;
   /// Tracks that fit on screen as they are while libmpv draws.
   final Set<String> _plainFits = {};
   Future<void> _restyling = Future.value();
@@ -867,9 +912,15 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool get subtitlesOff => _subtitlesOffIn.isNotEmpty;
 
   bool _backgroundAudioOnly = false;
+  /// The background cache is in force (_backgroundCache).
+  bool _smallCache = false;
   /// iPhone and iPad: following the player for picture in picture.
   _IosPipSync? _iosPip;
   bool _iosAutoPip = false;
+
+  /// mpv draws the subtitles while iOS's picture in picture is open (the
+  /// window shows only the video layer), for settings that have the Flutter
+  /// view draw them; not saved.
   bool _windowHidden = false;
   bool? _efficient;
 
@@ -1103,6 +1154,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     unawaited(_linkedPosts.close());
     unawaited(_waylandTopNotes.close());
     unawaited(_softwareQualityNotes.close());
+    unawaited(_batteryNotes.close());
     unawaited(_finishedDownloads.close());
     super.dispose();
   }

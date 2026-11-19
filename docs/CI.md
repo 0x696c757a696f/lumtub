@@ -13,7 +13,7 @@ packages only when asked:
 | --- | --- |
 | nothing | no packages, quick checks only |
 | `[full]`, or the label `full build` | the platforms whose files that push changed |
-| `[ios]`, `[android]`, `[macos]`, `[linux]` or `[windows]` | that platform alone, whatever changed |
+| `[ios]`, `[android]`, `[macos]`, `[linux]` or `[windows]` | that platform alone, whatever changed (`[ios] [windows]`: those two) |
 | `[all]` or `[showcase]` | every platform |
 
 "Whose files that push changed" comes from `.github/scripts/build_platforms.py`:
@@ -40,3 +40,32 @@ it builds everything: while debugging one platform, name it (`[ios]`).
 
 One build runs at a time: a newer run waits for older ones, and a newer push
 to a pull request cancels its older run.
+
+## Heavy dependencies are built elsewhere
+
+Nothing that takes long to compile is compiled in this repository's CI.
+[lumtub-media-builds](https://github.com/0x696c757a696f/lumtub-media-builds)
+builds it on a daily schedule and publishes a release; `build.yml` downloads
+the release pinned in `.github/pins.env` and checks its SHA-256. The weekly
+upstream run (`.github/scripts/upstream.py`) moves the pins to newer releases.
+
+| Dependency | Built by | Release name | Pins |
+| --- | --- | --- | --- |
+| libmpv for Linux (x86_64, x86_64-v3, aarch64) | `libmpv.yml` | `libmpv-<date>-<mpv commit>` | `MPV_*` |
+| libmpv for iOS (picture in picture patch) | `libmpv-ios.yml`, recipe read from `vendor/media_kit_libs_ios_video/ios` | `libmpv-ios-<MPVKit release>-<recipe hash>` | `IOS_LIBMPV_*` |
+| ANGLE for Windows on Arm | `angle-windows-arm64.yml` (vcpkg) | `angle-arm64-windows-<port version>` | `ANGLE_ARM64_*` |
+
+Where a trustworthy ready-made build already exists, it is used directly
+instead: libmpv for Windows and Android, MPVKit's other libraries for iOS,
+the LGPL FFmpeg for macOS (dfloresc/ffmpeg-macos-builds).
+
+Rules:
+
+- A new heavy dependency gets a workflow in lumtub-media-builds and a pin
+  here, never a build step in `build.yml`.
+- A dependency whose recipe lives in this repository (the iOS libmpv) is
+  named after a hash of the recipe. A change that edits the recipe builds it
+  locally once (cached by that hash); after merging, media-builds publishes
+  it the next day and the upstream run pins it.
+- A pin of `none` means "no release yet": `build.yml` falls back to
+  building it here.

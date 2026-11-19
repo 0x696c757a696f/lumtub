@@ -3578,5 +3578,8 @@
   "Off: nothing is recorded": "Mati: ora ana sing dicathet",
   "Mix with other apps": "Campur karo aplikasi liyane",
   "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "Swara aplikasi liyane tetep muter bareng video. iOS banjur ora nampilake Lumtub ing Layar Kunci lan Dynamic Island",
-  "mix audio other apps music": "Campur karo aplikasi liyane mix audio other apps music"
+  "mix audio other apps music": "Campur karo aplikasi liyane mix audio other apps music",
+  "Keep playing in the background": "Terus muter ing latar mburi",
+  "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Sawetara HP nutup aplikasi sing muter ing latar mburi kanggo ngirit baterai. Keparengaken Lumtub mlaku tanpa watesan baterai supaya puteran ora kepedhot.",
+  "Allow": "Idini"
 }

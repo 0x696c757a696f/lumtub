@@ -3579,5 +3579,8 @@
   "Off: nothing is recorded": "Fra: intet registreres",
   "Mix with other apps": "Bland med andre apps",
   "Other apps' sound keeps playing with the video. iOS then leaves Lumtub off the Lock Screen and the Dynamic Island": "Lyd fra andre apps spiller videre sammen med videoen. iOS viser så ikke Lumtub på låseskærmen og i Dynamic Island",
-  "mix audio other apps music": "Bland med andre apps mix audio other apps music"
+  "mix audio other apps music": "Bland med andre apps mix audio other apps music",
+  "Keep playing in the background": "Bliv ved med at afspille i baggrunden",
+  "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Nogle telefoner lukker apps, der afspiller i baggrunden, for at spare strøm. Lad Lumtub køre uden batteribegrænsninger, så afspilningen ikke bliver afbrudt.",
+  "Allow": "Tillad"
 }

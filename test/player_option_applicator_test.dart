@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/device_memory.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/player_option_applicator.dart';
 import 'package:lumtub/player_settings.dart';
@@ -114,5 +115,17 @@ void main() {
   test('mpv resolving keeps the codec ranking and picks no stray subtitle', () {
     expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), formatSort: 'res,fps,vcodec:avc'), 'ignore-config=,no-plugin-dirs=,format-sort=%18%res,fps,vcodec:avc');
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['subs-fallback'], 'default');
+  });
+
+  test('a phone in the background reads less ahead and keeps little of what was played', () {
+    const settings = PlayerSettings(cacheMemoryMb: 64, cacheSeconds: 60);
+    expect(PlayerOptionApplicator.cacheOptions(settings), {'cache-secs': '60', 'demuxer-max-bytes': '64MiB', 'demuxer-max-back-bytes': '16MiB'});
+    expect(PlayerOptionApplicator.cacheOptions(settings, background: true), {'cache-secs': '30', 'demuxer-max-bytes': '24MiB', 'demuxer-max-back-bytes': '4MiB'});
+    expect(PlayerOptionApplicator.optionsFor(settings)['demuxer-max-bytes'], '64MiB');
+  });
+
+  test("the device's memory is read", () {
+    if (!Platform.isLinux && !Platform.isMacOS) return;
+    expect(DeviceMemory.totalMb, greaterThan(256));
   });
 }

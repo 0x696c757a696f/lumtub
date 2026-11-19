@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'l10n/l10n.dart';
+import 'language_guess.dart';
 
 /// A language text can be translated into. [code] is Google Translate's;
 /// [youtube] is the `tlang` YouTube's auto-translated captions use; [tags]
@@ -185,7 +186,38 @@ class GoogleTranslator implements Translator {
 
   Future<String> _request(String chunk, String target) async {
     if (chunk.trim().isEmpty) return chunk;
-    final uri = Uri.https('translate.googleapis.com', '/translate_a/single', {'client': 'gtx', 'sl': 'auto', 'tl': target, 'dt': 't', 'q': chunk});
+    final result = await _ask(chunk, target, 'auto');
+    // Its guess at the language sometimes goes wrong (chatty text with
+    // emoji), and the text comes back as it was: once more, in the language
+    // the letters say it is in.
+    if (!_unchanged(result, chunk)) return result;
+    final source = _guessSource(chunk, target);
+    return source == null ? result : _ask(chunk, target, source);
+  }
+
+  /// The language [text] seems to be written in, other than [target]: from
+  /// its script, and English from its common words. Null when the letters
+  /// can't tell (French and German share English's).
+  static String? _guessSource(String text, String target) {
+    for (final code in const ['ja', 'ko', 'ru', 'ar', 'th', 'hi', 'zh-CN', 'zh-TW', 'en']) {
+      if (code == target || (code.startsWith('zh') && target.startsWith('zh'))) continue;
+      if (looksLike(text, code)) return code;
+    }
+    // Mostly Latin letters but no common English word seen: English is still
+    // the likeliest for a YouTube comment.
+    return target != 'en' && _latin(text) && !looksLike(text, target) ? 'en' : null;
+  }
+
+  static bool _unchanged(String a, String b) => a.replaceAll(RegExp(r'\s+'), ' ').trim() == b.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  /// Mostly Latin letters, as English is written.
+  static bool _latin(String text) {
+    final letters = RegExp(r'\p{L}', unicode: true).allMatches(text).length;
+    return letters >= 4 && RegExp(r'[A-Za-z]').allMatches(text).length >= letters * 0.8;
+  }
+
+  Future<String> _ask(String chunk, String target, String source) async {
+    final uri = Uri.https('translate.googleapis.com', '/translate_a/single', {'client': 'gtx', 'sl': source, 'tl': target, 'dt': 't', 'q': chunk});
     try {
       final response = await _client.get(uri).timeout(const Duration(seconds: 15));
       if (response.statusCode == 429) throw TranslationException(tr('Too many translation requests. Please try again later.'));

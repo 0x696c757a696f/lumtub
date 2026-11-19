@@ -78,19 +78,43 @@ class LibassLayout {
         style: TextStyle(fontSize: size, height: 1.3, fontFamily: font.isEmpty ? null : font, fontFamilyFallback: const [bundledFont], fontWeight: bold ? FontWeight.w700 : FontWeight.normal),
       ),
       textDirection: TextDirection.ltr,
-    )..layout(maxWidth: room * size);
-    final lines = <String>[];
-    var offset = 0;
-    while (offset < text.length) {
-      final range = painter.getLineBoundary(TextPosition(offset: offset));
-      if (range.end <= offset) break;
-      lines.add(text.substring(offset, range.end).replaceAll('\n', '').trimRight());
-      offset = range.end;
-      // The break itself, when the text had one.
-      if (offset < text.length && text[offset] == '\n') offset++;
+    );
+    List<String> linesAt(double ems) {
+      painter.layout(maxWidth: ems * size);
+      final lines = <String>[];
+      var offset = 0;
+      while (offset < text.length) {
+        final range = painter.getLineBoundary(TextPosition(offset: offset));
+        if (range.end <= offset) break;
+        lines.add(text.substring(offset, range.end).replaceAll('\n', '').trimRight());
+        offset = range.end;
+        // The break itself, when the text had one.
+        if (offset < text.length && text[offset] == '\n') offset++;
+      }
+      if (offset < text.length) lines.add(text.substring(offset));
+      return lines;
+    }
+
+    // A little spare: libass draws in the system's font, measured here in
+    // Flutter's, and the two are never quite as wide.
+    final width = room * 0.92;
+    var lines = linesAt(width);
+    // Balanced, as subtitles are set by hand: the narrowest width that
+    // keeps as many lines, so they come out about as long as each other
+    // instead of a full line and a stub.
+    if (lines.length > 1) {
+      var narrow = width / lines.length, wide = width;
+      for (var i = 0; i < 10; i++) {
+        final middle = (narrow + wide) / 2;
+        if (linesAt(middle).length <= lines.length) {
+          wide = middle;
+        } else {
+          narrow = middle;
+        }
+      }
+      lines = linesAt(wide);
     }
     painter.dispose();
-    if (offset < text.length) lines.add(text.substring(offset));
     return lines.join('\n');
   }
 
@@ -195,7 +219,7 @@ class LibassLook {
   /// Read from the fonts' OS/2 tables; others are taken as 1.3.
   static double lineEms(String font) => switch (font.toLowerCase()) {
         'microsoft yahei' || 'microsoft yahei ui' || '微软雅黑' => 1.32,
-        'noto sans cjk sc' || 'noto sans cjk tc' || 'noto sans cjk jp' || 'noto sans cjk kr' || 'noto sans sc' || 'source han sans sc' || 'source han sans' => 1.448,
+        'noto sans cjk sc' || 'noto sans cjk tc' || 'noto sans cjk jp' || 'noto sans cjk kr' || 'noto sans sc' || 'noto sans kr' || 'source han sans sc' || 'source han sans' => 1.448,
         'noto serif cjk sc' || 'noto serif cjk tc' || 'source han serif sc' => 1.438,
         'pingfang sc' || 'pingfang tc' || 'pingfang hk' => 1.4,
         'simhei' || 'simsun' || 'nsimsun' || 'kaiti' || 'fangsong' => 1.0,
@@ -214,10 +238,12 @@ class LibassLook {
 /// The second subtitle as an ASS file in its own font, color, opacity,
 /// size, outline and background, which mpv cannot set apart from the first
 /// subtitle's. Its letters are [secondEm] units at secondary-sub-scale 1;
-/// [outline] is the outline's width for a letter one unit wide.
-String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font, MainUnder? main, double aspect = 16 / 9}) {
+/// [outline] is the outline's width for a letter one unit wide. [scale]
+/// sizes everything in it, for a libmpv without secondary-sub-scale.
+String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font, MainUnder? main, double aspect = 16 / 9, double scale = 1}) {
   font ??= settings.secondaryFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.secondaryFont);
-  final size = secondEm * settings.secondaryScale * LibassLook.lineEms(font);
+  final unit = secondEm * scale;
+  final size = unit * settings.secondaryScale * LibassLook.lineEms(font);
   String colour(int rgb, double opacity) {
     final alpha = (255 * (1 - opacity.clamp(0, 1))).round();
     final r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF;
@@ -234,7 +260,7 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
   final opacity = settings.secondaryOpacity;
   final box = settings.subtitleBackground;
   final edge = box ? colour(0, 0.67 * opacity) : colour(0, opacity);
-  final width = box ? secondEm * 0.12 : outline * secondEm;
+  final width = box ? unit * 0.12 : outline * unit;
   final out = StringBuffer()
     ..writeln('[Script Info]')
     ..writeln('ScriptType: v4.00+')
@@ -265,10 +291,10 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
   // however tall its fonts really draw, whatever the player's size. One
   // event for each stretch of time in which the same lines show, so libass
   // never stacks two events of this copy on each other.
-  final mainSize = secondEm * settings.subtitleScale * LibassLook.lineEms(main.font);
+  final mainSize = unit * settings.subtitleScale * LibassLook.lineEms(main.font);
   final mainTag = '{\\fn${main.font.replaceAll(RegExp(r'[{}\\,]'), ' ')}\\fs${mainSize.toStringAsFixed(2)}\\b${settings.subtitleBold ? 1 : 0}}';
   // The gap the Flutter view leaves between the two, as a line that tall.
-  final gap = '{\\alpha&HFF&\\fs${(secondEm * 6 / 32).toStringAsFixed(2)}}\\h';
+  final gap = '{\\alpha&HFF&\\fs${(unit * 6 / 32).toStringAsFixed(2)}}\\h';
   // Broken as Lumtub's copy of the main subtitle breaks them, blank lines
   // left out as there.
   final mainText = [for (final cue in main.cues) ass(LibassLayout.wrap(cue.text, main.room, font: main.wrapFont, bold: settings.subtitleBold).replaceAll(RegExp(r'\n\s*\n'), '\n'))];

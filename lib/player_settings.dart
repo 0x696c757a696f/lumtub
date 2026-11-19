@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'app_directories.dart';
+import 'device_memory.dart';
 import 'decoder_status.dart';
 import 'network_proxy.dart';
 import 'piped_streams.dart';
@@ -350,12 +351,17 @@ class PlayerSettings {
   /// Whether the device is a phone, tablet or TV, where the read-ahead
   /// cache stays small: each MB of it is memory the system may take back by
   /// closing the app in the background.
-  static bool smallMemory = Platform.isAndroid;
+  static bool smallMemory = Platform.isAndroid || Platform.isIOS;
+
+  /// A phone, tablet or TV with 3 GB of memory or less, where even 64 MB
+  /// is much ([DeviceMemory.low]).
+  static bool lowMemory = smallMemory && DeviceMemory.low;
 
   /// 100 MB on computers, 40 s of 4K at YouTube's rates and minutes of
-  /// 1080p (cache-secs stops it sooner there); 64 MB on phones and TVs. The
-  /// cache of what was played is a quarter of it.
-  static int get defaultBufferMb => smallMemory ? 64 : 100;
+  /// 1080p (cache-secs stops it sooner there); 64 MB on phones and TVs, 32
+  /// MB on those with little memory. The cache of what was played is a
+  /// quarter of it.
+  static int get defaultBufferMb => lowMemory ? 32 : smallMemory ? 64 : 100;
 
   final String hwdec;
   final String scale;
@@ -762,7 +768,7 @@ class PlayerSettings {
         'cacheMode': cacheMode,
         'cacheSeconds': cacheSeconds,
         'cacheMemoryMb': cacheMemoryMb,
-        'bufferDefaults': 3,
+        'bufferDefaults': 4,
         'subtitleStyleVersion': 2,
         'strategy': strategy.name,
         'disabledCodecs': chosenCodecs == null ? null : [for (final c in VideoCodec.values) if (chosenCodecs!.contains(c)) c.name],
@@ -825,6 +831,10 @@ class PlayerSettings {
   /// that read well over video.
   static const defaultSubtitleFont = 'Microsoft YaHei';
 
+  /// The family name inside assets/fonts/NotoSansSC-Regular.ttf, which
+  /// libmpv loads on iOS from the app's bundle.
+  static const iosSubtitleFont = 'Noto Sans SC';
+
   /// [font] as libass should ask for it here: the default Windows font
   /// becomes the system's own Chinese font on macOS and Linux.
   /// The family libmpv draws subtitles with on Android at first, from the
@@ -833,9 +843,13 @@ class PlayerSettings {
 
   static String fontForThisSystem(String font) {
     if (Platform.isAndroid) return androidSubtitleFont;
+    // On iOS libmpv has the app's own fonts only (sub-font-provider none,
+    // see LifecycleActions): Noto Sans SC, or the one AndroidSubtitleFonts
+    // picks for the text.
+    if (Platform.isIOS) return iosSubtitleFont;
     if (font != defaultSubtitleFont || Platform.isWindows) return font;
-    // iOS has PingFang as macOS does, and no Noto fonts.
-    return Platform.isMacOS || Platform.isIOS ? 'PingFang SC' : 'Noto Sans CJK SC';
+    // macOS has PingFang, and no Noto fonts.
+    return Platform.isMacOS ? 'PingFang SC' : 'Noto Sans CJK SC';
   }
 
   /// These settings with the subtitle style of a fresh install.
@@ -869,7 +883,7 @@ class PlayerSettings {
       '#${(opacity.clamp(0, 1) * 255).round().toRadixString(16).padLeft(2, '0')}${(rgb & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}'.toUpperCase();
 
   factory PlayerSettings.fromJson(Object? raw) {
-    if (raw is! Map) return const PlayerSettings().copyWith(cacheMemoryMb: defaultBufferMb);
+    if (raw is! Map) return const PlayerSettings().copyWith(cacheMemoryMb: defaultBufferMb, libassSubtitles: Platform.isIOS);
     String choice(String key, Set<String> allowed, String fallback) {
       final value = raw[key]?.toString();
       return allowed.contains(value) ? value! : fallback;
@@ -957,7 +971,9 @@ class PlayerSettings {
       cacheSeconds: oldBuffer && raw['cacheSeconds'] == 30 ? 60 : number('cacheSeconds', 60, 1, 600),
       // Builds before bufferDefaults 3 saved mpv's 150 MB even when
       // untouched; it now uses less memory, less still on phones and TVs.
-      cacheMemoryMb: (oldBuffer && savedBuffer == 64) || (bufferVersion < 3 && savedBuffer == 150) ? defaultBufferMb : number('cacheMemoryMb', defaultBufferMb, 16, 1024),
+      // Before bufferDefaults 4 iPhones and iPads saved the computers' 100
+      // MB, and devices with little memory the phones' 64 MB.
+      cacheMemoryMb: (oldBuffer && savedBuffer == 64) || (bufferVersion < 3 && savedBuffer == 150) || (bufferVersion < 4 && ((savedBuffer == 100 && smallMemory) || (savedBuffer == 64 && lowMemory))) ? defaultBufferMb : number('cacheMemoryMb', defaultBufferMb, 16, 1024),
       strategy: strategy,
       disabledCodecs: disabled,
       audioQuality: _enumByName(AudioQuality.values, raw['audioQuality'], AudioQuality.best),
@@ -1007,7 +1023,9 @@ class PlayerSettings {
       mpvConf: conf,
       decoderResults: results,
       d3d11vaZeroCopy: raw['d3d11vaZeroCopy'] == true,
-      libassSubtitles: raw['libassSubtitles'] == true,
+      // Always on iOS: Flutter's subtitles over the video's platform view
+      // leave ghosts of earlier lines there.
+      libassSubtitles: Platform.isIOS || raw['libassSubtitles'] == true,
       proxyMode: _enumByName(ProxyMode.values, raw['proxyMode'], ProxyMode.system),
       proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
       dnsServer: raw['dnsServer']?.toString() ?? '',
@@ -1069,12 +1087,12 @@ class PlayerSettingsStore {
   PlayerSettingsStore(AppDirectories directories) : file = File('${directories.config.path}${Platform.pathSeparator}player_settings.json');
 
   Future<PlayerSettings> load() async {
-    if (!await file.exists()) return const PlayerSettings().copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb);
+    if (!await file.exists()) return const PlayerSettings().copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb, libassSubtitles: Platform.isIOS);
     try {
       return PlayerSettings.fromJson(jsonDecode(await file.readAsString()));
     } catch (e) {
       await setBrokenFileAside(file, e);
-      return const PlayerSettings().copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb);
+      return const PlayerSettings().copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb, libassSubtitles: Platform.isIOS);
     }
   }
 

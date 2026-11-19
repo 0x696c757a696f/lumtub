@@ -48,6 +48,41 @@
     }
   },
   {
+    "id": "subtitles",
+    "shot": {
+      "en": "cards/shots/subtitles.png",
+      "zh": "cards/shots/subtitles.png"
+    },
+    "window": {
+      "left": 175,
+      "top": 330,
+      "width": 1250
+    },
+    "zoom": {
+      "crop": [
+        450,
+        722,
+        690,
+        100
+      ],
+      "factor": 1.22,
+      "left": 690,
+      "top": 840
+    },
+    "en": {
+      "eyebrow": "Subtitles",
+      "title": "Two subtitles at once",
+      "text": "The original line with a whole-sentence translation above it, in any pair of languages.",
+      "tag": "Translation + original"
+    },
+    "zh": {
+      "eyebrow": "双语字幕",
+      "title": "原文和译文，一起看",
+      "text": "整句翻译，不是逐词拼凑。任意两种语言自由搭配。",
+      "tag": "中文译文 + 英文原文"
+    }
+  },
+  {
     "id": "reasons",
     "shot": {
       "en": "cards/shots/home-en.png",

@@ -213,5 +213,40 @@
       "title": "想要什么风格，就换什么风格",
       "text": "36 套皮肤，从光亮玻璃到新粗野，浅色深色都有，也可以自己做。"
     }
+  },
+  {
+    "id": "search",
+    "shot": {
+      "en": "cards/shots/search.png",
+      "zh": "cards/shots/search.png"
+    },
+    "window": {
+      "left": 175,
+      "top": 330,
+      "width": 1250
+    },
+    "zoom": {
+      "crop": [
+        196,
+        330,
+        762,
+        90
+      ],
+      "factor": 1.05,
+      "left": 700,
+      "top": 800
+    },
+    "en": {
+      "eyebrow": "Search",
+      "title": "Search that finds channels too",
+      "text": "Videos, Shorts, live streams, channels and playlists, sorted and filtered your way.",
+      "tag": "Pick what you're looking for"
+    },
+    "zh": {
+      "eyebrow": "搜索",
+      "title": "搜视频，也搜频道和播放列表",
+      "text": "视频、短视频、直播、频道、播放列表，按时间和时长随你筛。",
+      "tag": "想找什么就点什么"
+    }
   }
 ]

@@ -328,6 +328,14 @@ enum ExploreLanguage {
         _ => name,
       };
 
+  /// The language YouTube is asked in for a search in it, as YouTube
+  /// spells its interface languages.
+  String get youtubeHl => switch (this) {
+        tl => 'fil',
+        he => 'iw',
+        _ => code,
+      };
+
   /// The country most of the language's videos come from, searched as
   /// from when no region is picked; null where no one country leads.
   String? get homeCountry => switch (this) {
@@ -439,13 +447,25 @@ const searchGlossary = {'直播': 'live', '实况': 'live', '直播间': 'live',
 String englishSearchOf(String query) {
   final words = query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
   final seen = {for (final w in words) if (!isTranslatedPhrase(w)) w.toLowerCase()};
+  // An English word the query gives beside its Chinese keyword is that
+  // keyword's English, not a name: "基督宗教 Christianity" kept
+  // "Christianity" as written, which a search in Italian took for a name
+  // and searched in English (0 of 240 videos in Italian, 2026-11-19).
+  final pivoted = {
+    for (final w in words)
+      if (!searchGlossary.containsKey(w))
+        if (searchPivots[w] case final english?)
+          for (final part in english.split(' '))
+            if (part == part.toLowerCase()) part,
+  };
   final out = <String>[];
   final kept = <String>{};
   final written = <String>{};
   for (final word in words) {
     final english = searchGlossary.containsKey(word) ? null : searchPivots[word];
     if (english == null) {
-      if (written.add(word.toLowerCase())) out.add(word);
+      final lower = word.toLowerCase();
+      if (written.add(lower)) out.add(pivoted.contains(lower) ? lower : word);
       continue;
     }
     final parts = english.split(' ').map((w) => w.toLowerCase());

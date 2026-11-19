@@ -3599,5 +3599,9 @@
   "mix audio other apps music": "Mixen met andere apps mix audio other apps music",
   "Keep playing in the background": "Blijven afspelen op de achtergrond",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Sommige telefoons sluiten apps die op de achtergrond afspelen om batterij te besparen. Laat Lumtub zonder batterijbeperkingen draaien, zodat het afspelen niet wordt onderbroken.",
-  "Allow": "Toestaan"
+  "Allow": "Toestaan",
+  "Simultaneous downloads": "Gelijktijdige downloads",
+  "downloads at the same time parallel concurrent": "gelijktijdig parallel downloads aantal downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Er worden maximaal {0} video's tegelijk gedownload; liveopnamen tellen niet mee",
+  "{0} (default)": "{0} (standaard)"
 }

@@ -3599,5 +3599,9 @@
   "mix audio other apps music": "الدمج مع التطبيقات الأخرى mix audio other apps music",
   "Keep playing in the background": "مواصلة التشغيل في الخلفية",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "تُغلق بعض الهواتف التطبيقات التي تعمل في الخلفية لتوفير البطارية. اسمح لـ Lumtub بالعمل دون قيود البطارية حتى لا يتوقف التشغيل.",
-  "Allow": "سماح"
+  "Allow": "سماح",
+  "Simultaneous downloads": "التنزيلات المتزامنة",
+  "downloads at the same time parallel concurrent": "متزامن متوازي تنزيل عدد downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "يُنزَّل حتى {0} فيديوهات في وقت واحد، ولا تُحتسب تسجيلات البث المباشر",
+  "{0} (default)": "{0} (افتراضي)"
 }

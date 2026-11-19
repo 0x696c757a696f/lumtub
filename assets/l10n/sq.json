@@ -3594,5 +3594,9 @@
   "mix audio other apps music": "Përzieje me aplikacione të tjera mix audio other apps music",
   "Keep playing in the background": "Vazhdo luajtjen në sfond",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Disa telefona mbyllin aplikacionet që luajnë në sfond për të kursyer baterinë. Lejoje Lumtub të punojë pa kufizime baterie që luajtja të mos ndërpritet.",
-  "Allow": "Lejo"
+  "Allow": "Lejo",
+  "Simultaneous downloads": "Shkarkime të njëkohshme",
+  "downloads at the same time parallel concurrent": "njëkohshëm paralel shkarkime numri downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Shkarkohen deri në {0} video njëkohësisht; regjistrimet e drejtpërdrejta nuk llogariten",
+  "{0} (default)": "{0} (parazgjedhur)"
 }

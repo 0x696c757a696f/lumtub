@@ -3593,5 +3593,9 @@
   "mix audio other apps music": "ከሌሎች መተግበሪያዎች ጋር ቀላቅል mix audio other apps music",
   "Keep playing in the background": "በጀርባ መጫወትን ቀጥል",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "አንዳንድ ስልኮች ባትሪ ለመቆጠብ በጀርባ የሚጫወቱ መተግበሪያዎችን ይዘጋሉ። መጫወቱ እንዳይቋረጥ Lumtub ያለ ባትሪ ገደብ እንዲሰራ ይፍቀዱ።",
-  "Allow": "ፍቀድ"
+  "Allow": "ፍቀድ",
+  "Simultaneous downloads": "በአንድ ጊዜ የሚወርዱ",
+  "downloads at the same time parallel concurrent": "በአንድ ጊዜ ትይዩ ማውረድ ብዛት downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "በአንድ ጊዜ እስከ {0} ቪዲዮዎች ይወርዳሉ፤ የቀጥታ ቀረጻዎች አይቆጠሩም",
+  "{0} (default)": "{0} (ነባሪ)"
 }

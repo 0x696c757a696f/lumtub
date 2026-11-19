@@ -3593,5 +3593,9 @@
   "mix audio other apps music": "Басқа қолданбалармен араластыру mix audio other apps music",
   "Keep playing in the background": "Фонда ойнатуды жалғастыру",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Кейбір телефондар батареяны үнемдеу үшін фонда ойнатып тұрған қолданбаларды жабады. Ойнату үзілмеуі үшін Lumtub-қа батарея шектеуінсіз жұмыс істеуге рұқсат етіңіз.",
-  "Allow": "Рұқсат ету"
+  "Allow": "Рұқсат ету",
+  "Simultaneous downloads": "Бір мезгілдегі жүктеулер",
+  "downloads at the same time parallel concurrent": "бір мезгілде параллель жүктеу саны downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Бір уақытта {0} бейнеге дейін жүктеледі; тікелей эфир жазбалары есептелмейді",
+  "{0} (default)": "{0} (әдепкі)"
 }

@@ -3593,5 +3593,9 @@
   "mix audio other apps music": "Başga programmalar bilen garyşdyr mix audio other apps music",
   "Keep playing in the background": "Fonda oýnatmagy dowam et",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Käbir telefonlar batareýany tygşytlamak üçin fonda oýnaýan programmalary ýapýar. Oýnatma kesilmez ýaly Lumtub-a batareýa çäklendirmesiz işlemäge rugsat beriň.",
-  "Allow": "Rugsat ber"
+  "Allow": "Rugsat ber",
+  "Simultaneous downloads": "Bir wagtda göçürip almalar",
+  "downloads at the same time parallel concurrent": "bir wagtda parallel göçürip almak sany downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Bir wagtda {0} wideo çenli göçürilýär; göni ýaýlym ýazgylary hasaba alynmaýar",
+  "{0} (default)": "{0} (deslapky)"
 }

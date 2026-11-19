@@ -3594,5 +3594,9 @@
   "mix audio other apps music": "Keverés más alkalmazásokkal mix audio other apps music",
   "Keep playing in the background": "Lejátszás folytatása a háttérben",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Egyes telefonok az akkumulátor kímélése érdekében bezárják a háttérben lejátszó alkalmazásokat. Engedd, hogy a Lumtub akkumulátorkorlátozás nélkül fusson, így a lejátszás nem szakad meg.",
-  "Allow": "Engedélyezés"
+  "Allow": "Engedélyezés",
+  "Simultaneous downloads": "Egyidejű letöltések",
+  "downloads at the same time parallel concurrent": "egyidejű párhuzamos letöltés szám downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Egyszerre legfeljebb {0} videó töltődik le; az élő közvetítések felvétele nem számít bele",
+  "{0} (default)": "{0} (alapértelmezett)"
 }

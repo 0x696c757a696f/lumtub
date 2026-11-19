@@ -3594,5 +3594,9 @@
   "mix audio other apps music": "Sega teiste rakendustega mix audio other apps music",
   "Keep playing in the background": "Jätka taustal esitamist",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Mõned telefonid sulgevad aku säästmiseks taustal mängivad rakendused. Luba Lumtubil töötada ilma akupiiranguteta, et taasesitus ei katkeks.",
-  "Allow": "Luba"
+  "Allow": "Luba",
+  "Simultaneous downloads": "Samaaegsed allalaadimised",
+  "downloads at the same time parallel concurrent": "samaaegne paralleelne allalaadimine arv downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Korraga laaditakse alla kuni {0} videot; otseülekannete salvestusi ei arvestata",
+  "{0} (default)": "{0} (vaikimisi)"
 }

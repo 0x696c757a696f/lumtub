@@ -3599,5 +3599,9 @@
   "mix audio other apps music": "Diğer uygulamalarla karıştır mix audio other apps music",
   "Keep playing in the background": "Arka planda oynatmaya devam et",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Bazı telefonlar pil tasarrufu için arka planda oynatan uygulamaları kapatır. Oynatma kesilmesin diye Lumtub'ın pil kısıtlaması olmadan çalışmasına izin verin.",
-  "Allow": "İzin ver"
+  "Allow": "İzin ver",
+  "Simultaneous downloads": "Eş zamanlı indirmeler",
+  "downloads at the same time parallel concurrent": "eş zamanlı paralel indirme sayısı downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Aynı anda en fazla {0} video indirilir; canlı yayın kayıtları sayılmaz",
+  "{0} (default)": "{0} (varsayılan)"
 }

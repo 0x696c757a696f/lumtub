@@ -3629,5 +3629,9 @@
   "mix audio other apps music": "混音 其他 App 音乐 声音 mix audio",
   "Keep playing in the background": "后台持续播放",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "部分手机为了省电，会关闭在后台播放的 App。允许 Lumtub 不受电池限制运行，播放就不会被中断。",
-  "Allow": "允许"
+  "Allow": "允许",
+  "Simultaneous downloads": "同时下载数",
+  "downloads at the same time parallel concurrent": "同时 并行 并发 下载 数量 downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "最多同时下载 {0} 个视频，直播录制不计在内",
+  "{0} (default)": "{0}（默认）"
 }

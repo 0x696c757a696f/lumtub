@@ -3594,5 +3594,9 @@
   "mix audio other apps music": "Miksēt ar citām lietotnēm mix audio other apps music",
   "Keep playing in the background": "Turpināt atskaņot fonā",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Daži tālruņi aizver fonā atskaņojošas lietotnes, lai taupītu akumulatoru. Ļaujiet Lumtub darboties bez akumulatora ierobežojumiem, lai atskaņošana nepārtrūktu.",
-  "Allow": "Atļaut"
+  "Allow": "Atļaut",
+  "Simultaneous downloads": "Vienlaicīgas lejupielādes",
+  "downloads at the same time parallel concurrent": "vienlaicīgi paralēli lejupielādes skaits downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Vienlaikus tiek lejupielādēti līdz {0} videoklipiem; tiešraižu ieraksti netiek skaitīti",
+  "{0} (default)": "{0} (noklusējums)"
 }

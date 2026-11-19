@@ -3593,5 +3593,9 @@
   "mix audio other apps music": "ଅନ୍ୟ ଆପ୍ସ ସହିତ ମିଶାନ୍ତୁ mix audio other apps music",
   "Keep playing in the background": "ପୃଷ୍ଠଭୂମିରେ ଚଲାଇବା ଜାରି ରଖନ୍ତୁ",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "କିଛି ଫୋନ୍ ବ୍ୟାଟେରୀ ବଞ୍ଚାଇବା ପାଇଁ ପୃଷ୍ଠଭୂମିରେ ଚାଲୁଥିବା ଆପ୍ ବନ୍ଦ କରିଦିଅନ୍ତି। ପ୍ଲେବ୍ୟାକ୍ ନ ଅଟକିବା ପାଇଁ Lumtubକୁ ବ୍ୟାଟେରୀ ସୀମା ବିନା ଚାଲିବାକୁ ଦିଅନ୍ତୁ।",
-  "Allow": "ଅନୁମତି ଦିଅନ୍ତୁ"
+  "Allow": "ଅନୁମତି ଦିଅନ୍ତୁ",
+  "Simultaneous downloads": "ଏକାସାଙ୍ଗରେ ଡାଉନଲୋଡ୍",
+  "downloads at the same time parallel concurrent": "ଏକାସାଙ୍ଗରେ ସମାନ୍ତରାଳ ଡାଉନଲୋଡ୍ ସଂଖ୍ୟା downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "ଏକାସାଙ୍ଗରେ {0}ଟି ପର୍ଯ୍ୟନ୍ତ ଭିଡିଓ ଡାଉନଲୋଡ୍ ହୁଏ; ଲାଇଭ୍ ରେକର୍ଡିଂ ଗଣାଯାଏ ନାହିଁ",
+  "{0} (default)": "{0} (ଡିଫଲ୍ଟ)"
 }

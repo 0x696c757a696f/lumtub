@@ -3599,5 +3599,9 @@
   "mix audio other apps music": "Змішувати з іншими додатками mix audio other apps music",
   "Keep playing in the background": "Продовжувати відтворення у фоні",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Деякі телефони закривають застосунки, що відтворюють у фоні, щоб заощадити заряд. Дозвольте Lumtub працювати без обмежень батареї, щоб відтворення не переривалося.",
-  "Allow": "Дозволити"
+  "Allow": "Дозволити",
+  "Simultaneous downloads": "Одночасні завантаження",
+  "downloads at the same time parallel concurrent": "одночасно паралельно завантаження кількість downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Одночасно завантажується до {0} відео; записи трансляцій не враховуються",
+  "{0} (default)": "{0} (за замовчуванням)"
 }

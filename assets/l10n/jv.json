@@ -3593,5 +3593,9 @@
   "mix audio other apps music": "Campur karo aplikasi liyane mix audio other apps music",
   "Keep playing in the background": "Terus muter ing latar mburi",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Sawetara HP nutup aplikasi sing muter ing latar mburi kanggo ngirit baterai. Keparengaken Lumtub mlaku tanpa watesan baterai supaya puteran ora kepedhot.",
-  "Allow": "Idini"
+  "Allow": "Idini",
+  "Simultaneous downloads": "Undhuhan bebarengan",
+  "downloads at the same time parallel concurrent": "bebarengan paralel undhuhan cacah downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Nganti {0} video diundhuh bebarengan; rekaman siaran langsung ora diitung",
+  "{0} (default)": "{0} (gawan)"
 }

@@ -3599,5 +3599,9 @@
   "mix audio other apps music": "Campur dengan aplikasi lain mix audio other apps music",
   "Keep playing in the background": "Tetap putar di latar belakang",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Beberapa ponsel menutup aplikasi yang memutar di latar belakang untuk menghemat baterai. Izinkan Lumtub berjalan tanpa batasan baterai agar pemutaran tidak terputus.",
-  "Allow": "Izinkan"
+  "Allow": "Izinkan",
+  "Simultaneous downloads": "Unduhan bersamaan",
+  "downloads at the same time parallel concurrent": "bersamaan paralel unduhan jumlah downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Hingga {0} video diunduh sekaligus; rekaman siaran langsung tidak dihitung",
+  "{0} (default)": "{0} (default)"
 }

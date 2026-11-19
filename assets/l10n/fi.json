@@ -3594,5 +3594,9 @@
   "mix audio other apps music": "Sekoita muiden sovellusten kanssa mix audio other apps music",
   "Keep playing in the background": "Jatka toistoa taustalla",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Jotkin puhelimet sulkevat taustalla toistavia sovelluksia akun säästämiseksi. Anna Lumtubin toimia ilman akkurajoituksia, jotta toisto ei katkea.",
-  "Allow": "Salli"
+  "Allow": "Salli",
+  "Simultaneous downloads": "Samanaikaiset lataukset",
+  "downloads at the same time parallel concurrent": "samanaikainen rinnakkainen lataus määrä downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Enintään {0} videota ladataan kerrallaan; suorien lähetysten tallennuksia ei lasketa",
+  "{0} (default)": "{0} (oletus)"
 }

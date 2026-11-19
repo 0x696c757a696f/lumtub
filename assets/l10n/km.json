@@ -3593,5 +3593,9 @@
   "mix audio other apps music": "លាយជាមួយកម្មវិធីផ្សេងទៀត mix audio other apps music",
   "Keep playing in the background": "បន្តចាក់នៅផ្ទៃខាងក្រោយ",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "ទូរសព្ទខ្លះបិទកម្មវិធីដែលកំពុងចាក់នៅផ្ទៃខាងក្រោយ ដើម្បីសន្សំថ្ម។ អនុញ្ញាតឱ្យ Lumtub ដំណើរការដោយគ្មានការកំណត់ថ្ម ដើម្បីកុំឱ្យការចាក់ត្រូវដាច់។",
-  "Allow": "អនុញ្ញាត"
+  "Allow": "អនុញ្ញាត",
+  "Simultaneous downloads": "ការទាញយកក្នុងពេលតែមួយ",
+  "downloads at the same time parallel concurrent": "ពេលតែមួយ ស្របគ្នា ទាញយក ចំនួន downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "ទាញយកវីដេអូរហូតដល់ {0} ក្នុងពេលតែមួយ ការថតផ្សាយផ្ទាល់មិនរាប់បញ្ចូលទេ",
+  "{0} (default)": "{0} (លំនាំដើម)"
 }

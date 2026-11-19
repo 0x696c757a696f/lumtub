@@ -3599,5 +3599,9 @@
   "mix audio other apps music": "ミックス 他のアプリ 音楽 音声 mix audio",
   "Keep playing in the background": "バックグラウンドで再生を続ける",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "一部のスマホは電池を節約するため、バックグラウンドで再生中のアプリを終了します。再生が止まらないよう、Lumtub を電池の制限なしで動作させてください。",
-  "Allow": "許可"
+  "Allow": "許可",
+  "Simultaneous downloads": "同時ダウンロード数",
+  "downloads at the same time parallel concurrent": "同時 並列 ダウンロード 数 downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "最大 {0} 本の動画を同時にダウンロードします。ライブの録画は含まれません",
+  "{0} (default)": "{0}（デフォルト）"
 }

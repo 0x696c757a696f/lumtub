@@ -3594,5 +3594,9 @@
   "mix audio other apps music": "Changanya na programu zingine mix audio other apps music",
   "Keep playing in the background": "Endelea kucheza chinichini",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Baadhi ya simu hufunga programu zinazocheza chinichini ili kuokoa betri. Ruhusu Lumtub iendeshwe bila vikwazo vya betri ili uchezaji usikatike.",
-  "Allow": "Ruhusu"
+  "Allow": "Ruhusu",
+  "Simultaneous downloads": "Vipakuliwa kwa wakati mmoja",
+  "downloads at the same time parallel concurrent": "wakati mmoja sambamba kupakua idadi downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Hadi video {0} hupakuliwa kwa wakati mmoja; rekodi za matangazo ya moja kwa moja hazihesabiwi",
+  "{0} (default)": "{0} (chaguomsingi)"
 }

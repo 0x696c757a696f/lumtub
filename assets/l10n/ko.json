@@ -3599,5 +3599,9 @@
   "mix audio other apps music": "다른 앱과 함께 재생 mix audio other apps music",
   "Keep playing in the background": "백그라운드에서 계속 재생",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "일부 휴대전화는 배터리를 아끼려고 백그라운드에서 재생 중인 앱을 종료합니다. 재생이 끊기지 않도록 Lumtub이 배터리 제한 없이 실행되게 허용하세요.",
-  "Allow": "허용"
+  "Allow": "허용",
+  "Simultaneous downloads": "동시 다운로드 수",
+  "downloads at the same time parallel concurrent": "동시 병렬 다운로드 개수 downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "한 번에 최대 {0}개의 동영상을 다운로드합니다. 라이브 녹화는 포함되지 않습니다",
+  "{0} (default)": "{0}(기본값)"
 }

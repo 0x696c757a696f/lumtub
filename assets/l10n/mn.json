@@ -3593,5 +3593,9 @@
   "mix audio other apps music": "Бусад апптай хольж тоглуулах mix audio other apps music",
   "Keep playing in the background": "Ар талд үргэлжлүүлэн тоглуулах",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Зарим утас батарей хэмнэхийн тулд ар талд тоглуулж буй аппуудыг хаадаг. Тоглуулалт тасрахгүйн тулд Lumtub-д батарейн хязгааргүй ажиллахыг зөвшөөрнө үү.",
-  "Allow": "Зөвшөөрөх"
+  "Allow": "Зөвшөөрөх",
+  "Simultaneous downloads": "Зэрэг татах",
+  "downloads at the same time parallel concurrent": "зэрэг зэрэгцээ татах тоо downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Нэг дор {0} хүртэл видео татагдана; шууд нэвтрүүлгийн бичлэг тооцогдохгүй",
+  "{0} (default)": "{0} (өгөгдмөл)"
 }

@@ -3599,5 +3599,9 @@
   "mix audio other apps music": "Trộn với ứng dụng khác mix audio other apps music",
   "Keep playing in the background": "Tiếp tục phát trong nền",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Một số điện thoại đóng các ứng dụng đang phát trong nền để tiết kiệm pin. Hãy cho phép Lumtub chạy không bị giới hạn pin để việc phát không bị ngắt.",
-  "Allow": "Cho phép"
+  "Allow": "Cho phép",
+  "Simultaneous downloads": "Số lượt tải xuống đồng thời",
+  "downloads at the same time parallel concurrent": "đồng thời song song tải xuống số lượng downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Tải xuống tối đa {0} video cùng lúc; bản ghi trực tiếp không được tính",
+  "{0} (default)": "{0} (mặc định)"
 }

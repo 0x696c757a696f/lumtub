@@ -3593,5 +3593,9 @@
   "mix audio other apps music": "Campur jeung aplikasi séjén mix audio other apps music",
   "Keep playing in the background": "Teruskeun muter di latar tukang",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Sababaraha telepon nutup aplikasi nu keur muter di latar tukang pikeun ngahémat batré. Idinan Lumtub jalan tanpa watesan batré supados puteran henteu pegat.",
-  "Allow": "Idinan"
+  "Allow": "Idinan",
+  "Simultaneous downloads": "Undeuran sakaligus",
+  "downloads at the same time parallel concurrent": "sakaligus paralel undeuran jumlah downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Nepi ka {0} video diundeur sakaligus; rékaman siaran langsung teu diitung",
+  "{0} (default)": "{0} (standar)"
 }

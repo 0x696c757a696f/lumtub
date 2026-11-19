@@ -3593,5 +3593,9 @@
   "mix audio other apps music": "Hlanganisa nezinye izinhlelo zokusebenza mix audio other apps music",
   "Keep playing in the background": "Qhubeka udlale ngemuva",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Amanye amafoni avala izinhlelo zokusebenza ezidlala ngemuva ukuze onge ibhethri. Vumela i-Lumtub isebenze ngaphandle kwemikhawulo yebhethri ukuze ukudlala kungaphazamiseki.",
-  "Allow": "Vumela"
+  "Allow": "Vumela",
+  "Simultaneous downloads": "Ukulanda ngesikhathi esisodwa",
+  "downloads at the same time parallel concurrent": "ngesikhathi esisodwa ngokuhambisana ukulanda inani downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Kulandwa amavidiyo afinyelela ku-{0} ngesikhathi esisodwa; ukuqopha okubukhoma akubalwa",
+  "{0} (default)": "{0} (okuzenzakalelayo)"
 }

@@ -3594,5 +3594,9 @@
   "mix audio other apps music": "Ihalo sa iba pang app mix audio other apps music",
   "Keep playing in the background": "Patuloy na mag-play sa background",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Isinasara ng ilang telepono ang mga app na nagpe-play sa background para makatipid ng baterya. Hayaang tumakbo ang Lumtub nang walang limitasyon sa baterya para hindi maputol ang playback.",
-  "Allow": "Payagan"
+  "Allow": "Payagan",
+  "Simultaneous downloads": "Sabay-sabay na pag-download",
+  "downloads at the same time parallel concurrent": "sabay-sabay parallel download bilang downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Hanggang {0} video ang dina-download nang sabay; hindi kasama ang mga live recording",
+  "{0} (default)": "{0} (default)"
 }

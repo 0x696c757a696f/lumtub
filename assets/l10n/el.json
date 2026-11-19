@@ -3594,5 +3594,9 @@
   "mix audio other apps music": "Ανάμιξη με άλλες εφαρμογές mix audio other apps music",
   "Keep playing in the background": "Συνέχιση αναπαραγωγής στο παρασκήνιο",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "Ορισμένα τηλέφωνα κλείνουν εφαρμογές που παίζουν στο παρασκήνιο για εξοικονόμηση μπαταρίας. Επιτρέψτε στο Lumtub να λειτουργεί χωρίς περιορισμούς μπαταρίας, ώστε η αναπαραγωγή να μη διακόπτεται.",
-  "Allow": "Να επιτρέπεται"
+  "Allow": "Να επιτρέπεται",
+  "Simultaneous downloads": "Ταυτόχρονες λήψεις",
+  "downloads at the same time parallel concurrent": "ταυτόχρονα παράλληλα λήψεις αριθμός downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Λαμβάνονται έως {0} βίντεο ταυτόχρονα· οι εγγραφές ζωντανών μεταδόσεων δεν μετράνε",
+  "{0} (default)": "{0} (προεπιλογή)"
 }

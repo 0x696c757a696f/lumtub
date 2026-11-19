@@ -3593,5 +3593,9 @@
   "mix audio other apps music": "အခြားအက်ပ်များနှင့် ရောနှောရန် mix audio other apps music",
   "Keep playing in the background": "နောက်ခံတွင် ဆက်ဖွင့်ထားရန်",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "ဖုန်းအချို့သည် ဘက်ထရီချွေတာရန် နောက်ခံတွင် ဖွင့်နေသော အက်ပ်များကို ပိတ်ပစ်သည်။ ဖွင့်ခြင်း မပြတ်တောက်စေရန် Lumtub ကို ဘက်ထရီကန့်သတ်ချက်မရှိဘဲ အလုပ်လုပ်ခွင့်ပြုပါ။",
-  "Allow": "ခွင့်ပြုရန်"
+  "Allow": "ခွင့်ပြုရန်",
+  "Simultaneous downloads": "တစ်ပြိုင်နက် ဒေါင်းလုဒ်များ",
+  "downloads at the same time parallel concurrent": "တစ်ပြိုင်နက် အပြိုင် ဒေါင်းလုဒ် အရေအတွက် downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "တစ်ကြိမ်လျှင် ဗီဒီယို {0} ခုအထိ ဒေါင်းလုဒ်လုပ်သည်။ တိုက်ရိုက်ထုတ်လွှင့်မှု မှတ်တမ်းတင်ခြင်းကို မရေတွက်ပါ",
+  "{0} (default)": "{0} (မူလ)"
 }

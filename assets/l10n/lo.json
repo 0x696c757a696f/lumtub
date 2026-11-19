@@ -3593,5 +3593,9 @@
   "mix audio other apps music": "ປະສົມກັບແອັບອື່ນ mix audio other apps music",
   "Keep playing in the background": "ສືບຕໍ່ຫຼິ້ນໃນພື້ນຫຼັງ",
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "ໂທລະສັບບາງລຸ້ນປິດແອັບທີ່ກຳລັງຫຼິ້ນໃນພື້ນຫຼັງເພື່ອປະຢັດແບັດເຕີຣີ. ອະນຸຍາດໃຫ້ Lumtub ເຮັດວຽກໂດຍບໍ່ມີຂໍ້ຈຳກັດແບັດເຕີຣີ ເພື່ອບໍ່ໃຫ້ການຫຼິ້ນຖືກຕັດ.",
-  "Allow": "ອະນຸຍາດ"
+  "Allow": "ອະນຸຍາດ",
+  "Simultaneous downloads": "ການດາວໂຫຼດພ້ອມກັນ",
+  "downloads at the same time parallel concurrent": "ພ້ອມກັນ ຂະໜານ ດາວໂຫຼດ ຈຳນວນ downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "ດາວໂຫຼດວິດີໂອໄດ້ສູງສຸດ {0} ອັນພ້ອມກັນ; ການບັນທຶກສົດບໍ່ນັບລວມ",
+  "{0} (default)": "{0} (ຄ່າເລີ່ມຕົ້ນ)"
 }

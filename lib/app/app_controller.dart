@@ -49,6 +49,7 @@ import '../live_split.dart';
 import '../native_core.dart';
 import '../encrypted_dns.dart';
 import '../native_http.dart';
+import '../js_challenge_plugin.dart';
 import '../yt_dlp_tls.dart';
 import '../live_chat.dart';
 import '../link_video.dart';

@@ -77,6 +77,7 @@ extension LifecycleActions on AppController {
       // The proxy comes before the component downloads, which use it too.
       await (_refreshProxy(), cacheManager.prepare(settings), manager.initialize()).wait;
       await YtDlpTls.configure(directories.data, roots: settings.certificateRoots, quantum: settings.postQuantum);
+      await JsChallengePlugin.prepare(directories.data.path);
       final paths = await manager.ensureReady();
       addToPath(paths.executableDirectories);
       MediaKit.ensureInitialized(libmpv: paths.mpv.isEmpty ? null : paths.mpv);

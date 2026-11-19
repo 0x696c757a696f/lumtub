@@ -8,6 +8,7 @@ import 'package:ffi/ffi.dart';
 
 import 'android_python.dart';
 import 'ios_python.dart';
+import 'js_challenge_plugin.dart';
 import 'app_log.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
@@ -272,6 +273,15 @@ class NativeCore {
   /// LUMTUB_CORE_DLL points at another copy (tests and `flutter run`).
   static final NativeCore? instance = _load();
 
+  /// Where the library was loaded from; null on Android, where it is
+  /// loaded by name, or when it is not loaded.
+  static String? get path {
+    instance;
+    return _path;
+  }
+
+  static String? _path;
+
   static String get fileName => Platform.isWindows ? 'lumtub_core.dll' : Platform.isMacOS ? 'liblumtub_core.dylib' : 'liblumtub_core.so';
 
   /// What Lumtub says when the library is missing.
@@ -304,6 +314,7 @@ class NativeCore {
       try {
         final core = NativeCore._(DynamicLibrary.open(path));
         AppLog.nativeRedact = (message) => core.take(core.withText(message, core.redact)) ?? message;
+        _path = File(path).absolute.path;
         return core;
       } catch (e) {
         logWarn('Could not load $path: $e');
@@ -503,6 +514,12 @@ class ProcessTree implements Process {
     if (isYtDlp(executable)) {
       arguments = YtDlpTls.withPlugin(arguments, ytDlpIsolation.length);
       environment = {...YtDlpTls.environment, ...?environment};
+      // On computers the core's QuickJS solves YouTube's challenges; Deno,
+      // still passed with --js-runtimes, takes over where it cannot.
+      if (JsChallengePlugin.desktop case (final folder, final core)) {
+        arguments = [...arguments.take(ytDlpIsolation.length), '--plugin-dirs', folder, ...arguments.skip(ytDlpIsolation.length)];
+        environment = {...environment, 'LUMTUB_CORE': core};
+      }
     }
     (arguments, environment) = NetworkProxy.hideCredentials(arguments, environment);
     if (AndroidPython.runs(executable)) (executable, arguments, environment) = AndroidPython.current!.command(executable, arguments, environment);

@@ -3619,5 +3619,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Gli accessi salvati su questo dispositivo verranno eliminati. Iscrizioni e playlist restano su questo dispositivo.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Con l'accesso con browser, i video guardati in Lumtub vengono aggiunti anche alla cronologia di visualizzazione di YouTube, che YouTube usa per i consigli. Disattivato per impostazione predefinita; nulla viene sincronizzato in modalità di navigazione in incognito o quando la cronologia locale è disattivata",
   "YouTube did not make the playlist": "YouTube non ha creato la playlist",
-  "YouTube did not offer a comment box here": "YouTube non ha offerto una casella di commento qui"
+  "YouTube did not offer a comment box here": "YouTube non ha offerto una casella di commento qui",
+  "Simultaneous downloads": "Download simultanei",
+  "downloads at the same time parallel concurrent": "simultanei parallelo download numero downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Vengono scaricati fino a {0} video alla volta; le registrazioni delle dirette non contano",
+  "{0} (default)": "{0} (predefinito)"
 }

@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "इस डिवाइस पर सेव किए गए साइन-इन हटा दिए जाएँगे। सब्सक्रिप्शन और प्लेलिस्ट इस डिवाइस पर बने रहेंगे।",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "ब्राउज़र साइन-इन के साथ, Lumtub में देखे गए वीडियो आपके YouTube देखने के इतिहास में भी जुड़ जाते हैं, जिसका YouTube सुझावों के लिए इस्तेमाल करता है। डिफ़ॉल्ट रूप से बंद; इनकॉग्निटो मोड में या स्थानीय इतिहास बंद होने पर कुछ भी सिंक नहीं होता",
   "YouTube did not make the playlist": "YouTube ने प्लेलिस्ट नहीं बनाई",
-  "YouTube did not offer a comment box here": "YouTube ने यहाँ टिप्पणी बॉक्स नहीं दिया"
+  "YouTube did not offer a comment box here": "YouTube ने यहाँ टिप्पणी बॉक्स नहीं दिया",
+  "Simultaneous downloads": "एक साथ डाउनलोड",
+  "downloads at the same time parallel concurrent": "एक साथ समानांतर डाउनलोड संख्या downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "एक साथ ज़्यादा से ज़्यादा {0} वीडियो डाउनलोड होते हैं; लाइव रिकॉर्डिंग नहीं गिनी जातीं",
+  "{0} (default)": "{0} (डिफ़ॉल्ट)"
 }

@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Made-delete ang mga sign-in na naka-save sa device na ito. Mananatili sa device na ito ang mga subscription at playlist.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Sa browser sign-in, idinadagdag din ang mga video na pinanood sa Lumtub sa history ng panonood mo sa YouTube, na ginagamit ng YouTube para sa mga rekomendasyon. Naka-off bilang default; walang isi-sync sa incognito mode o kapag naka-off ang lokal na history",
   "YouTube did not make the playlist": "Hindi ginawa ng YouTube ang playlist",
-  "YouTube did not offer a comment box here": "Hindi nag-alok ang YouTube ng comment box dito"
+  "YouTube did not offer a comment box here": "Hindi nag-alok ang YouTube ng comment box dito",
+  "Simultaneous downloads": "Sabay-sabay na pag-download",
+  "downloads at the same time parallel concurrent": "sabay-sabay parallel download bilang downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Hanggang {0} video ang dina-download nang sabay; hindi kasama ang mga live recording",
+  "{0} (default)": "{0} (default)"
 }

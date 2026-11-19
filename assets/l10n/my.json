@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "ဤစက်ပေါ်တွင် သိမ်းထားသော လက်မှတ်ထိုးဝင်မှုများကို ဖျက်ပါမည်။ စာရင်းသွင်းမှုများနှင့် ဖွင့်ရန်စာရင်းများ ဤစက်ပေါ်တွင် ဆက်ရှိနေပါမည်။",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "ဘရောက်ဇာဖြင့် လက်မှတ်ထိုးဝင်ထားလျှင် Lumtub တွင်ကြည့်သော ဗီဒီယိုများကိုလည်း YouTube က အကြံပြုချက်များအတွက် သုံးသည့် သင့် YouTube ကြည့်ရှုမှတ်တမ်းထဲသို့ ထည့်ပါသည်။ မူလအားဖြင့် ပိတ်ထားသည်၊ ကိုယ်ရေးကိုယ်တာမုဒ်တွင် သို့မဟုတ် စက်တွင်းမှတ်တမ်းပိတ်ထားစဉ် ဘာမျှ ထပ်တူမပြုပါ",
   "YouTube did not make the playlist": "YouTube က ဖွင့်ရန်စာရင်းကို မဖန်တီးခဲ့ပါ",
-  "YouTube did not offer a comment box here": "YouTube က ဤနေရာတွင် မှတ်ချက်ဘောက်စ်ကို မပေးခဲ့ပါ"
+  "YouTube did not offer a comment box here": "YouTube က ဤနေရာတွင် မှတ်ချက်ဘောက်စ်ကို မပေးခဲ့ပါ",
+  "Simultaneous downloads": "တစ်ပြိုင်နက် ဒေါင်းလုဒ်များ",
+  "downloads at the same time parallel concurrent": "တစ်ပြိုင်နက် အပြိုင် ဒေါင်းလုဒ် အရေအတွက် downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "တစ်ကြိမ်လျှင် ဗီဒီယို {0} ခုအထိ ဒေါင်းလုဒ်လုပ်သည်။ တိုက်ရိုက်ထုတ်လွှင့်မှု မှတ်တမ်းတင်ခြင်းကို မရေတွက်ပါ",
+  "{0} (default)": "{0} (မူလ)"
 }

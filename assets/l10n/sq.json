@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Hyrjet e ruajtura në këtë pajisje do të fshihen. Abonimet dhe luajlistat mbeten në këtë pajisje.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Me hyrjen me shfletues, videot e parë në Lumtub shtohen edhe në historikun tuaj të shikimit në YouTube, të cilin YouTube e përdor për rekomandime. Joaktive si parazgjedhje; asgjë nuk sinkronizohet në modalitetin inkognito ose kur historiku lokal është joaktiv",
   "YouTube did not make the playlist": "YouTube nuk e krijoi luajlistën",
-  "YouTube did not offer a comment box here": "YouTube nuk ofroi kuti komenti këtu"
+  "YouTube did not offer a comment box here": "YouTube nuk ofroi kuti komenti këtu",
+  "Simultaneous downloads": "Shkarkime të njëkohshme",
+  "downloads at the same time parallel concurrent": "njëkohshëm paralel shkarkime numri downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Shkarkohen deri në {0} video njëkohësisht; regjistrimet e drejtpërdrejta nuk llogariten",
+  "{0} (default)": "{0} (parazgjedhur)"
 }

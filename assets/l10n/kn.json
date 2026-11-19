@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "ಈ ಸಾಧನದಲ್ಲಿ ಉಳಿಸಿದ ಸೈನ್ ಇನ್‌ಗಳನ್ನು ಅಳಿಸಲಾಗುತ್ತದೆ. ಚಂದಾದಾರಿಕೆಗಳು ಮತ್ತು ಪ್ಲೇಲಿಸ್ಟ್‌ಗಳು ಈ ಸಾಧನದಲ್ಲಿಯೇ ಇರುತ್ತವೆ.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "ಬ್ರೌಸರ್ ಸೈನ್ ಇನ್‌ನೊಂದಿಗೆ, Lumtub ನಲ್ಲಿ ವೀಕ್ಷಿಸಿದ ವೀಡಿಯೊಗಳು ನಿಮ್ಮ YouTube ವೀಕ್ಷಣೆ ಇತಿಹಾಸಕ್ಕೂ ಸೇರುತ್ತವೆ, ಇದನ್ನು YouTube ಶಿಫಾರಸುಗಳಿಗೆ ಬಳಸುತ್ತದೆ. ಡೀಫಾಲ್ಟ್ ಆಗಿ ಆಫ್; ಅಜ್ಞಾತ ಮೋಡ್‌ನಲ್ಲಿ ಅಥವಾ ಸ್ಥಳೀಯ ಇತಿಹಾಸ ಆಫ್ ಆಗಿದ್ದಾಗ ಏನನ್ನೂ ಸಿಂಕ್ ಮಾಡಲಾಗುವುದಿಲ್ಲ",
   "YouTube did not make the playlist": "YouTube ಪ್ಲೇಲಿಸ್ಟ್ ಅನ್ನು ರಚಿಸಿಲ್ಲ",
-  "YouTube did not offer a comment box here": "YouTube ಇಲ್ಲಿ ಕಾಮೆಂಟ್ ಬಾಕ್ಸ್ ನೀಡಿಲ್ಲ"
+  "YouTube did not offer a comment box here": "YouTube ಇಲ್ಲಿ ಕಾಮೆಂಟ್ ಬಾಕ್ಸ್ ನೀಡಿಲ್ಲ",
+  "Simultaneous downloads": "ಏಕಕಾಲದ ಡೌನ್‌ಲೋಡ್‌ಗಳು",
+  "downloads at the same time parallel concurrent": "ಏಕಕಾಲದಲ್ಲಿ ಸಮಾನಾಂತರ ಡೌನ್‌ಲೋಡ್ ಸಂಖ್ಯೆ downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "ಒಮ್ಮೆಗೆ {0} ವೀಡಿಯೊಗಳವರೆಗೆ ಡೌನ್‌ಲೋಡ್ ಆಗುತ್ತವೆ; ಲೈವ್ ರೆಕಾರ್ಡಿಂಗ್‌ಗಳನ್ನು ಎಣಿಸಲಾಗುವುದಿಲ್ಲ",
+  "{0} (default)": "{0} (ಡಿಫಾಲ್ಟ್)"
 }

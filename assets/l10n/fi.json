@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Tälle laitteelle tallennetut kirjautumistiedot poistetaan. Tilaukset ja soittolistat säilyvät tällä laitteella.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Selainkirjautumisella Lumtubissa katsotut videot lisätään myös YouTube-katseluhistoriaasi, jota YouTube käyttää suosituksiin. Oletuksena pois päältä; mitään ei synkronoida incognito-tilassa tai kun paikallinen historia on pois päältä",
   "YouTube did not make the playlist": "YouTube ei luonut soittolistaa",
-  "YouTube did not offer a comment box here": "YouTube ei tarjonnut tässä kommenttikenttää"
+  "YouTube did not offer a comment box here": "YouTube ei tarjonnut tässä kommenttikenttää",
+  "Simultaneous downloads": "Samanaikaiset lataukset",
+  "downloads at the same time parallel concurrent": "samanaikainen rinnakkainen lataus määrä downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Enintään {0} videota ladataan kerrallaan; suorien lähetysten tallennuksia ei lasketa",
+  "{0} (default)": "{0} (oletus)"
 }

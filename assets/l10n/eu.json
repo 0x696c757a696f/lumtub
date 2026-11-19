@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Gailu honetan gordetako saio-hasierak ezabatuko dira. Harpidetzak eta erreprodukzio-zerrendak gailu honetan geratuko dira.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Nabigatzailearekin saio-hasierarekin, Lumtuben ikusitako bideoak zure YouTubeko ikusitakoen historiara ere gehitzen dira, YouTubek gomendioetarako erabiltzen duena. Lehenespenez desaktibatuta; ez da ezer sinkronizatzen incognito moduan edo tokiko historia desaktibatuta dagoenean",
   "YouTube did not make the playlist": "YouTubek ez du erreprodukzio-zerrenda sortu",
-  "YouTube did not offer a comment box here": "YouTubek ez du iruzkin-koadrorik eskaini hemen"
+  "YouTube did not offer a comment box here": "YouTubek ez du iruzkin-koadrorik eskaini hemen",
+  "Simultaneous downloads": "Aldibereko deskargak",
+  "downloads at the same time parallel concurrent": "aldiberean paraleloan deskargak kopurua downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Gehienez {0} bideo deskargatzen dira aldi berean; zuzeneko grabazioak ez dira kontatzen",
+  "{0} (default)": "{0} (lehenetsia)"
 }

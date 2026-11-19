@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Այս սարքում պահված մուտքերը կջնջվեն։ Բաժանորդագրությունները և նվագարկման ցանկերը կմնան այս սարքում։",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Դիտարկիչով մուտքի դեպքում Lumtub-ում դիտած տեսանյութերը ավելացվում են նաև ձեր YouTube-ի դիտումների պատմությանը, որն YouTube-ը օգտագործում է առաջարկությունների համար։ Լռելյայն անջատված է. ինկոգնիտո ռեժիմում կամ երբ տեղային պատմությունն անջատված է, ոչինչ չի համաժամեցվում",
   "YouTube did not make the playlist": "YouTube-ը չստեղծեց նվագարկման ցանկը",
-  "YouTube did not offer a comment box here": "YouTube-ը այստեղ մեկնաբանության դաշտ չառաջարկեց"
+  "YouTube did not offer a comment box here": "YouTube-ը այստեղ մեկնաբանության դաշտ չառաջարկեց",
+  "Simultaneous downloads": "Միաժամանակյա ներբեռնումներ",
+  "downloads at the same time parallel concurrent": "միաժամանակ զուգահեռ ներբեռնում քանակ downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Միաժամանակ ներբեռնվում է մինչև {0} տեսանյութ․ ուղիղ եթերի ձայնագրությունները չեն հաշվվում",
+  "{0} (default)": "{0} (կանխադրված)"
 }

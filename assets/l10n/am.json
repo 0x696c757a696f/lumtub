@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "በዚህ መሣሪያ ላይ የተቀመጡ መግቢያዎች ይሰረዛሉ። ምዝገባዎችና አጫዋች ዝርዝሮች በዚህ መሣሪያ ላይ ይቆያሉ።",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "በአሳሽ መግቢያ፣ በ Lumtub የተመለከቷቸው ቪዲዮዎች YouTube ለምክሮች በሚጠቀምበት የ YouTube የእይታ ታሪክዎ ላይም ይጨመራሉ። በነባሪ ጠፍቷል፤ በማያሳውቅ ሁነታ ወይም የአካባቢ ታሪክ ሲጠፋ ምንም አይመሳሰልም",
   "YouTube did not make the playlist": "YouTube አጫዋች ዝርዝሩን አልፈጠረም",
-  "YouTube did not offer a comment box here": "YouTube እዚህ የአስተያየት ሳጥን አላቀረበም"
+  "YouTube did not offer a comment box here": "YouTube እዚህ የአስተያየት ሳጥን አላቀረበም",
+  "Simultaneous downloads": "በአንድ ጊዜ የሚወርዱ",
+  "downloads at the same time parallel concurrent": "በአንድ ጊዜ ትይዩ ማውረድ ብዛት downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "በአንድ ጊዜ እስከ {0} ቪዲዮዎች ይወርዳሉ፤ የቀጥታ ቀረጻዎች አይቆጠሩም",
+  "{0} (default)": "{0} (ነባሪ)"
 }

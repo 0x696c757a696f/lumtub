@@ -206,6 +206,31 @@ void main() {
       expect(m.taskFor('ccccccccccc')!.status, DownloadStatus.downloading);
     });
 
+    test('the number of downloads at once can be raised, is saved and stays within 1 to 5', () async {
+      final m = manager();
+      for (final id in ['aaaaaaaaaaa', 'bbbbbbbbbbb', 'ccccccccccc', 'ddddddddddd']) {
+        m.add(video(id), DownloadQuality.best);
+      }
+      await until(() => processes.length >= 2);
+      await settle();
+      expect(processes, hasLength(2));
+      await m.setMaxConcurrent(3);
+      await until(() => processes.length >= 3);
+      await settle();
+      expect(processes, hasLength(3));
+      expect(m.taskFor('ddddddddddd')!.status, DownloadStatus.queued);
+      await m.setMaxConcurrent(9);
+      expect(m.maxConcurrent, DownloadManager.maxConcurrentLimit);
+      await m.setMaxConcurrent(1);
+      await m.flush();
+      final again = manager();
+      await again.load();
+      expect(again.maxConcurrent, 1);
+      for (final p in processes) {
+        await p.exit(1);
+      }
+    });
+
     test('no download starts while the cache is being cleared', () async {
       final m = manager();
       final release = Completer<void>();

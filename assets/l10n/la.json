@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Ingressus in hac machina servati delebuntur. Subscriptiones et indices in hac machina manent.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Cum ingressu per navigatrum, pelliculae in Lumtub spectatae etiam ad historiam spectandi YouTube tuam adduntur, qua YouTube ad commendationes utitur. Sua sponte exstinctum; nihil synchronizatur in modo incognito vel cum historia localis exstincta est",
   "YouTube did not make the playlist": "YouTube indicem non creavit",
-  "YouTube did not offer a comment box here": "YouTube hic capsam commentarii non obtulit"
+  "YouTube did not offer a comment box here": "YouTube hic capsam commentarii non obtulit",
+  "Simultaneous downloads": "Depromptiones simul",
+  "downloads at the same time parallel concurrent": "simul parallele depromptiones numerus downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Ad {0} videos simul depromuntur; inscriptiones rerum directarum non numerantur",
+  "{0} (default)": "{0} (praedefinitum)"
 }

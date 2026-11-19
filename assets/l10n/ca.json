@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Els inicis de sessió desats en aquest dispositiu se suprimiran. Les subscripcions i les llistes de reproducció es mantenen en aquest dispositiu.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Amb l'inici de sessió amb navegador, els vídeos que veus a Lumtub també s'afegeixen al teu historial de reproducció de YouTube, que YouTube utilitza per a les recomanacions. Desactivat per defecte; no se sincronitza res en mode d'incògnit ni quan l'historial local està desactivat",
   "YouTube did not make the playlist": "YouTube no ha creat la llista de reproducció",
-  "YouTube did not offer a comment box here": "YouTube no ha ofert cap quadre de comentaris aquí"
+  "YouTube did not offer a comment box here": "YouTube no ha ofert cap quadre de comentaris aquí",
+  "Simultaneous downloads": "Baixades simultànies",
+  "downloads at the same time parallel concurrent": "simultànies paral·lel baixades nombre downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Es baixen fins a {0} vídeos alhora; les gravacions en directe no compten",
+  "{0} (default)": "{0} (per defecte)"
 }

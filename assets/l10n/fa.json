@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "ورودهای ذخیره‌شده روی این دستگاه حذف خواهند شد. اشتراک‌ها و فهرست‌های پخش روی این دستگاه می‌مانند.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "با ورود با مرورگر، ویدیوهایی که در Lumtub تماشا می‌کنید به سابقه تماشای YouTube شما هم اضافه می‌شوند که YouTube برای پیشنهادها از آن استفاده می‌کند. به‌طور پیش‌فرض خاموش است؛ در حالت ناشناس یا وقتی سابقه محلی خاموش است چیزی همگام‌سازی نمی‌شود",
   "YouTube did not make the playlist": "YouTube فهرست پخش را ایجاد نکرد",
-  "YouTube did not offer a comment box here": "YouTube در اینجا کادر نظر ارائه نکرد"
+  "YouTube did not offer a comment box here": "YouTube در اینجا کادر نظر ارائه نکرد",
+  "Simultaneous downloads": "دانلودهای هم‌زمان",
+  "downloads at the same time parallel concurrent": "هم‌زمان موازی دانلود تعداد downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "حداکثر {0} ویدیو هم‌زمان دانلود می‌شود؛ ضبط‌های زنده حساب نمی‌شوند",
+  "{0} (default)": "{0} (پیش‌فرض)"
 }

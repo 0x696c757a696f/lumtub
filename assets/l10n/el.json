@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Οι συνδέσεις που έχουν αποθηκευτεί σε αυτήν τη συσκευή θα διαγραφούν. Οι συνδρομές και οι λίστες αναπαραγωγής παραμένουν σε αυτήν τη συσκευή.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Με τη σύνδεση μέσω προγράμματος περιήγησης, τα βίντεο που παρακολουθείτε στο Lumtub προστίθενται και στο ιστορικό παρακολούθησης του YouTube, το οποίο το YouTube χρησιμοποιεί για προτάσεις. Απενεργοποιημένο από προεπιλογή· τίποτα δεν συγχρονίζεται σε ανώνυμη λειτουργία ή όταν το τοπικό ιστορικό είναι απενεργοποιημένο",
   "YouTube did not make the playlist": "Το YouTube δεν δημιούργησε τη λίστα αναπαραγωγής",
-  "YouTube did not offer a comment box here": "Το YouTube δεν πρόσφερε πλαίσιο σχολίου εδώ"
+  "YouTube did not offer a comment box here": "Το YouTube δεν πρόσφερε πλαίσιο σχολίου εδώ",
+  "Simultaneous downloads": "Ταυτόχρονες λήψεις",
+  "downloads at the same time parallel concurrent": "ταυτόχρονα παράλληλα λήψεις αριθμός downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Λαμβάνονται έως {0} βίντεο ταυτόχρονα· οι εγγραφές ζωντανών μεταδόσεων δεν μετράνε",
+  "{0} (default)": "{0} (προεπιλογή)"
 }

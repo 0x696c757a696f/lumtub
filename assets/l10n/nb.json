@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Påloggingene som er lagret på denne enheten, blir slettet. Abonnementer og spillelister blir værende på denne enheten.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Med nettleserpålogging legges videoer du ser i Lumtub også til i YouTube-visningsloggen din, som YouTube bruker til anbefalinger. Av som standard; ingenting synkroniseres i inkognitomodus eller når lokal logg er av",
   "YouTube did not make the playlist": "YouTube opprettet ikke spillelisten",
-  "YouTube did not offer a comment box here": "YouTube tilbød ikke et kommentarfelt her"
+  "YouTube did not offer a comment box here": "YouTube tilbød ikke et kommentarfelt her",
+  "Simultaneous downloads": "Samtidige nedlastinger",
+  "downloads at the same time parallel concurrent": "samtidig parallell nedlasting antall downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Opptil {0} videoer lastes ned om gangen; direkteopptak telles ikke",
+  "{0} (default)": "{0} (standard)"
 }

@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "La ensalutoj konservitaj en ĉi tiu aparato estos forigitaj. Abonoj kaj ludlistoj restas en ĉi tiu aparato.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Kun la ensaluto per retumilo, videoj spektitaj en Lumtub ankaŭ aldoniĝas al via YouTube-spektohistorio, kiun YouTube uzas por rekomendoj. Defaŭlte malŝaltita; nenio sinkroniĝas en privata reĝimo aŭ kiam la loka historio estas malŝaltita",
   "YouTube did not make the playlist": "YouTube ne kreis la ludliston",
-  "YouTube did not offer a comment box here": "YouTube ne proponis komentan keston ĉi tie"
+  "YouTube did not offer a comment box here": "YouTube ne proponis komentan keston ĉi tie",
+  "Simultaneous downloads": "Samtempaj elŝutoj",
+  "downloads at the same time parallel concurrent": "samtempe paralele elŝutoj nombro downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Ĝis {0} videoj elŝutiĝas samtempe; registradoj de rektaj elsendoj ne kalkuliĝas",
+  "{0} (default)": "{0} (defaŭlta)"
 }

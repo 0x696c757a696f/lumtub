@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "මෙම උපාංගයේ සුරැකි පුරනය වීම් මකා දමනු ඇත. දායකත්ව සහ ධාවන ලැයිස්තු මෙම උපාංගයේ ම පවතී.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "බ්‍රවුසර පුරනය වීමත් සමඟ, Lumtub හි නරඹන වීඩියෝ ඔබේ YouTube නැරඹුම් ඉතිහාසයට ද එකතු වේ, එය YouTube නිර්දේශ සඳහා භාවිත කරයි. පෙරනිමියෙන් අක්‍රීයයි; අදිසි මාදිලියේදී හෝ දේශීය ඉතිහාසය අක්‍රීය විට කිසිවක් සමමුහූර්ත නොවේ",
   "YouTube did not make the playlist": "YouTube ධාවන ලැයිස්තුව සාදා නැත",
-  "YouTube did not offer a comment box here": "YouTube මෙහි අදහස් කොටුවක් ලබා දුන්නේ නැත"
+  "YouTube did not offer a comment box here": "YouTube මෙහි අදහස් කොටුවක් ලබා දුන්නේ නැත",
+  "Simultaneous downloads": "එකවර බාගැනීම්",
+  "downloads at the same time parallel concurrent": "එකවර සමාන්තර බාගැනීම් ගණන downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "එකවර වීඩියෝ {0}ක් දක්වා බාගත වේ; සජීවී පටිගත කිරීම් ගණන් නොගැනේ",
+  "{0} (default)": "{0} (පෙරනිමි)"
 }

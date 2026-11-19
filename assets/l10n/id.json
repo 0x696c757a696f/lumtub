@@ -3619,5 +3619,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Data masuk yang tersimpan di perangkat ini akan dihapus. Langganan dan playlist tetap ada di perangkat ini.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Dengan masuk lewat browser, video yang ditonton di Lumtub juga ditambahkan ke riwayat tontonan YouTube Anda, yang dipakai YouTube untuk rekomendasi. Nonaktif secara default; tidak ada yang disinkronkan dalam mode penyamaran atau saat riwayat lokal dinonaktifkan",
   "YouTube did not make the playlist": "YouTube tidak membuat playlist",
-  "YouTube did not offer a comment box here": "YouTube tidak menyediakan kotak komentar di sini"
+  "YouTube did not offer a comment box here": "YouTube tidak menyediakan kotak komentar di sini",
+  "Simultaneous downloads": "Unduhan bersamaan",
+  "downloads at the same time parallel concurrent": "bersamaan paralel unduhan jumlah downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Hingga {0} video diunduh sekaligus; rekaman siaran langsung tidak dihitung",
+  "{0} (default)": "{0} (default)"
 }

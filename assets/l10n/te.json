@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "ఈ పరికరంలో సేవ్ చేసిన సైన్-ఇన్‌లు తొలగించబడతాయి. సభ్యత్వాలు మరియు ప్లేలిస్ట్‌లు ఈ పరికరంలోనే ఉంటాయి.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "బ్రౌజర్ సైన్-ఇన్‌తో, Lumtub లో చూసిన వీడియోలు మీ YouTube వీక్షణ చరిత్రకు కూడా జోడించబడతాయి, దీన్ని YouTube సిఫార్సుల కోసం ఉపయోగిస్తుంది. డిఫాల్ట్‌గా ఆఫ్; అజ్ఞాత మోడ్‌లో లేదా స్థానిక చరిత్ర ఆఫ్‌లో ఉన్నప్పుడు ఏదీ సింక్ కాదు",
   "YouTube did not make the playlist": "YouTube ప్లేలిస్ట్‌ను సృష్టించలేదు",
-  "YouTube did not offer a comment box here": "YouTube ఇక్కడ వ్యాఖ్య పెట్టెను అందించలేదు"
+  "YouTube did not offer a comment box here": "YouTube ఇక్కడ వ్యాఖ్య పెట్టెను అందించలేదు",
+  "Simultaneous downloads": "ఏకకాల డౌన్‌లోడ్‌లు",
+  "downloads at the same time parallel concurrent": "ఏకకాలంలో సమాంతర డౌన్‌లోడ్ సంఖ్య downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "ఒకేసారి గరిష్ఠంగా {0} వీడియోలు డౌన్‌లోడ్ అవుతాయి; లైవ్ రికార్డింగ్‌లు లెక్కలోకి రావు",
+  "{0} (default)": "{0} (డిఫాల్ట్)"
 }

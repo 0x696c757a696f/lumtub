@@ -3619,5 +3619,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Thông tin đăng nhập đã lưu trên thiết bị này sẽ bị xóa. Kênh đăng ký và danh sách phát vẫn được giữ trên thiết bị này.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Với đăng nhập bằng trình duyệt, video xem trong Lumtub cũng được thêm vào nhật ký xem YouTube của bạn, mà YouTube dùng để đề xuất. Mặc định tắt; không có gì được đồng bộ trong chế độ ẩn danh hoặc khi nhật ký cục bộ bị tắt",
   "YouTube did not make the playlist": "YouTube đã không tạo danh sách phát",
-  "YouTube did not offer a comment box here": "YouTube không cung cấp ô bình luận ở đây"
+  "YouTube did not offer a comment box here": "YouTube không cung cấp ô bình luận ở đây",
+  "Simultaneous downloads": "Số lượt tải xuống đồng thời",
+  "downloads at the same time parallel concurrent": "đồng thời song song tải xuống số lượng downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Tải xuống tối đa {0} video cùng lúc; bản ghi trực tiếp không được tính",
+  "{0} (default)": "{0} (mặc định)"
 }

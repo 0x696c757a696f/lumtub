@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "ព័ត៌មានចូលគណនីដែលបានរក្សាទុកលើឧបករណ៍នេះនឹងត្រូវលុប។ ការជាវ និងបញ្ជីចាក់នៅតែមាននៅលើឧបករណ៍នេះ។",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "ជាមួយការចូលគណនីដោយកម្មវិធីរុករក វីដេអូដែលបានមើលក្នុង Lumtub ក៏ត្រូវបានបន្ថែមទៅប្រវត្តិមើល YouTube របស់អ្នកដែរ ដែល YouTube ប្រើសម្រាប់ការណែនាំ។ បិទតាមលំនាំដើម។ គ្មានអ្វីត្រូវបានធ្វើសមកាលកម្មក្នុងមុខងារអនាមិក ឬនៅពេលបិទប្រវត្តិក្នុងឧបករណ៍ឡើយ",
   "YouTube did not make the playlist": "YouTube មិនបានបង្កើតបញ្ជីចាក់ទេ",
-  "YouTube did not offer a comment box here": "YouTube មិនបានផ្តល់ប្រអប់មតិនៅទីនេះទេ"
+  "YouTube did not offer a comment box here": "YouTube មិនបានផ្តល់ប្រអប់មតិនៅទីនេះទេ",
+  "Simultaneous downloads": "ការទាញយកក្នុងពេលតែមួយ",
+  "downloads at the same time parallel concurrent": "ពេលតែមួយ ស្របគ្នា ទាញយក ចំនួន downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "ទាញយកវីដេអូរហូតដល់ {0} ក្នុងពេលតែមួយ ការថតផ្សាយផ្ទាល់មិនរាប់បញ្ចូលទេ",
+  "{0} (default)": "{0} (លំនាំដើម)"
 }

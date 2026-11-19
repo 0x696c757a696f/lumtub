@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Conectările salvate pe acest dispozitiv vor fi șterse. Abonamentele și playlisturile rămân pe acest dispozitiv.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Cu conectarea prin browser, videoclipurile vizionate în Lumtub sunt adăugate și în istoricul tău de vizionare YouTube, pe care YouTube îl folosește pentru recomandări. Dezactivat implicit; nimic nu se sincronizează în modul incognito sau când istoricul local este dezactivat",
   "YouTube did not make the playlist": "YouTube nu a creat playlistul",
-  "YouTube did not offer a comment box here": "YouTube nu a oferit aici o casetă de comentarii"
+  "YouTube did not offer a comment box here": "YouTube nu a oferit aici o casetă de comentarii",
+  "Simultaneous downloads": "Descărcări simultane",
+  "downloads at the same time parallel concurrent": "simultan paralel descărcări număr downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Se descarcă până la {0} videoclipuri simultan; înregistrările live nu se pun la socoteală",
+  "{0} (default)": "{0} (implicit)"
 }

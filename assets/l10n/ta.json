@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "இந்தச் சாதனத்தில் சேமிக்கப்பட்ட உள்நுழைவுகள் நீக்கப்படும். சந்தாக்களும் பிளேலிஸ்ட்களும் இந்தச் சாதனத்திலேயே இருக்கும்.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "உலாவி உள்நுழைவுடன், Lumtub-இல் பார்த்த வீடியோக்கள் உங்கள் YouTube பார்த்த வரலாற்றிலும் சேர்க்கப்படும், இதை YouTube பரிந்துரைகளுக்குப் பயன்படுத்துகிறது. இயல்பாக முடக்கப்பட்டுள்ளது; மறைநிலைப் பயன்முறையில் அல்லது உள்ளூர் வரலாறு முடக்கப்பட்டிருக்கும்போது எதுவும் ஒத்திசைக்கப்படாது",
   "YouTube did not make the playlist": "YouTube பிளேலிஸ்ட்டை உருவாக்கவில்லை",
-  "YouTube did not offer a comment box here": "YouTube இங்கே கருத்துப் பெட்டியை வழங்கவில்லை"
+  "YouTube did not offer a comment box here": "YouTube இங்கே கருத்துப் பெட்டியை வழங்கவில்லை",
+  "Simultaneous downloads": "ஒரே நேர பதிவிறக்கங்கள்",
+  "downloads at the same time parallel concurrent": "ஒரே நேரம் இணை பதிவிறக்கம் எண்ணிக்கை downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "ஒரே நேரத்தில் {0} வீடியோக்கள் வரை பதிவிறக்கப்படும்; நேரலைப் பதிவுகள் கணக்கில் வராது",
+  "{0} (default)": "{0} (இயல்பு)"
 }

@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "פרטי ההתחברות שנשמרו במכשיר הזה יימחקו. המינויים ורשימות ההשמעה יישארו במכשיר הזה.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "עם התחברות באמצעות דפדפן, סרטונים שנצפו ב-Lumtub נוספים גם להיסטוריית הצפייה שלך ב-YouTube, שבה YouTube משתמש להמלצות. כבוי כברירת מחדל; דבר לא מסונכרן במצב גלישה בסתר או כשההיסטוריה המקומית כבויה",
   "YouTube did not make the playlist": "YouTube לא יצר את רשימת ההשמעה",
-  "YouTube did not offer a comment box here": "YouTube לא הציע כאן תיבת תגובה"
+  "YouTube did not offer a comment box here": "YouTube לא הציע כאן תיבת תגובה",
+  "Simultaneous downloads": "הורדות בו־זמניות",
+  "downloads at the same time parallel concurrent": "בו זמנית מקביל הורדות מספר downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "עד {0} סרטונים יורדים בו־זמנית; הקלטות של שידורים חיים לא נספרות",
+  "{0} (default)": "{0} (ברירת מחדל)"
 }

@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Најавите зачувани на овој уред ќе бидат избришани. Претплатите и плејлистите остануваат на овој уред.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Со најава преку прелистувач, видеата гледани во Lumtub се додаваат и во вашата историја на гледање на YouTube, која YouTube ја користи за препораки. Стандардно исклучено; ништо не се синхронизира во инкогнито режим или кога локалната историја е исклучена",
   "YouTube did not make the playlist": "YouTube не ја создаде плејлистата",
-  "YouTube did not offer a comment box here": "YouTube не понуди поле за коментар тука"
+  "YouTube did not offer a comment box here": "YouTube не понуди поле за коментар тука",
+  "Simultaneous downloads": "Истовремени преземања",
+  "downloads at the same time parallel concurrent": "истовремено паралелно преземање број downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Истовремено се преземаат до {0} видеа; снимањата во живо не се бројат",
+  "{0} (default)": "{0} (стандардно)"
 }

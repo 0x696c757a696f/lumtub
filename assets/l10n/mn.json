@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Энэ төхөөрөмж дээр хадгалсан нэвтрэх мэдээлэл устгагдана. Захиалга болон тоглуулах жагсаалтууд энэ төхөөрөмж дээр хэвээр үлдэнэ.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Хөтчөөр нэвтэрсэн үед Lumtub-д үзсэн видеонууд YouTube-ийн зөвлөмжид ашигладаг таны YouTube үзсэн түүхэд бас нэмэгдэнэ. Анхдагчаар унтраалттай; incognito горимд эсвэл дотоод түүх унтраалттай үед юу ч синк хийгдэхгүй",
   "YouTube did not make the playlist": "YouTube тоглуулах жагсаалтыг үүсгээгүй",
-  "YouTube did not offer a comment box here": "YouTube энд сэтгэгдлийн нүд санал болгоогүй"
+  "YouTube did not offer a comment box here": "YouTube энд сэтгэгдлийн нүд санал болгоогүй",
+  "Simultaneous downloads": "Зэрэг татах",
+  "downloads at the same time parallel concurrent": "зэрэг зэрэгцээ татах тоо downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Нэг дор {0} хүртэл видео татагдана; шууд нэвтрүүлгийн бичлэг тооцогдохгүй",
+  "{0} (default)": "{0} (өгөгдмөл)"
 }

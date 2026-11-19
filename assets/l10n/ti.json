@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "ኣብዚ መሳርሒ ዝተዓቀቡ እቶታት ክስርዙ እዮም። ምዝገባታትን ዝርዝር ምጽዋትን ኣብዚ መሳርሒ ይተርፉ።",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "ብእቶት ብብሮውዘር፣ ኣብ Lumtub ዝረኣኻዮም ቪዲዮታት YouTube ንመምዘኒ ዝጥቀመሉ ናይ YouTube ታሪኽ ምርኣይካ'ውን ይወሰኹ። ብነባሪ ጠፊኡ፤ ኣብ ምሕባእ ሞድ ወይ ናይ ከባቢ ታሪኽ ምስ ጠፍአ ዋላ ሓደ ኣይስምምዕን",
   "YouTube did not make the playlist": "YouTube ዝርዝር ምጽዋት ኣይፈጠረን",
-  "YouTube did not offer a comment box here": "YouTube ኣብዚ ሳጹን ርእይቶ ኣየቕረበን"
+  "YouTube did not offer a comment box here": "YouTube ኣብዚ ሳጹን ርእይቶ ኣየቕረበን",
+  "Simultaneous downloads": "ብሓደ ግዜ ዝወርዱ",
+  "downloads at the same time parallel concurrent": "ብሓደ ግዜ ተመሳሳሊ ምውራድ ብዝሒ downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "ብሓደ ግዜ ክሳብ {0} ቪድዮታት ይወርዱ፤ ቀጥታ ቅዳሕ ኣይቑፀርን",
+  "{0} (default)": "{0} (ነባሪ)"
 }

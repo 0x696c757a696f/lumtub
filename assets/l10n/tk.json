@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Bu enjamda saklanan giriş maglumatlary pozular. Ýazylmalar we pleýlistler bu enjamda galar.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Brauzer bilen giriş bilen Lumtub-da tomaşa edilen wideolar YouTube-yň maslahatlar üçin ulanýan YouTube tomaşa taryhyňyza hem goşulýar. Adaty ýagdaýda öçük; inkognito rejiminde ýa-da ýerli taryh öçük wagty hiç zat sinhronlanmaýar",
   "YouTube did not make the playlist": "YouTube pleýlisti döretmedi",
-  "YouTube did not offer a comment box here": "YouTube bu ýerde teswir gutusyny hödürlemedi"
+  "YouTube did not offer a comment box here": "YouTube bu ýerde teswir gutusyny hödürlemedi",
+  "Simultaneous downloads": "Bir wagtda göçürip almalar",
+  "downloads at the same time parallel concurrent": "bir wagtda parallel göçürip almak sany downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Bir wagtda {0} wideo çenli göçürilýär; göni ýaýlym ýazgylary hasaba alynmaýar",
+  "{0} (default)": "{0} (deslapky)"
 }

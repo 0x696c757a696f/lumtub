@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "ამ მოწყობილობაზე შენახული შესვლის მონაცემები წაიშლება. გამოწერები და დასაკრავი სიები ამ მოწყობილობაზე დარჩება.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "ბრაუზერით შესვლისას Lumtub-ში ნანახი ვიდეოები ემატება თქვენს YouTube-ის ნახვის ისტორიასაც, რომელსაც YouTube რეკომენდაციებისთვის იყენებს. ნაგულისხმევად გამორთულია; ინკოგნიტო რეჟიმში ან ლოკალური ისტორიის გამორთვისას არაფერი სინქრონიზდება",
   "YouTube did not make the playlist": "YouTube-მა დასაკრავი სია არ შექმნა",
-  "YouTube did not offer a comment box here": "YouTube-მა აქ კომენტარის ველი არ შემოგვთავაზა"
+  "YouTube did not offer a comment box here": "YouTube-მა აქ კომენტარის ველი არ შემოგვთავაზა",
+  "Simultaneous downloads": "ერთდროული ჩამოტვირთვები",
+  "downloads at the same time parallel concurrent": "ერთდროულად პარალელური ჩამოტვირთვა რაოდენობა downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "ერთდროულად ჩამოიტვირთება {0}-მდე ვიდეო; პირდაპირი ეთერის ჩანაწერები არ ითვლება",
+  "{0} (default)": "{0} (ნაგულისხმევი)"
 }

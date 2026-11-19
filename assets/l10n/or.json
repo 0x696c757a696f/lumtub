@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "ଏହି ଡିଭାଇସରେ ସେଭ୍ ହୋଇଥିବା ସାଇନ୍ ଇନ୍ ଗୁଡ଼ିକ ଡିଲିଟ୍ ହେବ। ସବସ୍କ୍ରିପସନ ଏବଂ ପ୍ଲେଲିଷ୍ଟ ଏହି ଡିଭାଇସରେ ହିଁ ରହିବ।",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "ବ୍ରାଉଜର ସାଇନ୍ ଇନ୍ ସହ, Lumtub ରେ ଦେଖାଯାଇଥିବା ଭିଡିଓ ଆପଣଙ୍କ YouTube ଦେଖିବା ଇତିହାସରେ ମଧ୍ୟ ଯୋଡ଼ାଯାଏ, ଯାହାକୁ YouTube ସୁପାରିଶ ପାଇଁ ବ୍ୟବହାର କରେ। ଡିଫଲ୍ଟ ଭାବେ ବନ୍ଦ; ଇନକଗ୍ନିଟୋ ମୋଡ୍ ରେ କିମ୍ବା ସ୍ଥାନୀୟ ଇତିହାସ ବନ୍ଦ ଥିଲେ କିଛି ସିଙ୍କ ହୁଏ ନାହିଁ",
   "YouTube did not make the playlist": "YouTube ପ୍ଲେଲିଷ୍ଟ ତିଆରି କଲା ନାହିଁ",
-  "YouTube did not offer a comment box here": "YouTube ଏଠାରେ ମନ୍ତବ୍ୟ ବାକ୍ସ ଦେଲା ନାହିଁ"
+  "YouTube did not offer a comment box here": "YouTube ଏଠାରେ ମନ୍ତବ୍ୟ ବାକ୍ସ ଦେଲା ନାହିଁ",
+  "Simultaneous downloads": "ଏକାସାଙ୍ଗରେ ଡାଉନଲୋଡ୍",
+  "downloads at the same time parallel concurrent": "ଏକାସାଙ୍ଗରେ ସମାନ୍ତରାଳ ଡାଉନଲୋଡ୍ ସଂଖ୍ୟା downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "ଏକାସାଙ୍ଗରେ {0}ଟି ପର୍ଯ୍ୟନ୍ତ ଭିଡିଓ ଡାଉନଲୋଡ୍ ହୁଏ; ଲାଇଭ୍ ରେକର୍ଡିଂ ଗଣାଯାଏ ନାହିଁ",
+  "{0} (default)": "{0} (ଡିଫଲ୍ଟ)"
 }

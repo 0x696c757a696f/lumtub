@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Šiame įrenginyje išsaugoti prisijungimo duomenys bus ištrinti. Prenumeratos ir grojaraščiai liks šiame įrenginyje.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Prisijungus naršykle, Lumtub žiūrėti vaizdo įrašai taip pat pridedami prie jūsų YouTube žiūrėjimo istorijos, kurią YouTube naudoja rekomendacijoms. Pagal numatytuosius nustatymus išjungta; inkognito režimu arba išjungus vietinę istoriją niekas nesinchronizuojama",
   "YouTube did not make the playlist": "YouTube nesukūrė grojaraščio",
-  "YouTube did not offer a comment box here": "YouTube čia nepasiūlė komentaro lauko"
+  "YouTube did not offer a comment box here": "YouTube čia nepasiūlė komentaro lauko",
+  "Simultaneous downloads": "Vienu metu atsisiunčiama",
+  "downloads at the same time parallel concurrent": "vienu metu lygiagrečiai atsisiuntimai skaičius downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Vienu metu atsisiunčiama iki {0} vaizdo įrašų; tiesioginių transliacijų įrašai neskaičiuojami",
+  "{0} (default)": "{0} (numatytasis)"
 }

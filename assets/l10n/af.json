@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Die aanmeldings wat op hierdie toestel gestoor is, sal uitgevee word. Intekeninge en snitlyste bly op hierdie toestel.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Met die blaaieraanmelding word video's wat in Lumtub gekyk word ook by jou YouTube-kykgeskiedenis gevoeg, wat YouTube vir aanbevelings gebruik. Standaard af; niks word gesinchroniseer in incognito-modus of wanneer plaaslike geskiedenis af is nie",
   "YouTube did not make the playlist": "YouTube het nie die snitlys gemaak nie",
-  "YouTube did not offer a comment box here": "YouTube het hier nie 'n kommentaarkassie gebied nie"
+  "YouTube did not offer a comment box here": "YouTube het hier nie 'n kommentaarkassie gebied nie",
+  "Simultaneous downloads": "Gelyktydige aflaaie",
+  "downloads at the same time parallel concurrent": "gelyktydig parallel aflaai aantal downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Tot {0} video's word op 'n slag afgelaai; regstreekse opnames tel nie",
+  "{0} (default)": "{0} (verstek)"
 }

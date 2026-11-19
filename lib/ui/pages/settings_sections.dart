@@ -19,6 +19,7 @@ import '../../appearance_settings.dart';
 import '../../decoder_status.dart';
 import '../../encrypted_dns.dart';
 import '../../native_core.dart';
+import '../../downloads/download_manager.dart' show DownloadManager;
 import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
@@ -1429,6 +1430,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.arrowCircleDown),
               onTap: controller.downloads == null ? null : () => _changeDownloadLocation(context, controller),
             ), subtitle: tr('downloads save location folder')),
+        SettingEntry(tr('Simultaneous downloads'), (context) => _concurrentDownloads(context, controller), subtitle: tr('downloads at the same time parallel concurrent')),
         SettingEntry(tr('Data location'), (context) => NormalItem(
               title: tr('Data location'),
               subtitle: tr('{0}\nSettings, watch history, favorites and downloaded components are stored here and kept when you uninstall.', [controller.directories?.root.path ?? tr('Preparing…')]),
@@ -1511,6 +1513,25 @@ Future<void> _importSettings(BuildContext context, AppController controller) asy
           ? tr('Settings imported; added {0} channels, {1} videos and {2} playlists', [merge.channels, merge.videos, merge.playlists])
           : tr('Settings imported');
   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+}
+
+Widget _concurrentDownloads(BuildContext context, AppController controller) {
+  final manager = controller.downloads;
+  if (manager == null) {
+    return NormalItem(title: tr('Simultaneous downloads'), subtitle: tr('Preparing…'), leading: _icon(AppIcons.stack));
+  }
+  final values = [
+    for (var n = 1; n <= DownloadManager.maxConcurrentLimit; n++) (n, n == 2 ? tr('{0} (default)', [n]) : '$n'),
+  ];
+  return ListenableBuilder(
+    listenable: manager,
+    builder: (context, _) => NormalItem(
+      title: tr('Simultaneous downloads'),
+      subtitle: tr('Up to {0} videos download at a time; live recordings are not counted', [manager.maxConcurrent]),
+      leading: _icon(AppIcons.stack),
+      onTap: () => pickFromDialog<int>(context, title: tr('Simultaneous downloads'), value: manager.maxConcurrent, values: values, onSelected: (v) => unawaited(manager.setMaxConcurrent(v))),
+    ),
+  );
 }
 
 Future<void> _changeDownloadLocation(BuildContext context, AppController controller) async {

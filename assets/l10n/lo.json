@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "ຂໍ້ມູນການເຂົ້າສູ່ລະບົບທີ່ບັນທຶກໄວ້ໃນອຸປະກອນນີ້ຈະຖືກລຶບ. ການຕິດຕາມ ແລະ ລາຍການຫຼິ້ນຈະຍັງຢູ່ໃນອຸປະກອນນີ້.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "ດ້ວຍການເຂົ້າສູ່ລະບົບດ້ວຍບຣາວເຊີ, ວິດີໂອທີ່ເບິ່ງໃນ Lumtub ຈະຖືກເພີ່ມເຂົ້າໃນປະຫວັດການເບິ່ງ YouTube ຂອງທ່ານນຳ, ເຊິ່ງ YouTube ໃຊ້ສຳລັບການແນະນຳ. ປິດໄວ້ຕາມຄ່າເລີ່ມຕົ້ນ; ບໍ່ມີຫຍັງຖືກຊິ້ງຄ໌ໃນໂໝດບໍ່ເປີດເຜີຍຕົວຕົນ ຫຼື ເມື່ອປິດປະຫວັດໃນເຄື່ອງ",
   "YouTube did not make the playlist": "YouTube ບໍ່ໄດ້ສ້າງລາຍການຫຼິ້ນ",
-  "YouTube did not offer a comment box here": "YouTube ບໍ່ໄດ້ສະແດງຊ່ອງຄອມເມັນຢູ່ທີ່ນີ້"
+  "YouTube did not offer a comment box here": "YouTube ບໍ່ໄດ້ສະແດງຊ່ອງຄອມເມັນຢູ່ທີ່ນີ້",
+  "Simultaneous downloads": "ການດາວໂຫຼດພ້ອມກັນ",
+  "downloads at the same time parallel concurrent": "ພ້ອມກັນ ຂະໜານ ດາວໂຫຼດ ຈຳນວນ downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "ດາວໂຫຼດວິດີໂອໄດ້ສູງສຸດ {0} ອັນພ້ອມກັນ; ການບັນທຶກສົດບໍ່ນັບລວມ",
+  "{0} (default)": "{0} (ຄ່າເລີ່ມຕົ້ນ)"
 }

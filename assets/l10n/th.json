@@ -3614,5 +3614,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "ข้อมูลการลงชื่อเข้าใช้ที่บันทึกไว้บนอุปกรณ์นี้จะถูกลบ การติดตามและเพลย์ลิสต์ยังคงอยู่บนอุปกรณ์นี้",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "เมื่อลงชื่อเข้าใช้ด้วยเบราว์เซอร์ วิดีโอที่ดูใน Lumtub จะถูกเพิ่มลงในประวัติการรับชม YouTube ของคุณด้วย ซึ่ง YouTube ใช้สำหรับการแนะนำ ปิดไว้เป็นค่าเริ่มต้น และจะไม่มีการซิงก์ใด ๆ ในโหมดไม่ระบุตัวตนหรือเมื่อปิดประวัติในเครื่อง",
   "YouTube did not make the playlist": "YouTube ไม่ได้สร้างเพลย์ลิสต์",
-  "YouTube did not offer a comment box here": "YouTube ไม่ได้แสดงช่องแสดงความคิดเห็นที่นี่"
+  "YouTube did not offer a comment box here": "YouTube ไม่ได้แสดงช่องแสดงความคิดเห็นที่นี่",
+  "Simultaneous downloads": "ดาวน์โหลดพร้อมกัน",
+  "downloads at the same time parallel concurrent": "พร้อมกัน ขนาน ดาวน์โหลด จำนวน downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "ดาวน์โหลดวิดีโอได้สูงสุด {0} รายการพร้อมกัน ไม่นับการบันทึกไลฟ์",
+  "{0} (default)": "{0} (ค่าเริ่มต้น)"
 }

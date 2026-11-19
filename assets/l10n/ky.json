@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Бул түзмөктө сакталган кирүү маалыматтары жок кылынат. Жазылуулар жана ойнотмо тизмелер бул түзмөктө кала берет.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Серепчи аркылуу кирүү менен Lumtub'да көрүлгөн видеолор YouTube сунуштар үчүн колдонгон YouTube көрүү таржымалыңызга да кошулат. Демейки боюнча өчүк; инкогнито режиминде же жергиликтүү таржымал өчүк болгондо эч нерсе синхрондолбойт",
   "YouTube did not make the playlist": "YouTube ойнотмо тизмени түзгөн жок",
-  "YouTube did not offer a comment box here": "YouTube бул жерде комментарий талаасын сунуштаган жок"
+  "YouTube did not offer a comment box here": "YouTube бул жерде комментарий талаасын сунуштаган жок",
+  "Simultaneous downloads": "Бир убакта жүктөөлөр",
+  "downloads at the same time parallel concurrent": "бир убакта параллель жүктөө саны downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Бир убакта {0} видеого чейин жүктөлөт; түз эфир жазуулары эсепке кирбейт",
+  "{0} (default)": "{0} (демейки)"
 }

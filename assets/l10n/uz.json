@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Bu qurilmada saqlangan kirish ma'lumotlari o'chiriladi. Obunalar va pleylistlar bu qurilmada qoladi.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Brauzer orqali kirish bilan Lumtub'da ko'rilgan videolar YouTube tavsiyalar uchun foydalanadigan YouTube ko'rish tarixingizga ham qo'shiladi. Odatiy bo'yicha o'chiq; inkognito rejimida yoki mahalliy tarix o'chiq bo'lganda hech narsa sinxronlanmaydi",
   "YouTube did not make the playlist": "YouTube pleylistni yaratmadi",
-  "YouTube did not offer a comment box here": "YouTube bu yerda izoh maydonini taklif qilmadi"
+  "YouTube did not offer a comment box here": "YouTube bu yerda izoh maydonini taklif qilmadi",
+  "Simultaneous downloads": "Bir vaqtda yuklab olishlar",
+  "downloads at the same time parallel concurrent": "bir vaqtda parallel yuklab olish soni downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Bir vaqtda {0} tagacha video yuklab olinadi; jonli efir yozuvlari hisobga olinmaydi",
+  "{0} (default)": "{0} (standart)"
 }

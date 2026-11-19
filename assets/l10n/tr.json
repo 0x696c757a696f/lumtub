@@ -3619,5 +3619,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Bu cihazda kayıtlı oturum açma bilgileri silinecek. Abonelikler ve oynatma listeleri bu cihazda kalır.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Tarayıcıyla oturum açmayla Lumtub'da izlenen videolar, YouTube'un önerilerde kullandığı YouTube izleme geçmişinize de eklenir. Varsayılan olarak kapalıdır; gizli modda veya yerel geçmiş kapalıyken hiçbir şey eşitlenmez",
   "YouTube did not make the playlist": "YouTube oynatma listesini oluşturmadı",
-  "YouTube did not offer a comment box here": "YouTube burada bir yorum kutusu sunmadı"
+  "YouTube did not offer a comment box here": "YouTube burada bir yorum kutusu sunmadı",
+  "Simultaneous downloads": "Eş zamanlı indirmeler",
+  "downloads at the same time parallel concurrent": "eş zamanlı paralel indirme sayısı downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Aynı anda en fazla {0} video indirilir; canlı yayın kayıtları sayılmaz",
+  "{0} (default)": "{0} (varsayılan)"
 }

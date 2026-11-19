@@ -3619,5 +3619,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "이 기기에 저장된 로그인 정보가 삭제됩니다. 구독과 재생목록은 이 기기에 그대로 남습니다.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "브라우저 로그인을 사용하면 Lumtub에서 시청한 동영상이 YouTube 시청 기록에도 추가되며, YouTube는 이를 추천에 사용합니다. 기본적으로 꺼져 있으며, 시크릿 모드이거나 로컬 기록이 꺼져 있으면 아무것도 동기화되지 않습니다",
   "YouTube did not make the playlist": "YouTube가 재생목록을 만들지 않았습니다",
-  "YouTube did not offer a comment box here": "YouTube가 여기에 댓글 입력란을 제공하지 않았습니다"
+  "YouTube did not offer a comment box here": "YouTube가 여기에 댓글 입력란을 제공하지 않았습니다",
+  "Simultaneous downloads": "동시 다운로드 수",
+  "downloads at the same time parallel concurrent": "동시 병렬 다운로드 개수 downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "한 번에 최대 {0}개의 동영상을 다운로드합니다. 라이브 녹화는 포함되지 않습니다",
+  "{0} (default)": "{0}(기본값)"
 }

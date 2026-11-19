@@ -3643,5 +3643,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "儲存在此裝置上的登入資料將被刪除。訂閱和播放清單會保留在此裝置上。",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "使用瀏覽器登入時，在 Lumtub 中觀看的影片亦會加入你的 YouTube 觀看記錄，YouTube 會用它來作推介。預設為關閉；在無痕模式下或關閉本機記錄時不會同步任何內容",
   "YouTube did not make the playlist": "YouTube 沒有建立這個播放清單",
-  "YouTube did not offer a comment box here": "YouTube 在這裡沒有提供留言框"
+  "YouTube did not offer a comment box here": "YouTube 在這裡沒有提供留言框",
+  "Simultaneous downloads": "同時下載數",
+  "downloads at the same time parallel concurrent": "同時 並行 並發 下載 數量 downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "最多同時下載 {0} 段影片，直播錄影不計在內",
+  "{0} (default)": "{0}（預設）"
 }

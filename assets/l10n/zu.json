@@ -3613,5 +3613,9 @@
   "The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.": "Ukungena okugcinwe kule divayisi kuzosuswa. Okubhalisiwe namalisti okudlala kuhlala kule divayisi.",
   "With the browser sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off": "Ngokungena ngebhrawuza, amavidiyo abukwe ku-Lumtub aphinda afakwe emlandweni wakho wokubuka we-YouTube, i-YouTube eyusebenzisela izincomo. Kuvaliwe ngokuzenzakalelayo; akukho okuvumelaniswayo kumodi yokuzifihla noma uma umlando wasendaweni uvaliwe",
   "YouTube did not make the playlist": "I-YouTube ayenzanga uhlu lokudlala",
-  "YouTube did not offer a comment box here": "I-YouTube ayihlinzekanga ibhokisi lamazwana lapha"
+  "YouTube did not offer a comment box here": "I-YouTube ayihlinzekanga ibhokisi lamazwana lapha",
+  "Simultaneous downloads": "Ukulanda ngesikhathi esisodwa",
+  "downloads at the same time parallel concurrent": "ngesikhathi esisodwa ngokuhambisana ukulanda inani downloads at the same time parallel concurrent",
+  "Up to {0} videos download at a time; live recordings are not counted": "Kulandwa amavidiyo afinyelela ku-{0} ngesikhathi esisodwa; ukuqopha okubukhoma akubalwa",
+  "{0} (default)": "{0} (okuzenzakalelayo)"
 }

@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Vis eller skjul oversættelsen",
   "Loop this line": "Gentag denne linje",
   "Line loop off": "Linjegentagelse fra",
-  "Loop this line on or off": "Linjegentagelse til eller fra"
+  "Loop this line on or off": "Linjegentagelse til eller fra",
+  "Record yourself saying this line": "Optag dig selv, mens du siger denne linje",
+  "Stop recording": "Stop optagelse",
+  "Compare with the original": "Sammenlign med originalen",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub kan ikke bruge mikrofonen. Giv tilladelse i systemindstillingerne.",
+  "Could not start recording: {0}": "Optagelsen kunne ikke startes: {0}",
+  "Nothing was recorded. Check the microphone.": "Intet blev optaget. Tjek mikrofonen.",
+  "Export as CSV": "Eksportér som CSV",
+  "Subtitles exported": "Undertekster eksporteret"
 }

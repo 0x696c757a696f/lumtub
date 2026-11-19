@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "ଅନୁବାଦ ଦେଖାନ୍ତୁ ବା ଲୁଚାନ୍ତୁ",
   "Loop this line": "ଏହି ଧାଡ଼ି ଲୁପ କରନ୍ତୁ",
   "Line loop off": "ଧାଡ଼ି ଲୁପ ବନ୍ଦ",
-  "Loop this line on or off": "ଧାଡ଼ି ଲୁପ ଚାଲୁ ବା ବନ୍ଦ"
+  "Loop this line on or off": "ଧାଡ଼ି ଲୁପ ଚାଲୁ ବା ବନ୍ଦ",
+  "Record yourself saying this line": "ଏହି ଧାଡ଼ି କହୁଥିବା ନିଜକୁ ରେକର୍ଡ କରନ୍ତୁ",
+  "Stop recording": "ରେକର୍ଡିଂ ବନ୍ଦ କରନ୍ତୁ",
+  "Compare with the original": "ମୂଳ ସହ ତୁଳନା କରନ୍ତୁ",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub ମାଇକ୍ରୋଫୋନ ବ୍ୟବହାର କରିପାରୁନାହିଁ। ସିଷ୍ଟମ ସେଟିଂସରେ ଅନୁମତି ଦିଅନ୍ତୁ।",
+  "Could not start recording: {0}": "ରେକର୍ଡିଂ ଆରମ୍ଭ କରାଯାଇପାରିଲା ନାହିଁ: {0}",
+  "Nothing was recorded. Check the microphone.": "କିଛି ରେକର୍ଡ ହୋଇନାହିଁ। ମାଇକ୍ରୋଫୋନ ଯାଞ୍ଚ କରନ୍ତୁ।",
+  "Export as CSV": "CSV ଭାବେ ଏକ୍ସପୋର୍ଟ କରନ୍ତୁ",
+  "Subtitles exported": "ସବ୍ଟାଇଟଲ ଏକ୍ସପୋର୍ଟ ହେଲା"
 }

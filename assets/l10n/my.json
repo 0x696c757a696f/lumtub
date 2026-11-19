@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "ဘာသာပြန်ကို ပြရန် သို့မဟုတ် ဝှက်ရန်",
   "Loop this line": "ဤစာကြောင်းကို ထပ်ခါထပ်ခါ ဖွင့်ရန်",
   "Line loop off": "စာကြောင်းထပ်ခါထပ်ခါဖွင့်ခြင်း ပိတ်ထားသည်",
-  "Loop this line on or off": "စာကြောင်းထပ်ခါထပ်ခါဖွင့်ခြင်း ဖွင့်ရန် သို့မဟုတ် ပိတ်ရန်"
+  "Loop this line on or off": "စာကြောင်းထပ်ခါထပ်ခါဖွင့်ခြင်း ဖွင့်ရန် သို့မဟုတ် ပိတ်ရန်",
+  "Record yourself saying this line": "ဤစာကြောင်းကို ပြောနေသည့် သင့်အသံကို ဖမ်းယူရန်",
+  "Stop recording": "အသံဖမ်းခြင်း ရပ်ရန်",
+  "Compare with the original": "မူရင်းနှင့် နှိုင်းယှဉ်ရန်",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub သည် မိုက်ခရိုဖုန်းကို မသုံးနိုင်ပါ။ စနစ်ဆက်တင်များတွင် ခွင့်ပြုပါ။",
+  "Could not start recording: {0}": "အသံဖမ်းခြင်း စတင်၍ မရပါ- {0}",
+  "Nothing was recorded. Check the microphone.": "ဘာမျှ မဖမ်းရပါ။ မိုက်ခရိုဖုန်းကို စစ်ဆေးပါ။",
+  "Export as CSV": "CSV အဖြစ် ထုတ်ယူရန်",
+  "Subtitles exported": "စာတန်းထိုး ထုတ်ယူပြီး"
 }

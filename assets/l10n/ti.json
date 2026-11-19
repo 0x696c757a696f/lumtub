@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "ትርጉም ኣርኢ/ሕባእ",
   "Loop this line": "እዚ መስርዕ ድገም",
   "Line loop off": "ድግመት መስርዕ ጠፊኡ",
-  "Loop this line on or off": "ድግመት መስርዕ ኣብርህ/ኣጥፍእ"
+  "Loop this line on or off": "ድግመት መስርዕ ኣብርህ/ኣጥፍእ",
+  "Record yourself saying this line": "እዚ መስርዕ ክትብል ንርእስኻ ቐድሕ",
+  "Stop recording": "ቀረጻ ኣቁም",
+  "Compare with the original": "ምስ ኦሪጅናል ኣወዳድር",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub ማይክሮፎን ክጥቀም ኣይክእልን። ኣብ ናይ ሲስተም ቅንብር ፍቐድ።",
+  "Could not start recording: {0}": "ቀረጻ ምጅማር ኣይተኻኣለን፦ {0}",
+  "Nothing was recorded. Check the microphone.": "ዋላ ሓንቲ ኣይተቐድሐትን። ማይክሮፎን ፈትሽ።",
+  "Export as CSV": "ከም CSV ኣውጽእ",
+  "Subtitles exported": "ትርጉም ጽሑፍ ተወጺኡ"
 }

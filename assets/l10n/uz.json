@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "Tarjimani ko'rsatish yoki yashirish",
   "Loop this line": "Bu jumlani takrorlash",
   "Line loop off": "Jumla takrori o'chirilgan",
-  "Loop this line on or off": "Jumla takrorini yoqish yoki o'chirish"
+  "Loop this line on or off": "Jumla takrorini yoqish yoki o'chirish",
+  "Record yourself saying this line": "Bu jumlani aytib, o'zingizni yozib oling",
+  "Stop recording": "Yozishni to'xtatish",
+  "Compare with the original": "Asl nusxa bilan solishtirish",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub mikrofondan foydalana olmayapti. Tizim sozlamalarida ruxsat bering.",
+  "Could not start recording: {0}": "Yozishni boshlab bo'lmadi: {0}",
+  "Nothing was recorded. Check the microphone.": "Hech narsa yozilmadi. Mikrofonni tekshiring.",
+  "Export as CSV": "CSV sifatida eksport qilish",
+  "Subtitles exported": "Taglavhalar eksport qilindi"
 }

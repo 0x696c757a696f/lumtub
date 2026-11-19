@@ -19,6 +19,7 @@ dependencies:
   crypto: ^3.0.6
   ffi: ^2.1.4
   file_selector: ^1.0.3
+  record: ^7.2.0
 
 dev_dependencies:
   flutter_test:

@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "Bonisa noma fihla ukuhumusha",
   "Loop this line": "Phinda lo mugqa",
   "Line loop off": "Ukuphinda umugqa kuvaliwe",
-  "Loop this line on or off": "Vula noma vala ukuphinda umugqa"
+  "Loop this line on or off": "Vula noma vala ukuphinda umugqa",
+  "Record yourself saying this line": "Ziqophe uthi lo mugqa",
+  "Stop recording": "Misa ukuqopha",
+  "Compare with the original": "Qhathanisa nolwasekuqaleni",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "I-Lumtub ayikwazi ukusebenzisa imakrofoni. Yivumele kuzilungiselelo zesistimu.",
+  "Could not start recording: {0}": "Ayikwazanga ukuqala ukuqopha: {0}",
+  "Nothing was recorded. Check the microphone.": "Akukho okuqoshiwe. Hlola imakrofoni.",
+  "Export as CSV": "Thumela njenge-CSV",
+  "Subtitles exported": "Amagama-ngezansi athunyelwe"
 }

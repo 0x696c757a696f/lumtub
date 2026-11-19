@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "Terjimäni görkez ýa-da gizle",
   "Loop this line": "Bu sözlemi gaýtala",
   "Line loop off": "Sözlem gaýtalamasy öçük",
-  "Loop this line on or off": "Sözlem gaýtalamasyny aç ýa-da öçür"
+  "Loop this line on or off": "Sözlem gaýtalamasyny aç ýa-da öçür",
+  "Record yourself saying this line": "Bu sözlemi aýdyp, özüňi ýazga al",
+  "Stop recording": "Ýazgyny bes et",
+  "Compare with the original": "Original bilen deňeşdir",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub mikrofony ulanyp bilmeýär. Ulgam sazlamalarynda rugsat ber.",
+  "Could not start recording: {0}": "Ýazga almak başlanmady: {0}",
+  "Nothing was recorded. Check the microphone.": "Hiç zat ýazga alynmady. Mikrofony barla.",
+  "Export as CSV": "CSV hökmünde eksport et",
+  "Subtitles exported": "Subtitrler eksport edildi"
 }

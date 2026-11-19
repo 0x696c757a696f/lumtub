@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Zobraziť alebo skryť preklad",
   "Loop this line": "Zopakovať tento riadok v slučke",
   "Line loop off": "Slučka riadka vypnutá",
-  "Loop this line on or off": "Zapnúť alebo vypnúť slučku riadka"
+  "Loop this line on or off": "Zapnúť alebo vypnúť slučku riadka",
+  "Record yourself saying this line": "Nahrať sa pri opakovaní tohto riadka",
+  "Stop recording": "Zastaviť nahrávanie",
+  "Compare with the original": "Porovnať s originálom",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub nemôže použiť mikrofón. Povoľte to v nastaveniach systému.",
+  "Could not start recording: {0}": "Nahrávanie sa nepodarilo spustiť: {0}",
+  "Nothing was recorded. Check the microphone.": "Nič sa nenahralo. Skontrolujte mikrofón.",
+  "Export as CSV": "Exportovať ako CSV",
+  "Subtitles exported": "Titulky exportované"
 }

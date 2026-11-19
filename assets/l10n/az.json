@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "Tərcüməni göstər və ya gizlət",
   "Loop this line": "Bu sətri təkrarla",
   "Line loop off": "Sətir təkrarı söndürülüb",
-  "Loop this line on or off": "Sətir təkrarını aç və ya söndür"
+  "Loop this line on or off": "Sətir təkrarını aç və ya söndür",
+  "Record yourself saying this line": "Bu sətri deyərkən özünüzü səsə yazın",
+  "Stop recording": "Yazını dayandır",
+  "Compare with the original": "Orijinalla müqayisə et",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub mikrofondan istifadə edə bilmir. Sistem parametrlərində icazə verin.",
+  "Could not start recording: {0}": "Yazı başlamadı: {0}",
+  "Nothing was recorded. Check the microphone.": "Heç nə yazılmadı. Mikrofonu yoxlayın.",
+  "Export as CSV": "CSV kimi ixrac et",
+  "Subtitles exported": "Subtitrlər ixrac edildi"
 }

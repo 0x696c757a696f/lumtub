@@ -151,4 +151,120 @@ extension LearningActions on AppController {
     // libmpv shows the second subtitle's blurred or plain copy.
     if (settings.blurSecondary && libassDraws && player != null) _restyleSubtitles(player!);
   }
+
+  /// Whether there is a take to compare with the original line.
+  bool get hasShadowTake => _shadowing?.take != null && _shadowLine != null;
+
+  /// 跟读录音: starts recording the person saying the line now, with the
+  /// video paused; pressed again, stops and plays the line, then the take.
+  /// While those play, stops them.
+  Future<void> toggleShadowing() async {
+    switch (shadowStage.value) {
+      case ShadowStage.recording:
+        return _stopShadowing();
+      case ShadowStage.original || ShadowStage.mine:
+        return _stopComparing();
+      case ShadowStage.idle:
+        break;
+    }
+    final player = this.player;
+    if (player == null) return;
+    final lines = learningLines;
+    final index = lineToStep(lines, player.state.position, 0);
+    if (index == null) {
+      _notice(tr('Turn on a subtitle first'));
+      return;
+    }
+    if (player.state.playing) await player.pause();
+    final folder = Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub shadowing');
+    final shadowing = _shadowing ??= Shadowing(folder, microphone: RecordMicrophone(mixWithOthers: settings.mixWithOthers));
+    try {
+      await shadowing.start(onTooLong: () => unawaited(_stopShadowing()));
+    } on ShadowException catch (e) {
+      logWarn('Could not record: $e');
+      _notice(e.denied ? tr("Lumtub can't use the microphone. Allow it in the system settings.") : tr('Could not start recording: {0}', [e.detail]));
+      return;
+    }
+    _shadowLine = lines[index];
+    shadowStage.value = ShadowStage.recording;
+  }
+
+  Future<void> _stopShadowing() async {
+    if (shadowStage.value != ShadowStage.recording) return;
+    File? take;
+    try {
+      take = await _shadowing?.stop();
+    } catch (e) {
+      logWarn('Could not save the recording: $e');
+    }
+    shadowStage.value = ShadowStage.idle;
+    // libmpv opens its audio output again in the session iOS has back.
+    final platform = player?.platform;
+    if (Platform.isIOS && platform is NativePlayer) {
+      await platform.command(['ao-reload']).catchError((Object e) => logDebug(() => 'Could not reopen the audio output: $e'));
+    }
+    if (take == null) {
+      _notice(tr('Nothing was recorded. Check the microphone.'));
+      return;
+    }
+    await compareShadowing();
+  }
+
+  /// Plays the line the take is of, then the take.
+  Future<void> compareShadowing() async {
+    final player = this.player;
+    final line = _shadowLine;
+    final take = _shadowing?.take;
+    if (player == null || line == null || take == null || shadowStage.value == ShadowStage.recording) return;
+    final serial = ++_shadowSerial;
+    bool current() => serial == _shadowSerial && identical(player, this.player);
+    shadowStage.value = ShadowStage.original;
+    try {
+      _linePause.reset();
+      await seek(lineStart(line));
+      await player.play();
+      final end = LinePause.pauseAt(line, rate: player.state.rate);
+      final deadline = DateTime.now().add((line.end - line.start) * (2 / player.state.rate.clamp(0.25, 4.0)) + const Duration(seconds: 3));
+      while (current() && DateTime.now().isBefore(deadline)) {
+        await Future<void>.delayed(const Duration(milliseconds: 30));
+        if (player.state.position >= end || !player.state.playing && player.state.position > line.start) break;
+      }
+      if (!current()) return;
+      if (player.state.playing) await player.pause();
+      shadowStage.value = ShadowStage.mine;
+      final mine = _shadowPlayer ??= Player();
+      await mine.setVolume(player.state.volume);
+      await mine.open(Media(take.uri.toString()));
+      final length = Duration(milliseconds: ((await take.length() - 44) / (Shadowing.sampleRate * 2) * 1000).round());
+      await mine.stream.completed.firstWhere((done) => done).timeout(length + const Duration(seconds: 2), onTimeout: () => true);
+    } catch (e) {
+      logWarn('Could not play the recording back: $e');
+    } finally {
+      if (serial == _shadowSerial) shadowStage.value = ShadowStage.idle;
+    }
+  }
+
+  Future<void> _stopComparing() async {
+    _shadowSerial++;
+    shadowStage.value = ShadowStage.idle;
+    await _shadowPlayer?.stop();
+    final player = this.player;
+    if (player != null && player.state.playing) await player.pause();
+  }
+
+  /// A new video or closing: the take and the microphone go.
+  Future<void> _forgetShadowing() async {
+    _shadowSerial++;
+    final shadowing = _shadowing, mine = _shadowPlayer;
+    _shadowing = null;
+    _shadowPlayer = null;
+    _shadowLine = null;
+    if (!_disposed) shadowStage.value = ShadowStage.idle;
+    try {
+      await shadowing?.dispose();
+      await mine?.dispose();
+    } catch (e) {
+      logDebug(() => 'Could not let go of the recording: $e');
+    }
+  }
 }

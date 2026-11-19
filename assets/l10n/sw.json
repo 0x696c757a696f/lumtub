@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Onyesha au ficha tafsiri",
   "Loop this line": "Rudia mstari huu mfululizo",
   "Line loop off": "Kurudia mstari kumezimwa",
-  "Loop this line on or off": "Washa au zima kurudia mstari"
+  "Loop this line on or off": "Washa au zima kurudia mstari",
+  "Record yourself saying this line": "Rekodi sauti yako ukisema mstari huu",
+  "Stop recording": "Simamisha kurekodi",
+  "Compare with the original": "Linganisha na asili",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub haiwezi kutumia maikrofoni. Iruhusu katika mipangilio ya mfumo.",
+  "Could not start recording: {0}": "Imeshindwa kuanza kurekodi: {0}",
+  "Nothing was recorded. Check the microphone.": "Hakuna kilichorekodiwa. Angalia maikrofoni.",
+  "Export as CSV": "Hamisha kama CSV",
+  "Subtitles exported": "Manukuu yamehamishwa"
 }

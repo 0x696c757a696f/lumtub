@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Afișează sau ascunde traducerea",
   "Loop this line": "Repetă acest rând",
   "Line loop off": "Repetarea rândului dezactivată",
-  "Loop this line on or off": "Activează sau dezactivează repetarea rândului"
+  "Loop this line on or off": "Activează sau dezactivează repetarea rândului",
+  "Record yourself saying this line": "Înregistrează-te rostind acest rând",
+  "Stop recording": "Oprește înregistrarea",
+  "Compare with the original": "Compară cu originalul",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub nu poate folosi microfonul. Permite accesul în setările sistemului.",
+  "Could not start recording: {0}": "Înregistrarea nu a putut porni: {0}",
+  "Nothing was recorded. Check the microphone.": "Nu s-a înregistrat nimic. Verifică microfonul.",
+  "Export as CSV": "Exportă ca CSV",
+  "Subtitles exported": "Subtitrări exportate"
 }

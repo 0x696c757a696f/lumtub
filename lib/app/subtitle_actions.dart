@@ -612,6 +612,7 @@ extension SubtitleActions on AppController {
   void _resetSubtitleFont() {
     _forgetSubtitleCopies();
     _forgetReveal();
+    unawaited(_forgetShadowing());
     _plainFits.clear();
     if (!libassCantDraw) return;
     libassCantDraw = false;

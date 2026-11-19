@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "অনুবাদ দেখুৱাওক বা লুকুৱাওক",
   "Loop this line": "এই শাৰী লুপ কৰক",
   "Line loop off": "শাৰী লুপ অফ",
-  "Loop this line on or off": "শাৰী লুপ অন বা অফ"
+  "Loop this line on or off": "শাৰী লুপ অন বা অফ",
+  "Record yourself saying this line": "এই শাৰীটো কওঁতে নিজকে ৰেকৰ্ড কৰক",
+  "Stop recording": "ৰেকৰ্ডিং বন্ধ কৰক",
+  "Compare with the original": "মূলটোৰ সৈতে তুলনা কৰক",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub-এ মাইক্ৰ'ফোন ব্যৱহাৰ কৰিব নোৱাৰে। ছিষ্টেম ছেটিঙত ইয়াক অনুমতি দিয়ক।",
+  "Could not start recording: {0}": "ৰেকৰ্ডিং আৰম্ভ কৰিব পৰা নগ'ল: {0}",
+  "Nothing was recorded. Check the microphone.": "একো ৰেকৰ্ড কৰা নহ'ল। মাইক্ৰ'ফোন পৰীক্ষা কৰক।",
+  "Export as CSV": "CSV হিচাপে ৰপ্তানি কৰক",
+  "Subtitles exported": "ছাবটাইটেল ৰপ্তানি কৰা হ'ল"
 }

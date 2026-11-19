@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Ipakita o itago ang pagsasalin",
   "Loop this line": "I-loop ang linyang ito",
   "Line loop off": "Naka-off ang line loop",
-  "Loop this line on or off": "Buksan o isara ang line loop"
+  "Loop this line on or off": "Buksan o isara ang line loop",
+  "Record yourself saying this line": "I-record ang sarili mo na sinasabi ang linyang ito",
+  "Stop recording": "Ihinto ang pag-record",
+  "Compare with the original": "Ihambing sa orihinal",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Hindi magamit ng Lumtub ang mikropono. Payagan ito sa mga setting ng system.",
+  "Could not start recording: {0}": "Hindi masimulan ang pag-record: {0}",
+  "Nothing was recorded. Check the microphone.": "Walang na-record. Suriin ang mikropono.",
+  "Export as CSV": "I-export bilang CSV",
+  "Subtitles exported": "Na-export ang mga subtitle"
 }

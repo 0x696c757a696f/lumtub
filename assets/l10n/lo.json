@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "ສະແດງ ຫຼື ເຊື່ອງຄຳແປ",
   "Loop this line": "ວົນແຖວນີ້",
   "Line loop off": "ປິດການວົນແຖວແລ້ວ",
-  "Loop this line on or off": "ເປີດ ຫຼື ປິດການວົນແຖວ"
+  "Loop this line on or off": "ເປີດ ຫຼື ປິດການວົນແຖວ",
+  "Record yourself saying this line": "ບັນທຶກສຽງຕົວເອງຕອນເວົ້າແຖວນີ້",
+  "Stop recording": "ຢຸດບັນທຶກສຽງ",
+  "Compare with the original": "ປຽບທຽບກັບຕົ້ນສະບັບ",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub ບໍ່ສາມາດໃຊ້ໄມໂຄຣໂຟນໄດ້. ກະລຸນາອະນຸຍາດໃນການຕັ້ງຄ່າລະບົບ.",
+  "Could not start recording: {0}": "ບໍ່ສາມາດເລີ່ມບັນທຶກສຽງໄດ້: {0}",
+  "Nothing was recorded. Check the microphone.": "ບໍ່ໄດ້ບັນທຶກຫຍັງເລີຍ. ກະລຸນາກວດເບິ່ງໄມໂຄຣໂຟນ.",
+  "Export as CSV": "ສົ່ງອອກເປັນ CSV",
+  "Subtitles exported": "ສົ່ງອອກຄຳບັນຍາຍແລ້ວ"
 }

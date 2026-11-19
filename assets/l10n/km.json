@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "បង្ហាញ ឬលាក់ការបកប្រែ",
   "Loop this line": "វិលជុំបន្ទាត់នេះ",
   "Line loop off": "វិលជុំបន្ទាត់បានបិទ",
-  "Loop this line on or off": "បើក ឬបិទការវិលជុំបន្ទាត់"
+  "Loop this line on or off": "បើក ឬបិទការវិលជុំបន្ទាត់",
+  "Record yourself saying this line": "ថតសំឡេងខ្លួនឯងអានបន្ទាត់នេះ",
+  "Stop recording": "ឈប់ថត",
+  "Compare with the original": "ប្រៀបធៀបជាមួយសំឡេងដើម",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub មិនអាចប្រើមីក្រូហ្វូនបានទេ។ សូមអនុញ្ញាតនៅក្នុងការកំណត់ប្រព័ន្ធ។",
+  "Could not start recording: {0}": "មិនអាចចាប់ផ្តើមថតបានទេ៖ {0}",
+  "Nothing was recorded. Check the microphone.": "មិនបានថតអ្វីទេ។ សូមពិនិត្យមីក្រូហ្វូន។",
+  "Export as CSV": "នាំចេញជា CSV",
+  "Subtitles exported": "បាននាំចេញចំណងជើងរង"
 }

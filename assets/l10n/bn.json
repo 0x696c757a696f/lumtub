@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "অনুবাদ দেখান বা লুকান",
   "Loop this line": "এই লাইন লুপ করুন",
   "Line loop off": "লাইন লুপ বন্ধ",
-  "Loop this line on or off": "লাইন লুপ চালু বা বন্ধ"
+  "Loop this line on or off": "লাইন লুপ চালু বা বন্ধ",
+  "Record yourself saying this line": "এই লাইনটি বলার সময় নিজেকে রেকর্ড করুন",
+  "Stop recording": "রেকর্ডিং বন্ধ করুন",
+  "Compare with the original": "মূলটির সঙ্গে তুলনা করুন",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub মাইক্রোফোন ব্যবহার করতে পারছে না। সিস্টেম সেটিংসে এটির অনুমতি দিন।",
+  "Could not start recording: {0}": "রেকর্ডিং শুরু করা যায়নি: {0}",
+  "Nothing was recorded. Check the microphone.": "কিছুই রেকর্ড হয়নি। মাইক্রোফোন পরীক্ষা করুন।",
+  "Export as CSV": "CSV হিসেবে এক্সপোর্ট করুন",
+  "Subtitles exported": "সাবটাইটেল এক্সপোর্ট হয়েছে"
 }

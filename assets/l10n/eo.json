@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Montri aŭ kaŝi la tradukon",
   "Loop this line": "Ripeti ĉi tiun linion",
   "Line loop off": "Linia ripetado malŝaltita",
-  "Loop this line on or off": "Ŝalti aŭ malŝalti linian ripetadon"
+  "Loop this line on or off": "Ŝalti aŭ malŝalti linian ripetadon",
+  "Record yourself saying this line": "Registri vin dirantan ĉi tiun linion",
+  "Stop recording": "Ĉesigi registradon",
+  "Compare with the original": "Kompari kun la originalo",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub ne povas uzi la mikrofonon. Permesu ĝin en la sistemaj agordoj.",
+  "Could not start recording: {0}": "Ne eblis komenci registradon: {0}",
+  "Nothing was recorded. Check the microphone.": "Nenio estis registrita. Kontrolu la mikrofonon.",
+  "Export as CSV": "Eksporti kiel CSV",
+  "Subtitles exported": "Subtekstoj eksportitaj"
 }

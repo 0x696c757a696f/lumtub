@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "અનુવાદ બતાવો અથવા છુપાવો",
   "Loop this line": "આ લીટી પુનરાવર્તિત કરો",
   "Line loop off": "લીટી પુનરાવર્તન બંધ",
-  "Loop this line on or off": "લીટી પુનરાવર્તન ચાલુ અથવા બંધ"
+  "Loop this line on or off": "લીટી પુનરાવર્તન ચાલુ અથવા બંધ",
+  "Record yourself saying this line": "આ લીટી બોલતા તમારી જાતને રેકોર્ડ કરો",
+  "Stop recording": "રેકોર્ડિંગ બંધ કરો",
+  "Compare with the original": "મૂળ સાથે સરખાવો",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub માઇક્રોફોનનો ઉપયોગ કરી શકતું નથી. સિસ્ટમ સેટિંગ્સમાં તેની મંજૂરી આપો.",
+  "Could not start recording: {0}": "રેકોર્ડિંગ શરૂ કરી શકાયું નહીં: {0}",
+  "Nothing was recorded. Check the microphone.": "કંઈ રેકોર્ડ થયું નથી. માઇક્રોફોન તપાસો.",
+  "Export as CSV": "CSV તરીકે નિકાસ કરો",
+  "Subtitles exported": "સબટાઇટલ નિકાસ થયા"
 }

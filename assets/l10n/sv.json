@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Visa eller dölj översättningen",
   "Loop this line": "Upprepa den här raden",
   "Line loop off": "Radupprepning av",
-  "Loop this line on or off": "Radupprepning på eller av"
+  "Loop this line on or off": "Radupprepning på eller av",
+  "Record yourself saying this line": "Spela in dig själv när du säger den här raden",
+  "Stop recording": "Stoppa inspelningen",
+  "Compare with the original": "Jämför med originalet",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub kan inte använda mikrofonen. Tillåt det i systeminställningarna.",
+  "Could not start recording: {0}": "Det gick inte att starta inspelningen: {0}",
+  "Nothing was recorded. Check the microphone.": "Inget spelades in. Kontrollera mikrofonen.",
+  "Export as CSV": "Exportera som CSV",
+  "Subtitles exported": "Undertexter exporterade"
 }

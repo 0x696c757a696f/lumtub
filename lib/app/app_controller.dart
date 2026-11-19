@@ -23,6 +23,7 @@ import '../app_window.dart';
 import '../app_preferences.dart';
 import '../libass_layout.dart';
 import '../line_pause.dart';
+import '../shadowing.dart';
 import '../play_queue.dart';
 import '../video_facts_lookup.dart';
 import '../video_languages.dart';
@@ -878,6 +879,14 @@ class AppController extends ChangeNotifier with _ExploreState {
   final _reveal = TranslationReveal();
   /// Whether the blurred second subtitle (模糊翻译) shows plainly now.
   final translationShown = ValueNotifier<bool>(false);
+  /// 跟读录音: the take and the microphone, made when first used.
+  Shadowing? _shadowing;
+  /// The line the take is of, and the player that plays the take.
+  SubtitleCue? _shadowLine;
+  Player? _shadowPlayer;
+  int _shadowSerial = 0;
+  /// What 跟读录音 is doing now.
+  final shadowStage = ValueNotifier(ShadowStage.idle);
 
   /// The chapter titles of [chapterTranslationOf] translated, one for
   /// each chapter, once asked for; untouched ones stay as they are.
@@ -1140,6 +1149,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     chatMessages.dispose();
     speechJob.dispose();
     translationShown.dispose();
+    unawaited(_forgetShadowing().whenComplete(shadowStage.dispose));
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     _startTimer?.cancel();

@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Shfaq ose fshih përkthimin",
   "Loop this line": "Përsërit këtë rresht në cikël",
   "Line loop off": "Cikli i rreshtit joaktiv",
-  "Loop this line on or off": "Cikli i rreshtit aktiv ose joaktiv"
+  "Loop this line on or off": "Cikli i rreshtit aktiv ose joaktiv",
+  "Record yourself saying this line": "Regjistro veten duke thënë këtë rresht",
+  "Stop recording": "Ndalo regjistrimin",
+  "Compare with the original": "Krahaso me origjinalin",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub nuk mund ta përdorë mikrofonin. Lejoje në cilësimet e sistemit.",
+  "Could not start recording: {0}": "Regjistrimi nuk mund të nisej: {0}",
+  "Nothing was recorded. Check the microphone.": "Nuk u regjistrua asgjë. Kontrollo mikrofonin.",
+  "Export as CSV": "Eksporto si CSV",
+  "Subtitles exported": "Titrat u eksportuan"
 }

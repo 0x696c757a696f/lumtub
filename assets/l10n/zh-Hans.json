@@ -3671,5 +3671,13 @@
   "Show or hide the translation": "显示或隐藏翻译",
   "Loop this line": "单句循环",
   "Line loop off": "单句循环已关",
-  "Loop this line on or off": "开关单句循环"
+  "Loop this line on or off": "开关单句循环",
+  "Record yourself saying this line": "跟读这一句（录音）",
+  "Stop recording": "停止录音",
+  "Compare with the original": "和原声对比",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub 用不了麦克风，请在系统设置里允许。",
+  "Could not start recording: {0}": "无法开始录音：{0}",
+  "Nothing was recorded. Check the microphone.": "没有录到声音，请检查麦克风。",
+  "Export as CSV": "导出为 CSV",
+  "Subtitles exported": "字幕已导出"
 }

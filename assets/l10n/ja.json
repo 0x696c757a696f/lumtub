@@ -3641,5 +3641,13 @@
   "Show or hide the translation": "翻訳の表示/非表示",
   "Loop this line": "この行をループ",
   "Line loop off": "この行のループをオフ",
-  "Loop this line on or off": "この行のループのオン/オフ"
+  "Loop this line on or off": "この行のループのオン/オフ",
+  "Record yourself saying this line": "この行を声に出して録音",
+  "Stop recording": "録音を停止",
+  "Compare with the original": "元の音声と比較",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtubはマイクを使用できません。システム設定で許可してください。",
+  "Could not start recording: {0}": "録音を開始できませんでした：{0}",
+  "Nothing was recorded. Check the microphone.": "何も録音されませんでした。マイクを確認してください。",
+  "Export as CSV": "CSVでエクスポート",
+  "Subtitles exported": "字幕をエクスポートしました"
 }

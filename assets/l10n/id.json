@@ -3641,5 +3641,13 @@
   "Show or hide the translation": "Tampilkan atau sembunyikan terjemahan",
   "Loop this line": "Ulangi baris ini",
   "Line loop off": "Ulangi baris nonaktif",
-  "Loop this line on or off": "Ulangi baris aktif atau nonaktif"
+  "Loop this line on or off": "Ulangi baris aktif atau nonaktif",
+  "Record yourself saying this line": "Rekam suara Anda mengucapkan baris ini",
+  "Stop recording": "Hentikan rekaman",
+  "Compare with the original": "Bandingkan dengan aslinya",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub tidak dapat menggunakan mikrofon. Izinkan di pengaturan sistem.",
+  "Could not start recording: {0}": "Tidak dapat memulai perekaman: {0}",
+  "Nothing was recorded. Check the microphone.": "Tidak ada yang terekam. Periksa mikrofon.",
+  "Export as CSV": "Ekspor sebagai CSV",
+  "Subtitles exported": "Subtitel diekspor"
 }

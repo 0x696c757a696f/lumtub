@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "Tuduhna utawa delikake terjemahan",
   "Loop this line": "Baleni baris iki",
   "Line loop off": "Ulang baris mati",
-  "Loop this line on or off": "Urip utawa pateni ulang baris"
+  "Loop this line on or off": "Urip utawa pateni ulang baris",
+  "Record yourself saying this line": "Rekam swaramu nalika ngucapake baris iki",
+  "Stop recording": "Mandhegake rekaman",
+  "Compare with the original": "Bandhingake karo asline",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub ora bisa nggunakake mikrofon. Idinana ing setelan sistem.",
+  "Could not start recording: {0}": "Ora bisa miwiti rekaman: {0}",
+  "Nothing was recorded. Check the microphone.": "Ora ana sing kerekam. Priksa mikrofon.",
+  "Export as CSV": "Ekspor minangka CSV",
+  "Subtitles exported": "Subtitel wis diekspor"
 }

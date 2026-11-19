@@ -3641,5 +3641,13 @@
   "Show or hide the translation": "Vertaling tonen of verbergen",
   "Loop this line": "Deze regel blijven herhalen",
   "Line loop off": "Regelherhaling uit",
-  "Loop this line on or off": "Regelherhaling aan of uit"
+  "Loop this line on or off": "Regelherhaling aan of uit",
+  "Record yourself saying this line": "Neem jezelf op terwijl je deze regel zegt",
+  "Stop recording": "Opname stoppen",
+  "Compare with the original": "Vergelijken met het origineel",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub kan de microfoon niet gebruiken. Sta dit toe in de systeeminstellingen.",
+  "Could not start recording: {0}": "Opname kon niet worden gestart: {0}",
+  "Nothing was recorded. Check the microphone.": "Er is niets opgenomen. Controleer de microfoon.",
+  "Export as CSV": "Exporteren als CSV",
+  "Subtitles exported": "Ondertitels geëxporteerd"
 }

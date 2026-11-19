@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "വിവർത്തനം കാണിക്കുക അല്ലെങ്കിൽ മറയ്ക്കുക",
   "Loop this line": "ഈ വരി ആവർത്തിക്കുക",
   "Line loop off": "വരി ആവർത്തനം ഓഫ്",
-  "Loop this line on or off": "വരി ആവർത്തനം ഓൺ അല്ലെങ്കിൽ ഓഫ്"
+  "Loop this line on or off": "വരി ആവർത്തനം ഓൺ അല്ലെങ്കിൽ ഓഫ്",
+  "Record yourself saying this line": "ഈ വരി പറയുന്നത് റെക്കോർഡ് ചെയ്യുക",
+  "Stop recording": "റെക്കോർഡിംഗ് നിർത്തുക",
+  "Compare with the original": "ഒറിജിനലുമായി താരതമ്യം ചെയ്യുക",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub-ന് മൈക്രോഫോൺ ഉപയോഗിക്കാൻ കഴിയുന്നില്ല. സിസ്റ്റം ക്രമീകരണത്തിൽ അനുവദിക്കുക.",
+  "Could not start recording: {0}": "റെക്കോർഡിംഗ് ആരംഭിക്കാനായില്ല: {0}",
+  "Nothing was recorded. Check the microphone.": "ഒന്നും റെക്കോർഡ് ചെയ്തിട്ടില്ല. മൈക്രോഫോൺ പരിശോധിക്കുക.",
+  "Export as CSV": "CSV ആയി എക്സ്പോർട്ട് ചെയ്യുക",
+  "Subtitles exported": "സബ്ടൈറ്റിലുകൾ എക്സ്പോർട്ട് ചെയ്തു"
 }

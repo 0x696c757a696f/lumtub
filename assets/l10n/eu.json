@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Erakutsi edo ezkutatu itzulpena",
   "Loop this line": "Errepikatu lerro hau begizta moduan",
   "Line loop off": "Lerro-begizta desaktibatuta",
-  "Loop this line on or off": "Aktibatu edo desaktibatu lerro-begizta"
+  "Loop this line on or off": "Aktibatu edo desaktibatu lerro-begizta",
+  "Record yourself saying this line": "Grabatu zeure burua lerro hau esaten",
+  "Stop recording": "Gelditu grabaketa",
+  "Compare with the original": "Alderatu jatorrizkoarekin",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtubek ezin du mikrofonoa erabili. Baimendu sistemaren ezarpenetan.",
+  "Could not start recording: {0}": "Ezin izan da grabazioa hasi: {0}",
+  "Nothing was recorded. Check the microphone.": "Ez da ezer grabatu. Egiaztatu mikrofonoa.",
+  "Export as CSV": "Esportatu CSV gisa",
+  "Subtitles exported": "Azpitituluak esportatu dira"
 }

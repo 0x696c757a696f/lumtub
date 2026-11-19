@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "הצגה או הסתרה של התרגום",
   "Loop this line": "לולאה של המשפט הזה",
   "Line loop off": "לולאת משפט כבויה",
-  "Loop this line on or off": "הפעלה או כיבוי של לולאת משפט"
+  "Loop this line on or off": "הפעלה או כיבוי של לולאת משפט",
+  "Record yourself saying this line": "הקלטת עצמך בקריאת המשפט הזה",
+  "Stop recording": "עצירת ההקלטה",
+  "Compare with the original": "השוואה למקור",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub לא יכול להשתמש במיקרופון. יש לאפשר זאת בהגדרות המערכת.",
+  "Could not start recording: {0}": "לא ניתן היה להתחיל בהקלטה: {0}",
+  "Nothing was recorded. Check the microphone.": "לא הוקלט דבר. יש לבדוק את המיקרופון.",
+  "Export as CSV": "ייצוא כ-CSV",
+  "Subtitles exported": "הכתוביות יוצאו"
 }

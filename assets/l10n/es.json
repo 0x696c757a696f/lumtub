@@ -3641,5 +3641,13 @@
   "Show or hide the translation": "Mostrar u ocultar la traducción",
   "Loop this line": "Repetir esta línea en bucle",
   "Line loop off": "Bucle de línea desactivado",
-  "Loop this line on or off": "Activar o desactivar el bucle de línea"
+  "Loop this line on or off": "Activar o desactivar el bucle de línea",
+  "Record yourself saying this line": "Grábate diciendo esta línea",
+  "Stop recording": "Detener grabación",
+  "Compare with the original": "Comparar con el original",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub no puede usar el micrófono. Permítelo en los ajustes del sistema.",
+  "Could not start recording: {0}": "No se pudo iniciar la grabación: {0}",
+  "Nothing was recorded. Check the microphone.": "No se grabó nada. Comprueba el micrófono.",
+  "Export as CSV": "Exportar como CSV",
+  "Subtitles exported": "Subtítulos exportados"
 }

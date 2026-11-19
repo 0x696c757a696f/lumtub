@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Ցույց տալ կամ թաքցնել թարգմանությունը",
   "Loop this line": "Կրկնել այս տողն անընդհատ",
   "Line loop off": "Տողի կրկնությունն անջատված է",
-  "Loop this line on or off": "Միացնել/անջատել տողի կրկնությունը"
+  "Loop this line on or off": "Միացնել/անջատել տողի կրկնությունը",
+  "Record yourself saying this line": "Ձայնագրել ինքներդ ձեզ՝ այս տողն ասելիս",
+  "Stop recording": "Դադարեցնել ձայնագրումը",
+  "Compare with the original": "Համեմատել բնօրինակի հետ",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub-ը չի կարող օգտագործել խոսափողը։ Թույլատրեք դա համակարգի կարգավորումներում։",
+  "Could not start recording: {0}": "Չհաջողվեց սկսել ձայնագրումը՝ {0}",
+  "Nothing was recorded. Check the microphone.": "Ոչինչ չձայնագրվեց։ Ստուգեք խոսափողը։",
+  "Export as CSV": "Արտահանել որպես CSV",
+  "Subtitles exported": "Ենթագրերն արտահանվեցին"
 }

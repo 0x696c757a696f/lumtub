@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "Témbongkeun atawa sumputkeun tarjamah",
   "Loop this line": "Loop kalimat ieu",
   "Line loop off": "Loop kalimat pareum",
-  "Loop this line on or off": "Hurungkeun atawa pareumkeun loop kalimat"
+  "Loop this line on or off": "Hurungkeun atawa pareumkeun loop kalimat",
+  "Record yourself saying this line": "Rékam sorangan nyebutkeun kalimat ieu",
+  "Stop recording": "Eureun ngarékam",
+  "Compare with the original": "Bandingkeun jeung aslina",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub teu bisa maké mikropon. Idinan dina setélan sistem.",
+  "Could not start recording: {0}": "Gagal ngamimitian rékaman: {0}",
+  "Nothing was recorded. Check the microphone.": "Euweuh nu karékam. Pariksa mikropon.",
+  "Export as CSV": "Ékspor salaku CSV",
+  "Subtitles exported": "Subtitel geus diékspor"
 }

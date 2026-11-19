@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Pokaži ali skrij prevod",
   "Loop this line": "Ponavljaj to vrstico v zanki",
   "Line loop off": "Zanka vrstice izklopljena",
-  "Loop this line on or off": "Vklop ali izklop zanke vrstice"
+  "Loop this line on or off": "Vklop ali izklop zanke vrstice",
+  "Record yourself saying this line": "Posnemi se, ko izgovarjaš to vrstico",
+  "Stop recording": "Ustavi snemanje",
+  "Compare with the original": "Primerjaj z izvirnikom",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub ne more uporabljati mikrofona. Dovoli to v sistemskih nastavitvah.",
+  "Could not start recording: {0}": "Snemanja ni bilo mogoče začeti: {0}",
+  "Nothing was recorded. Check the microphone.": "Nič ni bilo posneto. Preveri mikrofon.",
+  "Export as CSV": "Izvozi kot CSV",
+  "Subtitles exported": "Podnapisi izvoženi"
 }

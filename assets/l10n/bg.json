@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Показване или скриване на превода",
   "Loop this line": "Повтаряне на това изречение",
   "Line loop off": "Повторението на изречението е изключено",
-  "Loop this line on or off": "Включване или изключване на повторението на изречението"
+  "Loop this line on or off": "Включване или изключване на повторението на изречението",
+  "Record yourself saying this line": "Запишете се, докато казвате това изречение",
+  "Stop recording": "Спиране на записа",
+  "Compare with the original": "Сравняване с оригинала",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub не може да използва микрофона. Разрешете го в системните настройки.",
+  "Could not start recording: {0}": "Записът не можа да започне: {0}",
+  "Nothing was recorded. Check the microphone.": "Нищо не е записано. Проверете микрофона.",
+  "Export as CSV": "Експортиране като CSV",
+  "Subtitles exported": "Субтитрите са експортирани"
 }

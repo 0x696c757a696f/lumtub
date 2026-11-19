@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "ترجمہ دکھائیں یا چھپائیں",
   "Loop this line": "یہ سطر دہرائیں",
   "Line loop off": "سطر دہرائی آف",
-  "Loop this line on or off": "سطر دہرائی آن یا آف کریں"
+  "Loop this line on or off": "سطر دہرائی آن یا آف کریں",
+  "Record yourself saying this line": "یہ سطر بولتے ہوئے اپنی ریکارڈنگ کریں",
+  "Stop recording": "ریکارڈنگ روکیں",
+  "Compare with the original": "اصل سے موازنہ کریں",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub مائیکروفون استعمال نہیں کر سکتا۔ سسٹم کی ترتیبات میں اجازت دیں۔",
+  "Could not start recording: {0}": "ریکارڈنگ شروع نہیں ہو سکی: {0}",
+  "Nothing was recorded. Check the microphone.": "کچھ بھی ریکارڈ نہیں ہوا۔ مائیکروفون چیک کریں۔",
+  "Export as CSV": "CSV کے طور پر برآمد کریں",
+  "Subtitles exported": "سب ٹائٹلز برآمد ہو گئے"
 }

@@ -3641,5 +3641,13 @@
   "Show or hide the translation": "번역 표시/숨기기",
   "Loop this line": "이 문장 반복",
   "Line loop off": "문장 반복 꺼짐",
-  "Loop this line on or off": "문장 반복 켜기/끄기"
+  "Loop this line on or off": "문장 반복 켜기/끄기",
+  "Record yourself saying this line": "이 문장 따라 말하며 녹음",
+  "Stop recording": "녹음 중지",
+  "Compare with the original": "원본과 비교",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub에서 마이크를 사용할 수 없습니다. 시스템 설정에서 허용해 주세요.",
+  "Could not start recording: {0}": "녹음을 시작하지 못했습니다: {0}",
+  "Nothing was recorded. Check the microphone.": "녹음된 내용이 없습니다. 마이크를 확인해 주세요.",
+  "Export as CSV": "CSV로 내보내기",
+  "Subtitles exported": "자막을 내보냈습니다"
 }

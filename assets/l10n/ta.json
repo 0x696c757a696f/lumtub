@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "மொழிபெயர்ப்பைக் காட்டு / மறை",
   "Loop this line": "இந்த வரியைச் சுழற்று",
   "Line loop off": "வரி சுழற்சி நிறுத்தத்தில்",
-  "Loop this line on or off": "வரி சுழற்சியை இயக்கு / நிறுத்து"
+  "Loop this line on or off": "வரி சுழற்சியை இயக்கு / நிறுத்து",
+  "Record yourself saying this line": "இந்த வரியைச் சொல்லிப் பதிவு செய்",
+  "Stop recording": "பதிவை நிறுத்து",
+  "Compare with the original": "அசலுடன் ஒப்பிடு",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub மைக்ரோஃபோனைப் பயன்படுத்த முடியவில்லை. கணினி அமைப்புகளில் அனுமதிக்கவும்.",
+  "Could not start recording: {0}": "பதிவைத் தொடங்க முடியவில்லை: {0}",
+  "Nothing was recorded. Check the microphone.": "எதுவும் பதிவாகவில்லை. மைக்ரோஃபோனைச் சரிபார்க்கவும்.",
+  "Export as CSV": "CSV ஆக ஏற்றுமதி செய்",
+  "Subtitles exported": "வசனங்கள் ஏற்றுமதி செய்யப்பட்டன"
 }

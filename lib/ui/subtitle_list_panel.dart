@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderAbstractViewport;
@@ -10,6 +11,9 @@ import '../app_preferences.dart' show SubtitleListMode;
 import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleOption;
 import '../subtitle_cues.dart';
+import '../save_file.dart';
+import '../friendly_error.dart';
+import '../app_log.dart';
 import 'common.dart';
 import 'motion.dart';
 import 'player_panel.dart';
@@ -151,6 +155,20 @@ class _SubtitleListState extends State<SubtitleList> {
     return viewport.getOffsetToReveal(row, 0.3).offset.clamp(position.minScrollExtent, position.maxScrollExtent);
   }
 
+  /// Saves every line, with its translation, as a CSV file where the
+  /// person picks: for Anki, a spreadsheet or a word list.
+  Future<void> _export(List<PairedCue> cues) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final id = widget.controller.playing?.id ?? 'video';
+    try {
+      if (!await saveFileAs('lumtub-subtitles-$id.csv', utf8.encode(pairedCuesCsv(cues)), mime: 'text/csv', label: 'CSV', extension: 'csv')) return;
+      messenger?.showSnackBar(SnackBar(content: Text(tr('Subtitles exported'))));
+    } catch (e) {
+      logError('Could not export the subtitles', e);
+      messenger?.showSnackBar(SnackBar(content: Text(tr('Export failed: {0}', [friendlyFileError(e)]))));
+    }
+  }
+
   void _copy(PairedCue line) {
     unawaited(Clipboard.setData(ClipboardData(text: [line.cue.text, if (line.second != null) line.second!].join('\n'))));
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(tr('Subtitle copied')), duration: const Duration(seconds: 1)));
@@ -198,6 +216,11 @@ class _SubtitleListState extends State<SubtitleList> {
                 )),
               ),
               if (_bothOn) _modeMenu(colors),
+              IconButton(
+                tooltip: tr('Export as CSV'),
+                icon: Icon(AppIcons.downloadSimple, size: 20),
+                onPressed: () => unawaited(_export(cues)),
+              ),
             ]),
           ),
           Expanded(

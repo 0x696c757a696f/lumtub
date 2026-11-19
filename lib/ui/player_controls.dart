@@ -25,6 +25,7 @@ import '../device.dart';
 import '../app/app_controller.dart';
 import '../app_preferences.dart' show rateText;
 import '../heatmap.dart';
+import '../shadowing.dart' show ShadowStage;
 import '../keep_awake.dart';
 import '../picture_transform.dart';
 import '../storyboard.dart';
@@ -1239,7 +1240,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   /// 下一句 and 单句循环 ([few] keeps 重听 alone); with 模糊翻译 on and a second
   /// subtitle shown, the button that shows it.
   Widget _learningButtons(double width, {bool few = false}) => ListenableBuilder(
-        listenable: Listenable.merge([_controller, _controller.translationShown]),
+        listenable: Listenable.merge([_controller, _controller.translationShown, _controller.shadowStage]),
         builder: (context, _) {
           final settings = _controller.settings;
           final lines = settings.pauseEachLine && (_player.state.track.subtitle.id != 'no' || _controller.secondaryTrackId != 'no');
@@ -1266,6 +1267,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                   unawaited(_controller.toggleLineLoop());
                 },
               ),
+            if (lines) ..._shadowButtons(width),
             if (blurred)
               _IconButton(
                 tooltip: shown ? tr('Hide the translation') : tr('Show the translation'),
@@ -1281,6 +1283,43 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           ]);
         },
       );
+
+  /// 跟读录音: the microphone, red while recording, and with a take, the
+  /// way to hear the line and the take again.
+  List<Widget> _shadowButtons(double width) {
+    final stage = _controller.shadowStage.value;
+    final recording = stage == ShadowStage.recording;
+    final comparing = stage == ShadowStage.original || stage == ShadowStage.mine;
+    return [
+      Tooltip(
+        message: recording ? tr('Stop recording') : tr('Record yourself saying this line'),
+        child: _Hover(
+          label: recording ? tr('Stop recording') : tr('Record yourself saying this line'),
+          onTap: () {
+            _show();
+            unawaited(_controller.toggleShadowing());
+          },
+          child: SizedBox(
+            width: touchFirst ? max(width, 44) : width,
+            height: touchFirst ? 44 : 34,
+            child: Icon(recording ? AppIcons.stopFill : AppIcons.microphoneFill, size: 20, color: recording ? const Color(0xFFFF4D4F) : Colors.white),
+          ),
+        ),
+      ),
+      if (_controller.hasShadowTake && !recording)
+        _IconButton(
+          tooltip: tr('Compare with the original'),
+          width: width,
+          icon: AppIcons.userSound,
+          size: 20,
+          active: comparing,
+          onTap: () {
+            _show();
+            unawaited(comparing ? _controller.toggleShadowing() : _controller.compareShadowing());
+          },
+        ),
+    ];
+  }
 
   /// 弹幕 on or off and their settings: a video's chat, or its timed comments.
   Widget _danmakuButtons(double width, {bool withSettings = true}) => ListenableBuilder(

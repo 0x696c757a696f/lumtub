@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "نمایش یا پنهان کردن ترجمه",
   "Loop this line": "تکرار مداوم این خط",
   "Line loop off": "تکرار خط خاموش",
-  "Loop this line on or off": "روشن یا خاموش کردن تکرار خط"
+  "Loop this line on or off": "روشن یا خاموش کردن تکرار خط",
+  "Record yourself saying this line": "صدای خود را هنگام گفتن این خط ضبط کنید",
+  "Stop recording": "توقف ضبط",
+  "Compare with the original": "مقایسه با اصل",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub نمی‌تواند از میکروفون استفاده کند. در تنظیمات سیستم اجازه دهید.",
+  "Could not start recording: {0}": "شروع ضبط ممکن نشد: {0}",
+  "Nothing was recorded. Check the microphone.": "چیزی ضبط نشد. میکروفون را بررسی کنید.",
+  "Export as CSV": "خروجی گرفتن به‌صورت CSV",
+  "Subtitles exported": "از زیرنویس خروجی گرفته شد"
 }

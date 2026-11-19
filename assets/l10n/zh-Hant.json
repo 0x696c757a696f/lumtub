@@ -3660,5 +3660,13 @@
   "Show or hide the translation": "顯示或隱藏翻譯",
   "Loop this line": "單句循環",
   "Line loop off": "單句循環已關",
-  "Loop this line on or off": "開關單句循環"
+  "Loop this line on or off": "開關單句循環",
+  "Record yourself saying this line": "跟讀這一句（錄音）",
+  "Stop recording": "停止錄音",
+  "Compare with the original": "和原聲對比",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub 無法使用麥克風，請在系統設定裡允許。",
+  "Could not start recording: {0}": "無法開始錄音：{0}",
+  "Nothing was recorded. Check the microphone.": "沒有錄到聲音，請檢查麥克風。",
+  "Export as CSV": "匯出為 CSV",
+  "Subtitles exported": "字幕已匯出"
 }

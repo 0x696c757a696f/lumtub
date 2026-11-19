@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Rādīt vai paslēpt tulkojumu",
   "Loop this line": "Atkārtot šo rindu cilpā",
   "Line loop off": "Rindas cilpa izslēgta",
-  "Loop this line on or off": "Ieslēgt vai izslēgt rindas cilpu"
+  "Loop this line on or off": "Ieslēgt vai izslēgt rindas cilpu",
+  "Record yourself saying this line": "Ierakstīt sevi, sakot šo rindu",
+  "Stop recording": "Apturēt ierakstīšanu",
+  "Compare with the original": "Salīdzināt ar oriģinālu",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub nevar izmantot mikrofonu. Atļaujiet to sistēmas iestatījumos.",
+  "Could not start recording: {0}": "Ierakstīšanu neizdevās sākt: {0}",
+  "Nothing was recorded. Check the microphone.": "Nekas netika ierakstīts. Pārbaudiet mikrofonu.",
+  "Export as CSV": "Eksportēt kā CSV",
+  "Subtitles exported": "Subtitri eksportēti"
 }

@@ -3641,5 +3641,13 @@
   "Show or hide the translation": "Показать или скрыть перевод",
   "Loop this line": "Зациклить эту строку",
   "Line loop off": "Зацикливание строки выключено",
-  "Loop this line on or off": "Включить или выключить зацикливание строки"
+  "Loop this line on or off": "Включить или выключить зацикливание строки",
+  "Record yourself saying this line": "Записать, как вы произносите эту строку",
+  "Stop recording": "Остановить запись",
+  "Compare with the original": "Сравнить с оригиналом",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub не может использовать микрофон. Разрешите доступ в настройках системы.",
+  "Could not start recording: {0}": "Не удалось начать запись: {0}",
+  "Nothing was recorded. Check the microphone.": "Ничего не записано. Проверьте микрофон.",
+  "Export as CSV": "Экспортировать как CSV",
+  "Subtitles exported": "Субтитры экспортированы"
 }

@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Translationem ostendere vel celare",
   "Loop this line": "Hanc lineam in orbem repetere",
   "Line loop off": "Circuitus lineae exstinctus",
-  "Loop this line on or off": "Circuitum lineae incendere vel exstinguere"
+  "Loop this line on or off": "Circuitum lineae incendere vel exstinguere",
+  "Record yourself saying this line": "Vocem tuam hanc lineam dicentem recipe",
+  "Stop recording": "Recordationem sistere",
+  "Compare with the original": "Cum exemplari conferre",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub microphonum uti non potest. Permitte in optionibus systematis.",
+  "Could not start recording: {0}": "Recordatio incipi non potuit: {0}",
+  "Nothing was recorded. Check the microphone.": "Nihil recordatum est. Microphonum inspice.",
+  "Export as CSV": "Exportare ut CSV",
+  "Subtitles exported": "Subtitula exportata"
 }

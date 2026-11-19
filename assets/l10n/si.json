@@ -3635,5 +3635,13 @@
   "Show or hide the translation": "පරිවර්තනය පෙන්වන්න හෝ සඟවන්න",
   "Loop this line": "මෙම පේළිය පුනරාවර්තනය කරන්න",
   "Line loop off": "පේළි පුනරාවර්තනය අක්‍රියයි",
-  "Loop this line on or off": "පේළි පුනරාවර්තනය සක්‍රිය හෝ අක්‍රිය"
+  "Loop this line on or off": "පේළි පුනරාවර්තනය සක්‍රිය හෝ අක්‍රිය",
+  "Record yourself saying this line": "මෙම පේළිය පවසමින් ඔබව පටිගත කරන්න",
+  "Stop recording": "පටිගත කිරීම නවත්වන්න",
+  "Compare with the original": "මුල් එක සමඟ සසඳන්න",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub හට මයික්‍රොෆෝනය භාවිතා කළ නොහැක. පද්ධති සැකසුම්වල ඉඩ දෙන්න.",
+  "Could not start recording: {0}": "පටිගත කිරීම ආරම්භ කළ නොහැකි විය: {0}",
+  "Nothing was recorded. Check the microphone.": "කිසිවක් පටිගත නොවිණි. මයික්‍රොෆෝනය පරීක්ෂා කරන්න.",
+  "Export as CSV": "CSV ලෙස අපනයනය කරන්න",
+  "Subtitles exported": "උපසිරැසි අපනයනය කළා"
 }

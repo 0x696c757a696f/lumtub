@@ -3641,5 +3641,13 @@
   "Show or hide the translation": "Übersetzung ein- oder ausblenden",
   "Loop this line": "Diese Zeile in Schleife wiederholen",
   "Line loop off": "Zeilenschleife aus",
-  "Loop this line on or off": "Zeilenschleife an oder aus"
+  "Loop this line on or off": "Zeilenschleife an oder aus",
+  "Record yourself saying this line": "Diese Zeile selbst einsprechen",
+  "Stop recording": "Aufnahme beenden",
+  "Compare with the original": "Mit dem Original vergleichen",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub kann das Mikrofon nicht verwenden. Bitte in den Systemeinstellungen erlauben.",
+  "Could not start recording: {0}": "Aufnahme konnte nicht gestartet werden: {0}",
+  "Nothing was recorded. Check the microphone.": "Es wurde nichts aufgenommen. Bitte das Mikrofon prüfen.",
+  "Export as CSV": "Als CSV exportieren",
+  "Subtitles exported": "Untertitel exportiert"
 }

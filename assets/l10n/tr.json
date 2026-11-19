@@ -3641,5 +3641,13 @@
   "Show or hide the translation": "Çeviriyi göster veya gizle",
   "Loop this line": "Bu satırı döngüye al",
   "Line loop off": "Satır döngüsü kapalı",
-  "Loop this line on or off": "Satır döngüsünü aç veya kapat"
+  "Loop this line on or off": "Satır döngüsünü aç veya kapat",
+  "Record yourself saying this line": "Bu satırı söylerken kendini kaydet",
+  "Stop recording": "Kaydı durdur",
+  "Compare with the original": "Orijinaliyle karşılaştır",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub mikrofonu kullanamıyor. Sistem ayarlarından izin verin.",
+  "Could not start recording: {0}": "Kayıt başlatılamadı: {0}",
+  "Nothing was recorded. Check the microphone.": "Hiçbir şey kaydedilmedi. Mikrofonu kontrol edin.",
+  "Export as CSV": "CSV olarak dışa aktar",
+  "Subtitles exported": "Altyazı dışa aktarıldı"
 }

@@ -3636,5 +3636,13 @@
   "Show or hide the translation": "Паказаць або схаваць пераклад",
   "Loop this line": "Паўтараць гэты радок",
   "Line loop off": "Паўтор радка выключаны",
-  "Loop this line on or off": "Уключыць або выключыць паўтор радка"
+  "Loop this line on or off": "Уключыць або выключыць паўтор радка",
+  "Record yourself saying this line": "Запісаць сябе, калі вы кажаце гэты радок",
+  "Stop recording": "Спыніць запіс",
+  "Compare with the original": "Параўнаць з арыгіналам",
+  "Lumtub can't use the microphone. Allow it in the system settings.": "Lumtub не можа выкарыстоўваць мікрафон. Дазвольце гэта ў сістэмных наладах.",
+  "Could not start recording: {0}": "Не ўдалося пачаць запіс: {0}",
+  "Nothing was recorded. Check the microphone.": "Нічога не запісана. Праверце мікрафон.",
+  "Export as CSV": "Экспартаваць як CSV",
+  "Subtitles exported": "Субцітры экспартаваны"
 }

@@ -29,6 +29,7 @@ enum PlayerAction {
   lineNext,
   lineReplay,
   lineLoop,
+  shadow,
   linePause,
   revealTranslation,
   copySubtitle,
@@ -203,6 +204,8 @@ Map<PlayerAction, List<KeyCombo>> defaultShortcutKeys() {
     // Language Reactor's auto-pause key; V shows the blurred translation.
     PlayerAction.lineLoop: const [KeyCombo(LogicalKeyboardKey.keyR, shift: true)],
     PlayerAction.linePause: const [KeyCombo(LogicalKeyboardKey.keyQ)],
+    // E for echo: 跟读录音.
+    PlayerAction.shadow: const [KeyCombo(LogicalKeyboardKey.keyE)],
     PlayerAction.revealTranslation: const [KeyCombo(LogicalKeyboardKey.keyV)],
     PlayerAction.copySubtitle: [KeyCombo(LogicalKeyboardKey.keyC, control: !mac, meta: mac)],
     PlayerAction.theater: const [KeyCombo(LogicalKeyboardKey.keyT)],

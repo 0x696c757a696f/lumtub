@@ -6,7 +6,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart' show Color, PaintingBinding, Size;
-import 'package:flutter/services.dart' show MethodChannel;
+import 'package:flutter/services.dart' show MethodChannel, rootBundle;
 import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:http/http.dart' as http;
@@ -73,6 +73,7 @@ import '../cast/dlna.dart';
 import '../invidious_streams.dart';
 import '../piped_streams.dart';
 import '../search_options.dart';
+import '../search_phrases.dart';
 import '../search_suggestions.dart';
 import '../youtube_comments.dart';
 import '../youtube_account_feed.dart';
@@ -583,6 +584,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool _updateCheckedForChallenge = false;
   /// The spoken language of explore's videos, for its language filter.
   VideoLanguages? _videoLanguages;
+  SearchPhrases? _searchPhrases;
   AiFilter? _aiFilter;
 
   int _lastDrops = 0;

@@ -113,6 +113,20 @@ void main() {
     expect(check, (asked: 6, kept: 2, heard: 3));
   }, skip: core);
 
+  test("takes views and publishing time from the answer, as a search asked in another language writes them its own way", () async {
+    final client = MockClient((request) async => _json({
+          ..._player('Lezione di filosofia', asr: 'it'),
+          'videoDetails': {'title': 'Lezione di filosofia', 'shortDescription': '', 'viewCount': '1234567'},
+          'microformat': {'playerMicroformatRenderer': {'publishDate': '2026-10-01T05:00:00-07:00'}},
+        }));
+    final languages = VideoLanguages(client);
+    final line = jsonEncode({'id': 'vvvvvvvvvvv', 'title': 'Lezione di filosofia', 'channel': 'c', 'view_count': 12});
+    final kept = await languages.only(Stream.fromIterable([line]), ExploreLanguage.it).toList();
+    final entry = jsonDecode(kept.single) as Map;
+    expect(entry['view_count'], 1234567);
+    expect(entry['timestamp'], DateTime.parse('2026-10-01T12:00:00Z').millisecondsSinceEpoch ~/ 1000);
+  }, skip: core);
+
   test('asks the next app when one gives no captions, and asks it first from then on', () async {
     final asked = <String>[];
     final client = MockClient((request) async {

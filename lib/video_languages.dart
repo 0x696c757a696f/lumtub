@@ -41,7 +41,8 @@ class VideoLanguages {
   static const giveUpAfterDefault = 240;
 
   static const _fields = 'videoDetails.title,videoDetails.shortDescription,captions.playerCaptionsTracklistRenderer.captionTracks.languageCode,'
-      'captions.playerCaptionsTracklistRenderer.captionTracks.kind,streamingData.adaptiveFormats.audioTrack,streamingData.adaptiveFormats.xtags,playabilityStatus.status';
+      'captions.playerCaptionsTracklistRenderer.captionTracks.kind,streamingData.adaptiveFormats.audioTrack,streamingData.adaptiveFormats.xtags,playabilityStatus.status,'
+      'videoDetails.viewCount,microformat.playerMicroformatRenderer.publishDate';
   late final _probe = YoutubePlayerProbe(_client);
 
   Map<String, SpokenVideo>? _known;
@@ -51,6 +52,13 @@ class VideoLanguages {
   /// may tell by audio or captions next time.
   final _unheard = <String, SpokenVideo>{};
   final _textAt = <String, int>{};
+
+  /// Views and when published (seconds since 1970), as the `/player`
+  /// answers give them in any language: a search asked in another language
+  /// than English writes both its own way, which listings read only in
+  /// English. When published is kept on disk with the answer.
+  final _views = <String, int>{};
+  final _published = <String, int>{};
   static const _unheardKept = 5000;
   static const textKeptFor = Duration(days: 7);
 
@@ -127,6 +135,8 @@ class VideoLanguages {
   }
 
   void _forget(String id) {
+    _published.remove(id);
+    _views.remove(id);
     final language = _known?.remove(id)?.language;
     final channel = _channelOf.remove(id);
     final counts = channel == null ? null : _channels[channel];
@@ -185,8 +195,10 @@ class VideoLanguages {
 
   Future<_Read?> _fetch(String id, String hl, PlayerClient client) async {
     try {
-      final read = await _readInBackground(await _probe.fetchAs(client, id, _fields, expect: 'videoDetails', hl: hl));
+      final bytes = await _probe.fetchAs(client, id, _fields, expect: 'videoDetails', hl: hl);
+      final read = await _readInBackground(bytes);
       if (read is! Map<String, dynamic>) return null;
+      _factsOf(id, bytes);
       return (spoken: _spoken(read), playable: read['playable'] != false);
     } catch (e) {
       logDebug(() => 'Video languages: ${client.name} gave no answer for $id: $e');
@@ -223,6 +235,40 @@ class VideoLanguages {
     }
     _answered(withVideo);
     return best?.spoken;
+  }
+
+  static final _viewCount = RegExp(r'"viewCount"\s*:\s*"(\d+)"');
+  static final _publishDate = RegExp(r'"publishDate"\s*:\s*"([^"]+)"');
+
+  void _factsOf(String id, List<int> bytes) {
+    // Masked answers are a few kilobytes; a whole one is looked through once.
+    final text = utf8.decode(bytes, allowMalformed: true);
+    if (_views.length >= _kept) _views.remove(_views.keys.first);
+    if (_viewCount.firstMatch(text)?[1] case final views?) _views[id] = int.parse(views);
+    if (_publishDate.firstMatch(text)?[1] case final date?) {
+      if (DateTime.tryParse(date) case final at?) _published[id] = at.millisecondsSinceEpoch ~/ 1000;
+    }
+  }
+
+  /// [line] with the views of its video [id] as its answer gave them, and
+  /// when it was published where the line lacks it.
+  String _withFacts(String line, String id) {
+    final views = _views[id];
+    final published = _published[id];
+    if (views == null && published == null) return line;
+    final entry = jsonDecode(line) as Map<String, dynamic>;
+    var changed = false;
+    // The answer's count is exact; a listing asked in another language may
+    // have written it in a way read wrongly ("1,2 Mln").
+    if (views != null && entry['view_count'] != views) {
+      entry['view_count'] = views;
+      changed = true;
+    }
+    if (published != null && entry['timestamp'] == null && entry['release_timestamp'] == null) {
+      entry['timestamp'] = published;
+      changed = true;
+    }
+    return changed ? jsonEncode(entry) : line;
   }
 
   /// How much an answer that does not tell by captions or audio is worth:
@@ -274,9 +320,9 @@ class VideoLanguages {
       _unheard[key] = _spoken(value);
       _textAt[key] = (value['at'] as num).toInt();
     }
-    final (known, channels) = await Isolate.run(() {
+    final (known, channels, published) = await Isolate.run(() {
       final file = File(path);
-      final none = (<String, SpokenVideo>{}, <String, String>{});
+      final none = (<String, SpokenVideo>{}, <String, String>{}, <String, int>{});
       if (!file.existsSync()) return none;
       try {
         final raw = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
@@ -293,6 +339,10 @@ class VideoLanguages {
             for (final MapEntry(:key, :value) in heard.entries)
               if (value['channel'] case final String channel) key: channel,
           },
+          {
+            for (final MapEntry(:key, :value) in heard.entries)
+              if (value['published'] case final num at) key: at.toInt(),
+          },
         );
       } catch (_) {
         return none;
@@ -301,6 +351,7 @@ class VideoLanguages {
     for (final MapEntry(:key, :value) in channels.entries) {
       _count(key, value, known[key]?.language);
     }
+    _published.addAll(published);
     return known;
   }
 
@@ -314,6 +365,7 @@ class VideoLanguages {
         key: {
           ..._encode(value),
           if (_channelOf[key] case final channel?) 'channel': channel,
+          if (_published[key] case final at?) 'published': at,
         },
     };
     final texts = {
@@ -417,7 +469,8 @@ class VideoLanguages {
           told.update(key, (n) => n + 1, ifAbsent: () => 1);
           if (!passes(spoken, language, listed: item.title)) return null;
           kept++;
-          final shown = spoken == null || spoken.title.isEmpty || spoken.title == item.title ? line : jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
+          final titled = spoken == null || spoken.title.isEmpty || spoken.title == item.title ? line : jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
+          final shown = _withFacts(titled, item.id);
           return (shown, heard: spoken!.heard);
         })));
         yield* Stream.fromIterable(ready());

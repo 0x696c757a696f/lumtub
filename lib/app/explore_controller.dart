@@ -374,8 +374,11 @@ extension ExploreActions on AppController {
 
     _update(() => explore = VideoListLoader(
           () {
-            Listing search(List<String> queries) =>
-                queries.length > 1 ? repository.searchMix(queries, sp: sp, region: region) : repository.search(queries.single, sp: sp, region: region);
+            // YouTube ranks a search by the language it is asked in.
+            final hl = spoken ? language.youtubeHl : null;
+            Listing search(List<String> queries) => queries.length > 1
+                ? repository.searchMix(queries, sp: sp, region: region, hl: hl)
+                : repository.search(queries.single, sp: sp, region: region, hl: hl);
             final queries = mix ? exploreMixQueries(exploreSection) : [query];
             // The zones' search words are Chinese, which finds Chinese
             // videos: they are put in the language picked, else the

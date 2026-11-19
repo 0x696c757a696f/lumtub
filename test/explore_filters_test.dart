@@ -181,6 +181,10 @@ void main() {
     // Keywords a translation word by word takes in another sense go by their English.
     expect(searchPivots['体育'], 'sports');
     expect(englishSearchOf('后端 backend Java Go'), 'back-end backend Java Go');
+    // The English beside a keyword is its English, put into other languages too.
+    expect(englishSearchOf('基督宗教 Christianity'), 'christianity');
+    expect(translatesInto(searchPhrasesOf(englishSearchOf('基督宗教 Christianity')).single, ExploreLanguage.it), isTrue);
+    expect(englishSearchOf('天主教 Catholic'), 'catholic');
     // A user's own keywords, which no pivot covers, go into English first.
     expect(unpivotedPhrasesOf('攀岩 直播 bouldering 中世纪 历史'), ['攀岩', '中世纪', '历史']);
     expect(withEnglishOf('攀岩 直播 bouldering 中世纪 历史', ['rock climbing', 'medieval', 'history']), 'rock climbing 直播 bouldering medieval history');

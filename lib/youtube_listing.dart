@@ -22,11 +22,16 @@ class YoutubeListing {
 
   /// The search for [query]; [sp] is YouTube's filter parameter as its
   /// results page URL carries it, [region] the country to search as from.
-  Stream<String> search(String query, {String? sp, String? region}) => _pages('search', {
+  /// [hl] is the language YouTube is asked in, which it ranks results by:
+  /// asked in English, a search for "Cristianesimo" from Italy brought
+  /// English videos first (user log, 2026-11-19: 0 of 240 in Italian).
+  /// Counts and times are then written in that language: views are read
+  /// as a plain number, and how long ago is left out.
+  Stream<String> search(String query, {String? sp, String? region, String? hl}) => _pages('search', {
         'query': query,
         // The URL form is encoded twice; the API takes it decoded once.
         if (sp != null && sp.isNotEmpty) 'params': Uri.decodeQueryComponent(sp),
-      }, region: region);
+      }, region: region, hl: hl);
 
   /// The uploads, Shorts, live streams or playlists of channel
   /// [channelId].
@@ -54,7 +59,7 @@ class YoutubeListing {
         return read;
       });
 
-  Stream<String> _pages(String endpoint, Map<String, Object> first, {String? region, Set<String>? followed, String? sort}) async* {
+  Stream<String> _pages(String endpoint, Map<String, Object> first, {String? region, Set<String>? followed, String? sort, String? hl}) async* {
     final seen = <String>{};
     // Rows (a channel's playlist sections) show their first few items;
     // each whole row is read after the page that showed it.
@@ -77,7 +82,7 @@ class YoutubeListing {
                 'client': {
                   'clientName': 'WEB',
                   'clientVersion': YoutubeWeb.clientVersion,
-                  'hl': 'en',
+                  'hl': hl ?? 'en',
                   'timeZone': 'UTC',
                   'utcOffsetMinutes': 0,
                   if (region != null && region.isNotEmpty) 'gl': region.toUpperCase(),
@@ -117,7 +122,7 @@ class YoutubeListing {
     }
     for (final shelf in shelves) {
       try {
-        await for (final line in _pages(endpoint, shelf, region: region, followed: followed)) {
+        await for (final line in _pages(endpoint, shelf, region: region, followed: followed, hl: hl)) {
           final id = (jsonDecode(line) as Map)['id'];
           if (id is String && !seen.add(id)) continue;
           yield line;

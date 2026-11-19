@@ -16,39 +16,22 @@ Americas faith traditions
 Android iOS Flutter development
 Aristotle philosophy lecture
 Augustine philosophy
-Bayesian statistics lecture
 Bhagavad Gita Upanishads explained
 Bible study
-Biblical Hebrew Koine Greek biblical languages
 Buddhist history history of Buddhism
 Buddhist meditation mindfulness meditation retreat
-Buddhist teaching class
 Buddhist temple
 Byzantine chant
-Byzantine history lecture
 C++ programming tutorial
 CBT cognitive behavioral therapy
 CES MWC expo
-Catholic Bible study
-Catholic Church history
 Catholic homily
-Catholic prayer rosary
 Catholic radio 24/7
-Catholic religious life monastery religious order
-Catholic sacraments
-Catholic saints
-Catholic theology
-China religious culture
 Christian denominations christianity
-Christmas tradition
-Christology lecture
 DEF CON Black Hat talk security conference
 DJ set
 Dead Sea Scrolls apocrypha
 Dota 2 tournament
-Easter tradition
-Eastern Orthodox theology lecture
-Egyptology lecture
 Eid prayer
 Eucharistic adoration
 Europe religious traditions
@@ -57,7 +40,7 @@ Frankfurt School critical theory
 Friday prayer Jumu'ah
 GIS geographic information system course
 Gregorian chant
-Gregorian chant Catholic hymns
+Gregorian chant catholic hymns
 Hebrew Bible Old Testament scholarship
 Hebrew learning
 Hegel philosophy lecture
@@ -70,12 +53,12 @@ Hindu puja ritual
 Hindu swami lecture
 Hindu temple architecture
 Holy Communion service
-Holy Mass catholic
 Holy Week procession
 Holy Week processions
+Holy mass
+Holy mass catholic
 I Ching explained
 Islamic calligraphy geometric art
-Islamic culture
 Islamic history islam
 Islamic lecture khutbah islam
 Islamic philosophy Avicenna Averroes
@@ -88,56 +71,39 @@ Jewish holidays
 Jewish philosophy Maimonides
 Jewish traditions Shabbat
 Kant philosophy lecture
-Latin Ancient Greek lesson
 Liturgy of the Hours
 MV official
-Madhyamaka Yogacara Buddhist philosophy
+Madhyamaka Yogacara buddhist philosophy
 Maimonides Jewish philosophy
-Mariology lecture
 Middle East religious heritage
-New Testament lecture
 New Testament scholarship
 Nietzsche philosophy
-Old Testament lecture
 Orthodox Byzantine chant
 Orthodox Church Fathers patristics
-Orthodox Divine Liturgy orthodox Christianity
-Orthodox icons iconography orthodox Christianity
-Orthodox monasticism Mount Athos
-Orthodox theology orthodox Christianity
+Orthodox monasticism mount athos
 PC hardware graphics card CPU
-Pentecostal charismatic
 PhD defense
 Plato philosophy lecture
 Presocratic philosophers
 Protestant Reformation history
-Protestant christianity sermon
 Quran class
 Quran radio 24/7
 Quran recitation
-Reformed theology presbyterian
-Renaissance art history lecture
-Roman law lecture
 Rust programming
 Shabbat service
 South Asia religious culture
 Southeast Asia religious culture
-Stoicism lecture
 Sufi music qawwali
-Sunday church service
 TV series
 Taize prayer
 Talmud class
 Talmud study
 Tao Te Ching Zhuangzi explained
 Tao Te Ching explained
-Taoist temple
 Thomas Aquinas philosophy
 Torah Talmud study
-Trinity theology lecture
 UFC boxing
 Valorant CS2 tournament
-Western literature lecture
 Windows Linux macOS operating systems
 abstract algebra lecture
 academic
@@ -160,6 +126,7 @@ ancient Greek philosophy Plato Aristotle
 ancient Near East religion
 ancient history lecture
 ancient religions Egypt Greece Rome
+anglican
 animal
 animals documentary
 animation anime
@@ -186,14 +153,18 @@ autonomous driving
 aviation airplanes
 back-end backend Java Go
 baking
+baptist
 baseball MLB
 baseball rugby MLB NFL
 basic medical sciences medical school lecture
 basketball NBA
+bayesian statistics lecture
 beginner explained
 behavioral economics lecture
 behind the scenes
 believer atheist conversation
+bible study
+biblical Hebrew Koine Greek biblical languages
 biblical archaeology
 biblical archaeology lecture
 biblical archaeology religious history
@@ -219,11 +190,13 @@ buddhist master dharma talk
 buddhist music buddhist chanting
 buddhist studies
 buddhist sutras explained
+buddhist teaching class
 business analysis case study
 business interview
 business podcast
 business strategy lecture strategic management
 busking street performer
+byzantine history lecture
 calculus lecture
 call-in show
 calligraphy
@@ -241,6 +214,14 @@ career skills
 cars
 catechism class
 cathedral architecture church
+catholic
+catholic bible study
+catholic church history
+catholic prayer rosary
+catholic religious life monastery religious order
+catholic sacraments
+catholic saints
+catholic theology
 celebrities entertainment celebrity
 cell biology lecture
 challenge
@@ -251,12 +232,16 @@ chemistry experiment
 chemistry lecture
 chemistry materials science research seminar new cutting-edge
 china news
+china religious culture
 chinese Buddhism buddhist master dharma talk
 chinese animation
 chinese archaeology lecture
 chinese art history lecture
 chinese classics traditional culture
 chinese mythology legends mythology
+christianity
+christmas tradition
+christology lecture
 church
 church choir
 church history
@@ -302,13 +287,14 @@ condensed matter physics lecture
 condensed matter physics seminar superconductivity
 conference symposium
 confucianism Analects of Confucius
-confucianism taoism Chinese philosophy
+confucianism taoism chinese philosophy
 congress parliament
 console games PS5 Switch
 console gaming
 constitutional law lecture
 control theory lecture
 cooking
+coptic Orthodox
 corporate finance lecture
 cosmology lecture
 cosmology seminar new results dark energy matter
@@ -355,6 +341,9 @@ drawing painting artwork
 early Christianity history
 earth science geology climate
 earth science geology lecture
+easter tradition
+eastern Orthodox theology lecture
+eastern catholic Byzantine
 ecclesiology lecture
 ecology environment
 ecology lecture
@@ -365,6 +354,7 @@ economy analysis
 ecumenical dialogue
 ecumenism ecumenical theology lecture
 educational psychology lecture
+egyptology lecture
 electric vehicles EV
 electromagnetism lecture
 electronic engineering electrical engineering lecture
@@ -381,6 +371,7 @@ eschatology lecture
 esports commentary
 ethics moral philosophy lecture
 ethnomusicology lecture
+evangelical
 evolutionary biology lecture
 evolutionary biology research talk new findings
 ex-believer deconversion story
@@ -433,6 +424,7 @@ health talk
 heat transfer thermal engineering lecture
 highlights
 hiking
+hinduism
 historical linguistics lecture
 historiography lecture
 history documentary
@@ -472,7 +464,10 @@ introduction to world religions course
 investigative journalism
 investing
 investing personal finance
+islam
+islamic culture
 jazz radio 24/7
+judaism
 jurisprudence philosophy of law
 just chatting
 kids education kids learning
@@ -482,11 +477,12 @@ language learning
 language learning english japanese
 laptop tablet review
 large language models research talk paper
+latin ancient Greek lesson
 launch event
 launch observatory
 law lecture
 lecture
-lecture Chinese history
+lecture chinese history
 lecture course
 lecture open lecture
 lifestyle
@@ -500,6 +496,7 @@ liturgy
 lofi hip hop radio
 lofi radio 24/7
 logic philosophy lecture
+lutheran
 machine learning course lecture
 machine learning research talk paper NeurIPS ICML ICLR artificial intelligence cutting-edge
 macroeconomics lecture
@@ -508,6 +505,7 @@ management lecture
 manufacturing engineering lecture
 marathon running
 marine biology lecture
+mariology lecture
 marketing lecture course
 martial arts UFC boxing
 match esports tournament
@@ -532,6 +530,7 @@ meditation retreat
 metaphysics God argument
 metaphysics lecture
 meteorology climate science lecture weather
+methodist
 metro bus subway
 microbiology lecture
 microeconomics lecture
@@ -572,6 +571,7 @@ neurology lecture
 neuropsychology lecture
 neuroscience lecture
 neuroscience research seminar brain new findings
+new Testament lecture
 news
 news documentary
 nuclear fusion energy
@@ -583,6 +583,7 @@ nutrition science lecture
 obstetrics gynecology lecture obstetrics and gynecology
 ocean
 oceanography lecture
+old Testament lecture
 oncology lecture
 online class
 online games MMO
@@ -594,6 +595,11 @@ optics lecture
 orbital mechanics lecture
 organ recital
 organic chemistry lecture
+oriental orthodox church
+orthodox Christianity
+orthodox divine liturgy orthodox Christianity
+orthodox icons iconography orthodox Christianity
+orthodox theology orthodox Christianity
 outdoors
 outfits makeup fashion beauty
 painting artwork
@@ -606,6 +612,7 @@ patristics Church Fathers lecture
 pedagogy education theory lecture
 pediatrics lecture
 penetration testing course
+pentecostal charismatic
 personal finance
 personality psychology lecture
 pets
@@ -648,6 +655,7 @@ product launch keynote
 programming for beginners tutorial beginner
 programming language theory lecture programming languages
 programming tutorial
+protestant christianity sermon
 psychiatry lecture
 psychoanalysis Freud Jung lecture
 psychology lecture
@@ -671,6 +679,7 @@ rationalism empiricism Descartes Hume
 reading book review
 real analysis lecture mathematical analysis
 real estate housing market
+reformed theology presbyterian
 rehabilitation physical therapy rehab
 reinforcement learning research talk paper
 relationships dating
@@ -704,6 +713,7 @@ religious sculpture
 religious studies academic
 religious studies lecture course
 religious wedding funeral rites
+renaissance art history lecture
 restaurant kitchen
 restaurant review food
 reverse engineering binary exploitation
@@ -715,6 +725,7 @@ robotics course lecture
 robotics research talk RSS CoRL paper robot cutting-edge
 rock music rock metal
 rocket propulsion lecture
+roman law lecture
 rosary
 round table discussion roundtable
 running marathon
@@ -737,6 +748,7 @@ semiconductor chip design lecture semiconductors chips
 sermon
 sermon radio 24/7
 sermon testimony faith sharing
+shinto
 ships ship
 shopping haul
 shrine
@@ -758,7 +770,7 @@ sociology of religion lecture
 software development software engineering
 song requests
 space
-speech Pope homily
+speech pope homily
 spiritual theology mysticism lecture
 sports
 sports training coaching
@@ -770,11 +782,14 @@ startup entrepreneur
 statistics lecture
 stock market
 stocks US stocks stock
+stoicism lecture
 stream
 street food
 structural engineering lecture
 study methods study tips
 study with me
+sufism
+sunday church service
 sunday worship
 supercars luxury cars supercar
 surgery lecture
@@ -788,6 +803,7 @@ talk show
 taoism culture
 taoism culture taoist temple
 taoism spiritual practice taoist inner alchemy wellness
+taoist temple
 tech
 tech news
 tech talk
@@ -803,8 +819,9 @@ theology debate
 theology lecture
 theology research conference paper religious studies new scholarship
 theory of computation lecture
-theravada Buddhism Theravada
+theravada Buddhism theravada
 thermodynamics statistical mechanics lecture
+tibetan Buddhism
 topology geometry lecture
 tournament commentary
 traditional Chinese medicine lecture
@@ -814,6 +831,7 @@ train cam railway
 travel
 travel guide
 travel vlog
+trinity theology lecture
 unboxing review
 universe astronomy
 university
@@ -822,6 +840,7 @@ urban planning lecture
 urban sociology lecture
 vaccine infectious disease research talk
 variety show
+vatican News
 video editing Premiere
 virtual concert
 vlog daily vlog
@@ -833,6 +852,7 @@ war conflict news
 weather severe
 web security OWASP lecture
 weight loss
+western literature lecture
 western pop pop music
 white noise
 wilderness survival survival
@@ -848,5 +868,5 @@ worship music
 worship praise
 writing
 yoga philosophy meditation Hindu
-zen Buddhism Zen
+zen Buddhism zen
 zoology lecture

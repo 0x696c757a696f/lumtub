@@ -763,16 +763,16 @@ jobs:
           # main archive can crawl (47 kB/s, 17 minutes for the package lists
           # on 2026-11-19). Start on the Azure mirror, go back to the main
           # archive if it fails, and give every attempt a time limit so a
-          # stalled mirror can't hold the job. arm64 uses ports.ubuntu.com,
-          # which none of this touches.
+          # stalled mirror can't hold the job. arm64 (ports.ubuntu.com) has an
+          # Azure mirror too: azure.ports.ubuntu.com.
           echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80retries
-          sed -i 's#http://\(archive\|security\).ubuntu.com#http://azure.archive.ubuntu.com#' /etc/apt/sources.list
+          sed -i -e 's#http://\(archive\|security\).ubuntu.com#http://azure.archive.ubuntu.com#' -e 's#http://ports.ubuntu.com#http://azure.ports.ubuntu.com#' /etc/apt/sources.list
           cat > /usr/local/bin/apt-install <<'SH'
           #!/bin/sh
           for attempt in 1 2 3; do
             timeout 300 apt-get update && timeout 900 apt-get install -y --no-install-recommends "$@" && exit 0
             if [ "$attempt" = 1 ]; then
-              sed -i 's#http://azure.archive.ubuntu.com#http://archive.ubuntu.com#' /etc/apt/sources.list
+              sed -i 's#http://azure\.\(archive\|ports\)\.ubuntu\.com#http://\1.ubuntu.com#' /etc/apt/sources.list
             fi
             sleep 10
           done

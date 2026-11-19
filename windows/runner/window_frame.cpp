@@ -284,10 +284,10 @@ static bool TransparencyEffectsOn() {
 
 EncodableValue WindowFrame::SetDesktopGlass(bool on, bool dark, bool blur, DWORD tint) {
   glass_ = on;
-  // Three quarters of the skin's colour over the blur: Windows 10's
-  // accent blurs little, so less would leave the words of the windows
-  // behind readable. Flutter's own tint goes on top.
-  glass_frost_ = (tint & 0x00FFFFFFu) | 0xC0000000u;
+  // The skin's colour over the blur, as thick as Dart's alpha says: it
+  // follows 透明度, since Windows 10's accent blurs little on its own.
+  // Flutter's own tint goes on top.
+  glass_frost_ = tint;
   glass_blur_ = on && blur && TransparencyEffectsOn();
   ApplyMargins();
   if (on) {

@@ -55,7 +55,8 @@ abstract final class WindowGlass {
 
   /// Asks the runner to let the desktop through, or to stop; [dark] shades
   /// the system's own blur, [blur] asks for one, [tint] is the skin's page
-  /// colour, which frosts the blur where the system lays a colour over it.
+  /// colour at the alpha the blur is frosted with, where the system lays a
+  /// colour over it (Windows 10).
   /// The answer lands in [state]; asking the same again does nothing.
   static Future<void> apply({required bool on, required bool dark, required bool blur, Color tint = const Color(0xFF000000)}) async {
     final ask = (on: on, dark: dark, blur: blur, tint: tint.toARGB32());

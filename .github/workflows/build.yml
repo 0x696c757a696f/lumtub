@@ -1272,13 +1272,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: iOS - newest Xcode
-        # The newest release (not beta) Xcode the runner has, so the plugin's
-        # Swift is built by the newest Swift compiler there.
+      - name: iOS - Xcode and Swift
+        # The runner image's default Xcode, as releases are built with. The
+        # newest one there (26.3) came with Chinese text shown as boxes.
         run: |
-          set -euo pipefail
-          xcode=$(ls -d /Applications/Xcode_*.app 2>/dev/null | grep -Eiv 'beta|_rc|release_candidate' | sort -V | tail -1 || true)
-          if [ -n "$xcode" ]; then sudo xcode-select -s "$xcode/Contents/Developer"; fi
           xcodebuild -version
           swift --version
 

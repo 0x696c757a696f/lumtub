@@ -238,10 +238,12 @@ class LibassLook {
 /// The second subtitle as an ASS file in its own font, color, opacity,
 /// size, outline and background, which mpv cannot set apart from the first
 /// subtitle's. Its letters are [secondEm] units at secondary-sub-scale 1;
-/// [outline] is the outline's width for a letter one unit wide.
-String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font, MainUnder? main, double aspect = 16 / 9}) {
+/// [outline] is the outline's width for a letter one unit wide. [scale]
+/// sizes everything in it, for a libmpv without secondary-sub-scale.
+String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font, MainUnder? main, double aspect = 16 / 9, double scale = 1}) {
   font ??= settings.secondaryFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.secondaryFont);
-  final size = secondEm * settings.secondaryScale * LibassLook.lineEms(font);
+  final unit = secondEm * scale;
+  final size = unit * settings.secondaryScale * LibassLook.lineEms(font);
   String colour(int rgb, double opacity) {
     final alpha = (255 * (1 - opacity.clamp(0, 1))).round();
     final r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF;
@@ -258,7 +260,7 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
   final opacity = settings.secondaryOpacity;
   final box = settings.subtitleBackground;
   final edge = box ? colour(0, 0.67 * opacity) : colour(0, opacity);
-  final width = box ? secondEm * 0.12 : outline * secondEm;
+  final width = box ? unit * 0.12 : outline * unit;
   final out = StringBuffer()
     ..writeln('[Script Info]')
     ..writeln('ScriptType: v4.00+')
@@ -289,10 +291,10 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
   // however tall its fonts really draw, whatever the player's size. One
   // event for each stretch of time in which the same lines show, so libass
   // never stacks two events of this copy on each other.
-  final mainSize = secondEm * settings.subtitleScale * LibassLook.lineEms(main.font);
+  final mainSize = unit * settings.subtitleScale * LibassLook.lineEms(main.font);
   final mainTag = '{\\fn${main.font.replaceAll(RegExp(r'[{}\\,]'), ' ')}\\fs${mainSize.toStringAsFixed(2)}\\b${settings.subtitleBold ? 1 : 0}}';
   // The gap the Flutter view leaves between the two, as a line that tall.
-  final gap = '{\\alpha&HFF&\\fs${(secondEm * 6 / 32).toStringAsFixed(2)}}\\h';
+  final gap = '{\\alpha&HFF&\\fs${(unit * 6 / 32).toStringAsFixed(2)}}\\h';
   // Broken as Lumtub's copy of the main subtitle breaks them, blank lines
   // left out as there.
   final mainText = [for (final cue in main.cues) ass(LibassLayout.wrap(cue.text, main.room, font: main.wrapFont, bold: settings.subtitleBold).replaceAll(RegExp(r'\n\s*\n'), '\n'))];

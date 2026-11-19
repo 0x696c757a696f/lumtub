@@ -841,6 +841,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The subtitle options last sent to libmpv for the player's size.
   Map<String, String> _libassSent = {};
   Timer? _libassLookTimer;
+  /// The player whose libmpv was asked whether it has secondary-sub-scale
+  /// (mpv 0.42 on; the iOS and Android builds are older), and the answer.
+  /// Without it the second subtitle's copy carries its own size.
+  Player? _secondScaleAsked;
+  bool _secondScaleMissing = false;
   /// Second subtitles drawn in their own font and color: each copy's track
   /// id, with the track it copies and the style it has.
   final Map<String, ({String source, String key, bool second, String file})> _subtitleCopies = {};

@@ -85,7 +85,11 @@ extension LibassLookActions on AppController {
       options['sub-font'] = family;
       options['sub-font-size'] = look.fontSize(family).toStringAsFixed(1);
     }
-    if (_subtitleCopies[secondaryTrackId]?.second ?? false) options['secondary-sub-scale'] = (look.em / secondEm).toStringAsFixed(3);
+    if (_secondScaleMissing) {
+      options.remove('secondary-sub-scale');
+    } else if (_subtitleCopies[secondaryTrackId]?.second ?? false) {
+      options['secondary-sub-scale'] = (look.em / secondEm).toStringAsFixed(3);
+    }
     for (final MapEntry(:key, :value) in options.entries) {
       if (_libassSent[key] == value) continue;
       try {
@@ -126,7 +130,23 @@ extension LibassLookActions on AppController {
       _videoAspect.toStringAsFixed(2),
       // The outline is in the copy's letters, which follow the player's size.
       (look.em > 0 ? look.border / look.em * 100 : 0).round(),
+      // Its letters' size where libmpv cannot scale it.
+      if (_secondScaleMissing) (_secondCopyScale * 100).round(),
     ].join('|');
+  }
+
+  /// How much bigger than [secondEm] the copy's letters are drawn without
+  /// secondary-sub-scale: mpv older than 0.42 scales an ASS second
+  /// subtitle by the main one's sub-scale instead.
+  double get _secondCopyScale => _secondScaleMissing ? _libassLook.em / secondEm / max(settings.subtitleScale, 0.01) : 1;
+
+  /// Asks [player]'s libmpv once whether it has secondary-sub-scale.
+  Future<void> _askSecondScale(Player player, NativePlayer platform) async {
+    if (identical(_secondScaleAsked, player)) return;
+    final missing = (await platform.getProperty('secondary-sub-scale')).isEmpty;
+    _secondScaleAsked = player;
+    if (missing != _secondScaleMissing) logInfo(missing ? 'libmpv has no secondary-sub-scale: the second subtitle carries its own size' : 'libmpv has secondary-sub-scale');
+    _secondScaleMissing = missing;
   }
 
   /// The track the main subtitle shows the lines of, or 'no'.
@@ -184,6 +204,8 @@ extension LibassLookActions on AppController {
     final platform = player.platform;
     bool current() => identical(player, this.player) && serial == _copySerial;
     if (platform is! NativePlayer || !current()) return;
+    await _askSecondScale(player, platform);
+    if (!current()) return;
     for (final second in [false, true]) {
       final shown = await platform.getProperty(second ? 'secondary-sid' : 'sid');
       if (!current()) return;
@@ -235,7 +257,7 @@ extension LibassLookActions on AppController {
       final mainCues = mainTrack == null ? const <SubtitleCue>[] : await _trackCues(platform, mainTrack);
       if (!current()) return source;
       final main = (cues: mainCues, font: _mainFont, room: _roomEms(settings.subtitleScale).toDouble(), wrapFont: settings.subtitleFont);
-      text = secondAss(cues, settings, outline: look.em > 0 ? look.border / look.em : 0, room: room.toDouble(), font: font, main: main, aspect: _videoAspect);
+      text = secondAss(cues, settings, outline: look.em > 0 ? look.border / look.em : 0, room: room.toDouble(), font: font, main: main, aspect: _videoAspect, scale: _secondCopyScale);
     } else {
       final room = _roomEms(settings.subtitleScale).toDouble();
       final wrapped = [for (final c in cues) LibassLayout.wrap(c.text, room, font: settings.subtitleFont, bold: settings.subtitleBold)];

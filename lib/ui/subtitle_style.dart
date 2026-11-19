@@ -9,7 +9,25 @@ import 'pages/watch_page.dart' show subtitleViewFor;
 
 /// Font families this system installs, offered before a typed name, each
 /// with the name to translate, or null for one shown as it is written.
-List<(String, String?)> get subtitleFonts => Platform.isMacOS ? _macFonts : Platform.isLinux ? _linuxFonts : _windowsFonts;
+List<(String, String?)> get subtitleFonts => Platform.isMacOS ? _macFonts : Platform.isIOS ? _iosFonts : Platform.isLinux ? _linuxFonts : _windowsFonts;
+
+/// [font] as this system draws it: the default (Microsoft YaHei, saved the
+/// same everywhere) is another font off Windows.
+String _drawnFont(String font) => Platform.isIOS || Platform.isMacOS || Platform.isLinux ? PlayerSettings.fontForThisSystem(font) : font;
+
+/// libmpv draws the app's own Noto Sans SC unless another font is picked;
+/// no 'Default' here, as libass then looks for a system font through Core
+/// Text, which found none for Chinese on iOS 27.
+const _iosFonts = [
+  ('Noto Sans SC', null),
+  ('PingFang SC', 'PingFang'),
+  ('PingFang TC', 'PingFang (Traditional)'),
+  ('Hiragino Sans', null),
+  ('Apple SD Gothic Neo', null),
+  ('Helvetica Neue', null),
+  ('Arial', null),
+  ('Georgia', null),
+];
 
 const _macFonts = [
   ('', 'Default'),
@@ -61,6 +79,7 @@ const subtitleColors = [
 ];
 
 String subtitleFontLabel(String font) {
+  font = _drawnFont(font);
   for (final (name, label) in subtitleFonts) {
     if (name == font) return label == null ? name : tr(label);
   }
@@ -72,6 +91,7 @@ String subtitleColorLabel(int color) => '#${color.toRadixString(16).padLeft(6, '
 /// A preset family, or one typed in.
 Future<void> pickSubtitleFont(BuildContext context, String current, ValueChanged<String> onSelected) async {
   const custom = '\u0000custom';
+  current = _drawnFont(current);
   final known = subtitleFonts.any((f) => f.$1 == current);
   final chosen = await showDialog<String>(
     context: context,

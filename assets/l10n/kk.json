@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Қауымдастық жазбаларын жүктеу мүмкін болмады: {0}",
   "Couldn't load comments: {0}": "Пікірлерді жүктеу мүмкін болмады: {0}",
   "Couldn't load these subtitles": "Бұл субтитрлерді жүктеу мүмкін болмады",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Аударма қызметтері қазір бос емес. Бұл субтитрлерді бір минуттан кейін қайта көріңіз.",
   "Couldn't load: {0}": "Жүктеу мүмкін болмады: {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store сілтемесін ашу мүмкін болмады.",
   "Couldn't open the browser": "Браузерді ашу мүмкін болмады",

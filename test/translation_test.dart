@@ -184,8 +184,7 @@ void main() {
 
   testWidgets('沉浸式翻译 shows foreign text with its translation unasked', (tester) async {
     final fake = _Fake();
-    final controller = AppController()..translator = fake
-      ..textTranslator = fake;
+    final controller = AppController()..translator = fake;
     controller.preferences = controller.preferences.copyWith(translateLanguage: 'ja', immersiveLanguage: 'zh-CN', immersiveTranslation: true, bilingualTranslation: false);
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Column(children: [
       Translatable(controller: controller, text: 'Hello there', builder: (context, text) => Text(text)),
@@ -204,8 +203,7 @@ void main() {
 
   testWidgets('a tap turns Traditional Chinese into Simplified even when the two count as one', (tester) async {
     final fake = _Fake();
-    final controller = AppController()..translator = fake
-      ..textTranslator = fake;
+    final controller = AppController()..translator = fake;
     controller.preferences = controller.preferences.copyWith(translateLanguage: 'zh-CN', immersiveLanguage: 'zh-CN', immersiveTranslation: true, bilingualTranslation: false);
     expect(controller.preferences.chineseAsOne, isTrue);
     const text = '這樣的國家還會說這些話';
@@ -223,8 +221,7 @@ void main() {
 
   testWidgets('translates on tap, shows the original again and reports errors', (tester) async {
     final fake = _Fake();
-    final controller = AppController()..translator = fake
-      ..textTranslator = fake;
+    final controller = AppController()..translator = fake;
     controller.preferences = controller.preferences.copyWith(translateLanguage: 'zh-CN');
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(controller: controller, text: 'Hello', builder: (context, text) => Text(text)))));
     expect(find.text('Hello'), findsOneWidget);
@@ -257,7 +254,6 @@ void main() {
 
     final failing = _Fake()..fail = true;
     controller.translator = failing;
-    controller.textTranslator = failing;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(key: const ValueKey('b'), controller: controller, text: 'Other', builder: (context, text) => Text(text)))));
     await tester.tap(find.text('Translation'));
     await tester.pump();

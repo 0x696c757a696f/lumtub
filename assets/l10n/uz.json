@@ -876,6 +876,7 @@
   "Couldn't load community posts: {0}": "Hamjamiyat postlarini yuklab bo'lmadi: {0}",
   "Couldn't load comments: {0}": "Izohlarni yuklab bo'lmadi: {0}",
   "Couldn't load these subtitles": "Bu taglavhani yuklab bo'lmadi",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Tarjima xizmatlari hozir band. Bu subtitrlarni bir daqiqadan keyin qayta urinib ko‘ring.",
   "Couldn't load: {0}": "Yuklab bo'lmadi: {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store havolasini ochib bo'lmadi.",
   "Couldn't open the browser": "Brauzerni ochib bo'lmadi",

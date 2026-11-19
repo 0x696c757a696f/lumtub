@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "بارگیری مطالب انجمن ممکن نشد: {0}",
   "Couldn't load comments: {0}": "بارگیری نظرها ممکن نشد: {0}",
   "Couldn't load these subtitles": "بارگیری این زیرنویس ممکن نشد",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "سرویس‌های ترجمه اکنون مشغول هستند. یک دقیقه دیگر دوباره این زیرنویس را امتحان کنید.",
   "Couldn't load: {0}": "بارگیری ممکن نشد: {0}",
   "Couldn't open the Microsoft Store link.": "باز کردن پیوند Microsoft Store ممکن نشد.",
   "Couldn't open the browser": "باز کردن مرورگر ممکن نشد",

@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "சமூக இடுகைகளை ஏற்ற முடியவில்லை: {0}",
   "Couldn't load comments: {0}": "கருத்துகளை ஏற்ற முடியவில்லை: {0}",
   "Couldn't load these subtitles": "இந்த வசனங்களை ஏற்ற முடியவில்லை",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "மொழிபெயர்ப்பு சேவைகள் இப்போது பரபரப்பாக உள்ளன. ஒரு நிமிடம் கழித்து இந்த வசனங்களை மீண்டும் முயலவும்.",
   "Couldn't load: {0}": "ஏற்ற முடியவில்லை: {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store இணைப்பைத் திறக்க முடியவில்லை.",
   "Couldn't open the browser": "உலாவியைத் திறக்க முடியவில்லை",

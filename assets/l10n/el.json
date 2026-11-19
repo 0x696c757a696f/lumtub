@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Δεν ήταν δυνατή η φόρτωση των αναρτήσεων κοινότητας: {0}",
   "Couldn't load comments: {0}": "Δεν ήταν δυνατή η φόρτωση των σχολίων: {0}",
   "Couldn't load these subtitles": "Δεν ήταν δυνατή η φόρτωση αυτών των υποτίτλων",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Οι υπηρεσίες μετάφρασης είναι απασχολημένες αυτή τη στιγμή. Δοκιμάστε ξανά αυτούς τους υπότιτλους σε ένα λεπτό.",
   "Couldn't load: {0}": "Δεν ήταν δυνατή η φόρτωση: {0}",
   "Couldn't open the Microsoft Store link.": "Δεν ήταν δυνατό το άνοιγμα του συνδέσμου του Microsoft Store.",
   "Couldn't open the browser": "Δεν ήταν δυνατό το άνοιγμα του προγράμματος περιήγησης",

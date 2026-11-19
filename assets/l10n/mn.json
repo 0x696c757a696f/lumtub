@@ -876,6 +876,7 @@
   "Couldn't load community posts: {0}": "Нийгэмлэгийн нийтлэлийг ачаалж чадсангүй: {0}",
   "Couldn't load comments: {0}": "Сэтгэгдлийг ачаалж чадсангүй: {0}",
   "Couldn't load these subtitles": "Энэ хадмалыг ачаалж чадсангүй",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Орчуулгын үйлчилгээ одоо завгүй байна. Эдгээр хадмалыг нэг минутын дараа дахин оролдоно уу.",
   "Couldn't load: {0}": "Ачаалж чадсангүй: {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store-ийн холбоосыг нээж чадсангүй.",
   "Couldn't open the browser": "Хөтчийг нээж чадсангүй",

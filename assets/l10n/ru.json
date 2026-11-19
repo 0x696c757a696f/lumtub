@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Не удалось загрузить публикации сообщества: {0}",
   "Couldn't load comments: {0}": "Не удалось загрузить комментарии: {0}",
   "Couldn't load these subtitles": "Не удалось загрузить эти субтитры",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Службы перевода сейчас перегружены. Попробуйте эти субтитры снова через минуту.",
   "Couldn't load: {0}": "Не удалось загрузить: {0}",
   "Couldn't open the Microsoft Store link.": "Не удалось открыть ссылку Microsoft Store.",
   "Couldn't open the browser": "Не удалось открыть браузер",

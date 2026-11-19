@@ -878,6 +878,7 @@
   "Couldn't load community posts: {0}": "No s'han pogut carregar les publicacions de la comunitat: {0}",
   "Couldn't load comments: {0}": "No s'han pogut carregar els comentaris: {0}",
   "Couldn't load these subtitles": "No s'han pogut carregar aquests subtítols",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Els serveis de traducció estan ocupats ara mateix. Torneu a provar aquests subtítols d'aquí a un minut.",
   "Couldn't load: {0}": "No s'ha pogut carregar: {0}",
   "Couldn't open the Microsoft Store link.": "No s'ha pogut obrir l'enllaç de Microsoft Store.",
   "Couldn't open the browser": "No s'ha pogut obrir el navegador",

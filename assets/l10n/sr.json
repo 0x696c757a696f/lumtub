@@ -878,6 +878,7 @@
   "Couldn't load community posts: {0}": "Објаве заједнице нису учитане: {0}",
   "Couldn't load comments: {0}": "Коментари нису учитани: {0}",
   "Couldn't load these subtitles": "Ови титлови нису учитани",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Услуге превођења су тренутно заузете. Покушајте поново са овим титловима за минут.",
   "Couldn't load: {0}": "Није учитано: {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store веза није отворена.",
   "Couldn't open the browser": "Прегледач није отворен",

@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Det gick inte att läsa in communityinlägg: {0}",
   "Couldn't load comments: {0}": "Det gick inte att läsa in kommentarer: {0}",
   "Couldn't load these subtitles": "Det gick inte att läsa in de här undertexterna",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Översättningstjänsterna är upptagna just nu. Försök med de här undertexterna igen om en minut.",
   "Couldn't load: {0}": "Det gick inte att läsa in: {0}",
   "Couldn't open the Microsoft Store link.": "Det gick inte att öppna länken till Microsoft Store.",
   "Couldn't open the browser": "Det gick inte att öppna webbläsaren",

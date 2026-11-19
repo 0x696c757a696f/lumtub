@@ -897,6 +897,7 @@
   "Couldn't load community posts: {0}": "无法加载社区帖子：{0}",
   "Couldn't load comments: {0}": "无法加载评论：{0}",
   "Couldn't load these subtitles": "无法加载这条字幕",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "翻译服务现在太忙，请一分钟后再试这条字幕。",
   "Couldn't load: {0}": "无法加载：{0}",
   "Couldn't open the Microsoft Store link.": "无法打开 Microsoft Store 链接。",
   "Couldn't open the browser": "无法打开浏览器",

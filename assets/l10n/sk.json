@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Príspevky komunity sa nepodarilo načítať: {0}",
   "Couldn't load comments: {0}": "Komentáre sa nepodarilo načítať: {0}",
   "Couldn't load these subtitles": "Tieto titulky sa nepodarilo načítať",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Prekladové služby sú teraz vyťažené. Skúste tieto titulky znova o minútu.",
   "Couldn't load: {0}": "Nepodarilo sa načítať: {0}",
   "Couldn't open the Microsoft Store link.": "Odkaz na Microsoft Store sa nepodarilo otvoriť.",
   "Couldn't open the browser": "Prehliadač sa nepodarilo otvoriť",

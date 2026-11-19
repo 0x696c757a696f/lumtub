@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "A közösségi bejegyzések nem tölthetők be: {0}",
   "Couldn't load comments: {0}": "A hozzászólások nem tölthetők be: {0}",
   "Couldn't load these subtitles": "Ez a felirat nem tölthető be",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "A fordítószolgáltatások most túlterheltek. Próbáld újra ezt a feliratot egy perc múlva.",
   "Couldn't load: {0}": "Nem tölthető be: {0}",
   "Couldn't open the Microsoft Store link.": "A Microsoft Store hivatkozása nem nyitható meg.",
   "Couldn't open the browser": "A böngésző nem nyitható meg",

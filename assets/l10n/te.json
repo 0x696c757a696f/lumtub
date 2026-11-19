@@ -876,6 +876,7 @@
   "Couldn't load community posts: {0}": "కమ్యూనిటీ పోస్ట్‌లను లోడ్ చేయలేకపోయింది: {0}",
   "Couldn't load comments: {0}": "వ్యాఖ్యలను లోడ్ చేయలేకపోయింది: {0}",
   "Couldn't load these subtitles": "ఈ ఉపశీర్షికలను లోడ్ చేయలేకపోయింది",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "అనువాద సేవలు ప్రస్తుతం బిజీగా ఉన్నాయి. ఒక నిమిషం తర్వాత ఈ ఉపశీర్షికలను మళ్లీ ప్రయత్నించండి.",
   "Couldn't load: {0}": "లోడ్ చేయలేకపోయింది: {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store లింక్‌ను తెరవలేకపోయింది.",
   "Couldn't open the browser": "బ్రౌజర్‌ను తెరవలేకపోయింది",

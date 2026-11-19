@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Ekki tókst að hlaða færslum samfélagsins: {0}",
   "Couldn't load comments: {0}": "Ekki tókst að hlaða athugasemdum: {0}",
   "Couldn't load these subtitles": "Ekki tókst að hlaða þessum skjátexta",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Þýðingarþjónusturnar eru uppteknar núna. Reyndu þennan texta aftur eftir eina mínútu.",
   "Couldn't load: {0}": "Ekki tókst að hlaða: {0}",
   "Couldn't open the Microsoft Store link.": "Ekki tókst að opna tengil á Microsoft Store.",
   "Couldn't open the browser": "Ekki tókst að opna vafra",

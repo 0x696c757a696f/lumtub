@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Ne eblis ŝargi komunumajn afiŝojn: {0}",
   "Couldn't load comments: {0}": "Ne eblis ŝargi komentojn: {0}",
   "Couldn't load these subtitles": "Ne eblis ŝargi ĉi tiujn subtekstojn",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "La tradukaj servoj nun estas okupataj. Reprovu ĉi tiujn subtekstojn post minuto.",
   "Couldn't load: {0}": "Ne eblis ŝargi: {0}",
   "Couldn't open the Microsoft Store link.": "Ne eblis malfermi la ligilon de Microsoft Store.",
   "Couldn't open the browser": "Ne eblis malfermi la retumilon",

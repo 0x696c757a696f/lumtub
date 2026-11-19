@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "কমিউনিটী পোষ্ট ল'ড কৰিব পৰা নগ'ল: {0}",
   "Couldn't load comments: {0}": "মন্তব্য ল'ড কৰিব পৰা নগ'ল: {0}",
   "Couldn't load these subtitles": "এই ছাবটাইটেল ল'ড কৰিব পৰা নগ'ল",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "অনুবাদ সেৱাসমূহ এতিয়া ব্যস্ত। এক মিনিটৰ পিছত এই উপশিৰোনামবোৰ পুনৰ চেষ্টা কৰক।",
   "Couldn't load: {0}": "ল'ড কৰিব পৰা নগ'ল: {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store লিংক খুলিব পৰা নগ'ল।",
   "Couldn't open the browser": "ব্ৰাউজাৰ খুলিব পৰা নগ'ল",

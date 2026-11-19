@@ -876,6 +876,7 @@
   "Couldn't load community posts: {0}": "समुदाय पोस्टहरू लोड गर्न सकिएन: {0}",
   "Couldn't load comments: {0}": "टिप्पणीहरू लोड गर्न सकिएन: {0}",
   "Couldn't load these subtitles": "यी उपशीर्षक लोड गर्न सकिएन",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "अनुवाद सेवाहरू अहिले व्यस्त छन्। एक मिनेटपछि यी उपशीर्षकहरू फेरि प्रयास गर्नुहोस्।",
   "Couldn't load: {0}": "लोड गर्न सकिएन: {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store लिङ्क खोल्न सकिएन।",
   "Couldn't open the browser": "ब्राउजर खोल्न सकिएन",

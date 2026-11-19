@@ -876,6 +876,7 @@
   "Couldn't load community posts: {0}": "ප්‍රජා පළකිරීම් පූරණය කළ නොහැකි විය: {0}",
   "Couldn't load comments: {0}": "අදහස් පූරණය කළ නොහැකි විය: {0}",
   "Couldn't load these subtitles": "මෙම උපසිරැසි පූරණය කළ නොහැකි විය",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "පරිවර්තන සේවා දැන් කාර්යබහුලයි. විනාඩියකින් මෙම උපසිරැසි නැවත උත්සාහ කරන්න.",
   "Couldn't load: {0}": "පූරණය කළ නොහැකි විය: {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store සබැඳිය විවෘත කළ නොහැකි විය.",
   "Couldn't open the browser": "බ්‍රවුසරය විවෘත කළ නොහැකි විය",

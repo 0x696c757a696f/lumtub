@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Topluluk gönderileri yüklenemedi: {0}",
   "Couldn't load comments: {0}": "Yorumlar yüklenemedi: {0}",
   "Couldn't load these subtitles": "Bu altyazı yüklenemedi",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Çeviri hizmetleri şu anda yoğun. Bu altyazıları bir dakika sonra yeniden deneyin.",
   "Couldn't load: {0}": "Yüklenemedi: {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store bağlantısı açılamadı.",
   "Couldn't open the browser": "Tarayıcı açılamadı",

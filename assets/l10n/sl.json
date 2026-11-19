@@ -878,6 +878,7 @@
   "Couldn't load community posts: {0}": "Objav skupnosti ni bilo mogoče naložiti: {0}",
   "Couldn't load comments: {0}": "Komentarjev ni bilo mogoče naložiti: {0}",
   "Couldn't load these subtitles": "Teh podnapisov ni bilo mogoče naložiti",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Prevajalske storitve so trenutno zasedene. Te podnapise poskusite znova čez minuto.",
   "Couldn't load: {0}": "Nalaganje ni uspelo: {0}",
   "Couldn't open the Microsoft Store link.": "Povezave do trgovine Microsoft Store ni bilo mogoče odpreti.",
   "Couldn't open the browser": "Brskalnika ni bilo mogoče odpreti",

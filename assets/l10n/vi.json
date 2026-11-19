@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Không thể tải bài đăng cộng đồng: {0}",
   "Couldn't load comments: {0}": "Không thể tải bình luận: {0}",
   "Couldn't load these subtitles": "Không thể tải phụ đề này",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Các dịch vụ dịch đang bận. Hãy thử lại phụ đề này sau một phút.",
   "Couldn't load: {0}": "Không thể tải: {0}",
   "Couldn't open the Microsoft Store link.": "Không thể mở liên kết Microsoft Store.",
   "Couldn't open the browser": "Không thể mở trình duyệt",

@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "コミュニティ投稿を読み込めませんでした：{0}",
   "Couldn't load comments: {0}": "コメントを読み込めませんでした：{0}",
   "Couldn't load these subtitles": "この字幕を読み込めませんでした",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "翻訳サービスが混み合っています。1 分ほどしてからこの字幕をもう一度お試しください。",
   "Couldn't load: {0}": "読み込めませんでした：{0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store のリンクを開けませんでした。",
   "Couldn't open the browser": "ブラウザーを開けませんでした",

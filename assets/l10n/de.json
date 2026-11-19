@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Community-Beiträge konnten nicht geladen werden: {0}",
   "Couldn't load comments: {0}": "Kommentare konnten nicht geladen werden: {0}",
   "Couldn't load these subtitles": "Diese Untertitel konnten nicht geladen werden",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Die Übersetzungsdienste sind gerade ausgelastet. Versuche diese Untertitel in einer Minute erneut.",
   "Couldn't load: {0}": "Laden nicht möglich: {0}",
   "Couldn't open the Microsoft Store link.": "Der Microsoft-Store-Link konnte nicht geöffnet werden.",
   "Couldn't open the browser": "Browser konnte nicht geöffnet werden",

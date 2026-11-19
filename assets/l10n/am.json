@@ -876,6 +876,7 @@
   "Couldn't load community posts: {0}": "የማኅበረሰብ ልጥፎችን መጫን አልተቻለም፦ {0}",
   "Couldn't load comments: {0}": "አስተያየቶችን መጫን አልተቻለም፦ {0}",
   "Couldn't load these subtitles": "እነዚህን የትርጉም ጽሑፎች መጫን አልተቻለም",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "የትርጉም አገልግሎቶቹ አሁን ተጨናንቀዋል። እነዚህን የግርጌ ጽሑፎች ከአንድ ደቂቃ በኋላ እንደገና ይሞክሩ።",
   "Couldn't load: {0}": "መጫን አልተቻለም፦ {0}",
   "Couldn't open the Microsoft Store link.": "የ Microsoft Store አገናኙን መክፈት አልተቻለም።",
   "Couldn't open the browser": "አሳሹን መክፈት አልተቻለም",

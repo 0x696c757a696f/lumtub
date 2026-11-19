@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Kogukonna postitusi ei saanud laadida: {0}",
   "Couldn't load comments: {0}": "Kommentaare ei saanud laadida: {0}",
   "Couldn't load these subtitles": "Neid subtiitreid ei saanud laadida",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Tõlketeenused on praegu hõivatud. Proovi neid subtiitreid minuti pärast uuesti.",
   "Couldn't load: {0}": "Ei saanud laadida: {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store'i linki ei saanud avada.",
   "Couldn't open the browser": "Brauserit ei saanud avada",

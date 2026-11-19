@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "تعذّر تحميل منشورات المجتمع: {0}",
   "Couldn't load comments: {0}": "تعذّر تحميل التعليقات: {0}",
   "Couldn't load these subtitles": "تعذّر تحميل هذه الترجمة",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "خدمات الترجمة مشغولة الآن. أعد تجربة هذه الترجمة بعد دقيقة.",
   "Couldn't load: {0}": "تعذّر التحميل: {0}",
   "Couldn't open the Microsoft Store link.": "تعذّر فتح رابط Microsoft Store.",
   "Couldn't open the browser": "تعذّر فتح المتصفح",

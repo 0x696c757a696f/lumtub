@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Չհաջողվեց բեռնել համայնքի գրառումները՝ {0}",
   "Couldn't load comments: {0}": "Չհաջողվեց բեռնել մեկնաբանությունները՝ {0}",
   "Couldn't load these subtitles": "Չհաջողվեց բեռնել այս ենթագրերը",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Թարգմանության ծառայություններն այժմ զբաղված են։ Կրկին փորձեք այս ենթագրերը մեկ րոպեից։",
   "Couldn't load: {0}": "Չհաջողվեց բեռնել՝ {0}",
   "Couldn't open the Microsoft Store link.": "Չհաջողվեց բացել Microsoft Store-ի հղումը։",
   "Couldn't open the browser": "Չհաջողվեց բացել դիտարկիչը",

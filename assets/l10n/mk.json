@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Објавите од заедницата не можеа да се вчитаат: {0}",
   "Couldn't load comments: {0}": "Коментарите не можеа да се вчитаат: {0}",
   "Couldn't load these subtitles": "Овие титлови не можеа да се вчитаат",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Услугите за превод моментално се зафатени. Обидете се повторно со овие преводи за една минута.",
   "Couldn't load: {0}": "Не можеше да се вчита: {0}",
   "Couldn't open the Microsoft Store link.": "Врската до Microsoft Store не можеше да се отвори.",
   "Couldn't open the browser": "Прелистувачот не можеше да се отвори",

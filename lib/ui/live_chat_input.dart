@@ -123,7 +123,7 @@ class ChatMessageTranslation extends StatelessWidget {
     final text = message.emojis.keys.fold(message.text, (text, shortcut) => text.replaceAll(shortcut, ' ')).trim();
     if (text.split('\n').every(done)) return null;
     try {
-      final result = await translateForeignLines(controller.textTranslator, text, language, done);
+      final result = await translateForeignLines(controller.translator, text, language, done);
       return result.trim() == text ? null : result;
     } catch (_) {
       return null;

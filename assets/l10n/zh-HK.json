@@ -896,6 +896,7 @@
   "Couldn't load community posts: {0}": "無法載入社群貼文：{0}",
   "Couldn't load comments: {0}": "無法載入留言：{0}",
   "Couldn't load these subtitles": "無法載入這條字幕",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "翻譯服務目前繁忙，請一分鐘後再試這條字幕。",
   "Couldn't load: {0}": "無法載入：{0}",
   "Couldn't open the Microsoft Store link.": "無法開啟 Microsoft Store 連結。",
   "Couldn't open the browser": "無法開啟瀏覽器",

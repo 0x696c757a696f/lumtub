@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Nuntii communitatis onerari non potuerunt: {0}",
   "Couldn't load comments: {0}": "Commentaria onerari non potuerunt: {0}",
   "Couldn't load these subtitles": "Haec subtitula onerari non potuerunt",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Officia interpretandi nunc occupata sunt. Hos titulos post minutum iterum tempta.",
   "Couldn't load: {0}": "Onerari non potuit: {0}",
   "Couldn't open the Microsoft Store link.": "Nexus Microsoft Store aperiri non potuit.",
   "Couldn't open the browser": "Navigator aperiri non potuit",

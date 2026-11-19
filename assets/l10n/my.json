@@ -876,6 +876,7 @@
   "Couldn't load community posts: {0}": "အသိုင်းအဝိုင်းပို့စ်များကို ဖွင့်၍ မရပါ- {0}",
   "Couldn't load comments: {0}": "မှတ်ချက်များကို ဖွင့်၍ မရပါ- {0}",
   "Couldn't load these subtitles": "ဤစာတန်းထိုးကို ဖွင့်၍ မရပါ",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "ဘာသာပြန်ဝန်ဆောင်မှုများ ယခု အလုပ်များနေပါသည်။ ဤစာတန်းထိုးများကို တစ်မိနစ်အကြာတွင် ထပ်စမ်းကြည့်ပါ။",
   "Couldn't load: {0}": "ဖွင့်၍ မရပါ- {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store လင့်ခ်ကို ဖွင့်၍ မရပါ။",
   "Couldn't open the browser": "ဘရောက်ဇာကို ဖွင့်၍ မရပါ",

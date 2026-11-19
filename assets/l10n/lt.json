@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Nepavyko įkelti bendruomenės įrašų: {0}",
   "Couldn't load comments: {0}": "Nepavyko įkelti komentarų: {0}",
   "Couldn't load these subtitles": "Nepavyko įkelti šių subtitrų",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Vertimo paslaugos šiuo metu užimtos. Bandykite šiuos subtitrus dar kartą po minutės.",
   "Couldn't load: {0}": "Nepavyko įkelti: {0}",
   "Couldn't open the Microsoft Store link.": "Nepavyko atidaryti „Microsoft Store“ nuorodos.",
   "Couldn't open the browser": "Nepavyko atidaryti naršyklės",

@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "לא ניתן לטעון פוסטים בקהילה: {0}",
   "Couldn't load comments: {0}": "לא ניתן לטעון תגובות: {0}",
   "Couldn't load these subtitles": "לא ניתן לטעון את הכתוביות האלה",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "שירותי התרגום עמוסים כרגע. נסו שוב את הכתוביות האלה בעוד דקה.",
   "Couldn't load: {0}": "לא ניתן לטעון: {0}",
   "Couldn't open the Microsoft Store link.": "לא ניתן לפתוח את הקישור ל-Microsoft Store.",
   "Couldn't open the browser": "לא ניתן לפתוח את הדפדפן",

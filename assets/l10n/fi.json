@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Yhteisön julkaisuja ei voitu ladata: {0}",
   "Couldn't load comments: {0}": "Kommentteja ei voitu ladata: {0}",
   "Couldn't load these subtitles": "Tätä tekstitystä ei voitu ladata",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Käännöspalvelut ovat juuri nyt ruuhkautuneet. Kokeile näitä tekstityksiä uudelleen minuutin kuluttua.",
   "Couldn't load: {0}": "Lataus ei onnistunut: {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store -linkkiä ei voitu avata.",
   "Couldn't open the browser": "Selainta ei voitu avata",

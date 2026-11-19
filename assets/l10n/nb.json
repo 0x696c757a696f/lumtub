@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Kunne ikke laste fellesskapsinnlegg: {0}",
   "Couldn't load comments: {0}": "Kunne ikke laste kommentarer: {0}",
   "Couldn't load these subtitles": "Kunne ikke laste disse undertekstene",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Oversettelsestjenestene er opptatt akkurat nå. Prøv disse undertekstene igjen om et minutt.",
   "Couldn't load: {0}": "Kunne ikke laste: {0}",
   "Couldn't open the Microsoft Store link.": "Kunne ikke åpne lenken til Microsoft Store.",
   "Couldn't open the browser": "Kunne ikke åpne nettleseren",

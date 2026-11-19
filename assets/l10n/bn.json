@@ -876,6 +876,7 @@
   "Couldn't load community posts: {0}": "কমিউনিটি পোস্ট লোড করা যায়নি: {0}",
   "Couldn't load comments: {0}": "মন্তব্য লোড করা যায়নি: {0}",
   "Couldn't load these subtitles": "এই সাবটাইটেল লোড করা যায়নি",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "অনুবাদ পরিষেবাগুলি এখন ব্যস্ত। এক মিনিট পরে এই সাবটাইটেলগুলি আবার চেষ্টা করুন।",
   "Couldn't load: {0}": "লোড করা যায়নি: {0}",
   "Couldn't open the Microsoft Store link.": "Microsoft Store লিংক খোলা যায়নি।",
   "Couldn't open the browser": "ব্রাউজার খোলা যায়নি",

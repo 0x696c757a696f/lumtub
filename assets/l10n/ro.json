@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Nu s-au putut încărca postările din comunitate: {0}",
   "Couldn't load comments: {0}": "Nu s-au putut încărca comentariile: {0}",
   "Couldn't load these subtitles": "Nu s-au putut încărca aceste subtitrări",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Serviciile de traducere sunt ocupate acum. Încearcă din nou aceste subtitrări peste un minut.",
   "Couldn't load: {0}": "Nu s-a putut încărca: {0}",
   "Couldn't open the Microsoft Store link.": "Nu s-a putut deschide linkul Microsoft Store.",
   "Couldn't open the browser": "Nu s-a putut deschide browserul",

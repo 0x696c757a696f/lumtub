@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "โหลดโพสต์ในชุมชนไม่ได้: {0}",
   "Couldn't load comments: {0}": "โหลดความคิดเห็นไม่ได้: {0}",
   "Couldn't load these subtitles": "โหลดคำบรรยายนี้ไม่ได้",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "บริการแปลภาษากำลังยุ่งอยู่ในขณะนี้ ลองคำบรรยายนี้อีกครั้งในอีกหนึ่งนาที",
   "Couldn't load: {0}": "โหลดไม่ได้: {0}",
   "Couldn't open the Microsoft Store link.": "เปิดลิงก์ Microsoft Store ไม่ได้",
   "Couldn't open the browser": "เปิดเบราว์เซอร์ไม่ได้",

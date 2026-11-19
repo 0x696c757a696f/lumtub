@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Ezin izan dira komunitateko argitalpenak kargatu: {0}",
   "Couldn't load comments: {0}": "Ezin izan dira iruzkinak kargatu: {0}",
   "Couldn't load these subtitles": "Ezin izan dira azpititulu hauek kargatu",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Itzulpen-zerbitzuak lanpetuta daude orain. Saiatu berriro azpititulu hauekin minutu baten buruan.",
   "Couldn't load: {0}": "Ezin izan da kargatu: {0}",
   "Couldn't open the Microsoft Store link.": "Ezin izan da Microsoft Store esteka ireki.",
   "Couldn't open the browser": "Ezin izan da nabigatzailea ireki",

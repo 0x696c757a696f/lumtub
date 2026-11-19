@@ -876,6 +876,7 @@
   "Couldn't load community posts: {0}": "ໂຫຼດໂພສຊຸມຊົນບໍ່ໄດ້: {0}",
   "Couldn't load comments: {0}": "ໂຫຼດຄວາມຄິດເຫັນບໍ່ໄດ້: {0}",
   "Couldn't load these subtitles": "ໂຫຼດຄຳບັນຍາຍເຫຼົ່ານີ້ບໍ່ໄດ້",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "ບໍລິການແປພາສາກຳລັງຫຍຸ້ງຢູ່ຕອນນີ້. ລອງຄຳບັນຍາຍເຫຼົ່ານີ້ອີກຄັ້ງໃນອີກໜຶ່ງນາທີ.",
   "Couldn't load: {0}": "ໂຫຼດບໍ່ໄດ້: {0}",
   "Couldn't open the Microsoft Store link.": "ເປີດລິ້ງ Microsoft Store ບໍ່ໄດ້.",
   "Couldn't open the browser": "ເປີດບຣາວເຊີບໍ່ໄດ້",

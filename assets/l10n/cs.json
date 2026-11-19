@@ -877,6 +877,7 @@
   "Couldn't load community posts: {0}": "Příspěvky komunity se nepodařilo načíst: {0}",
   "Couldn't load comments: {0}": "Komentáře se nepodařilo načíst: {0}",
   "Couldn't load these subtitles": "Tyto titulky se nepodařilo načíst",
+  "The translation services are busy right now. Try these subtitles again in a minute.": "Překladové služby jsou teď vytížené. Zkuste tyto titulky znovu za minutu.",
   "Couldn't load: {0}": "Nepodařilo se načíst: {0}",
   "Couldn't open the Microsoft Store link.": "Odkaz na Microsoft Store se nepodařilo otevřít.",
   "Couldn't open the browser": "Prohlížeč se nepodařilo otevřít",

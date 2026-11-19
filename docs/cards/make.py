@@ -139,6 +139,8 @@ def main():
         if wanted and card["id"] not in wanted:
             continue
         for lang in ("en", "zh"):
+            if lang not in card:
+                continue
             html = OUT / f".{card['id']}-{lang}.html"
             html.write_text(card_html(card, lang), encoding="utf-8")
             pages.append(html)

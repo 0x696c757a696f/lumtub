@@ -98,8 +98,7 @@
   {
     "id": "explore",
     "shot": {
-      "en": "cards/shots/explore-en.png",
-      "zh": "cards/shots/explore-zh.png"
+      "en": "cards/shots/explore-en.png"
     },
     "window": {
       "left": 175,
@@ -117,17 +116,6 @@
         "factor": 1.1,
         "left": 760,
         "top": 820
-      },
-      "zh": {
-        "crop": [
-          770,
-          435,
-          830,
-          66
-        ],
-        "factor": 1.0,
-        "left": 680,
-        "top": 820
       }
     },
     "en": {
@@ -135,12 +123,6 @@
       "title": "Find more than what's trending",
       "text": "Twelve zones, hidden gems and new creators. Filter by region, quality and the language actually spoken.",
       "tag": "Filter by spoken language"
-    },
-    "zh": {
-      "eyebrow": "探索",
-      "title": "不只是热门榜",
-      "text": "十几个分区，冷门宝藏和新人新作。按地区、画质，和视频里真正说的语言筛选。",
-      "tag": "按真正说的语言筛"
     }
   },
   {

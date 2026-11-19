@@ -3651,5 +3651,10 @@
   "Export as CSV": "Esporta come CSV",
   "Subtitles exported": "Sottotitoli esportati",
   "Save the recording": "Salva la registrazione",
-  "Recording saved": "Registrazione salvata"
+  "Recording saved": "Registrazione salvata",
+  "Only my recording": "Solo la mia registrazione",
+  "The line, then my recording": "La battuta, poi la mia registrazione",
+  "All {0} lines I recorded, each then mine": "Tutte le {0} battute registrate, ciascuna seguita dalla mia",
+  "The line is no longer buffered. Play it once more, then save.": "La battuta non è più nel buffer. Riproducila ancora una volta, poi salva.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Alcune battute non sono più nel buffer, quindi per quelle si salva solo la tua registrazione."
 }

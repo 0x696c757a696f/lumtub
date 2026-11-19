@@ -3646,5 +3646,10 @@
   "Export as CSV": "CSV ஆக ஏற்றுமதி செய்",
   "Subtitles exported": "வசனங்கள் ஏற்றுமதி செய்யப்பட்டன",
   "Save the recording": "பதிவைச் சேமி",
-  "Recording saved": "பதிவு சேமிக்கப்பட்டது"
+  "Recording saved": "பதிவு சேமிக்கப்பட்டது",
+  "Only my recording": "என் பதிவு மட்டும்",
+  "The line, then my recording": "வரி, பிறகு என் பதிவு",
+  "All {0} lines I recorded, each then mine": "நான் பதிவுசெய்த அனைத்து {0} வரிகளும், ஒவ்வொன்றுக்கும் பின் என்னுடையது",
+  "The line is no longer buffered. Play it once more, then save.": "வரி இப்போது இடையகத்தில் இல்லை. இன்னொரு முறை இயக்கி, பிறகு சேமிக்கவும்.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "சில வரிகள் இப்போது இடையகத்தில் இல்லை, எனவே அவற்றுக்கு உங்கள் பதிவு மட்டுமே சேமிக்கப்படும்."
 }

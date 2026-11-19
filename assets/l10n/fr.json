@@ -3651,5 +3651,10 @@
   "Export as CSV": "Exporter au format CSV",
   "Subtitles exported": "Sous-titres exportés",
   "Save the recording": "Enregistrer la prise",
-  "Recording saved": "Prise enregistrée"
+  "Recording saved": "Prise enregistrée",
+  "Only my recording": "Seulement ma prise",
+  "The line, then my recording": "La réplique, puis ma prise",
+  "All {0} lines I recorded, each then mine": "Les {0} répliques enregistrées, chacune suivie de la mienne",
+  "The line is no longer buffered. Play it once more, then save.": "La réplique n'est plus en mémoire tampon. Relisez-la, puis enregistrez.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Certaines répliques ne sont plus en mémoire tampon : seule votre prise est enregistrée pour elles."
 }

@@ -3645,5 +3645,10 @@
   "Export as CSV": "ከም CSV ኣውጽእ",
   "Subtitles exported": "ትርጉም ጽሑፍ ተወጺኡ",
   "Save the recording": "ቅዳሕ ኣቐምጥ",
-  "Recording saved": "ቅዳሕ ተቐሚጡ"
+  "Recording saved": "ቅዳሕ ተቐሚጡ",
+  "Only my recording": "ቅዳሐይ ጥራይ",
+  "The line, then my recording": "እታ መስመር፡ ድሕሪኡ ቅዳሐይ",
+  "All {0} lines I recorded, each then mine": "ዝቐዳሕኩወን ኩለን {0} መስመራት፡ ነፍሲ ወከፈን ብናተይ ዝስዓባ",
+  "The line is no longer buffered. Play it once more, then save.": "እታ መስመር ኣብ መዐቀኒ የላን። ሓንሳእ ደጊምካ ተጻወታ፡ ድሕሪኡ ኣቐምጥ።",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "ገለ መስመራት ኣብ መዐቀኒ የለዋን፡ ስለዚ ንዓአተን ቅዳሕካ ጥራይ ይቕመጥ።"
 }

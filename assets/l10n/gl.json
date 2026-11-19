@@ -3646,5 +3646,10 @@
   "Export as CSV": "Exportar como CSV",
   "Subtitles exported": "Subtítulos exportados",
   "Save the recording": "Gardar a gravación",
-  "Recording saved": "Gravación gardada"
+  "Recording saved": "Gravación gardada",
+  "Only my recording": "Só a miña gravación",
+  "The line, then my recording": "A frase e logo a miña gravación",
+  "All {0} lines I recorded, each then mine": "As {0} frases que gravei, cada unha seguida da miña",
+  "The line is no longer buffered. Play it once more, then save.": "A frase xa non está no búfer. Reprodúcea outra vez e garda.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Algunhas frases xa non están no búfer, así que delas só se garda a túa gravación."
 }

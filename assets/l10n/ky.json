@@ -3645,5 +3645,10 @@
   "Export as CSV": "CSV катары экспорттоо",
   "Subtitles exported": "Субтитрлер экспорттолду",
   "Save the recording": "Жазууну сактоо",
-  "Recording saved": "Жазуу сакталды"
+  "Recording saved": "Жазуу сакталды",
+  "Only my recording": "Менин жазуум гана",
+  "The line, then my recording": "Сүйлөм, андан кийин менин жазуум",
+  "All {0} lines I recorded, each then mine": "Мен жазган бардык {0} сүйлөм, ар биринен кийин меники",
+  "The line is no longer buffered. Play it once more, then save.": "Сүйлөм буферде жок. Аны дагы бир жолу ойнотуп, анан сактаңыз.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Айрым сүйлөмдөр буферде жок, ошондуктан алар үчүн сиздин жазууңуз гана сакталат."
 }

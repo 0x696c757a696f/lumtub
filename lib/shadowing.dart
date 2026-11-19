@@ -5,6 +5,7 @@ import 'dart:isolate';
 import 'package:flutter/services.dart';
 
 import 'native_core.dart';
+import 'subtitle_cues.dart';
 
 /// 跟读录音: what the shadowing is doing now.
 enum ShadowStage { idle, recording, original, mine }
@@ -80,8 +81,25 @@ class CoreMicrophone implements Microphone {
   }
 }
 
-/// Records one take of the person saying a line, into [folder], as a WAV
-/// file that only stays on this device. A new take replaces the last one.
+/// One take of a line, and once read from the video's cache, the line as
+/// the video says it.
+class ShadowTake {
+  ShadowTake(this.line, this.file, this.length);
+  final SubtitleCue line;
+  final File file;
+  final Duration length;
+
+  /// The video's sound around the line; its last [originalSeconds] are the
+  /// line.
+  File? original;
+  double originalSeconds = 0;
+
+  /// What the core joins for this line (NativeCore.micJoin).
+  Map<String, Object> get part => {if (original != null) 'original': original!.path, 'seconds': originalSeconds, 'take': file.path};
+}
+
+/// Records the person saying lines, into [folder], as WAV files that only
+/// stay on this device: one take for each line, the newest kept.
 class Shadowing {
   Shadowing(this.folder, {Microphone? microphone}) : _microphone = microphone ?? CoreMicrophone();
 
@@ -98,13 +116,16 @@ class Shadowing {
 
   bool get recording => _recording;
 
-  /// The last take, once one was made.
-  File? take;
+  /// The takes, by the start of their line.
+  final takes = <Duration, ShadowTake>{};
 
-  /// How long [take] is.
-  Duration takeLength = Duration.zero;
+  /// The take made last.
+  ShadowTake? last;
 
-  File get _file => File('${folder.path}${Platform.pathSeparator}take.wav');
+  /// The takes in the order of their lines.
+  List<ShadowTake> get inOrder => takes.values.toList()..sort((a, b) => a.line.start.compareTo(b.line.start));
+
+  File fileFor(SubtitleCue line, String kind, String extension) => File('${folder.path}${Platform.pathSeparator}$kind-${line.start.inMilliseconds}.$extension');
 
   /// Starts recording; [onTooLong] is told when [longest] stops it.
   Future<void> start({void Function()? onTooLong}) async {
@@ -121,32 +142,41 @@ class Shadowing {
     _limit = Timer(longest, () => onTooLong?.call());
   }
 
-  /// Stops recording and saves the take; null when nothing was heard.
-  Future<File?> stop() async {
+  /// Stops recording and keeps the take of [line], in place of any earlier
+  /// one; null when nothing was heard.
+  Future<ShadowTake?> stop(SubtitleCue line) async {
     if (!_recording) return null;
     _recording = false;
     _limit?.cancel();
     await folder.create(recursive: true);
-    final file = _file;
-    final seconds = await _microphone.stopInto(file);
+    // A take too short to keep must not replace the line's last one.
+    final heard = File('${folder.path}${Platform.pathSeparator}recording.wav');
+    final seconds = await _microphone.stopInto(heard);
     if (seconds == null || seconds < shortest) {
-      if (await file.exists()) await file.delete();
-      take = null;
+      if (await heard.exists()) await heard.delete();
       return null;
     }
-    takeLength = Duration(milliseconds: (seconds * 1000).round());
-    return take = file;
+    final file = await heard.rename(fileFor(line, 'take', 'wav').path);
+    final take = ShadowTake(line, file, Duration(milliseconds: (seconds * 1000).round()));
+    take.original = takes[line.start]?.original;
+    take.originalSeconds = takes[line.start]?.originalSeconds ?? 0;
+    return last = takes[line.start] = take;
   }
 
-  /// Stops without keeping anything, and lets go of the microphone.
+  /// Stops without keeping anything, lets go of the microphone and deletes
+  /// every take.
   Future<void> dispose() async {
     _limit?.cancel();
     _recording = false;
     try {
       await _microphone.release();
     } catch (_) {}
-    final file = take;
-    take = null;
-    if (file != null && await file.exists()) await file.delete();
+    takes.clear();
+    last = null;
+    if (await folder.exists()) await folder.delete(recursive: true);
   }
 }
+
+/// What saving a take writes: the take, the line and then the take, or
+/// every line recorded so far, each followed by its take.
+enum ShadowExport { mine, withLine, all }

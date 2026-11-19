@@ -3646,5 +3646,10 @@
   "Export as CSV": "Eksport sebagai CSV",
   "Subtitles exported": "Sari kata dieksport",
   "Save the recording": "Simpan rakaman",
-  "Recording saved": "Rakaman disimpan"
+  "Recording saved": "Rakaman disimpan",
+  "Only my recording": "Rakaman saya sahaja",
+  "The line, then my recording": "Ayat itu, kemudian rakaman saya",
+  "All {0} lines I recorded, each then mine": "Semua {0} ayat yang saya rakam, setiap satu diikuti rakaman saya",
+  "The line is no longer buffered. Play it once more, then save.": "Ayat itu tiada lagi dalam penimbal. Mainkan sekali lagi, kemudian simpan.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Sesetengah ayat tiada lagi dalam penimbal, jadi hanya rakaman anda disimpan untuknya."
 }

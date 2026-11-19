@@ -3646,5 +3646,10 @@
   "Export as CSV": "Exportera som CSV",
   "Subtitles exported": "Undertexter exporterade",
   "Save the recording": "Spara inspelningen",
-  "Recording saved": "Inspelningen har sparats"
+  "Recording saved": "Inspelningen har sparats",
+  "Only my recording": "Bara min inspelning",
+  "The line, then my recording": "Repliken, sedan min inspelning",
+  "All {0} lines I recorded, each then mine": "Alla {0} repliker jag spelat in, var och en följd av min",
+  "The line is no longer buffered. Play it once more, then save.": "Repliken finns inte längre i bufferten. Spela upp den en gång till och spara sedan.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Vissa repliker finns inte längre i bufferten, så bara din inspelning sparas för dem."
 }

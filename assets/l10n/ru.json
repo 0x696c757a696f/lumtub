@@ -3651,5 +3651,10 @@
   "Export as CSV": "Экспортировать как CSV",
   "Subtitles exported": "Субтитры экспортированы",
   "Save the recording": "Сохранить запись",
-  "Recording saved": "Запись сохранена"
+  "Recording saved": "Запись сохранена",
+  "Only my recording": "Только моя запись",
+  "The line, then my recording": "Фраза, затем моя запись",
+  "All {0} lines I recorded, each then mine": "Все {0} записанные мной фразы, после каждой — моя",
+  "The line is no longer buffered. Play it once more, then save.": "Фразы уже нет в буфере. Воспроизведите её ещё раз, затем сохраните.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Некоторых фраз уже нет в буфере, поэтому для них сохранится только ваша запись."
 }

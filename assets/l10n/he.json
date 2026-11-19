@@ -3646,5 +3646,10 @@
   "Export as CSV": "ייצוא כ-CSV",
   "Subtitles exported": "הכתוביות יוצאו",
   "Save the recording": "שמירת ההקלטה",
-  "Recording saved": "ההקלטה נשמרה"
+  "Recording saved": "ההקלטה נשמרה",
+  "Only my recording": "רק ההקלטה שלי",
+  "The line, then my recording": "המשפט, ואחריו ההקלטה שלי",
+  "All {0} lines I recorded, each then mine": "כל {0} המשפטים שהקלטתי, כל אחד ואחריו שלי",
+  "The line is no longer buffered. Play it once more, then save.": "המשפט כבר לא נמצא במאגר. הפעילו אותו שוב ואז שמרו.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "חלק מהמשפטים כבר לא נמצאים במאגר, לכן עבורם נשמרת רק ההקלטה שלכם."
 }

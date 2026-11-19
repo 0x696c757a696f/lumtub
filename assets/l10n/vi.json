@@ -3651,5 +3651,10 @@
   "Export as CSV": "Xuất dưới dạng CSV",
   "Subtitles exported": "Đã xuất phụ đề",
   "Save the recording": "Lưu bản ghi âm",
-  "Recording saved": "Đã lưu bản ghi âm"
+  "Recording saved": "Đã lưu bản ghi âm",
+  "Only my recording": "Chỉ bản ghi của tôi",
+  "The line, then my recording": "Câu gốc, rồi bản ghi của tôi",
+  "All {0} lines I recorded, each then mine": "Tất cả {0} câu tôi đã ghi, mỗi câu kèm bản ghi của tôi",
+  "The line is no longer buffered. Play it once more, then save.": "Câu này không còn trong bộ đệm. Phát lại một lần nữa rồi lưu.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Một số câu không còn trong bộ đệm nên chỉ lưu bản ghi của bạn cho các câu đó."
 }

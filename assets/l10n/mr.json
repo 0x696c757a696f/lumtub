@@ -3645,5 +3645,10 @@
   "Export as CSV": "CSV म्हणून निर्यात करा",
   "Subtitles exported": "उपशीर्षके निर्यात झाली",
   "Save the recording": "रेकॉर्डिंग जतन करा",
-  "Recording saved": "रेकॉर्डिंग जतन केले"
+  "Recording saved": "रेकॉर्डिंग जतन केले",
+  "Only my recording": "फक्त माझे रेकॉर्डिंग",
+  "The line, then my recording": "ओळ, मग माझे रेकॉर्डिंग",
+  "All {0} lines I recorded, each then mine": "मी रेकॉर्ड केलेल्या सर्व {0} ओळी, प्रत्येकीनंतर माझी",
+  "The line is no longer buffered. Play it once more, then save.": "ओळ आता बफरमध्ये नाही. ती पुन्हा एकदा चालवा, मग जतन करा.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "काही ओळी आता बफरमध्ये नाहीत, म्हणून त्यांच्यासाठी फक्त तुमचे रेकॉर्डिंग जतन होईल."
 }

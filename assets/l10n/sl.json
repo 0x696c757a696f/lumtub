@@ -3646,5 +3646,10 @@
   "Export as CSV": "Izvozi kot CSV",
   "Subtitles exported": "Podnapisi izvoženi",
   "Save the recording": "Shrani posnetek",
-  "Recording saved": "Posnetek je shranjen"
+  "Recording saved": "Posnetek je shranjen",
+  "Only my recording": "Samo moj posnetek",
+  "The line, then my recording": "Stavek, nato moj posnetek",
+  "All {0} lines I recorded, each then mine": "Vseh {0} posnetih stavkov, vsak z mojim",
+  "The line is no longer buffered. Play it once more, then save.": "Stavka ni več v medpomnilniku. Predvajajte ga še enkrat in nato shranite.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Nekaterih stavkov ni več v medpomnilniku, zato se zanje shrani samo vaš posnetek."
 }

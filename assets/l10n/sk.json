@@ -3646,5 +3646,10 @@
   "Export as CSV": "Exportovať ako CSV",
   "Subtitles exported": "Titulky exportované",
   "Save the recording": "Uložiť nahrávku",
-  "Recording saved": "Nahrávka uložená"
+  "Recording saved": "Nahrávka uložená",
+  "Only my recording": "Iba moja nahrávka",
+  "The line, then my recording": "Veta, potom moja nahrávka",
+  "All {0} lines I recorded, each then mine": "Všetkých {0} nahraných viet, za každou moja",
+  "The line is no longer buffered. Play it once more, then save.": "Veta už nie je vo vyrovnávacej pamäti. Prehrajte ju ešte raz a potom uložte.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Niektoré vety už nie sú vo vyrovnávacej pamäti, preto sa pri nich uloží len vaša nahrávka."
 }

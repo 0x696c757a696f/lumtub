@@ -3645,5 +3645,10 @@
   "Export as CSV": "CSV hökmünde eksport et",
   "Subtitles exported": "Subtitrler eksport edildi",
   "Save the recording": "Ýazgyny sakla",
-  "Recording saved": "Ýazgy saklandy"
+  "Recording saved": "Ýazgy saklandy",
+  "Only my recording": "Diňe meniň ýazgym",
+  "The line, then my recording": "Sözlem, soňra meniň ýazgym",
+  "All {0} lines I recorded, each then mine": "Ýazga alan ähli {0} sözlemim, her biriniň yzyndan meniňki",
+  "The line is no longer buffered. Play it once more, then save.": "Sözlem indi buferde ýok. Ony ýene bir gezek oýnadyň, soňra saklaň.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Käbir sözlemler indi buferde ýok, şonuň üçin olar üçin diňe siziň ýazgyňyz saklanýar."
 }

@@ -3645,5 +3645,10 @@
   "Export as CSV": "ສົ່ງອອກເປັນ CSV",
   "Subtitles exported": "ສົ່ງອອກຄຳບັນຍາຍແລ້ວ",
   "Save the recording": "ບັນທຶກການອັດສຽງ",
-  "Recording saved": "ບັນທຶກການອັດສຽງແລ້ວ"
+  "Recording saved": "ບັນທຶກການອັດສຽງແລ້ວ",
+  "Only my recording": "ສະເພາະການອັດສຽງຂອງຂ້ອຍ",
+  "The line, then my recording": "ປະໂຫຍກ, ຈາກນັ້ນການອັດສຽງຂອງຂ້ອຍ",
+  "All {0} lines I recorded, each then mine": "ທັງໝົດ {0} ປະໂຫຍກທີ່ຂ້ອຍອັດ, ແຕ່ລະອັນຕາມດ້ວຍຂອງຂ້ອຍ",
+  "The line is no longer buffered. Play it once more, then save.": "ປະໂຫຍກນີ້ບໍ່ຢູ່ໃນບັບເຟີແລ້ວ. ຫຼິ້ນອີກເທື່ອໜຶ່ງ, ແລ້ວບັນທຶກ.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "ບາງປະໂຫຍກບໍ່ຢູ່ໃນບັບເຟີແລ້ວ, ສະນັ້ນຈຶ່ງບັນທຶກພຽງການອັດສຽງຂອງທ່ານສຳລັບພວກມັນ."
 }

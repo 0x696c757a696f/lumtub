@@ -25,7 +25,7 @@ import '../device.dart';
 import '../app/app_controller.dart';
 import '../app_preferences.dart' show rateText;
 import '../heatmap.dart';
-import '../shadowing.dart' show ShadowStage;
+import '../shadowing.dart' show ShadowExport, ShadowStage;
 import '../keep_awake.dart';
 import '../picture_transform.dart';
 import '../storyboard.dart';
@@ -1319,15 +1319,22 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           },
         ),
       if (_controller.hasShadowTake && !recording)
-        _IconButton(
+        _PopupMenu<int>(
           tooltip: tr('Save the recording'),
-          width: width,
-          icon: AppIcons.downloadSimple,
-          size: 20,
-          onTap: () {
-            _show();
-            unawaited(_controller.saveShadowTake());
-          },
+          value: -1,
+          items: [
+            (ShadowExport.mine.index, tr('Only my recording')),
+            (ShadowExport.withLine.index, tr('The line, then my recording')),
+            if (_controller.shadowTakeCount > 1) (ShadowExport.all.index, tr('All {0} lines I recorded, each then mine', ['${_controller.shadowTakeCount}'])),
+          ],
+          onSelected: (i) => unawaited(_controller.saveShadowTake(ShadowExport.values[i])),
+          onOpened: _menuOpened,
+          onClosed: _menuClosed,
+          child: SizedBox(
+            width: touchFirst ? max(width, 44) : width,
+            height: touchFirst ? 44 : 34,
+            child: Icon(AppIcons.downloadSimple, size: 20, color: Colors.white),
+          ),
         ),
     ];
   }

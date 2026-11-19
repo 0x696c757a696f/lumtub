@@ -3651,5 +3651,10 @@
   "Export as CSV": "Ekspor sebagai CSV",
   "Subtitles exported": "Subtitel diekspor",
   "Save the recording": "Simpan rekaman",
-  "Recording saved": "Rekaman disimpan"
+  "Recording saved": "Rekaman disimpan",
+  "Only my recording": "Hanya rekaman saya",
+  "The line, then my recording": "Kalimatnya, lalu rekaman saya",
+  "All {0} lines I recorded, each then mine": "Semua {0} kalimat yang saya rekam, masing-masing diikuti rekaman saya",
+  "The line is no longer buffered. Play it once more, then save.": "Kalimat sudah tidak ada di buffer. Putar sekali lagi, lalu simpan.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Beberapa kalimat sudah tidak ada di buffer, jadi hanya rekaman Anda yang disimpan untuknya."
 }

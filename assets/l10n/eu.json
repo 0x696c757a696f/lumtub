@@ -3646,5 +3646,10 @@
   "Export as CSV": "Esportatu CSV gisa",
   "Subtitles exported": "Azpitituluak esportatu dira",
   "Save the recording": "Gorde grabazioa",
-  "Recording saved": "Grabazioa gorde da"
+  "Recording saved": "Grabazioa gorde da",
+  "Only my recording": "Nire grabazioa bakarrik",
+  "The line, then my recording": "Esaldia, gero nire grabazioa",
+  "All {0} lines I recorded, each then mine": "Grabatu ditudan {0} esaldiak, bakoitzaren ondoren nirea",
+  "The line is no longer buffered. Play it once more, then save.": "Esaldia ez dago jada bufferrean. Erreproduzitu berriro eta gorde.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Esaldi batzuk ez daude jada bufferrean, beraz zure grabazioa bakarrik gordeko da haientzat."
 }

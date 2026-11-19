@@ -3645,5 +3645,10 @@
   "Export as CSV": "CSV အဖြစ် ထုတ်ယူရန်",
   "Subtitles exported": "စာတန်းထိုး ထုတ်ယူပြီး",
   "Save the recording": "အသံဖမ်းချက်ကို သိမ်းရန်",
-  "Recording saved": "အသံဖမ်းချက်ကို သိမ်းပြီးပါပြီ"
+  "Recording saved": "အသံဖမ်းချက်ကို သိမ်းပြီးပါပြီ",
+  "Only my recording": "ကျွန်ုပ်၏ အသံဖမ်းချက်သာ",
+  "The line, then my recording": "စာကြောင်း၊ ပြီးနောက် ကျွန်ုပ်၏ အသံဖမ်းချက်",
+  "All {0} lines I recorded, each then mine": "ကျွန်ုပ်ဖမ်းခဲ့သော စာကြောင်း {0} ကြောင်းလုံး၊ တစ်ခုစီနောက်တွင် ကျွန်ုပ်၏အသံ",
+  "The line is no longer buffered. Play it once more, then save.": "စာကြောင်းသည် ဘဖ်ဖာထဲတွင် မရှိတော့ပါ။ နောက်တစ်ကြိမ် ဖွင့်ပြီးမှ သိမ်းပါ။",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "စာကြောင်းအချို့ ဘဖ်ဖာထဲတွင် မရှိတော့သဖြင့် ၎င်းတို့အတွက် သင့်အသံဖမ်းချက်ကိုသာ သိမ်းပါမည်။"
 }

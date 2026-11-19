@@ -3651,5 +3651,10 @@
   "Export as CSV": "CSV olarak dışa aktar",
   "Subtitles exported": "Altyazı dışa aktarıldı",
   "Save the recording": "Kaydı kaydet",
-  "Recording saved": "Kayıt kaydedildi"
+  "Recording saved": "Kayıt kaydedildi",
+  "Only my recording": "Yalnızca benim kaydım",
+  "The line, then my recording": "Cümle, ardından benim kaydım",
+  "All {0} lines I recorded, each then mine": "Kaydettiğim {0} cümlenin tümü, her birinin ardından benimki",
+  "The line is no longer buffered. Play it once more, then save.": "Cümle artık arabellekte değil. Bir kez daha oynatıp kaydedin.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Bazı cümleler artık arabellekte değil, bu yüzden onlar için yalnızca sizin kaydınız saklanır."
 }

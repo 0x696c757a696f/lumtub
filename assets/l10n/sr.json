@@ -3646,5 +3646,10 @@
   "Export as CSV": "Извези као CSV",
   "Subtitles exported": "Титлови су извезени",
   "Save the recording": "Сачувај снимак",
-  "Recording saved": "Снимак је сачуван"
+  "Recording saved": "Снимак је сачуван",
+  "Only my recording": "Само мој снимак",
+  "The line, then my recording": "Реченица, па мој снимак",
+  "All {0} lines I recorded, each then mine": "Све {0} реченице које сам снимио, свака па моја",
+  "The line is no longer buffered. Play it once more, then save.": "Реченица више није у баферу. Пустите је још једном, па сачувајте.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Неке реченице више нису у баферу, па се за њих чува само ваш снимак."
 }

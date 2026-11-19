@@ -3645,5 +3645,10 @@
   "Export as CSV": "Ekspor minangka CSV",
   "Subtitles exported": "Subtitel wis diekspor",
   "Save the recording": "Simpen rekaman",
-  "Recording saved": "Rekaman wis disimpen"
+  "Recording saved": "Rekaman wis disimpen",
+  "Only my recording": "Mung rekamanku",
+  "The line, then my recording": "Ukarané, banjur rekamanku",
+  "All {0} lines I recorded, each then mine": "Kabèh {0} ukara sing tak rekam, saben siji diterusaké rekamanku",
+  "The line is no longer buffered. Play it once more, then save.": "Ukarané wis ora ana ing buffer. Puter sepisan menèh, banjur simpen.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Sawetara ukara wis ora ana ing buffer, dadi mung rekamanmu sing disimpen kanggo kuwi."
 }

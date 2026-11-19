@@ -3651,5 +3651,10 @@
   "Export as CSV": "Als CSV exportieren",
   "Subtitles exported": "Untertitel exportiert",
   "Save the recording": "Aufnahme speichern",
-  "Recording saved": "Aufnahme gespeichert"
+  "Recording saved": "Aufnahme gespeichert",
+  "Only my recording": "Nur meine Aufnahme",
+  "The line, then my recording": "Die Zeile, dann meine Aufnahme",
+  "All {0} lines I recorded, each then mine": "Alle {0} aufgenommenen Zeilen, jeweils gefolgt von meiner",
+  "The line is no longer buffered. Play it once more, then save.": "Die Zeile ist nicht mehr gepuffert. Spiel sie noch einmal ab und speichere dann.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Einige Zeilen sind nicht mehr gepuffert, daher wird für sie nur deine Aufnahme gespeichert."
 }

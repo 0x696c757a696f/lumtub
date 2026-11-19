@@ -3646,5 +3646,10 @@
   "Export as CSV": "Flytja út sem CSV",
   "Subtitles exported": "Skjátextar fluttir út",
   "Save the recording": "Vista upptökuna",
-  "Recording saved": "Upptakan var vistuð"
+  "Recording saved": "Upptakan var vistuð",
+  "Only my recording": "Aðeins mín upptaka",
+  "The line, then my recording": "Línan, svo mín upptaka",
+  "All {0} lines I recorded, each then mine": "Allar {0} línur sem ég tók upp, hver á eftir minni",
+  "The line is no longer buffered. Play it once more, then save.": "Línan er ekki lengur í biðminni. Spilaðu hana aftur og vistaðu svo.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Sumar línur eru ekki lengur í biðminni, svo aðeins upptakan þín er vistuð fyrir þær."
 }

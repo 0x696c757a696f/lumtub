@@ -3646,5 +3646,10 @@
   "Export as CSV": "ექსპორტი CSV-ად",
   "Subtitles exported": "სუბტიტრები ექსპორტირებულია",
   "Save the recording": "ჩანაწერის შენახვა",
-  "Recording saved": "ჩანაწერი შენახულია"
+  "Recording saved": "ჩანაწერი შენახულია",
+  "Only my recording": "მხოლოდ ჩემი ჩანაწერი",
+  "The line, then my recording": "ფრაზა, შემდეგ ჩემი ჩანაწერი",
+  "All {0} lines I recorded, each then mine": "ჩემ მიერ ჩაწერილი ყველა {0} ფრაზა, თითოეულს მოსდევს ჩემი",
+  "The line is no longer buffered. Play it once more, then save.": "ფრაზა აღარ არის ბუფერში. კიდევ ერთხელ ჩართეთ და შემდეგ შეინახეთ.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "ზოგიერთი ფრაზა აღარ არის ბუფერში, ამიტომ მათთვის მხოლოდ თქვენი ჩანაწერი შეინახება."
 }

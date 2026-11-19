@@ -3646,5 +3646,10 @@
   "Export as CSV": "CSV के रूप में निर्यात करें",
   "Subtitles exported": "उपशीर्षक निर्यात हुए",
   "Save the recording": "रिकॉर्डिंग सहेजें",
-  "Recording saved": "रिकॉर्डिंग सहेजी गई"
+  "Recording saved": "रिकॉर्डिंग सहेजी गई",
+  "Only my recording": "सिर्फ़ मेरी रिकॉर्डिंग",
+  "The line, then my recording": "पंक्ति, फिर मेरी रिकॉर्डिंग",
+  "All {0} lines I recorded, each then mine": "मेरी रिकॉर्ड की गई सभी {0} पंक्तियाँ, हर एक के बाद मेरी",
+  "The line is no longer buffered. Play it once more, then save.": "पंक्ति अब बफ़र में नहीं है। इसे एक बार फिर चलाएँ, फिर सहेजें।",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "कुछ पंक्तियाँ अब बफ़र में नहीं हैं, इसलिए उनके लिए सिर्फ़ आपकी रिकॉर्डिंग सहेजी जाएगी।"
 }

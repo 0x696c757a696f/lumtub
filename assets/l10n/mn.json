@@ -3645,5 +3645,10 @@
   "Export as CSV": "CSV болгон экспортлох",
   "Subtitles exported": "Хадмал экспортлогдлоо",
   "Save the recording": "Бичлэгийг хадгалах",
-  "Recording saved": "Бичлэг хадгалагдлаа"
+  "Recording saved": "Бичлэг хадгалагдлаа",
+  "Only my recording": "Зөвхөн миний бичлэг",
+  "The line, then my recording": "Өгүүлбэр, дараа нь миний бичлэг",
+  "All {0} lines I recorded, each then mine": "Миний бичсэн бүх {0} өгүүлбэр, тус бүрийн дараа минийх",
+  "The line is no longer buffered. Play it once more, then save.": "Өгүүлбэр буферт байхгүй болсон. Дахин нэг тоглуулаад хадгална уу.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Зарим өгүүлбэр буферт байхгүй болсон тул тэдгээрт зөвхөн таны бичлэг хадгалагдана."
 }

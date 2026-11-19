@@ -3646,5 +3646,10 @@
   "Export as CSV": "Exportare ut CSV",
   "Subtitles exported": "Subtitula exportata",
   "Save the recording": "Inscriptionem vocis serva",
-  "Recording saved": "Inscriptio vocis servata"
+  "Recording saved": "Inscriptio vocis servata",
+  "Only my recording": "Mea tantum inscriptio",
+  "The line, then my recording": "Versus, deinde mea inscriptio",
+  "All {0} lines I recorded, each then mine": "Omnes {0} versus quos inscripsi, singuli cum mea",
+  "The line is no longer buffered. Play it once more, then save.": "Versus iam non in memoria temporaria est. Iterum reproduc, deinde serva.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Quidam versus iam non in memoria temporaria sunt, itaque pro eis tua tantum inscriptio servatur."
 }

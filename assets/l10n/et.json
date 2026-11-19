@@ -3646,5 +3646,10 @@
   "Export as CSV": "Ekspordi CSV-vormingus",
   "Subtitles exported": "Subtiitrid eksporditud",
   "Save the recording": "Salvesta salvestis",
-  "Recording saved": "Salvestis on salvestatud"
+  "Recording saved": "Salvestis on salvestatud",
+  "Only my recording": "Ainult minu salvestis",
+  "The line, then my recording": "Lause, siis minu salvestis",
+  "All {0} lines I recorded, each then mine": "Kõik {0} lauset, mille salvestasin, igaüks koos minu omaga",
+  "The line is no longer buffered. Play it once more, then save.": "Lauset pole enam puhvris. Esita see veel korra ja salvesta siis.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Mõnda lauset pole enam puhvris, seega salvestatakse nende puhul ainult sinu salvestis."
 }

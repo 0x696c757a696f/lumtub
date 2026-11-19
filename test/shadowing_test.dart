@@ -44,35 +44,48 @@ void main() {
     if (folder.existsSync()) folder.deleteSync(recursive: true);
   });
 
-  test('a take is what the microphone heard, kept as a file', () async {
+  const first = (start: Duration(seconds: 3), end: Duration(seconds: 5), text: 'Hello');
+  const second = (start: Duration(seconds: 6), end: Duration(seconds: 8), text: 'Bye');
+
+  test('a take is what the microphone heard, kept as a file of its line', () async {
     final mic = FakeMicrophone();
     final shadowing = Shadowing(folder, microphone: mic);
     await shadowing.start();
     expect(shadowing.recording, isTrue);
     expect(mic.started, isTrue);
     mic.heard = 88200;
-    final take = await shadowing.stop();
+    final take = await shadowing.stop(first);
     expect(mic.started, isFalse);
     expect(shadowing.recording, isFalse);
     expect(take, isNotNull);
-    expect(take!.lengthSync(), 44 + 88200);
-    expect(shadowing.take?.path, take.path);
-    expect(shadowing.takeLength, const Duration(seconds: 1));
+    expect(take!.file.lengthSync(), 44 + 88200);
+    expect(take.length, const Duration(seconds: 1));
+    expect(take.line, first);
+    expect(take.part, {'seconds': 0.0, 'take': take.file.path});
+    expect(shadowing.last, same(take));
+    expect(shadowing.takes.keys, [first.start]);
     await shadowing.dispose();
     expect(mic.released, isTrue);
-    expect(take.existsSync(), isFalse);
+    expect(take.file.existsSync(), isFalse);
+    expect(shadowing.takes, isEmpty);
   });
 
-  test('a take too short to hear is not kept', () async {
+  test('a take too short to hear is not kept, nor replaces a good one', () async {
     final mic = FakeMicrophone();
     final shadowing = Shadowing(folder, microphone: mic);
     await shadowing.start();
     mic.heard = 100;
-    expect(await shadowing.stop(), isNull);
-    expect(shadowing.take, isNull);
+    expect(await shadowing.stop(first), isNull);
+    expect(shadowing.last, isNull);
     expect(folder.listSync(), isEmpty);
     await shadowing.start();
-    expect(await shadowing.stop(), isNull);
+    mic.heard = 20000;
+    final good = await shadowing.stop(first);
+    await shadowing.start();
+    mic.heard = 100;
+    expect(await shadowing.stop(first), isNull);
+    expect(good!.file.lengthSync(), 44 + 20000);
+    expect(shadowing.last, same(good));
   });
 
   test('a denied or missing microphone says why', () async {
@@ -85,17 +98,26 @@ void main() {
     expect(failing.recording, isFalse);
   });
 
-  test('a new take replaces the last one', () async {
+  test('each line keeps its newest take, and its sound from the video', () async {
     final mic = FakeMicrophone();
     final shadowing = Shadowing(folder, microphone: mic);
     await shadowing.start();
-    mic.heard = 20000;
-    final first = await shadowing.stop();
-    await shadowing.start();
     mic.heard = 30000;
-    final second = await shadowing.stop();
-    expect(second!.path, first!.path);
-    expect(second.lengthSync(), 44 + 30000);
+    await shadowing.stop(second);
+    await shadowing.start();
+    mic.heard = 20000;
+    final firstTake = await shadowing.stop(first);
+    firstTake!.original = shadowing.fileFor(first, 'line', 'wav');
+    firstTake.originalSeconds = 2.4;
+    await shadowing.start();
+    mic.heard = 40000;
+    final again = await shadowing.stop(first);
+    expect(again!.file.path, firstTake.file.path);
+    expect(again.file.lengthSync(), 44 + 40000);
+    expect(again.original?.path, firstTake.original!.path);
+    expect(again.part, {'original': firstTake.original!.path, 'seconds': 2.4, 'take': again.file.path});
+    expect([for (final take in shadowing.inOrder) take.line.text], ['Hello', 'Bye']);
+    expect(shadowing.last, same(again));
   });
 
   test('E records, and no other player action has it', () {

@@ -3645,5 +3645,10 @@
   "Export as CSV": "CSV ଭାବେ ଏକ୍ସପୋର୍ଟ କରନ୍ତୁ",
   "Subtitles exported": "ସବ୍ଟାଇଟଲ ଏକ୍ସପୋର୍ଟ ହେଲା",
   "Save the recording": "ରେକର୍ଡିଂ ସେଭ୍ କରନ୍ତୁ",
-  "Recording saved": "ରେକର୍ଡିଂ ସେଭ୍ ହେଲା"
+  "Recording saved": "ରେକର୍ଡିଂ ସେଭ୍ ହେଲା",
+  "Only my recording": "କେବଳ ମୋ ରେକର୍ଡିଂ",
+  "The line, then my recording": "ଧାଡ଼ି, ତା'ପରେ ମୋ ରେକର୍ଡିଂ",
+  "All {0} lines I recorded, each then mine": "ମୁଁ ରେକର୍ଡ କରିଥିବା ସମସ୍ତ {0} ଧାଡ଼ି, ପ୍ରତ୍ୟେକ ପରେ ମୋର",
+  "The line is no longer buffered. Play it once more, then save.": "ଧାଡ଼ିଟି ଆଉ ବଫରରେ ନାହିଁ। ଆଉ ଥରେ ଚଲାନ୍ତୁ, ତା'ପରେ ସେଭ୍ କରନ୍ତୁ।",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "କିଛି ଧାଡ଼ି ଆଉ ବଫରରେ ନାହିଁ, ତେଣୁ ସେଗୁଡ଼ିକ ପାଇଁ କେବଳ ଆପଣଙ୍କ ରେକର୍ଡିଂ ସେଭ୍ ହେବ।"
 }

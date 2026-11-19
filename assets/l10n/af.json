@@ -3646,5 +3646,10 @@
   "Export as CSV": "Voer uit as CSV",
   "Subtitles exported": "Onderskrifte uitgevoer",
   "Save the recording": "Stoor die opname",
-  "Recording saved": "Opname gestoor"
+  "Recording saved": "Opname gestoor",
+  "Only my recording": "Net my opname",
+  "The line, then my recording": "Die reël, dan my opname",
+  "All {0} lines I recorded, each then mine": "Al {0} reëls wat ek opgeneem het, elk gevolg deur myne",
+  "The line is no longer buffered. Play it once more, then save.": "Die reël is nie meer gebuffer nie. Speel dit weer, en stoor dan.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Sommige reëls is nie meer gebuffer nie, dus word net jou opname daarvoor gestoor."
 }

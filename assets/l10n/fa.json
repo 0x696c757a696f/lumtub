@@ -3646,5 +3646,10 @@
   "Export as CSV": "خروجی گرفتن به‌صورت CSV",
   "Subtitles exported": "از زیرنویس خروجی گرفته شد",
   "Save the recording": "ذخیرهٔ ضبط",
-  "Recording saved": "ضبط ذخیره شد"
+  "Recording saved": "ضبط ذخیره شد",
+  "Only my recording": "فقط ضبط من",
+  "The line, then my recording": "جمله، سپس ضبط من",
+  "All {0} lines I recorded, each then mine": "همهٔ {0} جمله‌ای که ضبط کردم، هرکدام همراه ضبط من",
+  "The line is no longer buffered. Play it once more, then save.": "این جمله دیگر در حافظهٔ موقت نیست. یک بار دیگر پخشش کنید و بعد ذخیره کنید.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "برخی جمله‌ها دیگر در حافظهٔ موقت نیستند، پس برای آن‌ها فقط ضبط شما ذخیره می‌شود."
 }

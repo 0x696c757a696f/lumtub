@@ -3645,5 +3645,10 @@
   "Export as CSV": "CSVగా ఎగుమతి చేయండి",
   "Subtitles exported": "ఉపశీర్షికలు ఎగుమతి అయ్యాయి",
   "Save the recording": "రికార్డింగ్‌ను సేవ్ చేయండి",
-  "Recording saved": "రికార్డింగ్ సేవ్ చేయబడింది"
+  "Recording saved": "రికార్డింగ్ సేవ్ చేయబడింది",
+  "Only my recording": "నా రికార్డింగ్ మాత్రమే",
+  "The line, then my recording": "వాక్యం, తర్వాత నా రికార్డింగ్",
+  "All {0} lines I recorded, each then mine": "నేను రికార్డ్ చేసిన మొత్తం {0} వాక్యాలు, ప్రతిదాని తర్వాత నాది",
+  "The line is no longer buffered. Play it once more, then save.": "వాక్యం ఇక బఫర్‌లో లేదు. ఇంకోసారి ప్లే చేసి, తర్వాత సేవ్ చేయండి.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "కొన్ని వాక్యాలు ఇక బఫర్‌లో లేవు, కాబట్టి వాటికి మీ రికార్డింగ్ మాత్రమే సేవ్ అవుతుంది."
 }

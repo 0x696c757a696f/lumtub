@@ -115,6 +115,158 @@ pub fn wav(samples: &[i16], rate: u32) -> Vec<u8> {
     out
 }
 
+/// The samples of a 16-bit PCM WAV file as mono, and their rate.
+pub fn read_wav(bytes: &[u8]) -> Result<(Vec<i16>, u32), String> {
+    if bytes.len() < 12 || &bytes[0..4] != b"RIFF" || &bytes[8..12] != b"WAVE" {
+        return Err("not a WAV file".into());
+    }
+    let mut at = 12;
+    let mut format: Option<(u16, u32)> = None;
+    while at + 8 <= bytes.len() {
+        let id = &bytes[at..at + 4];
+        let size = u32::from_le_bytes(bytes[at + 4..at + 8].try_into().unwrap()) as usize;
+        let body = at + 8;
+        if id == b"fmt " && body + 16 <= bytes.len() {
+            let tag = u16::from_le_bytes([bytes[body], bytes[body + 1]]);
+            let channels = u16::from_le_bytes([bytes[body + 2], bytes[body + 3]]);
+            let rate = u32::from_le_bytes(bytes[body + 4..body + 8].try_into().unwrap());
+            let bits = u16::from_le_bytes([bytes[body + 14], bytes[body + 15]]);
+            if !(tag == 1 || tag == 0xFFFE) || bits != 16 || channels == 0 || rate == 0 {
+                return Err(format!(
+                    "the WAV file is not 16-bit PCM (format {tag}, {bits} bits)"
+                ));
+            }
+            format = Some((channels, rate));
+        } else if id == b"data" {
+            let (channels, rate) = format.ok_or("the WAV file has no format")?;
+            // A writer that never finished leaves the size unset: the
+            // samples then run to the end of the file.
+            let end = if size == 0 || size == u32::MAX as usize {
+                bytes.len()
+            } else {
+                (body + size).min(bytes.len())
+            };
+            let frames: Vec<i16> = bytes[body..end]
+                .chunks_exact(2)
+                .map(|b| i16::from_le_bytes([b[0], b[1]]))
+                .collect();
+            let mut heard = Heard {
+                samples: Vec::with_capacity(frames.len() / channels as usize),
+                rate,
+            };
+            heard.add(&frames, channels as usize, |s| s);
+            return Ok((heard.samples, rate));
+        }
+        at = body + size + (size & 1);
+    }
+    Err("the WAV file has no samples".into())
+}
+
+/// [samples] at [from] Hz, at [to] Hz.
+pub fn resample(samples: &[i16], from: u32, to: u32) -> Vec<i16> {
+    if from == to || samples.is_empty() {
+        return samples.to_vec();
+    }
+    let length = (samples.len() as u64 * to as u64 / from as u64) as usize;
+    (0..length)
+        .map(|i| {
+            let at = i as f64 * from as f64 / to as f64;
+            let left = at.floor() as usize;
+            let right = (left + 1).min(samples.len() - 1);
+            let part = at - left as f64;
+            (samples[left.min(samples.len() - 1)] as f64 * (1.0 - part)
+                + samples[right] as f64 * part)
+                .round() as i16
+        })
+        .collect()
+}
+
+/// One line to join: the video's sound around it, how many seconds at its
+/// end are the line, and the person's take of it.
+pub struct Part<'a> {
+    pub original: Option<&'a [u8]>,
+    pub seconds: f64,
+    pub take: &'a [u8],
+}
+
+/// Each line as the video says it, a pause, then the take, one line after
+/// another with a longer pause, as one WAV file at the first take's rate.
+/// A line without the video's sound is the take alone.
+pub fn join(parts: &[Part], gap: f64) -> Result<Vec<u8>, String> {
+    let mut rate = 0;
+    let mut out: Vec<i16> = Vec::new();
+    for part in parts {
+        let (take, take_rate) = read_wav(part.take)?;
+        if rate == 0 {
+            rate = take_rate;
+        }
+        let silence = |seconds: f64| {
+            std::iter::repeat_n(0i16, (seconds.clamp(0.0, 5.0) * rate as f64) as usize)
+        };
+        if !out.is_empty() {
+            out.extend(silence(gap * 2.0));
+        }
+        if let Some(original) = part.original {
+            let (original, from) = read_wav(original)?;
+            let keep = ((part.seconds.max(0.0) * from as f64) as usize).min(original.len());
+            out.extend(resample(&original[original.len() - keep..], from, rate));
+            out.extend(silence(gap));
+        }
+        out.extend(resample(&take, take_rate, rate));
+    }
+    if out.is_empty() {
+        return Err("nothing to join".into());
+    }
+    Ok(wav(&out, rate))
+}
+
+/// Writes lines and takes as one WAV file (see [join]). [json] is
+/// `{"parts": [{"original"?, "seconds", "take"}], "gap", "out"}`; answers
+/// `{"seconds"}` or `{"error"}`. Free it with lumtub_string_free.
+///
+/// # Safety
+/// [json] must point at [length] bytes of UTF-8.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_mic_join(json: *const u8, length: usize) -> *mut c_char {
+    let ask: serde_json::Value =
+        serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
+    let done = (|| -> Result<f64, String> {
+        let read = |path: &serde_json::Value| {
+            std::fs::read(path.as_str().unwrap_or_default()).map_err(|e| e.to_string())
+        };
+        let mut files = Vec::new();
+        for part in ask["parts"].as_array().ok_or("no parts")? {
+            let original = if part["original"].is_string() {
+                Some(read(&part["original"])?)
+            } else {
+                None
+            };
+            files.push((
+                original,
+                part["seconds"].as_f64().unwrap_or(0.0),
+                read(&part["take"])?,
+            ));
+        }
+        let parts: Vec<Part> = files
+            .iter()
+            .map(|(original, seconds, take)| Part {
+                original: original.as_deref(),
+                seconds: *seconds,
+                take,
+            })
+            .collect();
+        let file = join(&parts, ask["gap"].as_f64().unwrap_or(0.8))?;
+        std::fs::write(ask["out"].as_str().unwrap_or_default(), &file)
+            .map_err(|e| e.to_string())?;
+        let (samples, rate) = read_wav(&file)?;
+        Ok(samples.len() as f64 / rate as f64)
+    })();
+    match done {
+        Ok(seconds) => give_json(&serde_json::json!({ "seconds": seconds })),
+        Err(e) => give_json(&serde_json::json!({ "error": e })),
+    }
+}
+
 /// Starts recording. Null when it did, else why not; free it with
 /// lumtub_string_free.
 #[unsafe(no_mangle)]
@@ -480,6 +632,80 @@ mod tests {
         let long = vec![1i16; 8000 * (LONGEST_SECONDS + 5)];
         heard.add(&long, 1, |s| s);
         assert_eq!(heard.samples.len(), 8000 * LONGEST_SECONDS);
+    }
+
+    #[test]
+    fn wav_read_back_and_downmixed() {
+        assert_eq!(
+            read_wav(&wav(&[5, -7, 9], 22050)).unwrap(),
+            (vec![5, -7, 9], 22050)
+        );
+        let mut stereo = wav(&[100, 300, -100, -300], 8000);
+        stereo[22] = 2;
+        assert_eq!(read_wav(&stereo).unwrap(), (vec![200, -200], 8000));
+        let mut unfinished = wav(&[1, 2], 8000);
+        unfinished[40..44].copy_from_slice(&0u32.to_le_bytes());
+        assert_eq!(read_wav(&unfinished).unwrap().0, vec![1, 2]);
+        assert!(read_wav(b"RIFF....WAVEfmt ").is_err());
+        let mut float = wav(&[1], 8000);
+        float[34] = 32;
+        assert!(read_wav(&float).is_err());
+    }
+
+    #[test]
+    fn the_line_then_a_pause_then_the_take() {
+        let before = vec![7i16; 16000];
+        let line = vec![1000i16; 8000];
+        let original = wav(&[before, line].concat(), 16000);
+        let take = wav(&vec![-5i16; 4000], 8000);
+        let first = Part {
+            original: Some(&original),
+            seconds: 0.5,
+            take: &take,
+        };
+        let (both, rate) = read_wav(&join(&[first], 0.25).unwrap()).unwrap();
+        assert_eq!(rate, 8000);
+        assert_eq!(both.len(), 4000 + 2000 + 4000);
+        assert!(both[..4000].iter().all(|&s| s == 1000));
+        assert!(both[4000..6000].iter().all(|&s| s == 0));
+        assert!(both[6000..].iter().all(|&s| s == -5));
+    }
+
+    #[test]
+    fn lines_one_after_another_at_the_first_takes_rate() {
+        let original = wav(&vec![9i16; 800], 8000);
+        let first = wav(&vec![1i16; 800], 8000);
+        let second = wav(&vec![2i16; 1600], 16000);
+        let parts = [
+            Part {
+                original: Some(&original),
+                seconds: 0.1,
+                take: &first,
+            },
+            Part {
+                original: None,
+                seconds: 0.0,
+                take: &second,
+            },
+        ];
+        let (all, rate) = read_wav(&join(&parts, 0.1).unwrap()).unwrap();
+        assert_eq!(rate, 8000);
+        assert_eq!(all.len(), 800 + 800 + 800 + 1600 + 800);
+        assert!(all[..800].iter().all(|&s| s == 9));
+        assert!(all[1600..2400].iter().all(|&s| s == 1));
+        assert!(all[2400..4000].iter().all(|&s| s == 0));
+        assert!(all[4000..].iter().all(|&s| s == 2));
+        assert!(join(&[], 0.1).is_err());
+    }
+
+    #[test]
+    fn resampling_keeps_length_and_shape() {
+        let ramp: Vec<i16> = (0..480).map(|i| i as i16).collect();
+        let down = resample(&ramp, 48000, 44100);
+        assert_eq!(down.len(), 441);
+        assert_eq!(down[0], 0);
+        assert!((down[440] - 479).abs() <= 1);
+        assert_eq!(resample(&ramp, 8000, 8000), ramp);
     }
 
     #[test]

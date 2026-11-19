@@ -3646,5 +3646,10 @@
   "Export as CSV": "Eksporto si CSV",
   "Subtitles exported": "Titrat u eksportuan",
   "Save the recording": "Ruaj regjistrimin",
-  "Recording saved": "Regjistrimi u ruajt"
+  "Recording saved": "Regjistrimi u ruajt",
+  "Only my recording": "Vetëm regjistrimi im",
+  "The line, then my recording": "Fjalia, pastaj regjistrimi im",
+  "All {0} lines I recorded, each then mine": "Të gjitha {0} fjalitë që regjistrova, secila e ndjekur nga e imja",
+  "The line is no longer buffered. Play it once more, then save.": "Fjalia nuk është më në memorien e përkohshme. Luajeni edhe një herë, pastaj ruajeni.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Disa fjali nuk janë më në memorien e përkohshme, prandaj për to ruhet vetëm regjistrimi juaj."
 }

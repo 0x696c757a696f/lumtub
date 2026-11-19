@@ -3646,5 +3646,10 @@
   "Export as CSV": "Экспартаваць як CSV",
   "Subtitles exported": "Субцітры экспартаваны",
   "Save the recording": "Захаваць запіс",
-  "Recording saved": "Запіс захаваны"
+  "Recording saved": "Запіс захаваны",
+  "Only my recording": "Толькі мой запіс",
+  "The line, then my recording": "Радок, потым мой запіс",
+  "All {0} lines I recorded, each then mine": "Усе {0} запісаныя мною радкі, пасля кожнага — мой",
+  "The line is no longer buffered. Play it once more, then save.": "Радка ўжо няма ў буферы. Прайграйце яго яшчэ раз і захавайце.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Некаторых радкоў ужо няма ў буферы, таму для іх захоўваецца толькі ваш запіс."
 }

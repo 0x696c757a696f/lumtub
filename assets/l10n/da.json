@@ -3646,5 +3646,10 @@
   "Export as CSV": "Eksportér som CSV",
   "Subtitles exported": "Undertekster eksporteret",
   "Save the recording": "Gem optagelsen",
-  "Recording saved": "Optagelsen er gemt"
+  "Recording saved": "Optagelsen er gemt",
+  "Only my recording": "Kun min optagelse",
+  "The line, then my recording": "Replikken, derefter min optagelse",
+  "All {0} lines I recorded, each then mine": "Alle {0} replikker, jeg har optaget, hver efterfulgt af min",
+  "The line is no longer buffered. Play it once more, then save.": "Replikken er ikke længere i bufferen. Afspil den igen, og gem så.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Nogle replikker er ikke længere i bufferen, så kun din optagelse gemmes for dem."
 }

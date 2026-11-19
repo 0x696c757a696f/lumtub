@@ -3645,5 +3645,10 @@
   "Export as CSV": "Thumela njenge-CSV",
   "Subtitles exported": "Amagama-ngezansi athunyelwe",
   "Save the recording": "Londoloza okuqoshiwe",
-  "Recording saved": "Okuqoshiwe kulondoloziwe"
+  "Recording saved": "Okuqoshiwe kulondoloziwe",
+  "Only my recording": "Okuqoshiwe kwami kuphela",
+  "The line, then my recording": "Umusho, bese okuqoshiwe kwami",
+  "All {0} lines I recorded, each then mine": "Yonke imisho engu-{0} engiyiqophile, ngayinye ilandelwa okwami",
+  "The line is no longer buffered. Play it once more, then save.": "Umusho awusekho kubhafa. Wudlale futhi kanye, bese ulondoloza.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Eminye imisho ayisekho kubhafa, ngakho kulondolozwa okuqoshiwe kwakho kuphela kuyo."
 }

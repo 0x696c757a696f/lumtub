@@ -3681,5 +3681,10 @@
   "Export as CSV": "导出为 CSV",
   "Subtitles exported": "字幕已导出",
   "Save the recording": "保存录音",
-  "Recording saved": "录音已保存"
+  "Recording saved": "录音已保存",
+  "Only my recording": "只要我的录音",
+  "The line, then my recording": "原声，然后我的录音",
+  "All {0} lines I recorded, each then mine": "全部 {0} 句录音，每句原声后接我的录音",
+  "The line is no longer buffered. Play it once more, then save.": "这一句已经不在缓冲区了。请再播放一次，然后保存。",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "部分句子已经不在缓冲区，这些句子只保存你的录音。"
 }

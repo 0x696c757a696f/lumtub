@@ -3651,5 +3651,10 @@
   "Export as CSV": "Eksportuj jako CSV",
   "Subtitles exported": "Napisy wyeksportowane",
   "Save the recording": "Zapisz nagranie",
-  "Recording saved": "Nagranie zapisane"
+  "Recording saved": "Nagranie zapisane",
+  "Only my recording": "Tylko moje nagranie",
+  "The line, then my recording": "Kwestia, potem moje nagranie",
+  "All {0} lines I recorded, each then mine": "Wszystkie {0} nagrane kwestie, każda z moim nagraniem",
+  "The line is no longer buffered. Play it once more, then save.": "Kwestii nie ma już w buforze. Odtwórz ją jeszcze raz, a potem zapisz.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Niektórych kwestii nie ma już w buforze, więc zapisze się dla nich tylko twoje nagranie."
 }

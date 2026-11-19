@@ -3646,5 +3646,10 @@
   "Export as CSV": "Εξαγωγή ως CSV",
   "Subtitles exported": "Οι υπότιτλοι εξήχθησαν",
   "Save the recording": "Αποθήκευση ηχογράφησης",
-  "Recording saved": "Η ηχογράφηση αποθηκεύτηκε"
+  "Recording saved": "Η ηχογράφηση αποθηκεύτηκε",
+  "Only my recording": "Μόνο η ηχογράφησή μου",
+  "The line, then my recording": "Η φράση, μετά η ηχογράφησή μου",
+  "All {0} lines I recorded, each then mine": "Και οι {0} φράσεις που ηχογράφησα, η καθεμία με τη δική μου",
+  "The line is no longer buffered. Play it once more, then save.": "Η φράση δεν υπάρχει πια στην προσωρινή μνήμη. Παίξτε τη ξανά και μετά αποθηκεύστε.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Ορισμένες φράσεις δεν υπάρχουν πια στην προσωρινή μνήμη, οπότε γι' αυτές αποθηκεύεται μόνο η ηχογράφησή σας."
 }

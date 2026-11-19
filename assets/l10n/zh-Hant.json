@@ -3670,5 +3670,10 @@
   "Export as CSV": "匯出為 CSV",
   "Subtitles exported": "字幕已匯出",
   "Save the recording": "儲存錄音",
-  "Recording saved": "錄音已儲存"
+  "Recording saved": "錄音已儲存",
+  "Only my recording": "只要我的錄音",
+  "The line, then my recording": "原聲，然後我的錄音",
+  "All {0} lines I recorded, each then mine": "全部 {0} 句錄音，每句原聲後接我的錄音",
+  "The line is no longer buffered. Play it once more, then save.": "這一句已不在緩衝區。請再播放一次，然後儲存。",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "部分句子已不在緩衝區，這些句子只會儲存你的錄音。"
 }

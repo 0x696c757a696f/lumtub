@@ -889,6 +889,10 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// What 跟读录音 is doing now.
   final shadowStage = ValueNotifier(ShadowStage.idle);
 
+  /// Changes each time a take is kept or the takes go, for the subtitle
+  /// list's marks.
+  final shadowTakes = ValueNotifier(0);
+
   /// The chapter titles of [chapterTranslationOf] translated, one for
   /// each chapter, once asked for; untouched ones stay as they are.
   List<String>? chapterTranslation;
@@ -1150,7 +1154,10 @@ class AppController extends ChangeNotifier with _ExploreState {
     chatMessages.dispose();
     speechJob.dispose();
     translationShown.dispose();
-    unawaited(_forgetShadowing().whenComplete(shadowStage.dispose));
+    unawaited(_forgetShadowing().whenComplete(() {
+      shadowStage.dispose();
+      shadowTakes.dispose();
+    }));
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     _startTimer?.cancel();

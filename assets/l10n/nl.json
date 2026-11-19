@@ -3651,5 +3651,10 @@
   "Export as CSV": "Exporteren als CSV",
   "Subtitles exported": "Ondertitels geëxporteerd",
   "Save the recording": "Opname opslaan",
-  "Recording saved": "Opname opgeslagen"
+  "Recording saved": "Opname opgeslagen",
+  "Only my recording": "Alleen mijn opname",
+  "The line, then my recording": "De zin, dan mijn opname",
+  "All {0} lines I recorded, each then mine": "Alle {0} opgenomen zinnen, telkens gevolgd door de mijne",
+  "The line is no longer buffered. Play it once more, then save.": "De zin staat niet meer in de buffer. Speel hem nog een keer af en sla dan op.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Sommige zinnen staan niet meer in de buffer, dus daarvoor wordt alleen je opname opgeslagen."
 }

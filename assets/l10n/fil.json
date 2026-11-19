@@ -3646,5 +3646,10 @@
   "Export as CSV": "I-export bilang CSV",
   "Subtitles exported": "Na-export ang mga subtitle",
   "Save the recording": "I-save ang recording",
-  "Recording saved": "Na-save ang recording"
+  "Recording saved": "Na-save ang recording",
+  "Only my recording": "Ang recording ko lang",
+  "The line, then my recording": "Ang linya, saka ang recording ko",
+  "All {0} lines I recorded, each then mine": "Lahat ng {0} linyang ni-record ko, bawat isa ay sinusundan ng akin",
+  "The line is no longer buffered. Play it once more, then save.": "Wala na sa buffer ang linya. I-play itong muli, saka i-save.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Wala na sa buffer ang ilang linya, kaya ang recording mo lang ang mase-save para sa mga iyon."
 }

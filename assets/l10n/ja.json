@@ -3651,5 +3651,10 @@
   "Export as CSV": "CSVでエクスポート",
   "Subtitles exported": "字幕をエクスポートしました",
   "Save the recording": "録音を保存",
-  "Recording saved": "録音を保存しました"
+  "Recording saved": "録音を保存しました",
+  "Only my recording": "自分の録音のみ",
+  "The line, then my recording": "元の音声、続けて自分の録音",
+  "All {0} lines I recorded, each then mine": "録音した全{0}行（それぞれ元の音声の後に自分の録音）",
+  "The line is no longer buffered. Play it once more, then save.": "この行はもうバッファにありません。もう一度再生してから保存してください。",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "一部の行はもうバッファにないため、それらは自分の録音のみ保存されます。"
 }

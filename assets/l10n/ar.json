@@ -3651,5 +3651,10 @@
   "Export as CSV": "تصدير بصيغة CSV",
   "Subtitles exported": "تم تصدير الترجمة",
   "Save the recording": "حفظ التسجيل",
-  "Recording saved": "تم حفظ التسجيل"
+  "Recording saved": "تم حفظ التسجيل",
+  "Only my recording": "تسجيلي فقط",
+  "The line, then my recording": "السطر ثم تسجيلي",
+  "All {0} lines I recorded, each then mine": "كل الأسطر التي سجلتها ({0})، وبعد كلٍّ منها تسجيلي",
+  "The line is no longer buffered. Play it once more, then save.": "لم يعد السطر في المخزن المؤقت. شغّله مرة أخرى ثم احفظ.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "بعض الأسطر لم تعد في المخزن المؤقت، لذا يُحفظ تسجيلك فقط لها."
 }

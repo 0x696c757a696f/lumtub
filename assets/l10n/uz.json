@@ -3645,5 +3645,10 @@
   "Export as CSV": "CSV sifatida eksport qilish",
   "Subtitles exported": "Taglavhalar eksport qilindi",
   "Save the recording": "Yozuvni saqlash",
-  "Recording saved": "Yozuv saqlandi"
+  "Recording saved": "Yozuv saqlandi",
+  "Only my recording": "Faqat mening yozuvim",
+  "The line, then my recording": "Gap, keyin mening yozuvim",
+  "All {0} lines I recorded, each then mine": "Men yozib olgan barcha {0} ta gap, har biridan keyin meniki",
+  "The line is no longer buffered. Play it once more, then save.": "Gap endi buferda yo‘q. Uni yana bir marta qo‘yib, keyin saqlang.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Ba’zi gaplar endi buferda yo‘q, shuning uchun ular uchun faqat sizning yozuvingiz saqlanadi."
 }

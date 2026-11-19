@@ -3645,5 +3645,10 @@
   "Export as CSV": "CSV ලෙස අපනයනය කරන්න",
   "Subtitles exported": "උපසිරැසි අපනයනය කළා",
   "Save the recording": "පටිගත කිරීම සුරකින්න",
-  "Recording saved": "පටිගත කිරීම සුරැකිණි"
+  "Recording saved": "පටිගත කිරීම සුරැකිණි",
+  "Only my recording": "මගේ පටිගත කිරීම පමණි",
+  "The line, then my recording": "වාක්‍යය, පසුව මගේ පටිගත කිරීම",
+  "All {0} lines I recorded, each then mine": "මා පටිගත කළ වාක්‍ය {0}ම, එක් එක් ඒවාට පසුව මගේ",
+  "The line is no longer buffered. Play it once more, then save.": "වාක්‍යය තවදුරටත් බෆරයේ නැත. එය තවත් වරක් වාදනය කර සුරකින්න.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "සමහර වාක්‍ය තවදුරටත් බෆරයේ නැති නිසා, ඒවා සඳහා ඔබගේ පටිගත කිරීම පමණක් සුරැකේ."
 }

@@ -284,6 +284,18 @@ class _SubtitleListState extends State<SubtitleList> {
                                 ],
                               ]),
                             ),
+                            ValueListenableBuilder<int>(
+                              valueListenable: widget.controller.shadowTakes,
+                              builder: (context, takes, child) => widget.controller.hasTakeOf(cue)
+                                  ? IconButton(
+                                      tooltip: tr('Compare with the original'),
+                                      visualDensity: VisualDensity.compact,
+                                      iconSize: 16,
+                                      icon: Icon(AppIcons.userSound, color: colors.primary),
+                                      onPressed: () => unawaited(widget.controller.compareShadowing(cue)),
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
                             IconButton(
                               tooltip: tr('Copy'),
                               visualDensity: VisualDensity.compact,

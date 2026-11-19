@@ -3645,5 +3645,10 @@
   "Export as CSV": "CSV kimi ixrac et",
   "Subtitles exported": "Subtitrlər ixrac edildi",
   "Save the recording": "Səs yazısını saxla",
-  "Recording saved": "Səs yazısı saxlanıldı"
+  "Recording saved": "Səs yazısı saxlanıldı",
+  "Only my recording": "Yalnız mənim səs yazım",
+  "The line, then my recording": "Sətir, sonra mənim səs yazım",
+  "All {0} lines I recorded, each then mine": "Yazdığım bütün {0} sətir, hər birindən sonra mənimki",
+  "The line is no longer buffered. Play it once more, then save.": "Sətir artıq buferdə deyil. Onu bir daha oynadın, sonra saxlayın.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Bəzi sətirlər artıq buferdə deyil, ona görə onlar üçün yalnız sizin səs yazınız saxlanılır."
 }

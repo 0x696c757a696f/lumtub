@@ -3646,5 +3646,10 @@
   "Export as CSV": "Izvezi kao CSV",
   "Subtitles exported": "Titlovi izvezeni",
   "Save the recording": "Spremi snimku",
-  "Recording saved": "Snimka je spremljena"
+  "Recording saved": "Snimka je spremljena",
+  "Only my recording": "Samo moja snimka",
+  "The line, then my recording": "Rečenica, pa moja snimka",
+  "All {0} lines I recorded, each then mine": "Sve {0} rečenice koje sam snimio, svaka pa moja",
+  "The line is no longer buffered. Play it once more, then save.": "Rečenica više nije u međuspremniku. Pustite je još jednom pa spremite.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Neke rečenice više nisu u međuspremniku, pa se za njih sprema samo vaša snimka."
 }

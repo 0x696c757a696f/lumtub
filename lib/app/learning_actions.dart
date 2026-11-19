@@ -153,7 +153,13 @@ extension LearningActions on AppController {
   }
 
   /// Whether there is a take to compare with the original line.
-  bool get hasShadowTake => _shadowing?.take != null && _shadowLine != null;
+  bool get hasShadowTake => _shadowing?.last != null;
+
+  /// How many lines have a take.
+  int get shadowTakeCount => _shadowing?.takes.length ?? 0;
+
+  /// Whether [line] has a take, for the subtitle list.
+  bool hasTakeOf(SubtitleCue line) => _shadowing?.takes.containsKey(line.start) ?? false;
 
   /// 跟读录音: starts recording the person saying the line now, with the
   /// video paused; pressed again, stops and plays the line, then the take.
@@ -191,9 +197,10 @@ extension LearningActions on AppController {
 
   Future<void> _stopShadowing() async {
     if (shadowStage.value != ShadowStage.recording) return;
-    File? take;
+    final line = _shadowLine;
+    ShadowTake? take;
     try {
-      take = await _shadowing?.stop();
+      if (line != null) take = await _shadowing?.stop(line);
     } catch (e) {
       logWarn('Could not save the recording: $e');
     }
@@ -207,17 +214,21 @@ extension LearningActions on AppController {
       _notice(tr('Nothing was recorded. Check the microphone.'));
       return;
     }
+    shadowTakes.value++;
+    // The line was just played, so the video's cache still holds it.
+    if (take.original == null) unawaited(_keepOriginal(take));
     await compareShadowing();
   }
 
-  /// Plays the line the take is of, then the take.
-  Future<void> compareShadowing() async {
+  /// Plays [line] (the line recorded last when null), then its take.
+  Future<void> compareShadowing([SubtitleCue? line]) async {
     final player = this.player;
-    final line = _shadowLine;
-    final take = _shadowing?.take;
-    if (player == null || line == null || take == null || shadowStage.value == ShadowStage.recording) return;
+    final take = line == null ? _shadowing?.last : _shadowing?.takes[line.start];
+    if (player == null || take == null || shadowStage.value == ShadowStage.recording) return;
+    line = take.line;
     final serial = ++_shadowSerial;
     bool current() => serial == _shadowSerial && identical(player, this.player);
+    if (shadowStage.value != ShadowStage.idle) await _shadowPlayer?.stop();
     shadowStage.value = ShadowStage.original;
     try {
       _linePause.reset();
@@ -234,9 +245,8 @@ extension LearningActions on AppController {
       shadowStage.value = ShadowStage.mine;
       final mine = _shadowPlayer ??= Player();
       await mine.setVolume(player.state.volume);
-      await mine.open(Media(take.uri.toString()));
-      final length = _shadowing?.takeLength ?? Duration.zero;
-      await mine.stream.completed.firstWhere((done) => done).timeout(length + const Duration(seconds: 2), onTimeout: () => true);
+      await mine.open(Media(take.file.uri.toString()));
+      await mine.stream.completed.firstWhere((done) => done).timeout(take.length + const Duration(seconds: 2), onTimeout: () => true);
     } catch (e) {
       logWarn('Could not play the recording back: $e');
     } finally {
@@ -244,16 +254,102 @@ extension LearningActions on AppController {
     }
   }
 
-  /// Saves the last take as a WAV file where the person picks; false when
-  /// they cancelled or there is none.
-  Future<bool> saveShadowTake() async {
-    final take = _shadowing?.take;
-    final line = _shadowLine;
-    if (take == null || line == null || !await take.exists()) return false;
-    final at = line.start.inSeconds;
-    final name = 'lumtub-shadowing-${playing?.id ?? 'video'}-${at ~/ 60}m${(at % 60).toString().padLeft(2, '0')}s.wav';
+  /// Reads the line [take] is of out of the video's cache, as the video
+  /// says it, for saving the two together. libmpv writes the cached
+  /// packets around the line to a file (from the keyframe before it, so
+  /// only its end is exact) and a second, silent libmpv decodes their
+  /// sound to WAV as fast as it can; the core keeps the end that is the
+  /// line. False when the cache no longer holds it.
+  Future<bool> _keepOriginal(ShadowTake take) async {
+    final player = this.player;
+    final shadowing = _shadowing;
+    final platform = player?.platform;
+    if (player == null || shadowing == null || platform is! NativePlayer || playing?.isLive == true) return false;
+    final line = take.line;
+    final from = line.start - const Duration(milliseconds: 150);
+    final start = (from < Duration.zero ? 0 : from.inMilliseconds) / 1000;
+    final end = (line.end + const Duration(milliseconds: 250)).inMilliseconds / 1000;
+    final File packets = shadowing.fileFor(line, 'video', 'mkv');
+    final File sound = shadowing.fileFor(line, 'line', 'wav');
+    Player? decoder;
     try {
-      if (!await saveFileAs(name, await take.readAsBytes(), mime: 'audio/wav', label: 'WAV', extension: 'wav')) return false;
+      final cache = jsonDecode(await platform.getProperty('demuxer-cache-state'));
+      final ranges = cache is Map ? cache['seekable-ranges'] : null;
+      final held = ranges is List && ranges.any((r) => r is Map && r['start'] is num && r['end'] is num && (r['start'] as num) <= start && (r['end'] as num) >= end);
+      if (!held) {
+        logDebug(() => 'The line at ${line.start} is no longer in the cache');
+        return false;
+      }
+      await shadowing.folder.create(recursive: true);
+      await platform.command(['dump-cache', '$start', '$end', packets.path]);
+      if (!await packets.exists() || await packets.length() == 0) return false;
+      decoder = Player(configuration: const PlayerConfiguration(vo: 'null', title: 'Lumtub line'));
+      final silent = decoder.platform;
+      if (silent is! NativePlayer) return false;
+      for (final (name, value) in [
+        ('vid', 'no'),
+        ('sid', 'no'),
+        ('ao', 'pcm'),
+        ('ao-pcm-file', sound.path),
+        ('ao-pcm-waveheader', 'yes'),
+        ('audio-format', 's16'),
+        ('audio-channels', 'mono'),
+        ('untimed', 'yes'),
+        ('volume', '100'),
+      ]) {
+        await silent.setProperty(name, value);
+      }
+      await decoder.open(Media(packets.uri.toString()));
+      await decoder.stream.completed.firstWhere((done) => done).timeout(const Duration(seconds: 20));
+      await decoder.dispose();
+      decoder = null;
+      if (!await sound.exists() || await sound.length() <= 44) return false;
+      take.original = sound;
+      take.originalSeconds = end - start;
+      return true;
+    } catch (e) {
+      logWarn('Could not read the line out of the cache: $e');
+      return false;
+    } finally {
+      await decoder?.dispose();
+      if (await packets.exists()) await packets.delete().catchError((Object _) => packets);
+    }
+  }
+
+  /// Saves takes as one WAV file where the person picks ([ShadowExport]);
+  /// false when they cancelled or there is nothing to save.
+  Future<bool> saveShadowTake(ShadowExport what) async {
+    final shadowing = _shadowing;
+    final last = shadowing?.last;
+    if (shadowing == null || last == null) return false;
+    final takes = what == ShadowExport.all ? shadowing.inOrder : [last];
+    final at = last.line.start.inSeconds;
+    final id = playing?.id ?? 'video';
+    final name = switch (what) {
+      ShadowExport.mine => 'lumtub-shadowing-$id-${at ~/ 60}m${(at % 60).toString().padLeft(2, '0')}s.wav',
+      ShadowExport.withLine => 'lumtub-shadowing-$id-${at ~/ 60}m${(at % 60).toString().padLeft(2, '0')}s-with-line.wav',
+      ShadowExport.all => 'lumtub-shadowing-$id-${takes.length}-lines.wav',
+    };
+    try {
+      final Uint8List bytes;
+      if (what == ShadowExport.mine) {
+        bytes = await last.file.readAsBytes();
+      } else {
+        for (final take in takes) {
+          if (take.original == null) await _keepOriginal(take);
+        }
+        if (takes.any((take) => take.original == null)) {
+          _notice(what == ShadowExport.withLine ? tr('The line is no longer buffered. Play it once more, then save.') : tr('Some lines are no longer buffered, so only your recording is saved for them.'));
+          if (what == ShadowExport.withLine) return false;
+        }
+        final out = shadowing.fileFor(last.line, 'export', 'wav').path;
+        final parts = [for (final take in takes) take.part];
+        final joined = await Isolate.run(() => NativeCore.micJoin(parts, out));
+        if (joined.error != null) throw StateError(joined.error!);
+        bytes = await File(out).readAsBytes();
+        await File(out).delete();
+      }
+      if (!await saveFileAs(name, bytes, mime: 'audio/wav', label: 'WAV', extension: 'wav')) return false;
       _notice(tr('Recording saved'));
       return true;
     } catch (e) {
@@ -278,7 +374,10 @@ extension LearningActions on AppController {
     _shadowing = null;
     _shadowPlayer = null;
     _shadowLine = null;
-    if (!_disposed) shadowStage.value = ShadowStage.idle;
+    if (!_disposed) {
+      shadowStage.value = ShadowStage.idle;
+      shadowTakes.value++;
+    }
     try {
       await shadowing?.dispose();
       await mine?.dispose();

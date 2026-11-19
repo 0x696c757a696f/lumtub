@@ -3645,5 +3645,10 @@
   "Export as CSV": "CSV તરીકે નિકાસ કરો",
   "Subtitles exported": "સબટાઇટલ નિકાસ થયા",
   "Save the recording": "રેકોર્ડિંગ સાચવો",
-  "Recording saved": "રેકોર્ડિંગ સાચવ્યું"
+  "Recording saved": "રેકોર્ડિંગ સાચવ્યું",
+  "Only my recording": "માત્ર મારું રેકોર્ડિંગ",
+  "The line, then my recording": "લાઇન, પછી મારું રેકોર્ડિંગ",
+  "All {0} lines I recorded, each then mine": "મેં રેકોર્ડ કરેલી બધી {0} લાઇનો, દરેક પછી મારી",
+  "The line is no longer buffered. Play it once more, then save.": "લાઇન હવે બફરમાં નથી. તેને ફરી એક વાર ચલાવો, પછી સાચવો.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "કેટલીક લાઇનો હવે બફરમાં નથી, તેથી તેમના માટે ફક્ત તમારું રેકોર્ડિંગ સચવાશે."
 }

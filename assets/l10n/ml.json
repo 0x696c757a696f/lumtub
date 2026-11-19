@@ -3646,5 +3646,10 @@
   "Export as CSV": "CSV ആയി എക്സ്പോർട്ട് ചെയ്യുക",
   "Subtitles exported": "സബ്ടൈറ്റിലുകൾ എക്സ്പോർട്ട് ചെയ്തു",
   "Save the recording": "റെക്കോർഡിംഗ് സംരക്ഷിക്കുക",
-  "Recording saved": "റെക്കോർഡിംഗ് സംരക്ഷിച്ചു"
+  "Recording saved": "റെക്കോർഡിംഗ് സംരക്ഷിച്ചു",
+  "Only my recording": "എന്റെ റെക്കോർഡിംഗ് മാത്രം",
+  "The line, then my recording": "വരി, തുടർന്ന് എന്റെ റെക്കോർഡിംഗ്",
+  "All {0} lines I recorded, each then mine": "ഞാൻ റെക്കോർഡ് ചെയ്ത എല്ലാ {0} വരികളും, ഓരോന്നിനും ശേഷം എന്റേത്",
+  "The line is no longer buffered. Play it once more, then save.": "വരി ഇനി ബഫറിൽ ഇല്ല. ഒരിക്കൽ കൂടി പ്ലേ ചെയ്ത് സംരക്ഷിക്കുക.",
+  "Some lines are no longer buffered, so only your recording is saved for them.": "ചില വരികൾ ഇനി ബഫറിൽ ഇല്ല, അതിനാൽ അവയ്ക്ക് നിങ്ങളുടെ റെക്കോർഡിംഗ് മാത്രം സംരക്ഷിക്കും."
 }

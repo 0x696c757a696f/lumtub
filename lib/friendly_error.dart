@@ -31,6 +31,9 @@ String friendlyError(Object error) {
       text.contains('dns error')) {
     return tr("Can't reach YouTube; check the network or proxy");
   }
+  if (text.contains('github') && RegExp(r'\b(http|status|code|error)\W{0,3}(403|429)\b').hasMatch(text)) {
+    return tr('GitHub is limiting update checks from this network for now (HTTP {0}); try again later or use another proxy', [RegExp(r'(403|429)').firstMatch(text)![1]!]);
+  }
   if (RegExp(r'\b(http|status|code|error)\W{0,3}403\b|\b403 forbidden').hasMatch(text)) return tr('YouTube refused the request (403); try again later or use another proxy');
   var message = error is http.ClientException ? error.message : raw;
   message = message.replaceFirst(RegExp(r'^(\w+(Exception|Error)):\s*'), '').trim();

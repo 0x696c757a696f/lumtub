@@ -81,6 +81,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
       values: [for (final s in TranslationService.values) (s, s.label)],
       onSelected: (v) => saveConfig((c) => c.copyWith(service: v)),
     ),
+    if (service.kind.isNotEmpty) tip(service.kind),
     PopupItem<String>(
       title: tr('Translation target language'),
       leading: Icon(AppIcons.translate),
@@ -90,12 +91,12 @@ List<Widget> _items(BuildContext context, AppController controller) {
     ),
     SwitchItem(
       title: tr('Translate subtitles with this service too'),
-      subtitle: service == TranslationService.google
+      subtitle: service.subtitlesOnGoogle
           ? tr("Available once another service is chosen; YouTube's own auto-translate is used by default")
           : tr("When off, YouTube's own auto-translate is used, and this service only when YouTube refuses"),
       leading: Icon(AppIcons.subtitles),
-      value: prefs.subtitlesByService && service != TranslationService.google,
-      enabled: service != TranslationService.google,
+      value: prefs.subtitlesByService && !service.subtitlesOnGoogle,
+      enabled: !service.subtitlesOnGoogle,
       onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(subtitlesByService: v)),
     ),
     if (service == TranslationService.microsoft) ...[
@@ -120,6 +121,22 @@ List<Widget> _items(BuildContext context, AppController controller) {
       header('DeepL'),
       keyItem(service),
       tip(tr('Free keys end in :fx and use the free endpoint automatically.')),
+    ],
+    if (service == TranslationService.mymemory) ...[
+      header('MyMemory'),
+      NormalItem(
+        title: tr('Email (optional)'),
+        subtitle: (controller.translationKeys[service.name] ?? '').isEmpty ? tr('Not set') : controller.translationKeys[service.name]!,
+        leading: Icon(AppIcons.identificationBadge),
+        onTap: () async {
+          final saved = controller.translationKeys[service.name] ?? '';
+          final typed = await showDialog<String>(
+            context: context,
+            builder: (context) => TextEditDialog(title: tr('Email (optional)'), initialText: saved, hintText: tr('Raises the daily allowance; sent only to MyMemory')),
+          );
+          if (typed != null) await controller.saveApiKey(service.name, typed.trim());
+        },
+      ),
     ],
     if (service == TranslationService.libre) ...[
       header('LibreTranslate'),

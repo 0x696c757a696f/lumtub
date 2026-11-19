@@ -191,6 +191,99 @@ void main() {
     });
   });
 
+  group('LibreTranslator languages', () {
+    test('asks the server which code it knows a language by', () async {
+      final targets = <String>[];
+      final client = MockClient((request) async {
+        if (request.url.path.endsWith('/languages')) {
+          return _json([
+            {'code': 'en', 'name': 'English', 'targets': ['en', 'zh', 'zt', 'tl']},
+            {'code': 'zh', 'name': 'Chinese', 'targets': ['en', 'zh', 'zt']},
+          ]);
+        }
+        targets.add(jsonDecode(request.body)['target'] as String);
+        return _json({'translatedText': ['x']});
+      });
+      final libre = LibreTranslator(client, server: 'https://old-libre.example.com');
+      await libre.translate('a', 'zh-CN');
+      await libre.translate('b', 'zh-TW');
+      await libre.translate('c', 'tl');
+      expect(targets, ['zh', 'zt', 'tl']);
+      expect(await _fails(libre.translate('d', 'ja')), tr('{0} does not support this language', ['LibreTranslate']));
+    });
+
+    test('reads codes and targets from /languages', () {
+      expect(LibreTranslator.parseLanguages([
+        {'code': 'zh-Hans', 'targets': ['zh-Hant', 'en']},
+      ]), {'zh-Hans', 'zh-Hant', 'en'});
+      expect(LibreTranslator.parseLanguages({'error': 'x'}), isNull);
+      expect(LibreTranslator.languageCode('zh-TW'), 'zh-Hant');
+      expect(LibreTranslator.languageCode('tl'), 'tl');
+    });
+  });
+
+  group('MyMemoryTranslator', () {
+    setUp(MyMemoryTranslator.resetPacing);
+    tearDown(MyMemoryTranslator.resetPacing);
+
+    test('asks with autodetect, one request per piece, and the email when given', () async {
+      final seen = <Uri>[];
+      final client = MockClient((request) async {
+        seen.add(request.url);
+        return _json({'responseData': {'translatedText': '译${request.url.queryParameters['q']}'}, 'quotaFinished': false, 'responseStatus': 200});
+      });
+      final translator = MyMemoryTranslator(client, email: () => 'me@example.com');
+      expect(await translator.translate('a\nb', 'iw'), '译a\n译b');
+      expect(seen.first.host, 'api.mymemory.translated.net');
+      expect(seen.first.queryParameters['langpair'], 'autodetect|he');
+      expect(seen.first.queryParameters['de'], 'me@example.com');
+      final plain = MockClient((request) async {
+        seen.add(request.url);
+        return _json({'responseData': {'translatedText': 'x'}, 'responseStatus': 200});
+      });
+      await MyMemoryTranslator(plain).translate('c', 'fr');
+      expect(seen.last.queryParameters.containsKey('de'), isFalse);
+    });
+
+    test('refuses long texts so the next service takes them', () async {
+      var asked = 0;
+      final client = MockClient((_) async {
+        asked++;
+        return _json({'responseData': {'translatedText': 'x'}, 'responseStatus': 200});
+      });
+      final long = List.filled(400, 'word').join(' ');
+      expect(await _fails(MyMemoryTranslator(client).translate(long, 'fr')), tr('This text is too long for {0}', ['MyMemory']));
+      expect(asked, 0);
+      final pieces = MyMemoryTranslator.piecesOf('${List.filled(60, 'Sentence one.').join(' ')}\nshort')!;
+      expect(pieces.every((p) => utf8.encode(p).length <= MyMemoryTranslator.requestBytes), isTrue);
+      expect(pieces.last, 'short');
+    });
+
+    test('a used-up allowance is busy until the next day, without asking again', () async {
+      var asked = 0;
+      final client = MockClient((_) async {
+        asked++;
+        return _json({'responseData': {'translatedText': 'MYMEMORY WARNING: YOU USED ALL AVAILABLE FREE TRANSLATIONS FOR TODAY'}, 'quotaFinished': true, 'responseStatus': 429});
+      });
+      final translator = MyMemoryTranslator(client);
+      expect(await _fails(translator.translate('a', 'fr')), TranslationException.busy().message);
+      expect(MyMemoryTranslator.coolingDown, isTrue);
+      expect(await _fails(translator.translate('b', 'fr')), TranslationException.busy().message);
+      expect(asked, 1);
+    });
+
+    test('is chosen for short texts only; subtitles stay with Google', () {
+      final fallback = MockClient((_) async => _json({}));
+      final google = GoogleTranslator(fallback);
+      expect(translatorFor(const TranslationConfig(service: TranslationService.mymemory), {}, fallback, fallback: google), same(google));
+      expect(TranslationService.mymemory.subtitlesOnGoogle, isTrue);
+      expect(TranslationService.deepl.subtitlesOnGoogle, isFalse);
+      for (final service in TranslationService.values) {
+        expect(service.kind, isA<String>());
+      }
+    });
+  });
+
   group('AiTranslator', () {
     http.Response reply(String content) => _json({'choices': [{'message': {'role': 'assistant', 'content': content}}]});
 

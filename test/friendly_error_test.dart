@@ -56,4 +56,10 @@ void main() {
     expect(friendlyDownloadError('ERROR: ffmpeg is not available'), contains('ffmpeg'));
     expect(friendlyDownloadError('ERROR: [youtube] x: Sign in to confirm you’re not a bot'), contains('bot'));
   });
+
+  test('a GitHub refusal names GitHub, not YouTube', () {
+    final text = friendlyError(const HttpException('GitHub API HTTP 403 for yt-dlp/yt-dlp'));
+    expect(text, contains('GitHub'));
+    expect(text, isNot(contains('YouTube')));
+  });
 }

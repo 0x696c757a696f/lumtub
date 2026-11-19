@@ -305,6 +305,7 @@ code { font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace; 
   margin-top: var(--s-900);
 }
 .section-head + .highlight { margin-top: 0; }
+.highlight.flip { grid-template-columns: 7fr 5fr; }
 .highlight.flip .hl-text { order: 2; }
 .hl-text { display: grid; gap: var(--s-200); }
 .index { color: var(--accent); letter-spacing: 0.08em; }
@@ -659,6 +660,7 @@ details p { padding: 0 var(--s-300) var(--s-300); overflow-wrap: anywhere; }
 @media (max-width: 960px) {
   .nav-links { display: none; }
   .highlight { grid-template-columns: 1fr; gap: var(--s-300); margin-top: var(--s-700); }
+  .highlight.flip { grid-template-columns: 1fr; }
   .highlight.flip .hl-text { order: 0; }
   .grid { grid-template-columns: 1fr 1fr; }
   .steps { grid-template-columns: 1fr; }

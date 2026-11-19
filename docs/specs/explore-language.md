@@ -30,10 +30,9 @@ From the video's own `/youtubei/v1/player` answer, in this order:
    them.
 3. **Only when neither exists**, the title and description read
    together, and only when the title is not a translation: the title
-   listed in English (search is asked with `hl=en`) is the same as the
-   one `/player` gives asked in the language picked. A title the uploader
-   or YouTube translated differs between the two, and such a video is
-   left out.
+   listed in the language picked (the search is asked in it) is the same
+   as the one `/player` gives asked in English. A title the uploader
+   translated differs between the two, and such a video is left out.
 
 Whenever 1 or 2 exists it decides, whatever the texts say: an English
 lecture with an Italian title and English captions is left out. A video
@@ -59,6 +58,11 @@ searching, so that the search finds videos in it to begin with:
   `lofi`, `vlog`, see `keptSearchWords`);
 - a zone of the person's own too; when its translated search runs out,
   its words as written are searched as well.
+
+An English word a zone gives beside its Chinese keyword
+(`基督宗教 Christianity`) is that keyword's English, not a name, and is
+translated with it (kept as a name, Italian Christianity searched
+"Christianity" and kept 0 of 240, 2026-11-19).
 
 The zones' Chinese keywords are not translated themselves: each has its
 English in `searchPivots` (`lib/explore_pivots.dart`), which is translated
@@ -87,8 +91,18 @@ phrase → translation) and never asked again; one page's phrases go in
 one request, 30 lines at most. A phrase no translator would take is
 searched in English, and the log says how many were left so and why.
 
-The search is also asked from the language's home country (`gl`) when no
-region is picked.
+The search is asked in the language picked (`hl`, as YouTube spells it:
+`fil`, `iw`), which YouTube ranks results by: on 2026-11-19, asked from
+the same connection, `cristianismo` brought 1 Spanish video in 18 with
+`hl=en` and 16 with `hl=es`; `Christentum` 3 German in 6 with `hl=en`,
+14 in 16 with `hl=de`. `gl` changed little. Such a listing writes views
+and dates its own way: views are read with any thousands separator, and
+the exact count and publishing date of each kept video are taken from
+its `/player` answer (the date is kept with heard answers). If the
+website listing fails, yt-dlp searches in English.
+
+It is also asked from the language's home country (`gl`) when no region
+is picked.
 
 A whole zone's words put into another language may find few videos or
 none (`知识 科普` as `conoscenza Scienza popolare` found none uploaded in
@@ -123,8 +137,10 @@ goes on with its sub-categories' searches, one after another.
   connection in Germany; with any visitor data every answer was `OK`).
 - Answers are cut down with `X-Goog-FieldMask`; if the mask loses the
   video, whole answers are asked for.
-- Texts are asked in the language picked, so the title shown is the one
-  a viewer in that language would see.
+- Explore's listing is already in the language picked, so its titles
+  are shown as they are and `/player` is asked in English, for rule 3
+  to compare. A caller whose listing is in English asks `/player` in the
+  language picked and shows the title it gives.
 - If YouTube leaves the video out of half of the last 20 answers (as when
   it asks this network to sign in), nothing is asked for 10 minutes.
 
@@ -148,8 +164,12 @@ by earlier versions in `heard_languages.json` are not read back.
 
 ## When nothing is found
 
+- Each search of a page (the zone's, then each wider one it goes on
+  with) is checked on its own. One that, after 60 answers, has kept none
+  and was told another language by audio, captions or the channel for
+  at least three in four, stops, and the next search starts.
 - After 240 videos with none kept (more after Keep looking), it stops
   and offers to look further.
 - Every check writes one log line:
-  `Language <name>: kept K of N videos, H told by audio or captions; <source language count>…`.
+  `Language <name>: kept K of N videos in S s (V a second, first shown after F s), H told by audio or captions; <source language count>…`.
   That line is the first thing to read when the filter misbehaves.

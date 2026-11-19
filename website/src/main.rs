@@ -467,7 +467,7 @@ fn Download(t: &'static Text, ctx: Ctx, lang: Lang) -> impl IntoView {
                     {t.install_notes.iter().map(|(os, note)| view! {
                         <div class="note-card">
                             <h4 class="title-3">{*os}</h4>
-                            <p class="body-6 muted">{*note}</p>
+                            {note.split('\n').map(|line| view! { <p class="body-6 muted">{line}</p> }).collect_view()}
                         </div>
                     }).collect_view()}
                     <div class="note-card source">

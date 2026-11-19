@@ -126,7 +126,7 @@ pub struct Text {
     pub platforms_title: &'static str,
     pub platforms_body: &'static str,
     pub table_head: [&'static str; 2],
-    pub packages: [Package; 13],
+    pub packages: [Package; 14],
     pub install_notes: [(&'static str, &'static str); 5],
     pub altstore_label: &'static str,
     pub copy: &'static str,
@@ -163,7 +163,7 @@ pub struct Text {
 pub const ALTSTORE_SOURCE: &str =
     "https://github.com/0x696c757a696f/lumtub/releases/latest/download/altstore-source.json";
 
-const PACKAGE_SUFFIXES: [(&str, &str); 13] = [
+const PACKAGE_SUFFIXES: [(&str, &str); 14] = [
     ("Windows", "windows-x64-v3-setup.exe"),
     ("Windows", "windows-x64-setup.exe"),
     ("Windows", "windows-arm64-setup.exe"),
@@ -176,6 +176,7 @@ const PACKAGE_SUFFIXES: [(&str, &str); 13] = [
     ("Android", "android-armeabi-v7a.apk"),
     ("Android", "android-x86_64.apk"),
     ("iOS", "ios.ipa"),
+    ("iOS", "ios-trollstore.tipa"),
     ("iOS", "altstore-source.json"),
 ];
 
@@ -308,14 +309,15 @@ pub static EN: Text = Text {
         package(9, "Android armeabi v7a", "Older 32 bit devices and many low cost TV boxes"),
         package(10, "Android x86_64", "Emulators and x86 Chromebooks"),
         package(11, "iPhone and iPad IPA", "iOS 15 or newer, sideloaded (preview, not yet tested on a real device)"),
-        package(12, "AltStore source", "Add it to SideStore or AltStore to get new versions"),
+        package(12, "TrollStore TIPA", "For TrollStore. No Apple ID needed"),
+        package(13, "AltStore source", "Add it to SideStore or AltStore to get new versions"),
     ],
     install_notes: [
         ("Windows", "Run the installer, or unzip the portable version from the releases page. No administrator rights needed. Package manager (under review): winget install Lumtub.Lumtub."),
         ("macOS", "Lumtub is not notarized yet. After dragging it into Applications, run xattr -dr com.apple.quarantine /Applications/Lumtub.app once, or choose Open Anyway in System Settings › Privacy & Security."),
         ("Linux", "Make the AppImage executable (chmod +x) and run it. It updates itself in place. If FUSE is missing, install fuse3. Or take the .flatpak from the releases page: flatpak install --user Lumtub_*.flatpak (it does not update itself)."),
-        ("Android", "Open the APK and allow installing from your browser or file manager. Later versions install from inside Lumtub."),
-        ("iPhone and iPad", "Lumtub isn't in the App Store. Install the IPA with SideStore, AltStore or Sideloadly using your own Apple ID, or with TrollStore, and add the source below for updates."),
+        ("Android", "Open the APK and allow installing from your browser or file manager. Later versions install from inside Lumtub.\nIf you already manage apps with Obtainium, you can add the GitHub repository there instead."),
+        ("iPhone and iPad", "Lumtub isn't in the App Store. We recommend SideStore: after a one time setup with a computer, it refreshes Lumtub on the phone itself.\n1. Install SideStore with the guide on sidestore.io, signed in with your Apple ID.\n2. In SideStore, add the Lumtub source on this page and install Lumtub from it.\n3. Leave SideStore's refresh on. With a free Apple ID, apps need a refresh every 7 days.\nIf your iOS version supports TrollStore, install the TIPA with it instead: it stays installed with no refresh. AltStore and Sideloadly work too, but refresh from a computer."),
     ],
     altstore_label: "AltStore and SideStore source",
     copy: "Copy",
@@ -493,14 +495,15 @@ pub static ZH: Text = Text {
         package(9, "Android armeabi v7a", "较老的 32 位设备和很多低价电视盒子"),
         package(10, "Android x86_64", "模拟器和 x86 Chromebook"),
         package(11, "iPhone 和 iPad IPA", "iOS 15 及以上，自签安装（预览版，尚未在真机上测试）"),
-        package(12, "AltStore 源", "添加到 SideStore 或 AltStore 里即可收到新版本"),
+        package(12, "TrollStore TIPA", "用 TrollStore 安装，不需要 Apple ID"),
+        package(13, "AltStore 源", "添加到 SideStore 或 AltStore 里即可收到新版本"),
     ],
     install_notes: [
         ("Windows", "运行安装程序即可，或者在发布页下载便携版解压。不需要管理员权限。也可以用包管理器（正在审核）：winget install Lumtub.Lumtub。"),
         ("macOS", "Lumtub 还没有经过 Apple 公证。拖进「应用程序」后，在终端运行一次 xattr -dr com.apple.quarantine /Applications/Lumtub.app，或在「系统设置 › 隐私与安全性」里点「仍要打开」。"),
         ("Linux", "给 AppImage 加上执行权限（chmod +x）后运行，之后会自动原地更新。提示缺少 FUSE 时安装 fuse3。也可以在发布页下载 .flatpak：flatpak install --user Lumtub_*.flatpak（不会自动更新）。"),
-        ("Android", "打开 APK，按提示允许浏览器或文件管理器安装应用。之后的新版本在 Lumtub 里直接安装。"),
-        ("iPhone 和 iPad", "Lumtub 不在 App Store 上。用 SideStore、AltStore 或 Sideloadly 配合你自己的 Apple ID 安装 IPA，或者用 TrollStore；再添加下面的源，就能收到更新。"),
+        ("Android", "打开 APK，按提示允许浏览器或文件管理器安装应用。之后的新版本在 Lumtub 里直接安装。\n如果你平时用 Obtainium 管理应用，也可以在里面添加 GitHub 仓库地址来跟随更新。"),
+        ("iPhone 和 iPad", "Lumtub 不在 App Store 上。推荐用 SideStore：用电脑设置一次之后，就能在手机上自己续签。\n1. 按 sidestore.io 上的教程安装 SideStore，登录你的 Apple ID。\n2. 在 SideStore 里添加本页的 Lumtub 源，从源里安装 Lumtub。\n3. 保持 SideStore 的自动续签开启。免费 Apple ID 签的应用每 7 天要续签一次。\n如果你的 iOS 版本支持 TrollStore，就改用它安装 TIPA：装好后永久有效，不用续签。AltStore 和 Sideloadly 也能用，但续签要连电脑。"),
     ],
     altstore_label: "AltStore 和 SideStore 源",
     copy: "复制",

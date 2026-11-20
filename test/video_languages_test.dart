@@ -360,6 +360,21 @@ void main() {
     expect(kept, hasLength(1));
   }, skip: core);
 
+  test('lets in a video nothing tells of a channel heard in the language', () async {
+    final client = MockClient((request) async {
+      final id = (jsonDecode(request.body) as Map)['videoId'] as String;
+      // Heard ones, then one with only a short title and no captions.
+      return _json(id.startsWith('h') ? _player('Telegiornale', asr: 'it') : _player('TG 21'));
+    });
+    final languages = VideoLanguages(client);
+    String line(String id) => jsonEncode({'id': id, 'title': id.startsWith('h') ? 'Telegiornale' : 'TG 21', 'channel': 'c', 'channel_id': 'UCcccccccccccccccccccccc'});
+    await languages.only(Stream.fromIterable([for (var i = 0; i < VideoLanguages.channelSure; i++) line('h000000000$i')]), ExploreLanguage.it).toList();
+    final kept = await languages.only(Stream.fromIterable([line('t0000000001')]), ExploreLanguage.it).toList();
+    expect(kept, hasLength(1));
+    final elsewhere = await languages.only(Stream.fromIterable([line('t0000000002')]), ExploreLanguage.es).toList();
+    expect(elsewhere, isEmpty, reason: 'the channel is plainly Italian');
+  }, skip: core);
+
   test('lets in videos without captions by their own texts, behind the heard ones, and stops asking the other apps when they never tell', () async {
     var calls = 0;
     final client = MockClient((request) async {

@@ -159,7 +159,8 @@ class VideoLanguages {
   /// The language every video heard of [channel] is spoken in, once at
   /// least [channelSure] were; null while that is not plain. Explore
   /// leaves out a channel plainly in another language without asking
-  /// about its videos.
+  /// about its videos, and lets in the videos of a channel plainly in the
+  /// language looked for that audio and captions do not tell.
   ExploreLanguage? channelSpeaks(String channel) {
     final counts = _channels[channel];
     if (counts == null || counts.length != 1) return null;
@@ -498,11 +499,16 @@ class VideoLanguages {
           if (spoken != null && spoken.heard) heard++;
           final key = spoken == null ? 'no answer' : '${spoken.source} ${spoken.language?.code ?? '?'}';
           told.update(key, (n) => n + 1, ifAbsent: () => 1);
-          if (!passes(spoken, language, listed: item.title)) return null;
+          // A video its answer does not tell, of a channel whose videos
+          // were all heard in [language], is in it too: news channels
+          // with short titles (RÚV, DZMM, TV9) were left out otherwise.
+          final byItsChannel = !(spoken?.heard ?? false) && item.channelId != null && channelSpeaks(item.channelId!) == language;
+          if (!passes(spoken, language, listed: item.title) && !byItsChannel) return null;
+          if (byItsChannel) told.update('channel kept', (n) => n + 1, ifAbsent: () => 1);
           kept++;
           final titled = listedInLanguage || spoken == null || spoken.title.isEmpty || spoken.title == item.title ? line : jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
           final shown = _withFacts(titled, item.id);
-          return (shown, heard: spoken!.heard);
+          return (shown, heard: spoken?.heard ?? false);
         })));
         yield* Stream.fromIterable(ready());
         while (pending.length >= parallel * 3) {

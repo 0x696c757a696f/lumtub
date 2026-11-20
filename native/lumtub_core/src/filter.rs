@@ -206,10 +206,72 @@ pub fn reading(title: &str) -> (Language, bool) {
         Language::Hi => devanagari(title).is_some(),
         Language::Ar => title.chars().filter(|c| c.is_alphabetic()).count() >= 12,
         Language::Ru => cyrillic(title).is_some(),
-        language if is_latin(language) && language != Language::Vi => latin_sure(title, language),
+        language if is_latin(language) && language != Language::Vi => {
+            letters_allow(title).is_none_or(|allowed| allowed.contains(&language))
+                && latin_sure(title, language)
+        }
         _ => true,
     };
     (found, sure)
+}
+
+/// Letters only a few Latin-script languages write, lower case, and
+/// those languages: a title with ø is Norwegian or Danish whatever its
+/// small words say.
+const LETTER_FAMILIES: [(&[char], &[Language]); 10] = {
+    use Language::*;
+    [
+        (&['ø'], &[No, Da]),
+        (&['å'], &[No, Da, Sv]),
+        (&['æ'], &[No, Da, Is]),
+        (&['ą', 'ę', 'ł', 'ś', 'ź', 'ż'], &[Pl]),
+        (&['ř', 'ě', 'ů'], &[Cs]),
+        (&['ğ', 'ı'], &[Tr, Az]),
+        (&['ə'], &[Az]),
+        (&['ő', 'ű'], &[Hu]),
+        (&['ā', 'ē', 'ī', 'ķ', 'ļ', 'ņ', 'ģ'], &[Lv]),
+        (&['ė', 'į', 'ų'], &[Lt]),
+    ]
+};
+
+/// The Latin-script languages [title]'s rarer letters leave, when it has
+/// any of [LETTER_FAMILIES]: those every such letter allows.
+fn letters_allow(title: &str) -> Option<Vec<Language>> {
+    let lower = title.to_lowercase();
+    let mut allowed: Option<Vec<Language>> = None;
+    for (letters, languages) in LETTER_FAMILIES {
+        if lower.contains(letters) {
+            allowed = Some(match allowed {
+                None => languages.to_vec(),
+                Some(so_far) => so_far
+                    .into_iter()
+                    .filter(|l| languages.contains(l))
+                    .collect(),
+            });
+        }
+    }
+    allowed
+}
+
+/// For a guess: the languages that may have written [title], read as
+/// [guessed] without being sure. Those of its script, narrowed by its
+/// rarer letters; English only when guessed, as English titles are read
+/// surely by their small words.
+pub fn alike(title: &str, guessed: Language) -> Vec<Language> {
+    if !is_latin(guessed) {
+        return same_script(guessed);
+    }
+    let mut languages = match letters_allow(title) {
+        Some(allowed) if !allowed.is_empty() => allowed,
+        _ => same_script(guessed)
+            .into_iter()
+            .filter(|l| *l != Language::En)
+            .collect(),
+    };
+    if !languages.contains(&guessed) {
+        languages.insert(0, guessed);
+    }
+    languages
 }
 
 /// The languages explore offers that write [language]'s script, itself
@@ -290,13 +352,19 @@ fn latin_sure(title: &str, language: Language) -> bool {
         .split(|c: char| !(c.is_alphabetic() || c == '\''))
         .filter(|w| !w.is_empty())
         .collect();
-    let small = LATIN_WORDS
-        .iter()
-        .find(|(l, _)| *l == language)
-        .map_or(0, |(_, small)| {
-            words.iter().filter(|w| small.contains(w)).count()
-        });
-    if small >= 2 {
+    let small =
+        LATIN_WORDS
+            .iter()
+            .find(|(l, _)| *l == language)
+            .map_or(Vec::new(), |(_, small)| {
+                words
+                    .iter()
+                    .filter(|w| small.contains(w))
+                    .collect::<Vec<_>>()
+            });
+    // Two small words, one of them longer than two letters: "o", "do",
+    // "em", "no", "na" are words of many languages.
+    if small.len() >= 2 && small.iter().any(|w| w.chars().count() > 2) {
         return true;
     }
     words.len() >= 4

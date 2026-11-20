@@ -6,7 +6,7 @@ use serde::Serialize;
 use serde_json::{Map, Value};
 use std::os::raw::c_char;
 
-use crate::filter::{Language, is_latin, reading, same_script};
+use crate::filter::{Language, alike, is_latin, reading};
 use crate::taste::{give_json, text};
 
 /// The value at [path] of nested objects.
@@ -758,6 +758,8 @@ pub struct Spoken {
     /// Whether YouTube would play the video to this client; an answer it
     /// would not play, such as one asking to sign in, has no captions.
     pub playable: bool,
+    /// For a guess: the languages that may have written the text.
+    pub alike: Vec<Language>,
 }
 
 /// The language a video is spoken in and its own title, from a `/player`
@@ -785,6 +787,7 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
             title,
             source: "audio",
             playable,
+            alike: Vec::new(),
         });
     }
     let captions = at(
@@ -825,6 +828,7 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
             title,
             source: "captions",
             playable,
+            alike: Vec::new(),
         });
     }
     let source = match by_text {
@@ -832,11 +836,16 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
         Some(_) if sure => "text",
         Some(_) => "guess",
     };
+    let alike = match by_text {
+        Some(guessed) if source == "guess" => alike(&format!("{title}\n{description}"), guessed),
+        _ => Vec::new(),
+    };
     Some(Spoken {
         language: by_text,
         title,
         source,
         playable,
+        alike,
     })
 }
 
@@ -1027,12 +1036,7 @@ pub unsafe extern "C" fn lumtub_spoken_language(body: *const u8, length: usize) 
         Some(Language::Any) => -1,
         Some(other) => other as i64,
     };
-    let alike = match spoken.language {
-        Some(guessed) if spoken.source == "guess" => {
-            same_script(guessed).into_iter().map(|l| l as u32).collect()
-        }
-        _ => Vec::new(),
-    };
+    let alike = spoken.alike.iter().map(|l| *l as u32).collect();
     give_json(&Out {
         language,
         title: spoken.title,
@@ -1298,7 +1302,15 @@ mod tests {
             |title: &str| json!({"videoDetails": {"title": title, "shortDescription": ""}});
         let short = spoken_language(&answer("Dagsrevyen 21")).unwrap();
         assert_eq!(short.source, "guess");
-        assert!(same_script(short.language.unwrap()).contains(&Language::No));
+        assert!(short.alike.contains(&Language::No));
+        assert!(!short.alike.contains(&Language::En) || short.language == Some(Language::En));
+        // A Norwegian title with English small words, and its ø and å.
+        let norwegian = spoken_language(&answer("Reiser for første gang på over 2 år!!")).unwrap();
+        assert_eq!(norwegian.source, "guess");
+        assert!(norwegian.alike.contains(&Language::No));
+        assert!(!norwegian.alike.contains(&Language::Pt));
+        let polish = spoken_language(&answer("Wiadomości z kraju")).unwrap();
+        assert!(!polish.alike.contains(&Language::Jv) || polish.source == "text");
         let icelandic = spoken_language(&answer("Fréttir kvöldsins í þættinum")).unwrap();
         assert_eq!(
             (icelandic.language, icelandic.source),
@@ -1328,7 +1340,8 @@ mod tests {
                 language: Some(Language::Ja),
                 title: "How to cook rice".into(),
                 source: "captions",
-                playable: true
+                playable: true,
+                alike: Vec::new()
             })
         );
         let original = json!({

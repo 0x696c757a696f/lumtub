@@ -684,6 +684,19 @@ void main() {
     expect(DownloadManager.defaultDirectoryFor(env, 'F'), endsWith('${Platform.isMacOS ? 'Movies' : 'Videos'}${Platform.pathSeparator}Lumtub'));
     expect(DownloadManager.defaultDirectoryFor({}, 'F'), 'F');
   });
+
+  test('saved subtitles in one language each become options; a bilingual file does not', () async {
+    final dir = await Directory.systemTemp.createTemp('lumtub_local_subs');
+    addTearDown(() => dir.delete(recursive: true));
+    final media = File('${dir.path}/Talk [abc].mp4')..writeAsStringSync('x');
+    for (final name in ['Talk [abc].en.srt', 'Talk [abc].zh-Hans.srt', 'Talk [abc].en-2.srt', 'Talk [abc].en+zh-Hans.srt', 'Talk [abc].en.ass', 'Other [xyz].fr.srt']) {
+      File('${dir.path}/$name').writeAsStringSync('1\n00:00:01,000 --> 00:00:02,000\nhi\n');
+    }
+    final options = LocalVideo.read(media).subtitleOptions;
+    expect(options.map((o) => o.language).toList()..sort(), ['en', 'en', 'zh-Hans']);
+    expect(options.every((o) => o.kind == SubtitleKind.uploaded && o.url.startsWith('file:')), isTrue);
+  });
 }
+
 
 T _track<T>(List<T> list, T item) => (list..add(item)).last;

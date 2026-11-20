@@ -438,6 +438,14 @@ extension SubtitleActions on AppController {
     _secondaryAutoFor = item.id;
     var mainTitle = shown(player.state.track.subtitle) ? player.state.track.subtitle.title : null;
     var mainLanguage = shown(player.state.track.subtitle) ? player.state.track.subtitle.language : null;
+    // Offline, a download's saved subtitles are all there is: none is
+    // translated, which would need the network.
+    final offline = details.subtitles.isNotEmpty && details.subtitles.every((o) => Uri.tryParse(o.url)?.scheme == 'file');
+    SubtitleOption? pick(List<SubtitleOption> options, TranslationLanguage target, {SubtitleOption? from, String? language}) {
+      final option = subtitleIn(options, target, from: from, language: language);
+      return offline && option?.kind == SubtitleKind.translated ? null : option;
+    }
+
     final first = settings.subtitleLanguage.translation;
     final original = originalSubtitle(details.subtitles, language: details.language);
     var spoken = settings.subtitleOriginal ? original : null;
@@ -453,9 +461,9 @@ extension SubtitleActions on AppController {
       alike = false;
     }
     final mainPlanned = alike
-        ? (wanted == PlayerSettings.originalSubtitle ? original : subtitleIn(details.subtitles, target!, language: details.language))
-        : spoken ?? subtitleIn(details.subtitles, first, language: details.language);
-    final secondPlanned = alike ? null : wanted == PlayerSettings.originalSubtitle ? original : target == null ? null : subtitleIn(details.subtitles, target, language: details.language);
+        ? (wanted == PlayerSettings.originalSubtitle ? original : pick(details.subtitles, target!, language: details.language))
+        : spoken ?? pick(details.subtitles, first, language: details.language);
+    final secondPlanned = alike ? null : wanted == PlayerSettings.originalSubtitle ? original : target == null ? null : pick(details.subtitles, target, language: details.language);
     // Playback waits only for a subtitle to be translated; one the video
     // has in the language wanted loads while it plays.
     final translating = (mainPlanned?.kind == SubtitleKind.translated && !manualOnly) || secondPlanned?.kind == SubtitleKind.translated;
@@ -473,7 +481,7 @@ extension SubtitleActions on AppController {
     final manual = settings.subtitleMode == SubtitleMode.manual;
     final mainWanted = settings.subtitleMode.anySubtitle || mainTitle != null || (manual && (_openedDirect == item.id || local));
     if (mainWanted && (mainTitle == null || (spoken != null ? spoken.label != mainTitle && !sameLanguage(spoken.language, mainLanguage) : !speaks(mainLanguage, first)))) {
-      final option = spoken ?? subtitleIn(details.subtitles, first, language: details.language);
+      final option = spoken ?? pick(details.subtitles, first, language: details.language);
       if (option != null && option.label != mainTitle && !(manual && mainTitle == null && option.kind != SubtitleKind.uploaded)) {
         logDebug(() => 'Showing ${option.language} (${option.kind.name}) as the main subtitle');
         await showSubtitle(option);
@@ -489,7 +497,7 @@ extension SubtitleActions on AppController {
     } else {
       // A translation is of the first subtitle, so the two line up.
       final main = details.subtitles.where((o) => o.label == mainTitle).firstOrNull;
-      option = target == null ? null : subtitleIn(details.subtitles, target, from: main, language: details.language);
+      option = target == null ? null : pick(details.subtitles, target, from: main, language: details.language);
       if (option == null || speaks(mainLanguage, target!)) {
         if (wanted.isNotEmpty) logWarn('No second subtitle in $wanted beside $mainLanguage');
         return;

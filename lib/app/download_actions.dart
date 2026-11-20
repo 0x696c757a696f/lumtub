@@ -161,6 +161,15 @@ extension DownloadActions on AppController {
           await File(path).writeAsString(picked.srt ? toSrt(cues) : toVtt(cues));
           final name = '${SubtitleChoices.languageOf(top.$1)} / ${SubtitleChoices.languageOf(bottom.$1)}';
           saved.add((path: path, language: top.$1.language, name: name, lines: true, ass: await styledCopy(path, lines)));
+          // Each language on its own beside the file, not in it: played
+          // offline in Lumtub, they show as first and second subtitle, each
+          // in its own style, as they do online.
+          for (final (option, text) in [top, bottom]) {
+            if (picked.tracks.any((t) => t.language == option.language)) continue;
+            final single = fileFor(option.language);
+            final cues = parseSubtitleCues(text);
+            await File(single).writeAsString(picked.srt ? toSrt(cues) : text);
+          }
         }
       }
     }

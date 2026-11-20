@@ -72,6 +72,30 @@ class LocalVideo {
     return subtitles.first;
   }
 
+  /// The saved subtitles in one language each, named `<video>.<language>`
+  /// (`-2` and on for a second file in one language), as options the
+  /// player picks the first and second subtitle from. A bilingual file
+  /// (`<a>+<b>`) is left out: its languages are saved on their own too.
+  List<SubtitleOption> get subtitleOptions {
+    final name = file.uri.pathSegments.last;
+    final dot = name.lastIndexOf('.');
+    final stem = dot > 0 ? name.substring(0, dot) : name;
+    return [
+      for (final f in subtitles)
+        if (_languageOf(f.uri.pathSegments.last, stem) case final language? when !f.path.toLowerCase().endsWith('.ass'))
+          SubtitleOption(language: language, name: '', url: f.uri.toString()),
+    ];
+  }
+
+  static String? _languageOf(String file, String stem) {
+    if (!file.startsWith('$stem.')) return null;
+    final rest = file.substring(stem.length + 1);
+    final dot = rest.lastIndexOf('.');
+    if (dot <= 0) return null;
+    final tag = rest.substring(0, dot).replaceFirst(RegExp(r'-\d+$'), '');
+    return tag.isEmpty || tag.contains('+') ? null : tag;
+  }
+
   /// The video codec of the file, from its sidecar; null when unknown.
   VideoCodec? get videoCodec => VideoCodec.of(info['vcodec']);
 

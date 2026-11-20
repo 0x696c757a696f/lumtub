@@ -163,3 +163,43 @@ String styledAss(List<BilingualLine> lines, PlayerSettings settings) {
   }
   return out.toString();
 }
+
+/// [ass] with each Dialogue line's times mapped by [shift] (where a time
+/// lands once stretches were cut out of the video); a line left with no
+/// time at all is dropped.
+String shiftAss(String ass, Duration Function(Duration) shift) {
+  final time = RegExp(r'^(\d+):(\d{2}):(\d{2})\.(\d{2})$');
+  Duration? parse(String text) {
+    final m = time.firstMatch(text.trim());
+    if (m == null) return null;
+    int n(int i) => int.parse(m[i]!);
+    return Duration(hours: n(1), minutes: n(2), seconds: n(3), milliseconds: n(4) * 10);
+  }
+
+  String stamp(Duration d) {
+    final cs = (d.inMilliseconds / 10).round();
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${cs ~/ 360000}:${two(cs ~/ 6000 % 60)}:${two(cs ~/ 100 % 60)}.${two(cs % 100)}';
+  }
+
+  final out = StringBuffer();
+  for (final line in ass.split('\n')) {
+    if (line.startsWith('Dialogue:')) {
+      final fields = line.substring('Dialogue:'.length).split(',');
+      final start = fields.length > 9 ? parse(fields[1]) : null;
+      final end = fields.length > 9 ? parse(fields[2]) : null;
+      if (start != null && end != null) {
+        final from = shift(start), to = shift(end);
+        if (to <= from) continue;
+        fields[1] = stamp(from);
+        fields[2] = stamp(to);
+        out.write('Dialogue:${fields.join(',')}\n');
+        continue;
+      }
+    }
+    out.write('$line\n');
+  }
+  final text = out.toString();
+  return ass.endsWith('\n') ? text : text.substring(0, text.length - 1);
+}
+

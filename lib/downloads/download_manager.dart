@@ -16,6 +16,9 @@ import '../sponsor_block.dart';
 import '../video_codec.dart';
 import 'download_models.dart';
 import 'download_selection.dart';
+import 'download_subtitles.dart';
+import '../subtitle_cues.dart';
+import '../cast/cast_subtitles.dart' show toVtt;
 import '../native_core.dart';
 import '../user_folders.dart';
 
@@ -773,12 +776,19 @@ class DownloadManager extends ChangeNotifier {
       final out = joined.path;
       // Beside an MP4, whose own subtitle tracks hold little of the style,
       // the styled ASS stays, named so other players load it with the
-      // video. Not when stretches were cut out: its times would be off.
-      final keepAss = out != null && !out.toLowerCase().endsWith('.mkv') && joined.cut.isEmpty;
+      // video, its times moved past stretches cut out as the file's are.
+      // The core moved the subtitles it was given; the ones saved beside
+      // the file in one language each are moved here.
+      if (out != null && joined.cut.isNotEmpty) await _shiftSideSubtitles(stem, {for (final s in subtitles) s.path}, joined.cut);
+      final keepAss = out != null && !out.toLowerCase().endsWith('.mkv');
       for (final s in subtitles) {
         final ass = s.ass;
         if (ass == null || !keepAss) continue;
         try {
+          if (joined.cut.isNotEmpty) {
+            final file = File(ass);
+            await file.writeAsString(shiftAss(await file.readAsString(), (at) => shiftPastCuts(at, joined.cut)));
+          }
           await File(ass).rename(sideAssFor(s.path));
         } on FileSystemException catch (e) {
           logWarn('Could not keep the styled subtitles beside ${task.id}: ${e.message}');
@@ -900,6 +910,25 @@ class DownloadManager extends ChangeNotifier {
         if (full[key] != null) key: key == 'chapters' && cut.isNotEmpty ? shiftChapters(full[key], cut) : key == 'duration' && cut.isNotEmpty && full[key] is num ? _shiftSeconds(full[key] as num, cut) : full[key],
       'lumtub': {'sponsorblock': kept},
     }), flush: true);
+  }
+
+  /// Moves the times of the SRT and WebVTT files beside [stem] that are
+  /// not in [moved] past the stretches [cut] out of the video.
+  Future<void> _shiftSideSubtitles(String stem, Set<String> moved, List<(Duration, Duration)> cut) async {
+    final name = stem.substring(stem.lastIndexOf(RegExp(r'[\\/]')) + 1);
+    try {
+      await for (final entity in File(stem).parent.list(followLinks: false)) {
+        final file = entity.uri.pathSegments.last;
+        if (entity is! File || moved.contains(entity.path) || !file.startsWith('$name.') || !RegExp(r'\.(srt|vtt)$').hasMatch(file)) continue;
+        final cues = [
+          for (final c in parseSubtitleCues(await entity.readAsString()))
+            if (shiftPastCuts(c.end, cut) case final end when end > shiftPastCuts(c.start, cut)) (start: shiftPastCuts(c.start, cut), end: end, text: c.text),
+        ];
+        await entity.writeAsString(file.endsWith('.srt') ? toSrt(cues) : toVtt(cues));
+      }
+    } on FileSystemException catch (e) {
+      logWarn('Could not move the subtitles beside $name past the cut stretches: ${e.message}');
+    }
   }
 
   /// The styled ASS kept beside a download for the subtitle file at

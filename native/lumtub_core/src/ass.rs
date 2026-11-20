@@ -1,6 +1,7 @@
 //! Styled subtitles for a downloaded file: an ASS file the app wrote from
 //! its subtitle settings, carried as an ASS track in Matroska, and as much
-//! of its look as `tx3g` holds (font, size, color, bold) in MP4.
+//! of its look as `tx3g` holds (font, size, color, bold, the box behind the
+//! text and the bottom margin) in MP4.
 
 /// What a style of the ASS file looks like.
 #[derive(Clone, Debug, PartialEq)]
@@ -11,6 +12,10 @@ pub struct Look {
     /// RGBA.
     pub color: u32,
     pub bold: bool,
+    /// RGBA of the box behind the text (`BorderStyle` 3), if it has one.
+    pub background: Option<u32>,
+    /// Space under the bottom line, in the file's units.
+    pub margin: f64,
 }
 
 /// An ASS file read for a track.
@@ -94,6 +99,10 @@ pub fn parse(source: &str) -> Option<Styled> {
                     .and_then(color)
                     .unwrap_or(0xFFFF_FFFF),
                 bold: field("bold").is_some_and(|b| b != "0"),
+                background: (field("borderstyle") == Some("3"))
+                    .then(|| field("backcolour").and_then(color))
+                    .flatten(),
+                margin: field("marginv").and_then(|m| m.parse().ok()).unwrap_or(0.0),
             };
             match field("name") {
                 Some("Default") => out.main = Some(look),
@@ -214,6 +223,17 @@ mod tests {
         let second = styled.second.unwrap();
         assert_eq!((second.color, second.bold), (0xFFE7_00E5, false));
         assert_eq!(tx3g_size(&second, styled.play_res_y), 12);
+        assert_eq!((main.background, main.margin), (None, 30.0));
+    }
+
+    #[test]
+    fn reads_the_box_behind_the_text() {
+        let file = FILE.replace(
+            "&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,",
+            "&H54000000,&H54000000,-1,0,0,0,100,100,0,0,3,",
+        );
+        let main = parse(&file).unwrap().main.unwrap();
+        assert_eq!(main.background, Some(0x0000_00AB));
     }
 
     #[test]

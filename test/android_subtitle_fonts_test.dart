@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/android_subtitle_fonts.dart';
+import 'package:lumtub/libass_layout.dart';
 
 void main() {
   setUp(() {
@@ -47,6 +48,10 @@ void main() {
     expect(AndroidSubtitleFonts.forLines(['圣人的短篇故事 historia świętego', '']), (drawable: false, main: null));
     expect(AndroidSubtitleFonts.forLines(['hello', 'مرحبا 你好']), (drawable: false, main: 'Noto Sans CJK SC'));
     expect(AndroidSubtitleFonts.forLines(['hello', 'नमस्ते']).drawable, isFalse, reason: 'no Devanagari font was found');
+    // The second subtitle's copy holds the main lines after a blank line.
+    const copy = '早上好。亲爱的朋友们。\n\u00a0\nDzień dobry moi drodzy.';
+    expect(AndroidSubtitleFonts.forLines(['Dzień dobry moi drodzy.', copy]).drawable, isFalse);
+    expect(AndroidSubtitleFonts.forLines(['Dzień dobry moi drodzy.', secondCopyOwnText(copy)]), (drawable: true, main: 'Roboto'));
   });
 
   test('another script gets its own font, alone with digits and punctuation', () {

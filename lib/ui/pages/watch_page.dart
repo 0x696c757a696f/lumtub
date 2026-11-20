@@ -12,7 +12,7 @@ import '../../device.dart';
 import '../../libass_layout.dart' show LibassLook;
 import '../window_chrome.dart';
 import '../../app/app_controller.dart';
-import '../../learning/chinese_dictionary.dart';
+import '../../learning/word_token.dart';
 import '../../learning/learning.dart';
 import '../learning/ruby_line.dart';
 import '../learning/word_card.dart';
@@ -1317,7 +1317,7 @@ typedef TranslationRevealing = ({ValueListenable<bool> shown, ValueChanged<bool>
 
 /// What the learning pack needs from the player: the dictionary, and what
 /// tapping a word of the main line does.
-typedef SubtitleWords = ({Learning learning, void Function(ChineseToken token, String line) onWord});
+typedef SubtitleWords = ({Learning learning, void Function(WordToken token, String line) onWord});
 
 /// The words of the main video's subtitle line, to find the one tapped.
 final _videoWords = RubyHits();
@@ -1335,7 +1335,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
   // for 模糊翻译, which needs the second line's place.
   if (ghost && !blur) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;
-  final dictionary = ghost ? null : words?.learning.chinese;
+  final lookUp = !ghost && (words?.learning.anyDictionary ?? false);
   TextStyle style(String font, double scale, int color, double opacity) => TextStyle(
         height: 1.3,
         fontSize: 32 * scale,
@@ -1364,26 +1364,28 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     secondaryShown: reveal?.shown,
     onSecondaryHover: reveal?.hover,
     onSecondaryTap: reveal?.tap,
-    mainLine: dictionary == null
+    mainLine: !lookUp
         ? null
-        : (text, style, scaler, outline) => !ChineseDictionary.looksChinese(text)
-            ? null
-            : LayoutBuilder(
+        : (text, style, scaler, outline) {
+            final tokens = words!.learning.wordsOf(text);
+            if (tokens == null) return null;
+            return LayoutBuilder(
                 builder: (context, constraints) => ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.9),
                   child: ChineseRubyLine(
-                    tokens: dictionary.segment(text),
+                    tokens: tokens,
                     style: style,
                     textScaler: scaler,
                     outline: outline,
                     alignment: WrapAlignment.center,
-                    pinyin: words!.learning.showPinyin,
+                    pinyin: words.learning.showPinyin,
                     hits: _videoWords,
                   ),
                 ),
-              ),
-    mainHit: dictionary == null ? null : (global) => _videoWords.wordAt(global) != null,
-    onMainTap: dictionary == null
+              );
+          },
+    mainHit: !lookUp ? null : (global) => _videoWords.wordAt(global) != null,
+    onMainTap: !lookUp
         ? null
         : (global) {
             final token = _videoWords.wordAt(global);

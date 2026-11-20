@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../learning/chinese_dictionary.dart';
+import '../../learning/word_token.dart';
 
-/// A Chinese line as words, each with its pinyin above it when [pinyin]
-/// is on. Tapping a word calls [onWord]; on the video, where the controls
+/// A line as words, each with its reading (pinyin) above it when
+/// [pinyin] is on. Tapping a word calls [onWord]; on the video, where the controls
 /// lie above the line, [hits] keeps where each word is instead.
 class ChineseRubyLine extends StatelessWidget {
   const ChineseRubyLine({
@@ -19,17 +19,17 @@ class ChineseRubyLine extends StatelessWidget {
     this.highlight,
   });
 
-  final List<ChineseToken> tokens;
+  final List<WordToken> tokens;
   final TextStyle style;
   final bool pinyin;
-  final ValueChanged<ChineseToken>? onWord;
+  final ValueChanged<WordToken>? onWord;
   final TextScaler? textScaler;
   final double outline;
   final WrapAlignment alignment;
   final RubyHits? hits;
 
   /// A word drawn marked, such as one in the vocabulary book.
-  final bool Function(String word)? highlight;
+  final bool Function(WordToken token)? highlight;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +46,7 @@ class ChineseRubyLine extends StatelessWidget {
         }
         continue;
       }
-      final marked = highlight?.call(token.text) ?? false;
+      final marked = highlight?.call(token) ?? false;
       final wordStyle = marked ? style.copyWith(decoration: TextDecoration.underline, decorationColor: style.color, decorationThickness: 2) : style;
       Widget block = Column(mainAxisSize: MainAxisSize.min, children: [
         if (pinyin && token.reading != null) _text(token.reading!, rubyStyle, outlineScale: 0.6),
@@ -87,7 +87,7 @@ class ChineseRubyLine extends StatelessWidget {
 /// Where each word of a [ChineseRubyLine] is, to find the one under a
 /// pointer that something above it took.
 class RubyHits {
-  final _words = <(GlobalKey, ChineseToken)>[];
+  final _words = <(GlobalKey, WordToken)>[];
 
   /// The line the words are from.
   String line = '';
@@ -97,10 +97,10 @@ class RubyHits {
     line = text;
   }
 
-  void _add(GlobalKey key, ChineseToken token) => _words.add((key, token));
+  void _add(GlobalKey key, WordToken token) => _words.add((key, token));
 
   /// The word at [global], with a little room around each.
-  ChineseToken? wordAt(Offset global) {
+  WordToken? wordAt(Offset global) {
     for (final (key, token) in _words) {
       final box = key.currentContext?.findRenderObject();
       if (box is! RenderBox || !box.attached || !box.hasSize) continue;

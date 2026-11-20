@@ -18,7 +18,7 @@ import 'common.dart';
 import 'motion.dart';
 import 'player_panel.dart';
 import 'app_icons.dart';
-import '../learning/chinese_dictionary.dart';
+import '../learning/learning.dart';
 import 'learning/ruby_line.dart';
 import 'learning/word_card.dart';
 
@@ -74,14 +74,14 @@ class _SubtitleListState extends State<SubtitleList> {
   /// the learning pack's dictionary is there; otherwise plain.
   Widget _line(String text, TextStyle style, {required String? other, required Duration at}) {
     final learning = widget.controller.learning;
-    final dictionary = learning.chinese;
-    if (dictionary == null || !ChineseDictionary.looksChinese(text)) return Text(text, style: style);
+    final tokens = learning.wordsOf(text);
+    if (tokens == null) return Text(text, style: style);
     final book = learning.book;
     return ChineseRubyLine(
-      tokens: dictionary.segment(text),
+      tokens: tokens,
       style: style,
       pinyin: learning.showPinyin,
-      highlight: book == null ? null : (word) => book.contains('zh', word),
+      highlight: book == null ? null : (token) => book.contains(Learning.languageOf(token), token.key) || book.contains(Learning.languageOf(token), token.key.toLowerCase()),
       onWord: (token) => unawaited(showWordCard(context, widget.controller, token, sentence: text, translation: other, at: at)),
     );
   }

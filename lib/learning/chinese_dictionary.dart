@@ -1,5 +1,9 @@
 import 'dart:convert';
 
+import 'word_token.dart';
+
+export 'word_token.dart';
+
 /// CC-CEDICT, read from the Chinese pack: words by both their
 /// simplified and traditional forms, splitting a line into words, and
 /// pinyin with tone marks.
@@ -62,9 +66,9 @@ class ChineseDictionary {
   /// longest matching are tried; the split with fewer pieces wins, then
   /// the one with fewer lone characters, then the backward one, which
   /// suits Chinese better.
-  List<ChineseToken> segment(String text) {
+  List<WordToken> segment(String text) {
     final chars = text.runes.map(String.fromCharCode).toList();
-    final tokens = <ChineseToken>[];
+    final tokens = <WordToken>[];
     var i = 0;
     while (i < chars.length) {
       if (!isHan(chars[i])) {
@@ -72,7 +76,7 @@ class ChineseDictionary {
         while (i < chars.length && !isHan(chars[i])) {
           i++;
         }
-        tokens.add(ChineseToken(chars.sublist(start, i).join(), null));
+        tokens.add(WordToken(chars.sublist(start, i).join(), null, isWord: false));
         continue;
       }
       final start = i;
@@ -80,7 +84,7 @@ class ChineseDictionary {
         i++;
       }
       for (final word in _split(chars.sublist(start, i))) {
-        tokens.add(ChineseToken(word, readingOf(word) ?? _charsReading(word)));
+        tokens.add(WordToken(word, readingOf(word) ?? _charsReading(word), isWord: true));
       }
     }
     return tokens;
@@ -151,15 +155,6 @@ class ChineseDictionary {
     '多么': 'duo1 me5', '为什么': 'wei4 shen2 me5', '為什麼': 'wei4 shen2 me5', '觉得': 'jue2 de5', '覺得': 'jue2 de5',
     '东西': 'dong1 xi5', '東西': 'dong1 xi5', '朋友': 'peng2 you5', '时候': 'shi2 hou5', '時候': 'shi2 hou5',
   };
-}
-
-/// A word with its reading, or the text between words ([reading] null,
-/// [isWord] false).
-class ChineseToken {
-  const ChineseToken(this.text, this.reading);
-  final String text;
-  final String? reading;
-  bool get isWord => ChineseDictionary.isHan(text);
 }
 
 class ChineseEntry {

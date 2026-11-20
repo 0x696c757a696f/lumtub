@@ -440,10 +440,10 @@ class LearningSwitches extends StatelessWidget {
         listenable: controller.learning,
         builder: (context, _) {
           final learning = controller.learning;
-          if (learning.chinese != null) {
+          if (learning.anyDictionary) {
             return Row(children: [
               Expanded(
-                child: toggle(tr('Pinyin'), tr('Above each word of a Chinese subtitle. Tap a word to look it up.'), learning.showPinyin,
+                child: toggle(tr('Pinyin'), tr('Above each word of a Chinese subtitle. Tap any word to look it up.'), learning.showPinyin,
                     (on) => unawaited(learning.setShowPinyin(on))),
               ),
               Expanded(
@@ -462,8 +462,8 @@ class LearningSwitches extends StatelessWidget {
             dense: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 12),
             leading: Icon(AppIcons.bookOpenText, size: 20),
-            title: Text(learning.licensed ? tr('Download the Chinese dictionary') : tr('Tap words to look them up · Learning pack')),
-            subtitle: Text(learning.licensed ? tr('About 4 MB, then everything works offline.') : tr('Offline dictionary, pinyin, vocabulary book, Anki export'),
+            title: Text(learning.licensed ? tr('Download a dictionary') : tr('Tap words to look them up · Learning pack')),
+            subtitle: Text(learning.licensed ? tr('Chinese or English, a few MB, then everything works offline.') : tr('Offline dictionary, pinyin, vocabulary book, Anki export'),
                 style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
             onTap: () => unawaited(openLearningPage(context, controller)),
           );

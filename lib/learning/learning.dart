@@ -10,15 +10,33 @@ import 'package:http/http.dart' as http;
 import '../app_directories.dart';
 import '../app_log.dart';
 import 'chinese_dictionary.dart';
+import 'english_dictionary.dart';
 import 'license.dart';
 import 'vocabulary.dart';
 
 /// Where the dictionary packs are published: a release of the app's own
 /// repository that holds data only, never an app version.
 const learningPackRelease = 'https://github.com/0x696c757a696f/lumtub/releases/download/learning';
-const chinesePackFile = 'zh-cedict.txt.gz';
-
 enum PackState { missing, downloading, loading, ready, failed }
+
+/// A dictionary the learning pack downloads.
+enum DictionaryPack {
+  chinese('zh', 'zh-cedict.txt.gz'),
+  english('en', 'en-ecdict.tsv.gz');
+
+  const DictionaryPack(this.language, this.file);
+  final String language;
+  final String file;
+}
+
+/// One pack's download and reading.
+class _Pack {
+  Object? dictionary;
+  PackState state = PackState.missing;
+  double? progress;
+  String? error;
+  Future<void>? loading;
+}
 
 /// The learning pack: the license, the Chinese dictionary and the
 /// vocabulary book. Everything stays on this device; the only request is
@@ -32,20 +50,16 @@ class Learning extends ChangeNotifier {
   bool _loaded = false;
   VocabularyBook? _book;
 
-  ChineseDictionary? _chinese;
-  PackState _chineseState = PackState.missing;
-  double? _progress;
-  String? _error;
-  Future<void>? _loadingChinese;
+  final _packs = {for (final pack in DictionaryPack.values) pack: _Pack()};
 
-  /// Changes what the video's subtitles show: the license, the
-  /// dictionary being ready or gone, pinyin on or off. Download progress
-  /// does not count.
+  /// Changes what the video's subtitles show: the license, a dictionary
+  /// being ready or gone, pinyin on or off. Download progress does not
+  /// count.
   final viewChanges = ValueNotifier<int>(0);
 
   @override
   void notifyListeners() {
-    final key = (_license, _chinese, _showPinyin);
+    final key = Object.hashAll([_license, _showPinyin, for (final p in _packs.values) p.dictionary]);
     if (key != _lastView) {
       _lastView = key;
       viewChanges.value++;
@@ -58,15 +72,33 @@ class Learning extends ChangeNotifier {
   LearningLicense? get license => _license;
   bool get licensed => _license != null;
   bool get showPinyin => _showPinyin;
-  PackState get chineseState => _chineseState;
-  double? get downloadProgress => _progress;
-  String? get packError => _error;
-  ChineseDictionary? get chinese => licensed ? _chinese : null;
+  PackState stateOf(DictionaryPack pack) => _packs[pack]!.state;
+  double? progressOf(DictionaryPack pack) => _packs[pack]!.progress;
+  String? errorOf(DictionaryPack pack) => _packs[pack]!.error;
+  ChineseDictionary? get chinese => licensed ? _packs[DictionaryPack.chinese]!.dictionary as ChineseDictionary? : null;
+  EnglishDictionary? get english => licensed ? _packs[DictionaryPack.english]!.dictionary as EnglishDictionary? : null;
+  bool get anyDictionary => chinese != null || english != null;
+
+  /// [text] as words a tap looks up, when a dictionary for its language
+  /// is ready.
+  List<WordToken>? wordsOf(String text) {
+    final zh = chinese;
+    if (zh != null && ChineseDictionary.looksChinese(text)) return zh.segment(text);
+    final en = english;
+    if (en != null && EnglishDictionary.looksLatin(text)) return en.segment(text);
+    return null;
+  }
+
+  /// The language of the dictionary [token] is looked up in.
+  static String languageOf(WordToken token) => ChineseDictionary.isHan(token.text) ? 'zh' : 'en';
   VocabularyBook? get book => _book;
 
   File? get _settingsFile => _directories == null ? null : File('${_directories!.config.path}${Platform.pathSeparator}learning.json');
-  Directory? get _packFolder => _directories == null ? null : Directory('${_directories!.data.path}${Platform.pathSeparator}learn${Platform.pathSeparator}zh');
-  File? get _chineseFile => _packFolder == null ? null : File('${_packFolder!.path}${Platform.pathSeparator}$chinesePackFile');
+  Directory? _folderOf(DictionaryPack pack) => _directories == null ? null : Directory('${_directories!.data.path}${Platform.pathSeparator}learn${Platform.pathSeparator}${pack.language}');
+  File? _fileOf(DictionaryPack pack) {
+    final folder = _folderOf(pack);
+    return folder == null ? null : File('${folder.path}${Platform.pathSeparator}${pack.file}');
+  }
 
   /// Reads the saved license and settings; with a license, the
   /// dictionary is read in the background when it is there.
@@ -88,11 +120,13 @@ class Learning extends ChangeNotifier {
     } catch (e) {
       logWarn('Could not read the learning settings: $e');
     }
-    if (await _chineseFile!.exists()) _chineseState = PackState.loading;
+    for (final pack in DictionaryPack.values) {
+      if (await _fileOf(pack)!.exists()) _packs[pack]!.state = PackState.loading;
+    }
     notifyListeners();
     if (licensed) {
       unawaited(_book!.load());
-      unawaited(loadChinese());
+      _loadAll();
     }
   }
 
@@ -104,7 +138,7 @@ class Learning extends ChangeNotifier {
     await _save();
     notifyListeners();
     unawaited(_book?.load());
-    unawaited(loadChinese());
+    _loadAll();
     return true;
   }
 
@@ -130,45 +164,60 @@ class Learning extends ChangeNotifier {
     }
   }
 
-  /// Reads the Chinese dictionary when it has been downloaded.
-  Future<void> loadChinese() => _loadingChinese ??= _loadChinese().whenComplete(() => _loadingChinese = null);
+  void _loadAll() {
+    for (final pack in DictionaryPack.values) {
+      unawaited(load(pack));
+    }
+  }
 
-  Future<void> _loadChinese() async {
-    final file = _chineseFile;
-    if (_chinese != null || file == null || !await file.exists()) return;
-    _chineseState = PackState.loading;
+  /// Reads [pack]'s dictionary when it has been downloaded.
+  Future<void> load(DictionaryPack pack) {
+    final state = _packs[pack]!;
+    return state.loading ??= _load(pack).whenComplete(() => state.loading = null);
+  }
+
+  Future<void> _load(DictionaryPack pack) async {
+    final state = _packs[pack]!;
+    final file = _fileOf(pack);
+    if (state.dictionary != null || file == null || !await file.exists()) return;
+    state.state = PackState.loading;
     notifyListeners();
     try {
       final path = file.path;
       final watch = Stopwatch()..start();
-      _chinese = await Isolate.run(() => ChineseDictionary.parse(utf8.decode(gzip.decode(File(path).readAsBytesSync()))));
-      logInfo('Chinese dictionary read in ${watch.elapsedMilliseconds} ms: ${_chinese!.size} entries');
-      _chineseState = PackState.ready;
+      state.dictionary = await Isolate.run<Object>(() {
+        final text = utf8.decode(gzip.decode(File(path).readAsBytesSync()));
+        return pack == DictionaryPack.chinese ? ChineseDictionary.parse(text) : EnglishDictionary.parse(text);
+      });
+      logInfo('${pack.name} dictionary read in ${watch.elapsedMilliseconds} ms');
+      state.state = PackState.ready;
     } catch (e) {
-      logError('Could not read the Chinese dictionary', e);
-      _error = '$e';
-      _chineseState = PackState.failed;
+      logError('Could not read the ${pack.name} dictionary', e);
+      state.error = '$e';
+      state.state = PackState.failed;
     }
     notifyListeners();
   }
 
-  /// Downloads the Chinese dictionary (about 4 MB) and checks it against
-  /// the SHA-256 sum published beside it.
-  Future<void> downloadChinese() async {
-    final file = _chineseFile;
-    if (file == null || _chineseState == PackState.downloading) return;
-    _chineseState = PackState.downloading;
-    _progress = null;
-    _error = null;
+  /// Downloads [pack]'s dictionary and checks it against the SHA-256 sum
+  /// published beside it.
+  Future<void> download(DictionaryPack pack) async {
+    final state = _packs[pack]!;
+    final file = _fileOf(pack);
+    if (file == null || state.state == PackState.downloading) return;
+    state
+      ..state = PackState.downloading
+      ..progress = null
+      ..error = null;
     notifyListeners();
     final client = http.Client();
     final part = File('${file.path}.part');
     try {
       final sums = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS')).timeout(const Duration(seconds: 30));
       if (sums.statusCode != 200) throw HttpException('SHA256SUMS HTTP ${sums.statusCode}');
-      final expected = RegExp('^([0-9a-f]{64}) [ *]?${RegExp.escape(chinesePackFile)}\\s*\$', multiLine: true).firstMatch(sums.body)?.group(1);
+      final expected = RegExp('^([0-9a-f]{64}) [ *]?${RegExp.escape(pack.file)}\\s*\$', multiLine: true).firstMatch(sums.body)?.group(1);
       if (expected == null) throw const FormatException('The dictionary is not listed in SHA256SUMS');
-      final response = await client.send(http.Request('GET', Uri.parse('$learningPackRelease/$chinesePackFile'))).timeout(const Duration(seconds: 30));
+      final response = await client.send(http.Request('GET', Uri.parse('$learningPackRelease/${pack.file}'))).timeout(const Duration(seconds: 30));
       if (response.statusCode != 200) throw HttpException('Dictionary HTTP ${response.statusCode}');
       await file.parent.create(recursive: true);
       final sink = part.openWrite();
@@ -182,7 +231,7 @@ class Learning extends ChangeNotifier {
           hasher.add(chunk);
           received += chunk.length;
           if (total != null && total > 0) {
-            _progress = received / total;
+            state.progress = received / total;
             notifyListeners();
           }
         }
@@ -192,15 +241,17 @@ class Learning extends ChangeNotifier {
       hasher.close();
       if (hashSink.value.toString() != expected) throw const FormatException('The dictionary download is damaged; try again');
       await part.rename(file.path);
-      logInfo('Chinese dictionary downloaded: $received bytes');
-      _chineseState = PackState.loading;
-      _progress = null;
+      logInfo('${pack.name} dictionary downloaded: $received bytes');
+      state
+        ..state = PackState.loading
+        ..progress = null;
       notifyListeners();
-      await loadChinese();
+      await load(pack);
     } catch (e) {
-      logError('Could not download the Chinese dictionary', e);
-      _error = '$e';
-      _chineseState = PackState.failed;
+      logError('Could not download the ${pack.name} dictionary', e);
+      state
+        ..error = '$e'
+        ..state = PackState.failed;
       try {
         if (await part.exists()) await part.delete();
       } catch (_) {}
@@ -210,22 +261,17 @@ class Learning extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteChinese() async {
-    _chinese = null;
-    _chineseState = PackState.missing;
+  Future<void> delete(DictionaryPack pack) async {
+    _packs[pack]!
+      ..dictionary = null
+      ..state = PackState.missing;
     notifyListeners();
     try {
-      final folder = _packFolder;
+      final folder = _folderOf(pack);
       if (folder != null && await folder.exists()) await folder.delete(recursive: true);
     } catch (e) {
-      logWarn('Could not delete the Chinese dictionary: $e');
+      logWarn('Could not delete the ${pack.name} dictionary: $e');
     }
-  }
-
-  /// Size of the downloaded dictionary in bytes, or null.
-  Future<int?> chineseSize() async {
-    final file = _chineseFile;
-    return file != null && await file.exists() ? file.length() : null;
   }
 }
 

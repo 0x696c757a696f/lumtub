@@ -96,7 +96,7 @@ class _LearningPage extends StatelessWidget {
                   child: Text(tr('Remove')),
                 ),
               ),
-            _ChineseTile(learning: learning),
+            for (final pack in DictionaryPack.values) _PackTile(learning: learning, pack: pack),
             SwitchItem(
               title: tr('Show pinyin above Chinese subtitles'),
               subtitle: tr('Above each word, on the video and in the subtitle list'),
@@ -115,14 +115,14 @@ class _LearningPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Text(
-                tr('How to use it: turn on a Chinese subtitle, then tap any word on the video or in the subtitle list. The video waits while the word is open. Everything stays on this device.'),
+                tr('How to use it: download a dictionary, turn on a Chinese or English subtitle, then tap any word on the video or in the subtitle list. The video waits while the word is open. Everything stays on this device.'),
                 style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5),
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Text(
-                tr('Chinese dictionary: CC-CEDICT by MDBG, under CC BY-SA 4.0.'),
+                tr('Chinese dictionary: CC-CEDICT by MDBG, under CC BY-SA 4.0. English dictionary: ECDICT by skywind3000, under the MIT license.'),
                 style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5),
               ),
             ),
@@ -150,7 +150,7 @@ class _Pitch extends StatelessWidget {
           const SizedBox(height: 8),
           for (final line in [
             tr('Tap any word in a subtitle for an offline dictionary entry'),
-            tr('Pinyin above each word'),
+            tr('Pinyin above each Chinese word'),
             tr('A vocabulary book that keeps the line and the moment in the video'),
             tr('Export your words to Anki or CSV'),
           ])
@@ -164,7 +164,7 @@ class _Pitch extends StatelessWidget {
             ),
           const SizedBox(height: 8),
           Text(
-            tr('Chinese now; Japanese and English next. One payment, all your devices, no account, no subscription. Buying it keeps Lumtub alive.'),
+            tr('Chinese and English now; Japanese next. One payment, all your devices, no account, no subscription. Buying it keeps Lumtub alive.'),
             style: TextStyle(color: theme.colorScheme.outline, fontSize: 12, height: 1.5),
           ),
           const SizedBox(height: 12),
@@ -185,31 +185,34 @@ class _Pitch extends StatelessWidget {
   }
 }
 
-class _ChineseTile extends StatelessWidget {
-  const _ChineseTile({required this.learning});
+class _PackTile extends StatelessWidget {
+  const _PackTile({required this.learning, required this.pack});
   final Learning learning;
+  final DictionaryPack pack;
 
   @override
   Widget build(BuildContext context) {
-    final state = learning.chineseState;
+    final state = learning.stateOf(pack);
+    final progress = learning.progressOf(pack);
+    final size = pack == DictionaryPack.chinese ? '4 MB' : '2 MB';
     final subtitle = switch (state) {
-      PackState.missing => tr('Not downloaded · about 4 MB'),
-      PackState.downloading => learning.downloadProgress == null ? tr('Downloading…') : tr('Downloading… {0}%', [(learning.downloadProgress! * 100).round()]),
+      PackState.missing => tr('Not downloaded · about {0}', [size]),
+      PackState.downloading => progress == null ? tr('Downloading…') : tr('Downloading… {0}%', [(progress * 100).round()]),
       PackState.loading => learning.licensed ? tr('Loading…') : tr('Downloaded'),
       PackState.ready => tr('Ready'),
-      PackState.failed => tr('Failed: {0}', [learning.packError ?? '']),
+      PackState.failed => tr('Failed: {0}', [learning.errorOf(pack) ?? '']),
     };
     return NormalItem(
-      title: tr('Chinese dictionary'),
+      title: pack == DictionaryPack.chinese ? tr('Chinese dictionary (Chinese–English)') : tr('English dictionary (English–Chinese)'),
       subtitle: subtitle,
       leading: Icon(AppIcons.translate),
       enabled: learning.licensed,
       trailing: !learning.licensed
           ? null
           : switch (state) {
-              PackState.missing || PackState.failed => FilledButton.tonal(onPressed: () => unawaited(learning.downloadChinese()), child: Text(tr('Download'))),
+              PackState.missing || PackState.failed => FilledButton.tonal(onPressed: () => unawaited(learning.download(pack)), child: Text(tr('Download'))),
               PackState.downloading || PackState.loading => const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-              PackState.ready => IconButton(tooltip: tr('Delete'), icon: Icon(AppIcons.trash, size: 20), onPressed: () => unawaited(learning.deleteChinese())),
+              PackState.ready => IconButton(tooltip: tr('Delete'), icon: Icon(AppIcons.trash, size: 20), onPressed: () => unawaited(learning.delete(pack))),
             },
     );
   }
@@ -277,7 +280,7 @@ class _VocabularyPageState extends State<_VocabularyPage> {
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(32),
-                      child: Text(tr('No words yet. Tap a word in a Chinese subtitle and choose Add to vocabulary book.'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline)),
+                      child: Text(tr('No words yet. Tap a word in a subtitle and choose Add to vocabulary book.'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline)),
                     ),
                   );
                 }

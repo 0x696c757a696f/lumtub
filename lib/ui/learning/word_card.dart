@@ -6,22 +6,27 @@ import 'package:flutter/services.dart';
 import '../../app/app_controller.dart';
 import '../../l10n/l10n.dart';
 import '../../learning/chinese_dictionary.dart';
+import '../../learning/english_dictionary.dart';
+import '../../learning/learning.dart';
 import '../../learning/vocabulary.dart';
 import '../app_icons.dart';
 
 /// The dictionary entries for [token], from a line heard at [at]: its
 /// readings and meanings, its characters, and a button that keeps it in
 /// the vocabulary book with the line. The video waits while it is open.
-Future<void> showWordCard(BuildContext context, AppController controller, ChineseToken token, {required String sentence, String? translation, Duration? at}) async {
-  final dictionary = controller.learning.chinese;
-  if (dictionary == null) return;
+Future<void> showWordCard(BuildContext context, AppController controller, WordToken token, {required String sentence, String? translation, Duration? at}) async {
+  final learning = controller.learning;
+  final language = Learning.languageOf(token);
+  if ((language == 'zh' ? learning.chinese : learning.english) == null) return;
   final player = controller.player;
   final wasPlaying = player?.state.playing ?? false;
   if (wasPlaying) unawaited(player!.pause());
   final when = at ?? player?.state.position ?? Duration.zero;
   await showDialog<void>(
     context: context,
-    builder: (context) => _WordCard(controller: controller, dictionary: dictionary, token: token, sentence: sentence, translation: translation, at: when),
+    builder: (context) => language == 'zh'
+        ? _WordCard(controller: controller, dictionary: learning.chinese!, token: token, sentence: sentence, translation: translation, at: when)
+        : _EnglishCard(controller: controller, dictionary: learning.english!, token: token, sentence: sentence, translation: translation, at: when),
   );
   if (wasPlaying && controller.player == player) unawaited(player?.play());
 }
@@ -31,7 +36,7 @@ class _WordCard extends StatelessWidget {
 
   final AppController controller;
   final ChineseDictionary dictionary;
-  final ChineseToken token;
+  final WordToken token;
   final String sentence;
   final String? translation;
   final Duration at;
@@ -115,6 +120,98 @@ class _WordCard extends StatelessWidget {
                           language: 'zh',
                           reading: token.reading ?? (entries.isEmpty ? '' : entries.first.marked),
                           meaning: entries.isEmpty ? '' : entries.first.senses.take(4).join('; '),
+                          sentence: sentence,
+                          translation: translation ?? '',
+                          videoId: playing?.id ?? '',
+                          videoTitle: playing?.title ?? '',
+                          at: at,
+                          added: DateTime.now(),
+                        )));
+                      },
+              );
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _EnglishCard extends StatelessWidget {
+  const _EnglishCard({required this.controller, required this.dictionary, required this.token, required this.sentence, required this.translation, required this.at});
+
+  final AppController controller;
+  final EnglishDictionary dictionary;
+  final WordToken token;
+  final String sentence;
+  final String? translation;
+  final Duration at;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final entries = dictionary.lookup(token.key);
+    final head = entries.isEmpty ? token.key : entries.last.word;
+    final book = controller.learning.book;
+    return AlertDialog(
+      title: Row(children: [
+        Expanded(child: SelectableText(token.text, style: theme.textTheme.headlineSmall)),
+        IconButton(
+          tooltip: tr('Copy'),
+          icon: Icon(AppIcons.copy, size: 18),
+          onPressed: () => unawaited(Clipboard.setData(ClipboardData(text: token.key))),
+        ),
+      ]),
+      content: SizedBox(
+        width: 420,
+        child: SingleChildScrollView(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            if (entries.isEmpty) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(tr('Not in the dictionary'), style: TextStyle(color: colors.outline))),
+            for (final e in entries)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text.rich(TextSpan(children: [
+                    TextSpan(text: e.word, style: theme.textTheme.titleMedium),
+                    if (e.phonetic.isNotEmpty) TextSpan(text: '  /${e.phonetic}/', style: TextStyle(color: colors.primary)),
+                  ])),
+                  const SizedBox(height: 2),
+                  for (final line in e.meanings.take(8)) Text(line, style: theme.textTheme.bodyMedium),
+                  if (e.namedForms.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(e.namedForms.map((f) => '${tr(f.$1)} ${f.$2}').join(' · '), style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
+                    ),
+                ]),
+              ),
+            if (sentence.isNotEmpty) ...[
+              const Divider(),
+              Text(sentence, style: theme.textTheme.bodyMedium),
+              if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
+            ],
+          ]),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
+        if (book != null && entries.isNotEmpty)
+          ListenableBuilder(
+            listenable: book,
+            builder: (context, _) {
+              final kept = book.contains('en', head);
+              final entry = entries.last;
+              return FilledButton.icon(
+                icon: Icon(kept ? AppIcons.check : AppIcons.plus, size: 18),
+                label: Text(kept ? tr('In vocabulary book') : tr('Add to vocabulary book')),
+                onPressed: kept
+                    ? null
+                    : () {
+                        final playing = controller.playing;
+                        unawaited(book.add(VocabularyWord(
+                          word: head,
+                          language: 'en',
+                          reading: entry.phonetic.isEmpty ? '' : '/${entry.phonetic}/',
+                          meaning: entry.meanings.take(3).join('; '),
                           sentence: sentence,
                           translation: translation ?? '',
                           videoId: playing?.id ?? '',

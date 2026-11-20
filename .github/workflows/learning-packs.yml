@@ -50,6 +50,41 @@ jobs:
           (cd "$RUNNER_TEMP/out" && sha256sum zh-cedict.txt.gz > SHA256SUMS)
           echo "CC-CEDICT: $entries entries, $(stat -c %s "$RUNNER_TEMP/out/zh-cedict.txt.gz") bytes compressed" | tee -a "$GITHUB_STEP_SUMMARY"
 
+      - name: Build the English dictionary
+        env:
+          # ECDICT (MIT); its main list has not changed for years, so a
+          # pinned commit and checksum keep the pack the same.
+          ECDICT_COMMIT: 39cfb9672c0906b63569e0453c2e6abfb9ab182a
+          ECDICT_SHA256: d1ecbdf9ee2b920afb6f430ca6b6bb9f559588cf0dff86e04bd255f9390843cc
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/ecdict.csv" "https://raw.githubusercontent.com/skywind3000/ECDICT/$ECDICT_COMMIT/ecdict.csv"
+          echo "$ECDICT_SHA256  $RUNNER_TEMP/in/ecdict.csv" | sha256sum -c -
+          # Words people meet: listed in a frequency list, Collins, Oxford or
+          # an exam list, with a Chinese meaning. One a line:
+          # word, phonetic, meanings (\n between lines), forms.
+          python3 - "$RUNNER_TEMP/in/ecdict.csv" "$RUNNER_TEMP/in/en.tsv" <<'PY'
+          import csv, re, sys
+          ok = re.compile(r"^[A-Za-z][A-Za-z'\- ]*$")
+          kept = 0
+          with open(sys.argv[1], newline='', encoding='utf-8') as f, open(sys.argv[2], 'w', encoding='utf-8', newline='\n') as out:
+              for d in csv.DictReader(f):
+                  word, meaning = d['word'], d['translation'].replace('\\n', '\n').strip()
+                  if not meaning or not ok.match(word):
+                      continue
+                  if not (int(d['frq'] or 0) or int(d['bnc'] or 0) or d['collins'] or d['oxford'] or d['tag']):
+                      continue
+                  clean = lambda t: t.replace('\t', ' ').replace('\r', '')
+                  out.write('\t'.join([word, clean(d['phonetic']), clean(meaning).replace('\n', '\\n'), clean(d['exchange'])]) + '\n')
+                  kept += 1
+          if kept < 40000:
+              sys.exit(f'only {kept} English words')
+          print(f'ECDICT: {kept} words')
+          PY
+          gzip -n -9 < "$RUNNER_TEMP/in/en.tsv" > "$RUNNER_TEMP/out/en-ecdict.tsv.gz"
+          (cd "$RUNNER_TEMP/out" && sha256sum zh-cedict.txt.gz en-ecdict.tsv.gz > SHA256SUMS)
+          echo "ECDICT: $(wc -l < "$RUNNER_TEMP/in/en.tsv") words, $(stat -c %s "$RUNNER_TEMP/out/en-ecdict.tsv.gz") bytes compressed" | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -58,8 +93,8 @@ jobs:
           if ! gh release view learning --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             gh release create learning --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
               --title 'Learning pack data' \
-              --notes 'Dictionaries for the learning pack, downloaded by Lumtub when a dictionary is turned on. Not an app release. CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/).'
+              --notes 'Dictionaries for the learning pack, downloaded by Lumtub when a dictionary is turned on. Not an app release. CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/); ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT).'
           fi
           # The dictionary first, then the sums that name it.
-          gh release upload learning "$RUNNER_TEMP/out/zh-cedict.txt.gz" --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload learning "$RUNNER_TEMP/out/zh-cedict.txt.gz" "$RUNNER_TEMP/out/en-ecdict.tsv.gz" --repo "$GITHUB_REPOSITORY" --clobber
           gh release upload learning "$RUNNER_TEMP/out/SHA256SUMS" --repo "$GITHUB_REPOSITORY" --clobber

@@ -103,7 +103,7 @@ const LATIN_WORDS: [(Language, &[&str]); 17] = [
         Language::Es,
         &[
             "el", "los", "las", "y", "que", "por", "para", "es", "como", "mi", "más", "qué",
-            "cómo", "muy", "pero", "su",
+            "cómo", "muy", "pero", "su", "noticias",
         ],
     ),
     (
@@ -300,7 +300,7 @@ pub fn reading(title: &str) -> (Language, bool) {
 /// Letters only a few Latin-script languages write, lower case, and
 /// those languages: a title with ø is Norwegian or Danish whatever its
 /// small words say.
-const LETTER_FAMILIES: [(&[char], &[Language]); 10] = {
+const LETTER_FAMILIES: [(&[char], &[Language]); 11] = {
     use Language::*;
     [
         (&['ø'], &[No, Da]),
@@ -308,6 +308,7 @@ const LETTER_FAMILIES: [(&[char], &[Language]); 10] = {
         (&['æ'], &[No, Da, Is]),
         (&['ą', 'ę', 'ł', 'ś', 'ź', 'ż'], &[Pl]),
         (&['ř', 'ě', 'ů'], &[Cs]),
+        (&['ľ', 'ĺ', 'ŕ'], &[Sk]),
         (&['ğ', 'ı'], &[Tr, Az]),
         (&['ə'], &[Az]),
         (&['ő', 'ű'], &[Hu]),
@@ -522,7 +523,12 @@ fn read(title: &str) -> Language {
         if title.contains(['ٹ', 'ڈ', 'ڑ', 'ں', 'ے']) {
             return Language::Ur;
         }
-        if title.contains(['پ', 'چ', 'ژ', 'گ', 'ی']) {
+        // Persian words Arabic does not use, for titles without Persian
+        // letters ("اخبار ساعت شش عصر").
+        let persian_word = title
+            .split(|c: char| !c.is_alphabetic())
+            .any(|w| matches!(w, "شش" | "است" | "های" | "برای" | "امروز" | "خبر‌ها"));
+        if title.contains(['پ', 'چ', 'ژ', 'گ', 'ی']) || persian_word {
             return Language::Fa;
         }
         return Language::Ar;

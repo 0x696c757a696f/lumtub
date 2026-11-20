@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -11,8 +12,9 @@ import 'package:lumtub/native_core.dart';
 Future<String?> _pack(Directory dir, String name, List<String> sql) async {
   final path = '${dir.path}${Platform.pathSeparator}$name';
   try {
-    const script = 'import sqlite3, sys\ndb = sqlite3.connect(sys.argv[1])\ndb.executescript(sys.stdin.read())\ndb.commit()\n';
+    const script = 'import sqlite3, sys\ndb = sqlite3.connect(sys.argv[1])\ndb.executescript(sys.stdin.buffer.read().decode(\'utf-8\'))\ndb.commit()\n';
     final process = await Process.start(Platform.isWindows ? 'python' : 'python3', ['-c', script, path]);
+    process.stdin.encoding = utf8;
     process.stdin.write(sql.map((s) => '$s;').join('\n'));
     await process.stdin.close();
     return await process.exitCode == 0 ? path : null;
@@ -34,6 +36,11 @@ void main() {
   test('English and Wiktionary dictionaries look words up in the core', () async {
     final dir = await Directory.systemTemp.createTemp('lumtub lexicon 词典');
     addTearDown(() => dir.delete(recursive: true));
+    // Closed first, so Windows lets the folder go.
+    addTearDown(() {
+      CoreLexicon.close('en');
+      CoreLexicon.close('ru');
+    });
     final en = await _pack(dir, 'en.sqlite', [
       ..._schema,
       "INSERT INTO entry VALUES (1, 'run\trʌn\tvi. 跑\tp:ran/i:running\tzk gk\t5\t300')",
@@ -64,6 +71,7 @@ void main() {
   test('the core cuts French and Spanish lines into words', () async {
     final dir = await Directory.systemTemp.createTemp('lumtub words');
     addTearDown(() => dir.delete(recursive: true));
+    addTearDown(() => CoreLexicon.close('es'));
     final es = await _pack(dir, 'es.sqlite', [
       ..._schema,
       "INSERT INTO entry VALUES (1, 'hacer\t\t\tv.\t做\tto do\t')",

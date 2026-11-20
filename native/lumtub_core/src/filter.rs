@@ -91,7 +91,7 @@ const VIETNAMESE: &str = "đơưạảấầẩẫậắằẳẵặẹẻẽế
 
 /// Small words that mark a Latin-script language. A word two of them
 /// share (in, con, una, e, da) marks neither.
-const LATIN_WORDS: [(Language, &[&str]); 16] = [
+const LATIN_WORDS: [(Language, &[&str]); 17] = [
     (
         Language::En,
         &[
@@ -206,6 +206,10 @@ const LATIN_WORDS: [(Language, &[&str]); 16] = [
         &[
             "jeung", "teh", "téh", "urang", "ieu", "kana", "sareng", "mah",
         ],
+    ),
+    (
+        Language::Et,
+        &["ning", "kuidas", "uudised", "reisivlog", "eesti", "täna"],
     ),
     (
         Language::Sw,
@@ -942,6 +946,7 @@ mod tests {
             ("Hierdie is baie lekker, ek sê vir julle", Af),
             ("Het nieuws van vandaag, maar niet voor iedereen", Nl),
             ("Habari za leo kutoka Dar es Salaam kwa ufupi", Sw),
+            ("Eesti uudised: kuidas täna ilm on", Et),
         ] {
             assert_eq!(reading(title), (language, true), "{title}");
         }

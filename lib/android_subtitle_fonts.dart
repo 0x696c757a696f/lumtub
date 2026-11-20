@@ -11,8 +11,8 @@ import 'app_log.dart';
 /// Chinese, Japanese, Korean, Latin, Greek and Cyrillic, Roboto for the
 /// accented letters Noto Sans CJK lacks (Polish ł, ę, ś) and one font for
 /// each other script, and the font is picked by the script of the text on
-/// screen. Text no one of them can draw whole, such as Arabic over Chinese,
-/// is left to Flutter's subtitle view, which falls back by itself.
+/// screen. A line no one of them can draw whole, such as Arabic and Chinese
+/// in one line, is left to Flutter's subtitle view, which falls back by itself.
 ///
 /// iOS works the same way with the app's own fonts ([prepareIos]): libass
 /// looking through Core Text there stalled mpv's video thread for seconds.
@@ -183,6 +183,20 @@ class AndroidSubtitleFonts {
 
   /// "NotoNaskhArabic-Regular.ttf" is the family "Noto Naskh Arabic".
   static String familyOf(String file) => file.split('-').first.replaceAllMapped(RegExp(r'(?<=[a-z])(?=[A-Z])'), (_) => ' ');
+
+  /// For the lines libmpv shows, the main subtitle's first and the second
+  /// subtitle's after it: the family for the main one, and whether libmpv
+  /// can draw them at all. Each is a track of its own in its own font (the
+  /// second one is Lumtub's copy in the family for its track), so each line
+  /// only has to fit one font by itself: Polish under Chinese is drawn,
+  /// Polish and Chinese in one line is not.
+  static ({bool drawable, String? main}) forLines(List<String> lines, {String language = ''}) {
+    final main = lines.isEmpty ? '' : lines.first.trim();
+    final rest = lines.skip(1).map((l) => l.trim()).where((l) => l.isNotEmpty);
+    final family = main.isEmpty ? null : familyFor(main, language: language);
+    final drawable = (main.isEmpty || family != null) && rest.every((l) => familyFor(l) != null);
+    return (drawable: drawable, main: family);
+  }
 
   /// The one family that draws all of [text], for subtitles whose language
   /// is [language]; null when no one family can.

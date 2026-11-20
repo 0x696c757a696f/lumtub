@@ -225,7 +225,9 @@ fn latin_letters(language: Language, lower: &str) -> bool {
         Language::De => lower.contains(['ä', 'ö', 'ü', 'ß']),
         // Portuguese writes õ before e (lições, põe); Estonian anywhere
         // (Praamisõit, kõik).
-        Language::Pt => lower.contains('ã') || ["ção", "õe", "ões"].iter().any(|s| lower.contains(s)),
+        Language::Pt => {
+            lower.contains('ã') || ["ção", "õe", "ões"].iter().any(|s| lower.contains(s))
+        }
         Language::Et => lower.contains('õ') && !latin_letters(Language::Pt, lower),
         // ş with a cedilla is Turkish too (Şi, "Xi", in a Turkish title).
         Language::Ro => lower.contains(['ș', 'ț', 'ţ']),

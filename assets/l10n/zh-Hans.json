@@ -3749,7 +3749,6 @@
   "Email you paid with on Ko-fi": "在 Ko-fi 付款时用的邮箱",
   "Afdian › My orders › the order › Order number": "爱发电 › 我的订单 › 点开这笔订单 › 订单号",
   "No paid order with this number was found. Copy the order number from your Afdian order page.": "没有找到这个订单号的已付款订单。请从爱发电的订单页面复制订单号。",
-  "No Ko-fi purchase with this email was found yet. Use the email you paid with, or wait a minute and try again.": "还没有找到这个邮箱在 Ko-fi 的购买记录。请填写付款时用的邮箱，或者等一分钟再试。",
   "Too many tries. Wait a minute and try again.": "尝试次数太多了，请等一分钟再试。",
   "Could not reach the license server. Check your connection, or ask for your code by message.": "连不上授权服务器。请检查网络，或者私信作者索取授权码。",
   "I bought it: unlock": "我已购买，解锁",
@@ -3766,5 +3765,8 @@
   "Rare": "生僻词",
   "Don't mark hard words": "不标记难词",
   "Only rare words stand out": "只标出生僻词",
-  "Words from later lists stand out": "超出这一级的词会标出"
+  "Words from later lists stand out": "超出这一级的词会标出",
+  "No Ko-fi purchase with this transaction ID and email was found yet. Check both against your Ko-fi receipt, or wait a minute and try again.": "还没有找到这个交易号和邮箱对应的 Ko-fi 购买记录。请对照 Ko-fi 发给你的收据检查这两项，或者等一分钟再试。",
+  "Ko-fi transaction ID": "Ko-fi 交易号（Transaction ID）",
+  "On the receipt Ko-fi emailed you": "在 Ko-fi 发到你邮箱的收据里"
 }

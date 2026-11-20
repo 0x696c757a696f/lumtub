@@ -2,7 +2,8 @@
 //
 // POST /kofi   Ko-fi's webhook: a paid shop order is remembered by its
 //              transaction id and the buyer's email.
-// POST /claim  {source: "kofi", email} or {source: "afdian", order}
+// POST /claim  {source: "kofi", order, email} or {source: "afdian", order}
+//              (Ko-fi's order is the transaction id on the buyer's receipt)
 //              returns {code} for a paid order, or {error}.
 //
 // 爱发电 orders are checked with 爱发电's own API when claimed, so they
@@ -51,26 +52,21 @@ async function kofi(request, env) {
   if (!counts) return reply({ ok: true, ignored: true });
   const order = clean(data.kofi_transaction_id).toLowerCase();
   if (!order) return reply({ error: 'no transaction id' }, 400);
-  const buyer = {
-    name: clean(data.from_name).slice(0, 60) || 'Ko-fi supporter',
+  // Codes carry no personal name: the order's tail is enough to trace one.
+  await env.LICENSES.put(`kofi:${order}`, JSON.stringify({
+    name: `Ko-fi #${order.replace(/[^0-9a-z]/g, '').slice(-6)}`,
     email: await sha256(clean(data.email).toLowerCase()),
     date: clean(data.timestamp).slice(0, 10) || new Date().toISOString().slice(0, 10),
-    order,
-  };
-  await env.LICENSES.put(`kofi:${order}`, JSON.stringify(buyer));
-  // Buyers claim with the email they paid with.
-  await env.LICENSES.put(`kofimail:${buyer.email}`, JSON.stringify(buyer));
+  }));
   return reply({ ok: true });
 }
 
 async function claim(request, env) {
   const ask = await request.json().catch(() => ({}));
   const source = clean(ask.source);
-  let order = clean(ask.order).toLowerCase();
+  const order = clean(ask.order).toLowerCase();
   const email = clean(ask.email).toLowerCase();
-  if (order.length > 80 || email.length > 200) return reply({ error: 'order' }, 400);
-  if (source === 'afdian' && !order) return reply({ error: 'order' }, 400);
-  if (source === 'kofi' && !email) return reply({ error: 'email' }, 400);
+  if (!order || order.length > 80 || email.length > 200) return reply({ error: 'order' }, 400);
   // A few tries a minute per address are plenty for a person.
   const ip = request.headers.get('cf-connecting-ip') || '';
   const slot = `tries:${ip}:${Math.floor(Date.now() / 60000)}`;
@@ -80,11 +76,10 @@ async function claim(request, env) {
 
   let buyer;
   if (source === 'kofi') {
-    const hash = await sha256(email);
-    const saved = JSON.parse((await env.LICENSES.get(order ? `kofi:${order}` : `kofimail:${hash}`)) || 'null');
-    if (!saved || saved.email !== hash) return reply({ error: 'not found' }, 404);
+    // Both must match, so a known email alone gets nothing.
+    const saved = JSON.parse((await env.LICENSES.get(`kofi:${order}`)) || 'null');
+    if (!saved || !email || saved.email !== await sha256(email)) return reply({ error: 'not found' }, 404);
     buyer = saved;
-    order = saved.order;
   } else if (source === 'afdian') {
     buyer = await afdianOrder(order, env);
     if (!buyer) return reply({ error: 'not found' }, 404);
@@ -119,7 +114,7 @@ async function afdianOrder(order, env) {
   const found = (answer.data?.list || []).find((o) => String(o.out_trade_no).toLowerCase() === order && Number(o.status) === 2 && (!plans.length || plans.includes(o.plan_id)));
   if (!found) return null;
   const when = Number(found.create_time) ? new Date(Number(found.create_time) * 1000) : new Date();
-  return { name: `爱发电 ${String(found.user_id || '').slice(-6)}`.trim(), date: when.toISOString().slice(0, 10) };
+  return { name: `爱发电 #${order.replace(/[^0-9a-z]/g, '').slice(-6)}`, date: when.toISOString().slice(0, 10) };
 }
 
 async function sign(env, fields) {

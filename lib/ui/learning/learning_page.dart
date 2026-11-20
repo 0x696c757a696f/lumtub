@@ -30,10 +30,11 @@ String learningSummary(Learning learning) => learning.licensed
     ? tr('Licensed to {0}', [learning.license!.name.isEmpty ? '—' : learning.license!.name])
     : tr('Tap words for meanings, pinyin, vocabulary book, Anki export');
 
-/// Unlocks a purchase: asks for the 爱发电 order number or the email paid
-/// with on Ko-fi and fetches the code from the license server.
+/// Unlocks a purchase: asks for the order number, and for Ko-fi the email
+/// paid with too, and fetches the code from the license server.
 Future<bool> claimPurchase(BuildContext context, Learning learning, {required bool afdianFirst}) async {
   final field = TextEditingController();
+  final email = TextEditingController();
   var afdian = afdianFirst;
   var busy = false;
   String? error;
@@ -41,12 +42,12 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
     context: context,
     builder: (context) => StatefulBuilder(builder: (context, setState) {
       Future<void> claim() async {
-        if (field.text.trim().isEmpty || busy) return;
+        if (field.text.trim().isEmpty || (!afdian && email.text.trim().isEmpty) || busy) return;
         setState(() {
           busy = true;
           error = null;
         });
-        final result = await learning.claimLicense(afdian: afdian, value: field.text);
+        final result = await learning.claimLicense(afdian: afdian, order: field.text, email: email.text);
         if (!context.mounted) return;
         if (result == ClaimResult.ok) {
           Navigator.pop(context, true);
@@ -57,7 +58,7 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
           error = switch (result) {
             ClaimResult.notFound => afdian
                 ? tr('No paid order with this number was found. Copy the order number from your Afdian order page.')
-                : tr('No Ko-fi purchase with this email was found yet. Use the email you paid with, or wait a minute and try again.'),
+                : tr('No Ko-fi purchase with this transaction ID and email was found yet. Check both against your Ko-fi receipt, or wait a minute and try again.'),
             ClaimResult.busy => tr('Too many tries. Wait a minute and try again.'),
             _ => tr('Could not reach the license server. Check your connection, or ask for your code by message.'),
           };
@@ -78,16 +79,30 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
               controller: field,
               autofocus: true,
               enabled: !busy,
-              keyboardType: afdian ? TextInputType.text : TextInputType.emailAddress,
               onSubmitted: (_) => unawaited(claim()),
               decoration: InputDecoration(
-                labelText: afdian ? tr('Afdian order number') : tr('Email you paid with on Ko-fi'),
-                helperText: afdian ? tr('Afdian › My orders › the order › Order number') : null,
-                errorText: error,
+                labelText: afdian ? tr('Afdian order number') : tr('Ko-fi transaction ID'),
+                helperText: afdian ? tr('Afdian › My orders › the order › Order number') : tr('On the receipt Ko-fi emailed you'),
+                errorText: afdian ? error : null,
                 errorMaxLines: 3,
                 border: const OutlineInputBorder(),
               ),
             ),
+            if (!afdian) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: email,
+                enabled: !busy,
+                keyboardType: TextInputType.emailAddress,
+                onSubmitted: (_) => unawaited(claim()),
+                decoration: InputDecoration(
+                  labelText: tr('Email you paid with on Ko-fi'),
+                  errorText: error,
+                  errorMaxLines: 3,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+            ],
           ]),
         ),
         actions: [
@@ -101,6 +116,7 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
     }),
   );
   field.dispose();
+  email.dispose();
   return ok ?? false;
 }
 

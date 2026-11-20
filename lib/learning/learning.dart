@@ -166,11 +166,11 @@ class Learning extends ChangeNotifier {
     return true;
   }
 
-  /// Asks the license server for the code of a purchase: a Ko-fi buyer
-  /// gives the email they paid with, an 爱发电 buyer the order number.
+  /// Asks the license server for the code of a purchase: the order
+  /// number, and for Ko-fi also the email paid with.
   /// The server's address is published on the `learning` release, so it
   /// can move without an app update.
-  Future<ClaimResult> claimLicense({required bool afdian, required String value}) async {
+  Future<ClaimResult> claimLicense({required bool afdian, required String order, String email = ''}) async {
     final client = http.Client();
     try {
       final where = await client.get(Uri.parse('$learningPackRelease/license-server.txt')).timeout(const Duration(seconds: 20));
@@ -180,7 +180,7 @@ class Learning extends ChangeNotifier {
           .post(
             server.resolve('/claim'),
             headers: {'content-type': 'application/json'},
-            body: jsonEncode({'source': afdian ? 'afdian' : 'kofi', if (afdian) 'order': value.trim() else 'email': value.trim()}),
+            body: jsonEncode({'source': afdian ? 'afdian' : 'kofi', 'order': order.trim(), if (!afdian) 'email': email.trim()}),
           )
           .timeout(const Duration(seconds: 30));
       if (response.statusCode == 429) return ClaimResult.busy;

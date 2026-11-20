@@ -18,6 +18,9 @@ import 'common.dart';
 import 'motion.dart';
 import 'player_panel.dart';
 import 'app_icons.dart';
+import '../learning/chinese_dictionary.dart';
+import 'learning/ruby_line.dart';
+import 'learning/word_card.dart';
 
 /// 字幕列表: every line of the main subtitle beside the video, with the
 /// second subtitle's words under it, the one being spoken marked and kept
@@ -60,6 +63,27 @@ class _SubtitleListState extends State<SubtitleList> {
     super.initState();
     _trackChanges = widget.player.stream.track.listen((_) => _reload());
     widget.controller.addListener(_secondChanged);
+    widget.controller.learning.addListener(_learningChanged);
+  }
+
+  void _learningChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// [text] as words with pinyin a tap looks up, when it is Chinese and
+  /// the learning pack's dictionary is there; otherwise plain.
+  Widget _line(String text, TextStyle style, {required String? other, required Duration at}) {
+    final learning = widget.controller.learning;
+    final dictionary = learning.chinese;
+    if (dictionary == null || !ChineseDictionary.looksChinese(text)) return Text(text, style: style);
+    final book = learning.book;
+    return ChineseRubyLine(
+      tokens: dictionary.segment(text),
+      style: style,
+      pinyin: learning.showPinyin,
+      highlight: book == null ? null : (word) => book.contains('zh', word),
+      onWord: (token) => unawaited(showWordCard(context, widget.controller, token, sentence: text, translation: other, at: at)),
+    );
   }
 
   void _reload() => setState(() {
@@ -99,6 +123,7 @@ class _SubtitleListState extends State<SubtitleList> {
   @override
   void dispose() {
     widget.controller.removeListener(_secondChanged);
+    widget.controller.learning.removeListener(_learningChanged);
     _trackChanges?.cancel();
     _positions?.cancel();
     _typing?.cancel();
@@ -271,15 +296,19 @@ class _SubtitleListState extends State<SubtitleList> {
                             ),
                             Expanded(
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                                Text(
+                                _line(
                                   top,
-                                  style: TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
+                                  TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
+                                  other: under,
+                                  at: cue.start,
                                 ),
                                 if (under != null) ...[
                                   const SizedBox(height: 2),
-                                  Text(
+                                  _line(
                                     under,
-                                    style: TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
+                                    TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
+                                    other: top,
+                                    at: cue.start,
                                   ),
                                 ],
                               ]),

@@ -14,6 +14,7 @@ import 'player_panel.dart';
 import 'common.dart' show ErrorBanner;
 import 'subtitle_list_panel.dart';
 import 'app_icons.dart';
+import 'learning/learning_page.dart';
 
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
 /// above it (双语字幕) on the right, as PiliNara's `_SubtitleSelectPanel`
@@ -435,6 +436,39 @@ class LearningSwitches extends StatelessWidget {
               (on) => unawaited(controller.setBlurSecondary(on))),
         ),
       ]),
+      ListenableBuilder(
+        listenable: controller.learning,
+        builder: (context, _) {
+          final learning = controller.learning;
+          if (learning.chinese != null) {
+            return Row(children: [
+              Expanded(
+                child: toggle(tr('Pinyin'), tr('Above each word of a Chinese subtitle. Tap a word to look it up.'), learning.showPinyin,
+                    (on) => unawaited(learning.setShowPinyin(on))),
+              ),
+              Expanded(
+                child: ListTile(
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  leading: Icon(AppIcons.bookOpenText, size: 20),
+                  title: Text(tr('Vocabulary book')),
+                  subtitle: Text(tr('{0} words', [learning.book?.words.length ?? 0]), style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
+                  onTap: () => unawaited(openVocabularyBook(context, controller)),
+                ),
+              ),
+            ]);
+          }
+          return ListTile(
+            dense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            leading: Icon(AppIcons.bookOpenText, size: 20),
+            title: Text(learning.licensed ? tr('Download the Chinese dictionary') : tr('Tap words to look them up · Learning pack')),
+            subtitle: Text(learning.licensed ? tr('About 4 MB, then everything works offline.') : tr('Offline dictionary, pinyin, vocabulary book, Anki export'),
+                style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
+            onTap: () => unawaited(openLearningPage(context, controller)),
+          );
+        },
+      ),
     ]);
   }
 }

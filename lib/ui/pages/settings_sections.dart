@@ -47,6 +47,7 @@ import 'relay_servers_page.dart';
 import 'settings_subpages.dart';
 import 'subscription_import_dialog.dart';
 import 'translation_settings_page.dart';
+import '../learning/learning_page.dart';
 import 'watch_stats_page.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
@@ -639,6 +640,15 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.translate),
               onTap: () => openTranslationSettings(context, controller),
             ), subtitle: '翻译目标语言 沉浸式翻译 双语对照 译文 翻译服务 AI 总结 接口 模型 语音识别 Whisper Groq 没有字幕 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
+        SettingEntry(tr('Learning pack'), (context) => ListenableBuilder(
+              listenable: controller.learning,
+              builder: (context, _) => NormalItem(
+                title: tr('Learning pack'),
+                subtitle: learningSummary(controller.learning),
+                leading: _icon(AppIcons.bookOpenText),
+                onTap: () => openLearningPage(context, controller),
+              ),
+            ), subtitle: '学习包 learning dictionary pinyin vocabulary Anki license 词典 拼音 生词本 授权码'),
     ],
     SettingsCategory.controls => [
         SettingEntry(tr('Show playback controls longer'), (context) => NormalItem(

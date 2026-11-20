@@ -165,6 +165,7 @@ extension LifecycleActions on AppController {
       _update(() {
         this.paths = paths;
         this.directories = directories;
+        unawaited(learning.start(directories));
         _cacheManager = cacheManager;
         cacheBytes = 0;
         _settingsStore = settingsStore;

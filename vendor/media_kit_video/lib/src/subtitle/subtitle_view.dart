@@ -152,7 +152,8 @@ class SubtitleViewState extends State<SubtitleView> {
     // after a blank line, invisible.
     if (configuration.ghost) secondary = secondary.split(RegExp(r'\n\s*\n')).first.trim();
     final secondaryStyle = configuration.secondaryStyle;
-    if (secondaryStyle == null) {
+    final custom = main.isEmpty || configuration.ghost ? null : configuration.mainLine?.call(main, configuration.style, textScaler, configuration.outline);
+    if (secondaryStyle == null && custom == null) {
       return SubtitleLine(
         [if (secondary.isNotEmpty) secondary, if (main.isNotEmpty) main].join('\n'),
         style: configuration.style,
@@ -162,10 +163,10 @@ class SubtitleViewState extends State<SubtitleView> {
         lines: 4,
       );
     }
-    Widget second = SubtitleLine(secondary, style: secondaryStyle, textAlign: configuration.textAlign, textScaler: textScaler, outline: configuration.outline);
+    Widget second = SubtitleLine(secondary, style: secondaryStyle ?? configuration.style, textAlign: configuration.textAlign, textScaler: textScaler, outline: configuration.outline);
     final shown = configuration.secondaryShown;
     if (configuration.blurSecondary && shown != null && !configuration.ghost) {
-      second = BlurredUntilShown(shown: shown, sigma: textScaler.scale(secondaryStyle.fontSize ?? 14) * blurSigmaEms, child: second);
+      second = BlurredUntilShown(shown: shown, sigma: textScaler.scale((secondaryStyle ?? configuration.style).fontSize ?? 14) * blurSigmaEms, child: second);
     }
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -173,7 +174,9 @@ class SubtitleViewState extends State<SubtitleView> {
         if (secondary.isNotEmpty)
           KeyedSubtree(key: _secondaryKey, child: second),
         if (secondary.isNotEmpty && main.isNotEmpty) SizedBox(height: textScaler.scale(configuration.spacing)),
-        if (main.isNotEmpty)
+        if (custom != null)
+          custom
+        else if (main.isNotEmpty)
           SubtitleLine(main, style: configuration.style, textAlign: configuration.textAlign, textScaler: textScaler, outline: configuration.outline),
       ],
     );
@@ -354,6 +357,16 @@ class SubtitleViewConfiguration {
   /// far it reaches out from them in logical pixels; 0 for none.
   final double outline;
 
+  /// Lumtub: draws the main line in place of [SubtitleLine] when it gives a
+  /// widget, such as words with their readings for the learning pack.
+  final Widget? Function(String text, TextStyle style, TextScaler scaler, double outline)? mainLine;
+
+  /// Lumtub: whether a pointer at a global position is on something in
+  /// the main line that [onMainTap] handles, such as a word; such taps are
+  /// taken above the controls.
+  final bool Function(Offset global)? mainHit;
+  final ValueChanged<Offset>? onMainTap;
+
   /// {@macro subtitle_view_configuration}
   const SubtitleViewConfiguration({
     this.visible = true,
@@ -378,6 +391,9 @@ class SubtitleViewConfiguration {
     this.onSecondaryTap,
     this.ghost = false,
     this.outline = 0,
+    this.mainLine,
+    this.mainHit,
+    this.onMainTap,
     this.padding = const EdgeInsets.fromLTRB(
       16.0,
       0.0,
@@ -413,6 +429,51 @@ class SecondaryRevealArea extends StatelessWidget {
           child: _RectHit(rect),
         ),
       );
+}
+
+/// Lumtub: takes taps on what [SubtitleViewConfiguration.mainHit] says is
+/// in the main line, above the controls; elsewhere they go on below.
+class MainLineTapArea extends StatelessWidget {
+  const MainLineTapArea({super.key, required this.configuration});
+
+  final SubtitleViewConfiguration configuration;
+
+  @override
+  Widget build(BuildContext context) => MouseRegion(
+        opaque: false,
+        hitTestBehavior: HitTestBehavior.deferToChild,
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.deferToChild,
+          onTapUp: (details) => configuration.onMainTap?.call(details.globalPosition),
+          child: _PointHit(configuration.mainHit ?? (_) => false),
+        ),
+      );
+}
+
+class _PointHit extends LeafRenderObjectWidget {
+  const _PointHit(this.hit);
+  final bool Function(Offset global) hit;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderPointHit(hit);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderPointHit renderObject) => renderObject.hit = hit;
+}
+
+class _RenderPointHit extends RenderBox {
+  _RenderPointHit(this.hit);
+  bool Function(Offset global) hit;
+
+  @override
+  bool get sizedByParent => true;
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) => constraints.biggest;
+
+  @override
+  bool hitTestSelf(Offset position) => attached && hit(localToGlobal(position));
 }
 
 class _RectHit extends LeafRenderObjectWidget {

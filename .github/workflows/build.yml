@@ -1735,10 +1735,14 @@ jobs:
             managers+=('- Windows: `scoop bucket add extras` then `scoop install lumtub`')
           fi
           footer="$RUNNER_TEMP/which-file.md"
-          python3 - "$footer" "${managers[@]}" <<'PY'
-          import sys
-          out, managers = sys.argv[1], sys.argv[2:]
+          python3 - "$footer" "$TAG" "$GITHUB_REPOSITORY" "${managers[@]}" <<'PY'
+          import re, sys
+          out, tag, repo, managers = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:]
           text = open("release-notes/_which-file.md", encoding="utf-8").read()
+          # Each file named in the table links to this release's own copy.
+          base = f"https://github.com/{repo}/releases/download/{tag}/Lumtub_{tag[1:]}_"
+          text = re.sub(r"`([a-z0-9_-]+(?:-setup\.exe|\.zip|\.AppImage|\.dmg|\.apk|\.ipa|\.tipa))`",
+                        lambda m: f"[`{m[1]}`]({base}{m[1]})", text)
           block = "\nOr with a package manager:\n\n" + "\n".join(managers) + "\n" if managers else ""
           open(out, "w", encoding="utf-8").write(text.replace("<!-- package managers -->\n", block))
           PY

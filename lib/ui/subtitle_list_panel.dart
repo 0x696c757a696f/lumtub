@@ -81,6 +81,8 @@ class _SubtitleListState extends State<SubtitleList> {
       tokens: tokens,
       style: style,
       pinyin: learning.showPinyin,
+      hard: learning.isHard,
+      hardColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFFFFC23D) : const Color(0xFFB86E00),
       highlight: book == null ? null : (token) => book.contains(Learning.languageOf(token), token.key) || book.contains(Learning.languageOf(token), token.key.toLowerCase()),
       onWord: (token) => unawaited(showWordCard(context, widget.controller, token, sentence: text, translation: other, at: at)),
     );

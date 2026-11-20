@@ -17,6 +17,8 @@ class ChineseRubyLine extends StatelessWidget {
     this.alignment = WrapAlignment.start,
     this.hits,
     this.highlight,
+    this.hard,
+    this.hardColor = const Color(0xFFFFC23D),
   });
 
   final List<WordToken> tokens;
@@ -30,6 +32,10 @@ class ChineseRubyLine extends StatelessWidget {
 
   /// A word drawn marked, such as one in the vocabulary book.
   final bool Function(WordToken token)? highlight;
+
+  /// Words above the learner's level, drawn in [hardColor].
+  final bool Function(WordToken token)? hard;
+  final Color hardColor;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +53,8 @@ class ChineseRubyLine extends StatelessWidget {
         continue;
       }
       final marked = highlight?.call(token) ?? false;
-      final wordStyle = marked ? style.copyWith(decoration: TextDecoration.underline, decorationColor: style.color, decorationThickness: 2) : style;
+      var wordStyle = (hard?.call(token) ?? false) ? style.copyWith(color: hardColor.withValues(alpha: style.color?.a ?? 1)) : style;
+      if (marked) wordStyle = wordStyle.copyWith(decoration: TextDecoration.underline, decorationColor: wordStyle.color, decorationThickness: 2);
       Widget block = Column(mainAxisSize: MainAxisSize.min, children: [
         if (pinyin && token.reading != null) _text(token.reading!, rubyStyle, outlineScale: 0.6),
         _text(token.text, wordStyle),

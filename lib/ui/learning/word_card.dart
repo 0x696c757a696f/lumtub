@@ -183,6 +183,14 @@ class _EnglishCard extends StatelessWidget {
                     TextSpan(text: e.word, style: theme.textTheme.titleMedium),
                     if (e.phonetic.isNotEmpty) TextSpan(text: '  /${e.phonetic}/', style: TextStyle(color: colors.primary)),
                   ])),
+                  if (e.tags.isNotEmpty || e.collins > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 2),
+                      child: Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                        for (final tag in e.tags) _Tag(tr(tag.label)),
+                        if (e.collins > 0) Text('${'★' * e.collins}${'☆' * (5 - e.collins)}', style: TextStyle(color: colors.outline, fontSize: 12)),
+                      ]),
+                    ),
                   const SizedBox(height: 2),
                   for (final line in e.meanings.take(8)) Text(line, style: theme.textTheme.bodyMedium),
                   if (e.namedForms.isNotEmpty)
@@ -331,6 +339,22 @@ class _JapaneseCard extends StatelessWidget {
             },
           ),
       ],
+    );
+  }
+}
+
+/// An exam list's name on a word card.
+class _Tag extends StatelessWidget {
+  const _Tag(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(border: Border.all(color: colors.outlineVariant), borderRadius: BorderRadius.circular(4)),
+      child: Text(text, style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant)),
     );
   }
 }

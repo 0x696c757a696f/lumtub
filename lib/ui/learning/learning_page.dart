@@ -7,6 +7,7 @@ import '../../app/app_controller.dart';
 import '../../app_log.dart';
 import '../../friendly_error.dart';
 import '../../l10n/l10n.dart';
+import '../../learning/english_dictionary.dart';
 import '../../learning/learning.dart';
 import '../../learning/vocabulary.dart';
 import '../../models.dart';
@@ -103,6 +104,27 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
   return ok ?? false;
 }
 
+Future<void> _pickEnglishLevel(BuildContext context, Learning learning) async {
+  final current = learning.englishLevel ?? -1;
+  final picked = await showDialog<int>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: Text(tr('My English level')),
+      children: [
+        for (final level in [-1, for (final l in EnglishLevel.values) if (l != EnglishLevel.beyond) l.index])
+          ListTile(
+            dense: true,
+            leading: Icon(level == current ? AppIcons.radioButton : AppIcons.circle),
+            title: Text(level < 0 ? tr("Don't mark hard words") : tr(EnglishLevel.values[level].label)),
+            subtitle: level < 0 ? null : Text(level == EnglishLevel.gre.index ? tr('Only rare words stand out') : tr('Words from later lists stand out')),
+            onTap: () => Navigator.pop(context, level),
+          ),
+      ],
+    ),
+  );
+  if (picked != null && picked != current) await learning.setEnglishLevel(picked < 0 ? null : picked);
+}
+
 /// Asks for a license code and keeps it when it is one.
 Future<bool> enterLicenseCode(BuildContext context, Learning learning) async {
   final field = TextEditingController();
@@ -178,6 +200,15 @@ class _LearningPage extends StatelessWidget {
               value: learning.showPinyin,
               enabled: learning.licensed,
               onChanged: (on) => unawaited(learning.setShowPinyin(on)),
+            ),
+            NormalItem(
+              title: tr('My English level'),
+              subtitle: learning.englishLevel == null
+                  ? tr('Hard words are not marked')
+                  : tr('{0}. Harder words stand out in color', [tr(EnglishLevel.values[learning.englishLevel!].label)]),
+              leading: Icon(AppIcons.graduationCap),
+              enabled: learning.licensed,
+              onTap: () => unawaited(_pickEnglishLevel(context, learning)),
             ),
             NormalItem(
               title: tr('Vocabulary book'),

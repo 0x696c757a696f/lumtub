@@ -3752,5 +3752,19 @@
   "No Ko-fi purchase with this email was found yet. Use the email you paid with, or wait a minute and try again.": "还没有找到这个邮箱在 Ko-fi 的购买记录。请填写付款时用的邮箱，或者等一分钟再试。",
   "Too many tries. Wait a minute and try again.": "尝试次数太多了，请等一分钟再试。",
   "Could not reach the license server. Check your connection, or ask for your code by message.": "连不上授权服务器。请检查网络，或者私信作者索取授权码。",
-  "I bought it: unlock": "我已购买，解锁"
+  "I bought it: unlock": "我已购买，解锁",
+  "My English level": "我的英语水平",
+  "Hard words are not marked": "不标记难词",
+  "{0}. Harder words stand out in color": "{0}，更难的词会用颜色标出",
+  "Middle school": "中考",
+  "High school": "高考",
+  "CET-4": "四级",
+  "CET-6": "六级",
+  "Postgraduate exam": "考研",
+  "TOEFL / IELTS": "托福 / 雅思",
+  "GRE": "GRE",
+  "Rare": "生僻词",
+  "Don't mark hard words": "不标记难词",
+  "Only rare words stand out": "只标出生僻词",
+  "Words from later lists stand out": "超出这一级的词会标出"
 }

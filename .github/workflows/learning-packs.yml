@@ -62,7 +62,9 @@ jobs:
           echo "$ECDICT_SHA256  $RUNNER_TEMP/in/ecdict.csv" | sha256sum -c -
           # Words people meet: listed in a frequency list, Collins, Oxford or
           # an exam list, with a Chinese meaning. One a line:
-          # word, phonetic, meanings (\n between lines), forms.
+          # word, phonetic, meanings (\n between lines), forms, exam tags
+          # (zk gk cet4 cet6 ky toefl ielts gre), Collins stars, frequency
+          # rank (the smaller of BNC's and the modern corpus', 0 unknown).
           python3 - "$RUNNER_TEMP/in/ecdict.csv" "$RUNNER_TEMP/in/en.tsv" <<'PY'
           import csv, re, sys
           ok = re.compile(r"^[A-Za-z][A-Za-z'\- ]*$")
@@ -75,7 +77,8 @@ jobs:
                   if not (int(d['frq'] or 0) or int(d['bnc'] or 0) or d['collins'] or d['oxford'] or d['tag']):
                       continue
                   clean = lambda t: t.replace('\t', ' ').replace('\r', '')
-                  out.write('\t'.join([word, clean(d['phonetic']), clean(meaning).replace('\n', '\\n'), clean(d['exchange'])]) + '\n')
+                  ranks = [r for r in (int(d['frq'] or 0), int(d['bnc'] or 0)) if r > 0]
+                  out.write('\t'.join([word, clean(d['phonetic']), clean(meaning).replace('\n', '\\n'), clean(d['exchange']), clean(d['tag']), clean(d['collins'] or '0'), str(min(ranks) if ranks else 0)]) + '\n')
                   kept += 1
           if kept < 40000:
               sys.exit(f'only {kept} English words')

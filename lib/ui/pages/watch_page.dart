@@ -1322,6 +1322,15 @@ typedef SubtitleWords = ({Learning learning, void Function(WordToken token, Stri
 /// The words of the main video's subtitle line, to find the one tapped.
 final _videoWords = RubyHits();
 
+/// Amber for words above the learner's level, or light blue where the
+/// subtitles are already yellow or orange.
+Color _hardColorOn(Color? text) {
+  if (text == null) return const Color(0xFFFFC23D);
+  final hsv = HSVColor.fromColor(text);
+  final yellowish = hsv.saturation > 0.35 && hsv.hue >= 20 && hsv.hue <= 75;
+  return yellowish ? const Color(0xFF7FDBFF) : const Color(0xFFFFC23D);
+}
+
 SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass, TranslationRevealing? reveal, SubtitleWords? words}) {
   // The view scales by area against 1080p, which makes the text tiny in a
   // small window. There a line is about a twentieth of the picture's
@@ -1379,6 +1388,8 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
                     outline: outline,
                     alignment: WrapAlignment.center,
                     pinyin: words.learning.showPinyin,
+                    hard: words.learning.isHard,
+                    hardColor: _hardColorOn(style.color),
                     hits: _videoWords,
                   ),
                 ),

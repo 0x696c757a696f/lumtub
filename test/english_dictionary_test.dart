@@ -36,4 +36,26 @@ void main() {
   test('forms are named', () {
     expect(d.lookup('run').single.namedForms.first, ('Past', 'ran'));
   });
+
+  test('words have levels from exam lists, then from how common they are', () {
+    final levels = EnglishDictionary.parse('add\tæd\tv. 加\tp:added/d:added/i:adding/3:adds\tzk gk cet4 ky\t5\t330\n'
+        'ubiquitous\tju:\ta. 无所不在的\t\tgre\t1\t8148\n'
+        'abruptly\t\tad. 突然地\t\t\t0\t7000\n'
+        'aaron\t\tn. 亚伦\t\t\t0\t15000\n'
+        'zymurgy\t\tn. 酿造学\t\t\t0\t40000\n');
+    expect(levels.lookup('add').single.tags, [EnglishLevel.middleSchool, EnglishLevel.highSchool, EnglishLevel.cet4, EnglishLevel.postgraduate]);
+    expect(levels.lookup('add').single.collins, 5);
+    expect(levels.levelOf('added'), EnglishLevel.middleSchool.index);
+    expect(levels.levelOf('ubiquitous'), EnglishLevel.gre.index);
+    expect(levels.levelOf('abruptly'), EnglishLevel.postgraduate.index);
+    expect(levels.levelOf('zymurgy'), EnglishLevel.beyond.index);
+    expect(levels.levelOf('aaron'), EnglishLevel.gre.index);
+    expect(levels.levelOf('Aaron'), isNull);
+    expect(levels.levelOf('Ubiquitous'), EnglishLevel.gre.index);
+    expect(levels.levelOf('Zymurgy'), isNull);
+    expect(levels.levelOf('nothing'), isNull);
+    // Packs without the level columns still read, with no levels.
+    expect(d.levelOf('run'), isNull);
+    expect(d.lookup('ran').single.forms, contains('p:ran'));
+  });
 }

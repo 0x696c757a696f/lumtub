@@ -4,8 +4,10 @@ import 'word_token.dart';
 
 /// The English pack: common English words with their phonetics and
 /// Chinese meanings, from ECDICT. One word a line:
-/// `word<TAB>phonetic<TAB>meanings, \n between lines<TAB>forms`, where
-/// forms are ECDICT's `p:ran/d:run/i:running/3:runs/0:run`.
+/// word, phonetic, meanings (`\n` between lines), forms, exam tags,
+/// Collins stars and frequency rank, between tabs, where forms are ECDICT's
+/// `p:ran/d:run/i:running/3:runs/0:run` and tags its `zk gk cet4`. Packs
+/// built before the last three columns existed still read.
 class EnglishDictionary {
   EnglishDictionary._(this._lines, this._index, this._forms);
 
@@ -29,9 +31,9 @@ class EnglishDictionary {
       lines.add(line);
       index.putIfAbsent(word, () => at);
       index.putIfAbsent(word.toLowerCase(), () => at);
-      final last = line.lastIndexOf('\t');
-      if (last > tab) {
-        for (final part in line.substring(last + 1).split('/')) {
+      final columns = line.split('\t');
+      if (columns.length > 3) {
+        for (final part in columns[3].split('/')) {
           final colon = part.indexOf(':');
           if (colon < 0 || part.startsWith('0:') || part.startsWith('1:')) continue;
           final form = part.substring(colon + 1).toLowerCase();
@@ -65,6 +67,26 @@ class EnglishDictionary {
 
   bool knows(String word) => lookup(word).isNotEmpty;
 
+  final _levels = <String, int?>{};
+
+  /// How hard [word] is, as an index into [EnglishLevel.values]: the
+  /// first exam whose list has it or the word it is a form of, or a guess
+  /// from how common it is. Null for words the pack cannot place, such as
+  /// names.
+  int? levelOf(String word) {
+    if (_levels.containsKey(word)) return _levels[word];
+    // With a capital, a word no exam lists is likely a name, not a hard
+    // word: only the lists count.
+    final capital = word != word.toLowerCase();
+    int? best;
+    for (final entry in lookup(word)) {
+      final level = capital && entry.tags.isEmpty ? null : entry.level;
+      if (level != null && (best == null || level < best)) best = level;
+    }
+    if (_levels.length > 20000) _levels.clear();
+    return _levels[word] = best;
+  }
+
   static final _word = RegExp(r"[A-Za-z]+(?:['’][A-Za-z]+)*");
 
   /// [text] as words and the pieces between them.
@@ -96,8 +118,34 @@ class EnglishDictionary {
   }
 }
 
+/// The levels a learner can say they are at, easiest first, and the
+/// exam word lists that mark them. [beyond] is for rare words no list has.
+enum EnglishLevel {
+  middleSchool(['zk'], 'Middle school'),
+  highSchool(['gk'], 'High school'),
+  cet4(['cet4'], 'CET-4'),
+  cet6(['cet6'], 'CET-6'),
+  postgraduate(['ky'], 'Postgraduate exam'),
+  toeflIelts(['toefl', 'ielts'], 'TOEFL / IELTS'),
+  gre(['gre'], 'GRE'),
+  beyond([], 'Rare');
+
+  const EnglishLevel(this.tags, this.label);
+  final List<String> tags;
+
+  /// The name to translate.
+  final String label;
+
+  static EnglishLevel? ofTag(String tag) {
+    for (final level in values) {
+      if (level.tags.contains(tag)) return level;
+    }
+    return null;
+  }
+}
+
 class EnglishEntry {
-  const EnglishEntry({required this.word, required this.phonetic, required this.meanings, required this.forms});
+  const EnglishEntry({required this.word, required this.phonetic, required this.meanings, required this.forms, this.tags = const [], this.collins = 0, this.rank = 0});
 
   final String word;
   final String phonetic;
@@ -105,6 +153,25 @@ class EnglishEntry {
 
   /// ECDICT's forms field, as `p:ran/d:run`.
   final String forms;
+
+  /// The exam lists that have the word, easiest first.
+  final List<EnglishLevel> tags;
+
+  /// Collins stars, 0 to 5: how common the word is in Collins' corpus.
+  final int collins;
+
+  /// Its frequency rank, 1 the most common; 0 unknown.
+  final int rank;
+
+  /// The first exam that lists it; otherwise a guess from its rank.
+  int? get level {
+    if (tags.isNotEmpty) return tags.first.index;
+    if (rank <= 0) return null;
+    if (rank < 5000) return EnglishLevel.cet4.index;
+    if (rank < 10000) return EnglishLevel.postgraduate.index;
+    if (rank < 20000) return EnglishLevel.gre.index;
+    return EnglishLevel.beyond.index;
+  }
 
   static EnglishEntry parse(String line) {
     final parts = line.split('\t');
@@ -114,6 +181,9 @@ class EnglishEntry {
       phonetic: at(1),
       meanings: at(2).split(r'\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
       forms: at(3),
+      tags: at(4).split(' ').map(EnglishLevel.ofTag).whereType<EnglishLevel>().toSet().toList()..sort((a, b) => a.index - b.index),
+      collins: int.tryParse(at(5)) ?? 0,
+      rank: int.tryParse(at(6)) ?? 0,
     );
   }
 

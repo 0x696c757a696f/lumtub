@@ -52,6 +52,7 @@ class Learning extends ChangeNotifier {
   AppDirectories? _directories;
   LearningLicense? _license;
   bool _showPinyin = true;
+  int? _englishLevel = EnglishLevel.cet4.index;
   bool _loaded = false;
   VocabularyBook? _book;
 
@@ -64,7 +65,7 @@ class Learning extends ChangeNotifier {
 
   @override
   void notifyListeners() {
-    final key = Object.hashAll([_license, _showPinyin, for (final p in _packs.values) p.dictionary]);
+    final key = Object.hashAll([_license, _showPinyin, _englishLevel, for (final p in _packs.values) p.dictionary]);
     if (key != _lastView) {
       _lastView = key;
       viewChanges.value++;
@@ -77,6 +78,19 @@ class Learning extends ChangeNotifier {
   LearningLicense? get license => _license;
   bool get licensed => _license != null;
   bool get showPinyin => _showPinyin;
+
+  /// The learner's English level as an index into [EnglishLevel.values];
+  /// words above it stand out. Null marks nothing.
+  int? get englishLevel => _englishLevel;
+
+  /// Whether [token] is an English word above the learner's level.
+  bool isHard(WordToken token) {
+    final level = _englishLevel;
+    final en = english;
+    if (level == null || en == null || languageOf(token) != 'en') return false;
+    final word = en.levelOf(token.key);
+    return word != null && word > level;
+  }
   PackState stateOf(DictionaryPack pack) => _packs[pack]!.state;
   double? progressOf(DictionaryPack pack) => _packs[pack]!.progress;
   String? errorOf(DictionaryPack pack) => _packs[pack]!.error;
@@ -121,6 +135,8 @@ class Learning extends ChangeNotifier {
         final json = jsonDecode(await file.readAsString());
         if (json is Map) {
           _showPinyin = json['pinyin'] != false;
+          final level = json['englishLevel'];
+          if (level is int) _englishLevel = level >= 0 && level < EnglishLevel.beyond.index ? level : null;
           final code = json['license'];
           if (code is String && code.isNotEmpty) _license = await Isolate.run(() => LearningLicense.parse(code));
         }
@@ -191,11 +207,17 @@ class Learning extends ChangeNotifier {
     await _save();
   }
 
+  Future<void> setEnglishLevel(int? level) async {
+    _englishLevel = level;
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> _save() async {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'pinyin': _showPinyin}));
+      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'pinyin': _showPinyin, 'englishLevel': _englishLevel ?? -1}));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }

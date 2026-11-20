@@ -322,7 +322,8 @@ mod tests {
             uri_path("C:\\Users\\Zoë\\a b.sqlite"),
             "/C:/Users/Zo%C3%AB/a%20b.sqlite"
         );
-        let folder = std::env::temp_dir().join(format!("lumtub-lexicon-é #&{}", std::process::id()));
+        let folder =
+            std::env::temp_dir().join(format!("lumtub-lexicon-é #&{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
         let path = folder.join("ru.sqlite");
         sample(&path);

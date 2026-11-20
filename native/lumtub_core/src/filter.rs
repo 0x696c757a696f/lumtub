@@ -223,7 +223,10 @@ fn latin_letters(language: Language, lower: &str) -> bool {
         Language::Es => lower.contains(['ñ', '¿', '¡']),
         Language::Fr => lower.contains(['œ', 'ç', 'è', 'ù', 'û']),
         Language::De => lower.contains(['ä', 'ö', 'ü', 'ß']),
-        Language::Pt => lower.contains(['ã', 'õ']) || lower.contains("ção"),
+        // Portuguese writes õ before e (lições, põe); Estonian anywhere
+        // (Praamisõit, kõik).
+        Language::Pt => lower.contains('ã') || ["ção", "õe", "ões"].iter().any(|s| lower.contains(s)),
+        Language::Et => lower.contains('õ') && !latin_letters(Language::Pt, lower),
         // ş with a cedilla is Turkish too (Şi, "Xi", in a Turkish title).
         Language::Ro => lower.contains(['ș', 'ț', 'ţ']),
         Language::Is => lower.contains(['þ', 'ð']),
@@ -606,7 +609,7 @@ fn read(title: &str) -> Language {
             || found == best
             || (best_score < 2.0
                 && info.confidence() >= 0.5
-                && (!listed(found) || score_of(found) >= best_score)))
+                && (!listed(found) || score_of(found) >= score_of(best))))
     {
         return found;
     }
@@ -960,6 +963,15 @@ mod tests {
             reading("Trump-Putin-Şi: Beden Dilleri Ne Dedi? | CANLI HABER").0,
             Ro
         );
+        // A letter shared with a bigger language does not outweigh
+        // Estonian's own word and trigrams.
+        for title in [
+            "Reisivlog 2 - Maldiivid - Praamisõit, kohalik saar",
+            "Avastasime Malta SÜNGED saladused... REISIVLOG",
+        ] {
+            assert_eq!(reading(title).0, Et, "{title}");
+        }
+        assert_eq!(reading("As lições de hoje").0, Pt);
         // One word of its own is a guess, but one that names Finnish.
         assert_eq!(reading("Matkavlogi - Kreeta").0, Fi);
     }

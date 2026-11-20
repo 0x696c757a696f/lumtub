@@ -43,6 +43,8 @@ already measured. Numbers in **bold** are the current limits in the code.
 | Pending video renders per output 每个画面待渲染帧 | **1**: the newest frame wins 只画最新帧 |
 | Retries after a playback failure 播放失败重试 | **3 per 2 min**, recovery counts only after decoded progress 解码前进才算恢复 |
 | Skin pictures 皮肤图片 | decoded at window size; none in Low resource mode 按窗口尺寸解码；低占用模式不画 |
+| AI jobs on this device AI 端侧任务 (`lib/jobs.dart`) | **1** heavy (recognition, generation 识别、生成) + **1** light (embeddings 嵌入); services 云端服务 **2**. Background jobs wait on battery, power saving and Low resource 后台任务在用电池、省电、低占用时暂停 |
+| Data pack downloads 数据包下载 (`lib/packs.dart`) | **1** at a time 同时一个; catalog reply ≤ **4 MiB**, each file exactly its listed size 目录回复 ≤ 4 MiB，每个文件必须等于清单里的大小 |
 
 A new feature that makes requests or starts processes joins an existing
 limit or adds its own, written here. Nothing starts an unbounded number

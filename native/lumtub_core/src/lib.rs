@@ -37,6 +37,7 @@ pub mod loopback;
 pub mod mic;
 pub mod netwatch;
 pub mod pac;
+pub mod packs;
 pub mod posts;
 pub mod process_cpu;
 pub mod process_tree;
@@ -54,6 +55,7 @@ pub mod roots;
 pub mod signing;
 pub mod socks;
 pub mod store;
+pub mod store_texts;
 pub mod subtitles;
 pub mod system_proxy;
 pub mod taste;
@@ -68,5 +70,5 @@ pub mod web_account;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    53
+    54
 }

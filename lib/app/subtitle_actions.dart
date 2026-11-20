@@ -713,7 +713,7 @@ extension SubtitleActions on AppController {
   }
 
   /// Whether 语音识别 has its address, model and key.
-  bool get canRecognizeSpeech => speechReady(preferences.translation, translationKeys);
+  bool get canRecognizeSpeech => intelligence.can(Capability.transcribe);
 
   Future<SubtitleOption?> _speechOptionFor(String videoId, VideoDetails details) async {
     if (AppController.hasOwnSubtitles(details)) return null;
@@ -742,48 +742,40 @@ extension SubtitleActions on AppController {
     final store = speechStore;
     if (item == null || details == null || repository == null || paths == null || store == null) throw TranslationException(tr('No video is playing'));
     if (speechJob.value != null) throw TranslationException(tr('Another video is being recognized, please wait'));
-    final config = preferences.translation;
-    if (!canRecognizeSpeech) throw TranslationException(tr('Set up the speech recognition service and key under Translation & AI first'));
-    final recognizer = SpeechRecognizer(_http, baseUrl: config.effectiveSpeechBaseUrl, key: speechKeyFor(config, translationKeys), model: config.effectiveSpeechModel);
+    final intelligence = this.intelligence;
+    if (!intelligence.can(Capability.transcribe)) throw TranslationException(tr('Set up the speech recognition service and key under Translation & AI first'));
     final serial = _playSerial;
+    final hint = details.language?.split('-').first.toLowerCase();
     final folder = Directory('${(directories?.cache ?? Directory.systemTemp).path}${Platform.pathSeparator}speech-${item.id}');
     void stage(String text, [int done = 0, int total = 0]) => speechJob.value = (videoId: item.id, stage: text, done: done, total: total);
     try {
       stage(tr('Downloading audio…'));
-      final parts = await SpeechAudio.fetch(
-        item.id,
-        folder,
-        ytDlp: repository.ytDlpPath,
-        environment: repository.processEnvironment,
-        proxy: proxy.ytDlpValue(settings.proxyMode),
-        cacheDirectory: repository.cacheDirectory,
-        deno: paths.deno,
-      );
-      final hint = details.language?.split('-').first.toLowerCase();
-      final answers = List<({Duration offset, Map<String, dynamic> answer})?>.filled(parts.length, null);
-      var done = 0;
-      var next = 0;
-      stage(tr('Recognizing speech…'), 0, parts.length);
-      // Two parts at a time: twice as fast without the burst a free tier
-      // answers with 429.
-      Future<void> worker() async {
-        while (next < parts.length) {
-          final i = next++;
-          answers[i] = (offset: parts[i].offset, answer: await recognizer.transcribe(parts[i].file, language: hint));
-          stage(tr('Recognizing speech…'), ++done, parts.length);
-        }
-      }
-
-      await Future.wait([for (var i = 0; i < min(2, parts.length); i++) worker()]);
-      final heard = [for (final a in answers) a!];
-      final vtt = await speechVtt(heard);
-      if (!vtt.contains('-->')) throw TranslationException(tr('No speech was recognized'));
-      final language = (hint == null || hint.isEmpty ? null : details.language) ?? speechLanguageTag(heard.first.answer['language']) ?? 'und';
-      final file = await store.save(item.id, language, vtt);
-      logInfo('Recognized speech of ${item.id} in ${parts.length} part(s)');
+      final transcript = await jobs.run('speech:${item.id}', (job) async {
+        final parts = await SpeechAudio.fetch(
+          item.id,
+          folder,
+          ytDlp: repository.ytDlpPath,
+          environment: repository.processEnvironment,
+          proxy: proxy.ytDlpValue(settings.proxyMode),
+          cacheDirectory: repository.cacheDirectory,
+          deno: paths.deno,
+        );
+        stage(tr('Recognizing speech…'), 0, parts.length);
+        final heard = await intelligence.transcribe(
+          parts,
+          language: hint,
+          onProgress: (done, total) => stage(tr('Recognizing speech…'), done, total),
+          cancelled: () => job.cancelled,
+        );
+        logInfo('Recognized speech of ${item.id} in ${parts.length} part(s)');
+        return heard;
+      }, lane: intelligence.providerFor(Capability.transcribe)!.offline ? JobLane.heavy : JobLane.network, priority: JobPriority.watching);
+      if (!transcript.vtt.contains('-->')) throw TranslationException(tr('No speech was recognized'));
+      final language = (hint == null || hint.isEmpty ? null : details.language) ?? transcript.language ?? 'und';
+      final file = await store.save(item.id, language, transcript.vtt, origin: transcript.origin.id, model: transcript.model);
       final option = SubtitleOption(language: language, name: '', url: file.uri.toString(), kind: SubtitleKind.speech);
       if (serial == _playSerial && playing?.id == item.id) {
-        _summaries.remove(item.id);
+        forgetSummary(item.id);
         _update(() => this.details = this.details?.withSpeechSubtitle(option));
         await _showSpeech(option, serial, asked: true);
       }

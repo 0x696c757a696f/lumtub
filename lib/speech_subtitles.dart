@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'app_log.dart';
 import 'background_json.dart';
 import 'l10n/l10n.dart';
+import 'local_db.dart';
 import 'native_core.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
@@ -178,15 +179,47 @@ const _whisperLanguages = {
   'hungarian': 'hu', 'romanian': 'ro', 'tagalog': 'tl', 'cantonese': 'yue', 'bengali': 'bn', 'tamil': 'ta', 'urdu': 'ur',
 };
 
-/// Recognized subtitles kept in [folder] as `<video id>.<language>.vtt`, so
-/// a video is sent once; the oldest go past [keep].
+/// Recognized subtitles, kept so a video is sent once: in `lumtub.db`
+/// with the core ([db]), marked as machine-made, else in [folder] as
+/// `<video id>.<language>.vtt`. Files from before the database are moved
+/// into it when their video is next looked up. Past [keep], the oldest go.
 class SpeechSubtitleStore {
-  SpeechSubtitleStore(this.folder, {this.keep = 300});
+  SpeechSubtitleStore(this.folder, {this.keep = 300, this.db, Directory? cache}) : cache = cache ?? folder;
   final Directory folder;
   final int keep;
+  final LocalDb? db;
+
+  /// Where subtitles read from [db] are written for the player.
+  final Directory cache;
+
+  /// The origins recognized subtitles are kept under.
+  static const origins = ['machine-local', 'machine-cloud'];
 
   /// The file and language of [videoId]'s recognized subtitles, if any.
   Future<({File file, String language})?> of(String videoId) async {
+    final db = this.db;
+    if (db != null) {
+      try {
+        final found = (await db.transcripts(videoId, origins: origins)).firstOrNull;
+        if (found != null) return (file: await _forPlayer(videoId, found.lang, found.body), language: found.lang);
+      } on LocalDbException catch (e) {
+        logWarn('Could not read recognized subtitles from lumtub.db: $e');
+      }
+    }
+    final old = await _fileOf(videoId);
+    if (old == null || db == null) return old;
+    try {
+      final vtt = await old.file.readAsString();
+      await db.putTranscript(videoId, old.language, 'machine-cloud', vtt, keep: keep);
+      await old.file.delete();
+      return (file: await _forPlayer(videoId, old.language, vtt), language: old.language);
+    } catch (e) {
+      logDebug(() => 'Could not move a speech subtitle file into lumtub.db: $e');
+      return old;
+    }
+  }
+
+  Future<({File file, String language})?> _fileOf(String videoId) async {
     try {
       if (!await folder.exists()) return null;
       await for (final entity in folder.list()) {
@@ -201,7 +234,25 @@ class SpeechSubtitleStore {
     return null;
   }
 
-  Future<File> save(String videoId, String language, String vtt) async {
+  Future<File> _forPlayer(String videoId, String language, String vtt) async {
+    await cache.create(recursive: true);
+    final file = File('${cache.path}${Platform.pathSeparator}$videoId.$language.vtt');
+    await file.writeAsString(vtt);
+    return file;
+  }
+
+  /// Keeps [vtt] as [videoId]'s subtitles in [language], made by [model]
+  /// on this device or a service ([origin]).
+  Future<File> save(String videoId, String language, String vtt, {String origin = 'machine-cloud', String model = ''}) async {
+    final db = this.db;
+    if (db != null) {
+      try {
+        await db.putTranscript(videoId, language, origin, vtt, model: model, keep: keep);
+        return await _forPlayer(videoId, language, vtt);
+      } on LocalDbException catch (e) {
+        logWarn('Could not keep recognized subtitles in lumtub.db: $e');
+      }
+    }
     await folder.create(recursive: true);
     final file = File('${folder.path}${Platform.pathSeparator}$videoId.$language.vtt');
     await file.writeAsString(vtt);

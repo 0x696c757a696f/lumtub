@@ -1406,12 +1406,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.autoUpdateApp,
               onChanged: (v) => savePrefs(prefs.copyWith(autoUpdateApp: v)),
             )),
-        SettingEntry(tr('Components'), (context) => NormalItem(
-              title: tr('Components'),
+        SettingEntry(tr('Components & data packs'), (context) => NormalItem(
+              title: tr('Components & data packs'),
               subtitle: '${controller.tools?.libmpvLabel ?? 'libmpv'} · yt-dlp ${controller.tools?.ytDlpVersion ?? tr('Not installed')}',
               leading: _icon(AppIcons.puzzlePiece),
               onTap: () => openComponents(context, controller),
-            ), subtitle: tr('libmpv yt-dlp Deno check for updates roll back')),
+            ), subtitle: tr('libmpv yt-dlp Deno check for updates roll back data packs models shaders')),
         SettingEntry(tr('Cache location'), (context) => NormalItem(
               title: tr('Cache location'),
               subtitle: settings.cachePath ?? controller.cacheRoot?.path ?? tr('Preparing…'),

@@ -63,7 +63,12 @@ extension LifecycleActions on AppController {
       unawaited(writeLogsOff(preferences.logLevel == LogLevel.off));
       this.channelPlayback = channelPlayback;
       this.watchTime = watchTime;
-      speechStore = SpeechSubtitleStore(Directory('${directories.data.path}${Platform.pathSeparator}speech'));
+      final sep = Platform.pathSeparator;
+      speechStore = SpeechSubtitleStore(
+        Directory('${directories.data.path}${sep}speech'),
+        db: _textsDb = LocalDbTexts.available ? LocalDb('${directories.data.path}${sep}lumtub.db') : null,
+        cache: Directory('${directories.cache.path}${sep}transcripts'),
+      );
       // An earlier attempt that failed may have left one.
       homeFeed?.dispose();
       homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(_passOn('home feed'));
@@ -74,8 +79,11 @@ extension LifecycleActions on AppController {
         _update(() => status = message);
       });
       _tools = manager;
+      packs?.dispose();
+      packs = PackManager(Directory('${directories.data.path}${sep}packs'), manager);
       // The proxy comes before the component downloads, which use it too.
       await (_refreshProxy(), cacheManager.prepare(settings), manager.initialize()).wait;
+      unawaited(packs!.load().catchError((Object e) => logWarn('Could not read the data packs: $e')));
       await YtDlpTls.configure(directories.data, roots: settings.certificateRoots, quantum: settings.postQuantum);
       await JsChallengePlugin.prepare(directories.data.path);
       final paths = await manager.ensureReady();

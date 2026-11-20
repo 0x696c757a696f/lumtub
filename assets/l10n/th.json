@@ -3651,5 +3651,8 @@
   "The line, then my recording": "ประโยคต้นฉบับ แล้วตามด้วยเสียงที่ฉันอัด",
   "All {0} lines I recorded, each then mine": "ทั้ง {0} ประโยคที่อัดไว้ แต่ละประโยคตามด้วยเสียงของฉัน",
   "The line is no longer buffered. Play it once more, then save.": "ประโยคนี้ไม่อยู่ในบัฟเฟอร์แล้ว เล่นอีกครั้งแล้วจึงบันทึก",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "บางประโยคไม่อยู่ในบัฟเฟอร์แล้ว จึงบันทึกเฉพาะเสียงที่คุณอัดสำหรับประโยคเหล่านั้น"
+  "Some lines are no longer buffered, so only your recording is saved for them.": "บางประโยคไม่อยู่ในบัฟเฟอร์แล้ว จึงบันทึกเฉพาะเสียงที่คุณอัดสำหรับประโยคเหล่านั้น",
+  "Languages I understand": "ภาษาที่ฉันเข้าใจ",
+  "Subtitles don't turn on by themselves for videos in these languages": "วิดีโอในภาษาเหล่านี้จะไม่เปิดคำบรรยายเอง",
+  "On for languages I don't understand": "เปิดสำหรับภาษาที่ฉันไม่เข้าใจ"
 }

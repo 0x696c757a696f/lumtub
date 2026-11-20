@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Věta, pak moje nahrávka",
   "All {0} lines I recorded, each then mine": "Všech {0} nahraných vět, za každou moje",
   "The line is no longer buffered. Play it once more, then save.": "Věta už není ve vyrovnávací paměti. Přehrajte ji ještě jednou a pak uložte.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Některé věty už nejsou ve vyrovnávací paměti, proto se u nich uloží jen vaše nahrávka."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Některé věty už nejsou ve vyrovnávací paměti, proto se u nich uloží jen vaše nahrávka.",
+  "Languages I understand": "Jazyky, kterým rozumím",
+  "Subtitles don't turn on by themselves for videos in these languages": "U videí v těchto jazycích se titulky nezapínají samy",
+  "On for languages I don't understand": "Zapnout u jazyků, kterým nerozumím"
 }

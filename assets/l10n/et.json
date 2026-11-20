@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Lause, siis minu salvestis",
   "All {0} lines I recorded, each then mine": "Kõik {0} lauset, mille salvestasin, igaüks koos minu omaga",
   "The line is no longer buffered. Play it once more, then save.": "Lauset pole enam puhvris. Esita see veel korra ja salvesta siis.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Mõnda lauset pole enam puhvris, seega salvestatakse nende puhul ainult sinu salvestis."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Mõnda lauset pole enam puhvris, seega salvestatakse nende puhul ainult sinu salvestis.",
+  "Languages I understand": "Keeled, millest aru saan",
+  "Subtitles don't turn on by themselves for videos in these languages": "Nendes keeltes videote puhul subtiitrid ise sisse ei lülitu",
+  "On for languages I don't understand": "Sees keelte puhul, millest ma aru ei saa"
 }

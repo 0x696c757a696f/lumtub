@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Տողը, հետո իմ ձայնագրությունը",
   "All {0} lines I recorded, each then mine": "Իմ ձայնագրած բոլոր {0} տողերը, յուրաքանչյուրից հետո իմը",
   "The line is no longer buffered. Play it once more, then save.": "Տողն այլևս բուֆերում չէ։ Նվագարկեք այն ևս մեկ անգամ, ապա պահեք։",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Որոշ տողեր այլևս բուֆերում չեն, ուստի դրանց համար պահվում է միայն ձեր ձայնագրությունը։"
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Որոշ տողեր այլևս բուֆերում չեն, ուստի դրանց համար պահվում է միայն ձեր ձայնագրությունը։",
+  "Languages I understand": "Լեզուներ, որոնք հասկանում եմ",
+  "Subtitles don't turn on by themselves for videos in these languages": "Այս լեզուներով տեսանյութերի համար ենթագրերն ինքնաբերաբար չեն միանում",
+  "On for languages I don't understand": "Միացված այն լեզուների համար, որոնք չեմ հասկանում"
 }

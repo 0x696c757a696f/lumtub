@@ -3651,5 +3651,8 @@
   "The line, then my recording": "המשפט, ואחריו ההקלטה שלי",
   "All {0} lines I recorded, each then mine": "כל {0} המשפטים שהקלטתי, כל אחד ואחריו שלי",
   "The line is no longer buffered. Play it once more, then save.": "המשפט כבר לא נמצא במאגר. הפעילו אותו שוב ואז שמרו.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "חלק מהמשפטים כבר לא נמצאים במאגר, לכן עבורם נשמרת רק ההקלטה שלכם."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "חלק מהמשפטים כבר לא נמצאים במאגר, לכן עבורם נשמרת רק ההקלטה שלכם.",
+  "Languages I understand": "שפות שאני מבין",
+  "Subtitles don't turn on by themselves for videos in these languages": "הכתוביות לא נדלקות מעצמן בסרטונים בשפות האלה",
+  "On for languages I don't understand": "מופעל בשפות שאני לא מבין"
 }

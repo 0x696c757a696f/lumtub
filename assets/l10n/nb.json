@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Replikken, så mitt opptak",
   "All {0} lines I recorded, each then mine": "Alle {0} replikker jeg har tatt opp, hver fulgt av mitt",
   "The line is no longer buffered. Play it once more, then save.": "Replikken er ikke lenger i bufferen. Spill den av én gang til, og lagre så.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Noen replikker er ikke lenger i bufferen, så bare opptaket ditt lagres for dem."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Noen replikker er ikke lenger i bufferen, så bare opptaket ditt lagres for dem.",
+  "Languages I understand": "Språk jeg forstår",
+  "Subtitles don't turn on by themselves for videos in these languages": "Teksting slås ikke på av seg selv for videoer på disse språkene",
+  "On for languages I don't understand": "På for språk jeg ikke forstår"
 }

@@ -3656,5 +3656,8 @@
   "The line, then my recording": "Die Zeile, dann meine Aufnahme",
   "All {0} lines I recorded, each then mine": "Alle {0} aufgenommenen Zeilen, jeweils gefolgt von meiner",
   "The line is no longer buffered. Play it once more, then save.": "Die Zeile ist nicht mehr gepuffert. Spiel sie noch einmal ab und speichere dann.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Einige Zeilen sind nicht mehr gepuffert, daher wird für sie nur deine Aufnahme gespeichert."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Einige Zeilen sind nicht mehr gepuffert, daher wird für sie nur deine Aufnahme gespeichert.",
+  "Languages I understand": "Sprachen, die ich verstehe",
+  "Subtitles don't turn on by themselves for videos in these languages": "Bei Videos in diesen Sprachen schalten sich Untertitel nicht von selbst ein",
+  "On for languages I don't understand": "Bei Sprachen an, die ich nicht verstehe"
 }

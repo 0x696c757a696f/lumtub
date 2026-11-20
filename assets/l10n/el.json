@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Η φράση, μετά η ηχογράφησή μου",
   "All {0} lines I recorded, each then mine": "Και οι {0} φράσεις που ηχογράφησα, η καθεμία με τη δική μου",
   "The line is no longer buffered. Play it once more, then save.": "Η φράση δεν υπάρχει πια στην προσωρινή μνήμη. Παίξτε τη ξανά και μετά αποθηκεύστε.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Ορισμένες φράσεις δεν υπάρχουν πια στην προσωρινή μνήμη, οπότε γι' αυτές αποθηκεύεται μόνο η ηχογράφησή σας."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Ορισμένες φράσεις δεν υπάρχουν πια στην προσωρινή μνήμη, οπότε γι' αυτές αποθηκεύεται μόνο η ηχογράφησή σας.",
+  "Languages I understand": "Γλώσσες που καταλαβαίνω",
+  "Subtitles don't turn on by themselves for videos in these languages": "Οι υπότιτλοι δεν ενεργοποιούνται μόνοι τους για βίντεο σε αυτές τις γλώσσες",
+  "On for languages I don't understand": "Ενεργοί για γλώσσες που δεν καταλαβαίνω"
 }

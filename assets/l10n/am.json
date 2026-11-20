@@ -3650,5 +3650,8 @@
   "The line, then my recording": "መስመሩ፣ ከዚያ የእኔ ቅጂ",
   "All {0} lines I recorded, each then mine": "የቀዳኋቸው {0} መስመሮች በሙሉ፣ እያንዳንዱ ከእኔ ጋር",
   "The line is no longer buffered. Play it once more, then save.": "መስመሩ ከእንግዲህ በማቆያ ውስጥ የለም። አንዴ እንደገና አጫውተው፣ ከዚያ አስቀምጥ።",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "አንዳንድ መስመሮች ከእንግዲህ በማቆያ ውስጥ የሉም፣ ስለዚህ ለእነሱ የእርስዎ ቅጂ ብቻ ይቀመጣል።"
+  "Some lines are no longer buffered, so only your recording is saved for them.": "አንዳንድ መስመሮች ከእንግዲህ በማቆያ ውስጥ የሉም፣ ስለዚህ ለእነሱ የእርስዎ ቅጂ ብቻ ይቀመጣል።",
+  "Languages I understand": "የምረዳቸው ቋንቋዎች",
+  "Subtitles don't turn on by themselves for videos in these languages": "በእነዚህ ቋንቋዎች ላሉ ቪዲዮዎች የትርጉም ጽሑፎች በራሳቸው አይበሩም",
+  "On for languages I don't understand": "ለማልረዳቸው ቋንቋዎች አብራ"
 }

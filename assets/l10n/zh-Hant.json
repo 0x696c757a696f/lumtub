@@ -3675,5 +3675,8 @@
   "The line, then my recording": "原聲，然後我的錄音",
   "All {0} lines I recorded, each then mine": "全部 {0} 句錄音，每句原聲後接我的錄音",
   "The line is no longer buffered. Play it once more, then save.": "這一句已不在緩衝區。請再播放一次，然後儲存。",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "部分句子已不在緩衝區，這些句子只會儲存你的錄音。"
+  "Some lines are no longer buffered, so only your recording is saved for them.": "部分句子已不在緩衝區，這些句子只會儲存你的錄音。",
+  "Languages I understand": "我聽得懂的語言",
+  "Subtitles don't turn on by themselves for videos in these languages": "這些語言的影片不會自動開啟字幕",
+  "On for languages I don't understand": "聽不懂的語言時開啟"
 }

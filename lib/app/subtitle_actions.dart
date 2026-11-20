@@ -32,6 +32,7 @@ extension SubtitleActions on AppController {
     final player = this.player;
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer || local.subtitles.isEmpty || settings.subtitleMode == SubtitleMode.off) return;
+    if (settings.subtitleMode == SubtitleMode.foreign && understands(local.info['language']?.toString(), settings.understood)) return;
     try {
       await player.stream.duration.firstWhere((d) => d > Duration.zero).timeout(const Duration(seconds: 15));
       if (serial != _playSerial) return;
@@ -393,14 +394,41 @@ extension SubtitleActions on AppController {
   Future<void> _autoSubtitles(VideoItem item, VideoDetails details, int serial) async {
     final player = this.player;
     if (player == null || details.subtitles.isEmpty || settings.subtitleMode == SubtitleMode.off) return;
-    if (_secondaryAutoFor == item.id || _openedLocal == item.id) return;
+    if (_secondaryAutoFor == item.id) return;
     // The details can arrive before libmpv has the file: a subtitle added
     // then is refused, and the second one would show alone.
     if (!await _fileLoaded(player, item.id, serial)) return;
+    final local = _openedLocal == item.id;
+    // A video in a language the user understands leaves subtitles off,
+    // whatever mpv picked as it loaded; they can still be turned on.
+    if (settings.subtitleMode == SubtitleMode.foreign) {
+      final spoken = details.language ?? details.subtitles.where((o) => o.kind == SubtitleKind.automatic).firstOrNull?.language;
+      if (understands(spoken, settings.understood)) {
+        _secondaryAutoFor = item.id;
+        logDebug(() => 'Subtitles stay off: ${item.id} is in $spoken, a language the user understands');
+        try {
+          final platform = player.platform;
+          if (platform is NativePlayer) await platform.setProperty('sid', 'no');
+          await player.setSubtitleTrack(SubtitleTrack.no());
+        } catch (_) {}
+        return;
+      }
+    }
+    // A download's own tracks give way to the ones picked here, as when
+    // it streams: one written in two languages would show beside them.
+    if (local) {
+      final platform = player.platform;
+      if (platform is NativePlayer) {
+        try {
+          await platform.setProperty('sid', 'no');
+          await player.setSubtitleTrack(SubtitleTrack.no());
+        } catch (_) {}
+      }
+    }
     bool shown(SubtitleTrack t) => t.id != 'no' && t.id != 'auto';
     // mpv picks the track itself as the file loads and does not say so;
     // ask it for a few seconds, then pick one here.
-    for (var i = 0; i < 6 && _openedDirect != item.id && !shown(player.state.track.subtitle); i++) {
+    for (var i = 0; i < 6 && _openedDirect != item.id && !local && !shown(player.state.track.subtitle); i++) {
       await syncMainSubtitle();
       if (serial != _playSerial || this.player != player) return;
       if (shown(player.state.track.subtitle)) break;
@@ -443,7 +471,7 @@ extension SubtitleActions on AppController {
     // 有人工字幕时开启 takes an uploaded subtitle only, as mpv's own pick
     // through ytdl_hook did.
     final manual = settings.subtitleMode == SubtitleMode.manual;
-    final mainWanted = settings.subtitleMode == SubtitleMode.always || mainTitle != null || (manual && _openedDirect == item.id);
+    final mainWanted = settings.subtitleMode.anySubtitle || mainTitle != null || (manual && (_openedDirect == item.id || local));
     if (mainWanted && (mainTitle == null || (spoken != null ? spoken.label != mainTitle && !sameLanguage(spoken.language, mainLanguage) : !speaks(mainLanguage, first)))) {
       final option = spoken ?? subtitleIn(details.subtitles, first, language: details.language);
       if (option != null && option.label != mainTitle && !(manual && mainTitle == null && option.kind != SubtitleKind.uploaded)) {
@@ -514,7 +542,11 @@ extension SubtitleActions on AppController {
       } else {
         final language = SubtitleLanguage.values.where((l) => l != SubtitleLanguage.auto && speaks(option.language, l.translation)).firstOrNull;
         // Uploaded subtitles alone would miss the automatic one chosen.
-        final mode = settings.subtitleMode == SubtitleMode.manual && option.kind == SubtitleKind.uploaded ? SubtitleMode.manual : SubtitleMode.always;
+        final mode = settings.subtitleMode == SubtitleMode.manual && option.kind == SubtitleKind.uploaded
+            ? SubtitleMode.manual
+            : settings.subtitleMode == SubtitleMode.foreign
+                ? SubtitleMode.foreign
+                : SubtitleMode.always;
         next = settings.copyWith(
           subtitleMode: mode,
           subtitleOriginal: original,
@@ -673,8 +705,9 @@ extension SubtitleActions on AppController {
 
   /// Shows [speech], or its translation into 第一字幕语言, unless subtitles
   /// are off.
-  Future<void> _showSpeech(SubtitleOption speech, int serial) async {
+  Future<void> _showSpeech(SubtitleOption speech, int serial, {bool asked = false}) async {
     if (settings.subtitleMode == SubtitleMode.off || serial != _playSerial) return;
+    if (!asked && settings.subtitleMode == SubtitleMode.foreign && understands(speech.language, settings.understood)) return;
     final first = settings.subtitleLanguage.translation;
     final option = settings.subtitleOriginal || speaks(speech.language, first) ? speech : translationOf([speech], first) ?? speech;
     await showSubtitle(option);
@@ -734,7 +767,7 @@ extension SubtitleActions on AppController {
       if (serial == _playSerial && playing?.id == item.id) {
         _summaries.remove(item.id);
         _update(() => this.details = this.details?.withSpeechSubtitle(option));
-        await _showSpeech(option, serial);
+        await _showSpeech(option, serial, asked: true);
       }
       return option;
     } on TranslationException {

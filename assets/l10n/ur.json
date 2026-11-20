@@ -3650,5 +3650,8 @@
   "The line, then my recording": "جملہ، پھر میری ریکارڈنگ",
   "All {0} lines I recorded, each then mine": "میرے ریکارڈ کیے ہوئے تمام {0} جملے، ہر ایک کے بعد میرا",
   "The line is no longer buffered. Play it once more, then save.": "جملہ اب بفر میں نہیں ہے۔ اسے ایک بار پھر چلائیں، پھر محفوظ کریں۔",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "کچھ جملے اب بفر میں نہیں ہیں، اس لیے ان کے لیے صرف آپ کی ریکارڈنگ محفوظ ہوگی۔"
+  "Some lines are no longer buffered, so only your recording is saved for them.": "کچھ جملے اب بفر میں نہیں ہیں، اس لیے ان کے لیے صرف آپ کی ریکارڈنگ محفوظ ہوگی۔",
+  "Languages I understand": "وہ زبانیں جو میں سمجھتا/سمجھتی ہوں",
+  "Subtitles don't turn on by themselves for videos in these languages": "ان زبانوں کی ویڈیوز کے لیے سب ٹائٹلز خود بخود آن نہیں ہوتے",
+  "On for languages I don't understand": "ان زبانوں کے لیے آن جو میں نہیں سمجھتا"
 }

@@ -3650,5 +3650,8 @@
   "The line, then my recording": "ओळ, मग माझे रेकॉर्डिंग",
   "All {0} lines I recorded, each then mine": "मी रेकॉर्ड केलेल्या सर्व {0} ओळी, प्रत्येकीनंतर माझी",
   "The line is no longer buffered. Play it once more, then save.": "ओळ आता बफरमध्ये नाही. ती पुन्हा एकदा चालवा, मग जतन करा.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "काही ओळी आता बफरमध्ये नाहीत, म्हणून त्यांच्यासाठी फक्त तुमचे रेकॉर्डिंग जतन होईल."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "काही ओळी आता बफरमध्ये नाहीत, म्हणून त्यांच्यासाठी फक्त तुमचे रेकॉर्डिंग जतन होईल.",
+  "Languages I understand": "मला समजणाऱ्या भाषा",
+  "Subtitles don't turn on by themselves for videos in these languages": "या भाषांमधील व्हिडिओंसाठी सबटायटल आपोआप सुरू होत नाहीत",
+  "On for languages I don't understand": "मला न समजणाऱ्या भाषांसाठी सुरू"
 }

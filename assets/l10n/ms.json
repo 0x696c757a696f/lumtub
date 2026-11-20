@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Ayat itu, kemudian rakaman saya",
   "All {0} lines I recorded, each then mine": "Semua {0} ayat yang saya rakam, setiap satu diikuti rakaman saya",
   "The line is no longer buffered. Play it once more, then save.": "Ayat itu tiada lagi dalam penimbal. Mainkan sekali lagi, kemudian simpan.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Sesetengah ayat tiada lagi dalam penimbal, jadi hanya rakaman anda disimpan untuknya."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Sesetengah ayat tiada lagi dalam penimbal, jadi hanya rakaman anda disimpan untuknya.",
+  "Languages I understand": "Bahasa yang saya faham",
+  "Subtitles don't turn on by themselves for videos in these languages": "Sari kata tidak hidup sendiri untuk video dalam bahasa-bahasa ini",
+  "On for languages I don't understand": "Hidup untuk bahasa yang saya tidak faham"
 }

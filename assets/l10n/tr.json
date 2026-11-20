@@ -3656,5 +3656,8 @@
   "The line, then my recording": "Cümle, ardından benim kaydım",
   "All {0} lines I recorded, each then mine": "Kaydettiğim {0} cümlenin tümü, her birinin ardından benimki",
   "The line is no longer buffered. Play it once more, then save.": "Cümle artık arabellekte değil. Bir kez daha oynatıp kaydedin.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Bazı cümleler artık arabellekte değil, bu yüzden onlar için yalnızca sizin kaydınız saklanır."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Bazı cümleler artık arabellekte değil, bu yüzden onlar için yalnızca sizin kaydınız saklanır.",
+  "Languages I understand": "Anladığım diller",
+  "Subtitles don't turn on by themselves for videos in these languages": "Bu dillerdeki videolarda altyazılar kendiliğinden açılmaz",
+  "On for languages I don't understand": "Anlamadığım dillerde açık"
 }

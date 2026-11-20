@@ -3650,5 +3650,8 @@
   "The line, then my recording": "Ukarané, banjur rekamanku",
   "All {0} lines I recorded, each then mine": "Kabèh {0} ukara sing tak rekam, saben siji diterusaké rekamanku",
   "The line is no longer buffered. Play it once more, then save.": "Ukarané wis ora ana ing buffer. Puter sepisan menèh, banjur simpen.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Sawetara ukara wis ora ana ing buffer, dadi mung rekamanmu sing disimpen kanggo kuwi."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Sawetara ukara wis ora ana ing buffer, dadi mung rekamanmu sing disimpen kanggo kuwi.",
+  "Languages I understand": "Basa sing aku ngerti",
+  "Subtitles don't turn on by themselves for videos in these languages": "Subtitel ora urip dhewe kanggo video nganggo basa-basa iki",
+  "On for languages I don't understand": "Urip kanggo basa sing ora dakngerteni"
 }

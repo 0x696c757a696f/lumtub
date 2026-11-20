@@ -3651,5 +3651,8 @@
   "The line, then my recording": "A mondat, utána a felvételem",
   "All {0} lines I recorded, each then mine": "Mind a {0} felvett mondat, mindegyik után az enyém",
   "The line is no longer buffered. Play it once more, then save.": "A mondat már nincs a pufferben. Játszd le még egyszer, aztán mentsd.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Néhány mondat már nincs a pufferben, ezért ezeknél csak a te felvételed mentődik."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Néhány mondat már nincs a pufferben, ezért ezeknél csak a te felvételed mentődik.",
+  "Languages I understand": "Nyelvek, amelyeket értek",
+  "Subtitles don't turn on by themselves for videos in these languages": "Az ezeken a nyelveken szóló videóknál a felirat nem kapcsol be magától",
+  "On for languages I don't understand": "Bekapcsolva a nem értett nyelveknél"
 }

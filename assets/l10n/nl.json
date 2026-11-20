@@ -3656,5 +3656,8 @@
   "The line, then my recording": "De zin, dan mijn opname",
   "All {0} lines I recorded, each then mine": "Alle {0} opgenomen zinnen, telkens gevolgd door de mijne",
   "The line is no longer buffered. Play it once more, then save.": "De zin staat niet meer in de buffer. Speel hem nog een keer af en sla dan op.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Sommige zinnen staan niet meer in de buffer, dus daarvoor wordt alleen je opname opgeslagen."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Sommige zinnen staan niet meer in de buffer, dus daarvoor wordt alleen je opname opgeslagen.",
+  "Languages I understand": "Talen die ik versta",
+  "Subtitles don't turn on by themselves for videos in these languages": "Ondertiteling gaat niet vanzelf aan bij video's in deze talen",
+  "On for languages I don't understand": "Aan bij talen die ik niet versta"
 }

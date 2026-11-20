@@ -3656,5 +3656,8 @@
   "The line, then my recording": "La battuta, poi la mia registrazione",
   "All {0} lines I recorded, each then mine": "Tutte le {0} battute registrate, ciascuna seguita dalla mia",
   "The line is no longer buffered. Play it once more, then save.": "La battuta non è più nel buffer. Riproducila ancora una volta, poi salva.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Alcune battute non sono più nel buffer, quindi per quelle si salva solo la tua registrazione."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Alcune battute non sono più nel buffer, quindi per quelle si salva solo la tua registrazione.",
+  "Languages I understand": "Lingue che capisco",
+  "Subtitles don't turn on by themselves for videos in these languages": "I sottotitoli non si attivano da soli per i video in queste lingue",
+  "On for languages I don't understand": "Attivi per le lingue che non capisco"
 }

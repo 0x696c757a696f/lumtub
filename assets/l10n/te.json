@@ -3650,5 +3650,8 @@
   "The line, then my recording": "వాక్యం, తర్వాత నా రికార్డింగ్",
   "All {0} lines I recorded, each then mine": "నేను రికార్డ్ చేసిన మొత్తం {0} వాక్యాలు, ప్రతిదాని తర్వాత నాది",
   "The line is no longer buffered. Play it once more, then save.": "వాక్యం ఇక బఫర్‌లో లేదు. ఇంకోసారి ప్లే చేసి, తర్వాత సేవ్ చేయండి.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "కొన్ని వాక్యాలు ఇక బఫర్‌లో లేవు, కాబట్టి వాటికి మీ రికార్డింగ్ మాత్రమే సేవ్ అవుతుంది."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "కొన్ని వాక్యాలు ఇక బఫర్‌లో లేవు, కాబట్టి వాటికి మీ రికార్డింగ్ మాత్రమే సేవ్ అవుతుంది.",
+  "Languages I understand": "నాకు అర్థమయ్యే భాషలు",
+  "Subtitles don't turn on by themselves for videos in these languages": "ఈ భాషల వీడియోలకు ఉపశీర్షికలు వాటంతట అవే ఆన్ కావు",
+  "On for languages I don't understand": "నాకు అర్థం కాని భాషలకు ఆన్"
 }

@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Репликата, после моят запис",
   "All {0} lines I recorded, each then mine": "Всички {0} записани от мен реплики, всяка последвана от моята",
   "The line is no longer buffered. Play it once more, then save.": "Репликата вече не е в буфера. Пуснете я още веднъж и запазете.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Някои реплики вече не са в буфера, затова за тях се запазва само вашият запис."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Някои реплики вече не са в буфера, затова за тях се запазва само вашият запис.",
+  "Languages I understand": "Езици, които разбирам",
+  "Subtitles don't turn on by themselves for videos in these languages": "Субтитрите не се включват сами за видеоклипове на тези езици",
+  "On for languages I don't understand": "Включени за езици, които не разбирам"
 }

@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 
 import '../../app/app_controller.dart';
 import '../../app/library_controller.dart';
@@ -12,6 +14,7 @@ import '../../youtube_account_feed.dart';
 import '../common.dart';
 import '../motion.dart';
 import '../haptics.dart';
+import '../key_scroll.dart';
 import '../playlist_length.dart';
 import '../theme.dart';
 import '../playlist_order_button.dart';
@@ -583,6 +586,29 @@ class _AllChannels extends StatefulWidget {
 
 class _AllChannelsState extends State<_AllChannels> {
   String _query = '';
+  final _list = ScrollController();
+
+  @override
+  void dispose() {
+    _list.dispose();
+    super.dispose();
+  }
+
+  /// Page Up and Page Down turn the list while the search field has the
+  /// focus, as they do on the page behind.
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent || !_list.hasClients) return KeyEventResult.ignored;
+    final direction = switch (event.logicalKey) {
+      LogicalKeyboardKey.pageDown => 1,
+      LogicalKeyboardKey.pageUp => -1,
+      _ => 0,
+    };
+    if (direction == 0) return KeyEventResult.ignored;
+    final position = _list.position;
+    final to = (position.pixels + direction * position.viewportDimension * KeyScroll.page).clamp(position.minScrollExtent, position.maxScrollExtent);
+    unawaited(position.animateTo(to, duration: KeyScroll.duration, curve: Curves.easeOutCubic));
+    return KeyEventResult.handled;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -592,7 +618,11 @@ class _AllChannelsState extends State<_AllChannels> {
         if (query.isEmpty || channel.name.toLowerCase().contains(query)) channel,
     ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     return Dialog(
-      child: ConstrainedBox(
+      child: Focus(
+        canRequestFocus: false,
+        skipTraversal: true,
+        onKeyEvent: _onKey,
+        child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520, maxHeight: 640),
         child: Column(children: [
           Padding(
@@ -610,6 +640,7 @@ class _AllChannelsState extends State<_AllChannels> {
             child: matches.isEmpty
                 ? Center(child: Text(tr('No matching channels')))
                 : ListView.builder(
+                    controller: _list,
                     itemCount: matches.length,
                     itemBuilder: (context, i) {
                       final channel = matches[i];
@@ -633,6 +664,7 @@ class _AllChannelsState extends State<_AllChannels> {
                   ),
           ),
         ]),
+        ),
       ),
     );
   }

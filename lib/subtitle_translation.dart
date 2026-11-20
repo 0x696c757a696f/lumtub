@@ -115,6 +115,19 @@ List<({String name, TranslationLanguage language, SubtitleOption option})> langu
   return rows;
 }
 
+/// Whether a video spoken in [language] (a YouTube or mpv tag) is in one
+/// of [known] (TranslationLanguage codes). Spoken Chinese is one language,
+/// whichever script its subtitles are written in.
+bool understands(String? language, List<String> known) {
+  String base(String? tag) {
+    final t = (tag ?? '').toLowerCase().replaceAll('_', '-').split('-').first;
+    return const {'chi', 'zho', 'cmn'}.contains(t) ? 'zh' : t;
+  }
+
+  final spoken = base(language);
+  return spoken.isNotEmpty && known.any((code) => base(code) == spoken);
+}
+
 /// Whether two tags name one language; Chinese scripts count as different.
 bool sameLanguage(String? a, String? b) {
   String base(String? tag) {

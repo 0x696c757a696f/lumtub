@@ -57,7 +57,8 @@ extension VideoDetailsActions on AppController {
     try {
       VideoDetails loaded;
       final local = await downloads?.localVideo(item.id);
-      if (local != null && local.info['title'] != null) {
+      final saved = local != null && local.info['title'] != null;
+      if (saved) {
         // Saved with the download, so the page works offline.
         loaded = VideoDetails.fromJson(local.info);
       } else {
@@ -100,6 +101,8 @@ extension VideoDetailsActions on AppController {
         if (speech != null && loaded.subtitles.length == 1) {
           _subtitlesSettled(serial);
           unawaited(_showSpeech(speech, serial));
+        } else if (saved) {
+          unawaited(_downloadedSubtitles(item, local, loaded, serial).whenComplete(() => _subtitlesSettled(serial)));
         } else {
           unawaited(_autoSubtitles(item, loaded, serial).whenComplete(() => _subtitlesSettled(serial)));
         }
@@ -112,6 +115,28 @@ extension VideoDetailsActions on AppController {
     } finally {
       if (serial == _playSerial) _update(() => loadingDetails = false);
     }
+  }
+
+  /// Subtitles for a downloaded video. Online, YouTube's, translations
+  /// too, picked as when it streams; the download keeps only the ones
+  /// saved with it, which are what plays offline.
+  Future<void> _downloadedSubtitles(VideoItem item, LocalVideo local, VideoDetails saved, int serial) async {
+    VideoDetails? online;
+    try {
+      final resolved = await _repository!.streams.resolve(item.id, _formatFor(item.id), formatSort: _formatSort, membersOnly: item.membersOnly).timeout(const Duration(seconds: 40));
+      online = resolved.details;
+    } catch (e) {
+      logInfo('The download of ${item.id} keeps its own subtitles: $e');
+    }
+    if (serial != _playSerial) return;
+    if (online == null || online.subtitles.isEmpty) {
+      final player = this.player;
+      if (player != null && await _fileLoaded(player, item.id, serial) && _openedLocal == item.id) await _addLocalSubtitles(local, serial);
+      return;
+    }
+    final merged = saved.withSubtitlesOf(online);
+    _update(() => details = merged);
+    await _autoSubtitles(item, merged, serial);
   }
 
   /// The playing video, and its place in the history, with what its

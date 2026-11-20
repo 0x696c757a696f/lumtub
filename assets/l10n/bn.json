@@ -3650,5 +3650,8 @@
   "The line, then my recording": "লাইনটি, তারপর আমার রেকর্ডিং",
   "All {0} lines I recorded, each then mine": "আমার রেকর্ড করা সব {0}টি লাইন, প্রতিটির পরে আমারটি",
   "The line is no longer buffered. Play it once more, then save.": "লাইনটি আর বাফারে নেই। আরেকবার চালান, তারপর সংরক্ষণ করুন।",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "কিছু লাইন আর বাফারে নেই, তাই সেগুলোর জন্য শুধু আপনার রেকর্ডিং সংরক্ষিত হবে।"
+  "Some lines are no longer buffered, so only your recording is saved for them.": "কিছু লাইন আর বাফারে নেই, তাই সেগুলোর জন্য শুধু আপনার রেকর্ডিং সংরক্ষিত হবে।",
+  "Languages I understand": "যে ভাষাগুলো আমি বুঝি",
+  "Subtitles don't turn on by themselves for videos in these languages": "এই ভাষাগুলোর ভিডিওর জন্য সাবটাইটেল নিজে থেকে চালু হয় না",
+  "On for languages I don't understand": "যে ভাষা বুঝি না তার জন্য চালু"
 }

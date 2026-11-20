@@ -3651,5 +3651,8 @@
   "The line, then my recording": "വരി, തുടർന്ന് എന്റെ റെക്കോർഡിംഗ്",
   "All {0} lines I recorded, each then mine": "ഞാൻ റെക്കോർഡ് ചെയ്ത എല്ലാ {0} വരികളും, ഓരോന്നിനും ശേഷം എന്റേത്",
   "The line is no longer buffered. Play it once more, then save.": "വരി ഇനി ബഫറിൽ ഇല്ല. ഒരിക്കൽ കൂടി പ്ലേ ചെയ്ത് സംരക്ഷിക്കുക.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "ചില വരികൾ ഇനി ബഫറിൽ ഇല്ല, അതിനാൽ അവയ്ക്ക് നിങ്ങളുടെ റെക്കോർഡിംഗ് മാത്രം സംരക്ഷിക്കും."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "ചില വരികൾ ഇനി ബഫറിൽ ഇല്ല, അതിനാൽ അവയ്ക്ക് നിങ്ങളുടെ റെക്കോർഡിംഗ് മാത്രം സംരക്ഷിക്കും.",
+  "Languages I understand": "എനിക്ക് മനസ്സിലാകുന്ന ഭാഷകൾ",
+  "Subtitles don't turn on by themselves for videos in these languages": "ഈ ഭാഷകളിലെ വീഡിയോകൾക്ക് സബ്‌ടൈറ്റിലുകൾ സ്വയം ഓണാകില്ല",
+  "On for languages I don't understand": "എനിക്ക് മനസ്സിലാകാത്ത ഭാഷകൾക്ക് ഓൺ"
 }

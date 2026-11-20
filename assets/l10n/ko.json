@@ -3656,5 +3656,8 @@
   "The line, then my recording": "원문 음성, 이어서 내 녹음",
   "All {0} lines I recorded, each then mine": "녹음한 {0}개 문장 전체(각각 원문 음성 뒤에 내 녹음)",
   "The line is no longer buffered. Play it once more, then save.": "이 문장은 더 이상 버퍼에 없습니다. 한 번 더 재생한 뒤 저장하세요.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "일부 문장은 더 이상 버퍼에 없어 해당 문장은 내 녹음만 저장됩니다."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "일부 문장은 더 이상 버퍼에 없어 해당 문장은 내 녹음만 저장됩니다.",
+  "Languages I understand": "내가 이해하는 언어",
+  "Subtitles don't turn on by themselves for videos in these languages": "이 언어로 된 동영상에서는 자막이 자동으로 켜지지 않습니다",
+  "On for languages I don't understand": "이해하지 못하는 언어일 때 켜기"
 }

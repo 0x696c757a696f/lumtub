@@ -3650,5 +3650,8 @@
   "The line, then my recording": "වාක්‍යය, පසුව මගේ පටිගත කිරීම",
   "All {0} lines I recorded, each then mine": "මා පටිගත කළ වාක්‍ය {0}ම, එක් එක් ඒවාට පසුව මගේ",
   "The line is no longer buffered. Play it once more, then save.": "වාක්‍යය තවදුරටත් බෆරයේ නැත. එය තවත් වරක් වාදනය කර සුරකින්න.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "සමහර වාක්‍ය තවදුරටත් බෆරයේ නැති නිසා, ඒවා සඳහා ඔබගේ පටිගත කිරීම පමණක් සුරැකේ."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "සමහර වාක්‍ය තවදුරටත් බෆරයේ නැති නිසා, ඒවා සඳහා ඔබගේ පටිගත කිරීම පමණක් සුරැකේ.",
+  "Languages I understand": "මට තේරෙන භාෂා",
+  "Subtitles don't turn on by themselves for videos in these languages": "මෙම භාෂාවලින් ඇති වීඩියෝ සඳහා උපසිරැසි ඉබේ ක්‍රියාත්මක නොවේ",
+  "On for languages I don't understand": "මට නොතේරෙන භාෂා සඳහා ක්‍රියාත්මකයි"
 }

@@ -39,13 +39,11 @@ jobs:
             echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@v4
-        if: steps.check.outputs.ready == 'true'
-
-      - uses: actions/setup-node@v4
+      # The runner's own Node is new enough for wrangler.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         if: steps.check.outputs.ready == 'true'
         with:
-          node-version: '22'
+          persist-credentials: false
 
       - name: Find or create the KV namespace
         if: steps.check.outputs.ready == 'true'

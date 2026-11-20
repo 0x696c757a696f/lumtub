@@ -338,7 +338,8 @@ enum ExploreLanguage {
         he => 'iw',
         jv || su => 'id',
         ti => 'am',
-        tk => 'tr',
+        // Asked in Turkish, a Turkmen search brings Turkish videos.
+        tk => 'ru',
         eo || la => 'en',
         _ => code,
       };
@@ -353,7 +354,7 @@ enum ExploreLanguage {
         jv => 'basa Jawa',
         su => 'basa Sunda',
         ti => 'ትግርኛ',
-        tk => 'türkmen',
+        tk => 'Türkmenistan',
         _ => null,
       };
 

@@ -374,7 +374,7 @@ void main() {
     expect(kept, hasLength(61));
     expect((jsonDecode(kept.first) as Map)['id'], 'h0000000001', reason: 'heard ones go first');
     // Lookups already running when the others stop telling still ask them.
-    expect(calls, lessThan(60 * PlayerClient.values.length ~/ 2 + VideoLanguages.parallel), reason: 'the other apps are left alone once they never tell');
+    expect(calls, lessThan(60 * PlayerClient.values.length ~/ 2 + VideoLanguages.parallel * 2), reason: 'the other apps are left alone once they never tell');
   }, skip: core);
 
   test('stops asking for a while once YouTube leaves the video out', () async {

@@ -113,7 +113,7 @@ class YoutubePlayerProbe {
 
   /// Lookups for lists go at most one per [lookupSpacing], and none while a
   /// video starts or for [afterPlayback] after.
-  static const lookupSpacing = Duration(milliseconds: 25);
+  static const lookupSpacing = Duration(milliseconds: 15);
 
   /// Whether a phone's app is hidden: lookups for lists wait meanwhile.
   static bool appHidden = false;

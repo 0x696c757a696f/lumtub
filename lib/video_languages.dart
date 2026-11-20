@@ -41,7 +41,9 @@ class VideoLanguages {
   final File? file;
 
   /// Lookups running at once.
-  static const parallel = 8;
+  /// Measured on 2026-11-20: 16 at once ran 60 a second with no refusals;
+  /// phones, on mobile networks and shared addresses, ask half as many.
+  static final parallel = Platform.isIOS || Platform.isAndroid ? 8 : 16;
   static const _kept = 20000;
   static const giveUpAfterDefault = 240;
 

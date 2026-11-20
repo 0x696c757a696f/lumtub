@@ -123,9 +123,10 @@ goes on with its sub-categories' searches, one after another.
 
 ## Asking YouTube
 
-- Each video is asked once per language check, at most 8 at a time,
-  started at least 25 ms apart (measured 2026-11-20: 16 at once ran
-  70 a second with no refusals). Languages YouTube has no interface in
+- Each video is asked once per language check, at most 16 at a time
+  (8 on phones),
+  started at least 15 ms apart (measured 2026-11-20: 16 at once ran
+  60–70 a second with no refusals). Languages YouTube has no interface in
   (eo, jv, la, su, ti, tk answer HTTP 400) are asked in a near one
   (`youtubeHl`), and their searches name the language
   (`searchAnchor`, such as "basa Jawa"), since asked in the near one

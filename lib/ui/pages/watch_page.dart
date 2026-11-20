@@ -1295,7 +1295,10 @@ double smallSubtitleScale(Size size) => (size.shortestSide * 0.055).clamp(13.0, 
 /// a phone's upright player with 9 px text. A [small] window (picture in
 /// picture, the mini player) keeps the same share of its height down to
 /// 6 px, as ExoPlayer does there, so a line does not cover the picture.
-double androidSubtitleScale(Size size, [double system = 1, bool small = false]) => max(small ? 6.0 : 12.0, size.height * 0.0533 * system) / 32;
+/// A player taller than wide (full screen upright, for a portrait video)
+/// counts no more than three quarters of its width: by its height the
+/// letters were so large that a line held a few words.
+double androidSubtitleScale(Size size, [double system = 1, bool small = false]) => max(small ? 6.0 : 12.0, min(size.height, size.width * 0.75) * 0.0533 * system) / 32;
 
 /// What 模糊翻译 needs from the player: whether the second subtitle shows
 /// plainly now, and what hovering and tapping it do.

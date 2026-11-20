@@ -118,6 +118,15 @@ The changes, marked "Lumtub" in the code:
   picture on that layer, arms it for going home, passes the window's play,
   pause and skip buttons on, and keeps the layer's clock at the player's
   position for the window's progress bar.
+  With `BoxFit.contain` the layer's view fills the whole player (the
+  display layer fits the picture in itself) and `VideoSink` tells the
+  output the view's shape (`canvas_aspect`, 0 while picture in picture
+  composites): the subtitles' canvas is the player, so a portrait video's
+  subtitles use the bars beside it.
+- `video_texture.dart`: an `aspectRatio` of 0 shows the texture by its own
+  shape. Lumtub draws the picture the player's shape while libmpv draws
+  subtitles on the desktop (`VideoOutputSize.canvas`), so libass can put
+  them in the bars beside a picture of another shape.
 - `SubtitleView` can blur the secondary line (`blurSecondary`, shown plainly
   while `secondaryShown` is true) and can lay its lines out unseen (`ghost`)
   while libmpv draws them, so the secondary line's place is known.

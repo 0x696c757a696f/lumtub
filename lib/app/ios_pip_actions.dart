@@ -105,6 +105,8 @@ extension IosPipActions on AppController {
   /// The window closed while Lumtub is in the background: from then on only
   /// the sound plays there, as without picture in picture.
   void _iosPipActiveChanged() {
+    // The window shows the picture's own shape: subtitles are wrapped for it.
+    _queueLibassLook();
     if (IosVideoLayer.active.value || !_windowHidden) return;
     final restored = _iosPip?.restoredAt;
     if (restored != null && DateTime.now().difference(restored) < const Duration(seconds: 3)) return;

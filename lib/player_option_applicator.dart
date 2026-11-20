@@ -155,6 +155,13 @@ class PlayerOptionApplicator {
       // one's style at its own size.
       'secondary-sub-ass-override': 'scale',
       'secondary-sub-scale': settings.secondaryScale.toStringAsFixed(2),
+      // Where the picture is fitted into a player of another shape (a
+      // portrait video), libmpv draws subtitles over the whole player, as
+      // the Flutter view does: lines run into the bars beside the picture
+      // and are sized by the player's height, Lumtub's ASS copies too.
+      'sub-use-margins': 'yes',
+      'sub-ass-force-margins': 'yes',
+      'sub-ass-scale-with-window': 'yes',
     };
   }
 

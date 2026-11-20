@@ -396,7 +396,23 @@ class VideoState extends State<Video> with WidgetsBindingObserver {
                       fit: StackFit.expand,
                       children: [
                 ClipRect(
-                  child: FittedBox(
+                  child: ValueListenableBuilder<PlatformVideoController?>(
+                    valueListenable: widget.controller.notifier,
+                    // Lumtub: on iOS a fitted picture's layer takes the
+                    // whole view and fits the picture in itself, so the
+                    // subtitles shown over it can use the bars beside a
+                    // picture of another shape (a portrait video's).
+                    builder: (context, notifier, fitted) => notifier
+                                    ?.layerHandle !=
+                                null &&
+                            videoViewParameters.fit == BoxFit.contain
+                        ? _FillingLayer(
+                            notifier: notifier!,
+                            visible: _visible,
+                            fill: videoViewParameters.fill,
+                          )
+                        : fitted!,
+                    child: FittedBox(
                     fit: videoViewParameters.fit,
                     alignment: videoViewParameters.alignment,
                     child: ValueListenableBuilder<PlatformVideoController?>(
@@ -414,10 +430,13 @@ class VideoState extends State<Video> with WidgetsBindingObserver {
                                         _visible) {
                                       return SizedBox(
                                         // Apply aspect ratio if provided.
-                                        width:
-                                            videoViewParameters.aspectRatio ==
-                                                    null
-                                                ? rect.width
+                                        // Lumtub: 0 is the texture's own
+                                        // shape too.
+                                        width: (videoViewParameters
+                                                        .aspectRatio ??
+                                                    0) <=
+                                                0
+                                            ? rect.width
                                                 : rect.height *
                                                     videoViewParameters
                                                         .aspectRatio!,
@@ -472,6 +491,7 @@ class VideoState extends State<Video> with WidgetsBindingObserver {
                               },
                             ),
                     ),
+                  ),
                   ),
                 ),
                 // Lumtub: the configuration alone says whether this view
@@ -578,3 +598,32 @@ Future<void> defaultExitNativeFullscreen() async {
   }
 }
 // --------------------------------------------------
+
+/// Lumtub: the iOS player's layer filling the whole view; its display layer
+/// fits the picture in itself (resizeAspect).
+class _FillingLayer extends StatelessWidget {
+  const _FillingLayer({required this.notifier, required this.visible, required this.fill});
+
+  final PlatformVideoController notifier;
+  final bool visible;
+  final Color fill;
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<int?>(
+        valueListenable: notifier.id,
+        builder: (context, id, _) => ValueListenableBuilder<Rect?>(
+          valueListenable: notifier.rect,
+          builder: (context, rect, _) {
+            if (id == null || rect == null || !visible) return const SizedBox.shrink();
+            // Nothing to show before the first picture's size is known.
+            if (rect.width <= 1.0 && rect.height <= 1.0) return ColoredBox(color: fill);
+            return UiKitView(
+              viewType: 'com.alexmercerind/media_kit_video/layer',
+              creationParams: {'handle': notifier.layerHandle},
+              creationParamsCodec: const StandardMessageCodec(),
+              hitTestBehavior: PlatformViewHitTestBehavior.transparent,
+            );
+          },
+        ),
+      );
+}

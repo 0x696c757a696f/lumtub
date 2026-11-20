@@ -374,7 +374,20 @@ class AppController extends ChangeNotifier with _ExploreState {
   void hideVideoIn(Object owner) => _outputSize?.hide(owner);
 
   /// Whether the picture is zoomed or stretched to fill the player.
-  set coverVideo(bool value) => _outputSize?.cover = value;
+  set coverVideo(bool value) {
+    if (value == _coverVideo) return;
+    _coverVideo = value;
+    _outputSize?.cover = value;
+    _syncSubtitleCanvas();
+  }
+
+  bool _coverVideo = false;
+
+  /// Whether libmpv draws the picture the shape of the player, fitted in
+  /// with bars, rather than the picture's own shape (see
+  /// [VideoOutputSize.canvas]): the player then shows the drawing by its
+  /// own shape.
+  final pictureShapedByPlayer = ValueNotifier(false);
 
   /// The playing video's width over height, 16:9 until it is known.
   double get videoAspect {

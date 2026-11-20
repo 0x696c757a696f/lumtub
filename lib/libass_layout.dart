@@ -50,7 +50,7 @@ class LibassLayout {
 
   /// How many lines libass draws [text] on, wrapping at the canvas width.
   static int lineCount(String text, {required double scale, double aspect = 16 / 9, double em = _font}) {
-    final room = (_canvas * max(aspect, 0.5) - 2 * _margin) / (em * scale);
+    final room = (_canvas * max(aspect, 0.2) - 2 * _margin) / (em * scale);
     var lines = 0;
     for (final line in text.replaceAll(_invisible, '').trim().split('\n')) {
       final width = _ems(line.trim());
@@ -62,7 +62,7 @@ class LibassLayout {
 
   /// The ems of a line in libass's room for [aspect], with letters [em]
   /// units wide at [scale].
-  static double roomEms({required double em, required double scale, double aspect = 16 / 9}) => (_canvas * max(aspect, 0.5) - 2 * _margin) / (em * scale);
+  static double roomEms({required double em, required double scale, double aspect = 16 / 9}) => (_canvas * max(aspect, 0.2) - 2 * _margin) / (em * scale);
 
   /// [text] with line breaks where the Flutter subtitle view wraps it in
   /// [room] ems of [font]. libass breaks lines only at spaces, so Chinese,

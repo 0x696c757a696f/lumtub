@@ -56,7 +56,7 @@ new file mode 100644
 index 0000000..1111111
 --- /dev/null
 +++ b/video/out/vo_avfoundation.c
-@@ -0,0 +1,585 @@
+@@ -0,0 +1,606 @@
 +/*
 + * This file is part of mpv.
 + *
@@ -121,7 +121,7 @@ index 0000000..1111111
 +    bool (*frame)(void *ctx, void *picture, int64_t rotate, double zoom);
 +    // The subtitles and OSD: image (a CGImageRef, NULL for none) covers
 +    // x, y, w, h (from the top left) of a canvas canvas_w by canvas_h, the
-+    // shape of the turned picture.
++    // shape of canvas_aspect below (the turned picture's when 0).
 +    void (*overlay)(void *ctx, void *image, double x, double y, double w,
 +                    double h, double canvas_w, double canvas_h);
 +    // Playback was reset (a seek, a new file): pictures waiting are dropped.
@@ -130,9 +130,15 @@ index 0000000..1111111
 +    // The tallest the subtitles are drawn: the screen's short side in
 +    // pixels (0: the picture's height).
 +    int64_t max_height;
++    // The shape (width / height) of the view the picture is fitted into:
++    // the subtitles' canvas is that shape, the picture in its middle, so
++    // subtitles can use the bars beside or above and below a picture of
++    // another shape (0: the picture's own shape). The app changes it from
++    // its main thread at any time.
++    double canvas_aspect;
 +};
 +
-+_Static_assert(sizeof(struct lumtub_vo_host) == 48,
++_Static_assert(sizeof(struct lumtub_vo_host) == 56,
 +               "struct lumtub_vo_host is laid out in PlayerLayer.swift");
 +
 +struct priv {
@@ -431,18 +437,33 @@ index 0000000..1111111
 +    // Drawn at the screen's size: crisp when the picture is smaller, and no
 +    // more pixels than the screen shows when it is larger.
 +    int max_height = (int)MPCLAMP(p->host->max_height, 0, 16384);
-+    int cw = w, ch = h;
-+    if (max_height > 0 && h != max_height) {
-+        cw = (int)MPMAX(1, (int64_t)w * max_height / h);
-+        ch = max_height;
++    // The picture in a canvas of the view's shape: bars to its sides (a
++    // portrait video in a wide view) or above and below it.
++    double aspect = p->host->canvas_aspect;
++    double pw = w, ph = h;
++    if (isfinite(aspect) && aspect >= 0.1 && aspect <= 10) {
++        if (aspect > pw / ph * 1.01) {
++            pw = ph * aspect;
++        } else if (aspect < pw / ph / 1.01) {
++            ph = pw / aspect;
++        }
 +    }
++    double scale = max_height > 0 ? max_height / ph : 1;
++    int cw = (int)MPMAX(1, lrint(pw * scale)), ch = (int)MPMAX(1, lrint(ph * scale));
++    // Where the picture is in it.
++    int vw = (int)MPMIN(cw, lrint(w * scale)), vh = (int)MPMIN(ch, lrint(h * scale));
++    int ml = (cw - vw) / 2, mt = (ch - vh) / 2;
 +    if (cw != p->osd_w || ch != p->osd_h) {
 +        p->osd_w = cw;
 +        p->osd_h = ch;
 +        p->osd_change_id = 0;
 +    }
 +
-+    struct mp_osd_res res = { .w = cw, .h = ch, .display_par = 1.0 };
++    struct mp_osd_res res = {
++        .w = cw, .h = ch,
++        .ml = ml, .mr = cw - vw - ml, .mt = mt, .mb = ch - vh - mt,
++        .display_par = 1.0,
++    };
 +    static const bool formats[SUBBITMAP_COUNT] = {
 +        [SUBBITMAP_BGRA] = true,
 +        [SUBBITMAP_LIBASS] = true,

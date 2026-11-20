@@ -130,8 +130,18 @@ extension VideoDetailsActions on AppController {
     }
     if (serial != _playSerial) return;
     if (online == null || online.subtitles.isEmpty) {
-      final player = this.player;
-      if (player != null && await _fileLoaded(player, item.id, serial) && _openedLocal == item.id) await _addLocalSubtitles(local, serial);
+      // Offline: the subtitles saved in one language each are picked as
+      // first and second subtitle, each in its own style, as online. A
+      // download with only a bilingual file shows that file.
+      final own = local.subtitleOptions;
+      if (own.isEmpty) {
+        final player = this.player;
+        if (player != null && await _fileLoaded(player, item.id, serial) && _openedLocal == item.id) await _addLocalSubtitles(local, serial);
+        return;
+      }
+      final offline = saved.withSubtitles(own);
+      _update(() => details = offline);
+      await _autoSubtitles(item, offline, serial);
       return;
     }
     final merged = saved.withSubtitlesOf(online);

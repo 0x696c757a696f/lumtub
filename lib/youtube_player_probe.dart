@@ -113,7 +113,7 @@ class YoutubePlayerProbe {
 
   /// Lookups for lists go at most one per [lookupSpacing], and none while a
   /// video starts or for [afterPlayback] after.
-  static const lookupSpacing = Duration(milliseconds: 150);
+  static const lookupSpacing = Duration(milliseconds: 25);
   static const afterPlayback = Duration(seconds: 3);
   /// After [refusalsBeforeRest] refusals in a row, lookups for lists rest
   /// for [rest]: asking on only keeps YouTube refusing, playback too.

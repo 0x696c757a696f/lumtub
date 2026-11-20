@@ -330,16 +330,24 @@ enum ExploreLanguage {
 
   /// The language YouTube is asked in for a search in it, as YouTube
   /// spells its interface languages.
+  /// YouTube refuses (HTTP 400) the languages it has no interface in:
+  /// those are asked in the language their videos are most often
+  /// listed beside, or English.
   String get youtubeHl => switch (this) {
         tl => 'fil',
         he => 'iw',
+        jv || su => 'id',
+        ti => 'am',
+        tk => 'tr',
+        eo || la => 'en',
         _ => code,
       };
 
   /// The country most of the language's videos come from, searched as
   /// from when no region is picked; null where no one country leads.
   String? get homeCountry => switch (this) {
-        any || zh || en || es || ar || eo || la || sq || ti || am || hy || mn || my || tk || uz => null,
+        // Searches from Iran bring no videos at all.
+        any || zh || en || es || ar || eo || la || sq || ti || am || hy || mn || my || tk || uz || fa => null,
         ja => 'JP',
         ko => 'KR',
         fr => 'FR',
@@ -366,7 +374,6 @@ enum ExploreLanguage {
         da => 'DK',
         fi => 'FI',
         he => 'IL',
-        fa => 'IR',
         ur => 'PK',
         bn => 'BD',
         af => 'ZA',

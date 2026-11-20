@@ -27,7 +27,12 @@ From the video's own `/youtubei/v1/player` answer, in this order:
    makes them from the audio, so their language is the spoken one;
    translations are not in `captionTracks`. A video with automatic
    captions in two languages (seen with dubbed videos) is not told by
-   them.
+   them. Except where YouTube has no speech recognition for the
+   language: it then labels the captions as a neighbour (Urdu, Gujarati
+   and Punjabi as Hindi, Tamil, Telugu and Bengali news as English, Lao
+   as Thai, Azerbaijani as Turkish, Estonian as Finnish; measured on
+   2026-11-20 over 1590 videos in 70 languages). When the texts surely
+   read as such a language (`captions_mislabelled`), the texts decide.
 3. **Only when neither exists**, the title and description read
    together, and only when the title is not a translation: the title
    listed in the language picked (the search is asked in it) is the same
@@ -45,6 +50,13 @@ Text is read by `title_language` in the Rust core: the script, then small
 words (`LATIN_WORDS`, which leave out words two languages share, such as
 `con`, `una`, `in`), then whatlang trigrams, which overrule small words
 only when sure and when the language they name has no fewer small words.
+A reading is *sure* (source `text`) for a script one language writes,
+letters only one language writes (þ/ð Icelandic, қ/ғ/ҳ Uzbek), two small
+words, or whatlang at 0.8 or more over four words or more. Otherwise it is
+a *guess* (source `guess`, with `alike`: the languages of its script), and
+passes for any of them, still only when the title is not a translation:
+short titles such as Norwegian or Icelandic news were read as English or
+Portuguese and left out.
 
 ## Finding candidates
 
@@ -111,7 +123,12 @@ goes on with its sub-categories' searches, one after another.
 
 ## Asking YouTube
 
-- Each video is asked once per language check, at most 6 at a time.
+- Each video is asked once per language check, at most 8 at a time,
+  started at least 25 ms apart (measured 2026-11-20: 16 at once ran
+  70 a second with no refusals). Languages YouTube has no interface in
+  (eo, jv, la, su, ti, tk answer HTTP 400) are asked in a near one
+  (`youtubeHl`), and Persian searches go without a region (gl=IR
+  brings nothing).
 - The apps are asked in turn until one tells by audio or captions:
   the visionOS app a quick start uses, then the TV app, then the website.
   Whichever told last is asked first from then on. When none tells, the

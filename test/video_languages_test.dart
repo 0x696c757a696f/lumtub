@@ -48,7 +48,7 @@ void main() {
   });
 
   group('passes', () {
-    SpokenVideo spoken(ExploreLanguage? language, String source, [String title = 'Lezione di filosofia']) => (language: language, title: title, source: source);
+    SpokenVideo spoken(ExploreLanguage? language, String source, [String title = 'Lezione di filosofia']) => (language: language, title: title, source: source, alike: const <ExploreLanguage>[]);
     bool passes(SpokenVideo? s, String listed) => VideoLanguages.passes(s, ExploreLanguage.it, listed: listed);
 
     test('audio or captions decide, whatever the titles say', () {
@@ -65,6 +65,14 @@ void main() {
       expect(passes(spoken(ExploreLanguage.it, 'text'), 'Philosophy lecture'), isFalse);
       expect(passes(spoken(ExploreLanguage.en, 'text', 'Philosophy lecture'), 'Philosophy lecture'), isFalse);
       expect(passes(spoken(null, 'none', ''), 'Lezione di filosofia'), isFalse);
+    });
+
+    test('a guess passes for any language of its script, untranslated only', () {
+      const latin = [ExploreLanguage.en, ExploreLanguage.it, ExploreLanguage.no];
+      final guess = (language: ExploreLanguage.en, title: 'Telegiornale 21', source: 'guess', alike: latin);
+      expect(passes(guess, 'Telegiornale 21'), isTrue);
+      expect(passes(guess, 'News 21'), isFalse);
+      expect(VideoLanguages.passes(guess, ExploreLanguage.ru, listed: 'Telegiornale 21'), isFalse);
     });
 
     test('nothing passes without an answer', () {

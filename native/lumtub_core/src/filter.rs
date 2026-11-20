@@ -152,6 +152,7 @@ fn latin_letters(language: Language, lower: &str) -> bool {
         Language::De => lower.contains(['ä', 'ö', 'ü', 'ß']),
         Language::Pt => lower.contains(['ã', 'õ']) || lower.contains("ção"),
         Language::Ro => lower.contains(['ș', 'ț', 'ş', 'ţ']),
+        Language::Is => lower.contains(['þ', 'ð']),
         _ => false,
     }
 }
@@ -190,6 +191,121 @@ fn kana_say_japanese(title: &str) -> bool {
 /// letters by its small words. A Latin title with no small words at all,
 /// such as "Minecraft Speedrun", is taken as English.
 pub fn title_language(title: &str) -> Language {
+    reading(title).0
+}
+
+/// [title_language], and whether the reading is sure: a script only one
+/// language writes, letters or small words of one language, or a sure
+/// statistical reading. A short Latin, Cyrillic, Devanagari or Arabic
+/// title read by default (English, Russian, Hindi, Arabic) is not sure:
+/// any language of its script may have written it.
+pub fn reading(title: &str) -> (Language, bool) {
+    let found = read(title);
+    let sure = match found {
+        Language::Any => false,
+        Language::Hi => devanagari(title).is_some(),
+        Language::Ar => title.chars().filter(|c| c.is_alphabetic()).count() >= 12,
+        Language::Ru => cyrillic(title).is_some(),
+        language if is_latin(language) && language != Language::Vi => latin_sure(title, language),
+        _ => true,
+    };
+    (found, sure)
+}
+
+/// The languages explore offers that write [language]'s script, itself
+/// included; only [language] for a script of its own.
+pub fn same_script(language: Language) -> Vec<Language> {
+    use Language::*;
+    let groups: [&[Language]; 3] = [&[Ru, Uk, Be, Bg, Mk, Mn, Uz], &[Hi, Mr, Ne], &[Ar, Fa, Ur]];
+    if is_latin(language) {
+        return (0..=Uz as u32)
+            .filter_map(language_at)
+            .filter(|l| is_latin(*l) && *l != Vi)
+            .collect();
+    }
+    groups
+        .iter()
+        .find(|group| group.contains(&language))
+        .map_or_else(|| vec![language], |group| group.to_vec())
+}
+
+/// The language at explore's index [index].
+pub fn language_at(index: u32) -> Option<Language> {
+    (index <= Language::Uz as u32).then(|| unsafe { std::mem::transmute::<u32, Language>(index) })
+}
+
+/// Whether [language] is written in Latin letters.
+pub fn is_latin(language: Language) -> bool {
+    use Language::*;
+    matches!(
+        language,
+        En | Es
+            | Fr
+            | De
+            | Pt
+            | It
+            | Nl
+            | Tr
+            | Id
+            | Ms
+            | Tl
+            | Pl
+            | Cs
+            | Ro
+            | Hu
+            | Sv
+            | No
+            | Da
+            | Fi
+            | Af
+            | Az
+            | Eo
+            | Et
+            | Eu
+            | Gl
+            | Is
+            | Jv
+            | La
+            | Lt
+            | Lv
+            | Sk
+            | Sq
+            | Su
+            | Sw
+            | Tk
+            | Uz
+            | Vi
+    )
+}
+
+/// Whether a Latin [title] read as [language] is surely in it: two of its
+/// small words, a letter only it writes, or a sure statistical reading of
+/// four words or more.
+fn latin_sure(title: &str, language: Language) -> bool {
+    let lower = title.to_lowercase();
+    if latin_letters(language, &lower) {
+        return true;
+    }
+    let words: Vec<&str> = lower
+        .split(|c: char| !(c.is_alphabetic() || c == '\''))
+        .filter(|w| !w.is_empty())
+        .collect();
+    let small = LATIN_WORDS
+        .iter()
+        .find(|(l, _)| *l == language)
+        .map_or(0, |(_, small)| {
+            words.iter().filter(|w| small.contains(w)).count()
+        });
+    if small >= 2 {
+        return true;
+    }
+    words.len() >= 4
+        && latin_detector().detect(title).is_some_and(|info| {
+            info.confidence() >= 0.8 && latin_language(info.lang()) == Some(language)
+        })
+}
+
+fn read(title: &str) -> Language {
     if kana_say_japanese(title) {
         return Language::Ja;
     }
@@ -255,6 +371,10 @@ pub fn title_language(title: &str) -> Language {
         if lower.contains(['ї', 'є', 'ґ']) {
             return Language::Uk;
         }
+        // Uzbek writes ў too, with қ, ғ and ҳ, which Belarusian does not.
+        if lower.contains(['қ', 'ғ', 'ҳ']) {
+            return Language::Uz;
+        }
         if lower.contains('ў') {
             return Language::Be;
         }
@@ -276,6 +396,10 @@ pub fn title_language(title: &str) -> Language {
     }
     if !title.chars().any(|c| c.is_ascii_alphabetic()) {
         return Language::Any;
+    }
+    // Only Icelandic writes þ and ð among explore's languages.
+    if lower.contains(['þ', 'ð']) {
+        return Language::Is;
     }
     let words: Vec<&str> = lower
         .split(|c: char| !(c.is_alphabetic() || c == '\''))

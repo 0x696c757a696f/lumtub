@@ -196,9 +196,8 @@ class LibassLook {
     return LibassLook(
       em: 32 * textScale * unit,
       margin: (max(0.0, below) * unit).round(),
-      // Four shadows border / 2 out and blurred as far read as an outline
-      // about 0.7 of the setting thick.
-      border: 0.7 * border * unit,
+      // The Flutter view's outline, in mpv's units.
+      border: outlineFor(border) * unit,
       gap: 6 * textScale * unit,
     );
   }
@@ -213,6 +212,11 @@ class LibassLook {
         position: position,
         border: border,
       );
+
+  /// How far the outline reaches out from the letters, in the Flutter
+  /// view's logical pixels, for the 描边 setting [border]: both drawings
+  /// use it.
+  static double outlineFor(double border) => 0.7 * border;
 
   /// libass sizes a font by its whole line (ascent and descent, as Windows
   /// does), the Flutter view by its em: how many ems a line of [font] is.

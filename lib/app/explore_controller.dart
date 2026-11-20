@@ -415,8 +415,13 @@ extension ExploreActions on AppController {
                   ));
             }
 
-            Listing searchIn(List<String> queries) =>
-                checked(translates ? Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional))) : search(queries));
+            Listing searchIn(List<String> queries) => checked(translates
+                ? Listing.deferred(() async {
+                    final words = await _searchWordsIn(queries, wordsIn, traditional: traditional);
+                    if (spoken) logInfo('Explore in ${language.name}: searching ${words.map((w) => '"$w"').join(', ')} (hl ${hl ?? '-'}, gl $region)');
+                    return search(words);
+                  })
+                : search(queries));
             // A narrow search that runs out goes on with wider ones, so a
             // sub-category with few videos still fills the page.
             var listing = searchIn(queries);

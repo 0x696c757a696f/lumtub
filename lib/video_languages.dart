@@ -506,7 +506,11 @@ class VideoLanguages {
       held.clear();
     } finally {
       done?.call((asked: asked, kept: kept, heard: heard));
-      if (asked > 0) {
+      // A search that brought no videos is logged too: an explore page that
+      // stays empty shows whether any video came to be checked.
+      if (asked == 0) {
+        logInfo('Language ${language.name}: the search brought no videos to check');
+      } else {
         final by = [for (final MapEntry(:key, :value) in told.entries) '$key $value'].join(', ');
         final seconds = clock.elapsedMilliseconds / 1000;
         final pace = seconds > 0 ? (asked / seconds).toStringAsFixed(1) : '-';

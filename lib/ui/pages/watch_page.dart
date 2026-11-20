@@ -9,6 +9,7 @@ import 'package:flutter/services.dart' show DeviceOrientation, SystemChrome, Sys
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../device.dart';
+import '../../libass_layout.dart' show LibassLook;
 import '../window_chrome.dart';
 import '../../app/app_controller.dart';
 import '../../appearance_settings.dart' show blankFont, bundledFont;
@@ -1324,12 +1325,6 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
         color: Color(0xFF000000 | color).withValues(alpha: opacity),
         fontWeight: settings.subtitleBold ? FontWeight.w700 : FontWeight.normal,
         backgroundColor: settings.subtitleBackground ? Color.fromRGBO(0, 0, 0, 0.67 * opacity) : null,
-        shadows: settings.subtitleBackground || border == 0
-            ? null
-            : [
-                for (final (dx, dy) in const [(-1.0, -1.0), (1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)])
-                  Shadow(color: Colors.black.withValues(alpha: opacity), offset: Offset(dx * border / 2, dy * border / 2), blurRadius: border / 2),
-              ],
       );
   return SubtitleViewConfiguration(
     style: style(settings.subtitleFont, settings.subtitleScale, settings.subtitleColor, settings.subtitleOpacity),
@@ -1338,6 +1333,9 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     textScaler: textScaler,
     scaleFor: byHeight ? (size) => TextScaler.linear(androidSubtitleScale(size, Device.captionScale, smallWindow != null)) : null,
     spacing: 6,
+    // The same solid outline libmpv draws (LibassLook.border), so either
+    // drawing them looks alike.
+    outline: settings.subtitleBackground ? 0 : LibassLook.outlineFor(border),
     secondaryKey: secondary,
     ghost: ghost,
     blurSecondary: blur,

@@ -7,6 +7,9 @@ body:
       value: |
         Lumtub is free and built by one person. Every idea is read, but there is no promise that it will be built, nor when. Requests from [sponsors](https://github.com/0x696c757a696f/lumtub#support-lumtub) are worked on first.
         Lumtub 是一个人免费做的。每条建议都会看，但不保证实现，也没有时间表。[赞助者](https://github.com/0x696c757a696f/lumtub/blob/main/README.zh-Hans.md#支持-lumtub)的建议优先处理。
+
+        One idea per issue, and both fields really filled in: answers like "none" or "see above" do not count. Issues that break these rules are closed automatically; edit them to fix it and they reopen.
+        一个 issue 只写一个建议，两项都要认真填写，“无”“如上”之类不算。不符合的 issue 会被自动关闭，编辑改好后会自动重新打开。
   - type: textarea
     id: problem
     attributes:
@@ -21,3 +24,10 @@ body:
       description: How you would like it to work. Screenshots of other apps are welcome. / 你希望它怎么用。可以附上别的软件的截图。
     validations:
       required: true
+  - type: checkboxes
+    id: one
+    attributes:
+      label: One problem per issue / 一个 issue 一个问题
+      options:
+        - label: This issue is about one idea only. Other ideas go in their own issues. / 这个 issue 只写了一个建议，其他建议会另开 issue。
+          required: true

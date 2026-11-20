@@ -6,7 +6,9 @@ body:
     attributes:
       value: |
         Thanks for reporting! Please search the [existing issues](https://github.com/0x696c757a696f/lumtub/issues?q=is%3Aissue) first.
+        One problem per issue, and every field really filled in: answers like "none" or "see above" do not count. Issues that break these rules are closed automatically; edit them to fix it and they reopen.
         感谢反馈！请先搜索一下[已有的 issue](https://github.com/0x696c757a696f/lumtub/issues?q=is%3Aissue)。
+        一个 issue 只写一个问题，每一项都要认真填写，“无”“如上”之类不算。不符合的 issue 会被自动关闭，编辑改好后会自动重新打开。
   - type: textarea
     id: what
     attributes:
@@ -25,6 +27,13 @@ body:
         3. …
     validations:
       required: true
+  - type: checkboxes
+    id: one
+    attributes:
+      label: One problem per issue / 一个 issue 一个问题
+      options:
+        - label: This issue is about one problem only. Other problems go in their own issues. / 这个 issue 只写了一个问题，其他问题会另开 issue。
+          required: true
   - type: dropdown
     id: os
     attributes:
@@ -40,7 +49,7 @@ body:
     id: diagnostics
     attributes:
       label: Diagnostics / 诊断信息
-      description: In Lumtub, Settings › About › Copy diagnostics, then paste here. It has the version, system, graphics card, components and playback settings. / 在 Lumtub 的 设置 › 关于 › 复制诊断信息，然后粘贴到这里。里面有版本、系统、显卡、组件和播放设置。
+      description: In Lumtub, Settings › About › Copy diagnostics, then paste here. It has the version, system, graphics card, components and playback settings. If Lumtub does not start, write the version you downloaded, such as 0.2.56. Reports without a version are closed automatically. / 在 Lumtub 的 设置 › 关于 › 复制诊断信息，然后粘贴到这里。里面有版本、系统、显卡、组件和播放设置。如果 Lumtub 打不开，请写下载的版本号，比如 0.2.56。没有版本号的反馈会被自动关闭。
       render: text
     validations:
       required: true

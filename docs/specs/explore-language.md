@@ -57,6 +57,15 @@ a *guess* (source `guess`, with `alike`: the languages of its script), and
 passes for any of them, still only when the title is not a translation:
 short titles such as Norwegian or Icelandic news were read as English or
 Portuguese and left out.
+Small words are listed for English, Spanish, French, German, Portuguese,
+Italian, Romanian, Dutch, Afrikaans, Filipino, Basque, Finnish, Albanian,
+Javanese, Sundanese and Swahili; a word of two lists marks neither.
+A guess never lets in Afrikaans, Javanese, Sundanese or Malay (nearly all
+their words are Dutch's or Indonesian's), nor Ukrainian or Belarusian for
+a text read as Russian by default.
+
+A video neither audio nor captions tell, of a channel whose videos were
+all heard in the language looked for (at least `channelSure`), is shown.
 
 ## Finding candidates
 

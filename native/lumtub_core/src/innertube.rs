@@ -1250,7 +1250,10 @@ mod tests {
             ]}
         });
         let spoken = spoken_language(&answer).unwrap();
-        assert_eq!((spoken.language, spoken.source), (Some(Language::It), "audio"));
+        assert_eq!(
+            (spoken.language, spoken.source),
+            (Some(Language::It), "audio")
+        );
     }
 
     #[test]

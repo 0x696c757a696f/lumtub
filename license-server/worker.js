@@ -1,0 +1,168 @@
+// Lumtub learning pack license server, a Cloudflare Worker.
+//
+// POST /kofi   Ko-fi's webhook: a paid shop order is remembered by its
+//              transaction id and the buyer's email.
+// POST /claim  {source: "kofi", email} or {source: "afdian", order}
+//              returns {code} for a paid order, or {error}.
+//
+// 爱发电 orders are checked with 爱发电's own API when claimed, so they
+// need no webhook. Codes are the same Ed25519-signed codes the signing
+// page makes; the app checks them offline.
+//
+// Secrets (wrangler secret put): LICENSE_KEY (the PKCS#8 private key in
+// base64), KOFI_TOKEN (Ko-fi › Webhooks › verification token),
+// AFDIAN_USER_ID and AFDIAN_TOKEN (爱发电 › 开发者). Optional vars:
+// KOFI_ITEM (the shop item's code, to count only that item) and
+// AFDIAN_PLANS (comma-separated plan ids that count).
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    if (request.method === 'OPTIONS') return reply(null, 204);
+    try {
+      if (request.method === 'POST' && url.pathname === '/kofi') return await kofi(request, env);
+      if (request.method === 'POST' && url.pathname === '/claim') return await claim(request, env);
+      if (request.method === 'GET' && url.pathname === '/') return reply({ ok: true });
+      return reply({ error: 'not found' }, 404);
+    } catch (e) {
+      console.log('error', e && e.stack || e);
+      return reply({ error: 'server error' }, 500);
+    }
+  },
+};
+
+function reply(body, status = 200) {
+  return new Response(body === null ? null : JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type' },
+  });
+}
+
+const sha256 = async (text) => hex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)));
+const hex = (buffer) => [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, '0')).join('');
+const clean = (text) => String(text ?? '').trim();
+
+async function kofi(request, env) {
+  const form = await request.formData();
+  const data = JSON.parse(form.get('data') || '{}');
+  if (!env.KOFI_TOKEN || data.verification_token !== env.KOFI_TOKEN) return reply({ error: 'bad token' }, 403);
+  const items = Array.isArray(data.shop_items) ? data.shop_items : [];
+  const counts = data.type === 'Shop Order' && (!env.KOFI_ITEM || items.some((i) => i.direct_link_code === env.KOFI_ITEM));
+  if (!counts) return reply({ ok: true, ignored: true });
+  const order = clean(data.kofi_transaction_id).toLowerCase();
+  if (!order) return reply({ error: 'no transaction id' }, 400);
+  const buyer = {
+    name: clean(data.from_name).slice(0, 60) || 'Ko-fi supporter',
+    email: await sha256(clean(data.email).toLowerCase()),
+    date: clean(data.timestamp).slice(0, 10) || new Date().toISOString().slice(0, 10),
+    order,
+  };
+  await env.LICENSES.put(`kofi:${order}`, JSON.stringify(buyer));
+  // Buyers claim with the email they paid with.
+  await env.LICENSES.put(`kofimail:${buyer.email}`, JSON.stringify(buyer));
+  return reply({ ok: true });
+}
+
+async function claim(request, env) {
+  const ask = await request.json().catch(() => ({}));
+  const source = clean(ask.source);
+  let order = clean(ask.order).toLowerCase();
+  const email = clean(ask.email).toLowerCase();
+  if (order.length > 80 || email.length > 200) return reply({ error: 'order' }, 400);
+  if (source === 'afdian' && !order) return reply({ error: 'order' }, 400);
+  if (source === 'kofi' && !email) return reply({ error: 'email' }, 400);
+  // A few tries a minute per address are plenty for a person.
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const slot = `tries:${ip}:${Math.floor(Date.now() / 60000)}`;
+  const tries = Number(await env.LICENSES.get(slot)) || 0;
+  if (tries >= 10) return reply({ error: 'busy' }, 429);
+  await env.LICENSES.put(slot, String(tries + 1), { expirationTtl: 120 });
+
+  let buyer;
+  if (source === 'kofi') {
+    const hash = await sha256(email);
+    const saved = JSON.parse((await env.LICENSES.get(order ? `kofi:${order}` : `kofimail:${hash}`)) || 'null');
+    if (!saved || saved.email !== hash) return reply({ error: 'not found' }, 404);
+    buyer = saved;
+    order = saved.order;
+  } else if (source === 'afdian') {
+    buyer = await afdianOrder(order, env);
+    if (!buyer) return reply({ error: 'not found' }, 404);
+  } else {
+    return reply({ error: 'source' }, 400);
+  }
+  const key = `code:${source}:${order}`;
+  let code = await env.LICENSES.get(key);
+  if (!code) {
+    code = await sign(env, { n: buyer.name, p: 'learn', d: buyer.date });
+    await env.LICENSES.put(key, code);
+  }
+  return reply({ code, name: buyer.name });
+}
+
+async function afdianOrder(order, env) {
+  if (!env.AFDIAN_USER_ID || !env.AFDIAN_TOKEN) return null;
+  const params = JSON.stringify({ out_trade_no: order });
+  const ts = Math.floor(Date.now() / 1000);
+  const signText = `${env.AFDIAN_TOKEN}params${params}ts${ts}user_id${env.AFDIAN_USER_ID}`;
+  const response = await fetch('https://afdian.com/api/open/query-order', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ user_id: env.AFDIAN_USER_ID, params, ts, sign: md5(signText) }),
+  });
+  const answer = await response.json().catch(() => null);
+  if (!answer || answer.ec !== 200) {
+    console.log('afdian', JSON.stringify(answer));
+    return null;
+  }
+  const plans = clean(env.AFDIAN_PLANS).split(',').map(clean).filter(Boolean);
+  const found = (answer.data?.list || []).find((o) => String(o.out_trade_no).toLowerCase() === order && Number(o.status) === 2 && (!plans.length || plans.includes(o.plan_id)));
+  if (!found) return null;
+  const when = Number(found.create_time) ? new Date(Number(found.create_time) * 1000) : new Date();
+  return { name: `爱发电 ${String(found.user_id || '').slice(-6)}`.trim(), date: when.toISOString().slice(0, 10) };
+}
+
+async function sign(env, fields) {
+  const der = Uint8Array.from(atob(env.LICENSE_KEY.replace(/\s/g, '')), (c) => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey('pkcs8', der, { name: 'Ed25519' }, false, ['sign']);
+  const payload = new TextEncoder().encode(JSON.stringify(fields));
+  const context = new TextEncoder().encode('lumtub-license-v1\n');
+  const message = new Uint8Array(context.length + payload.length);
+  message.set(context);
+  message.set(payload, context.length);
+  const signature = await crypto.subtle.sign({ name: 'Ed25519' }, key, message);
+  const b64url = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return `LT1.${b64url(payload)}.${b64url(signature)}`;
+}
+
+// MD5, which 爱发电's API signs with and Web Crypto lacks (RFC 1321).
+function md5(text) {
+  const bytes = new TextEncoder().encode(text);
+  const words = new Uint32Array(((bytes.length + 8 >> 6) + 1) * 16);
+  for (let i = 0; i < bytes.length; i++) words[i >> 2] |= bytes[i] << (i % 4 * 8);
+  words[bytes.length >> 2] |= 0x80 << (bytes.length % 4 * 8);
+  words[words.length - 2] = bytes.length * 8;
+  const s = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21];
+  const k = Array.from({ length: 64 }, (_, i) => Math.floor(Math.abs(Math.sin(i + 1)) * 2 ** 32) >>> 0);
+  let [a0, b0, c0, d0] = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476];
+  for (let chunk = 0; chunk < words.length; chunk += 16) {
+    let [a, b, c, d] = [a0, b0, c0, d0];
+    for (let i = 0; i < 64; i++) {
+      let f, g;
+      if (i < 16) { f = (b & c) | (~b & d); g = i; }
+      else if (i < 32) { f = (d & b) | (~d & c); g = (5 * i + 1) % 16; }
+      else if (i < 48) { f = b ^ c ^ d; g = (3 * i + 5) % 16; }
+      else { f = c ^ (b | ~d); g = (7 * i) % 16; }
+      const t = d;
+      d = c;
+      c = b;
+      const sum = (a + f + k[i] + words[chunk + g]) >>> 0;
+      b = (b + ((sum << s[(i >> 4) * 4 + i % 4]) | (sum >>> (32 - s[(i >> 4) * 4 + i % 4])))) >>> 0;
+      a = t;
+    }
+    a0 = (a0 + a) >>> 0; b0 = (b0 + b) >>> 0; c0 = (c0 + c) >>> 0; d0 = (d0 + d) >>> 0;
+  }
+  return [a0, b0, c0, d0].map((v) => [0, 8, 16, 24].map((sh) => ((v >>> sh) & 255).toString(16).padStart(2, '0')).join('')).join('');
+}
+
+export { md5, sign };

@@ -29,6 +29,80 @@ String learningSummary(Learning learning) => learning.licensed
     ? tr('Licensed to {0}', [learning.license!.name.isEmpty ? '—' : learning.license!.name])
     : tr('Tap words for meanings, pinyin, vocabulary book, Anki export');
 
+/// Unlocks a purchase: asks for the 爱发电 order number or the email paid
+/// with on Ko-fi and fetches the code from the license server.
+Future<bool> claimPurchase(BuildContext context, Learning learning, {required bool afdianFirst}) async {
+  final field = TextEditingController();
+  var afdian = afdianFirst;
+  var busy = false;
+  String? error;
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (context) => StatefulBuilder(builder: (context, setState) {
+      Future<void> claim() async {
+        if (field.text.trim().isEmpty || busy) return;
+        setState(() {
+          busy = true;
+          error = null;
+        });
+        final result = await learning.claimLicense(afdian: afdian, value: field.text);
+        if (!context.mounted) return;
+        if (result == ClaimResult.ok) {
+          Navigator.pop(context, true);
+          return;
+        }
+        setState(() {
+          busy = false;
+          error = switch (result) {
+            ClaimResult.notFound => afdian
+                ? tr('No paid order with this number was found. Copy the order number from your Afdian order page.')
+                : tr('No Ko-fi purchase with this email was found yet. Use the email you paid with, or wait a minute and try again.'),
+            ClaimResult.busy => tr('Too many tries. Wait a minute and try again.'),
+            _ => tr('Could not reach the license server. Check your connection, or ask for your code by message.'),
+          };
+        });
+      }
+
+      return AlertDialog(
+        title: Text(tr('Unlock your purchase')),
+        content: SizedBox(
+          width: 420,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Wrap(spacing: 8, children: [
+              ChoiceChip(label: Text(tr('Afdian')), selected: afdian, onSelected: busy ? null : (_) => setState(() => afdian = true)),
+              ChoiceChip(label: const Text('Ko-fi'), selected: !afdian, onSelected: busy ? null : (_) => setState(() => afdian = false)),
+            ]),
+            const SizedBox(height: 12),
+            TextField(
+              controller: field,
+              autofocus: true,
+              enabled: !busy,
+              keyboardType: afdian ? TextInputType.text : TextInputType.emailAddress,
+              onSubmitted: (_) => unawaited(claim()),
+              decoration: InputDecoration(
+                labelText: afdian ? tr('Afdian order number') : tr('Email you paid with on Ko-fi'),
+                helperText: afdian ? tr('Afdian › My orders › the order › Order number') : null,
+                errorText: error,
+                errorMaxLines: 3,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: busy ? null : () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
+          FilledButton(
+            onPressed: busy ? null : () => unawaited(claim()),
+            child: busy ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(tr('Unlock')),
+          ),
+        ],
+      );
+    }),
+  );
+  field.dispose();
+  return ok ?? false;
+}
+
 /// Asks for a license code and keeps it when it is one.
 Future<bool> enterLicenseCode(BuildContext context, Learning learning) async {
   final field = TextEditingController();
@@ -177,6 +251,7 @@ class _Pitch extends StatelessWidget {
               onPressed: () => unawaited(openExternal(zh ? '$kofiPage/shop' : afdianPage)),
               child: Text(zh ? tr('Buy on Ko-fi') : tr('Buy on Afdian')),
             ),
+            TextButton(onPressed: () => unawaited(claimPurchase(context, learning, afdianFirst: zh)), child: Text(tr('I bought it: unlock'))),
             TextButton(onPressed: () => unawaited(enterLicenseCode(context, learning)), child: Text(tr('Enter license code'))),
           ]),
         ]),

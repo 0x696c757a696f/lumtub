@@ -3742,5 +3742,15 @@
   "Show pinyin and kana above subtitles": "字幕上方显示拼音和假名",
   "Pinyin and kana": "拼音和假名",
   "Above each Chinese or Japanese word. Tap any word to look it up.": "显示在中文或日语的每个词上方。点任意一个词就能查词典。",
-  "Chinese, English or Japanese, a few MB, then everything works offline.": "中文、英语或日语，几 MB，下载后完全离线使用。"
+  "Chinese, English or Japanese, a few MB, then everything works offline.": "中文、英语或日语，几 MB，下载后完全离线使用。",
+  "Unlock your purchase": "解锁已购买的学习包",
+  "Afdian": "爱发电",
+  "Afdian order number": "爱发电订单号",
+  "Email you paid with on Ko-fi": "在 Ko-fi 付款时用的邮箱",
+  "Afdian › My orders › the order › Order number": "爱发电 › 我的订单 › 点开这笔订单 › 订单号",
+  "No paid order with this number was found. Copy the order number from your Afdian order page.": "没有找到这个订单号的已付款订单。请从爱发电的订单页面复制订单号。",
+  "No Ko-fi purchase with this email was found yet. Use the email you paid with, or wait a minute and try again.": "还没有找到这个邮箱在 Ko-fi 的购买记录。请填写付款时用的邮箱，或者等一分钟再试。",
+  "Too many tries. Wait a minute and try again.": "尝试次数太多了，请等一分钟再试。",
+  "Could not reach the license server. Check your connection, or ask for your code by message.": "连不上授权服务器。请检查网络，或者私信作者索取授权码。",
+  "I bought it: unlock": "我已购买，解锁"
 }

@@ -20,6 +20,9 @@ import 'vocabulary.dart';
 const learningPackRelease = 'https://github.com/0x696c757a696f/lumtub/releases/download/learning';
 enum PackState { missing, downloading, loading, ready, failed }
 
+/// How asking the license server for a bought code went.
+enum ClaimResult { ok, notFound, busy, offline }
+
 /// A dictionary the learning pack downloads.
 enum DictionaryPack {
   chinese('zh', 'zh-cedict.txt.gz'),
@@ -145,6 +148,35 @@ class Learning extends ChangeNotifier {
     unawaited(_book?.load());
     _loadAll();
     return true;
+  }
+
+  /// Asks the license server for the code of a purchase: a Ko-fi buyer
+  /// gives the email they paid with, an 爱发电 buyer the order number.
+  /// The server's address is published on the `learning` release, so it
+  /// can move without an app update.
+  Future<ClaimResult> claimLicense({required bool afdian, required String value}) async {
+    final client = http.Client();
+    try {
+      final where = await client.get(Uri.parse('$learningPackRelease/license-server.txt')).timeout(const Duration(seconds: 20));
+      final server = where.statusCode == 200 ? Uri.tryParse(where.body.trim()) : null;
+      if (server == null || server.scheme != 'https') return ClaimResult.offline;
+      final response = await client
+          .post(
+            server.resolve('/claim'),
+            headers: {'content-type': 'application/json'},
+            body: jsonEncode({'source': afdian ? 'afdian' : 'kofi', if (afdian) 'order': value.trim() else 'email': value.trim()}),
+          )
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode == 429) return ClaimResult.busy;
+      final code = response.statusCode == 200 ? (jsonDecode(response.body) as Map)['code'] : null;
+      if (code is! String) return response.statusCode >= 500 ? ClaimResult.offline : ClaimResult.notFound;
+      return await enterLicense(code) ? ClaimResult.ok : ClaimResult.notFound;
+    } catch (e) {
+      logWarn('Could not ask the license server: $e');
+      return ClaimResult.offline;
+    } finally {
+      client.close();
+    }
   }
 
   Future<void> removeLicense() async {

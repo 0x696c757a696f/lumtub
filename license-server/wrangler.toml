@@ -1,0 +1,10 @@
+# The deploy workflow (.github/workflows/license-server.yml) fills in the
+# KV namespace id and sets the secrets; see license-server/README.md.
+name = "lumtub-license"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[[kv_namespaces]]
+binding = "LICENSES"
+id = "KV_NAMESPACE_ID"

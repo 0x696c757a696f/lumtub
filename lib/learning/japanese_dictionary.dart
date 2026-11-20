@@ -288,10 +288,10 @@ List<_Rule> _makeRules() {
     ]) {
       add('$i$end', u, null, 'v5', name);
     }
-    add('${e}ば', u, null, 'v5', 'conditional');
-    add('${e}る', u, null, 'v5', 'potential');
+    add('$eば', u, null, 'v5', 'conditional');
+    add('$eる', u, null, 'v5', 'potential');
     add(e, u, null, 'v5', 'imperative');
-    add('${o}う', u, null, 'v5', 'volitional');
+    add('$oう', u, null, 'v5', 'volitional');
   }
   // 行く: 行った, 行って.
   add('った', 'く', null, 'v5', 'past');

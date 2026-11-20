@@ -262,7 +262,7 @@ jobs:
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
-      - name: Windows - verify latest zhongfly libmpv
+      - name: Windows - verify latest zhongfly libmpv (LGPL)
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -276,7 +276,9 @@ jobs:
           }
           # A new release is published before its assets finish uploading, so
           # take the newest one that already has this architecture's archive.
-          $pattern = "^mpv-dev-$([regex]::Escape($env:MPV_ARCH))-.+\.7z$"
+          # The LGPL build (mpv-dev-lgpl-*): no GPL code in what Lumtub ships.
+          # The date right after the architecture keeps x86_64 from matching x86_64-v3.
+          $pattern = "^mpv-dev-lgpl-$([regex]::Escape($env:MPV_ARCH))-[0-9]{8}-.+\.7z$"
           $releases = Invoke-RestMethod -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases?per_page=5' -Headers $headers
           $release = $null
           $asset = $null

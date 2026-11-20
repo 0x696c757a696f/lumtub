@@ -239,6 +239,11 @@ class LibassLook {
   double fontSize(String font) => em * lineEms(font);
 }
 
+/// The second subtitle's own lines in [text], the sub-text of its copy made
+/// by [secondAss]: the main subtitle's lines it holds, invisible, come after
+/// a blank line.
+String secondCopyOwnText(String text) => text.split(RegExp(r'\n\s*\n')).first.trim();
+
 /// The second subtitle as an ASS file in its own font, color, opacity,
 /// size, outline and background, which mpv cannot set apart from the first
 /// subtitle's. Its letters are [secondEm] units at secondary-sub-scale 1;

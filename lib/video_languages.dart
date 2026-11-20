@@ -13,8 +13,10 @@ import 'native_core.dart';
 import 'youtube_player_probe.dart';
 
 /// What a video is spoken in, and its title as the uploader wrote it.
-/// [source] says what told: audio, captions, text or none.
-typedef SpokenVideo = ({ExploreLanguage? language, String title, String source});
+/// [source] says what told: audio, captions, text, guess or none. A guess
+/// is a text read without being sure: any of the languages in [alike],
+/// which write its script, may have written it.
+typedef SpokenVideo = ({ExploreLanguage? language, String title, String source, List<ExploreLanguage> alike});
 
 /// One `/player` answer as the Rust core read it.
 typedef _Read = ({SpokenVideo spoken, bool playable});
@@ -22,6 +24,9 @@ typedef _Read = ({SpokenVideo spoken, bool playable});
 extension on SpokenVideo {
   /// Told by the video's audio or automatic captions, not its text.
   bool get heard => source == 'audio' || source == 'captions';
+
+  /// Told by the video's own title and description, surely or not.
+  bool get byText => source == 'text' || source == 'guess';
 }
 
 /// Looks up the language a video is spoken in, which YouTube's listings do
@@ -36,7 +41,9 @@ class VideoLanguages {
   final File? file;
 
   /// Lookups running at once.
-  static const parallel = 6;
+  /// Measured on 2026-11-20: 16 at once ran 60 a second with no refusals;
+  /// phones, on mobile networks and shared addresses, ask half as many.
+  static final parallel = Platform.isIOS || Platform.isAndroid ? 8 : 16;
   static const _kept = 20000;
   static const giveUpAfterDefault = 240;
 
@@ -84,7 +91,7 @@ class VideoLanguages {
   /// YouTube may tell by then.
   Future<SpokenVideo?> of(String id, {ExploreLanguage asking = ExploreLanguage.any, String? channel}) async {
     final known = _known ??= await (_loading ??= _load());
-    final hl = asking == ExploreLanguage.any ? 'en' : asking.code;
+    final hl = asking == ExploreLanguage.any ? 'en' : asking.youtubeHl;
     if (known[id] case final found?) {
       if (channel != null && !_channelOf.containsKey(id)) _count(id, channel, found.language);
       return found;
@@ -113,7 +120,7 @@ class VideoLanguages {
           _textAt.remove(oldest);
         }
         _unheard['$id $hl'] = found;
-        if (found.source == 'text') {
+        if (found.byText) {
           _textAt['$id $hl'] = DateTime.now().millisecondsSinceEpoch ~/ 1000;
           _save ??= Timer(const Duration(seconds: 5), _write);
         }
@@ -152,7 +159,8 @@ class VideoLanguages {
   /// The language every video heard of [channel] is spoken in, once at
   /// least [channelSure] were; null while that is not plain. Explore
   /// leaves out a channel plainly in another language without asking
-  /// about its videos.
+  /// about its videos, and lets in the videos of a channel plainly in the
+  /// language looked for that audio and captions do not tell.
   ExploreLanguage? channelSpeaks(String channel) {
     final counts = _channels[channel];
     if (counts == null || counts.length != 1) return null;
@@ -284,7 +292,11 @@ class VideoLanguages {
         : index == 0 || index >= ExploreLanguage.values.length
             ? null
             : ExploreLanguage.values[index];
-    return (language: language, title: read['title']?.toString() ?? '', source: read['source']?.toString() ?? 'audio');
+    final alike = [
+      for (final i in read['alike'] as List? ?? const [])
+        if (i is num && i > 0 && i < ExploreLanguage.values.length) ExploreLanguage.values[i.toInt()],
+    ];
+    return (language: language, title: read['title']?.toString() ?? '', source: read['source']?.toString() ?? 'audio', alike: alike);
   }
 
   // A player response runs to a few hundred kilobytes.
@@ -310,7 +322,7 @@ class VideoLanguages {
         final raw = jsonDecode(File(texts).readAsStringSync()) as Map<String, dynamic>;
         return {
           for (final MapEntry(:key, :value) in raw.entries)
-            if (value is Map<String, dynamic> && (value['at'] as num? ?? 0) >= oldest && value['source'] == 'text') key: value,
+            if (value is Map<String, dynamic> && (value['at'] as num? ?? 0) >= oldest && (value['source'] == 'text' || value['source'] == 'guess')) key: value,
         };
       } catch (_) {
         return <String, Map<String, dynamic>>{};
@@ -401,6 +413,7 @@ class VideoLanguages {
         },
         'title': spoken.title,
         'source': spoken.source,
+        if (spoken.alike.isNotEmpty) 'alike': [for (final language in spoken.alike) language.index],
       };
 
   /// The lines of [lines] whose videos are spoken in [language], each
@@ -429,7 +442,7 @@ class VideoLanguages {
   }) async* {
     final pending = <_Pending>[];
     final held = <String>[];
-    var asked = 0, kept = 0, heard = 0, byChannel = 0;
+    var asked = 0, kept = 0, heard = 0, byChannel = 0, cached = 0;
     // How long the reader waited: for the first video shown, and in all.
     final clock = Stopwatch()..start();
     int? firstShown;
@@ -480,16 +493,22 @@ class VideoLanguages {
             continue;
           }
         }
+        if (_known?.containsKey(item.id) ?? false) cached++;
         final asking = listedInLanguage ? ExploreLanguage.any : language;
         pending.add(_Pending(of(item.id, asking: asking, channel: item.channelId).then((spoken) {
           if (spoken != null && spoken.heard) heard++;
           final key = spoken == null ? 'no answer' : '${spoken.source} ${spoken.language?.code ?? '?'}';
           told.update(key, (n) => n + 1, ifAbsent: () => 1);
-          if (!passes(spoken, language, listed: item.title)) return null;
+          // A video its answer does not tell, of a channel whose videos
+          // were all heard in [language], is in it too: news channels
+          // with short titles (RÚV, DZMM, TV9) were left out otherwise.
+          final byItsChannel = !(spoken?.heard ?? false) && item.channelId != null && channelSpeaks(item.channelId!) == language;
+          if (!passes(spoken, language, listed: item.title) && !byItsChannel) return null;
+          if (byItsChannel) told.update('channel kept', (n) => n + 1, ifAbsent: () => 1);
           kept++;
           final titled = listedInLanguage || spoken == null || spoken.title.isEmpty || spoken.title == item.title ? line : jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
           final shown = _withFacts(titled, item.id);
-          return (shown, heard: spoken!.heard);
+          return (shown, heard: spoken?.heard ?? false);
         })));
         yield* Stream.fromIterable(ready());
         while (pending.length >= parallel * 3) {
@@ -506,13 +525,17 @@ class VideoLanguages {
       held.clear();
     } finally {
       done?.call((asked: asked, kept: kept, heard: heard));
-      if (asked > 0) {
+      // A search that brought no videos is logged too: an explore page that
+      // stays empty shows whether any video came to be checked.
+      if (asked == 0) {
+        logInfo('Language ${language.name}: the search brought no videos to check');
+      } else {
         final by = [for (final MapEntry(:key, :value) in told.entries) '$key $value'].join(', ');
         final seconds = clock.elapsedMilliseconds / 1000;
         final pace = seconds > 0 ? (asked / seconds).toStringAsFixed(1) : '-';
         final first = firstShown == null ? 'none shown' : 'first shown after ${(firstShown! / 1000).toStringAsFixed(1)} s';
         logInfo('Language ${language.name}: kept $kept of $asked videos in ${seconds.toStringAsFixed(1)} s ($pace a second, $first), '
-            '$heard told by audio or captions; $by');
+            '$heard told by audio or captions, $cached already known; $by');
       }
     }
   }
@@ -527,13 +550,21 @@ class VideoLanguages {
   ///   together, and only when they are not a translation: the title is
   ///   the same listed in English as asked in [language] (or listed in
   ///   [language] as asked in English). A title the
-  ///   uploader or YouTube translated differs between the two.
+  ///   uploader or YouTube translated differs between the two. Texts too
+  ///   short to be sure of, read as a language by default (a short Latin
+  ///   title as English), pass for any language of their script: a
+  ///   Norwegian news title of two words is not taken for English.
   /// * Without an answer it is left out.
   @visibleForTesting
   static bool passes(SpokenVideo? spoken, ExploreLanguage language, {required String listed}) {
     if (spoken == null) return false;
     if (spoken.heard) return spoken.language == language;
-    return spoken.source == 'text' && spoken.language == language && spoken.title.trim() == listed.trim();
+    final read = switch (spoken.source) {
+      'text' => spoken.language == language,
+      'guess' => spoken.language == language || spoken.alike.contains(language),
+      _ => false,
+    };
+    return read && spoken.title.trim() == listed.trim();
   }
 }
 

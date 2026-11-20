@@ -61,6 +61,16 @@ void main() {
     expect(watch.elapsed, greaterThanOrEqualTo(YoutubePlayerProbe.afterPlayback));
   });
 
+  test('a lookup of another endpoint does not hold lookups for lists back', () async {
+    final client = MockClient((request) async {
+      if (request.method == 'GET') return http.Response(_page, 200);
+      return http.Response(_playable, 200);
+    });
+    await YoutubePlayerProbe.post(client, _headers(), _body(), endpoint: 'next');
+    final list = YoutubePlayerProbe.post(client, _headers(), _body());
+    expect(await list.timeout(const Duration(seconds: 2)), isA<http.Response>());
+  });
+
   test('lookups for lists rest after YouTube took several in a row for a bot\'s', () async {
     var posts = 0;
     final client = MockClient((request) async {

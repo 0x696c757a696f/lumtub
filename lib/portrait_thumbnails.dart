@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'app_log.dart';
 import 'models.dart';
 import 'thumbnail_cache.dart';
 
@@ -125,14 +126,16 @@ abstract final class PortraitThumbnails {
     final out = StreamController<String>();
     final queue = Queue<_Held>();
     StreamSubscription<String>? source;
-    var paused = false, ended = false;
+    var paused = false, ended = false, videos = 0, dropped = 0;
     void flush() {
       while (queue.isNotEmpty && queue.first.done) {
         final held = queue.removeFirst();
+        if (held.portrait) dropped++;
         if (!held.portrait) out.add(held.line);
       }
       if (out.isClosed) return;
       if (ended && queue.isEmpty) {
+        if (dropped > 0) logInfo('Portrait thumbnails: left out $dropped of $videos videos');
         unawaited(out.close());
         return;
       }
@@ -153,6 +156,7 @@ abstract final class PortraitThumbnails {
           queue.add(held);
           final item = parseListingEntry(line);
           if (item is VideoItem) {
+            videos++;
             portrait(item.id).then((v) => v, onError: (_) => false).then((v) {
               held
                 ..portrait = v

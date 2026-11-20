@@ -91,7 +91,7 @@ const VIETNAMESE: &str = "đơưạảấầẩẫậắằẳẵặẹẻẽế
 
 /// Small words that mark a Latin-script language. A word two of them
 /// share (in, con, una, e, da) marks neither.
-const LATIN_WORDS: [(Language, &[&str]); 7] = [
+const LATIN_WORDS: [(Language, &[&str]); 17] = [
     (
         Language::En,
         &[
@@ -103,7 +103,7 @@ const LATIN_WORDS: [(Language, &[&str]); 7] = [
         Language::Es,
         &[
             "el", "los", "las", "y", "que", "por", "para", "es", "como", "mi", "más", "qué",
-            "cómo", "muy", "pero", "su",
+            "cómo", "muy", "pero", "su", "noticias",
         ],
     ),
     (
@@ -142,6 +142,79 @@ const LATIN_WORDS: [(Language, &[&str]); 7] = [
             "sunt", "acest", "această", "mai",
         ],
     ),
+    (
+        Language::Nl,
+        &[
+            "het", "een", "niet", "voor", "zijn", "naar", "deze", "bij", "maar", "wordt", "geen",
+            "nieuws", "hoe", "maak",
+        ],
+    ),
+    (
+        Language::Af,
+        &["nie", "vir", "ek", "jy", "hierdie", "baie", "julle", "nuus"],
+    ),
+    (
+        Language::Tl,
+        &[
+            "ang", "mga", "ng", "nang", "ito", "siya", "tayo", "natin", "ngayon", "balita",
+        ],
+    ),
+    (
+        Language::Eu,
+        &[
+            "eta",
+            "ere",
+            "dira",
+            "gaur",
+            "nola",
+            "zer",
+            "baina",
+            "albisteak",
+            "euskara",
+            "euskal",
+        ],
+    ),
+    (
+        Language::Fi,
+        &[
+            "että",
+            "mutta",
+            "kun",
+            "tämä",
+            "myös",
+            "mitä",
+            "miten",
+            "kanssa",
+            "joka",
+            "sekä",
+            "uutiset",
+            "matkavlogi",
+        ],
+    ),
+    (
+        Language::Sq,
+        &[
+            "dhe", "në", "të", "për", "një", "është", "që", "lajme", "lajmet",
+        ],
+    ),
+    (
+        Language::Jv,
+        &["lan", "ing", "karo", "iki", "kuwi", "wong", "saka"],
+    ),
+    (
+        Language::Su,
+        &[
+            "jeung", "teh", "téh", "urang", "ieu", "kana", "sareng", "mah",
+        ],
+    ),
+    (
+        Language::Et,
+        &["ning", "kuidas", "uudised", "reisivlog", "eesti", "täna"],
+    ),
+    (
+        Language::Sw,
+        &["kwa", "katika", "habari", "kutoka", "hii", "sana"],
+    ),
 ];
 
 /// Letters only one Latin-script language uses, lower case.
@@ -151,7 +224,17 @@ fn latin_letters(language: Language, lower: &str) -> bool {
         Language::Fr => lower.contains(['œ', 'ç', 'è', 'ù', 'û']),
         Language::De => lower.contains(['ä', 'ö', 'ü', 'ß']),
         Language::Pt => lower.contains(['ã', 'õ']) || lower.contains("ção"),
-        Language::Ro => lower.contains(['ș', 'ț', 'ş', 'ţ']),
+        // ş with a cedilla is Turkish too (Şi, "Xi", in a Turkish title).
+        Language::Ro => lower.contains(['ș', 'ț', 'ţ']),
+        Language::Is => lower.contains(['þ', 'ð']),
+        // Albanian writes ë in most sentences; Dutch and French only in a
+        // few names (België, Noël).
+        Language::Sq => lower.matches('ë').count() >= 2,
+        // Estonian doubles ä too, but writes õ.
+        Language::Fi => {
+            ["ää", "öö", "yy"].iter().any(|pair| lower.contains(pair)) && !lower.contains('õ')
+        }
+        Language::Eu => lower.contains("tx"),
         _ => false,
     }
 }
@@ -190,6 +273,201 @@ fn kana_say_japanese(title: &str) -> bool {
 /// letters by its small words. A Latin title with no small words at all,
 /// such as "Minecraft Speedrun", is taken as English.
 pub fn title_language(title: &str) -> Language {
+    reading(title).0
+}
+
+/// [title_language], and whether the reading is sure: a script only one
+/// language writes, letters or small words of one language, or a sure
+/// statistical reading. A short Latin, Cyrillic, Devanagari or Arabic
+/// title read by default (English, Russian, Hindi, Arabic) is not sure:
+/// any language of its script may have written it.
+pub fn reading(title: &str) -> (Language, bool) {
+    let found = read(title);
+    let sure = match found {
+        Language::Any => false,
+        Language::Hi => devanagari(title).is_some(),
+        Language::Ar => title.chars().filter(|c| c.is_alphabetic()).count() >= 12,
+        Language::Ru => cyrillic(title).is_some(),
+        language if is_latin(language) && language != Language::Vi => {
+            letters_allow(title).is_none_or(|allowed| allowed.contains(&language))
+                && latin_sure(title, language)
+        }
+        _ => true,
+    };
+    (found, sure)
+}
+
+/// Letters only a few Latin-script languages write, lower case, and
+/// those languages: a title with ø is Norwegian or Danish whatever its
+/// small words say.
+const LETTER_FAMILIES: [(&[char], &[Language]); 11] = {
+    use Language::*;
+    [
+        (&['ø'], &[No, Da]),
+        (&['å'], &[No, Da, Sv]),
+        (&['æ'], &[No, Da, Is]),
+        (&['ą', 'ę', 'ł', 'ś', 'ź', 'ż'], &[Pl]),
+        (&['ř', 'ě', 'ů'], &[Cs]),
+        (&['ľ', 'ĺ', 'ŕ'], &[Sk]),
+        (&['ğ', 'ı'], &[Tr, Az]),
+        (&['ə'], &[Az]),
+        (&['ő', 'ű'], &[Hu]),
+        (&['ā', 'ē', 'ī', 'ķ', 'ļ', 'ņ', 'ģ'], &[Lv]),
+        (&['ė', 'į', 'ų'], &[Lt]),
+    ]
+};
+
+/// The Latin-script languages [title]'s rarer letters leave, when it has
+/// any of [LETTER_FAMILIES]: those every such letter allows.
+fn letters_allow(title: &str) -> Option<Vec<Language>> {
+    let lower = title.to_lowercase();
+    let mut allowed: Option<Vec<Language>> = None;
+    for (letters, languages) in LETTER_FAMILIES {
+        if lower.contains(letters) {
+            allowed = Some(match allowed {
+                None => languages.to_vec(),
+                Some(so_far) => so_far
+                    .into_iter()
+                    .filter(|l| languages.contains(l))
+                    .collect(),
+            });
+        }
+    }
+    allowed
+}
+
+/// For a guess: the languages that may have written [title], read as
+/// [guessed] without being sure. Those of its script, narrowed by its
+/// rarer letters; English only when guessed, as English titles are read
+/// surely by their small words. Measured on 1590 videos in 70 languages
+/// (2026-11-20): every guess let in wrongly was between such neighbours.
+pub fn alike(title: &str, guessed: Language) -> Vec<Language> {
+    if !is_latin(guessed) {
+        // Russian read by default may be Ukrainian or Belarusian only
+        // when their own letters say so, which makes the reading sure.
+        return same_script(guessed)
+            .into_iter()
+            .filter(|l| guessed != Language::Ru || !matches!(l, Language::Be | Language::Uk))
+            .collect();
+    }
+    // Languages that share nearly all their words with a bigger one
+    // (Afrikaans with Dutch, Javanese and Sundanese with Indonesian) are
+    // told by their own small words, never by a guess: a Polish title
+    // read loosely was let in as Javanese.
+    use Language::*;
+    let mut languages = match letters_allow(title) {
+        Some(allowed) if !allowed.is_empty() => allowed,
+        _ => same_script(guessed)
+            .into_iter()
+            .filter(|l| !matches!(l, En | Af | Jv | Su | Ms))
+            .collect(),
+    };
+    if !languages.contains(&guessed) {
+        languages.insert(0, guessed);
+    }
+    languages
+}
+
+/// The languages explore offers that write [language]'s script, itself
+/// included; only [language] for a script of its own.
+pub fn same_script(language: Language) -> Vec<Language> {
+    use Language::*;
+    let groups: [&[Language]; 3] = [&[Ru, Uk, Be, Bg, Mk, Mn, Uz], &[Hi, Mr, Ne], &[Ar, Fa, Ur]];
+    if is_latin(language) {
+        return (0..=Uz as u32)
+            .filter_map(language_at)
+            .filter(|l| is_latin(*l) && *l != Vi)
+            .collect();
+    }
+    groups
+        .iter()
+        .find(|group| group.contains(&language))
+        .map_or_else(|| vec![language], |group| group.to_vec())
+}
+
+/// The language at explore's index [index].
+pub fn language_at(index: u32) -> Option<Language> {
+    (index <= Language::Uz as u32).then(|| unsafe { std::mem::transmute::<u32, Language>(index) })
+}
+
+/// Whether [language] is written in Latin letters.
+pub fn is_latin(language: Language) -> bool {
+    use Language::*;
+    matches!(
+        language,
+        En | Es
+            | Fr
+            | De
+            | Pt
+            | It
+            | Nl
+            | Tr
+            | Id
+            | Ms
+            | Tl
+            | Pl
+            | Cs
+            | Ro
+            | Hu
+            | Sv
+            | No
+            | Da
+            | Fi
+            | Af
+            | Az
+            | Eo
+            | Et
+            | Eu
+            | Gl
+            | Is
+            | Jv
+            | La
+            | Lt
+            | Lv
+            | Sk
+            | Sq
+            | Su
+            | Sw
+            | Tk
+            | Uz
+            | Vi
+    )
+}
+
+/// Whether a Latin [title] read as [language] is surely in it: two of its
+/// small words, a letter only it writes, or a sure statistical reading of
+/// four words or more.
+fn latin_sure(title: &str, language: Language) -> bool {
+    let lower = title.to_lowercase();
+    if latin_letters(language, &lower) {
+        return true;
+    }
+    let words: Vec<&str> = lower
+        .split(|c: char| !(c.is_alphabetic() || c == '\''))
+        .filter(|w| !w.is_empty())
+        .collect();
+    let small =
+        LATIN_WORDS
+            .iter()
+            .find(|(l, _)| *l == language)
+            .map_or(Vec::new(), |(_, small)| {
+                words
+                    .iter()
+                    .filter(|w| small.contains(w))
+                    .collect::<Vec<_>>()
+            });
+    // Two small words, one of them longer than two letters: "o", "do",
+    // "em", "no", "na" are words of many languages.
+    if small.len() >= 2 && small.iter().any(|w| w.chars().count() > 2) {
+        return true;
+    }
+    words.len() >= 4
+        && latin_detector().detect(title).is_some_and(|info| {
+            info.confidence() >= 0.8 && latin_language(info.lang()) == Some(language)
+        })
+}
+
+fn read(title: &str) -> Language {
     if kana_say_japanese(title) {
         return Language::Ja;
     }
@@ -245,7 +523,12 @@ pub fn title_language(title: &str) -> Language {
         if title.contains(['ٹ', 'ڈ', 'ڑ', 'ں', 'ے']) {
             return Language::Ur;
         }
-        if title.contains(['پ', 'چ', 'ژ', 'گ', 'ی']) {
+        // Persian words Arabic does not use, for titles without Persian
+        // letters ("اخبار ساعت شش عصر").
+        let persian_word = title
+            .split(|c: char| !c.is_alphabetic())
+            .any(|w| matches!(w, "شش" | "است" | "های" | "برای" | "امروز" | "خبر‌ها"));
+        if title.contains(['پ', 'چ', 'ژ', 'گ', 'ی']) || persian_word {
             return Language::Fa;
         }
         return Language::Ar;
@@ -254,6 +537,10 @@ pub fn title_language(title: &str) -> Language {
         let lower = title.to_lowercase();
         if lower.contains(['ї', 'є', 'ґ']) {
             return Language::Uk;
+        }
+        // Uzbek writes ў too, with қ, ғ and ҳ, which Belarusian does not.
+        if lower.contains(['қ', 'ғ', 'ҳ']) {
+            return Language::Uz;
         }
         if lower.contains('ў') {
             return Language::Be;
@@ -276,6 +563,10 @@ pub fn title_language(title: &str) -> Language {
     }
     if !title.chars().any(|c| c.is_ascii_alphabetic()) {
         return Language::Any;
+    }
+    // Only Icelandic writes þ and ð among explore's languages.
+    if lower.contains(['þ', 'ð']) {
+        return Language::Is;
     }
     let words: Vec<&str> = lower
         .split(|c: char| !(c.is_alphabetic() || c == '\''))
@@ -634,6 +925,45 @@ pub unsafe extern "C" fn lumtub_blocks_free(blocks: *mut Blocks) {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn no_small_word_marks_two_languages() {
+        // The first seven lists (das, que, como, ...) shared a few words
+        // before; the later ones share none with any list.
+        let mut seen = std::collections::HashMap::new();
+        for (index, (language, small)) in super::LATIN_WORDS.iter().enumerate() {
+            let language = *language;
+            for word in small.iter() {
+                if let Some((other, other_index)) = seen.insert(*word, (language, index))
+                    && (index >= 7 || other_index >= 7)
+                {
+                    assert_eq!(other, language, "{word} is listed twice");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn reads_the_smaller_latin_languages_by_their_words() {
+        use super::{Language::*, reading};
+        for (title, language) in [
+            ("Balita ngayong umaga: ang mga pangunahing ulat", Tl),
+            ("Gaur egungo albisteak eta euskara", Eu),
+            ("Lajmet e mbrëmjes në Tiranë dhe Durrës", Sq),
+            ("Hierdie is baie lekker, ek sê vir julle", Af),
+            ("Het nieuws van vandaag, maar niet voor iedereen", Nl),
+            ("Habari za leo kutoka Dar es Salaam kwa ufupi", Sw),
+            ("Eesti uudised: kuidas täna ilm on", Et),
+        ] {
+            assert_eq!(reading(title), (language, true), "{title}");
+        }
+        assert_ne!(
+            reading("Trump-Putin-Şi: Beden Dilleri Ne Dedi? | CANLI HABER").0,
+            Ro
+        );
+        // One word of its own is a guess, but one that names Finnish.
+        assert_eq!(reading("Matkavlogi - Kreeta").0, Fi);
+    }
+
     use super::*;
 
     #[test]

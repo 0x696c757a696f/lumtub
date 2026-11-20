@@ -33,6 +33,7 @@ import 'ui/window_chrome.dart';
 import 'window_glass.dart';
 import 'windows_shell.dart';
 import 'device.dart';
+import 'youtube_player_probe.dart';
 
 Future<void> main() async {
   FrameStats.sinceStart.start();
@@ -211,6 +212,7 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
         unawaited(controller.flushHistory());
         controller.cast.windowHidden = true;
         KeepAwake.hidden = true;
+        if (Platform.isIOS || Platform.isAndroid) YoutubePlayerProbe.appHidden = true;
         unawaited(controller.setBackgroundAudioOnly(true));
         // Nothing is drawn while hidden: decoded thumbnails go, and come
         // back from the disk cache when the window does.
@@ -241,6 +243,7 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
         if (widget.controller.appearance.motion == MotionPreference.system && Motion.systemPrefersReduced() != Motion.reduced) setState(() => _themeKey = null);
         controller.cast.windowHidden = false;
         KeepAwake.hidden = false;
+        YoutubePlayerProbe.appHidden = false;
         if (!Platform.isIOS) unawaited(controller.setBackgroundAudioOnly(false));
         if (!_pausedByMinimize) return;
         _pausedByMinimize = false;

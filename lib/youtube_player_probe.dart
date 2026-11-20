@@ -114,6 +114,9 @@ class YoutubePlayerProbe {
   /// Lookups for lists go at most one per [lookupSpacing], and none while a
   /// video starts or for [afterPlayback] after.
   static const lookupSpacing = Duration(milliseconds: 25);
+
+  /// Whether a phone's app is hidden: lookups for lists wait meanwhile.
+  static bool appHidden = false;
   static const afterPlayback = Duration(seconds: 3);
   /// After [refusalsBeforeRest] refusals in a row, lookups for lists rest
   /// for [rest]: asking on only keeps YouTube refusing, playback too.
@@ -126,6 +129,12 @@ class YoutubePlayerProbe {
     while (true) {
       final now = DateTime.now();
       if (now.isBefore(_restUntil)) return true;
+      // A phone suspends a hidden app within seconds: a lookup started then
+      // stalls until it times out. They wait for the app to come back.
+      if (appHidden) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        continue;
+      }
       final free = _playedAt.add(afterPlayback);
       if (_playing > 0 || now.isBefore(free)) {
         await Future<void>.delayed(_playing > 0 ? const Duration(milliseconds: 200) : free.difference(now));

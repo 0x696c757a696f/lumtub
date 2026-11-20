@@ -285,7 +285,7 @@ class _Pitch extends StatelessWidget {
             ),
           const SizedBox(height: 8),
           Text(
-            tr('Chinese, English and Japanese. One payment, all your devices, no account, no subscription. Buying it keeps Lumtub alive.'),
+            tr('Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, all your devices, no account, no subscription. Buying it keeps Lumtub alive.'),
             style: TextStyle(color: theme.colorScheme.outline, fontSize: 12, height: 1.5),
           ),
           const SizedBox(height: 12),
@@ -320,11 +320,13 @@ class _PackTile extends StatelessWidget {
       DictionaryPack.chinese => '4 MB',
       DictionaryPack.english => '2 MB',
       DictionaryPack.japanese => '7 MB',
+      _ => tr('a few MB'),
     };
     final subtitle = switch (state) {
       PackState.missing => tr('Not downloaded · about {0}', [size]),
       PackState.downloading => progress == null ? tr('Downloading…') : tr('Downloading… {0}%', [(progress * 100).round()]),
       PackState.loading => learning.licensed ? tr('Loading…') : tr('Downloaded'),
+      PackState.downloaded => tr('Downloaded · read when its subtitles play'),
       PackState.ready => tr('Ready'),
       PackState.failed => tr('Failed: {0}', [learning.errorOf(pack) ?? '']),
     };
@@ -333,6 +335,12 @@ class _PackTile extends StatelessWidget {
         DictionaryPack.chinese => tr('Chinese dictionary (Chinese–English)'),
         DictionaryPack.english => tr('English dictionary (English–Chinese)'),
         DictionaryPack.japanese => tr('Japanese dictionary (Japanese–English, with kana)'),
+        DictionaryPack.korean => tr('Korean dictionary (with romanization)'),
+        DictionaryPack.spanish => tr('Spanish dictionary'),
+        DictionaryPack.french => tr('French dictionary'),
+        DictionaryPack.german => tr('German dictionary'),
+        DictionaryPack.italian => tr('Italian dictionary'),
+        DictionaryPack.russian => tr('Russian dictionary'),
       },
       subtitle: subtitle,
       leading: Icon(AppIcons.translate),
@@ -342,7 +350,7 @@ class _PackTile extends StatelessWidget {
           : switch (state) {
               PackState.missing || PackState.failed => FilledButton.tonal(onPressed: () => unawaited(learning.download(pack)), child: Text(tr('Download'))),
               PackState.downloading || PackState.loading => const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-              PackState.ready => IconButton(tooltip: tr('Delete'), icon: Icon(AppIcons.trash, size: 20), onPressed: () => unawaited(learning.delete(pack))),
+              PackState.ready || PackState.downloaded => IconButton(tooltip: tr('Delete'), icon: Icon(AppIcons.trash, size: 20), onPressed: () => unawaited(learning.delete(pack))),
             },
     );
   }

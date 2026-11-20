@@ -1,11 +1,14 @@
 """Builds the learning pack's Wiktionary dictionaries.
 
-    wiktionary.py ZH_EXTRACT OUT_DIR LANG=EN_EXTRACT ...
+    wiktionary.py ZH_EXTRACT OUT_DIR LANG=EN_EXTRACT[,WIKDICT] ...
 
 ZH_EXTRACT is kaikki.org's extract of the Chinese Wiktionary (gzipped
 JSONL), which gives Chinese meanings for some words; each EN_EXTRACT is
 kaikki.org's extract of the English Wiktionary for one language (JSONL),
-which gives English meanings and the forms of words. Writes
+which gives English meanings and the forms of words; WIKDICT, WikDict's
+LANG-zh SQLite dictionary, fills in Chinese meanings the Chinese
+Wiktionary lacks. Chinese is converted to simplified characters when
+the opencc package is there. Writes
 OUT_DIR/LANG-wiktionary.tsv, one word a line:
 
     word, reading, IPA, parts of speech, Chinese meanings, English
@@ -17,8 +20,16 @@ of speech and base words between |. Both Wiktionaries are CC BY-SA 4.0.
 import gzip
 import json
 import re
+import sqlite3
 import sys
 from collections import defaultdict
+
+try:
+    import opencc
+    simplified = opencc.OpenCC('t2s').convert
+except ImportError:
+    print('opencc is missing: Chinese stays as written', flush=True)
+    simplified = str
 
 MAX_SENSES = 8
 MIN_WORDS = int(__import__("os").environ.get("MIN_WORDS", "20000"))
@@ -46,7 +57,10 @@ def gloss_of(sense):
 
 def main():
     zh_path, out_dir, *pairs = sys.argv[1:]
-    languages = dict(pair.split('=', 1) for pair in pairs)
+    languages, wikdicts = {}, {}
+    for pair in pairs:
+        code, paths = pair.split('=', 1)
+        languages[code], _, wikdicts[code] = paths.partition(',')
 
     # Chinese meanings, from the Chinese Wiktionary.
     chinese = {code: defaultdict(list) for code in languages}
@@ -65,9 +79,24 @@ def main():
             for sense in entry.get('senses', []):
                 if sense.get('form_of') or len(found) >= MAX_SENSES:
                     continue
-                gloss = gloss_of(sense)
-                if gloss and gloss not in found:
+                gloss = simplified(gloss_of(sense))
+                if gloss and f'{pos} {gloss}'.strip() not in found:
                     found.append(f'{pos} {gloss}'.strip())
+    # WikDict's translations, for the words still without Chinese.
+    for code, path in wikdicts.items():
+        if not path:
+            continue
+        added = 0
+        with sqlite3.connect(path) as db:
+            for word, translations, score in db.execute('select written_rep, trans_list, max_score from simple_translation'):
+                word = clean(word or '')
+                if not word or chinese[code].get(word) or not translations or float(score or 0) < 1:
+                    continue
+                meaning = '；'.join(dict.fromkeys(simplified(clean(t)) for t in str(translations).split('|') if clean(t)))
+                if meaning:
+                    chinese[code][word] = [meaning]
+                    added += 1
+        print(f'{code}: {added} Chinese meanings from WikDict', flush=True)
     for code, words in chinese.items():
         print(f'{code}: Chinese meanings for {len(words)} words', flush=True)
 

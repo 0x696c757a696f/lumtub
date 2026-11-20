@@ -12,13 +12,17 @@ import '../app_log.dart';
 import 'chinese_dictionary.dart';
 import 'english_dictionary.dart';
 import 'japanese_dictionary.dart';
+import 'latin_language.dart';
 import 'license.dart';
 import 'vocabulary.dart';
+import 'wiktionary_dictionary.dart';
 
 /// Where the dictionary packs are published: a release of the app's own
 /// repository that holds data only, never an app version.
 const learningPackRelease = 'https://github.com/0x696c757a696f/lumtub/releases/download/learning';
-enum PackState { missing, downloading, loading, ready, failed }
+/// [downloaded]: on disk, read the first time subtitles in its language
+/// show up, so dictionaries for languages not being watched take no memory.
+enum PackState { missing, downloading, downloaded, loading, ready, failed }
 
 /// How asking the license server for a bought code went.
 enum ClaimResult { ok, notFound, busy, offline }
@@ -27,11 +31,20 @@ enum ClaimResult { ok, notFound, busy, offline }
 enum DictionaryPack {
   chinese('zh', 'zh-cedict.txt.gz'),
   english('en', 'en-ecdict.tsv.gz'),
-  japanese('ja', 'ja-jmdict.tsv.gz');
+  japanese('ja', 'ja-jmdict.tsv.gz'),
+  korean('ko', 'ko-wiktionary.tsv.gz'),
+  spanish('es', 'es-wiktionary.tsv.gz'),
+  french('fr', 'fr-wiktionary.tsv.gz'),
+  german('de', 'de-wiktionary.tsv.gz'),
+  italian('it', 'it-wiktionary.tsv.gz'),
+  russian('ru', 'ru-wiktionary.tsv.gz');
 
   const DictionaryPack(this.language, this.file);
   final String language;
   final String file;
+
+  /// Built from Wiktionary, read by [WiktionaryDictionary].
+  bool get wiktionary => file.endsWith('-wiktionary.tsv.gz');
 }
 
 /// One pack's download and reading.
@@ -97,7 +110,18 @@ class Learning extends ChangeNotifier {
   ChineseDictionary? get chinese => licensed ? _packs[DictionaryPack.chinese]!.dictionary as ChineseDictionary? : null;
   EnglishDictionary? get english => licensed ? _packs[DictionaryPack.english]!.dictionary as EnglishDictionary? : null;
   JapaneseDictionary? get japanese => licensed ? _packs[DictionaryPack.japanese]!.dictionary as JapaneseDictionary? : null;
-  bool get anyDictionary => chinese != null || english != null || japanese != null;
+  bool get anyDictionary => _packs.values.any((p) => p.dictionary != null) && licensed;
+
+  /// The Wiktionary dictionary for [language], when it is ready.
+  WiktionaryDictionary? wiktionary(String language) {
+    if (!licensed) return null;
+    for (final pack in DictionaryPack.values) {
+      if (pack.wiktionary && pack.language == language) return _packs[pack]!.dictionary as WiktionaryDictionary?;
+    }
+    return null;
+  }
+
+  final _latin = LatinLanguageGuess();
 
   /// [text] as words a tap looks up, when a dictionary for its language
   /// is ready.
@@ -106,9 +130,17 @@ class Learning extends ChangeNotifier {
     if (ja != null && JapaneseDictionary.looksJapanese(text)) return ja.segment(text);
     final zh = chinese;
     if (zh != null && ChineseDictionary.looksChinese(text)) return zh.segment(text);
+    if (WiktionaryDictionary.looksKorean(text)) return _onDisk('ko') ? wiktionary('ko')?.segment(text) : null;
+    if (WiktionaryDictionary.looksCyrillic(text)) return _onDisk('ru') ? wiktionary('ru')?.segment(text) : null;
+    if (!EnglishDictionary.looksLatin(text)) return null;
     final en = english;
-    if (en != null && EnglishDictionary.looksLatin(text)) return en.segment(text);
-    return null;
+    final latin = [if (en != null) 'en', for (final code in const ['es', 'fr', 'de', 'it']) if (_packs[DictionaryPack.values.firstWhere((p) => p.language == code)]!.state case PackState.downloaded || PackState.loading || PackState.ready) code];
+    if (!licensed) return null;
+    final language = _latin.guess(text, latin);
+    if (language == null) return null;
+    if (language == 'en') return en!.segment(text);
+    // Read on first use; until then the line stays plain.
+    return _onDisk(language) ? wiktionary(language)?.segment(text) : null;
   }
 
   /// The language of the dictionary [token] is looked up in.
@@ -145,7 +177,7 @@ class Learning extends ChangeNotifier {
       logWarn('Could not read the learning settings: $e');
     }
     for (final pack in DictionaryPack.values) {
-      if (await _fileOf(pack)!.exists()) _packs[pack]!.state = PackState.loading;
+      if (await _fileOf(pack)!.exists()) _packs[pack]!.state = pack.wiktionary ? PackState.downloaded : PackState.loading;
     }
     notifyListeners();
     if (licensed) {
@@ -225,8 +257,21 @@ class Learning extends ChangeNotifier {
 
   void _loadAll() {
     for (final pack in DictionaryPack.values) {
-      unawaited(load(pack));
+      if (_packs[pack]!.state != PackState.downloaded) unawaited(load(pack));
     }
+  }
+
+  /// Whether [language]'s Wiktionary dictionary is on disk; reading it
+  /// starts now when it has not been read.
+  bool _onDisk(String language) {
+    if (!licensed) return false;
+    for (final pack in DictionaryPack.values) {
+      if (!pack.wiktionary || pack.language != language) continue;
+      final state = _packs[pack]!.state;
+      if (state == PackState.downloaded) unawaited(load(pack));
+      return state == PackState.downloaded || state == PackState.loading || state == PackState.ready;
+    }
+    return false;
   }
 
   /// Reads [pack]'s dictionary when it has been downloaded.
@@ -250,6 +295,7 @@ class Learning extends ChangeNotifier {
           DictionaryPack.chinese => ChineseDictionary.parse(text),
           DictionaryPack.english => EnglishDictionary.parse(text),
           DictionaryPack.japanese => JapaneseDictionary.parse(text),
+          _ => WiktionaryDictionary.parse(text, pack.language),
         };
       });
       logInfo('${pack.name} dictionary read in ${watch.elapsedMilliseconds} ms');

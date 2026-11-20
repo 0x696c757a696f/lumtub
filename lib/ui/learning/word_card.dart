@@ -10,6 +10,7 @@ import '../../learning/english_dictionary.dart';
 import '../../learning/japanese_dictionary.dart';
 import '../../learning/learning.dart';
 import '../../learning/vocabulary.dart';
+import '../../learning/wiktionary_dictionary.dart';
 import '../app_icons.dart';
 
 /// The dictionary entries for [token], from a line heard at [at]: its
@@ -21,7 +22,8 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
   final ready = switch (language) {
     'zh' => learning.chinese != null,
     'ja' => learning.japanese != null,
-    _ => learning.english != null,
+    'en' => learning.english != null,
+    _ => learning.wiktionary(language) != null,
   };
   if (!ready) return;
   final player = controller.player;
@@ -33,7 +35,8 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
     builder: (context) => switch (language) {
       'zh' => _WordCard(controller: controller, dictionary: learning.chinese!, token: token, sentence: sentence, translation: translation, at: when),
       'ja' => _JapaneseCard(controller: controller, dictionary: learning.japanese!, token: token, sentence: sentence, translation: translation, at: when),
-      _ => _EnglishCard(controller: controller, dictionary: learning.english!, token: token, sentence: sentence, translation: translation, at: when),
+      'en' => _EnglishCard(controller: controller, dictionary: learning.english!, token: token, sentence: sentence, translation: translation, at: when),
+      _ => _WiktionaryCard(controller: controller, dictionary: learning.wiktionary(language)!, token: token, sentence: sentence, translation: translation, at: when),
     },
   );
   if (wasPlaying && controller.player == player) unawaited(player?.play());
@@ -355,6 +358,114 @@ class _Tag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       decoration: BoxDecoration(border: Border.all(color: colors.outlineVariant), borderRadius: BorderRadius.circular(4)),
       child: Text(text, style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant)),
+    );
+  }
+}
+
+/// A word from a Wiktionary dictionary: Chinese meanings where the
+/// Chinese Wiktionary has them, then English ones.
+class _WiktionaryCard extends StatelessWidget {
+  const _WiktionaryCard({required this.controller, required this.dictionary, required this.token, required this.sentence, required this.translation, required this.at});
+
+  final AppController controller;
+  final WiktionaryDictionary dictionary;
+  final WordToken token;
+  final String sentence;
+  final String? translation;
+  final Duration at;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final language = dictionary.language;
+    final all = dictionary.lookup(token.key);
+    // A form with no meaning of its own shows only as a note on its word.
+    final entries = all.where((e) => e.hasMeanings).toList();
+    final formOf = all.where((e) => !e.hasMeanings || e.lemmas.isNotEmpty).expand((e) => e.lemmas).toSet();
+    final head = entries.isEmpty ? token.key : entries.first.word;
+    final book = controller.learning.book;
+    return AlertDialog(
+      title: Row(children: [
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            if (token.reading != null) Text(token.reading!, style: TextStyle(color: colors.primary, fontSize: 13)),
+            SelectableText(token.text, style: theme.textTheme.headlineSmall),
+          ]),
+        ),
+        IconButton(
+          tooltip: tr('Copy'),
+          icon: Icon(AppIcons.copy, size: 18),
+          onPressed: () => unawaited(Clipboard.setData(ClipboardData(text: token.key))),
+        ),
+      ]),
+      content: SizedBox(
+        width: 420,
+        child: SingleChildScrollView(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            if (entries.isEmpty) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(tr('Not in the dictionary'), style: TextStyle(color: colors.outline))),
+            if (formOf.isNotEmpty && entries.isNotEmpty && entries.first.word != token.key)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(tr('A form of {0}', [formOf.join(', ')]), style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
+              ),
+            for (final e in entries)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text.rich(TextSpan(children: [
+                    TextSpan(text: e.word, style: theme.textTheme.titleMedium),
+                    if (e.reading.isNotEmpty && e.reading != e.word) TextSpan(text: '  ${e.reading}', style: TextStyle(color: colors.primary)),
+                    if (e.ipa.isNotEmpty) TextSpan(text: '  /${e.ipa}/', style: TextStyle(color: colors.outline)),
+                  ])),
+                  const SizedBox(height: 2),
+                  for (final line in e.chinese.take(6)) Text(line, style: theme.textTheme.bodyMedium),
+                  for (final line in e.english.take(e.chinese.isEmpty ? 8 : 3))
+                    Text(line, style: e.chinese.isEmpty ? theme.textTheme.bodyMedium : theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
+                ]),
+              ),
+            if (sentence.isNotEmpty) ...[
+              const Divider(),
+              Text(sentence, style: theme.textTheme.bodyMedium),
+              if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
+            ],
+            const SizedBox(height: 8),
+            Text(tr('From Wiktionary, CC BY-SA 4.0'), style: TextStyle(fontSize: 11, color: colors.outline)),
+          ]),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
+        if (book != null && entries.isNotEmpty)
+          ListenableBuilder(
+            listenable: book,
+            builder: (context, _) {
+              final kept = book.contains(language, head);
+              final entry = entries.first;
+              return FilledButton.icon(
+                icon: Icon(kept ? AppIcons.check : AppIcons.plus, size: 18),
+                label: Text(kept ? tr('In vocabulary book') : tr('Add to vocabulary book')),
+                onPressed: kept
+                    ? null
+                    : () {
+                        final playing = controller.playing;
+                        unawaited(book.add(VocabularyWord(
+                          word: head,
+                          language: language,
+                          reading: entry.reading.isNotEmpty ? entry.reading : (entry.ipa.isEmpty ? '' : '/${entry.ipa}/'),
+                          meaning: (entry.chinese.isNotEmpty ? entry.chinese : entry.english).take(3).join('; '),
+                          sentence: sentence,
+                          translation: translation ?? '',
+                          videoId: playing?.id ?? '',
+                          videoTitle: playing?.title ?? '',
+                          at: at,
+                          added: DateTime.now(),
+                        )));
+                      },
+              );
+            },
+          ),
+      ],
     );
   }
 }

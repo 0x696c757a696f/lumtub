@@ -1,0 +1,47 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/learning/latin_language.dart';
+import 'package:lumtub/learning/wiktionary_dictionary.dart';
+
+void main() {
+  test('a form finds its word', () {
+    final es = WiktionaryDictionary.parse('hablar\t\taˈβlaɾ\tv.\tv. 说话\tv. to speak\\nv. to talk\t\nhablo\t\t\tv.\t\t\thablar\n', 'es');
+    expect(es.lookup('hablo').map((e) => e.word), ['hablo', 'hablar']);
+    expect(es.lookup('Hablar').single.chinese, ['v. 说话']);
+    expect(es.lookup('hablar').single.english, ['v. to speak', 'v. to talk']);
+    expect(es.lookup('nada'), isEmpty);
+  });
+
+  test('French elision looks up the word after the apostrophe', () {
+    final fr = WiktionaryDictionary.parse('homme\t\tɔm\tn.\tn. 人\tn. man\t\n', 'fr');
+    expect(fr.lookup("l'homme").single.word, 'homme');
+    final tokens = fr.segment("C’est l’homme.");
+    expect(tokens.where((t) => t.isWord).map((t) => t.key), ["C'est", "l'homme"]);
+    expect(tokens.map((t) => t.text).join(), 'C’est l’homme.');
+  });
+
+  test('Korean words lose their particles and endings', () {
+    final ko = WiktionaryDictionary.parse('학교\thakgyo\t\tn.\tn. 学校\tn. school\t\n가다\tgada\t\tv.\tv. 去\tv. to go\t\n하다\thada\t\tv.\t\tv. to do\t\n', 'ko');
+    expect(ko.lookup('학교에서').single.word, '학교');
+    expect(ko.lookup('가요').single.word, '가다');
+    expect(ko.lookup('갔어요').single.word, '가다');
+    expect(ko.lookup('했어요').single.word, '하다');
+    expect(WiktionaryDictionary.romanizeKorean('학교'), 'hakgyo');
+    expect(WiktionaryDictionary.romanizeKorean('한국어'), 'hangugeo');
+    expect(WiktionaryDictionary.romanizeKorean('사랑해요'), 'saranghaeyo');
+    expect(ko.segment('학교에 가요').first.reading, 'hakgyoe');
+  });
+
+  test('Latin subtitles settle on their language', () {
+    final guess = LatinLanguageGuess();
+    const all = ['en', 'es', 'fr', 'de', 'it'];
+    expect(guess.guess('¿Qué tal? Yo estoy muy bien, gracias.', all), 'es');
+    expect(LatinLanguageGuess().guess("C'est la vie, je ne sais pas.", all), 'fr');
+    expect(LatinLanguageGuess().guess('Ich weiß nicht, was das ist.', all), 'de');
+    expect(LatinLanguageGuess().guess('Non lo so, perché è difficile.', all), 'it');
+    expect(LatinLanguageGuess().guess('What is this? I don\'t know.', all), 'en');
+    // One unclear line keeps the language heard so far.
+    expect(guess.guess('Hola', all), 'es');
+    expect(LatinLanguageGuess().guess('Okay', ['en']), 'en');
+  });
+}
+

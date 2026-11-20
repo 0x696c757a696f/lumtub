@@ -3737,7 +3737,7 @@
   "Japanese dictionary (Japanese–English, with kana)": "日语词典（日英，带假名）",
   "Chinese dictionary: CC-CEDICT by MDBG, under CC BY-SA 4.0. English dictionary: ECDICT by skywind3000, under the MIT license. Japanese dictionary: JMdict by the Electronic Dictionary Research and Development Group, under CC BY-SA 4.0.": "中文词典：CC-CEDICT（MDBG 发布，CC BY-SA 4.0 许可）。英语词典：ECDICT（skywind3000，MIT 许可）。日语词典：JMdict（EDRDG，CC BY-SA 4.0 许可）。",
   "How to use it: download a dictionary, turn on a Chinese, English or Japanese subtitle, then tap any word on the video or in the subtitle list. The video waits while the word is open. Everything stays on this device.": "用法：先下载词典，打开中文、英文或日文字幕，再点视频上或字幕列表里的任意一个词。查词时视频会暂停。所有数据都只在这台设备上。",
-  "Chinese, English and Japanese. One payment, all your devices, no account, no subscription. Buying it keeps Lumtub alive.": "支持中文、英语和日语。一次付费，你所有的设备都能用，不用注册，不按月收费。你的购买让 Lumtub 能一直做下去。",
+  "Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, all your devices, no account, no subscription. Buying it keeps Lumtub alive.": "支持中文、英语、日语、韩语、西班牙语、法语、德语、意大利语和俄语。一次付费，你所有的设备都能用，不用注册，不按月收费。你的购买让 Lumtub 能一直做下去。",
   "Pinyin above Chinese, kana above Japanese": "中文上方显示拼音，日语上方显示假名",
   "Show pinyin and kana above subtitles": "字幕上方显示拼音和假名",
   "Pinyin and kana": "拼音和假名",
@@ -3768,5 +3768,14 @@
   "Words from later lists stand out": "超出这一级的词会标出",
   "No Ko-fi purchase with this transaction ID and email was found yet. Check both against your Ko-fi receipt, or wait a minute and try again.": "还没有找到这个交易号和邮箱对应的 Ko-fi 购买记录。请对照 Ko-fi 发给你的收据检查这两项，或者等一分钟再试。",
   "Ko-fi transaction ID": "Ko-fi 交易号（Transaction ID）",
-  "On the receipt Ko-fi emailed you": "在 Ko-fi 发到你邮箱的收据里"
+  "On the receipt Ko-fi emailed you": "在 Ko-fi 发到你邮箱的收据里",
+  "a few MB": "几 MB",
+  "Korean dictionary (with romanization)": "韩语词典（带罗马音）",
+  "Spanish dictionary": "西班牙语词典",
+  "French dictionary": "法语词典",
+  "German dictionary": "德语词典",
+  "Italian dictionary": "意大利语词典",
+  "Russian dictionary": "俄语词典",
+  "A form of {0}": "{0} 的变化形式",
+  "From Wiktionary, CC BY-SA 4.0": "释义来自维基词典（CC BY-SA 4.0）"
 }

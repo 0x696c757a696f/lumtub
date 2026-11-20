@@ -429,7 +429,7 @@ class VideoLanguages {
   }) async* {
     final pending = <_Pending>[];
     final held = <String>[];
-    var asked = 0, kept = 0, heard = 0, byChannel = 0;
+    var asked = 0, kept = 0, heard = 0, byChannel = 0, cached = 0;
     // How long the reader waited: for the first video shown, and in all.
     final clock = Stopwatch()..start();
     int? firstShown;
@@ -480,6 +480,7 @@ class VideoLanguages {
             continue;
           }
         }
+        if (_known?.containsKey(item.id) ?? false) cached++;
         final asking = listedInLanguage ? ExploreLanguage.any : language;
         pending.add(_Pending(of(item.id, asking: asking, channel: item.channelId).then((spoken) {
           if (spoken != null && spoken.heard) heard++;
@@ -516,7 +517,7 @@ class VideoLanguages {
         final pace = seconds > 0 ? (asked / seconds).toStringAsFixed(1) : '-';
         final first = firstShown == null ? 'none shown' : 'first shown after ${(firstShown! / 1000).toStringAsFixed(1)} s';
         logInfo('Language ${language.name}: kept $kept of $asked videos in ${seconds.toStringAsFixed(1)} s ($pace a second, $first), '
-            '$heard told by audio or captions; $by');
+            '$heard told by audio or captions, $cached already known; $by');
       }
     }
   }

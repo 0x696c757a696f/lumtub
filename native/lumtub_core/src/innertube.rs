@@ -1240,6 +1240,20 @@ mod tests {
     }
 
     #[test]
+    fn an_automatic_dub_listed_first_is_not_the_spoken_language() {
+        // As YouTube answered visionOS for an Italian news video, 2026-11-20.
+        let answer = json!({
+            "videoDetails": {"title": "TG La7", "shortDescription": ""},
+            "streamingData": {"adaptiveFormats": [
+                {"itag": 140, "audioTrack": {"displayName": "English (US)", "id": "en-US.10", "audioIsDefault": false, "isAutoDubbed": true}, "xtags": "ChQKBWFjb250EgtkdWJiZWQtYXV0bwoNCgRsYW5nEgVlbi1VUw"},
+                {"itag": 140, "audioTrack": {"displayName": "Italian original", "id": "it.4", "audioIsDefault": true}, "xtags": "ChEKBWFjb250EghvcmlnaW5hbAoKCgRsYW5nEgJpdA"}
+            ]}
+        });
+        let spoken = spoken_language(&answer).unwrap();
+        assert_eq!((spoken.language, spoken.source), (Some(Language::It), "audio"));
+    }
+
+    #[test]
     fn tells_the_spoken_language() {
         let asr = json!({
             "videoDetails": {"title": "How to cook rice", "shortDescription": ""},

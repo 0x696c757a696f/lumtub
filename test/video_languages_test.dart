@@ -286,7 +286,8 @@ void main() {
       return _json(switch (id) {
         'aaaaaaaaaaa' => _player('Lezione', asr: 'it'),
         'ccccccccccc' => {'playabilityStatus': {'status': 'OK'}, 'videoDetails': {}},
-        _ => _player('Lezione senza sottotitoli'),
+        // Sure Italian: three of its small words.
+        _ => _player('Lezione di filosofia per tutti gli studenti'),
       });
     });
     final folder = Directory.systemTemp.createTempSync('languages');
@@ -372,7 +373,8 @@ void main() {
     final kept = await languages.only(Stream.fromIterable(ids.map(line)), ExploreLanguage.zh, heldUpTo: 100).toList();
     expect(kept, hasLength(61));
     expect((jsonDecode(kept.first) as Map)['id'], 'h0000000001', reason: 'heard ones go first');
-    expect(calls, lessThan(60 * PlayerClient.values.length ~/ 2), reason: 'the other apps are left alone once they never tell');
+    // Lookups already running when the others stop telling still ask them.
+    expect(calls, lessThan(60 * PlayerClient.values.length ~/ 2 + VideoLanguages.parallel), reason: 'the other apps are left alone once they never tell');
   }, skip: core);
 
   test('stops asking for a while once YouTube leaves the video out', () async {

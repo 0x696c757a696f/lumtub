@@ -6,11 +6,31 @@ jobs:
   probe:
     runs-on: ubuntu-24.04
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - run: |
-          for u in https://kaikki.org/dictionary/rawdata.html https://kaikki.org/zhwiktionary/rawdata.html https://kaikki.org/dictionary/Korean/index.html https://kaikki.org/dictionary/Spanish/index.html; do
-            echo "== $u"; curl -fsSL "$u" | grep -oE 'href="[^"]*(json|gz)[^"]*"[^<]*<[^>]*>[^<]*' | head -40 || true
-            curl -fsSL "$u" | grep -oE '[0-9.]+ ?[MG]B' | head -20 || true
+          set -euo pipefail
+          mkdir -p in out
+          curl -fsSL --retry 5 -o in/zh.jsonl.gz https://kaikki.org/zhwiktionary/raw-wiktextract-data.jsonl.gz
+          args=()
+          for pair in ko=Korean es=Spanish fr=French de=German it=Italian ru=Russian; do
+            code=${pair%%=*}; name=${pair#*=}
+            curl -fsSL --retry 5 -o "in/$code.jsonl" "https://kaikki.org/dictionary/$name/kaikki.org-dictionary-$name.jsonl"
+            ls -la "in/$code.jsonl"
+            args+=("$code=in/$code.jsonl")
           done
-          curl -fsSL https://kaikki.org/dictionary/Korean/index.html | grep -iE 'jsonl|download' | head -20
-          curl -fsSL https://kaikki.org/dictionary/rawdata.html | sed 's/<[^>]*>/ /g' | grep -iE 'jsonl|MB|GB' | head -60
-          curl -fsSL https://kaikki.org/zhwiktionary/rawdata.html | sed 's/<[^>]*>/ /g' | grep -iE 'jsonl|MB|GB' | head -60
+          head -c 1500 in/ko.jsonl; echo
+          time python3 -I .github/learning/wiktionary.py in/zh.jsonl.gz out "${args[@]}"
+          for code in ko es fr de it ru; do
+            f=out/$code-wiktionary.tsv
+            echo "== $code $(wc -l < $f) lines, $(gzip -9 < $f | wc -c) bytes gz"
+            shuf -n 12 --random-source=<(yes) $f | cut -c1-220
+            awk -F'\t' '$5 != ""' $f | shuf -n 6 --random-source=<(yes) | cut -c1-220
+          done
+          grep -P '^(학교|가다|사랑|hablar|hablo|maison|Haus|ging|casa|собака|говорю)\t' out/*.tsv | cut -c1-300
+          gzip -9 out/*.tsv
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: wiktionary
+          path: out/

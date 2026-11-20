@@ -17,6 +17,7 @@ import '../apple_chip.dart';
 import '../ai_filter.dart';
 import '../android_subtitle_fonts.dart';
 import '../app_directories.dart';
+import '../learning/learning.dart';
 import '../app_updater.dart';
 import '../app_log.dart';
 import '../app_window.dart';
@@ -162,6 +163,9 @@ enum PageMode { home, explore, subscriptions, history, playlists, downloads, set
 class AppController extends ChangeNotifier with _ExploreState {
   HistoryStore? _history;
   AppDirectories? directories;
+
+  /// The paid learning pack: license, dictionaries, vocabulary book.
+  final learning = Learning();
 
   /// Now and then asks whether to support Lumtub; null until started.
   SupportReminder? supportReminder;

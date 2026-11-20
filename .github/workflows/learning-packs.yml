@@ -1,0 +1,65 @@
+name: Learning packs
+
+# Builds the learning pack's dictionaries and puts them on the `learning`
+# release, which Lumtub downloads from when someone turns a dictionary on.
+# The release holds data only; it is not an app release.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/learning-packs.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/learning-packs.yml'
+  schedule:
+    # CC-CEDICT changes a little every day; once a month is enough.
+    - cron: '23 4 2 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build and publish
+    # Pull requests from forks get no write token.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-learning-packs
+      cancel-in-progress: false
+    steps:
+      - name: Build the Chinese dictionary
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/in" "$RUNNER_TEMP/out"
+          curl -fsSL --retry 5 --retry-all-errors -A 'Mozilla/5.0 (compatible; Lumtub learning packs)' \
+            -o "$RUNNER_TEMP/in/cedict.txt.gz" https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz
+          zcat "$RUNNER_TEMP/in/cedict.txt.gz" > "$RUNNER_TEMP/in/cedict.txt"
+          # Only CC BY-SA 4.0 data goes out, and only a whole dictionary.
+          grep -q '^#! license=https://creativecommons.org/licenses/by-sa/4.0/' "$RUNNER_TEMP/in/cedict.txt"
+          entries=$(grep -vc '^#' "$RUNNER_TEMP/in/cedict.txt")
+          if (( entries < 100000 )); then
+            echo "::error::CC-CEDICT has only $entries entries"
+            exit 1
+          fi
+          gzip -n -9 < "$RUNNER_TEMP/in/cedict.txt" > "$RUNNER_TEMP/out/zh-cedict.txt.gz"
+          (cd "$RUNNER_TEMP/out" && sha256sum zh-cedict.txt.gz > SHA256SUMS)
+          echo "CC-CEDICT: $entries entries, $(stat -c %s "$RUNNER_TEMP/out/zh-cedict.txt.gz") bytes compressed" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! gh release view learning --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release create learning --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
+              --title 'Learning pack data' \
+              --notes 'Dictionaries for the learning pack, downloaded by Lumtub when a dictionary is turned on. Not an app release. CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/).'
+          fi
+          # The dictionary first, then the sums that name it.
+          gh release upload learning "$RUNNER_TEMP/out/zh-cedict.txt.gz" --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload learning "$RUNNER_TEMP/out/SHA256SUMS" --repo "$GITHUB_REPOSITORY" --clobber

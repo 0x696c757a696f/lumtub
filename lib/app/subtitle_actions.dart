@@ -39,7 +39,8 @@ extension SubtitleActions on AppController {
       final first = local.preferredSubtitle(settings.subtitleLanguage.mpvLangs.split(','));
       await platform.command(['sub-add', first.path, 'select']);
       await syncMainSubtitle();
-      for (final other in local.subtitles.where((f) => f != first)) {
+      // A styled ASS beside the file is for other players.
+      for (final other in local.subtitles.where((f) => f != first && !f.path.toLowerCase().endsWith('.ass'))) {
         await platform.command(['sub-add', other.path, 'auto']);
       }
     } catch (e) {

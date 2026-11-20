@@ -65,11 +65,14 @@ class LocalVideo {
   /// The subtitle file for the first of [languages] (such as `zh-Hans`)
   /// that has one, else the first file.
   File preferredSubtitle(List<String> languages) {
+    // A styled ASS kept beside the file is for other players.
+    final plain = [for (final f in subtitles) if (!f.path.toLowerCase().endsWith('.ass')) f];
+    final files = plain.isEmpty ? subtitles : plain;
     for (final language in languages) {
-      final match = subtitles.where((f) => f.path.toLowerCase().contains('.${language.trim().toLowerCase()}.')).firstOrNull;
+      final match = files.where((f) => f.path.toLowerCase().contains('.${language.trim().toLowerCase()}.')).firstOrNull;
       if (match != null) return match;
     }
-    return subtitles.first;
+    return files.first;
   }
 
   /// The saved subtitles in one language each, named `<video>.<language>`
@@ -767,15 +770,28 @@ class DownloadManager extends ChangeNotifier {
         cover: coverFile?.path,
         cut: [for (final s in segments ?? const <SkipSegment>[]) (s.start, s.end)],
       ));
+      final out = joined.path;
+      // Beside an MP4, whose own subtitle tracks hold little of the style,
+      // the styled ASS stays, named so other players load it with the
+      // video. Not when stretches were cut out: its times would be off.
+      final keepAss = out != null && !out.toLowerCase().endsWith('.mkv') && joined.cut.isEmpty;
+      for (final s in subtitles) {
+        final ass = s.ass;
+        if (ass == null || !keepAss) continue;
+        try {
+          await File(ass).rename(sideAssFor(s.path));
+        } on FileSystemException catch (e) {
+          logWarn('Could not keep the styled subtitles beside ${task.id}: ${e.message}');
+        }
+      }
       for (final path in [coverFile?.path, for (final s in subtitles) s.ass]) {
-        if (path == null) continue;
+        if (path == null || !await File(path).exists()) continue;
         try {
           await File(path).delete();
         } on FileSystemException {
           // Left for the user.
         }
       }
-      final out = joined.path;
       if (out == null) {
         task.status = DownloadStatus.failed;
         task.speed = null;
@@ -885,6 +901,10 @@ class DownloadManager extends ChangeNotifier {
       'lumtub': {'sponsorblock': kept},
     }), flush: true);
   }
+
+  /// The styled ASS kept beside a download for the subtitle file at
+  /// [path]: the same name with `.ass`.
+  static String sideAssFor(String path) => '${path.replaceFirst(RegExp(r'\.(srt|vtt)$'), '')}.ass';
 
   /// Where [at] lands once the stretches [cut] (in order) are left out: a
   /// time inside one lands where it starts.

@@ -696,6 +696,11 @@ void main() {
     expect(options.map((o) => o.language).toList()..sort(), ['en', 'en', 'zh-Hans']);
     expect(options.every((o) => o.kind == SubtitleKind.uploaded && o.url.startsWith('file:')), isTrue);
   });
+
+  test('the styled ASS kept beside a download takes the subtitle file name', () {
+    expect(DownloadManager.sideAssFor('/d/Talk [abc].en+zh-Hans.srt'), '/d/Talk [abc].en+zh-Hans.ass');
+    expect(DownloadManager.sideAssFor('/d/Talk [abc].ja.vtt'), '/d/Talk [abc].ja.ass');
+  });
 }
 
 

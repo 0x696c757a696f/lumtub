@@ -90,6 +90,7 @@ extension LifecycleActions on AppController {
         // libmpv's own notes only with the debug level; it says a lot.
         logLevel: preferences.logLevel == LogLevel.debug ? MPVLogLevel.info : MPVLogLevel.warn,
       ));
+      await UpscaleShaders.prepare(directories.data, settings.upscaling);
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
       _optionsApplied(player);
       if (!Platform.isWindows && player.platform is NativePlayer) {

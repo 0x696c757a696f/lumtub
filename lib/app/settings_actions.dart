@@ -291,6 +291,7 @@ extension SettingsActions on AppController {
         next.interpolation != oldSettings.interpolation ||
         next.d3d11vaZeroCopy != oldSettings.d3d11vaZeroCopy ||
         next.directRendering != oldSettings.directRendering;
+    if (next.upscaling != oldSettings.upscaling) await UpscaleShaders.prepare(directories?.data, next.upscaling);
     // Lighter scaling set for a busy GPU is not in the settings, so then
     // every option is set again.
     final ignoredOptions = await PlayerOptionApplicator.apply(player, next, previous: _lightRendering == null ? oldSettings : null);

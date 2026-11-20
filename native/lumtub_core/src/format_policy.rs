@@ -78,6 +78,17 @@ pub enum Audio {
     Low,
 }
 
+/// Which version of a video with high dynamic range plays.
+#[derive(Clone, Copy, PartialEq, Eq, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Hdr {
+    /// Standard range, except with the quality strategy.
+    #[default]
+    Auto,
+    Sdr,
+    Hdr,
+}
+
 #[derive(Deserialize, Default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Settings {
@@ -92,6 +103,7 @@ pub struct Settings {
     /// 0 for no cap.
     pub max_height: u32,
     pub audio: Audio,
+    pub hdr: Hdr,
     /// The language of the audio track to play instead of the original,
     /// as YouTube names it (`it`, `es-US`); empty for the original.
     pub audio_language: String,
@@ -322,9 +334,14 @@ impl Settings {
     }
 
     /// Whether HDR pictures rank above standard range ones of the same size
-    /// and frame rate: only with the quality strategy.
+    /// and frame rate: when asked for, or automatically with the quality
+    /// strategy.
     pub(crate) fn prefers_hdr(&self) -> bool {
-        self.strategy == Strategy::Quality
+        match self.hdr {
+            Hdr::Auto => self.strategy == Strategy::Quality,
+            Hdr::Sdr => false,
+            Hdr::Hdr => true,
+        }
     }
 
     /// Picture quality first, then standard range before HDR, then the
@@ -336,16 +353,24 @@ impl Settings {
     /// The quality strategy keeps yt-dlp's own ranking, but without AV1
     /// hardware decoding VP9 (HDR VP9 too) ranks above AV1 of the same
     /// size and frame rate; a size only AV1 has still wins.
+    /// The HDR choice ([Settings::hdr]) turns the range rule around.
     pub fn format_sort(&self) -> Option<String> {
+        let range = if self.prefers_hdr() {
+            "hdr:12"
+        } else {
+            "hdr:sdr"
+        };
         if self.strategy == Strategy::Quality {
-            if self.hardware(Codec::Av1) || !self.allows(Codec::Vp9) {
-                return None;
-            }
-            return Some("res,fps,hdr:12,vcodec:vp9.2".into());
+            let av1 = self.hardware(Codec::Av1) || !self.allows(Codec::Vp9);
+            return match (av1, self.prefers_hdr()) {
+                (true, true) => None,
+                (true, false) => Some(format!("res,fps,{range}")),
+                (false, _) => Some(format!("res,fps,{range},vcodec:vp9.2")),
+            };
         }
         self.codec_order()
             .first()
-            .map(|c| format!("res,fps,hdr:sdr,vcodec:{}", c.sort_name()))
+            .map(|c| format!("res,fps,{range},vcodec:{}", c.sort_name()))
     }
 
     pub fn policy(&self) -> Policy {
@@ -469,6 +494,38 @@ mod tests {
         assert_eq!(
             settings(r#"{"audioLanguage":"it]x"}"#).expression(),
             original
+        );
+    }
+
+    #[test]
+    fn hdr_choice() {
+        assert_eq!(
+            settings(r#"{"hdr":"hdr","hardware":["av1"]}"#)
+                .format_sort()
+                .unwrap(),
+            "res,fps,hdr:12,vcodec:av01"
+        );
+        assert!(settings(r#"{"hdr":"hdr"}"#).prefers_hdr());
+        assert!(!settings(r#"{"hdr":"sdr","strategy":"quality"}"#).prefers_hdr());
+        assert_eq!(
+            settings(r#"{"hdr":"sdr","strategy":"quality"}"#)
+                .format_sort()
+                .unwrap(),
+            "res,fps,hdr:sdr,vcodec:vp9.2"
+        );
+        assert_eq!(
+            settings(r#"{"hdr":"sdr","strategy":"quality","hardware":["av1"]}"#)
+                .format_sort()
+                .unwrap(),
+            "res,fps,hdr:sdr"
+        );
+        assert_eq!(
+            settings(r#"{"hdr":"hdr","strategy":"quality","hardware":["av1"]}"#).format_sort(),
+            None
+        );
+        assert_eq!(
+            settings(r#"{"hdr":"auto"}"#).format_sort().unwrap(),
+            "res,fps,hdr:sdr,vcodec:avc"
         );
     }
 

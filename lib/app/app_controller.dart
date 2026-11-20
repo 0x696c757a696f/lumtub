@@ -85,6 +85,7 @@ import '../youtube_related.dart';
 import '../recommendations.dart';
 import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
+import '../upscale_shaders.dart';
 import '../power.dart';
 import '../player_settings.dart';
 import '../thumbnail_trim.dart';

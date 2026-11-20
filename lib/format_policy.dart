@@ -81,6 +81,7 @@ class FormatPolicy {
         },
         'maxHeight': settings.maxHeight,
         'audio': settings.audioQuality.name,
+        'hdr': settings.hdr.name,
         'audioLanguage': audioLanguage,
         'display': max(0, displayHeight),
       });

@@ -24,6 +24,7 @@ import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
 import '../../device.dart';
+import '../../upscale_shaders.dart';
 import '../../progress_line.dart';
 import '../../right_click.dart';
 import '../../wheel_gesture.dart';
@@ -408,6 +409,19 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.checkSquare),
               title: Text(FormatPolicy.summary(settings), style: _note(context)),
             ), subtitle: tr('Video format')),
+        SettingEntry(tr('AV1 on this device'), (context) => ListTile(
+              dense: true,
+              leading: _icon(AppIcons.cpu),
+              title: Text(tr('AV1 on this device')),
+              subtitle: Text(av1Note(settings), style: _note(context)),
+            ), subtitle: tr('AV1 hardware decoding')),
+        if (!Platform.isIOS)
+          SettingEntry(tr('HDR videos'), (context) => NormalItem(
+                title: tr('HDR videos'),
+                subtitle: tr('{0}: {1}', [settings.hdr.label, settings.hdr.description]),
+                leading: _icon(AppIcons.sun),
+                onTap: () => pickDescribed<HdrPreference>(context, title: tr('HDR videos'), current: settings.hdr, values: [for (final h in HdrPreference.values) (h, h.label, h.description)], onSelected: (v) => save(settings.copyWith(hdr: v))),
+              ), subtitle: tr('HDR tone mapping standard range SDR')),
         SettingEntry(tr('Enable hardware decoding'), (context) => SwitchItem(
               title: tr('Enable hardware decoding'),
               subtitle: tr('Plays video with lower power use. Turn off if playback freezes.'),
@@ -577,6 +591,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.imagesSquare),
               onTap: () => pickFromDialog<String>(context, title: tr('Video scaling algorithm'), value: settings.scale, values: _scaleModes, onSelected: (value) => save(settings.copyWith(scale: value))),
             ), subtitle: tr('scale upscaling')),
+        if (UpscaleShaders.offered.length > 1)
+          SettingEntry(tr('Picture enhancement'), (context) => NormalItem(
+                title: tr('Picture enhancement'),
+                subtitle: tr('{0}: {1}. Only when the picture is drawn larger than it is; left out with Low resource use first, and on battery with Smart auto', [UpscaleShaders.usable(settings.upscaling).label, UpscaleShaders.usable(settings.upscaling).description]),
+                leading: _icon(AppIcons.sparkle),
+                onTap: () => pickDescribed<Upscaling>(context, title: tr('Picture enhancement'), current: UpscaleShaders.usable(settings.upscaling), values: [for (final u in UpscaleShaders.offered) (u, u.label, u.description)], onSelected: (v) => save(settings.copyWith(upscaling: v))),
+              ), subtitle: tr('upscaling super resolution shaders Anime4K FSRCNNX RAVU')),
         SettingEntry(tr('Debanding'), (context) => SwitchItem(
               title: tr('Debanding'),
               subtitle: tr('Reduces banding in gradients; slightly increases GPU load'),

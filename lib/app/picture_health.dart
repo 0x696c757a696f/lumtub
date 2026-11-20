@@ -209,7 +209,7 @@ extension PictureHealth on AppController {
   /// once drawing a frame takes most of its time: on a weak or busy GPU
   /// the filters cost dropped frames, the CPU decoding the picture needs
   /// all the time it can get, and at window size the difference is hard
-  /// to see. [software] is set when the decoder was just read: true for a
+  /// to see. 画质增强's shaders are left out then too. [software] is set when the decoder was just read: true for a
   /// CPU decoder, false for a hardware one.
   Future<void> _lightenIfBusy(NativePlayer platform, String? frames, {bool? software}) async {
     final player = this.player;

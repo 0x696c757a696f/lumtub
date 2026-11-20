@@ -17,6 +17,7 @@ void main() {
     expect(px(393, 221), 12, reason: 'the upright phone player keeps 12 px, not the 9 px scaling by area gives');
     expect(px(852, 393), closeTo(20.9, 0.1), reason: 'full screen sideways');
     expect(px(1920, 1080), closeTo(57.6, 0.1), reason: 'a TV, read from afar');
+    expect(px(393, 852), closeTo(15.7, 0.1), reason: 'full screen upright: by the width, not the tall screen');
     expect(px(852, 393, 1.5), closeTo(31.4, 0.1), reason: "Android's caption size setting counts");
   });
 

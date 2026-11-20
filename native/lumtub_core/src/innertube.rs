@@ -882,10 +882,18 @@ fn text_language(title: &str, description: &str) -> (Option<Language>, bool) {
         {
             (Some(description_says), description_sure)
         }
-        // Both Latin: the two together give the most text to go by.
+        // Both Latin: a title sure of itself decides, as descriptions
+        // carry English links and sponsor lines ("Jännittää!! |
+        // MATKAVLOGI" was read as English with its description). Else the
+        // two together give the most text to go by, surely only when the
+        // title or a description sure of itself reads the same.
+        (title_says, _) if is_latin(title_says) && title_sure => (Some(title_says), true),
         (title_says, description_says) if is_latin(title_says) && is_latin(description_says) => {
             let (both, sure) = reading(&format!("{title}\n{description}"));
-            (Some(both), sure)
+            (
+                Some(both),
+                sure && (both == title_says || (description_sure && description_says == both)),
+            )
         }
         (title_says, _) => (Some(title_says), title_sure),
     }
@@ -1323,6 +1331,12 @@ mod tests {
         );
         let uzbek = spoken_language(&answer("Ўзбекистон янгиликлари: қишлоқ хўжалиги")).unwrap();
         assert_eq!(uzbek.language, Some(Language::Uz));
+        let finnish = json!({"videoDetails": {"title": "Jännittää!! | MATKAVLOGI",
+            "shortDescription": "Thanks for watching! Follow me on Instagram and check out the links below for the best deals"}});
+        assert_eq!(
+            spoken_language(&finnish).unwrap().language,
+            Some(Language::Fi)
+        );
     }
 
     #[test]

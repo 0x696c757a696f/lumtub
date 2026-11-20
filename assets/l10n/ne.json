@@ -3650,5 +3650,8 @@
   "The line, then my recording": "वाक्य, त्यसपछि मेरो रेकर्डिङ",
   "All {0} lines I recorded, each then mine": "मैले रेकर्ड गरेका सबै {0} वाक्य, प्रत्येकपछि मेरो",
   "The line is no longer buffered. Play it once more, then save.": "वाक्य अब बफरमा छैन। फेरि एक पटक चलाउनुहोस्, अनि सेभ गर्नुहोस्।",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "केही वाक्य अब बफरमा छैनन्, त्यसैले तिनका लागि तपाईंको रेकर्डिङ मात्र सेभ हुन्छ।"
+  "Some lines are no longer buffered, so only your recording is saved for them.": "केही वाक्य अब बफरमा छैनन्, त्यसैले तिनका लागि तपाईंको रेकर्डिङ मात्र सेभ हुन्छ।",
+  "Languages I understand": "मैले बुझ्ने भाषाहरू",
+  "Subtitles don't turn on by themselves for videos in these languages": "यी भाषाका भिडियोहरूमा उपशीर्षक आफैं सुरु हुँदैन",
+  "On for languages I don't understand": "नबुझ्ने भाषाका लागि सुरु"
 }

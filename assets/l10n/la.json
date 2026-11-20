@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Versus, deinde mea inscriptio",
   "All {0} lines I recorded, each then mine": "Omnes {0} versus quos inscripsi, singuli cum mea",
   "The line is no longer buffered. Play it once more, then save.": "Versus iam non in memoria temporaria est. Iterum reproduc, deinde serva.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Quidam versus iam non in memoria temporaria sunt, itaque pro eis tua tantum inscriptio servatur."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Quidam versus iam non in memoria temporaria sunt, itaque pro eis tua tantum inscriptio servatur.",
+  "Languages I understand": "Linguae quas intellego",
+  "Subtitles don't turn on by themselves for videos in these languages": "Subtituli sua sponte non accenduntur in videis his linguis",
+  "On for languages I don't understand": "Accensi linguis quas non intellego"
 }

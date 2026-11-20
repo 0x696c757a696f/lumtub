@@ -3656,5 +3656,8 @@
   "The line, then my recording": "La réplique, puis ma prise",
   "All {0} lines I recorded, each then mine": "Les {0} répliques enregistrées, chacune suivie de la mienne",
   "The line is no longer buffered. Play it once more, then save.": "La réplique n'est plus en mémoire tampon. Relisez-la, puis enregistrez.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Certaines répliques ne sont plus en mémoire tampon : seule votre prise est enregistrée pour elles."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Certaines répliques ne sont plus en mémoire tampon : seule votre prise est enregistrée pour elles.",
+  "Languages I understand": "Langues que je comprends",
+  "Subtitles don't turn on by themselves for videos in these languages": "Les sous-titres ne s'activent pas d'eux-mêmes pour les vidéos dans ces langues",
+  "On for languages I don't understand": "Activés pour les langues que je ne comprends pas"
 }

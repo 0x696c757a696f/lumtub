@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Frāze, tad mans ieraksts",
   "All {0} lines I recorded, each then mine": "Visas {0} manis ierakstītās frāzes, katrai sekojot manējai",
   "The line is no longer buffered. Play it once more, then save.": "Frāze vairs nav buferī. Atskaņojiet to vēlreiz un tad saglabājiet.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Dažas frāzes vairs nav buferī, tāpēc tām tiek saglabāts tikai jūsu ieraksts."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Dažas frāzes vairs nav buferī, tāpēc tām tiek saglabāts tikai jūsu ieraksts.",
+  "Languages I understand": "Valodas, ko saprotu",
+  "Subtitles don't turn on by themselves for videos in these languages": "Šajās valodās runātiem video subtitri paši neieslēdzas",
+  "On for languages I don't understand": "Ieslēgti valodām, ko nesaprotu"
 }

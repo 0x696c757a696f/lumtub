@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Stavek, nato moj posnetek",
   "All {0} lines I recorded, each then mine": "Vseh {0} posnetih stavkov, vsak z mojim",
   "The line is no longer buffered. Play it once more, then save.": "Stavka ni več v medpomnilniku. Predvajajte ga še enkrat in nato shranite.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Nekaterih stavkov ni več v medpomnilniku, zato se zanje shrani samo vaš posnetek."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Nekaterih stavkov ni več v medpomnilniku, zato se zanje shrani samo vaš posnetek.",
+  "Languages I understand": "Jeziki, ki jih razumem",
+  "Subtitles don't turn on by themselves for videos in these languages": "Pri videoposnetkih v teh jezikih se podnapisi ne vklopijo sami",
+  "On for languages I don't understand": "Vklopljeno za jezike, ki jih ne razumem"
 }

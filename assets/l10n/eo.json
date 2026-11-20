@@ -3651,5 +3651,8 @@
   "The line, then my recording": "La linio, poste mia registraĵo",
   "All {0} lines I recorded, each then mine": "Ĉiuj {0} linioj, kiujn mi registris, ĉiu sekvata de la mia",
   "The line is no longer buffered. Play it once more, then save.": "La linio ne plu estas en la bufro. Ludu ĝin ankoraŭfoje, poste konservu.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Kelkaj linioj ne plu estas en la bufro, do por ili konserviĝas nur via registraĵo."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Kelkaj linioj ne plu estas en la bufro, do por ili konserviĝas nur via registraĵo.",
+  "Languages I understand": "Lingvoj, kiujn mi komprenas",
+  "Subtitles don't turn on by themselves for videos in these languages": "Subtekstoj ne ŝaltiĝas per si mem por videoj en ĉi tiuj lingvoj",
+  "On for languages I don't understand": "Ŝaltitaj por lingvoj, kiujn mi ne komprenas"
 }

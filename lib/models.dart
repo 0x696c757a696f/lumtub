@@ -545,6 +545,24 @@ class VideoDetails {
         language: language,
       );
 
+  /// These details with the subtitles and spoken language of [online]: a
+  /// download keeps neither, so a downloaded video played while online
+  /// gets the same subtitles, translations too, as when it streams.
+  VideoDetails withSubtitlesOf(VideoDetails online) => VideoDetails(
+        title: title,
+        channel: channel,
+        channelUrl: channelUrl,
+        channelId: channelId,
+        uploadDate: uploadDate,
+        viewCount: viewCount,
+        likeCount: likeCount,
+        description: description,
+        chapters: chapters,
+        subtitles: [...online.subtitles, ...subtitles.where((s) => s.kind == SubtitleKind.speech)],
+        scheduledStart: scheduledStart,
+        language: language ?? online.language,
+      );
+
   static final _chapterLine = RegExp(r'^\s*[\[(]?(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[\])]?\s*[-–—:|·]?\s*(\S.*)$');
 }
 

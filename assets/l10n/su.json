@@ -3650,5 +3650,8 @@
   "The line, then my recording": "Kalimahna, teras rékaman abdi",
   "All {0} lines I recorded, each then mine": "Sadaya {0} kalimah anu ku abdi dirékam, masing-masing dituturkeun ku rékaman abdi",
   "The line is no longer buffered. Play it once more, then save.": "Kalimahna tos teu aya dina panyangga. Puterkeun sakali deui, teras simpen.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Sababaraha kalimah tos teu aya dina panyangga, janten ngan rékaman anjeun anu disimpen pikeun éta."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Sababaraha kalimah tos teu aya dina panyangga, janten ngan rékaman anjeun anu disimpen pikeun éta.",
+  "Languages I understand": "Basa anu ku abdi kahartos",
+  "Subtitles don't turn on by themselves for videos in these languages": "Subjudul henteu hurung sorangan pikeun video dina basa-basa ieu",
+  "On for languages I don't understand": "Hurung pikeun basa anu teu kahartos"
 }

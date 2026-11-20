@@ -3650,5 +3650,8 @@
   "The line, then my recording": "Сөйлем, содан кейін менің жазбам",
   "All {0} lines I recorded, each then mine": "Мен жазған барлық {0} сөйлем, әрқайсысынан кейін менікі",
   "The line is no longer buffered. Play it once more, then save.": "Сөйлем буферде енді жоқ. Оны тағы бір рет ойнатып, содан кейін сақтаңыз.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Кейбір сөйлемдер буферде енді жоқ, сондықтан олар үшін тек сіздің жазбаңыз сақталады."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Кейбір сөйлемдер буферде енді жоқ, сондықтан олар үшін тек сіздің жазбаңыз сақталады.",
+  "Languages I understand": "Мен түсінетін тілдер",
+  "Subtitles don't turn on by themselves for videos in these languages": "Осы тілдердегі бейнелер үшін субтитрлер өздігінен қосылмайды",
+  "On for languages I don't understand": "Мен түсінбейтін тілдер үшін қосулы"
 }

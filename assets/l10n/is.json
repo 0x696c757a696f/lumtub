@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Línan, svo mín upptaka",
   "All {0} lines I recorded, each then mine": "Allar {0} línur sem ég tók upp, hver á eftir minni",
   "The line is no longer buffered. Play it once more, then save.": "Línan er ekki lengur í biðminni. Spilaðu hana aftur og vistaðu svo.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Sumar línur eru ekki lengur í biðminni, svo aðeins upptakan þín er vistuð fyrir þær."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Sumar línur eru ekki lengur í biðminni, svo aðeins upptakan þín er vistuð fyrir þær.",
+  "Languages I understand": "Tungumál sem ég skil",
+  "Subtitles don't turn on by themselves for videos in these languages": "Skjátextar kvikna ekki sjálfkrafa á myndböndum á þessum tungumálum",
+  "On for languages I don't understand": "Kveikt fyrir tungumál sem ég skil ekki"
 }

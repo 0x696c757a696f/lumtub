@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Реченица, па мој снимак",
   "All {0} lines I recorded, each then mine": "Све {0} реченице које сам снимио, свака па моја",
   "The line is no longer buffered. Play it once more, then save.": "Реченица више није у баферу. Пустите је још једном, па сачувајте.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Неке реченице више нису у баферу, па се за њих чува само ваш снимак."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Неке реченице више нису у баферу, па се за њих чува само ваш снимак.",
+  "Languages I understand": "Језици које разумем",
+  "Subtitles don't turn on by themselves for videos in these languages": "Титлови се не укључују сами за видео-снимке на овим језицима",
+  "On for languages I don't understand": "Укључено за језике које не разумем"
 }

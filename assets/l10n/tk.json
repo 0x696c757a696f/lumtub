@@ -3650,5 +3650,8 @@
   "The line, then my recording": "Sözlem, soňra meniň ýazgym",
   "All {0} lines I recorded, each then mine": "Ýazga alan ähli {0} sözlemim, her biriniň yzyndan meniňki",
   "The line is no longer buffered. Play it once more, then save.": "Sözlem indi buferde ýok. Ony ýene bir gezek oýnadyň, soňra saklaň.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Käbir sözlemler indi buferde ýok, şonuň üçin olar üçin diňe siziň ýazgyňyz saklanýar."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Käbir sözlemler indi buferde ýok, şonuň üçin olar üçin diňe siziň ýazgyňyz saklanýar.",
+  "Languages I understand": "Düşünýän dillerim",
+  "Subtitles don't turn on by themselves for videos in these languages": "Bu dillerdäki wideolar üçin subtitrler özbaşdak açylmaýar",
+  "On for languages I don't understand": "Düşünmeýän dillerim üçin açyk"
 }

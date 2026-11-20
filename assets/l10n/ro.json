@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Replica, apoi înregistrarea mea",
   "All {0} lines I recorded, each then mine": "Toate cele {0} replici înregistrate, fiecare urmată de a mea",
   "The line is no longer buffered. Play it once more, then save.": "Replica nu mai este în memoria tampon. Redă-o încă o dată, apoi salvează.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Unele replici nu mai sunt în memoria tampon, așa că pentru ele se salvează doar înregistrarea ta."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Unele replici nu mai sunt în memoria tampon, așa că pentru ele se salvează doar înregistrarea ta.",
+  "Languages I understand": "Limbi pe care le înțeleg",
+  "Subtitles don't turn on by themselves for videos in these languages": "Subtitrările nu pornesc singure pentru videoclipurile în aceste limbi",
+  "On for languages I don't understand": "Pornite pentru limbile pe care nu le înțeleg"
 }

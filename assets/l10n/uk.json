@@ -3656,5 +3656,8 @@
   "The line, then my recording": "Фраза, потім мій запис",
   "All {0} lines I recorded, each then mine": "Усі {0} записані мною фрази, після кожної — мій",
   "The line is no longer buffered. Play it once more, then save.": "Фрази вже немає в буфері. Відтворіть її ще раз, а потім збережіть.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Деяких фраз уже немає в буфері, тож для них збережеться лише ваш запис."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Деяких фраз уже немає в буфері, тож для них збережеться лише ваш запис.",
+  "Languages I understand": "Мови, які я розумію",
+  "Subtitles don't turn on by themselves for videos in these languages": "Для відео цими мовами субтитри не вмикаються самі",
+  "On for languages I don't understand": "Вмикати для мов, яких я не розумію"
 }

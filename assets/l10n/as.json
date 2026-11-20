@@ -3650,5 +3650,8 @@
   "The line, then my recording": "শাৰীটো, তাৰ পিছত মোৰ ৰেকৰ্ডিং",
   "All {0} lines I recorded, each then mine": "মই ৰেকৰ্ড কৰা আটাইকেইটা {0} শাৰী, প্ৰতিটোৰ পিছত মোৰটো",
   "The line is no longer buffered. Play it once more, then save.": "শাৰীটো আৰু বাফাৰত নাই। আকৌ এবাৰ চলাওক, তাৰ পিছত সাঁচি ৰাখক।",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "কিছুমান শাৰী আৰু বাফাৰত নাই, সেয়ে সেইবোৰৰ বাবে কেৱল আপোনাৰ ৰেকৰ্ডিং সাঁচি ৰখা হ'ব।"
+  "Some lines are no longer buffered, so only your recording is saved for them.": "কিছুমান শাৰী আৰু বাফাৰত নাই, সেয়ে সেইবোৰৰ বাবে কেৱল আপোনাৰ ৰেকৰ্ডিং সাঁচি ৰখা হ'ব।",
+  "Languages I understand": "মই বুজি পোৱা ভাষাসমূহ",
+  "Subtitles don't turn on by themselves for videos in these languages": "এই ভাষাসমূহৰ ভিডিঅ'ৰ বাবে ছাবটাইটেল নিজে নিজে অন নহয়",
+  "On for languages I don't understand": "মই নুবুজা ভাষাৰ বাবে অন"
 }

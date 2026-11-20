@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Repliikki, sitten oma äänitykseni",
   "All {0} lines I recorded, each then mine": "Kaikki {0} äänittämääni repliikkiä, kunkin perässä omani",
   "The line is no longer buffered. Play it once more, then save.": "Repliikki ei ole enää puskurissa. Toista se vielä kerran ja tallenna sitten.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Osa repliikeistä ei ole enää puskurissa, joten niistä tallennetaan vain oma äänityksesi."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Osa repliikeistä ei ole enää puskurissa, joten niistä tallennetaan vain oma äänityksesi.",
+  "Languages I understand": "Kielet, joita ymmärrän",
+  "Subtitles don't turn on by themselves for videos in these languages": "Tekstitykset eivät käynnisty itsestään näillä kielillä puhutuissa videoissa",
+  "On for languages I don't understand": "Päällä kielillä, joita en ymmärrä"
 }

@@ -3650,5 +3650,8 @@
   "The line, then my recording": "ಸಾಲು, ನಂತರ ನನ್ನ ರೆಕಾರ್ಡಿಂಗ್",
   "All {0} lines I recorded, each then mine": "ನಾನು ರೆಕಾರ್ಡ್ ಮಾಡಿದ ಎಲ್ಲಾ {0} ಸಾಲುಗಳು, ಪ್ರತಿಯೊಂದರ ನಂತರ ನನ್ನದು",
   "The line is no longer buffered. Play it once more, then save.": "ಸಾಲು ಇನ್ನು ಬಫರ್‌ನಲ್ಲಿಲ್ಲ. ಇನ್ನೊಮ್ಮೆ ಪ್ಲೇ ಮಾಡಿ, ನಂತರ ಉಳಿಸಿ.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "ಕೆಲವು ಸಾಲುಗಳು ಇನ್ನು ಬಫರ್‌ನಲ್ಲಿಲ್ಲ, ಆದ್ದರಿಂದ ಅವುಗಳಿಗೆ ನಿಮ್ಮ ರೆಕಾರ್ಡಿಂಗ್ ಮಾತ್ರ ಉಳಿಸಲಾಗುತ್ತದೆ."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "ಕೆಲವು ಸಾಲುಗಳು ಇನ್ನು ಬಫರ್‌ನಲ್ಲಿಲ್ಲ, ಆದ್ದರಿಂದ ಅವುಗಳಿಗೆ ನಿಮ್ಮ ರೆಕಾರ್ಡಿಂಗ್ ಮಾತ್ರ ಉಳಿಸಲಾಗುತ್ತದೆ.",
+  "Languages I understand": "ನನಗೆ ಅರ್ಥವಾಗುವ ಭಾಷೆಗಳು",
+  "Subtitles don't turn on by themselves for videos in these languages": "ಈ ಭಾಷೆಗಳ ವೀಡಿಯೊಗಳಿಗೆ ಉಪಶೀರ್ಷಿಕೆಗಳು ತಾವಾಗಿಯೇ ಆನ್ ಆಗುವುದಿಲ್ಲ",
+  "On for languages I don't understand": "ನನಗೆ ಅರ್ಥವಾಗದ ಭಾಷೆಗಳಿಗೆ ಆನ್"
 }

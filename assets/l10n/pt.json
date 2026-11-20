@@ -3656,5 +3656,8 @@
   "The line, then my recording": "A frase e depois a minha gravação",
   "All {0} lines I recorded, each then mine": "Todas as {0} frases que gravei, cada uma seguida da minha",
   "The line is no longer buffered. Play it once more, then save.": "A frase não está mais no buffer. Reproduza-a mais uma vez e salve.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Algumas frases não estão mais no buffer, então para elas só a sua gravação é salva."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Algumas frases não estão mais no buffer, então para elas só a sua gravação é salva.",
+  "Languages I understand": "Idiomas que entendo",
+  "Subtitles don't turn on by themselves for videos in these languages": "As legendas não se ativam sozinhas em vídeos nestes idiomas",
+  "On for languages I don't understand": "Ativadas em idiomas que não entendo"
 }

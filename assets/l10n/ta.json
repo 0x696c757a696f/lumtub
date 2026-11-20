@@ -3651,5 +3651,8 @@
   "The line, then my recording": "வரி, பிறகு என் பதிவு",
   "All {0} lines I recorded, each then mine": "நான் பதிவுசெய்த அனைத்து {0} வரிகளும், ஒவ்வொன்றுக்கும் பின் என்னுடையது",
   "The line is no longer buffered. Play it once more, then save.": "வரி இப்போது இடையகத்தில் இல்லை. இன்னொரு முறை இயக்கி, பிறகு சேமிக்கவும்.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "சில வரிகள் இப்போது இடையகத்தில் இல்லை, எனவே அவற்றுக்கு உங்கள் பதிவு மட்டுமே சேமிக்கப்படும்."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "சில வரிகள் இப்போது இடையகத்தில் இல்லை, எனவே அவற்றுக்கு உங்கள் பதிவு மட்டுமே சேமிக்கப்படும்.",
+  "Languages I understand": "எனக்குப் புரியும் மொழிகள்",
+  "Subtitles don't turn on by themselves for videos in these languages": "இந்த மொழிகளில் உள்ள வீடியோக்களுக்கு வசனங்கள் தானாக இயங்காது",
+  "On for languages I don't understand": "புரியாத மொழிகளுக்கு இயக்கு"
 }

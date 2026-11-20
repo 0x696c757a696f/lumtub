@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Sentensi, kisha rekodi yangu",
   "All {0} lines I recorded, each then mine": "Sentensi zote {0} nilizorekodi, kila moja ikifuatwa na yangu",
   "The line is no longer buffered. Play it once more, then save.": "Sentensi haipo tena kwenye bafa. Icheze mara moja zaidi, kisha uhifadhi.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Baadhi ya sentensi hazipo tena kwenye bafa, kwa hivyo ni rekodi yako tu itakayohifadhiwa kwa hizo."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Baadhi ya sentensi hazipo tena kwenye bafa, kwa hivyo ni rekodi yako tu itakayohifadhiwa kwa hizo.",
+  "Languages I understand": "Lugha ninazoelewa",
+  "Subtitles don't turn on by themselves for videos in these languages": "Manukuu hayawaki yenyewe kwa video za lugha hizi",
+  "On for languages I don't understand": "Washa kwa lugha nisizozielewa"
 }

@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Радок, потым мой запіс",
   "All {0} lines I recorded, each then mine": "Усе {0} запісаныя мною радкі, пасля кожнага — мой",
   "The line is no longer buffered. Play it once more, then save.": "Радка ўжо няма ў буферы. Прайграйце яго яшчэ раз і захавайце.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Некаторых радкоў ужо няма ў буферы, таму для іх захоўваецца толькі ваш запіс."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Некаторых радкоў ужо няма ў буферы, таму для іх захоўваецца толькі ваш запіс.",
+  "Languages I understand": "Мовы, якія я разумею",
+  "Subtitles don't turn on by themselves for videos in these languages": "Для відэа на гэтых мовах субцітры не ўключаюцца самі",
+  "On for languages I don't understand": "Уключаць для моў, якіх я не разумею"
 }

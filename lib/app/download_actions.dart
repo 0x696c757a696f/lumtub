@@ -40,7 +40,7 @@ extension DownloadActions on AppController {
           deno: paths.deno,
           cacheDirectory: _repository?.cacheDirectory,
           subtitleLanguages: settings.subtitleLanguage.ytDlpLangs,
-          autoSubtitles: settings.subtitleMode == SubtitleMode.always,
+          autoSubtitles: settings.subtitleMode.anySubtitle,
           cutSponsors: settings.sponsorBlock && settings.sponsorCut,
         ),
         sponsorSegments: (id) => _sponsorBlock.segments(id, settings.sponsorCategories),

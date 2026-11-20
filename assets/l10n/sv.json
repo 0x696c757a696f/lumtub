@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Repliken, sedan min inspelning",
   "All {0} lines I recorded, each then mine": "Alla {0} repliker jag spelat in, var och en följd av min",
   "The line is no longer buffered. Play it once more, then save.": "Repliken finns inte längre i bufferten. Spela upp den en gång till och spara sedan.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Vissa repliker finns inte längre i bufferten, så bara din inspelning sparas för dem."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Vissa repliker finns inte längre i bufferten, så bara din inspelning sparas för dem.",
+  "Languages I understand": "Språk jag förstår",
+  "Subtitles don't turn on by themselves for videos in these languages": "Undertexter slås inte på av sig själva för videor på dessa språk",
+  "On for languages I don't understand": "På för språk jag inte förstår"
 }

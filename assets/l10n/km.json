@@ -3650,5 +3650,8 @@
   "The line, then my recording": "ឃ្លា បន្ទាប់មកការថតរបស់ខ្ញុំ",
   "All {0} lines I recorded, each then mine": "ឃ្លាទាំង {0} ដែលខ្ញុំបានថត ម្នាក់ៗតាមដោយរបស់ខ្ញុំ",
   "The line is no longer buffered. Play it once more, then save.": "ឃ្លានេះលែងនៅក្នុងសតិបណ្ដោះអាសន្នហើយ។ ចាក់វាម្ដងទៀត រួចរក្សាទុក។",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "ឃ្លាខ្លះលែងនៅក្នុងសតិបណ្ដោះអាសន្នហើយ ដូច្នេះមានតែការថតរបស់អ្នកប៉ុណ្ណោះដែលត្រូវរក្សាទុក។"
+  "Some lines are no longer buffered, so only your recording is saved for them.": "ឃ្លាខ្លះលែងនៅក្នុងសតិបណ្ដោះអាសន្នហើយ ដូច្នេះមានតែការថតរបស់អ្នកប៉ុណ្ណោះដែលត្រូវរក្សាទុក។",
+  "Languages I understand": "ភាសាដែលខ្ញុំយល់",
+  "Subtitles don't turn on by themselves for videos in these languages": "អក្សររត់មិនបើកដោយខ្លួនឯងសម្រាប់វីដេអូជាភាសាទាំងនេះទេ",
+  "On for languages I don't understand": "បើកសម្រាប់ភាសាដែលខ្ញុំមិនយល់"
 }

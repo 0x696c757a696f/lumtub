@@ -459,6 +459,16 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           values: [for (final m in SubtitleMode.values) (m, m.label)],
           onSelected: (v) => save(settings.copyWith(subtitleMode: v)),
         ),
+        if (settings.subtitleMode == SubtitleMode.foreign)
+          NormalItem(
+          title: tr('Languages I understand'),
+          subtitle: [for (final code in settings.understood) TranslationLanguage.maybeByCode(code)?.label ?? code].join(', '),
+          leading: Icon(AppIcons.globe),
+          onTap: () async {
+            final picked = await _pickKnownLanguages(context, settings.understood);
+            if (picked != null) save(now().copyWith(knownLanguages: picked));
+          },
+        ),
         PopupItem<Object>(
           title: tr('First subtitle language'),
           leading: Icon(AppIcons.translate),
@@ -1279,3 +1289,40 @@ Future<void> openPrivacyConnections(BuildContext context, AppController controll
             state: controller.webSignIn?.signedIn ?? false ? tr('Signed in') : tr('Signed out')),
       ];
     });
+
+/// Ticks for the languages the user understands; null when cancelled.
+Future<List<String>?> _pickKnownLanguages(BuildContext context, List<String> known) {
+  final picked = {...known};
+  return showDialog<List<String>>(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: Text(tr('Languages I understand')),
+        content: SizedBox(
+          width: dialogWidth(context, 380),
+          height: 440,
+          child: Column(children: [
+            Text(tr("Subtitles don't turn on by themselves for videos in these languages"), style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView(children: [
+                for (final language in [...TranslationLanguage.all.where((l) => known.contains(l.code)), ...TranslationLanguage.all.where((l) => !known.contains(l.code))])
+                  CheckboxListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    value: picked.contains(language.code),
+                    title: Text(language.label),
+                    onChanged: (v) => setState(() => v == true ? picked.add(language.code) : picked.remove(language.code)),
+                  ),
+              ]),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
+          TextButton(onPressed: () => Navigator.pop(context, [for (final l in TranslationLanguage.all) if (picked.contains(l.code)) l.code]), child: Text(tr('Done'))),
+        ],
+      ),
+    ),
+  );
+}

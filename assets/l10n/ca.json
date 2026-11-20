@@ -3651,5 +3651,8 @@
   "The line, then my recording": "La frase i després el meu enregistrament",
   "All {0} lines I recorded, each then mine": "Totes les {0} frases que he enregistrat, cadascuna seguida de la meva",
   "The line is no longer buffered. Play it once more, then save.": "La frase ja no és a la memòria intermèdia. Reprodueix-la un altre cop i desa.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Algunes frases ja no són a la memòria intermèdia, així que només es desa el teu enregistrament."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Algunes frases ja no són a la memòria intermèdia, així que només es desa el teu enregistrament.",
+  "Languages I understand": "Idiomes que entenc",
+  "Subtitles don't turn on by themselves for videos in these languages": "Els subtítols no s'activen sols per als vídeos en aquests idiomes",
+  "On for languages I don't understand": "Activats per als idiomes que no entenc"
 }

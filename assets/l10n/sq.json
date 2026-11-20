@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Fjalia, pastaj regjistrimi im",
   "All {0} lines I recorded, each then mine": "Të gjitha {0} fjalitë që regjistrova, secila e ndjekur nga e imja",
   "The line is no longer buffered. Play it once more, then save.": "Fjalia nuk është më në memorien e përkohshme. Luajeni edhe një herë, pastaj ruajeni.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Disa fjali nuk janë më në memorien e përkohshme, prandaj për to ruhet vetëm regjistrimi juaj."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Disa fjali nuk janë më në memorien e përkohshme, prandaj për to ruhet vetëm regjistrimi juaj.",
+  "Languages I understand": "Gjuhët që kuptoj",
+  "Subtitles don't turn on by themselves for videos in these languages": "Titrat nuk ndizen vetë për videot në këto gjuhë",
+  "On for languages I don't understand": "Aktiv për gjuhët që nuk i kuptoj"
 }

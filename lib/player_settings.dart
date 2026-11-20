@@ -70,11 +70,16 @@ enum PlayOrder {
 enum SubtitleMode {
   off("Don't turn on automatically"),
   manual('On when human-made subtitles exist'),
-  always('Always on (including auto-generated)');
+  always('Always on (including auto-generated)'),
+  foreign("On for languages I don't understand");
 
   const SubtitleMode(this._label);
   final String _label;
   String get label => tr(_label);
+
+  /// On for any video, auto-generated subtitles included: [always], and
+  /// [foreign] for a video it does not leave alone.
+  bool get anySubtitle => this == always || this == foreign;
 }
 
 /// The language the first subtitle is looked for in: one of
@@ -442,6 +447,14 @@ class PlayerSettings {
   /// [secondarySubtitleLanguage] for the interface's language, the default.
   static const interfaceSubtitle = 'interface';
   final String secondarySubtitleLanguage;
+  /// TranslationLanguage codes of the languages the user understands, for
+  /// [SubtitleMode.foreign]; empty for [understood]'s default.
+  final List<String> knownLanguages;
+
+  /// The languages a video is left without subtitles in under
+  /// [SubtitleMode.foreign]: [knownLanguages], else the interface's and
+  /// the first subtitle's.
+  List<String> get understood => knownLanguages.isNotEmpty ? knownLanguages : {interfaceTranslationLanguage.code, subtitleLanguage.translation.code}.toList();
 
   /// The language [secondarySubtitleLanguage] names, null for none or the
   /// video's own.
@@ -570,6 +583,7 @@ class PlayerSettings {
     this.subtitleLanguage = SubtitleLanguage.auto,
     this.subtitleOriginal = false,
     this.secondarySubtitleLanguage = interfaceSubtitle,
+    this.knownLanguages = const [],
     this.subtitleBorder = 3,
     this.subtitleBackground = false,
     this.subtitleBold = false,
@@ -649,6 +663,7 @@ class PlayerSettings {
     SubtitleLanguage? subtitleLanguage,
     bool? subtitleOriginal,
     String? secondarySubtitleLanguage,
+    List<String>? knownLanguages,
     double? subtitleBorder,
     bool? subtitleBackground,
     bool? subtitleBold,
@@ -726,6 +741,7 @@ class PlayerSettings {
         subtitleLanguage: subtitleLanguage ?? this.subtitleLanguage,
         subtitleOriginal: subtitleOriginal ?? this.subtitleOriginal,
         secondarySubtitleLanguage: secondarySubtitleLanguage ?? this.secondarySubtitleLanguage,
+        knownLanguages: knownLanguages ?? this.knownLanguages,
         subtitleBorder: subtitleBorder ?? this.subtitleBorder,
         subtitleBackground: subtitleBackground ?? this.subtitleBackground,
         subtitleBold: subtitleBold ?? this.subtitleBold,
@@ -805,6 +821,7 @@ class PlayerSettings {
         'subtitleLanguageV2': subtitleLanguage.name,
         'subtitleOriginal': subtitleOriginal,
         'secondarySubtitleLanguageV2': secondarySubtitleLanguage,
+        'knownLanguages': knownLanguages,
         'subtitleBorder': subtitleBorder,
         'subtitleBackground': subtitleBackground,
         'subtitleBold': subtitleBold,
@@ -1022,6 +1039,7 @@ class PlayerSettings {
         interfaceSubtitle => interfaceSubtitle,
         final saved => TranslationLanguage.maybeByCode(saved)?.code ?? '',
       },
+      knownLanguages: raw['knownLanguages'] is List ? [for (final code in (raw['knownLanguages'] as List).whereType<String>()) if (TranslationLanguage.maybeByCode(code) != null) code] : const [],
       subtitleBorder: decimal('subtitleBorder', 3, 0, 8),
       subtitleBackground: raw['subtitleBackground'] == true,
       subtitleBold: raw['subtitleBold'] == true,

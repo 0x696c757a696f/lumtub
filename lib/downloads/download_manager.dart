@@ -826,7 +826,7 @@ class DownloadManager extends ChangeNotifier {
   }
 
   static const _sidecarKeys = [
-    'id', 'title', 'channel', 'uploader', 'channel_url', 'channel_id', 'upload_date', 'view_count', 'like_count', 'description', 'duration', 'chapters', 'webpage_url', 'vcodec',
+    'id', 'title', 'channel', 'uploader', 'channel_url', 'channel_id', 'upload_date', 'view_count', 'like_count', 'description', 'duration', 'chapters', 'webpage_url', 'vcodec', 'language',
   ];
 
   Future<List<SkipSegment>> _segments(DownloadTask task) async {

@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Ang linya, saka ang recording ko",
   "All {0} lines I recorded, each then mine": "Lahat ng {0} linyang ni-record ko, bawat isa ay sinusundan ng akin",
   "The line is no longer buffered. Play it once more, then save.": "Wala na sa buffer ang linya. I-play itong muli, saka i-save.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Wala na sa buffer ang ilang linya, kaya ang recording mo lang ang mase-save para sa mga iyon."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Wala na sa buffer ang ilang linya, kaya ang recording mo lang ang mase-save para sa mga iyon.",
+  "Languages I understand": "Mga wikang naiintindihan ko",
+  "Subtitles don't turn on by themselves for videos in these languages": "Hindi kusang bumubukas ang subtitle para sa mga video sa mga wikang ito",
+  "On for languages I don't understand": "Naka-on para sa mga wikang hindi ko naiintindihan"
 }

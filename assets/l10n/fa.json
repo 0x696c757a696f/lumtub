@@ -3651,5 +3651,8 @@
   "The line, then my recording": "جمله، سپس ضبط من",
   "All {0} lines I recorded, each then mine": "همهٔ {0} جمله‌ای که ضبط کردم، هرکدام همراه ضبط من",
   "The line is no longer buffered. Play it once more, then save.": "این جمله دیگر در حافظهٔ موقت نیست. یک بار دیگر پخشش کنید و بعد ذخیره کنید.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "برخی جمله‌ها دیگر در حافظهٔ موقت نیستند، پس برای آن‌ها فقط ضبط شما ذخیره می‌شود."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "برخی جمله‌ها دیگر در حافظهٔ موقت نیستند، پس برای آن‌ها فقط ضبط شما ذخیره می‌شود.",
+  "Languages I understand": "زبان‌هایی که می‌فهمم",
+  "Subtitles don't turn on by themselves for videos in these languages": "زیرنویس برای ویدیوهای این زبان‌ها خودبه‌خود روشن نمی‌شود",
+  "On for languages I don't understand": "روشن برای زبان‌هایی که نمی‌فهمم"
 }

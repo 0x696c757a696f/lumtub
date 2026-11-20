@@ -3651,5 +3651,8 @@
   "The line, then my recording": "Esaldia, gero nire grabazioa",
   "All {0} lines I recorded, each then mine": "Grabatu ditudan {0} esaldiak, bakoitzaren ondoren nirea",
   "The line is no longer buffered. Play it once more, then save.": "Esaldia ez dago jada bufferrean. Erreproduzitu berriro eta gorde.",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "Esaldi batzuk ez daude jada bufferrean, beraz zure grabazioa bakarrik gordeko da haientzat."
+  "Some lines are no longer buffered, so only your recording is saved for them.": "Esaldi batzuk ez daude jada bufferrean, beraz zure grabazioa bakarrik gordeko da haientzat.",
+  "Languages I understand": "Ulertzen ditudan hizkuntzak",
+  "Subtitles don't turn on by themselves for videos in these languages": "Hizkuntza hauetako bideoetan azpitituluak ez dira berez aktibatzen",
+  "On for languages I don't understand": "Ulertzen ez ditudan hizkuntzetan aktibatuta"
 }

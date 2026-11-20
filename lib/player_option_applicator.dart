@@ -178,7 +178,7 @@ class PlayerOptionApplicator {
       // The video's own language: yt-dlp names its automatic captions
       // "<language>-orig"; an uploaded one in it is added once known.
       if (subtitles) 'sub-langs=${quote(settings.subtitleOriginal ? '.*-orig' : settings.subtitleLanguage.ytDlpLangs)}',
-      if (subtitles && (settings.subtitleMode == SubtitleMode.always || settings.subtitleOriginal)) 'write-auto-subs=',
+      if (subtitles && (settings.subtitleMode.anySubtitle || settings.subtitleOriginal)) 'write-auto-subs=',
       if (infoJson != null) 'load-info-json=${quote(infoJson)}',
       // The same codec ranking as the app's own resolving; yt-dlp's default
       // prefers AV1 and VP9 over H.264.

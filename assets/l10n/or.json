@@ -3650,5 +3650,8 @@
   "The line, then my recording": "ଧାଡ଼ି, ତା'ପରେ ମୋ ରେକର୍ଡିଂ",
   "All {0} lines I recorded, each then mine": "ମୁଁ ରେକର୍ଡ କରିଥିବା ସମସ୍ତ {0} ଧାଡ଼ି, ପ୍ରତ୍ୟେକ ପରେ ମୋର",
   "The line is no longer buffered. Play it once more, then save.": "ଧାଡ଼ିଟି ଆଉ ବଫରରେ ନାହିଁ। ଆଉ ଥରେ ଚଲାନ୍ତୁ, ତା'ପରେ ସେଭ୍ କରନ୍ତୁ।",
-  "Some lines are no longer buffered, so only your recording is saved for them.": "କିଛି ଧାଡ଼ି ଆଉ ବଫରରେ ନାହିଁ, ତେଣୁ ସେଗୁଡ଼ିକ ପାଇଁ କେବଳ ଆପଣଙ୍କ ରେକର୍ଡିଂ ସେଭ୍ ହେବ।"
+  "Some lines are no longer buffered, so only your recording is saved for them.": "କିଛି ଧାଡ଼ି ଆଉ ବଫରରେ ନାହିଁ, ତେଣୁ ସେଗୁଡ଼ିକ ପାଇଁ କେବଳ ଆପଣଙ୍କ ରେକର୍ଡିଂ ସେଭ୍ ହେବ।",
+  "Languages I understand": "ମୁଁ ବୁଝୁଥିବା ଭାଷା",
+  "Subtitles don't turn on by themselves for videos in these languages": "ଏହି ଭାଷାର ଭିଡିଓ ପାଇଁ ସବଟାଇଟେଲ ନିଜେ ଚାଲୁ ହୁଏ ନାହିଁ",
+  "On for languages I don't understand": "ମୁଁ ବୁଝୁନଥିବା ଭାଷା ପାଇଁ ଚାଲୁ"
 }

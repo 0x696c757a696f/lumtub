@@ -54,5 +54,6 @@ jobs:
           cp -- "${ipas[0]}" "dist/Lumtub_${version}_ios.ipa"
           cp -- "${tipas[0]}" "dist/Lumtub_${version}_ios-trollstore.tipa"
           python3 ios/packaging/altstore-source.py "dist/Lumtub_${version}_ios.ipa" "$TAG" "release-notes/${version%%-*}.md" dist/altstore-source.json
+          .github/scripts/latest-names.sh dist
           ls -la dist
           gh release upload "$TAG" -R "$GITHUB_REPOSITORY" --clobber -- dist/*

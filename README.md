@@ -124,24 +124,24 @@ These are also found in other YouTube clients, and all are opt-in here:
 
 </div>
 
-| Package | For |
-|---|---|
-| `windows-x64-v3` | Most PCs from 2015 on (AVX2) — **pick this if unsure** |
-| `windows-x64` | Older x64 CPUs |
-| `windows-arm64` | Windows on ARM laptops |
-| `linux-x64-v3` AppImage | Most 64-bit PCs from 2015 on (AVX2) with glibc 2.35 or newer — **pick this if unsure** |
-| `linux-x64` AppImage | 64-bit PCs with glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36 and later) |
-| `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 |
-| `linux-x64` / `linux-arm64` Flatpak | The same, as a Flatpak bundle (no self-update: install the next one by hand) |
-| `macos-arm64` DMG | Macs with Apple silicon (M1 and later) |
-| `macos-x64` DMG | Intel Macs |
-| `android-arm64-v8a` APK | Most Android phones, tablets and TVs (Android 7.0 or newer) — **pick this if unsure** |
-| `android-armeabi-v7a` APK | Older 32-bit Android devices and many low-cost TV boxes |
-| `android-x86_64` APK | Android emulators and x86 Chromebooks |
-| `ios` IPA | iPhone and iPad with iOS 15 or newer (preview, sideloaded) |
-| `ios-trollstore` TIPA | The same for [TrollStore](https://github.com/opa334/TrollStore): also asks iOS for VP9 hardware decoding before iOS 26.2 |
+| Package | For | Download |
+|---|---|---|
+| `windows-x64-v3` | Most PCs from 2015 on (AVX2) — **pick this if unsure** | [⬇ Installer](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-windows-x64-v3-setup.exe) · [Portable ZIP](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-windows-x64-v3.zip) |
+| `windows-x64` | Older x64 CPUs | [⬇ Installer](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-windows-x64-setup.exe) · [Portable ZIP](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-windows-x64.zip) |
+| `windows-arm64` | Windows on ARM laptops | [⬇ Installer](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-windows-arm64-setup.exe) · [Portable ZIP](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-windows-arm64.zip) |
+| `linux-x64-v3` AppImage | Most 64-bit PCs from 2015 on (AVX2) with glibc 2.35 or newer — **pick this if unsure** | [⬇ AppImage](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-linux-x64-v3.AppImage) |
+| `linux-x64` AppImage | 64-bit PCs with glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36 and later) | [⬇ AppImage](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-linux-x64.AppImage) |
+| `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 | [⬇ AppImage](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-linux-arm64.AppImage) |
+| `linux-x64` / `linux-arm64` Flatpak | The same, as a Flatpak bundle (no self-update: install the next one by hand) | [Release page](https://github.com/0x696c757a696f/lumtub/releases/latest) |
+| `macos-arm64` DMG | Macs with Apple silicon (M1 and later) | [⬇ DMG](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-macos-arm64.dmg) |
+| `macos-x64` DMG | Intel Macs | [⬇ DMG](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-macos-x64.dmg) |
+| `android-arm64-v8a` APK | Most Android phones, tablets and TVs (Android 7.0 or newer) — **pick this if unsure** | [⬇ APK](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-android-arm64-v8a.apk) |
+| `android-armeabi-v7a` APK | Older 32-bit Android devices and many low-cost TV boxes | [⬇ APK](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-android-armeabi-v7a.apk) |
+| `android-x86_64` APK | Android emulators and x86 Chromebooks | [⬇ APK](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-android-x86_64.apk) |
+| `ios` IPA | iPhone and iPad with iOS 15 or newer (preview, sideloaded) | [⬇ IPA](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-ios.ipa) |
+| `ios-trollstore` TIPA | The same for [TrollStore](https://github.com/opa334/TrollStore): also asks iOS for VP9 hardware decoding before iOS 26.2 | [⬇ TIPA](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-ios-trollstore.tipa) |
 
-File names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
+The links in the table always give the newest version. On the release page, file names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
 **Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. Package manager (under review, working once accepted): `winget install Lumtub.Lumtub`.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place. If it says FUSE is missing, install your distribution's `fuse3` package, or start it with `--appimage-extract-and-run`. Prefer Flatpak? `flatpak install --user Lumtub_*_linux-x64.flatpak`.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.<br>

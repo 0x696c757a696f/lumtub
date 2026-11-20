@@ -162,9 +162,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-          sparse-checkout: |
-            native/lumtub_core
-            .github/scripts
+          sparse-checkout: native/lumtub_core
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: flatpak-*
@@ -185,9 +183,7 @@ jobs:
       - env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.manifests.outputs.tag }}
-        run: |
-          .github/scripts/latest-names.sh dist
-          gh release upload "$TAG" dist/*.flatpak dist/*.flatpak.sig --clobber --repo "$GITHUB_REPOSITORY"
+        run: gh release upload "$TAG" dist/*.flatpak dist/*.flatpak.sig --clobber --repo "$GITHUB_REPOSITORY"
 
   publish:
     name: Send to ${{ matrix.target }}

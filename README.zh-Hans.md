@@ -121,20 +121,20 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 
 | 安装包 | 适用于 | 下载 |
 |---|---|---|
-| `windows-x64-v3` | 2015 年以后的大多数电脑（支持 AVX2）。**不确定就选这个** | [⬇ 安装程序](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-windows-x64-v3-setup.exe) · [便携版 ZIP](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-windows-x64-v3.zip) |
-| `windows-x64` | 较老的 x64 处理器 | [⬇ 安装程序](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-windows-x64-setup.exe) · [便携版 ZIP](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-windows-x64.zip) |
-| `windows-arm64` | Windows on ARM 笔记本 | [⬇ 安装程序](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-windows-arm64-setup.exe) · [便携版 ZIP](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-windows-arm64.zip) |
-| `linux-x64-v3` AppImage | 2015 年以后的大多数 64 位电脑（AVX2），glibc 2.35 或更新——**拿不准就选这个** | [⬇ AppImage](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-linux-x64-v3.AppImage) |
-| `linux-x64` AppImage | glibc 2.35 或更新的 64 位电脑（Ubuntu 22.04、Debian 12、Fedora 36 及以后） | [⬇ AppImage](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-linux-x64.AppImage) |
-| `linux-arm64` AppImage | ARM64 Linux，例如树莓派 5 | [⬇ AppImage](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-linux-arm64.AppImage) |
+| `windows-x64-v3` | 2015 年以后的大多数电脑（支持 AVX2）。**不确定就选这个** | [⬇ 安装程序](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-v3-setup.exe) · [便携版 ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-v3.zip) |
+| `windows-x64` | 较老的 x64 处理器 | [⬇ 安装程序](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-setup.exe) · [便携版 ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-x64.zip) |
+| `windows-arm64` | Windows on ARM 笔记本 | [⬇ 安装程序](https://0x696c757a696f.github.io/lumtub/get/?windows-arm64-setup.exe) · [便携版 ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-arm64.zip) |
+| `linux-x64-v3` AppImage | 2015 年以后的大多数 64 位电脑（AVX2），glibc 2.35 或更新——**拿不准就选这个** | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-x64-v3.AppImage) |
+| `linux-x64` AppImage | glibc 2.35 或更新的 64 位电脑（Ubuntu 22.04、Debian 12、Fedora 36 及以后） | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-x64.AppImage) |
+| `linux-arm64` AppImage | ARM64 Linux，例如树莓派 5 | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-arm64.AppImage) |
 | `linux-x64` / `linux-arm64` Flatpak | 同上，Flatpak 包（不会自动更新，新版本需要手动安装） | [发布页](https://github.com/0x696c757a696f/lumtub/releases/latest) |
-| `macos-arm64` DMG | Apple 芯片的 Mac（M1 及以后） | [⬇ DMG](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-macos-arm64.dmg) |
-| `macos-x64` DMG | Intel 芯片的 Mac | [⬇ DMG](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-macos-x64.dmg) |
-| `android-arm64-v8a` APK | 大多数 Android 手机、平板和电视（Android 7.0 及以上）。**不确定就选这个** | [⬇ APK](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-android-arm64-v8a.apk) |
-| `android-armeabi-v7a` APK | 较老的 32 位 Android 设备和不少廉价电视盒子 | [⬇ APK](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-android-armeabi-v7a.apk) |
-| `android-x86_64` APK | Android 模拟器和 x86 Chromebook | [⬇ APK](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-android-x86_64.apk) |
-| `ios` IPA | iOS 15 及以上的 iPhone 和 iPad（预览版，自签安装） | [⬇ IPA](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-ios.ipa) |
-| `ios-trollstore` TIPA | 同上，给 [TrollStore](https://github.com/opa334/TrollStore) 用：iOS 26.2 之前也会向系统要 VP9 硬件解码 | [⬇ TIPA](https://github.com/0x696c757a696f/lumtub/releases/latest/download/Lumtub-ios-trollstore.tipa) |
+| `macos-arm64` DMG | Apple 芯片的 Mac（M1 及以后） | [⬇ DMG](https://0x696c757a696f.github.io/lumtub/get/?macos-arm64.dmg) |
+| `macos-x64` DMG | Intel 芯片的 Mac | [⬇ DMG](https://0x696c757a696f.github.io/lumtub/get/?macos-x64.dmg) |
+| `android-arm64-v8a` APK | 大多数 Android 手机、平板和电视（Android 7.0 及以上）。**不确定就选这个** | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-arm64-v8a.apk) |
+| `android-armeabi-v7a` APK | 较老的 32 位 Android 设备和不少廉价电视盒子 | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-armeabi-v7a.apk) |
+| `android-x86_64` APK | Android 模拟器和 x86 Chromebook | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-x86_64.apk) |
+| `ios` IPA | iOS 15 及以上的 iPhone 和 iPad（预览版，自签安装） | [⬇ IPA](https://0x696c757a696f.github.io/lumtub/get/?ios.ipa) |
+| `ios-trollstore` TIPA | 同上，给 [TrollStore](https://github.com/opa334/TrollStore) 用：iOS 26.2 之前也会向系统要 VP9 硬件解码 | [⬇ TIPA](https://0x696c757a696f.github.io/lumtub/get/?ios-trollstore.tipa) |
 
 表格里的链接总是下载最新版本。发布页上的文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
 **Windows**：用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。也可以用包管理器（正在审核，通过后可用）：`winget install Lumtub.Lumtub`。<br>

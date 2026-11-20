@@ -343,6 +343,20 @@ enum ExploreLanguage {
         _ => code,
       };
 
+  /// Words added to a search in a language YouTube has no interface in
+  /// ([youtubeHl] names another), which otherwise brings that other
+  /// language's videos: Javanese searches found only Indonesian ones,
+  /// Turkmen only Turkish, Tigrinya only Amharic (measured 2026-11-20).
+  String? get searchAnchor => switch (this) {
+        eo => 'Esperanto',
+        la => 'Latine',
+        jv => 'basa Jawa',
+        su => 'basa Sunda',
+        ti => 'ትግርኛ',
+        tk => 'türkmen',
+        _ => null,
+      };
+
   /// The country most of the language's videos come from, searched as
   /// from when no region is picked; null where no one country leads.
   String? get homeCountry => switch (this) {

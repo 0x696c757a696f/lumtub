@@ -163,6 +163,8 @@ void main() {
     expect(ExploreLanguage.it.homeCountry, 'IT');
     expect(ExploreLanguage.en.homeCountry, isNull);
     expect(ExploreLanguage.fa.homeCountry, isNull, reason: 'searches from Iran bring nothing');
+    expect(ExploreLanguage.jv.searchAnchor, 'basa Jawa');
+    expect(ExploreLanguage.it.searchAnchor, isNull);
     expect([for (final l in [ExploreLanguage.eo, ExploreLanguage.jv, ExploreLanguage.la, ExploreLanguage.su, ExploreLanguage.ti, ExploreLanguage.tk]) l.youtubeHl], ['en', 'id', 'en', 'id', 'am', 'tr']);
     // Every region's search language is one explore offers.
     for (final region in ExploreRegion.values.skip(1)) {

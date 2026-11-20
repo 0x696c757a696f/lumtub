@@ -417,7 +417,11 @@ extension ExploreActions on AppController {
 
             Listing searchIn(List<String> queries) => checked(translates
                 ? Listing.deferred(() async {
-                    final words = await _searchWordsIn(queries, wordsIn, traditional: traditional);
+                    final translated = await _searchWordsIn(queries, wordsIn, traditional: traditional);
+                    // A language YouTube has no interface in finds its
+                    // neighbour's videos unless the search names it.
+                    final anchor = spoken ? language.searchAnchor : null;
+                    final words = [for (final w in translated) anchor == null || w.contains(anchor) ? w : '$w $anchor'];
                     if (spoken) logInfo('Explore in ${language.name}: searching ${words.map((w) => '"$w"').join(', ')} (hl ${hl ?? '-'}, gl $region)');
                     return search(words);
                   })

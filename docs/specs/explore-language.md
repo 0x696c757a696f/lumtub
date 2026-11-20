@@ -127,8 +127,10 @@ goes on with its sub-categories' searches, one after another.
   started at least 25 ms apart (measured 2026-11-20: 16 at once ran
   70 a second with no refusals). Languages YouTube has no interface in
   (eo, jv, la, su, ti, tk answer HTTP 400) are asked in a near one
-  (`youtubeHl`), and Persian searches go without a region (gl=IR
-  brings nothing).
+  (`youtubeHl`), and their searches name the language
+  (`searchAnchor`, such as "basa Jawa"), since asked in the near one
+  YouTube brings only its videos. Persian searches go without a region
+  (gl=IR brings nothing).
 - The apps are asked in turn until one tells by audio or captions:
   the visionOS app a quick start uses, then the TV app, then the website.
   Whichever told last is asked first from then on. When none tells, the

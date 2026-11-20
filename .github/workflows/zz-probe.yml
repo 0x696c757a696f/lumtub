@@ -1,0 +1,16 @@
+name: Probe
+on: pull_request
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          for u in https://kaikki.org/dictionary/rawdata.html https://kaikki.org/zhwiktionary/rawdata.html https://kaikki.org/dictionary/Korean/index.html https://kaikki.org/dictionary/Spanish/index.html; do
+            echo "== $u"; curl -fsSL "$u" | grep -oE 'href="[^"]*(json|gz)[^"]*"[^<]*<[^>]*>[^<]*' | head -40 || true
+            curl -fsSL "$u" | grep -oE '[0-9.]+ ?[MG]B' | head -20 || true
+          done
+          curl -fsSL https://kaikki.org/dictionary/Korean/index.html | grep -iE 'jsonl|download' | head -20
+          curl -fsSL https://kaikki.org/dictionary/rawdata.html | sed 's/<[^>]*>/ /g' | grep -iE 'jsonl|MB|GB' | head -60
+          curl -fsSL https://kaikki.org/zhwiktionary/rawdata.html | sed 's/<[^>]*>/ /g' | grep -iE 'jsonl|MB|GB' | head -60

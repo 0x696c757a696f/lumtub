@@ -98,7 +98,7 @@ class _LearningPage extends StatelessWidget {
               ),
             for (final pack in DictionaryPack.values) _PackTile(learning: learning, pack: pack),
             SwitchItem(
-              title: tr('Show pinyin above Chinese subtitles'),
+              title: tr('Show pinyin and kana above subtitles'),
               subtitle: tr('Above each word, on the video and in the subtitle list'),
               leading: Icon(AppIcons.subtitles),
               value: learning.showPinyin,
@@ -115,14 +115,14 @@ class _LearningPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Text(
-                tr('How to use it: download a dictionary, turn on a Chinese or English subtitle, then tap any word on the video or in the subtitle list. The video waits while the word is open. Everything stays on this device.'),
+                tr('How to use it: download a dictionary, turn on a Chinese, English or Japanese subtitle, then tap any word on the video or in the subtitle list. The video waits while the word is open. Everything stays on this device.'),
                 style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5),
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Text(
-                tr('Chinese dictionary: CC-CEDICT by MDBG, under CC BY-SA 4.0. English dictionary: ECDICT by skywind3000, under the MIT license.'),
+                tr('Chinese dictionary: CC-CEDICT by MDBG, under CC BY-SA 4.0. English dictionary: ECDICT by skywind3000, under the MIT license. Japanese dictionary: JMdict by the Electronic Dictionary Research and Development Group, under CC BY-SA 4.0.'),
                 style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5),
               ),
             ),
@@ -150,7 +150,7 @@ class _Pitch extends StatelessWidget {
           const SizedBox(height: 8),
           for (final line in [
             tr('Tap any word in a subtitle for an offline dictionary entry'),
-            tr('Pinyin above each Chinese word'),
+            tr('Pinyin above Chinese, kana above Japanese'),
             tr('A vocabulary book that keeps the line and the moment in the video'),
             tr('Export your words to Anki or CSV'),
           ])
@@ -164,7 +164,7 @@ class _Pitch extends StatelessWidget {
             ),
           const SizedBox(height: 8),
           Text(
-            tr('Chinese and English now; Japanese next. One payment, all your devices, no account, no subscription. Buying it keeps Lumtub alive.'),
+            tr('Chinese, English and Japanese. One payment, all your devices, no account, no subscription. Buying it keeps Lumtub alive.'),
             style: TextStyle(color: theme.colorScheme.outline, fontSize: 12, height: 1.5),
           ),
           const SizedBox(height: 12),
@@ -194,7 +194,11 @@ class _PackTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = learning.stateOf(pack);
     final progress = learning.progressOf(pack);
-    final size = pack == DictionaryPack.chinese ? '4 MB' : '2 MB';
+    final size = switch (pack) {
+      DictionaryPack.chinese => '4 MB',
+      DictionaryPack.english => '2 MB',
+      DictionaryPack.japanese => '7 MB',
+    };
     final subtitle = switch (state) {
       PackState.missing => tr('Not downloaded · about {0}', [size]),
       PackState.downloading => progress == null ? tr('Downloading…') : tr('Downloading… {0}%', [(progress * 100).round()]),
@@ -203,7 +207,11 @@ class _PackTile extends StatelessWidget {
       PackState.failed => tr('Failed: {0}', [learning.errorOf(pack) ?? '']),
     };
     return NormalItem(
-      title: pack == DictionaryPack.chinese ? tr('Chinese dictionary (Chinese–English)') : tr('English dictionary (English–Chinese)'),
+      title: switch (pack) {
+        DictionaryPack.chinese => tr('Chinese dictionary (Chinese–English)'),
+        DictionaryPack.english => tr('English dictionary (English–Chinese)'),
+        DictionaryPack.japanese => tr('Japanese dictionary (Japanese–English, with kana)'),
+      },
       subtitle: subtitle,
       leading: Icon(AppIcons.translate),
       enabled: learning.licensed,

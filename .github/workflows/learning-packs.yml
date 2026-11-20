@@ -85,6 +85,53 @@ jobs:
           (cd "$RUNNER_TEMP/out" && sha256sum zh-cedict.txt.gz en-ecdict.tsv.gz > SHA256SUMS)
           echo "ECDICT: $(wc -l < "$RUNNER_TEMP/in/en.tsv") words, $(stat -c %s "$RUNNER_TEMP/out/en-ecdict.tsv.gz") bytes compressed" | tee -a "$GITHUB_STEP_SUMMARY"
 
+      - name: Build the Japanese dictionary
+        env:
+          # JMdict (EDRDG, CC BY-SA 4.0) as JSON from jmdict-simplified;
+          # a pinned weekly build and its checksum keep the pack the same.
+          JMDICT_TAG: 3.6.2+20261116213322
+          JMDICT_SHA256: c3c43879681c7e26b7a9113034fa3a94299234a47b3b7e3b3361447576c4932c
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/jmdict.zip" \
+            "https://github.com/scriptin/jmdict-simplified/releases/download/${JMDICT_TAG/+/%2B}/jmdict-eng-$JMDICT_TAG.json.zip"
+          echo "$JMDICT_SHA256  $RUNNER_TEMP/in/jmdict.zip" | sha256sum -c -
+          # One entry a line: kanji forms, kana forms (| between), the parts
+          # of speech that inflect, senses (\n between), 1 for common.
+          python3 - "$RUNNER_TEMP/in/jmdict.zip" "$RUNNER_TEMP/in/ja.tsv" <<'PY'
+          import json, sys, zipfile
+          KEEP = ('v1', 'v5', 'vk', 'vs', 'adj-i', 'adj-ix')
+          with zipfile.ZipFile(sys.argv[1]) as z:
+              data = json.loads(z.read([n for n in z.namelist() if n.endswith('.json')][0]))
+          kept = 0
+          with open(sys.argv[2], 'w', encoding='utf-8', newline='\n') as out:
+              for w in data['words']:
+                  kanji = [k['text'] for k in w['kanji'] if 'sK' not in k['tags']]
+                  kana = [k['text'] for k in w['kana'] if 'sk' not in k['tags']]
+                  if not kana:
+                      continue
+                  pos, senses = [], []
+                  for s in w['sense']:
+                      for p in s['partOfSpeech']:
+                          if p.startswith(KEEP) and p not in pos:
+                              pos.append(p)
+                      glosses = [g['text'] for g in s['gloss'] if g['lang'] == 'eng'][:6]
+                      if glosses and len(senses) < 5:
+                          senses.append('; '.join(glosses))
+                  if not senses:
+                      continue
+                  common = any(k['common'] for k in w['kanji']) or any(k['common'] for k in w['kana'])
+                  clean = lambda t: t.replace('\t', ' ').replace('\n', ' ').replace('|', '/')
+                  out.write('\t'.join(['|'.join(map(clean, kanji)), '|'.join(map(clean, kana)), ','.join(pos), '\\n'.join(map(clean, senses)), '1' if common else '0']) + '\n')
+                  kept += 1
+          if kept < 150000:
+              sys.exit(f'only {kept} Japanese entries')
+          print(f'JMdict: {kept} entries')
+          PY
+          gzip -n -9 < "$RUNNER_TEMP/in/ja.tsv" > "$RUNNER_TEMP/out/ja-jmdict.tsv.gz"
+          (cd "$RUNNER_TEMP/out" && sha256sum zh-cedict.txt.gz en-ecdict.tsv.gz ja-jmdict.tsv.gz > SHA256SUMS)
+          echo "JMdict: $(wc -l < "$RUNNER_TEMP/in/ja.tsv") entries, $(stat -c %s "$RUNNER_TEMP/out/ja-jmdict.tsv.gz") bytes compressed" | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -93,8 +140,8 @@ jobs:
           if ! gh release view learning --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             gh release create learning --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
               --title 'Learning pack data' \
-              --notes 'Dictionaries for the learning pack, downloaded by Lumtub when a dictionary is turned on. Not an app release. CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/); ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT).'
+              --notes 'Dictionaries for the learning pack, downloaded by Lumtub when a dictionary is turned on. Not an app release. CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/); ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT); JMdict by the Electronic Dictionary Research and Development Group under CC BY-SA 4.0 (https://www.edrdg.org/edrdg/licence.html), via jmdict-simplified.'
           fi
           # The dictionary first, then the sums that name it.
-          gh release upload learning "$RUNNER_TEMP/out/zh-cedict.txt.gz" "$RUNNER_TEMP/out/en-ecdict.tsv.gz" --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload learning "$RUNNER_TEMP/out/zh-cedict.txt.gz" "$RUNNER_TEMP/out/en-ecdict.tsv.gz" "$RUNNER_TEMP/out/ja-jmdict.tsv.gz" --repo "$GITHUB_REPOSITORY" --clobber
           gh release upload learning "$RUNNER_TEMP/out/SHA256SUMS" --repo "$GITHUB_REPOSITORY" --clobber

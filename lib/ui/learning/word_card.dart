@@ -7,6 +7,7 @@ import '../../app/app_controller.dart';
 import '../../l10n/l10n.dart';
 import '../../learning/chinese_dictionary.dart';
 import '../../learning/english_dictionary.dart';
+import '../../learning/japanese_dictionary.dart';
 import '../../learning/learning.dart';
 import '../../learning/vocabulary.dart';
 import '../app_icons.dart';
@@ -17,16 +18,23 @@ import '../app_icons.dart';
 Future<void> showWordCard(BuildContext context, AppController controller, WordToken token, {required String sentence, String? translation, Duration? at}) async {
   final learning = controller.learning;
   final language = Learning.languageOf(token);
-  if ((language == 'zh' ? learning.chinese : learning.english) == null) return;
+  final ready = switch (language) {
+    'zh' => learning.chinese != null,
+    'ja' => learning.japanese != null,
+    _ => learning.english != null,
+  };
+  if (!ready) return;
   final player = controller.player;
   final wasPlaying = player?.state.playing ?? false;
   if (wasPlaying) unawaited(player!.pause());
   final when = at ?? player?.state.position ?? Duration.zero;
   await showDialog<void>(
     context: context,
-    builder: (context) => language == 'zh'
-        ? _WordCard(controller: controller, dictionary: learning.chinese!, token: token, sentence: sentence, translation: translation, at: when)
-        : _EnglishCard(controller: controller, dictionary: learning.english!, token: token, sentence: sentence, translation: translation, at: when),
+    builder: (context) => switch (language) {
+      'zh' => _WordCard(controller: controller, dictionary: learning.chinese!, token: token, sentence: sentence, translation: translation, at: when),
+      'ja' => _JapaneseCard(controller: controller, dictionary: learning.japanese!, token: token, sentence: sentence, translation: translation, at: when),
+      _ => _EnglishCard(controller: controller, dictionary: learning.english!, token: token, sentence: sentence, translation: translation, at: when),
+    },
   );
   if (wasPlaying && controller.player == player) unawaited(player?.play());
 }
@@ -212,6 +220,105 @@ class _EnglishCard extends StatelessWidget {
                           language: 'en',
                           reading: entry.phonetic.isEmpty ? '' : '/${entry.phonetic}/',
                           meaning: entry.meanings.take(3).join('; '),
+                          sentence: sentence,
+                          translation: translation ?? '',
+                          videoId: playing?.id ?? '',
+                          videoTitle: playing?.title ?? '',
+                          at: at,
+                          added: DateTime.now(),
+                        )));
+                      },
+              );
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _JapaneseCard extends StatelessWidget {
+  const _JapaneseCard({required this.controller, required this.dictionary, required this.token, required this.sentence, required this.translation, required this.at});
+
+  final AppController controller;
+  final JapaneseDictionary dictionary;
+  final WordToken token;
+  final String sentence;
+  final String? translation;
+  final Duration at;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final matches = dictionary.lookUpInflected(token.key);
+    final entries = [for (final (_, list) in matches) ...list].take(6).toList();
+    final firstMatch = matches.isEmpty ? null : matches.first.$1;
+    final head = entries.isEmpty ? token.key : entries.first.headword;
+    final book = controller.learning.book;
+    return AlertDialog(
+      title: Row(children: [
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            if (token.reading != null) Text(token.reading!, style: theme.textTheme.bodyMedium!.copyWith(color: colors.primary)),
+            SelectableText(token.text, style: theme.textTheme.headlineMedium),
+          ]),
+        ),
+        IconButton(
+          tooltip: tr('Copy'),
+          icon: Icon(AppIcons.copy, size: 18),
+          onPressed: () => unawaited(Clipboard.setData(ClipboardData(text: head))),
+        ),
+      ]),
+      content: SizedBox(
+        width: 420,
+        child: SingleChildScrollView(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            if (firstMatch != null && firstMatch.steps.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text('${firstMatch.base} ← ${firstMatch.steps.reversed.join(' · ')}', style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
+              ),
+            if (entries.isEmpty) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(tr('Not in the dictionary'), style: TextStyle(color: colors.outline))),
+            for (final e in entries)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text.rich(TextSpan(children: [
+                    TextSpan(text: e.headword, style: theme.textTheme.titleMedium),
+                    TextSpan(text: '  ${e.kana.take(3).join('・')}', style: TextStyle(color: colors.primary)),
+                  ])),
+                  const SizedBox(height: 2),
+                  for (final (i, sense) in e.senses.indexed) Text('${i + 1}. $sense', style: theme.textTheme.bodyMedium),
+                ]),
+              ),
+            if (sentence.isNotEmpty) ...[
+              const Divider(),
+              Text(sentence, style: theme.textTheme.bodyMedium),
+              if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
+            ],
+          ]),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
+        if (book != null && entries.isNotEmpty)
+          ListenableBuilder(
+            listenable: book,
+            builder: (context, _) {
+              final kept = book.contains('ja', head);
+              final entry = entries.first;
+              return FilledButton.icon(
+                icon: Icon(kept ? AppIcons.check : AppIcons.plus, size: 18),
+                label: Text(kept ? tr('In vocabulary book') : tr('Add to vocabulary book')),
+                onPressed: kept
+                    ? null
+                    : () {
+                        final playing = controller.playing;
+                        unawaited(book.add(VocabularyWord(
+                          word: head,
+                          language: 'ja',
+                          reading: entry.kana.first,
+                          meaning: entry.senses.take(3).join('; '),
                           sentence: sentence,
                           translation: translation ?? '',
                           videoId: playing?.id ?? '',

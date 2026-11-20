@@ -11,6 +11,7 @@ import '../app_directories.dart';
 import '../app_log.dart';
 import 'chinese_dictionary.dart';
 import 'english_dictionary.dart';
+import 'japanese_dictionary.dart';
 import 'license.dart';
 import 'vocabulary.dart';
 
@@ -22,7 +23,8 @@ enum PackState { missing, downloading, loading, ready, failed }
 /// A dictionary the learning pack downloads.
 enum DictionaryPack {
   chinese('zh', 'zh-cedict.txt.gz'),
-  english('en', 'en-ecdict.tsv.gz');
+  english('en', 'en-ecdict.tsv.gz'),
+  japanese('ja', 'ja-jmdict.tsv.gz');
 
   const DictionaryPack(this.language, this.file);
   final String language;
@@ -77,11 +79,14 @@ class Learning extends ChangeNotifier {
   String? errorOf(DictionaryPack pack) => _packs[pack]!.error;
   ChineseDictionary? get chinese => licensed ? _packs[DictionaryPack.chinese]!.dictionary as ChineseDictionary? : null;
   EnglishDictionary? get english => licensed ? _packs[DictionaryPack.english]!.dictionary as EnglishDictionary? : null;
-  bool get anyDictionary => chinese != null || english != null;
+  JapaneseDictionary? get japanese => licensed ? _packs[DictionaryPack.japanese]!.dictionary as JapaneseDictionary? : null;
+  bool get anyDictionary => chinese != null || english != null || japanese != null;
 
   /// [text] as words a tap looks up, when a dictionary for its language
   /// is ready.
   List<WordToken>? wordsOf(String text) {
+    final ja = japanese;
+    if (ja != null && JapaneseDictionary.looksJapanese(text)) return ja.segment(text);
     final zh = chinese;
     if (zh != null && ChineseDictionary.looksChinese(text)) return zh.segment(text);
     final en = english;
@@ -90,7 +95,7 @@ class Learning extends ChangeNotifier {
   }
 
   /// The language of the dictionary [token] is looked up in.
-  static String languageOf(WordToken token) => ChineseDictionary.isHan(token.text) ? 'zh' : 'en';
+  static String languageOf(WordToken token) => token.language ?? (ChineseDictionary.isHan(token.text) ? 'zh' : 'en');
   VocabularyBook? get book => _book;
 
   File? get _settingsFile => _directories == null ? null : File('${_directories!.config.path}${Platform.pathSeparator}learning.json');
@@ -187,7 +192,11 @@ class Learning extends ChangeNotifier {
       final watch = Stopwatch()..start();
       state.dictionary = await Isolate.run<Object>(() {
         final text = utf8.decode(gzip.decode(File(path).readAsBytesSync()));
-        return pack == DictionaryPack.chinese ? ChineseDictionary.parse(text) : EnglishDictionary.parse(text);
+        return switch (pack) {
+          DictionaryPack.chinese => ChineseDictionary.parse(text),
+          DictionaryPack.english => EnglishDictionary.parse(text),
+          DictionaryPack.japanese => JapaneseDictionary.parse(text),
+        };
       });
       logInfo('${pack.name} dictionary read in ${watch.elapsedMilliseconds} ms');
       state.state = PackState.ready;

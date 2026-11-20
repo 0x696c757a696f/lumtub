@@ -1,0 +1,46 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/learning/japanese_dictionary.dart';
+
+const _sample = '食べる\tたべる\tv1\tto eat\t1\n'
+    '行く|往く\tいく|ゆく\tv5k-s\tto go\t1\n'
+    '読む\tよむ\tv5m\tto read\t1\n'
+    '美味しい\tおいしい\tadj-i\tdelicious\t1\n'
+    '勉強\tべんきょう\tvs\tstudy\t1\n'
+    '来る\tくる\tvk\tto come\t1\n'
+    '\tは\t\ttopic marker\t1\n'
+    '\tまだ\t\tstill; not yet\t1\n'
+    '浜\tはま\t\tbeach\t1\n'
+    '私\tわたし\t\tI; me\t1\n';
+
+void main() {
+  final d = JapaneseDictionary.parse(_sample);
+
+  test('inflected verbs and adjectives find their dictionary form', () {
+    String base(String text) => d.lookUpInflected(text).first.$2.first.headword;
+    expect(base('食べなかった'), '食べる');
+    expect(base('食べられませんでした'), '食べる');
+    expect(base('読んでいます'), '読む');
+    expect(base('行った'), '行く');
+    expect(base('美味しくなかった'), '美味しい');
+    expect(base('勉強しています'), '勉強');
+  });
+
+  test('a line splits into words with kana for kanji', () {
+    final tokens = d.segment('私はまだ食べていない。');
+    expect(tokens.map((t) => t.text), ['私', 'は', 'まだ', '食べていない', '。']);
+    expect(tokens[0].reading, 'わたし');
+    expect(tokens[3].reading, 'たべていない');
+    expect(tokens[1].reading, isNull);
+    expect(tokens[3].language, 'ja');
+  });
+
+  test('来る is read by what follows it', () {
+    expect(d.segment('来ない').single.reading, 'こない');
+    expect(d.segment('来ました').single.reading, 'きました');
+  });
+
+  test('Japanese is told by its kana', () {
+    expect(JapaneseDictionary.looksJapanese('私は学生です'), isTrue);
+    expect(JapaneseDictionary.looksJapanese('我是学生'), isFalse);
+  });
+}

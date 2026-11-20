@@ -1,0 +1,21 @@
+name: Probe WikDict
+on: pull_request
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          curl -fsSL https://download.wikdict.com/dictionaries/sqlite/2/ | grep -oE 'href="[^"]*zh[^"]*"' | head -40 || true
+          curl -fsSL https://download.wikdict.com/dictionaries/sqlite/ | grep -oE 'href="[^"]*"' | head -20 || true
+          for p in de-zh es-zh fr-zh ru-zh it-zh ko-zh; do
+            if curl -fsSL -o $p.sqlite3 "https://download.wikdict.com/dictionaries/sqlite/2/$p.sqlite3"; then
+              ls -la $p.sqlite3
+              sqlite3 $p.sqlite3 '.tables'
+              sqlite3 $p.sqlite3 '.schema simple_translation'
+              sqlite3 $p.sqlite3 'select count(*) from simple_translation'
+              sqlite3 -separator ' ¦ ' $p.sqlite3 'select * from simple_translation order by random() limit 8'
+            else echo "no $p"; fi
+          done
+          sqlite3 -separator ' ¦ ' es-zh.sqlite3 "select * from simple_translation where written_rep in ('hablar','casa','perro','bueno')"

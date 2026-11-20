@@ -616,15 +616,17 @@ extension SubtitleActions on AppController {
   }
 
   /// On Android and iOS, where libmpv draws in one font with no fallback: the font
-  /// that has every character of [lines], or Flutter's view for the rest of
-  /// the video when no one font has.
+  /// that has every character of the main subtitle in [lines], or Flutter's
+  /// view for the rest of the video when no one font has every character of
+  /// either line.
   void _fitSubtitleFont(Player player, List<String> lines) {
     if (!(Platform.isAndroid || Platform.isIOS) || !settings.libassSubtitles || libassCantDraw || !identical(player, this.player)) return;
     final platform = player.platform;
     final text = lines.join('\n').trim();
     if (platform is! NativePlayer || text.isEmpty) return;
-    final family = AndroidSubtitleFonts.familyFor(text, language: player.state.track.subtitle.language ?? '');
-    if (family == null) {
+    // The main and the second subtitle are drawn apart, each in its font.
+    final (:drawable, main: family) = AndroidSubtitleFonts.forLines(lines, language: player.state.track.subtitle.language ?? '');
+    if (!drawable) {
       logInfo('No one subtitle font draws "${text.length > 40 ? text.substring(0, 40) : text}"; Flutter draws this video\'s subtitles');
       _update(() => libassCantDraw = true);
       for (final name in ['sub-visibility', 'secondary-sub-visibility']) {
@@ -632,7 +634,7 @@ extension SubtitleActions on AppController {
       }
       return;
     }
-    if (family == _subtitleFamily) return;
+    if (family == null || family == _subtitleFamily) return;
     _subtitleFamily = family;
     _libassSent['sub-font'] = family;
     unawaited(platform.setProperty('sub-font', family).catchError((Object e) => logDebug(() => 'Could not set the subtitle font: $e')));

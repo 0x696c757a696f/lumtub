@@ -158,10 +158,11 @@ class SubtitleViewState extends State<SubtitleView> {
         style: configuration.style,
         textAlign: configuration.textAlign,
         textScaler: textScaler,
+        outline: configuration.outline,
         lines: 4,
       );
     }
-    Widget second = SubtitleLine(secondary, style: secondaryStyle, textAlign: configuration.textAlign, textScaler: textScaler);
+    Widget second = SubtitleLine(secondary, style: secondaryStyle, textAlign: configuration.textAlign, textScaler: textScaler, outline: configuration.outline);
     final shown = configuration.secondaryShown;
     if (configuration.blurSecondary && shown != null && !configuration.ghost) {
       second = BlurredUntilShown(shown: shown, sigma: textScaler.scale(secondaryStyle.fontSize ?? 14) * blurSigmaEms, child: second);
@@ -173,7 +174,7 @@ class SubtitleViewState extends State<SubtitleView> {
           KeyedSubtree(key: _secondaryKey, child: second),
         if (secondary.isNotEmpty && main.isNotEmpty) SizedBox(height: textScaler.scale(configuration.spacing)),
         if (main.isNotEmpty)
-          SubtitleLine(main, style: configuration.style, textAlign: configuration.textAlign, textScaler: textScaler),
+          SubtitleLine(main, style: configuration.style, textAlign: configuration.textAlign, textScaler: textScaler, outline: configuration.outline),
       ],
     );
   }
@@ -184,12 +185,16 @@ class SubtitleViewState extends State<SubtitleView> {
 // size, and wrapped lines are evened out, so a cue never ends on a lone word.
 // Lines run no wider than [_widest] of the picture.
 class SubtitleLine extends StatelessWidget {
-  const SubtitleLine(this.text, {required this.style, required this.textAlign, required this.textScaler, this.lines = 2});
+  const SubtitleLine(this.text, {required this.style, required this.textAlign, required this.textScaler, this.outline = 0, this.lines = 2});
 
   final String text;
   final TextStyle style;
   final TextAlign textAlign;
   final TextScaler textScaler;
+
+  /// How far a solid black outline reaches out from the letters, in
+  /// logical pixels, as libass draws one; 0 for none.
+  final double outline;
   final int lines;
 
   static const _smallest = 0.85;
@@ -203,9 +208,22 @@ class SubtitleLine extends StatelessWidget {
       final room = constraints.maxWidth.isFinite ? constraints.maxWidth : MediaQuery.sizeOf(context).width;
       final fit = layout(text, style, textScaler, room * _widest, lines, Directionality.of(context));
       final shown = fit.shrink == 1.0 ? style : style.copyWith(fontSize: (style.fontSize ?? 14) * fit.shrink);
+      final letters = Text(text, style: shown, textAlign: textAlign, textScaler: textScaler);
+      if (outline <= 0) return SizedBox(width: fit.width, child: letters);
+      // The outline under the letters: their shapes stroked twice as wide
+      // as it reaches, round at the corners, in the letters' opacity.
+      final stroke = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = outline * 2
+        ..strokeJoin = StrokeJoin.round
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xFF000000).withValues(alpha: shown.color?.a ?? 1);
       return SizedBox(
         width: fit.width,
-        child: Text(text, style: shown, textAlign: textAlign, textScaler: textScaler),
+        child: Stack(children: [
+          Text(text, style: shown.copyWith(foreground: stroke, shadows: const []), textAlign: textAlign, textScaler: textScaler),
+          letters,
+        ]),
       );
     });
   }
@@ -332,6 +350,10 @@ class SubtitleViewConfiguration {
   /// so the secondary line's place is known.
   final bool ghost;
 
+  /// Lumtub: a solid outline around the letters, as libmpv draws one: how
+  /// far it reaches out from them in logical pixels; 0 for none.
+  final double outline;
+
   /// {@macro subtitle_view_configuration}
   const SubtitleViewConfiguration({
     this.visible = true,
@@ -355,6 +377,7 @@ class SubtitleViewConfiguration {
     this.onSecondaryHover,
     this.onSecondaryTap,
     this.ghost = false,
+    this.outline = 0,
     this.padding = const EdgeInsets.fromLTRB(
       16.0,
       0.0,

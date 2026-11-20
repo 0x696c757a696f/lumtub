@@ -38,6 +38,17 @@ void main() {
     expect(AndroidSubtitleFonts.familyFor('błogosławionej'), isNull);
   });
 
+  test('the main and the second subtitle each need only a font of their own', () {
+    expect(AndroidSubtitleFonts.forLines(['w sensie, no bo w takim świecie żyli.', '因为那就是他们生活的世界。']), (drawable: true, main: 'Roboto'));
+    expect(AndroidSubtitleFonts.forLines(['因为那就是他们生活的世界。', 'w takim świecie żyli']), (drawable: true, main: 'Noto Sans CJK SC'));
+    expect(AndroidSubtitleFonts.forLines(['مرحبا بالعالم', '你好，世界']), (drawable: true, main: 'Noto Naskh Arabic'));
+    expect(AndroidSubtitleFonts.forLines(['Dobrý den, příteli', 'สวัสดี']), (drawable: true, main: 'Roboto'));
+    expect(AndroidSubtitleFonts.forLines(['', '你好']), (drawable: true, main: null), reason: 'no main line: its font stays');
+    expect(AndroidSubtitleFonts.forLines(['圣人的短篇故事 historia świętego', '']), (drawable: false, main: null));
+    expect(AndroidSubtitleFonts.forLines(['hello', 'مرحبا 你好']), (drawable: false, main: 'Noto Sans CJK SC'));
+    expect(AndroidSubtitleFonts.forLines(['hello', 'नमस्ते']).drawable, isFalse, reason: 'no Devanagari font was found');
+  });
+
   test('another script gets its own font, alone with digits and punctuation', () {
     expect(AndroidSubtitleFonts.familyFor('مرحبا بالعالم 2026!'), 'Noto Naskh Arabic');
     expect(AndroidSubtitleFonts.familyFor('สวัสดี'), 'Noto Sans Thai');

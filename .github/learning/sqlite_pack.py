@@ -51,6 +51,7 @@ def main():
                 terms[(k, entry)] = 0
 
     ids = {}
+    entries = 0
     pending = []
     with open(source, encoding='utf-8') as f:
         for line in f:
@@ -65,7 +66,8 @@ def main():
                 if not meanings:
                     pending.extend((word, lemma) for lemma in lemmas)
                     continue
-            entry = len(ids) + 1
+            entries += 1
+            entry = entries
             db.execute('INSERT INTO entry VALUES (?, ?)', (entry, line))
             ids.setdefault(word, entry)
             ids.setdefault(fold(word), entry)
@@ -91,7 +93,7 @@ def main():
     db.close()
     if problem != 'ok':
         sys.exit(f'{target}: {problem}')
-    print(f'{target}: {len(ids)} entries, {len(terms)} terms')
+    print(f'{target}: {entries} entries, {len(terms)} terms')
 
 
 if __name__ == '__main__':

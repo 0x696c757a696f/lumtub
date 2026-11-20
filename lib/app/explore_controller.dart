@@ -10,7 +10,7 @@ mixin _ExploreState {
   int exploreSub = 0;
   int exploreLeaf = 0;
   ExploreMode exploreMode = ExploreMode.popular;
-  SearchUploadDate explorePeriod = SearchUploadDate.month;
+  SearchUploadDate explorePeriod = SearchUploadDate.any;
   SearchDuration exploreDuration = SearchDuration.any;
   SearchQuality exploreQuality = SearchQuality.any;
   /// The 类型 and 视角 filters: 宗教与信仰's own lists there, general ones
@@ -415,8 +415,17 @@ extension ExploreActions on AppController {
                   ));
             }
 
-            Listing searchIn(List<String> queries) =>
-                checked(translates ? Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional))) : search(queries));
+            Listing searchIn(List<String> queries) => checked(translates
+                ? Listing.deferred(() async {
+                    final translated = await _searchWordsIn(queries, wordsIn, traditional: traditional);
+                    // A language YouTube has no interface in finds its
+                    // neighbour's videos unless the search names it.
+                    final anchor = spoken ? language.searchAnchor : null;
+                    final words = [for (final w in translated) anchor == null || w.contains(anchor) ? w : '$w $anchor'];
+                    if (spoken) logInfo('Explore in ${language.name}: searching ${words.map((w) => '"$w"').join(', ')} (hl ${hl ?? '-'}, gl $region)');
+                    return search(words);
+                  })
+                : search(queries));
             // A narrow search that runs out goes on with wider ones, so a
             // sub-category with few videos still fills the page.
             var listing = searchIn(queries);

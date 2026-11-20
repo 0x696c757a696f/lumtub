@@ -657,8 +657,9 @@ enum ExploreMode {
           ? curated
           : popular;
 
-  /// Whether the period chips apply.
-  bool get hasPeriod => this == popular;
+  /// Whether the period chips apply: 热门 and 长视频 count views over a
+  /// chosen period, all time unless picked otherwise.
+  bool get hasPeriod => this == popular || this == long;
 
   /// Whether the list shows the most watched first: by views, or by
   /// people watching now for streams.
@@ -675,14 +676,14 @@ const freshMaxViews = 5000;
 /// The periods popular videos can be counted over; [SearchUploadDate.any] is all time.
 const explorePeriods = [SearchUploadDate.today, SearchUploadDate.week, SearchUploadDate.month, SearchUploadDate.year, SearchUploadDate.any];
 
-/// YouTube's `sp` for a zone shown by [mode]: the most viewed of [period],
-/// the newest, the most relevant (of the year, or of all time for 精选;
-/// ranked or filtered here afterwards), long videos, or live streams. Search
+/// YouTube's `sp` for a zone shown by [mode]: the most viewed of [period]
+/// (long videos too), the newest, the most relevant (of the year, or of all time for 精选;
+/// ranked or filtered here afterwards), or live streams. Search
 /// cannot ask for upcoming or past streams, so those come from the newest
 /// videos, kept here by their live status.
 String exploreParams(
   ExploreMode mode, {
-  SearchUploadDate period = SearchUploadDate.month,
+  SearchUploadDate period = SearchUploadDate.any,
   SearchDuration duration = SearchDuration.any,
   SearchQuality quality = SearchQuality.any,
   bool recent = false,
@@ -695,7 +696,7 @@ String exploreParams(
       ExploreMode.forYou => searchParams(type: SearchFilter.videos, date: SearchUploadDate.month, duration: duration, quality: quality)!,
       ExploreMode.gems => searchParams(type: SearchFilter.videos, date: SearchUploadDate.year, duration: duration, quality: quality)!,
       ExploreMode.fresh => searchParams(type: SearchFilter.videos, date: SearchUploadDate.week, duration: duration, quality: quality)!,
-      ExploreMode.long => searchParams(type: SearchFilter.videos, sort: SearchSort.views, date: SearchUploadDate.year, duration: SearchDuration.long, quality: quality)!,
+      ExploreMode.long => searchParams(type: SearchFilter.videos, sort: SearchSort.views, date: period, duration: SearchDuration.long, quality: quality)!,
       ExploreMode.liveViewers => searchParams(type: SearchFilter.live, sort: SearchSort.views, quality: quality)!,
       ExploreMode.liveLatest => searchParams(type: SearchFilter.live, sort: SearchSort.date, quality: quality)!,
       ExploreMode.liveUpcoming || ExploreMode.liveReplay => searchParams(type: SearchFilter.videos, sort: SearchSort.date, quality: quality)!,

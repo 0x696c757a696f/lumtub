@@ -3,6 +3,11 @@ import 'package:lumtub/libass_layout.dart';
 import 'package:lumtub/player_settings.dart';
 
 void main() {
+  test("the second subtitle's copy: only its own lines count", () {
+    expect(secondCopyOwnText('早上好，亲爱的朋友们。\n\u00a0\nDzień dobry moi drodzy.\n20 dzień listopada'), '早上好，亲爱的朋友们。');
+    expect(secondCopyOwnText('Good morning\nmy friends'), 'Good morning\nmy friends');
+  });
+
   test('one main line: the second subtitle sits a line and a small gap above', () {
     expect(LibassLayout.secondaryPosition('Hello there', position: 100, scale: 1), 93.4);
     expect(LibassLayout.secondaryPosition('', position: 100, scale: 1), 93.4);

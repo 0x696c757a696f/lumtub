@@ -633,13 +633,21 @@ extension SubtitleActions on AppController {
     final text = lines.join('\n').trim();
     if (platform is! NativePlayer || text.isEmpty) return;
     // The main and the second subtitle are drawn apart, each in its font.
-    final (:drawable, main: family) = AndroidSubtitleFonts.forLines(lines, language: player.state.track.subtitle.language ?? '');
+    // Lumtub's copy of the second one also holds the main one's lines,
+    // invisible, after a blank line: only its own lines are its font's.
+    final own = [
+      for (final (i, line) in lines.indexed) i == 1 && _subtitleCopies[secondaryTrackId]?.second == true ? secondCopyOwnText(line) : line,
+    ];
+    final (:drawable, main: family) = AndroidSubtitleFonts.forLines(own, language: player.state.track.subtitle.language ?? '');
     if (!drawable) {
       logInfo('No one subtitle font draws "${text.length > 40 ? text.substring(0, 40) : text}"; Flutter draws this video\'s subtitles');
       _update(() => libassCantDraw = true);
       for (final name in ['sub-visibility', 'secondary-sub-visibility']) {
         unawaited(platform.setProperty(name, 'no').catchError((Object e) => logDebug(() => 'Could not hide $name: $e')));
       }
+      // The Flutter view shows the tracks themselves, not Lumtub's copies:
+      // the second one's would show the main lines a second time.
+      _restyleSubtitles(player);
       return;
     }
     if (family == null || family == _subtitleFamily) return;

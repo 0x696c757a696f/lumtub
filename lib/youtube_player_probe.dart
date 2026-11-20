@@ -81,10 +81,13 @@ class YoutubePlayerProbe {
     Duration timeout = const Duration(seconds: 15),
     bool playing = false,
   }) async {
-    if (!playing && endpoint == 'player') {
-      if (await _waitForPlayback()) return http.Response('', 429, reasonPhrase: 'Resting');
-    } else {
+    // Only a start is counted as one: a lookup of another endpoint (/next
+    // for the AI filter) counted and never let go held every lookup for a
+    // list back for good, so a language picked in Explore showed nothing.
+    if (playing) {
       _playing++;
+    } else if (endpoint == 'player' && await _waitForPlayback()) {
+      return http.Response('', 429, reasonPhrase: 'Resting');
     }
     try {
       final response = await _post(client, headers, body, endpoint: endpoint, mask: mask, timeout: timeout, playing: playing);
@@ -110,7 +113,10 @@ class YoutubePlayerProbe {
 
   /// Lookups for lists go at most one per [lookupSpacing], and none while a
   /// video starts or for [afterPlayback] after.
-  static const lookupSpacing = Duration(milliseconds: 150);
+  static const lookupSpacing = Duration(milliseconds: 15);
+
+  /// Whether a phone's app is hidden: lookups for lists wait meanwhile.
+  static bool appHidden = false;
   static const afterPlayback = Duration(seconds: 3);
   /// After [refusalsBeforeRest] refusals in a row, lookups for lists rest
   /// for [rest]: asking on only keeps YouTube refusing, playback too.
@@ -123,6 +129,12 @@ class YoutubePlayerProbe {
     while (true) {
       final now = DateTime.now();
       if (now.isBefore(_restUntil)) return true;
+      // A phone suspends a hidden app within seconds: a lookup started then
+      // stalls until it times out. They wait for the app to come back.
+      if (appHidden) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        continue;
+      }
       final free = _playedAt.add(afterPlayback);
       if (_playing > 0 || now.isBefore(free)) {
         await Future<void>.delayed(_playing > 0 ? const Duration(milliseconds: 200) : free.difference(now));

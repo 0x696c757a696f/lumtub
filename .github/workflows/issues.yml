@@ -1,13 +1,16 @@
 name: Issues
 
-# Keeps the issue list tidy without anyone watching it: a bug report that
-# came without its log is asked for one and marked `needs info`; the mark
-# goes when the reporter answers; an issue still waiting for its reporter
-# after 30 days is reminded, and closed 14 days later (reopening is one
-# click). Nothing else is closed by itself.
+# Keeps the issue list tidy without anyone watching it: a new issue that
+# breaks the issue rules (.github/scripts/issue_rules.py: opened from a form,
+# fields really answered, one problem per issue, a version for bugs) is told
+# why and closed, and reopens once its reporter edits it into shape; a bug
+# report that came without its log is asked for one and marked `needs info`;
+# the mark goes when the reporter answers; an issue still waiting for its
+# reporter after 30 days is reminded, and closed 14 days later (reopening is
+# one click). Issues from the owner, members and bots are never checked.
 on:
   issues:
-    types: [opened]
+    types: [opened, edited, reopened]
   issue_comment:
     types: [created]
   schedule:
@@ -17,11 +20,61 @@ on:
 permissions: {}
 
 jobs:
+  rules:
+    permissions:
+      issues: write
+    # Only the reporter's own new issue, or their edit or reopening of one
+    # these rules closed, is checked.
+    if: >-
+      github.event_name == 'issues' &&
+      github.event.sender.login == github.event.issue.user.login &&
+      github.event.issue.user.type != 'Bot' &&
+      !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) &&
+      (github.event.action == 'opened' || contains(github.event.issue.labels.*.name, 'invalid'))
+    runs-on: ubuntu-24.04
+    outputs:
+      closed: ${{ steps.check.outputs.closed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+      - name: Close the issue when it breaks the rules, reopen it when fixed
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          ACTION: ${{ github.event.action }}
+          STATE: ${{ github.event.issue.state }}
+        run: |
+          set -euo pipefail
+          python3 -I .github/scripts/issue_rules.py > "$RUNNER_TEMP/reply.md"
+          if [ -s "$RUNNER_TEMP/reply.md" ]; then
+            echo closed=true >> "$GITHUB_OUTPUT"
+            # An edit that still breaks the rules changes nothing: a closed issue
+            # already has its reply, an open one was reopened by the owner.
+            if [ "$ACTION" = edited ]; then exit 0; fi
+            gh issue edit "$NUMBER" --add-label invalid
+            gh issue comment "$NUMBER" --body-file "$RUNNER_TEMP/reply.md"
+            gh issue close "$NUMBER" --reason 'not planned'
+          elif [ "$ACTION" != opened ]; then
+            gh issue edit "$NUMBER" --remove-label invalid
+            if [ "$STATE" = closed ]; then
+              gh issue reopen "$NUMBER"
+              gh issue comment "$NUMBER" --body 'Thanks, reopened. 谢谢，已重新打开。'
+            fi
+          fi
+
   ask-for-log:
     permissions:
       issues: write
+    needs: rules
     if: >-
+      !cancelled() &&
+      needs.rules.outputs.closed != 'true' &&
       github.event_name == 'issues' &&
+      github.event.action == 'opened' &&
       contains(github.event.issue.labels.*.name, 'bug')
     runs-on: ubuntu-24.04
     steps:

@@ -24,6 +24,7 @@ NOTHING_PREFIXES = (
     "docs/",
     "website/",
     "packaging/",
+    "packs/",
     ".github/ISSUE_TEMPLATE/",
     ".github/scripts/",
 )

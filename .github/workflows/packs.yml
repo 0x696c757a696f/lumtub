@@ -1,0 +1,94 @@
+name: Data packs
+
+# Checks every pack under packs/ without secrets; on main the publish job
+# then builds packs.json, signs it and puts it on the `packs` release,
+# which Lumtub reads under Settings › Storage & updates.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packs/**'
+      - 'native/lumtub_core/src/packs.rs'
+      - 'native/lumtub_core/src/bin/lumtub-packs.rs'
+      - '.github/workflows/packs.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'packs/**'
+      - 'native/lumtub_core/src/packs.rs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check packs
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install the Rust toolchain
+        run: |
+          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: packs
+
+      - name: Check the packs
+        run: cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --release --bin lumtub-packs -- check packs
+
+  publish:
+    name: Publish packs
+    needs: check
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-packs
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install the Rust toolchain
+        run: |
+          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Build, sign and publish packs.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LUMTUB_UPDATE_KEY: ${{ secrets.LUMTUB_UPDATE_KEY }}
+        run: |
+          if ! compgen -G 'packs/*.json' > /dev/null; then
+            echo 'No packs yet; nothing to publish.' | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [[ -z "$LUMTUB_UPDATE_KEY" ]]; then
+            echo "::error::The LUMTUB_UPDATE_KEY secret is not set; the catalog cannot be signed."
+            exit 1
+          fi
+          # The version is when the packs last changed; the app refuses a
+          # catalog older than the one it has.
+          version=$(git log -1 --format=%ct -- packs native/lumtub_core/src/packs.rs)
+          cargo build --manifest-path native/lumtub_core/Cargo.toml --release --bin lumtub-packs --bin lumtub-sign
+          tools=native/lumtub_core/target/release
+          mkdir -p "$RUNNER_TEMP/out"
+          LUMTUB_PACKS_BUILT=$(date -u -d "@$version" +%Y-%m-%dT%H:%M:%SZ) "$tools/lumtub-packs" build packs "$RUNNER_TEMP/out/packs.json" "$version"
+          "$tools/lumtub-sign" "$RUNNER_TEMP/out/packs.json"
+          if ! gh release view packs --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release create packs --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
+              --title 'Data packs' --notes 'The signed catalog of optional data packs (models, language data, shaders). Lumtub reads it from Settings; it is not an app release.'
+          fi
+          gh release upload packs "$RUNNER_TEMP/out/packs.json" "$RUNNER_TEMP/out/packs.json.sig" --repo "$GITHUB_REPOSITORY" --clobber
+          echo "Published the pack catalog version $version" | tee -a "$GITHUB_STEP_SUMMARY"

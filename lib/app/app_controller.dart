@@ -33,7 +33,11 @@ import '../playback_failure.dart';
 import '../skip_silence.dart';
 import '../volume_balance.dart';
 import '../playback_recovery.dart';
+import '../intelligence.dart';
+import '../jobs.dart';
 import '../library_store.dart';
+import '../local_db.dart';
+import '../packs.dart';
 import '../secure_store.dart';
 import '../dearrow.dart';
 import '../device.dart';
@@ -1025,6 +1029,33 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// AI 总结 already made this session, by video id.
   final _summaries = <String, String>{};
 
+  /// Videos whose kept AI 总结 was thrown away this session, so lumtub.db
+  /// is not asked for it while that is being written.
+  final _staleSummaries = <String>{};
+
+  /// lumtub.db for texts made for videos (recognized subtitles, AI 总结),
+  /// when the core keeps them.
+  LocalDb? _textsDb;
+
+  /// The one queue for AI work: one heavy job on this device at a time,
+  /// background work only on mains power and outside low resource use.
+  late final jobs = JobQueue(backgroundPaused: () => Power.saving || appearance.lowResource || settings.strategy == PlaybackStrategy.lowResource);
+
+  /// The AI work, done by what is set up now: today the services under
+  /// 翻译与 AI, later the system's models and downloaded packs.
+  Intelligence get intelligence {
+    final config = preferences.translation;
+    return Intelligence([
+      CloudIntelligence(
+        speech: speechReady(config, translationKeys) ? SpeechRecognizer(_http, baseUrl: config.effectiveSpeechBaseUrl, key: speechKeyFor(config, translationKeys), model: config.effectiveSpeechModel) : null,
+        ai: aiServiceFor(config, translationKeys, _http),
+      ),
+    ]);
+  }
+
+  /// Data packs (models, language data, shaders) downloaded on demand.
+  PackManager? packs;
+
   /// Whether [details] has subtitles other than 语音识别's.
   static bool hasOwnSubtitles(VideoDetails? details) => details?.subtitles.any((s) => s.kind != SubtitleKind.speech) ?? false;
 
@@ -1170,6 +1201,8 @@ class AppController extends ChangeNotifier with _ExploreState {
     _danmaku?.stop();
     chatMessages.dispose();
     speechJob.dispose();
+    jobs.dispose();
+    packs?.dispose();
     translationShown.dispose();
     unawaited(_forgetShadowing().whenComplete(() {
       shadowStage.dispose();

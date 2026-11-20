@@ -465,11 +465,12 @@ class ToolManager {
 
   /// GitHub's downloads answer 502 to 504 now and then; such answers, and
   /// 429, are asked again a few times before the last one is returned.
-  Future<http.StreamedResponse> _sendRetrying(Uri uri) async {
+  Future<http.StreamedResponse> _sendRetrying(Uri uri, {Map<String, String> headers = const {}}) async {
     const waits = [Duration(seconds: 2), Duration(seconds: 5), Duration(seconds: 10)];
     for (var attempt = 0; ; attempt++) {
       final request = http.Request('GET', uri);
       request.headers['User-Agent'] = _userAgent;
+      request.headers.addAll(headers);
       final result = await _client.send(request).timeout(const Duration(seconds: 30));
       final busy = result.statusCode == 429 || (result.statusCode >= 502 && result.statusCode <= 504);
       if (!busy || attempt >= waits.length) return result;
@@ -477,6 +478,13 @@ class ToolManager {
       await Future<void>.delayed(waits[attempt]);
     }
   }
+
+  /// A GET of [uri] as component downloads make it, asked again while
+  /// GitHub is busy; for data packs ([PackManager]).
+  Future<http.StreamedResponse> sendRetrying(Uri uri, {Map<String, String> headers = const {}}) => _sendRetrying(uri, headers: headers);
+
+  /// [file]'s SHA-256 in lowercase hex.
+  Future<String> sha256Of(File file) => _sha256(file);
 
   /// The file's SHA-256, hashed by the native core on another isolate so the
   /// window keeps drawing; Dart hashes it when the core is missing.

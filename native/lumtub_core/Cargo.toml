@@ -89,5 +89,8 @@ curve25519-dalek = { version = "5", default-features = false }
 num-bigint = "0.5"
 ring = "0.17"
 whatlang = "0.18"
+# Japanese, Korean and Chinese cut into words (words.rs), with the
+# dictionary a learning pack downloads; none is built in.
+lindera = { version = "6.2.0", default-features = false, features = ["mmap"] }
 # QuickJS inside the core, for yt-dlp's challenge solver (js.rs).
 rquickjs = { version = "0.14", default-features = false, features = ["std"] }

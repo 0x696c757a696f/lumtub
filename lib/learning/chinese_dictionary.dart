@@ -84,11 +84,14 @@ class ChineseDictionary {
         i++;
       }
       for (final word in _split(chars.sublist(start, i))) {
-        tokens.add(WordToken(word, readingOf(word) ?? _charsReading(word), isWord: true));
+        tokens.add(WordToken(word, readingWithChars(word), isWord: true));
       }
     }
     return tokens;
   }
+
+  /// [word]'s pinyin, character by character when the dictionary lacks it.
+  String? readingWithChars(String word) => readingOf(word) ?? _charsReading(word);
 
   /// A word the dictionary lacks, read character by character.
   String? _charsReading(String word) {

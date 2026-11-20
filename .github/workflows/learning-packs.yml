@@ -8,10 +8,12 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/learning-packs.yml'
+      - '.github/learning/**'
   pull_request:
     branches: [main]
     paths:
       - '.github/workflows/learning-packs.yml'
+      - '.github/learning/**'
   schedule:
     # CC-CEDICT changes a little every day; once a month is enough.
     - cron: '23 4 2 * *'
@@ -166,6 +168,40 @@ jobs:
             rm -f "$RUNNER_TEMP/in/$code.jsonl"
           done
 
+      - name: Build the word segmenters
+        run: |
+          set -euo pipefail
+          # Lindera's dictionaries for cutting Japanese (IPADIC), Korean
+          # (mecab-ko-dic) and Chinese (jieba) into words, built by the
+          # same Lindera as the core reads them with. Each source is the
+          # one the lindera-* crate builds from, checked by its MD5.
+          rustup update stable --no-self-update
+          rustup default stable
+          cargo build --release --locked --manifest-path .github/learning/lindera_dict/Cargo.toml
+          tool="$PWD/.github/learning/lindera_dict/target/release/lindera_dict"
+          seg="$RUNNER_TEMP/segmenters"
+          mkdir -p "$seg"
+          while read -r code crate file md5 sub; do
+            curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/$crate.crate" "https://static.crates.io/crates/$crate/$crate-6.2.0.crate"
+            tar -xzf "$RUNNER_TEMP/in/$crate.crate" -C "$RUNNER_TEMP/in"
+            meta="$RUNNER_TEMP/in/$crate-6.2.0"
+            curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/$file" "https://lindera.dev/$file"
+            echo "$md5  $RUNNER_TEMP/in/$file" | md5sum -c -
+            tar -xzf "$RUNNER_TEMP/in/$file" -C "$RUNNER_TEMP/in"
+            freq=()
+            if [[ -f "$meta/context_id_freq.txt" ]]; then freq=("$meta/context_id_freq.txt"); fi
+            "$tool" "$meta/metadata.json" "$RUNNER_TEMP/in/${file%.tar.gz}${sub}" "$seg/$code" "${freq[@]}"
+            cp "$meta/NOTICE.txt" "$seg/$code/NOTICE.txt"
+            (cd "$seg/$code" && zip -q -X -9 -r "$RUNNER_TEMP/out/$code-segmenter.zip" .)
+            echo "$code segmenter: $(du -sb "$seg/$code" | cut -f1) bytes, $(stat -c %s "$RUNNER_TEMP/out/$code-segmenter.zip") zipped" | tee -a "$GITHUB_STEP_SUMMARY"
+          done <<'LIST'
+          ja lindera-ipadic mecab-ipadic-2.7.0-20250920.tar.gz a95c409f12f1023fce8ef91f991ef042
+          ko lindera-ko-dic mecab-ko-dic-2.1.1-20180720.tar.gz b996764e91c96bc89dc32ea208514a96
+          zh lindera-jieba mecab-jieba-0.1.1.tar.gz 749dc1ab25a035e141d014cd3c1cf8e9 /dict-src
+          LIST
+          # The core cuts real sentences with them before they go out.
+          LUMTUB_SEGMENTERS="$seg" cargo test --locked --manifest-path native/lumtub_core/Cargo.toml --lib real_segmenters -- --ignored --nocapture | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -175,6 +211,7 @@ jobs:
             ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT);
             JMdict by the Electronic Dictionary Research and Development Group under CC BY-SA 4.0 (https://www.edrdg.org/edrdg/licence.html), via jmdict-simplified;
             the Korean, Spanish, French, German, Italian and Russian dictionaries are made from the English and Chinese Wiktionaries (CC BY-SA 4.0, https://www.wiktionary.org/) as extracted by kaikki.org (https://kaikki.org/) and from WikDict (CC BY-SA, https://www.wikdict.com/).
+            The word segmenters are Lindera (MIT, https://github.com/lindera/lindera) builds of IPADIC (its own permissive license), mecab-ko-dic (Apache-2.0) and mecab-jieba (MIT); each zip holds its NOTICE.txt.
         run: |
           set -euo pipefail
           if ! gh release view learning --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
@@ -184,6 +221,6 @@ jobs:
           fi
           gh release edit learning --repo "$GITHUB_REPOSITORY" --notes "$NOTES"
           # The dictionaries first, then the sums that name them.
-          (cd "$RUNNER_TEMP/out" && sha256sum -- *.gz > SHA256SUMS)
-          gh release upload learning "$RUNNER_TEMP"/out/*.gz --repo "$GITHUB_REPOSITORY" --clobber
+          (cd "$RUNNER_TEMP/out" && sha256sum -- *.gz *.zip > SHA256SUMS)
+          gh release upload learning "$RUNNER_TEMP"/out/*.gz "$RUNNER_TEMP"/out/*.zip --repo "$GITHUB_REPOSITORY" --clobber
           gh release upload learning "$RUNNER_TEMP/out/SHA256SUMS" --repo "$GITHUB_REPOSITORY" --clobber

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../local_db.dart' show callCoreJson;
+import '../native_core.dart';
 
 /// A dictionary line found for a key, and whether the key is one of its
 /// word's forms rather than the word itself.
@@ -100,5 +101,58 @@ class MemoryLines implements LineSource {
     if (found.isNotEmpty) return found;
     final lower = key.toLowerCase();
     return lower == key ? found : _exact(lower);
+  }
+}
+
+/// A word the core found in a line: its place in UTF-16 units, the keys
+/// to look it up by (best first), and its reading for Japanese.
+typedef CoreWord = ({int start, int end, List<String> keys, String? reading});
+
+/// Lines cut into words by the core (words.rs): languages written with
+/// spaces always, Japanese, Korean and Chinese once [open] has their
+/// segmenter.
+class CoreWords {
+  /// Whether this core cuts lines; older cores and tests do not.
+  static bool get available => NativeCore.instance?.library.providesSymbol('lumtub_words') ?? false;
+
+  static final _open = <String>{};
+  static final _cache = <String, List<CoreWord>?>{};
+
+  static bool isOpen(String language) => _open.contains(language);
+
+  /// Opens the Lindera dictionary folder [path] for [language]; throws
+  /// when the core cannot.
+  static void open(String language, String path) {
+    final answer = callCoreJson('lumtub_words_open', jsonEncode({'language': language, 'path': path}));
+    if (answer['error'] != null) throw StateError('${answer['error']}');
+    _open.add(language);
+    _cache.clear();
+  }
+
+  static void close(String language) {
+    if (!_open.remove(language)) return;
+    callCoreJson('lumtub_words_close', jsonEncode({'language': language}));
+    _cache.clear();
+  }
+
+  /// The words of [line] in [language], or null when the core cannot cut
+  /// it.
+  static List<CoreWord>? cut(String language, String line) {
+    if (!available) return null;
+    final key = '$language\u0000$line';
+    if (_cache.containsKey(key)) return _cache[key];
+    final answer = callCoreJson('lumtub_words', jsonEncode({'language': language, 'lines': [line]}));
+    final lines = answer['lines'];
+    List<CoreWord>? words;
+    if (lines is List && lines.isNotEmpty && lines.first is List) {
+      words = [
+        for (final w in lines.first as List)
+          if (w is Map && w['s'] is int && w['e'] is int && w['k'] is List)
+            (start: w['s'] as int, end: w['e'] as int, keys: [for (final k in w['k'] as List) '$k'], reading: w['r'] as String?),
+      ];
+    }
+    // Subtitles come back to a line: keep the latest few thousand.
+    if (_cache.length > 3000) _cache.clear();
+    return _cache[key] = words;
   }
 }

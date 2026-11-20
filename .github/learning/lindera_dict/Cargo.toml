@@ -1,0 +1,15 @@
+[package]
+name = "lindera_dict"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Builds the Lindera dictionaries of the learning packs"
+
+[dependencies]
+# The same Lindera as the core, so the folders it writes are ones the
+# core reads.
+lindera = { version = "6.2.0", default-features = false }
+serde_json = "1"
+
+[profile.release]
+opt-level = 3

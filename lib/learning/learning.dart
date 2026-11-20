@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 
 import '../app_directories.dart';
 import '../app_log.dart';
+import '../zip_archive.dart' show extractZip;
 import 'chinese_dictionary.dart';
 import 'english_dictionary.dart';
 import 'japanese_dictionary.dart';
@@ -53,6 +54,13 @@ enum DictionaryPack {
 
   /// The name it is kept under.
   String get stored => sqlite ? file.substring(0, file.length - 3) : file;
+
+  /// The Lindera dictionary the core cuts this language's lines into
+  /// words with, downloaded beside the dictionary.
+  String? get segmenter => switch (this) {
+        japanese || korean || chinese => '$language-segmenter.zip',
+        _ => null,
+      };
 }
 
 /// One pack's download and reading.
@@ -135,11 +143,11 @@ class Learning extends ChangeNotifier {
   /// is ready.
   List<WordToken>? wordsOf(String text) {
     final ja = japanese;
-    if (ja != null && JapaneseDictionary.looksJapanese(text)) return ja.segment(text);
+    if (ja != null && JapaneseDictionary.looksJapanese(text)) return _cut('ja', text) ?? ja.segment(text);
     final zh = chinese;
-    if (zh != null && ChineseDictionary.looksChinese(text)) return zh.segment(text);
-    if (WiktionaryDictionary.looksKorean(text)) return _onDisk('ko') ? wiktionary('ko')?.segment(text) : null;
-    if (WiktionaryDictionary.looksCyrillic(text)) return _onDisk('ru') ? wiktionary('ru')?.segment(text) : null;
+    if (zh != null && ChineseDictionary.looksChinese(text)) return _cut('zh', text) ?? zh.segment(text);
+    if (WiktionaryDictionary.looksKorean(text)) return _onDisk('ko') ? _wiktionaryWords('ko', text) : null;
+    if (WiktionaryDictionary.looksCyrillic(text)) return _onDisk('ru') ? _wiktionaryWords('ru', text) : null;
     if (!EnglishDictionary.looksLatin(text)) return null;
     final en = english;
     final latin = [if (en != null) 'en', for (final code in const ['es', 'fr', 'de', 'it']) if (_packs[DictionaryPack.values.firstWhere((p) => p.language == code)]!.state case PackState.downloaded || PackState.loading || PackState.ready) code];
@@ -148,7 +156,51 @@ class Learning extends ChangeNotifier {
     if (language == null) return null;
     if (language == 'en') return en!.segment(text);
     // Read on first use; until then the line stays plain.
-    return _onDisk(language) ? wiktionary(language)?.segment(text) : null;
+    return _onDisk(language) ? _wiktionaryWords(language, text) : null;
+  }
+
+  List<WordToken>? _wiktionaryWords(String language, String text) {
+    final dictionary = wiktionary(language);
+    if (dictionary == null) return null;
+    return _cut(language, text) ?? dictionary.segment(text);
+  }
+
+  /// [text] cut into words by the core: elision and joined pronouns
+  /// handled, Japanese, Korean and Chinese by their segmenter. Null when
+  /// the core cannot, and the dictionary's own cutting is used.
+  List<WordToken>? _cut(String language, String text) {
+    if (const {'ja', 'ko', 'zh'}.contains(language) && !CoreWords.isOpen(language)) return null;
+    final words = CoreWords.cut(language, text);
+    if (words == null) return null;
+    final tokens = <WordToken>[];
+    var at = 0;
+    for (final w in words) {
+      if (w.start < at || w.end > text.length || w.keys.isEmpty) continue;
+      if (w.start > at) tokens.add(WordToken(text.substring(at, w.start), null, isWord: false, language: language));
+      final surface = text.substring(w.start, w.end);
+      final reading = switch (language) {
+        'ja' => w.reading,
+        'ko' => WiktionaryDictionary.romanizeKorean(surface),
+        'zh' => chinese?.readingWithChars(surface),
+        _ => null,
+      };
+      tokens.add(WordToken(surface, reading, isWord: true, lookup: _bestKey(language, w.keys), language: language));
+      at = w.end;
+    }
+    if (at < text.length) tokens.add(WordToken(text.substring(at), null, isWord: false, language: language));
+    return tokens;
+  }
+
+  /// The first of [keys] the dictionary knows; the core puts the ones its
+  /// own dictionaries know first already.
+  String _bestKey(String language, List<String> keys) {
+    final ja = japanese;
+    if (language == 'ja' && ja != null) {
+      for (final key in keys) {
+        if (ja.lookUpInflected(key).isNotEmpty) return key;
+      }
+    }
+    return keys.first;
   }
 
   /// The language of the dictionary [token] is looked up in.
@@ -312,6 +364,7 @@ class Learning extends ChangeNotifier {
             });
       logInfo('${pack.name} dictionary opened in ${watch.elapsedMilliseconds} ms');
       state.state = PackState.ready;
+      _openSegmenter(pack);
     } catch (e) {
       logError('Could not read the ${pack.name} dictionary', e);
       state.error = '$e';
@@ -397,6 +450,81 @@ class Learning extends ChangeNotifier {
   void _close(DictionaryPack pack) {
     _packs[pack]!.dictionary = null;
     if (pack.sqlite) CoreLexicon.close(pack.language);
+    if (pack.segmenter != null) CoreWords.close(pack.language);
+  }
+
+  Directory? _segmenterOf(DictionaryPack pack) {
+    final folder = _folderOf(pack);
+    return folder == null ? null : Directory('${folder.path}${Platform.pathSeparator}segmenter');
+  }
+
+  final _fetchingSegmenters = <DictionaryPack>{};
+
+  /// Opens [pack]'s segmenter, fetching it first when it is not there,
+  /// such as for a dictionary downloaded before segmenters were. Lines
+  /// are cut the old way until it is open.
+  void _openSegmenter(DictionaryPack pack) {
+    final folder = _segmenterOf(pack);
+    if (pack.segmenter == null || folder == null || !CoreWords.available || CoreWords.isOpen(pack.language)) return;
+    if (File('${folder.path}${Platform.pathSeparator}metadata.json').existsSync()) {
+      try {
+        CoreWords.open(pack.language, folder.path);
+        logInfo('${pack.name} segmenter opened');
+        viewChanges.value++;
+      } catch (e) {
+        logWarn('Could not open the ${pack.name} segmenter: $e');
+      }
+      return;
+    }
+    if (licensed) unawaited(_downloadSegmenter(pack));
+  }
+
+  Future<void> _downloadSegmenter(DictionaryPack pack) async {
+    final name = pack.segmenter;
+    final folder = _segmenterOf(pack);
+    if (name == null || folder == null || !_fetchingSegmenters.add(pack)) return;
+    final client = http.Client();
+    final archive = File('${folder.path}.zip');
+    final unpacked = Directory('${folder.path}.new');
+    try {
+      final sums = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS')).timeout(const Duration(seconds: 30));
+      final expected = sums.statusCode == 200 ? RegExp('^([0-9a-f]{64}) [ *]?${RegExp.escape(name)}\\s*\$', multiLine: true).firstMatch(sums.body)?.group(1) : null;
+      // Not published yet: the dictionary cuts lines itself meanwhile.
+      if (expected == null) return;
+      final response = await client.send(http.Request('GET', Uri.parse('$learningPackRelease/$name'))).timeout(const Duration(seconds: 30));
+      if (response.statusCode != 200) throw HttpException('Segmenter HTTP ${response.statusCode}');
+      await folder.parent.create(recursive: true);
+      final sink = archive.openWrite();
+      final hashSink = _DigestSink();
+      final hasher = sha256.startChunkedConversion(hashSink);
+      try {
+        await for (final chunk in response.stream.timeout(const Duration(seconds: 60))) {
+          sink.add(chunk);
+          hasher.add(chunk);
+        }
+      } finally {
+        await sink.close();
+      }
+      hasher.close();
+      if (hashSink.value.toString() != expected) throw const FormatException('The segmenter download is damaged');
+      if (await unpacked.exists()) await unpacked.delete(recursive: true);
+      await extractZip(archive, unpacked);
+      if (_packs[pack]!.dictionary == null) return;
+      CoreWords.close(pack.language);
+      if (await folder.exists()) await folder.delete(recursive: true);
+      await unpacked.rename(folder.path);
+      _openSegmenter(pack);
+    } catch (e) {
+      logWarn('Could not download the ${pack.name} segmenter: $e');
+    } finally {
+      client.close();
+      _fetchingSegmenters.remove(pack);
+      for (final leftover in [archive, unpacked]) {
+        try {
+          if (await leftover.exists()) await leftover.delete(recursive: true);
+        } catch (_) {}
+      }
+    }
   }
 
   Future<void> delete(DictionaryPack pack) async {

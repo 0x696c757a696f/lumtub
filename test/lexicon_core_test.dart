@@ -60,4 +60,28 @@ void main() {
     CoreLexicon.close('ru');
     expect(() => CoreLexicon.open('ru', '${dir.path}/missing.sqlite'), throwsStateError);
   }, skip: skip);
+
+  test('the core cuts French and Spanish lines into words', () async {
+    final dir = await Directory.systemTemp.createTemp('lumtub words');
+    addTearDown(() => dir.delete(recursive: true));
+    final es = await _pack(dir, 'es.sqlite', [
+      ..._schema,
+      "INSERT INTO entry VALUES (1, 'hacer\t\t\tv.\t做\tto do\t')",
+      "INSERT INTO term VALUES ('hacer', 1, 0)",
+    ]);
+    if (es == null) {
+      markTestSkipped('needs Python');
+      return;
+    }
+    const line = 'J’ai vu l’homme 😀, a-t-il dit.';
+    final words = CoreWords.cut('fr', line)!;
+    expect([for (final w in words) line.substring(w.start, w.end)], ['J’', 'ai', 'vu', 'l’', 'homme', 'a', 'il', 'dit']);
+    expect(words.first.keys.first, "J'");
+    final spanish = WiktionaryDictionary('es', CoreLexicon.open('es', es));
+    final found = spanish.lookup('Hacerlo');
+    expect(found.single.word, 'hacer');
+    expect(found.single.form, isTrue);
+    CoreLexicon.close('es');
+    expect(CoreWords.cut('ko', '안녕하세요'), isNull);
+  }, skip: skip);
 }

@@ -382,7 +382,7 @@ class _WiktionaryCard extends StatelessWidget {
     final all = dictionary.lookup(token.key);
     // A form with no meaning of its own shows only as a note on its word.
     final entries = all.where((e) => e.hasMeanings).toList();
-    final formOf = all.where((e) => !e.hasMeanings || e.lemmas.isNotEmpty).expand((e) => e.lemmas).toSet();
+    final formOf = {...all.where((e) => e.form && e.hasMeanings).map((e) => e.word), ...all.where((e) => !e.hasMeanings).expand((e) => e.lemmas)};
     final head = entries.isEmpty ? token.key : entries.first.word;
     final book = controller.learning.book;
     return AlertDialog(
@@ -404,7 +404,7 @@ class _WiktionaryCard extends StatelessWidget {
         child: SingleChildScrollView(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
             if (entries.isEmpty) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(tr('Not in the dictionary'), style: TextStyle(color: colors.outline))),
-            if (formOf.isNotEmpty && entries.isNotEmpty && entries.first.word != token.key)
+            if (formOf.isNotEmpty && entries.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(tr('A form of {0}', [formOf.join(', ')]), style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),

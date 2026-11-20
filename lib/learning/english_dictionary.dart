@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'lexicon.dart';
 import 'word_token.dart';
 
 /// The English pack: common English words with their phonetics and
@@ -9,57 +10,38 @@ import 'word_token.dart';
 /// `p:ran/d:run/i:running/3:runs/0:run` and tags its `zk gk cet4`. Packs
 /// built before the last three columns existed still read.
 class EnglishDictionary {
-  EnglishDictionary._(this._lines, this._index, this._forms);
+  EnglishDictionary(this._source);
 
-  final List<String> _lines;
-  final Map<String, int> _index;
+  final LineSource _source;
 
-  /// Each inflected form, lower case, to the words it comes from.
-  final Map<String, List<String>> _forms;
+  int get size => _source.size;
 
-  int get size => _lines.length;
+  /// The word list in memory, for tests and packs not moved to SQLite.
+  static EnglishDictionary parse(String text) => EnglishDictionary(MemoryLines(const LineSplitter().convert(text), formsOf: formsOf));
 
-  static EnglishDictionary parse(String text) {
-    final lines = <String>[];
-    final index = <String, int>{};
-    final forms = <String, List<String>>{};
-    for (final line in const LineSplitter().convert(text)) {
-      final tab = line.indexOf('\t');
-      if (tab <= 0) continue;
-      final word = line.substring(0, tab);
-      final at = lines.length;
-      lines.add(line);
-      index.putIfAbsent(word, () => at);
-      index.putIfAbsent(word.toLowerCase(), () => at);
-      final columns = line.split('\t');
-      if (columns.length > 3) {
-        for (final part in columns[3].split('/')) {
-          final colon = part.indexOf(':');
-          if (colon < 0 || part.startsWith('0:') || part.startsWith('1:')) continue;
-          final form = part.substring(colon + 1).toLowerCase();
-          if (form.isEmpty || form == word.toLowerCase()) continue;
-          final list = forms[form] ??= [];
-          if (!list.contains(word)) list.add(word);
-        }
-      }
-    }
-    return EnglishDictionary._(lines, index, forms);
+  /// The forms a line names: ECDICT's forms field without the lemma
+  /// (`0:`) and lemma kind (`1:`) parts.
+  static Iterable<String> formsOf(String line) {
+    final columns = line.split('\t');
+    if (columns.length < 4) return const [];
+    return [
+      for (final part in columns[3].split('/'))
+        if (part.length > 2 && part[1] == ':' && part[0] != '0' && part[0] != '1') part.substring(2),
+    ];
   }
 
   /// The entries for [word] as written, then for the words it is a form
   /// of: `ran` gives `ran`, if listed, and `run`.
   List<EnglishEntry> lookup(String word) {
     final found = <EnglishEntry>[];
-    final seen = <int>{};
+    final seen = <String>{};
     void add(String w) {
-      final at = _index[w] ?? _index[w.toLowerCase()];
-      if (at != null && seen.add(at)) found.add(EnglishEntry.parse(_lines[at]));
+      for (final row in _source.find(w)) {
+        if (seen.add(row.line)) found.add(EnglishEntry.parse(row.line));
+      }
     }
 
     add(word);
-    for (final base in _forms[word.toLowerCase()] ?? const <String>[]) {
-      add(base);
-    }
     // A possessive or a contraction the list lacks: the word before it.
     if (found.isEmpty && word.contains("'")) add(word.substring(0, word.indexOf("'")));
     return found;

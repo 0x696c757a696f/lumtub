@@ -32,6 +32,10 @@ jobs:
       group: publish-learning-packs
       cancel-in-progress: false
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
       - name: Build the Chinese dictionary
         run: |
           set -euo pipefail
@@ -47,7 +51,6 @@ jobs:
             exit 1
           fi
           gzip -n -9 < "$RUNNER_TEMP/in/cedict.txt" > "$RUNNER_TEMP/out/zh-cedict.txt.gz"
-          (cd "$RUNNER_TEMP/out" && sha256sum zh-cedict.txt.gz > SHA256SUMS)
           echo "CC-CEDICT: $entries entries, $(stat -c %s "$RUNNER_TEMP/out/zh-cedict.txt.gz") bytes compressed" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Build the English dictionary
@@ -85,7 +88,9 @@ jobs:
           print(f'ECDICT: {kept} words')
           PY
           gzip -n -9 < "$RUNNER_TEMP/in/en.tsv" > "$RUNNER_TEMP/out/en-ecdict.tsv.gz"
-          (cd "$RUNNER_TEMP/out" && sha256sum zh-cedict.txt.gz en-ecdict.tsv.gz > SHA256SUMS)
+          # The SQLite dictionary the app looks words up in on disk.
+          python3 -I .github/learning/sqlite_pack.py ecdict en "$RUNNER_TEMP/in/en.tsv" "$RUNNER_TEMP/in/en.sqlite"
+          gzip -n -9 < "$RUNNER_TEMP/in/en.sqlite" > "$RUNNER_TEMP/out/en-ecdict.sqlite.gz"
           echo "ECDICT: $(wc -l < "$RUNNER_TEMP/in/en.tsv") words, $(stat -c %s "$RUNNER_TEMP/out/en-ecdict.tsv.gz") bytes compressed" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Build the Japanese dictionary
@@ -132,19 +137,53 @@ jobs:
           print(f'JMdict: {kept} entries')
           PY
           gzip -n -9 < "$RUNNER_TEMP/in/ja.tsv" > "$RUNNER_TEMP/out/ja-jmdict.tsv.gz"
-          (cd "$RUNNER_TEMP/out" && sha256sum zh-cedict.txt.gz en-ecdict.tsv.gz ja-jmdict.tsv.gz > SHA256SUMS)
           echo "JMdict: $(wc -l < "$RUNNER_TEMP/in/ja.tsv") entries, $(stat -c %s "$RUNNER_TEMP/out/ja-jmdict.tsv.gz") bytes compressed" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Build the Wiktionary dictionaries
+        run: |
+          set -euo pipefail
+          # Simplified Chinese for meanings written in traditional characters.
+          python3 -m pip install --quiet --disable-pip-version-check opencc-python-reimplemented==0.1.7
+          # The Chinese Wiktionary (Chinese meanings) and the English one
+          # (English meanings and forms), both CC BY-SA 4.0, as extracted by
+          # kaikki.org; WikDict's Chinese translations fill gaps.
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" https://kaikki.org/zhwiktionary/raw-wiktextract-data.jsonl.gz
+          args=()
+          for pair in ko=Korean es=Spanish fr=French de=German it=Italian ru=Russian; do
+            code=${pair%%=*}; name=${pair#*=}
+            curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/$code.jsonl" "https://kaikki.org/dictionary/$name/kaikki.org-dictionary-$name.jsonl"
+            wikdict=""
+            if curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/$code-zh.sqlite3" "https://download.wikdict.com/dictionaries/sqlite/2/$code-zh.sqlite3"; then
+              wikdict=",$RUNNER_TEMP/in/$code-zh.sqlite3"
+            fi
+            args+=("$code=$RUNNER_TEMP/in/$code.jsonl$wikdict")
+          done
+          python3 .github/learning/wiktionary.py "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" "$RUNNER_TEMP/in" "${args[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+          for code in ko es fr de it ru; do
+            python3 -I .github/learning/sqlite_pack.py wiktionary "$code" "$RUNNER_TEMP/in/$code-wiktionary.tsv" "$RUNNER_TEMP/in/$code.sqlite"
+            gzip -n -9 < "$RUNNER_TEMP/in/$code.sqlite" > "$RUNNER_TEMP/out/$code-wiktionary.sqlite.gz"
+            echo "$code: $(stat -c %s "$RUNNER_TEMP/in/$code.sqlite") bytes, $(stat -c %s "$RUNNER_TEMP/out/$code-wiktionary.sqlite.gz") compressed" | tee -a "$GITHUB_STEP_SUMMARY"
+            rm -f "$RUNNER_TEMP/in/$code.jsonl"
+          done
 
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
+          NOTES: >-
+            Dictionaries for the learning pack, downloaded by Lumtub when a dictionary is turned on. Not an app release.
+            CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/);
+            ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT);
+            JMdict by the Electronic Dictionary Research and Development Group under CC BY-SA 4.0 (https://www.edrdg.org/edrdg/licence.html), via jmdict-simplified;
+            the Korean, Spanish, French, German, Italian and Russian dictionaries are made from the English and Chinese Wiktionaries (CC BY-SA 4.0, https://www.wiktionary.org/) as extracted by kaikki.org (https://kaikki.org/) and from WikDict (CC BY-SA, https://www.wikdict.com/).
         run: |
           set -euo pipefail
           if ! gh release view learning --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             gh release create learning --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
               --title 'Learning pack data' \
-              --notes 'Dictionaries for the learning pack, downloaded by Lumtub when a dictionary is turned on. Not an app release. CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/); ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT); JMdict by the Electronic Dictionary Research and Development Group under CC BY-SA 4.0 (https://www.edrdg.org/edrdg/licence.html), via jmdict-simplified.'
+              --notes "$NOTES"
           fi
-          # The dictionary first, then the sums that name it.
-          gh release upload learning "$RUNNER_TEMP/out/zh-cedict.txt.gz" "$RUNNER_TEMP/out/en-ecdict.tsv.gz" "$RUNNER_TEMP/out/ja-jmdict.tsv.gz" --repo "$GITHUB_REPOSITORY" --clobber
+          gh release edit learning --repo "$GITHUB_REPOSITORY" --notes "$NOTES"
+          # The dictionaries first, then the sums that name them.
+          (cd "$RUNNER_TEMP/out" && sha256sum -- *.gz > SHA256SUMS)
+          gh release upload learning "$RUNNER_TEMP"/out/*.gz --repo "$GITHUB_REPOSITORY" --clobber
           gh release upload learning "$RUNNER_TEMP/out/SHA256SUMS" --repo "$GITHUB_REPOSITORY" --clobber

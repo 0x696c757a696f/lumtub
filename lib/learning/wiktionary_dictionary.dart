@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'lexicon.dart';
 import 'word_token.dart';
 
 /// A dictionary built from Wiktionary for one language (Korean, Spanish,
@@ -8,64 +9,47 @@ import 'word_token.dart';
 /// English meanings (a literal `\n` between meanings), and the words it is
 /// a form of (`|` between).
 class WiktionaryDictionary {
-  WiktionaryDictionary._(this.language, this._lines, this._index);
+  WiktionaryDictionary(this.language, this._source);
 
   /// The language's code, such as `es`.
   final String language;
-  final List<String> _lines;
+  final LineSource _source;
 
-  /// Each word, and each word in lower case, to its line.
-  final Map<String, int> _index;
+  int get size => _source.size;
 
-  int get size => _lines.length;
-
-  static WiktionaryDictionary parse(String text, String language) {
-    final lines = <String>[];
-    final index = <String, int>{};
-    for (final line in const LineSplitter().convert(text)) {
-      final tab = line.indexOf('\t');
-      if (tab <= 0) continue;
-      final word = line.substring(0, tab);
-      final at = lines.length;
-      lines.add(line);
-      index.putIfAbsent(word, () => at);
-      index.putIfAbsent(word.toLowerCase(), () => at);
-    }
-    return WiktionaryDictionary._(language, lines, index);
-  }
-
-  WiktionaryEntry? _entry(String word) {
-    final at = _index[word] ?? _index[word.toLowerCase()];
-    return at == null ? null : WiktionaryEntry.parse(_lines[at]);
-  }
+  /// The word list in memory, for tests.
+  static WiktionaryDictionary parse(String text, String language) => WiktionaryDictionary(language, MemoryLines(const LineSplitter().convert(text)));
 
   /// The entries for [word]: the word itself, then the words it is a form
-  /// of (`hablo` gives `hablo` and `hablar`). Korean words carry their
-  /// particles and endings, so there the longest known start counts too.
+  /// of (`hablo` gives `hablar`). Korean words carry their particles and
+  /// endings, so there the longest known start counts too.
   List<WiktionaryEntry> lookup(String word) {
     final found = <WiktionaryEntry>[];
     final seen = <String>{};
-    void add(WiktionaryEntry? entry, {int depth = 0}) {
-      if (entry == null || !seen.add(entry.word)) return;
-      found.add(entry);
-      if (depth < 1) {
-        for (final lemma in entry.lemmas) {
-          add(_entry(lemma), depth: depth + 1);
+    void add(String key, {bool form = false, int depth = 0}) {
+      for (final row in _source.find(key)) {
+        if (!seen.add(row.line)) continue;
+        final entry = WiktionaryEntry.parse(row.line, form: form || row.form);
+        found.add(entry);
+        if (depth < 1) {
+          for (final lemma in entry.lemmas) {
+            add(lemma, form: true, depth: depth + 1);
+          }
         }
       }
     }
 
-    add(_entry(word));
+    add(word);
     if (found.isEmpty && language == 'ko') {
       for (final stem in koreanStems(word)) {
-        add(_entry(stem));
+        add(stem);
         if (found.isNotEmpty) break;
       }
     }
     // French l'homme, Italian dell'anno: the word after the apostrophe.
     if (found.isEmpty) {
       final apostrophe = word.lastIndexOf(RegExp("['’]"));
-      if (apostrophe > 0 && apostrophe < word.length - 1) add(_entry(word.substring(apostrophe + 1)));
+      if (apostrophe > 0 && apostrophe < word.length - 1) add(word.substring(apostrophe + 1));
     }
     return found;
   }
@@ -153,7 +137,7 @@ class WiktionaryDictionary {
 }
 
 class WiktionaryEntry {
-  const WiktionaryEntry({required this.word, this.reading = '', this.ipa = '', this.pos = const [], this.chinese = const [], this.english = const [], this.lemmas = const []});
+  const WiktionaryEntry({required this.word, this.reading = '', this.ipa = '', this.pos = const [], this.chinese = const [], this.english = const [], this.lemmas = const [], this.form = false});
 
   final String word;
 
@@ -167,7 +151,10 @@ class WiktionaryEntry {
   /// The words this is a form of.
   final List<String> lemmas;
 
-  static WiktionaryEntry parse(String line) {
+  /// Found as the word that what was looked up is a form of.
+  final bool form;
+
+  static WiktionaryEntry parse(String line, {bool form = false}) {
     final parts = line.split('\t');
     String at(int i) => i < parts.length ? parts[i] : '';
     List<String> lines(String text) => text.split(r'\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
@@ -180,6 +167,7 @@ class WiktionaryEntry {
       chinese: lines(at(4)),
       english: lines(at(5)),
       lemmas: list(at(6)),
+      form: form,
     );
   }
 

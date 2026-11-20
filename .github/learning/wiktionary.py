@@ -50,6 +50,16 @@ def opener(path):
     return gzip.open(path, 'rt', encoding='utf-8') if path.endswith('.gz') else open(path, encoding='utf-8')
 
 
+HANJA = re.compile(r'^汉字或谚汉混合表记：\S*?[〈（(](.+?)[〉）)]$')
+
+
+def with_pos(pos, gloss):
+    """[gloss] after its part of speech, unless it starts with one."""
+    if not pos or gloss.startswith(pos) or re.match(r'^[a-z]{1,5}\.', gloss):
+        return gloss
+    return f'{pos} {gloss}'
+
+
 def gloss_of(sense):
     glosses = sense.get('glosses') or sense.get('raw_glosses') or []
     return clean(glosses[-1]) if glosses else ''
@@ -80,8 +90,13 @@ def main():
                 if sense.get('form_of') or len(found) >= MAX_SENSES:
                     continue
                 gloss = simplified(gloss_of(sense))
-                if gloss and f'{pos} {gloss}'.strip() not in found:
-                    found.append(f'{pos} {gloss}'.strip())
+                # A Korean word's hanja: the meaning a Chinese reader sees.
+                hanja = HANJA.match(gloss) if code == 'ko' else None
+                if hanja:
+                    gloss = f'汉字词：{hanja.group(1)}'
+                gloss = with_pos(pos, gloss)
+                if gloss and gloss not in found:
+                    found.append(gloss)
     # WikDict's translations, for the words still without Chinese.
     for code, path in wikdicts.items():
         if not path:
@@ -136,7 +151,7 @@ def main():
                         continue
                     gloss = gloss_of(sense)
                     if gloss:
-                        gloss = f'{pos} {gloss}'.strip()
+                        gloss = with_pos(pos, gloss)
                         if gloss not in record['en']:
                             record['en'].append(gloss)
                 # Forms listed on the lemma's own page: hablo → hablar.

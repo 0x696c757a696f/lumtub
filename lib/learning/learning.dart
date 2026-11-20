@@ -13,6 +13,7 @@ import 'chinese_dictionary.dart';
 import 'english_dictionary.dart';
 import 'japanese_dictionary.dart';
 import 'latin_language.dart';
+import 'lexicon.dart';
 import 'license.dart';
 import 'vocabulary.dart';
 import 'wiktionary_dictionary.dart';
@@ -30,21 +31,28 @@ enum ClaimResult { ok, notFound, busy, offline }
 /// A dictionary the learning pack downloads.
 enum DictionaryPack {
   chinese('zh', 'zh-cedict.txt.gz'),
-  english('en', 'en-ecdict.tsv.gz'),
+  english('en', 'en-ecdict.sqlite.gz'),
   japanese('ja', 'ja-jmdict.tsv.gz'),
-  korean('ko', 'ko-wiktionary.tsv.gz'),
-  spanish('es', 'es-wiktionary.tsv.gz'),
-  french('fr', 'fr-wiktionary.tsv.gz'),
-  german('de', 'de-wiktionary.tsv.gz'),
-  italian('it', 'it-wiktionary.tsv.gz'),
-  russian('ru', 'ru-wiktionary.tsv.gz');
+  korean('ko', 'ko-wiktionary.sqlite.gz'),
+  spanish('es', 'es-wiktionary.sqlite.gz'),
+  french('fr', 'fr-wiktionary.sqlite.gz'),
+  german('de', 'de-wiktionary.sqlite.gz'),
+  italian('it', 'it-wiktionary.sqlite.gz'),
+  russian('ru', 'ru-wiktionary.sqlite.gz');
 
   const DictionaryPack(this.language, this.file);
   final String language;
   final String file;
 
   /// Built from Wiktionary, read by [WiktionaryDictionary].
-  bool get wiktionary => file.endsWith('-wiktionary.tsv.gz');
+  bool get wiktionary => file.contains('-wiktionary.');
+
+  /// A SQLite file the core looks words up in ([CoreLexicon]), kept
+  /// unpacked on disk; the others are word lists read into memory.
+  bool get sqlite => file.endsWith('.sqlite.gz');
+
+  /// The name it is kept under.
+  String get stored => sqlite ? file.substring(0, file.length - 3) : file;
 }
 
 /// One pack's download and reading.
@@ -151,7 +159,7 @@ class Learning extends ChangeNotifier {
   Directory? _folderOf(DictionaryPack pack) => _directories == null ? null : Directory('${_directories!.data.path}${Platform.pathSeparator}learn${Platform.pathSeparator}${pack.language}');
   File? _fileOf(DictionaryPack pack) {
     final folder = _folderOf(pack);
-    return folder == null ? null : File('${folder.path}${Platform.pathSeparator}${pack.file}');
+    return folder == null ? null : File('${folder.path}${Platform.pathSeparator}${pack.stored}');
   }
 
   /// Reads the saved license and settings; with a license, the
@@ -289,16 +297,20 @@ class Learning extends ChangeNotifier {
     try {
       final path = file.path;
       final watch = Stopwatch()..start();
-      state.dictionary = await Isolate.run<Object>(() {
-        final text = utf8.decode(gzip.decode(File(path).readAsBytesSync()));
-        return switch (pack) {
-          DictionaryPack.chinese => ChineseDictionary.parse(text),
-          DictionaryPack.english => EnglishDictionary.parse(text),
-          DictionaryPack.japanese => JapaneseDictionary.parse(text),
-          _ => WiktionaryDictionary.parse(text, pack.language),
-        };
-      });
-      logInfo('${pack.name} dictionary read in ${watch.elapsedMilliseconds} ms');
+      state.dictionary = pack.sqlite
+          ? switch (pack) {
+              DictionaryPack.english => EnglishDictionary(CoreLexicon.open(pack.language, path)),
+              _ => WiktionaryDictionary(pack.language, CoreLexicon.open(pack.language, path)),
+            }
+          : await Isolate.run<Object>(() {
+              final text = utf8.decode(gzip.decode(File(path).readAsBytesSync()));
+              return switch (pack) {
+                DictionaryPack.chinese => ChineseDictionary.parse(text),
+                DictionaryPack.japanese => JapaneseDictionary.parse(text),
+                _ => throw StateError('${pack.name} is a SQLite dictionary'),
+              };
+            });
+      logInfo('${pack.name} dictionary opened in ${watch.elapsedMilliseconds} ms');
       state.state = PackState.ready;
     } catch (e) {
       logError('Could not read the ${pack.name} dictionary', e);
@@ -321,6 +333,7 @@ class Learning extends ChangeNotifier {
     notifyListeners();
     final client = http.Client();
     final part = File('${file.path}.part');
+    final unpacked = File('${file.path}.new');
     try {
       final sums = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS')).timeout(const Duration(seconds: 30));
       if (sums.statusCode != 200) throw HttpException('SHA256SUMS HTTP ${sums.statusCode}');
@@ -349,7 +362,16 @@ class Learning extends ChangeNotifier {
       }
       hasher.close();
       if (hashSink.value.toString() != expected) throw const FormatException('The dictionary download is damaged; try again');
-      await part.rename(file.path);
+      if (pack.sqlite) {
+        // Unpacked once, then looked up in place; the open copy is let go
+        // first so it can be replaced.
+        await part.openRead().transform(gzip.decoder).pipe(unpacked.openWrite());
+        await part.delete();
+        _close(pack);
+        await unpacked.rename(file.path);
+      } else {
+        await part.rename(file.path);
+      }
       logInfo('${pack.name} dictionary downloaded: $received bytes');
       state
         ..state = PackState.loading
@@ -361,16 +383,24 @@ class Learning extends ChangeNotifier {
       state
         ..error = '$e'
         ..state = PackState.failed;
-      try {
-        if (await part.exists()) await part.delete();
-      } catch (_) {}
+      for (final leftover in [part, unpacked]) {
+        try {
+          if (await leftover.exists()) await leftover.delete();
+        } catch (_) {}
+      }
       notifyListeners();
     } finally {
       client.close();
     }
   }
 
+  void _close(DictionaryPack pack) {
+    _packs[pack]!.dictionary = null;
+    if (pack.sqlite) CoreLexicon.close(pack.language);
+  }
+
   Future<void> delete(DictionaryPack pack) async {
+    _close(pack);
     _packs[pack]!
       ..dictionary = null
       ..state = PackState.missing;

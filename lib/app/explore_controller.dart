@@ -10,7 +10,7 @@ mixin _ExploreState {
   int exploreSub = 0;
   int exploreLeaf = 0;
   ExploreMode exploreMode = ExploreMode.popular;
-  SearchUploadDate explorePeriod = SearchUploadDate.month;
+  SearchUploadDate explorePeriod = SearchUploadDate.any;
   SearchDuration exploreDuration = SearchDuration.any;
   SearchQuality exploreQuality = SearchQuality.any;
   /// The 类型 and 视角 filters: 宗教与信仰's own lists there, general ones

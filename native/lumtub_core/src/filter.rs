@@ -220,7 +220,8 @@ fn latin_letters(language: Language, lower: &str) -> bool {
         Language::Fr => lower.contains(['œ', 'ç', 'è', 'ù', 'û']),
         Language::De => lower.contains(['ä', 'ö', 'ü', 'ß']),
         Language::Pt => lower.contains(['ã', 'õ']) || lower.contains("ção"),
-        Language::Ro => lower.contains(['ș', 'ț', 'ş', 'ţ']),
+        // ş with a cedilla is Turkish too (Şi, "Xi", in a Turkish title).
+        Language::Ro => lower.contains(['ș', 'ț', 'ţ']),
         Language::Is => lower.contains(['þ', 'ð']),
         // Albanian writes ë in most sentences; Dutch and French only in a
         // few names (België, Noël).
@@ -944,6 +945,10 @@ mod tests {
         ] {
             assert_eq!(reading(title), (language, true), "{title}");
         }
+        assert_ne!(
+            reading("Trump-Putin-Şi: Beden Dilleri Ne Dedi? | CANLI HABER").0,
+            Ro
+        );
         // One word of its own is a guess, but one that names Finnish.
         assert_eq!(reading("Matkavlogi - Kreeta").0, Fi);
     }

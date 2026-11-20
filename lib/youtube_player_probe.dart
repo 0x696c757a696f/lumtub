@@ -81,10 +81,13 @@ class YoutubePlayerProbe {
     Duration timeout = const Duration(seconds: 15),
     bool playing = false,
   }) async {
-    if (!playing && endpoint == 'player') {
-      if (await _waitForPlayback()) return http.Response('', 429, reasonPhrase: 'Resting');
-    } else {
+    // Only a start is counted as one: a lookup of another endpoint (/next
+    // for the AI filter) counted and never let go held every lookup for a
+    // list back for good, so a language picked in Explore showed nothing.
+    if (playing) {
       _playing++;
+    } else if (endpoint == 'player' && await _waitForPlayback()) {
+      return http.Response('', 429, reasonPhrase: 'Resting');
     }
     try {
       final response = await _post(client, headers, body, endpoint: endpoint, mask: mask, timeout: timeout, playing: playing);

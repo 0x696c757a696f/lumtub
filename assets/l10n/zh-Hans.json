@@ -3893,5 +3893,15 @@
   "Code ID: {0}": "激活码 ID：{0}",
   "Activate here": "在本机激活",
   "Activation and privacy": "激活与隐私",
-  "What the license server keeps, for how long, and how to have it deleted": "授权服务器保存什么、保存多久、怎样要求删除"
+  "What the license server keeps, for how long, and how to have it deleted": "授权服务器保存什么、保存多久、怎样要求删除",
+  "Learning pack, dictionaries, pausing after each line, blurred translation": "学习包、词典、逐句暂停、模糊译文",
+  "Not downloaded": "未下载",
+  "Words saved": "已收词",
+  "Dictionaries ready": "可用词典",
+  "Download the languages you watch; then everything works offline": "下载你看视频的语言，之后全部离线可用",
+  "See all": "全部",
+  "Dictionaries": "词典",
+  "Saved this week": "本周新增",
+  "{0} words in your vocabulary book": "生词本里有 {0} 个词",
+  "Learning settings": "学习设置"
 }

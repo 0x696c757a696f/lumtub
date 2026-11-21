@@ -163,7 +163,7 @@ part 'window_actions.dart';
 part 'ios_pip_actions.dart';
 part 'learning_actions.dart';
 
-enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
+enum PageMode { home, explore, subscriptions, history, playlists, downloads, learning, settings, channel, playlist, youtubePlaylist }
 
 /// Application state and actions, kept separate from the widgets that show them.
 class AppController extends ChangeNotifier with _ExploreState {

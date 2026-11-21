@@ -19,14 +19,22 @@ import '../../models.dart';
 import '../../save_file.dart';
 import '../../widgets/settings_tiles.dart';
 import '../app_icons.dart';
-import '../common.dart' show openExternal;
+import '../app_shell.dart' show openSettings;
+import '../common.dart';
+import '../pages/settings_sections.dart' show SettingsCategory;
 import '../pages/support_page.dart' show afdianPage, kofiPage;
 import '../skin_paint.dart';
+import '../theme.dart';
 import 'word_card.dart' show englishLevelName;
 
-/// 学习包: the license, the dictionaries, pinyin and the vocabulary book.
-Future<void> openLearningPage(BuildContext context, AppController controller) =>
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) => _LearningPage(controller: controller)));
+part 'learning_home.dart';
+
+/// 学习: the rail's page; over the watch page while a video is open, so
+/// the video keeps playing.
+Future<void> openLearningPage(BuildContext context, AppController controller) async {
+  if (!controller.onWatchPage) return controller.navigate(PageMode.learning);
+  await Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) => _LearningPage(controller: controller)));
+}
 
 Future<void> openVocabularyBook(BuildContext context, AppController controller) =>
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) => _VocabularyPage(controller: controller)));
@@ -348,148 +356,99 @@ class _LearningPage extends StatelessWidget {
   const _LearningPage({required this.controller});
   final AppController controller;
 
-  Widget _voiceKeyItem(BuildContext context, String title, String name, {bool secret = true}) {
-    final saved = controller.translationKeys[name] ?? '';
-    return NormalItem(
-      title: title,
-      subtitle: saved.isEmpty ? tr('Not set') : (secret ? '${'•' * 8}${saved.length > 4 ? saved.substring(saved.length - 4) : ''}' : saved),
-      leading: const Icon(AppIcons.keyFill),
-      onTap: () async {
-        final typed = await showDialog<String>(context: context, builder: (context) => TextEditDialog(title: title, initialText: saved));
-        if (typed == null) return;
-        await controller.saveApiKey(name, typed.trim());
-        // Shown again with the new key.
-        await controller.learning.setVoiceService(controller.learning.voiceService);
-      },
-    );
-  }
-
   @override
-  Widget build(BuildContext context) {
-    final learning = controller.learning;
-    return Scaffold(
-      appBar: SkinAppBar(AppBar(title: Text(tr('Learning pack')))),
-      body: ListenableBuilder(
-        listenable: learning,
-        builder: (context, _) {
-          final colors = Theme.of(context).colorScheme;
-          return ListView(padding: const EdgeInsets.only(bottom: 40), children: [
-            if (learning.licenseStopped)
-              NormalItem(
-                title: tr('The learning pack is stopped on this device'),
-                subtitle: switch (learning.licenseStopReason) {
-                  'revoked' => tr('This code has been revoked because it was shared publicly. If you bought it, write to the author with your order number.'),
-                  'devices' => tr('This device was removed from the code, which is now on as many devices as it allows. Remove one you no longer use to use it here.'),
-                  _ => tr('The license server could not be reached since the code was entered. Connect to the internet and open Lumtub again.'),
-                },
-                leading: Icon(AppIcons.key),
-                onTap: learning.licenseStopReason == 'devices' ? () => unawaited(manageLicenseDevices(context, learning)) : null,
-              ),
-            if (!learning.licensed) _Pitch(learning: learning),
-            if (learning.licensed)
-              NormalItem(
-                title: tr('License'),
-                subtitle: learningSummary(learning),
-                leading: Icon(AppIcons.key),
-                trailing: TextButton(
-                  onPressed: () async {
-                    final yes = await confirmDialog(context, title: tr('Remove the license from this device?'), content: tr('You can enter the same code again at any time.'), confirm: tr('Remove'));
-                    if (yes) await learning.removeLicense();
-                  },
-                  child: Text(tr('Remove')),
-                ),
-              ),
-            if (learning.licensed)
-              NormalItem(
-                title: tr('Devices'),
-                subtitle: tr('A code works on up to {0} devices; remove one you no longer use', ['${learning.maxDevices}']),
-                leading: Icon(AppIcons.info),
-                onTap: () => unawaited(manageLicenseDevices(context, learning)),
-              ),
-            for (final pack in DictionaryPack.values) _PackTile(learning: learning, pack: pack),
-            SwitchItem(
-              title: tr('Show pinyin and kana above subtitles'),
-              subtitle: tr('Above each word, on the video and in the subtitle list'),
-              leading: Icon(AppIcons.subtitles),
-              value: learning.showPinyin,
-              enabled: learning.licensed,
-              onChanged: (on) => unawaited(learning.setShowPinyin(on)),
-            ),
-            SwitchItem(
-              title: tr('Romanization above Korean'),
-              subtitle: tr('Korean words in Latin letters, such as hangugeo above 한국어'),
-              leading: Icon(AppIcons.subtitles),
-              value: learning.showRomanization,
-              enabled: learning.licensed,
-              onChanged: (on) => unawaited(learning.setShowRomanization(on)),
-            ),
-            NormalItem(
-              title: tr('Voice for reading words'),
-              subtitle: _voiceLabel(learning.voiceService),
-              leading: Icon(AppIcons.speakerHigh),
-              enabled: learning.licensed,
-              onTap: () => unawaited(_pickVoice(context, learning)),
-            ),
-            if (learning.voiceService == VoiceService.azure) ...[
-              _voiceKeyItem(context, tr('Azure key'), azureVoiceKey),
-              _voiceKeyItem(context, tr('Azure region, such as westeurope'), azureVoiceRegion, secret: false),
-            ],
-            if (learning.voiceService == VoiceService.google) _voiceKeyItem(context, tr('Google Cloud key'), googleVoiceKey),
-            NormalItem(
-              title: tr('Meanings in'),
-              subtitle: _meaningLabel(learning.meanings),
-              leading: Icon(AppIcons.translate),
-              enabled: learning.licensed,
-              onTap: () => unawaited(_pickMeanings(context, learning)),
-            ),
-            NormalItem(
-              title: tr('My English level'),
-              subtitle: learning.englishLevel == null
-                  ? tr('Hard words are not marked')
-                  : tr('{0}. Harder words stand out in color', [englishLevelName(EnglishLevel.values[learning.englishLevel!])]),
-              leading: Icon(AppIcons.graduationCap),
-              enabled: learning.licensed,
-              onTap: () => unawaited(_pickEnglishLevel(context, learning)),
-            ),
-            NormalItem(
-              title: tr('Vocabulary book'),
-              subtitle: learning.licensed ? tr('{0} words', [learning.book?.words.length ?? 0]) : tr('Part of the learning pack'),
-              leading: Icon(AppIcons.bookOpenText),
-              enabled: learning.licensed,
-              onTap: () => openVocabularyBook(context, controller),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: Text(
-                tr('How to use it: download a dictionary, turn on a Chinese, English or Japanese subtitle, then tap any word on the video or in the subtitle list. The video waits while the word is open. Everything stays on this device.'),
-                style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5),
-              ),
-            ),
-            NormalItem(
-              title: tr('Data sources and licenses'),
-              subtitle: tr('The dictionaries are open data: who made them and under which license'),
-              leading: Icon(AppIcons.info),
-              onTap: () => unawaited(showDialog<void>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text(tr('Data sources and licenses')),
-                  content: const SizedBox(width: 520, child: SingleChildScrollView(child: SelectableText(learningDataNotice))),
-                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close')))],
-                ),
-              )),
-            ),
-            NormalItem(
-              title: tr('Activation and privacy'),
-              subtitle: tr('What the license server keeps, for how long, and how to have it deleted'),
-              leading: Icon(AppIcons.info),
-              onTap: () => unawaited(showLearningPrivacy(context)),
-            ),
-          ]);
-        },
+  Widget build(BuildContext context) => Scaffold(
+        appBar: SkinAppBar(AppBar(title: Text(tr('Learning')))),
+        body: LearningHome(controller: controller),
+      );
+}
+
+Widget _voiceKeyItem(BuildContext context, AppController controller, String title, String name, {bool secret = true}) {
+  final saved = controller.translationKeys[name] ?? '';
+  return NormalItem(
+    title: title,
+    subtitle: saved.isEmpty ? tr('Not set') : (secret ? '${'•' * 8}${saved.length > 4 ? saved.substring(saved.length - 4) : ''}' : saved),
+    leading: const Icon(AppIcons.keyFill),
+    onTap: () async {
+      final typed = await showDialog<String>(context: context, builder: (context) => TextEditDialog(title: title, initialText: saved));
+      if (typed == null) return;
+      await controller.saveApiKey(name, typed.trim());
+      // Shown again with the new key.
+      await controller.learning.setVoiceService(controller.learning.voiceService);
+    },
+  );
+}
+
+/// The learning pack's own settings, for 设置 › 学习, each wrapped so it
+/// follows the pack's state.
+List<(String, String, WidgetBuilder)> learningSettingRows(AppController controller) {
+  final learning = controller.learning;
+  Widget live(Widget Function(BuildContext context) build) => ListenableBuilder(listenable: learning, builder: (context, _) => build(context));
+  return [
+    (tr('Learning pack'), '学习包 learning dictionary license 词典 授权码 设备', (context) => live((context) => NormalItem(
+          title: tr('Learning pack'),
+          subtitle: learningSummary(learning),
+          leading: Icon(AppIcons.graduationCap),
+          onTap: () => unawaited(openLearningPage(context, controller)),
+        ))),
+    (tr('Show pinyin and kana above subtitles'), '拼音 假名 pinyin kana', (context) => live((context) => SwitchItem(
+          title: tr('Show pinyin and kana above subtitles'),
+          subtitle: tr('Above each word, on the video and in the subtitle list'),
+          leading: Icon(AppIcons.subtitles),
+          value: learning.showPinyin,
+          enabled: learning.licensed,
+          onChanged: (on) => unawaited(learning.setShowPinyin(on)),
+        ))),
+    (tr('Romanization above Korean'), '韩语 罗马字 romanization', (context) => live((context) => SwitchItem(
+          title: tr('Romanization above Korean'),
+          subtitle: tr('Korean words in Latin letters, such as hangugeo above 한국어'),
+          leading: Icon(AppIcons.subtitles),
+          value: learning.showRomanization,
+          enabled: learning.licensed,
+          onChanged: (on) => unawaited(learning.setShowRomanization(on)),
+        ))),
+    (tr('Voice for reading words'), '朗读 发音 语音 TTS Azure Google voice', (context) => live((context) => Column(mainAxisSize: MainAxisSize.min, children: [
+          NormalItem(
+            title: tr('Voice for reading words'),
+            subtitle: _voiceLabel(learning.voiceService),
+            leading: Icon(AppIcons.speakerHigh),
+            enabled: learning.licensed,
+            onTap: () => unawaited(_pickVoice(context, learning)),
+          ),
+          if (learning.voiceService == VoiceService.azure) ...[
+            _voiceKeyItem(context, controller, tr('Azure key'), azureVoiceKey),
+            _voiceKeyItem(context, controller, tr('Azure region, such as westeurope'), azureVoiceRegion, secret: false),
+          ],
+          if (learning.voiceService == VoiceService.google) _voiceKeyItem(context, controller, tr('Google Cloud key'), googleVoiceKey),
+        ]))),
+    (tr('Meanings in'), '释义 语言 meanings', (context) => live((context) => NormalItem(
+          title: tr('Meanings in'),
+          subtitle: _meaningLabel(learning.meanings),
+          leading: Icon(AppIcons.translate),
+          enabled: learning.licensed,
+          onTap: () => unawaited(_pickMeanings(context, learning)),
+        ))),
+    (tr('My English level'), '英语水平 难词 CEFR level', (context) => live((context) => NormalItem(
+          title: tr('My English level'),
+          subtitle: learning.englishLevel == null
+              ? tr('Hard words are not marked')
+              : tr('{0}. Harder words stand out in color', [englishLevelName(EnglishLevel.values[learning.englishLevel!])]),
+          leading: Icon(AppIcons.graduationCap),
+          enabled: learning.licensed,
+          onTap: () => unawaited(_pickEnglishLevel(context, learning)),
+        ))),
+  ];
+}
+
+/// Who made the dictionaries, as their licenses ask to be shown.
+Future<void> showLearningSources(BuildContext context) => showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr('Data sources and licenses')),
+        content: const SizedBox(width: 520, child: SingleChildScrollView(child: SelectableText(learningDataNotice))),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close')))],
       ),
     );
-  }
-}
 
 class _Pitch extends StatelessWidget {
   const _Pitch({required this.learning});
@@ -500,12 +459,15 @@ class _Pitch extends StatelessWidget {
     final theme = Theme.of(context);
     final zh = currentLanguage.isChinese;
     return Card(
-      margin: const EdgeInsets.all(16),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(Space.xl),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(tr('Learn languages from real videos'), style: theme.textTheme.titleMedium),
-          const SizedBox(height: 8),
+          Row(children: [
+            _Badge(icon: AppIcons.graduationCap, size: 48),
+            const SizedBox(width: Space.m),
+            Expanded(child: Text(tr('Learn languages from real videos'), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700))),
+          ]),
+          const SizedBox(height: Space.l),
           for (final line in [
             tr('Tap any word in a subtitle for an offline dictionary entry'),
             tr('Pinyin above Chinese, kana above Japanese'),
@@ -540,56 +502,6 @@ class _Pitch extends StatelessWidget {
           ]),
         ]),
       ),
-    );
-  }
-}
-
-class _PackTile extends StatelessWidget {
-  const _PackTile({required this.learning, required this.pack});
-  final Learning learning;
-  final DictionaryPack pack;
-
-  @override
-  Widget build(BuildContext context) {
-    final state = learning.stateOf(pack);
-    final progress = learning.progressOf(pack);
-    final size = switch (pack) {
-      DictionaryPack.chinese => '4 MB',
-      DictionaryPack.english => '2 MB',
-      DictionaryPack.japanese => '7 MB',
-      DictionaryPack.korean => '8 MB',
-      _ => tr('a few MB'),
-    };
-    final subtitle = switch (state) {
-      PackState.missing => tr('Not downloaded · about {0}', [size]),
-      PackState.downloading => progress == null ? tr('Downloading…') : tr('Downloading… {0}%', [(progress * 100).round()]),
-      PackState.loading => learning.licensed ? tr('Loading…') : tr('Downloaded'),
-      PackState.downloaded => tr('Downloaded · read when its subtitles play'),
-      PackState.ready => tr('Ready'),
-      PackState.failed => tr('Failed: {0}', [learning.errorOf(pack) ?? '']),
-    };
-    return NormalItem(
-      title: switch (pack) {
-        DictionaryPack.chinese => tr('Chinese dictionary (Chinese–English)'),
-        DictionaryPack.english => tr('English dictionary (English–Chinese)'),
-        DictionaryPack.japanese => tr('Japanese dictionary (Japanese–Chinese–English, with kana)'),
-        DictionaryPack.korean => tr('Korean dictionary (Korean–Chinese, KRDict)'),
-        DictionaryPack.spanish => tr('Spanish dictionary'),
-        DictionaryPack.french => tr('French dictionary'),
-        DictionaryPack.german => tr('German dictionary'),
-        DictionaryPack.italian => tr('Italian dictionary'),
-        DictionaryPack.russian => tr('Russian dictionary'),
-      },
-      subtitle: subtitle,
-      leading: Icon(AppIcons.translate),
-      enabled: learning.licensed,
-      trailing: !learning.licensed
-          ? null
-          : switch (state) {
-              PackState.missing || PackState.failed => FilledButton.tonal(onPressed: () => unawaited(learning.download(pack)), child: Text(tr('Download'))),
-              PackState.downloading || PackState.loading => const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-              PackState.ready || PackState.downloaded => IconButton(tooltip: tr('Delete'), icon: Icon(AppIcons.trash, size: 20), onPressed: () => unawaited(learning.delete(pack))),
-            },
     );
   }
 }

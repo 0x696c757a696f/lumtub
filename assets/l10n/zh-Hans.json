@@ -3909,7 +3909,7 @@
   "Lost your code, or a new computer: choose I bought it: unlock and enter the same order again. You get the same code; nothing is bought twice.": "激活码丢了或换了电脑：点「我已购买，解锁」，再输入同一个订单即可，拿到的是同一个激活码，不会重复扣费。",
   "A code works on up to 5 devices. Remove one you no longer use under Learning › Devices; a reinstalled Lumtub counts as a new device.": "一个激活码最多用于 5 台设备。不用的设备可以在「学习 › 设备」里移除；重装 Lumtub 算作新设备。",
   "Once the code is activated it keeps working without internet; Lumtub only checks now and then, when it can.": "激活后断网也能一直使用；Lumtub 只在能联网时偶尔确认一下。",
-  "If the pack does not work as described, or you were charged by mistake, write to us with your order number and we will fix it or refund you. A refunded order stops its code; your vocabulary book stays on your computer and can still be exported.": "如果学习包与描述不符或误扣款，请带上订单号来信，我们会修复或退款。退款后激活码停用，生词本仍留在你的电脑上，照样可以导出。",
+  "The learning pack is digital content: once it is activated, it is not refunded for a change of mind. If a problem in Lumtub keeps it from working and cannot be fixed, or you were charged by mistake, write to us with your order number and we will refund you. A refunded order stops its code; your vocabulary book stays on your computer and can still be exported.": "学习包是数字商品，激活后不支持无理由退款。如果因为软件问题无法使用且无法修复，或者误扣款，请带上订单号来信，我们会退款。退款后激活码停用，生词本仍留在你的电脑上，照样可以导出。",
   "Orders, refunds and questions: {0}": "订单、退款和问题请联系：{0}",
   "Today's {0} free word lookups are used up": "今天的 {0} 次免费查词用完了",
   "See the learning pack": "看看学习包",

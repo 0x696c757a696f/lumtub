@@ -987,7 +987,7 @@ Future<void> showLearningOrders(BuildContext context) => showDialog<void>(
               tr('Lost your code, or a new computer: choose I bought it: unlock and enter the same order again. You get the same code; nothing is bought twice.'),
               tr('A code works on up to 5 devices. Remove one you no longer use under Learning › Devices; a reinstalled Lumtub counts as a new device.'),
               tr('Once the code is activated it keeps working without internet; Lumtub only checks now and then, when it can.'),
-              tr('If the pack does not work as described, or you were charged by mistake, write to us with your order number and we will fix it or refund you. A refunded order stops its code; your vocabulary book stays on your computer and can still be exported.'),
+              tr('The learning pack is digital content: once it is activated, it is not refunded for a change of mind. If a problem in Lumtub keeps it from working and cannot be fixed, or you were charged by mistake, write to us with your order number and we will refund you. A refunded order stops its code; your vocabulary book stays on your computer and can still be exported.'),
               tr('Orders, refunds and questions: {0}', [learningContact]),
             ].join('\n\n')),
           ),

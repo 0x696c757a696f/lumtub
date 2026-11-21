@@ -46,3 +46,20 @@ LGPL FFmpeg and the other libraries linked into it:
   https://github.com/Predidit/libmpv-android-video-build.
 - macOS and iOS: Mpv.framework linked from MPVKit's LGPL libraries
   (https://github.com/mpvkit/MPVKit).
+
+The Android APK includes CPython (https://www.python.org), from the Android
+binary release python.org publishes for each Python version
+(python-<version>-<host>.tar.gz for arm64-v8a and x86_64; the version is
+PYTHON_ANDROID_VERSION in .github/pins.env), under the Python Software
+Foundation License Version 2. It is built with OpenSSL (Apache License 2.0),
+SQLite (public domain), libffi (MIT), xz/liblzma (public domain), bzip2
+(BSD-style) and zstd (BSD-3-Clause or GPL-2.0, taken under BSD-3-Clause); it
+contains no GNU readline or gdbm. Its small launcher
+(android/packaging/python-launcher.c) is Lumtub's. The certificates for
+Python are the Chrome Root Store list in native/lumtub_core/roots.
+
+The yt-dlp zip app in the Android APK is a stable release of yt-dlp (the
+Unlicense, public domain), checked against its published SHA2-256SUMS.
+QuickJS for YouTube's JavaScript challenges runs inside Lumtub's core (the
+rquickjs crate with QuickJS, MIT License); no separate QuickJS program is
+included.

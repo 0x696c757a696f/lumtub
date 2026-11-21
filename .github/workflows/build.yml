@@ -1463,6 +1463,18 @@ jobs:
       - name: Android - build the Rust core
         run: android/packaging/build-core.sh
 
+      - name: Android - read the pinned downloads
+        run: grep -E '^[A-Z0-9_]+=' .github/pins.env >> "$GITHUB_ENV"
+
+      - name: Android - cache the Python and yt-dlp downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/android-python/downloads
+          key: android-python-${{ env.PYTHON_ANDROID_VERSION }}-${{ env.PYTHON_ANDROID_SHA256_ARM64 }}-${{ env.PYTHON_ANDROID_SHA256_X86_64 }}-${{ env.YTDLP_VERSION }}-${{ env.YTDLP_SHA256 }}
+
+      - name: Android - add Python and yt-dlp
+        run: android/packaging/python.sh "$RUNNER_TEMP/android-python"
+
       - name: Android - get packages
         run: flutter pub get
 

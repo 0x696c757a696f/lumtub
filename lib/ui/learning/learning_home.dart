@@ -137,6 +137,7 @@ class _StoppedCard extends StatelessWidget {
               Text(
                 switch (learning.licenseStopReason) {
                   'revoked' => tr('This code has been revoked because it was shared publicly. If you bought it, write to the author with your order number.'),
+                  'refunded' => tr('This order was refunded, so the learning pack is off. Your vocabulary book stays on this device and can still be exported.'),
                   'devices' => tr('This device was removed from the code, which is now on as many devices as it allows. Remove one you no longer use to use it here.'),
                   _ => tr('The license server could not be reached since the code was entered. Connect to the internet and open Lumtub again.'),
                 },
@@ -220,8 +221,10 @@ class _VocabularyCard extends StatelessWidget {
           child: _CardTitle(
             icon: AppIcons.bookOpenText,
             title: tr('Vocabulary book'),
-            subtitle: learning.licensed ? tr('{0} words', [words.length]) : tr('Part of the learning pack'),
-            trailing: learning.licensed ? TextButton(onPressed: () => unawaited(openVocabularyBook(context, controller)), child: Text(tr('See all'))) : null,
+            subtitle: learning.licensed || words.isNotEmpty ? tr('{0} words', [words.length]) : tr('Part of the learning pack'),
+            // Saved words stay the buyer's: seen and exported even when the
+            // pack is off here.
+            trailing: learning.licensed || words.isNotEmpty ? TextButton(onPressed: () => unawaited(openVocabularyBook(context, controller)), child: Text(tr('See all'))) : null,
           ),
         ),
         if (recent.isEmpty)
@@ -375,6 +378,12 @@ class _AboutCard extends StatelessWidget {
   Widget build(BuildContext context) => Card(
         clipBehavior: Clip.antiAlias,
         child: Column(children: [
+          NormalItem(
+            title: tr('Orders and refunds'),
+            subtitle: tr('Getting your code again, devices, refunds, and whom to write to'),
+            leading: Icon(AppIcons.sealCheck),
+            onTap: () => unawaited(showLearningOrders(context)),
+          ),
           NormalItem(
             title: tr('Data sources and licenses'),
             subtitle: tr('The dictionaries are open data: who made them and under which license'),

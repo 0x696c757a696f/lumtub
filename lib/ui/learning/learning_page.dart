@@ -82,7 +82,7 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
                 PurchaseSource.kofi => tr('No Ko-fi purchase with this transaction ID and email was found yet. Check both against your Ko-fi receipt, or wait a minute and try again.'),
               },
             ClaimResult.busy => tr('Too many tries. Wait a minute and try again.'),
-            ClaimResult.revoked => tr('This code has been revoked because it was shared publicly. If you bought it, write to the author with your order number.'),
+            ClaimResult.revoked => learning.lastRefunded ? tr('This order was refunded, so the learning pack is off. Your vocabulary book stays on this device and can still be exported.') : tr('This code has been revoked because it was shared publicly. If you bought it, write to the author with your order number.'),
             _ => tr('Could not reach the license server. Check your connection, or ask for your code by message.'),
           };
         });
@@ -191,6 +191,8 @@ Future<void> _showConfirmation(BuildContext context, Learning learning, {require
     tr('Unlocked on {0}', [stamp]),
     tr('You agreed: {0}', [_consentText()]),
     tr('License code: {0}', [learning.license?.code ?? '']),
+    tr('What it includes: word lookup in subtitles with offline dictionaries, readings above words, the vocabulary book with Anki and CSV export, on up to 5 devices, with updates.'),
+    tr('Lost the code? Unlock again with the same order. Orders, refunds and questions: {0}', [learningContact]),
   ].join('\n');
   // Written to Downloads at once, so the buyer has the confirmation on a
   // durable medium without having to save it.
@@ -337,7 +339,7 @@ Future<bool> enterLicenseCode(BuildContext context, Learning learning) async {
                   Navigator.pop(context, false);
                   unawaited(manageLicenseDevices(context, learning));
                 case LicenseResult.revoked:
-                  setState(() => error = tr('This code has been revoked because it was shared publicly. If you bought it, write to the author with your order number.'));
+                  setState(() => error = learning.lastRefunded ? tr('This order was refunded, so the learning pack is off. Your vocabulary book stays on this device and can still be exported.') : tr('This code has been revoked because it was shared publicly. If you bought it, write to the author with your order number.'));
                 case LicenseResult.invalid:
                   setState(() => error = tr('This license code is not valid. Copy the whole code and try again.'));
               }
@@ -724,18 +726,45 @@ Future<void> showLearningPrivacy(BuildContext context) => showDialog<void>(
       ),
     );
 
+/// Where buyers write about orders, refunds and their data.
+const learningContact = '7poad30n5@mozmail.com';
+
+/// 订单与退款: how a code is recovered, what happens on a refund, and
+/// whom to write to.
+Future<void> showLearningOrders(BuildContext context) => showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr('Orders and refunds')),
+        content: SizedBox(
+          width: 520,
+          child: SingleChildScrollView(
+            child: SelectableText([
+              tr('Lost your code, or a new computer: choose I bought it: unlock and enter the same order again. You get the same code; nothing is bought twice.'),
+              tr('A code works on up to 5 devices. Remove one you no longer use under Learning › Devices; a reinstalled Lumtub counts as a new device.'),
+              tr('Once the code is activated it keeps working without internet; Lumtub only checks now and then, when it can.'),
+              tr('If the pack does not work as described, or you were charged by mistake, write to us with your order number and we will fix it or refund you. A refunded order stops its code; your vocabulary book stays on your computer and can still be exported.'),
+              tr('Orders, refunds and questions: {0}', [learningContact]),
+            ].join('\n\n')),
+          ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close')))],
+      ),
+    );
+
 const learningPrivacyEn = '''Activation and privacy (learning pack)
 
 Controller: Lumtub (Italy). Privacy contact: 7poad30n5@mozmail.com
 
 What is kept, and why
 • Unlocking a purchase: the order number, a SHA-256 hash of the email you paid with (Ko-fi and Polar; never the email itself), the order date, and when you agreed that the pack is supplied at once (proof of the end of the 14-day withdrawal right). Basis: performing the licence (GDPR art. 6(1)(b)) and legal obligations (6(1)(c)). Kept while the licence is valid.
-• Activating a device: a hashed device identifier (made on your computer from its machine ID; the ID itself is never sent), the kind of system (Windows, macOS…), and the dates the device was added and last confirmed. Used to activate the pack and keep a code to at most 5 devices. Basis: performing the licence (6(1)(b)) and our legitimate interest in preventing a code being shared (6(1)(f)). Kept while the device is on the code; removed at once when you remove the device in the app, and automatically after 24 months without a confirmation.
+• Activating a device: a hashed installation identifier (a random number Lumtub makes once when it is installed; nothing is read from your hardware or system), the kind of system (Windows, macOS…), and the dates the device was added and last confirmed. Used to activate the pack and keep a code to at most 5 devices. Basis: performing the licence (6(1)(b)) and our legitimate interest in preventing a code being shared (6(1)(f)). Removed at once when you remove the device in the app, and automatically 24 months after the device last confirmed the code.
+• Refunds: when an order is refunded in full, the date of the refund, so its code stops. Basis: performing the licence (6(1)(b)).
+How long: order and code records are kept as long as the licence is valid, so you can always get your code again on a new computer; device entries as above; payment and tax records are kept by the payment platform under the law that applies to it.
 • IP address: seen by the server to limit how often it can be asked; our own record of it is deleted within 2 minutes. Basis: legitimate interest in keeping the service safe (6(1)(f)).
 Words you look up, your vocabulary book and what you watch stay on your device and are never sent.
 
 Who processes it
-The server runs on Cloudflare (Cloudflare, Inc.) as our processor, which may involve transfer to the United States under the EU–US Data Privacy Framework or Standard Contractual Clauses. Request logs are turned off for this service; Cloudflare's own operational logs follow its policies. Payments are handled by Polar, Ko-fi or Afdian under their own privacy policies.
+The server runs on Cloudflare (Cloudflare, Inc.) as our processor, which may involve transfer to the United States under the EU–US Data Privacy Framework or Standard Contractual Clauses. Workers Logs and request logging are turned off for this service; Cloudflare's own operational and security logs follow its policies. Payments are handled by Polar, Ko-fi or Afdian under their own privacy policies.
 
 Your rights
 You may ask for access, correction, deletion, restriction, objection and a copy of your data, and complain to a supervisory authority (in Italy the Garante per la protezione dei dati personali). Write to the email above; we answer within one month. Without the device identifier the pack cannot be activated online. The 5-device limit is checked automatically; write to us if you need it looked at by a person.
@@ -748,12 +777,14 @@ const learningPrivacyZh = '''激活与隐私说明（学习包）
 
 保存什么，为什么
 • 领取购买的激活码：订单号、付款邮箱的 SHA-256 哈希值（Ko-fi 和 Polar；不保存邮箱本身）、订单日期，以及你同意「立即提供、14 天撤回权随之结束」的时间。法律依据：履行许可合同（GDPR 第 6(1)(b) 条）及法定义务（第 6(1)(c) 条）。在授权有效期间保存。
-• 激活设备：经过哈希的设备标识（在你的电脑上由机器 ID 计算，机器 ID 本身不会发送）、系统类型（Windows、macOS 等）、设备加入和最近确认的日期。用于激活学习包，并把一个激活码限制在最多 5 台设备。法律依据：履行许可合同（第 6(1)(b) 条）及防止激活码被分享的正当利益（第 6(1)(f) 条）。设备在激活码上期间保存；你在 App 里移除设备时立即删除；连续 24 个月没有确认会自动删除。
+• 激活设备：经过哈希的安装标识（Lumtub 安装后生成一次的随机数，不读取任何硬件或系统信息）、系统类型（Windows、macOS 等）、设备加入和最近确认的日期。用于激活学习包，并把一个激活码限制在最多 5 台设备。法律依据：履行许可合同（第 6(1)(b) 条）及防止激活码被分享的正当利益（第 6(1)(f) 条）。你在 App 里移除设备时立即删除；从该设备最后一次确认起满 24 个月自动删除。
+• 退款：订单全额退款时记录退款日期，相应激活码随之停用。法律依据：履行许可合同（第 6(1)(b) 条）。
+保存期限：订单和激活码记录在授权有效期间一直保存，方便你在新电脑上随时重新领取；设备记录如上；付款和税务记录由付款平台按其适用法律保存。
 • IP 地址：服务器用来限制请求频率，我们自己的记录在 2 分钟内删除。法律依据：保障服务安全的正当利益（第 6(1)(f) 条）。
 你查的词、生词本和观看内容都只保存在你的设备上，不会发送。
 
 谁来处理
-服务器运行在 Cloudflare（Cloudflare, Inc.）上，作为我们的数据处理者，可能涉及向美国传输，依据欧美数据隐私框架（DPF）或欧盟标准合同条款。本服务关闭了请求日志；Cloudflare 自身的运行日志遵循其政策。付款由 Polar、Ko-fi 或爱发电处理，适用它们各自的隐私政策。
+服务器运行在 Cloudflare（Cloudflare, Inc.）上，作为我们的数据处理者，可能涉及向美国传输，依据欧美数据隐私框架（DPF）或欧盟标准合同条款。本服务关闭了 Workers 日志和请求日志；Cloudflare 自身的运行和安全日志遵循其政策。付款由 Polar、Ko-fi 或爱发电处理，适用它们各自的隐私政策。
 
 你的权利
 你可以要求访问、更正、删除、限制处理、反对处理，以及获取数据副本，也可以向监管机构投诉（意大利为 Garante per la protezione dei dati personali）。请写信到上面的邮箱，我们会在一个月内答复。不提供设备标识就无法在线激活。5 台设备的上限由系统自动检查；如需人工处理，请来信。
@@ -772,4 +803,6 @@ Spanish, French, German, Italian, Russian: the English and Chinese Wiktionaries 
 
 Word splitting: Lindera (MIT) with IPADIC, mecab-ko-dic (Apache-2.0) and jieba (MIT).
 
-Changes: converted to SQLite word lists, meanings merged, shortened and simplified (Traditional to Simplified Chinese). These adapted dictionaries are shared under the same licenses and can be downloaded freely from github.com/0x696c757a696f/lumtub/releases/tag/learning.''';
+Changes: converted to SQLite word lists, meanings merged, shortened and simplified (Traditional to Simplified Chinese). These adapted dictionaries are shared under the same licenses and can be downloaded freely from github.com/0x696c757a696f/lumtub/releases/tag/learning.
+
+The learning pack's price pays for Lumtub's learning features and the service around them, not for this data: the dictionaries stay under their own licenses, and nothing in the purchase limits what those licenses let you do with them, such as copying, changing and sharing them.''';

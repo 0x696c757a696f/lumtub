@@ -3903,5 +3903,15 @@
   "Dictionaries": "词典",
   "Saved this week": "本周新增",
   "{0} words in your vocabulary book": "生词本里有 {0} 个词",
-  "Learning settings": "学习设置"
+  "Learning settings": "学习设置",
+  "This order was refunded, so the learning pack is off. Your vocabulary book stays on this device and can still be exported.": "这个订单已退款，学习包已停用。生词本仍保存在这台设备上，照样可以导出。",
+  "What it includes: word lookup in subtitles with offline dictionaries, readings above words, the vocabulary book with Anki and CSV export, on up to 5 devices, with updates.": "包含内容：字幕点词查离线词典、词上方注音、生词本及 Anki／CSV 导出，最多 5 台设备，含更新。",
+  "Lost the code? Unlock again with the same order. Orders, refunds and questions: {0}": "激活码丢了？用同一个订单再解锁一次即可。订单、退款和问题请联系：{0}",
+  "Orders and refunds": "订单与退款",
+  "Getting your code again, devices, refunds, and whom to write to": "重新领取激活码、设备、退款和联系方式",
+  "Lost your code, or a new computer: choose I bought it: unlock and enter the same order again. You get the same code; nothing is bought twice.": "激活码丢了或换了电脑：点「我已购买，解锁」，再输入同一个订单即可，拿到的是同一个激活码，不会重复扣费。",
+  "A code works on up to 5 devices. Remove one you no longer use under Learning › Devices; a reinstalled Lumtub counts as a new device.": "一个激活码最多用于 5 台设备。不用的设备可以在「学习 › 设备」里移除；重装 Lumtub 算作新设备。",
+  "Once the code is activated it keeps working without internet; Lumtub only checks now and then, when it can.": "激活后断网也能一直使用；Lumtub 只在能联网时偶尔确认一下。",
+  "If the pack does not work as described, or you were charged by mistake, write to us with your order number and we will fix it or refund you. A refunded order stops its code; your vocabulary book stays on your computer and can still be exported.": "如果学习包与描述不符或误扣款，请带上订单号来信，我们会修复或退款。退款后激活码停用，生词本仍留在你的电脑上，照样可以导出。",
+  "Orders, refunds and questions: {0}": "订单、退款和问题请联系：{0}"
 }

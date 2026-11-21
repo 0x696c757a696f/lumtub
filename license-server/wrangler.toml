@@ -14,6 +14,16 @@ id = "KV_NAMESPACE_ID"
 [vars]
 AFDIAN_PLANS = "548a65dee44b11f193bd52540025c377"
 
+# Each code's devices, one object per code, so slots are taken one
+# request at a time (SQLite-backed objects work on the free plan).
+[[durable_objects.bindings]]
+name = "SLOTS"
+class_name = "Slots"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Slots"]
+
 # revoked.txt is bundled as text.
 [[rules]]
 type = "Text"

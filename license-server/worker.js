@@ -2,8 +2,10 @@
 //
 // POST /kofi   Ko-fi's webhook: a paid shop order is remembered by its
 //              transaction id and the buyer's email.
-// POST /polar  Polar's webhook (order.paid), signed as Standard Webhooks:
-//              the order is remembered by its id and the buyer's email.
+// POST /polar  Polar's webhook, signed as Standard Webhooks: order.paid
+//              remembers the order by its id and the buyer's email (the
+//              same order again changes nothing); order.refunded, once
+//              refunded in full, stops its code.
 // POST /claim  {source: "kofi" or "polar", order, email, consent} or {source:
 //              "afdian", order, consent} (Ko-fi's order is the transaction
 //              id on the buyer's receipt) returns {code, consented} for a
@@ -23,7 +25,14 @@
 //              whoever holds the code can, so a buyer frees a slot alone.
 //
 // 爱发电 orders are checked with 爱发电's own API when claimed, so they
-// need no webhook. Codes are the same Ed25519-signed codes the signing
+// need no webhook; a Polar order whose webhook never came is looked up
+// with Polar's API when POLAR_TOKEN is set, so a paid order is never
+// left without its code. Claiming again gives the same code, which is
+// how a buyer recovers it on a new computer.
+//
+// Each code's devices live in its own Durable Object (Slots), which
+// handles one request at a time, so two activations at once can never
+// both take the last slot. Codes are the same Ed25519-signed codes the signing
 // page makes; the app checks them offline.
 //
 // Secrets (wrangler secret put): LICENSE_KEY (the PKCS#8 private key in
@@ -31,8 +40,9 @@
 // AFDIAN_USER_ID and AFDIAN_TOKEN (爱发电 › 开发者). Optional vars:
 // KOFI_ITEM (the shop item's code, to count only that item) and
 // AFDIAN_PLANS (comma-separated plan ids that count). Polar: the secret
-// POLAR_WEBHOOK_SECRET (Polar › Settings › Webhooks), and optionally the
-// var POLAR_PRODUCTS (comma-separated product ids that count).
+// POLAR_WEBHOOK_SECRET (Polar › Settings › Webhooks), optionally the
+// secret POLAR_TOKEN (an organization access token with orders:read) and
+// the var POLAR_PRODUCTS (comma-separated product ids that count).
 
 import revokedList from './revoked.txt';
 
@@ -125,23 +135,55 @@ async function polar(request, env) {
   const body = await request.text();
   if (!env.POLAR_WEBHOOK_SECRET || body.length > 200000 || !(await signedByPolar(request, body, env.POLAR_WEBHOOK_SECRET))) return reply({ error: 'bad signature' }, 403);
   const event = JSON.parse(body);
+  if (event.type === 'order.refunded') return await polarRefund(event.data || {}, env);
   if (event.type !== 'order.paid') return reply({ ok: true, ignored: true });
-  const data = event.data || {};
+  const saved = await rememberPolar(event.data || {}, env);
+  return saved ? reply({ ok: true }) : reply({ ok: true, ignored: true });
+}
+
+const polarProduct = (data, env) => {
   const products = clean(env.POLAR_PRODUCTS).split(',').map(clean).filter(Boolean);
-  const product = clean(data.product_id || data.product?.id);
-  if (products.length && !products.includes(product)) return reply({ ok: true, ignored: true });
+  return !products.length || products.includes(clean(data.product_id || data.product?.id));
+};
+
+// Keeps a paid Polar order; the same order twice writes the same record.
+async function rememberPolar(data, env) {
+  if (!polarProduct(data, env)) return null;
   const order = clean(data.id).toLowerCase();
   const email = clean(data.customer?.email || data.user?.email).toLowerCase();
-  if (!order || !email) return reply({ error: 'no order' }, 400);
+  if (!order || !email) return null;
   // The page Polar sends the buyer to after paying shows the order id.
   const checkout = clean(data.checkout_id).toLowerCase();
   if (checkout) await env.LICENSES.put(`polar-checkout:${checkout}`, order, { expirationTtl: 60 * 60 * 24 * 30 });
-  await env.LICENSES.put(`polar:${order}`, JSON.stringify({
+  const saved = {
     name: `Polar #${order.replace(/[^0-9a-z]/g, '').slice(-6)}`,
     email: await sha256(email),
     date: clean(data.created_at).slice(0, 10) || new Date().toISOString().slice(0, 10),
-  }));
+  };
+  await env.LICENSES.put(`polar:${order}`, JSON.stringify(saved));
+  return saved;
+}
+
+// A full refund stops the order's code: no new claims, no activations,
+// and devices that check in stop. A partial refund changes nothing.
+async function polarRefund(data, env) {
+  const order = clean(data.id).toLowerCase();
+  if (!order || clean(data.status) !== 'refunded' || !polarProduct(data, env)) return reply({ ok: true, ignored: true });
+  const today = new Date().toISOString().slice(0, 10);
+  await env.LICENSES.put(`refunded:polar:${order}`, today);
+  const code = await env.LICENSES.get(`code:polar:${order}`);
+  if (code) await env.LICENSES.put(`revoked:${(await sha256(code)).slice(0, 32)}`, `refunded ${today}`);
   return reply({ ok: true });
+}
+
+// The order straight from Polar, for when its webhook did not arrive.
+async function polarOrder(order, env) {
+  if (!env.POLAR_TOKEN || !/^[0-9a-f-]{36}$/.test(order)) return null;
+  const response = await fetch(`https://api.polar.sh/v1/orders/${order}`, { headers: { authorization: `Bearer ${env.POLAR_TOKEN}`, accept: 'application/json' } });
+  if (response.status !== 200) return null;
+  const data = await response.json().catch(() => null);
+  if (!data || clean(data.status) !== 'paid') return null;
+  return rememberPolar(data, env);
 }
 
 // Polar's success page (its success URL ends ?checkout_id={CHECKOUT_ID}):
@@ -180,8 +222,10 @@ async function claim(request, env) {
   let buyer;
   if (source === 'kofi' || source === 'polar') {
     // Both must match, so a known email alone gets nothing.
-    const saved = JSON.parse((await env.LICENSES.get(`${source}:${order}`)) || 'null');
+    let saved = JSON.parse((await env.LICENSES.get(`${source}:${order}`)) || 'null');
+    if (!saved && source === 'polar') saved = await polarOrder(order, env);
     if (!saved || !email || saved.email !== await sha256(email)) return reply({ error: 'not found' }, 404);
+    if (await env.LICENSES.get(`refunded:${source}:${order}`)) return reply({ error: 'refunded' }, 403);
     buyer = saved;
   } else if (source === 'afdian') {
     buyer = await afdianOrder(order, env);
@@ -266,24 +310,13 @@ async function activate(request, env) {
   const code = await checkCode(ask.code);
   if (!code) return reply({ error: 'code' }, 400);
   if (isRevoked(code.name, code.id)) return reply({ error: 'revoked' }, 403);
-  const key = `devices:${code.id}`;
+  const stopped = await env.LICENSES.get(`revoked:${code.id}`);
+  if (stopped) return reply({ error: 'revoked', reason: stopped.startsWith('refunded') ? 'refunded' : 'other' }, 403);
   const today = new Date().toISOString().slice(0, 10);
-  // A device not seen for 24 months is forgotten (the privacy notice
-  // says so), which also frees its slot.
-  const cutoff = new Date(Date.now() - 730 * 86400000).toISOString().slice(0, 10);
-  const devices = JSON.parse((await env.LICENSES.get(key)) || '[]').filter((d) => (d.seen || d.added || today) >= cutoff);
-  const known = devices.find((d) => d.id === device);
-  if (known) {
-    known.seen = today;
-    if (label) known.label = label;
-  } else if (devices.length >= MAX_DEVICES) {
-    return reply({ error: 'devices', devices: shown(devices), max: MAX_DEVICES }, 409);
-  } else {
-    devices.push({ id: device, label, added: today, seen: today });
-  }
-  await env.LICENSES.put(key, JSON.stringify(devices));
+  const answer = await slots(env, code.id, { op: 'add', device, label, today });
+  if (!answer.ok) return reply({ error: 'devices', devices: shown(answer.devices), max: MAX_DEVICES }, 409);
   const receipt = await signWith(env, { c: code.id, v: device, t: today }, 'lumtub-activation-v1\n', 'LA1.');
-  return reply({ receipt, devices: shown(devices), max: MAX_DEVICES });
+  return reply({ receipt, devices: shown(answer.devices), max: MAX_DEVICES });
 }
 
 async function deactivate(request, env) {
@@ -292,10 +325,54 @@ async function deactivate(request, env) {
   const device = clean(ask.device).toLowerCase();
   const code = await checkCode(ask.code);
   if (!code) return reply({ error: 'code' }, 400);
-  const key = `devices:${code.id}`;
-  const devices = JSON.parse((await env.LICENSES.get(key)) || '[]').filter((d) => d.id !== device);
-  await env.LICENSES.put(key, JSON.stringify(devices));
-  return reply({ devices: shown(devices), max: MAX_DEVICES });
+  const answer = await slots(env, code.id, { op: 'remove', device });
+  return reply({ devices: shown(answer.devices), max: MAX_DEVICES });
+}
+
+// One code's devices, changed one request at a time by its own Slots
+// object.
+async function slots(env, id, ask) {
+  const stub = env.SLOTS.get(env.SLOTS.idFromName(id));
+  const response = await stub.fetch('https://slots/', { method: 'POST', body: JSON.stringify({ ...ask, id }) });
+  return response.json();
+}
+
+// A code's devices. A device not seen for 24 months is forgotten (the
+// privacy notice says so), which also frees its slot; the order and its
+// code stay, so the buyer can always get the code again.
+export class Slots {
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+  }
+
+  async fetch(request) {
+    const ask = await request.json();
+    return this.state.blockConcurrencyWhile(async () => {
+      let devices = await this.state.storage.get('devices');
+      // Codes activated before the devices moved here: their list once.
+      if (devices === undefined) devices = JSON.parse((await this.env.LICENSES.get(`devices:${ask.id}`)) || '[]');
+      const today = ask.today || new Date().toISOString().slice(0, 10);
+      const cutoff = new Date(Date.parse(today) - 730 * 86400000).toISOString().slice(0, 10);
+      devices = devices.filter((d) => (d.seen || d.added || today) >= cutoff);
+      let ok = true;
+      if (ask.op === 'remove') {
+        devices = devices.filter((d) => d.id !== ask.device);
+      } else {
+        const known = devices.find((d) => d.id === ask.device);
+        if (known) {
+          known.seen = today;
+          if (ask.label) known.label = ask.label;
+        } else if (devices.length >= MAX_DEVICES) {
+          ok = false;
+        } else {
+          devices.push({ id: ask.device, label: ask.label, added: today, seen: today });
+        }
+      }
+      await this.state.storage.put('devices', devices);
+      return new Response(JSON.stringify({ ok, devices }), { headers: { 'content-type': 'application/json' } });
+    });
+  }
 }
 
 async function afdianOrder(order, env) {

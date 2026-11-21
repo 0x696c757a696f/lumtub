@@ -162,8 +162,13 @@ class Learning extends ChangeNotifier {
   /// device, or never confirmed by the server within [grace].
   bool get licenseStopped => _license != null && !licensed;
 
-  /// Why, for [licenseStopped]: 'revoked', 'devices' or 'offline'.
+  /// Why, for [licenseStopped]: 'revoked', 'refunded', 'devices' or
+  /// 'offline'.
   String _stopReason = '';
+
+  /// The last refusal was for a refunded order rather than a code shared
+  /// publicly.
+  bool lastRefunded = false;
   String get licenseStopReason => _blocked ? _stopReason : 'offline';
   bool get showPinyin => _showPinyin;
   bool get showRomanization => _showRomanization;
@@ -476,7 +481,10 @@ class Learning extends ChangeNotifier {
           .timeout(const Duration(seconds: 20));
       final answer = jsonDecode(response.body);
       _takeDevices(answer);
-      if (response.statusCode == 403 && answer is Map && answer['error'] == 'revoked') return (_Activation.revoked, null);
+      if (response.statusCode == 403 && answer is Map && answer['error'] == 'revoked') {
+        lastRefunded = answer['reason'] == 'refunded';
+        return (_Activation.revoked, null);
+      }
       if (response.statusCode == 409) return (_Activation.devices, null);
       final receipt = answer is Map ? answer['receipt'] : null;
       if (response.statusCode != 200 || receipt is! String) return (_Activation.offline, null);
@@ -509,7 +517,7 @@ class Learning extends ChangeNotifier {
         _blocked = false;
       case _Activation.revoked:
         _blocked = true;
-        _stopReason = 'revoked';
+        _stopReason = lastRefunded ? 'refunded' : 'revoked';
         logWarn('The learning pack code was revoked');
       case _Activation.devices:
         _blocked = true;
@@ -590,7 +598,10 @@ class Learning extends ChangeNotifier {
           )
           .timeout(const Duration(seconds: 30));
       if (response.statusCode == 429) return ClaimResult.busy;
-      if (response.statusCode == 403) return ClaimResult.revoked;
+      if (response.statusCode == 403) {
+        lastRefunded = response.body.contains('refunded');
+        return ClaimResult.revoked;
+      }
       final answer = response.statusCode == 200 ? jsonDecode(response.body) : null;
       final code = answer is Map ? answer['code'] : null;
       lastConsent = answer is Map ? DateTime.tryParse('${answer['consented']}')?.toLocal() : null;
@@ -713,10 +724,33 @@ class Learning extends ChangeNotifier {
       unawaited(_openSegmenter(pack));
     } catch (e) {
       logError('Could not read the ${pack.name} dictionary', e);
+      // An update that does not open: back to the version before it.
+      final previous = File('${file.path}.prev');
+      if (await previous.exists()) {
+        try {
+          _close(pack);
+          await previous.rename(file.path);
+          await _sumOf(pack)?.delete();
+          logWarn('Went back to the previous ${pack.name} dictionary');
+          return await _load(pack);
+        } catch (e) {
+          logWarn('Could not go back to the previous ${pack.name} dictionary: $e');
+        }
+      }
       state.error = '$e';
       state.state = PackState.failed;
     }
     notifyListeners();
+  }
+
+  /// Keeps the version [file] replaces, one only, to go back to when the
+  /// new one does not open.
+  Future<void> _keepPrevious(File file) async {
+    try {
+      if (await file.exists()) await file.rename('${file.path}.prev');
+    } catch (e) {
+      logWarn('Could not keep the previous ${file.path}: $e');
+    }
   }
 
   /// Downloads [pack]'s dictionary and checks it against the SHA-256 sum
@@ -771,9 +805,11 @@ class Learning extends ChangeNotifier {
         await part.openRead().transform(gzip.decoder).pipe(unpacked.openWrite());
         await part.delete();
         _close(pack);
+        await _keepPrevious(file);
         await unpacked.rename(file.path);
       } else {
         _close(pack);
+        await _keepPrevious(file);
         await part.rename(file.path);
       }
       try {

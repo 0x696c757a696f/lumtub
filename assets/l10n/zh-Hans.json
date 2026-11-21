@@ -3631,7 +3631,7 @@
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "部分手机为了省电，会关闭在后台播放的 App。允许 Lumtub 不受电池限制运行，播放就不会被中断。",
   "Allow": "允许",
   "Ask again with my account when blocked": "被拦截时用我的账号重新请求",
-  "When YouTube takes this network for a bot, the video you open is asked for once more with the browser sign-in's account (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too": "当 YouTube 把此网络当作机器人时，你打开的视频会再用浏览器登录的账号请求一次（每小时最多 20 次）。这样 YouTube 就知道该账号看过这个视频，经常在共用地址上使用的账号也可能被标记",
+  "When YouTube takes this network for a bot, the video you open or download is asked for once more with the browser sign-in's account, and for the next 30 minutes videos are asked for with the account right away (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too": "当 YouTube 把此网络当作机器人时，你打开或下载的视频会再用浏览器登录的账号请求一次，之后 30 分钟内的视频会直接用该账号请求（每小时最多 20 次）。这样 YouTube 就知道该账号看过这个视频，经常在共用地址上使用的账号也可能被标记",
   "bot not a bot blocked sign in cookies account": "机器人 非机器人 被拦截 登录 Cookie 账号 bot not a bot blocked sign in cookies account",
   "YouTube took this network for a bot, so this video was asked for with your account": "YouTube 把此网络当作机器人，所以这个视频是用你的账号请求的",
   "Browser sign-in, Google sign-in, syncing subscriptions and playlists": "浏览器登录、Google 登录、同步订阅和播放列表",

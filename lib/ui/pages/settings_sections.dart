@@ -821,7 +821,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         }, subtitle: tr('IPv4 IPv6 force-ipv4 slow start network')),
         SettingEntry(tr('Ask again with my account when blocked'), (context) => SwitchItem(
               title: tr('Ask again with my account when blocked'),
-              subtitle: tr("When YouTube takes this network for a bot, the video you open is asked for once more with the browser sign-in's account (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too"),
+              subtitle: tr("When YouTube takes this network for a bot, the video you open or download is asked for once more with the browser sign-in's account, and for the next 30 minutes videos are asked for with the account right away (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too"),
               leading: _icon(AppIcons.keyFill),
               value: settings.signInWhenBlocked,
               onChanged: (v) => save(settings.copyWith(signInWhenBlocked: v)),

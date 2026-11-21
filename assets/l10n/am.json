@@ -3595,7 +3595,7 @@
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "አንዳንድ ስልኮች ባትሪ ለመቆጠብ በጀርባ የሚጫወቱ መተግበሪያዎችን ይዘጋሉ። መጫወቱ እንዳይቋረጥ Lumtub ያለ ባትሪ ገደብ እንዲሰራ ይፍቀዱ።",
   "Allow": "ፍቀድ",
   "Ask again with my account when blocked": "ሲታገድ በመለያዬ እንደገና ጠይቅ",
-  "When YouTube takes this network for a bot, the video you open is asked for once more with the browser sign-in's account (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too": "YouTube ይህን አውታረ መረብ ቦት አድርጎ ሲቆጥረው፣ የከፈቱት ቪዲዮ በአሳሽ መግቢያ መለያ ሌላ አንድ ጊዜ ይጠየቃል (በሰዓት ቢበዛ 20 ጊዜ)። ከዚያ YouTube መለያው እንደተመለከተው ያውቃል፣ እና ከጋራ አድራሻ በተደጋጋሚ የሚጠቀም መለያም ምልክት ሊደረግበት ይችላል",
+  "When YouTube takes this network for a bot, the video you open or download is asked for once more with the browser sign-in's account, and for the next 30 minutes videos are asked for with the account right away (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too": "YouTube ይህን አውታረ መረብ ቦት አድርጎ ሲቆጥረው፣ የከፈቱት ወይም ያወረዱት ቪዲዮ በአሳሽ መግቢያ መለያ ሌላ አንድ ጊዜ ይጠየቃል፣ ከዚያም ለሚቀጥሉት 30 ደቂቃ ቪዲዮዎች ወዲያውኑ በመለያው ይጠየቃሉ (በሰዓት ቢበዛ 20 ጊዜ)። ከዚያ YouTube መለያው እንደተመለከተው ያውቃል፣ እና ከጋራ አድራሻ በተደጋጋሚ የሚጠቀም መለያም ምልክት ሊደረግበት ይችላል",
   "bot not a bot blocked sign in cookies account": "ቦት ቦት አይደለሁም ታግዷል ግባ ኩኪዎች መለያ bot not a bot blocked sign in cookies account",
   "YouTube took this network for a bot, so this video was asked for with your account": "YouTube ይህን አውታረ መረብ ቦት አድርጎ ቆጥሯል፣ ስለዚህ ይህ ቪዲዮ በመለያዎ ተጠይቋል",
   "Browser sign-in, Google sign-in, syncing subscriptions and playlists": "የአሳሽ መግቢያ፣ የ Google መግቢያ፣ ምዝገባዎችንና አጫዋች ዝርዝሮችን ማመሳሰል",

@@ -66,7 +66,7 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 - **Send to Anki** in one click, or export CSV.
 
 **Try it free:** your first 30 word lookups have everything switched on, no account needed. After that, without the pack, you can look up 3 words a day. [Install guide and refunds](https://0x696c757a696f.github.io/lumtub/learn/).<br>
-**Early-bird price:** €12 / ¥99 until 3 December, then €24 / ¥188. Pay once, no subscription ([Polar](https://buy.polar.sh/polar_cl_Kq1VEmdtmOLJaLBhOA2DgT5dXcnA2aBvhys200CDQVP?discount_code=ACTUAL50) · [爱发电](https://afdian.com/a/linmuqingfeng)). One license for 2 of your devices; the app checks it online about once every 30 days.
+**Early-bird price:** ¥99 until 3 December, then ¥188. Pay once, no subscription, on [爱发电](https://afdian.com/a/linmuqingfeng) (Alipay or WeChat Pay). Card payment is coming later. One license for 2 of your devices; the app checks it online about once every 30 days.
 
 **Free for everyone**, in the Subtitles menu under **Language learning**:
 
@@ -202,7 +202,7 @@ Lumtub is free. It comes only from:
 
 To check a download, compare its SHA-256 with the one GitHub shows next to the file on the [release page](https://github.com/0x696c757a696f/lumtub/releases/latest). On Windows: `Get-FileHash <file>` in PowerShell; on macOS and Linux: `shasum -a 256 <file>`.
 
-The optional [Learning Pack](#-learn-languages-from-real-videos) is sold only through Polar and 爱发电, from the links in this README, the website and the app. If anyone else asks you to pay for Lumtub, or sells a renamed copy without its source code, it doesn't come from this project and may have been tampered with. Lumtub's license (AGPL) lets others share and even sell copies, but only if they give you the complete source code under the same license and keep the copyright notices. A paid closed-source copy breaks the license. Please [report it in an issue](https://github.com/0x696c757a696f/lumtub/issues/new) with a link, so it can be taken down.
+The optional [Learning Pack](#-learn-languages-from-real-videos) is sold only through 爱发电, from the links in this README, the website and the app. If anyone else asks you to pay for Lumtub, or sells a renamed copy without its source code, it doesn't come from this project and may have been tampered with. Lumtub's license (AGPL) lets others share and even sell copies, but only if they give you the complete source code under the same license and keep the copyright notices. A paid closed-source copy breaks the license. Please [report it in an issue](https://github.com/0x696c757a696f/lumtub/issues/new) with a link, so it can be taken down.
 
 ## Where the data comes from
 

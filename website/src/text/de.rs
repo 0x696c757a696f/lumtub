@@ -98,7 +98,7 @@ pub static DE: Text = Text {
         pack_title: "Lernpaket · Vorschau",
         pack: ["Tippe auf ein Wort und sieh die Bedeutung. Die Wörterbücher werden einmal geladen und funktionieren danach offline: Chinesisch, Englisch, Japanisch und Koreanisch; Spanisch, Französisch, Deutsch, Italienisch und Russisch als Beta.", "Pinyin, Kana und koreanische Umschrift über der Zeile.", "Wörter über deinem Niveau werden hervorgehoben, so hältst du nur bei neuen an.", "Ein Vokabelheft, das den Satz, den Originalton und die Stelle im Video behält.", "Wörter mit einem Klick an Anki schicken oder als CSV exportieren."],
         trial: "Erst ausprobieren: Bei deinen ersten 30 Wortsuchen ist alles freigeschaltet, ohne Konto. Danach ohne Paket 3 pro Tag.",
-        price: "Frühbucherpreis 12 € / 99 ¥ bis 3. Dezember, danach 24 € / 188 ¥. Einmal bezahlt, kein Abo.",
+        price: "Frühbucherpreis 99 ¥ bis 3. Dezember, danach 188 ¥. Einmal bezahlt, kein Abo, über 爱发电 (Alipay oder WeChat Pay). Kartenzahlung kommt später.",
         fine: "Windows, macOS und Linux. Eine Lizenz für 2 deiner Geräte; die App prüft sie etwa alle 30 Tage online.",
         free_title: "Kostenlos für alle",
         free: ["Pause nach jeder Zeile, damit du sie verstehst, bevor es weitergeht.", "Übersetzung verschwommen, bis du darüberfährst: erst raten, dann prüfen.", "Zeile wiederholen, in Schleife abspielen, vor und zurück springen.", "Shadowing: nimm dich auf und vergleiche mit dem Original.", "Die Untertitelliste mit Übersetzungen als CSV exportieren."],

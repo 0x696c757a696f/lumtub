@@ -98,7 +98,7 @@ pub static IT: Text = Text {
         pack_title: "Pacchetto di studio · anteprima",
         pack: ["Tocca una parola e vedi il significato. I dizionari si scaricano una volta e poi funzionano offline: cinese, inglese, giapponese e coreano; spagnolo, francese, tedesco, italiano e russo in beta.", "Pinyin, kana e romanizzazione del coreano sopra la riga.", "Le parole sopra il tuo livello sono evidenziate, così ti fermi solo su quelle nuove.", "Un quaderno di vocaboli che tiene la frase, l'audio originale e il momento nel video.", "Manda le parole ad Anki con un clic, o esporta in CSV."],
         trial: "Prima provalo: le tue prime 30 ricerche hanno tutto attivo, senza account. Poi, senza il pacchetto, 3 ricerche al giorno.",
-        price: "Prezzo di lancio 12 € / 99 ¥ fino al 3 dicembre, poi 24 € / 188 ¥. Un solo pagamento, nessun abbonamento.",
+        price: "Prezzo di lancio 99 ¥ fino al 3 dicembre, poi 188 ¥. Un solo pagamento, nessun abbonamento, su 爱发电 (Alipay o WeChat Pay). Il pagamento con carta arriverà più avanti.",
         fine: "Windows, macOS e Linux. Una licenza per 2 tuoi dispositivi; l'app la verifica online circa una volta ogni 30 giorni.",
         free_title: "Gratis per tutti",
         free: ["Pausa dopo ogni riga, per capirla prima di andare avanti.", "Traduzione sfocata finché non ci passi sopra: prima indovina, poi controlla.", "Riascolta, ripeti in loop e passa da una riga all'altra.", "Shadowing: registrati e confrontati con l'originale.", "Esporta l'elenco dei sottotitoli con le traduzioni in CSV."],

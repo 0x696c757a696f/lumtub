@@ -64,7 +64,7 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 - **一键送进 Anki**，也可以导出 CSV。
 
 **免费试用**：前 30 次查词所有功能全部开放，不用注册。之后不买的话，每天能查 3 个词。[安装说明和退款](https://0x696c757a696f.github.io/lumtub/learn/zh/)。<br>
-**早鸟价**：¥99 / €12，到 12 月 3 日；之后 ¥188 / €24。一次付款，不订阅（[爱发电](https://afdian.com/a/linmuqingfeng) · [Polar](https://buy.polar.sh/polar_cl_Kq1VEmdtmOLJaLBhOA2DgT5dXcnA2aBvhys200CDQVP?discount_code=ACTUAL50)）。一份授权 2 台设备，软件大约每 30 天联网确认一次授权。
+**早鸟价**：¥99，到 12 月 3 日；之后 ¥188。一次付款，不订阅，在[爱发电](https://afdian.com/a/linmuqingfeng)购买。一份授权 2 台设备，软件大约每 30 天联网确认一次授权。
 
 **所有人免费**，在字幕菜单 › **学外语** 里：
 
@@ -196,7 +196,7 @@ Lumtub 是免费的，只从以下渠道发布：
 
 想确认下载的文件没被改过：把它的 SHA-256 和 [Release 页面](https://github.com/0x696c757a696f/lumtub/releases/latest)上文件旁边显示的对比。Windows 在 PowerShell 里运行 `Get-FileHash <文件>`，macOS 和 Linux 运行 `shasum -a 256 <文件>`。
 
-可选的[学习包](#-用真实视频学外语)只通过爱发电和 Polar 出售，链接只在本 README、官网和软件里。除此之外，如果有人向你收费出售 Lumtub，或者换个名字卖却不提供源代码，那就不是本项目发布的，安装包也可能被动过手脚。Lumtub 的许可证（AGPL）允许别人转发甚至出售副本，但必须把完整源代码以同样的许可证一并提供给你，并保留版权声明。收费又闭源的副本违反了许可证。遇到这种情况，请把链接[提交到 issue](https://github.com/0x696c757a696f/lumtub/issues/new)，以便发起下架。
+可选的[学习包](#-用真实视频学外语)只通过爱发电出售，链接只在本 README、官网和软件里。除此之外，如果有人向你收费出售 Lumtub，或者换个名字卖却不提供源代码，那就不是本项目发布的，安装包也可能被动过手脚。Lumtub 的许可证（AGPL）允许别人转发甚至出售副本，但必须把完整源代码以同样的许可证一并提供给你，并保留版权声明。收费又闭源的副本违反了许可证。遇到这种情况，请把链接[提交到 issue](https://github.com/0x696c757a696f/lumtub/issues/new)，以便发起下架。
 
 ## 数据来源
 

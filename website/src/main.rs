@@ -212,7 +212,7 @@ fn App() -> impl IntoView {
             <main id="main">
                 <Hero t=t ctx=ctx lang=l/>
                 <Highlights t=t lang=l skin=skin/>
-                <Learning t=t lang=l/>
+                <Learning t=t/>
                 <Tagline lang=l/>
                 <Steps t=t/>
                 <Features t=t/>
@@ -336,19 +336,10 @@ fn Highlights(t: &'static Text, lang: Lang, skin: SkinState) -> impl IntoView {
     }
 }
 
-const POLAR_CHECKOUT: &str =
-    "https://buy.polar.sh/polar_cl_Kq1VEmdtmOLJaLBhOA2DgT5dXcnA2aBvhys200CDQVP?discount_code=ACTUAL50";
-
 #[component]
-fn Learning(t: &'static Text, lang: Lang) -> impl IntoView {
+fn Learning(t: &'static Text) -> impl IntoView {
     let l = &t.learn;
-    let polar = view! { <a class="btn primary" href=POLAR_CHECKOUT rel="noopener">"Polar · €12"</a> };
-    let afdian = view! { <a class="btn" href=AFDIAN rel="noopener">"爱发电 · ¥99"</a> };
-    let buttons = if lang == Lang::Zh {
-        view! { <a class="btn primary" href=AFDIAN rel="noopener">"爱发电 · ¥99"</a><a class="btn" href=POLAR_CHECKOUT rel="noopener">"Polar · €12"</a> }.into_any()
-    } else {
-        view! { {polar}{afdian} }.into_any()
-    };
+    let buttons = view! { <a class="btn primary" href=AFDIAN rel="noopener">"爱发电 · ¥99"</a> };
     view! {
         <section id="learn" class="section alt">
             <div class="wrap">

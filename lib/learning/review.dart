@@ -1,12 +1,15 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 
 import '../app_directories.dart' show writeFileAtomic;
 import '../app_log.dart';
 import '../l10n/l10n.dart';
+import '../native_core.dart';
 import 'vocabulary.dart';
 
 /// How well a word came back in review.
@@ -50,10 +53,10 @@ class ReviewState {
     if (json is! Map) return null;
     final s = json['s'], d = json['d'];
     final due = DateTime.tryParse('${json['due']}'), last = DateTime.tryParse('${json['last']}');
-    if (s is! num || d is! num || due == null || last == null) return null;
+    if (s is! num || d is! num || due == null || last == null || !s.isFinite || s <= 0 || !d.isFinite) return null;
     return ReviewState(
       stability: s.toDouble(),
-      difficulty: d.toDouble(),
+      difficulty: d.toDouble().clamp(1, 10),
       due: due,
       last: last,
       reps: json['reps'] is int ? json['reps'] as int : 0,
@@ -84,9 +87,37 @@ abstract final class Fsrs {
 
   static double _initialDifficulty(int g) => (w[4] - (g - 3) * w[5]).clamp(1, 10).toDouble();
 
+  static final _core = NativeCore.instance?.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_review_next');
+
   /// The state after reviewing [state] (null for a word never reviewed)
-  /// with [grade] at [now].
+  /// with [grade] at [now]: worked out by lumtub_core, or here when it is
+  /// not there (tests).
   static ReviewState next(ReviewState? state, ReviewGrade grade, DateTime now) {
+    final core = NativeCore.instance, function = _core;
+    if (core != null && function != null) {
+      final input = jsonEncode({
+        if (state != null)
+          'state': {'s': state.stability, 'd': state.difficulty, 'reps': state.reps, 'lapses': state.lapses, 'last': state.last.millisecondsSinceEpoch, 'due': state.due.millisecondsSinceEpoch},
+        'grade': grade.value,
+        'now': now.millisecondsSinceEpoch,
+      });
+      final answer = core.take(core.withText(input, function));
+      final json = answer == null ? null : jsonDecode(answer);
+      if (json is Map && json['s'] is num && json['due'] is int && json['last'] is int) {
+        return ReviewState(
+          stability: (json['s'] as num).toDouble(),
+          difficulty: (json['d'] as num).toDouble(),
+          due: DateTime.fromMillisecondsSinceEpoch(json['due'] as int),
+          last: DateTime.fromMillisecondsSinceEpoch(json['last'] as int),
+          reps: json['reps'] as int? ?? 1,
+          lapses: json['lapses'] as int? ?? 0,
+        );
+      }
+    }
+    return _next(state, grade, now);
+  }
+
+  static ReviewState _next(ReviewState? state, ReviewGrade grade, DateTime now) {
     final g = grade.value;
     if (state == null) {
       final stability = w[g - 1];
@@ -173,15 +204,28 @@ class ReviewStore extends ChangeNotifier {
     }
   }
 
-  /// Words of [words] to review at [now]: those due, oldest due first,
-  /// then words never reviewed, oldest kept first, up to what is left of
-  /// today's [newPerDay].
+  /// Words of [words] to review at [now]: those due, then words never
+  /// reviewed, each oldest kept first, up to what is left of today's
+  /// [newPerDay].
   List<VocabularyWord> due(List<VocabularyWord> words, DateTime now) {
     final today = dayOf(now);
     final newToday = _states.values.where((s) => s.reps == 1 && dayOf(s.last) == today).length;
-    final old = [for (final w in words) if (_states[w.key] case final s? when !s.due.isAfter(now)) w]
-      ..sort((a, b) => _states[a.key]!.due.compareTo(_states[b.key]!.due));
-    final fresh = [for (final w in words.reversed) if (!_states.containsKey(w.key)) w].take(math.max(0, newPerDay - newToday));
+    // One pass, oldest kept first; no sorting, so it stays linear however
+    // big the book grows.
+    final old = <VocabularyWord>[];
+    final fresh = <VocabularyWord>[];
+    var room = math.max(0, newPerDay - newToday);
+    for (final w in words.reversed) {
+      final state = _states[w.key];
+      if (state == null) {
+        if (room > 0) {
+          fresh.add(w);
+          room--;
+        }
+      } else if (!state.due.isAfter(now)) {
+        old.add(w);
+      }
+    }
     return [...old, ...fresh];
   }
 

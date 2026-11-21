@@ -8,6 +8,7 @@ import '../../l10n/l10n.dart';
 import '../../learning/chinese_dictionary.dart';
 import '../../learning/english_dictionary.dart';
 import '../../learning/japanese_dictionary.dart';
+import '../../learning/known_words.dart';
 import '../../learning/learning.dart';
 import '../../learning/vocabulary.dart';
 import '../../learning/wiktionary_dictionary.dart';
@@ -133,6 +134,7 @@ class _WordCard extends StatelessWidget {
       title: Row(children: [
         Expanded(child: SelectableText(word, style: _headStyle(theme))),
         _SpeakButton(controller: controller, text: word, language: 'zh'),
+        _KnownButton(controller: controller, token: token),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -228,6 +230,7 @@ class _EnglishCard extends StatelessWidget {
       title: Row(children: [
         Expanded(child: SelectableText(token.text, style: _headStyle(theme))),
         _SpeakButton(controller: controller, text: token.key, language: 'en'),
+        _KnownButton(controller: controller, token: token),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -349,6 +352,7 @@ class _JapaneseCard extends StatelessWidget {
           ]),
         ),
         _SpeakButton(controller: controller, text: head, language: 'ja'),
+        _KnownButton(controller: controller, token: token),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -494,6 +498,7 @@ class _WiktionaryCard extends StatelessWidget {
           ]),
         ),
         _SpeakButton(controller: controller, text: token.key, language: language),
+        _KnownButton(controller: controller, token: token),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -708,4 +713,40 @@ class _KeptSwitch extends StatelessWidget {
         ),
         child: child,
       );
+}
+
+/// 我认识这个词: a known word loses its reading above the subtitles and
+/// counts as understood in a video's difficulty.
+class _KnownButton extends StatelessWidget {
+  const _KnownButton({required this.controller, required this.token});
+  final AppController controller;
+  final WordToken token;
+
+  @override
+  Widget build(BuildContext context) {
+    final book = controller.learning.book;
+    if (book == null || !controller.learning.unlocked) return const SizedBox.shrink();
+    final known = knownWordsOf(book);
+    return ListenableBuilder(
+      listenable: known,
+      builder: (context, _) {
+        final marked = known.marks(token);
+        return IconButton(
+          tooltip: marked ? tr('Known: tap to learn it again') : tr('I know this word: no reading above it any more'),
+          isSelected: marked,
+          icon: AnimatedSwitcher(
+            duration: Motion.of(Ease.fade),
+            transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+            child: Icon(
+              marked ? AppIcons.checkCircleFill : AppIcons.checkCircle,
+              key: ValueKey(marked),
+              size: 20,
+              color: marked ? Theme.of(context).colorScheme.primary : null,
+            ),
+          ),
+          onPressed: () => unawaited(known.mark(token, !marked)),
+        );
+      },
+    );
+  }
 }

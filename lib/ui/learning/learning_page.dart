@@ -385,6 +385,7 @@ class _PackTile extends StatelessWidget {
       DictionaryPack.chinese => '4 MB',
       DictionaryPack.english => '2 MB',
       DictionaryPack.japanese => '7 MB',
+      DictionaryPack.korean => '8 MB',
       _ => tr('a few MB'),
     };
     final subtitle = switch (state) {
@@ -400,7 +401,7 @@ class _PackTile extends StatelessWidget {
         DictionaryPack.chinese => tr('Chinese dictionary (Chinese–English)'),
         DictionaryPack.english => tr('English dictionary (English–Chinese)'),
         DictionaryPack.japanese => tr('Japanese dictionary (Japanese–English, with kana)'),
-        DictionaryPack.korean => tr('Korean dictionary (with romanization)'),
+        DictionaryPack.korean => tr('Korean dictionary (Korean–Chinese, KRDict)'),
         DictionaryPack.spanish => tr('Spanish dictionary'),
         DictionaryPack.french => tr('French dictionary'),
         DictionaryPack.german => tr('German dictionary'),

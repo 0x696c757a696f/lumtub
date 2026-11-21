@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 ຂຶ້ນໄປ, ບໍ່ສຳເນົາ)",
   "DirectX 12 (copy-back)": "DirectX 12 (ສຳເນົາກັບ)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (ຄົມຊັດທີ່ສຸດ, ໂຫຼດ GPU ສູງ)",
-  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; ສ່ວນໜຶ່ງຂອງໜ້າຕາແອັບດັດແປງມາຈາກ PiliNara, ການຫຼິ້ນສ້າງຢູ່ເທິງ mpv, media_kit ແລະ yt-dlp",
+  "AGPLv3; playback is built on mpv, media_kit and yt-dlp": "AGPLv3; ການຫຼິ້ນສ້າງຢູ່ເທິງ mpv, media_kit ແລະ yt-dlp",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU ວິທີຖອດລະຫັດປັດຈຸບັນ ສ່ວນຂະຫຍາຍວິດີໂອ VP9 AV1",
   "GitHub source code": "ໂຄ້ດຕົ້ນສະບັບ GitHub",
   "GitHub repository": "ບ່ອນເກັບ GitHub",

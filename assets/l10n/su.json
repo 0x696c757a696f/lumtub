@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 jeung saluhureunana, tanpa salinan)",
   "DirectX 12 (copy-back)": "DirectX 12 (salinan balik)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (paling seukeut, beban GPU beurat)",
-  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; sabagian antarmuka diadaptasi tina PiliNara, pamuter dumasar kana mpv, media_kit jeung yt-dlp",
+  "AGPLv3; playback is built on mpv, media_kit and yt-dlp": "AGPLv3; pamuter dumasar kana mpv, media_kit jeung yt-dlp",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU cara dékode ayeuna VP9 AV1 ekstensi vidéo",
   "GitHub source code": "Kode sumber GitHub",
   "GitHub repository": "Répositori GitHub",

@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 und höher, Zero-Copy)",
   "DirectX 12 (copy-back)": "DirectX 12 (Copy-back)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (schärfste, hohe GPU-Last)",
-  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; Teile der Oberfläche sind von PiliNara angepasst, die Wiedergabe basiert auf mpv, media_kit und yt-dlp",
+  "AGPLv3; playback is built on mpv, media_kit and yt-dlp": "AGPLv3; die Wiedergabe basiert auf mpv, media_kit und yt-dlp",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU aktuelle Dekodierung VP9 AV1 Videoerweiterungen",
   "GitHub source code": "GitHub-Quellcode",
   "GitHub repository": "GitHub-Repository",

@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 আৰু তাৰ পিছৰ, জিৰো-কপি)",
   "DirectX 12 (copy-back)": "DirectX 12 (কপি-বেক)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (আটাইতকৈ স্পষ্ট, GPU ত অধিক ভাৰ)",
-  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; UI ৰ কিছু অংশ PiliNara ৰ পৰা অভিযোজিত, প্লেবেক mpv, media_kit আৰু yt-dlp ৰ ওপৰত নিৰ্মিত",
+  "AGPLv3; playback is built on mpv, media_kit and yt-dlp": "AGPLv3; প্লেবেক mpv, media_kit আৰু yt-dlp ৰ ওপৰত নিৰ্মিত",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU বৰ্তমান ডিক'ডিং মোড VP9 AV1 ভিডিঅ' এক্সটেনশ্বন",
   "GitHub source code": "GitHub উৎস ক'ড",
   "GitHub repository": "GitHub ৰিপজিটৰী",

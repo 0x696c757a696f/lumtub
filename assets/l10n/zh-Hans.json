@@ -3764,6 +3764,8 @@
   "How to use it: download a dictionary, turn on a Chinese, English or Japanese subtitle, then tap any word on the video or in the subtitle list. The video waits while the word is open. Everything stays on this device.": "用法：先下载词典，打开中文、英文或日文字幕，再点视频上或字幕列表里的任意一个词。查词时视频会暂停。所有数据都只在这台设备上。",
   "Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, all your devices, no account, no subscription. Buying it keeps Lumtub alive.": "支持中文、英语、日语、韩语、西班牙语、法语、德语、意大利语和俄语。一次付费，你所有的设备都能用，不用注册，不按月收费。你的购买让 Lumtub 能一直做下去。",
   "Pinyin above Chinese, kana above Japanese": "中文上方显示拼音，日语上方显示假名",
+  "Romanization above Korean": "韩语上方显示罗马音",
+  "Korean words in Latin letters, such as hangugeo above 한국어": "用拉丁字母标注韩语读音，例如 한국어 上方显示 hangugeo",
   "Show pinyin and kana above subtitles": "字幕上方显示拼音和假名",
   "Pinyin and kana": "拼音和假名",
   "Above each Chinese or Japanese word. Tap any word to look it up.": "显示在中文或日语的每个词上方。点任意一个词就能查词典。",

@@ -86,6 +86,10 @@ class Learning extends ChangeNotifier {
   AppDirectories? _directories;
   LearningLicense? _license;
   bool _showPinyin = true;
+
+  /// Korean in letters above the words; off by default, as Hangul reads
+  /// as it sounds.
+  bool _showRomanization = false;
   int? _englishLevel = EnglishLevel.cet4.index;
   bool _loaded = false;
   VocabularyBook? _book;
@@ -99,7 +103,7 @@ class Learning extends ChangeNotifier {
 
   @override
   void notifyListeners() {
-    final key = Object.hashAll([_license, _showPinyin, _englishLevel, for (final p in _packs.values) p.dictionary]);
+    final key = Object.hashAll([_license, _showPinyin, _showRomanization, _englishLevel, for (final p in _packs.values) p.dictionary]);
     if (key != _lastView) {
       _lastView = key;
       viewChanges.value++;
@@ -112,6 +116,7 @@ class Learning extends ChangeNotifier {
   LearningLicense? get license => _license;
   bool get licensed => _license != null;
   bool get showPinyin => _showPinyin;
+  bool get showRomanization => _showRomanization;
 
   /// The learner's English level as an index into [EnglishLevel.values];
   /// words above it stand out. Null marks nothing.
@@ -151,7 +156,11 @@ class Learning extends ChangeNotifier {
     if (ja != null && JapaneseDictionary.looksJapanese(text)) return _cut('ja', text) ?? ja.segment(text);
     final zh = chinese;
     if (zh != null && ChineseDictionary.looksChinese(text)) return _cut('zh', text) ?? zh.segment(text);
-    if (WiktionaryDictionary.looksKorean(text)) return _onDisk('ko') ? _wiktionaryWords('ko', text) : null;
+    if (WiktionaryDictionary.looksKorean(text)) {
+      final words = _onDisk('ko') ? _wiktionaryWords('ko', text) : null;
+      if (words == null || _showRomanization) return words;
+      return [for (final w in words) w.reading == null ? w : WordToken(w.text, null, isWord: w.isWord, lookup: w.lookup, language: w.language)];
+    }
     if (WiktionaryDictionary.looksCyrillic(text)) return _onDisk('ru') ? _wiktionaryWords('ru', text) : null;
     if (!EnglishDictionary.looksLatin(text)) return null;
     final en = english;
@@ -232,6 +241,7 @@ class Learning extends ChangeNotifier {
         final json = jsonDecode(await file.readAsString());
         if (json is Map) {
           _showPinyin = json['pinyin'] != false;
+          _showRomanization = json['romanization'] == true;
           final level = json['englishLevel'];
           if (level is int) _englishLevel = level >= 0 && level < EnglishLevel.beyond.index ? level : null;
           final code = json['license'];
@@ -311,6 +321,12 @@ class Learning extends ChangeNotifier {
     await _save();
   }
 
+  Future<void> setShowRomanization(bool on) async {
+    _showRomanization = on;
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> setEnglishLevel(int? level) async {
     _englishLevel = level;
     notifyListeners();
@@ -321,7 +337,7 @@ class Learning extends ChangeNotifier {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'pinyin': _showPinyin, 'englishLevel': _englishLevel ?? -1}));
+      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'pinyin': _showPinyin, 'romanization': _showRomanization, 'englishLevel': _englishLevel ?? -1}));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }

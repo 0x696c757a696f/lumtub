@@ -47,7 +47,8 @@ class ChineseRubyLine extends StatelessWidget {
     for (final token in tokens) {
       if (!token.isWord) {
         // Text between words wraps at its spaces.
-        for (final piece in RegExp(r'\S+\s*|\s+').allMatches(token.text)) {
+        // A caption's line break is a space here: the words stand in one row.
+        for (final piece in RegExp(r'\S+\s*|\s+').allMatches(token.text.replaceAll(RegExp(r'\s*\n\s*'), ' '))) {
           children.add(_text(piece[0]!, style));
         }
         continue;
@@ -70,7 +71,8 @@ class ChineseRubyLine extends StatelessWidget {
           child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => onWord!(token), child: block),
         );
       }
-      children.add(Padding(padding: const EdgeInsets.symmetric(horizontal: 1), child: block));
+      // The outline reaches past the letters; the room keeps the space between words.
+      children.add(Padding(padding: EdgeInsets.symmetric(horizontal: 1 + outline / 2), child: block));
     }
     return Wrap(alignment: alignment, crossAxisAlignment: WrapCrossAlignment.end, children: children);
   }

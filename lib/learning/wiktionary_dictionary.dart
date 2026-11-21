@@ -111,15 +111,15 @@ class WiktionaryDictionary {
   /// Revised Romanization, syllable by syllable: 학교 → hakgyo. A final
   /// consonant before a vowel moves on (한국어 → hangugeo); other sound
   /// changes are left out.
-  static String romanizeKorean(String word) {
+  static String? romanizeKorean(String word) {
     final runes = word.runes.toList();
+    // Numbers and Latin letters read as they are; nothing to put above.
+    if (!runes.any(_isHangul)) return null;
     final out = StringBuffer();
     for (var i = 0; i < runes.length; i++) {
       final r = runes[i];
-      if (!_isHangul(r)) {
-        out.writeCharCode(r);
-        continue;
-      }
+      // Digits and letters beside Hangul read as they are.
+      if (!_isHangul(r)) continue;
       final index = r - 0xac00;
       final initial = index ~/ 588, vowel = (index % 588) ~/ 28, last = index % 28;
       out.write(_initials[initial]);

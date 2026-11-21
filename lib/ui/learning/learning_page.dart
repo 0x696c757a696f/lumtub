@@ -282,6 +282,14 @@ class _LearningPage extends StatelessWidget {
               enabled: learning.licensed,
               onChanged: (on) => unawaited(learning.setShowPinyin(on)),
             ),
+            SwitchItem(
+              title: tr('Romanization above Korean'),
+              subtitle: tr('Korean words in Latin letters, such as hangugeo above 한국어'),
+              leading: Icon(AppIcons.subtitles),
+              value: learning.showRomanization,
+              enabled: learning.licensed,
+              onChanged: (on) => unawaited(learning.setShowRomanization(on)),
+            ),
             NormalItem(
               title: tr('My English level'),
               subtitle: learning.englishLevel == null

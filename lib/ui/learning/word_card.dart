@@ -78,7 +78,7 @@ class _WordCard extends StatelessWidget {
 
     return AlertDialog(
       title: Row(children: [
-        Expanded(child: SelectableText(word, style: theme.textTheme.headlineMedium)),
+        Expanded(child: SelectableText(word, style: _headStyle(theme))),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -166,7 +166,7 @@ class _EnglishCard extends StatelessWidget {
     final book = controller.learning.book;
     return AlertDialog(
       title: Row(children: [
-        Expanded(child: SelectableText(token.text, style: theme.textTheme.headlineSmall)),
+        Expanded(child: SelectableText(token.text, style: _headStyle(theme))),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -183,8 +183,8 @@ class _EnglishCard extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text.rich(TextSpan(children: [
-                    TextSpan(text: e.word, style: theme.textTheme.titleMedium),
-                    if (e.phonetic.isNotEmpty) TextSpan(text: '  /${e.phonetic}/', style: TextStyle(color: colors.primary)),
+                    if (!_sameHead(entries.length, e.word, token.text)) TextSpan(text: '${e.word}  ', style: theme.textTheme.titleMedium),
+                    if (e.phonetic.isNotEmpty) TextSpan(text: '/${e.phonetic}/', style: TextStyle(color: colors.primary)),
                   ])),
                   if (e.tags.isNotEmpty || e.collins > 0)
                     Padding(
@@ -271,7 +271,7 @@ class _JapaneseCard extends StatelessWidget {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
             if (token.reading != null) Text(token.reading!, style: theme.textTheme.bodyMedium!.copyWith(color: colors.primary)),
-            SelectableText(token.text, style: theme.textTheme.headlineMedium),
+            SelectableText(token.text, style: _headStyle(theme)),
           ]),
         ),
         IconButton(
@@ -294,10 +294,12 @@ class _JapaneseCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text.rich(TextSpan(children: [
-                    TextSpan(text: e.headword, style: theme.textTheme.titleMedium),
-                    TextSpan(text: '  ${e.kana.take(3).join('・')}', style: TextStyle(color: colors.primary)),
-                  ])),
+                  // One entry spelt and read as the title says: nothing to add.
+                  if (!_sameHead(entries.length, e.headword, token.text) || e.kana.take(3).join('・') != (token.reading ?? e.kana.first))
+                    Text.rich(TextSpan(children: [
+                      TextSpan(text: e.headword, style: theme.textTheme.titleMedium),
+                      TextSpan(text: '  ${e.kana.take(3).join('・')}', style: TextStyle(color: colors.primary)),
+                    ])),
                   const SizedBox(height: 2),
                   for (final (i, sense) in e.senses.indexed) Text('${i + 1}. $sense', style: theme.textTheme.bodyMedium),
                 ]),
@@ -390,7 +392,7 @@ class _WiktionaryCard extends StatelessWidget {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
             if (token.reading != null) Text(token.reading!, style: TextStyle(color: colors.primary, fontSize: 13)),
-            SelectableText(token.text, style: theme.textTheme.headlineSmall),
+            SelectableText(token.text, style: _headStyle(theme)),
           ]),
         ),
         IconButton(
@@ -414,9 +416,9 @@ class _WiktionaryCard extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text.rich(TextSpan(children: [
-                    TextSpan(text: e.word, style: theme.textTheme.titleMedium),
-                    if (e.reading.isNotEmpty && e.reading != e.word) TextSpan(text: '  ${e.reading}', style: TextStyle(color: colors.primary)),
-                    if (e.ipa.isNotEmpty) TextSpan(text: '  /${e.ipa}/', style: TextStyle(color: colors.outline)),
+                    if (!_sameHead(entries.length, e.word, token.text)) TextSpan(text: '${e.word}  ', style: theme.textTheme.titleMedium),
+                    if (e.reading.isNotEmpty && e.reading != e.word) TextSpan(text: '${e.reading}  ', style: TextStyle(color: colors.primary)),
+                    if (e.ipa.isNotEmpty) TextSpan(text: '/${e.ipa}/', style: TextStyle(color: colors.outline)),
                   ])),
                   if (e.level > 0)
                     Padding(
@@ -485,3 +487,10 @@ class _WiktionaryCard extends StatelessWidget {
     );
   }
 }
+
+/// The word at the top of a card: plain letters, as a skin's title face
+/// may set every letter as a capital.
+TextStyle _headStyle(ThemeData theme) => theme.textTheme.bodyLarge!.copyWith(fontSize: 26, fontWeight: FontWeight.w600, height: 1.25);
+
+/// Whether the only entry is spelt as the card's title already shows it.
+bool _sameHead(int entries, String headword, String title) => entries == 1 && headword.toLowerCase() == title.toLowerCase();

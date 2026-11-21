@@ -36,6 +36,8 @@ void main() {
     expect(WiktionaryDictionary.romanizeKorean('학교'), 'hakgyo');
     expect(WiktionaryDictionary.romanizeKorean('한국어'), 'hangugeo');
     expect(WiktionaryDictionary.romanizeKorean('사랑해요'), 'saranghaeyo');
+    expect(WiktionaryDictionary.romanizeKorean('2027'), isNull);
+    expect(WiktionaryDictionary.romanizeKorean('20번이'), 'beoni');
     expect(ko.segment('학교에 가요').first.reading, 'hakgyoe');
   });
 

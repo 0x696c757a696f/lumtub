@@ -49,7 +49,7 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 
 ## 🆕 Learn languages from real videos
 
-**Turn the videos you love into your own language lessons.** Look up as you watch · listen line by line · save and review · offline dictionaries.
+**Learn languages from the videos you already love.** Look up as you watch · listen line by line · save and review · offline dictionaries.
 
 **Tap any word in the subtitles to look it up. Chinese gets pinyin and Japanese gets kana above the line. Save a word with its sentence and the original audio, and send it to Anki in one click. Offline dictionaries, one payment.**
 

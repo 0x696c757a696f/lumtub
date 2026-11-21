@@ -295,7 +295,7 @@ pub static EN: Text = Text {
     ],
     features_title: "Everything else you'd expect, and more",
     learn: Learn {
-        title: "Turn the videos you love into your own language lessons",
+        title: "Learn languages from the videos you already love",
         lead: "Tap any word in the subtitles to look it up. Chinese gets pinyin and Japanese gets kana above the line. Save a word with its sentence and the original audio, and send it to Anki in one click. Offline dictionaries, one payment.",
         shots_alt: ["Word card for 'nifty' with pronunciation, meanings and the sentence it came from", "Subtitle list with the words above the chosen level highlighted"],
         shots_note: "Real screenshots from the preview build, Chinese interface.",

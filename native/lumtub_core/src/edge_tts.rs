@@ -518,8 +518,32 @@ mod tests {
             ("食べる", "ja-JP-NanamiNeural"),
             ("学习", "zh-CN-XiaoxiaoNeural"),
         ] {
+            let started = std::time::Instant::now();
             let sound = speak(text, voice).unwrap_or_else(|e| panic!("{voice}: {e}"));
-            println!("{voice}: {} bytes", sound.len());
+            let path = std::env::temp_dir().join(format!("{voice}.mp3"));
+            std::fs::write(&path, &sound).unwrap();
+            println!(
+                "{voice}: {} bytes in {:?}, starts {:02x?}",
+                sound.len(),
+                started.elapsed(),
+                &sound[..16.min(sound.len())]
+            );
+            // How long and how loud, where ffmpeg is installed.
+            if let Ok(out) = std::process::Command::new("ffmpeg")
+                .args(["-hide_banner", "-i"])
+                .arg(&path)
+                .args(["-af", "volumedetect", "-f", "null", "-"])
+                .output()
+            {
+                for line in String::from_utf8_lossy(&out.stderr).lines() {
+                    if line.contains("Duration")
+                        || line.contains("mean_volume")
+                        || line.contains("max_volume")
+                    {
+                        println!("  {}", line.trim());
+                    }
+                }
+            }
             assert!(sound.len() > 1000, "{voice}");
         }
     }

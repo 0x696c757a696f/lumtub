@@ -230,6 +230,7 @@ jobs:
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
+          LICENSE_KEY: ${{ secrets.LUMTUB_LICENSE_KEY }}
           NOTES: >-
             Dictionaries for the learning pack, downloaded by Lumtub when a dictionary is turned on. Not an app release.
             CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/);
@@ -249,4 +250,12 @@ jobs:
           # The dictionaries first, then the sums that name them.
           (cd "$RUNNER_TEMP/out" && sha256sum -- *.gz *.zip > SHA256SUMS)
           gh release upload learning "$RUNNER_TEMP"/out/*.gz "$RUNNER_TEMP"/out/*.zip --repo "$GITHUB_REPOSITORY" --clobber
-          gh release upload learning "$RUNNER_TEMP/out/SHA256SUMS" --repo "$GITHUB_REPOSITORY" --clobber
+          # Signed with the license key under its own context: the app uses
+          # a dictionary only when its sum is in a list signed so.
+          umask 077
+          { echo '-----BEGIN PRIVATE KEY-----'; printf '%s' "$LICENSE_KEY" | tr -d ' \n\r' | fold -w 64; echo; echo '-----END PRIVATE KEY-----'; } > "$RUNNER_TEMP/key.pem"
+          { printf 'lumtub-learning-sums-v1\n'; cat "$RUNNER_TEMP/out/SHA256SUMS"; } > "$RUNNER_TEMP/sums.msg"
+          openssl pkeyutl -sign -rawin -inkey "$RUNNER_TEMP/key.pem" -in "$RUNNER_TEMP/sums.msg" -out "$RUNNER_TEMP/sums.raw"
+          rm -f "$RUNNER_TEMP/key.pem"
+          base64 -w0 "$RUNNER_TEMP/sums.raw" > "$RUNNER_TEMP/out/SHA256SUMS.sig"
+          gh release upload learning "$RUNNER_TEMP/out/SHA256SUMS" "$RUNNER_TEMP/out/SHA256SUMS.sig" --repo "$GITHUB_REPOSITORY" --clobber

@@ -243,6 +243,13 @@ class Learning extends ChangeNotifier {
     return folder == null ? null : File('${folder.path}${Platform.pathSeparator}${pack.stored}');
   }
 
+  /// The SHA-256 sum of the download [pack]'s file came from, to tell
+  /// when a newer one is published.
+  File? _sumOf(DictionaryPack pack) {
+    final file = _fileOf(pack);
+    return file == null ? null : File('${file.path}.sha256');
+  }
+
   /// Reads the saved license and settings; with a license, the
   /// dictionary is read in the background when it is there.
   Future<void> start(AppDirectories directories) async {
@@ -277,7 +284,55 @@ class Learning extends ChangeNotifier {
     if (licensed) {
       unawaited(_book!.load());
       _loadAll();
+      unawaited(_updateAll());
     }
+  }
+
+  bool _updating = false;
+
+  /// Downloads again, in the background, each dictionary on disk whose
+  /// published file has changed since (one at a time, a little after
+  /// start). The one in use stays until the new one is in place.
+  Future<void> _updateAll() async {
+    if (_updating) return;
+    _updating = true;
+    try {
+      await Future<void>.delayed(const Duration(seconds: 20));
+      final client = http.Client();
+      final SignedSums sums;
+      try {
+        sums = await _signedSums(client);
+      } finally {
+        client.close();
+      }
+      for (final pack in DictionaryPack.values) {
+        final file = _fileOf(pack);
+        final sum = _sumOf(pack);
+        if (file == null || sum == null || !await file.exists()) continue;
+        final expected = sums.of(pack.file);
+        if (expected == null) continue;
+        final have = await sum.exists() ? (await sum.readAsString()).trim() : '';
+        if (have == expected) continue;
+        if (_packs[pack]!.state == PackState.downloading) continue;
+        logInfo('A newer ${pack.name} dictionary is out; updating it');
+        await download(pack, quiet: true);
+      }
+    } catch (e) {
+      logWarn('Could not check for dictionary updates: $e');
+    } finally {
+      _updating = false;
+    }
+  }
+
+  /// The published SHA256SUMS, checked against its signature.
+  static Future<SignedSums> _signedSums(http.Client client) async {
+    final sums = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS')).timeout(const Duration(seconds: 30));
+    if (sums.statusCode != 200) throw HttpException('SHA256SUMS HTTP ${sums.statusCode}');
+    final signature = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS.sig')).timeout(const Duration(seconds: 30));
+    if (signature.statusCode != 200) throw HttpException('SHA256SUMS.sig HTTP ${signature.statusCode}');
+    final signed = SignedSums.verify(sums.bodyBytes, signature.body);
+    if (signed == null) throw const FormatException('The dictionary list is not signed by Lumtub');
+    return signed;
   }
 
   /// Checks [code] and keeps it when it is a license. Returns whether it is.
@@ -289,6 +344,7 @@ class Learning extends ChangeNotifier {
     notifyListeners();
     unawaited(_book?.load());
     _loadAll();
+    unawaited(_updateAll());
     return true;
   }
 
@@ -433,23 +489,25 @@ class Learning extends ChangeNotifier {
   }
 
   /// Downloads [pack]'s dictionary and checks it against the SHA-256 sum
-  /// published beside it.
-  Future<void> download(DictionaryPack pack) async {
+  /// published beside it. [quiet], for an update of one on disk, keeps
+  /// the old one in use until the new one is in place and only logs a
+  /// failure.
+  Future<void> download(DictionaryPack pack, {bool quiet = false}) async {
     final state = _packs[pack]!;
     final file = _fileOf(pack);
     if (file == null || state.state == PackState.downloading) return;
-    state
-      ..state = PackState.downloading
-      ..progress = null
-      ..error = null;
-    notifyListeners();
+    if (!quiet) {
+      state
+        ..state = PackState.downloading
+        ..progress = null
+        ..error = null;
+      notifyListeners();
+    }
     final client = http.Client();
     final part = File('${file.path}.part');
     final unpacked = File('${file.path}.new');
     try {
-      final sums = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS')).timeout(const Duration(seconds: 30));
-      if (sums.statusCode != 200) throw HttpException('SHA256SUMS HTTP ${sums.statusCode}');
-      final expected = RegExp('^([0-9a-f]{64}) [ *]?${RegExp.escape(pack.file)}\\s*\$', multiLine: true).firstMatch(sums.body)?.group(1);
+      final expected = (await _signedSums(client)).of(pack.file);
       if (expected == null) throw const FormatException('The dictionary is not listed in SHA256SUMS');
       final response = await client.send(http.Request('GET', Uri.parse('$learningPackRelease/${pack.file}'))).timeout(const Duration(seconds: 30));
       if (response.statusCode != 200) throw HttpException('Dictionary HTTP ${response.statusCode}');
@@ -464,7 +522,7 @@ class Learning extends ChangeNotifier {
           sink.add(chunk);
           hasher.add(chunk);
           received += chunk.length;
-          if (total != null && total > 0) {
+          if (!quiet && total != null && total > 0) {
             state.progress = received / total;
             notifyListeners();
           }
@@ -482,8 +540,12 @@ class Learning extends ChangeNotifier {
         _close(pack);
         await unpacked.rename(file.path);
       } else {
+        _close(pack);
         await part.rename(file.path);
       }
+      try {
+        await _sumOf(pack)!.writeAsString(expected);
+      } catch (_) {}
       logInfo('${pack.name} dictionary downloaded: $received bytes');
       state
         ..state = PackState.loading
@@ -492,9 +554,11 @@ class Learning extends ChangeNotifier {
       await load(pack);
     } catch (e) {
       logError('Could not download the ${pack.name} dictionary', e);
-      state
-        ..error = '$e'
-        ..state = PackState.failed;
+      if (!quiet) {
+        state
+          ..error = '$e'
+          ..state = PackState.failed;
+      }
       for (final leftover in [part, unpacked]) {
         try {
           if (await leftover.exists()) await leftover.delete();
@@ -546,8 +610,7 @@ class Learning extends ChangeNotifier {
     final archive = File('${folder.path}.zip');
     final unpacked = Directory('${folder.path}.new');
     try {
-      final sums = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS')).timeout(const Duration(seconds: 30));
-      final expected = sums.statusCode == 200 ? RegExp('^([0-9a-f]{64}) [ *]?${RegExp.escape(name)}\\s*\$', multiLine: true).firstMatch(sums.body)?.group(1) : null;
+      final expected = (await _signedSums(client)).of(name);
       // Not published yet: the dictionary cuts lines itself meanwhile.
       if (expected == null) return;
       final response = await client.send(http.Request('GET', Uri.parse('$learningPackRelease/$name'))).timeout(const Duration(seconds: 30));

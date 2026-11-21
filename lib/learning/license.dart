@@ -44,3 +44,30 @@ class LearningLicense {
     }
   }
 }
+
+/// The learning pack's SHA256SUMS, signed by the workflow that publishes
+/// the dictionaries with the same key as licenses (under its own context,
+/// so a signature for one is never one for the other). A dictionary is
+/// used only when its sum is in a list signed so: a file swapped on the
+/// download server, or the list beside it, is refused.
+class SignedSums {
+  SignedSums._(this.text);
+
+  final String text;
+
+  static const _context = 'lumtub-learning-sums-v1\n';
+
+  /// [sums] when [signature] (base64) signs it, else null.
+  static SignedSums? verify(List<int> sums, String signature, {List<int> key = LearningLicense.publicKey}) {
+    try {
+      final bytes = base64.decode(signature.trim());
+      if (!ed25519Verify(publicKey: key, message: [...utf8.encode(_context), ...sums], signature: bytes)) return null;
+      return SignedSums._(utf8.decode(sums));
+    } on FormatException {
+      return null;
+    }
+  }
+
+  /// The SHA-256 sum listed for [name], or null.
+  String? of(String name) => RegExp('^([0-9a-f]{64}) [ *]?${RegExp.escape(name)}\\s*\$', multiLine: true).firstMatch(text)?.group(1);
+}

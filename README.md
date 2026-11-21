@@ -158,6 +158,7 @@ These are also found in other YouTube clients, and all are opt-in here:
 
 The links in the table always give the newest version. On the release page, file names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
 **Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. Package manager (under review, working once accepted): `winget install Lumtub.Lumtub`.<br>
+Windows may show **Windows protected your PC** the first time, because the installer isn't signed with a paid code-signing certificate yet. Click **More info**, then **Run anyway**. Do this only for a file you downloaded from the official places below.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place. If it says FUSE is missing, install your distribution's `fuse3` package, or start it with `--appimage-extract-and-run`. Prefer Flatpak? `flatpak install --user Lumtub_*_linux-x64.flatpak`.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.<br>
 **Android (preview):** open the APK and allow installing from your browser or file manager when asked. New versions install from inside Lumtub; Android asks you to confirm. Live streams and downloads work too, through the yt-dlp built into the app; members-only videos don't play on Android yet.<br>
@@ -179,6 +180,8 @@ Lumtub is free. It comes only from:
 - the website [0x696c757a696f.github.io/lumtub](https://0x696c757a696f.github.io/lumtub/), which links to the same files,
 - Lumtub's built-in updater, which downloads from those releases,
 - the SideStore/AltStore source above, and `winget install Lumtub.Lumtub` once it's accepted.
+
+To check a download, compare its SHA-256 with the one GitHub shows next to the file on the [release page](https://github.com/0x696c757a696f/lumtub/releases/latest). On Windows: `Get-FileHash <file>` in PowerShell; on macOS and Linux: `shasum -a 256 <file>`.
 
 If anyone asks you to pay for Lumtub, or sells a renamed copy without its source code, it doesn't come from this project and may have been tampered with. Lumtub's license (AGPL) lets others share and even sell copies, but only if they give you the complete source code under the same license and keep the copyright notices. A paid closed-source copy breaks the license. Please [report it in an issue](https://github.com/0x696c757a696f/lumtub/issues/new) with a link, so it can be taken down.
 

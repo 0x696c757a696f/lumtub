@@ -153,6 +153,7 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 
 表格里的链接总是下载最新版本。发布页上的文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
 **Windows**：用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。也可以用包管理器（正在审核，通过后可用）：`winget install Lumtub.Lumtub`。<br>
+第一次打开时 Windows 可能提示「Windows 已保护你的电脑」，因为安装程序还没有买付费的代码签名证书。点「更多信息」，再点「仍要运行」。只对从下面官方渠道下载的文件这样做。<br>
 **Linux**：给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新。如果提示缺少 FUSE，请安装发行版的 `fuse3` 软件包，或用 `--appimage-extract-and-run` 参数启动。想用 Flatpak 的话：`flatpak install --user Lumtub_*_linux-x64.flatpak`。<br>
 第一次启动时会从 GitHub 下载 yt-dlp 和 Deno，之后 Lumtub 会自己保持更新。<br>
 **Android（预览版）**：打开 APK，按提示允许浏览器或文件管理器安装应用。新版本可以在 Lumtub 里直接安装，Android 会请你确认一次。直播和下载也都能用，靠的是应用里自带的 yt-dlp；会员专属视频在 Android 上暂时还不能看。<br>
@@ -173,6 +174,8 @@ Lumtub 是免费的，只从以下渠道发布：
 - 官网 [0x696c757a696f.github.io/lumtub](https://0x696c757a696f.github.io/lumtub/)（下载的是同一批文件）；
 - Lumtub 内置的自动更新（也从上面的 Releases 下载）；
 - 上面的 SideStore/AltStore 源，以及审核通过后的 `winget install Lumtub.Lumtub`。
+
+想确认下载的文件没被改过：把它的 SHA-256 和 [Release 页面](https://github.com/0x696c757a696f/lumtub/releases/latest)上文件旁边显示的对比。Windows 在 PowerShell 里运行 `Get-FileHash <文件>`，macOS 和 Linux 运行 `shasum -a 256 <文件>`。
 
 如果有人向你收费出售 Lumtub，或者换个名字卖却不提供源代码，那就不是本项目发布的，安装包也可能被动过手脚。Lumtub 的许可证（AGPL）允许别人转发甚至出售副本，但必须把完整源代码以同样的许可证一并提供给你，并保留版权声明。收费又闭源的副本违反了许可证。遇到这种情况，请把链接[提交到 issue](https://github.com/0x696c757a696f/lumtub/issues/new)，以便发起下架。
 

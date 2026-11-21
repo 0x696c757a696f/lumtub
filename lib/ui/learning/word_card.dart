@@ -194,7 +194,7 @@ class _EnglishCard extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 4, bottom: 2),
                       child: Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                        for (final tag in e.tags) _Tag(tr(tag.label)),
+                        for (final tag in e.tags) _Tag(englishLevelName(tag)),
                         if (e.collins > 0) Text('${'★' * e.collins}${'☆' * (5 - e.collins)}', style: TextStyle(color: colors.outline, fontSize: 12)),
                       ]),
                     ),
@@ -598,3 +598,7 @@ Future<void> _addWord(AppController controller, VocabularyBook book, Duration at
   await book.add(word);
   await controller.keepWordSound(word.key, at);
 }
+
+/// An English level as the learner knows it: the Chinese exam with a
+/// Chinese interface, else about where it sits on the CEFR scale.
+String englishLevelName(EnglishLevel level) => currentLanguage.isChinese || level == EnglishLevel.beyond ? tr(level.label) : '≈ ${level.cefr}';

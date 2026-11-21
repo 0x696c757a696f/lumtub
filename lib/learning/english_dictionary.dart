@@ -148,20 +148,24 @@ class EnglishDictionary {
 /// The levels a learner can say they are at, easiest first, and the
 /// exam word lists that mark them. [beyond] is for rare words no list has.
 enum EnglishLevel {
-  middleSchool(['zk'], 'Middle school'),
-  highSchool(['gk'], 'High school'),
-  cet4(['cet4'], 'CET-4'),
-  cet6(['cet6'], 'CET-6'),
-  postgraduate(['ky'], 'Postgraduate exam'),
-  toeflIelts(['toefl', 'ielts'], 'TOEFL / IELTS'),
-  gre(['gre'], 'GRE'),
-  beyond([], 'Rare');
+  middleSchool(['zk'], 'Middle school', 'A2'),
+  highSchool(['gk'], 'High school', 'B1'),
+  cet4(['cet4'], 'CET-4', 'B1+'),
+  cet6(['cet6'], 'CET-6', 'B2'),
+  postgraduate(['ky'], 'Postgraduate exam', 'B2+'),
+  toeflIelts(['toefl', 'ielts'], 'TOEFL / IELTS', 'C1'),
+  gre(['gre'], 'GRE', 'C2'),
+  beyond([], 'Rare', 'Rare');
 
-  const EnglishLevel(this.tags, this.label);
+  const EnglishLevel(this.tags, this.label, this.cefr);
   final List<String> tags;
 
-  /// The name to translate.
+  /// The name to translate: the Chinese exam it comes from.
   final String label;
+
+  /// About where the exam's list ends on the CEFR scale, for learners who
+  /// never sat Chinese exams. A rough guide, not an official level.
+  final String cefr;
 
   static EnglishLevel? ofTag(String tag) {
     for (final level in values) {

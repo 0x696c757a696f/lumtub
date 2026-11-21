@@ -22,6 +22,7 @@ import '../app_icons.dart';
 import '../common.dart' show openExternal;
 import '../pages/support_page.dart' show afdianPage, kofiPage;
 import '../skin_paint.dart';
+import 'word_card.dart' show englishLevelName;
 
 /// 学习包: the license, the dictionaries, pinyin and the vocabulary book.
 Future<void> openLearningPage(BuildContext context, AppController controller) =>
@@ -279,7 +280,7 @@ Future<void> _pickEnglishLevel(BuildContext context, Learning learning) async {
           ListTile(
             dense: true,
             leading: Icon(level == current ? AppIcons.radioButton : AppIcons.circle),
-            title: Text(level < 0 ? tr("Don't mark hard words") : tr(EnglishLevel.values[level].label)),
+            title: Text(level < 0 ? tr("Don't mark hard words") : englishLevelName(EnglishLevel.values[level])),
             subtitle: level < 0 ? null : Text(level == EnglishLevel.gre.index ? tr('Only rare words stand out') : tr('Words from later lists stand out')),
             onTap: () => Navigator.pop(context, level),
           ),
@@ -412,7 +413,7 @@ class _LearningPage extends StatelessWidget {
               title: tr('My English level'),
               subtitle: learning.englishLevel == null
                   ? tr('Hard words are not marked')
-                  : tr('{0}. Harder words stand out in color', [tr(EnglishLevel.values[learning.englishLevel!].label)]),
+                  : tr('{0}. Harder words stand out in color', [englishLevelName(EnglishLevel.values[learning.englishLevel!])]),
               leading: Icon(AppIcons.graduationCap),
               enabled: learning.licensed,
               onTap: () => unawaited(_pickEnglishLevel(context, learning)),

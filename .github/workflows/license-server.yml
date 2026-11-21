@@ -73,11 +73,10 @@ jobs:
           AFDIAN_USER_ID: ${{ secrets.AFDIAN_USER_ID }}
           AFDIAN_TOKEN: ${{ secrets.AFDIAN_TOKEN }}
           KOFI_ITEM: ${{ vars.KOFI_ITEM }}
-          AFDIAN_PLANS: ${{ vars.AFDIAN_PLANS }}
         run: |
           set -euo pipefail
           umask 077
-          jq -n 'env | {LICENSE_KEY, KOFI_TOKEN, AFDIAN_USER_ID, AFDIAN_TOKEN, KOFI_ITEM, AFDIAN_PLANS} | with_entries(select(.value != null and .value != ""))' > "$RUNNER_TEMP/secrets.json"
+          jq -n 'env | {LICENSE_KEY, KOFI_TOKEN, AFDIAN_USER_ID, AFDIAN_TOKEN, KOFI_ITEM} | with_entries(select(.value != null and .value != ""))' > "$RUNNER_TEMP/secrets.json"
           npx --yes wrangler@4.20.0 secret bulk "$RUNNER_TEMP/secrets.json"
           rm -f "$RUNNER_TEMP/secrets.json"
 

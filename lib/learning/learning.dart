@@ -145,7 +145,7 @@ class Learning extends ChangeNotifier {
 
   @override
   void notifyListeners() {
-    final key = Object.hashAll([_license, licensed, _showPinyin, _showRomanization, _englishLevel, for (final p in _packs.values) p.dictionary]);
+    final key = Object.hashAll([_license, licensed, unlocked, _showPinyin, _showRomanization, _englishLevel, for (final p in _packs.values) p.dictionary]);
     if (key != _lastView) {
       _lastView = key;
       viewChanges.value++;
@@ -161,7 +161,7 @@ class Learning extends ChangeNotifier {
   /// first lookup, then this many a day. Dictionaries, readings above
   /// words and the vocabulary book always work, so a learner sees what
   /// they would buy.
-  static const trialPerDay = 5;
+  static const trialPerDay = 3;
   static const trialDays = 7;
   String _trialDay = '';
 
@@ -204,6 +204,20 @@ class Learning extends ChangeNotifier {
 
   /// Without the pack, every word card is still free.
   bool get inFreeWeek => !licensed && freeWeekLeft > 0;
+
+  /// The pack's features are on: bought, or in the free week. Off, only
+  /// [trialPerDay] word cards a day are left; dictionaries download and
+  /// saved words can be seen and exported as CSV either way.
+  bool get unlocked => licensed || freeWeekLeft > 0;
+
+  /// Starts the free week, if it has not begun: at the first word card,
+  /// or when a dictionary is first ready and readings show.
+  void _beginTrial() {
+    if (licensed || _trialStart.isNotEmpty) return;
+    _see(_today);
+    _trialStart = _trialToday;
+    unawaited(_save());
+  }
 
   /// Word cards left today without the pack; unlimited with it.
   int get trialLeft => licensed ? trialPerDay : (_trialDay == _trialToday ? (trialPerDay - _trialUsed).clamp(0, trialPerDay) : trialPerDay);
@@ -278,7 +292,7 @@ class Learning extends ChangeNotifier {
   bool isHard(WordToken token) {
     final level = _englishLevel;
     final en = english;
-    if (level == null || en == null || languageOf(token) != 'en') return false;
+    if (level == null || en == null || !unlocked || languageOf(token) != 'en') return false;
     final word = en.levelOf(token.key);
     return word != null && word > level;
   }
@@ -303,8 +317,14 @@ class Learning extends ChangeNotifier {
   final _latin = LatinLanguageGuess();
 
   /// [text] as words a tap looks up, when a dictionary for its language
-  /// is ready.
+  /// is ready; readings above them only while [unlocked].
   List<WordToken>? wordsOf(String text) {
+    final words = _wordsOf(text);
+    if (words == null || unlocked) return words;
+    return [for (final w in words) w.reading == null ? w : WordToken(w.text, null, isWord: w.isWord, lookup: w.lookup, language: w.language)];
+  }
+
+  List<WordToken>? _wordsOf(String text) {
     if (JapaneseDictionary.looksJapanese(text) && _onDisk('ja')) {
       final ja = japanese;
       return ja == null ? null : _cut('ja', text) ?? ja.segment(text);
@@ -829,6 +849,7 @@ class Learning extends ChangeNotifier {
             });
       logInfo('${pack.name} dictionary opened in ${watch.elapsedMilliseconds} ms');
       state.state = PackState.ready;
+      _beginTrial();
       unawaited(_openSegmenter(pack));
     } catch (e) {
       logError('Could not read the ${pack.name} dictionary', e);

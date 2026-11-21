@@ -12,7 +12,7 @@ import '../../learning/learning.dart';
 import '../../learning/vocabulary.dart';
 import '../../learning/wiktionary_dictionary.dart';
 import '../app_icons.dart';
-import 'learning_page.dart' show buyLearningPack, claimPurchase, learningPriceLine;
+import 'learning_page.dart' show showLearningLocked;
 
 /// The dictionary entries for [token], from a line heard at [at]: its
 /// readings and meanings, its characters, and a button that keeps it in
@@ -50,37 +50,8 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
 
 /// Today's free word cards are used up: the moment a learner most wants
 /// the pack, so its price and the way to buy it are right here.
-Future<void> _trialUsedUp(BuildContext context, AppController controller) => showDialog<void>(
-      context: context,
-      builder: (dialog) => AlertDialog(
-        title: Text(tr("Today's {0} free word lookups are used up", [Learning.trialPerDay])),
-        content: SizedBox(
-          width: 460,
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(tr('More tomorrow. With the learning pack, look up as many words as you like, on up to 5 devices, with one payment and no subscription. Readings and your vocabulary book keep working either way.')),
-            const SizedBox(height: 12),
-            Text(learningPriceLine(), style: Theme.of(dialog).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-          ]),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialog), child: Text(tr('Later'))),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialog);
-              unawaited(claimPurchase(context, controller.learning, afdianFirst: currentLanguage.isChinese));
-            },
-            child: Text(tr('I bought it: unlock')),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(dialog);
-              unawaited(buyLearningPack());
-            },
-            child: Text(tr('Buy the learning pack')),
-          ),
-        ],
-      ),
-    );
+Future<void> _trialUsedUp(BuildContext context, AppController controller) => showLearningLocked(context, controller.learning,
+    title: tr("Today's {0} free word lookups are used up", [Learning.trialPerDay]), lead: tr('More tomorrow.'));
 
 /// Without the pack: how many free word cards today has left, so the
 /// last one is no surprise.
@@ -95,7 +66,7 @@ class _TrialNote extends StatelessWidget {
       padding: const EdgeInsets.only(top: 12),
       child: Text(
         learning.inFreeWeek
-            ? tr('Free trial: unlimited for {0} more days, then {1} lookups a day', [learning.freeWeekLeft, Learning.trialPerDay])
+            ? tr('Free trial: everything on for {0} more days', [learning.freeWeekLeft])
             : tr('{0} free lookups left today · the learning pack has no limit', [learning.trialLeft]),
         style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.outline),
       ),
@@ -179,7 +150,9 @@ class _WordCard extends StatelessWidget {
       actions: [
         _LineButton(controller: controller, at: at),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
-        if (book != null)
+        if (!controller.learning.unlocked)
+          _LockedAdd(learning: controller.learning)
+        else if (book != null)
           ListenableBuilder(
             listenable: book,
             builder: (context, _) {
@@ -282,7 +255,9 @@ class _EnglishCard extends StatelessWidget {
       actions: [
         _LineButton(controller: controller, at: at),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
-        if (book != null && entries.isNotEmpty)
+        if (!controller.learning.unlocked)
+          _LockedAdd(learning: controller.learning)
+        else if (book != null && entries.isNotEmpty)
           ListenableBuilder(
             listenable: book,
             builder: (context, _) {
@@ -411,7 +386,9 @@ class _JapaneseCard extends StatelessWidget {
       actions: [
         _LineButton(controller: controller, at: at),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
-        if (book != null && entries.isNotEmpty)
+        if (!controller.learning.unlocked)
+          _LockedAdd(learning: controller.learning)
+        else if (book != null && entries.isNotEmpty)
           ListenableBuilder(
             listenable: book,
             builder: (context, _) {
@@ -553,7 +530,9 @@ class _WiktionaryCard extends StatelessWidget {
       actions: [
         _LineButton(controller: controller, at: at),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
-        if (book != null && entries.isNotEmpty)
+        if (!controller.learning.unlocked)
+          _LockedAdd(learning: controller.learning)
+        else if (book != null && entries.isNotEmpty)
           ListenableBuilder(
             listenable: book,
             builder: (context, _) {
@@ -635,7 +614,13 @@ class _SpeakButtonState extends State<_SpeakButton> {
   }
 
   @override
-  Widget build(BuildContext context) => IconButton(
+  Widget build(BuildContext context) => !widget.controller.learning.unlocked
+      ? IconButton(
+          tooltip: tr('Read aloud: a learning pack feature'),
+          icon: Icon(AppIcons.lock, size: 18),
+          onPressed: () => unawaited(showLearningLocked(context, widget.controller.learning)),
+        )
+      : IconButton(
         tooltip: tr('Read aloud'),
         icon: _busy ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.speakerHigh, size: 20),
         onPressed: _busy || widget.text.isEmpty ? null : () => unawaited(_speak()),
@@ -668,3 +653,16 @@ Future<void> _addWord(AppController controller, VocabularyBook book, Duration at
 /// An English level as the learner knows it: the Chinese exam with a
 /// Chinese interface, else about where it sits on the CEFR scale.
 String englishLevelName(EnglishLevel level) => currentLanguage.isChinese || level == EnglishLevel.beyond ? tr(level.label) : '≈ ${level.cefr}';
+
+/// 加入生词本, locked: the free week is over and the pack is not bought.
+class _LockedAdd extends StatelessWidget {
+  const _LockedAdd({required this.learning});
+  final Learning learning;
+
+  @override
+  Widget build(BuildContext context) => FilledButton.tonalIcon(
+        icon: Icon(AppIcons.lock, size: 16),
+        label: Text(tr('Add to vocabulary book')),
+        onPressed: () => unawaited(showLearningLocked(context, learning)),
+      );
+}

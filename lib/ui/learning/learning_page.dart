@@ -205,11 +205,52 @@ String learningPriceLine() {
 /// Where the free trial stands: the free week's days left, or today's
 /// lookups after it.
 String learningTrialLine(Learning learning) => learning.inFreeWeek
-    ? tr('Free trial: unlimited lookups for {0} more days, then {1} a day. Buy once for unlimited.', [learning.freeWeekLeft, Learning.trialPerDay])
-    : tr('Free today: {0} of {1} word lookups left. Buy once for unlimited.', [learning.trialLeft, Learning.trialPerDay]);
+    ? tr('Free trial: everything on for {0} more days, then {1} word lookups a day. Buy once to keep it all.', [learning.freeWeekLeft, Learning.trialPerDay])
+    : tr('Trial over. Free today: {0} of {1} word lookups left. Buy once to turn everything back on.', [learning.trialLeft, Learning.trialPerDay]);
 
 /// The trial in one line, before anything was looked up.
-String learningTrialOffer() => tr('Free to try: unlimited for {0} days, then {1} word lookups a day, no account', [Learning.trialDays, Learning.trialPerDay]);
+String learningTrialOffer() => tr('Free to try: everything on for {0} days, no account', [Learning.trialDays]);
+
+/// What the learning pack unlocks, in one paragraph.
+String learningPackFeatures() => tr(
+    'The learning pack gives unlimited word lookups, pinyin and kana above subtitles, harder words highlighted, words read aloud, the vocabulary book with the line and its sound, Anki export and the four-step video study, on up to 5 devices, with one payment and no subscription.');
+
+/// A paid feature was asked for after the free week: what the pack
+/// gives, its price, and the ways to buy or unlock it.
+Future<void> showLearningLocked(BuildContext context, Learning learning, {String? title, String? lead}) => showDialog<void>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: Text(title ?? tr('A learning pack feature')),
+        content: SizedBox(
+          width: 460,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text([lead ?? tr('The {0}-day free trial is over.', [Learning.trialDays]), learningPackFeatures()].join(' ')),
+            const SizedBox(height: 8),
+            Text(tr('Words you saved stay yours: you can still see them and export them as CSV.'),
+                style: Theme.of(dialog).textTheme.bodySmall?.copyWith(color: Theme.of(dialog).colorScheme.outline)),
+            const SizedBox(height: 12),
+            Text(learningPriceLine(), style: Theme.of(dialog).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialog), child: Text(tr('Later'))),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialog);
+              unawaited(claimPurchase(context, learning, afdianFirst: currentLanguage.isChinese));
+            },
+            child: Text(tr('I bought it: unlock')),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialog);
+              unawaited(buyLearningPack());
+            },
+            child: Text(tr('Buy the learning pack')),
+          ),
+        ],
+      ),
+    );
 
 /// Opens the checkout the interface's language suggests: Afdian (Alipay,
 /// WeChat) for Chinese, Polar (cards) otherwise.
@@ -229,7 +270,7 @@ Future<void> _showConfirmation(BuildContext context, Learning learning, {require
     tr('Unlocked on {0}', [stamp]),
     tr('You agreed: {0}', [_consentText()]),
     tr('License code: {0}', [learning.license?.code ?? '']),
-    tr('What it includes: word lookup in subtitles with offline dictionaries, readings above words, the vocabulary book with Anki and CSV export, on up to 5 devices, with updates.'),
+    tr('What it includes: unlimited word lookup in subtitles with offline dictionaries, readings above words, harder words highlighted, reading aloud, the vocabulary book with Anki export, the four-step video study, on up to 5 devices, with updates.'),
     tr('Lost the code? Unlock again with the same order. Orders, refunds and questions: {0}', [learningContact]),
   ].join('\n');
   // Written to Downloads at once, so the buyer has the confirmation on a
@@ -510,9 +551,11 @@ class _Pitch extends StatelessWidget {
           const SizedBox(height: Space.l),
           for (final line in [
             tr('Tap any word in a subtitle for an offline dictionary entry'),
-            tr('Pinyin above Chinese, kana above Japanese'),
+            tr('Pinyin above Chinese, kana above Japanese, harder English words highlighted'),
+            tr('Words read aloud'),
             tr('A vocabulary book that keeps the line and the moment in the video'),
-            tr('Export your words to Anki or CSV'),
+            tr('Send your words to Anki with the sound of the line'),
+            tr('Study a video in four steps'),
           ])
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
@@ -567,6 +610,7 @@ class _VocabularyPageState extends State<_VocabularyPage> {
   Future<void> _export({required bool anki}) async {
     final book = _book;
     if (book == null || book.words.isEmpty) return;
+    if (anki && !widget.controller.learning.unlocked) return showLearningLocked(context, widget.controller.learning);
     final messenger = ScaffoldMessenger.maybeOf(context);
     try {
       final text = anki ? vocabularyAnki(book.words) : vocabularyCsv(book.words);
@@ -585,6 +629,7 @@ class _VocabularyPageState extends State<_VocabularyPage> {
   Future<void> _sendToAnki() async {
     final book = _book;
     if (book == null || book.words.isEmpty || _sending) return;
+    if (!widget.controller.learning.unlocked) return showLearningLocked(context, widget.controller.learning);
     final messenger = ScaffoldMessenger.maybeOf(context);
     setState(() => _sending = true);
     final anki = AnkiConnect();
@@ -623,10 +668,15 @@ class _VocabularyPageState extends State<_VocabularyPage> {
       appBar: SkinAppBar(AppBar(title: Text(tr('Vocabulary book')), actions: [
         TextButton.icon(
           onPressed: _sending ? null : () => unawaited(_sendToAnki()),
-          icon: _sending ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.paperPlaneRight, size: 18),
+          icon: _sending
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              : Icon(widget.controller.learning.unlocked ? AppIcons.paperPlaneRight : AppIcons.lock, size: 18),
           label: Text(tr('Send to Anki')),
         ),
-        TextButton.icon(onPressed: () => unawaited(_export(anki: true)), icon: Icon(AppIcons.downloadSimple, size: 18), label: const Text('Anki')),
+        TextButton.icon(
+            onPressed: () => unawaited(_export(anki: true)),
+            icon: Icon(widget.controller.learning.unlocked ? AppIcons.downloadSimple : AppIcons.lock, size: 18),
+            label: const Text('Anki')),
         TextButton.icon(onPressed: () => unawaited(_export(anki: false)), icon: Icon(AppIcons.downloadSimple, size: 18), label: const Text('CSV')),
         const SizedBox(width: 8),
       ])),

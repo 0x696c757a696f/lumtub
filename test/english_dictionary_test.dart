@@ -66,4 +66,16 @@ void main() {
     expect(d.lookup('run').single.meanings, ['v. 跑']);
     expect(d.lookup('walk').single.english, isEmpty);
   });
+
+  test('a short form or a compound is as hard as its full form or parts', () {
+    final d = EnglishDictionary.parse('vocabulary\t\tn. 词汇\t\tgk cet4\t1\t4802\n'
+        'vocab\t\tn. 词汇\t\t\t0\t37221\n'
+        'skin\t\tn. 皮肤\t\tgk cet4\t4\t1019\n'
+        'care\t\tn. 照料\t\tzk gk\t5\t434\n'
+        'skincare\t\tn. 护肤\t\t\t0\t47645\n'
+        'zymurgy\t\tn. 酿造学\t\t\t0\t40000\n');
+    expect(d.levelOf('vocab'), EnglishLevel.highSchool.index);
+    expect(d.levelOf('skincare'), EnglishLevel.highSchool.index);
+    expect(d.levelOf('zymurgy'), EnglishLevel.beyond.index);
+  });
 }

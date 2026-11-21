@@ -40,6 +40,11 @@ class ChineseRubyLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     hits?.clear(tokens.map((t) => t.text).join());
+    // A subtitle background goes once behind the whole line, not behind
+    // each word as a box of its own.
+    final back = this.style.backgroundColor ?? this.style.background?.color;
+    final clear = Paint()..color = const Color(0x00000000);
+    final style = back == null ? this.style : (this.style.background != null ? this.style.copyWith(background: clear) : this.style.copyWith(backgroundColor: const Color(0x00000000)));
     final size = style.fontSize ?? 14;
     // Half the line's size, but never too small to read in a list.
     final rubyStyle = style.copyWith(fontSize: size * 0.5 < 9 ? (size < 9 ? size : 9.0) : size * 0.5, height: 1.1, fontWeight: FontWeight.normal);
@@ -84,7 +89,12 @@ class ChineseRubyLine extends StatelessWidget {
       bool spaced(int j) => j >= 0 && j < tokens.length && !tokens[j].isWord && RegExp(j < i ? r'\s$' : r'^\s').hasMatch(tokens[j].text);
       children.add(Padding(padding: EdgeInsetsDirectional.only(start: spaced(i - 1) ? 0 : room, end: spaced(i + 1) ? 0 : room), child: block));
     }
-    return Wrap(alignment: alignment, crossAxisAlignment: WrapCrossAlignment.end, children: children);
+    final line = Wrap(alignment: alignment, crossAxisAlignment: WrapCrossAlignment.end, children: children);
+    if (back == null || back.a == 0) return line;
+    return DecoratedBox(
+      decoration: BoxDecoration(color: back, borderRadius: BorderRadius.circular(size * 0.12)),
+      child: Padding(padding: EdgeInsets.symmetric(horizontal: size * 0.25, vertical: size * 0.05), child: line),
+    );
   }
 
   /// [reading] over [word], as wide as the word and, on a side with no

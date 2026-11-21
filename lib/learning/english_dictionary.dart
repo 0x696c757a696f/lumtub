@@ -66,9 +66,53 @@ class EnglishDictionary {
       final level = capital && entry.tags.isEmpty ? null : entry.level;
       if (level != null && (best == null || level < best)) best = level;
     }
+    // No exam lists it: a short form (vocab) or a word made of two
+    // listed ones (skincare) is as hard as its full form or harder part,
+    // not as rare as the corpus counts make it.
+    if (!capital && best != null && lookup(word).every((e) => e.tags.isEmpty)) {
+      final easier = _listedLevel(_clippings[word.toLowerCase()]) ?? _compoundLevel(word.toLowerCase());
+      if (easier != null && easier < best) best = easier;
+    }
     if (_levels.length > 20000) _levels.clear();
     return _levels[word] = best;
   }
+
+  /// The easiest exam that lists [word] or what it is a form of.
+  int? _listedLevel(String? word) {
+    if (word == null) return null;
+    int? best;
+    for (final entry in lookup(word)) {
+      if (entry.tags.isNotEmpty && (best == null || entry.tags.first.index < best)) best = entry.tags.first.index;
+    }
+    return best;
+  }
+
+  /// For a closed compound (skincare, weekend), the level of its harder
+  /// part when both parts are on an exam list.
+  int? _compoundLevel(String word) {
+    if (word.length < 6 || !RegExp(r'^[a-z]+$').hasMatch(word)) return null;
+    int? best;
+    for (var i = 3; i <= word.length - 3; i++) {
+      final first = _listedLevel(word.substring(0, i));
+      final second = first == null ? null : _listedLevel(word.substring(i));
+      if (first == null || second == null) continue;
+      final level = first > second ? first : second;
+      if (best == null || level < best) best = level;
+    }
+    return best;
+  }
+
+  /// Common short forms and the words they stand for.
+  static const _clippings = {
+    'vocab': 'vocabulary', 'info': 'information', 'app': 'application', 'apps': 'application', 'ad': 'advertisement', 'ads': 'advertisement',
+    'photo': 'photograph', 'photos': 'photograph', 'exam': 'examination', 'exams': 'examination', 'lab': 'laboratory', 'labs': 'laboratory',
+    'gym': 'gymnasium', 'math': 'mathematics', 'maths': 'mathematics', 'phone': 'telephone', 'fridge': 'refrigerator', 'bike': 'bicycle',
+    'flu': 'influenza', 'memo': 'memorandum', 'demo': 'demonstration', 'intro': 'introduction', 'promo': 'promotion', 'specs': 'specification',
+    'stats': 'statistics', 'pic': 'picture', 'pics': 'picture', 'vet': 'veterinary', 'uni': 'university', 'admin': 'administration',
+    'convo': 'conversation', 'congrats': 'congratulation', 'fave': 'favourite', 'fav': 'favourite', 'prof': 'professor', 'bro': 'brother',
+    'sis': 'sister', 'mic': 'microphone', 'doc': 'doctor', 'docs': 'document', 'rep': 'representative', 'reps': 'repetition', 'ref': 'referee',
+    'temp': 'temperature', 'max': 'maximum', 'min': 'minimum', 'approx': 'approximately', 'etc': 'etcetera', 'tech': 'technology',
+  };
 
   static final _word = RegExp(r"[A-Za-z]+(?:['’][A-Za-z]+)*");
 

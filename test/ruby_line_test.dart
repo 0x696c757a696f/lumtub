@@ -43,4 +43,14 @@ void main() {
     final space = tester.getRect(find.text(' ').last);
     expect(we.left - but.right, closeTo(space.width, 0.5));
   });
+
+  testWidgets('a subtitle background is one box behind the line', (tester) async {
+    const tokens = [WordToken('to', null, isWord: true), WordToken(' ', null, isWord: false), WordToken('the', null, isWord: true)];
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(body: Center(child: ChineseRubyLine(tokens: tokens, style: TextStyle(fontSize: 20, backgroundColor: Color(0xAA000000))))),
+    ));
+    expect(find.byType(DecoratedBox), findsOneWidget);
+    final words = tester.widgetList<Text>(find.text('to'));
+    expect(words.every((t) => t.style?.backgroundColor?.a == 0), isTrue);
+  });
 }

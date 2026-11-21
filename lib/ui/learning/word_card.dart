@@ -654,7 +654,7 @@ Future<void> _addWord(AppController controller, VocabularyBook book, Duration at
 /// Chinese interface, else about where it sits on the CEFR scale.
 String englishLevelName(EnglishLevel level) => currentLanguage.isChinese || level == EnglishLevel.beyond ? tr(level.label) : '≈ ${level.cefr}';
 
-/// 加入生词本, locked: the free week is over and the pack is not bought.
+/// 加入生词本, locked: the free trial is over and the pack is not bought.
 class _LockedAdd extends StatelessWidget {
   const _LockedAdd({required this.learning});
   final Learning learning;

@@ -202,7 +202,7 @@ String learningPriceLine() {
   return tr('Pre-sale price {0}, paid once ({1} after launch; nothing more to pay then)', [now, learningPrice]);
 }
 
-/// Where the free trial stands: the free week's days left, or today's
+/// Where the free trial stands: the free lookups left, or today's
 /// lookups after it.
 String learningTrialLine(Learning learning) => learning.inTrial
     ? tr('Free trial: everything on for {0} more word lookups, then {1} a day. Buy once to keep it all.', [learning.trialTotalLeft, Learning.trialPerDay])
@@ -215,7 +215,7 @@ String learningTrialOffer() => tr('Free to try: everything on for the first {0} 
 String learningPackFeatures() => tr(
     'The learning pack gives unlimited word lookups, pinyin and kana above subtitles, harder words highlighted, words read aloud, the vocabulary book with the line and its sound, Anki export and the four-step video study, on up to 5 devices, with one payment and no subscription.');
 
-/// A paid feature was asked for after the free week: what the pack
+/// A paid feature was asked for after the free trial: what the pack
 /// gives, its price, and the ways to buy or unlock it.
 Future<void> showLearningLocked(BuildContext context, Learning learning, {String? title, String? lead}) => showDialog<void>(
       context: context,

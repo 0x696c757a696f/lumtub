@@ -255,8 +255,10 @@ class Learning extends ChangeNotifier {
   bool get showRomanization => _showRomanization;
 
   /// Which meanings a word card shows where a dictionary has both.
-  MeaningLanguage get meanings => _meanings;
-  MeaningLanguage _meanings = MeaningLanguage.chineseFirst;
+  /// Until one is chosen: Chinese first with a Chinese interface,
+  /// English otherwise.
+  MeaningLanguage get meanings => _meanings ?? (currentLanguage.isChinese ? MeaningLanguage.chineseFirst : MeaningLanguage.english);
+  MeaningLanguage? _meanings;
 
   /// Who reads words aloud on a word card.
   VoiceService get voiceService => _voiceService;
@@ -410,7 +412,7 @@ class Learning extends ChangeNotifier {
         if (json is Map) {
           _showPinyin = json['pinyin'] != false;
           _showRomanization = json['romanization'] == true;
-          _meanings = MeaningLanguage.values.firstWhere((m) => m.name == json['meanings'], orElse: () => MeaningLanguage.chineseFirst);
+          _meanings = MeaningLanguage.values.where((m) => m.name == json['meanings']).firstOrNull;
           _voiceService = VoiceService.values.firstWhere((v) => v.name == json['voice'], orElse: () => VoiceService.system);
           final level = json['englishLevel'];
           if (level is int) _englishLevel = level >= 0 && level < EnglishLevel.beyond.index ? level : null;
@@ -780,7 +782,7 @@ class Learning extends ChangeNotifier {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1, 'trial': {'taken': _trialTaken, 'seen': _trialSeen, 'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
+      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings?.name ?? '', 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1, 'trial': {'taken': _trialTaken, 'seen': _trialSeen, 'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }

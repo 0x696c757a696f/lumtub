@@ -5,7 +5,7 @@ import '../../l10n/l10n.dart';
 import '../../player_settings.dart' show interfaceTranslationLanguage;
 import '../../translation.dart';
 import '../../translation_services.dart';
-import '../../widgets/pilinara_settings_tiles.dart';
+import '../../widgets/settings_tiles.dart';
 import '../app_icons.dart';
 import '../common.dart' show dialogWidth;
 import '../translatable.dart' show TranslationView;

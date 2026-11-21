@@ -1,15 +1,14 @@
-// Adapted from prism_ui (FlClash), GPL-3.0: AnimatedGlyph.
+import 'dart:math';
 
-import 'dart:math' as math;
-
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 import 'motion.dart';
 
-/// A navigation icon that fills in when selected: the outlined and filled
-/// faces cross-fade while the icon pops a little larger and back. Give the
-/// same [FillIcon] as a destination's icon and selected icon, so the one
-/// state carries across the change. With animations reduced it just swaps.
+/// An icon that is its outline when off and its filled form when on: the
+/// filled face fades in as the icon pops slightly, the way a tab bar or a
+/// like button answers a tap. Colour and size come from the ambient
+/// [IconTheme]. Given as both a destination's icon and selectedIcon, one
+/// State carries the change across.
 class FillIcon extends StatefulWidget {
   const FillIcon(this.outline, this.fill, {super.key, required this.selected});
   final IconData outline;
@@ -17,6 +16,8 @@ class FillIcon extends StatefulWidget {
   final bool selected;
 
   static const duration = Duration(milliseconds: 350);
+
+  /// How far the icon grows at the height of the pop.
   static const pop = 0.1;
 
   @override
@@ -25,14 +26,12 @@ class FillIcon extends StatefulWidget {
 
 class _FillIconState extends State<FillIcon> with TickerProviderStateMixin {
   late final AnimationController _fill = AnimationController(vsync: this, duration: FillIcon.duration, value: widget.selected ? 1 : 0);
-  late final CurvedAnimation _eased = CurvedAnimation(parent: _fill, curve: Curves.easeInOutCubic);
   late final AnimationController _pop = AnimationController(vsync: this, duration: FillIcon.duration);
-  late final Listenable _both = Listenable.merge([_eased, _pop]);
 
   @override
-  void didUpdateWidget(FillIcon oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.selected == widget.selected) return;
+  void didUpdateWidget(FillIcon old) {
+    super.didUpdateWidget(old);
+    if (widget.selected == old.selected) return;
     if (Motion.reduced) {
       _fill.value = widget.selected ? 1 : 0;
       return;
@@ -47,7 +46,6 @@ class _FillIconState extends State<FillIcon> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _eased.dispose();
     _fill.dispose();
     _pop.dispose();
     super.dispose();
@@ -55,19 +53,19 @@ class _FillIconState extends State<FillIcon> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-        animation: _both,
+        animation: Listenable.merge([_fill, _pop]),
         builder: (context, _) {
-          final fill = _eased.value;
-          final scale = 1 + (_pop.isAnimating ? math.sin(math.pi * _pop.value) * FillIcon.pop : 0.0);
-          final Widget face = fill <= 0
+          final f = Curves.easeInOutCubic.transform(_fill.value);
+          final scale = 1 + sin(pi * _pop.value) * FillIcon.pop;
+          final Widget icon = f == 0
               ? Icon(widget.outline)
-              : fill >= 1
+              : f == 1
                   ? Icon(widget.fill)
                   : Stack(alignment: Alignment.center, children: [
-                      Opacity(opacity: 1 - fill, child: Icon(widget.outline)),
-                      Opacity(opacity: fill, child: Icon(widget.fill)),
+                      Opacity(opacity: 1 - f, child: Icon(widget.outline)),
+                      Opacity(opacity: f, child: Icon(widget.fill)),
                     ]);
-          return scale == 1 ? face : Transform.scale(scale: scale, child: face);
+          return scale == 1 ? icon : Transform.scale(scale: scale, child: icon);
         },
       );
 }

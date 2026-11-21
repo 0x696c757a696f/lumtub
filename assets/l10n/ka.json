@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 და ზემოთ, კოპირების გარეშე)",
   "DirectX 12 (copy-back)": "DirectX 12 (უკან კოპირებით)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (ყველაზე მკვეთრი, GPU-ს მაღალი დატვირთვა)",
-  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; ინტერფეისის ნაწილი ადაპტირებულია PiliNara-დან, დაკვრა დაფუძნებულია mpv-ზე, media_kit-სა და yt-dlp-ზე",
+  "AGPLv3; playback is built on mpv, media_kit and yt-dlp": "AGPLv3; დაკვრა დაფუძნებულია mpv-ზე, media_kit-სა და yt-dlp-ზე",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU მიმდინარე დეკოდირების რეჟიმი VP9 AV1 ვიდეო გაფართოებები",
   "GitHub source code": "GitHub-ის საწყისი კოდი",
   "GitHub repository": "GitHub რეპოზიტორია",

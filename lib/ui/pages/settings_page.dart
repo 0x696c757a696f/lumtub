@@ -1,54 +1,42 @@
-// Layout adapted from PiliNara (lib/pages/setting/view.dart): a list of
-// settings groups with a search box, and the chosen group beside it on wide
-// windows or on its own page on narrow ones.
-//
-// PiliNara: https://github.com/Starfallan/PiliNara
-// Copyright (C) PiliNara contributors.
-// Adapted for Lumtub under the GNU General Public License, version 3 or
-// later. Changes: GetX routing is replaced with local state and a
-// MaterialPageRoute, and the groups are Lumtub's own.
-
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
-import '../theme.dart';
-import 'account_settings.dart' show confirmSignOut;
-import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
 import '../common.dart';
 import '../skin_paint.dart';
+import '../theme.dart';
 import '../update_notice.dart';
+import 'account_settings.dart';
+import 'settings_sections.dart';
+
+void openSettingsCategory(BuildContext context, AppController controller, SettingsCategory category) {
+  Navigator.of(context).push(MaterialPageRoute<void>(
+    builder: (_) => Scaffold(
+      appBar: SkinAppBar(AppBar(title: Text(category.title))),
+      body: _CategoryRows(controller: controller, category: category),
+    ),
+  ));
+}
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, required this.controller, this.initial = SettingsCategory.account});
   final AppController controller;
   final SettingsCategory initial;
 
-  /// Below this width the groups and their rows no longer fit side by side.
-  static const wideWidth = 720.0;
+  /// Page width from which the groups and their rows sit side by side.
+  static const double wideWidth = 720;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-/// [category]'s settings on a page of their own, as a narrow window shows
-/// them.
-void openSettingsCategory(BuildContext context, AppController controller, SettingsCategory category) {
-  unawaited(Navigator.of(context).push(MaterialPageRoute<void>(
-    builder: (context) => Scaffold(
-      appBar: SkinAppBar(AppBar(title: Text(category.title))),
-      body: _Entries(controller: controller, category: category),
-    ),
-  )));
-}
-
 class _SettingsPageState extends State<SettingsPage> {
-  late SettingsCategory _category = widget.initial;
+  late SettingsCategory _selected = widget.initial;
   final _search = TextEditingController();
   String _query = '';
+
+  AppController get _controller => widget.controller;
 
   @override
   void dispose() {
@@ -56,105 +44,140 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
-  AppController get _controller => widget.controller;
+  void _setQuery(String text) => setState(() => _query = text.trim().toLowerCase());
 
-  @override
-  Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
-        final wide = constraints.maxWidth >= SettingsPage.wideWidth;
-        if (!wide) return _list(context, wide: false);
-        return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Expanded(flex: 4, child: _list(context, wide: true)),
-          VerticalDivider(width: 1, color: context.colors.outline.withValues(alpha: 0.1)),
-          Expanded(flex: 6, child: _query.isEmpty ? _Entries(controller: _controller, category: _category) : _SearchResults(controller: _controller, query: _query)),
-        ]);
-      });
+  void _clearSearch() {
+    _search.clear();
+    _setQuery('');
+  }
 
-  Widget _list(BuildContext context, {required bool wide}) => ListenableBuilder(
-        listenable: Listenable.merge([_controller, _controller.account]),
-        builder: (context, _) => _listBody(context, wide: wide),
+  void _choose(SettingsCategory category, bool wide) {
+    if (!wide) {
+      openSettingsCategory(context, _controller, category);
+      return;
+    }
+    _search.clear();
+    setState(() {
+      _selected = category;
+      _query = '';
+    });
+  }
+
+  Future<void> _signOut() async {
+    final forget = await confirmSignOut(
+      context,
+      title: tr('Sign out?'),
+      content: tr('The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.'),
+    );
+    if (forget == null) return;
+    _controller.webSignIn?.signOut();
+    if (_controller.account?.signedIn ?? false) await _controller.account?.signOut();
+    if (forget) _controller.account?.forgetSynced();
+  }
+
+  List<Widget> _matchingRows(BuildContext context) {
+    final rows = <Widget>[];
+    for (final category in SettingsCategory.values) {
+      final wholeGroup = category.title.toLowerCase().contains(_query);
+      for (final entry in settingEntries(category, _controller)) {
+        if (wholeGroup || entry.matches(_query)) rows.add(entry.builder(context));
+      }
+    }
+    if (rows.isEmpty) {
+      return [
+        Padding(
+          padding: const EdgeInsets.all(32),
+          child: Center(child: Text(tr('No matching settings'), style: TextStyle(color: context.colors.outline))),
+        ),
+      ];
+    }
+    return rows;
+  }
+
+  Widget _searchBox() => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        child: LeavesByKeys(
+          child: TextField(
+            controller: _search,
+            onChanged: _setQuery,
+            decoration: InputDecoration(
+              isDense: true,
+              filled: true,
+              fillColor: context.colors.onInverseSurface,
+              hintText: tr('Search settings'),
+              prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20),
+              suffixIcon: _query.isEmpty ? null : IconButton(tooltip: tr('Clear'), icon: Icon(AppIcons.x, size: 18), onPressed: _clearSearch),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(50), borderSide: BorderSide.none),
+            ),
+          ),
+        ),
       );
 
-  Widget _listBody(BuildContext context, {required bool wide}) {
+  Widget _categoryTile(SettingsCategory category, bool wide, {bool withSubtitle = true, Widget? leading}) {
     final theme = Theme.of(context);
-    final searching = _query.isNotEmpty;
-    return ListView(padding: const EdgeInsets.only(bottom: 24), children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: LeavesByKeys(child: TextField(
-          controller: _search,
-          onChanged: (value) => setState(() => _query = value.trim().toLowerCase()),
-          decoration: InputDecoration(
-            isDense: true,
-            filled: true,
-            fillColor: theme.colorScheme.onInverseSurface,
-            hintText: tr('Search settings'),
-            prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20),
-            suffixIcon: searching
-                ? IconButton(
-                    tooltip: tr('Clear'),
-                    icon: Icon(AppIcons.x, size: 18),
-                    onPressed: () => setState(() {
-                      _search.clear();
-                      _query = '';
-                    }),
-                  )
-                : null,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(50), borderSide: BorderSide.none),
-          ),
-        )),
-      ),
-      // On narrow windows the matches replace the groups; wide windows show
-      // them in the detail pane.
-      if (searching && !wide)
-        ..._SearchResults.rows(context, _controller, _query)
-      else ...[
-        for (final category in SettingsCategory.values)
-          if (category != SettingsCategory.account && category != SettingsCategory.about) _tile(context, category, wide: wide, subtitle: category.subtitle),
-        // Like PiliNara, the account and about rows sit at the bottom
-        // without a subtitle, with sign-out between them when signed in.
-        _tile(context, SettingsCategory.account, wide: wide),
-        if (_controller.account?.active ?? false)
-          ListTile(
-            leading: Icon(AppIcons.signOut),
-            title: Text(tr('Sign out'), style: theme.textTheme.titleMedium),
-            onTap: () async {
-              final forget = await confirmSignOut(context, title: tr('Sign out?'), content: tr('The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.'));
-              if (forget == null) return;
-              _controller.webSignIn?.signOut();
-              if (_controller.account?.signedIn ?? false) await _controller.account?.signOut();
-              if (forget) _controller.account?.forgetSynced();
-            },
-          ),
-        _tile(context, SettingsCategory.about, wide: wide),
-      ],
-    ]);
-  }
-
-  Widget _tile(BuildContext context, SettingsCategory category, {required bool wide, String? subtitle}) {
-    final theme = Theme.of(context);
+    final highlighted = wide && _query.isEmpty && category == _selected;
     return ListTile(
-      tileColor: wide && _query.isEmpty && category == _category ? theme.colorScheme.onInverseSurface : null,
-      leading: category == SettingsCategory.about ? UpdateDot(controller: _controller, child: Icon(category.icon)) : Icon(category.icon),
+      tileColor: highlighted ? theme.colorScheme.onInverseSurface : null,
+      leading: leading ?? Icon(category.icon),
       title: Text(category.title, style: theme.textTheme.titleMedium),
-      subtitle: subtitle == null ? null : Text(subtitle, style: theme.textTheme.labelMedium!.copyWith(color: theme.colorScheme.outline)),
-      onTap: () {
-        if (wide) {
-          setState(() {
-            _category = category;
-            _search.clear();
-            _query = '';
-          });
-        } else {
-          openSettingsCategory(context, _controller, category);
-        }
-      },
+      subtitle: withSubtitle ? Text(category.subtitle, style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.outline)) : null,
+      onTap: () => _choose(category, wide),
     );
   }
+
+  Widget _categoryList(bool wide) => ListenableBuilder(
+        listenable: Listenable.merge([_controller, _controller.account]),
+        builder: (context, _) {
+          final searching = _query.isNotEmpty;
+          return ListView(padding: const EdgeInsets.only(bottom: 24), children: [
+            _searchBox(),
+            if (searching && !wide)
+              ..._matchingRows(context)
+            else ...[
+              for (final c in SettingsCategory.values)
+                if (c != SettingsCategory.account && c != SettingsCategory.about) _categoryTile(c, wide),
+              _categoryTile(SettingsCategory.account, wide, withSubtitle: false),
+              if (_controller.account?.active ?? false)
+                ListTile(
+                  leading: Icon(AppIcons.signOut),
+                  title: Text(tr('Sign out'), style: Theme.of(context).textTheme.titleMedium),
+                  onTap: _signOut,
+                ),
+              _categoryTile(
+                SettingsCategory.about,
+                wide,
+                withSubtitle: false,
+                leading: UpdateDot(controller: _controller, child: Icon(SettingsCategory.about.icon)),
+              ),
+            ],
+          ]);
+        },
+      );
+
+  Widget _rightPane() {
+    if (_query.isEmpty) return _CategoryRows(controller: _controller, category: _selected);
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) => ListView(padding: const EdgeInsets.only(top: 4, bottom: 24), children: _matchingRows(context)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = constraints.maxWidth >= SettingsPage.wideWidth;
+          if (!wide) return _categoryList(false);
+          return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Expanded(flex: 4, child: _categoryList(true)),
+            VerticalDivider(width: 1, thickness: 1, color: context.colors.outline.withValues(alpha: 0.1)),
+            Expanded(flex: 6, child: _rightPane()),
+          ]);
+        },
+      );
 }
 
-/// The rows of one group, rebuilt whenever a setting changes.
-class _Entries extends StatelessWidget {
-  const _Entries({required this.controller, required this.category});
+class _CategoryRows extends StatelessWidget {
+  const _CategoryRows({required this.controller, required this.category});
   final AppController controller;
   final SettingsCategory category;
 
@@ -162,42 +185,12 @@ class _Entries extends StatelessWidget {
   Widget build(BuildContext context) => ListenableBuilder(
         listenable: controller,
         builder: (context, _) {
-          // Built as they scroll in: a long group no longer builds every row
-          // whenever any setting changes.
           final entries = settingEntries(category, controller);
           return ListView.builder(
             padding: const EdgeInsets.only(top: 4, bottom: 24),
             itemCount: entries.length,
-            itemBuilder: (context, index) => entries[index].builder(context),
+            itemBuilder: (context, i) => entries[i].builder(context),
           );
         },
-      );
-}
-
-/// Rows from every group whose title or keywords contain the query.
-class _SearchResults extends StatelessWidget {
-  const _SearchResults({required this.controller, required this.query});
-  final AppController controller;
-  final String query;
-
-  static List<Widget> rows(BuildContext context, AppController controller, String query) {
-    final rows = <Widget>[
-      for (final category in SettingsCategory.values)
-        for (final entry in settingEntries(category, controller))
-          if (entry.matches(query) || category.title.toLowerCase().contains(query)) entry.builder(context),
-    ];
-    if (rows.isNotEmpty) return rows;
-    return [
-      Padding(
-        padding: const EdgeInsets.all(32),
-        child: Text(tr('No matching settings'), textAlign: TextAlign.center, style: TextStyle(color: context.colors.outline)),
-      ),
-    ];
-  }
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-        listenable: controller,
-        builder: (context, _) => ListView(padding: const EdgeInsets.only(top: 4, bottom: 24), children: rows(context, controller, query)),
       );
 }

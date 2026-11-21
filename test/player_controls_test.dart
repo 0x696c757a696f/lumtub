@@ -135,7 +135,7 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('shows the title, time and PiliNara bottom bar', (tester) async {
+  testWidgets('shows the title, time and the bottom bar', (tester) async {
     await pump(tester);
     expect(find.text('测试视频标题'), findsOneWidget);
     expect(find.text('1:00 / 10:00'), findsOneWidget);
@@ -165,7 +165,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the top bar is PiliNara\'s: back and home, then the switches', (tester) async {
+  testWidgets('the top bar: back and home, then the switches', (tester) async {
     await pump(tester);
     for (final tip in ['Back', 'Home', 'Cast', 'Picture in picture', 'More settings']) {
       expect(find.byTooltip(tip), findsOneWidget, reason: tip);

@@ -4,26 +4,6 @@ Software Foundation, either version 3 of the License, or (at your option) any
 later version. See LICENSE. Versions up to and including 0.2.51 were released
 under the GNU General Public License, version 3 or later.
 
-Files adapted from other projects keep their own licence: the PiliNara and
-prism_ui (FlClash) code below is under the GNU General Public License version
-3 (or later, where its source says so), which section 13 of both licences
-allows to be combined with the GNU Affero General Public License.
-
-Lumtub contains settings and player UI adapted from PiliNara.
-
-PiliNara: https://github.com/Starfallan/PiliNara
-Copyright (C) PiliNara contributors.
-Licensed under GNU General Public License version 3 or later.
-
-The adapted sources are lib/widgets/pilinara_settings_tiles.dart (setting
-rows, choice, slider and list dialogs, colour palette and colour picker),
-lib/ui/pages/settings_page.dart (the grouped settings layout with search),
-lib/ui/pages/settings_subpages.dart (speed, theme colour, font, log and
-about pages), lib/ui/player_controls.dart (the control layer over the
-video: title and bottom bars, menus and the "more" sheet) and
-lib/widgets/video_progress_bar.dart (the desktop progress bar). Playback
-itself is Lumtub's own media_kit/libmpv code.
-
 Noto Sans CJK SC (assets/fonts, from Google Fonts' Noto Sans SC build via
 the @expo-google-fonts/noto-sans-sc 0.4.4 package) is
 Copyright 2014-2021 Adobe, licensed under the SIL Open Font License 1.1
@@ -47,9 +27,35 @@ enhancement) keep their own licences:
   de-ring and restore passes so they run only while the picture is scaled
   up, as the upscale passes already do.
 
-The Linux AppImage includes libmpv 0.41 (https://mpv.io) with FFmpeg,
-libplacebo, libass, dav1d and the other libraries linked into it, as built
-by https://github.com/jason-yau/mpv-prebuilt (GPL build, release named in
-usr/share/doc/libmpv/manifest.txt). mpv in this build is licensed under the
-GNU General Public License version 2 or later; the licenses of everything
-it contains are in usr/share/doc/libmpv/licenses.
+Every package includes an LGPL build of libmpv (https://mpv.io), licensed
+under the GNU Lesser General Public License version 2.1 or later, with an
+LGPL FFmpeg and the other libraries linked into it:
+
+- Windows: the mpv-dev-lgpl build of https://github.com/zhongfly/mpv-winbuild
+  (release named in libmpv-version.txt beside libmpv-2.dll).
+- Linux: built by https://github.com/0x696c757a696f/lumtub-media-builds with
+  mpv's gpl option off (release and sources in
+  usr/share/doc/libmpv/manifest.txt; licences in usr/share/doc/libmpv/licenses).
+- Android: the default build of
+  https://github.com/Predidit/libmpv-android-video-build.
+- macOS and iOS: Mpv.framework linked from MPVKit's LGPL libraries
+  (https://github.com/mpvkit/MPVKit).
+
+The Android APK includes CPython (https://www.python.org), from the Android
+binary release python.org publishes for each Python version
+(python-<version>-<host>.tar.gz for arm64-v8a and x86_64; for
+armeabi-v7a, which python.org does not publish, built from the same source
+tag by CPython's own Android/android.py; the version is
+PYTHON_ANDROID_VERSION in .github/pins.env), under the Python Software
+Foundation License Version 2. It is built with OpenSSL (Apache License 2.0),
+SQLite (public domain), libffi (MIT), xz/liblzma (public domain), bzip2
+(BSD-style) and zstd (BSD-3-Clause or GPL-2.0, taken under BSD-3-Clause); it
+contains no GNU readline or gdbm. Its small launcher
+(android/packaging/python-launcher.c) is Lumtub's. The certificates for
+Python are the Chrome Root Store list in native/lumtub_core/roots.
+
+The yt-dlp zip app in the Android APK is a stable release of yt-dlp (the
+Unlicense, public domain), checked against its published SHA2-256SUMS.
+QuickJS for YouTube's JavaScript challenges runs inside Lumtub's core (the
+rquickjs crate with QuickJS, MIT License); no separate QuickJS program is
+included.

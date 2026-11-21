@@ -18,7 +18,7 @@ import '../theme_preset_card.dart';
 import '../motion.dart';
 import '../skin_paint.dart';
 import '../theme.dart';
-import '../../widgets/pilinara_settings_tiles.dart';
+import '../../widgets/settings_tiles.dart';
 import 'downloads_page.dart' show openInExplorer;
 import '../palettes.dart' show paletteForSkin;
 import 'settings_sections.dart' show themeModeTiles;

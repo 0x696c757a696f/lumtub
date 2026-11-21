@@ -10,6 +10,6 @@ binding = "LICENSES"
 id = "KV_NAMESPACE_ID"
 
 # The 爱发电 plan that is the learning pack: other sponsorships get no
-# code. Not a secret; a repository variable AFDIAN_PLANS can say more.
+# code. Not a secret, so it lives here (comma-separated for more).
 [vars]
 AFDIAN_PLANS = "548a65dee44b11f193bd52540025c377"

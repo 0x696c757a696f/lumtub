@@ -25,6 +25,7 @@ import '../libass_layout.dart';
 import '../line_pause.dart';
 import '../save_file.dart';
 import '../shadowing.dart';
+import '../study_flow.dart';
 import '../play_queue.dart';
 import '../video_facts_lookup.dart';
 import '../video_languages.dart';
@@ -160,6 +161,7 @@ part 'account_actions.dart';
 part 'window_actions.dart';
 part 'ios_pip_actions.dart';
 part 'learning_actions.dart';
+part 'study_actions.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
 
@@ -911,6 +913,18 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// list's marks.
   final shadowTakes = ValueNotifier(0);
 
+  /// 精学: the video studied now, where each video's study stopped, and
+  /// what the study changed for a while (StudyActions).
+  StudyRun? _studyRun;
+  StudyStore? _studyStore;
+  /// Bumped as the study moves on, for its bar.
+  final studyChanged = ValueNotifier<int>(0);
+  /// 盲听 and 复听 hide the subtitles.
+  bool studyHidesSubtitles = false;
+  final _studyOwner = Object();
+  double? _studyRateBefore;
+  String? _studyChannel;
+
   /// The chapter titles of [chapterTranslationOf] translated, one for
   /// each chapter, once asked for; untouched ones stay as they are.
   List<String>? chapterTranslation;
@@ -1211,6 +1225,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     unawaited(_forgetShadowing().whenComplete(() {
       shadowStage.dispose();
       shadowTakes.dispose();
+      studyChanged.dispose();
     }));
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();

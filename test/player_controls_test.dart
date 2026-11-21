@@ -14,6 +14,7 @@ import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/ui/lights_off.dart';
 import 'package:lumtub/ui/pip_view.dart';
 import 'package:lumtub/ui/player_controls.dart';
+import 'package:lumtub/ui/learning_drawer.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/widgets/video_progress_bar.dart';
 import 'package:lumtub/wheel_gesture.dart';
@@ -162,6 +163,32 @@ void main() {
     expect((play.dy - time.dy).abs(), lessThan(4), reason: 'Play sits in the same row as the time');
     expect(play.dx, lessThan(time.dx));
     expect(tester.getCenter(find.byType(VideoProgressBar)).dy, closeTo(time.dy, 8));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the handle on the edge opens the learning drawer', (tester) async {
+    await pump(tester);
+    await tester.tap(find.byType(LearningDrawerHandle));
+    await tester.pumpAndSettle();
+    expect(find.byType(LearningDrawer), findsOneWidget);
+    expect(find.text('Study this video'), findsOneWidget);
+    expect(find.text('Pause after each line'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a locked study shows what the learning pack puts there, and line tools stay', (tester) async {
+    studyUnlocked = (_) => false;
+    studyLockedView = (context, c) => const Text('buy it');
+    addTearDown(() {
+      studyUnlocked = null;
+      studyLockedView = null;
+    });
+    await pump(tester);
+    await tester.tap(find.byType(LearningDrawerHandle));
+    await tester.pumpAndSettle();
+    expect(find.text('buy it'), findsOneWidget);
+    expect(find.text('Start studying'), findsNothing);
+    expect(find.text('Pause after each line'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

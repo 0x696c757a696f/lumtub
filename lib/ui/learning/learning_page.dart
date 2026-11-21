@@ -648,12 +648,12 @@ class _Pitch extends StatelessWidget {
               return Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
                 FilledButton(
                   onPressed: () => unawaited(afdianFirst ? openExternal(afdianPage) : _buyByCard()),
-                  child: Text(afdianFirst ? tr('Buy on Afdian (Alipay, WeChat)') : tr('Buy (card or PayPal)')),
+                  child: Text(afdianFirst ? tr('Buy on Afdian (Alipay, WeChat)') : tr('Buy on Ko-fi (card, PayPal)')),
                 ),
                 if (card)
                   OutlinedButton(
                     onPressed: () => unawaited(zh ? _buyByCard() : openExternal(afdianPage)),
-                    child: Text(zh ? tr('Buy (card or PayPal)') : tr('Buy on Afdian (Alipay, WeChat)')),
+                    child: Text(zh ? tr('Buy on Ko-fi (card, PayPal)') : tr('Buy on Afdian (Alipay, WeChat)')),
                   ),
                 TextButton(onPressed: () => unawaited(claimPurchase(context, learning, afdianFirst: zh)), child: Text(tr('I bought it: unlock'))),
               ]);

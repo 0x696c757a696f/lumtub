@@ -337,7 +337,7 @@ fn Highlights(t: &'static Text, lang: Lang, skin: SkinState) -> impl IntoView {
 }
 
 const POLAR_CHECKOUT: &str =
-    "https://buy.polar.sh/polar_cl_Kq1VEmdtmOLJaLBhOA2DgT5dXcnA2aBvhys200CDQVP";
+    "https://buy.polar.sh/polar_cl_Kq1VEmdtmOLJaLBhOA2DgT5dXcnA2aBvhys200CDQVP?discount_code=ACTUAL50";
 
 #[component]
 fn Learning(t: &'static Text, lang: Lang) -> impl IntoView {

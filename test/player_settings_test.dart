@@ -184,7 +184,7 @@ vo=gpu-next
     expect(settings.customOptions, {'scale': 'lanczos'});
   });
 
-  test('PiliNara mpv options survive a round trip', () {
+  test('mpv options survive a round trip', () {
     const original = PlayerSettings(
       hwdec: 'auto,auto-safe',
       d3d11vaZeroCopy: true,

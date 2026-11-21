@@ -6,7 +6,8 @@ name: License server
 # until the CLOUDFLARE_API_TOKEN secret exists; see license-server/README.md.
 on:
   push:
-    branches: [main]
+    # The learning pack's branch too, until it is merged.
+    branches: [main, claude/project-thread-gjrv5x]
     paths:
       - 'license-server/**'
       - '.github/workflows/license-server.yml'

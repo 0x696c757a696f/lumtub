@@ -3914,7 +3914,6 @@
   "Once the code is activated it keeps working without internet; Lumtub only checks now and then, when it can.": "激活后断网也能一直使用；Lumtub 只在能联网时偶尔确认一下。",
   "If the pack does not work as described, or you were charged by mistake, write to us with your order number and we will fix it or refund you. A refunded order stops its code; your vocabulary book stays on your computer and can still be exported.": "如果学习包与描述不符或误扣款，请带上订单号来信，我们会修复或退款。退款后激活码停用，生词本仍留在你的电脑上，照样可以导出。",
   "Orders, refunds and questions: {0}": "订单、退款和问题请联系：{0}",
-  "Free to try: {0} word lookups a day, no account": "免费试用：每天点词查 {0} 次，不用注册",
   "Free today: {0} of {1} word lookups left. Buy once for unlimited.": "今天还能免费查 {0} 次（每天 {1} 次）。买一次就不限次数。",
   "Today's {0} free word lookups are used up": "今天的 {0} 次免费查词用完了",
   "More tomorrow. With the learning pack, look up as many words as you like, on up to 5 devices, with one payment and no subscription. Readings and your vocabulary book keep working either way.": "明天会再给。买了学习包就能随便查，最多 5 台设备，一次付费、不用订阅。拼音假名和生词本不受影响，照常可用。",
@@ -3930,5 +3929,8 @@
   "Pre-sale price {0}, paid once ({1} after launch; nothing more to pay then)": "预售价 {0}，一次付清（正式版 {1}，现在买以后不用补差价）",
   "Have a license code? Enter it": "已有授权码？直接输入",
   "Buy the learning pack": "购买学习包",
-  "{0} free lookups left today · the learning pack has no limit": "今天还剩 {0} 次免费查词 · 学习包不限次数"
+  "{0} free lookups left today · the learning pack has no limit": "今天还剩 {0} 次免费查词 · 学习包不限次数",
+  "Free trial: unlimited lookups for {0} more days, then {1} a day. Buy once for unlimited.": "免费试用：还有 {0} 天不限次数查词，之后每天 {1} 次。买一次就不限次数。",
+  "Free to try: unlimited for {0} days, then {1} word lookups a day, no account": "免费试用：前 {0} 天不限次数，之后每天查词 {1} 次，不用注册",
+  "Free trial: unlimited for {0} more days, then {1} lookups a day": "免费试用：还有 {0} 天不限次数，之后每天 {1} 次"
 }

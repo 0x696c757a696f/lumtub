@@ -14,7 +14,6 @@ import 'player_panel.dart';
 import 'common.dart' show ErrorBanner;
 import 'subtitle_list_panel.dart';
 import 'app_icons.dart';
-import '../learning/learning.dart' show Learning;
 import 'learning/learning_page.dart';
 
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
@@ -463,7 +462,7 @@ class LearningSwitches extends StatelessWidget {
             contentPadding: const EdgeInsets.symmetric(horizontal: 12),
             leading: Icon(AppIcons.bookOpenText, size: 20),
             title: Text(tr('Download a dictionary')),
-            subtitle: Text(learning.licensed ? tr('Chinese, English or Japanese, a few MB, then everything works offline.') : tr('Free to try: {0} word lookups a day, no account', [Learning.trialPerDay]),
+            subtitle: Text(learning.licensed ? tr('Chinese, English or Japanese, a few MB, then everything works offline.') : learningTrialOffer(),
                 style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
             onTap: () => unawaited(openLearningPage(context, controller)),
           );

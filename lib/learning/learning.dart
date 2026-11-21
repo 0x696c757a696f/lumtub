@@ -157,11 +157,16 @@ class Learning extends ChangeNotifier {
 
   LearningLicense? get license => _license;
 
-  /// Without the pack, this many word cards a day: dictionaries, readings
-  /// above words and the vocabulary book all work, so a learner sees what
+  /// Without the pack: every word card free for [trialDays] days from the
+  /// first lookup, then this many a day. Dictionaries, readings above
+  /// words and the vocabulary book always work, so a learner sees what
   /// they would buy.
-  static const trialPerDay = 20;
+  static const trialPerDay = 5;
+  static const trialDays = 7;
   String _trialDay = '';
+
+  /// The day of the first lookup here, when the free week began.
+  String _trialStart = '';
 
   /// A word has been looked up here at least once: the getting-started
   /// steps tick it off.
@@ -172,11 +177,40 @@ class Learning extends ChangeNotifier {
   final _trialWords = <String>{};
   static String get _today => DateTime.now().toIso8601String().substring(0, 10);
 
+  /// The latest day the trial has seen, from this computer's clock or a
+  /// server's: turning the clock back neither stretches the free week nor
+  /// brings today's lookups back.
+  String _trialSeen = '';
+  String get _trialToday {
+    final today = _today;
+    return today.compareTo(_trialSeen) >= 0 ? today : _trialSeen;
+  }
+
+  /// Notes [day] (yyyy-mm-dd) as seen, when it is later than any before.
+  bool _see(String day) {
+    if (day.compareTo(_trialSeen) <= 0) return false;
+    _trialSeen = day;
+    return true;
+  }
+
+  /// Days of the free week left, counting today; 0 once it is over.
+  int get freeWeekLeft {
+    if (_trialStart.isEmpty) return trialDays;
+    final start = DateTime.tryParse(_trialStart);
+    if (start == null) return 0;
+    final today = DateTime.parse(_trialToday);
+    return (trialDays - today.difference(start).inDays).clamp(0, trialDays);
+  }
+
+  /// Without the pack, every word card is still free.
+  bool get inFreeWeek => !licensed && freeWeekLeft > 0;
+
   /// Word cards left today without the pack; unlimited with it.
-  int get trialLeft => licensed ? trialPerDay : (_trialDay == _today ? (trialPerDay - _trialUsed).clamp(0, trialPerDay) : trialPerDay);
+  int get trialLeft => licensed ? trialPerDay : (_trialDay == _trialToday ? (trialPerDay - _trialUsed).clamp(0, trialPerDay) : trialPerDay);
 
   /// Counts one word card; false when today's free ones are used up.
-  /// A [word] already looked up today is free.
+  /// A [word] already looked up today is free, and so is every word in
+  /// the free week.
   Future<bool> takeLookup(String word) async {
     if (!lookedUp) {
       lookedUp = true;
@@ -186,8 +220,16 @@ class Learning extends ChangeNotifier {
       }
     }
     if (licensed) return true;
-    if (_trialDay != _today) {
-      _trialDay = _today;
+    final seen = _see(_today);
+    if (_trialStart.isEmpty) _trialStart = _trialToday;
+    if (seen || _trialStart == _trialToday) await _save();
+    if (inFreeWeek) {
+      notifyListeners();
+      return true;
+    }
+    final today = _trialToday;
+    if (_trialDay != today) {
+      _trialDay = today;
       _trialUsed = 0;
       _trialWords.clear();
     }
@@ -380,6 +422,9 @@ class Learning extends ChangeNotifier {
           final trial = json['trial'];
           if (trial is Map) {
             _trialDay = '${trial['day'] ?? ''}';
+            // Counted a day at a time before the free week: that day began it.
+            _trialStart = '${trial['start'] ?? trial['day'] ?? ''}';
+            _trialSeen = '${trial['seen'] ?? trial['day'] ?? ''}';
             _trialUsed = trial['used'] is int ? trial['used'] as int : 0;
             final words = trial['words'];
             if (words is List) _trialWords.addAll(words.whereType<String>());
@@ -431,6 +476,10 @@ class Learning extends ChangeNotifier {
       } finally {
         client.close();
       }
+      if (_serverDay case final day? when !licensed && _see(day)) {
+        await _save();
+        notifyListeners();
+      }
       for (final pack in DictionaryPack.values) {
         final file = _fileOf(pack);
         final sum = _sumOf(pack);
@@ -450,10 +499,22 @@ class Learning extends ChangeNotifier {
     }
   }
 
+  /// Today as the server's clock has it, in local time, when it said.
+  static String? _serverDay;
+  static String? _dayOf(String? date) {
+    if (date == null) return null;
+    try {
+      return HttpDate.parse(date).toLocal().toIso8601String().substring(0, 10);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// The published SHA256SUMS, checked against its signature.
   static Future<SignedSums> _signedSums(http.Client client) async {
     final sums = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS')).timeout(const Duration(seconds: 30));
     if (sums.statusCode != 200) throw HttpException('SHA256SUMS HTTP ${sums.statusCode}');
+    _serverDay = _dayOf(sums.headers['date']);
     final signature = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS.sig')).timeout(const Duration(seconds: 30));
     if (signature.statusCode != 200) throw HttpException('SHA256SUMS.sig HTTP ${signature.statusCode}');
     final signed = SignedSums.verify(sums.bodyBytes, signature.body);
@@ -718,7 +779,7 @@ class Learning extends ChangeNotifier {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1, 'trial': {'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
+      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1, 'trial': {'start': _trialStart, 'seen': _trialSeen, 'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }

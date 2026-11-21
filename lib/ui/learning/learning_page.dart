@@ -202,6 +202,15 @@ String learningPriceLine() {
   return tr('Pre-sale price {0}, paid once ({1} after launch; nothing more to pay then)', [now, learningPrice]);
 }
 
+/// Where the free trial stands: the free week's days left, or today's
+/// lookups after it.
+String learningTrialLine(Learning learning) => learning.inFreeWeek
+    ? tr('Free trial: unlimited lookups for {0} more days, then {1} a day. Buy once for unlimited.', [learning.freeWeekLeft, Learning.trialPerDay])
+    : tr('Free today: {0} of {1} word lookups left. Buy once for unlimited.', [learning.trialLeft, Learning.trialPerDay]);
+
+/// The trial in one line, before anything was looked up.
+String learningTrialOffer() => tr('Free to try: unlimited for {0} days, then {1} word lookups a day, no account', [Learning.trialDays, Learning.trialPerDay]);
+
 /// Opens the checkout the interface's language suggests: Afdian (Alipay,
 /// WeChat) for Chinese, Polar (cards) otherwise.
 Future<void> buyLearningPack() => currentLanguage.isChinese ? openExternal(afdianPage) : _buyOnPolar();
@@ -519,7 +528,7 @@ class _Pitch extends StatelessWidget {
             style: TextStyle(color: theme.colorScheme.outline, fontSize: 12, height: 1.5),
           ),
           const SizedBox(height: Space.s),
-          Text(tr('Free today: {0} of {1} word lookups left. Buy once for unlimited.', [learning.trialLeft, Learning.trialPerDay]), style: theme.textTheme.bodyMedium),
+          Text(learningTrialLine(learning), style: theme.textTheme.bodyMedium),
           const SizedBox(height: 12),
           Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
             FilledButton(

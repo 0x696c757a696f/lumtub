@@ -301,7 +301,7 @@ class Learning extends ChangeNotifier {
   /// to [learningConsentVersion].
   /// The server's address is published on the `learning` release, so it
   /// can move without an app update.
-  Future<ClaimResult> claimLicense({required bool afdian, required String order, String email = ''}) async {
+  Future<ClaimResult> claimLicense({required PurchaseSource source, required String order, String email = ''}) async {
     final client = http.Client();
     try {
       final where = await client.get(Uri.parse('$learningPackRelease/license-server.txt')).timeout(const Duration(seconds: 20));
@@ -311,7 +311,7 @@ class Learning extends ChangeNotifier {
           .post(
             server.resolve('/claim'),
             headers: {'content-type': 'application/json'},
-            body: jsonEncode({'source': afdian ? 'afdian' : 'kofi', 'order': order.trim(), if (!afdian) 'email': email.trim(), 'consent': learningConsentVersion}),
+            body: jsonEncode({'source': source.name, 'order': order.trim(), if (source.needsEmail) 'email': email.trim(), 'consent': learningConsentVersion}),
           )
           .timeout(const Duration(seconds: 30));
       if (response.statusCode == 429) return ClaimResult.busy;
@@ -613,3 +613,30 @@ class _DigestSink implements Sink<Digest> {
 /// below, Chinese only, or English only. Where a word has none in the
 /// chosen language, the other's are shown.
 enum MeaningLanguage { chineseFirst, chinese, english }
+
+/// Where the learning pack was bought.
+enum PurchaseSource {
+  afdian,
+  polar,
+  kofi;
+
+  /// Ko-fi and Polar orders are claimed with the email paid with too.
+  bool get needsEmail => this != afdian;
+}
+
+/// Polar's checkout for the learning pack, published on the `learning`
+/// release so it can change without an app update; null when there is
+/// none yet.
+Future<Uri?> polarCheckout() async {
+  final client = http.Client();
+  try {
+    final answer = await client.get(Uri.parse('$learningPackRelease/polar-checkout.txt')).timeout(const Duration(seconds: 15));
+    final uri = answer.statusCode == 200 ? Uri.tryParse(answer.body.trim()) : null;
+    return uri != null && uri.scheme == 'https' && (uri.host == 'polar.sh' || uri.host.endsWith('.polar.sh')) ? uri : null;
+  } catch (e) {
+    logWarn('Could not look up the Polar checkout: $e');
+    return null;
+  } finally {
+    client.close();
+  }
+}

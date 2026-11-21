@@ -35,12 +35,12 @@ String learningSummary(Learning learning) => learning.licensed
     ? tr('Licensed to {0}', [learning.license!.name.isEmpty ? '—' : learning.license!.name])
     : tr('Tap words for meanings, pinyin, vocabulary book, Anki export');
 
-/// Unlocks a purchase: asks for the order number, and for Ko-fi the email
-/// paid with too, and fetches the code from the license server.
+/// Unlocks a purchase: asks for the order number, and for Ko-fi and Polar
+/// the email paid with too, and fetches the code from the license server.
 Future<bool> claimPurchase(BuildContext context, Learning learning, {required bool afdianFirst}) async {
   final field = TextEditingController();
   final email = TextEditingController();
-  var afdian = afdianFirst;
+  var source = afdianFirst ? PurchaseSource.afdian : PurchaseSource.polar;
   var busy = false;
   var agreed = false;
   String? error;
@@ -48,12 +48,12 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
     context: context,
     builder: (context) => StatefulBuilder(builder: (context, setState) {
       Future<void> claim() async {
-        if (field.text.trim().isEmpty || (!afdian && email.text.trim().isEmpty) || !agreed || busy) return;
+        if (field.text.trim().isEmpty || (source.needsEmail && email.text.trim().isEmpty) || !agreed || busy) return;
         setState(() {
           busy = true;
           error = null;
         });
-        final result = await learning.claimLicense(afdian: afdian, order: field.text, email: email.text);
+        final result = await learning.claimLicense(source: source, order: field.text, email: email.text);
         if (!context.mounted) return;
         if (result == ClaimResult.ok) {
           Navigator.pop(context, true);
@@ -62,9 +62,11 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
         setState(() {
           busy = false;
           error = switch (result) {
-            ClaimResult.notFound => afdian
-                ? tr('No paid order with this number was found. Copy the order number from your Afdian order page.')
-                : tr('No Ko-fi purchase with this transaction ID and email was found yet. Check both against your Ko-fi receipt, or wait a minute and try again.'),
+            ClaimResult.notFound => switch (source) {
+                PurchaseSource.afdian => tr('No paid order with this number was found. Copy the order number from your Afdian order page.'),
+                PurchaseSource.polar => tr('No Polar order with this ID and email was found yet. Check both against the page shown after paying or your Polar receipt, or wait a minute and try again.'),
+                PurchaseSource.kofi => tr('No Ko-fi purchase with this transaction ID and email was found yet. Check both against your Ko-fi receipt, or wait a minute and try again.'),
+              },
             ClaimResult.busy => tr('Too many tries. Wait a minute and try again.'),
             _ => tr('Could not reach the license server. Check your connection, or ask for your code by message.'),
           };
@@ -77,8 +79,8 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
           width: 420,
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Wrap(spacing: 8, children: [
-              ChoiceChip(label: Text(tr('Afdian')), selected: afdian, onSelected: busy ? null : (_) => setState(() => afdian = true)),
-              ChoiceChip(label: const Text('Ko-fi'), selected: !afdian, onSelected: busy ? null : (_) => setState(() => afdian = false)),
+              for (final s in PurchaseSource.values)
+                ChoiceChip(label: Text(_sourceName(s)), selected: source == s, onSelected: busy ? null : (_) => setState(() => source = s)),
             ]),
             const SizedBox(height: 12),
             TextField(
@@ -87,14 +89,22 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
               enabled: !busy,
               onSubmitted: (_) => unawaited(claim()),
               decoration: InputDecoration(
-                labelText: afdian ? tr('Afdian order number') : tr('Ko-fi transaction ID'),
-                helperText: afdian ? tr('Afdian › My orders › the order › Order number') : tr('On the receipt Ko-fi emailed you'),
-                errorText: afdian ? error : null,
+                labelText: switch (source) {
+                  PurchaseSource.afdian => tr('Afdian order number'),
+                  PurchaseSource.polar => tr('Polar order ID'),
+                  PurchaseSource.kofi => tr('Ko-fi transaction ID'),
+                },
+                helperText: switch (source) {
+                  PurchaseSource.afdian => tr('Afdian › My orders › the order › Order number'),
+                  PurchaseSource.polar => tr('Shown on the page after paying'),
+                  PurchaseSource.kofi => tr('On the receipt Ko-fi emailed you'),
+                },
+                errorText: source.needsEmail ? null : error,
                 errorMaxLines: 3,
                 border: const OutlineInputBorder(),
               ),
             ),
-            if (!afdian) ...[
+            if (source.needsEmail) ...[
               const SizedBox(height: 12),
               TextField(
                 controller: email,
@@ -102,7 +112,7 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
                 keyboardType: TextInputType.emailAddress,
                 onSubmitted: (_) => unawaited(claim()),
                 decoration: InputDecoration(
-                  labelText: tr('Email you paid with on Ko-fi'),
+                  labelText: source == PurchaseSource.polar ? tr('Email you paid with on Polar') : tr('Email you paid with on Ko-fi'),
                   errorText: error,
                   errorMaxLines: 3,
                   border: const OutlineInputBorder(),
@@ -135,8 +145,20 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
   final order = field.text.trim();
   field.dispose();
   email.dispose();
-  if (ok == true && context.mounted) await _showConfirmation(context, learning, afdian: afdian, order: order);
+  if (ok == true && context.mounted) await _showConfirmation(context, learning, source: source, order: order);
   return ok ?? false;
+}
+
+String _sourceName(PurchaseSource source) => switch (source) {
+      PurchaseSource.afdian => tr('Afdian'),
+      PurchaseSource.polar => 'Polar',
+      PurchaseSource.kofi => 'Ko-fi',
+    };
+
+/// Opens Polar's checkout, or Ko-fi's shop while there is none.
+Future<void> _buyOnPolar() async {
+  final checkout = await polarCheckout();
+  await openExternal(checkout?.toString() ?? '$kofiPage/shop');
 }
 
 String _consentText() => tr(
@@ -144,12 +166,12 @@ String _consentText() => tr(
 
 /// The record of the purchase and the consent, to keep: what EU law asks
 /// the seller to give on a durable medium.
-Future<void> _showConfirmation(BuildContext context, Learning learning, {required bool afdian, required String order}) async {
+Future<void> _showConfirmation(BuildContext context, Learning learning, {required PurchaseSource source, required String order}) async {
   final when = learning.lastConsent ?? DateTime.now();
   final stamp = '${when.year}-${when.month.toString().padLeft(2, '0')}-${when.day.toString().padLeft(2, '0')} ${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')}';
   final record = [
     tr('Lumtub learning pack'),
-    '${afdian ? tr('Afdian') : 'Ko-fi'}: $order',
+    '${_sourceName(source)}: $order',
     tr('Unlocked on {0}', [stamp]),
     tr('You agreed: {0}', [_consentText()]),
     tr('License code: {0}', [learning.license?.code ?? '']),
@@ -460,12 +482,12 @@ class _Pitch extends StatelessWidget {
           const SizedBox(height: 12),
           Wrap(spacing: 8, runSpacing: 8, children: [
             FilledButton(
-              onPressed: () => unawaited(openExternal(zh ? afdianPage : '$kofiPage/shop')),
-              child: Text(zh ? tr('Buy on Afdian') : tr('Buy on Ko-fi')),
+              onPressed: () => unawaited(zh ? openExternal(afdianPage) : _buyOnPolar()),
+              child: Text(zh ? tr('Buy on Afdian (Alipay, WeChat)') : tr('Buy (card, Apple Pay, Google Pay)')),
             ),
             OutlinedButton(
-              onPressed: () => unawaited(openExternal(zh ? '$kofiPage/shop' : afdianPage)),
-              child: Text(zh ? tr('Buy on Ko-fi') : tr('Buy on Afdian')),
+              onPressed: () => unawaited(zh ? _buyOnPolar() : openExternal(afdianPage)),
+              child: Text(zh ? tr('Buy (card, Apple Pay, Google Pay)') : tr('Buy on Afdian (Alipay, WeChat)')),
             ),
             TextButton(onPressed: () => unawaited(claimPurchase(context, learning, afdianFirst: zh)), child: Text(tr('I bought it: unlock'))),
             TextButton(onPressed: () => unawaited(enterLicenseCode(context, learning)), child: Text(tr('Enter license code'))),

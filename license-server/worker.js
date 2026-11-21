@@ -2,7 +2,9 @@
 //
 // POST /kofi   Ko-fi's webhook: a paid shop order is remembered by its
 //              transaction id and the buyer's email.
-// POST /claim  {source: "kofi", order, email, consent} or {source:
+// POST /polar  Polar's webhook (order.paid), signed as Standard Webhooks:
+//              the order is remembered by its id and the buyer's email.
+// POST /claim  {source: "kofi" or "polar", order, email, consent} or {source:
 //              "afdian", order, consent} (Ko-fi's order is the transaction
 //              id on the buyer's receipt) returns {code, consented} for a
 //              paid order, or {error}. [consent] is the version of the
@@ -19,7 +21,9 @@
 // base64), KOFI_TOKEN (Ko-fi › Webhooks › verification token),
 // AFDIAN_USER_ID and AFDIAN_TOKEN (爱发电 › 开发者). Optional vars:
 // KOFI_ITEM (the shop item's code, to count only that item) and
-// AFDIAN_PLANS (comma-separated plan ids that count).
+// AFDIAN_PLANS (comma-separated plan ids that count). Polar: the secret
+// POLAR_WEBHOOK_SECRET (Polar › Settings › Webhooks), and optionally the
+// var POLAR_PRODUCTS (comma-separated product ids that count).
 
 export default {
   async fetch(request, env) {
@@ -27,8 +31,10 @@ export default {
     if (request.method === 'OPTIONS') return reply(null, 204);
     try {
       if (request.method === 'POST' && url.pathname === '/kofi') return await kofi(request, env);
+      if (request.method === 'POST' && url.pathname === '/polar') return await polar(request, env);
       if (request.method === 'POST' && url.pathname === '/claim') return await claim(request, env);
       if (request.method === 'GET' && url.pathname === '/') return reply({ ok: true });
+      if (request.method === 'GET' && url.pathname === '/polar/thanks') return await polarThanks(url, env);
       return reply({ error: 'not found' }, 404);
     } catch (e) {
       console.log('error', e && e.stack || e);
@@ -70,6 +76,79 @@ async function kofi(request, env) {
   return reply({ ok: true });
 }
 
+const b64 = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes)));
+
+// Standard Webhooks: HMAC-SHA256 over "id.timestamp.body", base64, in
+// webhook-signature as "v1,<signature>" (several may be listed). Polar
+// signs with the secret's own bytes; a whsec_ secret in base64 is tried
+// as well.
+async function signedByPolar(request, body, secret) {
+  const id = request.headers.get('webhook-id') || '';
+  const timestamp = request.headers.get('webhook-timestamp') || '';
+  const given = (request.headers.get('webhook-signature') || '').split(' ').map((s) => s.split(',')[1]).filter(Boolean);
+  if (!id || !given.length || Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false;
+  const keys = [new TextEncoder().encode(secret)];
+  try {
+    keys.push(Uint8Array.from(atob(secret.replace(/^whsec_/, '')), (c) => c.charCodeAt(0)));
+  } catch (_) {
+    // Not base64: the bytes as they are only.
+  }
+  const message = new TextEncoder().encode(`${id}.${timestamp}.${body}`);
+  for (const raw of keys) {
+    const key = await crypto.subtle.importKey('raw', raw, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const expected = b64(await crypto.subtle.sign('HMAC', key, message));
+    if (given.some((g) => g.length === expected.length && timingSafe(g, expected))) return true;
+  }
+  return false;
+}
+
+function timingSafe(a, b) {
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+async function polar(request, env) {
+  const body = await request.text();
+  if (!env.POLAR_WEBHOOK_SECRET || body.length > 200000 || !(await signedByPolar(request, body, env.POLAR_WEBHOOK_SECRET))) return reply({ error: 'bad signature' }, 403);
+  const event = JSON.parse(body);
+  if (event.type !== 'order.paid') return reply({ ok: true, ignored: true });
+  const data = event.data || {};
+  const products = clean(env.POLAR_PRODUCTS).split(',').map(clean).filter(Boolean);
+  const product = clean(data.product_id || data.product?.id);
+  if (products.length && !products.includes(product)) return reply({ ok: true, ignored: true });
+  const order = clean(data.id).toLowerCase();
+  const email = clean(data.customer?.email || data.user?.email).toLowerCase();
+  if (!order || !email) return reply({ error: 'no order' }, 400);
+  // The page Polar sends the buyer to after paying shows the order id.
+  const checkout = clean(data.checkout_id).toLowerCase();
+  if (checkout) await env.LICENSES.put(`polar-checkout:${checkout}`, order, { expirationTtl: 60 * 60 * 24 * 30 });
+  await env.LICENSES.put(`polar:${order}`, JSON.stringify({
+    name: `Polar #${order.replace(/[^0-9a-z]/g, '').slice(-6)}`,
+    email: await sha256(email),
+    date: clean(data.created_at).slice(0, 10) || new Date().toISOString().slice(0, 10),
+  }));
+  return reply({ ok: true });
+}
+
+// Polar's success page (its success URL ends ?checkout_id={CHECKOUT_ID}):
+// the order id to type into Lumtub. It may come a few seconds before the
+// webhook, so the page looks again.
+async function polarThanks(url, env) {
+  const checkout = clean(url.searchParams.get('checkout_id')).toLowerCase();
+  const order = /^[0-9a-z_-]{3,80}$/.test(checkout) ? await env.LICENSES.get(`polar-checkout:${checkout}`) : null;
+  const safe = (order || '').replace(/[^0-9a-z-]/g, '');
+  const html = `<!doctype html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+${safe ? '' : '<meta http-equiv="refresh" content="4">'}<title>Lumtub</title>
+<style>body{font:16px/1.6 system-ui,sans-serif;max-width:560px;margin:48px auto;padding:0 16px;color:#222}code{font-size:15px;background:#f2f2f2;padding:4px 8px;border-radius:6px;user-select:all;word-break:break-all}</style></head><body>
+<h1>Thank you · 谢谢支持</h1>
+${safe ? `<p>Your order ID · 你的订单号：</p><p><code>${safe}</code></p>
+<p>In Lumtub › Learning › <b>I bought it: unlock</b>, pick Polar and enter this order ID and the email you paid with.</p>
+<p>在 Lumtub › 学习 › <b>我买了：解锁</b>，选 Polar，填这个订单号和付款用的邮箱。</p>` : '<p>Confirming your payment… · 正在确认付款…</p>'}
+</body></html>`;
+  return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+}
+
 async function claim(request, env) {
   const ask = await request.json().catch(() => ({}));
   const source = clean(ask.source);
@@ -86,9 +165,9 @@ async function claim(request, env) {
   await env.LICENSES.put(slot, String(tries + 1), { expirationTtl: 120 });
 
   let buyer;
-  if (source === 'kofi') {
+  if (source === 'kofi' || source === 'polar') {
     // Both must match, so a known email alone gets nothing.
-    const saved = JSON.parse((await env.LICENSES.get(`kofi:${order}`)) || 'null');
+    const saved = JSON.parse((await env.LICENSES.get(`${source}:${order}`)) || 'null');
     if (!saved || !email || saved.email !== await sha256(email)) return reply({ error: 'not found' }, 404);
     buyer = saved;
   } else if (source === 'afdian') {

@@ -3869,5 +3869,11 @@
   "Nothing new: these words are in the Lumtub deck already": "没有新词：这些词已经在 Lumtub 牌组里了",
   "{0} words added to the Lumtub deck in Anki": "已把 {0} 个词加入 Anki 的 Lumtub 牌组",
   "Anki did not answer. Open Anki with the AnkiConnect add-on (code 2055492159), or use the Anki file instead.": "Anki 没有响应。请打开 Anki 并安装 AnkiConnect 插件（代码 2055492159），或者改用导出 Anki 文件。",
-  "Anki said: {0}": "Anki 返回：{0}"
+  "Anki said: {0}": "Anki 返回：{0}",
+  "No Polar order with this ID and email was found yet. Check both against the page shown after paying or your Polar receipt, or wait a minute and try again.": "还没找到这个订单号和邮箱对应的 Polar 订单。请对照付款后显示的页面或 Polar 收据核对，或者等一分钟再试。",
+  "Polar order ID": "Polar 订单号",
+  "Shown on the page after paying": "付款后的页面上会显示",
+  "Email you paid with on Polar": "在 Polar 付款时用的邮箱",
+  "Buy on Afdian (Alipay, WeChat)": "在爱发电购买（支付宝、微信）",
+  "Buy (card, Apple Pay, Google Pay)": "购买（银行卡、Apple Pay、Google Pay）"
 }

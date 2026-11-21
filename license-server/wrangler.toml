@@ -13,3 +13,9 @@ id = "KV_NAMESPACE_ID"
 # code. Not a secret, so it lives here (comma-separated for more).
 [vars]
 AFDIAN_PLANS = "548a65dee44b11f193bd52540025c377"
+
+# revoked.txt is bundled as text.
+[[rules]]
+type = "Text"
+globs = ["**/*.txt"]
+fallthrough = true

@@ -60,6 +60,11 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
           Navigator.pop(context, true);
           return;
         }
+        if (result == ClaimResult.devices) {
+          Navigator.pop(context, false);
+          if (context.mounted) unawaited(manageLicenseDevices(context, learning));
+          return;
+        }
         setState(() {
           busy = false;
           error = switch (result) {
@@ -69,6 +74,7 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
                 PurchaseSource.kofi => tr('No Ko-fi purchase with this transaction ID and email was found yet. Check both against your Ko-fi receipt, or wait a minute and try again.'),
               },
             ClaimResult.busy => tr('Too many tries. Wait a minute and try again.'),
+            ClaimResult.revoked => tr('This code has been revoked because it was shared publicly. If you bought it, write to the author with your order number.'),
             _ => tr('Could not reach the license server. Check your connection, or ask for your code by message.'),
           };
         });
@@ -313,10 +319,18 @@ Future<bool> enterLicenseCode(BuildContext context, Learning learning) async {
           TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
           FilledButton(
             onPressed: () async {
-              if (await learning.enterLicense(field.text)) {
-                if (context.mounted) Navigator.pop(context, true);
-              } else {
-                setState(() => error = tr('This license code is not valid. Copy the whole code and try again.'));
+              final result = await learning.enterLicense(field.text);
+              if (!context.mounted) return;
+              switch (result) {
+                case LicenseResult.ok || LicenseResult.offline:
+                  Navigator.pop(context, true);
+                case LicenseResult.devices:
+                  Navigator.pop(context, false);
+                  unawaited(manageLicenseDevices(context, learning));
+                case LicenseResult.revoked:
+                  setState(() => error = tr('This code has been revoked because it was shared publicly. If you bought it, write to the author with your order number.'));
+                case LicenseResult.invalid:
+                  setState(() => error = tr('This license code is not valid. Copy the whole code and try again.'));
               }
             },
             child: Text(tr('OK')),
@@ -359,6 +373,17 @@ class _LearningPage extends StatelessWidget {
         builder: (context, _) {
           final colors = Theme.of(context).colorScheme;
           return ListView(padding: const EdgeInsets.only(bottom: 40), children: [
+            if (learning.licenseStopped)
+              NormalItem(
+                title: tr('The learning pack is stopped on this device'),
+                subtitle: switch (learning.licenseStopReason) {
+                  'revoked' => tr('This code has been revoked because it was shared publicly. If you bought it, write to the author with your order number.'),
+                  'devices' => tr('This device was removed from the code, which is now on as many devices as it allows. Remove one you no longer use to use it here.'),
+                  _ => tr('The license server could not be reached since the code was entered. Connect to the internet and open Lumtub again.'),
+                },
+                leading: Icon(AppIcons.key),
+                onTap: learning.licenseStopReason == 'devices' ? () => unawaited(manageLicenseDevices(context, learning)) : null,
+              ),
             if (!learning.licensed) _Pitch(learning: learning),
             if (learning.licensed)
               NormalItem(
@@ -372,6 +397,13 @@ class _LearningPage extends StatelessWidget {
                   },
                   child: Text(tr('Remove')),
                 ),
+              ),
+            if (learning.licensed)
+              NormalItem(
+                title: tr('Devices'),
+                subtitle: tr('A code works on up to {0} devices; remove one you no longer use', ['${learning.maxDevices}']),
+                leading: Icon(AppIcons.info),
+                onTap: () => unawaited(manageLicenseDevices(context, learning)),
               ),
             for (final pack in DictionaryPack.values) _PackTile(learning: learning, pack: pack),
             SwitchItem(
@@ -683,6 +715,85 @@ class _VocabularyPageState extends State<_VocabularyPage> {
 /// licenses ask to be shown in the app. The dictionaries stay open data:
 /// the pack sells the app's features, not the data, which anyone may
 /// copy under these licenses.
+/// The devices a code is active on, with a way to remove each; for a code
+/// that could not be activated here ([Learning.pendingLicense]), removing
+/// one lets it activate here.
+Future<void> manageLicenseDevices(BuildContext context, Learning learning) async {
+  final pending = learning.pendingLicense;
+  final license = pending ?? learning.license;
+  if (license == null) return;
+  final here = await learning.thisDevice();
+  var list = await learning.loadDevices(license: license);
+  var busy = false;
+  String? error;
+  if (!context.mounted) return;
+  await showDialog<void>(
+    context: context,
+    builder: (context) => StatefulBuilder(builder: (context, setState) {
+      final colors = Theme.of(context).colorScheme;
+      Future<void> remove(String id) async {
+        setState(() => busy = true);
+        final ok = await learning.removeDevice(id, license: license);
+        list = learning.devices;
+        if (!context.mounted) return;
+        setState(() {
+          busy = false;
+          error = ok ? null : tr('Could not reach the license server. Check your connection, or ask for your code by message.');
+        });
+      }
+
+      Future<void> activateHere() async {
+        setState(() => busy = true);
+        final result = await learning.enterLicense(license.code);
+        if (!context.mounted) return;
+        if (result == LicenseResult.ok || result == LicenseResult.offline) {
+          Navigator.pop(context);
+          return;
+        }
+        list = learning.devices;
+        setState(() {
+          busy = false;
+          error = result == LicenseResult.devices ? tr('Still on as many devices as it allows. Remove one first.') : tr('This code has been revoked because it was shared publicly. If you bought it, write to the author with your order number.');
+        });
+      }
+
+      final waiting = pending != null && (list?.length ?? learning.maxDevices) >= learning.maxDevices;
+      return AlertDialog(
+        title: Text(tr('Devices')),
+        content: SizedBox(
+          width: 440,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(
+              pending != null
+                  ? tr('This code is on {0} devices, the most it allows. Remove one you no longer use, then activate it here.', ['${learning.maxDevices}'])
+                  : tr('A code works on up to {0} devices. Only the kind of system is kept, never the computer\'s name.', ['${learning.maxDevices}']),
+            ),
+            const SizedBox(height: 8),
+            if (list == null)
+              Text(tr('Could not reach the license server. Check your connection, or ask for your code by message.'), style: TextStyle(color: colors.error))
+            else
+              for (final d in list!)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  title: Text(d.id == here ? '${d.label} · ${tr('This device')}' : d.label),
+                  subtitle: Text(tr('Last seen {0}', [d.seen])),
+                  trailing: d.id == here ? null : TextButton(onPressed: busy ? null : () => unawaited(remove(d.id)), child: Text(tr('Remove'))),
+                ),
+            if (error != null) Text(error!, style: TextStyle(color: colors.error)),
+            const SizedBox(height: 8),
+            SelectableText(tr('Code ID: {0}', [license.id]), style: TextStyle(fontSize: 11, color: colors.outline)),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
+          if (pending != null) FilledButton(onPressed: busy || waiting ? null : () => unawaited(activateHere()), child: Text(tr('Activate here'))),
+        ],
+      );
+    }),
+  );
+}
+
 const learningDataNotice = '''English: the word list, word forms and exam tags of ECDICT by skywind3000 (MIT, github.com/skywind3000/ECDICT). Chinese meanings from the Mandarin translations in the English Wiktionary and from the Chinese Wiktionary (CC BY-SA 4.0, wiktionary.org) as extracted by kaikki.org; where neither has a word, WikDict's translations (CC BY-SA 4.0, wikdict.com), marked as reference translations. Pronunciations (IPA) from the English Wiktionary. Frequency ranks from wordfreq by Robyn Speer (data CC BY-SA 4.0). English meanings from the Simple English and English Wiktionaries (CC BY-SA 4.0, wiktionary.org) as extracted by kaikki.org, and from WordNet 3.0, © Princeton University (WordNet license). CEFR levels: The CEFR-J Wordlist Version 1.5, compiled by Yukio Tono, Tokyo University of Foreign Studies (cefr-j.org), and the Octanove Vocabulary Profile C1/C2 1.0 by Octanove Labs (CC BY-SA 4.0), via github.com/openlanguageprofiles/olp-en-cefrj.
 
 Japanese: JMdict, © Electronic Dictionary Research and Development Group (CC BY-SA 4.0, edrdg.org/edrdg/licence.html), via jmdict-simplified; Chinese meanings from the Chinese Wiktionary (CC BY-SA 4.0) and WikDict (CC BY-SA 4.0, wikdict.com).

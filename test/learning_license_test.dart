@@ -39,4 +39,22 @@ void main() {
     expect(LearningLicense.parse('hello', key: _testKey), isNull);
     expect(LearningLicense.parse('LT1.!!!.???', key: _testKey), isNull);
   });
+
+  test('an activation receipt counts only for its code and device', () {
+    const key = [20, 8, 140, 165, 60, 26, 206, 148, 234, 252, 228, 161, 119, 136, 152, 186, 144, 179, 30, 117, 254, 110, 148, 214, 83, 62, 77, 48, 233, 223, 170, 60];
+    const receipt = 'LA1.eyJjIjoiMDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYiLCJ2IjoiZmVkY2JhOTg3NjU0MzIxMGZlZGNiYTk4NzY1NDMyMTAiLCJ0IjoiMjAyNi0xMS0yMSJ9.VHJam8_1fGVgC_dDkL-3TiCYf8C17rdDd9R8mVG0-5cwNRo7yFmNdiWQfErXpUSecmdRY6l4ZWkf_R7Ij1KZBw';
+    const code = '0123456789abcdef0123456789abcdef';
+    const device = 'fedcba9876543210fedcba9876543210';
+    expect(ActivationReceipt.verify(receipt, codeId: code, device: device, key: key)?.day, DateTime(2026, 11, 21));
+    expect(ActivationReceipt.verify(receipt, codeId: code, device: '0' * 32, key: key), isNull);
+    expect(ActivationReceipt.verify(receipt, codeId: '1' * 32, device: device, key: key), isNull);
+    expect(ActivationReceipt.verify(receipt, codeId: code, device: device), isNull);
+    expect(ActivationReceipt.verify(receipt.replaceFirst('LA1.e', 'LA1.f'), codeId: code, device: device, key: key), isNull);
+  });
+
+  test('a code id is the start of its SHA-256', () {
+    final license = LearningLicense.parse(_good, key: _testKey)!;
+    expect(license.id, hasLength(32));
+    expect(license.id, matches(RegExp(r'^[0-9a-f]{32}$')));
+  });
 }

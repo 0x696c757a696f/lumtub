@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
+
 import 'ed25519.dart';
 
 /// A learning pack license: who it was made for and when, signed with
@@ -15,6 +17,10 @@ class LearningLicense {
 
   /// The code as it was entered, kept to check again at the next start.
   final String code;
+
+  /// The code's id: how the license server keeps its devices and how a
+  /// code is named in its list of revoked ones.
+  String get id => sha256.convert(utf8.encode(code)).toString().substring(0, 32);
 
   static const _prefix = 'LT1.';
   static const _context = 'lumtub-license-v1\n';
@@ -70,4 +76,37 @@ class SignedSums {
 
   /// The SHA-256 sum listed for [name], or null.
   String? of(String name) => RegExp('^([0-9a-f]{64}) [ *]?${RegExp.escape(name)}\\s*\$', multiLine: true).firstMatch(text)?.group(1);
+}
+
+/// The license server's word that a code is active on one device: the
+/// code's id, the device and the day, signed with the license key under
+/// its own context. Kept beside the code, it lets the pack work offline
+/// on that device; copied to another, it does not match.
+class ActivationReceipt {
+  const ActivationReceipt._(this.day);
+
+  /// The day the server last confirmed it.
+  final DateTime day;
+
+  static const _prefix = 'LA1.';
+  static const _context = 'lumtub-activation-v1\n';
+
+  /// The receipt in [text] when it is signed and for [codeId] on
+  /// [device], else null.
+  static ActivationReceipt? verify(String text, {required String codeId, required String device, List<int> key = LearningLicense.publicKey}) {
+    if (!text.startsWith(_prefix)) return null;
+    final parts = text.substring(_prefix.length).split('.');
+    if (parts.length != 2) return null;
+    try {
+      final payload = base64Url.decode(base64Url.normalize(parts[0]));
+      final signature = base64Url.decode(base64Url.normalize(parts[1]));
+      if (!ed25519Verify(publicKey: key, message: [...utf8.encode(_context), ...payload], signature: signature)) return null;
+      final fields = jsonDecode(utf8.decode(payload));
+      if (fields is! Map || fields['c'] != codeId || fields['v'] != device) return null;
+      final day = DateTime.tryParse('${fields['t']}');
+      return day == null ? null : ActivationReceipt._(day);
+    } on FormatException {
+      return null;
+    }
+  }
 }

@@ -13,6 +13,15 @@
 //              2011/83 art. 16(m), Codice del consumo art. 59). The first
 //              consent of each order is kept with its time.
 //
+// POST /activate {code, device, label} records a device for a code (at
+//              most MAX_DEVICES) and returns {receipt, devices}: a signed
+//              receipt that the code is active on that device, which the
+//              app keeps and asks again for every 30 days. {error:
+//              "revoked"} for a code in revoked.txt, {error: "devices",
+//              devices} when the code is on as many devices as allowed.
+// POST /deactivate {code, device} removes a device from a code's list;
+//              whoever holds the code can, so a buyer frees a slot alone.
+//
 // 爱发电 orders are checked with 爱发电's own API when claimed, so they
 // need no webhook. Codes are the same Ed25519-signed codes the signing
 // page makes; the app checks them offline.
@@ -25,6 +34,8 @@
 // POLAR_WEBHOOK_SECRET (Polar › Settings › Webhooks), and optionally the
 // var POLAR_PRODUCTS (comma-separated product ids that count).
 
+import revokedList from './revoked.txt';
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -33,6 +44,8 @@ export default {
       if (request.method === 'POST' && url.pathname === '/kofi') return await kofi(request, env);
       if (request.method === 'POST' && url.pathname === '/polar') return await polar(request, env);
       if (request.method === 'POST' && url.pathname === '/claim') return await claim(request, env);
+      if (request.method === 'POST' && url.pathname === '/activate') return await activate(request, env);
+      if (request.method === 'POST' && url.pathname === '/deactivate') return await deactivate(request, env);
       if (request.method === 'GET' && url.pathname === '/') return reply({ ok: true });
       if (request.method === 'GET' && url.pathname === '/polar/thanks') return await polarThanks(url, env);
       return reply({ error: 'not found' }, 404);
@@ -183,6 +196,7 @@ async function claim(request, env) {
     consented = { version: consent, at: new Date().toISOString() };
     await env.LICENSES.put(consentKey, JSON.stringify(consented));
   }
+  if (isRevoked(buyer.name, '')) return reply({ error: 'revoked' }, 403);
   const key = `code:${source}:${order}`;
   let code = await env.LICENSES.get(key);
   if (!code) {
@@ -190,6 +204,95 @@ async function claim(request, env) {
     await env.LICENSES.put(key, code);
   }
   return reply({ code, name: buyer.name, consented: consented.at });
+}
+
+// Devices --------------------------------------------------------------
+
+const MAX_DEVICES = 5;
+
+// The public half of LICENSE_KEY, as in the app (lib/learning/license.dart).
+const PUBLIC_KEY = new Uint8Array([
+  92, 203, 159, 16, 74, 151, 175, 115, 174, 26, 30, 150, 154, 75, 64, 178,
+  245, 5, 87, 31, 181, 23, 50, 133, 133, 226, 91, 128, 111, 232, 16, 148,
+]);
+
+// revoked.txt: one code a line, by the name in it ("Polar #a1b2c3") or
+// by its id (the first 32 hex digits of its SHA-256, which the app
+// shows); a note can follow " # ", and a line starting with # is one.
+const REVOKED = new Set(String(revokedList).split('\n').filter((l) => !l.trim().startsWith('#')).map((l) => l.split(' # ')[0].trim().toLowerCase()).filter(Boolean));
+const isRevoked = (name, id) => REVOKED.has(clean(name).toLowerCase()) || (id !== '' && REVOKED.has(id));
+
+const fromB64url = (text) => Uint8Array.from(atob(text.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - text.length % 4) % 4)), (c) => c.charCodeAt(0));
+
+// The code's fields when [text] is a code signed with LICENSE_KEY.
+async function checkCode(text) {
+  const code = clean(text).replace(/\s/g, '');
+  const parts = code.startsWith('LT1.') ? code.slice(4).split('.') : [];
+  if (parts.length !== 2 || code.length > 2000) return null;
+  try {
+    const payload = fromB64url(parts[0]);
+    const signature = fromB64url(parts[1]);
+    const context = new TextEncoder().encode('lumtub-license-v1\n');
+    const message = new Uint8Array(context.length + payload.length);
+    message.set(context);
+    message.set(payload, context.length);
+    const key = await crypto.subtle.importKey('raw', PUBLIC_KEY, { name: 'Ed25519' }, false, ['verify']);
+    if (!await crypto.subtle.verify({ name: 'Ed25519' }, key, signature, message)) return null;
+    const fields = JSON.parse(new TextDecoder().decode(payload));
+    if (fields?.p !== 'learn') return null;
+    return { code, id: (await sha256(code)).slice(0, 32), name: clean(fields.n) };
+  } catch {
+    return null;
+  }
+}
+
+async function tooMany(request, env) {
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const slot = `tries:${ip}:${Math.floor(Date.now() / 60000)}`;
+  const tries = Number(await env.LICENSES.get(slot)) || 0;
+  if (tries >= 20) return true;
+  await env.LICENSES.put(slot, String(tries + 1), { expirationTtl: 120 });
+  return false;
+}
+
+const shown = (devices) => devices.map(({ id, label, seen }) => ({ id, label, seen }));
+
+async function activate(request, env) {
+  if (await tooMany(request, env)) return reply({ error: 'busy' }, 429);
+  const ask = await request.json().catch(() => ({}));
+  const device = clean(ask.device).toLowerCase();
+  const label = clean(ask.label).slice(0, 80);
+  if (!/^[0-9a-f]{32}$/.test(device)) return reply({ error: 'device' }, 400);
+  const code = await checkCode(ask.code);
+  if (!code) return reply({ error: 'code' }, 400);
+  if (isRevoked(code.name, code.id)) return reply({ error: 'revoked' }, 403);
+  const key = `devices:${code.id}`;
+  const devices = JSON.parse((await env.LICENSES.get(key)) || '[]');
+  const today = new Date().toISOString().slice(0, 10);
+  const known = devices.find((d) => d.id === device);
+  if (known) {
+    known.seen = today;
+    if (label) known.label = label;
+  } else if (devices.length >= MAX_DEVICES) {
+    return reply({ error: 'devices', devices: shown(devices), max: MAX_DEVICES }, 409);
+  } else {
+    devices.push({ id: device, label, added: today, seen: today });
+  }
+  await env.LICENSES.put(key, JSON.stringify(devices));
+  const receipt = await signWith(env, { c: code.id, v: device, t: today }, 'lumtub-activation-v1\n', 'LA1.');
+  return reply({ receipt, devices: shown(devices), max: MAX_DEVICES });
+}
+
+async function deactivate(request, env) {
+  if (await tooMany(request, env)) return reply({ error: 'busy' }, 429);
+  const ask = await request.json().catch(() => ({}));
+  const device = clean(ask.device).toLowerCase();
+  const code = await checkCode(ask.code);
+  if (!code) return reply({ error: 'code' }, 400);
+  const key = `devices:${code.id}`;
+  const devices = JSON.parse((await env.LICENSES.get(key)) || '[]').filter((d) => d.id !== device);
+  await env.LICENSES.put(key, JSON.stringify(devices));
+  return reply({ devices: shown(devices), max: MAX_DEVICES });
 }
 
 async function afdianOrder(order, env) {
@@ -215,16 +318,20 @@ async function afdianOrder(order, env) {
 }
 
 async function sign(env, fields) {
+  return signWith(env, fields, 'lumtub-license-v1\n', 'LT1.');
+}
+
+async function signWith(env, fields, contextText, prefix) {
   const der = Uint8Array.from(atob(env.LICENSE_KEY.replace(/\s/g, '')), (c) => c.charCodeAt(0));
   const key = await crypto.subtle.importKey('pkcs8', der, { name: 'Ed25519' }, false, ['sign']);
   const payload = new TextEncoder().encode(JSON.stringify(fields));
-  const context = new TextEncoder().encode('lumtub-license-v1\n');
+  const context = new TextEncoder().encode(contextText);
   const message = new Uint8Array(context.length + payload.length);
   message.set(context);
   message.set(payload, context.length);
   const signature = await crypto.subtle.sign({ name: 'Ed25519' }, key, message);
   const b64url = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  return `LT1.${b64url(payload)}.${b64url(signature)}`;
+  return `${prefix}${b64url(payload)}.${b64url(signature)}`;
 }
 
 // MD5, which 爱发电's API signs with and Web Crypto lacks (RFC 1321).

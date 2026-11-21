@@ -12,6 +12,7 @@ import '../app_log.dart';
 import '../l10n/l10n.dart' show currentLanguage;
 import '../zip_archive.dart' show extractZip;
 import 'chinese_dictionary.dart';
+import 'device_id.dart';
 import 'english_dictionary.dart';
 import 'japanese_dictionary.dart';
 import 'latin_language.dart';
@@ -36,7 +37,22 @@ enum PackState { missing, downloading, downloaded, loading, ready, failed }
 const learningConsentVersion = 'digital-content-v1';
 
 /// How asking the license server for a bought code went.
-enum ClaimResult { ok, notFound, busy, offline }
+enum ClaimResult { ok, notFound, busy, offline, revoked, devices }
+
+/// How entering a code went. [offline]: it is a code, kept, and works
+/// while the server is asked again at each start, for [Learning.grace].
+enum LicenseResult { ok, invalid, revoked, devices, offline }
+
+/// A device a code is active on, as the license server lists it.
+class LicenseDevice {
+  const LicenseDevice({required this.id, required this.label, required this.seen});
+  final String id;
+  final String label;
+  final String seen;
+}
+
+/// What the license server said about a code on this device.
+enum _Activation { ok, revoked, devices, offline }
 
 /// A dictionary the learning pack downloads.
 enum DictionaryPack {
@@ -89,6 +105,28 @@ class Learning extends ChangeNotifier {
 
   AppDirectories? _directories;
   LearningLicense? _license;
+
+  /// The server's signed word that [_license] is active here ([_receipt]),
+  /// the day it last said so, when the code was entered without one (the
+  /// server out of reach), and whether the server has since refused it
+  /// here: revoked, or this device taken off a code on its most devices.
+  String _receipt = '';
+  DateTime? _receiptDay;
+  DateTime? _entered;
+  bool _blocked = false;
+  String? _deviceId;
+
+  /// How long a code works on a device the server could not be asked for.
+  static const grace = Duration(days: 14);
+
+  /// How often the server is asked again whether a code is still good.
+  static const recheck = Duration(days: 30);
+
+  /// A code entered while all its device slots were taken, kept until a
+  /// device is removed; and the devices the server last listed.
+  LearningLicense? pendingLicense;
+  List<LicenseDevice> devices = const [];
+  int maxDevices = 5;
   bool _showPinyin = true;
 
   /// Korean in letters above the words; off by default, as Hangul reads
@@ -107,7 +145,7 @@ class Learning extends ChangeNotifier {
 
   @override
   void notifyListeners() {
-    final key = Object.hashAll([_license, _showPinyin, _showRomanization, _englishLevel, for (final p in _packs.values) p.dictionary]);
+    final key = Object.hashAll([_license, licensed, _showPinyin, _showRomanization, _englishLevel, for (final p in _packs.values) p.dictionary]);
     if (key != _lastView) {
       _lastView = key;
       viewChanges.value++;
@@ -118,7 +156,15 @@ class Learning extends ChangeNotifier {
   Object? _lastView;
 
   LearningLicense? get license => _license;
-  bool get licensed => _license != null;
+  bool get licensed => _license != null && !_blocked && (_receiptDay != null || (_entered != null && DateTime.now().difference(_entered!) < grace));
+
+  /// A code is kept but does not unlock here: revoked, taken off this
+  /// device, or never confirmed by the server within [grace].
+  bool get licenseStopped => _license != null && !licensed;
+
+  /// Why, for [licenseStopped]: 'revoked', 'devices' or 'offline'.
+  String _stopReason = '';
+  String get licenseStopReason => _blocked ? _stopReason : 'offline';
   bool get showPinyin => _showPinyin;
   bool get showRomanization => _showRomanization;
 
@@ -275,6 +321,10 @@ class Learning extends ChangeNotifier {
           if (level is int) _englishLevel = level >= 0 && level < EnglishLevel.beyond.index ? level : null;
           final code = json['license'];
           if (code is String && code.isNotEmpty) _license = await Isolate.run(() => LearningLicense.parse(code));
+          _receipt = '${json['activation'] ?? ''}';
+          _entered = DateTime.tryParse('${json['entered'] ?? ''}');
+          _blocked = json['blocked'] == true;
+          _stopReason = '${json['stopped'] ?? ''}';
         }
       }
     } catch (e) {
@@ -282,6 +332,20 @@ class Learning extends ChangeNotifier {
     }
     for (final pack in DictionaryPack.values) {
       if (await _fileOf(pack)!.exists()) _packs[pack]!.state = pack.wiktionary ? PackState.downloaded : PackState.loading;
+    }
+    if (_license != null) {
+      final license = _license!;
+      final device = await _device();
+      final receipt = _receipt;
+      _receiptDay = await Isolate.run(() => ActivationReceipt.verify(receipt, codeId: license.id, device: device)?.day);
+      // A code kept before devices were counted gets the same grace as
+      // one entered offline.
+      if (_receiptDay == null && _entered == null) {
+        _entered = DateTime.now();
+        await _save();
+      }
+      // Asked again now and then, and at once when never confirmed here.
+      if (_receiptDay == null || DateTime.now().difference(_receiptDay!) > recheck) unawaited(_checkIn());
     }
     notifyListeners();
     if (licensed) {
@@ -338,18 +402,167 @@ class Learning extends ChangeNotifier {
     return signed;
   }
 
-  /// Checks [code] and keeps it when it is a license. Returns whether it is.
-  Future<bool> enterLicense(String code) async {
+  /// Checks [code], activates it on this device and keeps it when it is a
+  /// license.
+  Future<LicenseResult> enterLicense(String code) async {
     final license = await Isolate.run(() => LearningLicense.parse(code));
-    if (license == null) return false;
+    if (license == null) return LicenseResult.invalid;
+    final (answer, receipt) = await _activate(license);
+    switch (answer) {
+      case _Activation.revoked:
+        return LicenseResult.revoked;
+      case _Activation.devices:
+        pendingLicense = license;
+        notifyListeners();
+        return LicenseResult.devices;
+      case _Activation.ok:
+      case _Activation.offline:
+        break;
+    }
+    final wasLicensed = licensed;
+    pendingLicense = null;
     _license = license;
+    _blocked = false;
+    _stopReason = '';
+    _receipt = receipt ?? '';
+    _receiptDay = receipt == null ? null : DateTime.now();
+    _entered = receipt == null ? DateTime.now() : null;
     await _save();
     notifyListeners();
-    unawaited(_book?.load());
-    _loadAll();
-    unawaited(_updateAll());
-    return true;
+    if (!wasLicensed) {
+      unawaited(_book?.load());
+      _loadAll();
+      unawaited(_updateAll());
+    }
+    return answer == _Activation.ok ? LicenseResult.ok : LicenseResult.offline;
   }
+
+  Future<String> _device() async => _deviceId ??= await learningDeviceId(_directories!.data);
+
+  /// The license server's address, published on the `learning` release so
+  /// it can move without an app update.
+  static Future<Uri?> _server(http.Client client) async {
+    final where = await client.get(Uri.parse('$learningPackRelease/license-server.txt')).timeout(const Duration(seconds: 20));
+    final server = where.statusCode == 200 ? Uri.tryParse(where.body.trim()) : null;
+    return server == null || server.scheme != 'https' ? null : server;
+  }
+
+  void _takeDevices(Object? answer) {
+    if (answer is! Map) return;
+    final list = answer['devices'];
+    if (list is List) {
+      devices = [
+        for (final d in list)
+          if (d is Map) LicenseDevice(id: '${d['id']}', label: '${d['label'] ?? ''}', seen: '${d['seen'] ?? ''}'),
+      ];
+    }
+    if (answer['max'] is int) maxDevices = answer['max'] as int;
+  }
+
+  /// Asks the server to count this device for [license]; the receipt
+  /// when it does.
+  Future<(_Activation, String?)> _activate(LearningLicense license) async {
+    final client = http.Client();
+    try {
+      final server = await _server(client);
+      if (server == null) return (_Activation.offline, null);
+      final response = await client
+          .post(server.resolve('/activate'), headers: {'content-type': 'application/json'}, body: jsonEncode({'code': license.code, 'device': await _device(), 'label': learningDeviceLabel()}))
+          .timeout(const Duration(seconds: 20));
+      final answer = jsonDecode(response.body);
+      _takeDevices(answer);
+      if (response.statusCode == 403 && answer is Map && answer['error'] == 'revoked') return (_Activation.revoked, null);
+      if (response.statusCode == 409) return (_Activation.devices, null);
+      final receipt = answer is Map ? answer['receipt'] : null;
+      if (response.statusCode != 200 || receipt is! String) return (_Activation.offline, null);
+      final device = await _device();
+      final id = license.id;
+      final valid = await Isolate.run(() => ActivationReceipt.verify(receipt, codeId: id, device: device) != null);
+      return valid ? (_Activation.ok, receipt) : (_Activation.offline, null);
+    } catch (e) {
+      logWarn('Could not ask the license server about this device: $e');
+      return (_Activation.offline, null);
+    } finally {
+      client.close();
+    }
+  }
+
+  /// Asks the server again whether the kept code is still good here. Out
+  /// of reach changes nothing; revoked, or this device taken off a full
+  /// code, stops it here.
+  Future<void> _checkIn() async {
+    final license = _license;
+    if (license == null) return;
+    final (answer, receipt) = await _activate(license);
+    if (_license != license) return;
+    final was = licensed;
+    switch (answer) {
+      case _Activation.ok:
+        _receipt = receipt!;
+        _receiptDay = DateTime.now();
+        _entered = null;
+        _blocked = false;
+      case _Activation.revoked:
+        _blocked = true;
+        _stopReason = 'revoked';
+        logWarn('The learning pack code was revoked');
+      case _Activation.devices:
+        _blocked = true;
+        _stopReason = 'devices';
+        pendingLicense = license;
+        logWarn('This device is no longer among the learning pack code\'s devices');
+      case _Activation.offline:
+        return;
+    }
+    await _save();
+    notifyListeners();
+    if (!was && licensed) {
+      unawaited(_book?.load());
+      _loadAll();
+      unawaited(_updateAll());
+    }
+  }
+
+  /// The devices [license] (or the kept code) is active on, fresh from
+  /// the server; null when it is out of reach.
+  Future<List<LicenseDevice>?> loadDevices({LearningLicense? license}) async {
+    final code = license ?? pendingLicense ?? _license;
+    if (code == null) return null;
+    if (code == _license && pendingLicense == null) {
+      await _checkIn();
+      return devices;
+    }
+    final (answer, _) = await _activate(code);
+    if (answer == _Activation.offline) return null;
+    if (answer == _Activation.ok) await enterLicense(code.code);
+    return devices;
+  }
+
+  /// Takes [device] off the code's list, freeing its slot.
+  Future<bool> removeDevice(String device, {LearningLicense? license}) async {
+    final code = license ?? pendingLicense ?? _license;
+    if (code == null) return false;
+    final client = http.Client();
+    try {
+      final server = await _server(client);
+      if (server == null) return false;
+      final response = await client
+          .post(server.resolve('/deactivate'), headers: {'content-type': 'application/json'}, body: jsonEncode({'code': code.code, 'device': device}))
+          .timeout(const Duration(seconds: 20));
+      if (response.statusCode != 200) return false;
+      _takeDevices(jsonDecode(response.body));
+      notifyListeners();
+      return true;
+    } catch (e) {
+      logWarn('Could not remove a device from the learning pack code: $e');
+      return false;
+    } finally {
+      client.close();
+    }
+  }
+
+  /// This device's id as the server counts it, to mark it in the list.
+  Future<String?> thisDevice() async => _directories == null ? null : _device();
 
   /// When the server recorded the buyer's consent for the last code it
   /// sent, for the confirmation shown after unlocking.
@@ -363,9 +576,8 @@ class Learning extends ChangeNotifier {
   Future<ClaimResult> claimLicense({required PurchaseSource source, required String order, String email = ''}) async {
     final client = http.Client();
     try {
-      final where = await client.get(Uri.parse('$learningPackRelease/license-server.txt')).timeout(const Duration(seconds: 20));
-      final server = where.statusCode == 200 ? Uri.tryParse(where.body.trim()) : null;
-      if (server == null || server.scheme != 'https') return ClaimResult.offline;
+      final server = await _server(client);
+      if (server == null) return ClaimResult.offline;
       final response = await client
           .post(
             server.resolve('/claim'),
@@ -374,11 +586,17 @@ class Learning extends ChangeNotifier {
           )
           .timeout(const Duration(seconds: 30));
       if (response.statusCode == 429) return ClaimResult.busy;
+      if (response.statusCode == 403) return ClaimResult.revoked;
       final answer = response.statusCode == 200 ? jsonDecode(response.body) : null;
       final code = answer is Map ? answer['code'] : null;
       lastConsent = answer is Map ? DateTime.tryParse('${answer['consented']}')?.toLocal() : null;
       if (code is! String) return response.statusCode >= 500 ? ClaimResult.offline : ClaimResult.notFound;
-      return await enterLicense(code) ? ClaimResult.ok : ClaimResult.notFound;
+      return switch (await enterLicense(code)) {
+        LicenseResult.ok || LicenseResult.offline => ClaimResult.ok,
+        LicenseResult.revoked => ClaimResult.revoked,
+        LicenseResult.devices => ClaimResult.devices,
+        LicenseResult.invalid => ClaimResult.notFound,
+      };
     } catch (e) {
       logWarn('Could not ask the license server: $e');
       return ClaimResult.offline;
@@ -387,8 +605,18 @@ class Learning extends ChangeNotifier {
     }
   }
 
+  /// Forgets the code here, and frees this device's slot when the server
+  /// can be reached.
   Future<void> removeLicense() async {
+    final license = _license;
+    if (license != null && _directories != null) await removeDevice(await _device(), license: license);
     _license = null;
+    pendingLicense = null;
+    _receipt = '';
+    _receiptDay = null;
+    _entered = null;
+    _blocked = false;
+    _stopReason = '';
     await _save();
     notifyListeners();
   }
@@ -427,7 +655,7 @@ class Learning extends ChangeNotifier {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1}));
+      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1}));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }

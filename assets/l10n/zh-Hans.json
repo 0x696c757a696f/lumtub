@@ -3878,5 +3878,18 @@
   "Buy (card, Apple Pay, Google Pay)": "购买（银行卡、Apple Pay、Google Pay）",
   "Data sources and licenses": "数据来源与许可证",
   "The dictionaries are open data: who made them and under which license": "词典都是开放数据：作者和许可证",
-  "Reference translation, matched by spelling: may not fit this sense": "参考译文：按拼写对应，不一定符合这里的意思"
+  "Reference translation, matched by spelling: may not fit this sense": "参考译文：按拼写对应，不一定符合这里的意思",
+  "This code has been revoked because it was shared publicly. If you bought it, write to the author with your order number.": "这个激活码因为被公开分享已经作废。如果你是正常购买的，请带上订单号联系作者。",
+  "The learning pack is stopped on this device": "学习包在这台设备上已停用",
+  "This device was removed from the code, which is now on as many devices as it allows. Remove one you no longer use to use it here.": "这台设备已从激活码中移除，而激活码的设备数已满。移除一台不再使用的设备，就能在这里继续使用。",
+  "The license server could not be reached since the code was entered. Connect to the internet and open Lumtub again.": "输入激活码后一直连不上授权服务器。请联网后重新打开 Lumtub。",
+  "Devices": "设备",
+  "A code works on up to {0} devices; remove one you no longer use": "一个激活码最多可在 {0} 台设备上使用，可以移除不再使用的设备",
+  "Still on as many devices as it allows. Remove one first.": "设备数仍然已满，请先移除一台。",
+  "This code is on {0} devices, the most it allows. Remove one you no longer use, then activate it here.": "这个激活码已在 {0} 台设备上使用，达到上限。移除一台不再使用的设备，再在本机激活。",
+  "A code works on up to {0} devices. Only the kind of system is kept, never the computer's name.": "一个激活码最多可在 {0} 台设备上使用。只记录系统类型，不记录电脑名称。",
+  "This device": "本机",
+  "Last seen {0}": "最近使用 {0}",
+  "Code ID: {0}": "激活码 ID：{0}",
+  "Activate here": "在本机激活"
 }

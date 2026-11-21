@@ -105,4 +105,27 @@ jobs:
           # Where the app's Buy button goes for buyers outside China.
           gh release upload learning license-server/polar-checkout.txt --repo "$GITHUB_REPOSITORY" --clobber
           echo "::notice::Ko-fi webhook URL: $url/kofi"
-          echo "::notice::Polar webhook URL: $url/polar (event order.paid); success URL: $url/polar/thanks?checkout_id={CHECKOUT_ID}"
+          echo "::notice::Polar webhook URL: $url/polar (events order.paid and order.refunded); success URL: $url/polar/thanks?checkout_id={CHECKOUT_ID}"
+          printf 'LICENSE_SERVER=%s\n' "$url" >> "$GITHUB_ENV"
+
+      # A code made here for this check only, never printed or kept:
+      # activating and freeing a device goes through the Durable Object.
+      - name: Check activation
+        if: steps.check.outputs.ready == 'true'
+        env:
+          LICENSE_KEY: ${{ secrets.LUMTUB_LICENSE_KEY }}
+        run: |
+          node --input-type=module -e '
+            import crypto from "node:crypto";
+            const key = crypto.createPrivateKey({ key: Buffer.from(process.env.LICENSE_KEY.replace(/\s/g, ""), "base64"), format: "der", type: "pkcs8" });
+            const payload = Buffer.from(JSON.stringify({ n: "CI check", p: "learn", d: new Date().toISOString().slice(0, 10) }));
+            const signature = crypto.sign(null, Buffer.concat([Buffer.from("lumtub-license-v1\n"), payload]), key);
+            const code = "LT1." + payload.toString("base64url") + "." + signature.toString("base64url");
+            const device = crypto.randomBytes(16).toString("hex");
+            const ask = (path, body) => fetch(process.env.LICENSE_SERVER + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(async (r) => [r.status, await r.json()]);
+            const [status, answer] = await ask("/activate", { code, device, label: "CI" });
+            if (status !== 200 || !String(answer.receipt).startsWith("LA1.") || !answer.devices.some((d) => d.id === device)) { console.log("::error::activation answered", status, answer.error ?? ""); process.exit(1); }
+            const [freed, after] = await ask("/deactivate", { code, device });
+            if (freed !== 200 || after.devices.some((d) => d.id === device)) { console.log("::error::deactivation answered", freed); process.exit(1); }
+            console.log("Activation and deactivation work");
+          '

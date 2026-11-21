@@ -7,7 +7,6 @@ import 'package:ffi/ffi.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
 import 'translation.dart' show TranslationException;
-import 'translation_services.dart';
 
 /// A subtitle file as timed paragraphs for AI 总结, cut by lumtub_core
 /// into requests of about [budget] characters, at most [most] of them.
@@ -25,6 +24,10 @@ Future<SummaryTranscript> summaryTranscript(String source, {int budget = 12000, 
   if (json is! Map) return (chunks: const <String>[], cut: false);
   return (chunks: [for (final c in json['chunks'] is List ? json['chunks'] as List : const []) '$c'], cut: json['cut'] == true);
 }
+
+/// Asks the AI for one answer to [user] under [system], such as
+/// [Intelligence.complete].
+typedef AiComplete = Future<String> Function(String system, String user);
 
 /// The language AI 总结 is written in: the interface's.
 String get summaryLanguage => switch (currentLanguage.tag) {
@@ -48,19 +51,19 @@ String _clean(String reply) => reply.replaceAll(RegExp(r'<think>[\s\S]*?</think>
 
 /// The summary of [title] from [transcript]: one request for a short video,
 /// notes per part and a summary of them for a long one.
-Future<String> summarizeTranscript(AiTranslator ai, String title, SummaryTranscript transcript, {void Function(int done, int total)? onProgress}) async {
+Future<String> summarizeTranscript(AiComplete complete, String title, SummaryTranscript transcript, {void Function(int done, int total)? onProgress}) async {
   final chunks = transcript.chunks;
   if (chunks.isEmpty) throw TranslationException(tr('The subtitles are empty, so there is nothing to summarize'));
   final system = _system(summaryLanguage);
-  if (chunks.length == 1) return _clean(await ai.complete(system, 'Title: $title\n\nTranscript:\n${chunks.first}'));
+  if (chunks.length == 1) return _clean(await complete(system, 'Title: $title\n\nTranscript:\n${chunks.first}'));
   final notes = <String>[];
   for (var i = 0; i < chunks.length; i++) {
     onProgress?.call(i, chunks.length + 1);
-    notes.add(_clean(await ai.complete(_partSystem, 'Title: $title\nPart ${i + 1} of ${chunks.length}.\n\n${chunks[i]}')));
+    notes.add(_clean(await complete(_partSystem, 'Title: $title\nPart ${i + 1} of ${chunks.length}.\n\n${chunks[i]}')));
   }
   onProgress?.call(chunks.length, chunks.length + 1);
   final note = transcript.cut ? '\n\n(The transcript was too long; only its first part is covered.)' : '';
-  return _clean(await ai.complete(system, 'Title: $title\n\nNotes on each part of the transcript, in order:\n${notes.join('\n')}$note'));
+  return _clean(await complete(system, 'Title: $title\n\nNotes on each part of the transcript, in order:\n${notes.join('\n')}$note'));
 }
 
 String _clock(Duration time) {
@@ -76,13 +79,13 @@ bool canSummarizeDescription(String description, List<({Duration start, String t
 
 /// The summary of a video without subtitles, from its [description] and
 /// [chapters] only, opening with a line that says so.
-Future<String> summarizeDescription(AiTranslator ai, String title, String description, List<({Duration start, String title})> chapters) async {
+Future<String> summarizeDescription(AiComplete complete, String title, String description, List<({Duration start, String title})> chapters) async {
   final system = 'You summarize a YouTube video that has no transcript, from its title, description and chapter list only. Write in $summaryLanguage. '
       'Start with one or two sentences on what the video is likely about. Then, if there are chapters, list them as short bullets starting with "- ", '
       'each beginning with its time in square brackets, like [12:34]; otherwise list the main points the description makes. '
       'Use only what is given, say nothing about what is not there, and do not add a heading or a closing remark.';
   final text = description.length > 6000 ? description.substring(0, 6000) : description;
   final list = chapters.isEmpty ? '' : '\n\nChapters:\n${[for (final c in chapters) '[${_clock(c.start)}] ${c.title}'].join('\n')}';
-  final summary = _clean(await ai.complete(system, 'Title: $title\n\nDescription:\n$text$list'));
+  final summary = _clean(await complete(system, 'Title: $title\n\nDescription:\n$text$list'));
   return '${tr('This video has no subtitles. This summary uses only the title, description and chapters, so it may be incomplete.')}\n\n$summary';
 }

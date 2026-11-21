@@ -144,6 +144,60 @@ class LocalDb {
   }
 }
 
+/// Texts made for a video (transcripts and AI summaries), kept in the
+/// same `lumtub.db` as the library by the core's `store_texts`.
+extension LocalDbTexts on LocalDb {
+  /// Whether this core keeps texts; older cores and tests keep files.
+  static bool get available => LocalDb.enabled && (NativeCore.instance?.library.providesSymbol('lumtub_store_texts') ?? false);
+
+  Future<Map<String, dynamic>> _texts(String op, Map<String, Object?> fields) async {
+    final ask = jsonEncode({'path': path, 'op': op, ...fields});
+    final answer = await Isolate.run(() => callCoreJson('lumtub_store_texts', ask));
+    if (answer['error'] case final String error) throw LocalDbException(error, answer['setAside'] as String?);
+    return answer;
+  }
+
+  /// Keeps [body] as [video]'s transcript in [lang]; of [origin], only the
+  /// newest [keep] stay (0 keeps all).
+  Future<void> putTranscript(String video, String lang, String origin, String body, {String model = '', int keep = 0}) =>
+      _texts('transcript.put', {'video': video, 'lang': lang, 'origin': origin, 'model': model, 'body': body, 'keep': keep});
+
+  /// [video]'s transcripts, newest first.
+  Future<List<SavedTranscript>> transcripts(String video, {List<String> origins = const []}) async {
+    final answer = await _texts('transcript.get', {'video': video, 'origins': origins});
+    return [
+      for (final t in answer['transcripts'] is List ? answer['transcripts'] as List : const [])
+        if (t is Map)
+          (
+            lang: '${t['lang']}',
+            origin: '${t['origin']}',
+            model: '${t['model'] ?? ''}',
+            body: '${t['body'] ?? ''}',
+            created: DateTime.fromMillisecondsSinceEpoch(((t['created'] as num?) ?? 0).toInt() * 1000),
+          ),
+    ];
+  }
+
+  /// Forgets [video]'s transcripts (all videos when empty), of [origin]
+  /// only when given.
+  Future<void> forgetTranscripts({String video = '', String origin = ''}) => _texts('transcript.forget', {'video': video, 'origin': origin});
+
+  Future<void> putSummary(String video, String lang, String provider, String body, {int keep = 0}) =>
+      _texts('summary.put', {'video': video, 'lang': lang, 'provider': provider, 'body': body, 'keep': keep});
+
+  Future<String?> summary(String video, String lang) async {
+    final found = (await _texts('summary.get', {'video': video, 'lang': lang}))['summary'];
+    return found is Map ? found['body'] as String? : null;
+  }
+
+  /// Forgets [video]'s summaries in every language (all videos when empty).
+  Future<void> forgetSummaries({String video = ''}) => _texts('summary.forget', {'video': video});
+}
+
+/// A transcript kept in `lumtub.db`. [origin] is `human`, `youtube-auto`,
+/// `machine-local` or `machine-cloud`.
+typedef SavedTranscript = ({String lang, String origin, String model, String body, DateTime created});
+
 class LocalDbException implements Exception {
   const LocalDbException(this.message, this.setAside);
   final String message;
@@ -154,7 +208,9 @@ class LocalDbException implements Exception {
   String toString() => setAside == null ? message : '$message (kept as $setAside)';
 }
 
-Map<String, dynamic> _call(String symbol, String ask) {
+/// The JSON answer of the core's [symbol] to [ask], or `{error}`; run it
+/// on another isolate.
+Map<String, dynamic> callCoreJson(String symbol, String ask) {
   final core = NativeCore.instance;
   if (core == null) return {'error': NativeCore.missingMessage};
   try {
@@ -168,6 +224,6 @@ Map<String, dynamic> _call(String symbol, String ask) {
   }
 }
 
-Map<String, dynamic> _read(String ask) => _call('lumtub_store_read', ask);
+Map<String, dynamic> _read(String ask) => callCoreJson('lumtub_store_read', ask);
 
-Map<String, dynamic> _write(String ask) => _call('lumtub_store_write', ask);
+Map<String, dynamic> _write(String ask) => callCoreJson('lumtub_store_write', ask);

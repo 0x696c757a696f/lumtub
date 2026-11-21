@@ -89,7 +89,7 @@ void main() {
       (SettingsCategory.subtitles, 'Subtitle settings', 'Subtitle settings', 'First subtitle language'),
       (SettingsCategory.subtitles, 'Translation & AI', 'Translation & AI', 'Google Translate (free)'),
       (SettingsCategory.style, 'App font', 'App font', 'Microsoft YaHei'),
-      (SettingsCategory.storage, 'Components', 'Components', 'Preparing components…'),
+      (SettingsCategory.storage, 'Components & data packs', 'Components & data packs', 'Preparing components…'),
       (SettingsCategory.about, 'Error log', 'Logs', 'No logs yet'),
     ]) {
       await openRow(tester, category, row);

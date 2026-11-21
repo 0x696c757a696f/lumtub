@@ -13,6 +13,7 @@ import '../../blocked_groups.dart';
 import '../../encrypted_dns.dart';
 import '../../friendly_error.dart';
 import '../../l10n/l10n.dart';
+import '../../packs.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
 import '../../save_file.dart';
@@ -1084,7 +1085,7 @@ class _PicturePageState extends State<_PicturePage> {
 
 // Components
 
-Future<void> openComponents(BuildContext context, AppController controller) => _openList(context, controller, tr('Components'), (context) {
+Future<void> openComponents(BuildContext context, AppController controller) => _openList(context, controller, tr('Components & data packs'), (context) {
       final tools = controller.tools;
       if (tools == null || !controller.ready) return [NormalItem(title: tr('Preparing components…'))];
       final libmpv = tools.libmpv;
@@ -1119,8 +1120,96 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
           onTap: controller.checkUpdates,
         ),
         _tip(context, tr("New libmpv falls back to the built-in version automatically if it fails. If videos won't play after a yt-dlp update, you can roll back to the previous version.")),
+        if (controller.packs case final packs?) PacksSection(packs),
       ];
     });
+
+/// 组件与数据包 › 数据包: models, language data and shaders downloaded only
+/// when wanted, with their size, license and a delete button.
+class PacksSection extends StatelessWidget {
+  const PacksSection(this.packs, {super.key});
+  final PackManager packs;
+
+  Future<void> _install(BuildContext context, Pack pack) async {
+    final ok = await confirmDialog(
+      context,
+      title: tr('Download {0}?', [pack.title]),
+      content: tr('{0} will be downloaded from {1} and checked against the signed list. License: {2}', [formatBytes(pack.size), Uri.tryParse(pack.files.first.url)?.host ?? '', pack.license]),
+      confirm: tr('Download'),
+    );
+    if (!ok || !context.mounted) return;
+    try {
+      await packs.install(pack.id);
+    } catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Could not download {0}: {1}', [pack.title, friendlyError(e)]))));
+    }
+  }
+
+  Future<void> _remove(BuildContext context, InstalledPack installed) async {
+    final ok = await confirmDialog(context, title: tr('Delete {0}?', [installed.pack.title]), content: tr('Frees {0}. You can download it again later.', [formatBytes(installed.pack.size)]), confirm: tr('Delete'));
+    if (ok) await packs.remove(installed.pack.id);
+  }
+
+  void _details(BuildContext context, Pack pack) => showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(pack.title),
+          content: SingleChildScrollView(
+            child: SelectableText([
+              if (pack.description.isNotEmpty) pack.description,
+              tr('Version: {0}', [pack.version]),
+              tr('Size: {0}', [formatBytes(pack.size)]),
+              tr('License: {0}', [pack.license]),
+              if (pack.source.isNotEmpty) tr('Source: {0}', [pack.source]),
+              if (pack.notice.isNotEmpty) pack.notice,
+            ].join('\n\n')),
+          ),
+          actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close')))],
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: packs,
+        builder: (context, _) {
+          final offered = packs.offered;
+          return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            _header(context, tr('Data packs')),
+            for (final installed in packs.installed)
+              NormalItem(
+                title: installed.pack.title,
+                subtitle: '${installed.pack.kind.label} · ${installed.pack.version} · ${formatBytes(installed.pack.size)} · ${installed.pack.license}',
+                leading: Icon(AppIcons.archive),
+                onTap: () => _details(context, installed.pack),
+                trailing: IconButton(tooltip: tr('Delete'), icon: Icon(AppIcons.trash), onPressed: packs.progress.isEmpty ? () => _remove(context, installed) : null),
+              ),
+            for (final pack in offered)
+              NormalItem(
+                title: pack.title,
+                subtitle: [
+                  '${pack.kind.label} · ${pack.version} · ${formatBytes(pack.size)} · ${pack.license}',
+                  if (packs.progress[pack.id] case final done?) tr('Downloading… {0}%', [(done * 100).floor()]),
+                  if (packs.installedOf(pack.id) != null) tr('Update available'),
+                ].join('\n'),
+                leading: Icon(AppIcons.archive),
+                onTap: () => _details(context, pack),
+                trailing: packs.progress.containsKey(pack.id)
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : TextButton(onPressed: packs.progress.isEmpty ? () => _install(context, pack) : null, child: Text(tr('Download'))),
+              ),
+            if (packs.installed.isEmpty && offered.isEmpty)
+              NormalItem(title: tr('No data packs yet'), subtitle: tr('Offline subtitles, summaries and upscaling will download their models here when you turn them on.'), leading: Icon(AppIcons.archive)),
+            NormalItem(
+              title: packs.refreshing ? tr('Checking the data pack list…') : tr('Check the data pack list'),
+              subtitle: packs.error ?? tr('Nothing is downloaded until you choose. Every file is checked against a list signed like Lumtub\'s updates'),
+              leading: Icon(AppIcons.arrowsClockwise),
+              enabled: !packs.refreshing,
+              onTap: packs.refresh,
+            ),
+          ]);
+        },
+      );
+}
 
 // About
 

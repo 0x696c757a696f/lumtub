@@ -12,7 +12,8 @@ import '../../learning/learning.dart';
 import '../../learning/vocabulary.dart';
 import '../../learning/wiktionary_dictionary.dart';
 import '../app_icons.dart';
-import 'learning_page.dart' show showLearningLocked;
+import '../motion.dart';
+import 'learning_page.dart' show learningPresaleDeadline, showLearningLocked;
 
 /// The dictionary entries for [token], from a line heard at [at]: its
 /// readings and meanings, its characters, and a button that keeps it in
@@ -67,17 +68,26 @@ class _TrialNote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (learning.licensed) return const SizedBox.shrink();
-    return Padding(
+    final colors = Theme.of(context).colorScheme;
+    // Near the end of the trial the note says so plainly, with the
+    // pre-sale's last day, while the learner is in the middle of using it.
+    final ending = learning.unlocked && learning.trialTotalLeft <= 10;
+    final until = learningPresaleDeadline();
+    final note = Padding(
       padding: const EdgeInsets.only(top: 12),
       child: Text(
-        learning.unlocked
-            ? learning.trialTotalLeft == 0
-                ? tr('This is the last free trial lookup')
-                : tr('Free trial: {0} word lookups left with everything on', [learning.trialTotalLeft])
-            : tr('{0} free lookups left today · the learning pack has no limit', [learning.trialLeft]),
-        style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.outline),
+        [
+          learning.unlocked
+              ? learning.trialTotalLeft == 0
+                  ? tr('This is the last free trial lookup')
+                  : tr('Free trial: {0} word lookups left with everything on', [learning.trialTotalLeft])
+              : tr('{0} free lookups left today · the learning pack has no limit', [learning.trialLeft]),
+          if (ending && until != null) until,
+        ].join(' · '),
+        style: TextStyle(fontSize: 11, color: ending ? colors.primary : colors.outline, fontWeight: ending ? FontWeight.w600 : null),
       ),
     );
+    return ending ? Entrance(scale: 0.96, child: note) : note;
   }
 }
 
@@ -168,7 +178,8 @@ class _WordCard extends StatelessWidget {
             listenable: book,
             builder: (context, _) {
               final kept = book.contains('zh', word);
-              return FilledButton.icon(
+              return _KeptSwitch(child: FilledButton.icon(
+                key: ValueKey(kept),
                 icon: Icon(kept ? AppIcons.check : AppIcons.plus, size: 18),
                 label: Text(kept ? tr('In vocabulary book') : tr('Add to vocabulary book')),
                 onPressed: kept
@@ -188,7 +199,7 @@ class _WordCard extends StatelessWidget {
                           added: DateTime.now(),
                         )));
                       },
-              );
+              ));
             },
           ),
       ],
@@ -274,7 +285,8 @@ class _EnglishCard extends StatelessWidget {
             builder: (context, _) {
               final kept = book.contains('en', head);
               final entry = entries.last;
-              return FilledButton.icon(
+              return _KeptSwitch(child: FilledButton.icon(
+                key: ValueKey(kept),
                 icon: Icon(kept ? AppIcons.check : AppIcons.plus, size: 18),
                 label: Text(kept ? tr('In vocabulary book') : tr('Add to vocabulary book')),
                 onPressed: kept
@@ -294,7 +306,7 @@ class _EnglishCard extends StatelessWidget {
                           added: DateTime.now(),
                         )));
                       },
-              );
+              ));
             },
           ),
       ],
@@ -405,7 +417,8 @@ class _JapaneseCard extends StatelessWidget {
             builder: (context, _) {
               final kept = book.contains('ja', head);
               final entry = entries.first;
-              return FilledButton.icon(
+              return _KeptSwitch(child: FilledButton.icon(
+                key: ValueKey(kept),
                 icon: Icon(kept ? AppIcons.check : AppIcons.plus, size: 18),
                 label: Text(kept ? tr('In vocabulary book') : tr('Add to vocabulary book')),
                 onPressed: kept
@@ -425,7 +438,7 @@ class _JapaneseCard extends StatelessWidget {
                           added: DateTime.now(),
                         )));
                       },
-              );
+              ));
             },
           ),
       ],
@@ -549,7 +562,8 @@ class _WiktionaryCard extends StatelessWidget {
             builder: (context, _) {
               final kept = book.contains(language, head);
               final entry = entries.first;
-              return FilledButton.icon(
+              return _KeptSwitch(child: FilledButton.icon(
+                key: ValueKey(kept),
                 icon: Icon(kept ? AppIcons.check : AppIcons.plus, size: 18),
                 label: Text(kept ? tr('In vocabulary book') : tr('Add to vocabulary book')),
                 onPressed: kept
@@ -569,7 +583,7 @@ class _WiktionaryCard extends StatelessWidget {
                           added: DateTime.now(),
                         )));
                       },
-              );
+              ));
             },
           ),
       ],
@@ -675,5 +689,23 @@ class _LockedAdd extends StatelessWidget {
         icon: Icon(AppIcons.lock, size: 16),
         label: Text(tr('Add to vocabulary book')),
         onPressed: () => unawaited(showLearningLocked(context, learning)),
+      );
+}
+
+/// 加入生词本 turning into 已在生词本: the new button grows in, so the
+/// tap is seen to have kept the word.
+class _KeptSwitch extends StatelessWidget {
+  const _KeptSwitch({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => AnimatedSwitcher(
+        duration: Motion.of(Ease.move),
+        switchInCurve: Ease.curve,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(scale: Tween(begin: 0.85, end: 1.0).animate(animation), child: child),
+        ),
+        child: child,
       );
 }

@@ -19,6 +19,7 @@ import '../../models.dart';
 import '../../save_file.dart';
 import '../../widgets/settings_tiles.dart';
 import '../app_icons.dart';
+import '../motion.dart';
 import '../app_shell.dart' show openSettings;
 import '../common.dart';
 import '../learning_drawer.dart' show LearningDrawerSection, addLearningDrawerSection, studyLockedView;
@@ -211,6 +212,16 @@ Future<void> _buyByCard() async {
 const learningPrice = (euro: '€24', yuan: '¥188');
 ({String euro, String yuan})? get learningPresale => (euro: '€12', yuan: '¥99');
 
+/// The last day of the pre-sale price.
+final learningPresaleEnds = DateTime(2026, 12, 3);
+
+/// "until 3 December" while the pre-sale runs, else null.
+String? learningPresaleDeadline() {
+  if (learningPresale == null || DateTime.now().isAfter(learningPresaleEnds.add(const Duration(days: 1)))) return null;
+  final day = currentLanguage.isChinese ? '${learningPresaleEnds.month} 月 ${learningPresaleEnds.day} 日' : '${learningPresaleEnds.day} December';
+  return tr('Pre-sale price until {0}', [day]);
+}
+
 /// The price in one line, in yuan too for a Chinese interface.
 String learningPriceLine() {
   String shown(({String euro, String yuan}) price) => currentLanguage.isChinese ? '${price.yuan} / ${price.euro}' : price.euro;
@@ -236,6 +247,7 @@ class LearningPriceTag extends StatelessWidget {
       TextSpan(text: shown(pre ?? learningPrice), style: TextStyle(fontSize: size, fontWeight: FontWeight.w700, color: colors.primary)),
       if (pre != null) TextSpan(text: '  ${shown(learningPrice)}', style: small.copyWith(decoration: TextDecoration.lineThrough, decorationColor: colors.outline)),
       TextSpan(text: '  ${pre != null ? tr('paid once, nothing more to pay after launch') : tr('paid once')}', style: small),
+      if (learningPresaleDeadline() case final until?) TextSpan(text: '\n$until', style: small.copyWith(color: colors.primary)),
     ]));
   }
 }
@@ -263,13 +275,14 @@ Future<void> showLearningLocked(BuildContext context, Learning learning, {String
           width: 460,
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(lead ?? tr('The {0} free trial lookups are used up.', [Learning.trialTotal]), style: Theme.of(dialog).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+            if (_soFar(learning) case final soFar?) Padding(padding: const EdgeInsets.only(top: 4), child: Text(soFar)),
             const SizedBox(height: 8),
             Text(learningPackFeatures()),
             const SizedBox(height: 8),
             Text(tr('Words you saved stay yours: you can still see them and export them as CSV.'),
                 style: Theme.of(dialog).textTheme.bodySmall?.copyWith(color: Theme.of(dialog).colorScheme.outline)),
             const SizedBox(height: 16),
-            const LearningPriceTag(size: 20),
+            const Entrance(scale: 0.96, child: LearningPriceTag(size: 20)),
           ]),
         ),
         actions: [
@@ -291,6 +304,16 @@ Future<void> showLearningLocked(BuildContext context, Learning learning, {String
         ],
       ),
     );
+
+/// What the learner did in the trial, so buying reads as carrying on.
+String? _soFar(Learning learning) {
+  final looked = Learning.trialTotal - learning.trialTotalLeft;
+  final saved = learning.book?.words.length ?? 0;
+  if (looked == 0 && saved == 0) return null;
+  return saved > 0
+      ? tr('So far you looked up {0} words and saved {1}. Buy once and carry on where you are.', [looked, saved])
+      : tr('So far you looked up {0} words. Buy once and carry on where you are.', [looked]);
+}
 
 /// Opens the checkout the interface's language suggests: Afdian (Alipay,
 /// WeChat) for Chinese, Polar (cards) otherwise.
@@ -612,6 +635,10 @@ class _Pitch extends StatelessWidget {
           ),
           const SizedBox(height: Space.s),
           Text(learningTrialLine(learning), style: theme.textTheme.bodyMedium),
+          if (learning.inTrial && learning.trialTotalLeft < Learning.trialTotal) ...[
+            const SizedBox(height: 6),
+            _TrialBar(used: (Learning.trialTotal - learning.trialTotalLeft) / Learning.trialTotal),
+          ],
           const SizedBox(height: 12),
           FutureBuilder<Uri?>(
             future: cardCheckout(),
@@ -621,18 +648,41 @@ class _Pitch extends StatelessWidget {
               return Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
                 FilledButton(
                   onPressed: () => unawaited(afdianFirst ? openExternal(afdianPage) : _buyByCard()),
-                  child: Text(afdianFirst ? tr('Buy on Afdian (Alipay, WeChat)') : tr('Buy (card or PayPal)')),
+                  child: Text(afdianFirst ? tr('Buy on Afdian (Alipay, WeChat)') : tr('Buy on Ko-fi (card, PayPal)')),
                 ),
                 if (card)
                   OutlinedButton(
                     onPressed: () => unawaited(zh ? _buyByCard() : openExternal(afdianPage)),
-                    child: Text(zh ? tr('Buy (card or PayPal)') : tr('Buy on Afdian (Alipay, WeChat)')),
+                    child: Text(zh ? tr('Buy on Ko-fi (card, PayPal)') : tr('Buy on Afdian (Alipay, WeChat)')),
                   ),
                 TextButton(onPressed: () => unawaited(claimPurchase(context, learning, afdianFirst: zh)), child: Text(tr('I bought it: unlock'))),
               ]);
             },
           ),
         ]),
+      ),
+    );
+  }
+}
+
+/// How much of the free trial is used, filling up to where it stands.
+class _TrialBar extends StatelessWidget {
+  const _TrialBar({required this.used});
+  final double used;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: 320,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: used),
+        duration: Motion.of(const Duration(milliseconds: 700)),
+        curve: Ease.curve,
+        builder: (context, value, _) => ClipRRect(
+          borderRadius: BorderRadius.circular(3),
+          child: LinearProgressIndicator(value: value, minHeight: 6, color: colors.primary, backgroundColor: colors.primaryContainer),
+        ),
       ),
     );
   }

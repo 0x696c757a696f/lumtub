@@ -3921,9 +3921,14 @@
   "See the learning pack": "看看学习包",
   "Get started in three steps": "三步上手",
   "Download the dictionary of a language you watch": "下载你看视频的语言的词典",
-  "Below, under Dictionaries: a few MB, then it works offline.": "在下面「词典」里，几 MB，下完就能离线用。",
   "Play a video with subtitles in that language and tap a word": "播放带该语言字幕的视频，点字幕里的词",
   "Pinyin or kana show above the words; the video waits while the card is open.": "词上方会显示拼音或假名；查词卡片打开时视频自动暂停。",
   "Add the word to your vocabulary book": "把这个词加入生词本",
-  "It keeps the line and the moment, and goes to Anki in one tap.": "会记下原句和视频时间点，一键导入 Anki。"
+  "It keeps the line and the moment, and goes to Anki in one tap.": "会记下原句和视频时间点，一键导入 Anki。",
+  "Pick one: a few MB, then it works offline.": "选一种语言，几 MB，下完就能离线用。",
+  "{0}, paid once": "{0}，一次付清",
+  "Pre-sale price {0}, paid once ({1} after launch; nothing more to pay then)": "预售价 {0}，一次付清（正式版 {1}，现在买以后不用补差价）",
+  "Have a license code? Enter it": "已有授权码？直接输入",
+  "Buy the learning pack": "购买学习包",
+  "{0} free lookups left today · the learning pack has no limit": "今天还剩 {0} 次免费查词 · 学习包不限次数"
 }

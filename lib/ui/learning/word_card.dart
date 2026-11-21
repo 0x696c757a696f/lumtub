@@ -12,7 +12,7 @@ import '../../learning/learning.dart';
 import '../../learning/vocabulary.dart';
 import '../../learning/wiktionary_dictionary.dart';
 import '../app_icons.dart';
-import 'learning_page.dart' show openLearningPage;
+import 'learning_page.dart' show buyLearningPack, claimPurchase, learningPriceLine;
 
 /// The dictionary entries for [token], from a line heard at [at]: its
 /// readings and meanings, its characters, and a button that keeps it in
@@ -48,25 +48,58 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
   if (wasPlaying && controller.player == player) unawaited(player?.play());
 }
 
-/// Today's free word cards are used up: what the pack gives, and where
-/// to get it.
+/// Today's free word cards are used up: the moment a learner most wants
+/// the pack, so its price and the way to buy it are right here.
 Future<void> _trialUsedUp(BuildContext context, AppController controller) => showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialog) => AlertDialog(
         title: Text(tr("Today's {0} free word lookups are used up", [Learning.trialPerDay])),
-        content: Text(tr('More tomorrow. With the learning pack, look up as many words as you like, on up to 5 devices, with one payment and no subscription. Readings and your vocabulary book keep working either way.')),
+        content: SizedBox(
+          width: 460,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(tr('More tomorrow. With the learning pack, look up as many words as you like, on up to 5 devices, with one payment and no subscription. Readings and your vocabulary book keep working either way.')),
+            const SizedBox(height: 12),
+            Text(learningPriceLine(), style: Theme.of(dialog).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          ]),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Later'))),
+          TextButton(onPressed: () => Navigator.pop(dialog), child: Text(tr('Later'))),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialog);
+              unawaited(claimPurchase(context, controller.learning, afdianFirst: currentLanguage.isChinese));
+            },
+            child: Text(tr('I bought it: unlock')),
+          ),
           FilledButton(
             onPressed: () {
-              Navigator.pop(context);
-              unawaited(openLearningPage(context, controller));
+              Navigator.pop(dialog);
+              unawaited(buyLearningPack());
             },
-            child: Text(tr('See the learning pack')),
+            child: Text(tr('Buy the learning pack')),
           ),
         ],
       ),
     );
+
+/// Without the pack: how many free word cards today has left, so the
+/// last one is no surprise.
+class _TrialNote extends StatelessWidget {
+  const _TrialNote({required this.learning});
+  final Learning learning;
+
+  @override
+  Widget build(BuildContext context) {
+    if (learning.licensed) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Text(
+        tr('{0} free lookups left today · the learning pack has no limit', [learning.trialLeft]),
+        style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.outline),
+      ),
+    );
+  }
+}
 
 class _WordCard extends StatelessWidget {
   const _WordCard({required this.controller, required this.dictionary, required this.token, required this.sentence, required this.translation, required this.at});
@@ -137,6 +170,7 @@ class _WordCard extends StatelessWidget {
               if (controller.mainSubtitleAutomatic) Text(tr('Auto-generated subtitles: a word may be misheard'), style: TextStyle(fontSize: 11, color: colors.outline)),
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
+            _TrialNote(learning: controller.learning),
           ]),
         ),
       ),
@@ -239,6 +273,7 @@ class _EnglishCard extends StatelessWidget {
               if (controller.mainSubtitleAutomatic) Text(tr('Auto-generated subtitles: a word may be misheard'), style: TextStyle(fontSize: 11, color: colors.outline)),
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
+            _TrialNote(learning: controller.learning),
           ]),
         ),
       ),
@@ -367,6 +402,7 @@ class _JapaneseCard extends StatelessWidget {
                   : tr('From JMdict (EDRDG), CC BY-SA 4.0'),
               style: TextStyle(fontSize: 11, color: colors.outline),
             ),
+            _TrialNote(learning: controller.learning),
           ]),
         ),
       ),
@@ -508,6 +544,7 @@ class _WiktionaryCard extends StatelessWidget {
                       : tr('From Wiktionary, CC BY-SA 4.0'),
               style: TextStyle(fontSize: 11, color: colors.outline),
             ),
+            _TrialNote(learning: controller.learning),
           ]),
         ),
       ),

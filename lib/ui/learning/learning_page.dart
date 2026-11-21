@@ -47,6 +47,7 @@ String learningSummary(Learning learning) => learning.licensed
 /// Unlocks a purchase: asks for the order number, and for Ko-fi and Polar
 /// the email paid with too, and fetches the code from the license server.
 Future<bool> claimPurchase(BuildContext context, Learning learning, {required bool afdianFirst}) async {
+  final outer = context;
   final field = TextEditingController();
   final email = TextEditingController();
   var source = afdianFirst ? PurchaseSource.afdian : PurchaseSource.polar;
@@ -145,7 +146,18 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
               dense: true,
               title: Text(_consentText()),
             ),
-            TextButton(onPressed: () => unawaited(showLearningPrivacy(context)), child: Text(tr('Activation and privacy'))),
+            Wrap(spacing: 8, children: [
+              TextButton(onPressed: () => unawaited(showLearningPrivacy(context)), child: Text(tr('Activation and privacy'))),
+              TextButton(
+                onPressed: busy
+                    ? null
+                    : () {
+                        Navigator.pop(context, false);
+                        unawaited(enterLicenseCode(outer, learning));
+                      },
+                child: Text(tr('Have a license code? Enter it')),
+              ),
+            ]),
           ]),
         ),
         actions: [
@@ -176,6 +188,23 @@ Future<void> _buyOnPolar() async {
   final checkout = await polarCheckout();
   await openExternal(checkout?.toString() ?? '$kofiPage/shop');
 }
+
+/// The learning pack's price, kept in this one place: [learningPresale]
+/// while the pre-sale runs, then null, and [learningPrice] alone shows.
+const learningPrice = '€19';
+({String euro, String yuan})? get learningPresale => (euro: '€15', yuan: '¥118');
+
+/// The price in one line, in yuan too for a Chinese interface.
+String learningPriceLine() {
+  final pre = learningPresale;
+  if (pre == null) return tr('{0}, paid once', [learningPrice]);
+  final now = currentLanguage.isChinese ? '${pre.yuan} / ${pre.euro}' : pre.euro;
+  return tr('Pre-sale price {0}, paid once ({1} after launch; nothing more to pay then)', [now, learningPrice]);
+}
+
+/// Opens the checkout the interface's language suggests: Afdian (Alipay,
+/// WeChat) for Chinese, Polar (cards) otherwise.
+Future<void> buyLearningPack() => currentLanguage.isChinese ? openExternal(afdianPage) : _buyOnPolar();
 
 String _consentText() => tr(
     'I ask for the learning pack to be supplied now, and I understand that once it is, I lose the 14-day right of withdrawal. This does not affect my rights if the pack does not work as described.');
@@ -462,7 +491,12 @@ class _Pitch extends StatelessWidget {
           Row(children: [
             _Badge(icon: AppIcons.graduationCap, size: 48),
             const SizedBox(width: Space.m),
-            Expanded(child: Text(tr('Learn languages from real videos'), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700))),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(tr('Learning pack'), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+                Text(learningPriceLine(), style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600)),
+              ]),
+            ),
           ]),
           const SizedBox(height: Space.l),
           for (final line in [
@@ -485,12 +519,11 @@ class _Pitch extends StatelessWidget {
             style: TextStyle(color: theme.colorScheme.outline, fontSize: 12, height: 1.5),
           ),
           const SizedBox(height: Space.s),
-          Text(tr('Free today: {0} of {1} word lookups left. Buy once for unlimited.', [learning.trialLeft, Learning.trialPerDay]),
-              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600)),
+          Text(tr('Free today: {0} of {1} word lookups left. Buy once for unlimited.', [learning.trialLeft, Learning.trialPerDay]), style: theme.textTheme.bodyMedium),
           const SizedBox(height: 12),
-          Wrap(spacing: 8, runSpacing: 8, children: [
+          Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
             FilledButton(
-              onPressed: () => unawaited(zh ? openExternal(afdianPage) : _buyOnPolar()),
+              onPressed: () => unawaited(buyLearningPack()),
               child: Text(zh ? tr('Buy on Afdian (Alipay, WeChat)') : tr('Buy (card, Apple Pay, Google Pay)')),
             ),
             OutlinedButton(
@@ -498,7 +531,6 @@ class _Pitch extends StatelessWidget {
               child: Text(zh ? tr('Buy (card, Apple Pay, Google Pay)') : tr('Buy on Afdian (Alipay, WeChat)')),
             ),
             TextButton(onPressed: () => unawaited(claimPurchase(context, learning, afdianFirst: zh)), child: Text(tr('I bought it: unlock'))),
-            TextButton(onPressed: () => unawaited(enterLicenseCode(context, learning)), child: Text(tr('Enter license code'))),
           ]),
         ]),
       ),

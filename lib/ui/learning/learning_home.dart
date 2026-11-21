@@ -413,7 +413,7 @@ class _GettingStarted extends StatelessWidget {
     final learning = controller.learning;
     final colors = context.colors;
     final steps = [
-      (_hasDictionary(learning), tr('Download the dictionary of a language you watch'), tr('Below, under Dictionaries: a few MB, then it works offline.')),
+      (_hasDictionary(learning), tr('Download the dictionary of a language you watch'), tr('Pick one: a few MB, then it works offline.')),
       (learning.lookedUp, tr('Play a video with subtitles in that language and tap a word'), tr('Pinyin or kana show above the words; the video waits while the card is open.')),
       (learning.book?.words.isNotEmpty ?? false, tr('Add the word to your vocabulary book'), tr('It keeps the line and the moment, and goes to Anki in one tap.')),
     ];
@@ -451,6 +451,7 @@ class _GettingStarted extends StatelessWidget {
                       decoration: done ? TextDecoration.lineThrough : null,
                     )),
                     if (!done) Text(detail, style: context.text.bodySmall?.copyWith(color: colors.onPrimaryContainer.withValues(alpha: 0.75))),
+                    if (i == 0 && !done) _QuickDownload(learning: learning),
                   ]),
                 ),
               ]),
@@ -460,6 +461,40 @@ class _GettingStarted extends StatelessWidget {
                 style: context.text.bodySmall?.copyWith(color: colors.onPrimaryContainer.withValues(alpha: 0.75))),
         ]),
       ),
+    );
+  }
+}
+
+/// The first step's languages, each downloading its dictionary at a tap,
+/// so a new learner need not look for the Dictionaries card further down.
+class _QuickDownload extends StatelessWidget {
+  const _QuickDownload({required this.learning});
+  final Learning learning;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.only(top: Space.s),
+      child: Wrap(spacing: Space.s, runSpacing: Space.s, children: [
+        for (final pack in DictionaryPack.values)
+          switch (learning.stateOf(pack)) {
+            PackState.downloading || PackState.loading => Chip(
+                avatar: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, value: learning.progressOf(pack))),
+                label: Text(_packLanguage(pack)),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+            _ => ActionChip(
+                avatar: Text(_packSample(pack), style: TextStyle(fontWeight: FontWeight.w700, color: colors.primary)),
+                label: Text(_packLanguage(pack)),
+                tooltip: learning.stateOf(pack) == PackState.failed ? tr('Failed: {0}', [learning.errorOf(pack) ?? '']) : tr('Download'),
+                onPressed: () => unawaited(learning.download(pack)),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+          },
+      ]),
     );
   }
 }

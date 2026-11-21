@@ -66,7 +66,7 @@ export default {
       if (request.method === 'POST' && url.pathname === '/activate') return await activate(request, env);
       if (request.method === 'POST' && url.pathname === '/deactivate') return await deactivate(request, env);
       if (request.method === 'GET' && url.pathname === '/') return reply({ ok: true });
-      if (request.method === 'GET' && url.pathname === '/kofi/status') return reply({ token: Boolean(env.KOFI_TOKEN), item: Boolean(env.KOFI_ITEM), last: JSON.parse((await env.LICENSES.get('kofi:last-verified')) || 'null') });
+      if (request.method === 'GET' && url.pathname === '/kofi/status') return reply({ token: Boolean(env.KOFI_TOKEN), item: clean(env.KOFI_ITEM) || KOFI_LEARNING_ITEM, last: JSON.parse((await env.LICENSES.get('kofi:last-verified')) || 'null') });
       if (request.method === 'GET' && url.pathname === '/polar/thanks') return await polarThanks(url, env);
       if (request.method === 'GET' && url.pathname === '/creem/thanks') return await creemThanks(url, env);
       return reply({ error: 'not found' }, 404);
@@ -92,6 +92,8 @@ const clean = (text) => String(text ?? '').trim();
 // wording gets a new version, and old ones stay accepted.
 const CONSENTS = ['digital-content-v1'];
 
+const KOFI_LEARNING_ITEM = '8b2e7ff0b9';
+
 async function kofi(request, env) {
   const form = await request.formData();
   const data = JSON.parse(form.get('data') || '{}');
@@ -100,7 +102,9 @@ async function kofi(request, env) {
   // sends a donation, which gives no code).
   await env.LICENSES.put('kofi:last-verified', JSON.stringify({ at: new Date().toISOString(), type: clean(data.type) }));
   const items = Array.isArray(data.shop_items) ? data.shop_items : [];
-  const counts = data.type === 'Shop Order' && (!env.KOFI_ITEM || items.some((i) => i.direct_link_code === env.KOFI_ITEM));
+  // Only the learning pack's shop item (ko-fi.com/s/<code>) gives a code.
+  const item = clean(env.KOFI_ITEM) || KOFI_LEARNING_ITEM;
+  const counts = data.type === 'Shop Order' && items.some((i) => clean(i.direct_link_code) === item);
   if (!counts) return reply({ ok: true, ignored: true });
   const order = clean(data.kofi_transaction_id).toLowerCase();
   if (!order) return reply({ error: 'no transaction id' }, 400);

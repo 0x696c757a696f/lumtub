@@ -65,8 +65,8 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 - **Vocabulary book** that keeps the sentence, the original audio and the moment in the video. Tap an entry to hear it again.
 - **Send to Anki** in one click, or export CSV.
 
-**Try it free:** unlimited lookups for 7 days from your first lookup, then 5 a day. Readings and the vocabulary book stay free.<br>
-**Pre-order price:** €15 / ¥118, once, no subscription ([Polar](https://buy.polar.sh/polar_cl_Kq1VEmdtmOLJaLBhOA2DgT5dXcnA2aBvhys200CDQVP) · [爱发电](https://afdian.com/a/linmuqingfeng)). It will be €19 after launch; if you buy now there's nothing more to pay later. One license works on up to 5 of your devices; the app checks it online about once every 30 days.
+**Try it free:** your first 30 word lookups have everything switched on, no account needed. After that, without the pack, you can look up 3 words a day. [Install guide and refunds](https://0x696c757a696f.github.io/lumtub/learn/).<br>
+**Early-bird price:** €12 / ¥99 until 3 December, then €24 / ¥188. Pay once, no subscription ([Polar](https://buy.polar.sh/polar_cl_Kq1VEmdtmOLJaLBhOA2DgT5dXcnA2aBvhys200CDQVP) · [爱发电](https://afdian.com/a/linmuqingfeng)). One license for 2 of your devices; the app checks it online about once every 30 days.
 
 **Free for everyone**, in the Subtitles menu under **Language learning**:
 

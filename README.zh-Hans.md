@@ -63,8 +63,8 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 - **生词本**：记下原句、原声和视频里的时间点，点一下再听一遍。
 - **一键送进 Anki**，也可以导出 CSV。
 
-**免费试用**：从第一次查词起 7 天不限次数，之后每天 5 次。注音和生词本一直免费。<br>
-**预售价**：€15 / ¥118，一次付款，不订阅（[爱发电](https://afdian.com/a/linmuqingfeng) · [Polar](https://buy.polar.sh/polar_cl_Kq1VEmdtmOLJaLBhOA2DgT5dXcnA2aBvhys200CDQVP)）。正式版 €19，现在买的以后不用补差价。一份授权最多 5 台设备，软件大约每 30 天联网确认一次授权。
+**免费试用**：前 30 次查词所有功能全部开放，不用注册。之后不买的话，每天能查 3 个词。[安装说明和退款](https://0x696c757a696f.github.io/lumtub/learn/zh/)。<br>
+**早鸟价**：¥99 / €12，到 12 月 3 日；之后 ¥188 / €24。一次付款，不订阅（[爱发电](https://afdian.com/a/linmuqingfeng) · [Polar](https://buy.polar.sh/polar_cl_Kq1VEmdtmOLJaLBhOA2DgT5dXcnA2aBvhys200CDQVP)）。一份授权 2 台设备，软件大约每 30 天联网确认一次授权。
 
 **所有人免费**，在字幕菜单 › **学外语** 里：
 

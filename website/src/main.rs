@@ -342,10 +342,10 @@ const POLAR_CHECKOUT: &str =
 #[component]
 fn Learning(t: &'static Text, lang: Lang) -> impl IntoView {
     let l = &t.learn;
-    let polar = view! { <a class="btn primary" href=POLAR_CHECKOUT rel="noopener">"Polar · €15"</a> };
-    let afdian = view! { <a class="btn" href=AFDIAN rel="noopener">"爱发电 · ¥118"</a> };
+    let polar = view! { <a class="btn primary" href=POLAR_CHECKOUT rel="noopener">"Polar · €12"</a> };
+    let afdian = view! { <a class="btn" href=AFDIAN rel="noopener">"爱发电 · ¥99"</a> };
     let buttons = if lang == Lang::Zh {
-        view! { <a class="btn primary" href=AFDIAN rel="noopener">"爱发电 · ¥118"</a><a class="btn" href=POLAR_CHECKOUT rel="noopener">"Polar · €15"</a> }.into_any()
+        view! { <a class="btn primary" href=AFDIAN rel="noopener">"爱发电 · ¥99"</a><a class="btn" href=POLAR_CHECKOUT rel="noopener">"Polar · €12"</a> }.into_any()
     } else {
         view! { {polar}{afdian} }.into_any()
     };

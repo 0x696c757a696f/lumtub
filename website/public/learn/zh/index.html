@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>学外语 · Lumtub</title>
+<meta name="description" content="点字幕查词，生词带原声存下来，一键进 Anki。离线词典，一次买断。">
+<link rel="icon" href="/lumtub/favicon.png">
+<style>
+@font-face { font-family: "Geist"; src: url("/lumtub/fonts/geist.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+:root { --bg: #fafafa; --surface: #ffffff; --text: #09090b; --muted: #52525b; --line: #e4e4e7; --accent: #e53935; --on-accent: #ffffff; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg: #181818; --surface: #212121; --text: #fafafa; --muted: #a1a1aa; --line: #313131; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: "Geist", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 16px; line-height: 1.6; }
+main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 40px; }
+header.top a { color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+header.top .lang { color: var(--muted); font-weight: 500; }
+h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.2; margin: 0 0 16px; text-wrap: balance; }
+h2 { font-size: 22px; line-height: 1.3; margin: 48px 0 12px; }
+h3 { font-size: 17px; margin: 24px 0 6px; }
+p, li { color: var(--muted); text-wrap: pretty; }
+p.lead { font-size: 18px; color: var(--text); }
+strong { color: var(--text); }
+ul, ol { padding-left: 1.3em; }
+li { margin: 4px 0; }
+.shots { display: grid; grid-template-columns: 815fr 654fr; gap: 12px; margin: 32px 0 8px; align-items: start; }
+.shots img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; }
+.caption { font-size: 13px; text-align: center; margin: 0; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin: 16px 0; }
+.buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+a.btn { display: inline-flex; align-items: center; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font-weight: 600; text-decoration: none; }
+a.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+a.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; overflow-wrap: anywhere; }
+a { color: inherit; }
+footer { margin-top: 56px; font-size: 13px; color: var(--muted); }
+@media (max-width: 600px) { .shots { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+<header class="top">
+<a href="/lumtub/"><img src="/lumtub/icon.png" alt="" width="28" height="28">Lumtub</a>
+<a class="lang" href="/lumtub/learn/" hreflang="en">English</a>
+</header>
+<h1>用真实视频学外语</h1>
+<p class="lead">点字幕里的词就能查，日语标假名、中文标拼音，生词连同原句和原声存进生词本，一键进 Anki。离线词典，一次买断。</p>
+
+<div class="shots">
+<img src="/lumtub/screenshots/learning-card.png" alt="单词 nifty 的卡片：发音、释义和它出现的原句" width="815" height="550">
+<img src="/lumtub/screenshots/learning-list.png" alt="字幕列表，比所选水平难的词被标了出来" width="654" height="636">
+</div>
+<p class="caption">真实截图。</p>
+
+<h2>有什么</h2>
+<h3>学习包</h3>
+<ul>
+<li>点词就查。日语动词变形会还原成原形再查。</li>
+<li>字幕上方注假名、拼音和韩语罗马音。</li>
+<li>比你水平难的词自动标出来。</li>
+<li>单词朗读。</li>
+<li>生词本：每个词都记下原句、原声和视频里的时间点。</li>
+<li>导出到 Anki。</li>
+<li>精学四步：一个视频分四步学透。</li>
+</ul>
+<p>词典：日语、中文、英语、韩语；西班牙语、法语、德语、意大利语、俄语为测试版。</p>
+<h3>所有人免费</h3>
+<ul>
+<li>每句说完自动暂停、翻译先模糊、单句循环、跟读录音。</li>
+<li>字幕列表导出 CSV。</li>
+<li>AI 视频概览（用你自己的密钥）。</li>
+</ul>
+
+<div class="box">
+<p><strong>先试再买。</strong>前 30 次查词，所有功能全部开放，不用注册。之后不买的话，每天能查 3 个词。</p>
+<p><strong>早鸟价 ¥99 / €12，到 12 月 3 日；之后 ¥188 / €24。</strong>一次付款，不订阅。一份授权 2 台设备。</p>
+<div class="buttons">
+<a class="btn primary" href="https://afdian.com/a/linmuqingfeng" rel="noopener">爱发电 · ¥99</a>
+<a class="btn" href="https://buy.polar.sh/polar_cl_Kq1VEmdtmOLJaLBhOA2DgT5dXcnA2aBvhys200CDQVP" rel="noopener">Polar · €12</a>
+</div>
+</div>
+
+<h2>安装</h2>
+<div class="buttons">
+<a class="btn primary" href="/lumtub/get/?windows-x64-v3-setup.exe">Windows</a>
+<a class="btn" href="/lumtub/get/?macos-arm64.dmg">Mac（M 系列芯片）</a>
+<a class="btn" href="/lumtub/get/?macos-x64.dmg">Mac（Intel）</a>
+<a class="btn" href="/lumtub/get/?linux-x64-v3.AppImage">Linux AppImage</a>
+</div>
+<p>电脑比较老，或者是 ARM 版 Windows？看<a href="https://github.com/0x696c757a696f/lumtub/releases/latest">全部下载</a>。</p>
+
+<h3>Windows</h3>
+<ol>
+<li>运行安装程序，不需要管理员权限。</li>
+<li>如果提示「Windows 已保护你的电脑」：点「更多信息」，再点「仍要运行」。出现这个提示是因为 Lumtub 还没有买付费的代码签名证书。</li>
+</ol>
+<h3>Mac</h3>
+<ol>
+<li>打开 DMG，把 Lumtub 拖进「应用程序」。</li>
+<li>第一次打开时，macOS 会拦下来，因为还没经过苹果公证。点「完成」，然后去「系统设置 › 隐私与安全性」，在 Lumtub 旁边点「仍要打开」。</li>
+<li>或者在终端里运行一次：<code>xattr -dr com.apple.quarantine /Applications/Lumtub.app</code></li>
+</ol>
+<h3>Linux</h3>
+<ol>
+<li>给文件加上执行权限：<code>chmod +x Lumtub_*.AppImage</code>，然后运行。</li>
+<li>如果提示缺少 FUSE，安装发行版的 <code>fuse3</code> 包。</li>
+</ol>
+<h3>然后</h3>
+<p>打开一个有你在学的语言字幕的视频，点一个词。第一次会问你要不要下载这种语言的词典。</p>
+
+<h2>退款</h2>
+<ul>
+<!-- TODO: 和软件里「订单与退款」的说法对齐（欧盟撤回权放弃勾选）。 -->
+<li>这是我额外的承诺，不影响你的法定权利：学习包用着不满意，购买后 14 天内联系我，全额退款，不问原因。</li>
+<li>如果到 2027 年 1 月 31 日正式版还没发布，所有预售订单都可以申请全额退款。</li>
+<li>联系方式：回复 Polar 的收据邮件，或者在爱发电私信。</li>
+</ul>
+
+<h2>说明</h2>
+<ul>
+<li>支持 Windows、macOS、Linux。安卓还没测试。</li>
+<li>查词不用联网。软件大约每 30 天联网确认一次授权。</li>
+<li>Lumtub 是开源软件（AGPL）。词典来自开放数据，来源列在软件里。</li>
+</ul>
+<footer><a href="/lumtub/">Lumtub</a> · <a href="https://github.com/0x696c757a696f/lumtub">GitHub</a></footer>
+</main>
+</body>
+</html>

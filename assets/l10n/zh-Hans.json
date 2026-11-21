@@ -4018,5 +4018,9 @@
   "Not found in the subtitles as quoted: AI may have reworded it.": "字幕里没找到这句原话，可能是 AI 改写的。",
   "Experimental": "实验功能",
   "Summary by AI": "AI 概括",
-  "Buy (card or PayPal)": "银行卡或 PayPal 购买"
+  "Buy (card or PayPal)": "银行卡或 PayPal 购买",
+  "Pre-sale": "预售价",
+  "paid once": "一次付清",
+  "paid once, nothing more to pay after launch": "一次付清，正式版上线后不用补差价",
+  "Nine languages, a few MB each, then everything works offline.": "九种语言可选，每种几 MB，下完就能离线用。"
 }

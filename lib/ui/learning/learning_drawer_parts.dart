@@ -44,7 +44,7 @@ class _StudyLocked extends StatelessWidget {
           Expanded(child: Text(tr('Study mode is part of the learning pack'), style: context.text.bodySmall)),
         ]),
         const SizedBox(height: 4),
-        Text(learningPriceLine(), style: context.text.bodySmall?.copyWith(color: context.colors.primary, fontWeight: FontWeight.w600)),
+        const LearningPriceTag(size: 14),
         const SizedBox(height: 8),
         Wrap(spacing: 8, runSpacing: 4, children: [
           FilledButton(onPressed: () => unawaited(buyLearningPack()), child: Text(tr('Buy the learning pack'))),

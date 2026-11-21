@@ -462,7 +462,7 @@ class LearningSwitches extends StatelessWidget {
             contentPadding: const EdgeInsets.symmetric(horizontal: 12),
             leading: Icon(AppIcons.bookOpenText, size: 20),
             title: Text(tr('Download a dictionary')),
-            subtitle: Text(learning.licensed ? tr('Chinese, English or Japanese, a few MB, then everything works offline.') : learningTrialOffer(),
+            subtitle: Text(learning.licensed ? tr('Nine languages, a few MB each, then everything works offline.') : learningTrialOffer(),
                 style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
             onTap: () => unawaited(openLearningPage(context, controller)),
           );

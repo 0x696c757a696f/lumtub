@@ -699,12 +699,19 @@ class AiTranslator extends _CachedTranslator {
     throw TranslationException(tr('The AI returned a different number of lines, so the subtitles cannot be aligned'));
   }
 
+  /// How Chinese reads well, added to the built-in prompts when the
+  /// translation is into Chinese.
+  static const chineseStyle = 'In the Chinese, put a space between Chinese characters and Latin letters or digits; '
+      'address the listener as 你, not 您, unless the original is formal; leave out filler words such as um, uh and you know; '
+      'and keep well-known English terms, product names and brand names in English.';
+
   /// The system prompt with the target, line count, style and the terms
   /// [text] uses filled in.
   String systemPrompt(String target, int count, List<String> context, [String text = '']) {
     final terms = glossaryFor(text);
     final parts = [
       prompt.replaceAll('{target}', TranslationLanguage.byCode(target).englishName).replaceAll('{lines}', '$count'),
+      if (target.toLowerCase().startsWith('zh') && promptPresets.any((p) => p.text == prompt)) chineseStyle,
       if (tone.isNotEmpty) tone,
       if (terms.isNotEmpty) 'Always translate these terms as given (original = translation):\n${terms.join('\n')}',
       if (context.isNotEmpty) 'For context only, these lines came just before; do not translate or repeat them:\n${context.join('\n')}',

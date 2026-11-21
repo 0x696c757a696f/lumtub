@@ -32,6 +32,14 @@ fn wide(c: char) -> bool {
 /// [cues] as paragraphs, each starting with its time: lines are joined
 /// until a pause, a sentence end after a while, or half a minute.
 pub fn paragraphs(cues: &[Cue]) -> Vec<String> {
+    timed_paragraphs(cues)
+        .into_iter()
+        .map(|(start, text)| format!("[{}] {}", clock(start), text))
+        .collect()
+}
+
+/// [paragraphs] as their start times and texts.
+fn timed_paragraphs(cues: &[Cue]) -> Vec<(u64, String)> {
     let mut out = Vec::new();
     let mut current = String::new();
     let mut started = 0;
@@ -45,8 +53,7 @@ pub fn paragraphs(cues: &[Cue]) -> Vec<String> {
         let long = cue.start.saturating_sub(started) >= 30_000;
         let sentence = ends_sentence(&current) && cue.start.saturating_sub(started) >= 12_000;
         if !current.is_empty() && (pause || long || sentence) {
-            out.push(format!("[{}] {}", clock(started), current));
-            current.clear();
+            out.push((started, std::mem::take(&mut current)));
         }
         if current.is_empty() {
             started = cue.start;
@@ -59,7 +66,7 @@ pub fn paragraphs(cues: &[Cue]) -> Vec<String> {
         last_end = cue.end;
     }
     if !current.is_empty() {
-        out.push(format!("[{}] {}", clock(started), current));
+        out.push((started, current));
     }
     out
 }
@@ -67,7 +74,8 @@ pub fn paragraphs(cues: &[Cue]) -> Vec<String> {
 /// [paragraphs] cut into pieces of at most [budget] characters, each sent
 /// to the AI in one request. Past [most] pieces the rest is left out.
 pub fn transcript(source: &str, budget: usize, most: usize) -> Value {
-    let lines = paragraphs(&cues(source));
+    let parsed = cues(source);
+    let lines = paragraphs(&parsed);
     let mut chunks: Vec<String> = Vec::new();
     let mut current = String::new();
     let mut size = 0;
@@ -91,7 +99,161 @@ pub fn transcript(source: &str, budget: usize, most: usize) -> Value {
     if !current.is_empty() && chunks.len() < most {
         chunks.push(current);
     }
-    json!({"chunks": chunks, "paragraphs": lines.len(), "cut": cut})
+    let end = parsed.iter().map(|c| c.end).max().unwrap_or(0);
+    json!({"chunks": chunks, "paragraphs": lines.len(), "cut": cut, "end": end})
+}
+
+/// Milliseconds of `h:mm:ss`, `m:ss` or a number of seconds.
+fn parse_clock(value: &Value) -> Option<u64> {
+    if let Some(seconds) = value.as_f64() {
+        return (seconds.is_finite() && seconds >= 0.0).then_some((seconds * 1000.0) as u64);
+    }
+    let text = value.as_str()?.trim().trim_matches(['[', ']']);
+    let mut total: u64 = 0;
+    let parts: Vec<&str> = text.split(':').collect();
+    if parts.is_empty() || parts.len() > 3 {
+        return None;
+    }
+    for part in &parts {
+        let n: u64 = part.trim().parse().ok()?;
+        total = total.checked_mul(60)?.checked_add(n)?;
+    }
+    total.checked_mul(1000)
+}
+
+/// Letters and digits only, lower case: what is compared when a quote is
+/// looked for in the subtitles.
+fn plain(text: &str) -> Vec<char> {
+    text.chars()
+        .filter(|c| c.is_alphanumeric())
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
+/// When [quote] is said in [cues]: the start of the cue its first words
+/// are in, if they are there as said.
+fn find_quote(cues: &[Cue], quote: &str) -> Option<u64> {
+    let wanted: Vec<char> = plain(quote).into_iter().take(24).collect();
+    if wanted.len() < 4 {
+        return None;
+    }
+    let mut all: Vec<char> = Vec::new();
+    let mut owner: Vec<usize> = Vec::new();
+    for (i, cue) in cues.iter().enumerate() {
+        for c in plain(&cue.text) {
+            all.push(c);
+            owner.push(i);
+        }
+    }
+    all.windows(wanted.len())
+        .position(|w| w == wanted.as_slice())
+        .map(|at| cues[owner[at]].start)
+}
+
+fn short(text: &str, most: usize) -> String {
+    let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    if text.chars().count() <= most {
+        text
+    } else {
+        text.chars().take(most).collect::<String>() + "…"
+    }
+}
+
+/// The AI 概览 a model wrote for the subtitles [source], with every time
+/// checked against them, so a made-up time never seeks: a chapter starts
+/// where the paragraph its time falls in starts, the first at 0:00, none
+/// past the end; a quote starts where its words are said, or else where
+/// its paragraph starts, and is marked `found` only in the first case.
+/// Answers `{about, chapters: [{ms, end, title}], quotes: [{ms, text,
+/// translation, found}]}`.
+pub fn overview_check(source: &str, overview: &Value) -> Value {
+    let parsed = cues(source);
+    let starts: Vec<u64> = timed_paragraphs(&parsed).iter().map(|(s, _)| *s).collect();
+    let end = parsed.iter().map(|c| c.end).max().unwrap_or(0);
+    let snap = |ms: u64| -> Option<u64> {
+        if starts.is_empty() || ms > end + 5_000 {
+            return None;
+        }
+        Some(
+            starts
+                .iter()
+                .rev()
+                .find(|&&s| s <= ms)
+                .copied()
+                .unwrap_or(starts[0]),
+        )
+    };
+    let about = short(
+        overview.get("about").and_then(Value::as_str).unwrap_or(""),
+        2000,
+    );
+    let mut chapters: Vec<(u64, String)> = Vec::new();
+    for chapter in overview
+        .get("chapters")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let title = short(
+            chapter.get("title").and_then(Value::as_str).unwrap_or(""),
+            100,
+        );
+        let Some(ms) = chapter.get("time").and_then(parse_clock).and_then(snap) else {
+            continue;
+        };
+        if title.is_empty() || chapters.iter().any(|(at, _)| *at == ms) {
+            continue;
+        }
+        chapters.push((ms, title));
+    }
+    chapters.sort_by_key(|(ms, _)| *ms);
+    chapters.truncate(30);
+    if let Some(first) = chapters.first_mut() {
+        first.0 = 0;
+    }
+    let mut quotes: Vec<Value> = Vec::new();
+    for quote in overview
+        .get("quotes")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let text = short(quote.get("text").and_then(Value::as_str).unwrap_or(""), 400);
+        if text.is_empty() || quotes.iter().any(|q| q["text"] == text.as_str()) {
+            continue;
+        }
+        let translation = short(
+            quote
+                .get("translation")
+                .and_then(Value::as_str)
+                .unwrap_or(""),
+            400,
+        );
+        let found = find_quote(&parsed, &text);
+        let Some(ms) = found.or_else(|| quote.get("time").and_then(parse_clock).and_then(snap))
+        else {
+            continue;
+        };
+        quotes.push(
+            json!({"ms": ms, "text": text, "translation": translation, "found": found.is_some()}),
+        );
+        if quotes.len() == 5 {
+            break;
+        }
+    }
+    quotes.sort_by_key(|q| q["ms"].as_u64().unwrap_or(0));
+    json!({
+        "about": about,
+        "chapters": chapters
+            .iter()
+            .enumerate()
+            .map(|(i, (ms, title))| {
+                let until = chapters.get(i + 1).map_or(end.max(*ms), |(next, _)| *next);
+                json!({"ms": ms, "end": until, "title": title})
+            })
+            .collect::<Vec<_>>(),
+        "quotes": quotes,
+    })
 }
 
 /// Days since 1970-01-01 of `YYYY-MM-DD`.
@@ -366,6 +528,17 @@ pub unsafe extern "C" fn lumtub_summary_transcript(json: *const u8, length: usiz
     give(transcript(source, budget, most).to_string())
 }
 
+/// [overview_check] for Dart, from `{source, overview}`.
+///
+/// # Safety
+/// [json] must point to [length] bytes of UTF-8.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_overview_check(json: *const u8, length: usize) -> *mut c_char {
+    let input: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or(Value::Null);
+    let source = input.get("source").and_then(Value::as_str).unwrap_or("");
+    give(overview_check(source, input.get("overview").unwrap_or(&Value::Null)).to_string())
+}
+
 /// [watch_stats] for Dart.
 ///
 /// # Safety
@@ -406,6 +579,50 @@ mod tests {
                 "[1:01:40] an hour in"
             ]
         );
+    }
+
+    #[test]
+    fn checks_the_times_of_an_overview() {
+        let source = "WEBVTT\n\n00:00.000 --> 00:04.000\nWelcome to the show.\n\n\
+            00:20.000 --> 00:24.000\nThe first thing to know is that\n\n\
+            00:24.000 --> 00:28.000\nbatteries hate the cold.\n\n\
+            01:10.000 --> 01:14.000\nIn the end it is all about heat.\n";
+        let overview = json!({
+            "about": "  A talk   about batteries. ",
+            "chapters": [
+                {"time": "0:22", "title": "Cold"},
+                {"time": "0:03", "title": "Start"},
+                {"time": "1:12", "title": "Heat"},
+                {"time": "9:00", "title": "Made up"},
+                {"time": "1:11", "title": "Same paragraph"},
+                {"time": "nonsense", "title": "Bad"},
+            ],
+            "quotes": [
+                {"time": "0:00", "text": "Batteries hate the cold.", "translation": "电池怕冷。"},
+                {"time": "1:10", "text": "Something nobody said at all"},
+                {"time": "30:00", "text": "Nobody said this either"},
+            ],
+        });
+        let checked = overview_check(source, &overview);
+        assert_eq!(checked["about"], "A talk about batteries.");
+        assert_eq!(
+            checked["chapters"],
+            json!([
+                {"ms": 0, "end": 20_000, "title": "Start"},
+                {"ms": 20_000, "end": 70_000, "title": "Cold"},
+                {"ms": 70_000, "end": 74_000, "title": "Heat"}
+            ])
+        );
+        assert_eq!(
+            checked["quotes"],
+            json!([
+                {"ms": 24_000, "text": "Batteries hate the cold.", "translation": "电池怕冷。", "found": true},
+                {"ms": 70_000, "text": "Something nobody said at all", "translation": "", "found": false},
+            ])
+        );
+        assert_eq!(parse_clock(&json!("1:02:03")), Some(3_723_000));
+        assert_eq!(parse_clock(&json!(12.5)), Some(12_500));
+        assert_eq!(transcript(source, 12_000, 8)["end"], 74_000);
     }
 
     #[test]

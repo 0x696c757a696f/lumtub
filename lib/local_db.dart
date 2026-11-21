@@ -192,6 +192,47 @@ extension LocalDbTexts on LocalDb {
 
   /// Forgets [video]'s summaries in every language (all videos when empty).
   Future<void> forgetSummaries({String video = ''}) => _texts('summary.forget', {'video': video});
+
+  /// Keeps a note on [video] at [at], or changes note [id]'s words.
+  /// Answers the note's id.
+  Future<int> putNote({int id = 0, required String video, String title = '', Duration at = Duration.zero, String quote = '', String body = ''}) async {
+    final answer = await _texts('note.put', {'id': id, 'video': video, 'title': title, 'at': at.inMilliseconds, 'quote': quote, 'body': body});
+    return (answer['id'] as num?)?.toInt() ?? 0;
+  }
+
+  /// [video]'s notes in the order of the video; with no video, all of
+  /// them, newest first.
+  Future<List<VideoNote>> notes({String video = ''}) async {
+    final answer = await _texts('note.list', {'video': video});
+    return [
+      for (final n in answer['notes'] is List ? answer['notes'] as List : const [])
+        if (n is Map) VideoNote.fromJson(n),
+    ];
+  }
+
+  Future<void> forgetNote(int id) => _texts('note.forget', {'id': id});
+}
+
+/// A note on a moment of a video: the subtitle words it is about and what
+/// the person wrote, or had AI write, about them.
+class VideoNote {
+  const VideoNote({required this.id, required this.video, this.title = '', required this.at, this.quote = '', this.body = '', required this.created});
+  factory VideoNote.fromJson(Map<dynamic, dynamic> json) => VideoNote(
+        id: (json['id'] as num?)?.toInt() ?? 0,
+        video: '${json['video'] ?? ''}',
+        title: '${json['title'] ?? ''}',
+        at: Duration(milliseconds: (json['at'] as num?)?.toInt() ?? 0),
+        quote: '${json['quote'] ?? ''}',
+        body: '${json['body'] ?? ''}',
+        created: DateTime.fromMillisecondsSinceEpoch(((json['created'] as num?) ?? 0).toInt() * 1000),
+      );
+  final int id;
+  final String video;
+  final String title;
+  final Duration at;
+  final String quote;
+  final String body;
+  final DateTime created;
 }
 
 /// A transcript kept in `lumtub.db`. [origin] is `human`, `youtube-auto`,

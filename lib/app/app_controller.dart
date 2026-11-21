@@ -1040,6 +1040,12 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// AI 总结 already made this session, by video id.
   final _summaries = <String, String>{};
 
+  /// Counts each note added, changed or deleted, for lists to reload.
+  final notesChanged = ValueNotifier<int>(0);
+
+  /// The video whose chapters AI 概览 made, as it had none of its own.
+  String? aiChaptersOf;
+
   /// Videos whose kept AI 总结 was thrown away this session, so lumtub.db
   /// is not asked for it while that is being written.
   final _staleSummaries = <String>{};

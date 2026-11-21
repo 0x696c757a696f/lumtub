@@ -29,7 +29,7 @@ import '../../right_click.dart';
 import '../../wheel_gesture.dart';
 import '../../shortcut_bindings.dart';
 import '../../video_codec.dart';
-import '../../widgets/pilinara_settings_tiles.dart';
+import '../../widgets/settings_tiles.dart';
 import '../../windows_video_info.dart';
 import '../../friendly_error.dart';
 import '../common.dart';

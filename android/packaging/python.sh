@@ -41,12 +41,17 @@ build_abi() { # abi triple clang-triple pin ("built" = made by python-arm32.sh)
   local url="https://www.python.org/ftp/python/$version/python-$version-$triple.tar.gz"
   local tarball="$downloads/python-$version-$triple.tar.gz"
   if [ "$pin" = built ]; then
-    # Kept in the cached downloads folder under the source and libraries it
-    # was built from, so a changed pin builds it again.
-    local stamp
-    stamp=$(printf '%s\n' "$version" "$PYTHON_ANDROID_SOURCE_COMMIT" "$PYTHON_ANDROID_ARM32_DEPS" | cat - "$here/python-arm32.sh" | sha256sum | cut -c1-16)
-    tarball="$downloads/python-$version-$triple-$stamp.tar.gz"
-    [ -f "$tarball" ] || "$here/python-arm32.sh" "$work/build-$triple" "$tarball"
+    # From lumtub-media-builds when pins.env pins this recipe's release,
+    # else built here (a change to the recipe, before its release exists).
+    local name
+    name=$("$here/python-arm32.sh" --name)
+    tarball="$downloads/$name.tar.gz"
+    if [ "$name" = "${PYTHON_ANDROID_ARM32_RELEASE:-}" ]; then
+      fetch "https://github.com/0x696c757a696f/lumtub-media-builds/releases/download/$name/$name.tar.gz" "$tarball" "$PYTHON_ANDROID_SHA256_ARM32"
+    elif [ ! -f "$tarball" ]; then
+      echo "This 32-bit Arm Python recipe is $name; pins.env has ${PYTHON_ANDROID_ARM32_RELEASE:-none}. Building it here." >&2
+      "$here/python-arm32.sh" "$work/build-$triple" "$tarball"
+    fi
   elif [ "$pin" = unpinned ]; then
     # Goes on, so one run prints every sum, and fails at the end.
     curl -fsSL --retry 5 --retry-all-errors -o "$tarball" "$url"

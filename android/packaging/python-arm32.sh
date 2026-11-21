@@ -6,6 +6,12 @@
 # python.sh treats all three ABIs alike.
 #
 #   python-arm32.sh <work folder> <tarball>
+#   python-arm32.sh --name    prints the release name of this recipe
+#
+# lumtub-media-builds builds this recipe once a day and releases it under
+# that name (python-android-arm32-<version>-<hash of the pins and this
+# script>); python.sh downloads that release when pins.env pins it, and runs
+# this script itself only for a recipe not released yet.
 #
 # Needs ANDROID_HOME (android-env.sh installs the NDK it wants when missing)
 # and PYTHON_ANDROID_VERSION, PYTHON_ANDROID_SOURCE_COMMIT and
@@ -14,10 +20,15 @@
 # cpython-android-source-deps tarballs, checked against their pinned sums and
 # unpacked before android.py would download them unchecked.
 set -euo pipefail
+version=$PYTHON_ANDROID_VERSION
+if [ "${1:-}" = --name ]; then
+  inputs=$(printf '%s\n' "$version" "$PYTHON_ANDROID_SOURCE_COMMIT" "$PYTHON_ANDROID_ARM32_DEPS" | cat - "$0" | sha256sum | cut -c1-10)
+  echo "python-android-arm32-$version-$inputs"
+  exit 0
+fi
 work=$1
 out=$2
 host=arm-linux-androideabi
-version=$PYTHON_ANDROID_VERSION
 : "${ANDROID_HOME:?}"
 
 src="$work/cpython"

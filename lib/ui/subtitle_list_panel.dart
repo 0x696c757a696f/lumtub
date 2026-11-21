@@ -18,6 +18,9 @@ import 'common.dart';
 import 'motion.dart';
 import 'player_panel.dart';
 import 'app_icons.dart';
+import '../learning/learning.dart';
+import 'learning/ruby_line.dart';
+import 'learning/word_card.dart';
 import 'video_notes.dart';
 
 /// 字幕列表: every line of the main subtitle beside the video, with the
@@ -62,6 +65,29 @@ class _SubtitleListState extends State<SubtitleList> {
     super.initState();
     _trackChanges = widget.player.stream.track.listen((_) => _reload());
     widget.controller.addListener(_secondChanged);
+    widget.controller.learning.addListener(_learningChanged);
+  }
+
+  void _learningChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// [text] as words with pinyin a tap looks up, when it is Chinese and
+  /// the learning pack's dictionary is there; otherwise plain.
+  Widget _line(String text, TextStyle style, {required String? other, required Duration at}) {
+    final learning = widget.controller.learning;
+    final tokens = _query.isEmpty ? learning.wordsOf(text) : null;
+    if (tokens == null) return _marked(text, style, Theme.of(context).colorScheme);
+    final book = learning.book;
+    return ChineseRubyLine(
+      tokens: tokens,
+      style: style,
+      pinyin: learning.showPinyin,
+      hard: learning.isHard,
+      hardColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFFFFC23D) : const Color(0xFFB86E00),
+      highlight: book == null ? null : (token) => book.contains(Learning.languageOf(token), token.key) || book.contains(Learning.languageOf(token), token.key.toLowerCase()),
+      onWord: (token) => unawaited(showWordCard(context, widget.controller, token, sentence: text, translation: other, at: at)),
+    );
   }
 
   void _reload() => setState(() {
@@ -101,6 +127,7 @@ class _SubtitleListState extends State<SubtitleList> {
   @override
   void dispose() {
     widget.controller.removeListener(_secondChanged);
+    widget.controller.learning.removeListener(_learningChanged);
     _trackChanges?.cancel();
     _positions?.cancel();
     _typing?.cancel();
@@ -328,17 +355,19 @@ class _SubtitleListState extends State<SubtitleList> {
                             ),
                             Expanded(
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                                _marked(
+                                _line(
                                   top,
                                   TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
-                                  colors,
+                                  other: under,
+                                  at: cue.start,
                                 ),
                                 if (under != null) ...[
                                   const SizedBox(height: 2),
-                                  _marked(
+                                  _line(
                                     under,
                                     TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
-                                    colors,
+                                    other: top,
+                                    at: cue.start,
                                   ),
                                 ],
                               ]),

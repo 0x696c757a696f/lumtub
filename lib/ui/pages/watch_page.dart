@@ -12,6 +12,10 @@ import '../../device.dart';
 import '../../libass_layout.dart' show LibassLook;
 import '../window_chrome.dart';
 import '../../app/app_controller.dart';
+import '../../learning/word_token.dart';
+import '../../learning/learning.dart';
+import '../learning/ruby_line.dart';
+import '../learning/word_card.dart';
 import '../../appearance_settings.dart' show blankFont, bundledFont;
 import '../../models.dart';
 import '../../player_settings.dart';
@@ -773,7 +777,9 @@ class _Player extends StatelessWidget {
             // texture, which flashes black on some Windows GPUs.
             child: Stack(fit: StackFit.expand, children: [
               RepaintBoundary(
-                child: Video(
+                child: ValueListenableBuilder<int>(
+                  valueListenable: controller.learning.viewChanges,
+                  builder: (context, learningView, child) => Video(
                   key: videoKey,
                   controller: controller.videoController!,
                   // Background playback is decided in main.dart (onHide), not by the view.
@@ -795,6 +801,10 @@ class _Player extends StatelessWidget {
                     byHeight: Platform.isAndroid || Platform.isIOS,
                     libass: controller.libassDraws,
                     reveal: (shown: controller.translationShown, hover: controller.hoverTranslation, tap: controller.toggleTranslation),
+                    words: (
+                      learning: controller.learning,
+                      onWord: (token, line) => unawaited(showWordCard(context, controller, token, sentence: line)),
+                    ),
                   ),
                   onEnterFullscreen: () {
                     // 铺满窗口 keeps the window as it is.
@@ -823,6 +833,7 @@ class _Player extends StatelessWidget {
                     }
                     return defaultExitNativeFullscreen();
                   },
+                ),
                 ),
               ),
               if (controller.waitingForStart && controller.playing != null)
@@ -1304,7 +1315,23 @@ double androidSubtitleScale(Size size, [double system = 1, bool small = false]) 
 /// plainly now, and what hovering and tapping it do.
 typedef TranslationRevealing = ({ValueListenable<bool> shown, ValueChanged<bool> hover, VoidCallback tap});
 
-SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass, TranslationRevealing? reveal}) {
+/// What the learning pack needs from the player: the dictionary, and what
+/// tapping a word of the main line does.
+typedef SubtitleWords = ({Learning learning, void Function(WordToken token, String line) onWord});
+
+/// The words of the main video's subtitle line, to find the one tapped.
+final _videoWords = RubyHits();
+
+/// Amber for words above the learner's level, or light blue where the
+/// subtitles are already yellow or orange.
+Color _hardColorOn(Color? text) {
+  if (text == null) return const Color(0xFFFFC23D);
+  final hsv = HSVColor.fromColor(text);
+  final yellowish = hsv.saturation > 0.35 && hsv.hue >= 20 && hsv.hue <= 75;
+  return yellowish ? const Color(0xFF7FDBFF) : const Color(0xFFFFC23D);
+}
+
+SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass, TranslationRevealing? reveal, SubtitleWords? words}) {
   // The view scales by area against 1080p, which makes the text tiny in a
   // small window. There a line is about a twentieth of the picture's
   // height, as on a TV, but never under 13 px, which stays readable, nor
@@ -1317,6 +1344,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
   // for 模糊翻译, which needs the second line's place.
   if (ghost && !blur) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;
+  final lookUp = !ghost && (words?.learning.anyDictionary ?? false);
   TextStyle style(String font, double scale, int color, double opacity) => TextStyle(
         height: 1.3,
         fontSize: 32 * scale,
@@ -1345,6 +1373,35 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     secondaryShown: reveal?.shown,
     onSecondaryHover: reveal?.hover,
     onSecondaryTap: reveal?.tap,
+    mainLine: !lookUp
+        ? null
+        : (text, style, scaler, outline) {
+            final tokens = words!.learning.wordsOf(text);
+            if (tokens == null) return null;
+            return LayoutBuilder(
+                builder: (context, constraints) => ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.9),
+                  child: ChineseRubyLine(
+                    tokens: tokens,
+                    style: style,
+                    textScaler: scaler,
+                    outline: outline,
+                    alignment: WrapAlignment.center,
+                    pinyin: words.learning.showPinyin,
+                    hard: words.learning.isHard,
+                    hardColor: _hardColorOn(style.color),
+                    hits: _videoWords,
+                  ),
+                ),
+              );
+          },
+    mainHit: !lookUp ? null : (global) => _videoWords.wordAt(global) != null,
+    onMainTap: !lookUp
+        ? null
+        : (global) {
+            final token = _videoWords.wordAt(global);
+            if (token != null) words!.onWord(token, _videoWords.line);
+          },
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),
   );
 }

@@ -1,0 +1,5 @@
+# Learning pack codes that no longer unlock anything: one a line, by the
+# name in the code ("Polar #a1b2c3", as the app shows it) or by its id (the
+# 32 hex digits the app shows under the license). A note may follow " # ".
+# A change here deploys with the license server; apps notice within 30 days,
+# and at once when the code is entered again.

@@ -101,5 +101,7 @@ jobs:
           done
           printf '%s\n' "$url" > "$RUNNER_TEMP/license-server.txt"
           gh release upload learning "$RUNNER_TEMP/license-server.txt" --repo "$GITHUB_REPOSITORY" --clobber
+          # Where the app's Buy button goes for buyers outside China.
+          gh release upload learning license-server/polar-checkout.txt --repo "$GITHUB_REPOSITORY" --clobber
           echo "::notice::Ko-fi webhook URL: $url/kofi"
           echo "::notice::Polar webhook URL: $url/polar (event order.paid); success URL: $url/polar/thanks?checkout_id={CHECKOUT_ID}"

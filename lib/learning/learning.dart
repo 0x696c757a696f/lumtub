@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 
 import '../app_directories.dart';
 import '../app_log.dart';
+import '../l10n/l10n.dart' show currentLanguage;
 import '../zip_archive.dart' show extractZip;
 import 'chinese_dictionary.dart';
 import 'english_dictionary.dart';
@@ -256,6 +257,8 @@ class Learning extends ChangeNotifier {
     if (_loaded) return;
     _loaded = true;
     _directories = directories;
+    // Learners outside China know CEFR levels, not Chinese exam lists.
+    EnglishEntry.preferCefr = !currentLanguage.isChinese;
     _voice = WordVoice(Directory('${directories.cache.path}${Platform.pathSeparator}word-sounds'));
     unawaited(_voice!.tidy());
     _book = VocabularyBook(File('${directories.data.path}${Platform.pathSeparator}vocabulary.json'));

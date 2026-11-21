@@ -78,4 +78,17 @@ void main() {
     expect(d.levelOf('skincare'), EnglishLevel.highSchool.index);
     expect(d.levelOf('zymurgy'), EnglishLevel.beyond.index);
   });
+
+  test('with CEFR preferred, a listed level comes from CEFR-J', () {
+    final d = EnglishDictionary.parse('clause\t\tn. 条款\t\tky toefl ielts gre\t2\t1871\t\tB2\n'
+        'regimen\t\tn. 养生法\t\ttoefl\t0\t7909\t\t\n');
+    addTearDown(() => EnglishEntry.preferCefr = false);
+    expect(d.lookup('clause').single.cefr, 'B2');
+    expect(d.levelOf('clause'), EnglishLevel.postgraduate.index);
+    EnglishEntry.preferCefr = true;
+    final again = EnglishDictionary.parse('clause\t\tn. 条款\t\tky toefl ielts gre\t2\t1871\t\tB2\n'
+        'regimen\t\tn. 养生法\t\ttoefl\t0\t7909\t\t\n');
+    expect(again.levelOf('clause'), EnglishLevel.cet6.index);
+    expect(again.levelOf('regimen'), EnglishLevel.toeflIelts.index);
+  });
 }

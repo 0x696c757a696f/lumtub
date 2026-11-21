@@ -190,11 +190,11 @@ class _EnglishCard extends StatelessWidget {
                     if (!_sameHead(entries.length, e.word, token.text)) TextSpan(text: '${e.word}  ', style: theme.textTheme.titleMedium),
                     if (e.phonetic.isNotEmpty) TextSpan(text: '/${e.phonetic}/', style: TextStyle(color: colors.primary)),
                   ])),
-                  if (e.tags.isNotEmpty || e.collins > 0)
+                  if (e.tags.isNotEmpty || e.cefr.isNotEmpty || e.collins > 0)
                     Padding(
                       padding: const EdgeInsets.only(top: 4, bottom: 2),
                       child: Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                        for (final tag in e.tags) _Tag(englishLevelName(tag)),
+                        if (EnglishEntry.preferCefr && e.cefr.isNotEmpty) _Tag('CEFR ${e.cefr}') else for (final tag in e.tags) _Tag(englishLevelName(tag)),
                         if (e.collins > 0) Text('${'★' * e.collins}${'☆' * (5 - e.collins)}', style: TextStyle(color: colors.outline, fontSize: 12)),
                       ]),
                     ),

@@ -63,13 +63,13 @@ class EnglishDictionary {
     final capital = word != word.toLowerCase();
     int? best;
     for (final entry in lookup(word)) {
-      final level = capital && entry.tags.isEmpty ? null : entry.level;
+      final level = capital && entry.tags.isEmpty && entry.cefr.isEmpty ? null : entry.level;
       if (level != null && (best == null || level < best)) best = level;
     }
     // No exam lists it: a short form (vocab) or a word made of two
     // listed ones (skincare) is as hard as its full form or harder part,
     // not as rare as the corpus counts make it.
-    if (!capital && best != null && lookup(word).every((e) => e.tags.isEmpty)) {
+    if (!capital && best != null && lookup(word).every((e) => e.tags.isEmpty && e.cefr.isEmpty)) {
       final easier = _listedLevel(_clippings[word.toLowerCase()]) ?? _compoundLevel(word.toLowerCase());
       if (easier != null && easier < best) best = easier;
     }
@@ -82,7 +82,8 @@ class EnglishDictionary {
     if (word == null) return null;
     int? best;
     for (final entry in lookup(word)) {
-      if (entry.tags.isNotEmpty && (best == null || entry.tags.first.index < best)) best = entry.tags.first.index;
+      final level = entry.tags.isEmpty && entry.cefr.isEmpty ? null : entry.level;
+      if (level != null && (best == null || level < best)) best = level;
     }
     return best;
   }
@@ -176,7 +177,7 @@ enum EnglishLevel {
 }
 
 class EnglishEntry {
-  const EnglishEntry({required this.word, required this.phonetic, required this.meanings, required this.forms, this.tags = const [], this.collins = 0, this.rank = 0, this.english = const []});
+  const EnglishEntry({required this.word, required this.phonetic, required this.meanings, required this.forms, this.tags = const [], this.collins = 0, this.rank = 0, this.english = const [], this.cefr = ''});
 
   final String word;
   final String phonetic;
@@ -185,6 +186,14 @@ class EnglishEntry {
 
   /// English meanings, such as `v. To move swiftly on foot.`
   final List<String> english;
+
+  /// The CEFR level (A1–C2) the CEFR-J and Octanove lists give it; empty
+  /// when they do not list it.
+  final String cefr;
+
+  /// Whether levels follow CEFR first (learners outside China) instead of
+  /// Chinese exam lists. Set from the interface language.
+  static bool preferCefr = false;
 
   /// ECDICT's forms field, as `p:ran/d:run`.
   final String forms;
@@ -200,6 +209,15 @@ class EnglishEntry {
 
   /// The first exam that lists it; otherwise a guess from its rank.
   int? get level {
+    if (preferCefr && cefr.isNotEmpty) {
+      return switch (cefr) {
+        'A1' || 'A2' => EnglishLevel.middleSchool.index,
+        'B1' => EnglishLevel.highSchool.index,
+        'B2' => EnglishLevel.cet6.index,
+        'C1' => EnglishLevel.toeflIelts.index,
+        _ => EnglishLevel.gre.index,
+      };
+    }
     if (tags.isNotEmpty) return tags.first.index;
     if (rank <= 0) return null;
     if (rank < 5000) return EnglishLevel.cet4.index;
@@ -220,6 +238,7 @@ class EnglishEntry {
       collins: int.tryParse(at(5)) ?? 0,
       rank: int.tryParse(at(6)) ?? 0,
       english: at(7).split(r'\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
+      cefr: at(8),
     );
   }
 

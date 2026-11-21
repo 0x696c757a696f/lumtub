@@ -61,6 +61,7 @@ jobs:
           # pinned commit and checksum keep the pack the same.
           ECDICT_COMMIT: 39cfb9672c0906b63569e0453c2e6abfb9ab182a
           ECDICT_SHA256: d1ecbdf9ee2b920afb6f430ca6b6bb9f559588cf0dff86e04bd255f9390843cc
+          OLP_COMMIT: d4e45b75b38f27b30dfc5c44d8c571aec7e7092f
         run: |
           set -euo pipefail
           curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/ecdict.csv" "https://raw.githubusercontent.com/skywind3000/ECDICT/$ECDICT_COMMIT/ecdict.csv"
@@ -99,6 +100,14 @@ jobs:
           curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/en-simple.jsonl.gz" https://kaikki.org/simplewiktionary/raw-wiktextract-data.jsonl.gz
           python3 -I .github/learning/en_english.py "$RUNNER_TEMP/in/en.tsv" "$RUNNER_TEMP/in/en-wiktionary.jsonl" "$RUNNER_TEMP/in/en-simple.jsonl.gz" | tee -a "$GITHUB_STEP_SUMMARY"
           rm -f "$RUNNER_TEMP/in/en-wiktionary.jsonl"
+          # CEFR levels for learners outside China: CEFR-J Wordlist 1.5 (free for
+          # commercial use with citation) and Octanove C1/C2 (CC BY-SA 4.0).
+          olp="https://raw.githubusercontent.com/openlanguageprofiles/olp-en-cefrj/$OLP_COMMIT"
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/cefrj.csv" "$olp/cefrj-vocabulary-profile-1.5.csv"
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/octanove.csv" "$olp/octanove-vocabulary-profile-c1c2-1.0.csv"
+          echo "b0dd3c635f1c9a4fdf1490c7e5b7c48e8bbe55b652ad0c9860a95f98e10ae498  $RUNNER_TEMP/in/cefrj.csv" | sha256sum -c -
+          echo "18c33a407f2f89f7b8de9671c6d45fe3ea0bce45e7d2d7dcaab48d73e0f7b380  $RUNNER_TEMP/in/octanove.csv" | sha256sum -c -
+          python3 -I .github/learning/en_cefr.py "$RUNNER_TEMP/in/en.tsv" "$RUNNER_TEMP/in/cefrj.csv" "$RUNNER_TEMP/in/octanove.csv" | tee -a "$GITHUB_STEP_SUMMARY"
           gzip -n -9 < "$RUNNER_TEMP/in/en.tsv" > "$RUNNER_TEMP/out/en-ecdict.tsv.gz"
           # The SQLite dictionary the app looks words up in on disk.
           python3 -I .github/learning/sqlite_pack.py ecdict en "$RUNNER_TEMP/in/en.tsv" "$RUNNER_TEMP/in/en.sqlite"
@@ -235,7 +244,7 @@ jobs:
           NOTES: >-
             Dictionaries for the learning pack, downloaded by Lumtub when a dictionary is turned on. Not an app release.
             CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/);
-            ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT), with English meanings from the Simple English and English Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org and from WordNet (WordNet license, https://wordnet.princeton.edu/license-and-commercial-use);
+            ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT), with English meanings from the Simple English and English Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org and from WordNet (WordNet license, https://wordnet.princeton.edu/license-and-commercial-use), and CEFR levels from The CEFR-J Wordlist Version 1.5, compiled by Yukio Tono, Tokyo University of Foreign Studies (http://www.cefr-j.org/), and the Octanove Vocabulary Profile C1/C2 1.0 by Octanove Labs (CC BY-SA 4.0), via https://github.com/openlanguageprofiles/olp-en-cefrj;
             JMdict by the Electronic Dictionary Research and Development Group under CC BY-SA 4.0 (https://www.edrdg.org/edrdg/licence.html), via jmdict-simplified, with Chinese meanings from the Chinese Wiktionary and WikDict;
             the Korean, Spanish, French, German, Italian and Russian dictionaries are made from the English and Chinese Wiktionaries (CC BY-SA 4.0, https://www.wiktionary.org/) as extracted by kaikki.org (https://kaikki.org/) and from WikDict (CC BY-SA, https://www.wikdict.com/);
             Korean meanings and levels come first from the Korean Basic Dictionary (한국어기초사전) of the National Institute of Korean Language (CC BY-SA 2.0 KR, https://krdict.korean.go.kr/), via its open data in https://github.com/basickorean/basickorean-vocab.

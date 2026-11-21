@@ -1,73 +1,68 @@
-// The in-app mini player: a small floating card over the pages while the
-// video keeps playing, after PiliNara's in-app picture in picture
-// (lib/services/pip_overlay_service.dart,
-// lib/common/widgets/pip_mini_video_content.dart).
-//
-// PiliNara: https://github.com/Starfallan/PiliNara
-// Copyright (C) PiliNara contributors.
-// Adapted for Lumtub under the GNU General Public License, version 3 or
-// later. Changes: a widget in the shell's page area instead of a navigator
-// overlay entry; it shares the player's one VideoController with the watch
-// page, which is unmounted while the card shows.
-
 import 'dart:async';
-import 'dart:io' show Platform;
+import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:media_kit/media_kit.dart' show Player;
+import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
 import '../app_window.dart' show pipAspectOf;
 import '../l10n/l10n.dart';
-import 'video_box.dart';
+import '../widgets/position_ticks.dart' show coarsePosition;
 import '../widgets/video_progress_bar.dart';
-import 'motion.dart';
-import '../widgets/position_ticks.dart';
 import 'app_icons.dart';
-import 'common.dart' show isPhone;
-import 'warm_layer.dart';
+import 'common.dart';
+import 'motion.dart';
 import 'pages/watch_page.dart' show subtitleViewFor;
+import 'video_box.dart';
+import 'warm_layer.dart';
 
-/// The corners the card snaps to.
 enum MiniCorner { topLeft, topRight, bottomLeft, bottomRight }
 
-/// Where the card's top left is, in an area of [area] for a card of [size].
+/// Subtitles are left out of a card whose short side is under this.
+const miniSubtitlesFrom = 120.0;
+
+/// The top left of a card of [size] sitting in [corner] of [area].
 Offset miniPosition(MiniCorner corner, Size area, Size size, {double margin = MiniPlayer.margin}) {
   final left = corner == MiniCorner.topLeft || corner == MiniCorner.bottomLeft;
   final top = corner == MiniCorner.topLeft || corner == MiniCorner.topRight;
   return Offset(left ? margin : area.width - size.width - margin, top ? margin : area.height - size.height - margin);
 }
 
-/// The corner nearest to a card whose top left is at [offset].
+/// The corner a card whose top left is at [offset] is nearest to, by its centre.
 MiniCorner nearestMiniCorner(Offset offset, Size area, Size size) {
-  final center = offset + Offset(size.width / 2, size.height / 2);
-  final left = center.dx < area.width / 2;
-  final top = center.dy < area.height / 2;
-  return left ? (top ? MiniCorner.topLeft : MiniCorner.bottomLeft) : (top ? MiniCorner.topRight : MiniCorner.bottomRight);
+  final centre = offset + Offset(size.width / 2, size.height / 2);
+  final left = centre.dx < area.width / 2;
+  final top = centre.dy < area.height / 2;
+  return top ? (left ? MiniCorner.topLeft : MiniCorner.topRight) : (left ? MiniCorner.bottomLeft : MiniCorner.bottomRight);
 }
 
-/// The card's size: [MiniPlayer.width] wide in the video's [aspect], made
-/// smaller to fit in [area].
+/// The card's size: [MiniPlayer.width] wide in the video's ratio, made
+/// smaller to fit [area] with its margins.
 Size miniSize(double aspect, Size area) {
+  const margin = MiniPlayer.margin;
   final ratio = pipAspectOf(aspect);
-  var width = MiniPlayer.width.clamp(0.0, area.width - 2 * MiniPlayer.margin);
-  final maxHeight = area.height - 2 * MiniPlayer.margin;
-  if (width / ratio > maxHeight) width = maxHeight * ratio;
+  var width = math.min(MiniPlayer.width, math.max(0.0, area.width - 2 * margin));
+  final room = area.height - 2 * margin;
+  if (width / ratio > room) width = room * ratio;
   return Size(width, width / ratio);
 }
 
-/// The floating card. Put it in a [Stack] that fills the page area; it
-/// sizes itself to that area.
+/// The video kept playing over the page after leaving the watch page: a
+/// card that can be dragged between the corners on a computer or tablet,
+/// a bar above the navigation on a phone. Place it in a Stack that fills
+/// the page area.
 class MiniPlayer extends StatefulWidget {
   const MiniPlayer({super.key, required this.controller, this.videoBuilder});
   final AppController controller;
 
-  /// Builds the picture; tests replace it, as they have no libmpv.
+  /// The picture in place of the real video.
   final WidgetBuilder? videoBuilder;
 
   static const width = 320.0;
-  /// The phone's bar, as tall as LibreTube's and NewPipe's.
+
+  /// As tall as LibreTube's and NewPipe's.
   static const barHeight = 64.0;
   static const margin = 12.0;
 
@@ -76,92 +71,288 @@ class MiniPlayer extends StatefulWidget {
 }
 
 class _MiniPlayerState extends State<MiniPlayer> {
-  final _subscriptions = <StreamSubscription<void>>[];
-  Timer? _hideTimer;
-  Timer? _mountTimer;
-  bool _hovering = false;
-  /// Whether the controls are built: from hovering until they have faded
-  /// out, so the hidden progress bar does not follow playback.
-  bool _controlsBuilt = false;
-  // The watch page's Video is still fading out for a moment after the card
-  // appears; two Videos of one controller must not overlap.
-  bool _videoMounted = false;
   MiniCorner _corner = MiniCorner.bottomRight;
   Offset? _dragging;
+  bool _videoReady = false;
+  bool _controlsShown = false;
+  bool _controlsBuilt = false;
+  Timer? _mount;
+  Timer? _hide;
+  Player? _watched;
+  final _subscriptions = <StreamSubscription<int?>>[];
 
   AppController get _controller => widget.controller;
 
   @override
   void initState() {
     super.initState();
-    _mountTimer = Timer(const Duration(milliseconds: 250), () {
-      if (mounted) setState(() => _videoMounted = true);
+    // The watch page's video is still fading out; two views of one controller
+    // must not overlap.
+    _mount = Timer(const Duration(milliseconds: 250), () {
+      if (mounted) setState(() => _videoReady = true);
     });
-    final player = _controller.player;
-    // Another video may have another ratio.
-    if (player != null) {
-      _subscriptions
-        ..add(player.stream.width.listen((_) => _refresh()))
-        ..add(player.stream.height.listen((_) => _refresh()));
-    }
   }
 
   @override
   void dispose() {
-    _hideTimer?.cancel();
-    _mountTimer?.cancel();
-    for (final s in _subscriptions) {
-      unawaited(s.cancel());
-    }
+    _mount?.cancel();
+    _hide?.cancel();
+    _unwatch();
     super.dispose();
   }
 
-  void _refresh() {
-    if (mounted) setState(() {});
-  }
-
-  void _show() {
-    _hideTimer?.cancel();
-    _hideTimer = Timer(const Duration(seconds: 3), () => _setHovering(false));
-    _setHovering(true);
-  }
-
-  void _setHovering(bool on) {
-    if (mounted && on != _hovering) {
-      setState(() {
-        _hovering = on;
-        if (on) _controlsBuilt = true;
-      });
+  void _unwatch() {
+    for (final s in _subscriptions) {
+      s.cancel();
     }
+    _subscriptions.clear();
+    _watched = null;
   }
 
-  /// Below this height the mini player shows no subtitles.
-  static const miniSubtitlesFrom = 120.0;
+  /// Another video may have another ratio.
+  void _watch(Player player) {
+    if (identical(_watched, player)) return;
+    _unwatch();
+    _watched = player;
+    void changed(int? _) {
+      if (mounted) setState(() {});
+    }
+    _subscriptions
+      ..add(player.stream.width.listen(changed))
+      ..add(player.stream.height.listen(changed));
+  }
 
-  /// The phone's mini bar is a thumbnail: even the smallest readable text
-  /// would cover the picture. Elsewhere the settings decide.
-  bool _subtitlesOff(Size box) => !_controller.settings.miniPlayerSubtitles || box.shortestSide < miniSubtitlesFrom;
+  void _showControls() {
+    _hide?.cancel();
+    _hide = Timer(const Duration(seconds: 3), _hideControls);
+    if (_controlsShown && _controlsBuilt) return;
+    setState(() => _controlsShown = _controlsBuilt = true);
+  }
 
-  Widget _video(BuildContext context) {
-    if (!_videoMounted) return const SizedBox.expand();
+  void _hideControls() {
+    _hide?.cancel();
+    if (mounted && _controlsShown) setState(() => _controlsShown = false);
+  }
+
+  String get _title {
+    final details = _controller.details?.title;
+    return details != null && details.isNotEmpty ? details : _controller.playing?.title ?? '';
+  }
+
+  String get _channel {
+    final details = _controller.details?.channel;
+    return details != null && details.isNotEmpty ? details : _controller.playing?.channel ?? '';
+  }
+
+  Widget _picture(BuildContext context, Size size) {
+    if (!_videoReady) return const SizedBox.expand();
     final builder = widget.videoBuilder;
     if (builder != null) return builder(context);
-    final controller = _controller.videoController;
-    if (controller == null) return const SizedBox.expand();
+    final video = _controller.videoController;
+    if (video == null) return const SizedBox.expand();
+    final settings = _controller.settings;
+    final subtitles = settings.miniPlayerSubtitles && size.shortestSide >= miniSubtitlesFrom;
     return VideoBox(
       controller: _controller,
       smallSubtitles: true,
-      subtitlesOff: _subtitlesOff,
+      subtitlesOff: (box) => !settings.miniPlayerSubtitles || box.shortestSide < miniSubtitlesFrom,
       child: WarmLayer(
-        child: LayoutBuilder(
-          builder: (context, constraints) => Video(
-            controller: controller,
-            // Background playback is decided in main.dart (onHide), not by the view.
-            pauseUponEnteringBackgroundMode: false,
-            controls: NoVideoControls,
-            subtitleViewConfiguration: _subtitlesOff(constraints.biggest)
-                ? const SubtitleViewConfiguration(visible: false)
-                : subtitleViewFor(_controller.settings, smallWindow: constraints.biggest, secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: _controller.libassDraws),
+        child: Video(
+          controller: video,
+          controls: NoVideoControls,
+          pauseUponEnteringBackgroundMode: false,
+          subtitleViewConfiguration: subtitles
+              ? subtitleViewFor(settings, smallWindow: size, secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: _controller.libassDraws)
+              : const SubtitleViewConfiguration(visible: false),
+        ),
+      ),
+    );
+  }
+
+  Widget _progressLine(BuildContext context, Player player) {
+    final colors = Theme.of(context).colorScheme;
+    return IgnorePointer(
+      child: RepaintBoundary(
+        child: StreamBuilder<Duration>(
+          stream: coarsePosition(player),
+          initialData: player.state.position,
+          builder: (context, _) {
+            final total = player.state.duration.inMilliseconds;
+            final value = total <= 0 ? 0.0 : (player.state.position.inMilliseconds / total).clamp(0.0, 1.0);
+            return LinearProgressIndicator(value: value, minHeight: 2, color: colors.inversePrimary, backgroundColor: Colors.white24);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _controls(BuildContext context, Player player) {
+    ButtonStyle style() => IconButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: const Color(0xB3000000),
+          padding: const EdgeInsets.all(4),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        );
+    return AnimatedOpacity(
+      opacity: _controlsShown ? 1 : 0,
+      duration: Motion.of(Ease.fade),
+      onEnd: () {
+        if (!_controlsShown && mounted) setState(() => _controlsBuilt = false);
+      },
+      child: IgnorePointer(
+        ignoring: !_controlsShown,
+        child: Column(children: [
+          Stack(children: [
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent]))),
+              ),
+            ),
+            Row(children: [
+              const SizedBox(width: 8),
+              Expanded(
+                child: IgnorePointer(child: Text(_title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 12))),
+              ),
+              IconButton(style: style(), tooltip: tr('Back to the watch page'), iconSize: 18, icon: Icon(AppIcons.arrowsOutSimple), onPressed: _controller.expandMini),
+              const SizedBox(width: 4),
+              IconButton(style: style(), tooltip: tr('Close the mini player and stop playback'), iconSize: 18, icon: Icon(AppIcons.x), onPressed: _controller.stopWatching),
+              const SizedBox(width: 4),
+            ]),
+          ]),
+          Expanded(
+            child: Center(
+              child: StreamBuilder<bool>(
+                stream: player.stream.playing,
+                initialData: player.state.playing,
+                builder: (context, snapshot) => IconButton(
+                  style: style(),
+                  tooltip: tr('Play/Pause (Space)'),
+                  iconSize: 40,
+                  icon: Icon(snapshot.data == true ? AppIcons.pauseCircle : AppIcons.playCircleFill),
+                  onPressed: () => unawaited(player.playOrPause()),
+                ),
+              ),
+            ),
+          ),
+          Container(
+            color: const Color(0xB3000000),
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 2),
+            child: StreamBuilder<Duration>(
+              stream: coarsePosition(player),
+              initialData: player.state.position,
+              builder: (context, _) => VideoProgressBar(
+                position: player.state.position,
+                buffered: player.state.buffer,
+                total: player.state.duration,
+                color: Colors.white,
+                onSeek: (time) => unawaited(_controller.seek(time)),
+              ),
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _card(BuildContext context, Player player, Size area) {
+    final size = miniSize(_controller.videoAspect, area);
+    final position = _dragging ?? miniPosition(_corner, area, size);
+    return AnimatedPositioned(
+      left: position.dx,
+      top: position.dy,
+      width: size.width,
+      height: size.height,
+      duration: _dragging != null ? Duration.zero : Motion.of(Ease.fade),
+      curve: Ease.curve,
+      child: Entrance(
+        child: MouseRegion(
+          onEnter: (_) => _showControls(),
+          onHover: (_) => _showControls(),
+          onExit: (_) => _hideControls(),
+          child: Material(
+            color: Colors.black,
+            elevation: 8,
+            borderRadius: BorderRadius.circular(8),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(fit: StackFit.expand, children: [
+              _picture(context, size),
+              Positioned(left: 0, right: 0, bottom: 0, child: _progressLine(context, player)),
+              GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () {
+                  unawaited(player.playOrPause());
+                  _showControls();
+                },
+                onDoubleTap: _controller.expandMini,
+                onPanStart: (_) => setState(() => _dragging = miniPosition(_corner, area, size)),
+                onPanUpdate: (details) {
+                  final at = (_dragging ?? position) + details.delta;
+                  setState(() => _dragging = Offset(at.dx.clamp(0.0, math.max(0.0, area.width - size.width)), at.dy.clamp(0.0, math.max(0.0, area.height - size.height))));
+                },
+                onPanEnd: (_) => setState(() {
+                  _corner = nearestMiniCorner(_dragging ?? position, area, size);
+                  _dragging = null;
+                }),
+                onPanCancel: () => setState(() => _dragging = null),
+              ),
+              if (_controlsBuilt) _controls(context, player),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _bar(BuildContext context, Player player) {
+    final theme = Theme.of(context);
+    const line = 2.0;
+    const thumb = MiniPlayer.barHeight - line;
+    final size = const Size(thumb * 16 / 9, thumb);
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Entrance(
+        scale: 0.96,
+        child: GestureDetector(
+          onTap: _controller.expandMini,
+          onVerticalDragEnd: (details) {
+            final v = details.primaryVelocity ?? 0;
+            if (v < -200) _controller.expandMini();
+            if (v > 200) _controller.stopWatching();
+          },
+          child: Material(
+            color: theme.colorScheme.surfaceContainerHigh,
+            elevation: 4,
+            child: SizedBox(
+              height: MiniPlayer.barHeight,
+              child: Column(children: [
+                _progressLine(context, player),
+                Expanded(
+                  child: Row(children: [
+                    SizedBox(width: size.width, height: size.height, child: ColoredBox(color: Colors.black, child: _picture(context, size))),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(_title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                        if (_channel.isNotEmpty) Text(_channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                      ]),
+                    ),
+                    StreamBuilder<bool>(
+                      stream: player.stream.playing,
+                      initialData: player.state.playing,
+                      builder: (context, snapshot) => IconButton(
+                        tooltip: tr('Play/Pause (Space)'),
+                        iconSize: 28,
+                        icon: Icon(snapshot.data == true ? AppIcons.pauseFill : AppIcons.playFill),
+                        onPressed: () => unawaited(player.playOrPause()),
+                      ),
+                    ),
+                    IconButton(tooltip: tr('Close the mini player and stop playback'), iconSize: 24, icon: Icon(AppIcons.x), onPressed: _controller.stopWatching),
+                    const SizedBox(width: 4),
+                  ]),
+                ),
+              ]),
+            ),
           ),
         ),
       ),
@@ -172,220 +363,8 @@ class _MiniPlayerState extends State<MiniPlayer> {
   Widget build(BuildContext context) {
     final player = _controller.player;
     if (player == null) return const SizedBox.shrink();
-    // Settles into place as the watch page gives way to it.
-    if (isPhone(context)) return Align(alignment: Alignment.bottomCenter, child: Entrance(scale: 0.96, child: _bar(context, player)));
-    return LayoutBuilder(builder: (context, constraints) {
-      final area = constraints.biggest;
-      final size = miniSize(_controller.videoAspect, area);
-      final dragging = _dragging;
-      final offset = dragging ?? miniPosition(_corner, area, size);
-      return Stack(children: [
-        AnimatedPositioned(
-          duration: dragging == null ? Motion.of(Ease.fade) : Duration.zero,
-          curve: Ease.curve,
-          left: offset.dx,
-          top: offset.dy,
-          width: size.width,
-          height: size.height,
-          child: Entrance(child: _card(context, player, area, size)),
-        ),
-      ]);
-    });
+    _watch(player);
+    if (isPhone(context)) return _bar(context, player);
+    return LayoutBuilder(builder: (context, constraints) => Stack(children: [_card(context, player, constraints.biggest)]));
   }
-
-  /// On a phone: a bar along the bottom of the page, above the navigation,
-  /// as phone video apps have it. A tap or a swipe up opens the watch page,
-  /// a swipe down closes it; its buttons are a finger's size.
-  Widget _bar(BuildContext context, Player player) {
-    final title = _controller.details?.title.isNotEmpty == true ? _controller.details!.title : _controller.playing?.title ?? '';
-    final channel = _controller.details?.channel ?? _controller.playing?.channel ?? '';
-    final colors = Theme.of(context).colorScheme;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _controller.expandMini,
-      onVerticalDragEnd: (details) {
-        final speed = details.primaryVelocity ?? 0;
-        if (speed < -200) _controller.expandMini();
-        if (speed > 200) _controller.stopWatching();
-      },
-      child: Material(
-        color: colors.surfaceContainerHigh,
-        elevation: 4,
-        child: SizedBox(
-          height: MiniPlayer.barHeight,
-          child: Column(children: [
-            _ProgressLine(player: player),
-            Expanded(
-              child: Row(children: [
-                AspectRatio(aspectRatio: 16 / 9, child: ColoredBox(color: Colors.black, child: RepaintBoundary(child: _video(context)))),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                    if (channel.isNotEmpty) Text(channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant)),
-                  ]),
-                ),
-                StreamBuilder<bool>(
-                  stream: player.stream.playing,
-                  initialData: player.state.playing,
-                  builder: (context, snapshot) => IconButton(
-                    tooltip: tr('Play/Pause (Space)'),
-                    iconSize: 28,
-                    icon: Icon(snapshot.data == true ? AppIcons.pauseFill : AppIcons.playFill),
-                    onPressed: () => unawaited(player.playOrPause()),
-                  ),
-                ),
-                IconButton(tooltip: tr('Close the mini player and stop playback'), iconSize: 24, icon: Icon(AppIcons.x), onPressed: _controller.stopWatching),
-                const SizedBox(width: 4),
-              ]),
-            ),
-          ]),
-        ),
-      ),
-    );
-  }
-
-  Widget _card(BuildContext context, Player player, Size area, Size size) {
-    final title = _controller.details?.title.isNotEmpty == true ? _controller.details!.title : _controller.playing?.title ?? '';
-    return MouseRegion(
-      onEnter: (_) => _show(),
-      onHover: (_) => _show(),
-      onExit: (_) {
-        _hideTimer?.cancel();
-        _setHovering(false);
-      },
-      child: Material(
-        color: Colors.black,
-        elevation: 8,
-        borderRadius: BorderRadius.circular(8),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(fit: StackFit.expand, children: [
-          RepaintBoundary(child: _video(context)),
-          // Under the controls, so their buttons do not wait for a double tap.
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onPanStart: (_) => setState(() => _dragging = miniPosition(_corner, area, size)),
-            onPanUpdate: (details) {
-              final next = (_dragging ?? Offset.zero) + details.delta;
-              setState(() => _dragging = Offset(next.dx.clamp(0.0, area.width - size.width), next.dy.clamp(0.0, area.height - size.height)));
-            },
-            onPanEnd: (_) => setState(() {
-              _corner = nearestMiniCorner(_dragging ?? miniPosition(_corner, area, size), area, size);
-              _dragging = null;
-            }),
-            onTap: () {
-              _show();
-              unawaited(player.playOrPause());
-            },
-            onDoubleTap: _controller.expandMini,
-          ),
-          // Its own layer: it moves a few times a second while the rest stays still.
-          Positioned(left: 0, right: 0, bottom: 0, child: IgnorePointer(child: RepaintBoundary(child: _ProgressLine(player: player)))),
-          IgnorePointer(
-            ignoring: !_hovering,
-            child: AnimatedOpacity(
-              opacity: _hovering ? 1 : 0,
-              duration: Motion.of(Ease.fade),
-              onEnd: () {
-                if (!_hovering && mounted) setState(() => _controlsBuilt = false);
-              },
-              child: _controlsBuilt ? _Controls(controller: _controller, player: player, title: title) : const SizedBox.expand(),
-            ),
-          ),
-        ]),
-      ),
-    );
-  }
-}
-
-/// A thin line of how far the video is, always visible.
-class _ProgressLine extends StatelessWidget {
-  const _ProgressLine({required this.player});
-  final Player player;
-
-  @override
-  Widget build(BuildContext context) => StreamBuilder<Duration>(
-        stream: coarsePosition(player),
-        initialData: player.state.position,
-        builder: (context, _) {
-          final total = player.state.duration.inMilliseconds;
-          return LinearProgressIndicator(
-            value: total > 0 ? (player.state.position.inMilliseconds / total).clamp(0.0, 1.0) : 0,
-            minHeight: 2,
-            color: Theme.of(context).colorScheme.inversePrimary,
-            backgroundColor: Colors.white24,
-          );
-        },
-      );
-}
-
-/// What shows while the pointer is over the card: the title with 展开 and
-/// 关闭, play/pause, and a progress bar to seek with.
-class _Controls extends StatelessWidget {
-  const _Controls({required this.controller, required this.player, required this.title});
-  final AppController controller;
-  final Player player;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    const shade = BoxDecoration(
-      gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xB3000000), Colors.transparent]),
-    );
-    return Column(children: [
-      // Only the buttons take pointer events; the rest drags the card.
-      Stack(children: [
-        const Positioned.fill(child: IgnorePointer(child: DecoratedBox(decoration: shade))),
-        Row(children: [
-          const SizedBox(width: 8),
-          Expanded(child: IgnorePointer(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 12)))),
-          _button(tr('Back to the watch page'), AppIcons.arrowsOutSimple, controller.expandMini, 18),
-          _button(tr('Close the mini player and stop playback'), AppIcons.x, controller.stopWatching, 18),
-        ]),
-      ]),
-      Expanded(
-        child: Center(
-          child: StreamBuilder<bool>(
-            stream: player.stream.playing,
-            initialData: player.state.playing,
-            builder: (context, snapshot) => _button(
-              tr('Play/Pause (Space)'),
-              snapshot.data == true ? AppIcons.pauseCircle : AppIcons.playCircleFill,
-              () => unawaited(player.playOrPause()),
-              40,
-            ),
-          ),
-        ),
-      ),
-      Container(
-        color: Colors.black.withValues(alpha: .70),
-        padding: const EdgeInsets.fromLTRB(4, 0, 4, 2),
-        child: StreamBuilder<Duration>(
-          stream: coarsePosition(player),
-          initialData: player.state.position,
-          builder: (context, _) => VideoProgressBar(
-            position: player.state.position,
-            buffered: player.state.buffer,
-            total: player.state.duration,
-            color: Colors.white,
-            onSeek: (time) => unawaited(controller.seek(time)),
-          ),
-        ),
-      ),
-    ]);
-  }
-
-  Widget _button(String tooltip, IconData icon, VoidCallback onTap, double size) => IconButton(
-        tooltip: tooltip,
-        icon: Icon(icon, color: Colors.white, size: size),
-        onPressed: onTap,
-        padding: const EdgeInsets.all(4),
-        constraints: const BoxConstraints(),
-        style: IconButton.styleFrom(
-          backgroundColor: Colors.black.withValues(alpha: .70),
-          foregroundColor: Colors.white,
-          shape: const CircleBorder(),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-      );
 }

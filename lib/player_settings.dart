@@ -15,7 +15,7 @@ import 'l10n/l10n.dart';
 /// Heights offered in the quality menu; 0 means automatic.
 const qualityHeights = [0, 2160, 1440, 1080, 720, 480, 360];
 
-/// Speeds offered before the user edits the list, as in PiliNara.
+/// Speeds offered before the user edits the list.
 const defaultSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 3.0];
 
 /// How playback picks among the codecs that are not disabled; see
@@ -53,8 +53,7 @@ enum DubbedAudio {
   String get label => tr(_label);
 }
 
-/// What happens when a video ends. Named and ordered like PiliNara's
-/// `PlayRepeat`.
+/// What happens when a video ends.
 enum PlayOrder {
   pause('Pause when finished'),
   listOrder('Play in order'),
@@ -170,7 +169,7 @@ class SubtitleLanguage {
   String toString() => name;
 }
 
-/// mpv's `--video-sync` modes, as PiliNara lists them.
+/// mpv's `--video-sync` modes.
 enum VideoSync {
   audio('audio', 'Sync to audio (default)'),
   displayResample('display-resample', 'Resample to display refresh rate (smoother)'),
@@ -189,8 +188,7 @@ enum VideoSync {
   String get label => tr(_label);
 }
 
-/// mpv's `--hwdec` decoders that exist on this system, from PiliNara's
-/// `HwDecType`. The setting is an ordered list; mpv tries them in turn.
+/// mpv's `--hwdec` decoders that exist on this system. The setting is an ordered list; mpv tries them in turn.
 /// Decoders without "-copy" hand frames to the renderer in GPU memory (zero
 /// copy); "-copy" ones copy them back to system memory first.
 List<(String, String)> get hwdecChoices => hwdecChoicesFor(Platform.operatingSystem, Abi.current());
@@ -279,14 +277,14 @@ final _windowsHwdec = <(String, String)>[
 /// at all is up to the disabled codecs.
 const defaultHwdecCodecs = 'h264,vc1,hevc,vp8,vp9,av1,prores,ffv1';
 
-/// PiliNara's 音量均衡 presets, as mpv `--af` filters.
+/// 音量均衡 presets, as mpv `--af` filters.
 List<(String, String)> get audioFilterPresets => [
   ('', tr('Close')),
   ('dynaudnorm=g=5:f=250:r=0.9:p=0.5', tr('Preset dynaudnorm (dynamic normalization)')),
   ('loudnorm=I=-16:LRA=11:TP=-1.5', tr('Preset loudnorm (loudness normalization)')),
 ];
 
-/// Picture adjustments PiliNara offers in its player, as mpv properties.
+/// Picture adjustments offered in the player, as mpv properties.
 /// How far each picture property may go either way. Brightness stops short
 /// of mpv's ±100, which turns the picture all black or all white.
 int pictureLimit(String key) => key == 'brightness' ? 50 : 100;
@@ -1112,7 +1110,7 @@ class PlayerSettings {
   static bool isSafeCustomOption(String key, String value) => customOptionProblem(key, value) == null;
 }
 
-/// SponsorBlock's categories with the names PiliNara shows for them.
+/// SponsorBlock's categories with the names shown for them.
 final sponsorCategoryNames = {
   'sponsor': (tr('Sponsor'), tr('Paid promotions, paid referrals and direct ads')),
   'selfpromo': (tr('Self-promotion'), tr('Unpaid promotion: merch, donations or collaborator info')),

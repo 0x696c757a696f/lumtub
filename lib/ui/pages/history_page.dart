@@ -15,8 +15,7 @@ import 'watch_stats_page.dart';
 import '../app_icons.dart';
 
 /// The watch history, with a search box, single delete from a card's menu,
-/// and a 选择 mode to delete several at once (after PiliNara's history and
-/// multi-select pages).
+/// and a 选择 mode to delete several at once.
 /// The history items whose title or channel contain [query].
 List<VideoItem> filterHistory(List<VideoItem> items, String query) {
   final needle = query.trim().toLowerCase();

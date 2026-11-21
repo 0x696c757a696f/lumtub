@@ -158,11 +158,7 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
       width: columnWidth,
       bottom: VideoProgressBar.height + 4 + (hasHeat ? 16 : 0),
       child: IgnorePointer(
-        child: OverflowBox(
-          alignment: Alignment.bottomCenter,
-          minHeight: 0,
-          maxHeight: double.infinity,
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
             if (preview != null) ...[
               DecoratedBox(
                 decoration: BoxDecoration(border: Border.all(color: Colors.white.withValues(alpha: 0.7)), borderRadius: BorderRadius.circular(4)),
@@ -180,7 +176,6 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
               child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: style),
             ),
           ]),
-        ),
       ),
     );
   }

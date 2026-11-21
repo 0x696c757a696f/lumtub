@@ -12,7 +12,7 @@ import 'kwin_keep_above.dart';
 double pipAspectOf(double aspect) => aspect.isFinite && aspect > 0 ? aspect.clamp(0.4, 3.0) : 16 / 9;
 
 /// The picture-in-picture picture's size in logical pixels: [shortSide] on
-/// its short side, the other side from [aspect] (as PiliNara's 280).
+/// its short side, the other side from [aspect].
 ({double width, double height}) pipSizeFor(double aspect, {double shortSide = 280}) {
   final a = pipAspectOf(aspect);
   return a >= 1 ? (width: shortSide * a, height: shortSide) : (width: shortSide, height: shortSide / a);
@@ -21,9 +21,7 @@ double pipAspectOf(double aspect) => aspect.isFinite && aspect > 0 ? aspect.clam
 /// The main window's always-on-top state and the picture-in-picture window,
 /// through user32 directly: Flutter's Windows embedder has no API for
 /// either, and a plugin for a few calls is more than they need.
-/// Picture in picture follows PiliNara's desktop one (GPLv3,
-/// lib/plugin/pl_player/controller.dart): 280 on the short side, always on
-/// top, the ratio kept, the last place remembered.
+/// Picture in picture: 280 on the short side, always on top, the ratio kept, the last place remembered.
 /// On Linux and macOS the runner does the same on the shell's channel
 /// (linux/runner/linux_shell.cc, macos/Runner/MacShell.swift).
 class AppWindow {
@@ -172,7 +170,7 @@ class AppWindow {
   /// width in logical pixels, so it comes back there next time.
   static ({int left, int top, double width})? _lastPip;
 
-  /// 画中画, as PiliNara's desktop one: no title bar or caption, above the
+  /// 画中画: no title bar or caption, above the
   /// other windows, a picture of the video's [aspect] ratio whose short side
   /// is [shortSide] logical pixels. The runner keeps the ratio while it is
   /// resized (window_placement.cpp, flutter_window.cpp). Returns false when

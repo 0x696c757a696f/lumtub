@@ -9,7 +9,7 @@ import 'translation.dart';
 /// Translated and bilingual subtitles. YouTube translates captions itself
 /// when a caption address carries `tlang=<language>`, so nothing is sent to
 /// another service. The secondary subtitle is mpv's `secondary-sid`, shown
-/// together with the main one (as PiliNara's 副字幕 does).
+/// together with the main one (副字幕).
 
 /// [source] translated into [target] by YouTube.
 SubtitleOption translatedOption(SubtitleOption source, TranslationLanguage target) {

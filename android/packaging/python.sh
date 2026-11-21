@@ -34,6 +34,7 @@ fetch() { # url file sha256
 }
 
 version=$PYTHON_ANDROID_VERSION
+unpinned=
 minor=${version%.*}
 build_abi() { # abi triple clang-triple pin ("built" = made by python-arm32.sh)
   local abi=$1 triple=$2 clang=$3 pin=$4
@@ -47,9 +48,10 @@ build_abi() { # abi triple clang-triple pin ("built" = made by python-arm32.sh)
     tarball="$downloads/python-$version-$triple-$stamp.tar.gz"
     [ -f "$tarball" ] || "$here/python-arm32.sh" "$work/build-$triple" "$tarball"
   elif [ "$pin" = unpinned ]; then
+    # Goes on, so one run prints every sum, and fails at the end.
     curl -fsSL --retry 5 --retry-all-errors -o "$tarball" "$url"
     echo "$url has SHA-256 $(sha256sum "$tarball" | cut -d' ' -f1); pin it in .github/pins.env" >&2
-    exit 1
+    unpinned=1
   else
     fetch "$url" "$tarball" "$pin"
   fi
@@ -86,6 +88,7 @@ build_abi() { # abi triple clang-triple pin ("built" = made by python-arm32.sh)
 build_abi arm64-v8a aarch64-linux-android aarch64-linux-android "$PYTHON_ANDROID_SHA256_ARM64"
 build_abi armeabi-v7a arm-linux-androideabi armv7a-linux-androideabi built
 build_abi x86_64 x86_64-linux-android x86_64-linux-android "$PYTHON_ANDROID_SHA256_X86_64"
+[ -z "$unpinned" ] || exit 1
 
 # yt-dlp: the pinned release's zip app, also checked against the
 # SHA2-256SUMS that release publishes.

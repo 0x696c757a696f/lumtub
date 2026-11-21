@@ -24,14 +24,16 @@ src="$work/cpython"
 rm -rf "$src"
 git init -q "$src"
 git -C "$src" fetch -q --depth 1 https://github.com/python/cpython.git "refs/tags/v$version"
-commit=$(git -C "$src" rev-parse FETCH_HEAD)
+commit=$(git -C "$src" rev-parse 'FETCH_HEAD^{commit}')
 [ "$commit" = "$PYTHON_ANDROID_SOURCE_COMMIT" ] || { echo "CPython v$version is $commit, pinned $PYTHON_ANDROID_SOURCE_COMMIT" >&2; exit 1; }
 git -C "$src" checkout -q FETCH_HEAD
 
-# android.py lists only the hosts python.org releases; its env script and
-# configure still know 32-bit Arm.
-sed -i 's/^HOSTS = \["aarch64-linux-android", "x86_64-linux-android"\]$/HOSTS = ["aarch64-linux-android", "arm-linux-androideabi", "x86_64-linux-android"]/' "$src/Android/android.py"
-grep -q '"arm-linux-androideabi"' "$src/Android/android.py" || { echo "android.py: could not add $host to HOSTS" >&2; exit 1; }
+# Older android.py lists only the hosts python.org releases; its env script
+# and configure still know 32-bit Arm.
+if ! grep -q '"arm-linux-androideabi"' "$src/Android/android.py"; then
+  sed -i 's/^HOSTS = \["aarch64-linux-android", "x86_64-linux-android"\]$/HOSTS = ["aarch64-linux-android", "arm-linux-androideabi", "x86_64-linux-android"]/' "$src/Android/android.py"
+  grep -q '"arm-linux-androideabi"' "$src/Android/android.py" || { echo "android.py: could not add $host to HOSTS" >&2; exit 1; }
+fi
 
 prefix="$src/cross-build/$host/prefix"
 mkdir -p "$prefix" "$work/deps"
@@ -48,6 +50,11 @@ for dep in "${deps[@]}"; do
 done
 
 cd "$src"
+# Newer android.py builds one target at a time: the build machine's Python
+# first, then the host's.
+if grep -q '^def build_targets' Android/android.py; then
+  python3 Android/android.py build build
+fi
 python3 Android/android.py build "$host"
 python3 Android/android.py package "$host"
 built=$(ls "$src/cross-build/$host/dist"/python-*-"$host".tar.gz)

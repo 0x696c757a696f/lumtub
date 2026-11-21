@@ -1103,12 +1103,13 @@ enum PurchaseSource {
 }
 
 /// The card checkout for the learning pack, published on the `learning`
-/// release so it can change without an app update: Creem's, else
-/// Polar's; null while card payments are closed (both files empty).
+/// release so it can change without an app update: Ko-fi's shop, else
+/// Creem's, else Polar's; null while card payments are closed (all
+/// files empty).
 Future<Uri?> cardCheckoutLink() async {
   final client = http.Client();
   try {
-    for (final (file, host) in const [('creem-checkout.txt', 'creem.io'), ('polar-checkout.txt', 'polar.sh')]) {
+    for (final (file, host) in const [('kofi-checkout.txt', 'ko-fi.com'), ('creem-checkout.txt', 'creem.io'), ('polar-checkout.txt', 'polar.sh')]) {
       final answer = await client.get(Uri.parse('$learningPackRelease/$file')).timeout(const Duration(seconds: 15));
       final uri = answer.statusCode == 200 ? Uri.tryParse(answer.body.trim()) : null;
       if (uri != null && uri.scheme == 'https' && (uri.host == host || uri.host.endsWith('.$host'))) return uri;

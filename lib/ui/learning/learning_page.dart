@@ -52,7 +52,7 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
   final outer = context;
   final field = TextEditingController();
   final email = TextEditingController();
-  var source = afdianFirst ? PurchaseSource.afdian : PurchaseSource.polar;
+  var source = afdianFirst ? PurchaseSource.afdian : PurchaseSource.kofi;
   var busy = false;
   var agreed = false;
   String? error;
@@ -598,12 +598,12 @@ class _Pitch extends StatelessWidget {
               return Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
                 FilledButton(
                   onPressed: () => unawaited(afdianFirst ? openExternal(afdianPage) : _buyByCard()),
-                  child: Text(afdianFirst ? tr('Buy on Afdian (Alipay, WeChat)') : tr('Buy (card, Apple Pay, Google Pay)')),
+                  child: Text(afdianFirst ? tr('Buy on Afdian (Alipay, WeChat)') : tr('Buy (card or PayPal)')),
                 ),
                 if (card)
                   OutlinedButton(
                     onPressed: () => unawaited(zh ? _buyByCard() : openExternal(afdianPage)),
-                    child: Text(zh ? tr('Buy (card, Apple Pay, Google Pay)') : tr('Buy on Afdian (Alipay, WeChat)')),
+                    child: Text(zh ? tr('Buy (card or PayPal)') : tr('Buy on Afdian (Alipay, WeChat)')),
                   ),
                 TextButton(onPressed: () => unawaited(claimPurchase(context, learning, afdianFirst: zh)), child: Text(tr('I bought it: unlock'))),
               ]);

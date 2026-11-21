@@ -18,6 +18,7 @@ import 'common.dart';
 import 'motion.dart';
 import 'player_panel.dart';
 import 'app_icons.dart';
+import 'study_bar.dart' show StudyVeil;
 
 /// 字幕列表: every line of the main subtitle beside the video, with the
 /// second subtitle's words under it, the one being spoken marked and kept
@@ -227,7 +228,7 @@ class _SubtitleListState extends State<SubtitleList> {
             // The way back floats over the list, so it stays in sight however
             // short the panel is.
             child: Stack(children: [
-              Positioned.fill(child: NotificationListener<ScrollStartNotification>(
+              Positioned.fill(child: StudyVeil(controller: widget.controller, child: NotificationListener<ScrollStartNotification>(
               // Following stops when the person drags the list, not when it
               // moves by itself or the page around it scrolls.
               onNotification: (n) {
@@ -310,7 +311,7 @@ class _SubtitleListState extends State<SubtitleList> {
                   );
                 },
               ),
-            ),),
+            )),),
               if (!_follow)
                 PositionedDirectional(
                   start: 0,

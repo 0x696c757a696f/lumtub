@@ -9,7 +9,7 @@
 // POST /creem  Creem's webhook, signed in creem-signature (HMAC-SHA256 hex
 //              of the raw body): checkout.completed remembers the order by
 //              its id and the buyer's email; refund.created, for the whole
-//              amount paid, stops its code.
+//              amount paid, or dispute.created, stops its code.
 // POST /claim  {source: "kofi", "polar" or "creem", order, email, consent} or {source:
 //              "afdian", order, consent} (Ko-fi's order is the transaction
 //              id on the buyer's receipt) returns {code, consented} for a
@@ -231,6 +231,7 @@ async function creem(request, env) {
   const event = JSON.parse(body);
   const object = event.object || {};
   if (event.eventType === 'refund.created') return await creemRefund(object, env);
+  if (event.eventType === 'dispute.created') return await creemDispute(object, env);
   if (event.eventType !== 'checkout.completed') return reply({ ok: true, ignored: true });
   const saved = await rememberCreem(object, env);
   return saved ? reply({ ok: true }) : reply({ ok: true, ignored: true });
@@ -275,6 +276,22 @@ async function creemRefund(refund, env) {
   await env.LICENSES.put(`refunded:creem:${order}`, today);
   const code = await env.LICENSES.get(`code:creem:${order}`);
   if (code) await env.LICENSES.put(`revoked:${(await sha256(code)).slice(0, 32)}`, `refunded ${today}`);
+  return reply({ ok: true });
+}
+
+// A chargeback stops the order's code too, until it is settled by hand
+// (delete the revoked: and disputed: keys).
+async function creemDispute(dispute, env) {
+  const order = idOf(dispute.transaction?.order || dispute.order || dispute.checkout?.order).toLowerCase();
+  if (!order) {
+    console.log('creem dispute without an order', clean(dispute.id));
+    return reply({ ok: true, ignored: true });
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  await env.LICENSES.put(`disputed:creem:${order}`, today);
+  await env.LICENSES.put(`refunded:creem:${order}`, `disputed ${today}`);
+  const code = await env.LICENSES.get(`code:creem:${order}`);
+  if (code) await env.LICENSES.put(`revoked:${(await sha256(code)).slice(0, 32)}`, `disputed ${today}`);
   return reply({ ok: true });
 }
 

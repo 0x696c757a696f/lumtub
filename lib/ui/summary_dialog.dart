@@ -122,7 +122,13 @@ class _SummaryDialogState extends State<_SummaryDialog> {
       title: Row(children: [
         Icon(AppIcons.sparkleFill, color: colors.primary),
         const SizedBox(width: 8),
-        Text(tr('AI summary')),
+        Flexible(child: Text(tr('AI summary'), overflow: TextOverflow.ellipsis)),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+          decoration: BoxDecoration(border: Border.all(color: colors.outlineVariant), borderRadius: BorderRadius.circular(4)),
+          child: Text(tr('Experimental'), maxLines: 1, style: TextStyle(fontSize: 11, color: colors.outline)),
+        ),
       ]),
       content: SizedBox(
         width: 560,
@@ -177,7 +183,12 @@ class _OverviewView extends StatelessWidget {
         );
     return SelectionArea(
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-        if (overview.about.isNotEmpty) Text(overview.about, style: const TextStyle(height: 1.6)),
+        if (overview.about.isNotEmpty) ...[
+          Text(tr('Summary by AI'), style: heading),
+          Text(tr('Written by AI and may be wrong. The quotes below are what was said.'), style: TextStyle(fontSize: 12, color: colors.outline)),
+          const SizedBox(height: 4),
+          Text(overview.about, style: const TextStyle(height: 1.6)),
+        ],
         if (overview.chapters.isNotEmpty) ...[
           const SizedBox(height: 16),
           Text(tr('Chapters'), style: heading),
@@ -188,6 +199,7 @@ class _OverviewView extends StatelessWidget {
         if (overview.quotes.isNotEmpty) ...[
           const SizedBox(height: 16),
           Text(tr('Key quotes'), style: heading),
+          Text(tr('Word for word from the subtitles; a tap plays the moment.'), style: TextStyle(fontSize: 12, color: colors.outline)),
           const SizedBox(height: 4),
           for (final q in overview.quotes)
             row(
@@ -195,6 +207,7 @@ class _OverviewView extends StatelessWidget {
               Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
                 Text('“${q.text}”', style: const TextStyle(height: 1.5, fontStyle: FontStyle.italic)),
                 if (q.translation.isNotEmpty) Text(q.translation, style: TextStyle(height: 1.5, color: colors.onSurfaceVariant)),
+                if (!q.found) Text(tr('Not found in the subtitles as quoted: AI may have reworded it.'), style: TextStyle(fontSize: 12, color: colors.error)),
               ]),
             ),
         ],

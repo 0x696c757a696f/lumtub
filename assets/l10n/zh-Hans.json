@@ -3760,5 +3760,10 @@
   "The video has no chapters of its own, so these are shown on the progress bar.": "这个视频本身没有章节，这些已显示在进度条上。",
   "Copy all notes": "复制全部笔记",
   "Notes copied": "笔记已复制",
-  "Said in the video": "视频原话"
+  "Said in the video": "视频原话",
+  "Written by AI and may be wrong. The quotes below are what was said.": "由 AI 概括，可能有误；下面的「关键原话」才是视频里说的。",
+  "Word for word from the subtitles; a tap plays the moment.": "字幕里的原话，点一下跳到那一刻。",
+  "Not found in the subtitles as quoted: AI may have reworded it.": "字幕里没找到这句原话，可能是 AI 改写的。",
+  "Experimental": "实验功能",
+  "Summary by AI": "AI 概括"
 }

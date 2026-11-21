@@ -14,6 +14,8 @@ import 'player_panel.dart';
 import 'common.dart' show ErrorBanner;
 import 'subtitle_list_panel.dart';
 import 'app_icons.dart';
+import '../learning/learning.dart' show Learning;
+import 'learning/learning_page.dart';
 
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
 /// above it (双语字幕) on the right. A choice applies at once and the panel stays open; a track
@@ -434,6 +436,39 @@ class LearningSwitches extends StatelessWidget {
               (on) => unawaited(controller.setBlurSecondary(on))),
         ),
       ]),
+      ListenableBuilder(
+        listenable: controller.learning,
+        builder: (context, _) {
+          final learning = controller.learning;
+          if (learning.anyDictionary) {
+            return Row(children: [
+              Expanded(
+                child: toggle(tr('Pinyin and kana'), tr('Above each Chinese or Japanese word. Tap any word to look it up.'), learning.showPinyin,
+                    (on) => unawaited(learning.setShowPinyin(on))),
+              ),
+              Expanded(
+                child: ListTile(
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  leading: Icon(AppIcons.bookOpenText, size: 20),
+                  title: Text(tr('Vocabulary book')),
+                  subtitle: Text(tr('{0} words', [learning.book?.words.length ?? 0]), style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
+                  onTap: () => unawaited(openVocabularyBook(context, controller)),
+                ),
+              ),
+            ]);
+          }
+          return ListTile(
+            dense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            leading: Icon(AppIcons.bookOpenText, size: 20),
+            title: Text(tr('Download a dictionary')),
+            subtitle: Text(learning.licensed ? tr('Chinese, English or Japanese, a few MB, then everything works offline.') : tr('Free to try: {0} word lookups a day, no account', [Learning.trialPerDay]),
+                style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
+            onTap: () => unawaited(openLearningPage(context, controller)),
+          );
+        },
+      ),
     ]);
   }
 }

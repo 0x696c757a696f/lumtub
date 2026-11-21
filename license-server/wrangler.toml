@@ -1,0 +1,36 @@
+# The deploy workflow (.github/workflows/license-server.yml) fills in the
+# KV namespace id and sets the secrets; see license-server/README.md.
+name = "lumtub-license"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[[kv_namespaces]]
+binding = "LICENSES"
+id = "KV_NAMESPACE_ID"
+
+# The 爱发电 plan that is the learning pack: other sponsorships get no
+# code. Not a secret, so it lives here (comma-separated for more).
+[vars]
+AFDIAN_PLANS = "548a65dee44b11f193bd52540025c377"
+
+# Each code's devices, one object per code, so slots are taken one
+# request at a time (SQLite-backed objects work on the free plan).
+[[durable_objects.bindings]]
+name = "SLOTS"
+class_name = "Slots"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Slots"]
+
+# revoked.txt is bundled as text.
+[[rules]]
+type = "Text"
+globs = ["**/*.txt"]
+fallthrough = true
+
+# No request logs kept by Cloudflare beyond what it needs to run the
+# worker: the privacy notice promises IP addresses are not kept.
+[observability]
+enabled = false

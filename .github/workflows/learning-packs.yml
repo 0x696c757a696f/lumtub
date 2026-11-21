@@ -1,0 +1,294 @@
+name: Learning packs
+
+# Builds the learning pack's dictionaries and puts them on the `learning`
+# release, which Lumtub downloads from when someone turns a dictionary on.
+# The release holds data only; it is not an app release.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/learning-packs.yml'
+      - '.github/learning/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/learning-packs.yml'
+      - '.github/learning/**'
+  schedule:
+    # CC-CEDICT changes a little every day; once a month is enough.
+    - cron: '23 4 2 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build and publish
+    # Pull requests from forks get no write token.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-learning-packs
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Build the Chinese dictionary
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/in" "$RUNNER_TEMP/out"
+          curl -fsSL --retry 5 --retry-all-errors -A 'Mozilla/5.0 (compatible; Lumtub learning packs)' \
+            -o "$RUNNER_TEMP/in/cedict.txt.gz" https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz
+          zcat "$RUNNER_TEMP/in/cedict.txt.gz" > "$RUNNER_TEMP/in/cedict.txt"
+          # Only CC BY-SA 4.0 data goes out, and only a whole dictionary.
+          grep -q '^#! license=https://creativecommons.org/licenses/by-sa/4.0/' "$RUNNER_TEMP/in/cedict.txt"
+          entries=$(grep -vc '^#' "$RUNNER_TEMP/in/cedict.txt")
+          if (( entries < 100000 )); then
+            echo "::error::CC-CEDICT has only $entries entries"
+            exit 1
+          fi
+          gzip -n -9 < "$RUNNER_TEMP/in/cedict.txt" > "$RUNNER_TEMP/out/zh-cedict.txt.gz"
+          echo "CC-CEDICT: $entries entries, $(stat -c %s "$RUNNER_TEMP/out/zh-cedict.txt.gz") bytes compressed" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Build the English dictionary
+        env:
+          # ECDICT (MIT); its main list has not changed for years, so a
+          # pinned commit and checksum keep the pack the same.
+          ECDICT_COMMIT: 39cfb9672c0906b63569e0453c2e6abfb9ab182a
+          ECDICT_SHA256: d1ecbdf9ee2b920afb6f430ca6b6bb9f559588cf0dff86e04bd255f9390843cc
+          OLP_COMMIT: d4e45b75b38f27b30dfc5c44d8c571aec7e7092f
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/ecdict.csv" "https://raw.githubusercontent.com/skywind3000/ECDICT/$ECDICT_COMMIT/ecdict.csv"
+          echo "$ECDICT_SHA256  $RUNNER_TEMP/in/ecdict.csv" | sha256sum -c -
+          # Words people meet: listed in a frequency list, Collins, Oxford or
+          # an exam list, with a Chinese meaning. One a line:
+          # word, phonetic, meanings (\n between lines), forms, exam tags
+          # (zk gk cet4 cet6 ky toefl ielts gre), Collins stars, frequency
+          # rank (the smaller of BNC's and the modern corpus', 0 unknown).
+          python3 - "$RUNNER_TEMP/in/ecdict.csv" "$RUNNER_TEMP/in/en.tsv" <<'PY'
+          import csv, re, sys
+          ok = re.compile(r"^[A-Za-z][A-Za-z'\- ]*$")
+          kept = 0
+          with open(sys.argv[1], newline='', encoding='utf-8') as f, open(sys.argv[2], 'w', encoding='utf-8', newline='\n') as out:
+              for d in csv.DictReader(f):
+                  word, meaning = d['word'], d['translation'].replace('\\n', '\n').strip()
+                  if not meaning or not ok.match(word):
+                      continue
+                  if not (int(d['frq'] or 0) or int(d['bnc'] or 0) or d['collins'] or d['oxford'] or d['tag']):
+                      continue
+                  clean = lambda t: t.replace('\t', ' ').replace('\r', '')
+                  ranks = [r for r in (int(d['frq'] or 0), int(d['bnc'] or 0)) if r > 0]
+                  # ECDICT's English definitions (mostly WordNet's); a line
+                  # starting with spaces goes on the one before it.
+                  definition = re.sub(r'\n\s+', ' ', d['definition'].replace('\\n', '\n')).strip()
+                  out.write('\t'.join([word, clean(d['phonetic']), clean(meaning).replace('\n', '\\n'), clean(d['exchange']), clean(d['tag']), clean(d['collins'] or '0'), str(min(ranks) if ranks else 0), clean(definition).replace('\n', '\\n')]) + '\n')
+                  kept += 1
+          if kept < 40000:
+              sys.exit(f'only {kept} English words')
+          print(f'ECDICT: {kept} words')
+          PY
+          # English meanings from the English Wiktionary (CC BY-SA 4.0), as
+          # extracted by kaikki.org; ECDICT's stay where it has none.
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/en-wiktionary.jsonl" https://kaikki.org/dictionary/English/kaikki.org-dictionary-English.jsonl
+          # The Simple English Wiktionary (CC BY-SA 4.0), in plain words, first.
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/en-simple.jsonl.gz" https://kaikki.org/simplewiktionary/raw-wiktextract-data.jsonl.gz
+          # Chinese meanings and phonetics from open data with a clear
+          # licence, in place of ECDICT's: the English Wiktionary's Mandarin
+          # translations, the Chinese Wiktionary's English entries (both
+          # CC BY-SA 4.0), WikDict's en-zh (CC BY-SA) only as a marked
+          # reference; ranks from wordfreq (MIT, data CC BY-SA 4.0).
+          python3 -m pip install --quiet --disable-pip-version-check opencc-python-reimplemented==0.1.7 wordfreq==3.1.1
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" https://kaikki.org/zhwiktionary/raw-wiktextract-data.jsonl.gz
+          # The Chinese Open Wordnet (its own permissive licence) through
+          # Princeton WordNet 3.0's index, for words the Wiktionaries lack.
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/cow.tar.xz" https://github.com/bond-lab/cow/releases/download/v1.0/cow-1.0.tar.xz
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/wordnet.zip" https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/wordnet.zip
+          echo "cdfa3ad70ab8f076355075636f977ba629b95adcde7fa3ea3f7c7277ce763acf  $RUNNER_TEMP/in/cow.tar.xz" | sha256sum -c -
+          echo "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59  $RUNNER_TEMP/in/wordnet.zip" | sha256sum -c -
+          tar -xJf "$RUNNER_TEMP/in/cow.tar.xz" -C "$RUNNER_TEMP/in"
+          en_zh=("$RUNNER_TEMP/in/en.tsv" "$RUNNER_TEMP/in/en-wiktionary.jsonl" "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" "cow=$RUNNER_TEMP/in/cow/cow-1.0.xml" "wordnet=$RUNNER_TEMP/in/wordnet.zip")
+          if curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/en-zh.sqlite3" "https://download.wikdict.com/dictionaries/sqlite/2/en-zh.sqlite3"; then
+            en_zh+=("wikdict=$RUNNER_TEMP/in/en-zh.sqlite3")
+          fi
+          # Not -I: it needs the opencc and wordfreq installed for this user.
+          python3 .github/learning/en_zh.py "${en_zh[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+          python3 -I .github/learning/en_english.py "$RUNNER_TEMP/in/en.tsv" "$RUNNER_TEMP/in/en-wiktionary.jsonl" "$RUNNER_TEMP/in/en-simple.jsonl.gz" | tee -a "$GITHUB_STEP_SUMMARY"
+          rm -f "$RUNNER_TEMP/in/en-wiktionary.jsonl"
+          # CEFR levels for learners outside China: CEFR-J Wordlist 1.5 (free for
+          # commercial use with citation) and Octanove C1/C2 (CC BY-SA 4.0).
+          olp="https://raw.githubusercontent.com/openlanguageprofiles/olp-en-cefrj/$OLP_COMMIT"
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/cefrj.csv" "$olp/cefrj-vocabulary-profile-1.5.csv"
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/octanove.csv" "$olp/octanove-vocabulary-profile-c1c2-1.0.csv"
+          echo "b0dd3c635f1c9a4fdf1490c7e5b7c48e8bbe55b652ad0c9860a95f98e10ae498  $RUNNER_TEMP/in/cefrj.csv" | sha256sum -c -
+          echo "18c33a407f2f89f7b8de9671c6d45fe3ea0bce45e7d2d7dcaab48d73e0f7b380  $RUNNER_TEMP/in/octanove.csv" | sha256sum -c -
+          python3 -I .github/learning/en_cefr.py "$RUNNER_TEMP/in/en.tsv" "$RUNNER_TEMP/in/cefrj.csv" "$RUNNER_TEMP/in/octanove.csv" | tee -a "$GITHUB_STEP_SUMMARY"
+          gzip -n -9 < "$RUNNER_TEMP/in/en.tsv" > "$RUNNER_TEMP/out/en-ecdict.tsv.gz"
+          # The SQLite dictionary the app looks words up in on disk.
+          python3 -I .github/learning/sqlite_pack.py ecdict en "$RUNNER_TEMP/in/en.tsv" "$RUNNER_TEMP/in/en.sqlite"
+          gzip -n -9 < "$RUNNER_TEMP/in/en.sqlite" > "$RUNNER_TEMP/out/en-ecdict.sqlite.gz"
+          echo "ECDICT: $(wc -l < "$RUNNER_TEMP/in/en.tsv") words, $(stat -c %s "$RUNNER_TEMP/out/en-ecdict.tsv.gz") bytes compressed" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Build the Japanese dictionary
+        env:
+          # JMdict (EDRDG, CC BY-SA 4.0) as JSON from jmdict-simplified;
+          # a pinned weekly build and its checksum keep the pack the same.
+          JMDICT_TAG: 3.6.2+20261116213322
+          JMDICT_SHA256: c3c43879681c7e26b7a9113034fa3a94299234a47b3b7e3b3361447576c4932c
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/jmdict.zip" \
+            "https://github.com/scriptin/jmdict-simplified/releases/download/${JMDICT_TAG/+/%2B}/jmdict-eng-$JMDICT_TAG.json.zip"
+          echo "$JMDICT_SHA256  $RUNNER_TEMP/in/jmdict.zip" | sha256sum -c -
+          # One entry a line: kanji forms, kana forms (| between), the parts
+          # of speech that inflect, senses (\n between), 1 for common.
+          python3 - "$RUNNER_TEMP/in/jmdict.zip" "$RUNNER_TEMP/in/ja.tsv" <<'PY'
+          import json, sys, zipfile
+          KEEP = ('v1', 'v5', 'vk', 'vs', 'adj-i', 'adj-ix')
+          with zipfile.ZipFile(sys.argv[1]) as z:
+              data = json.loads(z.read([n for n in z.namelist() if n.endswith('.json')][0]))
+          kept = 0
+          with open(sys.argv[2], 'w', encoding='utf-8', newline='\n') as out:
+              for w in data['words']:
+                  kanji = [k['text'] for k in w['kanji'] if 'sK' not in k['tags']]
+                  kana = [k['text'] for k in w['kana'] if 'sk' not in k['tags']]
+                  if not kana:
+                      continue
+                  pos, senses = [], []
+                  for s in w['sense']:
+                      for p in s['partOfSpeech']:
+                          if p.startswith(KEEP) and p not in pos:
+                              pos.append(p)
+                      glosses = [g['text'] for g in s['gloss'] if g['lang'] == 'eng'][:6]
+                      if glosses and len(senses) < 5:
+                          senses.append('; '.join(glosses))
+                  if not senses:
+                      continue
+                  common = any(k['common'] for k in w['kanji']) or any(k['common'] for k in w['kana'])
+                  clean = lambda t: t.replace('\t', ' ').replace('\n', ' ').replace('|', '/')
+                  out.write('\t'.join(['|'.join(map(clean, kanji)), '|'.join(map(clean, kana)), ','.join(pos), '\\n'.join(map(clean, senses)), '1' if common else '0']) + '\n')
+                  kept += 1
+          if kept < 150000:
+              sys.exit(f'only {kept} Japanese entries')
+          print(f'JMdict: {kept} entries')
+          PY
+          gzip -n -9 < "$RUNNER_TEMP/in/ja.tsv" > "$RUNNER_TEMP/out/ja-jmdict.tsv.gz"
+          echo "JMdict: $(wc -l < "$RUNNER_TEMP/in/ja.tsv") entries, $(stat -c %s "$RUNNER_TEMP/out/ja-jmdict.tsv.gz") bytes compressed" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Build the Wiktionary dictionaries
+        env:
+          KRDICT_COMMIT: 01516acf2c5c9796e3ccfe2b89b1d75a7536b5a1
+        run: |
+          set -euo pipefail
+          # Simplified Chinese for meanings written in traditional characters.
+          python3 -m pip install --quiet --disable-pip-version-check opencc-python-reimplemented==0.1.7
+          # The Chinese Wiktionary (Chinese meanings) and the English one
+          # (English meanings and forms), both CC BY-SA 4.0, as extracted by
+          # kaikki.org; WikDict's Chinese translations fill gaps.
+          # Downloaded for the English dictionary already.
+          [ -s "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" ] || curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" https://kaikki.org/zhwiktionary/raw-wiktextract-data.jsonl.gz
+          args=()
+          for pair in ko=Korean es=Spanish fr=French de=German it=Italian ru=Russian; do
+            code=${pair%%=*}; name=${pair#*=}
+            curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/$code.jsonl" "https://kaikki.org/dictionary/$name/kaikki.org-dictionary-$name.jsonl"
+            wikdict=""
+            if curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/$code-zh.sqlite3" "https://download.wikdict.com/dictionaries/sqlite/2/$code-zh.sqlite3"; then
+              wikdict=",$RUNNER_TEMP/in/$code-zh.sqlite3"
+            fi
+            args+=("$code=$RUNNER_TEMP/in/$code.jsonl$wikdict")
+          done
+          python3 .github/learning/wiktionary.py "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" "$RUNNER_TEMP/in" "${args[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+          # Korean: the Basic Dictionary (한국어기초사전, CC BY-SA 2.0 KR) first,
+          # from its open data as JSON, at a pinned commit.
+          git clone --quiet --filter=blob:none https://github.com/basickorean/basickorean-vocab "$RUNNER_TEMP/in/krdict"
+          git -C "$RUNNER_TEMP/in/krdict" checkout --quiet "$KRDICT_COMMIT"
+          python3 -I .github/learning/krdict.py "$RUNNER_TEMP/in/krdict" "$RUNNER_TEMP/in/ko-wiktionary.tsv" | tee -a "$GITHUB_STEP_SUMMARY"
+          # Japanese: Chinese meanings from the Chinese Wiktionary and WikDict
+          # beside JMdict's English ones.
+          ja_args=("$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" "$RUNNER_TEMP/in/ja.tsv")
+          if curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/ja-zh.sqlite3" "https://download.wikdict.com/dictionaries/sqlite/2/ja-zh.sqlite3"; then
+            ja_args+=("$RUNNER_TEMP/in/ja-zh.sqlite3")
+          fi
+          # Not -I: it needs the opencc the step installed for this user.
+          python3 .github/learning/ja_zh.py "${ja_args[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+          gzip -n -9 < "$RUNNER_TEMP/in/ja.tsv" > "$RUNNER_TEMP/out/ja-jmdict.tsv.gz"
+          for code in ko es fr de it ru; do
+            python3 -I .github/learning/sqlite_pack.py wiktionary "$code" "$RUNNER_TEMP/in/$code-wiktionary.tsv" "$RUNNER_TEMP/in/$code.sqlite"
+            gzip -n -9 < "$RUNNER_TEMP/in/$code.sqlite" > "$RUNNER_TEMP/out/$code-wiktionary.sqlite.gz"
+            echo "$code: $(stat -c %s "$RUNNER_TEMP/in/$code.sqlite") bytes, $(stat -c %s "$RUNNER_TEMP/out/$code-wiktionary.sqlite.gz") compressed" | tee -a "$GITHUB_STEP_SUMMARY"
+            rm -f "$RUNNER_TEMP/in/$code.jsonl"
+          done
+
+      - name: Build the word segmenters
+        run: |
+          set -euo pipefail
+          # Lindera's dictionaries for cutting Japanese (IPADIC), Korean
+          # (mecab-ko-dic) and Chinese (jieba) into words, built by the
+          # same Lindera as the core reads them with. Each source is the
+          # one the lindera-* crate builds from, checked by its MD5.
+          rustup update stable --no-self-update
+          rustup default stable
+          cargo build --release --locked --manifest-path .github/learning/lindera_dict/Cargo.toml
+          tool="$PWD/.github/learning/lindera_dict/target/release/lindera_dict"
+          seg="$RUNNER_TEMP/segmenters"
+          mkdir -p "$seg"
+          while read -r code crate file md5 sub; do
+            curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/$crate.crate" "https://static.crates.io/crates/$crate/$crate-6.2.0.crate"
+            tar -xzf "$RUNNER_TEMP/in/$crate.crate" -C "$RUNNER_TEMP/in"
+            meta="$RUNNER_TEMP/in/$crate-6.2.0"
+            curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/$file" "https://lindera.dev/$file"
+            echo "$md5  $RUNNER_TEMP/in/$file" | md5sum -c -
+            tar -xzf "$RUNNER_TEMP/in/$file" -C "$RUNNER_TEMP/in"
+            freq=()
+            if [[ -f "$meta/context_id_freq.txt" ]]; then freq=("$meta/context_id_freq.txt"); fi
+            "$tool" "$meta/metadata.json" "$RUNNER_TEMP/in/${file%.tar.gz}${sub}" "$seg/$code" "${freq[@]}"
+            cp "$meta/NOTICE.txt" "$seg/$code/NOTICE.txt"
+            (cd "$seg/$code" && zip -q -X -9 -r "$RUNNER_TEMP/out/$code-segmenter.zip" .)
+            echo "$code segmenter: $(du -sb "$seg/$code" | cut -f1) bytes, $(stat -c %s "$RUNNER_TEMP/out/$code-segmenter.zip") zipped" | tee -a "$GITHUB_STEP_SUMMARY"
+          done <<'LIST'
+          ja lindera-ipadic mecab-ipadic-2.7.0-20250920.tar.gz a95c409f12f1023fce8ef91f991ef042
+          ko lindera-ko-dic mecab-ko-dic-2.1.1-20180720.tar.gz b996764e91c96bc89dc32ea208514a96
+          zh lindera-jieba mecab-jieba-0.1.1.tar.gz 749dc1ab25a035e141d014cd3c1cf8e9 /dict-src
+          LIST
+          # The core cuts real sentences with them before they go out.
+          LUMTUB_SEGMENTERS="$seg" cargo test --locked --manifest-path native/lumtub_core/Cargo.toml --lib real_segmenters -- --ignored --nocapture | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LICENSE_KEY: ${{ secrets.LUMTUB_LICENSE_KEY }}
+          NOTES: >-
+            Dictionaries for the learning pack, downloaded by Lumtub when a dictionary is turned on. Not an app release.
+            CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/);
+            the English word list, word forms and exam tags of ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT), with Chinese meanings from the Mandarin translations of the English Wiktionary and from the Chinese Wiktionary (CC BY-SA 4.0, as extracted by kaikki.org), from the Chinese Open Wordnet by Francis Bond, Shan Wang and Luís Morgado da Costa (https://bond-lab.github.io/cow/LICENSE) through Princeton WordNet 3.0, and, marked as reference translations, from WikDict (CC BY-SA), IPA from the English Wiktionary, frequency ranks from wordfreq by Robyn Speer (data CC BY-SA 4.0), English meanings from the Simple English and English Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org and from WordNet (WordNet license, https://wordnet.princeton.edu/license-and-commercial-use), and CEFR levels from The CEFR-J Wordlist Version 1.5, compiled by Yukio Tono, Tokyo University of Foreign Studies (http://www.cefr-j.org/), and the Octanove Vocabulary Profile C1/C2 1.0 by Octanove Labs (CC BY-SA 4.0), via https://github.com/openlanguageprofiles/olp-en-cefrj;
+            JMdict by the Electronic Dictionary Research and Development Group under CC BY-SA 4.0 (https://www.edrdg.org/edrdg/licence.html), via jmdict-simplified, with Chinese meanings from the Chinese Wiktionary and WikDict;
+            the Korean, Spanish, French, German, Italian and Russian dictionaries are made from the English and Chinese Wiktionaries (CC BY-SA 4.0, https://www.wiktionary.org/) as extracted by kaikki.org (https://kaikki.org/) and from WikDict (CC BY-SA, https://www.wikdict.com/);
+            Korean meanings and levels come first from the Korean Basic Dictionary (한국어기초사전) of the National Institute of Korean Language (CC BY-SA 2.0 KR, https://krdict.korean.go.kr/), via its open data in https://github.com/basickorean/basickorean-vocab.
+            The word segmenters are Lindera (MIT, https://github.com/lindera/lindera) builds of IPADIC (its own permissive license), mecab-ko-dic (Apache-2.0) and mecab-jieba (MIT); each zip holds its NOTICE.txt.
+        run: |
+          set -euo pipefail
+          if ! gh release view learning --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release create learning --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
+              --title 'Learning pack data' \
+              --notes "$NOTES"
+          fi
+          gh release edit learning --repo "$GITHUB_REPOSITORY" --notes "$NOTES"
+          # The dictionaries first, then the sums that name them.
+          (cd "$RUNNER_TEMP/out" && sha256sum -- *.gz *.zip > SHA256SUMS)
+          gh release upload learning "$RUNNER_TEMP"/out/*.gz "$RUNNER_TEMP"/out/*.zip --repo "$GITHUB_REPOSITORY" --clobber
+          # Signed with the license key under its own context: the app uses
+          # a dictionary only when its sum is in a list signed so.
+          umask 077
+          # The secret is the key's DER in base64; openssl wants it as PEM.
+          label='PRIVATE KEY'
+          { echo "-----BEGIN $label-----"; printf '%s' "$LICENSE_KEY" | tr -d ' \n\r' | fold -w 64; echo; echo "-----END $label-----"; } > "$RUNNER_TEMP/key.pem"
+          { printf 'lumtub-learning-sums-v1\n'; cat "$RUNNER_TEMP/out/SHA256SUMS"; } > "$RUNNER_TEMP/sums.msg"
+          openssl pkeyutl -sign -rawin -inkey "$RUNNER_TEMP/key.pem" -in "$RUNNER_TEMP/sums.msg" -out "$RUNNER_TEMP/sums.raw"
+          rm -f "$RUNNER_TEMP/key.pem"
+          base64 -w0 "$RUNNER_TEMP/sums.raw" > "$RUNNER_TEMP/out/SHA256SUMS.sig"
+          gh release upload learning "$RUNNER_TEMP/out/SHA256SUMS" "$RUNNER_TEMP/out/SHA256SUMS.sig" --repo "$GITHUB_REPOSITORY" --clobber

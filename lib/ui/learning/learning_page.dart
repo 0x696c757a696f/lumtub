@@ -13,6 +13,7 @@ import '../../l10n/l10n.dart';
 import '../../learning/anki_connect.dart';
 import '../../learning/english_dictionary.dart';
 import '../../learning/learning.dart';
+import '../../learning/review.dart';
 import '../../learning/vocabulary.dart';
 import '../../learning/word_voice.dart' show azureVoiceKey, azureVoiceRegion, googleVoiceKey;
 import '../../models.dart';
@@ -27,6 +28,7 @@ import '../pages/settings_sections.dart' show SettingsCategory;
 import '../pages/support_page.dart' show afdianPage;
 import '../skin_paint.dart';
 import '../theme.dart';
+import 'review_page.dart' show openReview;
 import 'word_card.dart' show englishLevelName;
 
 part 'learning_home.dart';
@@ -618,10 +620,11 @@ class _Pitch extends StatelessWidget {
             (AppIcons.sparkle, tr('Harder words stand out'), tr('English words above your level are highlighted, from middle school and CET-4 up to TOEFL, IELTS and GRE; Korean words show their level.')),
             (AppIcons.speakerHigh, tr('Hear it'), tr('The word read aloud, or the line once more in the speaker\'s own voice.')),
             (AppIcons.bookOpenText, tr('A vocabulary book that remembers where'), tr('Each word keeps its line, translation, video and moment: tap it to watch that moment again.')),
+            (AppIcons.brain, tr('Review at the right time'), tr('Words come back just before you would forget them, in the line they were said in, with its own sound.')),
             (AppIcons.cards, tr('Anki with the real sound'), tr('Send words to Anki in one tap with the audio of the line, or save an Anki import file or CSV.')),
             (AppIcons.graduationCap, tr('Study a video in four steps'), tr('Listen without subtitles, read along, shadow the hard lines, listen again.')),
             (AppIcons.cloudSlash, tr('Works offline'), tr('Dictionaries live on your computer: lookups need no internet and send nothing anywhere.')),
-            (AppIcons.deviceMobile, tr('Two devices, no account'), tr('One code for two devices; move it to a new computer from the app.')),
+
           ]),
           const SizedBox(height: Space.m),
           _FreeExtras(),

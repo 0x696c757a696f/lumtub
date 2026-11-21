@@ -49,6 +49,8 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 
 ## 🆕 Learn languages from real videos
 
+**Turn the videos you love into your own language lessons.** Look up as you watch · listen line by line · save and review · offline dictionaries.
+
 **Tap any word in the subtitles to look it up. Chinese gets pinyin and Japanese gets kana above the line. Save a word with its sentence and the original audio, and send it to Anki in one click. Offline dictionaries, one payment.**
 
 <p align="center">
@@ -66,7 +68,7 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 - **Send to Anki** in one click, or export CSV.
 
 **Try it free:** your first 30 word lookups have everything switched on, no account needed. After that, without the pack, you can look up 3 words a day. [Install guide and refunds](https://0x696c757a696f.github.io/lumtub/learn/).<br>
-**Early-bird price:** ¥99 until 3 December, then ¥188. Pay once, no subscription, on [爱发电](https://afdian.com/a/linmuqingfeng) (Alipay or WeChat Pay). Card payment is coming later. One license for 2 of your devices; the app checks it online about once every 30 days.
+**Early-bird price:** ¥99 until 3 December, then ¥188. Pay once, no subscription, on [爱发电](https://afdian.com/a/linmuqingfeng) (Alipay or WeChat Pay). Card payment is coming later. One license for up to 5 of your devices; the app checks it online about once every 30 days.
 
 **Free for everyone**, in the Subtitles menu under **Language learning**:
 

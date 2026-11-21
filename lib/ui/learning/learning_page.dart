@@ -372,6 +372,7 @@ Future<void> _showConfirmation(BuildContext context, Learning learning, {require
 }
 
 String _voiceLabel(VoiceService service) => switch (service) {
+      VoiceService.lumtub => tr("Natural voices (Azure), nothing to set up; the computer's voice when offline"),
       VoiceService.system => tr("This computer's voices, offline and free"),
       VoiceService.azure => tr('Azure neural voices, with your own key'),
       VoiceService.google => tr('Google Cloud voices, with your own key'),

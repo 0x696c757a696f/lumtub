@@ -12,6 +12,10 @@ import '../native_http.dart';
 
 /// Who reads a word aloud on a word card.
 enum VoiceService {
+  /// Azure's neural voices through Lumtub's server, nothing to set up;
+  /// the system's voice when offline.
+  lumtub,
+
   /// The system's own voices, offline and free; Windows may need the
   /// language's voice added in its settings.
   system,
@@ -85,7 +89,8 @@ class WordVoice {
   }
 
   /// [text] in [language] read by [service], as a sound file.
-  Future<File> read(String text, String language, VoiceService service, Map<String, String> keys) async {
+  /// [server] gives Lumtub's server and this device's id, for [VoiceService.lumtub].
+  Future<File> read(String text, String language, VoiceService service, Map<String, String> keys, {Future<(Uri, String)?> Function()? server}) async {
     final name = sha1.convert(utf8.encode('${service.name}\n$language\n$text')).toString();
     final file = File('${cache.path}${Platform.pathSeparator}$name.${service == VoiceService.system ? 'wav' : 'mp3'}');
     if (await file.exists() && await file.length() > 0) return file;
@@ -97,12 +102,25 @@ class WordVoice {
         final answer = await Isolate.run(() => callCoreJson('lumtub_speak', ask));
         final error = answer['error'];
         if (error is String) throw VoiceException(error == 'no voice', error);
+      case VoiceService.lumtub:
+        final where = await server?.call();
+        if (where == null) throw const VoiceException(false, 'server unknown');
+        await file.writeAsBytes(await _lumtub(text, language, where.$1, where.$2), flush: true);
       case VoiceService.azure:
         await file.writeAsBytes(await _azure(text, language, keys[azureVoiceKey] ?? '', keys[azureVoiceRegion] ?? ''), flush: true);
       case VoiceService.google:
         await file.writeAsBytes(await _google(text, language, keys[googleVoiceKey] ?? ''), flush: true);
     }
     return file;
+  }
+
+  Future<List<int>> _lumtub(String text, String language, Uri server, String device) async {
+    if (!azureVoices.containsKey(language)) throw const VoiceException(true);
+    final response = await (_client ??= appHttpClient())
+        .post(server.resolve('/speak'), headers: {'content-type': 'application/json'}, body: jsonEncode({'text': text, 'language': language, 'device': device}))
+        .timeout(const Duration(seconds: 15));
+    if (response.statusCode != 200 || !(response.headers['content-type'] ?? '').startsWith('audio/')) throw VoiceException(false, 'Lumtub voice HTTP ${response.statusCode}');
+    return response.bodyBytes;
   }
 
   Future<List<int>> _azure(String text, String language, String key, String region) async {

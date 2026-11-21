@@ -277,7 +277,25 @@ class Learning extends ChangeNotifier {
 
   /// Who reads words aloud on a word card.
   VoiceService get voiceService => _voiceService;
-  VoiceService _voiceService = VoiceService.system;
+  VoiceService _voiceService = VoiceService.lumtub;
+
+  /// The learner chose the voice; until then the default may change.
+  bool _voicePicked = false;
+
+  (Uri, String)? _speech;
+
+  /// Lumtub's server and this device's id, for words read aloud there.
+  Future<(Uri, String)?> speechServer() async {
+    if (_speech != null || _directories == null) return _speech;
+    final client = http.Client();
+    try {
+      final server = await _server(client);
+      if (server == null) return null;
+      return _speech = (server, await _device());
+    } finally {
+      client.close();
+    }
+  }
 
   /// Reads words aloud; null until the learning settings are read.
   WordVoice? get voice => _voice;
@@ -464,7 +482,8 @@ class Learning extends ChangeNotifier {
           _showPinyin = json['pinyin'] != false;
           _showRomanization = json['romanization'] == true;
           _meanings = MeaningLanguage.values.where((m) => m.name == json['meanings']).firstOrNull;
-          _voiceService = VoiceService.values.firstWhere((v) => v.name == json['voice'], orElse: () => VoiceService.system);
+          _voicePicked = json['voicePicked'] == true;
+          if (_voicePicked) _voiceService = VoiceService.values.firstWhere((v) => v.name == json['voice'], orElse: () => VoiceService.lumtub);
           final level = json['englishLevel'];
           if (level is int) _englishLevel = level >= 0 && level < EnglishLevel.beyond.index ? level : null;
           final code = json['license'];
@@ -807,6 +826,7 @@ class Learning extends ChangeNotifier {
 
   Future<void> setVoiceService(VoiceService service) async {
     _voiceService = service;
+    _voicePicked = true;
     notifyListeners();
     await _save();
   }
@@ -833,7 +853,7 @@ class Learning extends ChangeNotifier {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings?.name ?? '', 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1, 'trial': {'taken': _trialTaken, 'seen': _trialSeen, 'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
+      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings?.name ?? '', 'voice': _voiceService.name, 'voicePicked': _voicePicked, 'englishLevel': _englishLevel ?? -1, 'trial': {'taken': _trialTaken, 'seen': _trialSeen, 'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }

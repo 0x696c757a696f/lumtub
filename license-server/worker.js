@@ -52,6 +52,11 @@
 // success URL can be https://<this worker>/creem/thanks, which shows the
 // buyer the order id.
 
+// Words read aloud: the secrets AZURE_TTS_KEY and AZURE_TTS_REGION (an
+// Azure Speech resource). Each word is made once and then served from the
+// cache; new words are capped per device and in all per day, so the cost
+// stays within Azure's free monthly allowance.
+
 import revokedList from './revoked.txt';
 
 export default {
@@ -65,6 +70,7 @@ export default {
       if (request.method === 'POST' && url.pathname === '/claim') return await claim(request, env);
       if (request.method === 'POST' && url.pathname === '/activate') return await activate(request, env);
       if (request.method === 'POST' && url.pathname === '/deactivate') return await deactivate(request, env);
+      if (request.method === 'POST' && url.pathname === '/speak') return await speak(request, env);
       if (request.method === 'GET' && url.pathname === '/') return reply({ ok: true });
       if (request.method === 'GET' && url.pathname === '/kofi/status') return reply({ token: Boolean(env.KOFI_TOKEN), item: clean(env.KOFI_ITEM) || KOFI_LEARNING_ITEM, last: JSON.parse((await env.LICENSES.get('kofi:last-verified')) || 'null') });
       if (request.method === 'GET' && url.pathname === '/polar/thanks') return await polarThanks(url, env);
@@ -567,3 +573,65 @@ function md5(text) {
 }
 
 export { md5, sign };
+
+// Read aloud ------------------------------------------------------------
+
+const AZURE_VOICES = {
+  en: 'en-US-JennyNeural', zh: 'zh-CN-XiaoxiaoNeural', ja: 'ja-JP-NanamiNeural', ko: 'ko-KR-SunHiNeural', es: 'es-ES-ElviraNeural',
+  fr: 'fr-FR-DeniseNeural', de: 'de-DE-KatjaNeural', it: 'it-IT-ElsaNeural', ru: 'ru-RU-SvetlanaNeural',
+};
+// New words made a day: per device, and in all (about 500 a day stays
+// within Azure's 500,000 free characters a month).
+const SPEAK_PER_DEVICE = 80;
+const SPEAK_PER_DAY = 500;
+const SPEAK_MAX_CHARS = 40;
+
+async function speak(request, env) {
+  const ask = await request.json().catch(() => ({}));
+  const language = clean(ask.language);
+  const text = String(ask.text || '').replace(/[\u0000-\u001f]/g, '').trim();
+  const device = clean(ask.device);
+  const voice = AZURE_VOICES[language];
+  if (!voice || !text || [...text].length > SPEAK_MAX_CHARS || !/^[0-9a-f]{16,64}$/.test(device)) return reply({ error: 'ask' }, 400);
+  if (!env.AZURE_TTS_KEY || !/^[a-z0-9]+$/.test(clean(env.AZURE_TTS_REGION))) return reply({ error: 'off' }, 503);
+  const cache = caches.default;
+  const key = new Request(`https://speak.lumtub/${language}/${await sha256(`${voice}\n${text}`)}.mp3`);
+  const kept = await cache.match(key);
+  if (kept) return withCors(kept);
+
+  const day = new Date().toISOString().slice(0, 10);
+  const mine = `speak:${day}:${device}`;
+  const all = `speak:${day}`;
+  const [used, total] = await Promise.all([env.LICENSES.get(mine), env.LICENSES.get(all)]);
+  if ((Number(used) || 0) >= SPEAK_PER_DEVICE || (Number(total) || 0) >= SPEAK_PER_DAY) return reply({ error: 'busy' }, 429);
+  await Promise.all([
+    env.LICENSES.put(mine, String((Number(used) || 0) + 1), { expirationTtl: 2 * 86400 }),
+    env.LICENSES.put(all, String((Number(total) || 0) + 1), { expirationTtl: 2 * 86400 }),
+  ]);
+
+  const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const ssml = `<speak version="1.0" xml:lang="${voice.slice(0, 5)}"><voice name="${voice}">${escaped}</voice></speak>`;
+  const answer = await fetch(`https://${clean(env.AZURE_TTS_REGION)}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+    method: 'POST',
+    headers: {
+      'Ocp-Apim-Subscription-Key': env.AZURE_TTS_KEY,
+      'Content-Type': 'application/ssml+xml',
+      'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
+      'User-Agent': 'Lumtub',
+    },
+    body: ssml,
+  });
+  if (!answer.ok) {
+    console.log('azure', answer.status);
+    return reply({ error: 'voice' }, 502);
+  }
+  const sound = new Response(await answer.arrayBuffer(), { headers: { 'content-type': 'audio/mpeg', 'cache-control': 'public, max-age=31536000' } });
+  await cache.put(key, sound.clone());
+  return withCors(sound);
+}
+
+function withCors(response) {
+  const out = new Response(response.body, response);
+  out.headers.set('access-control-allow-origin', '*');
+  return out;
+}

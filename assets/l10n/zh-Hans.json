@@ -3853,6 +3853,8 @@
   "Hear the line": "听原句",
   "Not ready yet": "还没准备好",
   "This computer has no voice for this language. Add one in the system settings, or pick an online voice in the learning pack settings.": "这台电脑没有这种语言的语音。可以在系统设置里添加，或在学习包设置里改用在线语音。",
+  "Natural voices (Azure), nothing to set up; the computer's voice when offline": "自然的真人级发音（Azure），无需设置；离线时用电脑自带的语音",
+  "the voice gave no sound": "语音没有生成声音",
   "This voice service has no voice for this language": "这个语音服务没有这种语言的声音",
   "Could not read it aloud: {0}": "无法朗读：{0}",
   "Voice for reading words": "朗读用的声音",

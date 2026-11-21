@@ -114,21 +114,59 @@ extension LearningActions on AppController {
     final voice = learning.voice;
     if (voice == null) return tr('Not ready yet');
     final service = learning.voiceService;
+    File? file;
+    Object? failure;
     try {
-      final file = await voice.read(text, language, service, translationKeys);
+      file = await voice.read(text, language, service, translationKeys, server: learning.speechServer);
+    } catch (e) {
+      failure = e;
+      logWarn('Could not read "$text" ($language) aloud with ${service.name}: $e');
+    }
+    // Lumtub's online voice: offline or busy, the system's voice instead.
+    if (file == null && service == VoiceService.lumtub) {
+      try {
+        file = await voice.read(text, language, VoiceService.system, translationKeys);
+        failure = null;
+      } catch (e) {
+        failure = e;
+        logWarn('Could not read "$text" ($language) aloud with the system voice either: $e');
+      }
+    }
+    if (file == null) {
+      final e = failure;
+      if (e is VoiceException && e.noVoice && (service == VoiceService.system || service == VoiceService.lumtub)) {
+        return tr('This computer has no voice for this language. Add one in the system settings, or pick an online voice in the learning pack settings.');
+      }
+      if (e is VoiceException && e.noVoice) return tr('This voice service has no voice for this language');
+      return tr('Could not read it aloud: {0}', [e is VoiceException ? e.detail : '$e']);
+    }
+    try {
+      final size = await file.length();
+      if (size < 100) {
+        await file.delete();
+        logWarn('Reading "$text" ($language) aloud gave an empty sound ($size bytes)');
+        return tr('Could not read it aloud: {0}', [tr('the voice gave no sound')]);
+      }
       final player = this.player;
       if (player != null && player.state.playing) await player.pause();
       final sound = _shadowPlayer ??= Player();
-      await sound.setVolume(player?.state.volume ?? 100);
+      await sound.setVolume((player?.state.volume ?? 100).clamp(30, 100).toDouble());
+      // Told when mpv cannot play it, rather than staying silent.
+      final failed = Completer<String>();
+      final watch = sound.stream.error.listen((message) {
+        if (!failed.isCompleted) failed.complete(message);
+      });
       await sound.open(Media(file.uri.toString()));
+      final problem = await failed.future.timeout(const Duration(milliseconds: 800), onTimeout: () => '');
+      await watch.cancel();
+      logInfo('Read "$text" ($language) aloud: $size bytes${problem.isEmpty ? '' : ', mpv: $problem'}');
+      if (problem.isNotEmpty) {
+        await file.delete();
+        return tr('Could not read it aloud: {0}', [problem]);
+      }
       return null;
-    } on VoiceException catch (e) {
-      logWarn('Could not read "$text" ($language) aloud with ${service.name}: $e');
-      if (e.noVoice && service == VoiceService.system) return tr('This computer has no voice for this language. Add one in the system settings, or pick an online voice in the learning pack settings.');
-      if (e.noVoice) return tr('This voice service has no voice for this language');
-      return tr('Could not read it aloud: {0}', [e.detail]);
     } catch (e) {
-      logWarn('Could not read "$text" ($language) aloud: $e');
+      logWarn('Could not play the sound for "$text" ($language): $e');
       return tr('Could not read it aloud: {0}', ['$e']);
     }
   }

@@ -635,7 +635,16 @@ class _SpeakButtonState extends State<_SpeakButton> {
     final problem = await widget.controller.sayAloud(widget.text, widget.language);
     if (!mounted) return;
     setState(() => _busy = false);
-    if (problem != null) ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(problem)));
+    // A snack bar would sit behind the word card, unseen.
+    if (problem != null) {
+      await showDialog<void>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          content: Text(problem),
+          actions: [TextButton(onPressed: () => Navigator.pop(dialog), child: Text(tr('OK')))],
+        ),
+      );
+    }
   }
 
   @override

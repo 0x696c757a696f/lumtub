@@ -198,7 +198,9 @@ class Learning extends ChangeNotifier {
   ChineseDictionary? get chinese => licensed ? _packs[DictionaryPack.chinese]!.dictionary as ChineseDictionary? : null;
   EnglishDictionary? get english => licensed ? _packs[DictionaryPack.english]!.dictionary as EnglishDictionary? : null;
   JapaneseDictionary? get japanese => licensed ? _packs[DictionaryPack.japanese]!.dictionary as JapaneseDictionary? : null;
-  bool get anyDictionary => _packs.values.any((p) => p.dictionary != null) && licensed;
+  /// Whether a dictionary is on disk, read or not: lines in its language
+  /// are looked at, which reads it the first time.
+  bool get anyDictionary => licensed && _packs.values.any((p) => const {PackState.downloaded, PackState.loading, PackState.ready}.contains(p.state));
 
   /// The Wiktionary dictionary for [language], when it is ready.
   WiktionaryDictionary? wiktionary(String language) {
@@ -214,10 +216,14 @@ class Learning extends ChangeNotifier {
   /// [text] as words a tap looks up, when a dictionary for its language
   /// is ready.
   List<WordToken>? wordsOf(String text) {
-    final ja = japanese;
-    if (ja != null && JapaneseDictionary.looksJapanese(text)) return _cut('ja', text) ?? ja.segment(text);
-    final zh = chinese;
-    if (zh != null && ChineseDictionary.looksChinese(text)) return _cut('zh', text) ?? zh.segment(text);
+    if (JapaneseDictionary.looksJapanese(text) && _onDisk('ja')) {
+      final ja = japanese;
+      return ja == null ? null : _cut('ja', text) ?? ja.segment(text);
+    }
+    if (ChineseDictionary.looksChinese(text) && _onDisk('zh')) {
+      final zh = chinese;
+      return zh == null ? null : _cut('zh', text) ?? zh.segment(text);
+    }
     if (WiktionaryDictionary.looksKorean(text)) {
       final words = _onDisk('ko') ? _wiktionaryWords('ko', text) : null;
       if (words == null || _showRomanization) return words;
@@ -225,14 +231,13 @@ class Learning extends ChangeNotifier {
     }
     if (WiktionaryDictionary.looksCyrillic(text)) return _onDisk('ru') ? _wiktionaryWords('ru', text) : null;
     if (!EnglishDictionary.looksLatin(text)) return null;
-    final en = english;
-    final latin = [if (en != null) 'en', for (final code in const ['es', 'fr', 'de', 'it']) if (_packs[DictionaryPack.values.firstWhere((p) => p.language == code)]!.state case PackState.downloaded || PackState.loading || PackState.ready) code];
+    final latin = [for (final code in const ['en', 'es', 'fr', 'de', 'it']) if (_packs[DictionaryPack.values.firstWhere((p) => p.language == code)]!.state case PackState.downloaded || PackState.loading || PackState.ready) code];
     if (!licensed) return null;
     final language = _latin.guess(text, latin);
-    if (language == null) return null;
-    if (language == 'en') return en!.segment(text);
     // Read on first use; until then the line stays plain.
-    return _onDisk(language) ? _wiktionaryWords(language, text) : null;
+    if (language == null || !_onDisk(language)) return null;
+    if (language == 'en') return english?.segment(text);
+    return _wiktionaryWords(language, text);
   }
 
   List<WordToken>? _wiktionaryWords(String language, String text) {
@@ -330,8 +335,10 @@ class Learning extends ChangeNotifier {
     } catch (e) {
       logWarn('Could not read the learning settings: $e');
     }
+    // Read when a line in its language first needs it: reading a
+    // dictionary at start held up the window's first frames.
     for (final pack in DictionaryPack.values) {
-      if (await _fileOf(pack)!.exists()) _packs[pack]!.state = pack.wiktionary ? PackState.downloaded : PackState.loading;
+      if (await _fileOf(pack)!.exists()) _packs[pack]!.state = PackState.downloaded;
     }
     if (_license != null) {
       final license = _license!;
@@ -350,7 +357,6 @@ class Learning extends ChangeNotifier {
     notifyListeners();
     if (licensed) {
       unawaited(_book!.load());
-      _loadAll();
       unawaited(_updateAll());
     }
   }
@@ -431,7 +437,6 @@ class Learning extends ChangeNotifier {
     notifyListeners();
     if (!wasLicensed) {
       unawaited(_book?.load());
-      _loadAll();
       unawaited(_updateAll());
     }
     return answer == _Activation.ok ? LicenseResult.ok : LicenseResult.offline;
@@ -518,7 +523,6 @@ class Learning extends ChangeNotifier {
     notifyListeners();
     if (!was && licensed) {
       unawaited(_book?.load());
-      _loadAll();
       unawaited(_updateAll());
     }
   }
@@ -661,18 +665,12 @@ class Learning extends ChangeNotifier {
     }
   }
 
-  void _loadAll() {
-    for (final pack in DictionaryPack.values) {
-      if (_packs[pack]!.state != PackState.downloaded) unawaited(load(pack));
-    }
-  }
-
-  /// Whether [language]'s Wiktionary dictionary is on disk; reading it
-  /// starts now when it has not been read.
+  /// Whether [language]'s dictionary is on disk; reading it starts now
+  /// when it has not been read.
   bool _onDisk(String language) {
     if (!licensed) return false;
     for (final pack in DictionaryPack.values) {
-      if (!pack.wiktionary || pack.language != language) continue;
+      if (pack.language != language) continue;
       final state = _packs[pack]!.state;
       if (state == PackState.downloaded) unawaited(load(pack));
       return state == PackState.downloaded || state == PackState.loading || state == PackState.ready;
@@ -695,22 +693,24 @@ class Learning extends ChangeNotifier {
     try {
       final path = file.path;
       final watch = Stopwatch()..start();
+      // Both on another thread: opening a SQLite file counts its words.
       state.dictionary = pack.sqlite
           ? switch (pack) {
-              DictionaryPack.english => EnglishDictionary(CoreLexicon.open(pack.language, path)),
-              _ => WiktionaryDictionary(pack.language, CoreLexicon.open(pack.language, path)),
+              DictionaryPack.english => EnglishDictionary(await CoreLexicon.openInBackground(pack.language, path)),
+              _ => WiktionaryDictionary(pack.language, await CoreLexicon.openInBackground(pack.language, path)),
             }
           : await Isolate.run<Object>(() {
-              final text = utf8.decode(gzip.decode(File(path).readAsBytesSync()));
+              final unpacked = gzip.decode(File(path).readAsBytesSync());
+              final bytes = unpacked is Uint8List ? unpacked : Uint8List.fromList(unpacked);
               return switch (pack) {
-                DictionaryPack.chinese => ChineseDictionary.parse(text),
-                DictionaryPack.japanese => JapaneseDictionary.parse(text),
+                DictionaryPack.chinese => ChineseDictionary.fromBytes(bytes),
+                DictionaryPack.japanese => JapaneseDictionary.fromBytes(bytes),
                 _ => throw StateError('${pack.name} is a SQLite dictionary'),
               };
             });
       logInfo('${pack.name} dictionary opened in ${watch.elapsedMilliseconds} ms');
       state.state = PackState.ready;
-      _openSegmenter(pack);
+      unawaited(_openSegmenter(pack));
     } catch (e) {
       logError('Could not read the ${pack.name} dictionary', e);
       state.error = '$e';
@@ -734,6 +734,8 @@ class Learning extends ChangeNotifier {
         ..error = null;
       notifyListeners();
     }
+    // A quiet update reads the new file only where the old one was read.
+    final wasRead = state.dictionary != null;
     final client = http.Client();
     final part = File('${file.path}.part');
     final unpacked = File('${file.path}.new');
@@ -778,6 +780,11 @@ class Learning extends ChangeNotifier {
         await _sumOf(pack)!.writeAsString(expected);
       } catch (_) {}
       logInfo('${pack.name} dictionary downloaded: $received bytes');
+      if (quiet && !wasRead) {
+        state.state = PackState.downloaded;
+        notifyListeners();
+        return;
+      }
       state
         ..state = PackState.loading
         ..progress = null;
@@ -817,12 +824,18 @@ class Learning extends ChangeNotifier {
   /// Opens [pack]'s segmenter, fetching it first when it is not there,
   /// such as for a dictionary downloaded before segmenters were. Lines
   /// are cut the old way until it is open.
-  void _openSegmenter(DictionaryPack pack) {
+  Future<void> _openSegmenter(DictionaryPack pack) async {
     final folder = _segmenterOf(pack);
     if (pack.segmenter == null || folder == null || !CoreWords.available || CoreWords.isOpen(pack.language)) return;
-    if (File('${folder.path}${Platform.pathSeparator}metadata.json').existsSync()) {
+    if (await File('${folder.path}${Platform.pathSeparator}metadata.json').exists()) {
       try {
-        CoreWords.open(pack.language, folder.path);
+        // Reading Lindera's dictionary takes a while; not on the window's thread.
+        await CoreWords.openInBackground(pack.language, folder.path);
+        // Deleted or replaced meanwhile.
+        if (_packs[pack]!.dictionary == null) {
+          CoreWords.close(pack.language);
+          return;
+        }
         logInfo('${pack.name} segmenter opened');
         viewChanges.value++;
       } catch (e) {
@@ -866,7 +879,7 @@ class Learning extends ChangeNotifier {
       CoreWords.close(pack.language);
       if (await folder.exists()) await folder.delete(recursive: true);
       await unpacked.rename(folder.path);
-      _openSegmenter(pack);
+      await _openSegmenter(pack);
     } catch (e) {
       logWarn('Could not download the ${pack.name} segmenter: $e');
     } finally {

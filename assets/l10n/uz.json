@@ -3653,5 +3653,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "Ba’zi gaplar endi buferda yo‘q, shuning uchun ular uchun faqat sizning yozuvingiz saqlanadi.",
   "Languages I understand": "Men tushunadigan tillar",
   "Subtitles don't turn on by themselves for videos in these languages": "Bu tillardagi videolar uchun subtitrlar o‘z-o‘zidan yoqilmaydi",
-  "On for languages I don't understand": "Tushunmaydigan tillarim uchun yoqilsin"
+  "On for languages I don't understand": "Tushunmaydigan tillarim uchun yoqilsin",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "GitHub'da Star qo'yish bepul va ko'proq odamlarga Lumtub'ni topishga yordam beradi. Bu faqat bir marta so'raladi."
 }

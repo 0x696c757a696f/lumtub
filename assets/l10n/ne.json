@@ -3653,5 +3653,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "केही वाक्य अब बफरमा छैनन्, त्यसैले तिनका लागि तपाईंको रेकर्डिङ मात्र सेभ हुन्छ।",
   "Languages I understand": "मैले बुझ्ने भाषाहरू",
   "Subtitles don't turn on by themselves for videos in these languages": "यी भाषाका भिडियोहरूमा उपशीर्षक आफैं सुरु हुँदैन",
-  "On for languages I don't understand": "नबुझ्ने भाषाका लागि सुरु"
+  "On for languages I don't understand": "नबुझ्ने भाषाका लागि सुरु",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "GitHub मा स्टार दिन केही खर्च लाग्दैन, र यसले धेरै मानिसलाई Lumtub भेट्टाउन मद्दत गर्छ। यो एक पटक मात्र सोधिन्छ।"
 }

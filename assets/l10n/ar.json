@@ -3659,5 +3659,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "بعض الأسطر لم تعد في المخزن المؤقت، لذا يُحفظ تسجيلك فقط لها.",
   "Languages I understand": "اللغات التي أفهمها",
   "Subtitles don't turn on by themselves for videos in these languages": "لا تُشغَّل الترجمة تلقائيًا لمقاطع الفيديو بهذه اللغات",
-  "On for languages I don't understand": "تشغيل للغات التي لا أفهمها"
+  "On for languages I don't understand": "تشغيل للغات التي لا أفهمها",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "نجمة على GitHub لا تكلّف شيئًا وتساعد المزيد من الناس على اكتشاف Lumtub. هذه هي المرة الوحيدة التي نطلب فيها ذلك."
 }

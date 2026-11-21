@@ -204,15 +204,16 @@ class _AppShellState extends State<AppShell> {
     return false;
   }
 
-  /// Asks about supporting Lumtub when it is due, and only while nothing
+  /// Asks for a star on GitHub or about supporting Lumtub when it is due, and only while nothing
   /// plays and no dialog or other page is open.
   void _askForSupport() {
     final reminder = _controller.supportReminder;
     if (reminder == null || !mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
     final now = DateTime.now();
     reminder.used(now);
-    if (!reminder.due(now) || _controller.playing != null || ModalRoute.of(context)?.isCurrent == false) return;
-    unawaited(askForSupport(context, reminder));
+    if (_controller.playing != null || ModalRoute.of(context)?.isCurrent == false) return;
+    if (reminder.starDue(now)) return unawaited(askForStar(context, reminder));
+    if (reminder.due(now)) unawaited(askForSupport(context, reminder));
   }
 
   void _focusSearch() {

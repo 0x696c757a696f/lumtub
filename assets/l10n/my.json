@@ -3653,5 +3653,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "စာကြောင်းအချို့ ဘဖ်ဖာထဲတွင် မရှိတော့သဖြင့် ၎င်းတို့အတွက် သင့်အသံဖမ်းချက်ကိုသာ သိမ်းပါမည်။",
   "Languages I understand": "ကျွန်ုပ်နားလည်သော ဘာသာစကားများ",
   "Subtitles don't turn on by themselves for videos in these languages": "ဤဘာသာစကားများဖြင့် ဗီဒီယိုများအတွက် စာတန်းထိုး အလိုအလျောက် မဖွင့်ပါ",
-  "On for languages I don't understand": "နားမလည်သော ဘာသာစကားများအတွက် ဖွင့်"
+  "On for languages I don't understand": "နားမလည်သော ဘာသာစကားများအတွက် ဖွင့်",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "GitHub တွင် Star ပေးခြင်းသည် အခမဲ့ဖြစ်ပြီး လူပိုများများ Lumtub ကို ရှာတွေ့စေရန် ကူညီပါသည်။ ဤမေးခွန်းကို ဤတစ်ကြိမ်သာ မေးပါမည်။"
 }

@@ -1170,6 +1170,16 @@ List<SettingEntry> aboutEntries(AppController controller) {
       subtitle: tr('sponsor donate support'),
     ),
     SettingEntry(
+      tr('Star it on GitHub'),
+      (context) => NormalItem(
+        title: tr('Star it on GitHub'),
+        subtitle: tr('Helps more people find Lumtub'),
+        leading: Icon(AppIcons.star, color: const Color(0xFFE3B341)),
+        onTap: () => openExternal(_repository),
+      ),
+      subtitle: 'GitHub star',
+    ),
+    SettingEntry(
       tr('Support reminder'),
       (context) => StatefulBuilder(
         builder: (context, setState) {

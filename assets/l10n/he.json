@@ -3654,5 +3654,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "חלק מהמשפטים כבר לא נמצאים במאגר, לכן עבורם נשמרת רק ההקלטה שלכם.",
   "Languages I understand": "שפות שאני מבין",
   "Subtitles don't turn on by themselves for videos in these languages": "הכתוביות לא נדלקות מעצמן בסרטונים בשפות האלה",
-  "On for languages I don't understand": "מופעל בשפות שאני לא מבין"
+  "On for languages I don't understand": "מופעל בשפות שאני לא מבין",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "כוכב ב-GitHub לא עולה כלום ועוזר ליותר אנשים למצוא את Lumtub. זו הפעם היחידה שזה נשאל."
 }

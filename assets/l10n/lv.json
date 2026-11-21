@@ -3654,5 +3654,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "Dažas frāzes vairs nav buferī, tāpēc tām tiek saglabāts tikai jūsu ieraksts.",
   "Languages I understand": "Valodas, ko saprotu",
   "Subtitles don't turn on by themselves for videos in these languages": "Šajās valodās runātiem video subtitri paši neieslēdzas",
-  "On for languages I don't understand": "Ieslēgti valodām, ko nesaprotu"
+  "On for languages I don't understand": "Ieslēgti valodām, ko nesaprotu",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "Zvaigznīte GitHub neko nemaksā un palīdz vairāk cilvēkiem atrast Lumtub. Tas tiek jautāts tikai šo vienu reizi."
 }

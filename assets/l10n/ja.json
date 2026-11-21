@@ -3659,5 +3659,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "一部の行はもうバッファにないため、それらは自分の録音のみ保存されます。",
   "Languages I understand": "理解できる言語",
   "Subtitles don't turn on by themselves for videos in these languages": "これらの言語の動画では字幕が自動でオンになりません",
-  "On for languages I don't understand": "理解できない言語のときにオン"
+  "On for languages I don't understand": "理解できない言語のときにオン",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "GitHub でスターを付けるのは無料で、より多くの人が Lumtub を見つける助けになります。このお願いは今回だけです。"
 }

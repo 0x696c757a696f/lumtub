@@ -3654,5 +3654,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "Неке реченице више нису у баферу, па се за њих чува само ваш снимак.",
   "Languages I understand": "Језици које разумем",
   "Subtitles don't turn on by themselves for videos in these languages": "Титлови се не укључују сами за видео-снимке на овим језицима",
-  "On for languages I don't understand": "Укључено за језике које не разумем"
+  "On for languages I don't understand": "Укључено за језике које не разумем",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "Звездица на GitHub-у ништа не кошта, а помаже да више људи пронађе Lumtub. Ово се пита само једном."
 }

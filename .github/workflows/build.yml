@@ -1470,7 +1470,11 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/android-python/downloads
-          key: android-python-${{ env.PYTHON_ANDROID_VERSION }}-${{ env.PYTHON_ANDROID_SHA256_ARM64 }}-${{ env.PYTHON_ANDROID_SHA256_X86_64 }}-${{ env.YTDLP_VERSION }}-${{ env.YTDLP_SHA256 }}
+          # Also holds the 32-bit Arm Python python-arm32.sh builds (about ten
+          # minutes), named after what it was built from; an older cache is
+          # restored so a changed yt-dlp pin does not build it again.
+          key: android-python-${{ env.PYTHON_ANDROID_VERSION }}-${{ env.PYTHON_ANDROID_SHA256_ARM64 }}-${{ env.PYTHON_ANDROID_SHA256_X86_64 }}-${{ env.PYTHON_ANDROID_SOURCE_COMMIT }}-${{ hashFiles('android/packaging/python-arm32.sh') }}-${{ env.YTDLP_VERSION }}-${{ env.YTDLP_SHA256 }}
+          restore-keys: android-python-
 
       - name: Android - add Python and yt-dlp
         run: android/packaging/python.sh "$RUNNER_TEMP/android-python"

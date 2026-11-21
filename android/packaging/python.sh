@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Puts CPython's Android build into the APK for yt-dlp: per ABI, a launcher
-# (python-launcher.c, Py_BytesMain) as jniLibs/<abi>/libpython.so, CPython's
+# Puts CPython's Android build into the APK for yt-dlp (python.org's
+# tarballs for arm64-v8a and x86_64, one built by python-arm32.sh for
+# armeabi-v7a): per ABI, a launcher (python-launcher.c, Py_BytesMain) as jniLibs/<abi>/libpython.so, CPython's
 # libpython3.x.so and the libraries it loads beside it, and the standard
 # library as jniLibs/<abi>/libpython.zip.so (usr/lib/python3.x, usr/etc/tls),
 # which PythonSetup.kt unpacks. Also res/raw/ytdlp, the yt-dlp zip app.
@@ -34,16 +35,24 @@ fetch() { # url file sha256
 
 version=$PYTHON_ANDROID_VERSION
 minor=${version%.*}
-build_abi() { # abi triple pin
-  local abi=$1 triple=$2 pin=$3
+build_abi() { # abi triple clang-triple pin ("built" = made by python-arm32.sh)
+  local abi=$1 triple=$2 clang=$3 pin=$4
   local url="https://www.python.org/ftp/python/$version/python-$version-$triple.tar.gz"
   local tarball="$downloads/python-$version-$triple.tar.gz"
-  if [ "$pin" = unpinned ]; then
+  if [ "$pin" = built ]; then
+    # Kept in the cached downloads folder under the source and libraries it
+    # was built from, so a changed pin builds it again.
+    local stamp
+    stamp=$(printf '%s\n' "$version" "$PYTHON_ANDROID_SOURCE_COMMIT" "$PYTHON_ANDROID_ARM32_DEPS" | cat - "$here/python-arm32.sh" | sha256sum | cut -c1-16)
+    tarball="$downloads/python-$version-$triple-$stamp.tar.gz"
+    [ -f "$tarball" ] || "$here/python-arm32.sh" "$work/build-$triple" "$tarball"
+  elif [ "$pin" = unpinned ]; then
     curl -fsSL --retry 5 --retry-all-errors -o "$tarball" "$url"
     echo "$url has SHA-256 $(sha256sum "$tarball" | cut -d' ' -f1); pin it in .github/pins.env" >&2
     exit 1
+  else
+    fetch "$url" "$tarball" "$pin"
   fi
-  fetch "$url" "$tarball" "$pin"
   local src="$work/$abi/src" stage="$work/$abi/stage"
   rm -rf "$work/$abi"
   mkdir -p "$src" "$stage/usr/lib" "$stage/usr/etc/tls" "$jni/$abi"
@@ -54,7 +63,7 @@ build_abi() { # abi triple pin
   # The interpreter and the libraries it loads, in the library folder.
   rm -f "$jni/$abi"/libpython*.so
   cp -L "$prefix"/lib/lib*.so "$jni/$abi/"
-  "$clang_bin/${triple}24-clang" -O2 -fPIE -pie \
+  "$clang_bin/${clang}24-clang" -O2 -fPIE -pie \
     -I"$prefix/include/python$minor" -L"$prefix/lib" \
     -Wl,-z,max-page-size=16384 \
     -o "$jni/$abi/libpython.so" "$here/python-launcher.c" -lpython"$minor"
@@ -74,8 +83,9 @@ build_abi() { # abi triple pin
   llvm-readelf -d "$jni/$abi/libpython.so" | grep NEEDED
 }
 
-build_abi arm64-v8a aarch64-linux-android "$PYTHON_ANDROID_SHA256_ARM64"
-build_abi x86_64 x86_64-linux-android "$PYTHON_ANDROID_SHA256_X86_64"
+build_abi arm64-v8a aarch64-linux-android aarch64-linux-android "$PYTHON_ANDROID_SHA256_ARM64"
+build_abi armeabi-v7a arm-linux-androideabi armv7a-linux-androideabi built
+build_abi x86_64 x86_64-linux-android x86_64-linux-android "$PYTHON_ANDROID_SHA256_X86_64"
 
 # yt-dlp: the pinned release's zip app, also checked against the
 # SHA2-256SUMS that release publishes.

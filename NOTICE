@@ -29,7 +29,9 @@ LGPL FFmpeg and the other libraries linked into it:
 
 The Android APK includes CPython (https://www.python.org), from the Android
 binary release python.org publishes for each Python version
-(python-<version>-<host>.tar.gz for arm64-v8a and x86_64; the version is
+(python-<version>-<host>.tar.gz for arm64-v8a and x86_64; for
+armeabi-v7a, which python.org does not publish, built from the same source
+tag by CPython's own Android/android.py; the version is
 PYTHON_ANDROID_VERSION in .github/pins.env), under the Python Software
 Foundation License Version 2. It is built with OpenSSL (Apache License 2.0),
 SQLite (public domain), libffi (MIT), xz/liblzma (public domain), bzip2

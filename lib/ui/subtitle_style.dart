@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
 import '../player_settings.dart';
-import '../widgets/pilinara_settings_tiles.dart';
+import '../widgets/settings_tiles.dart';
 import 'pages/watch_page.dart' show subtitleViewFor;
 
 /// Font families this system installs, offered before a typed name, each

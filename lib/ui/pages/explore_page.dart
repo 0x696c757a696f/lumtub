@@ -15,7 +15,7 @@ import '../reveal.dart';
 import '../../search_options.dart';
 import '../theme.dart';
 import '../video_card.dart';
-import '../../widgets/pilinara_settings_tiles.dart' show confirmDialog;
+import '../../widgets/settings_tiles.dart' show confirmDialog;
 import '../../l10n/l10n.dart';
 import '../../models.dart';
 import '../motion.dart';

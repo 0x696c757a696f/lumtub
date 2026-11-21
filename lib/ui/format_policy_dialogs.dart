@@ -4,7 +4,7 @@ import '../l10n/l10n.dart';
 import '../format_policy.dart';
 import '../player_settings.dart';
 import '../video_codec.dart';
-import '../widgets/pilinara_settings_tiles.dart';
+import '../widgets/settings_tiles.dart';
 import 'app_icons.dart';
 
 /// The text under the disabled codecs, in the settings and the player menu.

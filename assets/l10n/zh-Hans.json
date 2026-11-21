@@ -3985,7 +3985,12 @@
   "This part is done.": "这一段学完了。",
   "With subtitles": "字幕精学",
   "{0} hard lines": "{0} 个难句",
-  "Learning": "学习",
   "Line by line": "逐句",
-  "Study mode is part of the learning pack": "精学是学习包的功能"
+  "Study mode is part of the learning pack": "精学是学习包的功能",
+  "Tap a word in the subtitles, then Add to vocabulary book: it keeps the line and the moment.": "点字幕里的词，再点「加入生词本」：会连同原句和视频时间点一起存下。",
+  "See all {0} words": "查看全部 {0} 个词",
+  "Ready. Tap any word in the subtitles.": "词典已就绪，点字幕里任意一个词。",
+  "These subtitles are in {0}. Download its dictionary to tap any word for its meaning, offline.": "这个字幕是{0}。下载词典后，点任意一个词就能离线查释义。",
+  "Download the {0} dictionary": "下载{0}词典",
+  "Dictionary": "词典"
 }

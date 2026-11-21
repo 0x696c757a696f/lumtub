@@ -22,6 +22,7 @@ import 'network_proxy.dart';
 import 'player_settings.dart';
 import 'skins/skin_library.dart';
 import 'ui/app_shell.dart';
+import 'ui/learning/learning_page.dart' show installLearningPack;
 import 'ui/frame_stats.dart';
 import 'ui/app_icons.dart';
 import 'ui/motion.dart';
@@ -74,6 +75,7 @@ Future<void> main() async {
   }
   setLanguage(appearance.language);
   NativeCore.tellLanguage(youtubeHl);
+  installLearningPack();
   runApp(LumtubApp(controller: AppController(appearance: appearance, appearanceStore: store)));
   unawaited(WidgetsBinding.instance.waitUntilFirstFrameRasterized.then((_) => logInfo('First frame shown ${FrameStats.sinceStart.elapsedMilliseconds} ms after start')));
 }

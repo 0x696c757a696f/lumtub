@@ -377,6 +377,26 @@ class Learning extends ChangeNotifier {
   }
 
   /// The language of the dictionary [token] is looked up in.
+  /// The dictionary [text] (a few subtitle lines) would need, by its
+  /// script and, for Latin letters, the words in it.
+  DictionaryPack? packFor(String text) {
+    final String? language;
+    if (JapaneseDictionary.looksJapanese(text)) {
+      language = 'ja';
+    } else if (ChineseDictionary.looksChinese(text)) {
+      language = 'zh';
+    } else if (WiktionaryDictionary.looksKorean(text)) {
+      language = 'ko';
+    } else if (WiktionaryDictionary.looksCyrillic(text)) {
+      language = 'ru';
+    } else if (EnglishDictionary.looksLatin(text)) {
+      language = _latin.guess(text, const ['en', 'es', 'fr', 'de', 'it']);
+    } else {
+      language = null;
+    }
+    return DictionaryPack.values.where((p) => p.language == language).firstOrNull;
+  }
+
   static String languageOf(WordToken token) => token.language ?? (ChineseDictionary.isHan(token.text) ? 'zh' : 'en');
   VocabularyBook? get book => _book;
 

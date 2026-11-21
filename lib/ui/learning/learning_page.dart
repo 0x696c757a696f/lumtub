@@ -21,6 +21,7 @@ import '../../widgets/settings_tiles.dart';
 import '../app_icons.dart';
 import '../app_shell.dart' show openSettings;
 import '../common.dart';
+import '../learning_drawer.dart' show LearningDrawerSection, addLearningDrawerSection, studyLockedView;
 import '../pages/settings_sections.dart' show SettingsCategory;
 import '../pages/support_page.dart' show afdianPage;
 import '../skin_paint.dart';
@@ -28,6 +29,7 @@ import '../theme.dart';
 import 'word_card.dart' show englishLevelName;
 
 part 'learning_home.dart';
+part 'learning_drawer_parts.dart';
 
 /// 学习: the rail's page; over the watch page while a video is open, so
 /// the video keeps playing.

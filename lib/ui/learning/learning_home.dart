@@ -456,9 +456,6 @@ class _GettingStarted extends StatelessWidget {
                 ),
               ]),
             ),
-          if (!learning.licensed)
-            Text(learningTrialOffer(),
-                style: context.text.bodySmall?.copyWith(color: colors.onPrimaryContainer.withValues(alpha: 0.75))),
         ]),
       ),
     );

@@ -219,6 +219,27 @@ String learningPriceLine() {
   return tr('Pre-sale price {0}, paid once ({1} after launch; nothing more to pay then)', [shown(pre), shown(learningPrice)]);
 }
 
+/// The price as a tag: the pre-sale price, the price after launch struck
+/// through beside it, and that it is paid once.
+class LearningPriceTag extends StatelessWidget {
+  const LearningPriceTag({super.key, this.size = 16});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    String shown(({String euro, String yuan}) price) => currentLanguage.isChinese ? '${price.yuan} / ${price.euro}' : price.euro;
+    final pre = learningPresale;
+    final small = TextStyle(fontSize: size * 0.8, color: colors.outline);
+    return Text.rich(TextSpan(children: [
+      if (pre != null) TextSpan(text: '${tr('Pre-sale')} ', style: small.copyWith(color: colors.primary, fontWeight: FontWeight.w600)),
+      TextSpan(text: shown(pre ?? learningPrice), style: TextStyle(fontSize: size, fontWeight: FontWeight.w700, color: colors.primary)),
+      if (pre != null) TextSpan(text: '  ${shown(learningPrice)}', style: small.copyWith(decoration: TextDecoration.lineThrough, decorationColor: colors.outline)),
+      TextSpan(text: '  ${pre != null ? tr('paid once, nothing more to pay after launch') : tr('paid once')}', style: small),
+    ]));
+  }
+}
+
 /// Where the free trial stands: the free lookups left, or today's
 /// lookups after it.
 String learningTrialLine(Learning learning) => learning.inTrial
@@ -241,12 +262,14 @@ Future<void> showLearningLocked(BuildContext context, Learning learning, {String
         content: SizedBox(
           width: 460,
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text([lead ?? tr('The {0} free trial lookups are used up.', [Learning.trialTotal]), learningPackFeatures()].join(' ')),
+            Text(lead ?? tr('The {0} free trial lookups are used up.', [Learning.trialTotal]), style: Theme.of(dialog).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Text(learningPackFeatures()),
             const SizedBox(height: 8),
             Text(tr('Words you saved stay yours: you can still see them and export them as CSV.'),
                 style: Theme.of(dialog).textTheme.bodySmall?.copyWith(color: Theme.of(dialog).colorScheme.outline)),
-            const SizedBox(height: 12),
-            Text(learningPriceLine(), style: Theme.of(dialog).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 16),
+            const LearningPriceTag(size: 20),
           ]),
         ),
         actions: [
@@ -561,7 +584,7 @@ class _Pitch extends StatelessWidget {
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(tr('Learning pack'), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-                Text(learningPriceLine(), style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600)),
+                const LearningPriceTag(),
               ]),
             ),
           ]),

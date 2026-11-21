@@ -50,7 +50,7 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
   final outer = context;
   final field = TextEditingController();
   final email = TextEditingController();
-  var source = afdianFirst ? PurchaseSource.afdian : PurchaseSource.polar;
+  var source = afdianFirst ? PurchaseSource.afdian : PurchaseSource.creem;
   var busy = false;
   var agreed = false;
   String? error;
@@ -79,6 +79,7 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
           error = switch (result) {
             ClaimResult.notFound => switch (source) {
                 PurchaseSource.afdian => tr('No paid order with this number was found. Copy the order number from your Afdian order page.'),
+                PurchaseSource.creem => tr('No card order with this ID and email was found yet. Check both against the page shown after paying or the receipt Creem emailed you, or wait a minute and try again.'),
                 PurchaseSource.polar => tr('No Polar order with this ID and email was found yet. Check both against the page shown after paying or your Polar receipt, or wait a minute and try again.'),
                 PurchaseSource.kofi => tr('No Ko-fi purchase with this transaction ID and email was found yet. Check both against your Ko-fi receipt, or wait a minute and try again.'),
               },
@@ -107,12 +108,13 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
               decoration: InputDecoration(
                 labelText: switch (source) {
                   PurchaseSource.afdian => tr('Afdian order number'),
+                  PurchaseSource.creem => tr('Order ID (starts with ord_)'),
                   PurchaseSource.polar => tr('Polar order ID'),
                   PurchaseSource.kofi => tr('Ko-fi transaction ID'),
                 },
                 helperText: switch (source) {
                   PurchaseSource.afdian => tr('Afdian › My orders › the order › Order number'),
-                  PurchaseSource.polar => tr('Shown on the page after paying'),
+                  PurchaseSource.creem || PurchaseSource.polar => tr('Shown on the page after paying'),
                   PurchaseSource.kofi => tr('On the receipt Ko-fi emailed you'),
                 },
                 errorText: source.needsEmail ? null : error,
@@ -128,7 +130,11 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
                 keyboardType: TextInputType.emailAddress,
                 onSubmitted: (_) => unawaited(claim()),
                 decoration: InputDecoration(
-                  labelText: source == PurchaseSource.polar ? tr('Email you paid with on Polar') : tr('Email you paid with on Ko-fi'),
+                  labelText: switch (source) {
+                    PurchaseSource.polar => tr('Email you paid with on Polar'),
+                    PurchaseSource.kofi => tr('Email you paid with on Ko-fi'),
+                    _ => tr('Email you paid with'),
+                  },
                   errorText: error,
                   errorMaxLines: 3,
                   border: const OutlineInputBorder(),
@@ -179,18 +185,19 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
 
 String _sourceName(PurchaseSource source) => switch (source) {
       PurchaseSource.afdian => tr('Afdian'),
+      PurchaseSource.creem => tr('Card (Creem)'),
       PurchaseSource.polar => 'Polar',
       PurchaseSource.kofi => 'Ko-fi',
     };
 
-/// Polar's card checkout, asked once a run; null while card payments
-/// are closed (the published polar-checkout.txt is empty), and only
-/// Afdian is offered.
-Future<Uri?> cardCheckout() => _cardCheckout ??= polarCheckout();
+/// The card checkout (Creem, else Polar), asked once a run; null while
+/// card payments are closed (the published checkout files are empty),
+/// and only Afdian is offered.
+Future<Uri?> cardCheckout() => _cardCheckout ??= cardCheckoutLink();
 Future<Uri?>? _cardCheckout;
 
-/// Opens Polar's checkout, or Afdian while there is none.
-Future<void> _buyOnPolar() async {
+/// Opens the card checkout, or Afdian while there is none.
+Future<void> _buyByCard() async {
   final checkout = await cardCheckout();
   await openExternal(checkout?.toString() ?? afdianPage);
 }
@@ -260,7 +267,7 @@ Future<void> showLearningLocked(BuildContext context, Learning learning, {String
 
 /// Opens the checkout the interface's language suggests: Afdian (Alipay,
 /// WeChat) for Chinese, Polar (cards) otherwise.
-Future<void> buyLearningPack() => currentLanguage.isChinese ? openExternal(afdianPage) : _buyOnPolar();
+Future<void> buyLearningPack() => currentLanguage.isChinese ? openExternal(afdianPage) : _buyByCard();
 
 String _consentText() => tr(
     'I ask for the learning pack to be supplied now, and I understand that once it is, I lose the 14-day right of withdrawal. This does not affect my rights if the pack does not work as described.');
@@ -586,12 +593,12 @@ class _Pitch extends StatelessWidget {
               final afdianFirst = zh || !card;
               return Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
                 FilledButton(
-                  onPressed: () => unawaited(afdianFirst ? openExternal(afdianPage) : _buyOnPolar()),
+                  onPressed: () => unawaited(afdianFirst ? openExternal(afdianPage) : _buyByCard()),
                   child: Text(afdianFirst ? tr('Buy on Afdian (Alipay, WeChat)') : tr('Buy (card, Apple Pay, Google Pay)')),
                 ),
                 if (card)
                   OutlinedButton(
-                    onPressed: () => unawaited(zh ? _buyOnPolar() : openExternal(afdianPage)),
+                    onPressed: () => unawaited(zh ? _buyByCard() : openExternal(afdianPage)),
                     child: Text(zh ? tr('Buy (card, Apple Pay, Google Pay)') : tr('Buy on Afdian (Alipay, WeChat)')),
                   ),
                 TextButton(onPressed: () => unawaited(claimPurchase(context, learning, afdianFirst: zh)), child: Text(tr('I bought it: unlock'))),

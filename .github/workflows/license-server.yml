@@ -72,13 +72,14 @@ jobs:
           KOFI_TOKEN: ${{ secrets.KOFI_TOKEN }}
           POLAR_WEBHOOK_SECRET: ${{ secrets.POLAR_WEBHOOK_SECRET }}
           POLAR_TOKEN: ${{ secrets.POLAR_TOKEN }}
+          CREEM_WEBHOOK_SECRET: ${{ secrets.CREEM_WEBHOOK_SECRET }}
           AFDIAN_USER_ID: ${{ secrets.AFDIAN_USER_ID }}
           AFDIAN_TOKEN: ${{ secrets.AFDIAN_TOKEN }}
           KOFI_ITEM: ${{ vars.KOFI_ITEM }}
         run: |
           set -euo pipefail
           umask 077
-          jq -n 'env | {LICENSE_KEY, KOFI_TOKEN, POLAR_WEBHOOK_SECRET, POLAR_TOKEN, AFDIAN_USER_ID, AFDIAN_TOKEN, KOFI_ITEM} | with_entries(select(.value != null and .value != ""))' > "$RUNNER_TEMP/secrets.json"
+          jq -n 'env | {LICENSE_KEY, KOFI_TOKEN, POLAR_WEBHOOK_SECRET, POLAR_TOKEN, CREEM_WEBHOOK_SECRET, AFDIAN_USER_ID, AFDIAN_TOKEN, KOFI_ITEM} | with_entries(select(.value != null and .value != ""))' > "$RUNNER_TEMP/secrets.json"
           npx --yes wrangler@4.20.0 secret bulk "$RUNNER_TEMP/secrets.json"
           rm -f "$RUNNER_TEMP/secrets.json"
 
@@ -104,8 +105,10 @@ jobs:
           gh release upload learning "$RUNNER_TEMP/license-server.txt" --repo "$GITHUB_REPOSITORY" --clobber
           # Where the app's Buy button goes for buyers outside China.
           gh release upload learning license-server/polar-checkout.txt --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload learning license-server/creem-checkout.txt --repo "$GITHUB_REPOSITORY" --clobber
           echo "::notice::Ko-fi webhook URL: $url/kofi"
           echo "::notice::Polar webhook URL: $url/polar (events order.paid and order.refunded); success URL: $url/polar/thanks?checkout_id={CHECKOUT_ID}"
+          echo "::notice::Creem webhook URL: $url/creem (events checkout.completed and refund.created); success URL: $url/creem/thanks"
           printf 'LICENSE_SERVER=%s\n' "$url" >> "$GITHUB_ENV"
 
       # A code made here for this check only, never printed or kept:

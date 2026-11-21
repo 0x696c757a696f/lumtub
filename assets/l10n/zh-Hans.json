@@ -3939,5 +3939,9 @@
   "Free trial: everything on for {0} more word lookups, then {1} a day. Buy once to keep it all.": "免费试用：还有 {0} 次查词全部功能开放，之后每天 {1} 次。买一次就全部保留。",
   "Free to try: everything on for the first {0} word lookups, then {1} a day, no account": "免费试用：前 {0} 次查词全部功能开放，之后每天 {1} 次，不用注册",
   "The {0} free trial lookups are used up.": "{0} 次免费试用查词已用完。",
-  "Free trial: {0} word lookups left with everything on": "免费试用：还剩 {0} 次查词，全部功能开放"
+  "Free trial: {0} word lookups left with everything on": "免费试用：还剩 {0} 次查词，全部功能开放",
+  "No card order with this ID and email was found yet. Check both against the page shown after paying or the receipt Creem emailed you, or wait a minute and try again.": "还没找到这个订单号和邮箱对应的银行卡订单。请对照付款后显示的页面或 Creem 发给你的收据核对两项，或者等一分钟再试。",
+  "Order ID (starts with ord_)": "订单号（以 ord_ 开头）",
+  "Email you paid with": "付款用的邮箱",
+  "Card (Creem)": "银行卡（Creem）"
 }

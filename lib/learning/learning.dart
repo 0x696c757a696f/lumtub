@@ -1071,24 +1071,28 @@ enum MeaningLanguage { chineseFirst, chinese, english }
 /// Where the learning pack was bought.
 enum PurchaseSource {
   afdian,
+  creem,
   polar,
   kofi;
 
-  /// Ko-fi and Polar orders are claimed with the email paid with too.
+  /// Card orders are claimed with the email paid with too.
   bool get needsEmail => this != afdian;
 }
 
-/// Polar's checkout for the learning pack, published on the `learning`
-/// release so it can change without an app update; null when there is
-/// none yet.
-Future<Uri?> polarCheckout() async {
+/// The card checkout for the learning pack, published on the `learning`
+/// release so it can change without an app update: Creem's, else
+/// Polar's; null while card payments are closed (both files empty).
+Future<Uri?> cardCheckoutLink() async {
   final client = http.Client();
   try {
-    final answer = await client.get(Uri.parse('$learningPackRelease/polar-checkout.txt')).timeout(const Duration(seconds: 15));
-    final uri = answer.statusCode == 200 ? Uri.tryParse(answer.body.trim()) : null;
-    return uri != null && uri.scheme == 'https' && (uri.host == 'polar.sh' || uri.host.endsWith('.polar.sh')) ? uri : null;
+    for (final (file, host) in const [('creem-checkout.txt', 'creem.io'), ('polar-checkout.txt', 'polar.sh')]) {
+      final answer = await client.get(Uri.parse('$learningPackRelease/$file')).timeout(const Duration(seconds: 15));
+      final uri = answer.statusCode == 200 ? Uri.tryParse(answer.body.trim()) : null;
+      if (uri != null && uri.scheme == 'https' && (uri.host == host || uri.host.endsWith('.$host'))) return uri;
+    }
+    return null;
   } catch (e) {
-    logWarn('Could not look up the Polar checkout: $e');
+    logWarn('Could not look up the card checkout: $e');
     return null;
   } finally {
     client.close();

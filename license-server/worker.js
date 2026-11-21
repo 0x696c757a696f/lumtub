@@ -6,7 +6,11 @@
 //              remembers the order by its id and the buyer's email (the
 //              same order again changes nothing); order.refunded, once
 //              refunded in full, stops its code.
-// POST /claim  {source: "kofi" or "polar", order, email, consent} or {source:
+// POST /creem  Creem's webhook, signed in creem-signature (HMAC-SHA256 hex
+//              of the raw body): checkout.completed remembers the order by
+//              its id and the buyer's email; refund.created, for the whole
+//              amount paid, stops its code.
+// POST /claim  {source: "kofi", "polar" or "creem", order, email, consent} or {source:
 //              "afdian", order, consent} (Ko-fi's order is the transaction
 //              id on the buyer's receipt) returns {code, consented} for a
 //              paid order, or {error}. [consent] is the version of the
@@ -42,7 +46,11 @@
 // AFDIAN_PLANS (comma-separated plan ids that count). Polar: the secret
 // POLAR_WEBHOOK_SECRET (Polar › Settings › Webhooks), optionally the
 // secret POLAR_TOKEN (an organization access token with orders:read) and
-// the var POLAR_PRODUCTS (comma-separated product ids that count).
+// the var POLAR_PRODUCTS (comma-separated product ids that count). Creem:
+// the secret CREEM_WEBHOOK_SECRET (Creem › Developers › Webhook) and
+// optionally the var CREEM_PRODUCTS (comma-separated product ids). Its
+// success URL can be https://<this worker>/creem/thanks, which shows the
+// buyer the order id.
 
 import revokedList from './revoked.txt';
 
@@ -53,11 +61,13 @@ export default {
     try {
       if (request.method === 'POST' && url.pathname === '/kofi') return await kofi(request, env);
       if (request.method === 'POST' && url.pathname === '/polar') return await polar(request, env);
+      if (request.method === 'POST' && url.pathname === '/creem') return await creem(request, env);
       if (request.method === 'POST' && url.pathname === '/claim') return await claim(request, env);
       if (request.method === 'POST' && url.pathname === '/activate') return await activate(request, env);
       if (request.method === 'POST' && url.pathname === '/deactivate') return await deactivate(request, env);
       if (request.method === 'GET' && url.pathname === '/') return reply({ ok: true });
       if (request.method === 'GET' && url.pathname === '/polar/thanks') return await polarThanks(url, env);
+      if (request.method === 'GET' && url.pathname === '/creem/thanks') return await creemThanks(url, env);
       return reply({ error: 'not found' }, 404);
     } catch (e) {
       console.log('error', e && e.stack || e);
@@ -204,6 +214,90 @@ ${safe ? `<p>Your order ID · 你的订单号：</p><p><code>${safe}</code></p>
   return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
 }
 
+// Creem ------------------------------------------------------------------
+
+// creem-signature: HMAC-SHA256 of the raw body with the webhook secret, in
+// hex (docs.creem.io/code/webhooks).
+async function signedByCreem(request, body, secret) {
+  const given = clean(request.headers.get('creem-signature')).toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(given)) return false;
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return timingSafe(given, hex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(body))));
+}
+
+async function creem(request, env) {
+  const body = await request.text();
+  if (!env.CREEM_WEBHOOK_SECRET || body.length > 200000 || !(await signedByCreem(request, body, env.CREEM_WEBHOOK_SECRET))) return reply({ error: 'bad signature' }, 403);
+  const event = JSON.parse(body);
+  const object = event.object || {};
+  if (event.eventType === 'refund.created') return await creemRefund(object, env);
+  if (event.eventType !== 'checkout.completed') return reply({ ok: true, ignored: true });
+  const saved = await rememberCreem(object, env);
+  return saved ? reply({ ok: true }) : reply({ ok: true, ignored: true });
+}
+
+const idOf = (value) => clean(typeof value === 'object' && value !== null ? value.id : value);
+
+const creemProduct = (id, env) => {
+  const products = clean(env.CREEM_PRODUCTS).split(',').map(clean).filter(Boolean);
+  return !products.length || products.includes(id);
+};
+
+// Keeps a paid Creem order from its completed checkout; the same order
+// twice writes the same record.
+async function rememberCreem(checkout, env) {
+  const order = checkout.order || {};
+  const id = clean(order.id).toLowerCase();
+  const email = clean(checkout.customer?.email).toLowerCase();
+  if (!id || !email || clean(order.status) !== 'paid' || !creemProduct(idOf(checkout.product) || idOf(order.product), env)) return null;
+  const ch = clean(checkout.id).toLowerCase();
+  if (ch) await env.LICENSES.put(`creem-checkout:${ch}`, id, { expirationTtl: 60 * 60 * 24 * 30 });
+  const created = Number(order.created_at) ? new Date(Number(order.created_at)).toISOString() : clean(order.created_at);
+  const saved = {
+    name: `Creem #${id.replace(/^ord_/, '').replace(/[^0-9a-z]/g, '').slice(-6)}`,
+    email: await sha256(email),
+    date: created.slice(0, 10) || new Date().toISOString().slice(0, 10),
+  };
+  await env.LICENSES.put(`creem:${id}`, JSON.stringify(saved));
+  return saved;
+}
+
+// A refund of everything paid stops the order's code, as with Polar; a
+// partial refund changes nothing.
+async function creemRefund(refund, env) {
+  const transaction = refund.transaction || {};
+  const order = idOf(transaction.order || refund.order).toLowerCase();
+  const paid = Number(transaction.amount_paid);
+  const refunded = Math.max(Number(refund.refund_amount) || 0, Number(transaction.refunded_amount) || 0);
+  const full = clean(transaction.status) === 'refunded' || (paid > 0 && refunded >= paid);
+  if (!order || clean(refund.status || 'succeeded') !== 'succeeded' || !full) return reply({ ok: true, ignored: true });
+  const today = new Date().toISOString().slice(0, 10);
+  await env.LICENSES.put(`refunded:creem:${order}`, today);
+  const code = await env.LICENSES.get(`code:creem:${order}`);
+  if (code) await env.LICENSES.put(`revoked:${(await sha256(code)).slice(0, 32)}`, `refunded ${today}`);
+  return reply({ ok: true });
+}
+
+// Creem's success page: the order id to type into Lumtub, found from the
+// checkout id Creem adds to the success URL (or its order_id), once the
+// webhook has come.
+async function creemThanks(url, env) {
+  const checkout = clean(url.searchParams.get('checkout_id')).toLowerCase();
+  let order = /^[0-9a-z_-]{3,80}$/.test(checkout) ? await env.LICENSES.get(`creem-checkout:${checkout}`) : null;
+  const given = clean(url.searchParams.get('order_id')).toLowerCase();
+  if (!order && /^ord_[0-9a-z]{3,60}$/.test(given) && await env.LICENSES.get(`creem:${given}`)) order = given;
+  const safe = (order || '').replace(/[^0-9a-z_-]/g, '');
+  const html = `<!doctype html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+${safe ? '' : '<meta http-equiv="refresh" content="4">'}<title>Lumtub</title>
+<style>body{font:16px/1.6 system-ui,sans-serif;max-width:560px;margin:48px auto;padding:0 16px;color:#222}code{font-size:15px;background:#f2f2f2;padding:4px 8px;border-radius:6px;user-select:all;word-break:break-all}</style></head><body>
+<h1>Thank you · 谢谢支持</h1>
+${safe ? `<p>Your order ID · 你的订单号：</p><p><code>${safe}</code></p>
+<p>In Lumtub › Learning › <b>I bought it: unlock</b>, pick Card (Creem) and enter this order ID and the email you paid with.</p>
+<p>在 Lumtub › 学习 › <b>我买了：解锁</b>，选「银行卡（Creem）」，填这个订单号和付款用的邮箱。</p>` : '<p>Confirming your payment… · 正在确认付款…</p>'}
+</body></html>`;
+  return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+}
+
 async function claim(request, env) {
   const ask = await request.json().catch(() => ({}));
   const source = clean(ask.source);
@@ -220,7 +314,7 @@ async function claim(request, env) {
   await env.LICENSES.put(slot, String(tries + 1), { expirationTtl: 120 });
 
   let buyer;
-  if (source === 'kofi' || source === 'polar') {
+  if (source === 'kofi' || source === 'polar' || source === 'creem') {
     // Both must match, so a known email alone gets nothing.
     let saved = JSON.parse((await env.LICENSES.get(`${source}:${order}`)) || 'null');
     if (!saved && source === 'polar') saved = await polarOrder(order, env);

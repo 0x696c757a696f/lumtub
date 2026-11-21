@@ -31,7 +31,11 @@ void main() {
     expect(await learning.takeLookup('w0'), isTrue);
     expect(learning.trialTotalLeft, 1);
     expect(await learning.takeLookup('last'), isTrue);
+    // The last trial card stays fully on until it closes.
+    expect(learning.unlocked, isTrue);
+    expect(learning.closeTrialCard(), isTrue);
     expect(learning.unlocked, isFalse);
+    expect(learning.closeTrialCard(), isFalse);
   });
 
   test('after the trial, a few new words a day; one seen today again is free', () async {

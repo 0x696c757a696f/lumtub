@@ -45,6 +45,11 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
       _ => _WiktionaryCard(controller: controller, dictionary: learning.wiktionary(language)!, token: token, sentence: sentence, translation: translation, at: when),
     },
   );
+  if (learning.closeTrialCard() && context.mounted) {
+    // Told once, as it happens, rather than at the next lookup.
+    await showLearningLocked(context, learning, title: tr('The free trial is over'), lead: tr('From now on, {0} free word lookups a day.', [Learning.trialPerDay]));
+    return;
+  }
   if (wasPlaying && controller.player == player) unawaited(player?.play());
 }
 
@@ -65,8 +70,10 @@ class _TrialNote extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: Text(
-        learning.inTrial
-            ? tr('Free trial: {0} word lookups left with everything on', [learning.trialTotalLeft])
+        learning.unlocked
+            ? learning.trialTotalLeft == 0
+                ? tr('This is the last free trial lookup')
+                : tr('Free trial: {0} word lookups left with everything on', [learning.trialTotalLeft])
             : tr('{0} free lookups left today · the learning pack has no limit', [learning.trialLeft]),
         style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.outline),
       ),
@@ -89,7 +96,11 @@ class _WordCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final word = token.text;
-    final entries = dictionary.lookup(word);
+    // The reading shown above the word first: 看 kàn before kān.
+    final found = dictionary.lookup(word);
+    String plain(String s) => s.toLowerCase().replaceAll(' ', '');
+    final heard = token.reading == null ? null : plain(token.reading!);
+    final entries = heard == null ? found : [...found.where((e) => plain(e.marked) == heard), ...found.where((e) => plain(e.marked) != heard)];
     final chars = word.runes.map(String.fromCharCode).toList();
     final book = controller.learning.book;
     Widget entry(ChineseEntry e, {int senses = 8}) {

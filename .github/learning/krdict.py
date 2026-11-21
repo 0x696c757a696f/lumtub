@@ -29,6 +29,8 @@ POS = {
     '부사': 'adv.', '대명사': 'pron.', '수사': 'num.', '관형사': 'det.', '조사': 'part.', '어미': 'suf.',
     '접사': 'affix', '감탄사': 'int.',
 }
+# The Chinese translation's '(无对应词汇)': no word for it, only the explanation.
+NO_EQUIVALENT = re.compile(r'^[(（]\s*无对应词汇\s*[)）]$')
 PHRASES = {'관용구': 'idiom', '속담': 'proverb', '구': 'phr.', '문법‧표현': 'gram.'}
 
 
@@ -66,7 +68,13 @@ def main():
             if not word or not isinstance(entries, list) or '\t' in word:
                 continue
             record = {'reading': '', 'pos': [], 'zh': [], 'en': [], 'level': '', 'forms': []}
-            for h, entry in enumerate(entries):
+            # Homographs a learner meets first come first: 먹다 'eat'
+            # (beginner) before 먹다 'be deaf' (no level).
+            def rank(item):
+                h, entry = item
+                return (LEVELS.get(entry.get('lvk', ''), '9') if isinstance(entry, dict) else '9', h)
+
+            for h, entry in sorted(enumerate(entries), key=rank):
                 if not isinstance(entry, dict):
                     continue
                 pos = POS.get(entry.get('p', ''), '') or PHRASES.get(entry.get('u', ''), '')
@@ -83,7 +91,7 @@ def main():
                         record['forms'].append(form)
                 prefix = f'{pos} ' if pos else ''
                 for equivalent, *meaning in senses(zh.get(word), h):
-                    line = clean(equivalent)
+                    line = NO_EQUIVALENT.sub('', clean(equivalent))
                     if meaning and clean(meaning[0]):
                         line = f'{line}：{clean(meaning[0])}' if line else clean(meaning[0])
                     if line and len(record['zh']) < MAX_SENSES:

@@ -201,7 +201,20 @@ class Learning extends ChangeNotifier {
   /// [trialPerDay] word cards a day are left with the dictionaries already
   /// here, no new ones download, and saved words can still be seen and
   /// exported as CSV.
-  bool get unlocked => licensed || trialTotalLeft > 0;
+  bool get unlocked => licensed || trialTotalLeft > 0 || _lastTrialCard;
+
+  /// The word card that took the last free trial lookup is open: it still
+  /// has everything on, and the trial ends when it closes.
+  bool _lastTrialCard = false;
+
+  /// Called when a word card closes; true when it was the trial's last,
+  /// so the learner can be told the trial is over.
+  bool closeTrialCard() {
+    if (!_lastTrialCard) return false;
+    _lastTrialCard = false;
+    notifyListeners();
+    return true;
+  }
 
   /// Word cards left today without the pack; unlimited with it.
   int get trialLeft => licensed ? trialPerDay : (_trialDay == _trialToday ? (trialPerDay - _trialUsed).clamp(0, trialPerDay) : trialPerDay);
@@ -227,6 +240,7 @@ class Learning extends ChangeNotifier {
     if (_trialWords.contains(word)) return true;
     if (trialTotalLeft > 0) {
       _trialTaken++;
+      _lastTrialCard = trialTotalLeft == 0;
     } else if (_trialUsed >= trialPerDay) {
       return false;
     } else {
@@ -336,7 +350,23 @@ class Learning extends ChangeNotifier {
   List<WordToken>? _wiktionaryWords(String language, String text) {
     final dictionary = wiktionary(language);
     if (dictionary == null) return null;
-    return _cut(language, text) ?? dictionary.segment(text);
+    final words = _cut(language, text) ?? dictionary.segment(text);
+    if (language != 'de') return words;
+    // German nouns keep their capital, so only a sentence's first word is
+    // looked up in lower case first: Ich is ich, not das Ich.
+    var start = true;
+    final out = <WordToken>[];
+    for (final w in words) {
+      if (!w.isWord) {
+        if (RegExp(r'[.!?…:"„“»«-]').hasMatch(w.text)) start = true;
+        out.add(w);
+        continue;
+      }
+      final capital = w.key == w.text && w.text != w.text.toLowerCase();
+      out.add(start && capital ? WordToken(w.text, w.reading, isWord: true, lookup: w.text.toLowerCase(), language: w.language) : w);
+      start = false;
+    }
+    return out;
   }
 
   /// [text] cut into words by the core: elision and joined pronouns

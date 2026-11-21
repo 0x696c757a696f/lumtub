@@ -53,5 +53,22 @@ void main() {
     expect(guess.guess('Hola', all), 'es');
     expect(LatinLanguageGuess().guess('Okay', ['en']), 'en');
   });
+
+  test('the next video in another language is told at once', () {
+    final guess = LatinLanguageGuess();
+    const all = ['en', 'es', 'fr', 'de', 'it'];
+    for (final line in ['Ich habe gestern einen Film gesehen.', 'Kannst du mir bitte das Fenster aufmachen?', 'Das ist nicht so einfach.']) {
+      expect(guess.guess(line, all), 'de');
+    }
+    expect(guess.guess("Non me ne ero accorto, ma ci siamo già visti l'anno scorso.", all), 'it');
+  });
+
+  test('a word spelled as asked comes before an acronym or a letter', () {
+    final fr = WiktionaryDictionary.parse('CE\t\t\tname\t\tEC (European Community)\t\nce\t\t\tdet.\t\tthis\t\nque\t\t\tconj.\t\tthat\t', 'fr');
+    expect(fr.lookup('ce').first.word, 'ce');
+    expect(fr.lookup('Ce').first.word, 'ce');
+    expect(fr.lookup('CE').first.word, 'CE');
+    expect(fr.lookup("Qu'").first.word, 'que');
+  });
 }
 

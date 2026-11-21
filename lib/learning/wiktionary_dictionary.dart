@@ -28,7 +28,19 @@ class WiktionaryDictionary {
     final found = <WiktionaryEntry>[];
     final seen = <String>{};
     void add(String key, {bool form = false, int depth = 0}) {
-      for (final row in _source.find(key)) {
+      final rows = _source.find(key).toList();
+      // Spelled as asked first: ce before the acronym CE. A capital that
+      // may only start the sentence (Я, Qué) prefers the lower-case word,
+      // except German, where nouns keep theirs.
+      final lower = key.toLowerCase();
+      final first = key != lower && key.length > 1 && key.substring(1) == key.substring(1).toLowerCase() && language != 'de' ? lower : key;
+      final single = key.length == 1 && language != 'de' ? lower : first;
+      int rank(String line) {
+        final word = line.substring(0, line.contains('\t') ? line.indexOf('\t') : line.length);
+        return word == single ? 0 : word == key ? 1 : word.toLowerCase() == lower ? 2 : 3;
+      }
+      final order = [for (final (i, row) in rows.indexed) (rank(row.line), i, row)]..sort((a, b) => a.$1 != b.$1 ? a.$1.compareTo(b.$1) : a.$2.compareTo(b.$2));
+      for (final (_, _, row) in order) {
         if (!seen.add(row.line)) continue;
         final entry = WiktionaryEntry.parse(row.line, form: form || row.form);
         found.add(entry);
@@ -44,6 +56,14 @@ class WiktionaryDictionary {
     if (found.isEmpty && language == 'ko') {
       for (final stem in koreanStems(word)) {
         add(stem);
+        if (found.isNotEmpty) break;
+      }
+    }
+    // French qu', j', n': the word cut short, qu' being que.
+    if (found.isEmpty && RegExp("^\\p{L}+['’]\$", unicode: true).hasMatch(word)) {
+      final stem = word.substring(0, word.length - 1).toLowerCase();
+      for (final vowel in const ['e', 'a', 'o', 'i']) {
+        add('$stem$vowel');
         if (found.isNotEmpty) break;
       }
     }

@@ -195,11 +195,11 @@
   },
   "window": {
     "background": [
-      "#f3f3f3",
+      "#e8e8e8",
       {
         "pattern": {
           "type": "lines",
-          "color": "#0000000c",
+          "color": "#ffffffe6",
           "spacing": 4,
           "size": 2
         }
@@ -409,10 +409,11 @@
         "radius": 6,
         "shadow": [
           {
-            "color": "#00000040",
-            "y": 6,
-            "blur": 16
-          }
+            "color": "#00000047",
+            "y": 8,
+            "blur": 20
+          },
+          { "color": "#0000003a", "y": 1, "blur": 2 }
         ]
       },
       "clock": true
@@ -442,16 +443,22 @@
         "sides": [
           "bottom"
         ]
-      }
+      },
+      "shadow": [{ "color": "#0000002e", "y": 2, "blur": 6 }]
     },
+    // A source-list rail: pale blue-grey, lit from the left, with a soft edge.
     "sideBar": {
-      "fill": "#e9edf2e6",
+      "fill": [
+        { "linear": { "angle": 90, "colors": ["#eef2f7f2", "#dfe5ecf2"] } },
+        { "pattern": { "type": "lines", "color": "#ffffff66", "spacing": 4, "size": 2 } }
+      ],
       "border": {
-        "color": "#c3c7cd",
+        "color": "#b2b8c0",
         "sides": [
           "right"
         ]
-      }
+      },
+      "shadow": [{ "color": "#00000026", "x": 1, "y": 0, "blur": 6 }]
     },
     "statusBar": {
       "fill": {
@@ -484,9 +491,20 @@
       },
       "gloss": 0.5,
       "border": "#9c9c9c",
+      "shadow": [
+        { "color": "#00000033", "y": 2, "blur": 4 },
+        { "color": "#ffffffcc", "y": 1, "blur": 0 }
+      ],
       "hover": {
-        "fill": "#ffffff"
-      }
+        "fill": "#ffffff",
+        "shadow": [{ "color": "#0000003d", "y": 3, "blur": 6 }]
+      },
+      "pressed": {
+        "fill": { "linear": { "angle": 180, "colors": ["#c4c4c4", "#e2e2e2"] } },
+        "gloss": 0.1,
+        "shadow": [{ "color": "#00000040", "y": 1, "blur": 2 }]
+      },
+      "focused": { "border": { "color": "#3d8be6", "width": 2 } }
     },
     "buttonText": "#1a1a1a",
     "primaryButton": {
@@ -501,6 +519,10 @@
       },
       "gloss": 0.8,
       "border": "#0c3f87",
+      "shadow": [
+        { "color": "#0b3f8c66", "y": 3, "blur": 7 },
+        { "color": "#00000040", "y": 1, "blur": 1 }
+      ],
       "hover": {
         "fill": {
           "linear": {
@@ -511,6 +533,11 @@
             ]
           }
         }
+      },
+      "pressed": {
+        "fill": { "linear": { "angle": 180, "colors": ["#0a3a80", "#1a5eb8"] } },
+        "gloss": 0.2,
+        "shadow": [{ "color": "#00000040", "y": 1, "blur": 2 }]
       }
     },
     "primaryButtonText": "#ffffff",
@@ -524,7 +551,11 @@
           ]
         }
       },
-      "border": "#a9a9a9"
+      "gloss": 0.4,
+      "border": "#a9a9a9",
+      "shadow": [{ "color": "#0000002e", "y": 1, "blur": 3 }],
+      "hover": { "fill": "#ffffff" },
+      "pressed": { "fill": "#cfcfcf", "shadow": [] }
     },
     "chipSelected": {
       "fill": {
@@ -537,7 +568,8 @@
         }
       },
       "gloss": 0.8,
-      "border": "#0c3f87"
+      "border": "#0c3f87",
+      "shadow": [{ "color": "#0b3f8c59", "y": 2, "blur": 5 }]
     },
     "chipSelectedText": "#ffffff",
     "navSelected": {
@@ -551,7 +583,8 @@
         }
       },
       "gloss": 0.6,
-      "border": "#1b56a6"
+      "border": "#1b56a6",
+      "shadow": [{ "color": "#0b3f8c59", "y": 2, "blur": 5 }]
     },
     "navSelectedText": "#ffffff",
     "navText": "#2b2f35"
@@ -562,21 +595,23 @@
   },
   "cards": {
     "video": {
-      "fill": "#ffffff",
-      "border": "#c9c9c9",
+      "fill": { "linear": { "angle": 180, "colors": ["#ffffff", "#f1f1f1"] } },
+      "border": "#c0c0c0",
       "shadow": [
-        {
-          "color": "#00000026",
-          "y": 4,
-          "blur": 12
-        }
+        { "color": "#00000033", "y": 6, "blur": 16 },
+        { "color": "#00000040", "y": 1, "blur": 2 }
       ],
       "hover": {
         "border": {
           "color": "#3d8be6",
           "width": 2
-        }
+        },
+        "shadow": [
+          { "color": "#00000038", "y": 8, "blur": 20 },
+          { "color": "#3d8be659", "y": 0, "blur": 6 }
+        ]
       },
+      "pressed": { "fill": "#ececec", "shadow": [{ "color": "#00000040", "y": 1, "blur": 3 }] },
       "focused": {
         "border": {
           "color": "#1660c4",
@@ -586,8 +621,12 @@
     },
     "padding": 6,
     "panel": {
-      "fill": "#ffffffee",
-      "border": "#c3c3c3"
+      "fill": { "linear": { "angle": 180, "colors": ["#fdfdfdf2", "#ececece6"] } },
+      "border": "#b4b4b4",
+      "shadow": [
+        { "color": "#00000047", "y": 10, "blur": 28 },
+        { "color": "#00000040", "y": 1, "blur": 2 }
+      ]
     },
     "durationBadge": {
       "fill": "#1a1a1acc",

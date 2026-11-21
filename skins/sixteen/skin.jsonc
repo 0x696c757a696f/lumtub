@@ -191,220 +191,155 @@
     "onSelected": "#ffffff",
     "reason": "#800080"
   },
-  "shape": {
-    "cardRadius": 0,
-    "controlRadius": 0,
-    "thumbnailRadius": 0
-  },
+  "shape": { "cardRadius": 0, "controlRadius": 0, "thumbnailRadius": 0 },
   "window": {
+    // A teal and navy dither: the way 16-colour screens faked more shades.
     "background": [
-      "#008080"
+      "#008080",
+      { "pattern": { "type": "checker", "color": "#000080", "spacing": 1 } }
     ],
     "veil": 0.5,
     "titleBar": {
       "height": 26,
       "surface": {
         "fill": "#000080",
-        "border": {
-          "color": "#000000",
-          "width": 2,
-          "sides": [
-            "bottom"
-          ]
-        }
+        "border": { "color": "#000000", "width": 2, "sides": ["bottom"] }
       },
       "inactive": {
-        "fill": "#ffffff"
+        "fill": ["#ffffff", { "pattern": { "type": "checker", "color": "#c0c0c0", "spacing": 1 } }]
       },
       "text": "#ffffff",
       "inactiveText": "#000000",
       "align": "center",
+      // A plain navy plate under the title so the dither never touches the letters.
+      "titlePlate": "#000080",
       "buttons": {
-        "size": [
-          26,
-          24
-        ],
+        "size": [26, 24],
         "icon": "#000000",
         "surface": {
           "fill": "#c0c0c0",
           "border": "#000000",
-          "bevel": {
-            "light": "#ffffff",
-            "dark": "#808080",
-            "width": 2
-          }
+          "bevel": { "light": "#ffffff", "dark": "#808080", "width": 2 },
+          "pressed": { "fill": "#c0c0c0", "bevel": { "light": "#808080", "dark": "#c0c0c0", "width": 2 } }
         },
         "close": {
           "fill": "#c0c0c0",
           "border": "#000000",
-          "bevel": {
-            "light": "#ffffff",
-            "dark": "#808080",
-            "width": 2
-          }
+          "bevel": { "light": "#ffffff", "dark": "#808080", "width": 2 },
+          "pressed": { "fill": "#c0c0c0", "bevel": { "light": "#808080", "dark": "#c0c0c0", "width": 2 } }
         }
       }
     },
     "menuBar": {
       "surface": {
-        "fill": "#ffffff",
-        "border": {
-          "color": "#000000",
-          "width": 2,
-          "sides": [
-            "bottom"
-          ]
-        }
+        "fill": "#c0c0c0",
+        "border": { "color": "#000000", "width": 2, "sides": ["bottom"] },
+        "bevel": { "light": "#ffffff", "dark": "#808080", "width": 2 }
       },
       "text": "#000000",
       "highlight": "#000080",
       "highlightText": "#ffffff",
       "menu": {
-        "fill": "#ffffff",
-        "border": {
-          "color": "#000000",
-          "width": 2
-        }
+        "fill": "#c0c0c0",
+        "border": { "color": "#000000", "width": 2 },
+        "bevel": { "light": "#ffffff", "dark": "#808080", "width": 2 },
+        "shadow": [{ "color": "#000000", "x": 4, "y": 4, "blur": 0 }]
       }
     },
     "topBar": {
-      "fill": "#ffffff",
-      "border": {
-        "color": "#000000",
-        "width": 2,
-        "sides": [
-          "bottom"
-        ]
-      }
+      "fill": "#c0c0c0",
+      "border": { "color": "#000000", "width": 2, "sides": ["bottom"] },
+      "bevel": { "light": "#ffffff", "dark": "#808080", "width": 2 }
     },
     "sideBar": {
-      "fill": "#ffffff",
-      "border": {
-        "color": "#000000",
-        "width": 2,
-        "sides": [
-          "right"
-        ]
-      }
+      "fill": "#c0c0c0",
+      "border": { "color": "#000000", "width": 2, "sides": ["right"] },
+      "bevel": { "light": "#ffffff", "dark": "#808080", "width": 2 }
     },
     "statusBar": {
-      "fill": "#ffffff",
-      "border": {
-        "color": "#000000",
-        "width": 2,
-        "sides": [
-          "top"
-        ]
-      }
-    }
+      "fill": "#c0c0c0",
+      "border": { "color": "#000000", "width": 2, "sides": ["top"] },
+      "bevel": { "light": "#808080", "dark": "#ffffff", "width": 2 }
+    },
+    "topBarText": "#000000",
+    "statusBarText": "#000000"
   },
   "controls": {
+    "press": "wash",
     "button": {
       "fill": "#c0c0c0",
-      "border": {
-        "color": "#000000",
-        "width": 2
-      },
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#808080",
-        "width": 2
-      }
+      "border": { "color": "#000000", "width": 2 },
+      "bevel": { "light": "#ffffff", "dark": "#808080", "width": 2 },
+      "hover": { "fill": "#ffffff" },
+      "pressed": { "fill": "#c0c0c0", "bevel": { "light": "#808080", "dark": "#c0c0c0", "width": 2 } },
+      "focused": { "fill": "#ffff00" }
     },
     "buttonText": "#000000",
     "primaryButton": {
       "fill": "#c0c0c0",
-      "border": {
-        "color": "#000000",
-        "width": 3
-      },
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#808080",
-        "width": 2
-      }
+      "border": { "color": "#000000", "width": 3 },
+      "bevel": { "light": "#ffffff", "dark": "#808080", "width": 2 },
+      "hover": { "fill": "#ffffff" },
+      "pressed": { "fill": "#c0c0c0", "bevel": { "light": "#808080", "dark": "#c0c0c0", "width": 2 } },
+      "focused": { "fill": "#ffff00" }
     },
     "primaryButtonText": "#000000",
     "chip": {
       "fill": "#c0c0c0",
-      "border": {
-        "color": "#000000",
-        "width": 2
-      },
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#808080",
-        "width": 2
-      }
+      "border": { "color": "#000000", "width": 2 },
+      "bevel": { "light": "#ffffff", "dark": "#808080", "width": 2 },
+      "hover": { "fill": "#ffffff" }
     },
+    // Chosen: pushed in, navy.
     "chipSelected": {
       "fill": "#000080",
-      "border": {
-        "color": "#000000",
-        "width": 2
-      }
+      "border": { "color": "#000000", "width": 2 },
+      "bevel": { "light": "#000040", "dark": "#0000ff", "width": 2 }
     },
     "chipSelectedText": "#ffffff",
-    "navSelected": "#000080",
+    "navSelected": {
+      "fill": "#000080",
+      "border": { "color": "#ffff00", "width": 2 }
+    },
     "navSelectedText": "#ffffff",
     "navText": "#000000"
   },
   "cards": {
     "video": {
       "fill": "#ffffff",
-      "border": {
-        "color": "#000000",
-        "width": 2
-      },
-      "shadow": [
-        {
-          "color": "#000000",
-          "x": 4,
-          "y": 4
-        }
-      ],
-      "hover": {
-        "fill": "#ffff00"
-      },
-      "focused": {
-        "fill": "#ffff00"
-      }
+      "border": { "color": "#000000", "width": 2 },
+      "shadow": [{ "color": "#000000", "x": 4, "y": 4, "blur": 0 }],
+      "hover": { "fill": "#ffff00" },
+      "focused": { "fill": "#ffff00", "border": { "color": "#000000", "width": 3 } }
     },
     "padding": 4,
+    // Dialogs and panels: a grey sheet, hard bevel, a fat black offset shadow.
     "panel": {
-      "fill": "#ffffff",
-      "border": {
-        "color": "#000000",
-        "width": 2
-      },
-      "shadow": [
-        {
-          "color": "#000000",
-          "x": 6,
-          "y": 6
-        }
-      ]
+      "fill": "#c0c0c0",
+      "border": { "color": "#000000", "width": 2 },
+      "bevel": { "light": "#ffffff", "dark": "#808080", "width": 2 },
+      "shadow": [{ "color": "#000000", "x": 6, "y": 6, "blur": 0 }]
     },
     "durationBadge": "#000000",
     "durationText": "#ffffff"
   },
+  "icons": { "style": "fill", "effect": "none" },
   "logo": {
     "text": "LUMTUB",
     "font": "Press Start 2P",
     "size": 17,
     "fill": "#000000",
+    "shadow": "#ffff00",
     "badge": {
       "fill": "#ff0000",
-      "border": {
-        "color": "#000000",
-        "width": 2
-      },
-      "radius": 0
+      "border": { "color": "#000000", "width": 2 },
+      "radius": 0,
+      "bevel": { "light": "#ff8080", "dark": "#800000", "width": 2 }
     },
     "badgeIcon": "#ffffff"
   },
   "player": {
-    "progress": "#000080"
+    "progress": ["#000080", { "pattern": { "type": "checker", "color": "#0000ff", "spacing": 1 } }]
   },
   "author": "Lumtub",
   "license": "CC0-1.0"

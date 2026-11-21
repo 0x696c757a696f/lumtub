@@ -105,6 +105,7 @@ flutter:
     - skins/cassette/
     - skins/clay/
     - skins/brutal/
+    - skins/dunes/
     - skins/template/
   fonts:
     # One bundled default face keeps the Windows package small (SIL OFL 1.1,
@@ -168,6 +169,9 @@ flutter:
     - family: Space Mono
       fonts:
         - asset: skins/fonts/SpaceMono-Regular.ttf
+    - family: Michroma
+      fonts:
+        - asset: skins/fonts/Michroma-Regular.ttf
     # Phosphor icons (MIT, assets/fonts/phosphor/LICENSE).
     - family: Phosphor
       fonts:

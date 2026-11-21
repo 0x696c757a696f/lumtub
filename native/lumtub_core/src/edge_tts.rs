@@ -190,9 +190,9 @@ fn speak_once(text: &str, voice: &str) -> Result<Vec<u8>, Attempt> {
                     }
                 }
             }
-            Message::Close(frame) => {
+            Message::Close(_frame) => {
                 #[cfg(test)]
-                eprintln!("  closed: {frame:?}");
+                eprintln!("  closed: {_frame:?}");
                 break;
             }
             _ => {}

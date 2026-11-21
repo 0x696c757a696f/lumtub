@@ -123,7 +123,7 @@ class _DrawerDictionary extends StatelessWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: FilledButton.icon(
-                onPressed: () => unawaited(learning.download(pack)),
+                onPressed: () => unawaited(_getDictionary(context, learning, pack)),
                 icon: Icon(AppIcons.downloadSimple, size: 18),
                 label: Text(tr('Download the {0} dictionary', [_packLanguage(pack)])),
               ),
@@ -135,3 +135,8 @@ class _DrawerDictionary extends StatelessWidget {
     );
   }
 }
+
+/// Downloads [pack]'s dictionary, or, once the free trial is over without
+/// the pack, says that dictionaries come with it.
+Future<void> _getDictionary(BuildContext context, Learning learning, DictionaryPack pack) =>
+    learning.unlocked ? learning.download(pack) : showLearningLocked(context, learning);

@@ -52,7 +52,7 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
   final outer = context;
   final field = TextEditingController();
   final email = TextEditingController();
-  var source = afdianFirst ? PurchaseSource.afdian : PurchaseSource.creem;
+  var source = afdianFirst ? PurchaseSource.afdian : PurchaseSource.polar;
   var busy = false;
   var agreed = false;
   String? error;
@@ -98,7 +98,9 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
           width: 420,
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Wrap(spacing: 8, children: [
-              for (final s in PurchaseSource.values)
+              // Creem is ready on the server but not selling (its terms
+              // exclude video downloaders), so it is not offered.
+              for (final s in PurchaseSource.values.where((s) => s != PurchaseSource.creem))
                 ChoiceChip(label: Text(_sourceName(s)), selected: source == s, onSelected: busy ? null : (_) => setState(() => source = s)),
             ]),
             const SizedBox(height: 12),
@@ -228,7 +230,7 @@ String learningTrialOffer() => tr('Free to try: everything on for the first {0} 
 
 /// What the learning pack unlocks, in one paragraph.
 String learningPackFeatures() => tr(
-    'The learning pack gives unlimited word lookups, pinyin and kana above subtitles, harder words highlighted, words read aloud, the vocabulary book with the line and its sound, Anki export and the four-step video study, on up to 2 devices, with one payment and no subscription.');
+    'The learning pack gives offline dictionaries for nine languages, unlimited word lookups, pinyin and kana above subtitles, harder words highlighted, words read aloud, the vocabulary book with the line and its sound, Anki export and the four-step video study, on up to 2 devices, with one payment and no subscription.');
 
 /// A paid feature was asked for after the free trial: what the pack
 /// gives, its price, and the ways to buy or unlock it.

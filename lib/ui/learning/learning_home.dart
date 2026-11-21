@@ -336,7 +336,7 @@ class _PackCell extends StatelessWidget {
       PackState.failed => tr('Failed: {0}', [learning.errorOf(pack) ?? '']),
     };
     final action = switch (state) {
-            PackState.missing || PackState.failed => IconButton.filledTonal(tooltip: tr('Download'), icon: Icon(AppIcons.downloadSimple, size: 18), onPressed: () => unawaited(learning.download(pack))),
+            PackState.missing || PackState.failed => IconButton.filledTonal(tooltip: tr('Download'), icon: Icon(learning.unlocked ? AppIcons.downloadSimple : AppIcons.lock, size: 18), onPressed: () => unawaited(_getDictionary(context, learning, pack))),
             PackState.downloading || PackState.loading => SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, value: state == PackState.downloading ? progress : null)),
             PackState.ready || PackState.downloaded => IconButton(tooltip: tr('Delete'), icon: Icon(AppIcons.trash, size: 18, color: colors.onSurfaceVariant), onPressed: () => unawaited(learning.delete(pack))),
           };
@@ -489,7 +489,7 @@ class _QuickDownload extends StatelessWidget {
                 avatar: Text(_packSample(pack), style: TextStyle(fontWeight: FontWeight.w700, color: colors.primary)),
                 label: Text(_packLanguage(pack)),
                 tooltip: learning.stateOf(pack) == PackState.failed ? tr('Failed: {0}', [learning.errorOf(pack) ?? '']) : tr('Download'),
-                onPressed: () => unawaited(learning.download(pack)),
+                onPressed: () => unawaited(_getDictionary(context, learning, pack)),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 visualDensity: VisualDensity.compact,
               ),

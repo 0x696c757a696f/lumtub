@@ -198,8 +198,9 @@ class Learning extends ChangeNotifier {
   bool get inTrial => !licensed && trialTotalLeft > 0;
 
   /// The pack's features are on: bought, or in the free trial. Off, only
-  /// [trialPerDay] word cards a day are left; dictionaries download and
-  /// saved words can be seen and exported as CSV either way.
+  /// [trialPerDay] word cards a day are left with the dictionaries already
+  /// here, no new ones download, and saved words can still be seen and
+  /// exported as CSV.
   bool get unlocked => licensed || trialTotalLeft > 0;
 
   /// Word cards left today without the pack; unlimited with it.
@@ -511,7 +512,7 @@ class Learning extends ChangeNotifier {
         if (expected == null) continue;
         final have = await sum.exists() ? (await sum.readAsString()).trim() : '';
         if (have == expected) continue;
-        if (_packs[pack]!.state == PackState.downloading) continue;
+        if (_packs[pack]!.state == PackState.downloading || !unlocked) continue;
         logInfo('A newer ${pack.name} dictionary is out; updating it');
         await download(pack, quiet: true);
       }
@@ -888,10 +889,12 @@ class Learning extends ChangeNotifier {
   /// published beside it. [quiet], for an update of one on disk, keeps
   /// the old one in use until the new one is in place and only logs a
   /// failure.
+  /// Gets [pack]'s dictionary: part of the pack, so only while [unlocked]
+  /// (bought, or in the free trial). One already here keeps working.
   Future<void> download(DictionaryPack pack, {bool quiet = false}) async {
     final state = _packs[pack]!;
     final file = _fileOf(pack);
-    if (file == null || state.state == PackState.downloading) return;
+    if (file == null || state.state == PackState.downloading || !unlocked) return;
     if (!quiet) {
       state
         ..state = PackState.downloading

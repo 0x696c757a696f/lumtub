@@ -3620,7 +3620,7 @@
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "部分手機為了省電，會關閉在背景播放的 App。允許 Lumtub 不受電池限制執行，播放就不會被中斷。",
   "Allow": "允許",
   "Ask again with my account when blocked": "被封鎖時用我的帳號重新請求",
-  "When YouTube takes this network for a bot, the video you open is asked for once more with the browser sign-in's account (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too": "當 YouTube 把此網路當作機器人時，你開啟的影片會再用瀏覽器登入的帳號請求一次（每小時最多 20 次）。這樣 YouTube 就知道該帳號看過這部影片，經常在共用位址上使用的帳號也可能被標記",
+  "When YouTube takes this network for a bot, the video you open or download is asked for once more with the browser sign-in's account, and for the next 30 minutes videos are asked for with the account right away (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too": "當 YouTube 把此網路當作機器人時，你開啟或下載的影片會再用瀏覽器登入的帳號請求一次，之後 30 分鐘內的影片會直接用該帳號請求（每小時最多 20 次）。這樣 YouTube 就知道該帳號看過這部影片，經常在共用位址上使用的帳號也可能被標記",
   "bot not a bot blocked sign in cookies account": "機器人 非機器人 被封鎖 登入 Cookie 帳號 bot not a bot blocked sign in cookies account",
   "YouTube took this network for a bot, so this video was asked for with your account": "YouTube 把此網路當作機器人，所以這部影片是用你的帳號請求的",
   "Browser sign-in, Google sign-in, syncing subscriptions and playlists": "瀏覽器登入、Google 登入、同步訂閱和播放清單",

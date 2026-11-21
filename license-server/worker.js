@@ -371,9 +371,9 @@ async function claim(request, env) {
 
 // Devices --------------------------------------------------------------
 
-// Devices a code works on: written into codes issued from 21 November
-// 2026 (field m); codes issued before keep the 5 promised to them.
-const DEVICES_PER_CODE = 2;
+// Devices a code works on, written into each code (field m). Codes with a
+// lower m, issued for a few hours on 21 November 2026, get this many too.
+const DEVICES_PER_CODE = 5;
 const OLD_MAX_DEVICES = 5;
 
 // The public half of LICENSE_KEY, as in the app (lib/learning/license.dart).
@@ -406,7 +406,7 @@ async function checkCode(text) {
     if (!await crypto.subtle.verify({ name: 'Ed25519' }, key, signature, message)) return null;
     const fields = JSON.parse(new TextDecoder().decode(payload));
     if (fields?.p !== 'learn') return null;
-    return { code, id: (await sha256(code)).slice(0, 32), name: clean(fields.n), max: Number.isInteger(fields.m) && fields.m > 0 ? fields.m : OLD_MAX_DEVICES };
+    return { code, id: (await sha256(code)).slice(0, 32), name: clean(fields.n), max: Math.max(Number.isInteger(fields.m) && fields.m > 0 ? fields.m : OLD_MAX_DEVICES, DEVICES_PER_CODE) };
   } catch {
     return null;
   }

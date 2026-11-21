@@ -432,12 +432,18 @@ class _LearningPage extends StatelessWidget {
                 style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Text(
-                tr('Chinese dictionary: CC-CEDICT by MDBG, under CC BY-SA 4.0. English dictionary: ECDICT by skywind3000, under the MIT license. Japanese dictionary: JMdict by the Electronic Dictionary Research and Development Group, under CC BY-SA 4.0.'),
-                style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5),
-              ),
+            NormalItem(
+              title: tr('Data sources and licenses'),
+              subtitle: tr('The dictionaries are open data: who made them and under which license'),
+              leading: Icon(AppIcons.info),
+              onTap: () => unawaited(showDialog<void>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text(tr('Data sources and licenses')),
+                  content: const SizedBox(width: 520, child: SingleChildScrollView(child: SelectableText(learningDataNotice))),
+                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close')))],
+                ),
+              )),
             ),
           ]);
         },
@@ -672,3 +678,21 @@ class _VocabularyPageState extends State<_VocabularyPage> {
     );
   }
 }
+
+/// Who made the learning pack's data and under which license, as their
+/// licenses ask to be shown in the app. The dictionaries stay open data:
+/// the pack sells the app's features, not the data, which anyone may
+/// copy under these licenses.
+const learningDataNotice = '''English: ECDICT by skywind3000 (MIT, github.com/skywind3000/ECDICT). English meanings from the Simple English and English Wiktionaries (CC BY-SA 4.0, wiktionary.org) as extracted by kaikki.org, and from WordNet 3.0, © Princeton University (WordNet license). CEFR levels: The CEFR-J Wordlist Version 1.5, compiled by Yukio Tono, Tokyo University of Foreign Studies (cefr-j.org), and the Octanove Vocabulary Profile C1/C2 1.0 by Octanove Labs (CC BY-SA 4.0), via github.com/openlanguageprofiles/olp-en-cefrj.
+
+Japanese: JMdict, © Electronic Dictionary Research and Development Group (CC BY-SA 4.0, edrdg.org/edrdg/licence.html), via jmdict-simplified; Chinese meanings from the Chinese Wiktionary (CC BY-SA 4.0) and WikDict (CC BY-SA 4.0, wikdict.com).
+
+Chinese: CC-CEDICT by MDBG (CC BY-SA 4.0, cc-cedict.org).
+
+Korean: 한국어기초사전 (Korean Basic Dictionary), National Institute of Korean Language (CC BY-SA 2.0 KR, krdict.korean.go.kr), via github.com/basickorean/basickorean-vocab; with the Wiktionaries and WikDict.
+
+Spanish, French, German, Italian, Russian: the English and Chinese Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org, and WikDict (CC BY-SA 4.0).
+
+Word splitting: Lindera (MIT) with IPADIC, mecab-ko-dic (Apache-2.0) and jieba (MIT).
+
+Changes: converted to SQLite word lists, meanings merged, shortened and simplified (Traditional to Simplified Chinese). These adapted dictionaries are shared under the same licenses and can be downloaded freely from github.com/0x696c757a696f/lumtub/releases/tag/learning.''';

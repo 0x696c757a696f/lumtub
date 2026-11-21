@@ -1,7 +1,7 @@
 """Gives the English pack's words Chinese meanings and phonetics from
 open data with a clear licence, in place of ECDICT's.
 
-    en_zh.py EN_TSV ENGLISH_EXTRACT ZH_EXTRACT [WIKDICT]
+    en_zh.py EN_TSV ENGLISH_EXTRACT ZH_EXTRACT [wikdict=PATH] [cow=PATH wordnet=PATH]
 
 EN_TSV is the word list the workflow wrote (word, phonetic, Chinese
 meanings, forms, exam tags, Collins stars, rank, English meanings), and
@@ -11,7 +11,10 @@ is rewritten in place:
   translation tables, where each Mandarin translation belongs to one
   sense of the word (ENGLISH_EXTRACT, kaikki.org's JSONL), then from the
   Chinese Wiktionary's English entries, written in Chinese (ZH_EXTRACT,
-  gzipped JSONL); both CC BY-SA 4.0. WikDict's en-zh translations
+  gzipped JSONL); both CC BY-SA 4.0. A word neither has gets the
+  Chinese lemmas of its most common WordNet senses from the Chinese Open
+  Wordnet (cow=, its WN-LMF XML; WordNet-style licence), found through
+  Princeton WordNet 3.0's index files (wordnet=, the NLTK zip). WikDict's en-zh translations
   (WIKDICT, CC BY-SA) are used only for a word neither has, and marked
   so. A word none of them has keeps no Chinese meaning: the app shows
   its English ones rather than a guess.
@@ -40,8 +43,6 @@ POS = {
     'contraction': 'contr.', 'prep_phrase': 'phr.', 'abbrev': 'abbr.',
 }
 MAX_LINES = 5
-# Words whose raw translation items are printed, to see why they get none.
-PROBE = {'assess', 'totally', 'psychological', 'compulsory', 'however'}
 MAX_PER_LINE = 8
 CJK = re.compile(r'[㐀-鿿]')
 # What a translation or gloss should not carry along: notes in brackets,
@@ -138,9 +139,65 @@ def line_of(pos, groups):
     return f'{pos} {"；".join(senses)}' if senses else ''
 
 
+# Contractions, which dictionaries leave out; written for this pack.
+CONTRACTIONS = {
+    "can't": 'v. 不能，不会', "cannot": 'v. 不能，不会', "couldn't": 'v. 不能，不会（过去）', "won't": 'v. 不会，将不', "wouldn't": 'v. 不会，不愿',
+    "don't": 'v. 不（do not）', "doesn't": 'v. 不（does not）', "didn't": 'v. 没有（did not）', "isn't": 'v. 不是（is not）', "aren't": 'v. 不是（are not）',
+    "wasn't": 'v. 不是（was not）', "weren't": 'v. 不是（were not）', "haven't": 'v. 没有（have not）', "hasn't": 'v. 没有（has not）', "hadn't": 'v. 没有（had not）',
+    "shouldn't": 'v. 不应该', "mustn't": 'v. 不得，禁止', "needn't": 'v. 不必', "mightn't": 'v. 可能不', "shan't": 'v. 将不',
+    "i'm": '我是（I am）', "you're": '你是（you are）', "we're": '我们是（we are）', "they're": '他们是（they are）', "it's": '它是（it is / it has）',
+    "that's": '那是（that is）', "there's": '有（there is）', "let's": '让我们（let us）', "i've": '我已经（I have）', "i'll": '我将（I will）', "i'd": '我会；我曾（I would / I had）',
+    "anymore": 'adv. 不再，再也（不）', "alright": 'adj. 好的，没问题；adv. 还好',
+}
+
+
+def wordnet_meanings(cow_path, wordnet_path):
+    """word → lines of Chinese lemmas for its first WordNet senses, or
+    a function giving [] when either file is missing."""
+    if not cow_path or not wordnet_path:
+        return lambda word: []
+    import zipfile
+    lemmas = defaultdict(list)
+    current = None
+    with open(cow_path, encoding='utf-8') as f:
+        for line in f:
+            found = re.search(r'<Lemma writtenForm="([^"]+)"', line)
+            if found:
+                current = found.group(1)
+                continue
+            found = re.search(r'synset="cow-(\d{8})-([nvars])"', line)
+            if found and current:
+                key = (found.group(1), 'a' if found.group(2) == 's' else found.group(2))
+                if current not in lemmas[key]:
+                    lemmas[key].append(current)
+    index = defaultdict(dict)
+    with zipfile.ZipFile(wordnet_path) as z:
+        for pos, name in (('n', 'noun'), ('v', 'verb'), ('a', 'adj'), ('r', 'adv')):
+            for line in z.read(f'wordnet/index.{name}').decode('utf-8').splitlines():
+                if line.startswith(' '):
+                    continue
+                parts = line.split()
+                pointers, synsets = int(parts[3]), int(parts[2])
+                # Senses in order of how often they were met.
+                index[parts[0].replace('_', ' ')][pos] = parts[6 + pointers:6 + pointers + synsets]
+    print(f'Chinese Open Wordnet: {len(lemmas)} synsets; WordNet: {len(index)} words', flush=True)
+    names = {'n': 'n.', 'v': 'v.', 'a': 'adj.', 'r': 'adv.'}
+
+    def meanings(word):
+        lines = []
+        for pos in 'nvar':
+            groups = [lemmas[(o, pos)][:3] for o in index.get(word.lower(), {}).get(pos, [])[:4] if lemmas.get((o, pos))]
+            line = line_of(names[pos], groups[:3])
+            if line:
+                lines.append(line)
+        return lines
+    return meanings
+
+
 def main():
     tsv, english_path, zh_path, *rest = sys.argv[1:]
-    wikdict = rest[0] if rest else ''
+    options = dict(arg.split('=', 1) for arg in rest)
+    wikdict = options.get('wikdict', '')
     with open(tsv, encoding='utf-8') as f:
         rows = [line.rstrip('\n').split('\t') for line in f]
     wanted = {row[0] for row in rows}
@@ -164,10 +221,6 @@ def main():
             pos = POS.get(entry.get('pos', ''))
             if pos:
                 tables[word][pos].extend(translations_of(entry))
-            if word in PROBE:
-                items = list(entry.get('translations') or []) + [t for s in entry.get('senses') or [] for t in s.get('translations') or []]
-                chinese = [{k: t.get(k) for k in ('lang', 'lang_code', 'code', 'word', 'tags', 'raw_tags', 'sense')} for t in items if re.search(r'Chin|Mandarin|^zh$|^cmn$', f"{t.get('lang')}|{t.get('lang_code') or t.get('code')}")]
-                print(f'probe {word} {entry.get("pos")}: {len(items)} translations, keys {sorted(entry.keys())[:20]}, chinese {json.dumps(chinese[:6], ensure_ascii=False)}', flush=True)
 
     # The Chinese Wiktionary's English entries.
     glosses = defaultdict(lambda: defaultdict(list))
@@ -190,6 +243,8 @@ def main():
                 # A Chinese meaning, not an English explanation.
                 if gloss and CJK.search(gloss) and len(gloss) <= 40:
                     glosses[word][pos].append([part.strip() for part in re.split(r'[；;]', gloss) if part.strip()])
+
+    wordnet = wordnet_meanings(options.get('cow', ''), options.get('wordnet', ''))
 
     reference = {}
     if wikdict:
@@ -236,6 +291,12 @@ def main():
             if lines:
                 row[2], row[9] = '\\n'.join(lines[:MAX_LINES]), 'w'
                 counts['wiktionary'] += 1
+            elif word in CONTRACTIONS:
+                row[2], row[9] = CONTRACTIONS[word], 'w'
+                counts['contractions'] += 1
+            elif wordnet(word):
+                row[2], row[9] = '\\n'.join(wordnet(word)), 'w'
+                counts['Chinese Open Wordnet'] += 1
             elif lemma_of(row) and done.get(lemma_of(row)):
                 # An inflected form (socks, works): its base word's meanings.
                 row[2], row[9] = done[lemma_of(row)], 'w'
@@ -253,9 +314,10 @@ def main():
             if ranks is not None:
                 row[6] = str(ranks.get(word.lower(), 0))
             out.write('\t'.join(row) + '\n')
-    print(f"Chinese meanings: {counts['wiktionary']} from Wiktionary, {counts['base word']} from base words, {counts['wikdict']} from WikDict, "
+    print(f"Chinese meanings: {counts['wiktionary']} from Wiktionary, {counts['Chinese Open Wordnet']} from the Chinese Open Wordnet, "
+          f"{counts['contractions']} contractions, {counts['base word']} from base words, {counts['wikdict']} from WikDict, "
           f"{counts['none']} without, of {len(rows)}; IPA for {len(ipa)}", flush=True)
-    for word in ('bank', 'run', 'get', 'set', 'apple', 'however', 'beautiful', 'serendipity', 'assess', 'totally', 'socks', 'psychological', 'compulsory'):
+    for word in ('bank', 'run', 'get', 'set', 'however', 'beautiful', 'available', 'assess', 'totally', 'socks', 'psychological', "can't"):
         row = next((r for r in rows if r[0] == word), None)
         if row:
             print(f'  {word} /{row[1]}/ [{row[9]}] {row[2][:200]}', flush=True)

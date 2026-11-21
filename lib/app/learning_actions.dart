@@ -36,7 +36,8 @@ extension LearningActions on AppController {
 
   /// Called with each position: pauses as a line ends while 每句说完暂停 is on.
   void _pauseAtLineEnd(Player player, Duration position) {
-    if (!settings.pauseEachLine || playing?.isLive == true) {
+    _studyTick(player, position);
+    if (!_pauseLinesNow || playing?.isLive == true) {
       _linePause.reset();
       return;
     }

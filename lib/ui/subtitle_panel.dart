@@ -13,6 +13,7 @@ import 'pages/translation_settings_page.dart' show openTranslationSettings;
 import 'player_panel.dart';
 import 'common.dart' show ErrorBanner;
 import 'subtitle_list_panel.dart';
+import 'study_bar.dart' show StudyEntry;
 import 'app_icons.dart';
 
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
@@ -434,6 +435,7 @@ class LearningSwitches extends StatelessWidget {
               (on) => unawaited(controller.setBlurSecondary(on))),
         ),
       ]),
+      StudyEntry(controller: controller),
     ]);
   }
 }

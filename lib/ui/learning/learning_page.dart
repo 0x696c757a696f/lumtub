@@ -22,7 +22,7 @@ import '../app_icons.dart';
 import '../app_shell.dart' show openSettings;
 import '../common.dart';
 import '../pages/settings_sections.dart' show SettingsCategory;
-import '../pages/support_page.dart' show afdianPage, kofiPage;
+import '../pages/support_page.dart' show afdianPage;
 import '../skin_paint.dart';
 import '../theme.dart';
 import 'word_card.dart' show englishLevelName;
@@ -183,10 +183,16 @@ String _sourceName(PurchaseSource source) => switch (source) {
       PurchaseSource.kofi => 'Ko-fi',
     };
 
-/// Opens Polar's checkout, or Ko-fi's shop while there is none.
+/// Polar's card checkout, asked once a run; null while card payments
+/// are closed (the published polar-checkout.txt is empty), and only
+/// Afdian is offered.
+Future<Uri?> cardCheckout() => _cardCheckout ??= polarCheckout();
+Future<Uri?>? _cardCheckout;
+
+/// Opens Polar's checkout, or Afdian while there is none.
 Future<void> _buyOnPolar() async {
-  final checkout = await polarCheckout();
-  await openExternal(checkout?.toString() ?? '$kofiPage/shop');
+  final checkout = await cardCheckout();
+  await openExternal(checkout?.toString() ?? afdianPage);
 }
 
 /// The learning pack's price, kept in this one place: [learningPresale]
@@ -573,17 +579,25 @@ class _Pitch extends StatelessWidget {
           const SizedBox(height: Space.s),
           Text(learningTrialLine(learning), style: theme.textTheme.bodyMedium),
           const SizedBox(height: 12),
-          Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-            FilledButton(
-              onPressed: () => unawaited(buyLearningPack()),
-              child: Text(zh ? tr('Buy on Afdian (Alipay, WeChat)') : tr('Buy (card, Apple Pay, Google Pay)')),
-            ),
-            OutlinedButton(
-              onPressed: () => unawaited(zh ? _buyOnPolar() : openExternal(afdianPage)),
-              child: Text(zh ? tr('Buy (card, Apple Pay, Google Pay)') : tr('Buy on Afdian (Alipay, WeChat)')),
-            ),
-            TextButton(onPressed: () => unawaited(claimPurchase(context, learning, afdianFirst: zh)), child: Text(tr('I bought it: unlock'))),
-          ]),
+          FutureBuilder<Uri?>(
+            future: cardCheckout(),
+            builder: (context, snapshot) {
+              final card = snapshot.data != null;
+              final afdianFirst = zh || !card;
+              return Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                FilledButton(
+                  onPressed: () => unawaited(afdianFirst ? openExternal(afdianPage) : _buyOnPolar()),
+                  child: Text(afdianFirst ? tr('Buy on Afdian (Alipay, WeChat)') : tr('Buy (card, Apple Pay, Google Pay)')),
+                ),
+                if (card)
+                  OutlinedButton(
+                    onPressed: () => unawaited(zh ? _buyOnPolar() : openExternal(afdianPage)),
+                    child: Text(zh ? tr('Buy (card, Apple Pay, Google Pay)') : tr('Buy on Afdian (Alipay, WeChat)')),
+                  ),
+                TextButton(onPressed: () => unawaited(claimPurchase(context, learning, afdianFirst: zh)), child: Text(tr('I bought it: unlock'))),
+              ]);
+            },
+          ),
         ]),
       ),
     );

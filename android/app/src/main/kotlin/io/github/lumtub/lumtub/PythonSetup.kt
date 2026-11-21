@@ -6,11 +6,11 @@ import java.io.File
 import java.util.zip.ZipFile
 
 /**
- * Python for yt-dlp, from youtubedl-android's packages: libpython.so is the
- * interpreter, run from the app's library folder (the only place Android 10
- * and later lets an app start a program of its own), libpython.zip.so its
- * standard library, unpacked once per app version, and libqjs.so QuickJS
- * for YouTube's JavaScript challenges. Dart starts the processes itself
+ * Python for yt-dlp, CPython's own Android build (android/packaging/python.sh):
+ * libpython.so is a launcher for libpython3.x.so beside it, run from the
+ * app's library folder (the only place Android 10 and later lets an app
+ * start a program of its own), and libpython.zip.so is the standard library,
+ * unpacked once per app version. Dart starts the process itself
  * (lib/android_python.dart); this only gets the files ready.
  */
 object PythonSetup {
@@ -38,10 +38,9 @@ object PythonSetup {
         val usr = File(home, "usr")
         return buildMap {
             put("python", python.absolutePath)
-            File(libraries, "libqjs.so").takeIf { it.exists() }?.let { put("quickjs", it.absolutePath) }
             File(libraries, "liblumtub_core.so").takeIf { it.exists() }?.let { put("core", it.absolutePath) }
             put("home", usr.absolutePath)
-            put("libraries", File(usr, "lib").absolutePath)
+            put("libraries", libraries.absolutePath)
             put("certificates", File(usr, "etc/tls/cert.pem").absolutePath)
             put("programs", libraries.absolutePath)
             put("temporary", context.cacheDir.absolutePath)
@@ -50,7 +49,7 @@ object PythonSetup {
     }
 
     /**
-     * The yt-dlp the library carries, copied out for Dart to install when
+     * The yt-dlp the APK carries, copied out for Dart to install when
      * none is there yet; a newer one comes with the update check.
      */
     private fun copyBundledYtDlp(context: Context): File? {

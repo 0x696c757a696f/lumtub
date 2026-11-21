@@ -10,13 +10,11 @@ import 'native_core.dart';
 /// components) runs as an argument of the Python there. [ProcessTree.start]
 /// turns every start of a yt-dlp into that.
 class AndroidPython {
-  AndroidPython._(this.python, this.quickJs, this.environment, this.bundledYtDlp, this.plugins);
+  AndroidPython._(this.python, this.environment, this.bundledYtDlp, this.plugins);
 
-  /// The interpreter, libpython.so in the app's library folder.
+  /// The interpreter, libpython.so in the app's library folder: a small
+  /// launcher for CPython's libpython3.x.so beside it.
   final String python;
-
-  /// QuickJS, for YouTube's JavaScript challenges.
-  final String? quickJs;
 
   /// What Python needs to find its library and certificates.
   final Map<String, String> environment;
@@ -26,7 +24,7 @@ class AndroidPython {
 
   /// The folder of Lumtub's yt-dlp plugin, which solves YouTube's
   /// challenges with the core's QuickJS in Python's own process; null
-  /// when it could not be set up, and libqjs.so is started instead.
+  /// when it could not be set up, and yt-dlp then has no JavaScript runtime.
   final String? plugins;
 
   /// Set once Python is ready; null off Android or when it could not be.
@@ -46,7 +44,6 @@ class AndroidPython {
     final plugins = core == null ? null : await JsChallengePlugin.install(answer['temporary']!);
     return current = AndroidPython._(
       python,
-      answer['quickjs'],
       {
         'PYTHONHOME': answer['home']!,
         'HOME': answer['home']!,
@@ -68,7 +65,6 @@ class AndroidPython {
   /// The program, arguments and environment that start [script] with
   /// [arguments] and [environment].
   (String, List<String>, Map<String, String>) command(String script, List<String> arguments, Map<String, String>? environment) {
-    final js = quickJs;
     // Lumtub's plugin folder goes after --no-plugin-dirs, which would
     // otherwise clear it.
     final lead = arguments.takeWhile(ProcessTree.ytDlpIsolation.contains).length;
@@ -78,7 +74,6 @@ class AndroidPython {
         script,
         ...arguments.take(lead),
         if (plugins != null && !arguments.contains(plugins)) ...['--plugin-dirs', plugins!],
-        if (js != null && !arguments.contains('--js-runtimes')) ...['--js-runtimes', 'quickjs:$js'],
         ...arguments.skip(lead),
       ],
       {...?environment, ...this.environment},

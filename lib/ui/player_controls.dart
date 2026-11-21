@@ -584,7 +584,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   void _onSignal(PointerSignalEvent event) {
     if (event is! PointerScrollEvent || _locked) return;
     final keyboard = HardwareKeyboard.instance;
-    final modifier = Platform.isMacOS ? keyboard.isMetaPressed : keyboard.isControlPressed;
+    final modifier = keyboard.isControlPressed || (Platform.isMacOS && keyboard.isMetaPressed);
     final mode = _c.preferences.wheelGesture;
     if (!modifier && mode == WheelGesture.off) return;
     GestureBinding.instance.pointerSignalResolver.register(event, (resolved) => _scroll(resolved as PointerScrollEvent, modifier));

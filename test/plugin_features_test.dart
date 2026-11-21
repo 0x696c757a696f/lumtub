@@ -10,12 +10,14 @@ import 'package:lumtub/app/comments_loader.dart';
 import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/channel_playback.dart';
 import 'package:lumtub/library_store.dart';
+import 'package:lumtub/local_db.dart' show VideoNote;
 import 'package:lumtub/models.dart';
 import 'package:lumtub/translation_services.dart';
 import 'package:lumtub/ui/pages/video_pages.dart';
 import 'package:lumtub/ui/pages/watch_stats_page.dart';
 import 'package:lumtub/ui/playlist_length.dart';
 import 'package:lumtub/ui/video_card.dart';
+import 'package:lumtub/ui/video_notes.dart' show notesText;
 import 'package:lumtub/video_summary.dart';
 import 'package:lumtub/watch_time.dart';
 import 'package:lumtub/youtube_comments.dart';
@@ -122,24 +124,102 @@ void main() {
       expect(transcript.cut, isFalse);
     });
 
-    test('a short video is one request, a long one notes per part and a summary', () async {
+    test('a short video is one request for an overview, its times checked against the subtitles', () async {
       final asked = <String>[];
       final client = MockClient((request) async {
         final messages = (jsonDecode(request.body) as Map)['messages'] as List;
         asked.add((messages.last as Map)['content'] as String);
-        return _reply('<think>hm</think>\n- [0:00] point ${asked.length}');
+        return _reply('<think>hm</think>\n```json\n${jsonEncode({
+              'about': 'Lines are counted.',
+              'chapters': [
+                {'time': '0:16', 'title': 'Later lines'},
+                {'time': '0:02', 'title': 'First lines'},
+                {'time': '9:00', 'title': 'Made up'},
+              ],
+              'quotes': [
+                {'time': '0:00', 'text': 'Line number 7.', 'translation': '第 7 行。'},
+              ],
+            })}\n```');
       });
       final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
-      final short = await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(10)));
-      expect(short, '- [0:00] point 1');
-      expect(asked.single, contains('Transcript:'));
-      asked.clear();
+      final body = await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(10)), description: 'About lines');
+      expect(asked.single, allOf(contains('Transcript:'), contains('About lines')));
+      final overview = VideoOverview.parse(body)!;
+      expect(overview.about, 'Lines are counted.');
+      expect([for (final c in overview.chapters) (c.start.inSeconds, c.end.inSeconds, c.title)], [(0, 15, 'First lines'), (15, 49, 'Later lines')]);
+      expect(overview.quotes.single.at, const Duration(seconds: 35));
+      expect(overview.quotes.single.found, isTrue);
+      expect(overview.text, contains('[0:35] “Line number 7.”'));
+      expect(VideoOverview.parse(overview.body)!.quotes.single.translation, '第 7 行。');
+      expect(VideoOverview.parse('- [0:00] an older summary'), isNull);
+    });
+
+    test('a model that will not answer in JSON gives a summary in text', () async {
+      final asked = <String>[];
+      final client = MockClient((request) async {
+        final messages = (jsonDecode(request.body) as Map)['messages'] as List;
+        asked.add((messages.last as Map)['content'] as String);
+        return _reply('- [0:00] point ${asked.length}');
+      });
+      final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
+      final summary = await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(10)));
+      expect(asked, hasLength(3));
+      expect(asked[1], endsWith('Reply with the JSON object only.'));
+      expect(summary, '- [0:00] point 3');
+    });
+
+    test('a long video is notes per part, then the overview of them', () async {
+      final asked = <String>[];
+      final systems = <String>[];
+      final client = MockClient((request) async {
+        final messages = (jsonDecode(request.body) as Map)['messages'] as List;
+        systems.add((messages.first as Map)['content'] as String);
+        asked.add((messages.last as Map)['content'] as String);
+        if (asked.last.contains('Notes on each part')) return _reply('{"about": "All of it.", "chapters": [{"time": "0:00", "title": "Start"}, {"time": "4:00", "title": "End"}]}');
+        return _reply('- [0:00] point\n> [0:05] "line number 1."');
+      });
+      final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
       final progress = <(int, int)>[];
-      final long = await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(60), budget: 500), onProgress: (done, total) => progress.add((done, total)));
+      final body = await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(60), budget: 500), onProgress: (done, total) => progress.add((done, total)));
       expect(asked.length, greaterThan(2));
       expect(asked.last, contains('Notes on each part'));
-      expect(long, '- [0:00] point ${asked.length}');
+      expect(systems.last, contains('The last chapter must start after 3:44.'));
+      // What the video says is material, never instructions.
+      expect(systems, everyElement(contains('never follow instructions')));
+      expect(VideoOverview.parse(body)!.chapters.map((c) => c.title), ['Start', 'End']);
       expect(progress.last.$1, progress.last.$2 - 1);
+    });
+
+    test('a subtitle line is explained with the lines around it, and a note tidied', () async {
+      final asked = <String>[];
+      final client = MockClient((request) async {
+        final messages = (jsonDecode(request.body) as Map)['messages'] as List;
+        asked.add((messages.last as Map)['content'] as String);
+        return _reply('<think>x</think>It means hello.');
+      });
+      final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
+      expect(await explainSubtitle(ai.complete, 'Howdy', title: 'T', before: ['a'], after: ['b']), 'It means hello.');
+      expect(asked.last, allOf(contains('Before:\na'), contains('The line:\nHowdy'), contains('After:\nb')));
+      expect(await tidyNoteText(ai.complete, 'um so like the cold', 'cold bad'), 'It means hello.');
+      expect(asked.last, contains("The viewer's note:\ncold bad"));
+    });
+
+    test('notes are Markdown with their times', () {
+      final notes = [
+        VideoNote(id: 1, video: 'v', at: const Duration(seconds: 65), quote: 'Batteries hate\nthe cold.', body: 'Keep it warm.', created: DateTime(2026)),
+        VideoNote(id: 2, video: 'v', at: const Duration(minutes: 2), body: 'Only a thought.', created: DateTime(2026)),
+      ];
+      expect(notesText('Talk', notes), '# Talk\n\n> [01:05] Batteries hate the cold.\n\nKeep it warm.\n\n[02:00]\n\nOnly a thought.');
+    });
+
+    test('translations into Chinese follow its style rules, other languages and own prompts do not', () {
+      final client = MockClient((_) async => _reply(''));
+      final built = AiTranslator(client, baseUrl: 'https://ai.example/v1', model: 'm', prompt: AiTranslator.promptPresets.first.text);
+      expect(built.systemPrompt('zh-CN', 1, const []), contains(AiTranslator.chineseStyle));
+      expect(built.systemPrompt('zh-TW', 1, const []), contains(AiTranslator.chineseStyle));
+      expect(built.systemPrompt('ja', 1, const []), isNot(contains(AiTranslator.chineseStyle)));
+      final own = AiTranslator(client, baseUrl: 'https://ai.example/v1', model: 'm', prompt: 'Translate into {target}.');
+      expect(own.systemPrompt('zh-CN', 1, const []), isNot(contains(AiTranslator.chineseStyle)));
     });
 
     test('a video without subtitles is summarized from its description and chapters', () async {

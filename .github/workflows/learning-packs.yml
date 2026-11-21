@@ -254,7 +254,9 @@ jobs:
           # Signed with the license key under its own context: the app uses
           # a dictionary only when its sum is in a list signed so.
           umask 077
-          { echo '-----BEGIN PRIVATE KEY-----'; printf '%s' "$LICENSE_KEY" | tr -d ' \n\r' | fold -w 64; echo; echo '-----END PRIVATE KEY-----'; } > "$RUNNER_TEMP/key.pem"
+          # The secret is the key's DER in base64; openssl wants it as PEM.
+          label='PRIVATE KEY'
+          { echo "-----BEGIN $label-----"; printf '%s' "$LICENSE_KEY" | tr -d ' \n\r' | fold -w 64; echo; echo "-----END $label-----"; } > "$RUNNER_TEMP/key.pem"
           { printf 'lumtub-learning-sums-v1\n'; cat "$RUNNER_TEMP/out/SHA256SUMS"; } > "$RUNNER_TEMP/sums.msg"
           openssl pkeyutl -sign -rawin -inkey "$RUNNER_TEMP/key.pem" -in "$RUNNER_TEMP/sums.msg" -out "$RUNNER_TEMP/sums.raw"
           rm -f "$RUNNER_TEMP/key.pem"

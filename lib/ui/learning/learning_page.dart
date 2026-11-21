@@ -211,7 +211,7 @@ Future<void> _buyByCard() async {
 /// The learning pack as a one-off item on Afdian (Alipay, WeChat).
 const learningAfdianItem = 'https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00';
 
-const learningPrice = (euro: '€24', yuan: '¥188');
+const learningPrice = (euro: '€16', yuan: '¥129');
 ({String euro, String yuan})? get learningPresale => (euro: '€12', yuan: '¥99');
 
 /// The last day of the pre-sale price.

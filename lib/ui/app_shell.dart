@@ -29,6 +29,7 @@ import 'pages/support_page.dart';
 import 'pages/video_pages.dart';
 import 'pages/watch_page.dart';
 import 'pages/youtube_playlist_page.dart';
+import 'learning/learning_page.dart' show openLearningPage;
 import 'lights_off.dart';
 import 'motion.dart';
 import 'theater_mode.dart';
@@ -92,6 +93,13 @@ class _AppShellState extends State<AppShell> {
     (PageMode.history, AppIcons.clockCounterClockwise, AppIcons.clockCounterClockwiseFill, tr('History')),
     (PageMode.playlists, AppIcons.filmReel, AppIcons.filmReelFill, tr('Playlist')),
     (PageMode.downloads, AppIcons.arrowCircleDown, AppIcons.arrowCircleDownFill, tr('Downloads')),
+  ];
+
+  /// The rail's entries: the pages, then 学习, which opens the learning
+  /// pack over the page shown and is never the selected one.
+  static List<(PageMode?, IconData, IconData, String)> get _railDestinations => [
+    ..._destinations,
+    (null, AppIcons.graduationCap, const IconData(0xe62c, fontFamily: 'Phosphor Fill'), tr('Learning')),
   ];
 
   /// The bottom bar has room for four: History, Playlists and Downloads share
@@ -234,6 +242,10 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _select(int index) {
+    if (index >= _destinations.length) {
+      unawaited(openLearningPage(context, _controller));
+      return;
+    }
     final target = _destinations[index].$1;
     // Pressed again on its own page: to the top, and from the top, new
     // videos.
@@ -566,7 +578,7 @@ class _AppShellState extends State<AppShell> {
                           () => (_selectedIndex, _controller.mode == PageMode.settings && !_controller.onWatchPage, currentLanguage),
                           (context) => skinRail ? SkinRail(
                             skin: skin,
-                            destinations: [for (final d in _destinations) (d.$2, d.$3, d.$4)],
+                            destinations: [for (final d in _railDestinations) (d.$2, d.$3, d.$4)],
                             selected: _selectedIndex,
                             onSelected: _select,
                           ) : _navigationRail(context),
@@ -699,7 +711,7 @@ class _AppShellState extends State<AppShell> {
           selectedIcon: const Icon(AppIcons.gearFill),
         ) : null,
         destinations: [
-          for (final (i, d) in _destinations.indexed)
+          for (final (i, d) in _railDestinations.indexed)
             NavigationRailDestination(
               icon: GlassPlate(child: FillIcon(d.$2, d.$3, selected: i == _selectedIndex)),
               selectedIcon: GlassPlate(child: FillIcon(d.$2, d.$3, selected: i == _selectedIndex)),

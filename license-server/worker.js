@@ -53,7 +53,8 @@
 // buyer the order id.
 
 // Words read aloud: the secrets AZURE_TTS_KEY and AZURE_TTS_REGION (an
-// Azure Speech resource). Each word is made once and then served from the
+// Azure Speech resource), or else GOOGLE_TTS_KEY (Google Cloud
+// Text-to-Speech). Each word is made once and then served from the
 // cache; new words are capped per device and in all per day, so the cost
 // stays within Azure's free monthly allowance.
 
@@ -593,7 +594,8 @@ async function speak(request, env) {
   const device = clean(ask.device);
   const voice = AZURE_VOICES[language];
   if (!voice || !text || [...text].length > SPEAK_MAX_CHARS || !/^[0-9a-f]{16,64}$/.test(device)) return reply({ error: 'ask' }, 400);
-  if (!env.AZURE_TTS_KEY || !/^[a-z0-9]+$/.test(clean(env.AZURE_TTS_REGION))) return reply({ error: 'off' }, 503);
+  const azure = env.AZURE_TTS_KEY && /^[a-z0-9]+$/.test(clean(env.AZURE_TTS_REGION));
+  if (!azure && !env.GOOGLE_TTS_KEY) return reply({ error: 'off' }, 503);
   const cache = caches.default;
   const key = new Request(`https://speak.lumtub/${language}/${await sha256(`${voice}\n${text}`)}.mp3`);
   const kept = await cache.match(key);
@@ -609,6 +611,14 @@ async function speak(request, env) {
     env.LICENSES.put(all, String((Number(total) || 0) + 1), { expirationTtl: 2 * 86400 }),
   ]);
 
+  const made = azure ? await azureVoice(text, voice, env) : await googleVoice(text, language, env);
+  if (!made) return reply({ error: 'voice' }, 502);
+  const sound = new Response(made, { headers: { 'content-type': 'audio/mpeg', 'cache-control': 'public, max-age=31536000' } });
+  await cache.put(key, sound.clone());
+  return withCors(sound);
+}
+
+async function azureVoice(text, voice, env) {
   const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const ssml = `<speak version="1.0" xml:lang="${voice.slice(0, 5)}"><voice name="${voice}">${escaped}</voice></speak>`;
   const answer = await fetch(`https://${clean(env.AZURE_TTS_REGION)}.tts.speech.microsoft.com/cognitiveservices/v1`, {
@@ -623,11 +633,25 @@ async function speak(request, env) {
   });
   if (!answer.ok) {
     console.log('azure', answer.status);
-    return reply({ error: 'voice' }, 502);
+    return null;
   }
-  const sound = new Response(await answer.arrayBuffer(), { headers: { 'content-type': 'audio/mpeg', 'cache-control': 'public, max-age=31536000' } });
-  await cache.put(key, sound.clone());
-  return withCors(sound);
+  return await answer.arrayBuffer();
+}
+
+const GOOGLE_LANGUAGES = { en: 'en-US', zh: 'cmn-CN', ja: 'ja-JP', ko: 'ko-KR', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', it: 'it-IT', ru: 'ru-RU' };
+
+async function googleVoice(text, language, env) {
+  const answer = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize', {
+    method: 'POST',
+    headers: { 'X-Goog-Api-Key': env.GOOGLE_TTS_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ input: { text }, voice: { languageCode: GOOGLE_LANGUAGES[language] }, audioConfig: { audioEncoding: 'MP3' } }),
+  });
+  const json = answer.ok ? await answer.json().catch(() => null) : null;
+  if (typeof json?.audioContent !== 'string') {
+    console.log('google', answer.status);
+    return null;
+  }
+  return Uint8Array.from(atob(json.audioContent), (c) => c.charCodeAt(0));
 }
 
 function withCors(response) {

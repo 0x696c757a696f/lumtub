@@ -3849,5 +3849,20 @@
   "Picture enhancement": "画质增强",
   "{0}: {1}. Only when the picture is drawn larger than it is; left out with Low resource use first, and on battery with Smart auto": "{0}：{1}。只在画面被放大显示时生效；「低资源占用优先」时不用，「智能自动」下用电池时也不用",
   "upscaling super resolution shaders Anime4K FSRCNNX RAVU": "超分 超分辨率 着色器 放大 Anime4K FSRCNNX RAVU",
-  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "在 GitHub 上点个 Star 不花一分钱，却能让更多人发现 Lumtub。这个提示只会出现这一次。"
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "在 GitHub 上点个 Star 不花一分钱，却能让更多人发现 Lumtub。这个提示只会出现这一次。",
+  "Auto-generated subtitles: a word may be misheard": "自动生成的字幕，个别词可能听错",
+  "Read aloud": "朗读",
+  "Hear the line": "听原句",
+  "Not ready yet": "还没准备好",
+  "This computer has no voice for this language. Add one in the system settings, or pick an online voice in the learning pack settings.": "这台电脑没有这种语言的语音。可以在系统设置里添加，或在学习包设置里改用在线语音。",
+  "This voice service has no voice for this language": "这个语音服务没有这种语言的声音",
+  "Could not read it aloud: {0}": "无法朗读：{0}",
+  "Voice for reading words": "朗读用的声音",
+  "This computer's voices, offline and free": "本机语音，离线、免费",
+  "Azure neural voices, with your own key": "Azure 神经语音，用你自己的密钥",
+  "Google Cloud voices, with your own key": "Google Cloud 语音，用你自己的密钥",
+  "Azure and Google sound like a person and have a free monthly allowance; you make the key in their consoles. The words go to them to be read.": "Azure 和 Google 的声音接近真人，每月有免费额度；密钥在它们的控制台里创建。要朗读的词会发送给它们。",
+  "Azure key": "Azure 密钥",
+  "Azure region, such as westeurope": "Azure 区域，例如 westeurope",
+  "Google Cloud key": "Google Cloud 密钥"
 }

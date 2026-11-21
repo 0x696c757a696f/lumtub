@@ -24,6 +24,14 @@ windows-sys = { version = "0.61", features = [
   "Win32_UI_WindowsAndMessaging",
 ] }
 windows = { version = "0.62.2", features = [
+  # 读这个词 (speech.rs): the system's OneCore voices.
+  "Foundation",
+  "Foundation_Collections",
+  "Media",
+  "Media_Core",
+  "Media_SpeechSynthesis",
+  "Storage_Streams",
+  "Win32_System_WinRT",
   "Win32_Graphics_Direct3D",
   "Win32_Graphics_Direct3D11",
   "Win32_Graphics_Dxgi",

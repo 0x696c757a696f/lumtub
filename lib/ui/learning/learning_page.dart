@@ -13,6 +13,7 @@ import '../../l10n/l10n.dart';
 import '../../learning/english_dictionary.dart';
 import '../../learning/learning.dart';
 import '../../learning/vocabulary.dart';
+import '../../learning/word_voice.dart' show azureVoiceKey, azureVoiceRegion, googleVoiceKey;
 import '../../models.dart';
 import '../../save_file.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
@@ -185,6 +186,36 @@ Future<void> _showConfirmation(BuildContext context, Learning learning, {require
   );
 }
 
+String _voiceLabel(VoiceService service) => switch (service) {
+      VoiceService.system => tr("This computer's voices, offline and free"),
+      VoiceService.azure => tr('Azure neural voices, with your own key'),
+      VoiceService.google => tr('Google Cloud voices, with your own key'),
+    };
+
+Future<void> _pickVoice(BuildContext context, Learning learning) async {
+  final picked = await showDialog<VoiceService>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: Text(tr('Voice for reading words')),
+      children: [
+        for (final v in VoiceService.values)
+          ListTile(
+            dense: true,
+            leading: Icon(v == learning.voiceService ? AppIcons.radioButton : AppIcons.circle),
+            title: Text(_voiceLabel(v)),
+            onTap: () => Navigator.pop(context, v),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 4, 24, 8),
+          child: Text(tr('Azure and Google sound like a person and have a free monthly allowance; you make the key in their consoles. The words go to them to be read.'),
+              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.outline)),
+        ),
+      ],
+    ),
+  );
+  if (picked != null && picked != learning.voiceService) await learning.setVoiceService(picked);
+}
+
 String _meaningLabel(MeaningLanguage meanings) => switch (meanings) {
       MeaningLanguage.chineseFirst => tr('Chinese first, a few English ones below'),
       MeaningLanguage.chinese => tr('Chinese only'),
@@ -278,6 +309,22 @@ class _LearningPage extends StatelessWidget {
   const _LearningPage({required this.controller});
   final AppController controller;
 
+  Widget _voiceKeyItem(BuildContext context, String title, String name, {bool secret = true}) {
+    final saved = controller.translationKeys[name] ?? '';
+    return NormalItem(
+      title: title,
+      subtitle: saved.isEmpty ? tr('Not set') : (secret ? '${'•' * 8}${saved.length > 4 ? saved.substring(saved.length - 4) : ''}' : saved),
+      leading: const Icon(AppIcons.keyFill),
+      onTap: () async {
+        final typed = await showDialog<String>(context: context, builder: (context) => TextEditDialog(title: title, initialText: saved));
+        if (typed == null) return;
+        await controller.saveApiKey(name, typed.trim());
+        // Shown again with the new key.
+        await controller.learning.setVoiceService(controller.learning.voiceService);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final learning = controller.learning;
@@ -319,6 +366,18 @@ class _LearningPage extends StatelessWidget {
               enabled: learning.licensed,
               onChanged: (on) => unawaited(learning.setShowRomanization(on)),
             ),
+            NormalItem(
+              title: tr('Voice for reading words'),
+              subtitle: _voiceLabel(learning.voiceService),
+              leading: Icon(AppIcons.speakerHigh),
+              enabled: learning.licensed,
+              onTap: () => unawaited(_pickVoice(context, learning)),
+            ),
+            if (learning.voiceService == VoiceService.azure) ...[
+              _voiceKeyItem(context, tr('Azure key'), azureVoiceKey),
+              _voiceKeyItem(context, tr('Azure region, such as westeurope'), azureVoiceRegion, secret: false),
+            ],
+            if (learning.voiceService == VoiceService.google) _voiceKeyItem(context, tr('Google Cloud key'), googleVoiceKey),
             NormalItem(
               title: tr('Meanings in'),
               subtitle: _meaningLabel(learning.meanings),

@@ -18,6 +18,9 @@ import 'lexicon.dart';
 import 'license.dart';
 import 'vocabulary.dart';
 import 'wiktionary_dictionary.dart';
+import 'word_voice.dart';
+
+export 'word_voice.dart' show VoiceService, VoiceException;
 
 /// Where the dictionary packs are published: a release of the app's own
 /// repository that holds data only, never an app version.
@@ -121,6 +124,14 @@ class Learning extends ChangeNotifier {
   /// Which meanings a word card shows where a dictionary has both.
   MeaningLanguage get meanings => _meanings;
   MeaningLanguage _meanings = MeaningLanguage.chineseFirst;
+
+  /// Who reads words aloud on a word card.
+  VoiceService get voiceService => _voiceService;
+  VoiceService _voiceService = VoiceService.system;
+
+  /// Reads words aloud; null until the learning settings are read.
+  WordVoice? get voice => _voice;
+  WordVoice? _voice;
 
   /// The learner's English level as an index into [EnglishLevel.values];
   /// words above it stand out. Null marks nothing.
@@ -238,6 +249,8 @@ class Learning extends ChangeNotifier {
     if (_loaded) return;
     _loaded = true;
     _directories = directories;
+    _voice = WordVoice(Directory('${directories.cache.path}${Platform.pathSeparator}word-sounds'));
+    unawaited(_voice!.tidy());
     _book = VocabularyBook(File('${directories.data.path}${Platform.pathSeparator}vocabulary.json'));
     try {
       final file = _settingsFile!;
@@ -247,6 +260,7 @@ class Learning extends ChangeNotifier {
           _showPinyin = json['pinyin'] != false;
           _showRomanization = json['romanization'] == true;
           _meanings = MeaningLanguage.values.firstWhere((m) => m.name == json['meanings'], orElse: () => MeaningLanguage.chineseFirst);
+          _voiceService = VoiceService.values.firstWhere((v) => v.name == json['voice'], orElse: () => VoiceService.system);
           final level = json['englishLevel'];
           if (level is int) _englishLevel = level >= 0 && level < EnglishLevel.beyond.index ? level : null;
           final code = json['license'];
@@ -326,6 +340,12 @@ class Learning extends ChangeNotifier {
     await _save();
   }
 
+  Future<void> setVoiceService(VoiceService service) async {
+    _voiceService = service;
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> setMeanings(MeaningLanguage meanings) async {
     _meanings = meanings;
     notifyListeners();
@@ -348,7 +368,7 @@ class Learning extends ChangeNotifier {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'englishLevel': _englishLevel ?? -1}));
+      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1}));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }

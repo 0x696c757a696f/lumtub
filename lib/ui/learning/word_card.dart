@@ -79,6 +79,7 @@ class _WordCard extends StatelessWidget {
     return AlertDialog(
       title: Row(children: [
         Expanded(child: SelectableText(word, style: _headStyle(theme))),
+        _SpeakButton(controller: controller, text: word, language: 'zh'),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -107,12 +108,14 @@ class _WordCard extends StatelessWidget {
             if (sentence.isNotEmpty) ...[
               const Divider(),
               Text(sentence, style: theme.textTheme.bodyMedium),
+              if (controller.mainSubtitleAutomatic) Text(tr('Auto-generated subtitles: a word may be misheard'), style: TextStyle(fontSize: 11, color: colors.outline)),
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
           ]),
         ),
       ),
       actions: [
+        _LineButton(controller: controller, at: at),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
         if (book != null)
           ListenableBuilder(
@@ -167,6 +170,7 @@ class _EnglishCard extends StatelessWidget {
     return AlertDialog(
       title: Row(children: [
         Expanded(child: SelectableText(token.text, style: _headStyle(theme))),
+        _SpeakButton(controller: controller, text: token.key, language: 'en'),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -206,12 +210,14 @@ class _EnglishCard extends StatelessWidget {
             if (sentence.isNotEmpty) ...[
               const Divider(),
               Text(sentence, style: theme.textTheme.bodyMedium),
+              if (controller.mainSubtitleAutomatic) Text(tr('Auto-generated subtitles: a word may be misheard'), style: TextStyle(fontSize: 11, color: colors.outline)),
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
           ]),
         ),
       ),
       actions: [
+        _LineButton(controller: controller, at: at),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
         if (book != null && entries.isNotEmpty)
           ListenableBuilder(
@@ -274,6 +280,7 @@ class _JapaneseCard extends StatelessWidget {
             SelectableText(token.text, style: _headStyle(theme)),
           ]),
         ),
+        _SpeakButton(controller: controller, text: head, language: 'ja'),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -307,6 +314,7 @@ class _JapaneseCard extends StatelessWidget {
             if (sentence.isNotEmpty) ...[
               const Divider(),
               Text(sentence, style: theme.textTheme.bodyMedium),
+              if (controller.mainSubtitleAutomatic) Text(tr('Auto-generated subtitles: a word may be misheard'), style: TextStyle(fontSize: 11, color: colors.outline)),
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
             const SizedBox(height: 8),
@@ -320,6 +328,7 @@ class _JapaneseCard extends StatelessWidget {
         ),
       ),
       actions: [
+        _LineButton(controller: controller, at: at),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
         if (book != null && entries.isNotEmpty)
           ListenableBuilder(
@@ -402,6 +411,7 @@ class _WiktionaryCard extends StatelessWidget {
             SelectableText(token.text, style: _headStyle(theme)),
           ]),
         ),
+        _SpeakButton(controller: controller, text: token.key, language: language),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -443,6 +453,7 @@ class _WiktionaryCard extends StatelessWidget {
             if (sentence.isNotEmpty) ...[
               const Divider(),
               Text(sentence, style: theme.textTheme.bodyMedium),
+              if (controller.mainSubtitleAutomatic) Text(tr('Auto-generated subtitles: a word may be misheard'), style: TextStyle(fontSize: 11, color: colors.outline)),
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
             const SizedBox(height: 8),
@@ -458,6 +469,7 @@ class _WiktionaryCard extends StatelessWidget {
         ),
       ),
       actions: [
+        _LineButton(controller: controller, at: at),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
         if (book != null && entries.isNotEmpty)
           ListenableBuilder(
@@ -515,4 +527,51 @@ List<Widget> _meaningLines(ThemeData theme, MeaningLanguage meanings, List<Strin
     for (final line in first.take(8)) Text(line, style: main),
     for (final line in more) Text(line, style: aside),
   ];
+}
+
+/// 读这个词: the word in the voice chosen in the learning pack's settings.
+class _SpeakButton extends StatefulWidget {
+  const _SpeakButton({required this.controller, required this.text, required this.language});
+  final AppController controller;
+  final String text;
+  final String language;
+
+  @override
+  State<_SpeakButton> createState() => _SpeakButtonState();
+}
+
+class _SpeakButtonState extends State<_SpeakButton> {
+  bool _busy = false;
+
+  Future<void> _speak() async {
+    setState(() => _busy = true);
+    final problem = await widget.controller.sayAloud(widget.text, widget.language);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (problem != null) ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(problem)));
+  }
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+        tooltip: tr('Read aloud'),
+        icon: _busy ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.speakerHigh, size: 20),
+        onPressed: _busy || widget.text.isEmpty ? null : () => unawaited(_speak()),
+      );
+}
+
+/// 听原句: the line the word is from, once more from the video.
+class _LineButton extends StatelessWidget {
+  const _LineButton({required this.controller, required this.at});
+  final AppController controller;
+  final Duration at;
+
+  @override
+  Widget build(BuildContext context) {
+    if (controller.player == null || controller.learningLines.isEmpty) return const SizedBox.shrink();
+    return TextButton.icon(
+      icon: Icon(AppIcons.playCircle, size: 16),
+      label: Text(tr('Hear the line')),
+      onPressed: () => unawaited(controller.playLineOnce(at)),
+    );
+  }
 }

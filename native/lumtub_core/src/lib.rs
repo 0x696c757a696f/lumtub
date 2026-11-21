@@ -55,6 +55,7 @@ pub mod resolved;
 pub mod roots;
 pub mod signing;
 pub mod socks;
+pub mod speech;
 pub mod store;
 pub mod store_texts;
 pub mod subtitles;
@@ -72,5 +73,5 @@ pub mod words;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    56
+    57
 }

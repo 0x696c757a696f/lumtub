@@ -898,6 +898,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   List<SubtitleCue> _learningLines = const [];
   String? _learningLinesKey;
   DateTime _learningLinesAsked = DateTime(0);
+
+  /// Stops a line a word card played once as it ends.
+  StreamSubscription<Duration>? _lineOnce;
   final _linePause = LinePause();
   final _reveal = TranslationReveal();
   /// Whether the blurred second subtitle (模糊翻译) shows plainly now.

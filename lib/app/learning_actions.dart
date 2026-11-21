@@ -107,6 +107,52 @@ extension LearningActions on AppController {
     return true;
   }
 
+  /// Reads [text] in [language] aloud in the voice the learning pack's
+  /// settings name. Null when it plays, else what went wrong.
+  Future<String?> sayAloud(String text, String language) async {
+    final voice = learning.voice;
+    if (voice == null) return tr('Not ready yet');
+    final service = learning.voiceService;
+    try {
+      final file = await voice.read(text, language, service, translationKeys);
+      final player = this.player;
+      if (player != null && player.state.playing) await player.pause();
+      final sound = _shadowPlayer ??= Player();
+      await sound.setVolume(player?.state.volume ?? 100);
+      await sound.open(Media(file.uri.toString()));
+      return null;
+    } on VoiceException catch (e) {
+      logWarn('Could not read "$text" ($language) aloud with ${service.name}: $e');
+      if (e.noVoice && service == VoiceService.system) return tr('This computer has no voice for this language. Add one in the system settings, or pick an online voice in the learning pack settings.');
+      if (e.noVoice) return tr('This voice service has no voice for this language');
+      return tr('Could not read it aloud: {0}', [e.detail]);
+    } catch (e) {
+      logWarn('Could not read "$text" ($language) aloud: $e');
+      return tr('Could not read it aloud: {0}', ['$e']);
+    }
+  }
+
+  /// Plays the line said at [at] once and pauses as it ends: 听原句 on a
+  /// word card. False when no line is there.
+  Future<bool> playLineOnce(Duration at) async {
+    final player = this.player;
+    if (player == null) return false;
+    const slack = Duration(milliseconds: 300);
+    final line = learningLines.where((l) => l.start <= at + slack && at <= l.end + slack).lastOrNull;
+    if (line == null) return false;
+    await _lineOnce?.cancel();
+    await seek(lineStart(line));
+    if (this.player != player) return false;
+    _lineOnce = player.stream.position.listen((position) {
+      if (position < line.end) return;
+      unawaited(_lineOnce?.cancel());
+      _lineOnce = null;
+      unawaited(player.pause());
+    });
+    await player.play();
+    return true;
+  }
+
   Future<void> _loopLine(SubtitleCue line) async {
     _update(() {
       loopA = lineStart(line);

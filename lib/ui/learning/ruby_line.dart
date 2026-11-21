@@ -44,7 +44,8 @@ class ChineseRubyLine extends StatelessWidget {
     // Half the line's size, but never too small to read in a list.
     final rubyStyle = style.copyWith(fontSize: size * 0.5 < 9 ? (size < 9 ? size : 9.0) : size * 0.5, height: 1.1, fontWeight: FontWeight.normal);
     final children = <Widget>[];
-    for (final token in tokens) {
+    bool ruby(int i) => i >= 0 && i < tokens.length && tokens[i].isWord && pinyin && tokens[i].reading != null;
+    for (final (i, token) in tokens.indexed) {
       if (!token.isWord) {
         // Text between words wraps at its spaces.
         // A caption's line break is a space here: the words stand in one row.
@@ -56,8 +57,13 @@ class ChineseRubyLine extends StatelessWidget {
       final marked = highlight?.call(token) ?? false;
       var wordStyle = (hard?.call(token) ?? false) ? style.copyWith(color: hardColor.withValues(alpha: style.color?.a ?? 1)) : style;
       if (marked) wordStyle = wordStyle.copyWith(decoration: TextDecoration.underline, decorationColor: wordStyle.color, decorationThickness: 2);
+      // Japanese is written without spaces: its words stand close, and a
+      // reading longer than its word (しょうぎょう over 商業) reaches over a
+      // neighbour that has none, else is set smaller, as furigana is.
+      final japanese = token.language == 'ja';
       Widget block = Column(mainAxisSize: MainAxisSize.min, children: [
-        if (pinyin && token.reading != null) _text(token.reading!, rubyStyle, outlineScale: 0.6),
+        if (pinyin && token.reading != null)
+          japanese ? _furigana(token.text, wordStyle, token.reading!, rubyStyle, left: !ruby(i - 1), right: !ruby(i + 1)) : _text(token.reading!, rubyStyle, outlineScale: 0.6),
         _text(token.text, wordStyle),
       ]);
       if (hits != null) {
@@ -72,9 +78,41 @@ class ChineseRubyLine extends StatelessWidget {
         );
       }
       // The outline reaches past the letters; the room keeps the space between words.
-      children.add(Padding(padding: EdgeInsets.symmetric(horizontal: 1 + outline / 2), child: block));
+      children.add(Padding(padding: EdgeInsets.symmetric(horizontal: (japanese ? 0 : 1) + outline / 2), child: block));
     }
     return Wrap(alignment: alignment, crossAxisAlignment: WrapCrossAlignment.end, children: children);
+  }
+
+  /// [reading] over [word], as wide as the word and, on a side with no
+  /// reading next to it, up to half a letter more; shrunk when longer.
+  Widget _furigana(String word, TextStyle wordStyle, String reading, TextStyle style, {required bool left, required bool right}) {
+    final scaler = textScaler ?? TextScaler.noScaling;
+    (double, double) measure(String text, TextStyle s) {
+      final painter = TextPainter(text: TextSpan(text: text, style: s), textDirection: TextDirection.ltr, textScaler: scaler, maxLines: 1)..layout();
+      final size = (painter.width, painter.height);
+      painter.dispose();
+      return size;
+    }
+
+    final (width, _) = measure(word, wordStyle);
+    final (needed, height) = measure(reading, style);
+    // Centred over the word when it fits; past it only when it must be.
+    final reach = needed <= width ? 0.0 : (wordStyle.fontSize ?? 14) * scaler.scale(1) * 0.5;
+    final before = left ? reach : 0.0;
+    final after = right ? reach : 0.0;
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Stack(clipBehavior: Clip.none, children: [
+        Positioned(
+          left: -before,
+          width: width + before + after,
+          top: 0,
+          height: height,
+          child: FittedBox(fit: BoxFit.scaleDown, child: _text(reading, style, outlineScale: 0.6)),
+        ),
+      ]),
+    );
   }
 
   Widget _text(String text, TextStyle style, {double outlineScale = 1}) {

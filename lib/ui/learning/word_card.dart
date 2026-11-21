@@ -268,7 +268,14 @@ class _JapaneseCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final matches = dictionary.lookUpInflected(token.key);
-    final entries = [for (final (_, list) in matches) ...list].take(6).toList();
+    final all = [for (final (match, list) in matches) for (final e in list) (match.base, e)].take(6).toList();
+    // Entries the word is the usual spelling of come in full; others, such
+    // as 嘱する that JMdict lists 属する as a rare spelling of, in one grey
+    // line below, so the word meant is not lost among them.
+    bool usual(String base, JapaneseEntry e) => e.headword == base || (e.kanji.isEmpty && e.kana.first == base);
+    final entries = [for (final (base, e) in all) if (usual(base, e)) e];
+    final aside = entries.isEmpty ? const <JapaneseEntry>[] : [for (final (base, e) in all) if (!usual(base, e)) e];
+    if (entries.isEmpty) entries.addAll([for (final (_, e) in all) e]);
     final firstMatch = matches.isEmpty ? null : matches.first.$1;
     final head = entries.isEmpty ? token.key : entries.first.headword;
     final book = controller.learning.book;
@@ -310,6 +317,16 @@ class _JapaneseCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   ..._meaningLines(theme, controller.learning.meanings, e.chinese, [for (final (i, sense) in e.senses.indexed) '${i + 1}. $sense']),
                 ]),
+              ),
+            for (final e in aside)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  '${e.headword} ${e.kana.first} · ${(e.chinese.isNotEmpty && controller.learning.meanings != MeaningLanguage.english ? e.chinese : e.senses).firstOrNull ?? ''}',
+                  style: theme.textTheme.bodySmall!.copyWith(color: colors.outline),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             if (sentence.isNotEmpty) ...[
               const Divider(),

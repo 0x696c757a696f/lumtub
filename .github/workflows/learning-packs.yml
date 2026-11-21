@@ -184,7 +184,8 @@ jobs:
           if curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/ja-zh.sqlite3" "https://download.wikdict.com/dictionaries/sqlite/2/ja-zh.sqlite3"; then
             ja_args+=("$RUNNER_TEMP/in/ja-zh.sqlite3")
           fi
-          python3 -I .github/learning/ja_zh.py "${ja_args[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+          # Not -I: it needs the opencc the step installed for this user.
+          python3 .github/learning/ja_zh.py "${ja_args[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
           gzip -n -9 < "$RUNNER_TEMP/in/ja.tsv" > "$RUNNER_TEMP/out/ja-jmdict.tsv.gz"
           for code in ko es fr de it ru; do
             python3 -I .github/learning/sqlite_pack.py wiktionary "$code" "$RUNNER_TEMP/in/$code-wiktionary.tsv" "$RUNNER_TEMP/in/$code.sqlite"

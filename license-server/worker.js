@@ -66,6 +66,7 @@ export default {
       if (request.method === 'POST' && url.pathname === '/activate') return await activate(request, env);
       if (request.method === 'POST' && url.pathname === '/deactivate') return await deactivate(request, env);
       if (request.method === 'GET' && url.pathname === '/') return reply({ ok: true });
+      if (request.method === 'GET' && url.pathname === '/kofi/status') return reply({ token: Boolean(env.KOFI_TOKEN), item: Boolean(env.KOFI_ITEM), last: JSON.parse((await env.LICENSES.get('kofi:last-verified')) || 'null') });
       if (request.method === 'GET' && url.pathname === '/polar/thanks') return await polarThanks(url, env);
       if (request.method === 'GET' && url.pathname === '/creem/thanks') return await creemThanks(url, env);
       return reply({ error: 'not found' }, 404);
@@ -95,6 +96,9 @@ async function kofi(request, env) {
   const form = await request.formData();
   const data = JSON.parse(form.get('data') || '{}');
   if (!env.KOFI_TOKEN || data.verification_token !== env.KOFI_TOKEN) return reply({ error: 'bad token' }, 403);
+  // When Ko-fi last got through, for GET /kofi/status (its test button
+  // sends a donation, which gives no code).
+  await env.LICENSES.put('kofi:last-verified', JSON.stringify({ at: new Date().toISOString(), type: clean(data.type) }));
   const items = Array.isArray(data.shop_items) ? data.shop_items : [];
   const counts = data.type === 'Shop Order' && (!env.KOFI_ITEM || items.some((i) => i.direct_link_code === env.KOFI_ITEM));
   if (!counts) return reply({ ok: true, ignored: true });

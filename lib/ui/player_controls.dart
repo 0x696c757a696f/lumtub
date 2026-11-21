@@ -46,6 +46,7 @@ import 'motion.dart';
 import 'pages/settings_sections.dart' show qualityLabel, trimSpeed;
 import 'pages/settings_subpages.dart' show openPictureSettings;
 import 'player_panel.dart';
+import 'learning_drawer.dart' show LearningDrawerHandle;
 import 'player_shortcuts.dart';
 import 'player_stats.dart';
 import 'screenshot_action.dart';
@@ -756,6 +757,32 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                     Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _topBar(context, fullscreen, phone, extra, box))),
                     Positioned(left: 0, right: 0, bottom: 0, child: _bar(top: false, child: _bottomBar(context, fullscreen, phone, extra, color, gradient, box))),
                   ],
+                  if (!locked && _c.playing != null)
+                    PositionedDirectional(
+                      end: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: MouseRegion(
+                          onEnter: (_) {
+                            _overBar = true;
+                            _hideTimer?.cancel();
+                          },
+                          onExit: (_) {
+                            _overBar = false;
+                            _restartHide();
+                          },
+                          child: AnimatedBuilder(
+                            animation: _bars,
+                            child: LearningDrawerHandle(controller: _c),
+                            builder: (context, child) => IgnorePointer(
+                              ignoring: _bars.value < 0.5,
+                              child: FractionalTranslation(translation: Offset(1 - Ease.out.transform(_bars.value), 0), child: child),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   if (showLock) _lockColumn(context, fullscreen, phone, extra),
                 ]),
               ),

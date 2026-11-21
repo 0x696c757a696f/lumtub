@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 trở lên, không sao chép)",
   "DirectX 12 (copy-back)": "DirectX 12 (sao chép ngược)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (sắc nét nhất, tải GPU cao)",
-  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; một phần giao diện được phỏng theo PiliNara, phần phát video dựa trên mpv, media_kit và yt-dlp",
+  "AGPLv3; playback is built on mpv, media_kit and yt-dlp": "AGPLv3; phần phát video dựa trên mpv, media_kit và yt-dlp",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU cách giải mã hiện tại VP9 AV1 tiện ích mở rộng video",
   "GitHub source code": "Mã nguồn trên GitHub",
   "GitHub repository": "Kho GitHub",

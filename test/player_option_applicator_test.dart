@@ -62,7 +62,7 @@ void main() {
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['autosync'], '0');
   });
 
-  test('PiliNara mpv options and custom lines reach libmpv, custom lines win', () {
+  test('mpv options and custom lines reach libmpv, custom lines win', () {
     const settings = PlayerSettings(
       d3d11vaZeroCopy: true,
       autosync: 30,

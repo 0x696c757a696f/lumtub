@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 va undan yuqori, nusxasiz)",
   "DirectX 12 (copy-back)": "DirectX 12 (nusxa qaytariladi)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (eng aniq, GPU yuklamasi yuqori)",
-  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; interfeysning bir qismi PiliNara'dan moslashtirilgan, ijro mpv, media_kit va yt-dlp asosida ishlaydi",
+  "AGPLv3; playback is built on mpv, media_kit and yt-dlp": "AGPLv3; ijro mpv, media_kit va yt-dlp asosida ishlaydi",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU joriy dekodlash usuli VP9 AV1 video kengaytmalari",
   "GitHub source code": "GitHub manba kodi",
   "GitHub repository": "GitHub repozitoriysi",

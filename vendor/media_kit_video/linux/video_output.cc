@@ -15,6 +15,15 @@
 #include <gdk/gdkwayland.h>
 #include <gdk/gdkx.h>
 
+#include <fcntl.h>
+#include <unistd.h>
+#include <cstdio>
+#include <cstring>
+
+#ifndef EGL_DRM_RENDER_NODE_FILE_EXT
+#define EGL_DRM_RENDER_NODE_FILE_EXT 0x3377
+#endif
+
 struct _VideoOutput {
   GObject parent_instance;
   TextureGL* texture_gl;
@@ -33,9 +42,42 @@ struct _VideoOutput {
   gpointer texture_update_callback_context;
   FlTextureRegistrar* texture_registrar;
   gboolean destroyed;
+  /* Lumtub: the GPU's render node, handed to mpv for VA-API (see below). */
+  int drm_render_fd;
+  mpv_opengl_drm_params_v2 drm_params;
 };
 
 G_DEFINE_TYPE(VideoOutput, video_output, G_TYPE_OBJECT)
+
+// Lumtub: an LGPL libmpv has no X11 code, so on X11 VA-API cannot get its
+// display from the X11 connection. It opens the GPU's render node instead
+// (MPV_RENDER_PARAM_DRM_DISPLAY_V2): the node of the GPU behind the EGL
+// display when EGL can name it, else the first render node that opens.
+static int open_render_node(EGLDisplay display) {
+  auto query_display = (PFNEGLQUERYDISPLAYATTRIBEXTPROC)eglGetProcAddress("eglQueryDisplayAttribEXT");
+  auto query_device = (PFNEGLQUERYDEVICESTRINGEXTPROC)eglGetProcAddress("eglQueryDeviceStringEXT");
+  if (display != EGL_NO_DISPLAY && query_display != NULL && query_device != NULL) {
+    EGLAttrib device = 0;
+    if (query_display(display, EGL_DEVICE_EXT, &device) && device != 0) {
+      const char* node = query_device((EGLDeviceEXT)device, EGL_DRM_RENDER_NODE_FILE_EXT);
+      if (node != NULL) {
+        int fd = open(node, O_RDWR | O_CLOEXEC);
+        if (fd >= 0) {
+          return fd;
+        }
+      }
+    }
+  }
+  for (int i = 128; i < 136; i++) {
+    char node[32];
+    snprintf(node, sizeof(node), "/dev/dri/renderD%d", i);
+    int fd = open(node, O_RDWR | O_CLOEXEC);
+    if (fd >= 0) {
+      return fd;
+    }
+  }
+  return -1;
+}
 
 static void video_output_dispose(GObject* object) {
   VideoOutput* self = VIDEO_OUTPUT(object);
@@ -64,6 +106,7 @@ static void video_output_dispose(GObject* object) {
       }
       mpv_render_context_free(self->render_context);
       self->render_context = NULL;
+  self->drm_render_fd = -1;
       
       // Restore Flutter's context
       if (flutter_context != EGL_NO_CONTEXT) {
@@ -78,6 +121,10 @@ static void video_output_dispose(GObject* object) {
     }
     
     g_object_unref(self->texture_gl);
+  }
+  if (self->drm_render_fd >= 0) {
+    close(self->drm_render_fd);
+    self->drm_render_fd = -1;
   }
   // S/W
   if (self->texture_sw) {
@@ -205,6 +252,7 @@ VideoOutput* video_output_new(FlTextureRegistrar* texture_registrar,
                   {MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, (void*)&gl_init_params},
                   {MPV_RENDER_PARAM_INVALID, (void*)0},
                   {MPV_RENDER_PARAM_INVALID, (void*)0},
+                  {MPV_RENDER_PARAM_INVALID, (void*)0},
               };
               
               // VAAPI acceleration requires passing X11/Wayland display
@@ -215,6 +263,14 @@ VideoOutput* video_output_new(FlTextureRegistrar* texture_registrar,
               } else if (GDK_IS_X11_DISPLAY(display)) {
                 params[2].type = MPV_RENDER_PARAM_X11_DISPLAY;
                 params[2].data = gdk_x11_display_get_xdisplay(display);
+                self->drm_render_fd = open_render_node(self->egl_display);
+                if (self->drm_render_fd >= 0) {
+                  memset(&self->drm_params, 0, sizeof(self->drm_params));
+                  self->drm_params.fd = -1;
+                  self->drm_params.render_fd = self->drm_render_fd;
+                  params[3].type = MPV_RENDER_PARAM_DRM_DISPLAY_V2;
+                  params[3].data = &self->drm_params;
+                }
               }
               
               if (mpv_render_context_create(&self->render_context, self->handle, params) == 0) {

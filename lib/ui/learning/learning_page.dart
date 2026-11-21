@@ -17,7 +17,7 @@ import '../../learning/vocabulary.dart';
 import '../../learning/word_voice.dart' show azureVoiceKey, azureVoiceRegion, googleVoiceKey;
 import '../../models.dart';
 import '../../save_file.dart';
-import '../../widgets/pilinara_settings_tiles.dart';
+import '../../widgets/settings_tiles.dart';
 import '../app_icons.dart';
 import '../common.dart' show openExternal;
 import '../pages/support_page.dart' show afdianPage, kofiPage;

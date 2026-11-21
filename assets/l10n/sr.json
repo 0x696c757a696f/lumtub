@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 и новији, без копирања)",
   "DirectX 12 (copy-back)": "DirectX 12 (са враћањем)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (најоштрије, велико оптерећење GPU-а)",
-  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; делови интерфејса прилагођени су из PiliNara, репродукција се заснива на mpv, media_kit и yt-dlp",
+  "AGPLv3; playback is built on mpv, media_kit and yt-dlp": "AGPLv3; репродукција се заснива на mpv, media_kit и yt-dlp",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU тренутни начин декодирања VP9 AV1 видео проширења",
   "GitHub source code": "GitHub изворни код",
   "GitHub repository": "GitHub репозиторијум",

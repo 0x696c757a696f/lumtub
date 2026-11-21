@@ -1,20 +1,9 @@
-// Desktop progress bar modeled on PiliNara's player (lib/plugin/pl_player/
-// widgets/bottom_control.dart and its _DesktopProgressHoverPainter): a thin
-// bar with buffered and played parts, a thumb, SponsorBlock segments, and
-// hover markers with the time under the pointer.
-//
-// PiliNara: https://github.com/Starfallan/PiliNara
-// Copyright (C) PiliNara contributors.
-// Adapted for Lumtub under the GNU General Public License, version 3 or
-// later. Changes: rewritten as one self-contained widget without GetX or
-// the audio_video_progress_bar package.
+import 'dart:math' as math;
 
-import 'dart:math';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-/// A segment of the bar drawn in [color], such as a sponsor segment.
+/// A coloured stretch of the bar, such as a SponsorBlock segment or the
+/// A-B loop.
 class ProgressSegment {
   const ProgressSegment(this.start, this.end, this.color);
   final Duration start;
@@ -22,13 +11,16 @@ class ProgressSegment {
   final Color color;
 }
 
-/// A picture shown above the pointer, such as the frame at that time.
+/// A picture of fixed [size] shown over the pointer; [builder] makes it for
+/// the time under the pointer.
 class ProgressPreview {
   const ProgressPreview(this.size, this.builder);
   final Size size;
   final Widget Function(Duration time) builder;
 }
 
+/// A seek bar for a mouse: a thin track that thickens under the pointer,
+/// with a time label (and a picture, when there is one) following it.
 class VideoProgressBar extends StatefulWidget {
   const VideoProgressBar({
     super.key,
@@ -50,21 +42,18 @@ class VideoProgressBar extends StatefulWidget {
   final Duration total;
   final ValueChanged<Duration> onSeek;
   final Color color;
-  /// Paints the played part instead of [color], as a skin may ask.
   final Gradient? playedGradient;
   final List<ProgressSegment> segments;
-  /// Where chapters begin; the bar shows a gap at each.
   final List<Duration> chapterStarts;
-  /// The hover label for a time; the time itself by default.
   final String Function(Duration time)? labelOf;
-  /// A frame shown above the time label while the pointer is on the bar.
   final ProgressPreview? preview;
-  /// Samples 0..1 over the whole bar, drawn as a faint curve above it.
+
+  /// Samples from 0 to 1 across the whole bar.
   final List<double>? heatmap;
 
-  static const barHeight = 3.5;
-  static const height = 20.0;
-  static const heatmapHeight = 16.0;
+  static const double barHeight = 3.5;
+  static const double height = 20.0;
+  static const double heatmapHeight = 16.0;
 
   @override
   State<VideoProgressBar> createState() => _VideoProgressBarState();
@@ -74,226 +63,235 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
   double? _hover;
   double? _drag;
 
-  double _fractionAt(double dx, double width) => width <= 0 ? 0 : (dx / width).clamp(0.0, 1.0);
+  double _fractionAt(double x, double width) => width <= 0 ? 0 : (x / width).clamp(0.0, 1.0);
 
   Duration _timeAt(double fraction) => widget.total * fraction;
 
-  void _seek(double fraction) {
-    if (widget.total > Duration.zero) widget.onSeek(_timeAt(fraction));
+  double _fractionOf(Duration time) {
+    final total = widget.total.inMicroseconds;
+    return total <= 0 ? 0 : (time.inMicroseconds / total).clamp(0.0, 1.0);
   }
 
-  double _fractionOf(Duration time) => widget.total > Duration.zero ? (time.inMilliseconds / widget.total.inMilliseconds).clamp(0.0, 1.0) : 0.0;
+  String _clock(Duration time) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    final hours = time.inHours;
+    final minutes = two(time.inMinutes.remainder(60));
+    final seconds = two(time.inSeconds.remainder(60));
+    return hours > 0 ? '$hours:$minutes:$seconds' : '$minutes:$seconds';
+  }
+
+  void _seekTo(double fraction) {
+    if (widget.total <= Duration.zero) return;
+    widget.onSeek(_timeAt(fraction));
+  }
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final played = _drag ?? _fractionOf(widget.position);
-        final pointer = _drag ?? _hover;
-        return SizedBox(
-          height: VideoProgressBar.height,
-          child: Stack(clipBehavior: Clip.none, children: [
-            if (widget.heatmap case final heat? when heat.length > 1)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: VideoProgressBar.height / 2 + VideoProgressBar.barHeight / 2 + 1,
-                height: VideoProgressBar.heatmapHeight,
-                child: IgnorePointer(child: CustomPaint(painter: _HeatmapPainter(heat, widget.color))),
-              ),
-            Positioned.fill(
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                onHover: (event) => setState(() => _hover = _fractionAt(event.localPosition.dx, width)),
-                onExit: (_) => setState(() => _hover = null),
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTapUp: (details) => _seek(_fractionAt(details.localPosition.dx, width)),
-                  onHorizontalDragStart: (details) => setState(() => _drag = _fractionAt(details.localPosition.dx, width)),
-                  onHorizontalDragUpdate: (details) => setState(() => _drag = _fractionAt(details.localPosition.dx, width)),
-                  onHorizontalDragEnd: (_) {
-                    final drag = _drag;
-                    setState(() => _drag = null);
-                    if (drag != null) _seek(drag);
-                  },
-                  onHorizontalDragCancel: () => setState(() => _drag = null),
-                  child: CustomPaint(
-                    painter: _BarPainter(
-                      played: played,
-                      buffered: _fractionOf(widget.buffered),
-                      segments: [for (final s in widget.segments) (_fractionOf(s.start), _fractionOf(s.end), s.color)],
-                      chapters: [for (final start in widget.chapterStarts) if (start > Duration.zero) _fractionOf(start)],
-                      pointer: pointer,
-                      color: widget.color,
-                      gradient: widget.playedGradient,
-                      active: pointer != null,
-                    ),
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      final pointer = _drag ?? _hover;
+      final dragging = _drag != null;
+      final heat = widget.heatmap;
+      final hasHeat = heat != null && heat.length > 1;
+      final played = _drag ?? _fractionOf(widget.position);
+      return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onHover: (event) => setState(() => _hover = _fractionAt(event.localPosition.dx, width)),
+        onExit: (_) => setState(() => _hover = null),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (details) => _seekTo(_fractionAt(details.localPosition.dx, width)),
+          onHorizontalDragStart: (details) => setState(() => _drag = _fractionAt(details.localPosition.dx, width)),
+          onHorizontalDragUpdate: (details) => setState(() => _drag = _fractionAt(details.localPosition.dx, width)),
+          onHorizontalDragEnd: (_) {
+            final last = _drag;
+            setState(() => _drag = null);
+            if (last != null) _seekTo(last);
+          },
+          onHorizontalDragCancel: () => setState(() => _drag = null),
+          child: SizedBox(
+            width: width,
+            height: VideoProgressBar.height,
+            child: Stack(clipBehavior: Clip.none, children: [
+              if (hasHeat)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  height: VideoProgressBar.heatmapHeight,
+                  bottom: VideoProgressBar.height / 2 + VideoProgressBar.barHeight / 2 + 1,
+                  child: IgnorePointer(child: CustomPaint(painter: _HeatPainter(heat, widget.color))),
+                ),
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _TrackPainter(
+                    color: widget.color,
+                    gradient: widget.playedGradient,
+                    played: played,
+                    buffered: _fractionOf(widget.buffered),
+                    segments: [for (final s in widget.segments) (_fractionOf(s.start), _fractionOf(s.end), s.color)],
+                    chapters: [for (final c in widget.chapterStarts) if (c > Duration.zero) _fractionOf(c)],
+                    active: pointer != null,
+                    pointer: pointer,
                   ),
                 ),
               ),
-            ),
-            if (pointer != null && widget.total > Duration.zero) _label(pointer, width),
-          ]),
-        );
-      });
+              if (pointer != null && widget.total > Duration.zero) _label(width, pointer, hasHeat, dragging),
+            ]),
+          ),
+        ),
+      );
+    });
+  }
 
-  Widget _label(double pointer, double width) {
-    final text = (widget.labelOf ?? _clock)(_timeAt(pointer));
+  Widget _label(double width, double pointer, bool hasHeat, bool dragging) {
+    final time = _timeAt(pointer);
+    final text = widget.labelOf?.call(time) ?? _clock(time);
     const style = TextStyle(color: Colors.white, fontSize: 12);
     final painter = TextPainter(text: TextSpan(text: text, style: style), textDirection: TextDirection.ltr, maxLines: 1)..layout(maxWidth: 320);
     final labelWidth = painter.width + 16;
     painter.dispose();
     final preview = widget.preview;
-    final boxWidth = max(labelWidth, preview?.size.width ?? 0);
-    final heat = widget.heatmap != null ? VideoProgressBar.heatmapHeight : 0.0;
+    final columnWidth = math.max(labelWidth, preview?.size.width ?? 0);
+    final left = (pointer * width - columnWidth / 2).clamp(0.0, math.max(0.0, width - columnWidth)).toDouble();
     return Positioned(
-      left: (pointer * width - boxWidth / 2).clamp(0.0, width - boxWidth < 0 ? 0.0 : width - boxWidth),
-      bottom: VideoProgressBar.height + 4 + heat,
+      left: left,
+      width: columnWidth,
+      bottom: VideoProgressBar.height + 4 + (hasHeat ? 16 : 0),
       child: IgnorePointer(
-        child: SizedBox(
-          width: boxWidth,
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            if (preview != null)
-              Container(
-                margin: const EdgeInsets.only(bottom: 4),
-                decoration: BoxDecoration(border: Border.all(color: Colors.white70), borderRadius: BorderRadius.circular(4)),
-                child: ClipRRect(borderRadius: BorderRadius.circular(3), child: SizedBox.fromSize(size: preview.size, child: preview.builder(_timeAt(pointer)))),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+            if (preview != null) ...[
+              DecoratedBox(
+                decoration: BoxDecoration(border: Border.all(color: Colors.white.withValues(alpha: 0.7)), borderRadius: BorderRadius.circular(4)),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: SizedBox.fromSize(size: preview.size, child: preview.builder(time)),
+                ),
               ),
+              const SizedBox(height: 4),
+            ],
             Container(
               width: labelWidth,
-              alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(vertical: 3),
               decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(4)),
-              child: Text(text, style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: style),
             ),
           ]),
-        ),
       ),
     );
   }
-
-  static String _clock(Duration d) {
-    String two(int n) => n.toString().padLeft(2, '0');
-    final h = d.inHours;
-    return h > 0 ? '$h:${two(d.inMinutes % 60)}:${two(d.inSeconds % 60)}' : '${two(d.inMinutes)}:${two(d.inSeconds % 60)}';
-  }
 }
 
-class _BarPainter extends CustomPainter {
-  const _BarPainter({required this.played, required this.buffered, required this.segments, this.chapters = const [], required this.pointer, required this.color, this.gradient, required this.active});
+class _TrackPainter extends CustomPainter {
+  _TrackPainter({
+    required this.color,
+    required this.gradient,
+    required this.played,
+    required this.buffered,
+    required this.segments,
+    required this.chapters,
+    required this.active,
+    required this.pointer,
+  });
 
+  final Color color;
+  final Gradient? gradient;
   final double played;
   final double buffered;
   final List<(double, double, Color)> segments;
   final List<double> chapters;
-  final double? pointer;
-  final Color color;
   final bool active;
-  final Gradient? gradient;
+  final double? pointer;
+
+  static const _dark = Color(0xCC000000);
 
   @override
   void paint(Canvas canvas, Size size) {
-    const cap = VideoProgressBar.barHeight / 2;
-    final barHeight = active ? VideoProgressBar.barHeight + 1.5 : VideoProgressBar.barHeight;
-    final centerY = size.height / 2;
-    final top = centerY - barHeight / 2;
-    void bar(double from, double to, Color color, {Shader? shader}) {
+    final thickness = active ? VideoProgressBar.barHeight + 1.5 : VideoProgressBar.barHeight;
+    final cy = size.height / 2;
+    final track = Rect.fromLTWH(0, cy - thickness / 2, size.width, thickness);
+    final w = size.width;
+
+    void fill(double from, double to, Paint paint) {
       if (to <= from) return;
-      canvas.drawRRect(
-        RRect.fromLTRBR(from * size.width, top, to * size.width, top + barHeight, const Radius.circular(cap)),
-        Paint()
-          ..color = color
-          ..shader = shader,
-      );
+      canvas.drawRect(Rect.fromLTRB(from * w, track.top, to * w, track.bottom), paint);
     }
 
-    bar(0, 1, const Color(0x33FFFFFF));
-    bar(0, buffered, color.withValues(alpha: 0.4));
-    bar(0, played, color, shader: gradient?.createShader(Offset(0, top) & Size(size.width, barHeight)));
-    // Segments (SponsorBlock, the A-B loop) lie over the played part too, so
-    // a skin's colours never hide them: darker where already played, with
-    // dark ends that part them from a played colour close to theirs.
-    final divider = Paint()..color = const Color(0xCC000000);
+    canvas.save();
+    canvas.clipRRect(RRect.fromRectAndRadius(track, Radius.circular(thickness / 2)));
+    fill(0, 1, Paint()..color = const Color(0x33FFFFFF));
+    fill(0, buffered, Paint()..color = color.withValues(alpha: 0.4));
+    final playedPaint = Paint()..color = color;
+    if (gradient != null) playedPaint.shader = gradient!.createShader(track);
+    fill(0, played, playedPaint);
+
     for (final (start, end, segmentColor) in segments) {
       if (end <= start) continue;
+      final shade = Color.alphaBlend(const Color(0x59000000), segmentColor);
       final split = played.clamp(start, end);
-      if (split > start) {
-        canvas.drawRect(Rect.fromLTRB(start * size.width, top, split * size.width, top + barHeight), Paint()..color = Color.alphaBlend(const Color(0x59000000), segmentColor));
-      }
-      if (end > split) {
-        canvas.drawRect(Rect.fromLTRB(split * size.width, top, end * size.width, top + barHeight), Paint()..color = segmentColor);
-      }
-      for (final x in [start * size.width, end * size.width]) {
-        canvas.drawRect(Rect.fromLTRB(x - 0.75, top, x + 0.75, top + barHeight), divider);
+      fill(start, split, Paint()..color = shade);
+      fill(split, end, Paint()..color = segmentColor);
+      for (final edge in [start, end]) {
+        canvas.drawRect(Rect.fromLTWH(edge * w - 0.75, track.top, 1.5, thickness), Paint()..color = _dark);
       }
     }
-    // Chapter gaps across the bar, as on YouTube.
-    for (final chapter in chapters) {
-      final x = chapter * size.width;
-      canvas.drawRect(Rect.fromLTRB(x - 1, top - 0.5, x + 1, top + barHeight + 0.5), divider);
-    }
-    canvas.drawCircle(Offset(played * size.width, centerY), active ? 7 : 5.5, Paint()..color = color);
+    canvas.restore();
 
-    // PiliNara's hover marker: two small triangles pointing at the bar.
-    final value = pointer;
-    if (value == null) return;
-    final dx = value * size.width;
-    const half = 4.5;
-    const height = 5.0;
-    const gap = 4.0;
-    final paint = Paint()..color = color;
-    canvas
-      ..drawPath(
-        Path()
-          ..moveTo(dx - half, centerY - gap - height)
-          ..lineTo(dx + half, centerY - gap - height)
-          ..lineTo(dx, centerY - gap)
-          ..close(),
-        paint,
-      )
-      ..drawPath(
-        Path()
-          ..moveTo(dx - half, centerY + gap + height)
-          ..lineTo(dx + half, centerY + gap + height)
-          ..lineTo(dx, centerY + gap)
-          ..close(),
-        paint,
-      );
+    for (final chapter in chapters) {
+      canvas.drawRect(Rect.fromLTWH(chapter * w - 1, track.top - 0.5, 2, thickness + 1), Paint()..color = _dark);
+    }
+
+    canvas.drawCircle(Offset(played * w, cy), active ? 7 : 5.5, Paint()..color = color);
+
+    final x = pointer == null ? null : pointer! * w;
+    if (x != null) {
+      final paint = Paint()..color = color;
+      canvas.drawPath(Path()..moveTo(x - 4.5, cy - 9)..lineTo(x + 4.5, cy - 9)..lineTo(x, cy - 4)..close(), paint);
+      canvas.drawPath(Path()..moveTo(x - 4.5, cy + 9)..lineTo(x + 4.5, cy + 9)..lineTo(x, cy + 4)..close(), paint);
+    }
   }
 
   @override
-  bool shouldRepaint(_BarPainter old) =>
-      old.played != played || old.buffered != buffered || old.pointer != pointer || old.color != color || old.gradient != gradient || old.active != active || !listEquals(old.segments, segments) || !listEquals(old.chapters, chapters);
+  bool shouldRepaint(_TrackPainter old) {
+    if (old.color != color || old.gradient != gradient || old.played != played || old.buffered != buffered || old.active != active || old.pointer != pointer) return true;
+    if (old.segments.length != segments.length || old.chapters.length != chapters.length) return true;
+    for (var i = 0; i < segments.length; i++) {
+      if (old.segments[i] != segments[i]) return true;
+    }
+    for (var i = 0; i < chapters.length; i++) {
+      if (old.chapters[i] != chapters[i]) return true;
+    }
+    return false;
+  }
 }
 
-/// The "most replayed" curve: a smooth filled area, faint enough to leave
-/// the bar readable.
-class _HeatmapPainter extends CustomPainter {
-  const _HeatmapPainter(this.values, this.color);
+class _HeatPainter extends CustomPainter {
+  _HeatPainter(this.values, this.color);
   final List<double> values;
   final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
     final n = values.length;
-    final peak = values.reduce(max);
+    final peak = values.fold<double>(0, math.max);
     if (n < 2 || peak <= 0) return;
-    Offset point(int i) => Offset(i / (n - 1) * size.width, size.height - (values[i] / peak).clamp(0.0, 1.0) * (size.height - 1) - 1);
-    final line = Path()..moveTo(0, point(0).dy);
-    for (var i = 1; i < n; i++) {
-      final a = point(i - 1), b = point(i);
-      final mid = Offset((a.dx + b.dx) / 2, (a.dy + b.dy) / 2);
-      line.quadraticBezierTo(a.dx, a.dy, mid.dx, mid.dy);
+    final bottom = size.height;
+    final points = [
+      for (var i = 0; i < n; i++) Offset(i / (n - 1) * size.width, bottom - (values[i] / peak).clamp(0.0, 1.0) * (size.height - 1) - 1),
+    ];
+    final line = Path()..moveTo(points.first.dx, points.first.dy);
+    for (var i = 1; i < n - 1; i++) {
+      final mid = Offset((points[i].dx + points[i + 1].dx) / 2, (points[i].dy + points[i + 1].dy) / 2);
+      line.quadraticBezierTo(points[i].dx, points[i].dy, mid.dx, mid.dy);
     }
-    line.lineTo(size.width, point(n - 1).dy);
+    line.lineTo(points.last.dx, points.last.dy);
     final area = Path.from(line)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
+      ..lineTo(points.last.dx, bottom)
+      ..lineTo(points.first.dx, bottom)
       ..close();
-    canvas
-      ..drawPath(area, Paint()..color = Colors.white.withValues(alpha: 0.14))
-      ..drawPath(line, Paint()..color = Colors.white.withValues(alpha: 0.3)..style = PaintingStyle.stroke..strokeWidth = 1);
+    canvas.drawPath(area, Paint()..color = Colors.white.withValues(alpha: 0.14));
+    canvas.drawPath(line, Paint()..color = Colors.white.withValues(alpha: 0.3)..style = PaintingStyle.stroke..strokeWidth = 1);
   }
 
   @override
-  bool shouldRepaint(_HeatmapPainter old) => !identical(old.values, values) || old.color != color;
+  bool shouldRepaint(_HeatPainter old) => !identical(old.values, values) || old.color != color;
 }

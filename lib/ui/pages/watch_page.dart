@@ -62,7 +62,7 @@ import '../live_chat_input.dart';
 import '../live_chat_list.dart';
 
 /// Player, video details, the up-next list and the comments. On wide
-/// windows the list and the comments share a side panel, as PiliNara's
+/// windows the list and the comments share a side panel as
 /// 简介/评论 tabs; on narrow ones everything is stacked.
 class WatchPage extends StatefulWidget {
   const WatchPage({super.key, required this.controller});
@@ -772,7 +772,7 @@ class _Player extends StatelessWidget {
           borderRadius: height == null ? context.cardRadius : BorderRadius.zero,
           child: ColoredBox(
             color: Colors.black,
-            // As in PiliNara: the video and its controls repaint apart, so
+            // The video and its controls repaint apart, so
             // pointer movement over the controls does not redraw the video
             // texture, which flashes black on some Windows GPUs.
             child: Stack(fit: StackFit.expand, children: [
@@ -954,8 +954,8 @@ class _DescriptionState extends State<_Description> {
                   duration: Motion.of(Ease.fade),
                   curve: Ease.out,
                   alignment: Alignment.topCenter,
-                  // Times seek the video and links open in the browser, as in
-                  // PiliNara; the expanded text can still be selected.
+                  // Times seek the video and links open in the browser; the
+                  // expanded text can still be selected.
                   child: _expanded
                       ? SelectionArea(child: LinkedText(description, style: const TextStyle(height: 1.5), onTime: _seek, onLink: openExternal))
                       : LinkedText(description, maxLines: 3, style: const TextStyle(height: 1.5), onTime: _seek, onLink: openExternal),

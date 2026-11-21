@@ -7,18 +7,28 @@ void main() {
   const base = LibmpvBuild('20261018', LibmpvBuild.baseVariant);
   const v3 = LibmpvBuild('20261018', LibmpvBuild.v3Variant);
 
-  test('picks the archive for the CPU', () {
+  test('picks the LGPL archive for the CPU', () {
     const names = [
       'mpv-x86_64-v3-20261018-git-abc1234.7z',
       'mpv-dev-aarch64-20261018-git-abc1234.7z',
       'mpv-dev-x86_64-v3-20261018-git-abc1234.7z',
       'mpv-dev-x86_64-20261018-git-abc1234.7z',
       'mpv-dev-i686-20261018-git-abc1234.7z',
+      'mpv-dev-lgpl-aarch64-20261018-git-abc1234.7z',
+      'mpv-dev-lgpl-x86_64-v3-20261018-git-abc1234.7z',
+      'mpv-dev-lgpl-x86_64-20261018-git-abc1234.7z',
     ];
-    expect(libmpvAssetName(names, LibmpvBuild.v3Variant), 'mpv-dev-x86_64-v3-20261018-git-abc1234.7z');
-    expect(libmpvAssetName(names, LibmpvBuild.baseVariant), 'mpv-dev-x86_64-20261018-git-abc1234.7z');
-    expect(libmpvAssetName(names, LibmpvBuild.arm64Variant), 'mpv-dev-aarch64-20261018-git-abc1234.7z');
-    expect(libmpvAssetName(const ['mpv-dev-x86_64-v3-20261018-git-abc1234.7z'], LibmpvBuild.baseVariant), isNull);
+    expect(libmpvAssetName(names, LibmpvBuild.v3Variant), 'mpv-dev-lgpl-x86_64-v3-20261018-git-abc1234.7z');
+    expect(libmpvAssetName(names, LibmpvBuild.baseVariant), 'mpv-dev-lgpl-x86_64-20261018-git-abc1234.7z');
+    expect(libmpvAssetName(names, LibmpvBuild.arm64Variant), 'mpv-dev-lgpl-aarch64-20261018-git-abc1234.7z');
+    expect(libmpvAssetName(const ['mpv-dev-lgpl-x86_64-v3-20261018-git-abc1234.7z'], LibmpvBuild.baseVariant), isNull);
+  });
+
+  test('never takes a GPL archive', () {
+    const names = ['mpv-dev-x86_64-20261018-git-abc1234.7z', 'mpv-dev-x86_64-v3-20261018-git-abc1234.7z', 'mpv-dev-aarch64-20261018-git-abc1234.7z'];
+    for (final variant in LibmpvBuild.variants) {
+      expect(libmpvAssetName(names, variant), isNull);
+    }
   });
 
   test('an ARM64 build only replaces or is replaced by an ARM64 build', () {

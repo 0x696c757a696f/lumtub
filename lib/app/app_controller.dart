@@ -1133,6 +1133,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   static const _videoChannel = MethodChannel('com.alexmercerind/media_kit_video');
 
   DateTime _lastMemoryLog = DateTime(0);
+  int? _upscaleLoggedIn;
 
   bool ensureNotPlaying(String message) {
     if (playing == null) return true;

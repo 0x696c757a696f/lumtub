@@ -122,6 +122,7 @@ extension PictureHealth on AppController {
     final platform = player?.platform;
     if (platform is! NativePlayer || _tracking == null || !(player?.state.playing ?? false)) return;
     await _logMemory(platform);
+    await _logUpscaling(platform);
     try {
       final drops = int.tryParse(await platform.getProperty('frame-drop-count')) ?? 0;
       final added = drops - _lastDrops;
@@ -282,6 +283,24 @@ extension PictureHealth on AppController {
     } catch (_) {
       // An older plugin without timings.
       return null;
+    }
+  }
+
+  /// Logs once a video whether 画质增强's shaders run: the passes libmpv
+  /// drew the last frame with, and the picture's size against the
+  /// player's, as the shaders only run on a picture scaled up.
+  Future<void> _logUpscaling(NativePlayer platform) async {
+    if (settings.upscaling == Upscaling.off || _upscaleLoggedIn == _playSerial) return;
+    _upscaleLoggedIn = _playSerial;
+    try {
+      final shaders = await platform.getProperty('glsl-shaders');
+      final passes = RegExp(r'user shader: ([^"]+)').allMatches(await platform.getProperty('vo-passes')).map((m) => m[1]!.trim()).toSet();
+      final size = '${await platform.getProperty('video-params/h')}p in a player ${await platform.getProperty('osd-height')} px tall';
+      logInfo(passes.isNotEmpty
+          ? 'Picture enhancement ${settings.upscaling.name}: ${passes.length} shader passes run ($size): ${passes.take(4).join(', ')}'
+          : 'Picture enhancement ${settings.upscaling.name} not running ($size; ${_lightRendering != null ? 'fast scaling for $_lightRendering' : shaders.isEmpty ? 'no shaders loaded' : 'the picture is not scaled up enough'})');
+    } catch (e) {
+      logDebug(() => 'Could not read the shader passes: $e');
     }
   }
 

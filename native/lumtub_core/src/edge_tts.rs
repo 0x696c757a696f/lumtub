@@ -103,7 +103,11 @@ impl From<Failure> for Attempt {
 }
 
 fn speak_once(text: &str, voice: &str) -> Result<Vec<u8>, Attempt> {
+    #[cfg(test)]
+    let started = std::time::Instant::now();
     let socket = open(HOST, 443)?;
+    #[cfg(test)]
+    eprintln!("  connected in {:?}", started.elapsed());
     socket.set_read_timeout(Some(TIMEOUT)).map_err(other)?;
     socket.set_write_timeout(Some(TIMEOUT)).map_err(other)?;
     socket.set_nodelay(true).map_err(other)?;
@@ -171,13 +175,19 @@ fn speak_once(text: &str, voice: &str) -> Result<Vec<u8>, Attempt> {
     );
     socket.send(Message::text(message)).map_err(other)?;
 
+    #[cfg(test)]
+    eprintln!("  asked in {:?}", started.elapsed());
     let mut audio = Vec::new();
     loop {
         match socket.read().map_err(other)? {
             Message::Text(text) => {
                 let head = text.split("\r\n\r\n").next().unwrap_or("");
                 #[cfg(test)]
-                eprintln!("  text: {}", head.replace("\r\n", " | "));
+                eprintln!(
+                    "  {:?} text: {}",
+                    started.elapsed(),
+                    head.replace("\r\n", " | ")
+                );
                 if head.lines().any(|line| line.trim() == "Path:turn.end") {
                     break;
                 }
@@ -555,7 +565,6 @@ mod tests {
                 }
             }
             // For listening to it elsewhere.
-            println!("  base64 {}", base64(&sound));
             assert!(sound.len() > 1000, "{voice}");
         }
     }

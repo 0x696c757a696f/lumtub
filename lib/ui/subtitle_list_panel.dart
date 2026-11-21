@@ -18,11 +18,13 @@ import 'common.dart';
 import 'motion.dart';
 import 'player_panel.dart';
 import 'app_icons.dart';
+import 'video_notes.dart';
 
 /// 字幕列表: every line of the main subtitle beside the video, with the
 /// second subtitle's words under it, the one being spoken marked and kept
-/// in view. A tap jumps there; the copy button
-/// or a right click copies the line.
+/// in view. A tap jumps there; the copy button copies the line, and a
+/// right click or long press offers to copy it, explain it with AI or keep
+/// it as a note. Words searched for are marked.
 Future<void> showSubtitleList(BuildContext context, AppController controller, Player player) => showPlayerPanel(
       context,
       title: tr('Subtitle list'),
@@ -169,6 +171,60 @@ class _SubtitleListState extends State<SubtitleList> {
     }
   }
 
+  /// Copy, AI 讲解 and 记笔记 for line [i], where the person right-clicked
+  /// or long-pressed it.
+  Future<void> _menu(List<PairedCue> cues, int i, Offset at) async {
+    final line = cues[i];
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    if (overlay == null) return;
+    final local = overlay.globalToLocal(at);
+    final picked = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(local.dx, local.dy, overlay.size.width - local.dx, overlay.size.height - local.dy),
+      items: [
+        PopupMenuItem(value: 'copy', child: ListTile(dense: true, leading: Icon(AppIcons.copy, size: 18), title: Text(tr('Copy')))),
+        if (widget.controller.canSummarize) PopupMenuItem(value: 'explain', child: ListTile(dense: true, leading: Icon(AppIcons.lightbulb, size: 18), title: Text(tr('Explain with AI')))),
+        PopupMenuItem(value: 'note', child: ListTile(dense: true, leading: Icon(AppIcons.notePencil, size: 18), title: Text(tr('Save as note')))),
+      ],
+    );
+    if (!mounted || picked == null) return;
+    final text = [line.cue.text, if (line.second != null) line.second!].join('\n');
+    switch (picked) {
+      case 'copy':
+        _copy(line);
+      case 'explain':
+        String words(PairedCue c) => c.cue.text;
+        await showLineExplanation(
+          context,
+          widget.controller,
+          text: line.cue.text,
+          at: line.cue.start,
+          before: [for (final c in cues.sublist(i > 3 ? i - 3 : 0, i)) words(c)],
+          after: [for (final c in cues.sublist(i + 1, i + 3 < cues.length ? i + 3 : cues.length)) words(c)],
+        );
+      case 'note':
+        await showNoteEditor(context, widget.controller, at: line.cue.start, quote: text);
+    }
+  }
+
+  /// [text] with each place it has [_query] marked.
+  Widget _marked(String text, TextStyle style, ColorScheme colors) {
+    final query = _query;
+    if (query.isEmpty) return Text(text, style: style);
+    final lower = text.toLowerCase();
+    // Lower case can change a string's length; marking then would be off.
+    if (lower.length != text.length) return Text(text, style: style);
+    final spans = <TextSpan>[];
+    var from = 0;
+    for (var at = lower.indexOf(query); at >= 0; at = lower.indexOf(query, at + query.length)) {
+      if (at > from) spans.add(TextSpan(text: text.substring(from, at)));
+      spans.add(TextSpan(text: text.substring(at, at + query.length), style: TextStyle(backgroundColor: colors.tertiaryContainer, color: colors.onTertiaryContainer)));
+      from = at + query.length;
+    }
+    if (from < text.length) spans.add(TextSpan(text: text.substring(from)));
+    return Text.rich(TextSpan(children: spans), style: style);
+  }
+
   void _copy(PairedCue line) {
     unawaited(Clipboard.setData(ClipboardData(text: [line.cue.text, if (line.second != null) line.second!].join('\n'))));
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(tr('Subtitle copied')), duration: const Duration(seconds: 1)));
@@ -249,7 +305,8 @@ class _SubtitleListState extends State<SubtitleList> {
                   final playing = i == _current;
                   return GestureDetector(
                     key: playing ? _currentKey : null,
-                    onSecondaryTap: () => _copy(line),
+                    onSecondaryTapUp: (details) => unawaited(_menu(cues, i, details.globalPosition)),
+                    onLongPressStart: (details) => unawaited(_menu(cues, i, details.globalPosition)),
                     child: Material(
                       color: playing ? colors.secondaryContainer : Colors.transparent,
                       child: InkWell(
@@ -271,15 +328,17 @@ class _SubtitleListState extends State<SubtitleList> {
                             ),
                             Expanded(
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                                Text(
+                                _marked(
                                   top,
-                                  style: TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
+                                  TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
+                                  colors,
                                 ),
                                 if (under != null) ...[
                                   const SizedBox(height: 2),
-                                  Text(
+                                  _marked(
                                     under,
-                                    style: TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
+                                    TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
+                                    colors,
                                   ),
                                 ],
                               ]),

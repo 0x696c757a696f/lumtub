@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import '../app_directories.dart';
 import '../app_log.dart';
 import '../background_json.dart';
+import '../blocked_sign_in.dart';
 import '../friendly_error.dart';
 import '../l10n/l10n.dart';
 import '../models.dart';
@@ -171,6 +172,7 @@ class DownloadManager extends ChangeNotifier {
     this.cover,
     this.recorder,
     this.saveSubtitles,
+    this.blockedSignIn,
   })  : _directory = defaultDirectory,
         _maxConcurrent = maxConcurrent.clamp(1, maxConcurrentLimit),
         _start = start ?? _backgroundStart;
@@ -195,6 +197,10 @@ class DownloadManager extends ChangeNotifier {
   final Future<List<int>?> Function(String videoId)? cover;
   /// Records live streams; without it (or [join]) they cannot be saved.
   final LiveRecorder? recorder;
+  /// The opt-in signed-in way past YouTube's bot check, shared with
+  /// playback: a download refused for a bot is tried once more with the
+  /// account, and right after a refusal it starts with it.
+  final BlockedSignIn? Function()? blockedSignIn;
   /// Writes the subtitles picked for [task] beside `stem` (the video's path
   /// without its extension) and returns them; for downloads whose
   /// selection names its subtitles.
@@ -492,7 +498,7 @@ class DownloadManager extends ChangeNotifier {
   }
 
   /// yt-dlp's arguments for [task].
-  List<String> arguments(DownloadTask task) {
+  List<String> arguments(DownloadTask task, {String? cookies}) {
     final o = options?.call() ?? const DownloadOptions();
     final selection = task.selection;
     final audio = selection?.audioOnly ?? task.quality.audioOnly;
@@ -512,6 +518,7 @@ class DownloadManager extends ChangeNotifier {
       if (o.cacheDirectory != null) ...['--cache-dir', o.cacheDirectory!],
       if (o.deno != null) ...['--js-runtimes', 'deno:${o.deno!}'],
       if (o.proxy != null) ...['--proxy', o.proxy!],
+      if (cookies != null) ...['--cookies', cookies],
       '--paths', task.directory,
       '-o', joins ? _joinedPart : '%(title).80B [%(id)s].%(ext)s',
       // One sidecar and one set of subtitles for the joined file.
@@ -667,54 +674,88 @@ class DownloadManager extends ChangeNotifier {
     onFinished?.call(task);
   }
 
+  /// What yt-dlp says when YouTube takes the address for a bot.
+  static final _botCheck = RegExp(r"not a bot|confirm you.?re not|Sign in to confirm", caseSensitive: false);
+
   Future<void> _run(DownloadTask task) async {
     final id = task.id;
     final printed = <String>[];
     final errors = <String>[];
     String? shown;
-    int exitCode;
-    try {
-      await Directory(task.directory).create(recursive: true);
-      final env = {
-        ...?environment?.call(),
-        // So that titles in the printed path survive the pipe on Windows.
-        'PYTHONUTF8': '1',
-        'PYTHONIOENCODING': 'utf-8',
-      };
-      final process = await _start(ytDlpPath, arguments(task), environment: env);
-      _processes[id] = process;
-      lowerPriority(process.pid);
-      // A pause that came while the process was starting.
-      if (task.status != DownloadStatus.downloading) _stop(id);
-      void line(String text) {
-        final progress = DownloadProgress.parse(text);
-        if (progress != null) {
-          _progress(task, progress);
-          return;
+    var exitCode = -1;
+    Future<int> attempt(String? cookies) async {
+      printed.clear();
+      errors.clear();
+      try {
+        await Directory(task.directory).create(recursive: true);
+        final env = {
+          ...?environment?.call(),
+          // So that titles in the printed path survive the pipe on Windows.
+          'PYTHONUTF8': '1',
+          'PYTHONIOENCODING': 'utf-8',
+        };
+        final process = await _start(ytDlpPath, arguments(task, cookies: cookies), environment: env);
+        _processes[id] = process;
+        lowerPriority(process.pid);
+        // A pause that came while the process was starting.
+        if (task.status != DownloadStatus.downloading) _stop(id);
+        void line(String text) {
+          final progress = DownloadProgress.parse(text);
+          if (progress != null) {
+            _progress(task, progress);
+            return;
+          }
+          final path = DownloadProgress.parseFile(text);
+          if (path != null) {
+            printed.add(path);
+          } else if (text.trim().isNotEmpty) {
+            errors.add(text.trim());
+            if (errors.length > 20) errors.removeAt(0);
+          }
         }
-        final path = DownloadProgress.parseFile(text);
-        if (path != null) {
-          printed.add(path);
-        } else if (text.trim().isNotEmpty) {
-          errors.add(text.trim());
-          if (errors.length > 20) errors.removeAt(0);
-        }
-      }
 
-      final decoder = const Utf8Decoder(allowMalformed: true);
-      final done = [
-        process.stdout.transform(decoder).transform(const LineSplitter()).forEach(line),
-        process.stderr.transform(decoder).transform(const LineSplitter()).forEach(line),
-      ];
-      exitCode = await process.exitCode;
-      await Future.wait(done);
-    } catch (e) {
-      if (e is FileSystemException) {
-        shown = friendlyFileError(e);
-      } else {
-        errors.add('$e');
+        final decoder = const Utf8Decoder(allowMalformed: true);
+        final done = [
+          process.stdout.transform(decoder).transform(const LineSplitter()).forEach(line),
+          process.stderr.transform(decoder).transform(const LineSplitter()).forEach(line),
+        ];
+        final code = await process.exitCode;
+        await Future.wait(done);
+        return code;
+      } catch (e) {
+        if (e is FileSystemException) {
+          shown = friendlyFileError(e);
+        } else {
+          errors.add('$e');
+        }
+        return -1;
       }
-      exitCode = -1;
+    }
+
+    bool refused() => errors.any(_botCheck.hasMatch);
+    final signIn = blockedSignIn?.call();
+    var signed = false;
+    var triedSigned = false;
+    if (signIn != null && signIn.recentlyBlocked && signIn.usable != null && signIn.take()) {
+      logInfo('Download $id starts signed in: this network was taken for a bot a moment ago');
+      signed = triedSigned = true;
+      exitCode = await signIn.withCookies(id, attempt);
+      if (exitCode != 0 && !_stopping.contains(id) && !refused()) {
+        logInfo('Download $id failed signed in; trying without the account');
+        signed = false;
+        exitCode = await attempt(null);
+      }
+    } else {
+      exitCode = await attempt(null);
+    }
+    if (exitCode != 0 && !signed && !_stopping.contains(id) && refused() && signIn != null) {
+      signIn.noteBlocked();
+      if (!triedSigned && signIn.usable != null && signIn.take()) {
+        logInfo('Download $id was taken for a bot; trying again signed in');
+        exitCode = await signIn.withCookies(id, attempt);
+      }
+    } else if (exitCode == 0 && !signed) {
+      signIn?.noteAnswered();
     }
     _processes.remove(id);
     if (_stopping.remove(id)) {

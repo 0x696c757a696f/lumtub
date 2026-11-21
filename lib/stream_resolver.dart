@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'app_log.dart';
 import 'background_json.dart';
+import 'blocked_sign_in.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 
@@ -188,13 +189,17 @@ class StreamResolver {
   bool Function()? bothFamilies;
 
   /// Whether a video taken for a bot is asked once more with the cookie
-  /// sign-in (设置 › 账号, off by default). Only a video played in the
-  /// foreground, at most [signedRetriesPerHour] times an hour.
+  /// sign-in (设置 › 网络, off by default). Only a video played in the
+  /// foreground, at most [BlockedSignIn.perHour] times an hour; for
+  /// [BlockedSignIn.remember] after a refusal the first request already
+  /// goes signed in.
   bool Function()? signInWhenBlocked;
-  static const signedRetriesPerHour = 20;
-  final _signedRetries = <DateTime>[];
 
-  /// Told when a video plays only because it was asked signed in.
+  /// The signed-in way past a bot check, shared with downloads.
+  late final blockedSignIn = BlockedSignIn(cookies: () => members?.call(), enabled: () => signInWhenBlocked?.call() ?? false, directory: () => infoDirectory);
+
+  /// Told when a video plays only because it was asked signed in, once
+  /// each time this network is refused.
   void Function(String videoId)? onSignedInPlay;
 
   /// What yt-dlp says when YouTube takes the address for a bot.
@@ -434,11 +439,13 @@ class StreamResolver {
           _tvNeededUntil = DateTime.now().add(tvNeededFor);
           logInfo("visionOS was taken for a bot; yt-dlp asks its default clients for ${tvNeededFor.inMinutes} minutes");
         }
+        if (answer.contains('"LOGIN_REQUIRED"') && botCheck.hasMatch(answer)) blockedSignIn.noteBlocked();
         logInfo('Quick start of $videoId: left to yt-dlp (${VideoFactsLookup.playerWhy(answer)})');
         return null;
       }
       final info = jsonDecode(text) as Map<String, dynamic>;
       logInfo('Quick start of $videoId in ${watch.elapsedMilliseconds} ms');
+      blockedSignIn.noteAnswered();
       unawaited(checkVisionCut(info));
       return ResolvedVideo(info, _infoFile(videoId), format, text: text);
     } catch (e) {
@@ -507,7 +514,8 @@ class StreamResolver {
 
   void _noteSuccess(String videoId) {
     _failedAt.remove(videoId);
-    if (_refusedUntil != null) {
+    // A video asked signed in got through, not this address.
+    if (_refusedUntil != null && !blockedSignIn.recentlyBlocked) {
       _refusedUntil = null;
       logInfo('YouTube answers this address again; prefetching resumes');
     }
@@ -642,7 +650,21 @@ class StreamResolver {
     Future<ProcessResult> run({bool signed = false}) =>
         signed ? _signedIn(cookies!, videoId, format, formatSort: formatSort, live: live) : _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null, live: live);
     var signed = membersOnly && signedIn;
+    // Refused for a bot a moment ago: asking without the account again
+    // would only be refused too, after seconds.
+    var signedFirst = false;
+    if (!signed && !background && blockedSignIn.recentlyBlocked && blockedSignIn.usable != null && blockedSignIn.take()) {
+      logInfo('$videoId is asked signed in from the start: this network was taken for a bot a moment ago');
+      signed = signedFirst = true;
+    }
     var result = await run(signed: signed);
+    if (signedFirst && _failed(result) && !botCheck.hasMatch(result.stderr.toString())) {
+      // The account did not help this one (cookies no longer valid, say):
+      // asked as before.
+      logInfo('$videoId failed signed in (${_lastLine(result)}); asking without the account');
+      signed = false;
+      result = await run();
+    }
     if (_failed(result) && _transient.hasMatch(result.stderr.toString())) {
       logWarn('Resolving $videoId hit a network error, retrying once');
       await Future<void>.delayed(const Duration(seconds: 2));
@@ -675,18 +697,15 @@ class StreamResolver {
       signed = true;
       result = await run(signed: true);
     }
-    if (_failed(result) && !signed && !background && signedIn && botCheck.hasMatch(result.stderr.toString()) && (signInWhenBlocked?.call() ?? false)) {
-      final now = DateTime.now();
-      _signedRetries.removeWhere((at) => now.difference(at) > const Duration(hours: 1));
-      if (_signedRetries.length < signedRetriesPerHour) {
-        _signedRetries.add(now);
-        logInfo('$videoId was taken for a bot; asking again signed in (${_signedRetries.length} this hour)');
-        signed = true;
-        result = await run(signed: true);
-        if (!_failed(result)) onSignedInPlay?.call(videoId);
-      } else {
-        logWarn('$videoId was taken for a bot; signed-in retries are used up for this hour');
-      }
+    if (_failed(result) && !signed && botCheck.hasMatch(result.stderr.toString())) blockedSignIn.noteBlocked();
+    if (!_failed(result) && !signed) blockedSignIn.noteAnswered();
+    if (_failed(result) && !signed && !signedFirst && !background && signedIn && botCheck.hasMatch(result.stderr.toString()) && blockedSignIn.usable != null && blockedSignIn.take()) {
+      logInfo('$videoId was taken for a bot; asking again signed in (${blockedSignIn.usedThisHour} this hour)');
+      signed = true;
+      result = await run(signed: true);
+      if (!_failed(result) && blockedSignIn.tell()) onSignedInPlay?.call(videoId);
+    } else if (signedFirst && signed && !_failed(result) && blockedSignIn.tell()) {
+      onSignedInPlay?.call(videoId);
     }
     final output = result.stdout.toString().trim();
     final err = result.stderr.toString().trim();
@@ -724,6 +743,8 @@ class StreamResolver {
       cookies.wipeCookies(path);
     }
   }
+
+  static String _lastLine(ProcessResult result) => const LineSplitter().convert(result.stderr.toString().trim()).lastOrNull ?? 'exit ${result.exitCode}';
 
   bool _failed(ProcessResult result) => result.exitCode != 0 || result.stdout.toString().trim().isEmpty;
 

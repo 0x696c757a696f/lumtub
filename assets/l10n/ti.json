@@ -3595,7 +3595,7 @@
   "Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.": "ገለ ስልክታት ባትሪ ንምቑጣብ ኣብ ድሕረ ባይታ ዝጻወቱ ኣፕሊኬሽናት ይዓጽዉ። ምጽዋት ከይቋረጽ Lumtub ብዘይ ደረት ባትሪ ክሰርሕ ፍቐድሉ።",
   "Allow": "ፍቐድ",
   "Ask again with my account when blocked": "ምስ ተኸልከለ ብመለለዪ ዳግማይ ሕተት",
-  "When YouTube takes this network for a bot, the video you open is asked for once more with the browser sign-in's account (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too": "YouTube እዚ ኔትወርክ ቦት ገይሩ ምስ ዝሓስብ፣ እትኸፍቶ ቪዲዮ ብመለለዪ እቶት ብብሮውዘር ሓንሳብ ዳግማይ ይሕተት (ብሰዓት እቲ ዝለዓለ 20 ግዜ)። ሽዑ YouTube እቲ መለለዪ ከም ዝረኣዮ የለልዮ፣ ካብ ሓባራዊ ኣድራሻ ብተደጋጋሚ ዝጥቀም መለለዪ'ውን ምልክት ክግበረሉ ይኽእል",
+  "When YouTube takes this network for a bot, the video you open or download is asked for once more with the browser sign-in's account, and for the next 30 minutes videos are asked for with the account right away (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too": "YouTube እዚ ኔትወርክ ቦት ገይሩ ምስ ዝሓስብ፣ እትኸፍቶ ወይ እተውርዶ ቪዲዮ ብመለለዪ እቶት ብብሮውዘር ሓንሳብ ዳግማይ ይሕተት፣ ድሕሪኡ ድማ ን30 ደቓይቕ ቪዲዮታት ብቐጥታ ብመለለዪ ይሕተቱ (ብሰዓት እቲ ዝለዓለ 20 ግዜ)። ሽዑ YouTube እቲ መለለዪ ከም ዝረኣዮ የለልዮ፣ ካብ ሓባራዊ ኣድራሻ ብተደጋጋሚ ዝጥቀም መለለዪ'ውን ምልክት ክግበረሉ ይኽእል",
   "bot not a bot blocked sign in cookies account": "ቦት ቦት ኣይኮንኩን ተኸልኪሉ እቶ ኩኪታት ኣካውንት bot not a bot blocked sign in cookies account",
   "YouTube took this network for a bot, so this video was asked for with your account": "YouTube እዚ ኔትወርክ ቦት ገይሩ ሓሲቡ፣ ስለዚ እዚ ቪዲዮ ብኣካውንትካ ተሓቲቱ",
   "Browser sign-in, Google sign-in, syncing subscriptions and playlists": "እቶት ብብሮውዘር፣ እቶት Google፣ ምዝገባታትን ዝርዝር ምጽዋትን ምስምማዕ",

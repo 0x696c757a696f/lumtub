@@ -199,7 +199,7 @@ class _EnglishCard extends StatelessWidget {
                       ]),
                     ),
                   const SizedBox(height: 2),
-                  ..._meaningLines(theme, controller.learning.meanings, e.meanings, e.english),
+                  ..._meaningLines(theme, controller.learning.meanings, e.meanings, e.english, chineseNote: e.chineseReference ? tr('Reference translation, matched by spelling: may not fit this sense') : null),
                   if (e.namedForms.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
@@ -532,7 +532,7 @@ bool _sameHead(int entries, String headword, String title) => entries == 1 && he
 /// A word's meanings as [meanings] asks: the chosen language's, and below
 /// Chinese ones a few English ones in grey; the other language's when the
 /// word has none in the chosen one.
-List<Widget> _meaningLines(ThemeData theme, MeaningLanguage meanings, List<String> chinese, List<String> english) {
+List<Widget> _meaningLines(ThemeData theme, MeaningLanguage meanings, List<String> chinese, List<String> english, {String? chineseNote}) {
   final main = theme.textTheme.bodyMedium;
   final aside = theme.textTheme.bodySmall!.copyWith(color: theme.colorScheme.outline);
   final first = switch (meanings) {
@@ -541,6 +541,7 @@ List<Widget> _meaningLines(ThemeData theme, MeaningLanguage meanings, List<Strin
   };
   final more = meanings == MeaningLanguage.chineseFirst && identical(first, chinese) ? english.take(3) : const <String>[];
   return [
+    if (chineseNote != null && identical(first, chinese) && chinese.isNotEmpty) Text(chineseNote, style: aside),
     for (final line in first.take(8)) Text(line, style: main),
     for (final line in more) Text(line, style: aside),
   ];

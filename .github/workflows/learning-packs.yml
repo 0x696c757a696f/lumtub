@@ -98,6 +98,19 @@ jobs:
           curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/en-wiktionary.jsonl" https://kaikki.org/dictionary/English/kaikki.org-dictionary-English.jsonl
           # The Simple English Wiktionary (CC BY-SA 4.0), in plain words, first.
           curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/en-simple.jsonl.gz" https://kaikki.org/simplewiktionary/raw-wiktextract-data.jsonl.gz
+          # Chinese meanings and phonetics from open data with a clear
+          # licence, in place of ECDICT's: the English Wiktionary's Mandarin
+          # translations, the Chinese Wiktionary's English entries (both
+          # CC BY-SA 4.0), WikDict's en-zh (CC BY-SA) only as a marked
+          # reference; ranks from wordfreq (MIT, data CC BY-SA 4.0).
+          python3 -m pip install --quiet --disable-pip-version-check opencc-python-reimplemented==0.1.7 wordfreq==3.1.1
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" https://kaikki.org/zhwiktionary/raw-wiktextract-data.jsonl.gz
+          en_zh=("$RUNNER_TEMP/in/en.tsv" "$RUNNER_TEMP/in/en-wiktionary.jsonl" "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz")
+          if curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/en-zh.sqlite3" "https://download.wikdict.com/dictionaries/sqlite/2/en-zh.sqlite3"; then
+            en_zh+=("$RUNNER_TEMP/in/en-zh.sqlite3")
+          fi
+          # Not -I: it needs the opencc and wordfreq installed for this user.
+          python3 .github/learning/en_zh.py "${en_zh[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
           python3 -I .github/learning/en_english.py "$RUNNER_TEMP/in/en.tsv" "$RUNNER_TEMP/in/en-wiktionary.jsonl" "$RUNNER_TEMP/in/en-simple.jsonl.gz" | tee -a "$GITHUB_STEP_SUMMARY"
           rm -f "$RUNNER_TEMP/in/en-wiktionary.jsonl"
           # CEFR levels for learners outside China: CEFR-J Wordlist 1.5 (free for
@@ -170,7 +183,8 @@ jobs:
           # The Chinese Wiktionary (Chinese meanings) and the English one
           # (English meanings and forms), both CC BY-SA 4.0, as extracted by
           # kaikki.org; WikDict's Chinese translations fill gaps.
-          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" https://kaikki.org/zhwiktionary/raw-wiktextract-data.jsonl.gz
+          # Downloaded for the English dictionary already.
+          [ -s "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" ] || curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" https://kaikki.org/zhwiktionary/raw-wiktextract-data.jsonl.gz
           args=()
           for pair in ko=Korean es=Spanish fr=French de=German it=Italian ru=Russian; do
             code=${pair%%=*}; name=${pair#*=}
@@ -244,7 +258,7 @@ jobs:
           NOTES: >-
             Dictionaries for the learning pack, downloaded by Lumtub when a dictionary is turned on. Not an app release.
             CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/);
-            ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT), with English meanings from the Simple English and English Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org and from WordNet (WordNet license, https://wordnet.princeton.edu/license-and-commercial-use), and CEFR levels from The CEFR-J Wordlist Version 1.5, compiled by Yukio Tono, Tokyo University of Foreign Studies (http://www.cefr-j.org/), and the Octanove Vocabulary Profile C1/C2 1.0 by Octanove Labs (CC BY-SA 4.0), via https://github.com/openlanguageprofiles/olp-en-cefrj;
+            the English word list, word forms and exam tags of ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT), with Chinese meanings from the Mandarin translations of the English Wiktionary and from the Chinese Wiktionary (CC BY-SA 4.0, as extracted by kaikki.org) and, marked as reference translations, from WikDict (CC BY-SA), IPA from the English Wiktionary, frequency ranks from wordfreq by Robyn Speer (data CC BY-SA 4.0), English meanings from the Simple English and English Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org and from WordNet (WordNet license, https://wordnet.princeton.edu/license-and-commercial-use), and CEFR levels from The CEFR-J Wordlist Version 1.5, compiled by Yukio Tono, Tokyo University of Foreign Studies (http://www.cefr-j.org/), and the Octanove Vocabulary Profile C1/C2 1.0 by Octanove Labs (CC BY-SA 4.0), via https://github.com/openlanguageprofiles/olp-en-cefrj;
             JMdict by the Electronic Dictionary Research and Development Group under CC BY-SA 4.0 (https://www.edrdg.org/edrdg/licence.html), via jmdict-simplified, with Chinese meanings from the Chinese Wiktionary and WikDict;
             the Korean, Spanish, French, German, Italian and Russian dictionaries are made from the English and Chinese Wiktionaries (CC BY-SA 4.0, https://www.wiktionary.org/) as extracted by kaikki.org (https://kaikki.org/) and from WikDict (CC BY-SA, https://www.wikdict.com/);
             Korean meanings and levels come first from the Korean Basic Dictionary (한국어기초사전) of the National Institute of Korean Language (CC BY-SA 2.0 KR, https://krdict.korean.go.kr/), via its open data in https://github.com/basickorean/basickorean-vocab.

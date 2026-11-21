@@ -91,4 +91,15 @@ void main() {
     expect(again.levelOf('clause'), EnglishLevel.cet6.index);
     expect(again.levelOf('regimen'), EnglishLevel.toeflIelts.index);
   });
+
+  test('WikDict meanings are marked as a reference; a word without Chinese keeps its English', () {
+    final d = EnglishDictionary.parse('bank\tbaŋk\tn. 银行；岸\t\tcet4\t0\t900\tn. An institution\t\tw\n'
+        'zymurgy\t\tn. 酿造学\t\t\t0\t40000\t\t\td\n'
+        'quark\t\t\t\t\t0\t30000\tn. A particle\t\t\n');
+    expect(d.lookup('bank').single.chineseReference, isFalse);
+    expect(d.lookup('zymurgy').single.chineseReference, isTrue);
+    final quark = d.lookup('quark').single;
+    expect(quark.meanings, isEmpty);
+    expect(quark.english, ['n. A particle']);
+  });
 }

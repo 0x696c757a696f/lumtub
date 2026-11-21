@@ -3,11 +3,12 @@ import 'dart:convert';
 import 'lexicon.dart';
 import 'word_token.dart';
 
-/// The English pack: common English words with their phonetics and
-/// Chinese meanings, from ECDICT. One word a line:
+/// The English pack: common English words (ECDICT's list) with their
+/// phonetics and Chinese meanings from the Wiktionaries. One word a line:
 /// word, phonetic, meanings (`\n` between lines), forms, exam tags,
-/// Collins stars, frequency rank and English meanings (Wiktionary's, else
-/// WordNet's), between tabs, where forms are ECDICT's
+/// Collins stars (0 now), frequency rank, English meanings (Wiktionary's,
+/// else WordNet's), CEFR level and where the Chinese came from (`w`
+/// Wiktionary, `d` WikDict), between tabs, where forms are ECDICT's
 /// `p:ran/d:run/i:running/3:runs/0:run` and tags its `zk gk cet4`. Packs
 /// built before the last columns existed still read.
 class EnglishDictionary {
@@ -177,7 +178,7 @@ enum EnglishLevel {
 }
 
 class EnglishEntry {
-  const EnglishEntry({required this.word, required this.phonetic, required this.meanings, required this.forms, this.tags = const [], this.collins = 0, this.rank = 0, this.english = const [], this.cefr = ''});
+  const EnglishEntry({required this.word, required this.phonetic, required this.meanings, required this.forms, this.tags = const [], this.collins = 0, this.rank = 0, this.english = const [], this.cefr = '', this.chineseReference = false});
 
   final String word;
   final String phonetic;
@@ -203,6 +204,10 @@ class EnglishEntry {
 
   /// Collins stars, 0 to 5: how common the word is in Collins' corpus.
   final int collins;
+
+  /// Its Chinese meanings are WikDict's translations, matched by spelling
+  /// rather than by sense: shown as a reference only.
+  final bool chineseReference;
 
   /// Its frequency rank, 1 the most common; 0 unknown.
   final int rank;
@@ -239,6 +244,7 @@ class EnglishEntry {
       rank: int.tryParse(at(6)) ?? 0,
       english: at(7).split(r'\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
       cefr: at(8),
+      chineseReference: at(9) == 'd',
     );
   }
 

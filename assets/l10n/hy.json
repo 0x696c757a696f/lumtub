@@ -3654,5 +3654,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "Որոշ տողեր այլևս բուֆերում չեն, ուստի դրանց համար պահվում է միայն ձեր ձայնագրությունը։",
   "Languages I understand": "Լեզուներ, որոնք հասկանում եմ",
   "Subtitles don't turn on by themselves for videos in these languages": "Այս լեզուներով տեսանյութերի համար ենթագրերն ինքնաբերաբար չեն միանում",
-  "On for languages I don't understand": "Միացված այն լեզուների համար, որոնք չեմ հասկանում"
+  "On for languages I don't understand": "Միացված այն լեզուների համար, որոնք չեմ հասկանում",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "GitHub-ում աստղանիշը ոչինչ չարժե և օգնում է ավելի շատ մարդկանց գտնել Lumtub-ը։ Սա հարցվում է միայն մեկ անգամ։"
 }

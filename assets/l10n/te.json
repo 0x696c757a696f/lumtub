@@ -3653,5 +3653,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "కొన్ని వాక్యాలు ఇక బఫర్‌లో లేవు, కాబట్టి వాటికి మీ రికార్డింగ్ మాత్రమే సేవ్ అవుతుంది.",
   "Languages I understand": "నాకు అర్థమయ్యే భాషలు",
   "Subtitles don't turn on by themselves for videos in these languages": "ఈ భాషల వీడియోలకు ఉపశీర్షికలు వాటంతట అవే ఆన్ కావు",
-  "On for languages I don't understand": "నాకు అర్థం కాని భాషలకు ఆన్"
+  "On for languages I don't understand": "నాకు అర్థం కాని భాషలకు ఆన్",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "GitHubలో Star ఇవ్వడానికి ఏ ఖర్చూ లేదు, ఇది మరింత మంది Lumtubను కనుగొనడానికి సహాయపడుతుంది. ఇది ఈ ఒక్కసారి మాత్రమే అడుగుతుంది."
 }

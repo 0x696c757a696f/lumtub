@@ -3689,5 +3689,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "部分句子已经不在缓冲区，这些句子只保存你的录音。",
   "Languages I understand": "我听得懂的语言",
   "Subtitles don't turn on by themselves for videos in these languages": "这些语言的视频不会自动开字幕",
-  "On for languages I don't understand": "听不懂的语言时开启"
+  "On for languages I don't understand": "听不懂的语言时开启",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "在 GitHub 上点个 Star 不花一分钱，却能让更多人发现 Lumtub。这个提示只会出现这一次。"
 }

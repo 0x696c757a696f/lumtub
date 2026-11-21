@@ -3654,5 +3654,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "Ορισμένες φράσεις δεν υπάρχουν πια στην προσωρινή μνήμη, οπότε γι' αυτές αποθηκεύεται μόνο η ηχογράφησή σας.",
   "Languages I understand": "Γλώσσες που καταλαβαίνω",
   "Subtitles don't turn on by themselves for videos in these languages": "Οι υπότιτλοι δεν ενεργοποιούνται μόνοι τους για βίντεο σε αυτές τις γλώσσες",
-  "On for languages I don't understand": "Ενεργοί για γλώσσες που δεν καταλαβαίνω"
+  "On for languages I don't understand": "Ενεργοί για γλώσσες που δεν καταλαβαίνω",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "Ένα Star στο GitHub δεν κοστίζει τίποτα και βοηθά περισσότερους να βρουν το Lumtub. Αυτό ρωτιέται μόνο αυτή τη φορά."
 }

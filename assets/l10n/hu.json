@@ -3654,5 +3654,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "Néhány mondat már nincs a pufferben, ezért ezeknél csak a te felvételed mentődik.",
   "Languages I understand": "Nyelvek, amelyeket értek",
   "Subtitles don't turn on by themselves for videos in these languages": "Az ezeken a nyelveken szóló videóknál a felirat nem kapcsol be magától",
-  "On for languages I don't understand": "Bekapcsolva a nem értett nyelveknél"
+  "On for languages I don't understand": "Bekapcsolva a nem értett nyelveknél",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "Egy csillag a GitHubon semmibe sem kerül, és segít, hogy többen megtalálják a Lumtubot. Ezt csak most az egyszer kérdezzük."
 }

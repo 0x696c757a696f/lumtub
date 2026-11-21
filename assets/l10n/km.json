@@ -3653,5 +3653,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "ឃ្លាខ្លះលែងនៅក្នុងសតិបណ្ដោះអាសន្នហើយ ដូច្នេះមានតែការថតរបស់អ្នកប៉ុណ្ណោះដែលត្រូវរក្សាទុក។",
   "Languages I understand": "ភាសាដែលខ្ញុំយល់",
   "Subtitles don't turn on by themselves for videos in these languages": "អក្សររត់មិនបើកដោយខ្លួនឯងសម្រាប់វីដេអូជាភាសាទាំងនេះទេ",
-  "On for languages I don't understand": "បើកសម្រាប់ភាសាដែលខ្ញុំមិនយល់"
+  "On for languages I don't understand": "បើកសម្រាប់ភាសាដែលខ្ញុំមិនយល់",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "ការដាក់ផ្កាយនៅលើ GitHub មិនអស់ថ្លៃអ្វីទេ ហើយជួយឱ្យមនុស្សកាន់តែច្រើនរកឃើញ Lumtub។ សំណួរនេះសួរតែម្តងនេះប៉ុណ្ណោះ។"
 }

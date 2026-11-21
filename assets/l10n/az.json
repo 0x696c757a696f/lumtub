@@ -3653,5 +3653,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "Bəzi sətirlər artıq buferdə deyil, ona görə onlar üçün yalnız sizin səs yazınız saxlanılır.",
   "Languages I understand": "Başa düşdüyüm dillər",
   "Subtitles don't turn on by themselves for videos in these languages": "Bu dillərdəki videolar üçün altyazılar özü-özünə açılmır",
-  "On for languages I don't understand": "Başa düşmədiyim dillər üçün açıq"
+  "On for languages I don't understand": "Başa düşmədiyim dillər üçün açıq",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "GitHub-da Star vermək pulsuzdur və daha çox insanın Lumtub-u tapmasına kömək edir. Bu yalnız bir dəfə soruşulur."
 }

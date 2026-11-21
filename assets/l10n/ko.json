@@ -3659,5 +3659,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "일부 문장은 더 이상 버퍼에 없어 해당 문장은 내 녹음만 저장됩니다.",
   "Languages I understand": "내가 이해하는 언어",
   "Subtitles don't turn on by themselves for videos in these languages": "이 언어로 된 동영상에서는 자막이 자동으로 켜지지 않습니다",
-  "On for languages I don't understand": "이해하지 못하는 언어일 때 켜기"
+  "On for languages I don't understand": "이해하지 못하는 언어일 때 켜기",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "GitHub에서 Star를 누르는 데는 비용이 들지 않고, 더 많은 사람이 Lumtub을 알게 됩니다. 이 요청은 이번 한 번뿐입니다."
 }

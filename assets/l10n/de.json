@@ -3659,5 +3659,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "Einige Zeilen sind nicht mehr gepuffert, daher wird für sie nur deine Aufnahme gespeichert.",
   "Languages I understand": "Sprachen, die ich verstehe",
   "Subtitles don't turn on by themselves for videos in these languages": "Bei Videos in diesen Sprachen schalten sich Untertitel nicht von selbst ein",
-  "On for languages I don't understand": "Bei Sprachen an, die ich nicht verstehe"
+  "On for languages I don't understand": "Bei Sprachen an, die ich nicht verstehe",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "Ein Stern auf GitHub kostet nichts und hilft mehr Menschen, Lumtub zu finden. Diese Frage kommt nur dieses eine Mal."
 }

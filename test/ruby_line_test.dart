@@ -26,4 +26,21 @@ void main() {
     final squeezed = tester.getRect(find.text('さんぎょう').last);
     expect(squeezed.width, lessThanOrEqualTo(tester.getRect(find.text('産業').last).width + 10 + 0.5));
   });
+
+  testWidgets('words with a space between stand as far apart as the space', (tester) async {
+    const tokens = [
+      WordToken('But', null, isWord: true),
+      WordToken(' ', null, isWord: false),
+      WordToken('we', null, isWord: true),
+      WordToken(', ', null, isWord: false),
+      WordToken('also', null, isWord: true),
+    ];
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(body: Center(child: ChineseRubyLine(tokens: tokens, style: TextStyle(fontSize: 20), outline: 3))),
+    ));
+    final but = tester.getRect(find.text('But').last);
+    final we = tester.getRect(find.text('we').last);
+    final space = tester.getRect(find.text(' ').last);
+    expect(we.left - but.right, closeTo(space.width, 0.5));
+  });
 }

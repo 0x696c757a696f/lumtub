@@ -78,7 +78,11 @@ class ChineseRubyLine extends StatelessWidget {
         );
       }
       // The outline reaches past the letters; the room keeps the space between words.
-      children.add(Padding(padding: EdgeInsets.symmetric(horizontal: (japanese ? 0 : 1) + outline / 2), child: block));
+      // Room for the outline, but not beside a space, which already
+      // keeps words apart (with it, words on the video stood far apart).
+      final room = (japanese ? 0 : 1) + outline / 2;
+      bool spaced(int j) => j >= 0 && j < tokens.length && !tokens[j].isWord && RegExp(j < i ? r'\s$' : r'^\s').hasMatch(tokens[j].text);
+      children.add(Padding(padding: EdgeInsetsDirectional.only(start: spaced(i - 1) ? 0 : room, end: spaced(i + 1) ? 0 : room), child: block));
     }
     return Wrap(alignment: alignment, crossAxisAlignment: WrapCrossAlignment.end, children: children);
   }

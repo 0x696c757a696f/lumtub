@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 እና ከዚያ በላይ፣ ያለ መቅዳት)",
   "DirectX 12 (copy-back)": "DirectX 12 (ወደ ኋላ መቅዳት)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (በጣም ጥርት ያለ፣ ከፍተኛ የ GPU ጭነት)",
-  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3፤ የበይነገጹ የተወሰነ ክፍል ከ PiliNara የተወሰደ ነው፣ መልሶ ማጫወቱ በ mpv፣ media_kit እና yt-dlp ላይ የተመሠረተ ነው",
+  "AGPLv3; playback is built on mpv, media_kit and yt-dlp": "AGPLv3፤ መልሶ ማጫወቱ በ mpv፣ media_kit እና yt-dlp ላይ የተመሠረተ ነው",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU የአሁኑ የዲኮዲንግ ሁነታ VP9 AV1 የቪዲዮ ቅጥያዎች",
   "GitHub source code": "የ GitHub ምንጭ ኮድ",
   "GitHub repository": "የ GitHub ማከማቻ",

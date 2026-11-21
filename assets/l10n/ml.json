@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10-ഉം അതിനു ശേഷവും, സീറോ-കോപ്പി)",
   "DirectX 12 (copy-back)": "DirectX 12 (കോപ്പി-ബാക്ക്)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (ഏറ്റവും മൂർച്ചയുള്ളത്, ഉയർന്ന GPU ലോഡ്)",
-  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; ഇന്റർഫേസിന്റെ ചില ഭാഗങ്ങൾ PiliNara-യിൽ നിന്ന് രൂപാന്തരപ്പെടുത്തിയവ, പ്ലേബാക്ക് mpv, media_kit, yt-dlp എന്നിവയെ അടിസ്ഥാനമാക്കിയുള്ളത്",
+  "AGPLv3; playback is built on mpv, media_kit and yt-dlp": "AGPLv3; പ്ലേബാക്ക് mpv, media_kit, yt-dlp എന്നിവയെ അടിസ്ഥാനമാക്കിയുള്ളത്",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU നിലവിലെ ഡീകോഡിംഗ് രീതി VP9 AV1 വീഡിയോ എക്സ്റ്റൻഷനുകൾ",
   "GitHub source code": "GitHub സോഴ്സ് കോഡ്",
   "GitHub repository": "GitHub റിപ്പോസിറ്ററി",

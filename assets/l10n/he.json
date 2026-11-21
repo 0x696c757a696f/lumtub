@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 ואילך, ללא העתקה)",
   "DirectX 12 (copy-back)": "DirectX 12 (עם העתקה חוזרת)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (החד ביותר, עומס גבוה על ה-GPU)",
-  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3; חלק מהממשק מבוסס על PiliNara, וההפעלה מבוססת על mpv, ‏media_kit ו-yt-dlp",
+  "AGPLv3; playback is built on mpv, media_kit and yt-dlp": "AGPLv3; ההפעלה מבוססת על mpv, ‏media_kit ו-yt-dlp",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU שיטת פענוח נוכחית VP9 AV1 תוספי וידאו",
   "GitHub source code": "קוד המקור ב-GitHub",
   "GitHub repository": "מאגר GitHub",

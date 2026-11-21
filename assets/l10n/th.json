@@ -57,7 +57,7 @@
   "DirectX 12 (Windows 10 and later, zero-copy)": "DirectX 12 (Windows 10 ขึ้นไป, ไม่คัดลอก)",
   "DirectX 12 (copy-back)": "DirectX 12 (คัดลอกกลับ)",
   "EWA Lanczos Sharp (sharpest, heavy GPU load)": "EWA Lanczos Sharp (คมชัดที่สุด, ใช้ GPU หนัก)",
-  "AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp": "AGPLv3 ส่วนหนึ่งของหน้าจอดัดแปลงมาจาก PiliNara การเล่นสร้างบน mpv, media_kit และ yt-dlp",
+  "AGPLv3; playback is built on mpv, media_kit and yt-dlp": "AGPLv3 การเล่นสร้างบน mpv, media_kit และ yt-dlp",
   "GPU current decoding mode VP9 AV1 video extensions": "GPU วิธีถอดรหัสปัจจุบัน VP9 AV1 ส่วนขยายวิดีโอ",
   "GitHub source code": "ซอร์สโค้ดบน GitHub",
   "GitHub repository": "ที่เก็บ GitHub",

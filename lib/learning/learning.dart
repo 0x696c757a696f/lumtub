@@ -157,16 +157,15 @@ class Learning extends ChangeNotifier {
 
   LearningLicense? get license => _license;
 
-  /// Without the pack: every word card free for [trialDays] days from the
-  /// first lookup, then this many a day. Dictionaries, readings above
-  /// words and the vocabulary book always work, so a learner sees what
-  /// they would buy.
+  /// Without the pack: the first [trialTotal] word cards free with
+  /// everything on, then this many a day with the pack's features off.
+  /// A count rather than days, so a trial never runs past an offer's end.
   static const trialPerDay = 3;
-  static const trialDays = 7;
+  static const trialTotal = 30;
   String _trialDay = '';
 
-  /// The day of the first lookup here, when the free week began.
-  String _trialStart = '';
+  /// Word cards taken from [trialTotal] so far.
+  int _trialTaken = 0;
 
   /// A word has been looked up here at least once: the getting-started
   /// steps tick it off.
@@ -178,8 +177,7 @@ class Learning extends ChangeNotifier {
   static String get _today => DateTime.now().toIso8601String().substring(0, 10);
 
   /// The latest day the trial has seen, from this computer's clock or a
-  /// server's: turning the clock back neither stretches the free week nor
-  /// brings today's lookups back.
+  /// server's: turning the clock back does not bring today's lookups back.
   String _trialSeen = '';
   String get _trialToday {
     final today = _today;
@@ -193,38 +191,22 @@ class Learning extends ChangeNotifier {
     return true;
   }
 
-  /// Days of the free week left, counting today; 0 once it is over.
-  int get freeWeekLeft {
-    if (_trialStart.isEmpty) return trialDays;
-    final start = DateTime.tryParse(_trialStart);
-    if (start == null) return 0;
-    final today = DateTime.parse(_trialToday);
-    return (trialDays - today.difference(start).inDays).clamp(0, trialDays);
-  }
+  /// Free word cards with everything on still left.
+  int get trialTotalLeft => (trialTotal - _trialTaken).clamp(0, trialTotal);
 
-  /// Without the pack, every word card is still free.
-  bool get inFreeWeek => !licensed && freeWeekLeft > 0;
+  /// Without the pack, but still in the free trial.
+  bool get inTrial => !licensed && trialTotalLeft > 0;
 
-  /// The pack's features are on: bought, or in the free week. Off, only
+  /// The pack's features are on: bought, or in the free trial. Off, only
   /// [trialPerDay] word cards a day are left; dictionaries download and
   /// saved words can be seen and exported as CSV either way.
-  bool get unlocked => licensed || freeWeekLeft > 0;
-
-  /// Starts the free week, if it has not begun: at the first word card,
-  /// or when a dictionary is first ready and readings show.
-  void _beginTrial() {
-    if (licensed || _trialStart.isNotEmpty) return;
-    _see(_today);
-    _trialStart = _trialToday;
-    unawaited(_save());
-  }
+  bool get unlocked => licensed || trialTotalLeft > 0;
 
   /// Word cards left today without the pack; unlimited with it.
   int get trialLeft => licensed ? trialPerDay : (_trialDay == _trialToday ? (trialPerDay - _trialUsed).clamp(0, trialPerDay) : trialPerDay);
 
-  /// Counts one word card; false when today's free ones are used up.
-  /// A [word] already looked up today is free, and so is every word in
-  /// the free week.
+  /// Counts one word card; false when the free ones are used up. A [word]
+  /// already looked up today is free.
   Future<bool> takeLookup(String word) async {
     if (!lookedUp) {
       lookedUp = true;
@@ -234,13 +216,7 @@ class Learning extends ChangeNotifier {
       }
     }
     if (licensed) return true;
-    final seen = _see(_today);
-    if (_trialStart.isEmpty) _trialStart = _trialToday;
-    if (seen || _trialStart == _trialToday) await _save();
-    if (inFreeWeek) {
-      notifyListeners();
-      return true;
-    }
+    _see(_today);
     final today = _trialToday;
     if (_trialDay != today) {
       _trialDay = today;
@@ -248,13 +224,19 @@ class Learning extends ChangeNotifier {
       _trialWords.clear();
     }
     if (_trialWords.contains(word)) return true;
-    if (_trialUsed >= trialPerDay) return false;
-    _trialUsed++;
+    if (trialTotalLeft > 0) {
+      _trialTaken++;
+    } else if (_trialUsed >= trialPerDay) {
+      return false;
+    } else {
+      _trialUsed++;
+    }
     _trialWords.add(word);
     await _save();
     notifyListeners();
     return true;
   }
+
   bool get licensed => _license != null && !_blocked && (_receiptDay != null || (_entered != null && DateTime.now().difference(_entered!) < grace));
 
   /// A code is kept but does not unlock here: revoked, taken off this
@@ -442,8 +424,7 @@ class Learning extends ChangeNotifier {
           final trial = json['trial'];
           if (trial is Map) {
             _trialDay = '${trial['day'] ?? ''}';
-            // Counted a day at a time before the free week: that day began it.
-            _trialStart = '${trial['start'] ?? trial['day'] ?? ''}';
+            _trialTaken = trial['taken'] is int ? trial['taken'] as int : 0;
             _trialSeen = '${trial['seen'] ?? trial['day'] ?? ''}';
             _trialUsed = trial['used'] is int ? trial['used'] as int : 0;
             final words = trial['words'];
@@ -799,7 +780,7 @@ class Learning extends ChangeNotifier {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1, 'trial': {'start': _trialStart, 'seen': _trialSeen, 'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
+      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1, 'trial': {'taken': _trialTaken, 'seen': _trialSeen, 'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }
@@ -849,7 +830,6 @@ class Learning extends ChangeNotifier {
             });
       logInfo('${pack.name} dictionary opened in ${watch.elapsedMilliseconds} ms');
       state.state = PackState.ready;
-      _beginTrial();
       unawaited(_openSegmenter(pack));
     } catch (e) {
       logError('Could not read the ${pack.name} dictionary', e);

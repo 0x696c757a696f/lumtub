@@ -204,12 +204,12 @@ String learningPriceLine() {
 
 /// Where the free trial stands: the free week's days left, or today's
 /// lookups after it.
-String learningTrialLine(Learning learning) => learning.inFreeWeek
-    ? tr('Free trial: everything on for {0} more days, then {1} word lookups a day. Buy once to keep it all.', [learning.freeWeekLeft, Learning.trialPerDay])
+String learningTrialLine(Learning learning) => learning.inTrial
+    ? tr('Free trial: everything on for {0} more word lookups, then {1} a day. Buy once to keep it all.', [learning.trialTotalLeft, Learning.trialPerDay])
     : tr('Trial over. Free today: {0} of {1} word lookups left. Buy once to turn everything back on.', [learning.trialLeft, Learning.trialPerDay]);
 
 /// The trial in one line, before anything was looked up.
-String learningTrialOffer() => tr('Free to try: everything on for {0} days, no account', [Learning.trialDays]);
+String learningTrialOffer() => tr('Free to try: everything on for the first {0} word lookups, then {1} a day, no account', [Learning.trialTotal, Learning.trialPerDay]);
 
 /// What the learning pack unlocks, in one paragraph.
 String learningPackFeatures() => tr(
@@ -224,7 +224,7 @@ Future<void> showLearningLocked(BuildContext context, Learning learning, {String
         content: SizedBox(
           width: 460,
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text([lead ?? tr('The {0}-day free trial is over.', [Learning.trialDays]), learningPackFeatures()].join(' ')),
+            Text([lead ?? tr('The {0} free trial lookups are used up.', [Learning.trialTotal]), learningPackFeatures()].join(' ')),
             const SizedBox(height: 8),
             Text(tr('Words you saved stay yours: you can still see them and export them as CSV.'),
                 style: Theme.of(dialog).textTheme.bodySmall?.copyWith(color: Theme.of(dialog).colorScheme.outline)),

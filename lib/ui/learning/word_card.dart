@@ -65,8 +65,8 @@ class _TrialNote extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: Text(
-        learning.inFreeWeek
-            ? tr('Free trial: everything on for {0} more days', [learning.freeWeekLeft])
+        learning.inTrial
+            ? tr('Free trial: {0} word lookups left with everything on', [learning.trialTotalLeft])
             : tr('{0} free lookups left today · the learning pack has no limit', [learning.trialLeft]),
         style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.outline),
       ),

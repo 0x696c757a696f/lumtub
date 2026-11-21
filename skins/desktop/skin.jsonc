@@ -191,215 +191,143 @@
     "onSelected": "#ffffff",
     "reason": "#7a0040"
   },
-  "shape": {
-    "cardRadius": 0,
-    "controlRadius": 0,
-    "thumbnailRadius": 0
-  },
+  "shape": { "cardRadius": 0, "controlRadius": 0, "thumbnailRadius": 0 },
   "window": {
+    // The classic teal desk, with a fine dither like a 256-colour display.
     "background": [
-      "#3a6ea5",
-      {
-        "pattern": {
-          "type": "dots",
-          "color": "#ffffff1f",
-          "spacing": 4,
-          "size": 1
-        }
-      }
+      "#008080",
+      { "pattern": { "type": "checker", "color": "#ffffff0d", "spacing": 1 } }
     ],
+    "veil": 0.35,
     "titleBar": {
       "height": 26,
       "surface": {
-        "fill": {
-          "linear": {
-            "angle": 90,
-            "colors": [
-              "#000080",
-              "#0a68b0"
-            ]
-          }
-        }
+        "fill": { "linear": { "angle": 90, "colors": ["#000080", "#0a5aa8"] } },
+        "border": { "color": "#dfdfdf", "sides": ["top", "left"] },
+        "bevel": { "light": "#dfdfdf", "dark": "#000000", "innerLight": "#ffffff", "innerDark": "#808080", "width": 1 }
       },
       "inactive": {
-        "fill": {
-          "linear": {
-            "angle": 90,
-            "colors": [
-              "#606060",
-              "#8a8a8a"
-            ]
-          }
-        }
+        "fill": { "linear": { "angle": 90, "colors": ["#404040", "#707070"] } }
       },
       "text": "#ffffff",
       "inactiveText": "#ffffff",
       "buttons": {
-        "size": [
-          22,
-          18
-        ],
+        "size": [22, 18],
         "icon": "#000000",
         "surface": {
           "fill": "#c0c0c0",
-          "bevel": {
-            "light": "#ffffff",
-            "dark": "#000000",
-            "innerLight": "#dfdfdf",
-            "innerDark": "#808080",
-            "width": 1
-          }
+          "bevel": { "light": "#dfdfdf", "dark": "#000000", "innerLight": "#ffffff", "innerDark": "#808080", "width": 1 },
+          "pressed": { "fill": "#c0c0c0", "bevel": { "light": "#000000", "dark": "#ffffff", "innerLight": "#808080", "innerDark": "#dfdfdf", "width": 1 } }
         },
         "close": {
           "fill": "#c0c0c0",
-          "bevel": {
-            "light": "#ffffff",
-            "dark": "#000000",
-            "innerLight": "#dfdfdf",
-            "innerDark": "#808080",
-            "width": 1
-          }
+          "bevel": { "light": "#dfdfdf", "dark": "#000000", "innerLight": "#ffffff", "innerDark": "#808080", "width": 1 },
+          "pressed": { "fill": "#c0c0c0", "bevel": { "light": "#000000", "dark": "#ffffff", "innerLight": "#808080", "innerDark": "#dfdfdf", "width": 1 } }
         }
       }
     },
     "menuBar": {
       "surface": {
         "fill": "#c0c0c0",
-        "border": {
-          "color": "#808080",
-          "sides": [
-            "bottom"
-          ]
-        }
+        "bevel": { "light": "#ffffff", "dark": "#808080", "width": 1 }
       },
       "text": "#000000",
       "highlight": "#000080",
       "highlightText": "#ffffff",
+      // Menus drop a hard grey shadow, as on the real thing.
       "menu": {
         "fill": "#c0c0c0",
-        "border": "#000000"
+        "bevel": { "light": "#dfdfdf", "dark": "#000000", "innerLight": "#ffffff", "innerDark": "#808080", "width": 1 },
+        "shadow": [{ "color": "#00000080", "x": 2, "y": 2, "blur": 0 }]
       }
     },
     "topBar": {
       "fill": "#c0c0c0",
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#000000",
-        "innerLight": "#dfdfdf",
-        "innerDark": "#808080",
-        "width": 1
-      }
+      "bevel": { "light": "#dfdfdf", "dark": "#000000", "innerLight": "#ffffff", "innerDark": "#808080", "width": 1 }
     },
     "sideBar": {
       "fill": "#c0c0c0",
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#000000",
-        "innerLight": "#dfdfdf",
-        "innerDark": "#808080",
-        "width": 1
-      }
+      "bevel": { "light": "#dfdfdf", "dark": "#000000", "innerLight": "#ffffff", "innerDark": "#808080", "width": 1 }
     },
+    // The status line is a sunken well.
     "statusBar": {
       "fill": "#c0c0c0",
-      "bevel": {
-        "light": "#808080",
-        "dark": "#ffffff",
-        "width": 1
-      }
+      "bevel": { "light": "#808080", "dark": "#ffffff", "width": 1 }
     }
   },
   "controls": {
+    "press": "wash",
     "button": {
       "fill": "#c0c0c0",
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#000000",
-        "innerLight": "#dfdfdf",
-        "innerDark": "#808080",
-        "width": 1
-      }
+      "bevel": { "light": "#dfdfdf", "dark": "#000000", "innerLight": "#ffffff", "innerDark": "#808080", "width": 1 },
+      "hover": { "fill": "#cacaca" },
+      "pressed": { "fill": "#c0c0c0", "bevel": { "light": "#000000", "dark": "#ffffff", "innerLight": "#808080", "innerDark": "#dfdfdf", "width": 1 } },
+      "focused": { "border": { "color": "#000000", "width": 1 } }
     },
     "buttonText": "#000000",
+    // The default button: the same grey key with a black frame round it.
     "primaryButton": {
       "fill": "#c0c0c0",
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#000000",
-        "innerLight": "#dfdfdf",
-        "innerDark": "#808080",
-        "width": 1
-      },
-      "border": "#000000"
+      "border": "#000000",
+      "bevel": { "light": "#ffffff", "dark": "#000000", "innerLight": "#dfdfdf", "innerDark": "#808080", "width": 1 },
+      "hover": { "fill": "#cacaca" },
+      "pressed": { "fill": "#c0c0c0", "bevel": { "light": "#000000", "dark": "#ffffff", "innerLight": "#808080", "innerDark": "#dfdfdf", "width": 1 } }
     },
     "primaryButtonText": "#000000",
     "chip": {
       "fill": "#c0c0c0",
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#000000",
-        "innerLight": "#dfdfdf",
-        "innerDark": "#808080",
-        "width": 1
-      }
+      "bevel": { "light": "#dfdfdf", "dark": "#000000", "innerLight": "#ffffff", "innerDark": "#808080", "width": 1 },
+      "hover": { "fill": "#cacaca" }
     },
+    // A toggle that is on: pushed in, with the dithered face of a latched button.
     "chipSelected": {
-      "fill": "#000080",
-      "bevel": {
-        "light": "#000000",
-        "dark": "#ffffff",
-        "width": 1
-      }
+      "fill": ["#c0c0c0", { "pattern": { "type": "checker", "color": "#ffffff", "spacing": 1 } }],
+      "bevel": { "light": "#000000", "dark": "#ffffff", "innerLight": "#808080", "innerDark": "#dfdfdf", "width": 1 }
     },
-    "chipSelectedText": "#ffffff",
-    "navSelected": {
-      "fill": "#000080",
-      "border": "#ffffff"
-    },
+    "chipSelectedText": "#000000",
+    "navSelected": { "fill": "#000080", "border": { "color": "#ffffff", "width": 1 } },
     "navSelectedText": "#ffffff",
     "navText": "#000000"
   },
   "cards": {
+    // A list box: sunken white well.
     "video": {
       "fill": "#ffffff",
-      "bevel": {
-        "light": "#808080",
-        "dark": "#ffffff",
-        "innerLight": "#404040",
-        "innerDark": "#dfdfdf"
-      },
-      "focused": {
-        "fill": "#ffffe1"
-      }
+      "bevel": { "light": "#808080", "dark": "#ffffff", "innerLight": "#000000", "innerDark": "#dfdfdf", "width": 1 },
+      "hover": { "fill": "#ffffe1" },
+      "focused": { "fill": "#ffffe1", "border": { "color": "#000080", "width": 2 } }
     },
     "padding": 6,
+    // Windows, dialogs and menus: raised grey sheet with a hard drop shadow.
     "panel": {
       "fill": "#c0c0c0",
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#000000",
-        "innerLight": "#dfdfdf",
-        "innerDark": "#808080",
-        "width": 1
-      }
+      "bevel": { "light": "#dfdfdf", "dark": "#000000", "innerLight": "#ffffff", "innerDark": "#808080", "width": 1 },
+      "shadow": [{ "color": "#00000066", "x": 3, "y": 3, "blur": 0 }]
     },
     "durationBadge": "#000000",
     "durationText": "#00ff00"
   },
+  "icons": { "style": "regular", "effect": "none" },
   "logo": {
     "text": "LUMTUB",
     "font": "Press Start 2P",
     "size": 18,
     "fill": "#000080",
+    "shadow": "#ffffff",
     "badge": {
       "fill": "#d4006f",
       "border": "#000000",
-      "radius": 0
+      "radius": 0,
+      "bevel": { "light": "#ff6fb4", "dark": "#7a0040", "width": 1 }
     },
     "badgeIcon": "#ffffff"
   },
   "player": {
-    "progress": "#000080"
+    // Progress as a row of navy blocks, as in an installer's gauge.
+    "progress": [
+      "#000080",
+      { "pattern": { "type": "lines", "color": "#c0c0c0", "spacing": 10, "size": 2, "angle": 90 } }
+    ]
   },
   "author": "Lumtub",
   "license": "CC0-1.0"

@@ -7,6 +7,7 @@ import 'package:media_kit/media_kit.dart';
 import 'device.dart';
 import 'libass_layout.dart';
 import 'player_settings.dart';
+import 'upscale_shaders.dart';
 import 'app_log.dart';
 
 class PlayerOptionApplicator {
@@ -63,6 +64,17 @@ class PlayerOptionApplicator {
       'scale': settings.scale,
       'deband': settings.deband ? 'yes' : 'no',
       'interpolation': settings.interpolation ? 'yes' : 'no',
+      // 画质增强. Before the fast rendering below, which takes it off.
+      if (!Platform.isIOS) 'glsl-shaders': UpscaleShaders.option(settings.upscaling),
+      // An HDR picture reaches the screen through an 8-bit standard range
+      // texture, so mpv maps it down: BT.2390's curve keeps highlights
+      // apart without darkening the rest. Measuring each frame's brightest
+      // spot adds a compute pass per frame, left out on phones and with
+      // 低资源占用优先 (the stream's own metadata is used then).
+      if (!Platform.isIOS) ...{
+        'tone-mapping': 'bt.2390',
+        'hdr-compute-peak': light || Platform.isAndroid ? 'no' : 'auto',
+      },
       // 低资源占用优先 also scales the picture the cheapest way, as mpv's
       // fast profile does: a 4K frame shrunk to a window is most of the GPU
       // work after decoding.
@@ -208,6 +220,7 @@ class PlayerOptionApplicator {
     // Dithering stays: it costs little and without it dark gradients band.
     'deband': 'no',
     'interpolation': 'no',
+    'glsl-shaders': '',
   };
 
   /// libmpv's own values of [fastRendering]'s options, read before they are

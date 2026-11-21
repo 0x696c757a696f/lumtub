@@ -198,138 +198,106 @@
     "thumbnailRadius": 0
   },
   "window": {
+    // The LCD: pale green with a fine pixel grid, a faint shade towards the edges.
     "background": [
       "#8bac0f",
-      {
-        "pattern": {
-          "type": "grid",
-          "color": "#0f380f14",
-          "spacing": 3,
-          "size": 1
-        }
-      }
+      { "pattern": { "type": "grid", "color": "#0f380f14", "spacing": 3, "size": 1 } },
+      { "radial": { "center": [0.5, 0.5], "radius": 0.9, "colors": ["#9bbc0f00", "#30623040"] } }
     ],
     "menuBar": {},
     "titleBar": {
       "height": 26,
       "surface": {
-        "fill": "#306230",
-        "border": {
-          "color": "#0f380f",
-          "width": 3,
-          "sides": [
-            "bottom"
-          ]
-        }
+        "fill": ["#306230", { "pattern": { "type": "scanlines", "color": "#0f380f66", "spacing": 2, "size": 1 } }],
+        "border": { "color": "#0f380f", "width": 3, "sides": ["bottom"] }
       },
-      "inactive": {
-        "fill": "#4a7a3a"
-      },
+      "inactive": { "fill": "#4a7a3a" },
       "text": "#d4ec6a",
+      "titlePlate": "#306230",
       "buttons": {
-        "size": [
-          30,
-          22
-        ],
+        "size": [30, 22],
         "icon": "#d4ec6a",
         "surface": {
           "fill": "transparent",
-          "hover": {
-            "fill": "#0f380f"
-          }
+          "hover": { "fill": "#0f380f" }
         },
         "close": {
           "fill": "transparent",
-          "hover": {
-            "fill": "#0f380f"
-          }
+          "hover": { "fill": "#0f380f" }
         }
       }
     },
+    // The bezel round the screen: dark green plastic with scanlines.
     "topBar": {
-      "fill": "#306230",
-      "border": {
-        "color": "#0f380f",
-        "width": 4,
-        "sides": [
-          "bottom"
-        ]
-      }
+      "fill": ["#306230", { "pattern": { "type": "scanlines", "color": "#0f380f4d", "spacing": 2, "size": 1 } }],
+      "border": { "color": "#0f380f", "width": 4, "sides": ["bottom"] }
     },
     "sideBar": {
-      "fill": "#306230",
-      "border": {
-        "color": "#0f380f",
-        "width": 4,
-        "sides": [
-          "right"
-        ]
-      }
+      "fill": ["#306230", { "pattern": { "type": "scanlines", "color": "#0f380f4d", "spacing": 2, "size": 1 } }],
+      "border": { "color": "#0f380f", "width": 4, "sides": ["right"] }
     },
     "statusBar": {
-      "fill": "#306230",
-      "border": {
-        "color": "#0f380f",
-        "width": 4,
-        "sides": [
-          "top"
-        ]
-      }
+      "fill": ["#306230", { "pattern": { "type": "scanlines", "color": "#0f380f4d", "spacing": 2, "size": 1 } }],
+      "border": { "color": "#0f380f", "width": 4, "sides": ["top"] }
     },
     "topBarText": "#d4ec6a",
     "statusBarText": "#d4ec6a"
   },
   "controls": {
+    "press": "wash",
+    // Chunky pixel keys: a heavy frame and a solid dark-green edge below;
+    // pressed, they drop onto it.
     "button": {
-      "fill": "#9bbc0f",
-      "border": {
-        "color": "#0f380f",
-        "width": 3
-      },
-      "pressed": {
-        "fill": "#8bac0f"
-      }
+      "fill": ["#9bbc0f", { "pattern": { "type": "dots", "color": "#0f380f1a", "spacing": 3, "size": 1 } }],
+      "border": { "color": "#0f380f", "width": 3 },
+      "shadow": [{ "color": "#306230", "x": 0, "y": 3, "blur": 0 }],
+      "hover": { "fill": "#8bac0f" },
+      "pressed": { "fill": "#8bac0f", "shadow": [] },
+      "focused": { "border": { "color": "#0f380f", "width": 5 } }
     },
     "buttonText": "#0f380f",
-    "primaryButton": "#0f380f",
+    "primaryButton": {
+      "fill": ["#0f380f", { "pattern": { "type": "dots", "color": "#9bbc0f26", "spacing": 3, "size": 1 } }],
+      "border": { "color": "#0f380f", "width": 3 },
+      "shadow": [{ "color": "#306230", "x": 0, "y": 3, "blur": 0 }],
+      "hover": { "fill": "#306230" },
+      "pressed": { "fill": "#0f380f", "shadow": [] }
+    },
     "primaryButtonText": "#9bbc0f",
     "chip": {
       "fill": "#9bbc0f",
-      "border": {
-        "color": "#0f380f",
-        "width": 3
-      }
+      "border": { "color": "#0f380f", "width": 3 },
+      "shadow": [{ "color": "#306230", "x": 0, "y": 2, "blur": 0 }],
+      "hover": { "fill": "#8bac0f" }
     },
-    "chipSelected": "#0f380f",
+    "chipSelected": { "fill": "#0f380f", "border": { "color": "#0f380f", "width": 3 } },
     "chipSelectedText": "#9bbc0f",
-    "navSelected": "#9bbc0f",
+    "navSelected": {
+      "fill": "#9bbc0f",
+      "border": { "color": "#0f380f", "width": 3 },
+      "shadow": [{ "color": "#0f380f", "x": 2, "y": 2, "blur": 0 }]
+    },
     "navSelectedText": "#0f380f",
     "navText": "#d4ec6a"
   },
   "cards": {
+    // Each card is a screen tile: heavy frame, dot-matrix grain, solid pixel shadow.
     "video": {
-      "fill": "#9bbc0f",
-      "border": {
-        "color": "#0f380f",
-        "width": 3
-      },
-      "hover": {
-        "fill": "#8bac0f"
-      },
+      "fill": ["#9bbc0f", { "pattern": { "type": "dots", "color": "#0f380f14", "spacing": 3, "size": 1 } }],
+      "border": { "color": "#0f380f", "width": 3 },
+      "shadow": [{ "color": "#306230", "x": 4, "y": 4, "blur": 0 }],
+      "hover": { "fill": ["#8bac0f", { "pattern": { "type": "dots", "color": "#0f380f1f", "spacing": 3, "size": 1 } }] },
+      "pressed": { "fill": "#8bac0f", "shadow": [] },
       "focused": {
-        "border": {
-          "color": "#0f380f",
-          "width": 5
-        }
+        "border": { "color": "#0f380f", "width": 5 },
+        "shadow": [{ "color": "#306230", "x": 4, "y": 4, "blur": 0 }]
       }
     },
     "padding": 6,
     "panel": {
-      "fill": "#9bbc0f",
-      "border": {
-        "color": "#0f380f",
-        "width": 3
-      }
+      "fill": ["#9bbc0f", { "pattern": { "type": "dots", "color": "#0f380f14", "spacing": 3, "size": 1 } }],
+      "border": { "color": "#0f380f", "width": 3 },
+      "shadow": [{ "color": "#0f380f", "x": 4, "y": 4, "blur": 0 }]
     },
     "durationBadge": "#0f380f",
     "durationText": "#9bbc0f"
@@ -339,18 +307,16 @@
     "font": "Press Start 2P",
     "size": 18,
     "fill": "#d4ec6a",
+    "shadow": "#0f380f",
     "badge": {
       "fill": "#9bbc0f",
-      "border": {
-        "color": "#0f380f",
-        "width": 3
-      },
+      "border": { "color": "#0f380f", "width": 3 },
       "radius": 0
     },
     "badgeIcon": "#0f380f"
   },
   "player": {
-    "progress": "#0f380f"
+    "progress": ["#0f380f", { "pattern": { "type": "lines", "color": "#306230", "spacing": 4, "size": 1, "angle": 90 } }]
   },
   "author": "Lumtub",
   "license": "CC0-1.0"

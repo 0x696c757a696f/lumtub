@@ -1,0 +1,1527 @@
+// Dunes: a built-in Lumtub skin. Wind-carved dunes painted by Lumtub itself, under a hazy sun by day and two moons by night, with sand grain, raised cards and soft warm shadows.
+// skins/template/skin.jsonc explains every field, and skins/README.md how to make your own.
+// 沙丘：Lumtub 内置皮肤。Lumtub 自己画的风刻沙丘，白天是朦胧的太阳，夜里两轮明月；细沙颗粒、浮起的卡片和柔和的暖色阴影。
+// 每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "dunes",
+  "name": "Dunes",
+  "names": {
+    "zh-Hans": "沙丘",
+    "zh-Hant": "沙丘",
+    "zh-HK": "沙丘",
+    "af": "Duine",
+    "am": "የአሸዋ ክምሮች",
+    "ar": "الكثبان",
+    "az": "Qum təpələri",
+    "be": "Дзюны",
+    "bg": "Дюни",
+    "bn": "বালিয়াড়ি",
+    "cs": "Duny",
+    "da": "Klitter",
+    "de": "Dünen",
+    "el": "Αμμόλοφοι",
+    "eo": "Dunoj",
+    "es": "Dunas",
+    "et": "Luited",
+    "eu": "Dunak",
+    "fa": "تپه‌های شنی",
+    "fi": "Dyynit",
+    "fil": "Buhanginan",
+    "fr": "Dunes",
+    "gl": "Dunas",
+    "gu": "રેતીના ઢૂવા",
+    "he": "דיונות",
+    "hi": "रेत के टीले",
+    "hu": "Dűnék",
+    "hy": "Ավազաթմբեր",
+    "id": "Bukit Pasir",
+    "is": "Sandöldur",
+    "it": "Dune",
+    "ja": "砂丘",
+    "jv": "Gumuk Pasir",
+    "ka": "დიუნები",
+    "km": "ភ្នំខ្សាច់",
+    "kn": "ಮರಳು ದಿಬ್ಬಗಳು",
+    "ko": "모래언덕",
+    "la": "Tumuli harenae",
+    "lo": "ເນີນຊາຍ",
+    "lt": "Kopos",
+    "lv": "Kāpas",
+    "mk": "Дини",
+    "ml": "മണൽക്കുന്നുകൾ",
+    "mn": "Элсэн манхан",
+    "mr": "वाळूच्या टेकड्या",
+    "ms": "Bukit Pasir",
+    "my": "သဲသောင်ပြင်",
+    "nb": "Sanddyner",
+    "ne": "बालुवाका ढिस्का",
+    "nl": "Duinen",
+    "pa": "ਰੇਤ ਦੇ ਟਿੱਬੇ",
+    "pl": "Wydmy",
+    "pt": "Dunas",
+    "ro": "Dune",
+    "ru": "Дюны",
+    "si": "වැලි කඳු",
+    "sk": "Duny",
+    "sq": "Dunat",
+    "su": "Gumuk Keusik",
+    "sv": "Sanddyner",
+    "sw": "Matuta ya Mchanga",
+    "ta": "மணல் குன்றுகள்",
+    "te": "ఇసుక దిబ్బలు",
+    "th": "เนินทราย",
+    "ti": "ኩምራ ሑጻ",
+    "tk": "Gum depeleri",
+    "tr": "Kum Tepeleri",
+    "uk": "Дюни",
+    "ur": "ریت کے ٹیلے",
+    "uz": "Qum barxanlari",
+    "vi": "Đồi cát",
+    "zu": "Izindunduma Zesihlabathi",
+    "sr": "Дине",
+    "sr-Latn": "Dine",
+    "hr": "Dine",
+    "sl": "Sipine",
+    "bs": "Dine",
+    "ca": "Dunes",
+    "kk": "Құм төбелер",
+    "ky": "Кум дөбөлөрү",
+    "as": "বালিৰ টিলা",
+    "or": "ବାଲିଗଦା"
+  },
+  "description": "Wind-carved dunes under a hazy sun, two moons by night, with sand grain and soft shadows",
+  "descriptions": {
+    "zh-Hans": "风刻出的沙丘，白天是朦胧的太阳，夜里两轮明月，带细沙颗粒和柔和的阴影",
+    "zh-Hant": "風刻出的沙丘，白天是朦朧的太陽，夜裡兩輪明月，帶細沙顆粒和柔和的陰影",
+    "zh-HK": "風刻出的沙丘，白天是朦朧的太陽，夜裡兩輪明月，帶細沙顆粒和柔和的陰影",
+    "af": "Duine deur die wind gekerf onder 'n dynserige son, twee mane in die nag, met sandkorrels en sagte skaduwees",
+    "am": "በነፋስ የተቀረጹ የአሸዋ ክምሮች በጭጋጋማ ፀሐይ ስር፣ በሌሊት ሁለት ጨረቃዎች፣ ከአሸዋ ቅንጣትና ለስላሳ ጥላ ጋር",
+    "ar": "كثبان نحتتها الريح تحت شمس ضبابية، وقمران في الليل، مع حبيبات الرمل وظلال ناعمة",
+    "az": "Dumanlı günəş altında küləyin yonduğu qum təpələri, gecə iki ay, qum dənələri və yumşaq kölgələrlə",
+    "be": "Выразаныя ветрам дзюны пад смугавым сонцам, уначы дзве лупы, з пясчынкамі і мяккімі ценямі",
+    "bg": "Издълбани от вятъра дюни под мъгливо слънце, нощем две луни, с пясъчно зърно и меки сенки",
+    "bn": "ঝাপসা সূর্যের নিচে বাতাসে খোদাই করা বালিয়াড়ি, রাতে দুটি চাঁদ, বালির দানা ও কোমল ছায়াসহ",
+    "cs": "Větrem vytesané duny pod zamženým sluncem, v noci dva měsíce, se zrnky písku a jemnými stíny",
+    "da": "Vindskårne klitter under en diset sol, to måner om natten, med sandkorn og bløde skygger",
+    "de": "Vom Wind geformte Dünen unter dunstiger Sonne, nachts zwei Monde, mit Sandkorn und weichen Schatten",
+    "el": "Αμμόλοφοι σμιλεμένοι από τον άνεμο κάτω από θολό ήλιο, δύο φεγγάρια τη νύχτα, με κόκκους άμμου και απαλές σκιές",
+    "eo": "Ventoskulptitaj dunoj sub nebuleca suno, nokte du lunoj, kun sablograjnoj kaj molaj ombroj",
+    "es": "Dunas talladas por el viento bajo un sol brumoso, dos lunas de noche, con grano de arena y sombras suaves",
+    "et": "Tuule voolitud luited uduse päikese all, öösel kaks kuud, liivateradega ja pehmete varjudega",
+    "eu": "Haizeak zizelkatutako dunak eguzki lainotsuaren azpian, gauez bi ilargi, harea-alearekin eta itzal leunekin",
+    "fa": "تپه‌های شنیِ تراشیده‌ی باد زیر خورشیدی مه‌آلود، شب‌ها دو ماه، با دانه‌های شن و سایه‌های نرم",
+    "fi": "Tuulen veistämät dyynit utuisen auringon alla, yöllä kaksi kuuta, hiekanjyvin ja pehmein varjoin",
+    "fil": "Mga buhanginang inukit ng hangin sa ilalim ng malabong araw, dalawang buwan sa gabi, may butil ng buhangin at malambot na anino",
+    "fr": "Dunes sculptées par le vent sous un soleil voilé, deux lunes la nuit, avec grain de sable et ombres douces",
+    "gl": "Dunas talladas polo vento baixo un sol brumoso, dúas lúas pola noite, con gran de area e sombras suaves",
+    "gu": "ધૂંધળા સૂર્ય નીચે પવને કોતરેલા રેતીના ઢૂવા, રાત્રે બે ચંદ્ર, રેતીના કણ અને નરમ પડછાયા સાથે",
+    "he": "דיונות שפיסל הרוח תחת שמש מעורפלת, בלילה שני ירחים, עם גרגרי חול וצללים רכים",
+    "hi": "धुंधले सूरज के नीचे हवा से तराशे रेत के टीले, रात में दो चाँद, रेत के कणों और मुलायम परछाइयों के साथ",
+    "hu": "Szél faragta dűnék párás nap alatt, éjjel két hold, homokszemcsékkel és lágy árnyékokkal",
+    "hy": "Քամու քանդակած ավազաթմբեր մշուշոտ արևի տակ, գիշերը երկու լուսին, ավազահատիկներով և մեղմ ստվերներով",
+    "id": "Bukit pasir pahatan angin di bawah matahari berkabut, dua bulan di malam hari, dengan butir pasir dan bayangan lembut",
+    "is": "Vindsorfnar sandöldur undir mistri sól, tvö tungl á nóttunni, með sandkornum og mjúkum skuggum",
+    "it": "Dune scolpite dal vento sotto un sole velato, due lune di notte, con grana di sabbia e ombre morbide",
+    "ja": "風が刻んだ砂丘、昼はかすんだ太陽、夜は二つの月。砂の粒子とやわらかな影",
+    "jv": "Gumuk pasir ukiran angin ing sangisore srengenge sing burem, rong rembulan ing wayah wengi, karo wiji pasir lan bayangan alus",
+    "ka": "ქარის მიერ გამოკვეთილი დიუნები ბურუსიანი მზის ქვეშ, ღამით ორი მთვარე, ქვიშის მარცვლებითა და რბილი ჩრდილებით",
+    "km": "ភ្នំខ្សាច់ដែលខ្យល់ឆ្លាក់ក្រោមព្រះអាទិត្យស្រអាប់ ព្រះច័ន្ទពីរនៅពេលយប់ ជាមួយគ្រាប់ខ្សាច់ និងស្រមោលទន់",
+    "kn": "ಮಬ್ಬಾದ ಸೂರ್ಯನ ಕೆಳಗೆ ಗಾಳಿ ಕೆತ್ತಿದ ಮರಳು ದಿಬ್ಬಗಳು, ರಾತ್ರಿ ಎರಡು ಚಂದ್ರರು, ಮರಳಿನ ಕಣ ಮತ್ತು ಮೃದು ನೆರಳುಗಳೊಂದಿಗೆ",
+    "ko": "바람이 깎은 모래언덕, 낮에는 뿌연 해, 밤에는 두 개의 달. 모래 알갱이와 부드러운 그림자",
+    "la": "Tumuli harenae vento sculpti sub sole nebuloso, nocte duae lunae, cum granis harenae et umbris mollibus",
+    "lo": "ເນີນຊາຍທີ່ລົມແກະສະຫຼັກ ໃຕ້ຕາເວັນມົວ, ກາງຄືນມີດວງເດືອນສອງດວງ, ພ້ອມເມັດຊາຍ ແລະ ເງົາອ່ອນໆ",
+    "lt": "Vėjo išraižytos kopos po miglota saule, naktį du mėnuliai, su smėlio grūdeliais ir švelniais šešėliais",
+    "lv": "Vēja izgrebtas kāpas zem miglainas saules, naktī divi mēneši, ar smilšu graudiem un maigām ēnām",
+    "mk": "Дини издлабени од ветрот под магливо сонце, ноќе две месечини, со зрнца песок и меки сенки",
+    "ml": "മങ്ങിയ സൂര്യനു കീഴെ കാറ്റ് കൊത്തിയ മണൽക്കുന്നുകൾ, രാത്രിയിൽ രണ്ട് ചന്ദ്രന്മാർ, മണൽത്തരികളും മൃദുവായ നിഴലുകളും",
+    "mn": "Бүрэнхий нарны дор салхины сийлсэн элсэн манхан, шөнө хоёр сар, элсний ширхэг, зөөлөн сүүдэртэй",
+    "mr": "धूसर सूर्याखाली वाऱ्याने कोरलेल्या वाळूच्या टेकड्या, रात्री दोन चंद्र, वाळूचे कण आणि मऊ सावल्यांसह",
+    "ms": "Bukit pasir yang diukir angin di bawah matahari berjerebu, dua bulan pada waktu malam, dengan butiran pasir dan bayang lembut",
+    "my": "မှုန်ဝါးသောနေအောက်ရှိ လေထွင်းထားသော သဲသောင်များ၊ ညတွင် လနှစ်စင်း၊ သဲမှုန်နှင့် နူးညံ့သောအရိပ်များ",
+    "nb": "Vindformede sanddyner under en disig sol, to måner om natten, med sandkorn og myke skygger",
+    "ne": "धमिलो घामुनि हावाले कुँदेका बालुवाका ढिस्का, रातमा दुई चन्द्रमा, बालुवाका कण र नरम छायाँसहित",
+    "nl": "Door de wind gevormde duinen onder een nevelige zon, 's nachts twee manen, met zandkorrel en zachte schaduwen",
+    "pa": "ਧੁੰਦਲੇ ਸੂਰਜ ਹੇਠ ਹਵਾ ਦੇ ਤਰਾਸ਼ੇ ਰੇਤ ਦੇ ਟਿੱਬੇ, ਰਾਤ ਨੂੰ ਦੋ ਚੰਦ, ਰੇਤ ਦੇ ਕਣਾਂ ਅਤੇ ਨਰਮ ਪਰਛਾਵਿਆਂ ਨਾਲ",
+    "pl": "Wydmy rzeźbione wiatrem pod zamglonym słońcem, nocą dwa księżyce, z ziarnem piasku i miękkimi cieniami",
+    "pt": "Dunas esculpidas pelo vento sob um sol enevoado, duas luas à noite, com grão de areia e sombras suaves",
+    "ro": "Dune sculptate de vânt sub un soare încețoșat, noaptea două luni, cu granulație de nisip și umbre moi",
+    "ru": "Высеченные ветром дюны под туманным солнцем, ночью две луны, с песчинками и мягкими тенями",
+    "si": "මීදුම් හිරු යට සුළඟින් කැටයම් වූ වැලි කඳු, රාත්‍රියේ සඳු දෙකක්, වැලි කැට සහ මෘදු සෙවණැලි සමඟ",
+    "sk": "Vetrom vytesané duny pod zahmleným slnkom, v noci dva mesiace, so zrnkami piesku a jemnými tieňmi",
+    "sq": "Duna të gdhendura nga era nën një diell të mjegullt, natën dy hëna, me kokrriza rëre dhe hije të buta",
+    "su": "Gumuk keusik ukiran angin handapeun panonpoé nu samar, dua bulan peuting, kalayan butir keusik jeung kalangkang lemes",
+    "sv": "Vindformade sanddyner under en disig sol, två månar om natten, med sandkorn och mjuka skuggor",
+    "sw": "Matuta ya mchanga yaliyochongwa na upepo chini ya jua lenye ukungu, miezi miwili usiku, yenye chembe za mchanga na vivuli laini",
+    "ta": "மங்கிய சூரியனின் கீழ் காற்று செதுக்கிய மணல் குன்றுகள், இரவில் இரு நிலவுகள், மணல் துகள்களும் மென்மையான நிழல்களும்",
+    "te": "మసక సూర్యుని కింద గాలి చెక్కిన ఇసుక దిబ్బలు, రాత్రి రెండు చంద్రులు, ఇసుక రేణువులు మరియు మృదువైన నీడలతో",
+    "th": "เนินทรายที่ลมแกะสลักใต้ดวงอาทิตย์หม่น กลางคืนมีดวงจันทร์สองดวง พร้อมเม็ดทรายและเงานุ่ม",
+    "ti": "ብንፋስ ዝተቐርጹ ኩምራ ሑጻ ኣብ ትሕቲ ደብዛዝ ጸሓይ፣ ብለይቲ ክልተ ኣዋርሕ፣ ምስ ፍረ ሑጻን ልስሉስ ጽላሎትን",
+    "tk": "Dumanly günüň astynda ýeliň oýan gum depeleri, gijelerine iki aý, gum dänejikleri we ýumşak kölegeler bilen",
+    "tr": "Puslu güneşin altında rüzgârın oyduğu kum tepeleri, gece iki ay, kum taneleri ve yumuşak gölgelerle",
+    "uk": "Вирізьблені вітром дюни під серпанковим сонцем, уночі два місяці, з піщинками й м'якими тінями",
+    "ur": "دھندلے سورج تلے ہوا کے تراشے ریت کے ٹیلے، رات کو دو چاند، ریت کے ذرّوں اور نرم سایوں کے ساتھ",
+    "uz": "Tumanli quyosh ostida shamol o'ygan qum barxanlari, kechasi ikki oy, qum zarralari va yumshoq soyalar bilan",
+    "vi": "Những đồi cát gió tạc dưới mặt trời mờ sương, đêm có hai vầng trăng, với hạt cát và bóng đổ mềm",
+    "zu": "Izindunduma zesihlabathi ezibazwe ngumoya ngaphansi kwelanga elinenkungu, izinyanga ezimbili ebusuku, nezinhlamvu zesihlabathi nezithunzi ezithambile",
+    "sr": "Дине које је извајао ветар под измаглим сунцем, ноћу два месеца, са зрнцима песка и меким сенкама",
+    "sr-Latn": "Dine koje je izvajao vetar pod izmaglim suncem, noću dva meseca, sa zrncima peska i mekim senkama",
+    "hr": "Dine koje je izdubio vjetar pod maglovitim suncem, noću dva mjeseca, sa zrncima pijeska i mekim sjenama",
+    "sl": "Sipine, ki jih je izklesal veter pod zamegljenim soncem, ponoči dve luni, z zrnci peska in mehkimi sencami",
+    "bs": "Dine koje je izvajao vjetar pod maglovitim suncem, noću dva mjeseca, sa zrncima pijeska i mekim sjenama",
+    "ca": "Dunes esculpides pel vent sota un sol boirós, dues llunes de nit, amb gra de sorra i ombres suaus",
+    "kk": "Тұманды күн астында жел қашаған құм төбелер, түнде екі ай, құм түйіршіктері мен жұмсақ көлеңкелер",
+    "ky": "Тумандуу күндүн астында шамал чеккен кум дөбөлөрү, түнү эки ай, кум бүртүктөрү жана жумшак көлөкөлөр менен",
+    "as": "কুঁৱলীময় সূৰ্যৰ তলত বতাহে খোদিত বালিৰ টিলা, ৰাতি দুখন জোন, বালিৰ কণা আৰু কোমল ছাঁৰ সৈতে",
+    "or": "କୁହୁଡ଼ିଆ ସୂର୍ଯ୍ୟ ତଳେ ପବନ ଖୋଦିତ ବାଲିଗଦା, ରାତିରେ ଦୁଇଟି ଜହ୍ନ, ବାଲି କଣା ଓ କୋମଳ ଛାଇ ସହିତ"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "text": {
+    "displayFont": "Michroma"
+  },
+  "colors": {
+    "page": "#f3e4cc",
+    "text": "#2b1d12",
+    "muted": "#4b3524",
+    "accent": "#9c4a1c",
+    "onAccent": "#fff8ee",
+    "border": "#d9c09b",
+    "card": "#f9f0e1",
+    "selected": "#ebd3ad",
+    "onSelected": "#2b1d12",
+    "reason": "#86401a",
+    "chrome": "#efdcbf"
+  },
+  "shape": {
+    "cardRadius": 10,
+    "controlRadius": 8,
+    "thumbnailRadius": 6
+  },
+  "window": {
+    "decorations": [
+      {
+        "type": "scene",
+        "scene": "dunes",
+        "night": false,
+        "seed": 5
+      }
+    ],
+    "glass": {
+      "min": 0.7
+    },
+    "veil": 0.4,
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": [
+          "#f3e4cc",
+          {
+            "pattern": {
+              "type": "noise",
+              "color": "#5a321414",
+              "spacing": 2.5,
+              "size": 1
+            }
+          }
+        ]
+      },
+      "inactive": {
+        "fill": "#f3e4cc"
+      },
+      "text": "#2b1d12",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#2b1d12",
+        "surface": {
+          "fill": "transparent",
+          "radius": 6,
+          "hover": {
+            "fill": "#6b3f1a1a"
+          },
+          "pressed": {
+            "fill": "#6b3f1a33"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "radius": 6,
+          "hover": {
+            "fill": "#c42b1c"
+          },
+          "pressed": {
+            "fill": "#a0200f"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": [
+          "#f3e4cc",
+          {
+            "pattern": {
+              "type": "noise",
+              "color": "#5a321414",
+              "spacing": 2.5,
+              "size": 1
+            }
+          }
+        ]
+      },
+      "text": "#2b1d12",
+      "highlight": {
+        "fill": "#ebd3ad"
+      },
+      "highlightText": "#2b1d12",
+      "menu": {
+        "fill": [
+          "#f9f0e1fa",
+          {
+            "pattern": {
+              "type": "noise",
+              "color": "#5a321414",
+              "spacing": 2.5,
+              "size": 1
+            }
+          }
+        ],
+        "border": "#d9c09b",
+        "radius": 10,
+        "shadow": [
+          {
+            "color": "#6b3f1a2e",
+            "x": 0,
+            "y": 6,
+            "blur": 18
+          },
+          {
+            "color": "#6b3f1a1f",
+            "x": 0,
+            "y": 1,
+            "blur": 2
+          }
+        ]
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": [
+        "#f3e4cce6",
+        {
+          "pattern": {
+            "type": "noise",
+            "color": "#5a321414",
+            "spacing": 2.5,
+            "size": 1
+          }
+        }
+      ],
+      "border": {
+        "color": "#d9c09bcc",
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#f3e4ccb3",
+      "border": {
+        "color": "#d9c09b99",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": [
+        "#f3e4cce6",
+        {
+          "pattern": {
+            "type": "noise",
+            "color": "#5a321414",
+            "spacing": 2.5,
+            "size": 1
+          }
+        }
+      ],
+      "border": {
+        "color": "#d9c09bcc",
+        "sides": [
+          "top"
+        ]
+      }
+    },
+    "topBarText": "#2b1d12",
+    "statusBarText": "#4b3524",
+    "tabs": {
+      "position": "bottom",
+      "surface": {
+        "fill": [
+          "#f3e4ccf2",
+          {
+            "pattern": {
+              "type": "noise",
+              "color": "#5a321414",
+              "spacing": 2.5,
+              "size": 1
+            }
+          }
+        ],
+        "border": {
+          "color": "#d9c09bcc",
+          "sides": [
+            "top"
+          ]
+        }
+      },
+      "text": "#4b3524",
+      "selectedText": "#fff8ee",
+      "indicator": "#9c4a1c",
+      "selected": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#a9561f",
+              "#7a3410"
+            ]
+          }
+        },
+        "gloss": 0.18,
+        "radius": 10
+      }
+    },
+    "background": [
+      "#f3e4cc"
+    ]
+  },
+  "controls": {
+    "press": "wash",
+    "button": {
+      "fill": [
+        {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#fcf5ea",
+              "#ecdcc1"
+            ]
+          }
+        },
+        {
+          "pattern": {
+            "type": "noise",
+            "color": "#5a321414",
+            "spacing": 2.5,
+            "size": 1
+          }
+        }
+      ],
+      "border": "#d4b88e",
+      "shadow": [
+        {
+          "color": "#6b3f1a26",
+          "x": 0,
+          "y": 2,
+          "blur": 6
+        },
+        {
+          "color": "#6b3f1a1a",
+          "x": 0,
+          "y": 1,
+          "blur": 2
+        }
+      ],
+      "hover": {
+        "shadow": [
+          {
+            "color": "#6b3f1a38",
+            "x": 0,
+            "y": 4,
+            "blur": 10
+          },
+          {
+            "color": "#6b3f1a21",
+            "x": 0,
+            "y": 1,
+            "blur": 2
+          }
+        ]
+      },
+      "pressed": {
+        "fill": [
+          {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#e6d3b4",
+                "#f3e6d1"
+              ]
+            }
+          },
+          {
+            "pattern": {
+              "type": "noise",
+              "color": "#5a321414",
+              "spacing": 2.5,
+              "size": 1
+            }
+          }
+        ],
+        "shadow": [],
+        "bevel": {
+          "light": "#00000000",
+          "dark": "#6b3f1a33",
+          "width": 1,
+          "sunken": true
+        }
+      },
+      "focused": {
+        "border": {
+          "color": "#9c4a1c",
+          "width": 2
+        }
+      }
+    },
+    "buttonText": "#2b1d12",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#a9561f",
+            "#7a3410"
+          ]
+        }
+      },
+      "gloss": 0.18,
+      "border": "#00000026",
+      "shadow": [
+        {
+          "color": "#8c3d124d",
+          "x": 0,
+          "y": 4,
+          "blur": 12
+        }
+      ],
+      "hover": {
+        "shadow": [
+          {
+            "color": "#8c3d1266",
+            "x": 0,
+            "y": 6,
+            "blur": 16
+          }
+        ]
+      },
+      "pressed": {
+        "gloss": 0,
+        "shadow": [
+          {
+            "color": "#8c3d1240",
+            "x": 0,
+            "y": 1,
+            "blur": 3
+          }
+        ]
+      },
+      "focused": {
+        "border": {
+          "color": "#2b1d12",
+          "width": 2
+        }
+      }
+    },
+    "primaryButtonText": "#fff8ee",
+    "chip": {
+      "fill": [
+        {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#fcf5ea",
+              "#ecdcc1"
+            ]
+          }
+        },
+        {
+          "pattern": {
+            "type": "noise",
+            "color": "#5a321414",
+            "spacing": 2.5,
+            "size": 1
+          }
+        }
+      ],
+      "border": "#d4b88e",
+      "shadow": [
+        {
+          "color": "#6b3f1a26",
+          "x": 0,
+          "y": 2,
+          "blur": 6
+        },
+        {
+          "color": "#6b3f1a1a",
+          "x": 0,
+          "y": 1,
+          "blur": 2
+        }
+      ],
+      "hover": {
+        "shadow": [
+          {
+            "color": "#6b3f1a38",
+            "x": 0,
+            "y": 4,
+            "blur": 10
+          },
+          {
+            "color": "#6b3f1a21",
+            "x": 0,
+            "y": 1,
+            "blur": 2
+          }
+        ]
+      },
+      "pressed": {
+        "fill": [
+          {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#e6d3b4",
+                "#f3e6d1"
+              ]
+            }
+          },
+          {
+            "pattern": {
+              "type": "noise",
+              "color": "#5a321414",
+              "spacing": 2.5,
+              "size": 1
+            }
+          }
+        ],
+        "shadow": [],
+        "bevel": {
+          "light": "#00000000",
+          "dark": "#6b3f1a33",
+          "width": 1,
+          "sunken": true
+        }
+      },
+      "focused": {
+        "border": {
+          "color": "#9c4a1c",
+          "width": 2
+        }
+      }
+    },
+    "chipText": "#2b1d12",
+    "chipSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#a9561f",
+            "#7a3410"
+          ]
+        }
+      },
+      "gloss": 0.18,
+      "border": "#00000026",
+      "shadow": [
+        {
+          "color": "#8c3d124d",
+          "x": 0,
+          "y": 4,
+          "blur": 12
+        }
+      ],
+      "hover": {
+        "shadow": [
+          {
+            "color": "#8c3d1266",
+            "x": 0,
+            "y": 6,
+            "blur": 16
+          }
+        ]
+      },
+      "pressed": {
+        "gloss": 0,
+        "shadow": [
+          {
+            "color": "#8c3d1240",
+            "x": 0,
+            "y": 1,
+            "blur": 3
+          }
+        ]
+      },
+      "focused": {
+        "border": {
+          "color": "#2b1d12",
+          "width": 2
+        }
+      }
+    },
+    "chipSelectedText": "#fff8ee",
+    "navSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#a9561f",
+            "#7a3410"
+          ]
+        }
+      },
+      "gloss": 0.18,
+      "radius": 10,
+      "shadow": [
+        {
+          "color": "#8c3d124d",
+          "x": 0,
+          "y": 3,
+          "blur": 8
+        }
+      ]
+    },
+    "navSelectedText": "#fff8ee",
+    "navText": "#2b1d12"
+  },
+  "cards": {
+    "video": {
+      "fill": [
+        {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#fbf4e8",
+              "#f4e7d2"
+            ]
+          }
+        },
+        {
+          "pattern": {
+            "type": "noise",
+            "color": "#5a321414",
+            "spacing": 2.5,
+            "size": 1
+          }
+        }
+      ],
+      "border": {
+        "color": "#ffffffb3",
+        "sides": [
+          "top"
+        ]
+      },
+      "shadow": [
+        {
+          "color": "#6b3f1a2e",
+          "x": 0,
+          "y": 6,
+          "blur": 18
+        },
+        {
+          "color": "#6b3f1a1f",
+          "x": 0,
+          "y": 1,
+          "blur": 2
+        }
+      ],
+      "hover": {
+        "shadow": [
+          {
+            "color": "#6b3f1a47",
+            "x": 0,
+            "y": 12,
+            "blur": 26
+          },
+          {
+            "color": "#6b3f1a24",
+            "x": 0,
+            "y": 1,
+            "blur": 2
+          }
+        ]
+      },
+      "focused": {
+        "border": {
+          "color": "#9c4a1c",
+          "width": 3
+        }
+      }
+    },
+    "padding": 8,
+    "panel": {
+      "fill": [
+        "#f9f0e1f5",
+        {
+          "pattern": {
+            "type": "noise",
+            "color": "#5a321414",
+            "spacing": 2.5,
+            "size": 1
+          }
+        }
+      ],
+      "border": {
+        "color": "#ffffffb3",
+        "sides": [
+          "top"
+        ]
+      },
+      "shadow": [
+        {
+          "color": "#6b3f1a2e",
+          "x": 0,
+          "y": 6,
+          "blur": 18
+        },
+        {
+          "color": "#6b3f1a1f",
+          "x": 0,
+          "y": 1,
+          "blur": 2
+        }
+      ]
+    },
+    "durationBadge": {
+      "fill": "#1a1008d9",
+      "radius": 4
+    },
+    "durationText": "#fff4e6"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "Michroma",
+    "size": 20,
+    "fill": {
+      "linear": {
+        "angle": 180,
+        "colors": [
+          "#b35a24",
+          "#6e2e0c"
+        ]
+      }
+    },
+    "badge": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#a9561f",
+            "#7a3410"
+          ]
+        }
+      },
+      "gloss": 0.25,
+      "shadow": [
+        {
+          "color": "#8c3d124d",
+          "x": 0,
+          "y": 2,
+          "blur": 6
+        }
+      ]
+    },
+    "badgeIcon": "#fff8ee"
+  },
+  "icons": {
+    "style": "regular",
+    "effect": "emboss"
+  },
+  "player": {
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#e39a52",
+          "#9c4a1c"
+        ]
+      }
+    }
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#15111c",
+        "text": "#f2e6d6",
+        "muted": "#cdb9a3",
+        "accent": "#eba45c",
+        "onAccent": "#24140a",
+        "border": "#3d3243",
+        "card": "#211a29",
+        "selected": "#3e2e30",
+        "onSelected": "#f2e6d6",
+        "reason": "#f2b77c",
+        "chrome": "#18131f"
+      },
+      "window": {
+        "decorations": [
+          {
+            "type": "scene",
+            "scene": "dunes",
+            "night": true,
+            "seed": 5
+          }
+        ],
+        "glass": {
+          "min": 0.7
+        },
+        "veil": 0.3,
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": [
+              "#18131f",
+              {
+                "pattern": {
+                  "type": "noise",
+                  "color": "#f0d2b00f",
+                  "spacing": 2.5,
+                  "size": 1
+                }
+              }
+            ]
+          },
+          "inactive": {
+            "fill": "#18131f"
+          },
+          "text": "#f2e6d6",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#f2e6d6",
+            "surface": {
+              "fill": "transparent",
+              "radius": 6,
+              "hover": {
+                "fill": "#ffffff1f"
+              },
+              "pressed": {
+                "fill": "#ffffff33"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "radius": 6,
+              "hover": {
+                "fill": "#c42b1c"
+              },
+              "pressed": {
+                "fill": "#a0200f"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": [
+              "#18131f",
+              {
+                "pattern": {
+                  "type": "noise",
+                  "color": "#f0d2b00f",
+                  "spacing": 2.5,
+                  "size": 1
+                }
+              }
+            ]
+          },
+          "text": "#f2e6d6",
+          "highlight": {
+            "fill": "#3e2e30"
+          },
+          "highlightText": "#f2e6d6",
+          "menu": {
+            "fill": [
+              "#211a29fa",
+              {
+                "pattern": {
+                  "type": "noise",
+                  "color": "#f0d2b00f",
+                  "spacing": 2.5,
+                  "size": 1
+                }
+              }
+            ],
+            "border": "#3d3243",
+            "radius": 10,
+            "shadow": [
+              {
+                "color": "#00000059",
+                "x": 0,
+                "y": 6,
+                "blur": 18
+              },
+              {
+                "color": "#00000040",
+                "x": 0,
+                "y": 1,
+                "blur": 2
+              }
+            ]
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": [
+            "#18131fe6",
+            {
+              "pattern": {
+                "type": "noise",
+                "color": "#f0d2b00f",
+                "spacing": 2.5,
+                "size": 1
+              }
+            }
+          ],
+          "border": {
+            "color": "#3d3243cc",
+            "sides": [
+              "bottom"
+            ]
+          }
+        },
+        "sideBar": {
+          "fill": "#18131fb3",
+          "border": {
+            "color": "#3d324399",
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": [
+            "#18131fe6",
+            {
+              "pattern": {
+                "type": "noise",
+                "color": "#f0d2b00f",
+                "spacing": 2.5,
+                "size": 1
+              }
+            }
+          ],
+          "border": {
+            "color": "#3d3243cc",
+            "sides": [
+              "top"
+            ]
+          }
+        },
+        "topBarText": "#f2e6d6",
+        "statusBarText": "#cdb9a3",
+        "tabs": {
+          "position": "bottom",
+          "surface": {
+            "fill": [
+              "#18131ff2",
+              {
+                "pattern": {
+                  "type": "noise",
+                  "color": "#f0d2b00f",
+                  "spacing": 2.5,
+                  "size": 1
+                }
+              }
+            ],
+            "border": {
+              "color": "#3d3243cc",
+              "sides": [
+                "top"
+              ]
+            }
+          },
+          "text": "#cdb9a3",
+          "selectedText": "#24140a",
+          "indicator": "#eba45c",
+          "selected": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#f2b06a",
+                  "#d98a3e"
+                ]
+              }
+            },
+            "gloss": 0.18,
+            "radius": 10
+          }
+        },
+        "background": [
+          "#15111c"
+        ]
+      },
+      "controls": {
+        "press": "wash",
+        "button": {
+          "fill": [
+            {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#2c2333",
+                  "#211a28"
+                ]
+              }
+            },
+            {
+              "pattern": {
+                "type": "noise",
+                "color": "#f0d2b00f",
+                "spacing": 2.5,
+                "size": 1
+              }
+            }
+          ],
+          "border": "#4a3d4f",
+          "shadow": [
+            {
+              "color": "#00000040",
+              "x": 0,
+              "y": 2,
+              "blur": 6
+            },
+            {
+              "color": "#00000033",
+              "x": 0,
+              "y": 1,
+              "blur": 2
+            }
+          ],
+          "hover": {
+            "shadow": [
+              {
+                "color": "#00000059",
+                "x": 0,
+                "y": 4,
+                "blur": 10
+              },
+              {
+                "color": "#00000040",
+                "x": 0,
+                "y": 1,
+                "blur": 2
+              }
+            ]
+          },
+          "pressed": {
+            "fill": [
+              {
+                "linear": {
+                  "angle": 180,
+                  "colors": [
+                    "#1c1622",
+                    "#2a2231"
+                  ]
+                }
+              },
+              {
+                "pattern": {
+                  "type": "noise",
+                  "color": "#f0d2b00f",
+                  "spacing": 2.5,
+                  "size": 1
+                }
+              }
+            ],
+            "shadow": [],
+            "bevel": {
+              "light": "#00000000",
+              "dark": "#00000066",
+              "width": 1,
+              "sunken": true
+            }
+          },
+          "focused": {
+            "border": {
+              "color": "#eba45c",
+              "width": 2
+            }
+          }
+        },
+        "buttonText": "#f2e6d6",
+        "primaryButton": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#f2b06a",
+                "#d98a3e"
+              ]
+            }
+          },
+          "gloss": 0.18,
+          "border": "#00000026",
+          "shadow": [
+            {
+              "color": "#00000059",
+              "x": 0,
+              "y": 4,
+              "blur": 12
+            }
+          ],
+          "hover": {
+            "shadow": [
+              {
+                "color": "#00000073",
+                "x": 0,
+                "y": 6,
+                "blur": 16
+              }
+            ]
+          },
+          "pressed": {
+            "gloss": 0,
+            "shadow": [
+              {
+                "color": "#00000040",
+                "x": 0,
+                "y": 1,
+                "blur": 3
+              }
+            ]
+          },
+          "focused": {
+            "border": {
+              "color": "#f2e6d6",
+              "width": 2
+            }
+          }
+        },
+        "primaryButtonText": "#24140a",
+        "chip": {
+          "fill": [
+            {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#2c2333",
+                  "#211a28"
+                ]
+              }
+            },
+            {
+              "pattern": {
+                "type": "noise",
+                "color": "#f0d2b00f",
+                "spacing": 2.5,
+                "size": 1
+              }
+            }
+          ],
+          "border": "#4a3d4f",
+          "shadow": [
+            {
+              "color": "#00000040",
+              "x": 0,
+              "y": 2,
+              "blur": 6
+            },
+            {
+              "color": "#00000033",
+              "x": 0,
+              "y": 1,
+              "blur": 2
+            }
+          ],
+          "hover": {
+            "shadow": [
+              {
+                "color": "#00000059",
+                "x": 0,
+                "y": 4,
+                "blur": 10
+              },
+              {
+                "color": "#00000040",
+                "x": 0,
+                "y": 1,
+                "blur": 2
+              }
+            ]
+          },
+          "pressed": {
+            "fill": [
+              {
+                "linear": {
+                  "angle": 180,
+                  "colors": [
+                    "#1c1622",
+                    "#2a2231"
+                  ]
+                }
+              },
+              {
+                "pattern": {
+                  "type": "noise",
+                  "color": "#f0d2b00f",
+                  "spacing": 2.5,
+                  "size": 1
+                }
+              }
+            ],
+            "shadow": [],
+            "bevel": {
+              "light": "#00000000",
+              "dark": "#00000066",
+              "width": 1,
+              "sunken": true
+            }
+          },
+          "focused": {
+            "border": {
+              "color": "#eba45c",
+              "width": 2
+            }
+          }
+        },
+        "chipText": "#f2e6d6",
+        "chipSelected": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#f2b06a",
+                "#d98a3e"
+              ]
+            }
+          },
+          "gloss": 0.18,
+          "border": "#00000026",
+          "shadow": [
+            {
+              "color": "#00000059",
+              "x": 0,
+              "y": 4,
+              "blur": 12
+            }
+          ],
+          "hover": {
+            "shadow": [
+              {
+                "color": "#00000073",
+                "x": 0,
+                "y": 6,
+                "blur": 16
+              }
+            ]
+          },
+          "pressed": {
+            "gloss": 0,
+            "shadow": [
+              {
+                "color": "#00000040",
+                "x": 0,
+                "y": 1,
+                "blur": 3
+              }
+            ]
+          },
+          "focused": {
+            "border": {
+              "color": "#f2e6d6",
+              "width": 2
+            }
+          }
+        },
+        "chipSelectedText": "#24140a",
+        "navSelected": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#f2b06a",
+                "#d98a3e"
+              ]
+            }
+          },
+          "gloss": 0.18,
+          "radius": 10,
+          "shadow": [
+            {
+              "color": "#0000004d",
+              "x": 0,
+              "y": 3,
+              "blur": 8
+            }
+          ]
+        },
+        "navSelectedText": "#24140a",
+        "navText": "#f2e6d6"
+      },
+      "cards": {
+        "video": {
+          "fill": [
+            {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#261e2e",
+                  "#1d1724"
+                ]
+              }
+            },
+            {
+              "pattern": {
+                "type": "noise",
+                "color": "#f0d2b00f",
+                "spacing": 2.5,
+                "size": 1
+              }
+            }
+          ],
+          "border": {
+            "color": "#ffffff14",
+            "sides": [
+              "top"
+            ]
+          },
+          "shadow": [
+            {
+              "color": "#00000059",
+              "x": 0,
+              "y": 6,
+              "blur": 18
+            },
+            {
+              "color": "#00000040",
+              "x": 0,
+              "y": 1,
+              "blur": 2
+            }
+          ],
+          "hover": {
+            "shadow": [
+              {
+                "color": "#00000080",
+                "x": 0,
+                "y": 12,
+                "blur": 26
+              },
+              {
+                "color": "#0000004d",
+                "x": 0,
+                "y": 1,
+                "blur": 2
+              }
+            ]
+          },
+          "focused": {
+            "border": {
+              "color": "#eba45c",
+              "width": 3
+            }
+          }
+        },
+        "padding": 8,
+        "panel": {
+          "fill": [
+            "#211a29f5",
+            {
+              "pattern": {
+                "type": "noise",
+                "color": "#f0d2b00f",
+                "spacing": 2.5,
+                "size": 1
+              }
+            }
+          ],
+          "border": {
+            "color": "#ffffff14",
+            "sides": [
+              "top"
+            ]
+          },
+          "shadow": [
+            {
+              "color": "#00000059",
+              "x": 0,
+              "y": 6,
+              "blur": 18
+            },
+            {
+              "color": "#00000040",
+              "x": 0,
+              "y": 1,
+              "blur": 2
+            }
+          ]
+        },
+        "durationBadge": {
+          "fill": "#1a1008d9",
+          "radius": 4
+        },
+        "durationText": "#fff4e6"
+      },
+      "logo": {
+        "text": "LUMTUB",
+        "font": "Michroma",
+        "size": 20,
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#fbe3c4",
+              "#eba45c"
+            ]
+          }
+        },
+        "badge": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#f2b06a",
+                "#d98a3e"
+              ]
+            }
+          },
+          "gloss": 0.25,
+          "shadow": [
+            {
+              "color": "#0000004d",
+              "x": 0,
+              "y": 2,
+              "blur": 6
+            }
+          ]
+        },
+        "badgeIcon": "#24140a"
+      },
+      "icons": {
+        "style": "regular",
+        "effect": "none"
+      },
+      "player": {
+        "progress": {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#f6c58a",
+              "#e0863a"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

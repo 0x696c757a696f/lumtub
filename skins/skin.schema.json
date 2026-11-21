@@ -4579,6 +4579,7 @@
                     "checker",
                     "stitch",
                     "grain",
+                    "noise",
                     "scanlines"
                   ]
                 },
@@ -4805,6 +4806,7 @@
             "checker",
             "stitch",
             "grain",
+            "noise",
             "scanlines"
           ]
         },
@@ -4828,7 +4830,8 @@
             "underwater",
             "aurora",
             "city",
-            "collage"
+            "collage",
+            "dunes"
           ],
           "description": "With type scene: the landscape. 景色。"
         },

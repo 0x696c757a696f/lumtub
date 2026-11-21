@@ -1105,6 +1105,12 @@ List<SettingEntry> aboutEntries(AppController controller) => [
             leading: const Icon(AppIcons.heartFill, color: Color(0xFFEA4AAA)),
             onTap: () => openSupport(context),
           ), subtitle: tr('sponsor donate support')),
+      SettingEntry(tr('Star it on GitHub'), (context) => NormalItem(
+            title: tr('Star it on GitHub'),
+            subtitle: tr('Helps more people find Lumtub'),
+            leading: Icon(AppIcons.star, color: const Color(0xFFE3B341)),
+            onTap: () => openExternal(_repository),
+          ), subtitle: 'GitHub star'),
       SettingEntry(tr('Support reminder'), (context) {
         final reminder = controller.supportReminder;
         return StatefulBuilder(builder: (context, setState) => SwitchItem(

@@ -88,7 +88,7 @@ anything else out and Lumtub draws it the usual way.
 | `window.titleBar` | The window frame drawn by Lumtub (computers only). 标题栏（仅电脑）。 |
 | `window.menuBar` | File, View, Play, Help with Alt keys (computers only); `position: "top"` puts it above the title bar, `appMenu` adds a bold app menu first. 菜单栏（仅电脑）；`position: "top"` 放到标题栏上面，`appMenu` 在最前面加粗体应用菜单。 |
 | `window.topBar`, `sideBar`, `statusBar` | The search row, navigation, status line; `topBarText` and `statusBarText` colour what is on them. 顶栏、侧栏、状态栏及其文字颜色。 |
-| `window.decorations` `scene` | A whole painted landscape behind everything: `meadow`, `sky`, `underwater`, `aurora`, `city`, `collage`; `"night": true` for the night version. 整幅背景景色：草原、蓝天、水下、极光、未来城、千禧拼贴；`"night": true` 是夜晚版。 |
+| `window.decorations` `scene` | A whole painted landscape behind everything: `meadow`, `sky`, `underwater`, `aurora`, `city`, `collage`, `dunes`; `"night": true` for the night version. 整幅背景景色：草原、蓝天、水下、极光、未来城、千禧拼贴、沙丘；`"night": true` 是夜晚版。 |
 | `window.veil` | 0–0.9 of the page colour laid over the backdrop under the pages, so text reads over a busy picture; it thins when the glass is clearer than `glass.min`. 在页面下面垫一层页面底色，景色再花文字也看得清；玻璃比 `glass.min` 更透明时它会变淡。 |
 | `window.glass` | `true` (or `{"min": 0.6}`, the clearest glass at which all text still reads) lets users make the bars, rail, cards and panels clearer, down to 30%, so the background shows through; text must read on the background too. `true` 时用户可以把栏、侧栏、卡片、面板的不透明度调低到 30%，透出背景；`min` 是文字仍然都看得清的最透明程度。 |
 | `window.tabs` | Tabs for the pages on a phone or in a narrow window, at the bottom or under the top bar (`position`), with `selected`, `indicator`, `labels: "text"` and `caps`. 手机或窄窗口的页面标签栏，在底部或顶栏下面（`position`），可设 `selected`、`indicator`、`labels: "text"`、`caps`。 |
@@ -355,6 +355,7 @@ own shapes; only the colours change. 跟随浅色/深色模式，保留 Lumtub �
 | `cassette` | Cassette Future | 磁带未来 | beige hardware, amber terminal text, 1970s–80s visions of the future |
 | `clay` | Clay | 软陶 | soft puffy clay shapes, ~2021 |
 | `brutal` | Neo-Brutal | 新粗野 | thick black outlines, flat clashing colours, square corners |
+| `dunes` | Dunes | 沙丘 | wind-carved dunes, a hazy sun, two moons by night, sand grain and soft shadows |
 
 Fonts in [`fonts/`](fonts/) are under the SIL Open Font License 1.1; each
 licence is next to its font.

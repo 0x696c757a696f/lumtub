@@ -534,7 +534,7 @@ class ImagePaint extends SkinPaint {
 /// A repeating pixel pattern.
 class PatternPaint extends SkinPaint {
   const PatternPaint(this.type, this.color, {required this.spacing, required this.size, required this.angle});
-  static const types = {'lines', 'grid', 'dots', 'checker', 'scanlines', 'stitch', 'grain'};
+  static const types = {'lines', 'grid', 'dots', 'checker', 'scanlines', 'stitch', 'grain', 'noise'};
   final String type;
   final Color color;
   final double spacing;
@@ -806,7 +806,7 @@ class BeamDecoration extends SkinDecoration {
 /// Glossy ribbons swept across the window, as on the water and glass
 /// wallpapers of the late 2000s.
 /// The landscapes a skin can have painted behind it.
-const sceneNames = ['meadow', 'sky', 'underwater', 'aurora', 'city', 'collage'];
+const sceneNames = ['meadow', 'sky', 'underwater', 'aurora', 'city', 'collage', 'dunes'];
 
 /// A whole landscape behind everything: lib/ui/skin_scenes.dart.
 class SceneDecoration extends SkinDecoration {

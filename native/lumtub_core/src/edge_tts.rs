@@ -176,6 +176,8 @@ fn speak_once(text: &str, voice: &str) -> Result<Vec<u8>, Attempt> {
         match socket.read().map_err(other)? {
             Message::Text(text) => {
                 let head = text.split("\r\n\r\n").next().unwrap_or("");
+                #[cfg(test)]
+                eprintln!("  text: {}", head.replace("\r\n", " | "));
                 if head.lines().any(|line| line.trim() == "Path:turn.end") {
                     break;
                 }
@@ -188,7 +190,11 @@ fn speak_once(text: &str, voice: &str) -> Result<Vec<u8>, Attempt> {
                     }
                 }
             }
-            Message::Close(_) => break,
+            Message::Close(frame) => {
+                #[cfg(test)]
+                eprintln!("  closed: {frame:?}");
+                break;
+            }
             _ => {}
         }
     }
@@ -517,6 +523,10 @@ mod tests {
             ("Hello", "en-US-JennyNeural"),
             ("食べる", "ja-JP-NanamiNeural"),
             ("学习", "zh-CN-XiaoxiaoNeural"),
+            (
+                "The quick brown fox jumps over the lazy dog, twice.",
+                "en-US-JennyNeural",
+            ),
         ] {
             let started = std::time::Instant::now();
             let sound = speak(text, voice).unwrap_or_else(|e| panic!("{voice}: {e}"));
@@ -544,6 +554,8 @@ mod tests {
                     }
                 }
             }
+            // For listening to it elsewhere.
+            println!("  base64 {}", base64(&sound));
             assert!(sound.len() > 1000, "{voice}");
         }
     }

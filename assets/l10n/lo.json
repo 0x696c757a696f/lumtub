@@ -3653,5 +3653,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "ບາງປະໂຫຍກບໍ່ຢູ່ໃນບັບເຟີແລ້ວ, ສະນັ້ນຈຶ່ງບັນທຶກພຽງການອັດສຽງຂອງທ່ານສຳລັບພວກມັນ.",
   "Languages I understand": "ພາສາທີ່ຂ້ອຍເຂົ້າໃຈ",
   "Subtitles don't turn on by themselves for videos in these languages": "ຄຳບັນຍາຍບໍ່ເປີດເອງສຳລັບວິດີໂອໃນພາສາເຫຼົ່ານີ້",
-  "On for languages I don't understand": "ເປີດສຳລັບພາສາທີ່ຂ້ອຍບໍ່ເຂົ້າໃຈ"
+  "On for languages I don't understand": "ເປີດສຳລັບພາສາທີ່ຂ້ອຍບໍ່ເຂົ້າໃຈ",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "ການໃຫ້ດາວໃນ GitHub ບໍ່ມີຄ່າໃຊ້ຈ່າຍ ແລະ ຊ່ວຍໃຫ້ຄົນຫຼາຍຂຶ້ນຄົ້ນພົບ Lumtub. ຄຳຖາມນີ້ຈະຖາມພຽງຄັ້ງດຽວ."
 }

@@ -3654,5 +3654,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "Disa fjali nuk janë më në memorien e përkohshme, prandaj për to ruhet vetëm regjistrimi juaj.",
   "Languages I understand": "Gjuhët që kuptoj",
   "Subtitles don't turn on by themselves for videos in these languages": "Titrat nuk ndizen vetë për videot në këto gjuhë",
-  "On for languages I don't understand": "Aktiv për gjuhët që nuk i kuptoj"
+  "On for languages I don't understand": "Aktiv për gjuhët që nuk i kuptoj",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "Një yll në GitHub nuk kushton asgjë dhe i ndihmon më shumë njerëz të gjejnë Lumtub. Kjo pyetet vetëm këtë herë."
 }

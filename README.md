@@ -15,6 +15,7 @@ No account needed to watch.
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
 [![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
+[![GitHub stars](https://img.shields.io/github/stars/0x696c757a696f/lumtub?style=flat&logo=github&color=E3B341)](https://github.com/0x696c757a696f/lumtub/stargazers)
 <a href="#support-lumtub"><img src="docs/sponsor/sponsor-en.svg" alt="Sponsor" height="20"></a>
 
 #### Download
@@ -26,6 +27,8 @@ No account needed to watch.
 <a href="https://github.com/0x696c757a696f/lumtub/releases/latest"><img src="https://img.shields.io/badge/Download%20for-iPhone%20%26%20iPad-555555?style=for-the-badge&logo=ios&logoColor=white" alt="iPhone & iPad" height="36"></a>
 
 <sub>Free, open source, no telemetry. Which file to pick: <a href="#get-it">Get it</a>. iPhone and iPad are in preview.</sub>
+
+⭐ **Like Lumtub? Star it on GitHub (top right of this page).** It costs nothing and is the main way new people find it.
 
 https://github.com/user-attachments/assets/97e3ce09-8e66-43fe-9125-bff1b3dcb3fe
 

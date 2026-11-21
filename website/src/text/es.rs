@@ -98,7 +98,7 @@ pub static ES: Text = Text {
         pack_title: "Paquete de aprendizaje · versión preliminar",
         pack: ["Toca una palabra y ve su significado. Los diccionarios se descargan una vez y luego funcionan sin conexión: chino, inglés, japonés y coreano; español, francés, alemán, italiano y ruso en beta.", "Pinyin, kana y romanización coreana sobre la línea.", "Las palabras por encima de tu nivel se resaltan, así solo te paras en las nuevas.", "Un cuaderno de vocabulario que guarda la frase, el audio original y el momento del vídeo.", "Envía palabras a Anki con un clic, o exporta CSV."],
         trial: "Pruébalo primero: tus primeras 30 búsquedas tienen todo activado, sin cuenta. Después, sin el paquete, 3 búsquedas al día.",
-        price: "Precio de lanzamiento 99 ¥ hasta el 3 de diciembre, luego 188 ¥. Un solo pago, sin suscripción, en 爱发电 (Alipay o WeChat Pay). El pago con tarjeta llegará más adelante.",
+        price: "Precio de lanzamiento 99 ¥ hasta el 3 de diciembre, luego 129 ¥. Un solo pago, sin suscripción, en 爱发电 (Alipay o WeChat Pay). El pago con tarjeta llegará más adelante.",
         fine: "Windows, macOS y Linux. Una licencia para hasta 5 de tus dispositivos; la app la comprueba en línea más o menos una vez cada 30 días.",
         free_title: "Gratis para todos",
         free: ["Pausa tras cada línea, para entenderla antes de seguir.", "Traducción borrosa hasta que pasas el ratón: primero adivina, luego comprueba.", "Repite, repite en bucle y salta de línea en línea.", "Shadowing: grábate y compárate con el original.", "Exporta la lista de subtítulos con traducciones en CSV."],

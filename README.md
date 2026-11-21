@@ -68,7 +68,7 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 - **Send to Anki** in one click, or export CSV.
 
 **Try it free:** your first 30 word lookups have everything switched on, no account needed. After that, without the pack, you can look up 3 words a day. [Install guide and refunds](https://0x696c757a696f.github.io/lumtub/learn/).<br>
-**Early-bird price:** ¥99 until 3 December, then ¥188. Pay once, no subscription, on [爱发电](https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00) (Alipay or WeChat Pay). Card payment is coming later. One license for up to 5 of your devices; the app checks it online about once every 30 days.
+**Early-bird price:** ¥99 until 3 December, then ¥129. Pay once, no subscription, on [爱发电](https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00) (Alipay or WeChat Pay). Card payment is coming later. One license for up to 5 of your devices; the app checks it online about once every 30 days.
 
 **Free for everyone**, in the Subtitles menu under **Language learning**:
 

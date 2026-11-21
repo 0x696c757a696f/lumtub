@@ -24,6 +24,7 @@ class _LearningHomeState extends State<LearningHome> {
 
   List<Widget> _cards(BuildContext context) => [
         if (learning.licenseStopped) _StoppedCard(learning: learning),
+        if (_GettingStarted.needed(learning)) _GettingStarted(controller: controller),
         if (learning.licensed) _StatusCard(controller: controller) else _Pitch(learning: learning),
         _VocabularyCard(controller: controller),
         _DictionariesCard(learning: learning),
@@ -221,10 +222,10 @@ class _VocabularyCard extends StatelessWidget {
           child: _CardTitle(
             icon: AppIcons.bookOpenText,
             title: tr('Vocabulary book'),
-            subtitle: learning.licensed || words.isNotEmpty ? tr('{0} words', [words.length]) : tr('Part of the learning pack'),
+            subtitle: tr('{0} words', [words.length]),
             // Saved words stay the buyer's: seen and exported even when the
             // pack is off here.
-            trailing: learning.licensed || words.isNotEmpty ? TextButton(onPressed: () => unawaited(openVocabularyBook(context, controller)), child: Text(tr('See all'))) : null,
+            trailing: words.isEmpty ? null : TextButton(onPressed: () => unawaited(openVocabularyBook(context, controller)), child: Text(tr('See all'))),
           ),
         ),
         if (recent.isEmpty)
@@ -330,13 +331,11 @@ class _PackCell extends StatelessWidget {
     final status = switch (state) {
       PackState.missing => tr('Not downloaded'),
       PackState.downloading => progress == null ? tr('Downloading…') : tr('Downloading… {0}%', [(progress * 100).round()]),
-      PackState.loading => learning.licensed ? tr('Loading…') : tr('Downloaded'),
+      PackState.loading => tr('Loading…'),
       PackState.downloaded || PackState.ready => tr('Ready'),
       PackState.failed => tr('Failed: {0}', [learning.errorOf(pack) ?? '']),
     };
-    final action = !learning.licensed
-        ? null
-        : switch (state) {
+    final action = switch (state) {
             PackState.missing || PackState.failed => IconButton.filledTonal(tooltip: tr('Download'), icon: Icon(AppIcons.downloadSimple, size: 18), onPressed: () => unawaited(learning.download(pack))),
             PackState.downloading || PackState.loading => SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, value: state == PackState.downloading ? progress : null)),
             PackState.ready || PackState.downloaded => IconButton(tooltip: tr('Delete'), icon: Icon(AppIcons.trash, size: 18, color: colors.onSurfaceVariant), onPressed: () => unawaited(learning.delete(pack))),
@@ -398,4 +397,69 @@ class _AboutCard extends StatelessWidget {
           ),
         ]),
       );
+}
+
+/// 新手引导: three steps to a first word, each ticked off as it is done;
+/// gone once all three are.
+class _GettingStarted extends StatelessWidget {
+  const _GettingStarted({required this.controller});
+  final AppController controller;
+
+  static bool _hasDictionary(Learning learning) => DictionaryPack.values.any((p) => const {PackState.ready, PackState.downloaded, PackState.loading}.contains(learning.stateOf(p)));
+  static bool needed(Learning learning) => !_hasDictionary(learning) || !learning.lookedUp || (learning.book?.words.isEmpty ?? true);
+
+  @override
+  Widget build(BuildContext context) {
+    final learning = controller.learning;
+    final colors = context.colors;
+    final steps = [
+      (_hasDictionary(learning), tr('Download the dictionary of a language you watch'), tr('Below, under Dictionaries: a few MB, then it works offline.')),
+      (learning.lookedUp, tr('Play a video with subtitles in that language and tap a word'), tr('Pinyin or kana show above the words; the video waits while the card is open.')),
+      (learning.book?.words.isNotEmpty ?? false, tr('Add the word to your vocabulary book'), tr('It keeps the line and the moment, and goes to Anki in one tap.')),
+    ];
+    final next = steps.indexWhere((s) => !s.$1);
+    return Card(
+      color: colors.primaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(Space.l),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(tr('Get started in three steps'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w700, color: colors.onPrimaryContainer)),
+          const SizedBox(height: Space.m),
+          for (final (i, (done, title, detail)) in steps.indexed)
+            Padding(
+              padding: const EdgeInsets.only(bottom: Space.s),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: done || i == next ? colors.primary : null,
+                    border: done || i == next ? null : Border.all(color: colors.onPrimaryContainer.withValues(alpha: 0.4)),
+                  ),
+                  child: done
+                      ? Icon(AppIcons.check, size: 15, color: colors.onPrimary)
+                      : Text('${i + 1}', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: i == next ? colors.onPrimary : colors.onPrimaryContainer)),
+                ),
+                const SizedBox(width: Space.m),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(title, style: context.text.bodyLarge?.copyWith(
+                      fontWeight: i == next ? FontWeight.w600 : null,
+                      color: colors.onPrimaryContainer.withValues(alpha: done ? 0.6 : 1),
+                      decoration: done ? TextDecoration.lineThrough : null,
+                    )),
+                    if (!done) Text(detail, style: context.text.bodySmall?.copyWith(color: colors.onPrimaryContainer.withValues(alpha: 0.75))),
+                  ]),
+                ),
+              ]),
+            ),
+          if (!learning.licensed)
+            Text(tr('Free to try: {0} word lookups a day, no account', [Learning.trialPerDay]),
+                style: context.text.bodySmall?.copyWith(color: colors.onPrimaryContainer.withValues(alpha: 0.75))),
+        ]),
+      ),
+    );
+  }
 }

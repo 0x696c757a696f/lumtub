@@ -3762,7 +3762,7 @@
   "Japanese dictionary (Japanese–Chinese–English, with kana)": "日语词典（日中英，带假名）",
   "Chinese dictionary: CC-CEDICT by MDBG, under CC BY-SA 4.0. English dictionary: ECDICT by skywind3000, under the MIT license. Japanese dictionary: JMdict by the Electronic Dictionary Research and Development Group, under CC BY-SA 4.0.": "中文词典：CC-CEDICT（MDBG 发布，CC BY-SA 4.0 许可）。英语词典：ECDICT（skywind3000，MIT 许可）。日语词典：JMdict（EDRDG，CC BY-SA 4.0 许可）。",
   "How to use it: download a dictionary, turn on a Chinese, English or Japanese subtitle, then tap any word on the video or in the subtitle list. The video waits while the word is open. Everything stays on this device.": "用法：先下载词典，打开中文、英文或日文字幕，再点视频上或字幕列表里的任意一个词。查词时视频会暂停。所有数据都只在这台设备上。",
-  "Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, all your devices, no account, no subscription. Buying it keeps Lumtub alive.": "支持中文、英语、日语、韩语、西班牙语、法语、德语、意大利语和俄语。一次付费，你所有的设备都能用，不用注册，不按月收费。你的购买让 Lumtub 能一直做下去。",
+  "Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, up to 5 devices, no account, no subscription. Buying it keeps Lumtub alive.": "支持中文、英语、日语、韩语、西班牙语、法语、德语、意大利语和俄语。一次付费，最多 5 台设备，不用注册，不按月收费。你的购买让 Lumtub 能一直做下去。",
   "Pinyin above Chinese, kana above Japanese": "中文上方显示拼音，日语上方显示假名",
   "Romanization above Korean": "韩语上方显示罗马音",
   "Korean words in Latin letters, such as hangugeo above 한국어": "用拉丁字母标注韩语读音，例如 한국어 上方显示 hangugeo",
@@ -3913,5 +3913,17 @@
   "A code works on up to 5 devices. Remove one you no longer use under Learning › Devices; a reinstalled Lumtub counts as a new device.": "一个激活码最多用于 5 台设备。不用的设备可以在「学习 › 设备」里移除；重装 Lumtub 算作新设备。",
   "Once the code is activated it keeps working without internet; Lumtub only checks now and then, when it can.": "激活后断网也能一直使用；Lumtub 只在能联网时偶尔确认一下。",
   "If the pack does not work as described, or you were charged by mistake, write to us with your order number and we will fix it or refund you. A refunded order stops its code; your vocabulary book stays on your computer and can still be exported.": "如果学习包与描述不符或误扣款，请带上订单号来信，我们会修复或退款。退款后激活码停用，生词本仍留在你的电脑上，照样可以导出。",
-  "Orders, refunds and questions: {0}": "订单、退款和问题请联系：{0}"
+  "Orders, refunds and questions: {0}": "订单、退款和问题请联系：{0}",
+  "Free to try: {0} word lookups a day, no account": "免费试用：每天点词查 {0} 次，不用注册",
+  "Free today: {0} of {1} word lookups left. Buy once for unlimited.": "今天还能免费查 {0} 次（每天 {1} 次）。买一次就不限次数。",
+  "Today's {0} free word lookups are used up": "今天的 {0} 次免费查词用完了",
+  "More tomorrow. With the learning pack, look up as many words as you like, on up to 5 devices, with one payment and no subscription. Readings and your vocabulary book keep working either way.": "明天会再给。买了学习包就能随便查，最多 5 台设备，一次付费、不用订阅。拼音假名和生词本不受影响，照常可用。",
+  "See the learning pack": "看看学习包",
+  "Get started in three steps": "三步上手",
+  "Download the dictionary of a language you watch": "下载你看视频的语言的词典",
+  "Below, under Dictionaries: a few MB, then it works offline.": "在下面「词典」里，几 MB，下完就能离线用。",
+  "Play a video with subtitles in that language and tap a word": "播放带该语言字幕的视频，点字幕里的词",
+  "Pinyin or kana show above the words; the video waits while the card is open.": "词上方会显示拼音或假名；查词卡片打开时视频自动暂停。",
+  "Add the word to your vocabulary book": "把这个词加入生词本",
+  "It keeps the line and the moment, and goes to Anki in one tap.": "会记下原句和视频时间点，一键导入 Anki。"
 }

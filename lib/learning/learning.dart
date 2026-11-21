@@ -156,6 +156,42 @@ class Learning extends ChangeNotifier {
   Object? _lastView;
 
   LearningLicense? get license => _license;
+
+  /// Without the pack, this many word cards a day: dictionaries, readings
+  /// above words and the vocabulary book all work, so a learner sees what
+  /// they would buy.
+  static const trialPerDay = 20;
+  String _trialDay = '';
+
+  /// A word has been looked up here at least once: the getting-started
+  /// steps tick it off.
+  bool lookedUp = false;
+  int _trialUsed = 0;
+  static String get _today => DateTime.now().toIso8601String().substring(0, 10);
+
+  /// Word cards left today without the pack; unlimited with it.
+  int get trialLeft => licensed ? trialPerDay : (_trialDay == _today ? (trialPerDay - _trialUsed).clamp(0, trialPerDay) : trialPerDay);
+
+  /// Counts one word card; false when today's free ones are used up.
+  Future<bool> takeLookup() async {
+    if (!lookedUp) {
+      lookedUp = true;
+      if (licensed) {
+        await _save();
+        notifyListeners();
+      }
+    }
+    if (licensed) return true;
+    if (_trialDay != _today) {
+      _trialDay = _today;
+      _trialUsed = 0;
+    }
+    if (_trialUsed >= trialPerDay) return false;
+    _trialUsed++;
+    await _save();
+    notifyListeners();
+    return true;
+  }
   bool get licensed => _license != null && !_blocked && (_receiptDay != null || (_entered != null && DateTime.now().difference(_entered!) < grace));
 
   /// A code is kept but does not unlock here: revoked, taken off this
@@ -200,16 +236,15 @@ class Learning extends ChangeNotifier {
   PackState stateOf(DictionaryPack pack) => _packs[pack]!.state;
   double? progressOf(DictionaryPack pack) => _packs[pack]!.progress;
   String? errorOf(DictionaryPack pack) => _packs[pack]!.error;
-  ChineseDictionary? get chinese => licensed ? _packs[DictionaryPack.chinese]!.dictionary as ChineseDictionary? : null;
-  EnglishDictionary? get english => licensed ? _packs[DictionaryPack.english]!.dictionary as EnglishDictionary? : null;
-  JapaneseDictionary? get japanese => licensed ? _packs[DictionaryPack.japanese]!.dictionary as JapaneseDictionary? : null;
+  ChineseDictionary? get chinese => _packs[DictionaryPack.chinese]!.dictionary as ChineseDictionary?;
+  EnglishDictionary? get english => _packs[DictionaryPack.english]!.dictionary as EnglishDictionary?;
+  JapaneseDictionary? get japanese => _packs[DictionaryPack.japanese]!.dictionary as JapaneseDictionary?;
   /// Whether a dictionary is on disk, read or not: lines in its language
   /// are looked at, which reads it the first time.
-  bool get anyDictionary => licensed && _packs.values.any((p) => const {PackState.downloaded, PackState.loading, PackState.ready}.contains(p.state));
+  bool get anyDictionary => _packs.values.any((p) => const {PackState.downloaded, PackState.loading, PackState.ready}.contains(p.state));
 
   /// The Wiktionary dictionary for [language], when it is ready.
   WiktionaryDictionary? wiktionary(String language) {
-    if (!licensed) return null;
     for (final pack in DictionaryPack.values) {
       if (pack.wiktionary && pack.language == language) return _packs[pack]!.dictionary as WiktionaryDictionary?;
     }
@@ -237,7 +272,6 @@ class Learning extends ChangeNotifier {
     if (WiktionaryDictionary.looksCyrillic(text)) return _onDisk('ru') ? _wiktionaryWords('ru', text) : null;
     if (!EnglishDictionary.looksLatin(text)) return null;
     final latin = [for (final code in const ['en', 'es', 'fr', 'de', 'it']) if (_packs[DictionaryPack.values.firstWhere((p) => p.language == code)]!.state case PackState.downloaded || PackState.loading || PackState.ready) code];
-    if (!licensed) return null;
     final language = _latin.guess(text, latin);
     // Read on first use; until then the line stays plain.
     if (language == null || !_onDisk(language)) return null;
@@ -335,6 +369,12 @@ class Learning extends ChangeNotifier {
           _entered = DateTime.tryParse('${json['entered'] ?? ''}');
           _blocked = json['blocked'] == true;
           _stopReason = '${json['stopped'] ?? ''}';
+          lookedUp = json['lookedUp'] == true;
+          final trial = json['trial'];
+          if (trial is Map) {
+            _trialDay = '${trial['day'] ?? ''}';
+            _trialUsed = trial['used'] is int ? trial['used'] as int : 0;
+          }
         }
       }
     } catch (e) {
@@ -360,10 +400,9 @@ class Learning extends ChangeNotifier {
       if (_receiptDay == null || DateTime.now().difference(_receiptDay!) > recheck) unawaited(_checkIn());
     }
     notifyListeners();
-    if (licensed) {
-      unawaited(_book!.load());
-      unawaited(_updateAll());
-    }
+    // Everyone can try the pack, so dictionaries on disk stay current.
+    unawaited(_book!.load());
+    unawaited(_updateAll());
   }
 
   bool _updating = false;
@@ -670,7 +709,7 @@ class Learning extends ChangeNotifier {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1}));
+      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1, 'trial': {'day': _trialDay, 'used': _trialUsed}, 'lookedUp': lookedUp}));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }
@@ -679,7 +718,6 @@ class Learning extends ChangeNotifier {
   /// Whether [language]'s dictionary is on disk; reading it starts now
   /// when it has not been read.
   bool _onDisk(String language) {
-    if (!licensed) return false;
     for (final pack in DictionaryPack.values) {
       if (pack.language != language) continue;
       final state = _packs[pack]!.state;
@@ -879,7 +917,7 @@ class Learning extends ChangeNotifier {
       }
       return;
     }
-    if (licensed) unawaited(_downloadSegmenter(pack));
+    unawaited(_downloadSegmenter(pack));
   }
 
   Future<void> _downloadSegmenter(DictionaryPack pack) async {

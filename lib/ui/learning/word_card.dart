@@ -12,6 +12,7 @@ import '../../learning/learning.dart';
 import '../../learning/vocabulary.dart';
 import '../../learning/wiktionary_dictionary.dart';
 import '../app_icons.dart';
+import 'learning_page.dart' show openLearningPage;
 
 /// The dictionary entries for [token], from a line heard at [at]: its
 /// readings and meanings, its characters, and a button that keeps it in
@@ -26,6 +27,11 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
     _ => learning.wiktionary(language) != null,
   };
   if (!ready) return;
+  if (!await learning.takeLookup()) {
+    if (context.mounted) await _trialUsedUp(context, controller);
+    return;
+  }
+  if (!context.mounted) return;
   final player = controller.player;
   final wasPlaying = player?.state.playing ?? false;
   if (wasPlaying) unawaited(player!.pause());
@@ -41,6 +47,26 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
   );
   if (wasPlaying && controller.player == player) unawaited(player?.play());
 }
+
+/// Today's free word cards are used up: what the pack gives, and where
+/// to get it.
+Future<void> _trialUsedUp(BuildContext context, AppController controller) => showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr("Today's {0} free word lookups are used up", [Learning.trialPerDay])),
+        content: Text(tr('More tomorrow. With the learning pack, look up as many words as you like, on up to 5 devices, with one payment and no subscription. Readings and your vocabulary book keep working either way.')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Later'))),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              unawaited(openLearningPage(context, controller));
+            },
+            child: Text(tr('See the learning pack')),
+          ),
+        ],
+      ),
+    );
 
 class _WordCard extends StatelessWidget {
   const _WordCard({required this.controller, required this.dictionary, required this.token, required this.sentence, required this.translation, required this.at});

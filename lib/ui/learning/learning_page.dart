@@ -398,7 +398,6 @@ List<(String, String, WidgetBuilder)> learningSettingRows(AppController controll
           subtitle: tr('Above each word, on the video and in the subtitle list'),
           leading: Icon(AppIcons.subtitles),
           value: learning.showPinyin,
-          enabled: learning.licensed,
           onChanged: (on) => unawaited(learning.setShowPinyin(on)),
         ))),
     (tr('Romanization above Korean'), '韩语 罗马字 romanization', (context) => live((context) => SwitchItem(
@@ -406,7 +405,6 @@ List<(String, String, WidgetBuilder)> learningSettingRows(AppController controll
           subtitle: tr('Korean words in Latin letters, such as hangugeo above 한국어'),
           leading: Icon(AppIcons.subtitles),
           value: learning.showRomanization,
-          enabled: learning.licensed,
           onChanged: (on) => unawaited(learning.setShowRomanization(on)),
         ))),
     (tr('Voice for reading words'), '朗读 发音 语音 TTS Azure Google voice', (context) => live((context) => Column(mainAxisSize: MainAxisSize.min, children: [
@@ -414,8 +412,7 @@ List<(String, String, WidgetBuilder)> learningSettingRows(AppController controll
             title: tr('Voice for reading words'),
             subtitle: _voiceLabel(learning.voiceService),
             leading: Icon(AppIcons.speakerHigh),
-            enabled: learning.licensed,
-            onTap: () => unawaited(_pickVoice(context, learning)),
+              onTap: () => unawaited(_pickVoice(context, learning)),
           ),
           if (learning.voiceService == VoiceService.azure) ...[
             _voiceKeyItem(context, controller, tr('Azure key'), azureVoiceKey),
@@ -427,7 +424,6 @@ List<(String, String, WidgetBuilder)> learningSettingRows(AppController controll
           title: tr('Meanings in'),
           subtitle: _meaningLabel(learning.meanings),
           leading: Icon(AppIcons.translate),
-          enabled: learning.licensed,
           onTap: () => unawaited(_pickMeanings(context, learning)),
         ))),
     (tr('My English level'), '英语水平 难词 CEFR level', (context) => live((context) => NormalItem(
@@ -436,7 +432,6 @@ List<(String, String, WidgetBuilder)> learningSettingRows(AppController controll
               ? tr('Hard words are not marked')
               : tr('{0}. Harder words stand out in color', [englishLevelName(EnglishLevel.values[learning.englishLevel!])]),
           leading: Icon(AppIcons.graduationCap),
-          enabled: learning.licensed,
           onTap: () => unawaited(_pickEnglishLevel(context, learning)),
         ))),
   ];
@@ -486,9 +481,12 @@ class _Pitch extends StatelessWidget {
             ),
           const SizedBox(height: 8),
           Text(
-            tr('Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, all your devices, no account, no subscription. Buying it keeps Lumtub alive.'),
+            tr('Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, up to 5 devices, no account, no subscription. Buying it keeps Lumtub alive.'),
             style: TextStyle(color: theme.colorScheme.outline, fontSize: 12, height: 1.5),
           ),
+          const SizedBox(height: Space.s),
+          Text(tr('Free today: {0} of {1} word lookups left. Buy once for unlimited.', [learning.trialLeft, Learning.trialPerDay]),
+              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           Wrap(spacing: 8, runSpacing: 8, children: [
             FilledButton(

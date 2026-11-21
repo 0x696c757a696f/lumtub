@@ -18,6 +18,7 @@ import '../ai_filter.dart';
 import '../android_subtitle_fonts.dart';
 import '../app_directories.dart';
 import '../learning/learning.dart';
+import '../learning/vocabulary.dart' show wavTail;
 import '../app_updater.dart';
 import '../app_log.dart';
 import '../app_window.dart';

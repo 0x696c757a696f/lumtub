@@ -10,6 +10,7 @@ import '../../app/app_controller.dart';
 import '../../app_log.dart';
 import '../../friendly_error.dart';
 import '../../l10n/l10n.dart';
+import '../../learning/anki_connect.dart';
 import '../../learning/english_dictionary.dart';
 import '../../learning/learning.dart';
 import '../../learning/vocabulary.dart';
@@ -557,6 +558,32 @@ class _VocabularyPageState extends State<_VocabularyPage> {
     }
   }
 
+  bool _sending = false;
+
+  /// Sends the book's words straight into Anki through AnkiConnect.
+  Future<void> _sendToAnki() async {
+    final book = _book;
+    if (book == null || book.words.isEmpty || _sending) return;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    setState(() => _sending = true);
+    final anki = AnkiConnect();
+    try {
+      final added = await anki.send(book.words, book);
+      messenger?.showSnackBar(SnackBar(content: Text(added == 0 ? tr('Nothing new: these words are in the Lumtub deck already') : tr('{0} words added to the Lumtub deck in Anki', [added]))));
+    } on AnkiException catch (e) {
+      logWarn('Could not send the vocabulary to Anki: $e');
+      messenger?.showSnackBar(SnackBar(
+        duration: const Duration(seconds: 10),
+        content: Text(e.notRunning
+            ? tr('Anki did not answer. Open Anki with the AnkiConnect add-on (code 2055492159), or use the Anki file instead.')
+            : tr('Anki said: {0}', [e.detail])),
+      ));
+    } finally {
+      anki.close();
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
   void _open(VocabularyWord word) {
     if (word.videoId.isEmpty) return;
     final start = word.at > const Duration(seconds: 1) ? word.at - const Duration(seconds: 1) : Duration.zero;
@@ -573,6 +600,11 @@ class _VocabularyPageState extends State<_VocabularyPage> {
     final colors = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: SkinAppBar(AppBar(title: Text(tr('Vocabulary book')), actions: [
+        TextButton.icon(
+          onPressed: _sending ? null : () => unawaited(_sendToAnki()),
+          icon: _sending ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.paperPlaneRight, size: 18),
+          label: Text(tr('Send to Anki')),
+        ),
         TextButton.icon(onPressed: () => unawaited(_export(anki: true)), icon: Icon(AppIcons.downloadSimple, size: 18), label: const Text('Anki')),
         TextButton.icon(onPressed: () => unawaited(_export(anki: false)), icon: Icon(AppIcons.downloadSimple, size: 18), label: const Text('CSV')),
         const SizedBox(width: 8),

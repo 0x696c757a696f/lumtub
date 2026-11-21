@@ -3864,5 +3864,10 @@
   "Azure and Google sound like a person and have a free monthly allowance; you make the key in their consoles. The words go to them to be read.": "Azure 和 Google 的声音接近真人，每月有免费额度；密钥在它们的控制台里创建。要朗读的词会发送给它们。",
   "Azure key": "Azure 密钥",
   "Azure region, such as westeurope": "Azure 区域，例如 westeurope",
-  "Google Cloud key": "Google Cloud 密钥"
+  "Google Cloud key": "Google Cloud 密钥",
+  "Send to Anki": "发送到 Anki",
+  "Nothing new: these words are in the Lumtub deck already": "没有新词：这些词已经在 Lumtub 牌组里了",
+  "{0} words added to the Lumtub deck in Anki": "已把 {0} 个词加入 Anki 的 Lumtub 牌组",
+  "Anki did not answer. Open Anki with the AnkiConnect add-on (code 2055492159), or use the Anki file instead.": "Anki 没有响应。请打开 Anki 并安装 AnkiConnect 插件（代码 2055492159），或者改用导出 Anki 文件。",
+  "Anki said: {0}": "Anki 返回：{0}"
 }

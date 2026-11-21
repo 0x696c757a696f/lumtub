@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:crypto/crypto.dart';
 
 import 'package:flutter/foundation.dart';
 
@@ -88,6 +91,11 @@ class VocabularyBook extends ChangeNotifier {
 
   List<VocabularyWord> get words => List.unmodifiable(_words);
 
+  /// Where the line [key] was heard in is kept, for Anki: a WAV file in
+  /// `vocabulary-sounds` beside the book.
+  File soundOf(String key) =>
+      File('${file.parent.path}${Platform.pathSeparator}vocabulary-sounds${Platform.pathSeparator}${sha1.convert(utf8.encode(key)).toString().substring(0, 16)}.wav');
+
   bool contains(String language, String word) => _words.any((w) => w.language == language && w.word == word);
 
   Future<void> load() async {
@@ -114,6 +122,8 @@ class VocabularyBook extends ChangeNotifier {
 
   Future<void> remove(VocabularyWord word) async {
     _words.removeWhere((w) => w.key == word.key);
+    final sound = soundOf(word.key);
+    if (await sound.exists()) await sound.delete().catchError((Object _) => sound);
     notifyListeners();
     await _save();
   }
@@ -167,4 +177,46 @@ String clockOf(Duration d) {
   final s = d.inSeconds;
   final clock = '${(s ~/ 60) % 60}:${(s % 60).toString().padLeft(2, '0')}';
   return s >= 3600 ? '${s ~/ 3600}:${clock.padLeft(5, '0')}' : clock;
+}
+
+/// The last [seconds] of the 16-bit WAV file [bytes], as a WAV file;
+/// [bytes] unchanged when it is not one it can read.
+List<int> wavTail(List<int> bytes, double seconds) {
+  final data = bytes is Uint8List ? bytes : Uint8List.fromList(bytes);
+  if (data.length < 44 || String.fromCharCodes(data.sublist(0, 4)) != 'RIFF' || String.fromCharCodes(data.sublist(8, 12)) != 'WAVE') return bytes;
+  final view = ByteData.sublistView(data);
+  int? rate, align, dataAt, dataLength, fmtAt, fmtSize;
+  var at = 12;
+  while (at + 8 <= data.length) {
+    final id = String.fromCharCodes(data.sublist(at, at + 4));
+    final size = view.getUint32(at + 4, Endian.little);
+    if (id == 'fmt ' && at + 24 <= data.length && at + 8 + size <= data.length) {
+      fmtAt = at + 8;
+      fmtSize = size;
+      rate = view.getUint32(at + 12, Endian.little);
+      align = view.getUint16(at + 20, Endian.little);
+    } else if (id == 'data') {
+      dataAt = at + 8;
+      // A file written while it played may say 0 or too much.
+      dataLength = size == 0 || dataAt + size > data.length ? data.length - dataAt : size;
+      break;
+    }
+    at += 8 + size + (size.isOdd ? 1 : 0);
+  }
+  if (rate == null || align == null || align == 0 || dataAt == null || dataLength == null || fmtAt == null || fmtSize == null) return bytes;
+  final keep = ((seconds * rate).round() * align).clamp(0, dataLength - dataLength % align);
+  final pcm = data.sublist(dataAt + dataLength - keep, dataAt + dataLength);
+  final out = BytesBuilder(copy: false)
+    ..add(data.sublist(0, 12))
+    ..add(_chunk('fmt ', data.sublist(fmtAt, fmtAt + fmtSize)))
+    ..add(_chunk('data', pcm));
+  final result = out.toBytes();
+  ByteData.sublistView(result).setUint32(4, result.length - 8, Endian.little);
+  return result;
+}
+
+Uint8List _chunk(String id, List<int> body) {
+  final head = ByteData(8)..setUint32(4, body.length, Endian.little);
+  final bytes = head.buffer.asUint8List()..setAll(0, id.codeUnits);
+  return Uint8List.fromList([...bytes, ...body, if (body.length.isOdd) 0]);
 }

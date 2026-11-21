@@ -129,7 +129,7 @@ class _WordCard extends StatelessWidget {
                     ? null
                     : () {
                         final playing = controller.playing;
-                        unawaited(book.add(VocabularyWord(
+                        unawaited(_addWord(controller, book, at, VocabularyWord(
                           word: word,
                           language: 'zh',
                           reading: token.reading ?? (entries.isEmpty ? '' : entries.first.marked),
@@ -232,7 +232,7 @@ class _EnglishCard extends StatelessWidget {
                     ? null
                     : () {
                         final playing = controller.playing;
-                        unawaited(book.add(VocabularyWord(
+                        unawaited(_addWord(controller, book, at, VocabularyWord(
                           word: head,
                           language: 'en',
                           reading: entry.phonetic.isEmpty ? '' : '/${entry.phonetic}/',
@@ -343,7 +343,7 @@ class _JapaneseCard extends StatelessWidget {
                     ? null
                     : () {
                         final playing = controller.playing;
-                        unawaited(book.add(VocabularyWord(
+                        unawaited(_addWord(controller, book, at, VocabularyWord(
                           word: head,
                           language: 'ja',
                           reading: entry.kana.first,
@@ -484,7 +484,7 @@ class _WiktionaryCard extends StatelessWidget {
                     ? null
                     : () {
                         final playing = controller.playing;
-                        unawaited(book.add(VocabularyWord(
+                        unawaited(_addWord(controller, book, at, VocabularyWord(
                           word: head,
                           language: language,
                           reading: entry.reading.isNotEmpty ? entry.reading : (entry.ipa.isEmpty ? '' : '/${entry.ipa}/'),
@@ -574,4 +574,10 @@ class _LineButton extends StatelessWidget {
       onPressed: () => unawaited(controller.playLineOnce(at)),
     );
   }
+}
+
+/// Keeps [word] in [book], and the line it was heard in for Anki.
+Future<void> _addWord(AppController controller, VocabularyBook book, Duration at, VocabularyWord word) async {
+  await book.add(word);
+  await controller.keepWordSound(word.key, at);
 }

@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'dart:ui' show PointMode;
 
 import 'package:flutter/material.dart';
 
 import 'scene_props.dart';
+import 'skin_paint.dart' show noiseShader;
 
 /// Landscapes painted behind a skin: a meadow under the sky, the open sky,
 /// the sea seen from under water, and northern lights over mountains. Each
@@ -15,7 +17,8 @@ enum SkinScene {
   underwater,
   aurora,
   city,
-  collage;
+  collage,
+  dunes;
 
   static SkinScene? byName(String? name) => values.where((s) => s.name == name).firstOrNull;
 }
@@ -33,6 +36,8 @@ List<Color> sceneTones(SkinScene scene, {required bool night}) => switch ((scene
       (SkinScene.city, true) => [..._MeadowNight.sky, ..._MeadowNight.hills.expand((h) => h), ..._City.glassNight],
       (SkinScene.collage, false) => [..._Collage.day, ..._Collage.props],
       (SkinScene.collage, true) => [..._Collage.night, ..._Collage.propsNight],
+      (SkinScene.dunes, false) => [..._DunesDay.sky, ..._DunesDay.dunes.expand((d) => d)],
+      (SkinScene.dunes, true) => [..._DunesNight.sky, ..._DunesNight.dunes.expand((d) => d)],
     };
 
 class ScenePainter extends CustomPainter {
@@ -65,6 +70,8 @@ class ScenePainter extends CustomPainter {
           _city(c, size, random, night);
         case SkinScene.collage:
           _collage(c, size, random, night);
+        case SkinScene.dunes:
+          _dunes(c, size, random, night);
       }
       picture = recorder.endRecording();
       // A window is one size at a time; keep a few for resizing back.
@@ -863,4 +870,218 @@ void _collage(Canvas canvas, Size size, math.Random random, bool night) {
     final r = 5 + math.pow(random.nextDouble(), 2) * 44;
     rainbowBubble(canvas, Offset(size.width * random.nextDouble(), size.height * random.nextDouble()), r.toDouble(), opacity: night ? 0.6 : 1);
   }
+}
+
+// ── Dunes ─────────────────────────────────────────────────────────────────
+
+abstract final class _DunesDay {
+  /// Top of the sky down to the haze on the horizon.
+  static const sky = [Color(0xFFE2C29A), Color(0xFFEDD3AE), Color(0xFFF6E4C8), Color(0xFFF9ECD8)];
+  /// Far to near: sunlit face at the crest and at the foot, then the
+  /// shaded slip face at the crest and at the foot.
+  static const dunes = [
+    [Color(0xFFF3DDBB), Color(0xFFEDD1A8), Color(0xFFE2C29C), Color(0xFFDDBA92)],
+    [Color(0xFFF2D3A4), Color(0xFFE8C189), Color(0xFFD3A77A), Color(0xFFCC9D6F)],
+    [Color(0xFFF1C990), Color(0xFFE3B072), Color(0xFFC08D5F), Color(0xFFB48056)],
+    [Color(0xFFF0C080), Color(0xFFDDA461), Color(0xFFAE7A4F), Color(0xFFA06E47)],
+  ];
+  static const sun = Color(0xFFFFF6E6);
+  static const haze = Color(0xFFF8E8D0);
+  static const grain = Color(0x2E6A4020);
+}
+
+abstract final class _DunesNight {
+  static const sky = [Color(0xFF0B0A18), Color(0xFF15122A), Color(0xFF231B35), Color(0xFF3A2735)];
+  static const dunes = [
+    [Color(0xFF3B2D3E), Color(0xFF332838), Color(0xFF241D30), Color(0xFF211A2C)],
+    [Color(0xFF4A3744), Color(0xFF3D2E3C), Color(0xFF241C2E), Color(0xFF1F1828)],
+    [Color(0xFF5A4248), Color(0xFF47343C), Color(0xFF231A2A), Color(0xFF1C1523)],
+    [Color(0xFF684C4E), Color(0xFF503A3E), Color(0xFF211825), Color(0xFF18121D)],
+  ];
+  static const haze = Color(0xFF4A3040);
+  static const grain = Color(0x33E8C8A8);
+}
+
+/// One row of dunes: its top edge and the crests along it. Sharp crests
+/// and wide round hollows, each crest leaning with the wind so its slip
+/// face (at the left, away from the light) is the steeper side.
+({List<Offset> edge, List<(double x, double y, double valley)> peaks}) _duneEdge(Size size, math.Random random, {required double base, required double height, required int count}) {
+  final f = math.pi * count / size.width;
+  final p1 = random.nextDouble() * math.pi;
+  final f2 = math.pi * 2 * (0.4 + random.nextDouble() * 0.5) / size.width;
+  final p2 = random.nextDouble() * math.pi * 2;
+  final f3 = math.pi * 2 * (0.5 + random.nextDouble() * 0.6) / size.width;
+  final p3 = random.nextDouble() * math.pi * 2;
+  double rise(double x) {
+    // Unevenly spaced crests: the phase drifts along the row.
+    final u = f * x + p1 + 0.9 * math.sin(f3 * x + p3);
+    // Leaning the wave puts the cusp nearer one hollow than the other.
+    final ridge = 1 - math.sin(u + 0.55 * math.sin(u)).abs();
+    final crest = math.pow(ridge, 1.6).toDouble();
+    return height * (0.72 * crest + 0.28 * (0.5 + 0.5 * math.sin(f2 * x + p2)));
+  }
+
+  const n = 360;
+  final edge = [
+    for (var i = 0; i <= n; i++)
+      () {
+        final x = size.width * (i / n * 1.1 - 0.05);
+        return Offset(x, base - rise(x));
+      }(),
+  ];
+  final peaks = <(double, double, double)>[];
+  for (var i = 1; i < n; i++) {
+    if (edge[i].dy < edge[i - 1].dy && edge[i].dy <= edge[i + 1].dy) {
+      // The hollow before it, at the left.
+      var j = i - 1;
+      while (j > 0 && edge[j - 1].dy > edge[j].dy) {
+        j--;
+      }
+      peaks.add((edge[i].dx, edge[i].dy, edge[j].dx));
+    }
+  }
+  return (edge: edge, peaks: peaks);
+}
+
+double _edgeAt(List<Offset> edge, double x) {
+  for (var i = 1; i < edge.length; i++) {
+    if (edge[i].dx >= x) {
+      final a = edge[i - 1], b = edge[i];
+      return a.dy + (b.dy - a.dy) * ((x - a.dx) / math.max(0.001, b.dx - a.dx));
+    }
+  }
+  return edge.last.dy;
+}
+
+void _dune(Canvas canvas, Size size, math.Random random, {required double base, required double height, required int count, required List<Color> tones, required bool night, required double ripples}) {
+  final (:edge, :peaks) = _duneEdge(size, random, base: base, height: height, count: count);
+  final body = Path()..moveTo(edge.first.dx, size.height);
+  for (final p in edge) {
+    body.lineTo(p.dx, p.dy);
+  }
+  body
+    ..lineTo(edge.last.dx, size.height)
+    ..close();
+  final top = edge.map((p) => p.dy).reduce(math.min);
+  final band = Rect.fromLTRB(0, top, size.width, size.height);
+  // The sunlit sand, bright at the crests.
+  canvas.drawPath(body, Paint()..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [tones[0], tones[1]], stops: const [0, 0.7]).createShader(band));
+  canvas.save();
+  canvas.clipPath(body);
+  // Wind ripples on the lit backs: fine lines following the dune's
+  // shape, a shaded groove with a lit ridge just under it.
+  final depth = size.height - top;
+  for (var i = 0; i < 26 * ripples; i++) {
+    final d = depth * (0.04 + math.pow(random.nextDouble(), 1.3) * 0.7);
+    final x0 = random.nextDouble() * size.width;
+    final w = size.width * (0.08 + random.nextDouble() * 0.2);
+    final wobble = 2 + random.nextDouble() * 5;
+    final phase = random.nextDouble() * 6;
+    final line = <Offset>[
+      for (var j = 0; j <= 24; j++)
+        () {
+          final x = x0 + w * j / 24;
+          return Offset(x, _edgeAt(edge, x) + d + math.sin(j / 24 * math.pi * 2 + phase) * wobble);
+        }(),
+    ];
+    final fade = 1 - d / depth;
+    canvas.drawPoints(PointMode.polygon, line, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..color = tones[3].withValues(alpha: 0.28 * fade));
+    canvas.drawPoints(PointMode.polygon, [for (final p in line) p + const Offset(0, 1.6)], Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = (night ? const Color(0xFFB8A6C8) : Colors.white).withValues(alpha: (night ? 0.12 : 0.3) * fade));
+  }
+  // Slip faces in shadow: from each crest the knife edge winds down
+  // through the dune; everything between it and the hollow before is in
+  // shade.
+  for (final (px, py, valley) in peaks) {
+    final span = px - valley;
+    final bend = span * (0.15 + random.nextDouble() * 0.25);
+    final shade = Path()..moveTo(px, py);
+    for (final p in edge.reversed) {
+      if (p.dx < px && p.dx >= valley) shade.lineTo(p.dx, p.dy);
+    }
+    shade
+      ..lineTo(valley + span * 0.3, size.height)
+      ..lineTo(px - bend, size.height)
+      ..cubicTo(px - bend * 1.4, py + (size.height - py) * 0.6, px + bend * 0.9, py + (size.height - py) * 0.3, px, py)
+      ..close();
+    final rect = Rect.fromLTRB(valley, py, px, size.height);
+    canvas.drawPath(shade, Paint()..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [tones[2], tones[3]]).createShader(rect));
+    // Light thrown back from the sand in front warms the shade's foot.
+    canvas.drawPath(shade, Paint()
+      ..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [tones[1].withValues(alpha: 0), tones[1].withValues(alpha: 0.3)]).createShader(rect));
+  }
+  canvas.restore();
+  // The knife-edge crests catch the light.
+  for (final (px, py, _) in peaks) {
+    final crest = [for (final p in edge) if (p.dx >= px - 2 && p.dx < px + size.width * 0.12) p];
+    if (crest.length < 2) continue;
+    canvas.drawPoints(PointMode.polygon, crest, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round
+      ..shader = LinearGradient(colors: [(night ? const Color(0xFFE8DCF0) : Colors.white).withValues(alpha: night ? 0.45 : 0.8), Colors.white.withValues(alpha: 0)]).createShader(Rect.fromLTRB(px, py - 4, px + size.width * 0.12, py + 4))
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.8));
+  }
+}
+
+/// A sea of wind-carved dunes, crest behind crest fading into the haze:
+/// under a low, hazy sun by day; by night under a large moon and a small
+/// second one, with the crests silvered and the slip faces in deep shade.
+void _dunes(Canvas canvas, Size size, math.Random random, bool night) {
+  final rect = Offset.zero & size;
+  final m = math.min(size.width, size.height);
+  final sky = night ? _DunesNight.sky : _DunesDay.sky;
+  final tones = night ? _DunesNight.dunes : _DunesDay.dunes;
+  _verticalGradient(canvas, rect, sky, const [0, 0.25, 0.48, 0.62]);
+  final light = Offset(size.width * 0.78, size.height * 0.36);
+  if (night) {
+    _stars(canvas, size, random, down: 0.6, count: 220);
+    // The band of the galaxy, faint, across the sky.
+    canvas.save();
+    canvas.translate(size.width * 0.5, size.height * 0.25);
+    canvas.rotate(-0.35);
+    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: size.width * 1.3, height: size.height * 0.16), Paint()
+      ..color = const Color(0x14C8B8FF)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, m * 0.05));
+    canvas.restore();
+    _moon(canvas, Offset(size.width * 0.86, size.height * 0.22), m * 0.06);
+    _moon(canvas, Offset(size.width * 0.74, size.height * 0.14), m * 0.018);
+    _glow(canvas, Offset(size.width * 0.5, size.height * 0.58), size.width * 0.6, const Color(0x40703040));
+  } else {
+    // A big pale sun low in the haze.
+    _glow(canvas, light, m * 0.9, const Color(0x55FFE2B0));
+    _glow(canvas, light, m * 0.32, const Color(0x99FFF1D6));
+    canvas.drawCircle(light, m * 0.07, Paint()
+      ..color = _DunesDay.sun
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, m * 0.006));
+    // Thin bands of high cloud across the sun.
+    for (var i = 0; i < 5; i++) {
+      final y = size.height * (0.12 + random.nextDouble() * 0.26);
+      final x = size.width * (random.nextDouble() * 0.8);
+      canvas.drawOval(Rect.fromLTWH(x, y, size.width * (0.2 + random.nextDouble() * 0.3), m * 0.012), Paint()
+        ..color = const Color(0x40FFFFFF)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, m * 0.008));
+    }
+  }
+  const bases = [0.6, 0.7, 0.82, 0.97];
+  const heights = [0.07, 0.11, 0.16, 0.22];
+  const counts = [4, 3, 3, 2];
+  for (var i = 0; i < tones.length; i++) {
+    _dune(canvas, size, random, base: size.height * bases[i], height: size.height * heights[i], count: counts[i], tones: tones[i], night: night, ripples: 0.3 + i * 0.35);
+    // Blown sand hangs over the far dunes.
+    if (i < tones.length - 1) {
+      final y = size.height * (bases[i] - heights[i] * 0.4);
+      final band = Rect.fromLTRB(0, y - size.height * 0.08, size.width, y + size.height * 0.12);
+      final haze = night ? _DunesNight.haze : _DunesDay.haze;
+      canvas.drawRect(band, Paint()
+        ..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [haze.withValues(alpha: 0), haze.withValues(alpha: night ? 0.22 : 0.4), haze.withValues(alpha: 0)]).createShader(band));
+    }
+  }
+  // Grain over everything, as sand and old film.
+  canvas.drawRect(rect, Paint()..shader = noiseShader(night ? _DunesNight.grain : _DunesDay.grain, spacing: 3, size: 1));
 }

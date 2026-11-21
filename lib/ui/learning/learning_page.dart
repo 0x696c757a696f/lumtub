@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../app/app_controller.dart';
 import '../../app_log.dart';
@@ -37,12 +38,13 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
   final email = TextEditingController();
   var afdian = afdianFirst;
   var busy = false;
+  var agreed = false;
   String? error;
   final ok = await showDialog<bool>(
     context: context,
     builder: (context) => StatefulBuilder(builder: (context, setState) {
       Future<void> claim() async {
-        if (field.text.trim().isEmpty || (!afdian && email.text.trim().isEmpty) || busy) return;
+        if (field.text.trim().isEmpty || (!afdian && email.text.trim().isEmpty) || !agreed || busy) return;
         setState(() {
           busy = true;
           error = null;
@@ -103,21 +105,69 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
                 ),
               ),
             ],
+            const SizedBox(height: 8),
+            // Ticked by the buyer, never ahead of time: EU law lets the
+            // 14-day withdrawal end only with this express consent.
+            CheckboxListTile(
+              value: agreed,
+              onChanged: busy ? null : (on) => setState(() => agreed = on ?? false),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              title: Text(_consentText()),
+            ),
           ]),
         ),
         actions: [
           TextButton(onPressed: busy ? null : () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
           FilledButton(
-            onPressed: busy ? null : () => unawaited(claim()),
+            onPressed: busy || !agreed ? null : () => unawaited(claim()),
             child: busy ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(tr('Unlock')),
           ),
         ],
       );
     }),
   );
+  final order = field.text.trim();
   field.dispose();
   email.dispose();
+  if (ok == true && context.mounted) await _showConfirmation(context, learning, afdian: afdian, order: order);
   return ok ?? false;
+}
+
+String _consentText() => tr(
+    'I ask for the learning pack to be supplied now, and I understand that once it is, I lose the 14-day right of withdrawal. This does not affect my rights if the pack does not work as described.');
+
+/// The record of the purchase and the consent, to keep: what EU law asks
+/// the seller to give on a durable medium.
+Future<void> _showConfirmation(BuildContext context, Learning learning, {required bool afdian, required String order}) async {
+  final when = learning.lastConsent ?? DateTime.now();
+  final stamp = '${when.year}-${when.month.toString().padLeft(2, '0')}-${when.day.toString().padLeft(2, '0')} ${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')}';
+  final record = [
+    tr('Lumtub learning pack'),
+    '${afdian ? tr('Afdian') : 'Ko-fi'}: $order',
+    tr('Unlocked on {0}', [stamp]),
+    tr('You agreed: {0}', [_consentText()]),
+    tr('License code: {0}', [learning.license?.code ?? '']),
+  ].join('\n');
+  await showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(tr('Unlocked')),
+      content: SizedBox(
+        width: 460,
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(tr('Keep this confirmation of your purchase:')),
+          const SizedBox(height: 8),
+          SelectableText(record, style: Theme.of(context).textTheme.bodySmall),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => unawaited(Clipboard.setData(ClipboardData(text: record))), child: Text(tr('Copy'))),
+        FilledButton(onPressed: () => Navigator.pop(context), child: Text(tr('OK'))),
+      ],
+    ),
+  );
 }
 
 Future<void> _pickEnglishLevel(BuildContext context, Learning learning) async {

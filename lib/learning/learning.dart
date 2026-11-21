@@ -26,6 +26,11 @@ const learningPackRelease = 'https://github.com/0x696c757a696f/lumtub/releases/d
 /// show up, so dictionaries for languages not being watched take no memory.
 enum PackState { missing, downloading, downloaded, loading, ready, failed }
 
+/// The version of the statement a buyer agrees to before a bought code
+/// is sent (the license server keeps it with the time): the pack is
+/// supplied at once, which ends the 14-day right of withdrawal.
+const learningConsentVersion = 'digital-content-v1';
+
 /// How asking the license server for a bought code went.
 enum ClaimResult { ok, notFound, busy, offline }
 
@@ -258,8 +263,13 @@ class Learning extends ChangeNotifier {
     return true;
   }
 
+  /// When the server recorded the buyer's consent for the last code it
+  /// sent, for the confirmation shown after unlocking.
+  DateTime? lastConsent;
+
   /// Asks the license server for the code of a purchase: the order
-  /// number, and for Ko-fi also the email paid with.
+  /// number, and for Ko-fi also the email paid with. The buyer has agreed
+  /// to [learningConsentVersion].
   /// The server's address is published on the `learning` release, so it
   /// can move without an app update.
   Future<ClaimResult> claimLicense({required bool afdian, required String order, String email = ''}) async {
@@ -272,11 +282,13 @@ class Learning extends ChangeNotifier {
           .post(
             server.resolve('/claim'),
             headers: {'content-type': 'application/json'},
-            body: jsonEncode({'source': afdian ? 'afdian' : 'kofi', 'order': order.trim(), if (!afdian) 'email': email.trim()}),
+            body: jsonEncode({'source': afdian ? 'afdian' : 'kofi', 'order': order.trim(), if (!afdian) 'email': email.trim(), 'consent': learningConsentVersion}),
           )
           .timeout(const Duration(seconds: 30));
       if (response.statusCode == 429) return ClaimResult.busy;
-      final code = response.statusCode == 200 ? (jsonDecode(response.body) as Map)['code'] : null;
+      final answer = response.statusCode == 200 ? jsonDecode(response.body) : null;
+      final code = answer is Map ? answer['code'] : null;
+      lastConsent = answer is Map ? DateTime.tryParse('${answer['consented']}')?.toLocal() : null;
       if (code is! String) return response.statusCode >= 500 ? ClaimResult.offline : ClaimResult.notFound;
       return await enterLicense(code) ? ClaimResult.ok : ClaimResult.notFound;
     } catch (e) {

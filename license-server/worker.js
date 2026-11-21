@@ -2,9 +2,14 @@
 //
 // POST /kofi   Ko-fi's webhook: a paid shop order is remembered by its
 //              transaction id and the buyer's email.
-// POST /claim  {source: "kofi", order, email} or {source: "afdian", order}
-//              (Ko-fi's order is the transaction id on the buyer's receipt)
-//              returns {code} for a paid order, or {error}.
+// POST /claim  {source: "kofi", order, email, consent} or {source:
+//              "afdian", order, consent} (Ko-fi's order is the transaction
+//              id on the buyer's receipt) returns {code, consented} for a
+//              paid order, or {error}. [consent] is the version of the
+//              statement the buyer ticked: that the pack is supplied now and
+//              the 14-day right of withdrawal ends with that (EU directive
+//              2011/83 art. 16(m), Codice del consumo art. 59). The first
+//              consent of each order is kept with its time.
 //
 // 爱发电 orders are checked with 爱发电's own API when claimed, so they
 // need no webhook. Codes are the same Ed25519-signed codes the signing
@@ -43,6 +48,10 @@ const sha256 = async (text) => hex(await crypto.subtle.digest('SHA-256', new Tex
 const hex = (buffer) => [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, '0')).join('');
 const clean = (text) => String(text ?? '').trim();
 
+// The statement the app shows beside the box the buyer ticks; a new
+// wording gets a new version, and old ones stay accepted.
+const CONSENTS = ['digital-content-v1'];
+
 async function kofi(request, env) {
   const form = await request.formData();
   const data = JSON.parse(form.get('data') || '{}');
@@ -67,6 +76,8 @@ async function claim(request, env) {
   const order = clean(ask.order).toLowerCase();
   const email = clean(ask.email).toLowerCase();
   if (!order || order.length > 80 || email.length > 200) return reply({ error: 'order' }, 400);
+  const consent = clean(ask.consent);
+  if (!CONSENTS.includes(consent)) return reply({ error: 'consent' }, 400);
   // A few tries a minute per address are plenty for a person.
   const ip = request.headers.get('cf-connecting-ip') || '';
   const slot = `tries:${ip}:${Math.floor(Date.now() / 60000)}`;
@@ -86,13 +97,20 @@ async function claim(request, env) {
   } else {
     return reply({ error: 'source' }, 400);
   }
+  // The proof of consent: which statement, when, before the code went out.
+  const consentKey = `consent:${source}:${order}`;
+  let consented = JSON.parse((await env.LICENSES.get(consentKey)) || 'null');
+  if (!consented) {
+    consented = { version: consent, at: new Date().toISOString() };
+    await env.LICENSES.put(consentKey, JSON.stringify(consented));
+  }
   const key = `code:${source}:${order}`;
   let code = await env.LICENSES.get(key);
   if (!code) {
     code = await sign(env, { n: buyer.name, p: 'learn', d: buyer.date });
     await env.LICENSES.put(key, code);
   }
-  return reply({ code, name: buyer.name });
+  return reply({ code, name: buyer.name, consented: consented.at });
 }
 
 async function afdianOrder(order, env) {

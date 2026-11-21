@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:typed_data';
+
+import 'packed_lines.dart';
 
 import 'word_token.dart';
 
@@ -8,42 +11,52 @@ export 'word_token.dart';
 /// simplified and traditional forms, splitting a line into words, and
 /// pinyin with tone marks.
 class ChineseDictionary {
-  ChineseDictionary._(this._lines, this._index, this.longest);
+  ChineseDictionary._(this._lines, this.longest);
 
-  final List<String> _lines;
-  final Map<String, List<int>> _index;
+  final PackedLines _lines;
 
   /// The most characters any word has, capped: no subtitle word is longer.
   final int longest;
 
-  int get size => _lines.length;
+  int get size => _lines.size;
 
   /// Reads CC-CEDICT's text: `傳統 传统 [chuan2 tong3] /tradition/...`.
-  static ChineseDictionary parse(String text) {
-    final lines = <String>[];
-    final index = <String, List<int>>{};
+  static ChineseDictionary parse(String text) => fromBytes(utf8.encode(text));
+
+  /// [parse] for the pack's UTF-8 bytes.
+  static ChineseDictionary fromBytes(Uint8List bytes) {
     var longest = 1;
-    for (final line in const LineSplitter().convert(text)) {
-      if (line.isEmpty || line.startsWith('#')) continue;
-      final firstSpace = line.indexOf(' ');
-      final secondSpace = firstSpace < 0 ? -1 : line.indexOf(' ', firstSpace + 1);
-      if (secondSpace < 0 || !line.contains('[', secondSpace)) continue;
-      final traditional = line.substring(0, firstSpace);
-      final simplified = line.substring(firstSpace + 1, secondSpace);
-      final at = lines.length;
-      lines.add(line);
-      (index[simplified] ??= []).add(at);
-      if (traditional != simplified) (index[traditional] ??= []).add(at);
-      final count = simplified.runes.length;
+    final lines = PackedLines.build(bytes, (start, end, key) {
+      if (end <= start || bytes[start] == 0x23) return;
+      var firstSpace = start;
+      while (firstSpace < end && bytes[firstSpace] != 0x20) {
+        firstSpace++;
+      }
+      var secondSpace = firstSpace + 1;
+      while (secondSpace < end && bytes[secondSpace] != 0x20) {
+        secondSpace++;
+      }
+      if (secondSpace >= end) return;
+      var bracket = secondSpace;
+      while (bracket < end && bytes[bracket] != 0x5b) {
+        bracket++;
+      }
+      if (bracket >= end) return;
+      key(firstSpace + 1, secondSpace);
+      key(start, firstSpace);
+      var count = 0;
+      for (var i = firstSpace + 1; i < secondSpace; i++) {
+        if (bytes[i] & 0xc0 != 0x80) count++;
+      }
       if (count > longest) longest = count;
-    }
-    return ChineseDictionary._(lines, index, longest.clamp(1, 8));
+    });
+    return ChineseDictionary._(lines, longest.clamp(1, 8));
   }
 
   /// Every entry for [word], in either script.
-  List<ChineseEntry> lookup(String word) => [for (final i in _index[word] ?? const <int>[]) ChineseEntry.parse(_lines[i])];
+  List<ChineseEntry> lookup(String word) => [for (final i in _lines.linesOf(word)) ChineseEntry.parse(_lines.line(i))];
 
-  bool contains(String word) => _index.containsKey(word);
+  bool contains(String word) => _lines.contains(word);
 
   /// The usual reading of [word], with tone marks: a common particle or
   /// character is read as it mostly is, otherwise the first entry that
@@ -51,11 +64,11 @@ class ChineseDictionary {
   String? readingOf(String word) {
     final usual = _usualReadings[word];
     if (usual != null) return pinyinMarks(usual);
-    final found = _index[word];
-    if (found == null) return null;
+    final found = _lines.linesOf(word);
+    if (found.isEmpty) return null;
     String? first;
     for (final i in found) {
-      final pinyin = ChineseEntry.pinyinOf(_lines[i]);
+      final pinyin = ChineseEntry.pinyinOf(_lines.line(i));
       first ??= pinyin;
       if (pinyin.isNotEmpty && pinyin[0] == pinyin[0].toLowerCase()) return pinyinMarks(pinyin);
     }
@@ -104,7 +117,7 @@ class ChineseDictionary {
     var i = 0;
     while (i < run.length) {
       var n = longest < run.length - i ? longest : run.length - i;
-      while (n > 1 && !_index.containsKey(run.sublist(i, i + n).join())) {
+      while (n > 1 && !_lines.contains(run.sublist(i, i + n).join())) {
         n--;
       }
       forward.add(run.sublist(i, i + n).join());
@@ -114,7 +127,7 @@ class ChineseDictionary {
     var end = run.length;
     while (end > 0) {
       var n = longest < end ? longest : end;
-      while (n > 1 && !_index.containsKey(run.sublist(end - n, end).join())) {
+      while (n > 1 && !_lines.contains(run.sublist(end - n, end).join())) {
         n--;
       }
       backward.insert(0, run.sublist(end - n, end).join());

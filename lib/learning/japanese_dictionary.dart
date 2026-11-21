@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:typed_data';
+
+import 'packed_lines.dart';
 
 import 'word_token.dart';
 
@@ -8,36 +11,45 @@ import 'word_token.dart';
 /// verb and adjective endings taken back to the dictionary form, so
 /// 食べなかった finds 食べる and is read たべなかった.
 class JapaneseDictionary {
-  JapaneseDictionary._(this._lines, this._index);
+  JapaneseDictionary._(this._lines);
 
-  final List<String> _lines;
-  final Map<String, List<int>> _index;
+  final PackedLines _lines;
 
-  int get size => _lines.length;
+  int get size => _lines.size;
 
   static const _longest = 12;
 
-  static JapaneseDictionary parse(String text) {
-    final lines = <String>[];
-    final index = <String, List<int>>{};
-    for (final line in const LineSplitter().convert(text)) {
-      final first = line.indexOf('\t');
-      final second = first < 0 ? -1 : line.indexOf('\t', first + 1);
-      if (second < 0) continue;
-      final at = lines.length;
-      lines.add(line);
-      for (final form in [...line.substring(0, first).split('|'), ...line.substring(first + 1, second).split('|')]) {
-        if (form.isEmpty) continue;
-        final list = index[form] ??= [];
-        if (list.isEmpty || list.last != at) list.add(at);
-      }
-    }
-    return JapaneseDictionary._(lines, index);
-  }
+  static JapaneseDictionary parse(String text) => fromBytes(utf8.encode(text));
+
+  /// Reads the pack's UTF-8 text: each line found by its kanji and kana
+  /// forms, the first two fields.
+  static JapaneseDictionary fromBytes(Uint8List bytes) => JapaneseDictionary._(PackedLines.build(bytes, (start, end, key) {
+        var first = start;
+        while (first < end && bytes[first] != 0x09) {
+          first++;
+        }
+        var second = first + 1;
+        while (second < end && bytes[second] != 0x09) {
+          second++;
+        }
+        if (second >= end) return;
+        void forms(int from, int to) {
+          var at = from;
+          for (var i = from; i <= to; i++) {
+            if (i == to || bytes[i] == 0x7c) {
+              key(at, i);
+              at = i + 1;
+            }
+          }
+        }
+
+        forms(start, first);
+        forms(first + 1, second);
+      }));
 
   /// The entries written [word], common ones first.
   List<JapaneseEntry> lookup(String word) {
-    final found = [for (final i in _index[word] ?? const <int>[]) JapaneseEntry.parse(_lines[i])];
+    final found = [for (final i in _lines.linesOf(word)) JapaneseEntry.parse(_lines.line(i))];
     // Entries where [word] is the main way of writing come first, then
     // common ones; otherwise JMdict's order.
     int rank(JapaneseEntry e) => ((e.kanji.isEmpty ? e.kana.first : e.kanji.first) == word ? 0 : 2) + (e.common ? 0 : 1);

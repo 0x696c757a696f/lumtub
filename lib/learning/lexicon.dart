@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import '../local_db.dart' show callCoreJson;
 import '../native_core.dart';
@@ -33,6 +34,15 @@ class CoreLexicon implements LineSource {
   /// Opens [path] as [language]'s dictionary; throws when the core cannot.
   static CoreLexicon open(String language, String path) {
     final answer = callCoreJson('lumtub_lexicon_open', jsonEncode({'language': language, 'path': path}));
+    if (answer['error'] != null) throw StateError('${answer['error']}');
+    return CoreLexicon._(language, (answer['words'] as num?)?.toInt() ?? 0);
+  }
+
+  /// [open] on another isolate: the core keeps one set of open
+  /// dictionaries for the whole process.
+  static Future<CoreLexicon> openInBackground(String language, String path) async {
+    final ask = jsonEncode({'language': language, 'path': path});
+    final answer = await Isolate.run(() => callCoreJson('lumtub_lexicon_open', ask));
     if (answer['error'] != null) throw StateError('${answer['error']}');
     return CoreLexicon._(language, (answer['words'] as num?)?.toInt() ?? 0);
   }
@@ -124,6 +134,16 @@ class CoreWords {
   /// when the core cannot.
   static void open(String language, String path) {
     final answer = callCoreJson('lumtub_words_open', jsonEncode({'language': language, 'path': path}));
+    if (answer['error'] != null) throw StateError('${answer['error']}');
+    _open.add(language);
+    _cache.clear();
+  }
+
+  /// [open] on another isolate: the core keeps one segmenter a language
+  /// for the whole process.
+  static Future<void> openInBackground(String language, String path) async {
+    final ask = jsonEncode({'language': language, 'path': path});
+    final answer = await Isolate.run(() => callCoreJson('lumtub_words_open', ask));
     if (answer['error'] != null) throw StateError('${answer['error']}');
     _open.add(language);
     _cache.clear();

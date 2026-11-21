@@ -16,6 +16,7 @@ const REPO: &str = "https://github.com/0x696c757a696f/lumtub";
 const RELEASES: &str = "https://github.com/0x696c757a696f/lumtub/releases/latest";
 const SPONSORS: &str = "https://github.com/sponsors/0x696c757a696f";
 const AFDIAN: &str = "https://afdian.com/a/linmuqingfeng";
+const AFDIAN_PACK: &str = "https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00";
 const KOFI: &str = "https://ko-fi.com/0x696c757a696f";
 const WEBLATE: &str = "https://hosted.weblate.org/engage/lumtub/";
 const SECTIONS: [&str; 5] = ["features", "download", "privacy", "faq", "support"];
@@ -339,7 +340,7 @@ fn Highlights(t: &'static Text, lang: Lang, skin: SkinState) -> impl IntoView {
 #[component]
 fn Learning(t: &'static Text) -> impl IntoView {
     let l = &t.learn;
-    let buttons = view! { <a class="btn primary" href=AFDIAN rel="noopener">"爱发电 · ¥99"</a> };
+    let buttons = view! { <a class="btn primary" href=AFDIAN_PACK rel="noopener">"爱发电 · ¥99"</a> };
     view! {
         <section id="learn" class="section alt">
             <div class="wrap">

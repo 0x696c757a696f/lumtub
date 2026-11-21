@@ -64,7 +64,7 @@ class _Resume extends StatelessWidget {
       const SizedBox(width: 8),
       Expanded(
         child: Text(
-          tr('Study stopped at {0}, step {1} of 4: {2}', [_clock(resume.unitStart), resume.step.index + 1, studyStepName(resume.step)]),
+          tr('Study stopped at {0}, step {1} of 4: {2}', [studyClock(resume.unitStart), resume.step.index + 1, studyStepName(resume.step)]),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: context.text.bodyMedium,
@@ -77,7 +77,7 @@ class _Resume extends StatelessWidget {
   }
 }
 
-String _clock(Duration d) {
+String studyClock(Duration d) {
   final s = d.inSeconds;
   final h = s ~/ 3600, m = s ~/ 60 % 60, sec = s % 60;
   String two(int n) => n.toString().padLeft(2, '0');
@@ -101,7 +101,7 @@ class _Study extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            tr('Study · part {0} of {1} · {2}–{3}', [run.unit + 1, run.units.length, _clock(unit.start), _clock(unit.end)]),
+            tr('Study · part {0} of {1} · {2}–{3}', [run.unit + 1, run.units.length, studyClock(unit.start), studyClock(unit.end)]),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: context.text.titleSmall,
@@ -296,40 +296,6 @@ class _Steps extends StatelessWidget {
         ),
       ],
     ]);
-  }
-}
-
-/// 精学 in the subtitle menu's language learning part: starts studying
-/// the video, or stops it.
-class StudyEntry extends StatelessWidget {
-  const StudyEntry({super.key, required this.controller});
-  final AppController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final studying = controller.study != null;
-    return ListTile(
-      dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-      leading: Icon(AppIcons.graduationCap, size: 20, color: colors.primary),
-      title: Text(tr('Study this video')),
-      subtitle: Text(
-        tr('Part by part, in four steps: listen blind, read along, shadow the hard lines, listen again.'),
-        maxLines: 3,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: 11, color: colors.outline),
-      ),
-      trailing: studying
-          ? TextButton(onPressed: () => unawaited(controller.stopStudy()), child: Text(tr('Stop studying')))
-          : FilledButton.tonal(
-              onPressed: () {
-                unawaited(Navigator.of(context, rootNavigator: true).maybePop());
-                unawaited(controller.startStudy(resume: controller.studyResume != null));
-              },
-              child: Text(tr('Start studying')),
-            ),
-    );
   }
 }
 

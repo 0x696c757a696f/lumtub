@@ -8,7 +8,9 @@ import 'app_directories.dart';
 ///
 /// The first time comes after Lumtub was used on [_daysUsed] different days
 /// and at least [_firstAfter] after the first of them; later ones come
-/// [_every] after the last. Turning it off stops it for good.
+/// [_every] after the last. Once, after [_daysUsed] days of use over at
+/// least [_starAfter], it asks instead for a star on GitHub. Turning it
+/// off stops both for good.
 class SupportReminder {
   SupportReminder(this.file);
   final File file;
@@ -16,9 +18,14 @@ class SupportReminder {
   static const _daysUsed = 7;
   static const _firstAfter = Duration(days: 14);
   static const _every = Duration(days: 60);
+  static const _starAfter = Duration(days: 7);
+
+  /// How far apart the star and the support questions keep.
+  static const _apart = Duration(days: 7);
 
   DateTime? _first;
   DateTime? _last;
+  DateTime? _star;
   final _days = <String>{};
   bool _off = false;
   final _writes = WriteQueue();
@@ -33,6 +40,7 @@ class SupportReminder {
       DateTime? time(Object? value) => value is int ? DateTime.fromMillisecondsSinceEpoch(value) : null;
       _first = time(data['first']);
       _last = time(data['last']);
+      _star = time(data['star']);
       _off = data['off'] == true;
       if (data['days'] case final List days) _days.addAll(days.whereType<String>());
     } catch (e) {
@@ -56,7 +64,22 @@ class SupportReminder {
     final first = _first;
     if (_off || first == null || _days.length < _daysUsed) return false;
     final last = _last;
+    if (_star case final star? when now.difference(star) < _apart) return false;
     return last == null ? now.difference(first) >= _firstAfter : now.difference(last) >= _every;
+  }
+
+  /// Whether to ask, this one time, for a star on GitHub at [now].
+  bool starDue(DateTime now) {
+    final first = _first;
+    if (_off || _star != null || first == null || _days.length < _daysUsed || now.difference(first) < _starAfter) return false;
+    final last = _last;
+    return last == null || now.difference(last) >= _apart;
+  }
+
+  /// Asked for a star at [now]; it is never asked again.
+  void starAsked(DateTime now) {
+    _star = now;
+    _save();
   }
 
   /// Asked at [now]: the next time is [_every] later.
@@ -78,6 +101,7 @@ class SupportReminder {
     final text = jsonEncode({
       if (_first case final first?) 'first': first.millisecondsSinceEpoch,
       if (_last case final last?) 'last': last.millisecondsSinceEpoch,
+      if (_star case final star?) 'star': star.millisecondsSinceEpoch,
       'days': _days.toList(),
       if (_off) 'off': true,
     });

@@ -3713,5 +3713,6 @@
   "HDR tone mapping standard range SDR": "HDR 色调映射 标准动态范围 SDR",
   "Picture enhancement": "画质增强",
   "{0}: {1}. Only when the picture is drawn larger than it is; left out with Low resource use first, and on battery with Smart auto": "{0}：{1}。只在画面被放大显示时生效；「低资源占用优先」时不用，「智能自动」下用电池时也不用",
-  "upscaling super resolution shaders Anime4K FSRCNNX RAVU": "超分 超分辨率 着色器 放大 Anime4K FSRCNNX RAVU"
+  "upscaling super resolution shaders Anime4K FSRCNNX RAVU": "超分 超分辨率 着色器 放大 Anime4K FSRCNNX RAVU",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "在 GitHub 上点个 Star 不花一分钱，却能让更多人发现 Lumtub。这个提示只会出现这一次。"
 }

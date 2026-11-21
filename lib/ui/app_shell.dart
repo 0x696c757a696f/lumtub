@@ -108,6 +108,7 @@ class _AppShellState extends State<AppShell> {
     super.initState();
     _frames;
     KeyScroll.watch();
+    HardwareKeyboard.instance.addHandler(_unfocusedKey);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) WindowChrome.menus.value = _menus;
     });
@@ -179,18 +180,40 @@ class _AppShellState extends State<AppShell> {
     _supportCheck?.cancel();
     _searchText.dispose();
     _searchFocus.dispose();
+    HardwareKeyboard.instance.removeHandler(_unfocusedKey);
     super.dispose();
   }
 
-  /// Asks about supporting Lumtub when it is due, and only while nothing
+  /// With no control focused, as when the app has just started or after a
+  /// click on a page button, which takes no focus, the focus rests on the
+  /// page's route, above the window's keys, which then went unheard until
+  /// an arrow key brought a control into focus. They are taken here then.
+  bool _unfocusedKey(KeyEvent event) {
+    if (event is KeyUpEvent || !mounted) return false;
+    final focus = FocusManager.instance.primaryFocus;
+    final route = ModalRoute.of(context);
+    if (focus is! FocusScopeNode || route == null || !route.isCurrent) return false;
+    final page = FocusScope.of(context);
+    if (!identical(focus, page) && !page.ancestors.contains(focus)) return false;
+    for (final MapEntry(:key, :value) in _windowKeys().entries) {
+      if (key.accepts(event, HardwareKeyboard.instance)) {
+        value();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Asks for a star on GitHub or about supporting Lumtub when it is due, and only while nothing
   /// plays and no dialog or other page is open.
   void _askForSupport() {
     final reminder = _controller.supportReminder;
     if (reminder == null || !mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
     final now = DateTime.now();
     reminder.used(now);
-    if (!reminder.due(now) || _controller.playing != null || ModalRoute.of(context)?.isCurrent == false) return;
-    unawaited(askForSupport(context, reminder));
+    if (_controller.playing != null || ModalRoute.of(context)?.isCurrent == false) return;
+    if (reminder.starDue(now)) return unawaited(askForStar(context, reminder));
+    if (reminder.due(now)) unawaited(askForSupport(context, reminder));
   }
 
   void _focusSearch() {
@@ -464,25 +487,28 @@ class _AppShellState extends State<AppShell> {
 
   bool _tvFocused = false;
 
+  /// The keys the window takes wherever the focus is in it.
+  Map<ShortcutActivator, VoidCallback> _windowKeys() => {
+        ..._pageShortcuts(),
+        const SingleActivator(LogicalKeyboardKey.f5): _refreshPage,
+        // Keys that are not set in the shortcut settings: the back key
+        // some keyboards have, and a TV remote's channel keys, which turn
+        // the page as TV apps take them.
+        const SingleActivator(LogicalKeyboardKey.browserBack): _back,
+        const SingleActivator(LogicalKeyboardKey.channelDown): () => KeyScroll.byPage(1),
+        const SingleActivator(LogicalKeyboardKey.channelUp): () => KeyScroll.byPage(-1),
+        SingleActivator(LogicalKeyboardKey.keyR, control: !Platform.isMacOS, meta: Platform.isMacOS): _refreshPage,
+        // Esc goes back too, except on the watch page, where it leaves
+        // full screen and closes panels.
+        const SingleActivator(LogicalKeyboardKey.escape): () {
+          final typing = NotWhileTyping.typing;
+          if (!typing && !_controller.onWatchPage) _back();
+        },
+      };
+
   @override
   Widget build(BuildContext context) => CallbackShortcuts(
-        bindings: {
-          ..._pageShortcuts(),
-          const SingleActivator(LogicalKeyboardKey.f5): _refreshPage,
-          // Keys that are not set in the shortcut settings: the back key
-          // some keyboards have, and a TV remote's channel keys, which turn
-          // the page as TV apps take them.
-          const SingleActivator(LogicalKeyboardKey.browserBack): _back,
-          const SingleActivator(LogicalKeyboardKey.channelDown): () => KeyScroll.byPage(1),
-          const SingleActivator(LogicalKeyboardKey.channelUp): () => KeyScroll.byPage(-1),
-          SingleActivator(LogicalKeyboardKey.keyR, control: !Platform.isMacOS, meta: Platform.isMacOS): _refreshPage,
-          // Esc goes back too, except on the watch page, where it leaves
-          // full screen and closes panels.
-          const SingleActivator(LogicalKeyboardKey.escape): () {
-            final typing = NotWhileTyping.typing;
-            if (!typing && !_controller.onWatchPage) _back();
-          },
-        },
+        bindings: _windowKeys(),
         child: Listener(
           // The mouse "back" button goes back, like Alt+←.
           onPointerDown: (event) {

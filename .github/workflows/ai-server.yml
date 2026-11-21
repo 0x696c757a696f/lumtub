@@ -1,0 +1,106 @@
+name: AI helper
+
+# Deploys ai-server/ (a Cloudflare Worker that explains subtitle lines
+# for learning pack buyers without an AI key of their own) and writes its
+# address to the `learning` release as ai-server.txt, which is how the app
+# knows the helper is on. Run by hand only: every explanation it gives is
+# paid for with the LUMTUB_AI_KEY secret. "off" takes the address down, so
+# the app stops asking. See ai-server/README.md.
+on:
+  workflow_dispatch:
+    inputs:
+      off:
+        description: Turn the helper off (remove its address)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-server
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      AI_KEY: ${{ secrets.LUMTUB_AI_KEY }}
+    steps:
+      - name: Turn off
+        if: inputs.off
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete-asset learning ai-server.txt --repo "$GITHUB_REPOSITORY" --yes || true
+          echo "::notice::The AI helper's address is gone; the app no longer asks it."
+
+      - name: Check secrets
+        id: check
+        if: ${{ !inputs.off }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ] || [ -z "$AI_KEY" ]; then
+            echo "::notice::CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID or LUMTUB_AI_KEY is not set; nothing to deploy."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        if: steps.check.outputs.ready == 'true'
+        with:
+          persist-credentials: false
+
+      - name: Find or create the KV namespaces
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          set -euo pipefail
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          find() { curl -fsS "${auth[@]}" "$api/storage/kv/namespaces?per_page=100" | jq -r --arg t "$1" '.result[] | select(.title == $t) | .id' | head -n1; }
+          ai=$(find lumtub-ai)
+          if [ -z "$ai" ]; then
+            ai=$(curl -fsS "${auth[@]}" -H 'content-type: application/json' -d '{"title":"lumtub-ai"}' "$api/storage/kv/namespaces" | jq -r '.result.id')
+          fi
+          licenses=$(find lumtub-licenses)
+          [ -n "$ai" ] && [ "$ai" != null ] && [ -n "$licenses" ] || { echo "::error::Deploy the license server first"; exit 1; }
+          sed -i "s/AI_NAMESPACE_ID/$ai/; s/LICENSES_NAMESPACE_ID/$licenses/" ai-server/wrangler.toml
+
+      - name: Deploy the worker
+        if: steps.check.outputs.ready == 'true'
+        working-directory: ai-server
+        env:
+          AI_BASE: ${{ vars.LUMTUB_AI_BASE }}
+          AI_MODEL: ${{ vars.LUMTUB_AI_MODEL }}
+        run: |
+          set -euo pipefail
+          args=()
+          [ -n "$AI_BASE" ] && args+=(--var "AI_BASE:$AI_BASE")
+          [ -n "$AI_MODEL" ] && args+=(--var "AI_MODEL:$AI_MODEL")
+          npx --yes wrangler@4.20.0 deploy "${args[@]}"
+          umask 077
+          jq -n '{AI_KEY: env.AI_KEY}' > "$RUNNER_TEMP/secrets.json"
+          npx --yes wrangler@4.20.0 secret bulk "$RUNNER_TEMP/secrets.json"
+          rm -f "$RUNNER_TEMP/secrets.json"
+
+      - name: Publish its address
+        if: steps.check.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          sub=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" | jq -r '.result.subdomain // empty')
+          url="https://lumtub-ai.$sub.workers.dev"
+          for i in $(seq 1 20); do
+            if curl -fsS "$url/" | grep -q '"on":true'; then break; fi
+            [ "$i" = 20 ] && { echo "::error::$url does not answer"; exit 1; }
+            sleep 6
+          done
+          printf '%s\n' "$url" > "$RUNNER_TEMP/ai-server.txt"
+          gh release upload learning "$RUNNER_TEMP/ai-server.txt" --repo "$GITHUB_REPOSITORY" --clobber
+          echo "::notice::AI helper on at $url"

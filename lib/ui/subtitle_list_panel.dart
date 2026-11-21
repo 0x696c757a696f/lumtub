@@ -20,6 +20,7 @@ import 'player_panel.dart';
 import 'app_icons.dart';
 import '../learning/learning.dart';
 import 'learning/ruby_line.dart';
+import 'learning/sentence_card.dart';
 import 'learning/word_card.dart';
 import 'video_notes.dart';
 
@@ -210,7 +211,7 @@ class _SubtitleListState extends State<SubtitleList> {
       position: RelativeRect.fromLTRB(local.dx, local.dy, overlay.size.width - local.dx, overlay.size.height - local.dy),
       items: [
         PopupMenuItem(value: 'copy', child: ListTile(dense: true, leading: Icon(AppIcons.copy, size: 18), title: Text(tr('Copy')))),
-        if (widget.controller.canSummarize) PopupMenuItem(value: 'explain', child: ListTile(dense: true, leading: Icon(AppIcons.lightbulb, size: 18), title: Text(tr('Explain with AI')))),
+        if (canExplainSentences(widget.controller)) PopupMenuItem(value: 'explain', child: ListTile(dense: true, leading: Icon(AppIcons.lightbulb, size: 18), title: Text(tr('AI explains this line')))),
         PopupMenuItem(value: 'note', child: ListTile(dense: true, leading: Icon(AppIcons.notePencil, size: 18), title: Text(tr('Save as note')))),
       ],
     );
@@ -221,7 +222,7 @@ class _SubtitleListState extends State<SubtitleList> {
         _copy(line);
       case 'explain':
         String words(PairedCue c) => c.cue.text;
-        await showLineExplanation(
+        await showSentenceExplanation(
           context,
           widget.controller,
           text: line.cue.text,

@@ -95,5 +95,30 @@ class AnkiConnect {
     return added is List ? added.where((id) => id != null).length : 0;
   }
 
+  /// Sends one sentence card: [front] (the line, with its [sound] when
+  /// kept) and [back] (its explanation), both plain text. False when the
+  /// same card is in the deck already.
+  Future<bool> sendSentence({required String front, required String back, File? sound, String language = '', String deck = 'Lumtub'}) async {
+    await _call('version');
+    await _call('createDeck', {'deck': deck});
+    final (type, fields) = await _noteType();
+    String html(String text) => const HtmlEscape(HtmlEscapeMode.element).convert(text).replaceAll('\n', '<br>');
+    final note = {
+      'deckName': deck,
+      'modelName': type,
+      'fields': {fields[0]: html(front), fields[1]: html(back)},
+      'tags': ['lumtub', 'sentence', if (language.isNotEmpty) language],
+      'options': {'allowDuplicate': false, 'duplicateScope': 'deck'},
+      if (sound != null && await sound.exists())
+        'audio': [
+          {'data': base64Encode(await sound.readAsBytes()), 'filename': 'lumtub-${sound.uri.pathSegments.last}', 'fields': [fields[0]]},
+        ],
+    };
+    final can = await _call('canAddNotes', {'notes': [note]});
+    if (can is! List || can.isEmpty || can.first != true) return false;
+    await _call('addNote', {'note': note});
+    return true;
+  }
+
   void close() => _client.close();
 }

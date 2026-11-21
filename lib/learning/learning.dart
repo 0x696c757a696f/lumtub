@@ -578,6 +578,16 @@ class Learning extends ChangeNotifier {
 
   Future<String> _device() async => _deviceId ??= await learningDeviceId(_directories!.data);
 
+  /// What the server's AI helper is asked with: this device, and with an
+  /// active license its code's id and the server's receipt for it.
+  Future<({String device, String code, String receipt})?> serverPass() async {
+    if (_directories == null) return null;
+    final device = await _device();
+    final license = _license;
+    if (license == null || !licensed) return (device: device, code: '', receipt: '');
+    return (device: device, code: license.id, receipt: _receipt);
+  }
+
   /// The license server's address, published on the `learning` release so
   /// it can move without an app update.
   static Future<Uri?> _server(http.Client client) async {

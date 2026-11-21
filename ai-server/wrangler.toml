@@ -1,0 +1,28 @@
+# The learning pack's AI helper: explains subtitle lines for buyers who
+# have no AI key of their own. Deployed only by hand, through
+# .github/workflows/ai-server.yml; see ai-server/README.md.
+name = "lumtub-ai"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+# Explanations by line, and the counters of each day.
+[[kv_namespaces]]
+binding = "AI"
+id = "AI_NAMESPACE_ID"
+
+# The license server's namespace, read only for codes stopped there
+# (refunded or revoked).
+[[kv_namespaces]]
+binding = "LICENSES"
+id = "LICENSES_NAMESPACE_ID"
+
+[vars]
+AI_BASE = "https://api.deepseek.com"
+AI_MODEL = "deepseek-chat"
+PER_DAY = "30"
+TRIAL = "5"
+DAILY_MAX = "1500"
+
+[observability]
+enabled = false

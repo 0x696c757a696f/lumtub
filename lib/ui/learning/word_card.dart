@@ -13,6 +13,7 @@ import '../../learning/vocabulary.dart';
 import '../../learning/wiktionary_dictionary.dart';
 import '../app_icons.dart';
 import 'learning_page.dart' show showLearningLocked;
+import 'sentence_card.dart';
 
 /// The dictionary entries for [token], from a line heard at [at]: its
 /// readings and meanings, its characters, and a button that keeps it in
@@ -149,6 +150,7 @@ class _WordCard extends StatelessWidget {
       ),
       actions: [
         _LineButton(controller: controller, at: at),
+        _ExplainButton(controller: controller, sentence: sentence, at: at),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
         if (!controller.learning.unlocked)
           _LockedAdd(learning: controller.learning)
@@ -254,6 +256,7 @@ class _EnglishCard extends StatelessWidget {
       ),
       actions: [
         _LineButton(controller: controller, at: at),
+        _ExplainButton(controller: controller, sentence: sentence, at: at),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
         if (!controller.learning.unlocked)
           _LockedAdd(learning: controller.learning)
@@ -385,6 +388,7 @@ class _JapaneseCard extends StatelessWidget {
       ),
       actions: [
         _LineButton(controller: controller, at: at),
+        _ExplainButton(controller: controller, sentence: sentence, at: at),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
         if (!controller.learning.unlocked)
           _LockedAdd(learning: controller.learning)
@@ -529,6 +533,7 @@ class _WiktionaryCard extends StatelessWidget {
       ),
       actions: [
         _LineButton(controller: controller, at: at),
+        _ExplainButton(controller: controller, sentence: sentence, at: at),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
         if (!controller.learning.unlocked)
           _LockedAdd(learning: controller.learning)
@@ -640,6 +645,24 @@ class _LineButton extends StatelessWidget {
       icon: Icon(AppIcons.playCircle, size: 16),
       label: Text(tr('Hear the line')),
       onPressed: () => unawaited(controller.playLineOnce(at)),
+    );
+  }
+}
+
+/// AI 讲这句 for the line the word was heard in.
+class _ExplainButton extends StatelessWidget {
+  const _ExplainButton({required this.controller, required this.sentence, required this.at});
+  final AppController controller;
+  final String sentence;
+  final Duration at;
+
+  @override
+  Widget build(BuildContext context) {
+    if (sentence.trim().isEmpty || !canExplainSentences(controller)) return const SizedBox.shrink();
+    return TextButton.icon(
+      icon: Icon(AppIcons.lightbulb, size: 16),
+      label: Text(tr('AI explains this line')),
+      onPressed: () => unawaited(showSentenceExplanation(context, controller, text: sentence, at: at)),
     );
   }
 }

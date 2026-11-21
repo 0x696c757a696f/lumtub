@@ -1,14 +1,16 @@
 """Adds English meanings to the English pack's word list.
 
-    en_english.py EN_TSV ENGLISH_EXTRACT
+    en_english.py EN_TSV ENGLISH_EXTRACT [SIMPLE_EXTRACT]
 
 EN_TSV is the ECDICT list the workflow wrote (word, phonetic, Chinese
 meanings, forms, exam tags, Collins stars, rank, then ECDICT's own
 English definitions, mostly WordNet's). ENGLISH_EXTRACT is kaikki.org's
 extract of the English Wiktionary's English words (JSONL, CC BY-SA 4.0).
 The eighth column becomes the word's Wiktionary meanings, plainer and
-newer than WordNet's, or stays ECDICT's when Wiktionary has none. The
-file is rewritten in place.
+newer than WordNet's, or stays ECDICT's when Wiktionary has none.
+SIMPLE_EXTRACT, kaikki.org's extract of the Simple English Wiktionary
+(CC BY-SA 4.0), written in plain words for learners, goes first where it
+has the word. The file is rewritten in place.
 """
 import gzip
 import json
@@ -33,20 +35,18 @@ def opener(path):
     return gzip.open(path, 'rt', encoding='utf-8') if path.endswith('.gz') else open(path, encoding='utf-8')
 
 
-def main():
-    tsv, extract = sys.argv[1:]
-    with open(tsv, encoding='utf-8') as f:
-        rows = [line.rstrip('\n').split('\t') for line in f]
-    wanted = {row[0] for row in rows}
+def senses_of(path, wanted, simple):
+    """word → (common senses, rare senses) from one extract."""
     common, rare = {}, {}
     english = re.compile(r'"lang_code":\s*"en"')
-    with opener(extract) as f:
+    with opener(path) as f:
         for line in f:
-            if not english.search(line):
+            # The Simple English Wiktionary only has English words.
+            if not simple and not english.search(line):
                 continue
             entry = json.loads(line)
             word = clean(entry.get('word', ''))
-            if entry.get('lang_code') != 'en' or word not in wanted:
+            if entry.get('lang_code', 'en') != 'en' or word not in wanted:
                 continue
             pos = POS.get(entry.get('pos', ''))
             if not pos:
@@ -65,12 +65,25 @@ def main():
                 text = f'{pos} {gloss}'
                 if text not in found and len(found) < MAX_SENSES:
                     found.append(text)
+    return common, rare
+
+
+def main():
+    tsv, extract, *simple_extract = sys.argv[1:]
+    with open(tsv, encoding='utf-8') as f:
+        rows = [line.rstrip('\n').split('\t') for line in f]
+    wanted = {row[0] for row in rows}
+    common, rare = senses_of(extract, wanted, False)
+    simple = {}
+    if simple_extract:
+        simple, _ = senses_of(simple_extract[0], wanted, True)
+        print(f'Simple English Wiktionary: {len(simple)} words', flush=True)
     from_wiktionary = 0
     with open(tsv, 'w', encoding='utf-8', newline='\n') as out:
         for row in rows:
             while len(row) < 8:
                 row.append('')
-            senses = (common.get(row[0], []) + rare.get(row[0], []))[:MAX_SENSES]
+            senses = simple.get(row[0]) or (common.get(row[0], []) + rare.get(row[0], []))[:MAX_SENSES]
             if senses:
                 row[7] = '\\n'.join(senses)
                 from_wiktionary += 1

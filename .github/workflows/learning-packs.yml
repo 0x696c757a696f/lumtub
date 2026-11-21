@@ -95,7 +95,9 @@ jobs:
           # English meanings from the English Wiktionary (CC BY-SA 4.0), as
           # extracted by kaikki.org; ECDICT's stay where it has none.
           curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/en-wiktionary.jsonl" https://kaikki.org/dictionary/English/kaikki.org-dictionary-English.jsonl
-          python3 -I .github/learning/en_english.py "$RUNNER_TEMP/in/en.tsv" "$RUNNER_TEMP/in/en-wiktionary.jsonl" | tee -a "$GITHUB_STEP_SUMMARY"
+          # The Simple English Wiktionary (CC BY-SA 4.0), in plain words, first.
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/en-simple.jsonl.gz" https://kaikki.org/simplewiktionary/raw-wiktextract-data.jsonl.gz
+          python3 -I .github/learning/en_english.py "$RUNNER_TEMP/in/en.tsv" "$RUNNER_TEMP/in/en-wiktionary.jsonl" "$RUNNER_TEMP/in/en-simple.jsonl.gz" | tee -a "$GITHUB_STEP_SUMMARY"
           rm -f "$RUNNER_TEMP/in/en-wiktionary.jsonl"
           gzip -n -9 < "$RUNNER_TEMP/in/en.tsv" > "$RUNNER_TEMP/out/en-ecdict.tsv.gz"
           # The SQLite dictionary the app looks words up in on disk.
@@ -231,7 +233,7 @@ jobs:
           NOTES: >-
             Dictionaries for the learning pack, downloaded by Lumtub when a dictionary is turned on. Not an app release.
             CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/);
-            ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT), with English meanings from the English Wiktionary (CC BY-SA 4.0) as extracted by kaikki.org and from WordNet (WordNet license, https://wordnet.princeton.edu/license-and-commercial-use);
+            ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT), with English meanings from the Simple English and English Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org and from WordNet (WordNet license, https://wordnet.princeton.edu/license-and-commercial-use);
             JMdict by the Electronic Dictionary Research and Development Group under CC BY-SA 4.0 (https://www.edrdg.org/edrdg/licence.html), via jmdict-simplified, with Chinese meanings from the Chinese Wiktionary and WikDict;
             the Korean, Spanish, French, German, Italian and Russian dictionaries are made from the English and Chinese Wiktionaries (CC BY-SA 4.0, https://www.wiktionary.org/) as extracted by kaikki.org (https://kaikki.org/) and from WikDict (CC BY-SA, https://www.wikdict.com/);
             Korean meanings and levels come first from the Korean Basic Dictionary (한국어기초사전) of the National Institute of Korean Language (CC BY-SA 2.0 KR, https://krdict.korean.go.kr/), via its open data in https://github.com/basickorean/basickorean-vocab.

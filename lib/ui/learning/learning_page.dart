@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../app/app_controller.dart';
 import '../../app_log.dart';
@@ -150,6 +152,19 @@ Future<void> _showConfirmation(BuildContext context, Learning learning, {require
     tr('You agreed: {0}', [_consentText()]),
     tr('License code: {0}', [learning.license?.code ?? '']),
   ].join('\n');
+  // Written to Downloads at once, so the buyer has the confirmation on a
+  // durable medium without having to save it.
+  String? kept;
+  try {
+    final folder = await getDownloadsDirectory() ?? await getApplicationDocumentsDirectory();
+    final safe = order.replaceAll(RegExp(r'[^0-9A-Za-z_-]'), '');
+    final file = File('${folder.path}${Platform.pathSeparator}Lumtub-purchase-$safe.txt');
+    await file.writeAsString('$record\n', flush: true);
+    kept = file.path;
+  } catch (e) {
+    logWarn('Could not save the purchase confirmation: $e');
+  }
+  if (!context.mounted) return;
   await showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
@@ -157,7 +172,7 @@ Future<void> _showConfirmation(BuildContext context, Learning learning, {require
       content: SizedBox(
         width: 460,
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(tr('Keep this confirmation of your purchase:')),
+          Text(kept == null ? tr('Keep this confirmation of your purchase:') : tr('This confirmation of your purchase was saved to {0}', [kept])),
           const SizedBox(height: 8),
           SelectableText(record, style: Theme.of(context).textTheme.bodySmall),
         ]),

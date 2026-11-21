@@ -19,6 +19,7 @@ import 'motion.dart';
 import 'player_panel.dart';
 import 'app_icons.dart';
 import '../learning/learning.dart';
+import '../learning/vocabulary.dart' show VocabularyBook;
 import 'learning/ruby_line.dart';
 import 'learning/word_card.dart';
 import 'video_notes.dart';
@@ -67,11 +68,32 @@ class _SubtitleListState extends State<SubtitleList> {
     _trackChanges = widget.player.stream.track.listen((_) => _reload());
     widget.controller.addListener(_secondChanged);
     widget.controller.learning.addListener(_learningChanged);
+    _watchBook();
   }
 
   void _learningChanged() {
+    _watchBook();
+    _learningSeen++;
     if (mounted) setState(() {});
   }
+
+  /// A word saved or removed changes which words are marked.
+  VocabularyBook? _book;
+  void _watchBook() {
+    final book = widget.controller.learning.book;
+    if (identical(book, _book)) return;
+    _book?.removeListener(_learningChanged);
+    _book = book;
+    book?.addListener(_learningChanged);
+  }
+
+  /// The rows built, each with whether it was the playing line. When the
+  /// playing line moves only its old and new rows are built again: building
+  /// every row shown, each line cut into words with readings, took the
+  /// window's thread long enough to drop frames of a 60 fps video.
+  final _rows = <int, (bool, Widget)>{};
+  Object? _rowsFor;
+  int _learningSeen = 0;
 
   /// [text] as words with pinyin a tap looks up, when it is Chinese and
   /// the learning pack's dictionary is there; otherwise plain.
@@ -132,6 +154,7 @@ class _SubtitleListState extends State<SubtitleList> {
   void dispose() {
     widget.controller.removeListener(_secondChanged);
     widget.controller.learning.removeListener(_learningChanged);
+    _book?.removeListener(_learningChanged);
     _trackChanges?.cancel();
     _positions?.cancel();
     _typing?.cancel();
@@ -261,6 +284,82 @@ class _SubtitleListState extends State<SubtitleList> {
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(tr('Subtitle copied')), duration: const Duration(seconds: 1)));
   }
 
+  Widget _row(List<PairedCue> cues, int i, bool playing, ColorScheme colors) {
+    final line = cues[i];
+    final cue = line.cue;
+    final swap = _mode == SubtitleListMode.secondOver && line.second != null;
+    final top = swap ? line.second! : cue.text;
+    final under = swap ? cue.text : line.second;
+    return GestureDetector(
+      key: playing ? _currentKey : null,
+      onSecondaryTapUp: (details) => unawaited(_menu(cues, i, details.globalPosition)),
+      onLongPressStart: (details) => unawaited(_menu(cues, i, details.globalPosition)),
+      child: Material(
+        color: playing ? colors.secondaryContainer : Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            // The tapped line lights up at once, before the
+            // player gets there.
+            setState(() {
+              _follow = true;
+              _current = i;
+            });
+            unawaited(widget.controller.seek(cue.start));
+          },
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 4, 8),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              SizedBox(
+                width: 52,
+                child: Text(formatClock(cue.start), style: TextStyle(fontSize: 12, color: playing ? colors.onSecondaryContainer : colors.outline, fontFeatures: const [FontFeature.tabularFigures()])),
+              ),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                  _line(
+                    top,
+                    TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
+                    other: under,
+                    at: cue.start,
+                    colors: colors,
+                  ),
+                  if (under != null) ...[
+                    const SizedBox(height: 2),
+                    _line(
+                      under,
+                      TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
+                      other: top,
+                      at: cue.start,
+                      colors: colors,
+                    ),
+                  ],
+                ]),
+              ),
+              ValueListenableBuilder<int>(
+                valueListenable: widget.controller.shadowTakes,
+                builder: (context, takes, child) => widget.controller.hasTakeOf(cue)
+                    ? IconButton(
+                        tooltip: tr('Compare with the original'),
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 16,
+                        icon: Icon(AppIcons.userSound, color: colors.primary),
+                        onPressed: () => unawaited(widget.controller.compareShadowing(cue)),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              IconButton(
+                tooltip: tr('Copy'),
+                visualDensity: VisualDensity.compact,
+                iconSize: 16,
+                icon: Icon(AppIcons.copy, color: colors.outline),
+                onPressed: () => _copy(line),
+              ),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -282,6 +381,12 @@ class _SubtitleListState extends State<SubtitleList> {
           );
         }
         if (_positions == null) _listen(cues);
+        // Anything a row shows but the playing line builds them all again.
+        final rowsFor = Object.hash(cues, _query, _mode, colors, _learningSeen, Localizations.maybeLocaleOf(context), MediaQuery.textScalerOf(context));
+        if (rowsFor != _rowsFor) {
+          _rowsFor = rowsFor;
+          _rows.clear();
+        }
         final shown = [
           for (final (i, cue) in cues.indexed)
             if (_query.isEmpty || cue.cue.text.toLowerCase().contains(_query) || (cue.second?.toLowerCase().contains(_query) ?? false)) i,
@@ -328,80 +433,11 @@ class _SubtitleListState extends State<SubtitleList> {
                 itemCount: shown.length,
                 itemBuilder: (context, k) {
                   final i = shown[k];
-                  final line = cues[i];
-                  final cue = line.cue;
-                  final swap = _mode == SubtitleListMode.secondOver && line.second != null;
-                  final top = swap ? line.second! : cue.text;
-                  final under = swap ? cue.text : line.second;
                   final playing = i == _current;
-                  return GestureDetector(
-                    key: playing ? _currentKey : null,
-                    onSecondaryTapUp: (details) => unawaited(_menu(cues, i, details.globalPosition)),
-                    onLongPressStart: (details) => unawaited(_menu(cues, i, details.globalPosition)),
-                    child: Material(
-                      color: playing ? colors.secondaryContainer : Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          // The tapped line lights up at once, before the
-                          // player gets there.
-                          setState(() {
-                            _follow = true;
-                            _current = i;
-                          });
-                          unawaited(widget.controller.seek(cue.start));
-                        },
-                        child: Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 4, 8),
-                          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            SizedBox(
-                              width: 52,
-                              child: Text(formatClock(cue.start), style: TextStyle(fontSize: 12, color: playing ? colors.onSecondaryContainer : colors.outline, fontFeatures: const [FontFeature.tabularFigures()])),
-                            ),
-                            Expanded(
-                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                                _line(
-                                  top,
-                                  TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
-                                  other: under,
-                                  at: cue.start,
-                                  colors: colors,
-                                ),
-                                if (under != null) ...[
-                                  const SizedBox(height: 2),
-                                  _line(
-                                    under,
-                                    TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
-                                    other: top,
-                                    at: cue.start,
-                                    colors: colors,
-                                  ),
-                                ],
-                              ]),
-                            ),
-                            ValueListenableBuilder<int>(
-                              valueListenable: widget.controller.shadowTakes,
-                              builder: (context, takes, child) => widget.controller.hasTakeOf(cue)
-                                  ? IconButton(
-                                      tooltip: tr('Compare with the original'),
-                                      visualDensity: VisualDensity.compact,
-                                      iconSize: 16,
-                                      icon: Icon(AppIcons.userSound, color: colors.primary),
-                                      onPressed: () => unawaited(widget.controller.compareShadowing(cue)),
-                                    )
-                                  : const SizedBox.shrink(),
-                            ),
-                            IconButton(
-                              tooltip: tr('Copy'),
-                              visualDensity: VisualDensity.compact,
-                              iconSize: 16,
-                              icon: Icon(AppIcons.copy, color: colors.outline),
-                              onPressed: () => _copy(line),
-                            ),
-                          ]),
-                        ),
-                      ),
-                    ),
-                  );
+                  if (_rows[i] case (final was, final row) when was == playing) return row;
+                  final row = _row(cues, i, playing, colors);
+                  _rows[i] = (playing, row);
+                  return row;
                 },
               ),
             )),),

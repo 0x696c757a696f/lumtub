@@ -132,7 +132,8 @@ fn speak_once(text: &str, voice: &str) -> Result<Vec<u8>, Attempt> {
     }
     headers.insert(
         "Cookie",
-        HeaderValue::from_str(&format!("muid={};", random_hex().to_ascii_uppercase())).map_err(other)?,
+        HeaderValue::from_str(&format!("muid={};", random_hex().to_ascii_uppercase()))
+            .map_err(other)?,
     );
 
     let (mut socket, _) = match tungstenite::client(request, stream) {
@@ -269,10 +270,20 @@ fn civil_from_days(days: i64) -> (i64, i64, i64) {
     let mp = (5 * doy + 2) / 153;
     let day = doy - (153 * mp + 2) / 5 + 1;
     let month = if mp < 10 { mp + 3 } else { mp - 9 };
-    (if month <= 2 { yoe + era * 400 + 1 } else { yoe + era * 400 }, month, day)
+    (
+        if month <= 2 {
+            yoe + era * 400 + 1
+        } else {
+            yoe + era * 400
+        },
+        month,
+        day,
+    )
 }
 
-const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS: [&str; 12] = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 const WEEKDAYS: [&str; 7] = ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"];
 
 /// `Sun, 06 Nov 1994 08:49:37 GMT` as Unix seconds.
@@ -316,7 +327,9 @@ fn open(host: &str, port: u16) -> Result<TcpStream, Failure> {
                     Err(error) => last = Some(error),
                 }
             }
-            Err(other(last.map_or("no address for the Edge voice".into(), |e| e.to_string())))
+            Err(other(
+                last.map_or("no address for the Edge voice".into(), |e| e.to_string()),
+            ))
         }
         Some(proxy) => {
             if let Some(socks) = crate::socks::Proxy::parse(&proxy) {
@@ -334,7 +347,10 @@ fn open(host: &str, port: u16) -> Result<TcpStream, Failure> {
 fn tunnel(proxy: &str, host: &str, port: u16) -> Result<TcpStream, Failure> {
     let rest = proxy[7..].trim_end_matches('/');
     let (login, address) = rest.rsplit_once('@').unwrap_or(("", rest));
-    let address = if address.rsplit_once(':').is_some_and(|(_, p)| p.parse::<u16>().is_ok()) {
+    let address = if address
+        .rsplit_once(':')
+        .is_some_and(|(_, p)| p.parse::<u16>().is_ok())
+    {
         address.to_string()
     } else {
         format!("{address}:80")
@@ -349,7 +365,10 @@ fn tunnel(proxy: &str, host: &str, port: u16) -> Result<TcpStream, Failure> {
     let mut ask = format!("CONNECT {host}:{port} HTTP/1.1\r\nHost: {host}:{port}\r\n");
     if !login.is_empty() {
         let login = crate::relay::decode(&login.replace('+', "%2B"));
-        ask.push_str(&format!("Proxy-Authorization: Basic {}\r\n", base64(login.as_bytes())));
+        ask.push_str(&format!(
+            "Proxy-Authorization: Basic {}\r\n",
+            base64(login.as_bytes())
+        ));
     }
     ask.push_str("\r\n");
     socket.write_all(ask.as_bytes()).map_err(other)?;
@@ -377,7 +396,9 @@ fn base64(data: &[u8]) -> String {
     const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = String::new();
     for chunk in data.chunks(3) {
-        let n = (chunk[0] as u32) << 16 | (*chunk.get(1).unwrap_or(&0) as u32) << 8 | *chunk.get(2).unwrap_or(&0) as u32;
+        let n = (chunk[0] as u32) << 16
+            | (*chunk.get(1).unwrap_or(&0) as u32) << 8
+            | *chunk.get(2).unwrap_or(&0) as u32;
         for i in 0..4 {
             if i <= chunk.len() {
                 out.push(TABLE[(n >> (18 - 6 * i) & 63) as usize] as char);
@@ -438,8 +459,14 @@ mod tests {
 
     #[test]
     fn reads_http_dates() {
-        assert_eq!(parse_http_date("Sun, 06 Nov 1994 08:49:37 GMT"), Some(784_111_777));
-        assert_eq!(parse_http_date("Fri, 21 Nov 2026 10:00:00 GMT"), Some(1_795_255_200));
+        assert_eq!(
+            parse_http_date("Sun, 06 Nov 1994 08:49:37 GMT"),
+            Some(784_111_777)
+        );
+        assert_eq!(
+            parse_http_date("Fri, 21 Nov 2026 10:00:00 GMT"),
+            Some(1_795_255_200)
+        );
         assert_eq!(parse_http_date("garbage"), None);
     }
 
@@ -476,14 +503,21 @@ mod tests {
     #[test]
     fn refuses_odd_voice_names() {
         assert!(matches!(speak("hi", "en-US'><x"), Err(Failure::Other(_))));
-        assert!(matches!(speak("  ", "en-US-JennyNeural"), Err(Failure::Other(_))));
+        assert!(matches!(
+            speak("  ", "en-US-JennyNeural"),
+            Err(Failure::Other(_))
+        ));
     }
 
     /// The real service (CI runs it, as the token and protocol change).
     #[test]
     #[ignore]
     fn live() {
-        for (text, voice) in [("Hello", "en-US-JennyNeural"), ("食べる", "ja-JP-NanamiNeural"), ("学习", "zh-CN-XiaoxiaoNeural")] {
+        for (text, voice) in [
+            ("Hello", "en-US-JennyNeural"),
+            ("食べる", "ja-JP-NanamiNeural"),
+            ("学习", "zh-CN-XiaoxiaoNeural"),
+        ] {
             let sound = speak(text, voice).unwrap_or_else(|e| panic!("{voice}: {e}"));
             println!("{voice}: {} bytes", sound.len());
             assert!(sound.len() > 1000, "{voice}");

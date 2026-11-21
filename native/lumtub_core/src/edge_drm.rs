@@ -472,7 +472,11 @@ mod tests {
         let token = generate_sec_ms_gec_v2(ticks_at(1_763_700_000));
         let (cs64, sha) = token.split_once('-').unwrap();
         assert_eq!((cs64.len(), sha.len()), (16, 64));
-        assert!(token.chars().all(|c| c == '-' || c.is_ascii_digit() || c.is_ascii_uppercase()));
+        assert!(
+            token
+                .chars()
+                .all(|c| c == '-' || c.is_ascii_digit() || c.is_ascii_uppercase())
+        );
         // The same five minutes give the same token.
         assert_eq!(token, generate_sec_ms_gec_v2(ticks_at(1_763_700_200)));
         assert_ne!(token, generate_sec_ms_gec_v2(ticks_at(1_763_700_300)));

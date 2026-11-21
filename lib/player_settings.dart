@@ -169,6 +169,36 @@ class SubtitleLanguage {
   String toString() => name;
 }
 
+/// 画质增强: which mpv shaders rebuild detail when a picture is drawn larger
+/// than it is (lib/upscale_shaders.dart).
+enum Upscaling {
+  off('Off', 'Plain scaling'),
+  light('Light (RAVU)', 'Sharper edges for a little GPU work'),
+  strong('Strong (FSRCNNX)', 'More detail in filmed video; needs a capable graphics card'),
+  anime('Anime (Anime4K)', 'Cleaner lines in animation; needs a capable graphics card');
+
+  const Upscaling(this._label, this._description);
+  final String _label;
+  final String _description;
+  String get label => tr(_label);
+  String get description => tr(_description);
+}
+
+/// Which version of a video with high dynamic range plays. The picture
+/// reaches the screen through an 8-bit standard range texture, so an HDR
+/// one is tone mapped down to standard range either way.
+enum HdrPreference {
+  auto('Automatic', 'Standard range version; HDR with Quality first'),
+  sdr('Standard range version', 'Plays the version YouTube made for normal screens; less decoding work'),
+  hdr('HDR version', 'Tone mapped to this screen; 10-bit decoding uses more power');
+
+  const HdrPreference(this._label, this._description);
+  final String _label;
+  final String _description;
+  String get label => tr(_label);
+  String get description => tr(_description);
+}
+
 /// mpv's `--video-sync` modes.
 enum VideoSync {
   audio('audio', 'Sync to audio (default)'),
@@ -423,6 +453,8 @@ class PlayerSettings {
   /// mpv's `audio-device` name, or `auto` for the Windows default.
   final String audioDevice;
   final VideoSync videoSync;
+  final Upscaling upscaling;
+  final HdrPreference hdr;
   /// Highest video height to request, or 0 for no limit.
   final int maxHeight;
   final PlayOrder playOrder;
@@ -571,6 +603,8 @@ class PlayerSettings {
     this.dubbedAudio = DubbedAudio.original,
     this.audioDevice = 'auto',
     this.videoSync = VideoSync.audio,
+    this.upscaling = Upscaling.off,
+    this.hdr = HdrPreference.auto,
     this.maxHeight = 0,
     this.playOrder = PlayOrder.pause,
     this.defaultSpeed = 1.0,
@@ -651,6 +685,8 @@ class PlayerSettings {
     DubbedAudio? dubbedAudio,
     String? audioDevice,
     VideoSync? videoSync,
+    Upscaling? upscaling,
+    HdrPreference? hdr,
     int? maxHeight,
     PlayOrder? playOrder,
     double? defaultSpeed,
@@ -729,6 +765,8 @@ class PlayerSettings {
         dubbedAudio: dubbedAudio ?? this.dubbedAudio,
         audioDevice: audioDevice ?? this.audioDevice,
         videoSync: videoSync ?? this.videoSync,
+        upscaling: upscaling ?? this.upscaling,
+        hdr: hdr ?? this.hdr,
         maxHeight: maxHeight ?? this.maxHeight,
         playOrder: playOrder ?? this.playOrder,
         defaultSpeed: defaultSpeed ?? this.defaultSpeed,
@@ -808,6 +846,8 @@ class PlayerSettings {
         'dubbedAudio': dubbedAudio.name,
         'audioDevice': audioDevice,
         'videoSync': videoSync.name,
+        'upscaling': upscaling.name,
+        'hdr': hdr.name,
         'maxHeight': maxHeight,
         'playOrder': playOrder.name,
         'playOrderDefault': 2,
@@ -1016,6 +1056,8 @@ class PlayerSettings {
       dubbedAudio: _enumByName(DubbedAudio.values, raw['dubbedAudio'], DubbedAudio.original),
       audioDevice: device.isEmpty || device.length > 200 || device.contains(RegExp(r'[\r\n]')) ? 'auto' : device,
       videoSync: _enumByName(VideoSync.values, raw['videoSync'], VideoSync.audio),
+      upscaling: _enumByName(Upscaling.values, raw['upscaling'], Upscaling.off),
+      hdr: _enumByName(HdrPreference.values, raw['hdr'], HdrPreference.auto),
       maxHeight: raw['maxHeight'] is int && (raw['maxHeight'] as int) >= 0 && (raw['maxHeight'] as int) <= 4320 ? raw['maxHeight'] as int : 0,
       playOrder: playOrder,
       defaultSpeed: decimal('defaultSpeed', 1.0, 0.1, 8),

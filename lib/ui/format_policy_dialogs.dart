@@ -43,26 +43,44 @@ void toggleCodec(BuildContext context, PlayerSettings settings, VideoCodec codec
   _say(context, _why(settings, disabled ? {...current, codec} : current));
 }
 
-/// Asks for a [PlaybackStrategy], each with its one-line description, and
+/// Asks for one of [values], each with its one-line description, and
 /// reports a changed choice.
-Future<void> pickPlaybackStrategy(BuildContext context, PlaybackStrategy current, ValueChanged<PlaybackStrategy> onSelected) async {
-  final result = await showDialog<PlaybackStrategy>(
+Future<void> pickDescribed<T>(BuildContext context, {required String title, required T current, required List<(T, String, String)> values, required ValueChanged<T> onSelected}) async {
+  final result = await showDialog<T>(
     context: context,
     builder: (context) => SimpleDialog(
-      title: Text(tr('Playback strategy')),
+      title: Text(title),
       children: [
-        for (final strategy in PlaybackStrategy.values)
+        for (final (value, label, description) in values)
           ListTile(
             dense: true,
-            leading: Icon(strategy == current ? AppIcons.radioButton : AppIcons.circle),
-            title: Text(strategy.label),
-            subtitle: Text(strategy.description),
-            onTap: () => Navigator.pop(context, strategy),
+            leading: Icon(value == current ? AppIcons.radioButton : AppIcons.circle),
+            title: Text(label),
+            subtitle: Text(description),
+            onTap: () => Navigator.pop(context, value),
           ),
       ],
     ),
   );
   if (result != null && result != current) onSelected(result);
+}
+
+/// Asks for a [PlaybackStrategy], each with its one-line description, and
+/// reports a changed choice.
+Future<void> pickPlaybackStrategy(BuildContext context, PlaybackStrategy current, ValueChanged<PlaybackStrategy> onSelected) => pickDescribed(
+      context,
+      title: tr('Playback strategy'),
+      current: current,
+      values: [for (final s in PlaybackStrategy.values) (s, s.label, s.description)],
+      onSelected: onSelected,
+    );
+
+/// How this device decodes AV1 and what automatic playback does about it.
+String av1Note(PlayerSettings settings) {
+  if (settings.disabledCodecs.contains(VideoCodec.av1)) return tr('AV1 is disabled');
+  if (FormatPolicy.hardware(settings, VideoCodec.av1)) return tr('Hardware decoding. Smart auto prefers AV1: the same picture in less data');
+  if (FormatPolicy.softwareOnly(settings, VideoCodec.av1)) return tr('Software decoding. Smart auto avoids AV1, which costs much power on the CPU');
+  return tr('Not verified yet. Smart auto prefers other codecs until an AV1 video has played in hardware');
 }
 
 /// Asks which codecs to disable and reports the settings when they changed.

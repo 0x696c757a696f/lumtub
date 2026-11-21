@@ -5,6 +5,7 @@ import 'package:lumtub/device_memory.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/player_option_applicator.dart';
 import 'package:lumtub/player_settings.dart';
+import 'package:lumtub/upscale_shaders.dart';
 
 void main() {
   test('maps supported UI settings to libmpv options', () {
@@ -122,6 +123,32 @@ void main() {
     expect(PlayerOptionApplicator.cacheOptions(settings), {'cache-secs': '60', 'demuxer-max-bytes': '64MiB', 'demuxer-max-back-bytes': '16MiB'});
     expect(PlayerOptionApplicator.cacheOptions(settings, background: true), {'cache-secs': '30', 'demuxer-max-bytes': '24MiB', 'demuxer-max-back-bytes': '4MiB'});
     expect(PlayerOptionApplicator.optionsFor(settings)['demuxer-max-bytes'], '64MiB');
+  });
+
+  test('picture enhancement and HDR tone mapping', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final data = await Directory.systemTemp.createTemp('lumtub_upscale');
+    addTearDown(() => data.delete(recursive: true));
+    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings(upscaling: Upscaling.anime))['glsl-shaders'], '');
+    await UpscaleShaders.prepare(data, Upscaling.anime);
+    final shaders = PlayerOptionApplicator.optionsFor(const PlayerSettings(upscaling: Upscaling.anime))['glsl-shaders']!;
+    expect(shaders, endsWith('anime4k-a.glsl'));
+    expect(File(shaders).readAsStringSync(), contains('//!HOOK MAIN'));
+    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['glsl-shaders'], '');
+    // 低资源占用优先 leaves the shaders out.
+    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings(upscaling: Upscaling.anime, strategy: PlaybackStrategy.lowResource))['glsl-shaders'], '');
+    final normal = PlayerOptionApplicator.optionsFor(const PlayerSettings());
+    expect(normal['tone-mapping'], 'bt.2390');
+    expect(normal['hdr-compute-peak'], 'auto');
+    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings(strategy: PlaybackStrategy.lowResource))['hdr-compute-peak'], 'no');
+  });
+
+  test('picture enhancement and HDR choices are saved', () {
+    const original = PlayerSettings(upscaling: Upscaling.strong, hdr: HdrPreference.sdr);
+    final restored = PlayerSettings.fromJson(original.toJson());
+    expect(restored.upscaling, Upscaling.strong);
+    expect(restored.hdr, HdrPreference.sdr);
+    expect(PlayerSettings.fromJson(const {'upscaling': 'x', 'hdr': 'y'}).upscaling, Upscaling.off);
   });
 
   test("the device's memory is read", () {

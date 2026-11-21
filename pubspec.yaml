@@ -56,6 +56,8 @@ flutter:
     - python/lumtub_tls.py
     # Settings › Appearance › App icon (lib/windows_shell.dart).
     - assets/app_icons/
+    # 画质增强's mpv shaders (lib/upscale_shaders.dart, assets/shaders/README.md).
+    - assets/shaders/
     # Built-in skins and the template users start from (skins/README.md).
     - skins/rice-paper/
     - skins/candlelight/

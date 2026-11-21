@@ -13,6 +13,20 @@ The Phosphor icon fonts (assets/fonts/phosphor, from the phosphor_flutter
 2.1.0 package) are Copyright 2020-2021 Phosphor Icons, licensed under the
 MIT License (assets/fonts/phosphor/LICENSE).
 
+The upscaling shaders in assets/shaders (Settings › Picture › Picture
+enhancement) keep their own licences:
+- ravu-lite-ar-r3.glsl, RAVU by Bin Jin (https://github.com/bjin/mpv-prescalers),
+  GNU Lesser General Public License version 3 or later.
+- FSRCNNX_x2_8-0-4-1.glsl, Copyright (C) 2017-2021 igv
+  (https://github.com/igv/FSRCNN-TensorFlow, release 1.1), GNU Lesser
+  General Public License version 3 or later.
+  The LGPL text is assets/shaders/LICENSE-LGPL-3.0.txt.
+- anime4k-a.glsl, Anime4K 4.0 by bloc97 (https://github.com/bloc97/Anime4K),
+  MIT License (assets/shaders/LICENSE-Anime4K.txt). It joins the files of
+  Anime4K's mpv mode A (fast) into one, and adds a condition to the
+  de-ring and restore passes so they run only while the picture is scaled
+  up, as the upscale passes already do.
+
 Every package includes an LGPL build of libmpv (https://mpv.io), licensed
 under the GNU Lesser General Public License version 2.1 or later, with an
 LGPL FFmpeg and the other libraries linked into it:

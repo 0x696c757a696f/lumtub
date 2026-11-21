@@ -69,7 +69,9 @@ build_abi() { # abi triple clang-triple pin ("built" = made by python-arm32.sh)
 
   # The interpreter and the libraries it loads, in the library folder.
   rm -f "$jni/$abi"/libpython*.so
-  cp -L "$prefix"/lib/lib*.so "$jni/$abi/"
+  # CPython's modules load the *_python.so builds of OpenSSL and SQLite;
+  # the tarballs also carry unsuffixed copies, which nothing loads.
+  cp -L "$prefix"/lib/libpython*.so "$prefix"/lib/lib*_python.so "$jni/$abi/"
   "$clang_bin/${clang}24-clang" -O2 -fPIE -pie \
     -I"$prefix/include/python$minor" -L"$prefix/lib" \
     -Wl,-z,max-page-size=16384 \

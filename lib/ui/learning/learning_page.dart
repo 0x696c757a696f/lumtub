@@ -191,15 +191,15 @@ Future<void> _buyOnPolar() async {
 
 /// The learning pack's price, kept in this one place: [learningPresale]
 /// while the pre-sale runs, then null, and [learningPrice] alone shows.
-const learningPrice = '€19';
-({String euro, String yuan})? get learningPresale => (euro: '€15', yuan: '¥118');
+const learningPrice = (euro: '€24', yuan: '¥188');
+({String euro, String yuan})? get learningPresale => (euro: '€12', yuan: '¥99');
 
 /// The price in one line, in yuan too for a Chinese interface.
 String learningPriceLine() {
+  String shown(({String euro, String yuan}) price) => currentLanguage.isChinese ? '${price.yuan} / ${price.euro}' : price.euro;
   final pre = learningPresale;
-  if (pre == null) return tr('{0}, paid once', [learningPrice]);
-  final now = currentLanguage.isChinese ? '${pre.yuan} / ${pre.euro}' : pre.euro;
-  return tr('Pre-sale price {0}, paid once ({1} after launch; nothing more to pay then)', [now, learningPrice]);
+  if (pre == null) return tr('{0}, paid once', [shown(learningPrice)]);
+  return tr('Pre-sale price {0}, paid once ({1} after launch; nothing more to pay then)', [shown(pre), shown(learningPrice)]);
 }
 
 /// Where the free trial stands: the free lookups left, or today's
@@ -213,7 +213,7 @@ String learningTrialOffer() => tr('Free to try: everything on for the first {0} 
 
 /// What the learning pack unlocks, in one paragraph.
 String learningPackFeatures() => tr(
-    'The learning pack gives unlimited word lookups, pinyin and kana above subtitles, harder words highlighted, words read aloud, the vocabulary book with the line and its sound, Anki export and the four-step video study, on up to 5 devices, with one payment and no subscription.');
+    'The learning pack gives unlimited word lookups, pinyin and kana above subtitles, harder words highlighted, words read aloud, the vocabulary book with the line and its sound, Anki export and the four-step video study, on up to 2 devices, with one payment and no subscription.');
 
 /// A paid feature was asked for after the free trial: what the pack
 /// gives, its price, and the ways to buy or unlock it.
@@ -270,7 +270,7 @@ Future<void> _showConfirmation(BuildContext context, Learning learning, {require
     tr('Unlocked on {0}', [stamp]),
     tr('You agreed: {0}', [_consentText()]),
     tr('License code: {0}', [learning.license?.code ?? '']),
-    tr('What it includes: unlimited word lookup in subtitles with offline dictionaries, readings above words, harder words highlighted, reading aloud, the vocabulary book with Anki export, the four-step video study, on up to 5 devices, with updates.'),
+    tr('What it includes: unlimited word lookup in subtitles with offline dictionaries, readings above words, harder words highlighted, reading aloud, the vocabulary book with Anki export, the four-step video study, on up to 2 devices, with updates.'),
     tr('Lost the code? Unlock again with the same order. Orders, refunds and questions: {0}', [learningContact]),
   ].join('\n');
   // Written to Downloads at once, so the buyer has the confirmation on a
@@ -567,7 +567,7 @@ class _Pitch extends StatelessWidget {
             ),
           const SizedBox(height: 8),
           Text(
-            tr('Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, up to 5 devices, no account, no subscription. Buying it keeps Lumtub alive.'),
+            tr('Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, up to 2 devices, no account, no subscription. Buying it keeps Lumtub alive.'),
             style: TextStyle(color: theme.colorScheme.outline, fontSize: 12, height: 1.5),
           ),
           const SizedBox(height: Space.s),
@@ -829,7 +829,7 @@ Future<void> showLearningOrders(BuildContext context) => showDialog<void>(
           child: SingleChildScrollView(
             child: SelectableText([
               tr('Lost your code, or a new computer: choose I bought it: unlock and enter the same order again. You get the same code; nothing is bought twice.'),
-              tr('A code works on up to 5 devices. Remove one you no longer use under Learning › Devices; a reinstalled Lumtub counts as a new device.'),
+              tr('A code works on up to 2 devices. Remove one you no longer use under Learning › Devices; a reinstalled Lumtub counts as a new device.'),
               tr('Once the code is activated it keeps working without internet; Lumtub only checks now and then, when it can.'),
               tr('If the pack does not work as described, or you were charged by mistake, write to us with your order number and we will fix it or refund you. A refunded order stops its code; your vocabulary book stays on your computer and can still be exported.'),
               tr('Orders, refunds and questions: {0}', [learningContact]),
@@ -846,7 +846,7 @@ Controller: Lumtub (Italy). Privacy contact: 7poad30n5@mozmail.com
 
 What is kept, and why
 • Unlocking a purchase: the order number, a SHA-256 hash of the email you paid with (Ko-fi and Polar; never the email itself), the order date, and when you agreed that the pack is supplied at once (proof of the end of the 14-day withdrawal right). Basis: performing the licence (GDPR art. 6(1)(b)) and legal obligations (6(1)(c)). Kept while the licence is valid.
-• Activating a device: a hashed installation identifier (a random number Lumtub makes once when it is installed; nothing is read from your hardware or system), the kind of system (Windows, macOS…), and the dates the device was added and last confirmed. Used to activate the pack and keep a code to at most 5 devices. Basis: performing the licence (6(1)(b)) and our legitimate interest in preventing a code being shared (6(1)(f)). Removed at once when you remove the device in the app, and automatically 24 months after the device last confirmed the code.
+• Activating a device: a hashed installation identifier (a random number Lumtub makes once when it is installed; nothing is read from your hardware or system), the kind of system (Windows, macOS…), and the dates the device was added and last confirmed. Used to activate the pack and keep a code to at most 2 devices (5 for codes issued before 21 November 2026). Basis: performing the licence (6(1)(b)) and our legitimate interest in preventing a code being shared (6(1)(f)). Removed at once when you remove the device in the app, and automatically 24 months after the device last confirmed the code.
 • Refunds: when an order is refunded in full, the date of the refund, so its code stops. Basis: performing the licence (6(1)(b)).
 How long: order and code records are kept as long as the licence is valid, so you can always get your code again on a new computer; device entries as above; payment and tax records are kept by the payment platform under the law that applies to it.
 • IP address: seen by the server to limit how often it can be asked; our own record of it is deleted within 2 minutes. Basis: legitimate interest in keeping the service safe (6(1)(f)).
@@ -866,7 +866,7 @@ const learningPrivacyZh = '''激活与隐私说明（学习包）
 
 保存什么，为什么
 • 领取购买的激活码：订单号、付款邮箱的 SHA-256 哈希值（Ko-fi 和 Polar；不保存邮箱本身）、订单日期，以及你同意「立即提供、14 天撤回权随之结束」的时间。法律依据：履行许可合同（GDPR 第 6(1)(b) 条）及法定义务（第 6(1)(c) 条）。在授权有效期间保存。
-• 激活设备：经过哈希的安装标识（Lumtub 安装后生成一次的随机数，不读取任何硬件或系统信息）、系统类型（Windows、macOS 等）、设备加入和最近确认的日期。用于激活学习包，并把一个激活码限制在最多 5 台设备。法律依据：履行许可合同（第 6(1)(b) 条）及防止激活码被分享的正当利益（第 6(1)(f) 条）。你在 App 里移除设备时立即删除；从该设备最后一次确认起满 24 个月自动删除。
+• 激活设备：经过哈希的安装标识（Lumtub 安装后生成一次的随机数，不读取任何硬件或系统信息）、系统类型（Windows、macOS 等）、设备加入和最近确认的日期。用于激活学习包，并把一个激活码限制在最多 2 台设备（2026 年 11 月 21 日前发出的激活码为 5 台）。法律依据：履行许可合同（第 6(1)(b) 条）及防止激活码被分享的正当利益（第 6(1)(f) 条）。你在 App 里移除设备时立即删除；从该设备最后一次确认起满 24 个月自动删除。
 • 退款：订单全额退款时记录退款日期，相应激活码随之停用。法律依据：履行许可合同（第 6(1)(b) 条）。
 保存期限：订单和激活码记录在授权有效期间一直保存，方便你在新电脑上随时重新领取；设备记录如上；付款和税务记录由付款平台按其适用法律保存。
 • IP 地址：服务器用来限制请求频率，我们自己的记录在 2 分钟内删除。法律依据：保障服务安全的正当利益（第 6(1)(f) 条）。
@@ -876,7 +876,7 @@ const learningPrivacyZh = '''激活与隐私说明（学习包）
 服务器运行在 Cloudflare（Cloudflare, Inc.）上，作为我们的数据处理者，可能涉及向美国传输，依据欧美数据隐私框架（DPF）或欧盟标准合同条款。本服务关闭了 Workers 日志和请求日志；Cloudflare 自身的运行和安全日志遵循其政策。付款由 Polar、Ko-fi 或爱发电处理，适用它们各自的隐私政策。
 
 你的权利
-你可以要求访问、更正、删除、限制处理、反对处理，以及获取数据副本，也可以向监管机构投诉（意大利为 Garante per la protezione dei dati personali）。请写信到上面的邮箱，我们会在一个月内答复。不提供设备标识就无法在线激活。5 台设备的上限由系统自动检查；如需人工处理，请来信。
+你可以要求访问、更正、删除、限制处理、反对处理，以及获取数据副本，也可以向监管机构投诉（意大利为 Garante per la protezione dei dati personali）。请写信到上面的邮箱，我们会在一个月内答复。不提供设备标识就无法在线激活。设备数上限由系统自动检查；如需人工处理，请来信。
 
 更新日期：2026 年 11 月 21 日''';
 

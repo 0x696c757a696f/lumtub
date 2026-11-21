@@ -16,7 +16,7 @@
 //              consent of each order is kept with its time.
 //
 // POST /activate {code, device, label} records a device for a code (at
-//              most MAX_DEVICES) and returns {receipt, devices}: a signed
+//              most the code's device limit) and returns {receipt, devices}: a signed
 //              receipt that the code is active on that device, which the
 //              app keeps and asks again for every 30 days. {error:
 //              "revoked"} for a code in revoked.txt, {error: "devices",
@@ -244,7 +244,7 @@ async function claim(request, env) {
   const key = `code:${source}:${order}`;
   let code = await env.LICENSES.get(key);
   if (!code) {
-    code = await sign(env, { n: buyer.name, p: 'learn', d: buyer.date });
+    code = await sign(env, { n: buyer.name, p: 'learn', d: buyer.date, m: DEVICES_PER_CODE });
     await env.LICENSES.put(key, code);
   }
   return reply({ code, name: buyer.name, consented: consented.at });
@@ -252,7 +252,10 @@ async function claim(request, env) {
 
 // Devices --------------------------------------------------------------
 
-const MAX_DEVICES = 5;
+// Devices a code works on: written into codes issued from 21 November
+// 2026 (field m); codes issued before keep the 5 promised to them.
+const DEVICES_PER_CODE = 2;
+const OLD_MAX_DEVICES = 5;
 
 // The public half of LICENSE_KEY, as in the app (lib/learning/license.dart).
 const PUBLIC_KEY = new Uint8Array([
@@ -284,7 +287,7 @@ async function checkCode(text) {
     if (!await crypto.subtle.verify({ name: 'Ed25519' }, key, signature, message)) return null;
     const fields = JSON.parse(new TextDecoder().decode(payload));
     if (fields?.p !== 'learn') return null;
-    return { code, id: (await sha256(code)).slice(0, 32), name: clean(fields.n) };
+    return { code, id: (await sha256(code)).slice(0, 32), name: clean(fields.n), max: Number.isInteger(fields.m) && fields.m > 0 ? fields.m : OLD_MAX_DEVICES };
   } catch {
     return null;
   }
@@ -313,10 +316,10 @@ async function activate(request, env) {
   const stopped = await env.LICENSES.get(`revoked:${code.id}`);
   if (stopped) return reply({ error: 'revoked', reason: stopped.startsWith('refunded') ? 'refunded' : 'other' }, 403);
   const today = new Date().toISOString().slice(0, 10);
-  const answer = await slots(env, code.id, { op: 'add', device, label, today });
-  if (!answer.ok) return reply({ error: 'devices', devices: shown(answer.devices), max: MAX_DEVICES }, 409);
+  const answer = await slots(env, code.id, { op: 'add', device, label, today, max: code.max });
+  if (!answer.ok) return reply({ error: 'devices', devices: shown(answer.devices), max: code.max }, 409);
   const receipt = await signWith(env, { c: code.id, v: device, t: today }, 'lumtub-activation-v1\n', 'LA1.');
-  return reply({ receipt, devices: shown(answer.devices), max: MAX_DEVICES });
+  return reply({ receipt, devices: shown(answer.devices), max: code.max });
 }
 
 async function deactivate(request, env) {
@@ -326,7 +329,7 @@ async function deactivate(request, env) {
   const code = await checkCode(ask.code);
   if (!code) return reply({ error: 'code' }, 400);
   const answer = await slots(env, code.id, { op: 'remove', device });
-  return reply({ devices: shown(answer.devices), max: MAX_DEVICES });
+  return reply({ devices: shown(answer.devices), max: code.max });
 }
 
 // One code's devices, changed one request at a time by its own Slots
@@ -363,7 +366,7 @@ export class Slots {
         if (known) {
           known.seen = today;
           if (ask.label) known.label = ask.label;
-        } else if (devices.length >= MAX_DEVICES) {
+        } else if (devices.length >= (ask.max || OLD_MAX_DEVICES)) {
           ok = false;
         } else {
           devices.push({ id: ask.device, label: ask.label, added: today, seen: today });

@@ -126,7 +126,7 @@ class Learning extends ChangeNotifier {
   /// device is removed; and the devices the server last listed.
   LearningLicense? pendingLicense;
   List<LicenseDevice> devices = const [];
-  int maxDevices = 5;
+  int maxDevices = 2;
   bool _showPinyin = true;
 
   /// Korean in letters above the words; off by default, as Hangul reads

@@ -513,7 +513,7 @@ async function afdianOrder(order, env) {
     return null;
   }
   const plans = clean(env.AFDIAN_PLANS).split(',').map(clean).filter(Boolean);
-  const found = (answer.data?.list || []).find((o) => String(o.out_trade_no).toLowerCase() === order && Number(o.status) === 2 && (!plans.length || plans.includes(o.plan_id)));
+  const found = (answer.data?.list || []).find((o) => String(o.out_trade_no).toLowerCase() === order && Number(o.status) === 2 && (!plans.length || plans.includes(o.plan_id) || (o.sku_detail || []).some((s) => plans.includes(s.plan_id))));
   if (!found) return null;
   const when = Number(found.create_time) ? new Date(Number(found.create_time) * 1000) : new Date();
   return { name: `爱发电 #${order.replace(/[^0-9a-z]/g, '').slice(-6)}`, date: when.toISOString().slice(0, 10) };

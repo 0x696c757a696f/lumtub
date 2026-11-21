@@ -28,7 +28,6 @@ import '../app_shell.dart' show openSettings;
 import '../common.dart';
 import '../learning_drawer.dart' show LearningDrawerSection, addLearningDrawerSection, studyLockedView;
 import '../pages/settings_sections.dart' show SettingsCategory;
-import '../pages/support_page.dart' show afdianPage;
 import '../skin_paint.dart';
 import '../theme.dart';
 import 'review_page.dart' show openReview;
@@ -210,12 +209,15 @@ Future<Uri?>? _cardCheckout;
 /// Opens the card checkout, or Afdian while there is none.
 Future<void> _buyByCard() async {
   final checkout = await cardCheckout();
-  await openExternal(checkout?.toString() ?? afdianPage);
+  await openExternal(checkout?.toString() ?? learningAfdianItem);
 }
 
 /// The learning pack's price, kept in this one place: [learningPresale]
 /// while the pre-sale runs, then null, and [learningPrice] alone shows.
-const learningPrice = (euro: '€24', yuan: '¥188');
+/// The learning pack as a one-off item on Afdian (Alipay, WeChat).
+const learningAfdianItem = 'https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00';
+
+const learningPrice = (euro: '€16', yuan: '¥129');
 ({String euro, String yuan})? get learningPresale => (euro: '€12', yuan: '¥99');
 
 /// The last day of the pre-sale price.
@@ -323,7 +325,7 @@ String? _soFar(Learning learning) {
 
 /// Opens the checkout the interface's language suggests: Afdian (Alipay,
 /// WeChat) for Chinese, Polar (cards) otherwise.
-Future<void> buyLearningPack() => currentLanguage.isChinese ? openExternal(afdianPage) : _buyByCard();
+Future<void> buyLearningPack() => currentLanguage.isChinese ? openExternal(learningAfdianItem) : _buyByCard();
 
 String _consentText() => tr(
     'I ask for the learning pack to be supplied now, and I understand that once it is, I lose the 14-day right of withdrawal. This does not affect my rights if the pack does not work as described.');
@@ -650,12 +652,12 @@ class _Pitch extends StatelessWidget {
               final afdianFirst = zh || !card;
               return Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
                 FilledButton(
-                  onPressed: () => unawaited(afdianFirst ? openExternal(afdianPage) : _buyByCard()),
+                  onPressed: () => unawaited(afdianFirst ? openExternal(learningAfdianItem) : _buyByCard()),
                   child: Text(afdianFirst ? tr('Buy on Afdian (Alipay, WeChat)') : tr('Buy on Ko-fi (card, PayPal)')),
                 ),
                 if (card)
                   OutlinedButton(
-                    onPressed: () => unawaited(zh ? _buyByCard() : openExternal(afdianPage)),
+                    onPressed: () => unawaited(zh ? _buyByCard() : openExternal(learningAfdianItem)),
                     child: Text(zh ? tr('Buy on Ko-fi (card, PayPal)') : tr('Buy on Afdian (Alipay, WeChat)')),
                   ),
                 TextButton(onPressed: () => unawaited(claimPurchase(context, learning, afdianFirst: zh)), child: Text(tr('I bought it: unlock'))),

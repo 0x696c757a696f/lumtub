@@ -12,7 +12,7 @@ id = "KV_NAMESPACE_ID"
 # The 爱发电 plan that is the learning pack: other sponsorships get no
 # code. Not a secret, so it lives here (comma-separated for more).
 [vars]
-AFDIAN_PLANS = "548a65dee44b11f193bd52540025c377"
+AFDIAN_PLANS = "548a65dee44b11f193bd52540025c377,1257acd0e5cc11f1a9d05254001e7c00"
 
 # Each code's devices, one object per code, so slots are taken one
 # request at a time (SQLite-backed objects work on the free plan).

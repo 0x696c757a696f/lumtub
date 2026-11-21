@@ -8,8 +8,12 @@ import 'linked_text.dart';
 import 'pages/translation_settings_page.dart';
 import 'theme.dart';
 import 'app_icons.dart';
+import 'video_notes.dart';
+import '../video_summary.dart' show VideoOverview;
 
-/// AI 总结 of the video playing. The times in it seek the video.
+/// AI 总结 of the video playing, as AI 概览 (what it is about, chapters
+/// and key quotes), with the person's notes on it under it. The times in
+/// it seek the video.
 Future<void> showVideoSummary(BuildContext context, AppController controller) => showPanel<void>(context, (context) => _SummaryDialog(controller: controller));
 
 class _SummaryDialog extends StatefulWidget {
@@ -71,6 +75,13 @@ class _SummaryDialogState extends State<_SummaryDialog> {
     }
   }
 
+  /// Out of the way so the moment shows; the summary is kept and opens
+  /// again at once.
+  void _seek(Duration time) {
+    widget.controller.seek(time);
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
@@ -80,16 +91,10 @@ class _SummaryDialogState extends State<_SummaryDialog> {
     if (!controller.canSummarize) {
       body = Text(tr('AI summary uses the AI interface under Settings › Translation & AI (OpenAI, DeepSeek, Ollama and others). Set up the interface and key, then try again. Only the video title and subtitle text are sent.'), style: TextStyle(color: colors.onSurfaceVariant, height: 1.5));
     } else if (summary != null) {
-      body = SingleChildScrollView(
-        child: SelectionArea(
-          child: LinkedText(summary, style: const TextStyle(height: 1.6), onTime: (time) {
-            // Out of the way so the moment shows; the summary is kept and
-            // opens again at once.
-            controller.seek(time);
-            Navigator.pop(context);
-          }, onLink: openExternal),
-        ),
-      );
+      final overview = VideoOverview.parse(summary);
+      body = overview != null
+          ? _OverviewView(overview: overview, byAi: controller.chaptersByAi, onTime: _seek)
+          : SelectionArea(child: LinkedText(summary, style: const TextStyle(height: 1.6), onTime: _seek, onLink: openExternal));
     } else if (_error case final error?) {
       body = ErrorBanner(error, onRetry: _run);
     } else if (controller.speechJob.value != null) {
@@ -113,12 +118,26 @@ class _SummaryDialogState extends State<_SummaryDialog> {
       ]);
     }
     return PanelDialog(
+      scrollable: true,
       title: Row(children: [
         Icon(AppIcons.sparkleFill, color: colors.primary),
         const SizedBox(width: 8),
-        Text(tr('AI summary')),
+        Flexible(child: Text(tr('AI summary'), overflow: TextOverflow.ellipsis)),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+          decoration: BoxDecoration(border: Border.all(color: colors.outlineVariant), borderRadius: BorderRadius.circular(4)),
+          child: Text(tr('Experimental'), maxLines: 1, style: TextStyle(fontSize: 11, color: colors.outline)),
+        ),
       ]),
-      content: SizedBox(width: 560, child: body),
+      content: SizedBox(
+        width: 560,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+          body,
+          const Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Divider(height: 1)),
+          VideoNotesList(controller: controller, onSeek: _seek),
+        ]),
+      ),
       actions: [
         if (!controller.canSummarize)
           TextButton(
@@ -132,9 +151,67 @@ class _SummaryDialogState extends State<_SummaryDialog> {
         // Without subtitles the summary came from the description only.
         if (controller.canSummarize && !AppController.hasOwnSubtitles(controller.details) && !_speechDone && controller.canRecognizeSpeech && controller.speechJob.value == null && (summary != null || _error != null))
           TextButton.icon(onPressed: _fromSpeech, icon: Icon(AppIcons.waveform, size: 18), label: Text(tr('Summarize again with speech recognition'))),
-        if (summary != null) TextButton(onPressed: () => copyText(context, summary, tr('Summary copied')), child: Text(tr('Copy'))),
+        if (summary != null) TextButton(onPressed: () => copyText(context, VideoOverview.parse(summary)?.text ?? summary, tr('Summary copied')), child: Text(tr('Copy'))),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
       ],
+    );
+  }
+}
+
+class _OverviewView extends StatelessWidget {
+  const _OverviewView({required this.overview, required this.byAi, required this.onTime});
+  final VideoOverview overview;
+  /// Whether the chapters are on the progress bar, the video having none.
+  final bool byAi;
+  final ValueChanged<Duration> onTime;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final heading = Theme.of(context).textTheme.titleSmall;
+    final time = TextStyle(color: colors.primary, fontFeatures: const [FontFeature.tabularFigures()]);
+    Widget row(Duration at, Widget child) => InkWell(
+          onTap: () => onTime(at),
+          borderRadius: BorderRadius.circular(6),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              SizedBox(width: 64, child: Text(formatClock(at), style: time)),
+              Expanded(child: child),
+            ]),
+          ),
+        );
+    return SelectionArea(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+        if (overview.about.isNotEmpty) ...[
+          Text(tr('Summary by AI'), style: heading),
+          Text(tr('Written by AI and may be wrong. The quotes below are what was said.'), style: TextStyle(fontSize: 12, color: colors.outline)),
+          const SizedBox(height: 4),
+          Text(overview.about, style: const TextStyle(height: 1.6)),
+        ],
+        if (overview.chapters.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text(tr('Chapters'), style: heading),
+          if (byAi) Text(tr('The video has no chapters of its own, so these are shown on the progress bar.'), style: TextStyle(fontSize: 12, color: colors.outline)),
+          const SizedBox(height: 4),
+          for (final c in overview.chapters) row(c.start, Text(c.title, style: const TextStyle(height: 1.5))),
+        ],
+        if (overview.quotes.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text(tr('Key quotes'), style: heading),
+          Text(tr('Word for word from the subtitles; a tap plays the moment.'), style: TextStyle(fontSize: 12, color: colors.outline)),
+          const SizedBox(height: 4),
+          for (final q in overview.quotes)
+            row(
+              q.at,
+              Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                Text('“${q.text}”', style: const TextStyle(height: 1.5, fontStyle: FontStyle.italic)),
+                if (q.translation.isNotEmpty) Text(q.translation, style: TextStyle(height: 1.5, color: colors.onSurfaceVariant)),
+                if (!q.found) Text(tr('Not found in the subtitles as quoted: AI may have reworded it.'), style: TextStyle(fontSize: 12, color: colors.error)),
+              ]),
+            ),
+        ],
+      ]),
     );
   }
 }

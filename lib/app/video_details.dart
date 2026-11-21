@@ -49,7 +49,26 @@ extension VideoDetailsActions on AppController {
 
   String _keepSummary(String id, String summary) {
     if (_summaries.length >= 30) _summaries.remove(_summaries.keys.first);
+    _aiChapters(id, summary);
     return _summaries[id] = summary;
+  }
+
+  /// Whether the playing video's chapters on the progress bar are AI
+  /// 概览's, as it had none of its own.
+  bool get chaptersByAi => aiChaptersOf != null && aiChaptersOf == playing?.id;
+
+  /// AI 概览's chapters on the progress bar of [id] while it plays, when
+  /// it has none of its own.
+  void _aiChapters(String id, String summary) {
+    final details = this.details;
+    if (playing?.id != id || details == null || (details.chapters.isNotEmpty && !chaptersByAi)) return;
+    final overview = VideoOverview.parse(summary);
+    if (overview == null || overview.chapters.length < 2) return;
+    _update(() {
+      this.details = details.withChapters([for (final c in overview.chapters) Chapter(c.start, c.end, c.title)]);
+      aiChaptersOf = id;
+    });
+    chaptersChanged.value++;
   }
 
   Future<String> _summarize(VideoItem item, VideoDetails? details, Intelligence intelligence, void Function(int done, int total)? onProgress) async {
@@ -61,7 +80,7 @@ extension VideoDetailsActions on AppController {
       // No subtitles, not even YouTube's automatic ones: the description
       // and chapters are all there is to go on.
       final description = details?.description ?? '';
-      final chapters = [for (final c in details?.chapters ?? const <Chapter>[]) (start: c.start, title: c.title)];
+      final chapters = [for (final c in details?.chapters ?? const <Chapter>[]) if (!chaptersByAi) (start: c.start, title: c.title)];
       if (!canSummarizeDescription(description, chapters)) throw TranslationException(tr('This video has no subtitles and its description is too short to summarize'));
       final summary = await summarizeDescription(complete, title, description, chapters);
       logInfo('Summarized ${item.id} from its description');
@@ -69,9 +88,52 @@ extension VideoDetailsActions on AppController {
     }
     final source = await File(await _subtitleFile(option)).readAsString();
     final transcript = await summaryTranscript(source);
-    final summary = await summarizeTranscript(complete, title, transcript, onProgress: onProgress);
+    final summary = await summarizeTranscript(complete, title, transcript, description: details?.description ?? '', onProgress: onProgress);
     logInfo('Summarized ${item.id} from ${transcript.chunks.length} part(s)');
     return summary;
+  }
+
+  /// lumtub.db, where notes are kept; older cores have none.
+  LocalDb get _notesDb => _textsDb ?? (throw TranslationException(tr('Notes need a newer Lumtub core')));
+
+  /// The notes on [video], in the order of the video.
+  Future<List<VideoNote>> notesOf(String video) async => _textsDb == null ? const [] : _notesDb.notes(video: video);
+
+  /// Keeps a note on the playing video at [at]: the subtitle words
+  /// [quote] and what the person wrote about them.
+  Future<void> addNote({required Duration at, String quote = '', String body = ''}) async {
+    final item = playing;
+    if (item == null) throw TranslationException(tr('No video is playing'));
+    final title = details?.title.isNotEmpty == true ? details!.title : item.title;
+    await _notesDb.putNote(video: item.id, title: title, at: at, quote: quote.trim(), body: body.trim());
+    notesChanged.value++;
+  }
+
+  Future<void> changeNote(VideoNote note, {required String quote, required String body}) async {
+    await _notesDb.putNote(id: note.id, video: note.video, quote: quote.trim(), body: body.trim());
+    notesChanged.value++;
+  }
+
+  Future<void> forgetNote(VideoNote note) async {
+    await _notesDb.forgetNote(note.id);
+    notesChanged.value++;
+  }
+
+  /// AI 讲解 of [text], a line of the playing video's subtitles, read with
+  /// the lines [before] and [after] it, in the interface language.
+  Future<String> explainLine(String text, {List<String> before = const [], List<String> after = const []}) async {
+    final intelligence = this.intelligence;
+    if (!intelligence.can(Capability.complete)) throw TranslationException(tr('Set up the AI interface and key under Translation & AI first'));
+    final item = playing;
+    final title = details?.title.isNotEmpty == true ? details!.title : item?.title ?? '';
+    return explainSubtitle(intelligence.complete, text, title: title, before: before, after: after);
+  }
+
+  /// [quote] and the person's [draft] made into a clear note by AI.
+  Future<String> tidyNote(String quote, String draft) async {
+    final intelligence = this.intelligence;
+    if (!intelligence.can(Capability.complete)) throw TranslationException(tr('Set up the AI interface and key under Translation & AI first'));
+    return tidyNoteText(intelligence.complete, quote, draft);
   }
 
   /// Starts resolving [item] before it is opened, such as when the pointer
@@ -125,8 +187,10 @@ extension VideoDetailsActions on AppController {
       if (serial == _playSerial) {
         _update(() {
           details = loaded;
+          aiChaptersOf = null;
           if (preferences.showRelated) related = _relatedTo(item, loaded.title.isNotEmpty ? loaded.title : item.title);
         });
+        if (_summaries[item.id] case final summary?) _aiChapters(item.id, summary);
         // Once yt-dlp names the start time, wait for it rather than poll.
         if (waitingForStart && item.scheduledStart == null && loaded.scheduledStart != null) _waitForStart(item);
         unawaited(_localizeDetails(item.id, serial));

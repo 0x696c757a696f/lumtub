@@ -51,6 +51,16 @@ CREATE TABLE IF NOT EXISTS summary(
   PRIMARY KEY(video, lang)
 );
 CREATE INDEX IF NOT EXISTS summary_age ON summary(created);
+CREATE TABLE IF NOT EXISTS note(
+  id INTEGER PRIMARY KEY,
+  video TEXT NOT NULL,
+  title TEXT NOT NULL,
+  at INTEGER NOT NULL,
+  quote TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS note_video ON note(video, at);
 ";
 
 /// One call at a time, so the app's isolates never wait on each other's

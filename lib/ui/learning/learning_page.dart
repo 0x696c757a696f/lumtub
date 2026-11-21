@@ -612,22 +612,19 @@ class _Pitch extends StatelessWidget {
             ),
           ]),
           const SizedBox(height: Space.l),
-          for (final line in [
-            tr('Tap any word in a subtitle for an offline dictionary entry'),
-            tr('Pinyin above Chinese, kana above Japanese, harder English words highlighted'),
-            tr('Words read aloud'),
-            tr('A vocabulary book that keeps the line and the moment in the video'),
-            tr('Send your words to Anki with the sound of the line'),
-            tr('Study a video in four steps'),
-          ])
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Icon(AppIcons.check, size: 16, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
-                Expanded(child: Text(line)),
-              ]),
-            ),
+          _FeatureGrid(features: [
+            (AppIcons.handTap, tr('Tap any word in a subtitle'), tr('Offline dictionaries for nine languages, Chinese meanings first; conjugated and inflected forms lead to their word.')),
+            (AppIcons.textAa, tr('Readings above the words'), tr('Pinyin above Chinese, kana above Japanese, romanization above Korean.')),
+            (AppIcons.sparkle, tr('Harder words stand out'), tr('English words above your level are highlighted, from middle school and CET-4 up to TOEFL, IELTS and GRE; Korean words show their level.')),
+            (AppIcons.speakerHigh, tr('Hear it'), tr('The word read aloud, or the line once more in the speaker\'s own voice.')),
+            (AppIcons.bookOpenText, tr('A vocabulary book that remembers where'), tr('Each word keeps its line, translation, video and moment: tap it to watch that moment again.')),
+            (AppIcons.cards, tr('Anki with the real sound'), tr('Send words to Anki in one tap with the audio of the line, or save an Anki import file or CSV.')),
+            (AppIcons.graduationCap, tr('Study a video in four steps'), tr('Listen without subtitles, read along, shadow the hard lines, listen again.')),
+            (AppIcons.cloudSlash, tr('Works offline'), tr('Dictionaries live on your computer: lookups need no internet and send nothing anywhere.')),
+            (AppIcons.deviceMobile, tr('Two devices, no account'), tr('One code for two devices; move it to a new computer from the app.')),
+          ]),
+          const SizedBox(height: Space.m),
+          _FreeExtras(),
           const SizedBox(height: 8),
           Text(
             tr('Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, up to 2 devices, no account, no subscription. Buying it keeps Lumtub alive.'),
@@ -685,6 +682,65 @@ class _TrialBar extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// The pack's features as tiles, three across on a wide page.
+class _FeatureGrid extends StatelessWidget {
+  const _FeatureGrid({required this.features});
+  final List<(IconData, String, String)> features;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return LayoutBuilder(builder: (context, constraints) {
+      final across = constraints.maxWidth > 760 ? 3 : (constraints.maxWidth > 480 ? 2 : 1);
+      final width = (constraints.maxWidth - (across - 1) * Space.s) / across;
+      return Wrap(spacing: Space.s, runSpacing: Space.s, children: [
+        for (final (i, (icon, title, detail)) in features.indexed)
+          Entrance(
+            duration: Motion.of(Duration(milliseconds: 260 + 50 * i)),
+            scale: 0.95,
+            child: Container(
+              width: width,
+              constraints: const BoxConstraints(minHeight: 128),
+              padding: const EdgeInsets.all(Space.m),
+              decoration: BoxDecoration(border: Border.all(color: colors.outlineVariant), borderRadius: BorderRadius.circular(8)),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(color: colors.primaryContainer, shape: BoxShape.circle),
+                  child: Icon(icon, size: 18, color: colors.primary),
+                ),
+                const SizedBox(height: Space.s),
+                Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 2),
+                Text(detail, style: theme.textTheme.bodySmall?.copyWith(color: colors.outline, height: 1.45)),
+              ]),
+            ),
+          ),
+      ]);
+    });
+  }
+}
+
+/// What stays free with or without the pack, as a row of small chips.
+class _FreeExtras extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
+      Text(tr('Free for everyone as well:'), style: TextStyle(fontSize: 12, color: colors.outline)),
+      for (final name in [tr('Pause after each line'), tr('Blur the translation'), tr('Loop this line'), tr('Record yourself'), tr('AI video overview')])
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(color: colors.surfaceContainerHighest, borderRadius: BorderRadius.circular(10)),
+          child: Text(name, style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant)),
+        ),
+    ]);
   }
 }
 

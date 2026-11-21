@@ -18,3 +18,5 @@
 <!-- package managers -->
 
 Each file has a `.sig` next to it, which Lumtub checks before it installs an update. The AppImage, the Windows packages, the DMG and the APK update themselves from inside Lumtub; a Flatpak bundle does not, so install the next one by hand. More help: [Get it](https://github.com/0x696c757a696f/lumtub#get-it).
+
+Like Lumtub? A ⭐ on [GitHub](https://github.com/0x696c757a696f/lumtub) costs nothing and helps more people find it.

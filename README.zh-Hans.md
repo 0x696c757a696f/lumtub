@@ -15,6 +15,7 @@
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
 [![翻译状态](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
+[![GitHub Star](https://img.shields.io/github/stars/0x696c757a696f/lumtub?style=flat&logo=github&label=Star&color=E3B341)](https://github.com/0x696c757a696f/lumtub/stargazers)
 <a href="#支持-lumtub"><img src="docs/sponsor/sponsor-zh.svg" alt="赞助" height="20"></a>
 
 #### 下载
@@ -26,6 +27,8 @@
 <a href="https://github.com/0x696c757a696f/lumtub/releases/latest"><img src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-iPhone%20%E5%92%8C%20iPad-555555?style=for-the-badge&logo=ios&logoColor=white" alt="下载 iPhone 和 iPad" height="36"></a>
 
 <sub>免费开源，不收集遥测数据。不知道选哪个文件？看<a href="#下载">下载</a>一节。iPhone 和 iPad 版为预览版。</sub>
+
+⭐ **觉得好用？在 GitHub 右上角点个 Star 吧。** 不花一分钱，却是新用户发现 Lumtub 的主要途径。
 
 [截图](#截图) · [功能](#功能) · [下载](#下载) · [数据来源](#数据来源) · [隐私](#隐私哪些留在本机哪些会发出去) · [常见问题](#常见问题) · [支持](#支持-lumtub)
 

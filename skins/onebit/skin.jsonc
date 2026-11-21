@@ -216,50 +216,21 @@
       "surface": {
         "fill": [
           "#ffffff",
-          {
-            "pattern": {
-              "type": "lines",
-              "color": "#000000",
-              "spacing": 3,
-              "size": 1
-            }
-          }
+          { "pattern": { "type": "lines", "color": "#000000", "spacing": 2, "size": 1 } }
         ],
-        "border": {
-          "color": "#000000",
-          "sides": [
-            "bottom"
-          ]
-        }
+        "border": { "color": "#000000", "sides": ["bottom"] }
       },
-      "inactive": {
-        "fill": "#ffffff"
-      },
+      "inactive": { "fill": "#ffffff" },
       "text": "#000000",
       "align": "center",
       "titlePlate": "#ffffff",
       "buttons": {
         "placement": "split",
         "glyphs": "classic",
-        "size": [
-          14,
-          14
-        ],
+        "size": [14, 14],
         "icon": "#000000",
-        "surface": {
-          "fill": "#ffffff",
-          "border": "#000000",
-          "pressed": {
-            "fill": "#000000"
-          }
-        },
-        "close": {
-          "fill": "#ffffff",
-          "border": "#000000",
-          "pressed": {
-            "fill": "#000000"
-          }
-        }
+        "surface": { "fill": "#ffffff", "border": "#000000", "pressed": { "fill": "#000000" } },
+        "close": { "fill": "#ffffff", "border": "#000000", "pressed": { "fill": "#000000" } }
       }
     },
     "menuBar": {
@@ -269,116 +240,88 @@
       "height": 22,
       "surface": {
         "fill": "#ffffff",
-        "border": {
-          "color": "#000000",
-          "sides": [
-            "bottom"
-          ]
-        }
+        "border": { "color": "#000000", "sides": ["bottom"] }
       },
       "text": "#000000",
       "highlight": "#000000",
       "highlightText": "#ffffff",
+      // Pull-down menus: a 1 px frame and a solid black shadow, no blur.
       "menu": {
         "fill": "#ffffff",
-        "border": "#000000"
+        "border": "#000000",
+        "shadow": [{ "color": "#000000", "x": 2, "y": 2, "blur": 0 }]
       }
     },
+    // A thick rule under the bars, as under the Mac menu bar.
     "topBar": {
       "fill": "#ffffff",
-      "border": {
-        "color": "#000000",
-        "sides": [
-          "bottom"
-        ]
-      }
+      "border": { "color": "#000000", "width": 2, "sides": ["bottom"] }
     },
     "sideBar": {
       "fill": "#ffffff",
-      "border": {
-        "color": "#000000",
-        "sides": [
-          "right"
-        ]
-      }
+      "border": { "color": "#000000", "width": 2, "sides": ["right"] }
     },
     "statusBar": {
       "fill": "#ffffff",
-      "border": {
-        "color": "#000000",
-        "sides": [
-          "top"
-        ]
-      }
+      "border": { "color": "#000000", "width": 2, "sides": ["top"] }
     }
   },
   "controls": {
+    "press": "wash",
+    // A rounded key with a one-pixel solid shadow; pressed, it drops onto it and inverts.
     "button": {
       "fill": "#ffffff",
       "border": "#000000",
-      "pressed": {
-        "fill": "#000000"
-      }
+      "shadow": [{ "color": "#000000", "x": 1, "y": 1, "blur": 0 }],
+      "hover": { "fill": "#ffffff", "border": { "color": "#000000", "width": 2 } },
+      "pressed": { "fill": "#000000" },
+      "focused": { "border": { "color": "#000000", "width": 3 } }
     },
     "buttonText": "#000000",
+    // The default button wears its extra ring.
     "primaryButton": {
       "fill": "#ffffff",
-      "border": {
-        "color": "#000000",
-        "width": 3
-      }
+      "border": { "color": "#000000", "width": 3 },
+      "shadow": [{ "color": "#000000", "x": 2, "y": 2, "blur": 0 }],
+      "pressed": { "fill": "#000000" }
     },
     "primaryButtonText": "#000000",
     "chip": {
       "fill": "#ffffff",
-      "border": "#000000"
+      "border": "#000000",
+      "shadow": [{ "color": "#000000", "x": 1, "y": 1, "blur": 0 }],
+      "hover": { "border": { "color": "#000000", "width": 2 } }
     },
-    "chipSelected": "#000000",
+    "chipSelected": { "fill": "#000000", "border": "#000000" },
     "chipSelectedText": "#ffffff",
     "navSelected": "#000000",
     "navSelectedText": "#ffffff",
     "navText": "#000000"
   },
   "cards": {
+    // Each card is a little window: 1 px frame, solid shadow; pointed at, the
+    // frame doubles; pressed, it sits flat on the page.
     "video": {
       "fill": "#ffffff",
       "border": "#000000",
-      "shadow": [
-        {
-          "color": "#000000",
-          "x": 2,
-          "y": 2
-        }
-      ],
+      "shadow": [{ "color": "#000000", "x": 3, "y": 3, "blur": 0 }],
       "hover": {
-        "border": {
-          "color": "#000000",
-          "width": 2
-        }
+        "border": { "color": "#000000", "width": 2 },
+        "shadow": [{ "color": "#000000", "x": 3, "y": 3, "blur": 0 }]
       },
+      "pressed": { "fill": "#ffffff", "border": { "color": "#000000", "width": 2 }, "shadow": [] },
       "focused": {
-        "border": {
-          "color": "#000000",
-          "width": 3
-        }
+        "border": { "color": "#000000", "width": 3 },
+        "shadow": [{ "color": "#000000", "x": 3, "y": 3, "blur": 0 }]
       }
     },
     "padding": 4,
     "panel": {
       "fill": "#ffffff",
-      "border": "#000000",
-      "shadow": [
-        {
-          "color": "#000000",
-          "x": 2,
-          "y": 2
-        }
-      ]
+      "border": { "color": "#000000", "width": 2 },
+      "shadow": [{ "color": "#000000", "x": 3, "y": 3, "blur": 0 }]
     },
-    "durationBadge": {
-      "fill": "#ffffff",
-      "border": "#000000"
-    },
+    "durationBadge": { "fill": "#ffffff", "border": "#000000" },
     "durationText": "#000000"
   },
   "logo": {
@@ -393,6 +336,7 @@
     "badgeIcon": "#ffffff"
   },
   "player": {
+    // A solid black bar over a dithered empty track's worth of white.
     "progress": "#000000"
   },
   "author": "Lumtub",

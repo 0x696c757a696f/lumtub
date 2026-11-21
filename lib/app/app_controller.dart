@@ -89,6 +89,7 @@ import '../youtube_related.dart';
 import '../recommendations.dart';
 import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
+import '../upscale_shaders.dart';
 import '../power.dart';
 import '../player_settings.dart';
 import '../thumbnail_trim.dart';
@@ -1163,6 +1164,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   static const _videoChannel = MethodChannel('com.alexmercerind/media_kit_video');
 
   DateTime _lastMemoryLog = DateTime(0);
+  int? _upscaleLoggedIn;
 
   bool ensureNotPlaying(String message) {
     if (playing == null) return true;

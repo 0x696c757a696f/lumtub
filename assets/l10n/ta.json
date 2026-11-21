@@ -3654,5 +3654,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "சில வரிகள் இப்போது இடையகத்தில் இல்லை, எனவே அவற்றுக்கு உங்கள் பதிவு மட்டுமே சேமிக்கப்படும்.",
   "Languages I understand": "எனக்குப் புரியும் மொழிகள்",
   "Subtitles don't turn on by themselves for videos in these languages": "இந்த மொழிகளில் உள்ள வீடியோக்களுக்கு வசனங்கள் தானாக இயங்காது",
-  "On for languages I don't understand": "புரியாத மொழிகளுக்கு இயக்கு"
+  "On for languages I don't understand": "புரியாத மொழிகளுக்கு இயக்கு",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "GitHub-இல் ஒரு Star இடுவதற்கு எந்தச் செலவும் இல்லை, இது மேலும் பலர் Lumtub-ஐக் கண்டறிய உதவும். இது இந்த ஒரு முறை மட்டுமே கேட்கப்படும்."
 }

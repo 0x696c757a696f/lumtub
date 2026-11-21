@@ -48,6 +48,43 @@ void main() {
     expect(again.due(first.add(const Duration(days: 60))), isTrue);
   });
 
+  test('asks for a star once, a week in, and keeps the support question a week away', () async {
+    final file = File('${dir.path}/support_reminder.json');
+    final reminder = SupportReminder(file);
+    final start = DateTime(2026, 1, 1, 12);
+    for (var day = 0; day < 6; day++) {
+      reminder.used(start.add(Duration(days: day)));
+    }
+    expect(reminder.starDue(start.add(const Duration(days: 30))), isFalse, reason: 'six days of use');
+    reminder.used(start.add(const Duration(days: 6)));
+    expect(reminder.starDue(start.add(const Duration(days: 6))), isFalse, reason: 'not a week yet');
+    final asked = start.add(const Duration(days: 13));
+    expect(reminder.starDue(asked), isTrue);
+    reminder.starAsked(asked);
+    expect(reminder.starDue(asked.add(const Duration(days: 400))), isFalse, reason: 'only once');
+    expect(reminder.due(start.add(const Duration(days: 14))), isFalse, reason: 'a day after the star');
+    expect(reminder.due(asked.add(const Duration(days: 7))), isTrue);
+
+    final again = await reload(reminder, file);
+    expect(again.starDue(asked.add(const Duration(days: 400))), isFalse, reason: 'kept');
+    expect(again.due(start.add(const Duration(days: 14))), isFalse);
+  });
+
+  test('no star question when reminders are off or support was just asked', () async {
+    final reminder = SupportReminder(File('${dir.path}/support_reminder.json'));
+    final start = DateTime(2026, 1, 1, 12);
+    for (var day = 0; day < 20; day++) {
+      reminder.used(start.add(Duration(days: day)));
+    }
+    final asked = start.add(const Duration(days: 20));
+    reminder.asked(asked);
+    expect(reminder.starDue(asked.add(const Duration(days: 6))), isFalse);
+    expect(reminder.starDue(asked.add(const Duration(days: 7))), isTrue);
+    reminder.enabled = false;
+    expect(reminder.starDue(asked.add(const Duration(days: 7))), isFalse);
+    await reminder.saved;
+  });
+
   test("don't ask again sticks", () async {
     final file = File('${dir.path}/support_reminder.json');
     final reminder = SupportReminder(file);
@@ -85,6 +122,18 @@ void main() {
     await tester.tap(find.text("Don't ask again"));
     await tester.pumpAndSettle();
     expect(reminder.enabled, isFalse);
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200)));
+  });
+
+  testWidgets('the star question asks once and offers GitHub', (tester) async {
+    final reminder = SupportReminder(File('${dir.path}/support_reminder.json'));
+    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) => TextButton(onPressed: () => askForStar(context, reminder), child: const Text('open')))));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Star it on GitHub'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(reminder.starDue(DateTime(2030)), isFalse);
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200)));
   });
 }

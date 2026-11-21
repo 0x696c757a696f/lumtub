@@ -3654,5 +3654,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "Някои реплики вече не са в буфера, затова за тях се запазва само вашият запис.",
   "Languages I understand": "Езици, които разбирам",
   "Subtitles don't turn on by themselves for videos in these languages": "Субтитрите не се включват сами за видеоклипове на тези езици",
-  "On for languages I don't understand": "Включени за езици, които не разбирам"
+  "On for languages I don't understand": "Включени за езици, които не разбирам",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "Звезда в GitHub не струва нищо и помага повече хора да открият Lumtub. Това се пита само веднъж."
 }

@@ -249,6 +249,12 @@
         "position": 0.42
       },
       {
+        "type": "beam",
+        "color": "#9fdcff33",
+        "angle": 18,
+        "position": 0.7
+      },
+      {
         "type": "bubbles",
         "count": 7,
         "color": "#6ec8ff40",
@@ -280,7 +286,8 @@
           "sides": [
             "bottom"
           ]
-        }
+        },
+        "gloss": 0.15
       },
       "inactive": {
         "fill": "#06122c"
@@ -327,16 +334,44 @@
         "sides": [
           "bottom"
         ]
-      }
+      },
+      "gloss": 0.18,
+      "shadow": [
+        {
+          "color": "#6fd0ff2e",
+          "y": 6,
+          "blur": 24
+        },
+        {
+          "color": "#000000a6",
+          "y": 2,
+          "blur": 4
+        }
+      ]
     },
     "sideBar": {
-      "fill": "#02081859",
+      "fill": {
+        "linear": {
+          "angle": 90,
+          "colors": [
+            "#0a1e5099",
+            "#02081866"
+          ]
+        }
+      },
       "border": {
         "color": "#6ec8ff40",
         "sides": [
           "right"
         ]
-      }
+      },
+      "shadow": [
+        {
+          "color": "#00000080",
+          "x": 4,
+          "blur": 18
+        }
+      ]
     },
     "statusBar": {
       "fill": "#02081899",
@@ -345,16 +380,85 @@
         "sides": [
           "top"
         ]
-      }
+      },
+      "gloss": 0.12,
+      "shadow": [
+        {
+          "color": "#6fd0ff26",
+          "y": -3,
+          "blur": 14
+        }
+      ]
     }
   },
   "controls": {
     "button": {
-      "fill": "#6ec8ff17",
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#6ec8ff33",
+            "#6ec8ff0d",
+            "#0a1e5059"
+          ],
+          "stops": [
+            0,
+            0.5,
+            1
+          ]
+        }
+      },
       "border": "#6ec8ff59",
       "hover": {
         "glow": "#6fd0ff8c",
-        "border": "#cfeaff"
+        "border": "#cfeaff",
+        "shadow": [
+          {
+            "color": "#6fd0ff59",
+            "blur": 18
+          },
+          {
+            "color": "#000000a6",
+            "y": 2,
+            "blur": 4
+          }
+        ]
+      },
+      "gloss": 0.4,
+      "bevel": {
+        "light": "#cfeaff59",
+        "dark": "#00000080",
+        "width": 1
+      },
+      "shadow": [
+        {
+          "color": "#000000a6",
+          "y": 4,
+          "blur": 10
+        },
+        {
+          "color": "#6fd0ff26",
+          "blur": 10
+        }
+      ],
+      "pressed": {
+        "gloss": 0,
+        "shadow": [],
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#02081899",
+              "#6ec8ff26"
+            ]
+          }
+        },
+        "bevel": {
+          "light": "#00000000",
+          "dark": "#6ec8ff40",
+          "width": 1,
+          "sunken": true
+        }
       }
     },
     "buttonText": "#cfeaff",
@@ -369,12 +473,83 @@
         }
       },
       "glow": "#6fd0ff99",
-      "border": "#cfeaff"
+      "border": "#cfeaff",
+      "gloss": 0.75,
+      "bevel": {
+        "light": "#ffffffcc",
+        "dark": "#1e5ab0",
+        "width": 1
+      },
+      "shadow": [
+        {
+          "color": "#6fd0ff66",
+          "y": 4,
+          "blur": 16
+        },
+        {
+          "color": "#000000a6",
+          "y": 1,
+          "blur": 2
+        }
+      ],
+      "pressed": {
+        "gloss": 0,
+        "shadow": [
+          {
+            "color": "#6fd0ff33",
+            "y": 1,
+            "blur": 4
+          }
+        ],
+        "bevel": {
+          "light": "#00000000",
+          "dark": "#1e5ab0",
+          "width": 1,
+          "sunken": true
+        }
+      }
     },
     "primaryButtonText": "#001226",
     "chip": {
-      "fill": "#6ec8ff14",
-      "border": "#6ec8ff59"
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#6ec8ff33",
+            "#6ec8ff0d",
+            "#0a1e5059"
+          ],
+          "stops": [
+            0,
+            0.5,
+            1
+          ]
+        }
+      },
+      "border": "#6ec8ff59",
+      "gloss": 0.35,
+      "bevel": {
+        "light": "#cfeaff40",
+        "dark": "#00000080",
+        "width": 1
+      },
+      "shadow": [
+        {
+          "color": "#000000a6",
+          "y": 2,
+          "blur": 6
+        }
+      ],
+      "pressed": {
+        "gloss": 0,
+        "shadow": [],
+        "bevel": {
+          "light": "#00000000",
+          "dark": "#6ec8ff40",
+          "width": 1,
+          "sunken": true
+        }
+      }
     },
     "chipSelected": {
       "fill": {
@@ -387,7 +562,20 @@
         }
       },
       "glow": "#6fd0ff99",
-      "border": "#e0f3ff"
+      "border": "#e0f3ff",
+      "gloss": 0.7,
+      "bevel": {
+        "light": "#ffffffcc",
+        "dark": "#1e5ab0",
+        "width": 1
+      },
+      "shadow": [
+        {
+          "color": "#6fd0ff66",
+          "y": 3,
+          "blur": 14
+        }
+      ]
     },
     "chipSelectedText": "#001226",
     "navSelected": {
@@ -404,7 +592,20 @@
           ]
         }
       },
-      "glow": "#6fd0ff40"
+      "glow": "#6fd0ff40",
+      "gloss": 0.3,
+      "bevel": {
+        "light": "#cfeaff59",
+        "dark": "#00000066",
+        "width": 1
+      },
+      "border": "#6ec8ff99",
+      "shadow": [
+        {
+          "color": "#6fd0ff4d",
+          "blur": 18
+        }
+      ]
     },
     "navSelectedText": "#ffffff",
     "navText": "#9cb8dc"
@@ -415,11 +616,39 @@
   },
   "cards": {
     "video": {
-      "fill": "#0a1e5059",
+      "fill": [
+        "#0a1e5059",
+        {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#6ec8ff26",
+              "#6ec8ff00",
+              "#00000059"
+            ],
+            "stops": [
+              0,
+              0.4,
+              1
+            ]
+          }
+        }
+      ],
       "border": "#6ec8ff40",
       "hover": {
         "border": "#cfeaff",
-        "glow": "#6fd0ff8c"
+        "glow": "#6fd0ff8c",
+        "shadow": [
+          {
+            "color": "#6fd0ff59",
+            "blur": 26
+          },
+          {
+            "color": "#000000b3",
+            "y": 4,
+            "blur": 8
+          }
+        ]
       },
       "focused": {
         "border": {
@@ -427,12 +656,62 @@
           "width": 2
         },
         "glow": "#6fd0ff"
-      }
+      },
+      "gloss": 0.1,
+      "bevel": {
+        "light": "#cfeaff40",
+        "dark": "#00000080",
+        "width": 1
+      },
+      "shadow": [
+        {
+          "color": "#000000b3",
+          "y": 8,
+          "blur": 24
+        },
+        {
+          "color": "#285ac840",
+          "y": 2,
+          "blur": 10
+        }
+      ]
     },
     "padding": 8,
     "panel": {
-      "fill": "#0b1d48e6",
-      "border": "#6ec8ff4d"
+      "fill": [
+        "#0b1d48e6",
+        {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#6ec8ff1f",
+              "#6ec8ff00"
+            ],
+            "stops": [
+              0,
+              0.35
+            ]
+          }
+        }
+      ],
+      "border": "#6ec8ff4d",
+      "bevel": {
+        "light": "#cfeaff40",
+        "dark": "#00000080",
+        "width": 1
+      },
+      "shadow": [
+        {
+          "color": "#000000b3",
+          "y": 8,
+          "blur": 24
+        },
+        {
+          "color": "#285ac840",
+          "y": 1,
+          "blur": 8
+        }
+      ]
     },
     "durationBadge": {
       "fill": "#020818d9",

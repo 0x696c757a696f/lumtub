@@ -14,7 +14,7 @@ const afdianPage = 'https://afdian.com/a/linmuqingfeng';
 
 /// Ko-fi: one-time gifts by PayPal or card, without a GitHub account.
 const kofiPage = 'https://ko-fi.com/0x696c757a696f';
-const _repository = 'https://github.com/0x696c757a696f/lumtub';
+const repositoryPage = 'https://github.com/0x696c757a696f/lumtub';
 
 /// A crypto address and the networks it takes.
 typedef _Address = ({String label, String networks, String address});
@@ -60,6 +60,27 @@ Future<void> askForSupport(BuildContext context, SupportReminder reminder) async
   if (answer == true && context.mounted) await openSupport(context);
 }
 
+/// Asks once, after a week of use, for a star on GitHub.
+Future<void> askForStar(BuildContext context, SupportReminder reminder) async {
+  reminder.starAsked(DateTime.now());
+  final star = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      icon: const Icon(AppIcons.starFill, color: Color(0xFFE3B341)),
+      title: Text(tr('Enjoying Lumtub?')),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Text(tr('A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.'), style: const TextStyle(height: 1.5)),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(tr('Close'))),
+        FilledButton.icon(onPressed: () => Navigator.of(context).pop(true), icon: Icon(AppIcons.star, size: 18), label: Text(tr('Star it on GitHub'))),
+      ],
+    ),
+  );
+  if (star == true) openExternal(repositoryPage);
+}
+
 class _SupportPage extends StatelessWidget {
   const _SupportPage();
 
@@ -91,8 +112,8 @@ class _SupportPage extends StatelessWidget {
             _Group(tr('Stablecoins'), _stablecoins),
             const SizedBox(height: 16),
             _Heading(tr('Other ways to help'), AppIcons.handHeart),
-            _Way(AppIcons.star, tr('Star it on GitHub'), tr('Helps more people find Lumtub'), _repository),
-            _Way(AppIcons.bug, tr('Report a bug or suggest an idea'), tr('Diagnostics and the error log help most'), '$_repository/issues'),
+            _Way(AppIcons.star, tr('Star it on GitHub'), tr('Helps more people find Lumtub'), repositoryPage),
+            _Way(AppIcons.bug, tr('Report a bug or suggest an idea'), tr('Diagnostics and the error log help most'), '$repositoryPage/issues'),
             _Way(AppIcons.translate, tr('Help translate'), tr('Translate Lumtub into your language on Weblate'), 'https://hosted.weblate.org/engage/lumtub/'),
           ]),
         ),

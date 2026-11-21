@@ -3654,5 +3654,6 @@
   "Some lines are no longer buffered, so only your recording is saved for them.": "Nogle replikker er ikke længere i bufferen, så kun din optagelse gemmes for dem.",
   "Languages I understand": "Sprog, jeg forstår",
   "Subtitles don't turn on by themselves for videos in these languages": "Undertekster slås ikke selv til for videoer på disse sprog",
-  "On for languages I don't understand": "Til for sprog, jeg ikke forstår"
+  "On for languages I don't understand": "Til for sprog, jeg ikke forstår",
+  "A star on GitHub costs nothing and helps more people find Lumtub. This is the only time it asks.": "En stjerne på GitHub koster ingenting og hjælper flere med at finde Lumtub. Der spørges kun denne ene gang."
 }

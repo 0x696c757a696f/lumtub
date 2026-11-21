@@ -673,6 +673,7 @@ extension SubtitleActions on AppController {
     _forgetSubtitleCopies();
     _forgetReveal();
     unawaited(_forgetShadowing());
+    _studyVideoChanged();
     _plainFits.clear();
     if (!libassCantDraw) return;
     libassCantDraw = false;

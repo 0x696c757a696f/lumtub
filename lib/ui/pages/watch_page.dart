@@ -37,6 +37,7 @@ import '../player_shortcuts.dart';
 import '../screenshot_action.dart';
 import '../summary_dialog.dart';
 import '../subtitle_list_panel.dart';
+import '../study_bar.dart';
 import '../animated_visibility.dart';
 import '../theater_mode.dart';
 import '../skeleton.dart';
@@ -225,6 +226,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
             return Column(children: [
               _Player(controller: controller, videoKey: _video, byRotation: _enteredByRotation, onExit: _leftFullscreen),
               CastBar(controller: controller),
+              Padding(padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding), child: StudyBar(controller: controller)),
               Expanded(
                 child: _SidePanel(
                   controller: controller,
@@ -263,6 +265,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
             if (!theater) _BackRow(onBack: controller.goBack),
             Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, byRotation: _enteredByRotation, onExit: _leftFullscreen))),
             CastBar(controller: controller),
+            StudyBar(controller: controller),
             if (!theater) const SizedBox(height: 12),
             _Toolbar(controller: controller),
             if (controller.playbackError != null && !controller.waitingForStart) ...[
@@ -795,7 +798,9 @@ class _Player extends StatelessWidget {
                       ),
                     ),
                   ),
-                  subtitleViewConfiguration: subtitleViewFor(
+                  subtitleViewConfiguration: controller.studyHidesSubtitles
+                      ? const SubtitleViewConfiguration(visible: false)
+                      : subtitleViewFor(
                     controller.settings,
                     secondary: controller.secondarySubtitle?.label,
                     byHeight: Platform.isAndroid || Platform.isIOS,

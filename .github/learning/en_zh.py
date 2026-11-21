@@ -40,6 +40,8 @@ POS = {
     'contraction': 'contr.', 'prep_phrase': 'phr.', 'abbrev': 'abbr.',
 }
 MAX_LINES = 5
+# Words whose raw translation items are printed, to see why they get none.
+PROBE = {'assess', 'totally', 'psychological', 'compulsory', 'however'}
 MAX_PER_LINE = 8
 CJK = re.compile(r'[㐀-鿿]')
 # What a translation or gloss should not carry along: notes in brackets,
@@ -55,10 +57,19 @@ def opener(path):
     return gzip.open(path, 'rt', encoding='utf-8') if path.endswith('.gz') else open(path, encoding='utf-8')
 
 
+# Chinese varieties other than Mandarin, whose words a Mandarin reader
+# would not use.
+OTHER_CHINESE = re.compile(r'Cantonese|Hokkien|Min|Wu|Hakka|Teochew|Gan|Xiang|Jin|Dungan|Classical|Literary|Taishanese|Shanghainese', re.I)
+
+
 def mandarin(item):
     code = item.get('lang_code') or item.get('code') or ''
     lang = item.get('lang') or ''
-    return code == 'cmn' or (code == 'zh' and 'Mandarin' in lang) or lang in ('Chinese Mandarin', 'Mandarin')
+    tags = ' '.join(item.get('tags') or []) + ' ' + ' '.join(item.get('raw_tags') or [])
+    if code == 'cmn' or 'Mandarin' in lang or 'Mandarin' in tags:
+        return True
+    # "Chinese" with no variety named: written Chinese, as Mandarin uses it.
+    return (code == 'zh' or lang == 'Chinese') and not OTHER_CHINESE.search(lang + ' ' + tags)
 
 
 def translations_of(entry):
@@ -153,6 +164,10 @@ def main():
             pos = POS.get(entry.get('pos', ''))
             if pos:
                 tables[word][pos].extend(translations_of(entry))
+            if word in PROBE:
+                items = list(entry.get('translations') or []) + [t for s in entry.get('senses') or [] for t in s.get('translations') or []]
+                chinese = [{k: t.get(k) for k in ('lang', 'lang_code', 'code', 'word', 'tags', 'raw_tags', 'sense')} for t in items if re.search(r'Chin|Mandarin|^zh$|^cmn$', f"{t.get('lang')}|{t.get('lang_code') or t.get('code')}")]
+                print(f'probe {word} {entry.get("pos")}: {len(items)} translations, keys {sorted(entry.keys())[:20]}, chinese {json.dumps(chinese[:6], ensure_ascii=False)}', flush=True)
 
     # The Chinese Wiktionary's English entries.
     glosses = defaultdict(lambda: defaultdict(list))
@@ -196,39 +211,51 @@ def main():
         print('wordfreq is missing: ranks stay as they were', flush=True)
 
     counts = defaultdict(int)
+    done = {}
+
+    def lemma_of(row):
+        # ECDICT's forms: 0:base word, when this one is a form of it.
+        for part in row[3].split('/'):
+            if part.startswith('0:') and part[2:] != row[0]:
+                return part[2:]
+        return ''
+
+    # Base words first, so a form finds its base word's meanings.
+    rows.sort(key=lambda r: bool(lemma_of(r)))
     with open(tsv, 'w', encoding='utf-8', newline='\n') as out:
         for row in rows:
             while len(row) < 10:
                 row.append('')
             word = row[0]
-            lines = []
-            for pos, groups in tables.get(word, {}).items():
-                line = line_of(pos, groups)
-                if line:
-                    lines.append(line)
-            covered = {line.split(' ', 1)[0] for line in lines}
+            # The Chinese Wiktionary's own meanings join the translations,
+            # after them within a part of speech.
+            merged = {pos: list(groups) for pos, groups in tables.get(word, {}).items()}
             for pos, groups in glosses.get(word, {}).items():
-                if pos not in covered:
-                    line = line_of(pos, groups)
-                    if line:
-                        lines.append(line)
+                merged.setdefault(pos, []).extend(groups)
+            lines = [line for line in (line_of(pos, groups) for pos, groups in merged.items()) if line]
             if lines:
                 row[2], row[9] = '\\n'.join(lines[:MAX_LINES]), 'w'
                 counts['wiktionary'] += 1
+            elif lemma_of(row) and done.get(lemma_of(row)):
+                # An inflected form (socks, works): its base word's meanings.
+                row[2], row[9] = done[lemma_of(row)], 'w'
+                counts['base word'] += 1
             elif word in reference:
                 row[2], row[9] = reference[word], 'd'
                 counts['wikdict'] += 1
             else:
                 row[2], row[9] = '', ''
                 counts['none'] += 1
+            if row[9] == 'w':
+                done[word] = row[2]
             row[1] = ipa.get(word, '')
             row[5] = '0'
             if ranks is not None:
                 row[6] = str(ranks.get(word.lower(), 0))
             out.write('\t'.join(row) + '\n')
-    print(f"Chinese meanings: {counts['wiktionary']} from Wiktionary, {counts['wikdict']} from WikDict, "
+    print(f"Chinese meanings: {counts['wiktionary']} from Wiktionary, {counts['base word']} from base words, {counts['wikdict']} from WikDict, "
           f"{counts['none']} without, of {len(rows)}; IPA for {len(ipa)}", flush=True)
-    for word in ('bank', 'run', 'get', 'set', 'apple', 'however', 'beautiful', 'serendipity'):
+    for word in ('bank', 'run', 'get', 'set', 'apple', 'however', 'beautiful', 'serendipity', 'assess', 'totally', 'socks', 'psychological', 'compulsory'):
         row = next((r for r in rows if r[0] == word), None)
         if row:
             print(f'  {word} /{row[1]}/ [{row[9]}] {row[2][:200]}', flush=True)

@@ -19,3 +19,8 @@ AFDIAN_PLANS = "548a65dee44b11f193bd52540025c377"
 type = "Text"
 globs = ["**/*.txt"]
 fallthrough = true
+
+# No request logs kept by Cloudflare beyond what it needs to run the
+# worker: the privacy notice promises IP addresses are not kept.
+[observability]
+enabled = false

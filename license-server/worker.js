@@ -267,8 +267,11 @@ async function activate(request, env) {
   if (!code) return reply({ error: 'code' }, 400);
   if (isRevoked(code.name, code.id)) return reply({ error: 'revoked' }, 403);
   const key = `devices:${code.id}`;
-  const devices = JSON.parse((await env.LICENSES.get(key)) || '[]');
   const today = new Date().toISOString().slice(0, 10);
+  // A device not seen for 24 months is forgotten (the privacy notice
+  // says so), which also frees its slot.
+  const cutoff = new Date(Date.now() - 730 * 86400000).toISOString().slice(0, 10);
+  const devices = JSON.parse((await env.LICENSES.get(key)) || '[]').filter((d) => (d.seen || d.added || today) >= cutoff);
   const known = devices.find((d) => d.id === device);
   if (known) {
     known.seen = today;

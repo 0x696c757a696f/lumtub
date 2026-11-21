@@ -8,6 +8,11 @@ Copied from pub.dev (MIT, see LICENSE) with the Windows, Linux and macOS
 plugins kept.
 The changes, marked "Lumtub" in the code:
 
+- `linux/video_output.cc`: on X11, mpv also gets the GPU's render node
+  (`MPV_RENDER_PARAM_DRM_DISPLAY_V2`; the node behind the EGL display when
+  `EGL_EXT_device_query` names it, else the first one that opens). An LGPL
+  libmpv has no X11 code, so VA-API takes its display from that node.
+
 - `linux/texture_gl.cc`: each frame ends with an EGL fence instead of
   `glFinish()`. Flutter's context waits for that fence on the GPU
   (`EGL_KHR_wait_sync`), or the CPU waits for that frame alone, so the

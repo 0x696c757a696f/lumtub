@@ -1,7 +1,6 @@
 // "Most replayed": the curve above the progress bar. yt-dlp's `heatmap` is a
 // list of {start_time, end_time, value} with value 0..1. YouTube's own player
-// draws the same curve; PiliNara has the equivalent for Bilibili's
-// "高能进度条" (lib/plugin/pl_player, GPLv3).
+// draws the same curve.
 
 import 'dart:math';
 

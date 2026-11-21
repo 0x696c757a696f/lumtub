@@ -262,7 +262,7 @@ jobs:
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
-      - name: Windows - verify latest zhongfly libmpv
+      - name: Windows - verify latest zhongfly libmpv (LGPL)
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -276,7 +276,9 @@ jobs:
           }
           # A new release is published before its assets finish uploading, so
           # take the newest one that already has this architecture's archive.
-          $pattern = "^mpv-dev-$([regex]::Escape($env:MPV_ARCH))-.+\.7z$"
+          # The LGPL build (mpv-dev-lgpl-*): no GPL code in what Lumtub ships.
+          # The date right after the architecture keeps x86_64 from matching x86_64-v3.
+          $pattern = "^mpv-dev-lgpl-$([regex]::Escape($env:MPV_ARCH))-[0-9]{8}-.+\.7z$"
           $releases = Invoke-RestMethod -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases?per_page=5' -Headers $headers
           $release = $null
           $asset = $null
@@ -1460,6 +1462,22 @@ jobs:
 
       - name: Android - build the Rust core
         run: android/packaging/build-core.sh
+
+      - name: Android - read the pinned downloads
+        run: grep -E '^[A-Z0-9_]+=' .github/pins.env >> "$GITHUB_ENV"
+
+      - name: Android - cache the Python and yt-dlp downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/android-python/downloads
+          # Also holds the 32-bit Arm Python python-arm32.sh builds (about ten
+          # minutes), named after what it was built from; an older cache is
+          # restored so a changed yt-dlp pin does not build it again.
+          key: android-python-${{ env.PYTHON_ANDROID_VERSION }}-${{ env.PYTHON_ANDROID_SHA256_ARM64 }}-${{ env.PYTHON_ANDROID_SHA256_X86_64 }}-${{ env.PYTHON_ANDROID_SOURCE_COMMIT }}-${{ hashFiles('android/packaging/python-arm32.sh') }}-${{ env.YTDLP_VERSION }}-${{ env.YTDLP_SHA256 }}
+          restore-keys: android-python-
+
+      - name: Android - add Python and yt-dlp
+        run: android/packaging/python.sh "$RUNNER_TEMP/android-python"
 
       - name: Android - get packages
         run: flutter pub get

@@ -16,8 +16,7 @@ import 'subtitle_list_panel.dart';
 import 'app_icons.dart';
 
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
-/// above it (双语字幕) on the right, as PiliNara's `_SubtitleSelectPanel`
-/// has them. A choice applies at once and the panel stays open; a track
+/// above it (双语字幕) on the right. A choice applies at once and the panel stays open; a track
 /// chosen on one side is greyed out on the other, and tapping it there
 /// swaps the two sides.
 Future<void> showSubtitlePanel(BuildContext context, AppController controller, Player player, {required VoidCallback onSettings, VoidCallback? onList}) => showPlayerPanel(

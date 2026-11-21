@@ -1,39 +1,35 @@
-// Adapted from prism_ui (FlClash), GPL-3.0.
-
-import 'dart:async';
-import 'dart:math' as math;
-
 import 'package:flutter/widgets.dart';
 
 import 'motion.dart';
 
-enum _Edge {
-  start(Axis.horizontal, AlignmentDirectional.topStart, Offset(-1, 0)),
-  end(Axis.horizontal, AlignmentDirectional.topEnd, Offset(1, 0)),
-  top(Axis.vertical, AlignmentDirectional.bottomStart, Offset(0, -1)),
-  bottom(Axis.vertical, AlignmentDirectional.bottomStart, Offset(0, 1));
-
-  const _Edge(this.axis, this.alignment, this.hidden);
-  final Axis axis;
-  final AlignmentDirectional alignment;
-  final Offset hidden;
-}
-
-/// The navigation rail or the bottom bar coming and going with the window's
-/// width: it grows from its edge while sliding in and fading up, and the page
-/// beside it gives up or takes back the room as it moves. A hidden one is not
-/// built at all, so it takes no focus and says nothing to a screen reader.
+/// Shows and hides a bar or panel by sliding it in from its edge while the
+/// page beside it gives up or takes back the room. A hidden one is not
+/// built at all, so it takes no focus and nothing for a screen reader.
 class AnimatedVisibility extends StatefulWidget {
-  const AnimatedVisibility.rail({super.key, required this.visible, required this.child}) : _edge = _Edge.start;
-  /// A panel along the end edge, such as 剧场模式's column beside the video.
-  const AnimatedVisibility.side({super.key, required this.visible, required this.child}) : _edge = _Edge.end;
-  /// A bar along the top edge, such as the top bar leaving for 剧场模式.
-  const AnimatedVisibility.topBar({super.key, required this.visible, required this.child}) : _edge = _Edge.top;
-  const AnimatedVisibility.bottomBar({super.key, required this.visible, required this.child}) : _edge = _Edge.bottom;
+  const AnimatedVisibility.rail({super.key, required this.visible, required this.child})
+      : _axis = Axis.horizontal,
+        _from = -1,
+        _alignment = AlignmentDirectional.centerStart;
+  const AnimatedVisibility.side({super.key, required this.visible, required this.child})
+      : _axis = Axis.horizontal,
+        _from = 1,
+        _alignment = AlignmentDirectional.centerEnd;
+  const AnimatedVisibility.topBar({super.key, required this.visible, required this.child})
+      : _axis = Axis.vertical,
+        _from = -1,
+        _alignment = AlignmentDirectional.topCenter;
+  const AnimatedVisibility.bottomBar({super.key, required this.visible, required this.child})
+      : _axis = Axis.vertical,
+        _from = 1,
+        _alignment = AlignmentDirectional.bottomCenter;
 
   final bool visible;
   final Widget child;
-  final _Edge _edge;
+  final Axis _axis;
+
+  /// Which side of its place the child starts from: -1 before, 1 after.
+  final double _from;
+  final AlignmentGeometry _alignment;
 
   static const duration = Duration(milliseconds: 300);
 
@@ -42,89 +38,67 @@ class AnimatedVisibility extends StatefulWidget {
 }
 
 class _AnimatedVisibilityState extends State<AnimatedVisibility> with SingleTickerProviderStateMixin {
-  // Settling in, then speeding away: the same curve run backwards.
-  late final AnimationController _controller;
-  late final CurvedAnimation _animation;
-  /// What is shown while it leaves: the last child it had while visible.
-  late Widget _shown;
-  late bool _built;
+  late final AnimationController _controller = AnimationController(vsync: this, duration: AnimatedVisibility.duration, value: widget.visible ? 1 : 0);
+  late final Animation<double> _progress = CurvedAnimation(parent: _controller, curve: Ease.curve);
+  Widget? _last;
 
   @override
-  void initState() {
-    super.initState();
-    _shown = widget.child;
-    _built = widget.visible;
-    _controller = AnimationController(vsync: this, value: widget.visible ? 1 : 0, duration: Motion.of(AnimatedVisibility.duration))..addStatusListener(_status);
-    _animation = CurvedAnimation(parent: _controller, curve: Ease.curve);
-  }
-
-  @override
-  void didUpdateWidget(AnimatedVisibility oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.visible) _shown = widget.child;
-    if (widget.visible == oldWidget.visible) return;
+  void didUpdateWidget(AnimatedVisibility old) {
+    super.didUpdateWidget(old);
+    if (widget.visible == old.visible) return;
     if (Motion.reduced) {
-      _built = widget.visible;
       _controller.value = widget.visible ? 1 : 0;
       return;
     }
-    _controller.duration = AnimatedVisibility.duration;
+    _controller.duration = Motion.of(AnimatedVisibility.duration);
     if (widget.visible) {
-      _built = true;
-      unawaited(_controller.forward());
-    } else if (_controller.isDismissed) {
-      _built = false;
+      _controller.forward();
     } else {
-      unawaited(_controller.reverse());
+      _controller.reverse();
     }
-  }
-
-  void _status(AnimationStatus status) {
-    if (status != AnimationStatus.dismissed || widget.visible || !_built) return;
-    setState(() => _built = false);
   }
 
   @override
   void dispose() {
-    _animation.dispose();
     _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final edge = widget._edge;
-    final content = !_built
-        ? const SizedBox.shrink()
-        : AnimatedBuilder(
-            animation: _animation,
-            // Clipped only while moving: settled, a shadow or a glow may
-            // reach past it.
-            builder: (context, child) {
-              final factor = math.max(_animation.value, 0.0);
-              return ClipRect(
-                clipBehavior: _controller.isCompleted ? Clip.none : Clip.hardEdge,
-                child: Align(
-                  alignment: edge.alignment,
-                  widthFactor: edge.axis == Axis.horizontal ? factor : null,
-                  heightFactor: edge.axis == Axis.vertical ? factor : null,
-                  child: child,
+    if (widget.visible) _last = widget.child;
+    final child = _last;
+    final horizontal = widget._axis == Axis.horizontal;
+    final rtl = horizontal && Directionality.of(context) == TextDirection.rtl;
+    return AnimatedBuilder(
+      animation: _controller,
+      child: child,
+      builder: (context, child) {
+        if (child == null || (!widget.visible && _controller.isDismissed)) return const SizedBox.shrink();
+        final t = _progress.value;
+        final away = (1 - t) * widget._from * (rtl ? -1 : 1);
+        return ClipRect(
+          clipBehavior: t < 1 ? Clip.hardEdge : Clip.none,
+          child: Align(
+            alignment: widget._alignment,
+            widthFactor: horizontal ? t : null,
+            heightFactor: horizontal ? null : t,
+            child: FractionalTranslation(
+              translation: horizontal ? Offset(away, 0) : Offset(0, away),
+              child: Opacity(
+                opacity: t,
+                child: IgnorePointer(
+                  ignoring: !widget.visible,
+                  child: ExcludeFocus(
+                    excluding: !widget.visible,
+                    child: ExcludeSemantics(excluding: !widget.visible, child: child),
+                  ),
                 ),
-              );
-            },
-            child: FadeTransition(
-              opacity: _animation,
-              child: SlideTransition(
-                position: _animation.drive(Tween(begin: edge.hidden, end: Offset.zero)),
-                textDirection: Directionality.maybeOf(context),
-                child: _shown,
               ),
             ),
-          );
-    final hidden = !widget.visible;
-    return ExcludeSemantics(
-      excluding: hidden,
-      child: ExcludeFocus(excluding: hidden, child: IgnorePointer(ignoring: hidden, child: content)),
+          ),
+        );
+      },
     );
   }
 }

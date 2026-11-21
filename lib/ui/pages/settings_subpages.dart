@@ -1,642 +1,758 @@
-// Settings sub-pages adapted from PiliNara (lib/pages/setting/pages/
-// play_speed_set.dart, color_select.dart, font_setting.dart, logs.dart,
-// lib/pages/setting/widgets/ and lib/pages/about/view.dart).
-//
-// PiliNara: https://github.com/Starfallan/PiliNara
-// Copyright (C) PiliNara contributors.
-// Adapted for Lumtub under the GNU General Public License, version 3 or
-// later. Changes: the pages read and save Lumtub's settings through
-// AppController instead of PiliNara's storage, GetX and SmartDialog are
-// removed, and the Bilibili-only options (danmaku, long-press speed,
-// dynamic colour on Android) are dropped or replaced by Windows ones.
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
-import '../../app_updater.dart';
-import '../../packs.dart';
-import '../../friendly_error.dart';
-import '../../save_file.dart';
 import '../../app/app_controller.dart';
 import '../../app_log.dart';
-import '../../app_preferences.dart';
+import '../../app_updater.dart';
+import '../../appearance_settings.dart';
 import '../../blocked_groups.dart';
 import '../../encrypted_dns.dart';
+import '../../friendly_error.dart';
+import '../../l10n/l10n.dart';
+import '../../packs.dart';
 import '../../piped_streams.dart';
-import '../../appearance_settings.dart';
 import '../../player_settings.dart';
+import '../../save_file.dart';
 import '../../translation.dart';
+import '../../widgets/settings_tiles.dart';
 import '../../windows_shell.dart';
-import '../../widgets/pilinara_settings_tiles.dart';
+import '../app_icons.dart';
 import '../common.dart';
+import '../motion.dart';
+import '../skin_paint.dart';
 import '../subtitle_style.dart';
 import '../theme.dart';
 import 'downloads_page.dart' show openInExplorer;
-import 'settings_sections.dart';
+import 'settings_sections.dart' show SettingEntry, themeModes, trimSpeed, labelOf;
 import 'support_page.dart';
 import 'translation_settings_page.dart';
-import '../../l10n/l10n.dart';
-import '../motion.dart';
-import '../app_icons.dart';
-import '../skin_paint.dart';
 
 const _repository = 'https://github.com/0x696c757a696f/lumtub';
 
-/// Pushes a sub-page that rebuilds whenever [controller] changes.
-Future<void> _push(BuildContext context, AppController controller, String title, List<Widget> Function(BuildContext context) children, {List<Widget>? actions}) =>
+Widget _header(BuildContext context, String text) => Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      child: Text(text, style: Theme.of(context).textTheme.titleSmall?.copyWith(color: context.colors.primary)),
+    );
+
+Widget _tip(BuildContext context, String text) => Padding(
+      padding: const EdgeInsets.all(12).copyWith(left: 16, right: 16),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(padding: const EdgeInsets.only(top: 2), child: Icon(AppIcons.info, size: 16, color: context.colors.outline)),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text, style: TextStyle(fontSize: 12, height: 1.5, color: context.colors.outline))),
+      ]),
+    );
+
+TextStyle _faint(BuildContext context) => TextStyle(fontSize: 12, color: context.colors.outline);
+
+Widget _plainNote(BuildContext context, String text) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Text(text, style: TextStyle(color: context.colors.outline, height: 1.6)),
+    );
+
+Widget _cancel(BuildContext context) => TextButton(
+      onPressed: () => Navigator.pop(context),
+      child: Text(tr('Cancel'), style: TextStyle(color: context.colors.outline)),
+    );
+
+Future<void> _openList(
+  BuildContext context,
+  AppController controller,
+  String title,
+  List<Widget> Function(BuildContext context) rows, {
+  List<Widget> Function(BuildContext context)? actions,
+}) =>
     Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (context) => Scaffold(
-        appBar: SkinAppBar(AppBar(title: Text(title), actions: actions)),
-        body: ListenableBuilder(
-          listenable: controller,
-          builder: (context, _) => ListView(padding: const EdgeInsets.only(bottom: 40), children: children(context)),
+      builder: (_) => ListenableBuilder(
+        listenable: controller,
+        builder: (context, _) => Scaffold(
+          appBar: SkinAppBar(AppBar(title: Text(title), actions: actions?.call(context))),
+          body: ListView(padding: const EdgeInsets.only(bottom: 40), children: rows(context)),
         ),
       ),
     ));
 
-Widget _header(BuildContext context, String text) => Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Text(text, style: Theme.of(context).textTheme.titleSmall!.copyWith(color: context.colors.primary)),
+Future<void> _openPage(BuildContext context, String title, Widget body, {List<Widget>? actions}) => Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => Scaffold(appBar: SkinAppBar(AppBar(title: Text(title), actions: actions)), body: body),
+    ));
+
+class _PromptDialog extends StatefulWidget {
+  const _PromptDialog({
+    required this.title,
+    required this.label,
+    required this.confirm,
+    this.helper,
+    this.helperLines,
+    this.numeric = false,
+    this.filled = false,
+  });
+  final String title;
+  final String label;
+  final String confirm;
+  final String? helper;
+  final int? helperLines;
+  final bool numeric;
+  final bool filled;
+
+  @override
+  State<_PromptDialog> createState() => _PromptDialogState();
+}
+
+class _PromptDialogState extends State<_PromptDialog> {
+  final _text = TextEditingController();
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  void _submit() => Navigator.pop(context, _text.text);
+
+  @override
+  Widget build(BuildContext context) {
+    final confirm = Text(widget.confirm);
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SizedBox(
+        width: dialogWidth(context, 420),
+        child: TextField(
+          controller: _text,
+          autofocus: true,
+          keyboardType: widget.numeric ? const TextInputType.numberWithOptions(decimal: true) : null,
+          decoration: InputDecoration(labelText: widget.label, helperText: widget.helper, helperMaxLines: widget.helperLines),
+          onSubmitted: (_) => _submit(),
+        ),
+      ),
+      actions: [
+        _cancel(context),
+        widget.filled ? FilledButton(onPressed: _submit, child: confirm) : TextButton(onPressed: _submit, child: confirm),
+      ],
     );
+  }
+}
 
-Widget _tip(BuildContext context, String text) => Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(AppIcons.info, size: 16, color: context.colors.outline),
-        const SizedBox(width: 8),
-        Expanded(child: Text(text, style: TextStyle(color: context.colors.outline, fontSize: 12, height: 1.5))),
-      ]),
-    );
+// Blocked channels
 
-// 隐私设置 › 屏蔽频道
-
-/// Blocked channels, by id or typed name, and channels not to recommend.
-Future<void> openBlockedChannels(BuildContext context, AppController controller) => _push(
+Future<void> openBlockedChannels(BuildContext context, AppController controller) => _openList(
       context,
       controller,
       tr('Blocked channels'),
       (context) {
         final prefs = controller.preferences;
-        final outline = TextStyle(color: context.colors.outline, fontSize: 12);
+        final none = prefs.blockedChannels.isEmpty && prefs.blockedChannelNames.isEmpty;
         return [
           _header(context, tr('Blocked channels')),
-          if (prefs.blockedChannels.isEmpty && prefs.blockedChannelNames.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(tr('No channels blocked yet. Use “Add” at the top right, or choose “Block this channel” on a video card, channel page or the watch page.'), style: TextStyle(color: context.colors.outline, height: 1.6)),
-            ),
+          if (none) _plainNote(context, tr('No channels blocked yet. Use “Add” at the top right, or choose “Block this channel” on a video card, channel page or the watch page.')),
           for (final channel in prefs.blockedChannels)
             ListTile(
               leading: Icon(AppIcons.userMinus),
               title: Text(channel.name.isEmpty ? channel.id : channel.name),
-              subtitle: Text(channel.id, style: outline),
+              subtitle: Text(channel.id, style: _faint(context)),
               trailing: TextButton(onPressed: () => controller.unblockChannel(channel.id), child: Text(tr('Remove'))),
             ),
           for (final name in prefs.blockedChannelNames)
             ListTile(
               leading: Icon(AppIcons.userMinus),
               title: Text(name),
-              subtitle: Text(tr('Blocked by name'), style: outline),
+              subtitle: Text(tr('Blocked by name'), style: _faint(context)),
               trailing: TextButton(onPressed: () => controller.unblockChannelName(name), child: Text(tr('Remove'))),
             ),
           _tip(context, tr('Blocked channels never show in the home feed, Explore, search, related videos or the subscription feed. The list stays on this computer.')),
           _header(context, tr('Channels not recommended')),
-          if (prefs.unrecommendedChannels.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(tr("None yet. Choose “Don't recommend this channel” on a video card, channel page or the watch page."), style: TextStyle(color: context.colors.outline, height: 1.6)),
-            ),
+          if (prefs.unrecommendedChannels.isEmpty) _plainNote(context, tr("None yet. Choose “Don't recommend this channel” on a video card, channel page or the watch page.")),
           for (final channel in prefs.unrecommendedChannels)
             ListTile(
               leading: Icon(AppIcons.thumbsDown),
               title: Text(channel.name.isEmpty ? channel.id : channel.name),
-              subtitle: Text(channel.id, style: outline),
+              subtitle: Text(channel.id, style: _faint(context)),
               trailing: TextButton(onPressed: () => controller.setRecommendChannel(channel, true), child: Text(tr('Recommend again'))),
             ),
           _tip(context, tr('Channels not recommended stay out of the home feed, Explore and related videos, but still show in searches and follows.')),
         ];
       },
-      actions: [
-        Builder(builder: (context) => TextButton.icon(
-              onPressed: () => _addBlockedChannel(context, controller),
-              icon: Icon(AppIcons.plus),
-              label: Text(tr('Add')),
-            )),
+      actions: (context) => [
+        TextButton.icon(
+          icon: Icon(AppIcons.plus),
+          label: Text(tr('Add')),
+          onPressed: () async {
+            final typed = await showDialog<String>(
+              context: context,
+              builder: (_) => _PromptDialog(
+                title: tr('Blocked channels'),
+                label: tr('Channel link or full name'),
+                helper: tr('A link with a channel ID starting with UC blocks by ID; anything else blocks the channel with exactly that name'),
+                helperLines: 2,
+                confirm: tr('Block'),
+                filled: true,
+              ),
+            );
+            if (typed == null) return;
+            final blocked = controller.blockChannelTyped(typed);
+            if (blocked != null && context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Blocked “{0}”', [blocked]))));
+            }
+          },
+        ),
         const SizedBox(width: 8),
       ],
     );
 
-Future<void> _addBlockedChannel(BuildContext context, AppController controller) async {
-  final text = TextEditingController();
-  final typed = await showDialog<String>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(tr('Blocked channels')),
-      content: SizedBox(
-        width: dialogWidth(context, 420),
-        child: TextField(
-          controller: text,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: tr('Channel link or full name'),
-            helperText: tr('A link with a channel ID starting with UC blocks by ID; anything else blocks the channel with exactly that name'),
-            helperMaxLines: 2,
-          ),
-          onSubmitted: (v) => Navigator.pop(context, v),
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
-        FilledButton(onPressed: () => Navigator.pop(context, text.text), child: Text(tr('Block'))),
-      ],
-    ),
-  );
-  text.dispose();
-  if (typed == null) return;
-  final blocked = controller.blockChannelTyped(typed);
-  if (blocked != null && context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Blocked “{0}”', [blocked]))));
-}
+// Block lists
 
-// 首页与搜索设置 › 屏蔽争议宗教团体
-
-/// The groups of blocked_groups.dart, all on or off and one by one.
-Future<void> openBlockedGroups(BuildContext context, AppController controller) => _push(context, controller, tr('Block controversial religious groups'), (context) {
-      final prefs = controller.preferences;
-      void save(AppPreferences next) => controller.savePreferences(next);
-      return [
-        SwitchListTile(
-          secondary: const Icon(AppIcons.prohibitFill),
-          title: Text(tr('Block controversial religious groups')),
-          subtitle: Text(tr("Channels and videos of the groups below are left out of recommendations, Explore, related videos and search; other channels' reports about them, and searches for their names, are not affected")),
-          value: prefs.blockGroups,
-          onChanged: (v) => save(prefs.copyWith(blockGroups: v)),
-        ),
-        _tip(context, tr("Searching for a channel's exact name (letter case included; not one character more or less) still finds that channel and its videos. Followed channels still show in subscriptions.")),
-        _header(context, tr('Groups to block')),
-        ..._groupTiles(context, controller, blockedGroups, media: false),
-        _tip(context, tr('Tap a group to see its whole list and untick entries one by one. Only channel names, @handles and channel IDs are matched, never titles or descriptions, and the list stays on this computer. To block more, use Home & search › Title keyword filter, or Privacy › Blocked channels.')),
-        _suggestTile(),
-      ];
-    });
-
-Future<void> openStateMedia(BuildContext context, AppController controller) => _push(context, controller, tr('Block state propaganda media'), (context) {
-      final prefs = controller.preferences;
-      void save(AppPreferences next) => controller.savePreferences(next);
-      return [
-        SwitchListTile(
-          secondary: Icon(AppIcons.megaphone),
-          title: Text(tr('Block state propaganda media')),
-          subtitle: Text(tr('Channels and videos of the government propaganda outlets below are hidden from recommendations, Explore, related videos and search')),
-          value: prefs.blockStateMedia,
-          onChanged: (v) => save(prefs.copyWith(blockStateMedia: v)),
-        ),
-        _tip(context, tr('Only the channel name counts, so videos from other channels that repost or report on them still show. Editorially independent public broadcasters such as the BBC, NHK and PBS are not included. Searching for the exact channel name (case-sensitive) still finds them.')),
-        _header(context, tr('Groups to block')),
-        ..._groupTiles(context, controller, stateMedia, media: true),
-        _tip(context, tr('The list stays on this computer. Add any channel it misses under Privacy › Blocked channels.')),
-        _suggestTile(),
-      ];
-    });
-
-/// Opens the repository's form for adding a channel to a block list or taking one off.
 Widget _suggestTile() => ListTile(
       leading: Icon(AppIcons.arrowSquareOut),
       title: Text(tr('Suggest a channel or report a mistake')),
       subtitle: Text(tr('The lists are public on GitHub, and anyone can add to them. Every entry needs a public source')),
-      onTap: () => openExternal('https://github.com/0x696c757a696f/lumtub/issues/new?template=block_list.yml'),
+      onTap: () => openExternal('$_repository/issues/new?template=block_list.yml'),
     );
 
+Future<void> openBlockedGroups(BuildContext context, AppController controller) => _openBlockList(context, controller, media: false);
 
-/// One row per group: a tick for the whole group, and a tap for its list.
-List<Widget> _groupTiles(BuildContext context, AppController controller, List<BlockedGroup> groups, {required bool media}) {
-  final prefs = controller.preferences;
-  final enabled = media ? prefs.blockStateMedia : prefs.blockGroups;
-  final allowed = prefs.allowedEntries.toSet();
-  return [
-    for (final group in groups)
-      Builder(builder: (context) {
-        final entries = group.entries;
-        final off = entries.where((e) => allowed.contains(e.key)).length;
-        return ListTile(
-          dense: true,
-          enabled: enabled,
-          leading: Checkbox(
-            value: prefs.groupOn(group, media: media),
-            onChanged: enabled ? (on) => controller.savePreferences(prefs.withGroup(group, on == true, media: media)) : null,
-          ),
-          title: Text(group.label),
-          subtitle: Text(
-            [
-              if (group.note case final note?) tr(note),
-              [
-                tr('{0} entries', [entries.length]),
-                if (off > 0) tr('{0} unticked', [off]),
-                if (!group.onByDefault) tr('Not blocked by default'),
-                entries.take(4).map((e) => e.label).join(tr(', ')),
-              ].join(' · '),
-            ].join('\n'),
-            maxLines: group.note == null ? 1 : 3,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: context.colors.outline, fontSize: 12),
-          ),
-          trailing: Icon(AppIcons.caretRight),
-          onTap: () => _openGroupEntries(context, controller, group, media: media),
-        );
-      }),
-  ];
-}
+Future<void> openStateMedia(BuildContext context, AppController controller) => _openBlockList(context, controller, media: true);
 
-/// Everything [group] blocks, each tickable on its own.
-Future<void> _openGroupEntries(BuildContext context, AppController controller, BlockedGroup group, {required bool media}) {
-  final entries = group.entries;
-  void setAll(bool on) {
-    final keys = {for (final e in entries) e.key};
-    final rest = controller.preferences.allowedEntries.where((k) => !keys.contains(k));
-    controller.savePreferences(controller.preferences.copyWith(allowedEntries: [...rest, if (!on) ...keys]));
-  }
-
-  return _push(context, controller, group.label, (context) {
+Future<void> _openBlockList(BuildContext context, AppController controller, {required bool media}) {
+  final title = media ? tr('Block state propaganda media') : tr('Block controversial religious groups');
+  return _openList(context, controller, title, (context) {
     final prefs = controller.preferences;
-    final allowed = prefs.allowedEntries.toSet();
-    final groupOn = prefs.groupOn(group, media: media) && (media ? prefs.blockStateMedia : prefs.blockGroups);
+    final master = media ? prefs.blockStateMedia : prefs.blockGroups;
+    final groups = media ? stateMedia : blockedGroups;
     return [
       SwitchListTile(
-        title: Text(tr('Block this group')),
-        subtitle: Text(media ? tr('Needs "Block state propaganda media" on') : tr('Needs "Block controversial religious groups" on')),
-        value: prefs.groupOn(group, media: media),
-        onChanged: (on) => controller.savePreferences(prefs.withGroup(group, on, media: media)),
+        secondary: Icon(media ? AppIcons.megaphone : AppIcons.prohibitFill),
+        title: Text(title),
+        subtitle: Text(media
+            ? '${tr('Channels and videos of the government propaganda outlets below are hidden from recommendations, Explore, related videos and search')}. ${tr('Only the channel name counts, so videos from other channels that repost or report on them still show. Editorially independent public broadcasters such as the BBC, NHK and PBS are not included. Searching for the exact channel name (case-sensitive) still finds them.')}'
+            : '${tr("Channels and videos of the groups below are left out of recommendations, Explore, related videos and search; other channels' reports about them, and searches for their names, are not affected")}. ${tr("Searching for a channel's exact name (letter case included; not one character more or less) still finds that channel and its videos. Followed channels still show in subscriptions.")}'),
+        value: master,
+        onChanged: (v) => controller.savePreferences(media ? prefs.copyWith(blockStateMedia: v) : prefs.copyWith(blockGroups: v)),
       ),
-      for (final kind in BlockKind.values)
-        if (entries.where((e) => e.kind == kind).toList() case final list when list.isNotEmpty) ...[
-          _header(context, '${kind.label} · ${list.length}'),
-          for (final entry in list)
-            CheckboxListTile(
-              dense: true,
-              enabled: groupOn,
-              title: Text(entry.label),
-              subtitle: entry.forms.length > 1 ? Text(entry.forms.skip(1).join(tr(', ')), style: TextStyle(color: context.colors.outline, fontSize: 12)) : null,
-              value: !allowed.contains(entry.key),
-              onChanged: (on) => controller.savePreferences(prefs.copyWith(
-                allowedEntries: on == true ? [...prefs.allowedEntries.where((k) => k != entry.key)] : [...prefs.allowedEntries, entry.key],
-              )),
-            ),
-        ],
-      _tip(context, switch (media) {
-        true => tr('A channel is blocked when its name is one of these or starts with one, followed by a space or sign.'),
-        false => tr('"Words in titles and channel names" block wherever they appear in a title or channel name; "Channel names" only count the channel name, which must be the name or start with it; @handles and channel ids must match exactly.'),
-      }),
+      _tip(context, media
+          ? tr('The list stays on this computer. Add any channel it misses under Privacy › Blocked channels.')
+          : tr('Tap a group to see its whole list and untick entries one by one. Only channel names, @handles and channel IDs are matched, never titles or descriptions, and the list stays on this computer. To block more, use Home & search › Title keyword filter, or Privacy › Blocked channels.')),
+      _header(context, tr('Groups to block')),
+      for (final group in groups) _groupTile(context, controller, group, media, master),
+      _tip(context, tr('A channel is blocked when its name is one of these or starts with one, followed by a space or sign.')),
+      _suggestTile(),
     ];
-  }, actions: [
-    TextButton(onPressed: () => setAll(true), child: Text(tr('Tick all'))),
-    TextButton(onPressed: () => setAll(false), child: Text(tr('Untick all'))),
-  ]);
+  });
 }
 
-// 播放设置 › 倍速设置 (PiliNara's play_speed_set.dart)
-
-Future<void> openPlaySpeed(BuildContext context, AppController controller) {
-  void save(PlayerSettings next) => controller.saveSettings(next);
-
-  Future<void> add(BuildContext context) async {
-    final text = TextEditingController();
-    final value = await showDialog<double>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(tr('Add speed')),
-        content: TextField(
-          controller: text,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(labelText: tr('Custom speed'), helperText: tr('Between 0.1 and 5')),
-          onSubmitted: (v) => Navigator.pop(context, double.tryParse(v)),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'), style: TextStyle(color: context.colors.outline))),
-          TextButton(onPressed: () => Navigator.pop(context, double.tryParse(text.text)), child: Text(tr('Confirm'))),
-        ],
-      ),
-    );
-    text.dispose();
-    if (value == null) return;
-    if (value < 0.1 || value > 5) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Speed must be between 0.1 and 5'))));
-      return;
-    }
-    final speed = (value * 100).round() / 100;
-    final speeds = controller.settings.speeds;
-    if (speeds.contains(speed)) return;
-    save(controller.settings.copyWith(speeds: [...speeds, speed]..sort()));
-  }
-
-  Future<void> edit(BuildContext context, double speed) async {
-    final settings = controller.settings;
-    final action = await showModalBottomSheet<int>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Padding(padding: const EdgeInsets.all(12), child: Text('${trimSpeed(speed)}x', style: Theme.of(context).textTheme.titleMedium)),
-          ListTile(leading: Icon(AppIcons.checkCircle), title: Text(tr('Set as default speed')), onTap: () => Navigator.pop(context, 0)),
-          ListTile(
-            leading: Icon(AppIcons.trash),
-            title: Text(tr('Delete this item')),
-            enabled: settings.speeds.length > 1 && speed != settings.defaultSpeed,
-            onTap: () => Navigator.pop(context, 1),
-          ),
-        ]),
-      ),
-    );
-    if (action == 0) save(controller.settings.copyWith(defaultSpeed: speed));
-    if (action == 1) save(controller.settings.copyWith(speeds: [...controller.settings.speeds]..remove(speed)));
-  }
-
-  return _push(
-    context,
-    controller,
-    tr('Speed settings'),
-    actions: [
-      Builder(
-        builder: (context) => TextButton(
-          onPressed: () async {
-            if (await confirmDialog(context, title: tr('Reset speed?'), content: tr('Restores the default speed list and sets the default speed back to 1x.'), confirm: tr('Reset'))) {
-              save(controller.settings.copyWith(speeds: defaultSpeeds, defaultSpeed: 1));
-            }
-          },
-          child: Text(tr('Reset')),
-        ),
-      ),
-      const SizedBox(width: 8),
-    ],
-    (context) {
-      final settings = controller.settings;
-      return [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Text(tr('Tap the buttons below to set the default (preferred) speed or delete it'), style: TextStyle(color: context.colors.outline)),
-        ),
-        ListTile(title: Text(tr('Default speed')), subtitle: Text('${trimSpeed(settings.defaultSpeed)}x')),
-        Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 8, 0),
-          child: Row(children: [
-            Text(tr('Speed list'), style: Theme.of(context).textTheme.titleMedium),
-            const Spacer(),
-            TextButton(onPressed: () => add(context), child: Text(tr('Add'))),
-          ]),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Wrap(spacing: 8, runSpacing: 8, children: [
-            for (final speed in settings.speeds)
-              speed == settings.defaultSpeed
-                  ? FilledButton(onPressed: () => edit(context, speed), child: Text('${trimSpeed(speed)}x'))
-                  : FilledButton.tonal(onPressed: () => edit(context, speed), child: Text('${trimSpeed(speed)}x')),
-          ]),
-        ),
-        _tip(context, tr("The speed menu in the player's bottom bar uses this list.")),
-      ];
-    },
+Widget _groupTile(BuildContext context, AppController controller, BlockedGroup group, bool media, bool master) {
+  final prefs = controller.preferences;
+  final keys = {for (final e in group.entries) e.key};
+  final unticked = prefs.allowedEntries.where(keys.contains).length;
+  final parts = [
+    tr('{0} entries', [group.entries.length]),
+    if (unticked > 0) tr('{0} unticked', [unticked]),
+    if (!group.onByDefault) tr('Not blocked by default'),
+    group.entries.take(4).map((e) => e.label).join(tr(', ')),
+  ];
+  final note = group.note;
+  final lines = [if (note != null) tr(note), parts.join(' · ')];
+  return ListTile(
+    dense: true,
+    enabled: master,
+    leading: Checkbox(
+      value: prefs.groupOn(group, media: media),
+      onChanged: master ? (on) => controller.savePreferences(prefs.withGroup(group, on == true, media: media)) : null,
+    ),
+    title: Text(group.label),
+    subtitle: Text(lines.join('\n'), maxLines: note != null ? 3 : 1, overflow: TextOverflow.ellipsis, style: _faint(context)),
+    trailing: Icon(AppIcons.caretRight),
+    onTap: () => _openGroupEntries(context, controller, group, media),
   );
 }
 
-// 播放设置 › 字幕设置
+Future<void> _openGroupEntries(BuildContext context, AppController controller, BlockedGroup group, bool media) {
+  final keys = [for (final e in group.entries) e.key];
+  return _openList(
+    context,
+    controller,
+    group.label,
+    (context) {
+      final prefs = controller.preferences;
+      final master = media ? prefs.blockStateMedia : prefs.blockGroups;
+      final on = prefs.groupOn(group, media: media);
+      return [
+        SwitchListTile(
+          title: Text(tr('Block this group')),
+          subtitle: Text(media ? tr('Needs "Block state propaganda media" on') : tr('Needs "Block controversial religious groups" on')),
+          value: on,
+          onChanged: (v) => controller.savePreferences(prefs.withGroup(group, v, media: media)),
+        ),
+        for (final kind in BlockKind.values)
+          if (group.entries.any((e) => e.kind == kind)) ...[
+            _header(context, '${kind.label} · ${group.entries.where((e) => e.kind == kind).length}'),
+            for (final entry in group.entries.where((e) => e.kind == kind))
+              CheckboxListTile(
+                dense: true,
+                enabled: on && master,
+                value: !prefs.allowedEntries.contains(entry.key),
+                title: Text(entry.label),
+                subtitle: entry.forms.length > 1 ? Text(entry.forms.skip(1).join(tr(', ')), style: _faint(context)) : null,
+                onChanged: (checked) {
+                  final latest = controller.preferences;
+                  final rest = latest.allowedEntries.where((k) => k != entry.key).toList();
+                  controller.savePreferences(latest.copyWith(allowedEntries: checked == true ? rest : [...rest, entry.key]));
+                },
+              ),
+          ],
+        _tip(context, tr('"Words in titles and channel names" block wherever they appear in a title or channel name; "Channel names" only count the channel name, which must be the name or start with it; @handles and channel ids must match exactly.')),
+      ];
+    },
+    actions: (context) => [
+      TextButton(
+        onPressed: () {
+          final latest = controller.preferences;
+          controller.savePreferences(latest.copyWith(allowedEntries: latest.allowedEntries.where((k) => !keys.contains(k)).toList()));
+        },
+        child: Text(tr('Tick all')),
+      ),
+      TextButton(
+        onPressed: () {
+          final latest = controller.preferences;
+          controller.savePreferences(latest.copyWith(allowedEntries: [...latest.allowedEntries.where((k) => !keys.contains(k)), ...keys]));
+        },
+        child: Text(tr('Untick all')),
+      ),
+    ],
+  );
+}
 
-Future<void> openSubtitleSettings(BuildContext context, AppController controller) => _push(context, controller, tr('Subtitle settings'), (context) {
+// Speeds
+
+Future<void> openPlaySpeed(BuildContext context, AppController controller) => _openList(
+      context,
+      controller,
+      tr('Speed settings'),
+      (context) {
+        final settings = controller.settings;
+        return [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text(tr('Tap the buttons below to set the default (preferred) speed or delete it'), style: TextStyle(color: context.colors.outline)),
+          ),
+          ListTile(title: Text(tr('Default speed')), subtitle: Text('${trimSpeed(settings.defaultSpeed)}x')),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 16, end: 8),
+            child: Row(children: [
+              Text(tr('Speed list'), style: Theme.of(context).textTheme.titleMedium),
+              const Spacer(),
+              TextButton(onPressed: () => _addSpeed(context, controller), child: Text(tr('Add'))),
+            ]),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Wrap(spacing: 8, runSpacing: 8, children: [
+              for (final speed in settings.speeds)
+                speed == settings.defaultSpeed
+                    ? FilledButton(onPressed: () => _speedSheet(context, controller, speed), child: Text('${trimSpeed(speed)}x'))
+                    : FilledButton.tonal(onPressed: () => _speedSheet(context, controller, speed), child: Text('${trimSpeed(speed)}x')),
+            ]),
+          ),
+          _tip(context, tr("The speed menu in the player's bottom bar uses this list.")),
+        ];
+      },
+      actions: (context) => [
+        TextButton(
+          onPressed: () async {
+            final yes = await confirmDialog(
+              context,
+              title: tr('Reset speed?'),
+              content: tr('Restores the default speed list and sets the default speed back to 1x.'),
+              confirm: 'Reset',
+            );
+            if (yes) await controller.saveSettings(controller.settings.copyWith(speeds: defaultSpeeds, defaultSpeed: 1));
+          },
+          child: Text(tr('Reset')),
+        ),
+        const SizedBox(width: 8),
+      ],
+    );
+
+Future<void> _addSpeed(BuildContext context, AppController controller) async {
+  final text = await showDialog<String>(
+    context: context,
+    builder: (_) => _PromptDialog(
+      title: tr('Add speed'),
+      label: tr('Custom speed'),
+      helper: tr('Between 0.1 and 5'),
+      confirm: tr('Confirm'),
+      numeric: true,
+    ),
+  );
+  final value = text == null ? null : double.tryParse(text.trim());
+  if (value == null) return;
+  if (value < 0.1 || value > 5) {
+    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Speed must be between 0.1 and 5'))));
+    return;
+  }
+  final speed = double.parse(value.toStringAsFixed(2));
+  final settings = controller.settings;
+  if (settings.speeds.contains(speed)) return;
+  await controller.saveSettings(settings.copyWith(speeds: [...settings.speeds, speed]..sort()));
+}
+
+Future<void> _speedSheet(BuildContext context, AppController controller, double speed) => showModalBottomSheet<void>(
+      context: context,
+      builder: (sheet) {
+        final settings = controller.settings;
+        final removable = settings.speeds.length > 1 && speed != settings.defaultSpeed;
+        return SafeArea(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Padding(padding: const EdgeInsets.all(12), child: Text('${trimSpeed(speed)}x', style: Theme.of(sheet).textTheme.titleMedium)),
+            ListTile(
+              leading: Icon(AppIcons.checkCircle),
+              title: Text(tr('Set as default speed')),
+              onTap: () {
+                Navigator.pop(sheet);
+                controller.saveSettings(controller.settings.copyWith(defaultSpeed: speed));
+              },
+            ),
+            ListTile(
+              enabled: removable,
+              leading: Icon(AppIcons.trash),
+              title: Text(tr('Delete this item')),
+              onTap: () {
+                Navigator.pop(sheet);
+                final latest = controller.settings;
+                controller.saveSettings(latest.copyWith(speeds: latest.speeds.where((s) => s != speed).toList()));
+              },
+            ),
+          ]),
+        );
+      },
+    );
+
+// Subtitles
+
+Future<void> openSubtitleSettings(BuildContext context, AppController controller) => _openList(context, controller, tr('Subtitle settings'), (context) {
       final settings = controller.settings;
-      void save(PlayerSettings next) => controller.saveSettings(next);
-      // Read when a picker closes, so two quick changes do not undo each other.
-      PlayerSettings now() => controller.settings;
-      String percent(double v) => '${(v * 100).round()}%';
-      List<Widget> look({
-        required String font,
-        required double scale,
-        required int color,
-        required double opacity,
-        required void Function(String) setFont,
-        required void Function(double) setScale,
-        required void Function(int) setColor,
-        required void Function(double) setOpacity,
-        bool enabled = true,
-        bool scaleEnabled = true,
-      }) =>
-          [
-            NormalItem(
-              title: tr('Font'),
-              subtitle: subtitleFontLabel(font),
-              leading: Icon(AppIcons.textAUnderline),
-              enabled: enabled,
-              onTap: () => pickSubtitleFont(context, font, setFont),
-            ),
-            NormalItem(
-              title: tr('Size'),
-              subtitle: '${scale.toStringAsFixed(1)}×',
-              leading: Icon(AppIcons.textAa),
-              enabled: scaleEnabled,
-              onTap: () => pickWithSlider(context, title: tr('Size'), value: scale, min: 0.5, max: 3, divisions: 25, suffix: '×', precise: 1, onSelected: (v) => setScale((v * 10).round() / 10)),
-            ),
-            NormalItem(
-              title: tr('Color'),
-              subtitle: subtitleColorLabel(color),
-              leading: Icon(AppIcons.palette),
-              trailing: Container(width: 20, height: 20, decoration: BoxDecoration(color: Color(0xFF000000 | color), shape: BoxShape.circle, border: Border.all(color: context.colors.outlineVariant))),
-              enabled: enabled,
-              onTap: () => pickSubtitleColor(context, color, setColor),
-            ),
-            NormalItem(
-              title: tr('Opacity'),
-              subtitle: percent(opacity),
-              leading: Icon(AppIcons.drop),
-              enabled: enabled,
-              onTap: () => pickSubtitleOpacity(context, opacity, setOpacity),
-            ),
-          ];
-      final secondary = TranslationLanguage.maybeByCode(settings.secondarySubtitleLanguage);
+      Future<void> change(PlayerSettings Function(PlayerSettings latest) edit) => controller.saveSettings(edit(controller.settings));
+      final off = settings.subtitleMode == SubtitleMode.off;
+      final secondary = settings.secondarySubtitleLanguage;
       return [
         PopupItem<SubtitleMode>(
           title: tr('Turn on subtitles automatically'),
           leading: Icon(AppIcons.subtitles),
           value: settings.subtitleMode,
           values: [for (final m in SubtitleMode.values) (m, m.label)],
-          onSelected: (v) => save(settings.copyWith(subtitleMode: v)),
+          onSelected: (m) => change((s) => s.copyWith(subtitleMode: m)),
         ),
         if (settings.subtitleMode == SubtitleMode.foreign)
           NormalItem(
-          title: tr('Languages I understand'),
-          subtitle: [for (final code in settings.understood) TranslationLanguage.maybeByCode(code)?.label ?? code].join(', '),
-          leading: Icon(AppIcons.globe),
-          onTap: () async {
-            final picked = await _pickKnownLanguages(context, settings.understood);
-            if (picked != null) save(now().copyWith(knownLanguages: picked));
-          },
-        ),
+            title: tr('Languages I understand'),
+            leading: Icon(AppIcons.globe),
+            subtitle: settings.understood.map((code) => TranslationLanguage.maybeByCode(code)?.label ?? code).join(', '),
+            onTap: () async {
+              final picked = await showDialog<List<String>>(context: context, builder: (_) => _KnownLanguagesDialog(initial: settings.understood));
+              if (picked != null) await change((s) => s.copyWith(knownLanguages: picked));
+            },
+          ),
         PopupItem<Object>(
           title: tr('First subtitle language'),
           leading: Icon(AppIcons.translate),
           value: settings.subtitleOriginal ? PlayerSettings.originalSubtitle : settings.subtitleLanguage,
-          values: [(PlayerSettings.originalSubtitle, tr("Video's own language")), for (final l in SubtitleLanguage.values) (l, l.label)],
-          onSelected: (v) => save(v is SubtitleLanguage ? settings.copyWith(subtitleLanguage: v, subtitleOriginal: false) : settings.copyWith(subtitleOriginal: true)),
+          values: <(Object, String)>[
+            (PlayerSettings.originalSubtitle, tr("Video's own language")),
+            for (final l in SubtitleLanguage.values) (l, l.label),
+          ],
+          onSelected: (v) => change((s) => v is SubtitleLanguage ? s.copyWith(subtitleLanguage: v, subtitleOriginal: false) : s.copyWith(subtitleOriginal: true)),
         ),
         PopupItem<String>(
           title: tr('Second subtitle language'),
           leading: Icon(AppIcons.closedCaptioning),
-          value: const {PlayerSettings.originalSubtitle, PlayerSettings.interfaceSubtitle}.contains(settings.secondarySubtitleLanguage) ? settings.secondarySubtitleLanguage : secondary?.code ?? '',
+          enabled: !off,
+          value: secondary == PlayerSettings.originalSubtitle || secondary == PlayerSettings.interfaceSubtitle ? secondary : TranslationLanguage.maybeByCode(secondary)?.code ?? '',
           values: [
             ('', tr('Never')),
             (PlayerSettings.interfaceSubtitle, tr('Interface language ({0})', [interfaceTranslationLanguage.label])),
             (PlayerSettings.originalSubtitle, tr("Video's own language (uploaded or auto-generated)")),
             for (final l in TranslationLanguage.all) (l.code, l.label),
           ],
-          enabled: settings.subtitleMode != SubtitleMode.off,
-          onSelected: (v) => save(settings.copyWith(secondarySubtitleLanguage: v)),
+          onSelected: (v) => change((s) => s.copyWith(secondarySubtitleLanguage: v)),
         ),
         _tip(
           context,
-          settings.subtitleMode == SubtitleMode.off
+          off
               ? tr('Turn on “Turn on subtitles automatically” first, so the second subtitle can show by itself.')
               : tr('The first subtitle is shown in the first subtitle language, translated by YouTube when the video has none in it. The second subtitle appears above it; "Video\'s own language" is the subtitle in the language spoken in the video. It is hidden when it matches the first.'),
         ),
         SubtitlePreview(settings: settings),
         _header(context, tr('First subtitle style')),
-        ...look(
+        ..._subtitleStyleRows(
+          context,
           font: settings.subtitleFont,
           scale: settings.subtitleScale,
           color: settings.subtitleColor,
           opacity: settings.subtitleOpacity,
-          setFont: (v) => save(now().copyWith(subtitleFont: v)),
-          setScale: (v) => save(now().copyWith(subtitleScale: v)),
-          setColor: (v) => save(now().copyWith(subtitleColor: v)),
-          setOpacity: (v) => save(now().copyWith(subtitleOpacity: v)),
+          setFont: (v) => change((s) => s.copyWith(subtitleFont: v)),
+          setScale: (v) => change((s) => s.copyWith(subtitleScale: v)),
+          setColor: (v) => change((s) => s.copyWith(subtitleColor: v)),
+          setOpacity: (v) => change((s) => s.copyWith(subtitleOpacity: v)),
         ),
         _header(context, tr('Second subtitle style')),
-        ...look(
+        ..._subtitleStyleRows(
+          context,
           font: settings.secondaryFont,
           scale: settings.secondaryScale,
           color: settings.secondaryColor,
           opacity: settings.secondaryOpacity,
-          setFont: (v) => save(now().copyWith(secondaryFont: v)),
-          setScale: (v) => save(now().copyWith(secondaryScale: v)),
-          setColor: (v) => save(now().copyWith(secondaryColor: v)),
-          setOpacity: (v) => save(now().copyWith(secondaryOpacity: v)),
+          setFont: (v) => change((s) => s.copyWith(secondaryFont: v)),
+          setScale: (v) => change((s) => s.copyWith(secondaryScale: v)),
+          setColor: (v) => change((s) => s.copyWith(secondaryColor: v)),
+          setOpacity: (v) => change((s) => s.copyWith(secondaryOpacity: v)),
         ),
         _header(context, tr('General')),
-        // Always on iOS (see PlayerSettings.fromJson).
-        if (!Platform.isIOS) SwitchItem(
-          title: tr('Subtitles rendered by mpv (libass)'),
-          subtitle: tr('Supports styled subtitles; when off, the UI draws them, using fewer resources'),
-          leading: Icon(AppIcons.stack),
-          value: settings.libassSubtitles,
-          onChanged: (v) => save(settings.copyWith(libassSubtitles: v)),
-        ),
+        if (!Platform.isIOS)
+          SwitchItem(
+            title: tr('Subtitles rendered by mpv (libass)'),
+            subtitle: tr('Supports styled subtitles; when off, the UI draws them, using fewer resources'),
+            leading: Icon(AppIcons.stack),
+            value: settings.libassSubtitles,
+            onChanged: (v) => change((s) => s.copyWith(libassSubtitles: v)),
+          ),
         SwitchItem(
           title: tr('Subtitles in picture in picture'),
           leading: Icon(AppIcons.pictureInpicture),
           value: settings.pipSubtitles,
-          onChanged: (v) => save(settings.copyWith(pipSubtitles: v)),
+          onChanged: (v) => change((s) => s.copyWith(pipSubtitles: v)),
         ),
         SwitchItem(
           title: tr('Subtitles in the mini player'),
           leading: Icon(AppIcons.closedCaptioning),
           value: settings.miniPlayerSubtitles,
-          onChanged: (v) => save(settings.copyWith(miniPlayerSubtitles: v)),
+          onChanged: (v) => change((s) => s.copyWith(miniPlayerSubtitles: v)),
         ),
         NormalItem(
           title: tr('Subtitle position'),
           subtitle: tr('Current: {0}% (100 is the bottom of the frame)', [settings.subtitlePosition]),
           leading: Icon(AppIcons.alignBottom),
-          onTap: () => pickWithSlider(context, title: tr('Subtitle position'), value: settings.subtitlePosition.toDouble(), min: 0, max: 100, divisions: 100, suffix: '%', onSelected: (v) => save(now().copyWith(subtitlePosition: v.round()))),
+          onTap: () => pickWithSlider(
+            context,
+            title: tr('Subtitle position'),
+            value: settings.subtitlePosition.toDouble(),
+            min: 0,
+            max: 100,
+            divisions: 100,
+            suffix: '%',
+            precise: 0,
+            onSelected: (v) => change((s) => s.copyWith(subtitlePosition: v.round())),
+          ),
         ),
         NormalItem(
           title: tr('Outline thickness'),
           subtitle: tr('Current: {0}', [settings.subtitleBorder.toStringAsFixed(1)]),
           leading: Icon(AppIcons.rectangleDashed),
-          onTap: () => pickWithSlider(context, title: tr('Outline thickness'), value: settings.subtitleBorder, min: 0, max: 8, divisions: 16, suffix: '', precise: 1, onSelected: (v) => save(now().copyWith(subtitleBorder: v))),
+          onTap: () => pickWithSlider(
+            context,
+            title: tr('Outline thickness'),
+            value: settings.subtitleBorder,
+            min: 0,
+            max: 8,
+            divisions: 16,
+            precise: 1,
+            onSelected: (v) => change((s) => s.copyWith(subtitleBorder: v)),
+          ),
         ),
         SwitchItem(
           title: tr('Background box'),
           subtitle: tr('Add a semi-transparent black background behind subtitles instead of an outline'),
           leading: Icon(AppIcons.rectangle),
           value: settings.subtitleBackground,
-          onChanged: (v) => save(settings.copyWith(subtitleBackground: v)),
+          onChanged: (v) => change((s) => s.copyWith(subtitleBackground: v)),
         ),
         SwitchItem(
           title: tr('Bold'),
           leading: Icon(AppIcons.textB),
           value: settings.subtitleBold,
-          onChanged: (v) => save(settings.copyWith(subtitleBold: v)),
+          onChanged: (v) => change((s) => s.copyWith(subtitleBold: v)),
         ),
         NormalItem(
           title: tr('Restore default style'),
           subtitle: tr('Microsoft YaHei, a white first subtitle and a smaller light gold second one'),
           leading: Icon(AppIcons.arrowCounterClockwise),
-          onTap: () => save(now().withDefaultSubtitleStyle()),
+          onTap: () => change((s) => s.withDefaultSubtitleStyle()),
         ),
         _tip(context, tr('Subtitles are fetched by yt-dlp; auto-generated subtitles are used when no manual ones exist. Language and enable settings take effect from the next video; styles apply immediately.')),
       ];
     });
 
-// 其它设置 › 空降助手
+List<Widget> _subtitleStyleRows(
+  BuildContext context, {
+  required String font,
+  required double scale,
+  required int color,
+  required double opacity,
+  required ValueChanged<String> setFont,
+  required ValueChanged<double> setScale,
+  required ValueChanged<int> setColor,
+  required ValueChanged<double> setOpacity,
+}) =>
+    [
+      NormalItem(
+        title: tr('Font'),
+        leading: Icon(AppIcons.textAUnderline),
+        subtitle: subtitleFontLabel(font),
+        onTap: () => pickSubtitleFont(context, font, setFont),
+      ),
+      NormalItem(
+        title: tr('Size'),
+        leading: Icon(AppIcons.textAa),
+        subtitle: '${scale.toStringAsFixed(1)}×',
+        onTap: () => pickWithSlider(
+          context,
+          title: tr('Size'),
+          value: scale,
+          min: 0.5,
+          max: 3,
+          divisions: 25,
+          suffix: '×',
+          precise: 1,
+          onSelected: (v) => setScale(double.parse(v.toStringAsFixed(1))),
+        ),
+      ),
+      NormalItem(
+        title: tr('Color'),
+        leading: Icon(AppIcons.palette),
+        subtitle: subtitleColorLabel(color),
+        trailing: Container(
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Color(0xFF000000 | color),
+            border: Border.all(color: context.colors.outlineVariant),
+          ),
+        ),
+        onTap: () => pickSubtitleColor(context, color, setColor),
+      ),
+      NormalItem(
+        title: tr('Opacity'),
+        leading: Icon(AppIcons.drop),
+        subtitle: '${(opacity * 100).round()}%',
+        onTap: () => pickSubtitleOpacity(context, opacity, setOpacity),
+      ),
+    ];
 
-Future<void> openSponsorBlock(BuildContext context, AppController controller) => _push(context, controller, tr('SponsorBlock'), (context) {
+class _KnownLanguagesDialog extends StatefulWidget {
+  const _KnownLanguagesDialog({required this.initial});
+  final List<String> initial;
+
+  @override
+  State<_KnownLanguagesDialog> createState() => _KnownLanguagesDialogState();
+}
+
+class _KnownLanguagesDialogState extends State<_KnownLanguagesDialog> {
+  late final Set<String> _ticked = widget.initial.toSet();
+
+  @override
+  Widget build(BuildContext context) {
+    final all = TranslationLanguage.all;
+    final ordered = [...all.where((l) => _ticked.contains(l.code)), ...all.where((l) => !_ticked.contains(l.code))];
+    return AlertDialog(
+      title: Text(tr('Languages I understand')),
+      content: SizedBox(
+        width: dialogWidth(context, 380),
+        height: 440,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(tr("Subtitles don't turn on by themselves for videos in these languages"), style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 8),
+          Expanded(
+            child: ListView(children: [
+              for (final l in ordered)
+                CheckboxListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  value: _ticked.contains(l.code),
+                  title: Text(l.label),
+                  onChanged: (on) => setState(() => on == true ? _ticked.add(l.code) : _ticked.remove(l.code)),
+                ),
+            ]),
+          ),
+        ]),
+      ),
+      actions: [
+        _cancel(context),
+        TextButton(onPressed: () => Navigator.pop(context, [for (final l in all) if (_ticked.contains(l.code)) l.code]), child: Text(tr('Done'))),
+      ],
+    );
+  }
+}
+
+// SponsorBlock
+
+Future<void> openSponsorBlock(BuildContext context, AppController controller) => _openList(context, controller, tr('SponsorBlock'), (context) {
       final settings = controller.settings;
-      void save(PlayerSettings next) => controller.saveSettings(next);
+      final on = settings.sponsorBlock;
       return [
         SwitchItem(
           title: tr('Enable SponsorBlock'),
           subtitle: tr('Automatically skip sponsors, self-promotion and other segments'),
           leading: Icon(AppIcons.airplaneTakeoff),
-          value: settings.sponsorBlock,
-          onChanged: (v) => save(settings.copyWith(sponsorBlock: v)),
+          value: on,
+          onChanged: (v) => controller.saveSettings(controller.settings.copyWith(sponsorBlock: v)),
         ),
         SwitchItem(
           title: tr('Show a notice when skipping'),
           leading: Icon(AppIcons.bell),
+          enabled: on,
           value: settings.sponsorNotice,
-          enabled: settings.sponsorBlock,
-          onChanged: (v) => save(settings.copyWith(sponsorNotice: v)),
+          onChanged: (v) => controller.saveSettings(controller.settings.copyWith(sponsorNotice: v)),
         ),
         SwitchItem(
           title: tr('Cut them out of downloads'),
           subtitle: tr('Downloaded videos leave these segments out, cut at keyframes without encoding again'),
           leading: Icon(AppIcons.scissors),
+          enabled: on,
           value: settings.sponsorCut,
-          enabled: settings.sponsorBlock,
-          onChanged: (v) => save(settings.copyWith(sponsorCut: v)),
+          onChanged: (v) => controller.saveSettings(controller.settings.copyWith(sponsorCut: v)),
         ),
         _header(context, tr('Segment types to skip')),
         for (final MapEntry(key: category, value: (name, description)) in sponsorCategoryNames.entries)
           CheckboxListTile(
             title: Text(name),
-            subtitle: Text(description, style: TextStyle(color: context.colors.outline, fontSize: 12)),
+            subtitle: Text(description, style: _faint(context)),
             value: settings.sponsorCategories.contains(category),
-            enabled: settings.sponsorBlock,
-            onChanged: (v) {
-              final next = {...controller.settings.sponsorCategories};
-              v == true ? next.add(category) : next.remove(category);
-              save(controller.settings.copyWith(sponsorCategories: next));
-            },
+            onChanged: on
+                ? (checked) {
+                    final latest = controller.settings;
+                    final next = {...latest.sponsorCategories};
+                    checked == true ? next.add(category) : next.remove(category);
+                    controller.saveSettings(latest.copyWith(sponsorCategories: next));
+                  }
+                : null,
           ),
         _tip(context, tr('Segment data comes from the SponsorBlock community (sponsor.ajay.app). Lookups send only the first 4 characters of the video ID hash, never your account or watch history.')),
       ];
     });
 
-// 外观设置 › 应用主题 (PiliNara's color_select.dart)
+// Colors
 
-Future<void> openColorSelect(BuildContext context, AppController controller) => _push(context, controller, tr('Custom color'), (context) {
+Future<void> openColorSelect(BuildContext context, AppController controller) => _openList(context, controller, tr('Custom color'), (context) {
       final appearance = controller.appearance;
       final brightness = Theme.of(context).brightness;
-      void save(AppearanceSettings next) => controller.saveAppearance(next);
+      final hasWindowsAccent = controller.windowsAccent != null;
+      final collapsed = appearance.systemAccent && hasWindowsAccent;
       ColorScheme schemeOf(Color seed) => ColorScheme.fromSeed(seedColor: seed, brightness: brightness, dynamicSchemeVariant: appearance.schemeVariant);
-      Widget swatch(Color seed, String label, bool selected, VoidCallback onTap) => GestureDetector(
+
+      Future<void> toggleSystemAccent() => controller.saveAppearance(appearance.copyWith(systemAccent: !appearance.systemAccent, skin: '', palette: ''));
+
+      Widget swatch(String label, Color seed, bool selected, VoidCallback onTap) => GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: onTap,
-            child: Column(children: [
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
               ColorPalette(colorScheme: schemeOf(seed), selected: selected),
               const SizedBox(height: 4),
-              Text(label, style: TextStyle(fontSize: 12, color: selected ? null : context.colors.outline)),
+              Text(label, style: TextStyle(fontSize: 12, color: selected ? context.colors.onSurface : context.colors.outline)),
             ]),
           );
-      final windows = controller.windowsAccent;
+
       return [
         _header(context, tr('Custom')),
         PopupItem<ThemeMode>(
@@ -644,49 +760,55 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
           leading: Icon(AppIcons.flashlight),
           value: appearance.themeMode,
           values: themeModes,
-          onSelected: (mode) => save(appearance.copyWith(themeMode: mode)),
+          onSelected: (m) => controller.saveAppearance(controller.appearance.copyWith(themeMode: m)),
         ),
         PopupItem<DynamicSchemeVariant>(
           title: tr('Palette style'),
           leading: Icon(AppIcons.palette),
           value: appearance.schemeVariant,
           values: [for (final e in schemeVariantNames.entries) (e.key, e.value)],
-          onSelected: (v) => save(appearance.copyWith(schemeVariant: v)),
+          onSelected: (v) => controller.saveAppearance(controller.appearance.copyWith(schemeVariant: v)),
         ),
         ListTile(
-          title: Text(tr('Follow Windows accent color')),
-          subtitle: Text(windows == null ? tr("Couldn't read the system accent color") : tr('Change it in Windows Settings › Personalization › Colors'), style: TextStyle(color: context.colors.outline, fontSize: 12)),
-          enabled: windows != null,
+          enabled: hasWindowsAccent,
           leading: Checkbox(
-            value: appearance.systemAccent,
-            onChanged: windows == null ? null : (v) => save(appearance.copyWith(skin: '', palette: '', systemAccent: v ?? false)),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+            visualDensity: VisualDensity.compact,
+            value: appearance.systemAccent,
+            onChanged: hasWindowsAccent ? (_) => toggleSystemAccent() : null,
           ),
-          onTap: windows == null ? null : () => save(appearance.copyWith(skin: '', palette: '', systemAccent: !appearance.systemAccent)),
+          title: Text(tr('Follow Windows accent color')),
+          subtitle: Text(
+            hasWindowsAccent ? tr('Change it in Windows Settings › Personalization › Colors') : tr("Couldn't read the system accent color"),
+            style: _faint(context),
+          ),
+          onTap: hasWindowsAccent ? toggleSystemAccent : null,
         ),
         AnimatedSize(
           duration: Motion.of(const Duration(milliseconds: 200)),
           curve: Ease.out,
-          child: appearance.systemAccent && windows != null
+          child: collapsed
               ? const SizedBox(width: double.infinity)
               : Padding(
                   padding: const EdgeInsets.all(12),
                   child: Wrap(spacing: 22, runSpacing: 18, alignment: WrapAlignment.center, children: [
-                    swatch(Color(appearance.customAccent), tr('Custom'), appearance.accentIndex < 0, () async {
-                      final color = await showDialog<Color>(
+                    swatch(tr('Custom'), Color(appearance.customAccent), appearance.accentIndex < 0, () async {
+                      final picked = await showDialog<Color>(
                         context: context,
-                        builder: (context) => AlertDialog(
+                        builder: (_) => AlertDialog(
                           clipBehavior: Clip.hardEdge,
                           contentPadding: const EdgeInsets.symmetric(vertical: 16),
                           title: Text(tr('Custom color')),
                           content: SlideColorPicker(color: Color(appearance.customAccent)),
                         ),
                       );
-                      if (color != null) save(controller.appearance.copyWith(skin: '', palette: '', accentIndex: -1, customAccent: color.toARGB32()));
+                      if (picked == null) return;
+                      await controller.saveAppearance(controller.appearance.copyWith(skin: '', palette: '', accentIndex: -1, customAccent: picked.toARGB32()));
                     }),
                     for (var i = 0; i < accentChoices.length; i++)
-                      swatch(accentChoices[i].$2, accentChoices[i].$1, appearance.accentIndex == i, () => save(controller.appearance.copyWith(skin: '', palette: '', accentIndex: i))),
+                      swatch(accentChoices[i].$1, accentChoices[i].$2, appearance.accentIndex == i, () {
+                        controller.saveAppearance(controller.appearance.copyWith(accentIndex: i, skin: '', palette: ''));
+                      }),
                   ]),
                 ),
         ),
@@ -702,7 +824,7 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
                   const SizedBox(height: 4),
                   Text(tr('Secondary text'), style: TextStyle(color: context.colors.outline)),
                   const SizedBox(height: 12),
-                  Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                  Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
                     FilledButton(onPressed: () {}, child: Text(tr('Subscriptions'))),
                     FilledButton.tonal(onPressed: () {}, child: Text(tr('Favorites'))),
                     OutlinedButton(onPressed: () {}, child: Text(tr('Share'))),
@@ -718,219 +840,278 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
       ];
     });
 
-// 外观设置 › App 字体设置 (PiliNara's font_setting.dart)
+// Fonts
 
-Future<void> openFontSettings(BuildContext context, AppController controller) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => _FontSettingsPage(controller: controller)));
+Future<void> openFontSettings(BuildContext context, AppController controller) => _openPage(context, tr('App font'), _FontPage(controller: controller));
 
-class _FontSettingsPage extends StatefulWidget {
-  const _FontSettingsPage({required this.controller});
+class _FontPage extends StatefulWidget {
+  const _FontPage({required this.controller});
   final AppController controller;
 
   @override
-  State<_FontSettingsPage> createState() => _FontSettingsPageState();
+  State<_FontPage> createState() => _FontPageState();
 }
 
-class _FontSettingsPageState extends State<_FontSettingsPage> {
-  List<String>? _systemFonts;
+class _FontPageState extends State<_FontPage> {
+  final _search = TextEditingController();
+  List<String> _system = const [];
+  late bool _loading = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
   String _query = '';
 
   @override
   void initState() {
     super.initState();
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      WindowsShell.systemFontFamilies().then((fonts) {
-        if (mounted) setState(() => _systemFonts = fonts);
-      });
-    } else {
-      _systemFonts = const [];
-    }
+    if (_loading) unawaited(_load());
+  }
+
+  Future<void> _load() async {
+    final names = await WindowsShell.systemFontFamilies();
+    if (!mounted) return;
+    setState(() {
+      _system = names;
+      _loading = false;
+    });
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: SkinAppBar(AppBar(title: Text(tr('App font')))),
-        body: ListenableBuilder(
-          listenable: widget.controller,
-          builder: (context, _) {
-            final controller = widget.controller;
-            final appearance = controller.appearance;
-            final fixed = {for (final (family, _) in fontChoices) if (family != null) family};
-            final needle = _query.trim().toLowerCase();
-            final system = (_systemFonts ?? const <String>[]).where((family) => !fixed.contains(family) && (needle.isEmpty || family.toLowerCase().contains(needle))).toList();
-            void save(String? family) => controller.saveAppearance(family == null ? appearance.copyWith(clearFontFamily: true) : appearance.copyWith(fontFamily: family));
-            Widget option(String? family, String label) => RadioListTile<String?>(
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pick(String? family) {
+    final appearance = widget.controller.appearance;
+    return widget.controller.saveAppearance(family == null ? appearance.copyWith(clearFontFamily: true) : appearance.copyWith(fontFamily: family));
+  }
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: widget.controller,
+        builder: (context, _) {
+          final appearance = widget.controller.appearance;
+          final theme = Theme.of(context);
+          final offered = {for (final (family, _) in fontChoices) family};
+          final needle = _query.trim().toLowerCase();
+          final installed = [for (final name in _system) if (!offered.contains(name) && name.toLowerCase().contains(needle)) name];
+          final percent = (appearance.textScale * 100).round();
+          return RadioGroup<String?>(
+            groupValue: appearance.fontFamily,
+            onChanged: _pick,
+            child: ListView(padding: const EdgeInsets.only(bottom: 40), children: [
+              _header(context, tr('Font')),
+              for (final (family, label) in fontChoices)
+                RadioListTile<String?>(
                   value: family,
                   title: Text(label, style: TextStyle(fontFamily: family == autoFont ? appearance.font : family)),
-                  subtitle: family == null || family == autoFont ? null : Text(family, style: TextStyle(color: context.colors.outline, fontSize: 12)),
-                );
-            final theme = Theme.of(context);
-            return RadioGroup<String?>(
-              groupValue: appearance.fontFamily,
-              onChanged: save,
-              child: ListView(padding: const EdgeInsets.only(bottom: 40), children: [
-                _header(context, tr('Font')),
-                for (final (family, label) in fontChoices) option(family, label),
-                _header(context, tr('Installed system fonts')),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: LeavesByKeys(child: TextField(
-                    onChanged: (value) => setState(() => _query = value),
+                  subtitle: family == null || family == autoFont ? null : Text(family, style: _faint(context)),
+                ),
+              _header(context, tr('Installed system fonts')),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: LeavesByKeys(
+                  child: TextField(
+                    controller: _search,
                     decoration: InputDecoration(prefixIcon: Icon(AppIcons.magnifyingGlass), hintText: tr('Search installed fonts')),
-                  )),
+                    onChanged: (v) => setState(() => _query = v),
+                  ),
                 ),
-                if (_systemFonts == null)
-                  const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()))
-                else if (system.isEmpty)
-                  Padding(padding: const EdgeInsets.all(16), child: Text(tr('No installed fonts match'), style: TextStyle(color: context.colors.outline)))
-                else
-                  for (final family in system) option(family, family),
-                _header(context, tr('Font size')),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Row(children: [
-                    Expanded(child: Slider(min: 0.8, max: 1.4, divisions: 12, value: appearance.textScale, label: '${(appearance.textScale * 100).round()}%', onChanged: (v) => controller.saveAppearance(appearance.copyWith(textScale: (v * 100).round() / 100)))),
-                    SizedBox(width: 48, child: Text('${(appearance.textScale * 100).round()}%')),
-                    TextButton(onPressed: () => controller.saveAppearance(appearance.copyWith(textScale: 1, fontFamily: autoFont)), child: Text(tr('Reset'))),
-                  ]),
-                ),
-                _header(context, tr('Preview')),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(tr('Lumtub makes YouTube better on Windows'), style: theme.textTheme.titleLarge),
-                    const SizedBox(height: 4),
-                    Text(tr('The quick brown fox jumps over the lazy dog. 0123456789'), style: theme.textTheme.bodyMedium),
-                    const SizedBox(height: 4),
-                    Text(tr('Channel name · 120K views · 3 days ago'), style: theme.textTheme.labelMedium!.copyWith(color: context.colors.outline)),
-                  ]),
-                ),
-                _tip(context, tr("Noto Sans CJK SC is bundled with Lumtub. System fonts are read from the current Windows user's font collection.")),
-              ]),
-            );
-          },
-        ),
+              ),
+              if (_loading)
+                const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()))
+              else if (installed.isEmpty)
+                Padding(padding: const EdgeInsets.all(16), child: Text(tr('No installed fonts match'), style: TextStyle(color: context.colors.outline)))
+              else
+                for (final name in installed) RadioListTile<String?>(value: name, title: Text(name, style: TextStyle(fontFamily: name))),
+              _header(context, tr('Font size')),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(children: [
+                  Expanded(
+                    child: Slider(
+                      value: appearance.textScale.clamp(0.8, 1.4),
+                      min: 0.8,
+                      max: 1.4,
+                      divisions: 12,
+                      label: '$percent%',
+                      onChanged: (v) => widget.controller.saveAppearance(widget.controller.appearance.copyWith(textScale: double.parse(v.toStringAsFixed(2)))),
+                    ),
+                  ),
+                  SizedBox(width: 48, child: Text('$percent%')),
+                  TextButton(
+                    onPressed: () => widget.controller.saveAppearance(widget.controller.appearance.copyWith(textScale: 1, fontFamily: autoFont)),
+                    child: Text(tr('Reset')),
+                  ),
+                ]),
+              ),
+              _header(context, tr('Preview')),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(tr('Lumtub makes YouTube better on Windows'), style: theme.textTheme.titleLarge),
+                  const SizedBox(height: 4),
+                  Text(tr('The quick brown fox jumps over the lazy dog. 0123456789'), style: theme.textTheme.bodyMedium),
+                  const SizedBox(height: 4),
+                  Text(tr('Channel name · 120K views · 3 days ago'), style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.outline)),
+                ]),
+              ),
+              _tip(context, tr("Noto Sans CJK SC is bundled with Lumtub. System fonts are read from the current Windows user's font collection.")),
+            ]),
+          );
+        },
       );
 }
 
-// 视频设置 › 画面与音画同步调节 (PiliNara's video picture panel)
+// Picture
 
-Future<void> openPictureSettings(BuildContext context, AppController controller) => Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (context) => _PictureSettingsPage(controller: controller)),
-    );
+Future<void> openPictureSettings(BuildContext context, AppController controller) =>
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => _PicturePage(controller: controller)));
 
-class _PictureSettingsPage extends StatefulWidget {
-  const _PictureSettingsPage({required this.controller});
+class _PicturePage extends StatefulWidget {
+  const _PicturePage({required this.controller});
   final AppController controller;
 
   @override
-  State<_PictureSettingsPage> createState() => _PictureSettingsPageState();
+  State<_PicturePage> createState() => _PicturePageState();
 }
 
-class _PictureSettingsPageState extends State<_PictureSettingsPage> {
-  late final Map<String, int> _picture = {...widget.controller.settings.picture};
-  late int _audioDelay = widget.controller.settings.audioDelayMs;
+class _PicturePageState extends State<_PicturePage> {
+  late final Map<String, int> _values = {...widget.controller.settings.picture};
+  late int _delay = widget.controller.settings.audioDelayMs;
 
-  void _save() => widget.controller.saveSettings(widget.controller.settings.copyWith(picture: {
-        for (final entry in _picture.entries)
-          if (entry.value != 0) entry.key: entry.value,
-      }, audioDelayMs: _audioDelay));
+  AppController get _c => widget.controller;
 
-  Widget _slider(String label, int value, int min, int max, String suffix, ValueChanged<int> onChanged, VoidCallback onReset) => Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(16, 4, 8, 4),
+  Future<void> _persist() => _c.saveSettings(_c.settings.copyWith(
+        picture: {for (final e in _values.entries) if (e.value != 0) e.key: e.value},
+        audioDelayMs: _delay,
+      ));
+
+  void _previewDelay() => _c.previewProperty('audio-delay', (_delay / 1000).toString());
+
+  Future<void> _resetAll() async {
+    setState(() {
+      _values.clear();
+      _delay = 0;
+    });
+    for (final (key, _) in pictureProperties) {
+      unawaited(_c.previewProperty(key, '0'));
+    }
+    unawaited(_c.previewProperty('audio-delay', '0'));
+    await _persist();
+  }
+
+  Widget _row({
+    required String label,
+    required int value,
+    required int min,
+    required int max,
+    required int step,
+    String suffix = '',
+    required ValueChanged<int> onChanged,
+    required VoidCallback onReset,
+  }) =>
+      Padding(
+        padding: const EdgeInsetsDirectional.only(start: 16, top: 4, bottom: 4, end: 8),
         child: Row(children: [
           SizedBox(width: 72, child: Text(label)),
           Expanded(
             child: Slider(
-              value: value.toDouble(),
+              value: value.toDouble().clamp(min, max).toDouble(),
               min: min.toDouble(),
               max: max.toDouble(),
-              divisions: max - min,
+              divisions: (max - min) ~/ step,
               label: '$value$suffix',
-              onChanged: (v) => onChanged(v.round()),
-              onChangeEnd: (_) => _save(),
+              onChanged: (v) => onChanged((v / step).round() * step),
+              onChangeEnd: (_) => _persist(),
             ),
           ),
           SizedBox(width: 64, child: Text('$value$suffix', textAlign: TextAlign.end)),
-          IconButton(tooltip: tr('Reset'), icon: Icon(AppIcons.arrowCounterClockwise, size: 20), onPressed: value == 0 ? null : onReset),
+          IconButton(
+            tooltip: tr('Reset'),
+            icon: Icon(AppIcons.arrowCounterClockwise, size: 20),
+            onPressed: value == 0 ? null : onReset,
+          ),
         ]),
       );
 
   @override
   Widget build(BuildContext context) {
-    final controller = widget.controller;
     return Scaffold(
       appBar: SkinAppBar(AppBar(
         title: Text(tr('Video and A/V sync adjustments')),
-        actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _picture.clear();
-                _audioDelay = 0;
-              });
-              for (final (key, _) in pictureProperties) {
-                controller.previewProperty(key, '0');
-              }
-              controller.previewProperty('audio-delay', '0');
-              _save();
-            },
-            child: Text(tr('Reset all')),
-          ),
-          const SizedBox(width: 8),
-        ],
+        actions: [TextButton(onPressed: _resetAll, child: Text(tr('Reset all'))), const SizedBox(width: 8)],
       )),
       body: ListView(padding: const EdgeInsets.only(bottom: 40), children: [
         _header(context, tr('Video')),
         for (final (key, label) in pictureProperties)
-          _slider(label, _picture[key] ?? 0, -pictureLimit(key), pictureLimit(key), '', (v) {
-            setState(() => _picture[key] = v);
-            controller.previewProperty(key, '$v');
-          }, () {
-            setState(() => _picture[key] = 0);
-            controller.previewProperty(key, '0');
-            _save();
-          }),
+          _row(
+            label: label,
+            value: _values[key] ?? 0,
+            min: -pictureLimit(key),
+            max: pictureLimit(key),
+            step: 1,
+            onChanged: (v) {
+              setState(() => _values[key] = v);
+              _c.previewProperty(key, '$v');
+            },
+            onReset: () {
+              setState(() => _values.remove(key));
+              _c.previewProperty(key, '0');
+              _persist();
+            },
+          ),
         _header(context, tr('A/V sync')),
-        _slider(tr('Audio delay'), _audioDelay, -2000, 2000, ' ms', (v) {
-          setState(() => _audioDelay = (v / 10).round() * 10);
-          controller.previewProperty('audio-delay', '${_audioDelay / 1000}');
-        }, () {
-          setState(() => _audioDelay = 0);
-          controller.previewProperty('audio-delay', '0');
-          _save();
-        }),
+        _row(
+          label: tr('Audio delay'),
+          value: _delay,
+          min: -2000,
+          max: 2000,
+          step: 10,
+          suffix: ' ms',
+          onChanged: (v) {
+            setState(() => _delay = v);
+            _previewDelay();
+          },
+          onReset: () {
+            setState(() => _delay = 0);
+            _previewDelay();
+            _persist();
+          },
+        ),
         _tip(context, tr('Previews live on the playing video while dragging. Positive audio delay plays sound later; negative plays it earlier. These values apply to all subsequent videos.')),
       ]),
     );
   }
 }
 
-// 其它设置 › 组件管理
+// Components
 
-Future<void> openComponents(BuildContext context, AppController controller) => _push(context, controller, tr('Components & data packs'), (context) {
+Future<void> openComponents(BuildContext context, AppController controller) => _openList(context, controller, tr('Components & data packs'), (context) {
       final tools = controller.tools;
       if (tools == null || !controller.ready) return [NormalItem(title: tr('Preparing components…'))];
       final libmpv = tools.libmpv;
-      final current = libmpv.current;
-      final next = libmpv.selected;
-      final pendingRestart = next != null && next != current;
+      final selected = libmpv.selected;
+      final restartPending = selected != null && selected.label != libmpv.current?.label;
+      final libmpvLines = [
+        if (!Platform.isWindows)
+          tools.libmpvLabel
+        else
+          tr('{0}: {1}', [libmpv.usesDownload ? tr('Updated') : tr('Built-in'), libmpv.current?.label ?? tr('Unknown version')]),
+        if (restartPending) tr('Uses {0} after restart', [selected.label]),
+      ];
       return [
         NormalItem(
           title: 'libmpv',
-          subtitle: [
-            if (!Platform.isWindows) tools.libmpvLabel else tr('{0}: {1}', [libmpv.usesDownload ? tr('Updated') : tr('Built-in'), current?.label ?? tr('Unknown version')]),
-            if (pendingRestart) tr('Uses {0} after restart', [next.label]),
-          ].join('\n'),
           leading: Icon(AppIcons.filmSlate),
-          trailing: libmpv.usesDownload || pendingRestart ? TextButton(onPressed: controller.rollBackLibmpv, child: Text(tr('Revert to built-in'))) : null,
+          subtitle: libmpvLines.join('\n'),
+          trailing: libmpv.usesDownload || restartPending ? TextButton(onPressed: controller.rollBackLibmpv, child: Text(tr('Revert to built-in'))) : null,
         ),
         NormalItem(
           title: 'yt-dlp',
-          subtitle: tools.ytDlpVersion ?? tr('Not installed'),
           leading: Icon(AppIcons.terminal),
+          subtitle: tools.ytDlpVersion ?? tr('Not installed'),
           trailing: tools.canRollBackYtDlp ? TextButton(onPressed: controller.rollBackYtDlp, child: Text(tr('Roll back to previous version'))) : null,
         ),
-        NormalItem(title: 'Deno', subtitle: tools.denoVersion ?? tr('Not installed'), leading: Icon(AppIcons.code)),
+        NormalItem(title: 'Deno', leading: Icon(AppIcons.code), subtitle: tools.denoVersion ?? tr('Not installed')),
         NormalItem(
           title: controller.checking ? tr('Checking for updates…') : tr('Check for updates now'),
           subtitle: tr('Downloads only from the official GitHub Release and verifies SHA-256. Takes effect after restart'),
@@ -1030,151 +1211,259 @@ class PacksSection extends StatelessWidget {
       );
 }
 
-// 关于 (PiliNara's about/view.dart)
+// About
 
-List<SettingEntry> aboutEntries(AppController controller) => [
-      SettingEntry(tr('Version'), (context) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(children: [
-              Icon(AppIcons.monitorPlayFill, size: 72, color: context.colors.primary),
-              const SizedBox(height: 4),
-              Text('Lumtub', style: Theme.of(context).textTheme.titleMedium!.copyWith(height: 2)),
-              Text(tr('A third-party YouTube client built with Flutter and mpv'), style: TextStyle(color: context.colors.outline)),
-              const SizedBox(height: 8),
-              ListTile(
-                title: Text(tr('Current version')),
-                leading: Icon(AppIcons.gitCommit),
-                trailing: Text(appVersion, style: TextStyle(fontSize: 14, color: context.colors.outline)),
-                onTap: () => copyText(context, appVersion, tr('Version number copied')),
-              ),
-            ]),
-          ), subtitle: tr('Current version update')),
-      SettingEntry(tr('Check for updates'), (context) {
-        final updater = controller.appUpdater;
-        final release = updater?.available;
-        final progress = updater?.progress;
-        final String title, subtitle;
-        if (updater?.ready != null) {
-          title = tr('Version {0} downloaded', [updater?.readyVersion ?? release?.version ?? '']);
-          subtitle = updater?.installError != null
-              ? tr("The installer didn't start: {0}. Click to try again", [updater!.installError!])
-              : Platform.isAndroid
-                  ? tr('Tap to install it')
-                  : tr('Installs when Lumtub closes; click to restart and update now');
-        } else if (progress != null) {
-          title = tr('Downloading version {0}…', [updater?.downloading ?? release?.version ?? '']);
-          subtitle = '${(progress * 100).round()}%';
-        } else if (updater?.checking ?? false) {
-          title = tr('Checking for app updates…');
-          subtitle = tr('Checked at startup and every 6 hours; you can also check now.');
-        } else if (release != null && updater?.rejected == release.version) {
-          title = tr('Update available: {0}', [release.version]);
-          subtitle = tr('The installer failed its signature check and was not installed. Click to download it from GitHub Releases');
-        } else if (release != null) {
-          title = tr('Update available: {0}', [release.version]);
-          subtitle = !AppUpdater.canInstall || release.asset == null
-              ? tr('Click to open the GitHub Release download.')
-              : updater?.error != null
-                  ? tr('Download failed: {0}. Click to retry', [updater!.error!])
-                  : Platform.isAndroid
-                      ? tr('Tap to download and install')
-                      : tr('Click to download; it installs when Lumtub closes');
-        } else {
-          title = tr('Check for updates');
-          subtitle = updater?.error == null ? tr('Checked at startup and every 6 hours; you can also check now.') : tr('Could not check for app updates: {0}', [updater!.error!]);
-        }
-        return NormalItem(
-          title: title,
-          subtitle: subtitle,
-          leading: Icon(AppIcons.clockClockwise),
-          onTap: () async {
-            if (updater?.ready != null) return controller.restartToUpdate();
-            if (progress != null || (updater?.checking ?? false)) return;
-            await controller.checkAppUpdate();
-            final found = controller.appUpdater?.available;
-            if (found != null && (!AppUpdater.canInstall || found.asset == null || controller.appUpdater?.rejected == found.version)) openExternal(AppUpdater.releasePage(found.page));
-            if (found == null && context.mounted && controller.appUpdater?.error == null) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Lumtub is up to date'))));
-            }
-          },
-        );
-      }, subtitle: tr('Release page new version auto update')),
-      SettingEntry(tr('Support development'), (context) => NormalItem(
-            title: tr('Support development'),
-            subtitle: tr('Sponsor Lumtub on GitHub Sponsors or with crypto'),
-            leading: const Icon(AppIcons.heartFill, color: Color(0xFFEA4AAA)),
-            onTap: () => openSupport(context),
-          ), subtitle: tr('sponsor donate support')),
-      SettingEntry(tr('Star it on GitHub'), (context) => NormalItem(
-            title: tr('Star it on GitHub'),
-            subtitle: tr('Helps more people find Lumtub'),
-            leading: Icon(AppIcons.star, color: const Color(0xFFE3B341)),
-            onTap: () => openExternal(_repository),
-          ), subtitle: 'GitHub star'),
-      SettingEntry(tr('Support reminder'), (context) {
-        final reminder = controller.supportReminder;
-        return StatefulBuilder(builder: (context, setState) => SwitchItem(
-              title: tr('Support reminder'),
-              subtitle: tr('Now and then, at most once every two months, ask whether to support Lumtub'),
-              leading: Icon(AppIcons.bell),
-              value: reminder?.enabled ?? false,
-              enabled: reminder != null,
-              onChanged: (v) => setState(() => reminder?.enabled = v),
-            ));
-      }, subtitle: tr('sponsor donate support reminder')),
-      SettingEntry(tr('Source code'), (context) => NormalItem(
-            title: tr('GitHub repository'),
-            subtitle: 'github.com/0x696c757a696f/lumtub',
-            leading: Icon(AppIcons.code),
-            onTap: () => openExternal(_repository),
-          ), subtitle: tr('GitHub source code')),
-      SettingEntry(tr('Feedback'), (context) => NormalItem(
-            title: tr('Feedback'),
-            subtitle: tr('File an issue on GitHub with the diagnostics and error log attached'),
-            leading: Icon(AppIcons.chatCenteredText),
-            onTap: () => openExternal('$_repository/issues/new/choose'),
-          ), subtitle: 'issue bug'),
-      SettingEntry(tr('Error log'), (context) => NormalItem(
-            title: tr('Error log'),
-            subtitle: tr('Stored only on this device. Sign-in credentials and stream URLs are never saved'),
-            leading: Icon(AppIcons.bug),
-            onTap: () => openLogs(context, controller),
-          ), subtitle: tr('Log')),
-      SettingEntry(tr('Log level'), (context) => NormalItem(
-            title: tr('Log level'),
-            subtitle: tr('Now: {0}. Set it to Debug for a while to track a problem down; it records more detail', [labelOf(_logLevels, controller.preferences.logLevel)]),
-            leading: Icon(AppIcons.slidersHorizontal),
-            onTap: () => pickFromDialog<LogLevel>(context,
-                title: tr('Log level'),
-                value: controller.preferences.logLevel,
-                values: _logLevels,
-                onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(logLevel: v))),
-          ), subtitle: tr('log level debug verbose')),
-      SettingEntry(tr('Copy diagnostics'), (context) => NormalItem(
-            title: tr('Copy diagnostics'),
-            subtitle: tr('Version, system, graphics card, components and playback settings'),
-            leading: Icon(AppIcons.copy),
-            onTap: () => copyText(context, controller.diagnostics(), tr('Diagnostics copied')),
-          ), subtitle: tr('feedback issues')),
-      SettingEntry(tr('Open source licenses'), (context) => NormalItem(
-            title: tr('Open source licenses'),
-            subtitle: tr('AGPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp'),
-            leading: Icon(AppIcons.gavel),
-            onTap: () => showLicensePage(context: context, applicationName: 'Lumtub', applicationVersion: appVersion),
-          ), subtitle: 'PiliNara mpv media_kit yt-dlp license'),
-    ];
+List<SettingEntry> aboutEntries(AppController controller) {
+  const logLevelNames = [LogLevel.off, LogLevel.error, LogLevel.warn, LogLevel.info, LogLevel.debug];
+  List<(LogLevel, String)> logLevels() => [
+        (logLevelNames[0], tr('Off: nothing is recorded')),
+        (logLevelNames[1], tr('Errors: only problems Lumtub could not get past')),
+        (logLevelNames[2], tr('Warnings: also problems Lumtub worked around')),
+        (logLevelNames[3], tr('Info: also what Lumtub did (default)')),
+        (logLevelNames[4], tr('Debug: also every step and timing')),
+      ];
+  return [
+    SettingEntry(
+      tr('Version'),
+      (context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(children: [
+          Icon(AppIcons.monitorPlayFill, size: 72, color: context.colors.primary),
+          const SizedBox(height: 4),
+          Text('Lumtub', style: Theme.of(context).textTheme.titleMedium?.copyWith(height: 2)),
+          Text(tr('A third-party YouTube client built with Flutter and mpv'), style: TextStyle(color: context.colors.outline)),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Icon(AppIcons.gitCommit),
+            title: Text(tr('Current version')),
+            trailing: Text(appVersion, style: TextStyle(fontSize: 14, color: context.colors.outline)),
+            onTap: () => copyText(context, appVersion, tr('Version number copied')),
+          ),
+        ]),
+      ),
+      subtitle: tr('Current version update'),
+    ),
+    SettingEntry(
+      tr('Check for updates'),
+      (context) => _UpdateCheckRow(controller: controller),
+      subtitle: tr('Release page new version auto update'),
+    ),
+    SettingEntry(
+      tr('Support development'),
+      (context) => NormalItem(
+        title: tr('Support development'),
+        subtitle: tr('Sponsor Lumtub on GitHub Sponsors or with crypto'),
+        leading: Icon(AppIcons.heartFill, color: const Color(0xFFEA4AAA)),
+        onTap: () => openSupport(context),
+      ),
+      subtitle: tr('sponsor donate support'),
+    ),
+    SettingEntry(
+      tr('Star it on GitHub'),
+      (context) => NormalItem(
+        title: tr('Star it on GitHub'),
+        subtitle: tr('Helps more people find Lumtub'),
+        leading: Icon(AppIcons.star, color: const Color(0xFFE3B341)),
+        onTap: () => openExternal(_repository),
+      ),
+      subtitle: 'GitHub star',
+    ),
+    SettingEntry(
+      tr('Support reminder'),
+      (context) => StatefulBuilder(
+        builder: (context, setState) {
+          final reminder = controller.supportReminder;
+          return SwitchItem(
+            title: tr('Support reminder'),
+            subtitle: tr('Now and then, at most once every two months, ask whether to support Lumtub'),
+            leading: Icon(AppIcons.bell),
+            enabled: reminder != null,
+            value: reminder?.enabled ?? false,
+            onChanged: (v) {
+              reminder?.enabled = v;
+              setState(() {});
+            },
+          );
+        },
+      ),
+      subtitle: tr('sponsor donate support reminder'),
+    ),
+    SettingEntry(
+      tr('Source code'),
+      (context) => NormalItem(
+        title: tr('GitHub repository'),
+        subtitle: 'github.com/0x696c757a696f/lumtub',
+        leading: Icon(AppIcons.code),
+        onTap: () => openExternal(_repository),
+      ),
+      subtitle: tr('GitHub source code'),
+    ),
+    SettingEntry(
+      tr('Feedback'),
+      (context) => NormalItem(
+        title: tr('Feedback'),
+        subtitle: tr('File an issue on GitHub with the diagnostics and error log attached'),
+        leading: Icon(AppIcons.chatCenteredText),
+        onTap: () => openExternal('$_repository/issues/new/choose'),
+      ),
+      subtitle: 'issue bug',
+    ),
+    SettingEntry(
+      tr('Error log'),
+      (context) => NormalItem(
+        title: tr('Error log'),
+        subtitle: tr('Stored only on this device. Sign-in credentials and stream URLs are never saved'),
+        leading: Icon(AppIcons.bug),
+        onTap: () => openLogs(context, controller),
+      ),
+      subtitle: tr('Log'),
+    ),
+    SettingEntry(
+      tr('Log level'),
+      (context) => NormalItem(
+        title: tr('Log level'),
+        subtitle: tr('Now: {0}. Set it to Debug for a while to track a problem down; it records more detail', [labelOf(logLevels(), controller.preferences.logLevel)]),
+        leading: Icon(AppIcons.slidersHorizontal),
+        onTap: () => pickFromDialog<LogLevel>(
+          context,
+          title: tr('Log level'),
+          value: controller.preferences.logLevel,
+          values: logLevels(),
+          onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(logLevel: v)),
+        ),
+      ),
+      subtitle: tr('log level debug verbose'),
+    ),
+    SettingEntry(
+      tr('Copy diagnostics'),
+      (context) => NormalItem(
+        title: tr('Copy diagnostics'),
+        subtitle: tr('Version, system, graphics card, components and playback settings'),
+        leading: Icon(AppIcons.copy),
+        onTap: () => copyText(context, controller.diagnostics(), tr('Diagnostics copied')),
+      ),
+      subtitle: tr('feedback issues'),
+    ),
+    SettingEntry(
+      tr('Open source licenses'),
+      (context) => NormalItem(
+        title: tr('Open source licenses'),
+        subtitle: tr('AGPLv3; playback is built on mpv, media_kit and yt-dlp'),
+        leading: Icon(AppIcons.gavel),
+        onTap: () => showLicensePage(context: context, applicationName: 'Lumtub', applicationVersion: appVersion),
+      ),
+      subtitle: 'mpv media_kit yt-dlp license',
+    ),
+  ];
+}
 
-List<(LogLevel, String)> get _logLevels => [
-      (LogLevel.off, tr('Off: nothing is recorded')),
-      (LogLevel.error, tr('Errors: only problems Lumtub could not get past')),
-      (LogLevel.warn, tr('Warnings: also problems Lumtub worked around')),
-      (LogLevel.info, tr('Info: also what Lumtub did (default)')),
-      (LogLevel.debug, tr('Debug: also every step and timing')),
-    ];
+class _UpdateCheckRow extends StatelessWidget {
+  const _UpdateCheckRow({required this.controller});
+  final AppController controller;
 
-// 关于 › 错误日志 (PiliNara's logs.dart)
+  ({String title, String subtitle}) _text(AppUpdater? updater) {
+    final available = updater?.available;
+    final checkedAtStartup = tr('Checked at startup and every 6 hours; you can also check now.');
+    if (updater?.ready != null) {
+      final error = updater?.installError;
+      return (
+        title: tr('Version {0} downloaded', [updater?.readyVersion ?? available?.version ?? '']),
+        subtitle: error != null
+            ? tr("The installer didn't start: {0}. Click to try again", [error])
+            : Platform.isAndroid
+                ? tr('Tap to install it')
+                : tr('Installs when Lumtub closes; click to restart and update now'),
+      );
+    }
+    if (updater?.progress != null) {
+      return (
+        title: tr('Downloading version {0}…', [updater?.downloading ?? available?.version ?? '']),
+        subtitle: '${((updater?.progress ?? 0) * 100).round()}%',
+      );
+    }
+    if (updater?.checking ?? false) return (title: tr('Checking for app updates…'), subtitle: checkedAtStartup);
+    if (available != null) {
+      final title = tr('Update available: {0}', [available.version]);
+      if (available.version == updater?.rejected) {
+        return (title: title, subtitle: tr('The installer failed its signature check and was not installed. Click to download it from GitHub Releases'));
+      }
+      if (!AppUpdater.canInstall || available.asset == null) return (title: title, subtitle: tr('Click to open the GitHub Release download.'));
+      final error = updater?.error;
+      if (error != null) return (title: title, subtitle: tr('Download failed: {0}. Click to retry', [error]));
+      return (title: title, subtitle: Platform.isAndroid ? tr('Tap to download and install') : tr('Click to download; it installs when Lumtub closes'));
+    }
+    final error = updater?.error;
+    return (title: tr('Check for updates'), subtitle: error != null ? tr('Could not check for app updates: {0}', [error]) : checkedAtStartup);
+  }
 
-Future<void> openLogs(BuildContext context, AppController controller) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) => _LogsPage(controller: controller)));
+  Future<void> _tapped(BuildContext context) async {
+    final updater = controller.appUpdater;
+    if (updater?.ready != null) {
+      await controller.restartToUpdate();
+      return;
+    }
+    if (updater?.progress != null || (updater?.checking ?? false)) return;
+    await controller.checkAppUpdate();
+    final found = updater?.available;
+    if (found != null) {
+      if (!AppUpdater.canInstall || found.asset == null || found.version == updater?.rejected) {
+        await openExternal(AppUpdater.releasePage(found.page));
+      }
+    } else if (context.mounted && updater?.error == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Lumtub is up to date'))));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: Listenable.merge([controller, controller.appUpdater]),
+        builder: (context, _) {
+          final text = _text(controller.appUpdater);
+          return NormalItem(
+            title: text.title,
+            subtitle: text.subtitle,
+            leading: Icon(AppIcons.clockClockwise),
+            onTap: () => _tapped(context),
+          );
+        },
+      );
+}
+
+// Logs
+
+Future<void> openLogs(BuildContext context, AppController controller) =>
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => _LogsPage(controller: controller)));
+
+class _LogEntry {
+  _LogEntry(this.time, this.text);
+  final String? time;
+  String text;
+
+  LogLevel get level {
+    final body = text.trimLeft();
+    for (final level in LogLevel.values) {
+      if (level != LogLevel.off && body.startsWith(level.tag.trim())) return level;
+    }
+    return body.startsWith('错误') ? LogLevel.error : LogLevel.info;
+  }
+}
+
+List<_LogEntry> _parseLog(String raw) {
+  final entries = <_LogEntry>[];
+  for (final line in const LineSplitter().convert(raw)) {
+    if (line.isEmpty) continue;
+    final space = line.indexOf(' ');
+    final stamped = space > 0 && DateTime.tryParse(line.substring(0, space)) != null;
+    if (stamped) {
+      entries.add(_LogEntry(line.substring(0, space), line.substring(space + 1)));
+    } else if (entries.isNotEmpty) {
+      entries.last.text = '${entries.last.text}\n$line';
+    } else {
+      entries.add(_LogEntry(null, line));
+    }
+  }
+  return entries;
+}
 
 class _LogsPage extends StatefulWidget {
   const _LogsPage({required this.controller});
@@ -1185,239 +1474,254 @@ class _LogsPage extends StatefulWidget {
 }
 
 class _LogsPageState extends State<_LogsPage> {
+  static const _names = ['lumtub.old.log', 'lumtub.log'];
   String? _text;
-
-  /// The least important level shown.
   LogLevel _shown = LogLevel.debug;
 
-  static LogLevel _levelOf(String rest) {
-    for (final level in LogLevel.values) {
-      if (level != LogLevel.off && rest.startsWith(level.tag.trim())) return level;
-    }
-    // Lines from before levels were written, such as 错误 ones.
-    return rest.startsWith('错误') ? LogLevel.error : LogLevel.info;
-  }
-
-  Directory? get _directory => widget.controller.directories?.logs;
-
-  File? _file(String name) => _directory == null ? null : File('${_directory!.path}${Platform.pathSeparator}$name');
+  Directory? get _dir => widget.controller.directories?.logs;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    unawaited(_load());
   }
 
   Future<void> _load() async {
-    final parts = <String>[];
-    for (final name in const ['lumtub.old.log', 'lumtub.log']) {
-      try {
-        final file = _file(name);
-        if (file != null && await file.exists()) parts.add(await file.readAsString());
-      } on FileSystemException {
-        // An unreadable log is shown as empty.
+    final dir = _dir;
+    final buffer = StringBuffer();
+    if (dir != null) {
+      for (final name in _names) {
+        try {
+          buffer.write(await File('${dir.path}${Platform.pathSeparator}$name').readAsString());
+        } catch (_) {}
       }
     }
-    if (mounted) setState(() => _text = parts.join());
+    if (mounted) setState(() => _text = buffer.toString());
+  }
+
+  void _snack(String text) {
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
   Future<void> _clear() async {
-    if (!await confirmDialog(context, title: tr('Clear logs?'), content: tr('Deletes Lumtub logs saved on this device.'), confirm: tr('Clear all'))) return;
-    for (final name in const ['lumtub.old.log', 'lumtub.log']) {
+    final yes = await confirmDialog(context, title: tr('Clear logs?'), content: tr('Deletes Lumtub logs saved on this device.'), confirm: 'Clear all');
+    final dir = _dir;
+    if (!yes || dir == null) return;
+    for (final name in _names) {
       try {
-        final file = _file(name);
-        if (file != null && await file.exists()) await file.writeAsString('');
-      } on FileSystemException {
-        // Keep going; the rest of the log is still cleared.
-      }
+        await File('${dir.path}${Platform.pathSeparator}$name').writeAsString('');
+      } catch (_) {}
     }
     await _load();
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Cleared'))));
+    _snack(tr('Cleared'));
   }
 
-  /// Saves both logs, oldest first, as one text file where the person picks.
   Future<void> _export() async {
-    final now = DateTime.now();
     String two(int n) => n.toString().padLeft(2, '0');
+    final now = DateTime.now();
     final name = 'lumtub-log-${now.year}${two(now.month)}${two(now.day)}-${two(now.hour)}${two(now.minute)}.txt';
-    final messenger = ScaffoldMessenger.of(context);
     try {
-      if (!await saveFileAs(name, utf8.encode(_text ?? ''), mime: 'text/plain', label: 'TXT', extension: 'txt')) return;
-      messenger.showSnackBar(SnackBar(content: Text(tr('Log exported'))));
+      final saved = await saveFileAs(name, Uint8List.fromList(utf8.encode(_text ?? '')), mime: 'text/plain', label: 'TXT', extension: 'txt');
+      if (saved) _snack(tr('Log exported'));
     } catch (e) {
       logError('Could not export the log', e);
-      messenger.showSnackBar(SnackBar(content: Text(tr('Export failed: {0}', [friendlyFileError(e)]))));
+      _snack(tr('Export failed: {0}', [friendlyFileError(e)]));
     }
   }
+
+  Widget _menu() => PopupMenuButton<VoidCallback>(
+        onSelected: (action) => action(),
+        itemBuilder: (_) => [
+          PopupMenuItem(
+            value: () => copyText(context, _text ?? '', tr('Copied')),
+            child: Text(tr('Copy log')),
+          ),
+          PopupMenuItem(value: _export, child: Text(tr('Export log'))),
+          PopupMenuItem(value: () => openExternal('$_repository/issues/new/choose'), child: Text(tr('Bug reports'))),
+          if (!Platform.isAndroid && !Platform.isIOS)
+            PopupMenuItem(
+              value: () {
+                final dir = _dir;
+                if (dir != null) openInExplorer(dir.path);
+              },
+              child: Text(tr('Open log folder')),
+            ),
+          PopupMenuItem(value: _clear, child: Text(tr('Clear logs'))),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
     final text = _text;
-    final all = text == null ? const <String>[] : text.split('\n').where((l) => l.isNotEmpty);
-    // A line without a time stamp continues the one before it, such as a
-    // stack trace, and goes with it.
-    final lines = <String>[];
-    final levels = <LogLevel>[];
-    for (final line in all) {
-      final space = line.indexOf(' ');
-      final stamped = space > 0 && DateTime.tryParse(line.substring(0, space)) != null;
-      if (!stamped && lines.isNotEmpty) {
-        lines[lines.length - 1] = '${lines.last}\n$line';
-        continue;
-      }
-      lines.add(line);
-      levels.add(_levelOf(stamped ? line.substring(space + 1) : line));
-    }
-    final shown = [
-      for (var i = lines.length - 1; i >= 0; i--)
-        if (levels[i].index <= _shown.index) (lines[i], levels[i]),
+    final colors = context.colors;
+    final chips = [
+      (LogLevel.debug, tr('All')),
+      (LogLevel.info, tr('Info and above')),
+      (LogLevel.warn, tr('Warnings and above')),
+      (LogLevel.error, tr('Errors only')),
     ];
+    final entries = text == null ? const <_LogEntry>[] : _parseLog(text).where((e) => e.level.index <= _shown.index).toList().reversed.toList();
+    Color? colorOf(LogLevel level) => switch (level) {
+          LogLevel.error => colors.error,
+          LogLevel.warn => colors.tertiary,
+          LogLevel.debug => colors.outline,
+          _ => null,
+        };
     return Scaffold(
-      appBar: SkinAppBar(AppBar(
-        title: Text(tr('Logs')),
-        actions: [
-          PopupMenuButton<int>(
-            onSelected: (value) => switch (value) {
-              0 => copyText(context, text ?? '', tr('Copied')),
-              4 => _export(),
-              1 => openExternal('$_repository/issues/new/choose'),
-              2 => _directory == null ? null : unawaited(openInExplorer(_directory!.path)),
-              _ => _clear(),
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(value: 0, child: Text(tr('Copy log'))),
-              PopupMenuItem(value: 4, child: Text(tr('Export log'))),
-              PopupMenuItem(value: 1, child: Text(tr('Bug reports'))),
-              if (!Platform.isAndroid && !Platform.isIOS) PopupMenuItem(value: 2, child: Text(tr('Open log folder'))),
-              PopupMenuItem(value: 3, child: Text(tr('Clear logs'))),
-            ],
-          ),
-          const SizedBox(width: 4),
-        ],
-      )),
+      appBar: SkinAppBar(AppBar(title: Text(tr('Logs')), actions: [_menu(), const SizedBox(width: 4)])),
       body: text == null
           ? const Center(child: CircularProgressIndicator())
           : Column(children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                child: Wrap(spacing: 8, children: [
-                  for (final (level, label) in [(LogLevel.debug, tr('All')), (LogLevel.info, tr('Info and above')), (LogLevel.warn, tr('Warnings and above')), (LogLevel.error, tr('Errors only'))])
-                    ChoiceChip(label: Text(label), selected: _shown == level, onSelected: (_) => setState(() => _shown = level)),
-                ]),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Wrap(spacing: 8, children: [
+                    for (final (level, label) in chips) ChoiceChip(label: Text(label), selected: _shown == level, onSelected: (_) => setState(() => _shown = level)),
+                  ]),
+                ),
               ),
-              Expanded(child: shown.isEmpty
-              ? Center(child: Text(tr('No logs yet'), style: TextStyle(color: context.colors.outline)))
-              : SelectionArea(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
-                    itemCount: shown.length,
-                    separatorBuilder: (context, i) => const Divider(height: 1),
-                    itemBuilder: (context, i) {
-                      final (line, level) = shown[i];
-                      final space = line.indexOf(' ');
-                      final time = space > 0 ? line.substring(0, space).replaceFirst('T', ' ').split('.').first : '';
-                      final rest = space > 0 ? line.substring(space + 1) : line;
-                      final color = switch (level) {
-                        LogLevel.error => context.colors.error,
-                        LogLevel.warn => context.colors.tertiary,
-                        LogLevel.debug => context.colors.outline,
-                        LogLevel.info || LogLevel.off => null,
-                      };
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          if (time.isNotEmpty) Text(time, style: TextStyle(fontSize: 12, color: context.colors.outline)),
-                          Text(rest, style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: color)),
-                        ]),
-                      );
-                    },
-                  ),
-                )),
+              Expanded(
+                child: entries.isEmpty
+                    ? Center(child: Text(tr('No logs yet'), style: TextStyle(color: colors.outline)))
+                    : SelectionArea(
+                        child: ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+                          itemCount: entries.length,
+                          separatorBuilder: (context, index) => const Divider(height: 1),
+                          itemBuilder: (context, i) {
+                            final e = entries[i];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                if (e.time != null) Text(e.time!.replaceFirst('T', ' ').split('.').first, style: _faint(context)),
+                                Text(e.text, style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: colorOf(e.level))),
+                              ]),
+                            );
+                          },
+                        ),
+                      ),
+              ),
             ]),
     );
   }
 }
 
-/// 连接的服务器: every service Lumtub talks to, when, and what it learns,
-/// with a switch where it can be turned off.
-Future<void> openPrivacyConnections(BuildContext context, AppController controller) => _push(context, controller, tr('Connected servers'), (context) {
-      final settings = controller.settings;
+// Connected servers
+
+Future<void> openPrivacyConnections(BuildContext context, AppController controller) => _openList(context, controller, tr('Connected servers'), (context) {
       final prefs = controller.preferences;
-      void saveSettings(PlayerSettings next) => controller.saveSettings(next);
-      void savePrefs(AppPreferences next) => controller.savePreferences(next);
-      Widget row(IconData icon, String title, String hosts, String detail, {bool? value, ValueChanged<bool>? onChanged, String? state, VoidCallback? onTap}) => ListTile(
+      final settings = controller.settings;
+      final dns = DnsServer.of(settings.dnsServer, settings.dnsCustomUrl);
+      final relay = settings.playbackSource.relay;
+      final notInUse = tr('Not in use');
+
+      Widget row(
+        IconData icon,
+        String title,
+        String hosts,
+        String detail, {
+        String? state,
+        bool? on,
+        ValueChanged<bool>? toggle,
+        VoidCallback? onTap,
+      }) =>
+          ListTile(
+            isThreeLine: true,
             leading: Icon(icon),
             title: Text(title),
             subtitle: Text('$hosts\n$detail'),
-            isThreeLine: true,
-            onTap: onTap ?? (onChanged == null || value == null ? null : () => onChanged(!value)),
-            trailing: value != null && onChanged != null
-                ? Switch(value: value, onChanged: onChanged)
-                : state == null
-                    ? null
-                    : Text(state, style: TextStyle(color: context.colors.outline)),
+            trailing: toggle != null
+                ? Switch(value: on ?? false, onChanged: toggle)
+                : Text(state ?? '', style: TextStyle(color: context.colors.outline)),
+            onTap: toggle != null ? () => toggle(!(on ?? false)) : onTap,
           );
-      final dns = DnsServer.of(settings.dnsServer, settings.dnsCustomUrl);
-      final relay = settings.playbackSource != PlaybackSource.youtube;
+
       return [
         _tip(context, tr('Lumtub has no analytics, telemetry or crash reporting, and never uploads watch history, cookies or account data. These are all the servers it connects to; with a proxy on, all go through it.')),
         _header(context, tr('Required')),
-        row(AppIcons.monitorPlay, 'YouTube', 'www.youtube.com · *.googlevideo.com · i.ytimg.com', tr('Search, lists, playback and thumbnails. YouTube sees your IP and what you watch, as in a browser'), state: tr('Required')),
-        row(AppIcons.listMagnifyingGlass, tr('YouTube search suggestions'), 'suggestqueries-clients6.youtube.com', tr('While you type in the search box, the text so far is sent to YouTube for suggestions'), state: tr('While typing')),
+        row(
+          AppIcons.monitorPlay,
+          'YouTube',
+          'www.youtube.com · *.googlevideo.com · i.ytimg.com',
+          tr('Search, lists, playback and thumbnails. YouTube sees your IP and what you watch, as in a browser'),
+          state: tr('Required'),
+        ),
+        row(
+          AppIcons.listMagnifyingGlass,
+          tr('YouTube search suggestions'),
+          'suggestqueries-clients6.youtube.com',
+          tr('While you type in the search box, the text so far is sent to YouTube for suggestions'),
+          state: tr('While typing'),
+        ),
         _header(context, tr('Can be turned off')),
-        row(AppIcons.arrowLineDown, tr('Update checks'), 'api.github.com · github.com', tr('Checks for and downloads new versions of Lumtub, libmpv, yt-dlp and other components; GitHub sees only your IP'),
-            value: prefs.autoCheckUpdates, onChanged: (v) => savePrefs(prefs.copyWith(autoCheckUpdates: v, autoUpdateApp: v && prefs.autoUpdateApp))),
-        row(AppIcons.fastForward, tr('SponsorBlock'), 'sponsor.ajay.app', tr("Sponsor segments are looked up by a prefix of the video ID's hash, so the server doesn't learn which video"),
-            value: settings.sponsorBlock, onChanged: (v) => saveSettings(settings.copyWith(sponsorBlock: v))),
-        row(AppIcons.textT, 'DeArrow', 'sponsor.ajay.app · dearrow-thumb.ajay.app', tr("Replaces clickbait with community titles and thumbnails; titles are looked up by a prefix of the video ID's hash, replacement thumbnails are downloaded by video ID"),
-            value: settings.deArrowTitles || settings.deArrowThumbnails, onChanged: (v) => saveSettings(settings.copyWith(deArrowTitles: v, deArrowThumbnails: v))),
-        row(AppIcons.thumbsDown, 'Return YouTube Dislike', 'returnyoutubedislikeapi.com', tr('Shows estimated dislikes on the watch page; sends it the ID of the video you watch'),
-            value: settings.returnDislike, onChanged: (v) => saveSettings(settings.copyWith(returnDislike: v))),
-        row(AppIcons.translate, tr('Translation'), controller.preferences.translation.service.label, tr('Text is sent to the chosen service only when you click Translate, turn on subtitle translation or use AI summary'),
-            state: tr('When pressed'), onTap: () => openTranslationSettings(context, controller)),
-        row(AppIcons.graph, tr('Piped / Invidious'), relay ? settings.playbackSource.label : tr('Not in use'), tr('Fetch videos from YouTube for you; they learn which video you watch. Also tried briefly when YouTube answers 429'),
-            state: relay ? tr('In use') : tr('Fallback only')),
-        row(AppIcons.hardDrives, tr('Encrypted DNS'), dns?.url ?? tr('Not in use'), tr('Looks up host names on a direct connection; the DNS server learns which sites you visit, not what you do there'), state: dns == null ? tr('Close') : tr('In use')),
-        row(AppIcons.userCircle, tr('Google account'), 'accounts.google.com · oauth2.googleapis.com · www.googleapis.com', tr('Only after signing in, to sync subscriptions, playlists, likes and comments'),
-            state: controller.account?.signedIn ?? false ? tr('Signed in') : tr('Signed out')),
-        row(AppIcons.globe, tr('Browser sign-in'), 'www.youtube.com/youtubei', tr('Only after signing in: your YouTube pages, likes, comments, subscriptions and playlists, requested as the YouTube website'),
-            state: controller.webSignIn?.signedIn ?? false ? tr('Signed in') : tr('Signed out')),
+        row(
+          AppIcons.arrowLineDown,
+          tr('Update checks'),
+          'api.github.com · github.com',
+          tr('Checks for and downloads new versions of Lumtub, libmpv, yt-dlp and other components; GitHub sees only your IP'),
+          on: prefs.autoCheckUpdates,
+          toggle: (v) => controller.savePreferences(prefs.copyWith(autoCheckUpdates: v, autoUpdateApp: v && prefs.autoUpdateApp)),
+        ),
+        row(
+          AppIcons.fastForward,
+          tr('SponsorBlock'),
+          'sponsor.ajay.app',
+          tr("Sponsor segments are looked up by a prefix of the video ID's hash, so the server doesn't learn which video"),
+          on: settings.sponsorBlock,
+          toggle: (v) => controller.saveSettings(settings.copyWith(sponsorBlock: v)),
+        ),
+        row(
+          AppIcons.textT,
+          'DeArrow',
+          'sponsor.ajay.app · dearrow-thumb.ajay.app',
+          tr("Replaces clickbait with community titles and thumbnails; titles are looked up by a prefix of the video ID's hash, replacement thumbnails are downloaded by video ID"),
+          on: settings.deArrowTitles || settings.deArrowThumbnails,
+          toggle: (v) => controller.saveSettings(settings.copyWith(deArrowTitles: v, deArrowThumbnails: v)),
+        ),
+        row(
+          AppIcons.thumbsDown,
+          'Return YouTube Dislike',
+          'returnyoutubedislikeapi.com',
+          tr('Shows estimated dislikes on the watch page; sends it the ID of the video you watch'),
+          on: settings.returnDislike,
+          toggle: (v) => controller.saveSettings(settings.copyWith(returnDislike: v)),
+        ),
+        row(
+          AppIcons.translate,
+          tr('Translation'),
+          prefs.translation.service.label,
+          tr('Text is sent to the chosen service only when you click Translate, turn on subtitle translation or use AI summary'),
+          state: tr('When pressed'),
+          onTap: () => openTranslationSettings(context, controller),
+        ),
+        row(
+          AppIcons.graph,
+          tr('Piped / Invidious'),
+          settings.playbackSource != PlaybackSource.youtube ? settings.playbackSource.label : notInUse,
+          tr('Fetch videos from YouTube for you; they learn which video you watch. Also tried briefly when YouTube answers 429'),
+          state: relay != null ? tr('In use') : tr('Fallback only'),
+        ),
+        row(
+          AppIcons.hardDrives,
+          tr('Encrypted DNS'),
+          dns?.url ?? notInUse,
+          tr('Looks up host names on a direct connection; the DNS server learns which sites you visit, not what you do there'),
+          state: dns == null ? tr('Close') : tr('In use'),
+        ),
+        row(
+          AppIcons.userCircle,
+          tr('Google account'),
+          'accounts.google.com · oauth2.googleapis.com · www.googleapis.com',
+          tr('Only after signing in, to sync subscriptions, playlists, likes and comments'),
+          state: controller.account?.signedIn ?? false ? tr('Signed in') : tr('Signed out'),
+        ),
+        row(
+          AppIcons.globe,
+          tr('Browser sign-in'),
+          'www.youtube.com/youtubei',
+          tr('Only after signing in: your YouTube pages, likes, comments, subscriptions and playlists, requested as the YouTube website'),
+          state: controller.webSignIn?.signedIn ?? false ? tr('Signed in') : tr('Signed out'),
+        ),
       ];
     });
-
-/// Ticks for the languages the user understands; null when cancelled.
-Future<List<String>?> _pickKnownLanguages(BuildContext context, List<String> known) {
-  final picked = {...known};
-  return showDialog<List<String>>(
-    context: context,
-    builder: (context) => StatefulBuilder(
-      builder: (context, setState) => AlertDialog(
-        title: Text(tr('Languages I understand')),
-        content: SizedBox(
-          width: dialogWidth(context, 380),
-          height: 440,
-          child: Column(children: [
-            Text(tr("Subtitles don't turn on by themselves for videos in these languages"), style: Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height: 8),
-            Expanded(
-              child: ListView(children: [
-                for (final language in [...TranslationLanguage.all.where((l) => known.contains(l.code)), ...TranslationLanguage.all.where((l) => !known.contains(l.code))])
-                  CheckboxListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    value: picked.contains(language.code),
-                    title: Text(language.label),
-                    onChanged: (v) => setState(() => v == true ? picked.add(language.code) : picked.remove(language.code)),
-                  ),
-              ]),
-            ),
-          ]),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
-          TextButton(onPressed: () => Navigator.pop(context, [for (final l in TranslationLanguage.all) if (picked.contains(l.code)) l.code]), child: Text(tr('Done'))),
-        ],
-      ),
-    ),
-  );
-}

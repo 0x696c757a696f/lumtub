@@ -16,7 +16,7 @@ extension PlaybackControls on AppController {
   }
 
   /// Pauses playback after [after], or at the end of the current video when
-  /// [afterCurrent]; null turns the timer off. From PiliNara's 定时关闭.
+  /// [afterCurrent]; null turns the timer off (定时关闭).
   void setSleepTimer(Duration? after, {bool afterCurrent = false}) {
     _sleepTimer?.cancel();
     _sleepTimer = after == null ? null : Timer(after, () {

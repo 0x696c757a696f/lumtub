@@ -6,7 +6,7 @@ import '../../app/app_controller.dart';
 import '../../l10n/l10n.dart';
 import '../../models.dart' show ChannelRef;
 import '../../watch_time.dart';
-import '../../widgets/pilinara_settings_tiles.dart' show confirmDialog;
+import '../../widgets/settings_tiles.dart' show confirmDialog;
 import '../theme.dart';
 import '../app_icons.dart';
 import '../skin_paint.dart';

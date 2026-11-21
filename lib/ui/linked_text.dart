@@ -28,8 +28,8 @@ class LinkPart extends TextPart {
 
 final _pattern = RegExp(r'https?://[^\s<>"）)】」，。]+|(?<![\d:.])(?:(\d{1,2}):)?(\d{1,2}):(\d{2})(?![\d:])');
 
-/// Splits [text] into plain text, times and links, as PiliNara does for
-/// descriptions and comments.
+/// Splits [text] into plain text, times and links, for descriptions and
+/// comments.
 List<TextPart> splitLinks(String text) {
   final parts = <TextPart>[];
   var last = 0;

@@ -20,6 +20,7 @@ extension DownloadActions on AppController {
   DownloadManager _downloadsFor(ToolPaths paths, AppDirectories directories) => DownloadManager(
         file: File('${directories.data.path}${Platform.pathSeparator}downloads.json'),
         ytDlpPath: paths.ytDlp,
+        blockedSignIn: () => _repository?.streams.blockedSignIn,
         onFinished: (task) {
           if (!_disposed) _finishedDownloads.add(task);
         },

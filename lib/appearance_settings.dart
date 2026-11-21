@@ -9,7 +9,7 @@ import 'l10n/l10n.dart';
 import 'sun_times.dart';
 
 /// Seed colours offered in Settings; the first is the default. The first
-/// six are Lumtub's own, the rest PiliNara's palette.
+/// six are Lumtub's own, the rest a wider palette.
 final accentChoices = <(String, Color)>[
   (tr('YouTube red'), Color(0xFFE53935)),
   (tr('Cyan green'), Color(0xFF26A69A)),
@@ -59,7 +59,7 @@ const themePresets = [
   ThemePreset('OLED black', 0xFF9E9E9E, DynamicSchemeVariant.monochrome, pureBlack: true),
 ];
 
-/// Material's palette styles with the names PiliNara uses.
+/// Material's palette styles with their names in Settings.
 final schemeVariantNames = {
   DynamicSchemeVariant.tonalSpot: tr('Default (Tonal Spot)'),
   DynamicSchemeVariant.fidelity: tr('Fidelity'),

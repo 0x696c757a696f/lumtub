@@ -27,6 +27,10 @@ final _sections = <String, LearningDrawerSection>{
   'lines': LearningDrawerSection(id: 'lines', order: 20, title: () => tr('Line by line'), build: (context, c) => _LineSection(controller: c)),
 };
 
+/// What the drawer's 精学 part shows while [studyUnlocked] says no: set by
+/// the learning pack (its pitch and a way to buy it).
+Widget Function(BuildContext context, AppController controller)? studyLockedView;
+
 /// Adds [section] to the learning drawer, or replaces the one with its id.
 /// Other learning features put their own parts in this way.
 void addLearningDrawerSection(LearningDrawerSection section) => _sections[section.id] = section;
@@ -77,6 +81,7 @@ class _StudySection extends StatelessWidget {
     final studying = controller.study != null;
     final resume = controller.studyResume;
     void close() => unawaited(Navigator.of(context, rootNavigator: true).maybePop());
+    final locked = !controller.studyAllowed && !studying;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Row(children: [
         Icon(AppIcons.graduationCap, size: 22, color: colors.primary),
@@ -89,6 +94,9 @@ class _StudySection extends StatelessWidget {
         style: context.text.bodySmall?.copyWith(color: colors.outline),
       ),
       const SizedBox(height: 8),
+      if (locked)
+        studyLockedView?.call(context, controller) ?? Text(tr('Study mode is part of the learning pack'), style: context.text.bodySmall)
+      else
       Wrap(spacing: 8, runSpacing: 4, children: [
         if (studying)
           OutlinedButton(onPressed: () => unawaited(controller.stopStudy()), child: Text(tr('Stop studying')))
@@ -116,7 +124,7 @@ class _StudySection extends StatelessWidget {
             child: Text(tr('Start studying')),
           ),
       ]),
-      if (!studying && resume != null)
+      if (!locked && !studying && resume != null)
         Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Text(

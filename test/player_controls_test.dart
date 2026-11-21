@@ -176,6 +176,22 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('a locked study shows what the learning pack puts there, and line tools stay', (tester) async {
+    studyUnlocked = (_) => false;
+    studyLockedView = (context, c) => const Text('buy it');
+    addTearDown(() {
+      studyUnlocked = null;
+      studyLockedView = null;
+    });
+    await pump(tester);
+    await tester.tap(find.byType(LearningDrawerHandle));
+    await tester.pumpAndSettle();
+    expect(find.text('buy it'), findsOneWidget);
+    expect(find.text('Start studying'), findsNothing);
+    expect(find.text('Pause after each line'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the top bar: back and home, then the switches', (tester) async {
     await pump(tester);
     for (final tip in ['Back', 'Home', 'Cast', 'Picture in picture', 'More settings']) {

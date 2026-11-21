@@ -25,7 +25,7 @@ class StudyBar extends StatelessWidget {
         final run = controller.study;
         if (run != null) return _frame(context, _Study(controller: controller, run: run));
         final resume = controller.studyResume;
-        if (resume == null) return const SizedBox.shrink();
+        if (resume == null || !controller.studyAllowed) return const SizedBox.shrink();
         return _frame(context, _Resume(controller: controller, resume: resume));
       },
     );

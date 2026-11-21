@@ -2,7 +2,14 @@ part of 'app_controller.dart';
 
 /// 精学: one stretch of a video studied in four steps (StudyStep), from
 /// the subtitle list's lines. Ordinary watching is left as it was.
+/// Whether 精学 may start for [controller]; set by the learning pack, which
+/// owns the license. Unset, it always may.
+bool Function(AppController controller)? studyUnlocked;
+
 extension StudyActions on AppController {
+  /// Whether 精学 may start now.
+  bool get studyAllowed => studyUnlocked?.call(this) ?? true;
+
   StudyRun? get study => _studyRun;
 
   StudyStore? get studyStore => _studyStore;
@@ -56,6 +63,10 @@ extension StudyActions on AppController {
     if (player == null || item == null) return;
     if (item.isLive) {
       _notice(tr('Study mode works on videos, not live streams'));
+      return;
+    }
+    if (!studyAllowed) {
+      _notice(tr('Study mode is part of the learning pack'));
       return;
     }
     final store = await _studyStoreReady();

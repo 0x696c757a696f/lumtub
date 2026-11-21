@@ -314,6 +314,22 @@ code { font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace; 
 }
 
 figure { margin: 0; }
+
+/* Language learning */
+.learn-shots {
+  display: grid; grid-template-columns: 815fr 654fr; gap: var(--s-300); align-items: start;
+  margin-bottom: var(--s-200);
+}
+.learn-shots img { width: 100%; height: auto; }
+.learn-shots figcaption { grid-column: 1 / -1; }
+.learn-grid { display: grid; grid-template-columns: 7fr 5fr; gap: var(--s-200); margin-top: var(--s-500); }
+.learn-grid ul { margin: 0; padding-left: 1.2em; display: grid; gap: var(--s-75); }
+.learn-grid .card { display: grid; gap: var(--s-100); align-content: start; }
+.learn-pack { border-color: var(--accent); }
+.learn-buy { display: flex; flex-wrap: wrap; gap: var(--s-100); }
+@media (max-width: 760px) {
+  .learn-shots, .learn-grid { grid-template-columns: 1fr; }
+}
 figcaption { color: var(--muted); text-align: center; margin-top: var(--s-75); }
 
 /* Live skin preview: a Lumtub window drawn from the skin files in skins/.

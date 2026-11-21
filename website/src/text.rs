@@ -93,6 +93,20 @@ pub struct Mock {
     pub status: &'static str,
 }
 
+pub struct Learn {
+    pub title: &'static str,
+    pub lead: &'static str,
+    pub shots_alt: [&'static str; 2],
+    pub shots_note: &'static str,
+    pub pack_title: &'static str,
+    pub pack: [&'static str; 5],
+    pub trial: &'static str,
+    pub price: &'static str,
+    pub fine: &'static str,
+    pub free_title: &'static str,
+    pub free: [&'static str; 5],
+}
+
 pub struct Text {
     pub title: &'static str,
     pub lang_name: &'static str,
@@ -122,6 +136,7 @@ pub struct Text {
     pub steps_title: &'static str,
     pub steps: [(&'static str, &'static str); 3],
     pub features_title: &'static str,
+    pub learn: Learn,
     pub features: [Feature; 12],
     pub platforms_title: &'static str,
     pub platforms_body: &'static str,
@@ -279,6 +294,19 @@ pub static EN: Text = Text {
         ("Watch your way", "The For you feed learns from what you watch on this computer. Choose a skin, subtitles and quality once and Lumtub remembers."),
     ],
     features_title: "Everything else you'd expect, and more",
+    learn: Learn {
+        title: "Learn languages from real videos",
+        lead: "Tap any word in the subtitles to look it up. Chinese gets pinyin and Japanese gets kana above the line. Save a word with its sentence and the original audio, and send it to Anki in one click. Offline dictionaries, one payment.",
+        shots_alt: ["Word card for 'nifty' with pronunciation, meanings and the sentence it came from", "Subtitle list with the words above the chosen level highlighted"],
+        shots_note: "Real screenshots from the preview build, Chinese interface.",
+        pack_title: "Learning Pack · preview",
+        pack: ["Tap a word for its meaning. Dictionaries download once and then work offline: Chinese, English, Japanese and Korean; Spanish, French, German, Italian and Russian in beta.", "Pinyin, kana and Korean romanization above the line.", "Words above your level are highlighted, so you only stop for new ones.", "A vocabulary book that keeps the sentence, the original audio and the moment in the video.", "Send words to Anki in one click, or export CSV."],
+        trial: "Try it free: unlimited lookups for 7 days from your first one, then 5 a day. Readings and the vocabulary book stay free.",
+        price: "Pre-order €15 / ¥118, paid once. €19 after launch, with nothing more to pay if you buy now.",
+        fine: "Windows, macOS and Linux. One license for up to 5 of your devices; the app checks it online about once every 30 days.",
+        free_title: "Free for everyone",
+        free: ["Pause after each line, so you understand it before moving on.", "Blur the translation until you hover it: guess first, then check.", "Replay, loop and step through lines.", "Shadowing: record yourself and compare with the original.", "Export the subtitle list with translations as CSV."],
+    },
     features: [
         Feature { icon: "play-circle", title: "Player", body: "Theater mode, mini player, borderless picture in picture, A to B loop, storyboard previews, the most replayed heatmap and skip silence. Volume balance evens out loud and quiet videos, and speed and volume are remembered per channel." },
         Feature { icon: "download-simple", title: "Downloads", body: "Any format YouTube serves, joined without encoding again, with subtitles, title and cover inside. Record lives as they air, then play offline." },
@@ -465,6 +493,19 @@ pub static ZH: Text = Text {
         ("按你的方式看", "「为你推荐」根据你在这台电脑上看的内容学习。皮肤、字幕和画质设一次，Lumtub 会记住。"),
     ],
     features_title: "该有的都有，还多一些",
+    learn: Learn {
+        title: "用真实视频学外语",
+        lead: "点字幕里的词就能查，中文标拼音、日语标假名，生词连同原句和原声存进生词本，一键进 Anki。离线词典，一次买断。",
+        shots_alt: ["单词 nifty 的卡片：发音、释义和它出现的原句", "字幕列表，比所选水平难的词被标了出来"],
+        shots_note: "测试版真实截图。",
+        pack_title: "学习包 · 测试版",
+        pack: ["点词就查。词典下载一次，之后查词不用联网：中文、英语、日语、韩语；西班牙语、法语、德语、意大利语、俄语为测试版。", "字幕上方注拼音、假名和韩语罗马音。", "比你水平难的词自动标出来，只在生词上停下。", "生词本记下原句、原声和视频里的时间点。", "一键送进 Anki，也可以导出 CSV。"],
+        trial: "免费试用：从第一次查词起 7 天不限次数，之后每天 5 次。注音和生词本一直免费。",
+        price: "预售价 ¥118 / €15，一次付款。正式版 €19，现在买的以后不用补差价。",
+        fine: "支持 Windows、macOS、Linux。一份授权最多 5 台设备，软件大约每 30 天联网确认一次授权。",
+        free_title: "所有人免费",
+        free: ["每句说完自动暂停，听懂了再往下。", "翻译先模糊，鼠标移上去才显示：先猜，再对答案。", "重听、单句循环、上一句和下一句。", "跟读：录下自己说的，和原声对比。", "字幕列表连同翻译导出 CSV。"],
+    },
     features: [
         Feature { icon: "play-circle", title: "播放器", body: "剧场模式、小窗、无边框画中画、A-B 循环、进度条预览图、「最多重播」热度图和跳过静音。音量均衡让忽大忽小的视频听起来一样响，每个频道单独记住倍速和音量。" },
         Feature { icon: "download-simple", title: "下载", body: "YouTube 提供的任何格式都能下，不重新编码直接合并，字幕、标题和封面写进文件。直播可以边播边录，下完离线播放。" },

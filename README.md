@@ -49,7 +49,26 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 
 ## 🆕 Learn languages from real videos
 
-Free for everyone, in the Subtitles menu under **Language learning**:
+**Tap any word in the subtitles to look it up. Chinese gets pinyin and Japanese gets kana above the line. Save a word with its sentence and the original audio, and send it to Anki in one click. Offline dictionaries, one payment.**
+
+<p align="center">
+<img src="docs/screenshots/learning-card.png" alt="Word card for 'nifty' with pronunciation, meanings and the sentence it came from" width="48%">
+<img src="docs/screenshots/learning-list.png" alt="Subtitle list with the words above the chosen level highlighted" width="48%">
+</p>
+<p align="center"><sub>Real screenshots from the preview build, Chinese interface.</sub></p>
+
+**Learning Pack** (preview, Windows, macOS and Linux):
+
+- **Tap a word, get the meaning**, from dictionaries that download once and then work offline. Chinese, English, Japanese and Korean; Spanish, French, German, Italian and Russian in beta.
+- **Readings above the line**: pinyin for Chinese, kana for Japanese, romanization for Korean.
+- **Words above your level are highlighted**, so you only stop for the ones you don't know yet.
+- **Vocabulary book** that keeps the sentence, the original audio and the moment in the video. Tap an entry to hear it again.
+- **Send to Anki** in one click, or export CSV.
+
+**Try it free:** unlimited lookups for 7 days from your first lookup, then 5 a day. Readings and the vocabulary book stay free.<br>
+**Pre-order price:** €15 / ¥118, once, no subscription ([Polar](https://buy.polar.sh/polar_cl_Kq1VEmdtmOLJaLBhOA2DgT5dXcnA2aBvhys200CDQVP) · [爱发电](https://afdian.com/a/linmuqingfeng)). It will be €19 after launch; if you buy now there's nothing more to pay later. One license works on up to 5 of your devices; the app checks it online about once every 30 days.
+
+**Free for everyone**, in the Subtitles menu under **Language learning**:
 
 - **Pause after each line** (Q): playback stops when a line ends, so you have time to understand it before you move on.
 - **Blur the translation** (V): the second subtitle stays blurred until you hover it, tap it or press the key. Guess first, then check.
@@ -183,7 +202,7 @@ Lumtub is free. It comes only from:
 
 To check a download, compare its SHA-256 with the one GitHub shows next to the file on the [release page](https://github.com/0x696c757a696f/lumtub/releases/latest). On Windows: `Get-FileHash <file>` in PowerShell; on macOS and Linux: `shasum -a 256 <file>`.
 
-If anyone asks you to pay for Lumtub, or sells a renamed copy without its source code, it doesn't come from this project and may have been tampered with. Lumtub's license (AGPL) lets others share and even sell copies, but only if they give you the complete source code under the same license and keep the copyright notices. A paid closed-source copy breaks the license. Please [report it in an issue](https://github.com/0x696c757a696f/lumtub/issues/new) with a link, so it can be taken down.
+The optional [Learning Pack](#-learn-languages-from-real-videos) is sold only through Polar and 爱发电, from the links in this README, the website and the app. If anyone else asks you to pay for Lumtub, or sells a renamed copy without its source code, it doesn't come from this project and may have been tampered with. Lumtub's license (AGPL) lets others share and even sell copies, but only if they give you the complete source code under the same license and keep the copyright notices. A paid closed-source copy breaks the license. Please [report it in an issue](https://github.com/0x696c757a696f/lumtub/issues/new) with a link, so it can be taken down.
 
 ## Where the data comes from
 

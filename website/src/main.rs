@@ -212,6 +212,7 @@ fn App() -> impl IntoView {
             <main id="main">
                 <Hero t=t ctx=ctx lang=l/>
                 <Highlights t=t lang=l skin=skin/>
+                <Learning t=t lang=l/>
                 <Tagline lang=l/>
                 <Steps t=t/>
                 <Features t=t/>
@@ -330,6 +331,50 @@ fn Highlights(t: &'static Text, lang: Lang, skin: SkinState) -> impl IntoView {
                         </article>
                     }
                 }).collect_view()}
+            </div>
+        </section>
+    }
+}
+
+const POLAR_CHECKOUT: &str =
+    "https://buy.polar.sh/polar_cl_Kq1VEmdtmOLJaLBhOA2DgT5dXcnA2aBvhys200CDQVP";
+
+#[component]
+fn Learning(t: &'static Text, lang: Lang) -> impl IntoView {
+    let l = &t.learn;
+    let polar = view! { <a class="btn primary" href=POLAR_CHECKOUT rel="noopener">"Polar · €15"</a> };
+    let afdian = view! { <a class="btn" href=AFDIAN rel="noopener">"爱发电 · ¥118"</a> };
+    let buttons = if lang == Lang::Zh {
+        view! { <a class="btn primary" href=AFDIAN rel="noopener">"爱发电 · ¥118"</a><a class="btn" href=POLAR_CHECKOUT rel="noopener">"Polar · €15"</a> }.into_any()
+    } else {
+        view! { {polar}{afdian} }.into_any()
+    };
+    view! {
+        <section id="learn" class="section alt">
+            <div class="wrap">
+                <header class="section-head reveal">
+                    <h2 class="heading-3">{l.title}</h2>
+                    <p class="body-3 muted">{l.lead}</p>
+                </header>
+                <figure class="learn-shots reveal">
+                    <img class="shot" loading="lazy" src="screenshots/learning-card.png" alt=l.shots_alt[0] width="815" height="550"/>
+                    <img class="shot" loading="lazy" src="screenshots/learning-list.png" alt=l.shots_alt[1] width="654" height="636"/>
+                    <figcaption class="caption-2">{l.shots_note}</figcaption>
+                </figure>
+                <div class="learn-grid reveal">
+                    <div class="card learn-pack">
+                        <h3 class="title-2">{l.pack_title}</h3>
+                        <ul class="body-6">{l.pack.iter().map(|x| view! { <li>{*x}</li> }).collect_view()}</ul>
+                        <p class="body-6">{l.trial}</p>
+                        <p class="body-6"><strong>{l.price}</strong></p>
+                        <div class="learn-buy">{buttons}</div>
+                        <p class="caption-2 muted">{l.fine}</p>
+                    </div>
+                    <div class="card">
+                        <h3 class="title-2">{l.free_title}</h3>
+                        <ul class="body-6">{l.free.iter().map(|x| view! { <li>{*x}</li> }).collect_view()}</ul>
+                    </div>
+                </div>
             </div>
         </section>
     }

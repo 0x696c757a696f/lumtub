@@ -6,9 +6,10 @@ import 'word_token.dart';
 /// The English pack: common English words with their phonetics and
 /// Chinese meanings, from ECDICT. One word a line:
 /// word, phonetic, meanings (`\n` between lines), forms, exam tags,
-/// Collins stars and frequency rank, between tabs, where forms are ECDICT's
+/// Collins stars, frequency rank and English meanings (Wiktionary's, else
+/// WordNet's), between tabs, where forms are ECDICT's
 /// `p:ran/d:run/i:running/3:runs/0:run` and tags its `zk gk cet4`. Packs
-/// built before the last three columns existed still read.
+/// built before the last columns existed still read.
 class EnglishDictionary {
   EnglishDictionary(this._source);
 
@@ -127,11 +128,15 @@ enum EnglishLevel {
 }
 
 class EnglishEntry {
-  const EnglishEntry({required this.word, required this.phonetic, required this.meanings, required this.forms, this.tags = const [], this.collins = 0, this.rank = 0});
+  const EnglishEntry({required this.word, required this.phonetic, required this.meanings, required this.forms, this.tags = const [], this.collins = 0, this.rank = 0, this.english = const []});
 
   final String word;
   final String phonetic;
+  /// Chinese meanings.
   final List<String> meanings;
+
+  /// English meanings, such as `v. To move swiftly on foot.`
+  final List<String> english;
 
   /// ECDICT's forms field, as `p:ran/d:run`.
   final String forms;
@@ -166,6 +171,7 @@ class EnglishEntry {
       tags: at(4).split(' ').map(EnglishLevel.ofTag).whereType<EnglishLevel>().toSet().toList()..sort((a, b) => a.index - b.index),
       collins: int.tryParse(at(5)) ?? 0,
       rank: int.tryParse(at(6)) ?? 0,
+      english: at(7).split(r'\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
     );
   }
 

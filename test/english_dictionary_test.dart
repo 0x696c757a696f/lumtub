@@ -58,4 +58,12 @@ void main() {
     expect(d.levelOf('run'), isNull);
     expect(d.lookup('ran').single.forms, contains('p:ran'));
   });
+
+  test('English meanings come from the eighth column', () {
+    final d = EnglishDictionary.parse('run\trʌn\tv. 跑\tp:ran\t\t5\t100\tv. To move swiftly on foot.\\nn. An act of running.\n'
+        'walk\twɔ:k\tv. 走\t\t\t5\t200\n');
+    expect(d.lookup('run').single.english, ['v. To move swiftly on foot.', 'n. An act of running.']);
+    expect(d.lookup('run').single.meanings, ['v. 跑']);
+    expect(d.lookup('walk').single.english, isEmpty);
+  });
 }

@@ -199,7 +199,7 @@ class _EnglishCard extends StatelessWidget {
                       ]),
                     ),
                   const SizedBox(height: 2),
-                  for (final line in e.meanings.take(8)) Text(line, style: theme.textTheme.bodyMedium),
+                  ..._meaningLines(theme, controller.learning.meanings, e.meanings, e.english),
                   if (e.namedForms.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
@@ -236,7 +236,7 @@ class _EnglishCard extends StatelessWidget {
                           word: head,
                           language: 'en',
                           reading: entry.phonetic.isEmpty ? '' : '/${entry.phonetic}/',
-                          meaning: entry.meanings.take(3).join('; '),
+                          meaning: (entry.meanings.isNotEmpty && controller.learning.meanings != MeaningLanguage.english ? entry.meanings : entry.english).take(3).join('; '),
                           sentence: sentence,
                           translation: translation ?? '',
                           videoId: playing?.id ?? '',

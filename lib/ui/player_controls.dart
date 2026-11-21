@@ -1,73 +1,68 @@
-// Player controls adapted from PiliNara (lib/plugin/pl_player/view/view.dart,
-// widgets/bottom_control.dart, app_bar_ani.dart, play_pause_btn.dart,
-// common_btn.dart, models/video_fit_type.dart and
-// lib/pages/video/widgets/header_control.dart).
-//
-// PiliNara: https://github.com/Starfallan/PiliNara
-// Copyright (C) PiliNara contributors.
-// Adapted for Lumtub under the GNU General Public License, version 3 or
-// later. Changes: the controls drive media_kit through Lumtub's
-// AppController instead of PiliNara's PlPlayerController and GetX; touch
-// gestures, danmaku and Bilibili-only buttons are left out, and desktop
-// mouse handling (hover to show, wheel for volume) is kept.
-
 import 'dart:async';
-import 'dart:io';
-import 'dart:math';
+import 'dart:io' show Platform;
+import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
-import '../device.dart';
 import '../app/app_controller.dart';
-import '../app_preferences.dart' show rateText;
+import '../app_preferences.dart' show AppPreferences, rateText;
+import '../device.dart';
 import '../heatmap.dart';
 import '../keep_awake.dart';
+import '../l10n/l10n.dart';
+import '../models.dart';
 import '../picture_transform.dart';
-import '../storyboard.dart';
-import '../models.dart' show Chapter, formatCount;
-import '../system_env.dart' show shareText;
-import '../youtube_account.dart' show VideoRating;
-import '../format_policy.dart';
 import '../player_settings.dart';
-import '../stream_resolver.dart' show AudioLanguage;
-import '../translation.dart' show TranslationLanguage;
+import '../right_click.dart';
+import '../shadowing.dart';
+import '../skins/skin.dart';
+import '../storyboard.dart';
+import '../stream_resolver.dart';
+import '../system_env.dart';
+import '../translation.dart';
+import '../video_codec.dart';
+import '../wheel_gesture.dart';
 import '../widgets/mini_progress_line.dart';
-import '../widgets/position_ticks.dart' show coarse;
+import '../widgets/position_ticks.dart';
 import '../widgets/video_progress_bar.dart';
+import '../window_frame.dart';
+import '../youtube_account.dart';
+import '../format_policy.dart';
+import 'app_icons.dart';
 import 'cast_ui.dart';
 import 'common.dart';
-import 'format_policy_dialogs.dart';
-import 'pages/settings_sections.dart' show trimSpeed, qualityLabel;
-import 'pages/settings_subpages.dart';
-import 'player_shortcuts.dart';
-import 'player_panel.dart';
-import 'subtitle_list_panel.dart';
-import 'subtitle_panel.dart';
-import 'subtitle_style_panel.dart';
 import 'danmaku_panel.dart';
+import 'fill_window.dart';
+import 'format_policy_dialogs.dart';
+import 'haptics.dart';
+import 'lights_off.dart';
+import 'motion.dart';
+import 'pages/settings_sections.dart' show qualityLabel, trimSpeed;
+import 'pages/settings_subpages.dart' show openPictureSettings;
+import 'player_panel.dart';
+import 'player_shortcuts.dart';
 import 'player_stats.dart';
 import 'screenshot_action.dart';
 import 'storyboard_preview.dart';
-import 'lights_off.dart';
-import 'theater_mode.dart';
-import 'fill_window.dart';
-import '../right_click.dart';
-import 'video_box.dart';
-import 'video_aspect.dart';
+import 'subtitle_list_panel.dart';
+import 'subtitle_panel.dart';
 import 'theme.dart';
-import '../skins/skin.dart';
-import '../l10n/l10n.dart';
-import '../video_codec.dart' show heightLabel;
-import '../wheel_gesture.dart';
-import '../window_frame.dart';
-import 'motion.dart';
-import 'app_icons.dart';
+import 'subtitle_style_panel.dart';
+import 'theater_mode.dart';
+import 'video_aspect.dart';
+import 'video_box.dart';
 
-/// Picture sizing, from PiliNara's `VideoFitType`.
+part 'player_controls_widgets.dart';
+part 'player_controls_bottom.dart';
+part 'player_controls_panel.dart';
+
+/// How the picture is fitted into the player.
 enum VideoFit {
   contain('Auto', BoxFit.contain),
   fill('Stretch', BoxFit.fill),
@@ -80,18 +75,51 @@ enum VideoFit {
 
   const VideoFit(this._label, this.fit, [this.aspectRatio]);
   final String _label;
-  String get label => tr(_label);
   final BoxFit fit;
   final double? aspectRatio;
+
+  String get label => tr(_label);
 }
 
-/// The chosen [VideoFit]; kept for the session like PiliNara keeps it per
-/// player.
+/// The fit chosen for the session, shared by every player.
 final videoFit = ValueNotifier(VideoFit.contain);
 
-/// Colours of the SponsorBlock categories on the progress bar, as the
-/// SponsorBlock extension draws them.
-const _segmentColors = {
+/// The name of an audio language in a menu: `Spanish (US) (original)`.
+String audioLanguageLabel(AudioLanguage language) {
+  final parts = language.code.split('-');
+  final name = TranslationLanguage.ofTag(parts.first)?.label ?? language.code;
+  final label = parts.length > 1 ? '$name (${parts.skip(1).join('-')})' : name;
+  return switch (language.kind) {
+    'original' => tr('{0} (original)', [label]),
+    'auto' => tr('{0} (automatic dub)', [label]),
+    _ => label,
+  };
+}
+
+/// The name of an audio track in a menu. yt-dlp names formats like
+/// `251-4 - audio only (English (US) original (default), medium)`.
+String trackLabel(String id, String? title, String? language) {
+  final match = RegExp(r'^(\d+)(-\w+)? - audio only \((.*)\)$').firstMatch(title ?? '');
+  if (match != null) {
+    final codec = switch (int.parse(match[1]!)) {
+      249 || 250 || 251 => 'Opus',
+      139 || 140 || 141 => 'AAC',
+      _ => null,
+    };
+    return [
+      match[3]!,
+      if (codec != null) codec,
+      if ((match[2] ?? '').contains('drc')) tr('Volume normalization'),
+    ].join(' · ');
+  }
+  final parts = [
+    if (title != null && title.isNotEmpty) title,
+    if (language != null && language.isNotEmpty) language,
+  ];
+  return parts.isEmpty ? tr('Track {0}', [id]) : parts.join(' · ');
+}
+
+const _sponsorColors = {
   'sponsor': Color(0xFF00D400),
   'selfpromo': Color(0xFFFFFF00),
   'interaction': Color(0xFFCC00FF),
@@ -102,16 +130,12 @@ const _segmentColors = {
   'filler': Color(0xFF7300FF),
 };
 
-const _menuText = TextStyle(color: Colors.white, fontSize: 12);
+bool _isTouch(PointerDeviceKind? kind) => kind == PointerDeviceKind.touch || kind == PointerDeviceKind.stylus || kind == PointerDeviceKind.invertedStylus;
 
-/// PiliNara's control layer over the video: a title bar and a bottom bar
-/// that slide in on hover, with the progress bar, play, time, fit,
-/// subtitle, speed, quality and fullscreen buttons.
+/// The controls over the video: bars, gestures, keys and the panels they open.
 class PlayerControls extends StatefulWidget {
   const PlayerControls({super.key, required this.player, required this.state, required this.controller});
   final Player player;
-  /// The video these controls sit on; null in tests, where there is no
-  /// video surface.
   final VideoState? state;
   final AppController controller;
 
@@ -120,494 +144,490 @@ class PlayerControls extends StatefulWidget {
 }
 
 class _PlayerControlsState extends State<PlayerControls> with SingleTickerProviderStateMixin {
-  late final _animation = AnimationController(vsync: this, duration: Motion.of(const Duration(milliseconds: 200)), value: 1);
+  late final AnimationController _bars = AnimationController(vsync: this, duration: Motion.of(Ease.fade), value: 1);
+  final _focus = FocusNode(debugLabel: 'player controls', skipTraversal: true);
+  final _bottomKey = GlobalKey();
+  late final PictureTransform _picture = PictureTransform(widget.player);
+  final _feedback = ValueNotifier<({IconData icon, String text})?>(null);
   final _subscriptions = <StreamSubscription<Object?>>[];
-  final _focus = FocusNode(debugLabel: 'player controls');
+
   Timer? _hideTimer;
   Timer? _feedbackTimer;
-  (IconData, String)? _feedback;
   int _menus = 0;
-  bool _hoveringBars = false;
-  late final _transform = PictureTransform(_player);
-  // What yt-dlp's extraction of the playing video offers for the bar.
-  String? _infoFor;
-  bool _infoBusy = false;
-  String? _infoRead;
-  Heatmap? _heatmap;
+  bool _overBar = false;
+  bool _locked = false;
+  bool _orientationLocked = false;
+  bool _touched = false;
+  bool _lifted = false;
+  PointerDeviceKind _lastKind = PointerDeviceKind.mouse;
+
+  String? _videoId;
+  String? _infoId;
+  bool _reading = false;
+  Heatmap? _heat;
   ProgressPreview? _preview;
 
-  AppController get _controller => widget.controller;
+  double? _heldRate;
+  Map<ShortcutActivator, VoidCallback>? _bindings;
+  AppPreferences? _bindingsFor;
+
+  final _fingers = <int, Offset>{};
+  double _pinchStart = 0;
+  double _pinchLast = 0;
+  bool _pinching = false;
+
+  double _verticalTotal = 0;
+  double _verticalSteps = 0;
+  bool _verticalLeft = false;
+  double _horizontalTotal = 0;
+  Duration? _seekFrom;
+  Duration? _seekTo;
+  bool _dragLive = false;
+  Size _lastBox = Size.zero;
+
+  AppController get _c => widget.controller;
   Player get _player => widget.player;
+
+  bool get _barsShown => _bars.status == AnimationStatus.forward || _bars.status == AnimationStatus.completed;
 
   @override
   void initState() {
     super.initState();
+    _videoId = _c.playing?.id;
+    _c.addListener(_onController);
+    _c.pictureShapedByPlayer.addListener(_applyFit);
     videoFit.addListener(_applyFit);
-    _controller.coverVideo = videoFit.value != VideoFit.contain;
-    _controller.addListener(_syncVideo);
-    KeepAwake.hold(this, _player.state.playing && !_controller.audioOnly);
-    // Hides the pointer together with the bars.
-    _animation.addStatusListener((status) {
-      if (mounted) setState(() {});
-      _liftSubtitles(status != AnimationStatus.dismissed && status != AnimationStatus.reverse);
-    });
-    // The bars start out shown.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _liftSubtitles(_animation.value > 0));
+    _picture.addListener(_rebuild);
+    _bars.addStatusListener(_onBarsStatus);
+    final stream = _player.stream;
     _subscriptions.addAll([
-      // The next video may have another shape; the ratio set for the last
-      // one would stretch it.
-      _player.stream.width.listen((_) => _applyFit()),
-      _player.stream.height.listen((_) => _applyFit()),
-      _player.stream.duration.listen((_) => _syncVideo()),
-      _player.stream.playing.listen((playing) {
-        KeepAwake.hold(this, playing && !_controller.audioOnly);
-        if (!playing) {
-          _show();
-        } else {
-          _scheduleHide();
-        }
-      }),
-      _player.stream.completed.listen((completed) {
-        if (!completed || !_controller.preferences.exitFullscreenOnEnd || !mounted) return;
-        if (isFullscreen(context) && _controller.stopsAfterEnd) unawaited(widget.state?.exitFullscreen());
+      stream.playing.listen(_onPlaying),
+      stream.completed.listen(_onCompleted),
+      stream.width.listen((_) => _applyFit()),
+      stream.height.listen((_) => _applyFit()),
+      stream.duration.listen((_) {
+        if (_heat == null && _preview == null) _infoId = null;
+        _readInfo();
       }),
     ]);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _applyFit());
-    _scheduleHide();
+    _restartHide();
+    _keepAwake();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _applyFit();
+      _readInfo();
+      _updateLift();
+    });
+  }
+
+  @override
+  void didUpdateWidget(PlayerControls old) {
+    super.didUpdateWidget(old);
+    if (old.controller != widget.controller) {
+      old.controller.removeListener(_onController);
+      old.controller.pictureShapedByPlayer.removeListener(_applyFit);
+      widget.controller.addListener(_onController);
+      widget.controller.pictureShapedByPlayer.addListener(_applyFit);
+    }
   }
 
   @override
   void dispose() {
-    videoFit.removeListener(_applyFit);
-    _controller.removeListener(_syncVideo);
-    KeepAwake.hold(this, false);
-    _holdSpeed(false);
-    _transform.dispose();
+    _hideTimer?.cancel();
+    _feedbackTimer?.cancel();
     for (final subscription in _subscriptions) {
       unawaited(subscription.cancel());
     }
+    _c.removeListener(_onController);
+    _c.pictureShapedByPlayer.removeListener(_applyFit);
+    videoFit.removeListener(_applyFit);
+    _picture.removeListener(_rebuild);
+    _picture.dispose();
+    _releaseHold();
+    KeepAwake.hold(this, false);
+    if (_lifted) _c.liftSubtitles(0);
     if (_orientationLocked) unawaited(SystemChrome.setPreferredOrientations(const []));
-    _hideTimer?.cancel();
-    _feedbackTimer?.cancel();
-    if (_lifted) _controller.liftSubtitles(0);
-    _animation.dispose();
+    _bars.dispose();
     _focus.dispose();
+    _feedback.dispose();
     super.dispose();
   }
 
-  /// Loads the bar's preview frames and replay curve once per video, from
-  /// the extraction already made for playback, and resets mirroring and zoom
-  /// for a new one. Tried again until the extraction is there.
-  void _syncVideo() {
-    final id = _controller.playing?.id;
-    if (!mounted || id == null) return;
-    if (_infoFor != id) {
-      _infoFor = id;
-      _infoRead = null;
-      _heatmap = null;
-      _preview = null;
-      _transform.reset();
-      // A long press held while the video changed must not leave the next
-      // one fast.
-      _holdSpeed(false);
-      if (mounted) setState(() {});
-    } else if (_infoRead == id) {
-      return;
-    }
-    if (_infoBusy) return;
-    _infoBusy = true;
-    _controller.playingInfo().then((info) {
-      _infoBusy = false;
-      if (!mounted || info == null || _controller.playing?.id != id) return;
-      // Read once per video, also when it has neither: a live has no heatmap
-      // or storyboard, and the controller notifies many times a second.
-      _infoRead = id;
-      final board = Storyboard.from(info);
-      setState(() {
-        _heatmap = Heatmap.from(info);
-        _preview = board == null ? null : storyboardPreview(board, _controller.storyboardSheets);
+  void _rebuild() {
+    if (!mounted) return;
+    if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() {});
       });
+    } else {
+      setState(() {});
+    }
+  }
+
+  void _onController() {
+    final id = _c.playing?.id;
+    if (id != _videoId) {
+      _videoId = id;
+      _heat = null;
+      _preview = null;
+      _infoId = null;
+      _picture.reset();
+      _releaseHold();
+    }
+    _readInfo();
+    _keepAwake();
+    _rebuild();
+  }
+
+  void _onPlaying(bool playing) {
+    _keepAwake();
+    if (playing) {
+      _restartHide();
+    } else {
+      _showBars();
+    }
+  }
+
+  void _onCompleted(bool completed) {
+    if (!completed || !mounted) return;
+    if (_c.preferences.exitFullscreenOnEnd && isFullscreen(context) && _c.stopsAfterEnd) {
+      unawaited(widget.state?.exitFullscreen());
+    }
+  }
+
+  void _keepAwake() => KeepAwake.hold(this, _player.state.playing && !_c.audioOnly);
+
+  Future<void> _readInfo() async {
+    final id = _c.playing?.id;
+    if (id == null || _infoId == id || _reading) return;
+    _reading = true;
+    Map<String, dynamic>? info;
+    try {
+      info = await _c.playingInfo();
+    } finally {
+      _reading = false;
+    }
+    if (!mounted || _c.playing?.id != id || info == null) return;
+    _infoId = id;
+    final board = Storyboard.from(info);
+    setState(() {
+      _heat = Heatmap.from(info!);
+      _preview = board == null ? null : storyboardPreview(board, _c.storyboardSheets);
     });
   }
 
   void _applyFit() {
+    if (!mounted) return;
     final fit = videoFit.value;
-    _controller.coverVideo = fit != VideoFit.contain;
-    // update() cannot clear an aspect ratio, so the automatic modes pass
-    // the video's own one.
-    final ratio = videoAspectFor(fit.aspectRatio, _player.state.width, _player.state.height);
+    _c.coverVideo = fit != VideoFit.contain;
+    final shaped = fit == VideoFit.contain && _c.pictureShapedByPlayer.value;
+    final state = _player.state;
+    final ratio = shaped ? 0.0 : videoAspectFor(fit.aspectRatio, state.width, state.height);
     widget.state?.update(fit: fit.fit, aspectRatio: ratio);
   }
 
-  final _bottomBarKey = GlobalKey();
-  /// The most subtitles move up while the controls show, as a share of the
-  /// picture's height.
-  static const _maxLift = 0.15;
-  /// In a picture shorter than this, such as a phone's held upright, the
-  /// subtitles move all the way above the bar, as phone video apps do;
-  /// lifted only part of the way they would sit on the time and buttons.
-  static const _clearBelow = 360.0;
-  bool _lifted = false;
-
-  /// Moves the subtitles above the bottom bar while it [shows], so it never
-  /// covers them, and back down once it hides.
-  void _liftSubtitles(bool shows) {
-    if (!mounted || shows == _lifted) return;
-    final bar = _bottomBarKey.currentContext?.findRenderObject();
-    final box = context.findRenderObject();
-    if (shows && (bar is! RenderBox || !bar.hasSize || box is! RenderBox || !box.hasSize)) return;
-    _lifted = shows;
-    // mpv places subtitles in percent of the picture, which may be letterboxed.
-    final size = shows ? (box as RenderBox).size : Size.zero;
-    final w = _player.state.width ?? 0, h = _player.state.height ?? 0;
-    final picture = w > 0 && h > 0 ? min(size.height, size.width * h / w) : size.height;
-    // Above the bar. In a large picture never more than a share of it, so
-    // a tall bar does not push them into the middle.
-    final view = widget.state;
-    final barHeight = shows ? (bar as RenderBox).size.height : 0.0;
-    final lift = !shows ? 0.0 : picture < _clearBelow ? barHeight : min(barHeight, picture * _maxLift);
-    if (view != null && view.mounted) view.setSubtitleViewPadding(view.widget.subtitleViewConfiguration.padding + EdgeInsets.only(bottom: lift));
-    if (lift == 0) return _controller.liftSubtitles(0);
-    _controller.liftSubtitles(picture > 0 ? (lift / picture * 100).ceil() : 0);
+  void _showFeedback(IconData icon, String text) {
+    _feedback.value = (icon: icon, text: text);
+    _feedbackTimer?.cancel();
+    _feedbackTimer = Timer(const Duration(milliseconds: 700), () => _feedback.value = null);
   }
 
-  void _show() {
+  // Bars
+
+  void _showBars() {
+    if (!mounted) return;
+    _bars.forward();
+    _restartHide();
+  }
+
+  void _restartHide() {
     _hideTimer?.cancel();
-    if (_animation.status != AnimationStatus.forward && _animation.value < 1) _animation.forward();
-    _scheduleHide();
+    _hideTimer = Timer(Duration(seconds: _c.preferences.controlsHideSeconds), _autoHide);
   }
 
-  void _scheduleHide() {
-    _hideTimer?.cancel();
-    _hideTimer = Timer(Duration(seconds: _controller.preferences.controlsHideSeconds), () {
-      if (!mounted || !_player.state.playing || _menus > 0 || _hoveringBars) return;
-      _animation.reverse();
-      _hidePointer();
-    });
-  }
-
-  /// In fullscreen the pointer goes with the bars right away, not on its
-  /// next move (see [WindowFrame.hidePointer]).
-  void _hidePointer() {
-    if (!WindowFrame.supported || Device.tv || !isFullscreen(context)) return;
-    final box = context.findRenderObject();
-    if (box is! RenderBox || !box.hasSize) return;
-    unawaited(WindowFrame.hidePointer(box.localToGlobal(Offset.zero) & box.size));
-  }
-
-  /// The rate before a long press sped playback up, while it is held.
-  double? _heldRate;
-
-  void _holdSpeed(bool hold) {
-    if (hold) {
-      if (_heldRate != null || !_player.state.playing) return;
-      final rate = _heldRate = _player.state.rate;
-      final fast = max(2.0, rate * 2).clamp(0.25, 4.0);
-      unawaited(HapticFeedback.lightImpact());
-      unawaited(_player.setRate(fast));
-      _showFeedback(AppIcons.fastForwardFill, tr('Playing at {0}x', [rateText(fast)]));
-    } else if (_heldRate case final rate?) {
-      _heldRate = null;
-      unawaited(_player.setRate(rate));
+  void _autoHide() {
+    if (!mounted || !_player.state.playing || _menus > 0 || _overBar) return;
+    _bars.reverse();
+    if (isFullscreen(context) && WindowFrame.supported && !Device.tv) {
+      final box = context.findRenderObject();
+      if (box is RenderBox && box.hasSize) unawaited(WindowFrame.hidePointer(box.localToGlobal(Offset.zero) & box.size));
     }
   }
 
-
-  void _showFeedback(IconData icon, String text) {
-    _feedbackTimer?.cancel();
-    setState(() => _feedback = (icon, text));
-    _feedbackTimer = Timer(const Duration(milliseconds: 700), () {
-      if (mounted) setState(() => _feedback = null);
-    });
+  void _hideNow() {
+    _hideTimer?.cancel();
+    _bars.reverse();
   }
 
-  void _onScroll(PointerSignalEvent event) {
-    if (event is! PointerScrollEvent) return;
-    // Claiming the event keeps the page around the player from scrolling;
-    // with the wheel gesture off only Ctrl + wheel is taken.
-    if (_controller.preferences.wheelGesture == WheelGesture.off && !_speedModifier) return;
-    GestureBinding.instance.pointerSignalResolver.register(event, _onWheel);
+  void _menuOpened() {
+    _menus++;
+    _hideTimer?.cancel();
   }
 
-  bool get _speedModifier => HardwareKeyboard.instance.isControlPressed || (Platform.isMacOS && HardwareKeyboard.instance.isMetaPressed);
+  void _menuClosed() {
+    if (_menus > 0) _menus--;
+    if (_menus == 0) _restartHide();
+  }
 
-  void _onWheel(PointerSignalEvent event) {
-    if (event is! PointerScrollEvent) return;
+  void _onBarsStatus(AnimationStatus status) => _updateLift();
+
+  /// Raises mpv's subtitles above the bottom bar while the bars show.
+  void _updateLift() {
+    if (!mounted) return;
+    final shown = _barsShown;
+    final bar = _bottomKey.currentContext?.size?.height ?? 0;
+    final box = _lastBox;
+    var amount = 0.0;
+    var percent = 0;
+    if (shown && bar > 0 && box.height > 0) {
+      final state = _player.state;
+      final ratio = videoAspectFor(null, state.width, state.height);
+      final picture = math.min(box.height, box.width / ratio);
+      amount = picture > 360 ? math.min(bar, picture * 0.15) : bar;
+      percent = (amount / picture * 100).ceil();
+    }
+    _lifted = percent > 0;
+    _c.liftSubtitles(percent);
+    widget.state?.setSubtitleViewPadding(EdgeInsets.only(bottom: amount));
+  }
+
+  // Touch and mouse
+
+  void _onTapUp(TapUpDetails details) {
+    _focus.requestFocus();
+    if (_locked) return _showBars();
+    if (_isTouch(details.kind)) {
+      if (_barsShown) {
+        _hideNow();
+      } else {
+        _showBars();
+      }
+    } else {
+      unawaited(_player.playOrPause());
+      _showBars();
+    }
+  }
+
+  void _onDoubleTap() {
+    if (_locked) return;
+    if (_isTouch(_lastKind)) {
+      Haptics.select();
+      unawaited(_player.playOrPause().then((_) {
+        final playing = _player.state.playing;
+        _showFeedback(playing ? AppIcons.pauseFill : AppIcons.playFill, playing ? tr('Pause') : tr('Play'));
+      }));
+    } else {
+      unawaited(toggleFullscreenFrom(widget.state));
+    }
+  }
+
+  void _onSecondaryTap() {
+    if (_locked) return;
+    switch (_c.preferences.rightClick) {
+      case RightClick.off:
+        break;
+      case RightClick.back:
+        if (isFullscreen(context)) {
+          unawaited(widget.state?.exitFullscreen());
+        } else {
+          _c.goBack();
+        }
+      case RightClick.fillWindow:
+        unawaited(toggleFillWindow(widget.state));
+    }
+  }
+
+  void _holdStart() {
+    if (_locked || _heldRate != null || !_player.state.playing) return;
+    final rate = _player.state.rate;
+    final speed = math.max(2.0, rate * 2).clamp(0.25, 4.0);
+    _heldRate = rate;
+    if (touchFirst && !Device.tv) unawaited(HapticFeedback.lightImpact());
+    unawaited(_player.setRate(speed));
+    _showFeedback(AppIcons.fastForwardFill, tr('Playing at {0}x', [rateText(speed)]));
+  }
+
+  void _releaseHold() {
+    final rate = _heldRate;
+    if (rate == null) return;
+    _heldRate = null;
+    unawaited(_player.setRate(rate));
+  }
+
+  void _onPointerDown(PointerDownEvent event) {
+    _lastKind = event.kind;
+    final touch = _isTouch(event.kind);
+    if (touch != _touched) setState(() => _touched = touch);
+    if (event.kind == PointerDeviceKind.touch) {
+      _fingers[event.pointer] = event.position;
+      if (_fingers.length == 2) {
+        _pinching = true;
+        _pinchStart = _pinchLast = _spread();
+      }
+    }
+  }
+
+  void _onPointerMove(PointerMoveEvent event) {
+    if (!_fingers.containsKey(event.pointer)) return;
+    _fingers[event.pointer] = event.position;
+    if (_fingers.length == 2) _pinchLast = _spread();
+  }
+
+  void _onPointerEnd(PointerEvent event) {
+    if (!_fingers.containsKey(event.pointer)) return;
+    final both = _fingers.length == 2;
+    _fingers.remove(event.pointer);
+    if (both && _pinchStart > 0 && event is PointerUpEvent) _finishPinch();
+    if (_fingers.isEmpty) _pinching = false;
+  }
+
+  double _spread() {
+    final points = _fingers.values.toList();
+    return points.length < 2 ? 0 : (points[0] - points[1]).distance;
+  }
+
+  void _finishPinch() {
+    final ratio = _pinchStart > 0 ? _pinchLast / _pinchStart : 1.0;
+    _pinchStart = 0;
+    if (_locked || !isFullscreen(context)) return;
+    if (ratio > 1.2 && videoFit.value != VideoFit.cover) {
+      videoFit.value = VideoFit.cover;
+      _showFeedback(AppIcons.cornersOut, VideoFit.cover.label);
+    } else if (ratio < 0.83 && videoFit.value != VideoFit.contain) {
+      videoFit.value = VideoFit.contain;
+      _showFeedback(AppIcons.cornersIn, VideoFit.contain.label);
+    }
+  }
+
+  void _onVerticalStart(DragStartDetails details) {
+    _dragLive = !_locked && !_pinching;
+    _verticalTotal = 0;
+    _verticalSteps = 0;
+    _verticalLeft = details.localPosition.dx < _lastBox.width / 2;
+  }
+
+  void _onVerticalUpdate(DragUpdateDetails details) {
+    if (!_dragLive || _pinching) return;
+    final dy = details.primaryDelta ?? 0;
+    _verticalTotal += dy;
+    if (isPhone(context) && !isFullscreen(context)) return;
+    final height = _lastBox.height;
+    if (height <= 0) return;
+    final range = _verticalLeft ? 2 * pictureLimit('brightness') : 100;
+    _verticalSteps -= dy * range / height;
+    final whole = _verticalSteps.truncate();
+    if (whole == 0) return;
+    _verticalSteps -= whole;
+    if (_verticalLeft) {
+      unawaited(_stepBrightness(whole));
+    } else {
+      unawaited(_stepVolume(whole.toDouble()));
+    }
+  }
+
+  void _onVerticalEnd(DragEndDetails details) {
+    if (!_dragLive) return;
+    _dragLive = false;
+    if (!(isPhone(context) && !isFullscreen(context))) return;
+    final velocity = details.primaryVelocity ?? 0;
+    if (_verticalTotal < -48 || velocity < -400) {
+      unawaited(widget.state?.enterFullscreen());
+    } else if (_verticalTotal > 48 || velocity > 400) {
+      _c.goBack();
+    }
+  }
+
+  void _onHorizontalStart(DragStartDetails details) {
+    final duration = _player.state.duration;
+    _dragLive = !_locked && !_pinching && duration > Duration.zero;
+    _horizontalTotal = 0;
+    _seekFrom = _player.state.position;
+    _seekTo = null;
+  }
+
+  void _onHorizontalUpdate(DragUpdateDetails details) {
+    final from = _seekFrom;
+    final duration = _player.state.duration;
+    if (!_dragLive || _pinching || from == null || duration <= Duration.zero || _lastBox.width <= 0) return;
+    _horizontalTotal += details.primaryDelta ?? 0;
+    final span = duration < const Duration(minutes: 3) ? duration : const Duration(minutes: 3);
+    final raw = from + span * (_horizontalTotal / _lastBox.width);
+    final target = raw < Duration.zero ? Duration.zero : raw > duration ? duration : raw;
+    _seekTo = target;
+    _showFeedback(_horizontalTotal >= 0 ? AppIcons.fastForwardFill : AppIcons.rewindFill, '${formatPlaybackTime(target)} / ${formatPlaybackTime(duration)}');
+  }
+
+  void _onHorizontalEnd(DragEndDetails details) {
+    final target = _seekTo;
+    final live = _dragLive;
+    _dragLive = false;
+    _seekTo = null;
+    if (live && target != null) unawaited(_c.seek(target));
+  }
+
+  void _onHorizontalCancel() {
+    _dragLive = false;
+    _seekTo = null;
+  }
+
+  Future<void> _stepVolume(double delta) async {
+    await _c.changeVolume(delta);
+    final volume = _player.state.volume.round();
+    _showFeedback(volume == 0 ? AppIcons.speakerSlash : AppIcons.speakerHighFill, '$volume%');
+  }
+
+  Future<void> _stepBrightness(int delta) async {
+    final value = await _c.changeBrightness(delta);
+    _showFeedback(value < 0 ? AppIcons.sunDim : AppIcons.sun, tr('Brightness {0}', [value > 0 ? '+$value' : '$value']));
+  }
+
+  void _onSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent || _locked) return;
+    final keyboard = HardwareKeyboard.instance;
+    final modifier = keyboard.isControlPressed || (Platform.isMacOS && keyboard.isMetaPressed);
+    final mode = _c.preferences.wheelGesture;
+    if (!modifier && mode == WheelGesture.off) return;
+    GestureBinding.instance.pointerSignalResolver.register(event, (resolved) => _scroll(resolved as PointerScrollEvent, modifier));
+  }
+
+  void _scroll(PointerScrollEvent event, bool modifier) {
     final up = event.scrollDelta.dy < 0;
-    // Ctrl + wheel steps through 倍速选项, as Enhancer for YouTube does.
-    if (_speedModifier) {
-      final speed = nextSpeed(_controller.settings.speeds, _player.state.rate, up ? 1 : -1);
+    if (modifier) {
+      final speed = nextSpeed(_c.settings.speeds, _player.state.rate, up ? 1 : -1);
       if (speed == null) return;
       unawaited(_player.setRate(speed));
       _showFeedback(up ? AppIcons.fastForwardFill : AppIcons.speedometer, '${trimSpeed(speed)}X');
       return;
     }
-    final brightness = switch (_controller.preferences.wheelGesture) {
-      WheelGesture.off => null,
-      WheelGesture.volume => false,
+    final left = event.localPosition.dx < _lastBox.width / 2;
+    final useBrightness = switch (_c.preferences.wheelGesture) {
       WheelGesture.brightness => true,
-      // The left half of the player sets the brightness, the right the volume.
-      WheelGesture.split => _onLeft(event.localPosition),
+      WheelGesture.split => left,
+      _ => false,
     };
-    if (brightness == null) return;
-    if (brightness) {
-      _brighten(up ? _brightnessStep : -_brightnessStep);
+    if (useBrightness) {
+      unawaited(_stepBrightness(up ? 5 : -5));
     } else {
-      final step = _controller.preferences.volumeStep.toDouble();
-      _louder(up ? step : -step);
+      final step = _c.preferences.volumeStep.toDouble();
+      unawaited(_stepVolume(up ? step : -step));
     }
   }
 
-  static const _brightnessStep = 5;
+  // Keys
 
-  bool _onLeft(Offset position) => position.dx < (context.size?.width ?? double.infinity) / 2;
-
-  void _louder(double delta) => unawaited(_controller.changeVolume(delta).then((_) {
-        final volume = _player.state.volume.round();
-        _showFeedback(volume == 0 ? AppIcons.speakerSlash : AppIcons.speakerHighFill, '$volume%');
-      }));
-
-  void _brighten(int delta) => unawaited(_controller.changeBrightness(delta).then((value) {
-        _showFeedback(value < 0 ? AppIcons.sunDim : AppIcons.sun, tr('Brightness {0}', [value > 0 ? '+$value' : '$value']));
-      }));
-
-  /// Sliding a finger up or down: the side it started on, and how far it
-  /// has gone in steps not applied yet.
-  bool _dragLeft = false;
-  double _dragSteps = 0;
-
-  /// 锁定: taps, slides and the wheel do nothing but show the unlock
-  /// button, so a phone in a pocket or a hand on the screen changes nothing.
-  bool _locked = false;
-  /// Whether a finger last touched the player; the lock button is for
-  /// touch screens and full screen.
-  bool _touched = false;
-
-  void _toggleLock() {
-    setState(() => _locked = !_locked);
-    _showFeedback(_locked ? AppIcons.lock : AppIcons.lockOpen, _locked ? tr('Locked') : tr('Unlocked'));
-    _show();
-  }
-
-  TapDownDetails? _doubleTapAt;
-
-  /// A finger's double tap on the left or right third skips back or ahead
-  /// 10 s, as in YouTube's phone app, and taps in a row add up; the middle
-  /// plays or pauses. The mouse's double click toggles full screen.
-  /// A finger's double tap anywhere plays or pauses, as in Bilibili's and
-  /// other Chinese video apps; seeking is a sideways slide. A mouse's double
-  /// click toggles full screen.
-  void _doubleTap() {
-    final at = _doubleTapAt;
-    final touch = at != null && (at.kind == PointerDeviceKind.touch || at.kind == PointerDeviceKind.stylus);
-    if (!touch) {
-      unawaited(toggleFullscreenFrom(widget.state));
-      return;
+  Map<ShortcutActivator, VoidCallback> _shortcuts() {
+    final prefs = _c.preferences;
+    if (_bindings == null || !identical(_bindingsFor, prefs)) {
+      _bindingsFor = prefs;
+      _bindings = playerShortcuts(_c, () => widget.state, onFeedback: _showFeedback, onScreenshot: _screenshot);
     }
-    unawaited(HapticFeedback.selectionClick());
-    unawaited(_player.playOrPause());
-    _showFeedback(_player.state.playing ? AppIcons.pauseFill : AppIcons.playFill, _player.state.playing ? tr('Pause') : tr('Play'));
+    return _bindings!;
   }
 
-  /// Where a sideways slide started, how far it went and where it seeks to.
-  Duration? _slideFrom, _slideTo;
-  double _slideX = 0;
+  void _screenshot() => unawaited(captureScreenshot(context, _c, onFeedback: _showFeedback));
 
-  void _seekSlideStart(DragStartDetails details) {
-    final length = _player.state.duration;
-    _slideFrom = length > Duration.zero ? _player.state.position : null;
-    _slideTo = _slideFrom;
-    _slideX = 0;
-  }
-
-  /// The player's width is three minutes, or the whole video when shorter.
-  void _seekSlideUpdate(DragUpdateDetails details) {
-    final from = _slideFrom, width = context.size?.width ?? 0;
-    if (from == null || width <= 0 || _pinching) return;
-    _slideX += details.primaryDelta ?? 0;
-    final length = _player.state.duration;
-    final span = length < const Duration(minutes: 3) ? length : const Duration(minutes: 3);
-    final to = from + span * (_slideX / width);
-    _slideTo = to < Duration.zero ? Duration.zero : (to > length ? length : to);
-    _showFeedback(_slideX >= 0 ? AppIcons.fastForwardFill : AppIcons.rewindFill, '${formatPlaybackTime(_slideTo!)} / ${formatPlaybackTime(length)}');
-  }
-
-  void _seekSlideEnd(DragEndDetails details) {
-    final to = _slideTo;
-    _slideFrom = _slideTo = null;
-    if (to != null && !_pinching) unawaited(_controller.seek(to));
-  }
-
-  PointerDeviceKind? _tapKind;
-
-  /// A phone's screen held upright, too narrow for the full screen's rows.
-  bool _upright(BuildContext context) => _phone && MediaQuery.sizeOf(context).width < 600;
-
-  /// Phones only: keeps the screen in the way it is held now, landscape or
-  /// portrait, until unlocked.
-  static bool get _phone => touchFirst && !Device.tv;
-  bool _orientationLocked = false;
-
-  void _toggleOrientation() {
-    final landscape = MediaQuery.orientationOf(context) == Orientation.landscape;
-    setState(() => _orientationLocked = !_orientationLocked);
-    unawaited(SystemChrome.setPreferredOrientations(!_orientationLocked
-        ? const []
-        : landscape
-            ? const [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]
-            : const [DeviceOrientation.portraitUp]));
-    _showFeedback(AppIcons.deviceRotate, !_orientationLocked ? tr('Rotate with the phone') : landscape ? tr('Locked to landscape') : tr('Locked to portrait'));
-  }
-
-  /// A-B 循环 at the current position, saying what the press did.
-  Future<void> _markLoop() async {
-    await _controller.markLoop();
-    final a = _controller.loopA, b = _controller.loopB;
-    _showFeedback(
-      AppIcons.repeatOnce,
-      b != null ? tr('Looping {0} – {1}', [formatPlaybackTime(a!), formatPlaybackTime(b)]) : a != null ? tr('Point A {0}; press again to set point B', [formatPlaybackTime(a)]) : tr('A-B loop off'),
-    );
-  }
-
-  /// How far the picture stands in from the screen's sides, beyond the
-  /// notch's own inset, in full screen: the controls keep to the picture,
-  /// not the black bars beside it.
-  double _besidePicture(bool fullscreen) {
-    if (!fullscreen) return 0;
-    final width = _player.state.width ?? 0, height = _player.state.height ?? 0;
-    final screen = MediaQuery.sizeOf(context);
-    if (width <= 0 || height <= 0 || screen.isEmpty) return 0;
-    final scale = min(screen.width / width, screen.height / height);
-    final side = (screen.width - width * scale) / 2;
-    final view = View.of(context);
-    final safe = EdgeInsets.fromViewPadding(view.viewPadding, view.devicePixelRatio);
-    return max(0.0, side - max(safe.left, safe.right));
-  }
-
-  Widget _onPicture(bool fullscreen, Widget child) {
-    final extra = _besidePicture(fullscreen);
-    return extra <= 0 ? child : Padding(padding: EdgeInsets.symmetric(horizontal: extra), child: child);
-  }
-
-  Widget _lockButton(bool fullscreen) => PositionedDirectional(
-        start: 12 + _besidePicture(fullscreen),
-        top: 0,
-        bottom: 0,
-        child: SafeArea(
-          right: false,
-          child: Center(
-          child: FadeTransition(
-            opacity: _animation,
-            child: IgnorePointer(
-              ignoring: _animation.isDismissed,
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                DecoratedBox(
-                  decoration: const BoxDecoration(color: Color(0x66000000), shape: BoxShape.circle),
-                  child: _IconButton(tooltip: _locked ? tr('Unlock') : tr('Lock'), icon: _locked ? AppIcons.lock : AppIcons.lockOpen, width: 40, onTap: _toggleLock),
-                ),
-                if (_phone && !_locked) ...[
-                  const SizedBox(height: 12),
-                  DecoratedBox(
-                    decoration: const BoxDecoration(color: Color(0x66000000), shape: BoxShape.circle),
-                    child: _IconButton(
-                      tooltip: _orientationLocked ? tr('Rotate with the phone') : tr('Lock screen rotation'),
-                      icon: _orientationLocked ? AppIcons.lockSimple : AppIcons.deviceRotate,
-                      active: _orientationLocked,
-                      width: 40,
-                      onTap: _toggleOrientation,
-                    ),
-                  ),
-                ],
-              ]),
-            ),
-          ),
-        ),
-        ),
-      );
-
-  /// Fingers on the player, for a pinch: two fingers spread apart in full
-  /// screen crop the picture to fill the screen, pinched together show it
-  /// whole again, as in phone video apps. Read from the raw touches, so the
-  /// one-finger slides keep their gestures.
-  final _fingers = <int, Offset>{};
-  double? _pinchFrom;
-  bool _pinching = false;
-
-  void _pinchDown(PointerDownEvent event) {
-    _fingers[event.pointer] = event.position;
-    if (_fingers.length == 2 && !_locked && isFullscreen(context)) {
-      _pinchFrom = _spread();
-      _pinching = true;
-    }
-  }
-
-  void _pinchMove(PointerMoveEvent event) {
-    if (_fingers.containsKey(event.pointer)) _fingers[event.pointer] = event.position;
-  }
-
-  void _pinchUp(PointerEvent event) {
-    final from = _pinchFrom;
-    if (from != null && _fingers.length == 2 && from > 0) {
-      final ratio = _spread() / from;
-      final fit = ratio > 1.2 ? VideoFit.cover : ratio < 0.83 ? VideoFit.contain : null;
-      if (fit != null && fit != videoFit.value) {
-        videoFit.value = fit;
-        _showFeedback(fit == VideoFit.cover ? AppIcons.cornersOut : AppIcons.cornersIn, fit.label);
-      }
-      _pinchFrom = null;
-    }
-    _fingers.remove(event.pointer);
-    // The slides start again with every finger lifted.
-    if (_fingers.isEmpty) _pinching = false;
-  }
-
-  double _spread() {
-    final [a, b] = _fingers.values.take(2).toList();
-    return (a - b).distance;
-  }
-
-  /// On a phone outside full screen a slide is not brightness or volume
-  /// but where the player goes: up into full screen, down into the mini
-  /// player, as in phone video apps.
-  bool _slideMoves = false;
-  double _slid = 0;
-
-  void _dragStart(DragStartDetails details) {
-    _dragLeft = _onLeft(details.localPosition);
-    _dragSteps = 0;
-    _slideMoves = _phone && !isFullscreen(context);
-    _slid = 0;
-  }
-
-  void _dragEnd(DragEndDetails details) {
-    if (!_slideMoves || _pinching) return;
-    final speed = details.primaryVelocity ?? 0;
-    if (_slid < -48 || speed < -400) unawaited(widget.state?.enterFullscreen());
-    if (_slid > 48 || speed > 400) _controller.goBack();
-  }
-
-  void _dragUpdate(DragUpdateDetails details) {
-    if (_pinching) return;
-    if (_slideMoves) {
-      _slid += details.primaryDelta ?? 0;
-      return;
-    }
-    final height = context.size?.height ?? 0;
-    if (height <= 0) return;
-    // The player's full height is the whole range: 100 % volume, or every
-    // brightness step from the darkest to the brightest allowed.
-    _dragSteps -= (details.primaryDelta ?? 0) / height * (_dragLeft ? 2 * pictureLimit('brightness') : 100);
-    final whole = _dragSteps.truncate();
-    if (whole == 0) return;
-    _dragSteps -= whole;
-    _dragLeft ? _brighten(whole) : _louder(whole.toDouble());
-  }
-
-  /// A TV remote, as TV video apps take it: with the bars hidden, OK plays
-  /// or pauses, left and right seek and up or down bring the bars up on
-  /// their first button; with the bars up the arrows move between buttons.
-  KeyEventResult _remoteKey(FocusNode node, KeyEvent event) {
-    if (event is KeyUpEvent) return KeyEventResult.ignored;
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (!Device.tv || event is! KeyDownEvent) return KeyEventResult.ignored;
     final key = event.logicalKey;
     final ok = key == LogicalKeyboardKey.select || key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter || key == LogicalKeyboardKey.gameButtonA;
     final direction = switch (key) {
@@ -618,158 +638,426 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       _ => null,
     };
     if (!ok && direction == null) return KeyEventResult.ignored;
-    final shown = _animation.value > 0 && _animation.status != AnimationStatus.reverse;
-    var focused = FocusManager.instance.primaryFocus;
-    // A button the bars hid with them is not where the remote is.
-    if (!shown && focused != _focus) {
-      _focus.requestFocus();
-      focused = _focus;
+    if (!_barsShown) _focus.requestFocus();
+    if (FocusManager.instance.primaryFocus == _focus) {
+      _showBars();
+      if (ok) {
+        unawaited(_player.playOrPause());
+        return KeyEventResult.handled;
+      }
+      if (direction == TraversalDirection.up || direction == TraversalDirection.down) {
+        _focusBottomBar();
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
     }
-    final onButton = focused != _focus;
-    if (onButton) {
-      _show();
-      if (direction != null) focused?.focusInDirection(direction);
-      return direction != null ? KeyEventResult.handled : KeyEventResult.ignored;
-    }
-    if (ok) {
-      unawaited(_player.playOrPause());
-      _show();
+    _showBars();
+    if (direction != null) {
+      FocusManager.instance.primaryFocus?.focusInDirection(direction);
       return KeyEventResult.handled;
     }
-    _show();
-    // Left and right seek through the player's own keys.
-    if (direction == TraversalDirection.left || direction == TraversalDirection.right) return KeyEventResult.ignored;
-    _firstButton()?.requestFocus();
-    return KeyEventResult.handled;
+    return KeyEventResult.ignored;
   }
 
-  /// The bottom bar's first button: the lowest row's leftmost control.
-  FocusNode? _firstButton() {
-    FocusNode? best;
-    for (final node in _focus.traversalDescendants) {
-      if (!node.canRequestFocus || node.context == null) continue;
-      final rect = node.rect;
-      final b = best?.rect;
-      if (b == null || rect.bottom > b.bottom + 4 || ((rect.bottom - b.bottom).abs() <= 4 && rect.left < b.left)) best = node;
+  void _focusBottomBar() {
+    final nodes = [
+      for (final node in _focus.descendants)
+        if (node is! FocusScopeNode && node.canRequestFocus && !node.skipTraversal && node.context != null && node.context!.mounted) node,
+    ];
+    if (nodes.isEmpty) return;
+    final lowest = nodes.map((n) => n.rect.bottom).reduce(math.max);
+    final row = nodes.where((n) => n.rect.bottom >= lowest - 4).toList()..sort((a, b) => a.rect.left.compareTo(b.rect.left));
+    row.first.requestFocus();
+  }
+
+  // Look
+
+  /// The played colour and gradient of the progress bar, from the skin.
+  (Color, Gradient?) _progressStyle(BuildContext context) {
+    final fallback = Theme.of(context).colorScheme.inversePrimary;
+    final paints = context.skin?.player.progress;
+    if (paints == null || paints.isEmpty) return (fallback, null);
+    return switch (paints.last) {
+      SolidPaint(:final color) => (color, null),
+      final LinearPaint paint when paint.colors.isNotEmpty => (paint.colors.last, paint.gradient),
+      RadialPaint(:final colors, :final stops) when colors.isNotEmpty => (colors.last, LinearGradient(colors: colors, stops: stops)),
+      _ => (fallback, null),
+    };
+  }
+
+  ({double side, double above}) _letterbox(Size box) {
+    final fit = videoFit.value;
+    if (fit != VideoFit.contain && fit.aspectRatio == null || box.isEmpty) return (side: 0, above: 0);
+    final state = _player.state;
+    final ratio = videoAspectFor(fit.aspectRatio, state.width, state.height);
+    var width = box.width;
+    var height = box.height;
+    if (width / height > ratio) {
+      width = height * ratio;
+    } else {
+      height = width / ratio;
     }
-    return best;
-  }
-
-  /// Keeps the bars up while one of their menus is open.
-  void _menuOpened() {
-    _menus++;
-    _show();
-  }
-
-  void _menuClosed() {
-    if (_menus > 0) _menus--;
-    _scheduleHide();
+    return (side: (box.width - width) / 2, above: (box.height - height) / 2);
   }
 
   @override
   Widget build(BuildContext context) {
     final fullscreen = isFullscreen(context);
-    final shortcuts = playerShortcuts(_controller, () => widget.state, onFeedback: _showFeedback, onScreenshot: () => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)));
-    final controls = _controls(fullscreen, shortcuts);
-    return VideoBox(controller: _controller, child: controls);
-  }
-
-  Widget _controls(bool fullscreen, Map<ShortcutActivator, VoidCallback> shortcuts) {
-    return CallbackShortcuts(
-      bindings: shortcuts,
-      child: Focus(
-        focusNode: _focus,
-        autofocus: true,
-        onKeyEvent: Device.tv ? _remoteKey : null,
-        child: ListenableBuilder(
-          listenable: _controller,
-          builder: (context, _) => MouseRegion(
-            onHover: (_) => _show(),
-            cursor: _animation.value == 0 ? SystemMouseCursors.none : MouseCursor.defer,
-            child: Listener(
-              onPointerSignal: (event) {
-                if (!_locked) _onScroll(event);
-              },
-              onPointerDown: (event) {
-                final touch = event.kind == PointerDeviceKind.touch || event.kind == PointerDeviceKind.stylus;
-                if (touch != _touched) setState(() => _touched = touch);
-                if (event.kind == PointerDeviceKind.touch) _pinchDown(event);
-              },
-              onPointerMove: _pinchMove,
-              onPointerUp: _pinchUp,
-              onPointerCancel: _pinchUp,
-              child: Stack(fit: StackFit.expand, children: [
-                if (_locked)
-                  GestureDetector(behavior: HitTestBehavior.opaque, onTap: _show)
-                else
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    // A finger sliding up or down, as in phone players; a
-                    // mouse never drags these.
-                    supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus},
-                    onVerticalDragStart: _dragStart,
-                    onVerticalDragUpdate: _dragUpdate,
-                    onVerticalDragEnd: _dragEnd,
-                    onHorizontalDragStart: _seekSlideStart,
-                    onHorizontalDragUpdate: _seekSlideUpdate,
-                    onHorizontalDragEnd: _seekSlideEnd,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTapUp: (details) => _tapKind = details.kind,
-                      onTap: () {
-                        _focus.requestFocus();
-                        // A finger's tap shows or hides the controls, as in
-                        // phone video apps; a double tap in the middle
-                        // pauses. A mouse click pauses, as on YouTube.
-                        if (_tapKind == PointerDeviceKind.touch || _tapKind == PointerDeviceKind.stylus) {
-                          if (_animation.value > 0 && _animation.status != AnimationStatus.reverse) {
-                            _hideTimer?.cancel();
-                            _animation.reverse();
-                          } else {
-                            _show();
-                          }
-                          return;
-                        }
-                        unawaited(_player.playOrPause());
-                        _show();
-                      },
-                      onDoubleTapDown: (details) => _doubleTapAt = details,
-                      onDoubleTap: _doubleTap,
-                      // Hold for 2x, as on YouTube and in PiliNara.
-                      onLongPressStart: (_) => _holdSpeed(true),
-                      onLongPressEnd: (_) => _holdSpeed(false),
-                      onLongPressCancel: () => _holdSpeed(false),
-                      // As in wiliwili: out of fullscreen first, then back.
-                      onSecondaryTap: switch (_controller.preferences.rightClick) {
-                        RightClick.off => null,
-                        RightClick.back => () => fullscreen ? unawaited(widget.state?.exitFullscreen()) : _controller.goBack(),
-                        RightClick.fillWindow => () => unawaited(toggleFillWindow(widget.state)),
-                      },
-                    ),
-                  ),
-                _buffering(),
-                if (_feedback case (final icon, final text)) Center(child: IgnorePointer(child: _FeedbackBubble(icon: icon, text: text))),
-                if (_controller.showStats) Positioned.fill(child: _stats(fullscreen)),
-                if (_controller.preferences.progressLine.shows(fullscreen: fullscreen))
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: IgnorePointer(
-                      child: FadeTransition(
-                        opacity: _animation.drive(Tween(begin: 1.0, end: 0.0)),
-                        child: MiniProgressLine(player: _player, color: Theme.of(context).colorScheme.inversePrimary),
+    final phone = isPhone(context);
+    final padding = MediaQuery.paddingOf(context);
+    final locked = _locked;
+    final showLock = locked || fullscreen || (_touched && !phone);
+    final (color, gradient) = _progressStyle(context);
+    final line = _c.preferences.progressLine.shows(fullscreen: fullscreen);
+    return VideoBox(
+      controller: _c,
+      child: CallbackShortcuts(
+        bindings: _shortcuts(),
+        child: Focus(
+          focusNode: _focus,
+          autofocus: true,
+          onKeyEvent: _onKey,
+          child: LayoutBuilder(builder: (context, constraints) {
+            final box = constraints.biggest;
+            if (box != _lastBox) {
+              _lastBox = box;
+              WidgetsBinding.instance.addPostFrameCallback((_) => _updateLift());
+            }
+            final letter = _letterbox(box);
+            final extra = fullscreen ? math.max(0.0, letter.side - math.max(padding.left, padding.right)) : 0.0;
+            return AnimatedBuilder(
+              animation: _bars,
+              child: Listener(
+                behavior: HitTestBehavior.translucent,
+                onPointerDown: _onPointerDown,
+                onPointerMove: _onPointerMove,
+                onPointerUp: _onPointerEnd,
+                onPointerCancel: _onPointerEnd,
+                onPointerSignal: _onSignal,
+                child: Stack(fit: StackFit.expand, children: [
+                  Positioned.fill(child: _surface()),
+                  _Buffering(player: _player, c: _c),
+                  IgnorePointer(child: _FeedbackBubble(feedback: _feedback)),
+                  if (_c.showStats) _statsOverlay(box, letter, fullscreen, padding),
+                  if (line)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: IgnorePointer(
+                        child: AnimatedBuilder(
+                          animation: _bars,
+                          builder: (context, child) => Opacity(opacity: 1 - _bars.value, child: child),
+                          child: MiniProgressLine(player: _player, color: Theme.of(context).colorScheme.inversePrimary),
+                        ),
                       ),
                     ),
+                  if (!locked) ...[
+                    Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _topBar(context, fullscreen, phone, extra, box))),
+                    Positioned(left: 0, right: 0, bottom: 0, child: _bar(top: false, child: _bottomBar(context, fullscreen, phone, extra, color, gradient, box))),
+                  ],
+                  if (showLock) _lockColumn(context, fullscreen, phone, extra),
+                ]),
+              ),
+              builder: (context, child) => MouseRegion(
+                cursor: _bars.value == 0 ? SystemMouseCursors.none : MouseCursor.defer,
+                onHover: (event) {
+                  if (event.kind == PointerDeviceKind.mouse) _showBars();
+                },
+                child: child,
+              ),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget _surface() => RawGestureDetector(
+        behavior: HitTestBehavior.opaque,
+        gestures: {
+          TapGestureRecognizer: GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+            TapGestureRecognizer.new,
+            (recognizer) => recognizer
+              ..onTapUp = _onTapUp
+              ..onSecondaryTap = _onSecondaryTap,
+          ),
+          DoubleTapGestureRecognizer: GestureRecognizerFactoryWithHandlers<DoubleTapGestureRecognizer>(
+            DoubleTapGestureRecognizer.new,
+            (recognizer) => recognizer.onDoubleTap = _onDoubleTap,
+          ),
+          LongPressGestureRecognizer: GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+            LongPressGestureRecognizer.new,
+            (recognizer) => recognizer
+              ..onLongPressStart = ((_) => _holdStart())
+              ..onLongPressEnd = ((_) => _releaseHold())
+              ..onLongPressCancel = _releaseHold,
+          ),
+          if (!_locked) ...{
+            VerticalDragGestureRecognizer: GestureRecognizerFactoryWithHandlers<VerticalDragGestureRecognizer>(
+              () => VerticalDragGestureRecognizer(supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus, PointerDeviceKind.invertedStylus}),
+              (recognizer) => recognizer
+                ..onStart = _onVerticalStart
+                ..onUpdate = _onVerticalUpdate
+                ..onEnd = _onVerticalEnd,
+            ),
+            HorizontalDragGestureRecognizer: GestureRecognizerFactoryWithHandlers<HorizontalDragGestureRecognizer>(
+              () => HorizontalDragGestureRecognizer(supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus, PointerDeviceKind.invertedStylus}),
+              (recognizer) => recognizer
+                ..onStart = _onHorizontalStart
+                ..onUpdate = _onHorizontalUpdate
+                ..onEnd = _onHorizontalEnd
+                ..onCancel = _onHorizontalCancel,
+            ),
+          },
+        },
+        child: const SizedBox.expand(),
+      );
+
+  Widget _bar({required bool top, required Widget child}) {
+    const black = Color(0xBF000000);
+    return MouseRegion(
+      onEnter: (_) {
+        _overBar = true;
+        _hideTimer?.cancel();
+      },
+      onExit: (_) {
+        _overBar = false;
+        _restartHide();
+      },
+      child: AnimatedBuilder(
+        animation: _bars,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: top ? Alignment.bottomCenter : Alignment.topCenter,
+              end: top ? Alignment.topCenter : Alignment.bottomCenter,
+              colors: const [Colors.transparent, black],
+            ),
+          ),
+          child: top ? child : KeyedSubtree(key: _bottomKey, child: child),
+        ),
+        builder: (context, child) {
+          final hidden = 1 - Ease.out.transform(_bars.value);
+          return FractionalTranslation(translation: Offset(0, top ? -hidden : 1.2 * hidden), child: child);
+        },
+      ),
+    );
+  }
+
+  Widget _statsOverlay(Size box, ({double side, double above}) letter, bool fullscreen, EdgeInsets padding) {
+    final start = math.max(letter.side, padding.left) + 12;
+    final top = math.max(letter.above + 8, math.max(fullscreen ? padding.top : 0.0, fullscreen ? 64.0 : 52.0));
+    final maxWidth = math.max(0.0, box.width - start - math.max(letter.side, 12));
+    final maxHeight = math.max(0.0, box.height - top - math.max(letter.above, 8));
+    return Positioned(
+      left: start,
+      top: top,
+      child: IgnorePointer(
+        child: StreamBuilder<int?>(
+          stream: _player.stream.width,
+          initialData: _player.state.width,
+          builder: (context, _) => ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight),
+            child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.topLeft, child: PlayerStats(player: _player)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Top bar
+
+  Widget _topBar(BuildContext context, bool fullscreen, bool phone, double extra, Size box) {
+    final c = _c;
+    final details = c.details;
+    final item = c.playing;
+    final title = details != null && details.title.isNotEmpty ? details.title : item?.title ?? '';
+    final channel = details != null && details.channel.isNotEmpty ? details.channel : item?.channel ?? '';
+    final accent = Theme.of(context).colorScheme.inversePrimary;
+    final narrow = box.width < 600;
+    final row = Padding(
+      padding: EdgeInsetsDirectional.fromSTEB((fullscreen ? 8 : 4) + extra, fullscreen ? 8 : 4, 8 + extra, 16),
+      child: Row(children: [
+        _IconBtn(
+          icon: AppIcons.arrowLeft,
+          size: 20,
+          tooltip: fullscreen ? tr('Exit fullscreen') : tr('Back'),
+          onTap: () {
+            _showBars();
+            if (fullscreen) {
+              unawaited(widget.state?.exitFullscreen());
+            } else {
+              c.goBack();
+            }
+          },
+        ),
+        if (!phone || fullscreen)
+          _IconBtn(
+            icon: AppIcons.houseFill,
+            size: 20,
+            tooltip: tr('Home'),
+            onTap: () async {
+              if (fullscreen) await widget.state?.exitFullscreen();
+              c.navigate(PageMode.home);
+            },
+          ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: fullscreen ? 16 : 14, fontWeight: FontWeight.w500)),
+            if (fullscreen && channel.isNotEmpty)
+              Text(channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          ]),
+        ),
+        if (phone && fullscreen && item != null && !narrow) ...[..._countButtons(accent), const SizedBox(width: 8)],
+        if (c.pinned) _status(AppIcons.pushPinFill, tr('Window pinned on top'), accent),
+        if (c.audioOnly) _status(AppIcons.headphonesFill, tr('Playing audio only'), accent),
+        if (c.sleepAt != null || c.sleepAfterCurrent) _status(AppIcons.moonStars, tr('Sleep timer on'), Colors.white, size: 18),
+        if (!fullscreen && !phone)
+          ValueListenableBuilder<bool>(
+            valueListenable: lightsOff,
+            builder: (context, off, _) => _IconBtn(
+              icon: off ? AppIcons.lightbulbFill : AppIcons.lightbulb,
+              size: 19,
+              active: off,
+              tooltip: off ? tr('Lights on (B)') : tr('Lights off (B)'),
+              onTap: () {
+                _showBars();
+                lightsOff.value = !lightsOff.value;
+              },
+            ),
+          ),
+        ListenableBuilder(
+          listenable: c.cast,
+          builder: (context, _) => _IconBtn(
+            icon: c.cast.active ? AppIcons.airplay : AppIcons.screencast,
+            size: 19,
+            active: c.cast.active,
+            tooltip: tr('Cast'),
+            onTap: () {
+              _showBars();
+              unawaited(showCastDialog(context, c));
+            },
+          ),
+        ),
+        if (!phone || fullscreen)
+          _IconBtn(
+            icon: AppIcons.browsers,
+            size: 19,
+            tooltip: tr('Picture in picture'),
+            onTap: () async {
+              if (fullscreen) await widget.state?.exitFullscreen();
+              c.setPip(true);
+            },
+          ),
+        _IconBtn(icon: AppIcons.slidersHorizontal, size: 20, tooltip: tr('More settings'), onTap: () => _openMore(context)),
+      ]),
+    );
+    return fullscreen ? SafeArea(bottom: false, child: row) : row;
+  }
+
+  Widget _status(IconData icon, String tooltip, Color color, {double size = 17}) => Tooltip(
+        message: tooltip,
+        child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Icon(icon, size: size, color: color)),
+      );
+
+  List<Widget> _countButtons(Color accent) {
+    final c = _c;
+    final item = c.playing;
+    if (item == null) return const [];
+    final account = c.account;
+    final liked = account?.ratingOf(item.id) == VideoRating.like;
+    final base = c.details?.likeCount ?? c.dislikes?.likes;
+    final likes = base == null ? null : math.max(0, base + (account?.ratingChange(item.id, VideoRating.like) ?? 0));
+    final library = c.library;
+    final favorite = library?.isFavorite(item.id) ?? false;
+    return [
+      _CountButton(
+        icon: liked ? AppIcons.thumbsUpFill : AppIcons.thumbsUp,
+        tooltip: tr('Like'),
+        count: likes,
+        active: liked,
+        onTap: () {
+          _showBars();
+          if (account != null && account.active && !account.ratingOff(item.id)) {
+            unawaited(account.rate(item, VideoRating.like));
+          } else if (account != null && account.active) {
+            _showFeedback(AppIcons.thumbsUp, tr('The uploader turned off likes and dislikes for this video'));
+          } else {
+            _showFeedback(AppIcons.thumbsUp, tr('Sign in to YouTube to {0}', [tr('Like')]));
+          }
+        },
+      ),
+      if (!_c.preferences.focusHideComments)
+        _CountButton(
+          icon: AppIcons.chatCircle,
+          tooltip: tr('Comments'),
+          onTap: () async {
+            await widget.state?.exitFullscreen();
+            sidePanelTab.value = null;
+            sidePanelTab.value = 'comments';
+          },
+        ),
+      if (library != null)
+        _CountButton(
+          icon: favorite ? AppIcons.heartFill : AppIcons.heart,
+          tooltip: tr('Favorites'),
+          active: favorite,
+          onTap: () {
+            _showBars();
+            library.toggleFavorite(item);
+            _rebuild();
+          },
+        ),
+      _CountButton(
+        icon: AppIcons.share,
+        tooltip: tr('Share'),
+        onTap: () async {
+          _showBars();
+          if (!await shareText(item.url)) {
+            await Clipboard.setData(ClipboardData(text: item.url));
+            _showFeedback(AppIcons.link, tr('Link copied'));
+          }
+        },
+      ),
+    ];
+  }
+
+  // Lock
+
+  Widget _lockColumn(BuildContext context, bool fullscreen, bool phone, double extra) {
+    final accent = Theme.of(context).colorScheme.inversePrimary;
+    return Positioned.fill(
+      child: AnimatedBuilder(
+        animation: _bars,
+        builder: (context, child) => IgnorePointer(ignoring: _bars.value == 0, child: Opacity(opacity: _bars.value, child: child)),
+        child: SafeArea(
+          right: false,
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Padding(
+              padding: EdgeInsetsDirectional.only(start: 12 + extra),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                _CircleButton(
+                  icon: _locked ? AppIcons.lock : AppIcons.lockOpen,
+                  tooltip: _locked ? tr('Unlock') : tr('Lock'),
+                  onTap: () {
+                    setState(() => _locked = !_locked);
+                    _showFeedback(_locked ? AppIcons.lock : AppIcons.lockOpen, _locked ? tr('Locked') : tr('Unlocked'));
+                    _showBars();
+                  },
+                ),
+                if (phone && !_locked && !Device.tv) ...[
+                  const SizedBox(height: 12),
+                  _CircleButton(
+                    icon: _orientationLocked ? AppIcons.lockSimple : AppIcons.deviceRotate,
+                    tooltip: _orientationLocked ? tr('Rotate with the phone') : tr('Lock screen rotation'),
+                    active: _orientationLocked,
+                    accent: accent,
+                    onTap: () => _toggleOrientation(context),
                   ),
-                if (!_locked) ...[
-                  // In full screen the bars keep clear of a camera cutout.
-                  Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _onPicture(fullscreen, SafeArea(top: fullscreen, bottom: false, left: fullscreen, right: fullscreen, child: _topBar(context, fullscreen))))),
-                  Positioned(left: 0, right: 0, bottom: 0, child: KeyedSubtree(key: _bottomBarKey, child: _bar(top: false, child: _onPicture(fullscreen, _bottomBar(context, fullscreen))))),
                 ],
-                // On a phone, only in full screen: over the small player above the
-                // page it covers the picture and has nothing to lock.
-                if (_locked || fullscreen || (_touched && !_phone)) _lockButton(fullscreen),
               ]),
             ),
           ),
@@ -778,1211 +1066,91 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     );
   }
 
-  List<Chapter> get _chapters => _controller.details?.chapters ?? const [];
-
-  /// The current chapter's title; opens the chapter list, as on YouTube.
-  Widget _chapterMenu() {
-    if (_chapters.isEmpty) return const SizedBox.shrink();
-    // Rebuilt only when the position enters another chapter.
-    int chapterAt(Duration position) {
-      final chapters = _chapters;
-      final current = Chapter.at(chapters, position);
-      return current == null ? -1 : chapters.indexOf(current);
+  void _toggleOrientation(BuildContext context) {
+    final landscape = MediaQuery.orientationOf(context) == Orientation.landscape;
+    setState(() => _orientationLocked = !_orientationLocked);
+    _showBars();
+    if (_orientationLocked) {
+      unawaited(SystemChrome.setPreferredOrientations(landscape ? const [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight] : const [DeviceOrientation.portraitUp]));
+      _showFeedback(AppIcons.deviceRotate, landscape ? tr('Locked to landscape') : tr('Locked to portrait'));
+    } else {
+      unawaited(SystemChrome.setPreferredOrientations(const []));
+      _showFeedback(AppIcons.deviceRotate, tr('Rotate with the phone'));
     }
-
-    return ValueListenableBuilder<int>(
-      valueListenable: _controller.chaptersChanged,
-      builder: (context, version, child) => StreamBuilder<int>(
-        stream: _player.stream.position.map(chapterAt).distinct(),
-        initialData: chapterAt(_player.state.position),
-        builder: (context, _) {
-          final chapters = _chapters;
-          final current = Chapter.at(chapters, _player.state.position);
-          final translated = _controller.translatedChapters;
-          // Translated titles, with the original after them when 双语对照
-          // is on; the bar shows the translation alone.
-          String title(int i, {bool both = false}) {
-            final original = chapters[i].title;
-            final translation = translated != null && i < translated.length ? translated[i] : null;
-            if (translation == null || translation == original) return original;
-            return both && _controller.preferences.bilingualTranslation ? '$translation · $original' : translation;
-          }
-
-          final index = current == null ? -1 : chapters.indexOf(current);
-          return _PopupMenu<int>(
-            tooltip: tr('Chapters'),
-            value: index,
-            items: [
-              for (final (i, c) in chapters.indexed) (i, '${formatPlaybackTime(c.start)}  ${title(i, both: true)}'),
-              if (translated == null) (-2, _controller.translatingChapters ? tr('Translating chapter names…') : tr('Translate chapter names')),
-            ],
-            onSelected: (i) => i == -2 ? unawaited(_controller.translateChapters()) : unawaited(_controller.seek(chapters[i].start)),
-            onOpened: _menuOpened,
-            onClosed: _menuClosed,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Text('·  ${title(index < 0 ? 0 : index)}  ›', style: _menuText, maxLines: 1, overflow: TextOverflow.ellipsis),
-            ),
-          );
-        },
-      ),
-    );
   }
 
-  /// The playback info panel, kept on the picture (not on the black bars
-  /// beside it, where its dark background can't be seen) and out of the
-  /// notch, and made smaller when the player is too small for it, as on a
-  /// phone held upright.
-  Widget _stats(bool fullscreen) => IgnorePointer(
-        child: StreamBuilder<int?>(
-          stream: _player.stream.width,
-          builder: (context, _) => LayoutBuilder(builder: (context, box) {
-            final width = _player.state.width ?? 0;
-            final height = _player.state.height ?? 0;
-            var side = 0.0;
-            var above = 0.0;
-            if (width > 0 && height > 0 && box.maxWidth.isFinite && box.maxHeight.isFinite) {
-              final scale = min(box.maxWidth / width, box.maxHeight / height);
-              side = (box.maxWidth - width * scale) / 2;
-              above = (box.maxHeight - height * scale) / 2;
-            }
-            // The screen's own notch or camera hole, read from the view: a
-            // SafeArea above may have taken it out of MediaQuery.
-            final view = View.of(context);
-            final safe = EdgeInsets.fromViewPadding(view.viewPadding, view.devicePixelRatio);
-            final rtl = Directionality.of(context) == TextDirection.rtl;
-            final start = max(side, rtl ? safe.right : safe.left) + 12;
-            final top = max(above + 8, max(fullscreen ? safe.top : 0.0, fullscreen ? 64.0 : 52.0));
-            return Stack(children: [
-              PositionedDirectional(
-                start: start,
-                top: top,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: max(0.0, box.maxWidth - start - max(side, 12.0)),
-                    maxHeight: max(0.0, box.maxHeight - top - max(above, 8.0)),
-                  ),
-                  child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.topStart, child: PlayerStats(player: _player)),
-                ),
-              ),
-            ]);
-          }),
-        ),
-      );
+  // Menus
 
-  Widget _buffering() => StreamBuilder<bool>(
-        stream: _player.stream.buffering,
-        initialData: _player.state.buffering,
-        builder: (context, snapshot) => _controller.playbackError == null && (snapshot.data == true || _controller.waitingForSubtitles)
-            ? Center(
-                child: IgnorePointer(
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    const SizedBox(width: 36, height: 36, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3)),
-                    if (_controller.waitingForSubtitles) ...[
-                      const SizedBox(height: 12),
-                      Text(tr('Translating subtitles…'), style: const TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 4)])),
-                    ],
-                  ]),
-                ),
-              )
-            : const SizedBox.shrink(),
-      );
-
-  /// PiliNara's `AppBarAni`: a gradient bar that slides out of the edge.
-  Widget _bar({required bool top, required Widget child}) => MouseRegion(
-        onEnter: (_) => _hoveringBars = true,
-        onExit: (_) {
-          _hoveringBars = false;
-          _scheduleHide();
-        },
-        child: SlideTransition(
-          position: _animation.drive(Tween(begin: Offset(0, top ? -1 : 1.2), end: Offset.zero)),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: top ? Alignment.bottomCenter : Alignment.topCenter,
-                end: top ? Alignment.topCenter : Alignment.bottomCenter,
-                colors: const [Colors.transparent, Color(0xBF000000)],
-              ),
-            ),
-            child: child,
-          ),
-        ),
-      );
-
-  /// Laid out as PiliNara's: 返回 and 主页 on the left, the title, then a
-  /// row of switches.
-  /// 点赞, 评论, 收藏 and 分享 with their counts, for a phone's full screen.
-  List<Widget> _fullscreenActions(BuildContext context, Future<void> Function() leaveFullscreen) {
-    final item = _controller.playing!;
-    final account = _controller.account;
-    final signedIn = account?.active ?? false;
-    final library = _controller.library;
-    final liked = signedIn && account!.ratingOf(item.id) == VideoRating.like;
-    final likes = _controller.details?.likeCount ?? _controller.dislikes?.likes;
-    final shownLikes = likes == null || !signedIn ? likes : (likes + account!.ratingChange(item.id, VideoRating.like)).clamp(0, 1 << 62);
-    final favorite = library?.isFavorite(item.id) ?? false;
-    return [
-      _CountButton(
-        tooltip: tr('Like'),
-        icon: liked ? AppIcons.thumbsUpFill : AppIcons.thumbsUp,
-        count: shownLikes,
-        active: liked,
-        onTap: () {
-          if (signedIn && !account!.ratingOff(item.id)) {
-            unawaited(account.rate(item, VideoRating.like));
-          } else {
-            _showFeedback(AppIcons.thumbsUp, signedIn ? tr('The uploader turned off likes and dislikes for this video') : tr('Sign in to YouTube to {0}', [tr('Like')]));
-          }
-        },
-      ),
-      if (!_controller.preferences.focusHideComments)
-        _CountButton(
-          tooltip: tr('Comments'),
-          icon: AppIcons.chatCircle,
-          onTap: () async {
-            await leaveFullscreen();
-            sidePanelTab.value = null;
-            sidePanelTab.value = 'comments';
-          },
-        ),
-      if (library != null)
-        _CountButton(
-          tooltip: tr('Favorites'),
-          icon: favorite ? AppIcons.heartFill : AppIcons.heart,
-          active: favorite,
-          onTap: () => library.toggleFavorite(item),
-        ),
-      _CountButton(
-        tooltip: tr('Share'),
-        icon: AppIcons.share,
-        onTap: () async {
-          if (await shareText(item.url)) return;
-          await Clipboard.setData(ClipboardData(text: item.url));
-          _showFeedback(AppIcons.link, tr('Link copied'));
-        },
-      ),
-      const SizedBox(width: 8),
-    ];
-  }
-
-  Widget _topBar(BuildContext context, bool fullscreen) {
-    final item = _controller.playing;
-    final details = _controller.details;
-    final title = details?.title.isNotEmpty == true ? details!.title : item?.title ?? '';
-    Future<void> leaveFullscreen() async {
-      if (fullscreen) await widget.state?.exitFullscreen();
-    }
-
-    return Padding(
-      padding: EdgeInsetsDirectional.fromSTEB(fullscreen ? 8 : 4, fullscreen ? 8 : 4, 8, 16),
-      child: Row(children: [
-        _IconButton(
-          tooltip: fullscreen ? tr('Exit fullscreen') : tr('Back'),
-          icon: AppIcons.arrowLeft,
-          size: 20,
-          onTap: () => fullscreen ? unawaited(leaveFullscreen()) : _controller.goBack(),
-        ),
-        // Above a phone's page the back arrow and a swipe down do this.
-        if (!_phone || fullscreen)
-        _IconButton(
-          tooltip: tr('Home'),
-          icon: AppIcons.houseFill,
-          size: 20,
-          onTap: () async {
-            await leaveFullscreen();
-            _controller.navigate(PageMode.home);
-          },
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: fullscreen ? 16 : 14, fontWeight: FontWeight.w500)),
-            if (fullscreen && (details?.channel ?? item?.channel ?? '').isNotEmpty)
-              Text(details?.channel ?? item!.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-          ]),
-        ),
-        // A phone in full screen: the page's main actions, as phone video
-        // apps keep them by the title, so there is no need to leave.
-        if (_phone && fullscreen && item != null && !_upright(context)) ..._fullscreenActions(context, leaveFullscreen),
-        // Switches that are on show here, so the state stays visible after
-        // they moved into 更多设置.
-        for (final (on, icon, tip) in [
-          (_controller.pinned, AppIcons.pushPinFill, tr('Window pinned on top')),
-          (_controller.audioOnly, AppIcons.headphonesFill, tr('Playing audio only')),
-        ])
-          if (on) Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Tooltip(message: tip, child: Icon(icon, color: Theme.of(context).colorScheme.inversePrimary, size: 17))),
-        if (_controller.sleepAt != null || _controller.sleepAfterCurrent)
-          Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Tooltip(message: tr('Sleep timer on'), child: Icon(AppIcons.moonStars, color: Colors.white, size: 18))),
-        // 关灯 dims the page around the player, which a phone does not show.
-        if (!fullscreen && !_phone)
-          ValueListenableBuilder(
-            valueListenable: lightsOff,
-            builder: (context, off, _) => _IconButton(
-              tooltip: off ? tr('Lights on (B)') : tr('Lights off (B)'),
-              icon: off ? AppIcons.lightbulbFill : AppIcons.lightbulb,
-              size: 19,
-              active: off,
-              onTap: () => lightsOff.value = !off,
-            ),
-          ),
-        _IconButton(
-          tooltip: tr('Cast'),
-          icon: _controller.cast.active ? AppIcons.airplay : AppIcons.screencast,
-          size: 19,
-          active: _controller.cast.active,
-          onTap: () => unawaited(showCastDialog(context, _controller)),
-        ),
-        if (!_phone || fullscreen)
-        _IconButton(
-          tooltip: tr('Picture in picture'),
-          icon: AppIcons.browsers,
-          size: 19,
-          onTap: () async {
-            await leaveFullscreen();
-            _controller.setPip(true);
-          },
-        ),
-        _IconButton(tooltip: tr('More settings'), icon: AppIcons.slidersHorizontal, size: 20, onTap: () => _showMore(context)),
-      ]),
-    );
-  }
-
-  Widget _bottomBar(BuildContext context, bool fullscreen) {
-    final skinned = context.skin?.player.progress.lastOrNull;
-    final primary = switch (skinned) {
-      SolidPaint(:final color) => color,
-      LinearPaint(:final colors) || RadialPaint(:final colors) => colors.last,
-      _ => Theme.of(context).colorScheme.inversePrimary,
-    };
-    final playedGradient = switch (skinned) {
-      final LinearPaint p => p.gradient,
-      RadialPaint(:final colors, :final stops) => LinearGradient(colors: colors, stops: stops),
-      _ => null,
-    };
-    // Built here, once per rebuild of the bar, not on every position event.
-    final segments = [
-      for (final s in _controller.segments) ProgressSegment(s.start, s.end, _segmentColors[s.category] ?? const Color(0xFF00D400)),
-      // The A-B loop, or a sliver at A while B is still to be set.
-      if (_controller.loopA case final a?) ProgressSegment(a, _controller.loopB ?? a + const Duration(seconds: 1), const Color(0xCCFFFFFF)),
-    ];
-    final chapterStarts = [for (final c in _chapters) c.start];
-    // A finger's size on a phone. The small player above a phone's page
-    // keeps what a phone needs there; the rest is in full screen and the
-    // settings panel, and the volume is the phone's own keys.
-    final width = _phone ? 44.0 : fullscreen ? 42.0 : 35.0;
-    final compact = _phone && !fullscreen;
-    // Full screen held upright (a portrait video, or a screen Android or
-    // iPadOS would not turn): the menus that do not fit are in the
-    // settings panel, as on the small player.
-    final narrow = compact || (fullscreen && _upright(context));
-    final progress = _PositionBuilder(
-      player: _player,
-      active: !_animation.isDismissed,
-      builder: (context) => VideoProgressBar(
-        position: _player.state.position,
-        buffered: _player.state.buffer,
-        total: _player.state.duration,
-        color: primary,
-        playedGradient: playedGradient,
-        segments: segments,
-        chapterStarts: chapterStarts,
-        preview: _preview,
-        heatmap: _controller.preferences.showHeatmap ? _heatmap?.values : null,
-        labelOf: _chapters.isEmpty ? null : (time) => '${formatPlaybackTime(time)} · ${Chapter.at(_chapters, time)?.title ?? ''}',
-        onSeek: (time) => unawaited(_controller.seek(time)),
-      ),
-    );
-    final time = _PositionBuilder(
-      player: _player,
-      active: !_animation.isDismissed,
-      seconds: true,
-      builder: (context) => _controller.playing?.isLive == true
-          ? _LiveButton(
-              behind: _player.state.duration - _player.state.position > AppController.liveBehind,
-              onTap: () => unawaited(_controller.goLive()),
-            )
-          : Text(
-              '${formatPlaybackTime(_player.state.position)} / ${formatPlaybackTime(_player.state.duration)}',
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
-            ),
-    );
-    // The small player above a phone's page: one thin row, as phone video
-    // apps have it, so the subtitles lifted above it stay low.
-    if (compact) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(4, 12, 4, 2),
-        child: Row(children: [
-          _PlayPauseButton(player: _player),
-          Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: progress)),
-          time,
-          _subtitleMenu(width),
-          _IconButton(tooltip: tr('Fullscreen (F)'), icon: AppIcons.cornersOut, size: 24, width: width, onTap: () => unawaited(widget.state?.toggleFullscreen())),
-        ]),
-      );
-    }
-    // Keep the action cluster anchored to the physical bottom-right edge in
-    // fullscreen. The progress and playback information remain on the left.
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(fullscreen ? 16 : 8, 16, fullscreen ? 16 : 8, fullscreen ? 12 : 8),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: progress,
-        ),
-        const SizedBox(height: 2),
-        Row(children: [
-          // On a phone too the buttons are in the bar, as phone video apps
-          // have them in full screen, leaving the picture clear.
-          _PlayPauseButton(player: _player),
-          if (_controller.hasNext)
-            _IconButton(tooltip: tr('Next (Shift+N)'), icon: AppIcons.skipForwardFill, size: 22, width: width, onTap: () => unawaited(_controller.playNext())),
-          if (!_phone) _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
-          SizedBox(width: _phone ? 8 : 4),
-          time,
-          Expanded(child: Align(alignment: AlignmentDirectional.centerStart, child: _chapterMenu())),
-          // Live chat on an upright full screen keeps only its switch.
-          if (!compact) _danmakuButtons(width, withSettings: !narrow),
-          _subtitleMenu(width),
-          if (!narrow)
-          StreamBuilder<double>(
-            stream: _player.stream.rate,
-            initialData: _player.state.rate,
-            builder: (context, _) => _TextMenu<double>(
-              tooltip: tr('Speed'),
-              label: '${trimSpeed(_player.state.rate)}X',
-              value: _player.state.rate,
-              values: [for (final speed in _controller.settings.speeds) (speed, '${trimSpeed(speed)}X')],
-              onSelected: (speed) => unawaited(_player.setRate(speed)),
-              onOpened: _menuOpened,
-              onClosed: _menuClosed,
-            ),
-          ),
-          // Quality on the small player is in its settings panel.
-          if (!narrow)
-          StreamBuilder<int?>(
-            stream: _player.stream.height,
-            initialData: _player.state.height,
-            builder: (context, _) {
-              final height = _player.state.height ?? 0;
-              final width = _player.state.width ?? 0;
-              // Portrait videos are named by their width, as YouTube does.
-              final aspect = width > 0 && height > 0 ? width / height : null;
-              final max = _controller.settings.maxHeight;
-              final choices = _controller.qualityChoices;
-              return _TextMenu<int>(
-                tooltip: tr('Quality'),
-                label: height > 0 ? heightLabel(height, _controller.availableFrameRates[height], 'P', aspect) : (max == 0 ? tr('Auto') : heightLabel(max, _controller.availableFrameRates[max], 'P', aspect)),
-                // A limit above what this video offers plays its highest.
-                // Lowered for dropped frames, 自动 is not ticked, so
-                // picking it lifts the limit.
-                value: max == 0 && _controller.droppedCap > 0 ? -1 : (choices.contains(max) ? max : height),
-                values: [for (final h in choices) (h, h == 0 ? tr('Auto') : heightLabel(h, _controller.availableFrameRates[h], 'P', aspect))],
-                onSelected: (h) => unawaited(_controller.setMaxHeight(h)),
-                onOpened: _menuOpened,
-                onClosed: _menuClosed,
-              );
-            },
-          ),
-          // The column beside the video, folded away in 剧场模式, unfolds
-          // from here, so it takes no strip of the page while folded.
-          if (!fullscreen && !_phone)
-            ListenableBuilder(
-              listenable: Listenable.merge([theaterMode, theaterChatOpen]),
-              builder: (context, _) => theaterMode.value && theaterPanelBeside && !theaterChatOpen.value
-                  ? _IconButton(tooltip: tr('Expand'), icon: AppIcons.sidebar, size: 22, width: width, onTap: () => theaterChatOpen.value = true)
-                  : const SizedBox.shrink(),
-            ),
-          if (!fullscreen && !_phone)
-            ValueListenableBuilder(
-              valueListenable: theaterMode,
-              builder: (context, theater, _) => _IconButton(
-                tooltip: theater ? tr('Exit theater mode (T)') : tr('Theater mode (T)'),
-                icon: AppIcons.frameCorners,
-                size: 22,
-                width: width,
-                active: theater,
-                onTap: () => theaterMode.value = !theater,
-              ),
-            ),
-          // 铺满窗口, as Bilibili's web fullscreen beside its fullscreen.
-          // Phones and tablets have the whole screen already.
-          if (!touchFirst && (!fullscreen || fillingWindow.value))
-            _IconButton(
-              tooltip: tr('Fill the window (W)'),
-              icon: AppIcons.arrowsOutSimple,
-              size: 22,
-              width: width,
-              active: fillingWindow.value,
-              onTap: () => unawaited(toggleFillWindow(widget.state)),
-            ),
-          _IconButton(
-            tooltip: fullscreen && !fillingWindow.value ? tr('Exit fullscreen (F)') : tr('Fullscreen (F)'),
-            icon: fullscreen && !fillingWindow.value ? AppIcons.cornersIn : AppIcons.cornersOut,
-            size: 24,
-            width: width,
-            onTap: () => unawaited(toggleFullscreenFrom(widget.state).whenComplete(() {
-              if (mounted) setState(() {});
-            })),
-          ),
-        ]),
-        ]),
-      ),
-    );
-  }
-
-  /// 弹幕 on or off and their settings: a video's chat, or its timed comments.
-  Widget _danmakuButtons(double width, {bool withSettings = true}) => ListenableBuilder(
-        listenable: _controller,
-        builder: (context, _) {
-          if (!_controller.hasDanmaku) return const SizedBox.shrink();
-          final settings = _controller.preferences.danmaku;
-          return Row(mainAxisSize: MainAxisSize.min, children: [
-            _IconButton(
-              tooltip: settings.enabled ? tr('Turn off bullet chat') : tr('Turn on bullet chat'),
-              width: width,
-              icon: settings.enabled ? AppIcons.chatsFill : AppIcons.chatCircleSlash,
-              active: settings.enabled,
-              onTap: () => unawaited(_controller.setDanmaku(settings.copyWith(enabled: !settings.enabled))),
-            ),
-            if (settings.enabled && withSettings) _IconButton(tooltip: tr('Bullet chat settings'), width: width, icon: AppIcons.slidersHorizontal, onTap: () => unawaited(_openDanmaku(context))),
-          ]);
-        },
-      );
-
-  Future<void> _openDanmaku(BuildContext context) async {
+  /// A choice among [rows]: a sheet on a phone, else a dark popup over or
+  /// above the button whose [anchor] context is given.
+  Future<void> _pick<T>(BuildContext anchor, {required String title, required List<(T, String)> rows, required T? current, required void Function(T value) onSelected}) async {
     _menuOpened();
-    await showDanmakuPanel(context, _controller);
-    _menuClosed();
+    try {
+      T? picked;
+      if (isPhone(anchor)) {
+        picked = await pickFromSheet<T>(
+          anchor,
+          [for (final (value, label) in rows) (value: value, icon: null, label: label, selected: value == current)],
+          title: title,
+        );
+      } else {
+        final box = anchor.findRenderObject() as RenderBox;
+        final origin = box.localToGlobal(Offset.zero);
+        final touch = touchFirst;
+        final height = rows.length * (touch ? 48.0 : 36.0) + 12;
+        final above = origin.dy - 6 - height;
+        final top = above >= 8 ? above : origin.dy;
+        final size = MediaQuery.sizeOf(anchor);
+        final accent = Theme.of(anchor).colorScheme.inversePrimary;
+        picked = await showMenu<T>(
+          context: anchor,
+          useRootNavigator: true,
+          position: RelativeRect.fromLTRB(origin.dx, top, size.width - origin.dx - box.size.width, size.height - top),
+          color: const Color(0xEB1F1F1F),
+          elevation: 6,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          constraints: const BoxConstraints(minWidth: 112),
+          menuPadding: const EdgeInsets.symmetric(vertical: 6),
+          items: [
+            for (final (value, label) in rows)
+              PopupMenuItem<T>(
+                value: value,
+                height: touch ? 48 : 36,
+                padding: const EdgeInsets.only(left: 12, right: 16),
+                child: Row(children: [
+                  SizedBox(width: 22, child: value == current ? Icon(AppIcons.check, size: 16, color: accent) : null),
+                  Flexible(child: Text(label, style: TextStyle(color: value == current ? accent : Colors.white, fontSize: 12, fontWeight: value == current ? FontWeight.w600 : FontWeight.normal))),
+                ]),
+              ),
+          ],
+        );
+      }
+      if (picked != null && picked != current) onSelected(picked);
+    } finally {
+      _menuClosed();
+    }
   }
 
-  Widget _subtitleMenu(double width) => ListenableBuilder(
-        listenable: _controller,
-        builder: (context, _) => StreamBuilder<Track>(
-        stream: _player.stream.track,
-        initialData: _player.state.track,
-        builder: (context, _) {
-          final current = _player.state.track.subtitle;
-          final on = current.id != 'no' && current.id != 'auto';
-          final hasTracks = _player.state.tracks.subtitle.any((t) => t.id != 'auto' && t.id != 'no');
-          // A video with none still gets the button, for 语音识别.
-          final details = _controller.details;
-          if (!hasTracks && (details == null || (details.subtitles.isEmpty && (_controller.playing?.isLive ?? true)))) return const SizedBox.shrink();
-          final button = _IconButton(
-            tooltip: tr('Subtitles'),
-            width: width,
-            icon: on ? AppIcons.closedCaptioningFill : AppIcons.subtitlesSlash,
-            active: _controller.secondarySubtitle != null,
-            onTap: () => unawaited(_openSubtitles(context)),
-          );
-          if (!on && _controller.secondarySubtitle == null) return button;
-          // While a subtitle is shown, its list is one click away.
-          return Row(mainAxisSize: MainAxisSize.min, children: [
-            button,
-            _IconButton(tooltip: tr('Subtitle list'), width: width, icon: AppIcons.textAlignLeft, onTap: () => unawaited(_openSubtitleList(context))),
-          ]);
-        },
-      ),
-      );
-
-  Future<void> _openSubtitles(BuildContext context) async {
+  void _openSubtitles(BuildContext context) {
+    _showBars();
     _menuOpened();
-    await showSubtitlePanel(context, _controller, _player, onSettings: () => unawaited(showSubtitleStylePanel(context, _controller)), onList: () => unawaited(_openSubtitleList(context)));
-    _menuClosed();
+    unawaited(showSubtitlePanel(
+      context,
+      _c,
+      _player,
+      onSettings: () => unawaited(showSubtitleStylePanel(context, _c)),
+      onList: () => _openSubtitleList(context),
+    ).whenComplete(_menuClosed));
   }
 
-  Future<void> _openSubtitleList(BuildContext context) async {
-    // Beside the video there is room for the list, which then leaves the
-    // picture uncovered.
+  void _openSubtitleList(BuildContext context) {
     if (subtitleListBeside && !isFullscreen(context)) {
       if (theaterMode.value) theaterChatOpen.value = true;
       sidePanelTab.value = null;
       sidePanelTab.value = 'subtitles';
-      return;
+    } else {
+      _menuOpened();
+      unawaited(showSubtitleList(context, _c, _player).whenComplete(_menuClosed));
     }
-    _menuOpened();
-    await showSubtitleList(context, _controller, _player);
-    _menuClosed();
   }
-
-  /// The 更多 panel: PiliNara's header sheet, as a side panel whose
-  /// choices apply at once while it stays open.
-  Future<void> _showMore(BuildContext context) async {
-    _menuOpened();
-    await showPlayerPanel(
-      context,
-      title: tr('More settings'),
-      builder: (panel) => ListenableBuilder(listenable: Listenable.merge([_controller, _transform]), builder: (panel, _) => _moreItems(context, panel)),
-    );
-    _menuClosed();
-  }
-
-  Widget _moreItems(BuildContext context, BuildContext panel) {
-    final settings = _controller.settings;
-    final audio = _player.state.tracks.audio.where((t) => t.id != 'auto' && t.id != 'no').toList();
-    // Steps that open a page or act on the picture close the panel first.
-    void closeThen(VoidCallback then) {
-      Navigator.of(panel).pop();
-      then();
-    }
-
-    const sleepOff = -1;
-    const sleepAfterCurrent = 0;
-    final sleepAt = _controller.sleepAt;
-    final sleeping = _controller.sleepAfterCurrent ? sleepAfterCurrent : (sleepAt == null ? sleepOff : null);
-    final codecs = FormatPolicy.disabledNames(settings);
-    return ListView(padding: const EdgeInsets.only(bottom: 16), children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-        child: Wrap(spacing: 8, runSpacing: 8, children: [
-          PanelToggle(label: tr('Keep window on top'), icon: AppIcons.pushPin, value: _controller.pinned, onChanged: (_) => _controller.togglePinned()),
-          PanelToggle(label: tr('Listen only'), icon: AppIcons.headphonesFill, value: _controller.audioOnly, onChanged: (_) => unawaited(_controller.toggleAudioOnly())),
-          PanelToggle(label: tr('SponsorBlock'), icon: AppIcons.shield, value: settings.sponsorBlock, onChanged: (_) => unawaited(_controller.toggleSponsorBlock())),
-          PanelToggle(label: tr('Playback info'), icon: AppIcons.info, value: _controller.showStats, onChanged: (_) => _controller.toggleStats()),
-          PanelToggle(label: tr('Mirror'), icon: AppIcons.flipHorizontal, value: _transform.mirrored, onChanged: (v) => unawaited(_transform.setMirrored(v))),
-          PanelToggle(
-            label: _controller.loopB != null ? tr('A-B looping') : _controller.loopA != null ? tr('Set point B') : tr('A-B loop'),
-            icon: AppIcons.repeatOnce,
-            value: _controller.loopA != null,
-            onChanged: (_) => unawaited(_markLoop()),
-          ),
-          PanelToggle(label: tr('In-app mini player'), icon: AppIcons.pictureInpicture, value: false, onChanged: (_) => closeThen(() async {
-            if (isFullscreen(context)) await widget.state?.exitFullscreen();
-            _controller.enterMini();
-          })),
-        ]),
-      ),
-      PanelHeading(tr('Video')),
-      // A phone's small player has no room for the speed button.
-      if (_phone)
-        PanelChoices<double>(
-          label: tr('Speed'),
-          icon: AppIcons.gauge,
-          value: _player.state.rate,
-          values: [for (final speed in _controller.settings.speeds) (speed, '${trimSpeed(speed)}X')],
-          onSelected: (speed) => unawaited(_player.setRate(speed)),
-        ),
-      PanelChoices<int>(
-        label: tr('Quality'),
-        icon: AppIcons.sealCheck,
-        value: settings.maxHeight == 0 && _controller.droppedCap > 0 ? -1 : settings.maxHeight,
-        values: [for (final h in _controller.qualityChoices) (h, qualityLabel(h, _controller.availableFrameRates[h]))],
-        onSelected: _controller.setMaxHeight,
-      ),
-      ValueListenableBuilder(
-        valueListenable: videoFit,
-        builder: (context, fit, _) => PanelChoices<VideoFit>(
-          label: tr('Aspect ratio'),
-          icon: AppIcons.arrowsOut,
-          value: fit,
-          values: [for (final f in VideoFit.values) (f, f.label)],
-          onSelected: (f) => videoFit.value = f,
-        ),
-      ),
-      PanelChoices<int>(
-        label: tr('Rotate'),
-        icon: AppIcons.arrowClockwise,
-        value: _transform.rotation,
-        values: [for (final r in PictureTransform.rotations) (r, '$r°')],
-        onSelected: (r) => unawaited(_transform.setRotation(r)),
-      ),
-      PanelChoices<double>(
-        label: tr('Zoom'),
-        icon: AppIcons.magnifyingGlassPlus,
-        value: _transform.zoom,
-        values: [for (final z in PictureTransform.zoomLevels) (z, z == 1 ? tr('Original size') : '${trimSpeed(z)}x')],
-        onSelected: (z) => unawaited(_transform.setZoom(z)),
-      ),
-      PanelLink(label: tr('Video and A/V sync adjustments'), icon: AppIcons.slidersHorizontal, onTap: () => closeThen(() => openPictureSettings(context, _controller))),
-      PanelHeading(tr('Sound')),
-      PanelChoices<AudioQuality>(
-        label: tr('Audio quality'),
-        icon: AppIcons.musicNote,
-        value: settings.audioQuality,
-        values: [for (final q in AudioQuality.values) (q, q.label)],
-        onSelected: (q) => unawaited(_controller.reloadVideo(_controller.settings.copyWith(audioQuality: q))),
-      ),
-      PanelChoices<DubbedAudio>(
-        label: tr('Dubbed audio'),
-        icon: AppIcons.musicNotes,
-        value: settings.dubbedAudio,
-        values: [for (final d in DubbedAudio.values) (d, d.label)],
-        collapsed: true,
-        onSelected: (d) => unawaited(_controller.reloadVideo(_controller.settings.copyWith(dubbedAudio: d))),
-      ),
-      if (_controller.availableAudioLanguages.length > 1)
-        PanelChoices<String>(
-          label: tr('Audio track'),
-          icon: AppIcons.musicNotes,
-          value: _audioLanguageChoice(_controller.availableAudioLanguages, _controller.audioLanguage),
-          values: [for (final l in _controller.availableAudioLanguages) (l.code, audioLanguageLabel(l))],
-          collapsed: true,
-          onSelected: (code) => unawaited(_controller.chooseAudioLanguage(_controller.availableAudioLanguages.firstWhere((l) => l.code == code).isOriginal ? '' : code)),
-        )
-      else if (audio.length > 1)
-        StreamBuilder<Track>(
-          stream: _player.stream.track,
-          builder: (context, _) => PanelChoices<String>(
-            label: tr('Audio track'),
-            icon: AppIcons.musicNotes,
-            value: _player.state.track.audio.id,
-            values: [for (final t in audio) (t.id, trackLabel(t.id, t.title, t.language))],
-            collapsed: true,
-            onSelected: (id) => unawaited(_player.setAudioTrack(audio.firstWhere((t) => t.id == id))),
-          ),
-        ),
-      PanelHeading(tr('Play')),
-      PanelChoices<PlayOrder>(
-        label: tr('Playback order'),
-        icon: AppIcons.repeat,
-        value: settings.playOrder,
-        values: [for (final o in PlayOrder.values) (o, o.label)],
-        onSelected: _controller.setPlayOrder,
-      ),
-      PanelChoices<int?>(
-        label: sleepAt == null ? tr('Sleep timer') : tr('Sleep timer (pauses in {0} min)', [sleepAt.difference(DateTime.now()).inMinutes + 1]),
-        icon: AppIcons.moonStars,
-        value: sleeping,
-        values: [(sleepOff, tr('Off')), (sleepAfterCurrent, tr('After the current video')), for (final m in const [15, 30, 45, 60, 90]) (m, tr('{0} min', [m]))],
-        onSelected: (minutes) {
-          if (minutes == null || minutes == sleepOff) {
-            _controller.setSleepTimer(null);
-          } else if (minutes == sleepAfterCurrent) {
-            _controller.setSleepTimer(null, afterCurrent: true);
-          } else {
-            _controller.setSleepTimer(Duration(minutes: minutes));
-          }
-        },
-      ),
-      PanelChoices<PlaybackStrategy>(
-        label: tr('Playback strategy'),
-        icon: AppIcons.filmStrip,
-        value: settings.strategy,
-        values: [for (final v in PlaybackStrategy.values) (v, v.label)],
-        onSelected: (v) => unawaited(_controller.reloadVideo(_controller.settings.copyWith(strategy: v))),
-      ),
-      PanelLink(
-        label: tr('Disabled video codecs'),
-        detail: codecs.isEmpty ? tr('None') : codecs,
-        icon: AppIcons.prohibit,
-        onTap: () => pickDisabledCodecs(context, settings, (v) => _controller.reloadVideo(v)),
-      ),
-      PanelLink(
-        label: tr('Subtitles'),
-        detail: '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label}',
-        icon: AppIcons.subtitles,
-        onTap: () => closeThen(() => unawaited(_openSubtitles(context))),
-      ),
-      PanelHeading(tr('Tools')),
-      PanelLink(label: tr('Screenshot (S)'), detail: Platform.isWindows ? tr('Saved to Pictures\\Lumtub and copied to the clipboard') : tr('Saved to Pictures\\Lumtub and copied to the clipboard').replaceAll('\\', '/'), icon: AppIcons.camera, opens: false, onTap: () => closeThen(() => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)))),
-      PanelLink(label: tr('Subtitle list'), detail: tr('Click a line to jump there; A / D previous or next line, R replays'), icon: AppIcons.textAlignLeft, onTap: () => closeThen(() => unawaited(_openSubtitleList(context)))),
-      PanelLink(
-        label: keyNames(tr('Copy current subtitle (Ctrl+C)')),
-        icon: AppIcons.copy,
-        opens: false,
-        onTap: () {
-          final text = _controller.currentSubtitleText;
-          if (text.isEmpty) return;
-          unawaited(Clipboard.setData(ClipboardData(text: text)));
-          closeThen(() => _showFeedback(AppIcons.copy, tr('Subtitle copied')));
-        },
-      ),
-      PanelLink(label: tr('Reload video'), detail: tr('Reload from current position'), icon: AppIcons.arrowsClockwise, opens: false, onTap: () => closeThen(() => unawaited(_controller.reloadVideo()))),
-      PanelLink(label: tr('Keyboard shortcuts'), icon: AppIcons.keyboard, onTap: () => showShortcutHelp(context, _controller.preferences)),
-    ]);
-  }
-
-
-}
-
-/// PiliNara's `ComBtn`: a bare white icon with a tooltip, with a soft
-/// round highlight under the mouse.
-/// The live mark of a live stream: a red dot while it plays at its newest
-/// moment, a grey one with "Back to live" once it has fallen behind;
-/// pressing it jumps to the newest moment.
-class _LiveButton extends StatelessWidget {
-  const _LiveButton({required this.behind, required this.onTap});
-  final bool behind;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-        message: tr('Jump to the newest moment (End)'),
-        child: _Hover(
-          label: tr('Jump to the newest moment (End)'),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: behind ? Colors.white54 : const Color(0xFFFF2D2D))),
-              const SizedBox(width: 6),
-              Text(behind ? tr('Back to live') : tr('Live'), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
-            ]),
-          ),
-        ),
-      );
-}
-
-class _IconButton extends StatelessWidget {
-  const _IconButton({required this.tooltip, required this.icon, required this.onTap, this.size = 22, this.width = 34, this.active = false});
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onTap;
-  final double size;
-  final double width;
-  /// A switch that is on, drawn in the theme's color.
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-        message: tooltip,
-        child: _Hover(
-          label: tooltip,
-          onTap: onTap,
-          // A finger's size on a touch screen.
-          child: SizedBox(width: touchFirst ? max(width, 44) : width, height: touchFirst ? 44 : 34, child: Icon(icon, size: size, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white)),
-        ),
-      );
-}
-
-/// An icon of a phone's full-screen top bar, with its count small at the
-/// top right, as phone video apps draw them.
-class _CountButton extends StatelessWidget {
-  const _CountButton({required this.tooltip, required this.icon, required this.onTap, this.count, this.active = false});
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onTap;
-  final int? count;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = active ? Theme.of(context).colorScheme.inversePrimary : Colors.white;
-    return Tooltip(
-      message: tooltip,
-      child: _Hover(
-        label: tooltip,
-        onTap: onTap,
-        child: SizedBox(
-          width: 52,
-          height: 44,
-          child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
-            Icon(icon, size: 24, color: color),
-            if (count case final count?)
-              PositionedDirectional(
-                top: 0,
-                start: 30,
-                child: Text(formatCount(count), maxLines: 1, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600, shadows: const [Shadow(blurRadius: 3)])),
-              ),
-          ]),
-        ),
-      ),
-    );
-  }
-}
-
-/// A pressable area of the bars: the click cursor and a translucent
-/// rounded highlight while the mouse is over it.
-class _Hover extends StatefulWidget {
-  const _Hover({required this.onTap, required this.child, this.label});
-  final VoidCallback onTap;
-  final Widget child;
-  /// Read out by screen readers; null leaves the child's own text.
-  final String? label;
-
-  @override
-  State<_Hover> createState() => _HoverState();
-}
-
-class _HoverState extends State<_Hover> {
-  bool _over = false;
-  bool _focused = false;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-        button: true,
-        label: widget.label,
-        onTap: widget.onTap,
-        child: FocusableActionDetector(
-          mouseCursor: SystemMouseCursors.click,
-          onShowHoverHighlight: (over) => setState(() => _over = over),
-          onShowFocusHighlight: (focused) => setState(() => _focused = focused),
-          actions: {ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) => widget.onTap())},
-          shortcuts: const {
-            SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-            SingleActivator(LogicalKeyboardKey.numpadEnter): ActivateIntent(),
-            SingleActivator(LogicalKeyboardKey.select): ActivateIntent(),
-          },
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: widget.onTap,
-            child: AnimatedContainer(
-              duration: Motion.of(Ease.fade),
-              decoration: BoxDecoration(
-                color: _over || _focused ? Colors.white.withValues(alpha: 0.14) : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
-                border: _focused ? Border.all(color: Colors.white.withValues(alpha: 0.75), width: 2) : null,
-              ),
-              child: widget.child,
-            ),
-          ),
-        ),
-      );
-}
-
-/// PiliNara's `PlayOrPauseButton`, animating between the two icons.
-/// Rebuilds [builder] as the playback position moves, only while [active]
-/// (the bars are on screen), and with [seconds] only when the whole second
-/// changes. mpv reports the position on every frame.
-class _PositionBuilder extends StatefulWidget {
-  const _PositionBuilder({required this.player, required this.active, required this.builder, this.seconds = false});
-  final Player player;
-  final bool active;
-  final bool seconds;
-  final WidgetBuilder builder;
-
-  @override
-  State<_PositionBuilder> createState() => _PositionBuilderState();
-}
-
-class _PositionBuilderState extends State<_PositionBuilder> {
-  StreamSubscription<Duration>? _subscription;
-  int _shown = -1;
-
-  @override
-  void initState() {
-    super.initState();
-    _listen();
-  }
-
-  @override
-  void didUpdateWidget(_PositionBuilder old) {
-    super.didUpdateWidget(old);
-    if (old.active != widget.active || old.player != widget.player) _listen();
-  }
-
-  void _listen() {
-    unawaited(_subscription?.cancel());
-    _subscription = !widget.active
-        ? null
-        : _positions().listen((position) {
-            final mark = widget.seconds ? position.inSeconds : position.inMilliseconds;
-            if (mark == _shown || !mounted) return;
-            _shown = mark;
-            setState(() {});
-          });
-  }
-
-  /// mpv reports the position every frame; the bar moves about a pixel in
-  /// 1/1500 of the video, so changes smaller than that are skipped.
-  Stream<Duration> _positions() {
-    final positions = widget.player.stream.position;
-    if (widget.seconds) return positions;
-    final step = Duration(microseconds: (widget.player.state.duration.inMicroseconds / 1500).round());
-    return coarse(positions, step: step < const Duration(milliseconds: 40) ? const Duration(milliseconds: 40) : step > const Duration(milliseconds: 500) ? const Duration(milliseconds: 500) : step);
-  }
-
-  @override
-  void dispose() {
-    unawaited(_subscription?.cancel());
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.builder(context);
-}
-
-class _PlayPauseButton extends StatefulWidget {
-  const _PlayPauseButton({required this.player});
-  final Player player;
-
-  @override
-  State<_PlayPauseButton> createState() => _PlayPauseButtonState();
-}
-
-class _PlayPauseButtonState extends State<_PlayPauseButton> with SingleTickerProviderStateMixin {
-  late final _animation = AnimationController(vsync: this, value: widget.player.state.playing ? 1 : 0, duration: Motion.of(const Duration(milliseconds: 200)));
-  late final StreamSubscription<bool> _subscription = widget.player.stream.playing.listen((playing) => playing ? _animation.forward() : _animation.reverse());
-
-  @override
-  void initState() {
-    super.initState();
-    _subscription;
-  }
-
-  @override
-  void dispose() {
-    unawaited(_subscription.cancel());
-    _animation.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-        message: tr('Play/Pause (Space)'),
-        child: _Hover(
-          label: tr('Play/Pause (Space)'),
-          onTap: () => unawaited(widget.player.playOrPause()),
-          // A finger's size on a touch screen.
-          child: SizedBox(
-            width: touchFirst ? 48 : 42,
-            height: touchFirst ? 40 : 34,
-            child: Center(child: AnimatedIcon(progress: _animation, icon: AnimatedIcons.play_pause, color: Colors.white, size: touchFirst ? 26 : 20)),
-          ),
-        ),
-      );
-}
-
-/// PiliNara's dark popup menu: 0.8 black, 35 high rows, 13px white text.
-class _PopupMenu<T> extends StatelessWidget {
-  const _PopupMenu({
-    required this.tooltip,
-    required this.value,
-    required this.items,
-    required this.onSelected,
-    required this.onOpened,
-    required this.onClosed,
-    required this.child,
-  });
-
-  final String tooltip;
-  final T value;
-  final List<(T, String)> items;
-  final ValueChanged<T> onSelected;
-  final VoidCallback onOpened;
-  final VoidCallback onClosed;
-  final Widget child;
-
-  /// A finger's height on a touch screen, and a remote's on a TV.
-  static double get _itemHeight => touchFirst ? 48.0 : 36.0;
-  static const _padding = 6.0;
-
-  /// Opens the list just above the button, as the bars sit at the bottom,
-  /// instead of over it.
-  Future<void> _open(BuildContext context) async {
-    if (touchFirst && isPhone(context)) {
-      onOpened();
-      final picked = await pickFromSheet<T>(context, [for (final (item, label) in items) (value: item, icon: null, label: label, selected: item == value)], title: tooltip);
-      onClosed();
-      if (picked != null && picked != value) onSelected(picked);
-      return;
-    }
-    final box = context.findRenderObject()! as RenderBox;
-    final overlay = Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
-    final rect = Rect.fromPoints(box.localToGlobal(Offset.zero, ancestor: overlay), box.localToGlobal(box.size.bottomRight(Offset.zero), ancestor: overlay));
-    final height = items.length * _itemHeight + _padding * 2;
-    final top = rect.top - height - 6;
-    final position = top >= 8
-        ? RelativeRect.fromLTRB(rect.left, top, overlay.size.width - rect.right, overlay.size.height - rect.top)
-        : RelativeRect.fromRect(rect, Offset.zero & overlay.size);
-    onOpened();
-    final theme = Theme.of(context);
-    final picked = await showMenu<T>(
-      context: context,
-      position: position,
-      color: const Color(0xEB1F1F1F),
-      elevation: 6,
-      menuPadding: const EdgeInsets.symmetric(vertical: _padding),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      constraints: const BoxConstraints(minWidth: 112),
-      items: [
-        for (final (item, label) in items)
-          PopupMenuItem<T>(
-            height: _itemHeight,
-            padding: const EdgeInsets.only(left: 12, right: 16),
-            value: item,
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              SizedBox(width: 22, child: item == value ? Icon(AppIcons.check, size: 16, color: theme.colorScheme.inversePrimary) : null),
-              Flexible(child: Text(label, style: item == value ? _menuText.copyWith(color: theme.colorScheme.inversePrimary, fontWeight: FontWeight.w600) : _menuText)),
-            ]),
-          ),
-      ],
-    );
-    onClosed();
-    if (picked != null && picked != value) onSelected(picked);
-  }
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-        message: tooltip,
-        child: Builder(builder: (context) => _Hover(label: tooltip, onTap: () => unawaited(_open(context)), child: child)),
-      );
-}
-
-/// A menu shown as its current value in text, like PiliNara's speed, fit
-/// and quality buttons.
-class _TextMenu<T> extends StatelessWidget {
-  const _TextMenu({
-    required this.tooltip,
-    required this.label,
-    required this.value,
-    required this.values,
-    required this.onSelected,
-    required this.onOpened,
-    required this.onClosed,
-  });
-
-  final String tooltip;
-  final String label;
-  final T value;
-  final List<(T, String)> values;
-  final ValueChanged<T> onSelected;
-  final VoidCallback onOpened;
-  final VoidCallback onClosed;
-
-  @override
-  Widget build(BuildContext context) => _PopupMenu<T>(
-        tooltip: tooltip,
-        value: value,
-        items: values,
-        onSelected: onSelected,
-        onOpened: onOpened,
-        onClosed: onClosed,
-        child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8), child: Text(label, style: _menuText)),
-      );
-}
-
-/// Volume icon that mutes on click and shows a slider on hover, on focus,
-/// and for a few seconds after a tap (touch has no hover).
-class _VolumeButton extends StatefulWidget {
-  const _VolumeButton({required this.player, required this.controller, required this.onMenuOpened, required this.onMenuClosed});
-  final Player player;
-  final AppController controller;
-  final VoidCallback onMenuOpened;
-  final VoidCallback onMenuClosed;
-
-  @override
-  State<_VolumeButton> createState() => _VolumeButtonState();
-}
-
-class _VolumeButtonState extends State<_VolumeButton> {
-  bool _open = false;
-  Timer? _tapTimer;
-
-  void _setOpen(bool open) {
-    if (!open) _tapTimer?.cancel();
-    if (open == _open || !mounted) return;
-    setState(() => _open = open);
-    open ? widget.onMenuOpened() : widget.onMenuClosed();
-  }
-
-  void _tapped() {
-    unawaited(widget.controller.toggleMute());
-    _setOpen(true);
-    _tapTimer?.cancel();
-    _tapTimer = Timer(const Duration(seconds: 4), () => _setOpen(false));
-  }
-
-  @override
-  void dispose() {
-    _tapTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => MouseRegion(
-        onEnter: (_) => _setOpen(true),
-        onExit: (_) => _setOpen(false),
-        child: Focus(
-          canRequestFocus: false,
-          skipTraversal: true,
-          onFocusChange: _setOpen,
-          child: StreamBuilder<double>(
-          stream: widget.player.stream.volume,
-          initialData: widget.player.state.volume,
-          builder: (context, _) {
-            final volume = widget.player.state.volume;
-            final max = widget.controller.settings.volumeMax.toDouble();
-            return Row(mainAxisSize: MainAxisSize.min, children: [
-              _IconButton(
-                tooltip: volume == 0 ? tr('Unmute (M)') : tr('Mute (M)'),
-                icon: volume == 0 ? AppIcons.speakerSlash : (volume < 50 ? AppIcons.speakerLowFill : AppIcons.speakerHighFill),
-                onTap: _tapped,
-              ),
-              AnimatedSize(
-                duration: Motion.of(Ease.fade),
-                child: _open
-                    ? SizedBox(
-                        width: 96,
-                        child: SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            trackHeight: 3,
-                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                            overlayShape: SliderComponentShape.noOverlay,
-                            activeTrackColor: Colors.white,
-                            inactiveTrackColor: Colors.white30,
-                            thumbColor: Colors.white,
-                          ),
-                          child: Slider(value: volume.clamp(0, max), max: max, onChanged: (v) => unawaited(widget.player.setVolume(v))),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ]);
-          },
-          ),
-        ),
-      );
-}
-
-/// The seek, volume and mute indicator in the middle of the video.
-class _FeedbackBubble extends StatelessWidget {
-  const _FeedbackBubble({required this.icon, required this.text});
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(color: const Color(0x88000000), borderRadius: BorderRadius.circular(8)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, color: Colors.white, size: 22),
-          const SizedBox(width: 4),
-          Text(text, style: const TextStyle(color: Colors.white, fontSize: 12)),
-        ]),
-      );
-}
-
-/// yt-dlp names audio formats like `251-4 - audio only (English (US)
-/// original (default), medium)`; shown as the part in brackets and the
-/// codec its number stands for.
-final _ytDlpAudio = RegExp(r'^(\d+)(-[\w-]+)? - audio only \((.*)\)$');
-
-/// A track's name in menus.
-/// The language of [languages] that [asked] (a language code, a prefix of
-/// one, or empty for the original) selects.
-String _audioLanguageChoice(List<AudioLanguage> languages, String asked) {
-  final lower = asked.toLowerCase();
-  final match = lower.isEmpty ? null : languages.where((l) => l.code.toLowerCase() == lower).firstOrNull ?? languages.where((l) => l.code.toLowerCase().startsWith(lower)).firstOrNull;
-  return (match ?? languages.firstWhere((l) => l.isOriginal, orElse: () => languages.first)).code;
-}
-
-/// An audio language for the player's menu: its name, marked when it is the
-/// original or an automatic dub.
-String audioLanguageLabel(AudioLanguage language) {
-  final parts = language.code.split('-');
-  final name = TranslationLanguage.ofTag(parts.first)?.label ?? language.code;
-  final region = parts.length > 1 ? ' (${parts.skip(1).join('-')})' : '';
-  final label = '$name$region';
-  return switch (language.kind) {
-    'original' => tr('{0} (original)', [label]),
-    'auto' => tr('{0} (automatic dub)', [label]),
-    _ => label,
-  };
-}
-
-String trackLabel(String id, String? title, String? language) {
-  final match = title == null ? null : _ytDlpAudio.firstMatch(title);
-  if (match != null) {
-    final codec = switch (int.parse(match[1]!)) {
-      249 || 250 || 251 => 'Opus',
-      139 || 140 || 141 => 'AAC',
-      _ => null,
-    };
-    return [match[3]!, if (codec != null) codec, if (match[2]?.contains('drc') ?? false) tr('Volume normalization')].join(' · ');
-  }
-  final parts = [if (title != null && title.isNotEmpty) title, if (language != null && language.isNotEmpty) language];
-  return parts.isEmpty ? tr('Track {0}', [id]) : parts.join(' · ');
 }

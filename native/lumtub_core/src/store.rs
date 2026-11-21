@@ -1,5 +1,7 @@
 //! lumtub.db: the library (favorites, 稍后观看, playlists, followed
-//! channels, watch progress) and the watch history, in SQLite.
+//! channels, watch progress) and the watch history, in SQLite. Texts
+//! made for a video, such as recognized subtitles and AI summaries, are
+//! kept in the same file (store_texts.rs).
 //!
 //! The app keeps its lists in memory and hands each changed list over
 //! whole as its keys in order, with the bodies of only the entries that
@@ -30,6 +32,25 @@ CREATE TABLE IF NOT EXISTS entry(
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS entry_order ON entry(list, pos);
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS transcript(
+  video TEXT NOT NULL,
+  lang TEXT NOT NULL,
+  origin TEXT NOT NULL,
+  model TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created INTEGER NOT NULL,
+  PRIMARY KEY(video, lang, origin)
+);
+CREATE INDEX IF NOT EXISTS transcript_age ON transcript(origin, created);
+CREATE TABLE IF NOT EXISTS summary(
+  video TEXT NOT NULL,
+  lang TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created INTEGER NOT NULL,
+  PRIMARY KEY(video, lang)
+);
+CREATE INDEX IF NOT EXISTS summary_age ON summary(created);
 ";
 
 /// One call at a time, so the app's isolates never wait on each other's
@@ -89,7 +110,7 @@ fn set_aside(path: &Path) -> String {
 /// call and closed after it, so no file stays open between the app's
 /// rare writes (the data folder can be moved or deleted at any time). A
 /// damaged database is set aside.
-fn with_db<T>(
+pub(crate) fn with_db<T>(
     path: &str,
     work: impl FnOnce(&mut Connection) -> rusqlite::Result<T>,
 ) -> Result<T, StoreError> {
@@ -356,7 +377,7 @@ struct WriteAsk<'a> {
     meta: HashMap<&'a str, &'a str>,
 }
 
-fn error_json(error: StoreError) -> String {
+pub(crate) fn error_json(error: StoreError) -> String {
     match error {
         StoreError::Broken(moved) => {
             serde_json::json!({"error": "The library database was damaged", "setAside": moved})

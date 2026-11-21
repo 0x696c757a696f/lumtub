@@ -67,3 +67,10 @@ path = "fuzz_targets/cast_lan.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "packs"
+path = "fuzz_targets/packs.rs"
+test = false
+doc = false
+bench = false

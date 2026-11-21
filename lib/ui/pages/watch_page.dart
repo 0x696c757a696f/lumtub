@@ -9,6 +9,7 @@ import 'package:flutter/services.dart' show DeviceOrientation, SystemChrome, Sys
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../device.dart';
+import '../../libass_layout.dart' show LibassLook;
 import '../window_chrome.dart';
 import '../../app/app_controller.dart';
 import '../../appearance_settings.dart' show blankFont, bundledFont;
@@ -57,7 +58,7 @@ import '../live_chat_input.dart';
 import '../live_chat_list.dart';
 
 /// Player, video details, the up-next list and the comments. On wide
-/// windows the list and the comments share a side panel, as PiliNara's
+/// windows the list and the comments share a side panel as
 /// 简介/评论 tabs; on narrow ones everything is stacked.
 class WatchPage extends StatefulWidget {
   const WatchPage({super.key, required this.controller});
@@ -767,7 +768,7 @@ class _Player extends StatelessWidget {
           borderRadius: height == null ? context.cardRadius : BorderRadius.zero,
           child: ColoredBox(
             color: Colors.black,
-            // As in PiliNara: the video and its controls repaint apart, so
+            // The video and its controls repaint apart, so
             // pointer movement over the controls does not redraw the video
             // texture, which flashes black on some Windows GPUs.
             child: Stack(fit: StackFit.expand, children: [
@@ -788,7 +789,13 @@ class _Player extends StatelessWidget {
                       ),
                     ),
                   ),
-                  subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: controller.libassDraws),
+                  subtitleViewConfiguration: subtitleViewFor(
+                    controller.settings,
+                    secondary: controller.secondarySubtitle?.label,
+                    byHeight: Platform.isAndroid || Platform.isIOS,
+                    libass: controller.libassDraws,
+                    reveal: (shown: controller.translationShown, hover: controller.hoverTranslation, tap: controller.toggleTranslation),
+                  ),
                   onEnterFullscreen: () {
                     // 铺满窗口 keeps the window as it is.
                     if (fillingWindow.value) return Future.value();
@@ -936,8 +943,8 @@ class _DescriptionState extends State<_Description> {
                   duration: Motion.of(Ease.fade),
                   curve: Ease.out,
                   alignment: Alignment.topCenter,
-                  // Times seek the video and links open in the browser, as in
-                  // PiliNara; the expanded text can still be selected.
+                  // Times seek the video and links open in the browser; the
+                  // expanded text can still be selected.
                   child: _expanded
                       ? SelectionArea(child: LinkedText(description, style: const TextStyle(height: 1.5), onTime: _seek, onLink: openExternal))
                       : LinkedText(description, maxLines: 3, style: const TextStyle(height: 1.5), onTime: _seek, onLink: openExternal),
@@ -1288,16 +1295,27 @@ double smallSubtitleScale(Size size) => (size.shortestSide * 0.055).clamp(13.0, 
 /// a phone's upright player with 9 px text. A [small] window (picture in
 /// picture, the mini player) keeps the same share of its height down to
 /// 6 px, as ExoPlayer does there, so a line does not cover the picture.
-double androidSubtitleScale(Size size, [double system = 1, bool small = false]) => max(small ? 6.0 : 12.0, size.height * 0.0533 * system) / 32;
+/// A player taller than wide (full screen upright, for a portrait video)
+/// counts no more than three quarters of its width: by its height the
+/// letters were so large that a line held a few words.
+double androidSubtitleScale(Size size, [double system = 1, bool small = false]) => max(small ? 6.0 : 12.0, min(size.height, size.width * 0.75) * 0.0533 * system) / 32;
 
-SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass}) {
+/// What 模糊翻译 needs from the player: whether the second subtitle shows
+/// plainly now, and what hovering and tapping it do.
+typedef TranslationRevealing = ({ValueListenable<bool> shown, ValueChanged<bool> hover, VoidCallback tap});
+
+SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass, TranslationRevealing? reveal}) {
   // The view scales by area against 1080p, which makes the text tiny in a
   // small window. There a line is about a twentieth of the picture's
   // height, as on a TV, but never under 13 px, which stays readable, nor
   // over the full-size text.
   final textScaler = smallWindow == null || byHeight ? null : TextScaler.linear(smallSubtitleScale(smallWindow));
   final paddingScale = smallWindow == null ? 1.0 : (smallWindow.shortestSide / 720).clamp(0.3, 1.0);
-  if (libass ?? settings.libassSubtitles) return const SubtitleViewConfiguration(visible: false);
+  final ghost = libass ?? settings.libassSubtitles;
+  final blur = reveal != null && settings.blurSecondary && secondary != null;
+  // libmpv draws, blurred too; the view lays the lines out unseen only
+  // for 模糊翻译, which needs the second line's place.
+  if (ghost && !blur) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;
   TextStyle style(String font, double scale, int color, double opacity) => TextStyle(
         height: 1.3,
@@ -1310,12 +1328,6 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
         color: Color(0xFF000000 | color).withValues(alpha: opacity),
         fontWeight: settings.subtitleBold ? FontWeight.w700 : FontWeight.normal,
         backgroundColor: settings.subtitleBackground ? Color.fromRGBO(0, 0, 0, 0.67 * opacity) : null,
-        shadows: settings.subtitleBackground || border == 0
-            ? null
-            : [
-                for (final (dx, dy) in const [(-1.0, -1.0), (1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)])
-                  Shadow(color: Colors.black.withValues(alpha: opacity), offset: Offset(dx * border / 2, dy * border / 2), blurRadius: border / 2),
-              ],
       );
   return SubtitleViewConfiguration(
     style: style(settings.subtitleFont, settings.subtitleScale, settings.subtitleColor, settings.subtitleOpacity),
@@ -1324,7 +1336,15 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     textScaler: textScaler,
     scaleFor: byHeight ? (size) => TextScaler.linear(androidSubtitleScale(size, Device.captionScale, smallWindow != null)) : null,
     spacing: 6,
+    // The same solid outline libmpv draws (LibassLook.border), so either
+    // drawing them looks alike.
+    outline: settings.subtitleBackground ? 0 : LibassLook.outlineFor(border),
     secondaryKey: secondary,
+    ghost: ghost,
+    blurSecondary: blur,
+    secondaryShown: reveal?.shown,
+    onSecondaryHover: reveal?.hover,
+    onSecondaryTap: reveal?.tap,
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),
   );
 }

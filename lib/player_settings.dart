@@ -15,7 +15,7 @@ import 'l10n/l10n.dart';
 /// Heights offered in the quality menu; 0 means automatic.
 const qualityHeights = [0, 2160, 1440, 1080, 720, 480, 360];
 
-/// Speeds offered before the user edits the list, as in PiliNara.
+/// Speeds offered before the user edits the list.
 const defaultSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 3.0];
 
 /// How playback picks among the codecs that are not disabled; see
@@ -53,8 +53,7 @@ enum DubbedAudio {
   String get label => tr(_label);
 }
 
-/// What happens when a video ends. Named and ordered like PiliNara's
-/// `PlayRepeat`.
+/// What happens when a video ends.
 enum PlayOrder {
   pause('Pause when finished'),
   listOrder('Play in order'),
@@ -70,11 +69,16 @@ enum PlayOrder {
 enum SubtitleMode {
   off("Don't turn on automatically"),
   manual('On when human-made subtitles exist'),
-  always('Always on (including auto-generated)');
+  always('Always on (including auto-generated)'),
+  foreign("On for languages I don't understand");
 
   const SubtitleMode(this._label);
   final String _label;
   String get label => tr(_label);
+
+  /// On for any video, auto-generated subtitles included: [always], and
+  /// [foreign] for a video it does not leave alone.
+  bool get anySubtitle => this == always || this == foreign;
 }
 
 /// The language the first subtitle is looked for in: one of
@@ -165,7 +169,37 @@ class SubtitleLanguage {
   String toString() => name;
 }
 
-/// mpv's `--video-sync` modes, as PiliNara lists them.
+/// 画质增强: which mpv shaders rebuild detail when a picture is drawn larger
+/// than it is (lib/upscale_shaders.dart).
+enum Upscaling {
+  off('Off', 'Plain scaling'),
+  light('Light (RAVU)', 'Sharper edges for a little GPU work'),
+  strong('Strong (FSRCNNX)', 'More detail in filmed video; needs a capable graphics card'),
+  anime('Anime (Anime4K)', 'Cleaner lines in animation; needs a capable graphics card');
+
+  const Upscaling(this._label, this._description);
+  final String _label;
+  final String _description;
+  String get label => tr(_label);
+  String get description => tr(_description);
+}
+
+/// Which version of a video with high dynamic range plays. The picture
+/// reaches the screen through an 8-bit standard range texture, so an HDR
+/// one is tone mapped down to standard range either way.
+enum HdrPreference {
+  auto('Automatic', 'Standard range version; HDR with Quality first'),
+  sdr('Standard range version', 'Plays the version YouTube made for normal screens; less decoding work'),
+  hdr('HDR version', 'Tone mapped to this screen; 10-bit decoding uses more power');
+
+  const HdrPreference(this._label, this._description);
+  final String _label;
+  final String _description;
+  String get label => tr(_label);
+  String get description => tr(_description);
+}
+
+/// mpv's `--video-sync` modes.
 enum VideoSync {
   audio('audio', 'Sync to audio (default)'),
   displayResample('display-resample', 'Resample to display refresh rate (smoother)'),
@@ -184,8 +218,7 @@ enum VideoSync {
   String get label => tr(_label);
 }
 
-/// mpv's `--hwdec` decoders that exist on this system, from PiliNara's
-/// `HwDecType`. The setting is an ordered list; mpv tries them in turn.
+/// mpv's `--hwdec` decoders that exist on this system. The setting is an ordered list; mpv tries them in turn.
 /// Decoders without "-copy" hand frames to the renderer in GPU memory (zero
 /// copy); "-copy" ones copy them back to system memory first.
 List<(String, String)> get hwdecChoices => hwdecChoicesFor(Platform.operatingSystem, Abi.current());
@@ -274,14 +307,14 @@ final _windowsHwdec = <(String, String)>[
 /// at all is up to the disabled codecs.
 const defaultHwdecCodecs = 'h264,vc1,hevc,vp8,vp9,av1,prores,ffv1';
 
-/// PiliNara's 音量均衡 presets, as mpv `--af` filters.
+/// 音量均衡 presets, as mpv `--af` filters.
 List<(String, String)> get audioFilterPresets => [
   ('', tr('Close')),
   ('dynaudnorm=g=5:f=250:r=0.9:p=0.5', tr('Preset dynaudnorm (dynamic normalization)')),
   ('loudnorm=I=-16:LRA=11:TP=-1.5', tr('Preset loudnorm (loudness normalization)')),
 ];
 
-/// Picture adjustments PiliNara offers in its player, as mpv properties.
+/// Picture adjustments offered in the player, as mpv properties.
 /// How far each picture property may go either way. Brightness stops short
 /// of mpv's ±100, which turns the picture all black or all white.
 int pictureLimit(String key) => key == 'brightness' ? 50 : 100;
@@ -420,6 +453,8 @@ class PlayerSettings {
   /// mpv's `audio-device` name, or `auto` for the Windows default.
   final String audioDevice;
   final VideoSync videoSync;
+  final Upscaling upscaling;
+  final HdrPreference hdr;
   /// Highest video height to request, or 0 for no limit.
   final int maxHeight;
   final PlayOrder playOrder;
@@ -442,6 +477,14 @@ class PlayerSettings {
   /// [secondarySubtitleLanguage] for the interface's language, the default.
   static const interfaceSubtitle = 'interface';
   final String secondarySubtitleLanguage;
+  /// TranslationLanguage codes of the languages the user understands, for
+  /// [SubtitleMode.foreign]; empty for [understood]'s default.
+  final List<String> knownLanguages;
+
+  /// The languages a video is left without subtitles in under
+  /// [SubtitleMode.foreign]: [knownLanguages], else the interface's and
+  /// the first subtitle's.
+  List<String> get understood => knownLanguages.isNotEmpty ? knownLanguages : {interfaceTranslationLanguage.code, subtitleLanguage.translation.code}.toList();
 
   /// The language [secondarySubtitleLanguage] names, null for none or the
   /// video's own.
@@ -450,6 +493,10 @@ class PlayerSettings {
   final double subtitleBorder;
   final bool subtitleBackground;
   final bool subtitleBold;
+  /// Playback pauses as each subtitle line ends (学外语).
+  final bool pauseEachLine;
+  /// The second subtitle, a translation, is blurred until asked for.
+  final bool blurSecondary;
   /// Subtitles show in the picture-in-picture window.
   final bool pipSubtitles;
   /// Subtitles show in the in-app mini player.
@@ -556,6 +603,8 @@ class PlayerSettings {
     this.dubbedAudio = DubbedAudio.original,
     this.audioDevice = 'auto',
     this.videoSync = VideoSync.audio,
+    this.upscaling = Upscaling.off,
+    this.hdr = HdrPreference.auto,
     this.maxHeight = 0,
     this.playOrder = PlayOrder.pause,
     this.defaultSpeed = 1.0,
@@ -566,9 +615,12 @@ class PlayerSettings {
     this.subtitleLanguage = SubtitleLanguage.auto,
     this.subtitleOriginal = false,
     this.secondarySubtitleLanguage = interfaceSubtitle,
+    this.knownLanguages = const [],
     this.subtitleBorder = 3,
     this.subtitleBackground = false,
     this.subtitleBold = false,
+    this.pauseEachLine = false,
+    this.blurSecondary = false,
     this.pipSubtitles = true,
     this.miniPlayerSubtitles = true,
     this.sponsorBlock = false,
@@ -633,6 +685,8 @@ class PlayerSettings {
     DubbedAudio? dubbedAudio,
     String? audioDevice,
     VideoSync? videoSync,
+    Upscaling? upscaling,
+    HdrPreference? hdr,
     int? maxHeight,
     PlayOrder? playOrder,
     double? defaultSpeed,
@@ -643,9 +697,12 @@ class PlayerSettings {
     SubtitleLanguage? subtitleLanguage,
     bool? subtitleOriginal,
     String? secondarySubtitleLanguage,
+    List<String>? knownLanguages,
     double? subtitleBorder,
     bool? subtitleBackground,
     bool? subtitleBold,
+    bool? pauseEachLine,
+    bool? blurSecondary,
     bool? pipSubtitles,
     bool? miniPlayerSubtitles,
     bool? sponsorBlock,
@@ -708,6 +765,8 @@ class PlayerSettings {
         dubbedAudio: dubbedAudio ?? this.dubbedAudio,
         audioDevice: audioDevice ?? this.audioDevice,
         videoSync: videoSync ?? this.videoSync,
+        upscaling: upscaling ?? this.upscaling,
+        hdr: hdr ?? this.hdr,
         maxHeight: maxHeight ?? this.maxHeight,
         playOrder: playOrder ?? this.playOrder,
         defaultSpeed: defaultSpeed ?? this.defaultSpeed,
@@ -718,9 +777,12 @@ class PlayerSettings {
         subtitleLanguage: subtitleLanguage ?? this.subtitleLanguage,
         subtitleOriginal: subtitleOriginal ?? this.subtitleOriginal,
         secondarySubtitleLanguage: secondarySubtitleLanguage ?? this.secondarySubtitleLanguage,
+        knownLanguages: knownLanguages ?? this.knownLanguages,
         subtitleBorder: subtitleBorder ?? this.subtitleBorder,
         subtitleBackground: subtitleBackground ?? this.subtitleBackground,
         subtitleBold: subtitleBold ?? this.subtitleBold,
+        pauseEachLine: pauseEachLine ?? this.pauseEachLine,
+        blurSecondary: blurSecondary ?? this.blurSecondary,
         pipSubtitles: pipSubtitles ?? this.pipSubtitles,
         miniPlayerSubtitles: miniPlayerSubtitles ?? this.miniPlayerSubtitles,
         sponsorBlock: sponsorBlock ?? this.sponsorBlock,
@@ -784,6 +846,8 @@ class PlayerSettings {
         'dubbedAudio': dubbedAudio.name,
         'audioDevice': audioDevice,
         'videoSync': videoSync.name,
+        'upscaling': upscaling.name,
+        'hdr': hdr.name,
         'maxHeight': maxHeight,
         'playOrder': playOrder.name,
         'playOrderDefault': 2,
@@ -795,9 +859,12 @@ class PlayerSettings {
         'subtitleLanguageV2': subtitleLanguage.name,
         'subtitleOriginal': subtitleOriginal,
         'secondarySubtitleLanguageV2': secondarySubtitleLanguage,
+        'knownLanguages': knownLanguages,
         'subtitleBorder': subtitleBorder,
         'subtitleBackground': subtitleBackground,
         'subtitleBold': subtitleBold,
+        'pauseEachLine': pauseEachLine,
+        'blurSecondary': blurSecondary,
         'pipSubtitles': pipSubtitles,
         'miniPlayerSubtitles': miniPlayerSubtitles,
         'sponsorBlock': sponsorBlock,
@@ -989,6 +1056,8 @@ class PlayerSettings {
       dubbedAudio: _enumByName(DubbedAudio.values, raw['dubbedAudio'], DubbedAudio.original),
       audioDevice: device.isEmpty || device.length > 200 || device.contains(RegExp(r'[\r\n]')) ? 'auto' : device,
       videoSync: _enumByName(VideoSync.values, raw['videoSync'], VideoSync.audio),
+      upscaling: _enumByName(Upscaling.values, raw['upscaling'], Upscaling.off),
+      hdr: _enumByName(HdrPreference.values, raw['hdr'], HdrPreference.auto),
       maxHeight: raw['maxHeight'] is int && (raw['maxHeight'] as int) >= 0 && (raw['maxHeight'] as int) <= 4320 ? raw['maxHeight'] as int : 0,
       playOrder: playOrder,
       defaultSpeed: decimal('defaultSpeed', 1.0, 0.1, 8),
@@ -1010,9 +1079,12 @@ class PlayerSettings {
         interfaceSubtitle => interfaceSubtitle,
         final saved => TranslationLanguage.maybeByCode(saved)?.code ?? '',
       },
+      knownLanguages: raw['knownLanguages'] is List ? [for (final code in (raw['knownLanguages'] as List).whereType<String>()) if (TranslationLanguage.maybeByCode(code) != null) code] : const [],
       subtitleBorder: decimal('subtitleBorder', 3, 0, 8),
       subtitleBackground: raw['subtitleBackground'] == true,
       subtitleBold: raw['subtitleBold'] == true,
+      pauseEachLine: raw['pauseEachLine'] == true,
+      blurSecondary: raw['blurSecondary'] == true,
       pipSubtitles: raw['pipSubtitles'] != false,
       miniPlayerSubtitles: raw['miniPlayerSubtitles'] != false,
       sponsorBlock: raw['sponsorBlock'] == true,
@@ -1080,7 +1152,7 @@ class PlayerSettings {
   static bool isSafeCustomOption(String key, String value) => customOptionProblem(key, value) == null;
 }
 
-/// SponsorBlock's categories with the names PiliNara shows for them.
+/// SponsorBlock's categories with the names shown for them.
 final sponsorCategoryNames = {
   'sponsor': (tr('Sponsor'), tr('Paid promotions, paid referrals and direct ads')),
   'selfpromo': (tr('Self-promotion'), tr('Unpaid promotion: merch, donations or collaborator info')),

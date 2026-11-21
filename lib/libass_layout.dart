@@ -50,7 +50,7 @@ class LibassLayout {
 
   /// How many lines libass draws [text] on, wrapping at the canvas width.
   static int lineCount(String text, {required double scale, double aspect = 16 / 9, double em = _font}) {
-    final room = (_canvas * max(aspect, 0.5) - 2 * _margin) / (em * scale);
+    final room = (_canvas * max(aspect, 0.2) - 2 * _margin) / (em * scale);
     var lines = 0;
     for (final line in text.replaceAll(_invisible, '').trim().split('\n')) {
       final width = _ems(line.trim());
@@ -62,7 +62,7 @@ class LibassLayout {
 
   /// The ems of a line in libass's room for [aspect], with letters [em]
   /// units wide at [scale].
-  static double roomEms({required double em, required double scale, double aspect = 16 / 9}) => (_canvas * max(aspect, 0.5) - 2 * _margin) / (em * scale);
+  static double roomEms({required double em, required double scale, double aspect = 16 / 9}) => (_canvas * max(aspect, 0.2) - 2 * _margin) / (em * scale);
 
   /// [text] with line breaks where the Flutter subtitle view wraps it in
   /// [room] ems of [font]. libass breaks lines only at spaces, so Chinese,
@@ -196,9 +196,8 @@ class LibassLook {
     return LibassLook(
       em: 32 * textScale * unit,
       margin: (max(0.0, below) * unit).round(),
-      // Four shadows border / 2 out and blurred as far read as an outline
-      // about 0.7 of the setting thick.
-      border: 0.7 * border * unit,
+      // The Flutter view's outline, in mpv's units.
+      border: outlineFor(border) * unit,
       gap: 6 * textScale * unit,
     );
   }
@@ -213,6 +212,11 @@ class LibassLook {
         position: position,
         border: border,
       );
+
+  /// How far the outline reaches out from the letters, in the Flutter
+  /// view's logical pixels, for the 描边 setting [border]: both drawings
+  /// use it.
+  static double outlineFor(double border) => 0.7 * border;
 
   /// libass sizes a font by its whole line (ascent and descent, as Windows
   /// does), the Flutter view by its em: how many ems a line of [font] is.
@@ -235,12 +239,17 @@ class LibassLook {
   double fontSize(String font) => em * lineEms(font);
 }
 
+/// The second subtitle's own lines in [text], the sub-text of its copy made
+/// by [secondAss]: the main subtitle's lines it holds, invisible, come after
+/// a blank line.
+String secondCopyOwnText(String text) => text.split(RegExp(r'\n\s*\n')).first.trim();
+
 /// The second subtitle as an ASS file in its own font, color, opacity,
 /// size, outline and background, which mpv cannot set apart from the first
 /// subtitle's. Its letters are [secondEm] units at secondary-sub-scale 1;
 /// [outline] is the outline's width for a letter one unit wide. [scale]
 /// sizes everything in it, for a libmpv without secondary-sub-scale.
-String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font, MainUnder? main, double aspect = 16 / 9, double scale = 1}) {
+String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font, MainUnder? main, double aspect = 16 / 9, double scale = 1, bool blurred = false}) {
   font ??= settings.secondaryFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.secondaryFont);
   final unit = secondEm * scale;
   final size = unit * settings.secondaryScale * LibassLook.lineEms(font);
@@ -279,7 +288,10 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
     ..writeln('Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text');
   // Braces would open override tags; line breaks are ASS's own.
   String ass(String text) => text.replaceAll('{', '(').replaceAll('}', ')').replaceAll(RegExp(r'\r?\n'), r'\N');
-  String second(String text) => ass(LibassLayout.wrap(text, room, font: settings.secondaryFont, bold: settings.subtitleBold));
+  // 模糊翻译: libass blurs the outline alone when there is one, so the
+  // letters lose it and are blurred themselves, as the Flutter view blurs.
+  final blur = blurred ? '{\\bord0\\shad0\\blur${(size * blurEms).toStringAsFixed(1)}}' : '';
+  String second(String text) => '$blur${ass(LibassLayout.wrap(text, room, font: settings.secondaryFont, bold: settings.subtitleBold))}';
   if (main == null || main.cues.isEmpty) {
     for (final cue in cues) {
       out.writeln('Dialogue: 0,${stamp(cue.start)},${stamp(cue.end)},Default,,0,0,0,,${second(cue.text)}');
@@ -356,3 +368,7 @@ typedef MainUnder = ({List<SubtitleCue> cues, String font, double room, String w
 
 /// A letter of [secondAss] at secondary-sub-scale 1, in mpv's units.
 const secondEm = 20.0;
+
+/// How far 模糊翻译 blurs the second subtitle, in letters: libass's \\blur
+/// for its line height. The Flutter view's blur matches it.
+const blurEms = 0.25;

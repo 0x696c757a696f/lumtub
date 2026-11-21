@@ -130,12 +130,12 @@ void main() {
         return _reply('<think>hm</think>\n- [0:00] point ${asked.length}');
       });
       final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
-      final short = await summarizeTranscript(ai, 'Title', await summaryTranscript(_vtt(10)));
+      final short = await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(10)));
       expect(short, '- [0:00] point 1');
       expect(asked.single, contains('Transcript:'));
       asked.clear();
       final progress = <(int, int)>[];
-      final long = await summarizeTranscript(ai, 'Title', await summaryTranscript(_vtt(60), budget: 500), onProgress: (done, total) => progress.add((done, total)));
+      final long = await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(60), budget: 500), onProgress: (done, total) => progress.add((done, total)));
       expect(asked.length, greaterThan(2));
       expect(asked.last, contains('Notes on each part'));
       expect(long, '- [0:00] point ${asked.length}');
@@ -153,7 +153,7 @@ void main() {
       final chapters = [(start: Duration.zero, title: 'Intro'), (start: const Duration(seconds: 65), title: 'Setup')];
       expect(canSummarizeDescription('short', const []), isFalse);
       expect(canSummarizeDescription('short', chapters), isTrue);
-      final summary = await summarizeDescription(ai, 'Title', 'About the video', chapters);
+      final summary = await summarizeDescription(ai.complete, 'Title', 'About the video', chapters);
       expect(asked, contains('[1:05] Setup'));
       expect(summary, startsWith('This video has no subtitles'));
       expect(summary, endsWith('- [1:05] Setup'));

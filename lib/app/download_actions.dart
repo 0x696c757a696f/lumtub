@@ -20,6 +20,7 @@ extension DownloadActions on AppController {
   DownloadManager _downloadsFor(ToolPaths paths, AppDirectories directories) => DownloadManager(
         file: File('${directories.data.path}${Platform.pathSeparator}downloads.json'),
         ytDlpPath: paths.ytDlp,
+        blockedSignIn: () => _repository?.streams.blockedSignIn,
         onFinished: (task) {
           if (!_disposed) _finishedDownloads.add(task);
         },
@@ -40,7 +41,7 @@ extension DownloadActions on AppController {
           deno: paths.deno,
           cacheDirectory: _repository?.cacheDirectory,
           subtitleLanguages: settings.subtitleLanguage.ytDlpLangs,
-          autoSubtitles: settings.subtitleMode == SubtitleMode.always,
+          autoSubtitles: settings.subtitleMode.anySubtitle,
           cutSponsors: settings.sponsorBlock && settings.sponsorCut,
         ),
         sponsorSegments: (id) => _sponsorBlock.segments(id, settings.sponsorCategories),
@@ -161,6 +162,15 @@ extension DownloadActions on AppController {
           await File(path).writeAsString(picked.srt ? toSrt(cues) : toVtt(cues));
           final name = '${SubtitleChoices.languageOf(top.$1)} / ${SubtitleChoices.languageOf(bottom.$1)}';
           saved.add((path: path, language: top.$1.language, name: name, lines: true, ass: await styledCopy(path, lines)));
+          // Each language on its own beside the file, not in it: played
+          // offline in Lumtub, they show as first and second subtitle, each
+          // in its own style, as they do online.
+          for (final (option, text) in [top, bottom]) {
+            if (picked.tracks.any((t) => t.language == option.language)) continue;
+            final single = fileFor(option.language);
+            final cues = parseSubtitleCues(text);
+            await File(single).writeAsString(picked.srt ? toSrt(cues) : text);
+          }
         }
       }
     }

@@ -4,6 +4,7 @@ import 'dart:ffi' show Abi;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/decoder_status.dart';
 import 'package:lumtub/player_settings.dart';
+import 'package:lumtub/subtitle_translation.dart';
 import 'package:lumtub/video_codec.dart';
 
 void main() {
@@ -183,7 +184,7 @@ vo=gpu-next
     expect(settings.customOptions, {'scale': 'lanczos'});
   });
 
-  test('PiliNara mpv options survive a round trip', () {
+  test('mpv options survive a round trip', () {
     const original = PlayerSettings(
       hwdec: 'auto,auto-safe',
       d3d11vaZeroCopy: true,
@@ -261,5 +262,25 @@ vo=gpu-next
     final chosen = PlayerSettings.fromJson(const PlayerSettings(relayFallback: false, skipSilence: true).toJson());
     expect(chosen.relayFallback, isFalse);
     expect(chosen.skipSilence, isTrue);
+  });
+
+  test('languages understood are kept, and default to the interface and first subtitle ones', () {
+    final saved = PlayerSettings.fromJson(const PlayerSettings(subtitleMode: SubtitleMode.foreign, knownLanguages: ['en', 'ja', 'nonsense']).toJson());
+    expect(saved.subtitleMode, SubtitleMode.foreign);
+    expect(saved.subtitleMode.anySubtitle, isTrue);
+    expect(saved.knownLanguages, ['en', 'ja']);
+    expect(saved.understood, ['en', 'ja']);
+    const plain = PlayerSettings(subtitleLanguage: SubtitleLanguage.auto);
+    expect(plain.understood, isNotEmpty);
+    expect(SubtitleMode.manual.anySubtitle, isFalse);
+  });
+
+  test('a video is understood by its spoken language, Chinese whatever the script', () {
+    expect(understands('en-US', ['en']), isTrue);
+    expect(understands('en', ['ja']), isFalse);
+    expect(understands('zh-Hant', ['zh-CN']), isTrue);
+    expect(understands('zh', ['zh-TW']), isTrue);
+    expect(understands(null, ['en']), isFalse);
+    expect(understands('', ['en']), isFalse);
   });
 }

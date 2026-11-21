@@ -6,7 +6,7 @@ use serde::Serialize;
 use serde_json::{Map, Value};
 use std::os::raw::c_char;
 
-use crate::filter::{Language, title_language};
+use crate::filter::{Language, alike, is_latin, reading};
 use crate::taste::{give_json, text};
 
 /// The value at [path] of nested objects.
@@ -751,11 +751,15 @@ pub struct Spoken {
     pub language: Option<Language>,
     /// The uploader's own title.
     pub title: String,
-    /// What told: "audio", "captions", "text" or "none".
+    /// What told: "audio", "captions", "text", "guess" (a text read
+    /// without being sure: any language of its script may have written it)
+    /// or "none".
     pub source: &'static str,
     /// Whether YouTube would play the video to this client; an answer it
     /// would not play, such as one asking to sign in, has no captions.
     pub playable: bool,
+    /// For a guess: the languages that may have written the text.
+    pub alike: Vec<Language>,
 }
 
 /// The language a video is spoken in and its own title, from a `/player`
@@ -783,6 +787,7 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
             title,
             source: "audio",
             playable,
+            alike: Vec::new(),
         });
     }
     let captions = at(
@@ -807,14 +812,6 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
         .first()
         .copied()
         .filter(|first| heard.iter().all(|l| l == first));
-    if let Some(language) = from_captions {
-        return Some(Spoken {
-            language: Some(language),
-            title,
-            source: "captions",
-            playable,
-        });
-    }
     let description: String = details
         .get("shortDescription")
         .and_then(Value::as_str)
@@ -822,71 +819,84 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
         .chars()
         .take(500)
         .collect();
-    let by_title = title_language(&title);
-    let by_description = title_language(&description);
-    let latin = |l: Language| {
-        matches!(
-            l,
-            Language::En
-                | Language::Es
-                | Language::Fr
-                | Language::De
-                | Language::Pt
-                | Language::It
-                | Language::Nl
-                | Language::Tr
-                | Language::Id
-                | Language::Tl
-                | Language::Pl
-                | Language::Cs
-                | Language::Ro
-                | Language::Hu
-                | Language::Sv
-                | Language::No
-                | Language::Da
-                | Language::Fi
-                | Language::Af
-                | Language::Az
-                | Language::Eo
-                | Language::Et
-                | Language::Eu
-                | Language::Gl
-                | Language::Is
-                | Language::Jv
-                | Language::La
-                | Language::Lt
-                | Language::Lv
-                | Language::Sk
-                | Language::Sq
-                | Language::Su
-                | Language::Sw
-                | Language::Tk
-                | Language::Uz
-        )
+    let (by_text, sure) = text_language(&title, &description);
+    if let Some(language) = from_captions
+        && !captions_mislabelled(language, by_text, sure)
+    {
+        return Some(Spoken {
+            language: Some(language),
+            title,
+            source: "captions",
+            playable,
+            alike: Vec::new(),
+        });
+    }
+    let source = match by_text {
+        None => "none",
+        Some(_) if sure => "text",
+        Some(_) => "guess",
     };
-    let language = match (by_title, by_description) {
-        (Language::Any, Language::Any) => None,
-        (Language::Any, other) => Some(other),
-        // A Latin title over a description in another script, such as an
-        // English title for a Chinese video, goes by the description.
-        (title, description)
-            if latin(title) && !latin(description) && description != Language::Any =>
-        {
-            Some(description)
-        }
-        // Both Latin: the two together give the most text to go by.
-        (title_says, description_says) if latin(title_says) && latin(description_says) => {
-            Some(title_language(&format!("{title}\n{description}")))
-        }
-        (title, _) => Some(title),
+    let alike = match by_text {
+        Some(guessed) if source == "guess" => alike(&format!("{title}\n{description}"), guessed),
+        _ => Vec::new(),
     };
-    let source = if language.is_some() { "text" } else { "none" };
     Some(Spoken {
-        language,
+        language: by_text,
         title,
         source,
         playable,
+        alike,
     })
+}
+
+/// Whether automatic captions labelled [captions] are a guess YouTube
+/// made for a language it has no speech recognition for: it labels them
+/// as a neighbour (Urdu, Gujarati and Punjabi news as Hindi, Tamil or
+/// Telugu news as English, Lao as Thai, Azerbaijani as Turkish, Estonian
+/// as Finnish). Then the video's own text, when it surely reads as one of
+/// those languages, decides. Captions in a language YouTube recognises
+/// stand against any text: a Japanese talk keeps its English title.
+fn captions_mislabelled(captions: Language, text: Option<Language>, sure: bool) -> bool {
+    use Language::*;
+    const UNHEARD: [Language; 27] = [
+        Ur, Gu, Pa, Ta, Te, Ml, Bn, Kn, Mr, Ne, Si, Lo, My, Km, Am, Ti, Hy, Ka, Mn, Az, Et, Sq, Uz,
+        Is, Eu, Sw, Tk,
+    ];
+    text.is_some_and(|text| sure && text != captions && UNHEARD.contains(&text))
+}
+
+/// The language a video's [title] and [description] read as, and
+/// whether surely; None when neither gives anything to go by.
+fn text_language(title: &str, description: &str) -> (Option<Language>, bool) {
+    let (by_title, title_sure) = reading(title);
+    let (by_description, description_sure) = reading(description);
+    match (by_title, by_description) {
+        (Language::Any, Language::Any) => (None, false),
+        (Language::Any, other) => (Some(other), description_sure),
+        // A Latin title over a description in another script, such as an
+        // English title for a Chinese video, goes by the description.
+        (title_says, description_says)
+            if is_latin(title_says)
+                && !is_latin(description_says)
+                && description_says != Language::Any =>
+        {
+            (Some(description_says), description_sure)
+        }
+        // Both Latin: a title sure of itself decides, as descriptions
+        // carry English links and sponsor lines ("Jännittää!! |
+        // MATKAVLOGI" was read as English with its description). Else the
+        // two together give the most text to go by, surely only when the
+        // title or a description sure of itself reads the same.
+        (title_says, _) if is_latin(title_says) && title_sure => (Some(title_says), true),
+        (title_says, description_says) if is_latin(title_says) && is_latin(description_says) => {
+            let (both, sure) = reading(&format!("{title}\n{description}"));
+            (
+                Some(both),
+                sure && (both == title_says || (description_sure && description_says == both)),
+            )
+        }
+        (title_says, _) => (Some(title_says), title_sure),
+    }
 }
 
 /// Words for "original" in the languages track names are shown in.
@@ -1004,7 +1014,7 @@ fn base64_any(text: &str) -> Option<Vec<u8>> {
 }
 
 /// What [spoken_language] finds in a `/player` response, as JSON
-/// `{language, title, source, playable}`: `language` is explore's index, 0
+/// `{language, title, source, playable, alike}`: `language` is explore's index, 0
 /// when nothing tells, and -1 for a language explore does not offer. Null
 /// when [body] is not a player response.
 ///
@@ -1018,6 +1028,10 @@ pub unsafe extern "C" fn lumtub_spoken_language(body: *const u8, length: usize) 
         title: String,
         source: &'static str,
         playable: bool,
+        /// For a guess: the languages that write its script, any of
+        /// which may have written the text.
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        alike: Vec<u32>,
     }
     let Ok(data) = serde_json::from_str::<Value>(unsafe { text(body, length) }) else {
         return std::ptr::null_mut();
@@ -1030,11 +1044,13 @@ pub unsafe extern "C" fn lumtub_spoken_language(body: *const u8, length: usize) 
         Some(Language::Any) => -1,
         Some(other) => other as i64,
     };
+    let alike = spoken.alike.iter().map(|l| *l as u32).collect();
     give_json(&Out {
         language,
         title: spoken.title,
         source: spoken.source,
         playable: spoken.playable,
+        alike,
     })
 }
 
@@ -1240,6 +1256,90 @@ mod tests {
     }
 
     #[test]
+    fn an_automatic_dub_listed_first_is_not_the_spoken_language() {
+        // As YouTube answered visionOS for an Italian news video, 2026-11-20.
+        let answer = json!({
+            "videoDetails": {"title": "TG La7", "shortDescription": ""},
+            "streamingData": {"adaptiveFormats": [
+                {"itag": 140, "audioTrack": {"displayName": "English (US)", "id": "en-US.10", "audioIsDefault": false, "isAutoDubbed": true}, "xtags": "ChQKBWFjb250EgtkdWJiZWQtYXV0bwoNCgRsYW5nEgVlbi1VUw"},
+                {"itag": 140, "audioTrack": {"displayName": "Italian original", "id": "it.4", "audioIsDefault": true}, "xtags": "ChEKBWFjb250EghvcmlnaW5hbAoKCgRsYW5nEgJpdA"}
+            ]}
+        });
+        let spoken = spoken_language(&answer).unwrap();
+        assert_eq!(
+            (spoken.language, spoken.source),
+            (Some(Language::It), "audio")
+        );
+    }
+
+    #[test]
+    fn captions_youtube_guessed_give_way_to_the_text() {
+        let answer = |title: &str, asr: &str| {
+            json!({
+                "videoDetails": {"title": title, "shortDescription": ""},
+                "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [
+                    {"languageCode": asr, "kind": "asr"}
+                ]}}
+            })
+        };
+        // Urdu news YouTube labelled Hindi, Tamil news labelled English.
+        let urdu = spoken_language(&answer(
+            "پاکستان میں آج کی بڑی خبریں اور تازہ ترین صورتحال",
+            "hi",
+        ))
+        .unwrap();
+        assert_eq!((urdu.language, urdu.source), (Some(Language::Ur), "text"));
+        let tamil = spoken_language(&answer("இன்றைய முக்கிய செய்திகள்", "en")).unwrap();
+        assert_eq!((tamil.language, tamil.source), (Some(Language::Ta), "text"));
+        let lao = spoken_language(&answer("ຂ່າວມື້ນີ້", "th")).unwrap();
+        assert_eq!(lao.language, Some(Language::Lo));
+        // Captions in a language YouTube hears stand against the text.
+        let japanese =
+            spoken_language(&answer("The best ramen in the city of Tokyo", "ja")).unwrap();
+        assert_eq!(
+            (japanese.language, japanese.source),
+            (Some(Language::Ja), "captions")
+        );
+        let hindi = spoken_language(&answer("आज की बड़ी खबरें", "hi")).unwrap();
+        assert_eq!(hindi.source, "captions");
+    }
+
+    #[test]
+    fn a_short_title_is_only_a_guess() {
+        let answer =
+            |title: &str| json!({"videoDetails": {"title": title, "shortDescription": ""}});
+        let short = spoken_language(&answer("Dagsrevyen 21")).unwrap();
+        assert_eq!(short.source, "guess");
+        assert!(short.alike.contains(&Language::No));
+        assert!(!short.alike.contains(&Language::En) || short.language == Some(Language::En));
+        // A Norwegian title with English small words, and its ø and å.
+        let norwegian = spoken_language(&answer("Reiser for første gang på over 2 år!!")).unwrap();
+        assert_eq!(norwegian.source, "guess");
+        assert!(norwegian.alike.contains(&Language::No));
+        assert!(!norwegian.alike.contains(&Language::Pt));
+        let polish = spoken_language(&answer("Wiadomości z kraju")).unwrap();
+        assert!(!polish.alike.contains(&Language::Jv) || polish.source == "text");
+        let icelandic = spoken_language(&answer("Fréttir kvöldsins í þættinum")).unwrap();
+        assert_eq!(
+            (icelandic.language, icelandic.source),
+            (Some(Language::Is), "text")
+        );
+        let english = spoken_language(&answer("How to make the best bread at home")).unwrap();
+        assert_eq!(
+            (english.language, english.source),
+            (Some(Language::En), "text")
+        );
+        let uzbek = spoken_language(&answer("Ўзбекистон янгиликлари: қишлоқ хўжалиги")).unwrap();
+        assert_eq!(uzbek.language, Some(Language::Uz));
+        let finnish = json!({"videoDetails": {"title": "Jännittää!! | MATKAVLOGI",
+            "shortDescription": "Thanks for watching! Follow me on Instagram and check out the links below for the best deals"}});
+        assert_eq!(
+            spoken_language(&finnish).unwrap().language,
+            Some(Language::Fi)
+        );
+    }
+
+    #[test]
     fn tells_the_spoken_language() {
         let asr = json!({
             "videoDetails": {"title": "How to cook rice", "shortDescription": ""},
@@ -1254,7 +1354,8 @@ mod tests {
                 language: Some(Language::Ja),
                 title: "How to cook rice".into(),
                 source: "captions",
-                playable: true
+                playable: true,
+                alike: Vec::new()
             })
         );
         let original = json!({

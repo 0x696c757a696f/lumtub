@@ -291,6 +291,34 @@ void main() {
     expect(cookies.written, hasLength(1), reason: 'prefetches never use the account');
   }, skip: Platform.isWindows ? 'uses a shell script' : null);
 
+  test('right after a bot check the next video is asked signed in from the start', () async {
+    final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    final log = File('${dir.path}/log');
+    final script = File('${dir.path}/fake-yt-dlp');
+    await script.writeAsString('#!/bin/sh\necho "\$*" >> ${log.path}\n'
+        'case "\$*" in *--cookies*) ;; *) echo "ERROR: [youtube] dQw4w9WgXcQ: Sign in to confirm you\'re not a bot" >&2; exit 1;; esac\n'
+        'cat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final cookies = _FakeCookies();
+    final played = <String>[];
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'))
+      ..members = (() => cookies)
+      ..signInWhenBlocked = (() => true)
+      ..onSignedInPlay = played.add;
+    await resolver.resolve('dQw4w9WgXcQ', 'ytdl');
+    expect(resolver.blockedSignIn.recentlyBlocked, isTrue);
+    final runs = log.readAsLinesSync().length;
+    await resolver.resolve('aaaaaaaaaaa', 'ytdl');
+    final later = log.readAsLinesSync().skip(runs).toList();
+    expect(later, hasLength(1));
+    expect(later.single, contains('--cookies'));
+    expect(cookies.written, hasLength(2));
+    expect(cookies.wiped, cookies.written);
+    expect(played, ['dQw4w9WgXcQ'], reason: 'told once, when the account first helped');
+    expect(resolver.blockedSignIn.usedThisHour, 2);
+  }, skip: Platform.isWindows ? 'uses a shell script' : null);
+
   test('a run without the TV clients that fails asks with them again', () async {
     final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
     addTearDown(() => dir.delete(recursive: true));

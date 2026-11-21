@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:ui' as ui show Codec, ImmutableBuffer, TargetImageSize, TargetImageSizeCallback;
+import 'dart:ui' as ui show Codec, ImmutableBuffer, PictureRecorder, TargetImageSize, TargetImageSizeCallback;
 import 'dart:ui' show PointMode;
 
 import 'package:flutter/foundation.dart';
@@ -83,6 +83,10 @@ void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
           ..color = p.color.withValues(alpha: p.color.a * alpha)
           ..shader = fade);
       }
+    case 'noise':
+      // Fine grain, as of sand or paper: one small tile drawn once and
+      // repeated, so a card costs a single rectangle.
+      canvas.drawRect(cover, Paint()..shader = noiseShader(p.color, spacing: step, size: size));
     case 'checker':
       final path = Path();
       var row = 0;
@@ -94,6 +98,40 @@ void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
       canvas.drawPath(path, paint);
   }
   canvas.restore();
+}
+
+final _noiseTiles = <(Color, double, double), ImageShader>{};
+
+/// A repeating tile of grains of [color], about [spacing] apart and [size]
+/// across, each a little lighter or stronger than the next. Drawn at twice
+/// the size and scaled down, so grains stay crisp on high-density screens.
+ImageShader noiseShader(Color color, {required double spacing, required double size}) {
+  final key = (color, spacing, size);
+  final cached = _noiseTiles[key];
+  if (cached != null) return cached;
+  const tile = 128.0;
+  const scale = 2.0;
+  final recorder = ui.PictureRecorder();
+  final canvas = Canvas(recorder)..scale(scale);
+  final random = math.Random(11);
+  final count = (tile * tile / (spacing * spacing)).round().clamp(1, 20000);
+  // Four strengths, one call each.
+  final buckets = List.generate(4, (_) => <double>[]);
+  for (var i = 0; i < count; i++) {
+    buckets[random.nextInt(4)].addAll([random.nextDouble() * tile, random.nextDouble() * tile]);
+  }
+  for (var b = 0; b < buckets.length; b++) {
+    canvas.drawRawPoints(PointMode.points, Float32List.fromList(buckets[b]), Paint()
+      ..color = color.withValues(alpha: color.a * (0.25 + b * 0.25))
+      ..strokeWidth = size
+      ..strokeCap = StrokeCap.round);
+  }
+  final picture = recorder.endRecording();
+  final image = picture.toImageSync((tile * scale).round(), (tile * scale).round());
+  picture.dispose();
+  final shader = ImageShader(image, TileMode.repeated, TileMode.repeated, (Matrix4.identity()..scaleByDouble(1 / scale, 1 / scale, 1, 1)).storage, filterQuality: FilterQuality.medium);
+  if (_noiseTiles.length > 12) _noiseTiles.remove(_noiseTiles.keys.first);
+  return _noiseTiles[key] = shader;
 }
 
 /// A box drawn as a [SkinSurface]: shadow, glow, fill, shine, bevel and

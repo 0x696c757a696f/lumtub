@@ -3,43 +3,75 @@ part of 'app_controller.dart';
 /// The details of the playing video and the AI summary made from them.
 extension VideoDetailsActions on AppController {
   /// Forgets [videoId]'s AI 总结, so the next one is made again.
-  void forgetSummary(String videoId) => _summaries.remove(videoId);
+  void forgetSummary(String videoId) {
+    _summaries.remove(videoId);
+    _staleSummaries.add(videoId);
+    final db = _textsDb;
+    if (db != null) unawaited(db.forgetSummaries(video: videoId).catchError((Object e) => logDebug(() => 'Could not forget a summary: $e')));
+  }
 
   String? summaryOf(String id) => _summaries[id];
 
   /// Whether AI 总结 has an AI service to ask.
-  bool get canSummarize => aiServiceFor(preferences.translation, translationKeys, _http) != null;
+  bool get canSummarize => intelligence.can(Capability.complete);
 
   /// AI 总结 of the video playing, from its subtitles in its own language,
   /// by the AI service set up under 翻译服务. Only the transcript and the
-  /// title are sent, and only when asked.
+  /// title are sent, and only when asked. Kept in lumtub.db, so a video is
+  /// summarized once in each interface language.
   Future<String> summarize({void Function(int done, int total)? onProgress}) async {
     final item = playing;
     final details = this.details;
     if (item == null) throw TranslationException(tr('No video is playing'));
     if (_summaries[item.id] case final done?) return done;
-    final ai = aiServiceFor(preferences.translation, translationKeys, _http);
-    if (ai == null) throw TranslationException(tr('Set up the AI interface and key under Translation & AI first'));
+    final intelligence = this.intelligence;
+    if (!intelligence.can(Capability.complete)) throw TranslationException(tr('Set up the AI interface and key under Translation & AI first'));
+    final db = _textsDb;
+    final language = currentLanguage.tag;
+    if (db != null && !_staleSummaries.contains(item.id)) {
+      try {
+        if (await db.summary(item.id, language) case final saved?) return _keepSummary(item.id, saved);
+      } on LocalDbException catch (e) {
+        logWarn('Could not read a summary from lumtub.db: $e');
+      }
+    }
+    final summary = await jobs.run('summary:${item.id}', (job) => _summarize(item, details, intelligence, onProgress), priority: JobPriority.watching);
+    if (db != null) {
+      try {
+        await db.putSummary(item.id, language, intelligence.makerOf(Capability.complete), summary, keep: 500);
+        _staleSummaries.remove(item.id);
+      } on LocalDbException catch (e) {
+        logWarn('Could not keep a summary in lumtub.db: $e');
+      }
+    }
+    return _keepSummary(item.id, summary);
+  }
+
+  String _keepSummary(String id, String summary) {
+    if (_summaries.length >= 30) _summaries.remove(_summaries.keys.first);
+    return _summaries[id] = summary;
+  }
+
+  Future<String> _summarize(VideoItem item, VideoDetails? details, Intelligence intelligence, void Function(int done, int total)? onProgress) async {
     final subtitles = details?.subtitles ?? const <SubtitleOption>[];
     final option = originalSubtitle(subtitles, language: details?.language) ?? subtitles.firstOrNull;
     final title = details?.title.isNotEmpty == true ? details!.title : item.title;
-    final String summary;
+    Future<String> complete(String system, String user) => intelligence.complete(system, user);
     if (option == null) {
       // No subtitles, not even YouTube's automatic ones: the description
       // and chapters are all there is to go on.
       final description = details?.description ?? '';
       final chapters = [for (final c in details?.chapters ?? const <Chapter>[]) (start: c.start, title: c.title)];
       if (!canSummarizeDescription(description, chapters)) throw TranslationException(tr('This video has no subtitles and its description is too short to summarize'));
-      summary = await summarizeDescription(ai, title, description, chapters);
+      final summary = await summarizeDescription(complete, title, description, chapters);
       logInfo('Summarized ${item.id} from its description');
-    } else {
-      final source = await File(await _subtitleFile(option)).readAsString();
-      final transcript = await summaryTranscript(source);
-      summary = await summarizeTranscript(ai, title, transcript, onProgress: onProgress);
-      logInfo('Summarized ${item.id} from ${transcript.chunks.length} part(s)');
+      return summary;
     }
-    if (_summaries.length >= 30) _summaries.remove(_summaries.keys.first);
-    return _summaries[item.id] = summary;
+    final source = await File(await _subtitleFile(option)).readAsString();
+    final transcript = await summaryTranscript(source);
+    final summary = await summarizeTranscript(complete, title, transcript, onProgress: onProgress);
+    logInfo('Summarized ${item.id} from ${transcript.chunks.length} part(s)');
+    return summary;
   }
 
   /// Starts resolving [item] before it is opened, such as when the pointer
@@ -57,7 +89,8 @@ extension VideoDetailsActions on AppController {
     try {
       VideoDetails loaded;
       final local = await downloads?.localVideo(item.id);
-      if (local != null && local.info['title'] != null) {
+      final saved = local != null && local.info['title'] != null;
+      if (saved) {
         // Saved with the download, so the page works offline.
         loaded = VideoDetails.fromJson(local.info);
       } else {
@@ -100,6 +133,8 @@ extension VideoDetailsActions on AppController {
         if (speech != null && loaded.subtitles.length == 1) {
           _subtitlesSettled(serial);
           unawaited(_showSpeech(speech, serial));
+        } else if (saved) {
+          unawaited(_downloadedSubtitles(item, local, loaded, serial).whenComplete(() => _subtitlesSettled(serial)));
         } else {
           unawaited(_autoSubtitles(item, loaded, serial).whenComplete(() => _subtitlesSettled(serial)));
         }
@@ -112,6 +147,38 @@ extension VideoDetailsActions on AppController {
     } finally {
       if (serial == _playSerial) _update(() => loadingDetails = false);
     }
+  }
+
+  /// Subtitles for a downloaded video. Online, YouTube's, translations
+  /// too, picked as when it streams; the download keeps only the ones
+  /// saved with it, which are what plays offline.
+  Future<void> _downloadedSubtitles(VideoItem item, LocalVideo local, VideoDetails saved, int serial) async {
+    VideoDetails? online;
+    try {
+      final resolved = await _repository!.streams.resolve(item.id, _formatFor(item.id), formatSort: _formatSort, membersOnly: item.membersOnly).timeout(const Duration(seconds: 40));
+      online = resolved.details;
+    } catch (e) {
+      logInfo('The download of ${item.id} keeps its own subtitles: $e');
+    }
+    if (serial != _playSerial) return;
+    if (online == null || online.subtitles.isEmpty) {
+      // Offline: the subtitles saved in one language each are picked as
+      // first and second subtitle, each in its own style, as online. A
+      // download with only a bilingual file shows that file.
+      final own = local.subtitleOptions;
+      if (own.isEmpty) {
+        final player = this.player;
+        if (player != null && await _fileLoaded(player, item.id, serial) && _openedLocal == item.id) await _addLocalSubtitles(local, serial);
+        return;
+      }
+      final offline = saved.withSubtitles(own);
+      _update(() => details = offline);
+      await _autoSubtitles(item, offline, serial);
+      return;
+    }
+    final merged = saved.withSubtitlesOf(online);
+    _update(() => details = merged);
+    await _autoSubtitles(item, merged, serial);
   }
 
   /// The playing video, and its place in the history, with what its

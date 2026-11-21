@@ -81,6 +81,23 @@ class VideoOutputSize {
     value ? _schedule() : _update();
   }
 
+  bool _canvas = false;
+
+  /// Whether libmpv draws subtitles: the picture is then drawn the shape of
+  /// its box, fitted in with bars (unless it covers the box), so subtitles
+  /// can use the bars beside a picture of another shape, as the Flutter
+  /// subtitle view does. Set at once: the view shows the picture by the
+  /// drawn shape.
+  set canvas(bool value) {
+    if (value == _canvas) return;
+    _canvas = value;
+    _timer?.cancel();
+    _update();
+  }
+
+  /// Whether the picture is drawn the shape of its box now.
+  bool get canvasShaped => _canvas && !_cover;
+
   /// The box drawn into while hidden.
   static const hiddenBox = Size(320, 180);
 
@@ -95,16 +112,26 @@ class VideoOutputSize {
   /// The size to draw at for the video [video] shown in the largest of
   /// [boxes]: the video fitted into that box (covering it with [cover]),
   /// or null for the video's own size when the box is as large or there is
-  /// nothing to fit.
-  static (int, int)? target(Size video, Iterable<Size> boxes, {bool cover = false}) {
+  /// nothing to fit. With [canvas] (and not [cover]) the drawing is the
+  /// box's shape, the video fitted in its middle at no more than its own
+  /// size.
+  static (int, int)? target(Size video, Iterable<Size> boxes, {bool cover = false, bool canvas = false}) {
     if (video.isEmpty || boxes.isEmpty) return null;
     final box = boxes.reduce((a, b) => a.width * a.height >= b.width * b.height ? a : b);
     if (box.isEmpty) return null;
     final across = box.width / video.width, down = box.height / video.height;
     final scale = cover ? max(across, down) : min(across, down);
-    if (scale >= 1) return null;
     // Even sizes; rounded up when covering, so no edge is left short.
     int even(double v) => max(2, (cover ? (v / 2).ceil() : (v / 2).round()) * 2);
+    if (canvas && !cover) {
+      final shape = box.width / box.height, own = video.width / video.height;
+      // Shapes this close draw as the video's own.
+      if ((shape / own - 1).abs() > 0.01) {
+        final down = min(1.0, scale);
+        return (even(box.width / scale * down), even(box.height / scale * down));
+      }
+    }
+    if (scale >= 1) return null;
     return (even(video.width * scale), even(video.height * scale));
   }
 
@@ -131,7 +158,7 @@ class VideoOutputSize {
     // While a page covers the video, the size stays: drawing it again at
     // another size for nobody to see costs a texture swap twice.
     if (_boxes.isEmpty && !_hidden) return;
-    final next = target(_video, _hidden ? const [hiddenBox] : _boxes.values, cover: _cover);
+    final next = target(_video, _hidden ? const [hiddenBox] : _boxes.values, cover: _cover, canvas: _canvas);
     if (next == null) {
       if (_native) return;
       _native = true;

@@ -15,6 +15,7 @@ No account needed to watch.
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
 [![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
+[![GitHub stars](https://img.shields.io/github/stars/0x696c757a696f/lumtub?style=flat&logo=github&color=E3B341)](https://github.com/0x696c757a696f/lumtub/stargazers)
 <a href="#support-lumtub"><img src="docs/sponsor/sponsor-en.svg" alt="Sponsor" height="20"></a>
 
 #### Download
@@ -26,6 +27,8 @@ No account needed to watch.
 <a href="https://github.com/0x696c757a696f/lumtub/releases/latest"><img src="https://img.shields.io/badge/Download%20for-iPhone%20%26%20iPad-555555?style=for-the-badge&logo=ios&logoColor=white" alt="iPhone & iPad" height="36"></a>
 
 <sub>Free, open source, no telemetry. Which file to pick: <a href="#get-it">Get it</a>. iPhone and iPad are in preview.</sub>
+
+⭐ **Like Lumtub? Star it on GitHub (top right of this page).** It costs nothing and is the main way new people find it.
 
 https://github.com/user-attachments/assets/97e3ce09-8e66-43fe-9125-bff1b3dcb3fe
 
@@ -136,24 +139,24 @@ These are also found in other YouTube clients, and all are opt-in here:
 
 </div>
 
-| Package | For |
-|---|---|
-| `windows-x64-v3` | Most PCs from 2015 on (AVX2) — **pick this if unsure** |
-| `windows-x64` | Older x64 CPUs |
-| `windows-arm64` | Windows on ARM laptops |
-| `linux-x64-v3` AppImage | Most 64-bit PCs from 2015 on (AVX2) with glibc 2.35 or newer — **pick this if unsure** |
-| `linux-x64` AppImage | 64-bit PCs with glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36 and later) |
-| `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 |
-| `linux-x64` / `linux-arm64` Flatpak | The same, as a Flatpak bundle (no self-update: install the next one by hand) |
-| `macos-arm64` DMG | Macs with Apple silicon (M1 and later) |
-| `macos-x64` DMG | Intel Macs |
-| `android-arm64-v8a` APK | Most Android phones, tablets and TVs (Android 7.0 or newer) — **pick this if unsure** |
-| `android-armeabi-v7a` APK | Older 32-bit Android devices and many low-cost TV boxes |
-| `android-x86_64` APK | Android emulators and x86 Chromebooks |
-| `ios` IPA | iPhone and iPad with iOS 15 or newer (preview, sideloaded) |
-| `ios-trollstore` TIPA | The same for [TrollStore](https://github.com/opa334/TrollStore): also asks iOS for VP9 hardware decoding before iOS 26.2 |
+| Package | For | Download |
+|---|---|---|
+| `windows-x64-v3` | Most PCs from 2015 on (AVX2) — **pick this if unsure** | [⬇ Installer](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-v3-setup.exe) · [Portable ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-v3.zip) |
+| `windows-x64` | Older x64 CPUs | [⬇ Installer](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-setup.exe) · [Portable ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-x64.zip) |
+| `windows-arm64` | Windows on ARM laptops | [⬇ Installer](https://0x696c757a696f.github.io/lumtub/get/?windows-arm64-setup.exe) · [Portable ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-arm64.zip) |
+| `linux-x64-v3` AppImage | Most 64-bit PCs from 2015 on (AVX2) with glibc 2.35 or newer — **pick this if unsure** | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-x64-v3.AppImage) |
+| `linux-x64` AppImage | 64-bit PCs with glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36 and later) | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-x64.AppImage) |
+| `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-arm64.AppImage) |
+| `linux-x64` / `linux-arm64` Flatpak | The same, as a Flatpak bundle (no self-update: install the next one by hand) | [Release page](https://github.com/0x696c757a696f/lumtub/releases/latest) |
+| `macos-arm64` DMG | Macs with Apple silicon (M1 and later) | [⬇ DMG](https://0x696c757a696f.github.io/lumtub/get/?macos-arm64.dmg) |
+| `macos-x64` DMG | Intel Macs | [⬇ DMG](https://0x696c757a696f.github.io/lumtub/get/?macos-x64.dmg) |
+| `android-arm64-v8a` APK | Most Android phones, tablets and TVs (Android 7.0 or newer) — **pick this if unsure** | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-arm64-v8a.apk) |
+| `android-armeabi-v7a` APK | Older 32-bit Android devices and many low-cost TV boxes | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-armeabi-v7a.apk) |
+| `android-x86_64` APK | Android emulators and x86 Chromebooks | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-x86_64.apk) |
+| `ios` IPA | iPhone and iPad with iOS 15 or newer (preview, sideloaded) | [⬇ IPA](https://0x696c757a696f.github.io/lumtub/get/?ios.ipa) |
+| `ios-trollstore` TIPA | The same for [TrollStore](https://github.com/opa334/TrollStore): also asks iOS for VP9 hardware decoding before iOS 26.2 | [⬇ TIPA](https://0x696c757a696f.github.io/lumtub/get/?ios-trollstore.tipa) |
 
-File names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
+The links in the table always give the newest version. On the release page, file names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
 **Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. Package manager (under review, working once accepted): `winget install Lumtub.Lumtub`.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place. If it says FUSE is missing, install your distribution's `fuse3` package, or start it with `--appimage-extract-and-run`. Prefer Flatpak? `flatpak install --user Lumtub_*_linux-x64.flatpak`.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.<br>
@@ -288,6 +291,6 @@ Source strings are English wrapped in `tr('…')`; translations, simplified Chin
 
 Lumtub is licensed under the GNU Affero General Public License, version 3 or later (`AGPL-3.0-or-later`). Anyone who runs a modified Lumtub as a network service must also offer its source code to the people who use it. Versions up to and including 0.2.51 were released under `GPL-3.0-or-later`.
 
-The settings tiles in `lib/widgets/pilinara_settings_tiles.dart` are adapted from [PiliNara](https://github.com/Starfallan/PiliNara), copyright its contributors, and remain under GPL-3.0-or-later, which may be combined with the AGPL; parts of Lumtub's interface follow PiliNara's design. `vendor/pilinara-settings/` is an unmodified PiliNara snapshot kept for reference and not built; the rest of PiliNara is at the repository linked above. `vendor/media_kit_video/` is a modified copy of media_kit_video (see its `LUMTUB.md`).
+`vendor/media_kit_video/` is a modified copy of media_kit_video (see its `LUMTUB.md`).
 
 Built on [media_kit](https://github.com/media-kit/media-kit), [mpv](https://mpv.io), [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [FFmpeg](https://ffmpeg.org). AI channel lists come from [KillSlop](https://killslop.app) (CC BY-SA 4.0) and [AiSList](https://github.com/Override92/AiSList) (CC BY-NC 4.0), downloaded at runtime and not shipped with Lumtub. The bundled Noto Sans SC font is under the SIL Open Font License 1.1 (`assets/fonts/OFL.txt`); the Phosphor icon fonts are under the MIT License (`assets/fonts/phosphor/LICENSE`). Other packages and components keep their own licenses; see `NOTICE` before redistributing.

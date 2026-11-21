@@ -63,7 +63,12 @@ extension LifecycleActions on AppController {
       unawaited(writeLogsOff(preferences.logLevel == LogLevel.off));
       this.channelPlayback = channelPlayback;
       this.watchTime = watchTime;
-      speechStore = SpeechSubtitleStore(Directory('${directories.data.path}${Platform.pathSeparator}speech'));
+      final sep = Platform.pathSeparator;
+      speechStore = SpeechSubtitleStore(
+        Directory('${directories.data.path}${sep}speech'),
+        db: _textsDb = LocalDbTexts.available ? LocalDb('${directories.data.path}${sep}lumtub.db') : null,
+        cache: Directory('${directories.cache.path}${sep}transcripts'),
+      );
       // An earlier attempt that failed may have left one.
       homeFeed?.dispose();
       homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(_passOn('home feed'));
@@ -74,8 +79,11 @@ extension LifecycleActions on AppController {
         _update(() => status = message);
       });
       _tools = manager;
+      packs?.dispose();
+      packs = PackManager(Directory('${directories.data.path}${sep}packs'), manager);
       // The proxy comes before the component downloads, which use it too.
       await (_refreshProxy(), cacheManager.prepare(settings), manager.initialize()).wait;
+      unawaited(packs!.load().catchError((Object e) => logWarn('Could not read the data packs: $e')));
       await YtDlpTls.configure(directories.data, roots: settings.certificateRoots, quantum: settings.postQuantum);
       await JsChallengePlugin.prepare(directories.data.path);
       final paths = await manager.ensureReady();
@@ -90,6 +98,7 @@ extension LifecycleActions on AppController {
         // libmpv's own notes only with the debug level; it says a lot.
         logLevel: preferences.logLevel == LogLevel.debug ? MPVLogLevel.info : MPVLogLevel.warn,
       ));
+      await UpscaleShaders.prepare(directories.data, settings.upscaling);
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
       _optionsApplied(player);
       if (!Platform.isWindows && player.platform is NativePlayer) {
@@ -175,7 +184,10 @@ extension LifecycleActions on AppController {
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
-        _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}heard_languages.json'));
+        // Answers saved before 0.2.57 may have taken an automatic dub for the
+        // spoken language (and its channel with it): asked again.
+        unawaited(File('${directories.cache.path}${Platform.pathSeparator}heard_languages.json').delete().then((_) {}, onError: (_) {}));
+        _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}heard_languages_2.json'));
         ChannelAvatarLookup.instance.configure(_http, File('${directories.cache.path}${Platform.pathSeparator}channel_avatars.json'));
         VideoFactsLookup.instance.configure(_http, File('${directories.cache.path}${Platform.pathSeparator}video_facts.json'));
         unawaited(EmojiPictures.configure(File('${directories.cache.path}${Platform.pathSeparator}emoji_pictures.json')));
@@ -217,6 +229,8 @@ extension LifecycleActions on AppController {
         // Android draws into a surface of its own size; media_kit has no
         // output size there.
         _outputSize = Platform.isAndroid ? null : VideoOutputSize((width, height) async => videoController?.setSize(width: width, height: height), onError: (e) => logWarn('Could not size the video output: $e'));
+        _outputSize?.cover = _coverVideo;
+        _syncSubtitleCanvas();
         _listenTo(player);
         _dropTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkDrops());
         _thumbnailTrimTimer?.cancel();

@@ -9,7 +9,7 @@ import 'translation.dart';
 /// Translated and bilingual subtitles. YouTube translates captions itself
 /// when a caption address carries `tlang=<language>`, so nothing is sent to
 /// another service. The secondary subtitle is mpv's `secondary-sid`, shown
-/// together with the main one (as PiliNara's 副字幕 does).
+/// together with the main one (副字幕).
 
 /// [source] translated into [target] by YouTube.
 SubtitleOption translatedOption(SubtitleOption source, TranslationLanguage target) {
@@ -113,6 +113,19 @@ List<({String name, TranslationLanguage language, SubtitleOption option})> langu
     rows.add((name: name, language: language, option: option));
   }
   return rows;
+}
+
+/// Whether a video spoken in [language] (a YouTube or mpv tag) is in one
+/// of [known] (TranslationLanguage codes). Spoken Chinese is one language,
+/// whichever script its subtitles are written in.
+bool understands(String? language, List<String> known) {
+  String base(String? tag) {
+    final t = (tag ?? '').toLowerCase().replaceAll('_', '-').split('-').first;
+    return const {'chi', 'zho', 'cmn'}.contains(t) ? 'zh' : t;
+  }
+
+  final spoken = base(language);
+  return spoken.isNotEmpty && known.any((code) => base(code) == spoken);
 }
 
 /// Whether two tags name one language; Chinese scripts count as different.

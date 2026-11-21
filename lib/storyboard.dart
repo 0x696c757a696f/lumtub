@@ -1,8 +1,6 @@
 // Hover preview thumbnails for the progress bar. YouTube publishes
 // "storyboards": sprite sheets of small frames, which yt-dlp lists among the
-// formats (format_note "storyboard", ids sb0..sb3, ext mhtml). The idea
-// follows PiliNara's video shot preview (lib/plugin/pl_player/models/
-// video_shot_data.dart, GPLv3), whose sprite sheets work the same way.
+// formats (format_note "storyboard", ids sb0..sb3, ext mhtml).
 
 import 'dart:async';
 import 'dart:math';

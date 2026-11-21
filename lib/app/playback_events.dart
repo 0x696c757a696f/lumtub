@@ -196,6 +196,7 @@ extension PlaybackEvents on AppController {
       player.stream.subtitle.listen((lines) {
         _fitSubtitleFont(player, lines);
         _placeSecondary(player, lines);
+        _secondLineChanged(lines);
       }),
       player.stream.playing.listen((_) {
         _updateEfficiency();
@@ -243,6 +244,7 @@ extension PlaybackEvents on AppController {
           unawaited(inspectCurrentDecoder(delay: const Duration(milliseconds: 500)));
         }
         if (_segments.isNotEmpty && settings.sponsorBlock) _skipSegments(position);
+        _pauseAtLineEnd(player, position);
         _countWatchTime();
         final now = DateTime.now();
         if (now.difference(_lastProgressSave) > const Duration(seconds: 5)) {

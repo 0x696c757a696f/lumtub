@@ -15,6 +15,7 @@
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
 [![翻译状态](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
+[![GitHub Star](https://img.shields.io/github/stars/0x696c757a696f/lumtub?style=flat&logo=github&label=Star&color=E3B341)](https://github.com/0x696c757a696f/lumtub/stargazers)
 <a href="#支持-lumtub"><img src="docs/sponsor/sponsor-zh.svg" alt="赞助" height="20"></a>
 
 #### 下载
@@ -26,6 +27,8 @@
 <a href="https://github.com/0x696c757a696f/lumtub/releases/latest"><img src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-iPhone%20%E5%92%8C%20iPad-555555?style=for-the-badge&logo=ios&logoColor=white" alt="下载 iPhone 和 iPad" height="36"></a>
 
 <sub>免费开源，不收集遥测数据。不知道选哪个文件？看<a href="#下载">下载</a>一节。iPhone 和 iPad 版为预览版。</sub>
+
+⭐ **觉得好用？在 GitHub 右上角点个 Star 吧。** 不花一分钱，却是新用户发现 Lumtub 的主要途径。
 
 [学外语](#-用真实视频学外语) · [截图](#截图) · [功能](#功能) · [下载](#下载) · [数据来源](#数据来源) · [隐私](#隐私哪些留在本机哪些会发出去) · [常见问题](#常见问题) · [支持](#支持-lumtub)
 
@@ -131,24 +134,24 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 
 </div>
 
-| 安装包 | 适用于 |
-|---|---|
-| `windows-x64-v3` | 2015 年以后的大多数电脑（支持 AVX2）。**不确定就选这个** |
-| `windows-x64` | 较老的 x64 处理器 |
-| `windows-arm64` | Windows on ARM 笔记本 |
-| `linux-x64-v3` AppImage | 2015 年以后的大多数 64 位电脑（AVX2），glibc 2.35 或更新——**拿不准就选这个** |
-| `linux-x64` AppImage | glibc 2.35 或更新的 64 位电脑（Ubuntu 22.04、Debian 12、Fedora 36 及以后） |
-| `linux-arm64` AppImage | ARM64 Linux，例如树莓派 5 |
-| `linux-x64` / `linux-arm64` Flatpak | 同上，Flatpak 包（不会自动更新，新版本需要手动安装） |
-| `macos-arm64` DMG | Apple 芯片的 Mac（M1 及以后） |
-| `macos-x64` DMG | Intel 芯片的 Mac |
-| `android-arm64-v8a` APK | 大多数 Android 手机、平板和电视（Android 7.0 及以上）。**不确定就选这个** |
-| `android-armeabi-v7a` APK | 较老的 32 位 Android 设备和不少廉价电视盒子 |
-| `android-x86_64` APK | Android 模拟器和 x86 Chromebook |
-| `ios` IPA | iOS 15 及以上的 iPhone 和 iPad（预览版，自签安装） |
-| `ios-trollstore` TIPA | 同上，给 [TrollStore](https://github.com/opa334/TrollStore) 用：iOS 26.2 之前也会向系统要 VP9 硬件解码 |
+| 安装包 | 适用于 | 下载 |
+|---|---|---|
+| `windows-x64-v3` | 2015 年以后的大多数电脑（支持 AVX2）。**不确定就选这个** | [⬇ 安装程序](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-v3-setup.exe) · [便携版 ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-v3.zip) |
+| `windows-x64` | 较老的 x64 处理器 | [⬇ 安装程序](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-setup.exe) · [便携版 ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-x64.zip) |
+| `windows-arm64` | Windows on ARM 笔记本 | [⬇ 安装程序](https://0x696c757a696f.github.io/lumtub/get/?windows-arm64-setup.exe) · [便携版 ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-arm64.zip) |
+| `linux-x64-v3` AppImage | 2015 年以后的大多数 64 位电脑（AVX2），glibc 2.35 或更新——**拿不准就选这个** | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-x64-v3.AppImage) |
+| `linux-x64` AppImage | glibc 2.35 或更新的 64 位电脑（Ubuntu 22.04、Debian 12、Fedora 36 及以后） | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-x64.AppImage) |
+| `linux-arm64` AppImage | ARM64 Linux，例如树莓派 5 | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-arm64.AppImage) |
+| `linux-x64` / `linux-arm64` Flatpak | 同上，Flatpak 包（不会自动更新，新版本需要手动安装） | [发布页](https://github.com/0x696c757a696f/lumtub/releases/latest) |
+| `macos-arm64` DMG | Apple 芯片的 Mac（M1 及以后） | [⬇ DMG](https://0x696c757a696f.github.io/lumtub/get/?macos-arm64.dmg) |
+| `macos-x64` DMG | Intel 芯片的 Mac | [⬇ DMG](https://0x696c757a696f.github.io/lumtub/get/?macos-x64.dmg) |
+| `android-arm64-v8a` APK | 大多数 Android 手机、平板和电视（Android 7.0 及以上）。**不确定就选这个** | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-arm64-v8a.apk) |
+| `android-armeabi-v7a` APK | 较老的 32 位 Android 设备和不少廉价电视盒子 | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-armeabi-v7a.apk) |
+| `android-x86_64` APK | Android 模拟器和 x86 Chromebook | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-x86_64.apk) |
+| `ios` IPA | iOS 15 及以上的 iPhone 和 iPad（预览版，自签安装） | [⬇ IPA](https://0x696c757a696f.github.io/lumtub/get/?ios.ipa) |
+| `ios-trollstore` TIPA | 同上，给 [TrollStore](https://github.com/opa334/TrollStore) 用：iOS 26.2 之前也会向系统要 VP9 硬件解码 | [⬇ TIPA](https://0x696c757a696f.github.io/lumtub/get/?ios-trollstore.tipa) |
 
-文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
+表格里的链接总是下载最新版本。发布页上的文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
 **Windows**：用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。也可以用包管理器（正在审核，通过后可用）：`winget install Lumtub.Lumtub`。<br>
 **Linux**：给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新。如果提示缺少 FUSE，请安装发行版的 `fuse3` 软件包，或用 `--appimage-extract-and-run` 参数启动。想用 Flatpak 的话：`flatpak install --user Lumtub_*_linux-x64.flatpak`。<br>
 第一次启动时会从 GitHub 下载 yt-dlp 和 Deno，之后 Lumtub 会自己保持更新。<br>
@@ -256,6 +259,6 @@ Lumtub 是独立项目，与 YouTube 或 Google 无关，未获得其认可或�
 
 Lumtub 以 GNU Affero 通用公共许可证第 3 版或更新版本（`AGPL-3.0-or-later`）发布。修改后的 Lumtub 如果作为网络服务提供给别人使用，也必须向这些用户提供源代码。0.2.51 及更早的版本以 `GPL-3.0-or-later` 发布。
 
-`lib/widgets/pilinara_settings_tiles.dart` 中的设置项改编自 [PiliNara](https://github.com/Starfallan/PiliNara)，版权归其贡献者所有，仍以 GPL-3.0-or-later 发布（可与 AGPL 合并使用）；Lumtub 的部分界面参考了 PiliNara 的设计。`vendor/pilinara-settings/` 是未经修改的 PiliNara 快照，仅供参考，不参与构建；PiliNara 的其余部分见上面链接的仓库。`vendor/media_kit_video/` 是修改过的 media_kit_video（见其中的 `LUMTUB.md`）。
+`vendor/media_kit_video/` 是修改过的 media_kit_video（见其中的 `LUMTUB.md`）。
 
 基于 [media_kit](https://github.com/media-kit/media-kit)、[mpv](https://mpv.io)、[yt-dlp](https://github.com/yt-dlp/yt-dlp) 和 [FFmpeg](https://ffmpeg.org) 构建。AI 频道名单来自 [KillSlop](https://killslop.app)（CC BY-SA 4.0）和 [AiSList](https://github.com/Override92/AiSList)（CC BY-NC 4.0），在运行时下载，不随 Lumtub 分发。内置的 Noto Sans SC 字体采用 SIL Open Font License 1.1（`assets/fonts/OFL.txt`）；Phosphor 图标字体采用 MIT 许可证（`assets/fonts/phosphor/LICENSE`）。其他软件包和组件保留各自的许可证；再分发前请参阅 `NOTICE`。

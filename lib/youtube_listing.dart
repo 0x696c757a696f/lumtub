@@ -139,9 +139,10 @@ class YoutubeListing {
   /// [videos], only a video counts as found: a search that turns up
   /// channels alone still asks [fallback].
   static Stream<String> orElse(Stream<String> Function() web, Stream<String> Function() fallback, {bool videos = false}) async* {
-    var any = false;
+    var any = false, lines = 0;
     try {
       await for (final line in web()) {
+        lines++;
         any = any || !videos || line.contains('"ie_key":"Youtube"');
         yield line;
       }
@@ -149,6 +150,9 @@ class YoutubeListing {
       if (any) rethrow;
       logWarn('YouTube listing failed, using yt-dlp: $e');
     }
-    if (!any) yield* fallback();
+    if (!any) {
+      logInfo('YouTube listing gave no videos ($lines entries), using yt-dlp');
+      yield* fallback();
+    }
   }
 }

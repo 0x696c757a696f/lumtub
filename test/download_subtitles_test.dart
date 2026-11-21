@@ -54,4 +54,18 @@ void main() {
     expect(ass, contains('Dialogue: 0,0:00:00.00,0:00:02.00,Default,,0,0,0,,你好\\N{\\rSecond}Hello\n'));
     expect(ass, contains('Dialogue: 0,0:00:03.00,0:00:04.00,Default,,0,0,0,,{\\rSecond}Only (below)\n'));
   });
+
+  test('a styled ASS kept beside a download moves past stretches cut out', () {
+    const ass = '[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n'
+        'Dialogue: 0,0:00:01.00,0:00:02.00,Default,,0,0,0,,before\n'
+        'Dialogue: 0,0:00:03.00,0:00:04.00,Default,,0,0,0,,inside, cut\n'
+        'Dialogue: 0,0:00:07.50,0:00:09.00,Default,,0,0,0,,after\n';
+    Duration shift(Duration at) => at <= const Duration(seconds: 2) ? at : at < const Duration(seconds: 6) ? const Duration(seconds: 2) : at - const Duration(seconds: 4);
+    final shifted = shiftAss(ass, shift);
+    expect(shifted, contains('Dialogue: 0,0:00:01.00,0:00:02.00,Default,,0,0,0,,before'));
+    expect(shifted, isNot(contains('inside')));
+    expect(shifted, contains('Dialogue: 0,0:00:03.50,0:00:05.00,Default,,0,0,0,,after'));
+    expect(shifted, startsWith('[Events]\nFormat:'));
+  });
 }
+

@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/blocked_sign_in.dart';
+import 'package:lumtub/stream_resolver.dart' show MembersCookies;
 import 'package:lumtub/video_codec.dart';
 import 'package:lumtub/downloads/download_manager.dart';
 import 'package:lumtub/downloads/download_models.dart';
@@ -158,6 +160,7 @@ void main() {
       bool cutSponsors = false,
       LiveRecorder? recorder,
       Future<List<SavedSubtitle>> Function(DownloadTask task, String stem, DownloadSubtitles picked, {bool styled})? saveSubtitles,
+      BlockedSignIn? signIn,
     }) => _track(managers, DownloadManager(
           file: File('${dir.path}/downloads.json'),
           ytDlpPath: 'yt-dlp',
@@ -176,6 +179,7 @@ void main() {
           cover: cover,
           recorder: recorder,
           saveSubtitles: saveSubtitles,
+          blockedSignIn: () => signIn,
         ));
 
     Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 80));
@@ -187,6 +191,43 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 30));
       }
     }
+
+    test('a download taken for a bot is tried again signed in only with the setting on, and the next starts signed in', () async {
+      final cookies = _Cookies();
+      var on = false;
+      final signIn = BlockedSignIn(cookies: () => cookies, enabled: () => on, directory: () => Directory('${dir.path}/info'));
+      final m = manager(signIn: signIn);
+      const bot = "ERROR: [youtube] aaaaaaaaaaa: Sign in to confirm you're not a bot. Use --cookies-from-browser or --cookies for the authentication.";
+      m.add(video('aaaaaaaaaaa'), DownloadQuality.best);
+      await until(() => processes.isNotEmpty);
+      processes.last.err(bot);
+      await processes.last.exit(1);
+      await until(() => m.taskFor('aaaaaaaaaaa')!.status == DownloadStatus.failed);
+      expect(processes, hasLength(1), reason: 'off by default');
+      expect(m.taskFor('aaaaaaaaaaa')!.status, DownloadStatus.failed);
+      expect(signIn.recentlyBlocked, isTrue);
+      m.remove('aaaaaaaaaaa');
+      await settle();
+
+      on = true;
+      final before = processes.length;
+      m.add(video('bbbbbbbbbbb'), DownloadQuality.best);
+      await until(() => processes.length > before);
+      expect(started.last, contains('--cookies'), reason: 'refused a moment ago: signed in from the start');
+      final path = started.last[started.last.indexOf('--cookies') + 1];
+      expect(File(path).existsSync(), isTrue);
+      await processes.last.exit(1);
+      // Failed signed in for another reason: tried once more without the account.
+      await until(() => processes.length > before + 1);
+      expect(cookies.wiped, [path]);
+      expect(File(path).existsSync(), isFalse);
+      expect(started.last, isNot(contains('--cookies')));
+      processes.last.err(bot);
+      await processes.last.exit(1);
+      await until(() => m.taskFor('bbbbbbbbbbb')!.status == DownloadStatus.failed);
+      expect(processes, hasLength(before + 2), reason: 'one signed-in try per download');
+      expect(signIn.usedThisHour, 1);
+    });
 
     test('runs at most two downloads at once and starts the next when one ends', () async {
       final m = manager();
@@ -684,6 +725,45 @@ void main() {
     expect(DownloadManager.defaultDirectoryFor(env, 'F'), endsWith('${Platform.isMacOS ? 'Movies' : 'Videos'}${Platform.pathSeparator}Lumtub'));
     expect(DownloadManager.defaultDirectoryFor({}, 'F'), 'F');
   });
+
+  test('saved subtitles in one language each become options; a bilingual file does not', () async {
+    final dir = await Directory.systemTemp.createTemp('lumtub_local_subs');
+    addTearDown(() => dir.delete(recursive: true));
+    final media = File('${dir.path}/Talk [abc].mp4')..writeAsStringSync('x');
+    for (final name in ['Talk [abc].en.srt', 'Talk [abc].zh-Hans.srt', 'Talk [abc].en-2.srt', 'Talk [abc].en+zh-Hans.srt', 'Talk [abc].en.ass', 'Other [xyz].fr.srt']) {
+      File('${dir.path}/$name').writeAsStringSync('1\n00:00:01,000 --> 00:00:02,000\nhi\n');
+    }
+    final options = LocalVideo.read(media).subtitleOptions;
+    expect(options.map((o) => o.language).toList()..sort(), ['en', 'en', 'zh-Hans']);
+    expect(options.every((o) => o.kind == SubtitleKind.uploaded && o.url.startsWith('file:')), isTrue);
+  });
+
+  test('the styled ASS kept beside a download takes the subtitle file name', () {
+    expect(DownloadManager.sideAssFor('/d/Talk [abc].en+zh-Hans.srt'), '/d/Talk [abc].en+zh-Hans.ass');
+    expect(DownloadManager.sideAssFor('/d/Talk [abc].ja.vtt'), '/d/Talk [abc].ja.ass');
+  });
 }
 
+
 T _track<T>(List<T> list, T item) => (list..add(item)).last;
+
+class _Cookies implements MembersCookies {
+  @override
+  bool signedIn = true;
+  final written = <String>[];
+  final wiped = <String>[];
+
+  @override
+  Future<bool> writeCookies(String path) async {
+    written.add(path);
+    await File(path).writeAsString('SAPISID=x\n');
+    return true;
+  }
+
+  @override
+  void wipeCookies(String path) {
+    wiped.add(path);
+    final file = File(path);
+    if (file.existsSync()) file.deleteSync();
+  }
+}

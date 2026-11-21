@@ -720,8 +720,9 @@ fn webm_track(head: &cast_webm::Head, total: u64) -> Track {
 enum Media<'a> {
     Picture(u16, u16),
     Sound,
-    /// Timed text in this language (BCP 47).
-    Text(&'a str),
+    /// Timed text in this language (BCP 47), over a picture this wide and
+    /// tall.
+    Text(&'a str, u16, u16),
 }
 
 /// A `trak` with one sample entry, written by `entry`. The sample tables
@@ -736,7 +737,7 @@ fn trak_box(timescale: u32, media: Media, entry: impl FnOnce(&mut Vec<u8>)) -> V
             o.extend_from_slice(&[0; 4 + 4 + 8 + 2]);
             // Subtitle tracks share an alternate group: one shows at a time.
             o.extend_from_slice(
-                &(if matches!(media, Media::Text(_)) {
+                &(if matches!(media, Media::Text(..)) {
                     2u16
                 } else {
                     0
@@ -755,10 +756,9 @@ fn trak_box(timescale: u32, media: Media, entry: impl FnOnce(&mut Vec<u8>)) -> V
             for v in [0x0001_0000u32, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000] {
                 o.extend_from_slice(&v.to_be_bytes());
             }
-            let (width, height) = if let Media::Picture(w, h) = media {
-                (w, h)
-            } else {
-                (0, 0)
+            let (width, height) = match media {
+                Media::Picture(w, h) | Media::Text(_, w, h) => (w, h),
+                Media::Sound => (0, 0),
             };
             o.extend_from_slice(&((width as u32) << 16).to_be_bytes());
             o.extend_from_slice(&((height as u32) << 16).to_be_bytes());
@@ -768,7 +768,7 @@ fn trak_box(timescale: u32, media: Media, entry: impl FnOnce(&mut Vec<u8>)) -> V
                 o.extend_from_slice(&[0; 12]);
                 o.extend_from_slice(&timescale.to_be_bytes());
                 o.extend_from_slice(&[0, 0, 0, 0]);
-                let language = if let Media::Text(l) = media {
+                let language = if let Media::Text(l, ..) = media {
                     crate::embed::iso639_2t(l)
                 } else {
                     "und"
@@ -782,7 +782,7 @@ fn trak_box(timescale: u32, media: Media, entry: impl FnOnce(&mut Vec<u8>)) -> V
             let (handler, name): (&[u8; 4], &[u8]) = match media {
                 Media::Picture(..) => (b"vide", b"VideoHandler\0"),
                 Media::Sound => (b"soun", b"SoundHandler\0"),
-                Media::Text(_) => (b"sbtl", b"SubtitleHandler\0"),
+                Media::Text(..) => (b"sbtl", b"SubtitleHandler\0"),
             };
             put_box(o, b"hdlr", |o| {
                 o.extend_from_slice(&[0; 8]);
@@ -790,7 +790,7 @@ fn trak_box(timescale: u32, media: Media, entry: impl FnOnce(&mut Vec<u8>)) -> V
                 o.extend_from_slice(&[0; 12]);
                 o.extend_from_slice(name);
             });
-            if let Media::Text(language) = media
+            if let Media::Text(language, ..) = media
                 && !language.is_empty()
             {
                 put_box(o, b"elng", |o| {
@@ -805,7 +805,7 @@ fn trak_box(timescale: u32, media: Media, entry: impl FnOnce(&mut Vec<u8>)) -> V
                         o.extend_from_slice(&[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])
                     }),
                     Media::Sound => put_box(o, b"smhd", |o| o.extend_from_slice(&[0; 8])),
-                    Media::Text(_) => put_box(o, b"nmhd", |o| o.extend_from_slice(&[0; 4])),
+                    Media::Text(..) => put_box(o, b"nmhd", |o| o.extend_from_slice(&[0; 4])),
                 }
                 put_box(o, b"dinf", |o| {
                     put_box(o, b"dref", |o| {
@@ -831,7 +831,11 @@ fn trak_box(timescale: u32, media: Media, entry: impl FnOnce(&mut Vec<u8>)) -> V
 
 /// A timed text (`tx3g`) track's `trak`, at 1000 ticks a second: text
 /// centred at the bottom, white unless `styled` gives its look.
-fn text_trak(language: &str, styled: Option<&crate::ass::Styled>) -> Vec<u8> {
+fn text_trak(
+    language: &str,
+    styled: Option<&crate::ass::Styled>,
+    (width, height): (u16, u16),
+) -> Vec<u8> {
     let look = styled.and_then(|s| s.main.as_ref().map(|l| (l, s.play_res_y)));
     let (bold, size, color) = look.map_or((0, 18, 0xffff_ffff), |(l, y)| {
         (u8::from(l.bold), crate::ass::tx3g_size(l, y), l.color)
@@ -844,13 +848,22 @@ fn text_trak(language: &str, styled: Option<&crate::ass::Styled>) -> Vec<u8> {
         }
     });
     let font = &font.as_bytes()[..font.len().min(255)];
-    trak_box(1000, Media::Text(language), |o| {
+    let background = look.and_then(|(l, _)| l.background).unwrap_or(0);
+    // The text box: the whole picture, less the bottom margin, with text
+    // set at its bottom.
+    let bottom = look.map_or(height, |(l, y)| {
+        let margin = (l.margin * height as f64 / y.max(1.0)).round();
+        (height as f64 - margin).clamp(0.0, height as f64) as u16
+    });
+    trak_box(1000, Media::Text(language, width, height), |o| {
         put_box(o, b"tx3g", |o| {
             o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
             o.extend_from_slice(&0u32.to_be_bytes());
             o.extend_from_slice(&[1, 0xff]);
-            o.extend_from_slice(&[0, 0, 0, 0]);
-            o.extend_from_slice(&[0; 8]);
+            o.extend_from_slice(&background.to_be_bytes());
+            for v in [0, 0, bottom, width] {
+                o.extend_from_slice(&v.to_be_bytes());
+            }
             o.extend_from_slice(&[0, 0, 0, 0, 0, 1, bold, size]);
             o.extend_from_slice(&color.to_be_bytes());
             put_box(o, b"ftab", |o| {
@@ -861,6 +874,25 @@ fn text_trak(language: &str, styled: Option<&crate::ass::Styled>) -> Vec<u8> {
             });
         });
     })
+}
+
+/// The width and height a `tkhd` in `trak` gives.
+fn picture_size(trak: &[u8]) -> (u16, u16) {
+    let outer = Atom {
+        kind: *b"trak",
+        start: 0,
+        body: 8,
+        end: trak.len(),
+    };
+    child(trak, outer, b"tkhd")
+        .filter(|tkhd| tkhd.end >= tkhd.body + 8)
+        .map_or((0, 0), |tkhd| {
+            let at = tkhd.end - 8;
+            (
+                u16::from_be_bytes([trak[at], trak[at + 1]]),
+                u16::from_be_bytes([trak[at + 4], trak[at + 5]]),
+            )
+        })
 }
 
 /// The text track's one fragment: each cue a sample, and the gaps between
@@ -1469,7 +1501,10 @@ fn mp4_head(
         o.extend_from_slice(&renumbered(&video.trak, 1));
         o.extend_from_slice(&renumbered(&audio.trak, 2));
         for (i, (language, styled)) in texts.iter().enumerate() {
-            o.extend_from_slice(&renumbered(&text_trak(language, *styled), 3 + i as u32));
+            o.extend_from_slice(&renumbered(
+                &text_trak(language, *styled, picture_size(&video.trak)),
+                3 + i as u32,
+            ));
         }
         o.extend_from_slice(&mp4_metadata(title, cover));
         put_box(o, b"mvex", |o| {
@@ -3184,6 +3219,23 @@ pub extern "C" fn lumtub_cast_log() -> *mut c_char {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn text_track_keeps_the_box_and_the_bottom_margin() {
+        let ass = "[Script Info]\nPlayResY: 720\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,Arial,40,&H00FFFFFF,&H000000FF,&H54000000,&H54000000,0,0,0,0,100,100,0,0,3,2,0,2,25,25,60,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\nDialogue: 0,0:00:01.00,0:00:02.00,Default,,0,0,0,,Hi\n";
+        let styled = crate::ass::parse(ass).unwrap();
+        let trak = text_trak("en", Some(&styled), (1920, 1080));
+        assert_eq!(picture_size(&trak), (1920, 1080));
+        let at = trak.windows(4).position(|w| w == b"tx3g").unwrap() + 4 + 8 + 4 + 2;
+        assert_eq!(&trak[at..at + 4], &0x0000_00ABu32.to_be_bytes());
+        let edges: Vec<u16> = (0..4)
+            .map(|i| u16::from_be_bytes([trak[at + 4 + 2 * i], trak[at + 5 + 2 * i]]))
+            .collect();
+        assert_eq!(edges, [0, 0, 990, 1920]);
+        let plain = text_trak("en", None, (1280, 720));
+        let at = plain.windows(4).position(|w| w == b"tx3g").unwrap() + 4 + 8 + 4 + 2;
+        assert_eq!(&plain[at..at + 4], &[0; 4]);
+    }
 
     #[test]
     fn cuts_snap_to_keyframes_inside_what_was_asked() {

@@ -262,7 +262,7 @@ jobs:
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
-      - name: Windows - verify latest zhongfly libmpv
+      - name: Windows - verify latest zhongfly libmpv (LGPL)
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -276,7 +276,9 @@ jobs:
           }
           # A new release is published before its assets finish uploading, so
           # take the newest one that already has this architecture's archive.
-          $pattern = "^mpv-dev-$([regex]::Escape($env:MPV_ARCH))-.+\.7z$"
+          # The LGPL build (mpv-dev-lgpl-*): no GPL code in what Lumtub ships.
+          # The date right after the architecture keeps x86_64 from matching x86_64-v3.
+          $pattern = "^mpv-dev-lgpl-$([regex]::Escape($env:MPV_ARCH))-[0-9]{8}-.+\.7z$"
           $releases = Invoke-RestMethod -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases?per_page=5' -Headers $headers
           $release = $null
           $asset = $null
@@ -1461,6 +1463,22 @@ jobs:
       - name: Android - build the Rust core
         run: android/packaging/build-core.sh
 
+      - name: Android - read the pinned downloads
+        run: grep -E '^[A-Z0-9_]+=' .github/pins.env >> "$GITHUB_ENV"
+
+      - name: Android - cache the Python and yt-dlp downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/android-python/downloads
+          # Also holds the 32-bit Arm Python python-arm32.sh builds (about ten
+          # minutes), named after what it was built from; an older cache is
+          # restored so a changed yt-dlp pin does not build it again.
+          key: android-python-${{ env.PYTHON_ANDROID_VERSION }}-${{ env.PYTHON_ANDROID_SHA256_ARM64 }}-${{ env.PYTHON_ANDROID_SHA256_X86_64 }}-${{ env.PYTHON_ANDROID_SOURCE_COMMIT }}-${{ hashFiles('android/packaging/python-arm32.sh') }}-${{ env.YTDLP_VERSION }}-${{ env.YTDLP_SHA256 }}
+          restore-keys: android-python-
+
+      - name: Android - add Python and yt-dlp
+        run: android/packaging/python.sh "$RUNNER_TEMP/android-python"
+
       - name: Android - get packages
         run: flutter pub get
 
@@ -1735,10 +1753,14 @@ jobs:
             managers+=('- Windows: `scoop bucket add extras` then `scoop install lumtub`')
           fi
           footer="$RUNNER_TEMP/which-file.md"
-          python3 - "$footer" "${managers[@]}" <<'PY'
-          import sys
-          out, managers = sys.argv[1], sys.argv[2:]
+          python3 - "$footer" "$TAG" "$GITHUB_REPOSITORY" "${managers[@]}" <<'PY'
+          import re, sys
+          out, tag, repo, managers = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:]
           text = open("release-notes/_which-file.md", encoding="utf-8").read()
+          # Each file named in the table links to this release's own copy.
+          base = f"https://github.com/{repo}/releases/download/{tag}/Lumtub_{tag[1:]}_"
+          text = re.sub(r"`([a-z0-9_-]+(?:-setup\.exe|\.zip|\.AppImage|\.dmg|\.apk|\.ipa|\.tipa))`",
+                        lambda m: f"[`{m[1]}`]({base}{m[1]})", text)
           block = "\nOr with a package manager:\n\n" + "\n".join(managers) + "\n" if managers else ""
           open(out, "w", encoding="utf-8").write(text.replace("<!-- package managers -->\n", block))
           PY

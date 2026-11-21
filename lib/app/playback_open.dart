@@ -337,7 +337,6 @@ extension PlaybackOpening on AppController {
     _openIssued = item.id;
     _decoderPending = true;
     _update(() {});
-    unawaited(_addLocalSubtitles(local, serial));
     return true;
   }
 

@@ -16,8 +16,7 @@ import 'subtitle_list_panel.dart';
 import 'app_icons.dart';
 
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
-/// above it (双语字幕) on the right, as PiliNara's `_SubtitleSelectPanel`
-/// has them. A choice applies at once and the panel stays open; a track
+/// above it (双语字幕) on the right. A choice applies at once and the panel stays open; a track
 /// chosen on one side is greyed out on the other, and tapping it there
 /// swaps the two sides.
 Future<void> showSubtitlePanel(BuildContext context, AppController controller, Player player, {required VoidCallback onSettings, VoidCallback? onList}) => showPlayerPanel(
@@ -264,6 +263,10 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
             Expanded(child: column(primary: false)),
           ]),
         ),
+      if (offered.isNotEmpty || others.isNotEmpty) ...[
+        Divider(height: 1, color: colors.outlineVariant),
+        LearningSwitches(controller: controller),
+      ],
     ]);
   }
 
@@ -396,5 +399,41 @@ class _SpeechOfferState extends State<SpeechOffer> {
         },
       ),
     );
+  }
+}
+
+/// 学外语 in the subtitle panel: 每句说完暂停 and 模糊翻译.
+class LearningSwitches extends StatelessWidget {
+  const LearningSwitches({super.key, required this.controller});
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = controller.settings;
+    final theme = Theme.of(context);
+    Widget toggle(String title, String detail, bool value, ValueChanged<bool> onChanged) => SwitchListTile(
+          dense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+          title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
+          subtitle: Text(detail, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
+          value: value,
+          onChanged: onChanged,
+        );
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+        child: Text(tr('Language learning'), style: theme.textTheme.labelMedium!.copyWith(color: theme.colorScheme.outline)),
+      ),
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(
+          child: toggle(tr('Pause after each line'), tr('Playback pauses as each subtitle line ends.'), settings.pauseEachLine,
+              (on) => unawaited(controller.saveSettings(controller.settings.copyWith(pauseEachLine: on)))),
+        ),
+        Expanded(
+          child: toggle(tr('Blur the translation'), tr('Hover over the second subtitle or tap it to see it.'), settings.blurSecondary,
+              (on) => unawaited(controller.setBlurSecondary(on))),
+        ),
+      ]),
+    ]);
   }
 }

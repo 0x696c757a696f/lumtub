@@ -8,6 +8,11 @@ Copied from pub.dev (MIT, see LICENSE) with the Windows, Linux and macOS
 plugins kept.
 The changes, marked "Lumtub" in the code:
 
+- `linux/video_output.cc`: on X11, mpv also gets the GPU's render node
+  (`MPV_RENDER_PARAM_DRM_DISPLAY_V2`; the node behind the EGL display when
+  `EGL_EXT_device_query` names it, else the first one that opens). An LGPL
+  libmpv has no X11 code, so VA-API takes its display from that node.
+
 - `linux/texture_gl.cc`: each frame ends with an EGL fence instead of
   `glFinish()`. Flutter's context waits for that fence on the GPU
   (`EGL_KHR_wait_sync`), or the CPU waits for that frame alone, so the
@@ -118,3 +123,18 @@ The changes, marked "Lumtub" in the code:
   picture on that layer, arms it for going home, passes the window's play,
   pause and skip buttons on, and keeps the layer's clock at the player's
   position for the window's progress bar.
+  With `BoxFit.contain` the layer's view fills the whole player (the
+  display layer fits the picture in itself) and `VideoSink` tells the
+  output the view's shape (`canvas_aspect`, 0 while picture in picture
+  composites): the subtitles' canvas is the player, so a portrait video's
+  subtitles use the bars beside it.
+- `video_texture.dart`: an `aspectRatio` of 0 shows the texture by its own
+  shape. Lumtub draws the picture the player's shape while libmpv draws
+  subtitles on the desktop (`VideoOutputSize.canvas`), so libass can put
+  them in the bars beside a picture of another shape.
+- `SubtitleView` can blur the secondary line (`blurSecondary`, shown plainly
+  while `secondaryShown` is true) and can lay its lines out unseen (`ghost`)
+  while libmpv draws them, so the secondary line's place is known.
+  `SecondaryRevealArea`, above the controls in `video_texture.dart`, takes
+  hovering and taps over that line only and passes every other pointer
+  event on to the controls.

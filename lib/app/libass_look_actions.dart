@@ -37,6 +37,7 @@ extension LibassLookActions on AppController {
   /// Options were set from the settings alone: the look for the player's
   /// size goes back at once, and the copies are checked against them.
   void _optionsApplied(Player player) {
+    _syncSubtitleCanvas();
     _libassSent = {};
     unawaited(_applyLibassLook());
     final platform = player.platform;
@@ -54,12 +55,36 @@ extension LibassLookActions on AppController {
   LibassLook get _libassLook {
     final view = _subtitleView;
     if (view == null) return LibassLook.standard(position: settings.subtitlePosition, border: settings.subtitleBorder, byHeight: Platform.isAndroid || Platform.isIOS, caption: Device.captionScale);
-    return LibassLook.of(view: view.view, aspect: _videoAspect, textScale: view.textScale, paddingScale: view.paddingScale, position: settings.subtitlePosition, border: settings.subtitleBorder);
+    return LibassLook.of(view: view.view, aspect: _canvasAspect, textScale: view.textScale, paddingScale: view.paddingScale, position: settings.subtitlePosition, border: settings.subtitleBorder);
   }
 
   double get _videoAspect {
     final w = player?.state.width ?? 0, h = player?.state.height ?? 0;
     return w > 0 && h > 0 ? w / h : 16 / 9;
+  }
+
+  /// The shape libmpv draws subtitles in: the whole player where the
+  /// picture is fitted into it with bars, so lines can run into the bars
+  /// beside a portrait picture as in the Flutter view, else the picture.
+  /// On iOS the player's layer fills a fitted player (not while picture in
+  /// picture, where the frames carry the subtitles); elsewhere the drawing
+  /// takes the player's shape while libmpv draws subtitles.
+  double get _canvasAspect {
+    final view = _subtitleView?.view;
+    final whole = Platform.isIOS ? !_coverVideo && !IosVideoLayer.active.value : _outputSize?.canvasShaped ?? false;
+    if (!whole || view == null || view.isEmpty) return _videoAspect;
+    return view.width / view.height;
+  }
+
+  /// The drawing takes the player's shape while libmpv draws subtitles on
+  /// a desktop.
+  void _syncSubtitleCanvas() {
+    final output = _outputSize;
+    if (output != null) {
+      output.canvas = !Platform.isIOS && libassDraws;
+      pictureShapedByPlayer.value = output.canvasShaped;
+    }
+    _queueLibassLook();
   }
 
   /// Sends the look once resizing settles: a window dragged wider lays the
@@ -108,16 +133,20 @@ extension LibassLookActions on AppController {
   }
 
   /// The room a line has, in letters: copies are wrapped to it.
-  int _roomEms(double scale) => LibassLayout.roomEms(em: _libassLook.em, scale: scale, aspect: _videoAspect).floor();
+  int _roomEms(double scale) => LibassLayout.roomEms(em: _libassLook.em, scale: scale, aspect: _canvasAspect).floor();
 
   /// What the copy of the main subtitle depends on: where it wraps.
   String get _mainCopyKey => 'main|${_roomEms(settings.subtitleScale)}';
 
   /// What the styled copy of a second subtitle depends on.
-  String get _secondCopyKey {
+  String get _secondCopyKey => _secondCopyKeyFor(secondBlurred);
+
+  /// [_secondCopyKey] for the copy blurred by 模糊翻译 or the plain one.
+  String _secondCopyKeyFor(bool blurred) {
     final look = _libassLook;
     return [
       'second',
+      if (blurred) 'blurred',
       _roomEms(settings.secondaryScale),
       settings.secondaryFont,
       settings.secondaryScale,
@@ -200,7 +229,8 @@ extension LibassLookActions on AppController {
       return copy.second != second || copy.key != (second ? _secondCopyKey : _mainCopyKey);
     }
 
-    return wrong(main, false) || wrong(secondaryTrackId, true) || _subtitleCopies.length > 2;
+    // 模糊翻译 keeps the second subtitle's plain and blurred copies both.
+    return wrong(main, false) || wrong(secondaryTrackId, true) || _subtitleCopies.length > (settings.blurSecondary ? 3 : 2);
   }
 
   Future<void> _restyleNow(Player player, int serial, ({String old, String now})? moved) async {
@@ -238,8 +268,15 @@ extension LibassLookActions on AppController {
     // Copies neither subtitle shows any more: a growing translation would
     // pile them up in mpv's track list.
     final main = await platform.getProperty('sid'), secondShown = await platform.getProperty('secondary-sid');
+    // 模糊翻译: the second subtitle's other copy, blurred or plain, is kept
+    // ready, so showing or blurring it swaps tracks at once.
+    String? other;
+    final secondSource = _subtitleCopies[secondShown]?.source;
+    if (!quick && libassDraws && settings.blurSecondary && secondSource != null && current()) {
+      other = await _copyFor(platform, secondSource, second: true, current: current, blurred: !secondBlurred);
+    }
     for (final id in [..._subtitleCopies.keys]) {
-      if (id == main || id == secondShown || !current()) continue;
+      if (id == main || id == secondShown || id == other || !current()) continue;
       final gone = _subtitleCopies.remove(id);
       try {
         await platform.command(['sub-remove', id]);
@@ -252,8 +289,11 @@ extension LibassLookActions on AppController {
 
   /// The track to show for [source]: its copy, made now if need be, or the
   /// track itself where it needs none or none can be made.
-  Future<String> _copyFor(NativePlayer platform, String source, {required bool second, required bool Function() current}) async {
-    var key = second ? _secondCopyKey : _mainCopyKey;
+  /// [blurred] asks for the second subtitle's copy blurred or not, made
+  /// whole at once, rather than as it shows now.
+  Future<String> _copyFor(NativePlayer platform, String source, {required bool second, required bool Function() current, bool? blurred}) async {
+    final blur = second && (blurred ?? secondBlurred);
+    var key = second ? _secondCopyKeyFor(blur) : _mainCopyKey;
     final tracks = await mpvSubtitleTracks(platform);
     final made = _subtitleCopies.entries.where((e) => e.value.source == source && e.value.key == key && tracks.containsKey(e.key)).firstOrNull;
     if (made != null) return made.key;
@@ -267,7 +307,7 @@ extension LibassLookActions on AppController {
     // copy replaces it right after.
     bool near(SubtitleCue c) => c.end >= _quickFrom && c.start <= _quickFrom + const Duration(seconds: 90);
     final hasQuick = _subtitleCopies.values.any((c) => c.source == source && c.key == '$key$_quickMark');
-    if (second && cues.length > 60 && !hasQuick) {
+    if (second && blurred == null && cues.length > 60 && !hasQuick) {
       _quickFrom = (player?.state.position ?? Duration.zero) - const Duration(seconds: 5);
       cues = cues.where(near).toList();
       key = '$key$_quickMark';
@@ -283,7 +323,7 @@ extension LibassLookActions on AppController {
       if (key.endsWith(_quickMark)) mainCues = mainCues.where(near).toList();
       if (!current()) return source;
       final main = (cues: mainCues, font: _mainFont, room: _roomEms(settings.subtitleScale).toDouble(), wrapFont: settings.subtitleFont);
-      text = secondAss(cues, settings, outline: look.em > 0 ? look.border / look.em : 0, room: room.toDouble(), font: font, main: main, aspect: _videoAspect, scale: _secondCopyScale);
+      text = secondAss(cues, settings, outline: look.em > 0 ? look.border / look.em : 0, room: room.toDouble(), font: font, main: main, aspect: _videoAspect, scale: _secondCopyScale, blurred: blur);
     } else {
       final room = _roomEms(settings.subtitleScale).toDouble();
       final wrapped = [for (final c in cues) LibassLayout.wrap(c.text, room, font: settings.subtitleFont, bold: settings.subtitleBold)];

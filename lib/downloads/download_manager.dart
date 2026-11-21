@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import '../app_directories.dart';
 import '../app_log.dart';
 import '../background_json.dart';
+import '../blocked_sign_in.dart';
 import '../friendly_error.dart';
 import '../l10n/l10n.dart';
 import '../models.dart';
@@ -16,6 +17,9 @@ import '../sponsor_block.dart';
 import '../video_codec.dart';
 import 'download_models.dart';
 import 'download_selection.dart';
+import 'download_subtitles.dart';
+import '../subtitle_cues.dart';
+import '../cast/cast_subtitles.dart' show toVtt;
 import '../native_core.dart';
 import '../user_folders.dart';
 
@@ -65,11 +69,38 @@ class LocalVideo {
   /// The subtitle file for the first of [languages] (such as `zh-Hans`)
   /// that has one, else the first file.
   File preferredSubtitle(List<String> languages) {
+    // A styled ASS kept beside the file is for other players.
+    final plain = [for (final f in subtitles) if (!f.path.toLowerCase().endsWith('.ass')) f];
+    final files = plain.isEmpty ? subtitles : plain;
     for (final language in languages) {
-      final match = subtitles.where((f) => f.path.toLowerCase().contains('.${language.trim().toLowerCase()}.')).firstOrNull;
+      final match = files.where((f) => f.path.toLowerCase().contains('.${language.trim().toLowerCase()}.')).firstOrNull;
       if (match != null) return match;
     }
-    return subtitles.first;
+    return files.first;
+  }
+
+  /// The saved subtitles in one language each, named `<video>.<language>`
+  /// (`-2` and on for a second file in one language), as options the
+  /// player picks the first and second subtitle from. A bilingual file
+  /// (`<a>+<b>`) is left out: its languages are saved on their own too.
+  List<SubtitleOption> get subtitleOptions {
+    final name = file.uri.pathSegments.last;
+    final dot = name.lastIndexOf('.');
+    final stem = dot > 0 ? name.substring(0, dot) : name;
+    return [
+      for (final f in subtitles)
+        if (_languageOf(f.uri.pathSegments.last, stem) case final language? when !f.path.toLowerCase().endsWith('.ass'))
+          SubtitleOption(language: language, name: '', url: f.uri.toString()),
+    ];
+  }
+
+  static String? _languageOf(String file, String stem) {
+    if (!file.startsWith('$stem.')) return null;
+    final rest = file.substring(stem.length + 1);
+    final dot = rest.lastIndexOf('.');
+    if (dot <= 0) return null;
+    final tag = rest.substring(0, dot).replaceFirst(RegExp(r'-\d+$'), '');
+    return tag.isEmpty || tag.contains('+') ? null : tag;
   }
 
   /// The video codec of the file, from its sidecar; null when unknown.
@@ -141,6 +172,7 @@ class DownloadManager extends ChangeNotifier {
     this.cover,
     this.recorder,
     this.saveSubtitles,
+    this.blockedSignIn,
   })  : _directory = defaultDirectory,
         _maxConcurrent = maxConcurrent.clamp(1, maxConcurrentLimit),
         _start = start ?? _backgroundStart;
@@ -165,6 +197,10 @@ class DownloadManager extends ChangeNotifier {
   final Future<List<int>?> Function(String videoId)? cover;
   /// Records live streams; without it (or [join]) they cannot be saved.
   final LiveRecorder? recorder;
+  /// The opt-in signed-in way past YouTube's bot check, shared with
+  /// playback: a download refused for a bot is tried once more with the
+  /// account, and right after a refusal it starts with it.
+  final BlockedSignIn? Function()? blockedSignIn;
   /// Writes the subtitles picked for [task] beside `stem` (the video's path
   /// without its extension) and returns them; for downloads whose
   /// selection names its subtitles.
@@ -462,7 +498,7 @@ class DownloadManager extends ChangeNotifier {
   }
 
   /// yt-dlp's arguments for [task].
-  List<String> arguments(DownloadTask task) {
+  List<String> arguments(DownloadTask task, {String? cookies}) {
     final o = options?.call() ?? const DownloadOptions();
     final selection = task.selection;
     final audio = selection?.audioOnly ?? task.quality.audioOnly;
@@ -482,6 +518,7 @@ class DownloadManager extends ChangeNotifier {
       if (o.cacheDirectory != null) ...['--cache-dir', o.cacheDirectory!],
       if (o.deno != null) ...['--js-runtimes', 'deno:${o.deno!}'],
       if (o.proxy != null) ...['--proxy', o.proxy!],
+      if (cookies != null) ...['--cookies', cookies],
       '--paths', task.directory,
       '-o', joins ? _joinedPart : '%(title).80B [%(id)s].%(ext)s',
       // One sidecar and one set of subtitles for the joined file.
@@ -637,54 +674,88 @@ class DownloadManager extends ChangeNotifier {
     onFinished?.call(task);
   }
 
+  /// What yt-dlp says when YouTube takes the address for a bot.
+  static final _botCheck = RegExp(r"not a bot|confirm you.?re not|Sign in to confirm", caseSensitive: false);
+
   Future<void> _run(DownloadTask task) async {
     final id = task.id;
     final printed = <String>[];
     final errors = <String>[];
     String? shown;
-    int exitCode;
-    try {
-      await Directory(task.directory).create(recursive: true);
-      final env = {
-        ...?environment?.call(),
-        // So that titles in the printed path survive the pipe on Windows.
-        'PYTHONUTF8': '1',
-        'PYTHONIOENCODING': 'utf-8',
-      };
-      final process = await _start(ytDlpPath, arguments(task), environment: env);
-      _processes[id] = process;
-      lowerPriority(process.pid);
-      // A pause that came while the process was starting.
-      if (task.status != DownloadStatus.downloading) _stop(id);
-      void line(String text) {
-        final progress = DownloadProgress.parse(text);
-        if (progress != null) {
-          _progress(task, progress);
-          return;
+    var exitCode = -1;
+    Future<int> attempt(String? cookies) async {
+      printed.clear();
+      errors.clear();
+      try {
+        await Directory(task.directory).create(recursive: true);
+        final env = {
+          ...?environment?.call(),
+          // So that titles in the printed path survive the pipe on Windows.
+          'PYTHONUTF8': '1',
+          'PYTHONIOENCODING': 'utf-8',
+        };
+        final process = await _start(ytDlpPath, arguments(task, cookies: cookies), environment: env);
+        _processes[id] = process;
+        lowerPriority(process.pid);
+        // A pause that came while the process was starting.
+        if (task.status != DownloadStatus.downloading) _stop(id);
+        void line(String text) {
+          final progress = DownloadProgress.parse(text);
+          if (progress != null) {
+            _progress(task, progress);
+            return;
+          }
+          final path = DownloadProgress.parseFile(text);
+          if (path != null) {
+            printed.add(path);
+          } else if (text.trim().isNotEmpty) {
+            errors.add(text.trim());
+            if (errors.length > 20) errors.removeAt(0);
+          }
         }
-        final path = DownloadProgress.parseFile(text);
-        if (path != null) {
-          printed.add(path);
-        } else if (text.trim().isNotEmpty) {
-          errors.add(text.trim());
-          if (errors.length > 20) errors.removeAt(0);
-        }
-      }
 
-      final decoder = const Utf8Decoder(allowMalformed: true);
-      final done = [
-        process.stdout.transform(decoder).transform(const LineSplitter()).forEach(line),
-        process.stderr.transform(decoder).transform(const LineSplitter()).forEach(line),
-      ];
-      exitCode = await process.exitCode;
-      await Future.wait(done);
-    } catch (e) {
-      if (e is FileSystemException) {
-        shown = friendlyFileError(e);
-      } else {
-        errors.add('$e');
+        final decoder = const Utf8Decoder(allowMalformed: true);
+        final done = [
+          process.stdout.transform(decoder).transform(const LineSplitter()).forEach(line),
+          process.stderr.transform(decoder).transform(const LineSplitter()).forEach(line),
+        ];
+        final code = await process.exitCode;
+        await Future.wait(done);
+        return code;
+      } catch (e) {
+        if (e is FileSystemException) {
+          shown = friendlyFileError(e);
+        } else {
+          errors.add('$e');
+        }
+        return -1;
       }
-      exitCode = -1;
+    }
+
+    bool refused() => errors.any(_botCheck.hasMatch);
+    final signIn = blockedSignIn?.call();
+    var signed = false;
+    var triedSigned = false;
+    if (signIn != null && signIn.recentlyBlocked && signIn.usable != null && signIn.take()) {
+      logInfo('Download $id starts signed in: this network was taken for a bot a moment ago');
+      signed = triedSigned = true;
+      exitCode = await signIn.withCookies(id, attempt);
+      if (exitCode != 0 && !_stopping.contains(id) && !refused()) {
+        logInfo('Download $id failed signed in; trying without the account');
+        signed = false;
+        exitCode = await attempt(null);
+      }
+    } else {
+      exitCode = await attempt(null);
+    }
+    if (exitCode != 0 && !signed && !_stopping.contains(id) && refused() && signIn != null) {
+      signIn.noteBlocked();
+      if (!triedSigned && signIn.usable != null && signIn.take()) {
+        logInfo('Download $id was taken for a bot; trying again signed in');
+        exitCode = await signIn.withCookies(id, attempt);
+      }
+    } else if (exitCode == 0 && !signed) {
+      signIn?.noteAnswered();
     }
     _processes.remove(id);
     if (_stopping.remove(id)) {
@@ -743,15 +814,35 @@ class DownloadManager extends ChangeNotifier {
         cover: coverFile?.path,
         cut: [for (final s in segments ?? const <SkipSegment>[]) (s.start, s.end)],
       ));
+      final out = joined.path;
+      // Beside an MP4, whose own subtitle tracks hold little of the style,
+      // the styled ASS stays, named so other players load it with the
+      // video, its times moved past stretches cut out as the file's are.
+      // The core moved the subtitles it was given; the ones saved beside
+      // the file in one language each are moved here.
+      if (out != null && joined.cut.isNotEmpty) await _shiftSideSubtitles(stem, {for (final s in subtitles) s.path}, joined.cut);
+      final keepAss = out != null && !out.toLowerCase().endsWith('.mkv');
+      for (final s in subtitles) {
+        final ass = s.ass;
+        if (ass == null || !keepAss) continue;
+        try {
+          if (joined.cut.isNotEmpty) {
+            final file = File(ass);
+            await file.writeAsString(shiftAss(await file.readAsString(), (at) => shiftPastCuts(at, joined.cut)));
+          }
+          await File(ass).rename(sideAssFor(s.path));
+        } on FileSystemException catch (e) {
+          logWarn('Could not keep the styled subtitles beside ${task.id}: ${e.message}');
+        }
+      }
       for (final path in [coverFile?.path, for (final s in subtitles) s.ass]) {
-        if (path == null) continue;
+        if (path == null || !await File(path).exists()) continue;
         try {
           await File(path).delete();
         } on FileSystemException {
           // Left for the user.
         }
       }
-      final out = joined.path;
       if (out == null) {
         task.status = DownloadStatus.failed;
         task.speed = null;
@@ -826,7 +917,7 @@ class DownloadManager extends ChangeNotifier {
   }
 
   static const _sidecarKeys = [
-    'id', 'title', 'channel', 'uploader', 'channel_url', 'channel_id', 'upload_date', 'view_count', 'like_count', 'description', 'duration', 'chapters', 'webpage_url', 'vcodec',
+    'id', 'title', 'channel', 'uploader', 'channel_url', 'channel_id', 'upload_date', 'view_count', 'like_count', 'description', 'duration', 'chapters', 'webpage_url', 'vcodec', 'language',
   ];
 
   Future<List<SkipSegment>> _segments(DownloadTask task) async {
@@ -861,6 +952,29 @@ class DownloadManager extends ChangeNotifier {
       'lumtub': {'sponsorblock': kept},
     }), flush: true);
   }
+
+  /// Moves the times of the SRT and WebVTT files beside [stem] that are
+  /// not in [moved] past the stretches [cut] out of the video.
+  Future<void> _shiftSideSubtitles(String stem, Set<String> moved, List<(Duration, Duration)> cut) async {
+    final name = stem.substring(stem.lastIndexOf(RegExp(r'[\\/]')) + 1);
+    try {
+      await for (final entity in File(stem).parent.list(followLinks: false)) {
+        final file = entity.uri.pathSegments.last;
+        if (entity is! File || moved.contains(entity.path) || !file.startsWith('$name.') || !RegExp(r'\.(srt|vtt)$').hasMatch(file)) continue;
+        final cues = [
+          for (final c in parseSubtitleCues(await entity.readAsString()))
+            if (shiftPastCuts(c.end, cut) case final end when end > shiftPastCuts(c.start, cut)) (start: shiftPastCuts(c.start, cut), end: end, text: c.text),
+        ];
+        await entity.writeAsString(file.endsWith('.srt') ? toSrt(cues) : toVtt(cues));
+      }
+    } on FileSystemException catch (e) {
+      logWarn('Could not move the subtitles beside $name past the cut stretches: ${e.message}');
+    }
+  }
+
+  /// The styled ASS kept beside a download for the subtitle file at
+  /// [path]: the same name with `.ass`.
+  static String sideAssFor(String path) => '${path.replaceFirst(RegExp(r'\.(srt|vtt)$'), '')}.ass';
 
   /// Where [at] lands once the stretches [cut] (in order) are left out: a
   /// time inside one lands where it starts.

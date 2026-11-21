@@ -1,7 +1,7 @@
 import 'dart:ffi';
 import 'dart:io';
 
-/// A libmpv build from zhongfly/mpv-winbuild: its release tag
+/// An LGPL libmpv build from zhongfly/mpv-winbuild: its release tag
 /// (a date such as 20261018) and CPU variant.
 class LibmpvBuild {
   const LibmpvBuild(this.tag, this.variant);
@@ -49,12 +49,13 @@ class LibmpvBuild {
   int get hashCode => Object.hash(tag, variant);
 }
 
-/// The development archive for [variant] among [names].
+/// The LGPL development archive (`mpv-dev-lgpl-*`) for [variant] among
+/// [names]; the GPL ones beside it are never taken.
 String? libmpvAssetName(Iterable<String> names, String variant) {
   final pattern = switch (variant) {
-    LibmpvBuild.v3Variant => RegExp(r'^mpv-dev-x86_64-v3-.+\.7z$'),
-    LibmpvBuild.arm64Variant => RegExp(r'^mpv-dev-aarch64-.+\.7z$'),
-    _ => RegExp(r'^mpv-dev-x86_64-(?!v3-).+\.7z$'),
+    LibmpvBuild.v3Variant => RegExp(r'^mpv-dev-lgpl-x86_64-v3-.+\.7z$'),
+    LibmpvBuild.arm64Variant => RegExp(r'^mpv-dev-lgpl-aarch64-.+\.7z$'),
+    _ => RegExp(r'^mpv-dev-lgpl-x86_64-(?!v3-).+\.7z$'),
   };
   for (final name in names) {
     if (pattern.hasMatch(name)) return name;

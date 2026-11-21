@@ -48,7 +48,7 @@ void main() {
   });
 
   group('passes', () {
-    SpokenVideo spoken(ExploreLanguage? language, String source, [String title = 'Lezione di filosofia']) => (language: language, title: title, source: source);
+    SpokenVideo spoken(ExploreLanguage? language, String source, [String title = 'Lezione di filosofia']) => (language: language, title: title, source: source, alike: const <ExploreLanguage>[]);
     bool passes(SpokenVideo? s, String listed) => VideoLanguages.passes(s, ExploreLanguage.it, listed: listed);
 
     test('audio or captions decide, whatever the titles say', () {
@@ -65,6 +65,14 @@ void main() {
       expect(passes(spoken(ExploreLanguage.it, 'text'), 'Philosophy lecture'), isFalse);
       expect(passes(spoken(ExploreLanguage.en, 'text', 'Philosophy lecture'), 'Philosophy lecture'), isFalse);
       expect(passes(spoken(null, 'none', ''), 'Lezione di filosofia'), isFalse);
+    });
+
+    test('a guess passes for any language of its script, untranslated only', () {
+      const latin = [ExploreLanguage.en, ExploreLanguage.it, ExploreLanguage.no];
+      final guess = (language: ExploreLanguage.en, title: 'Telegiornale 21', source: 'guess', alike: latin);
+      expect(passes(guess, 'Telegiornale 21'), isTrue);
+      expect(passes(guess, 'News 21'), isFalse);
+      expect(VideoLanguages.passes(guess, ExploreLanguage.ru, listed: 'Telegiornale 21'), isFalse);
     });
 
     test('nothing passes without an answer', () {
@@ -278,7 +286,8 @@ void main() {
       return _json(switch (id) {
         'aaaaaaaaaaa' => _player('Lezione', asr: 'it'),
         'ccccccccccc' => {'playabilityStatus': {'status': 'OK'}, 'videoDetails': {}},
-        _ => _player('Lezione senza sottotitoli'),
+        // Sure Italian: three of its small words.
+        _ => _player('Lezione di filosofia per tutti gli studenti'),
       });
     });
     final folder = Directory.systemTemp.createTempSync('languages');
@@ -351,6 +360,21 @@ void main() {
     expect(kept, hasLength(1));
   }, skip: core);
 
+  test('lets in a video nothing tells of a channel heard in the language', () async {
+    final client = MockClient((request) async {
+      final id = (jsonDecode(request.body) as Map)['videoId'] as String;
+      // Heard ones, then one with only a short title and no captions.
+      return _json(id.startsWith('h') ? _player('Telegiornale', asr: 'it') : _player('TG 21'));
+    });
+    final languages = VideoLanguages(client);
+    String line(String id) => jsonEncode({'id': id, 'title': id.startsWith('h') ? 'Telegiornale' : 'TG 21', 'channel': 'c', 'channel_id': 'UCcccccccccccccccccccccc'});
+    await languages.only(Stream.fromIterable([for (var i = 0; i < VideoLanguages.channelSure; i++) line('h000000000$i')]), ExploreLanguage.it).toList();
+    final kept = await languages.only(Stream.fromIterable([line('t0000000001')]), ExploreLanguage.it).toList();
+    expect(kept, hasLength(1));
+    final elsewhere = await languages.only(Stream.fromIterable([line('t0000000002')]), ExploreLanguage.es).toList();
+    expect(elsewhere, isEmpty, reason: 'the channel is plainly Italian');
+  }, skip: core);
+
   test('lets in videos without captions by their own texts, behind the heard ones, and stops asking the other apps when they never tell', () async {
     var calls = 0;
     final client = MockClient((request) async {
@@ -364,7 +388,8 @@ void main() {
     final kept = await languages.only(Stream.fromIterable(ids.map(line)), ExploreLanguage.zh, heldUpTo: 100).toList();
     expect(kept, hasLength(61));
     expect((jsonDecode(kept.first) as Map)['id'], 'h0000000001', reason: 'heard ones go first');
-    expect(calls, lessThan(60 * PlayerClient.values.length ~/ 2), reason: 'the other apps are left alone once they never tell');
+    // Lookups already running when the others stop telling still ask them.
+    expect(calls, lessThan(60 * PlayerClient.values.length ~/ 2 + VideoLanguages.parallel * 2), reason: 'the other apps are left alone once they never tell');
   }, skip: core);
 
   test('stops asking for a while once YouTube leaves the video out', () async {

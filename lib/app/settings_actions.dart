@@ -291,6 +291,7 @@ extension SettingsActions on AppController {
         next.interpolation != oldSettings.interpolation ||
         next.d3d11vaZeroCopy != oldSettings.d3d11vaZeroCopy ||
         next.directRendering != oldSettings.directRendering;
+    if (next.upscaling != oldSettings.upscaling) await UpscaleShaders.prepare(directories?.data, next.upscaling);
     // Lighter scaling set for a busy GPU is not in the settings, so then
     // every option is set again.
     final ignoredOptions = await PlayerOptionApplicator.apply(player, next, previous: _lightRendering == null ? oldSettings : null);
@@ -434,7 +435,7 @@ extension SettingsActions on AppController {
   Future<void> _clearLookupFiles() async {
     final folder = directories?.cache.path;
     if (folder == null) return;
-    for (final name in const ['heard_languages.json', 'text_languages.json', 'video_facts.json', 'channel_avatars.json', 'portrait_thumbnails.json', 'emoji_pictures.json', 'ai_labels.json', 'ai_channels.json']) {
+    for (final name in const ['heard_languages_2.json', 'text_languages.json', 'video_facts.json', 'channel_avatars.json', 'portrait_thumbnails.json', 'emoji_pictures.json', 'ai_labels.json', 'ai_channels.json']) {
       try {
         final file = File('$folder${Platform.pathSeparator}$name');
         if (await file.exists()) await file.delete();

@@ -7,6 +7,7 @@ import 'package:media_kit/media_kit.dart';
 import 'device.dart';
 import 'libass_layout.dart';
 import 'player_settings.dart';
+import 'upscale_shaders.dart';
 import 'app_log.dart';
 
 class PlayerOptionApplicator {
@@ -63,6 +64,17 @@ class PlayerOptionApplicator {
       'scale': settings.scale,
       'deband': settings.deband ? 'yes' : 'no',
       'interpolation': settings.interpolation ? 'yes' : 'no',
+      // 画质增强. Before the fast rendering below, which takes it off.
+      if (!Platform.isIOS) 'glsl-shaders': UpscaleShaders.option(settings.upscaling),
+      // An HDR picture reaches the screen through an 8-bit standard range
+      // texture, so mpv maps it down: BT.2390's curve keeps highlights
+      // apart without darkening the rest. Measuring each frame's brightest
+      // spot adds a compute pass per frame, left out on phones and with
+      // 低资源占用优先 (the stream's own metadata is used then).
+      if (!Platform.isIOS) ...{
+        'tone-mapping': 'bt.2390',
+        'hdr-compute-peak': light || Platform.isAndroid ? 'no' : 'auto',
+      },
       // 低资源占用优先 also scales the picture the cheapest way, as mpv's
       // fast profile does: a 4K frame shrunk to a window is most of the GPU
       // work after decoding.
@@ -155,6 +167,13 @@ class PlayerOptionApplicator {
       // one's style at its own size.
       'secondary-sub-ass-override': 'scale',
       'secondary-sub-scale': settings.secondaryScale.toStringAsFixed(2),
+      // Where the picture is fitted into a player of another shape (a
+      // portrait video), libmpv draws subtitles over the whole player, as
+      // the Flutter view does: lines run into the bars beside the picture
+      // and are sized by the player's height, Lumtub's ASS copies too.
+      'sub-use-margins': 'yes',
+      'sub-ass-force-margins': 'yes',
+      'sub-ass-scale-with-window': 'yes',
     };
   }
 
@@ -178,7 +197,7 @@ class PlayerOptionApplicator {
       // The video's own language: yt-dlp names its automatic captions
       // "<language>-orig"; an uploaded one in it is added once known.
       if (subtitles) 'sub-langs=${quote(settings.subtitleOriginal ? '.*-orig' : settings.subtitleLanguage.ytDlpLangs)}',
-      if (subtitles && (settings.subtitleMode == SubtitleMode.always || settings.subtitleOriginal)) 'write-auto-subs=',
+      if (subtitles && (settings.subtitleMode.anySubtitle || settings.subtitleOriginal)) 'write-auto-subs=',
       if (infoJson != null) 'load-info-json=${quote(infoJson)}',
       // The same codec ranking as the app's own resolving; yt-dlp's default
       // prefers AV1 and VP9 over H.264.
@@ -201,6 +220,7 @@ class PlayerOptionApplicator {
     // Dithering stays: it costs little and without it dark gradients band.
     'deband': 'no',
     'interpolation': 'no',
+    'glsl-shaders': '',
   };
 
   /// libmpv's own values of [fastRendering]'s options, read before they are

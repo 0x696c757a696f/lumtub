@@ -72,8 +72,9 @@ void main() {
     expect(exploreParams(ExploreMode.liveViewers), 'CAMSAkAB');
     // Newest first, videos only.
     expect(exploreParams(ExploreMode.latest), 'CAISAhAB');
-    // Long: views, this year, videos, over 20 minutes.
-    expect(exploreParams(ExploreMode.long), 'CAMSBggFEAEYAg%253D%253D');
+    // Long: views, all time unless a period is picked, videos, over 20 minutes.
+    expect(exploreParams(ExploreMode.long), 'CAMSBBABGAI%253D');
+    expect(exploreParams(ExploreMode.long, period: SearchUploadDate.year), 'CAMSBggFEAEYAg%253D%253D');
     // 新人新作: this week, videos only.
     expect(base64.decode(exploreParams(ExploreMode.fresh).replaceAll('%253D', '=')), [0x12, 4, 0x08, 3, 0x10, 1]);
     // 全部 mixes the video zones; region and language pick where from.
@@ -377,7 +378,7 @@ void main() {
     expect(find.text('Shuffle'), findsOneWidget);
     await tester.tap(find.text('Education'));
     await tester.pump();
-    expect(find.text('Education · most watched This month'), findsOneWidget);
+    expect(find.text('Education · most watched Any time'), findsOneWidget);
     expect(find.text('Shuffle'), findsNothing);
     expect(controller.exploreBroaderQueries, isEmpty, reason: 'the zone is searched in its own words');
     controller.preferences = controller.preferences.copyWith(exploreLanguage: ExploreLanguage.it);
@@ -388,7 +389,7 @@ void main() {
     await tester.tap(find.text('History'));
     await tester.pump();
     expect(controller.exploreQuery, '历史 纪录片');
-    expect(find.text('Education · History · most watched This month'), findsOneWidget);
+    expect(find.text('Education · History · most watched Any time'), findsOneWidget);
 
     await tester.tap(find.text('Latest'));
     await tester.pump();
@@ -410,7 +411,7 @@ void main() {
     expect(controller.exploreMode, ExploreMode.liveViewers);
     expect(find.text('All live · By viewers'), findsOneWidget);
     expect(find.text('Shuffle'), findsOneWidget);
-    expect(find.text('This month'), findsNothing);
+    expect(find.text('Any time'), findsNothing);
 
     await _reveal(tester, '24/7 live');
     await tester.tap(find.text('24/7 live'));

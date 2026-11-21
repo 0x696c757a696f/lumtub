@@ -15,7 +15,7 @@ import '../reveal.dart';
 import '../../search_options.dart';
 import '../theme.dart';
 import '../video_card.dart';
-import '../../widgets/pilinara_settings_tiles.dart' show confirmDialog;
+import '../../widgets/settings_tiles.dart' show confirmDialog;
 import '../../l10n/l10n.dart';
 import '../../models.dart';
 import '../motion.dart';
@@ -64,7 +64,7 @@ class _ExplorePageState extends State<ExplorePage> {
       ExploreMode.forYou => tr('{0} · Based on your watch history', [name]),
       ExploreMode.gems => tr('{0} · Great videos with under 50K views', [name]),
       ExploreMode.fresh => tr('{0} · New this week, under 5,000 views, from channels you have not watched', [name]),
-      ExploreMode.long => tr('{0} · Most watched videos over 20 minutes this year', [name]),
+      ExploreMode.long => '${tr('{0} · most watched {1}', [name, controller.explorePeriod.label])} · ${SearchDuration.long.label}',
       ExploreMode.latest => tr('{0} · Latest uploads', [name]),
       ExploreMode.liveViewers => tr('{0} live · By viewers', [name]),
       ExploreMode.liveLatest => tr('{0} live · Just started', [name]),

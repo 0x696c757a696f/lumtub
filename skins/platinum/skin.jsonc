@@ -198,97 +198,45 @@
     "thumbnailRadius": 2
   },
   "window": {
+    // The classic blue-violet platinum desk with a fine weave.
     "background": [
       "#6b7ba6",
-      {
-        "pattern": {
-          "type": "dots",
-          "color": "#ffffff14",
-          "spacing": 3,
-          "size": 1
-        }
-      }
+      { "linear": { "angle": 180, "colors": ["#7686b0", "#5e6e99"] } },
+      { "pattern": { "type": "dots", "color": "#ffffff14", "spacing": 3, "size": 1 } }
     ],
+    "veil": 0.3,
     "titleBar": {
       "height": 24,
       "surface": {
         "fill": [
-          "#dddddd",
-          {
-            "pattern": {
-              "type": "lines",
-              "color": "#999999",
-              "spacing": 3,
-              "size": 1
-            }
-          }
+          { "linear": { "angle": 180, "colors": ["#eeeeee", "#c8c8c8"] } },
+          // Fine ridges, the platinum title-bar grip.
+          { "pattern": { "type": "lines", "color": "#ffffffb0", "spacing": 2, "size": 1 } }
         ],
-        "border": {
-          "color": "#555555",
-          "sides": [
-            "bottom"
-          ]
-        }
+        "border": { "color": "#555555", "sides": ["bottom"] },
+        "bevel": { "light": "#ffffff", "dark": "#999999", "width": 1 }
       },
-      "inactive": {
-        "fill": "#dddddd"
-      },
+      "inactive": { "fill": { "linear": { "angle": 180, "colors": ["#e8e8e8", "#d4d4d4"] } } },
       "text": "#111111",
+      "inactiveText": "#555555",
       "align": "center",
       "titlePlate": "#dddddd",
       "buttons": {
         "placement": "split",
         "glyphs": "classic",
-        "size": [
-          14,
-          14
-        ],
+        "size": [14, 14],
         "icon": "#222222",
         "surface": {
-          "fill": {
-            "linear": {
-              "angle": 135,
-              "colors": [
-                "#ffffff",
-                "#aaaaaa"
-              ]
-            }
-          },
+          "fill": { "linear": { "angle": 135, "colors": ["#ffffff", "#aaaaaa"] } },
           "border": "#444444",
-          "pressed": {
-            "fill": {
-              "linear": {
-                "angle": 135,
-                "colors": [
-                  "#888888",
-                  "#cccccc"
-                ]
-              }
-            }
-          }
+          "bevel": { "light": "#ffffff", "dark": "#888888", "width": 1 },
+          "pressed": { "fill": { "linear": { "angle": 135, "colors": ["#888888", "#cccccc"] } } }
         },
         "close": {
-          "fill": {
-            "linear": {
-              "angle": 135,
-              "colors": [
-                "#ffffff",
-                "#aaaaaa"
-              ]
-            }
-          },
+          "fill": { "linear": { "angle": 135, "colors": ["#ffffff", "#aaaaaa"] } },
           "border": "#444444",
-          "pressed": {
-            "fill": {
-              "linear": {
-                "angle": 135,
-                "colors": [
-                  "#888888",
-                  "#cccccc"
-                ]
-              }
-            }
-          }
+          "bevel": { "light": "#ffffff", "dark": "#888888", "width": 1 },
+          "pressed": { "fill": { "linear": { "angle": 135, "colors": ["#888888", "#cccccc"] } } }
         }
       }
     },
@@ -298,129 +246,82 @@
       "underlineKeys": false,
       "height": 22,
       "surface": {
-        "fill": {
-          "linear": {
-            "angle": 180,
-            "colors": [
-              "#eeeeee",
-              "#cccccc"
-            ]
-          }
-        },
-        "border": {
-          "color": "#666666",
-          "sides": [
-            "bottom"
-          ]
-        }
+        "fill": { "linear": { "angle": 180, "colors": ["#f4f4f4", "#cccccc"] } },
+        "border": { "color": "#666666", "sides": ["bottom"] },
+        "bevel": { "light": "#ffffff", "dark": "#aaaaaa", "width": 1 }
       },
       "text": "#000000",
       "highlight": "#3a3ac8",
       "highlightText": "#ffffff",
       "menu": {
-        "fill": "#eeeeee",
-        "border": "#444444"
+        "fill": { "linear": { "angle": 180, "colors": ["#f4f4f4", "#e0e0e0"] } },
+        "border": "#444444",
+        "shadow": [{ "color": "#0000004d", "x": 2, "y": 3, "blur": 2 }]
       },
       "clock": true
     },
     "topBar": {
-      "fill": "#dddddd",
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#999999"
-      },
-      "border": {
-        "color": "#666666",
-        "sides": [
-          "bottom"
-        ]
-      }
+      "fill": { "linear": { "angle": 180, "colors": ["#e8e8e8", "#d2d2d2"] } },
+      "bevel": { "light": "#ffffff", "dark": "#999999" },
+      "border": { "color": "#666666", "sides": ["bottom"] }
     },
     "sideBar": {
-      "fill": "#dddddd",
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#999999"
-      }
+      "fill": { "linear": { "angle": 90, "colors": ["#e2e2e2", "#d0d0d0"] } },
+      "bevel": { "light": "#ffffff", "dark": "#999999" },
+      "border": { "color": "#666666", "sides": ["right"] }
     },
+    // The status line is an inset groove.
     "statusBar": {
-      "fill": "#dddddd",
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#999999"
-      }
+      "fill": "#d4d4d4",
+      "bevel": { "light": "#999999", "dark": "#ffffff" }
     }
   },
   "controls": {
+    "press": "wash",
     "button": {
-      "fill": {
-        "linear": {
-          "angle": 180,
-          "colors": [
-            "#f4f4f4",
-            "#d4d4d4"
-          ]
-        }
-      },
+      "fill": { "linear": { "angle": 180, "colors": ["#fafafa", "#c8c8c8"] } },
       "border": "#444444",
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#aaaaaa"
-      }
+      "bevel": { "light": "#ffffff", "dark": "#999999" },
+      "shadow": [{ "color": "#00000033", "x": 0, "y": 1, "blur": 1 }],
+      "hover": { "fill": { "linear": { "angle": 180, "colors": ["#ffffff", "#d6d6d6"] } } },
+      "pressed": {
+        "fill": { "linear": { "angle": 180, "colors": ["#a8a8a8", "#cfcfcf"] } },
+        "bevel": { "light": "#777777", "dark": "#eeeeee" },
+        "shadow": []
+      },
+      "focused": { "border": { "color": "#3a3ac8", "width": 2 } }
     },
     "buttonText": "#111111",
+    // The default button: a dark ring round the same grey key.
     "primaryButton": {
-      "fill": {
-        "linear": {
-          "angle": 180,
-          "colors": [
-            "#f4f4f4",
-            "#d4d4d4"
-          ]
-        }
-      },
-      "border": {
-        "color": "#222222",
-        "width": 2
-      },
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#aaaaaa"
+      "fill": { "linear": { "angle": 180, "colors": ["#fafafa", "#c0c0d4"] } },
+      "border": { "color": "#222222", "width": 2 },
+      "bevel": { "light": "#ffffff", "dark": "#9a9ab4" },
+      "shadow": [{ "color": "#00000040", "x": 0, "y": 1, "blur": 2 }],
+      "hover": { "fill": { "linear": { "angle": 180, "colors": ["#ffffff", "#d0d0e4"] } } },
+      "pressed": {
+        "fill": { "linear": { "angle": 180, "colors": ["#a0a0b8", "#c8c8dc"] } },
+        "bevel": { "light": "#707088", "dark": "#eeeeff" },
+        "shadow": []
       }
     },
     "primaryButtonText": "#111111",
     "chip": {
-      "fill": {
-        "linear": {
-          "angle": 180,
-          "colors": [
-            "#f4f4f4",
-            "#d4d4d4"
-          ]
-        }
-      },
-      "border": "#444444"
+      "fill": { "linear": { "angle": 180, "colors": ["#fafafa", "#cccccc"] } },
+      "border": "#444444",
+      "bevel": { "light": "#ffffff", "dark": "#999999" },
+      "hover": { "fill": { "linear": { "angle": 180, "colors": ["#ffffff", "#dadada"] } } }
     },
     "chipSelected": {
-      "fill": {
-        "linear": {
-          "angle": 180,
-          "colors": [
-            "#5a5ae0",
-            "#3a3ac8"
-          ]
-        }
-      },
+      "fill": { "linear": { "angle": 180, "colors": ["#4a4ad8", "#3a3ac8"] } },
       "border": "#222222",
-      "bevel": {
-        "light": "#c8c8ff",
-        "dark": "#2a2a90"
-      }
+      "bevel": { "light": "#2a2a90", "dark": "#7a7aff" }
     },
     "chipSelectedText": "#ffffff",
     "navSelected": {
-      "fill": "#ccccff",
-      "border": "#6666cc"
+      "fill": { "linear": { "angle": 180, "colors": ["#d8d8ff", "#bcbcf4"] } },
+      "border": "#6666cc",
+      "bevel": { "light": "#ffffff", "dark": "#9a9ad8" }
     },
     "navSelectedText": "#000000",
     "navText": "#222222"
@@ -431,31 +332,28 @@
   },
   "cards": {
     "video": {
-      "fill": "#eeeeee",
+      "fill": { "linear": { "angle": 180, "colors": ["#f6f6f6", "#e4e4e4"] } },
       "border": "#888888",
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#bbbbbb"
-      },
+      "bevel": { "light": "#ffffff", "dark": "#bbbbbb" },
+      "shadow": [{ "color": "#00000040", "x": 1, "y": 2, "blur": 3 }],
       "hover": {
         "fill": "#ccccff",
         "border": "#3a3ac8"
       },
+      "pressed": { "fill": "#c4c4f4", "bevel": { "light": "#999999", "dark": "#ffffff" }, "shadow": [] },
       "focused": {
-        "border": {
-          "color": "#3a3ac8",
-          "width": 2
-        }
+        "border": { "color": "#3a3ac8", "width": 2 }
       }
     },
     "padding": 6,
     "panel": {
-      "fill": "#dddddd",
+      "fill": { "linear": { "angle": 180, "colors": ["#e8e8e8", "#d4d4d4"] } },
       "border": "#444444",
-      "bevel": {
-        "light": "#ffffff",
-        "dark": "#999999"
-      }
+      "bevel": { "light": "#ffffff", "dark": "#999999" },
+      "shadow": [
+        { "color": "#00000040", "x": 3, "y": 4, "blur": 6 },
+        { "color": "#00000066", "x": 1, "y": 1, "blur": 0 }
+      ]
     },
     "durationBadge": "#222222",
     "durationText": "#ffffff"
@@ -467,17 +365,10 @@
     "fill": "#222222",
     "shadow": "#ffffff",
     "badge": {
-      "fill": {
-        "linear": {
-          "angle": 135,
-          "colors": [
-            "#7a7aff",
-            "#3a3ac8"
-          ]
-        }
-      },
+      "fill": { "linear": { "angle": 135, "colors": ["#7a7aff", "#3a3ac8"] } },
       "gloss": 0.4,
-      "border": "#555555"
+      "border": "#555555",
+      "bevel": { "light": "#c8c8ff", "dark": "#2a2a90" }
     },
     "badgeIcon": "#ffffff"
   },

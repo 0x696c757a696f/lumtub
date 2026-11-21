@@ -22,6 +22,9 @@ import '../app_log.dart';
 import '../app_window.dart';
 import '../app_preferences.dart';
 import '../libass_layout.dart';
+import '../line_pause.dart';
+import '../save_file.dart';
+import '../shadowing.dart';
 import '../play_queue.dart';
 import '../video_facts_lookup.dart';
 import '../video_languages.dart';
@@ -29,7 +32,11 @@ import '../playback_failure.dart';
 import '../skip_silence.dart';
 import '../volume_balance.dart';
 import '../playback_recovery.dart';
+import '../intelligence.dart';
+import '../jobs.dart';
 import '../library_store.dart';
+import '../local_db.dart';
+import '../packs.dart';
 import '../secure_store.dart';
 import '../dearrow.dart';
 import '../device.dart';
@@ -82,6 +89,7 @@ import '../youtube_related.dart';
 import '../recommendations.dart';
 import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
+import '../upscale_shaders.dart';
 import '../power.dart';
 import '../player_settings.dart';
 import '../thumbnail_trim.dart';
@@ -151,6 +159,7 @@ part 'lifecycle_actions.dart';
 part 'account_actions.dart';
 part 'window_actions.dart';
 part 'ios_pip_actions.dart';
+part 'learning_actions.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
 
@@ -370,7 +379,20 @@ class AppController extends ChangeNotifier with _ExploreState {
   void hideVideoIn(Object owner) => _outputSize?.hide(owner);
 
   /// Whether the picture is zoomed or stretched to fill the player.
-  set coverVideo(bool value) => _outputSize?.cover = value;
+  set coverVideo(bool value) {
+    if (value == _coverVideo) return;
+    _coverVideo = value;
+    _outputSize?.cover = value;
+    _syncSubtitleCanvas();
+  }
+
+  bool _coverVideo = false;
+
+  /// Whether libmpv draws the picture the shape of the player, fitted in
+  /// with bars, rather than the picture's own shape (see
+  /// [VideoOutputSize.canvas]): the player then shows the drawing by its
+  /// own shape.
+  final pictureShapedByPlayer = ValueNotifier(false);
 
   /// The playing video's width over height, 16:9 until it is known.
   double get videoAspect {
@@ -865,6 +887,29 @@ class AppController extends ChangeNotifier with _ExploreState {
   );
 
   final _cues = <String, List<SubtitleCue>>{};
+  /// Bumped when a subtitle file was read again, as the lines in it grew.
+  int _cueGeneration = 0;
+  /// The lines 每句说完暂停 and stepping by line go by, and what they were
+  /// read for (LearningActions).
+  List<SubtitleCue> _learningLines = const [];
+  String? _learningLinesKey;
+  DateTime _learningLinesAsked = DateTime(0);
+  final _linePause = LinePause();
+  final _reveal = TranslationReveal();
+  /// Whether the blurred second subtitle (模糊翻译) shows plainly now.
+  final translationShown = ValueNotifier<bool>(false);
+  /// 跟读录音: the take and the microphone, made when first used.
+  Shadowing? _shadowing;
+  /// The line the take is of, and the player that plays the take.
+  SubtitleCue? _shadowLine;
+  Player? _shadowPlayer;
+  int _shadowSerial = 0;
+  /// What 跟读录音 is doing now.
+  final shadowStage = ValueNotifier(ShadowStage.idle);
+
+  /// Changes each time a take is kept or the takes go, for the subtitle
+  /// list's marks.
+  final shadowTakes = ValueNotifier(0);
 
   /// The chapter titles of [chapterTranslationOf] translated, one for
   /// each chapter, once asked for; untouched ones stay as they are.
@@ -981,6 +1026,33 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// AI 总结 already made this session, by video id.
   final _summaries = <String, String>{};
 
+  /// Videos whose kept AI 总结 was thrown away this session, so lumtub.db
+  /// is not asked for it while that is being written.
+  final _staleSummaries = <String>{};
+
+  /// lumtub.db for texts made for videos (recognized subtitles, AI 总结),
+  /// when the core keeps them.
+  LocalDb? _textsDb;
+
+  /// The one queue for AI work: one heavy job on this device at a time,
+  /// background work only on mains power and outside low resource use.
+  late final jobs = JobQueue(backgroundPaused: () => Power.saving || appearance.lowResource || settings.strategy == PlaybackStrategy.lowResource);
+
+  /// The AI work, done by what is set up now: today the services under
+  /// 翻译与 AI, later the system's models and downloaded packs.
+  Intelligence get intelligence {
+    final config = preferences.translation;
+    return Intelligence([
+      CloudIntelligence(
+        speech: speechReady(config, translationKeys) ? SpeechRecognizer(_http, baseUrl: config.effectiveSpeechBaseUrl, key: speechKeyFor(config, translationKeys), model: config.effectiveSpeechModel) : null,
+        ai: aiServiceFor(config, translationKeys, _http),
+      ),
+    ]);
+  }
+
+  /// Data packs (models, language data, shaders) downloaded on demand.
+  PackManager? packs;
+
   /// Whether [details] has subtitles other than 语音识别's.
   static bool hasOwnSubtitles(VideoDetails? details) => details?.subtitles.any((s) => s.kind != SubtitleKind.speech) ?? false;
 
@@ -1092,6 +1164,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   static const _videoChannel = MethodChannel('com.alexmercerind/media_kit_video');
 
   DateTime _lastMemoryLog = DateTime(0);
+  int? _upscaleLoggedIn;
 
   bool ensureNotPlaying(String message) {
     if (playing == null) return true;
@@ -1126,6 +1199,13 @@ class AppController extends ChangeNotifier with _ExploreState {
     _danmaku?.stop();
     chatMessages.dispose();
     speechJob.dispose();
+    jobs.dispose();
+    packs?.dispose();
+    translationShown.dispose();
+    unawaited(_forgetShadowing().whenComplete(() {
+      shadowStage.dispose();
+      shadowTakes.dispose();
+    }));
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     _startTimer?.cancel();

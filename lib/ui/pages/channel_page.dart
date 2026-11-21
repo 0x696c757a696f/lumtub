@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../../device.dart';
 import '../../app/app_controller.dart';
+import '../../app/library_controller.dart';
 import '../../app/posts_loader.dart';
 import '../../app/video_list_loader.dart';
 import '../../channel_avatar_lookup.dart';
@@ -742,9 +743,58 @@ class FollowButton extends StatelessWidget {
     // The same button either way, so its colour and icon change in place.
     final icon = Swap(child: Icon(following ? AppIcons.check : AppIcons.plus, key: ValueKey(following)));
     final label = Text(following ? tr('Following') : tr('Follow'), maxLines: 1, overflow: TextOverflow.ellipsis);
-    return following ? FilledButton.tonalIcon(onPressed: toggle, icon: icon, label: label) : FilledButton.icon(onPressed: toggle, icon: icon, label: label);
+    if (!following) return FilledButton.icon(onPressed: toggle, icon: icon, label: label);
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Flexible(child: FilledButton.tonalIcon(onPressed: toggle, icon: icon, label: label)),
+      const SizedBox(width: 4),
+      IconButton.filledTonal(
+        tooltip: tr('Subscription groups'),
+        icon: Icon(AppIcons.folder),
+        onPressed: () => unawaited(showChannelGroups(context, library, channel)),
+      ),
+    ]);
   }
 }
+
+/// Ticks for the subscription groups [channel] is in, and a new group.
+Future<void> showChannelGroups(BuildContext context, LibraryController library, ChannelRef channel) => showDialog<void>(
+      context: context,
+      builder: (context) => ListenableBuilder(
+        listenable: library,
+        builder: (context, _) => PanelDialog(
+          title: Text(tr('Subscription groups')),
+          content: SizedBox(
+            width: dialogWidth(context, 360),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Flexible(
+                child: ListView(shrinkWrap: true, children: [
+                  for (final group in library.channelGroups)
+                    CheckboxListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      value: group.channels.contains(channel.id),
+                      title: Text(group.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      onChanged: (v) => library.setInGroup(group, channel.id, v ?? false),
+                    ),
+                ]),
+              ),
+              ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(AppIcons.plus),
+                title: Text(tr('New group')),
+                onTap: () async {
+                  final name = await promptText(context, title: tr('New group'), hint: tr('Group name'), confirm: tr('Confirm'));
+                  if (name == null || name.trim().isEmpty) return;
+                  library.addGroup(name, {channel.id});
+                },
+              ),
+            ]),
+          ),
+          actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Done')))],
+        ),
+      ),
+    );
 
 /// A row kept at the top of the page while the list under it scrolls.
 class _PinnedRow extends SliverPersistentHeaderDelegate {

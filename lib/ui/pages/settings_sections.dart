@@ -24,12 +24,13 @@ import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
 import '../../device.dart';
+import '../../upscale_shaders.dart';
 import '../../progress_line.dart';
 import '../../right_click.dart';
 import '../../wheel_gesture.dart';
 import '../../shortcut_bindings.dart';
 import '../../video_codec.dart';
-import '../../widgets/pilinara_settings_tiles.dart';
+import '../../widgets/settings_tiles.dart';
 import '../../windows_video_info.dart';
 import '../../friendly_error.dart';
 import '../common.dart';
@@ -408,6 +409,19 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.checkSquare),
               title: Text(FormatPolicy.summary(settings), style: _note(context)),
             ), subtitle: tr('Video format')),
+        SettingEntry(tr('AV1 on this device'), (context) => ListTile(
+              dense: true,
+              leading: _icon(AppIcons.cpu),
+              title: Text(tr('AV1 on this device')),
+              subtitle: Text(av1Note(settings), style: _note(context)),
+            ), subtitle: tr('AV1 hardware decoding')),
+        if (!Platform.isIOS)
+          SettingEntry(tr('HDR videos'), (context) => NormalItem(
+                title: tr('HDR videos'),
+                subtitle: tr('{0}: {1}', [settings.hdr.label, settings.hdr.description]),
+                leading: _icon(AppIcons.sun),
+                onTap: () => pickDescribed<HdrPreference>(context, title: tr('HDR videos'), current: settings.hdr, values: [for (final h in HdrPreference.values) (h, h.label, h.description)], onSelected: (v) => save(settings.copyWith(hdr: v))),
+              ), subtitle: tr('HDR tone mapping standard range SDR')),
         SettingEntry(tr('Enable hardware decoding'), (context) => SwitchItem(
               title: tr('Enable hardware decoding'),
               subtitle: tr('Plays video with lower power use. Turn off if playback freezes.'),
@@ -577,6 +591,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.imagesSquare),
               onTap: () => pickFromDialog<String>(context, title: tr('Video scaling algorithm'), value: settings.scale, values: _scaleModes, onSelected: (value) => save(settings.copyWith(scale: value))),
             ), subtitle: tr('scale upscaling')),
+        if (UpscaleShaders.offered.length > 1)
+          SettingEntry(tr('Picture enhancement'), (context) => NormalItem(
+                title: tr('Picture enhancement'),
+                subtitle: tr('{0}: {1}. Only when the picture is drawn larger than it is; left out with Low resource use first, and on battery with Smart auto', [UpscaleShaders.usable(settings.upscaling).label, UpscaleShaders.usable(settings.upscaling).description]),
+                leading: _icon(AppIcons.sparkle),
+                onTap: () => pickDescribed<Upscaling>(context, title: tr('Picture enhancement'), current: UpscaleShaders.usable(settings.upscaling), values: [for (final u in UpscaleShaders.offered) (u, u.label, u.description)], onSelected: (v) => save(settings.copyWith(upscaling: v))),
+              ), subtitle: tr('upscaling super resolution shaders Anime4K FSRCNNX RAVU')),
         SettingEntry(tr('Debanding'), (context) => SwitchItem(
               title: tr('Debanding'),
               subtitle: tr('Reduces banding in gradients; slightly increases GPU load'),
@@ -800,7 +821,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         }, subtitle: tr('IPv4 IPv6 force-ipv4 slow start network')),
         SettingEntry(tr('Ask again with my account when blocked'), (context) => SwitchItem(
               title: tr('Ask again with my account when blocked'),
-              subtitle: tr("When YouTube takes this network for a bot, the video you open is asked for once more with the browser sign-in's account (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too"),
+              subtitle: tr("When YouTube takes this network for a bot, the video you open or download is asked for once more with the browser sign-in's account, and for the next 30 minutes videos are asked for with the account right away (at most 20 times an hour). YouTube then knows the account watched it, and an account used often from a shared address may be flagged too"),
               leading: _icon(AppIcons.keyFill),
               value: settings.signInWhenBlocked,
               onChanged: (v) => save(settings.copyWith(signInWhenBlocked: v)),
@@ -1406,12 +1427,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.autoUpdateApp,
               onChanged: (v) => savePrefs(prefs.copyWith(autoUpdateApp: v)),
             )),
-        SettingEntry(tr('Components'), (context) => NormalItem(
-              title: tr('Components'),
+        SettingEntry(tr('Components & data packs'), (context) => NormalItem(
+              title: tr('Components & data packs'),
               subtitle: '${controller.tools?.libmpvLabel ?? 'libmpv'} · yt-dlp ${controller.tools?.ytDlpVersion ?? tr('Not installed')}',
               leading: _icon(AppIcons.puzzlePiece),
               onTap: () => openComponents(context, controller),
-            ), subtitle: tr('libmpv yt-dlp Deno check for updates roll back')),
+            ), subtitle: tr('libmpv yt-dlp Deno check for updates roll back data packs models shaders')),
         SettingEntry(tr('Cache location'), (context) => NormalItem(
               title: tr('Cache location'),
               subtitle: settings.cachePath ?? controller.cacheRoot?.path ?? tr('Preparing…'),

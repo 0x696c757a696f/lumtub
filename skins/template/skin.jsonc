@@ -38,7 +38,8 @@
 //                      Only on window.background. 只能用在 window.background。
 //                  { "pattern": { "type": "dots", "color": "#0002", "spacing": 4, "size": 1 } }
 //                      type: lines, grid, dots, checker, scanlines, stitch (seams
-//                      "spacing" in from top and bottom), grain (wood); "angle" rotates.
+//                      "spacing" in from top and bottom), grain (wood), noise
+//                      (fine sand or paper grain, cheap enough for every card); "angle" rotates.
 //                Where a list of paints is allowed they are painted first to
 //                last, so later ones lie on top. 可以写成列表，后面的盖在前面的上面。
 // surface 表面:  how a box is drawn (bars, cards, buttons):
@@ -222,9 +223,9 @@
     // 背景之上、内容之下的装饰；低占用模式下不画。"above": true 会画在内容上面。
     // type: scene, bubbles, sparkles, perspectiveGrid, beam, waves, pattern
     // { "type": "scene", "scene": "meadow" } paints a whole landscape:
-    // meadow, sky, underwater, aurora or city; "night": true for its night.
+    // meadow, sky, underwater, aurora, city or dunes; "night": true for its night.
     // { "type": "scene", "scene": "meadow" } 画一整幅景色：meadow 草原、sky 蓝天、
-    // underwater 水下、aurora 极光、city 未来城；"night": true 是夜晚版。
+    // underwater 水下、aurora 极光、city 未来城、dunes 沙丘；"night": true 是夜晚版。
     // Each type's own fields 各类型自己的字段:
     //   bubbles / sparkles / waves / scene: "count", "seed" (another seed
     //     scatters them differently 换个数字换一种分布); sparkles "glow";

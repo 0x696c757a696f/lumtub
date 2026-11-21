@@ -59,3 +59,9 @@ Unlicense, public domain), checked against its published SHA2-256SUMS.
 QuickJS for YouTube's JavaScript challenges runs inside Lumtub's core (the
 rquickjs crate with QuickJS, MIT License); no separate QuickJS program is
 included.
+
+The Sec-MS-GEC token for Edge's online voices
+(native/lumtub_core/src/edge_drm.rs) is taken from msedge-tts 0.4.1
+(https://github.com/hs-CN/msedge-tts, MIT License, Copyright (c) 2024
+shuai.huang), a port of edge-tts's drm.py; the license text is kept in that
+file. The WebSocket is the tungstenite crate (MIT or Apache-2.0).

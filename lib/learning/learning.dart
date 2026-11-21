@@ -277,7 +277,7 @@ class Learning extends ChangeNotifier {
 
   /// Who reads words aloud on a word card.
   VoiceService get voiceService => _voiceService;
-  VoiceService _voiceService = VoiceService.lumtub;
+  VoiceService _voiceService = VoiceService.edge;
 
   /// The learner chose the voice; until then the default may change.
   bool _voicePicked = false;
@@ -483,7 +483,8 @@ class Learning extends ChangeNotifier {
           _showRomanization = json['romanization'] == true;
           _meanings = MeaningLanguage.values.where((m) => m.name == json['meanings']).firstOrNull;
           _voicePicked = json['voicePicked'] == true;
-          if (_voicePicked) _voiceService = VoiceService.values.firstWhere((v) => v.name == json['voice'], orElse: () => VoiceService.lumtub);
+          // Lumtub's server is now only what Edge's voices fall back on.
+          if (_voicePicked) _voiceService = VoiceService.values.firstWhere((v) => v.name == json['voice'] && v != VoiceService.lumtub, orElse: () => VoiceService.edge);
           final level = json['englishLevel'];
           if (level is int) _englishLevel = level >= 0 && level < EnglishLevel.beyond.index ? level : null;
           final code = json['license'];

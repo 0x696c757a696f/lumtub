@@ -845,6 +845,13 @@ jobs:
         if: matrix.package_arch == 'x64'
         run: cargo test --manifest-path native/lumtub_core/Cargo.toml --release --lib tls::tests::live -- --ignored --nocapture --test-threads 1
 
+      # Edge's online voices, the default read-aloud: Microsoft changes
+      # their token now and then, so a refusal shows here first.
+      - name: Linux - Edge voices against the real service
+        if: matrix.package_arch == 'x64'
+        continue-on-error: true
+        run: cargo test --manifest-path native/lumtub_core/Cargo.toml --release --lib edge_tts::tests::live -- --ignored --nocapture --test-threads 1
+
       # GitHub's release downloads time out now and then; keep them between runs.
       - name: Linux - cache downloads
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}

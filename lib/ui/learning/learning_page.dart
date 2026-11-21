@@ -372,7 +372,8 @@ Future<void> _showConfirmation(BuildContext context, Learning learning, {require
 }
 
 String _voiceLabel(VoiceService service) => switch (service) {
-      VoiceService.lumtub => tr("Natural voices (Azure), nothing to set up; the computer's voice when offline"),
+      VoiceService.edge => tr("Edge's online voices: natural, free, nothing to set up; the computer's voice when they can't be reached"),
+      VoiceService.lumtub => tr("Natural voices through Lumtub's server"),
       VoiceService.system => tr("This computer's voices, offline and free"),
       VoiceService.azure => tr('Azure neural voices, with your own key'),
       VoiceService.google => tr('Google Cloud voices, with your own key'),
@@ -384,7 +385,7 @@ Future<void> _pickVoice(BuildContext context, Learning learning) async {
     builder: (context) => SimpleDialog(
       title: Text(tr('Voice for reading words')),
       children: [
-        for (final v in VoiceService.values)
+        for (final v in VoiceService.values.where((v) => v != VoiceService.lumtub))
           ListTile(
             dense: true,
             leading: Icon(v == learning.voiceService ? AppIcons.radioButton : AppIcons.circle),

@@ -18,6 +18,8 @@ pub mod cut;
 pub mod danmaku;
 pub mod dns;
 pub mod downloads;
+mod edge_drm;
+pub mod edge_tts;
 pub mod embed;
 pub mod feed;
 pub mod filter;
@@ -73,5 +75,5 @@ pub mod words;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    57
+    59
 }

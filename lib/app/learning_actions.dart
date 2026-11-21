@@ -1,5 +1,8 @@
 part of 'app_controller.dart';
 
+/// Whether the switch to the computer's voice was told this run.
+bool _edgeFallbackTold = false;
+
 /// 学外语: 每句说完暂停, 模糊翻译 and stepping line by line, on the lines
 /// the subtitle list shows.
 extension LearningActions on AppController {
@@ -109,43 +112,65 @@ extension LearningActions on AppController {
   }
 
   /// Reads [text] in [language] aloud in the voice the learning pack's
-  /// settings name. Null when it plays, else what went wrong.
-  Future<String?> sayAloud(String text, String language) async {
+  /// settings name. [problem] is null when it plays, else what went wrong;
+  /// [note] says, once a run, that Edge's voices failed and the computer's
+  /// voice read it instead.
+  Future<({String? problem, String? note})> sayAloud(String text, String language) async {
     final voice = learning.voice;
-    if (voice == null) return tr('Not ready yet');
+    if (voice == null) return (problem: tr('Not ready yet'), note: null);
     final service = learning.voiceService;
     File? file;
     Object? failure;
+    String? note;
     try {
-      file = await voice.read(text, language, service, translationKeys, server: learning.speechServer);
+      file = await voice.read(text, language, service, translationKeys);
     } catch (e) {
       failure = e;
       logWarn('Could not read "$text" ($language) aloud with ${service.name}: $e');
     }
-    // Lumtub's online voice: offline or busy, the system's voice instead.
-    if (file == null && service == VoiceService.lumtub) {
-      try {
-        file = await voice.read(text, language, VoiceService.system, translationKeys);
-        failure = null;
-      } catch (e) {
-        failure = e;
-        logWarn('Could not read "$text" ($language) aloud with the system voice either: $e');
+    // Edge's voices refused or out of reach: Lumtub's server when it has a
+    // key, else the computer's own voice, said once.
+    if (file == null && service == VoiceService.edge) {
+      final edgeFailure = failure;
+      // A language Edge has no voice for goes straight to the computer's.
+      final unsupported = edgeFailure is VoiceException && edgeFailure.noVoice;
+      if (!unsupported) {
+        try {
+          file = await voice.read(text, language, VoiceService.lumtub, translationKeys, server: learning.speechServer);
+          failure = null;
+        } catch (e) {
+          logInfo('Lumtub\'s server did not read "$text" either: $e');
+        }
+      }
+      if (file == null) {
+        try {
+          file = await voice.read(text, language, VoiceService.system, translationKeys);
+          failure = null;
+          if (!unsupported && !_edgeFallbackTold) {
+            _edgeFallbackTold = true;
+            final why = edgeFailure is VoiceException ? edgeFailure.detail : '$edgeFailure';
+            note = tr("Edge's online voices can't be reached right now ({0}), so this computer's voice read it.", [why]);
+          }
+        } catch (e) {
+          failure = e;
+          logWarn('Could not read "$text" ($language) aloud with the system voice either: $e');
+        }
       }
     }
     if (file == null) {
       final e = failure;
-      if (e is VoiceException && e.noVoice && (service == VoiceService.system || service == VoiceService.lumtub)) {
-        return tr('This computer has no voice for this language. Add one in the system settings, or pick an online voice in the learning pack settings.');
+      if (e is VoiceException && e.noVoice && (service == VoiceService.system || service == VoiceService.edge)) {
+        return (problem: tr('This computer has no voice for this language. Add one in the system settings, or pick an online voice in the learning pack settings.'), note: null);
       }
-      if (e is VoiceException && e.noVoice) return tr('This voice service has no voice for this language');
-      return tr('Could not read it aloud: {0}', [e is VoiceException ? e.detail : '$e']);
+      if (e is VoiceException && e.noVoice) return (problem: tr('This voice service has no voice for this language'), note: null);
+      return (problem: tr('Could not read it aloud: {0}', [e is VoiceException ? e.detail : '$e']), note: null);
     }
     try {
       final size = await file.length();
       if (size < 100) {
         await file.delete();
         logWarn('Reading "$text" ($language) aloud gave an empty sound ($size bytes)');
-        return tr('Could not read it aloud: {0}', [tr('the voice gave no sound')]);
+        return (problem: tr('Could not read it aloud: {0}', [tr('the voice gave no sound')]), note: null);
       }
       final player = this.player;
       if (player != null && player.state.playing) await player.pause();
@@ -162,12 +187,12 @@ extension LearningActions on AppController {
       logInfo('Read "$text" ($language) aloud: $size bytes${problem.isEmpty ? '' : ', mpv: $problem'}');
       if (problem.isNotEmpty) {
         await file.delete();
-        return tr('Could not read it aloud: {0}', [problem]);
+        return (problem: tr('Could not read it aloud: {0}', [problem]), note: null);
       }
-      return null;
+      return (problem: null, note: note);
     } catch (e) {
       logWarn('Could not play the sound for "$text" ($language): $e');
-      return tr('Could not read it aloud: {0}', ['$e']);
+      return (problem: tr('Could not read it aloud: {0}', ['$e']), note: null);
     }
   }
 

@@ -632,15 +632,16 @@ class _SpeakButtonState extends State<_SpeakButton> {
 
   Future<void> _speak() async {
     setState(() => _busy = true);
-    final problem = await widget.controller.sayAloud(widget.text, widget.language);
+    final said = await widget.controller.sayAloud(widget.text, widget.language);
     if (!mounted) return;
     setState(() => _busy = false);
     // A snack bar would sit behind the word card, unseen.
-    if (problem != null) {
+    final message = said.problem ?? said.note;
+    if (message != null) {
       await showDialog<void>(
         context: context,
         builder: (dialog) => AlertDialog(
-          content: Text(problem),
+          content: Text(message),
           actions: [TextButton(onPressed: () => Navigator.pop(dialog), child: Text(tr('OK')))],
         ),
       );

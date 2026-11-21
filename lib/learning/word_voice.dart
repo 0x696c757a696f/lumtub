@@ -12,8 +12,12 @@ import '../native_http.dart';
 
 /// Who reads a word aloud on a word card.
 enum VoiceService {
-  /// Azure's neural voices through Lumtub's server, nothing to set up;
-  /// the system's voice when offline.
+  /// Edge's online voices, as Microsoft Edge reads aloud: natural, free,
+  /// nothing to set up; the system's voice when they cannot be reached.
+  edge,
+
+  /// Azure's neural voices through Lumtub's server, when the server has
+  /// a key; tried after [edge] fails, not offered on its own.
   lumtub,
 
   /// The system's own voices, offline and free; Windows may need the
@@ -52,7 +56,8 @@ class WordVoice {
   final Directory cache;
   http.Client? _client;
 
-  /// Azure's neural voice for each language.
+  /// The neural voice for each language, by Azure's name, which Edge's
+  /// online voices share.
   static const azureVoices = {
     'en': 'en-US-JennyNeural',
     'zh': 'zh-CN-XiaoxiaoNeural',
@@ -102,6 +107,14 @@ class WordVoice {
         final answer = await Isolate.run(() => callCoreJson('lumtub_speak', ask));
         final error = answer['error'];
         if (error is String) throw VoiceException(error == 'no voice', error);
+      case VoiceService.edge:
+        final voice = azureVoices[language];
+        if (voice == null) throw const VoiceException(true);
+        if (!_provides('lumtub_speak_online')) throw const VoiceException(false, 'Edge voice needs a newer core');
+        final ask = jsonEncode({'text': text, 'voice': voice, 'out': file.path});
+        final answer = await Isolate.run(() => callCoreJson('lumtub_speak_online', ask));
+        final error = answer['error'];
+        if (error is String) throw VoiceException(false, error);
       case VoiceService.lumtub:
         final where = await server?.call();
         if (where == null) throw const VoiceException(false, 'server unknown');

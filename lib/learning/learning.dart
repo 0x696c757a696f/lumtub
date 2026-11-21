@@ -167,13 +167,17 @@ class Learning extends ChangeNotifier {
   /// steps tick it off.
   bool lookedUp = false;
   int _trialUsed = 0;
+
+  /// Words already looked up today: opening one again costs nothing.
+  final _trialWords = <String>{};
   static String get _today => DateTime.now().toIso8601String().substring(0, 10);
 
   /// Word cards left today without the pack; unlimited with it.
   int get trialLeft => licensed ? trialPerDay : (_trialDay == _today ? (trialPerDay - _trialUsed).clamp(0, trialPerDay) : trialPerDay);
 
   /// Counts one word card; false when today's free ones are used up.
-  Future<bool> takeLookup() async {
+  /// A [word] already looked up today is free.
+  Future<bool> takeLookup(String word) async {
     if (!lookedUp) {
       lookedUp = true;
       if (licensed) {
@@ -185,9 +189,12 @@ class Learning extends ChangeNotifier {
     if (_trialDay != _today) {
       _trialDay = _today;
       _trialUsed = 0;
+      _trialWords.clear();
     }
+    if (_trialWords.contains(word)) return true;
     if (_trialUsed >= trialPerDay) return false;
     _trialUsed++;
+    _trialWords.add(word);
     await _save();
     notifyListeners();
     return true;
@@ -374,6 +381,8 @@ class Learning extends ChangeNotifier {
           if (trial is Map) {
             _trialDay = '${trial['day'] ?? ''}';
             _trialUsed = trial['used'] is int ? trial['used'] as int : 0;
+            final words = trial['words'];
+            if (words is List) _trialWords.addAll(words.whereType<String>());
           }
         }
       }
@@ -709,7 +718,7 @@ class Learning extends ChangeNotifier {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1, 'trial': {'day': _trialDay, 'used': _trialUsed}, 'lookedUp': lookedUp}));
+      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'voice': _voiceService.name, 'englishLevel': _englishLevel ?? -1, 'trial': {'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }

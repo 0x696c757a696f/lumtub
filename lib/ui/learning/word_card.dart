@@ -27,7 +27,7 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
     _ => learning.wiktionary(language) != null,
   };
   if (!ready) return;
-  if (!await learning.takeLookup()) {
+  if (!await learning.takeLookup('$language:${token.key.toLowerCase()}')) {
     if (context.mounted) await _trialUsedUp(context, controller);
     return;
   }

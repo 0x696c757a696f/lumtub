@@ -3,6 +3,14 @@ import 'package:lumtub/learning/latin_language.dart';
 import 'package:lumtub/learning/wiktionary_dictionary.dart';
 
 void main() {
+  test('a Korean Basic Dictionary line carries its level and source', () {
+    final entry = WiktionaryEntry.parse('가다\t\tka̠da̠\tv.\tv. 去\tv. go\t\t1\tkrdict');
+    expect(entry.level, 1);
+    expect(entry.source, 'krdict');
+    expect(entry.chinese, ['v. 去']);
+    expect(WiktionaryEntry.parse('casa\t\t\tn.\t\tn. house\t').level, 0);
+  });
+
   test('a form finds its word', () {
     final es = WiktionaryDictionary.parse('hablar\t\taˈβlaɾ\tv.\tv. 说话\tv. to speak\\nv. to talk\t\nhablo\t\t\tv.\t\t\thablar\n', 'es');
     expect(es.lookup('hablo').map((e) => e.word), ['hablo', 'hablar']);

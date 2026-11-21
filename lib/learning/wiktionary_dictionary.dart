@@ -6,8 +6,9 @@ import 'word_token.dart';
 /// A dictionary built from Wiktionary for one language (Korean, Spanish,
 /// French, German, Italian, Russian). One word a line, between tabs:
 /// word, reading, IPA, parts of speech (`|` between), Chinese meanings,
-/// English meanings (a literal `\n` between meanings), and the words it is
-/// a form of (`|` between).
+/// English meanings (a literal `\n` between meanings), the words it is a
+/// form of (`|` between), then for Korean the learner's level (1 to 3)
+/// and `krdict` when the meanings come from the Korean Basic Dictionary.
 class WiktionaryDictionary {
   WiktionaryDictionary(this.language, this._source);
 
@@ -137,7 +138,7 @@ class WiktionaryDictionary {
 }
 
 class WiktionaryEntry {
-  const WiktionaryEntry({required this.word, this.reading = '', this.ipa = '', this.pos = const [], this.chinese = const [], this.english = const [], this.lemmas = const [], this.form = false});
+  const WiktionaryEntry({required this.word, this.reading = '', this.ipa = '', this.pos = const [], this.chinese = const [], this.english = const [], this.lemmas = const [], this.form = false, this.level = 0, this.source = ''});
 
   final String word;
 
@@ -154,6 +155,13 @@ class WiktionaryEntry {
   /// Found as the word that what was looked up is a form of.
   final bool form;
 
+  /// The Korean Basic Dictionary's level: 1 beginner, 2 intermediate,
+  /// 3 advanced; 0 for none.
+  final int level;
+
+  /// Where the meanings come from: `krdict`, or empty for Wiktionary.
+  final String source;
+
   static WiktionaryEntry parse(String line, {bool form = false}) {
     final parts = line.split('\t');
     String at(int i) => i < parts.length ? parts[i] : '';
@@ -168,6 +176,8 @@ class WiktionaryEntry {
       english: lines(at(5)),
       lemmas: list(at(6)),
       form: form,
+      level: int.tryParse(at(7)) ?? 0,
+      source: at(8),
     );
   }
 

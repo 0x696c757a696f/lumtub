@@ -418,6 +418,15 @@ class _WiktionaryCard extends StatelessWidget {
                     if (e.reading.isNotEmpty && e.reading != e.word) TextSpan(text: '  ${e.reading}', style: TextStyle(color: colors.primary)),
                     if (e.ipa.isNotEmpty) TextSpan(text: '  /${e.ipa}/', style: TextStyle(color: colors.outline)),
                   ])),
+                  if (e.level > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: _Tag(switch (e.level) {
+                        1 => tr('Korean beginner'),
+                        2 => tr('Korean intermediate'),
+                        _ => tr('Korean advanced'),
+                      }),
+                    ),
                   const SizedBox(height: 2),
                   for (final line in e.chinese.take(6)) Text(line, style: theme.textTheme.bodyMedium),
                   for (final line in e.english.take(e.chinese.isEmpty ? 8 : 3))
@@ -430,7 +439,14 @@ class _WiktionaryCard extends StatelessWidget {
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
             const SizedBox(height: 8),
-            Text(tr('From Wiktionary, CC BY-SA 4.0'), style: TextStyle(fontSize: 11, color: colors.outline)),
+            Text(
+              entries.isNotEmpty && entries.every((e) => e.source == 'krdict')
+                  ? tr('From the Korean Basic Dictionary (National Institute of Korean Language), CC BY-SA 2.0 KR')
+                  : entries.any((e) => e.source == 'krdict')
+                      ? tr('From the Korean Basic Dictionary (CC BY-SA 2.0 KR) and Wiktionary (CC BY-SA 4.0)')
+                      : tr('From Wiktionary, CC BY-SA 4.0'),
+              style: TextStyle(fontSize: 11, color: colors.outline),
+            ),
           ]),
         ),
       ),

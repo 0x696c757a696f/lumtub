@@ -168,6 +168,14 @@ jobs:
           git clone --quiet --filter=blob:none https://github.com/basickorean/basickorean-vocab "$RUNNER_TEMP/in/krdict"
           git -C "$RUNNER_TEMP/in/krdict" checkout --quiet "$KRDICT_COMMIT"
           python3 -I .github/learning/krdict.py "$RUNNER_TEMP/in/krdict" "$RUNNER_TEMP/in/ko-wiktionary.tsv" | tee -a "$GITHUB_STEP_SUMMARY"
+          # Japanese: Chinese meanings from the Chinese Wiktionary and WikDict
+          # beside JMdict's English ones.
+          ja_args=("$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" "$RUNNER_TEMP/in/ja.tsv")
+          if curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/ja-zh.sqlite3" "https://download.wikdict.com/dictionaries/sqlite/2/ja-zh.sqlite3"; then
+            ja_args+=("$RUNNER_TEMP/in/ja-zh.sqlite3")
+          fi
+          python3 -I .github/learning/ja_zh.py "${ja_args[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+          gzip -n -9 < "$RUNNER_TEMP/in/ja.tsv" > "$RUNNER_TEMP/out/ja-jmdict.tsv.gz"
           for code in ko es fr de it ru; do
             python3 -I .github/learning/sqlite_pack.py wiktionary "$code" "$RUNNER_TEMP/in/$code-wiktionary.tsv" "$RUNNER_TEMP/in/$code.sqlite"
             gzip -n -9 < "$RUNNER_TEMP/in/$code.sqlite" > "$RUNNER_TEMP/out/$code-wiktionary.sqlite.gz"
@@ -216,7 +224,7 @@ jobs:
             Dictionaries for the learning pack, downloaded by Lumtub when a dictionary is turned on. Not an app release.
             CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/);
             ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT);
-            JMdict by the Electronic Dictionary Research and Development Group under CC BY-SA 4.0 (https://www.edrdg.org/edrdg/licence.html), via jmdict-simplified;
+            JMdict by the Electronic Dictionary Research and Development Group under CC BY-SA 4.0 (https://www.edrdg.org/edrdg/licence.html), via jmdict-simplified, with Chinese meanings from the Chinese Wiktionary and WikDict;
             the Korean, Spanish, French, German, Italian and Russian dictionaries are made from the English and Chinese Wiktionaries (CC BY-SA 4.0, https://www.wiktionary.org/) as extracted by kaikki.org (https://kaikki.org/) and from WikDict (CC BY-SA, https://www.wikdict.com/);
             Korean meanings and levels come first from the Korean Basic Dictionary (한국어기초사전) of the National Institute of Korean Language (CC BY-SA 2.0 KR, https://krdict.korean.go.kr/), via its open data in https://github.com/basickorean/basickorean-vocab.
             The word segmenters are Lindera (MIT, https://github.com/lindera/lindera) builds of IPADIC (its own permissive license), mecab-ko-dic (Apache-2.0) and mecab-jieba (MIT); each zip holds its NOTICE.txt.

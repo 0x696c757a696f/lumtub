@@ -301,7 +301,7 @@ class _JapaneseCard extends StatelessWidget {
                       TextSpan(text: '  ${e.kana.take(3).join('・')}', style: TextStyle(color: colors.primary)),
                     ])),
                   const SizedBox(height: 2),
-                  for (final (i, sense) in e.senses.indexed) Text('${i + 1}. $sense', style: theme.textTheme.bodyMedium),
+                  ..._meaningLines(theme, controller.learning.meanings, e.chinese, [for (final (i, sense) in e.senses.indexed) '${i + 1}. $sense']),
                 ]),
               ),
             if (sentence.isNotEmpty) ...[
@@ -309,6 +309,13 @@ class _JapaneseCard extends StatelessWidget {
               Text(sentence, style: theme.textTheme.bodyMedium),
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
+            const SizedBox(height: 8),
+            Text(
+              entries.any((e) => e.chinese.isNotEmpty)
+                  ? tr('From JMdict (EDRDG) with Chinese from Wiktionary and WikDict, CC BY-SA')
+                  : tr('From JMdict (EDRDG), CC BY-SA 4.0'),
+              style: TextStyle(fontSize: 11, color: colors.outline),
+            ),
           ]),
         ),
       ),
@@ -331,7 +338,7 @@ class _JapaneseCard extends StatelessWidget {
                           word: head,
                           language: 'ja',
                           reading: entry.kana.first,
-                          meaning: entry.senses.take(3).join('; '),
+                          meaning: (entry.chinese.isNotEmpty && controller.learning.meanings != MeaningLanguage.english ? entry.chinese : entry.senses).take(3).join('; '),
                           sentence: sentence,
                           translation: translation ?? '',
                           videoId: playing?.id ?? '',
@@ -430,9 +437,7 @@ class _WiktionaryCard extends StatelessWidget {
                       }),
                     ),
                   const SizedBox(height: 2),
-                  for (final line in e.chinese.take(6)) Text(line, style: theme.textTheme.bodyMedium),
-                  for (final line in e.english.take(e.chinese.isEmpty ? 8 : 3))
-                    Text(line, style: e.chinese.isEmpty ? theme.textTheme.bodyMedium : theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
+                  ..._meaningLines(theme, controller.learning.meanings, e.chinese, e.english),
                 ]),
               ),
             if (sentence.isNotEmpty) ...[
@@ -471,7 +476,7 @@ class _WiktionaryCard extends StatelessWidget {
                           word: head,
                           language: language,
                           reading: entry.reading.isNotEmpty ? entry.reading : (entry.ipa.isEmpty ? '' : '/${entry.ipa}/'),
-                          meaning: (entry.chinese.isNotEmpty ? entry.chinese : entry.english).take(3).join('; '),
+                          meaning: (entry.chinese.isNotEmpty && controller.learning.meanings != MeaningLanguage.english ? entry.chinese : entry.english).take(3).join('; '),
                           sentence: sentence,
                           translation: translation ?? '',
                           videoId: playing?.id ?? '',
@@ -494,3 +499,20 @@ TextStyle _headStyle(ThemeData theme) => theme.textTheme.bodyLarge!.copyWith(fon
 
 /// Whether the only entry is spelt as the card's title already shows it.
 bool _sameHead(int entries, String headword, String title) => entries == 1 && headword.toLowerCase() == title.toLowerCase();
+
+/// A word's meanings as [meanings] asks: the chosen language's, and below
+/// Chinese ones a few English ones in grey; the other language's when the
+/// word has none in the chosen one.
+List<Widget> _meaningLines(ThemeData theme, MeaningLanguage meanings, List<String> chinese, List<String> english) {
+  final main = theme.textTheme.bodyMedium;
+  final aside = theme.textTheme.bodySmall!.copyWith(color: theme.colorScheme.outline);
+  final first = switch (meanings) {
+    MeaningLanguage.english => english.isNotEmpty ? english : chinese,
+    _ => chinese.isNotEmpty ? chinese : english,
+  };
+  final more = meanings == MeaningLanguage.chineseFirst && identical(first, chinese) ? english.take(3) : const <String>[];
+  return [
+    for (final line in first.take(8)) Text(line, style: main),
+    for (final line in more) Text(line, style: aside),
+  ];
+}

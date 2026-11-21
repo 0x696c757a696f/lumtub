@@ -118,6 +118,10 @@ class Learning extends ChangeNotifier {
   bool get showPinyin => _showPinyin;
   bool get showRomanization => _showRomanization;
 
+  /// Which meanings a word card shows where a dictionary has both.
+  MeaningLanguage get meanings => _meanings;
+  MeaningLanguage _meanings = MeaningLanguage.chineseFirst;
+
   /// The learner's English level as an index into [EnglishLevel.values];
   /// words above it stand out. Null marks nothing.
   int? get englishLevel => _englishLevel;
@@ -242,6 +246,7 @@ class Learning extends ChangeNotifier {
         if (json is Map) {
           _showPinyin = json['pinyin'] != false;
           _showRomanization = json['romanization'] == true;
+          _meanings = MeaningLanguage.values.firstWhere((m) => m.name == json['meanings'], orElse: () => MeaningLanguage.chineseFirst);
           final level = json['englishLevel'];
           if (level is int) _englishLevel = level >= 0 && level < EnglishLevel.beyond.index ? level : null;
           final code = json['license'];
@@ -321,6 +326,12 @@ class Learning extends ChangeNotifier {
     await _save();
   }
 
+  Future<void> setMeanings(MeaningLanguage meanings) async {
+    _meanings = meanings;
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> setShowRomanization(bool on) async {
     _showRomanization = on;
     notifyListeners();
@@ -337,7 +348,7 @@ class Learning extends ChangeNotifier {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'pinyin': _showPinyin, 'romanization': _showRomanization, 'englishLevel': _englishLevel ?? -1}));
+      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings.name, 'englishLevel': _englishLevel ?? -1}));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }
@@ -577,3 +588,8 @@ class _DigestSink implements Sink<Digest> {
   @override
   void close() {}
 }
+
+/// The meanings a word card shows: Chinese first with a few English ones
+/// below, Chinese only, or English only. Where a word has none in the
+/// chosen language, the other's are shown.
+enum MeaningLanguage { chineseFirst, chinese, english }

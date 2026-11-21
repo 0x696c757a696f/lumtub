@@ -197,13 +197,17 @@ class JapaneseMatch {
 }
 
 class JapaneseEntry {
-  const JapaneseEntry({required this.kanji, required this.kana, required this.pos, required this.senses, required this.common});
+  const JapaneseEntry({required this.kanji, required this.kana, required this.pos, required this.senses, required this.common, this.chinese = const []});
 
   final List<String> kanji;
   final List<String> kana;
   final List<String> pos;
   final List<String> senses;
   final bool common;
+
+  /// Meanings in Chinese, from the Chinese Wiktionary or WikDict; empty
+  /// for words they lack.
+  final List<String> chinese;
 
   String get headword => kanji.isEmpty ? kana.first : kanji.first;
 
@@ -231,6 +235,7 @@ class JapaneseEntry {
       pos: list(at(2), ','),
       senses: list(at(3), r'\n'),
       common: at(4) == '1',
+      chinese: list(at(5), r'\n'),
     );
   }
 }

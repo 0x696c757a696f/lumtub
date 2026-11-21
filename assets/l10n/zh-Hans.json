@@ -3759,7 +3759,7 @@
   "Comparative": "比较级",
   "Superlative": "最高级",
   "Plural": "复数",
-  "Japanese dictionary (Japanese–English, with kana)": "日语词典（日英，带假名）",
+  "Japanese dictionary (Japanese–Chinese–English, with kana)": "日语词典（日中英，带假名）",
   "Chinese dictionary: CC-CEDICT by MDBG, under CC BY-SA 4.0. English dictionary: ECDICT by skywind3000, under the MIT license. Japanese dictionary: JMdict by the Electronic Dictionary Research and Development Group, under CC BY-SA 4.0.": "中文词典：CC-CEDICT（MDBG 发布，CC BY-SA 4.0 许可）。英语词典：ECDICT（skywind3000，MIT 许可）。日语词典：JMdict（EDRDG，CC BY-SA 4.0 许可）。",
   "How to use it: download a dictionary, turn on a Chinese, English or Japanese subtitle, then tap any word on the video or in the subtitle list. The video waits while the word is open. Everything stays on this device.": "用法：先下载词典，打开中文、英文或日文字幕，再点视频上或字幕列表里的任意一个词。查词时视频会暂停。所有数据都只在这台设备上。",
   "Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, all your devices, no account, no subscription. Buying it keeps Lumtub alive.": "支持中文、英语、日语、韩语、西班牙语、法语、德语、意大利语和俄语。一次付费，你所有的设备都能用，不用注册，不按月收费。你的购买让 Lumtub 能一直做下去。",
@@ -3817,5 +3817,12 @@
   "Korean advanced": "韩语高级",
   "From the Korean Basic Dictionary (National Institute of Korean Language), CC BY-SA 2.0 KR": "释义来自韩国国立国语院《韩国语基础词典》（CC BY-SA 2.0 KR）",
   "From the Korean Basic Dictionary (CC BY-SA 2.0 KR) and Wiktionary (CC BY-SA 4.0)": "释义来自《韩国语基础词典》（CC BY-SA 2.0 KR）和维基词典（CC BY-SA 4.0）",
-  "This confirmation of your purchase was saved to {0}": "这份购买确认已保存到 {0}"
+  "This confirmation of your purchase was saved to {0}": "这份购买确认已保存到 {0}",
+  "Meanings in": "释义语言",
+  "Chinese first, a few English ones below": "中文优先，下面附几条英文",
+  "Chinese only": "只显示中文",
+  "English only": "只显示英文",
+  "A word with no meaning in the chosen language shows the other's.": "某个词没有所选语言的释义时，显示另一种语言的。",
+  "From JMdict (EDRDG) with Chinese from Wiktionary and WikDict, CC BY-SA": "释义来自 JMdict（EDRDG），中文来自维基词典和 WikDict，CC BY-SA",
+  "From JMdict (EDRDG), CC BY-SA 4.0": "释义来自 JMdict（EDRDG），CC BY-SA 4.0"
 }

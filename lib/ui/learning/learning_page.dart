@@ -185,6 +185,35 @@ Future<void> _showConfirmation(BuildContext context, Learning learning, {require
   );
 }
 
+String _meaningLabel(MeaningLanguage meanings) => switch (meanings) {
+      MeaningLanguage.chineseFirst => tr('Chinese first, a few English ones below'),
+      MeaningLanguage.chinese => tr('Chinese only'),
+      MeaningLanguage.english => tr('English only'),
+    };
+
+Future<void> _pickMeanings(BuildContext context, Learning learning) async {
+  final picked = await showDialog<MeaningLanguage>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: Text(tr('Meanings in')),
+      children: [
+        for (final m in MeaningLanguage.values)
+          ListTile(
+            dense: true,
+            leading: Icon(m == learning.meanings ? AppIcons.radioButton : AppIcons.circle),
+            title: Text(_meaningLabel(m)),
+            onTap: () => Navigator.pop(context, m),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 4, 24, 8),
+          child: Text(tr("A word with no meaning in the chosen language shows the other's."), style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.outline)),
+        ),
+      ],
+    ),
+  );
+  if (picked != null && picked != learning.meanings) await learning.setMeanings(picked);
+}
+
 Future<void> _pickEnglishLevel(BuildContext context, Learning learning) async {
   final current = learning.englishLevel ?? -1;
   final picked = await showDialog<int>(
@@ -289,6 +318,13 @@ class _LearningPage extends StatelessWidget {
               value: learning.showRomanization,
               enabled: learning.licensed,
               onChanged: (on) => unawaited(learning.setShowRomanization(on)),
+            ),
+            NormalItem(
+              title: tr('Meanings in'),
+              subtitle: _meaningLabel(learning.meanings),
+              leading: Icon(AppIcons.translate),
+              enabled: learning.licensed,
+              onTap: () => unawaited(_pickMeanings(context, learning)),
             ),
             NormalItem(
               title: tr('My English level'),
@@ -408,7 +444,7 @@ class _PackTile extends StatelessWidget {
       title: switch (pack) {
         DictionaryPack.chinese => tr('Chinese dictionary (Chinese–English)'),
         DictionaryPack.english => tr('English dictionary (English–Chinese)'),
-        DictionaryPack.japanese => tr('Japanese dictionary (Japanese–English, with kana)'),
+        DictionaryPack.japanese => tr('Japanese dictionary (Japanese–Chinese–English, with kana)'),
         DictionaryPack.korean => tr('Korean dictionary (Korean–Chinese, KRDict)'),
         DictionaryPack.spanish => tr('Spanish dictionary'),
         DictionaryPack.french => tr('French dictionary'),

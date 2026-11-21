@@ -3891,5 +3891,7 @@
   "This device": "本机",
   "Last seen {0}": "最近使用 {0}",
   "Code ID: {0}": "激活码 ID：{0}",
-  "Activate here": "在本机激活"
+  "Activate here": "在本机激活",
+  "Activation and privacy": "激活与隐私",
+  "What the license server keeps, for how long, and how to have it deleted": "授权服务器保存什么、保存多久、怎样要求删除"
 }

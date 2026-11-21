@@ -137,6 +137,7 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
               dense: true,
               title: Text(_consentText()),
             ),
+            TextButton(onPressed: () => unawaited(showLearningPrivacy(context)), child: Text(tr('Activation and privacy'))),
           ]),
         ),
         actions: [
@@ -477,6 +478,12 @@ class _LearningPage extends StatelessWidget {
                 ),
               )),
             ),
+            NormalItem(
+              title: tr('Activation and privacy'),
+              subtitle: tr('What the license server keeps, for how long, and how to have it deleted'),
+              leading: Icon(AppIcons.info),
+              onTap: () => unawaited(showLearningPrivacy(context)),
+            ),
           ]);
         },
       ),
@@ -783,6 +790,7 @@ Future<void> manageLicenseDevices(BuildContext context, Learning learning) async
             if (error != null) Text(error!, style: TextStyle(color: colors.error)),
             const SizedBox(height: 8),
             SelectableText(tr('Code ID: {0}', [license.id]), style: TextStyle(fontSize: 11, color: colors.outline)),
+            TextButton(onPressed: () => unawaited(showLearningPrivacy(context)), child: Text(tr('Activation and privacy'))),
           ]),
         ),
         actions: [
@@ -793,6 +801,52 @@ Future<void> manageLicenseDevices(BuildContext context, Learning learning) async
     }),
   );
 }
+
+/// The privacy notice for buying and activating the learning pack.
+Future<void> showLearningPrivacy(BuildContext context) => showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr('Activation and privacy')),
+        content: SizedBox(width: 560, child: SingleChildScrollView(child: SelectableText(currentLanguage.isChinese ? learningPrivacyZh : learningPrivacyEn))),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close')))],
+      ),
+    );
+
+const learningPrivacyEn = '''Activation and privacy (learning pack)
+
+Controller: Lumtub (Italy). Privacy contact: 7poad30n5@mozmail.com
+
+What is kept, and why
+• Unlocking a purchase: the order number, a SHA-256 hash of the email you paid with (Ko-fi and Polar; never the email itself), the order date, and when you agreed that the pack is supplied at once (proof of the end of the 14-day withdrawal right). Basis: performing the licence (GDPR art. 6(1)(b)) and legal obligations (6(1)(c)). Kept while the licence is valid.
+• Activating a device: a hashed device identifier (made on your computer from its machine ID; the ID itself is never sent), the kind of system (Windows, macOS…), and the dates the device was added and last confirmed. Used to activate the pack and keep a code to at most 5 devices. Basis: performing the licence (6(1)(b)) and our legitimate interest in preventing a code being shared (6(1)(f)). Kept while the device is on the code; removed at once when you remove the device in the app, and automatically after 24 months without a confirmation.
+• IP address: seen by the server to limit how often it can be asked; our own record of it is deleted within 2 minutes. Basis: legitimate interest in keeping the service safe (6(1)(f)).
+Words you look up, your vocabulary book and what you watch stay on your device and are never sent.
+
+Who processes it
+The server runs on Cloudflare (Cloudflare, Inc.) as our processor, which may involve transfer to the United States under the EU–US Data Privacy Framework or Standard Contractual Clauses. Request logs are turned off for this service; Cloudflare's own operational logs follow its policies. Payments are handled by Polar, Ko-fi or Afdian under their own privacy policies.
+
+Your rights
+You may ask for access, correction, deletion, restriction, objection and a copy of your data, and complain to a supervisory authority (in Italy the Garante per la protezione dei dati personali). Write to the email above; we answer within one month. Without the device identifier the pack cannot be activated online. The 5-device limit is checked automatically; write to us if you need it looked at by a person.
+
+Last updated: 21 November 2026''';
+
+const learningPrivacyZh = '''激活与隐私说明（学习包）
+
+数据控制者：Lumtub（意大利）。隐私联系邮箱：7poad30n5@mozmail.com
+
+保存什么，为什么
+• 领取购买的激活码：订单号、付款邮箱的 SHA-256 哈希值（Ko-fi 和 Polar；不保存邮箱本身）、订单日期，以及你同意「立即提供、14 天撤回权随之结束」的时间。法律依据：履行许可合同（GDPR 第 6(1)(b) 条）及法定义务（第 6(1)(c) 条）。在授权有效期间保存。
+• 激活设备：经过哈希的设备标识（在你的电脑上由机器 ID 计算，机器 ID 本身不会发送）、系统类型（Windows、macOS 等）、设备加入和最近确认的日期。用于激活学习包，并把一个激活码限制在最多 5 台设备。法律依据：履行许可合同（第 6(1)(b) 条）及防止激活码被分享的正当利益（第 6(1)(f) 条）。设备在激活码上期间保存；你在 App 里移除设备时立即删除；连续 24 个月没有确认会自动删除。
+• IP 地址：服务器用来限制请求频率，我们自己的记录在 2 分钟内删除。法律依据：保障服务安全的正当利益（第 6(1)(f) 条）。
+你查的词、生词本和观看内容都只保存在你的设备上，不会发送。
+
+谁来处理
+服务器运行在 Cloudflare（Cloudflare, Inc.）上，作为我们的数据处理者，可能涉及向美国传输，依据欧美数据隐私框架（DPF）或欧盟标准合同条款。本服务关闭了请求日志；Cloudflare 自身的运行日志遵循其政策。付款由 Polar、Ko-fi 或爱发电处理，适用它们各自的隐私政策。
+
+你的权利
+你可以要求访问、更正、删除、限制处理、反对处理，以及获取数据副本，也可以向监管机构投诉（意大利为 Garante per la protezione dei dati personali）。请写信到上面的邮箱，我们会在一个月内答复。不提供设备标识就无法在线激活。5 台设备的上限由系统自动检查；如需人工处理，请来信。
+
+更新日期：2026 年 11 月 21 日''';
 
 const learningDataNotice = '''English: the word list, word forms and exam tags of ECDICT by skywind3000 (MIT, github.com/skywind3000/ECDICT). Chinese meanings from the Mandarin translations in the English Wiktionary and from the Chinese Wiktionary (CC BY-SA 4.0, wiktionary.org) as extracted by kaikki.org; where neither has a word, WikDict's translations (CC BY-SA 4.0, wikdict.com), marked as reference translations. Pronunciations (IPA) from the English Wiktionary. Frequency ranks from wordfreq by Robyn Speer (data CC BY-SA 4.0). English meanings from the Simple English and English Wiktionaries (CC BY-SA 4.0, wiktionary.org) as extracted by kaikki.org, and from WordNet 3.0, © Princeton University (WordNet license). CEFR levels: The CEFR-J Wordlist Version 1.5, compiled by Yukio Tono, Tokyo University of Foreign Studies (cefr-j.org), and the Octanove Vocabulary Profile C1/C2 1.0 by Octanove Labs (CC BY-SA 4.0), via github.com/openlanguageprofiles/olp-en-cefrj.
 

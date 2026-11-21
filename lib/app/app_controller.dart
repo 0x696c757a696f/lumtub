@@ -29,6 +29,7 @@ import '../play_queue.dart';
 import '../video_facts_lookup.dart';
 import '../video_languages.dart';
 import '../playback_failure.dart';
+import '../plugins.dart';
 import '../skip_silence.dart';
 import '../volume_balance.dart';
 import '../playback_recovery.dart';
@@ -1162,6 +1163,9 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   @override
   void dispose() {
+    for (final plugin in Plugins.all) {
+      plugin.dispose();
+    }
     _libassLookTimer?.cancel();
     _disposed = true;
     _stopCurrentChat();

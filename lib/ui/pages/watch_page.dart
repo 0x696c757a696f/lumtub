@@ -12,6 +12,7 @@ import '../../device.dart';
 import '../../libass_layout.dart' show LibassLook;
 import '../window_chrome.dart';
 import '../../app/app_controller.dart';
+import '../../plugins.dart';
 import '../../appearance_settings.dart' show blankFont, bundledFont;
 import '../../models.dart';
 import '../../player_settings.dart';
@@ -773,7 +774,9 @@ class _Player extends StatelessWidget {
             // texture, which flashes black on some Windows GPUs.
             child: Stack(fit: StackFit.expand, children: [
               RepaintBoundary(
-                child: Video(
+                child: ListenableBuilder(
+                  listenable: Plugins.changes,
+                  builder: (context, _) => Video(
                   key: videoKey,
                   controller: controller.videoController!,
                   // Background playback is decided in main.dart (onHide), not by the view.
@@ -795,6 +798,7 @@ class _Player extends StatelessWidget {
                     byHeight: Platform.isAndroid || Platform.isIOS,
                     libass: controller.libassDraws,
                     reveal: (shown: controller.translationShown, hover: controller.hoverTranslation, tap: controller.toggleTranslation),
+                    line: Plugins.videoLine(context, controller),
                   ),
                   onEnterFullscreen: () {
                     // 铺满窗口 keeps the window as it is.
@@ -823,6 +827,7 @@ class _Player extends StatelessWidget {
                     }
                     return defaultExitNativeFullscreen();
                   },
+                ),
                 ),
               ),
               if (controller.waitingForStart && controller.playing != null)
@@ -1304,7 +1309,7 @@ double androidSubtitleScale(Size size, [double system = 1, bool small = false]) 
 /// plainly now, and what hovering and tapping it do.
 typedef TranslationRevealing = ({ValueListenable<bool> shown, ValueChanged<bool> hover, VoidCallback tap});
 
-SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass, TranslationRevealing? reveal}) {
+SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass, TranslationRevealing? reveal, VideoLineHooks? line}) {
   // The view scales by area against 1080p, which makes the text tiny in a
   // small window. There a line is about a twentieth of the picture's
   // height, as on a TV, but never under 13 px, which stays readable, nor
@@ -1317,6 +1322,9 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
   // for 模糊翻译, which needs the second line's place.
   if (ghost && !blur) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;
+  // A plugin draws and takes taps on the main line only where the view
+  // shows it.
+  final hooks = ghost ? null : line;
   TextStyle style(String font, double scale, int color, double opacity) => TextStyle(
         height: 1.3,
         fontSize: 32 * scale,
@@ -1345,6 +1353,9 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     secondaryShown: reveal?.shown,
     onSecondaryHover: reveal?.hover,
     onSecondaryTap: reveal?.tap,
+    mainLine: hooks?.line,
+    mainHit: hooks?.hit,
+    onMainTap: hooks?.tap,
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),
   );
 }

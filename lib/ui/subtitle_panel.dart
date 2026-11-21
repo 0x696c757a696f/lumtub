@@ -14,6 +14,7 @@ import 'player_panel.dart';
 import 'common.dart' show ErrorBanner;
 import 'subtitle_list_panel.dart';
 import 'app_icons.dart';
+import '../plugins.dart';
 
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
 /// above it (双语字幕) on the right. A choice applies at once and the panel stays open; a track
@@ -434,6 +435,7 @@ class LearningSwitches extends StatelessWidget {
               (on) => unawaited(controller.setBlurSecondary(on))),
         ),
       ]),
+      ...Plugins.subtitlePanel(context, controller),
     ]);
   }
 }

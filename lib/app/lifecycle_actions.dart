@@ -231,6 +231,9 @@ extension LifecycleActions on AppController {
         status = ignoredOptions.isEmpty ? tr('Ready · Decoding method will be verified during playback') : tr('Ready · Ignored unsupported settings: {0}', [ignoredOptions.join(', ')]);
         error = null;
       });
+      for (final plugin in Plugins.all) {
+        unawaited(plugin.start(this).catchError((Object e, StackTrace s) => logError('A plugin could not start', e, s)));
+      }
       if (mode == PageMode.explore) _loadExplore();
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
       unawaited(checkHistoryLive());

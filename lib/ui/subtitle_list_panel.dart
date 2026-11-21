@@ -18,6 +18,7 @@ import 'common.dart';
 import 'motion.dart';
 import 'player_panel.dart';
 import 'app_icons.dart';
+import '../plugins.dart';
 
 /// 字幕列表: every line of the main subtitle beside the video, with the
 /// second subtitle's words under it, the one being spoken marked and kept
@@ -60,7 +61,17 @@ class _SubtitleListState extends State<SubtitleList> {
     super.initState();
     _trackChanges = widget.player.stream.track.listen((_) => _reload());
     widget.controller.addListener(_secondChanged);
+    Plugins.changes.addListener(_pluginsChanged);
   }
+
+  void _pluginsChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// [text] as a plugin draws it, such as words a tap looks up; otherwise
+  /// plain.
+  Widget _line(String text, TextStyle style, {required String? other, required Duration at}) =>
+      Plugins.listLine(context, widget.controller, text, style, other: other, at: at) ?? Text(text, style: style);
 
   void _reload() => setState(() {
         _cues = widget.controller.listedSubtitleCues();
@@ -99,6 +110,7 @@ class _SubtitleListState extends State<SubtitleList> {
   @override
   void dispose() {
     widget.controller.removeListener(_secondChanged);
+    Plugins.changes.removeListener(_pluginsChanged);
     _trackChanges?.cancel();
     _positions?.cancel();
     _typing?.cancel();
@@ -271,15 +283,19 @@ class _SubtitleListState extends State<SubtitleList> {
                             ),
                             Expanded(
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                                Text(
+                                _line(
                                   top,
-                                  style: TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
+                                  TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
+                                  other: under,
+                                  at: cue.start,
                                 ),
                                 if (under != null) ...[
                                   const SizedBox(height: 2),
-                                  Text(
+                                  _line(
                                     under,
-                                    style: TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
+                                    TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
+                                    other: top,
+                                    at: cue.start,
                                   ),
                                 ],
                               ]),

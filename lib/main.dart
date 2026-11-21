@@ -33,9 +33,14 @@ import 'ui/window_chrome.dart';
 import 'window_glass.dart';
 import 'windows_shell.dart';
 import 'device.dart';
+import 'plugins.dart';
 import 'youtube_player_probe.dart';
 
-Future<void> main() async {
+Future<void> main() => runLumtub();
+
+/// Starts Lumtub, with [plugins] built in when another app is made from it.
+Future<void> runLumtub({List<LumtubPlugin> plugins = const []}) async {
+  Plugins.use(plugins);
   FrameStats.sinceStart.start();
   WidgetsFlutterBinding.ensureInitialized();
   // Before any HTTP client exists, so all of them follow the proxy setting.

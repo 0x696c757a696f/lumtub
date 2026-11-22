@@ -367,6 +367,10 @@ class SubtitleViewConfiguration {
   final bool Function(Offset global)? mainHit;
   final ValueChanged<Offset>? onMainTap;
 
+  /// Lumtub: the pointer came onto (true) or left (false) what
+  /// [mainHit] says is in the main line.
+  final ValueChanged<bool>? onMainHover;
+
   /// {@macro subtitle_view_configuration}
   const SubtitleViewConfiguration({
     this.visible = true,
@@ -394,6 +398,7 @@ class SubtitleViewConfiguration {
     this.mainLine,
     this.mainHit,
     this.onMainTap,
+    this.onMainHover,
     this.padding = const EdgeInsets.fromLTRB(
       16.0,
       0.0,
@@ -443,6 +448,8 @@ class MainLineTapArea extends StatelessWidget {
         opaque: false,
         hitTestBehavior: HitTestBehavior.deferToChild,
         cursor: SystemMouseCursors.click,
+        onEnter: configuration.onMainHover == null ? null : (_) => configuration.onMainHover!(true),
+        onExit: configuration.onMainHover == null ? null : (_) => configuration.onMainHover!(false),
         child: GestureDetector(
           behavior: HitTestBehavior.deferToChild,
           onTapUp: (details) => configuration.onMainTap?.call(details.globalPosition),

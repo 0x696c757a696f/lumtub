@@ -812,6 +812,7 @@ class _Player extends StatelessWidget {
                         : (
                       learning: controller.learning,
                       onWord: (token, line) => unawaited(showWordCard(context, controller, token, sentence: line)),
+                      onHover: controller.hoverSubtitle,
                     ),
                   ),
                   onEnterFullscreen: () {
@@ -1325,7 +1326,7 @@ typedef TranslationRevealing = ({ValueListenable<bool> shown, ValueChanged<bool>
 
 /// What the learning pack needs from the player: the dictionary, and what
 /// tapping a word of the main line does.
-typedef SubtitleWords = ({Learning learning, void Function(WordToken token, String line) onWord});
+typedef SubtitleWords = ({Learning learning, void Function(WordToken token, String line) onWord, void Function(bool over)? onHover});
 
 /// The words of the main video's subtitle line, to find the one tapped.
 final _videoWords = RubyHits();
@@ -1411,6 +1412,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
             final token = _videoWords.wordAt(global);
             if (token != null) words!.onWord(token, _videoWords.line);
           },
+    onMainHover: !lookUp ? null : words!.onHover,
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),
   );
 }

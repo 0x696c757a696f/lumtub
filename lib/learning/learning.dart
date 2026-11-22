@@ -135,6 +135,11 @@ class Learning extends ChangeNotifier {
   /// Korean in letters above the words; off by default, as Hangul reads
   /// as it sounds.
   bool _showRomanization = false;
+
+  /// The video pauses while the mouse is over a subtitle line, so a word
+  /// can be read and tapped; it plays on when the mouse leaves.
+  bool _hoverPause = true;
+  bool get hoverPause => _hoverPause;
   int? _englishLevel = EnglishLevel.cet4.index;
   bool _loaded = false;
   VocabularyBook? _book;
@@ -499,6 +504,7 @@ class Learning extends ChangeNotifier {
         if (json is Map) {
           _showPinyin = json['pinyin'] != false;
           _showRomanization = json['romanization'] == true;
+          _hoverPause = json['hoverPause'] != false;
           _meanings = MeaningLanguage.values.where((m) => m.name == json['meanings']).firstOrNull;
           _voicePicked = json['voicePicked'] == true;
           // Lumtub's server is now only what Edge's voices fall back on.
@@ -856,6 +862,12 @@ class Learning extends ChangeNotifier {
     await _save();
   }
 
+  Future<void> setHoverPause(bool on) async {
+    _hoverPause = on;
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> setShowRomanization(bool on) async {
     _showRomanization = on;
     notifyListeners();
@@ -872,7 +884,7 @@ class Learning extends ChangeNotifier {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings?.name ?? '', 'voice': _voiceService.name, 'voicePicked': _voicePicked, 'englishLevel': _englishLevel ?? -1, 'trial': {'taken': _trialTaken, 'seen': _trialSeen, 'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
+      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'hoverPause': _hoverPause, 'meanings': _meanings?.name ?? '', 'voice': _voiceService.name, 'voicePicked': _voicePicked, 'englishLevel': _englishLevel ?? -1, 'trial': {'taken': _trialTaken, 'seen': _trialSeen, 'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }

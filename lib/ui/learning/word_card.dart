@@ -35,7 +35,7 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
   }
   if (!context.mounted) return;
   final player = controller.player;
-  final wasPlaying = player?.state.playing ?? false;
+  final wasPlaying = (player?.state.playing ?? false) | controller.takeHoverPause();
   if (wasPlaying) unawaited(player!.pause());
   final when = at ?? player?.state.position ?? Duration.zero;
   await showDialog<void>(

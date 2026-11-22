@@ -545,6 +545,13 @@ List<(String, String, WidgetBuilder)> learningSettingRows(AppController controll
           leading: Icon(AppIcons.graduationCap),
           onTap: () => unawaited(openLearningPage(context, controller)),
         ))),
+    (tr('Pause while the mouse is on a subtitle line'), '悬停暂停 鼠标 字幕 hover pause', (context) => live((context) => SwitchItem(
+          title: tr('Pause while the mouse is on a subtitle line'),
+          subtitle: tr('Read and tap the words at ease; it plays on when the mouse leaves'),
+          leading: Icon(AppIcons.pauseCircle),
+          value: learning.hoverPause,
+          onChanged: (on) => unawaited(learning.setHoverPause(on)),
+        ))),
     (tr('Show pinyin and kana above subtitles'), '拼音 假名 pinyin kana', (context) => live((context) => SwitchItem(
           title: tr('Show pinyin and kana above subtitles'),
           subtitle: tr('Above each word, on the video and in the subtitle list'),

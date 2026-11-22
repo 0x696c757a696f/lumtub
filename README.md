@@ -259,13 +259,17 @@ Everything is open source under the AGPL, so none of this has to be taken on tru
 
 ## FAQ
 
-**Is it free?** Yes, and it stays free. No ads, no paid tier, no data sold. It's funded by [sponsors](#support-lumtub).
+**Is it free?** Yes. Watching, downloads, subscriptions, recommendations and every other player feature are free, with no ads and no data sold, and they stay that way. The only paid part is the optional [Learning Pack](#-learn-languages-from-real-videos) for language learners. Development is funded by [sponsors](#support-lumtub) and Learning Pack sales.
+
+**What is the Learning Pack, and what does it cost?** An optional add-on for learning languages from videos: word lookup in the subtitles, readings above the line, a vocabulary book with the original audio, review and Anki export. Your first 30 lookups have everything switched on; after that, 3 lookups a day stay free. Early bird ¥99 until 3 January 2027, then ¥129, paid once on 爱发电, up to 5 devices.
+
+**Can I get a refund for the Learning Pack?** It's a digital product, so there's no refund for a change of mind after activation. If a software problem stops it working and it can't be fixed, you get your money back. Ask through a message on 爱发电. Details: [lumtub.app/learn](https://lumtub.app/learn/).
 
 **Will it break when YouTube changes something?** Sometimes, briefly. Lumtub updates yt-dlp on its own, and fixes usually arrive within days.
 
 **Do I need a Google account?** No. Everything except account features (likes, comments, syncing) works signed out.
 
-**Is everything free?** Lumtub is. Some optional AI features (translation, speech-to-text, summaries) use third-party services or your own API keys, and those providers may charge.
+**Are the AI features free?** The app side is. Some optional AI features (translation, speech-to-text, summaries) use third-party services or your own API keys, and those providers may charge.
 
 **Where is my data?** On Windows in `%LOCALAPPDATA%\Lumtub`, or the `userdata` folder next to `lumtub.exe` for the portable version. On Linux in `~/.local/share/lumtub`, on macOS in `~/Library/Application Support/Lumtub`. Settings, subscriptions and your library can be exported and imported.
 
@@ -289,7 +293,7 @@ Lumtub speaks 82 languages, all translated by volunteers on [Weblate](https://ho
 
 <div align="center">
 
-<a href="https://github.com/sponsors/0x696c757a696f"><img src="docs/sponsor/banner-en.svg" alt="Keep Lumtub free. No ads, no tracking, no paid tier. One developer, in the open." width="100%"></a>
+<a href="https://github.com/sponsors/0x696c757a696f"><img src="docs/sponsor/banner-en.svg" alt="Keep Lumtub free. No ads, no tracking, no subscriptions. One developer, in the open." width="100%"></a>
 
 <a href="https://github.com/sponsors/0x696c757a696f"><img src="docs/sponsor/github-en.svg" alt="Sponsor on GitHub" height="64"></a>
 <a href="https://ko-fi.com/0x696c757a696f"><img src="docs/sponsor/kofi-en.svg" alt="Support on Ko-fi" height="64"></a>

@@ -3698,5 +3698,20 @@
   "Very hard for now": "Ngumu sana kwa sasa",
   "of what is said you know": "ya yanayosemwa unayajua",
   "{0} different words, {1} new to you · {2} lines with just one new word": "Maneno {0} tofauti, {1} mapya kwako · mistari {2} yenye neno jipya moja tu",
-  "Learn these first: the new words said most": "Jifunze haya kwanza: maneno mapya yanayosemwa zaidi"
+  "Learn these first: the new words said most": "Jifunze haya kwanza: maneno mapya yanayosemwa zaidi",
+  "Learning mode": "Hali ya kujifunza",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Kutafuta maneno, matamshi, daftari la msamiati, marudio na ukurasa wa Kujifunza",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Imezimwa: hakuna kipengele cha kujifunza kinachoonekana au kufanya kazi. Maneno yako na leseni vimehifadhiwa.",
+  "Pause while the mouse is on a subtitle line": "Sitisha kipanya kikiwa kwenye mstari wa manukuu",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Soma na gusa maneno bila haraka; uchezaji unaendelea kipanya kikiondoka",
+  "Beginner": "Mwanzo",
+  "Intermediate": "Wastani",
+  "Advanced": "Juu",
+  "My level in other languages": "Kiwango changu katika lugha nyingine",
+  "My level in {0}": "Kiwango changu katika {0}",
+  "Not set: hard words are not marked": "Haijawekwa: maneno magumu hayawekewi alama",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Maneno magumu zaidi yanaonekana wazi, rahisi zaidi huhesabiwa kama yanayojulikana",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Imekadiriwa kutokana na jinsi maneno yanavyotumika: mwongozo tu, si orodha rasmi ya CEFR.",
+  "The word levels are still downloading; words are marked once they are here.": "Viwango vya maneno bado vinapakuliwa; maneno yatawekewa alama yakishafika.",
+  "Set your level for a truer picture": "Weka kiwango chako kwa picha sahihi zaidi"
 }

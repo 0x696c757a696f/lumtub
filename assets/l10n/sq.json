@@ -3698,5 +3698,20 @@
   "Very hard for now": "Tani për tani shumë e vështirë",
   "of what is said you know": "e asaj që thuhet e njihni",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} fjalë të ndryshme, {1} të reja për ju · {2} fjali me vetëm një fjalë të re",
-  "Learn these first: the new words said most": "Mësoni këto së pari: fjalët e reja që thuhen më shpesh"
+  "Learn these first: the new words said most": "Mësoni këto së pari: fjalët e reja që thuhen më shpesh",
+  "Learning mode": "Modaliteti i mësimit",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Kërkimi i fjalëve, shqiptimi, libri i fjalorit, përsëritja dhe faqja Mësimi",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Çaktivizuar: asnjë veçori mësimi nuk shfaqet e nuk funksionon. Fjalët dhe licenca juaj ruhen.",
+  "Pause while the mouse is on a subtitle line": "Pusho kur miu është mbi rreshtin e titrave",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Lexo dhe prek fjalët pa nxitim; luajtja vazhdon kur miu largohet",
+  "Beginner": "Fillestar",
+  "Intermediate": "Mesatar",
+  "Advanced": "I avancuar",
+  "My level in other languages": "Niveli im në gjuhë të tjera",
+  "My level in {0}": "Niveli im në {0}",
+  "Not set: hard words are not marked": "I paracaktuar: fjalët e vështira nuk shënohen",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Fjalët më të vështira dallohen, më të lehtat llogariten si të njohura",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Vlerësuar sipas shpeshtësisë së përdorimit të fjalëve: një udhëzues, jo listë zyrtare CEFR.",
+  "The word levels are still downloading; words are marked once they are here.": "Nivelet e fjalëve po shkarkohen ende; fjalët do të shënohen sapo të jenë gati.",
+  "Set your level for a truer picture": "Cakto nivelin tënd për një pamje më të saktë"
 }

@@ -3697,5 +3697,20 @@
   "Very hard for now": "હમણાં માટે ખૂબ અઘરું",
   "of what is said you know": "જે બોલાય છે તેમાંથી તમે જાણો છો",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} અલગ શબ્દો, {1} તમારા માટે નવા · {2} લીટીઓમાં માત્ર એક નવો શબ્દ",
-  "Learn these first: the new words said most": "પહેલા આ શીખો: સૌથી વધુ બોલાતા નવા શબ્દો"
+  "Learn these first: the new words said most": "પહેલા આ શીખો: સૌથી વધુ બોલાતા નવા શબ્દો",
+  "Learning mode": "શીખવાનો મોડ",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "શબ્દ શોધ, ઉચ્ચાર, શબ્દભંડોળ પુસ્તિકા, પુનરાવર્તન અને શીખવાનું પૃષ્ઠ",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "બંધ: શીખવાની કોઈ સુવિધા દેખાતી નથી કે ચાલતી નથી. તમારા શબ્દો અને લાઇસન્સ સચવાયેલા રહે છે.",
+  "Pause while the mouse is on a subtitle line": "માઉસ સબટાઇટલ લાઇન પર હોય ત્યારે થોભાવો",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "શાંતિથી શબ્દો વાંચો અને ટેપ કરો; માઉસ હટતાં જ પ્લેબેક ફરી ચાલુ થાય છે",
+  "Beginner": "શરૂઆતનું",
+  "Intermediate": "મધ્યમ",
+  "Advanced": "ઉચ્ચ",
+  "My level in other languages": "અન્ય ભાષાઓમાં મારું સ્તર",
+  "My level in {0}": "{0}માં મારું સ્તર",
+  "Not set: hard words are not marked": "સેટ નથી: મુશ્કેલ શબ્દો ચિહ્નિત થતા નથી",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. વધુ મુશ્કેલ શબ્દો અલગ તરી આવે છે, સરળ શબ્દો જાણીતા ગણાય છે",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "શબ્દોના ઉપયોગની આવૃત્તિ પરથી અંદાજિત: માર્ગદર્શન માટે, અધિકૃત CEFR યાદી નથી.",
+  "The word levels are still downloading; words are marked once they are here.": "શબ્દ સ્તરો હજી ડાઉનલોડ થઈ રહ્યા છે; આવી જતાં જ શબ્દો ચિહ્નિત થશે.",
+  "Set your level for a truer picture": "વધુ સચોટ ચિત્ર માટે તમારું સ્તર સેટ કરો"
 }

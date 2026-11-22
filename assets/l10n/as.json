@@ -3697,5 +3697,20 @@
   "Very hard for now": "এতিয়ালৈ বহুত কঠিন",
   "of what is said you know": "কোৱা কথাৰ যিমান আপুনি জানে",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0}টা বেলেগ শব্দ, {1}টা আপোনাৰ বাবে নতুন · {2}টা বাক্যত মাত্ৰ এটা নতুন শব্দ",
-  "Learn these first: the new words said most": "এইবোৰ আগতে শিকক: আটাইতকৈ বেছি কোৱা নতুন শব্দ"
+  "Learn these first: the new words said most": "এইবোৰ আগতে শিকক: আটাইতকৈ বেছি কোৱা নতুন শব্দ",
+  "Learning mode": "শিকাৰ ম'ড",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "শব্দ বিচাৰ, উচ্চাৰণ, শব্দভাণ্ডাৰ, পুনৰীক্ষণ আৰু শিকা পৃষ্ঠা",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "বন্ধ: শিকাৰ কোনো সুবিধা দেখা নাযায় বা নচলে। আপোনাৰ শব্দ আৰু অনুজ্ঞাপত্ৰ সংৰক্ষিত থাকে।",
+  "Pause while the mouse is on a subtitle line": "মাউছ subtitle ৰেখাত থাকিলে বিৰতি দিয়ক",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "শব্দবোৰ লাগু-লাগু নকৰাকৈ পঢ়ক আৰু টেপ কৰক; মাউছ আঁতৰালে পুনৰ চলিব",
+  "Beginner": "আৰম্ভণি",
+  "Intermediate": "মধ্যম",
+  "Advanced": "উন্নত",
+  "My level in other languages": "অন্য ভাষাত মোৰ স্তৰ",
+  "My level in {0}": "{0}ত মোৰ স্তৰ",
+  "Not set: hard words are not marked": "ছেট কৰা হোৱা নাই: কঠিন শব্দ চিহ্নিত নহয়",
+  "{0}. Harder words stand out, easier ones count as known": "{0}। কঠিন শব্দবোৰ আগত দেখা যায়, সহজ শব্দবোৰ জনা বুলি গণ্য হয়",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "শব্দৰ ব্যৱহাৰৰ সঘনতাৰ ওপৰত আধাৰিত অনুমান: এক নিৰ্দেশনা, official CEFR তালিকা নহয়।",
+  "The word levels are still downloading; words are marked once they are here.": "শব্দৰ স্তৰ এতিয়াও ডাউনলোড হৈ আছে; ইয়ালৈ আহিলেই শব্দ চিহ্নিত হ'ব।",
+  "Set your level for a truer picture": "অধিক সঠিক ছবিৰ বাবে আপোনাৰ স্তৰ ছেট কৰক"
 }

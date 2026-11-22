@@ -3727,5 +3727,20 @@
   "Very hard for now": "而家仲太難",
   "of what is said you know": "嘅內容你認識",
   "{0} different words, {1} new to you · {2} lines with just one new word": "共 {0} 個不同嘅字，{1} 個對你係新嘅 · {2} 句只差一個生字",
-  "Learn these first: the new words said most": "先學呢幾個：出現最多嘅生字"
+  "Learn these first: the new words said most": "先學呢幾個：出現最多嘅生字",
+  "Learning mode": "學習模式",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "查詞、注音、生詞簿、温習同「學習」頁面",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "已關閉：學習功能全部不會顯示，亦不會運行。生詞簿同授權都會保留。",
+  "Pause while the mouse is on a subtitle line": "滑鼠移到字幕上時暫停",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "可以從容地睇詞、點詞，滑鼠移開後繼續播放",
+  "Beginner": "初級",
+  "Intermediate": "中級",
+  "Advanced": "高級",
+  "My level in other languages": "我的外語程度",
+  "My level in {0}": "我的{0}程度",
+  "Not set: hard words are not marked": "未設定：不標記難詞",
+  "{0}. Harder words stand out, easier ones count as known": "{0}。較難的詞會標示出來，較簡單的詞當作已認識",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "按詞語常用程度估算，僅供參考，並非官方 CEFR 詞表。",
+  "The word levels are still downloading; words are marked once they are here.": "詞彙等級仍在下載，下載完就會開始標記。",
+  "Set your level for a truer picture": "設定你的程度，難度會更準確"
 }

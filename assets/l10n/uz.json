@@ -3697,5 +3697,20 @@
   "Very hard for now": "Hozircha juda qiyin",
   "of what is said you know": "aytilganlarning bilganingiz",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} xil so‘z, {1} tasi siz uchun yangi · faqat bitta yangi so‘zli {2} ta gap",
-  "Learn these first: the new words said most": "Avval bularni o‘rganing: eng ko‘p aytiladigan yangi so‘zlar"
+  "Learn these first: the new words said most": "Avval bularni o‘rganing: eng ko‘p aytiladigan yangi so‘zlar",
+  "Learning mode": "O‘rganish rejimi",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "So‘z qidirish, o‘qilishi, lug‘at daftari, takrorlash va O‘rganish sahifasi",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "O‘chiq: o‘rganish funksiyalarining hech biri ko‘rinmaydi va ishlamaydi. So‘zlaringiz va litsenziyangiz saqlanadi.",
+  "Pause while the mouse is on a subtitle line": "Sichqoncha subtitr qatorida bo‘lsa, pauza qilish",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "So‘zlarni shoshilmay o‘qing va bosing; sichqoncha ketgach, ijro davom etadi",
+  "Beginner": "Boshlang‘ich",
+  "Intermediate": "O‘rta",
+  "Advanced": "Yuqori",
+  "My level in other languages": "Boshqa tillardagi darajam",
+  "My level in {0}": "{0} tilidagi darajam",
+  "Not set: hard words are not marked": "Belgilanmagan: qiyin so‘zlar belgilanmaydi",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Qiyinroq so‘zlar ajralib turadi, osonlari tanish deb hisoblanadi",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "So‘zlarning ishlatilish tez-tezligiga qarab baholangan: faqat yo‘l-yo‘riq, rasmiy CEFR ro‘yxati emas.",
+  "The word levels are still downloading; words are marked once they are here.": "So‘z darajalari hali yuklanmoqda; yuklangach, so‘zlar belgilanadi.",
+  "Set your level for a truer picture": "Aniqroq natija uchun darajangizni belgilang"
 }

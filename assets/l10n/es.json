@@ -3703,5 +3703,20 @@
   "Very hard for now": "Muy difícil por ahora",
   "of what is said you know": "de lo que se dice ya lo conoces",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} palabras distintas, {1} nuevas para ti · {2} frases con una sola palabra nueva",
-  "Learn these first: the new words said most": "Aprende primero estas: las palabras nuevas que más se dicen"
+  "Learn these first: the new words said most": "Aprende primero estas: las palabras nuevas que más se dicen",
+  "Learning mode": "Modo de aprendizaje",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Consulta de palabras, lecturas, cuaderno de vocabulario, repaso y la página Aprendizaje",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Desactivado: no se muestra ni se ejecuta ninguna función de aprendizaje. Se conservan tus palabras y tu licencia.",
+  "Pause while the mouse is on a subtitle line": "Pausar mientras el ratón está sobre una línea de subtítulos",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Lee y toca las palabras con calma; se reanuda cuando el ratón se aparta",
+  "Beginner": "Principiante",
+  "Intermediate": "Intermedio",
+  "Advanced": "Avanzado",
+  "My level in other languages": "Mi nivel en otros idiomas",
+  "My level in {0}": "Mi nivel de {0}",
+  "Not set: hard words are not marked": "Sin definir: las palabras difíciles no se marcan",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Las palabras más difíciles destacan; las más fáciles se consideran conocidas",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Estimado según la frecuencia de uso de las palabras: orientativo, no una lista oficial del MCER.",
+  "The word levels are still downloading; words are marked once they are here.": "Los niveles de palabras aún se están descargando; se marcarán en cuanto lleguen.",
+  "Set your level for a truer picture": "Define tu nivel para un resultado más fiel"
 }

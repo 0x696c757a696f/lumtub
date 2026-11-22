@@ -3703,5 +3703,20 @@
   "Very hard for now": "Difícil demais por enquanto",
   "of what is said you know": "do que é dito você conhece",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} palavras diferentes, {1} novas para você · {2} frases com apenas uma palavra nova",
-  "Learn these first: the new words said most": "Aprenda estas primeiro: as palavras novas mais ditas"
+  "Learn these first: the new words said most": "Aprenda estas primeiro: as palavras novas mais ditas",
+  "Learning mode": "Modo de aprendizagem",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Consulta de palavras, leituras, caderno de vocabulário, revisão e página Aprendizagem",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Desativado: nenhum recurso de aprendizagem é mostrado nem executado. As suas palavras e a licença ficam guardadas.",
+  "Pause while the mouse is on a subtitle line": "Pausar enquanto o rato estiver sobre uma linha de legenda",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Leia e toque nas palavras com calma; a reprodução continua quando o rato sair",
+  "Beginner": "Iniciante",
+  "Intermediate": "Intermédio",
+  "Advanced": "Avançado",
+  "My level in other languages": "O meu nível noutras línguas",
+  "My level in {0}": "O meu nível em {0}",
+  "Not set: hard words are not marked": "Não definido: as palavras difíceis não são marcadas",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. As palavras mais difíceis destacam-se, as mais fáceis contam como conhecidas",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Estimado pela frequência de uso das palavras: uma orientação, não uma lista CEFR oficial.",
+  "The word levels are still downloading; words are marked once they are here.": "Os níveis das palavras ainda estão a ser transferidos; as palavras são marcadas assim que chegarem.",
+  "Set your level for a truer picture": "Defina o seu nível para um retrato mais fiel"
 }

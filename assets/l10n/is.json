@@ -3698,5 +3698,20 @@
   "Very hard for now": "Of erfitt í bili",
   "of what is said you know": "af því sem sagt er kanntu",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} ólík orð, {1} ný fyrir þig · {2} línur með aðeins einu nýju orði",
-  "Learn these first: the new words said most": "Lærðu þessi fyrst: nýju orðin sem oftast eru sögð"
+  "Learn these first: the new words said most": "Lærðu þessi fyrst: nýju orðin sem oftast eru sögð",
+  "Learning mode": "Námsstilling",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Orðaflettingar, framburður, orðasafnsbók, upprifjun og Nám-síðan",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Slökkt: engir námseiginleikar birtast eða keyra. Orðin þín og leyfið haldast.",
+  "Pause while the mouse is on a subtitle line": "Gera hlé meðan músin er á textalínu",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Lestu og snertu orðin í rólegheitum; spilun heldur áfram þegar músin fer burt",
+  "Beginner": "Byrjandi",
+  "Intermediate": "Miðstig",
+  "Advanced": "Framhaldsstig",
+  "My level in other languages": "Færnistig mitt í öðrum tungumálum",
+  "My level in {0}": "Færnistig mitt í {0}",
+  "Not set: hard words are not marked": "Ekki stillt: erfið orð eru ekki merkt",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Erfiðari orð skera sig úr, auðveldari orð teljast þekkt",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Áætlað út frá tíðni orða: til viðmiðunar, ekki opinber CEFR-listi.",
+  "The word levels are still downloading; words are marked once they are here.": "Orðastigin eru enn að hlaðast niður; orð verða merkt þegar þau berast.",
+  "Set your level for a truer picture": "Stilltu færnistig þitt fyrir nákvæmari mynd"
 }

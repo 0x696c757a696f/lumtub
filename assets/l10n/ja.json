@@ -3703,5 +3703,20 @@
   "Very hard for now": "今はまだ難しすぎる",
   "of what is said you know": "の内容がわかります",
   "{0} different words, {1} new to you · {2} lines with just one new word": "異なり語数 {0}、あなたにとって新しい語 {1} · 新しい単語が1つだけの文 {2}",
-  "Learn these first: the new words said most": "まず覚えたい:よく出てくる新出単語"
+  "Learn these first: the new words said most": "まず覚えたい:よく出てくる新出単語",
+  "Learning mode": "学習モード",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "単語の検索、読み仮名、単語帳、復習、学習ページ",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "オフ：学習機能は表示も動作もしません。単語とライセンスは保持されます。",
+  "Pause while the mouse is on a subtitle line": "マウスが字幕の行にある間は一時停止",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "単語をじっくり読んでタップできます。マウスを離すと再生を続けます",
+  "Beginner": "初級",
+  "Intermediate": "中級",
+  "Advanced": "上級",
+  "My level in other languages": "他の言語のレベル",
+  "My level in {0}": "{0}のレベル",
+  "Not set: hard words are not marked": "未設定：難しい単語は表示されません",
+  "{0}. Harder words stand out, easier ones count as known": "{0}。難しい単語は目立ち、易しい単語は既知として扱われます",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "単語の使用頻度から推定した目安です。公式のCEFRリストではありません。",
+  "The word levels are still downloading; words are marked once they are here.": "単語レベルをダウンロード中です。届き次第、単語に印が付きます。",
+  "Set your level for a truer picture": "レベルを設定すると、難易度がより正確になります"
 }

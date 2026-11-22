@@ -3697,5 +3697,20 @@
   "Very hard for now": "Ayeuna masih hésé pisan",
   "of what is said you know": "tina anu diucapkeun anjeun apal",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} kecap béda, {1} anyar pikeun anjeun · {2} kalimah ngan ukur hiji kecap anyar",
-  "Learn these first: the new words said most": "Diajar ieu heula: kecap anyar anu pangmindengna diucapkeun"
+  "Learn these first: the new words said most": "Diajar ieu heula: kecap anyar anu pangmindengna diucapkeun",
+  "Learning mode": "Mode diajar",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Néangan kecap, cara maca, buku kosakata, ulangan jeung kaca Diajar",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Pareum: teu aya fitur diajar anu muncul atawa jalan. Kecap jeung lisénsi anjeun tetep disimpen.",
+  "Pause while the mouse is on a subtitle line": "Eureun samentara basa beurit aya dina baris subjudul",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Baca jeung toél kecap kalayan santai; diputer deui basa beurit ngajauhan",
+  "Beginner": "Pamula",
+  "Intermediate": "Menengah",
+  "Advanced": "Mahér",
+  "My level in other languages": "Tingkat kuring dina basa séjén",
+  "My level in {0}": "Tingkat kuring dina {0}",
+  "Not set: hard words are not marked": "Can disetél: kecap hésé teu diténdaan",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Kecap anu leuwih hésé dibéréndélkeun, anu leuwih gampang dianggap geus apal",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Diperkirakeun tina sabaraha mindeng kecap dipaké: ukur pituduh, lain daptar CEFR resmi.",
+  "The word levels are still downloading; words are marked once they are here.": "Tingkat kecap masih diunduh; kecap bakal diténdaan sanggeus réngsé.",
+  "Set your level for a truer picture": "Setél tingkat anjeun pikeun gambaran anu leuwih akurat"
 }

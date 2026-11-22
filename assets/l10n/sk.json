@@ -3698,5 +3698,20 @@
   "Very hard for now": "Zatiaľ veľmi ťažké",
   "of what is said you know": "z povedaného poznáte",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} rôznych slov, {1} nových pre vás · {2} viet len s jedným novým slovom",
-  "Learn these first: the new words said most": "Naučte sa najprv tieto: najčastejšie nové slová"
+  "Learn these first: the new words said most": "Naučte sa najprv tieto: najčastejšie nové slová",
+  "Learning mode": "Režim učenia",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Vyhľadávanie slov, výslovnosť, zošit slovíčok, opakovanie a stránka Učenie",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Vypnuté: žiadne funkcie učenia sa nezobrazujú ani nespúšťajú. Vaše slová a licencia zostanú zachované.",
+  "Pause while the mouse is on a subtitle line": "Pozastaviť, keď je myš nad riadkom titulkov",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Čítajte a klikajte na slová v pokoji; prehrávanie pokračuje, keď myš odsuniete",
+  "Beginner": "Začiatočník",
+  "Intermediate": "Stredne pokročilý",
+  "Advanced": "Pokročilý",
+  "My level in other languages": "Moja úroveň v iných jazykoch",
+  "My level in {0}": "Moja úroveň: {0}",
+  "Not set: hard words are not marked": "Nenastavené: ťažké slová sa neoznačujú",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Ťažšie slová sa zvýraznia, ľahšie sa považujú za známe",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Odhad podľa frekvencie používania slov: orientačný údaj, nie oficiálny zoznam CEFR.",
+  "The word levels are still downloading; words are marked once they are here.": "Úrovne slov sa ešte sťahujú; slová sa označia hneď, ako budú k dispozícii.",
+  "Set your level for a truer picture": "Nastavte si úroveň pre presnejší obraz"
 }

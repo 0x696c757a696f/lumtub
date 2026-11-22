@@ -3698,5 +3698,20 @@
   "Very hard for now": "Egyelőre nagyon nehéz",
   "of what is said you know": "annak, ami elhangzik, ismered",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} különböző szó, ebből {1} új számodra · {2} mondatban csak egy új szó van",
-  "Learn these first: the new words said most": "Ezeket tanuld meg először: a leggyakrabban elhangzó új szavak"
+  "Learn these first: the new words said most": "Ezeket tanuld meg először: a leggyakrabban elhangzó új szavak",
+  "Learning mode": "Tanulómód",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Szókeresés, kiejtés, szószedet, ismétlés és a Tanulás oldal",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Kikapcsolva: egyetlen tanulási funkció sem jelenik meg és nem fut. A szavaid és a licenc megmaradnak.",
+  "Pause while the mouse is on a subtitle line": "Szünet, amíg az egér a feliratsoron van",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Olvasd és érintsd meg a szavakat nyugodtan; az egér elmozdulásakor a lejátszás folytatódik",
+  "Beginner": "Kezdő",
+  "Intermediate": "Középhaladó",
+  "Advanced": "Haladó",
+  "My level in other languages": "Szintem más nyelveken",
+  "My level in {0}": "Szintem: {0}",
+  "Not set: hard words are not marked": "Nincs beállítva: a nehéz szavak nincsenek megjelölve",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. A nehezebb szavak kiemelkednek, a könnyebbeket ismertnek számítjuk",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "A szavak gyakorisága alapján becsült: útmutató, nem hivatalos CEFR-lista.",
+  "The word levels are still downloading; words are marked once they are here.": "A szószintek még letöltés alatt vannak; a szavak megjelölése a megérkezésük után indul.",
+  "Set your level for a truer picture": "Állítsd be a szintedet a pontosabb képért"
 }

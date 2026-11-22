@@ -3698,5 +3698,20 @@
   "Very hard for now": "For vanskelig foreløpig",
   "of what is said you know": "av det som sies kan du",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} ulike ord, {1} nye for deg · {2} linjer med bare ett nytt ord",
-  "Learn these first: the new words said most": "Lær disse først: de nye ordene som sies mest"
+  "Learn these first: the new words said most": "Lær disse først: de nye ordene som sies mest",
+  "Learning mode": "Læremodus",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Ordoppslag, uttale, ordbok, repetisjon og Læring-siden",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Av: ingen av læringsfunksjonene vises eller kjører. Ordene dine og lisensen beholdes.",
+  "Pause while the mouse is on a subtitle line": "Pause når musen er over en undertekstlinje",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Les og trykk på ordene i ro og mak; avspillingen fortsetter når musen flyttes bort",
+  "Beginner": "Nybegynner",
+  "Intermediate": "Middels",
+  "Advanced": "Avansert",
+  "My level in other languages": "Mitt nivå i andre språk",
+  "My level in {0}": "Mitt nivå i {0}",
+  "Not set: hard words are not marked": "Ikke angitt: vanskelige ord markeres ikke",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Vanskeligere ord fremheves, enklere regnes som kjent",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Anslått ut fra hvor ofte ordene brukes: en veiledning, ikke en offisiell CEFR-liste.",
+  "The word levels are still downloading; words are marked once they are here.": "Ordnivåene lastes fortsatt ned; ord markeres så snart de er der.",
+  "Set your level for a truer picture": "Angi nivået ditt for et mer treffende bilde"
 }

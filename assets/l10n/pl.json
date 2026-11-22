@@ -3703,5 +3703,20 @@
   "Very hard for now": "Na razie zbyt trudny",
   "of what is said you know": "tego, co słyszysz, znasz",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} różnych słów, {1} nowych dla Ciebie · {2} zdań z tylko jednym nowym słowem",
-  "Learn these first: the new words said most": "Naucz się najpierw tych: najczęściej padających nowych słówek"
+  "Learn these first: the new words said most": "Naucz się najpierw tych: najczęściej padających nowych słówek",
+  "Learning mode": "Tryb nauki",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Sprawdzanie słów, wymowa, zeszyt słówek, powtórki i strona Nauka",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Wyłączone: żadne funkcje nauki nie są wyświetlane ani uruchamiane. Twoje słowa i licencja zostają zachowane.",
+  "Pause while the mouse is on a subtitle line": "Wstrzymaj, gdy mysz jest nad linią napisów",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Czytaj i klikaj słowa bez pośpiechu; odtwarzanie wznowi się po odsunięciu myszy",
+  "Beginner": "Początkujący",
+  "Intermediate": "Średniozaawansowany",
+  "Advanced": "Zaawansowany",
+  "My level in other languages": "Mój poziom w innych językach",
+  "My level in {0}": "Mój poziom: {0}",
+  "Not set: hard words are not marked": "Nie ustawiono: trudne słowa nie są oznaczane",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Trudniejsze słowa są wyróżniane, łatwiejsze uznawane za znane",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Szacowane na podstawie częstości użycia słów: wskazówka, a nie oficjalna lista CEFR.",
+  "The word levels are still downloading; words are marked once they are here.": "Poziomy słów wciąż się pobierają; słowa zostaną oznaczone, gdy będą gotowe.",
+  "Set your level for a truer picture": "Ustaw swój poziom, aby uzyskać dokładniejszy obraz"
 }

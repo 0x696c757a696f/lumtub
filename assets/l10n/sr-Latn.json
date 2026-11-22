@@ -3698,5 +3698,20 @@
   "Very hard for now": "Za sada veoma teško",
   "of what is said you know": "onoga što se govori znate",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} različitih reči, {1} novih za vas · {2} rečenica sa samo jednom novom rečju",
-  "Learn these first: the new words said most": "Prvo naučite ove: nove reči koje se najčešće izgovaraju"
+  "Learn these first: the new words said most": "Prvo naučite ove: nove reči koje se najčešće izgovaraju",
+  "Learning mode": "Režim učenja",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Pretraga reči, izgovor, sveska rečnika, ponavljanje i stranica Učenje",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Isključeno: nijedna funkcija učenja se ne prikazuje niti radi. Vaše reči i licenca su sačuvane.",
+  "Pause while the mouse is on a subtitle line": "Pauziraj dok je miš na redu titla",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Čitajte i dodirujte reči bez žurbe; reprodukcija se nastavlja kada miš ode",
+  "Beginner": "Početnik",
+  "Intermediate": "Srednji nivo",
+  "Advanced": "Napredni",
+  "My level in other languages": "Moj nivo u drugim jezicima",
+  "My level in {0}": "Moj nivo: {0}",
+  "Not set: hard words are not marked": "Nije podešeno: teške reči se ne označavaju",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Teže reči su istaknute, lakše se računaju kao poznate",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Procenjeno na osnovu učestalosti reči: orijentir, a ne zvanični CEFR spisak.",
+  "The word levels are still downloading; words are marked once they are here.": "Nivoi reči se još preuzimaju; reči će biti označene čim stignu.",
+  "Set your level for a truer picture": "Podesite svoj nivo za tačniju sliku"
 }

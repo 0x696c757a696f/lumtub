@@ -3697,5 +3697,20 @@
   "Very hard for now": "ବର୍ତ୍ତମାନ ପାଇଁ ବହୁତ କଠିନ",
   "of what is said you know": "କୁହାଯାଇଥିବାର ଆପଣ ଜାଣନ୍ତି",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} ଭିନ୍ନ ଶବ୍ଦ, {1} ଆପଣଙ୍କ ପାଇଁ ନୂଆ · {2} ଧାଡ଼ିରେ କେବଳ ଗୋଟିଏ ନୂଆ ଶବ୍ଦ",
-  "Learn these first: the new words said most": "ପ୍ରଥମେ ଏଗୁଡ଼ିକ ଶିଖନ୍ତୁ: ସବୁଠୁ ଅଧିକ କୁହାଯାଉଥିବା ନୂଆ ଶବ୍ଦ"
+  "Learn these first: the new words said most": "ପ୍ରଥମେ ଏଗୁଡ଼ିକ ଶିଖନ୍ତୁ: ସବୁଠୁ ଅଧିକ କୁହାଯାଉଥିବା ନୂଆ ଶବ୍ଦ",
+  "Learning mode": "ଶିକ୍ଷା ମୋଡ୍",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "ଶବ୍ଦ ଖୋଜା, ଉଚ୍ଚାରଣ, ଶବ୍ଦ ପୁସ୍ତକ, ସମୀକ୍ଷା ଏବଂ ଶିକ୍ଷା ପୃଷ୍ଠା",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "ବନ୍ଦ: କୌଣସି ଶିକ୍ଷା ସୁବିଧା ଦେଖାଯିବ ନାହିଁ କିମ୍ବା ଚାଲିବ ନାହିଁ। ଆପଣଙ୍କ ଶବ୍ଦ ଓ ଲାଇସେନ୍ସ ସଂରକ୍ଷିତ ରହିବ।",
+  "Pause while the mouse is on a subtitle line": "ମାଉସ୍ ସବ୍‌ଟାଇଟଲ୍ ଧାଡ଼ି ଉପରେ ଥିଲେ ବିରତି କରନ୍ତୁ",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "ଶବ୍ଦଗୁଡ଼ିକୁ ଆରାମରେ ପଢ଼ନ୍ତୁ ଓ ଟ୍ୟାପ୍ କରନ୍ତୁ; ମାଉସ୍ ହଟିଲେ ପ୍ଲେ ଜାରି ରହିବ",
+  "Beginner": "ଆରମ୍ଭିକ",
+  "Intermediate": "ମଧ୍ୟମ",
+  "Advanced": "ଉନ୍ନତ",
+  "My level in other languages": "ଅନ୍ୟ ଭାଷାରେ ମୋର ସ୍ତର",
+  "My level in {0}": "{0}ରେ ମୋର ସ୍ତର",
+  "Not set: hard words are not marked": "ସେଟ୍ ହୋଇନାହିଁ: କଠିନ ଶବ୍ଦ ଚିହ୍ନିତ ହେବ ନାହିଁ",
+  "{0}. Harder words stand out, easier ones count as known": "{0}। କଠିନ ଶବ୍ଦ ଉଭା ହୁଏ, ସହଜ ଶବ୍ଦ ଜଣା ଥିବା ଭାବରେ ଗଣାଯାଏ",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "ଶବ୍ଦ କେତେ ବ୍ୟବହୃତ ହୁଏ ତାହା ଅନୁଯାୟୀ ଅନୁମାନ: ଏକ ମାର୍ଗଦର୍ଶିକା, ଅଧିକାରିକ CEFR ତାଲିକା ନୁହେଁ।",
+  "The word levels are still downloading; words are marked once they are here.": "ଶବ୍ଦ ସ୍ତର ଏବେ ବି ଡାଉନଲୋଡ୍ ହେଉଛି; ଆସିଲେ ଶବ୍ଦ ଚିହ୍ନିତ ହେବ।",
+  "Set your level for a truer picture": "ଅଧିକ ସଠିକ୍ ଚିତ୍ର ପାଇଁ ଆପଣଙ୍କ ସ୍ତର ସେଟ୍ କରନ୍ତୁ"
 }

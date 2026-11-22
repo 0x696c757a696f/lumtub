@@ -3698,5 +3698,20 @@
   "Very hard for now": "இப்போதைக்கு மிகக் கடினம்",
   "of what is said you know": "பேசப்படுவதில் உங்களுக்குத் தெரிந்தது",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} வெவ்வேறு சொற்கள், {1} உங்களுக்குப் புதியவை · {2} வரிகளில் ஒரே ஒரு புதிய சொல்",
-  "Learn these first: the new words said most": "முதலில் இவற்றைக் கற்கவும்: அதிகம் சொல்லப்படும் புதிய சொற்கள்"
+  "Learn these first: the new words said most": "முதலில் இவற்றைக் கற்கவும்: அதிகம் சொல்லப்படும் புதிய சொற்கள்",
+  "Learning mode": "கற்றல் பயன்முறை",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "சொல் தேடல், உச்சரிப்பு, சொல்லகராதி புத்தகம், மீள்பார்வை மற்றும் கற்றல் பக்கம்",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "முடக்கம்: கற்றல் அம்சங்கள் எதுவும் தோன்றாது, இயங்காது. உங்கள் சொற்களும் உரிமமும் பாதுகாக்கப்படும்.",
+  "Pause while the mouse is on a subtitle line": "சுட்டி வசன வரியில் இருக்கும்போது இடைநிறுத்து",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "சொற்களை நிதானமாகப் படித்துத் தட்டலாம்; சுட்டி விலகியதும் தொடர்ந்து இயங்கும்",
+  "Beginner": "தொடக்கநிலை",
+  "Intermediate": "இடைநிலை",
+  "Advanced": "மேம்பட்ட நிலை",
+  "My level in other languages": "பிற மொழிகளில் என் நிலை",
+  "My level in {0}": "{0} மொழியில் என் நிலை",
+  "Not set: hard words are not marked": "அமைக்கப்படவில்லை: கடினமான சொற்கள் குறிக்கப்படாது",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. கடினமான சொற்கள் தனித்துத் தெரியும், எளிய சொற்கள் தெரிந்தவையாகக் கருதப்படும்",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "சொற்கள் பயன்படுத்தப்படும் அடிக்கடியை வைத்து மதிப்பிடப்பட்டது: வழிகாட்டி மட்டுமே, அதிகாரப்பூர்வ CEFR பட்டியல் அல்ல.",
+  "The word levels are still downloading; words are marked once they are here.": "சொல் நிலைகள் இன்னும் பதிவிறக்கப்படுகின்றன; வந்ததும் சொற்கள் குறிக்கப்படும்.",
+  "Set your level for a truer picture": "மேலும் துல்லியமான நிலைக்கு உங்கள் நிலையை அமையுங்கள்"
 }

@@ -3697,5 +3697,20 @@
   "Very hard for now": "Әзірге тым қиын",
   "of what is said you know": "айтылғанның білетін бөлігіңіз",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} түрлі сөз, {1} сізге жаңа · {2} сөйлемде тек бір жаңа сөз бар",
-  "Learn these first: the new words said most": "Алдымен осыларды үйреніңіз: ең жиі айтылатын жаңа сөздер"
+  "Learn these first: the new words said most": "Алдымен осыларды үйреніңіз: ең жиі айтылатын жаңа сөздер",
+  "Learning mode": "Оқу режимі",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Сөзді іздеу, оқылуы, сөздік дәптер, қайталау және Оқу беті",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Өшірулі: оқу мүмкіндіктері көрсетілмейді және жұмыс істемейді. Сөздеріңіз бен лицензияңыз сақталады.",
+  "Pause while the mouse is on a subtitle line": "Тінтуір субтитр жолында тұрғанда кідірту",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Сөздерді асықпай оқып, түртіңіз; тінтуір кеткенде ойнату жалғасады",
+  "Beginner": "Бастапқы",
+  "Intermediate": "Орта",
+  "Advanced": "Жоғары",
+  "My level in other languages": "Басқа тілдердегі деңгейім",
+  "My level in {0}": "{0} деңгейім",
+  "Not set: hard words are not marked": "Орнатылмаған: қиын сөздер белгіленбейді",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Қиынырақ сөздер ерекшеленеді, оңайларын білетін сөз деп есептейді",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Сөздердің қолданылу жиілігі бойынша бағаланған: бағдар ғана, ресми CEFR тізімі емес.",
+  "The word levels are still downloading; words are marked once they are here.": "Сөз деңгейлері әлі жүктелуде; сөздер келген бойда белгіленеді.",
+  "Set your level for a truer picture": "Дәлірек нәтиже үшін деңгейіңізді орнатыңыз"
 }

@@ -3698,5 +3698,20 @@
   "Very hard for now": "فعلاً بسیار سخت",
   "of what is said you know": "از آنچه گفته می‌شود را می‌دانید",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} واژهٔ متفاوت، {1} جدید برای شما · {2} جمله با فقط یک واژهٔ جدید",
-  "Learn these first: the new words said most": "اول اینها را یاد بگیرید: پرتکرارترین واژه‌های جدید"
+  "Learn these first: the new words said most": "اول اینها را یاد بگیرید: پرتکرارترین واژه‌های جدید",
+  "Learning mode": "حالت یادگیری",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "جست‌وجوی واژه، تلفظ، دفتر واژگان، مرور و صفحه «یادگیری»",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "خاموش: هیچ‌یک از ویژگی‌های یادگیری نمایش داده نمی‌شود و اجرا نمی‌شود. واژه‌ها و مجوز شما حفظ می‌شود.",
+  "Pause while the mouse is on a subtitle line": "توقف تا زمانی که ماوس روی خط زیرنویس است",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "واژه‌ها را با آرامش بخوانید و لمس کنید؛ با دور شدن ماوس پخش ادامه می‌یابد",
+  "Beginner": "مبتدی",
+  "Intermediate": "متوسط",
+  "Advanced": "پیشرفته",
+  "My level in other languages": "سطح من در زبان‌های دیگر",
+  "My level in {0}": "سطح من در {0}",
+  "Not set: hard words are not marked": "تنظیم نشده: واژه‌های دشوار علامت‌گذاری نمی‌شوند",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. واژه‌های دشوارتر مشخص می‌شوند و واژه‌های ساده‌تر آشنا به حساب می‌آیند",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "برآورد بر اساس بسامد کاربرد واژه‌ها: راهنما است، نه فهرست رسمی CEFR.",
+  "The word levels are still downloading; words are marked once they are here.": "سطح واژه‌ها هنوز در حال دانلود است؛ با رسیدن آن‌ها واژه‌ها علامت‌گذاری می‌شوند.",
+  "Set your level for a truer picture": "برای تصویری دقیق‌تر سطح خود را تنظیم کنید"
 }

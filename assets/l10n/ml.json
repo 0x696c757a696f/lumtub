@@ -3698,5 +3698,20 @@
   "Very hard for now": "ഇപ്പോൾ വളരെ പ്രയാസം",
   "of what is said you know": "പറയുന്നതിൽ നിങ്ങൾക്ക് അറിയാവുന്നത്",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} വ്യത്യസ്ത വാക്കുകൾ, {1} നിങ്ങൾക്ക് പുതിയത് · ഒരു പുതിയ വാക്ക് മാത്രമുള്ള {2} വരികൾ",
-  "Learn these first: the new words said most": "ആദ്യം ഇവ പഠിക്കുക: ഏറ്റവും കൂടുതൽ പറയുന്ന പുതിയ വാക്കുകൾ"
+  "Learn these first: the new words said most": "ആദ്യം ഇവ പഠിക്കുക: ഏറ്റവും കൂടുതൽ പറയുന്ന പുതിയ വാക്കുകൾ",
+  "Learning mode": "പഠന മോഡ്",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "വാക്ക് തിരയൽ, ഉച്ചാരണം, പദാവലി പുസ്തകം, അവലോകനം, പഠന പേജ്",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "ഓഫ്: പഠന സവിശേഷതകളൊന്നും കാണിക്കുകയോ പ്രവർത്തിക്കുകയോ ചെയ്യില്ല. നിങ്ങളുടെ വാക്കുകളും ലൈസൻസും സൂക്ഷിക്കപ്പെടും.",
+  "Pause while the mouse is on a subtitle line": "മൗസ് സബ്ടൈറ്റിൽ വരിയിൽ ഉള്ളപ്പോൾ താൽക്കാലികമായി നിർത്തുക",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "വാക്കുകൾ സാവധാനം വായിക്കുകയും ടാപ്പ് ചെയ്യുകയും ചെയ്യാം; മൗസ് മാറ്റുമ്പോൾ പ്ലേ തുടരും",
+  "Beginner": "തുടക്കക്കാരൻ",
+  "Intermediate": "ഇടത്തരം",
+  "Advanced": "ഉയർന്നത്",
+  "My level in other languages": "മറ്റ് ഭാഷകളിലെ എന്റെ നിലവാരം",
+  "My level in {0}": "{0}-ലെ എന്റെ നിലവാരം",
+  "Not set: hard words are not marked": "സജ്ജമാക്കിയിട്ടില്ല: കഠിനമായ വാക്കുകൾ അടയാളപ്പെടുത്തില്ല",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. കഠിനമായ വാക്കുകൾ ഹൈലൈറ്റ് ചെയ്യും, എളുപ്പമുള്ളവ അറിയാവുന്നതായി കണക്കാക്കും",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "വാക്കുകളുടെ ഉപയോഗ ആവൃത്തി അനുസരിച്ചുള്ള കണക്ക്: ഒരു മാർഗനിർദേശം മാത്രം, ഔദ്യോഗിക CEFR പട്ടികയല്ല.",
+  "The word levels are still downloading; words are marked once they are here.": "വാക്കുകളുടെ നിലവാരങ്ങൾ ഇപ്പോഴും ഡൗൺലോഡ് ചെയ്യുന്നു; എത്തിയാലുടൻ വാക്കുകൾ അടയാളപ്പെടുത്തും.",
+  "Set your level for a truer picture": "കൂടുതൽ കൃത്യമായ ചിത്രത്തിന് നിങ്ങളുടെ നിലവാരം സജ്ജമാക്കുക"
 }

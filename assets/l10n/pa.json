@@ -3697,5 +3697,20 @@
   "Very hard for now": "ਫ਼ਿਲਹਾਲ ਬਹੁਤ ਔਖਾ",
   "of what is said you know": "ਜੋ ਬੋਲਿਆ ਜਾਂਦਾ ਹੈ ਉਸ ਵਿੱਚੋਂ ਤੁਸੀਂ ਜਾਣਦੇ ਹੋ",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} ਵੱਖ-ਵੱਖ ਸ਼ਬਦ, {1} ਤੁਹਾਡੇ ਲਈ ਨਵੇਂ · {2} ਲਾਈਨਾਂ ਵਿੱਚ ਸਿਰਫ਼ ਇੱਕ ਨਵਾਂ ਸ਼ਬਦ",
-  "Learn these first: the new words said most": "ਪਹਿਲਾਂ ਇਹ ਸਿੱਖੋ: ਸਭ ਤੋਂ ਵੱਧ ਬੋਲੇ ਜਾਂਦੇ ਨਵੇਂ ਸ਼ਬਦ"
+  "Learn these first: the new words said most": "ਪਹਿਲਾਂ ਇਹ ਸਿੱਖੋ: ਸਭ ਤੋਂ ਵੱਧ ਬੋਲੇ ਜਾਂਦੇ ਨਵੇਂ ਸ਼ਬਦ",
+  "Learning mode": "ਸਿੱਖਣ ਮੋਡ",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "ਸ਼ਬਦ ਖੋਜ, ਉਚਾਰਨ, ਸ਼ਬਦ-ਕਿਤਾਬ, ਦੁਹਰਾਈ ਅਤੇ ਸਿੱਖਣ ਪੰਨਾ",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "ਬੰਦ: ਸਿੱਖਣ ਦੀਆਂ ਕੋਈ ਵੀ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਨਹੀਂ ਦਿਸਦੀਆਂ ਜਾਂ ਚੱਲਦੀਆਂ। ਤੁਹਾਡੇ ਸ਼ਬਦ ਅਤੇ ਲਾਇਸੰਸ ਸੁਰੱਖਿਅਤ ਰਹਿੰਦੇ ਹਨ।",
+  "Pause while the mouse is on a subtitle line": "ਮਾਊਸ ਉਪਸਿਰਲੇਖ ਦੀ ਲਾਈਨ ਉੱਤੇ ਹੋਣ ਤੇ ਰੋਕੋ",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "ਸ਼ਬਦਾਂ ਨੂੰ ਆਰਾਮ ਨਾਲ ਪੜ੍ਹੋ ਅਤੇ ਟੈਪ ਕਰੋ; ਮਾਊਸ ਹਟਣ ਤੇ ਪਲੇਬੈਕ ਜਾਰੀ ਰਹਿੰਦਾ ਹੈ",
+  "Beginner": "ਸ਼ੁਰੂਆਤੀ",
+  "Intermediate": "ਦਰਮਿਆਨਾ",
+  "Advanced": "ਉੱਨਤ",
+  "My level in other languages": "ਹੋਰ ਭਾਸ਼ਾਵਾਂ ਵਿੱਚ ਮੇਰਾ ਪੱਧਰ",
+  "My level in {0}": "{0} ਵਿੱਚ ਮੇਰਾ ਪੱਧਰ",
+  "Not set: hard words are not marked": "ਸੈੱਟ ਨਹੀਂ ਹੈ: ਔਖੇ ਸ਼ਬਦ ਚਿੰਨ੍ਹਿਤ ਨਹੀਂ ਕੀਤੇ ਜਾਂਦੇ",
+  "{0}. Harder words stand out, easier ones count as known": "{0}। ਔਖੇ ਸ਼ਬਦ ਉੱਭਰ ਕੇ ਦਿਸਦੇ ਹਨ, ਸੌਖੇ ਸ਼ਬਦ ਜਾਣੇ-ਪਛਾਣੇ ਗਿਣੇ ਜਾਂਦੇ ਹਨ",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "ਸ਼ਬਦਾਂ ਦੀ ਵਰਤੋਂ ਦੀ ਗਿਣਤੀ ਅਨੁਸਾਰ ਅੰਦਾਜ਼ਾ: ਇੱਕ ਮਾਰਗਦਰਸ਼ਕ, ਅਧਿਕਾਰਤ CEFR ਸੂਚੀ ਨਹੀਂ।",
+  "The word levels are still downloading; words are marked once they are here.": "ਸ਼ਬਦ ਪੱਧਰ ਅਜੇ ਡਾਊਨਲੋਡ ਹੋ ਰਹੇ ਹਨ; ਆਉਂਦੇ ਹੀ ਸ਼ਬਦ ਚਿੰਨ੍ਹਿਤ ਕੀਤੇ ਜਾਣਗੇ।",
+  "Set your level for a truer picture": "ਵਧੇਰੇ ਸਹੀ ਤਸਵੀਰ ਲਈ ਆਪਣਾ ਪੱਧਰ ਸੈੱਟ ਕਰੋ"
 }

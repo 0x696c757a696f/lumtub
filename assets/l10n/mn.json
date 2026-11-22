@@ -3697,5 +3697,20 @@
   "Very hard for now": "Одоохондоо хэтэрхий хэцүү",
   "of what is said you know": "хэлэгдсэн зүйлийн таны мэддэг хэсэг",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} өөр үг, {1} нь танд шинэ · {2} мөрөнд нэг л шинэ үг байна",
-  "Learn these first: the new words said most": "Эхлээд эдгээрийг сураарай: хамгийн их хэлэгддэг шинэ үгс"
+  "Learn these first: the new words said most": "Эхлээд эдгээрийг сураарай: хамгийн их хэлэгддэг шинэ үгс",
+  "Learning mode": "Сурах горим",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Үг хайх, дуудлага, үгийн дэвтэр, давтлага болон Сурах хуудас",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Унтраалттай: суралцахтай холбоотой онцлогууд харагдахгүй, ажиллахгүй. Таны үгс болон лиценз хадгалагдана.",
+  "Pause while the mouse is on a subtitle line": "Хулгана хадмал мөр дээр байхад түр зогсоох",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Үгсийг тайван уншиж, дарна уу; хулгана холдоход тоглуулалт үргэлжилнэ",
+  "Beginner": "Анхан шат",
+  "Intermediate": "Дунд шат",
+  "Advanced": "Ахисан шат",
+  "My level in other languages": "Бусад хэл дээрх миний түвшин",
+  "My level in {0}": "{0} хэл дээрх миний түвшин",
+  "Not set: hard words are not marked": "Тохируулаагүй: хэцүү үгсийг тэмдэглэхгүй",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Илүү хэцүү үгс тодорно, илүү хялбар үгсийг мэддэг гэж тооцно",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Үгийн хэрэглээний давтамжаар тооцсон: чиглүүлэг бөгөөд албан ёсны CEFR жагсаалт биш.",
+  "The word levels are still downloading; words are marked once they are here.": "Үгийн түвшнүүд татагдаж байна; ирмэгц үгсийг тэмдэглэнэ.",
+  "Set your level for a truer picture": "Илүү оновчтой дүр зураг гарахын тулд түвшнээ тохируулна уу"
 }

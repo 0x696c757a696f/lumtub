@@ -3703,5 +3703,20 @@
   "Very hard for now": "Voorlopig te moeilijk",
   "of what is said you know": "van wat er gezegd wordt ken je",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} verschillende woorden, {1} nieuw voor jou · {2} zinnen met maar één nieuw woord",
-  "Learn these first: the new words said most": "Leer deze eerst: de nieuwe woorden die het vaakst worden gezegd"
+  "Learn these first: the new words said most": "Leer deze eerst: de nieuwe woorden die het vaakst worden gezegd",
+  "Learning mode": "Leermodus",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Woorden opzoeken, uitspraak, woordenboek, herhaling en de Leren-pagina",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Uit: geen enkele leerfunctie wordt getoond of uitgevoerd. Je woorden en licentie blijven bewaard.",
+  "Pause while the mouse is on a subtitle line": "Pauzeren zolang de muis op een ondertitelregel staat",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Lees en tik rustig op woorden; het afspelen gaat verder zodra de muis weg is",
+  "Beginner": "Beginner",
+  "Intermediate": "Gemiddeld",
+  "Advanced": "Gevorderd",
+  "My level in other languages": "Mijn niveau in andere talen",
+  "My level in {0}": "Mijn niveau in {0}",
+  "Not set: hard words are not marked": "Niet ingesteld: moeilijke woorden worden niet gemarkeerd",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Moeilijkere woorden vallen op, makkelijkere tellen als bekend",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Geschat op basis van hoe vaak woorden voorkomen: een richtlijn, geen officiële CEFR-lijst.",
+  "The word levels are still downloading; words are marked once they are here.": "De woordniveaus worden nog gedownload; woorden worden gemarkeerd zodra ze er zijn.",
+  "Set your level for a truer picture": "Stel je niveau in voor een completer beeld"
 }

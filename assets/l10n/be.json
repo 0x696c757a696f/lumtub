@@ -3698,5 +3698,20 @@
   "Very hard for now": "Пакуль занадта цяжка",
   "of what is said you know": "з таго, што гаворыцца, вы ведаеце",
   "{0} different words, {1} new to you · {2} lines with just one new word": "Розных слоў: {0}, новых для вас: {1} · фраз з адным новым словам: {2}",
-  "Learn these first: the new words said most": "Спачатку вывучыце гэтыя: самыя частыя новыя словы"
+  "Learn these first: the new words said most": "Спачатку вывучыце гэтыя: самыя частыя новыя словы",
+  "Learning mode": "Рэжым вывучэння",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Пошук слоў, вымаўленне, слоўнік, паўтарэнне і старонка «Вывучэнне»",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Выключана: функцыі вывучэння не паказваюцца і не працуюць. Вашы словы і ліцэнзія захоўваюцца.",
+  "Pause while the mouse is on a subtitle line": "Паўза, калі мыш на радку субцітраў",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Чытайце і націскайце словы не спяшаючыся; відэа працягнецца, калі мыш сыдзе",
+  "Beginner": "Пачатковы",
+  "Intermediate": "Сярэдні",
+  "Advanced": "Высокі",
+  "My level in other languages": "Мой узровень іншых моў",
+  "My level in {0}": "Мой узровень: {0}",
+  "Not set: hard words are not marked": "Не зададзена: складаныя словы не пазначаюцца",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Больш складаныя словы вылучаюцца, прасцейшыя лічацца вядомымі",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Ацэнена па частаце ўжывання слоў: арыенцір, а не афіцыйны спіс CEFR.",
+  "The word levels are still downloading; words are marked once they are here.": "Узроўні слоў яшчэ сцягваюцца; словы будуць пазначаны, калі яны з'явяцца.",
+  "Set your level for a truer picture": "Задайце свой узровень для дакладнейшай ацэнкі"
 }

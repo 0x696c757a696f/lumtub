@@ -3697,5 +3697,20 @@
   "Very hard for now": "ಸದ್ಯಕ್ಕೆ ತುಂಬಾ ಕಷ್ಟ",
   "of what is said you know": "ಹೇಳಿದ ವಿಷಯದಲ್ಲಿ ನಿಮಗೆ ತಿಳಿದಿದೆ",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} ವಿಭಿನ್ನ ಪದಗಳು, {1} ನಿಮಗೆ ಹೊಸದು · {2} ಸಾಲುಗಳಲ್ಲಿ ಕೇವಲ ಒಂದು ಹೊಸ ಪದ",
-  "Learn these first: the new words said most": "ಮೊದಲು ಇವುಗಳನ್ನು ಕಲಿಯಿರಿ: ಹೆಚ್ಚು ಹೇಳಲಾಗುವ ಹೊಸ ಪದಗಳು"
+  "Learn these first: the new words said most": "ಮೊದಲು ಇವುಗಳನ್ನು ಕಲಿಯಿರಿ: ಹೆಚ್ಚು ಹೇಳಲಾಗುವ ಹೊಸ ಪದಗಳು",
+  "Learning mode": "ಕಲಿಕೆ ಮೋಡ್",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "ಪದ ಹುಡುಕಾಟ, ಓದುವಿಕೆ, ಪದಸಂಗ್ರಹ ಪುಸ್ತಕ, ಪುನರಾವಲೋಕನ ಮತ್ತು ಕಲಿಕೆ ಪುಟ",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "ಆಫ್: ಯಾವುದೇ ಕಲಿಕೆ ವೈಶಿಷ್ಟ್ಯ ತೋರಿಸುವುದಿಲ್ಲ, ಚಲಿಸುವುದಿಲ್ಲ. ನಿಮ್ಮ ಪದಗಳು ಮತ್ತು ಪರವಾನಗಿ ಉಳಿಯುತ್ತವೆ.",
+  "Pause while the mouse is on a subtitle line": "ಮೌಸ್ ಉಪಶೀರ್ಷಿಕೆ ಸಾಲಿನ ಮೇಲಿರುವಾಗ ವಿರಾಮ",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "ನಿಧಾನವಾಗಿ ಪದಗಳನ್ನು ಓದಿ, ಟ್ಯಾಪ್ ಮಾಡಿ; ಮೌಸ್ ಸರಿದಾಗ ಪ್ಲೇಬ್ಯಾಕ್ ಮುಂದುವರಿಯುತ್ತದೆ",
+  "Beginner": "ಆರಂಭಿಕ",
+  "Intermediate": "ಮಧ್ಯಮ",
+  "Advanced": "ಮುಂದುವರಿದ",
+  "My level in other languages": "ಇತರ ಭಾಷೆಗಳಲ್ಲಿ ನನ್ನ ಮಟ್ಟ",
+  "My level in {0}": "{0} ನಲ್ಲಿ ನನ್ನ ಮಟ್ಟ",
+  "Not set: hard words are not marked": "ಹೊಂದಿಸಿಲ್ಲ: ಕಠಿಣ ಪದಗಳನ್ನು ಗುರುತಿಸುವುದಿಲ್ಲ",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. ಕಠಿಣ ಪದಗಳು ಎದ್ದು ಕಾಣುತ್ತವೆ, ಸರಳ ಪದಗಳು ತಿಳಿದಿವೆ ಎಂದು ಪರಿಗಣಿಸಲಾಗುತ್ತದೆ",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "ಪದಗಳ ಬಳಕೆಯ ಆವರ್ತನದಿಂದ ಅಂದಾಜು: ಮಾರ್ಗದರ್ಶಿ ಮಾತ್ರ, ಅಧಿಕೃತ CEFR ಪಟ್ಟಿಯಲ್ಲ.",
+  "The word levels are still downloading; words are marked once they are here.": "ಪದ ಮಟ್ಟಗಳು ಇನ್ನೂ ಡೌನ್‌ಲೋಡ್ ಆಗುತ್ತಿವೆ; ಬಂದ ತಕ್ಷಣ ಪದಗಳನ್ನು ಗುರುತಿಸಲಾಗುತ್ತದೆ.",
+  "Set your level for a truer picture": "ಹೆಚ್ಚು ನಿಖರ ಚಿತ್ರಕ್ಕಾಗಿ ನಿಮ್ಮ ಮಟ್ಟವನ್ನು ಹೊಂದಿಸಿ"
 }

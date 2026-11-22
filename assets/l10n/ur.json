@@ -3697,5 +3697,20 @@
   "Very hard for now": "فی الحال بہت مشکل",
   "of what is said you know": "جو کچھ کہا جاتا ہے اس میں سے آپ جانتے ہیں",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} مختلف الفاظ، {1} آپ کے لیے نئے · {2} جملے جن میں صرف ایک نیا لفظ ہے",
-  "Learn these first: the new words said most": "پہلے یہ سیکھیں: سب سے زیادہ بولے جانے والے نئے الفاظ"
+  "Learn these first: the new words said most": "پہلے یہ سیکھیں: سب سے زیادہ بولے جانے والے نئے الفاظ",
+  "Learning mode": "سیکھنے کا موڈ",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "لفظ کی تلاش، تلفظ، الفاظ کی کاپی، دہرائی اور سیکھنے کا صفحہ",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "بند: سیکھنے کی کوئی خصوصیت نظر نہیں آتی اور نہ چلتی ہے۔ آپ کے الفاظ اور لائسنس محفوظ رہتے ہیں۔",
+  "Pause while the mouse is on a subtitle line": "ماؤس سب ٹائٹل کی لائن پر ہو تو روک دیں",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "الفاظ آرام سے پڑھیں اور ٹیپ کریں؛ ماؤس ہٹتے ہی پلے دوبارہ شروع ہو جاتا ہے",
+  "Beginner": "ابتدائی",
+  "Intermediate": "درمیانی",
+  "Advanced": "اعلیٰ",
+  "My level in other languages": "دیگر زبانوں میں میری سطح",
+  "My level in {0}": "{0} میں میری سطح",
+  "Not set: hard words are not marked": "سیٹ نہیں: مشکل الفاظ پر نشان نہیں لگتا",
+  "{0}. Harder words stand out, easier ones count as known": "{0}۔ مشکل الفاظ نمایاں ہوتے ہیں، آسان الفاظ جانے پہچانے شمار ہوتے ہیں",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "الفاظ کے استعمال کی کثرت سے اندازہ لگایا گیا: صرف رہنمائی، سرکاری CEFR فہرست نہیں۔",
+  "The word levels are still downloading; words are marked once they are here.": "الفاظ کی سطحیں ابھی ڈاؤن لوڈ ہو رہی ہیں؛ آتے ہی الفاظ پر نشان لگ جائے گا۔",
+  "Set your level for a truer picture": "درست تر تصویر کے لیے اپنی سطح سیٹ کریں"
 }

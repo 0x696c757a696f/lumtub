@@ -3697,5 +3697,20 @@
   "Very hard for now": "Häzirlikçe örän kyn",
   "of what is said you know": "aýdylýanlaryň bilýäniňiz",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} dürli söz, {1} siziň üçin täze · {2} sözlemde diňe bir täze söz",
-  "Learn these first: the new words said most": "Ilki bulary öwreniň: iň köp aýdylýan täze sözler"
+  "Learn these first: the new words said most": "Ilki bulary öwreniň: iň köp aýdylýan täze sözler",
+  "Learning mode": "Öwrenmek tertibi",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Söz gözlegi, okalyşy, sözlük depderi, gaýtalama we Öwrenmek sahypasy",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Öçük: öwrenmek aýratynlyklarynyň hiç biri görünmeýär we işlemeýär. Sözleriňiz we ygtyýarnamaňyz saklanýar.",
+  "Pause while the mouse is on a subtitle line": "Syçan subtitr setirinde wagty bes et",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Sözleri rahat okaň we basyň; syçan gidende ýene oýnaýar",
+  "Beginner": "Başlangyç",
+  "Intermediate": "Orta",
+  "Advanced": "Ýokary",
+  "My level in other languages": "Beýleki dillerdäki derejem",
+  "My level in {0}": "{0} dilindäki derejem",
+  "Not set: hard words are not marked": "Goýulmady: kyn sözler bellenmeýär",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Kyn sözler tapawutlanýar, aňsatlary bilinýän hasaplanýar",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Sözleriň ulanylyş ýygylygyna görä bahalandyryldy: diňe gollanma, resmi CEFR sanawy däl.",
+  "The word levels are still downloading; words are marked once they are here.": "Söz derejeleri henizem ýüklenýär; gelenden soň sözler bellener.",
+  "Set your level for a truer picture": "Has takyk netije üçin derejäňizi goýuň"
 }

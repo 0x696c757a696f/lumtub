@@ -3703,5 +3703,20 @@
   "Very hard for now": "Hiện còn rất khó",
   "of what is said you know": "nội dung được nói mà bạn biết",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} từ khác nhau, {1} từ mới với bạn · {2} câu chỉ có một từ mới",
-  "Learn these first: the new words said most": "Học những từ này trước: các từ mới được nói nhiều nhất"
+  "Learn these first: the new words said most": "Học những từ này trước: các từ mới được nói nhiều nhất",
+  "Learning mode": "Chế độ học",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Tra từ, phiên âm, sổ từ vựng, ôn tập và trang Học tập",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Tắt: không có tính năng học nào hiển thị hoặc chạy. Từ vựng và giấy phép của bạn vẫn được giữ.",
+  "Pause while the mouse is on a subtitle line": "Tạm dừng khi chuột ở trên dòng phụ đề",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Đọc và chạm vào từ thoải mái; video phát tiếp khi chuột rời đi",
+  "Beginner": "Sơ cấp",
+  "Intermediate": "Trung cấp",
+  "Advanced": "Cao cấp",
+  "My level in other languages": "Trình độ của tôi ở các ngôn ngữ khác",
+  "My level in {0}": "Trình độ {0} của tôi",
+  "Not set: hard words are not marked": "Chưa đặt: từ khó không được đánh dấu",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Từ khó hơn được làm nổi bật, từ dễ hơn được tính là đã biết",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Ước tính theo mức độ thường dùng của từ: chỉ để tham khảo, không phải danh sách CEFR chính thức.",
+  "The word levels are still downloading; words are marked once they are here.": "Cấp độ từ vẫn đang tải; từ sẽ được đánh dấu khi tải xong.",
+  "Set your level for a truer picture": "Đặt trình độ của bạn để có kết quả chính xác hơn"
 }

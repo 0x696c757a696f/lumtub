@@ -3697,5 +3697,20 @@
   "Very hard for now": "अहिलेका लागि धेरै गाह्रो",
   "of what is said you know": "भनिएका कुरामध्ये तपाईंलाई थाहा छ",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} फरक शब्द, {1} तपाईंका लागि नयाँ · {2} लाइनमा एउटा मात्र नयाँ शब्द",
-  "Learn these first: the new words said most": "पहिले यी सिक्नुहोस्: सबैभन्दा बढी भनिने नयाँ शब्द"
+  "Learn these first: the new words said most": "पहिले यी सिक्नुहोस्: सबैभन्दा बढी भनिने नयाँ शब्द",
+  "Learning mode": "सिकाइ मोड",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "शब्द खोजी, उच्चारण, शब्दकोश पुस्तक, पुनरावलोकन र सिकाइ पृष्ठ",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "बन्द: कुनै पनि सिकाइ सुविधा देखिँदैन वा चल्दैन। तपाईंका शब्द र इजाजतपत्र जोगिन्छन्।",
+  "Pause while the mouse is on a subtitle line": "माउस उपशीर्षक पङ्क्तिमा हुँदा पज गर्नुहोस्",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "शब्दहरू आरामले पढ्नुहोस् र ट्याप गर्नुहोस्; माउस हटाएपछि प्ले जारी रहन्छ",
+  "Beginner": "सुरुवाती",
+  "Intermediate": "मध्यम",
+  "Advanced": "उन्नत",
+  "My level in other languages": "अन्य भाषामा मेरो स्तर",
+  "My level in {0}": "{0} मा मेरो स्तर",
+  "Not set: hard words are not marked": "सेट गरिएको छैन: कठिन शब्द चिन्ह लगाइँदैन",
+  "{0}. Harder words stand out, easier ones count as known": "{0}। कठिन शब्द छुट्टिएर देखिन्छन्, सजिला शब्द थाहा भएका मानिन्छन्",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "शब्द कति प्रयोग हुन्छन् भन्ने आधारमा अनुमानित: मार्गदर्शन मात्र, आधिकारिक CEFR सूची होइन।",
+  "The word levels are still downloading; words are marked once they are here.": "शब्द स्तरहरू अझै डाउनलोड हुँदैछन्; आएपछि शब्दहरूमा चिन्ह लगाइनेछ।",
+  "Set your level for a truer picture": "अझ सही चित्रका लागि आफ्नो स्तर सेट गर्नुहोस्"
 }

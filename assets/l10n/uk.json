@@ -3703,5 +3703,20 @@
   "Very hard for now": "Поки що дуже важко",
   "of what is said you know": "сказаного ви знаєте",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} різних слів, {1} нових для вас · {2} рядків лише з одним новим словом",
-  "Learn these first: the new words said most": "Спершу вивчіть ці: нові слова, що звучать найчастіше"
+  "Learn these first: the new words said most": "Спершу вивчіть ці: нові слова, що звучать найчастіше",
+  "Learning mode": "Режим навчання",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Пошук слів, вимова, словник, повторення та сторінка «Навчання»",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Вимкнено: жодна функція навчання не показується й не працює. Ваші слова та ліцензія зберігаються.",
+  "Pause while the mouse is on a subtitle line": "Пауза, коли миша на рядку субтитрів",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Читайте й торкайтеся слів без поспіху; відтворення триває, коли миша піде",
+  "Beginner": "Початковий",
+  "Intermediate": "Середній",
+  "Advanced": "Просунутий",
+  "My level in other languages": "Мій рівень в інших мовах",
+  "My level in {0}": "Мій рівень: {0}",
+  "Not set: hard words are not marked": "Не задано: складні слова не позначаються",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Складніші слова виділяються, простіші вважаються відомими",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Оцінено за частотою вживання слів: орієнтир, а не офіційний список CEFR.",
+  "The word levels are still downloading; words are marked once they are here.": "Рівні слів ще завантажуються; слова буде позначено, щойно вони з’являться.",
+  "Set your level for a truer picture": "Вкажіть свій рівень для точнішої картини"
 }

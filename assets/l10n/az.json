@@ -3697,5 +3697,20 @@
   "Very hard for now": "Hələlik çox çətin",
   "of what is said you know": "deyilənlərin bildiyiniz hissəsi",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} fərqli söz, {1} sizin üçün yeni · {2} cümlədə cəmi bir yeni söz",
-  "Learn these first: the new words said most": "Əvvəlcə bunları öyrənin: ən çox deyilən yeni sözlər"
+  "Learn these first: the new words said most": "Əvvəlcə bunları öyrənin: ən çox deyilən yeni sözlər",
+  "Learning mode": "Öyrənmə rejimi",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Söz axtarışı, tələffüz, lüğət dəftəri, təkrar və Öyrənmə səhifəsi",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Söndürülüb: öyrənmə funksiyaları nə görünür, nə də işləyir. Sözləriniz və lisenziyanız saxlanılır.",
+  "Pause while the mouse is on a subtitle line": "Siçan altyazı sətrinin üzərində olduqda pauza et",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Sözləri rahatca oxuyun və toxunun; siçan çəkiləndə oynatma davam edir",
+  "Beginner": "Başlanğıc",
+  "Intermediate": "Orta",
+  "Advanced": "İrəli",
+  "My level in other languages": "Digər dillərdə səviyyəm",
+  "My level in {0}": "{0} üzrə səviyyəm",
+  "Not set: hard words are not marked": "Təyin edilməyib: çətin sözlər qeyd olunmur",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Daha çətin sözlər seçilir, daha asanları məlum sayılır",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Sözlərin işlənmə tezliyinə görə təxmin edilib: bələdçidir, rəsmi CEFR siyahısı deyil.",
+  "The word levels are still downloading; words are marked once they are here.": "Söz səviyyələri hələ endirilir; gəldikdən sonra sözlər qeyd olunacaq.",
+  "Set your level for a truer picture": "Daha dəqiq nəticə üçün səviyyənizi təyin edin"
 }

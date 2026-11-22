@@ -3698,5 +3698,20 @@
   "Very hard for now": "Moi difícil por agora",
   "of what is said you know": "do que se di, xa o coñeces",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} palabras diferentes, {1} novas para ti · {2} liñas cunha soa palabra nova",
-  "Learn these first: the new words said most": "Aprende primeiro estas: as palabras novas máis ditas"
+  "Learn these first: the new words said most": "Aprende primeiro estas: as palabras novas máis ditas",
+  "Learning mode": "Modo de aprendizaxe",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Consulta de palabras, lecturas, caderno de vocabulario, repaso e a páxina Aprendizaxe",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Desactivado: ningunha función de aprendizaxe se mostra nin se executa. As túas palabras e a licenza consérvanse.",
+  "Pause while the mouse is on a subtitle line": "Pausar mentres o rato está sobre unha liña de subtítulos",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Le e toca as palabras con calma; a reprodución continúa cando o rato se afasta",
+  "Beginner": "Principiante",
+  "Intermediate": "Intermedio",
+  "Advanced": "Avanzado",
+  "My level in other languages": "O meu nivel noutros idiomas",
+  "My level in {0}": "O meu nivel en {0}",
+  "Not set: hard words are not marked": "Sen definir: as palabras difíciles non se marcan",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. As palabras máis difíciles destacan e as máis fáciles cóntanse como coñecidas",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Estimado segundo a frecuencia das palabras: unha referencia, non unha lista oficial do MCER.",
+  "The word levels are still downloading; words are marked once they are here.": "Os niveis de palabras aínda se están descargando; as palabras marcaranse en canto cheguen.",
+  "Set your level for a truer picture": "Define o teu nivel para ter unha idea máis exacta"
 }

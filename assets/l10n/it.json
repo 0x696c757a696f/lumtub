@@ -3703,5 +3703,20 @@
   "Very hard for now": "Troppo difficile per ora",
   "of what is said you know": "di ciò che viene detto lo conosci",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} parole diverse, {1} nuove per te · {2} frasi con una sola parola nuova",
-  "Learn these first: the new words said most": "Impara prima queste: le parole nuove dette più spesso"
+  "Learn these first: the new words said most": "Impara prima queste: le parole nuove dette più spesso",
+  "Learning mode": "Modalità apprendimento",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Ricerca parole, letture, quaderno del vocabolario, ripasso e pagina Apprendimento",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Disattivata: nessuna funzione di apprendimento viene mostrata o eseguita. Le tue parole e la licenza vengono conservate.",
+  "Pause while the mouse is on a subtitle line": "Pausa quando il mouse è su una riga di sottotitoli",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Leggi e tocca le parole con calma; la riproduzione riprende quando il mouse si sposta",
+  "Beginner": "Principiante",
+  "Intermediate": "Intermedio",
+  "Advanced": "Avanzato",
+  "My level in other languages": "Il mio livello in altre lingue",
+  "My level in {0}": "Il mio livello di {0}",
+  "Not set: hard words are not marked": "Non impostato: le parole difficili non vengono segnalate",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Le parole più difficili risaltano, quelle più facili sono considerate note",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Stimato in base alla frequenza d'uso delle parole: un'indicazione, non un elenco CEFR ufficiale.",
+  "The word levels are still downloading; words are marked once they are here.": "I livelli delle parole sono ancora in download; le parole verranno segnalate appena arrivano.",
+  "Set your level for a truer picture": "Imposta il tuo livello per una stima più precisa"
 }

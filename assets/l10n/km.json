@@ -3697,5 +3697,20 @@
   "Very hard for now": "ពិបាកពេកសម្រាប់ពេលនេះ",
   "of what is said you know": "នៃអ្វីដែលគេនិយាយ អ្នកស្គាល់",
   "{0} different words, {1} new to you · {2} lines with just one new word": "ពាក្យខុសគ្នា {0} ដែល {1} ថ្មីសម្រាប់អ្នក · {2} ប្រយោគមានពាក្យថ្មីតែមួយ",
-  "Learn these first: the new words said most": "រៀនទាំងនេះជាមុន៖ ពាក្យថ្មីដែលគេនិយាយច្រើនបំផុត"
+  "Learn these first: the new words said most": "រៀនទាំងនេះជាមុន៖ ពាក្យថ្មីដែលគេនិយាយច្រើនបំផុត",
+  "Learning mode": "របៀបរៀន",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "ស្វែងរកពាក្យ ការអាន សៀវភៅពាក្យ ការពិនិត្យឡើងវិញ និងទំព័ររៀន",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "បិទ៖ មុខងាររៀនទាំងអស់មិនបង្ហាញ និងមិនដំណើរការទេ។ ពាក្យ និងអាជ្ញាបណ្ណរបស់អ្នកនៅតែរក្សាទុក។",
+  "Pause while the mouse is on a subtitle line": "ផ្អាកពេលកណ្ដុរនៅលើបន្ទាត់ចំណងជើងរង",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "អាន និងចុចពាក្យដោយសុខស្រួល ការចាក់បន្តពេលកណ្ដុរចេញផុត",
+  "Beginner": "ចាប់ផ្ដើម",
+  "Intermediate": "មធ្យម",
+  "Advanced": "ខ្ពស់",
+  "My level in other languages": "កម្រិតរបស់ខ្ញុំក្នុងភាសាផ្សេងទៀត",
+  "My level in {0}": "កម្រិតរបស់ខ្ញុំក្នុង {0}",
+  "Not set: hard words are not marked": "មិនទាន់កំណត់៖ ពាក្យពិបាកមិនត្រូវបានសម្គាល់ទេ",
+  "{0}. Harder words stand out, easier ones count as known": "{0}។ ពាក្យពិបាកជាងនឹងលេចធ្លោ ពាក្យងាយជាងត្រូវរាប់ថាស្គាល់រួច",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "ប៉ាន់ស្មានពីភាពញឹកញាប់នៃការប្រើពាក្យ៖ ជាការណែនាំ មិនមែនបញ្ជី CEFR ផ្លូវការទេ។",
+  "The word levels are still downloading; words are marked once they are here.": "កម្រិតពាក្យកំពុងទាញយក ពាក្យនឹងត្រូវសម្គាល់ពេលមកដល់។",
+  "Set your level for a truer picture": "កំណត់កម្រិតរបស់អ្នក ដើម្បីបានរូបភាពកាន់តែត្រឹមត្រូវ"
 }

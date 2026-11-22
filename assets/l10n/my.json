@@ -3697,5 +3697,20 @@
   "Very hard for now": "လောလောဆယ် အလွန်ခက်သည်",
   "of what is said you know": "ပြောသမျှထဲမှ သင်သိသည်",
   "{0} different words, {1} new to you · {2} lines with just one new word": "မတူညီသော စကားလုံး {0} လုံး၊ သင့်အတွက် အသစ် {1} လုံး · စကားလုံးအသစ်တစ်လုံးတည်းပါသော စာကြောင်း {2} ကြောင်း",
-  "Learn these first: the new words said most": "ဤစကားလုံးများကို အရင်သင်ပါ၊ အများဆုံးပြောသော စကားလုံးအသစ်များ"
+  "Learn these first: the new words said most": "ဤစကားလုံးများကို အရင်သင်ပါ၊ အများဆုံးပြောသော စကားလုံးအသစ်များ",
+  "Learning mode": "သင်ယူမှုမုဒ်",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "စကားလုံးရှာဖွေခြင်း၊ အသံထွက်၊ ဝေါဟာရစာအုပ်၊ ပြန်လည်လေ့ကျင့်ခြင်းနှင့် သင်ယူမှုစာမျက်နှာ",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "ပိတ်ထားသည်: သင်ယူမှုလုပ်ဆောင်ချက်များ မပြသဘဲ မလည်ပတ်ပါ။ သင့်စကားလုံးများနှင့် လိုင်စင်ကို သိမ်းထားပါသည်။",
+  "Pause while the mouse is on a subtitle line": "မောက်စ်သည် စာတန်းထိုးစာကြောင်းပေါ်ရှိနေစဉ် ခေတ္တရပ်ပါ",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "စကားလုံးများကို အေးအေးဆေးဆေး ဖတ်ပြီး နှိပ်ပါ။ မောက်စ်ဖယ်လိုက်သည်နှင့် ဆက်ပြသည်",
+  "Beginner": "အခြေခံ",
+  "Intermediate": "အလယ်အလတ်",
+  "Advanced": "အဆင့်မြင့်",
+  "My level in other languages": "အခြားဘာသာစကားများတွင် ကျွန်ုပ်၏အဆင့်",
+  "My level in {0}": "{0} တွင် ကျွန်ုပ်၏အဆင့်",
+  "Not set: hard words are not marked": "မသတ်မှတ်ရသေးပါ: ခက်ခဲသောစကားလုံးများကို မှတ်သားမည်မဟုတ်ပါ",
+  "{0}. Harder words stand out, easier ones count as known": "{0}။ ပိုခက်သောစကားလုံးများ ထင်ရှားစေပြီး ပိုလွယ်သည်များကို သိပြီးသားအဖြစ် ယူဆသည်",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "စကားလုံးသုံးစွဲမှုအကြိမ်ရေအပေါ် အခြေခံခန့်မှန်းထားသည်: လမ်းညွှန်ချက်သာဖြစ်ပြီး တရားဝင် CEFR စာရင်း မဟုတ်ပါ။",
+  "The word levels are still downloading; words are marked once they are here.": "စကားလုံးအဆင့်များကို ဒေါင်းလုဒ်လုပ်နေဆဲဖြစ်သည်၊ ရောက်လာသည်နှင့် စကားလုံးများကို မှတ်သားပါမည်။",
+  "Set your level for a truer picture": "ပိုမိုမှန်ကန်သောပုံရရန် သင့်အဆင့်ကို သတ်မှတ်ပါ"
 }

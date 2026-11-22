@@ -3703,5 +3703,20 @@
   "Very hard for now": "Vorerst sehr schwer",
   "of what is said you know": "von dem, was gesagt wird, kennst du",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} verschiedene Wörter, {1} neu für dich · {2} Zeilen mit nur einem neuen Wort",
-  "Learn these first: the new words said most": "Lerne diese zuerst: die am häufigsten gesagten neuen Wörter"
+  "Learn these first: the new words said most": "Lerne diese zuerst: die am häufigsten gesagten neuen Wörter",
+  "Learning mode": "Lernmodus",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Wortnachschlagen, Aussprache, Vokabelheft, Wiederholung und die Seite „Lernen“",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Aus: Keine Lernfunktionen werden angezeigt oder ausgeführt. Deine Wörter und deine Lizenz bleiben erhalten.",
+  "Pause while the mouse is on a subtitle line": "Pausieren, solange die Maus auf einer Untertitelzeile ist",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Wörter in Ruhe lesen und antippen; die Wiedergabe läuft weiter, sobald die Maus weg ist",
+  "Beginner": "Anfänger",
+  "Intermediate": "Mittelstufe",
+  "Advanced": "Fortgeschritten",
+  "My level in other languages": "Mein Niveau in anderen Sprachen",
+  "My level in {0}": "Mein Niveau in {0}",
+  "Not set: hard words are not marked": "Nicht festgelegt: Schwierige Wörter werden nicht markiert",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Schwierigere Wörter fallen auf, leichtere gelten als bekannt",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Geschätzt nach der Häufigkeit der Wörter: ein Richtwert, keine offizielle GER-Liste.",
+  "The word levels are still downloading; words are marked once they are here.": "Die Wortniveaus werden noch heruntergeladen; die Wörter werden markiert, sobald sie da sind.",
+  "Set your level for a truer picture": "Lege dein Niveau fest für ein genaueres Bild"
 }

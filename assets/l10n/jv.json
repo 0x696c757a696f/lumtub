@@ -3697,5 +3697,20 @@
   "Very hard for now": "Isih angel banget",
   "of what is said you know": "saka sing diucapké wis sampeyan ngerti",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} tembung beda, {1} anyar kanggo sampeyan · {2} ukara mung kanthi siji tembung anyar",
-  "Learn these first: the new words said most": "Sinau iki disik: tembung anyar sing paling kerep diucapké"
+  "Learn these first: the new words said most": "Sinau iki disik: tembung anyar sing paling kerep diucapké",
+  "Learning mode": "Mode sinau",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Nggoleki tembung, cara maca, buku tembung, ulangan, lan kaca Sinau",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Mati: fitur sinau ora katon lan ora mlaku. Tembung lan lisensi sampeyan tetep disimpen.",
+  "Pause while the mouse is on a subtitle line": "Ngaso nalika mouse ana ing baris subtitle",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Waca lan ketok tembung kanthi santai; puteran diterusake nalika mouse nyingkir",
+  "Beginner": "Pemula",
+  "Intermediate": "Menengah",
+  "Advanced": "Mahir",
+  "My level in other languages": "Level kula ing basa liya",
+  "My level in {0}": "Level kula ing {0}",
+  "Not set: hard words are not marked": "Durung disetel: tembung angel ora ditandhani",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Tembung sing luwih angel katon cetha, sing luwih gampang dianggep wis ngerti",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Dikira-kira saka sepira kerepe tembung dienggo: minangka pandhuan, dudu dhaptar CEFR resmi.",
+  "The word levels are still downloading; words are marked once they are here.": "Level tembung isih diundhuh; tembung bakal ditandhani yen wis teka.",
+  "Set your level for a truer picture": "Setel level sampeyan supaya gambarane luwih pas"
 }

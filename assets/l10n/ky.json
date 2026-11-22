@@ -3697,5 +3697,20 @@
   "Very hard for now": "Азырынча өтө кыйын",
   "of what is said you know": "айтылгандын билген бөлүгүңүз",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} ар түрдүү сөз, {1} сизге жаңы · {2} сүйлөмдө бир гана жаңы сөз бар",
-  "Learn these first: the new words said most": "Адегенде муну үйрөнүңүз: эң көп айтылган жаңы сөздөр"
+  "Learn these first: the new words said most": "Адегенде муну үйрөнүңүз: эң көп айтылган жаңы сөздөр",
+  "Learning mode": "Үйрөнүү режими",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Сөз издөө, окулушу, сөз дептери, кайталоо жана Үйрөнүү барагы",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Өчүк: үйрөнүү функциялары көрүнбөйт жана иштебейт. Сөздөрүңүз жана лицензияңыз сакталат.",
+  "Pause while the mouse is on a subtitle line": "Чычкан субтитр сабында турганда тындыруу",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Сөздөрдү шашпай окуп, таптаңыз; чычкан кеткенде ойнотуу улантылат",
+  "Beginner": "Баштапкы",
+  "Intermediate": "Орто",
+  "Advanced": "Жогорку",
+  "My level in other languages": "Башка тилдердеги деңгээлим",
+  "My level in {0}": "{0} боюнча деңгээлим",
+  "Not set: hard words are not marked": "Коюлган эмес: кыйын сөздөр белгиленбейт",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Кыйыныраак сөздөр көзгө урунат, жөнөкөйлөрү билген сөз катары эсептелет",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Сөздөрдүн колдонулуу жыштыгы боюнча бааланган: багыт гана, расмий CEFR тизмеси эмес.",
+  "The word levels are still downloading; words are marked once they are here.": "Сөз деңгээлдери дагы эле жүктөлүүдө; сөздөр келери менен белгиленет.",
+  "Set your level for a truer picture": "Тагыраак жыйынтык үчүн деңгээлиңизди коюңуз"
 }

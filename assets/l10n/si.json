@@ -3697,5 +3697,20 @@
   "Very hard for now": "දැනට ඉතා අමාරුයි",
   "of what is said you know": "කියන දේවලින් ඔබ දන්නා",
   "{0} different words, {1} new to you · {2} lines with just one new word": "වෙනස් වචන {0}ක්, ඔබට අලුත් {1}ක් · අලුත් වචනයක් එකක් පමණක් ඇති පේළි {2}ක්",
-  "Learn these first: the new words said most": "මේවා මුලින් ඉගෙන ගන්න: වැඩිපුරම කියවෙන අලුත් වචන"
+  "Learn these first: the new words said most": "මේවා මුලින් ඉගෙන ගන්න: වැඩිපුරම කියවෙන අලුත් වචන",
+  "Learning mode": "ඉගෙනුම් මාදිලිය",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "වචන සෙවීම, උච්චාරණ, වචන පොත, සමාලෝචනය සහ ඉගෙනුම් පිටුව",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "අක්‍රියයි: ඉගෙනුම් විශේෂාංග කිසිවක් නොපෙන්වයි හෝ නොක්‍රියාත්මක වේ. ඔබේ වචන සහ බලපත්‍රය ආරක්ෂිතව පවතී.",
+  "Pause while the mouse is on a subtitle line": "මවුසය උපසිරැසි පේළියක් මත ඇති විට විරාම කරන්න",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "වචන සැහැල්ලුවෙන් කියවා තට්ටු කරන්න; මවුසය ඉවත් කළ විට නැවත වාදනය වේ",
+  "Beginner": "ආරම්භක",
+  "Intermediate": "මධ්‍යම",
+  "Advanced": "උසස්",
+  "My level in other languages": "වෙනත් භාෂාවල මගේ මට්ටම",
+  "My level in {0}": "{0} හි මගේ මට්ටම",
+  "Not set: hard words are not marked": "සකසා නැත: අමාරු වචන සලකුණු නොකෙරේ",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. අමාරු වචන කැපී පෙනේ, පහසු ඒවා දන්නා ඒවා ලෙස සැලකේ",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "වචන භාවිතා වන වාර ගණන අනුව ඇස්තමේන්තුවකි: මාර්ගෝපදේශයක් පමණි, නිල CEFR ලැයිස්තුවක් නොවේ.",
+  "The word levels are still downloading; words are marked once they are here.": "වචන මට්ටම් තවමත් බාගත වෙමින් පවතී; ඒවා පැමිණි පසු වචන සලකුණු කෙරේ.",
+  "Set your level for a truer picture": "වඩා නිවැරදි චිත්‍රයක් සඳහා ඔබේ මට්ටම සකසන්න"
 }

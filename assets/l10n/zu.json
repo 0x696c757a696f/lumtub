@@ -3697,5 +3697,20 @@
   "Very hard for now": "Kunzima kakhulu okwamanje",
   "of what is said you know": "walokho okushiwo oyaziyo",
   "{0} different words, {1} new to you · {2} lines with just one new word": "Amagama {0} ahlukene, {1} amasha kuwe · imigqa engu-{2} enegama elisha elilodwa kuphela",
-  "Learn these first: the new words said most": "Funda lawa kuqala: amagama amasha ashiwo kakhulu"
+  "Learn these first: the new words said most": "Funda lawa kuqala: amagama amasha ashiwo kakhulu",
+  "Learning mode": "Imodi yokufunda",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Ukusesha amagama, ukufunda, ibhuku lezinkulumo, ukubuyekeza nekhasi Lokufunda",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Kuvaliwe: ayikho into yokufunda ebonakalayo noma isebenzayo. Amagama akho nelayisense kugcinwa.",
+  "Pause while the mouse is on a subtitle line": "Misa isikhashana lapho igundane likumulayini wamagama-ngezansi",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Funda uthinte amagama ngokuphumula; ukudlala kuyaqhubeka igundane lisusiwe",
+  "Beginner": "Oqalayo",
+  "Intermediate": "Maphakathi",
+  "Advanced": "Ophambili",
+  "My level in other languages": "Izinga lami kwezinye izilimi",
+  "My level in {0}": "Izinga lami ku-{0}",
+  "Not set: hard words are not marked": "Akusethiwe: amagama ayinselele awamaki",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Amagama anzima abonakala kakhulu, alula abalwa njengawaziwayo",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Kulinganiselwe ngokuthi amagama asetshenziswa kangakanani: umhlahlandlela kuphela, hhayi uhlu olusemthethweni lwe-CEFR.",
+  "The word levels are still downloading; words are marked once they are here.": "Amazinga amagama asadawunilodwa; amagama azomakwa uma efika.",
+  "Set your level for a truer picture": "Setha izinga lakho ukuze ubone isithombe esingcono"
 }

@@ -3697,5 +3697,20 @@
   "Very hard for now": "এখনকার জন্য খুব কঠিন",
   "of what is said you know": "যা বলা হচ্ছে তার যতটা আপনি জানেন",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0}টি ভিন্ন শব্দ, {1}টি আপনার কাছে নতুন · মাত্র একটি নতুন শব্দসহ {2}টি বাক্য",
-  "Learn these first: the new words said most": "আগে এগুলো শিখুন: সবচেয়ে বেশি বলা নতুন শব্দ"
+  "Learn these first: the new words said most": "আগে এগুলো শিখুন: সবচেয়ে বেশি বলা নতুন শব্দ",
+  "Learning mode": "শেখার মোড",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "শব্দ খোঁজা, উচ্চারণ, শব্দভাণ্ডার, পুনরাবৃত্তি এবং শেখার পাতা",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "বন্ধ: শেখার কোনো সুবিধা দেখানো বা চালানো হবে না। আপনার শব্দ ও লাইসেন্স রাখা থাকবে।",
+  "Pause while the mouse is on a subtitle line": "মাউস সাবটাইটেল লাইনে থাকলে বিরতি দিন",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "আরাম করে শব্দ পড়ুন ও ট্যাপ করুন; মাউস সরালে আবার চলবে",
+  "Beginner": "শুরুর স্তর",
+  "Intermediate": "মধ্যম",
+  "Advanced": "উন্নত",
+  "My level in other languages": "অন্যান্য ভাষায় আমার স্তর",
+  "My level in {0}": "{0}-এ আমার স্তর",
+  "Not set: hard words are not marked": "সেট করা নেই: কঠিন শব্দ চিহ্নিত হবে না",
+  "{0}. Harder words stand out, easier ones count as known": "{0}। কঠিন শব্দ আলাদা করে দেখানো হয়, সহজ শব্দ জানা বলে গণ্য হয়",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "শব্দ কত ঘন ঘন ব্যবহৃত হয় তা থেকে অনুমান: একটি নির্দেশিকা, সরকারি CEFR তালিকা নয়।",
+  "The word levels are still downloading; words are marked once they are here.": "শব্দের স্তর এখনও ডাউনলোড হচ্ছে; এসে গেলে শব্দ চিহ্নিত করা হবে।",
+  "Set your level for a truer picture": "আরও সঠিক ধারণার জন্য আপনার স্তর সেট করুন"
 }

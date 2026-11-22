@@ -3697,5 +3697,20 @@
   "Very hard for now": "ንሕጂ ኣዝዩ ኣሸጋሪ",
   "of what is said you know": "ካብ ዝዝረብ ትፈልጦ",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} ዝተፈላለዩ ቃላት፣ {1} ንዓኻ ሓደስቲ · {2} ሓረጋት ሓደ ሓድሽ ቃል ጥራይ ዘለዎም",
-  "Learn these first: the new words said most": "መጀመርታ እዚአቶም ተማሃር: ዝበዝሐ ዝዝረቡ ሓደስቲ ቃላት"
+  "Learn these first: the new words said most": "መጀመርታ እዚአቶም ተማሃር: ዝበዝሐ ዝዝረቡ ሓደስቲ ቃላት",
+  "Learning mode": "ናይ ትምህርቲ ኣገባብ",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "ቃላት ምድላይ፡ ንባብ፡ መዝገበ ቃላት፡ ምድጋም ከምኡውን ናይ ትምህርቲ ገጽ",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "ጠፊኡ፡ ዝኾነ ናይ ትምህርቲ ኣገልግሎት ኣይርአን ኣይሰርሕን። ቃላትኩምን ፍቓድኩምን ይተርፉ።",
+  "Pause while the mouse is on a subtitle line": "ጸረ-ሽም ኣብ መስመር ትርጉም ክህሉ ከሎ ኣቋርጽ",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "ቃላት ብሃዳኣ ኣንብቡን ተትከሉን፤ ጸረ-ሽም ምስ ወጸ ምጽዋት ይቕጽል",
+  "Beginner": "ጀማሪ",
+  "Intermediate": "ማእከላይ",
+  "Advanced": "ላዕለዋይ",
+  "My level in other languages": "ኣብ ካልኦት ቋንቋታት ዘለኒ ደረጃ",
+  "My level in {0}": "ኣብ {0} ዘለኒ ደረጃ",
+  "Not set: hard words are not marked": "ኣይተዋህበን፡ ኣጸጋሚ ቃላት ኣይምልከቱን",
+  "{0}. Harder words stand out, easier ones count as known": "{0}። ዝኸበዱ ቃላት ይርአዩ፡ ዝቐለሉ ከም ዝፍለጡ ይቑጸሩ",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "ብዝተጠቕመሉ ጊዜ ብዝሒ ዝተገመተ፡ መምርሒ ጥራይ እዩ፡ ወግዓዊ ዝርዝር CEFR ኣይኮነን።",
+  "The word levels are still downloading; words are marked once they are here.": "ደረጃታት ቃላት ገና ይወርዱ ኣለዉ፤ ምስ በጽሑ ቃላት ይምልከቱ።",
+  "Set your level for a truer picture": "ንመሊእ ስእሊ ደረጃኹም ኣቐምጡ"
 }

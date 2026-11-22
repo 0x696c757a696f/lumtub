@@ -3703,5 +3703,20 @@
   "Very hard for now": "Trop difficile pour l'instant",
   "of what is said you know": "de ce qui est dit, vous le comprenez",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} mots différents, {1} nouveaux pour vous · {2} phrases avec un seul mot nouveau",
-  "Learn these first: the new words said most": "À apprendre d'abord : les nouveaux mots les plus fréquents"
+  "Learn these first: the new words said most": "À apprendre d'abord : les nouveaux mots les plus fréquents",
+  "Learning mode": "Mode d'apprentissage",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "Recherche de mots, lectures, carnet de vocabulaire, révision et page Apprentissage",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "Désactivé : aucune fonction d'apprentissage ne s'affiche ni ne s'exécute. Vos mots et votre licence sont conservés.",
+  "Pause while the mouse is on a subtitle line": "Pause quand la souris est sur une ligne de sous-titres",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "Lisez et touchez les mots à votre rythme ; la lecture reprend quand la souris s'éloigne",
+  "Beginner": "Débutant",
+  "Intermediate": "Intermédiaire",
+  "Advanced": "Avancé",
+  "My level in other languages": "Mon niveau dans d'autres langues",
+  "My level in {0}": "Mon niveau en {0}",
+  "Not set: hard words are not marked": "Non défini : les mots difficiles ne sont pas signalés",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. Les mots plus difficiles ressortent, les plus faciles sont considérés comme connus",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "Estimé d'après la fréquence des mots : une indication, pas une liste CECR officielle.",
+  "The word levels are still downloading; words are marked once they are here.": "Les niveaux de mots sont encore en cours de téléchargement ; les mots seront signalés dès leur arrivée.",
+  "Set your level for a truer picture": "Définissez votre niveau pour une estimation plus juste"
 }

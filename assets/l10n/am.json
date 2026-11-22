@@ -3697,5 +3697,20 @@
   "Very hard for now": "ለአሁን በጣም ከባድ",
   "of what is said you know": "ከሚነገረው የሚያውቁት",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} የተለያዩ ቃላት፣ {1} ለእርስዎ አዲስ · {2} መስመሮች አንድ አዲስ ቃል ብቻ ያላቸው",
-  "Learn these first: the new words said most": "እነዚህን መጀመሪያ ይማሩ፦ በብዛት የሚነገሩ አዲስ ቃላት"
+  "Learn these first: the new words said most": "እነዚህን መጀመሪያ ይማሩ፦ በብዛት የሚነገሩ አዲስ ቃላት",
+  "Learning mode": "የመማር ሁነታ",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "የቃል ፍለጋ፣ ንባቦች፣ የቃላት መጽሐፍ፣ ክለሳ እና የመማር ገጽ",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "ጠፍቷል፦ ምንም የመማር ባህሪ አይታይም ወይም አይሠራም። ቃላትዎና ፈቃድዎ ይቀመጣሉ።",
+  "Pause while the mouse is on a subtitle line": "አይጥ በግርጌ ጽሑፍ መስመር ላይ ሲሆን ቆም አድርግ",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "ቃላትን በእርጋታ አንብብና ንካ፤ አይጡ ሲወጣ መጫወቱን ይቀጥላል",
+  "Beginner": "ጀማሪ",
+  "Intermediate": "መካከለኛ",
+  "Advanced": "ከፍተኛ",
+  "My level in other languages": "በሌሎች ቋንቋዎች ያለኝ ደረጃ",
+  "My level in {0}": "በ{0} ያለኝ ደረጃ",
+  "Not set: hard words are not marked": "አልተቀናበረም፦ አስቸጋሪ ቃላት አይመረጡም",
+  "{0}. Harder words stand out, easier ones count as known": "{0}። አስቸጋሪ ቃላት ጎልተው ይታያሉ፣ ቀላል ቃላት እንደሚታወቁ ይቆጠራሉ",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "ቃላት ምን ያህል በተደጋጋሚ እንደሚጠቀሙ ተመስርቶ የተገመተ፦ መመሪያ ብቻ ነው፣ ይፋዊ የCEFR ዝርዝር አይደለም።",
+  "The word levels are still downloading; words are marked once they are here.": "የቃል ደረጃዎቹ አሁንም እየወረዱ ነው፤ ቃላት ከደረሱ በኋላ ይመረጣሉ።",
+  "Set your level for a truer picture": "ለትክክለኛ ግምት ደረጃዎን ያቀናብሩ"
 }

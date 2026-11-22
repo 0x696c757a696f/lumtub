@@ -3697,5 +3697,20 @@
   "Very hard for now": "ప్రస్తుతానికి చాలా కష్టం",
   "of what is said you know": "చెప్పినదానిలో మీకు తెలిసినది",
   "{0} different words, {1} new to you · {2} lines with just one new word": "{0} వేర్వేరు పదాలు, {1} మీకు కొత్తవి · {2} వాక్యాల్లో ఒక్క కొత్త పదమే",
-  "Learn these first: the new words said most": "ముందు వీటిని నేర్చుకోండి: ఎక్కువగా పలికే కొత్త పదాలు"
+  "Learn these first: the new words said most": "ముందు వీటిని నేర్చుకోండి: ఎక్కువగా పలికే కొత్త పదాలు",
+  "Learning mode": "అభ్యాస మోడ్",
+  "Word lookup, readings, the vocabulary book, review and the Learning page": "పదాల శోధన, ఉచ్చారణ, పదజాలం పుస్తకం, పునశ్చరణ మరియు అభ్యాసం పేజీ",
+  "Off: nothing of the learning features shows or runs. Your words and license are kept.": "ఆఫ్: అభ్యాస ఫీచర్లేవీ కనిపించవు, పనిచేయవు. మీ పదాలు, లైసెన్స్ అలాగే ఉంటాయి.",
+  "Pause while the mouse is on a subtitle line": "మౌస్ ఉపశీర్షిక పంక్తిపై ఉన్నప్పుడు ఆపు",
+  "Read and tap the words at ease; it plays on when the mouse leaves": "పదాలను తీరిగ్గా చదివి నొక్కండి; మౌస్ తొలగగానే ప్లే కొనసాగుతుంది",
+  "Beginner": "ప్రారంభ స్థాయి",
+  "Intermediate": "మధ్యస్థ స్థాయి",
+  "Advanced": "ఉన్నత స్థాయి",
+  "My level in other languages": "ఇతర భాషల్లో నా స్థాయి",
+  "My level in {0}": "{0}లో నా స్థాయి",
+  "Not set: hard words are not marked": "సెట్ చేయలేదు: కఠిన పదాలు గుర్తించబడవు",
+  "{0}. Harder words stand out, easier ones count as known": "{0}. కఠినమైన పదాలు ప్రత్యేకంగా కనిపిస్తాయి, సులభమైనవి తెలిసినవిగా లెక్కించబడతాయి",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "పదాల వినియోగ తరచుదనం ఆధారంగా అంచనా: ఇది ఒక మార్గదర్శి మాత్రమే, అధికారిక CEFR జాబితా కాదు.",
+  "The word levels are still downloading; words are marked once they are here.": "పద స్థాయిలు ఇంకా డౌన్‌లోడ్ అవుతున్నాయి; అవి వచ్చాక పదాలు గుర్తించబడతాయి.",
+  "Set your level for a truer picture": "మరింత కచ్చితమైన అంచనా కోసం మీ స్థాయిని సెట్ చేయండి"
 }

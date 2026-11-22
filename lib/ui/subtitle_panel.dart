@@ -435,6 +435,7 @@ class LearningSwitches extends StatelessWidget {
               (on) => unawaited(controller.setBlurSecondary(on))),
         ),
       ]),
+      if (controller.learningOn)
       ListenableBuilder(
         listenable: controller.learning,
         builder: (context, _) {

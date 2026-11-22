@@ -102,6 +102,7 @@ class _SubtitleListState extends State<SubtitleList> {
   /// marked instead.
   Widget _line(String text, TextStyle style, {required String? other, required Duration at, required ColorScheme colors}) {
     if (_query.isNotEmpty) return _marked(text, style, colors);
+    if (!widget.controller.learningOn) return Text(text, style: style);
     final learning = widget.controller.learning;
     final tokens = learning.wordsOf(text);
     if (tokens == null) return Text(text, style: style);

@@ -174,7 +174,7 @@ extension LifecycleActions on AppController {
       _update(() {
         this.paths = paths;
         this.directories = directories;
-        unawaited(learning.start(directories));
+        if (preferences.learningMode) unawaited(learning.start(directories));
         _cacheManager = cacheManager;
         cacheBytes = 0;
         _settingsStore = settingsStore;
@@ -182,6 +182,7 @@ extension LifecycleActions on AppController {
         _preferencesStore = preferencesStore;
         this.preferences = preferences;
         mode = PageMode.values.where((m) => m.name == preferences.startPage).firstOrNull ?? PageMode.home;
+        if (mode == PageMode.learning && !preferences.learningMode) mode = PageMode.home;
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);

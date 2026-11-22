@@ -1047,6 +1047,19 @@ class Learning extends ChangeNotifier {
     }
   }
 
+  /// Lets go of every dictionary and segmenter, for when learning is
+  /// turned off; each opens again when a line next needs it.
+  void sleep() {
+    for (final pack in DictionaryPack.values) {
+      final state = _packs[pack]!;
+      if (state.dictionary == null) continue;
+      _close(pack);
+      state.state = PackState.downloaded;
+    }
+    _words.clear();
+    notifyListeners();
+  }
+
   void _close(DictionaryPack pack) {
     _packs[pack]!.dictionary = null;
     if (pack.sqlite) CoreLexicon.close(pack.language);

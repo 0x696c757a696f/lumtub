@@ -6,6 +6,24 @@ bool _edgeFallbackTold = false;
 /// 学外语: 每句说完暂停, 模糊翻译 and stepping line by line, on the lines
 /// the subtitle list shows.
 extension LearningActions on AppController {
+  /// Whether the language-learning features are on (Settings ›
+  /// Learning). Off, none of them shows, and the dictionaries, word
+  /// cutting, license checks and updates do not run.
+  bool get learningOn => preferences.learningMode;
+
+  Future<void> setLearningMode(bool on) async {
+    if (on == learningOn) return;
+    await savePreferences(preferences.copyWith(learningMode: on));
+    if (on) {
+      final folders = directories;
+      if (folders != null) unawaited(learning.start(folders));
+    } else {
+      learning.sleep();
+      if (mode == PageMode.learning) navigate(PageMode.home);
+    }
+    logInfo('Learning mode ${on ? 'on' : 'off'}');
+  }
+
   /// The lines playback pauses after and steps through: the subtitle
   /// list's rows, so a sentence split over several lines pauses once, at
   /// its end. Read again when the subtitles shown change.

@@ -807,7 +807,9 @@ class _Player extends StatelessWidget {
                     byHeight: Platform.isAndroid || Platform.isIOS,
                     libass: controller.libassDraws,
                     reveal: (shown: controller.translationShown, hover: controller.hoverTranslation, tap: controller.toggleTranslation),
-                    words: (
+                    words: !controller.learningOn
+                        ? null
+                        : (
                       learning: controller.learning,
                       onWord: (token, line) => unawaited(showWordCard(context, controller, token, sentence: line)),
                     ),

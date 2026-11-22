@@ -80,6 +80,10 @@ class ANGLESurfaceManager {
 
   // Lumtub: how long drawing and Flutter's reads take, lock waits included.
   FrameTiming draw_timing;
+  // Lumtub: the glFinish part of draw_timing, and how long a finished
+  // frame waited until Flutter took it.
+  FrameTiming finish_timing;
+  FrameTiming wait_timing;
   FrameTiming read_timing;
   // Lumtub: "frames=drawn/shown", frames drawn and frames Flutter took,
   // then starts again. More drawn than shown is work nobody saw.
@@ -112,6 +116,7 @@ class ANGLESurfaceManager {
   uint64_t used_[kBuffers] = {};
   uint64_t clock_ = 0;
   int front_ = 0;
+  std::chrono::steady_clock::time_point front_since_{};
   int taken_[2] = {-1, -1};
   int drawing_ = -1;
   std::mutex ring_mutex_;

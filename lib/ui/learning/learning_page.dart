@@ -12,10 +12,13 @@ import '../../friendly_error.dart';
 import '../../l10n/l10n.dart';
 import '../../learning/anki_connect.dart';
 import '../../learning/english_dictionary.dart';
+import '../../learning/known_words.dart';
 import '../../learning/learning.dart';
+import '../../learning/review.dart';
+import '../../learning/video_words.dart';
+import '../../learning/word_token.dart';
 import '../../learning/vocabulary.dart';
 import '../../learning/word_voice.dart' show azureVoiceKey, azureVoiceRegion, googleVoiceKey;
-import '../../models.dart';
 import '../../save_file.dart';
 import '../../widgets/settings_tiles.dart';
 import '../app_icons.dart';
@@ -26,7 +29,9 @@ import '../learning_drawer.dart' show LearningDrawerSection, addLearningDrawerSe
 import '../pages/settings_sections.dart' show SettingsCategory;
 import '../skin_paint.dart';
 import '../theme.dart';
-import 'word_card.dart' show englishLevelName;
+import 'review_page.dart' show openReview, showSavedWord, watchVocabularyMoment;
+import '../../subtitle_cues.dart' show SubtitleCue;
+import 'word_card.dart' show englishLevelName, showWordCard;
 
 part 'learning_home.dart';
 part 'learning_drawer_parts.dart';
@@ -454,6 +459,42 @@ Future<void> _pickEnglishLevel(BuildContext context, Learning learning) async {
   if (picked != null && picked != current) await learning.setEnglishLevel(picked < 0 ? null : picked);
 }
 
+/// Asks the learner's level in [language] (not English).
+Future<void> pickLanguageLevel(BuildContext context, Learning learning, String language) async {
+  final scale = LevelScale.of(language);
+  if (scale == null) return;
+  final current = learning.levelIn(language) ?? 0;
+  final picked = await showDialog<int>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: Text(tr('My level in {0}', [_languageName(language)])),
+      children: [
+        for (final level in [0, for (var l = 1; l <= scale.top; l++) l])
+          ListTile(
+            dense: true,
+            leading: Icon(level == current ? AppIcons.radioButton : AppIcons.circle),
+            title: Text(level == 0 ? tr("Don't mark hard words") : scale.nameOf(level)),
+            subtitle: level == 0 ? null : (level == scale.top ? Text(tr('Only rare words stand out')) : null),
+            onTap: () => Navigator.pop(context, level),
+          ),
+        if (!scale.official)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
+            child: Text(tr('Estimated from how often words are used: a guide, not an official CEFR list.'), style: Theme.of(context).textTheme.bodySmall),
+          ),
+        if (!learning.hasLevels(language))
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
+            child: Text(tr('The word levels are still downloading; words are marked once they are here.'), style: Theme.of(context).textTheme.bodySmall),
+          ),
+      ],
+    ),
+  );
+  if (picked != null && picked != current) await learning.setLevel(language, picked == 0 ? null : picked);
+}
+
+String _languageName(String language) => _packLanguage(DictionaryPack.values.firstWhere((p) => p.language == language));
+
 /// Asks for a license code and keeps it when it is one.
 Future<bool> enterLicenseCode(BuildContext context, Learning learning) async {
   final field = TextEditingController();
@@ -540,6 +581,16 @@ List<(String, String, WidgetBuilder)> learningSettingRows(AppController controll
           leading: Icon(AppIcons.graduationCap),
           onTap: () => unawaited(openLearningPage(context, controller)),
         ))),
+    // Touch screens have no mouse to rest on a line: a tap on a word
+    // pauses there anyway.
+    if (!Platform.isAndroid && !Platform.isIOS)
+      (tr('Pause while the mouse is on a subtitle line'), '悬停暂停 鼠标 字幕 hover pause', (context) => live((context) => SwitchItem(
+          title: tr('Pause while the mouse is on a subtitle line'),
+          subtitle: tr('Read and tap the words at ease; it plays on when the mouse leaves'),
+          leading: Icon(AppIcons.pauseCircle),
+          value: learning.hoverPause,
+          onChanged: (on) => unawaited(learning.setHoverPause(on)),
+        ))),
     (tr('Show pinyin and kana above subtitles'), '拼音 假名 pinyin kana', (context) => live((context) => SwitchItem(
           title: tr('Show pinyin and kana above subtitles'),
           subtitle: tr('Above each word, on the video and in the subtitle list'),
@@ -581,6 +632,18 @@ List<(String, String, WidgetBuilder)> learningSettingRows(AppController controll
           leading: Icon(AppIcons.graduationCap),
           onTap: () => unawaited(_pickEnglishLevel(context, learning)),
         ))),
+    (tr('My level in other languages'), '水平 HSK JLPT CEFR level 难词', (context) => live((context) => Column(mainAxisSize: MainAxisSize.min, children: [
+          for (final pack in DictionaryPack.values)
+            if (pack != DictionaryPack.english && learning.stateOf(pack) == PackState.ready && LevelScale.of(pack.language) != null)
+              NormalItem(
+                title: tr('My level in {0}', [_packLanguage(pack)]),
+                subtitle: learning.levelIn(pack.language) == null
+                    ? tr('Not set: hard words are not marked')
+                    : tr('{0}. Harder words stand out, easier ones count as known', [LevelScale.of(pack.language)!.nameOf(learning.levelIn(pack.language)!)]),
+                leading: Icon(AppIcons.graduationCap),
+                onTap: () => unawaited(pickLanguageLevel(context, learning, pack.language)),
+              ),
+        ]))),
   ];
 }
 
@@ -623,10 +686,10 @@ class _Pitch extends StatelessWidget {
             (AppIcons.sparkle, tr('Harder words stand out'), tr('English words above your level are highlighted, from middle school and CET-4 up to TOEFL, IELTS and GRE; Korean words show their level.')),
             (AppIcons.speakerHigh, tr('Hear it'), tr('The word read aloud, or the line once more in the speaker\'s own voice.')),
             (AppIcons.bookOpenText, tr('A vocabulary book that remembers where'), tr('Each word keeps its line, translation, video and moment: tap it to watch that moment again.')),
+            (AppIcons.brain, tr('Review at the right time'), tr('Words come back just before you would forget them, in the line they were said in, with its own sound.')),
             (AppIcons.cards, tr('Anki with the real sound'), tr('Send words to Anki in one tap with the audio of the line, or save an Anki import file or CSV.')),
             (AppIcons.graduationCap, tr('Study a video in four steps'), tr('Listen without subtitles, read along, shadow the hard lines, listen again.')),
             (AppIcons.cloudSlash, tr('Works offline'), tr('Dictionaries live on your computer: lookups need no internet and send nothing anywhere.')),
-            (AppIcons.deviceMobile, tr('Five devices, no account'), tr('One code for five devices; move it to a new computer from the app.')),
           ]),
           const SizedBox(height: Space.m),
           _FreeExtras(),
@@ -809,16 +872,6 @@ class _VocabularyPageState extends State<_VocabularyPage> {
     }
   }
 
-  void _open(VocabularyWord word) {
-    if (word.videoId.isEmpty) return;
-    final start = word.at > const Duration(seconds: 1) ? word.at - const Duration(seconds: 1) : Duration.zero;
-    unawaited(widget.controller.play(
-      VideoItem(id: word.videoId, title: word.videoTitle, channel: '', url: 'https://www.youtube.com/watch?v=${word.videoId}'),
-      at: start,
-    ));
-    Navigator.of(context).popUntil((route) => route.isFirst);
-  }
-
   @override
   Widget build(BuildContext context) {
     final book = _book;
@@ -860,7 +913,7 @@ class _VocabularyPageState extends State<_VocabularyPage> {
                   itemBuilder: (context, i) {
                     final w = words[i];
                     return ListTile(
-                      onTap: w.videoId.isEmpty ? null : () => _open(w),
+                      onTap: () => unawaited(showSavedWord(context, widget.controller, w)),
                       title: Text.rich(TextSpan(children: [
                         TextSpan(text: w.word, style: const TextStyle(fontSize: 18)),
                         if (w.reading.isNotEmpty) TextSpan(text: '  ${w.reading}', style: TextStyle(color: colors.primary)),
@@ -870,7 +923,11 @@ class _VocabularyPageState extends State<_VocabularyPage> {
                         if (w.sentence.isNotEmpty) Text(w.sentence, style: TextStyle(color: colors.outline)),
                         if (w.videoTitle.isNotEmpty) Text('${w.videoTitle} · ${clockOf(w.at)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: colors.outline)),
                       ]),
-                      trailing: IconButton(tooltip: tr('Delete'), icon: Icon(AppIcons.trash, size: 18), onPressed: () => unawaited(book.remove(w))),
+                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                        if (w.videoId.isNotEmpty)
+                          IconButton(tooltip: tr('Watch this moment'), icon: Icon(AppIcons.playCircle, size: 18), onPressed: () => watchVocabularyMoment(context, widget.controller, w)),
+                        IconButton(tooltip: tr('Delete'), icon: Icon(AppIcons.trash, size: 18), onPressed: () => unawaited(book.remove(w))),
+                      ]),
                     );
                   },
                 );
@@ -1048,6 +1105,8 @@ Chinese: CC-CEDICT by MDBG (CC BY-SA 4.0, cc-cedict.org).
 Korean: 한국어기초사전 (Korean Basic Dictionary), National Institute of Korean Language (CC BY-SA 2.0 KR, krdict.korean.go.kr), via github.com/basickorean/basickorean-vocab; with the Wiktionaries and WikDict.
 
 Spanish, French, German, Italian, Russian: the English and Chinese Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org, and WikDict (CC BY-SA 4.0).
+
+Word levels: HSK lists from complete-hsk-vocabulary by Yanis Zafirópulos (MIT, github.com/drkameleon/complete-hsk-vocabulary); JLPT lists from OpenJLPT (CC BY-SA 4.0, github.com/evanclan/OpenJLPT), based on Jonathan Waller's JLPT lists; Korean levels from the Korean Basic Dictionary; Spanish, French, German, Italian and Russian levels estimated from wordfreq by Robyn Speer (data CC BY-SA 4.0): a guide, not an official CEFR list.
 
 Word splitting: Lindera (MIT) with IPADIC, mecab-ko-dic (Apache-2.0) and jieba (MIT).
 

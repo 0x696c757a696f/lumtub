@@ -665,7 +665,17 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: '翻译目标语言 沉浸式翻译 双语对照 译文 翻译服务 AI 总结 接口 模型 语音识别 Whisper Groq 没有字幕 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
     ],
     SettingsCategory.learning => [
-        for (final (title, words, builder) in learningSettingRows(controller)) SettingEntry(title, builder, subtitle: words),
+        SettingEntry(tr('Learning mode'), (context) => SwitchItem(
+              title: tr('Learning mode'),
+              subtitle: controller.learningOn
+                  ? tr('Word lookup, readings, the vocabulary book, review and the Learning page')
+                  : tr('Off: nothing of the learning features shows or runs. Your words and license are kept.'),
+              leading: _icon(AppIcons.graduationCap),
+              value: controller.learningOn,
+              onChanged: (v) => unawaited(controller.setLearningMode(v)),
+            ), subtitle: '学习模式 关闭学习 learning mode off'),
+        if (controller.learningOn)
+          for (final (title, words, builder) in learningSettingRows(controller)) SettingEntry(title, builder, subtitle: words),
         SettingEntry(tr('Pause after each line'), (context) => SwitchItem(
               title: tr('Pause after each line'),
               subtitle: tr('Playback pauses as each subtitle line ends.'),

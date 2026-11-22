@@ -224,6 +224,28 @@ jobs:
             rm -f "$RUNNER_TEMP/in/$code.jsonl"
           done
 
+      - name: Build the word levels
+        env:
+          HSK_COMMIT: 7ac65bf1a6387d35f1ade478906172a19311c7f9
+          JLPT_COMMIT: 0d1d3410bec90bd4098a7c72de820543cb4f707c
+        run: |
+          set -euo pipefail
+          # HSK lists from complete-hsk-vocabulary (MIT), JLPT lists from
+          # OpenJLPT (CC BY-SA 4.0),
+          # both at pinned commits; the Korean levels are in its word list;
+          # the others by word frequency (wordfreq, installed above).
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/hsk.json" "https://raw.githubusercontent.com/drkameleon/complete-hsk-vocabulary/$HSK_COMMIT/complete.json"
+          echo "c869a0ce353279c9333d9b42c31fc3549785e8b40673dab57ee42bc99cd14131  $RUNNER_TEMP/in/hsk.json" | sha256sum -c -
+          jlpt=()
+          for pair in 5=cbb221c9a3a92108fcd02fb088d9afacc70bc8c96570d5730425de0a49dad5f3 4=b38512a6dc1e06a3615f377b3e58184c4a85b6f769c2e3f58f2a4ef0e1810927 3=17ca6bcbba9d212c3c9d38c38cecc2adef0fd8718cb7157bb48dd9d3a1724948 2=4c7053d1b61f71ca4004252cafdf89439c65531900e7bab6c53078802acf3c5b 1=09325eb676ec26044e9019afb5ddd460a394a0d8cb51b0b34d30d03124c131ff; do
+            n=${pair%%=*}; sum=${pair#*=}
+            curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/n$n.json" "https://raw.githubusercontent.com/evanclan/OpenJLPT/$JLPT_COMMIT/data/json/vocab/n$n.json"
+            echo "$sum  $RUNNER_TEMP/in/n$n.json" | sha256sum -c -
+            jlpt+=("$RUNNER_TEMP/in/n$n.json")
+          done
+          # Not -I: it needs the wordfreq installed for this user.
+          python3 .github/learning/levels.py "$RUNNER_TEMP/out" "hsk=$RUNNER_TEMP/in/hsk.json" "jlpt=$(IFS=,; echo "${jlpt[*]}")" "ko=$RUNNER_TEMP/in/ko-wiktionary.tsv" | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Build the word segmenters
         run: |
           set -euo pipefail
@@ -269,6 +291,7 @@ jobs:
             JMdict by the Electronic Dictionary Research and Development Group under CC BY-SA 4.0 (https://www.edrdg.org/edrdg/licence.html), via jmdict-simplified, with Chinese meanings from the Chinese Wiktionary and WikDict;
             the Korean, Spanish, French, German, Italian and Russian dictionaries are made from the English and Chinese Wiktionaries (CC BY-SA 4.0, https://www.wiktionary.org/) as extracted by kaikki.org (https://kaikki.org/) and from WikDict (CC BY-SA, https://www.wikdict.com/);
             Korean meanings and levels come first from the Korean Basic Dictionary (한국어기초사전) of the National Institute of Korean Language (CC BY-SA 2.0 KR, https://krdict.korean.go.kr/), via its open data in https://github.com/basickorean/basickorean-vocab.
+            Word levels: the HSK lists from complete-hsk-vocabulary by Yanis Zafirópulos (MIT, https://github.com/drkameleon/complete-hsk-vocabulary); the JLPT lists from OpenJLPT (CC BY-SA 4.0, https://github.com/evanclan/OpenJLPT), based on Jonathan Waller's JLPT lists; the Korean levels from the Korean Basic Dictionary; the Spanish, French, German, Italian and Russian levels estimated from wordfreq by Robyn Speer (data CC BY-SA 4.0), a guide and not an official CEFR list.
             The word segmenters are Lindera (MIT, https://github.com/lindera/lindera) builds of IPADIC (its own permissive license), mecab-ko-dic (Apache-2.0) and mecab-jieba (MIT); each zip holds its NOTICE.txt.
         run: |
           set -euo pipefail

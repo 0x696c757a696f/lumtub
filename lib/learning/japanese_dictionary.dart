@@ -53,7 +53,21 @@ class JapaneseDictionary {
     // Entries where [word] is the main way of writing come first, then
     // common ones; otherwise JMdict's order.
     int rank(JapaneseEntry e) => ((e.kanji.isEmpty ? e.kana.first : e.kanji.first) == word ? 0 : 2) + (e.common ? 0 : 1);
-    final ranked = [for (final (i, e) in found.indexed) (i, e)]..sort((a, b) => rank(a.$2) != rank(b.$2) ? rank(a.$2) - rank(b.$2) : a.$1 - b.$1);
+    // Written in kana only, a word may be any of several kanji words read
+    // alike (いっぱい: 一杯, 一敗); the one with more senses is the one
+    // people mean far more often.
+    final kanaOnly = found.any((e) => e.kanji.isNotEmpty && e.kana.contains(word));
+    int order((int, JapaneseEntry) a, (int, JapaneseEntry) b) {
+      final byRank = rank(a.$2) - rank(b.$2);
+      if (byRank != 0) return byRank;
+      if (kanaOnly) {
+        final bySenses = b.$2.senses.length - a.$2.senses.length;
+        if (bySenses != 0) return bySenses;
+      }
+      return a.$1 - b.$1;
+    }
+
+    final ranked = [for (final (i, e) in found.indexed) (i, e)]..sort(order);
     return [for (final (_, e) in ranked) e];
   }
 

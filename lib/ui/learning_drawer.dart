@@ -181,6 +181,7 @@ class LearningDrawerHandle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!controller.learningOn) return const SizedBox.shrink();
     return Tooltip(
       message: tr('Learning'),
       child: Material(

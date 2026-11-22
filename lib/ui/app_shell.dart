@@ -86,20 +86,20 @@ class _AppShellState extends State<AppShell> {
   late final _layoutChanges = Listenable.merge([_controller, theaterMode]);
   late final _frames = FrameStats.start(() => _controller.onWatchPage ? (_controller.mini ? 'mini player' : 'watch') : _controller.mode.name, causes: () => _controller.rebuildCauses);
 
-  static List<(PageMode, IconData, IconData, String)> get _destinations => [
+  List<(PageMode, IconData, IconData, String)> get _destinations => [
     (PageMode.home, AppIcons.house, AppIcons.houseFill, tr('Home')),
     (PageMode.explore, AppIcons.compass, AppIcons.compassFill, tr('Explore')),
     (PageMode.subscriptions, AppIcons.stack, AppIcons.stackFill, tr('Subscriptions')),
     (PageMode.history, AppIcons.clockCounterClockwise, AppIcons.clockCounterClockwiseFill, tr('History')),
     (PageMode.playlists, AppIcons.filmReel, AppIcons.filmReelFill, tr('Playlist')),
     (PageMode.downloads, AppIcons.arrowCircleDown, AppIcons.arrowCircleDownFill, tr('Downloads')),
-    (PageMode.learning, AppIcons.graduationCap, const IconData(0xe62c, fontFamily: 'Phosphor Fill'), tr('Learning')),
+    if (_controller.learningOn) (PageMode.learning, AppIcons.graduationCap, const IconData(0xe62c, fontFamily: 'Phosphor Fill'), tr('Learning')),
   ];
 
   /// The bottom bar has room for four: History, Playlists and Downloads share
   /// one Library tab, with a switch at the top of each of those pages.
   static const _library = {PageMode.history, PageMode.playlists, PageMode.downloads};
-  static final _bottomDestinations = [
+  List<(PageMode, IconData, IconData, String)> get _bottomDestinations => [
     ..._destinations.where((d) => !_library.contains(d.$1)),
     (PageMode.history, AppIcons.bookOpen, AppIcons.bookOpenFill, tr('Library')),
   ];

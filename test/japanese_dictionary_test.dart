@@ -15,6 +15,12 @@ const _sample = '食べる\tたべる\tv1\tto eat\t1\n'
 void main() {
   final d = JapaneseDictionary.parse(_sample);
 
+  test('a word in kana finds the kanji word people mean, not the first read alike', () {
+    final alike = JapaneseDictionary.parse('一敗\tいっぱい\tvs\tone defeat\t1\n一杯|一盃\tいっぱい\t\tone cup\\nfull\\na lot\t1\n');
+    expect(alike.lookup('いっぱい').first.headword, '一杯');
+    expect(alike.lookup('一敗').first.headword, '一敗');
+  });
+
   test('an entry reads its Chinese meanings', () {
     final entry = JapaneseEntry.parse('主権\tしゅけん\t\tsovereignty\t1\tn. 主权\\nn. 统治权');
     expect(entry.chinese, ['n. 主权', 'n. 统治权']);

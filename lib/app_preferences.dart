@@ -106,6 +106,7 @@ class AppPreferences {
     this.pipOnLeave = false,
     this.closeToTray = false,
     this.minimizeToTray = false,
+    this.learningMode = true,
     this.softwareQualityTold = false,
     this.batteryAsked = false,
     this.gpuPreference = 'system',
@@ -253,6 +254,10 @@ class AppPreferences {
   final bool closeToTray;
   /// Minimising the window hides it to the tray icon.
   final bool minimizeToTray;
+
+  /// The language-learning features: off, none of them shows and nothing
+  /// of them loads or runs. Playback's own learning aids stay.
+  final bool learningMode;
   /// Lumtub has said once why automatic quality stays at 1080p on a device
   /// that decodes neither VP9 nor AV1 in hardware.
   final bool softwareQualityTold;
@@ -498,6 +503,7 @@ class AppPreferences {
     bool? pipOnLeave,
     bool? closeToTray,
     bool? minimizeToTray,
+    bool? learningMode,
     bool? softwareQualityTold,
     bool? batteryAsked,
     String? gpuPreference,
@@ -589,6 +595,7 @@ class AppPreferences {
         pipOnLeave: pipOnLeave ?? this.pipOnLeave,
         closeToTray: closeToTray ?? this.closeToTray,
         minimizeToTray: minimizeToTray ?? this.minimizeToTray,
+        learningMode: learningMode ?? this.learningMode,
         softwareQualityTold: softwareQualityTold ?? this.softwareQualityTold,
         batteryAsked: batteryAsked ?? this.batteryAsked,
         gpuPreference: gpuPreference ?? this.gpuPreference,
@@ -681,6 +688,7 @@ class AppPreferences {
         'pipOnLeave': pipOnLeave,
         'closeToTray': closeToTray,
         'minimizeToTray': minimizeToTray,
+        'learningMode': learningMode,
         'softwareQualityTold': softwareQualityTold,
         'batteryAsked': batteryAsked,
         'gpuPreference': gpuPreference,
@@ -812,6 +820,7 @@ class AppPreferences {
       pipOnLeave: flag('pipOnLeave', d.pipOnLeave),
       closeToTray: flag('closeToTray', d.closeToTray),
       minimizeToTray: flag('minimizeToTray', d.minimizeToTray),
+      learningMode: flag('learningMode', d.learningMode),
       softwareQualityTold: flag('softwareQualityTold', d.softwareQualityTold),
       batteryAsked: flag('batteryAsked', d.batteryAsked),
       gpuPreference: gpuPreferences.contains(raw['gpuPreference']) ? raw['gpuPreference'] as String : d.gpuPreference,

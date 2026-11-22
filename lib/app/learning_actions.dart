@@ -3,9 +3,63 @@ part of 'app_controller.dart';
 /// Whether the switch to the computer's voice was told this run.
 bool _edgeFallbackTold = false;
 
+/// Whether hovering a subtitle line paused playback.
+bool _hoverPaused = false;
+
+/// Plays on a moment after the pointer leaves the line, so moving across
+/// the gaps between its words does not stop and start the video.
+Timer? _hoverResume;
+
 /// 学外语: 每句说完暂停, 模糊翻译 and stepping line by line, on the lines
 /// the subtitle list shows.
 extension LearningActions on AppController {
+  /// Whether the language-learning features are on (Settings ›
+  /// Learning). Off, none of them shows, and the dictionaries, word
+  /// cutting, license checks and updates do not run.
+  bool get learningOn => preferences.learningMode;
+
+  /// The mouse came onto ([over]) or left a subtitle line one can look
+  /// words up in: playback pauses meanwhile, and plays on only when it
+  /// was this that paused it.
+  void hoverSubtitle(bool over) {
+    final player = this.player;
+    if (player == null || !learning.hoverPause || !learningOn) return;
+    _hoverResume?.cancel();
+    if (over) {
+      if (_hoverPaused || !player.state.playing) return;
+      _hoverPaused = true;
+      unawaited(player.pause());
+    } else if (_hoverPaused) {
+      _hoverResume = Timer(const Duration(milliseconds: 350), () {
+        if (!_hoverPaused || this.player != player) return;
+        _hoverPaused = false;
+        unawaited(player.play());
+      });
+    }
+  }
+
+  /// Whether hovering had paused playback, handing the resuming over to
+  /// the caller (a word card opened from the line resumes when it closes).
+  bool takeHoverPause() {
+    _hoverResume?.cancel();
+    final paused = _hoverPaused;
+    _hoverPaused = false;
+    return paused;
+  }
+
+  Future<void> setLearningMode(bool on) async {
+    if (on == learningOn) return;
+    await savePreferences(preferences.copyWith(learningMode: on));
+    if (on) {
+      final folders = directories;
+      if (folders != null) unawaited(learning.start(folders));
+    } else {
+      learning.sleep();
+      if (mode == PageMode.learning) navigate(PageMode.home);
+    }
+    logInfo('Learning mode ${on ? 'on' : 'off'}');
+  }
+
   /// The lines playback pauses after and steps through: the subtitle
   /// list's rows, so a sentence split over several lines pauses once, at
   /// its end. Read again when the subtitles shown change.
@@ -193,6 +247,23 @@ extension LearningActions on AppController {
     } catch (e) {
       logWarn('Could not play the sound for "$text" ($language): $e');
       return (problem: tr('Could not read it aloud: {0}', ['$e']), note: null);
+    }
+  }
+
+  /// Plays the sound file [file] (a vocabulary word's line) on its own,
+  /// pausing the video. False when it could not.
+  Future<bool> playSoundFile(File file) async {
+    try {
+      if (!await file.exists()) return false;
+      final player = this.player;
+      if (player != null && player.state.playing) await player.pause();
+      final sound = _shadowPlayer ??= Player();
+      await sound.setVolume(player?.state.volume ?? 100);
+      await sound.open(Media(file.uri.toString()));
+      return true;
+    } catch (e) {
+      logWarn('Could not play ${file.path}: $e');
+      return false;
     }
   }
 

@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/app_controller.dart';
+import '../../device.dart';
 import '../../l10n/l10n.dart';
 import '../../learning/chinese_dictionary.dart';
 import '../../learning/english_dictionary.dart';
 import '../../learning/japanese_dictionary.dart';
+import '../../learning/known_words.dart';
 import '../../learning/learning.dart';
 import '../../learning/vocabulary.dart';
 import '../../learning/wiktionary_dictionary.dart';
@@ -34,24 +36,62 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
   }
   if (!context.mounted) return;
   final player = controller.player;
-  final wasPlaying = player?.state.playing ?? false;
+  final wasPlaying = (player?.state.playing ?? false) | controller.takeHoverPause();
   if (wasPlaying) unawaited(player!.pause());
   final when = at ?? player?.state.position ?? Duration.zero;
-  await showDialog<void>(
-    context: context,
-    builder: (context) => switch (language) {
+  Widget card(BuildContext context) => switch (language) {
       'zh' => _WordCard(controller: controller, dictionary: learning.chinese!, token: token, sentence: sentence, translation: translation, at: when),
       'ja' => _JapaneseCard(controller: controller, dictionary: learning.japanese!, token: token, sentence: sentence, translation: translation, at: when),
       'en' => _EnglishCard(controller: controller, dictionary: learning.english!, token: token, sentence: sentence, translation: translation, at: when),
       _ => _WiktionaryCard(controller: controller, dictionary: learning.wiktionary(language)!, token: token, sentence: sentence, translation: translation, at: when),
-    },
-  );
+    };
+  if (Device.phone(context)) {
+    // On a phone the card rises from the bottom, within the thumb's
+    // reach, and stops short of the top so the paused picture stays in
+    // sight; back, a tap above it, a swipe down or Close puts it away.
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      useSafeArea: true,
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.62),
+      builder: card,
+    );
+  } else {
+    await showDialog<void>(context: context, builder: card);
+  }
   if (learning.closeTrialCard() && context.mounted) {
     // Told once, as it happens, rather than at the next lookup.
     await showLearningLocked(context, learning, title: tr('The free trial is over'), lead: tr('From now on, {0} free word lookups a day.', [Learning.trialPerDay]));
     return;
   }
   if (wasPlaying && controller.player == player) unawaited(player?.play());
+}
+
+/// A word card's frame: a dialog in the middle on a computer or tablet,
+/// the body of a bottom sheet on a phone.
+class _CardShell extends StatelessWidget {
+  const _CardShell({required this.title, required this.content, required this.actions});
+
+  final Widget title;
+  final Widget content;
+  final List<Widget> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!Device.phone(context)) return AlertDialog(title: title, content: content, actions: actions);
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 12, 8),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+        DefaultTextStyle.merge(style: theme.textTheme.headlineSmall, child: title),
+        const SizedBox(height: 8),
+        Flexible(child: Padding(padding: const EdgeInsets.only(right: 8), child: content)),
+        const SizedBox(height: 8),
+        OverflowBar(alignment: MainAxisAlignment.end, spacing: 8, overflowAlignment: OverflowBarAlignment.end, children: actions),
+      ]),
+    );
+  }
 }
 
 /// Today's free word cards are used up: the moment a learner most wants
@@ -129,10 +169,11 @@ class _WordCard extends StatelessWidget {
       );
     }
 
-    return AlertDialog(
+    return _CardShell(
       title: Row(children: [
         Expanded(child: SelectableText(word, style: _headStyle(theme))),
         _SpeakButton(controller: controller, text: word, language: 'zh'),
+        _KnownButton(controller: controller, token: token),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -224,10 +265,11 @@ class _EnglishCard extends StatelessWidget {
     final entries = dictionary.lookup(token.key);
     final head = entries.isEmpty ? token.key : entries.last.word;
     final book = controller.learning.book;
-    return AlertDialog(
+    return _CardShell(
       title: Row(children: [
         Expanded(child: SelectableText(token.text, style: _headStyle(theme))),
         _SpeakButton(controller: controller, text: token.key, language: 'en'),
+        _KnownButton(controller: controller, token: token),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -340,7 +382,7 @@ class _JapaneseCard extends StatelessWidget {
     final firstMatch = matches.isEmpty ? null : matches.first.$1;
     final head = entries.isEmpty ? token.key : entries.first.headword;
     final book = controller.learning.book;
-    return AlertDialog(
+    return _CardShell(
       title: Row(children: [
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
@@ -349,6 +391,7 @@ class _JapaneseCard extends StatelessWidget {
           ]),
         ),
         _SpeakButton(controller: controller, text: head, language: 'ja'),
+        _KnownButton(controller: controller, token: token),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -485,7 +528,7 @@ class _WiktionaryCard extends StatelessWidget {
     final formOf = {...all.where((e) => e.form && e.hasMeanings).map((e) => e.word), ...all.where((e) => !e.hasMeanings).expand((e) => e.lemmas)};
     final head = entries.isEmpty ? token.key : entries.first.word;
     final book = controller.learning.book;
-    return AlertDialog(
+    return _CardShell(
       title: Row(children: [
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
@@ -494,6 +537,7 @@ class _WiktionaryCard extends StatelessWidget {
           ]),
         ),
         _SpeakButton(controller: controller, text: token.key, language: language),
+        _KnownButton(controller: controller, token: token),
         IconButton(
           tooltip: tr('Copy'),
           icon: Icon(AppIcons.copy, size: 18),
@@ -718,4 +762,40 @@ class _KeptSwitch extends StatelessWidget {
         ),
         child: child,
       );
+}
+
+/// 我认识这个词: a known word loses its reading above the subtitles and
+/// counts as understood in a video's difficulty.
+class _KnownButton extends StatelessWidget {
+  const _KnownButton({required this.controller, required this.token});
+  final AppController controller;
+  final WordToken token;
+
+  @override
+  Widget build(BuildContext context) {
+    final book = controller.learning.book;
+    if (book == null || !controller.learning.unlocked) return const SizedBox.shrink();
+    final known = knownWordsOf(book);
+    return ListenableBuilder(
+      listenable: known,
+      builder: (context, _) {
+        final marked = known.marks(token);
+        return IconButton(
+          tooltip: marked ? tr('Known: tap to learn it again') : tr('I know this word: no reading above it any more'),
+          isSelected: marked,
+          icon: AnimatedSwitcher(
+            duration: Motion.of(Ease.fade),
+            transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+            child: Icon(
+              marked ? AppIcons.checkCircleFill : AppIcons.checkCircle,
+              key: ValueKey(marked),
+              size: 20,
+              color: marked ? Theme.of(context).colorScheme.primary : null,
+            ),
+          ),
+          onPressed: () => unawaited(known.mark(token, !marked)),
+        );
+      },
+    );
+  }
 }

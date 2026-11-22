@@ -367,6 +367,19 @@ class SubtitleViewConfiguration {
   final bool Function(Offset global)? mainHit;
   final ValueChanged<Offset>? onMainTap;
 
+  /// Lumtub: the pointer came onto (true) or left (false) what
+  /// [mainHit] says is in the main line.
+  final ValueChanged<bool>? onMainHover;
+
+  /// Lumtub: a press held on the main line and drawn across it, from
+  /// where it began to where the finger is; once it is lifted, [done]
+  /// with both at the last place, and the selection so far stands.
+  final void Function(Offset from, Offset to, bool done)? onMainSelect;
+
+  /// Lumtub: a quick sideways swipe on the main line: -1 towards the
+  /// previous line (finger to the right), 1 towards the next.
+  final ValueChanged<int>? onMainSwipe;
+
   /// {@macro subtitle_view_configuration}
   const SubtitleViewConfiguration({
     this.visible = true,
@@ -394,6 +407,9 @@ class SubtitleViewConfiguration {
     this.mainLine,
     this.mainHit,
     this.onMainTap,
+    this.onMainHover,
+    this.onMainSelect,
+    this.onMainSwipe,
     this.padding = const EdgeInsets.fromLTRB(
       16.0,
       0.0,
@@ -443,9 +459,20 @@ class MainLineTapArea extends StatelessWidget {
         opaque: false,
         hitTestBehavior: HitTestBehavior.deferToChild,
         cursor: SystemMouseCursors.click,
+        onEnter: configuration.onMainHover == null ? null : (_) => configuration.onMainHover!(true),
+        onExit: configuration.onMainHover == null ? null : (_) => configuration.onMainHover!(false),
         child: GestureDetector(
           behavior: HitTestBehavior.deferToChild,
           onTapUp: (details) => configuration.onMainTap?.call(details.globalPosition),
+          onLongPressStart: configuration.onMainSelect == null ? null : (details) => configuration.onMainSelect!(details.globalPosition, details.globalPosition, false),
+          onLongPressMoveUpdate: configuration.onMainSelect == null ? null : (details) => configuration.onMainSelect!(details.globalPosition - details.offsetFromOrigin, details.globalPosition, false),
+          onLongPressEnd: configuration.onMainSelect == null ? null : (details) => configuration.onMainSelect!(details.globalPosition, details.globalPosition, true),
+          onHorizontalDragEnd: configuration.onMainSwipe == null
+              ? null
+              : (details) {
+                  final speed = details.primaryVelocity ?? 0;
+                  if (speed.abs() > 300) configuration.onMainSwipe!(speed > 0 ? -1 : 1);
+                },
           child: _PointHit(configuration.mainHit ?? (_) => false),
         ),
       );

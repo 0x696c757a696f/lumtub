@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 
 import '../app_directories.dart';
 import '../app_log.dart';
+import '../app_updater.dart' show AppUpdater;
 import '../l10n/l10n.dart' show currentLanguage;
 import '../zip_archive.dart' show extractZip;
 import 'chinese_dictionary.dart';
@@ -19,10 +20,12 @@ import 'latin_language.dart';
 import 'lexicon.dart';
 import 'license.dart';
 import 'vocabulary.dart';
+import 'word_levels.dart';
 import 'wiktionary_dictionary.dart';
 import 'word_voice.dart';
 
 export 'word_voice.dart' show VoiceService, VoiceException;
+export 'word_levels.dart' show LevelScale;
 
 /// Where the dictionary packs are published: a release of the app's own
 /// repository that holds data only, never an app version.
@@ -86,6 +89,10 @@ enum DictionaryPack {
         japanese || korean || chinese => '$language-segmenter.zip',
         _ => null,
       };
+
+  /// The word levels read beside the dictionary; English has its own in
+  /// the dictionary.
+  String? get levels => this == english ? null : '$language-levels.tsv.gz';
 }
 
 /// One pack's download and reading.
@@ -135,7 +142,20 @@ class Learning extends ChangeNotifier {
   /// Korean in letters above the words; off by default, as Hangul reads
   /// as it sounds.
   bool _showRomanization = false;
+
+  /// The video pauses while the mouse is over a subtitle line, so a word
+  /// can be read and tapped; it plays on when the mouse leaves.
+  bool _hoverPause = true;
+  bool get hoverPause => _hoverPause;
   int? _englishLevel = EnglishLevel.cet4.index;
+
+  /// The learner's level in each language but English, 1 the easiest
+  /// ([LevelScale]); a language left out marks nothing.
+  final _myLevels = <String, int>{};
+
+  /// Each language's word levels, read beside its dictionary.
+  final _wordLevels = <String, WordLevels>{};
+  final _fetchingLevels = <DictionaryPack>{};
   bool _loaded = false;
   VocabularyBook? _book;
 
@@ -149,7 +169,7 @@ class Learning extends ChangeNotifier {
   @override
   void notifyListeners() {
     _words.clear();
-    final key = Object.hashAll([_license, licensed, unlocked, _showPinyin, _showRomanization, _englishLevel, for (final p in _packs.values) p.dictionary]);
+    final key = Object.hashAll([_license, licensed, unlocked, _showPinyin, _showRomanization, _englishLevel, Object.hashAllUnordered([for (final e in _myLevels.entries) '${e.key}${e.value}']), for (final l in _wordLevels.values) l, for (final p in _packs.values) p.dictionary]);
     if (key != _lastView) {
       _lastView = key;
       viewChanges.value++;
@@ -309,13 +329,58 @@ class Learning extends ChangeNotifier {
   /// words above it stand out. Null marks nothing.
   int? get englishLevel => _englishLevel;
 
-  /// Whether [token] is an English word above the learner's level.
+  /// The learner's level in [language]: for English an index into
+  /// [EnglishLevel.values], otherwise 1 to [LevelScale.top]. Null when
+  /// they have not said.
+  int? levelIn(String language) => language == 'en' ? _englishLevel : _myLevels[language];
+
+  Future<void> setLevel(String language, int? level) async {
+    if (language == 'en') return setEnglishLevel(level);
+    final scale = LevelScale.of(language);
+    if (scale == null) return;
+    if (level == null || level < 1 || level > scale.top) {
+      _myLevels.remove(language);
+    } else {
+      _myLevels[language] = level;
+    }
+    notifyListeners();
+    await _save();
+  }
+
+  /// Changes whenever a level or the levels read change.
+  String get levelKey => '$_englishLevel|$_myLevels|${_wordLevels.keys.join(',')}';
+
+  /// Whether the word levels of [language] are there to mark words by.
+  bool hasLevels(String language) => language == 'en' ? english != null : _wordLevels.containsKey(language);
+
+  /// [token]'s level on its language's scale (see [levelIn]); null when
+  /// no list has it.
+  int? levelOfWord(WordToken token) {
+    final language = languageOf(token);
+    if (language == 'en') return english?.levelOf(token.key);
+    final levels = _wordLevels[language];
+    if (levels == null) return null;
+    final level = levels.of(token.key) ?? levels.of(token.text);
+    if (level != null || language != 'zh') return level;
+    return levels.ofParts(token.text);
+  }
+
+  /// Whether [token] is a word above the learner's level.
   bool isHard(WordToken token) {
-    final level = _englishLevel;
-    final en = english;
-    if (level == null || en == null || !unlocked || languageOf(token) != 'en') return false;
-    final word = en.levelOf(token.key);
-    return word != null && word > level;
+    if (!unlocked) return false;
+    final mine = levelIn(languageOf(token));
+    if (mine == null) return false;
+    final word = levelOfWord(token);
+    return word != null && word > mine;
+  }
+
+  /// Whether [token] is a word at or below the learner's level, so likely
+  /// known even when they never marked it.
+  bool belowLevel(WordToken token) {
+    final mine = levelIn(languageOf(token));
+    if (mine == null) return false;
+    final word = levelOfWord(token);
+    return word != null && word <= mine;
   }
   PackState stateOf(DictionaryPack pack) => _packs[pack]!.state;
   double? progressOf(DictionaryPack pack) => _packs[pack]!.progress;
@@ -499,12 +564,20 @@ class Learning extends ChangeNotifier {
         if (json is Map) {
           _showPinyin = json['pinyin'] != false;
           _showRomanization = json['romanization'] == true;
+          _hoverPause = json['hoverPause'] != false;
           _meanings = MeaningLanguage.values.where((m) => m.name == json['meanings']).firstOrNull;
           _voicePicked = json['voicePicked'] == true;
           // Lumtub's server is now only what Edge's voices fall back on.
           if (_voicePicked) _voiceService = VoiceService.values.firstWhere((v) => v.name == json['voice'] && v != VoiceService.lumtub, orElse: () => VoiceService.edge);
           final level = json['englishLevel'];
           if (level is int) _englishLevel = level >= 0 && level < EnglishLevel.beyond.index ? level : null;
+          final levels = json['levels'];
+          if (levels is Map) {
+            for (final MapEntry(:key, :value) in levels.entries) {
+              final top = LevelScale.of('$key')?.top;
+              if (top != null && value is int && value >= 1 && value <= top) _myLevels['$key'] = value;
+            }
+          }
           final code = json['license'];
           if (code is String && code.isNotEmpty) _license = await Isolate.run(() => LearningLicense.parse(code));
           _receipt = '${json['activation'] ?? ''}';
@@ -581,6 +654,9 @@ class Learning extends ChangeNotifier {
         final have = await sum.exists() ? (await sum.readAsString()).trim() : '';
         if (have == expected) continue;
         if (_packs[pack]!.state == PackState.downloading || !unlocked) continue;
+        // Dictionaries run to tens of MB: on mobile data the update waits
+        // for Wi-Fi.
+        if (await AppUpdater.metered()) break;
         logInfo('A newer ${pack.name} dictionary is out; updating it');
         await download(pack, quiet: true);
       }
@@ -856,6 +932,12 @@ class Learning extends ChangeNotifier {
     await _save();
   }
 
+  Future<void> setHoverPause(bool on) async {
+    _hoverPause = on;
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> setShowRomanization(bool on) async {
     _showRomanization = on;
     notifyListeners();
@@ -872,7 +954,7 @@ class Learning extends ChangeNotifier {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'meanings': _meanings?.name ?? '', 'voice': _voiceService.name, 'voicePicked': _voicePicked, 'englishLevel': _englishLevel ?? -1, 'trial': {'taken': _trialTaken, 'seen': _trialSeen, 'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
+      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'hoverPause': _hoverPause, 'meanings': _meanings?.name ?? '', 'voice': _voiceService.name, 'voicePicked': _voicePicked, 'englishLevel': _englishLevel ?? -1, 'levels': _myLevels, 'trial': {'taken': _trialTaken, 'seen': _trialSeen, 'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }
@@ -923,6 +1005,7 @@ class Learning extends ChangeNotifier {
       logInfo('${pack.name} dictionary opened in ${watch.elapsedMilliseconds} ms');
       state.state = PackState.ready;
       unawaited(_openSegmenter(pack));
+      unawaited(_openLevels(pack));
     } catch (e) {
       logError('Could not read the ${pack.name} dictionary', e);
       // An update that does not open: back to the version before it.
@@ -1047,10 +1130,78 @@ class Learning extends ChangeNotifier {
     }
   }
 
+  /// Lets go of every dictionary and segmenter, for when learning is
+  /// turned off; each opens again when a line next needs it.
+  void sleep() {
+    for (final pack in DictionaryPack.values) {
+      final state = _packs[pack]!;
+      if (state.dictionary == null) continue;
+      _close(pack);
+      state.state = PackState.downloaded;
+    }
+    _words.clear();
+    notifyListeners();
+  }
+
   void _close(DictionaryPack pack) {
     _packs[pack]!.dictionary = null;
     if (pack.sqlite) CoreLexicon.close(pack.language);
     if (pack.segmenter != null) CoreWords.close(pack.language);
+    _wordLevels.remove(pack.language);
+  }
+
+  File? _levelsFileOf(DictionaryPack pack) {
+    final folder = _folderOf(pack);
+    return folder == null ? null : File('${folder.path}${Platform.pathSeparator}levels.tsv.gz');
+  }
+
+  /// Reads [pack]'s word levels, fetching them first when they are not
+  /// there. Words are not marked by level until then.
+  Future<void> _openLevels(DictionaryPack pack) async {
+    final file = _levelsFileOf(pack);
+    if (pack.levels == null || file == null || _wordLevels.containsKey(pack.language)) return;
+    if (!await file.exists()) {
+      if (!await _downloadLevels(pack, file)) return;
+    }
+    try {
+      final levels = await WordLevels.read(file);
+      if (_packs[pack]!.dictionary == null) return;
+      _wordLevels[pack.language] = levels;
+      logInfo('${pack.name} word levels read: ${levels.length}');
+      notifyListeners();
+    } catch (e) {
+      logWarn('Could not read the ${pack.name} word levels: $e');
+    }
+  }
+
+  Future<bool> _downloadLevels(DictionaryPack pack, File file) async {
+    final name = pack.levels;
+    if (name == null || !_fetchingLevels.add(pack)) return false;
+    final client = http.Client();
+    final part = File('${file.path}.part');
+    try {
+      final expected = (await _signedSums(client)).of(name);
+      // Not published yet.
+      if (expected == null) return false;
+      final response = await client.get(Uri.parse('$learningPackRelease/$name')).timeout(const Duration(seconds: 60));
+      if (response.statusCode != 200) throw HttpException('Word levels HTTP ${response.statusCode}');
+      // A few hundred kilobytes; anything far bigger is not this file.
+      if (response.bodyBytes.length > 8 << 20) throw const FormatException('The word levels are too big');
+      if (sha256.convert(response.bodyBytes).toString() != expected) throw const FormatException('The word levels download is damaged');
+      await file.parent.create(recursive: true);
+      await part.writeAsBytes(response.bodyBytes, flush: true);
+      await part.rename(file.path);
+      return true;
+    } catch (e) {
+      logWarn('Could not download the ${pack.name} word levels: $e');
+      return false;
+    } finally {
+      client.close();
+      _fetchingLevels.remove(pack);
+      try {
+        if (await part.exists()) await part.delete();
+      } catch (_) {}
+    }
   }
 
   Directory? _segmenterOf(DictionaryPack pack) {

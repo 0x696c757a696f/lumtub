@@ -243,12 +243,12 @@ class AppUpdater extends ChangeNotifier {
     }
     // Told once the download has started, so the home page does not show
     // a release as waiting for a click for a moment first.
-    if (download && available != null && !(automatic && await _metered())) await this.download();
+    if (download && available != null && !(automatic && await metered())) await this.download();
     _notify();
   }
 
   /// Whether Android says the connection is metered, as mobile data is.
-  static Future<bool> _metered() async {
+  static Future<bool> metered() async {
     if (!Platform.isAndroid) return false;
     try {
       return await const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('isMetered') ?? false;

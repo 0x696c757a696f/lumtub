@@ -18,6 +18,7 @@ import 'common.dart';
 import 'motion.dart';
 import 'player_panel.dart';
 import 'app_icons.dart';
+import '../learning/known_words.dart';
 import '../learning/learning.dart';
 import '../learning/vocabulary.dart' show VocabularyBook;
 import 'learning/ruby_line.dart';
@@ -101,19 +102,36 @@ class _SubtitleListState extends State<SubtitleList> {
   /// marked instead.
   Widget _line(String text, TextStyle style, {required String? other, required Duration at, required ColorScheme colors}) {
     if (_query.isNotEmpty) return _marked(text, style, colors);
+    if (!widget.controller.learningOn) return Text(text, style: style);
     final learning = widget.controller.learning;
     final tokens = learning.wordsOf(text);
     if (tokens == null) return Text(text, style: style);
     final book = learning.book;
-    return ChineseRubyLine(
+    final known = book == null || !learning.unlocked ? null : knownWordsOf(book);
+    final line = ChineseRubyLine(
       tokens: tokens,
       style: style,
       pinyin: learning.showPinyin,
       hard: learning.isHard,
       hardColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFFFFC23D) : const Color(0xFFB86E00),
       highlight: book == null ? null : (token) => book.contains(Learning.languageOf(token), token.key) || book.contains(Learning.languageOf(token), token.key.toLowerCase()),
+      known: known?.knows,
       onWord: (token) => unawaited(showWordCard(context, widget.controller, token, sentence: text, translation: other, at: at)),
     );
+    if (known == null || !known.oneNew(tokens)) return line;
+    // One word away from understood: the line most worth learning from.
+    return Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+      Flexible(child: line),
+      const SizedBox(width: 6),
+      Tooltip(
+        message: tr('One new word in this line: the easiest line to learn from'),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+          decoration: BoxDecoration(color: colors.primaryContainer, borderRadius: BorderRadius.circular(6)),
+          child: Text('+1', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: colors.primary)),
+        ),
+      ),
+    ]);
   }
 
   void _reload() => setState(() {

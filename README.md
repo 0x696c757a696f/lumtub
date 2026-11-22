@@ -30,6 +30,8 @@ No account needed to watch.
 
 ⭐ **Like Lumtub? Star it on GitHub (top right of this page).** It costs nothing and is the main way new people find it.
 
+🆕 **Learning Pack:** click words in the subtitles to learn Japanese, English, Chinese, Korean and more from any video. [See it in action](#-learn-languages-from-real-videos) · early bird ¥99 until 3 January.
+
 https://github.com/user-attachments/assets/97e3ce09-8e66-43fe-9125-bff1b3dcb3fe
 
 [Learn languages](#-learn-languages-from-real-videos) · [Screenshots](#screenshots) · [Features](#features) · [Get it](#get-it) · [Data](#where-the-data-comes-from) · [Privacy](#privacy-what-stays-local-and-what-doesnt) · [FAQ](#faq) · [Support](#support-lumtub)
@@ -49,26 +51,53 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 
 ## 🆕 Learn languages from real videos
 
-**Learn languages from the videos you already love.** Look up as you watch · listen line by line · save and review · offline dictionaries.
-
-**Tap any word in the subtitles to look it up. Chinese gets pinyin and Japanese gets kana above the line. Save a word with its sentence and the original audio, and send it to Anki in one click. Offline dictionaries, one payment.**
+**Learn languages from the videos you already love.** Click a word in the subtitles, see what it means, hear it, save it with its sentence and review it later with the line from the video.
 
 <p align="center">
-<img src="docs/screenshots/learning-card.png" alt="Word card for 'nifty' with pronunciation, meanings and the sentence it came from" width="48%">
-<img src="docs/screenshots/learning-list.png" alt="Subtitle list with the words above the chosen level highlighted" width="48%">
+<img src="docs/screenshots/learning/lookup-en.gif" alt="Clicking a Japanese word in the subtitles of a Kyoto travel video opens its reading, meaning and pronunciation, then saves it" width="80%">
 </p>
-<p align="center"><sub>Real screenshots from the preview build, Chinese interface.</sub></p>
+<p align="center"><sub>A real recording of Lumtub, not a mock-up. ▶ <a href="https://lumtub.app/learn/#demo">Watch the 45-second demo with sound</a></sub></p>
 
-**Learning Pack** (preview, Windows, macOS and Linux):
+<div align="center">
 
-- **Tap a word, get the meaning**, from dictionaries that download once and then work offline. Chinese, English, Japanese and Korean; Spanish, French, German, Italian and Russian in beta.
+**Early bird ¥99** until 3 January 2027, then ¥129 · pay once, no subscription · up to 5 of your devices<br>
+**Try it first:** your first 30 word lookups have everything switched on, no account needed.
+
+<a href="https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00"><img src="https://img.shields.io/badge/Get%20the%20Learning%20Pack-%C2%A599%20early%20bird-E53935?style=for-the-badge" alt="Get the Learning Pack, ¥99 early bird" height="32"></a>
+<a href="https://lumtub.app/learn/"><img src="https://img.shields.io/badge/Install%20guide%20%26%20refunds-555555?style=for-the-badge" alt="Install guide and refunds" height="32"></a>
+
+</div>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/en/1-lookup-ja.jpg" alt="Click any word in the subtitles: reading, meaning and the original line, saved in one click" width="100%"></td>
+<td width="50%"><img src="docs/screenshots/learning/en/2-kana.jpg" alt="Kana above every kanji, in the video and in the transcript" width="100%"></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/en/3-lookup-fr.jpg" alt="Not just Japanese: looking up a French word in a French video" width="100%"></td>
+<td width="50%"><img src="docs/screenshots/learning/en/4-study.jpg" alt="Study mode: four steps per section of a video" width="100%"></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/en/5-vocab.jpg" alt="Vocabulary book: every word keeps its sentence, the video and the timestamp" width="100%"></td>
+<td width="50%"><img src="docs/screenshots/learning/en/6-review.jpg" alt="Review card that plays the real line from the video" width="100%"></td>
+</tr>
+</table>
+<p align="center"><sub>Real screenshots with real YouTube videos, English interface. The license number is blurred.</sub></p>
+
+**What the Learning Pack adds** (Windows, macOS and Linux):
+
+- **Click a word, get the meaning**, from dictionaries that download once and then work offline. Chinese, English, Japanese and Korean; Spanish, French, German, Italian and Russian in beta. Conjugated Japanese verbs are found by their dictionary form.
 - **Readings above the line**: pinyin for Chinese, kana for Japanese, romanization for Korean.
-- **Words above your level are highlighted**, so you only stop for the ones you don't know yet.
-- **Vocabulary book** that keeps the sentence, the original audio and the moment in the video. Tap an entry to hear it again.
+- **Words above your level are highlighted**, so you only stop for the ones you don't know yet. Before you start a video, see how much of it you already know and which words come up most.
+- **Hear it**: words are read aloud, and every saved word keeps the original line's audio.
+- **Vocabulary book** that keeps the sentence, the original audio and the moment in the video. Click an entry to hear it again.
+- **Review** with spaced repetition. Each card plays the line from the video, not a robot voice.
+- **Study one video in four steps**: listen without subtitles, read along, shadow the hard lines, then listen again.
 - **Send to Anki** in one click, or export CSV.
 
-**Try it free:** your first 30 word lookups have everything switched on, no account needed. After that, without the pack, you can look up 3 words a day. [Install guide and refunds](https://lumtub.app/learn/).<br>
-**Early-bird price:** ¥99 until 3 January 2027, then ¥129. Pay once, no subscription, on [爱发电](https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00) (Alipay or WeChat Pay). Card payment is coming later. One license for up to 5 of your devices; the app checks it online about once every 30 days.
+**Why pay when there are free tools?** asbplayer, Yomitan and Anki together are an excellent free setup, and if it works for you, keep it. The Learning Pack does the same loop inside one app: no browser extensions to set up, dictionaries built in and offline, and the line's audio goes to Anki with the card. You're paying for that convenience, and it funds Lumtub's development.
+
+**Price:** early bird ¥99 until 3 January 2027, then ¥129. Pay once on [爱发电](https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00) (Alipay or WeChat Pay); card payment is coming later. One license for up to 5 of your devices; the app checks it online about once every 30 days. After the 30 free lookups, without the pack, you can still look up 3 words a day. [Install guide and refunds](https://lumtub.app/learn/).
 
 **Free for everyone**, in the Subtitles menu under **Language learning**:
 

@@ -213,7 +213,7 @@ fn App() -> impl IntoView {
             <main id="main">
                 <Hero t=t ctx=ctx lang=l/>
                 <Highlights t=t lang=l skin=skin/>
-                <Learning t=t/>
+                <Learning t=t lang=l/>
                 <Tagline lang=l/>
                 <Steps t=t/>
                 <Features t=t/>
@@ -337,10 +337,16 @@ fn Highlights(t: &'static Text, lang: Lang, skin: SkinState) -> impl IntoView {
     }
 }
 
+const LEARN_SHOTS_EN: [&str; 6] = ["1-lookup-ja", "2-kana", "3-lookup-fr", "4-study", "5-vocab", "6-review"];
+const LEARN_SHOTS_ZH: [&str; 6] = ["1-lookup-ja", "2-kana", "3-lookup-en", "4-video-words", "5-study", "7-review"];
+
 #[component]
-fn Learning(t: &'static Text) -> impl IntoView {
+fn Learning(t: &'static Text, lang: Lang) -> impl IntoView {
     let l = &t.learn;
-    let buttons = view! { <a class="btn primary" href=AFDIAN_PACK rel="noopener">"爱发电 · ¥99"</a> };
+    let (dir, names): (&str, &[&str]) = if lang == Lang::Zh { ("zh", &LEARN_SHOTS_ZH) } else { ("en", &LEARN_SHOTS_EN) };
+    let guide = if lang == Lang::Zh { "/learn/zh/" } else { "/learn/" };
+    let video = format!("screenshots/learning/demo-{dir}.mp4");
+    let poster = format!("screenshots/learning/demo-{dir}.jpg");
     view! {
         <section id="learn" class="section alt">
             <div class="wrap">
@@ -348,9 +354,16 @@ fn Learning(t: &'static Text) -> impl IntoView {
                     <h2 class="heading-3">{l.title}</h2>
                     <p class="body-3 muted">{l.lead}</p>
                 </header>
+                <figure class="learn-demo reveal">
+                    <video class="shot" controls playsinline preload="none" poster=poster width="1440" height="900">
+                        <source src=video type="video/mp4"/>
+                    </video>
+                    <figcaption class="caption-2">{l.demo_note}</figcaption>
+                </figure>
                 <figure class="learn-shots reveal">
-                    <img class="shot" loading="lazy" src="screenshots/learning-card.png" alt=l.shots_alt[0] width="815" height="550"/>
-                    <img class="shot" loading="lazy" src="screenshots/learning-list.png" alt=l.shots_alt[1] width="654" height="636"/>
+                    {names.iter().zip(l.shots_alt.iter()).map(|(n, alt)| view! {
+                        <img class="shot" loading="lazy" src=format!("screenshots/learning/{dir}/{n}.jpg") alt=*alt width="1280" height="960"/>
+                    }).collect_view()}
                     <figcaption class="caption-2">{l.shots_note}</figcaption>
                 </figure>
                 <div class="learn-grid reveal">
@@ -359,7 +372,10 @@ fn Learning(t: &'static Text) -> impl IntoView {
                         <ul class="body-6">{l.pack.iter().map(|x| view! { <li>{*x}</li> }).collect_view()}</ul>
                         <p class="body-6">{l.trial}</p>
                         <p class="body-6"><strong>{l.price}</strong></p>
-                        <div class="learn-buy">{buttons}</div>
+                        <div class="learn-buy">
+                            <a class="btn primary" href=AFDIAN_PACK rel="noopener">{l.buy}</a>
+                            <a class="btn" href=guide>{l.guide}</a>
+                        </div>
                         <p class="caption-2 muted">{l.fine}</p>
                     </div>
                     <div class="card">

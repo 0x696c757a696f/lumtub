@@ -316,9 +316,10 @@ code { font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace; 
 figure { margin: 0; }
 
 /* Language learning */
+.learn-demo { max-width: 960px; margin: 0 auto var(--s-500); }
+.learn-demo video { display: block; width: 100%; height: auto; background: #000; }
 .learn-shots {
-  display: grid; grid-template-columns: 815fr 654fr; gap: var(--s-300); align-items: start;
-  margin-bottom: var(--s-200);
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-200); align-items: start;
 }
 .learn-shots img { width: 100%; height: auto; }
 .learn-shots figcaption { grid-column: 1 / -1; }
@@ -327,8 +328,14 @@ figure { margin: 0; }
 .learn-grid .card { display: grid; gap: var(--s-100); align-content: start; }
 .learn-pack { border-color: var(--accent); }
 .learn-buy { display: flex; flex-wrap: wrap; gap: var(--s-100); }
+@media (max-width: 900px) {
+  .learn-shots { grid-template-columns: repeat(2, 1fr); }
+}
 @media (max-width: 760px) {
-  .learn-shots, .learn-grid { grid-template-columns: 1fr; }
+  .learn-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .learn-shots { grid-template-columns: 1fr; }
 }
 figcaption { color: var(--muted); text-align: center; margin-top: var(--s-75); }
 

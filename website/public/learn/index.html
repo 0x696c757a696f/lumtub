@@ -24,8 +24,11 @@ p.lead { font-size: 18px; color: var(--text); }
 strong { color: var(--text); }
 ul, ol { padding-left: 1.3em; }
 li { margin: 4px 0; }
-.shots { display: grid; grid-template-columns: 815fr 654fr; gap: 12px; margin: 32px 0 8px; align-items: start; }
+.demo { margin: 32px 0 8px; }
+.demo video { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; background: #000; }
+.shots { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 24px 0 8px; align-items: start; }
 .shots img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; }
+.quick { margin: 20px 0 0; }
 .caption { font-size: 13px; text-align: center; margin: 0; }
 .box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin: 16px 0; }
 .buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
@@ -35,7 +38,7 @@ a.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 code { font-family: ui-monospace, Consolas, monospace; font-size: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; overflow-wrap: anywhere; }
 a { color: inherit; }
 footer { margin-top: 56px; font-size: 13px; color: var(--muted); }
-@media (max-width: 600px) { .shots { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .shots { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -47,22 +50,40 @@ footer { margin-top: 56px; font-size: 13px; color: var(--muted); }
 <h1>Learn languages from the videos you already love</h1>
 <p class="lead"><strong>Look up as you watch · listen line by line · save and review · offline dictionaries.</strong> Tap any word in the subtitles to look it up. Japanese gets kana and Chinese gets pinyin above the line. Save the word with its sentence and the original audio, and send it to Anki in one click. Offline dictionaries, one payment.</p>
 
-<div class="shots">
-<img src="/screenshots/learning-card.png" alt="Word card for 'nifty' with pronunciation, meanings and the sentence it came from" width="815" height="550">
-<img src="/screenshots/learning-list.png" alt="Subtitle list with the words above the chosen level highlighted" width="654" height="636">
+<div class="buttons quick">
+<a class="btn primary" href="https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00" rel="noopener">Buy on 爱发电 · ¥99</a>
+<a class="btn" href="#install">Try it free first</a>
 </div>
-<p class="caption">Real screenshots, Chinese interface.</p>
+<p class="caption" style="text-align:left">Early bird until 3 January 2027, then ¥129. Your first 30 lookups are free.</p>
+
+<figure class="demo" id="demo">
+<video controls playsinline preload="metadata" poster="/screenshots/learning/demo-en.jpg" width="1440" height="900">
+<source src="/screenshots/learning/demo-en.mp4" type="video/mp4">
+</video>
+</figure>
+<p class="caption">A real recording of Lumtub with sound, 45 seconds. Not a mock-up.</p>
+<div class="shots">
+<img src="/screenshots/learning/en/1-lookup-ja.jpg" alt="Click any word in the subtitles: reading, meaning and the original line, saved in one click" width="1280" height="960" loading="lazy">
+<img src="/screenshots/learning/en/2-kana.jpg" alt="Kana above every kanji, in the video and in the transcript" width="1280" height="960" loading="lazy">
+<img src="/screenshots/learning/en/3-lookup-fr.jpg" alt="Looking up a French word in a French video" width="1280" height="960" loading="lazy">
+<img src="/screenshots/learning/en/4-study.jpg" alt="Study mode: four steps per section of a video" width="1280" height="960" loading="lazy">
+<img src="/screenshots/learning/en/5-vocab.jpg" alt="Vocabulary book: every word keeps its sentence, the video and the timestamp" width="1280" height="960" loading="lazy">
+<img src="/screenshots/learning/en/6-review.jpg" alt="Review card that plays the real line from the video" width="1280" height="960" loading="lazy">
+</div>
+<p class="caption">Real screenshots with real YouTube videos, English interface. The license number is blurred.</p>
 
 <h2>What you get</h2>
 <h3>Learning Pack</h3>
 <ul>
-<li>Tap a word for its meaning. Conjugated Japanese verbs are looked up by their dictionary form.</li>
+<li>Click a word for its meaning. Conjugated Japanese verbs are looked up by their dictionary form.</li>
 <li>Kana, pinyin and Korean romanization above the subtitles.</li>
 <li>Words above your level are highlighted.</li>
-<li>Words read aloud.</li>
-<li>A vocabulary book that keeps each word's sentence, its sound and the moment in the video.</li>
-<li>Export to Anki.</li>
-<li>Four-step study of one video.</li>
+<li>Before you start a video, see how much of it you already know and which words come up most.</li>
+<li>Words read aloud, and every saved word keeps the original line&#39;s audio.</li>
+<li>A vocabulary book that keeps each word&#39;s sentence, its sound and the moment in the video.</li>
+<li>Review with spaced repetition, using the line from the video.</li>
+<li>Study one video in four steps: listen blind, read along, shadow the hard lines, listen again.</li>
+<li>Export to Anki in one click, or CSV.</li>
 </ul>
 <p>Dictionaries: Japanese, Chinese, English and Korean. Spanish, French, German, Italian and Russian are in beta.</p>
 <h3>Free for everyone</h3>
@@ -83,7 +104,7 @@ footer { margin-top: 56px; font-size: 13px; color: var(--muted); }
 <h2>Compared with free tools</h2>
 <p>asbplayer, Yomitan and Anki together are an excellent free setup, and if it works for you, keep it. Lumtub does the same loop in one app: no browser extensions to set up, dictionaries built in and offline, and the line's audio goes to Anki with the card. That convenience is what the Learning Pack is for.</p>
 
-<h2>Install</h2>
+<h2 id="install">Install</h2>
 <div class="buttons">
 <a class="btn primary" href="/get/?windows-x64-v3-setup.exe">Windows</a>
 <a class="btn" href="/get/?macos-arm64.dmg">Mac (Apple silicon)</a>

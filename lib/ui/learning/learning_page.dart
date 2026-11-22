@@ -215,12 +215,13 @@ const learningPrice = (euro: '€16', yuan: '¥129');
 ({String euro, String yuan})? get learningPresale => (euro: '€12', yuan: '¥99');
 
 /// The last day of the pre-sale price.
-final learningPresaleEnds = DateTime(2026, 12, 3);
+/// Through the Christmas and New Year holidays.
+final learningPresaleEnds = DateTime(2027, 1, 3);
 
-/// "until 3 December" while the pre-sale runs, else null.
+/// "until 3 January" while the pre-sale runs, else null.
 String? learningPresaleDeadline() {
   if (learningPresale == null || DateTime.now().isAfter(learningPresaleEnds.add(const Duration(days: 1)))) return null;
-  final day = currentLanguage.isChinese ? '${learningPresaleEnds.month} 月 ${learningPresaleEnds.day} 日' : '${learningPresaleEnds.day} December';
+  final day = currentLanguage.isChinese ? '${learningPresaleEnds.month} 月 ${learningPresaleEnds.day} 日' : '${learningPresaleEnds.day} ${const ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][learningPresaleEnds.month - 1]}';
   return tr('Pre-sale price until {0}', [day]);
 }
 

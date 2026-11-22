@@ -13,6 +13,7 @@ import '../../libass_layout.dart' show LibassLook;
 import '../window_chrome.dart';
 import '../../app/app_controller.dart';
 import '../../learning/word_token.dart';
+import '../../learning/known_words.dart';
 import '../../learning/learning.dart';
 import '../learning/ruby_line.dart';
 import '../learning/word_card.dart';
@@ -1395,6 +1396,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
                     pinyin: words.learning.showPinyin,
                     hard: words.learning.isHard,
                     hardColor: _hardColorOn(style.color),
+                    known: words.learning.book == null || !words.learning.unlocked ? null : knownWordsOf(words.learning.book!).knows,
                     hits: _videoWords,
                   ),
                 ),

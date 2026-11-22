@@ -54,6 +54,7 @@ pub mod relay;
 pub mod relay_hls;
 pub mod relay_live;
 pub mod resolved;
+pub mod review;
 pub mod roots;
 pub mod signing;
 pub mod socks;
@@ -75,5 +76,5 @@ pub mod words;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    59
+    60
 }

@@ -19,6 +19,7 @@ class ChineseRubyLine extends StatelessWidget {
     this.highlight,
     this.hard,
     this.hardColor = const Color(0xFFFFC23D),
+    this.known,
   });
 
   final List<WordToken> tokens;
@@ -37,6 +38,9 @@ class ChineseRubyLine extends StatelessWidget {
   final bool Function(WordToken token)? hard;
   final Color hardColor;
 
+  /// Words the learner knows: no reading above them.
+  final bool Function(WordToken token)? known;
+
   @override
   Widget build(BuildContext context) {
     hits?.clear(tokens.map((t) => t.text).join());
@@ -49,7 +53,7 @@ class ChineseRubyLine extends StatelessWidget {
     // Half the line's size, but never too small to read in a list.
     final rubyStyle = style.copyWith(fontSize: size * 0.5 < 9 ? (size < 9 ? size : 9.0) : size * 0.5, height: 1.1, fontWeight: FontWeight.normal);
     final children = <Widget>[];
-    bool ruby(int i) => i >= 0 && i < tokens.length && tokens[i].isWord && pinyin && tokens[i].reading != null;
+    bool ruby(int i) => i >= 0 && i < tokens.length && tokens[i].isWord && pinyin && tokens[i].reading != null && !(known?.call(tokens[i]) ?? false);
     for (final (i, token) in tokens.indexed) {
       if (!token.isWord) {
         // Text between words wraps at its spaces.
@@ -67,7 +71,7 @@ class ChineseRubyLine extends StatelessWidget {
       // neighbour that has none, else is set smaller, as furigana is.
       final japanese = token.language == 'ja';
       Widget block = Column(mainAxisSize: MainAxisSize.min, children: [
-        if (pinyin && token.reading != null)
+        if (ruby(i))
           japanese ? _furigana(token.text, wordStyle, token.reading!, rubyStyle, left: !ruby(i - 1), right: !ruby(i + 1)) : _text(token.reading!, rubyStyle, outlineScale: 0.6),
         _text(token.text, wordStyle),
       ]);

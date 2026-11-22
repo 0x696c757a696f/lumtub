@@ -196,6 +196,23 @@ extension LearningActions on AppController {
     }
   }
 
+  /// Plays the sound file [file] (a vocabulary word's line) on its own,
+  /// pausing the video. False when it could not.
+  Future<bool> playSoundFile(File file) async {
+    try {
+      if (!await file.exists()) return false;
+      final player = this.player;
+      if (player != null && player.state.playing) await player.pause();
+      final sound = _shadowPlayer ??= Player();
+      await sound.setVolume(player?.state.volume ?? 100);
+      await sound.open(Media(file.uri.toString()));
+      return true;
+    } catch (e) {
+      logWarn('Could not play ${file.path}: $e');
+      return false;
+    }
+  }
+
   /// Plays the line said at [at] once and pauses as it ends: 听原句 on a
   /// word card. False when no line is there.
   Future<bool> playLineOnce(Duration at) async {

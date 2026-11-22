@@ -87,16 +87,29 @@ class VocabularyBook extends ChangeNotifier {
 
   final File file;
   final List<VocabularyWord> _words = [];
+
+  /// [VocabularyWord.key] of every word, so [contains] is one lookup
+  /// however big the book grows: subtitles ask it for every word drawn.
+  final Set<String> _keys = {};
   bool _loaded = false;
 
-  List<VocabularyWord> get words => List.unmodifiable(_words);
+  /// A copy made once per change, so reading it is free and a caller
+  /// holding it is never surprised by a later change.
+  List<VocabularyWord> get words => _view ??= List.unmodifiable(_words);
+  List<VocabularyWord>? _view;
+
+  @override
+  void notifyListeners() {
+    _view = null;
+    super.notifyListeners();
+  }
 
   /// Where the line [key] was heard in is kept, for Anki: a WAV file in
   /// `vocabulary-sounds` beside the book.
   File soundOf(String key) =>
       File('${file.parent.path}${Platform.pathSeparator}vocabulary-sounds${Platform.pathSeparator}${sha1.convert(utf8.encode(key)).toString().substring(0, 16)}.wav');
 
-  bool contains(String language, String word) => _words.any((w) => w.language == language && w.word == word);
+  bool contains(String language, String word) => _keys.contains('$language:$word');
 
   Future<void> load() async {
     if (_loaded) return;
@@ -105,7 +118,12 @@ class VocabularyBook extends ChangeNotifier {
       if (!await file.exists()) return;
       final json = jsonDecode(await file.readAsString());
       final list = json is Map ? json['words'] : null;
-      if (list is List) _words.addAll(list.map(VocabularyWord.fromJson).whereType<VocabularyWord>());
+      if (list is List) {
+        for (final word in list.map(VocabularyWord.fromJson).whereType<VocabularyWord>()) {
+          if (_keys.add(word.key)) _words.add(word);
+        }
+        _view = null;
+      }
       notifyListeners();
     } catch (e) {
       logWarn('Could not read the vocabulary book: $e');
@@ -114,14 +132,14 @@ class VocabularyBook extends ChangeNotifier {
 
   Future<void> add(VocabularyWord word) async {
     await load();
-    _words.removeWhere((w) => w.key == word.key);
+    if (!_keys.add(word.key)) _words.removeWhere((w) => w.key == word.key);
     _words.insert(0, word);
     notifyListeners();
     await _save();
   }
 
   Future<void> remove(VocabularyWord word) async {
-    _words.removeWhere((w) => w.key == word.key);
+    if (_keys.remove(word.key)) _words.removeWhere((w) => w.key == word.key);
     final sound = soundOf(word.key);
     if (await sound.exists()) await sound.delete().catchError((Object _) => sound);
     notifyListeners();

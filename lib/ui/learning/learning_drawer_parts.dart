@@ -7,6 +7,13 @@ void installLearningPack() {
   studyUnlocked = (controller) => controller.learning.unlocked;
   studyLockedView = (context, controller) => _StudyLocked(controller: controller);
   addLearningDrawerSection(LearningDrawerSection(
+    id: 'video-words',
+    order: 25,
+    title: () => tr('Words in this video'),
+    shown: (c) => c.learning.book != null && c.playing != null && c.learningLines.isNotEmpty && _drawerPack(c) == null,
+    build: (context, c) => _DrawerVideoWords(controller: c),
+  ));
+  addLearningDrawerSection(LearningDrawerSection(
     id: 'vocabulary',
     order: 30,
     title: () => tr('Vocabulary book'),
@@ -140,3 +147,97 @@ class _DrawerDictionary extends StatelessWidget {
 /// the pack, says that dictionaries come with it.
 Future<void> _getDictionary(BuildContext context, Learning learning, DictionaryPack pack) =>
     learning.unlocked ? learning.download(pack) : showLearningLocked(context, learning);
+
+/// How much of this video the learner knows, how hard that makes it, and
+/// the new words said most often: learnt first, they open up the most.
+class _DrawerVideoWords extends StatelessWidget {
+  const _DrawerVideoWords({required this.controller});
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final learning = controller.learning;
+    if (!learning.unlocked) {
+      return Row(children: [
+        Icon(AppIcons.lock, size: 16, color: context.colors.outline),
+        const SizedBox(width: 6),
+        Expanded(child: Text(tr('See how much of this video you understand, and its key new words, with the learning pack'), style: context.text.bodySmall)),
+      ]);
+    }
+    final known = knownWordsOf(learning.book!);
+    final lines = controller.learningLines;
+    return ListenableBuilder(
+      listenable: known,
+      builder: (context, _) => FutureBuilder<VideoWords?>(
+        future: videoWordsOf(learning, known, controller.playing!.id, [for (final l in lines) l.text]),
+        builder: (context, snapshot) {
+          final words = snapshot.data;
+          if (words == null) {
+            return snapshot.connectionState == ConnectionState.done ? const SizedBox.shrink() : const LinearProgressIndicator(minHeight: 2);
+          }
+          final colors = context.colors;
+          final (label, color) = switch (words.level) {
+            VideoLevel.easy => (tr('Easy for you'), Colors.green.shade600),
+            VideoLevel.right => (tr('Just right for learning'), colors.primary),
+            VideoLevel.hard => (tr('Challenging'), Colors.orange.shade700),
+            VideoLevel.tooHard => (tr('Very hard for now'), colors.error),
+          };
+          return Entrance(
+            scale: 0.97,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: words.known),
+                  duration: Motion.of(const Duration(milliseconds: 700)),
+                  curve: Ease.curve,
+                  builder: (context, v, _) => Text('${(v * 100).round()}%', style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w800, color: color)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(tr('of what is said you know'), style: context.text.bodySmall?.copyWith(color: colors.outline)),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+                  child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+                ),
+              ]),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(value: words.known, minHeight: 5, color: color, backgroundColor: colors.surfaceContainerHighest),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                tr('{0} different words, {1} new to you · {2} lines with just one new word', [words.words, words.newWords, words.oneNew.length]),
+                style: context.text.bodySmall?.copyWith(color: colors.outline),
+              ),
+              if (words.often.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(tr('Learn these first: the new words said most'), style: context.text.labelMedium),
+                const SizedBox(height: 6),
+                Wrap(spacing: 6, runSpacing: 6, children: [
+                  for (final (token, count) in words.often)
+                    ActionChip(
+                      visualDensity: VisualDensity.compact,
+                      label: Text.rich(TextSpan(children: [
+                        TextSpan(text: token.text),
+                        TextSpan(text: ' ×$count', style: TextStyle(fontSize: 11, color: colors.outline)),
+                      ])),
+                      onPressed: () => unawaited(showWordCard(context, controller, token, sentence: _lineWith(lines, token))),
+                    ),
+                ]),
+              ],
+            ]),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// The first line saying [token], for its word card.
+String _lineWith(List<SubtitleCue> lines, WordToken token) => lines.firstWhere((l) => l.text.contains(token.text), orElse: () => lines.first).text;

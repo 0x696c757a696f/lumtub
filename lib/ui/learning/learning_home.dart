@@ -26,6 +26,7 @@ class _LearningHomeState extends State<LearningHome> {
         if (learning.licenseStopped) _StoppedCard(learning: learning),
         if (_GettingStarted.needed(learning)) _GettingStarted(controller: controller),
         if (learning.licensed) _StatusCard(controller: controller) else _Pitch(learning: learning),
+        if ((learning.book?.words.isNotEmpty ?? false)) _ReviewHomeCard(controller: controller),
         _VocabularyCard(controller: controller),
         _DictionariesCard(learning: learning),
         _AboutCard(controller: controller),
@@ -200,6 +201,73 @@ class _StatusCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 复习: how many words are due, the streak and the words learnt, and the
+/// button that starts a review.
+class _ReviewHomeCard extends StatefulWidget {
+  const _ReviewHomeCard({required this.controller});
+  final AppController controller;
+
+  @override
+  State<_ReviewHomeCard> createState() => _ReviewHomeCardState();
+}
+
+class _ReviewHomeCardState extends State<_ReviewHomeCard> {
+  late final VocabularyBook _book = widget.controller.learning.book!;
+  late final ReviewStore _store = reviewStoreOf(_book);
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_store.load());
+  }
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: Listenable.merge([_store, _book]),
+        builder: (context, _) {
+          final colors = context.colors;
+          final now = DateTime.now();
+          final due = _store.dueCount(_book.words, now);
+          final streak = _store.streak(now);
+          final known = _store.knownCount(_book.words);
+          final locked = !widget.controller.learning.unlocked;
+          Widget stat(String number, String label) => Padding(
+                padding: const EdgeInsets.only(right: Space.xl),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(number, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w800, color: colors.primary)),
+                  Text(label, style: context.text.bodySmall?.copyWith(color: colors.outline)),
+                ]),
+              );
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(Space.l),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                _CardTitle(
+                  icon: AppIcons.brain,
+                  title: tr('Review'),
+                  subtitle: due > 0 ? tr('{0} words to review now', [due]) : tr('Nothing due right now'),
+                  trailing: FilledButton.icon(
+                    onPressed: () => unawaited(openReview(context, widget.controller)),
+                    icon: Icon(locked ? AppIcons.lock : AppIcons.playCircle, size: 18),
+                    label: Text(due > 0 ? tr('Start review') : tr('Open')),
+                  ),
+                ),
+                const SizedBox(height: Space.m),
+                Wrap(children: [
+                  stat('$due', tr('due now')),
+                  stat('$streak', tr('days in a row')),
+                  stat('$known', tr('words learnt')),
+                ]),
+                const SizedBox(height: Space.s),
+                Text(tr('Each word comes back just before you would forget it, in the line it was said in, with its own sound.'),
+                    style: context.text.bodySmall?.copyWith(color: colors.outline)),
+              ]),
+            ),
+          );
+        },
+      );
 }
 
 /// The newest words, each opening its video at its moment, with the

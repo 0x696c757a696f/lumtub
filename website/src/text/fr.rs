@@ -98,7 +98,7 @@ pub static FR: Text = Text {
         pack_title: "Pack d'apprentissage · préversion",
         pack: ["Touchez un mot pour voir son sens. Les dictionnaires se téléchargent une fois puis fonctionnent hors ligne : chinois, anglais, japonais et coréen ; espagnol, français, allemand, italien et russe en bêta.", "Pinyin, kana et romanisation du coréen au-dessus de la ligne.", "Les mots au-dessus de votre niveau sont mis en évidence : vous ne vous arrêtez que sur les nouveaux.", "Un carnet de vocabulaire qui garde la phrase, l'audio d'origine et le moment dans la vidéo.", "Envoyez les mots dans Anki en un clic, ou exportez en CSV."],
         trial: "Essayez d'abord : tout est activé pendant vos 30 premières recherches, sans compte. Ensuite, sans le pack, 3 recherches par jour.",
-        price: "Prix de lancement 99 ¥ jusqu'au 3 décembre, puis 129 ¥. Payé une fois, sans abonnement, sur 爱发电 (Alipay ou WeChat Pay). Le paiement par carte arrivera plus tard.",
+        price: "Prix de lancement 99 ¥ jusqu'au 3 janvier 2027, puis 129 ¥. Payé une fois, sans abonnement, sur 爱发电 (Alipay ou WeChat Pay). Le paiement par carte arrivera plus tard.",
         fine: "Windows, macOS et Linux. Une licence pour 5 de vos appareils au plus ; l'app la vérifie en ligne environ une fois tous les 30 jours.",
         free_title: "Gratuit pour tous",
         free: ["Pause après chaque ligne, pour la comprendre avant de continuer.", "Traduction floue jusqu'au survol : devinez d'abord, vérifiez ensuite.", "Réécouter, boucler et passer d'une ligne à l'autre.", "Shadowing : enregistrez-vous et comparez avec l'original.", "Exportez la liste des sous-titres avec traductions en CSV."],

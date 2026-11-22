@@ -54,7 +54,8 @@ The changes, marked "Lumtub" in the code:
   being replaced by the video's own size.
 - `windows/frame_stats.h`, `video_output.cc`, `angle_surface_manager.cc`,
   `video_output_manager.cc`, `media_kit_video_plugin.cc`: time each frame's
-  render, ANGLE draw and Flutter read, count frames announced while one was
+  render, ANGLE draw (and its `glFinish` alone), how long a finished frame
+  waits until Flutter takes it, and Flutter read, count frames announced while one was
   still waiting and frames drawn against frames Flutter took, and return them through `VideoOutputManager.Stats`, so the
   log shows where frames are lost.
 - `lib/src/video_controller/native_video_controller/real.dart`: on Windows

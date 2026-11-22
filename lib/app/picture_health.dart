@@ -135,11 +135,16 @@ extension PictureHealth on AppController {
         await _stepDownIfDropping(platform, added);
       }
       if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) {
-        // Smooth playback is logged too, every few minutes, so a stutter can
-        // be compared with how the same machine plays normally.
-        if (frames != null && DateTime.now().difference(_lastFrameLog) >= const Duration(minutes: 3)) {
+        // Smooth playback is logged too, once a minute, so a stutter can be
+        // compared with how the same machine plays normally, next to the
+        // window's own 'Frames:' line. On Windows: render = libmpv's
+        // drawing, draw = that plus finish (glFinish, the wait for the GPU),
+        // wait = a finished frame until Flutter took it, read = Flutter's
+        // compositions, frames = drawn/taken (each taken frame is a new
+        // shared handle Flutter opens again).
+        if (frames != null && DateTime.now().difference(_lastFrameLog) >= const Duration(minutes: 1)) {
           _lastFrameLog = DateTime.now();
-          logDebug(() => 'Frames in 10 s, $added dropped: $frames');
+          logInfo('Video frames in 10 s, $added dropped: $frames');
         }
         return;
       }

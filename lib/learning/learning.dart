@@ -101,7 +101,10 @@ class _Pack {
 /// vocabulary book. Everything stays on this device; the only request is
 /// the one download of the dictionary, from GitHub.
 class Learning extends ChangeNotifier {
-  Learning();
+  Learning() {
+    // A segmenter opened without a notification still changes the words.
+    viewChanges.addListener(_words.clear);
+  }
 
   AppDirectories? _directories;
   LearningLicense? _license;
@@ -145,6 +148,7 @@ class Learning extends ChangeNotifier {
 
   @override
   void notifyListeners() {
+    _words.clear();
     final key = Object.hashAll([_license, licensed, unlocked, _showPinyin, _showRomanization, _englishLevel, for (final p in _packs.values) p.dictionary]);
     if (key != _lastView) {
       _lastView = key;
@@ -336,10 +340,24 @@ class Learning extends ChangeNotifier {
   /// [text] as words a tap looks up, when a dictionary for its language
   /// is ready; readings above them only while [unlocked].
   List<WordToken>? wordsOf(String text) {
-    final words = _wordsOf(text);
+    var words = _words.remove(text);
+    if (words == null) {
+      words = _wordsOf(text);
+      // A line not cut yet (its dictionary still loading) is asked again.
+      if (words != null && _words.length >= _wordsKept) _words.remove(_words.keys.first);
+    }
+    if (words != null) _words[text] = words;
     if (words == null || unlocked) return words;
     return [for (final w in words) w.reading == null ? w : WordToken(w.text, null, isWord: w.isWord, lookup: w.lookup, language: w.language)];
   }
+
+  /// Lines already cut, newest last. The video's line and every row of the
+  /// subtitle list are built again whenever the playing line changes, and
+  /// cutting a line (the core's segmenter, then a dictionary look-up per
+  /// word) is too slow to repeat on the window's thread for each of them.
+  /// Emptied whenever anything that changes the words does.
+  final _words = <String, List<WordToken>>{};
+  static const _wordsKept = 512;
 
   List<WordToken>? _wordsOf(String text) {
     if (JapaneseDictionary.looksJapanese(text) && _onDisk('ja')) {

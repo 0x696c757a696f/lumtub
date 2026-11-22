@@ -430,7 +430,7 @@ class SkinBackdrop extends StatelessWidget {
     final warmth = context.pictureWarmth;
     Widget warm(Widget child) => warmth == null ? child : ColorFiltered(colorFilter: ColorFilter.mode(warmth, BlendMode.modulate), child: child);
     return Stack(fit: StackFit.expand, children: [
-      RepaintBoundary(child: warm(Stack(fit: StackFit.expand, children: [
+      RepaintBoundary(child: warm(_Kept(child: Stack(fit: StackFit.expand, children: [
         // Pure black in dark mode replaces the page of a skin that follows
         // the theme mode, as it does Lumtub's own.
         ColoredBox(color: skin.followsThemeMode && Theme.of(context).colorScheme.surface == Colors.black ? Colors.black : skin.colors.page),
@@ -438,11 +438,35 @@ class SkinBackdrop extends StatelessWidget {
         // which cost memory to decode.
         if (skin.background.isNotEmpty && pictures) SkinLayers(plain ? skin.background.where((layer) => layer is! ImagePaint).toList() : skin.background),
         if (below.isNotEmpty) CustomPaint(painter: SkinDecorationPainter(below)),
-      ]))),
+      ])))),
       child,
-      if (above.isNotEmpty) IgnorePointer(child: RepaintBoundary(child: warm(CustomPaint(painter: SkinDecorationPainter(above))))),
+      if (above.isNotEmpty) IgnorePointer(child: RepaintBoundary(child: warm(_Kept(child: CustomPaint(painter: SkinDecorationPainter(above)))))),
     ]);
   }
+}
+
+/// Asks the engine to keep [child], the window's still background, as one
+/// picture. Flutter draws the whole window again for every video frame
+/// (60 times a second for a 60 fps video), and without the hint a skin's
+/// page colour, picture, gradients and ornaments are each drawn over the
+/// whole window every time; a weak GPU playing 60 fps video then has no
+/// time left for the rest. Kept, they are one picture drawn once.
+class _Kept extends StatelessWidget {
+  const _Kept({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(painter: const _Nothing(), isComplex: true, child: child);
+}
+
+class _Nothing extends CustomPainter {
+  const _Nothing();
+
+  @override
+  void paint(Canvas canvas, Size size) {}
+
+  @override
+  bool shouldRepaint(_Nothing old) => false;
 }
 
 /// A box drawn as [surface] (or nothing when null) round [child].

@@ -61,11 +61,15 @@ void ANGLESurfaceManager::Draw(std::function<void()> callback) {
   eglMakeCurrent(display_, surfaces_[target], surfaces_[target], context_);
   callback();
   // Lumtub: the frame is handed to Flutter only once the GPU has drawn it.
+  const auto finish = std::chrono::steady_clock::now();
   SwapBuffers();
+  const auto finished = std::chrono::steady_clock::now();
+  finish_timing.Add(finished - finish);
   MakeCurrent(false);
   {
     std::lock_guard<std::mutex> lock(ring_mutex_);
     front_ = target;
+    front_since_ = finished;
   }
   drawn_++;
   ::ReleaseMutex(mutex_);
@@ -97,7 +101,10 @@ HANDLE ANGLESurfaceManager::Read() {
     if (taken_[0] != front_) {
       taken_[1] = taken_[0];
       taken_[0] = front_;
+      // Each new frame is a new shared handle for Flutter, which then
+      // opens that texture again.
       shown_++;
+      wait_timing.Add(std::chrono::steady_clock::now() - front_since_);
     }
     handle = handles_[front_];
   }

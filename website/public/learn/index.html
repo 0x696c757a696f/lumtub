@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learn languages · Lumtub</title>
+<meta name="description" content="Tap a word in the subtitles, save it with the original audio, send it to Anki. Offline dictionaries, one payment.">
+<link rel="icon" href="/favicon.png">
+<style>
+@font-face { font-family: "Geist"; src: url("/fonts/geist.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+:root { --bg: #fafafa; --surface: #ffffff; --text: #09090b; --muted: #52525b; --line: #e4e4e7; --accent: #e53935; --on-accent: #ffffff; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg: #181818; --surface: #212121; --text: #fafafa; --muted: #a1a1aa; --line: #313131; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: "Geist", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 16px; line-height: 1.6; }
+main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 40px; }
+header.top a { color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+header.top .lang { color: var(--muted); font-weight: 500; }
+h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.2; margin: 0 0 16px; text-wrap: balance; }
+h2 { font-size: 22px; line-height: 1.3; margin: 48px 0 12px; }
+h3 { font-size: 17px; margin: 24px 0 6px; }
+p, li { color: var(--muted); text-wrap: pretty; }
+p.lead { font-size: 18px; color: var(--text); }
+strong { color: var(--text); }
+ul, ol { padding-left: 1.3em; }
+li { margin: 4px 0; }
+.shots { display: grid; grid-template-columns: 815fr 654fr; gap: 12px; margin: 32px 0 8px; align-items: start; }
+.shots img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; }
+.caption { font-size: 13px; text-align: center; margin: 0; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin: 16px 0; }
+.buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+a.btn { display: inline-flex; align-items: center; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font-weight: 600; text-decoration: none; }
+a.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+a.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; overflow-wrap: anywhere; }
+a { color: inherit; }
+footer { margin-top: 56px; font-size: 13px; color: var(--muted); }
+@media (max-width: 600px) { .shots { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+<header class="top">
+<a href="/"><img src="/icon.png" alt="" width="28" height="28">Lumtub</a>
+<a class="lang" href="/learn/zh/" hreflang="zh-Hans">中文</a>
+</header>
+<h1>Learn languages from the videos you already love</h1>
+<p class="lead"><strong>Look up as you watch · listen line by line · save and review · offline dictionaries.</strong> Tap any word in the subtitles to look it up. Japanese gets kana and Chinese gets pinyin above the line. Save the word with its sentence and the original audio, and send it to Anki in one click. Offline dictionaries, one payment.</p>
+
+<div class="shots">
+<img src="/screenshots/learning-card.png" alt="Word card for 'nifty' with pronunciation, meanings and the sentence it came from" width="815" height="550">
+<img src="/screenshots/learning-list.png" alt="Subtitle list with the words above the chosen level highlighted" width="654" height="636">
+</div>
+<p class="caption">Real screenshots, Chinese interface.</p>
+
+<h2>What you get</h2>
+<h3>Learning Pack</h3>
+<ul>
+<li>Tap a word for its meaning. Conjugated Japanese verbs are looked up by their dictionary form.</li>
+<li>Kana, pinyin and Korean romanization above the subtitles.</li>
+<li>Words above your level are highlighted.</li>
+<li>Words read aloud.</li>
+<li>A vocabulary book that keeps each word's sentence, its sound and the moment in the video.</li>
+<li>Export to Anki.</li>
+<li>Four-step study of one video.</li>
+</ul>
+<p>Dictionaries: Japanese, Chinese, English and Korean. Spanish, French, German, Italian and Russian are in beta.</p>
+<h3>Free for everyone</h3>
+<ul>
+<li>Pause after each line, blurred translation until you hover it, line loop, shadowing recorder.</li>
+<li>Export the subtitle list as CSV.</li>
+<li>AI overview of a video, with your own API key.</li>
+</ul>
+
+<div class="box">
+<p><strong>Try it first.</strong> Your first 30 word lookups have everything switched on. No account needed. After that, without the pack, you can look up 3 words a day.</p>
+<p><strong>Early bird: ¥99 until 3 January 2027, then ¥129.</strong> A lifetime license, paid once, no automatic renewal, no account in the app. One license for up to 5 of your devices; you can remove old ones yourself. Payment is on 爱发电 (Alipay or WeChat Pay); card payment is coming later.</p>
+<div class="buttons">
+<a class="btn primary" href="https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00" rel="noopener">Buy on 爱发电 · ¥99</a>
+</div>
+</div>
+
+<h2>Compared with free tools</h2>
+<p>asbplayer, Yomitan and Anki together are an excellent free setup, and if it works for you, keep it. Lumtub does the same loop in one app: no browser extensions to set up, dictionaries built in and offline, and the line's audio goes to Anki with the card. That convenience is what the Learning Pack is for.</p>
+
+<h2>Install</h2>
+<div class="buttons">
+<a class="btn primary" href="/get/?windows-x64-v3-setup.exe">Windows</a>
+<a class="btn" href="/get/?macos-arm64.dmg">Mac (Apple silicon)</a>
+<a class="btn" href="/get/?macos-x64.dmg">Mac (Intel)</a>
+<a class="btn" href="/get/?linux-x64-v3.AppImage">Linux AppImage</a>
+</div>
+<p>Older PC or Windows on ARM? See <a href="https://github.com/0x696c757a696f/lumtub/releases/latest">all downloads</a>.</p>
+
+<h3>Windows</h3>
+<ol>
+<li>Run the installer. No administrator rights needed.</li>
+<li>If Windows shows <strong>Windows protected your PC</strong>: click <strong>More info</strong>, then <strong>Run anyway</strong>. This appears because Lumtub isn't signed with a paid certificate yet.</li>
+</ol>
+<h3>Mac</h3>
+<ol>
+<li>Open the DMG and drag Lumtub into Applications.</li>
+<li>The first time, macOS stops it because it isn't notarized by Apple yet. Click <strong>Done</strong>, then go to <strong>System Settings › Privacy &amp; Security</strong> and click <strong>Open Anyway</strong> next to Lumtub.</li>
+<li>Or run this once in Terminal: <code>xattr -dr com.apple.quarantine /Applications/Lumtub.app</code></li>
+</ol>
+<h3>Linux</h3>
+<ol>
+<li>Make the file executable: <code>chmod +x Lumtub_*.AppImage</code>, then run it.</li>
+<li>If it says FUSE is missing, install your distribution's <code>fuse3</code> package.</li>
+</ol>
+<h3>Then</h3>
+<p>Open a video with subtitles in the language you're learning and tap a word. The first time, Lumtub asks to download that language's dictionary.</p>
+
+<h2>Refunds</h2>
+<ul>
+<li>Digital product: no refunds for change of mind once activated. If a software problem stops it working and it can't be fixed, contact me for a refund.</li>
+<li>To ask, send a message on 爱发电.</li>
+</ul>
+
+<h2>Good to know</h2>
+<ul>
+<li>Windows, macOS and Linux. Android isn't tested yet.</li>
+<li>Looking up words works offline. The app checks your license online about once every 30 days.</li>
+<li>Lumtub is open source (AGPL). The dictionaries are open data; their sources are listed in the app.</li>
+</ul>
+<footer><a href="/">Lumtub</a> · <a href="https://github.com/0x696c757a696f/lumtub">GitHub</a></footer>
+</main>
+</body>
+</html>

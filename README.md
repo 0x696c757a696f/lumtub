@@ -32,7 +32,7 @@ No account needed to watch.
 
 https://github.com/user-attachments/assets/97e3ce09-8e66-43fe-9125-bff1b3dcb3fe
 
-[Screenshots](#screenshots) · [Features](#features) · [Get it](#get-it) · [Data](#where-the-data-comes-from) · [Privacy](#privacy-what-stays-local-and-what-doesnt) · [FAQ](#faq) · [Support](#support-lumtub)
+[Learn languages](#-learn-languages-from-real-videos) · [Screenshots](#screenshots) · [Features](#features) · [Get it](#get-it) · [Data](#where-the-data-comes-from) · [Privacy](#privacy-what-stays-local-and-what-doesnt) · [FAQ](#faq) · [Support](#support-lumtub)
 
 </div>
 ---
@@ -46,6 +46,39 @@ https://github.com/user-attachments/assets/97e3ce09-8e66-43fe-9125-bff1b3dcb3fe
 - **No account to watch.** Search, playback, subscriptions and recommendations work signed out. Sign in only for likes, comments, playlists, members-only videos and other interaction.
 
 Lumtub is free and open source, with no ads, no accounts of its own and no telemetry.
+
+## 🆕 Learn languages from real videos
+
+**Learn languages from the videos you already love.** Look up as you watch · listen line by line · save and review · offline dictionaries.
+
+**Tap any word in the subtitles to look it up. Chinese gets pinyin and Japanese gets kana above the line. Save a word with its sentence and the original audio, and send it to Anki in one click. Offline dictionaries, one payment.**
+
+<p align="center">
+<img src="docs/screenshots/learning-card.png" alt="Word card for 'nifty' with pronunciation, meanings and the sentence it came from" width="48%">
+<img src="docs/screenshots/learning-list.png" alt="Subtitle list with the words above the chosen level highlighted" width="48%">
+</p>
+<p align="center"><sub>Real screenshots from the preview build, Chinese interface.</sub></p>
+
+**Learning Pack** (preview, Windows, macOS and Linux):
+
+- **Tap a word, get the meaning**, from dictionaries that download once and then work offline. Chinese, English, Japanese and Korean; Spanish, French, German, Italian and Russian in beta.
+- **Readings above the line**: pinyin for Chinese, kana for Japanese, romanization for Korean.
+- **Words above your level are highlighted**, so you only stop for the ones you don't know yet.
+- **Vocabulary book** that keeps the sentence, the original audio and the moment in the video. Tap an entry to hear it again.
+- **Send to Anki** in one click, or export CSV.
+
+**Try it free:** your first 30 word lookups have everything switched on, no account needed. After that, without the pack, you can look up 3 words a day. [Install guide and refunds](https://lumtub.app/learn/).<br>
+**Early-bird price:** ¥99 until 3 January 2027, then ¥129. Pay once, no subscription, on [爱发电](https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00) (Alipay or WeChat Pay). Card payment is coming later. One license for up to 5 of your devices; the app checks it online about once every 30 days.
+
+**Free for everyone**, in the Subtitles menu under **Language learning**:
+
+- **Pause after each line** (Q): playback stops when a line ends, so you have time to understand it before you move on.
+- **Blur the translation** (V): the second subtitle stays blurred until you hover it, tap it or press the key. Guess first, then check.
+- **Replay, loop and step through lines** (R, Shift+R, A, D): every jump goes by subtitle line and starts playing.
+- **Shadowing** (E): record yourself saying the line, then hear the original and your take one after the other. Recordings stay on your device.
+- **Export the subtitle list as CSV**, every line with its translation, for Anki or a spreadsheet.
+
+Combined with two subtitles at once and Explore by spoken language, this turns any video into listening practice. Touch screens and TV remotes get buttons for all of it.
 
 ## Screenshots
 
@@ -146,6 +179,7 @@ These are also found in other YouTube clients, and all are opt-in here:
 
 The links in the table always give the newest version. On the release page, file names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
 **Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. Package manager (under review, working once accepted): `winget install Lumtub.Lumtub`.<br>
+Windows may show **Windows protected your PC** the first time, because the installer isn't signed with a paid code-signing certificate yet. Click **More info**, then **Run anyway**. Do this only for a file you downloaded from the official places below.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place. If it says FUSE is missing, install your distribution's `fuse3` package, or start it with `--appimage-extract-and-run`. Prefer Flatpak? `flatpak install --user Lumtub_*_linux-x64.flatpak`.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.<br>
 **Android (preview):** open the APK and allow installing from your browser or file manager when asked. New versions install from inside Lumtub; Android asks you to confirm. Live streams and downloads work too, through the yt-dlp built into the app; members-only videos don't play on Android yet.<br>
@@ -168,7 +202,9 @@ Lumtub is free. It comes only from:
 - Lumtub's built-in updater, which downloads from those releases,
 - the SideStore/AltStore source above, and `winget install Lumtub.Lumtub` once it's accepted.
 
-If anyone asks you to pay for Lumtub, or sells a renamed copy without its source code, it doesn't come from this project and may have been tampered with. Lumtub's license (AGPL) lets others share and even sell copies, but only if they give you the complete source code under the same license and keep the copyright notices. A paid closed-source copy breaks the license. Please [report it in an issue](https://github.com/0x696c757a696f/lumtub/issues/new) with a link, so it can be taken down.
+To check a download, compare its SHA-256 with the one GitHub shows next to the file on the [release page](https://github.com/0x696c757a696f/lumtub/releases/latest). On Windows: `Get-FileHash <file>` in PowerShell; on macOS and Linux: `shasum -a 256 <file>`.
+
+The optional [Learning Pack](#-learn-languages-from-real-videos) is sold only through 爱发电, from the links in this README, the website and the app. If anyone else asks you to pay for Lumtub, or sells a renamed copy without its source code, it doesn't come from this project and may have been tampered with. Lumtub's license (AGPL) lets others share and even sell copies, but only if they give you the complete source code under the same license and keep the copyright notices. A paid closed-source copy breaks the license. Please [report it in an issue](https://github.com/0x696c757a696f/lumtub/issues/new) with a link, so it can be taken down.
 
 ## Where the data comes from
 

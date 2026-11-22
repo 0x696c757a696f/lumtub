@@ -16,6 +16,7 @@ const REPO: &str = "https://github.com/0x696c757a696f/lumtub";
 const RELEASES: &str = "https://github.com/0x696c757a696f/lumtub/releases/latest";
 const SPONSORS: &str = "https://github.com/sponsors/0x696c757a696f";
 const AFDIAN: &str = "https://afdian.com/a/linmuqingfeng";
+const AFDIAN_PACK: &str = "https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00";
 const KOFI: &str = "https://ko-fi.com/0x696c757a696f";
 const WEBLATE: &str = "https://hosted.weblate.org/engage/lumtub/";
 const SECTIONS: [&str; 5] = ["features", "download", "privacy", "faq", "support"];
@@ -212,6 +213,7 @@ fn App() -> impl IntoView {
             <main id="main">
                 <Hero t=t ctx=ctx lang=l/>
                 <Highlights t=t lang=l skin=skin/>
+                <Learning t=t/>
                 <Tagline lang=l/>
                 <Steps t=t/>
                 <Features t=t/>
@@ -330,6 +332,41 @@ fn Highlights(t: &'static Text, lang: Lang, skin: SkinState) -> impl IntoView {
                         </article>
                     }
                 }).collect_view()}
+            </div>
+        </section>
+    }
+}
+
+#[component]
+fn Learning(t: &'static Text) -> impl IntoView {
+    let l = &t.learn;
+    let buttons = view! { <a class="btn primary" href=AFDIAN_PACK rel="noopener">"爱发电 · ¥99"</a> };
+    view! {
+        <section id="learn" class="section alt">
+            <div class="wrap">
+                <header class="section-head reveal">
+                    <h2 class="heading-3">{l.title}</h2>
+                    <p class="body-3 muted">{l.lead}</p>
+                </header>
+                <figure class="learn-shots reveal">
+                    <img class="shot" loading="lazy" src="screenshots/learning-card.png" alt=l.shots_alt[0] width="815" height="550"/>
+                    <img class="shot" loading="lazy" src="screenshots/learning-list.png" alt=l.shots_alt[1] width="654" height="636"/>
+                    <figcaption class="caption-2">{l.shots_note}</figcaption>
+                </figure>
+                <div class="learn-grid reveal">
+                    <div class="card learn-pack">
+                        <h3 class="title-2">{l.pack_title}</h3>
+                        <ul class="body-6">{l.pack.iter().map(|x| view! { <li>{*x}</li> }).collect_view()}</ul>
+                        <p class="body-6">{l.trial}</p>
+                        <p class="body-6"><strong>{l.price}</strong></p>
+                        <div class="learn-buy">{buttons}</div>
+                        <p class="caption-2 muted">{l.fine}</p>
+                    </div>
+                    <div class="card">
+                        <h3 class="title-2">{l.free_title}</h3>
+                        <ul class="body-6">{l.free.iter().map(|x| view! { <li>{*x}</li> }).collect_view()}</ul>
+                    </div>
+                </div>
             </div>
         </section>
     }

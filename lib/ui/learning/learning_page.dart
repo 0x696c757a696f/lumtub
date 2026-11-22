@@ -19,7 +19,6 @@ import '../../learning/video_words.dart';
 import '../../learning/word_token.dart';
 import '../../learning/vocabulary.dart';
 import '../../learning/word_voice.dart' show azureVoiceKey, azureVoiceRegion, googleVoiceKey;
-import '../../models.dart';
 import '../../save_file.dart';
 import '../../widgets/settings_tiles.dart';
 import '../app_icons.dart';
@@ -30,7 +29,7 @@ import '../learning_drawer.dart' show LearningDrawerSection, addLearningDrawerSe
 import '../pages/settings_sections.dart' show SettingsCategory;
 import '../skin_paint.dart';
 import '../theme.dart';
-import 'review_page.dart' show openReview;
+import 'review_page.dart' show openReview, showSavedWord, watchVocabularyMoment;
 import '../../subtitle_cues.dart' show SubtitleCue;
 import 'word_card.dart' show englishLevelName, showWordCard;
 
@@ -815,16 +814,6 @@ class _VocabularyPageState extends State<_VocabularyPage> {
     }
   }
 
-  void _open(VocabularyWord word) {
-    if (word.videoId.isEmpty) return;
-    final start = word.at > const Duration(seconds: 1) ? word.at - const Duration(seconds: 1) : Duration.zero;
-    unawaited(widget.controller.play(
-      VideoItem(id: word.videoId, title: word.videoTitle, channel: '', url: 'https://www.youtube.com/watch?v=${word.videoId}'),
-      at: start,
-    ));
-    Navigator.of(context).popUntil((route) => route.isFirst);
-  }
-
   @override
   Widget build(BuildContext context) {
     final book = _book;
@@ -866,7 +855,7 @@ class _VocabularyPageState extends State<_VocabularyPage> {
                   itemBuilder: (context, i) {
                     final w = words[i];
                     return ListTile(
-                      onTap: w.videoId.isEmpty ? null : () => _open(w),
+                      onTap: () => unawaited(showSavedWord(context, widget.controller, w)),
                       title: Text.rich(TextSpan(children: [
                         TextSpan(text: w.word, style: const TextStyle(fontSize: 18)),
                         if (w.reading.isNotEmpty) TextSpan(text: '  ${w.reading}', style: TextStyle(color: colors.primary)),
@@ -876,7 +865,11 @@ class _VocabularyPageState extends State<_VocabularyPage> {
                         if (w.sentence.isNotEmpty) Text(w.sentence, style: TextStyle(color: colors.outline)),
                         if (w.videoTitle.isNotEmpty) Text('${w.videoTitle} · ${clockOf(w.at)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: colors.outline)),
                       ]),
-                      trailing: IconButton(tooltip: tr('Delete'), icon: Icon(AppIcons.trash, size: 18), onPressed: () => unawaited(book.remove(w))),
+                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                        if (w.videoId.isNotEmpty)
+                          IconButton(tooltip: tr('Watch this moment'), icon: Icon(AppIcons.playCircle, size: 18), onPressed: () => watchVocabularyMoment(context, widget.controller, w)),
+                        IconButton(tooltip: tr('Delete'), icon: Icon(AppIcons.trash, size: 18), onPressed: () => unawaited(book.remove(w))),
+                      ]),
                     );
                   },
                 );

@@ -304,7 +304,7 @@ class _VocabularyCard extends StatelessWidget {
         else ...[
           for (final w in recent.take(5))
             ListTile(
-              onTap: w.videoId.isEmpty ? null : () => _playWord(context, controller, w),
+              onTap: () => unawaited(showSavedWord(context, controller, w)),
               title: Text.rich(TextSpan(children: [
                 TextSpan(text: w.word, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
                 if (w.reading.isNotEmpty) TextSpan(text: '  ${w.reading}', style: TextStyle(color: colors.primary)),
@@ -314,22 +314,20 @@ class _VocabularyCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              trailing: w.videoId.isEmpty ? null : Text(clockOf(w.at), style: context.text.bodySmall?.copyWith(color: colors.onSurfaceVariant)),
+              trailing: w.videoId.isEmpty
+                  ? null
+                  : TextButton.icon(
+                      style: TextButton.styleFrom(foregroundColor: colors.onSurfaceVariant, visualDensity: VisualDensity.compact),
+                      onPressed: () => watchVocabularyMoment(context, controller, w),
+                      icon: Icon(AppIcons.playCircle, size: 16),
+                      label: Text(clockOf(w.at)),
+                    ),
             ),
           const SizedBox(height: Space.s),
         ],
       ]),
     );
   }
-}
-
-void _playWord(BuildContext context, AppController controller, VocabularyWord word) {
-  final start = word.at > const Duration(seconds: 1) ? word.at - const Duration(seconds: 1) : Duration.zero;
-  unawaited(controller.play(
-    VideoItem(id: word.videoId, title: word.videoTitle, channel: '', url: 'https://www.youtube.com/watch?v=${word.videoId}'),
-    at: start,
-  ));
-  Navigator.of(context).popUntil((route) => route.isFirst);
 }
 
 /// One tile per language, laid out in as many columns as fit.

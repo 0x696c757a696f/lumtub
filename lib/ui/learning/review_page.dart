@@ -25,6 +25,44 @@ Future<void> openReview(BuildContext context, AppController controller) async {
   await Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) => ReviewPage(controller: controller)));
 }
 
+/// Plays [word]'s video from a second before the moment it was saved.
+void watchVocabularyMoment(BuildContext context, AppController controller, VocabularyWord word) {
+  if (word.videoId.isEmpty) return;
+  final start = word.at > const Duration(seconds: 1) ? word.at - const Duration(seconds: 1) : Duration.zero;
+  unawaited(controller.play(VideoItem(id: word.videoId, title: word.videoTitle, channel: '', url: 'https://www.youtube.com/watch?v=${word.videoId}'), at: start));
+  Navigator.of(context).popUntil((route) => route.isFirst);
+}
+
+/// A saved word's card: the word in its line, reading, meaning and
+/// translation, the line's own sound, and a way back to its moment.
+Future<void> showSavedWord(BuildContext context, AppController controller, VocabularyWord word) async {
+  final book = controller.learning.book;
+  final sound = book?.soundOf(word.key);
+  final hasSound = sound != null && await sound.exists();
+  if (hasSound) unawaited(controller.playSoundFile(sound));
+  if (!context.mounted) return;
+  await showDialog<void>(
+    context: context,
+    builder: (dialog) => Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560, maxHeight: 560),
+        child: Entrance(
+          scale: 0.97,
+          child: SavedWordCard(
+            word: word,
+            shown: true,
+            sound: hasSound,
+            onReplay: () => unawaited(controller.playSoundFile(sound!)),
+            onOpenVideo: () => watchVocabularyMoment(dialog, controller, word),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 class ReviewPage extends StatefulWidget {
   const ReviewPage({super.key, required this.controller});
   final AppController controller;
@@ -111,12 +149,7 @@ class _ReviewPageState extends State<ReviewPage> {
     return KeyEventResult.ignored;
   }
 
-  void _openVideo(VocabularyWord word) {
-    if (word.videoId.isEmpty) return;
-    final start = word.at > const Duration(seconds: 1) ? word.at - const Duration(seconds: 1) : Duration.zero;
-    unawaited(widget.controller.play(VideoItem(id: word.videoId, title: word.videoTitle, channel: '', url: 'https://www.youtube.com/watch?v=${word.videoId}'), at: start));
-    Navigator.of(context).popUntil((route) => route.isFirst);
-  }
+  void _openVideo(VocabularyWord word) => watchVocabularyMoment(context, widget.controller, word);
 
   @override
   Widget build(BuildContext context) {
@@ -149,7 +182,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                 child: SlideTransition(position: Tween(begin: const Offset(0.06, 0), end: Offset.zero).animate(animation), child: child),
                               ),
                               layoutBuilder: (current, previous) => Stack(alignment: Alignment.topCenter, children: [...previous, if (current != null) current]),
-                              child: _ReviewCard(
+                              child: SavedWordCard(
                                 key: ValueKey('${word.key}#$_done#${_queue.length}'),
                                 word: word,
                                 shown: _shown,
@@ -216,8 +249,8 @@ class _Progress extends StatelessWidget {
 
 /// The word in its line: the line and its sound first, the word lit up in
 /// it; the reading, meaning and translation once shown.
-class _ReviewCard extends StatelessWidget {
-  const _ReviewCard({super.key, required this.word, required this.shown, required this.sound, required this.onReplay, required this.onOpenVideo});
+class SavedWordCard extends StatelessWidget {
+  const SavedWordCard({super.key, required this.word, required this.shown, required this.sound, required this.onReplay, required this.onOpenVideo});
   final VocabularyWord word;
   final bool shown;
   final bool sound;

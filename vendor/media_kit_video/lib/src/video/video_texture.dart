@@ -514,6 +514,17 @@ class VideoState extends State<Video> with WidgetsBindingObserver {
                   Positioned.fill(
                     child: videoViewParameters.controls!.call(this),
                   ),
+                // Lumtub: words in the main line a tap looks up, above
+                // the controls.
+                if (videoViewParameters.subtitleViewConfiguration.onMainTap != null &&
+                    videoViewParameters.subtitleViewConfiguration.visible &&
+                    !videoViewParameters.subtitleViewConfiguration.ghost)
+                  Positioned.fill(
+                    child: MainLineTapArea(
+                      configuration:
+                          videoViewParameters.subtitleViewConfiguration,
+                    ),
+                  ),
                 // Lumtub: a blurred secondary subtitle shows when the
                 // pointer is over it or it is tapped, over the controls.
                 if (videoViewParameters

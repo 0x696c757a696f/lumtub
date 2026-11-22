@@ -2,6 +2,16 @@ part of 'app_controller.dart';
 
 /// Subtitles, the subtitle list, chapter translation and speech recognition on the watch page.
 extension SubtitleActions on AppController {
+  /// Whether the main subtitle is YouTube's speech recognition (or ours),
+  /// whose words may be misheard.
+  bool get mainSubtitleAutomatic {
+    final track = player?.state.track.subtitle;
+    if (track == null) return false;
+    final option = _shownOptions[track.title] ?? details?.subtitles.where((o) => o.label == track.title).firstOrNull;
+    if (option != null) return option.kind == SubtitleKind.automatic || option.kind == SubtitleKind.speech;
+    return (track.language ?? '').endsWith('-orig');
+  }
+
   Future<void> _restoreSubtitles(({String? main, SubtitleOption? second}) kept, int serial) async {
     final player = this.player;
     if (player == null) return;
@@ -663,6 +673,7 @@ extension SubtitleActions on AppController {
     _forgetSubtitleCopies();
     _forgetReveal();
     unawaited(_forgetShadowing());
+    _studyVideoChanged();
     _plainFits.clear();
     if (!libassCantDraw) return;
     libassCantDraw = false;

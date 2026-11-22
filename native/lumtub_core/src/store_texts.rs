@@ -1,6 +1,6 @@
 //! Texts made for a video, kept in lumtub.db beside the library: subtitle
-//! transcripts (recognized from the audio, or later fetched) and AI
-//! summaries. Each is made once and read many times, and each row says
+//! transcripts (recognized from the audio, or later fetched), AI
+//! summaries and the person's notes on a moment of a video. Each is made once and read many times, and each row says
 //! where it came from, so machine-made text is never taken for a person's.
 
 use std::os::raw::c_char;
@@ -198,6 +198,94 @@ pub fn forget_summaries(path: &str, video: &str) -> Result<usize, StoreError> {
     })
 }
 
+#[derive(Debug, PartialEq, Serialize)]
+pub struct Note {
+    pub id: i64,
+    pub video: String,
+    pub title: String,
+    pub at: i64,
+    pub quote: String,
+    pub body: String,
+    pub created: i64,
+}
+
+/// Keeps a note on [video] at [at] milliseconds: the subtitle words it is
+/// about ([quote]) and what the person wrote or had AI write ([body]).
+/// With an [id], that note is changed. Answers the note's id.
+pub fn put_note(
+    path: &str,
+    id: i64,
+    video: &str,
+    title: &str,
+    at: i64,
+    quote: &str,
+    body: &str,
+) -> Result<i64, StoreError> {
+    if video.is_empty() || video.len() > 64 {
+        return Err(bad("A video id is needed"));
+    }
+    if quote.len() + body.len() > 1 << 20 || title.len() > 1000 {
+        return Err(bad("The note is too large"));
+    }
+    if quote.trim().is_empty() && body.trim().is_empty() {
+        return Err(bad("The note is empty"));
+    }
+    let kept = with_db(path, |db| {
+        if id > 0 {
+            let changed = db.execute(
+                "UPDATE note SET quote = ?2, body = ?3 WHERE id = ?1",
+                params![id, quote, body],
+            )?;
+            return Ok((changed > 0).then_some(id));
+        }
+        db.execute(
+            "INSERT INTO note(video, title, at, quote, body, created) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![video, title, at.max(0), quote, body, now()],
+        )?;
+        Ok(Some(db.last_insert_rowid()))
+    })?;
+    kept.ok_or_else(|| bad("The note is gone"))
+}
+
+/// [video]'s notes in the order of the video; with no video, every note,
+/// newest first.
+pub fn notes(path: &str, video: &str) -> Result<Vec<Note>, StoreError> {
+    with_db(path, |db| {
+        let (sql, args): (&str, Vec<&str>) = if video.is_empty() {
+            (
+                "SELECT id, video, title, at, quote, body, created FROM note ORDER BY created DESC, id DESC",
+                vec![],
+            )
+        } else {
+            (
+                "SELECT id, video, title, at, quote, body, created FROM note WHERE video = ?1 ORDER BY at, id",
+                vec![video],
+            )
+        };
+        let mut rows = db.prepare(sql)?;
+        let found = rows
+            .query_map(rusqlite::params_from_iter(args), |row| {
+                Ok(Note {
+                    id: row.get(0)?,
+                    video: row.get(1)?,
+                    title: row.get(2)?,
+                    at: row.get(3)?,
+                    quote: row.get(4)?,
+                    body: row.get(5)?,
+                    created: row.get(6)?,
+                })
+            })?
+            .collect::<rusqlite::Result<Vec<_>>>()?;
+        Ok(found)
+    })
+}
+
+pub fn forget_note(path: &str, id: i64) -> Result<usize, StoreError> {
+    with_db(path, |db| {
+        db.execute("DELETE FROM note WHERE id = ?1", [id])
+    })
+}
+
 #[derive(Deserialize)]
 struct Ask {
     path: String,
@@ -218,6 +306,14 @@ struct Ask {
     body: String,
     #[serde(default)]
     keep: usize,
+    #[serde(default)]
+    id: i64,
+    #[serde(default)]
+    title: String,
+    #[serde(default)]
+    at: i64,
+    #[serde(default)]
+    quote: String,
 }
 
 fn answer(ask: &str) -> String {
@@ -256,6 +352,12 @@ fn answer(ask: &str) -> String {
         "summary.forget" => {
             forget_summaries(path, &ask.video).map(|n| serde_json::json!({"deleted": n}))
         }
+        "note.put" => put_note(
+            path, ask.id, &ask.video, &ask.title, ask.at, &ask.quote, &ask.body,
+        )
+        .map(|id| serde_json::json!({"id": id})),
+        "note.list" => notes(path, &ask.video).map(|found| serde_json::json!({"notes": found})),
+        "note.forget" => forget_note(path, ask.id).map(|n| serde_json::json!({"deleted": n})),
         _ => Err(bad("Unknown operation")),
     };
     match result {
@@ -268,7 +370,9 @@ fn answer(ask: &str) -> String {
 /// ...}` with op one of `transcript.put` (video, lang, origin, model,
 /// body, keep), `transcript.get` (video, origins), `transcript.forget`
 /// (video, origin), `summary.put` (video, lang, provider, body, keep),
-/// `summary.get` (video, lang) and `summary.forget` (video). Answers
+/// `summary.get` (video, lang), `summary.forget` (video), `note.put` (id,
+/// video, title, at, quote, body), `note.list` (video) and `note.forget`
+/// (id). Answers
 /// `{error, setAside?}` on failure. Free it with `lumtub_string_free`.
 ///
 /// # Safety
@@ -368,6 +472,28 @@ mod tests {
         assert!(summary(&path, "v", "en").unwrap().is_none());
         assert!(summary(&path, "w3", "en").unwrap().is_some());
         assert_eq!(forget_summaries(&path, "w3").unwrap(), 1);
+    }
+
+    #[test]
+    fn notes_round_trip() {
+        let path = temp("notes");
+        let late = put_note(&path, 0, "v", "Talk", 90_000, "the end", "").unwrap();
+        let early = put_note(&path, 0, "v", "Talk", 5_000, "hello", "a greeting").unwrap();
+        put_note(&path, 0, "w", "Other", 0, "", "just a thought").unwrap();
+        assert!(put_note(&path, 0, "v", "Talk", 0, " ", "").is_err());
+        let found = notes(&path, "v").unwrap();
+        assert_eq!(
+            found.iter().map(|n| n.id).collect::<Vec<_>>(),
+            vec![early, late]
+        );
+        assert_eq!(found[0].body, "a greeting");
+        put_note(&path, late, "v", "Talk", 0, "the end", "tidied").unwrap();
+        assert_eq!(notes(&path, "v").unwrap()[1].body, "tidied");
+        assert_eq!(notes(&path, "v").unwrap()[1].at, 90_000);
+        assert_eq!(notes(&path, "").unwrap().len(), 3);
+        assert_eq!(forget_note(&path, early).unwrap(), 1);
+        assert_eq!(notes(&path, "v").unwrap().len(), 1);
+        assert!(put_note(&path, 9999, "v", "Talk", 0, "x", "").is_err());
     }
 
     #[test]

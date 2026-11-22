@@ -17,6 +17,8 @@ import '../apple_chip.dart';
 import '../ai_filter.dart';
 import '../android_subtitle_fonts.dart';
 import '../app_directories.dart';
+import '../learning/learning.dart';
+import '../learning/vocabulary.dart' show wavTail;
 import '../app_updater.dart';
 import '../app_log.dart';
 import '../app_window.dart';
@@ -25,6 +27,7 @@ import '../libass_layout.dart';
 import '../line_pause.dart';
 import '../save_file.dart';
 import '../shadowing.dart';
+import '../study_flow.dart';
 import '../play_queue.dart';
 import '../video_facts_lookup.dart';
 import '../video_languages.dart';
@@ -160,13 +163,17 @@ part 'account_actions.dart';
 part 'window_actions.dart';
 part 'ios_pip_actions.dart';
 part 'learning_actions.dart';
+part 'study_actions.dart';
 
-enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
+enum PageMode { home, explore, subscriptions, history, playlists, downloads, learning, settings, channel, playlist, youtubePlaylist }
 
 /// Application state and actions, kept separate from the widgets that show them.
 class AppController extends ChangeNotifier with _ExploreState {
   HistoryStore? _history;
   AppDirectories? directories;
+
+  /// The paid learning pack: license, dictionaries, vocabulary book.
+  final learning = Learning();
 
   /// Now and then asks whether to support Lumtub; null until started.
   SupportReminder? supportReminder;
@@ -894,6 +901,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   List<SubtitleCue> _learningLines = const [];
   String? _learningLinesKey;
   DateTime _learningLinesAsked = DateTime(0);
+
+  /// Stops a line a word card played once as it ends.
+  StreamSubscription<Duration>? _lineOnce;
   final _linePause = LinePause();
   final _reveal = TranslationReveal();
   /// Whether the blurred second subtitle (模糊翻译) shows plainly now.
@@ -910,6 +920,18 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Changes each time a take is kept or the takes go, for the subtitle
   /// list's marks.
   final shadowTakes = ValueNotifier(0);
+
+  /// 精学: the video studied now, where each video's study stopped, and
+  /// what the study changed for a while (StudyActions).
+  StudyRun? _studyRun;
+  StudyStore? _studyStore;
+  /// Bumped as the study moves on, for its bar.
+  final studyChanged = ValueNotifier<int>(0);
+  /// 盲听 and 复听 hide the subtitles.
+  bool studyHidesSubtitles = false;
+  final _studyOwner = Object();
+  double? _studyRateBefore;
+  String? _studyChannel;
 
   /// The chapter titles of [chapterTranslationOf] translated, one for
   /// each chapter, once asked for; untouched ones stay as they are.
@@ -1025,6 +1047,12 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// AI 总结 already made this session, by video id.
   final _summaries = <String, String>{};
+
+  /// Counts each note added, changed or deleted, for lists to reload.
+  final notesChanged = ValueNotifier<int>(0);
+
+  /// The video whose chapters AI 概览 made, as it had none of its own.
+  String? aiChaptersOf;
 
   /// Videos whose kept AI 总结 was thrown away this session, so lumtub.db
   /// is not asked for it while that is being written.
@@ -1205,6 +1233,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     unawaited(_forgetShadowing().whenComplete(() {
       shadowStage.dispose();
       shadowTakes.dispose();
+      studyChanged.dispose();
     }));
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();

@@ -67,5 +67,22 @@ void main() {
       await db.forgetSummaries(video: 'v');
       expect(await db.summary('v', 'zh-Hans'), isNull);
     }, skip: skip);
+
+    test('notes are kept by video in the order of the video', () async {
+      await sub('data').create();
+      final db = LocalDb('${sub('data').path}${Platform.pathSeparator}lumtub.db');
+      final late = await db.putNote(video: 'v', title: 'Talk', at: const Duration(minutes: 2), quote: 'the end');
+      await db.putNote(video: 'v', title: 'Talk', at: const Duration(seconds: 5), quote: 'hello', body: 'a greeting');
+      await db.putNote(video: 'w', body: 'elsewhere');
+      final notes = await db.notes(video: 'v');
+      expect([for (final n in notes) n.quote], ['hello', 'the end']);
+      expect(notes.first.body, 'a greeting');
+      expect(notes.first.at, const Duration(seconds: 5));
+      await db.putNote(id: late, video: 'v', quote: 'the end', body: 'tidied');
+      expect((await db.notes(video: 'v')).last.body, 'tidied');
+      expect(await db.notes(), hasLength(3));
+      await db.forgetNote(late);
+      expect(await db.notes(video: 'v'), hasLength(1));
+    }, skip: skip);
   });
 }

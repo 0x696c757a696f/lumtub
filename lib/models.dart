@@ -545,6 +545,23 @@ class VideoDetails {
         language: language,
       );
 
+  /// These details with [chapters] in place of theirs, such as AI 概览's
+  /// for a video that has none.
+  VideoDetails withChapters(List<Chapter> chapters) => VideoDetails(
+        title: title,
+        channel: channel,
+        channelUrl: channelUrl,
+        channelId: channelId,
+        uploadDate: uploadDate,
+        viewCount: viewCount,
+        likeCount: likeCount,
+        description: description,
+        chapters: chapters,
+        subtitles: subtitles,
+        scheduledStart: scheduledStart,
+        language: language,
+      );
+
   /// These details with the subtitles and spoken language of [online]: a
   /// download keeps neither, so a downloaded video played while online
   /// gets the same subtitles, translations too, as when it streams.

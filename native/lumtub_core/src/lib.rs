@@ -18,6 +18,8 @@ pub mod cut;
 pub mod danmaku;
 pub mod dns;
 pub mod downloads;
+mod edge_drm;
+pub mod edge_tts;
 pub mod embed;
 pub mod feed;
 pub mod filter;
@@ -29,6 +31,7 @@ pub mod innertube;
 pub mod insights;
 pub mod join;
 pub mod js;
+pub mod lexicon;
 pub mod listing;
 pub mod lists;
 pub mod lists_update;
@@ -54,6 +57,7 @@ pub mod resolved;
 pub mod roots;
 pub mod signing;
 pub mod socks;
+pub mod speech;
 pub mod store;
 pub mod store_texts;
 pub mod subtitles;
@@ -66,9 +70,10 @@ pub mod tv_history;
 pub mod update;
 pub mod vault;
 pub mod web_account;
+pub mod words;
 
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    54
+    59
 }

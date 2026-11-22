@@ -1,0 +1,138 @@
+name: License server
+
+# Deploys license-server/ (a Cloudflare Worker that hands out learning pack
+# codes to Ko-fi and 爱发电 buyers) and writes its address to the `learning`
+# release as license-server.txt, where Lumtub looks it up. Does nothing
+# until the CLOUDFLARE_API_TOKEN secret exists; see license-server/README.md.
+on:
+  push:
+    # The learning pack's branch too, until it is merged.
+    branches: [main, claude/project-thread-gjrv5x]
+    paths:
+      - 'license-server/**'
+      - '.github/workflows/license-server.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: license-server
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Check secrets
+        id: check
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::notice::CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID is not set; nothing to deploy."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The runner's own Node is new enough for wrangler.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        if: steps.check.outputs.ready == 'true'
+        with:
+          persist-credentials: false
+
+      - name: Find or create the KV namespace
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          set -euo pipefail
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          id=$(curl -fsS "${auth[@]}" "$api/storage/kv/namespaces?per_page=100" | jq -r '.result[] | select(.title == "lumtub-licenses") | .id' | head -n1)
+          if [ -z "$id" ]; then
+            id=$(curl -fsS "${auth[@]}" -H 'content-type: application/json' -d '{"title":"lumtub-licenses"}' "$api/storage/kv/namespaces" | jq -r '.result.id')
+          fi
+          [ -n "$id" ] && [ "$id" != null ]
+          sed -i "s/KV_NAMESPACE_ID/$id/" license-server/wrangler.toml
+
+      - name: Deploy the worker
+        if: steps.check.outputs.ready == 'true'
+        working-directory: license-server
+        run: npx --yes wrangler@4.20.0 deploy
+
+      - name: Set its secrets
+        if: steps.check.outputs.ready == 'true'
+        working-directory: license-server
+        env:
+          LICENSE_KEY: ${{ secrets.LUMTUB_LICENSE_KEY }}
+          KOFI_TOKEN: ${{ secrets.KOFI_TOKEN }}
+          POLAR_WEBHOOK_SECRET: ${{ secrets.POLAR_WEBHOOK_SECRET }}
+          POLAR_TOKEN: ${{ secrets.POLAR_TOKEN }}
+          CREEM_WEBHOOK_SECRET: ${{ secrets.CREEM_WEBHOOK_SECRET }}
+          AFDIAN_USER_ID: ${{ secrets.AFDIAN_USER_ID }}
+          AFDIAN_TOKEN: ${{ secrets.AFDIAN_TOKEN }}
+          KOFI_ITEM: ${{ vars.KOFI_ITEM }}
+          AZURE_TTS_KEY: ${{ secrets.AZURE_TTS_KEY }}
+          AZURE_TTS_REGION: ${{ secrets.AZURE_TTS_REGION }}
+          GOOGLE_TTS_KEY: ${{ secrets.GOOGLE_TTS_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          jq -n 'env | {LICENSE_KEY, KOFI_TOKEN, POLAR_WEBHOOK_SECRET, POLAR_TOKEN, CREEM_WEBHOOK_SECRET, AFDIAN_USER_ID, AFDIAN_TOKEN, KOFI_ITEM, AZURE_TTS_KEY, AZURE_TTS_REGION, GOOGLE_TTS_KEY} | with_entries(select(.value != null and .value != ""))' > "$RUNNER_TEMP/secrets.json"
+          npx --yes wrangler@4.20.0 secret bulk "$RUNNER_TEMP/secrets.json"
+          rm -f "$RUNNER_TEMP/secrets.json"
+
+      - name: Publish its address
+        if: steps.check.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          sub=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" | jq -r '.result.subdomain // empty')
+          if [ -z "$sub" ]; then
+            echo "::error::This Cloudflare account has no workers.dev subdomain yet. Open Workers & Pages in the Cloudflare dashboard once, then run this again."
+            exit 1
+          fi
+          url="https://lumtub-license.$sub.workers.dev"
+          # A new workers.dev address can take a little while to answer.
+          for i in $(seq 1 20); do
+            if curl -fsS "$url/" | grep -q '"ok":true'; then break; fi
+            [ "$i" = 20 ] && { echo "::error::$url does not answer"; exit 1; }
+            sleep 6
+          done
+          printf '%s\n' "$url" > "$RUNNER_TEMP/license-server.txt"
+          gh release upload learning "$RUNNER_TEMP/license-server.txt" --repo "$GITHUB_REPOSITORY" --clobber
+          # Where the app's Buy button goes for buyers outside China.
+          gh release upload learning license-server/polar-checkout.txt --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload learning license-server/kofi-checkout.txt --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload learning license-server/creem-checkout.txt --repo "$GITHUB_REPOSITORY" --clobber
+          echo "::notice::Ko-fi webhook URL: $url/kofi"
+          echo "::notice::Polar webhook URL: $url/polar (events order.paid and order.refunded); success URL: $url/polar/thanks?checkout_id={CHECKOUT_ID}"
+          echo "::notice::Creem webhook URL: $url/creem (events checkout.completed and refund.created); success URL: $url/creem/thanks"
+          printf 'LICENSE_SERVER=%s\n' "$url" >> "$GITHUB_ENV"
+
+      # A code made here for this check only, never printed or kept:
+      # activating and freeing a device goes through the Durable Object.
+      - name: Check activation
+        if: steps.check.outputs.ready == 'true'
+        env:
+          LICENSE_KEY: ${{ secrets.LUMTUB_LICENSE_KEY }}
+        run: |
+          node --input-type=module -e '
+            import crypto from "node:crypto";
+            const key = crypto.createPrivateKey({ key: Buffer.from(process.env.LICENSE_KEY.replace(/\s/g, ""), "base64"), format: "der", type: "pkcs8" });
+            const payload = Buffer.from(JSON.stringify({ n: "CI check", p: "learn", d: new Date().toISOString().slice(0, 10) }));
+            const signature = crypto.sign(null, Buffer.concat([Buffer.from("lumtub-license-v1\n"), payload]), key);
+            const code = "LT1." + payload.toString("base64url") + "." + signature.toString("base64url");
+            const device = crypto.randomBytes(16).toString("hex");
+            const ask = (path, body) => fetch(process.env.LICENSE_SERVER + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(async (r) => [r.status, await r.json()]);
+            const [status, answer] = await ask("/activate", { code, device, label: "CI" });
+            if (status !== 200 || !String(answer.receipt).startsWith("LA1.") || !answer.devices.some((d) => d.id === device)) { console.log("::error::activation answered", status, answer.error ?? ""); process.exit(1); }
+            const [freed, after] = await ask("/deactivate", { code, device });
+            if (freed !== 200 || after.devices.some((d) => d.id === device)) { console.log("::error::deactivation answered", freed); process.exit(1); }
+            console.log("Activation and deactivation work");
+          '

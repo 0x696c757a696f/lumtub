@@ -103,7 +103,11 @@ impl From<Failure> for Attempt {
 }
 
 fn speak_once(text: &str, voice: &str) -> Result<Vec<u8>, Attempt> {
+    #[cfg(test)]
+    let started = std::time::Instant::now();
     let socket = open(HOST, 443)?;
+    #[cfg(test)]
+    eprintln!("  connected in {:?}", started.elapsed());
     socket.set_read_timeout(Some(TIMEOUT)).map_err(other)?;
     socket.set_write_timeout(Some(TIMEOUT)).map_err(other)?;
     socket.set_nodelay(true).map_err(other)?;
@@ -171,11 +175,19 @@ fn speak_once(text: &str, voice: &str) -> Result<Vec<u8>, Attempt> {
     );
     socket.send(Message::text(message)).map_err(other)?;
 
+    #[cfg(test)]
+    eprintln!("  asked in {:?}", started.elapsed());
     let mut audio = Vec::new();
     loop {
         match socket.read().map_err(other)? {
             Message::Text(text) => {
                 let head = text.split("\r\n\r\n").next().unwrap_or("");
+                #[cfg(test)]
+                eprintln!(
+                    "  {:?} text: {}",
+                    started.elapsed(),
+                    head.replace("\r\n", " | ")
+                );
                 if head.lines().any(|line| line.trim() == "Path:turn.end") {
                     break;
                 }
@@ -188,7 +200,11 @@ fn speak_once(text: &str, voice: &str) -> Result<Vec<u8>, Attempt> {
                     }
                 }
             }
-            Message::Close(_) => break,
+            Message::Close(_frame) => {
+                #[cfg(test)]
+                eprintln!("  closed: {_frame:?}");
+                break;
+            }
             _ => {}
         }
     }
@@ -517,9 +533,38 @@ mod tests {
             ("Hello", "en-US-JennyNeural"),
             ("食べる", "ja-JP-NanamiNeural"),
             ("学习", "zh-CN-XiaoxiaoNeural"),
+            (
+                "The quick brown fox jumps over the lazy dog, twice.",
+                "en-US-JennyNeural",
+            ),
         ] {
+            let started = std::time::Instant::now();
             let sound = speak(text, voice).unwrap_or_else(|e| panic!("{voice}: {e}"));
-            println!("{voice}: {} bytes", sound.len());
+            let path = std::env::temp_dir().join(format!("{voice}.mp3"));
+            std::fs::write(&path, &sound).unwrap();
+            println!(
+                "{voice}: {} bytes in {:?}, starts {:02x?}",
+                sound.len(),
+                started.elapsed(),
+                &sound[..16.min(sound.len())]
+            );
+            // How long and how loud, where ffmpeg is installed.
+            if let Ok(out) = std::process::Command::new("ffmpeg")
+                .args(["-hide_banner", "-i"])
+                .arg(&path)
+                .args(["-af", "volumedetect", "-f", "null", "-"])
+                .output()
+            {
+                for line in String::from_utf8_lossy(&out.stderr).lines() {
+                    if line.contains("Duration")
+                        || line.contains("mean_volume")
+                        || line.contains("max_volume")
+                    {
+                        println!("  {}", line.trim());
+                    }
+                }
+            }
+            // For listening to it elsewhere.
             assert!(sound.len() > 1000, "{voice}");
         }
     }

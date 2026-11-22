@@ -29,6 +29,7 @@ import 'pages/support_page.dart';
 import 'pages/video_pages.dart';
 import 'pages/watch_page.dart';
 import 'pages/youtube_playlist_page.dart';
+import 'learning/learning_page.dart' show LearningHome;
 import 'lights_off.dart';
 import 'motion.dart';
 import 'theater_mode.dart';
@@ -92,6 +93,7 @@ class _AppShellState extends State<AppShell> {
     (PageMode.history, AppIcons.clockCounterClockwise, AppIcons.clockCounterClockwiseFill, tr('History')),
     (PageMode.playlists, AppIcons.filmReel, AppIcons.filmReelFill, tr('Playlist')),
     (PageMode.downloads, AppIcons.arrowCircleDown, AppIcons.arrowCircleDownFill, tr('Downloads')),
+    (PageMode.learning, AppIcons.graduationCap, const IconData(0xe62c, fontFamily: 'Phosphor Fill'), tr('Learning')),
   ];
 
   /// The bottom bar has room for four: History, Playlists and Downloads share
@@ -782,6 +784,7 @@ class _AppShellState extends State<AppShell> {
       PageMode.subscriptions => SubscriptionsPage(controller: controller),
       PageMode.playlists => PlaylistsPage(controller: controller),
       PageMode.downloads => DownloadsPage(controller: controller),
+      PageMode.learning => LearningHome(controller: controller),
       PageMode.channel => ChannelPage(controller: controller),
       PageMode.playlist => PlaylistDetailPage(controller: controller),
       PageMode.youtubePlaylist => YoutubePlaylistPage(controller: controller),

@@ -447,6 +447,16 @@ pub unsafe extern "C" fn lumtub_http_configure(json: *const u8, length: usize) {
     crate::netwatch::generation();
 }
 
+/// The proxy the app's settings send traffic through, when one is set.
+pub(crate) fn proxy_address() -> Option<String> {
+    LAST.read()
+        .unwrap_or_else(|e| e.into_inner())
+        .as_ref()
+        .and_then(|settings| settings.proxy.clone())
+        .map(|p| p.trim().to_string())
+        .filter(|p| !p.is_empty())
+}
+
 /// The settings [CLIENT] was last built from.
 static LAST: LazyLock<RwLock<Option<Settings>>> = LazyLock::new(|| RwLock::new(None));
 

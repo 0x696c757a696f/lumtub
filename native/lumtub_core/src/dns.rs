@@ -454,6 +454,9 @@ mod tests {
         let addrs = runtime
             .block_on(resolve(Arc::new(doh), "example.org".into(), 443))
             .unwrap();
-        assert_eq!(addrs, vec!["10.0.0.7:443".parse().unwrap()]);
+        assert_eq!(
+            addrs,
+            vec!["10.0.0.7:443".parse::<std::net::SocketAddr>().unwrap()]
+        );
     }
 }

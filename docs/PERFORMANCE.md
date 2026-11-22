@@ -69,6 +69,13 @@ of requests, processes or timers.
   大面积不用 `Opacity` 和 `BackdropFilter`，改用图片自带的 `opacity`、`FadeTransition` 或半透明颜色。
 - Never await player calls inside an mpv property callback.
   不在 mpv 属性回调里 await 播放器调用。
+- Flutter draws the whole window again for every video frame, 60 times a
+  second for a 60 fps video. Whatever stays still over a large area (a
+  skin's background) is kept as one picture (`isComplex`), and nothing
+  under or beside the video is rebuilt per frame or per subtitle line
+  beyond what changed: a line is cut into words once (`Learning.wordsOf`),
+  and the subtitle list rebuilds only the rows whose playing state moved.
+  播放 60 帧视频时 Flutter 每秒把整个窗口重画 60 次。大面积不动的东西（皮肤背景）做成一张缓存图（`isComplex`）；视频周围的东西不随每帧或每句字幕重建：一句字幕只切一次词（`Learning.wordsOf`），字幕列表换行时只重建播放状态变了的两行。
 
 ## 4. Processes, files and network 进程、文件和网络
 
@@ -138,3 +145,5 @@ Each is fixed in its own change; remove the line when it is.
 
 1. The player cache defaults (60 s / 100 MiB, 64 MiB on Android) and `demuxer-hysteresis` are untested against a 96 MiB budget; the Windows bridge still calls `glFinish` every frame. Both need measurements first.
    播放器缓冲默认值（60 秒 / 100 MiB，Android 64 MiB）和 `demuxer-hysteresis` 还没按 96 MiB 的目标测过；Windows 渲染桥每帧仍调用 `glFinish`。两项都要先实测。
+2. On Windows the video's ring of four shared textures gives Flutter a new handle every frame, so Flutter's raster thread opens the shared texture again (`eglCreatePbufferFromClientBuffer`) 60 times a second at 60 fps; and every video frame redraws the whole window. Moving the picture under the window (DirectComposition) would end both; needs a spike and GPU measurements.
+   Windows 上视频的四张共享纹理轮换，每帧交给 Flutter 的句柄都不同，Flutter 光栅线程每秒要重新打开共享纹理 60 次；而且每个视频帧都会重画整个窗口。把画面放到窗口下层（DirectComposition）能同时解决，需要先做原型并在真机 GPU 上测。

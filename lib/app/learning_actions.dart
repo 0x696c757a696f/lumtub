@@ -1,5 +1,8 @@
 part of 'app_controller.dart';
 
+/// Whether the switch to the computer's voice was told this run.
+bool _edgeFallbackTold = false;
+
 /// 学外语: 每句说完暂停, 模糊翻译 and stepping line by line, on the lines
 /// the subtitle list shows.
 extension LearningActions on AppController {
@@ -105,6 +108,112 @@ extension LearningActions on AppController {
     if (index == null) return null;
     await _loopLine(lines[index]);
     if (!player.state.playing) await player.play();
+    return true;
+  }
+
+  /// Reads [text] in [language] aloud in the voice the learning pack's
+  /// settings name. [problem] is null when it plays, else what went wrong;
+  /// [note] says, once a run, that Edge's voices failed and the computer's
+  /// voice read it instead.
+  Future<({String? problem, String? note})> sayAloud(String text, String language) async {
+    final voice = learning.voice;
+    if (voice == null) return (problem: tr('Not ready yet'), note: null);
+    final service = learning.voiceService;
+    File? file;
+    Object? failure;
+    String? note;
+    try {
+      file = await voice.read(text, language, service, translationKeys);
+    } catch (e) {
+      failure = e;
+      logWarn('Could not read "$text" ($language) aloud with ${service.name}: $e');
+    }
+    // Edge's voices refused or out of reach: Lumtub's server when it has a
+    // key, else the computer's own voice, said once.
+    if (file == null && service == VoiceService.edge) {
+      final edgeFailure = failure;
+      // A language Edge has no voice for goes straight to the computer's.
+      final unsupported = edgeFailure is VoiceException && edgeFailure.noVoice;
+      if (!unsupported) {
+        try {
+          file = await voice.read(text, language, VoiceService.lumtub, translationKeys, server: learning.speechServer);
+          failure = null;
+        } catch (e) {
+          logInfo('Lumtub\'s server did not read "$text" either: $e');
+        }
+      }
+      if (file == null) {
+        try {
+          file = await voice.read(text, language, VoiceService.system, translationKeys);
+          failure = null;
+          if (!unsupported && !_edgeFallbackTold) {
+            _edgeFallbackTold = true;
+            final why = edgeFailure is VoiceException ? edgeFailure.detail : '$edgeFailure';
+            note = tr("Edge's online voices can't be reached right now ({0}), so this computer's voice read it.", [why]);
+          }
+        } catch (e) {
+          failure = e;
+          logWarn('Could not read "$text" ($language) aloud with the system voice either: $e');
+        }
+      }
+    }
+    if (file == null) {
+      final e = failure;
+      if (e is VoiceException && e.noVoice && (service == VoiceService.system || service == VoiceService.edge)) {
+        return (problem: tr('This computer has no voice for this language. Add one in the system settings, or pick an online voice in the learning pack settings.'), note: null);
+      }
+      if (e is VoiceException && e.noVoice) return (problem: tr('This voice service has no voice for this language'), note: null);
+      return (problem: tr('Could not read it aloud: {0}', [e is VoiceException ? e.detail : '$e']), note: null);
+    }
+    try {
+      final size = await file.length();
+      if (size < 100) {
+        await file.delete();
+        logWarn('Reading "$text" ($language) aloud gave an empty sound ($size bytes)');
+        return (problem: tr('Could not read it aloud: {0}', [tr('the voice gave no sound')]), note: null);
+      }
+      final player = this.player;
+      if (player != null && player.state.playing) await player.pause();
+      final sound = _shadowPlayer ??= Player();
+      await sound.setVolume((player?.state.volume ?? 100).clamp(30, 100).toDouble());
+      // Told when mpv cannot play it, rather than staying silent.
+      final failed = Completer<String>();
+      final watch = sound.stream.error.listen((message) {
+        if (!failed.isCompleted) failed.complete(message);
+      });
+      await sound.open(Media(file.uri.toString()));
+      final problem = await failed.future.timeout(const Duration(milliseconds: 800), onTimeout: () => '');
+      await watch.cancel();
+      logInfo('Read "$text" ($language) aloud: $size bytes${problem.isEmpty ? '' : ', mpv: $problem'}');
+      if (problem.isNotEmpty) {
+        await file.delete();
+        return (problem: tr('Could not read it aloud: {0}', [problem]), note: null);
+      }
+      return (problem: null, note: note);
+    } catch (e) {
+      logWarn('Could not play the sound for "$text" ($language): $e');
+      return (problem: tr('Could not read it aloud: {0}', ['$e']), note: null);
+    }
+  }
+
+  /// Plays the line said at [at] once and pauses as it ends: 听原句 on a
+  /// word card. False when no line is there.
+  Future<bool> playLineOnce(Duration at) async {
+    final player = this.player;
+    if (player == null) return false;
+    const slack = Duration(milliseconds: 300);
+    final line = learningLines.where((l) => l.start <= at + slack && at <= l.end + slack).lastOrNull;
+    if (line == null) return false;
+    await _lineOnce?.cancel();
+    await seek(lineStart(line));
+    if (this.player != player) return false;
+    _lineOnce = player.stream.position.listen((position) {
+      if (position < line.end) return;
+      unawaited(_lineOnce?.cancel());
+      _lineOnce = null;
+      unawaited(player.pause());
+    });
+    await player.play();
     return true;
   }
 
@@ -262,16 +371,30 @@ extension LearningActions on AppController {
   /// sound to WAV as fast as it can; the core keeps the end that is the
   /// line. False when the cache no longer holds it.
   Future<bool> _keepOriginal(ShadowTake take) async {
-    final player = this.player;
     final shadowing = _shadowing;
-    final platform = player?.platform;
-    if (player == null || shadowing == null || platform is! NativePlayer || playing?.isLive == true) return false;
+    if (shadowing == null) return false;
     final line = take.line;
+    final sound = shadowing.fileFor(line, 'line', 'wav');
+    final seconds = await _cutLine(line, shadowing.folder, shadowing.fileFor(line, 'video', 'mkv'), sound);
+    if (seconds == null) return false;
+    take.original = sound;
+    take.originalSeconds = seconds;
+    return true;
+  }
+
+  /// Decodes [line]'s sound out of the video's cache into the WAV file
+  /// [sound]: libmpv writes the cached packets around it to [packets]
+  /// (from the keyframe before it, so only the end is exact) and a
+  /// second, silent libmpv decodes them as fast as it can. The seconds
+  /// at the file's end that are the line, or null when the cache no
+  /// longer holds it.
+  Future<double?> _cutLine(SubtitleCue line, Directory folder, File packets, File sound, {int? sampleRate}) async {
+    final player = this.player;
+    final platform = player?.platform;
+    if (player == null || platform is! NativePlayer || playing?.isLive == true) return null;
     final from = line.start - const Duration(milliseconds: 150);
     final start = (from < Duration.zero ? 0 : from.inMilliseconds) / 1000;
     final end = (line.end + const Duration(milliseconds: 250)).inMilliseconds / 1000;
-    final File packets = shadowing.fileFor(line, 'video', 'mkv');
-    final File sound = shadowing.fileFor(line, 'line', 'wav');
     Player? decoder;
     try {
       final cache = jsonDecode(await platform.getProperty('demuxer-cache-state'));
@@ -279,14 +402,14 @@ extension LearningActions on AppController {
       final held = ranges is List && ranges.any((r) => r is Map && r['start'] is num && r['end'] is num && (r['start'] as num) <= start && (r['end'] as num) >= end);
       if (!held) {
         logDebug(() => 'The line at ${line.start} is no longer in the cache');
-        return false;
+        return null;
       }
-      await shadowing.folder.create(recursive: true);
+      await folder.create(recursive: true);
       await platform.command(['dump-cache', '$start', '$end', packets.path]);
-      if (!await packets.exists() || await packets.length() == 0) return false;
+      if (!await packets.exists() || await packets.length() == 0) return null;
       decoder = Player(configuration: const PlayerConfiguration(vo: 'null', title: 'Lumtub line'));
       final silent = decoder.platform;
-      if (silent is! NativePlayer) return false;
+      if (silent is! NativePlayer) return null;
       for (final (name, value) in [
         ('vid', 'no'),
         ('sid', 'no'),
@@ -295,6 +418,7 @@ extension LearningActions on AppController {
         ('ao-pcm-waveheader', 'yes'),
         ('audio-format', 's16'),
         ('audio-channels', 'mono'),
+        if (sampleRate != null) ('audio-samplerate', '$sampleRate'),
         ('untimed', 'yes'),
         ('volume', '100'),
       ]) {
@@ -304,16 +428,36 @@ extension LearningActions on AppController {
       await decoder.stream.completed.firstWhere((done) => done).timeout(const Duration(seconds: 20));
       await decoder.dispose();
       decoder = null;
-      if (!await sound.exists() || await sound.length() <= 44) return false;
-      take.original = sound;
-      take.originalSeconds = end - start;
-      return true;
+      if (!await sound.exists() || await sound.length() <= 44) return null;
+      return end - start;
     } catch (e) {
       logWarn('Could not read the line out of the cache: $e');
-      return false;
+      return null;
     } finally {
       await decoder?.dispose();
       if (await packets.exists()) await packets.delete().catchError((Object _) => packets);
+    }
+  }
+
+  /// Keeps the line said at [at] as the sound of the vocabulary word
+  /// [key], for Anki. Nothing when the cache no longer holds it.
+  Future<void> keepWordSound(String key, Duration at) async {
+    final book = learning.book;
+    if (book == null) return;
+    const slack = Duration(milliseconds: 300);
+    final line = learningLines.where((l) => l.start <= at + slack && at <= l.end + slack).lastOrNull;
+    if (line == null) return;
+    final sound = book.soundOf(key);
+    final whole = File('${sound.path}.part');
+    final seconds = await _cutLine(line, sound.parent, File('${sound.path}.mkv'), whole, sampleRate: 22050);
+    if (seconds == null) return;
+    try {
+      await whole.writeAsBytes(wavTail(await whole.readAsBytes(), seconds), flush: true);
+      await whole.rename(sound.path);
+      logDebug(() => 'Kept the line of $key for Anki');
+    } catch (e) {
+      logWarn('Could not keep the line of $key: $e');
+      if (await whole.exists()) await whole.delete().catchError((Object _) => whole);
     }
   }
 

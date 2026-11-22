@@ -48,6 +48,7 @@ import 'relay_servers_page.dart';
 import 'settings_subpages.dart';
 import 'subscription_import_dialog.dart';
 import 'translation_settings_page.dart';
+import '../learning/learning_page.dart';
 import 'watch_stats_page.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
@@ -61,6 +62,7 @@ enum SettingsCategory {
   sound('Sound', 'Audio quality, output device, volume, normalization, skipping silence'),
   picture('Picture', 'Scaling, debanding, frame interpolation, video sync, mpv options'),
   subtitles('Subtitles & translation', 'Subtitle languages and style, translation and AI'),
+  learning('Learning', 'Learning pack, dictionaries, pausing after each line, blurred translation'),
   controls('Controls & shortcuts', 'Player controls, progress bar, keyboard and mouse'),
   network('Network', 'Proxy, encrypted DNS, certificates, playback source, buffering'),
   recommend('Home & recommendations', 'For you, Continue watching, Not interested, focus mode'),
@@ -81,6 +83,7 @@ enum SettingsCategory {
         sound => AppIcons.speakerHigh,
         picture => AppIcons.image,
         subtitles => AppIcons.subtitles,
+        learning => AppIcons.graduationCap,
         controls => AppIcons.keyboard,
         network => AppIcons.globe,
         recommend => AppIcons.compass,
@@ -660,6 +663,35 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.translate),
               onTap: () => openTranslationSettings(context, controller),
             ), subtitle: '翻译目标语言 沉浸式翻译 双语对照 译文 翻译服务 AI 总结 接口 模型 语音识别 Whisper Groq 没有字幕 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
+    ],
+    SettingsCategory.learning => [
+        for (final (title, words, builder) in learningSettingRows(controller)) SettingEntry(title, builder, subtitle: words),
+        SettingEntry(tr('Pause after each line'), (context) => SwitchItem(
+              title: tr('Pause after each line'),
+              subtitle: tr('Playback pauses as each subtitle line ends.'),
+              leading: _icon(AppIcons.pauseCircle),
+              value: settings.pauseEachLine,
+              onChanged: (v) => save(settings.copyWith(pauseEachLine: v)),
+            ), subtitle: '逐句暂停 line pause'),
+        SettingEntry(tr('Blur the translation'), (context) => SwitchItem(
+              title: tr('Blur the translation'),
+              subtitle: tr('Hover over the second subtitle or tap it to see it.'),
+              leading: _icon(AppIcons.eyeSlash),
+              value: settings.blurSecondary,
+              onChanged: (v) => unawaited(controller.setBlurSecondary(v)),
+            ), subtitle: '模糊译文 blur translation'),
+        SettingEntry(tr('Data sources and licenses'), (context) => NormalItem(
+              title: tr('Data sources and licenses'),
+              subtitle: tr('The dictionaries are open data: who made them and under which license'),
+              leading: _icon(AppIcons.info),
+              onTap: () => unawaited(showLearningSources(context)),
+            ), subtitle: '词典来源 许可 licenses'),
+        SettingEntry(tr('Activation and privacy'), (context) => NormalItem(
+              title: tr('Activation and privacy'),
+              subtitle: tr('What the license server keeps, for how long, and how to have it deleted'),
+              leading: _icon(AppIcons.shieldWarning),
+              onTap: () => unawaited(showLearningPrivacy(context)),
+            ), subtitle: '激活 隐私 GDPR privacy'),
     ],
     SettingsCategory.controls => [
         SettingEntry(tr('Show playback controls longer'), (context) => NormalItem(

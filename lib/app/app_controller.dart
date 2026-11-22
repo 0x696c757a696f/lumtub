@@ -17,6 +17,8 @@ import '../apple_chip.dart';
 import '../ai_filter.dart';
 import '../android_subtitle_fonts.dart';
 import '../app_directories.dart';
+import '../learning/learning.dart';
+import '../learning/vocabulary.dart' show wavTail;
 import '../app_updater.dart';
 import '../app_log.dart';
 import '../app_window.dart';
@@ -163,12 +165,15 @@ part 'ios_pip_actions.dart';
 part 'learning_actions.dart';
 part 'study_actions.dart';
 
-enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
+enum PageMode { home, explore, subscriptions, history, playlists, downloads, learning, settings, channel, playlist, youtubePlaylist }
 
 /// Application state and actions, kept separate from the widgets that show them.
 class AppController extends ChangeNotifier with _ExploreState {
   HistoryStore? _history;
   AppDirectories? directories;
+
+  /// The paid learning pack: license, dictionaries, vocabulary book.
+  final learning = Learning();
 
   /// Now and then asks whether to support Lumtub; null until started.
   SupportReminder? supportReminder;
@@ -896,6 +901,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   List<SubtitleCue> _learningLines = const [];
   String? _learningLinesKey;
   DateTime _learningLinesAsked = DateTime(0);
+
+  /// Stops a line a word card played once as it ends.
+  StreamSubscription<Duration>? _lineOnce;
   final _linePause = LinePause();
   final _reveal = TranslationReveal();
   /// Whether the blurred second subtitle (模糊翻译) shows plainly now.

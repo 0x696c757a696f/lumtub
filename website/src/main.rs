@@ -344,7 +344,14 @@ const LEARN_SHOTS_ZH: [&str; 6] = ["1-lookup-ja", "2-kana", "3-lookup-en", "4-vi
 fn Learning(t: &'static Text, lang: Lang) -> impl IntoView {
     let l = &t.learn;
     let (dir, names): (&str, &[&str]) = if lang == Lang::Zh { ("zh", &LEARN_SHOTS_ZH) } else { ("en", &LEARN_SHOTS_EN) };
-    let guide = if lang == Lang::Zh { "/learn/zh/" } else { "/learn/" };
+    let guide = match lang {
+        Lang::En => "/learn/",
+        Lang::Zh => "/learn/zh/",
+        Lang::Es => "/learn/es/",
+        Lang::Fr => "/learn/fr/",
+        Lang::De => "/learn/de/",
+        Lang::It => "/learn/it/",
+    };
     let video = format!("screenshots/learning/demo-{dir}.mp4");
     let poster = format!("screenshots/learning/demo-{dir}.jpg");
     view! {

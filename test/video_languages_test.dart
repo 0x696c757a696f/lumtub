@@ -97,7 +97,7 @@ void main() {
       return _json(players[body['videoId']] ?? {'playabilityStatus': {'status': 'ERROR'}});
     });
     final folder = Directory.systemTemp.createTempSync('languages');
-    addTearDown(() => folder.deleteSync(recursive: true));
+    addTearDown(() => _remove(folder));
     final languages = VideoLanguages(client, file: File('${folder.path}/languages.json'));
     LanguageCheck? check;
     final kept = await languages
@@ -291,7 +291,7 @@ void main() {
       });
     });
     final folder = Directory.systemTemp.createTempSync('languages');
-    addTearDown(() => folder.deleteSync(recursive: true));
+    addTearDown(() => _remove(folder));
     final file = File('${folder.path}/languages.json')
       // Written by an earlier version: a guess from the title.
       ..writeAsStringSync(jsonEncode({
@@ -342,7 +342,7 @@ void main() {
       return _json(_player('Lecture', asr: id.startsWith('e') ? 'en' : 'it'));
     });
     final folder = Directory.systemTemp.createTempSync('languages');
-    addTearDown(() => folder.deleteSync(recursive: true));
+    addTearDown(() => _remove(folder));
     final file = File('${folder.path}/languages.json');
     String line(String id, String channel) => jsonEncode({'id': id, 'title': 'Lecture', 'channel': 'c', 'channel_id': channel});
     const english = 'UCaaaaaaaaaaaaaaaaaaaaaa', mixed = 'UCbbbbbbbbbbbbbbbbbbbbbb';
@@ -406,4 +406,14 @@ void main() {
     expect(await languages.of('yyyyyyyyyyy', asking: ExploreLanguage.it), isNull);
     expect(calls, before, reason: 'resting');
   }, skip: core);
+}
+
+/// A save the test did not wait for can still hold a file open on Windows;
+/// the temporary folder is then left for the system to clear.
+void _remove(Directory folder) {
+  try {
+    folder.deleteSync(recursive: true);
+  } on FileSystemException {
+    // Still in use.
+  }
 }

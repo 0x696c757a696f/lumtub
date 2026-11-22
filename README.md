@@ -30,9 +30,11 @@ No account needed to watch.
 
 ⭐ **Like Lumtub? Star it on GitHub (top right of this page).** It costs nothing and is the main way new people find it.
 
+🆕 **Learning Pack:** click words in the subtitles to learn Japanese, English, Chinese, Korean and more from any video. [See it in action](#-learn-languages-from-real-videos) · early bird ¥99 until 3 January.
+
 https://github.com/user-attachments/assets/97e3ce09-8e66-43fe-9125-bff1b3dcb3fe
 
-[Screenshots](#screenshots) · [Features](#features) · [Get it](#get-it) · [Data](#where-the-data-comes-from) · [Privacy](#privacy-what-stays-local-and-what-doesnt) · [FAQ](#faq) · [Support](#support-lumtub)
+[Learn languages](#-learn-languages-from-real-videos) · [Screenshots](#screenshots) · [Features](#features) · [Get it](#get-it) · [Data](#where-the-data-comes-from) · [Privacy](#privacy-what-stays-local-and-what-doesnt) · [FAQ](#faq) · [Support](#support-lumtub)
 
 </div>
 ---
@@ -46,6 +48,66 @@ https://github.com/user-attachments/assets/97e3ce09-8e66-43fe-9125-bff1b3dcb3fe
 - **No account to watch.** Search, playback, subscriptions and recommendations work signed out. Sign in only for likes, comments, playlists, members-only videos and other interaction.
 
 Lumtub is free and open source, with no ads, no accounts of its own and no telemetry.
+
+## 🆕 Learn languages from real videos
+
+**Learn languages from the videos you already love.** Click a word in the subtitles, see what it means, hear it, save it with its sentence and review it later with the line from the video.
+
+<p align="center">
+<img src="docs/screenshots/learning/lookup-en.gif" alt="Clicking a Japanese word in the subtitles of a Kyoto travel video opens its reading, meaning and pronunciation, then saves it" width="80%">
+</p>
+<p align="center"><sub>A real recording of Lumtub, not a mock-up. ▶ <a href="https://lumtub.app/learn/#demo">Watch the 45-second demo with sound</a></sub></p>
+
+<div align="center">
+
+**Early bird ¥99** until 3 January 2027, then ¥129 · pay once, no subscription · up to 5 of your devices<br>
+**Try it first:** your first 30 word lookups have everything switched on, no account needed.
+
+<a href="https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00"><img src="https://img.shields.io/badge/Get%20the%20Learning%20Pack-%C2%A599%20early%20bird-E53935?style=for-the-badge" alt="Get the Learning Pack, ¥99 early bird" height="32"></a>
+<a href="https://lumtub.app/learn/"><img src="https://img.shields.io/badge/Install%20guide%20%26%20refunds-555555?style=for-the-badge" alt="Install guide and refunds" height="32"></a>
+
+</div>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/en/1-lookup-ja.jpg" alt="Click any word in the subtitles: reading, meaning and the original line, saved in one click" width="100%"></td>
+<td width="50%"><img src="docs/screenshots/learning/en/2-kana.jpg" alt="Kana above every kanji, in the video and in the transcript" width="100%"></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/en/3-lookup-fr.jpg" alt="Not just Japanese: looking up a French word in a French video" width="100%"></td>
+<td width="50%"><img src="docs/screenshots/learning/en/4-study.jpg" alt="Study mode: four steps per section of a video" width="100%"></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/en/5-vocab.jpg" alt="Vocabulary book: every word keeps its sentence, the video and the timestamp" width="100%"></td>
+<td width="50%"><img src="docs/screenshots/learning/en/6-review.jpg" alt="Review card that plays the real line from the video" width="100%"></td>
+</tr>
+</table>
+<p align="center"><sub>Real screenshots with real YouTube videos, English interface. The license number is blurred.</sub></p>
+
+**What the Learning Pack adds** (Windows, macOS and Linux):
+
+- **Click a word, get the meaning**, from dictionaries that download once and then work offline. Chinese, English, Japanese and Korean; Spanish, French, German, Italian and Russian in beta. Conjugated Japanese verbs are found by their dictionary form.
+- **Readings above the line**: pinyin for Chinese, kana for Japanese, romanization for Korean.
+- **Words above your level are highlighted**, so you only stop for the ones you don't know yet. Before you start a video, see how much of it you already know and which words come up most.
+- **Hear it**: words are read aloud, and every saved word keeps the original line's audio.
+- **Vocabulary book** that keeps the sentence, the original audio and the moment in the video. Click an entry to hear it again.
+- **Review** with spaced repetition. Each card plays the line from the video, not a robot voice.
+- **Study one video in four steps**: listen without subtitles, read along, shadow the hard lines, then listen again.
+- **Send to Anki** in one click, or export CSV.
+
+**Why pay when there are free tools?** asbplayer, Yomitan and Anki together are an excellent free setup, and if it works for you, keep it. The Learning Pack does the same loop inside one app: no browser extensions to set up, dictionaries built in and offline, and the line's audio goes to Anki with the card. You're paying for that convenience, and it funds Lumtub's development.
+
+**Price:** early bird ¥99 until 3 January 2027, then ¥129. Pay once on [爱发电](https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00) (Alipay or WeChat Pay); card payment is coming later. One license for up to 5 of your devices; the app checks it online about once every 30 days. After the 30 free lookups, without the pack, you can still look up 3 words a day. [Install guide and refunds](https://lumtub.app/learn/).
+
+**Free for everyone**, in the Subtitles menu under **Language learning**:
+
+- **Pause after each line** (Q): playback stops when a line ends, so you have time to understand it before you move on.
+- **Blur the translation** (V): the second subtitle stays blurred until you hover it, tap it or press the key. Guess first, then check.
+- **Replay, loop and step through lines** (R, Shift+R, A, D): every jump goes by subtitle line and starts playing.
+- **Shadowing** (E): record yourself saying the line, then hear the original and your take one after the other. Recordings stay on your device.
+- **Export the subtitle list as CSV**, every line with its translation, for Anki or a spreadsheet.
+
+Combined with two subtitles at once and Explore by spoken language, this turns any video into listening practice. Touch screens and TV remotes get buttons for all of it.
 
 ## Screenshots
 
@@ -129,23 +191,24 @@ These are also found in other YouTube clients, and all are opt-in here:
 
 | Package | For | Download |
 |---|---|---|
-| `windows-x64-v3` | Most PCs from 2015 on (AVX2) — **pick this if unsure** | [⬇ Installer](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-v3-setup.exe) · [Portable ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-v3.zip) |
-| `windows-x64` | Older x64 CPUs | [⬇ Installer](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-setup.exe) · [Portable ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-x64.zip) |
-| `windows-arm64` | Windows on ARM laptops | [⬇ Installer](https://0x696c757a696f.github.io/lumtub/get/?windows-arm64-setup.exe) · [Portable ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-arm64.zip) |
-| `linux-x64-v3` AppImage | Most 64-bit PCs from 2015 on (AVX2) with glibc 2.35 or newer — **pick this if unsure** | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-x64-v3.AppImage) |
-| `linux-x64` AppImage | 64-bit PCs with glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36 and later) | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-x64.AppImage) |
-| `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-arm64.AppImage) |
+| `windows-x64-v3` | Most PCs from 2015 on (AVX2) — **pick this if unsure** | [⬇ Installer](https://lumtub.app/get/?windows-x64-v3-setup.exe) · [Portable ZIP](https://lumtub.app/get/?windows-x64-v3.zip) |
+| `windows-x64` | Older x64 CPUs | [⬇ Installer](https://lumtub.app/get/?windows-x64-setup.exe) · [Portable ZIP](https://lumtub.app/get/?windows-x64.zip) |
+| `windows-arm64` | Windows on ARM laptops | [⬇ Installer](https://lumtub.app/get/?windows-arm64-setup.exe) · [Portable ZIP](https://lumtub.app/get/?windows-arm64.zip) |
+| `linux-x64-v3` AppImage | Most 64-bit PCs from 2015 on (AVX2) with glibc 2.35 or newer — **pick this if unsure** | [⬇ AppImage](https://lumtub.app/get/?linux-x64-v3.AppImage) |
+| `linux-x64` AppImage | 64-bit PCs with glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36 and later) | [⬇ AppImage](https://lumtub.app/get/?linux-x64.AppImage) |
+| `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 | [⬇ AppImage](https://lumtub.app/get/?linux-arm64.AppImage) |
 | `linux-x64` / `linux-arm64` Flatpak | The same, as a Flatpak bundle (no self-update: install the next one by hand) | [Release page](https://github.com/0x696c757a696f/lumtub/releases/latest) |
-| `macos-arm64` DMG | Macs with Apple silicon (M1 and later) | [⬇ DMG](https://0x696c757a696f.github.io/lumtub/get/?macos-arm64.dmg) |
-| `macos-x64` DMG | Intel Macs | [⬇ DMG](https://0x696c757a696f.github.io/lumtub/get/?macos-x64.dmg) |
-| `android-arm64-v8a` APK | Most Android phones, tablets and TVs (Android 7.0 or newer) — **pick this if unsure** | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-arm64-v8a.apk) |
-| `android-armeabi-v7a` APK | Older 32-bit Android devices and many low-cost TV boxes | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-armeabi-v7a.apk) |
-| `android-x86_64` APK | Android emulators and x86 Chromebooks | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-x86_64.apk) |
-| `ios` IPA | iPhone and iPad with iOS 15 or newer (preview, sideloaded) | [⬇ IPA](https://0x696c757a696f.github.io/lumtub/get/?ios.ipa) |
-| `ios-trollstore` TIPA | The same for [TrollStore](https://github.com/opa334/TrollStore): also asks iOS for VP9 hardware decoding before iOS 26.2 | [⬇ TIPA](https://0x696c757a696f.github.io/lumtub/get/?ios-trollstore.tipa) |
+| `macos-arm64` DMG | Macs with Apple silicon (M1 and later) | [⬇ DMG](https://lumtub.app/get/?macos-arm64.dmg) |
+| `macos-x64` DMG | Intel Macs | [⬇ DMG](https://lumtub.app/get/?macos-x64.dmg) |
+| `android-arm64-v8a` APK | Most Android phones, tablets and TVs (Android 7.0 or newer) — **pick this if unsure** | [⬇ APK](https://lumtub.app/get/?android-arm64-v8a.apk) |
+| `android-armeabi-v7a` APK | Older 32-bit Android devices and many low-cost TV boxes | [⬇ APK](https://lumtub.app/get/?android-armeabi-v7a.apk) |
+| `android-x86_64` APK | Android emulators and x86 Chromebooks | [⬇ APK](https://lumtub.app/get/?android-x86_64.apk) |
+| `ios` IPA | iPhone and iPad with iOS 15 or newer (preview, sideloaded) | [⬇ IPA](https://lumtub.app/get/?ios.ipa) |
+| `ios-trollstore` TIPA | The same for [TrollStore](https://github.com/opa334/TrollStore): also asks iOS for VP9 hardware decoding before iOS 26.2 | [⬇ TIPA](https://lumtub.app/get/?ios-trollstore.tipa) |
 
 The links in the table always give the newest version. On the release page, file names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
 **Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. Package manager (under review, working once accepted): `winget install Lumtub.Lumtub`.<br>
+Windows may show **Windows protected your PC** the first time, because the installer isn't signed with a paid code-signing certificate yet. Click **More info**, then **Run anyway**. Do this only for a file you downloaded from the official places below.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place. If it says FUSE is missing, install your distribution's `fuse3` package, or start it with `--appimage-extract-and-run`. Prefer Flatpak? `flatpak install --user Lumtub_*_linux-x64.flatpak`.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.<br>
 **Android (preview):** open the APK and allow installing from your browser or file manager when asked. New versions install from inside Lumtub; Android asks you to confirm. Live streams and downloads work too, through the yt-dlp built into the app; members-only videos don't play on Android yet.<br>
@@ -164,11 +227,13 @@ or open it, click **Done**, and choose **Open Anyway** next to Lumtub in **Syste
 
 Lumtub is free. It comes only from:
 - [GitHub Releases](https://github.com/0x696c757a696f/lumtub/releases) of this repository,
-- the website [0x696c757a696f.github.io/lumtub](https://0x696c757a696f.github.io/lumtub/), which links to the same files,
+- the website [lumtub.app](https://lumtub.app/), which links to the same files,
 - Lumtub's built-in updater, which downloads from those releases,
 - the SideStore/AltStore source above, and `winget install Lumtub.Lumtub` once it's accepted.
 
-If anyone asks you to pay for Lumtub, or sells a renamed copy without its source code, it doesn't come from this project and may have been tampered with. Lumtub's license (AGPL) lets others share and even sell copies, but only if they give you the complete source code under the same license and keep the copyright notices. A paid closed-source copy breaks the license. Please [report it in an issue](https://github.com/0x696c757a696f/lumtub/issues/new) with a link, so it can be taken down.
+To check a download, compare its SHA-256 with the one GitHub shows next to the file on the [release page](https://github.com/0x696c757a696f/lumtub/releases/latest). On Windows: `Get-FileHash <file>` in PowerShell; on macOS and Linux: `shasum -a 256 <file>`.
+
+The optional [Learning Pack](#-learn-languages-from-real-videos) is sold only through 爱发电, from the links in this README, the website and the app. If anyone else asks you to pay for Lumtub, or sells a renamed copy without its source code, it doesn't come from this project and may have been tampered with. Lumtub's license (AGPL) lets others share and even sell copies, but only if they give you the complete source code under the same license and keep the copyright notices. A paid closed-source copy breaks the license. Please [report it in an issue](https://github.com/0x696c757a696f/lumtub/issues/new) with a link, so it can be taken down.
 
 ## Where the data comes from
 

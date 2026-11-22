@@ -242,6 +242,58 @@ class _WatchedLabels extends UnmodifiableMapBase<String, String> {
   Iterable<String> get keys => _times.keys;
 }
 
+/// A title cut to [maxLines] lines that shows itself whole in a tooltip
+/// when the pointer rests on it, as a web page's title attribute does. Only
+/// a title that did not fit gets one. Nothing is measured until the pointer
+/// comes in; then the paragraph already laid out says whether it was cut.
+/// Touch never opens it, so a long press still reaches the card.
+class TitleText extends StatefulWidget {
+  const TitleText(this.text, {super.key, required this.maxLines, required this.style});
+
+  final String text;
+  final int maxLines;
+  final TextStyle style;
+
+  @override
+  State<TitleText> createState() => _TitleTextState();
+}
+
+class _TitleTextState extends State<TitleText> {
+  bool _cut = false;
+
+  @override
+  void didUpdateWidget(TitleText old) {
+    super.didUpdateWidget(old);
+    if (old.text != widget.text || old.maxLines != widget.maxLines) _cut = false;
+  }
+
+  void _check(PointerEnterEvent _) {
+    RenderParagraph? paragraph;
+    void find(RenderObject child) {
+      if (paragraph != null) return;
+      if (child is RenderParagraph) {
+        paragraph = child;
+      } else {
+        child.visitChildren(find);
+      }
+    }
+    context.findRenderObject()?.visitChildren(find);
+    final cut = paragraph?.didExceedMaxLines ?? false;
+    if (cut != _cut) setState(() => _cut = cut);
+  }
+
+  @override
+  Widget build(BuildContext context) => MouseRegion(
+        onEnter: _check,
+        child: Tooltip(
+          message: _cut ? widget.text : '',
+          triggerMode: TooltipTriggerMode.manual,
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Text(widget.text, maxLines: widget.maxLines, overflow: TextOverflow.ellipsis, style: widget.style),
+        ),
+      );
+}
+
 /// A video as one row of a list: a small thumbnail or none, the title, the
 /// channel and views, for 列表 and 纯文字. Fewer and smaller pictures than
 /// the grid, so long lists scroll lighter.
@@ -311,7 +363,7 @@ class VideoRow extends StatelessWidget {
             const SizedBox(width: Space.m),
           ],
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(titleFor(item), maxLines: text ? 1 : 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)),
+            TitleText(titleFor(item), maxLines: text ? 1 : 2, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)),
             const SizedBox(height: Space.xs),
             Row(children: [
               if (text && status != null) ...[
@@ -404,7 +456,7 @@ class PlaylistCard extends StatelessWidget {
           Expanded(child: Padding(
             padding: const EdgeInsets.fromLTRB(2, 10, 2, 4),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Flexible(child: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
+              Flexible(child: TitleText(item.title, maxLines: 2, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
               const SizedBox(height: Space.xs),
               Text(item.channel.isEmpty ? tr('Playlist') : tr('{0} · Playlist', [item.channel]), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
             ]),
@@ -711,7 +763,7 @@ class _VideoCardState extends State<VideoCard> {
             // The channel line keeps to the card's foot, however long the
             // title, so a row of cards lines up.
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(child: Align(alignment: AlignmentDirectional.topStart, child: Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: compact ? 13 : 14, height: compact ? 1.32 : 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)))),
+              Expanded(child: Align(alignment: AlignmentDirectional.topStart, child: TitleText(titleFor(item), maxLines: 2, style: TextStyle(fontSize: compact ? 13 : 14, height: compact ? 1.32 : 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)))),
               // Why it is here, on a line of its own so it reads whole.
               if (widget.reason case final reason? when reason.isNotEmpty)
                 SizedBox(height: _reasonHeight * cardTextScale(context), child: Align(alignment: AlignmentDirectional.centerStart, child: ReasonTag(reason, wide: true))),
@@ -966,7 +1018,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
           ),
           const SizedBox(width: 8),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, height: 1.35, fontWeight: FontWeight.w500, color: colors.onSurface)),
+            TitleText(titleFor(item), maxLines: 2, style: TextStyle(fontSize: 12, height: 1.35, fontWeight: FontWeight.w500, color: colors.onSurface)),
             const SizedBox(height: 4),
             if (upcomingStart != null)
               Text(upcomingStart, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary, fontWeight: FontWeight.w500)),
@@ -1050,7 +1102,7 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
       entry('browser', AppIcons.arrowSquareOut, tr('Open in browser')),
   ];
   final choice = phone
-      ? await pickFromSheet<String>(context, rows, title: item.title)
+      ? await pickFromSheet<String>(context, rows, title: titleFor(item))
       : await showMenu<String>(context: context, position: RelativeRect.fromRect(position & const Size(1, 1), Offset.zero & overlay.size), items: items);
   if (!context.mounted) return;
   switch (choice) {

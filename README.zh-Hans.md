@@ -30,7 +30,9 @@
 
 ⭐ **觉得好用？在 GitHub 右上角点个 Star 吧。** 不花一分钱，却是新用户发现 Lumtub 的主要途径。
 
-[截图](#截图) · [功能](#功能) · [下载](#下载) · [数据来源](#数据来源) · [隐私](#隐私哪些留在本机哪些会发出去) · [常见问题](#常见问题) · [支持](#支持-lumtub)
+🆕 **学习包**：点字幕里的词，用任何视频学日语、英语、韩语等外语。[看看效果](#-用真实视频学外语) · 早鸟价 ¥99，到 1 月 3 日。
+
+[学外语](#-用真实视频学外语) · [截图](#截图) · [功能](#功能) · [下载](#下载) · [数据来源](#数据来源) · [隐私](#隐私哪些留在本机哪些会发出去) · [常见问题](#常见问题) · [支持](#支持-lumtub)
 
 </div>
 ---
@@ -44,6 +46,69 @@
 - **不用账号也能看。** 搜索、播放、订阅和推荐都不需要登录。只有点赞、评论、播放列表、会员专属视频等互动才需要登录。
 
 Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集遥测数据。
+
+## 🆕 用真实视频学外语
+
+**把喜欢的视频，变成自己的外语教材。** 点字幕里的词就能看释义、听发音，连同原句存进生词本，之后用视频里的原声复习。
+
+<p align="center">
+<img src="docs/screenshots/learning/lookup-zh.gif" alt="在京都旅行视频的字幕里点一个日语词，弹出读音、释义和发音，再加入生词本" width="80%">
+</p>
+<p align="center"><sub>Lumtub 真实录屏，不是效果图。▶ <a href="https://lumtub.app/learn/zh/#demo">看 40 秒带声音的演示</a></sub></p>
+
+<div align="center">
+
+**早鸟价 ¥99**，到 2027 年 1 月 3 日，之后 ¥129 · 一次买断，不订阅 · 最多 5 台设备<br>
+**先试再买**：前 30 次查词所有功能全部开放，不用注册。
+
+<a href="https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00"><img src="https://img.shields.io/badge/%E8%B4%AD%E4%B9%B0%E5%AD%A6%E4%B9%A0%E5%8C%85-%E6%97%A9%E9%B8%9F%E4%BB%B7%20%C2%A599-E53935?style=for-the-badge" alt="购买学习包，早鸟价 ¥99" height="32"></a>
+<a href="https://lumtub.app/learn/zh/"><img src="https://img.shields.io/badge/%E5%AE%89%E8%A3%85%E8%AF%B4%E6%98%8E%E5%92%8C%E9%80%80%E6%AC%BE-555555?style=for-the-badge" alt="安装说明和退款" height="32"></a>
+
+</div>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/zh/1-lookup-ja.jpg" alt="看日本视频，点字幕里的词就能查：读音、释义和原句，一键加入生词本" width="100%"></td>
+<td width="50%"><img src="docs/screenshots/learning/zh/2-kana.jpg" alt="汉字上面自动标假名，视频字幕和字幕列表都有" width="100%"></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/zh/3-lookup-en.jpg" alt="英语视频也一样：难词标黄，点了就懂" width="100%"></td>
+<td width="50%"><img src="docs/screenshots/learning/zh/4-video-words.jpg" alt="看之前就知道这个视频你认识多少词，先学出现最多的生词" width="100%"></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/zh/5-study.jpg" alt="精学：每段四步，盲听、带字幕精读、难句跟读、无字幕复听" width="100%"></td>
+<td width="50%"><img src="docs/screenshots/learning/zh/6-vocab.jpg" alt="生词本记住原句和时间点，可以一键送进 Anki" width="100%"></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/zh/7-review.jpg" alt="复习时听视频里的原声，按记忆曲线安排" width="100%"></td>
+<td width="50%" align="center"><sub>以上都是真实视频里的真实截图，<br>授权码已打码。</sub></td>
+</tr>
+</table>
+
+**学习包包含**（Windows、macOS、Linux）：
+
+- **点词就查**：词典下载一次，之后查词不用联网。中文、英语、日语、韩语；西班牙语、法语、德语、意大利语、俄语为测试版。日语动词变形后也能按原形查到。
+- **字幕上方注音**：中文拼音、日语假名、韩语罗马音。
+- **比你水平难的词自动标出来**，只在不认识的词上停下。开始看之前，就能知道这个视频你认识多少，哪些生词出现最多。
+- **听得到**：单词能朗读，每个收藏的词都带着那句话的原声。
+- **生词本**：记下原句、原声和视频里的时间点，点一下再听一遍。
+- **复习**：按记忆曲线安排，每张卡片播放视频里的原声，不是机器朗读。
+- **精学一个视频，每段四步**：盲听、带字幕精读、难句跟读、无字幕复听。
+- **一键送进 Anki**，也可以导出 CSV。
+
+**有免费工具，为什么还要买？** asbplayer、Yomitan 加 Anki 是很好的免费组合，用得顺手就继续用。学习包把同样的流程放进一个软件里：不用装浏览器扩展，词典内置、离线可用，那句话的原声会跟卡片一起进 Anki。你买的是这份省事，钱也用来支持 Lumtub 继续开发。
+
+**价格**：早鸟价 ¥99，到 2027 年 1 月 3 日；之后 ¥129。在[爱发电](https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00)一次付款（支付宝或微信）。一份授权最多 5 台设备，软件大约每 30 天联网确认一次授权。30 次免费查词用完后，不买也每天能查 3 个词。[安装说明和退款](https://lumtub.app/learn/zh/)。
+
+**所有人免费**，在字幕菜单 › **学外语** 里：
+
+- **每句说完暂停**（Q）：一句字幕结束就停下，听懂了再往下看。
+- **模糊翻译**（V）：第二行字幕先模糊，鼠标移上去、点一下或按键才显示。先猜，再对答案。
+- **重听、单句循环、上一句和下一句**（R、Shift+R、A、D）：都按字幕一句一句跳，跳完直接播放。
+- **跟读**（E）：录下自己说这句话，然后原声和你的录音先后播放，方便对比。录音只留在你的设备上。
+- **字幕列表导出 CSV**：每句原文带翻译，可以导入 Anki 或表格。
+
+配合双语字幕和「按视频实际语言找视频」，任何视频都能拿来练听力。触屏和电视遥控器也有对应的按钮。
 
 ## 截图
 
@@ -124,23 +189,24 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 
 | 安装包 | 适用于 | 下载 |
 |---|---|---|
-| `windows-x64-v3` | 2015 年以后的大多数电脑（支持 AVX2）。**不确定就选这个** | [⬇ 安装程序](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-v3-setup.exe) · [便携版 ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-v3.zip) |
-| `windows-x64` | 较老的 x64 处理器 | [⬇ 安装程序](https://0x696c757a696f.github.io/lumtub/get/?windows-x64-setup.exe) · [便携版 ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-x64.zip) |
-| `windows-arm64` | Windows on ARM 笔记本 | [⬇ 安装程序](https://0x696c757a696f.github.io/lumtub/get/?windows-arm64-setup.exe) · [便携版 ZIP](https://0x696c757a696f.github.io/lumtub/get/?windows-arm64.zip) |
-| `linux-x64-v3` AppImage | 2015 年以后的大多数 64 位电脑（AVX2），glibc 2.35 或更新——**拿不准就选这个** | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-x64-v3.AppImage) |
-| `linux-x64` AppImage | glibc 2.35 或更新的 64 位电脑（Ubuntu 22.04、Debian 12、Fedora 36 及以后） | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-x64.AppImage) |
-| `linux-arm64` AppImage | ARM64 Linux，例如树莓派 5 | [⬇ AppImage](https://0x696c757a696f.github.io/lumtub/get/?linux-arm64.AppImage) |
+| `windows-x64-v3` | 2015 年以后的大多数电脑（支持 AVX2）。**不确定就选这个** | [⬇ 安装程序](https://lumtub.app/get/?windows-x64-v3-setup.exe) · [便携版 ZIP](https://lumtub.app/get/?windows-x64-v3.zip) |
+| `windows-x64` | 较老的 x64 处理器 | [⬇ 安装程序](https://lumtub.app/get/?windows-x64-setup.exe) · [便携版 ZIP](https://lumtub.app/get/?windows-x64.zip) |
+| `windows-arm64` | Windows on ARM 笔记本 | [⬇ 安装程序](https://lumtub.app/get/?windows-arm64-setup.exe) · [便携版 ZIP](https://lumtub.app/get/?windows-arm64.zip) |
+| `linux-x64-v3` AppImage | 2015 年以后的大多数 64 位电脑（AVX2），glibc 2.35 或更新——**拿不准就选这个** | [⬇ AppImage](https://lumtub.app/get/?linux-x64-v3.AppImage) |
+| `linux-x64` AppImage | glibc 2.35 或更新的 64 位电脑（Ubuntu 22.04、Debian 12、Fedora 36 及以后） | [⬇ AppImage](https://lumtub.app/get/?linux-x64.AppImage) |
+| `linux-arm64` AppImage | ARM64 Linux，例如树莓派 5 | [⬇ AppImage](https://lumtub.app/get/?linux-arm64.AppImage) |
 | `linux-x64` / `linux-arm64` Flatpak | 同上，Flatpak 包（不会自动更新，新版本需要手动安装） | [发布页](https://github.com/0x696c757a696f/lumtub/releases/latest) |
-| `macos-arm64` DMG | Apple 芯片的 Mac（M1 及以后） | [⬇ DMG](https://0x696c757a696f.github.io/lumtub/get/?macos-arm64.dmg) |
-| `macos-x64` DMG | Intel 芯片的 Mac | [⬇ DMG](https://0x696c757a696f.github.io/lumtub/get/?macos-x64.dmg) |
-| `android-arm64-v8a` APK | 大多数 Android 手机、平板和电视（Android 7.0 及以上）。**不确定就选这个** | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-arm64-v8a.apk) |
-| `android-armeabi-v7a` APK | 较老的 32 位 Android 设备和不少廉价电视盒子 | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-armeabi-v7a.apk) |
-| `android-x86_64` APK | Android 模拟器和 x86 Chromebook | [⬇ APK](https://0x696c757a696f.github.io/lumtub/get/?android-x86_64.apk) |
-| `ios` IPA | iOS 15 及以上的 iPhone 和 iPad（预览版，自签安装） | [⬇ IPA](https://0x696c757a696f.github.io/lumtub/get/?ios.ipa) |
-| `ios-trollstore` TIPA | 同上，给 [TrollStore](https://github.com/opa334/TrollStore) 用：iOS 26.2 之前也会向系统要 VP9 硬件解码 | [⬇ TIPA](https://0x696c757a696f.github.io/lumtub/get/?ios-trollstore.tipa) |
+| `macos-arm64` DMG | Apple 芯片的 Mac（M1 及以后） | [⬇ DMG](https://lumtub.app/get/?macos-arm64.dmg) |
+| `macos-x64` DMG | Intel 芯片的 Mac | [⬇ DMG](https://lumtub.app/get/?macos-x64.dmg) |
+| `android-arm64-v8a` APK | 大多数 Android 手机、平板和电视（Android 7.0 及以上）。**不确定就选这个** | [⬇ APK](https://lumtub.app/get/?android-arm64-v8a.apk) |
+| `android-armeabi-v7a` APK | 较老的 32 位 Android 设备和不少廉价电视盒子 | [⬇ APK](https://lumtub.app/get/?android-armeabi-v7a.apk) |
+| `android-x86_64` APK | Android 模拟器和 x86 Chromebook | [⬇ APK](https://lumtub.app/get/?android-x86_64.apk) |
+| `ios` IPA | iOS 15 及以上的 iPhone 和 iPad（预览版，自签安装） | [⬇ IPA](https://lumtub.app/get/?ios.ipa) |
+| `ios-trollstore` TIPA | 同上，给 [TrollStore](https://github.com/opa334/TrollStore) 用：iOS 26.2 之前也会向系统要 VP9 硬件解码 | [⬇ TIPA](https://lumtub.app/get/?ios-trollstore.tipa) |
 
 表格里的链接总是下载最新版本。发布页上的文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
 **Windows**：用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。也可以用包管理器（正在审核，通过后可用）：`winget install Lumtub.Lumtub`。<br>
+第一次打开时 Windows 可能提示「Windows 已保护你的电脑」，因为安装程序还没有买付费的代码签名证书。点「更多信息」，再点「仍要运行」。只对从下面官方渠道下载的文件这样做。<br>
 **Linux**：给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新。如果提示缺少 FUSE，请安装发行版的 `fuse3` 软件包，或用 `--appimage-extract-and-run` 参数启动。想用 Flatpak 的话：`flatpak install --user Lumtub_*_linux-x64.flatpak`。<br>
 第一次启动时会从 GitHub 下载 yt-dlp 和 Deno，之后 Lumtub 会自己保持更新。<br>
 **Android（预览版）**：打开 APK，按提示允许浏览器或文件管理器安装应用。新版本可以在 Lumtub 里直接安装，Android 会请你确认一次。直播和下载也都能用，靠的是应用里自带的 yt-dlp；会员专属视频在 Android 上暂时还不能看。<br>
@@ -158,11 +224,13 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 
 Lumtub 是免费的，只从以下渠道发布：
 - 本仓库的 [GitHub Releases](https://github.com/0x696c757a696f/lumtub/releases)；
-- 官网 [0x696c757a696f.github.io/lumtub](https://0x696c757a696f.github.io/lumtub/)（下载的是同一批文件）；
+- 官网 [lumtub.app](https://lumtub.app/)（下载的是同一批文件）；
 - Lumtub 内置的自动更新（也从上面的 Releases 下载）；
 - 上面的 SideStore/AltStore 源，以及审核通过后的 `winget install Lumtub.Lumtub`。
 
-如果有人向你收费出售 Lumtub，或者换个名字卖却不提供源代码，那就不是本项目发布的，安装包也可能被动过手脚。Lumtub 的许可证（AGPL）允许别人转发甚至出售副本，但必须把完整源代码以同样的许可证一并提供给你，并保留版权声明。收费又闭源的副本违反了许可证。遇到这种情况，请把链接[提交到 issue](https://github.com/0x696c757a696f/lumtub/issues/new)，以便发起下架。
+想确认下载的文件没被改过：把它的 SHA-256 和 [Release 页面](https://github.com/0x696c757a696f/lumtub/releases/latest)上文件旁边显示的对比。Windows 在 PowerShell 里运行 `Get-FileHash <文件>`，macOS 和 Linux 运行 `shasum -a 256 <文件>`。
+
+可选的[学习包](#-用真实视频学外语)只通过爱发电出售，链接只在本 README、官网和软件里。除此之外，如果有人向你收费出售 Lumtub，或者换个名字卖却不提供源代码，那就不是本项目发布的，安装包也可能被动过手脚。Lumtub 的许可证（AGPL）允许别人转发甚至出售副本，但必须把完整源代码以同样的许可证一并提供给你，并保留版权声明。收费又闭源的副本违反了许可证。遇到这种情况，请把链接[提交到 issue](https://github.com/0x696c757a696f/lumtub/issues/new)，以便发起下架。
 
 ## 数据来源
 

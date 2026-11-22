@@ -16,6 +16,7 @@ const REPO: &str = "https://github.com/0x696c757a696f/lumtub";
 const RELEASES: &str = "https://github.com/0x696c757a696f/lumtub/releases/latest";
 const SPONSORS: &str = "https://github.com/sponsors/0x696c757a696f";
 const AFDIAN: &str = "https://afdian.com/a/linmuqingfeng";
+const AFDIAN_PACK: &str = "https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00";
 const KOFI: &str = "https://ko-fi.com/0x696c757a696f";
 const WEBLATE: &str = "https://hosted.weblate.org/engage/lumtub/";
 const SECTIONS: [&str; 5] = ["features", "download", "privacy", "faq", "support"];
@@ -212,6 +213,7 @@ fn App() -> impl IntoView {
             <main id="main">
                 <Hero t=t ctx=ctx lang=l/>
                 <Highlights t=t lang=l skin=skin/>
+                <Learning t=t lang=l/>
                 <Tagline lang=l/>
                 <Steps t=t/>
                 <Features t=t/>
@@ -330,6 +332,64 @@ fn Highlights(t: &'static Text, lang: Lang, skin: SkinState) -> impl IntoView {
                         </article>
                     }
                 }).collect_view()}
+            </div>
+        </section>
+    }
+}
+
+const LEARN_SHOTS_EN: [&str; 6] = ["1-lookup-ja", "2-kana", "3-lookup-fr", "4-study", "5-vocab", "6-review"];
+const LEARN_SHOTS_ZH: [&str; 6] = ["1-lookup-ja", "2-kana", "3-lookup-en", "4-video-words", "5-study", "7-review"];
+
+#[component]
+fn Learning(t: &'static Text, lang: Lang) -> impl IntoView {
+    let l = &t.learn;
+    let (dir, names): (&str, &[&str]) = if lang == Lang::Zh { ("zh", &LEARN_SHOTS_ZH) } else { ("en", &LEARN_SHOTS_EN) };
+    let guide = match lang {
+        Lang::En => "/learn/",
+        Lang::Zh => "/learn/zh/",
+        Lang::Es => "/learn/es/",
+        Lang::Fr => "/learn/fr/",
+        Lang::De => "/learn/de/",
+        Lang::It => "/learn/it/",
+    };
+    let video = format!("screenshots/learning/demo-{dir}.mp4");
+    let poster = format!("screenshots/learning/demo-{dir}.jpg");
+    view! {
+        <section id="learn" class="section alt">
+            <div class="wrap">
+                <header class="section-head reveal">
+                    <h2 class="heading-3">{l.title}</h2>
+                    <p class="body-3 muted">{l.lead}</p>
+                </header>
+                <figure class="learn-demo reveal">
+                    <video class="shot" controls playsinline preload="none" poster=poster width="1440" height="900">
+                        <source src=video type="video/mp4"/>
+                    </video>
+                    <figcaption class="caption-2">{l.demo_note}</figcaption>
+                </figure>
+                <figure class="learn-shots reveal">
+                    {names.iter().zip(l.shots_alt.iter()).map(|(n, alt)| view! {
+                        <img class="shot" loading="lazy" src=format!("screenshots/learning/{dir}/{n}.jpg") alt=*alt width="1280" height="960"/>
+                    }).collect_view()}
+                    <figcaption class="caption-2">{l.shots_note}</figcaption>
+                </figure>
+                <div class="learn-grid reveal">
+                    <div class="card learn-pack">
+                        <h3 class="title-2">{l.pack_title}</h3>
+                        <ul class="body-6">{l.pack.iter().map(|x| view! { <li>{*x}</li> }).collect_view()}</ul>
+                        <p class="body-6">{l.trial}</p>
+                        <p class="body-6"><strong>{l.price}</strong></p>
+                        <div class="learn-buy">
+                            <a class="btn primary" href=AFDIAN_PACK rel="noopener">{l.buy}</a>
+                            <a class="btn" href=guide>{l.guide}</a>
+                        </div>
+                        <p class="caption-2 muted">{l.fine}</p>
+                    </div>
+                    <div class="card">
+                        <h3 class="title-2">{l.free_title}</h3>
+                        <ul class="body-6">{l.free.iter().map(|x| view! { <li>{*x}</li> }).collect_view()}</ul>
+                    </div>
+                </div>
             </div>
         </section>
     }

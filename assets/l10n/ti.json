@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "ብዝተጠቕመሉ ጊዜ ብዝሒ ዝተገመተ፡ መምርሒ ጥራይ እዩ፡ ወግዓዊ ዝርዝር CEFR ኣይኮነን።",
   "The word levels are still downloading; words are marked once they are here.": "ደረጃታት ቃላት ገና ይወርዱ ኣለዉ፤ ምስ በጽሑ ቃላት ይምልከቱ።",
   "Set your level for a truer picture": "ንመሊእ ስእሊ ደረጃኹም ኣቐምጡ",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "መልሲ ንምርኣይ ካርዱ ንክዑ · ንየማን ስሓብ፦ ዝኣስኩ፣ ንጸጋም፦ ረሲዐ"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "መልሲ ንምርኣይ ካርዱ ንክዑ · ንየማን ስሓብ፦ ዝኣስኩ፣ ንጸጋም፦ ረሲዐ",
+  "{0} words · about {1} min": "{0} ቃላት · ኣስታት {1} ደቒቕ",
+  "All done · the next words come back in {0}": "ኩሉ ተወዲኡ · ዝቕጽሉ ቃላት ድሕሪ {0} ይምለሱ",
+  "From {0} videos": "ካብ {0} ቪድዮታት",
+  "Words without a video": "ቪድዮ ዘይብሎም ቃላት",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "ስፔስ መልሲ የርኢ · 1 2 3 4 ነጥቢ · R ሓረግ ዳግማይ የጻወት · F ኣቓልቦ ኣገባብ",
+  "Leave focus mode (F)": "ካብ ኣቓልቦ ኣገባብ ውጻእ (F)",
+  "Focus mode: the video scene, no numbers (F)": "ኣቓልቦ ኣገባብ፦ ትዕይንቲ ቪድዮ፣ ቁጽሪ የለን (F)"
 }

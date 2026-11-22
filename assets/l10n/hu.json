@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "A szavak gyakorisága alapján becsült: útmutató, nem hivatalos CEFR-lista.",
   "The word levels are still downloading; words are marked once they are here.": "A szószintek még letöltés alatt vannak; a szavak megjelölése a megérkezésük után indul.",
   "Set your level for a truer picture": "Állítsd be a szintedet a pontosabb képért",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Koppints a kártyára a válaszért · húzd jobbra: emlékszem, balra: elfelejtettem"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Koppints a kártyára a válaszért · húzd jobbra: emlékszem, balra: elfelejtettem",
+  "{0} words · about {1} min": "{0} szó · kb. {1} perc",
+  "All done · the next words come back in {0}": "Minden kész · a következő szavak {0} múlva térnek vissza",
+  "From {0} videos": "{0} videóból",
+  "Words without a video": "Videó nélküli szavak",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "A szóköz mutatja a választ · 1 2 3 4 értékelés · R újrajátssza a mondatot · F fókuszmód",
+  "Leave focus mode (F)": "Kilépés a fókuszmódból (F)",
+  "Focus mode: the video scene, no numbers (F)": "Fókuszmód: a videó jelenete, számok nélkül (F)"
 }

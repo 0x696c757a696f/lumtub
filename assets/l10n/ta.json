@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "சொற்கள் பயன்படுத்தப்படும் அடிக்கடியை வைத்து மதிப்பிடப்பட்டது: வழிகாட்டி மட்டுமே, அதிகாரப்பூர்வ CEFR பட்டியல் அல்ல.",
   "The word levels are still downloading; words are marked once they are here.": "சொல் நிலைகள் இன்னும் பதிவிறக்கப்படுகின்றன; வந்ததும் சொற்கள் குறிக்கப்படும்.",
   "Set your level for a truer picture": "மேலும் துல்லியமான நிலைக்கு உங்கள் நிலையை அமையுங்கள்",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "பதிலுக்கு கார்டைத் தட்டவும் · வலதுபுறம் ஸ்வைப்: நினைவிருக்கிறது, இடது: மறந்துவிட்டேன்"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "பதிலுக்கு கார்டைத் தட்டவும் · வலதுபுறம் ஸ்வைப்: நினைவிருக்கிறது, இடது: மறந்துவிட்டேன்",
+  "{0} words · about {1} min": "{0} சொற்கள் · சுமார் {1} நிமிடம்",
+  "All done · the next words come back in {0}": "எல்லாம் முடிந்தது · அடுத்த சொற்கள் {0} கழித்து வரும்",
+  "From {0} videos": "{0} வீடியோக்களிலிருந்து",
+  "Words without a video": "வீடியோ இல்லாத சொற்கள்",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "ஸ்பேஸ் விடையைக் காட்டும் · 1 2 3 4 மதிப்பீடு · R வரியை மீண்டும் ஒலிக்கும் · F கவனப் பயன்முறை",
+  "Leave focus mode (F)": "கவனப் பயன்முறையிலிருந்து வெளியேறு (F)",
+  "Focus mode: the video scene, no numbers (F)": "கவனப் பயன்முறை: வீடியோ காட்சி, எண்கள் இல்லை (F)"
 }

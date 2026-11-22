@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "ਸ਼ਬਦਾਂ ਦੀ ਵਰਤੋਂ ਦੀ ਗਿਣਤੀ ਅਨੁਸਾਰ ਅੰਦਾਜ਼ਾ: ਇੱਕ ਮਾਰਗਦਰਸ਼ਕ, ਅਧਿਕਾਰਤ CEFR ਸੂਚੀ ਨਹੀਂ।",
   "The word levels are still downloading; words are marked once they are here.": "ਸ਼ਬਦ ਪੱਧਰ ਅਜੇ ਡਾਊਨਲੋਡ ਹੋ ਰਹੇ ਹਨ; ਆਉਂਦੇ ਹੀ ਸ਼ਬਦ ਚਿੰਨ੍ਹਿਤ ਕੀਤੇ ਜਾਣਗੇ।",
   "Set your level for a truer picture": "ਵਧੇਰੇ ਸਹੀ ਤਸਵੀਰ ਲਈ ਆਪਣਾ ਪੱਧਰ ਸੈੱਟ ਕਰੋ",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "ਜਵਾਬ ਲਈ ਕਾਰਡ ਨੂੰ ਟੈਪ ਕਰੋ · ਸੱਜੇ ਸਵਾਈਪ: ਯਾਦ ਹੈ, ਖੱਬੇ: ਭੁੱਲ ਗਿਆ"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "ਜਵਾਬ ਲਈ ਕਾਰਡ ਨੂੰ ਟੈਪ ਕਰੋ · ਸੱਜੇ ਸਵਾਈਪ: ਯਾਦ ਹੈ, ਖੱਬੇ: ਭੁੱਲ ਗਿਆ",
+  "{0} words · about {1} min": "{0} ਸ਼ਬਦ · ਲਗਭਗ {1} ਮਿੰਟ",
+  "All done · the next words come back in {0}": "ਸਭ ਹੋ ਗਿਆ · ਅਗਲੇ ਸ਼ਬਦ {0} ਬਾਅਦ ਵਾਪਸ ਆਉਣਗੇ",
+  "From {0} videos": "{0} ਵੀਡੀਓ ਤੋਂ",
+  "Words without a video": "ਬਿਨਾਂ ਵੀਡੀਓ ਵਾਲੇ ਸ਼ਬਦ",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Space ਜਵਾਬ ਦਿਖਾਉਂਦਾ ਹੈ · 1 2 3 4 ਗ੍ਰੇਡ · R ਲਾਈਨ ਦੁਬਾਰਾ ਚਲਾਉਂਦਾ ਹੈ · F ਫੋਕਸ ਮੋਡ",
+  "Leave focus mode (F)": "ਫੋਕਸ ਮੋਡ ਤੋਂ ਬਾਹਰ ਨਿਕਲੋ (F)",
+  "Focus mode: the video scene, no numbers (F)": "ਫੋਕਸ ਮੋਡ: ਵੀਡੀਓ ਦਾ ਦ੍ਰਿਸ਼, ਕੋਈ ਗਿਣਤੀ ਨਹੀਂ (F)"
 }

@@ -3719,5 +3719,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Оценка по частоте употребления слов: ориентир, а не официальный список CEFR.",
   "The word levels are still downloading; words are marked once they are here.": "Уровни слов ещё загружаются; слова будут отмечены, как только они появятся.",
   "Set your level for a truer picture": "Укажите свой уровень, чтобы оценка была точнее",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Нажмите на карточку, чтобы увидеть ответ · вправо: помню, влево: забыл"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Нажмите на карточку, чтобы увидеть ответ · вправо: помню, влево: забыл",
+  "{0} words · about {1} min": "{0} слов · около {1} мин",
+  "All done · the next words come back in {0}": "Всё готово · следующие слова вернутся через {0}",
+  "From {0} videos": "Из {0} видео",
+  "Words without a video": "Слова без видео",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Пробел показывает ответ · 1 2 3 4 оценка · R воспроизводит реплику снова · F режим концентрации",
+  "Leave focus mode (F)": "Выйти из режима концентрации (F)",
+  "Focus mode: the video scene, no numbers (F)": "Режим концентрации: сцена из видео, без цифр (F)"
 }

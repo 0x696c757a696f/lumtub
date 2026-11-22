@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Ex frequentia verborum aestimatum: index tantum, non tabula CEFR publica.",
   "The word levels are still downloading; words are marked once they are here.": "Gradus verborum adhuc deferuntur; verba notabuntur cum advenerint.",
   "Set your level for a truer picture": "Gradum tuum constitue ut verior species fiat",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Tange tabellam pro responso · dextrorsum trahe: memini, sinistrorsum: oblitus sum"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Tange tabellam pro responso · dextrorsum trahe: memini, sinistrorsum: oblitus sum",
+  "{0} words · about {1} min": "{0} verba · circiter {1} min",
+  "All done · the next words come back in {0}": "Omnia peracta · proxima verba redeunt post {0}",
+  "From {0} videos": "Ex {0} videis",
+  "Words without a video": "Verba sine video",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Spatium responsum ostendit · 1 2 3 4 aestimatio · R versum iterum audit · F modus intentionis",
+  "Leave focus mode (F)": "Modum intentionis relinquere (F)",
+  "Focus mode: the video scene, no numbers (F)": "Modus intentionis: scaena videi, sine numeris (F)"
 }

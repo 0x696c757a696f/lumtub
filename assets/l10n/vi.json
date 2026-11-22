@@ -3719,5 +3719,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Ước tính theo mức độ thường dùng của từ: chỉ để tham khảo, không phải danh sách CEFR chính thức.",
   "The word levels are still downloading; words are marked once they are here.": "Cấp độ từ vẫn đang tải; từ sẽ được đánh dấu khi tải xong.",
   "Set your level for a truer picture": "Đặt trình độ của bạn để có kết quả chính xác hơn",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Chạm vào thẻ để xem đáp án · vuốt phải: nhớ, vuốt trái: quên"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Chạm vào thẻ để xem đáp án · vuốt phải: nhớ, vuốt trái: quên",
+  "{0} words · about {1} min": "{0} từ · khoảng {1} phút",
+  "All done · the next words come back in {0}": "Xong hết · các từ tiếp theo sẽ quay lại sau {0}",
+  "From {0} videos": "Từ {0} video",
+  "Words without a video": "Từ không có video",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Phím cách hiện đáp án · 1 2 3 4 chấm điểm · R phát lại câu · F chế độ tập trung",
+  "Leave focus mode (F)": "Thoát chế độ tập trung (F)",
+  "Focus mode: the video scene, no numbers (F)": "Chế độ tập trung: cảnh trong video, không hiện số (F)"
 }

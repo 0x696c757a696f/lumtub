@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "برآورد بر اساس بسامد کاربرد واژه‌ها: راهنما است، نه فهرست رسمی CEFR.",
   "The word levels are still downloading; words are marked once they are here.": "سطح واژه‌ها هنوز در حال دانلود است؛ با رسیدن آن‌ها واژه‌ها علامت‌گذاری می‌شوند.",
   "Set your level for a truer picture": "برای تصویری دقیق‌تر سطح خود را تنظیم کنید",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "برای دیدن پاسخ روی کارت بزنید · کشیدن به راست: یادم بود، به چپ: فراموش کردم"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "برای دیدن پاسخ روی کارت بزنید · کشیدن به راست: یادم بود، به چپ: فراموش کردم",
+  "{0} words · about {1} min": "{0} واژه · حدود {1} دقیقه",
+  "All done · the next words come back in {0}": "همه تمام شد · واژه‌های بعدی {0} دیگر برمی‌گردند",
+  "From {0} videos": "از {0} ویدیو",
+  "Words without a video": "واژه‌های بدون ویدیو",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "فاصله پاسخ را نشان می‌دهد · 1 2 3 4 نمره‌دهی · R جمله را دوباره پخش می‌کند · F حالت تمرکز",
+  "Leave focus mode (F)": "خروج از حالت تمرکز (F)",
+  "Focus mode: the video scene, no numbers (F)": "حالت تمرکز: صحنهٔ ویدیو، بدون عدد (F)"
 }

@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "စကားလုံးသုံးစွဲမှုအကြိမ်ရေအပေါ် အခြေခံခန့်မှန်းထားသည်: လမ်းညွှန်ချက်သာဖြစ်ပြီး တရားဝင် CEFR စာရင်း မဟုတ်ပါ။",
   "The word levels are still downloading; words are marked once they are here.": "စကားလုံးအဆင့်များကို ဒေါင်းလုဒ်လုပ်နေဆဲဖြစ်သည်၊ ရောက်လာသည်နှင့် စကားလုံးများကို မှတ်သားပါမည်။",
   "Set your level for a truer picture": "ပိုမိုမှန်ကန်သောပုံရရန် သင့်အဆင့်ကို သတ်မှတ်ပါ",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "အဖြေကြည့်ရန် ကတ်ကို တို့ပါ · ညာသို့ပွတ်ဆွဲ- မှတ်မိသည်၊ ဘယ်သို့- မေ့သွားသည်"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "အဖြေကြည့်ရန် ကတ်ကို တို့ပါ · ညာသို့ပွတ်ဆွဲ- မှတ်မိသည်၊ ဘယ်သို့- မေ့သွားသည်",
+  "{0} words · about {1} min": "စကားလုံး {0} လုံး · ခန့်မှန်း {1} မိနစ်",
+  "All done · the next words come back in {0}": "အားလုံးပြီးပါပြီ · နောက်စကားလုံးများ {0} နောက် ပြန်လာမည်",
+  "From {0} videos": "ဗီဒီယို {0} ခုမှ",
+  "Words without a video": "ဗီဒီယိုမရှိသော စကားလုံးများ",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Space က အဖြေပြသည် · 1 2 3 4 အဆင့်ပေးရန် · R က စာကြောင်းကို ပြန်ဖွင့်သည် · F အာရုံစူးစိုက်မုဒ်",
+  "Leave focus mode (F)": "အာရုံစူးစိုက်မုဒ်မှ ထွက်ရန် (F)",
+  "Focus mode: the video scene, no numbers (F)": "အာရုံစူးစိုက်မုဒ် - ဗီဒီယိုမြင်ကွင်း၊ ဂဏန်းမပါ (F)"
 }

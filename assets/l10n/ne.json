@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "शब्द कति प्रयोग हुन्छन् भन्ने आधारमा अनुमानित: मार्गदर्शन मात्र, आधिकारिक CEFR सूची होइन।",
   "The word levels are still downloading; words are marked once they are here.": "शब्द स्तरहरू अझै डाउनलोड हुँदैछन्; आएपछि शब्दहरूमा चिन्ह लगाइनेछ।",
   "Set your level for a truer picture": "अझ सही चित्रका लागि आफ्नो स्तर सेट गर्नुहोस्",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "उत्तरका लागि कार्डमा ट्याप गर्नुहोस् · दायाँ स्वाइप: सम्झिएँ, बायाँ: बिर्सिएँ"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "उत्तरका लागि कार्डमा ट्याप गर्नुहोस् · दायाँ स्वाइप: सम्झिएँ, बायाँ: बिर्सिएँ",
+  "{0} words · about {1} min": "{0} शब्द · लगभग {1} मिनेट",
+  "All done · the next words come back in {0}": "सबै सकियो · अर्का शब्दहरू {0} पछि फर्कनेछन्",
+  "From {0} videos": "{0} भिडियोबाट",
+  "Words without a video": "भिडियो नभएका शब्द",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Space ले उत्तर देखाउँछ · 1 2 3 4 मूल्यांकन · R ले लाइन फेरि बजाउँछ · F फोकस मोड",
+  "Leave focus mode (F)": "फोकस मोडबाट बाहिर निस्कनुहोस् (F)",
+  "Focus mode: the video scene, no numbers (F)": "फोकस मोड: भिडियोको दृश्य, कुनै सङ्ख्या छैन (F)"
 }

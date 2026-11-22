@@ -3719,5 +3719,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "単語の使用頻度から推定した目安です。公式のCEFRリストではありません。",
   "The word levels are still downloading; words are marked once they are here.": "単語レベルをダウンロード中です。届き次第、単語に印が付きます。",
   "Set your level for a truer picture": "レベルを設定すると、難易度がより正確になります",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "カードをタップで答えを表示 · 右にスワイプ：覚えた、左：忘れた"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "カードをタップで答えを表示 · 右にスワイプ：覚えた、左：忘れた",
+  "{0} words · about {1} min": "{0} 語 · 約 {1} 分",
+  "All done · the next words come back in {0}": "すべて完了 · 次の単語は {0} 後に戻ってきます",
+  "From {0} videos": "{0} 本の動画から",
+  "Words without a video": "動画のない単語",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "スペースで答えを表示 · 1 2 3 4 で評価 · R でもう一度再生 · F で集中モード",
+  "Leave focus mode (F)": "集中モードを終了 (F)",
+  "Focus mode: the video scene, no numbers (F)": "集中モード：動画のシーンを表示、数字は非表示 (F)"
 }

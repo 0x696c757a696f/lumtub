@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Kulinganiselwe ngokuthi amagama asetshenziswa kangakanani: umhlahlandlela kuphela, hhayi uhlu olusemthethweni lwe-CEFR.",
   "The word levels are still downloading; words are marked once they are here.": "Amazinga amagama asadawunilodwa; amagama azomakwa uma efika.",
   "Set your level for a truer picture": "Setha izinga lakho ukuze ubone isithombe esingcono",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Thinta ikhadi ukuze ubone impendulo · swayipha ngakwesokudla: ngikhumbule, ngakwesobunxele: ngikhohliwe"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Thinta ikhadi ukuze ubone impendulo · swayipha ngakwesokudla: ngikhumbule, ngakwesobunxele: ngikhohliwe",
+  "{0} words · about {1} min": "{0} amagama · cishe imizuzu engu-{1}",
+  "All done · the next words come back in {0}": "Konke kwenziwe · amagama alandelayo abuya emva kwe-{0}",
+  "From {0} videos": "Kuvidiyo ezingu-{0}",
+  "Words without a video": "Amagama angenavidiyo",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Isikhala sibonisa impendulo · 1 2 3 4 amaphuzu · R udlala umugqa futhi · F imodi yokugxila",
+  "Leave focus mode (F)": "Phuma kumodi yokugxila (F)",
+  "Focus mode: the video scene, no numbers (F)": "Imodi yokugxila: indawo yevidiyo, ayikho inombolo (F)"
 }

@@ -29,6 +29,7 @@ import '../learning_drawer.dart' show LearningDrawerSection, addLearningDrawerSe
 import '../pages/settings_sections.dart' show SettingsCategory;
 import '../skin_paint.dart';
 import '../theme.dart';
+import '../video_card.dart' show thumbnailFor;
 import 'review_page.dart' show openReview, showSavedWord, watchVocabularyMoment;
 import '../../subtitle_cues.dart' show SubtitleCue;
 import 'word_card.dart' show englishLevelName, showWordCard;

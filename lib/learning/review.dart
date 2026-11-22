@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import '../app_directories.dart' show writeFileAtomic;
 import '../app_log.dart';
 import '../l10n/l10n.dart';
+import '../models.dart' show VideoItem;
 import '../native_core.dart';
 import 'vocabulary.dart';
 
@@ -171,6 +172,16 @@ class ReviewStore extends ChangeNotifier {
   final Map<String, int> _days = {};
   bool _loaded = false;
 
+  /// Seconds a word takes in review, learnt from the reviews done here, so
+  /// the time a review will take can be told before it starts.
+  double get secondsPerWord => _pace;
+  double _pace = defaultPace;
+  static const defaultPace = 12.0;
+
+  /// 专注复习: the word's video scene, and no counts or intervals.
+  bool get focus => _focus;
+  bool _focus = false;
+
   /// New words to bring in a day, so the reviews do not pile up.
   static const newPerDay = 20;
 
@@ -192,6 +203,9 @@ class ReviewStore extends ChangeNotifier {
           if (state != null) _states['$key'] = state;
         }
       }
+      final pace = json['pace'];
+      if (pace is num && pace.isFinite && pace > 0) _pace = pace.toDouble().clamp(3, 60);
+      if (json['focus'] == true) _focus = true;
       final days = json['days'];
       if (days is Map) {
         for (final MapEntry(:key, :value) in days.entries) {
@@ -232,6 +246,26 @@ class ReviewStore extends ChangeNotifier {
   /// How many of [words] are due now, new words included.
   int dueCount(List<VocabularyWord> words, DateTime now) => due(words, now).length;
 
+  /// When the first of [words] not due at [now] comes back.
+  DateTime? nextDue(List<VocabularyWord> words, DateTime now) {
+    DateTime? next;
+    for (final w in words) {
+      final due = _states[w.key]?.due;
+      if (due != null && due.isAfter(now) && (next == null || due.isBefore(next))) next = due;
+    }
+    return next;
+  }
+
+  /// Minutes [count] words will likely take, at least one.
+  int minutesFor(int count) => count <= 0 ? 0 : math.max(1, (count * _pace / 60).round());
+
+  Future<void> setFocus(bool value) async {
+    if (_focus == value) return;
+    _focus = value;
+    notifyListeners();
+    await _save();
+  }
+
   /// Words of [words] remembered well enough to count as learnt.
   int knownCount(List<VocabularyWord> words) => words.where((w) => _states[w.key]?.known ?? false).length;
 
@@ -255,8 +289,12 @@ class ReviewStore extends ChangeNotifier {
   /// intervals shown on the grade buttons.
   ReviewState preview(String key, ReviewGrade grade, DateTime now) => Fsrs.next(_states[key], grade, now);
 
-  Future<void> grade(String key, ReviewGrade grade, DateTime now) async {
+  /// Keeps [key]'s new state; [seconds] is how long the word was on
+  /// screen, which teaches [secondsPerWord] (a word left open while the
+  /// learner was away counts as a minute at most).
+  Future<void> grade(String key, ReviewGrade grade, DateTime now, {double? seconds}) async {
     _states[key] = Fsrs.next(_states[key], grade, now);
+    if (seconds != null && seconds > 0) _pace = (_pace * 0.9 + seconds.clamp(2, 60) * 0.1).clamp(3, 60);
     _days.update(dayOf(now), (n) => n + 1, ifAbsent: () => 1);
     notifyListeners();
     await _save();
@@ -276,6 +314,8 @@ class ReviewStore extends ChangeNotifier {
         'version': 1,
         'words': {for (final MapEntry(:key, :value) in _states.entries) key: value.toJson()},
         'days': _days,
+        'pace': double.parse(_pace.toStringAsFixed(2)),
+        if (_focus) 'focus': true,
       }));
     } catch (e) {
       logError('Could not save the review schedule', e);
@@ -299,3 +339,32 @@ final _stores = <String, ReviewStore>{};
 /// The review schedule kept beside [book].
 ReviewStore reviewStoreOf(VocabularyBook book) =>
     _stores.putIfAbsent(book.file.path, () => ReviewStore(File('${book.file.parent.path}${Platform.pathSeparator}review.json')));
+
+/// The words of a review heard in one video ([videoId] empty: words saved
+/// without one).
+@immutable
+class ReviewScene {
+  const ReviewScene(this.videoId, this.title, this.words);
+  final String videoId;
+  final String title;
+  final List<VocabularyWord> words;
+
+  VideoItem get video => VideoItem(id: videoId, title: title, channel: '', url: 'https://www.youtube.com/watch?v=$videoId');
+}
+
+/// [queue] by the video each word was heard in, the videos with most words
+/// first, words without a video last.
+List<ReviewScene> todaysScenes(List<VocabularyWord> queue) {
+  final by = <String, List<VocabularyWord>>{};
+  final titles = <String, String>{};
+  for (final w in queue) {
+    (by[w.videoId] ??= []).add(w);
+    if (w.videoTitle.isNotEmpty) titles[w.videoId] = w.videoTitle;
+  }
+  final scenes = [for (final MapEntry(:key, :value) in by.entries) ReviewScene(key, titles[key] ?? '', value)];
+  scenes.sort((a, b) {
+    if (a.videoId.isEmpty != b.videoId.isEmpty) return a.videoId.isEmpty ? 1 : -1;
+    return b.words.length.compareTo(a.words.length);
+  });
+  return scenes;
+}

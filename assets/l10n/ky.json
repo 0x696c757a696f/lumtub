@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Сөздөрдүн колдонулуу жыштыгы боюнча бааланган: багыт гана, расмий CEFR тизмеси эмес.",
   "The word levels are still downloading; words are marked once they are here.": "Сөз деңгээлдери дагы эле жүктөлүүдө; сөздөр келери менен белгиленет.",
   "Set your level for a truer picture": "Тагыраак жыйынтык үчүн деңгээлиңизди коюңуз",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Жооп үчүн картаны басыңыз · оңго сүрүңүз: эсимде, солго: унуттум"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Жооп үчүн картаны басыңыз · оңго сүрүңүз: эсимде, солго: унуттум",
+  "{0} words · about {1} min": "{0} сөз · болжолдуу {1} мүн",
+  "All done · the next words come back in {0}": "Баары бүттү · кийинки сөздөр {0} кийин кайтат",
+  "From {0} videos": "{0} видеодон",
+  "Words without a video": "Видеосу жок сөздөр",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Боштук жоопту көрсөтөт · 1 2 3 4 баа берүү · R сүйлөмдү кайра ойнотот · F фокус режими",
+  "Leave focus mode (F)": "Фокус режиминен чыгуу (F)",
+  "Focus mode: the video scene, no numbers (F)": "Фокус режими: видеонун көрүнүшү, сандарсыз (F)"
 }

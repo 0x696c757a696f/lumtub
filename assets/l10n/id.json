@@ -3719,5 +3719,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Diperkirakan dari seberapa sering kata digunakan: sebagai panduan, bukan daftar CEFR resmi.",
   "The word levels are still downloading; words are marked once they are here.": "Level kata masih diunduh; kata akan ditandai setelah tersedia.",
   "Set your level for a truer picture": "Atur level Anda agar gambaran lebih akurat",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Ketuk kartu untuk melihat jawaban · geser ke kanan: ingat, ke kiri: lupa"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Ketuk kartu untuk melihat jawaban · geser ke kanan: ingat, ke kiri: lupa",
+  "{0} words · about {1} min": "{0} kata · sekitar {1} menit",
+  "All done · the next words come back in {0}": "Semua selesai · kata berikutnya kembali dalam {0}",
+  "From {0} videos": "Dari {0} video",
+  "Words without a video": "Kata tanpa video",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Spasi menampilkan jawaban · 1 2 3 4 beri nilai · R memutar ulang kalimat · F mode fokus",
+  "Leave focus mode (F)": "Keluar dari mode fokus (F)",
+  "Focus mode: the video scene, no numbers (F)": "Mode fokus: adegan video, tanpa angka (F)"
 }

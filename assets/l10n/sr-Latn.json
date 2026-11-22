@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Procenjeno na osnovu učestalosti reči: orijentir, a ne zvanični CEFR spisak.",
   "The word levels are still downloading; words are marked once they are here.": "Nivoi reči se još preuzimaju; reči će biti označene čim stignu.",
   "Set your level for a truer picture": "Podesite svoj nivo za tačniju sliku",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Dodirnite karticu za odgovor · prevucite udesno: zapamćeno, ulevo: zaboravljeno"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Dodirnite karticu za odgovor · prevucite udesno: zapamćeno, ulevo: zaboravljeno",
+  "{0} words · about {1} min": "{0} reči · oko {1} min",
+  "All done · the next words come back in {0}": "Sve gotovo · sledeće reči se vraćaju za {0}",
+  "From {0} videos": "Iz {0} video-snimaka",
+  "Words without a video": "Reči bez video-snimka",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Razmak prikazuje odgovor · 1 2 3 4 ocena · R ponovo pušta rečenicu · F režim fokusa",
+  "Leave focus mode (F)": "Izađi iz režima fokusa (F)",
+  "Focus mode: the video scene, no numbers (F)": "Režim fokusa: scena iz video-snimka, bez brojeva (F)"
 }

@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Áætlað út frá tíðni orða: til viðmiðunar, ekki opinber CEFR-listi.",
   "The word levels are still downloading; words are marked once they are here.": "Orðastigin eru enn að hlaðast niður; orð verða merkt þegar þau berast.",
   "Set your level for a truer picture": "Stilltu færnistig þitt fyrir nákvæmari mynd",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Ýttu á spjaldið til að sjá svarið · strjúktu til hægri: man, til vinstri: gleymdi"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Ýttu á spjaldið til að sjá svarið · strjúktu til hægri: man, til vinstri: gleymdi",
+  "{0} words · about {1} min": "{0} orð · um {1} mín.",
+  "All done · the next words come back in {0}": "Allt búið · næstu orð koma aftur eftir {0}",
+  "From {0} videos": "Úr {0} myndskeiðum",
+  "Words without a video": "Orð án myndskeiðs",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Bilslá sýnir svarið · 1 2 3 4 einkunn · R spilar línuna aftur · F einbeitingarhamur",
+  "Leave focus mode (F)": "Hætta í einbeitingarham (F)",
+  "Focus mode: the video scene, no numbers (F)": "Einbeitingarhamur: atriðið úr myndskeiðinu, engar tölur (F)"
 }

@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Εκτίμηση με βάση τη συχνότητα χρήσης των λέξεων: ενδεικτική, όχι επίσημη λίστα CEFR.",
   "The word levels are still downloading; words are marked once they are here.": "Τα επίπεδα λέξεων κατεβαίνουν ακόμα· οι λέξεις θα επισημανθούν μόλις έρθουν.",
   "Set your level for a truer picture": "Ορίστε το επίπεδό σας για πιο ακριβή εικόνα",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Πατήστε την κάρτα για την απάντηση · σύρετε δεξιά: θυμάμαι, αριστερά: ξέχασα"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Πατήστε την κάρτα για την απάντηση · σύρετε δεξιά: θυμάμαι, αριστερά: ξέχασα",
+  "{0} words · about {1} min": "{0} λέξεις · περίπου {1} λεπτά",
+  "All done · the next words come back in {0}": "Όλα έτοιμα · οι επόμενες λέξεις επιστρέφουν σε {0}",
+  "From {0} videos": "Από {0} βίντεο",
+  "Words without a video": "Λέξεις χωρίς βίντεο",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Το διάστημα εμφανίζει την απάντηση · 1 2 3 4 βαθμολόγηση · R ξαναπαίζει τη φράση · F λειτουργία εστίασης",
+  "Leave focus mode (F)": "Έξοδος από τη λειτουργία εστίασης (F)",
+  "Focus mode: the video scene, no numbers (F)": "Λειτουργία εστίασης: η σκηνή του βίντεο, χωρίς αριθμούς (F)"
 }

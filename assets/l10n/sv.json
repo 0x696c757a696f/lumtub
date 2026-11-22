@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Uppskattat utifrån hur ofta orden används: en vägledning, inte en officiell CEFR-lista.",
   "The word levels are still downloading; words are marked once they are here.": "Ordnivåerna laddas fortfarande ned; orden markeras så snart de finns här.",
   "Set your level for a truer picture": "Ange din nivå för en mer rättvisande bild",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Tryck på kortet för svaret · svep åt höger: kom ihåg, åt vänster: glömde"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Tryck på kortet för svaret · svep åt höger: kom ihåg, åt vänster: glömde",
+  "{0} words · about {1} min": "{0} ord · cirka {1} min",
+  "All done · the next words come back in {0}": "Allt klart · nästa ord kommer tillbaka om {0}",
+  "From {0} videos": "Från {0} videor",
+  "Words without a video": "Ord utan video",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Mellanslag visar svaret · 1 2 3 4 betyg · R spelar upp raden igen · F fokusläge",
+  "Leave focus mode (F)": "Lämna fokusläge (F)",
+  "Focus mode: the video scene, no numbers (F)": "Fokusläge: videoscenen, inga siffror (F)"
 }

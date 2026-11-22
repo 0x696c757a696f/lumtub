@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Estimat segons la freqüència d'ús de les paraules: una guia, no una llista oficial del MECR.",
   "The word levels are still downloading; words are marked once they are here.": "Els nivells de paraules encara s'estan baixant; les paraules es marcaran quan arribin.",
   "Set your level for a truer picture": "Defineix el teu nivell per a una imatge més fidel",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Toca la targeta per veure la resposta · llisca a la dreta: recordat, a l'esquerra: oblidat"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Toca la targeta per veure la resposta · llisca a la dreta: recordat, a l'esquerra: oblidat",
+  "{0} words · about {1} min": "{0} paraules · uns {1} min",
+  "All done · the next words come back in {0}": "Tot fet · les properes paraules tornen d'aquí a {0}",
+  "From {0} videos": "De {0} vídeos",
+  "Words without a video": "Paraules sense vídeo",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Espai mostra la resposta · 1 2 3 4 puntua · R torna a reproduir la frase · F mode concentració",
+  "Leave focus mode (F)": "Surt del mode concentració (F)",
+  "Focus mode: the video scene, no numbers (F)": "Mode concentració: l'escena del vídeo, sense números (F)"
 }

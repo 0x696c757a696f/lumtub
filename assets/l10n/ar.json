@@ -3719,5 +3719,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "تقدير مبني على شيوع استخدام الكلمات: للاسترشاد فقط، وليس قائمة CEFR رسمية.",
   "The word levels are still downloading; words are marked once they are here.": "لا يزال تنزيل مستويات الكلمات جارياً؛ سيبدأ تمييز الكلمات فور اكتماله.",
   "Set your level for a truer picture": "حدّد مستواك لتقدير أدق",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "انقر على البطاقة للإجابة · اسحب يمينًا: تذكرت، يسارًا: نسيت"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "انقر على البطاقة للإجابة · اسحب يمينًا: تذكرت، يسارًا: نسيت",
+  "{0} words · about {1} min": "{0} كلمات · نحو {1} دقيقة",
+  "All done · the next words come back in {0}": "اكتمل كل شيء · تعود الكلمات التالية بعد {0}",
+  "From {0} videos": "من {0} فيديوهات",
+  "Words without a video": "كلمات بلا فيديو",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "المسافة تُظهر الإجابة · 1 2 3 4 للتقييم · R لإعادة تشغيل الجملة · F وضع التركيز",
+  "Leave focus mode (F)": "الخروج من وضع التركيز (F)",
+  "Focus mode: the video scene, no numbers (F)": "وضع التركيز: مشهد الفيديو بدون أرقام (F)"
 }

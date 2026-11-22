@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Проценето според зачестеноста на зборовите: водич, а не официјален список на CEFR.",
   "The word levels are still downloading; words are marked once they are here.": "Нивоата на зборови сè уште се преземаат; зборовите се означуваат штом ќе пристигнат.",
   "Set your level for a truer picture": "Поставете го вашето ниво за попрецизна слика",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Допрете ја картичката за одговор · повлечете надесно: запомнено, налево: заборавено"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Допрете ја картичката за одговор · повлечете надесно: запомнено, налево: заборавено",
+  "{0} words · about {1} min": "{0} зборови · околу {1} мин",
+  "All done · the next words come back in {0}": "Сè е готово · следните зборови се враќаат за {0}",
+  "From {0} videos": "Од {0} видеа",
+  "Words without a video": "Зборови без видео",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Празното место го прикажува одговорот · 1 2 3 4 оценка · R ја пушта реченицата повторно · F фокус режим",
+  "Leave focus mode (F)": "Излези од фокус режим (F)",
+  "Focus mode: the video scene, no numbers (F)": "Фокус режим: сцената од видеото, без бројки (F)"
 }

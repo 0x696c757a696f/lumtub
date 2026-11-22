@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "შეფასებულია სიტყვების გამოყენების სიხშირით: ორიენტირია და არა ოფიციალური CEFR სია.",
   "The word levels are still downloading; words are marked once they are here.": "სიტყვების დონეები ჯერ კიდევ იტვირთება; სიტყვები აღინიშნება, როგორც კი მოვა.",
   "Set your level for a truer picture": "დააყენეთ თქვენი დონე უფრო ზუსტი სურათისთვის",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "პასუხისთვის შეეხეთ ბარათს · გადაფურცლეთ მარჯვნივ: მახსოვს, მარცხნივ: დამავიწყდა"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "პასუხისთვის შეეხეთ ბარათს · გადაფურცლეთ მარჯვნივ: მახსოვს, მარცხნივ: დამავიწყდა",
+  "{0} words · about {1} min": "{0} სიტყვა · დაახლოებით {1} წთ",
+  "All done · the next words come back in {0}": "ყველაფერი შესრულებულია · შემდეგი სიტყვები დაბრუნდება {0}-ში",
+  "From {0} videos": "{0} ვიდეოდან",
+  "Words without a video": "სიტყვები ვიდეოს გარეშე",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Space აჩვენებს პასუხს · 1 2 3 4 შეფასებისთვის · R ხელახლა უკრავს ფრაზას · F ფოკუსის რეჟიმი",
+  "Leave focus mode (F)": "ფოკუსის რეჟიმიდან გასვლა (F)",
+  "Focus mode: the video scene, no numbers (F)": "ფოკუსის რეჟიმი: ვიდეოს სცენა, რიცხვების გარეშე (F)"
 }

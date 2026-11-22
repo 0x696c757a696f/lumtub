@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Imekadiriwa kutokana na jinsi maneno yanavyotumika: mwongozo tu, si orodha rasmi ya CEFR.",
   "The word levels are still downloading; words are marked once they are here.": "Viwango vya maneno bado vinapakuliwa; maneno yatawekewa alama yakishafika.",
   "Set your level for a truer picture": "Weka kiwango chako kwa picha sahihi zaidi",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Gusa kadi kuona jibu · telezesha kulia: nimekumbuka, kushoto: nimesahau"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Gusa kadi kuona jibu · telezesha kulia: nimekumbuka, kushoto: nimesahau",
+  "{0} words · about {1} min": "Maneno {0} · takriban dakika {1}",
+  "All done · the next words come back in {0}": "Yote imekamilika · maneno yanayofuata yanarudi baada ya {0}",
+  "From {0} videos": "Kutoka video {0}",
+  "Words without a video": "Maneno bila video",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Nafasi inaonyesha jibu · 1 2 3 4 alama · R inacheza mstari tena · F hali ya umakini",
+  "Leave focus mode (F)": "Toka kwenye hali ya umakini (F)",
+  "Focus mode: the video scene, no numbers (F)": "Hali ya umakini: tukio la video, bila nambari (F)"
 }

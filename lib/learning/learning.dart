@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 
 import '../app_directories.dart';
 import '../app_log.dart';
+import '../app_updater.dart' show AppUpdater;
 import '../l10n/l10n.dart' show currentLanguage;
 import '../zip_archive.dart' show extractZip;
 import 'chinese_dictionary.dart';
@@ -653,6 +654,9 @@ class Learning extends ChangeNotifier {
         final have = await sum.exists() ? (await sum.readAsString()).trim() : '';
         if (have == expected) continue;
         if (_packs[pack]!.state == PackState.downloading || !unlocked) continue;
+        // Dictionaries run to tens of MB: on mobile data the update waits
+        // for Wi-Fi.
+        if (await AppUpdater.metered()) break;
         logInfo('A newer ${pack.name} dictionary is out; updating it');
         await download(pack, quiet: true);
       }

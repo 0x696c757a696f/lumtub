@@ -813,6 +813,8 @@ class _Player extends StatelessWidget {
                       learning: controller.learning,
                       onWord: (token, line) => unawaited(showWordCard(context, controller, token, sentence: line)),
                       onHover: controller.hoverSubtitle,
+                      // A finger swiped across the line; a mouse drags no lines.
+                      onSwipe: Platform.isAndroid || Platform.isIOS ? (step) => unawaited(controller.stepLine(step)) : null,
                     ),
                   ),
                   onEnterFullscreen: () {
@@ -1326,7 +1328,7 @@ typedef TranslationRevealing = ({ValueListenable<bool> shown, ValueChanged<bool>
 
 /// What the learning pack needs from the player: the dictionary, and what
 /// tapping a word of the main line does.
-typedef SubtitleWords = ({Learning learning, void Function(WordToken token, String line) onWord, void Function(bool over)? onHover});
+typedef SubtitleWords = ({Learning learning, void Function(WordToken token, String line) onWord, void Function(bool over)? onHover, void Function(int step)? onSwipe});
 
 /// The words of the main video's subtitle line, to find the one tapped.
 final _videoWords = RubyHits();
@@ -1390,7 +1392,9 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
             return LayoutBuilder(
                 builder: (context, constraints) => ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.9),
-                  child: ChineseRubyLine(
+                  child: ValueListenableBuilder(
+                    valueListenable: _videoWords.selection,
+                    builder: (context, chosen, child) => ChineseRubyLine(
                     tokens: tokens,
                     style: style,
                     textScaler: scaler,
@@ -1401,6 +1405,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
                     hardColor: _hardColorOn(style.color),
                     known: words.learning.book == null || !words.learning.unlocked ? null : knownWordsOf(words.learning.book!).knows,
                     hits: _videoWords,
+                  ),
                   ),
                 ),
               );
@@ -1413,6 +1418,15 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
             if (token != null) words!.onWord(token, _videoWords.line);
           },
     onMainHover: !lookUp ? null : words!.onHover,
+    // A press held on a word and drawn to another looks up the words
+    // between as one, such as a phrase or a name.
+    onMainSelect: !lookUp
+        ? null
+        : (from, to, done) {
+            final token = _videoWords.select(from, to, done: done);
+            if (token != null) words!.onWord(token, _videoWords.line);
+          },
+    onMainSwipe: !lookUp ? null : words!.onSwipe,
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),
   );
 }

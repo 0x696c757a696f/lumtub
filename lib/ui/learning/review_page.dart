@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -149,6 +150,8 @@ class _ReviewPageState extends State<ReviewPage> {
     return KeyEventResult.ignored;
   }
 
+  static bool get _touch => Platform.isAndroid || Platform.isIOS;
+
   void _openVideo(VocabularyWord word) => watchVocabularyMoment(context, widget.controller, word);
 
   @override
@@ -182,13 +185,28 @@ class _ReviewPageState extends State<ReviewPage> {
                                 child: SlideTransition(position: Tween(begin: const Offset(0.06, 0), end: Offset.zero).animate(animation), child: child),
                               ),
                               layoutBuilder: (current, previous) => Stack(alignment: Alignment.topCenter, children: [...previous, if (current != null) current]),
-                              child: SavedWordCard(
+                              child: GestureDetector(
                                 key: ValueKey('${word.key}#$_done#${_queue.length}'),
-                                word: word,
-                                shown: _shown,
-                                sound: _sound,
-                                onReplay: () => unawaited(_playLine()),
-                                onOpenVideo: () => _openVideo(word),
+                                // On a touch screen the card itself answers: a tap
+                                // turns it over, then a swipe right is
+                                // Remembered and a swipe left Forgot.
+                                behavior: HitTestBehavior.translucent,
+                                onTap: _touch && !_shown ? () => setState(() => _shown = true) : null,
+                                onHorizontalDragEnd: !_touch || !_shown
+                                    ? null
+                                    : (details) {
+                                        final speed = details.primaryVelocity ?? 0;
+                                        if (speed.abs() < 300) return;
+                                        unawaited(HapticFeedback.selectionClick());
+                                        unawaited(_grade(speed > 0 ? ReviewGrade.good : ReviewGrade.again));
+                                      },
+                                child: SavedWordCard(
+                                  word: word,
+                                  shown: _shown,
+                                  sound: _sound,
+                                  onReplay: () => unawaited(_playLine()),
+                                  onOpenVideo: () => _openVideo(word),
+                                ),
                               ),
                             ),
                           ),
@@ -206,7 +224,7 @@ class _ReviewPageState extends State<ReviewPage> {
                           ),
                           const SizedBox(height: Space.s),
                           Text(
-                            tr('Space shows the answer · 1 2 3 4 grade · R plays the line again'),
+                            _touch ? tr('Tap the card for the answer · swipe right: remembered, left: forgot') : tr('Space shows the answer · 1 2 3 4 grade · R plays the line again'),
                             textAlign: TextAlign.center,
                             style: TextStyle(fontSize: 11, color: context.colors.outline),
                           ),

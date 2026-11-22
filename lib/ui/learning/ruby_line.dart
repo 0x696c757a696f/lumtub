@@ -43,7 +43,7 @@ class ChineseRubyLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    hits?.clear(tokens.map((t) => t.text).join());
+    hits?.clear(tokens);
     // A subtitle background goes once behind the whole line, not behind
     // each word as a box of its own.
     final back = this.style.backgroundColor ?? this.style.background?.color;
@@ -75,9 +75,12 @@ class ChineseRubyLine extends StatelessWidget {
           japanese ? _furigana(token.text, wordStyle, token.reading!, rubyStyle, left: !ruby(i - 1), right: !ruby(i + 1)) : _text(token.reading!, rubyStyle, outlineScale: 0.6),
         _text(token.text, wordStyle),
       ]);
+      if (hits?.chosen(i) ?? false) {
+        block = DecoratedBox(decoration: BoxDecoration(color: const Color(0x993B82F6), borderRadius: BorderRadius.circular(size * 0.12)), child: block);
+      }
       if (hits != null) {
         final key = GlobalKey();
-        hits!._add(key, token);
+        hits!._add(key, i);
         block = KeyedSubtree(key: key, child: block);
       }
       if (onWord != null) {
@@ -150,28 +153,75 @@ class ChineseRubyLine extends StatelessWidget {
 }
 
 /// Where each word of a [ChineseRubyLine] is, to find the one under a
-/// pointer that something above it took.
+/// pointer that something above it took, and the words a press drawn
+/// across the line has chosen.
 class RubyHits {
-  final _words = <(GlobalKey, WordToken)>[];
+  final _words = <(GlobalKey, int)>[];
+  var _tokens = const <WordToken>[];
 
   /// The line the words are from.
   String line = '';
 
-  void clear(String text) {
+  /// The words chosen, first and last index into the line's tokens, while
+  /// a press is drawn across them.
+  final selection = ValueNotifier<(int, int)?>(null);
+  int? _anchor;
+
+  void clear(List<WordToken> tokens) {
     _words.clear();
-    line = text;
+    _tokens = tokens;
+    line = tokens.map((t) => t.text).join();
   }
 
-  void _add(GlobalKey key, WordToken token) => _words.add((key, token));
+  void _add(GlobalKey key, int index) => _words.add((key, index));
 
-  /// The word at [global], with a little room around each.
-  WordToken? wordAt(Offset global) {
-    for (final (key, token) in _words) {
+  int? _indexAt(Offset global) {
+    for (final (key, index) in _words) {
       final box = key.currentContext?.findRenderObject();
       if (box is! RenderBox || !box.attached || !box.hasSize) continue;
       final rect = (box.localToGlobal(Offset.zero) & box.size).inflate(2);
-      if (rect.contains(global)) return token;
+      if (rect.contains(global)) return index;
     }
     return null;
+  }
+
+  /// The word at [global], with a little room around each.
+  WordToken? wordAt(Offset global) {
+    final index = _indexAt(global);
+    return index == null ? null : _tokens[index];
+  }
+
+  /// Whether the token at [index] is among those chosen.
+  bool chosen(int index) {
+    final range = selection.value;
+    return range != null && index >= range.$1 && index <= range.$2;
+  }
+
+  /// Follows a press drawn across the line: [from] is where it began,
+  /// [to] where the finger is. Lifted, it answers the words chosen as one
+  /// token to look up (a single word as it is), and the choice clears.
+  WordToken? select(Offset from, Offset to, {required bool done}) {
+    if (!done) {
+      _anchor ??= _indexAt(from);
+      final end = _indexAt(to);
+      final anchor = _anchor;
+      if (anchor != null && end != null) selection.value = anchor <= end ? (anchor, end) : (end, anchor);
+      return null;
+    }
+    final range = selection.value;
+    _anchor = null;
+    selection.value = null;
+    // The line may have moved on under the finger.
+    return range == null || range.$2 >= _tokens.length ? null : phrase(range.$1, range.$2);
+  }
+
+  /// Tokens [first] to [last] of the line as one, with what stands between
+  /// them, such as spaces, kept; one word comes back as it is.
+  WordToken phrase(int first, int last) {
+    if (first == last) return _tokens[first];
+    final parts = _tokens.sublist(first, last + 1);
+    final text = parts.map((t) => t.text).join().replaceAll(RegExp(r'\s+'), ' ').trim();
+    final lower = parts.any((t) => t.lookup != null);
+    return WordToken(text, null, isWord: true, lookup: lower ? text.toLowerCase() : null, language: parts.first.language);
   }
 }

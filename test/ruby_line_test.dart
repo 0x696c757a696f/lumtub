@@ -53,4 +53,50 @@ void main() {
     final words = tester.widgetList<Text>(find.text('to'));
     expect(words.every((t) => t.style?.backgroundColor?.a == 0), isTrue);
   });
+
+  testWidgets('a press drawn across words looks them up as one phrase, spaces kept', (tester) async {
+    const tokens = [
+      WordToken('I', null, isWord: true, lookup: 'i', language: 'en'),
+      WordToken(' ', null, isWord: false),
+      WordToken('Looked', null, isWord: true, lookup: 'looked', language: 'en'),
+      WordToken(' ', null, isWord: false),
+      WordToken('up', null, isWord: true, language: 'en'),
+      WordToken(' ', null, isWord: false),
+      WordToken('it', null, isWord: true, language: 'en'),
+    ];
+    final hits = RubyHits();
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: ValueListenableBuilder(
+            valueListenable: hits.selection,
+            builder: (context, _, child) => ChineseRubyLine(tokens: tokens, style: const TextStyle(fontSize: 20), hits: hits),
+          ),
+        ),
+      ),
+    ));
+    final from = tester.getCenter(find.text('up'));
+    final to = tester.getCenter(find.text('Looked'));
+    expect(hits.select(from, from, done: false), isNull);
+    expect(hits.select(from, to, done: false), isNull);
+    await tester.pump();
+    // The chosen words are marked while the finger is down.
+    expect(hits.selection.value, (2, 4));
+    expect(find.byWidgetPredicate((w) => w is DecoratedBox && (w.decoration as BoxDecoration).color == const Color(0x993B82F6)), findsNWidgets(2));
+    final phrase = hits.select(to, to, done: true)!;
+    expect(phrase.text, 'Looked up');
+    expect(phrase.key, 'looked up');
+    expect(phrase.language, 'en');
+    expect(hits.selection.value, isNull);
+    // One word stays the token it was.
+    hits.select(to, to, done: false);
+    expect(hits.select(to, to, done: true)!.key, 'looked');
+  });
+
+  test('Chinese words chosen together join without spaces', () {
+    final hits = RubyHits()..clear(const [WordToken('人工', 'rén gōng', isWord: true), WordToken('智能', 'zhì néng', isWord: true)]);
+    final phrase = hits.phrase(0, 1);
+    expect(phrase.text, '人工智能');
+    expect(phrase.key, '人工智能');
+  });
 }

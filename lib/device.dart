@@ -45,6 +45,11 @@ class Device {
     return size.shortestSide >= 600;
   }
 
+  /// A phone held in the hand: touch, and a screen too narrow for
+  /// dialogs in the middle, so panels come up from the bottom edge where
+  /// the thumb is.
+  static bool phone(BuildContext context) => (Platform.isAndroid || Platform.isIOS) && !tv && MediaQuery.sizeOf(context).shortestSide < 600;
+
   /// On a TV something must hold focus for the remote's arrows to move:
   /// the first control, once the first page is shown.
   static void focusFirstOnTv() {

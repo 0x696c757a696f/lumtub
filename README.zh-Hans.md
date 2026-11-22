@@ -256,13 +256,17 @@ Lumtub 是免费的，只从以下渠道发布：
 
 ## 常见问题
 
-**免费吗？** 免费，并且会一直免费。没有广告，没有付费版，不卖数据。开发靠[赞助](#支持-lumtub)。
+**免费吗？** 免费。看视频、下载、订阅、推荐和播放器的其他功能都免费，没有广告，也不卖数据，以后也一样。唯一收费的是给学外语的人准备的可选[学习包](#-用真实视频学外语)。开发靠[赞助](#支持-lumtub)和学习包的收入。
+
+**学习包是什么？多少钱？** 一个可选的学外语功能包：字幕里点词就查、字幕上方注音、带原声的生词本、复习和导出到 Anki。前 30 次查词所有功能全部开放；之后不买也每天能免费查 3 个词。早鸟价 ¥99，到 2027 年 1 月 3 日，之后 ¥129，在爱发电一次付款，最多 5 台设备。
+
+**学习包能退款吗？** 这是数字商品，激活后因为改变主意不退款。如果是软件问题导致用不了、又修不好，会退款。在爱发电发私信申请即可。详情见 [lumtub.app/learn/zh](https://lumtub.app/learn/zh/)。
 
 **YouTube 改了东西会不会用不了？** 有时会短暂失效。Lumtub 会自动更新 yt-dlp，通常几天内就会修好。
 
 **需要 Google 账号吗？** 不需要。除了点赞、评论、同步这些账号功能，其他都能在不登录时使用。
 
-**所有功能都免费吗？** Lumtub 本身免费。部分可选的 AI 功能（翻译、语音转字幕、总结）使用第三方服务或你自己的 API 密钥，这些服务商可能收费。
+**AI 功能免费吗？** 软件这边免费。部分可选的 AI 功能（翻译、语音转字幕、总结）使用第三方服务或你自己的 API 密钥，这些服务商可能收费。
 
 **数据存在哪里？** Windows 在 `%LOCALAPPDATA%\Lumtub`，便携版在 `lumtub.exe` 旁边的 `userdata` 文件夹。Linux 在 `~/.local/share/lumtub`，macOS 在 `~/Library/Application Support/Lumtub`。设置、订阅和媒体库都可以导出和导入。
 
@@ -286,7 +290,7 @@ Lumtub 支持 82 种界面语言，全部由志愿者在 [Weblate](https://hoste
 
 <div align="center">
 
-<a href="https://afdian.com/a/linmuqingfeng"><img src="docs/sponsor/banner-zh.svg" alt="让 Lumtub 一直免费下去。没有广告，没有追踪，没有付费版。一个人开发，完全开源。" width="100%"></a>
+<a href="https://afdian.com/a/linmuqingfeng"><img src="docs/sponsor/banner-zh.svg" alt="让 Lumtub 一直免费下去。没有广告，没有追踪，没有订阅。一个人开发，完全开源。" width="100%"></a>
 
 <a href="https://afdian.com/a/linmuqingfeng"><img src="docs/sponsor/afdian-zh.svg" alt="在爱发电上赞助" height="64"></a>
 <a href="https://github.com/sponsors/0x696c757a696f"><img src="docs/sponsor/github-zh.svg" alt="在 GitHub 上赞助" height="64"></a>

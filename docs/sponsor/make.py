@@ -157,14 +157,14 @@ def banner(lang):
     if lang == "en":
         eyebrow = "SUPPORT LUMTUB"
         head = "Keep Lumtub free."
-        sub = "No ads, no tracking, no paid tier. One developer, in the open."
+        sub = "No ads, no tracking, no subscriptions. One developer, in the open."
         sub2 = "Sponsors pay for the time it takes, and decide what comes next."
         chips = ["Year-long iOS installs", "Test devices", "Sponsor requests first"]
         chip_label = "Up next"
     else:
         eyebrow = "支持 LUMTUB"
         head = "让 Lumtub 一直免费下去"
-        sub = "没有广告，没有追踪，没有付费版。一个人开发，完全开源。"
+        sub = "没有广告，没有追踪，没有订阅。一个人开发，完全开源。"
         sub2 = "赞助支付开发它的时间，也决定下一步做什么。"
         chips = ["iOS 安装一年有效", "测试设备", "赞助者需求优先"]
         chip_label = "下一步"

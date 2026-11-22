@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Sözleriň ulanylyş ýygylygyna görä bahalandyryldy: diňe gollanma, resmi CEFR sanawy däl.",
   "The word levels are still downloading; words are marked once they are here.": "Söz derejeleri henizem ýüklenýär; gelenden soň sözler bellener.",
   "Set your level for a truer picture": "Has takyk netije üçin derejäňizi goýuň",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Jogap üçin kartça ellik ediň · saga süýşüriň: ýadymda, çepe: unutdym"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Jogap üçin kartça ellik ediň · saga süýşüriň: ýadymda, çepe: unutdym",
+  "{0} words · about {1} min": "{0} söz · takmynan {1} min",
+  "All done · the next words come back in {0}": "Hemmesi gutardy · indiki sözler {0} soň gaýdyp geler",
+  "From {0} videos": "{0} wideodan",
+  "Words without a video": "Wideosyz sözler",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Boşluk düwmesi jogaby görkezýär · 1 2 3 4 baha · R sözlemi gaýtadan oýnadýar · F fokus tertibi",
+  "Leave focus mode (F)": "Fokus tertibinden çyk (F)",
+  "Focus mode: the video scene, no numbers (F)": "Fokus tertibi: wideo sahnasy, sansyz (F)"
 }

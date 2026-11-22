@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "הערכה לפי שכיחות השימוש במילים: להכוונה בלבד, לא רשימת CEFR רשמית.",
   "The word levels are still downloading; words are marked once they are here.": "רמות המילים עדיין בהורדה; המילים יסומנו ברגע שיגיעו.",
   "Set your level for a truer picture": "הגדירו את הרמה שלכם לתמונה מדויקת יותר",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "הקישו על הכרטיס לתשובה · החלקה ימינה: זכרתי, שמאלה: שכחתי"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "הקישו על הכרטיס לתשובה · החלקה ימינה: זכרתי, שמאלה: שכחתי",
+  "{0} words · about {1} min": "{0} מילים · כ-{1} דקות",
+  "All done · the next words come back in {0}": "הכול הושלם · המילים הבאות יחזרו בעוד {0}",
+  "From {0} videos": "מתוך {0} סרטונים",
+  "Words without a video": "מילים בלי סרטון",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "רווח מציג את התשובה · 1 2 3 4 לדירוג · R מנגן שוב את המשפט · F מצב ריכוז",
+  "Leave focus mode (F)": "יציאה ממצב ריכוז (F)",
+  "Focus mode: the video scene, no numbers (F)": "מצב ריכוז: סצנת הסרטון, בלי מספרים (F)"
 }

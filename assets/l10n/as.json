@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "শব্দৰ ব্যৱহাৰৰ সঘনতাৰ ওপৰত আধাৰিত অনুমান: এক নিৰ্দেশনা, official CEFR তালিকা নহয়।",
   "The word levels are still downloading; words are marked once they are here.": "শব্দৰ স্তৰ এতিয়াও ডাউনলোড হৈ আছে; ইয়ালৈ আহিলেই শব্দ চিহ্নিত হ'ব।",
   "Set your level for a truer picture": "অধিক সঠিক ছবিৰ বাবে আপোনাৰ স্তৰ ছেট কৰক",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "উত্তৰৰ বাবে কাৰ্ডত টেপ কৰক · সোঁফালে ছোৱাইপ: মনত আছে, বাওঁফালে: পাহৰিলোঁ"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "উত্তৰৰ বাবে কাৰ্ডত টেপ কৰক · সোঁফালে ছোৱাইপ: মনত আছে, বাওঁফালে: পাহৰিলোঁ",
+  "{0} words · about {1} min": "{0}টা শব্দ · প্ৰায় {1} মিনিট",
+  "All done · the next words come back in {0}": "সকলো শেষ · পৰৱৰ্তী শব্দবোৰ {0}ৰ পিছত ঘূৰি আহিব",
+  "From {0} videos": "{0}টা ভিডিঅ'ৰ পৰা",
+  "Words without a video": "ভিডিঅ' নথকা শব্দ",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "স্পেচে উত্তৰ দেখুৱায় · 1 2 3 4 গ্ৰেড · R ৰে বাক্যটো পুনৰ বজায় · F মনোযোগ মোড",
+  "Leave focus mode (F)": "মনোযোগ মোডৰ পৰা ওলাওক (F)",
+  "Focus mode: the video scene, no numbers (F)": "মনোযোগ মোড: ভিডিঅ'ৰ দৃশ্য, সংখ্যা নাই (F)"
 }

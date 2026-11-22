@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Aprēķināts pēc vārdu lietošanas biežuma: orientieris, nevis oficiāls CEFR saraksts.",
   "The word levels are still downloading; words are marked once they are here.": "Vārdu līmeņi vēl tiek lejupielādēti; vārdi tiks atzīmēti, tiklīdz tie būs pieejami.",
   "Set your level for a truer picture": "Iestatiet savu līmeni, lai iegūtu precīzāku priekšstatu",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Pieskarieties kartītei, lai redzētu atbildi · velciet pa labi: atcerējos, pa kreisi: aizmirsu"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Pieskarieties kartītei, lai redzētu atbildi · velciet pa labi: atcerējos, pa kreisi: aizmirsu",
+  "{0} words · about {1} min": "{0} vārdi · apmēram {1} min",
+  "All done · the next words come back in {0}": "Viss pabeigts · nākamie vārdi atgriezīsies pēc {0}",
+  "From {0} videos": "No {0} video",
+  "Words without a video": "Vārdi bez video",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Atstarpe parāda atbildi · 1 2 3 4 vērtējums · R atskaņo frāzi vēlreiz · F fokusa režīms",
+  "Leave focus mode (F)": "Iziet no fokusa režīma (F)",
+  "Focus mode: the video scene, no numbers (F)": "Fokusa režīms: video aina, bez skaitļiem (F)"
 }

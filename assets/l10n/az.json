@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Sözlərin işlənmə tezliyinə görə təxmin edilib: bələdçidir, rəsmi CEFR siyahısı deyil.",
   "The word levels are still downloading; words are marked once they are here.": "Söz səviyyələri hələ endirilir; gəldikdən sonra sözlər qeyd olunacaq.",
   "Set your level for a truer picture": "Daha dəqiq nəticə üçün səviyyənizi təyin edin",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Cavab üçün karta toxunun · sağa sürüşdürün: yadda qaldı, sola: unutdum"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Cavab üçün karta toxunun · sağa sürüşdürün: yadda qaldı, sola: unutdum",
+  "{0} words · about {1} min": "{0} söz · təxminən {1} dəq",
+  "All done · the next words come back in {0}": "Hamısı bitdi · növbəti sözlər {0} sonra qayıdacaq",
+  "From {0} videos": "{0} videodan",
+  "Words without a video": "Videosuz sözlər",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Boşluq cavabı göstərir · 1 2 3 4 qiymət · R cümləni yenidən oxudur · F fokus rejimi",
+  "Leave focus mode (F)": "Fokus rejimindən çıx (F)",
+  "Focus mode: the video scene, no numbers (F)": "Fokus rejimi: video səhnəsi, rəqəmsiz (F)"
 }

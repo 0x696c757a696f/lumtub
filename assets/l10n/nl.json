@@ -3719,5 +3719,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Geschat op basis van hoe vaak woorden voorkomen: een richtlijn, geen officiële CEFR-lijst.",
   "The word levels are still downloading; words are marked once they are here.": "De woordniveaus worden nog gedownload; woorden worden gemarkeerd zodra ze er zijn.",
   "Set your level for a truer picture": "Stel je niveau in voor een completer beeld",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Tik op de kaart voor het antwoord · veeg naar rechts: onthouden, naar links: vergeten"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Tik op de kaart voor het antwoord · veeg naar rechts: onthouden, naar links: vergeten",
+  "{0} words · about {1} min": "{0} woorden · ongeveer {1} min",
+  "All done · the next words come back in {0}": "Alles klaar · de volgende woorden komen over {0} terug",
+  "From {0} videos": "Uit {0} video's",
+  "Words without a video": "Woorden zonder video",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Spatie toont het antwoord · 1 2 3 4 beoordelen · R speelt de zin opnieuw af · F focusmodus",
+  "Leave focus mode (F)": "Focusmodus verlaten (F)",
+  "Focus mode: the video scene, no numbers (F)": "Focusmodus: de videoscène, geen cijfers (F)"
 }

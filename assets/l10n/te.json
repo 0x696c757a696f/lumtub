@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "పదాల వినియోగ తరచుదనం ఆధారంగా అంచనా: ఇది ఒక మార్గదర్శి మాత్రమే, అధికారిక CEFR జాబితా కాదు.",
   "The word levels are still downloading; words are marked once they are here.": "పద స్థాయిలు ఇంకా డౌన్‌లోడ్ అవుతున్నాయి; అవి వచ్చాక పదాలు గుర్తించబడతాయి.",
   "Set your level for a truer picture": "మరింత కచ్చితమైన అంచనా కోసం మీ స్థాయిని సెట్ చేయండి",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "సమాధానం కోసం కార్డ్‌ను ట్యాప్ చేయండి · కుడివైపు స్వైప్: గుర్తుంది, ఎడమవైపు: మర్చిపోయా"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "సమాధానం కోసం కార్డ్‌ను ట్యాప్ చేయండి · కుడివైపు స్వైప్: గుర్తుంది, ఎడమవైపు: మర్చిపోయా",
+  "{0} words · about {1} min": "{0} పదాలు · సుమారు {1} నిమిషాలు",
+  "All done · the next words come back in {0}": "అన్నీ పూర్తయ్యాయి · తదుపరి పదాలు {0} తర్వాత తిరిగి వస్తాయి",
+  "From {0} videos": "{0} వీడియోల నుండి",
+  "Words without a video": "వీడియో లేని పదాలు",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "స్పేస్ సమాధానం చూపుతుంది · 1 2 3 4 గ్రేడ్ · R వాక్యాన్ని మళ్లీ ప్లే చేస్తుంది · F ఫోకస్ మోడ్",
+  "Leave focus mode (F)": "ఫోకస్ మోడ్ నుండి నిష్క్రమించండి (F)",
+  "Focus mode: the video scene, no numbers (F)": "ఫోకస్ మోడ్: వీడియో దృశ్యం, సంఖ్యలు లేవు (F)"
 }

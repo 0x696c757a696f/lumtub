@@ -3719,5 +3719,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Geschätzt nach der Häufigkeit der Wörter: ein Richtwert, keine offizielle GER-Liste.",
   "The word levels are still downloading; words are marked once they are here.": "Die Wortniveaus werden noch heruntergeladen; die Wörter werden markiert, sobald sie da sind.",
   "Set your level for a truer picture": "Lege dein Niveau fest für ein genaueres Bild",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Karte antippen für die Antwort · nach rechts wischen: gewusst, nach links: vergessen"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Karte antippen für die Antwort · nach rechts wischen: gewusst, nach links: vergessen",
+  "{0} words · about {1} min": "{0} Wörter · etwa {1} Min.",
+  "All done · the next words come back in {0}": "Alles erledigt · die nächsten Wörter kommen in {0} wieder",
+  "From {0} videos": "Aus {0} Videos",
+  "Words without a video": "Wörter ohne Video",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Leertaste zeigt die Antwort · 1 2 3 4 bewerten · R spielt die Zeile erneut ab · F Fokusmodus",
+  "Leave focus mode (F)": "Fokusmodus verlassen (F)",
+  "Focus mode: the video scene, no numbers (F)": "Fokusmodus: die Videoszene, keine Zahlen (F)"
 }

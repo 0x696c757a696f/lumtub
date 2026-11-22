@@ -3738,5 +3738,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "依詞的常用程度估算，僅供參考，不是官方 CEFR 詞表。",
   "The word levels are still downloading; words are marked once they are here.": "詞彙等級仍在下載，下載完就會開始標記。",
   "Set your level for a truer picture": "設定你的程度，難度會更準",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "點一下卡片查看答案 · 右滑：記得，左滑：忘了"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "點一下卡片查看答案 · 右滑：記得，左滑：忘了",
+  "{0} words · about {1} min": "{0} 個詞 · 約 {1} 分鐘",
+  "All done · the next words come back in {0}": "都複習完了 · 下一批詞 {0} 後回來",
+  "From {0} videos": "來自 {0} 個影片",
+  "Words without a video": "沒有出處影片的詞",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "空白鍵顯示答案 · 1 2 3 4 評分 · R 重播句子 · F 專注模式",
+  "Leave focus mode (F)": "退出專注模式 (F)",
+  "Focus mode: the video scene, no numbers (F)": "專注模式：看影片畫面，不看數字 (F)"
 }

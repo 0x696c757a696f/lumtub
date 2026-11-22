@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "ಪದಗಳ ಬಳಕೆಯ ಆವರ್ತನದಿಂದ ಅಂದಾಜು: ಮಾರ್ಗದರ್ಶಿ ಮಾತ್ರ, ಅಧಿಕೃತ CEFR ಪಟ್ಟಿಯಲ್ಲ.",
   "The word levels are still downloading; words are marked once they are here.": "ಪದ ಮಟ್ಟಗಳು ಇನ್ನೂ ಡೌನ್‌ಲೋಡ್ ಆಗುತ್ತಿವೆ; ಬಂದ ತಕ್ಷಣ ಪದಗಳನ್ನು ಗುರುತಿಸಲಾಗುತ್ತದೆ.",
   "Set your level for a truer picture": "ಹೆಚ್ಚು ನಿಖರ ಚಿತ್ರಕ್ಕಾಗಿ ನಿಮ್ಮ ಮಟ್ಟವನ್ನು ಹೊಂದಿಸಿ",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "ಉತ್ತರಕ್ಕಾಗಿ ಕಾರ್ಡ್ ಟ್ಯಾಪ್ ಮಾಡಿ · ಬಲಕ್ಕೆ ಸ್ವೈಪ್: ನೆನಪಿದೆ, ಎಡಕ್ಕೆ: ಮರೆತೆ"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "ಉತ್ತರಕ್ಕಾಗಿ ಕಾರ್ಡ್ ಟ್ಯಾಪ್ ಮಾಡಿ · ಬಲಕ್ಕೆ ಸ್ವೈಪ್: ನೆನಪಿದೆ, ಎಡಕ್ಕೆ: ಮರೆತೆ",
+  "{0} words · about {1} min": "{0} ಪದಗಳು · ಸುಮಾರು {1} ನಿಮಿಷ",
+  "All done · the next words come back in {0}": "ಎಲ್ಲವೂ ಮುಗಿದಿದೆ · ಮುಂದಿನ ಪದಗಳು {0} ನಂತರ ಮರಳುತ್ತವೆ",
+  "From {0} videos": "{0} ವೀಡಿಯೊಗಳಿಂದ",
+  "Words without a video": "ವೀಡಿಯೊ ಇಲ್ಲದ ಪದಗಳು",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Space ಉತ್ತರ ತೋರಿಸುತ್ತದೆ · 1 2 3 4 ಗ್ರೇಡ್ · R ಸಾಲನ್ನು ಮತ್ತೆ ಪ್ಲೇ ಮಾಡುತ್ತದೆ · F ಫೋಕಸ್ ಮೋಡ್",
+  "Leave focus mode (F)": "ಫೋಕಸ್ ಮೋಡ್‌ನಿಂದ ನಿರ್ಗಮಿಸಿ (F)",
+  "Focus mode: the video scene, no numbers (F)": "ಫೋಕಸ್ ಮೋಡ್: ವೀಡಿಯೊ ದೃಶ್ಯ, ಸಂಖ್ಯೆಗಳಿಲ್ಲ (F)"
 }

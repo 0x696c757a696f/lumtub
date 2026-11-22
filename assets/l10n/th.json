@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "ประมาณจากความถี่ในการใช้คำ: เป็นเพียงแนวทาง ไม่ใช่รายการ CEFR อย่างเป็นทางการ",
   "The word levels are still downloading; words are marked once they are here.": "ระดับคำศัพท์ยังดาวน์โหลดอยู่ จะทำเครื่องหมายคำเมื่อพร้อม",
   "Set your level for a truer picture": "ตั้งระดับของคุณเพื่อให้ภาพแม่นยำยิ่งขึ้น",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "แตะการ์ดเพื่อดูคำตอบ · ปัดขวา: จำได้ ปัดซ้าย: ลืม"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "แตะการ์ดเพื่อดูคำตอบ · ปัดขวา: จำได้ ปัดซ้าย: ลืม",
+  "{0} words · about {1} min": "{0} คำ · ประมาณ {1} นาที",
+  "All done · the next words come back in {0}": "เสร็จหมดแล้ว · คำถัดไปจะกลับมาใน {0}",
+  "From {0} videos": "จากวิดีโอ {0} รายการ",
+  "Words without a video": "คำที่ไม่มีวิดีโอ",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "เว้นวรรคเพื่อแสดงคำตอบ · 1 2 3 4 ให้คะแนน · R เล่นประโยคซ้ำ · F โหมดโฟกัส",
+  "Leave focus mode (F)": "ออกจากโหมดโฟกัส (F)",
+  "Focus mode: the video scene, no numbers (F)": "โหมดโฟกัส: ฉากจากวิดีโอ ไม่แสดงตัวเลข (F)"
 }

@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Odhad podle četnosti slov: orientační, nejde o oficiální seznam CEFR.",
   "The word levels are still downloading; words are marked once they are here.": "Úrovně slov se ještě stahují; slova se označí, jakmile dorazí.",
   "Set your level for a truer picture": "Nastavte si úroveň pro přesnější obraz",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Klepnutím na kartu zobrazíte odpověď · přejetí doprava: pamatuji, doleva: zapomněl jsem"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Klepnutím na kartu zobrazíte odpověď · přejetí doprava: pamatuji, doleva: zapomněl jsem",
+  "{0} words · about {1} min": "{0} slovíček · asi {1} min",
+  "All done · the next words come back in {0}": "Hotovo · další slovíčka se vrátí za {0}",
+  "From {0} videos": "Z {0} videí",
+  "Words without a video": "Slovíčka bez videa",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Mezerník zobrazí odpověď · 1 2 3 4 hodnocení · R přehraje větu znovu · F režim soustředění",
+  "Leave focus mode (F)": "Opustit režim soustředění (F)",
+  "Focus mode: the video scene, no numbers (F)": "Režim soustředění: scéna z videa, bez čísel (F)"
 }

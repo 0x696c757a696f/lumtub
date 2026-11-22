@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Procijenjeno prema učestalosti upotrebe riječi: orijentir, a ne zvanični CEFR popis.",
   "The word levels are still downloading; words are marked once they are here.": "Nivoi riječi se još preuzimaju; riječi će biti označene čim stignu.",
   "Set your level for a truer picture": "Postavite svoj nivo za precizniju procjenu",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Dodirnite karticu za odgovor · prevucite udesno: zapamćeno, ulijevo: zaboravljeno"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Dodirnite karticu za odgovor · prevucite udesno: zapamćeno, ulijevo: zaboravljeno",
+  "{0} words · about {1} min": "{0} riječi · oko {1} min",
+  "All done · the next words come back in {0}": "Sve gotovo · sljedeće riječi se vraćaju za {0}",
+  "From {0} videos": "Iz {0} videa",
+  "Words without a video": "Riječi bez videa",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Razmaknica prikazuje odgovor · 1 2 3 4 ocjena · R ponovo pušta repliku · F fokus način",
+  "Leave focus mode (F)": "Izađi iz fokus načina (F)",
+  "Focus mode: the video scene, no numbers (F)": "Fokus način: scena iz videa, bez brojeva (F)"
 }

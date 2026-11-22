@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Үгийн хэрэглээний давтамжаар тооцсон: чиглүүлэг бөгөөд албан ёсны CEFR жагсаалт биш.",
   "The word levels are still downloading; words are marked once they are here.": "Үгийн түвшнүүд татагдаж байна; ирмэгц үгсийг тэмдэглэнэ.",
   "Set your level for a truer picture": "Илүү оновчтой дүр зураг гарахын тулд түвшнээ тохируулна уу",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Хариулт харахын тулд картыг дарна уу · баруун шударна: санасан, зүүн: мартсан"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Хариулт харахын тулд картыг дарна уу · баруун шударна: санасан, зүүн: мартсан",
+  "{0} words · about {1} min": "{0} үг · ойролцоогоор {1} мин",
+  "All done · the next words come back in {0}": "Бүгд дууслаа · дараагийн үгс {0}-ийн дараа буцна",
+  "From {0} videos": "{0} бичлэгээс",
+  "Words without a video": "Бичлэггүй үгс",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Зай хариултыг харуулна · 1 2 3 4 үнэлгээ · R мөрийг дахин тоглуулна · F төвлөрөх горим",
+  "Leave focus mode (F)": "Төвлөрөх горимоос гарах (F)",
+  "Focus mode: the video scene, no numbers (F)": "Төвлөрөх горим: бичлэгийн дүрс, тоогүй (F)"
 }

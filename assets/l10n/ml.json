@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "വാക്കുകളുടെ ഉപയോഗ ആവൃത്തി അനുസരിച്ചുള്ള കണക്ക്: ഒരു മാർഗനിർദേശം മാത്രം, ഔദ്യോഗിക CEFR പട്ടികയല്ല.",
   "The word levels are still downloading; words are marked once they are here.": "വാക്കുകളുടെ നിലവാരങ്ങൾ ഇപ്പോഴും ഡൗൺലോഡ് ചെയ്യുന്നു; എത്തിയാലുടൻ വാക്കുകൾ അടയാളപ്പെടുത്തും.",
   "Set your level for a truer picture": "കൂടുതൽ കൃത്യമായ ചിത്രത്തിന് നിങ്ങളുടെ നിലവാരം സജ്ജമാക്കുക",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "ഉത്തരത്തിനായി കാർഡിൽ ടാപ്പ് ചെയ്യുക · വലത്തേക്ക് സ്വൈപ്പ്: ഓർമ്മയുണ്ട്, ഇടത്തേക്ക്: മറന്നു"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "ഉത്തരത്തിനായി കാർഡിൽ ടാപ്പ് ചെയ്യുക · വലത്തേക്ക് സ്വൈപ്പ്: ഓർമ്മയുണ്ട്, ഇടത്തേക്ക്: മറന്നു",
+  "{0} words · about {1} min": "{0} വാക്കുകൾ · ഏകദേശം {1} മിനിറ്റ്",
+  "All done · the next words come back in {0}": "എല്ലാം കഴിഞ്ഞു · അടുത്ത വാക്കുകൾ {0} കഴിഞ്ഞ് തിരിച്ചെത്തും",
+  "From {0} videos": "{0} വീഡിയോകളിൽ നിന്ന്",
+  "Words without a video": "വീഡിയോ ഇല്ലാത്ത വാക്കുകൾ",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Space ഉത്തരം കാണിക്കും · 1 2 3 4 ഗ്രേഡ് · R വരി വീണ്ടും കേൾപ്പിക്കും · F ഫോക്കസ് മോഡ്",
+  "Leave focus mode (F)": "ഫോക്കസ് മോഡിൽ നിന്ന് പുറത്തുകടക്കുക (F)",
+  "Focus mode: the video scene, no numbers (F)": "ഫോക്കസ് മോഡ്: വീഡിയോ ദൃശ്യം, സംഖ്യകളില്ല (F)"
 }

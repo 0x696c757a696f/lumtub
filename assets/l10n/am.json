@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "ቃላት ምን ያህል በተደጋጋሚ እንደሚጠቀሙ ተመስርቶ የተገመተ፦ መመሪያ ብቻ ነው፣ ይፋዊ የCEFR ዝርዝር አይደለም።",
   "The word levels are still downloading; words are marked once they are here.": "የቃል ደረጃዎቹ አሁንም እየወረዱ ነው፤ ቃላት ከደረሱ በኋላ ይመረጣሉ።",
   "Set your level for a truer picture": "ለትክክለኛ ግምት ደረጃዎን ያቀናብሩ",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "መልሱን ለማየት ካርዱን ይንኩ · ወደ ቀኝ ጎትት፦ አስታወስኩ፣ ወደ ግራ፦ ረሳሁ"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "መልሱን ለማየት ካርዱን ይንኩ · ወደ ቀኝ ጎትት፦ አስታወስኩ፣ ወደ ግራ፦ ረሳሁ",
+  "{0} words · about {1} min": "{0} ቃላት · ወደ {1} ደቂቃ",
+  "All done · the next words come back in {0}": "ሁሉም ተጠናቋል · የሚቀጥሉት ቃላት በ{0} ውስጥ ይመለሳሉ",
+  "From {0} videos": "ከ{0} ቪዲዮዎች",
+  "Words without a video": "ቪዲዮ የሌላቸው ቃላት",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "ስፔስ መልሱን ያሳያል · 1 2 3 4 ደረጃ · R መስመሩን እንደገና ያጫውታል · F ትኩረት ሁነታ",
+  "Leave focus mode (F)": "ከትኩረት ሁነታ ውጣ (F)",
+  "Focus mode: the video scene, no numbers (F)": "ትኩረት ሁነታ፦ የቪዲዮ ትዕይንት፣ ቁጥሮች የሉም (F)"
 }

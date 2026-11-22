@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Գնահատված է բառերի օգտագործման հաճախականությամբ․ ուղենիշ է, ոչ պաշտոնական CEFR ցանկ։",
   "The word levels are still downloading; words are marked once they are here.": "Բառերի մակարդակները դեռ ներբեռնվում են․ բառերը կնշվեն ժամանելուն պես։",
   "Set your level for a truer picture": "Սահմանեք ձեր մակարդակը՝ ավելի ճշգրիտ պատկերի համար",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Հպեք քարտին՝ պատասխանը տեսնելու համար · սահեցրեք աջ՝ հիշեցի, ձախ՝ մոռացա"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Հպեք քարտին՝ պատասխանը տեսնելու համար · սահեցրեք աջ՝ հիշեցի, ձախ՝ մոռացա",
+  "{0} words · about {1} min": "{0} բառ · մոտ {1} րոպե",
+  "All done · the next words come back in {0}": "Ամեն ինչ պատրաստ է · հաջորդ բառերը կվերադառնան {0}-ից",
+  "From {0} videos": "{0} տեսանյութից",
+  "Words without a video": "Տեսանյութ չունեցող բառեր",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Բացատը ցույց է տալիս պատասխանը · 1 2 3 4՝ գնահատական · R՝ նորից նվագարկել նախադասությունը · F կենտրոնացման ռեժիմ",
+  "Leave focus mode (F)": "Դուրս գալ կենտրոնացման ռեժիմից (F)",
+  "Focus mode: the video scene, no numbers (F)": "Կենտրոնացման ռեժիմ՝ տեսանյութի տեսարանը, առանց թվերի (F)"
 }

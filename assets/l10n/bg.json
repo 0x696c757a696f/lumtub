@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Оценено според честотата на употреба на думите: ориентир, а не официален списък по CEFR.",
   "The word levels are still downloading; words are marked once they are here.": "Нивата на думите още се изтеглят; думите ще бъдат отбелязани, щом пристигнат.",
   "Set your level for a truer picture": "Задайте нивото си за по-точна оценка",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Докоснете картата за отговор · плъзнете надясно: помня, наляво: забравих"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Докоснете картата за отговор · плъзнете надясно: помня, наляво: забравих",
+  "{0} words · about {1} min": "{0} думи · около {1} мин",
+  "All done · the next words come back in {0}": "Готово · следващите думи се връщат след {0}",
+  "From {0} videos": "От {0} видеа",
+  "Words without a video": "Думи без видео",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Интервалът показва отговора · 1 2 3 4 оценка · R пуска репликата отново · F фокус режим",
+  "Leave focus mode (F)": "Изход от фокус режима (F)",
+  "Focus mode: the video scene, no numbers (F)": "Фокус режим: сцената от видеото, без числа (F)"
 }

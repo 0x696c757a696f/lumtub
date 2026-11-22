@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Taksita laŭ la ofteco de vortoj: gvidilo, ne oficiala CEFR-listo.",
   "The word levels are still downloading; words are marked once they are here.": "La vortniveloj ankoraŭ elŝutiĝas; vortoj estos markitaj kiam ili alvenos.",
   "Set your level for a truer picture": "Agordu vian nivelon por pli vera bildo",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Tuŝetu la karton por la respondo · ŝovu dekstren: memoris, maldekstren: forgesis"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Tuŝetu la karton por la respondo · ŝovu dekstren: memoris, maldekstren: forgesis",
+  "{0} words · about {1} min": "{0} vortoj · ĉirkaŭ {1} min",
+  "All done · the next words come back in {0}": "Ĉio farita · la sekvaj vortoj revenos post {0}",
+  "From {0} videos": "El {0} videoj",
+  "Words without a video": "Vortoj sen video",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Spaco montras la respondon · 1 2 3 4 takso · R ludas la frazon denove · F fokusa reĝimo",
+  "Leave focus mode (F)": "Eliri el fokusa reĝimo (F)",
+  "Focus mode: the video scene, no numbers (F)": "Fokusa reĝimo: la videa sceno, sen nombroj (F)"
 }

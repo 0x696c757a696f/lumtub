@@ -3713,5 +3713,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "So‘zlarning ishlatilish tez-tezligiga qarab baholangan: faqat yo‘l-yo‘riq, rasmiy CEFR ro‘yxati emas.",
   "The word levels are still downloading; words are marked once they are here.": "So‘z darajalari hali yuklanmoqda; yuklangach, so‘zlar belgilanadi.",
   "Set your level for a truer picture": "Aniqroq natija uchun darajangizni belgilang",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Javob uchun kartaga bosing · o'ngga surish: esladim, chapga: unutdim"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Javob uchun kartaga bosing · o'ngga surish: esladim, chapga: unutdim",
+  "{0} words · about {1} min": "{0} ta so‘z · taxminan {1} daq",
+  "All done · the next words come back in {0}": "Hammasi tayyor · keyingi so‘zlar {0} dan keyin qaytadi",
+  "From {0} videos": "{0} ta videodan",
+  "Words without a video": "Videosiz so‘zlar",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Probel javobni ko‘rsatadi · 1 2 3 4 baho · R gapni qayta ijro etadi · F fokus rejimi",
+  "Leave focus mode (F)": "Fokus rejimidan chiqish (F)",
+  "Focus mode: the video scene, no numbers (F)": "Fokus rejimi: video sahnasi, raqamlarsiz (F)"
 }

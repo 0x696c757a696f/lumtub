@@ -24,9 +24,10 @@ class _LearningHomeState extends State<LearningHome> {
 
   List<Widget> _cards(BuildContext context) => [
         if (learning.licenseStopped) _StoppedCard(learning: learning),
+        // Today's words first: what a learner comes back to the page for.
+        if ((learning.book?.words.isNotEmpty ?? false)) _ReviewHomeCard(controller: controller),
         if (_GettingStarted.needed(learning)) _GettingStarted(controller: controller),
         if (learning.licensed) _StatusCard(controller: controller) else _Pitch(learning: learning),
-        if ((learning.book?.words.isNotEmpty ?? false)) _ReviewHomeCard(controller: controller),
         _VocabularyCard(controller: controller),
         _DictionariesCard(learning: learning),
         _AboutCard(controller: controller),
@@ -203,8 +204,9 @@ class _StatusCard extends StatelessWidget {
   }
 }
 
-/// 复习: how many words are due, the streak and the words learnt, and the
-/// button that starts a review.
+/// 今天: what today's review holds and how long it will take, its words
+/// laid out by the video each was heard in, as a strip of frames; a frame
+/// starts a review of that video's words only.
 class _ReviewHomeCard extends StatefulWidget {
   const _ReviewHomeCard({required this.controller});
   final AppController controller;
@@ -229,45 +231,151 @@ class _ReviewHomeCardState extends State<_ReviewHomeCard> {
         builder: (context, _) {
           final colors = context.colors;
           final now = DateTime.now();
-          final due = _store.dueCount(_book.words, now);
+          final queue = _store.due(_book.words, now);
+          final due = queue.length;
           final streak = _store.streak(now);
           final known = _store.knownCount(_book.words);
           final locked = !widget.controller.learning.unlocked;
+          final scenes = todaysScenes(queue);
+          final next = due > 0 ? null : _store.nextDue(_book.words, now);
+          final summary = due > 0
+              ? tr('{0} words · about {1} min', [due, _store.minutesFor(due)])
+              : next == null
+                  ? tr('Nothing due right now')
+                  : tr('All done · the next words come back in {0}', [reviewIntervalLabel(next.difference(now))]);
           Widget stat(String number, String label) => Padding(
                 padding: const EdgeInsets.only(right: Space.xl),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(number, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w800, color: colors.primary)),
+                child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+                  Text(number, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                  const SizedBox(width: Space.xs),
                   Text(label, style: context.text.bodySmall?.copyWith(color: colors.outline)),
                 ]),
               );
+          final start = FilledButton.icon(
+            onPressed: () => unawaited(openReview(context, widget.controller)),
+            icon: Icon(locked ? AppIcons.lock : AppIcons.playCircle, size: 18),
+            label: Text(due > 0 ? tr('Start review') : tr('Open')),
+          );
+          // A phone (or a narrow window) gets the button under the title,
+          // as wide as the card, where a thumb finds it.
+          final narrow = MediaQuery.sizeOf(context).width < 600;
           return Card(
+            clipBehavior: Clip.antiAlias,
             child: Padding(
-              padding: const EdgeInsets.all(Space.l),
+              padding: EdgeInsets.all(narrow ? Space.m : Space.l),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                _CardTitle(
-                  icon: AppIcons.brain,
-                  title: tr('Review'),
-                  subtitle: due > 0 ? tr('{0} words to review now', [due]) : tr('Nothing due right now'),
-                  trailing: FilledButton.icon(
-                    onPressed: () => unawaited(openReview(context, widget.controller)),
-                    icon: Icon(locked ? AppIcons.lock : AppIcons.playCircle, size: 18),
-                    label: Text(due > 0 ? tr('Start review') : tr('Open')),
+                _CardTitle(icon: AppIcons.filmStrip, title: tr('Today'), subtitle: summary, trailing: narrow ? null : start),
+                if (narrow) ...[
+                  const SizedBox(height: Space.m),
+                  SizedBox(width: double.infinity, height: 48, child: start),
+                ],
+                if (scenes.isNotEmpty) ...[
+                  const SizedBox(height: Space.l),
+                  Text(tr('From {0} videos', [scenes.where((s) => s.videoId.isNotEmpty).length]),
+                      style: context.text.labelMedium?.copyWith(color: colors.onSurfaceVariant, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: Space.s),
+                  SizedBox(
+                    height: _SceneTile.heightFor(narrow),
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: scenes.length,
+                      separatorBuilder: (context, index) => const SizedBox(width: Space.m),
+                      itemBuilder: (context, i) => _SceneTile(
+                        scene: scenes[i],
+                        width: narrow ? 140 : 176,
+                        thumbnails: widget.controller.thumbnailDirectory,
+                        onTap: () => unawaited(openReview(context, widget.controller, video: scenes[i].videoId)),
+                      ),
+                    ),
                   ),
-                ),
+                ],
                 const SizedBox(height: Space.m),
-                Wrap(children: [
-                  stat('$due', tr('due now')),
+                Wrap(runSpacing: Space.xs, children: [
                   stat('$streak', tr('days in a row')),
                   stat('$known', tr('words learnt')),
                 ]),
-                const SizedBox(height: Space.s),
-                Text(tr('Each word comes back just before you would forget it, in the line it was said in, with its own sound.'),
-                    style: context.text.bodySmall?.copyWith(color: colors.outline)),
               ]),
             ),
           );
         },
       );
+}
+
+/// A video's frame with how many of its words are due and the first of
+/// them under it, like a subtitle.
+class _SceneTile extends StatelessWidget {
+  const _SceneTile({required this.scene, required this.width, required this.thumbnails, required this.onTap});
+  final ReviewScene scene;
+  final double width;
+  final Directory? thumbnails;
+  final VoidCallback onTap;
+
+  /// The frame and two lines of title under it.
+  static double heightFor(bool narrow) => (narrow ? 140 : 176) * 9 / 16 + 44;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final words = scene.words.map((w) => w.word).take(3).join('  ');
+    final frame = ClipRRect(
+      borderRadius: context.thumbnailRadius,
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Stack(fit: StackFit.expand, children: [
+          if (scene.videoId.isEmpty)
+            ColoredBox(color: colors.surfaceContainerHighest, child: Icon(AppIcons.bookOpenText, color: colors.outline))
+          else
+            Image(
+              image: thumbnailFor(scene.video, thumbnails, width: 320, size: 'mqdefault'),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stack) => ColoredBox(color: colors.surfaceContainerHighest),
+            ),
+          // The words over the frame's foot, as the subtitle they were.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: DecoratedBox(
+              decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x00000000), Color(0xB0000000)])),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(Space.s, Space.l, Space.s, Space.xs),
+                child: Text(words, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13, shadows: [Shadow(blurRadius: 3)])),
+              ),
+            ),
+          ),
+          Positioned(
+            top: Space.xs,
+            right: Space.xs,
+            child: DecoratedBox(
+              decoration: BoxDecoration(color: colors.primary, borderRadius: context.controlRadius),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                child: Text('${scene.words.length}', style: TextStyle(color: colors.onPrimary, fontSize: 12, fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ),
+        ]),
+      ),
+    );
+    return SizedBox(
+      width: width,
+      child: Tooltip(
+        message: scene.videoId.isEmpty ? tr('Words without a video') : scene.title,
+        waitDuration: const Duration(milliseconds: 500),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: context.thumbnailRadius,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            frame,
+            const SizedBox(height: Space.xs),
+            Text(scene.videoId.isEmpty ? tr('Words without a video') : scene.title,
+                maxLines: 2, overflow: TextOverflow.ellipsis, style: context.text.bodySmall?.copyWith(height: 1.25)),
+          ]),
+        ),
+      ),
+    );
+  }
 }
 
 /// The newest words, each opening its video at its moment, with the

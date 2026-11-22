@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Hinnatud sõnade kasutussageduse järgi: juhis, mitte ametlik CEFR-i loend.",
   "The word levels are still downloading; words are marked once they are here.": "Sõnatasemeid laaditakse veel alla; sõnad märgitakse, kui need kohal on.",
   "Set your level for a truer picture": "Määra oma tase täpsema pildi saamiseks",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Vastuse nägemiseks puudutage kaarti · pühkige paremale: mäletan, vasakule: unustasin"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Vastuse nägemiseks puudutage kaarti · pühkige paremale: mäletan, vasakule: unustasin",
+  "{0} words · about {1} min": "{0} sõna · umbes {1} min",
+  "All done · the next words come back in {0}": "Kõik tehtud · järgmised sõnad tulevad tagasi {0} pärast",
+  "From {0} videos": "{0} videost",
+  "Words without a video": "Videota sõnad",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Tühik näitab vastust · 1 2 3 4 hinda · R esitab lause uuesti · F fookusrežiim",
+  "Leave focus mode (F)": "Välju fookusrežiimist (F)",
+  "Focus mode: the video scene, no numbers (F)": "Fookusrežiim: video stseen, ilma numbriteta (F)"
 }

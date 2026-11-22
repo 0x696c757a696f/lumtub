@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Hitzen erabilera-maiztasunaren arabera kalkulatua: gida bat, ez CEFR zerrenda ofiziala.",
   "The word levels are still downloading; words are marked once they are here.": "Hitzen mailak oraindik deskargatzen ari dira; hitzak iristean markatuko dira.",
   "Set your level for a truer picture": "Ezarri zure maila irudi zehatzagoa lortzeko",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Ukitu txartela erantzunerako · irristatu eskuinera: gogoratu dut, ezkerrera: ahaztu dut"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Ukitu txartela erantzunerako · irristatu eskuinera: gogoratu dut, ezkerrera: ahaztu dut",
+  "{0} words · about {1} min": "{0} hitz · {1} min inguru",
+  "All done · the next words come back in {0}": "Dena eginda · hurrengo hitzak {0} barru itzuliko dira",
+  "From {0} videos": "{0} bideotatik",
+  "Words without a video": "Bideorik gabeko hitzak",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Zuriuneak erantzuna erakusten du · 1 2 3 4 puntuatu · R-k esaldia berriro jotzen du · F fokuratze modua",
+  "Leave focus mode (F)": "Irten fokuratze modutik (F)",
+  "Focus mode: the video scene, no numbers (F)": "Fokuratze modua: bideoaren eszena, zenbakirik gabe (F)"
 }

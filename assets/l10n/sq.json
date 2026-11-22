@@ -3714,5 +3714,12 @@
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Vlerësuar sipas shpeshtësisë së përdorimit të fjalëve: një udhëzues, jo listë zyrtare CEFR.",
   "The word levels are still downloading; words are marked once they are here.": "Nivelet e fjalëve po shkarkohen ende; fjalët do të shënohen sapo të jenë gati.",
   "Set your level for a truer picture": "Cakto nivelin tënd për një pamje më të saktë",
-  "Tap the card for the answer · swipe right: remembered, left: forgot": "Prek kartën për përgjigjen · rrëshqit djathtas: e mbajta mend, majtas: e harrova"
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Prek kartën për përgjigjen · rrëshqit djathtas: e mbajta mend, majtas: e harrova",
+  "{0} words · about {1} min": "{0} fjalë · rreth {1} min",
+  "All done · the next words come back in {0}": "Gjithçka u krye · fjalët e ardhshme kthehen pas {0}",
+  "From {0} videos": "Nga {0} video",
+  "Words without a video": "Fjalë pa video",
+  "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Hapësira shfaq përgjigjen · 1 2 3 4 vlerësimi · R luan përsëri fjalinë · F modaliteti i përqendrimit",
+  "Leave focus mode (F)": "Dil nga modaliteti i përqendrimit (F)",
+  "Focus mode: the video scene, no numbers (F)": "Modaliteti i përqendrimit: skena e videos, pa numra (F)"
 }

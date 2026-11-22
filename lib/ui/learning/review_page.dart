@@ -13,17 +13,19 @@ import '../app_icons.dart';
 import '../motion.dart';
 import '../skin_paint.dart';
 import '../theme.dart';
+import '../video_card.dart' show thumbnailFor;
 import 'learning_page.dart' show LearningPriceTag, buyLearningPack;
 
 /// 复习生词: the vocabulary book's words that are due, one at a time, each
-/// in the line it was heard in, with that line's own sound.
-Future<void> openReview(BuildContext context, AppController controller) async {
+/// in the line it was heard in, with that line's own sound; only those
+/// heard in [video] when given.
+Future<void> openReview(BuildContext context, AppController controller, {String? video}) async {
   final book = controller.learning.book;
   if (book == null) return;
   await book.load();
   await reviewStoreOf(book).load();
   if (!context.mounted) return;
-  await Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) => ReviewPage(controller: controller)));
+  await Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) => ReviewPage(controller: controller, video: video)));
 }
 
 /// Plays [word]'s video from a second before the moment it was saved.
@@ -65,8 +67,11 @@ Future<void> showSavedWord(BuildContext context, AppController controller, Vocab
 }
 
 class ReviewPage extends StatefulWidget {
-  const ReviewPage({super.key, required this.controller});
+  const ReviewPage({super.key, required this.controller, this.video});
   final AppController controller;
+
+  /// Only the words heard in this video (empty: those saved without one).
+  final String? video;
 
   @override
   State<ReviewPage> createState() => _ReviewPageState();
@@ -75,12 +80,16 @@ class ReviewPage extends StatefulWidget {
 class _ReviewPageState extends State<ReviewPage> {
   late final VocabularyBook _book = widget.controller.learning.book!;
   late final ReviewStore _store = reviewStoreOf(_book);
-  late List<VocabularyWord> _queue = _store.due(_book.words, DateTime.now());
+  late List<VocabularyWord> _queue = [
+    for (final w in _store.due(_book.words, DateTime.now()))
+      if (widget.video == null || w.videoId == widget.video) w,
+  ];
   late final int _total = _queue.length;
   final _focus = FocusNode();
   int _done = 0;
   bool _shown = false;
   bool _sound = false;
+  DateTime _since = DateTime.now();
 
   VocabularyWord? get _word => _queue.firstOrNull;
 
@@ -107,7 +116,7 @@ class _ReviewPageState extends State<ReviewPage> {
     final word = _word;
     if (word == null || !_shown) return;
     final now = DateTime.now();
-    await _store.grade(word.key, grade, now);
+    await _store.grade(word.key, grade, now, seconds: now.difference(_since).inMilliseconds / 1000);
     if (!mounted) return;
     setState(() {
       _queue = [..._queue.skip(1)];
@@ -119,6 +128,7 @@ class _ReviewPageState extends State<ReviewPage> {
       }
       _shown = false;
       _sound = false;
+      _since = DateTime.now();
     });
     unawaited(_playLine());
   }
@@ -143,6 +153,10 @@ class _ReviewPageState extends State<ReviewPage> {
         return KeyEventResult.handled;
       }
     }
+    if (key == LogicalKeyboardKey.keyF) {
+      unawaited(_store.setFocus(!_store.focus));
+      return KeyEventResult.handled;
+    }
     if (key == LogicalKeyboardKey.keyR) {
       unawaited(_playLine());
       return KeyEventResult.handled;
@@ -155,27 +169,98 @@ class _ReviewPageState extends State<ReviewPage> {
   void _openVideo(VocabularyWord word) => watchVocabularyMoment(context, widget.controller, word);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(listenable: _store, builder: (context, _) => _page(context));
+
+  Widget _page(BuildContext context) {
     final learning = widget.controller.learning;
     final word = _word;
+    final focus = _store.focus;
+    // The scene needs the word's video; a word saved without one keeps
+    // its card.
+    final scene = focus && word != null && word.videoId.isNotEmpty;
+    final touchHint = tr('Tap the card for the answer · swipe right: remembered, left: forgot');
+    final keyHint = tr('Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode');
+    Widget answerArea(VocabularyWord word) => AnimatedSwitcher(
+          duration: Motion.of(Ease.fade),
+          child: _shown
+              ? _GradeButtons(key: const ValueKey('grades'), store: _store, word: word, quiet: focus, onGrade: (g) => unawaited(_grade(g)))
+              : SizedBox(
+                  key: const ValueKey('show'),
+                  height: 64,
+                  width: double.infinity,
+                  child: FilledButton(onPressed: () => setState(() => _shown = true), child: Text(tr('Show the answer'))),
+                ),
+        );
+    Widget card(VocabularyWord word) => GestureDetector(
+          key: ValueKey('${word.key}#$_done#${_queue.length}#$scene'),
+          // On a touch screen the card itself answers: a tap turns it
+          // over, then a swipe right is Remembered and a swipe left Forgot.
+          behavior: HitTestBehavior.translucent,
+          onTap: _touch && !_shown ? () => setState(() => _shown = true) : null,
+          onHorizontalDragEnd: !_touch || !_shown
+              ? null
+              : (details) {
+                  final speed = details.primaryVelocity ?? 0;
+                  if (speed.abs() < 300) return;
+                  unawaited(HapticFeedback.selectionClick());
+                  unawaited(_grade(speed > 0 ? ReviewGrade.good : ReviewGrade.again));
+                },
+          child: scene
+              ? ReviewScenePanel(
+                  word: word,
+                  shown: _shown,
+                  sound: _sound,
+                  thumbnails: widget.controller.thumbnailDirectory,
+                  onReplay: () => unawaited(_playLine()),
+                  onOpenVideo: () => _openVideo(word),
+                )
+              : SavedWordCard(
+                  word: word,
+                  shown: _shown,
+                  sound: _sound,
+                  onReplay: () => unawaited(_playLine()),
+                  onOpenVideo: () => _openVideo(word),
+                ),
+        );
     return Scaffold(
-      appBar: SkinAppBar(AppBar(title: Text(tr('Review words')))),
+      appBar: SkinAppBar(AppBar(
+        title: Text(tr('Review words')),
+        actions: [
+          if (learning.unlocked)
+            Padding(
+              padding: const EdgeInsets.only(right: Space.s),
+              child: IconButton(
+                tooltip: focus ? tr('Leave focus mode (F)') : tr('Focus mode: the video scene, no numbers (F)'),
+                isSelected: focus,
+                icon: Icon(AppIcons.filmStrip),
+                selectedIcon: Icon(AppIcons.filmStrip, color: context.colors.primary),
+                onPressed: () => unawaited(_store.setFocus(!focus)),
+              ),
+            ),
+        ],
+      )),
       body: Focus(
         focusNode: _focus,
         autofocus: true,
         onKeyEvent: _key,
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
+            constraints: BoxConstraints(maxWidth: scene ? 820 : 620),
             child: Padding(
-              padding: const EdgeInsets.all(Space.l),
+              padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 600 ? Space.m : Space.l),
               child: !learning.unlocked
-                  ? const _ReviewLocked()
+                  ? const Center(child: ReviewPlate(child: _ReviewLocked()))
                   : word == null
-                      ? _ReviewDone(store: _store, book: _book, done: _done)
+                      ? Center(child: ReviewPlate(child: _ReviewDone(store: _store, book: _book, done: _done)))
                       : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                          _Progress(done: _done, total: _total, left: _queue.length),
-                          const SizedBox(height: Space.l),
+                          // Focus mode drops the count: only the words.
+                          if (!focus) ...[
+                            ReviewPlate(
+                              padding: const EdgeInsets.symmetric(horizontal: Space.m, vertical: Space.s),
+                              child: _Progress(done: _done, total: _total, left: _queue.length),
+                            ),
+                            const SizedBox(height: Space.m),
+                          ],
                           Expanded(
                             child: AnimatedSwitcher(
                               duration: Motion.of(Ease.move),
@@ -185,54 +270,192 @@ class _ReviewPageState extends State<ReviewPage> {
                                 child: SlideTransition(position: Tween(begin: const Offset(0.06, 0), end: Offset.zero).animate(animation), child: child),
                               ),
                               layoutBuilder: (current, previous) => Stack(alignment: Alignment.topCenter, children: [...previous, if (current != null) current]),
-                              child: GestureDetector(
-                                key: ValueKey('${word.key}#$_done#${_queue.length}'),
-                                // On a touch screen the card itself answers: a tap
-                                // turns it over, then a swipe right is
-                                // Remembered and a swipe left Forgot.
-                                behavior: HitTestBehavior.translucent,
-                                onTap: _touch && !_shown ? () => setState(() => _shown = true) : null,
-                                onHorizontalDragEnd: !_touch || !_shown
-                                    ? null
-                                    : (details) {
-                                        final speed = details.primaryVelocity ?? 0;
-                                        if (speed.abs() < 300) return;
-                                        unawaited(HapticFeedback.selectionClick());
-                                        unawaited(_grade(speed > 0 ? ReviewGrade.good : ReviewGrade.again));
-                                      },
-                                child: SavedWordCard(
-                                  word: word,
-                                  shown: _shown,
-                                  sound: _sound,
-                                  onReplay: () => unawaited(_playLine()),
-                                  onOpenVideo: () => _openVideo(word),
-                                ),
-                              ),
+                              child: card(word),
                             ),
                           ),
-                          const SizedBox(height: Space.l),
-                          AnimatedSwitcher(
-                            duration: Motion.of(Ease.fade),
-                            child: _shown
-                                ? _GradeButtons(key: const ValueKey('grades'), store: _store, word: word, onGrade: (g) => unawaited(_grade(g)))
-                                : SizedBox(
-                                    key: const ValueKey('show'),
-                                    height: 64,
-                                    width: double.infinity,
-                                    child: FilledButton(onPressed: () => setState(() => _shown = true), child: Text(tr('Show the answer'))),
-                                  ),
-                          ),
-                          const SizedBox(height: Space.s),
-                          Text(
-                            _touch ? tr('Tap the card for the answer · swipe right: remembered, left: forgot') : tr('Space shows the answer · 1 2 3 4 grade · R plays the line again'),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 11, color: context.colors.outline),
+                          const SizedBox(height: Space.m),
+                          ReviewPlate(
+                            padding: const EdgeInsets.fromLTRB(Space.s, Space.s, Space.s, Space.xs),
+                            child: Column(mainAxisSize: MainAxisSize.min, children: [
+                              answerArea(word),
+                              const SizedBox(height: Space.xs),
+                              Text(
+                                _touch ? touchHint : keyHint,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 11, color: context.colors.onSurfaceVariant),
+                              ),
+                            ]),
                           ),
                         ]),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// What a review's parts sit on: the skin's panel (its colours, gradient,
+/// glass and border), so text reads over any skin's picture; Lumtub's own
+/// card without a skin.
+class ReviewPlate extends StatelessWidget {
+  const ReviewPlate({super.key, required this.child, this.padding = const EdgeInsets.all(Space.l)});
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final panel = context.skin?.panel;
+    if (panel != null) return SkinBox(surface: panel, radius: context.cardRadius.topLeft.x, padding: padding, child: child);
+    return Card(child: Padding(padding: padding, child: child));
+  }
+}
+
+/// 专注复习's card: the word's video as a screen, its line over the
+/// picture as the subtitle it was (the word lit up in it), the line's
+/// translation under it as a second subtitle once shown, and the word's
+/// reading and meaning on the skin's panel below.
+class ReviewScenePanel extends StatelessWidget {
+  const ReviewScenePanel({super.key, required this.word, required this.shown, required this.sound, required this.thumbnails, required this.onReplay, required this.onOpenVideo});
+  final VocabularyWord word;
+  final bool shown;
+  final bool sound;
+  final Directory? thumbnails;
+  final VoidCallback onReplay;
+  final VoidCallback onOpenVideo;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final sentence = word.sentence.isEmpty ? word.word : word.sentence;
+    final at = sentence.toLowerCase().indexOf(word.word.toLowerCase());
+    const outline = [Shadow(blurRadius: 4), Shadow(blurRadius: 2), Shadow(offset: Offset(0, 1), blurRadius: 1)];
+    // Sized to the screen as the player sizes subtitles: smaller on a
+    // phone, never too small to read.
+    final width = MediaQuery.sizeOf(context).width;
+    final narrow = width < 600;
+    final line = TextStyle(color: Colors.white, fontSize: (width / 34).clamp(16, 24), height: 1.4, fontWeight: FontWeight.w600, shadows: outline);
+    // The accent where it reads on the dark foot of the picture, else a
+    // warm yellow, as subtitles light up a word.
+    final lit = colors.primary.computeLuminance() > 0.18 ? colors.primary : const Color(0xFFFFD54F);
+    final screen = ClipRRect(
+      borderRadius: context.cardRadius,
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Stack(fit: StackFit.expand, children: [
+          const ColoredBox(color: Colors.black),
+          Image(
+            image: thumbnailFor(ReviewScene(word.videoId, word.videoTitle, const []).video, thumbnails, width: 1280, size: 'maxresdefault'),
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+            errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+          ),
+          // Darker toward the foot, where the subtitle is, as on the player.
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, stops: [0.35, 1], colors: [Color(0x14000000), Color(0xC8000000)]),
+            ),
+          ),
+          Positioned(
+            left: narrow ? Space.m : Space.xl,
+            right: narrow ? Space.m : Space.xl,
+            bottom: narrow ? Space.s : Space.l,
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text.rich(
+                at < 0
+                    ? TextSpan(text: sentence)
+                    : TextSpan(children: [
+                        TextSpan(text: sentence.substring(0, at)),
+                        TextSpan(
+                          text: sentence.substring(at, at + word.word.length),
+                          style: TextStyle(color: lit, decoration: TextDecoration.underline, decorationColor: lit, decorationThickness: 2),
+                        ),
+                        TextSpan(text: sentence.substring(at + word.word.length)),
+                      ]),
+                textAlign: TextAlign.center,
+                style: line,
+              ),
+              AnimatedSize(
+                duration: Motion.of(Ease.move),
+                curve: Ease.curve,
+                child: shown && word.translation.isNotEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: Space.xs),
+                        child: Text(word.translation, textAlign: TextAlign.center, style: line.copyWith(fontSize: narrow ? 13 : 16, fontWeight: FontWeight.w400, color: Colors.white.withValues(alpha: 0.9))),
+                      )
+                    : const SizedBox(width: double.infinity),
+              ),
+            ]),
+          ),
+          // The moment it comes from, a tap away.
+          Positioned(
+            left: Space.s,
+            top: Space.s,
+            right: Space.s,
+            child: Row(children: [
+              Flexible(
+                child: Material(
+                  color: Colors.black.withValues(alpha: 0.45),
+                  borderRadius: context.controlRadius,
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: onOpenVideo,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: Space.s, vertical: 4),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(AppIcons.playCircle, size: 16, color: Colors.white),
+                        const SizedBox(width: Space.xs),
+                        Flexible(
+                          child: Text(
+                            '${word.videoTitle.isEmpty ? tr('Watch this moment') : word.videoTitle} · ${clockOf(word.at)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.white, fontSize: 12),
+                          ),
+                        ),
+                      ]),
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              if (sound)
+                IconButton.filled(
+                  style: IconButton.styleFrom(backgroundColor: Colors.black.withValues(alpha: 0.45), foregroundColor: Colors.white),
+                  tooltip: tr('Play the line again'),
+                  onPressed: onReplay,
+                  icon: Icon(AppIcons.speakerHigh, size: 18),
+                ),
+            ]),
+          ),
+        ]),
+      ),
+    );
+    return SingleChildScrollView(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        screen,
+        AnimatedSize(
+          duration: Motion.of(Ease.move),
+          curve: Ease.curve,
+          alignment: Alignment.topCenter,
+          child: !shown
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.only(top: Space.m),
+                  child: Entrance(
+                    scale: 0.98,
+                    child: ReviewPlate(
+                      child: Wrap(crossAxisAlignment: WrapCrossAlignment.end, spacing: Space.l, runSpacing: Space.xs, children: [
+                        SelectableText(word.word, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700)),
+                        if (word.reading.isNotEmpty) Text(word.reading, style: theme.textTheme.titleMedium?.copyWith(color: colors.primary)),
+                        if (word.meaning.isNotEmpty) Text(word.meaning, style: theme.textTheme.bodyLarge),
+                      ]),
+                    ),
+                  ),
+                ),
+        ),
+      ]),
     );
   }
 }
@@ -260,7 +483,7 @@ class _Progress extends StatelessWidget {
         ),
       ),
       const SizedBox(width: Space.m),
-      Text(tr('{0} left', [left]), style: TextStyle(fontSize: 12, color: colors.outline)),
+      Text(tr('{0} left', [left]), style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant)),
     ]);
   }
 }
@@ -282,13 +505,8 @@ class SavedWordCard extends StatelessWidget {
     final sentence = word.sentence;
     final at = sentence.toLowerCase().indexOf(word.word.toLowerCase());
     final lineStyle = theme.textTheme.titleMedium?.copyWith(height: 1.6, fontWeight: FontWeight.w400);
-    return Container(
+    return ReviewPlate(
       padding: const EdgeInsets.all(Space.xl),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border.all(color: colors.outlineVariant),
-        borderRadius: BorderRadius.circular(12),
-      ),
       child: SingleChildScrollView(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
@@ -327,7 +545,7 @@ class SavedWordCard extends StatelessWidget {
                       if (word.translation.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: Space.m),
-                          child: Text(word.translation, style: theme.textTheme.bodyMedium?.copyWith(color: colors.outline)),
+                          child: Text(word.translation, style: theme.textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant)),
                         ),
                       if (word.videoId.isNotEmpty)
                         Padding(
@@ -353,9 +571,12 @@ class SavedWordCard extends StatelessWidget {
 }
 
 class _GradeButtons extends StatelessWidget {
-  const _GradeButtons({super.key, required this.store, required this.word, required this.onGrade});
+  const _GradeButtons({super.key, required this.store, required this.word, required this.onGrade, this.quiet = false});
   final ReviewStore store;
   final VocabularyWord word;
+
+  /// Focus mode: the grades without the intervals they give.
+  final bool quiet;
   final ValueChanged<ReviewGrade> onGrade;
 
   @override
@@ -366,8 +587,10 @@ class _GradeButtons extends StatelessWidget {
       final next = store.preview(word.key, grade, now).due.difference(now);
       final content = Column(mainAxisSize: MainAxisSize.min, children: [
         Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-        const SizedBox(height: 2),
-        Text(reviewIntervalLabel(next), style: TextStyle(fontSize: 11, color: main ? colors.onPrimary.withValues(alpha: 0.8) : colors.outline)),
+        if (!quiet) ...[
+          const SizedBox(height: 2),
+          Text(reviewIntervalLabel(next), style: TextStyle(fontSize: 11, color: main ? colors.onPrimary.withValues(alpha: 0.8) : colors.onSurfaceVariant)),
+        ],
       ]);
       const padding = EdgeInsets.symmetric(vertical: 6);
       return Expanded(
@@ -413,11 +636,11 @@ class _ReviewDone extends StatelessWidget {
     Widget stat(String number, String label) => Expanded(
           child: Column(children: [
             Text(number, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800, color: colors.primary)),
-            Text(label, style: TextStyle(fontSize: 12, color: colors.outline)),
+            Text(label, style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant)),
           ]),
         );
     return Entrance(
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(AppIcons.checkCircle, size: 56, color: colors.primary),
         const SizedBox(height: Space.m),
         Text(
@@ -432,7 +655,7 @@ class _ReviewDone extends StatelessWidget {
                   ? ''
                   : tr('The next words come back in {0}.', [reviewIntervalLabel(next.difference(now))]),
           textAlign: TextAlign.center,
-          style: TextStyle(color: colors.outline),
+          style: TextStyle(color: colors.onSurfaceVariant),
         ),
         if (book.words.isNotEmpty) ...[
           const SizedBox(height: Space.xl),
@@ -455,13 +678,13 @@ class _ReviewLocked extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Icon(AppIcons.lock, size: 40, color: theme.colorScheme.outline),
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      Icon(AppIcons.lock, size: 40, color: theme.colorScheme.onSurfaceVariant),
       const SizedBox(height: Space.m),
       Text(tr('Review is part of the learning pack'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
       const SizedBox(height: Space.s),
       Text(tr('Words come back just before you would forget them, each with the line it was said in.'),
-          textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.outline)),
+          textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
       const SizedBox(height: Space.l),
       const LearningPriceTag(),
       const SizedBox(height: Space.l),

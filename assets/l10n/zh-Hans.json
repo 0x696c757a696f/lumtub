@@ -4097,5 +4097,15 @@
   "Word lookup, readings, the vocabulary book, review and the Learning page": "点词查词、注音、生词本、复习和\"学习\"页面",
   "Off: nothing of the learning features shows or runs. Your words and license are kept.": "已关闭：学习功能都不显示、也不运行。生词本和授权都保留。",
   "Pause while the mouse is on a subtitle line": "鼠标移到字幕上时暂停",
-  "Read and tap the words at ease; it plays on when the mouse leaves": "可以从容地看词、点词，鼠标移开后继续播放"
+  "Read and tap the words at ease; it plays on when the mouse leaves": "可以从容地看词、点词，鼠标移开后继续播放",
+  "Beginner": "初级",
+  "Intermediate": "中级",
+  "Advanced": "高级",
+  "My level in other languages": "我的外语水平",
+  "My level in {0}": "我的{0}水平",
+  "Not set: hard words are not marked": "未设置：不标记难词",
+  "{0}. Harder words stand out, easier ones count as known": "{0}。更难的词会标出来，更简单的词算作认识",
+  "Estimated from how often words are used: a guide, not an official CEFR list.": "按词的常用程度估算，仅供参考，不是官方 CEFR 词表。",
+  "The word levels are still downloading; words are marked once they are here.": "词汇等级还在下载，下载完就会开始标记。",
+  "Set your level for a truer picture": "设置你的水平，难度会更准"
 }

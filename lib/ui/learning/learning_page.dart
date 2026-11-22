@@ -459,6 +459,42 @@ Future<void> _pickEnglishLevel(BuildContext context, Learning learning) async {
   if (picked != null && picked != current) await learning.setEnglishLevel(picked < 0 ? null : picked);
 }
 
+/// Asks the learner's level in [language] (not English).
+Future<void> pickLanguageLevel(BuildContext context, Learning learning, String language) async {
+  final scale = LevelScale.of(language);
+  if (scale == null) return;
+  final current = learning.levelIn(language) ?? 0;
+  final picked = await showDialog<int>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: Text(tr('My level in {0}', [_languageName(language)])),
+      children: [
+        for (final level in [0, for (var l = 1; l <= scale.top; l++) l])
+          ListTile(
+            dense: true,
+            leading: Icon(level == current ? AppIcons.radioButton : AppIcons.circle),
+            title: Text(level == 0 ? tr("Don't mark hard words") : scale.nameOf(level)),
+            subtitle: level == 0 ? null : (level == scale.top ? Text(tr('Only rare words stand out')) : null),
+            onTap: () => Navigator.pop(context, level),
+          ),
+        if (!scale.official)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
+            child: Text(tr('Estimated from how often words are used: a guide, not an official CEFR list.'), style: Theme.of(context).textTheme.bodySmall),
+          ),
+        if (!learning.hasLevels(language))
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
+            child: Text(tr('The word levels are still downloading; words are marked once they are here.'), style: Theme.of(context).textTheme.bodySmall),
+          ),
+      ],
+    ),
+  );
+  if (picked != null && picked != current) await learning.setLevel(language, picked == 0 ? null : picked);
+}
+
+String _languageName(String language) => _packLanguage(DictionaryPack.values.firstWhere((p) => p.language == language));
+
 /// Asks for a license code and keeps it when it is one.
 Future<bool> enterLicenseCode(BuildContext context, Learning learning) async {
   final field = TextEditingController();
@@ -593,6 +629,18 @@ List<(String, String, WidgetBuilder)> learningSettingRows(AppController controll
           leading: Icon(AppIcons.graduationCap),
           onTap: () => unawaited(_pickEnglishLevel(context, learning)),
         ))),
+    (tr('My level in other languages'), '水平 HSK JLPT CEFR level 难词', (context) => live((context) => Column(mainAxisSize: MainAxisSize.min, children: [
+          for (final pack in DictionaryPack.values)
+            if (pack != DictionaryPack.english && learning.stateOf(pack) == PackState.ready && LevelScale.of(pack.language) != null)
+              NormalItem(
+                title: tr('My level in {0}', [_packLanguage(pack)]),
+                subtitle: learning.levelIn(pack.language) == null
+                    ? tr('Not set: hard words are not marked')
+                    : tr('{0}. Harder words stand out, easier ones count as known', [LevelScale.of(pack.language)!.nameOf(learning.levelIn(pack.language)!)]),
+                leading: Icon(AppIcons.graduationCap),
+                onTap: () => unawaited(pickLanguageLevel(context, learning, pack.language)),
+              ),
+        ]))),
   ];
 }
 
@@ -1054,6 +1102,8 @@ Chinese: CC-CEDICT by MDBG (CC BY-SA 4.0, cc-cedict.org).
 Korean: 한국어기초사전 (Korean Basic Dictionary), National Institute of Korean Language (CC BY-SA 2.0 KR, krdict.korean.go.kr), via github.com/basickorean/basickorean-vocab; with the Wiktionaries and WikDict.
 
 Spanish, French, German, Italian, Russian: the English and Chinese Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org, and WikDict (CC BY-SA 4.0).
+
+Word levels: HSK lists from complete-hsk-vocabulary by Yanis Zafirópulos (MIT, github.com/drkameleon/complete-hsk-vocabulary); JLPT lists from OpenJLPT (CC BY-SA 4.0, github.com/evanclan/OpenJLPT), based on Jonathan Waller's JLPT lists; Korean levels from the Korean Basic Dictionary; Spanish, French, German, Italian and Russian levels estimated from wordfreq by Robyn Speer (data CC BY-SA 4.0): a guide, not an official CEFR list.
 
 Word splitting: Lindera (MIT) with IPADIC, mecab-ko-dic (Apache-2.0) and jieba (MIT).
 

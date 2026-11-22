@@ -17,7 +17,7 @@ import 'word_token.dart';
 /// one new word.
 @immutable
 class VideoWords {
-  const VideoWords({required this.known, required this.words, required this.newWords, required this.often, required this.oneNew});
+  const VideoWords({required this.known, required this.words, required this.newWords, required this.often, required this.oneNew, this.language = ''});
 
   /// From 0 to 1, each word counted every time it is said.
   final double known;
@@ -26,6 +26,9 @@ class VideoWords {
 
   /// The new words said most often, with how often, most first.
   final List<(WordToken, int)> often;
+
+  /// The language most of its words are in.
+  final String language;
 
   /// Indexes of the lines with exactly one new word.
   final List<int> oneNew;
@@ -40,12 +43,12 @@ enum VideoLevel { easy, right, hard, tooHard }
 
 final _cache = <String, Future<VideoWords?>>{};
 
-/// [VideoWords] of [lines] for the words [known] holds; English words
+/// [VideoWords] of [lines] for the words [known] holds; words at or
 /// below the learner's level count as known. Cut into words a few lines
 /// at a time, so the interface never waits; counted by lumtub_core off
 /// the interface thread. Null without the core or a dictionary.
 Future<VideoWords?> videoWordsOf(Learning learning, KnownWords known, String id, List<String> lines, {int most = 12}) {
-  final key = '$id|${lines.length}|${known.revision}';
+  final key = '$id|${lines.length}|${known.revision}|${learning.levelKey}';
   if (_cache.length > 8) _cache.remove(_cache.keys.first);
   return _cache[key] ??= _videoWords(learning, known, lines, most);
 }
@@ -55,6 +58,7 @@ Future<VideoWords?> _videoWords(Learning learning, KnownWords known, List<String
   final keys = <List<String>>[];
   final tokens = <String, WordToken>{};
   final knownKeys = <String>{};
+  final languages = <String, int>{};
   for (final (i, line) in lines.indexed) {
     // A breath every few lines keeps frames coming while a long video is cut.
     if (i % 40 == 39) await Future<void>.delayed(Duration.zero);
@@ -68,7 +72,8 @@ Future<VideoWords?> _videoWords(Learning learning, KnownWords known, List<String
       if (!t.isWord || !KnownWords.counts(t)) continue;
       final key = KnownWords.tokenKey(t);
       row.add(key);
-      if (tokens.putIfAbsent(key, () => t) == t && (known.knows(t) || (Learning.languageOf(t) == 'en' && !learning.isHard(t)))) knownKeys.add(key);
+      languages.update(Learning.languageOf(t), (n) => n + 1, ifAbsent: () => 1);
+      if (tokens.putIfAbsent(key, () => t) == t && (known.knows(t) || learning.belowLevel(t))) knownKeys.add(key);
     }
     keys.add(row);
   }
@@ -90,5 +95,6 @@ Future<VideoWords?> _videoWords(Learning learning, KnownWords known, List<String
         if (pair is List && pair.length == 2 && pair[0] is String && tokens[pair[0] as String] != null) (tokens[pair[0] as String]!, pair[1] as int),
     ],
     oneNew: [for (final i in (json['oneNew'] as List? ?? const [])) if (i is int) i],
+    language: languages.entries.fold<MapEntry<String, int>?>(null, (best, e) => best == null || e.value > best.value ? e : best)?.key ?? '',
   );
 }

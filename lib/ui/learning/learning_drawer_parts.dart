@@ -215,6 +215,18 @@ class _DrawerVideoWords extends StatelessWidget {
                 tr('{0} different words, {1} new to you · {2} lines with just one new word', [words.words, words.newWords, words.oneNew.length]),
                 style: context.text.bodySmall?.copyWith(color: colors.outline),
               ),
+              if (words.language.isNotEmpty && LevelScale.of(words.language) != null && learning.levelIn(words.language) == null) ...[
+                const SizedBox(height: 4),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+                    onPressed: () => unawaited(words.language == 'en' ? _pickEnglishLevel(context, learning) : pickLanguageLevel(context, learning, words.language)),
+                    icon: Icon(AppIcons.graduationCap, size: 16),
+                    label: Text(tr('Set your level for a truer picture')),
+                  ),
+                ),
+              ],
               if (words.often.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(tr('Learn these first: the new words said most'), style: context.text.labelMedium),

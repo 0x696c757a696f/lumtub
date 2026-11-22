@@ -3713,5 +3713,6 @@
   "{0}. Harder words stand out, easier ones count as known": "{0} คำที่ยากกว่าจะเด่นขึ้นมา ส่วนคำที่ง่ายกว่าจะนับว่ารู้แล้ว",
   "Estimated from how often words are used: a guide, not an official CEFR list.": "ประมาณจากความถี่ในการใช้คำ: เป็นเพียงแนวทาง ไม่ใช่รายการ CEFR อย่างเป็นทางการ",
   "The word levels are still downloading; words are marked once they are here.": "ระดับคำศัพท์ยังดาวน์โหลดอยู่ จะทำเครื่องหมายคำเมื่อพร้อม",
-  "Set your level for a truer picture": "ตั้งระดับของคุณเพื่อให้ภาพแม่นยำยิ่งขึ้น"
+  "Set your level for a truer picture": "ตั้งระดับของคุณเพื่อให้ภาพแม่นยำยิ่งขึ้น",
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "แตะการ์ดเพื่อดูคำตอบ · ปัดขวา: จำได้ ปัดซ้าย: ลืม"
 }

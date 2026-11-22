@@ -3713,5 +3713,6 @@
   "{0}. Harder words stand out, easier ones count as known": "{0}. Les paraules més difícils ressalten, les més fàcils es consideren conegudes",
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Estimat segons la freqüència d'ús de les paraules: una guia, no una llista oficial del MECR.",
   "The word levels are still downloading; words are marked once they are here.": "Els nivells de paraules encara s'estan baixant; les paraules es marcaran quan arribin.",
-  "Set your level for a truer picture": "Defineix el teu nivell per a una imatge més fidel"
+  "Set your level for a truer picture": "Defineix el teu nivell per a una imatge més fidel",
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Toca la targeta per veure la resposta · llisca a la dreta: recordat, a l'esquerra: oblidat"
 }

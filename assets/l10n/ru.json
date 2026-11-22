@@ -3718,5 +3718,6 @@
   "{0}. Harder words stand out, easier ones count as known": "{0}. Более сложные слова выделяются, более простые считаются известными",
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Оценка по частоте употребления слов: ориентир, а не официальный список CEFR.",
   "The word levels are still downloading; words are marked once they are here.": "Уровни слов ещё загружаются; слова будут отмечены, как только они появятся.",
-  "Set your level for a truer picture": "Укажите свой уровень, чтобы оценка была точнее"
+  "Set your level for a truer picture": "Укажите свой уровень, чтобы оценка была точнее",
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Нажмите на карточку, чтобы увидеть ответ · вправо: помню, влево: забыл"
 }

@@ -3718,5 +3718,6 @@
   "{0}. Harder words stand out, easier ones count as known": "{0}. 어려운 단어는 눈에 띄고, 쉬운 단어는 아는 것으로 간주됩니다",
   "Estimated from how often words are used: a guide, not an official CEFR list.": "단어 사용 빈도로 추정한 값입니다. 참고용이며 공식 CEFR 목록이 아닙니다.",
   "The word levels are still downloading; words are marked once they are here.": "단어 수준을 아직 다운로드하는 중입니다. 도착하면 단어에 표시됩니다.",
-  "Set your level for a truer picture": "수준을 설정하면 난이도가 더 정확해집니다"
+  "Set your level for a truer picture": "수준을 설정하면 난이도가 더 정확해집니다",
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "카드를 탭하면 정답 확인 · 오른쪽으로 스와이프: 기억함, 왼쪽: 잊음"
 }

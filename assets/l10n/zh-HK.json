@@ -3742,5 +3742,6 @@
   "{0}. Harder words stand out, easier ones count as known": "{0}。較難的詞會標示出來，較簡單的詞當作已認識",
   "Estimated from how often words are used: a guide, not an official CEFR list.": "按詞語常用程度估算，僅供參考，並非官方 CEFR 詞表。",
   "The word levels are still downloading; words are marked once they are here.": "詞彙等級仍在下載，下載完就會開始標記。",
-  "Set your level for a truer picture": "設定你的程度，難度會更準確"
+  "Set your level for a truer picture": "設定你的程度，難度會更準確",
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "點擊卡片睇答案 · 向右掃：記得，向左掃：唔記得"
 }

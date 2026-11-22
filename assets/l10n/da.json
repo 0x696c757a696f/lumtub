@@ -3713,5 +3713,6 @@
   "{0}. Harder words stand out, easier ones count as known": "{0}. Sværere ord fremhæves, lettere ord regnes som kendte",
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Anslået ud fra, hvor ofte ord bruges: en vejledning, ikke en officiel CEFR-liste.",
   "The word levels are still downloading; words are marked once they are here.": "Ordniveauerne hentes stadig; ordene markeres, når de er klar.",
-  "Set your level for a truer picture": "Angiv dit niveau for et mere præcist billede"
+  "Set your level for a truer picture": "Angiv dit niveau for et mere præcist billede",
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Tryk på kortet for svaret · stryg til højre: husket, til venstre: glemt"
 }

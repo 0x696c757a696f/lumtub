@@ -3718,5 +3718,6 @@
   "{0}. Harder words stand out, easier ones count as known": "{0}. Las palabras más difíciles destacan; las más fáciles se consideran conocidas",
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Estimado según la frecuencia de uso de las palabras: orientativo, no una lista oficial del MCER.",
   "The word levels are still downloading; words are marked once they are here.": "Los niveles de palabras aún se están descargando; se marcarán en cuanto lleguen.",
-  "Set your level for a truer picture": "Define tu nivel para un resultado más fiel"
+  "Set your level for a truer picture": "Define tu nivel para un resultado más fiel",
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Toca la tarjeta para ver la respuesta · desliza a la derecha: recordada, a la izquierda: olvidada"
 }

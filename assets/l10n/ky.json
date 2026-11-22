@@ -3712,5 +3712,6 @@
   "{0}. Harder words stand out, easier ones count as known": "{0}. Кыйыныраак сөздөр көзгө урунат, жөнөкөйлөрү билген сөз катары эсептелет",
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Сөздөрдүн колдонулуу жыштыгы боюнча бааланган: багыт гана, расмий CEFR тизмеси эмес.",
   "The word levels are still downloading; words are marked once they are here.": "Сөз деңгээлдери дагы эле жүктөлүүдө; сөздөр келери менен белгиленет.",
-  "Set your level for a truer picture": "Тагыраак жыйынтык үчүн деңгээлиңизди коюңуз"
+  "Set your level for a truer picture": "Тагыраак жыйынтык үчүн деңгээлиңизди коюңуз",
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Жооп үчүн картаны басыңыз · оңго сүрүңүз: эсимде, солго: унуттум"
 }

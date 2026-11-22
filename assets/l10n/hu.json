@@ -3713,5 +3713,6 @@
   "{0}. Harder words stand out, easier ones count as known": "{0}. A nehezebb szavak kiemelkednek, a könnyebbeket ismertnek számítjuk",
   "Estimated from how often words are used: a guide, not an official CEFR list.": "A szavak gyakorisága alapján becsült: útmutató, nem hivatalos CEFR-lista.",
   "The word levels are still downloading; words are marked once they are here.": "A szószintek még letöltés alatt vannak; a szavak megjelölése a megérkezésük után indul.",
-  "Set your level for a truer picture": "Állítsd be a szintedet a pontosabb képért"
+  "Set your level for a truer picture": "Állítsd be a szintedet a pontosabb képért",
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Koppints a kártyára a válaszért · húzd jobbra: emlékszem, balra: elfelejtettem"
 }

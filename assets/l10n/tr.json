@@ -3718,5 +3718,6 @@
   "{0}. Harder words stand out, easier ones count as known": "{0}. Daha zor kelimeler öne çıkar, daha kolay olanlar bilinen sayılır",
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Kelimelerin kullanım sıklığına göre tahmin edilmiştir: bir kılavuzdur, resmî CEFR listesi değildir.",
   "The word levels are still downloading; words are marked once they are here.": "Kelime seviyeleri hâlâ indiriliyor; kelimeler geldiğinde işaretlenecek.",
-  "Set your level for a truer picture": "Daha doğru bir sonuç için seviyenizi ayarlayın"
+  "Set your level for a truer picture": "Daha doğru bir sonuç için seviyenizi ayarlayın",
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Cevap için karta dokunun · sağa kaydır: hatırladım, sola: unuttum"
 }

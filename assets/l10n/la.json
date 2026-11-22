@@ -3713,5 +3713,6 @@
   "{0}. Harder words stand out, easier ones count as known": "{0}. Verba difficiliora eminent, faciliora pro cognitis habentur",
   "Estimated from how often words are used: a guide, not an official CEFR list.": "Ex frequentia verborum aestimatum: index tantum, non tabula CEFR publica.",
   "The word levels are still downloading; words are marked once they are here.": "Gradus verborum adhuc deferuntur; verba notabuntur cum advenerint.",
-  "Set your level for a truer picture": "Gradum tuum constitue ut verior species fiat"
+  "Set your level for a truer picture": "Gradum tuum constitue ut verior species fiat",
+  "Tap the card for the answer · swipe right: remembered, left: forgot": "Tange tabellam pro responso · dextrorsum trahe: memini, sinistrorsum: oblitus sum"
 }

@@ -30,6 +30,8 @@
 
 ⭐ **觉得好用？在 GitHub 右上角点个 Star 吧。** 不花一分钱，却是新用户发现 Lumtub 的主要途径。
 
+🆕 **学习包**：点字幕里的词，用任何视频学日语、英语、韩语等外语。[看看效果](#-用真实视频学外语) · 早鸟价 ¥99，到 1 月 3 日。
+
 [学外语](#-用真实视频学外语) · [截图](#截图) · [功能](#功能) · [下载](#下载) · [数据来源](#数据来源) · [隐私](#隐私哪些留在本机哪些会发出去) · [常见问题](#常见问题) · [支持](#支持-lumtub)
 
 </div>
@@ -47,26 +49,56 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 
 ## 🆕 用真实视频学外语
 
-**把喜欢的视频，变成自己的外语教材。** 边看边查 · 逐句精听 · 收藏复习 · 离线词典。
-
-**点字幕里的词就能查，中文标拼音、日语标假名，生词连同原句和原声存进生词本，一键进 Anki。离线词典，一次买断。**
+**把喜欢的视频，变成自己的外语教材。** 点字幕里的词就能看释义、听发音，连同原句存进生词本，之后用视频里的原声复习。
 
 <p align="center">
-<img src="docs/screenshots/learning-card.png" alt="单词 nifty 的卡片：发音、释义和它出现的原句" width="48%">
-<img src="docs/screenshots/learning-list.png" alt="字幕列表，比所选水平难的词被标了出来" width="48%">
+<img src="docs/screenshots/learning/lookup-zh.gif" alt="在京都旅行视频的字幕里点一个日语词，弹出读音、释义和发音，再加入生词本" width="80%">
 </p>
-<p align="center"><sub>测试版真实截图。</sub></p>
+<p align="center"><sub>Lumtub 真实录屏，不是效果图。▶ <a href="https://lumtub.app/learn/zh/#demo">看 40 秒带声音的演示</a></sub></p>
 
-**学习包**（测试版，Windows、macOS、Linux）：
+<div align="center">
 
-- **点词就查**：词典下载一次，之后查词不用联网。中文、英语、日语、韩语；西班牙语、法语、德语、意大利语、俄语为测试版。
+**早鸟价 ¥99**，到 2027 年 1 月 3 日，之后 ¥129 · 一次买断，不订阅 · 最多 5 台设备<br>
+**先试再买**：前 30 次查词所有功能全部开放，不用注册。
+
+<a href="https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00"><img src="https://img.shields.io/badge/%E8%B4%AD%E4%B9%B0%E5%AD%A6%E4%B9%A0%E5%8C%85-%E6%97%A9%E9%B8%9F%E4%BB%B7%20%C2%A599-E53935?style=for-the-badge" alt="购买学习包，早鸟价 ¥99" height="32"></a>
+<a href="https://lumtub.app/learn/zh/"><img src="https://img.shields.io/badge/%E5%AE%89%E8%A3%85%E8%AF%B4%E6%98%8E%E5%92%8C%E9%80%80%E6%AC%BE-555555?style=for-the-badge" alt="安装说明和退款" height="32"></a>
+
+</div>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/zh/1-lookup-ja.jpg" alt="看日本视频，点字幕里的词就能查：读音、释义和原句，一键加入生词本" width="100%"></td>
+<td width="50%"><img src="docs/screenshots/learning/zh/2-kana.jpg" alt="汉字上面自动标假名，视频字幕和字幕列表都有" width="100%"></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/zh/3-lookup-en.jpg" alt="英语视频也一样：难词标黄，点了就懂" width="100%"></td>
+<td width="50%"><img src="docs/screenshots/learning/zh/4-video-words.jpg" alt="看之前就知道这个视频你认识多少词，先学出现最多的生词" width="100%"></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/zh/5-study.jpg" alt="精学：每段四步，盲听、带字幕精读、难句跟读、无字幕复听" width="100%"></td>
+<td width="50%"><img src="docs/screenshots/learning/zh/6-vocab.jpg" alt="生词本记住原句和时间点，可以一键送进 Anki" width="100%"></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/learning/zh/7-review.jpg" alt="复习时听视频里的原声，按记忆曲线安排" width="100%"></td>
+<td width="50%" align="center"><sub>以上都是真实视频里的真实截图，<br>授权码已打码。</sub></td>
+</tr>
+</table>
+
+**学习包包含**（Windows、macOS、Linux）：
+
+- **点词就查**：词典下载一次，之后查词不用联网。中文、英语、日语、韩语；西班牙语、法语、德语、意大利语、俄语为测试版。日语动词变形后也能按原形查到。
 - **字幕上方注音**：中文拼音、日语假名、韩语罗马音。
-- **比你水平难的词自动标出来**，只在不认识的词上停下。
+- **比你水平难的词自动标出来**，只在不认识的词上停下。开始看之前，就能知道这个视频你认识多少，哪些生词出现最多。
+- **听得到**：单词能朗读，每个收藏的词都带着那句话的原声。
 - **生词本**：记下原句、原声和视频里的时间点，点一下再听一遍。
+- **复习**：按记忆曲线安排，每张卡片播放视频里的原声，不是机器朗读。
+- **精学一个视频，每段四步**：盲听、带字幕精读、难句跟读、无字幕复听。
 - **一键送进 Anki**，也可以导出 CSV。
 
-**免费试用**：前 30 次查词所有功能全部开放，不用注册。之后不买的话，每天能查 3 个词。[安装说明和退款](https://lumtub.app/learn/zh/)。<br>
-**早鸟价**：¥99，到 2027 年 1 月 3 日；之后 ¥129。一次付款，不订阅，在[爱发电](https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00)购买。一份授权最多 5 台设备，软件大约每 30 天联网确认一次授权。
+**有免费工具，为什么还要买？** asbplayer、Yomitan 加 Anki 是很好的免费组合，用得顺手就继续用。学习包把同样的流程放进一个软件里：不用装浏览器扩展，词典内置、离线可用，那句话的原声会跟卡片一起进 Anki。你买的是这份省事，钱也用来支持 Lumtub 继续开发。
+
+**价格**：早鸟价 ¥99，到 2027 年 1 月 3 日；之后 ¥129。在[爱发电](https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00)一次付款（支付宝或微信）。一份授权最多 5 台设备，软件大约每 30 天联网确认一次授权。30 次免费查词用完后，不买也每天能查 3 个词。[安装说明和退款](https://lumtub.app/learn/zh/)。
 
 **所有人免费**，在字幕菜单 › **学外语** 里：
 

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Impara le lingue · Lumtub</title>
+<meta name="description" content="Fai clic su una parola nei sottotitoli, salvala con l'audio originale e inviala ad Anki. Dizionari offline, un solo pagamento.">
+<link rel="icon" href="/favicon.png">
+<style>
+@font-face { font-family: "Geist"; src: url("/fonts/geist.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+:root { --bg: #fafafa; --surface: #ffffff; --text: #09090b; --muted: #52525b; --line: #e4e4e7; --accent: #e53935; --on-accent: #ffffff; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg: #181818; --surface: #212121; --text: #fafafa; --muted: #a1a1aa; --line: #313131; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: "Geist", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 16px; line-height: 1.6; }
+main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 40px; }
+header.top a { color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+header.top .lang { color: var(--muted); font-weight: 500; }
+header.top .lang a { display: inline; color: var(--muted); font-weight: 500; text-decoration: none; }
+header.top .lang a:hover { color: var(--text); }
+header.top .lang span { color: var(--text); font-weight: 600; }
+header.top { flex-wrap: wrap; }
+header.top .lang { font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 6px; justify-content: flex-end; }
+
+h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.2; margin: 0 0 16px; text-wrap: balance; }
+h2 { font-size: 22px; line-height: 1.3; margin: 48px 0 12px; }
+h3 { font-size: 17px; margin: 24px 0 6px; }
+p, li { color: var(--muted); text-wrap: pretty; }
+p.lead { font-size: 18px; color: var(--text); }
+strong { color: var(--text); }
+ul, ol { padding-left: 1.3em; }
+li { margin: 4px 0; }
+.demo { margin: 32px 0 8px; }
+.demo video { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; background: #000; }
+.shots { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 24px 0 8px; align-items: start; }
+.shots img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; }
+.quick { margin: 20px 0 0; }
+.caption { font-size: 13px; text-align: center; margin: 0; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin: 16px 0; }
+.buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+a.btn { display: inline-flex; align-items: center; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font-weight: 600; text-decoration: none; }
+a.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+a.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; overflow-wrap: anywhere; }
+a { color: inherit; }
+footer { margin-top: 56px; font-size: 13px; color: var(--muted); }
+@media (max-width: 520px) { .shots { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+<header class="top">
+<a href="/?lang=it"><img src="/icon.png" alt="" width="28" height="28">Lumtub</a>
+<nav class="lang"><a href="/learn/" hreflang="en">English</a> · <a href="/learn/es/" hreflang="es">Español</a> · <a href="/learn/fr/" hreflang="fr">Français</a> · <a href="/learn/de/" hreflang="de">Deutsch</a> · <span aria-current="page">Italiano</span> · <a href="/learn/zh/" hreflang="zh-Hans">中文</a></nav>
+</header>
+<h1>Impara le lingue con i video che ami già</h1>
+<p class="lead"><strong>Cerca mentre guardi · ascolta battuta per battuta · salva e ripassa · dizionari offline.</strong> Fai clic su qualsiasi parola nei sottotitoli per cercarla. Il giapponese ha i kana e il cinese il pinyin sopra la riga. Salva la parola con la sua frase e l'audio originale, e inviala ad Anki con un clic. Dizionari offline, un solo pagamento.</p>
+
+<div class="buttons quick">
+<a class="btn primary" href="https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00" rel="noopener">Acquista su 爱发电 · ¥99</a>
+<a class="btn" href="#install">Prima provalo gratis</a>
+</div>
+<p class="caption" style="text-align:left">Prezzo di lancio fino al 3 gennaio 2027, poi ¥129. Le prime 30 ricerche sono gratuite.</p>
+
+<figure class="demo" id="demo">
+<video controls playsinline preload="metadata" poster="/screenshots/learning/demo-en.jpg" width="1440" height="900">
+<source src="/screenshots/learning/demo-en.mp4" type="video/mp4">
+</video>
+</figure>
+<p class="caption">Una vera registrazione di Lumtub con l'audio, 45 secondi. Non è un mock-up.</p>
+<div class="shots">
+<img src="/screenshots/learning/en/1-lookup-ja.jpg" alt="Fai clic su qualsiasi parola nei sottotitoli: lettura, significato e la battuta originale, salvati con un clic" width="1280" height="960" loading="lazy">
+<img src="/screenshots/learning/en/2-kana.jpg" alt="Kana sopra ogni kanji, nel video e nella trascrizione" width="1280" height="960" loading="lazy">
+<img src="/screenshots/learning/en/3-lookup-fr.jpg" alt="Cercare una parola francese in un video in francese" width="1280" height="960" loading="lazy">
+<img src="/screenshots/learning/en/4-study.jpg" alt="Modalità studio: quattro passaggi per ogni parte del video" width="1280" height="960" loading="lazy">
+<img src="/screenshots/learning/en/5-vocab.jpg" alt="Quaderno dei vocaboli: ogni parola conserva la sua frase, il video e il momento" width="1280" height="960" loading="lazy">
+<img src="/screenshots/learning/en/6-review.jpg" alt="Scheda di ripasso che riproduce la vera battuta del video" width="1280" height="960" loading="lazy">
+</div>
+<p class="caption">Schermate reali con veri video di YouTube, interfaccia in inglese. Il numero di licenza è sfocato.</p>
+
+<h2>Cosa ottieni</h2>
+<h3>Pacchetto di studio</h3>
+<ul>
+<li>Fai clic su una parola per vederne il significato. I verbi giapponesi coniugati vengono cercati nella forma del dizionario.</li>
+<li>Kana, pinyin e romanizzazione coreana sopra i sottotitoli.</li>
+<li>Le parole sopra il tuo livello sono evidenziate.</li>
+<li>Prima di iniziare un video, vedi quanta parte ne capisci già e quali parole compaiono di più.</li>
+<li>Le parole vengono lette ad alta voce e ogni parola salvata conserva l'audio originale della sua battuta.</li>
+<li>Un quaderno dei vocaboli che conserva per ogni parola la frase, il suono e il momento del video.</li>
+<li>Ripasso a intervalli, con la battuta del video.</li>
+<li>Studia un video in quattro passaggi: ascolta senza sottotitoli, leggi insieme, ripeti le battute difficili, riascolta.</li>
+<li>Esporta in Anki con un clic, o in CSV.</li>
+</ul>
+<p>Dizionari: giapponese, cinese, inglese e coreano. Spagnolo, francese, tedesco, italiano e russo in beta.</p>
+<h3>Gratis per tutti</h3>
+<ul>
+<li>Pausa dopo ogni battuta, traduzione sfocata finché non ci passi sopra, ripetizione della battuta, registratore per ripetere ad alta voce.</li>
+<li>Esporta l'elenco dei sottotitoli in CSV.</li>
+<li>Panoramica di un video con l'IA, con la tua chiave API.</li>
+</ul>
+
+<div class="box">
+<p><strong>Prima provalo.</strong> Le tue prime 30 ricerche di parole hanno tutto attivo. Senza account. Dopo, senza il pacchetto, puoi cercare 3 parole al giorno.</p>
+<p><strong>Prezzo di lancio: ¥99 fino al 3 gennaio 2027, poi ¥129.</strong> Una licenza a vita, pagata una volta, senza rinnovo automatico e senza account nell'app. Una licenza per un massimo di 5 tuoi dispositivi; puoi rimuovere da solo quelli vecchi. Il pagamento avviene su 爱发电 (Alipay o WeChat Pay); il pagamento con carta arriverà più avanti.</p>
+<div class="buttons">
+<a class="btn primary" href="https://afdian.com/item/1257acd0e5cc11f1a9d05254001e7c00" rel="noopener">Acquista su 爱发电 · ¥99</a>
+</div>
+</div>
+
+<h2>Rispetto agli strumenti gratuiti</h2>
+<p>asbplayer, Yomitan e Anki insieme sono un'ottima soluzione gratuita, e se fa per te, tienila. Lumtub fa lo stesso percorso in un'unica app: nessuna estensione del browser da configurare, dizionari inclusi e offline, e l'audio della battuta va in Anki con la scheda. È questa comodità che offre il pacchetto di studio.</p>
+
+<h2 id="install">Installazione</h2>
+<div class="buttons">
+<a class="btn primary" href="/get/?windows-x64-v3-setup.exe">Windows</a>
+<a class="btn" href="/get/?macos-arm64.dmg">Mac (Apple silicon)</a>
+<a class="btn" href="/get/?macos-x64.dmg">Mac (Intel)</a>
+<a class="btn" href="/get/?linux-x64-v3.AppImage">Linux AppImage</a>
+</div>
+<p>PC vecchio o Windows su ARM? Vedi <a href="https://github.com/0x696c757a696f/lumtub/releases/latest">tutti i download</a>.</p>
+
+<h3>Windows</h3>
+<ol>
+<li>Avvia il programma di installazione. Non servono diritti di amministratore.</li>
+<li>Se Windows mostra <strong>PC protetto da Windows</strong>: fai clic su <strong>Ulteriori informazioni</strong>, poi su <strong>Esegui comunque</strong>. Compare perché Lumtub non è ancora firmato con un certificato a pagamento.</li>
+</ol>
+<h3>Mac</h3>
+<ol>
+<li>Apri il DMG e trascina Lumtub in Applicazioni.</li>
+<li>La prima volta macOS lo blocca perché non è ancora autenticato da Apple. Fai clic su <strong>Fine</strong>, poi vai in <strong>Impostazioni di Sistema › Privacy e sicurezza</strong> e fai clic su <strong>Apri comunque</strong> accanto a Lumtub.</li>
+<li>Oppure esegui una volta nel Terminale: <code>xattr -dr com.apple.quarantine /Applications/Lumtub.app</code></li>
+</ol>
+<h3>Linux</h3>
+<ol>
+<li>Rendi il file eseguibile: <code>chmod +x Lumtub_*.AppImage</code>, poi avvialo.</li>
+<li>Se dice che manca FUSE, installa il pacchetto <code>fuse3</code> della tua distribuzione.</li>
+</ol>
+<h3>Poi</h3>
+<p>Apri un video con sottotitoli nella lingua che stai imparando e fai clic su una parola. La prima volta Lumtub chiede di scaricare il dizionario di quella lingua.</p>
+
+<h2>Rimborsi</h2>
+<ul>
+<li>Prodotto digitale: nessun rimborso per ripensamento dopo l'attivazione. Se un problema del software ne impedisce il funzionamento e non si può risolvere, contattami per un rimborso.</li>
+<li>Per chiederlo, invia un messaggio su 爱发电.</li>
+</ul>
+
+<h2>Da sapere</h2>
+<ul>
+<li>Windows, macOS e Linux. Android non è ancora testato.</li>
+<li>La ricerca delle parole funziona offline. L'app verifica la licenza online circa ogni 30 giorni.</li>
+<li>Lumtub è open source (AGPL). I dizionari sono dati aperti; le loro fonti sono indicate nell'app.</li>
+</ul>
+<footer><a href="/?lang=it">Lumtub</a> · <a href="https://github.com/0x696c757a696f/lumtub">GitHub</a></footer>
+</main>
+</body>
+</html>

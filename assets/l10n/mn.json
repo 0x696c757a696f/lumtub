@@ -3722,5 +3722,6 @@
   "Leave focus mode (F)": "Төвлөрөх горимоос гарах (F)",
   "Focus mode: the video scene, no numbers (F)": "Төвлөрөх горим: бичлэгийн дүрс, тоогүй (F)",
   "Just right": "Яг тохирсон",
-  "Too hard": "Хэт хэцүү"
+  "Too hard": "Хэт хэцүү",
+  "Heard in {0} videos": "{0} бичлэгт сонсогдсон"
 }

@@ -3723,5 +3723,6 @@
   "Leave focus mode (F)": "Изход от фокус режима (F)",
   "Focus mode: the video scene, no numbers (F)": "Фокус режим: сцената от видеото, без числа (F)",
   "Just right": "Точно",
-  "Too hard": "Твърде трудно"
+  "Too hard": "Твърде трудно",
+  "Heard in {0} videos": "Чута в {0} видеоклипа"
 }

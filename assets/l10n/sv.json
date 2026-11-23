@@ -3723,5 +3723,6 @@
   "Leave focus mode (F)": "Lämna fokusläge (F)",
   "Focus mode: the video scene, no numbers (F)": "Fokusläge: videoscenen, inga siffror (F)",
   "Just right": "Lagom",
-  "Too hard": "För svårt"
+  "Too hard": "För svårt",
+  "Heard in {0} videos": "Hört i {0} videor"
 }

@@ -55,4 +55,18 @@ void main() {
     expect(looksLikeName(word("I'm", 'en')), isFalse);
     expect(looksLikeName(word('NASA', 'en')), isFalse);
   });
+
+  test('words being learnt remember the videos they were heard in', () {
+    final store = VideoDifficulty();
+    store.saw('dQw4w9WgXcQ', ['pt:casa', 'pt:ônibus']);
+    store.saw('dQw4w9WgXcQ', ['pt:casa']);
+    store.saw('aaaaaaaaaaa', ['pt:casa']);
+    expect(store.videosWith('pt:casa'), 2);
+    expect(store.videosWith('pt:ônibus'), 1);
+    expect(store.videosWith('pt:gato'), 0);
+    for (var i = 0; i < VideoDifficulty.videosPerWord + 5; i++) {
+      store.saw('v${i.toString().padLeft(10, '0')}', ['pt:casa']);
+    }
+    expect(store.videosWith('pt:casa'), VideoDifficulty.videosPerWord);
+  });
 }

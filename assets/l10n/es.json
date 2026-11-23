@@ -3728,5 +3728,6 @@
   "Leave focus mode (F)": "Salir del modo concentración (F)",
   "Focus mode: the video scene, no numbers (F)": "Modo concentración: la escena del vídeo, sin números (F)",
   "Just right": "Adecuado",
-  "Too hard": "Demasiado difícil"
+  "Too hard": "Demasiado difícil",
+  "Heard in {0} videos": "Oída en {0} vídeos"
 }

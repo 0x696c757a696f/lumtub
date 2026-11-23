@@ -3723,5 +3723,6 @@
   "Leave focus mode (F)": "ออกจากโหมดโฟกัส (F)",
   "Focus mode: the video scene, no numbers (F)": "โหมดโฟกัส: ฉากจากวิดีโอ ไม่แสดงตัวเลข (F)",
   "Just right": "พอดี",
-  "Too hard": "ยากเกินไป"
+  "Too hard": "ยากเกินไป",
+  "Heard in {0} videos": "ได้ยินใน {0} วิดีโอ"
 }

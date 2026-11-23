@@ -3728,5 +3728,6 @@
   "Leave focus mode (F)": "집중 모드 나가기 (F)",
   "Focus mode: the video scene, no numbers (F)": "집중 모드: 동영상 장면만 표시, 숫자 숨김 (F)",
   "Just right": "딱 맞음",
-  "Too hard": "너무 어려움"
+  "Too hard": "너무 어려움",
+  "Heard in {0} videos": "동영상 {0}개에서 들음"
 }

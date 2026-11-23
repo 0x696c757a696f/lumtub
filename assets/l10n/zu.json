@@ -3722,5 +3722,6 @@
   "Leave focus mode (F)": "Phuma kumodi yokugxila (F)",
   "Focus mode: the video scene, no numbers (F)": "Imodi yokugxila: indawo yevidiyo, ayikho inombolo (F)",
   "Just right": "Kulungile",
-  "Too hard": "Kunzima kakhulu"
+  "Too hard": "Kunzima kakhulu",
+  "Heard in {0} videos": "Kuzwakale kumavidiyo angu-{0}"
 }

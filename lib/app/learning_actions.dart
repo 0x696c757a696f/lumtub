@@ -103,6 +103,15 @@ extension LearningActions on AppController {
       if (_learningLinesKey != key || playing?.id != id) return;
       final words = await videoWordsOf(learning, knownWordsOf(book), id, [for (final l in _learningLines) l.text]);
       if (words != null && words.words >= 20) videoDifficulty.remember(id, words.known);
+      // The words being learnt that this video says, for "heard in N videos".
+      final known = knownWordsOf(book);
+      final heard = <String>{};
+      for (final line in _learningLines) {
+        for (final t in learning.wordsOf(line.text) ?? const <WordToken>[]) {
+          if (t.isWord && known.learning(t)) heard.add(KnownWords.tokenKey(t));
+        }
+      }
+      videoDifficulty.saw(id, heard);
     }).catchError((Object e) => logWarn('Could not work out the video difficulty: $e')));
   }
 

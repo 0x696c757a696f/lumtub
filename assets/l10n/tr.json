@@ -3728,5 +3728,6 @@
   "Leave focus mode (F)": "Odak modundan çık (F)",
   "Focus mode: the video scene, no numbers (F)": "Odak modu: videonun sahnesi, sayılar yok (F)",
   "Just right": "Tam kıvamında",
-  "Too hard": "Çok zor"
+  "Too hard": "Çok zor",
+  "Heard in {0} videos": "{0} videoda duyuldu"
 }

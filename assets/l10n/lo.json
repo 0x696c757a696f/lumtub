@@ -3722,5 +3722,6 @@
   "Leave focus mode (F)": "ອອກຈາກໂໝດໂຟກັດ (F)",
   "Focus mode: the video scene, no numbers (F)": "ໂໝດໂຟກັດ: ສາກຈາກວິດີໂອ, ບໍ່ມີຕົວເລກ (F)",
   "Just right": "ພໍດີ",
-  "Too hard": "ຍາກເກີນໄປ"
+  "Too hard": "ຍາກເກີນໄປ",
+  "Heard in {0} videos": "ໄດ້ຍິນໃນ {0} ວິດີໂອ"
 }

@@ -3728,5 +3728,6 @@
   "Leave focus mode (F)": "Выйти из режима концентрации (F)",
   "Focus mode: the video scene, no numbers (F)": "Режим концентрации: сцена из видео, без цифр (F)",
   "Just right": "В самый раз",
-  "Too hard": "Слишком сложно"
+  "Too hard": "Слишком сложно",
+  "Heard in {0} videos": "Встречалось в {0} видео"
 }

@@ -3722,5 +3722,6 @@
   "Leave focus mode (F)": "Фокус режимінен шығу (F)",
   "Focus mode: the video scene, no numbers (F)": "Фокус режимі: бейне көрінісі, сандарсыз (F)",
   "Just right": "Дәл келеді",
-  "Too hard": "Тым қиын"
+  "Too hard": "Тым қиын",
+  "Heard in {0} videos": "{0} бейнеде естілді"
 }

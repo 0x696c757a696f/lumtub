@@ -3723,5 +3723,6 @@
   "Leave focus mode (F)": "ფოკუსის რეჟიმიდან გასვლა (F)",
   "Focus mode: the video scene, no numbers (F)": "ფოკუსის რეჟიმი: ვიდეოს სცენა, რიცხვების გარეშე (F)",
   "Just right": "ზუსტად შესაფერისი",
-  "Too hard": "ძალიან რთული"
+  "Too hard": "ძალიან რთული",
+  "Heard in {0} videos": "მოსმენილია {0} ვიდეოში"
 }

@@ -185,6 +185,7 @@ extension LearningActions on AppController {
   /// [note] says, once a run, that Edge's voices failed and the computer's
   /// voice read it instead.
   Future<({String? problem, String? note})> sayAloud(String text, String language) async {
+    language = WordVoice.variantOf(language, [player?.state.track.subtitle.language, secondarySubtitle?.language]);
     final voice = learning.voice;
     if (voice == null) return (problem: tr('Not ready yet'), note: null);
     final service = learning.voiceService;

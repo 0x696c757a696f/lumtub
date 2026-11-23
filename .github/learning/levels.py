@@ -22,7 +22,7 @@ import unicodedata
 
 # The most used words of each band, by rank.
 BANDS = [(600, 1), (1500, 2), (3000, 3), (5500, 4), (9500, 5), (16000, 6)]
-EUROPEAN = ['es', 'fr', 'de', 'it', 'ru']
+EUROPEAN = ['es', 'fr', 'de', 'it', 'ru', 'pt']
 
 
 def keep(levels, word, level):

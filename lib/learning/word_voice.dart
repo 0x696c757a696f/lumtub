@@ -68,6 +68,11 @@ class WordVoice {
     'de': 'de-DE-KatjaNeural',
     'it': 'it-IT-ElsaNeural',
     'ru': 'ru-RU-SvetlanaNeural',
+    'pt': 'pt-BR-FranciscaNeural',
+    'pt-BR': 'pt-BR-FranciscaNeural',
+    'pt-PT': 'pt-PT-RaquelNeural',
+    'es-ES': 'es-ES-ElviraNeural',
+    'es-MX': 'es-MX-DaliaNeural',
   };
 
   /// Google's language codes.
@@ -81,7 +86,29 @@ class WordVoice {
     'de': 'de-DE',
     'it': 'it-IT',
     'ru': 'ru-RU',
+    'pt': 'pt-BR',
+    'pt-BR': 'pt-BR',
+    'pt-PT': 'pt-PT',
+    'es-ES': 'es-ES',
+    'es-MX': 'es-US',
   };
+
+  /// [language] as the subtitles' region says it: Portuguese from
+  /// Portugal or Brazil, Spanish from Spain or Latin America. [codes] are
+  /// the shown subtitles' language codes (`pt-PT`, `es-419`); with no
+  /// region in them, Brazil and Latin America, whose videos YouTube has
+  /// most of.
+  static String variantOf(String language, Iterable<String?> codes) {
+    if (language != 'pt' && language != 'es') return language;
+    for (final code in codes) {
+      final tag = (code ?? '').toLowerCase().replaceAll('_', '-');
+      if (!tag.startsWith('$language-')) continue;
+      final region = tag.substring(language.length + 1);
+      if (language == 'pt') return region == 'pt' || region == 'ao' || region == 'mz' ? 'pt-PT' : 'pt-BR';
+      return region == 'es' ? 'es-ES' : 'es-MX';
+    }
+    return language == 'pt' ? 'pt-BR' : 'es-MX';
+  }
 
   static bool _provides(String symbol) => NativeCore.instance?.library.providesSymbol(symbol) ?? false;
 
@@ -103,8 +130,13 @@ class WordVoice {
     switch (service) {
       case VoiceService.system:
         if (!_provides('lumtub_speak')) throw const VoiceException(true);
-        final ask = jsonEncode({'text': text, 'language': language, 'out': file.path});
-        final answer = await Isolate.run(() => callCoreJson('lumtub_speak', ask));
+        var ask = jsonEncode({'text': text, 'language': language, 'out': file.path});
+        var answer = await Isolate.run(() => callCoreJson('lumtub_speak', ask));
+        // No voice for the region (pt-PT): any of the language's.
+        if (answer['error'] == 'no voice' && language.contains('-')) {
+          ask = jsonEncode({'text': text, 'language': language.split('-').first, 'out': file.path});
+          answer = await Isolate.run(() => callCoreJson('lumtub_speak', ask));
+        }
         final error = answer['error'];
         if (error is String) throw VoiceException(error == 'no voice', error);
       case VoiceService.edge:

@@ -1145,9 +1145,9 @@ Chinese: CC-CEDICT by MDBG (CC BY-SA 4.0, cc-cedict.org).
 
 Korean: 한국어기초사전 (Korean Basic Dictionary), National Institute of Korean Language (CC BY-SA 2.0 KR, krdict.korean.go.kr), via github.com/basickorean/basickorean-vocab; with the Wiktionaries and WikDict.
 
-Spanish, French, German, Italian, Russian: the English and Chinese Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org, and WikDict (CC BY-SA 4.0).
+Spanish, French, German, Italian, Russian, Portuguese: the English and Chinese Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org, and WikDict (CC BY-SA 4.0).
 
-Word levels: HSK lists from complete-hsk-vocabulary by Yanis Zafirópulos (MIT, github.com/drkameleon/complete-hsk-vocabulary); JLPT lists from OpenJLPT (CC BY-SA 4.0, github.com/evanclan/OpenJLPT), based on Jonathan Waller's JLPT lists; Korean levels from the Korean Basic Dictionary; Spanish, French, German, Italian and Russian levels estimated from wordfreq by Robyn Speer (data CC BY-SA 4.0): a guide, not an official CEFR list.
+Word levels: HSK lists from complete-hsk-vocabulary by Yanis Zafirópulos (MIT, github.com/drkameleon/complete-hsk-vocabulary); JLPT lists from OpenJLPT (CC BY-SA 4.0, github.com/evanclan/OpenJLPT), based on Jonathan Waller's JLPT lists; Korean levels from the Korean Basic Dictionary; Spanish, French, German, Italian, Russian and Portuguese levels estimated from wordfreq by Robyn Speer (data CC BY-SA 4.0): a guide, not an official CEFR list.
 
 Word splitting: Lindera (MIT) with IPADIC, mecab-ko-dic (Apache-2.0) and jieba (MIT).
 

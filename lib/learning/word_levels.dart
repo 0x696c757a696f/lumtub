@@ -34,7 +34,7 @@ enum LevelScale {
         'zh' => hsk,
         'ja' => jlpt,
         'ko' => korean,
-        'es' || 'fr' || 'de' || 'it' || 'ru' => cefr,
+        'es' || 'fr' || 'de' || 'it' || 'ru' || 'pt' => cefr,
         _ => null,
       };
 }

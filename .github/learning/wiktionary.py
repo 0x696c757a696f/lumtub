@@ -50,6 +50,24 @@ def opener(path):
     return gzip.open(path, 'rt', encoding='utf-8') if path.endswith('.gz') else open(path, encoding='utf-8')
 
 
+# Where a Spanish or Portuguese sense is said, from its tags: English for
+# the English meanings, Chinese for the Chinese ones when every sense of
+# the word is from there (ônibus, Brazil; autocarro, Portugal).
+REGIONS = {
+    'Brazil': '巴西', 'Portugal': '葡萄牙', 'Spain': '西班牙', 'Latin-America': '拉美', 'Mexico': '墨西哥',
+    'Argentina': '阿根廷', 'Rioplatense': '拉普拉塔', 'Uruguay': '乌拉圭', 'Chile': '智利', 'Colombia': '哥伦比亚',
+    'Peru': '秘鲁', 'Venezuela': '委内瑞拉', 'Cuba': '古巴', 'Caribbean': '加勒比', 'Central-America': '中美洲',
+    'Andes': '安第斯', 'Angola': '安哥拉', 'Mozambique': '莫桑比克',
+}
+REGIONAL = {'es', 'pt'}
+
+
+def regions_of(code, sense):
+    if code not in REGIONAL:
+        return []
+    return [tag for tag in sense.get('tags', []) if tag in REGIONS]
+
+
 HANJA = re.compile(r'^汉字或谚汉混合表记：\S*?[〈（(](.+?)[〉）)]$')
 
 
@@ -119,7 +137,7 @@ def main():
         words = {}
 
         def word_of(text):
-            return words.setdefault(text, {'reading': '', 'ipa': '', 'pos': [], 'en': [], 'lemmas': []})
+            return words.setdefault(text, {'reading': '', 'ipa': '', 'pos': [], 'en': [], 'lemmas': [], 'regions': []})
 
         with opener(path) as f:
             for line in f:
@@ -151,6 +169,10 @@ def main():
                         continue
                     gloss = gloss_of(sense)
                     if gloss:
+                        regions = regions_of(code, sense)
+                        record['regions'].append(set(regions))
+                        if regions:
+                            gloss = f"({', '.join(r.replace('-', ' ') for r in regions)}) {gloss}"
                         gloss = with_pos(pos, gloss)
                         if gloss not in record['en']:
                             record['en'].append(gloss)
@@ -170,6 +192,10 @@ def main():
             for text in sorted(words):
                 record = words[text]
                 zh = chinese[code].get(text, [])
+                shared = set.intersection(*record['regions']) if record['regions'] else set()
+                if zh and shared:
+                    where = '、'.join(REGIONS[r] for r in sorted(shared))
+                    zh = [f'〔{where}〕{line}' for line in zh]
                 if not (zh or record['en'] or record['lemmas']):
                     continue
                 out.write('\t'.join([

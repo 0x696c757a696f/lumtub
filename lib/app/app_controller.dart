@@ -22,6 +22,7 @@ import '../learning/known_words.dart' show knownWordsOf;
 import '../learning/video_difficulty.dart' show videoDifficulty;
 import '../learning/video_words.dart' show videoWordsOf;
 import '../learning/vocabulary.dart' show wavTail;
+import '../learning/word_voice.dart' show WordVoice;
 import '../app_updater.dart';
 import '../app_log.dart';
 import '../app_window.dart';

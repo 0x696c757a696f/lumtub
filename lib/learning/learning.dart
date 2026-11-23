@@ -68,7 +68,8 @@ enum DictionaryPack {
   french('fr', 'fr-wiktionary.sqlite.gz'),
   german('de', 'de-wiktionary.sqlite.gz'),
   italian('it', 'it-wiktionary.sqlite.gz'),
-  russian('ru', 'ru-wiktionary.sqlite.gz');
+  russian('ru', 'ru-wiktionary.sqlite.gz'),
+  portuguese('pt', 'pt-wiktionary.sqlite.gz');
 
   const DictionaryPack(this.language, this.file);
   final String language;
@@ -441,7 +442,7 @@ class Learning extends ChangeNotifier {
     }
     if (WiktionaryDictionary.looksCyrillic(text)) return _onDisk('ru') ? _wiktionaryWords('ru', text) : null;
     if (!EnglishDictionary.looksLatin(text)) return null;
-    final latin = [for (final code in const ['en', 'es', 'fr', 'de', 'it']) if (_packs[DictionaryPack.values.firstWhere((p) => p.language == code)]!.state case PackState.downloaded || PackState.loading || PackState.ready) code];
+    final latin = [for (final code in const ['en', 'es', 'fr', 'de', 'it', 'pt']) if (_packs[DictionaryPack.values.firstWhere((p) => p.language == code)]!.state case PackState.downloaded || PackState.loading || PackState.ready) code];
     final language = _latin.guess(text, latin);
     // Read on first use; until then the line stays plain.
     if (language == null || !_onDisk(language)) return null;
@@ -523,7 +524,7 @@ class Learning extends ChangeNotifier {
     } else if (WiktionaryDictionary.looksCyrillic(text)) {
       language = 'ru';
     } else if (EnglishDictionary.looksLatin(text)) {
-      language = _latin.guess(text, const ['en', 'es', 'fr', 'de', 'it']);
+      language = _latin.guess(text, const ['en', 'es', 'fr', 'de', 'it', 'pt']);
     } else {
       language = null;
     }

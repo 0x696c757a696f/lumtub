@@ -11,6 +11,7 @@ import '../../learning/english_dictionary.dart';
 import '../../learning/japanese_dictionary.dart';
 import '../../learning/known_words.dart';
 import '../../learning/learning.dart';
+import '../../learning/review.dart' show reviewStoreOf;
 import '../../learning/vocabulary.dart';
 import '../../learning/wiktionary_dictionary.dart';
 import '../app_icons.dart';
@@ -35,6 +36,17 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
     return;
   }
   if (!context.mounted) return;
+  // A saved word opened again while watching was not remembered after all:
+  // it comes back in today's review.
+  if (learning.book case final book? when learning.unlocked) {
+    final reviews = reviewStoreOf(book);
+    for (final word in {token.text, token.key, token.key.toLowerCase()}) {
+      if (book.contains(language, word)) {
+        unawaited(reviews.load().then((_) => reviews.lookedUpAgain('$language:$word', DateTime.now())));
+        break;
+      }
+    }
+  }
   final player = controller.player;
   final wasPlaying = (player?.state.playing ?? false) | controller.takeHoverPause();
   if (wasPlaying) unawaited(player!.pause());

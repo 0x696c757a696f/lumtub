@@ -38,6 +38,8 @@ class ReviewState {
   final int reps;
   final int lapses;
 
+  ReviewState copyWith({DateTime? due}) => ReviewState(stability: stability, difficulty: difficulty, due: due ?? this.due, last: last, reps: reps, lapses: lapses);
+
   /// Remembered for three weeks or more at a time: no longer a new word.
   bool get known => stability >= 21;
 
@@ -298,6 +300,20 @@ class ReviewStore extends ChangeNotifier {
     _days.update(dayOf(now), (n) => n + 1, ifAbsent: () => 1);
     notifyListeners();
     await _save();
+  }
+
+  /// [key] was looked up again while watching: a word the schedule
+  /// thought remembered was not, so it comes back in today's review. The
+  /// grade stays the learner's to give there; nothing else changes.
+  Future<bool> lookedUpAgain(String key, DateTime now) async {
+    final state = _states[key];
+    if (state == null || state.reps == 0 || !state.due.isAfter(now)) return false;
+    // Opened again within the hour it was graded: still the same study.
+    if (now.difference(state.last) < const Duration(hours: 1)) return false;
+    _states[key] = state.copyWith(due: now);
+    notifyListeners();
+    await _save();
+    return true;
   }
 
   /// Drops the schedule of words no longer in the book.

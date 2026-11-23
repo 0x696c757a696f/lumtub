@@ -34,11 +34,13 @@ class VideoWords {
   final List<int> oneNew;
 
   /// About how hard the video is for this learner, from what is known.
-  VideoLevel get level => known >= 0.95 ? VideoLevel.easy : (known >= 0.85 ? VideoLevel.right : (known >= 0.7 ? VideoLevel.hard : VideoLevel.tooHard));
+  VideoLevel get level => known >= 0.98 ? VideoLevel.easy : (known >= 0.90 ? VideoLevel.right : (known >= 0.80 ? VideoLevel.hard : VideoLevel.tooHard));
 }
 
-/// 95 % of words known reads with ease; around 90 % is where a learner
-/// learns most (comprehensible input); below 70 % is a struggle.
+/// From studies of viewing (Durbahn et al. 2024, Webb & Rodgers 2009):
+/// 98 % of words known watches with ease, 90 to 98 % is where a learner
+/// with subtitles learns most, 80 % still gets the gist with help, and
+/// below that every line stops for a word.
 enum VideoLevel { easy, right, hard, tooHard }
 
 final _cache = <String, Future<VideoWords?>>{};

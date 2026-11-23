@@ -477,6 +477,7 @@ String _packLanguage(DictionaryPack pack) => switch (pack) {
       DictionaryPack.german => tr('German'),
       DictionaryPack.italian => tr('Italian'),
       DictionaryPack.russian => tr('Russian'),
+      DictionaryPack.portuguese => tr('Portuguese'),
     };
 
 /// The language's own sample, so each tile reads at a glance.
@@ -490,6 +491,7 @@ String _packSample(DictionaryPack pack) => switch (pack) {
       DictionaryPack.german => 'De',
       DictionaryPack.italian => 'It',
       DictionaryPack.russian => 'Ру',
+      DictionaryPack.portuguese => 'Pt',
     };
 
 class _PackCell extends StatelessWidget {

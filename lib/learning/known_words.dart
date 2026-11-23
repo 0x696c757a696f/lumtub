@@ -38,6 +38,16 @@ class KnownWords extends ChangeNotifier {
 
   int get marked => _keys.length;
 
+  /// The characters of the [language] words known (`zh`, `ja`), for
+  /// telling a new word made of known characters.
+  Set<int> characters(String language) {
+    final prefix = '$language:';
+    return {
+      for (final key in [..._keys, ...review.knownKeys])
+        if (key.startsWith(prefix)) ...key.substring(prefix.length).runes,
+    };
+  }
+
   Future<void> load() async {
     if (_loaded) return;
     _loaded = true;

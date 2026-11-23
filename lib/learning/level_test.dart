@@ -4,7 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 /// The languages the level test is made for, in the order offered.
-const levelTestLanguages = ['en', 'zh', 'ja', 'ko', 'es', 'fr', 'de', 'it', 'ru'];
+const levelTestLanguages = ['en', 'zh', 'ja', 'ko', 'es', 'fr', 'de', 'it', 'pt', 'ru'];
 
 /// The file of [language]'s items on the learning release.
 String levelTestFile(String language) => '$language-leveltest.tsv.gz';

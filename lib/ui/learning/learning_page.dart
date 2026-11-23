@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../app/app_controller.dart';
+import '../../appearance_settings.dart' show languageStyle;
 import '../../app_log.dart';
 import '../../friendly_error.dart';
 import '../../native_core.dart';
@@ -708,7 +709,7 @@ class _Pitch extends StatelessWidget {
           _FreeExtras(),
           const SizedBox(height: 8),
           Text(
-            tr('Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, up to 5 devices, no account, no subscription. Buying it keeps Lumtub alive.'),
+            tr('Chinese, English, Japanese, Korean, Spanish, French, German, Italian, Russian and Portuguese. One payment, up to 5 devices, no account, no subscription. Buying it keeps Lumtub alive.'),
             style: TextStyle(color: theme.colorScheme.outline, fontSize: 12, height: 1.5),
           ),
           const SizedBox(height: Space.s),
@@ -965,12 +966,12 @@ class _VocabularyPageState extends State<_VocabularyPage> {
                     return ListTile(
                       onTap: () => unawaited(showSavedWord(context, widget.controller, w)),
                       title: Text.rich(TextSpan(children: [
-                        TextSpan(text: w.word, style: const TextStyle(fontSize: 18)),
+                        TextSpan(text: w.word, style: const TextStyle(fontSize: 18).merge(languageStyle(w.language))),
                         if (w.reading.isNotEmpty) TextSpan(text: '  ${w.reading}', style: TextStyle(color: colors.primary)),
                       ])),
                       subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         if (w.meaning.isNotEmpty) Text(w.meaning, maxLines: 2, overflow: TextOverflow.ellipsis),
-                        if (w.sentence.isNotEmpty) Text(w.sentence, style: TextStyle(color: colors.outline)),
+                        if (w.sentence.isNotEmpty) Text(w.sentence, style: TextStyle(color: colors.outline).merge(languageStyle(w.language))),
                         if (w.videoTitle.isNotEmpty) Text('${w.videoTitle} · ${clockOf(w.at)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: colors.outline)),
                       ]),
                       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -1154,9 +1155,9 @@ Chinese: CC-CEDICT by MDBG (CC BY-SA 4.0, cc-cedict.org).
 
 Korean: 한국어기초사전 (Korean Basic Dictionary), National Institute of Korean Language (CC BY-SA 2.0 KR, krdict.korean.go.kr), via github.com/basickorean/basickorean-vocab; with the Wiktionaries and WikDict.
 
-Spanish, French, German, Italian, Russian: the English and Chinese Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org, and WikDict (CC BY-SA 4.0).
+Spanish, French, German, Italian, Russian, Portuguese: the English and Chinese Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org, and WikDict (CC BY-SA 4.0).
 
-Word levels: HSK lists from complete-hsk-vocabulary by Yanis Zafirópulos (MIT, github.com/drkameleon/complete-hsk-vocabulary); JLPT lists from OpenJLPT (CC BY-SA 4.0, github.com/evanclan/OpenJLPT), based on Jonathan Waller's JLPT lists; Korean levels from the Korean Basic Dictionary; Spanish, French, German, Italian and Russian levels estimated from wordfreq by Robyn Speer (data CC BY-SA 4.0): a guide, not an official CEFR list.
+Word levels: HSK lists from complete-hsk-vocabulary by Yanis Zafirópulos (MIT, github.com/drkameleon/complete-hsk-vocabulary); JLPT lists from OpenJLPT (CC BY-SA 4.0, github.com/evanclan/OpenJLPT), based on Jonathan Waller's JLPT lists; Korean levels from the Korean Basic Dictionary; Spanish, French, German, Italian, Russian and Portuguese levels estimated from wordfreq by Robyn Speer (data CC BY-SA 4.0): a guide, not an official CEFR list.
 
 Level test: real words from these word levels; the made-up words are Lumtub's own, generated from the same open word lists and checked against CC-CEDICT, JMdict, the Wiktionary dictionaries and wordfreq, with stroke counts from Unihan (Unicode License v3). No item is taken from a published test.
 

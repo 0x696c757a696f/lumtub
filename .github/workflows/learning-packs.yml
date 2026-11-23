@@ -193,7 +193,7 @@ jobs:
           # Downloaded for the English dictionary already.
           [ -s "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" ] || curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/zhwiktionary.jsonl.gz" https://kaikki.org/zhwiktionary/raw-wiktextract-data.jsonl.gz
           args=()
-          for pair in ko=Korean es=Spanish fr=French de=German it=Italian ru=Russian; do
+          for pair in ko=Korean es=Spanish fr=French de=German it=Italian ru=Russian pt=Portuguese; do
             code=${pair%%=*}; name=${pair#*=}
             curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/$code.jsonl" "https://kaikki.org/dictionary/$name/kaikki.org-dictionary-$name.jsonl"
             wikdict=""
@@ -217,7 +217,7 @@ jobs:
           # Not -I: it needs the opencc the step installed for this user.
           python3 .github/learning/ja_zh.py "${ja_args[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
           gzip -n -9 < "$RUNNER_TEMP/in/ja.tsv" > "$RUNNER_TEMP/out/ja-jmdict.tsv.gz"
-          for code in ko es fr de it ru; do
+          for code in ko es fr de it ru pt; do
             python3 -I .github/learning/sqlite_pack.py wiktionary "$code" "$RUNNER_TEMP/in/$code-wiktionary.tsv" "$RUNNER_TEMP/in/$code.sqlite"
             gzip -n -9 < "$RUNNER_TEMP/in/$code.sqlite" > "$RUNNER_TEMP/out/$code-wiktionary.sqlite.gz"
             echo "$code: $(stat -c %s "$RUNNER_TEMP/in/$code.sqlite") bytes, $(stat -c %s "$RUNNER_TEMP/out/$code-wiktionary.sqlite.gz") compressed" | tee -a "$GITHUB_STEP_SUMMARY"
@@ -310,9 +310,9 @@ jobs:
             CC-CEDICT is published by MDBG under CC BY-SA 4.0 (https://cc-cedict.org/wiki/);
             the English word list, word forms and exam tags of ECDICT by skywind3000 under the MIT license (https://github.com/skywind3000/ECDICT), with Chinese meanings from the Mandarin translations of the English Wiktionary and from the Chinese Wiktionary (CC BY-SA 4.0, as extracted by kaikki.org), from the Chinese Open Wordnet by Francis Bond, Shan Wang and Luís Morgado da Costa (https://bond-lab.github.io/cow/LICENSE) through Princeton WordNet 3.0, and, marked as reference translations, from WikDict (CC BY-SA), IPA from the English Wiktionary, frequency ranks from wordfreq by Robyn Speer (data CC BY-SA 4.0), English meanings from the Simple English and English Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org and from WordNet (WordNet license, https://wordnet.princeton.edu/license-and-commercial-use), and CEFR levels from The CEFR-J Wordlist Version 1.5, compiled by Yukio Tono, Tokyo University of Foreign Studies (http://www.cefr-j.org/), and the Octanove Vocabulary Profile C1/C2 1.0 by Octanove Labs (CC BY-SA 4.0), via https://github.com/openlanguageprofiles/olp-en-cefrj;
             JMdict by the Electronic Dictionary Research and Development Group under CC BY-SA 4.0 (https://www.edrdg.org/edrdg/licence.html), via jmdict-simplified, with Chinese meanings from the Chinese Wiktionary and WikDict;
-            the Korean, Spanish, French, German, Italian and Russian dictionaries are made from the English and Chinese Wiktionaries (CC BY-SA 4.0, https://www.wiktionary.org/) as extracted by kaikki.org (https://kaikki.org/) and from WikDict (CC BY-SA, https://www.wikdict.com/);
+            the Korean, Spanish, French, German, Italian, Russian and Portuguese dictionaries are made from the English and Chinese Wiktionaries (CC BY-SA 4.0, https://www.wiktionary.org/) as extracted by kaikki.org (https://kaikki.org/) and from WikDict (CC BY-SA, https://www.wikdict.com/);
             Korean meanings and levels come first from the Korean Basic Dictionary (한국어기초사전) of the National Institute of Korean Language (CC BY-SA 2.0 KR, https://krdict.korean.go.kr/), via its open data in https://github.com/basickorean/basickorean-vocab.
-            Word levels: the HSK lists from complete-hsk-vocabulary by Yanis Zafirópulos (MIT, https://github.com/drkameleon/complete-hsk-vocabulary); the JLPT lists from OpenJLPT (CC BY-SA 4.0, https://github.com/evanclan/OpenJLPT), based on Jonathan Waller's JLPT lists; the Korean levels from the Korean Basic Dictionary; the Spanish, French, German, Italian and Russian levels estimated from wordfreq by Robyn Speer (data CC BY-SA 4.0), a guide and not an official CEFR list.
+            Word levels: the HSK lists from complete-hsk-vocabulary by Yanis Zafirópulos (MIT, https://github.com/drkameleon/complete-hsk-vocabulary); the JLPT lists from OpenJLPT (CC BY-SA 4.0, https://github.com/evanclan/OpenJLPT), based on Jonathan Waller's JLPT lists; the Korean levels from the Korean Basic Dictionary; the Spanish, French, German, Italian, Russian and Portuguese levels estimated from wordfreq by Robyn Speer (data CC BY-SA 4.0), a guide and not an official CEFR list.
             Level test items: real words from these word levels (English by the exam tags of its word list), and made-up words Lumtub generates from the same open word lists, checked against CC-CEDICT, JMdict, the Wiktionary dictionaries and wordfreq; stroke counts from Unihan (Unicode License v3). No item is taken from a published test.
             The word segmenters are Lindera (MIT, https://github.com/lindera/lindera) builds of IPADIC (its own permissive license), mecab-ko-dic (Apache-2.0) and mecab-jieba (MIT); each zip holds its NOTICE.txt.
         run: |

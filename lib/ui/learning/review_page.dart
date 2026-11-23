@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/app_controller.dart';
+import '../../appearance_settings.dart' show languageStyle;
 import '../../l10n/l10n.dart';
 import '../../learning/review.dart';
 import '../../learning/vocabulary.dart';
@@ -447,7 +448,7 @@ class ReviewScenePanel extends StatelessWidget {
                     scale: 0.98,
                     child: ReviewPlate(
                       child: Wrap(crossAxisAlignment: WrapCrossAlignment.end, spacing: Space.l, runSpacing: Space.xs, children: [
-                        SelectableText(word.word, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700)),
+                        SelectableText(word.word, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700).merge(languageStyle(word.language))),
                         if (word.reading.isNotEmpty) Text(word.reading, style: theme.textTheme.titleMedium?.copyWith(color: colors.primary)),
                         if (word.meaning.isNotEmpty) Text(word.meaning, style: theme.textTheme.bodyLarge),
                       ]),
@@ -504,13 +505,13 @@ class SavedWordCard extends StatelessWidget {
     final colors = theme.colorScheme;
     final sentence = word.sentence;
     final at = sentence.toLowerCase().indexOf(word.word.toLowerCase());
-    final lineStyle = theme.textTheme.titleMedium?.copyWith(height: 1.6, fontWeight: FontWeight.w400);
+    final lineStyle = theme.textTheme.titleMedium?.copyWith(height: 1.6, fontWeight: FontWeight.w400).merge(languageStyle(word.language));
     return ReviewPlate(
       padding: const EdgeInsets.all(Space.xl),
       child: SingleChildScrollView(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Expanded(child: SelectableText(word.word, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700))),
+            Expanded(child: SelectableText(word.word, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700).merge(languageStyle(word.language)))),
             if (sound)
               IconButton(tooltip: tr('Play the line again'), onPressed: onReplay, icon: Icon(AppIcons.speakerHigh, color: colors.primary)),
           ]),

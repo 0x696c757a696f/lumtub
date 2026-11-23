@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/app_controller.dart';
+import '../../appearance_settings.dart' show languageStyle;
 import '../../device.dart';
 import '../../l10n/l10n.dart';
 import '../../learning/chinese_dictionary.dart';
@@ -11,6 +12,8 @@ import '../../learning/english_dictionary.dart';
 import '../../learning/japanese_dictionary.dart';
 import '../../learning/known_words.dart';
 import '../../learning/learning.dart';
+import '../../learning/review.dart' show reviewStoreOf;
+import '../../learning/video_difficulty.dart' show videoDifficulty;
 import '../../learning/vocabulary.dart';
 import '../../learning/wiktionary_dictionary.dart';
 import '../app_icons.dart';
@@ -23,6 +26,8 @@ import 'learning_page.dart' show learningPresaleDeadline, showLearningLocked;
 Future<void> showWordCard(BuildContext context, AppController controller, WordToken token, {required String sentence, String? translation, Duration? at}) async {
   final learning = controller.learning;
   final language = Learning.languageOf(token);
+  // A face for the word's character forms where the system has none.
+  unawaited(controller.ensureCjkFont(language));
   final ready = switch (language) {
     'zh' => learning.chinese != null,
     'ja' => learning.japanese != null,
@@ -35,6 +40,17 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
     return;
   }
   if (!context.mounted) return;
+  // A saved word opened again while watching was not remembered after all:
+  // it comes back in today's review.
+  if (learning.book case final book? when learning.unlocked) {
+    final reviews = reviewStoreOf(book);
+    for (final word in {token.text, token.key, token.key.toLowerCase()}) {
+      if (book.contains(language, word)) {
+        unawaited(reviews.load().then((_) => reviews.lookedUpAgain('$language:$word', DateTime.now())));
+        break;
+      }
+    }
+  }
   final player = controller.player;
   final wasPlaying = (player?.state.playing ?? false) | controller.takeHoverPause();
   if (wasPlaying) unawaited(player!.pause());
@@ -101,6 +117,26 @@ Future<void> _trialUsedUp(BuildContext context, AppController controller) => sho
 
 /// Without the pack: how many free word cards today has left, so the
 /// last one is no surprise.
+/// How many videos the word, being learnt, was heard in: seeing it
+/// come up again is part of learning it.
+class _SeenNote extends StatelessWidget {
+  const _SeenNote({required this.token});
+  final WordToken token;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: videoDifficulty,
+        builder: (context, _) {
+          final videos = videoDifficulty.videosWith(KnownWords.tokenKey(token));
+          if (videos < 2) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(tr('Heard in {0} videos', [videos]), style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.outline)),
+          );
+        },
+      );
+}
+
 class _TrialNote extends StatelessWidget {
   const _TrialNote({required this.learning});
   final Learning learning;
@@ -171,7 +207,7 @@ class _WordCard extends StatelessWidget {
 
     return _CardShell(
       title: Row(children: [
-        Expanded(child: SelectableText(word, style: _headStyle(theme))),
+        Expanded(child: SelectableText(word, style: _headStyle(theme, 'zh'))),
         _SpeakButton(controller: controller, text: word, language: 'zh'),
         _KnownButton(controller: controller, token: token),
         IconButton(
@@ -201,10 +237,11 @@ class _WordCard extends StatelessWidget {
             ],
             if (sentence.isNotEmpty) ...[
               const Divider(),
-              Text(sentence, style: theme.textTheme.bodyMedium),
+              Text(sentence, style: theme.textTheme.bodyMedium?.merge(languageStyle('zh'))),
               if (controller.mainSubtitleAutomatic) Text(tr('Auto-generated subtitles: a word may be misheard'), style: TextStyle(fontSize: 11, color: colors.outline)),
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
+            _SeenNote(token: token),
             _TrialNote(learning: controller.learning),
           ]),
         ),
@@ -267,7 +304,7 @@ class _EnglishCard extends StatelessWidget {
     final book = controller.learning.book;
     return _CardShell(
       title: Row(children: [
-        Expanded(child: SelectableText(token.text, style: _headStyle(theme))),
+        Expanded(child: SelectableText(token.text, style: _headStyle(theme, 'en'))),
         _SpeakButton(controller: controller, text: token.key, language: 'en'),
         _KnownButton(controller: controller, token: token),
         IconButton(
@@ -308,10 +345,11 @@ class _EnglishCard extends StatelessWidget {
               ),
             if (sentence.isNotEmpty) ...[
               const Divider(),
-              Text(sentence, style: theme.textTheme.bodyMedium),
+              Text(sentence, style: theme.textTheme.bodyMedium?.merge(languageStyle('en'))),
               if (controller.mainSubtitleAutomatic) Text(tr('Auto-generated subtitles: a word may be misheard'), style: TextStyle(fontSize: 11, color: colors.outline)),
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
+            _SeenNote(token: token),
             _TrialNote(learning: controller.learning),
           ]),
         ),
@@ -387,7 +425,7 @@ class _JapaneseCard extends StatelessWidget {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
             if (token.reading != null) Text(token.reading!, style: theme.textTheme.bodyMedium!.copyWith(color: colors.primary)),
-            SelectableText(token.text, style: _headStyle(theme)),
+            SelectableText(token.text, style: _headStyle(theme, 'ja')),
           ]),
         ),
         _SpeakButton(controller: controller, text: head, language: 'ja'),
@@ -434,7 +472,7 @@ class _JapaneseCard extends StatelessWidget {
               ),
             if (sentence.isNotEmpty) ...[
               const Divider(),
-              Text(sentence, style: theme.textTheme.bodyMedium),
+              Text(sentence, style: theme.textTheme.bodyMedium?.merge(languageStyle('ja'))),
               if (controller.mainSubtitleAutomatic) Text(tr('Auto-generated subtitles: a word may be misheard'), style: TextStyle(fontSize: 11, color: colors.outline)),
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
@@ -445,6 +483,7 @@ class _JapaneseCard extends StatelessWidget {
                   : tr('From JMdict (EDRDG), CC BY-SA 4.0'),
               style: TextStyle(fontSize: 11, color: colors.outline),
             ),
+            _SeenNote(token: token),
             _TrialNote(learning: controller.learning),
           ]),
         ),
@@ -533,7 +572,7 @@ class _WiktionaryCard extends StatelessWidget {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
             if (token.reading != null) Text(token.reading!, style: TextStyle(color: colors.primary, fontSize: 13)),
-            SelectableText(token.text, style: _headStyle(theme)),
+            SelectableText(token.text, style: _headStyle(theme, language)),
           ]),
         ),
         _SpeakButton(controller: controller, text: token.key, language: language),
@@ -578,7 +617,7 @@ class _WiktionaryCard extends StatelessWidget {
               ),
             if (sentence.isNotEmpty) ...[
               const Divider(),
-              Text(sentence, style: theme.textTheme.bodyMedium),
+              Text(sentence, style: theme.textTheme.bodyMedium?.merge(languageStyle(language))),
               if (controller.mainSubtitleAutomatic) Text(tr('Auto-generated subtitles: a word may be misheard'), style: TextStyle(fontSize: 11, color: colors.outline)),
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
@@ -591,6 +630,7 @@ class _WiktionaryCard extends StatelessWidget {
                       : tr('From Wiktionary, CC BY-SA 4.0'),
               style: TextStyle(fontSize: 11, color: colors.outline),
             ),
+            _SeenNote(token: token),
             _TrialNote(learning: controller.learning),
           ]),
         ),
@@ -637,7 +677,8 @@ class _WiktionaryCard extends StatelessWidget {
 
 /// The word at the top of a card: plain letters, as a skin's title face
 /// may set every letter as a capital.
-TextStyle _headStyle(ThemeData theme) => theme.textTheme.bodyLarge!.copyWith(fontSize: 26, fontWeight: FontWeight.w600, height: 1.25);
+/// The word looked up, in its own language's character forms.
+TextStyle _headStyle(ThemeData theme, String language) => theme.textTheme.bodyLarge!.copyWith(fontSize: 26, fontWeight: FontWeight.w600, height: 1.25).merge(languageStyle(language));
 
 /// Whether the only entry is spelt as the card's title already shows it.
 bool _sameHead(int entries, String headword, String title) => entries == 1 && headword.toLowerCase() == title.toLowerCase();

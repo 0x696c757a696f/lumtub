@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'app_directories.dart';
+import 'appearance_settings.dart' show cjkFormOf, downloadedCjkFamilies;
 import 'device_memory.dart';
 import 'decoder_status.dart';
 import 'network_proxy.dart';
@@ -917,16 +918,37 @@ class PlayerSettings {
   /// system fonts AndroidSubtitleFonts gathers; it changes with the text.
   static const androidSubtitleFont = 'Noto Sans CJK SC';
 
-  static String fontForThisSystem(String font) {
+  /// [language] is the subtitle's: the default font then becomes one with
+  /// that language's character forms, so Japanese kanji are not drawn as
+  /// Chinese ones.
+  static String fontForThisSystem(String font, {String language = ''}) {
     if (Platform.isAndroid) return androidSubtitleFont;
     // On iOS libmpv has the app's own fonts only (sub-font-provider none,
     // see LifecycleActions): Noto Sans SC, or the one AndroidSubtitleFonts
     // picks for the text.
     if (Platform.isIOS) return iosSubtitleFont;
-    if (font != defaultSubtitleFont || Platform.isWindows) return font;
-    // macOS has PingFang, and no Noto fonts.
-    return Platform.isMacOS ? 'PingFang SC' : 'Noto Sans CJK SC';
+    if (font != defaultSubtitleFont) return font;
+    return defaultFontOn(Platform.operatingSystem, cjkFormOf(language), downloaded: downloadedCjkFamilies);
   }
+
+  /// The default subtitle font on [system] (Platform.operatingSystem) for
+  /// text in [forms] (see cjkFormOf; null for simplified Chinese and every
+  /// other language). Each is part of every install of that system; on
+  /// Linux a font downloaded as a data pack ([downloaded]) stands in where
+  /// the distribution has no Noto Sans CJK for it.
+  static String defaultFontOn(String system, String? forms, {Map<String, String> downloaded = const {}}) => switch ((system, forms)) {
+        ('windows', 'ja') => 'Yu Gothic UI',
+        ('windows', 'ko') => 'Malgun Gothic',
+        ('windows', 'zh-Hant') => 'Microsoft JhengHei',
+        ('windows', _) => defaultSubtitleFont,
+        ('macos', 'ja') => 'Hiragino Sans',
+        ('macos', 'ko') => 'Apple SD Gothic Neo',
+        ('macos', 'zh-Hant') => 'PingFang TC',
+        // macOS has PingFang, and no Noto fonts.
+        ('macos', _) => 'PingFang SC',
+        (_, final String forms) => downloaded[forms] ?? 'Noto Sans CJK ${const {'ja': 'JP', 'ko': 'KR', 'zh-Hant': 'TC'}[forms] ?? 'SC'}',
+        _ => 'Noto Sans CJK SC',
+      };
 
   /// These settings with the subtitle style of a fresh install.
   PlayerSettings withDefaultSubtitleStyle() {

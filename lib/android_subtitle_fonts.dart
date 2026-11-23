@@ -108,8 +108,11 @@ class AndroidSubtitleFonts {
   /// in [flutterFonts] (with Latin, Greek, Cyrillic and kana) and the
   /// others in [bundled] (Korean, Noto Sans for the accented letters Noto
   /// Sans SC lacks and one for each other script), and
-  /// returns it; null when Noto Sans SC is not there.
-  static Future<String?> prepareIos(String folder, {required String flutterFonts, required String bundled}) async {
+  /// returns it; null when Noto Sans SC is not there. [downloaded] are the
+  /// Japanese, Korean or traditional Chinese faces downloaded as data packs
+  /// (CjkFontPacks), by forms and with their families, which then draw
+  /// those languages in their own character forms.
+  static Future<String?> prepareIos(String folder, {required String flutterFonts, required String bundled, Map<String, (File, String)> downloaded = const {}}) async {
     try {
       const sc = 'NotoSansSC-Regular.ttf';
       if (!File('$flutterFonts/$sc').existsSync()) return null;
@@ -130,8 +133,16 @@ class AndroidSubtitleFonts {
           if (prefixes.any(name.startsWith)) families.putIfAbsent(script, () => familyOf(name));
         }
       }
+      for (final (file, _) in downloaded.values) {
+        Link('$folder/${file.uri.pathSegments.last}').createSync(file.path);
+      }
       cjk = true;
-      cjkFamilies = {'ja': 'Noto Sans SC', 'ko': korean ? 'Noto Sans KR' : 'Noto Sans SC', 'zh-Hant': 'Noto Sans SC', 'zh': 'Noto Sans SC'};
+      cjkFamilies = {
+        'ja': downloaded['ja']?.$2 ?? 'Noto Sans SC',
+        'ko': downloaded['ko']?.$2 ?? (korean ? 'Noto Sans KR' : 'Noto Sans SC'),
+        'zh-Hant': downloaded['zh-Hant']?.$2 ?? 'Noto Sans SC',
+        'zh': 'Noto Sans SC',
+      };
       return folder;
     } catch (e) {
       logWarn('Could not gather the subtitle fonts: $e');

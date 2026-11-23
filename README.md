@@ -86,7 +86,7 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 
 **What the Learning Pack adds** (Windows, macOS and Linux):
 
-- **Click a word, get the meaning**, from dictionaries that download once and then work offline. Chinese, English, Japanese and Korean; Spanish, French, German, Italian and Russian in beta. Conjugated Japanese verbs are found by their dictionary form.
+- **Click a word, get the meaning**, from dictionaries that download once and then work offline. Chinese, English, Japanese and Korean; Spanish, French, German, Italian, Russian and Portuguese in beta. Conjugated Japanese verbs are found by their dictionary form.
 - **Readings above the line**: pinyin for Chinese, kana for Japanese, romanization for Korean.
 - **Words above your level are highlighted**, so you only stop for the ones you don't know yet. Before you start a video, see how much of it you already know and which words come up most.
 - **Hear it**: words are read aloud, and every saved word keeps the original line's audio.

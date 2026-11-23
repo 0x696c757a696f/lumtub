@@ -125,6 +125,8 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
       skin,
       appearance.glassOpacity,
       glass ? (appearance.windowGlassClarity, appearance.windowGlassWhole) : null,
+      // A downloaded Japanese, Korean or traditional Chinese face joins the fallback.
+      widget.controller.cjkFontsRevision,
     );
     if (key == _themeKey) return;
     _themeKey = key;

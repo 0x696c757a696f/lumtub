@@ -623,7 +623,7 @@ extension SubtitleActions on AppController {
       position: (100 - _subtitleLift).clamp(0, 100),
       scale: settings.subtitleScale,
       aspect: _canvasAspect,
-      fontSize: look.fontSize(_subtitleFamily ?? font),
+      fontSize: look.fontSize(_drawnFamily ?? font),
       em: look.em,
       margin: look.margin,
       gap: look.gap,
@@ -633,12 +633,25 @@ extension SubtitleActions on AppController {
     unawaited(platform.setProperty('secondary-sub-pos', position.toStringAsFixed(1)).catchError((Object e) => logDebug(() => 'Could not move the second subtitle: $e')));
   }
 
+  /// On a desktop: the default font in the forms of the subtitle's language.
   /// On Android and iOS, where libmpv draws in one font with no fallback: the font
   /// that has every character of the main subtitle in [lines], or Flutter's
   /// view for the rest of the video when no one font has every character of
   /// either line.
   void _fitSubtitleFont(Player player, List<String> lines) {
-    if (!(Platform.isAndroid || Platform.isIOS) || !settings.libassSubtitles || libassCantDraw || !identical(player, this.player)) return;
+    if (Platform.isLinux || Platform.isIOS) {
+      // A face for the subtitles' character forms where the system has none.
+      unawaited(ensureCjkFont(mainSubtitleLanguage));
+      unawaited(ensureCjkFont(secondSubtitleLanguage));
+    }
+    if (!(Platform.isAndroid || Platform.isIOS)) {
+      // A desktop: the font follows the track's language, sent once it
+      // differs from the one libmpv has.
+      final family = settings.libassSubtitles && identical(player, this.player) ? _drawnFamily : null;
+      if (family != null && _libassSent['sub-font'] != family) _queueLibassLook();
+      return;
+    }
+    if (!settings.libassSubtitles || libassCantDraw || !identical(player, this.player)) return;
     final platform = player.platform;
     final text = lines.join('\n').trim();
     if (platform is! NativePlayer || text.isEmpty) return;

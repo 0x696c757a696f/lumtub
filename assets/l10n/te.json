@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (NVIDIA మాత్రమే, కాపీ-బ్యాక్)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (NVIDIA మాత్రమే, జీరో-కాపీ)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "ఆటోమేటిక్ (డిఫాల్ట్): సరళీకృత చైనీస్ సిస్టమ్‌లో Noto Sans CJK SC, ఇతరాల్లో సిస్టమ్ ఫాంట్",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (అంతర్నిర్మితం)",
   "Piped · Specific server": "Piped · నిర్దిష్ట సర్వర్",
   "Piped · Auto-select server": "Piped · సర్వర్‌ను స్వయంచాలకంగా ఎంచుకో",
@@ -3721,6 +3720,8 @@
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "స్పేస్ సమాధానం చూపుతుంది · 1 2 3 4 గ్రేడ్ · R వాక్యాన్ని మళ్లీ ప్లే చేస్తుంది · F ఫోకస్ మోడ్",
   "Leave focus mode (F)": "ఫోకస్ మోడ్ నుండి నిష్క్రమించండి (F)",
   "Focus mode: the video scene, no numbers (F)": "ఫోకస్ మోడ్: వీడియో దృశ్యం, సంఖ్యలు లేవు (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "స్వయంచాలకం (డిఫాల్ట్): Inter, చైనీస్, జపనీస్ మరియు కొరియన్ అక్షరాలు ఇంటర్‌ఫేస్ భాష రూపాల్లో",
+  "Inter (built-in)": "Inter (అంతర్నిర్మితం)",
   "Just right": "సరిగ్గా సరిపోతుంది",
   "Too hard": "చాలా కష్టం",
   "Heard in {0} videos": "{0} వీడియోలలో విన్నారు"

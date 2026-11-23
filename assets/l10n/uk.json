@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (лише NVIDIA, зі зворотним копіюванням)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (лише NVIDIA, без копіювання)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Автоматично (за замовчуванням): Noto Sans CJK SC у системі зі спрощеною китайською, в інших випадках системний шрифт",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (вбудований)",
   "Piped · Specific server": "Piped · Указаний сервер",
   "Piped · Auto-select server": "Piped · Автовибір сервера",
@@ -3727,6 +3726,8 @@
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Пропуск показує відповідь · 1 2 3 4 оцінка · R відтворює рядок знову · F режим зосередження",
   "Leave focus mode (F)": "Вийти з режиму зосередження (F)",
   "Focus mode: the video scene, no numbers (F)": "Режим зосередження: сцена з відео, без цифр (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Автоматично (за замовчуванням): Inter, з китайськими, японськими та корейськими знаками у формах мови інтерфейсу",
+  "Inter (built-in)": "Inter (вбудований)",
   "Just right": "Саме те",
   "Too hard": "Надто складно",
   "Heard in {0} videos": "Чули в {0} відео"

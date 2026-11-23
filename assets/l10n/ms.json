@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文 Bahasa Melayu",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (NVIDIA sahaja, salin balik)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (NVIDIA sahaja, tanpa salinan)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Automatik (lalai): Noto Sans CJK SC pada sistem Cina Ringkas, fon sistem pada yang lain",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (terbina dalam)",
   "Piped · Specific server": "Piped · Pelayan tertentu",
   "Piped · Auto-select server": "Piped · Pilih pelayan secara automatik",
@@ -3722,6 +3721,8 @@
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Space menunjukkan jawapan · 1 2 3 4 gred · R main semula baris · F mod fokus",
   "Leave focus mode (F)": "Keluar dari mod fokus (F)",
   "Focus mode: the video scene, no numbers (F)": "Mod fokus: babak video, tanpa nombor (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatik (lalai): Inter, dengan aksara Cina, Jepun dan Korea dalam bentuk bahasa antara muka",
+  "Inter (built-in)": "Inter (terbina dalam)",
   "Just right": "Sesuai",
   "Too hard": "Terlalu sukar",
   "Heard in {0} videos": "Didengar dalam {0} video"

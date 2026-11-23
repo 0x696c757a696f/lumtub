@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC(NVIDIA 전용, 카피백)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC(NVIDIA 전용, 제로 카피)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "자동(기본값): 중국어 간체 시스템에서는 Noto Sans CJK SC, 그 외에는 시스템 글꼴",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC(내장)",
   "Piped · Specific server": "Piped · 서버 지정",
   "Piped · Auto-select server": "Piped · 서버 자동 선택",
@@ -3727,6 +3726,8 @@
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "스페이스바로 정답 보기 · 1 2 3 4로 평가 · R로 문장 다시 듣기 · F로 집중 모드",
   "Leave focus mode (F)": "집중 모드 나가기 (F)",
   "Focus mode: the video scene, no numbers (F)": "집중 모드: 동영상 장면만 표시, 숫자 숨김 (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "자동(기본값): Inter, 한중일 문자는 인터페이스 언어의 글자 모양으로 표시",
+  "Inter (built-in)": "Inter(내장)",
   "Just right": "딱 맞음",
   "Too hard": "너무 어려움",
   "Heard in {0} videos": "동영상 {0}개에서 들음"

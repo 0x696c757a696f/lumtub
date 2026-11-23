@@ -107,4 +107,21 @@ void main() {
     File('${flutter.path}/NotoSansSC-Regular.ttf').deleteSync();
     expect(await AndroidSubtitleFonts.prepareIos('${root.path}/subs', flutterFonts: flutter.path, bundled: bundled.path), isNull);
   });
+
+  test('on iOS downloaded Japanese and traditional Chinese faces draw those languages', () async {
+    final root = Directory.systemTemp.createTempSync('fonts');
+    addTearDown(() => root.deleteSync(recursive: true));
+    final flutter = Directory('${root.path}/flutter')..createSync();
+    final bundled = Directory('${root.path}/bundled')..createSync();
+    File('${flutter.path}/NotoSansSC-Regular.ttf').writeAsStringSync('x');
+    final jp = File('${root.path}/NotoSansJP.ttf')..writeAsStringSync('jp');
+    final android = AndroidSubtitleFonts.cjkFamilies;
+    addTearDown(() => AndroidSubtitleFonts.cjkFamilies = android);
+    final folder = await AndroidSubtitleFonts.prepareIos('${root.path}/subs', flutterFonts: flutter.path, bundled: bundled.path, downloaded: {'ja': (jp, 'Noto Sans JP')});
+    expect(File('$folder/NotoSansJP.ttf').readAsStringSync(), 'jp');
+    expect(AndroidSubtitleFonts.familyFor('そして最初に'), 'Noto Sans JP');
+    expect(AndroidSubtitleFonts.familyFor('直角', language: 'ja'), 'Noto Sans JP');
+    expect(AndroidSubtitleFonts.familyFor('直角', language: 'zh-TW'), 'Noto Sans SC');
+    expect(AndroidSubtitleFonts.familyFor('直角'), 'Noto Sans SC');
+  });
 }

@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (NVIDIA ಮಾತ್ರ, ಕಾಪಿ-ಬ್ಯಾಕ್)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (NVIDIA ಮಾತ್ರ, ಝೀರೋ-ಕಾಪಿ)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "ಸ್ವಯಂಚಾಲಿತ (ಡೀಫಾಲ್ಟ್): ಸರಳೀಕೃತ ಚೈನೀಸ್ ಸಿಸ್ಟಂನಲ್ಲಿ Noto Sans CJK SC, ಇಲ್ಲದಿದ್ದರೆ ಸಿಸ್ಟಂ ಫಾಂಟ್",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (ಅಂತರ್ನಿರ್ಮಿತ)",
   "Piped · Specific server": "Piped · ನಿರ್ದಿಷ್ಟ ಸರ್ವರ್",
   "Piped · Auto-select server": "Piped · ಸರ್ವರ್ ಸ್ವಯಂ ಆಯ್ಕೆ",
@@ -3721,6 +3720,8 @@
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Space ಉತ್ತರ ತೋರಿಸುತ್ತದೆ · 1 2 3 4 ಗ್ರೇಡ್ · R ಸಾಲನ್ನು ಮತ್ತೆ ಪ್ಲೇ ಮಾಡುತ್ತದೆ · F ಫೋಕಸ್ ಮೋಡ್",
   "Leave focus mode (F)": "ಫೋಕಸ್ ಮೋಡ್‌ನಿಂದ ನಿರ್ಗಮಿಸಿ (F)",
   "Focus mode: the video scene, no numbers (F)": "ಫೋಕಸ್ ಮೋಡ್: ವೀಡಿಯೊ ದೃಶ್ಯ, ಸಂಖ್ಯೆಗಳಿಲ್ಲ (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "ಸ್ವಯಂಚಾಲಿತ (ಡೀಫಾಲ್ಟ್): Inter, ಚೈನೀಸ್, ಜಪಾನೀಸ್ ಮತ್ತು ಕೊರಿಯನ್ ಅಕ್ಷರಗಳು ಇಂಟರ್ಫೇಸ್ ಭಾಷೆಯ ರೂಪಗಳಲ್ಲಿ",
+  "Inter (built-in)": "Inter (ಅಂತರ್ನಿರ್ಮಿತ)",
   "Just right": "ಸರಿಯಾಗಿದೆ",
   "Too hard": "ತುಂಬಾ ಕಷ್ಟ",
   "Heard in {0} videos": "{0} ವೀಡಿಯೊಗಳಲ್ಲಿ ಕೇಳಿದೆ"

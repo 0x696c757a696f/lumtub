@@ -108,8 +108,9 @@ extension LibassLookActions on AppController {
       ..remove('secondary-sub-pos');
     // Above the player's controls while they show.
     options['sub-pos'] = '${(100 - _subtitleLift).clamp(0, 100)}';
-    // On Android the font that draws this video's script, at its own size.
-    if (_subtitleFamily case final family?) {
+    // The font that draws this video's script on Android and iOS, or the
+    // subtitle language's forms on a desktop, at its own size.
+    if (_drawnFamily case final family?) {
       options['sub-font'] = family;
       options['sub-font-size'] = look.fontSize(family).toStringAsFixed(1);
     }
@@ -185,7 +186,17 @@ extension LibassLookActions on AppController {
   String get _mainSource => _subtitleCopies[_mainTrackId]?.source ?? _mainTrackId;
 
   /// The font libmpv draws the main subtitle in.
-  String get _mainFont => _subtitleFamily ?? (settings.subtitleFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.subtitleFont));
+  String get _mainFont => _drawnFamily ?? (settings.subtitleFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.subtitleFont));
+
+  /// The family libmpv draws the main subtitle in, where the settings alone
+  /// do not say it: on Android and iOS the one that draws this video's
+  /// script; on a desktop the default font in the character forms of the
+  /// subtitle's language (Japanese kanji as Japanese writes them).
+  String? get _drawnFamily {
+    if (Platform.isAndroid || Platform.isIOS) return _subtitleFamily;
+    if (settings.subtitleFont.isEmpty) return null;
+    return PlayerSettings.fontForThisSystem(settings.subtitleFont, language: player?.state.track.subtitle.language ?? '');
+  }
 
   /// Whether the subtitle track [id] is Lumtub's copy of another, which
   /// track lists leave out.
@@ -317,7 +328,12 @@ extension LibassLookActions on AppController {
     final String text;
     if (second) {
       final room = _roomEms(settings.secondaryScale);
-      final font = Platform.isAndroid || Platform.isIOS ? AndroidSubtitleFonts.familyFor(cues.take(40).map((c) => c.text).join('\n'), language: track.language ?? '') : null;
+      final font = Platform.isAndroid || Platform.isIOS
+          ? AndroidSubtitleFonts.familyFor(cues.take(40).map((c) => c.text).join('\n'), language: track.language ?? '')
+          // In the character forms of the second subtitle's own language.
+          : settings.secondaryFont.isEmpty
+              ? null
+              : PlayerSettings.fontForThisSystem(settings.secondaryFont, language: track.language ?? '');
       final mainTrack = tracks[_mainSource];
       var mainCues = mainTrack == null ? const <SubtitleCue>[] : await _trackCues(platform, mainTrack);
       if (key.endsWith(_quickMark)) mainCues = mainCues.where(near).toList();

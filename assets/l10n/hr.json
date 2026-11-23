@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文 Jezik Hrvatski",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (samo NVIDIA, s povratnim kopiranjem)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (samo NVIDIA, bez kopiranja)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Automatski (zadano): Noto Sans CJK SC na sustavu na pojednostavljenom kineskom, inače sistemski font",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (ugrađen)",
   "Piped · Specific server": "Piped · Određeni poslužitelj",
   "Piped · Auto-select server": "Piped · Automatski odabir poslužitelja",
@@ -3722,6 +3721,8 @@
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Razmaknica prikazuje odgovor · 1 2 3 4 ocjena · R ponovno pušta rečenicu · F fokus način",
   "Leave focus mode (F)": "Izađi iz fokus načina (F)",
   "Focus mode: the video scene, no numbers (F)": "Fokus način: scena iz videa, bez brojeva (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatski (zadano): Inter, s kineskim, japanskim i korejskim znakovima u oblicima jezika sučelja",
+  "Inter (built-in)": "Inter (ugrađen)",
   "Just right": "Taman",
   "Too hard": "Preteško",
   "Heard in {0} videos": "Čuto u {0} videa"

@@ -83,7 +83,12 @@ extension LifecycleActions on AppController {
       packs = PackManager(Directory('${directories.data.path}${sep}packs'), manager);
       // The proxy comes before the component downloads, which use it too.
       await (_refreshProxy(), cacheManager.prepare(settings), manager.initialize()).wait;
-      unawaited(packs!.load().catchError((Object e) => logWarn('Could not read the data packs: $e')));
+      unawaited(packs!.load().then((_) async {
+        // Fonts downloaded before, then the one the interface language
+        // needs where the system has none.
+        await useDownloadedCjkFonts();
+        await ensureCjkFont(currentLanguage.tag);
+      }).catchError((Object e) => logWarn('Could not read the data packs: $e')));
       await YtDlpTls.configure(directories.data, roots: settings.certificateRoots, quantum: settings.postQuantum);
       await JsChallengePlugin.prepare(directories.data.path);
       final paths = await manager.ensureReady();
@@ -123,23 +128,9 @@ extension LifecycleActions on AppController {
           // for seconds on mpv's video thread on iOS 27, holding the OSD lock
           // (the crash report: core and main thread waiting on it), which
           // stalled playback and got the app killed in the background.
-          final app = File(Platform.resolvedExecutable).parent.path;
-          final fonts = await AndroidSubtitleFonts.prepareIos('${directories.cache.path}/subtitle-fonts', flutterFonts: '$app/Frameworks/App.framework/flutter_assets/assets/fonts', bundled: '$app/SubtitleFonts');
-          if (fonts == null) {
-            logInfo('No bundled subtitle fonts in $app');
-          } else {
-            for (final MapEntry(:key, :value) in {
-              'sub-font-provider': 'none',
-              'sub-fonts-dir': fonts,
-              // The bullet chat is drawn as OSD.
-              'osd-font-provider': 'none',
-              'osd-fonts-dir': fonts,
-              'osd-font': PlayerSettings.iosSubtitleFont,
-            }.entries) {
-              await platform.setProperty(key, value).catchError((Object e) => logDebug(() => 'Could not set $key: $e'));
-            }
-          }
+          await _prepareIosSubtitleFonts(platform);
         }
+        if (Platform.isLinux) await _useDownloadedSubtitleFonts(platform);
         final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders');
         try {
           shaders.createSync(recursive: true);

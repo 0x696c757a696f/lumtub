@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (ສະເພາະ NVIDIA, ສຳເນົາກັບ)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (ສະເພາະ NVIDIA, ບໍ່ສຳເນົາ)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "ອັດຕະໂນມັດ (ຄ່າເລີ່ມຕົ້ນ): ໃຊ້ Noto Sans CJK SC ຖ້າລະບົບເປັນຈີນຕົວຫຍໍ້, ນອກນັ້ນໃຊ້ຟອນຂອງລະບົບ",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (ມີໃນຕົວ)",
   "Piped · Specific server": "Piped · ກຳນົດເຊີບເວີ",
   "Piped · Auto-select server": "Piped · ເລືອກເຊີບເວີອັດຕະໂນມັດ",
@@ -3721,6 +3720,8 @@
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "ກົດ Space ເພື່ອເບິ່ງຄຳຕອບ · 1 2 3 4 ໃຫ້ຄະແນນ · R ຟັງປະໂຫຍກອີກຄັ້ງ · F ໂໝດໂຟກັດ",
   "Leave focus mode (F)": "ອອກຈາກໂໝດໂຟກັດ (F)",
   "Focus mode: the video scene, no numbers (F)": "ໂໝດໂຟກັດ: ສາກຈາກວິດີໂອ, ບໍ່ມີຕົວເລກ (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "ອັດຕະໂນມັດ (ຄ່າເລີ່ມຕົ້ນ): Inter, ພ້ອມຕົວອັກສອນຈີນ ຍີ່ປຸ່ນ ແລະ ເກົາຫຼີ ໃນຮູບແບບຂອງພາສາສ່ວນຕິດຕໍ່",
+  "Inter (built-in)": "Inter (ມີໃນຕົວ)",
   "Just right": "ພໍດີ",
   "Too hard": "ຍາກເກີນໄປ",
   "Heard in {0} videos": "ໄດ້ຍິນໃນ {0} ວິດີໂອ"

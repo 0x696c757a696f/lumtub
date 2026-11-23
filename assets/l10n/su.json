@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (NVIDIA wungkul, salinan balik)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (NVIDIA wungkul, tanpa salinan)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Otomatis (standar): Noto Sans CJK SC dina sistem Cina Sederhana, fon sistem lamun lian ti éta",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (kaasup)",
   "Piped · Specific server": "Piped · Server nu ditangtukeun",
   "Piped · Auto-select server": "Piped · Pilih server otomatis",
@@ -3721,6 +3720,8 @@
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Spasi mintonkeun jawaban · 1 2 3 4 nilai · R muter deui kalimah · F mode fokus",
   "Leave focus mode (F)": "Kaluar tina mode fokus (F)",
   "Focus mode: the video scene, no numbers (F)": "Mode fokus: adegan pidéo, taya angka (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Otomatis (standar): Inter, kalayan aksara Tiongkok, Jepang, jeung Korea dina wangun basa antarmuka",
+  "Inter (built-in)": "Inter (kaasup)",
   "Just right": "Pas",
   "Too hard": "Hésé teuing",
   "Heard in {0} videos": "Kadéngé dina {0} vidéo"

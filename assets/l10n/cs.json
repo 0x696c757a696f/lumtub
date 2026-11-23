@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (jen NVIDIA, zpětné kopírování)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (jen NVIDIA, nulové kopírování)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Automaticky (výchozí): v systému se zjednodušenou čínštinou Noto Sans CJK SC, jinak systémové písmo",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (vestavěné)",
   "Piped · Specific server": "Piped · Zvolený server",
   "Piped · Auto-select server": "Piped · Automatický výběr serveru",
@@ -3722,6 +3721,8 @@
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Mezerník zobrazí odpověď · 1 2 3 4 hodnocení · R přehraje větu znovu · F režim soustředění",
   "Leave focus mode (F)": "Opustit režim soustředění (F)",
   "Focus mode: the video scene, no numbers (F)": "Režim soustředění: scéna z videa, bez čísel (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automaticky (výchozí): Inter, s čínskými, japonskými a korejskými znaky v tvarech jazyka rozhraní",
+  "Inter (built-in)": "Inter (vestavěné)",
   "Just right": "Akorát",
   "Too hard": "Příliš těžké",
   "Heard in {0} videos": "Slyšeno v {0} videích"

@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文 Valoda latviešu",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (tikai NVIDIA, kopēšana atpakaļ)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (tikai NVIDIA, nulles kopēšana)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Automātiski (noklusējums): vienkāršotās ķīniešu valodas sistēmā Noto Sans CJK SC, citur sistēmas fonts",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (iebūvēts)",
   "Piped · Specific server": "Piped · norādīts serveris",
   "Piped · Auto-select server": "Piped · automātiski izvēlēts serveris",
@@ -3722,6 +3721,8 @@
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Atstarpe parāda atbildi · 1 2 3 4 vērtējums · R atskaņo frāzi vēlreiz · F fokusa režīms",
   "Leave focus mode (F)": "Iziet no fokusa režīma (F)",
   "Focus mode: the video scene, no numbers (F)": "Fokusa režīms: video aina, bez skaitļiem (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automātiski (noklusējums): Inter, ar ķīniešu, japāņu un korejiešu rakstzīmēm saskarnes valodas formās",
+  "Inter (built-in)": "Inter (iebūvēts)",
   "Just right": "Tieši laikā",
   "Too hard": "Pārāk grūti",
   "Heard in {0} videos": "Dzirdēts {0} videoklipos"

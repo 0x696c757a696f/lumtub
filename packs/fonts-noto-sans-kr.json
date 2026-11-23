@@ -1,0 +1,30 @@
+{
+  "id": "fonts-noto-sans-kr",
+  "version": "2.004.0",
+  "kind": "language",
+  "title": {
+    "en": "Noto Sans KR (Korean font)",
+    "zh-Hans": "Noto Sans KR（韩文字体）"
+  },
+  "description": {
+    "en": "Draws Korean text in its own character forms where the system has no font for it (Linux without Noto Sans CJK, subtitles on iPhone). Downloaded by itself when needed.",
+    "zh-Hans": "系统里没有韩文字体时（没装 Noto Sans CJK 的 Linux、iPhone 上的字幕），用它按韩文字形显示。需要时自动下载。"
+  },
+  "license": "OFL-1.1",
+  "notice": "Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'. Licensed under the SIL Open Font License, Version 1.1 (https://openfontlicense.org).",
+  "source": "https://github.com/google/fonts/tree/06bfe0d62a98375cb09c942fa18e68bd32cff057/ofl/notosanskr",
+  "minApp": "0.2.60",
+  "platforms": [
+    "linux-x64",
+    "linux-arm64",
+    "ios"
+  ],
+  "files": [
+    {
+      "path": "NotoSansKR.ttf",
+      "url": "https://github.com/google/fonts/raw/06bfe0d62a98375cb09c942fa18e68bd32cff057/ofl/notosanskr/NotoSansKR%5Bwght%5D.ttf",
+      "sha256": "194018e6b2b293a7964f037b25c0249ce1418bc9ab3c971060a03aa57861e252",
+      "size": 10414588
+    }
+  ]
+}

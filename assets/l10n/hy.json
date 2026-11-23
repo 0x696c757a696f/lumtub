@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (միայն NVIDIA, պատճենումով)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (միայն NVIDIA, առանց պատճենման)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Ավտոմատ (կանխադրված). Noto Sans CJK SC՝ պարզեցված չինարենով համակարգում, այլապես՝ համակարգային տառատեսակը",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (ներկառուցված)",
   "Piped · Specific server": "Piped · Որոշակի սերվեր",
   "Piped · Auto-select server": "Piped · Սերվերի ավտոմատ ընտրություն",
@@ -3722,6 +3721,8 @@
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Բացատը ցույց է տալիս պատասխանը · 1 2 3 4՝ գնահատական · R՝ նորից նվագարկել նախադասությունը · F կենտրոնացման ռեժիմ",
   "Leave focus mode (F)": "Դուրս գալ կենտրոնացման ռեժիմից (F)",
   "Focus mode: the video scene, no numbers (F)": "Կենտրոնացման ռեժիմ՝ տեսանյութի տեսարանը, առանց թվերի (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Ավտոմատ (կանխադրված). Inter, չինական, ճապոնական և կորեական գրանշաններով ինտերֆեյսի լեզվի ձևերով",
+  "Inter (built-in)": "Inter (ներկառուցված)",
   "Just right": "Հենց այն",
   "Too hard": "Չափազանց դժվար",
   "Heard in {0} videos": "Լսվել է {0} տեսանյութում"

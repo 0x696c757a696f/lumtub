@@ -699,7 +699,7 @@ class _Pitch extends StatelessWidget {
           _FreeExtras(),
           const SizedBox(height: 8),
           Text(
-            tr('Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, up to 5 devices, no account, no subscription. Buying it keeps Lumtub alive.'),
+            tr('Chinese, English, Japanese, Korean, Spanish, French, German, Italian, Russian and Portuguese. One payment, up to 5 devices, no account, no subscription. Buying it keeps Lumtub alive.'),
             style: TextStyle(color: theme.colorScheme.outline, fontSize: 12, height: 1.5),
           ),
           const SizedBox(height: Space.s),

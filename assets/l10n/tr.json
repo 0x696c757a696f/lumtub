@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文 Dil Türkçe",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (yalnızca NVIDIA, geri kopyalama)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (yalnızca NVIDIA, sıfır kopya)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Otomatik (varsayılan): Basitleştirilmiş Çince sistemlerde Noto Sans CJK SC, diğerlerinde sistem yazı tipi",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (yerleşik)",
   "Piped · Specific server": "Piped · Belirli sunucu",
   "Piped · Auto-select server": "Piped · Sunucuyu otomatik seç",
@@ -3726,5 +3725,7 @@
   "Words without a video": "Videosuz kelimeler",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Boşluk cevabı gösterir · 1 2 3 4 puan · R cümleyi yeniden oynatır · F odak modu",
   "Leave focus mode (F)": "Odak modundan çık (F)",
-  "Focus mode: the video scene, no numbers (F)": "Odak modu: videonun sahnesi, sayılar yok (F)"
+  "Focus mode: the video scene, no numbers (F)": "Odak modu: videonun sahnesi, sayılar yok (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Otomatik (varsayılan): Inter, Çince, Japonca ve Korece karakterler arayüz dilinin biçimlerinde",
+  "Inter (built-in)": "Inter (yerleşik)"
 }

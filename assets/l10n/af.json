@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文 Taal Afrikaans",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (net NVIDIA, terugkopie)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (net NVIDIA, nulkopie)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Outomaties (verstek): Noto Sans CJK SC op 'n Vereenvoudigde Chinese stelsel, andersins die stelsellettertipe",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (ingebou)",
   "Piped · Specific server": "Piped · Spesifieke bediener",
   "Piped · Auto-select server": "Piped · Kies bediener outomaties",
@@ -3721,5 +3720,7 @@
   "Words without a video": "Woorde sonder video",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Spasie wys die antwoord · 1 2 3 4 gradeer · R speel die reël weer · F fokusmodus",
   "Leave focus mode (F)": "Verlaat fokusmodus (F)",
-  "Focus mode: the video scene, no numbers (F)": "Fokusmodus: die videotoneel, geen syfers (F)"
+  "Focus mode: the video scene, no numbers (F)": "Fokusmodus: die videotoneel, geen syfers (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Outomaties (verstek): Inter, met Chinese, Japannese en Koreaanse karakters in die vorme van die koppelvlaktaal",
+  "Inter (built-in)": "Inter (ingebou)"
 }

@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (NVIDIA uniquement, avec recopie)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (NVIDIA uniquement, zéro copie)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Automatique (par défaut) : Noto Sans CJK SC sur un système en chinois simplifié, la police système dans les autres cas",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (intégrée)",
   "Piped · Specific server": "Piped · Serveur spécifique",
   "Piped · Auto-select server": "Piped · Serveur choisi automatiquement",
@@ -3726,5 +3725,7 @@
   "Words without a video": "Mots sans vidéo",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Espace affiche la réponse · 1 2 3 4 pour noter · R rejoue la phrase · F mode concentration",
   "Leave focus mode (F)": "Quitter le mode concentration (F)",
-  "Focus mode: the video scene, no numbers (F)": "Mode concentration : la scène de la vidéo, sans chiffres (F)"
+  "Focus mode: the video scene, no numbers (F)": "Mode concentration : la scène de la vidéo, sans chiffres (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatique (par défaut) : Inter, avec les caractères chinois, japonais et coréens dans les formes de la langue de l'interface",
+  "Inter (built-in)": "Inter (intégrée)"
 }

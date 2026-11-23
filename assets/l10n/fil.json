@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (NVIDIA lang, copy-back)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (NVIDIA lang, zero-copy)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Awtomatiko (default): Noto Sans CJK SC sa system na may Simplified Chinese, system font sa iba pa",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (built-in)",
   "Piped · Specific server": "Piped · Partikular na server",
   "Piped · Auto-select server": "Piped · Awtomatikong pumili ng server",
@@ -3721,5 +3720,7 @@
   "Words without a video": "Mga salitang walang video",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Ipinapakita ng Space ang sagot · 1 2 3 4 para sa marka · R para ulitin ang linya · F focus mode",
   "Leave focus mode (F)": "Lumabas sa focus mode (F)",
-  "Focus mode: the video scene, no numbers (F)": "Focus mode: ang eksena ng video, walang numero (F)"
+  "Focus mode: the video scene, no numbers (F)": "Focus mode: ang eksena ng video, walang numero (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Awtomatiko (default): Inter, na may mga karakter na Chinese, Japanese at Korean sa mga anyo ng wika ng interface",
+  "Inter (built-in)": "Inter (built-in)"
 }

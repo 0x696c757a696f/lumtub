@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文 Хэл Монгол",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (зөвхөн NVIDIA, буцаан хуулах)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (зөвхөн NVIDIA, хуулалтгүй)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Автомат (үндсэн): Хялбаршуулсан хятад хэлтэй системд Noto Sans CJK SC, бусад үед системийн фонт",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (суулгагдсан)",
   "Piped · Specific server": "Piped · Заасан сервер",
   "Piped · Auto-select server": "Piped · Серверийг автоматаар сонгох",
@@ -3720,5 +3719,7 @@
   "Words without a video": "Бичлэггүй үгс",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Зай хариултыг харуулна · 1 2 3 4 үнэлгээ · R мөрийг дахин тоглуулна · F төвлөрөх горим",
   "Leave focus mode (F)": "Төвлөрөх горимоос гарах (F)",
-  "Focus mode: the video scene, no numbers (F)": "Төвлөрөх горим: бичлэгийн дүрс, тоогүй (F)"
+  "Focus mode: the video scene, no numbers (F)": "Төвлөрөх горим: бичлэгийн дүрс, тоогүй (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Автомат (өгөгдмөл): Inter, хятад, япон, солонгос тэмдэгтүүдийг интерфейсийн хэлний хэлбэрээр",
+  "Inter (built-in)": "Inter (суулгагдсан)"
 }

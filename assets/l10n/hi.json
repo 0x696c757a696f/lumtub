@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文 भाषा हिन्दी",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (केवल NVIDIA, कॉपी-बैक)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (केवल NVIDIA, ज़ीरो-कॉपी)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "ऑटो (डिफ़ॉल्ट): सरलीकृत चीनी सिस्टम पर Noto Sans CJK SC, अन्यथा सिस्टम फ़ॉन्ट",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (इनबिल्ट)",
   "Piped · Specific server": "Piped · चुना हुआ सर्वर",
   "Piped · Auto-select server": "Piped · सर्वर अपने आप चुनें",
@@ -3721,5 +3720,7 @@
   "Words without a video": "बिना वीडियो वाले शब्द",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Space उत्तर दिखाता है · 1 2 3 4 से ग्रेड दें · R वाक्य फिर से चलाता है · F फ़ोकस मोड",
   "Leave focus mode (F)": "फ़ोकस मोड से बाहर निकलें (F)",
-  "Focus mode: the video scene, no numbers (F)": "फ़ोकस मोड: वीडियो का दृश्य, कोई संख्या नहीं (F)"
+  "Focus mode: the video scene, no numbers (F)": "फ़ोकस मोड: वीडियो का दृश्य, कोई संख्या नहीं (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "स्वचालित (डिफ़ॉल्ट): Inter, चीनी, जापानी और कोरियाई वर्ण इंटरफ़ेस भाषा के रूपों में",
+  "Inter (built-in)": "Inter (इनबिल्ट)"
 }

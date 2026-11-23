@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 簡體中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC（NVIDIA 獨佔，回拷）",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC（NVIDIA 獨佔，零複製）",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "自動（預設）：簡體中文系統用 Noto Sans CJK SC，其他用系統字型",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC（內建）",
   "Piped · Specific server": "Piped · 指定伺服器",
   "Piped · Auto-select server": "Piped · 自動選擇伺服器",
@@ -3745,5 +3744,7 @@
   "Words without a video": "沒有出處影片的詞",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "空白鍵顯示答案 · 1 2 3 4 評分 · R 重播句子 · F 專注模式",
   "Leave focus mode (F)": "退出專注模式 (F)",
-  "Focus mode: the video scene, no numbers (F)": "專注模式：看影片畫面，不看數字 (F)"
+  "Focus mode: the video scene, no numbers (F)": "專注模式：看影片畫面，不看數字 (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "自動（預設）：Inter，中日韓文字依介面語言的字形顯示",
+  "Inter (built-in)": "Inter（內建）"
 }

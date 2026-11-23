@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文 ভাষা অসমীয়া",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (কেৱল NVIDIA, কপি-বেক)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (কেৱল NVIDIA, জিৰো-কপি)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "স্বয়ংক্ৰিয় (ডিফল্ট): সৰলীকৃত চীনা ছিষ্টেমত Noto Sans CJK SC, নহ'লে ছিষ্টেম ফণ্ট",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (অন্তৰ্নিৰ্মিত)",
   "Piped · Specific server": "Piped · নিৰ্দিষ্ট ছাৰ্ভাৰ",
   "Piped · Auto-select server": "Piped · স্বয়ংক্ৰিয়ভাৱে ছাৰ্ভাৰ বাছনি",
@@ -3720,5 +3719,7 @@
   "Words without a video": "ভিডিঅ' নথকা শব্দ",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "স্পেচে উত্তৰ দেখুৱায় · 1 2 3 4 গ্ৰেড · R ৰে বাক্যটো পুনৰ বজায় · F মনোযোগ মোড",
   "Leave focus mode (F)": "মনোযোগ মোডৰ পৰা ওলাওক (F)",
-  "Focus mode: the video scene, no numbers (F)": "মনোযোগ মোড: ভিডিঅ'ৰ দৃশ্য, সংখ্যা নাই (F)"
+  "Focus mode: the video scene, no numbers (F)": "মনোযোগ মোড: ভিডিঅ'ৰ দৃশ্য, সংখ্যা নাই (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "স্বয়ংক্ৰিয় (ডিফল্ট): Inter, চীনা, জাপানী আৰু কোৰিয়ান আখৰ ইণ্টাৰফেচ ভাষাৰ ৰূপত",
+  "Inter (built-in)": "Inter (অন্তৰ্নিৰ্মিত)"
 }

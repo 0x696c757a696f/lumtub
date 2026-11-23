@@ -16,6 +16,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../apple_chip.dart';
 import '../ai_filter.dart';
 import '../android_subtitle_fonts.dart';
+import '../cjk_font_packs.dart';
 import '../app_directories.dart';
 import '../learning/learning.dart';
 import '../learning/vocabulary.dart' show wavTail;
@@ -164,6 +165,7 @@ part 'window_actions.dart';
 part 'ios_pip_actions.dart';
 part 'learning_actions.dart';
 part 'study_actions.dart';
+part 'cjk_font_actions.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, downloads, learning, settings, channel, playlist, youtubePlaylist }
 
@@ -584,6 +586,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   SecureJsonFile? _translationKeyFile;
   /// The subtitle shown above the main one (双语字幕), if any.
   SubtitleOption? secondarySubtitle;
+
+  /// The languages of the main and the second subtitle, for drawing each in
+  /// its own character forms; empty where unknown.
+  String get mainSubtitleLanguage => player?.state.track.subtitle.language ?? '';
+  String get secondSubtitleLanguage => secondarySubtitle?.language ?? '';
   /// mpv's `secondary-sid` as it last said: 'no' when no second subtitle
   /// shows. It can show one this controller did not choose, such as one
   /// mpv brought back by itself.
@@ -1080,6 +1087,13 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// Data packs (models, language data, shaders) downloaded on demand.
   PackManager? packs;
+
+  /// The forms (see cjkFormOf) a font pack was looked for in this run.
+  final _cjkFontsAsked = <String>{};
+
+  /// Counts the downloaded faces loaded, so the theme is made again with
+  /// them in its fallback.
+  int cjkFontsRevision = 0;
 
   /// Whether [details] has subtitles other than 语音识别's.
   static bool hasOwnSubtitles(VideoDetails? details) => details?.subtitles.any((s) => s.kind != SubtitleKind.speech) ?? false;

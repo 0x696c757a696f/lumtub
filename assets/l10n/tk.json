@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文 Dil Türkmen",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (diňe NVIDIA, yzyna göçürme)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (diňe NVIDIA, göçürmesiz)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Awtomatik (adaty): ýönekeýleşdirilen hytaý ulgamynda Noto Sans CJK SC, galan ýagdaýlarda ulgam şrifti",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (içine guralan)",
   "Piped · Specific server": "Piped · Kesgitli serwer",
   "Piped · Auto-select server": "Piped · Serweri awtomatik saýla",
@@ -3720,5 +3719,7 @@
   "Words without a video": "Wideosyz sözler",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Boşluk düwmesi jogaby görkezýär · 1 2 3 4 baha · R sözlemi gaýtadan oýnadýar · F fokus tertibi",
   "Leave focus mode (F)": "Fokus tertibinden çyk (F)",
-  "Focus mode: the video scene, no numbers (F)": "Fokus tertibi: wideo sahnasy, sansyz (F)"
+  "Focus mode: the video scene, no numbers (F)": "Fokus tertibi: wideo sahnasy, sansyz (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Awtomatik (deslapky): Inter, hytaý, ýapon we koreý nyşanlary interfeýs dilinin şekillerinde",
+  "Inter (built-in)": "Inter (içine guralan)"
 }

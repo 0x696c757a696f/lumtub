@@ -81,7 +81,7 @@ class _PipViewState extends State<PipView> {
           controls: NoVideoControls,
           pauseUponEnteringBackgroundMode: false,
           subtitleViewConfiguration: settings.pipSubtitles
-              ? subtitleViewFor(settings, smallWindow: window, secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: _controller.libassDraws)
+              ? subtitleViewFor(settings, smallWindow: window, secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: _controller.libassDraws, mainLanguage: _controller.mainSubtitleLanguage, secondLanguage: _controller.secondSubtitleLanguage)
               : const SubtitleViewConfiguration(visible: false),
         ),
       ),

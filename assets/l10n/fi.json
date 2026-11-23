@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (vain NVIDIA, takaisinkopiointi)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (vain NVIDIA, nollakopiointi)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Automaattinen (oletus): yksinkertaistetun kiinan järjestelmässä Noto Sans CJK SC, muuten järjestelmän fontti",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (sisäänrakennettu)",
   "Piped · Specific server": "Piped · Valittu palvelin",
   "Piped · Auto-select server": "Piped · Palvelimen automaattinen valinta",
@@ -3721,5 +3720,7 @@
   "Words without a video": "Sanat ilman videota",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Välilyönti näyttää vastauksen · 1 2 3 4 arvioi · R toistaa repliikin uudelleen · F keskittymistila",
   "Leave focus mode (F)": "Poistu keskittymistilasta (F)",
-  "Focus mode: the video scene, no numbers (F)": "Keskittymistila: videon kohtaus, ei lukuja (F)"
+  "Focus mode: the video scene, no numbers (F)": "Keskittymistila: videon kohtaus, ei lukuja (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automaattinen (oletus): Inter, kiinalaiset, japanilaiset ja korealaiset merkit käyttöliittymän kielen muodoissa",
+  "Inter (built-in)": "Inter (sisäänrakennettu)"
 }

@@ -29,6 +29,7 @@ class _LearningHomeState extends State<LearningHome> {
         if (_GettingStarted.needed(learning)) _GettingStarted(controller: controller),
         if (learning.licensed) _StatusCard(controller: controller) else _Pitch(learning: learning),
         _VocabularyCard(controller: controller),
+        _LevelTestCard(controller: controller),
         _DictionariesCard(learning: learning),
         _AboutCard(controller: controller),
       ];

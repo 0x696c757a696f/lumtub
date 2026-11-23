@@ -17,6 +17,7 @@ import 'device_id.dart';
 import 'english_dictionary.dart';
 import 'japanese_dictionary.dart';
 import 'latin_language.dart';
+import 'level_test.dart';
 import 'lexicon.dart';
 import 'license.dart';
 import 'video_difficulty.dart';
@@ -1205,6 +1206,48 @@ class Learning extends ChangeNotifier {
         if (await part.exists()) await part.delete();
       } catch (_) {}
     }
+  }
+
+  /// The level test's items for [language]: checked against the signed
+  /// list and kept, so a test works offline once fetched. Null when they
+  /// are not published or cannot be had.
+  Future<LevelTestBank?> levelTestBank(String language) async {
+    final name = levelTestFile(language);
+    final data = _directories?.data.path;
+    final file = data == null ? null : File([data, 'learn', 'level-test', name].join(Platform.pathSeparator));
+    Uint8List? bytes;
+    final client = http.Client();
+    try {
+      final expected = (await _signedSums(client)).of(name);
+      if (expected == null) return null;
+      if (file != null && await file.exists()) {
+        final kept = await file.readAsBytes();
+        if (sha256.convert(kept).toString() == expected) bytes = kept;
+      }
+      if (bytes == null) {
+        final response = await client.get(Uri.parse('$learningPackRelease/$name')).timeout(const Duration(seconds: 60));
+        if (response.statusCode != 200) throw HttpException('Level test HTTP ${response.statusCode}');
+        if (response.bodyBytes.length > 4 << 20) throw const FormatException('The level test is too big');
+        if (sha256.convert(response.bodyBytes).toString() != expected) throw const FormatException('The level test download is damaged');
+        bytes = response.bodyBytes;
+        if (file != null) {
+          await file.parent.create(recursive: true);
+          final part = File('${file.path}.part');
+          await part.writeAsBytes(bytes, flush: true);
+          await part.rename(file.path);
+        }
+      }
+    } catch (e) {
+      logWarn('Could not fetch the $language level test: $e');
+      // Offline: the copy kept, which was checked when it came.
+      if (file != null && await file.exists()) bytes = await file.readAsBytes();
+    } finally {
+      client.close();
+    }
+    if (bytes == null) return null;
+    final kept = bytes;
+    final bank = await Isolate.run(() => LevelTestBank.fromBytes(language, kept));
+    return bank.usable ? bank : null;
   }
 
   Directory? _segmenterOf(DictionaryPack pack) {

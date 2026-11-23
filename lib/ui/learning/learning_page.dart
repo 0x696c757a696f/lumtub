@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' show Random, max;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,6 +18,7 @@ import '../../learning/anki_package.dart';
 import '../../learning/english_dictionary.dart';
 import '../../learning/known_words.dart';
 import '../../learning/learning.dart';
+import '../../learning/level_test.dart';
 import '../../learning/review.dart';
 import '../../learning/video_words.dart';
 import '../../learning/word_token.dart';
@@ -34,12 +36,13 @@ import '../pages/settings_sections.dart' show SettingsCategory;
 import '../skin_paint.dart';
 import '../theme.dart';
 import '../video_card.dart' show thumbnailFor;
-import 'review_page.dart' show openReview, showSavedWord, watchVocabularyMoment;
+import 'review_page.dart' show ReviewPlate, openReview, showSavedWord, watchVocabularyMoment;
 import '../../subtitle_cues.dart' show SubtitleCue;
 import 'word_card.dart' show englishLevelName, showWordCard;
 
 part 'learning_home.dart';
 part 'learning_drawer_parts.dart';
+part 'level_test_page.dart';
 
 /// 学习: the rail's page; over the watch page while a video is open, so
 /// the video keeps playing.
@@ -637,6 +640,12 @@ List<(String, String, WidgetBuilder)> learningSettingRows(AppController controll
           leading: Icon(AppIcons.graduationCap),
           onTap: () => unawaited(_pickEnglishLevel(context, learning)),
         ))),
+    (tr('Find your level in 2 minutes'), '水平测试 测试 定级 level test placement', (context) => NormalItem(
+          title: tr('Find your level in 2 minutes'),
+          subtitle: tr('A quick yes/no word test that sets your level'),
+          leading: Icon(AppIcons.chartBar),
+          onTap: () => unawaited(openLevelTest(context, learning)),
+        )),
     (tr('My level in other languages'), '水平 HSK JLPT CEFR level 难词', (context) => live((context) => Column(mainAxisSize: MainAxisSize.min, children: [
           for (final pack in DictionaryPack.values)
             if (pack != DictionaryPack.english && learning.stateOf(pack) == PackState.ready && LevelScale.of(pack.language) != null)
@@ -1149,6 +1158,8 @@ Korean: 한국어기초사전 (Korean Basic Dictionary), National Institute of K
 Spanish, French, German, Italian, Russian, Portuguese: the English and Chinese Wiktionaries (CC BY-SA 4.0) as extracted by kaikki.org, and WikDict (CC BY-SA 4.0).
 
 Word levels: HSK lists from complete-hsk-vocabulary by Yanis Zafirópulos (MIT, github.com/drkameleon/complete-hsk-vocabulary); JLPT lists from OpenJLPT (CC BY-SA 4.0, github.com/evanclan/OpenJLPT), based on Jonathan Waller's JLPT lists; Korean levels from the Korean Basic Dictionary; Spanish, French, German, Italian, Russian and Portuguese levels estimated from wordfreq by Robyn Speer (data CC BY-SA 4.0): a guide, not an official CEFR list.
+
+Level test: real words from these word levels; the made-up words are Lumtub's own, generated from the same open word lists and checked against CC-CEDICT, JMdict, the Wiktionary dictionaries and wordfreq, with stroke counts from Unihan (Unicode License v3). No item is taken from a published test.
 
 Word splitting: Lindera (MIT) with IPADIC, mecab-ko-dic (Apache-2.0) and jieba (MIT).
 

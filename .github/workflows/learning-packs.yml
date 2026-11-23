@@ -246,6 +246,27 @@ jobs:
           # Not -I: it needs the wordfreq installed for this user.
           python3 .github/learning/levels.py "$RUNNER_TEMP/out" "hsk=$RUNNER_TEMP/in/hsk.json" "jlpt=$(IFS=,; echo "${jlpt[*]}")" "ko=$RUNNER_TEMP/in/ko-wiktionary.tsv" | tee -a "$GITHUB_STEP_SUMMARY"
 
+      - name: Build the level tests
+        env:
+          UNIHAN_VERSION: 16.0.0
+        run: |
+          set -euo pipefail
+          # Stroke counts (kTotalStrokes) from the Unicode Character
+          # Database's Unihan (Unicode License v3), so made-up Chinese and
+          # Japanese words are as complex as the real ones.
+          unihan=()
+          if curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/in/Unihan.zip" "https://www.unicode.org/Public/$UNIHAN_VERSION/ucd/Unihan.zip"; then
+            unihan=("unihan=$RUNNER_TEMP/in/Unihan.zip")
+          else
+            echo "::warning::Unihan could not be fetched: made-up Chinese and Japanese words are matched by frequency only"
+          fi
+          lex=("lex:en=$RUNNER_TEMP/in/en.sqlite")
+          for code in ko es fr de it ru pt; do
+            if [[ -f "$RUNNER_TEMP/in/$code.sqlite" ]]; then lex+=("lex:$code=$RUNNER_TEMP/in/$code.sqlite"); fi
+          done
+          # Not -I: it needs the wordfreq and opencc installed for this user.
+          python3 .github/learning/level_test.py "$RUNNER_TEMP/out" "$RUNNER_TEMP/out" "cedict=$RUNNER_TEMP/in/cedict.txt" "jmdict=$RUNNER_TEMP/in/ja.tsv" "${unihan[@]}" "${lex[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Build the word segmenters
         run: |
           set -euo pipefail
@@ -292,6 +313,7 @@ jobs:
             the Korean, Spanish, French, German, Italian, Russian and Portuguese dictionaries are made from the English and Chinese Wiktionaries (CC BY-SA 4.0, https://www.wiktionary.org/) as extracted by kaikki.org (https://kaikki.org/) and from WikDict (CC BY-SA, https://www.wikdict.com/);
             Korean meanings and levels come first from the Korean Basic Dictionary (한국어기초사전) of the National Institute of Korean Language (CC BY-SA 2.0 KR, https://krdict.korean.go.kr/), via its open data in https://github.com/basickorean/basickorean-vocab.
             Word levels: the HSK lists from complete-hsk-vocabulary by Yanis Zafirópulos (MIT, https://github.com/drkameleon/complete-hsk-vocabulary); the JLPT lists from OpenJLPT (CC BY-SA 4.0, https://github.com/evanclan/OpenJLPT), based on Jonathan Waller's JLPT lists; the Korean levels from the Korean Basic Dictionary; the Spanish, French, German, Italian, Russian and Portuguese levels estimated from wordfreq by Robyn Speer (data CC BY-SA 4.0), a guide and not an official CEFR list.
+            Level test items: real words from these word levels (English by the exam tags of its word list), and made-up words Lumtub generates from the same open word lists, checked against CC-CEDICT, JMdict, the Wiktionary dictionaries and wordfreq; stroke counts from Unihan (Unicode License v3). No item is taken from a published test.
             The word segmenters are Lindera (MIT, https://github.com/lindera/lindera) builds of IPADIC (its own permissive license), mecab-ko-dic (Apache-2.0) and mecab-jieba (MIT); each zip holds its NOTICE.txt.
         run: |
           set -euo pipefail

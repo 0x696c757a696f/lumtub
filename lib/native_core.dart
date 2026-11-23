@@ -301,6 +301,17 @@ class NativeCore {
     return (seconds: (answer['seconds'] as num?)?.toDouble(), error: answer['error']?.toString());
   }
 
+  /// Writes an Anki package as [package] describes (anki.rs): null, or
+  /// why it could not. It reads and writes files, so run it on another
+  /// isolate.
+  static String? ankiPackage(Map<String, Object?> package) {
+    final core = instance;
+    if (core == null) return 'the Lumtub core is missing';
+    final call = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_anki_package');
+    final answer = jsonDecode(core.take(core.withText(jsonEncode(package), call)) ?? '{}') as Map;
+    return answer['error']?.toString();
+  }
+
   final bool Function(int job, int code) _kill;
   final void Function(int job) _close;
 

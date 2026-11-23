@@ -3721,5 +3721,8 @@
   "Leave focus mode (F)": "ចាកចេញពីរបៀបផ្តោតអារម្មណ៍ (F)",
   "Focus mode: the video scene, no numbers (F)": "របៀបផ្តោតអារម្មណ៍៖ ឆាកវីដេអូ គ្មានលេខ (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "ស្វ័យប្រវត្តិ (លំនាំដើម)៖ Inter ជាមួយអក្សរចិន ជប៉ុន និងកូរ៉េ ក្នុងទម្រង់នៃភាសាចំណុចប្រទាក់",
-  "Inter (built-in)": "Inter (មានស្រាប់)"
+  "Inter (built-in)": "Inter (មានស្រាប់)",
+  "Just right": "សមល្មម",
+  "Too hard": "ពិបាកពេក",
+  "Heard in {0} videos": "បានឮក្នុងវីដេអូ {0}"
 }

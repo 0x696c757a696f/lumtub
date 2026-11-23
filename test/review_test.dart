@@ -97,4 +97,28 @@ void main() {
     expect(scenes.first.title, 'Title v2');
     expect(scenes.first.video.url, 'https://www.youtube.com/watch?v=v2');
   });
+
+  test('a remembered word looked up again while watching comes back today', () async {
+    final dir = Directory.systemTemp.createTempSync('review');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final store = ReviewStore(File('${dir.path}/review.json'));
+    final start = DateTime.utc(2026, 11, 1, 9);
+    // Never reviewed: nothing to bring back.
+    expect(await store.lookedUpAgain('ja:食べる', start), isFalse);
+    await store.grade('ja:食べる', ReviewGrade.good, start);
+    final due = store.of('ja:食べる')!.due;
+    // Within the hour of its grade it is the same study.
+    expect(await store.lookedUpAgain('ja:食べる', start.add(const Duration(minutes: 20))), isFalse);
+    final later = start.add(const Duration(hours: 5));
+    expect(due.isAfter(later), isTrue);
+    expect(await store.lookedUpAgain('ja:食べる', later), isTrue);
+    final state = store.of('ja:食べる')!;
+    expect(state.due, later);
+    // Only when it comes back: stability and counts stay as graded.
+    expect(state.reps, 1);
+    expect(state.lapses, 0);
+    expect(store.reviewedOn(later), 1);
+    // Already due: nothing more to do.
+    expect(await store.lookedUpAgain('ja:食べる', later.add(const Duration(minutes: 5))), isFalse);
+  });
 }

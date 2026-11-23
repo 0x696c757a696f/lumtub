@@ -8,6 +8,7 @@ class LatinLanguageGuess {
     'es': ['el', 'la', 'que', 'de', 'y', 'los', 'las', 'es', 'por', 'una', 'con', 'no', 'pero', 'muy', 'yo', 'lo', 'para', 'del', 'está', 'qué', 'sé', 'nos', 'cuando', 'como', 'más', 'eso', 'esto', 'hay', 'te', 'mi'],
     'fr': ['le', 'la', 'les', 'et', 'est', 'je', 'vous', 'que', 'des', 'une', 'pas', 'ce', "c'est", 'dans', 'pour', 'qui', 'nous', 'il', 'du', 'avec', 'mais', 'on', 'tu', 'au', 'sur', 'ça', 'très', 'bien', 'fait', 'moi'],
     'de': ['der', 'die', 'und', 'ist', 'ich', 'nicht', 'das', 'ein', 'eine', 'zu', 'es', 'du', 'wir', 'sie', 'mit', 'auf', 'den', 'auch', 'aber', 'wie', 'habe', 'hat', 'mir', 'dich', 'mich', 'noch', 'schon', 'bitte', 'kann', 'einen'],
+    'pt': ['o', 'não', 'é', 'um', 'uma', 'os', 'do', 'da', 'em', 'no', 'na', 'você', 'eu', 'mas', 'isso', 'está', 'muito', 'tem', 'ele', 'ela', 'também', 'então', 'aqui', 'mais', 'tudo', 'foi', 'vou', 'pra', 'meu', 'com'],
     'it': ['il', 'che', 'di', 'è', 'e', 'non', 'un', 'una', 'per', 'sono', 'mi', 'gli', 'della', 'ho', 'questo', 'ma', 'anche', 'come', 'cosa', 'perché', 'ci', 'siamo', 'già', 'più', 'quando', 'molto', 'così', 'sei', 'ti', 'tutto'],
   };
 
@@ -16,6 +17,7 @@ class LatinLanguageGuess {
     'fr': 'çœêèàùâîôû',
     'de': 'ßäöü',
     'it': 'ìò',
+    'pt': 'ãõ',
   };
 
   final _tally = <String, double>{};

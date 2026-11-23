@@ -2,8 +2,9 @@
 //!
 //! Languages written with spaces are cut here: French and Italian
 //! elision (`l'amico`, `j'ai`) and French inverted pronouns
-//! (`parlez-vous`, `a-t-il`) become separate words, each with its own
-//! place on screen. Pronouns joined to the end of a Spanish or Italian
+//! (`parlez-vous`, `a-t-il`) and Portuguese hyphenated pronouns
+//! (`dá-me`, `fazê-lo`) become separate words, each with its own place on
+//! screen. Pronouns joined to the end of a Spanish or Italian
 //! word (`hacerlo`, `dammelo`) stay one word on screen; the dictionary
 //! looks for the word under them only when it does not know the whole
 //! ([without_pronouns]).
@@ -159,8 +160,16 @@ fn word(
     }
     let whole = key_of(&line[start..end]);
     let joined = whole.contains(['\'', '-']);
-    if !joined || !matches!(language, "fr" | "it") || known(&whole) {
+    if !joined || !matches!(language, "fr" | "it" | "pt") || known(&whole) {
         out.push(Piece::new(start, end, whole));
+        return;
+    }
+    if language == "pt" {
+        if whole.contains('-') {
+            hyphen_parts(line, start, end, out);
+        } else {
+            out.push(Piece::new(start, end, whole));
+        }
         return;
     }
     if language == "fr" && whole.contains('-') && french_inversion(line, start, end, known, out) {
@@ -257,6 +266,24 @@ fn elided(language: &str, left: &str) -> bool {
     }
 }
 
+/// `dá-me`, `fazê-lo`, `dir-te-ei`: a Portuguese verb and the pronouns
+/// joined to it by hyphens, each a word of its own. Called only when the
+/// dictionary does not know the whole, so `guarda-chuva` stays whole.
+fn hyphen_parts(line: &str, start: usize, end: usize, out: &mut Vec<Piece>) {
+    let mut from = start;
+    for (i, c) in line[start..end].char_indices() {
+        if c == '-' {
+            if start + i > from {
+                out.push(Piece::new(from, start + i, key_of(&line[from..start + i])));
+            }
+            from = start + i + 1;
+        }
+    }
+    if end > from {
+        out.push(Piece::new(from, end, key_of(&line[from..end])));
+    }
+}
+
 /// `parlez-vous`, `a-t-il`, `donne-le-moi`: the verb and its pronouns as
 /// words of their own, the `t` between them left out. Other joined words
 /// (`week-end`, `peut-être`) stay whole.
@@ -308,6 +335,7 @@ pub fn without_pronouns(language: &str, word: &str) -> Vec<String> {
     match language {
         "es" => spanish_stems(&unaccented(&word)),
         "it" => italian_stems(&word),
+        "pt" => portuguese_verb(&word),
         _ => Vec::new(),
     }
 }
@@ -356,6 +384,27 @@ fn spanish_stems(word: &str) -> Vec<String> {
         }
     }
     out
+}
+
+/// A Portuguese infinitive that lost its `r` before `-lo`, `-la`, `-los`,
+/// `-las`: `fazê` → `fazer`, `comprá` → `comprar`, `parti` → `partir`,
+/// `pô` → `pôr`.
+fn portuguese_verb(word: &str) -> Vec<String> {
+    let Some(last) = word.chars().last() else {
+        return Vec::new();
+    };
+    let stem = &word[..word.len() - last.len_utf8()];
+    if stem.chars().count() < 1 {
+        return Vec::new();
+    }
+    match last {
+        'á' => vec![format!("{stem}ar")],
+        'ê' => vec![format!("{stem}er")],
+        'í' | 'i' => vec![format!("{stem}ir")],
+        'ô' if stem == "p" => vec!["pôr".to_string()],
+        'ô' => vec![format!("{stem}or")],
+        _ => Vec::new(),
+    }
 }
 
 fn italian_stems(word: &str) -> Vec<String> {
@@ -845,6 +894,14 @@ mod tests {
             ["Hacerlo", "Dímelo"]
         );
         assert_eq!(texts(&spaced("ru", "За́мок — ёлка", &[])), ["За́мок", "ёлка"]);
+        assert_eq!(
+            texts(&spaced(
+                "pt",
+                "Dá-me o guarda-chuva, vou fazê-lo",
+                &["guarda-chuva"]
+            )),
+            ["Dá", "me", "o", "guarda-chuva", "vou", "fazê", "lo"]
+        );
     }
 
     #[test]
@@ -860,6 +917,11 @@ mod tests {
         assert!(without_pronouns("it", "porlo").contains(&"porre".to_string()));
         assert!(without_pronouns("it", "guardandola").contains(&"guardando".to_string()));
         assert!(without_pronouns("fr", "parlerle").is_empty());
+        assert_eq!(without_pronouns("pt", "fazê"), ["fazer"]);
+        assert_eq!(without_pronouns("pt", "comprá"), ["comprar"]);
+        assert_eq!(without_pronouns("pt", "parti"), ["partir"]);
+        assert_eq!(without_pronouns("pt", "pô"), ["pôr"]);
+        assert!(without_pronouns("pt", "casa").is_empty());
     }
 
     #[test]

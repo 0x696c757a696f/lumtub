@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "கவனப் பயன்முறையிலிருந்து வெளியேறு (F)",
   "Focus mode: the video scene, no numbers (F)": "கவனப் பயன்முறை: வீடியோ காட்சி, எண்கள் இல்லை (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "தானியங்கி (இயல்புநிலை): Inter, சீன, ஜப்பானிய மற்றும் கொரிய எழுத்துகள் இடைமுக மொழியின் வடிவங்களில்",
-  "Inter (built-in)": "Inter (உள்ளமைந்தது)"
+  "Inter (built-in)": "Inter (உள்ளமைந்தது)",
+  "Just right": "சரியானது",
+  "Too hard": "மிகக் கடினம்",
+  "Heard in {0} videos": "{0} வீடியோக்களில் கேட்டது"
 }

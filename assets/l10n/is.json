@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Hætta í einbeitingarham (F)",
   "Focus mode: the video scene, no numbers (F)": "Einbeitingarhamur: atriðið úr myndskeiðinu, engar tölur (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Sjálfvirkt (sjálfgefið): Inter, með kínverskum, japönskum og kóreskum stöfum í myndum viðmótstungumálsins",
-  "Inter (built-in)": "Inter (innbyggt)"
+  "Inter (built-in)": "Inter (innbyggt)",
+  "Just right": "Hæfilegt",
+  "Too hard": "Of erfitt",
+  "Heard in {0} videos": "Heyrt í {0} myndböndum"
 }

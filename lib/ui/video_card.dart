@@ -9,6 +9,8 @@ import 'package:flutter/services.dart';
 
 import '../device.dart';
 import '../app/app_controller.dart';
+import '../learning/video_difficulty.dart';
+import '../learning/video_words.dart' show VideoLevel, VideoWords;
 import '../appearance_settings.dart';
 import '../library_store.dart';
 import '../models.dart';
@@ -355,6 +357,7 @@ class VideoRow extends StatelessWidget {
                     else if (item.durationLabel.isNotEmpty)
                       PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
                     if (item.membersOnly) const PositionedDirectional(start: 4, bottom: 4, child: MembersOnlyBadge()),
+                    PositionedDirectional(start: 4, top: 4, child: DifficultyBadge(item.id)),
                     _ProgressBar(item: item),
                   ]),
                 ),
@@ -753,6 +756,7 @@ class _VideoCardState extends State<VideoCard> {
                 else if (item.durationLabel.isNotEmpty)
                   PositionedDirectional(end: 8, bottom: 6, child: DurationBadge(item.durationLabel, onShade: views != null)),
                 if (item.membersOnly) const PositionedDirectional(start: 8, top: 8, child: MembersOnlyBadge()),
+                PositionedDirectional(start: 8, top: item.membersOnly ? 34 : 8, child: DifficultyBadge(item.id)),
                 _ProgressBar(item: item),
                 if (_hovered) PositionedDirectional(top: 8, end: 8, child: _QuickActions(item: item)),
               ]),
@@ -926,6 +930,33 @@ class WatchedLine extends StatelessWidget {
   }
 }
 
+/// How hard a video is for the learner, from the last time its subtitles
+/// were read: shown with learning on and the pack unlocked.
+class DifficultyBadge extends StatelessWidget {
+  const DifficultyBadge(this.id, {super.key});
+  final String id;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: videoDifficulty,
+        builder: (context, _) {
+          final controller = VideoActions.of(context);
+          final known = videoDifficulty.knownOf(id);
+          if (known == null || controller == null || !controller.learningOn || !controller.learning.unlocked) return const SizedBox.shrink();
+          final (label, color) = switch (VideoWords.levelFor(known)) {
+            VideoLevel.easy => (tr('Easy'), const Color(0xFF2E7D32)),
+            VideoLevel.right => (tr('Just right'), const Color(0xFF1565C0)),
+            VideoLevel.hard => (tr('Challenging'), const Color(0xFFE65100)),
+            VideoLevel.tooHard => (tr('Too hard'), const Color(0xFFB71C1C)),
+          };
+          return Tooltip(
+            message: '${(known * 100).floor()} % ${tr('of what is said you know')}',
+            child: DurationBadge(label, color: color),
+          );
+        },
+      );
+}
+
 /// The mark on a members-only video, in the green YouTube gives it.
 class MembersOnlyBadge extends StatelessWidget {
   const MembersOnlyBadge({super.key});
@@ -1011,6 +1042,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
                   else if (item.durationLabel.isNotEmpty)
                     PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
                   if (item.membersOnly) const PositionedDirectional(start: 4, bottom: 4, child: MembersOnlyBadge()),
+                    PositionedDirectional(start: 4, top: 4, child: DifficultyBadge(item.id)),
                   _ProgressBar(item: item),
                 ]),
               ),

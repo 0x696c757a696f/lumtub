@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Zapusti način osredotočenosti (F)",
   "Focus mode: the video scene, no numbers (F)": "Način osredotočenosti: prizor iz videoposnetka, brez številk (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Samodejno (privzeto): Inter, s kitajskimi, japonskimi in korejskimi znaki v oblikah jezika vmesnika",
-  "Inter (built-in)": "Inter (vgrajena)"
+  "Inter (built-in)": "Inter (vgrajena)",
+  "Just right": "Ravno prav",
+  "Too hard": "Pretežko",
+  "Heard in {0} videos": "Slišano v {0} videih"
 }

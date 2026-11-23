@@ -3721,5 +3721,8 @@
   "Leave focus mode (F)": "ফোকাস মোড থেকে বের হন (F)",
   "Focus mode: the video scene, no numbers (F)": "ফোকাস মোড: ভিডিওর দৃশ্য, কোনো সংখ্যা নেই (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "স্বয়ংক্রিয় (ডিফল্ট): Inter, চীনা, জাপানি ও কোরিয়ান অক্ষর ইন্টারফেস ভাষার রূপে",
-  "Inter (built-in)": "Inter (অন্তর্নির্মিত)"
+  "Inter (built-in)": "Inter (অন্তর্নির্মিত)",
+  "Just right": "উপযুক্ত",
+  "Too hard": "খুব কঠিন",
+  "Heard in {0} videos": "{0}টি ভিডিওতে শোনা গেছে"
 }

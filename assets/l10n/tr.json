@@ -3727,5 +3727,8 @@
   "Leave focus mode (F)": "Odak modundan çık (F)",
   "Focus mode: the video scene, no numbers (F)": "Odak modu: videonun sahnesi, sayılar yok (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Otomatik (varsayılan): Inter, Çince, Japonca ve Korece karakterler arayüz dilinin biçimlerinde",
-  "Inter (built-in)": "Inter (yerleşik)"
+  "Inter (built-in)": "Inter (yerleşik)",
+  "Just right": "Tam kıvamında",
+  "Too hard": "Çok zor",
+  "Heard in {0} videos": "{0} videoda duyuldu"
 }

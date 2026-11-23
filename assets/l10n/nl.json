@@ -3727,5 +3727,8 @@
   "Leave focus mode (F)": "Focusmodus verlaten (F)",
   "Focus mode: the video scene, no numbers (F)": "Focusmodus: de videoscène, geen cijfers (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatisch (standaard): Inter, met Chinese, Japanse en Koreaanse tekens in de vormen van de interfacetaal",
-  "Inter (built-in)": "Inter (ingebouwd)"
+  "Inter (built-in)": "Inter (ingebouwd)",
+  "Just right": "Precies goed",
+  "Too hard": "Te moeilijk",
+  "Heard in {0} videos": "Gehoord in {0} video's"
 }

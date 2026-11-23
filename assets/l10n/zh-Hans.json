@@ -3760,7 +3760,6 @@
   "Japanese dictionary (Japanese–Chinese–English, with kana)": "日语词典（日中英，带假名）",
   "Chinese dictionary: CC-CEDICT by MDBG, under CC BY-SA 4.0. English dictionary: ECDICT by skywind3000, under the MIT license. Japanese dictionary: JMdict by the Electronic Dictionary Research and Development Group, under CC BY-SA 4.0.": "中文词典：CC-CEDICT（MDBG 发布，CC BY-SA 4.0 许可）。英语词典：ECDICT（skywind3000，MIT 许可）。日语词典：JMdict（EDRDG，CC BY-SA 4.0 许可）。",
   "How to use it: download a dictionary, turn on a Chinese, English or Japanese subtitle, then tap any word on the video or in the subtitle list. The video waits while the word is open. Everything stays on this device.": "用法：先下载词典，打开中文、英文或日文字幕，再点视频上或字幕列表里的任意一个词。查词时视频会暂停。所有数据都只在这台设备上。",
-  "Chinese, English, Japanese, Korean, Spanish, French, German, Italian and Russian. One payment, up to 5 devices, no account, no subscription. Buying it keeps Lumtub alive.": "支持中文、英语、日语、韩语、西班牙语、法语、德语、意大利语和俄语。一次付费，最多 5 台设备，不用注册，不按月收费。你的购买让 Lumtub 能一直做下去。",
   "Romanization above Korean": "韩语上方显示罗马音",
   "Korean words in Latin letters, such as hangugeo above 한국어": "用拉丁字母标注韩语读音，例如 한국어 上方显示 hangugeo",
   "Show pinyin and kana above subtitles": "字幕上方显示拼音和假名",
@@ -4116,5 +4115,9 @@
   "Leave focus mode (F)": "退出专注模式 (F)",
   "Focus mode: the video scene, no numbers (F)": "专注模式：看视频画面，不看数字 (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "自动（默认）：Inter，中日韩文字按界面语言的字形显示",
-  "Inter (built-in)": "Inter（内置）"
+  "Inter (built-in)": "Inter（内置）",
+  "Chinese, English, Japanese, Korean, Spanish, French, German, Italian, Russian and Portuguese. One payment, up to 5 devices, no account, no subscription. Buying it keeps Lumtub alive.": "支持中文、英语、日语、韩语、西班牙语、法语、德语、意大利语、俄语和葡萄牙语。一次付费，最多 5 台设备，不用注册，不按月收费。你的购买让 Lumtub 能一直做下去。",
+  "Just right": "合适",
+  "Too hard": "太难",
+  "Heard in {0} videos": "在 {0} 个视频里听到过"
 }

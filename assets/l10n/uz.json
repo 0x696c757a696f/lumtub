@@ -3721,5 +3721,8 @@
   "Leave focus mode (F)": "Fokus rejimidan chiqish (F)",
   "Focus mode: the video scene, no numbers (F)": "Fokus rejimi: video sahnasi, raqamlarsiz (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Avtomatik (standart): Inter, xitoy, yapon va koreys belgilari interfeys tilining shakllarida",
-  "Inter (built-in)": "Inter (o'rnatilgan)"
+  "Inter (built-in)": "Inter (o'rnatilgan)",
+  "Just right": "Ayni muddao",
+  "Too hard": "Juda qiyin",
+  "Heard in {0} videos": "{0} ta videoda eshitilgan"
 }

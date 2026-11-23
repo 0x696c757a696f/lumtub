@@ -3727,5 +3727,8 @@
   "Leave focus mode (F)": "Wyjdź z trybu skupienia (F)",
   "Focus mode: the video scene, no numbers (F)": "Tryb skupienia: scena z filmu, bez liczb (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatycznie (domyślnie): Inter, ze znakami chińskimi, japońskimi i koreańskimi w formach języka interfejsu",
-  "Inter (built-in)": "Inter (wbudowana)"
+  "Inter (built-in)": "Inter (wbudowana)",
+  "Just right": "W sam raz",
+  "Too hard": "Za trudne",
+  "Heard in {0} videos": "Słyszane w {0} filmach"
 }

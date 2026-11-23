@@ -3721,5 +3721,8 @@
   "Leave focus mode (F)": "ከትኩረት ሁነታ ውጣ (F)",
   "Focus mode: the video scene, no numbers (F)": "ትኩረት ሁነታ፦ የቪዲዮ ትዕይንት፣ ቁጥሮች የሉም (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "አውቶማቲክ (ነባሪ): Inter፣ የቻይንኛ፣ የጃፓንኛ እና የኮሪያኛ ቁምፊዎች በበይነገጽ ቋንቋ ቅርጾች",
-  "Inter (built-in)": "Inter (ውስጠ-ገብ)"
+  "Inter (built-in)": "Inter (ውስጠ-ገብ)",
+  "Just right": "ልክ ነው",
+  "Too hard": "በጣም ከባድ",
+  "Heard in {0} videos": "በ{0} ቪዲዮዎች ውስጥ ተሰምቷል"
 }

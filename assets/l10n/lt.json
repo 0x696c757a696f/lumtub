@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Išeiti iš susitelkimo režimo (F)",
   "Focus mode: the video scene, no numbers (F)": "Susitelkimo režimas: vaizdo įrašo scena, be skaičių (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatinis (numatytasis): Inter, su kinų, japonų ir korėjiečių rašmenimis sąsajos kalbos formomis",
-  "Inter (built-in)": "Inter (įtrauktas)"
+  "Inter (built-in)": "Inter (įtrauktas)",
+  "Just right": "Kaip tik",
+  "Too hard": "Per sunku",
+  "Heard in {0} videos": "Girdėta {0} vaizdo įrašuose"
 }

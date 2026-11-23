@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Iziet no fokusa režīma (F)",
   "Focus mode: the video scene, no numbers (F)": "Fokusa režīms: video aina, bez skaitļiem (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automātiski (noklusējums): Inter, ar ķīniešu, japāņu un korejiešu rakstzīmēm saskarnes valodas formās",
-  "Inter (built-in)": "Inter (iebūvēts)"
+  "Inter (built-in)": "Inter (iebūvēts)",
+  "Just right": "Tieši laikā",
+  "Too hard": "Pārāk grūti",
+  "Heard in {0} videos": "Dzirdēts {0} videoklipos"
 }

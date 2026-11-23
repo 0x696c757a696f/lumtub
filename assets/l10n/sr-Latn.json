@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Izađi iz režima fokusa (F)",
   "Focus mode: the video scene, no numbers (F)": "Režim fokusa: scena iz video-snimka, bez brojeva (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatski (podrazumevano): Inter, sa kineskim, japanskim i korejskim znakovima u oblicima jezika interfejsa",
-  "Inter (built-in)": "Inter (ugrađen)"
+  "Inter (built-in)": "Inter (ugrađen)",
+  "Just right": "Taman",
+  "Too hard": "Preteško",
+  "Heard in {0} videos": "Čuto u {0} video snimaka"
 }

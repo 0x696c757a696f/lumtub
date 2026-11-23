@@ -3721,5 +3721,8 @@
   "Leave focus mode (F)": "ఫోకస్ మోడ్ నుండి నిష్క్రమించండి (F)",
   "Focus mode: the video scene, no numbers (F)": "ఫోకస్ మోడ్: వీడియో దృశ్యం, సంఖ్యలు లేవు (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "స్వయంచాలకం (డిఫాల్ట్): Inter, చైనీస్, జపనీస్ మరియు కొరియన్ అక్షరాలు ఇంటర్‌ఫేస్ భాష రూపాల్లో",
-  "Inter (built-in)": "Inter (అంతర్నిర్మితం)"
+  "Inter (built-in)": "Inter (అంతర్నిర్మితం)",
+  "Just right": "సరిగ్గా సరిపోతుంది",
+  "Too hard": "చాలా కష్టం",
+  "Heard in {0} videos": "{0} వీడియోలలో విన్నారు"
 }

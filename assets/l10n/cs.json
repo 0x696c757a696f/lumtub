@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Opustit režim soustředění (F)",
   "Focus mode: the video scene, no numbers (F)": "Režim soustředění: scéna z videa, bez čísel (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automaticky (výchozí): Inter, s čínskými, japonskými a korejskými znaky v tvarech jazyka rozhraní",
-  "Inter (built-in)": "Inter (vestavěné)"
+  "Inter (built-in)": "Inter (vestavěné)",
+  "Just right": "Akorát",
+  "Too hard": "Příliš těžké",
+  "Heard in {0} videos": "Slyšeno v {0} videích"
 }

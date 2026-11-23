@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Έξοδος από τη λειτουργία εστίασης (F)",
   "Focus mode: the video scene, no numbers (F)": "Λειτουργία εστίασης: η σκηνή του βίντεο, χωρίς αριθμούς (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Αυτόματα (προεπιλογή): Inter, με κινεζικούς, ιαπωνικούς και κορεατικούς χαρακτήρες στις μορφές της γλώσσας της διεπαφής",
-  "Inter (built-in)": "Inter (ενσωματωμένη)"
+  "Inter (built-in)": "Inter (ενσωματωμένη)",
+  "Just right": "Ό,τι πρέπει",
+  "Too hard": "Πολύ δύσκολο",
+  "Heard in {0} videos": "Ακούστηκε σε {0} βίντεο"
 }

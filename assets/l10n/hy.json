@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Դուրս գալ կենտրոնացման ռեժիմից (F)",
   "Focus mode: the video scene, no numbers (F)": "Կենտրոնացման ռեժիմ՝ տեսանյութի տեսարանը, առանց թվերի (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Ավտոմատ (կանխադրված). Inter, չինական, ճապոնական և կորեական գրանշաններով ինտերֆեյսի լեզվի ձևերով",
-  "Inter (built-in)": "Inter (ներկառուցված)"
+  "Inter (built-in)": "Inter (ներկառուցված)",
+  "Just right": "Հենց այն",
+  "Too hard": "Չափազանց դժվար",
+  "Heard in {0} videos": "Լսվել է {0} տեսանյութում"
 }

@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Lumabas sa focus mode (F)",
   "Focus mode: the video scene, no numbers (F)": "Focus mode: ang eksena ng video, walang numero (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Awtomatiko (default): Inter, na may mga karakter na Chinese, Japanese at Korean sa mga anyo ng wika ng interface",
-  "Inter (built-in)": "Inter (built-in)"
+  "Inter (built-in)": "Inter (built-in)",
+  "Just right": "Sakto lang",
+  "Too hard": "Masyadong mahirap",
+  "Heard in {0} videos": "Narinig sa {0} na video"
 }

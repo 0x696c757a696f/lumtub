@@ -3721,5 +3721,8 @@
   "Leave focus mode (F)": "Төвлөрөх горимоос гарах (F)",
   "Focus mode: the video scene, no numbers (F)": "Төвлөрөх горим: бичлэгийн дүрс, тоогүй (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Автомат (өгөгдмөл): Inter, хятад, япон, солонгос тэмдэгтүүдийг интерфейсийн хэлний хэлбэрээр",
-  "Inter (built-in)": "Inter (суулгагдсан)"
+  "Inter (built-in)": "Inter (суулгагдсан)",
+  "Just right": "Яг тохирсон",
+  "Too hard": "Хэт хэцүү",
+  "Heard in {0} videos": "{0} бичлэгт сонсогдсон"
 }

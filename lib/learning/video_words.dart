@@ -34,14 +34,32 @@ class VideoWords {
   final List<int> oneNew;
 
   /// About how hard the video is for this learner, from what is known.
-  VideoLevel get level => known >= 0.95 ? VideoLevel.easy : (known >= 0.85 ? VideoLevel.right : (known >= 0.7 ? VideoLevel.hard : VideoLevel.tooHard));
+  VideoLevel get level => levelFor(known);
+
+  static VideoLevel levelFor(double known) => known >= 0.98 ? VideoLevel.easy : (known >= 0.90 ? VideoLevel.right : (known >= 0.80 ? VideoLevel.hard : VideoLevel.tooHard));
 }
 
-/// 95 % of words known reads with ease; around 90 % is where a learner
-/// learns most (comprehensible input); below 70 % is a struggle.
+/// From studies of viewing (Durbahn et al. 2024, Webb & Rodgers 2009):
+/// 98 % of words known watches with ease, 90 to 98 % is where a learner
+/// with subtitles learns most, 80 % still gets the gist with help, and
+/// below that every line stops for a word.
 enum VideoLevel { easy, right, hard, tooHard }
 
 final _cache = <String, Future<VideoWords?>>{};
+
+final _sentenceEnd = RegExp(r'[.!?…。！？]');
+final _han = RegExp(r'\p{Script=Han}', unicode: true);
+final _upper = RegExp(r'^\p{Lu}', unicode: true);
+
+/// A capitalised word inside a sentence in a language that writes only
+/// names that way: Lisboa, Pierre. German capitalises every noun.
+bool looksLikeName(WordToken t) {
+  final language = Learning.languageOf(t);
+  if (language == 'de' || language == 'zh' || language == 'ja' || language == 'ko') return false;
+  // I'm, I've, I'll: the English I, not a name.
+  if (language == 'en' && RegExp("^I['’]").hasMatch(t.text)) return false;
+  return _upper.hasMatch(t.text) && t.text != t.text.toUpperCase();
+}
 
 /// [VideoWords] of [lines] for the words [known] holds; words at or
 /// below the learner's level count as known. Cut into words a few lines
@@ -59,6 +77,8 @@ Future<VideoWords?> _videoWords(Learning learning, KnownWords known, List<String
   final tokens = <String, WordToken>{};
   final knownKeys = <String>{};
   final languages = <String, int>{};
+  final characters = {'zh': known.characters('zh'), 'ja': known.characters('ja')};
+  final compounds = <String>{};
   for (final (i, line) in lines.indexed) {
     // A breath every few lines keeps frames coming while a long video is cut.
     if (i % 40 == 39) await Future<void>.delayed(Duration.zero);
@@ -68,17 +88,38 @@ Future<VideoWords?> _videoWords(Learning learning, KnownWords known, List<String
       continue;
     }
     final row = <String>[];
+    var start = true;
     for (final t in words) {
-      if (!t.isWord || !KnownWords.counts(t)) continue;
+      if (!t.isWord) {
+        if (_sentenceEnd.hasMatch(t.text)) start = true;
+        continue;
+      }
+      final first = start;
+      start = false;
+      if (!KnownWords.counts(t)) continue;
+      // A name says nothing about the words one knows.
+      if (!first && looksLikeName(t) && !known.knows(t)) continue;
       final key = KnownWords.tokenKey(t);
       row.add(key);
       languages.update(Learning.languageOf(t), (n) => n + 1, ifAbsent: () => 1);
-      if (tokens.putIfAbsent(key, () => t) == t && (known.knows(t) || learning.belowLevel(t))) knownKeys.add(key);
+      if (tokens.putIfAbsent(key, () => t) == t) {
+        if (known.knows(t) || learning.belowLevel(t)) {
+          knownKeys.add(key);
+          characters[Learning.languageOf(t)]?.addAll(t.text.runes);
+        }
+      }
     }
     keys.add(row);
   }
   if (tokens.isEmpty) return null;
-  final input = jsonEncode({'lines': keys, 'known': knownKeys.toList(), 'most': most});
+  // A new Chinese or Japanese word made only of characters known from
+  // other words counts as half known: its meaning can often be guessed.
+  for (final MapEntry(:key, value: t) in tokens.entries) {
+    final chars = characters[Learning.languageOf(t)];
+    if (chars == null || knownKeys.contains(key) || t.text.runes.length < 2) continue;
+    if (t.text.runes.every((c) => _han.hasMatch(String.fromCharCode(c)) && chars.contains(c))) compounds.add(key);
+  }
+  final input = jsonEncode({'lines': keys, 'known': knownKeys.toList(), 'half': compounds.toList(), 'most': most});
   final answer = await Isolate.run(() {
     final core = NativeCore.instance!;
     final coverage = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_word_coverage');

@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Forlad fokustilstand (F)",
   "Focus mode: the video scene, no numbers (F)": "Fokustilstand: videoscenen, ingen tal (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatisk (standard): Inter, med kinesiske, japanske og koreanske tegn i formerne fra grænsefladens sprog",
-  "Inter (built-in)": "Inter (indbygget)"
+  "Inter (built-in)": "Inter (indbygget)",
+  "Just right": "Tilpas",
+  "Too hard": "For svært",
+  "Heard in {0} videos": "Hørt i {0} videoer"
 }

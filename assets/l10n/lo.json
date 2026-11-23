@@ -3721,5 +3721,8 @@
   "Leave focus mode (F)": "ອອກຈາກໂໝດໂຟກັດ (F)",
   "Focus mode: the video scene, no numbers (F)": "ໂໝດໂຟກັດ: ສາກຈາກວິດີໂອ, ບໍ່ມີຕົວເລກ (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "ອັດຕະໂນມັດ (ຄ່າເລີ່ມຕົ້ນ): Inter, ພ້ອມຕົວອັກສອນຈີນ ຍີ່ປຸ່ນ ແລະ ເກົາຫຼີ ໃນຮູບແບບຂອງພາສາສ່ວນຕິດຕໍ່",
-  "Inter (built-in)": "Inter (ມີໃນຕົວ)"
+  "Inter (built-in)": "Inter (ມີໃນຕົວ)",
+  "Just right": "ພໍດີ",
+  "Too hard": "ຍາກເກີນໄປ",
+  "Heard in {0} videos": "ໄດ້ຍິນໃນ {0} ວິດີໂອ"
 }

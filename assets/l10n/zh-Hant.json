@@ -3746,5 +3746,8 @@
   "Leave focus mode (F)": "退出專注模式 (F)",
   "Focus mode: the video scene, no numbers (F)": "專注模式：看影片畫面，不看數字 (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "自動（預設）：Inter，中日韓文字依介面語言的字形顯示",
-  "Inter (built-in)": "Inter（內建）"
+  "Inter (built-in)": "Inter（內建）",
+  "Just right": "合適",
+  "Too hard": "太難",
+  "Heard in {0} videos": "在 {0} 部影片裡聽過"
 }

@@ -3721,5 +3721,8 @@
   "Leave focus mode (F)": "Kaluar tina mode fokus (F)",
   "Focus mode: the video scene, no numbers (F)": "Mode fokus: adegan pidéo, taya angka (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Otomatis (standar): Inter, kalayan aksara Tiongkok, Jepang, jeung Korea dina wangun basa antarmuka",
-  "Inter (built-in)": "Inter (kaasup)"
+  "Inter (built-in)": "Inter (kaasup)",
+  "Just right": "Pas",
+  "Too hard": "Hésé teuing",
+  "Heard in {0} videos": "Kadéngé dina {0} vidéo"
 }

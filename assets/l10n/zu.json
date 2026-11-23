@@ -3721,5 +3721,8 @@
   "Leave focus mode (F)": "Phuma kumodi yokugxila (F)",
   "Focus mode: the video scene, no numbers (F)": "Imodi yokugxila: indawo yevidiyo, ayikho inombolo (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Okuzenzakalelayo (okuzenzekelayo): Inter, nezinhlamvu zesiShayina, zesiJapane nezesiKorea ngezimo zolimi lwesibonisi",
-  "Inter (built-in)": "Inter (ifakiwe)"
+  "Inter (built-in)": "Inter (ifakiwe)",
+  "Just right": "Kulungile",
+  "Too hard": "Kunzima kakhulu",
+  "Heard in {0} videos": "Kuzwakale kumavidiyo angu-{0}"
 }

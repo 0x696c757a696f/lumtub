@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Kilépés a fókuszmódból (F)",
   "Focus mode: the video scene, no numbers (F)": "Fókuszmód: a videó jelenete, számok nélkül (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatikus (alapértelmezett): Inter, a kínai, japán és koreai karakterek a felület nyelvének formáiban",
-  "Inter (built-in)": "Inter (beépített)"
+  "Inter (built-in)": "Inter (beépített)",
+  "Just right": "Épp jó",
+  "Too hard": "Túl nehéz",
+  "Heard in {0} videos": "{0} videóban hallott"
 }

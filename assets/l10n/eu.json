@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Irten fokuratze modutik (F)",
   "Focus mode: the video scene, no numbers (F)": "Fokuratze modua: bideoaren eszena, zenbakirik gabe (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatikoa (lehenetsia): Inter, txinatar, japoniar eta korear karaktereak interfazearen hizkuntzaren formetan",
-  "Inter (built-in)": "Inter (integratua)"
+  "Inter (built-in)": "Inter (integratua)",
+  "Just right": "Egokia",
+  "Too hard": "Zailegia",
+  "Heard in {0} videos": "{0} bideotan entzuna"
 }

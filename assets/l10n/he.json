@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "יציאה ממצב ריכוז (F)",
   "Focus mode: the video scene, no numbers (F)": "מצב ריכוז: סצנת הסרטון, בלי מספרים (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "אוטומטי (ברירת מחדל): Inter, עם תווים סיניים, יפניים וקוריאניים בצורות של שפת הממשק",
-  "Inter (built-in)": "Inter (מובנה)"
+  "Inter (built-in)": "Inter (מובנה)",
+  "Just right": "בדיוק מתאים",
+  "Too hard": "קשה מדי",
+  "Heard in {0} videos": "נשמע ב-{0} סרטונים"
 }

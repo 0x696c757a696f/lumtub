@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Modum intentionis relinquere (F)",
   "Focus mode: the video scene, no numbers (F)": "Modus intentionis: scaena videi, sine numeris (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automaticum (praesumptum): Inter, cum notis Sinicis, Iaponicis et Coreanis in formis linguae interfaciei",
-  "Inter (built-in)": "Inter (insitus)"
+  "Inter (built-in)": "Inter (insitus)",
+  "Just right": "Aptum",
+  "Too hard": "Nimis difficile",
+  "Heard in {0} videos": "Audita in {0} pelliculis"
 }

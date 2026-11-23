@@ -3721,5 +3721,8 @@
   "Leave focus mode (F)": "Фокус режимінен шығу (F)",
   "Focus mode: the video scene, no numbers (F)": "Фокус режимі: бейне көрінісі, сандарсыз (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Автоматты (әдепкі): Inter, қытай, жапон және корей таңбалары интерфейс тілінің пішімдерінде",
-  "Inter (built-in)": "Inter (кіріктірілген)"
+  "Inter (built-in)": "Inter (кіріктірілген)",
+  "Just right": "Дәл келеді",
+  "Too hard": "Тым қиын",
+  "Heard in {0} videos": "{0} бейнеде естілді"
 }

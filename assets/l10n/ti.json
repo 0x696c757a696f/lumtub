@@ -3721,5 +3721,8 @@
   "Leave focus mode (F)": "ካብ ኣቓልቦ ኣገባብ ውጻእ (F)",
   "Focus mode: the video scene, no numbers (F)": "ኣቓልቦ ኣገባብ፦ ትዕይንቲ ቪድዮ፣ ቁጽሪ የለን (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "ኣውቶማቲክ (ነባሪ): Inter፣ ናይ ቻይና፣ ጃፓን፣ ኮርያ ፊደላት ብቕርጽታት ቋንቋ ኢንተርፌስ",
-  "Inter (built-in)": "Inter (ውዱብ)"
+  "Inter (built-in)": "Inter (ውዱብ)",
+  "Just right": "ልክ እዩ",
+  "Too hard": "ኣዝዩ ከቢድ",
+  "Heard in {0} videos": "ኣብ {0} ቪድዮታት ተሰሚዑ"
 }

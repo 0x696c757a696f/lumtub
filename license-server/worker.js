@@ -580,6 +580,8 @@ export { md5, sign };
 const AZURE_VOICES = {
   en: 'en-US-JennyNeural', zh: 'zh-CN-XiaoxiaoNeural', ja: 'ja-JP-NanamiNeural', ko: 'ko-KR-SunHiNeural', es: 'es-ES-ElviraNeural',
   fr: 'fr-FR-DeniseNeural', de: 'de-DE-KatjaNeural', it: 'it-IT-ElsaNeural', ru: 'ru-RU-SvetlanaNeural',
+  pt: 'pt-BR-FranciscaNeural', 'pt-BR': 'pt-BR-FranciscaNeural', 'pt-PT': 'pt-PT-RaquelNeural',
+  'es-ES': 'es-ES-ElviraNeural', 'es-MX': 'es-MX-DaliaNeural',
 };
 // New words made a day: per device, and in all (about 500 a day stays
 // within Azure's 500,000 free characters a month).
@@ -638,7 +640,10 @@ async function azureVoice(text, voice, env) {
   return await answer.arrayBuffer();
 }
 
-const GOOGLE_LANGUAGES = { en: 'en-US', zh: 'cmn-CN', ja: 'ja-JP', ko: 'ko-KR', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', it: 'it-IT', ru: 'ru-RU' };
+const GOOGLE_LANGUAGES = {
+  en: 'en-US', zh: 'cmn-CN', ja: 'ja-JP', ko: 'ko-KR', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', it: 'it-IT', ru: 'ru-RU',
+  pt: 'pt-BR', 'pt-BR': 'pt-BR', 'pt-PT': 'pt-PT', 'es-ES': 'es-ES', 'es-MX': 'es-US',
+};
 
 async function googleVoice(text, language, env) {
   const answer = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize', {

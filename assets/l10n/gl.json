@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Saír do modo concentración (F)",
   "Focus mode: the video scene, no numbers (F)": "Modo concentración: a escena do vídeo, sen números (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automática (predeterminada): Inter, cos caracteres chineses, xaponeses e coreanos nas formas do idioma da interface",
-  "Inter (built-in)": "Inter (integrado)"
+  "Inter (built-in)": "Inter (integrado)",
+  "Just right": "Axeitado",
+  "Too hard": "Demasiado difícil",
+  "Heard in {0} videos": "Escoitada en {0} vídeos"
 }

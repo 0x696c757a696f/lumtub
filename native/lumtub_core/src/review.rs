@@ -146,10 +146,18 @@ fn json_of(state: State) -> Value {
 /// What a video's lines hold for a learner who knows [known]: the share
 /// of its words (counted each time they are said) known already, its
 /// distinct words, the unknown ones said most often, and the lines with
-/// exactly one unknown word among at least three.
-pub fn coverage(lines: &[Vec<String>], known: &HashSet<&str>, most: usize) -> Value {
+/// exactly one unknown word among at least three. A word in [half] (a
+/// Chinese or Japanese word whose every character the learner knows from
+/// other words) counts as half understood: its meaning can often be
+/// guessed, but not always.
+pub fn coverage(
+    lines: &[Vec<String>],
+    known: &HashSet<&str>,
+    half: &HashSet<&str>,
+    most: usize,
+) -> Value {
     let mut said = 0usize;
-    let mut understood = 0usize;
+    let mut understood = 0.0f64;
     let mut counts: HashMap<&str, usize> = HashMap::new();
     let mut first: HashMap<&str, usize> = HashMap::new();
     let mut one_new = Vec::new();
@@ -158,8 +166,11 @@ pub fn coverage(lines: &[Vec<String>], known: &HashSet<&str>, most: usize) -> Va
         for word in line {
             said += 1;
             if known.contains(word.as_str()) {
-                understood += 1;
+                understood += 1.0;
             } else {
+                if half.contains(word.as_str()) {
+                    understood += 0.5;
+                }
                 unknown.insert(word);
                 *counts.entry(word).or_default() += 1;
                 first.entry(word).or_insert(i);
@@ -184,7 +195,7 @@ pub fn coverage(lines: &[Vec<String>], known: &HashSet<&str>, most: usize) -> Va
     often.sort_unstable_by(order);
     json!({
         "said": said,
-        "known": if said == 0 { 0.0 } else { understood as f64 / said as f64 },
+        "known": if said == 0 { 0.0 } else { understood / said as f64 },
         "words": distinct.len(),
         "unknownWords": unknown_words,
         "often": often.iter().take(most).map(|(w, n, _)| json!([w, n])).collect::<Vec<_>>(),
@@ -215,7 +226,7 @@ pub unsafe extern "C" fn lumtub_review_next(json: *const u8, length: usize) -> *
     give(json_of(next(state, grade, now)).to_string())
 }
 
-/// [coverage] for Dart, from `{lines: [[word key, …], …], known: [key, …], most}`.
+/// [coverage] for Dart, from `{lines: [[word key, …], …], known: [key, …], half: [key, …], most}`.
 ///
 /// # Safety
 /// [json] must point to [length] bytes of UTF-8.
@@ -246,12 +257,17 @@ pub unsafe extern "C" fn lumtub_word_coverage(json: *const u8, length: usize) ->
         .and_then(Value::as_array)
         .map(|k| k.iter().filter_map(Value::as_str).collect())
         .unwrap_or_default();
+    let half: HashSet<&str> = input
+        .get("half")
+        .and_then(Value::as_array)
+        .map(|k| k.iter().filter_map(Value::as_str).collect())
+        .unwrap_or_default();
     let most = input
         .get("most")
         .and_then(Value::as_u64)
         .unwrap_or(10)
         .min(200) as usize;
-    give(coverage(&lines, &known, most).to_string())
+    give(coverage(&lines, &known, &half, most).to_string())
 }
 
 #[cfg(test)]
@@ -303,9 +319,12 @@ mod tests {
             line(&["学习", "学习"]),
         ];
         let known: HashSet<&str> = ["我", "喜欢"].into_iter().collect();
-        let answer = coverage(&lines, &known, 5);
+        let answer = coverage(&lines, &known, &HashSet::new(), 5);
         assert_eq!(answer["said"], 8);
         assert_eq!(answer["known"], 0.5);
+        // 吃饭 guessed from known characters: half of its one saying.
+        let half: HashSet<&str> = ["吃饭"].into_iter().collect();
+        assert_eq!(coverage(&lines, &known, &half, 5)["known"], 4.5 / 8.0);
         assert_eq!(answer["words"], 4);
         assert_eq!(answer["unknownWords"], 2);
         assert_eq!(answer["often"][0], json!(["学习", 3]));

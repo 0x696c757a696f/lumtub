@@ -12,6 +12,8 @@ import '../../learning/english_dictionary.dart';
 import '../../learning/japanese_dictionary.dart';
 import '../../learning/known_words.dart';
 import '../../learning/learning.dart';
+import '../../learning/review.dart' show reviewStoreOf;
+import '../../learning/video_difficulty.dart' show videoDifficulty;
 import '../../learning/vocabulary.dart';
 import '../../learning/wiktionary_dictionary.dart';
 import '../app_icons.dart';
@@ -38,6 +40,17 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
     return;
   }
   if (!context.mounted) return;
+  // A saved word opened again while watching was not remembered after all:
+  // it comes back in today's review.
+  if (learning.book case final book? when learning.unlocked) {
+    final reviews = reviewStoreOf(book);
+    for (final word in {token.text, token.key, token.key.toLowerCase()}) {
+      if (book.contains(language, word)) {
+        unawaited(reviews.load().then((_) => reviews.lookedUpAgain('$language:$word', DateTime.now())));
+        break;
+      }
+    }
+  }
   final player = controller.player;
   final wasPlaying = (player?.state.playing ?? false) | controller.takeHoverPause();
   if (wasPlaying) unawaited(player!.pause());
@@ -104,6 +117,26 @@ Future<void> _trialUsedUp(BuildContext context, AppController controller) => sho
 
 /// Without the pack: how many free word cards today has left, so the
 /// last one is no surprise.
+/// How many videos the word, being learnt, was heard in: seeing it
+/// come up again is part of learning it.
+class _SeenNote extends StatelessWidget {
+  const _SeenNote({required this.token});
+  final WordToken token;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: videoDifficulty,
+        builder: (context, _) {
+          final videos = videoDifficulty.videosWith(KnownWords.tokenKey(token));
+          if (videos < 2) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(tr('Heard in {0} videos', [videos]), style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.outline)),
+          );
+        },
+      );
+}
+
 class _TrialNote extends StatelessWidget {
   const _TrialNote({required this.learning});
   final Learning learning;
@@ -208,6 +241,7 @@ class _WordCard extends StatelessWidget {
               if (controller.mainSubtitleAutomatic) Text(tr('Auto-generated subtitles: a word may be misheard'), style: TextStyle(fontSize: 11, color: colors.outline)),
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
+            _SeenNote(token: token),
             _TrialNote(learning: controller.learning),
           ]),
         ),
@@ -315,6 +349,7 @@ class _EnglishCard extends StatelessWidget {
               if (controller.mainSubtitleAutomatic) Text(tr('Auto-generated subtitles: a word may be misheard'), style: TextStyle(fontSize: 11, color: colors.outline)),
               if (translation != null && translation!.isNotEmpty) Text(translation!, style: theme.textTheme.bodySmall!.copyWith(color: colors.outline)),
             ],
+            _SeenNote(token: token),
             _TrialNote(learning: controller.learning),
           ]),
         ),
@@ -448,6 +483,7 @@ class _JapaneseCard extends StatelessWidget {
                   : tr('From JMdict (EDRDG), CC BY-SA 4.0'),
               style: TextStyle(fontSize: 11, color: colors.outline),
             ),
+            _SeenNote(token: token),
             _TrialNote(learning: controller.learning),
           ]),
         ),
@@ -594,6 +630,7 @@ class _WiktionaryCard extends StatelessWidget {
                       : tr('From Wiktionary, CC BY-SA 4.0'),
               style: TextStyle(fontSize: 11, color: colors.outline),
             ),
+            _SeenNote(token: token),
             _TrialNote(learning: controller.learning),
           ]),
         ),

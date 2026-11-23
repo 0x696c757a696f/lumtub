@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "ფოკუსის რეჟიმიდან გასვლა (F)",
   "Focus mode: the video scene, no numbers (F)": "ფოკუსის რეჟიმი: ვიდეოს სცენა, რიცხვების გარეშე (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "ავტომატური (ნაგულისხმევი): Inter, ჩინური, იაპონური და კორეული სიმბოლოებით ინტერფეისის ენის ფორმებში",
-  "Inter (built-in)": "Inter (ჩაშენებული)"
+  "Inter (built-in)": "Inter (ჩაშენებული)",
+  "Just right": "ზუსტად შესაფერისი",
+  "Too hard": "ძალიან რთული",
+  "Heard in {0} videos": "მოსმენილია {0} ვიდეოში"
 }

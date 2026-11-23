@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Dil nga modaliteti i përqendrimit (F)",
   "Focus mode: the video scene, no numbers (F)": "Modaliteti i përqendrimit: skena e videos, pa numra (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatike (parazgjedhja): Inter, me shkronjat kineze, japoneze dhe koreane në format e gjuhës së ndërfaqes",
-  "Inter (built-in)": "Inter (i integruar)"
+  "Inter (built-in)": "Inter (i integruar)",
+  "Just right": "Tamam",
+  "Too hard": "Shumë e vështirë",
+  "Heard in {0} videos": "Dëgjuar në {0} video"
 }

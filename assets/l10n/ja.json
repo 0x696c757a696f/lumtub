@@ -3727,5 +3727,8 @@
   "Leave focus mode (F)": "集中モードを終了 (F)",
   "Focus mode: the video scene, no numbers (F)": "集中モード：動画のシーンを表示、数字は非表示 (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "自動（既定）：Inter。漢字・かな・ハングルは表示言語の字形で表示",
-  "Inter (built-in)": "Inter（内蔵）"
+  "Inter (built-in)": "Inter（内蔵）",
+  "Just right": "ちょうどいい",
+  "Too hard": "難しすぎる",
+  "Heard in {0} videos": "{0} 本の動画で聞いた"
 }

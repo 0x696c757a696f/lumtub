@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Keluar dari mod fokus (F)",
   "Focus mode: the video scene, no numbers (F)": "Mod fokus: babak video, tanpa nombor (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatik (lalai): Inter, dengan aksara Cina, Jepun dan Korea dalam bentuk bahasa antara muka",
-  "Inter (built-in)": "Inter (terbina dalam)"
+  "Inter (built-in)": "Inter (terbina dalam)",
+  "Just right": "Sesuai",
+  "Too hard": "Terlalu sukar",
+  "Heard in {0} videos": "Didengar dalam {0} video"
 }

@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "خروج از حالت تمرکز (F)",
   "Focus mode: the video scene, no numbers (F)": "حالت تمرکز: صحنهٔ ویدیو، بدون عدد (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "خودکار (پیش‌فرض): Inter، با نویسه‌های چینی، ژاپنی و کره‌ای در شکل‌های زبان رابط",
-  "Inter (built-in)": "Inter (داخلی)"
+  "Inter (built-in)": "Inter (داخلی)",
+  "Just right": "مناسب",
+  "Too hard": "خیلی سخت",
+  "Heard in {0} videos": "در {0} ویدیو شنیده شده"
 }

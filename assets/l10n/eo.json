@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Eliri el fokusa reĝimo (F)",
   "Focus mode: the video scene, no numbers (F)": "Fokusa reĝimo: la videa sceno, sen nombroj (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Aŭtomata (implicita): Inter, kun ĉinaj, japanaj kaj koreaj signoj en la formoj de la lingvo de la interfaco",
-  "Inter (built-in)": "Inter (enkonstruita)"
+  "Inter (built-in)": "Inter (enkonstruita)",
+  "Just right": "Ĝuste taŭga",
+  "Too hard": "Tro malfacila",
+  "Heard in {0} videos": "Aŭdita en {0} videoj"
 }

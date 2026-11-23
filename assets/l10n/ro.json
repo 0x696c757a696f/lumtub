@@ -3722,5 +3722,8 @@
   "Leave focus mode (F)": "Ieși din modul concentrare (F)",
   "Focus mode: the video scene, no numbers (F)": "Mod concentrare: scena din videoclip, fără numere (F)",
   "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automat (implicit): Inter, cu caracterele chinezești, japoneze și coreene în formele limbii interfeței",
-  "Inter (built-in)": "Inter (inclus)"
+  "Inter (built-in)": "Inter (inclus)",
+  "Just right": "Potrivit",
+  "Too hard": "Prea greu",
+  "Heard in {0} videos": "Auzit în {0} videoclipuri"
 }

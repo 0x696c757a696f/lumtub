@@ -9,8 +9,10 @@ import 'package:path_provider/path_provider.dart';
 import '../../app/app_controller.dart';
 import '../../app_log.dart';
 import '../../friendly_error.dart';
+import '../../native_core.dart';
 import '../../l10n/l10n.dart';
 import '../../learning/anki_connect.dart';
+import '../../learning/anki_package.dart';
 import '../../learning/english_dictionary.dart';
 import '../../learning/known_words.dart';
 import '../../learning/learning.dart';
@@ -20,6 +22,7 @@ import '../../learning/word_token.dart';
 import '../../learning/vocabulary.dart';
 import '../../learning/word_voice.dart' show azureVoiceKey, azureVoiceRegion, googleVoiceKey;
 import '../../save_file.dart';
+import '../../thumbnail_cache.dart' show CachedThumbnail;
 import '../../widgets/settings_tiles.dart';
 import '../app_icons.dart';
 import '../motion.dart';
@@ -830,16 +833,53 @@ class _VocabularyPageState extends State<_VocabularyPage> {
     unawaited(_book?.load());
   }
 
+  /// The picture of the video [videoId] for its cards, from the
+  /// thumbnail cache or downloaded into it; null when it cannot be had.
+  Future<AnkiPictureFile?> _picture(String videoId) async {
+    final folder = widget.controller.thumbnailDirectory;
+    try {
+      final url = 'https://i.ytimg.com/vi/$videoId/mqdefault.jpg';
+      final bytes = await CachedThumbnail(url, folder == null ? null : CachedThumbnail.fileFor(folder, videoId, 'mqdefault')).bytes().timeout(const Duration(seconds: 15));
+      return (bytes: bytes, webp: isWebp(bytes));
+    } catch (e) {
+      logDebug(() => 'No picture of $videoId for Anki: $e');
+      return null;
+    }
+  }
+
+  /// Saves the book as an Anki package, with the sound of each line and
+  /// the picture of each video; an import file of text when the core
+  /// that writes packages is missing.
+  Future<void> _exportAnki(VocabularyBook book, ScaffoldMessengerState? messenger) async {
+    if (NativeCore.instance == null) {
+      final saved = await saveFileAs('lumtub-vocabulary-anki.txt', utf8.encode(vocabularyAnki(book.words)), mime: 'text/plain', label: 'Anki', extension: 'txt');
+      if (saved) messenger?.showSnackBar(SnackBar(content: Text(tr('Saved. In Anki, choose File › Import and pick this file.'))));
+      return;
+    }
+    setState(() => _sending = true);
+    final folder = await Directory.systemTemp.createTemp('lumtub-apkg');
+    try {
+      final file = File('${folder.path}${Platform.pathSeparator}lumtub-vocabulary.apkg');
+      final error = await writeAnkiPackage(book.words, book, file, picture: _picture);
+      if (error != null) throw FileSystemException(error, file.path);
+      final saved = await saveFileAs('lumtub-vocabulary.apkg', await file.readAsBytes(), mime: 'application/octet-stream', label: 'Anki', extension: 'apkg');
+      if (saved) messenger?.showSnackBar(SnackBar(content: Text(tr('Saved. In Anki, choose File › Import and pick this file.'))));
+    } finally {
+      await folder.delete(recursive: true).catchError((Object _) => folder);
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
   Future<void> _export({required bool anki}) async {
     final book = _book;
-    if (book == null || book.words.isEmpty) return;
+    if (book == null || book.words.isEmpty || _sending) return;
     if (anki && !widget.controller.learning.unlocked) return showLearningLocked(context, widget.controller.learning);
     final messenger = ScaffoldMessenger.maybeOf(context);
     try {
-      final text = anki ? vocabularyAnki(book.words) : vocabularyCsv(book.words);
-      final saved = await saveFileAs(anki ? 'lumtub-vocabulary-anki.txt' : 'lumtub-vocabulary.csv', utf8.encode(text),
-          mime: anki ? 'text/plain' : 'text/csv', label: anki ? 'Anki' : 'CSV', extension: anki ? 'txt' : 'csv');
-      if (saved) messenger?.showSnackBar(SnackBar(content: Text(anki ? tr('Saved. In Anki, choose File › Import and pick this file.') : tr('Vocabulary exported'))));
+      if (anki) return await _exportAnki(book, messenger);
+      final text = vocabularyCsv(book.words);
+      final saved = await saveFileAs('lumtub-vocabulary.csv', utf8.encode(text), mime: 'text/csv', label: 'CSV', extension: 'csv');
+      if (saved) messenger?.showSnackBar(SnackBar(content: Text(tr('Vocabulary exported'))));
     } catch (e) {
       logError('Could not export the vocabulary book', e);
       messenger?.showSnackBar(SnackBar(content: Text(tr('Export failed: {0}', [friendlyFileError(e)]))));
@@ -857,7 +897,7 @@ class _VocabularyPageState extends State<_VocabularyPage> {
     setState(() => _sending = true);
     final anki = AnkiConnect();
     try {
-      final added = await anki.send(book.words, book);
+      final added = await anki.send(book.words, book, picture: _picture);
       messenger?.showSnackBar(SnackBar(content: Text(added == 0 ? tr('Nothing new: these words are in the Lumtub deck already') : tr('{0} words added to the Lumtub deck in Anki', [added]))));
     } on AnkiException catch (e) {
       logWarn('Could not send the vocabulary to Anki: $e');
@@ -887,7 +927,7 @@ class _VocabularyPageState extends State<_VocabularyPage> {
           label: Text(tr('Send to Anki')),
         ),
         TextButton.icon(
-            onPressed: () => unawaited(_export(anki: true)),
+            onPressed: _sending ? null : () => unawaited(_export(anki: true)),
             icon: Icon(widget.controller.learning.unlocked ? AppIcons.downloadSimple : AppIcons.lock, size: 18),
             label: const Text('Anki')),
         TextButton.icon(onPressed: () => unawaited(_export(anki: false)), icon: Icon(AppIcons.downloadSimple, size: 18), label: const Text('CSV')),

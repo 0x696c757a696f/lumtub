@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:lumtub/learning/anki_card.dart';
 import 'package:lumtub/learning/anki_connect.dart';
 import 'package:lumtub/learning/vocabulary.dart';
 
@@ -66,12 +67,11 @@ void main() {
     server.listen((request) async {
       final body = jsonDecode(await utf8.decodeStream(request)) as Map;
       asked.add(body);
-      final params = body['params'] as Map;
       final result = switch (body['action']) {
         'version' => 6,
         'createDeck' => 1,
         'modelNames' => ['Cloze', '问答题'],
-        'modelFieldNames' => params['modelName'] == '问答题' ? ['正面', '背面'] : ['Text', 'Extra', 'More'],
+        'createModel' => {'id': 1},
         'canAddNotes' => [true, false],
         'addNotes' => [111],
         _ => null,
@@ -80,16 +80,65 @@ void main() {
       await request.response.close();
     });
     final anki = AnkiConnect(client: _Redirect(server.port));
-    expect(await anki.send(book.words, book), 1);
+    final pictures = <String>[];
+    expect(await anki.send(book.words, book, picture: (id) async {
+      pictures.add(id);
+      return (bytes: [1, 2], webp: false);
+    }), 1);
+    final model = asked.firstWhere((a) => a['action'] == 'createModel')['params'] as Map;
+    expect(model['modelName'], 'Lumtub');
+    expect(model['inOrderFields'], AnkiCard.fields);
+    expect((model['css'] as String).startsWith(AnkiCard.styleMarker), isTrue);
     final add = asked.firstWhere((a) => a['action'] == 'addNotes')['params']['notes'] as List;
     expect(add, hasLength(1));
     final note = add.single as Map;
-    expect(note['modelName'], '问答题');
-    // Newest first: 'main' then 'docteur'; canAddNotes kept the first.
-    expect((note['fields'] as Map)['正面'], 'main');
+    expect(note['modelName'], 'Lumtub');
+    expect(note['tags'], ['lumtub', 'lumtub::fr']);
+    // Newest first: 'main' then 'docteur'; canAddNotes kept the first,
+    // which has no video, so no picture was asked for.
+    expect((note['fields'] as Map)['Word'], 'main');
+    expect(pictures, isEmpty);
     final docteur = (asked.firstWhere((a) => a['action'] == 'canAddNotes')['params']['notes'] as List)[1] as Map;
-    expect((docteur['audio'] as List).single['fields'], ['背面']);
-    expect((docteur['fields'] as Map)['背面'], contains('docteur en neurosciences'));
+    expect((docteur['audio'] as List).single['fields'], ['Audio']);
+    expect((docteur['fields'] as Map)['Sentence'], '<b>docteur</b> en neurosciences');
+    expect((docteur['fields'] as Map)['Time'], '0:09');
+  });
+
+  test('an older Lumtub style is updated, a changed one is kept', () async {
+    for (final (css, updated) in [('/* Lumtub card style 0. old */', true), ('.card { color: red }', false), (AnkiCard.css, false)]) {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final asked = <String>[];
+      server.listen((request) async {
+        final body = jsonDecode(await utf8.decodeStream(request)) as Map;
+        asked.add(body['action'] as String);
+        final result = switch (body['action']) {
+          'modelNames' => ['Lumtub'],
+          'modelFieldNames' => AnkiCard.fields.where((f) => f != 'Notes').toList(),
+          'modelStyling' => {'css': css},
+          'modelTemplates' => {'Recognition': {'Front': '', 'Back': ''}},
+          'canAddNotes' => [false],
+          _ => null,
+        };
+        request.response.write(jsonEncode({'result': result, 'error': null}));
+        await request.response.close();
+      });
+      final folder = await Directory.systemTemp.createTemp('lumtub-anki');
+      final book = VocabularyBook(File('${folder.path}/v.json'));
+      final anki = AnkiConnect(client: _Redirect(server.port));
+      expect(await anki.send([VocabularyWord(word: 'x', language: 'fr', added: DateTime(2026))], book), 0);
+      expect(asked, contains('modelFieldAdd'));
+      expect(asked.contains('updateModelStyling'), updated, reason: css);
+      expect(asked.contains('updateModelTemplates'), updated, reason: css);
+      anki.close();
+      await server.close();
+      await folder.delete(recursive: true);
+    }
+  });
+
+  test('the line marks the word where it stands alone', () {
+    expect(AnkiCard.markedLine('Run, he runs <fast>', 'run', 'en'), '<b>Run</b>, he runs &lt;fast&gt;');
+    expect(AnkiCard.markedLine('我们一起学习中文吧', '学习', 'zh'), '我们一起<b>学习</b>中文吧');
+    expect(AnkiCard.markedLine("l'école", 'école', 'fr'), "l'<b>école</b>");
   });
 
   test('Anki not running reads as such', () async {

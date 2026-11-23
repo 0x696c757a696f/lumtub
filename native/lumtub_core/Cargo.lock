@@ -1542,6 +1542,7 @@ dependencies = [
  "aes-gcm",
  "bytes",
  "cpal",
+ "crc32fast",
  "curve25519-dalek",
  "ed25519-dalek",
  "getrandom 0.4.3",

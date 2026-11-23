@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import 'anki_card.dart';
 import 'vocabulary.dart';
 
 /// Why words could not go to Anki.
@@ -17,10 +18,16 @@ class AnkiException implements Exception {
   String toString() => notRunning ? 'Anki is not reachable' : detail;
 }
 
+/// A video's picture for a card: its bytes, and whether they are WebP.
+typedef AnkiPictureFile = ({List<int> bytes, bool webp});
+
+/// The picture of the video [videoId], or null when there is none.
+typedef AnkiPicture = Future<AnkiPictureFile?> Function(String videoId);
+
 /// Sends vocabulary words straight into Anki through the AnkiConnect
 /// add-on (code 2055492159), which listens on this computer only. Each
-/// word becomes a two-sided note in the deck [deck], with the line it
-/// was heard in as sound where the book kept it.
+/// word becomes a note of the Lumtub note type ([AnkiCard]) in the deck
+/// [deck], with the line it was heard in as sound where the book kept it.
 class AnkiConnect {
   AnkiConnect({http.Client? client}) : _client = client ?? http.Client();
 
@@ -45,53 +52,86 @@ class AnkiConnect {
     return answer['result'];
   }
 
-  /// A note type with two fields, Basic by preference (named in Anki's
-  /// own language), and its fields.
-  Future<(String, List<String>)> _noteType() async {
+  /// Makes sure Anki has the Lumtub note type with every field, and
+  /// brings its style and templates up to date unless someone changed
+  /// them (they deleted [AnkiCard.styleMarker]).
+  Future<void> _noteType() async {
     final names = await _call('modelNames');
     if (names is! List) throw const AnkiException(false, 'No note types');
-    const preferred = ['Basic', '问答题', '問答題', 'Basique', 'Básico', 'Einfach', 'Base', 'Базовый', '基本'];
-    final ordered = [...preferred.where(names.contains), ...names.whereType<String>().where((n) => !preferred.contains(n))];
-    for (final name in ordered.take(12)) {
-      final fields = await _call('modelFieldNames', {'modelName': name});
-      if (fields is List && fields.length == 2 && fields.every((f) => f is String)) return (name, fields.cast<String>());
+    if (!names.contains(AnkiCard.modelName)) {
+      await _call('createModel', {
+        'modelName': AnkiCard.modelName,
+        'inOrderFields': AnkiCard.fields,
+        'css': AnkiCard.css,
+        'isCloze': false,
+        'cardTemplates': [
+          {'Name': AnkiCard.cardName, 'Front': AnkiCard.front, 'Back': AnkiCard.back},
+        ],
+      });
+      return;
     }
-    throw const AnkiException(false, 'No note type with two fields');
+    final fields = await _call('modelFieldNames', {'modelName': AnkiCard.modelName});
+    if (fields is! List) throw const AnkiException(false, 'The Lumtub note type has no fields');
+    for (final (i, field) in AnkiCard.fields.indexed) {
+      if (!fields.contains(field)) await _call('modelFieldAdd', {'modelName': AnkiCard.modelName, 'fieldName': field, 'index': i});
+    }
+    final styling = await _call('modelStyling', {'modelName': AnkiCard.modelName});
+    final css = styling is Map ? styling['css'] : null;
+    if (css is String && css != AnkiCard.css && css.startsWith(AnkiCard.styleMarker.substring(0, 21))) {
+      await _call('updateModelStyling', {
+        'model': {'name': AnkiCard.modelName, 'css': AnkiCard.css},
+      });
+      final templates = await _call('modelTemplates', {'modelName': AnkiCard.modelName});
+      if (templates is Map && templates.length == 1) {
+        await _call('updateModelTemplates', {
+          'model': {
+            'name': AnkiCard.modelName,
+            'templates': {
+              templates.keys.first: {'Front': AnkiCard.front, 'Back': AnkiCard.back},
+            },
+          },
+        });
+      }
+    }
   }
 
   /// Sends [words]; the number added. Words already in the deck are left.
-  Future<int> send(List<VocabularyWord> words, VocabularyBook book, {String deck = 'Lumtub'}) async {
+  /// [picture] gives the picture of a video, when there is one.
+  Future<int> send(List<VocabularyWord> words, VocabularyBook book, {String deck = AnkiCard.deckName, AnkiPicture? picture}) async {
     if (words.isEmpty) return 0;
     await _call('version');
     await _call('createDeck', {'deck': deck});
-    final (type, fields) = await _noteType();
-    String html(String text) => const HtmlEscape(HtmlEscapeMode.element).convert(text).replaceAll('\n', '<br>');
+    await _noteType();
     final notes = <Map<String, Object?>>[];
     for (final w in words) {
-      final front = w.reading.isEmpty || w.reading == w.word ? html(w.word) : '${html(w.word)}<br><small>${html(w.reading)}</small>';
-      final back = [
-        if (w.meaning.isNotEmpty) html(w.meaning),
-        if (w.sentence.isNotEmpty) '<br>${html(w.sentence)}',
-        if (w.translation.isNotEmpty) '<small>${html(w.translation)}</small>',
-        if (w.link.isNotEmpty) '<small><a href="${html(w.link)}">${html(w.videoTitle.isEmpty ? w.link : w.videoTitle)}</a></small>',
-      ].join('<br>');
       final sound = book.soundOf(w.key);
       notes.add({
         'deckName': deck,
-        'modelName': type,
-        'fields': {fields[0]: front, fields[1]: back},
-        'tags': ['lumtub', w.language],
+        'modelName': AnkiCard.modelName,
+        'fields': AnkiCard.noteFields(w),
+        'tags': AnkiCard.tags(w),
         'options': {'allowDuplicate': false, 'duplicateScope': 'deck'},
         if (await sound.exists())
           'audio': [
-            {'data': base64Encode(await sound.readAsBytes()), 'filename': 'lumtub-${sound.uri.pathSegments.last}', 'fields': [fields[1]]},
+            {'data': base64Encode(await sound.readAsBytes()), 'filename': AnkiCard.soundName(w), 'fields': ['Audio']},
           ],
       });
     }
     final can = await _call('canAddNotes', {'notes': notes});
-    final fresh = [for (final (i, note) in notes.indexed) if (can is List && i < can.length && can[i] == true) note];
+    final fresh = [for (final (i, note) in notes.indexed) if (can is List && i < can.length && can[i] == true) (words[i], note)];
     if (fresh.isEmpty) return 0;
-    final added = await _call('addNotes', {'notes': fresh});
+    if (picture != null) {
+      final pictures = <String, AnkiPictureFile?>{};
+      for (final (w, note) in fresh) {
+        if (w.videoId.isEmpty) continue;
+        final file = pictures.containsKey(w.videoId) ? pictures[w.videoId] : pictures[w.videoId] = await picture(w.videoId);
+        if (file == null) continue;
+        note['picture'] = [
+          {'data': base64Encode(file.bytes), 'filename': AnkiCard.pictureName(w.videoId, webp: file.webp), 'fields': ['Picture']},
+        ];
+      }
+    }
+    final added = await _call('addNotes', {'notes': [for (final (_, note) in fresh) note]});
     return added is List ? added.where((id) => id != null).length : 0;
   }
 

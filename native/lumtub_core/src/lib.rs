@@ -4,6 +4,7 @@
 //! recommendations; the process tree is used when the platform has one.
 
 pub mod airplay;
+pub mod anki;
 pub mod ass;
 pub mod backup;
 pub mod browser_sign_in;
@@ -76,5 +77,5 @@ pub mod words;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    60
+    61
 }

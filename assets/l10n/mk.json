@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文 Јазик македонски",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (само NVIDIA, со копирање назад)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (само NVIDIA, без копирање)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Автоматски (стандардно): Noto Sans CJK SC на систем со поедноставен кинески, инаку системскиот фонт",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (вграден)",
   "Piped · Specific server": "Piped · Одреден сервер",
   "Piped · Auto-select server": "Piped · Автоматски избор на сервер",

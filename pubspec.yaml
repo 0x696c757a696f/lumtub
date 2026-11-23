@@ -108,15 +108,20 @@ flutter:
     - skins/dunes/
     - skins/template/
   fonts:
-    # One bundled default face keeps the Windows package small (SIL OFL 1.1,
-    # assets/fonts/OFL.txt). Flutter uses this Regular face for every weight;
-    # Windows fonts remain the fallback for characters it does not include.
-    # Its lone combining accents are taken out of its character map
-    # (assets/fonts/drop_combining_marks.py), so Polish ś or ż come whole
-    # from the system's font instead of as s or z plus a misplaced accent.
-    - family: Noto Sans CJK SC
+    # Inter (SIL OFL 1.1, assets/fonts/OFL-Inter.txt) draws Latin, Cyrillic
+    # and Greek letters: Inter 4.1's variable font with its optical size
+    # axis pinned at 14 (fonttools varLib.instancer InterVariable.ttf
+    # opsz=14), one file for every weight.
+    - family: Inter
       fonts:
-        - asset: assets/fonts/NotoSansSC-Regular.ttf
+        - asset: assets/fonts/InterVariable.ttf
+    # The bundled Chinese face (SIL OFL 1.1, assets/fonts/OFL.txt), used
+    # after Inter for Chinese characters. Flutter uses this Regular face
+    # for every weight; system fonts remain the fallback for characters it
+    # does not include. Its lone combining accents are taken out of its
+    # character map (assets/fonts/drop_combining_marks.py), so Polish ś or
+    # ż come whole from another font instead of as s or z plus a misplaced
+    # accent.
     # The same face's proportional curly quotes, cut out with fontTools.
     - family: Lumtub Quotes
       fonts:

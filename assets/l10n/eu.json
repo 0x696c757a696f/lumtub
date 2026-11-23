@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文 Hizkuntza euskara",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (NVIDIA bakarrik, atzera kopiatuz)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (NVIDIA bakarrik, kopiarik gabe)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Automatikoa (lehenetsia): Noto Sans CJK SC txinera sinplifikatuko sistemetan, sistemaren letra-tipoa gainerakoetan",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (integratua)",
   "Piped · Specific server": "Piped · Zerbitzari zehatza",
   "Piped · Auto-select server": "Piped · Zerbitzaria automatikoki hautatu",

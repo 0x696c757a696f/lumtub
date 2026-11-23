@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (NVIDIA ጥራይ፣ ምልጋስ-ድሕሪት)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (NVIDIA ጥራይ፣ ብዘይ ምልጋስ)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "ባዕላዊ (ቀዳማይ ምርጫ)፦ ኣብ ስርዓት ዝተቐለለ ቻይናዊ Noto Sans CJK SC፣ ኣብ ካልእ ፎንት ስርዓት",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (ውዱብ)",
   "Piped · Specific server": "Piped · ዝተወሰነ ሰርቨር",
   "Piped · Auto-select server": "Piped · ባዕላዊ ምርጫ ሰርቨር",

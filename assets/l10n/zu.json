@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Ulimi 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (i-NVIDIA kuphela, ikhophi ibuyela emuva)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (i-NVIDIA kuphela, ayikho ikhophi)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "Okuzenzakalelayo: i-Noto Sans CJK SC kusistimu yesiShayina Esilula, kwezinye kusetshenziswa uhlobo lwamagama lwesistimu",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (ifakiwe)",
   "Piped · Specific server": "Piped · Iseva ethile",
   "Piped · Auto-select server": "Piped · Khetha iseva ngokuzenzakalelayo",

@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文 اللغة العربية",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (لـ NVIDIA فقط، مع إعادة النسخ)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (لـ NVIDIA فقط، بلا نسخ)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "تلقائي (افتراضي): Noto Sans CJK SC على أنظمة الصينية المبسّطة، وخط النظام في غيرها",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (مدمج)",
   "Piped · Specific server": "Piped · خادم محدد",
   "Piped · Auto-select server": "Piped · اختيار الخادم تلقائيًا",

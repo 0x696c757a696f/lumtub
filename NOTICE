@@ -9,6 +9,11 @@ the @expo-google-fonts/noto-sans-sc 0.4.4 package) is
 Copyright 2014-2021 Adobe, licensed under the SIL Open Font License 1.1
 (assets/fonts/OFL.txt).
 
+Inter (assets/fonts/InterVariable.ttf, from Inter 4.1, https://github.com/rsms/inter,
+with its optical size axis fixed at 14) is Copyright 2016 The Inter Project
+Authors, licensed under the SIL Open Font License 1.1
+(assets/fonts/OFL-Inter.txt).
+
 The Phosphor icon fonts (assets/fonts/phosphor, from the phosphor_flutter
 2.1.0 package) are Copyright 2020-2021 Phosphor Icons, licensed under the
 MIT License (assets/fonts/phosphor/LICENSE).

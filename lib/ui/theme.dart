@@ -232,7 +232,9 @@ ThemeData buildAppTheme(
   // default text starts with a face holding only proportional ones.
   final chosen = skin?.font ?? fontFamily;
   final family = chosen == bundledFont ? quotesFont : chosen;
-  const fallback = [bundledFont, blankFont];
+  // A skin's display face often has Latin letters only; Inter goes on
+  // with the rest of the alphabets.
+  final fallback = [if (skin?.font != null) interFont, ...fontFallback(chosen)];
   TextStyle font(TextStyle style) => style.copyWith(fontFamily: family, fontFamilyFallback: fallback);
   final border = BorderSide(color: scheme.outlineVariant);
   final focusColor = scheme.onSurface.withValues(alpha: 0.55);
@@ -556,7 +558,7 @@ ThemeData buildAppTheme(
   );
   var text = _typeScale(theme.textTheme);
   if (skin?.displayFont case final display?) {
-    TextStyle? d(TextStyle? style) => style?.copyWith(fontFamily: display, fontFamilyFallback: [if (family != null) family, bundledFont, blankFont]);
+    TextStyle? d(TextStyle? style) => style?.copyWith(fontFamily: display, fontFamilyFallback: [if (family != null) family, ...fallback]);
     text = text.copyWith(
       displayLarge: d(text.displayLarge),
       displayMedium: d(text.displayMedium),

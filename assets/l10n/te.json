@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (NVIDIA మాత్రమే, కాపీ-బ్యాక్)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (NVIDIA మాత్రమే, జీరో-కాపీ)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "ఆటోమేటిక్ (డిఫాల్ట్): సరళీకృత చైనీస్ సిస్టమ్‌లో Noto Sans CJK SC, ఇతరాల్లో సిస్టమ్ ఫాంట్",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (అంతర్నిర్మితం)",
   "Piped · Specific server": "Piped · నిర్దిష్ట సర్వర్",
   "Piped · Auto-select server": "Piped · సర్వర్‌ను స్వయంచాలకంగా ఎంచుకో",

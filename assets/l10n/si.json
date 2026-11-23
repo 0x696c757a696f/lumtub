@@ -74,7 +74,6 @@
   "Language 語言 English 简体中文 繁體中文": "Language 語言 English 简体中文 繁體中文",
   "NVDEC (NVIDIA only, copy-back)": "NVDEC (NVIDIA පමණි, පිටපත් කර ආපසු)",
   "NVDEC (NVIDIA only, zero-copy)": "NVDEC (NVIDIA පමණි, පිටපත් රහිත)",
-  "Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise": "ස්වයංක්‍රීය (පෙරනිමි): සරල චීන පද්ධතියක Noto Sans CJK SC, අන් අවස්ථාවල පද්ධති අකුරු",
   "Noto Sans CJK SC (built-in)": "Noto Sans CJK SC (ඇතුළත් කර ඇත)",
   "Piped · Specific server": "Piped · නිශ්චිත සේවාදායකය",
   "Piped · Auto-select server": "Piped · සේවාදායකය ස්වයංක්‍රීයව තෝරන්න",

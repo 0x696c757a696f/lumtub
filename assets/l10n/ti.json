@@ -3719,5 +3719,7 @@
   "Words without a video": "ቪድዮ ዘይብሎም ቃላት",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "ስፔስ መልሲ የርኢ · 1 2 3 4 ነጥቢ · R ሓረግ ዳግማይ የጻወት · F ኣቓልቦ ኣገባብ",
   "Leave focus mode (F)": "ካብ ኣቓልቦ ኣገባብ ውጻእ (F)",
-  "Focus mode: the video scene, no numbers (F)": "ኣቓልቦ ኣገባብ፦ ትዕይንቲ ቪድዮ፣ ቁጽሪ የለን (F)"
+  "Focus mode: the video scene, no numbers (F)": "ኣቓልቦ ኣገባብ፦ ትዕይንቲ ቪድዮ፣ ቁጽሪ የለን (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "ኣውቶማቲክ (ነባሪ): Inter፣ ናይ ቻይና፣ ጃፓን፣ ኮርያ ፊደላት ብቕርጽታት ቋንቋ ኢንተርፌስ",
+  "Inter (built-in)": "Inter (ውዱብ)"
 }

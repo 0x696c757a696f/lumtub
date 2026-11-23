@@ -17,7 +17,7 @@ import '../../learning/known_words.dart';
 import '../../learning/learning.dart';
 import '../learning/ruby_line.dart';
 import '../learning/word_card.dart';
-import '../../appearance_settings.dart' show blankFont, bundledFont;
+import '../../appearance_settings.dart' show blankFont, bundledFont, cjkFormOf, languageStyle;
 import '../../models.dart';
 import '../../player_settings.dart';
 import '../../timestamp_link.dart';
@@ -806,6 +806,8 @@ class _Player extends StatelessWidget {
                     secondary: controller.secondarySubtitle?.label,
                     byHeight: Platform.isAndroid || Platform.isIOS,
                     libass: controller.libassDraws,
+                    mainLanguage: controller.mainSubtitleLanguage,
+                    secondLanguage: controller.secondSubtitleLanguage,
                     reveal: (shown: controller.translationShown, hover: controller.hoverTranslation, tap: controller.toggleTranslation),
                     words: !controller.learningOn
                         ? null
@@ -1342,7 +1344,7 @@ Color _hardColorOn(Color? text) {
   return yellowish ? const Color(0xFF7FDBFF) : const Color(0xFFFFC23D);
 }
 
-SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass, TranslationRevealing? reveal, SubtitleWords? words}) {
+SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary, bool byHeight = false, bool? libass, TranslationRevealing? reveal, SubtitleWords? words, String mainLanguage = '', String secondLanguage = ''}) {
   // The view scales by area against 1080p, which makes the text tiny in a
   // small window. There a line is about a twentieth of the picture's
   // height, as on a TV, but never under 13 px, which stays readable, nor
@@ -1356,12 +1358,19 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
   if (ghost && !blur) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;
   final lookUp = !ghost && (words?.learning.anyDictionary ?? false);
-  TextStyle style(String font, double scale, int color, double opacity) => TextStyle(
+  // Each line in its own language's character forms: the default font
+  // gives way to that language's, and the locale and fallback follow it.
+  TextStyle style(String font, double scale, int color, double opacity, String language) => TextStyle(
         height: 1.3,
         fontSize: 32 * scale,
-        fontFamily: font.isEmpty ? null : font,
+        fontFamily: font.isEmpty
+            ? null
+            : font == PlayerSettings.defaultSubtitleFont && cjkFormOf(language) != null && !(Platform.isAndroid || Platform.isIOS)
+                ? PlayerSettings.fontForThisSystem(font, language: language)
+                : font,
+        locale: languageStyle(language)?.locale,
         // Where the font is missing (another system), the bundled one.
-        fontFamilyFallback: const [bundledFont, blankFont],
+        fontFamilyFallback: languageStyle(language)?.fontFamilyFallback ?? const [bundledFont, blankFont],
         letterSpacing: 0.0,
         wordSpacing: 0.0,
         color: Color(0xFF000000 | color).withValues(alpha: opacity),
@@ -1369,8 +1378,8 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
         backgroundColor: settings.subtitleBackground ? Color.fromRGBO(0, 0, 0, 0.67 * opacity) : null,
       );
   return SubtitleViewConfiguration(
-    style: style(settings.subtitleFont, settings.subtitleScale, settings.subtitleColor, settings.subtitleOpacity),
-    secondaryStyle: style(settings.secondaryFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity),
+    style: style(settings.subtitleFont, settings.subtitleScale, settings.subtitleColor, settings.subtitleOpacity, mainLanguage),
+    secondaryStyle: style(settings.secondaryFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity, secondLanguage),
     // sub-pos counts from the top; 100 is the bottom edge.
     textScaler: textScaler,
     scaleFor: byHeight ? (size) => TextScaler.linear(androidSubtitleScale(size, Device.captionScale, smallWindow != null)) : null,

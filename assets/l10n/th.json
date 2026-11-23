@@ -3720,5 +3720,7 @@
   "Words without a video": "คำที่ไม่มีวิดีโอ",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "เว้นวรรคเพื่อแสดงคำตอบ · 1 2 3 4 ให้คะแนน · R เล่นประโยคซ้ำ · F โหมดโฟกัส",
   "Leave focus mode (F)": "ออกจากโหมดโฟกัส (F)",
-  "Focus mode: the video scene, no numbers (F)": "โหมดโฟกัส: ฉากจากวิดีโอ ไม่แสดงตัวเลข (F)"
+  "Focus mode: the video scene, no numbers (F)": "โหมดโฟกัส: ฉากจากวิดีโอ ไม่แสดงตัวเลข (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "อัตโนมัติ (ค่าเริ่มต้น): Inter โดยอักขระจีน ญี่ปุ่น และเกาหลีใช้รูปแบบตามภาษาของอินเทอร์เฟซ",
+  "Inter (built-in)": "Inter (ในตัว)"
 }

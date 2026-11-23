@@ -3719,5 +3719,7 @@
   "Words without a video": "Видеосу жок сөздөр",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Боштук жоопту көрсөтөт · 1 2 3 4 баа берүү · R сүйлөмдү кайра ойнотот · F фокус режими",
   "Leave focus mode (F)": "Фокус режиминен чыгуу (F)",
-  "Focus mode: the video scene, no numbers (F)": "Фокус режими: видеонун көрүнүшү, сандарсыз (F)"
+  "Focus mode: the video scene, no numbers (F)": "Фокус режими: видеонун көрүнүшү, сандарсыз (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Автоматтык (демейки): Inter, кытай, жапон жана корей белгилери интерфейс тилинин формаларында",
+  "Inter (built-in)": "Inter (камтылган)"
 }

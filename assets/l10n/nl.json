@@ -3725,5 +3725,7 @@
   "Words without a video": "Woorden zonder video",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Spatie toont het antwoord · 1 2 3 4 beoordelen · R speelt de zin opnieuw af · F focusmodus",
   "Leave focus mode (F)": "Focusmodus verlaten (F)",
-  "Focus mode: the video scene, no numbers (F)": "Focusmodus: de videoscène, geen cijfers (F)"
+  "Focus mode: the video scene, no numbers (F)": "Focusmodus: de videoscène, geen cijfers (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatisch (standaard): Inter, met Chinese, Japanse en Koreaanse tekens in de vormen van de interfacetaal",
+  "Inter (built-in)": "Inter (ingebouwd)"
 }

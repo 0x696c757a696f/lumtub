@@ -3725,5 +3725,7 @@
   "Words without a video": "Từ không có video",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Phím cách hiện đáp án · 1 2 3 4 chấm điểm · R phát lại câu · F chế độ tập trung",
   "Leave focus mode (F)": "Thoát chế độ tập trung (F)",
-  "Focus mode: the video scene, no numbers (F)": "Chế độ tập trung: cảnh trong video, không hiện số (F)"
+  "Focus mode: the video scene, no numbers (F)": "Chế độ tập trung: cảnh trong video, không hiện số (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Tự động (mặc định): Inter, với chữ Trung, Nhật và Hàn theo dạng chữ của ngôn ngữ giao diện",
+  "Inter (built-in)": "Inter (tích hợp sẵn)"
 }

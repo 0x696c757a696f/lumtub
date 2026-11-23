@@ -3720,5 +3720,7 @@
   "Words without a video": "வீடியோ இல்லாத சொற்கள்",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "ஸ்பேஸ் விடையைக் காட்டும் · 1 2 3 4 மதிப்பீடு · R வரியை மீண்டும் ஒலிக்கும் · F கவனப் பயன்முறை",
   "Leave focus mode (F)": "கவனப் பயன்முறையிலிருந்து வெளியேறு (F)",
-  "Focus mode: the video scene, no numbers (F)": "கவனப் பயன்முறை: வீடியோ காட்சி, எண்கள் இல்லை (F)"
+  "Focus mode: the video scene, no numbers (F)": "கவனப் பயன்முறை: வீடியோ காட்சி, எண்கள் இல்லை (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "தானியங்கி (இயல்புநிலை): Inter, சீன, ஜப்பானிய மற்றும் கொரிய எழுத்துகள் இடைமுக மொழியின் வடிவங்களில்",
+  "Inter (built-in)": "Inter (உள்ளமைந்தது)"
 }

@@ -3720,5 +3720,7 @@
   "Words without a video": "Slovíčka bez videa",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Medzerník zobrazí odpoveď · 1 2 3 4 hodnotenie · R prehrá vetu znova · F režim sústredenia",
   "Leave focus mode (F)": "Opustiť režim sústredenia (F)",
-  "Focus mode: the video scene, no numbers (F)": "Režim sústredenia: scéna z videa, bez čísel (F)"
+  "Focus mode: the video scene, no numbers (F)": "Režim sústredenia: scéna z videa, bez čísel (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automaticky (predvolené): Inter, s čínskymi, japonskými a kórejskými znakmi v tvaroch jazyka rozhrania",
+  "Inter (built-in)": "Inter (vstavané)"
 }

@@ -3719,5 +3719,7 @@
   "Words without a video": "ဗီဒီယိုမရှိသော စကားလုံးများ",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Space က အဖြေပြသည် · 1 2 3 4 အဆင့်ပေးရန် · R က စာကြောင်းကို ပြန်ဖွင့်သည် · F အာရုံစူးစိုက်မုဒ်",
   "Leave focus mode (F)": "အာရုံစူးစိုက်မုဒ်မှ ထွက်ရန် (F)",
-  "Focus mode: the video scene, no numbers (F)": "အာရုံစူးစိုက်မုဒ် - ဗီဒီယိုမြင်ကွင်း၊ ဂဏန်းမပါ (F)"
+  "Focus mode: the video scene, no numbers (F)": "အာရုံစူးစိုက်မုဒ် - ဗီဒီယိုမြင်ကွင်း၊ ဂဏန်းမပါ (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "အလိုအလျောက် (မူလ): Inter၊ တရုတ်၊ ဂျပန်နှင့် ကိုရီးယားစာလုံးများကို အင်တာဖေ့စ်ဘာသာစကား၏ ပုံစံများဖြင့်",
+  "Inter (built-in)": "Inter (ပါဝင်ပြီးသား)"
 }

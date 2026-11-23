@@ -3720,5 +3720,7 @@
   "Words without a video": "വീഡിയോ ഇല്ലാത്ത വാക്കുകൾ",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Space ഉത്തരം കാണിക്കും · 1 2 3 4 ഗ്രേഡ് · R വരി വീണ്ടും കേൾപ്പിക്കും · F ഫോക്കസ് മോഡ്",
   "Leave focus mode (F)": "ഫോക്കസ് മോഡിൽ നിന്ന് പുറത്തുകടക്കുക (F)",
-  "Focus mode: the video scene, no numbers (F)": "ഫോക്കസ് മോഡ്: വീഡിയോ ദൃശ്യം, സംഖ്യകളില്ല (F)"
+  "Focus mode: the video scene, no numbers (F)": "ഫോക്കസ് മോഡ്: വീഡിയോ ദൃശ്യം, സംഖ്യകളില്ല (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "സ്വയമേവ (ഡിഫോൾട്ട്): Inter, ചൈനീസ്, ജാപ്പനീസ്, കൊറിയൻ അക്ഷരങ്ങൾ ഇന്റർഫേസ് ഭാഷയുടെ രൂപങ്ങളിൽ",
+  "Inter (built-in)": "Inter (ഇൻബിൽറ്റ്)"
 }

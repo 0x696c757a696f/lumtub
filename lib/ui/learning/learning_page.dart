@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../app/app_controller.dart';
+import '../../appearance_settings.dart' show languageStyle;
 import '../../app_log.dart';
 import '../../friendly_error.dart';
 import '../../l10n/l10n.dart';
@@ -916,12 +917,12 @@ class _VocabularyPageState extends State<_VocabularyPage> {
                     return ListTile(
                       onTap: () => unawaited(showSavedWord(context, widget.controller, w)),
                       title: Text.rich(TextSpan(children: [
-                        TextSpan(text: w.word, style: const TextStyle(fontSize: 18)),
+                        TextSpan(text: w.word, style: const TextStyle(fontSize: 18).merge(languageStyle(w.language))),
                         if (w.reading.isNotEmpty) TextSpan(text: '  ${w.reading}', style: TextStyle(color: colors.primary)),
                       ])),
                       subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         if (w.meaning.isNotEmpty) Text(w.meaning, maxLines: 2, overflow: TextOverflow.ellipsis),
-                        if (w.sentence.isNotEmpty) Text(w.sentence, style: TextStyle(color: colors.outline)),
+                        if (w.sentence.isNotEmpty) Text(w.sentence, style: TextStyle(color: colors.outline).merge(languageStyle(w.language))),
                         if (w.videoTitle.isNotEmpty) Text('${w.videoTitle} · ${clockOf(w.at)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: colors.outline)),
                       ]),
                       trailing: Row(mainAxisSize: MainAxisSize.min, children: [

@@ -3725,5 +3725,7 @@
   "Words without a video": "Palavras sem vídeo",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Espaço mostra a resposta · 1 2 3 4 avalia · R repete a frase · F modo foco",
   "Leave focus mode (F)": "Sair do modo foco (F)",
-  "Focus mode: the video scene, no numbers (F)": "Modo foco: a cena do vídeo, sem números (F)"
+  "Focus mode: the video scene, no numbers (F)": "Modo foco: a cena do vídeo, sem números (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automático (predefinição): Inter, com os caracteres chineses, japoneses e coreanos nas formas do idioma da interface",
+  "Inter (built-in)": "Inter (incluída)"
 }

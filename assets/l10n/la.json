@@ -3720,5 +3720,7 @@
   "Words without a video": "Verba sine video",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Spatium responsum ostendit · 1 2 3 4 aestimatio · R versum iterum audit · F modus intentionis",
   "Leave focus mode (F)": "Modum intentionis relinquere (F)",
-  "Focus mode: the video scene, no numbers (F)": "Modus intentionis: scaena videi, sine numeris (F)"
+  "Focus mode: the video scene, no numbers (F)": "Modus intentionis: scaena videi, sine numeris (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automaticum (praesumptum): Inter, cum notis Sinicis, Iaponicis et Coreanis in formis linguae interfaciei",
+  "Inter (built-in)": "Inter (insitus)"
 }

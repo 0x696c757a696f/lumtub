@@ -3719,5 +3719,7 @@
   "Words without a video": "ভিডিও ছাড়া শব্দ",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "স্পেস উত্তর দেখায় · 1 2 3 4 গ্রেড · R বাক্যটি আবার চালায় · F ফোকাস মোড",
   "Leave focus mode (F)": "ফোকাস মোড থেকে বের হন (F)",
-  "Focus mode: the video scene, no numbers (F)": "ফোকাস মোড: ভিডিওর দৃশ্য, কোনো সংখ্যা নেই (F)"
+  "Focus mode: the video scene, no numbers (F)": "ফোকাস মোড: ভিডিওর দৃশ্য, কোনো সংখ্যা নেই (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "স্বয়ংক্রিয় (ডিফল্ট): Inter, চীনা, জাপানি ও কোরিয়ান অক্ষর ইন্টারফেস ভাষার রূপে",
+  "Inter (built-in)": "Inter (অন্তর্নির্মিত)"
 }

@@ -3720,5 +3720,7 @@
   "Words without a video": "Думи без видео",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Интервалът показва отговора · 1 2 3 4 оценка · R пуска репликата отново · F фокус режим",
   "Leave focus mode (F)": "Изход от фокус режима (F)",
-  "Focus mode: the video scene, no numbers (F)": "Фокус режим: сцената от видеото, без числа (F)"
+  "Focus mode: the video scene, no numbers (F)": "Фокус режим: сцената от видеото, без числа (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Автоматично (по подразбиране): Inter, с китайски, японски и корейски знаци във формите на езика на интерфейса",
+  "Inter (built-in)": "Inter (вграден)"
 }

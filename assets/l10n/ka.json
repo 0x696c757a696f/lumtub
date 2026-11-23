@@ -3720,5 +3720,7 @@
   "Words without a video": "სიტყვები ვიდეოს გარეშე",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Space აჩვენებს პასუხს · 1 2 3 4 შეფასებისთვის · R ხელახლა უკრავს ფრაზას · F ფოკუსის რეჟიმი",
   "Leave focus mode (F)": "ფოკუსის რეჟიმიდან გასვლა (F)",
-  "Focus mode: the video scene, no numbers (F)": "ფოკუსის რეჟიმი: ვიდეოს სცენა, რიცხვების გარეშე (F)"
+  "Focus mode: the video scene, no numbers (F)": "ფოკუსის რეჟიმი: ვიდეოს სცენა, რიცხვების გარეშე (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "ავტომატური (ნაგულისხმევი): Inter, ჩინური, იაპონური და კორეული სიმბოლოებით ინტერფეისის ენის ფორმებში",
+  "Inter (built-in)": "Inter (ჩაშენებული)"
 }

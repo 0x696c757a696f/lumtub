@@ -3720,5 +3720,7 @@
   "Words without a video": "Sanat ilman videota",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Välilyönti näyttää vastauksen · 1 2 3 4 arvioi · R toistaa repliikin uudelleen · F keskittymistila",
   "Leave focus mode (F)": "Poistu keskittymistilasta (F)",
-  "Focus mode: the video scene, no numbers (F)": "Keskittymistila: videon kohtaus, ei lukuja (F)"
+  "Focus mode: the video scene, no numbers (F)": "Keskittymistila: videon kohtaus, ei lukuja (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automaattinen (oletus): Inter, kiinalaiset, japanilaiset ja korealaiset merkit käyttöliittymän kielen muodoissa",
+  "Inter (built-in)": "Inter (sisäänrakennettu)"
 }

@@ -3719,5 +3719,7 @@
   "Words without a video": "Videosiz so‘zlar",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Probel javobni ko‘rsatadi · 1 2 3 4 baho · R gapni qayta ijro etadi · F fokus rejimi",
   "Leave focus mode (F)": "Fokus rejimidan chiqish (F)",
-  "Focus mode: the video scene, no numbers (F)": "Fokus rejimi: video sahnasi, raqamlarsiz (F)"
+  "Focus mode: the video scene, no numbers (F)": "Fokus rejimi: video sahnasi, raqamlarsiz (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Avtomatik (standart): Inter, xitoy, yapon va koreys belgilari interfeys tilining shakllarida",
+  "Inter (built-in)": "Inter (o'rnatilgan)"
 }

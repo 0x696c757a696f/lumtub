@@ -3720,5 +3720,7 @@
   "Words without a video": "Maneno bila video",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Nafasi inaonyesha jibu · 1 2 3 4 alama · R inacheza mstari tena · F hali ya umakini",
   "Leave focus mode (F)": "Toka kwenye hali ya umakini (F)",
-  "Focus mode: the video scene, no numbers (F)": "Hali ya umakini: tukio la video, bila nambari (F)"
+  "Focus mode: the video scene, no numbers (F)": "Hali ya umakini: tukio la video, bila nambari (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Kiotomatiki (chaguomsingi): Inter, na herufi za Kichina, Kijapani na Kikorea katika maumbo ya lugha ya kiolesura",
+  "Inter (built-in)": "Inter (imejengewa ndani)"
 }

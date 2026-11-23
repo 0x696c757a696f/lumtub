@@ -139,18 +139,65 @@ const blankFont = 'Lumtub Blank';
 /// interface language.
 const autoFont = 'auto';
 
-/// Interface languages whose Han characters (and kana, hangul) are drawn
-/// differently from simplified Chinese, so the bundled simplified Chinese
-/// face must not stand in for the system's font for them.
-bool ownCjkForms(String languageTag) => languageTag == 'ja' || languageTag == 'ko' || languageTag.startsWith('zh-Hant');
+/// Which of Japanese ('ja'), Korean ('ko') or traditional Chinese
+/// ('zh-Hant') [language] (a language tag, as YouTube or mpv give it) is,
+/// the languages whose Han characters (and kana, hangul) are drawn
+/// differently from simplified Chinese; null for any other.
+String? cjkFormOf(String language) {
+  final tag = language.toLowerCase().replaceAll('_', '-');
+  if (tag == 'ja' || tag == 'jpn' || tag.startsWith('ja-')) return 'ja';
+  if (tag == 'ko' || tag == 'kor' || tag.startsWith('ko-')) return 'ko';
+  if (RegExp(r'^zh-(hant|tw|hk|mo)\b').hasMatch(tag) || tag == 'yue' || tag.startsWith('yue-')) return 'zh-Hant';
+  return null;
+}
+
+/// Whether [language] is Chinese in simplified characters.
+bool isSimplifiedChineseTag(String language) {
+  final tag = language.toLowerCase().replaceAll('_', '-');
+  return (tag == 'zh' || tag == 'chi' || tag == 'zho' || tag.startsWith('zh-')) && cjkFormOf(tag) == null;
+}
+
+/// Downloaded faces (data packs) for Japanese, Korean or traditional
+/// Chinese on a system that has none, by [cjkFormOf]; see CjkFontPacks.
+final downloadedCjkFamilies = <String, String>{};
 
 /// The fonts tried after [family] for characters it lacks, before the
 /// system's own fallback. In Japanese, Korean and traditional Chinese the
-/// system picks a face with that language's character forms (it knows
-/// the interface language); elsewhere Chinese comes from the bundled face
-/// on every system alike.
-List<String> fontFallback(String? family, [String? languageTag]) =>
-    family != bundledFont && ownCjkForms(languageTag ?? currentLanguage.tag) ? const [blankFont] : const [bundledFont, blankFont];
+/// system picks a face with that language's character forms (it knows the
+/// language from the text's locale), or the downloaded one where it has
+/// none; elsewhere Chinese comes from the bundled face on every system
+/// alike.
+List<String> fontFallback(String? family, [String? languageTag]) {
+  final forms = cjkFormOf(languageTag ?? currentLanguage.tag);
+  if (family == bundledFont || forms == null) return const [bundledFont, blankFont];
+  return [if (downloadedCjkFamilies[forms] case final face?) face, blankFont];
+}
+
+/// For text known to be in [language] (a subtitle line, a word being
+/// learned) whatever the interface language: its locale, so the system
+/// picks a face with that language's character forms, and [fontFallback]
+/// for it. Null for an unknown language.
+TextStyle? languageStyle(String? language) {
+  if (language == null || language.isEmpty) return null;
+  final tag = language.replaceAll('_', '-');
+  final forms = cjkFormOf(tag);
+  final Locale locale;
+  if (forms == 'zh-Hant') {
+    locale = const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant');
+  } else if (isSimplifiedChineseTag(tag)) {
+    locale = const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans');
+  } else {
+    final code = tag.split('-').first.toLowerCase();
+    if (!RegExp(r'^[a-z]{2,3}$').hasMatch(code)) return null;
+    locale = Locale(forms ?? code);
+  }
+  final fallback = forms != null
+      ? [if (downloadedCjkFamilies[forms] case final face?) face, blankFont]
+      : isSimplifiedChineseTag(tag)
+          ? const [bundledFont, blankFont]
+          : fontFallback(null);
+  return TextStyle(locale: locale, fontFamilyFallback: fallback);
+}
 
 /// Fonts offered in Settings: automatic, the bundled ones, then fonts that
 /// ship with Windows and cover Chinese; null is the system UI font.

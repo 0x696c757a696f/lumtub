@@ -3720,5 +3720,7 @@
   "Words without a video": "Ord uten video",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Mellomrom viser svaret · 1 2 3 4 vurdering · R spiller linjen på nytt · F fokusmodus",
   "Leave focus mode (F)": "Forlat fokusmodus (F)",
-  "Focus mode: the video scene, no numbers (F)": "Fokusmodus: videoscenen, ingen tall (F)"
+  "Focus mode: the video scene, no numbers (F)": "Fokusmodus: videoscenen, ingen tall (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "Automatisk (standard): Inter, med kinesiske, japanske og koreanske tegn i formene fra grensesnittspråket",
+  "Inter (built-in)": "Inter (innebygd)"
 }

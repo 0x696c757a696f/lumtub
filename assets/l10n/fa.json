@@ -3720,5 +3720,7 @@
   "Words without a video": "واژه‌های بدون ویدیو",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "فاصله پاسخ را نشان می‌دهد · 1 2 3 4 نمره‌دهی · R جمله را دوباره پخش می‌کند · F حالت تمرکز",
   "Leave focus mode (F)": "خروج از حالت تمرکز (F)",
-  "Focus mode: the video scene, no numbers (F)": "حالت تمرکز: صحنهٔ ویدیو، بدون عدد (F)"
+  "Focus mode: the video scene, no numbers (F)": "حالت تمرکز: صحنهٔ ویدیو، بدون عدد (F)",
+  "Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language": "خودکار (پیش‌فرض): Inter، با نویسه‌های چینی، ژاپنی و کره‌ای در شکل‌های زبان رابط",
+  "Inter (built-in)": "Inter (داخلی)"
 }

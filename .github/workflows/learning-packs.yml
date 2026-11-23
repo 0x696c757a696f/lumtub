@@ -261,7 +261,9 @@ jobs:
             echo "::warning::Unihan could not be fetched: made-up Chinese and Japanese words are matched by frequency only"
           fi
           lex=("lex:en=$RUNNER_TEMP/in/en.sqlite")
-          for code in ko es fr de it ru; do lex+=("lex:$code=$RUNNER_TEMP/in/$code.sqlite"); done
+          for code in ko es fr de it ru pt; do
+            if [[ -f "$RUNNER_TEMP/in/$code.sqlite" ]]; then lex+=("lex:$code=$RUNNER_TEMP/in/$code.sqlite"); fi
+          done
           # Not -I: it needs the wordfreq and opencc installed for this user.
           python3 .github/learning/level_test.py "$RUNNER_TEMP/out" "$RUNNER_TEMP/out" "cedict=$RUNNER_TEMP/in/cedict.txt" "jmdict=$RUNNER_TEMP/in/ja.tsv" "${unihan[@]}" "${lex[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
 

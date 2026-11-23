@@ -15,7 +15,7 @@ learners who say yes to everything. Writes OUT_DIR/<lang>-leveltest.tsv.gz:
 No item comes from a published test. The made-up words are our own,
 from our own word lists:
 
-- en, es, fr, de, it: Wuggy's idea (Keuleers & Brysbaert 2010), written
+- en, es, fr, de, it, pt: Wuggy's idea (Keuleers & Brysbaert 2010), written
   anew: a real word cut into consonant and vowel groups, about half of
   them swapped for groups that follow and precede their neighbours at
   that place in real words.
@@ -64,8 +64,9 @@ VOWELS = {
     'fr': 'aeiouyàâäéèêëîïôöùûüÿœæ',
     'de': 'aeiouyäöü',
     'it': 'aeiouàèéìíòóù',
+    'pt': 'aeiouáâãàéêíóôõú',
 }
-LATIN = {'en': 'a-z', 'es': 'a-zñáéíóúü', 'fr': 'a-zàâäçéèêëîïôöùûüÿœæ', 'de': 'a-zäöüß', 'it': 'a-zàèéìíòóù', 'ru': 'а-яё'}
+LATIN = {'en': 'a-z', 'es': 'a-zñáéíóúü', 'fr': 'a-zàâäçéèêëîïôöùûüÿœæ', 'de': 'a-zäöüß', 'it': 'a-zàèéìíòóù', 'ru': 'а-яё', 'pt': 'a-záâãàçéêíóôõú'}
 HAN = re.compile(r'^[一-鿿]+$')
 HIRAGANA = re.compile(r'^[ぁ-ゖー]+$')
 HANGUL = re.compile(r'^[가-힣]+$')

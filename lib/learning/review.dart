@@ -189,6 +189,9 @@ class ReviewStore extends ChangeNotifier {
 
   ReviewState? of(String key) => _states[key];
 
+  /// The keys of the words reviewed until they stay.
+  Iterable<String> get knownKeys => _states.entries.where((e) => e.value.known).map((e) => e.key);
+
   static String dayOf(DateTime time) => time.toLocal().toIso8601String().substring(0, 10);
 
   Future<void> load() async {

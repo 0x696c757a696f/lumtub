@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/learning/video_difficulty.dart';
 import 'package:lumtub/learning/video_words.dart';
+import 'package:lumtub/learning/word_token.dart';
 
 void main() {
   late Directory dir;
@@ -43,5 +44,15 @@ void main() {
     }
     expect(store.knownOf(id(0)), isNull);
     expect(store.knownOf(id(VideoDifficulty.limit)), 0.9);
+  });
+
+  test('names inside a sentence are not counted as new words', () {
+    WordToken word(String text, String language) => WordToken(text, null, isWord: true, language: language);
+    expect(looksLikeName(word('Lisboa', 'pt')), isTrue);
+    expect(looksLikeName(word('Pierre', 'fr')), isTrue);
+    expect(looksLikeName(word('casa', 'pt')), isFalse);
+    expect(looksLikeName(word('Haus', 'de')), isFalse);
+    expect(looksLikeName(word("I'm", 'en')), isFalse);
+    expect(looksLikeName(word('NASA', 'en')), isFalse);
   });
 }

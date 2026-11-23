@@ -3721,5 +3721,7 @@
   "Words without a video": "Fjalë pa video",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "Hapësira shfaq përgjigjen · 1 2 3 4 vlerësimi · R luan përsëri fjalinë · F modaliteti i përqendrimit",
   "Leave focus mode (F)": "Dil nga modaliteti i përqendrimit (F)",
-  "Focus mode: the video scene, no numbers (F)": "Modaliteti i përqendrimit: skena e videos, pa numra (F)"
+  "Focus mode: the video scene, no numbers (F)": "Modaliteti i përqendrimit: skena e videos, pa numra (F)",
+  "Just right": "Tamam",
+  "Too hard": "Shumë e vështirë"
 }

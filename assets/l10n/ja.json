@@ -3726,5 +3726,7 @@
   "Words without a video": "動画のない単語",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "スペースで答えを表示 · 1 2 3 4 で評価 · R でもう一度再生 · F で集中モード",
   "Leave focus mode (F)": "集中モードを終了 (F)",
-  "Focus mode: the video scene, no numbers (F)": "集中モード：動画のシーンを表示、数字は非表示 (F)"
+  "Focus mode: the video scene, no numbers (F)": "集中モード：動画のシーンを表示、数字は非表示 (F)",
+  "Just right": "ちょうどいい",
+  "Too hard": "難しすぎる"
 }

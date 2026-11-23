@@ -3721,5 +3721,7 @@
   "Words without a video": "Videó nélküli szavak",
   "Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode": "A szóköz mutatja a választ · 1 2 3 4 értékelés · R újrajátssza a mondatot · F fókuszmód",
   "Leave focus mode (F)": "Kilépés a fókuszmódból (F)",
-  "Focus mode: the video scene, no numbers (F)": "Fókuszmód: a videó jelenete, számok nélkül (F)"
+  "Focus mode: the video scene, no numbers (F)": "Fókuszmód: a videó jelenete, számok nélkül (F)",
+  "Just right": "Épp jó",
+  "Too hard": "Túl nehéz"
 }

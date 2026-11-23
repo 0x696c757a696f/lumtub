@@ -88,7 +88,22 @@ extension LearningActions on AppController {
     unawaited(listedSubtitleCues().then((rows) {
       if (_learningLinesKey != key) return;
       _learningLines = [for (final row in rows) row.cue];
+      _rememberDifficulty(key);
     }).catchError((Object e) => logWarn('Could not read the subtitle lines to pause after: $e')));
+  }
+
+  /// Works out, a moment after the lines are read, how much of the video
+  /// the learner knows, for its card in every list; the learning drawer
+  /// reads the same counted result.
+  void _rememberDifficulty(String key) {
+    final id = playing?.id;
+    final book = learning.book;
+    if (id == null || book == null || !learningOn || !learning.unlocked || _learningLines.isEmpty || playing?.isLive == true) return;
+    unawaited(Future<void>.delayed(const Duration(seconds: 4), () async {
+      if (_learningLinesKey != key || playing?.id != id) return;
+      final words = await videoWordsOf(learning, knownWordsOf(book), id, [for (final l in _learningLines) l.text]);
+      if (words != null && words.words >= 20) videoDifficulty.remember(id, words.known);
+    }).catchError((Object e) => logWarn('Could not work out the video difficulty: $e')));
   }
 
   /// Called with each position: pauses as a line ends while 每句说完暂停 is on.

@@ -19,6 +19,7 @@ import 'japanese_dictionary.dart';
 import 'latin_language.dart';
 import 'lexicon.dart';
 import 'license.dart';
+import 'video_difficulty.dart';
 import 'vocabulary.dart';
 import 'word_levels.dart';
 import 'wiktionary_dictionary.dart';
@@ -557,6 +558,7 @@ class Learning extends ChangeNotifier {
     _voice = WordVoice(Directory('${directories.cache.path}${Platform.pathSeparator}word-sounds'));
     unawaited(_voice!.tidy());
     _book = VocabularyBook(File('${directories.data.path}${Platform.pathSeparator}vocabulary.json'));
+    unawaited(videoDifficulty.open(File('${directories.data.path}${Platform.pathSeparator}video-difficulty.json')));
     try {
       final file = _settingsFile!;
       if (await file.exists()) {

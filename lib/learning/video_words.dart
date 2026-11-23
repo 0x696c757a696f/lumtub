@@ -34,7 +34,9 @@ class VideoWords {
   final List<int> oneNew;
 
   /// About how hard the video is for this learner, from what is known.
-  VideoLevel get level => known >= 0.98 ? VideoLevel.easy : (known >= 0.90 ? VideoLevel.right : (known >= 0.80 ? VideoLevel.hard : VideoLevel.tooHard));
+  VideoLevel get level => levelFor(known);
+
+  static VideoLevel levelFor(double known) => known >= 0.98 ? VideoLevel.easy : (known >= 0.90 ? VideoLevel.right : (known >= 0.80 ? VideoLevel.hard : VideoLevel.tooHard));
 }
 
 /// From studies of viewing (Durbahn et al. 2024, Webb & Rodgers 2009):

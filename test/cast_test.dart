@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -94,6 +95,15 @@ class _FakeCastDevice implements CastDevice {
   Future<CastStatus?> status() async => next;
   @override
   Future<void> close() async => calls.add('close');
+}
+
+class _SlowCastDevice extends _FakeCastDevice {
+  final loaded = Completer<void>();
+  @override
+  Future<void> load(CastMedia media) async {
+    calls.add('load ${media.url}');
+    await loaded.future;
+  }
 }
 
 void main() {
@@ -257,6 +267,14 @@ void main() {
       expect(services.single.id, '0f1e2d');
       expect(services.single.port, 8009);
       expect(services.single.host.address, '192.168.1.77');
+    });
+
+    test('takes only the address the reply came from, and answers what the packet completed', () {
+      final other = MdnsCollector();
+      expect(other.add(_mdnsPacket(), from: InternetAddress('192.168.1.5')), isEmpty);
+      expect(other.services, isEmpty);
+      final found = MdnsCollector().add(_mdnsPacket(), from: InternetAddress('192.168.1.77'));
+      expect(found.single.host.address, '192.168.1.77');
     });
 
     test('ignores truncated packets', () {
@@ -544,6 +562,18 @@ void main() {
       expect(device.calls.last, 'stop');
       expect(controller.active, isFalse);
       expect(await controller.stop(), isNull);
+    });
+
+    test('of two devices picked at once, only the newest keeps the session', () async {
+      final first = _SlowCastDevice(), second = _FakeCastDevice();
+      final controller = CastController();
+      addTearDown(controller.dispose);
+      final starting = controller.start(first, const CastMedia(url: 'http://a', title: 'A'));
+      await controller.start(second, const CastMedia(url: 'http://b', title: 'B'));
+      first.loaded.complete();
+      await starting;
+      expect(controller.device, same(second));
+      expect(first.calls.last, 'close');
     });
 
     test('polls less often while the window is hidden', () async {

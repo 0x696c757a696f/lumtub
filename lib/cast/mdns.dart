@@ -49,55 +49,82 @@ class MdnsCollector {
   final _srv = <String, (String, int)>{};
   final _txt = <String, Map<String, String>>{};
   final _addresses = <String, InternetAddress>{};
+  /// The instances whose SRV record names each host.
+  final _byTarget = <String, Set<String>>{};
+
+  /// The most names each kind of record is kept for: a LAN has a few
+  /// devices, and a flood of answers is not held.
+  static const _maxNames = 256;
 
   /// Reads one packet in the core; what a malformed one holds before the
-  /// damage is kept, the rest ignored.
-  void add(Uint8List packet) {
+  /// damage is kept, the rest ignored. With [from], the packet's sender,
+  /// only addresses that are the sender's own are taken, so no host can
+  /// name another as a receiver. Answers the services this packet
+  /// completed or changed.
+  List<MdnsService> add(Uint8List packet, {InternetAddress? from}) {
     final Object? read;
     try {
       read = readInCore('lumtub_mdns_records', packet);
     } on FormatException {
-      return;
+      return const [];
     }
-    if (read is! Map) return;
+    if (read is! Map) return const [];
     final records = read;
+    final touched = <String>{};
     List<List<Object?>> rows(String key) => [for (final row in records[key] as List? ?? const []) if (row is List) row];
+    bool room(Map<String, Object?> map, String name) => map.length < _maxNames || map.containsKey(name);
     for (final row in rows('ptr')) {
-      if (row case [final String owner, final String target] when owner.toLowerCase() == service) _ptr.add(target);
+      if (row case [final String owner, final String target] when owner.toLowerCase() == service && (_ptr.length < _maxNames || _ptr.contains(target))) {
+        _ptr.add(target);
+        touched.add(target);
+      }
     }
     for (final row in rows('srv')) {
-      if (row case [final String name, final String target, final num port]) _srv[name] = (target, port.toInt());
+      if (row case [final String name, final String target, final num port] when room(_srv, name)) {
+        if (_srv[name] case (final before, _)?) _byTarget[before]?.remove(name);
+        _srv[name] = (target, port.toInt());
+        (_byTarget[target] ??= {}).add(name);
+        touched.add(name);
+      }
     }
     for (final row in rows('txt')) {
-      if (row case [final String name, final Map entries]) _txt[name] = {for (final MapEntry(:key, :value) in entries.entries) '$key': '$value'};
+      if (row case [final String name, final Map entries] when room(_txt, name)) {
+        _txt[name] = {for (final MapEntry(:key, :value) in entries.entries) '$key': '$value'};
+        touched.add(name);
+      }
     }
     for (final row in rows('addresses')) {
-      if (row case [final String name, final String text]) {
+      if (row case [final String name, final String text] when room(_addresses, name)) {
         final address = InternetAddress.tryParse(text);
-        if (address == null) continue;
+        if (address == null || (from != null && address != from)) continue;
         // An IPv4 address wins over an IPv6 one for the same name.
         if (address.type == InternetAddressType.IPv4) {
           _addresses[name] = address;
         } else {
           _addresses.putIfAbsent(name, () => address);
         }
+        touched.addAll(_byTarget[name] ?? const {});
       }
     }
+    return [for (final instance in touched) if (_service(instance) case final found?) found];
+  }
+
+  MdnsService? _service(String instance) {
+    if (!_ptr.contains(instance)) return null;
+    final (target, port) = _srv[instance] ?? (null, 0);
+    final address = _addresses[target];
+    if (address == null) return null;
+    return MdnsService(
+      id: _txt[instance]?['id'] ?? instance,
+      name: _txt[instance]?['fn'] ?? instance.split('.').first,
+      host: address,
+      port: port,
+      txt: _txt[instance] ?? const {},
+    );
   }
 
   /// The services whose records are all known, an IPv4 address preferred.
-  List<MdnsService> get services => [
-        for (final instance in _ptr)
-          if (_srv[instance] case (final target, final port)?)
-            if (_addresses[target] case final address?)
-              MdnsService(
-                id: _txt[instance]?['id'] ?? instance,
-                name: _txt[instance]?['fn'] ?? instance.split('.').first,
-                host: address,
-                port: port,
-                txt: _txt[instance] ?? const {},
-              ),
-      ];
+  List<MdnsService> get services => [for (final instance in _ptr) if (_service(instance) case final found?) found];
 }
 
 /// Asks the LAN for [service] for [timeout], emitting each device once.
@@ -110,8 +137,10 @@ Stream<MdnsService> discoverMdns({String service = googleCastService, Duration t
   final seen = <String>{};
   Timer? finish;
   Timer? repeat;
+  var closed = false;
 
   void close() {
+    closed = true;
     finish?.cancel();
     repeat?.cancel();
     for (final s in sockets) {
@@ -124,15 +153,20 @@ Stream<MdnsService> discoverMdns({String service = googleCastService, Duration t
     final target = InternetAddress('224.0.0.251');
     final query = mdnsQuery(service);
     for (final address in await localIPv4Addresses()) {
+      if (closed) return;
       try {
         final socket = await RawDatagramSocket.bind(address, 0);
+        // Cancelled while binding: close() has run already.
+        if (closed) {
+          socket.close();
+          return;
+        }
         sockets.add(socket);
         socket.listen((event) {
           if (event != RawSocketEvent.read) return;
           final packet = socket.receive();
           if (packet == null) return;
-          collector.add(packet.data);
-          for (final found in collector.services) {
+          for (final found in collector.add(packet.data, from: packet.address)) {
             if (seen.add(found.id) && !controller.isClosed) controller.add(found);
           }
         });
@@ -150,6 +184,7 @@ Stream<MdnsService> discoverMdns({String service = googleCastService, Duration t
       }
     }
 
+    if (closed) return;
     ask();
     repeat = Timer.periodic(const Duration(seconds: 2), (_) => ask());
     finish = Timer(timeout, close);

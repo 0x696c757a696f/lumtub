@@ -303,6 +303,7 @@ Stream<CastDevice> discoverDlna({Duration timeout = const Duration(seconds: 6)})
   final http = HttpClient()..connectionTimeout = const Duration(seconds: 4);
   Timer? finish;
   Timer? repeat;
+  var closed = false;
 
   Future<void> describe(SsdpResponse found) async {
     try {
@@ -322,6 +323,7 @@ Stream<CastDevice> discoverDlna({Duration timeout = const Duration(seconds: 6)})
   }
 
   Future<void> close() async {
+    closed = true;
     finish?.cancel();
     repeat?.cancel();
     for (final s in sockets) {
@@ -336,8 +338,14 @@ Stream<CastDevice> discoverDlna({Duration timeout = const Duration(seconds: 6)})
     final data = utf8.encode(ssdpSearchRequest());
     final locations = <String>{};
     for (final address in await localIPv4Addresses()) {
+      if (closed) return;
       try {
         final socket = await RawDatagramSocket.bind(address, 0);
+        // Cancelled while binding: close() has run already.
+        if (closed) {
+          socket.close();
+          return;
+        }
         sockets.add(socket);
         socket.listen((event) {
           if (event != RawSocketEvent.read) return;
@@ -364,6 +372,7 @@ Stream<CastDevice> discoverDlna({Duration timeout = const Duration(seconds: 6)})
       }
     }
 
+    if (closed) return;
     search();
     repeat = Timer.periodic(const Duration(seconds: 2), (_) => search());
     finish = Timer(timeout, close);

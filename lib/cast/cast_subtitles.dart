@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import '../app_log.dart';
 import '../subtitle_cues.dart';
 
 /// The subtitles cast with a video: one line, or two when a second
@@ -60,7 +61,8 @@ class CastSubtitleServer {
   CastSubtitleServer._();
   static final instance = CastSubtitleServer._();
 
-  HttpServer? _server;
+  /// One bind for all: two registrations at once share it.
+  Future<HttpServer>? _server;
   final _files = <String, ({String type, List<int> body})>{};
   var _serial = 0;
 
@@ -68,10 +70,16 @@ class CastSubtitleServer {
   /// returns their addresses as seen from [host]. Only the newest few are
   /// kept.
   Future<CastSubtitles> register(List<SubtitleCue> cues, {required String host, Duration offset = Duration.zero, String? language}) async {
-    var server = _server;
-    if (server == null) {
-      server = _server = await HttpServer.bind(InternetAddress.anyIPv4, 0);
-      server.listen(_answer);
+    final binding = _server ??= HttpServer.bind(InternetAddress.anyIPv4, 0).then((server) {
+      server.listen(_answer, onError: (Object e) => logWarn('Cast subtitle server: $e'));
+      return server;
+    });
+    final HttpServer server;
+    try {
+      server = await binding;
+    } catch (_) {
+      if (identical(_server, binding)) _server = null;
+      rethrow;
     }
     final lines = cuesFrom(cues, offset);
     // A random path part, so another device on the network cannot guess the address.
@@ -108,8 +116,13 @@ class CastSubtitleServer {
   }
 
   Future<void> close() async {
-    await _server?.close(force: true);
+    final binding = _server;
     _server = null;
     _files.clear();
+    try {
+      await (await binding)?.close(force: true);
+    } catch (_) {
+      // It never bound.
+    }
   }
 }

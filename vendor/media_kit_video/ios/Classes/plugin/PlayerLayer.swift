@@ -220,7 +220,8 @@ final class PlayerLayer: NSObject {
       let bounds = fill.boundingRect(
         with: CGSize(width: room, height: .greatestFiniteMagnitude),
         options: [.usesLineFragmentOrigin, .usesFontLeading], context: nil)
-      laid.append((fill, stroke, CGSize(width: ceil(bounds.width), height: ceil(bounds.height))))
+      // A point wider than measured, so drawing breaks the lines where measuring did.
+      laid.append((fill, stroke, CGSize(width: ceil(bounds.width) + 1, height: ceil(bounds.height))))
     }
     guard !laid.isEmpty else { return nil }
     let pad = ceil(lines.map(\.outline).max() ?? 0) + 1

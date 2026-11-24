@@ -15,24 +15,55 @@ final lightsOffHole = GlobalKey(debugLabel: 'lightsOffHole');
 /// Darkens what is under it except [lightsOffHole]. A click on the dark
 /// part turns the lights back on; the player stays usable through the hole.
 class LightsOffLayer extends StatefulWidget {
-  const LightsOffLayer({super.key, required this.dim, this.radius = AppStyle.cardRadius});
+  const LightsOffLayer({super.key, required this.dim, this.radius = AppStyle.cardRadius, this.visible = true});
 
   /// How dark, from 0 to 1.
   final double dim;
   final BorderRadius radius;
+
+  /// False fades the dark away; once gone the layer draws and measures
+  /// nothing until it shows again.
+  final bool visible;
 
   @override
   State<LightsOffLayer> createState() => _LightsOffLayerState();
 }
 
 class _LightsOffLayerState extends State<LightsOffLayer> with SingleTickerProviderStateMixin {
-  late final _fade = AnimationController(vsync: this, duration: Motion.of(const Duration(milliseconds: 250)))..forward();
+  late final _fade = AnimationController(vsync: this, duration: Motion.of(const Duration(milliseconds: 250)));
   Rect? _hole;
+  bool _measuring = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(_measure);
+    _fade.addStatusListener(_faded);
+    if (widget.visible) _show();
+  }
+
+  @override
+  void didUpdateWidget(LightsOffLayer old) {
+    super.didUpdateWidget(old);
+    if (widget.visible == old.visible) return;
+    if (widget.visible) {
+      _show();
+    } else {
+      _fade.duration = Motion.of(const Duration(milliseconds: 250));
+      _fade.reverse();
+    }
+  }
+
+  void _show() {
+    _fade.duration = Motion.of(const Duration(milliseconds: 250));
+    _fade.forward();
+    if (!_measuring) {
+      _measuring = true;
+      WidgetsBinding.instance.addPostFrameCallback(_measure);
+    }
+  }
+
+  void _faded(AnimationStatus status) {
+    if (status == AnimationStatus.dismissed && mounted) setState(() => _hole = null);
   }
 
   @override
@@ -44,7 +75,10 @@ class _LightsOffLayerState extends State<LightsOffLayer> with SingleTickerProvid
   /// Follows the player after every frame, so scrolling, 剧场模式 and
   /// window resizes move the hole with it. Only a change repaints.
   void _measure(Duration _) {
-    if (!mounted) return;
+    if (!mounted || (!widget.visible && _fade.isDismissed)) {
+      _measuring = false;
+      return;
+    }
     final hole = holeRect(lightsOffHole, context.findRenderObject());
     if (hole != _hole) setState(() => _hole = hole);
     WidgetsBinding.instance.addPostFrameCallback(_measure);
@@ -53,12 +87,12 @@ class _LightsOffLayerState extends State<LightsOffLayer> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final hole = _hole;
-    if (hole == null) return const SizedBox.shrink();
+    if (hole == null || (!widget.visible && _fade.isDismissed)) return const SizedBox.shrink();
     // Its own layer: the fade and a moving hole repaint the dark layer
     // only, not the page under it.
     return _HoleHitTest(
       hole: hole,
-      child: RepaintBoundary(child: GestureDetector(
+      child: RepaintBoundary(child: IgnorePointer(ignoring: !widget.visible, child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => lightsOff.value = false,
         child: AnimatedBuilder(
@@ -68,7 +102,7 @@ class _LightsOffLayerState extends State<LightsOffLayer> with SingleTickerProvid
             painter: _DarkPainter(hole: widget.radius.toRRect(hole), color: Colors.black.withValues(alpha: widget.dim * Ease.out.transform(_fade.value))),
           ),
         ),
-      )),
+      ))),
     );
   }
 }

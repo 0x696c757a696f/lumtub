@@ -137,8 +137,26 @@ void main() {
     expect(AndroidSubtitleFonts.familyFor('因此 so'), 'Noto Sans SC');
     expect(AndroidSubtitleFonts.familyFor('สวัสดี'), 'Noto Sans Thai');
     expect(AndroidSubtitleFonts.familyFor('błogosławionej'), 'Noto Sans');
+    // Without the Chinese face libass still draws the other scripts.
     File('${flutter.path}/NotoSansSC-Regular.ttf').deleteSync();
+    expect(await AndroidSubtitleFonts.prepareIos('${root.path}/subs', flutterFonts: flutter.path, bundled: bundled.path), isNotNull);
+    expect(AndroidSubtitleFonts.familyFor('błogosławionej'), 'Noto Sans');
+    expect(AndroidSubtitleFonts.familyFor('สวัสดี'), 'Noto Sans Thai');
+    expect(AndroidSubtitleFonts.familyFor('因此 so'), isNull);
+    expect(AndroidSubtitleFonts.forLines(['ciao', '你好']).drawable, isFalse);
+    // With no font at all there is nothing for libass.
+    for (final f in bundled.listSync()) {
+      f.deleteSync();
+    }
     expect(await AndroidSubtitleFonts.prepareIos('${root.path}/subs', flutterFonts: flutter.path, bundled: bundled.path), isNull);
+  });
+
+  test('the app bundles the Chinese face libass on iOS starts from', () {
+    // Left out of pubspec.yaml once (0.2.59 to 0.2.61): iOS subtitles all
+    // fell to Flutter's view and never reached picture in picture.
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    expect(pubspec, contains('asset: assets/fonts/NotoSansSC-Regular.ttf'));
+    expect(File('assets/fonts/NotoSansSC-Regular.ttf').existsSync(), isTrue);
   });
 
   test('on iOS downloaded Japanese and traditional Chinese faces draw those languages', () async {

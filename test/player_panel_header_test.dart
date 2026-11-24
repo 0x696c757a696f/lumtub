@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/player_panel.dart';
 import 'package:media_kit_video/media_kit_video.dart' show VideoObstructionAvoider;
+import 'tooltip_finder.dart';
 
 void main() {
   const rtl = {'ar', 'fa', 'he', 'ur', 'ps', 'sd', 'ug', 'yi', 'dv', 'ckb'};
@@ -61,7 +62,7 @@ void main() {
     expect(find.text('Subtitle list'), findsOneWidget);
     await pumpHeader(tester, width: 360, words: const {});
     expect(find.text('Subtitle list'), findsNothing);
-    expect(find.byTooltip('Subtitle list'), findsOneWidget);
+    expect(byTooltip('Subtitle list'), findsOneWidget);
   });
 
   test('the picture moves out from under a panel only when enough is left', () {

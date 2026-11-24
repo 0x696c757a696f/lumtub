@@ -139,3 +139,6 @@ The changes, marked "Lumtub" in the code:
   `SecondaryRevealArea`, above the controls in `video_texture.dart`, takes
   hovering and taps over that line only and passes every other pointer
   event on to the controls.
+- Material widgets come from `package:material_ui` (Flutter 3.50 deprecated
+  `package:flutter/material.dart`), so the fullscreen route, subtitle view
+  and controls read the app's own theme.

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -11,6 +11,7 @@ import 'package:lumtub/packs.dart';
 import 'package:lumtub/tool_manager.dart';
 import 'package:lumtub/ui/pages/settings_subpages.dart';
 import 'package:lumtub/ui/theme.dart';
+import 'tooltip_finder.dart';
 
 void main() {
   late Directory temp;
@@ -163,7 +164,7 @@ void main() {
     await tester.runAsync(() => packs.install('shaders-upscale'));
     await tester.pumpAndSettle();
     expect(packs.installed.single.pack.id, 'shaders-upscale');
-    expect(find.byTooltip('Delete'), findsOneWidget);
+    expect(byTooltip('Delete'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

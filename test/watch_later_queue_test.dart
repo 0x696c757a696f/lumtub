@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app/library_controller.dart';
@@ -17,6 +17,7 @@ import 'package:lumtub/ui/play_queue_panel.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/ui/video_card.dart';
 import 'package:lumtub/video_repository.dart';
+import 'tooltip_finder.dart';
 
 void main() {
   final videos = [
@@ -192,7 +193,7 @@ void main() {
     expect(find.text('Play queue'), findsOneWidget);
     expect(find.text('视频 0'), findsOneWidget);
     expect(find.text('视频 1'), findsOneWidget);
-    await tester.tap(find.byTooltip('Remove from queue').first);
+    await tester.tap(byTooltip('Remove from queue').first);
     expect(controller.playQueue.items.map((v) => v.id), [videos[1].id]);
     await tester.tap(find.text('Clear all'));
     expect(controller.playQueue.isEmpty, isTrue);

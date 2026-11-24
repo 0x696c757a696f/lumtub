@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The glossy things of the 2000s look, painted for the skin scenes: glass
 /// orbs with a world inside, the Earth, rainbow bubbles, glass stars,

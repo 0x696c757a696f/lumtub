@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:lumtub/app/app_controller.dart';
@@ -7,6 +7,7 @@ import 'package:lumtub/community_posts.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/ui/pages/channel_page.dart';
 import 'package:lumtub/video_repository.dart';
+import 'tooltip_finder.dart';
 
 void main() {
   Future<AppController> pump(WidgetTester tester, Size size) async {
@@ -54,7 +55,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(PostCommentsPanel), findsOneWidget);
     expect(find.byType(ChannelPage, skipOffstage: true), findsNothing);
-    await tester.tap(find.byTooltip('Close (Esc)'));
+    await tester.tap(byTooltip('Close (Esc)'));
     await tester.pumpAndSettle();
     expect(find.byType(PostCommentsPanel), findsNothing);
   });

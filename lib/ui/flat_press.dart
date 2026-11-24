@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Ink for a press with no ripple: the whole control darkens at once while
 /// it is held, and fades back when let go, so a click is felt more than a

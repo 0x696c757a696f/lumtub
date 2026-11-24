@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app_preferences.dart';
@@ -11,6 +11,7 @@ import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/ui/app_icons.dart';
 
 import 'player_controls_test.dart' show FakePlayer;
+import 'tooltip_finder.dart';
 
 const _video = VideoItem(id: 'dQw4w9WgXcQ', title: '测试视频标题', channel: 'Channel', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
 
@@ -228,8 +229,8 @@ void main() {
     testWidgets('hovering shows play/pause, expand and close', (tester) async {
       await pumpCard(tester);
       await hover(tester);
-      expect(find.byTooltip('Back to the watch page'), findsOneWidget);
-      expect(find.byTooltip('Close the mini player and stop playback'), findsOneWidget);
+      expect(byTooltip('Back to the watch page'), findsOneWidget);
+      expect(byTooltip('Close the mini player and stop playback'), findsOneWidget);
 
       expect(player.state.playing, isTrue);
       await tester.tap(find.byIcon(AppIcons.pauseCircle));
@@ -241,7 +242,7 @@ void main() {
     testWidgets('expand goes back to the watch page', (tester) async {
       await pumpCard(tester);
       await hover(tester);
-      await tester.tap(find.byTooltip('Back to the watch page'));
+      await tester.tap(byTooltip('Back to the watch page'));
       await tester.pump();
       expect(controller.mini, isFalse);
       expect(controller.onWatchPage, isTrue);
@@ -251,7 +252,7 @@ void main() {
     testWidgets('close stops the video', (tester) async {
       await pumpCard(tester);
       await hover(tester);
-      await tester.tap(find.byTooltip('Close the mini player and stop playback'));
+      await tester.tap(byTooltip('Close the mini player and stop playback'));
       await tester.pump();
       expect(controller.mini, isFalse);
       expect(controller.playing, isNull);

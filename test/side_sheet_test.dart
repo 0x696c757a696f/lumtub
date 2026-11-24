@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/ui/side_sheet.dart';
+import 'tooltip_finder.dart';
 
 /// Opens a [PanelDialog] with [show] from a button in a window [size]
 /// across, written in [direction].
@@ -39,7 +40,7 @@ void main() {
     expect(find.byType(AlertDialog), findsNothing);
     expect(find.byType(BottomSheet), findsNothing);
     expect(_sheet(tester), const Rect.fromLTWH(720, 0, 480, 800));
-    expect(find.byTooltip('Close'), findsOneWidget);
+    expect(byTooltip('Close'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -58,7 +59,7 @@ void main() {
     expect(find.text('Body'), findsNothing);
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Close'));
+    await tester.tap(byTooltip('Close'));
     await tester.pumpAndSettle();
     expect(find.text('Body'), findsNothing);
   });
@@ -87,7 +88,7 @@ void main() {
     await _open(tester, const Size(1200, 800), showPanel, direction: TextDirection.rtl);
     expect(_sheet(tester), const Rect.fromLTWH(0, 0, 480, 800));
     // The close button sits at the end of the title, on the left.
-    expect(tester.getCenter(find.byTooltip('Close')).dx, lessThan(tester.getCenter(find.text('Panel')).dx));
+    expect(tester.getCenter(byTooltip('Close')).dx, lessThan(tester.getCenter(find.text('Panel')).dx));
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(find.text('Body'), findsNothing);
@@ -104,7 +105,7 @@ void main() {
     await _open(tester, const Size(400, 800), showPanel);
     expect(find.byType(BottomSheet), findsOneWidget);
     expect(find.byType(AlertDialog), findsNothing);
-    expect(find.byTooltip('Close'), findsNothing);
+    expect(byTooltip('Close'), findsNothing);
     final sheet = tester.getRect(find.byType(BottomSheet));
     expect(sheet.bottom, 800);
     expect(sheet.width, 400);

@@ -137,6 +137,13 @@ void main() {
     expect((library.isFavorite(video.id), library.isFavorite(other.id)), (false, true));
     library.favorites.removeAt(0);
     expect(library.isFavorite(other.id), isFalse);
+    library.favorites.addAll([video, video, other]);
+    library.favorites.remove(video);
+    expect(library.isFavorite(video.id), isTrue);
+    library.favorites.retainWhere((item) => item.id == other.id);
+    expect((library.isFavorite(video.id), library.isFavorite(other.id)), (false, true));
+    library.favorites.length = 0;
+    expect(library.isFavorite(other.id), isFalse);
     library.watchLater.addAll([video, other]);
     expect(library.isWatchLater(other.id), isTrue);
     expect(library.removeWatchLater(other.id), isTrue);

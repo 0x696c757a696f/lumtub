@@ -25,66 +25,100 @@ class WatchProgress {
 }
 
 /// A list that knows the ids of its entries, so asking whether one is in
-/// it costs no scan; the ids are kept right whoever changes the list.
+/// it costs no scan; the index changes with the list, whoever changes it.
 class IdList<T> extends ListBase<T> {
   IdList(this._idOf);
   final String Function(T) _idOf;
   final _items = <T>[];
-  Set<String>? _ids;
+  /// How many entries have each id.
+  final _ids = <String, int>{};
 
-  bool containsId(String id) => (_ids ??= {for (final item in _items) _idOf(item)}).contains(id);
+  bool containsId(String id) => _ids.containsKey(id);
+
+  void _count(T item) => _ids.update(_idOf(item), (n) => n + 1, ifAbsent: () => 1);
+
+  void _uncount(T item) {
+    final id = _idOf(item);
+    final n = _ids[id];
+    if (n == null) return;
+    if (n <= 1) {
+      _ids.remove(id);
+    } else {
+      _ids[id] = n - 1;
+    }
+  }
 
   @override
   int get length => _items.length;
   @override
   set length(int value) {
+    for (var i = value; i < _items.length; i++) {
+      _uncount(_items[i]);
+    }
     _items.length = value;
-    _ids = null;
   }
 
   @override
   T operator [](int index) => _items[index];
   @override
   void operator []=(int index, T value) {
+    final old = _items[index];
     _items[index] = value;
-    _ids = null;
+    _uncount(old);
+    _count(value);
   }
 
   @override
   void add(T element) {
     _items.add(element);
-    _ids?.add(_idOf(element));
+    _count(element);
   }
 
   @override
   void addAll(Iterable<T> iterable) {
+    final start = _items.length;
     _items.addAll(iterable);
-    _ids = null;
+    for (var i = start; i < _items.length; i++) {
+      _count(_items[i]);
+    }
   }
 
   @override
   void insert(int index, T element) {
     _items.insert(index, element);
-    _ids?.add(_idOf(element));
+    _count(element);
   }
 
   @override
   bool remove(Object? element) {
-    final removed = _items.remove(element);
-    if (removed) _ids = null;
-    return removed;
+    if (element is! T) return false;
+    final at = _items.indexOf(element);
+    if (at < 0) return false;
+    _uncount(_items.removeAt(at));
+    return true;
   }
 
   @override
-  void removeWhere(bool Function(T element) test) {
-    _items.removeWhere(test);
-    _ids = null;
+  T removeAt(int index) {
+    final item = _items.removeAt(index);
+    _uncount(item);
+    return item;
   }
+
+  @override
+  void removeWhere(bool Function(T element) test) => _items.removeWhere((item) {
+        if (!test(item)) return false;
+        _uncount(item);
+        return true;
+      });
+
+  @override
+  void retainWhere(bool Function(T element) test) => removeWhere((item) => !test(item));
 
   @override
   void clear() {
     _items.clear();
-    _ids = null;
+    _ids.clear();
   }
 
   @override

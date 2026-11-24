@@ -904,6 +904,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     () => translator,
     byTranslator: () => preferences.subtitlesByService && !preferences.translation.service.subtitlesOnGoogle,
     position: () => player?.state.position ?? Duration.zero,
+    playing: () => playing?.id,
     onUpdated: _subtitleFileUpdated,
   );
 

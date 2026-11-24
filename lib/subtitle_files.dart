@@ -28,8 +28,9 @@ import 'scripts.dart';
 /// The whole track is translated when it is asked for whole.
 class SubtitleFiles {
   SubtitleFiles(this._client, this._folder, this._translator,
-      {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.busyPauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3, Duration Function()? position, this.onUpdated, this.poll = const Duration(seconds: 5)})
-      : _position = position ?? _start;
+      {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.busyPauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3, Duration Function()? position, Object? Function()? playing, this.onUpdated, this.poll = const Duration(seconds: 5)})
+      : _position = position ?? _start,
+        _playing = playing ?? _nothing;
   final http.Client _client;
   final Directory _folder;
   /// The translator chosen now; a new one translates again.
@@ -44,6 +45,9 @@ class SubtitleFiles {
   final int concurrency;
   /// Where playback is, so a track Lumtub translates starts there.
   final Duration Function() _position;
+  /// What is playing now, such as the video's id: a track that followed
+  /// another video stops once this changes, as [_position] is no longer its.
+  final Object? Function() _playing;
   /// Called with a file's path each time more of a translation, begun at
   /// [_position], has been written to it; false once the track is no
   /// longer shown, which stops translating it.
@@ -60,6 +64,8 @@ class SubtitleFiles {
   static Duration _start() => Duration.zero;
 
   static bool _never() => false;
+
+  static Object? _nothing() => null;
 
   final _paths = <String, Future<String>>{};
   /// Translations still being finished in the background, by key.
@@ -294,6 +300,7 @@ class SubtitleFiles {
         ]);
 
     // Enough to start with: the piece playing now and the next few.
+    final playing = _playing();
     final start = order(_position());
     final first = wanted();
     await run((first.isEmpty ? start : first).take(concurrency).toList());
@@ -301,6 +308,7 @@ class SubtitleFiles {
 
     Future<String?> follow() async {
       while (true) {
+        if (!_whole.contains(key) && _playing() != playing) return null;
         final pieces = wanted();
         if (pieces.isNotEmpty) {
           await run(pieces);

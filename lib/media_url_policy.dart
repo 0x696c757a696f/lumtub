@@ -37,6 +37,12 @@ final _resolved = <String, ({DateTime at, bool public})>{};
 /// as bad as an IP literal. The answer is kept for five minutes; a name
 /// that does not resolve counts as public, as the player cannot reach it
 /// either. [lookup] is for tests.
+///
+/// The player resolves the name again itself, so a server that answers
+/// differently the second time (DNS rebinding) gets past this check. That
+/// is accepted: only a Piped or Invidious server in use (picked by the
+/// user or from the public list) can try it, and what it reaches is a GET
+/// the player makes, whose reply is played, not read back.
 Future<bool> resolvesToPublicAddress(String host, {Future<List<InternetAddress>> Function(String host)? lookup}) async {
   final key = host.toLowerCase();
   final known = _resolved[key];

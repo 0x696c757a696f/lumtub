@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -93,7 +94,7 @@ class SkinLibrary extends ChangeNotifier {
       if (found.isEmpty) throw const FormatException('No skin.jsonc in this file');
       found.sort((a, b) => a.uri.pathSegments.length.compareTo(b.uri.pathSegments.length));
       final source = found.first.parent;
-      final skin = Skin.parse(decodeJsonc(await found.first.readAsString()), folder: source.path, builtIn: false);
+      final skin = Skin.parse(await _readSkinFile(found.first), folder: source.path, builtIn: false);
       if (builtInIds.contains(skin.id)) throw FormatException('"${skin.id}" is the name of a built-in skin');
       final target = Directory('${folder.path}${Platform.pathSeparator}${skin.id}');
       // The skin it replaces is set aside, not deleted, until the new one
@@ -145,7 +146,7 @@ class SkinLibrary extends ChangeNotifier {
           final file = File('${dir.path}${Platform.pathSeparator}skin.jsonc');
           if (!await file.exists()) continue;
           try {
-            final skin = Skin.parse(decodeJsonc(await file.readAsString()), folder: dir.path, builtIn: false);
+            final skin = Skin.parse(await _readSkinFile(file), folder: dir.path, builtIn: false);
             await _loadFonts(skin);
             skins.add(skin);
             if (skin.warnings.isNotEmpty) logInfo('Skin ${skin.id}: ${skin.warnings.join('; ')}');
@@ -162,6 +163,18 @@ class SkinLibrary extends ChangeNotifier {
     revision++;
   }
 
+  /// Largest skin.jsonc and font file read; a skin's pictures are decoded
+  /// at the size they are drawn.
+  static const maxSkinFileBytes = 1 << 20;
+  static const maxFontBytes = 20 << 20;
+
+  /// A skin.jsonc decoded off the UI thread when it is big.
+  static Future<Object?> _readSkinFile(File file) async {
+    if (await file.length() > maxSkinFileBytes) throw const FormatException('skin.jsonc is larger than 1 MB');
+    final text = await file.readAsString();
+    return text.length < 64 << 10 ? decodeJsonc(text) : Isolate.run(() => decodeJsonc(text));
+  }
+
   Future<void> _loadFonts(Skin skin) async {
     for (final MapEntry(key: family, value: name) in skin.fontFiles.entries) {
       final path = skin.file(name);
@@ -174,6 +187,10 @@ class SkinLibrary extends ChangeNotifier {
       try {
         final stat = await File(path).stat();
         final key = '$family\n$path\n${stat.modified.microsecondsSinceEpoch}\n${stat.size}';
+        if (stat.size > maxFontBytes) {
+          skin.warn('font "$family" ($name) is larger than 20 MB');
+          continue;
+        }
         final known = _loadedFonts[key];
         if (known != null) {
           skin.loadedFonts[family] = known;

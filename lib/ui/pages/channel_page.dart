@@ -77,13 +77,18 @@ class _ChannelPageState extends State<ChannelPage> {
     controller.setChannelSort(value);
   }
 
+  /// The ids of a page of posts, made once per list (a new list comes with
+  /// each page loaded).
+  static Set<String> _postIds(List<CommunityPost> posts) => _postIdsOf[posts] ??= {for (final p in posts) p.id};
+  static final _postIdsOf = Expando<Set<String>>();
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
         final wide = constraints.maxWidth >= _sideBySide;
         final posts = controller.channelPosts;
         // Only while that post is still listed.
         final open = _commentsFor;
-        final shown = wide && open != null && posts != null && posts.posts.any((p) => p.id == open.id) ? open : null;
+        final shown = wide && open != null && posts != null && _postIds(posts.posts).contains(open.id) ? open : null;
         final list = _list(context, wide, shown);
         if (shown == null) return list;
         return CallbackShortcuts(
@@ -440,13 +445,19 @@ class PostCard extends StatelessWidget {
             onRate: post.rating == null || controller.channelPosts == null ? null : (want) => controller.channelPosts!.rate(post, want),
           ),
           const SizedBox(width: 16),
-          TextButton.icon(
-            onPressed: onComments,
-            icon: Icon(AppIcons.chatCircle, size: 16),
-            label: Text(post.comments.isEmpty ? tr('Comments') : post.comments, style: const TextStyle(fontSize: 12)),
+          Flexible(
+            child: TextButton.icon(
+              onPressed: onComments,
+              icon: Icon(AppIcons.chatCircle, size: 16),
+              label: Text(post.comments.isEmpty ? tr('Comments') : post.comments, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)),
+            ),
           ),
           const Spacer(),
-          TextButton.icon(onPressed: () => openExternal(post.url), icon: Icon(AppIcons.arrowSquareOut, size: 16), label: Text(tr('View in browser'))),
+          // A phone has no room for the words: the icon keeps them as its tooltip.
+          if (MediaQuery.sizeOf(context).width < 480)
+            IconButton(onPressed: () => openExternal(post.url), tooltip: tr('View in browser'), icon: Icon(AppIcons.arrowSquareOut, size: 18))
+          else
+            TextButton.icon(onPressed: () => openExternal(post.url), icon: Icon(AppIcons.arrowSquareOut, size: 16), label: Text(tr('View in browser'))),
         ]),
       ]),
     ));

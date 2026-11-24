@@ -63,10 +63,18 @@ class _RelayServersPageState extends State<_RelayServersPage> {
   }
 
   /// Answering servers fastest first, then unmeasured, then unreachable.
+  /// Sorted again only when the list changes or a test starts or ends,
+  /// not on every notify; rows keep still while a test runs.
   List<String> _sorted() {
+    final key = (_piped.catalogUpdatedAt, _busy);
+    if (key == _sortedFor) return _sortedServers;
     int rank(String s) => _piped.timingOf(s) ?? (_piped.wasTried(s) ? 1 << 30 : 1 << 29);
-    return _piped.catalog..sort((a, b) => rank(a).compareTo(rank(b)));
+    _sortedFor = key;
+    return _sortedServers = [..._piped.catalog]..sort((a, b) => rank(a).compareTo(rank(b)));
   }
+
+  Object? _sortedFor;
+  List<String> _sortedServers = const [];
 
   @override
   Widget build(BuildContext context) {

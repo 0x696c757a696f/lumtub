@@ -63,6 +63,18 @@ class _StudyLocked extends StatelessWidget {
       ]);
 }
 
+/// The book's words by the video each was heard in, newest first; made
+/// once per change of the book (its list of words is new each time), not
+/// on every rebuild of the drawer.
+Map<String, List<VocabularyWord>> _wordsByVideo(List<VocabularyWord> words) => _byVideo[words] ??= () {
+      final by = <String, List<VocabularyWord>>{};
+      for (final w in words.reversed) {
+        (by[w.videoId] ??= []).add(w);
+      }
+      return by;
+    }();
+final _byVideo = Expando<Map<String, List<VocabularyWord>>>();
+
 /// The words kept from this video, newest first, and the whole book.
 class _DrawerVocabulary extends StatelessWidget {
   const _DrawerVocabulary({required this.controller});
@@ -75,7 +87,7 @@ class _DrawerVocabulary extends StatelessWidget {
       listenable: book,
       builder: (context, _) {
         final id = controller.playing?.id;
-        final here = [for (final w in book.words.reversed) if (w.videoId == id) w];
+        final here = _wordsByVideo(book.words)[id] ?? const <VocabularyWord>[];
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (here.isEmpty)
             Text(tr('Tap a word in the subtitles, then Add to vocabulary book: it keeps the line and the moment.'),

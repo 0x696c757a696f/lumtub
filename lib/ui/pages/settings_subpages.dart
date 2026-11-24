@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:material_ui/material_ui.dart';
@@ -734,12 +735,20 @@ Future<void> openSponsorBlock(BuildContext context, AppController controller) =>
 
 // Colors
 
+/// Swatch schemes worked out once: the sheet is rebuilt on every change,
+/// and a tonal palette is slow to compute.
+final _swatchSchemes = <(int, Brightness, DynamicSchemeVariant), ColorScheme>{};
+
 Future<void> openColorSelect(BuildContext context, AppController controller) => _openList(context, controller, tr('Custom color'), (context) {
       final appearance = controller.appearance;
       final brightness = Theme.of(context).brightness;
       final hasWindowsAccent = controller.windowsAccent != null;
       final collapsed = appearance.systemAccent && hasWindowsAccent;
-      ColorScheme schemeOf(Color seed) => ColorScheme.fromSeed(seedColor: seed, brightness: brightness, dynamicSchemeVariant: appearance.schemeVariant);
+      ColorScheme schemeOf(Color seed) {
+        if (_swatchSchemes.length > 200) _swatchSchemes.clear();
+        return _swatchSchemes[(seed.toARGB32(), brightness, appearance.schemeVariant)] ??=
+            ColorScheme.fromSeed(seedColor: seed, brightness: brightness, dynamicSchemeVariant: appearance.schemeVariant);
+      }
 
       Future<void> toggleSystemAccent() => controller.saveAppearance(appearance.copyWith(systemAccent: !appearance.systemAccent, skin: '', palette: ''));
 
@@ -894,68 +903,81 @@ class _FontPageState extends State<_FontPage> {
           final needle = _query.trim().toLowerCase();
           final installed = [for (final name in _system) if (!offered.contains(name) && name.toLowerCase().contains(needle)) name];
           final percent = (appearance.textScale * 100).round();
+          final head = [
+            _header(context, tr('Font')),
+            for (final (family, label) in fontChoices)
+              RadioListTile<String?>(
+                value: family,
+                title: Text(label, style: TextStyle(fontFamily: family == autoFont ? appearance.font : family)),
+                subtitle: family == null || family == autoFont ? null : Text(family, style: _faint(context)),
+              ),
+            _header(context, tr('Installed system fonts')),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: LeavesByKeys(
+                child: TextField(
+                  controller: _search,
+                  decoration: InputDecoration(prefixIcon: Icon(AppIcons.magnifyingGlass), hintText: tr('Search installed fonts')),
+                  onChanged: (v) => setState(() => _query = v),
+                ),
+              ),
+            ),
+            if (_loading)
+              const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()))
+            else if (installed.isEmpty)
+              Padding(padding: const EdgeInsets.all(16), child: Text(tr('No installed fonts match'), style: TextStyle(color: context.colors.outline))),
+          ];
+          final shown = _loading ? const <String>[] : installed;
+          final tail = [
+            _header(context, tr('Font size')),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(children: [
+                Expanded(
+                  child: Slider(
+                    value: appearance.textScale.clamp(0.8, 1.4),
+                    min: 0.8,
+                    max: 1.4,
+                    divisions: 12,
+                    label: '$percent%',
+                    onChanged: (v) => widget.controller.saveAppearance(widget.controller.appearance.copyWith(textScale: double.parse(v.toStringAsFixed(2)))),
+                  ),
+                ),
+                SizedBox(width: 48, child: Text('$percent%')),
+                TextButton(
+                  onPressed: () => widget.controller.saveAppearance(widget.controller.appearance.copyWith(textScale: 1, fontFamily: autoFont)),
+                  child: Text(tr('Reset')),
+                ),
+              ]),
+            ),
+            _header(context, tr('Preview')),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(tr('Lumtub makes YouTube better on Windows'), style: theme.textTheme.titleLarge),
+                const SizedBox(height: 4),
+                Text(tr('The quick brown fox jumps over the lazy dog. 0123456789'), style: theme.textTheme.bodyMedium),
+                const SizedBox(height: 4),
+                Text(tr('Channel name · 120K views · 3 days ago'), style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.outline)),
+              ]),
+            ),
+            _tip(context, tr("Noto Sans CJK SC is bundled with Lumtub. System fonts are read from the current Windows user's font collection.")),
+          ];
+          // Hundreds of installed fonts, each in its own face: only the
+          // rows on screen are built.
           return RadioGroup<String?>(
             groupValue: appearance.fontFamily,
             onChanged: _pick,
-            child: ListView(padding: const EdgeInsets.only(bottom: 40), children: [
-              _header(context, tr('Font')),
-              for (final (family, label) in fontChoices)
-                RadioListTile<String?>(
-                  value: family,
-                  title: Text(label, style: TextStyle(fontFamily: family == autoFont ? appearance.font : family)),
-                  subtitle: family == null || family == autoFont ? null : Text(family, style: _faint(context)),
-                ),
-              _header(context, tr('Installed system fonts')),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: LeavesByKeys(
-                  child: TextField(
-                    controller: _search,
-                    decoration: InputDecoration(prefixIcon: Icon(AppIcons.magnifyingGlass), hintText: tr('Search installed fonts')),
-                    onChanged: (v) => setState(() => _query = v),
-                  ),
-                ),
-              ),
-              if (_loading)
-                const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()))
-              else if (installed.isEmpty)
-                Padding(padding: const EdgeInsets.all(16), child: Text(tr('No installed fonts match'), style: TextStyle(color: context.colors.outline)))
-              else
-                for (final name in installed) RadioListTile<String?>(value: name, title: Text(name, style: TextStyle(fontFamily: name))),
-              _header(context, tr('Font size')),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Row(children: [
-                  Expanded(
-                    child: Slider(
-                      value: appearance.textScale.clamp(0.8, 1.4),
-                      min: 0.8,
-                      max: 1.4,
-                      divisions: 12,
-                      label: '$percent%',
-                      onChanged: (v) => widget.controller.saveAppearance(widget.controller.appearance.copyWith(textScale: double.parse(v.toStringAsFixed(2)))),
-                    ),
-                  ),
-                  SizedBox(width: 48, child: Text('$percent%')),
-                  TextButton(
-                    onPressed: () => widget.controller.saveAppearance(widget.controller.appearance.copyWith(textScale: 1, fontFamily: autoFont)),
-                    child: Text(tr('Reset')),
-                  ),
-                ]),
-              ),
-              _header(context, tr('Preview')),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(tr('Lumtub makes YouTube better on Windows'), style: theme.textTheme.titleLarge),
-                  const SizedBox(height: 4),
-                  Text(tr('The quick brown fox jumps over the lazy dog. 0123456789'), style: theme.textTheme.bodyMedium),
-                  const SizedBox(height: 4),
-                  Text(tr('Channel name · 120K views · 3 days ago'), style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.outline)),
-                ]),
-              ),
-              _tip(context, tr("Noto Sans CJK SC is bundled with Lumtub. System fonts are read from the current Windows user's font collection.")),
-            ]),
+            child: ListView.builder(
+              padding: const EdgeInsets.only(bottom: 40),
+              itemCount: head.length + shown.length + tail.length,
+              itemBuilder: (context, i) {
+                if (i < head.length) return head[i];
+                i -= head.length;
+                if (i < shown.length) return RadioListTile<String?>(value: shown[i], title: Text(shown[i], style: TextStyle(fontFamily: shown[i])));
+                return tail[i - shown.length];
+              },
+            ),
           );
         },
       );
@@ -1437,33 +1459,44 @@ Future<void> openLogs(BuildContext context, AppController controller) =>
 class _LogEntry {
   _LogEntry(this.time, this.text);
   final String? time;
-  String text;
+  final String text;
 
-  LogLevel get level {
+  late final LogLevel level = () {
     final body = text.trimLeft();
     for (final level in LogLevel.values) {
       if (level != LogLevel.off && body.startsWith(level.tag.trim())) return level;
     }
     return body.startsWith('错误') ? LogLevel.error : LogLevel.info;
-  }
+  }();
 }
 
 List<_LogEntry> _parseLog(String raw) {
   final entries = <_LogEntry>[];
+  String? time;
+  final lines = <String>[];
+  void flush() {
+    if (lines.isNotEmpty) entries.add(_LogEntry(time, lines.join('\n')));
+    lines.clear();
+  }
+
   for (final line in const LineSplitter().convert(raw)) {
     if (line.isEmpty) continue;
     final space = line.indexOf(' ');
     final stamped = space > 0 && DateTime.tryParse(line.substring(0, space)) != null;
     if (stamped) {
-      entries.add(_LogEntry(line.substring(0, space), line.substring(space + 1)));
-    } else if (entries.isNotEmpty) {
-      entries.last.text = '${entries.last.text}\n$line';
+      flush();
+      time = line.substring(0, space);
+      lines.add(line.substring(space + 1));
     } else {
-      entries.add(_LogEntry(null, line));
+      lines.add(line);
     }
   }
+  flush();
   return entries;
 }
+
+/// A big log is parsed off the UI thread.
+Future<List<_LogEntry>> _parseLogApart(String text) async => text.length < 256 << 10 ? _parseLog(text) : Isolate.run(() => _parseLog(text));
 
 class _LogsPage extends StatefulWidget {
   const _LogsPage({required this.controller});
@@ -1476,6 +1509,8 @@ class _LogsPage extends StatefulWidget {
 class _LogsPageState extends State<_LogsPage> {
   static const _names = ['lumtub.old.log', 'lumtub.log'];
   String? _text;
+  // Parsed once a load (off the UI thread when big), not on each rebuild.
+  List<_LogEntry> _entries = const [];
   LogLevel _shown = LogLevel.debug;
 
   Directory? get _dir => widget.controller.directories?.logs;
@@ -1496,7 +1531,13 @@ class _LogsPageState extends State<_LogsPage> {
         } catch (_) {}
       }
     }
-    if (mounted) setState(() => _text = buffer.toString());
+    final text = buffer.toString();
+    final entries = await _parseLogApart(text);
+    if (!mounted) return;
+    setState(() {
+      _text = text;
+      _entries = entries;
+    });
   }
 
   void _snack(String text) {
@@ -1560,7 +1601,7 @@ class _LogsPageState extends State<_LogsPage> {
       (LogLevel.warn, tr('Warnings and above')),
       (LogLevel.error, tr('Errors only')),
     ];
-    final entries = text == null ? const <_LogEntry>[] : _parseLog(text).where((e) => e.level.index <= _shown.index).toList().reversed.toList();
+    final entries = text == null ? const <_LogEntry>[] : _entries.reversed.where((e) => e.level.index <= _shown.index).toList();
     Color? colorOf(LogLevel level) => switch (level) {
           LogLevel.error => colors.error,
           LogLevel.warn => colors.tertiary,

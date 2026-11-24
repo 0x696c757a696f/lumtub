@@ -114,6 +114,12 @@ class Skin {
         PatternPaint(:final color) => [...tones, for (final under in tones) Color.alphaBlend(color, under)],
         _ => tones,
       };
+      tones = tones.toSet().toList();
+      // Many layers of many colours multiply: a spread of them stands in.
+      if (tones.length > 64) {
+        tones.sort((a, b) => a.computeLuminance().compareTo(b.computeLuminance()));
+        tones = [for (var i = 0; i < 64; i++) tones[i * (tones.length - 1) ~/ 63]];
+      }
     }
     final foreground = <Color>[colors.text, if (colors.muted case final muted?) muted];
     bool reads(double veil) => tones.every((under) {
@@ -451,10 +457,13 @@ class SkinShape {
 sealed class SkinPaint {
   const SkinPaint();
 
+  static const maxLayers = 8;
+
   static List<SkinPaint> listOf(Object? value, Skin skin) {
     if (value == null) return const [];
     final items = value is List ? value : [value];
-    return items.map((item) => parse(item, skin)).nonNulls.toList();
+    if (items.length > maxLayers) skin.warn('paint: only the first $maxLayers layers are drawn');
+    return items.take(maxLayers).map((item) => parse(item, skin)).nonNulls.toList();
   }
 
   static SkinPaint? parse(Object? value, Skin skin) {
@@ -494,7 +503,9 @@ sealed class SkinPaint {
       final color = skin.colorOf(m['color'], 'pattern.color');
       final type = _str(m['type']);
       if (color == null || type == null || !PatternPaint.types.contains(type)) return _bad(skin, 'pattern needs a type (${PatternPaint.types.join(', ')}) and a color');
-      return PatternPaint(type, color, spacing: math.max(1, _num(m['spacing']) ?? 4), size: math.max(0.5, _num(m['size']) ?? 1), angle: _num(m['angle']) ?? 0);
+      // Dots are drawn one by one, so they are kept a little apart.
+      final spacing = (_num(m['spacing']) ?? 4).clamp(type == 'dots' ? 3 : 1, 200).toDouble();
+      return PatternPaint(type, color, spacing: spacing, size: (_num(m['size']) ?? 1).clamp(0.5, math.max(0.5, spacing)).toDouble(), angle: _num(m['angle']) ?? 0);
     }
     return _bad(skin, 'paint: use "linear", "radial", "image" or "pattern"');
   }
@@ -628,8 +639,8 @@ class SkinSurface {
           BoxShadow(
             color: skin.colorOf(s['color'], 'shadow.color') ?? const Color(0x40000000),
             offset: Offset(_num(s['x']) ?? 0, _num(s['y']) ?? 0),
-            blurRadius: _num(s['blur']) ?? 0,
-            spreadRadius: _num(s['spread']) ?? 0,
+            blurRadius: (_num(s['blur']) ?? 0).clamp(0, 100).toDouble(),
+            spreadRadius: (_num(s['spread']) ?? 0).clamp(-100, 100).toDouble(),
           ),
     ];
     final hover = SkinSurface.parse(value['hover'], skin);
@@ -766,7 +777,7 @@ sealed class SkinDecoration {
       case 'sparkles':
         return SparklesDecoration(count: (_num(value['count']) ?? 6).round().clamp(1, 40), color: color ?? Colors.white, glow: skin.colorOf(value['glow'], 'sparkles.glow'), seed: (_num(value['seed']) ?? 3).round(), above: above);
       case 'perspectiveGrid':
-        return PerspectiveGridDecoration(color: color ?? const Color(0x55FF3FD2), spacing: _num(value['spacing']) ?? 48, horizon: (_num(value['horizon']) ?? 0.55).clamp(0, 1).toDouble(), above: above);
+        return PerspectiveGridDecoration(color: color ?? const Color(0x55FF3FD2), spacing: (_num(value['spacing']) ?? 48).clamp(8, 400).toDouble(), horizon: (_num(value['horizon']) ?? 0.55).clamp(0, 1).toDouble(), above: above);
       case 'beam':
         return BeamDecoration(color: color ?? const Color(0x59FFFFFF), angle: _num(value['angle']) ?? -10, position: (_num(value['position']) ?? 0.45).toDouble(), above: above);
       case 'waves':
@@ -1191,7 +1202,13 @@ Map<String, String> _strings(Object? v) => {
 
 String? _localized(Map<String, String> m, String language) => m[language] ?? m[language.split('-').first];
 
-List<Color> _colors(Object? v, Skin skin) => _list(v).map((c) => skin.colorOf(c, 'gradient colour')).nonNulls.toList();
+List<Color> _colors(Object? v, Skin skin) {
+  final list = _list(v);
+  if (list.length > _maxColors) skin.warn('a gradient takes at most $_maxColors colours; the rest are left out');
+  return list.take(_maxColors).map((c) => skin.colorOf(c, 'gradient colour')).nonNulls.toList();
+}
+
+const _maxColors = 16;
 
 List<double>? _stops(Object? v, int count, Skin skin) {
   final stops = [for (final s in _list(v)) if (s is num) s.toDouble()];

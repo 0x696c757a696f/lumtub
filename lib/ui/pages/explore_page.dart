@@ -448,7 +448,7 @@ class _AddTopicDialogState extends State<_AddTopicDialog> {
             TextField(
               controller: _label,
               autofocus: true,
-              maxLength: 8,
+              maxLength: 24,
               decoration: InputDecoration(labelText: tr('Name'), hintText: tr('e.g. Catholic music')),
               onChanged: (_) => setState(() {}),
               onSubmitted: (_) => _submit(),

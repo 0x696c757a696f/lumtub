@@ -41,6 +41,37 @@ class _HistoryPageState extends State<HistoryPage> {
 
   AppController get controller => widget.controller;
 
+  // The history runs to thousands of entries and the page rebuilds on
+  // every notify and tick: the filtered list and the pruned selection are
+  // worked out again only when the history or the search changes. Videos
+  // are added at the front and removed by count, so its length and ends
+  // tell a change.
+  Object? _shownFor;
+  List<VideoItem> _shownItems = const [];
+  Object? _allSelectedFor;
+  bool _allSelectedKept = false;
+
+  List<VideoItem> _shown(List<VideoItem> all) {
+    final key = (all.length, all.firstOrNull?.id, all.lastOrNull?.id, _query);
+    if (key == _shownFor) return _shownItems;
+    _shownFor = key;
+    if (_selected.isNotEmpty) {
+      final ids = {for (final item in all) item.id};
+      _selected.removeWhere((id) => !ids.contains(id));
+    }
+    return _shownItems = filterHistory(all, _query);
+  }
+
+  bool _allSelected(List<VideoItem> items) {
+    if (_selected.isEmpty || items.isEmpty) return false;
+    final key = (_shownFor, _selected.length);
+    if (key != _allSelectedFor) {
+      _allSelectedFor = key;
+      _allSelectedKept = items.every((item) => _selected.contains(item.id));
+    }
+    return _allSelectedKept;
+  }
+
   /// The search typed and the history shown, there again after a video.
   final _kept = PageMemory<(String, bool)>('history');
 
@@ -69,9 +100,8 @@ class _HistoryPageState extends State<HistoryPage> {
     if (all.isEmpty && !signedIn) {
       return StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('No watch history yet'), message: tr('Played videos are saved on this device, up to {0} entries.', [historyLimit]));
     }
-    final items = filterHistory(all, _query);
-    _selected.removeWhere((id) => !all.any((item) => item.id == id));
-    final allSelected = items.isNotEmpty && items.every((item) => _selected.contains(item.id));
+    final items = _shown(all);
+    final allSelected = _allSelected(items);
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: PageHeader(
         tr('Watch history'),

@@ -1495,7 +1495,8 @@ List<_LogEntry> _parseLog(String raw) {
   return entries;
 }
 
-Future<List<_LogEntry>> _parseLogApart(String text) => Isolate.run(() => _parseLog(text));
+/// A big log is parsed off the UI thread.
+Future<List<_LogEntry>> _parseLogApart(String text) async => text.length < 256 << 10 ? _parseLog(text) : Isolate.run(() => _parseLog(text));
 
 class _LogsPage extends StatefulWidget {
   const _LogsPage({required this.controller});
@@ -1508,7 +1509,7 @@ class _LogsPage extends StatefulWidget {
 class _LogsPageState extends State<_LogsPage> {
   static const _names = ['lumtub.old.log', 'lumtub.log'];
   String? _text;
-  // Parsed once a load, off the UI thread: a log can be megabytes.
+  // Parsed once a load (off the UI thread when big), not on each rebuild.
   List<_LogEntry> _entries = const [];
   LogLevel _shown = LogLevel.debug;
 

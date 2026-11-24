@@ -111,7 +111,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final second = controller.settings.secondaryTarget;
     final near = languageRows(offered, spoken, [
       (tr('Interface language'), interfaceTranslationLanguage),
-      if (chosen != SubtitleLanguage.auto) (tr('First subtitle language'), chosen.translation),
+      if (!controller.settings.subtitleOriginal && chosen != SubtitleLanguage.auto) (tr('First subtitle language'), chosen.translation),
       if (second != null) (tr('Second subtitle language'), second),
       (tr('System language'), SubtitleLanguage.systemTranslation),
     ]);

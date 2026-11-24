@@ -408,15 +408,22 @@ class Learning extends ChangeNotifier {
   /// [text] as words a tap looks up, when a dictionary for its language
   /// is ready; readings above them only while [unlocked].
   List<WordToken>? wordsOf(String text) {
-    var words = _words.remove(text);
-    if (words == null) {
-      words = _wordsOf(text);
+    var cut = _words.remove(text);
+    if (cut == null) {
+      final words = _wordsOf(text);
       // A line not cut yet (its dictionary still loading) is asked again.
-      if (words != null && _words.length >= _wordsKept) _words.remove(_words.keys.first);
+      if (words == null) return null;
+      if (_words.length >= _wordsKept) _words.remove(_words.keys.first);
+      cut = (words: words, plain: null);
     }
-    if (words != null) _words[text] = words;
-    if (words == null || unlocked) return words;
-    return [for (final w in words) w.reading == null ? w : WordToken(w.text, null, isWord: w.isWord, lookup: w.lookup, language: w.language)];
+    if (unlocked) {
+      _words[text] = cut;
+      return cut.words;
+    }
+    // Without readings, made once per line too.
+    final plain = cut.plain ?? [for (final w in cut.words) w.reading == null ? w : WordToken(w.text, null, isWord: w.isWord, lookup: w.lookup, language: w.language)];
+    _words[text] = (words: cut.words, plain: plain);
+    return plain;
   }
 
   /// Lines already cut, newest last. The video's line and every row of the
@@ -424,7 +431,7 @@ class Learning extends ChangeNotifier {
   /// cutting a line (the core's segmenter, then a dictionary look-up per
   /// word) is too slow to repeat on the window's thread for each of them.
   /// Emptied whenever anything that changes the words does.
-  final _words = <String, List<WordToken>>{};
+  final _words = <String, ({List<WordToken> words, List<WordToken>? plain})>{};
   static const _wordsKept = 512;
 
   List<WordToken>? _wordsOf(String text) {

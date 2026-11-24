@@ -99,9 +99,40 @@ void main() {
     expect((note['fields'] as Map)['Word'], 'main');
     expect(pictures, isEmpty);
     final docteur = (asked.firstWhere((a) => a['action'] == 'canAddNotes')['params']['notes'] as List)[1] as Map;
-    expect((docteur['audio'] as List).single['fields'], ['Audio']);
+    // Sounds are read only for the words Anki takes.
+    expect(docteur.containsKey('audio'), isFalse);
     expect((docteur['fields'] as Map)['Sentence'], '<b>docteur</b> en neurosciences');
     expect((docteur['fields'] as Map)['Time'], '0:09');
+  });
+
+  test('a new word goes with its sound', () async {
+    final folder = await Directory.systemTemp.createTemp('lumtub-anki');
+    addTearDown(() => folder.delete(recursive: true));
+    final book = VocabularyBook(File('${folder.path}/vocabulary.json'));
+    final word = VocabularyWord(word: 'docteur', language: 'fr', meaning: 'n. 医生', added: DateTime(2026));
+    await book.add(word);
+    final sound = book.soundOf(word.key);
+    await sound.parent.create(recursive: true);
+    await sound.writeAsBytes(wav(100, 10));
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    addTearDown(server.close);
+    final asked = <Map>[];
+    server.listen((request) async {
+      final body = jsonDecode(await utf8.decodeStream(request)) as Map;
+      asked.add(body);
+      final result = switch (body['action']) {
+        'version' => 6,
+        'modelNames' => <String>[],
+        'canAddNotes' => [true],
+        'addNotes' => [111],
+        _ => null,
+      };
+      request.response.write(jsonEncode({'result': result, 'error': null}));
+      await request.response.close();
+    });
+    expect(await AnkiConnect(client: _Redirect(server.port)).send(book.words, book), 1);
+    final note = (asked.firstWhere((a) => a['action'] == 'addNotes')['params']['notes'] as List).single as Map;
+    expect((note['audio'] as List).single['fields'], ['Audio']);
   });
 
   test('an older Lumtub style is updated, a changed one is kept', () async {

@@ -32,7 +32,13 @@ jobs:
 
       - name: Install the Rust toolchain
         run: |
-          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path
+          # rustup-init itself, pinned by version and checksum (pins.env).
+          rustup_version=$(grep -E '^RUSTUP_VERSION=' .github/pins.env | cut -d= -f2)
+          rustup_sum=$(grep -E '^RUSTUP_SHA256_X86_64_LINUX=' .github/pins.env | cut -d= -f2)
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/rustup-init" "https://static.rust-lang.org/rustup/archive/$rustup_version/x86_64-unknown-linux-gnu/rustup-init"
+          echo "$rustup_sum  $RUNNER_TEMP/rustup-init" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/rustup-init"
+          "$RUNNER_TEMP/rustup-init" -y --profile minimal --default-toolchain stable --no-modify-path
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
       - name: Cache Rust dependencies
@@ -62,7 +68,13 @@ jobs:
 
       - name: Install the Rust toolchain
         run: |
-          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path
+          # rustup-init itself, pinned by version and checksum (pins.env).
+          rustup_version=$(grep -E '^RUSTUP_VERSION=' .github/pins.env | cut -d= -f2)
+          rustup_sum=$(grep -E '^RUSTUP_SHA256_X86_64_LINUX=' .github/pins.env | cut -d= -f2)
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/rustup-init" "https://static.rust-lang.org/rustup/archive/$rustup_version/x86_64-unknown-linux-gnu/rustup-init"
+          echo "$rustup_sum  $RUNNER_TEMP/rustup-init" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/rustup-init"
+          "$RUNNER_TEMP/rustup-init" -y --profile minimal --default-toolchain stable --no-modify-path
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
       - name: Build, sign and publish packs.json

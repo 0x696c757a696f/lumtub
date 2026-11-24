@@ -48,6 +48,9 @@ class MainActivity : FlutterActivity() {
     /** Waiting for the system's save picker: the bytes and who to answer. */
     private var saving: Pair<ByteArray, MethodChannel.Result>? = null
 
+    /** What this activity gave PlaybackService; a newer activity may replace it. */
+    private var playbackListener: ((String, Any?) -> Unit)? = null
+
     /** Gives the core's certificate check (rustls-platform-verifier) this app's context. */
     private external fun initTls(context: android.content.Context)
 
@@ -61,7 +64,9 @@ class MainActivity : FlutterActivity() {
         }
         val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lumtub/windows_shell")
         this.channel = channel
-        PlaybackService.listener = { method, argument -> runOnUiThread { channel.invokeMethod(method, argument) } }
+        val listener: (String, Any?) -> Unit = { method, argument -> runOnUiThread { channel.invokeMethod(method, argument) } }
+        playbackListener = listener
+        PlaybackService.listener = listener
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lumtub/window_frame").setMethodCallHandler { call, result ->
             when (call.method) {
                 "setDesktopGlass" -> result.success(
@@ -462,7 +467,8 @@ class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         if (isFinishing) PlaybackService.stop(this)
-        PlaybackService.listener = null
+        // A recreated activity may already have set its own.
+        if (PlaybackService.listener === playbackListener) PlaybackService.listener = null
         super.onDestroy()
     }
 }

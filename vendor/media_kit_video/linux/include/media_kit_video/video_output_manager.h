@@ -42,12 +42,15 @@ VideoOutputManager* video_output_manager_new(
  * i.e. video dimensions changes.
  * @param texture_update_callback_context Context passed to
  * |texture_update_callback|.
+ * @param texture_update_callback_context_destroy Frees the context once the
+ * |VideoOutput| is gone, or at once when |handle| already has one.
  */
 void video_output_manager_create(VideoOutputManager* self,
                                  gint64 handle,
                                  VideoOutputConfiguration configuration,
                                  TextureUpdateCallback texture_update_callback,
-                                 gpointer texture_update_callback_context);
+                                 gpointer texture_update_callback_context,
+                                 GDestroyNotify texture_update_callback_context_destroy);
 
 /**
  * @brief Sets the required video output size. This forces |VideoOutput| to

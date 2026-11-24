@@ -56,6 +56,8 @@ final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate, ASWe
   private var signIn: ASWebAuthenticationSession?
   /// The page signing in to YouTube for its cookies, while it is open.
   private var webSignIn: WebSignInController?
+  /// The 'webSignIn' call that page answers.
+  private var webSignInResult: FlutterResult?
 
   /// Now Playing: the Lock Screen, Control Center, the Dynamic Island and
   /// headphone buttons, as on macOS (MacShell.swift).
@@ -124,15 +126,25 @@ final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate, ASWe
     case "webSignIn":
       // No other app's cookies can be read, so Google's sign-in opens in a
       // page of Lumtub's own, as on Android (WebSignInActivity.kt).
+      if webSignIn != nil {
+        // The page is open already: it answers this call, the older one
+        // ends as closed.
+        webSignInResult?(nil)
+        webSignInResult = result
+        return
+      }
       guard let root = LumtubShell.topController() else {
         result(FlutterError(code: "no_window", message: "Nothing to sign in from", details: nil))
         return
       }
-      webSignIn?.finish(nil)
       let page = WebSignInController { [weak self] path in
-        self?.webSignIn = nil
-        result(path)
+        guard let self else { return }
+        self.webSignIn = nil
+        let answer = self.webSignInResult
+        self.webSignInResult = nil
+        answer?(path)
       }
+      webSignInResult = result
       webSignIn = page
       root.present(page.wrapped, animated: true)
     case "setMetadata":
@@ -227,8 +239,11 @@ final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate, ASWe
       result(FlutterError(code: "bad_arguments", message: "Nothing to save", details: nil))
       return
     }
-    if let pending = saving {
-      pending(false)
+    // One picker at a time: the open one answers its own call and removes
+    // its own file.
+    if saving != nil {
+      result(false)
+      return
     }
     let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
     let file = folder.appendingPathComponent((name as NSString).lastPathComponent)
@@ -281,14 +296,14 @@ final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate, ASWe
   private func loadArtwork(_ address: String) {
     artworkAddress = address
     guard let url = URL(string: address), url.scheme == "https" else { return }
-    URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+    CappedDownload.start(url, limit: 8 << 20) { [weak self] data in
       guard let data, let image = UIImage(data: data) else { return }
       DispatchQueue.main.async {
         guard let self, self.artworkAddress == address, !self.info.isEmpty else { return }
         self.info[MPMediaItemPropertyArtwork] = LumtubShell.artwork(image)
         self.publish()
       }
-    }.resume()
+    }
   }
 
   /// Made outside the main queue's closures: MediaPlayer asks for the
@@ -450,5 +465,43 @@ final class WebSignInController: UIViewController, WKNavigationDelegate, UIAdapt
       wrapped.dismiss(animated: true)
     }
     done(path)
+  }
+}
+
+/// Downloads at most [limit] bytes (a thumbnail for Now Playing);
+/// a larger answer is dropped instead of read into memory whole.
+private final class CappedDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable {
+  private let limit: Int
+  private let done: (Data?) -> Void
+  private var data = Data()
+
+  private init(limit: Int, done: @escaping (Data?) -> Void) {
+    self.limit = limit
+    self.done = done
+    super.init()
+  }
+
+  static func start(_ url: URL, limit: Int, done: @escaping (Data?) -> Void) {
+    // The session keeps its delegate until it is invalidated, when the
+    // download ends; its delegate queue runs one callback at a time.
+    let session = URLSession(configuration: .ephemeral, delegate: CappedDownload(limit: limit, done: done), delegateQueue: nil)
+    session.dataTask(with: url).resume()
+  }
+
+  func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse,
+                  completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+    completionHandler(response.expectedContentLength > Int64(limit) ? .cancel : .allow)
+  }
+
+  func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive chunk: Data) {
+    data.append(chunk)
+    if data.count > limit {
+      dataTask.cancel()
+    }
+  }
+
+  func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+    done(error == nil && data.count <= limit ? data : nil)
+    session.finishTasksAndInvalidate()
   }
 }

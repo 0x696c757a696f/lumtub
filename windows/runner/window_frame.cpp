@@ -3,6 +3,7 @@
 #include <commctrl.h>
 #include <dwmapi.h>
 
+#include <algorithm>
 #include <cmath>
 
 #include <flutter/standard_method_codec.h>
@@ -29,11 +30,15 @@ int FrameThickness(HWND window) {
   return ::GetSystemMetricsForDpi(SM_CYFRAME, dpi) + ::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
 }
 
+// A coordinate from Dart, kept finite and within what std::lround can
+// return once scaled; anything else is 0.
 double Number(const EncodableValue& value) {
-  if (const auto* real = std::get_if<double>(&value)) return *real;
-  if (const auto* narrow = std::get_if<int32_t>(&value)) return *narrow;
-  if (const auto* wide = std::get_if<int64_t>(&value)) return static_cast<double>(*wide);
-  return 0;
+  double number = 0;
+  if (const auto* real = std::get_if<double>(&value)) number = *real;
+  if (const auto* narrow = std::get_if<int32_t>(&value)) number = *narrow;
+  if (const auto* wide = std::get_if<int64_t>(&value)) number = static_cast<double>(*wide);
+  if (!std::isfinite(number)) return 0;
+  return std::clamp(number, -1e6, 1e6);
 }
 
 // left, top, right, bottom

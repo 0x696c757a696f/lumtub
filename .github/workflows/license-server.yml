@@ -6,8 +6,9 @@ name: License server
 # until the CLOUDFLARE_API_TOKEN secret exists; see license-server/README.md.
 on:
   push:
-    # The learning pack's branch too, until it is merged.
-    branches: [main, claude/project-thread-gjrv5x]
+    # Only main deploys: the job holds the production Cloudflare token and
+    # every payment provider's secret.
+    branches: [main]
     paths:
       - 'license-server/**'
       - '.github/workflows/license-server.yml'
@@ -23,15 +24,17 @@ concurrency:
 jobs:
   deploy:
     name: Deploy
+    # A manual run deploys only from main as well.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - name: Check secrets
         id: check
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
             echo "::notice::CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID is not set; nothing to deploy."
@@ -46,8 +49,18 @@ jobs:
         with:
           persist-credentials: false
 
+      # wrangler and everything it pulls in, exactly as package-lock.json
+      # pins them, installed before any secret is in the environment.
+      - name: Install wrangler
+        if: steps.check.outputs.ready == 'true'
+        working-directory: license-server
+        run: npm ci --no-audit --no-fund
+
       - name: Find or create the KV namespace
         if: steps.check.outputs.ready == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
           api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
@@ -62,12 +75,17 @@ jobs:
       - name: Deploy the worker
         if: steps.check.outputs.ready == 'true'
         working-directory: license-server
-        run: npx --yes wrangler@4.20.0 deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --no-install wrangler deploy
 
       - name: Set its secrets
         if: steps.check.outputs.ready == 'true'
         working-directory: license-server
         env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           LICENSE_KEY: ${{ secrets.LUMTUB_LICENSE_KEY }}
           KOFI_TOKEN: ${{ secrets.KOFI_TOKEN }}
           POLAR_WEBHOOK_SECRET: ${{ secrets.POLAR_WEBHOOK_SECRET }}
@@ -83,13 +101,15 @@ jobs:
           set -euo pipefail
           umask 077
           jq -n 'env | {LICENSE_KEY, KOFI_TOKEN, POLAR_WEBHOOK_SECRET, POLAR_TOKEN, CREEM_WEBHOOK_SECRET, AFDIAN_USER_ID, AFDIAN_TOKEN, KOFI_ITEM, AZURE_TTS_KEY, AZURE_TTS_REGION, GOOGLE_TTS_KEY} | with_entries(select(.value != null and .value != ""))' > "$RUNNER_TEMP/secrets.json"
-          npx --yes wrangler@4.20.0 secret bulk "$RUNNER_TEMP/secrets.json"
+          npx --no-install wrangler secret bulk "$RUNNER_TEMP/secrets.json"
           rm -f "$RUNNER_TEMP/secrets.json"
 
       - name: Publish its address
         if: steps.check.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
           sub=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" | jq -r '.result.subdomain // empty')

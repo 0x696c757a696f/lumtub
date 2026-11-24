@@ -46,14 +46,18 @@ void video_output_manager_create(VideoOutputManager* self,
                                  gint64 handle,
                                  VideoOutputConfiguration configuration,
                                  TextureUpdateCallback texture_update_callback,
-                                 gpointer texture_update_callback_context) {
+                                 gpointer texture_update_callback_context,
+                                 GDestroyNotify texture_update_callback_context_destroy) {
   if (!g_hash_table_contains(self->video_outputs, GINT_TO_POINTER(handle))) {
     g_autoptr(VideoOutput) video_output = video_output_new(
         self->texture_registrar, self->view, handle, configuration);
     video_output_set_texture_update_callback(
-        video_output, texture_update_callback, texture_update_callback_context);
+        video_output, texture_update_callback, texture_update_callback_context,
+        texture_update_callback_context_destroy);
     g_hash_table_insert(self->video_outputs, GINT_TO_POINTER(handle),
                         g_object_ref(video_output));
+  } else if (texture_update_callback_context_destroy != NULL) {
+    texture_update_callback_context_destroy(texture_update_callback_context);
   }
 }
 

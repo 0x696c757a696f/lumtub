@@ -1,6 +1,6 @@
 """Finds newer versions of the pieces build.yml pins; see upstream.yml.
 
-Pieces CI can judge on its own (libmpv for Linux, FFmpeg for macOS,
+Pieces CI can judge on its own (libmpv for Linux and Windows, FFmpeg for macOS,
 appimagetool) are moved to their newest version in .github/pins.env, which
 build.yml reads (the workflow token cannot push changes to workflow files);
 libmpv for Android and macOS is moved in its vendor/ copy. Each change is
@@ -96,6 +96,38 @@ def angle_prebuilt(text, changes):
     text = text.replace(pinned[0], f"ANGLE_ARM64_RELEASE={tag}")
     text = re.sub(r"^(ANGLE_ARM64_SHA256=)[0-9a-f]{64}$", rf"\g<1>{sha256(assets[f'{tag}.tar.gz'])}", text, flags=re.M)
     changes.append(f"ANGLE arm64 {pinned[1]} -> {tag}")
+    return text
+
+
+def windows_mpv(text, changes):
+    """Windows libmpv from zhongfly/mpv-winbuild (LGPL), pinned by release and checksums."""
+    pinned = re.search(r"^WINDOWS_MPV_RELEASE=(\S+)$", text, re.M)
+    if not pinned:
+        return text
+    for release in get("https://api.github.com/repos/zhongfly/mpv-winbuild/releases?per_page=5"):
+        if release["draft"] or release["prerelease"]:
+            continue
+        sums = {}
+        for key, arch in LINUX_MPV.items():
+            pattern = rf"mpv-dev-lgpl-{re.escape(arch)}-[0-9]{{8}}-.+\.7z"
+            for asset in release["assets"]:
+                if re.fullmatch(pattern, asset["name"]) and asset.get("state") == "uploaded":
+                    digest = asset.get("digest") or ""
+                    if re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+                        sums[key] = digest[7:]
+                    break
+        if len(sums) == len(LINUX_MPV):
+            break
+    else:
+        print("zhongfly/mpv-winbuild has no recent release with every libmpv archive; skipped.")
+        return text
+    tag = release["tag_name"]
+    if tag == pinned[1] or not re.fullmatch(r"[0-9A-Za-z._-]{1,100}", tag):
+        return text
+    text = text.replace(pinned[0], f"WINDOWS_MPV_RELEASE={tag}")
+    for key, digest in sums.items():
+        text = re.sub(rf"^(WINDOWS_MPV_SHA256_{key}=)(none|[0-9a-f]{{64}})$", rf"\g<1>{digest}", text, flags=re.M)
+    changes.append(f"Windows libmpv {pinned[1]} -> {tag}")
     return text
 
 
@@ -353,7 +385,7 @@ def main():
     with open(BUILD, encoding="utf-8") as f:
         text = f.read()
     changes, notes = [], []
-    for check in (mpv_prebuilt, angle_prebuilt, ffmpeg, ffmpeg_prebuilt, appimagetool):
+    for check in (mpv_prebuilt, angle_prebuilt, windows_mpv, ffmpeg, ffmpeg_prebuilt, appimagetool):
         try:
             text = check(text, changes)
         except Exception as e:

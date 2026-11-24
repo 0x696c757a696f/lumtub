@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       libmpv:
-        description: 'libmpv to ship: latest zhongfly build, or the one media_kit bundles'
+        description: 'libmpv to ship: the zhongfly build pinned in pins.env (the newest when none), or the one media_kit bundles'
         type: choice
         options: [latest, media_kit]
         default: latest
@@ -32,6 +32,9 @@ on:
   # Builds main once a day when no build on main has its files yet.
   schedule:
     - cron: '41 3 * * *'
+
+# Every job names the permissions it needs.
+permissions: {}
 
 # A newer push to a pull request makes its earlier run moot. Adding any
 # label but "full build" changes nothing, so its run keeps a group of its own
@@ -181,13 +184,27 @@ jobs:
             local id
             for id in $(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=built-$tree&per_page=20" \
                 --jq '[.artifacts[] | select(.expired | not) | .workflow_run.id] | unique | reverse | .[]'); do
-              read -r event branch conclusion repo path <<< "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq '"\(.event) \(.head_branch) \(.conclusion) \(.head_repository.full_name) \(.path)"')"
+              read -r event branch conclusion repo path head <<< "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq '"\(.event) \(.head_branch) \(.conclusion) \(.head_repository.full_name) \(.path) \(.head_sha)"')"
               [[ "$conclusion" == success ]] || continue
               # Only a run of this repository's own Build, on a branch of this
               # repository: a fork's pull request runs its own copy of the
               # workflows and could upload a marker and packages for any tree.
               if [[ "$repo" != "$GITHUB_REPOSITORY" || "$path" != .github/workflows/build.yml ]]; then
                 echo "Not reusing run $id ($event from $repo, $path)."
+                continue
+              fi
+              # A push or daily run on main, or a pull request: a manual run
+              # can start from any branch's own copy of this workflow.
+              if ! [[ ( "$event" == push || "$event" == schedule ) && "$branch" == main || "$event" == pull_request ]]; then
+                echo "Not reusing run $id ($event on $branch)."
+                continue
+              fi
+              # The marker's name is the run's own word. The commit the run
+              # was made for must have these very files, build.yml among
+              # them, so the workflow that made the packages is the one
+              # being released: a branch that edits build.yml has other files.
+              if [[ "$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$head" --jq .tree.sha || true)" != "$tree" ]]; then
+                echo "Not reusing run $id (its commit $head has other files)."
                 continue
               fi
               # The daily run wants a build made on main, for main's caches.
@@ -262,7 +279,11 @@ jobs:
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
-      - name: Windows - verify latest zhongfly libmpv (LGPL)
+      - name: Windows - read the pinned downloads
+        shell: bash
+        run: grep -E '^[A-Z0-9_]+=' .github/pins.env >> "$GITHUB_ENV"
+
+      - name: Windows - verify the zhongfly libmpv (LGPL)
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -279,7 +300,18 @@ jobs:
           # The LGPL build (mpv-dev-lgpl-*): no GPL code in what Lumtub ships.
           # The date right after the architecture keeps x86_64 from matching x86_64-v3.
           $pattern = "^mpv-dev-lgpl-$([regex]::Escape($env:MPV_ARCH))-[0-9]{8}-.+\.7z$"
-          $releases = Invoke-RestMethod -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases?per_page=5' -Headers $headers
+          # The release pins.env names, checked against its pinned sum; with
+          # none pinned yet, the newest one and the digest GitHub lists.
+          $pinnedTag = $env:WINDOWS_MPV_RELEASE
+          $pinnedSum = [Environment]::GetEnvironmentVariable('WINDOWS_MPV_SHA256_' + ($env:MPV_ARCH.ToUpperInvariant() -replace '-', '_'))
+          if ($pinnedTag -and $pinnedTag -ne 'none') {
+            if ($pinnedTag -notmatch '^[0-9A-Za-z._-]{1,100}$') { throw "Unexpected pinned libmpv tag: $pinnedTag" }
+            if ($pinnedSum -notmatch '^[0-9a-f]{64}$') { throw "pins.env has no SHA-256 for $env:MPV_ARCH." }
+            $releases = @(Invoke-RestMethod -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri "https://api.github.com/repos/zhongfly/mpv-winbuild/releases/tags/$pinnedTag" -Headers $headers)
+          } else {
+            $pinnedSum = $null
+            $releases = Invoke-RestMethod -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases?per_page=5' -Headers $headers
+          }
           $release = $null
           $asset = $null
           foreach ($candidate in $releases) {
@@ -290,6 +322,7 @@ jobs:
           if (-not $asset) { throw "No recent release has a $env:MPV_ARCH development archive." }
           if ($asset.digest -notmatch '^sha256:([0-9a-fA-F]{64})$') { throw "Latest libmpv asset has no SHA-256 digest: $($asset.name)" }
           $expectedHash = $Matches[1].ToLowerInvariant()
+          if ($pinnedSum -and $expectedHash -ne $pinnedSum) { throw "$($asset.name) is listed with SHA-256 $expectedHash; pins.env has $pinnedSum." }
           $downloadUri = [uri]$asset.browser_download_url
           if ($downloadUri.Scheme -ne 'https' -or $downloadUri.Host -ne 'github.com') { throw "Unexpected libmpv download host: $downloadUri" }
           $archive = Join-Path $env:RUNNER_TEMP $asset.name
@@ -301,8 +334,11 @@ jobs:
           & tar.exe -xf $archive -C $extractDir 2>$null
           $library = Get-ChildItem -LiteralPath $extractDir -Filter 'libmpv-2.dll' -File -Recurse | Select-Object -First 1
           if (-not $library) {
+            # 7-Zip's own release on GitHub, pinned by version and checksum.
             $sevenZip = Join-Path $env:RUNNER_TEMP '7zr.exe'
-            Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri 'https://www.7-zip.org/a/7zr.exe' -OutFile $sevenZip
+            Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri "https://github.com/ip7z/7zip/releases/download/$env:SEVENZIP_VERSION/7zr.exe" -OutFile $sevenZip
+            $sevenZipSum = (Get-FileHash -LiteralPath $sevenZip -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($sevenZipSum -ne $env:SEVENZR_SHA256) { throw "7zr.exe has SHA-256 $sevenZipSum; pins.env has $env:SEVENZR_SHA256." }
             & $sevenZip x -y "-o$extractDir" $archive | Out-Null
             if ($LASTEXITCODE -ne 0) { throw 'Could not extract the latest libmpv archive.' }
             $library = Get-ChildItem -LiteralPath $extractDir -Filter 'libmpv-2.dll' -File -Recurse | Select-Object -First 1
@@ -323,6 +359,8 @@ jobs:
           $archive = Join-Path $env:RUNNER_TEMP "flutter_windows_$env:FLUTTER_VERSION-stable.zip"
           $destination = Join-Path $env:RUNNER_TEMP 'flutter-sdk'
           Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_$env:FLUTTER_VERSION-stable.zip" -OutFile $archive
+          $sum = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sum -ne $env:FLUTTER_SHA256_WINDOWS) { throw "Flutter $env:FLUTTER_VERSION for Windows has SHA-256 $sum; pins.env has $env:FLUTTER_SHA256_WINDOWS." }
           Expand-Archive -LiteralPath $archive -DestinationPath $destination -Force
           $flutterBin = Join-Path $destination 'flutter/bin'
           if (-not (Test-Path -LiteralPath $flutterBin)) { throw 'Flutter SDK did not contain flutter/bin.' }
@@ -378,7 +416,12 @@ jobs:
           $root = $env:VCPKG_INSTALLATION_ROOT
           if (-not $root -or -not (Test-Path -LiteralPath (Join-Path $root 'vcpkg.exe'))) {
             $root = Join-Path $env:RUNNER_TEMP 'vcpkg'
-            git clone --depth 1 https://github.com/microsoft/vcpkg $root
+            # The commit pins.env names; its scripts pin the vcpkg tool.
+            if ($env:VCPKG_COMMIT -notmatch '^[0-9a-f]{40}$') { throw "Unexpected VCPKG_COMMIT: $env:VCPKG_COMMIT" }
+            git init -q $root
+            git -C $root fetch -q --depth 1 https://github.com/microsoft/vcpkg $env:VCPKG_COMMIT
+            if ($LASTEXITCODE -ne 0) { throw 'Could not fetch vcpkg.' }
+            git -C $root checkout -q FETCH_HEAD
             & (Join-Path $root 'bootstrap-vcpkg.bat') -disableMetrics
             if ($LASTEXITCODE -ne 0) { throw 'vcpkg bootstrap failed.' }
           }
@@ -440,11 +483,11 @@ jobs:
           if (-not $client) { throw 'The aarch64 libmpv archive has no headers.' }
           Copy-Item (Join-Path $client.DirectoryName '*.h') (Join-Path $mpv 'include')
 
-          # Headers from the archive media_kit uses on x64 (same MD5 check).
+          # Headers from the archive media_kit uses on x64 (same SHA-256 check).
           $archive = Join-Path $env:RUNNER_TEMP 'ANGLE.7z'
           Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri 'https://github.com/alexmercerind/flutter-windows-ANGLE-OpenGL-ES/releases/download/v1.0.1/ANGLE.7z' -OutFile $archive
-          $md5 = (Get-FileHash -LiteralPath $archive -Algorithm MD5).Hash.ToLowerInvariant()
-          if ($md5 -ne 'e866f13e8d552348058afaafe869b1ed') { throw 'ANGLE header archive failed its MD5 check.' }
+          $sum = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sum -ne 'cc5911bb15d596fd5a2b362613ad35b7093b427117269a7359054a65746a5f9a') { throw 'ANGLE header archive failed its SHA-256 check.' }
           $headers = Join-Path $env:RUNNER_TEMP 'angle-headers'
           New-Item -ItemType Directory -Force -Path $headers | Out-Null
           & cmake -E chdir $headers cmake -E tar xf $archive
@@ -472,7 +515,10 @@ jobs:
           if (-not (Get-Command rustup -ErrorAction SilentlyContinue)) {
             $hostTriple = if ($env:PACKAGE_ARCH -eq 'arm64') { 'aarch64-pc-windows-msvc' } else { 'x86_64-pc-windows-msvc' }
             $init = Join-Path $env:RUNNER_TEMP 'rustup-init.exe'
-            Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri "https://static.rust-lang.org/rustup/dist/$hostTriple/rustup-init.exe" -OutFile $init
+            Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri "https://static.rust-lang.org/rustup/archive/$env:RUSTUP_VERSION/$hostTriple/rustup-init.exe" -OutFile $init
+            $expected = if ($env:PACKAGE_ARCH -eq 'arm64') { $env:RUSTUP_SHA256_AARCH64_WINDOWS } else { $env:RUSTUP_SHA256_X86_64_WINDOWS }
+            $sum = (Get-FileHash -LiteralPath $init -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($sum -ne $expected) { throw "rustup-init has SHA-256 $sum; pins.env has $expected." }
             & $init -y --profile minimal --no-modify-path
             if ($LASTEXITCODE -ne 0) { throw 'rustup-init failed.' }
             $cargoBin = Join-Path $env:USERPROFILE '.cargo\bin'
@@ -750,7 +796,8 @@ jobs:
     # tests on.
     runs-on: ${{ matrix.runner }}
     container:
-      image: ubuntu:22.04
+      # ubuntu:22.04, by the digest of its multi-architecture index.
+      image: ubuntu:22.04@sha256:b000e69a50ff940390233025e7a337fb8469b509e2334fa4d018ac30f3e18cdb
       # The job network's own resolver has been seen failing; ask public ones too.
       options: --dns 168.63.129.16 --dns 8.8.8.8 --dns 1.1.1.1
     env:
@@ -803,6 +850,7 @@ jobs:
           if [ "$PACKAGE_ARCH" != arm64 ]; then
             archive="$RUNNER_TEMP/flutter.tar.xz"
             curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$FLUTTER_VERSION-stable.tar.xz"
+            echo "$FLUTTER_SHA256_LINUX  $archive" | sha256sum -c -
             tar -xJf "$archive" -C "$RUNNER_TEMP"
           else
             # Flutter publishes no arm64 Linux SDK archive; the same release
@@ -814,7 +862,16 @@ jobs:
 
       - name: Linux - install the Rust toolchain
         run: |
-          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --component rustfmt,clippy --default-toolchain stable --no-modify-path
+          # rustup-init itself, pinned by version and checksum.
+          case "$(uname -m)" in
+            x86_64) triple=x86_64-unknown-linux-gnu; sum=$RUSTUP_SHA256_X86_64_LINUX ;;
+            aarch64) triple=aarch64-unknown-linux-gnu; sum=$RUSTUP_SHA256_AARCH64_LINUX ;;
+            *) echo "No rustup-init pinned for $(uname -m)"; exit 1 ;;
+          esac
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/rustup-init" "https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/$triple/rustup-init"
+          echo "$sum  $RUNNER_TEMP/rustup-init" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/rustup-init"
+          "$RUNNER_TEMP/rustup-init" -y --profile minimal --component rustfmt,clippy --default-toolchain stable --no-modify-path
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           "$HOME/.cargo/bin/rustc" --version
 
@@ -828,7 +885,7 @@ jobs:
       - name: Linux - build the Rust core
         run: |
           manifest=native/lumtub_core/Cargo.toml
-          if [ "${{ matrix.package_arch }}" = x64 ]; then
+          if [ "$PACKAGE_ARCH" = x64 ]; then
             cargo fmt --manifest-path "$manifest" --check
             cargo clippy --manifest-path "$manifest" --release --all-targets -- -D warnings
           fi
@@ -914,8 +971,9 @@ jobs:
       - name: Linux - package AppImage
         env:
           APPIMAGE_ARCH: ${{ matrix.appimage_arch }}
+          FLUTTER_ARCH: ${{ matrix.flutter_arch }}
         run: |
-          bundle="build/linux/${{ matrix.flutter_arch }}/release/bundle"
+          bundle="build/linux/$FLUTTER_ARCH/release/bundle"
           # Only here, so the smoke test finds nothing but what the AppImage carries.
           LD_LIBRARY_PATH="$RUNNER_TEMP/mpv/lib" linux/packaging/make-appdir.sh "$bundle" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/AppDir"
           cp LICENSE NOTICE "$RUNNER_TEMP/AppDir/usr/bin/"
@@ -1024,7 +1082,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          persist-credentials: true  # zizmor: ignore[artipacked] this job pushes with git
+          # The token goes only to the push step, not to pip and the tools before it.
+          persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Check whether pictures are wanted
         id: wanted
@@ -1063,6 +1122,8 @@ jobs:
           "$RUNNER_TEMP/venv/bin/python" linux/packaging/promo.py "$RUNNER_TEMP/shots/readme-shots-linux" "$voice/kokoro-v1.0.onnx" "$voice/voices-v1.0.bin"
       - name: Push the pictures
         if: steps.wanted.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           sha=$(git rev-parse --short HEAD)
           git checkout --orphan readme-shots
@@ -1076,7 +1137,8 @@ jobs:
           done
           git add -A
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Pictures of $sha"
-          git push -f origin readme-shots
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push -f "https://github.com/$GITHUB_REPOSITORY" readme-shots
 
   macos:
     name: macOS
@@ -1108,6 +1170,7 @@ jobs:
         run: |
           archive="$RUNNER_TEMP/flutter.zip"
           curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_$FLUTTER_VERSION-stable.zip"
+          echo "$FLUTTER_SHA256_MACOS_ARM64  $archive" | shasum -a 256 -c -
           unzip -q "$archive" -d "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/flutter/bin/flutter" --version
@@ -1306,14 +1369,17 @@ jobs:
 
       - name: iOS - read the Flutter version
         shell: bash
-        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
+        run: |
+          echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
+          grep -E '^FLUTTER_SHA256_[A-Z0-9_]+=' .github/pins.env >> "$GITHUB_ENV"
 
       - name: iOS - install Flutter stable SDK
         run: |
           archive="$RUNNER_TEMP/flutter.zip"
           # The Flutter SDK for this Mac's CPU (Apple silicon or Intel).
-          case "$(uname -m)" in arm64) sdk=macos_arm64 ;; *) sdk=macos ;; esac
+          case "$(uname -m)" in arm64) sdk=macos_arm64; sum=$FLUTTER_SHA256_MACOS_ARM64 ;; *) sdk=macos; sum=$FLUTTER_SHA256_MACOS ;; esac
           curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_${sdk}_$FLUTTER_VERSION-stable.zip"
+          echo "$sum  $archive" | shasum -a 256 -c -
           unzip -q "$archive" -d "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/flutter/bin/flutter" --version
@@ -1369,7 +1435,7 @@ jobs:
           echo "done=true" >> "$GITHUB_OUTPUT"
 
       - name: iOS - cache the patched libmpv
-        if: steps.prebuilt.outputs.done != 'true'
+        if: steps.prebuilt.outputs.done != 'true' && !startsWith(github.ref, 'refs/tags/')
         id: libmpv
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -1440,18 +1506,22 @@ jobs:
     permissions:
       contents: write
     steps:
+      # The token goes only to the push step, not to Gradle and pub.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          persist-credentials: true  # zizmor: ignore[artipacked] this job pushes with git
+          persist-credentials: false
 
       - name: Android - read the Flutter version
         shell: bash
-        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
+        run: |
+          echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
+          grep -E '^FLUTTER_SHA256_[A-Z0-9_]+=' .github/pins.env >> "$GITHUB_ENV"
 
       - name: Android - install Flutter stable SDK
         run: |
           archive="$RUNNER_TEMP/flutter.tar.xz"
           curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$FLUTTER_VERSION-stable.tar.xz"
+          echo "$FLUTTER_SHA256_LINUX  $archive" | sha256sum -c -
           tar -xJf "$archive" -C "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/flutter/bin/flutter" --version
@@ -1485,6 +1555,7 @@ jobs:
         run: grep -E '^[A-Z0-9_]+=' .github/pins.env >> "$GITHUB_ENV"
 
       - name: Android - cache the Python and yt-dlp downloads
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/android-python/downloads
@@ -1627,6 +1698,8 @@ jobs:
       - name: Android - pictures to the android-shots branch
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           sha=$(git rev-parse --short HEAD)
           git checkout -q --orphan android-shots
@@ -1634,7 +1707,8 @@ jobs:
           cp "$RUNNER_TEMP"/smoke/*.png "$RUNNER_TEMP"/smoke/*.mp4 . 2> /dev/null || true
           git add -A
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Android pictures of $sha"
-          git push -f origin android-shots
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push -f "https://github.com/$GITHUB_REPOSITORY" android-shots
 
   # Marks these files as built and passed, for the reuse job above.
   built:

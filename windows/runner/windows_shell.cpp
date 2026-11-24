@@ -410,11 +410,15 @@ void WindowsShell::ShowTrayMenu() {
   ::AppendMenuW(menu, MF_STRING, kTrayExit, exit_label_.c_str());
   POINT cursor;
   ::GetCursorPos(&cursor);
+  const HWND window = window_;
   // The menu closes on a click elsewhere only if its owner is foreground.
-  ::SetForegroundWindow(window_);
-  const UINT command = ::TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, cursor.x, cursor.y, 0, window_, nullptr);
-  ::PostMessage(window_, WM_NULL, 0, 0);
+  ::SetForegroundWindow(window);
+  const UINT command = ::TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, cursor.x, cursor.y, 0, window, nullptr);
   ::DestroyMenu(menu);
+  // The menu runs a message loop of its own: the window, and this object
+  // with it, may be gone when it returns.
+  if (!::IsWindow(window)) return;
+  ::PostMessage(window, WM_NULL, 0, 0);
   switch (command) {
     case kTrayShow: ShowFromTray(); break;
     case kTrayPlayPause: Send("button", EncodableValue("playpause")); break;

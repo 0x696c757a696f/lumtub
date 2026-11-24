@@ -11,6 +11,22 @@ class ReplyThread {
   String? next;
   bool loading = false;
   String? error;
+  /// The ids of [replies] as [_seenOf] held them.
+  final _seen = <String>{};
+  List<YoutubeComment>? _seenOf;
+}
+
+/// Adds [page]'s comments not in [list] yet to it; [seen] holds the ids of
+/// [list] when it is [seenOf], and is made again otherwise. The comments
+/// already there are not read again for each page.
+List<YoutubeComment> _appendNew(List<YoutubeComment> list, List<YoutubeComment> page, Set<String> seen, List<YoutubeComment>? seenOf) {
+  if (!identical(seenOf, list)) {
+    seen
+      ..clear()
+      ..addAll(list.map((c) => c.id));
+  }
+  final added = [for (final c in page) if (seen.add(c.id)) c];
+  return added.isEmpty ? list : [...list, ...added];
 }
 
 /// Pages through the comments under a video or a community post.
@@ -31,6 +47,9 @@ class CommentsLoader extends ChangeNotifier {
   final replies = <String, ReplyThread>{};
   int _generation = 0;
   bool _disposed = false;
+  /// The ids of [comments] as [_seenOf] held them.
+  final _seen = <String>{};
+  List<YoutubeComment>? _seenOf;
 
   /// Ratings changed here, by comment id, ahead of the next load.
   final _rated = <String, String>{};
@@ -140,8 +159,7 @@ class CommentsLoader extends ChangeNotifier {
       }
       started = true;
       _learn(page.comments);
-      final seen = {for (final c in comments) c.id};
-      comments = [...comments, ...page.comments.where((c) => seen.add(c.id))];
+      comments = _seenOf = _appendNew(comments, page.comments, _seen, _seenOf);
       // A page with nothing new would only repeat.
       _next = page.comments.isEmpty ? null : page.continuation;
     } catch (e) {
@@ -201,9 +219,10 @@ class CommentsLoader extends ChangeNotifier {
       if (generation != _generation) return;
       _learn(page.comments);
       // The TV app's replies page starts with the comment itself.
-      final seen = {comment.id, for (final c in thread.replies) c.id};
+      final replies = _appendNew(thread.replies, [for (final c in page.comments) if (c.id != comment.id) c], thread._seen, thread._seenOf);
       thread
-        ..replies = [...thread.replies, ...page.comments.where((c) => seen.add(c.id))]
+        ..replies = replies
+        .._seenOf = replies
         ..next = page.comments.isEmpty ? null : page.continuation;
     } catch (e) {
       thread.error = friendlyError(e);

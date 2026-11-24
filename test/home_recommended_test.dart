@@ -69,4 +69,20 @@ void main() {
     feed.shuffle();
     expect(feed.seenFrom, isNull);
   });
+
+  test('a feed that failed to be made does not stay loading', () async {
+    final feed = HomeFeed(NotInterested(null));
+    addTearDown(feed.dispose);
+    await feed.refresh(
+      HomeFeedSources(
+        history: const [],
+        related: (_) async => const [],
+        channelUploads: (_) async => const [],
+        search: (_) async => [VideoItem(id: 'video0'.padRight(11, '0'), title: 'v', channel: 'c', channelId: 'UC0', url: 'u')],
+      ),
+      filter: (_) => throw StateError('filter failed'),
+    );
+    expect(feed.loading, isFalse);
+    expect(feed.error, isNotNull);
+  });
 }

@@ -11,14 +11,7 @@ extension NavigationActions on AppController {
   void _go(PageMode target) {
     setPip(false);
     final keep = _keepsPlaying;
-    if (!keep) {
-      if (playing != null) _finishWatching();
-      _tracking = null;
-      _recoveryTimer?.cancel();
-      _recovery.reset();
-      _settled.stop();
-      ++_playSerial;
-    }
+    if (!keep) _leavePlayback();
     if (target == PageMode.home) unawaited(refreshHomeFeed());
     if (target == PageMode.home || target == PageMode.history) unawaited(checkHistoryLive());
     _saveProgress(now: true);
@@ -34,7 +27,27 @@ extension NavigationActions on AppController {
         playbackError = null;
       }
     });
-    if (!keep) _unload();
+    if (!keep) {
+      _syncDanmaku();
+      _unload();
+    }
+  }
+
+  /// Leaves the video without keeping it in the mini player: an open still
+  /// under way, its recovery and its live chat end with it.
+  void _leavePlayback() {
+    if (playing != null) _finishWatching();
+    _saveProgress(now: true);
+    _countWatchTime(flush: true);
+    _stopCurrentChat();
+    _tracking = null;
+    _stallTimer?.cancel();
+    _recoveryTimer?.cancel();
+    _startTimer?.cancel();
+    _cancelLineOnce();
+    _recovery.reset();
+    _settled.stop();
+    ++_playSerial;
   }
 
   /// What is on screen now, as 返回 would come back to it.

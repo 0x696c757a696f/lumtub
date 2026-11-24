@@ -231,11 +231,25 @@ class PlayerOptionApplicator {
   /// first set, so removing one from the settings puts it back.
   static final _customDefaults = Expando<Map<String, String>>();
 
+  /// What libmpv has from [previous]: its options, with [fastRendering]'s
+  /// over them while the lighter scaling is on ([lightened]).
+  static Map<String, String> appliedOptions(PlayerSettings previous, {bool lightened = false}) {
+    final options = optionsFor(previous);
+    if (!lightened) return options;
+    final custom = previous.customOptions;
+    return {
+      ...options,
+      for (final MapEntry(:key, :value) in fastRendering.entries)
+        if (!custom.containsKey(key)) key: value,
+    };
+  }
+
   /// Sets [settings]' options on [player]. With [previous], the settings
   /// libmpv already has, only the options that differ are set: setting
   /// hwdec or the decoder options again restarts the video decoder, which
-  /// a change of subtitle colour must not.
-  static Future<List<String>> apply(Player player, PlayerSettings settings, {PlayerSettings? previous}) async {
+  /// a change of subtitle colour must not. [lightened] says the lighter
+  /// scaling was set over [previous], so its options are set back too.
+  static Future<List<String>> apply(Player player, PlayerSettings settings, {PlayerSettings? previous, bool lightened = false}) async {
     final platform = player.platform;
     if (platform is! NativePlayer) return const [];
     final failed = <String>[];
@@ -255,12 +269,13 @@ class PlayerOptionApplicator {
     for (final entry in defaults.entries) {
       options.putIfAbsent(entry.key, () => entry.value);
     }
-    final before = previous == null ? null : optionsFor(previous);
+    final before = previous == null ? null : appliedOptions(previous, lightened: lightened);
     final customDefaults = _customDefaults[player] ??= {};
+    final custom = settings.customOptions;
     for (final entry in options.entries) {
       if (before != null && (before[entry.key] ?? defaults[entry.key]) == entry.value) continue;
       try {
-        if (settings.customOptions.containsKey(entry.key) && !customDefaults.containsKey(entry.key)) {
+        if (custom.containsKey(entry.key) && !customDefaults.containsKey(entry.key)) {
           customDefaults[entry.key] = await platform.getProperty(entry.key);
         }
         await platform.setProperty(entry.key, entry.value);

@@ -308,7 +308,12 @@ extension SubtitleActions on AppController {
       logWarn('Could not read the subtitle lines: $e');
     }
     final cues = text == null ? const <SubtitleCue>[] : parseSubtitleCues(text);
-    if (cues.isNotEmpty) {
+    // A file read whole without lines it can read (an ASS track), or one
+    // that could not be read three times, is not read again and again.
+    final unreadable = cues.isEmpty && text != null && text.trim().isNotEmpty;
+    final misses = cues.isNotEmpty || unreadable ? 0 : _cueMisses[key] = (_cueMisses[key] ?? 0) + 1;
+    if (cues.isNotEmpty || unreadable || misses >= 3) {
+      _cueMisses.remove(key);
       if (_cues.length >= 4) _cues.remove(_cues.keys.first);
       _cues[key] = cues;
     }
@@ -361,14 +366,19 @@ extension SubtitleActions on AppController {
     final player = this.player;
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer) return;
+    // Fetching or translating it can take long enough for another video
+    // to open, which it is not for.
+    final serial = _playSerial, videoId = playing?.id;
+    bool moved() => this.player != player || serial != _playSerial || playing?.id != videoId;
     _shownOptions[option.label] = option;
     try {
       final loaded = subtitleTrackOf(await mpvSubtitleTracks(platform), option, leaving: _subtitleCopies.keys);
+      if (moved()) return;
       if (loaded != null) {
         await player.setSubtitleTrack(loaded);
       } else {
         final file = await _subtitleFile(option);
-        if (this.player != player) return;
+        if (moved()) return;
         await platform.command(['sub-add', file, 'select', option.label, option.language]);
         await syncMainSubtitle();
       }
@@ -389,7 +399,7 @@ extension SubtitleActions on AppController {
     final until = DateTime.now().add(const Duration(seconds: 30));
     while (DateTime.now().isBefore(until)) {
       if (serial != _playSerial || this.player != player) return false;
-      if (_openIssued == id) {
+      if (_openIssued == id && _fileSerial == serial) {
         try {
           // Unavailable from the moment a file is asked for until it loads;
           // unlike the duration, there for a live stream too.
@@ -541,7 +551,8 @@ extension SubtitleActions on AppController {
       await ready.future.timeout(AppController.subtitleWait, onTimeout: () => logWarn('Subtitle translation not ready after ${AppController.subtitleWait.inSeconds} s; playing without it'));
     } finally {
       await watch.cancel();
-      if (waitingForSubtitles) _update(() => waitingForSubtitles = false);
+      // A later video's wait is its own to end.
+      if (waitingForSubtitles && serial == _subtitlesSerial) _update(() => waitingForSubtitles = false);
     }
     if (serial != _playSerial || this.player != player || started || playbackError != null) return;
     await player.play();
@@ -593,12 +604,13 @@ extension SubtitleActions on AppController {
   Future<void> setSecondarySubtitle(SubtitleOption? option) async {
     final player = this.player;
     if (player == null) return;
+    final serial = _playSerial, videoId = playing?.id;
     if (option != null) _update(() => secondaryLoading = option);
     try {
       final platform = player.platform;
       final loaded = option == null || platform is NativePlayer && subtitleTrackOf(await mpvSubtitleTracks(platform), option, leaving: _subtitleCopies.keys) != null;
       final file = loaded ? null : await _subtitleFile(option);
-      if (this.player != player) return;
+      if (this.player != player || serial != _playSerial || playing?.id != videoId) return;
       if (!await SecondarySubtitle.set(player, option, file: file, leaving: [..._subtitleCopies.keys])) throw StateError('Subtitles not loaded');
       _update(() => secondarySubtitle = option);
     } catch (e) {

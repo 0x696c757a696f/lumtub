@@ -155,4 +155,21 @@ void main() {
     if (!Platform.isLinux && !Platform.isMacOS) return;
     expect(DeviceMemory.totalMb, greaterThan(256));
   });
+
+  test('turning the lighter scaling off sets back its options only', () {
+    const settings = PlayerSettings(hwdec: 'auto-safe', scale: 'lanczos', audioFilter: 'lavfi=[dynaudnorm]');
+    final before = PlayerOptionApplicator.appliedOptions(settings, lightened: true);
+    final wanted = PlayerOptionApplicator.optionsFor(settings);
+    final changed = {for (final MapEntry(:key, :value) in wanted.entries) if (before[key] != value) key};
+    expect(changed, contains('scale'));
+    expect(changed, isNot(contains('hwdec')), reason: 'hwdec again restarts the decoder');
+    expect(changed, isNot(contains('af')), reason: 'af again drops the silence and volume filters');
+    expect(changed, isNot(contains('vd-lavc-dr')));
+    expect(PlayerOptionApplicator.appliedOptions(settings), wanted);
+  });
+
+  test('an option of their own is not taken for the lighter one', () {
+    const settings = PlayerSettings(mpvConf: 'scale=spline36');
+    expect(PlayerOptionApplicator.appliedOptions(settings, lightened: true)['scale'], 'spline36');
+  });
 }

@@ -85,6 +85,8 @@ extension PlaybackOpening on AppController {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
       if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);
       final local = allowLocal && resolved && piped && !item.isLive ? await downloads?.localVideo(item.id) : null;
+      // Closed, or another video asked for, meanwhile.
+      if (serial != _playSerial) return false;
       _openedLocal = null;
       // A download in a codec the playback rules disable (AV1 decoded in
       // software, say) streams instead, in a codec the rules allow.
@@ -134,7 +136,7 @@ extension PlaybackOpening on AppController {
           if (video == null && !Platform.isAndroid && !Platform.isIOS && (_quickSerial != serial || quickAgain) && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
             _quickSerial = serial;
             final full = pending;
-            pending = Future.any([
+            pending = firstSuccess([
               full,
               streams.quick(item.id, format, FormatPolicy.settingsJson(_playback, audioLanguage: _audioLanguageFor(item.id))).then((quick) {
                 if (quick == null) return full;
@@ -244,6 +246,7 @@ extension PlaybackOpening on AppController {
         // chunks short.
         await platform.setProperty('curl-max-request-size', _relayed == item.id ? '64MiB' : PlayerOptionApplicator.curlRequestSize);
       }
+      if (serial != _playSerial) return false;
       _tracking = null;
       _resetSubtitleFont();
       if (secondarySubtitle != null) {
@@ -264,6 +267,8 @@ extension PlaybackOpening on AppController {
         _tellSoftwareQuality();
       }
       await AppController._forgetCrop(player);
+      if (serial != _playSerial) return false;
+      _fileSerial = serial;
       await player.open(Media(direct ?? split ?? relayedLive ?? mobileLive?['url'] as String? ?? item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
@@ -328,6 +333,8 @@ extension PlaybackOpening on AppController {
     _resumePoint.start(_lastPosition);
     _openedLocal = item.id;
     await AppController._forgetCrop(player);
+    if (serial != _playSerial) return false;
+    _fileSerial = serial;
     await player.open(Media(local.file.path, start: start), play: play);
     if (serial == _playSerial) _tracking = item;
     _mpvLogLines = 0;
@@ -373,6 +380,8 @@ extension PlaybackOpening on AppController {
       _openedResolved = null;
       _openedVia = item.id;
       await AppController._forgetCrop(player);
+      if (serial != _playSerial) return false;
+      _fileSerial = serial;
       await player.open(Media(address, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
@@ -471,7 +480,10 @@ extension PlaybackOpening on AppController {
   /// or shows [message] once the attempts are used up.
   Future<void> _recover(String message) async {
     final item = _tracking;
-    if (item == null || _recovering) return;
+    // Only the file of the video asked for, not one still there while
+    // another opens.
+    if (item == null || _recovering || item.id != playing?.id || _fileSerial != _playSerial) return;
+    final serial = _playSerial;
     final position = _resumePoint.beforeFailure;
     if (!_recovery.tryAttempt(position: position)) {
       logError('Playback interrupted, gave up reconnecting ${item.id}: $message');
@@ -502,7 +514,6 @@ extension PlaybackOpening on AppController {
     _notice(tr('Connection lost, reconnecting from {0}…', [AppController._clock(position)]));
     _recovering = true;
     _recoveryTimer?.cancel();
-    final serial = _playSerial;
     try {
       // A new open also asks yt-dlp again, which replaces stream addresses
       // that expired while the video sat paused.

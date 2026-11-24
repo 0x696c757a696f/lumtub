@@ -205,8 +205,9 @@ extension VideoDetailsActions on AppController {
       } else {
         _subtitlesSettled(serial);
       }
-    } catch (_) {
+    } catch (e) {
       // The page still shows what the list already knew about the video.
+      logWarn('Could not load the details of ${item.id}: $e');
       _subtitlesSettled(serial);
     } finally {
       if (serial == _playSerial) _update(() => loadingDetails = false);

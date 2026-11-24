@@ -315,11 +315,11 @@ class LibraryController extends ChangeNotifier {
     // otherwise open hundreds of connections at once and, where the feed
     // fails, start as many yt-dlp processes.
     final feedErrors = <int, Object>{};
-    final results = await mapLimited(channels, feedConcurrency, (channel) async {
+    final results = await mapLimited([for (var i = 0; i < channels.length; i++) i], feedConcurrency, (i) async {
       try {
-        return await _feed.latest(channel, fresh: force);
+        return await _feed.latest(channels[i], fresh: force);
       } catch (e) {
-        feedErrors[channels.indexOf(channel)] = e;
+        feedErrors[i] = e;
         return null;
       }
     });
@@ -454,13 +454,17 @@ class LibraryController extends ChangeNotifier {
     _fillingAvatars = true;
     try {
       final queue = [for (final channel in store.channels) if (channel.avatar == null && _avatarTried.add(channel.id)) channel];
+      // Where each one was; the list can change while the pictures are
+      // asked for, so a place is checked before it is used.
+      final places = {for (final (i, channel) in store.channels.indexed) channel.id: i};
       var found = false;
       Future<void> worker() async {
         while (queue.isNotEmpty) {
           final channel = queue.removeLast();
           try {
             final avatar = await _avatars.fetch(channel);
-            final at = store.channels.indexOf(channel);
+            var at = places[channel.id] ?? -1;
+            if (at < 0 || at >= store.channels.length || store.channels[at].id != channel.id) at = store.channels.indexWhere((c) => c.id == channel.id);
             if (avatar != null && at >= 0 && store.channels[at].avatar == null) {
               store.channels[at] = ChannelRef(channel.id, store.channels[at].name, avatar);
               found = true;

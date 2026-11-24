@@ -363,13 +363,15 @@ class AppPreferences {
 
   /// The block lists as sets and lowercased once per preferences: [shows]
   /// runs for every item of every list on every rebuild.
-  ({Set<String> blockedIds, Set<String> unrecommendedIds, Set<String> names, List<String> keywords}) get _lists => _listCache[this] ??= (
+  ({Set<String> blockedIds, Set<String> unrecommendedIds, Set<String> names, Set<String> refNames, List<String> keywords}) get _lists => _listCache[this] ??= (
         blockedIds: {for (final c in blockedChannels) c.id},
+        // As saved, not lowercased: matched exactly, unlike [names].
+        refNames: {for (final c in blockedChannels) if (c.name.isNotEmpty) c.name},
         unrecommendedIds: {for (final c in unrecommendedChannels) c.id},
         names: {for (final n in blockedChannelNames) n.trim().toLowerCase()},
         keywords: [for (final w in blockedKeywords) w.toLowerCase()],
       );
-  static final _listCache = Expando<({Set<String> blockedIds, Set<String> unrecommendedIds, Set<String> names, List<String> keywords})>();
+  static final _listCache = Expando<({Set<String> blockedIds, Set<String> unrecommendedIds, Set<String> names, Set<String> refNames, List<String> keywords})>();
 
   /// Whether a channel called [name], with [id] or [handle] if known, is
   /// one the user blocks by group or as state media.
@@ -377,7 +379,7 @@ class AppPreferences {
   /// through the native core.
   bool blocksChannel(String name, {String? id, String? handle}) {
     if (!blockGroups && !blockStateMedia && !blockOtherLists) return false;
-    final memo = _blockMemo[this] ??= <String, bool>{};
+    final memo = _block.memo;
     if (memo.length > 20000) memo.clear();
     return memo['channel\n$id\n$handle\n$name'] ??= (blockGroups && _matchers.groups.channel(name, id: id, handle: handle)) ||
         blocksMediaChannel(name) ||
@@ -406,13 +408,25 @@ class AppPreferences {
     return copyWith(enabledGroups: toggled(enabledGroups, on), allowedGroups: media ? null : unticked, allowedMedia: media ? unticked : null);
   }
 
-  ({BlockMatcher groups, BlockMatcher media, BlockMatcher others}) get _matchers => _matcherCache[this] ??= (
+  ({BlockMatcher groups, BlockMatcher media, BlockMatcher others}) get _matchers => _block.matchers ??= (
         groups: BlockMatcher([for (final g in blockedGroups) if (groupOn(g)) g], allowedEntries: allowedEntries.toSet()),
         media: BlockMatcher([for (final g in stateMedia) if (groupOn(g, media: true)) g], allowedEntries: allowedEntries.toSet()),
         // Lists that only label or demote are not left out.
         others: BlockMatcher([for (final g in otherLists) if (groupOn(g) && (g.action == 'hide' || g.action == 'quiet')) g], allowedEntries: allowedEntries.toSet()),
       );
-  static final _matcherCache = Expando<({BlockMatcher groups, BlockMatcher media, BlockMatcher others})>();
+
+  /// The block matchers and what they answered, shared by every copy of
+  /// the preferences with the same block settings: a change to anything
+  /// else (danmaku, subtitles, layout) keeps them; a change to any of
+  /// these builds them and their answers afresh. The lists themselves are
+  /// read once a run.
+  _BlockState get _block => _blockStates[this] ??= () {
+        final key = jsonEncode([blockGroups, blockStateMedia, blockOtherLists, enabledGroups, allowedGroups, allowedMedia, allowedEntries]);
+        final last = _lastBlock;
+        return last != null && last.key == key ? last : _lastBlock = _BlockState(key);
+      }();
+  static final _blockStates = Expando<_BlockState>();
+  static _BlockState? _lastBlock;
 
   /// Whether a channel called [name] is state media the user blocks.
   bool blocksMediaChannel(String name) => blockStateMedia && _matchers.media.channel(name);
@@ -422,26 +436,21 @@ class AppPreferences {
   /// channel for these preferences: lists are filtered again on every
   /// rebuild, and the block lists run to hundreds of names.
   bool blocksGroup(VideoItem item) {
-    final memo = _blockMemo[this] ??= <String, bool>{};
+    final memo = _block.memo;
     if (memo.length > 20000) memo.clear();
     return memo['${item.channelId}\n${item.channel}'] ??= blocksChannel(item.channel, id: item.channelId);
   }
 
-  static final _blockMemo = Expando<Map<String, bool>>();
-
   /// Whether a comment by [author] (a name or @handle) with channel [id] is
   /// by a channel the user blocks. Its text is never looked at.
-  bool blocksCommenter(String author, String? id) {
-    final memo = _blockMemo[this] ??= <String, bool>{};
-    if (memo.length > 20000) memo.clear();
-    return memo['comment\n$id\n$author'] ??= isBlocked(id) || isBlockedName(author) || blocksChannel(author, id: id, handle: author.startsWith('@') ? author : null);
-  }
+  bool blocksCommenter(String author, String? id) =>
+      isBlocked(id) || isBlockedName(author) || blocksChannel(author, id: id, handle: author.startsWith('@') ? author : null);
 
   /// Whether [item] passes the privacy and content filters. [watched] says
   /// whether it was watched to the end.
   bool shows(VideoItem item, {bool watched = false}) {
     if (isBlocked(item.channelId) || isBlockedName(item.channel)) return false;
-    if (blockedChannels.isNotEmpty && item.channelId == null && blockedChannels.any((c) => c.name.isNotEmpty && c.name == item.channel)) return false;
+    if (blockedChannels.isNotEmpty && item.channelId == null && _lists.refNames.contains(item.channel)) return false;
     final keywords = _lists.keywords;
     if (keywords.isNotEmpty) {
       final title = item.title.toLowerCase();
@@ -760,11 +769,12 @@ class AppPreferences {
     }
     List<ChannelRef> channelList(String key) {
       final channels = <ChannelRef>[];
+      final ids = <String>{};
       if (raw[key] is List) {
         for (final entry in raw[key] as List) {
           if (entry is! Map) continue;
           final id = entry['id']?.toString() ?? '';
-          if (ChannelRef.isValidId(id) && !channels.any((c) => c.id == id)) channels.add(ChannelRef(id, entry['name']?.toString() ?? ''));
+          if (ChannelRef.isValidId(id) && ids.add(id)) channels.add(ChannelRef(id, entry['name']?.toString() ?? ''));
         }
       }
       return channels;
@@ -926,3 +936,11 @@ class AppPreferencesStore {
 
 /// A playback speed as shown to people: `2`, `1.25`.
 String rateText(double rate) => rate == rate.roundToDouble() ? rate.toStringAsFixed(0) : rate.toString();
+
+/// See [AppPreferences._block].
+class _BlockState {
+  _BlockState(this.key);
+  final String key;
+  ({BlockMatcher groups, BlockMatcher media, BlockMatcher others})? matchers;
+  final memo = <String, bool>{};
+}

@@ -41,4 +41,27 @@ void main() {
       expect(prefs.blocksGroup(_from(channel)), isFalse, reason: channel);
     }
   }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
+
+  test('a change to anything but the block settings keeps the answers; a block setting changes them', () {
+    const prefs = AppPreferences(blockGroups: true);
+    expect(prefs.blocksGroup(_from('陈破空')), isTrue);
+    expect(prefs.copyWith(hideShorts: true).blocksGroup(_from('陈破空')), isTrue);
+    expect(prefs.copyWith(blockGroups: false).blocksGroup(_from('陈破空')), isFalse);
+    expect(prefs.blocksGroup(_from('陈破空')), isTrue);
+  }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
+
+  test('a channel blocked without an id is matched by its exact saved name', () {
+    const prefs = AppPreferences(blockedChannels: [ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Some Channel')]);
+    expect(prefs.shows(_from('Some Channel')), isFalse);
+    expect(prefs.shows(_from('some channel')), isTrue);
+  });
+
+  test('duplicate channel ids are read once', () {
+    final prefs = AppPreferences.fromJson({
+      'blockedChannels': [
+        for (var i = 0; i < 3; i++) {'id': 'UCuAXFkgsw1L7xaCfnd5JJOw', 'name': 'n$i'},
+      ],
+    });
+    expect(prefs.blockedChannels.map((c) => c.name), ['n0']);
+  });
 }

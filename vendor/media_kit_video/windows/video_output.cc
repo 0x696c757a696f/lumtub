@@ -110,7 +110,7 @@ VideoOutput::VideoOutput(int64_t handle,
 
 std::atomic<bool> VideoOutput::engine_closing_{false};
 
-VideoOutput::~VideoOutput() {
+void VideoOutput::FreeRenderContext() {
   destroyed_ = true;
   // Stop libmpv callbacks and drain rendering before releasing any surfaces.
   thread_pool_ref_->Post([this]() {
@@ -126,6 +126,14 @@ VideoOutput::~VideoOutput() {
       }
     }
   }).get();
+}
+
+void VideoOutput::StopForEngineShutdown() {
+  FreeRenderContext();
+}
+
+VideoOutput::~VideoOutput() {
+  FreeRenderContext();
 
   int64_t texture_id;
   {
@@ -185,10 +193,13 @@ void VideoOutput::Render() {
     }
     // S/W
     if (pixel_buffer_ != nullptr) {
-      int32_t size[]{
-          static_cast<int32_t>(pixel_buffer_textures_.at(texture_id_)->width),
-          static_cast<int32_t>(pixel_buffer_textures_.at(texture_id_)->height),
-      };
+      int32_t size[2];
+      {
+        std::lock_guard<std::mutex> lock(textures_mutex_);
+        const auto& texture = pixel_buffer_textures_.at(texture_id_);
+        size[0] = static_cast<int32_t>(texture->width);
+        size[1] = static_cast<int32_t>(texture->height);
+      }
       auto pitch = 4 * size[0];
       mpv_render_param params[]{
           {MPV_RENDER_PARAM_SW_SIZE, size},
@@ -274,12 +285,22 @@ void VideoOutput::CheckAndResize() {
   }
   int64_t current_width = -1, current_height = -1;
   if (surface_manager_ != nullptr) {
+    // Lumtub: Direct3D cannot make a larger texture.
+    required_width = std::min<int64_t>(required_width,
+                                       D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION);
+    required_height = std::min<int64_t>(required_height,
+                                        D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION);
+    if (required_width == failed_width_ && required_height == failed_height_) {
+      return;
+    }
     current_width = surface_manager_->width();
     current_height = surface_manager_->height();
   }
   if (pixel_buffer_ != nullptr) {
-    current_width = pixel_buffer_textures_.at(texture_id_)->width;
-    current_height = pixel_buffer_textures_.at(texture_id_)->height;
+    std::lock_guard<std::mutex> lock(textures_mutex_);
+    const auto& texture = pixel_buffer_textures_.at(texture_id_);
+    current_width = texture->width;
+    current_height = texture->height;
   }
   // Currently rendered video output dimensions.
   // Either H/W or S/W rendered.
@@ -310,8 +331,23 @@ void VideoOutput::Resize(int64_t required_width, int64_t required_height) {
       // Lumtub: Flutter's raster thread copies from these textures in
       // |Read|; freeing them meanwhile crashed the app.
       std::lock_guard<std::mutex> lock(textures_mutex_);
-      surface_manager_->SetSize(static_cast<int32_t>(required_width),
-                                static_cast<int32_t>(required_height));
+      const auto previous_width = surface_manager_->width();
+      const auto previous_height = surface_manager_->height();
+      try {
+        surface_manager_->SetSize(static_cast<int32_t>(required_width),
+                                  static_cast<int32_t>(required_height));
+        failed_width_ = failed_height_ = 0;
+      } catch (const std::exception&) {
+        // Lumtub: keep showing video at the size that worked, instead of no
+        // texture at all until the app restarts.
+        failed_width_ = required_width;
+        failed_height_ = required_height;
+        try {
+          surface_manager_->SetSize(previous_width, previous_height);
+        } catch (const std::exception&) {
+          return;
+        }
+      }
     }
     auto texture = std::make_unique<FlutterDesktopGpuSurfaceDescriptor>();
     texture->struct_size = sizeof(FlutterDesktopGpuSurfaceDescriptor);
@@ -348,7 +384,8 @@ void VideoOutput::Resize(int64_t required_width, int64_t required_height) {
     texture_variants_.emplace(
         std::make_pair(texture_id_, std::move(texture_variant)));
     // Notify public texture update callback.
-    texture_update_callback_(texture_id_, required_width, required_height);
+    texture_update_callback_(texture_id_, surface_manager_->width(),
+                             surface_manager_->height());
   }
   // S/W
   if (pixel_buffer_ != nullptr) {
@@ -368,15 +405,18 @@ void VideoOutput::Resize(int64_t required_width, int64_t required_height) {
           }
         }));
     // Register new texture.
-    texture_id_ =
+    auto id =
         registrar_->texture_registrar()->RegisterTexture(texture_variant.get());
-    std::cout << "media_kit: VideoOutput: Create Texture: " << texture_id_
+    std::cout << "media_kit: VideoOutput: Create Texture: " << id
               << std::endl;
+    // Lumtub: |texture_id_| is set only once its buffer is stored, under the
+    // lock, so the callback above never calls at() on a missing entry.
     std::lock_guard<std::mutex> lock(textures_mutex_);
     pixel_buffer_textures_.emplace(
-        std::make_pair(texture_id_, std::move(pixel_buffer_texture)));
+        std::make_pair(id, std::move(pixel_buffer_texture)));
     texture_variants_.emplace(
-        std::make_pair(texture_id_, std::move(texture_variant)));
+        std::make_pair(id, std::move(texture_variant)));
+    texture_id_ = id;
     // Notify public texture update callback.
     texture_update_callback_(texture_id_, required_width, required_height);
   }
@@ -407,11 +447,12 @@ int64_t VideoOutput::GetVideoWidth() {
   int64_t width = 0;
   int64_t height = 0;
 
-  mpv_node params;
-  mpv_get_property(handle_, "video-out-params", MPV_FORMAT_NODE, &params);
+  mpv_node params{};
+  const auto error =
+      mpv_get_property(handle_, "video-out-params", MPV_FORMAT_NODE, &params);
 
   int64_t dw = 0, dh = 0, rotate = 0;
-  if (params.format == MPV_FORMAT_NODE_MAP) {
+  if (error == 0 && params.format == MPV_FORMAT_NODE_MAP) {
     for (int32_t i = 0; i < params.u.list->num; i++) {
       char* key = params.u.list->keys[i];
       auto value = params.u.list->values[i];
@@ -427,6 +468,8 @@ int64_t VideoOutput::GetVideoWidth() {
         }
       }
     }
+  }
+  if (error == 0) {
     mpv_free_node_contents(&params);
   }
 
@@ -440,7 +483,8 @@ int64_t VideoOutput::GetVideoWidth() {
       return SW_RENDERING_MAX_WIDTH;
     }
     if (height >= SW_RENDERING_MAX_HEIGHT) {
-      return width / height * SW_RENDERING_MAX_HEIGHT;
+      return static_cast<int64_t>(static_cast<double>(width) / height *
+                                  SW_RENDERING_MAX_HEIGHT);
     }
   }
 
@@ -456,11 +500,12 @@ int64_t VideoOutput::GetVideoHeight() {
   int64_t width = 0;
   int64_t height = 0;
 
-  mpv_node params;
-  mpv_get_property(handle_, "video-out-params", MPV_FORMAT_NODE, &params);
+  mpv_node params{};
+  const auto error =
+      mpv_get_property(handle_, "video-out-params", MPV_FORMAT_NODE, &params);
 
   int64_t dw = 0, dh = 0, rotate = 0;
-  if (params.format == MPV_FORMAT_NODE_MAP) {
+  if (error == 0 && params.format == MPV_FORMAT_NODE_MAP) {
     for (int32_t i = 0; i < params.u.list->num; i++) {
       char* key = params.u.list->keys[i];
       auto value = params.u.list->values[i];
@@ -476,6 +521,8 @@ int64_t VideoOutput::GetVideoHeight() {
         }
       }
     }
+  }
+  if (error == 0) {
     mpv_free_node_contents(&params);
   }
 
@@ -489,7 +536,8 @@ int64_t VideoOutput::GetVideoHeight() {
       return SW_RENDERING_MAX_HEIGHT;
     }
     if (width >= SW_RENDERING_MAX_WIDTH) {
-      return height / width * SW_RENDERING_MAX_WIDTH;
+      return static_cast<int64_t>(static_cast<double>(height) / width *
+                                  SW_RENDERING_MAX_WIDTH);
     }
   }
 

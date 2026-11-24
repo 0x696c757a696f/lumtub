@@ -48,6 +48,7 @@ class VideoOutput {
 
   int64_t texture_id() const { return texture_id_; }
   int64_t width() const {
+    std::lock_guard<std::mutex> lock(textures_mutex_);
     // H/W
     if (surface_manager_ != nullptr && texture_id_) {
       return surface_manager_->width();
@@ -59,6 +60,7 @@ class VideoOutput {
     return width_.value_or(1);
   }
   int64_t height() const {
+    std::lock_guard<std::mutex> lock(textures_mutex_);
     // H/W
     if (surface_manager_ != nullptr && texture_id_) {
       return surface_manager_->height();
@@ -85,6 +87,11 @@ class VideoOutput {
   // Lumtub: frame timings since the last call, for the log.
   std::string TakeStats();
 
+  // Lumtub: stops libmpv's callbacks and rendering, keeping every texture
+  // alive; the engine is closing and its raster thread may still read them,
+  // so the object is then left allocated instead of destroyed.
+  void StopForEngineShutdown();
+
  private:
   void NotifyRender();
 
@@ -95,6 +102,8 @@ class VideoOutput {
   void Resize(int64_t required_width, int64_t required_height);
 
   void UnregisterTexture(int64_t texture_id);
+
+  void FreeRenderContext();
 
   int64_t GetVideoWidth();
 
@@ -107,6 +116,9 @@ class VideoOutput {
   mpv_handle* handle_ = nullptr;
   mpv_render_context* render_context_ = nullptr;
   int64_t texture_id_ = 0;
+  // Lumtub: a H/W size the surface could not be made at, not tried again.
+  int64_t failed_width_ = 0;
+  int64_t failed_height_ = 0;
   flutter::PluginRegistrarWindows* registrar_ = nullptr;
   ThreadPool* thread_pool_ref_ = nullptr;
   // For preventing any asynchronous operations (primarily texture objects
@@ -118,7 +130,7 @@ class VideoOutput {
   std::atomic<uint64_t> coalesced_{0};
   FrameTiming render_timing_;
 
-  std::mutex textures_mutex_ = std::mutex();
+  mutable std::mutex textures_mutex_;
   std::condition_variable textures_unregistered_;
   size_t pending_texture_unregistrations_ = 0;
 

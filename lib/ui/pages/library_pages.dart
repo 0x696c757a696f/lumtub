@@ -956,10 +956,8 @@ class PlaylistDetailPage extends StatelessWidget {
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
-        child: Row(children: [
-          IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: Icon(AppIcons.arrowLeft)),
-          const SizedBox(width: 8),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        child: LayoutBuilder(builder: (context, constraints) {
+          final title = Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
             Text(
               playlist != null && LibraryController.isRemote(playlist) ? tr('{0} videos · From your YouTube account, updated on sync', [items.length]) : tr('{0} videos · Saved on this device only', [items.length]),
@@ -967,35 +965,50 @@ class PlaylistDetailPage extends StatelessWidget {
             ),
             if (playlistLength(items, progressOf: library.progressOf) case final length?)
               Text(length, style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
-          ])),
-          if (own.length > 1) ...[
-            SortMenu<VideoOrder>(
-              tooltip: tr('Video order'),
-              values: VideoOrder.values,
-              value: controller.videoOrder(id),
-              labelOf: (order) => order.label,
-              onSelected: (order) => unawaited(controller.setVideoOrder(id, order)),
-              reversed: reversed,
-              onReversed: (back) => unawaited(controller.setReversed(id, back)),
-              onArrange: arrangeable ? () => _arrange(context, id, name, items) : null,
+          ]));
+          final buttons = <Widget>[
+            if (own.length > 1)
+              SortMenu<VideoOrder>(
+                tooltip: tr('Video order'),
+                values: VideoOrder.values,
+                value: controller.videoOrder(id),
+                labelOf: (order) => order.label,
+                onSelected: (order) => unawaited(controller.setVideoOrder(id, order)),
+                reversed: reversed,
+                onReversed: (back) => unawaited(controller.setReversed(id, back)),
+                onArrange: arrangeable ? () => _arrange(context, id, name, items) : null,
+              ),
+            FilledButton.icon(
+              onPressed: items.isEmpty ? null : () => controller.playList(id, name, own),
+              icon: const Icon(AppIcons.playFill),
+              label: Text(tr('Play all')),
             ),
-            const SizedBox(width: 4),
-          ],
-          FilledButton.icon(
-            onPressed: items.isEmpty ? null : () => controller.playList(id, name, own),
-            icon: const Icon(AppIcons.playFill),
-            label: Text(tr('Play all')),
-          ),
-          if (later && items.isNotEmpty) ...[
-            const SizedBox(width: 4),
-            TextButton.icon(onPressed: () => _clearLater(context, library), icon: Icon(AppIcons.trashSimple), label: Text(tr('Clear all'))),
-          ],
-          if (playlist != null) ...[
-            const SizedBox(width: 4),
-            IconButton(tooltip: tr('Rename'), onPressed: () => _rename(context, library, playlist), icon: Icon(AppIcons.pencilSimple)),
-            IconButton(tooltip: tr('Delete playlist'), onPressed: () => _delete(context, library, playlist), icon: Icon(AppIcons.trash)),
-          ],
-        ]),
+            if (later && items.isNotEmpty) TextButton.icon(onPressed: () => _clearLater(context, library), icon: Icon(AppIcons.trashSimple), label: Text(tr('Clear all'))),
+            if (playlist != null) ...[
+              IconButton(tooltip: tr('Rename'), onPressed: () => _rename(context, library, playlist), icon: Icon(AppIcons.pencilSimple)),
+              IconButton(tooltip: tr('Delete playlist'), onPressed: () => _delete(context, library, playlist), icon: Icon(AppIcons.trash)),
+            ],
+          ];
+          final back = IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: Icon(AppIcons.arrowLeft));
+          // A narrow window (a phone) gives the title its own line and puts
+          // the buttons under it.
+          if (constraints.maxWidth < 600) {
+            return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [back, const SizedBox(width: 8), title]),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 8),
+                child: Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: buttons),
+              ),
+            ]);
+          }
+          return Row(children: [
+            back,
+            const SizedBox(width: 8),
+            title,
+            for (final (i, button) in buttons.indexed) ...[if (i > 0) const SizedBox(width: 4), button],
+          ]);
+        }),
       )),
       if (items.isEmpty)
         SliverFillRemaining(hasScrollBody: false, child: StatusView(

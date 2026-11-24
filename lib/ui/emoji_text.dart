@@ -39,7 +39,15 @@ List<InlineSpan> emojiSpans(BuildContext context, String text, Map<String, Strin
 
 /// The names in [names] as one pattern, longest first, so that an emoji
 /// with a skin tone is found whole rather than as its plain emoji.
+/// Made once for each set of names: chat rows and 弹幕 messages ask for
+/// the same few again and again.
 RegExp emojiPattern(Iterable<String> names) {
+  final key = names.join('\n');
+  final kept = _patterns.remove(key);
+  if (kept != null) return _patterns[key] = kept;
   final sorted = [for (final name in names) if (name.isNotEmpty) name]..sort((a, b) => b.length.compareTo(a.length));
-  return RegExp(sorted.map(RegExp.escape).join('|'));
+  if (_patterns.length >= 64) _patterns.remove(_patterns.keys.first);
+  return _patterns[key] = RegExp(sorted.map(RegExp.escape).join('|'));
 }
+
+final _patterns = <String, RegExp>{};

@@ -718,6 +718,8 @@
   "Back {0} s": "{0} s zurück",
   "Always on (including auto-generated)": "Immer an (auch automatisch generierte)",
   "Restore": "Wiederherstellen",
+  "Minimize": "Minimieren",
+  "Maximize": "Maximieren",
   "Restore all player defaults": "Alle Player-Einstellungen auf Standard zurücksetzen",
   "Recommend again": "Wieder empfehlen",
   "Recommend this channel again": "Diesen Kanal wieder empfehlen",

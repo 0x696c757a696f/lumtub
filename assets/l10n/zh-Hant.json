@@ -737,6 +737,8 @@
   "Back {0} s": "倒轉 {0} 秒",
   "Always on (including auto-generated)": "總是開啟（含自動生成字幕）",
   "Restore": "恢復",
+  "Minimize": "最小化",
+  "Maximize": "最大化",
   "Restore all player defaults": "恢復全部播放器預設設定",
   "Recommend again": "恢復推薦",
   "Recommend this channel again": "恢復推薦此頻道",

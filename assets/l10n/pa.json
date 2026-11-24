@@ -717,6 +717,8 @@
   "Back {0} s": "{0} ਸਕਿੰਟ ਪਿੱਛੇ",
   "Always on (including auto-generated)": "ਹਮੇਸ਼ਾ ਚਾਲੂ (ਆਪਣੇ-ਆਪ ਬਣੇ ਸਮੇਤ)",
   "Restore": "ਰੀਸਟੋਰ ਕਰੋ",
+  "Minimize": "ਛੋਟਾ ਕਰੋ",
+  "Maximize": "ਵੱਡਾ ਕਰੋ",
   "Restore all player defaults": "ਪਲੇਅਰ ਦੇ ਸਾਰੇ ਡਿਫੌਲਟ ਬਹਾਲ ਕਰੋ",
   "Recommend again": "ਦੁਬਾਰਾ ਸੁਝਾਓ",
   "Recommend this channel again": "ਇਸ ਚੈਨਲ ਨੂੰ ਦੁਬਾਰਾ ਸੁਝਾਓ",

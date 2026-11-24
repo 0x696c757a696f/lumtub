@@ -718,6 +718,8 @@
   "Back {0} s": "Tagasi {0} s",
   "Always on (including auto-generated)": "Alati sees (sh automaatselt loodud)",
   "Restore": "Taasta",
+  "Minimize": "Minimeeri",
+  "Maximize": "Maksimeeri",
   "Restore all player defaults": "Taasta kõik pleieri vaikeseaded",
   "Recommend again": "Soovita uuesti",
   "Recommend this channel again": "Soovita seda kanalit uuesti",

@@ -718,6 +718,8 @@
   "Back {0} s": "{0}초 뒤로",
   "Always on (including auto-generated)": "항상 켜기(자동 생성 자막 포함)",
   "Restore": "복원",
+  "Minimize": "최소화",
+  "Maximize": "최대화",
   "Restore all player defaults": "플레이어 기본 설정 모두 복원",
   "Recommend again": "추천 다시 켜기",
   "Recommend this channel again": "이 채널 추천 다시 켜기",

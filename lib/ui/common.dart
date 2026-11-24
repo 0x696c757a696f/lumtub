@@ -4,17 +4,37 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:media_kit/media_kit.dart';
 
 import 'theme.dart';
 import '../device.dart';
 import '../l10n/l10n.dart';
 import '../system_env.dart';
+import '../widgets/position_ticks.dart';
 import 'app_icons.dart';
 import 'motion.dart';
 import 'reveal.dart';
 import 'side_sheet.dart';
 
 export '../models.dart' show formatBytes;
+
+/// A player's [coarsePosition], made once and kept while the player stays
+/// the same, so a [StreamBuilder] keeps its subscription when it is built
+/// again. Each builder needs one of its own: the thinning keeps state.
+class KeptPositions {
+  KeptPositions({this.step = const Duration(milliseconds: 250)});
+  final Duration step;
+  Player? _player;
+  Stream<Duration>? _stream;
+
+  Stream<Duration> of(Player player) {
+    if (!identical(player, _player) || _stream == null) {
+      _player = player;
+      _stream = coarsePosition(player, step: step);
+    }
+    return _stream!;
+  }
+}
 
 /// Whether a scrolled list is close enough to its end to fetch the next
 /// page: two screens ahead, so it usually arrives before the user gets there.

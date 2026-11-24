@@ -718,6 +718,8 @@
   "Back {0} s": "ย้อนกลับ {0} วิ",
   "Always on (including auto-generated)": "เปิดเสมอ (รวมคำบรรยายที่สร้างอัตโนมัติ)",
   "Restore": "กู้คืน",
+  "Minimize": "ย่อเล็กสุด",
+  "Maximize": "ขยายใหญ่สุด",
   "Restore all player defaults": "คืนค่าเริ่มต้นของเพลเยอร์ทั้งหมด",
   "Recommend again": "แนะนำอีกครั้ง",
   "Recommend this channel again": "แนะนำช่องนี้อีกครั้ง",

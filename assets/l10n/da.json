@@ -718,6 +718,8 @@
   "Back {0} s": "Tilbage {0} sek.",
   "Always on (including auto-generated)": "Altid til (inkl. automatisk genererede)",
   "Restore": "Gendan",
+  "Minimize": "Minimer",
+  "Maximize": "Maksimer",
   "Restore all player defaults": "Gendan alle afspillerstandarder",
   "Recommend again": "Anbefal igen",
   "Recommend this channel again": "Anbefal denne kanal igen",

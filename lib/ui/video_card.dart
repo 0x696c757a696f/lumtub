@@ -600,7 +600,9 @@ class _VideoCardState extends State<VideoCard> {
     if (widget.item.isLive || widget.item.isUpcoming) return;
     _preview = Timer(const Duration(milliseconds: 700), () {
       if (!mounted) return;
-      setState(() => _frame = 1);
+      // With reduced motion the preview holds on its middle frame.
+      setState(() => _frame = Motion.reduced ? 2 : 1);
+      if (Motion.reduced) return;
       _preview = Timer.periodic(const Duration(milliseconds: 1000), (_) {
         if (mounted) setState(() => _frame = _frame % 3 + 1);
       });

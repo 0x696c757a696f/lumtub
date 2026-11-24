@@ -156,6 +156,13 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   Timer? _feedbackTimer;
   int _menus = 0;
   bool _overBar = false;
+  /// Round each bar, to see the focus come into it.
+  final _topBarFocus = FocusNode(canRequestFocus: false, skipTraversal: true);
+  final _bottomBarFocus = FocusNode(canRequestFocus: false, skipTraversal: true);
+  /// The keyboard has moved the focus into the bars, which hold open.
+  bool _keysInBars = false;
+  final _sinceHover = Stopwatch();
+  final _livePositions = KeptPositions(step: const Duration(seconds: 1));
   bool _locked = false;
   bool _orientationLocked = false;
   bool _touched = false;
@@ -250,6 +257,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     if (_orientationLocked) unawaited(SystemChrome.setPreferredOrientations(const []));
     _bars.dispose();
     _focus.dispose();
+    _topBarFocus.dispose();
+    _bottomBarFocus.dispose();
     _feedback.dispose();
     super.dispose();
   }
@@ -328,6 +337,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   void _showFeedback(IconData icon, String text) {
+    if (!mounted) return;
     _feedback.value = (icon: icon, text: text);
     _feedbackTimer?.cancel();
     _feedbackTimer = Timer(const Duration(milliseconds: 700), () => _feedback.value = null);
@@ -337,6 +347,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   void _showBars() {
     if (!mounted) return;
+    _bars.duration = Motion.of(Ease.fade);
     _bars.forward();
     _restartHide();
   }
@@ -347,8 +358,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   void _autoHide() {
-    if (!mounted || !_player.state.playing || _menus > 0 || _overBar) return;
+    if (!mounted || !_player.state.playing || _menus > 0 || _overBar || _keysInBars) return;
+    _bars.duration = Motion.of(Ease.fade);
     _bars.reverse();
+    _leaveBars();
     if (isFullscreen(context) && WindowFrame.supported && !Device.tv) {
       final box = context.findRenderObject();
       if (box is RenderBox && box.hasSize) unawaited(WindowFrame.hidePointer(box.localToGlobal(Offset.zero) & box.size));
@@ -357,7 +370,31 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   void _hideNow() {
     _hideTimer?.cancel();
+    _bars.duration = Motion.of(Ease.fade);
     _bars.reverse();
+    _leaveBars();
+  }
+
+  /// Hidden bars keep no focus, so Enter cannot press a button not seen.
+  void _leaveBars() {
+    if (_topBarFocus.hasFocus || _bottomBarFocus.hasFocus) _focus.requestFocus();
+  }
+
+  /// Tab into the bars shows them and holds them open while the focus
+  /// stays; a click that leaves the focus in a bar does not hold them.
+  void _barFocusChanged(bool _) {
+    if (!mounted) return;
+    final inBars = _topBarFocus.hasFocus || _bottomBarFocus.hasFocus;
+    if (!inBars) {
+      if (_keysInBars) {
+        _keysInBars = false;
+        _restartHide();
+      }
+    } else if (!_keysInBars && !Device.tv && HardwareKeyboard.instance.logicalKeysPressed.isNotEmpty) {
+      _keysInBars = true;
+      _showBars();
+      _hideTimer?.cancel();
+    }
   }
 
   void _menuOpened() {
@@ -746,9 +783,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                       right: 0,
                       bottom: 0,
                       child: IgnorePointer(
-                        child: AnimatedBuilder(
-                          animation: _bars,
-                          builder: (context, child) => Opacity(opacity: 1 - _bars.value, child: child),
+                        child: FadeTransition(
+                          opacity: ReverseAnimation(_bars),
                           child: MiniProgressLine(player: _player, color: Theme.of(context).colorScheme.inversePrimary),
                         ),
                       ),
@@ -789,7 +825,14 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               builder: (context, child) => MouseRegion(
                 cursor: _bars.value == 0 ? SystemMouseCursors.none : MouseCursor.defer,
                 onHover: (event) {
-                  if (event.kind == PointerDeviceKind.mouse) _showBars();
+                  if (event.kind != PointerDeviceKind.mouse) return;
+                  // A moving mouse sends many events; the hide timer needs
+                  // starting again only now and then.
+                  if (_barsShown && _sinceHover.isRunning && _sinceHover.elapsedMilliseconds < 250) return;
+                  _sinceHover
+                    ..reset()
+                    ..start();
+                  _showBars();
                 },
                 child: child,
               ),
@@ -862,7 +905,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               colors: const [Colors.transparent, black],
             ),
           ),
-          child: top ? child : KeyedSubtree(key: _bottomKey, child: child),
+          child: Focus(
+            focusNode: top ? _topBarFocus : _bottomBarFocus,
+            onFocusChange: _barFocusChanged,
+            child: top ? child : KeyedSubtree(key: _bottomKey, child: child),
+          ),
         ),
         builder: (context, child) {
           final hidden = 1 - Ease.out.transform(_bars.value);
@@ -1058,34 +1105,37 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     return Positioned.fill(
       child: AnimatedBuilder(
         animation: _bars,
-        builder: (context, child) => IgnorePointer(ignoring: _bars.value == 0, child: Opacity(opacity: _bars.value, child: child)),
-        child: SafeArea(
-          right: false,
-          child: Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: Padding(
-              padding: EdgeInsetsDirectional.only(start: 12 + extra),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                _CircleButton(
-                  icon: _locked ? AppIcons.lock : AppIcons.lockOpen,
-                  tooltip: _locked ? tr('Unlock') : tr('Lock'),
-                  onTap: () {
-                    setState(() => _locked = !_locked);
-                    _showFeedback(_locked ? AppIcons.lock : AppIcons.lockOpen, _locked ? tr('Locked') : tr('Unlocked'));
-                    _showBars();
-                  },
-                ),
-                if (phone && !_locked && !Device.tv) ...[
-                  const SizedBox(height: 12),
+        builder: (context, child) => IgnorePointer(ignoring: _bars.value == 0, child: child),
+        child: FadeTransition(
+          opacity: _bars,
+          child: SafeArea(
+            right: false,
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Padding(
+                padding: EdgeInsetsDirectional.only(start: 12 + extra),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
                   _CircleButton(
-                    icon: _orientationLocked ? AppIcons.lockSimple : AppIcons.deviceRotate,
-                    tooltip: _orientationLocked ? tr('Rotate with the phone') : tr('Lock screen rotation'),
-                    active: _orientationLocked,
-                    accent: accent,
-                    onTap: () => _toggleOrientation(context),
+                    icon: _locked ? AppIcons.lock : AppIcons.lockOpen,
+                    tooltip: _locked ? tr('Unlock') : tr('Lock'),
+                    onTap: () {
+                      setState(() => _locked = !_locked);
+                      _showFeedback(_locked ? AppIcons.lock : AppIcons.lockOpen, _locked ? tr('Locked') : tr('Unlocked'));
+                      _showBars();
+                    },
                   ),
-                ],
-              ]),
+                  if (phone && !_locked && !Device.tv) ...[
+                    const SizedBox(height: 12),
+                    _CircleButton(
+                      icon: _orientationLocked ? AppIcons.lockSimple : AppIcons.deviceRotate,
+                      tooltip: _orientationLocked ? tr('Rotate with the phone') : tr('Lock screen rotation'),
+                      active: _orientationLocked,
+                      accent: accent,
+                      onTap: () => _toggleOrientation(context),
+                    ),
+                  ],
+                ]),
+              ),
             ),
           ),
         ),

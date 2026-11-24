@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../app/app_controller.dart';
 import '../app/comments_loader.dart';
+import '../app_preferences.dart' show AppPreferences;
 import '../models.dart';
 import '../youtube_comments.dart';
 import 'common.dart';
@@ -88,6 +89,33 @@ class _CommentsSectionState extends State<CommentsSection> {
         _loader.stopLoadingAll();
       }
     });
+  }
+
+  /// The comments last filtered, from which list and settings.
+  List<YoutubeComment> _from = const [];
+  List<YoutubeComment> _shown = const [];
+  Object? _shownBy;
+
+  /// [comments] without those of blocked commenters and, while searching,
+  /// those that do not match. A page loaded onto the end is filtered alone,
+  /// not the whole list again for every page.
+  List<YoutubeComment> _shownOf(List<YoutubeComment> comments, AppPreferences prefs) {
+    bool keep(YoutubeComment c) => !prefs.blocksCommenter(c.author, c.channelId) && (_words.isEmpty || _matches(c));
+    // A search also looks in replies, which load apart: it filters anew.
+    if (_words.isNotEmpty) return [for (final c in comments) if (keep(c)) c];
+    final from = _from;
+    final grown = identical(_shownBy, prefs) &&
+        from.isNotEmpty &&
+        comments.length >= from.length &&
+        identical(comments.first, from.first) &&
+        identical(comments[from.length - 1], from.last);
+    final shown = grown && comments.length == from.length
+        ? _shown
+        : [if (grown) ..._shown, for (var i = grown ? from.length : 0; i < comments.length; i++) if (keep(comments[i])) comments[i]];
+    _from = comments;
+    _shown = shown;
+    _shownBy = prefs;
+    return shown;
   }
 
   /// [comment], or one of its loaded replies, holds the words searched.
@@ -255,9 +283,12 @@ class _CommentsSectionState extends State<CommentsSection> {
                   : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 8), Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [immersive, search, order])]);
             }),
             const SizedBox(height: 8),
-            if (_searching) _searchBar(context),
+            // Each in a slot of its own, so opening the search keeps what
+            // is being written in the composer.
+            if (_searching) _searchBar(context) else const SizedBox.shrink(),
             if (_canWrite) CommentComposer(hint: tr('Add a comment…'), onSubmit: _post, thanksFor: widget.videoId)
-            else if (loader.canCreate) CommentComposer(hint: tr('Add a comment…'), onSubmit: _create),
+            else if (loader.canCreate) CommentComposer(hint: tr('Add a comment…'), onSubmit: _create)
+            else const SizedBox.shrink(),
           ];
           if (loader.comments.isNotEmpty && !_listed) {
             _arriving = true;
@@ -265,7 +296,7 @@ class _CommentsSectionState extends State<CommentsSection> {
           }
           _listed = loader.comments.isNotEmpty;
           final prefs = widget.controller.preferences;
-          final shown = [for (final comment in loader.comments) if (!prefs.blocksCommenter(comment.author, comment.channelId) && (_words.isEmpty || _matches(comment))) comment];
+          final shown = _shownOf(loader.comments, prefs);
           final footer = <Widget>[
             if (loader.loading)
               const Padding(padding: EdgeInsets.all(16), child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))))

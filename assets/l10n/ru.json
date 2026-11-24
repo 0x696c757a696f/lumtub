@@ -718,6 +718,8 @@
   "Back {0} s": "Назад на {0} с",
   "Always on (including auto-generated)": "Всегда включены (включая автоматические)",
   "Restore": "Восстановить",
+  "Minimize": "Свернуть",
+  "Maximize": "Развернуть",
   "Restore all player defaults": "Восстановить все настройки проигрывателя по умолчанию",
   "Recommend again": "Рекомендовать снова",
   "Recommend this channel again": "Снова рекомендовать этот канал",

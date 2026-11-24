@@ -718,6 +718,8 @@
   "Back {0} s": "{0} 秒巻き戻し",
   "Always on (including auto-generated)": "常にオン（自動生成を含む）",
   "Restore": "復元",
+  "Minimize": "最小化",
+  "Maximize": "最大化",
   "Restore all player defaults": "プレーヤーの設定をすべてデフォルトに戻す",
   "Recommend again": "おすすめを再開",
   "Recommend this channel again": "このチャンネルをおすすめに戻す",

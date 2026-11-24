@@ -654,7 +654,8 @@ class _AppShellState extends State<AppShell> {
                 valueListenable: lightsOff,
                 builder: (context, off, child) => Stack(fit: StackFit.expand, children: [
                   child!,
-                  if (off && watching) Positioned.fill(child: LightsOffLayer(dim: _controller.preferences.lightsOffDim / 100)),
+                  // Kept while watching, so turning the lights on fades too.
+                  if (watching) Positioned.fill(child: LightsOffLayer(visible: off, dim: _controller.preferences.lightsOffDim / 100)),
                 ]),
                 // Android's back button and gesture go back through the
                 // pages first; on the first page they send the app to the
@@ -930,13 +931,16 @@ class _TopBar extends StatelessWidget {
     return Container(
       decoration: skin?.topBar != null ? SurfaceDecoration.of(context, skin!.topBar!) : BoxDecoration(color: context.tones.chrome),
       height: AppStyle.topBarHeight,
-      child: _onTopBar(
+      // A spinner or hover on the bar repaints in a layer of its own, not
+      // with the bar's surface.
+      child: RepaintBoundary(child: _onTopBar(
         context,
         skin?.topBar == null ? null : skin?.topBarText,
         Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        // Seeing the desktop, each thing on the bar glows to stay readable.
-        child: Row(children: GlassPlate.each(skin?.topBar, [
+        // Seeing the desktop, each thing on the bar glows to stay readable:
+        // one plate for the whole row, as the halos are the same.
+        child: GlassPlate(surface: skin?.topBar, child: Row(children: [
           InkWell(
             borderRadius: AppStyle.cardRadius,
             onTap: () => controller.navigate(PageMode.home),
@@ -959,7 +963,7 @@ class _TopBar extends StatelessWidget {
           SizedBox(width: wide ? 16 : 8),
           Expanded(child: Center(child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
-            child: GlassPlate(surface: skin?.topBar, child: SizedBox(height: 40, child: _SearchField(app: controller, controller: searchText, focusNode: searchFocus, enabled: ready, onSubmit: onSubmit))),
+            child: SizedBox(height: 40, child: _SearchField(app: controller, controller: searchText, focusNode: searchFocus, enabled: ready, onSubmit: onSubmit)),
           ))),
           SizedBox(width: wide ? 16 : 4),
           IconButton(
@@ -993,7 +997,7 @@ class _TopBar extends StatelessWidget {
           ),
         ])),
       ),
-      ),
+      )),
     );
   }
 
@@ -1045,9 +1049,10 @@ class _SearchFieldState extends State<_SearchField> {
 
   @override
   void dispose() {
-    widget.focusNode
-      ..onKeyEvent = null
-      ..removeListener(_onFocus);
+    // The column's bar and the peeking one share the node, and the new
+    // field installs its handler before the old one is disposed.
+    if (widget.focusNode.onKeyEvent == _onKey) widget.focusNode.onKeyEvent = null;
+    widget.focusNode.removeListener(_onFocus);
     super.dispose();
   }
 
@@ -1295,10 +1300,10 @@ class _StatusBar extends StatelessWidget {
         null => BoxDecoration(color: context.tones.chrome, border: Border(top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
       },
       alignment: AlignmentDirectional.centerStart,
-      child: GlassPlate(
+      child: RepaintBoundary(child: GlassPlate(
         surface: context.skin?.statusBar,
         child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.skin?.statusBarText ?? context.colors.outline, fontSize: 12, fontFamily: context.skin?.monoFont)),
-      ),
+      )),
     );
   }
 }

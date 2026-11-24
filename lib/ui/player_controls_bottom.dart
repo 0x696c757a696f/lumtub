@@ -424,7 +424,7 @@ class _LiveButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final player = host._player;
     return StreamBuilder<Duration>(
-      stream: coarsePosition(player, step: const Duration(seconds: 1)),
+      stream: host._livePositions.of(player),
       initialData: player.state.position,
       builder: (context, _) {
         final behind = player.state.duration - player.state.position > AppController.liveBehind;
@@ -571,9 +571,24 @@ class _ChapterMenuState extends State<_ChapterMenu> {
 
   List<Chapter> get _chapters => widget.host._c.details?.chapters ?? const [];
 
+  /// The last chapter starting at or before [position], as [Chapter.at]
+  /// finds it: most ticks stay in the chapter they were in, and a jump is
+  /// found by halving.
   int _indexAt(Duration position) {
-    final chapter = Chapter.at(_chapters, position);
-    return chapter == null ? -1 : _chapters.indexOf(chapter);
+    final chapters = _chapters;
+    final i = _index;
+    if (i >= 0 && i < chapters.length && chapters[i].start <= position && (i + 1 == chapters.length || chapters[i + 1].start > position)) return i;
+    var low = 0, high = chapters.length - 1, found = -1;
+    while (low <= high) {
+      final mid = (low + high) >> 1;
+      if (chapters[mid].start <= position) {
+        found = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return found;
   }
 
   @override

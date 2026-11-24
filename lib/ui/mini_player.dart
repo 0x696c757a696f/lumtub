@@ -9,7 +9,6 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../app/app_controller.dart';
 import '../app_window.dart' show pipAspectOf;
 import '../l10n/l10n.dart';
-import '../widgets/position_ticks.dart' show coarsePosition;
 import '../widgets/video_progress_bar.dart';
 import 'app_icons.dart';
 import 'common.dart';
@@ -79,6 +78,8 @@ class _MiniPlayerState extends State<MiniPlayer> {
   Timer? _mount;
   Timer? _hide;
   Player? _watched;
+  final _linePositions = KeptPositions();
+  final _barPositions = KeptPositions();
   final _subscriptions = <StreamSubscription<int?>>[];
 
   AppController get _controller => widget.controller;
@@ -174,7 +175,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
     return IgnorePointer(
       child: RepaintBoundary(
         child: StreamBuilder<Duration>(
-          stream: coarsePosition(player),
+          stream: _linePositions.of(player),
           initialData: player.state.position,
           builder: (context, _) {
             final total = player.state.duration.inMilliseconds;
@@ -239,7 +240,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
             color: const Color(0xB3000000),
             padding: const EdgeInsets.fromLTRB(4, 0, 4, 2),
             child: StreamBuilder<Duration>(
-              stream: coarsePosition(player),
+              stream: _barPositions.of(player),
               initialData: player.state.position,
               builder: (context, _) => VideoProgressBar(
                 position: player.state.position,

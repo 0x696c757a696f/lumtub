@@ -9,9 +9,9 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../app/app_controller.dart';
 import '../app_window.dart';
 import '../l10n/l10n.dart';
-import '../widgets/position_ticks.dart' show coarsePosition;
 import '../widgets/video_progress_bar.dart';
 import 'app_icons.dart';
+import 'common.dart';
 import 'motion.dart';
 import 'pages/watch_page.dart' show subtitleViewFor;
 import 'player_shortcuts.dart';
@@ -32,6 +32,9 @@ class _PipViewState extends State<PipView> {
   final _subscriptions = <StreamSubscription<int?>>[];
   Timer? _hide;
   bool _controlsShown = false;
+  /// The controls stay built only while they show or fade, so hidden ones
+  /// cost nothing.
+  bool _controlsBuilt = false;
 
   AppController get _controller => widget.controller;
 
@@ -58,7 +61,12 @@ class _PipViewState extends State<PipView> {
   void _show() {
     _hide?.cancel();
     _hide = Timer(const Duration(seconds: 3), _hideNow);
-    if (!_controlsShown) setState(() => _controlsShown = true);
+    if (!_controlsShown) {
+      setState(() {
+        _controlsShown = true;
+        _controlsBuilt = true;
+      });
+    }
   }
 
   void _hideNow() {
@@ -110,10 +118,15 @@ class _PipViewState extends State<PipView> {
               AnimatedOpacity(
                 opacity: _controlsShown ? 1 : 0,
                 duration: Motion.of(Ease.fade),
-                child: IgnorePointer(
-                  ignoring: !_controlsShown,
-                  child: PipControls(controller: _controller, player: player, scale: (window.shortestSide / 280).clamp(0.6, 2.0)),
-                ),
+                onEnd: () {
+                  if (!_controlsShown && mounted) setState(() => _controlsBuilt = false);
+                },
+                child: _controlsBuilt
+                    ? IgnorePointer(
+                        ignoring: !_controlsShown,
+                        child: PipControls(controller: _controller, player: player, scale: (window.shortestSide / 280).clamp(0.6, 2.0)),
+                      )
+                    : const SizedBox.shrink(),
               ),
               Positioned(
                 right: 0,
@@ -135,11 +148,22 @@ class _PipViewState extends State<PipView> {
 
 /// What picture in picture shows over the video: the title and a button to
 /// leave on top, seek and play buttons in the middle, the progress bar below.
-class PipControls extends StatelessWidget {
+class PipControls extends StatefulWidget {
   const PipControls({super.key, required this.controller, required this.player, this.scale = 1});
   final AppController controller;
   final Player player;
   final double scale;
+
+  @override
+  State<PipControls> createState() => _PipControlsState();
+}
+
+class _PipControlsState extends State<PipControls> {
+  final _positions = KeptPositions();
+
+  AppController get controller => widget.controller;
+  Player get player => widget.player;
+  double get scale => widget.scale;
 
   String get _title {
     final details = controller.details?.title;
@@ -194,7 +218,7 @@ class PipControls extends StatelessWidget {
         color: const Color(0xB3000000),
         padding: const EdgeInsets.fromLTRB(4, 0, 16, 2),
         child: StreamBuilder<Duration>(
-          stream: coarsePosition(player),
+          stream: _positions.of(player),
           initialData: player.state.position,
           builder: (context, _) => VideoProgressBar(
             position: player.state.position,

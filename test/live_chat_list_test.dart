@@ -35,4 +35,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('message 42'), findsOneWidget);
   });
+
+  testWidgets('scrolled up, the chat still holds once it is at its cap', (tester) async {
+    List<LiveChatMessage> capped(int count) => messages(count).sublist(count - 100);
+    await tester.pumpWidget(chat(capped(140)));
+    await tester.drag(find.byType(ListView), const Offset(0, 200));
+    await tester.pumpAndSettle();
+    final before = tester.getTopLeft(find.text('message 130')).dy;
+    await tester.pumpWidget(chat(capped(143)));
+    await tester.pump();
+    expect(tester.getTopLeft(find.text('message 130')).dy, before);
+    expect(find.text('3 new messages'), findsOneWidget);
+  });
 }

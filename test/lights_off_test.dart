@@ -46,7 +46,29 @@ void main() {
     expect(lightsOff.value, isFalse);
   });
 
-  test('the hole follows the player box', () {
+  testWidgets('turning the lights on fades the dark away', (tester) async {
+    lightsOff.value = true;
+    await tester.pumpWidget(MaterialApp(
+      home: Stack(children: [
+        Positioned(left: 100, top: 100, width: 320, height: 180, child: ColoredBox(key: lightsOffHole, color: Colors.black)),
+        Positioned.fill(child: ValueListenableBuilder(
+          valueListenable: lightsOff,
+          builder: (context, off, _) => LightsOffLayer(visible: off, dim: .85),
+        )),
+      ]),
+    ));
+    await tester.pumpAndSettle();
+    Finder dark() => find.descendant(of: find.byType(LightsOffLayer), matching: find.byType(CustomPaint));
+    expect(dark(), findsOneWidget);
+    lightsOff.value = false;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(dark(), findsOneWidget, reason: 'still fading');
+    await tester.pumpAndSettle();
+    expect(dark(), findsNothing);
+  });
+
+    test('the hole follows the player box', () {
     expect(holeRect(GlobalKey(), null), isNull);
   });
 

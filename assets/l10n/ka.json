@@ -718,6 +718,8 @@
   "Back {0} s": "უკან {0} წმ",
   "Always on (including auto-generated)": "ყოველთვის ჩართული (ავტომატურად გენერირებულის ჩათვლით)",
   "Restore": "აღდგენა",
+  "Minimize": "ჩაკეცვა",
+  "Maximize": "გაშლა",
   "Restore all player defaults": "ფლეერის ყველა ნაგულისხმევი პარამეტრის აღდგენა",
   "Recommend again": "რეკომენდაციის აღდგენა",
   "Recommend this channel again": "ამ არხის რეკომენდაციის აღდგენა",

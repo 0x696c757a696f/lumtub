@@ -177,12 +177,6 @@ class GlassPlate extends StatelessWidget {
   final SkinSurface? surface;
   final Widget child;
 
-  /// Each of [children] on a plate of its own, but gaps and stretches.
-  static List<Widget> each(SkinSurface? surface, List<Widget> children) => [
-        for (final child in children)
-          child is SizedBox || child is Spacer || child is Expanded || child is Flexible ? child : GlassPlate(surface: surface, child: child),
-      ];
-
   /// How far the strokes are widened before [sigma] softens the edge, in
   /// pixels: the halo is nearly whole up to two pixels past the ink and
   /// gone about [spread] plus three [sigma] out.

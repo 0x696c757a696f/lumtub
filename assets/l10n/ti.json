@@ -717,6 +717,8 @@
   "Back {0} s": "{0} ሰከንድ ንድሕሪት",
   "Always on (including auto-generated)": "ኩሉ ግዜ ነቒሑ (ባዕላዊ ዝተፈጥረ ሓዊሱ)",
   "Restore": "መልስ",
+  "Minimize": "ኣንእስ",
+  "Maximize": "ኣግፍሕ",
   "Restore all player defaults": "ኩሉ ቅጥዕታት መጻዎቲ ናብ ቀዳማይ መልስ",
   "Recommend again": "ዳግም ኣቕርብ",
   "Recommend this channel again": "እዚ ቻነል ዳግም ኣቕርብ",

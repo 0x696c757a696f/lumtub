@@ -18,6 +18,7 @@ import 'translation.dart';
 import 'wheel_gesture.dart';
 import 'translation_services.dart';
 import 'l10n/l10n.dart';
+import 'list_order.dart';
 
 /// Pages the app can open on start, in navigation order.
 ///
@@ -73,6 +74,10 @@ class AppPreferences {
     this.blockOtherLists = true,
     this.allowedMedia = const [],
     this.reversedPlaylists = const [],
+    this.groupOrder = GroupOrder.manual,
+    this.channelOrder = ChannelOrder.recent,
+    this.playlistOrder = PlaylistOrder.manual,
+    this.videoOrders = const {},
     this.castMaxHeight = 1080,
     this.castFormats = const {},
     this.enabledGroups = const [],
@@ -189,6 +194,15 @@ class AppPreferences {
   final bool blockOtherLists;
   /// Playlists shown and played last to first (倒序), by id.
   final List<String> reversedPlaylists;
+  /// The order of the 订阅分组.
+  final GroupOrder groupOrder;
+  /// The order of the followed channels on the subscriptions page.
+  final ChannelOrder channelOrder;
+  /// The order of the playlists on the playlists page.
+  final PlaylistOrder playlistOrder;
+  /// The order chosen for a playlist's videos, by playlist id; one not here
+  /// keeps the order videos were added in.
+  final Map<String, VideoOrder> videoOrders;
   /// 投屏画质: the tallest picture sent to a TV, 1080, 2160 or 4320. Above
   /// 1080 the picture is VP9 or AV1 at up to 60 fps, which only newer TVs
   /// decode.
@@ -470,6 +484,10 @@ class AppPreferences {
     List<String>? allowedMedia,
     bool? blockOtherLists,
     List<String>? reversedPlaylists,
+    GroupOrder? groupOrder,
+    ChannelOrder? channelOrder,
+    PlaylistOrder? playlistOrder,
+    Map<String, VideoOrder>? videoOrders,
     int? castMaxHeight,
     Map<String, String>? castFormats,
     List<String>? enabledGroups,
@@ -562,6 +580,10 @@ class AppPreferences {
         allowedMedia: allowedMedia ?? this.allowedMedia,
         blockOtherLists: blockOtherLists ?? this.blockOtherLists,
         reversedPlaylists: reversedPlaylists ?? this.reversedPlaylists,
+        groupOrder: groupOrder ?? this.groupOrder,
+        channelOrder: channelOrder ?? this.channelOrder,
+        playlistOrder: playlistOrder ?? this.playlistOrder,
+        videoOrders: videoOrders ?? this.videoOrders,
         castMaxHeight: castMaxHeight ?? this.castMaxHeight,
         castFormats: castFormats ?? this.castFormats,
         enabledGroups: enabledGroups ?? this.enabledGroups,
@@ -655,6 +677,10 @@ class AppPreferences {
         'allowedMedia': allowedMedia,
         'blockOtherLists': blockOtherLists,
         'reversedPlaylists': reversedPlaylists,
+        'groupOrder': groupOrder.name,
+        'channelOrder': channelOrder.name,
+        'playlistOrder': playlistOrder.name,
+        'videoOrders': {for (final MapEntry(:key, :value) in videoOrders.entries) key: value.name},
         'castMaxHeight': castMaxHeight,
         'castFormats': castFormats,
         'enabledGroups': enabledGroups,
@@ -767,6 +793,14 @@ class AppPreferences {
       allowedGroups: renamedBlockLists(strings('allowedGroups')),
       allowedMedia: renamedBlockLists(strings('allowedMedia')),
       reversedPlaylists: strings('reversedPlaylists'),
+      groupOrder: GroupOrder.parse(raw['groupOrder']),
+      channelOrder: ChannelOrder.parse(raw['channelOrder']),
+      playlistOrder: PlaylistOrder.parse(raw['playlistOrder']),
+      videoOrders: {
+        if (raw['videoOrders'] case final Map<String, dynamic> orders)
+          for (final MapEntry(:key, :value) in orders.entries)
+            if (VideoOrder.values.where((v) => v.name == value).firstOrNull case final order? when order != VideoOrder.added) key: order,
+      },
       castMaxHeight: const {720, 1080, 1440, 2160, 4320}.contains(raw['castMaxHeight']) ? raw['castMaxHeight'] as int : d.castMaxHeight,
       castFormats: {
         if (raw['castFormats'] case final Map<String, dynamic> formats)

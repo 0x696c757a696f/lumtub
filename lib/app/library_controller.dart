@@ -41,6 +41,16 @@ class LibraryController extends ChangeNotifier {
 
   Timer? _saveTimer;
 
+  /// Counts every change that listeners heard of, so a view worked out
+  /// from the library can tell it is still current.
+  int revision = 0;
+
+  @override
+  void notifyListeners() {
+    revision++;
+    super.notifyListeners();
+  }
+
   List<VideoItem> get favorites => store.favorites;
   List<VideoItem> get watchLater => store.watchLater;
   List<LocalPlaylist> get playlists => store.playlists;
@@ -172,6 +182,32 @@ class LibraryController extends ChangeNotifier {
 
   void removeGroup(ChannelGroup group) {
     store.channelGroups.remove(group);
+    _changed();
+  }
+
+  /// Keeps the 订阅分组 in [order], which holds the same groups.
+  void arrangeGroups(List<ChannelGroup> order) => _arrange(store.channelGroups, order);
+
+  /// Keeps the playlists in [order], which holds the same playlists.
+  void arrangePlaylists(List<LocalPlaylist> order) => _arrange(store.playlists, order);
+
+  /// Keeps the videos of [list] (收藏, 稍后观看 or a playlist's items) in
+  /// [order], which holds the same videos.
+  void arrangeVideos(List<VideoItem> list, List<VideoItem> order) => _arrange(list, order);
+
+  void _arrange<T>(List<T> list, List<T> order) {
+    // A list changed meanwhile (a video added while the dialog was open)
+    // keeps what [order] lacks at the end and drops what is gone.
+    final now = list.toSet();
+    final kept = [for (final entry in order) if (now.remove(entry)) entry, for (final entry in list) if (now.contains(entry)) entry];
+    var same = kept.length == list.length;
+    for (var i = 0; same && i < kept.length; i++) {
+      same = identical(kept[i], list[i]);
+    }
+    if (same) return;
+    list
+      ..clear()
+      ..addAll(kept);
     _changed();
   }
 

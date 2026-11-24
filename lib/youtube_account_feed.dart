@@ -75,6 +75,18 @@ class YoutubeAccountFeed {
     return found;
   }
 
+  /// The entries of the account's playlist [playlistId] in YouTube's
+  /// order: each video's id and the entry's own id (setVideoId), which
+  /// moving it needs.
+  Future<List<(String video, String set)>> playlistEntries(String playlistId) async {
+    final found = <(String, String)>[];
+    await for (final line in lines('VL$playlistId', shorts: true, pages: 100)) {
+      final entry = jsonDecode(line);
+      if (entry is Map && entry['id'] is String && entry['playlist_set_id'] is String) found.add((entry['id'] as String, entry['playlist_set_id'] as String));
+    }
+    return found;
+  }
+
   /// The account's own playlists. Watch Later and Liked videos, whose ids
   /// are too short for [PlaylistResult.isValidId], are left out.
   Future<List<PlaylistResult>> accountPlaylists() async {

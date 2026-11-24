@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../../app/app_controller.dart';
 import '../../app/library_controller.dart';
 import '../../library_store.dart';
+import '../../list_order.dart';
 import '../../models.dart';
 import '../../thumbnail_cache.dart';
 import '../../youtube_account_feed.dart';
@@ -17,7 +18,7 @@ import '../haptics.dart';
 import '../key_scroll.dart';
 import '../playlist_length.dart';
 import '../theme.dart';
-import '../playlist_order_button.dart';
+import '../sort_menu.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
 import 'subscription_import_dialog.dart';
@@ -26,7 +27,8 @@ import '../../l10n/l10n.dart';
 import '../app_icons.dart';
 
 /// Newest uploads of the channels followed on this computer, under a row of
-/// their avatars, the ones that posted most recently first. Picking an
+/// their avatars in the order chosen for them (by default, the ones that
+/// posted most recently first). Picking an
 /// avatar narrows the videos to that channel without leaving the page.
 class SubscriptionsPage extends StatefulWidget {
   const SubscriptionsPage({super.key, required this.controller});
@@ -78,7 +80,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
       );
     }
     final group = library.channelGroups.contains(_group) ? _group : null;
-    final inGroup = group == null ? channels : [for (final c in channels) if (group.channels.contains(c.id)) c];
+    final inGroup = controller.orderedChannels(group == null ? channels : [for (final c in channels) if (group.channels.contains(c.id)) c], key: group);
     final selected = inGroup.contains(_selected) ? _selected : null;
     final all = controller.visible(library.feed, subscriptions: true);
     final chosen = selected != null
@@ -129,13 +131,14 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
               ]),
       )),
       SliverToBoxAdapter(child: _GroupChips(
-        groups: library.channelGroups,
+        groups: controller.orderedGroups,
+        channelOrder: _ChannelOrderMenu(controller: controller),
         selected: group,
         onSelect: (g) => setState(() {
           _group = g;
           _selected = null;
         }),
-        onManage: () => showSheet<void>(context, (_) => _ManageGroups(library: library, channels: channels)),
+        onManage: () => showSheet<void>(context, (_) => _ManageGroups(controller: controller, library: library, channels: channels)),
       )),
       if (strip != null) SliverToBoxAdapter(child: strip),
       if (selected != null)
@@ -195,8 +198,10 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
 
 /// 全部 and each 订阅分组 as chips, with the button that edits them.
 class _GroupChips extends StatelessWidget {
-  const _GroupChips({required this.groups, required this.selected, required this.onSelect, required this.onManage});
+  const _GroupChips({required this.groups, required this.channelOrder, required this.selected, required this.onSelect, required this.onManage});
   final List<ChannelGroup> groups;
+  /// The menu that orders the channels below.
+  final Widget channelOrder;
   final ChannelGroup? selected;
   final ValueChanged<ChannelGroup?> onSelect;
   final VoidCallback onManage;
@@ -220,13 +225,31 @@ class _GroupChips extends StatelessWidget {
             icon: Icon(groups.isEmpty ? AppIcons.folderPlus : AppIcons.pencilSimple, size: 18),
             label: Text(groups.isEmpty ? tr('New group') : tr('Manage groups')),
           ),
+          channelOrder,
         ]),
       );
 }
 
-/// Adds, renames and removes 订阅分组 and picks each one's channels.
+/// Picks the order of the followed channels on the subscriptions page.
+class _ChannelOrderMenu extends StatelessWidget {
+  const _ChannelOrderMenu({required this.controller});
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) => SortMenu<ChannelOrder>(
+        tooltip: tr('Channel order'),
+        values: ChannelOrder.values,
+        value: controller.preferences.channelOrder,
+        labelOf: (order) => order.label,
+        onSelected: controller.setChannelOrder,
+      );
+}
+
+/// Adds, renames, orders and removes 订阅分组 and picks each one's
+/// channels.
 class _ManageGroups extends StatelessWidget {
-  const _ManageGroups({required this.library, required this.channels});
+  const _ManageGroups({required this.controller, required this.library, required this.channels});
+  final AppController controller;
   final LibraryController library;
   final List<ChannelRef> channels;
 
@@ -250,20 +273,47 @@ class _ManageGroups extends StatelessWidget {
     );
   }
 
+  /// Keeps the groups in the order they were dragged into.
+  void _move(List<ChannelGroup> shown, int from, int to) {
+    final order = [...shown];
+    order.insert(to, order.removeAt(from));
+    library.arrangeGroups(order);
+    if (controller.preferences.groupOrder != GroupOrder.manual) unawaited(controller.setGroupOrder(GroupOrder.manual));
+  }
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-        listenable: library,
-        builder: (context, _) => PanelDialog(
+        listenable: Listenable.merge([library, controller]),
+        builder: (context, _) {
+          final groups = controller.orderedGroups;
+          return PanelDialog(
           title: Text(tr('Subscription groups')),
           content: SizedBox(
             width: dialogWidth(context, 420),
-            child: library.channelGroups.isEmpty
+            child: groups.isEmpty
                 ? Text(tr("Sort the channels you follow into groups, such as “Learning” or “Music”, and see one group's new videos at a time on the Subscriptions page."), style: TextStyle(color: context.colors.outline, height: 1.5))
-                : ListView(shrinkWrap: true, children: [
-                    for (final group in library.channelGroups)
-                      ListTile(
+                : Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    if (groups.length > 1)
+                      SortMenu<GroupOrder>(
+                        tooltip: tr('Group order'),
+                        values: GroupOrder.values,
+                        value: controller.preferences.groupOrder,
+                        labelOf: (order) => order.label,
+                        onSelected: controller.setGroupOrder,
+                      ),
+                    Flexible(child: ReorderableListView.builder(
+                      shrinkWrap: true,
+                      buildDefaultDragHandles: false,
+                      itemCount: groups.length,
+                      onReorderItem: (from, to) => _move(groups, from, to),
+                      itemBuilder: (context, i) {
+                        final group = groups[i];
+                        return ListTile(
+                        key: ObjectKey(group),
                         contentPadding: EdgeInsets.zero,
-                        leading: Icon(AppIcons.folder),
+                        leading: groups.length > 1
+                            ? ReorderableDragStartListener(index: i, child: Tooltip(message: tr('Drag to reorder'), child: Padding(padding: const EdgeInsets.all(4), child: Icon(AppIcons.dotsSixVertical))))
+                            : Icon(AppIcons.folder),
                         title: Text(group.name),
                         subtitle: Text(tr('{0} channels', [group.channels.length])),
                         onTap: () => showSheet<void>(context, (_) => _GroupChannels(library: library, group: group, channels: channels)),
@@ -278,7 +328,9 @@ class _ManageGroups extends StatelessWidget {
                           ),
                           IconButton(tooltip: tr('Delete group'), icon: Icon(AppIcons.trash), onPressed: () => library.removeGroup(group)),
                         ]),
-                      ),
+                      );
+                      },
+                    )),
                   ]),
           ),
           actions: [
@@ -294,7 +346,8 @@ class _ManageGroups extends StatelessWidget {
             ),
             TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Done'))),
           ],
-        ),
+        );
+        },
       );
 }
 
@@ -359,6 +412,7 @@ File? _avatarFile(Directory? thumbnails, ChannelRef channel) =>
 /// marks an upload in the last two days.
 class _ChannelStrip extends StatefulWidget {
   const _ChannelStrip({this.vertical = false, this.itemWidth = 72, required this.channels, required this.feed, required this.live, required this.selected, required this.thumbnails, required this.onSelect, required this.onShowAll});
+  /// Already in the order chosen for them.
   final List<ChannelRef> channels;
   final List<VideoItem> feed;
   /// Channels streaming now.
@@ -391,23 +445,19 @@ class _ChannelStripState extends State<_ChannelStrip> {
 
   @override
   Widget build(BuildContext context) {
+    // The newest upload of each channel, for the mark on recent ones.
     final latest = <String, DateTime?>{};
     for (final item in widget.feed) {
       final id = item.channelId;
       if (id != null && !latest.containsKey(id)) latest[id] = item.published;
     }
     final live = widget.live;
-    final rank = {for (final (i, id) in latest.keys.indexed) id: i};
-    // Channels streaming now first, then by their newest video.
-    int order(ChannelRef channel) => (live.contains(channel.id) ? -latest.length - 1 : 0) + (rank[channel.id] ?? latest.length);
-    final ordered = [...widget.channels]..sort((a, b) => order(a).compareTo(order(b)));
+    var ordered = widget.channels;
     final selected = widget.selected;
     // A channel picked from the full list shows up front, so the row says
     // what the videos below are narrowed to.
-    if (selected != null && ordered.indexOf(selected) >= _ChannelStrip.shown) {
-      ordered
-        ..remove(selected)
-        ..insert(0, selected);
+    if (selected != null && !ordered.take(_ChannelStrip.shown).contains(selected)) {
+      ordered = [selected, for (final channel in ordered) if (channel != selected) channel];
     }
     final fresh = DateTime.now().subtract(const Duration(days: 2));
     final showAll = _StripItem(
@@ -616,7 +666,7 @@ class _AllChannelsState extends State<_AllChannels> {
     final matches = [
       for (final channel in widget.channels)
         if (query.isEmpty || channel.name.toLowerCase().contains(query)) channel,
-    ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    ];
     return Dialog(
       child: Focus(
         canRequestFocus: false,
@@ -682,20 +732,33 @@ class PlaylistsPage extends StatelessWidget {
     final entries = [
       (AppController.favoritesPlaylistId, tr('Favorites'), library.favorites, AppIcons.heartFill),
       (AppController.watchLaterPlaylistId, tr('Watch later'), library.watchLater, AppIcons.clockFill),
-      for (final playlist in library.playlists) (playlist.id, playlist.name, playlist.items, LibraryController.isRemote(playlist) ? AppIcons.monitorPlay : AppIcons.playlist),
+      for (final playlist in controller.orderedPlaylists) (playlist.id, playlist.name, playlist.items, LibraryController.isRemote(playlist) ? AppIcons.monitorPlay : AppIcons.playlist),
     ];
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: PageHeader(
         tr('Playlist'),
         subtitle: tr('Saved on this device only'),
-        trailing: FilledButton.tonalIcon(
-          onPressed: () async {
-            final name = await promptText(context, title: tr('New playlist'), hint: tr('Playlist name'), confirm: tr('Create'));
-            if (name != null) library.createPlaylist(name);
-          },
-          icon: Icon(AppIcons.plus),
-          label: Text(tr('New')),
-        ),
+        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+          if (library.playlists.length > 1) ...[
+            SortMenu<PlaylistOrder>(
+              tooltip: tr('Playlist order'),
+              values: PlaylistOrder.values,
+              value: controller.preferences.playlistOrder,
+              labelOf: (order) => order.label,
+              onSelected: controller.setPlaylistOrder,
+              onArrange: () => _arrange(context, library),
+            ),
+            const SizedBox(width: 4),
+          ],
+          FilledButton.tonalIcon(
+            onPressed: () async {
+              final name = await promptText(context, title: tr('New playlist'), hint: tr('Playlist name'), confirm: tr('Create'));
+              if (name != null) library.createPlaylist(name);
+            },
+            icon: Icon(AppIcons.plus),
+            label: Text(tr('New')),
+          ),
+        ]),
       )),
       SliverVideoLayout(
         count: entries.length,
@@ -718,6 +781,21 @@ class PlaylistsPage extends StatelessWidget {
       if (controller.accountFeed?.available ?? false) ..._youtubePlaylists(context),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
+  }
+
+  /// Drags the playlists into the user's own order, starting from the one
+  /// shown.
+  Future<void> _arrange(BuildContext context, LibraryController library) async {
+    final order = await showArrangeDialog<LocalPlaylist>(
+      context,
+      title: tr('Arrange playlists'),
+      items: controller.orderedPlaylists,
+      labelOf: (playlist) => playlist.name,
+      detailOf: (playlist) => tr('{0} videos', [playlist.items.length]),
+    );
+    if (order == null) return;
+    library.arrangePlaylists(order);
+    await controller.setPlaylistOrder(PlaylistOrder.manual);
   }
 
   /// The account's playlists on YouTube, read with the browser sign-in.
@@ -862,8 +940,17 @@ class PlaylistDetailPage extends StatelessWidget {
         action: FilledButton.tonal(onPressed: controller.goBack, child: Text(tr('Back'))),
       );
     }
-    final own = List<VideoItem>.of(favorites ? library.favorites : later ? library.watchLater : playlist!.items);
-    final items = controller.isReversed(id) ? own.reversed.toList() : own;
+    final saved = favorites ? library.favorites : later ? library.watchLater : playlist!.items;
+    final own = List<VideoItem>.of(controller.orderedVideos(id, saved));
+    final reversed = controller.isReversed(id);
+    final items = reversed ? own.reversed.toList() : own;
+    // A copy of one of the account's YouTube playlists takes a dragged
+    // order only when it can be sent to YouTube; the next sync would undo
+    // it otherwise.
+    final account = controller.account;
+    final remoteId = playlist != null && LibraryController.isRemote(playlist) ? playlist.id.substring(LibraryController.remotePrefix.length) : null;
+    final arrangeable = remoteId == null || (account?.canReorder(remoteId) ?? false);
+    final uploadable = remoteId == null && own.isNotEmpty && (account?.canAct ?? false);
     final name = favorites ? tr('Favorites') : later ? tr('Watch later') : playlist!.name;
     void remove(VideoItem item) => favorites
         ? library.toggleFavorite(item)
@@ -873,10 +960,8 @@ class PlaylistDetailPage extends StatelessWidget {
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
-        child: Row(children: [
-          IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: Icon(AppIcons.arrowLeft)),
-          const SizedBox(width: 8),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        child: LayoutBuilder(builder: (context, constraints) {
+          final title = Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
             Text(
               playlist != null && LibraryController.isRemote(playlist) ? tr('{0} videos · From your YouTube account, updated on sync', [items.length]) : tr('{0} videos · Saved on this device only', [items.length]),
@@ -884,23 +969,51 @@ class PlaylistDetailPage extends StatelessWidget {
             ),
             if (playlistLength(items, progressOf: library.progressOf) case final length?)
               Text(length, style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
-          ])),
-          if (own.length > 1) ...[PlaylistOrderButton(controller: controller, id: id), const SizedBox(width: 4)],
-          FilledButton.icon(
-            onPressed: items.isEmpty ? null : () => controller.playList(id, name, own),
-            icon: const Icon(AppIcons.playFill),
-            label: Text(tr('Play all')),
-          ),
-          if (later && items.isNotEmpty) ...[
-            const SizedBox(width: 4),
-            TextButton.icon(onPressed: () => _clearLater(context, library), icon: Icon(AppIcons.trashSimple), label: Text(tr('Clear all'))),
-          ],
-          if (playlist != null) ...[
-            const SizedBox(width: 4),
-            IconButton(tooltip: tr('Rename'), onPressed: () => _rename(context, library, playlist), icon: Icon(AppIcons.pencilSimple)),
-            IconButton(tooltip: tr('Delete playlist'), onPressed: () => _delete(context, library, playlist), icon: Icon(AppIcons.trash)),
-          ],
-        ]),
+          ]));
+          final buttons = <Widget>[
+            if (own.length > 1)
+              SortMenu<VideoOrder>(
+                tooltip: tr('Video order'),
+                values: VideoOrder.values,
+                value: controller.videoOrder(id),
+                labelOf: (order) => order.label,
+                onSelected: (order) => unawaited(controller.setVideoOrder(id, order)),
+                reversed: reversed,
+                onReversed: (back) => unawaited(controller.setReversed(id, back)),
+                onArrange: arrangeable ? () => _arrange(context, id, name, items, remoteId: remoteId) : null,
+              ),
+            FilledButton.icon(
+              onPressed: items.isEmpty ? null : () => controller.playList(id, name, own),
+              icon: const Icon(AppIcons.playFill),
+              label: Text(tr('Play all')),
+            ),
+            if (later && items.isNotEmpty) TextButton.icon(onPressed: () => _clearLater(context, library), icon: Icon(AppIcons.trashSimple), label: Text(tr('Clear all'))),
+            if (uploadable) IconButton(tooltip: tr('Upload to YouTube'), onPressed: () => _upload(context, name, items), icon: Icon(AppIcons.monitorArrowUp)),
+            if (playlist != null) ...[
+              IconButton(tooltip: tr('Rename'), onPressed: () => _rename(context, library, playlist), icon: Icon(AppIcons.pencilSimple)),
+              IconButton(tooltip: tr('Delete playlist'), onPressed: () => _delete(context, library, playlist), icon: Icon(AppIcons.trash)),
+            ],
+          ];
+          final back = IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: Icon(AppIcons.arrowLeft));
+          // A narrow window (a phone) gives the title its own line and puts
+          // the buttons under it.
+          if (constraints.maxWidth < 600) {
+            return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [back, const SizedBox(width: 8), title]),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 8),
+                child: Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: buttons),
+              ),
+            ]);
+          }
+          return Row(children: [
+            back,
+            const SizedBox(width: 8),
+            title,
+            for (final (i, button) in buttons.indexed) ...[if (i > 0) const SizedBox(width: 4), button],
+          ]);
+        }),
       )),
       if (items.isEmpty)
         SliverFillRemaining(hasScrollBody: false, child: StatusView(
@@ -912,6 +1025,42 @@ class PlaylistDetailPage extends StatelessWidget {
         SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.playList(id, name, own, start: item), onRemove: remove),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
+  }
+
+  /// Drags the videos into the user's own order, starting from the one
+  /// shown.
+  /// For a copy of a YouTube playlist ([remoteId]), the order goes to
+  /// YouTube too.
+  Future<void> _arrange(BuildContext context, String id, String name, List<VideoItem> shown, {String? remoteId}) async {
+    final order = await showArrangeDialog<VideoItem>(
+      context,
+      title: tr('Arrange “{0}”', [name]),
+      items: shown,
+      labelOf: (item) => item.title,
+      detailOf: (item) => item.channel,
+    );
+    if (order == null) return;
+    await controller.arrangeVideos(id, order);
+    if (remoteId != null) await controller.account?.pushPlaylistOrder(remoteId, order);
+  }
+
+  /// Copies the list shown to the YouTube account, after saying what that
+  /// makes there.
+  Future<void> _upload(BuildContext context, String name, List<VideoItem> shown) async {
+    final account = controller.account;
+    if (account == null) return;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr('Upload to YouTube')),
+        content: Text(tr('This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.', [name, shown.length])),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Upload'))),
+        ],
+      ),
+    );
+    if (go ?? false) await account.uploadPlaylist(name, shown);
   }
 
   Future<void> _clearLater(BuildContext context, LibraryController library) async {

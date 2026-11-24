@@ -1222,7 +1222,7 @@ Future<void> showAddToPlaylist(BuildContext context, AppController controller, V
     builder: (context) => SimpleDialog(
       title: Text(tr('Add to playlist')),
       children: [
-        for (final playlist in library.playlists)
+        for (final playlist in controller.orderedPlaylists)
           SimpleDialogOption(
             onPressed: () => Navigator.pop(context, playlist.id),
             child: ListTile(leading: Icon(AppIcons.playlist), title: Text(playlist.name), subtitle: Text(tr('{0} videos', [playlist.items.length]))),

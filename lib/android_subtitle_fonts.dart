@@ -154,15 +154,15 @@ class AndroidSubtitleFonts {
   /// returns it; null when Android has no Noto Sans CJK.
   static Future<String?> prepare(String folder, {String system = _system}) async {
     try {
-      final names = [for (final f in Directory(system).listSync()) f.path.split(RegExp(r'[/\\]')).last]..sort();
+      final names = [await for (final f in Directory(system).list()) f.path.split(RegExp(r'[/\\]')).last]..sort();
       final dir = Directory(folder);
-      if (dir.existsSync()) dir.deleteSync(recursive: true);
-      dir.createSync(recursive: true);
-      void link(String name) {
+      if (await dir.exists()) await dir.delete(recursive: true);
+      await dir.create(recursive: true);
+      Future<void> link(String name) async {
         try {
-          Link('$folder/$name').createSync('$system/$name');
+          await Link('$folder/$name').create('$system/$name');
         } on FileSystemException {
-          File('$system/$name').copySync('$folder/$name');
+          await File('$system/$name').copy('$folder/$name');
         }
       }
 
@@ -170,17 +170,17 @@ class AndroidSubtitleFonts {
       cjk = cjkFile != null;
       cjkFamilies = _androidCjk;
       if (!cjk) return null;
-      link(cjkFile!);
+      await link(cjkFile!);
       families.clear();
       final roboto = names.where((n) => RegExp(r'^Roboto-(Regular|VF)\.[ot]tf$').hasMatch(n)).firstOrNull;
-      if (roboto != null) link(roboto);
+      if (roboto != null) await link(roboto);
       latin = roboto == null ? null : 'Roboto';
       for (final MapEntry(key: script, value: prefixes) in _scriptFiles.entries) {
         for (final prefix in prefixes) {
           // The plain face, not the narrower UI one nor a bold or serif one.
           final file = names.where((n) => n.startsWith(prefix) && RegExp(r'-(Regular|VF)\.[ot]tf$').hasMatch(n)).firstOrNull;
           if (file == null) continue;
-          link(file);
+          await link(file);
           families[script] = familyOf(file);
           break;
         }

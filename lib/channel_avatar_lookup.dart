@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'app_directories.dart';
+import 'background_json.dart';
 import 'channel_avatars.dart';
 import 'models.dart';
 
@@ -29,20 +31,42 @@ class ChannelAvatarLookup extends ChangeNotifier {
   var _running = 0;
   Timer? _save;
 
+  /// Set while the saved pictures are read; nothing is looked up until then.
+  bool _loading = false;
+  Future<void> _loaded = Future.value();
+
+  /// Completes once the pictures kept on disk are read.
+  @visibleForTesting
+  Future<void> get loaded => _loaded;
+
   void configure(http.Client client, File file) {
     _source = ChannelAvatars(client);
     _file = file;
+    _loading = true;
+    _loaded = _load(file);
+  }
+
+  Future<void> _load(File file) async {
     try {
-      final saved = jsonDecode(file.readAsStringSync());
-      if (saved is Map) {
+      final saved = await decodeJsonInBackground(await file.readAsString());
+      if (saved is Map && identical(file, _file)) {
+        // Pictures found meanwhile are newer than the saved ones.
+        final found = Map.of(_known);
+        _known.clear();
         for (final entry in saved.entries) {
           final url = ChannelRef.avatarUrl(entry.value);
           if (ChannelRef.isValidId(entry.key.toString()) && url != null) _known[entry.key.toString()] = url;
         }
+        _known
+          ..removeWhere((id, _) => found.containsKey(id))
+          ..addAll(found);
       }
     } catch (_) {
       // Not saved yet, or unreadable: looked up again.
     }
+    if (!identical(file, _file)) return;
+    _loading = false;
+    notifyListeners();
   }
 
   /// The picture of channel [id], or null while it is looked up (once) or
@@ -50,7 +74,7 @@ class ChannelAvatarLookup extends ChangeNotifier {
   String? of(String? id) {
     if (id == null || !ChannelRef.isValidId(id)) return null;
     final known = _known[id];
-    if (known != null || _source == null || !_tried.add(id)) return known;
+    if (known != null || _source == null || _loading || !_tried.add(id)) return known;
     _waiting.add(id);
     scheduleMicrotask(_pump);
     return null;
@@ -95,8 +119,7 @@ class ChannelAvatarLookup extends ChangeNotifier {
     final file = _file;
     if (file == null) return;
     try {
-      await file.parent.create(recursive: true);
-      await file.writeAsString(jsonEncode(_known));
+      await writeFileAtomic(file, jsonEncode(_known));
     } catch (_) {
       // Kept in memory; written again with the next picture.
     }
@@ -106,6 +129,7 @@ class ChannelAvatarLookup extends ChangeNotifier {
   void reset() {
     _source = null;
     _file = null;
+    _loading = false;
     _known.clear();
     _tried.clear();
     _waiting.clear();

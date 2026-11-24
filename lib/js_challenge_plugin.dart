@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 
+import 'app_directories.dart';
 import 'app_log.dart';
 import 'native_core.dart';
 
@@ -36,10 +37,7 @@ class JsChallengePlugin {
       final root = Directory('$folder${Platform.pathSeparator}yt-dlp-plugins');
       final file = File([root.path, 'lumtub', 'yt_dlp_plugins', 'extractor', 'lumtub_jsc.py'].join(Platform.pathSeparator));
       final source = await rootBundle.loadString(asset);
-      if (!file.existsSync() || file.readAsStringSync() != source) {
-        file.parent.createSync(recursive: true);
-        file.writeAsStringSync(source, flush: true);
-      }
+      if (!await file.exists() || await file.readAsString() != source) await writeFileAtomic(file, source);
       return root.path;
     } catch (e) {
       logWarn('Could not set up the yt-dlp challenge plugin: $e');

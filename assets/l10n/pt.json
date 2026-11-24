@@ -3778,5 +3778,15 @@
   "Playlist order": "Ordem das playlists",
   "Arrange playlists": "Organizar playlists",
   "Video order": "Ordem dos vídeos",
-  "Arrange “{0}”": "Organizar “{0}”"
+  "Arrange “{0}”": "Organizar “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Enviada ao YouTube como a playlist privada “{0}”",
+  "Upload failed": "Falha no envio",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Mudar a ordem no YouTube exige login pelo navegador (cookies)",
+  "The order on YouTube is already the same": "A ordem no YouTube já é a mesma",
+  "Order saved on YouTube ({0} videos moved)": "Ordem salva no YouTube ({0} vídeos movidos)",
+  "Couldn't change the order on YouTube": "Não foi possível mudar a ordem no YouTube",
+  "YouTube did not list this playlist": "O YouTube não listou esta playlist",
+  "Upload to YouTube": "Enviar ao YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Isso cria uma nova playlist privada “{0}” na sua conta do YouTube com estes {1} vídeos, na ordem mostrada. A lista aqui continua como está.",
+  "Upload": "Enviar"
 }

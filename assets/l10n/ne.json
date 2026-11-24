@@ -3772,5 +3772,15 @@
   "Playlist order": "प्लेलिस्टको क्रम",
   "Arrange playlists": "प्लेलिस्ट मिलाउनुहोस्",
   "Video order": "भिडियोको क्रम",
-  "Arrange “{0}”": "“{0}” मिलाउनुहोस्"
+  "Arrange “{0}”": "“{0}” मिलाउनुहोस्",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube मा निजी प्लेलिस्ट “{0}” को रूपमा अपलोड गरियो",
+  "Upload failed": "अपलोड असफल भयो",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube मा क्रम परिवर्तन गर्न ब्राउजर साइन इन (कुकी) चाहिन्छ",
+  "The order on YouTube is already the same": "YouTube मा भएको क्रम पहिल्यै उही छ",
+  "Order saved on YouTube ({0} videos moved)": "YouTube मा क्रम सुरक्षित गरियो ({0} भिडियो सारियो)",
+  "Couldn't change the order on YouTube": "YouTube मा क्रम परिवर्तन गर्न सकिएन",
+  "YouTube did not list this playlist": "YouTube ले यो प्लेलिस्ट देखाएन",
+  "Upload to YouTube": "YouTube मा अपलोड गर्नुहोस्",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "यसले तपाईंको YouTube खातामा यी {1} भिडियो देखाइएको क्रममा राखेर “{0}” नामको नयाँ निजी प्लेलिस्ट बनाउँछ। यहाँको सूची जस्ताको तस्तै रहन्छ।",
+  "Upload": "अपलोड गर्नुहोस्"
 }

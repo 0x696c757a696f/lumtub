@@ -3773,5 +3773,15 @@
   "Playlist order": "Afspilningslisternes rækkefølge",
   "Arrange playlists": "Ordn afspilningslister",
   "Video order": "Videorækkefølge",
-  "Arrange “{0}”": "Ordn “{0}”"
+  "Arrange “{0}”": "Ordn “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Uploadet til YouTube som den private afspilningsliste »{0}«",
+  "Upload failed": "Upload mislykkedes",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Ændring af rækkefølgen på YouTube kræver browserlogin (cookies)",
+  "The order on YouTube is already the same": "Rækkefølgen på YouTube er allerede den samme",
+  "Order saved on YouTube ({0} videos moved)": "Rækkefølgen er gemt på YouTube ({0} videoer flyttet)",
+  "Couldn't change the order on YouTube": "Kunne ikke ændre rækkefølgen på YouTube",
+  "YouTube did not list this playlist": "YouTube viste ikke denne afspilningsliste",
+  "Upload to YouTube": "Upload til YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Det opretter en ny privat afspilningsliste »{0}« på din YouTube-konto med disse {1} videoer i den viste rækkefølge. Listen her forbliver, som den er.",
+  "Upload": "Upload"
 }

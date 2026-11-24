@@ -3773,5 +3773,15 @@
   "Playlist order": "Röð spilunarlista",
   "Arrange playlists": "Raða spilunarlistum",
   "Video order": "Röð myndbanda",
-  "Arrange “{0}”": "Raða „{0}“"
+  "Arrange “{0}”": "Raða „{0}“",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Hlaðið upp á YouTube sem einkaspilunarlistinn „{0}“",
+  "Upload failed": "Upphleðsla mistókst",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Til að breyta röðinni á YouTube þarf innskráningu með vafra (vefkökur)",
+  "The order on YouTube is already the same": "Röðin á YouTube er nú þegar sú sama",
+  "Order saved on YouTube ({0} videos moved)": "Röðin vistuð á YouTube ({0} myndbönd færð)",
+  "Couldn't change the order on YouTube": "Ekki tókst að breyta röðinni á YouTube",
+  "YouTube did not list this playlist": "YouTube birti ekki þennan spilunarlista",
+  "Upload to YouTube": "Hlaða upp á YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Þetta býr til nýjan einkaspilunarlista „{0}“ á YouTube-reikningnum þínum með þessum {1} myndböndum, í röðinni sem sýnd er. Listinn hér helst óbreyttur.",
+  "Upload": "Hlaða upp"
 }

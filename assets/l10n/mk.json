@@ -3773,5 +3773,15 @@
   "Playlist order": "Редослед на плејлисти",
   "Arrange playlists": "Подреди плејлисти",
   "Video order": "Редослед на видеа",
-  "Arrange “{0}”": "Подреди „{0}“"
+  "Arrange “{0}”": "Подреди „{0}“",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Поставено на YouTube како приватната плејлиста „{0}“",
+  "Upload failed": "Поставувањето не успеа",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "За промена на редоследот на YouTube е потребна најава преку прелистувач (колачиња)",
+  "The order on YouTube is already the same": "Редоследот на YouTube е веќе ист",
+  "Order saved on YouTube ({0} videos moved)": "Редоследот е зачуван на YouTube (преместени видеа: {0})",
+  "Couldn't change the order on YouTube": "Не можеше да се промени редоследот на YouTube",
+  "YouTube did not list this playlist": "YouTube не ја прикажа оваа плејлиста",
+  "Upload to YouTube": "Постави на YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Ова создава нова приватна плејлиста „{0}“ во вашата сметка на YouTube со овие {1} видеа, по прикажаниот редослед. Списокот овде останува како што е.",
+  "Upload": "Постави"
 }

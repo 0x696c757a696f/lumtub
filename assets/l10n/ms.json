@@ -3773,5 +3773,15 @@
   "Playlist order": "Susunan senarai main",
   "Arrange playlists": "Susun senarai main",
   "Video order": "Susunan video",
-  "Arrange “{0}”": "Susun “{0}”"
+  "Arrange “{0}”": "Susun “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Dimuat naik ke YouTube sebagai senarai main persendirian “{0}”",
+  "Upload failed": "Muat naik gagal",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Menukar susunan di YouTube memerlukan log masuk pelayar (kuki)",
+  "The order on YouTube is already the same": "Susunan di YouTube sudah sama",
+  "Order saved on YouTube ({0} videos moved)": "Susunan disimpan di YouTube ({0} video dialihkan)",
+  "Couldn't change the order on YouTube": "Tidak dapat menukar susunan di YouTube",
+  "YouTube did not list this playlist": "YouTube tidak menyenaraikan senarai main ini",
+  "Upload to YouTube": "Muat naik ke YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Ini mencipta senarai main persendirian baharu “{0}” dalam akaun YouTube anda dengan {1} video ini, mengikut susunan yang dipaparkan. Senarai di sini kekal seperti sedia ada.",
+  "Upload": "Muat naik"
 }

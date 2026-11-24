@@ -3773,5 +3773,15 @@
   "Playlist order": "ترتیب فهرست‌های پخش",
   "Arrange playlists": "مرتب‌سازی فهرست‌های پخش",
   "Video order": "ترتیب ویدیوها",
-  "Arrange “{0}”": "مرتب‌سازی «{0}»"
+  "Arrange “{0}”": "مرتب‌سازی «{0}»",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "به‌صورت فهرست پخش خصوصی «{0}» در YouTube بارگذاری شد",
+  "Upload failed": "بارگذاری ناموفق بود",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "برای تغییر ترتیب در YouTube، ورود با مرورگر (کوکی) لازم است",
+  "The order on YouTube is already the same": "ترتیب در YouTube از قبل همین است",
+  "Order saved on YouTube ({0} videos moved)": "ترتیب در YouTube ذخیره شد ({0} ویدیو جابه‌جا شد)",
+  "Couldn't change the order on YouTube": "تغییر ترتیب در YouTube ممکن نشد",
+  "YouTube did not list this playlist": "YouTube این فهرست پخش را فهرست نکرد",
+  "Upload to YouTube": "بارگذاری در YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "این کار در حساب YouTube شما فهرست پخش خصوصی جدیدی با نام «{0}» می‌سازد و این {1} ویدیو را به همان ترتیبی که نمایش داده شده در آن قرار می‌دهد. فهرست اینجا همان‌طور که هست می‌ماند.",
+  "Upload": "بارگذاری"
 }

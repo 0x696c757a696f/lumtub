@@ -3772,5 +3772,15 @@
   "Playlist order": "የአጫዋች ዝርዝር ቅደም ተከተል",
   "Arrange playlists": "አጫዋች ዝርዝሮችን አደራጅ",
   "Video order": "የቪዲዮ ቅደም ተከተል",
-  "Arrange “{0}”": "“{0}”ን አደራጅ"
+  "Arrange “{0}”": "“{0}”ን አደራጅ",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "ወደ YouTube እንደ የግል አጫዋች ዝርዝር «{0}» ተሰቅሏል",
+  "Upload failed": "መስቀል አልተሳካም",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "በ YouTube ላይ ቅደም ተከተሉን ለመቀየር በአሳሽ (ኩኪዎች) መግባት ያስፈልጋል",
+  "The order on YouTube is already the same": "በ YouTube ላይ ያለው ቅደም ተከተል አስቀድሞ ተመሳሳይ ነው",
+  "Order saved on YouTube ({0} videos moved)": "ቅደም ተከተሉ በ YouTube ላይ ተቀምጧል ({0} ቪዲዮዎች ተንቀሳቅሰዋል)",
+  "Couldn't change the order on YouTube": "በ YouTube ላይ ቅደም ተከተሉን መቀየር አልተቻለም",
+  "YouTube did not list this playlist": "YouTube ይህን አጫዋች ዝርዝር አላሳየም",
+  "Upload to YouTube": "ወደ YouTube ስቀል",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "በ YouTube መለያዎ ውስጥ እነዚህን {1} ቪዲዮዎች በሚታየው ቅደም ተከተል የያዘ አዲስ የግል አጫዋች ዝርዝር «{0}» ይፈጥራል። እዚህ ያለው ዝርዝር እንዳለ ይቆያል።",
+  "Upload": "ስቀል"
 }

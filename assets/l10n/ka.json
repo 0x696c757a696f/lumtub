@@ -3773,5 +3773,15 @@
   "Playlist order": "დასაკრავი სიების თანმიმდევრობა",
   "Arrange playlists": "დასაკრავი სიების დალაგება",
   "Video order": "ვიდეოების თანმიმდევრობა",
-  "Arrange “{0}”": "„{0}“-ის დალაგება"
+  "Arrange “{0}”": "„{0}“-ის დალაგება",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube-ზე ატვირთულია როგორც კერძო დასაკრავი სია „{0}“",
+  "Upload failed": "ატვირთვა ვერ მოხერხდა",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube-ზე თანმიმდევრობის შესაცვლელად საჭიროა ბრაუზერით შესვლა (cookie)",
+  "The order on YouTube is already the same": "YouTube-ზე თანმიმდევრობა უკვე იგივეა",
+  "Order saved on YouTube ({0} videos moved)": "თანმიმდევრობა შენახულია YouTube-ზე ({0} ვიდეო გადატანილია)",
+  "Couldn't change the order on YouTube": "YouTube-ზე თანმიმდევრობის შეცვლა ვერ მოხერხდა",
+  "YouTube did not list this playlist": "YouTube-მა ეს დასაკრავი სია არ აჩვენა",
+  "Upload to YouTube": "YouTube-ზე ატვირთვა",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "ეს თქვენს YouTube ანგარიშში შექმნის ახალ კერძო დასაკრავ სიას „{0}“ ამ {1} ვიდეოთი, ნაჩვენები თანმიმდევრობით. აქაური სია უცვლელი დარჩება.",
+  "Upload": "ატვირთვა"
 }

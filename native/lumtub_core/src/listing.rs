@@ -294,6 +294,11 @@ fn video(renderer: &Value) -> Option<Value> {
             "availability",
             opt(members_only(renderer).then_some("subscriber_only")),
         ),
+        // The entry's own id in a playlist, which moving it on YouTube needs.
+        (
+            "playlist_set_id",
+            opt(renderer.get("setVideoId").and_then(Value::as_str)),
+        ),
     ]))
 }
 

@@ -3772,5 +3772,15 @@
   "Playlist order": "Pleýlist tertibi",
   "Arrange playlists": "Pleýlistleri tertiple",
   "Video order": "Wideo tertibi",
-  "Arrange “{0}”": "“{0}” tertiple"
+  "Arrange “{0}”": "“{0}” tertiple",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube-a şahsy pleýlist “{0}” hökmünde ýüklendi",
+  "Upload failed": "Ýükleme şowsuz boldy",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube-da tertibi üýtgetmek üçin brauzer bilen giriş (cookie) gerek",
+  "The order on YouTube is already the same": "YouTube-daky tertip eýýäm şol bir",
+  "Order saved on YouTube ({0} videos moved)": "Tertip YouTube-da saklandy ({0} wideo süýşürildi)",
+  "Couldn't change the order on YouTube": "YouTube-da tertibi üýtgetmek başartmady",
+  "YouTube did not list this playlist": "YouTube bu pleýlisti görkezmedi",
+  "Upload to YouTube": "YouTube-a ýükle",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Bu YouTube hasabyňyzda şu {1} wideo bilen, görkezilen tertipde täze şahsy “{0}” pleýlistini döredýär. Bu ýerdäki sanaw şol bolşy ýaly galýar.",
+  "Upload": "Ýükle"
 }

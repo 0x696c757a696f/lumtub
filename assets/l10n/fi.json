@@ -3773,5 +3773,15 @@
   "Playlist order": "Soittolistojen järjestys",
   "Arrange playlists": "Järjestä soittolistat",
   "Video order": "Videoiden järjestys",
-  "Arrange “{0}”": "Järjestä ”{0}”"
+  "Arrange “{0}”": "Järjestä ”{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Ladattu YouTubeen yksityisenä soittolistana ”{0}”",
+  "Upload failed": "Lataus epäonnistui",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Järjestyksen muuttaminen YouTubessa vaatii selainkirjautumisen (evästeet)",
+  "The order on YouTube is already the same": "Järjestys YouTubessa on jo sama",
+  "Order saved on YouTube ({0} videos moved)": "Järjestys tallennettu YouTubeen ({0} videota siirretty)",
+  "Couldn't change the order on YouTube": "Järjestystä ei voitu muuttaa YouTubessa",
+  "YouTube did not list this playlist": "YouTube ei listannut tätä soittolistaa",
+  "Upload to YouTube": "Lataa YouTubeen",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Tämä luo YouTube-tilillesi uuden yksityisen soittolistan ”{0}”, jossa on nämä {1} videota näytetyssä järjestyksessä. Tässä oleva lista pysyy ennallaan.",
+  "Upload": "Lataa"
 }

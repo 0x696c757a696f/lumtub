@@ -3778,5 +3778,15 @@
   "Playlist order": "Thứ tự danh sách phát",
   "Arrange playlists": "Sắp xếp danh sách phát",
   "Video order": "Thứ tự video",
-  "Arrange “{0}”": "Sắp xếp “{0}”"
+  "Arrange “{0}”": "Sắp xếp “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Đã tải lên YouTube dưới dạng danh sách phát riêng tư “{0}”",
+  "Upload failed": "Tải lên không thành công",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Muốn đổi thứ tự trên YouTube thì cần đăng nhập bằng trình duyệt (cookie)",
+  "The order on YouTube is already the same": "Thứ tự trên YouTube đã giống rồi",
+  "Order saved on YouTube ({0} videos moved)": "Đã lưu thứ tự trên YouTube (đã di chuyển {0} video)",
+  "Couldn't change the order on YouTube": "Không thể đổi thứ tự trên YouTube",
+  "YouTube did not list this playlist": "YouTube không liệt kê danh sách phát này",
+  "Upload to YouTube": "Tải lên YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Thao tác này tạo danh sách phát riêng tư mới “{0}” trong tài khoản YouTube của bạn với {1} video này, theo thứ tự đang hiển thị. Danh sách ở đây giữ nguyên.",
+  "Upload": "Tải lên"
 }

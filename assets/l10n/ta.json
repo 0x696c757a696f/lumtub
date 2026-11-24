@@ -3773,5 +3773,15 @@
   "Playlist order": "பிளேலிஸ்ட் வரிசை",
   "Arrange playlists": "பிளேலிஸ்ட்களை ஒழுங்குபடுத்து",
   "Video order": "வீடியோ வரிசை",
-  "Arrange “{0}”": "“{0}” ஒழுங்குபடுத்து"
+  "Arrange “{0}”": "“{0}” ஒழுங்குபடுத்து",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube-இல் தனிப்பட்ட பிளேலிஸ்ட் “{0}” ஆகப் பதிவேற்றப்பட்டது",
+  "Upload failed": "பதிவேற்றம் தோல்வியடைந்தது",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube-இல் வரிசையை மாற்ற உலாவி உள்நுழைவு (குக்கீகள்) தேவை",
+  "The order on YouTube is already the same": "YouTube-இல் உள்ள வரிசை ஏற்கனவே அதேதான்",
+  "Order saved on YouTube ({0} videos moved)": "YouTube-இல் வரிசை சேமிக்கப்பட்டது ({0} வீடியோக்கள் நகர்த்தப்பட்டன)",
+  "Couldn't change the order on YouTube": "YouTube-இல் வரிசையை மாற்ற முடியவில்லை",
+  "YouTube did not list this playlist": "YouTube இந்தப் பிளேலிஸ்ட்டைப் பட்டியலிடவில்லை",
+  "Upload to YouTube": "YouTube-இல் பதிவேற்று",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "இது உங்கள் YouTube கணக்கில் இந்த {1} வீடியோக்களுடன், காட்டப்பட்ட வரிசையில், “{0}” என்ற புதிய தனிப்பட்ட பிளேலிஸ்ட்டை உருவாக்கும். இங்குள்ள பட்டியல் அப்படியே இருக்கும்.",
+  "Upload": "பதிவேற்று"
 }

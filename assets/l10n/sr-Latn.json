@@ -3773,5 +3773,15 @@
   "Playlist order": "Redosled plejlista",
   "Arrange playlists": "Rasporedi plejliste",
   "Video order": "Redosled video snimaka",
-  "Arrange “{0}”": "Rasporedi „{0}“"
+  "Arrange “{0}”": "Rasporedi „{0}“",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Otpremljeno na YouTube kao privatna plejlista „{0}“",
+  "Upload failed": "Otpremanje nije uspelo",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Za promenu redosleda na YouTube-u potrebna je prijava pomoću pregledača (kolačići)",
+  "The order on YouTube is already the same": "Redosled na YouTube-u je već isti",
+  "Order saved on YouTube ({0} videos moved)": "Redosled je sačuvan na YouTube-u (premešteno video snimaka: {0})",
+  "Couldn't change the order on YouTube": "Nije moguće promeniti redosled na YouTube-u",
+  "YouTube did not list this playlist": "YouTube nije prikazao ovu plejlistu",
+  "Upload to YouTube": "Otpremi na YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Ovo pravi novu privatnu plejlistu „{0}“ na vašem YouTube nalogu sa ovih {1} video snimaka, redosledom kako je prikazano. Lista ovde ostaje kakva jeste.",
+  "Upload": "Otpremi"
 }

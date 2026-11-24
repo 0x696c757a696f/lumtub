@@ -3778,5 +3778,15 @@
   "Playlist order": "ترتيب قوائم التشغيل",
   "Arrange playlists": "تنظيم قوائم التشغيل",
   "Video order": "ترتيب الفيديوهات",
-  "Arrange “{0}”": "تنظيم «{0}»"
+  "Arrange “{0}”": "تنظيم «{0}»",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "تم التحميل إلى YouTube كقائمة التشغيل الخاصة «{0}»",
+  "Upload failed": "فشل التحميل",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "يتطلب تغيير الترتيب على YouTube تسجيل الدخول عبر المتصفح (ملفات تعريف الارتباط)",
+  "The order on YouTube is already the same": "الترتيب على YouTube مطابق بالفعل",
+  "Order saved on YouTube ({0} videos moved)": "تم حفظ الترتيب على YouTube (نُقل {0} فيديو)",
+  "Couldn't change the order on YouTube": "تعذّر تغيير الترتيب على YouTube",
+  "YouTube did not list this playlist": "لم يعرض YouTube قائمة التشغيل هذه",
+  "Upload to YouTube": "تحميل إلى YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "سيؤدي هذا إلى إنشاء قائمة تشغيل خاصة جديدة «{0}» في حسابك على YouTube تضم {1} فيديو بالترتيب المعروض. تبقى القائمة هنا كما هي.",
+  "Upload": "تحميل"
 }

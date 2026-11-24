@@ -855,7 +855,7 @@
   "New": "新規",
   "New YouTube playlist": "YouTube の再生リストを新規作成",
   "New playlist": "再生リストを新規作成",
-  "New private playlist…": "限定公開の再生リストを新規作成…",
+  "New private playlist…": "非公開の再生リストを新規作成…",
   "Untitled playlist": "新しい再生リスト",
   "Protestant": "プロテスタント",
   "New cache location unavailable, still using the original: {0}": "新しいキャッシュの場所が使用できないため、元の場所を引き続き使用します：{0}",
@@ -3778,5 +3778,15 @@
   "Playlist order": "再生リストの並び順",
   "Arrange playlists": "再生リストを並べ替え",
   "Video order": "動画の並び順",
-  "Arrange “{0}”": "「{0}」を並べ替え"
+  "Arrange “{0}”": "「{0}」を並べ替え",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube に非公開の再生リスト「{0}」としてアップロードしました",
+  "Upload failed": "アップロードに失敗しました",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube で順番を変えるには、ブラウザーログイン（Cookie）が必要です",
+  "The order on YouTube is already the same": "YouTube の順番はすでに同じです",
+  "Order saved on YouTube ({0} videos moved)": "YouTube に順番を保存しました（{0} 本の動画を移動）",
+  "Couldn't change the order on YouTube": "YouTube で順番を変えられませんでした",
+  "YouTube did not list this playlist": "YouTube にこの再生リストは表示されませんでした",
+  "Upload to YouTube": "YouTube にアップロード",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "YouTube アカウントに、この {1} 本の動画を表示どおりの順番で入れた非公開の再生リスト「{0}」を新しく作成します。ここにあるリストはそのままです。",
+  "Upload": "アップロード"
 }

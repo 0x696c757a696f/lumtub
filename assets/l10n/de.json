@@ -3778,5 +3778,15 @@
   "Playlist order": "Playlist-Reihenfolge",
   "Arrange playlists": "Playlists anordnen",
   "Video order": "Videoreihenfolge",
-  "Arrange “{0}”": "„{0}“ anordnen"
+  "Arrange “{0}”": "„{0}“ anordnen",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Als private Playlist „{0}“ zu YouTube hochgeladen",
+  "Upload failed": "Upload fehlgeschlagen",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Zum Ändern der Reihenfolge auf YouTube ist die Browser-Anmeldung (Cookies) nötig",
+  "The order on YouTube is already the same": "Die Reihenfolge auf YouTube ist schon dieselbe",
+  "Order saved on YouTube ({0} videos moved)": "Reihenfolge auf YouTube gespeichert ({0} Videos verschoben)",
+  "Couldn't change the order on YouTube": "Reihenfolge auf YouTube konnte nicht geändert werden",
+  "YouTube did not list this playlist": "YouTube hat diese Playlist nicht aufgelistet",
+  "Upload to YouTube": "Zu YouTube hochladen",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Dadurch entsteht in deinem YouTube-Konto eine neue private Playlist „{0}“ mit diesen {1} Videos in der angezeigten Reihenfolge. Die Liste hier bleibt unverändert.",
+  "Upload": "Hochladen"
 }

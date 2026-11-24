@@ -3773,5 +3773,15 @@
   "Playlist order": "Redoslijed popisa za reprodukciju",
   "Arrange playlists": "Posloži popise za reprodukciju",
   "Video order": "Redoslijed videozapisa",
-  "Arrange “{0}”": "Posloži „{0}“"
+  "Arrange “{0}”": "Posloži „{0}“",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Preneseno na YouTube kao privatni popis za reprodukciju „{0}“",
+  "Upload failed": "Prijenos nije uspio",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Za promjenu redoslijeda na YouTubeu potrebna je prijava preglednikom (kolačići)",
+  "The order on YouTube is already the same": "Redoslijed na YouTubeu već je isti",
+  "Order saved on YouTube ({0} videos moved)": "Redoslijed je spremljen na YouTubeu (premješteno videozapisa: {0})",
+  "Couldn't change the order on YouTube": "Nije moguće promijeniti redoslijed na YouTubeu",
+  "YouTube did not list this playlist": "YouTube nije prikazao ovaj popis za reprodukciju",
+  "Upload to YouTube": "Prenesi na YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Ovime se u vašem YouTube računu stvara novi privatni popis za reprodukciju „{0}“ s ovih {1} videozapisa, redoslijedom kojim su prikazani. Popis ovdje ostaje kakav jest.",
+  "Upload": "Prenesi"
 }

@@ -3773,5 +3773,15 @@
   "Playlist order": "Парадак плэйлістаў",
   "Arrange playlists": "Упарадкаваць плэйлісты",
   "Video order": "Парадак відэа",
-  "Arrange “{0}”": "Упарадкаваць «{0}»"
+  "Arrange “{0}”": "Упарадкаваць «{0}»",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Загружана ў YouTube як прыватны плэйліст «{0}»",
+  "Upload failed": "Не ўдалося загрузіць",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Каб змяніць парадак на YouTube, трэба ўвайсці праз браўзер (cookie)",
+  "The order on YouTube is already the same": "Парадак на YouTube ужо такі самы",
+  "Order saved on YouTube ({0} videos moved)": "Парадак захаваны на YouTube (перасунута відэа: {0})",
+  "Couldn't change the order on YouTube": "Не ўдалося змяніць парадак на YouTube",
+  "YouTube did not list this playlist": "YouTube не паказаў гэты плэйліст",
+  "Upload to YouTube": "Загрузіць у YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Гэта створыць у вашым акаўнце YouTube новы прыватны плэйліст «{0}» з гэтымі відэа ({1}) у паказаным парадку. Спіс тут застанецца без змен.",
+  "Upload": "Загрузіць"
 }

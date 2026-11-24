@@ -3772,5 +3772,15 @@
   "Playlist order": "ਪਲੇਲਿਸਟ ਕ੍ਰਮ",
   "Arrange playlists": "ਪਲੇਲਿਸਟਾਂ ਨੂੰ ਵਿਵਸਥਿਤ ਕਰੋ",
   "Video order": "ਵੀਡੀਓ ਕ੍ਰਮ",
-  "Arrange “{0}”": "“{0}” ਨੂੰ ਵਿਵਸਥਿਤ ਕਰੋ"
+  "Arrange “{0}”": "“{0}” ਨੂੰ ਵਿਵਸਥਿਤ ਕਰੋ",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube 'ਤੇ ਨਿੱਜੀ ਪਲੇਲਿਸਟ “{0}” ਵਜੋਂ ਅੱਪਲੋਡ ਕੀਤੀ ਗਈ",
+  "Upload failed": "ਅੱਪਲੋਡ ਨਹੀਂ ਹੋ ਸਕੀ",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube 'ਤੇ ਕ੍ਰਮ ਬਦਲਣ ਲਈ ਬ੍ਰਾਊਜ਼ਰ ਸਾਈਨ ਇਨ (ਕੁਕੀਜ਼) ਚਾਹੀਦਾ ਹੈ",
+  "The order on YouTube is already the same": "YouTube 'ਤੇ ਕ੍ਰਮ ਪਹਿਲਾਂ ਹੀ ਉਹੀ ਹੈ",
+  "Order saved on YouTube ({0} videos moved)": "YouTube 'ਤੇ ਕ੍ਰਮ ਸੁਰੱਖਿਅਤ ਕੀਤਾ ਗਿਆ ({0} ਵੀਡੀਓ ਖਿਸਕਾਏ ਗਏ)",
+  "Couldn't change the order on YouTube": "YouTube 'ਤੇ ਕ੍ਰਮ ਬਦਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ",
+  "YouTube did not list this playlist": "YouTube ਨੇ ਇਹ ਪਲੇਲਿਸਟ ਨਹੀਂ ਦਿਖਾਈ",
+  "Upload to YouTube": "YouTube 'ਤੇ ਅੱਪਲੋਡ ਕਰੋ",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "ਇਸ ਨਾਲ ਤੁਹਾਡੇ YouTube ਖਾਤੇ ਵਿੱਚ ਇਹ {1} ਵੀਡੀਓ ਦਿਖਾਏ ਗਏ ਕ੍ਰਮ ਵਿੱਚ ਰੱਖ ਕੇ “{0}” ਨਾਂ ਦੀ ਨਵੀਂ ਨਿੱਜੀ ਪਲੇਲਿਸਟ ਬਣੇਗੀ। ਇੱਥੋਂ ਦੀ ਸੂਚੀ ਜਿਵੇਂ ਹੈ ਤਿਵੇਂ ਹੀ ਰਹੇਗੀ।",
+  "Upload": "ਅੱਪਲੋਡ ਕਰੋ"
 }

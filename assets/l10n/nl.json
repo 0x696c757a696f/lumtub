@@ -3778,5 +3778,15 @@
   "Playlist order": "Afspeellijstvolgorde",
   "Arrange playlists": "Afspeellijsten rangschikken",
   "Video order": "Videovolgorde",
-  "Arrange “{0}”": "“{0}” rangschikken"
+  "Arrange “{0}”": "“{0}” rangschikken",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Geüpload naar YouTube als de privéafspeellijst “{0}”",
+  "Upload failed": "Uploaden mislukt",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Voor het wijzigen van de volgorde op YouTube moet je inloggen met de browser (cookies)",
+  "The order on YouTube is already the same": "De volgorde op YouTube is al hetzelfde",
+  "Order saved on YouTube ({0} videos moved)": "Volgorde opgeslagen op YouTube ({0} video's verplaatst)",
+  "Couldn't change the order on YouTube": "Kon de volgorde op YouTube niet wijzigen",
+  "YouTube did not list this playlist": "YouTube heeft deze afspeellijst niet getoond",
+  "Upload to YouTube": "Uploaden naar YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Hiermee maak je in je YouTube-account een nieuwe privéafspeellijst “{0}” met deze {1} video's, in de getoonde volgorde. De lijst hier blijft zoals hij is.",
+  "Upload": "Uploaden"
 }

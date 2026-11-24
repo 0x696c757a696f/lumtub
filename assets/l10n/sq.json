@@ -3773,5 +3773,15 @@
   "Playlist order": "Rendi i luajlistave",
   "Arrange playlists": "Rendit luajlistat",
   "Video order": "Rendi i videove",
-  "Arrange “{0}”": "Rendit “{0}”"
+  "Arrange “{0}”": "Rendit “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "U ngarkua në YouTube si luajlista private “{0}”",
+  "Upload failed": "Ngarkimi dështoi",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Për të ndryshuar renditjen në YouTube duhet hyrja me shfletues (cookie)",
+  "The order on YouTube is already the same": "Renditja në YouTube është tashmë e njëjtë",
+  "Order saved on YouTube ({0} videos moved)": "Renditja u ruajt në YouTube ({0} video u zhvendosën)",
+  "Couldn't change the order on YouTube": "Renditja në YouTube nuk u ndryshua dot",
+  "YouTube did not list this playlist": "YouTube nuk e listoi këtë luajlistë",
+  "Upload to YouTube": "Ngarko në YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Kjo krijon një luajlistë të re private “{0}” në llogarinë tënde në YouTube me këto {1} video, në renditjen e shfaqur. Lista këtu mbetet siç është.",
+  "Upload": "Ngarko"
 }

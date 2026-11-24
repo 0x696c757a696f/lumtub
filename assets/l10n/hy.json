@@ -3773,5 +3773,15 @@
   "Playlist order": "Նվագացանկերի հերթականություն",
   "Arrange playlists": "Դասավորել նվագացանկերը",
   "Video order": "Տեսանյութերի հերթականություն",
-  "Arrange “{0}”": "Դասավորել «{0}»"
+  "Arrange “{0}”": "Դասավորել «{0}»",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Վերբեռնվել է YouTube որպես մասնավոր նվագացանկ «{0}»",
+  "Upload failed": "Վերբեռնումը չհաջողվեց",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube-ում հերթականությունը փոխելու համար պետք է մուտք գործել դիտարկիչով (cookie)",
+  "The order on YouTube is already the same": "YouTube-ում հերթականությունն արդեն նույնն է",
+  "Order saved on YouTube ({0} videos moved)": "Հերթականությունը պահվել է YouTube-ում ({0} տեսանյութ տեղափոխվել է)",
+  "Couldn't change the order on YouTube": "Չհաջողվեց փոխել հերթականությունը YouTube-ում",
+  "YouTube did not list this playlist": "YouTube-ը չցուցադրեց այս նվագացանկը",
+  "Upload to YouTube": "Վերբեռնել YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Սա ձեր YouTube հաշվում կստեղծի նոր մասնավոր նվագացանկ «{0}»՝ այս {1} տեսանյութով, ցուցադրված հերթականությամբ։ Այստեղի ցանկը կմնա առանց փոփոխության։",
+  "Upload": "Վերբեռնել"
 }

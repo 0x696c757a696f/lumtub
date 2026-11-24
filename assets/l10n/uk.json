@@ -3778,5 +3778,15 @@
   "Playlist order": "Порядок плейлистів",
   "Arrange playlists": "Упорядкувати плейлисти",
   "Video order": "Порядок відео",
-  "Arrange “{0}”": "Упорядкувати «{0}»"
+  "Arrange “{0}”": "Упорядкувати «{0}»",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Завантажено на YouTube як приватний плейлист «{0}»",
+  "Upload failed": "Не вдалося завантажити",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Щоб змінити порядок на YouTube, потрібен вхід через браузер (cookie)",
+  "The order on YouTube is already the same": "Порядок на YouTube уже такий самий",
+  "Order saved on YouTube ({0} videos moved)": "Порядок збережено на YouTube (переміщено відео: {0})",
+  "Couldn't change the order on YouTube": "Не вдалося змінити порядок на YouTube",
+  "YouTube did not list this playlist": "YouTube не показав цей плейлист",
+  "Upload to YouTube": "Завантажити на YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Це створить в обліковому записі YouTube новий приватний плейлист «{0}» з цими відео ({1}) у показаному порядку. Список тут залишиться без змін.",
+  "Upload": "Завантажити"
 }

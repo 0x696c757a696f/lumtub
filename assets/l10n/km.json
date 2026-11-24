@@ -3772,5 +3772,15 @@
   "Playlist order": "លំដាប់បញ្ជីចាក់",
   "Arrange playlists": "រៀបចំបញ្ជីចាក់",
   "Video order": "លំដាប់វីដេអូ",
-  "Arrange “{0}”": "រៀបចំ “{0}”"
+  "Arrange “{0}”": "រៀបចំ “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "បានផ្ទុកឡើងទៅ YouTube ជាបញ្ជីចាក់ឯកជន “{0}”",
+  "Upload failed": "ការផ្ទុកឡើងបរាជ័យ",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "ការប្ដូរលំដាប់នៅលើ YouTube ត្រូវការចូលគណនីដោយកម្មវិធីរុករក (ខូគី)",
+  "The order on YouTube is already the same": "លំដាប់នៅលើ YouTube ដូចគ្នារួចហើយ",
+  "Order saved on YouTube ({0} videos moved)": "បានរក្សាទុកលំដាប់នៅលើ YouTube (បានផ្លាស់ទីវីដេអូ {0})",
+  "Couldn't change the order on YouTube": "មិនអាចប្ដូរលំដាប់នៅលើ YouTube បានទេ",
+  "YouTube did not list this playlist": "YouTube មិនបានរាយបញ្ជីចាក់នេះទេ",
+  "Upload to YouTube": "ផ្ទុកឡើងទៅ YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "វានឹងបង្កើតបញ្ជីចាក់ឯកជនថ្មី “{0}” នៅក្នុងគណនី YouTube របស់អ្នក ដោយមានវីដេអូទាំង {1} នេះ តាមលំដាប់ដែលបានបង្ហាញ។ បញ្ជីនៅទីនេះនៅដដែល។",
+  "Upload": "ផ្ទុកឡើង"
 }

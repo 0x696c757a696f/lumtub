@@ -3773,5 +3773,15 @@
   "Playlist order": "Ordre de les llistes de reproducció",
   "Arrange playlists": "Reordena les llistes de reproducció",
   "Video order": "Ordre dels vídeos",
-  "Arrange “{0}”": "Reordena «{0}»"
+  "Arrange “{0}”": "Reordena «{0}»",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "S'ha pujat a YouTube com a llista de reproducció privada «{0}»",
+  "Upload failed": "No s'ha pogut pujar",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Per canviar l'ordre a YouTube cal iniciar la sessió amb navegador (galetes)",
+  "The order on YouTube is already the same": "L'ordre a YouTube ja és el mateix",
+  "Order saved on YouTube ({0} videos moved)": "Ordre desat a YouTube ({0} vídeos moguts)",
+  "Couldn't change the order on YouTube": "No s'ha pogut canviar l'ordre a YouTube",
+  "YouTube did not list this playlist": "YouTube no ha llistat aquesta llista de reproducció",
+  "Upload to YouTube": "Puja a YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Això crea una llista de reproducció privada nova «{0}» al teu compte de YouTube amb aquests {1} vídeos, en l'ordre mostrat. La llista d'aquí es queda tal com està.",
+  "Upload": "Puja"
 }

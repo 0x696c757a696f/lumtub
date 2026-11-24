@@ -3773,5 +3773,15 @@
   "Playlist order": "പ്ലേലിസ്റ്റ് ക്രമം",
   "Arrange playlists": "പ്ലേലിസ്റ്റുകൾ ക്രമീകരിക്കുക",
   "Video order": "വീഡിയോ ക്രമം",
-  "Arrange “{0}”": "“{0}” ക്രമീകരിക്കുക"
+  "Arrange “{0}”": "“{0}” ക്രമീകരിക്കുക",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube-ലേക്ക് സ്വകാര്യ പ്ലേലിസ്റ്റ് “{0}” ആയി അപ്‌ലോഡ് ചെയ്തു",
+  "Upload failed": "അപ്‌ലോഡ് പരാജയപ്പെട്ടു",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube-ൽ ക്രമം മാറ്റാൻ ബ്രൗസർ സൈൻ ഇൻ (കുക്കികൾ) ആവശ്യമാണ്",
+  "The order on YouTube is already the same": "YouTube-ലെ ക്രമം ഇതിനകം ഇതുതന്നെയാണ്",
+  "Order saved on YouTube ({0} videos moved)": "YouTube-ൽ ക്രമം സേവ് ചെയ്തു ({0} വീഡിയോകൾ നീക്കി)",
+  "Couldn't change the order on YouTube": "YouTube-ൽ ക്രമം മാറ്റാനായില്ല",
+  "YouTube did not list this playlist": "YouTube ഈ പ്ലേലിസ്റ്റ് പട്ടികപ്പെടുത്തിയില്ല",
+  "Upload to YouTube": "YouTube-ലേക്ക് അപ്‌ലോഡ് ചെയ്യുക",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "ഇത് നിങ്ങളുടെ YouTube അക്കൗണ്ടിൽ ഈ {1} വീഡിയോകളോടെ, കാണിച്ചിരിക്കുന്ന ക്രമത്തിൽ, “{0}” എന്ന പുതിയ സ്വകാര്യ പ്ലേലിസ്റ്റ് ഉണ്ടാക്കും. ഇവിടത്തെ ലിസ്റ്റ് അതുപോലെ തന്നെ തുടരും.",
+  "Upload": "അപ്‌ലോഡ് ചെയ്യുക"
 }

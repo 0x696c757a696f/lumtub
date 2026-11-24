@@ -3772,5 +3772,15 @@
   "Playlist order": "Ukulandelana kwezinhlu zokudlala",
   "Arrange playlists": "Hlela izinhlu zokudlala",
   "Video order": "Ukulandelana kwamavidiyo",
-  "Arrange “{0}”": "Hlela “{0}”"
+  "Arrange “{0}”": "Hlela “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Kulayishelwe ku-YouTube njengohlu lokudlala oluyimfihlo “{0}”",
+  "Upload failed": "Ukulayisha kuhlulekile",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Ukushintsha ukulandelana ku-YouTube kudinga ukungena ngebhrawuza (amakhukhi)",
+  "The order on YouTube is already the same": "Ukulandelana ku-YouTube sekuvele kufana",
+  "Order saved on YouTube ({0} videos moved)": "Ukulandelana kulondolozwe ku-YouTube (amavidiyo angu-{0} ahanjisiwe)",
+  "Couldn't change the order on YouTube": "Ayikwazanga ukushintsha ukulandelana ku-YouTube",
+  "YouTube did not list this playlist": "I-YouTube ayizange ibonise lolu hlu lokudlala",
+  "Upload to YouTube": "Layisha ku-YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Lokhu kudala uhlu lokudlala olusha oluyimfihlo “{0}” ku-akhawunti yakho ye-YouTube enamavidiyo la angu-{1}, ngokulandelana okuboniswayo. Uhlu lapha lusala njengoba lunjalo.",
+  "Upload": "Layisha"
 }

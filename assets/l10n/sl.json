@@ -3773,5 +3773,15 @@
   "Playlist order": "Vrstni red seznamov predvajanja",
   "Arrange playlists": "Uredi sezname predvajanja",
   "Video order": "Vrstni red videoposnetkov",
-  "Arrange “{0}”": "Uredi „{0}“"
+  "Arrange “{0}”": "Uredi „{0}“",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Naloženo v YouTube kot zasebni seznam predvajanja »{0}«",
+  "Upload failed": "Nalaganje ni uspelo",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Za spremembo vrstnega reda v YouTubu je potrebna prijava z brskalnikom (piškotki)",
+  "The order on YouTube is already the same": "Vrstni red v YouTubu je že enak",
+  "Order saved on YouTube ({0} videos moved)": "Vrstni red je shranjen v YouTubu (premaknjenih videov: {0})",
+  "Couldn't change the order on YouTube": "Vrstnega reda v YouTubu ni bilo mogoče spremeniti",
+  "YouTube did not list this playlist": "YouTube ni prikazal tega seznama predvajanja",
+  "Upload to YouTube": "Naloži v YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "S tem se v vašem računu YouTube ustvari nov zasebni seznam predvajanja »{0}« s temi {1} videi v prikazanem vrstnem redu. Seznam tukaj ostane nespremenjen.",
+  "Upload": "Naloži"
 }

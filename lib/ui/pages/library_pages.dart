@@ -944,9 +944,13 @@ class PlaylistDetailPage extends StatelessWidget {
     final own = List<VideoItem>.of(controller.orderedVideos(id, saved));
     final reversed = controller.isReversed(id);
     final items = reversed ? own.reversed.toList() : own;
-    // YouTube's own lists are copied again on each sync, which would undo
-    // an order dragged here.
-    final arrangeable = playlist == null || !LibraryController.isRemote(playlist);
+    // A copy of one of the account's YouTube playlists takes a dragged
+    // order only when it can be sent to YouTube; the next sync would undo
+    // it otherwise.
+    final account = controller.account;
+    final remoteId = playlist != null && LibraryController.isRemote(playlist) ? playlist.id.substring(LibraryController.remotePrefix.length) : null;
+    final arrangeable = remoteId == null || (account?.canReorder(remoteId) ?? false);
+    final uploadable = remoteId == null && own.isNotEmpty && (account?.canAct ?? false);
     final name = favorites ? tr('Favorites') : later ? tr('Watch later') : playlist!.name;
     void remove(VideoItem item) => favorites
         ? library.toggleFavorite(item)
@@ -976,7 +980,7 @@ class PlaylistDetailPage extends StatelessWidget {
                 onSelected: (order) => unawaited(controller.setVideoOrder(id, order)),
                 reversed: reversed,
                 onReversed: (back) => unawaited(controller.setReversed(id, back)),
-                onArrange: arrangeable ? () => _arrange(context, id, name, items) : null,
+                onArrange: arrangeable ? () => _arrange(context, id, name, items, remoteId: remoteId) : null,
               ),
             FilledButton.icon(
               onPressed: items.isEmpty ? null : () => controller.playList(id, name, own),
@@ -984,6 +988,7 @@ class PlaylistDetailPage extends StatelessWidget {
               label: Text(tr('Play all')),
             ),
             if (later && items.isNotEmpty) TextButton.icon(onPressed: () => _clearLater(context, library), icon: Icon(AppIcons.trashSimple), label: Text(tr('Clear all'))),
+            if (uploadable) IconButton(tooltip: tr('Upload to YouTube'), onPressed: () => _upload(context, name, items), icon: Icon(AppIcons.monitorArrowUp)),
             if (playlist != null) ...[
               IconButton(tooltip: tr('Rename'), onPressed: () => _rename(context, library, playlist), icon: Icon(AppIcons.pencilSimple)),
               IconButton(tooltip: tr('Delete playlist'), onPressed: () => _delete(context, library, playlist), icon: Icon(AppIcons.trash)),
@@ -1024,7 +1029,9 @@ class PlaylistDetailPage extends StatelessWidget {
 
   /// Drags the videos into the user's own order, starting from the one
   /// shown.
-  Future<void> _arrange(BuildContext context, String id, String name, List<VideoItem> shown) async {
+  /// For a copy of a YouTube playlist ([remoteId]), the order goes to
+  /// YouTube too.
+  Future<void> _arrange(BuildContext context, String id, String name, List<VideoItem> shown, {String? remoteId}) async {
     final order = await showArrangeDialog<VideoItem>(
       context,
       title: tr('Arrange “{0}”', [name]),
@@ -1032,7 +1039,28 @@ class PlaylistDetailPage extends StatelessWidget {
       labelOf: (item) => item.title,
       detailOf: (item) => item.channel,
     );
-    if (order != null) await controller.arrangeVideos(id, order);
+    if (order == null) return;
+    await controller.arrangeVideos(id, order);
+    if (remoteId != null) await controller.account?.pushPlaylistOrder(remoteId, order);
+  }
+
+  /// Copies the list shown to the YouTube account, after saying what that
+  /// makes there.
+  Future<void> _upload(BuildContext context, String name, List<VideoItem> shown) async {
+    final account = controller.account;
+    if (account == null) return;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr('Upload to YouTube')),
+        content: Text(tr('This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.', [name, shown.length])),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Upload'))),
+        ],
+      ),
+    );
+    if (go ?? false) await account.uploadPlaylist(name, shown);
   }
 
   Future<void> _clearLater(BuildContext context, LibraryController library) async {

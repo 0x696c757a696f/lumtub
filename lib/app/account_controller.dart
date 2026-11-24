@@ -387,6 +387,55 @@ class AccountController extends ChangeNotifier {
     }
   }
 
+  /// Copies [items] to the account as a new private playlist named
+  /// [name], in this order, and keeps a copy of it in the library as for
+  /// the account's other playlists.
+  Future<bool> uploadPlaylist(String name, List<VideoItem> items) async {
+    if (!_writable() || items.isEmpty) return false;
+    try {
+      final api = _actor;
+      final target = await api.createPlaylist(name.trim());
+      final ids = [for (final item in items) item.id];
+      if (api is WebAccountApi) {
+        await api.addAllToPlaylist(target.id, ids);
+      } else {
+        // The Google API takes one video a call.
+        for (final id in ids) {
+          await api.addToPlaylist(target.id, id);
+        }
+      }
+      library.mirrorRemotePlaylist(target.id, target.title, items);
+      notice(tr('Uploaded to YouTube as the private playlist "{0}"', [target.title]));
+      return true;
+    } catch (e) {
+      _failed(tr('Upload failed'), e);
+      return false;
+    }
+  }
+
+  /// Whether the account's playlist [playlistId] can be put in order from
+  /// here: with the browser sign-in, and not Liked videos, whose order is
+  /// the order of the likes.
+  bool canReorder(String playlistId) => viaWeb && playlistId != likesPlaylist && playlistId != 'LL';
+
+  /// Puts the account's playlist [playlistId] in the order of [items] on
+  /// YouTube, moving only the videos out of place.
+  Future<bool> pushPlaylistOrder(String playlistId, List<VideoItem> items) async {
+    if (!_writable()) return false;
+    if (!canReorder(playlistId)) {
+      notice(tr('Changing the order on YouTube needs the browser (cookies) sign-in'));
+      return false;
+    }
+    try {
+      final moved = await WebAccountApi(web!).reorderPlaylist(playlistId, [for (final item in items) item.id]);
+      notice(moved == 0 ? tr('The order on YouTube is already the same') : tr('Order saved on YouTube ({0} videos moved)', [moved]));
+      return true;
+    } catch (e) {
+      _failed(tr("Couldn't change the order on YouTube"), e);
+      return false;
+    }
+  }
+
   /// Subscribes to or unsubscribes from [channel] on YouTube.
   Future<void> setSubscribed(ChannelRef channel, bool subscribed) async {
     if (!canAct) return;

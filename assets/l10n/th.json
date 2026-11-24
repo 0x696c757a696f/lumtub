@@ -3773,5 +3773,15 @@
   "Playlist order": "ลำดับเพลย์ลิสต์",
   "Arrange playlists": "จัดลำดับเพลย์ลิสต์",
   "Video order": "ลำดับวิดีโอ",
-  "Arrange “{0}”": "จัดลำดับ “{0}”"
+  "Arrange “{0}”": "จัดลำดับ “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "อัปโหลดไปยัง YouTube เป็นเพลย์ลิสต์ส่วนตัว “{0}” แล้ว",
+  "Upload failed": "อัปโหลดไม่สำเร็จ",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "การเปลี่ยนลำดับบน YouTube ต้องลงชื่อเข้าใช้ด้วยเบราว์เซอร์ (คุกกี้)",
+  "The order on YouTube is already the same": "ลำดับบน YouTube เหมือนกันอยู่แล้ว",
+  "Order saved on YouTube ({0} videos moved)": "บันทึกลำดับบน YouTube แล้ว (ย้ายวิดีโอ {0} รายการ)",
+  "Couldn't change the order on YouTube": "เปลี่ยนลำดับบน YouTube ไม่ได้",
+  "YouTube did not list this playlist": "YouTube ไม่แสดงเพลย์ลิสต์นี้",
+  "Upload to YouTube": "อัปโหลดไปยัง YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "การดำเนินการนี้จะสร้างเพลย์ลิสต์ส่วนตัวใหม่ “{0}” ในบัญชี YouTube ของคุณ โดยมีวิดีโอ {1} รายการนี้ตามลำดับที่แสดง รายการที่อยู่ที่นี่จะคงเดิม",
+  "Upload": "อัปโหลด"
 }

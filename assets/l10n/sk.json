@@ -3773,5 +3773,15 @@
   "Playlist order": "Poradie zoznamov videí",
   "Arrange playlists": "Usporiadať zoznamy videí",
   "Video order": "Poradie videí",
-  "Arrange “{0}”": "Usporiadať „{0}“"
+  "Arrange “{0}”": "Usporiadať „{0}“",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Nahrané na YouTube ako súkromný zoznam videí „{0}“",
+  "Upload failed": "Nahrávanie zlyhalo",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Zmena poradia na YouTube vyžaduje prihlásenie cez prehliadač (cookies)",
+  "The order on YouTube is already the same": "Poradie na YouTube je už rovnaké",
+  "Order saved on YouTube ({0} videos moved)": "Poradie uložené na YouTube (presunuté videá: {0})",
+  "Couldn't change the order on YouTube": "Poradie na YouTube sa nepodarilo zmeniť",
+  "YouTube did not list this playlist": "YouTube tento zoznam videí nezobrazil",
+  "Upload to YouTube": "Nahrať na YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Týmto sa vo vašom účte YouTube vytvorí nový súkromný zoznam videí „{0}“ s týmito {1} videami v zobrazenom poradí. Zoznam tu zostane nezmenený.",
+  "Upload": "Nahrať"
 }

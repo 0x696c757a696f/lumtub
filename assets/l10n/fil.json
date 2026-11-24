@@ -3773,5 +3773,15 @@
   "Playlist order": "Pagkakasunod-sunod ng playlist",
   "Arrange playlists": "Ayusin ang mga playlist",
   "Video order": "Pagkakasunod-sunod ng video",
-  "Arrange “{0}”": "Ayusin ang “{0}”"
+  "Arrange “{0}”": "Ayusin ang “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "In-upload sa YouTube bilang pribadong playlist na “{0}”",
+  "Upload failed": "Hindi nagtagumpay ang pag-upload",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Kailangan ng browser sign-in (cookies) para baguhin ang pagkakasunod-sunod sa YouTube",
+  "The order on YouTube is already the same": "Pareho na ang pagkakasunod-sunod sa YouTube",
+  "Order saved on YouTube ({0} videos moved)": "Na-save ang pagkakasunod-sunod sa YouTube ({0} video ang inilipat)",
+  "Couldn't change the order on YouTube": "Hindi mabago ang pagkakasunod-sunod sa YouTube",
+  "YouTube did not list this playlist": "Hindi inilista ng YouTube ang playlist na ito",
+  "Upload to YouTube": "I-upload sa YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Gagawa ito ng bagong pribadong playlist na “{0}” sa iyong YouTube account na may {1} video na ito, ayon sa ipinapakitang pagkakasunod-sunod. Mananatili ang listahan dito kung ano ito ngayon.",
+  "Upload": "I-upload"
 }

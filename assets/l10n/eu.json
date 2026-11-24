@@ -3773,5 +3773,15 @@
   "Playlist order": "Erreprodukzio-zerrenden ordena",
   "Arrange playlists": "Antolatu erreprodukzio-zerrendak",
   "Video order": "Bideoen ordena",
-  "Arrange “{0}”": "Antolatu “{0}”"
+  "Arrange “{0}”": "Antolatu “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTuben igo da erreprodukzio-zerrenda pribatu gisa: “{0}”",
+  "Upload failed": "Igoerak huts egin du",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTuben ordena aldatzeko, nabigatzailearekin hasi behar da saioa (cookieak)",
+  "The order on YouTube is already the same": "YouTubeko ordena lehendik ere bera da",
+  "Order saved on YouTube ({0} videos moved)": "Ordena YouTuben gorde da ({0} bideo mugitu dira)",
+  "Couldn't change the order on YouTube": "Ezin izan da YouTubeko ordena aldatu",
+  "YouTube did not list this playlist": "YouTubek ez du erreprodukzio-zerrenda hau zerrendatu",
+  "Upload to YouTube": "Igo YouTubera",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Honek erreprodukzio-zerrenda pribatu berri bat sortzen du, “{0}”, zure YouTube kontuan, {1} bideo hauekin, erakusten den ordenan. Hemengo zerrenda bere horretan geratzen da.",
+  "Upload": "Igo"
 }

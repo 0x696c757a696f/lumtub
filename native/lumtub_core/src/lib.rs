@@ -42,6 +42,7 @@ pub mod mic;
 pub mod netwatch;
 pub mod pac;
 pub mod packs;
+pub mod playlist_sync;
 pub mod posts;
 pub mod process_cpu;
 pub mod process_tree;
@@ -77,5 +78,5 @@ pub mod words;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    61
+    62
 }

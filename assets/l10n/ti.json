@@ -3772,5 +3772,15 @@
   "Playlist order": "ቅደም ተከተል ዝርዝር ጸወታ",
   "Arrange playlists": "ዝርዝር ጸወታ ኣዳሉ",
   "Video order": "ቅደም ተከተል ቪድዮ",
-  "Arrange “{0}”": "“{0}” ኣዳሉ"
+  "Arrange “{0}”": "“{0}” ኣዳሉ",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "ናብ YouTube ከም ብሕታዊ ዝርዝር ጸወታ «{0}» ተጻዒኑ",
+  "Upload failed": "ምጽዓን ኣይተዓወተን",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "ኣብ YouTube ቅደም ተኸተል ንምቕያር ብብሮውዘር (ኩኪታት) ምእታው የድሊ",
+  "The order on YouTube is already the same": "ኣብ YouTube ዘሎ ቅደም ተኸተል ድሮ ተመሳሳሊ እዩ",
+  "Order saved on YouTube ({0} videos moved)": "ቅደም ተኸተል ኣብ YouTube ተዓቂቡ ({0} ቪዲዮታት ተንቀሳቒሱ)",
+  "Couldn't change the order on YouTube": "ኣብ YouTube ቅደም ተኸተል ምቕያር ኣይተኻእለን",
+  "YouTube did not list this playlist": "YouTube እዚ ዝርዝር ጸወታ ኣየርኣየን",
+  "Upload to YouTube": "ናብ YouTube ጽዓን",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "እዚ ኣብ ኣካውንት YouTube ናትካ ምስዚ {1} ቪዲዮታት ብዝተራእየ ቅደም ተኸተል ሓድሽ ብሕታዊ ዝርዝር ጸወታ «{0}» ይፈጥር። እቲ ኣብዚ ዘሎ ዝርዝር ከምዘሎ ይተርፍ።",
+  "Upload": "ጽዓን"
 }

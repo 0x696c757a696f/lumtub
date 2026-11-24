@@ -3773,5 +3773,15 @@
   "Playlist order": "Ред на плейлистите",
   "Arrange playlists": "Подреждане на плейлистите",
   "Video order": "Ред на видеата",
-  "Arrange “{0}”": "Подреждане на „{0}“"
+  "Arrange “{0}”": "Подреждане на „{0}“",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Качено в YouTube като личния плейлист „{0}“",
+  "Upload failed": "Качването не успя",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "За промяна на реда в YouTube е нужен вход през браузър (бисквитки)",
+  "The order on YouTube is already the same": "Редът в YouTube вече е същият",
+  "Order saved on YouTube ({0} videos moved)": "Редът е запазен в YouTube (преместени видеа: {0})",
+  "Couldn't change the order on YouTube": "Редът в YouTube не можа да се промени",
+  "YouTube did not list this playlist": "YouTube не показа този плейлист",
+  "Upload to YouTube": "Качване в YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Това създава нов личен плейлист „{0}“ във вашия акаунт в YouTube с тези {1} видеа в показания ред. Списъкът тук остава непроменен.",
+  "Upload": "Качване"
 }

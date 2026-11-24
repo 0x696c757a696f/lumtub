@@ -3773,5 +3773,15 @@
   "Playlist order": "Spellisteordning",
   "Arrange playlists": "Ordna spellistor",
   "Video order": "Videoordning",
-  "Arrange “{0}”": "Ordna ”{0}”"
+  "Arrange “{0}”": "Ordna ”{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Uppladdad till YouTube som den privata spellistan ”{0}”",
+  "Upload failed": "Uppladdningen misslyckades",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "För att ändra ordningen på YouTube krävs webbläsarinloggning (cookies)",
+  "The order on YouTube is already the same": "Ordningen på YouTube är redan densamma",
+  "Order saved on YouTube ({0} videos moved)": "Ordningen sparad på YouTube ({0} videor flyttades)",
+  "Couldn't change the order on YouTube": "Det gick inte att ändra ordningen på YouTube",
+  "YouTube did not list this playlist": "YouTube listade inte den här spellistan",
+  "Upload to YouTube": "Ladda upp till YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Det här skapar en ny privat spellista ”{0}” i ditt YouTube-konto med de här {1} videorna, i den ordning som visas. Listan här förblir som den är.",
+  "Upload": "Ladda upp"
 }

@@ -3772,5 +3772,15 @@
   "Playlist order": "প্লেলিষ্টৰ ক্ৰম",
   "Arrange playlists": "প্লেলিষ্ট সজাওক",
   "Video order": "ভিডিঅ'ৰ ক্ৰম",
-  "Arrange “{0}”": "“{0}” সজাওক"
+  "Arrange “{0}”": "“{0}” সজাওক",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube-ত ব্যক্তিগত প্লেলিষ্ট “{0}” হিচাপে আপল'ড কৰা হ'ল",
+  "Upload failed": "আপল'ড বিফল হ'ল",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube-ত ক্ৰম সলনি কৰিবলৈ ব্ৰাউজাৰ ছাইন ইন (কুকী) লাগে",
+  "The order on YouTube is already the same": "YouTube-ত থকা ক্ৰম ইতিমধ্যে একেই",
+  "Order saved on YouTube ({0} videos moved)": "YouTube-ত ক্ৰম সংৰক্ষণ কৰা হ'ল ({0} টা ভিডিঅ' স্থানান্তৰ কৰা হ'ল)",
+  "Couldn't change the order on YouTube": "YouTube-ত ক্ৰম সলনি কৰিব নোৱাৰিলে",
+  "YouTube did not list this playlist": "YouTube-এ এই প্লেলিষ্টটো তালিকাভুক্ত কৰা নাই",
+  "Upload to YouTube": "YouTube-লৈ আপল'ড কৰক",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "ইয়াৰ দ্বাৰা আপোনাৰ YouTube একাউণ্টত এই {1} টা ভিডিঅ'ৰ সৈতে, দেখুওৱা ক্ৰমত, এটা নতুন ব্যক্তিগত প্লেলিষ্ট “{0}” তৈয়াৰ হ'ব। ইয়াত থকা তালিকা যেনেকুৱা আছে তেনেকুৱাই থাকিব।",
+  "Upload": "আপল'ড কৰক"
 }

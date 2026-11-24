@@ -3773,5 +3773,15 @@
   "Playlist order": "Esitusloendite järjekord",
   "Arrange playlists": "Järjesta esitusloendid",
   "Video order": "Videote järjekord",
-  "Arrange “{0}”": "Järjesta „{0}“"
+  "Arrange “{0}”": "Järjesta „{0}“",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube’i üles laaditud privaatse esitusloendina „{0}“",
+  "Upload failed": "Üleslaadimine ebaõnnestus",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube’is järjekorra muutmiseks on vaja brauseriga sisselogimist (küpsised)",
+  "The order on YouTube is already the same": "Järjekord YouTube’is on juba sama",
+  "Order saved on YouTube ({0} videos moved)": "Järjekord salvestati YouTube’i ({0} videot liigutati)",
+  "Couldn't change the order on YouTube": "Järjekorda YouTube’is ei saanud muuta",
+  "YouTube did not list this playlist": "YouTube ei loetlenud seda esitusloendit",
+  "Upload to YouTube": "Laadi YouTube’i üles",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "See loob su YouTube’i kontole uue privaatse esitusloendi „{0}“ nende {1} videoga näidatud järjekorras. Siinne loend jääb samaks.",
+  "Upload": "Laadi üles"
 }

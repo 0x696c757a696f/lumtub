@@ -79,6 +79,43 @@ class WebAccountApi implements AccountApi {
         },
         'a playlist change');
 
+  /// How many changes go in one `browse/edit_playlist` request.
+  static const perRequest = 100;
+
+  /// Adds [videoIds] to [playlistId] in this order, [perRequest] to a
+  /// request.
+  Future<void> addAllToPlaylist(String playlistId, List<String> videoIds) async {
+    for (var from = 0; from < videoIds.length; from += perRequest) {
+      await _send(
+        'browse/edit_playlist',
+        {
+          'playlistId': playlistId,
+          'actions': [
+            for (final id in videoIds.skip(from).take(perRequest)) {'action': 'ACTION_ADD_VIDEO', 'addedVideoId': id},
+          ],
+        },
+        'a playlist change',
+      );
+    }
+  }
+
+  /// Puts [playlistId] on YouTube in the order of [videoIds], moving only
+  /// the entries out of place (worked out in the core). Returns how many
+  /// entries moved.
+  Future<int> reorderPlaylist(String playlistId, List<String> videoIds) async {
+    final core = NativeCore.instance;
+    if (core == null) throw StateError(NativeCore.missingMessage);
+    final current = await feed.playlistEntries(playlistId);
+    if (current.isEmpty) throw StateError(tr('YouTube did not list this playlist'));
+    final requests = core.playlistMoves(current, videoIds, perRequest: perRequest);
+    var moved = 0;
+    for (final actions in requests) {
+      await _send('browse/edit_playlist', {'playlistId': playlistId, 'actions': actions}, 'a playlist change');
+      moved += actions.length;
+    }
+    return moved;
+  }
+
   @override
   Future<RemotePlaylist> createPlaylist(String title) async {
     final data = await _send('playlist/create', {'title': title, 'privacyStatus': 'PRIVATE'}, 'a new playlist');

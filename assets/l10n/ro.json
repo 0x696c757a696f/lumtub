@@ -3773,5 +3773,15 @@
   "Playlist order": "Ordinea listelor de redare",
   "Arrange playlists": "Aranjează listele de redare",
   "Video order": "Ordinea videoclipurilor",
-  "Arrange “{0}”": "Aranjează „{0}”"
+  "Arrange “{0}”": "Aranjează „{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Încărcată pe YouTube ca listă de redare privată „{0}”",
+  "Upload failed": "Încărcarea a eșuat",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Pentru a schimba ordinea pe YouTube este nevoie de conectarea prin browser (cookie-uri)",
+  "The order on YouTube is already the same": "Ordinea de pe YouTube este deja aceeași",
+  "Order saved on YouTube ({0} videos moved)": "Ordinea a fost salvată pe YouTube ({0} videoclipuri mutate)",
+  "Couldn't change the order on YouTube": "Nu am putut schimba ordinea pe YouTube",
+  "YouTube did not list this playlist": "YouTube nu a listat această listă de redare",
+  "Upload to YouTube": "Încarcă pe YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Aceasta creează o listă de redare privată nouă „{0}” în contul tău YouTube, cu aceste {1} videoclipuri, în ordinea afișată. Lista de aici rămâne neschimbată.",
+  "Upload": "Încarcă"
 }

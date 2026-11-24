@@ -3772,5 +3772,15 @@
   "Playlist order": "ପ୍ଲେଲିଷ୍ଟ କ୍ରମ",
   "Arrange playlists": "ପ୍ଲେଲିଷ୍ଟ ସଜାନ୍ତୁ",
   "Video order": "ଭିଡିଓ କ୍ରମ",
-  "Arrange “{0}”": "“{0}” ସଜାନ୍ତୁ"
+  "Arrange “{0}”": "“{0}” ସଜାନ୍ତୁ",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube ରେ ବ୍ୟକ୍ତିଗତ ପ୍ଲେଲିଷ୍ଟ “{0}” ଭାବେ ଅପଲୋଡ ହେଲା",
+  "Upload failed": "ଅପଲୋଡ ବିଫଳ ହେଲା",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube ରେ କ୍ରମ ବଦଳାଇବାକୁ ବ୍ରାଉଜର ସାଇନ୍ ଇନ୍ (କୁକି) ଆବଶ୍ୟକ",
+  "The order on YouTube is already the same": "YouTube ରେ ଥିବା କ୍ରମ ଆଗରୁ ସମାନ",
+  "Order saved on YouTube ({0} videos moved)": "YouTube ରେ କ୍ରମ ସଞ୍ଚୟ ହେଲା ({0} ଭିଡିଓ ଘୁଞ୍ଚିଲା)",
+  "Couldn't change the order on YouTube": "YouTube ରେ କ୍ରମ ବଦଳାଯାଇପାରିଲା ନାହିଁ",
+  "YouTube did not list this playlist": "YouTube ଏହି ପ୍ଲେଲିଷ୍ଟକୁ ତାଲିକାଭୁକ୍ତ କଲା ନାହିଁ",
+  "Upload to YouTube": "YouTube କୁ ଅପଲୋଡ କରନ୍ତୁ",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "ଏହା ଆପଣଙ୍କ YouTube ଆକାଉଣ୍ଟରେ ଏହି {1} ଭିଡିଓ ସହ, ଦେଖାଯାଇଥିବା କ୍ରମରେ, “{0}” ନାମରେ ଏକ ନୂଆ ବ୍ୟକ୍ତିଗତ ପ୍ଲେଲିଷ୍ଟ ତିଆରି କରିବ। ଏଠାକାର ତାଲିକା ଯେପରି ଅଛି ସେପରି ରହିବ।",
+  "Upload": "ଅପଲୋଡ କରନ୍ତୁ"
 }

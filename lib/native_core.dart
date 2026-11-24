@@ -47,6 +47,7 @@ class NativeCore {
         _looksLike = library.lookupFunction<Bool Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_looks_like'),
         _resolved = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_resolved'),
         _edl = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_edl'),
+        _playlistMoves = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_playlist_moves'),
         _quickRequest = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_quick_request'),
         _quickInfo = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_quick_info'),
         _castStart = library.lookupFunction<Uint16 Function(), int Function()>('lumtub_cast_start'),
@@ -127,6 +128,7 @@ class NativeCore {
   bool looksLike(String source, String target) => withText(source, (s, sl) => withText(target, (t, tl) => _looksLike(s, sl, t, tl)));
   final Pointer<Utf8> Function(Pointer<Uint8> info, int length, Pointer<Uint8> ask, int askLength) _resolved;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _edl;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _playlistMoves;
 
   /// What yt-dlp's answer [info] offers for the rules in [ask], as JSON
   /// (native/lumtub_core/src/resolved.rs).
@@ -134,6 +136,23 @@ class NativeCore {
 
   /// An mpv EDL address playing [addresses] as one video.
   String? edl(List<String> addresses) => take(withText(jsonEncode(addresses), _edl));
+
+  /// The `actions` lists for `browse/edit_playlist` that put a YouTube
+  /// playlist's entries ([current]: video id and setVideoId, in YouTube's
+  /// order) into the order of [wanted], moving the fewest entries; at most
+  /// [perRequest] moves in each list.
+  List<List<Object?>> playlistMoves(List<(String video, String set)> current, List<String> wanted, {int perRequest = 100}) {
+    final answer = take(withText(
+      jsonEncode({
+        'current': [for (final (video, set) in current) {'video': video, 'set': set}],
+        'wanted': wanted,
+        'per_request': perRequest,
+      }),
+      _playlistMoves,
+    ));
+    final lists = answer == null ? null : jsonDecode(answer);
+    return [if (lists is List) for (final list in lists) if (list is List) list];
+  }
 
   final Pointer<Utf8> Function(Pointer<Uint8> id, int length) _quickRequest;
   final Pointer<Utf8> Function(Pointer<Uint8> player, int playerLength, Pointer<Uint8> settings, int settingsLength) _quickInfo;

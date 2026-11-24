@@ -3772,5 +3772,15 @@
   "Playlist order": "Urutan daptar puter",
   "Arrange playlists": "Susun daptar puter",
   "Video order": "Urutan video",
-  "Arrange “{0}”": "Susun “{0}”"
+  "Arrange “{0}”": "Susun “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Diunggah ka YouTube minangka daptar puter pribadi “{0}”",
+  "Upload failed": "Unggahan gagal",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Pikeun ngarobah urutan di YouTube diperlukeun asup nganggo pangbuka (cookie)",
+  "The order on YouTube is already the same": "Urutan di YouTube geus sarua",
+  "Order saved on YouTube ({0} videos moved)": "Urutan disimpen di YouTube ({0} vidéo dipindahkeun)",
+  "Couldn't change the order on YouTube": "Teu bisa ngarobah urutan di YouTube",
+  "YouTube did not list this playlist": "YouTube teu mintonkeun daptar puter ieu",
+  "Upload to YouTube": "Unggah ka YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Ieu nijieun daptar puter pribadi anyar “{0}” dina akun YouTube anjeun kalayan {1} vidéo ieu, dina urutan anu ditémbongkeun. Daptar di dieu tetep sakumaha ayeuna.",
+  "Upload": "Unggah"
 }

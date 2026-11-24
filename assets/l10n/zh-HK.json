@@ -3802,5 +3802,15 @@
   "Playlist order": "播放清單排序",
   "Arrange playlists": "調整播放清單順序",
   "Video order": "影片排序",
-  "Arrange “{0}”": "調整「{0}」的順序"
+  "Arrange “{0}”": "調整「{0}」的順序",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "已上傳到 YouTube，私人播放清單「{0}」",
+  "Upload failed": "上傳失敗",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "要在 YouTube 上改順序，需要用瀏覽器（Cookie）登入",
+  "The order on YouTube is already the same": "YouTube 上的順序已經一樣",
+  "Order saved on YouTube ({0} videos moved)": "順序已同步到 YouTube（移動了 {0} 個影片）",
+  "Couldn't change the order on YouTube": "未能在 YouTube 上改順序",
+  "YouTube did not list this playlist": "YouTube 沒有列出這個播放清單",
+  "Upload to YouTube": "上傳到 YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "會在你的 YouTube 帳戶內新增私人播放清單「{0}」，並按目前顯示的順序放入這 {1} 個影片。這裡的清單保持不變。",
+  "Upload": "上傳"
 }

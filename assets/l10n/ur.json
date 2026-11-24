@@ -3772,5 +3772,15 @@
   "Playlist order": "پلے لسٹ کی ترتیب",
   "Arrange playlists": "پلے لسٹس ترتیب دیں",
   "Video order": "ویڈیو کی ترتیب",
-  "Arrange “{0}”": "“{0}” کو ترتیب دیں"
+  "Arrange “{0}”": "“{0}” کو ترتیب دیں",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube پر نجی پلے لسٹ “{0}” کے طور پر اپ لوڈ ہو گئی",
+  "Upload failed": "اپ لوڈ ناکام ہو گیا",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube پر ترتیب بدلنے کے لیے براؤزر سائن ان (کوکیز) درکار ہے",
+  "The order on YouTube is already the same": "YouTube پر ترتیب پہلے ہی وہی ہے",
+  "Order saved on YouTube ({0} videos moved)": "YouTube پر ترتیب محفوظ ہو گئی ({0} ویڈیوز منتقل کی گئیں)",
+  "Couldn't change the order on YouTube": "YouTube پر ترتیب نہیں بدلی جا سکی",
+  "YouTube did not list this playlist": "YouTube نے یہ پلے لسٹ نہیں دکھائی",
+  "Upload to YouTube": "YouTube پر اپ لوڈ کریں",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "اس سے آپ کے YouTube اکاؤنٹ میں یہ {1} ویڈیوز دکھائی گئی ترتیب میں رکھ کر “{0}” نام کی نئی نجی پلے لسٹ بن جائے گی۔ یہاں کی فہرست جیسی ہے ویسی ہی رہے گی۔",
+  "Upload": "اپ لوڈ کریں"
 }

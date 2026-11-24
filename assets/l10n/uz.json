@@ -3772,5 +3772,15 @@
   "Playlist order": "Pleylistlar tartibi",
   "Arrange playlists": "Pleylistlarni tartiblash",
   "Video order": "Videolar tartibi",
-  "Arrange “{0}”": "“{0}”ni tartiblash"
+  "Arrange “{0}”": "“{0}”ni tartiblash",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube'ga shaxsiy pleylist “{0}” sifatida yuklandi",
+  "Upload failed": "Yuklash amalga oshmadi",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube'da tartibni o'zgartirish uchun brauzer orqali kirish (cookie) kerak",
+  "The order on YouTube is already the same": "YouTube'dagi tartib allaqachon xuddi shunday",
+  "Order saved on YouTube ({0} videos moved)": "Tartib YouTube'da saqlandi ({0} ta video ko'chirildi)",
+  "Couldn't change the order on YouTube": "YouTube'da tartibni o'zgartirib bo'lmadi",
+  "YouTube did not list this playlist": "YouTube bu pleylistni ko'rsatmadi",
+  "Upload to YouTube": "YouTube'ga yuklash",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Bu YouTube hisobingizda shu {1} ta video bilan, ko'rsatilgan tartibda yangi shaxsiy “{0}” pleylistini yaratadi. Bu yerdagi ro'yxat o'zgarishsiz qoladi.",
+  "Upload": "Yuklash"
 }

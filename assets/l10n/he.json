@@ -3773,5 +3773,15 @@
   "Playlist order": "סדר הפלייליסטים",
   "Arrange playlists": "סידור פלייליסטים",
   "Video order": "סדר הסרטונים",
-  "Arrange “{0}”": "סידור “{0}”"
+  "Arrange “{0}”": "סידור “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "הועלתה ל-YouTube כפלייליסט פרטי “{0}”",
+  "Upload failed": "ההעלאה נכשלה",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "שינוי הסדר ב-YouTube דורש התחברות באמצעות דפדפן (Cookie)",
+  "The order on YouTube is already the same": "הסדר ב-YouTube כבר זהה",
+  "Order saved on YouTube ({0} videos moved)": "הסדר נשמר ב-YouTube ({0} סרטונים הועברו)",
+  "Couldn't change the order on YouTube": "לא ניתן היה לשנות את הסדר ב-YouTube",
+  "YouTube did not list this playlist": "YouTube לא הציג את הפלייליסט הזה",
+  "Upload to YouTube": "העלאה ל-YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "פעולה זו יוצרת בחשבון ה-YouTube שלכם פלייליסט פרטי חדש “{0}” עם {1} הסרטונים האלה, לפי הסדר המוצג. הרשימה כאן נשארת כפי שהיא.",
+  "Upload": "העלאה"
 }

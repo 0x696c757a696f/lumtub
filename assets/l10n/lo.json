@@ -3772,5 +3772,15 @@
   "Playlist order": "ລຳດັບລາຍການຫຼິ້ນ",
   "Arrange playlists": "ຈັດລຽງລາຍການຫຼິ້ນ",
   "Video order": "ລຳດັບວິດີໂອ",
-  "Arrange “{0}”": "ຈັດລຽງ “{0}”"
+  "Arrange “{0}”": "ຈັດລຽງ “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "ອັບໂຫຼດຂຶ້ນ YouTube ເປັນລາຍການຫຼິ້ນສ່ວນຕົວ “{0}” ແລ້ວ",
+  "Upload failed": "ອັບໂຫຼດບໍ່ສຳເລັດ",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "ການປ່ຽນລຳດັບໃນ YouTube ຕ້ອງເຂົ້າສູ່ລະບົບດ້ວຍບຣາວເຊີ (ຄຸກກີ້)",
+  "The order on YouTube is already the same": "ລຳດັບໃນ YouTube ຄືກັນແລ້ວ",
+  "Order saved on YouTube ({0} videos moved)": "ບັນທຶກລຳດັບໃນ YouTube ແລ້ວ (ຍ້າຍ {0} ວິດີໂອ)",
+  "Couldn't change the order on YouTube": "ປ່ຽນລຳດັບໃນ YouTube ບໍ່ໄດ້",
+  "YouTube did not list this playlist": "YouTube ບໍ່ໄດ້ສະແດງລາຍການຫຼິ້ນນີ້",
+  "Upload to YouTube": "ອັບໂຫຼດຂຶ້ນ YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "ນີ້ຈະສ້າງລາຍການຫຼິ້ນສ່ວນຕົວໃໝ່ “{0}” ໃນບັນຊີ YouTube ຂອງທ່ານ ພ້ອມວິດີໂອ {1} ລາຍການນີ້ ຕາມລຳດັບທີ່ສະແດງ. ລາຍການຢູ່ບ່ອນນີ້ຈະຄືເກົ່າ.",
+  "Upload": "ອັບໂຫຼດ"
 }

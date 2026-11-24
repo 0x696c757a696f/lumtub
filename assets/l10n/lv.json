@@ -3773,5 +3773,15 @@
   "Playlist order": "Atskaņošanas sarakstu secība",
   "Arrange playlists": "Kārtot atskaņošanas sarakstus",
   "Video order": "Video secība",
-  "Arrange “{0}”": "Kārtot „{0}“"
+  "Arrange “{0}”": "Kārtot „{0}“",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Augšupielādēts YouTube kā privāts atskaņošanas saraksts „{0}“",
+  "Upload failed": "Augšupielāde neizdevās",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Lai mainītu secību pakalpojumā YouTube, jāpierakstās ar pārlūkprogrammu (sīkfaili)",
+  "The order on YouTube is already the same": "Secība pakalpojumā YouTube jau ir tāda pati",
+  "Order saved on YouTube ({0} videos moved)": "Secība saglabāta pakalpojumā YouTube (pārvietoti video: {0})",
+  "Couldn't change the order on YouTube": "Neizdevās mainīt secību pakalpojumā YouTube",
+  "YouTube did not list this playlist": "YouTube neuzrādīja šo atskaņošanas sarakstu",
+  "Upload to YouTube": "Augšupielādēt pakalpojumā YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Tādējādi jūsu YouTube kontā tiks izveidots jauns privāts atskaņošanas saraksts „{0}“ ar šiem {1} video parādītajā secībā. Saraksts šeit paliek nemainīgs.",
+  "Upload": "Augšupielādēt"
 }

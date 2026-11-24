@@ -3773,5 +3773,15 @@
   "Playlist order": "Lejátszási listák sorrendje",
   "Arrange playlists": "Lejátszási listák rendezése",
   "Video order": "Videók sorrendje",
-  "Arrange “{0}”": "„{0}” rendezése"
+  "Arrange “{0}”": "„{0}” rendezése",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Feltöltve a YouTube-ra privát lejátszási listaként: „{0}”",
+  "Upload failed": "A feltöltés nem sikerült",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "A sorrend YouTube-on való módosításához böngészős bejelentkezés (cookie) kell",
+  "The order on YouTube is already the same": "A sorrend a YouTube-on már ugyanez",
+  "Order saved on YouTube ({0} videos moved)": "A sorrend mentve a YouTube-on ({0} videó áthelyezve)",
+  "Couldn't change the order on YouTube": "Nem sikerült módosítani a sorrendet a YouTube-on",
+  "YouTube did not list this playlist": "A YouTube nem listázta ezt a lejátszási listát",
+  "Upload to YouTube": "Feltöltés a YouTube-ra",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Ez új privát lejátszási listát hoz létre „{0}” néven a YouTube-fiókodban ezzel a {1} videóval, a megjelenített sorrendben. Az itteni lista változatlan marad.",
+  "Upload": "Feltöltés"
 }

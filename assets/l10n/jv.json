@@ -3772,5 +3772,15 @@
   "Playlist order": "Urutan dhaptar putar",
   "Arrange playlists": "Atur dhaptar putar",
   "Video order": "Urutan video",
-  "Arrange “{0}”": "Atur “{0}”"
+  "Arrange “{0}”": "Atur “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Wis diunggah menyang YouTube minangka dhaptar putar pribadi “{0}”",
+  "Upload failed": "Unggahan gagal",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Ngowahi urutan ing YouTube butuh mlebu nganggo browser (cookie)",
+  "The order on YouTube is already the same": "Urutan ing YouTube wis padha",
+  "Order saved on YouTube ({0} videos moved)": "Urutan wis disimpen ing YouTube ({0} video dipindhah)",
+  "Couldn't change the order on YouTube": "Ora bisa ngowahi urutan ing YouTube",
+  "YouTube did not list this playlist": "YouTube ora nampilake dhaptar putar iki",
+  "Upload to YouTube": "Unggah menyang YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Iki gawe dhaptar putar pribadi anyar “{0}” ing akun YouTube Panjenengan kanthi {1} video iki, miturut urutan sing katon. Dhaptar ing kéné tetep kaya saiki.",
+  "Upload": "Unggah"
 }

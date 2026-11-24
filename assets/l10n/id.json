@@ -3778,5 +3778,15 @@
   "Playlist order": "Urutan playlist",
   "Arrange playlists": "Susun playlist",
   "Video order": "Urutan video",
-  "Arrange “{0}”": "Susun “{0}”"
+  "Arrange “{0}”": "Susun “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Diunggah ke YouTube sebagai playlist pribadi “{0}”",
+  "Upload failed": "Gagal mengunggah",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Mengubah urutan di YouTube memerlukan masuk dengan browser (cookie)",
+  "The order on YouTube is already the same": "Urutan di YouTube sudah sama",
+  "Order saved on YouTube ({0} videos moved)": "Urutan disimpan di YouTube ({0} video dipindahkan)",
+  "Couldn't change the order on YouTube": "Tidak dapat mengubah urutan di YouTube",
+  "YouTube did not list this playlist": "YouTube tidak menampilkan playlist ini",
+  "Upload to YouTube": "Unggah ke YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Ini membuat playlist pribadi baru “{0}” di akun YouTube Anda dengan {1} video ini, sesuai urutan yang ditampilkan. Daftar di sini tetap seperti semula.",
+  "Upload": "Unggah"
 }

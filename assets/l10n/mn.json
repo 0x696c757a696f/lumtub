@@ -3772,5 +3772,15 @@
   "Playlist order": "Тоглуулах жагсаалтын дараалал",
   "Arrange playlists": "Тоглуулах жагсаалтуудыг эрэмбэлэх",
   "Video order": "Видеоны дараалал",
-  "Arrange “{0}”": "“{0}”-г эрэмбэлэх"
+  "Arrange “{0}”": "“{0}”-г эрэмбэлэх",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube-д хувийн тоглуулах жагсаалт «{0}» болгон байршууллаа",
+  "Upload failed": "Байршуулах амжилтгүй боллоо",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube дээр дарааллыг өөрчлөхөд хөтчөөр нэвтрэх (күүки) шаардлагатай",
+  "The order on YouTube is already the same": "YouTube дээрх дараалал аль хэдийн ижил байна",
+  "Order saved on YouTube ({0} videos moved)": "Дарааллыг YouTube дээр хадгаллаа ({0} видео зөөгдсөн)",
+  "Couldn't change the order on YouTube": "YouTube дээр дарааллыг өөрчилж чадсангүй",
+  "YouTube did not list this playlist": "YouTube энэ тоглуулах жагсаалтыг харуулсангүй",
+  "Upload to YouTube": "YouTube-д байршуулах",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Энэ нь таны YouTube бүртгэлд эдгээр {1} видеотой, харуулсан дарааллаар «{0}» нэртэй шинэ хувийн тоглуулах жагсаалт үүсгэнэ. Энд байгаа жагсаалт хэвээр үлдэнэ.",
+  "Upload": "Байршуулах"
 }

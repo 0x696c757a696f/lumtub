@@ -3773,5 +3773,15 @@
   "Playlist order": "Ordo indicum pellicularum",
   "Arrange playlists": "Indices pellicularum ordina",
   "Video order": "Ordo videorum",
-  "Arrange “{0}”": "“{0}” ordina"
+  "Arrange “{0}”": "“{0}” ordina",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "In YouTube impositus ut index pellicularum privatus “{0}”",
+  "Upload failed": "Impositio defecit",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Ordinem in YouTube mutare ingressum per navigatrum (crustula) requirit",
+  "The order on YouTube is already the same": "Ordo in YouTube iam idem est",
+  "Order saved on YouTube ({0} videos moved)": "Ordo in YouTube servatus est ({0} pelliculae motae)",
+  "Couldn't change the order on YouTube": "Ordo in YouTube mutari non potuit",
+  "YouTube did not list this playlist": "YouTube hunc indicem pellicularum non enumeravit",
+  "Upload to YouTube": "In YouTube imponere",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Hoc novum indicem pellicularum privatum “{0}” in ratione tua YouTube creat cum his {1} pelliculis, ordine ostenso. Index hic manet ut est.",
+  "Upload": "Imponere"
 }

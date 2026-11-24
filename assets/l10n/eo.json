@@ -3773,5 +3773,15 @@
   "Playlist order": "Ordo de ludlistoj",
   "Arrange playlists": "Aranĝi ludlistojn",
   "Video order": "Ordo de videoj",
-  "Arrange “{0}”": "Aranĝi “{0}”"
+  "Arrange “{0}”": "Aranĝi “{0}”",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Alŝutita al YouTube kiel la privata ludlisto “{0}”",
+  "Upload failed": "Alŝuto malsukcesis",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Por ŝanĝi la ordon en YouTube necesas ensaluto per retumilo (kuketoj)",
+  "The order on YouTube is already the same": "La ordo en YouTube jam samas",
+  "Order saved on YouTube ({0} videos moved)": "Ordo konservita en YouTube ({0} videoj movitaj)",
+  "Couldn't change the order on YouTube": "Ne eblis ŝanĝi la ordon en YouTube",
+  "YouTube did not list this playlist": "YouTube ne listigis ĉi tiun ludliston",
+  "Upload to YouTube": "Alŝuti al YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Ĉi tio kreas novan privatan ludliston “{0}” en via YouTube-konto kun ĉi tiuj {1} videoj, laŭ la montrata ordo. La listo ĉi tie restas kiel ĝi estas.",
+  "Upload": "Alŝuti"
 }

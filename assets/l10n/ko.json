@@ -3778,5 +3778,15 @@
   "Playlist order": "재생목록 정렬",
   "Arrange playlists": "재생목록 순서 조정",
   "Video order": "영상 정렬",
-  "Arrange “{0}”": "“{0}” 순서 조정"
+  "Arrange “{0}”": "“{0}” 순서 조정",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube에 비공개 재생목록 “{0}”(으)로 업로드했습니다",
+  "Upload failed": "업로드하지 못했습니다",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube에서 순서를 바꾸려면 브라우저 로그인(쿠키)이 필요합니다",
+  "The order on YouTube is already the same": "YouTube의 순서가 이미 같습니다",
+  "Order saved on YouTube ({0} videos moved)": "YouTube에 순서를 저장했습니다(동영상 {0}개 이동)",
+  "Couldn't change the order on YouTube": "YouTube에서 순서를 바꾸지 못했습니다",
+  "YouTube did not list this playlist": "YouTube에서 이 재생목록이 표시되지 않았습니다",
+  "Upload to YouTube": "YouTube에 업로드",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "YouTube 계정에 이 동영상 {1}개를 표시된 순서대로 담은 새 비공개 재생목록 “{0}”을(를) 만듭니다. 여기 있는 목록은 그대로 유지됩니다.",
+  "Upload": "업로드"
 }

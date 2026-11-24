@@ -3773,5 +3773,15 @@
   "Playlist order": "Orde das listas de reprodución",
   "Arrange playlists": "Reordenar listas de reprodución",
   "Video order": "Orde dos vídeos",
-  "Arrange “{0}”": "Reordenar «{0}»"
+  "Arrange “{0}”": "Reordenar «{0}»",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "Subida a YouTube como a lista de reprodución privada “{0}”",
+  "Upload failed": "Produciuse un erro ao subir",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "Para cambiar a orde en YouTube fai falta iniciar sesión cun navegador (cookies)",
+  "The order on YouTube is already the same": "A orde en YouTube xa é a mesma",
+  "Order saved on YouTube ({0} videos moved)": "Orde gardada en YouTube ({0} vídeos movidos)",
+  "Couldn't change the order on YouTube": "Non se puido cambiar a orde en YouTube",
+  "YouTube did not list this playlist": "YouTube non listou esta lista de reprodución",
+  "Upload to YouTube": "Subir a YouTube",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "Isto crea unha lista de reprodución privada nova “{0}” na túa conta de YouTube con estes {1} vídeos, na orde mostrada. A lista de aquí queda como está.",
+  "Upload": "Subir"
 }

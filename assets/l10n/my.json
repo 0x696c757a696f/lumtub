@@ -3772,5 +3772,15 @@
   "Playlist order": "ဖွင့်ရန်စာရင်း အစီအစဉ်",
   "Arrange playlists": "ဖွင့်ရန်စာရင်းများ စီစဉ်ရန်",
   "Video order": "ဗီဒီယိုအစီအစဉ်",
-  "Arrange “{0}”": "“{0}” ကို စီစဉ်ရန်"
+  "Arrange “{0}”": "“{0}” ကို စီစဉ်ရန်",
+  "Uploaded to YouTube as the private playlist \"{0}\"": "YouTube သို့ ပုဂ္ဂလိက ဖွင့်ရန်စာရင်း “{0}” အဖြစ် တင်ပြီးပါပြီ",
+  "Upload failed": "တင်ခြင်း မအောင်မြင်ပါ",
+  "Changing the order on YouTube needs the browser (cookies) sign-in": "YouTube တွင် အစီအစဉ်ပြောင်းရန် ဘရောက်ဇာဖြင့် လက်မှတ်ထိုးဝင်ခြင်း (ကွတ်ကီး) လိုအပ်သည်",
+  "The order on YouTube is already the same": "YouTube ရှိ အစီအစဉ်သည် အတူတူပင် ဖြစ်နေပြီ",
+  "Order saved on YouTube ({0} videos moved)": "အစီအစဉ်ကို YouTube တွင် သိမ်းပြီးပါပြီ (ဗီဒီယို {0} ခု ရွှေ့ထားသည်)",
+  "Couldn't change the order on YouTube": "YouTube တွင် အစီအစဉ် ပြောင်း၍ မရပါ",
+  "YouTube did not list this playlist": "YouTube က ဤဖွင့်ရန်စာရင်းကို မပြပါ",
+  "Upload to YouTube": "YouTube သို့ တင်ရန်",
+  "This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.": "၎င်းသည် သင့် YouTube အကောင့်တွင် ဤဗီဒီယို {1} ခုပါသော ပုဂ္ဂလိက ဖွင့်ရန်စာရင်းအသစ် “{0}” ကို ပြထားသည့် အစီအစဉ်အတိုင်း ဖန်တီးပေးမည်။ ဤနေရာရှိ စာရင်းမှာ မပြောင်းလဲဘဲ ရှိနေမည်။",
+  "Upload": "တင်ရန်"
 }

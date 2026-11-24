@@ -107,7 +107,24 @@ impl Lexicon {
 
     /// Whether [key] is a word or form here, as [find] looks it up.
     pub fn knows(&self, key: &str) -> bool {
-        !self.find(key).is_empty()
+        let lower = key.to_lowercase();
+        let folded = fold(&lower);
+        [key, &lower, &folded]
+            .into_iter()
+            .any(|k| !k.is_empty() && self.has(k))
+            || crate::words::without_pronouns(&self.language, &lower)
+                .iter()
+                .any(|stem| self.has(stem))
+    }
+
+    /// Whether [key] has an entry, without reading it.
+    fn has(&self, key: &str) -> bool {
+        self.db
+            .prepare_cached(
+                "SELECT 1 FROM term t JOIN entry e ON e.id = t.entry WHERE t.key = ?1 LIMIT 1",
+            )
+            .and_then(|mut query| query.exists([key]))
+            .unwrap_or(false)
     }
 
     fn find_exact(&self, key: &str) -> Vec<Found> {

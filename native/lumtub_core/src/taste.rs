@@ -7,7 +7,7 @@
 #![allow(clippy::missing_safety_doc)]
 
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ffi::{CString, c_char};
 
 /// Keys in the order they were first added, so ties come out the same way
@@ -44,12 +44,18 @@ impl Ordered {
         let mut order: Vec<usize> = (0..self.keys.len())
             .filter(|&i| self.values[i] > floor)
             .collect();
-        order.sort_by(|&a, &b| self.values[b].total_cmp(&self.values[a]));
-        order
-            .into_iter()
-            .take(count)
-            .map(|i| self.keys[i].as_str())
-            .collect()
+        // Highest first, ties in the order added; only the first [count]
+        // are sorted.
+        let by = |a: &usize, b: &usize| self.values[*b].total_cmp(&self.values[*a]).then(a.cmp(b));
+        if count < order.len() {
+            if count == 0 {
+                return Vec::new();
+            }
+            order.select_nth_unstable_by(count - 1, by);
+            order.truncate(count);
+        }
+        order.sort_by(by);
+        order.into_iter().map(|i| self.keys[i].as_str()).collect()
     }
 }
 
@@ -253,8 +259,9 @@ fn cjk(c: char) -> bool {
 /// the order they appear, Latin words first.
 pub fn title_words(title: &str) -> Vec<String> {
     let mut result: Vec<String> = Vec::new();
+    let mut seen: HashSet<String> = HashSet::new();
     let mut push = |word: String| {
-        if !result.contains(&word) {
+        if seen.insert(word.clone()) {
             result.push(word);
         }
     };
@@ -411,16 +418,9 @@ fn rank(taste: &Taste, ranking: &Ranking) -> Vec<(usize, usize)> {
             }
         }
     }
-    struct Pooled {
-        item: usize,
-        reason: usize,
-        score: f64,
-        channel: usize,
-        interest: Option<usize>,
-    }
     let mut channel_ids: HashMap<&str, usize> = HashMap::new();
     let mut interest_ids: HashMap<&str, usize> = HashMap::new();
-    let mut pool: Vec<Pooled> = entries
+    let pool: Vec<Pooled> = entries
         .iter()
         .map(|e| {
             let c = &ranking.candidates[e.item];
@@ -439,27 +439,100 @@ fn rank(taste: &Taste, ranking: &Ranking) -> Vec<(usize, usize)> {
             }
         })
         .collect();
-    let mut per_channel = vec![0u32; channel_ids.len()];
-    let mut per_interest = vec![0u32; interest_ids.len()];
-    let mut picked = Vec::new();
-    while picked.len() < ranking.count && !pool.is_empty() {
-        let mut best = 0;
-        let mut best_score = f64::NEG_INFINITY;
-        for (i, entry) in pool.iter().enumerate() {
-            let score = entry.score
-                - 0.45 * per_channel[entry.channel] as f64
-                - entry.interest.map_or(0.0, |w| 0.2 * per_interest[w] as f64);
-            if score > best_score {
-                best_score = score;
-                best = i;
-            }
+    pick(&pool, channel_ids.len(), interest_ids.len(), ranking.count)
+        .into_iter()
+        .map(|i| (pool[i].item, pool[i].reason))
+        .collect()
+}
+
+/// A candidate in the ranking: its score before the picks so far, and the
+/// channel and interest it would add one more of.
+struct Pooled {
+    item: usize,
+    reason: usize,
+    score: f64,
+    channel: usize,
+    interest: Option<usize>,
+}
+
+/// A pooled candidate's place among the others: the higher its score, the
+/// earlier it is picked; between equals, the one earlier in the pool. Like
+/// a scan that takes the first strictly higher score above minus infinity,
+/// scores that are not (minus infinity, NaN) all come last, by place, and
+/// -0 is 0.
+#[derive(Clone, Copy)]
+struct Place {
+    above: bool,
+    score: f64,
+    at: usize,
+}
+
+impl Place {
+    fn new(score: f64, at: usize) -> Place {
+        let above = score > f64::NEG_INFINITY;
+        Place {
+            above,
+            score: if above { score + 0.0 } else { 0.0 },
+            at,
         }
-        let chosen = pool.remove(best);
-        per_channel[chosen.channel] += 1;
-        if let Some(w) = chosen.interest {
+    }
+}
+
+impl Ord for Place {
+    fn cmp(&self, other: &Place) -> std::cmp::Ordering {
+        self.above
+            .cmp(&other.above)
+            .then(self.score.total_cmp(&other.score))
+            .then(other.at.cmp(&self.at))
+    }
+}
+
+impl PartialOrd for Place {
+    fn partial_cmp(&self, other: &Place) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for Place {
+    fn eq(&self, other: &Place) -> bool {
+        self.cmp(other).is_eq()
+    }
+}
+
+impl Eq for Place {}
+
+/// Up to [count] of [pool] in the order picked: each time the highest
+/// score once lowered for the channel and interest already picked. Scores
+/// only fall as picks are made, so each waits in a heap at its last known
+/// score and is looked at again only when it comes up: O((count + n) log n)
+/// rather than a scan of the pool per pick.
+fn pick(pool: &[Pooled], channels: usize, interests: usize, count: usize) -> Vec<usize> {
+    let mut per_channel = vec![0u32; channels];
+    let mut per_interest = vec![0u32; interests];
+    let now = |entry: &Pooled, per_channel: &[u32], per_interest: &[u32]| {
+        entry.score
+            - 0.45 * per_channel[entry.channel] as f64
+            - entry.interest.map_or(0.0, |w| 0.2 * per_interest[w] as f64)
+    };
+    let mut waiting: std::collections::BinaryHeap<Place> = pool
+        .iter()
+        .enumerate()
+        .map(|(at, entry)| Place::new(now(entry, &per_channel, &per_interest), at))
+        .collect();
+    let mut picked = Vec::new();
+    while picked.len() < count {
+        let Some(top) = waiting.pop() else { break };
+        let entry = &pool[top.at];
+        let place = Place::new(now(entry, &per_channel, &per_interest), top.at);
+        if waiting.peek().is_some_and(|next| place < *next) {
+            waiting.push(place);
+            continue;
+        }
+        per_channel[entry.channel] += 1;
+        if let Some(w) = entry.interest {
             per_interest[w] += 1;
         }
-        picked.push((chosen.item, chosen.reason));
+        picked.push(top.at);
     }
     picked
 }
@@ -469,6 +542,18 @@ pub(crate) unsafe fn text<'a>(ptr: *const u8, len: usize) -> &'a str {
         return "";
     }
     std::str::from_utf8(unsafe { std::slice::from_raw_parts(ptr, len) }).unwrap_or("")
+}
+
+/// The most of one answer from outside (YouTube's JSON or HTML, yt-dlp's,
+/// a feed) that a parser takes.
+pub(crate) const MAX_BODY: usize = 32 << 20;
+
+/// [text] for an answer from outside: empty past [MAX_BODY].
+pub(crate) unsafe fn outside<'a>(ptr: *const u8, len: usize) -> &'a str {
+    if len > MAX_BODY {
+        return "";
+    }
+    unsafe { text(ptr, len) }
 }
 
 pub(crate) fn give(value: String) -> *mut c_char {
@@ -578,6 +663,99 @@ pub unsafe extern "C" fn lumtub_string_free(value: *mut c_char) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The pick as it was: a scan of the pool for each pick.
+    fn pick_by_scan(
+        pool: &[Pooled],
+        channels: usize,
+        interests: usize,
+        count: usize,
+    ) -> Vec<usize> {
+        let mut pool: Vec<(usize, &Pooled)> = pool.iter().enumerate().collect();
+        let mut per_channel = vec![0u32; channels];
+        let mut per_interest = vec![0u32; interests];
+        let mut picked = Vec::new();
+        while picked.len() < count && !pool.is_empty() {
+            let mut best = 0;
+            let mut best_score = f64::NEG_INFINITY;
+            for (i, (_, entry)) in pool.iter().enumerate() {
+                let score = entry.score
+                    - 0.45 * per_channel[entry.channel] as f64
+                    - entry.interest.map_or(0.0, |w| 0.2 * per_interest[w] as f64);
+                if score > best_score {
+                    best_score = score;
+                    best = i;
+                }
+            }
+            let (at, chosen) = pool.remove(best);
+            per_channel[chosen.channel] += 1;
+            if let Some(w) = chosen.interest {
+                per_interest[w] += 1;
+            }
+            picked.push(at);
+        }
+        picked
+    }
+
+    #[test]
+    fn picks_in_the_same_order_as_a_scan() {
+        let mut seed = 0x9e37_79b9_7f4a_7c15u64;
+        let mut next = move || {
+            seed ^= seed << 13;
+            seed ^= seed >> 7;
+            seed ^= seed << 17;
+            seed
+        };
+        for round in 0..3000 {
+            let n = (next() % 120) as usize;
+            let channels = 1 + (next() % 12) as usize;
+            let interests = 1 + (next() % 6) as usize;
+            let pool: Vec<Pooled> = (0..n)
+                .map(|i| {
+                    let score = match next() % 20 {
+                        0 => f64::NAN,
+                        1 => f64::NEG_INFINITY,
+                        2 => f64::INFINITY,
+                        3 => -0.0,
+                        // Coarse values, so ties are common.
+                        4..=12 => (next() % 8) as f64 * 0.05,
+                        _ => jitter(round, &i.to_string()) * 3.0 - 1.0,
+                    };
+                    Pooled {
+                        item: i,
+                        reason: i,
+                        score,
+                        channel: (next() as usize) % channels,
+                        interest: (next() % 3 != 0).then(|| (next() as usize) % interests),
+                    }
+                })
+                .collect();
+            let count = (next() % 140) as usize;
+            assert_eq!(
+                pick(&pool, channels, interests, count),
+                pick_by_scan(&pool, channels, interests, count),
+                "round {round}"
+            );
+        }
+    }
+
+    #[test]
+    fn tops_in_the_same_order_as_a_full_sort() {
+        let mut ordered = Ordered::default();
+        for i in 0..500 {
+            ordered.add(&format!("k{i}"), ((i * 7919) % 13) as f64 - 2.0);
+        }
+        for count in [0, 1, 5, 10, 200, 1000] {
+            let mut all: Vec<usize> = (0..500).filter(|&i| ordered.values[i] > 0.0).collect();
+            all.sort_by(|&a, &b| ordered.values[b].total_cmp(&ordered.values[a]));
+            let expected: Vec<&str> = all
+                .into_iter()
+                .take(count)
+                .map(|i| ordered.keys[i].as_str())
+                .collect();
+            assert_eq!(ordered.top(count, 0.0), expected, "{count}");
+        }
+    }
 
     fn watched(k: &str, t: &str) -> Watched {
         Watched {

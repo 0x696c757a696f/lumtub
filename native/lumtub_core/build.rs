@@ -70,4 +70,16 @@ fn main() {
     );
     let target = Path::new(&std::env::var("OUT_DIR").unwrap()).join("lists_files.rs");
     std::fs::write(target, out).unwrap();
+    // QuickJS's version names the bytecode js.rs keeps, so bytecode an
+    // earlier QuickJS wrote is never read back.
+    let lock = Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.lock");
+    println!("cargo:rerun-if-changed={}", lock.display());
+    let quickjs = std::fs::read_to_string(&lock)
+        .ok()
+        .and_then(|lock| {
+            let (_, after) = lock.split_once("name = \"rquickjs-sys\"\nversion = \"")?;
+            Some(after.split('"').next()?.to_string())
+        })
+        .unwrap_or_else(|| "unknown".into());
+    println!("cargo:rustc-env=LUMTUB_QUICKJS={quickjs}");
 }

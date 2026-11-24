@@ -3,7 +3,7 @@
 //! 观看统计 from the watch time kept on this computer.
 
 use serde_json::{Value, json};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ffi::c_char;
 
 use crate::subtitles::{Cue, cues};
@@ -171,7 +171,7 @@ pub fn overview_check(source: &str, overview: &Value) -> Value {
     let starts: Vec<u64> = timed_paragraphs(&parsed).iter().map(|(s, _)| *s).collect();
     let end = parsed.iter().map(|c| c.end).max().unwrap_or(0);
     let snap = |ms: u64| -> Option<u64> {
-        if starts.is_empty() || ms > end + 5_000 {
+        if starts.is_empty() || ms > end.saturating_add(5_000) {
             return None;
         }
         Some(
@@ -188,6 +188,7 @@ pub fn overview_check(source: &str, overview: &Value) -> Value {
         2000,
     );
     let mut chapters: Vec<(u64, String)> = Vec::new();
+    let mut chapter_times = HashSet::new();
     for chapter in overview
         .get("chapters")
         .and_then(Value::as_array)
@@ -201,7 +202,7 @@ pub fn overview_check(source: &str, overview: &Value) -> Value {
         let Some(ms) = chapter.get("time").and_then(parse_clock).and_then(snap) else {
             continue;
         };
-        if title.is_empty() || chapters.iter().any(|(at, _)| *at == ms) {
+        if title.is_empty() || !chapter_times.insert(ms) {
             continue;
         }
         chapters.push((ms, title));
@@ -429,7 +430,11 @@ pub fn speech_vtt(input: &Value) -> String {
         .into_iter()
         .flatten()
     {
-        let offset = part.get("offset").and_then(Value::as_u64).unwrap_or(0);
+        let offset = part
+            .get("offset")
+            .and_then(Value::as_u64)
+            .unwrap_or(0)
+            .min(10_000_000_000);
         for segment in part
             .get("segments")
             .and_then(Value::as_array)
@@ -456,11 +461,13 @@ pub fn speech_vtt(input: &Value) -> String {
                     .get(name)
                     .and_then(Value::as_f64)
                     .unwrap_or(0.0)
-                    .max(0.0)
+                    .clamp(0.0, 1e7)
                     * 1000.0) as u64
             };
-            let start = offset + second("start");
-            let end = (offset + second("end")).max(start + 500);
+            let start = offset.saturating_add(second("start"));
+            let end = offset
+                .saturating_add(second("end"))
+                .max(start.saturating_add(500));
             let size = if text.chars().any(wide) { 22 } else { 48 };
             let parts = pieces(&text, size);
             let total: usize = parts
@@ -473,9 +480,11 @@ pub fn speech_vtt(input: &Value) -> String {
                 let next = if i + 1 == parts.len() {
                     end
                 } else {
-                    at + (end - start) * piece.chars().count() as u64 / total as u64
+                    at.saturating_add(
+                        (end - start).saturating_mul(piece.chars().count() as u64) / total as u64,
+                    )
                 };
-                cues.push((at, next.max(at + 300), piece.clone()));
+                cues.push((at, next.max(at.saturating_add(300)), piece.clone()));
                 at = next;
             }
         }
@@ -485,7 +494,7 @@ pub fn speech_vtt(input: &Value) -> String {
     for i in 0..cues.len() {
         let (start, mut end, ref text) = cues[i];
         if let Some(next) = cues.get(i + 1) {
-            end = end.min(next.0.max(start + 300));
+            end = end.min(next.0.max(start.saturating_add(300)));
         }
         out.push_str(&format!(
             "{} --> {}\n{}\n\n",
@@ -503,7 +512,8 @@ pub fn speech_vtt(input: &Value) -> String {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_speech_vtt(json: *const u8, length: usize) -> *mut c_char {
-    let input: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or(Value::Null);
+    let input: Value =
+        serde_json::from_str(unsafe { crate::taste::outside(json, length) }).unwrap_or(Value::Null);
     give(speech_vtt(&input))
 }
 
@@ -513,7 +523,8 @@ pub unsafe extern "C" fn lumtub_speech_vtt(json: *const u8, length: usize) -> *m
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_summary_transcript(json: *const u8, length: usize) -> *mut c_char {
-    let input: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or(Value::Null);
+    let input: Value =
+        serde_json::from_str(unsafe { crate::taste::outside(json, length) }).unwrap_or(Value::Null);
     let source = input.get("source").and_then(Value::as_str).unwrap_or("");
     let budget = input
         .get("budget")
@@ -534,7 +545,8 @@ pub unsafe extern "C" fn lumtub_summary_transcript(json: *const u8, length: usiz
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_overview_check(json: *const u8, length: usize) -> *mut c_char {
-    let input: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or(Value::Null);
+    let input: Value =
+        serde_json::from_str(unsafe { crate::taste::outside(json, length) }).unwrap_or(Value::Null);
     let source = input.get("source").and_then(Value::as_str).unwrap_or("");
     give(overview_check(source, input.get("overview").unwrap_or(&Value::Null)).to_string())
 }

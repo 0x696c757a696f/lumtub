@@ -8,7 +8,7 @@ use std::os::raw::c_char;
 
 use crate::comments::{Rating, button_rating, display, find_string, https, plain_text, token};
 use crate::innertube::at;
-use crate::taste::{give_json, text};
+use crate::taste::{give_json, outside};
 
 /// The `ytInitialData` object embedded in a YouTube page.
 pub fn initial_data(html: &str) -> Option<Value> {
@@ -135,7 +135,11 @@ fn post(post: &Value) -> Option<Post> {
             id,
             title: plain_text(renderer.get("title")),
             channel: plain_text(renderer.get("ownerText")),
-            duration: parts.map(|parts| parts.iter().fold(0, |total, n| total * 60 + n)),
+            duration: parts.and_then(|parts| {
+                parts
+                    .iter()
+                    .try_fold(0u32, |total, &n| total.checked_mul(60)?.checked_add(n))
+            }),
         })
     });
     let poll = match of(&["pollRenderer", "choices"]) {
@@ -257,7 +261,7 @@ pub fn section_token(data: &Value) -> Option<String> {
 /// [body] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_youtube_posts(body: *const u8, length: usize) -> *mut c_char {
-    let body = unsafe { text(body, length) };
+    let body = unsafe { outside(body, length) };
     let data = if body.trim_start().starts_with('{') {
         serde_json::from_str(body).ok()
     } else {
@@ -276,7 +280,7 @@ pub unsafe extern "C" fn lumtub_youtube_post_comments(
     html: *const u8,
     length: usize,
 ) -> *mut c_char {
-    give_json(&initial_data(unsafe { text(html, length) }).and_then(|data| section_token(&data)))
+    give_json(&initial_data(unsafe { outside(html, length) }).and_then(|data| section_token(&data)))
 }
 
 #[cfg(test)]

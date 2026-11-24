@@ -176,6 +176,23 @@ pub fn stats(base: &str, watched: &Watched, tracking: &Tracking, cpn: &str) -> [
     ]
 }
 
+/// The body of [response], or None when it fails or passes
+/// [crate::taste::MAX_BODY].
+async fn read_capped(mut response: reqwest::Response) -> Option<Vec<u8>> {
+    let most = crate::taste::MAX_BODY;
+    if response.content_length().is_some_and(|n| n > most as u64) {
+        return None;
+    }
+    let mut body = Vec::new();
+    while let Some(piece) = response.chunk().await.ok()? {
+        if piece.len() > most - body.len() {
+            return None;
+        }
+        body.extend_from_slice(&piece);
+    }
+    Some(body)
+}
+
 async fn report(port: i64, watched: Watched) {
     let fail = |why: String| {
         post(port, vec![Item::Int(0), Item::Text(why)]);
@@ -210,10 +227,8 @@ async fn report(port: i64, watched: Watched) {
         .send()
         .await;
     let player = match player {
-        Ok(response) if response.status().is_success() => response
-            .bytes()
+        Ok(response) if response.status().is_success() => read_capped(response)
             .await
-            .ok()
             .and_then(|b| serde_json::from_slice::<Value>(&b).ok()),
         Ok(response) => {
             if response.status().as_u16() == 401 {

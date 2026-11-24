@@ -37,12 +37,20 @@ fn time(text: &str) -> Option<u64> {
     let mut parts = text.trim().split(':');
     let (h, m, s) = (parts.next()?, parts.next()?, parts.next()?);
     let (s, cs) = s.split_once('.').unwrap_or((s, "0"));
-    let cs: u64 = format!("{cs:0<2}")[..2].parse().ok()?;
-    Some(
-        ((h.parse::<u64>().ok()? * 60 + m.parse::<u64>().ok()?) * 60 + s.parse::<u64>().ok()?)
-            * 1000
-            + cs * 10,
-    )
+    // The first two digits, the second 0 when missing.
+    let digit = |i: usize| match cs.as_bytes().get(i) {
+        None => Some(0),
+        Some(b) => b.is_ascii_digit().then(|| (b - b'0') as u64),
+    };
+    let cs = digit(0)? * 10 + digit(1)?;
+    h.parse::<u64>()
+        .ok()?
+        .checked_mul(60)?
+        .checked_add(m.parse().ok()?)?
+        .checked_mul(60)?
+        .checked_add(s.parse().ok()?)?
+        .checked_mul(1000)?
+        .checked_add(cs * 10)
 }
 
 /// `&HAABBGGRR` as RGBA.
@@ -198,6 +206,15 @@ pub fn styl(from: usize, to: usize, look: &Look, play_res_y: f64) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reads_times_without_panicking() {
+        assert_eq!(time("0:00:03.5"), Some(3500));
+        assert_eq!(time("0:00:03.50"), Some(3500));
+        assert_eq!(time("0:00:03"), Some(3000));
+        assert_eq!(time("0:00:03.é5"), None);
+        assert_eq!(time("99999999999999999:00:00.00"), None);
+    }
 
     const FILE: &str = "[Script Info]\nScriptType: v4.00+\nPlayResX: 1280\nPlayResY: 720\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,Microsoft YaHei,40.00,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,2.00,0,2,25,25,30,1\nStyle: Second,Segoe UI,30.00,&H1A00E7FF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2.00,0,2,25,25,30,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\nDialogue: 0,0:00:03.50,0:00:05.00,Default,,0,0,0,,世界\\N{\\rSecond}world, again\nDialogue: 0,0:00:01.00,0:00:02.25,Default,,0,0,0,,你好\n";
 

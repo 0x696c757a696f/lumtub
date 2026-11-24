@@ -11,7 +11,7 @@
 use std::ffi::c_char;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{self, RecvTimeoutError, SyncSender};
+use std::sync::mpsc::{self, RecvTimeoutError, SyncSender, TrySendError};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -181,33 +181,47 @@ pub fn solve(input: &str) -> Output {
 fn solve_on_thread(input: SolveInput) -> Result<Value, String> {
     let (reply, answer) = mpsc::sync_channel(1);
     let mut job = SolveJob { input, reply };
-    {
-        let mut solver = SOLVER.lock().unwrap_or_else(|e| e.into_inner());
-        let sent = match solver.as_ref() {
-            Some(thread) => match thread.send(job) {
-                Ok(()) => None,
+    loop {
+        let (thread, waiting) = {
+            let mut solver = SOLVER.lock().unwrap_or_else(|e| e.into_inner());
+            let Some(thread) = solver.clone() else {
+                *solver = Some(start_solver(job)?);
+                break;
+            };
+            match thread.try_send(job) {
+                Ok(()) => break,
+                // A full queue is waited on without the lock, which the
+                // thread takes before it ends.
+                Err(TrySendError::Full(waiting)) => (thread, waiting),
                 // It had just ended.
-                Err(e) => Some(e.0),
-            },
-            None => Some(job),
+                Err(TrySendError::Disconnected(waiting)) => {
+                    *solver = Some(start_solver(waiting)?);
+                    break;
+                }
+            }
         };
-        if let Some(waiting) = sent {
-            job = waiting;
-            let (thread, jobs) = mpsc::sync_channel::<SolveJob>(4);
-            std::thread::Builder::new()
-                .name("lumtub-js-solver".into())
-                .stack_size(THREAD_STACK)
-                .spawn(move || solver_thread(jobs))
-                .map_err(|e| format!("Could not start the JavaScript thread: {e}"))?;
-            thread
-                .send(job)
-                .map_err(|_| "The JavaScript thread ended at once".to_string())?;
-            *solver = Some(thread);
+        match thread.send(waiting) {
+            Ok(()) => break,
+            Err(e) => job = e.0,
         }
     }
     answer
         .recv()
         .unwrap_or_else(|_| Err("The JavaScript thread ended without an answer".into()))
+}
+
+/// A new solver thread, given [job] first.
+fn start_solver(job: SolveJob) -> Result<SyncSender<SolveJob>, String> {
+    let (thread, jobs) = mpsc::sync_channel::<SolveJob>(4);
+    std::thread::Builder::new()
+        .name("lumtub-js-solver".into())
+        .stack_size(THREAD_STACK)
+        .spawn(move || solver_thread(jobs))
+        .map_err(|e| format!("Could not start the JavaScript thread: {e}"))?;
+    thread
+        .send(job)
+        .map_err(|_| "The JavaScript thread ended at once".to_string())?;
+    Ok(thread)
 }
 
 /// A player compiled and run, by the hash of its source.
@@ -297,21 +311,37 @@ fn new_runtime() -> Result<(Runtime, Context), String> {
     Ok((runtime, context))
 }
 
+/// Kept bytecode: the SHA-256 of [code], then [code].
+fn sealed(code: &[u8]) -> Vec<u8> {
+    [Sha256::digest(code).as_slice(), code].concat()
+}
+
+/// The bytecode in [sealed] when it is whole, as [sealed] wrote it.
+fn unsealed(sealed: &[u8]) -> Option<&[u8]> {
+    let (digest, code) = sealed.split_at_checked(32)?;
+    (Sha256::digest(code).as_slice() == digest).then_some(code)
+}
+
 /// A runtime with [player] loaded into it, from its bytecode in [cache]
-/// when that is there and loads, compiled (and kept there) otherwise.
+/// when that is there, whole and from this QuickJS, compiled (and kept
+/// there) otherwise. QuickJS trusts the bytecode it reads, so a file cut
+/// short or written by another version is never given to it.
 fn load_player(
     player: &str,
     hash: &str,
     cache: Option<&Path>,
 ) -> Result<(Runtime, Context), String> {
+    let version = env!("LUMTUB_QUICKJS");
     let kept: Option<PathBuf> =
-        cache.map(|folder| folder.join(format!("lumtub-player-{hash}.qbc")));
+        cache.map(|folder| folder.join(format!("lumtub-player-{hash}-qjs{version}.qbc")));
     if let Some(path) = &kept
-        && let Ok(code) = std::fs::read(path)
+        && let Ok(file) = std::fs::read(path)
     {
-        let (runtime, context) = new_runtime()?;
-        if context.with(|ctx| run_bytecode(&ctx, &code)).is_ok() {
-            return Ok((runtime, context));
+        if let Some(code) = unsealed(&file) {
+            let (runtime, context) = new_runtime()?;
+            if context.with(|ctx| run_bytecode(&ctx, code)).is_ok() {
+                return Ok((runtime, context));
+            }
         }
         let _ = std::fs::remove_file(path);
     }
@@ -320,7 +350,9 @@ fn load_player(
     context.with(|ctx| run_bytecode(&ctx, &code))?;
     if let Some(path) = &kept {
         let partial = path.with_extension("qbc.part");
-        if std::fs::write(&partial, &code).is_ok() && std::fs::rename(&partial, path).is_err() {
+        if std::fs::write(&partial, sealed(&code)).is_ok()
+            && std::fs::rename(&partial, path).is_err()
+        {
             let _ = std::fs::remove_file(&partial);
         }
     }
@@ -469,6 +501,14 @@ pub unsafe extern "C" fn lumtub_js_run(source: *const u8, len: usize) -> *mut c_
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reads_back_only_whole_bytecode() {
+        let kept = sealed(b"code");
+        assert_eq!(unsealed(&kept), Some(&b"code"[..]));
+        assert_eq!(unsealed(&kept[..kept.len() - 1]), None);
+        assert_eq!(unsealed(b"code"), None);
+    }
 
     #[test]
     fn prints_what_console_log_gets() {

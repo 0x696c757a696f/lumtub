@@ -289,10 +289,12 @@ fn unit_of(after: &str, hl: &str) -> Option<f64> {
         return Some(*factor);
     }
     // A unit of the language first, then the common K, M and B: a list
-    // may be in another language than the one asked for.
-    word_unit(after, units(hl))
-        .or_else(|| word_unit(after, units("")))
-        .or_else(|| anywhere(after))
+    // may be in another language than the one asked for. Units are short,
+    // so only the start of the text is lowercased, once.
+    let lower = after.chars().take(32).collect::<String>().to_lowercase();
+    word_unit(&lower, units(hl))
+        .or_else(|| word_unit(&lower, units("")))
+        .or_else(|| anywhere(&lower))
 }
 
 /// Languages with units of their own, for [anywhere].
@@ -318,9 +320,8 @@ fn anywhere(after: &str) -> Option<f64> {
     found
 }
 
-/// The unit of [table] that is the whole first word of [after].
-fn word_unit(after: &str, table: &[(&str, f64)]) -> Option<f64> {
-    let lower = after.to_lowercase();
+/// The unit of [table] that is the whole first word of [lower].
+fn word_unit(lower: &str, table: &[(&str, f64)]) -> Option<f64> {
     // A unit is a whole word: "mil m" before "mil", "mill" never as "mil".
     let mut best: Option<(usize, f64)> = None;
     for &(unit, factor) in table {

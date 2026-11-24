@@ -12,7 +12,7 @@ use std::os::raw::c_char;
 use crate::counts;
 use crate::innertube::{self, at, seconds, text_of};
 use crate::listing::count;
-use crate::taste::{give_json, text};
+use crate::taste::{give_json, outside};
 
 #[derive(Serialize, Debug, Default, PartialEq)]
 pub struct Page {
@@ -440,7 +440,7 @@ pub unsafe extern "C" fn lumtub_tv_browse(
     length: usize,
     shorts: bool,
 ) -> *mut c_char {
-    let Ok(data) = serde_json::from_str::<Value>(unsafe { text(body, length) }) else {
+    let Ok(data) = serde_json::from_str::<Value>(unsafe { outside(body, length) }) else {
         return std::ptr::null_mut();
     };
     give_json(&page(&data, shorts))

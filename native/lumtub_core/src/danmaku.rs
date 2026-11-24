@@ -121,7 +121,9 @@ fn literal(text: &str) -> String {
 }
 
 impl Danmaku {
-    pub fn new(settings: Settings) -> Self {
+    pub fn new(mut settings: Settings) -> Self {
+        settings.font_size = settings.font_size.max(1.0);
+        settings.duration_ms = settings.duration_ms.max(1.0);
         let line = settings.font_size * 1.25;
         let count = ((HEIGHT * settings.area.clamp(0.1, 1.0)) / line)
             .floor()
@@ -295,6 +297,17 @@ pub unsafe extern "C" fn lumtub_danmaku_free(danmaku: *mut Danmaku) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn takes_zero_sizes_and_durations() {
+        let danmaku = Danmaku::new(Settings {
+            font_size: 0.0,
+            duration_ms: 0.0,
+            ..Settings::default()
+        });
+        assert!(danmaku.lanes.len() < 1000);
+        assert!(danmaku.speed(100.0).is_finite());
+    }
 
     fn message(start_ms: f64, text: &str) -> Message {
         Message {

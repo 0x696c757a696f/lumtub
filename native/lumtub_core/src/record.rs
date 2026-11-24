@@ -321,7 +321,7 @@ impl Unindexed {
 
     /// Bytes `from..=to` of the file as seen.
     pub fn read(&self, path: &str, from: u64, to: u64) -> Result<Box<dyn Read + Send>, String> {
-        let end = to + 1;
+        let end = to.saturating_add(1);
         let head = self.head.len() as u64;
         let first: Vec<u8> = if from < head {
             self.head[from as usize..end.min(head) as usize].to_vec()
@@ -342,14 +342,26 @@ impl Unindexed {
 pub fn unindexed(path: &str) -> Result<Option<Unindexed>, String> {
     let mut file = File::open(path).map_err(|e| format!("{path}: {e}"))?;
     let size = file.metadata().map_err(|e| e.to_string())?.len();
+    unindexed_from(&mut file, size)
+}
+
+/// [unindexed] for the `size` bytes of `file`.
+pub fn unindexed_from<R: Read + Seek>(
+    file: &mut R,
+    size: u64,
+) -> Result<Option<Unindexed>, String> {
     let mut start = vec![0u8; size.min(1 << 20) as usize];
+    file.seek(SeekFrom::Start(0)).map_err(|e| e.to_string())?;
     file.read_exact(&mut start).map_err(|e| e.to_string())?;
     if cast_webm::is_webm(&start) {
-        webm(&mut file, &start, size)
+        webm(file, &start, size)
     } else {
-        mp4(&mut file, &start, size)
+        mp4(file, &start, size)
     }
 }
+
+/// The most read whole of one `moof`.
+const MAX_MOOF: u64 = 16 << 20;
 
 fn be32(b: &[u8], at: usize) -> Option<u32> {
     Some(u32::from_be_bytes(b.get(at..at + 4)?.try_into().ok()?))
@@ -364,7 +376,7 @@ fn child(b: &[u8], from: usize, to: usize, kind: &[u8; 4]) -> Option<(usize, usi
     let mut at = from;
     while at + 8 <= to {
         let size = be32(b, at)? as usize;
-        if size < 8 || at + size > to {
+        if size < 8 || size > to - at {
             return None;
         }
         if &b[at + 4..at + 8] == kind {
@@ -375,7 +387,7 @@ fn child(b: &[u8], from: usize, to: usize, kind: &[u8; 4]) -> Option<(usize, usi
     None
 }
 
-fn mp4(file: &mut File, start: &[u8], size: u64) -> Result<Option<Unindexed>, String> {
+fn mp4<R: Read + Seek>(file: &mut R, start: &[u8], size: u64) -> Result<Option<Unindexed>, String> {
     // The head: boxes before the first moof; a sidx there means an index.
     let mut at = 0usize;
     let (mut ftyp, mut moov) = (None, None);
@@ -384,7 +396,7 @@ fn mp4(file: &mut File, start: &[u8], size: u64) -> Result<Option<Unindexed>, St
             return Err("no fragment in the first megabyte".into());
         };
         let kind = start.get(at + 4..at + 8).ok_or("cut short")?;
-        let end = at + box_size as usize;
+        let end = at.saturating_add(box_size as usize);
         match kind {
             b"sidx" => return Ok(None),
             b"moof" => break,
@@ -404,7 +416,7 @@ fn mp4(file: &mut File, start: &[u8], size: u64) -> Result<Option<Unindexed>, St
         .and_then(|(t, e)| child(moov, t, e, b"mdia"))
         .ok_or("no mdia")?;
     let (mdhd, _) = child(moov, mdia, mdia_end, b"mdhd").ok_or("no mdhd")?;
-    let timescale = if moov[mdhd] == 1 {
+    let timescale = if *moov.get(mdhd).ok_or("no timescale")? == 1 {
         be32(moov, mdhd + 20)
     } else {
         be32(moov, mdhd + 12)
@@ -430,7 +442,14 @@ fn mp4(file: &mut File, start: &[u8], size: u64) -> Result<Option<Unindexed>, St
         if box_size < 8 {
             break;
         }
+        if box_size > size - offset {
+            // The last fragment was cut short when the recording stopped.
+            break;
+        }
         if &header[4..8] == b"moof" {
+            if box_size > MAX_MOOF {
+                return Err("a fragment too large".into());
+            }
             let mut moof = vec![0u8; box_size as usize];
             file.seek(SeekFrom::Start(offset))
                 .map_err(|e| e.to_string())?;
@@ -440,17 +459,16 @@ fn mp4(file: &mut File, start: &[u8], size: u64) -> Result<Option<Unindexed>, St
             let time = child(&moof, 8, moof.len(), b"traf")
                 .and_then(|(t, e)| child(&moof, t, e, b"tfdt"))
                 .and_then(|(d, _)| {
-                    if moof[d] == 1 {
+                    if *moof.get(d)? == 1 {
                         be64(&moof, d + 4)
                     } else {
                         be32(&moof, d + 4).map(u64::from)
                     }
                 });
             fragments.push((offset, time.ok_or("a fragment without its time")?));
-        }
-        if offset + box_size > size {
-            // The last fragment was cut short when the recording stopped.
-            break;
+            if fragments.len() > u16::MAX as usize {
+                return Err("too many fragments".into());
+            }
         }
         offset += box_size;
     }
@@ -484,9 +502,6 @@ fn mp4(file: &mut File, start: &[u8], size: u64) -> Result<Option<Unindexed>, St
         sidx.extend_from_slice(&(duration as u32).to_be_bytes());
         sidx.extend_from_slice(&0x9000_0000u32.to_be_bytes());
     }
-    if count > u16::MAX as usize {
-        return Err("too many fragments".into());
-    }
     let head = [ftyp, moov, &sidx].concat();
     Ok(Some(Unindexed {
         head,
@@ -501,6 +516,8 @@ const INFO: u32 = 0x1549_A966;
 const TRACKS: u32 = 0x1654_AE6B;
 const CUES: u32 = 0x1C53_BB6B;
 const TIMESTAMP: u32 = 0xE7;
+/// The most clusters given Cues, each a CuePoint of 70 bytes.
+const MAX_CLUSTERS: usize = 1 << 20;
 
 /// An EBML element with an 8-byte size.
 fn ebml(out: &mut Vec<u8>, id: u32, body: &[u8]) {
@@ -513,7 +530,11 @@ fn ebml(out: &mut Vec<u8>, id: u32, body: &[u8]) {
     out.extend_from_slice(body);
 }
 
-fn webm(file: &mut File, start: &[u8], size: u64) -> Result<Option<Unindexed>, String> {
+fn webm<R: Read + Seek>(
+    file: &mut R,
+    start: &[u8],
+    size: u64,
+) -> Result<Option<Unindexed>, String> {
     let ebml_head = element(start, 0).ok_or("no EBML head")?;
     let segment = element(start, ebml_head.end)
         .filter(|e| e.id == SEGMENT)
@@ -564,6 +585,9 @@ fn webm(file: &mut File, start: &[u8], size: u64) -> Result<Option<Unindexed>, S
             break;
         }
         if e.id == CLUSTER {
+            if clusters.len() >= MAX_CLUSTERS {
+                return Err("too many clusters".into());
+            }
             let time = element(&header[..read], e.data)
                 .filter(|t| t.id == TIMESTAMP && t.end <= read)
                 .map(|t| {
@@ -769,5 +793,51 @@ mod tests {
 
     fn continuation_len(fragment: &[u8]) -> usize {
         crate::relay_live::continuation_len(fragment)
+    }
+
+    fn mp4_box(kind: &[u8; 4], body: &[u8]) -> Vec<u8> {
+        let mut out = ((body.len() + 8) as u32).to_be_bytes().to_vec();
+        out.extend_from_slice(kind);
+        out.extend_from_slice(body);
+        out
+    }
+
+    #[test]
+    fn refuses_damaged_fragments() {
+        let read = |b: &[u8]| unindexed_from(&mut Cursor::new(b), b.len() as u64);
+        let mut mdhd = vec![0u8; 12];
+        mdhd.extend_from_slice(&1000u32.to_be_bytes());
+        let moov = |mdhd: &[u8]| {
+            let mut file = mp4_box(b"ftyp", b"iso6");
+            file.extend(mp4_box(
+                b"moov",
+                &mp4_box(b"trak", &mp4_box(b"mdia", &mp4_box(b"mdhd", mdhd))),
+            ));
+            file
+        };
+        // An mdhd or tfdt with no body.
+        let mut file = moov(&[]);
+        file.extend(mp4_box(b"moof", &[]));
+        assert!(read(&file).is_err());
+        let mut file = moov(&mdhd);
+        file.extend(mp4_box(b"moof", &mp4_box(b"traf", &mp4_box(b"tfdt", &[]))));
+        assert_eq!(read(&file).err().unwrap(), "a fragment without its time");
+        // A moof that claims about 2^60 bytes, or a size that wraps, ends
+        // the file as if cut short.
+        let mut whole = moov(&mdhd);
+        whole.extend(mp4_box(
+            b"moof",
+            &mp4_box(b"traf", &mp4_box(b"tfdt", &[0; 8])),
+        ));
+        whole.extend(mp4_box(b"mdat", &[1]));
+        for size in [1u64 << 60, u64::MAX - 7, u64::MAX] {
+            let mut file = whole.clone();
+            file.extend_from_slice(&1u32.to_be_bytes());
+            file.extend_from_slice(b"moof");
+            file.extend_from_slice(&size.to_be_bytes());
+            file.extend_from_slice(&[0; 64]);
+            let seen = read(&file).unwrap().unwrap();
+            assert_eq!(seen.size, whole.len() as u64);
+        }
     }
 }

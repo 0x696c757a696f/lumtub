@@ -90,6 +90,8 @@ class _ReviewPageState extends State<ReviewPage> {
   int _done = 0;
   bool _shown = false;
   bool _sound = false;
+  // A second tap, swipe or repeated key while a grade is saved is let go.
+  bool _grading = false;
   DateTime _since = DateTime.now();
 
   VocabularyWord? get _word => _queue.firstOrNull;
@@ -115,9 +117,14 @@ class _ReviewPageState extends State<ReviewPage> {
 
   Future<void> _grade(ReviewGrade grade) async {
     final word = _word;
-    if (word == null || !_shown) return;
+    if (word == null || !_shown || _grading) return;
+    _grading = true;
     final now = DateTime.now();
-    await _store.grade(word.key, grade, now, seconds: now.difference(_since).inMilliseconds / 1000);
+    try {
+      await _store.grade(word.key, grade, now, seconds: now.difference(_since).inMilliseconds / 1000);
+    } finally {
+      _grading = false;
+    }
     if (!mounted) return;
     setState(() {
       _queue = [..._queue.skip(1)];
@@ -586,13 +593,18 @@ class _GradeButtons extends StatelessWidget {
     final now = DateTime.now();
     Widget button(ReviewGrade grade, String label, {Color? color, bool main = false}) {
       final next = store.preview(word.key, grade, now).due.difference(now);
-      final content = Column(mainAxisSize: MainAxisSize.min, children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-        if (!quiet) ...[
-          const SizedBox(height: 2),
-          Text(reviewIntervalLabel(next), style: TextStyle(fontSize: 11, color: main ? colors.onPrimary.withValues(alpha: 0.8) : colors.onSurfaceVariant)),
-        ],
-      ]);
+      // One line each, shrunk rather than wrapped, so long words fit the
+      // row on a narrow phone.
+      final content = FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(label, maxLines: 1, style: const TextStyle(fontWeight: FontWeight.w700)),
+          if (!quiet) ...[
+            const SizedBox(height: 2),
+            Text(reviewIntervalLabel(next), maxLines: 1, style: TextStyle(fontSize: 11, color: main ? colors.onPrimary.withValues(alpha: 0.8) : colors.onSurfaceVariant)),
+          ],
+        ]),
+      );
       const padding = EdgeInsets.symmetric(vertical: 6);
       return Expanded(
         child: Padding(

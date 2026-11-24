@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart';
 
+import '../l10n/l10n.dart';
 import '../skins/skin.dart';
 import 'common.dart';
 import 'scene_props.dart';
@@ -19,6 +20,10 @@ class SkinDeckView extends StatefulWidget {
   final Player? player;
   final String title;
   final Future<void> Function(Duration to) onSeek;
+
+  /// How many times the body has been painted, for tests.
+  @visibleForTesting
+  static int bodyPaints = 0;
 
   @override
   State<SkinDeckView> createState() => _SkinDeckViewState();
@@ -82,13 +87,21 @@ class _SkinDeckViewState extends State<SkinDeckView> {
     final d = widget.deck;
     final boombox = d.shape == 'boombox';
     final height = boombox ? 96.0 : (d.shape == 'oval' ? 82.0 : 70.0);
+    final at = _dragging == null ? _position : _duration * _dragging!;
+    String timeAt(Duration at) => '${formatClock(at)} / ${formatClock(_duration)}';
+    final time = timeAt(at);
     return Padding(
       padding: const EdgeInsets.only(top: 10),
+      // Tight, so a change inside lays out no further up than the
+      // boundary below and never paints the body again.
       child: SizedBox(
+        width: double.infinity,
         height: height,
         child: CustomPaint(
           painter: _BodyPainter(d, warmth: context.pictureWarmth),
-          child: LayoutBuilder(builder: (context, box) {
+          // The body is costly to draw: the groove and buttons repaint in
+          // a layer of their own, so it is drawn only when it changes.
+          child: RepaintBoundary(child: LayoutBuilder(builder: (context, box) {
             final narrow = box.maxWidth < 520;
             // Room for the round ends, or the speakers in them.
             final ends = boombox || d.speakers ? height * 0.86 : (d.shape == 'capsule' || d.shape == 'oval' ? height * 0.42 : 14.0);
@@ -98,30 +111,49 @@ class _SkinDeckViewState extends State<SkinDeckView> {
             return Padding(
               padding: EdgeInsets.fromLTRB(ends, top, ends, boombox ? height * 0.06 : 0),
               child: Row(children: [
-                _GelButton(colors: d.button, glyph: d.glyph, size: small, kind: _Glyph.back, glow: d.glow, tooltip: '-10', onTap: () => _jump(-10)),
+                _GelButton(colors: d.button, glyph: d.glyph, size: small, kind: _Glyph.back, glow: d.glow, label: tr('Back {0} s', [10]), onTap: () => _jump(-10)),
                 const SizedBox(width: 6),
-                _GelButton(colors: d.play, glyph: d.playGlyph, size: play, kind: _playing ? _Glyph.pause : _Glyph.play, glow: d.glow, onTap: () => unawaited(widget.player?.playOrPause())),
+                _GelButton(
+                  colors: d.play,
+                  glyph: d.playGlyph,
+                  size: play,
+                  kind: _playing ? _Glyph.pause : _Glyph.play,
+                  glow: d.glow,
+                  label: _playing ? tr('Pause') : tr('Play'),
+                  tooltip: tr('Play/Pause (Space)'),
+                  onTap: () => unawaited(widget.player?.playOrPause()),
+                ),
                 const SizedBox(width: 6),
-                _GelButton(colors: d.button, glyph: d.glyph, size: small, kind: _Glyph.forward, glow: d.glow, tooltip: '+10', onTap: () => _jump(10)),
+                _GelButton(colors: d.button, glyph: d.glyph, size: small, kind: _Glyph.forward, glow: d.glow, label: tr('Forward {0} s', [10]), onTap: () => _jump(10)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    _Screen(deck: d, time: '${formatClock(_dragging == null ? _position : _duration * _dragging!)} / ${formatClock(_duration)}', title: narrow ? '' : widget.title),
+                    _Screen(deck: d, time: time, title: narrow ? '' : widget.title),
                     const SizedBox(height: 7),
-                    _Groove(
-                      deck: d,
-                      played: _played,
-                      onDrag: (v) => setState(() => _dragging = v),
-                      onDone: (v) {
-                        setState(() => _dragging = null);
-                        if (_duration > Duration.zero) unawaited(widget.onSeek(_duration * v));
-                      },
+                    Semantics(
+                      slider: true,
+                      value: time,
+                      increasedValue: timeAt(at + const Duration(seconds: 10) > _duration ? _duration : at + const Duration(seconds: 10)),
+                      decreasedValue: timeAt(at < const Duration(seconds: 10) ? Duration.zero : at - const Duration(seconds: 10)),
+                      onIncrease: () => _jump(10),
+                      onDecrease: () => _jump(-10),
+                      child: RepaintBoundary(
+                        child: _Groove(
+                          deck: d,
+                          played: _played,
+                          onDrag: (v) => setState(() => _dragging = v),
+                          onDone: (v) {
+                            setState(() => _dragging = null);
+                            if (_duration > Duration.zero) unawaited(widget.onSeek(_duration * v));
+                          },
+                        ),
+                      ),
                     ),
                   ]),
                 ),
               ]),
             );
-          }),
+          })),
         ),
       ),
     );
@@ -171,6 +203,7 @@ class _BodyPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    SkinDeckView.bodyPaints++;
     final rect = Offset.zero & size;
     final outline = deckOutline(deck.shape, rect);
     final solid = 1 - deck.clear;
@@ -323,13 +356,16 @@ enum _Glyph { play, pause, back, forward }
 /// A round gel button: coloured right through, lit from the top, pressing
 /// in when clicked.
 class _GelButton extends StatefulWidget {
-  const _GelButton({required this.colors, required this.glyph, required this.size, required this.kind, required this.onTap, this.glow, this.tooltip});
+  const _GelButton({required this.colors, required this.glyph, required this.size, required this.kind, required this.label, required this.onTap, this.glow, this.tooltip});
   final List<Color> colors;
   final Color glyph;
   final double size;
   final _Glyph kind;
   final VoidCallback onTap;
   final Color? glow;
+  /// What the button does, for screen readers and, without [tooltip], its
+  /// tooltip.
+  final String label;
   final String? tooltip;
 
   @override
@@ -338,16 +374,18 @@ class _GelButton extends StatefulWidget {
 
 class _GelButtonState extends State<_GelButton> {
   bool _hover = false;
+  bool _focused = false;
   bool _down = false;
 
   @override
   Widget build(BuildContext context) {
-    Widget button = MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() {
-        _hover = false;
-        _down = false;
+    final button = FocusableActionDetector(
+      mouseCursor: SystemMouseCursors.click,
+      actions: {ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) => widget.onTap())},
+      onShowFocusHighlight: (v) => setState(() => _focused = v),
+      onShowHoverHighlight: (v) => setState(() {
+        _hover = v;
+        if (!v) _down = false;
       }),
       child: GestureDetector(
         onTapDown: (_) => setState(() => _down = true),
@@ -356,12 +394,15 @@ class _GelButtonState extends State<_GelButton> {
         onTap: widget.onTap,
         child: SizedBox.square(
           dimension: widget.size,
-          child: CustomPaint(painter: _GelPainter(widget, hover: _hover, down: _down)),
+          child: CustomPaint(painter: _GelPainter(widget, hover: _hover || _focused, down: _down)),
         ),
       ),
     );
-    if (widget.tooltip != null) button = Tooltip(message: widget.tooltip!, child: button);
-    return Semantics(button: true, label: widget.kind.name, child: button);
+    return Semantics(
+      button: true,
+      label: widget.label,
+      child: Tooltip(message: widget.tooltip ?? widget.label, excludeFromSemantics: true, child: button),
+    );
   }
 }
 

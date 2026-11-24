@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:media_kit/media_kit.dart';
 
 import '../skins/skin.dart';
@@ -28,24 +28,37 @@ class SkinLcd extends StatefulWidget {
   State<SkinLcd> createState() => _SkinLcdState();
 }
 
-class _SkinLcdState extends State<SkinLcd> with SingleTickerProviderStateMixin {
-  late final Ticker _ticker = createTicker(_tick);
+class _SkinLcdState extends State<SkinLcd> {
+  /// 20 frames a second is enough for a meter and costs almost nothing; a
+  /// timer asks for just those frames, where a ticker would ask for one
+  /// at every refresh of the screen.
+  Timer? _timer;
   final _subscriptions = <StreamSubscription<Object?>>[];
   final _random = Random(7);
   final _levels = List<double>.filled(_bars, 0);
   final _targets = List<double>.filled(_bars, 0);
-  Duration _last = Duration.zero;
-  double _scroll = 0;
+  /// How far the title has run; the meter and the title repaint on it
+  /// alone, without building the display again.
+  final _scroll = ValueNotifier<double>(0);
+  bool _shown = true;
   bool _playing = false;
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
 
   static const _bars = 14;
+  static const _frame = Duration(milliseconds: 50);
 
   @override
   void initState() {
     super.initState();
     _listen();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _shown = TickerMode.valuesOf(context).enabled;
+    _run();
   }
 
   @override
@@ -79,20 +92,16 @@ class _SkinLcdState extends State<SkinLcd> with SingleTickerProviderStateMixin {
   }
 
   void _run() {
-    final move = !widget.still && !Motion.reduced && (_playing || _levels.any((l) => l > 0.01));
-    if (move && !_ticker.isActive) {
-      _last = Duration.zero;
-      _ticker.start();
-    } else if (!move && _ticker.isActive) {
-      _ticker.stop();
+    final move = _shown && !widget.still && !Motion.reduced && (_playing || _levels.any((l) => l > 0.01));
+    if (move) {
+      _timer ??= Timer.periodic(_frame, (_) => _tick());
+    } else {
+      _timer?.cancel();
+      _timer = null;
     }
   }
 
-  void _tick(Duration elapsed) {
-    final dt = (elapsed - _last).inMicroseconds / 1e6;
-    // 20 frames a second is enough for a meter and costs almost nothing.
-    if (dt < 0.05) return;
-    _last = elapsed;
+  void _tick() {
     final volume = ((widget.player?.state.volume ?? 100) / 100).clamp(0.0, 1.0);
     for (var i = 0; i < _bars; i++) {
       if (_random.nextDouble() < 0.35) {
@@ -103,9 +112,11 @@ class _SkinLcdState extends State<SkinLcd> with SingleTickerProviderStateMixin {
       final target = _playing ? _targets[i] : 0.0;
       _levels[i] += (target - _levels[i]) * (target > _levels[i] ? 0.6 : 0.25);
     }
-    _scroll += dt * 36;
-    setState(() {});
-    if (!_playing && _levels.every((l) => l <= 0.01)) _ticker.stop();
+    _scroll.value += _frame.inMicroseconds / 1e6 * 36;
+    if (!_playing && _levels.every((l) => l <= 0.01)) {
+      _timer?.cancel();
+      _timer = null;
+    }
   }
 
   @override
@@ -113,7 +124,8 @@ class _SkinLcdState extends State<SkinLcd> with SingleTickerProviderStateMixin {
     for (final s in _subscriptions) {
       unawaited(s.cancel());
     }
-    _ticker.dispose();
+    _timer?.cancel();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -148,7 +160,7 @@ class _SkinLcdState extends State<SkinLcd> with SingleTickerProviderStateMixin {
             SizedBox(
               width: 84,
               height: 36,
-              child: CustomPaint(painter: _MeterPainter(List.of(_levels), text, player.lcdAccent)),
+              child: RepaintBoundary(child: CustomPaint(painter: _MeterPainter(_levels, text, player.lcdAccent, repaint: _scroll))),
             ),
           ],
         ]),
@@ -162,7 +174,7 @@ class _SkinLcdState extends State<SkinLcd> with SingleTickerProviderStateMixin {
 class _Marquee extends StatelessWidget {
   const _Marquee({required this.text, required this.offset, required this.style});
   final String text;
-  final double? offset;
+  final ValueListenable<double>? offset;
   final TextStyle style;
 
   @override
@@ -177,21 +189,28 @@ class _Marquee extends StatelessWidget {
           return Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: style);
         }
         const gap = 48.0;
-        final x = -(offset % (width + gap));
+        // Laid out once; each frame only moves the kept picture of it.
+        final strip = RepaintBoundary(
+          child: Stack(clipBehavior: Clip.none, children: [
+            Positioned(left: 0, top: 0, child: Text(text, maxLines: 1, softWrap: false, style: style)),
+            Positioned(left: width + gap, top: 0, child: Text(text, maxLines: 1, softWrap: false, style: style)),
+          ]),
+        );
         return ClipRect(
           child: SizedBox(
             height: height,
-            child: Stack(clipBehavior: Clip.none, children: [
-              Positioned(left: x, top: 0, child: Text(text, maxLines: 1, softWrap: false, style: style)),
-              Positioned(left: x + width + gap, top: 0, child: Text(text, maxLines: 1, softWrap: false, style: style)),
-            ]),
+            child: ValueListenableBuilder<double>(
+              valueListenable: offset,
+              builder: (context, offset, child) => Transform.translate(offset: Offset(-(offset % (width + gap)), 0), child: child),
+              child: strip,
+            ),
           ),
         );
       });
 }
 
 class _MeterPainter extends CustomPainter {
-  _MeterPainter(this.levels, this.color, this.peak);
+  _MeterPainter(this.levels, this.color, this.peak, {super.repaint});
   final List<double> levels;
   final Color color;
   final Color peak;
@@ -214,5 +233,5 @@ class _MeterPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_MeterPainter old) => true;
+  bool shouldRepaint(_MeterPainter old) => !identical(old.levels, levels) || old.color != color || old.peak != peak;
 }

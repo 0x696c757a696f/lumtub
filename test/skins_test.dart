@@ -107,6 +107,20 @@ void main() {
     expect(read({'enabled': false}).tabs, isNull);
   });
 
+  test('a light hover fill reaching the dark side is listed', () {
+    Skin read(Map<String, Object?> darkHover) => Skin.parse({
+          'lumtubSkin': 1,
+          'id': 't',
+          'name': 'T',
+          'brightness': 'auto',
+          'colors': {'page': '#eef1f1', 'text': '#1f3236'},
+          'cards': {'video': {'fill': '#ffffff80', 'hover': {'fill': '#ffffffcc'}}},
+          'overrides': {'dark': {'colors': {'page': '#1c2326', 'text': '#e6eeee'}, 'cards': {'video': {'fill': '#232c30b3', 'hover': darkHover}}}},
+        }, folder: 'skins/t', builtIn: true);
+    expect(read({'border': '#8fd0cf'}).warnings, contains(startsWith('dark: cards.video.hover')));
+    expect(read({'fill': '#283b3ecc'}).warnings.where((w) => w.contains('cards.video')), isEmpty);
+  });
+
   test('a saved colour scheme becomes its skin', () {
     expect(paletteSkinId('ricePaper'), 'rice-paper');
     expect(SkinLibrary.colorSchemeIds, containsAll([for (final p in palettes) paletteSkinId(p.id)]));

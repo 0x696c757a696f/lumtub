@@ -181,6 +181,19 @@ class Skin {
   late final SkinSurface? videoCard = SkinSurface.parse(_cards['video'], this);
   /// Padding inside [videoCard].
   late final double videoCardPadding = _num(_cards['padding']) ?? 8;
+  /// Checks the card's words on the card while pointed at, pressed and
+  /// focused. Overrides are merged field by field, so a light hover fill
+  /// reaches the dark side unless overrides.dark gives the state its own.
+  late final bool _cardStatesChecked = () {
+    final card = videoCard;
+    if (card == null) return true;
+    for (final (state, look) in [('hover', card.forState(hovered: true)), ('pressed', card.forState(pressed: true)), ('focused', card.forState(focused: true))]) {
+      if (look.baseColor == null) continue;
+      final worst = look.tones(colors.page).map((bg) => contrastRatio(Color.alphaBlend(colors.text, bg), bg)).reduce((a, b) => a < b ? a : b);
+      if (worst < 4.5) warn('cards.video.$state: colors.text is ${worst.toStringAsFixed(1)}:1 on it, needs 4.5:1; give "$state" a "fill" of its own (in overrides.dark too)');
+    }
+    return true;
+  }();
   /// Dialogs, menus and panels on the watch page.
   late final SkinSurface? panel = SkinSurface.parse(_cards['panel'], this);
   /// The little label with the length on a thumbnail.
@@ -285,6 +298,7 @@ class Skin {
       ..field
       ..navSelected
       ..videoCard
+      .._cardStatesChecked
       ..panel
       ..durationBadge
       ..logo

@@ -152,6 +152,22 @@ editors and checkers.
    **深色皮肤：每个表面都配好前景色。** 图标看不见，通常是浅色半透明填充叠在浅色图片上，
    或者背景改深了文字却还是默认色。深色皮肤里的半透明填充要保持深色，每加一个表面就写上它的文字颜色。
 
+   **States are merged too.** With `"brightness": "auto"`, `overrides.dark`
+   is merged into the light side field by field, `hover`, `pressed` and
+   `focused` included. A `hover` with a light `fill` on the light side
+   therefore stays on the dark side unless `overrides.dark` gives that
+   state a `fill` of its own; a card then turns white under light text
+   while pointed at. Whenever the light side's `hover`, `pressed` or
+   `focused` has a `fill`, write one for the dark side as well. Lumtub
+   checks `colors.text` on video cards in every state and lists a card
+   state under 4.5:1.
+
+   **状态也会合并。** `"brightness": "auto"` 时，`overrides.dark` 是逐个字段合并到浅色那份上的，
+   `hover`、`pressed`、`focused` 也一样。浅色那边的 `hover` 写了浅色 `fill`，深色这边如果没给这个状态
+   写自己的 `fill`，就会沿用浅色的，鼠标一指卡片就变白、浅色字看不清。所以浅色那边的 `hover`、`pressed`、
+   `focused` 只要写了 `fill`，深色那边也要各写一个。Lumtub 会检查视频卡片在每种状态下 `colors.text`
+   的对比度，低于 4.5:1 的状态会列出来。
+
 3. **Warm light (护眼暖色) tints skins too.** It multiplies every colour by
    a warm tint, so blue drops the most and red not at all. Never tell two
    states apart by blue alone; change brightness or shape as well.
@@ -286,10 +302,13 @@ For what should differ by device, add `overrides`:
 }
 ```
 
-Each override is merged into the skin key by key. The devices are
-`desktop`, `mobile`, `tablet` and `tv`.
+Each override is merged into the skin key by key, down to single fields
+of a surface's `hover`, `pressed` and `focused`: what an override leaves
+out is kept from the rest of the file. The devices are `desktop`,
+`mobile`, `tablet` and `tv`.
 
-覆盖会逐项合并进皮肤。设备名是 `desktop`、`mobile`、`tablet`、`tv`。
+覆盖会逐项合并进皮肤，一直合并到表面的 `hover`、`pressed`、`focused` 里的单个字段：
+覆盖里没写的，沿用文件其余部分的。设备名是 `desktop`、`mobile`、`tablet`、`tv`。
 
 ## Share a skin 分享皮肤
 

@@ -516,7 +516,10 @@ class AppUpdater extends ChangeNotifier {
       } else if (!portable) {
         final folder = File(executable).parent.path;
         final name = _nameOf(file);
-        final result = launchInstaller(package: file.path, folder: folder, processId: pid, relaunch: relaunch, name: name, signature: '${file.path}.sig');
+        final package = file.path, processId = pid;
+        // Hashing the package and waiting on the administrator prompt take
+        // seconds: never on the window's isolate.
+        final result = await Isolate.run(() => launchInstaller(package: package, folder: folder, processId: processId, relaunch: relaunch, name: name, signature: '$package.sig'));
         if (result == null) throw StateError('No native core');
         if (result['rejected'] == true) {
           logWarn('The downloaded Lumtub update failed its check before installing: ${result['error']}');

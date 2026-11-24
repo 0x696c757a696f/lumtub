@@ -74,3 +74,17 @@ path = "fuzz_targets/packs.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "cut"
+path = "fuzz_targets/cut.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "record"
+path = "fuzz_targets/record.rs"
+test = false
+doc = false
+bench = false

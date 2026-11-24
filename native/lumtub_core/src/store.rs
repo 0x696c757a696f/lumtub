@@ -3,11 +3,13 @@
 //! made for a video, such as recognized subtitles and AI summaries, are
 //! kept in the same file (store_texts.rs).
 //!
-//! The app keeps its lists in memory and hands each changed list over
-//! whole as its keys in order, with the bodies of only the entries that
-//! are new or changed. Rows keep their positions wherever the order still
-//! allows, so putting a video first in a history of thousands writes one
-//! row instead of the whole file.
+//! The app keeps its lists in memory and hands each changed list over as
+//! an edit when no entry moved: the keys removed, the keys added each with
+//! the key before it, and the bodies that are new or changed; only those
+//! rows are read or written. When entries moved it hands the list over
+//! whole as its keys in order, and rows keep their positions wherever the
+//! order still allows, so putting a video first in a history of thousands
+//! writes one row instead of the whole file.
 //!
 //! SQLite's rollback journal with full syncs: a power cut loses at most
 //! the write in progress, never the file.
@@ -200,6 +202,17 @@ pub struct ListWrite<'a> {
     pub bodies: HashMap<&'a str, &'a str>,
 }
 
+/// One list changed with no entry moved: [remove] goes, each of [insert]
+/// goes right after the key named with it (first when none, in this
+/// order, so one may follow another added just before), and [bodies]
+/// replaces the bodies of the keys it names.
+pub struct ListEdit<'a> {
+    pub name: &'a str,
+    pub remove: Vec<&'a str>,
+    pub insert: Vec<(&'a str, Option<&'a str>)>,
+    pub bodies: HashMap<&'a str, &'a str>,
+}
+
 /// Rows written, for tests.
 #[derive(Debug, Default, PartialEq)]
 pub struct Written {
@@ -216,6 +229,17 @@ pub fn write(
     drop: &[&str],
     meta: &[(&str, &str)],
 ) -> Result<Written, StoreError> {
+    write_all(path, lists, &[], drop, meta)
+}
+
+/// As [write], with [edits] as well.
+pub fn write_all(
+    path: &str,
+    lists: &[ListWrite],
+    edits: &[ListEdit],
+    drop: &[&str],
+    meta: &[(&str, &str)],
+) -> Result<Written, StoreError> {
     with_db(path, |db| {
         let transaction = db.transaction()?;
         let mut written = Written::default();
@@ -224,6 +248,12 @@ pub fn write(
         }
         for list in lists {
             let counted = write_list(&transaction, list)?;
+            written.inserted += counted.inserted;
+            written.updated += counted.updated;
+            written.deleted += counted.deleted;
+        }
+        for edit in edits {
+            let counted = edit_list(&transaction, edit)?;
             written.inserted += counted.inserted;
             written.updated += counted.updated;
             written.deleted += counted.deleted;
@@ -291,6 +321,95 @@ fn write_list(db: &rusqlite::Transaction, list: &ListWrite) -> rusqlite::Result<
         }
     }
     Ok(written)
+}
+
+/// Applies [edit], reading and writing only the rows it names and their
+/// neighbours: O(changes · log n) with the `entry_order` index.
+fn edit_list(db: &rusqlite::Transaction, edit: &ListEdit) -> rusqlite::Result<Written> {
+    let mut written = Written::default();
+    let mut delete = db.prepare_cached("DELETE FROM entry WHERE list = ?1 AND key = ?2")?;
+    for key in &edit.remove {
+        written.deleted += delete.execute(params![edit.name, key])?;
+    }
+    let added: HashSet<&str> = edit.insert.iter().map(|(key, _)| *key).collect();
+    let mut change =
+        db.prepare_cached("UPDATE entry SET body = ?3 WHERE list = ?1 AND key = ?2")?;
+    for (key, body) in &edit.bodies {
+        if !added.contains(key) {
+            written.updated += change.execute(params![edit.name, key, body])?;
+        }
+    }
+    let mut insert = db.prepare_cached(
+        "INSERT INTO entry(list, key, pos, body) VALUES (?1, ?2, ?3, ?4) \
+         ON CONFLICT(list, key) DO UPDATE SET pos = excluded.pos, body = excluded.body",
+    )?;
+    for &(key, after) in &edit.insert {
+        // A new key without a body has nothing to store and is left out.
+        let Some(body) = edit.bodies.get(key) else {
+            continue;
+        };
+        let pos = match place(db, edit.name, after)? {
+            Some(pos) => pos,
+            None => {
+                // No room left between two neighbours: the list is
+                // numbered again, which is rare.
+                renumber(db, edit.name)?;
+                place(db, edit.name, after)?.unwrap_or_default()
+            }
+        };
+        insert.execute(params![edit.name, key, pos, body])?;
+        written.inserted += 1;
+    }
+    Ok(written)
+}
+
+/// A position right after [after] (first when none) in [list]; none when
+/// there is no room left before the next entry.
+fn place(
+    db: &rusqlite::Transaction,
+    list: &str,
+    after: Option<&str>,
+) -> rusqlite::Result<Option<f64>> {
+    let (low, high): (Option<f64>, Option<f64>) = match after {
+        Some(after) => {
+            let low: f64 = db
+                .prepare_cached("SELECT pos FROM entry WHERE list = ?1 AND key = ?2")?
+                .query_row(params![list, after], |r| r.get(0))?;
+            let high = db
+                .prepare_cached("SELECT MIN(pos) FROM entry WHERE list = ?1 AND pos > ?2")?
+                .query_row(params![list, low], |r| r.get(0))?;
+            (Some(low), high)
+        }
+        None => {
+            let high = db
+                .prepare_cached("SELECT MIN(pos) FROM entry WHERE list = ?1")?
+                .query_row([list], |r| r.get(0))?;
+            (None, high)
+        }
+    };
+    Ok(match (low, high) {
+        (None, None) => Some(0.0),
+        (None, Some(high)) => Some(high - 1.0),
+        (Some(low), None) => Some(low + 1.0),
+        (Some(low), Some(high)) => {
+            let mid = low + (high - low) / 2.0;
+            (low < mid && mid < high).then_some(mid)
+        }
+    })
+}
+
+/// Numbers the entries of [list] 0, 1, 2… in their order.
+fn renumber(db: &rusqlite::Transaction, list: &str) -> rusqlite::Result<()> {
+    let keys = db
+        .prepare_cached("SELECT key FROM entry WHERE list = ?1 ORDER BY pos")?
+        .query_map([list], |row| row.get::<_, String>(0))?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    let mut move_row =
+        db.prepare_cached("UPDATE entry SET pos = ?3 WHERE list = ?1 AND key = ?2")?;
+    for (i, key) in keys.iter().enumerate() {
+        move_row.execute(params![list, key, i as f64])?;
+    }
+    Ok(())
 }
 
 /// Positions for a list whose entries had the positions [old] (None for
@@ -375,6 +494,24 @@ struct ListAsk<'a> {
     keys: Vec<String>,
     #[serde(borrow, default)]
     bodies: HashMap<String, &'a RawValue>,
+    /// An edit ([ListEdit]) rather than the whole list.
+    #[serde(default)]
+    remove: Option<Vec<String>>,
+    #[serde(default)]
+    insert: Option<Vec<(String, Option<String>)>>,
+}
+
+impl ListAsk<'_> {
+    fn is_edit(&self) -> bool {
+        self.remove.is_some() || self.insert.is_some()
+    }
+
+    fn bodies(&self) -> HashMap<&str, &str> {
+        self.bodies
+            .iter()
+            .map(|(key, body)| (key.as_str(), body.get()))
+            .collect()
+    }
 }
 
 #[derive(Deserialize)]
@@ -443,14 +580,27 @@ fn write_json(ask: &str) -> String {
     let lists: Vec<ListWrite> = ask
         .lists
         .iter()
+        .filter(|list| !list.is_edit())
         .map(|list| ListWrite {
             name: &list.name,
             keys: list.keys.iter().map(String::as_str).collect(),
-            bodies: list
-                .bodies
+            bodies: list.bodies(),
+        })
+        .collect();
+    let edits: Vec<ListEdit> = ask
+        .lists
+        .iter()
+        .filter(|list| list.is_edit())
+        .map(|list| ListEdit {
+            name: &list.name,
+            remove: list.remove.iter().flatten().map(String::as_str).collect(),
+            insert: list
+                .insert
                 .iter()
-                .map(|(key, body)| (key.as_str(), body.get()))
+                .flatten()
+                .map(|(key, after)| (key.as_str(), after.as_deref()))
                 .collect(),
+            bodies: list.bodies(),
         })
         .collect();
     let drop: Vec<&str> = ask.drop.iter().map(String::as_str).collect();
@@ -459,7 +609,7 @@ fn write_json(ask: &str) -> String {
         .iter()
         .map(|(k, v)| (k.as_str(), v.as_str()))
         .collect();
-    match write(&ask.path, &lists, &drop, &meta) {
+    match write_all(&ask.path, &lists, &edits, &drop, &meta) {
         Ok(written) => serde_json::json!({"inserted": written.inserted, "updated": written.updated, "deleted": written.deleted}).to_string(),
         Err(error) => error_json(error),
     }
@@ -479,8 +629,10 @@ pub unsafe extern "C" fn lumtub_store_read(json: *const u8, length: usize) -> *m
 
 /// Writes lists in one transaction. [json] is `{path, lists: [{name,
 /// keys: [key], bodies: {key: body}}], drop: [name], meta: {key:
-/// value}}`; the answer is `{inserted, updated, deleted}` or `{error,
-/// setAside?}`. Free it with `lumtub_string_free`.
+/// value}}`, where a list may instead be an edit `{name, remove: [key],
+/// insert: [[key, after|null]], bodies}` ([ListEdit]); the answer is
+/// `{inserted, updated, deleted}` or `{error, setAside?}`. Free it with
+/// `lumtub_string_free`.
 ///
 /// # Safety
 /// [json] must point to [length] bytes of UTF-8.
@@ -668,6 +820,74 @@ mod tests {
         let (lists, meta) = read(&path, &[odd.to_string()], &[]).unwrap();
         assert_eq!(lists[odd][1].1, "{\"b\":\"\\\"x\\\"\"}");
         assert_eq!(meta[odd], odd);
+    }
+
+    fn edit(path: &str, list: serde_json::Value) -> serde_json::Value {
+        let ask = serde_json::json!({"path": path, "lists": [list]});
+        serde_json::from_str(&write_json(&ask.to_string())).unwrap()
+    }
+
+    #[test]
+    fn an_edit_touches_only_the_rows_it_names() {
+        let path = temp("edit");
+        let all: Vec<String> = (0..5).map(|i| format!("v{i}")).collect();
+        let names: Vec<&str> = all.iter().map(String::as_str).collect();
+        let bodies: Vec<(&str, &str)> = names.iter().map(|k| (*k, "1")).collect();
+        write(&path, &[list("h", &names, &bodies)], &[], &[]).unwrap();
+        let answer = edit(
+            &path,
+            serde_json::json!({"name": "h", "remove": ["v2"], "insert": [["new", null], ["mid", "v3"], ["end", "v4"], ["after", "new"]],
+                "bodies": {"new": 2, "mid": 2, "end": 2, "after": 2, "v1": 3, "nobody": null}}),
+        );
+        assert_eq!(
+            answer,
+            serde_json::json!({"inserted": 4, "updated": 1, "deleted": 1})
+        );
+        assert_eq!(
+            keys(&path, "h"),
+            ["new", "after", "v0", "v1", "v3", "mid", "v4", "end"]
+        );
+        let (lists, _) = read(&path, &["h".to_string()], &[]).unwrap();
+        assert_eq!(lists["h"][3], ("v1".to_string(), "3".to_string()));
+        // A key added without a body is left out.
+        edit(
+            &path,
+            serde_json::json!({"name": "h", "remove": [], "insert": [["bare", "v0"]]}),
+        );
+        assert!(!keys(&path, "h").contains(&"bare".to_string()));
+        // An edit out of step with the file fails whole.
+        let answer = edit(
+            &path,
+            serde_json::json!({"name": "h", "remove": ["v0"], "insert": [["x", "gone"]], "bodies": {"x": 1}}),
+        );
+        assert!(answer["error"].is_string(), "{answer}");
+        assert!(keys(&path, "h").contains(&"v0".to_string()));
+    }
+
+    #[test]
+    fn edits_in_one_gap_renumber_when_it_runs_out() {
+        let path = temp("gap");
+        write(
+            &path,
+            &[list("h", &["a", "z"], &[("a", "1"), ("z", "1")])],
+            &[],
+            &[],
+        )
+        .unwrap();
+        let mut after = "a".to_string();
+        let mut expected = vec!["a".to_string()];
+        for i in 0..200 {
+            let key = format!("k{i}");
+            edit(
+                &path,
+                serde_json::json!({"name": "h", "remove": [], "insert": [[key, after]], "bodies": {&key: 1}}),
+            );
+            // Each goes right after the one before: the gap halves each time.
+            expected.push(key.clone());
+            after = key;
+        }
+        expected.push("z".into());
+        assert_eq!(keys(&path, "h"), expected);
     }
 
     #[test]

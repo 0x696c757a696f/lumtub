@@ -1,8 +1,9 @@
 name: Fuzz
 
 # Feeds random and mutated input to the core's parsers of data from outside
-# (MP4 and WebM streams, AirPlay property lists, PAC scripts, subtitles,
-# update signatures) for five minutes each, every night. A crash fails the
+# (MP4 and WebM streams, downloaded and recorded sound and video files,
+# YouTube and yt-dlp answers, AirPlay property lists, PAC scripts,
+# subtitles, update signatures) for five minutes each, every night. A crash fails the
 # run, keeps the input that caused it as an artifact, and Retry and report
 # opens an issue. The corpus grows from night to night through the cache.
 on:
@@ -21,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [mp4_head, webm, bplist, pac, subtitles, update_signature, cast_lan, packs, cut, record]
+        target: [mp4_head, webm, bplist, pac, subtitles, update_signature, cast_lan, packs, cut, record, youtube]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:

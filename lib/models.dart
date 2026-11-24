@@ -435,12 +435,23 @@ class Chapter {
 
   /// The chapter [position] is in, or null before the first one.
   static Chapter? at(List<Chapter> chapters, Duration position) {
-    Chapter? found;
-    for (final chapter in chapters) {
-      if (chapter.start > position) break;
-      found = chapter;
+    final index = indexAt(chapters, position);
+    return index < 0 ? null : chapters[index];
+  }
+
+  /// The index of the chapter [position] is in, or -1 before the first
+  /// one; [chapters] are in order of their starts, as [listFrom] gives them.
+  static int indexAt(List<Chapter> chapters, Duration position) {
+    var low = 0, high = chapters.length;
+    while (low < high) {
+      final middle = (low + high) >> 1;
+      if (chapters[middle].start > position) {
+        high = middle;
+      } else {
+        low = middle + 1;
+      }
     }
-    return found;
+    return low - 1;
   }
 }
 

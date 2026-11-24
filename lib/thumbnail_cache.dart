@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -142,7 +143,7 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   /// Downloads at a time, so a fast scroll does not open dozens at once.
   static const _parallel = 6;
   static int _running = 0;
-  static final _waiting = <(Completer<void>, bool Function())>[];
+  static final _waiting = ListQueue<(Completer<void>, bool Function())>();
 
   /// Waits for a download slot. A picture no one [wanted] any more by its
   /// turn, as its card scrolled off screen, is dropped with
@@ -165,7 +166,7 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   @visibleForTesting
   static void free() {
     while (_waiting.isNotEmpty) {
-      final (turn, wanted) = _waiting.removeAt(0);
+      final (turn, wanted) = _waiting.removeFirst();
       if (wanted()) return turn.complete();
       turn.completeError(const ThumbnailDropped());
     }

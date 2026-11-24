@@ -474,6 +474,10 @@ void main() {
     expect(mixed.map((r) => r.item.id).toSet(), hasLength(20));
     int count(String reason) => mixed.where((r) => r.reason == reason).length;
     expect((count('l'), count('r'), count('e'), count('f')), (7, 6, 4, 3));
+    // What was taken or skipped is gone from the lanes.
+    expect(lanes[FeedLane.longTerm]!.first.item.id, video('l7').id);
+    expect(lanes[FeedLane.recent]!.first.item.id, video('r6').id);
+    expect(lanes[FeedLane.fresh], hasLength(47));
     // A lane that runs dry leaves its share to the others.
     final short = mixLanes({FeedLane.longTerm: lane('a', 2), FeedLane.fresh: lane('b', 10)}, 8);
     expect(short, hasLength(8));

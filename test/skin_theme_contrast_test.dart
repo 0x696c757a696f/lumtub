@@ -51,6 +51,8 @@ void main() {
           'links on cards': (linkColor(theme), solid(scheme.surfaceContainerLow, page), 4.5),
           // Filter chips: Explore's and search's menus, off and on.
           'chip label': (theme.chipTheme.labelStyle!.color!, solid(theme.chipTheme.backgroundColor!, page), 4.5),
+          // Tooltips (whole titles of cut ones among them) follow the side.
+          'tooltip': (theme.tooltipTheme.textStyle!.color!, solid((theme.tooltipTheme.decoration! as BoxDecoration).color!, page), 4.5),
           'chip label, chosen': ((theme.chipTheme.labelStyle!.color! as WidgetStateColor).resolve(selected), solid(theme.chipTheme.selectedColor!, page), 4.5),
         };
         // Every control's words on the control as drawn over the page,
@@ -70,6 +72,22 @@ void main() {
             expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(4.45), reason: '$what text in ${mode.name}: $fg on $bg');
           }
         }
+        // Card words on the card in every state: a hover fill made for
+        // one side must not reach the other through overrides.
+        if (side.videoCard case final card?) {
+          for (final (state, look) in [
+            ('resting', card),
+            ('hovered', card.forState(hovered: true)),
+            ('pressed', card.forState(pressed: true)),
+            ('focused', card.forState(focused: true)),
+          ]) {
+            for (final bg in look.tones(page)) {
+              expect(contrastRatio(solid(side.colors.text, bg), bg), greaterThanOrEqualTo(4.45), reason: 'card text, $state, in ${mode.name}: on $bg');
+            }
+          }
+        }
+        // A dark side's tooltips are dark too, not the light inverse.
+        expect(ThemeData.estimateBrightnessForColor((theme.tooltipTheme.decoration! as BoxDecoration).color!), side.brightness, reason: 'tooltip ground in ${mode.name}');
         for (final MapEntry(key: what, value: (fg, bg, min)) in pairs.entries) {
           expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(min - 0.05), reason: '$what in ${mode.name}');
         }

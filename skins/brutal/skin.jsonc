@@ -1094,6 +1094,7 @@
             }
           ],
           "hover": {
+            "fill": "#123d2c",
             "shadow": [
               {
                 "color": "#ff5c8a",

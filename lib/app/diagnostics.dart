@@ -60,7 +60,7 @@ extension Diagnostics on AppController {
   }
 
   String get _playerRoute {
-    final endpoint = proxyEndpoint;
+    final endpoint = proxyEndpoint?.replaceFirst(RegExp(r'^[^@]*@'), '');
     if (endpoint == null) return tr('Direct');
     return proxy.isSocks ? tr('Local bridge {0} to {1}', [endpoint, proxy.redacted ?? '']) : tr('Proxy {0}', [proxy.redacted ?? '']);
   }
@@ -104,7 +104,7 @@ extension Diagnostics on AppController {
         logDebug(() => 'The proxy check failed: $e');
       }
       if (proxy.isSocks) {
-        final endpoint = proxyEndpoint ?? '';
+        final endpoint = proxyEndpoint?.replaceFirst(RegExp(r'^[^@]*@'), '') ?? '';
         final bridged = endpoint.isNotEmpty && endpoint != '127.0.0.1:1';
         add(NetworkCheck(tr('Local SOCKS bridge'), ok: bridged, route: endpoint, detail: bridged ? tr('libmpv and pictures reach the SOCKS proxy through it') : tr('The bridge did not start, so libmpv and pictures cannot connect')));
       }

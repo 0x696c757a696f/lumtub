@@ -408,7 +408,7 @@ fn tunnel(proxy: &str, host: &str, port: u16) -> Result<TcpStream, Failure> {
     Ok(socket)
 }
 
-fn base64(data: &[u8]) -> String {
+pub(crate) fn base64(data: &[u8]) -> String {
     const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = String::new();
     for chunk in data.chunks(3) {

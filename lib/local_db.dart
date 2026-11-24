@@ -87,14 +87,11 @@ class LocalDb {
     for (final MapEntry(key: name, value: entries) in lists.entries) {
       final before = _sent[name] ?? const {};
       final now = <String, String>{};
-      final keys = StringBuffer();
       final bodies = StringBuffer();
       var changed = false;
       for (final (key, body) in entries) {
         if (now.containsKey(key)) continue;
         now[key] = body;
-        if (keys.isNotEmpty) keys.write(',');
-        keys.write(jsonEncode(key));
         final old = before[key];
         if (!identical(old, body) && old != body) {
           if (bodies.isNotEmpty) bodies.write(',');
@@ -121,12 +118,37 @@ class LocalDb {
       if (!changed) continue;
       if (!firstList) ask.write(',');
       firstList = false;
+      final known = _sent[name];
+      if (known != null && _inOrder(known, now)) {
+        // No entry moved: only what was added or removed is sent, each
+        // added key with the one before it, so the core touches only those rows.
+        final added = StringBuffer();
+        String? previous;
+        for (final key in now.keys) {
+          if (!known.containsKey(key)) {
+            if (added.isNotEmpty) added.write(',');
+            added.write(jsonEncode([key, previous]));
+          }
+          previous = key;
+        }
+        ask
+          ..write('{"name":')
+          ..write(jsonEncode(name))
+          ..write(',"remove":')
+          ..write(jsonEncode([for (final key in known.keys) if (!now.containsKey(key)) key]))
+          ..write(',"insert":[')
+          ..write(added)
+          ..write('],"bodies":{')
+          ..write(bodies)
+          ..write('}}');
+        continue;
+      }
       ask
         ..write('{"name":')
         ..write(jsonEncode(name))
-        ..write(',"keys":[')
-        ..write(keys)
-        ..write('],"bodies":{')
+        ..write(',"keys":')
+        ..write(jsonEncode(now.keys.toList()))
+        ..write(',"bodies":{')
         ..write(bodies)
         ..write('}}');
     }
@@ -142,6 +164,16 @@ class LocalDb {
     _sent.addAll(sending);
     dropped.forEach(_sent.remove);
   }
+}
+
+/// Whether the keys [before] and [now] share are in the same order in both.
+bool _inOrder(Map<String, String> before, Map<String, String> now) {
+  final kept = before.keys.where(now.containsKey).iterator;
+  for (final key in now.keys) {
+    if (!before.containsKey(key)) continue;
+    if (!kept.moveNext() || kept.current != key) return false;
+  }
+  return true;
 }
 
 /// Texts made for a video (transcripts and AI summaries), kept in the

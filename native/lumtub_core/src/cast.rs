@@ -181,6 +181,8 @@ struct Atom {
 
 /// The boxes laid one after another in `data[from..to]`.
 fn atoms(data: &[u8], from: usize, to: usize) -> Vec<Atom> {
+    // A parent may claim more bytes than were read.
+    let to = to.min(data.len());
     let mut found = Vec::new();
     let mut at = from;
     while at + 8 <= to {
@@ -491,6 +493,20 @@ fn index(data: &[u8], sidx: Atom) -> Option<Vec<Segment>> {
 }
 
 // ---- fragments ----
+
+/// Reads one segment as an MP4 fragment and as a WebM cluster, for the
+/// fuzzer. Returns how many samples each gave.
+#[doc(hidden)]
+pub fn read_fragment(data: &[u8], base: u64) -> (Option<usize>, Option<usize>) {
+    let defaults = Defaults {
+        duration: 1,
+        size: 1,
+        flags: 0,
+    };
+    let mp4 = fragment(data.to_vec(), base, defaults).ok();
+    let webm = webm_fragment(data.to_vec(), 1, 1).ok();
+    (mp4.map(|f| f.samples.len()), webm.map(|f| f.samples.len()))
+}
 
 /// The samples of every `moof` in one segment's bytes. `base` is the
 /// segment's offset in its file, for a `tfhd` that gives an absolute one.
@@ -1344,12 +1360,12 @@ fn next_fragment(
 }
 
 /// The segment holding `seconds`: the last that starts at or before it.
+/// Segments are in time order, so this is a binary search.
 fn segment_at(track: &Track, seconds: f64) -> usize {
     track
         .segments
-        .iter()
-        .rposition(|s| s.start <= seconds + 1e-6)
-        .unwrap_or(0)
+        .partition_point(|s| s.start <= seconds + 1e-6)
+        .saturating_sub(1)
 }
 
 // ---- writing ----
@@ -1465,7 +1481,12 @@ fn renumbered(trak: &[u8], id: u32) -> Vec<u8> {
         end: trak.len(),
     };
     if let Some(tkhd) = child(&trak, outer, b"tkhd") {
-        let at = tkhd.body + if trak[tkhd.body] == 1 { 20 } else { 12 };
+        let at = tkhd.body
+            + if trak.get(tkhd.body) == Some(&1) {
+                20
+            } else {
+                12
+            };
         if at + 4 <= tkhd.end {
             trak[at..at + 4].copy_from_slice(&id.to_be_bytes());
         }
@@ -1867,8 +1888,9 @@ impl Cuts {
             .iter()
             .filter_map(|&(from, to)| {
                 let (from, to) = ((from * 1000.0).round() as i64, (to * 1000.0).round() as i64);
-                let start = *keyframes.iter().find(|&&k| k >= from)?;
-                let end = *keyframes.iter().rev().find(|&&k| k <= to)?;
+                let start = *keyframes.get(keyframes.partition_point(|&k| k < from))?;
+                let end =
+                    *keyframes.get(keyframes.partition_point(|&k| k <= to).checked_sub(1)?)?;
                 (end > start).then_some((start, end))
             })
             .collect();
@@ -2083,26 +2105,37 @@ impl Session {
     /// The picture's segments from the one holding the start: index, start
     /// and length in seconds.
     fn hls_segments(&self) -> Vec<(usize, f64, f64)> {
-        let segments = &self.video.segments;
         let first = segment_at(&self.video, self.start);
-        let last = segments.last().map_or(0.0, |s| s.start);
-        let typical = if segments.len() > 1 {
-            last / (segments.len() - 1) as f64
-        } else {
-            5.0
-        };
-        let end = if self.duration > last {
-            self.duration
-        } else {
-            last + typical
-        };
-        (first..segments.len())
-            .map(|i| {
-                let start = segments[i].start;
-                let next = segments.get(i + 1).map_or(end, |s| s.start);
-                (i, start, (next - start).max(0.001))
-            })
+        (first..self.video.segments.len())
+            .filter_map(|i| self.hls_span(i).map(|(start, length)| (i, start, length)))
             .collect()
+    }
+
+    /// The start and length in seconds of the picture's segment `i`, one
+    /// of [Session::hls_segments]; none for any other.
+    fn hls_span(&self, i: usize) -> Option<(f64, f64)> {
+        let segments = &self.video.segments;
+        if i < segment_at(&self.video, self.start) {
+            return None;
+        }
+        let start = segments.get(i)?.start;
+        let next = match segments.get(i + 1) {
+            Some(next) => next.start,
+            None => {
+                let last = segments.last().map_or(0.0, |s| s.start);
+                let typical = if segments.len() > 1 {
+                    last / (segments.len() - 1) as f64
+                } else {
+                    5.0
+                };
+                if self.duration > last {
+                    self.duration
+                } else {
+                    last + typical
+                }
+            }
+        };
+        Some((start, (next - start).max(0.001)))
     }
 
     /// The playlist asked for first: with subtitles, a master playlist
@@ -2200,11 +2233,7 @@ impl Session {
         if let Some((_, made)) = self.made.lock().unwrap().iter().find(|(i, _)| *i == index) {
             return Ok(made.clone());
         }
-        let (_, start, length) = *self
-            .hls_segments()
-            .iter()
-            .find(|s| s.0 == index)
-            .ok_or("no such segment")?;
+        let (start, length) = self.hls_span(index).ok_or("no such segment")?;
         let end = if index + 1 < self.video.segments.len() {
             start + length
         } else {
@@ -3219,6 +3248,24 @@ pub extern "C" fn lumtub_cast_log() -> *mut c_char {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_traf_longer_than_its_segment_is_refused_not_a_crash() {
+        let mut data = Vec::new();
+        data.extend_from_slice(&36u32.to_be_bytes());
+        data.extend_from_slice(b"moof");
+        data.extend_from_slice(&100u32.to_be_bytes());
+        data.extend_from_slice(b"traf");
+        data.extend_from_slice(&16u32.to_be_bytes());
+        data.extend_from_slice(b"tfhd");
+        data.extend_from_slice(&[0; 8]);
+        data.extend_from_slice(&[0, 0, 0, 9]);
+        assert_eq!(data.len(), 36);
+        let _ = read_fragment(&data, 0);
+        let mut trak = Vec::new();
+        put_box(&mut trak, b"trak", |o| put_box(o, b"tkhd", |_| {}));
+        assert_eq!(renumbered(&trak, 2), trak);
+    }
 
     #[test]
     fn text_track_keeps_the_box_and_the_bottom_margin() {

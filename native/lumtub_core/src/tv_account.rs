@@ -345,17 +345,24 @@ async fn sign_in(port: i64, attempt: u64) {
                     client_id: client_id.clone(),
                     client_secret: client_secret.clone(),
                 };
-                let saved = {
+                let file = {
                     let mut account = account();
                     account.refresh = Some(credential.clone());
                     account.access = Some((
                         access,
                         Instant::now() + Duration::from_secs(seconds.saturating_sub(60)),
                     ));
-                    account
-                        .file
-                        .clone()
-                        .map(|file| store::save(&file, &credential))
+                    account.file.clone()
+                };
+                // Unlocked and off the request threads: the keyring may
+                // ask the user first.
+                let saved = match file {
+                    Some(file) => Some(
+                        tokio::task::spawn_blocking(move || store::save(&file, &credential))
+                            .await
+                            .unwrap_or_else(|_| Err("the sign-in could not be saved".into())),
+                    ),
+                    None => None,
                 };
                 match saved {
                     Some(Err(why)) => post(port, vec![Item::Int(2), Item::Text(why)]),

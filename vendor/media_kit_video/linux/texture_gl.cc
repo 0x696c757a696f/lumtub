@@ -110,6 +110,9 @@ struct _TextureGL {
   guint32 current_width;
   guint32 current_height;
   VideoOutput* video_output;
+  // Lumtub: held while a frame is drawn; texture_gl_detach takes it, so the
+  // VideoOutput is never freed under a frame.
+  GMutex mutex;
 };
 
 G_DEFINE_TYPE(TextureGL, texture_gl, fl_texture_gl_get_type())
@@ -124,17 +127,66 @@ static void texture_gl_init(TextureGL* self) {
   self->current_width = 1;
   self->current_height = 1;
   self->video_output = NULL;
+  g_mutex_init(&self->mutex);
+}
+
+// Lumtub: frees mpv's side (its texture, FBOs and the EGLImage) in mpv's
+// context. Called with |mutex| held, or once nothing else uses |self|.
+static void texture_gl_free_mpv_resources(TextureGL* self, VideoOutput* video_output) {
+  EGLDisplay egl_display = video_output_get_egl_display(video_output);
+  EGLContext egl_context = video_output_get_egl_context(video_output);
+  if (self->egl_image != EGL_NO_IMAGE_KHR) {
+    eglDestroyImageKHR(egl_display, self->egl_image);
+    self->egl_image = EGL_NO_IMAGE_KHR;
+  }
+  if (egl_context == EGL_NO_CONTEXT) {
+    return;
+  }
+  EGLDisplay current_display = eglGetCurrentDisplay();
+  EGLContext current_context = eglGetCurrentContext();
+  EGLSurface current_draw = eglGetCurrentSurface(EGL_DRAW);
+  EGLSurface current_read = eglGetCurrentSurface(EGL_READ);
+  eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
+  if (self->mpv_texture != 0) {
+    glDeleteTextures(1, &self->mpv_texture);
+    self->mpv_texture = 0;
+  }
+  if (self->fbo != 0) {
+    glDeleteFramebuffers(1, &self->fbo);
+    self->fbo = 0;
+  }
+  if (self->export_texture != 0) {
+    glDeleteTextures(1, &self->export_texture);
+    self->export_texture = 0;
+  }
+  if (self->export_fbo != 0) {
+    glDeleteFramebuffers(1, &self->export_fbo);
+    self->export_fbo = 0;
+  }
+  if (current_context != EGL_NO_CONTEXT) {
+    eglMakeCurrent(current_display, current_draw, current_read, current_context);
+  } else {
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+  }
+}
+
+void texture_gl_detach(TextureGL* self) {
+  g_mutex_lock(&self->mutex);
+  if (self->video_output != NULL) {
+    texture_gl_free_mpv_resources(self, self->video_output);
+    self->video_output = NULL;
+  }
+  g_mutex_unlock(&self->mutex);
+}
+
+static void texture_gl_finalize(GObject* object) {
+  g_mutex_clear(&TEXTURE_GL(object)->mutex);
+  G_OBJECT_CLASS(texture_gl_parent_class)->finalize(object);
 }
 
 static void texture_gl_dispose(GObject* object) {
   TextureGL* self = TEXTURE_GL(object);
   VideoOutput* video_output = self->video_output;
-  
-  // Save current context
-  EGLDisplay current_display = eglGetCurrentDisplay();
-  EGLContext current_context = eglGetCurrentContext();
-  EGLSurface current_draw = eglGetCurrentSurface(EGL_DRAW);
-  EGLSurface current_read = eglGetCurrentSurface(EGL_READ);
   
   // Clean up Flutter's texture (in Flutter's context)
   if (self->name != 0) {
@@ -142,35 +194,10 @@ static void texture_gl_dispose(GObject* object) {
     self->name = 0;
   }
   
-  // Clean up EGLImage
-  if (self->egl_image != EGL_NO_IMAGE_KHR && video_output != NULL) {
-    EGLDisplay egl_display = video_output_get_egl_display(video_output);
-    eglDestroyImageKHR(egl_display, self->egl_image);
-    self->egl_image = EGL_NO_IMAGE_KHR;
-  }
-  
-  // Clean up mpv's OpenGL resources (in mpv's isolated context)
+  // Clean up mpv's OpenGL resources and the EGLImage (in mpv's isolated
+  // context), unless texture_gl_detach did already.
   if (video_output != NULL) {
-    EGLDisplay egl_display = video_output_get_egl_display(video_output);
-    EGLContext egl_context = video_output_get_egl_context(video_output);
-    
-    if (egl_context != EGL_NO_CONTEXT) {
-      eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
-      
-      if (self->mpv_texture != 0) {
-        glDeleteTextures(1, &self->mpv_texture);
-        self->mpv_texture = 0;
-      }
-      if (self->fbo != 0) {
-        glDeleteFramebuffers(1, &self->fbo);
-        glDeleteTextures(1, &self->export_texture);
-        glDeleteFramebuffers(1, &self->export_fbo);
-        self->fbo = 0;
-      }
-      
-      // Restore previous context
-      eglMakeCurrent(current_display, current_draw, current_read, current_context);
-    }
+    texture_gl_free_mpv_resources(self, video_output);
   }
   
   self->current_width = 1;
@@ -182,6 +209,7 @@ static void texture_gl_dispose(GObject* object) {
 static void texture_gl_class_init(TextureGLClass* klass) {
   FL_TEXTURE_GL_CLASS(klass)->populate = texture_gl_populate_texture;
   G_OBJECT_CLASS(klass)->dispose = texture_gl_dispose;
+  G_OBJECT_CLASS(klass)->finalize = texture_gl_finalize;
 }
 
 TextureGL* texture_gl_new(VideoOutput* video_output) {
@@ -198,10 +226,15 @@ gboolean texture_gl_populate_texture(FlTextureGL* texture,
                                      guint32* height,
                                      GError** error) {
   TextureGL* self = TEXTURE_GL(texture);
+  g_mutex_lock(&self->mutex);
   VideoOutput* video_output = self->video_output;
   
-  gint32 required_width = (guint32)video_output_get_width(video_output);
-  gint32 required_height = (guint32)video_output_get_height(video_output);
+  gint32 required_width = 0;
+  gint32 required_height = 0;
+  if (video_output != NULL) {
+    required_width = (guint32)video_output_get_width(video_output);
+    required_height = (guint32)video_output_get_height(video_output);
+  }
   
   if (required_width > 0 && required_height > 0) {
     gboolean first_frame = self->name == 0 || self->fbo == 0 || self->mpv_texture == 0;
@@ -225,8 +258,13 @@ gboolean texture_gl_populate_texture(FlTextureGL* texture,
       if (!first_frame) {
         glDeleteTextures(1, &self->mpv_texture);
         glDeleteFramebuffers(1, &self->fbo);
+        glDeleteTextures(1, &self->export_texture);
+        glDeleteFramebuffers(1, &self->export_fbo);
+        self->export_texture = 0;
+        self->export_fbo = 0;
         if (self->egl_image != EGL_NO_IMAGE_KHR) {
           eglDestroyImageKHR(egl_display, self->egl_image);
+          self->egl_image = EGL_NO_IMAGE_KHR;
         }
       }
       
@@ -285,7 +323,7 @@ gboolean texture_gl_populate_texture(FlTextureGL* texture,
       eglMakeCurrent(flutter_display, flutter_draw, flutter_read, flutter_context);
       
       // Free previous Flutter texture
-      if (!first_frame && self->name != 0) {
+      if (self->name != 0) {
         glDeleteTextures(1, &self->name);
       }
       
@@ -368,5 +406,6 @@ gboolean texture_gl_populate_texture(FlTextureGL* texture,
     *height = 1;
   }
   
+  g_mutex_unlock(&self->mutex);
   return TRUE;
 }

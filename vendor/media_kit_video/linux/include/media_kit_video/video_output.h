@@ -74,7 +74,8 @@ VideoOutput* video_output_new(FlTextureRegistrar* texture_registrar,
 void video_output_set_texture_update_callback(
     VideoOutput* self,
     TextureUpdateCallback texture_update_callback,
-    gpointer texture_update_callback_context);
+    gpointer texture_update_callback_context,
+    GDestroyNotify texture_update_callback_context_destroy);
 
 /**
  * @brief Sets the required video output size. This forces |VideoOutput| to

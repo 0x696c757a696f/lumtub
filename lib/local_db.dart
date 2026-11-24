@@ -52,7 +52,7 @@ class LocalDb {
   /// has been set aside by then.
   Future<DbContents> read(List<String> lists, {List<String> prefixes = const []}) async {
     final ask = jsonEncode({'path': path, 'lists': lists, 'prefixes': prefixes});
-    final answer = await Isolate.run(() => _read(ask));
+    final (answer, bodies) = await Isolate.run(() => _readWithBodies(ask));
     if (answer['error'] case final String error) throw LocalDbException(error, answer['setAside'] as String?);
     final found = <String, List<(String, Object?)>>{};
     for (final MapEntry(:key, :value) in (answer['lists'] as Map? ?? const {}).entries) {
@@ -61,7 +61,7 @@ class LocalDb {
         if (pair is List && pair.length == 2 && pair[0] is String) entries.add((pair[0] as String, pair[1]));
       }
       found[key as String] = entries;
-      _sent[key] = {for (final (k, body) in entries) k: jsonEncode(body)};
+      _sent[key] = bodies[key] ?? const {};
     }
     final meta = <String, String>{
       for (final MapEntry(:key, :value) in (answer['meta'] as Map? ?? const {}).entries)
@@ -266,5 +266,18 @@ Map<String, dynamic> callCoreJson(String symbol, String ask) {
 }
 
 Map<String, dynamic> _read(String ask) => callCoreJson('lumtub_store_read', ask);
+
+/// [_read]'s answer and each list's bodies as JSON text, encoded here
+/// rather than on the UI isolate.
+(Map<String, dynamic>, Map<String, Map<String, String>>) _readWithBodies(String ask) {
+  final answer = _read(ask);
+  return (answer, {
+    for (final MapEntry(:key, :value) in (answer['lists'] as Map? ?? const {}).entries)
+      key as String: {
+        for (final pair in value is List ? value : const [])
+          if (pair is List && pair.length == 2 && pair[0] is String) pair[0] as String: jsonEncode(pair[1]),
+      },
+  });
+}
 
 Map<String, dynamic> _write(String ask) => callCoreJson('lumtub_store_write', ask);

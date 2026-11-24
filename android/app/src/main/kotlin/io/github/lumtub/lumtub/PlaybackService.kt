@@ -167,7 +167,10 @@ class PlaybackService : Service() {
             artworkLoader.execute {
                 if (wantedArtwork != address) return@execute
                 val bitmap = try {
-                    val connection = URL(address).openConnection() as HttpURLConnection
+                    // Lumtub's own requests to the internet are https only.
+                    val url = URL(address)
+                    if (url.protocol != "https") throw java.io.IOException("not https")
+                    val connection = url.openConnection() as HttpURLConnection
                     connection.connectTimeout = 8000
                     connection.readTimeout = 8000
                     val bytes = connection.inputStream.use { stream ->
@@ -261,14 +264,25 @@ class PlaybackService : Service() {
                 return START_NOT_STICKY
             }
         }
-        service = this
-        requested = false
-        denied = false
+        // Playback stopped between asking for the service and its start: it
+        // must still enter the foreground once, then it goes at once instead
+        // of keeping a stale notification and the process alive.
+        val stale = state.status == "stopped" || (service == null && !requested)
+        if (!stale) {
+            service = this
+            requested = false
+            denied = false
+        }
         val notification = build(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
         } else {
             startForeground(NOTIFICATION, notification)
+        }
+        if (stale) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) stopForeground(STOP_FOREGROUND_REMOVE)
+            else @Suppress("DEPRECATION") stopForeground(true)
+            stopSelf()
         }
         return START_NOT_STICKY
     }

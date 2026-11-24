@@ -665,7 +665,7 @@
       "border": "#ffffffd9",
       "hover": {
         "border": "#2f7178",
-        "fill": "#ffffffcc",
+        "fill": "#eef8f6d9",
         "shadow": [
           {
             "color": "#2f717833",
@@ -1283,6 +1283,30 @@
           ],
           "border": "#ffffff1a",
           "hover": {
+            "fill": [
+              "#283b3ecc",
+              {
+                "linear": {
+                  "angle": 180,
+                  "colors": [
+                    "#8fd0cf2e",
+                    "#8fd0cf00"
+                  ],
+                  "stops": [
+                    0,
+                    0.6
+                  ]
+                }
+              },
+              {
+                "pattern": {
+                  "type": "noise",
+                  "color": "#ffffff08",
+                  "spacing": 2,
+                  "size": 1
+                }
+              }
+            ],
             "border": "#8fd0cf",
             "shadow": [
               {

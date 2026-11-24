@@ -1303,6 +1303,7 @@
           },
           "border": "#ffffff3d",
           "hover": {
+            "fill": "#0e3d63c7",
             "border": "#ffffffd9",
             "glow": "#bfe8ff",
             "shadow": [

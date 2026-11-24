@@ -406,10 +406,17 @@ ThemeData buildAppTheme(
       // to edge. There it keeps Flutter's margins instead.
       width: Skin.formFactor == 'mobile' ? null : 480,
     ),
+    // Tooltips follow the theme like the menus do, as Windows' own
+    // tooltips: light on a light page, dark on a dark one.
     tooltipTheme: TooltipThemeData(
       waitDuration: const Duration(milliseconds: 500),
-      textStyle: font(TextStyle(fontSize: 12, height: 16 / 12, color: scheme.onInverseSurface)),
-      decoration: BoxDecoration(color: scheme.inverseSurface, borderRadius: controlRadius),
+      textStyle: font(TextStyle(fontSize: 12, height: 16 / 12, color: scheme.onSurface)),
+      decoration: BoxDecoration(
+        color: dark ? scheme.surfaceContainerHigh : scheme.surface,
+        borderRadius: controlRadius,
+        border: Border.all(color: scheme.outlineVariant),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: dark ? 0.5 : 0.16), blurRadius: 8, offset: const Offset(0, 2))],
+      ),
     ),
     // Tags: a hairline when off; the text colour filled when on.
     chipTheme: ChipThemeData(

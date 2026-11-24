@@ -21,5 +21,8 @@ void main() {
     for (final c in ['ㅤ', '​', '⁣', '﻿', 'ᅟ']) {
       expect(width(c), lessThan(0.01), reason: 'U+${c.codeUnitAt(0).toRadixString(16)}');
     }
+    // Loading a font tells the text to lay out again on a later frame.
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await tester.pump();
   });
 }

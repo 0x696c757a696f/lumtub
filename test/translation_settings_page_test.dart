@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/translation_services.dart';
 import 'package:lumtub/ui/pages/translation_settings_page.dart';
+import 'tooltip_finder.dart';
 
 void main() {
   Future<AppController> open(WidgetTester tester, TranslationConfig config) async {
@@ -42,7 +43,7 @@ void main() {
     await tester.tap(find.text('API key').first);
     await tester.pumpAndSettle();
     expect(tester.widget<TextField>(find.byType(TextField)).obscureText, isTrue);
-    await tester.tap(find.byTooltip('Show'));
+    await tester.tap(byTooltip('Show'));
     await tester.pump();
     expect(tester.widget<TextField>(find.byType(TextField)).obscureText, isFalse);
   });

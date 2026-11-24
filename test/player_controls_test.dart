@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:media_kit/media_kit.dart';
@@ -19,6 +19,7 @@ import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/widgets/video_progress_bar.dart';
 import 'package:lumtub/wheel_gesture.dart';
 import 'package:lumtub/ui/app_icons.dart';
+import 'tooltip_finder.dart';
 
 /// A player without libmpv: state changes are pushed through the streams
 /// the controls listen to.
@@ -157,7 +158,7 @@ void main() {
       home: Scaffold(body: ColoredBox(color: Colors.black, child: PlayerControls(player: player, state: null, controller: controller))),
     ));
     await tester.pump();
-    expect(find.byTooltip('Previous video'), findsNothing);
+    expect(byTooltip('Previous video'), findsNothing);
     final time = tester.getCenter(find.text('1:00 / 10:00'));
     final play = tester.getCenter(find.byType(AnimatedIcon).hitTestable().first);
     expect((play.dy - time.dy).abs(), lessThan(4), reason: 'Play sits in the same row as the time');
@@ -195,7 +196,7 @@ void main() {
   testWidgets('the top bar: back and home, then the switches', (tester) async {
     await pump(tester);
     for (final tip in ['Back', 'Home', 'Cast', 'Picture in picture', 'More settings']) {
-      expect(find.byTooltip(tip), findsOneWidget, reason: tip);
+      expect(byTooltip(tip), findsOneWidget, reason: tip);
     }
     expect(tester.takeException(), isNull);
   });
@@ -210,9 +211,9 @@ void main() {
     ));
     await tester.pump();
     expect(find.text('测试视频标题'), findsOneWidget);
-    expect(find.byTooltip('Leave picture in picture'), findsOneWidget);
-    expect(find.byTooltip('Home'), findsNothing);
-    await tester.tap(find.byTooltip('Play/Pause (Space)'));
+    expect(byTooltip('Leave picture in picture'), findsOneWidget);
+    expect(byTooltip('Home'), findsNothing);
+    await tester.tap(byTooltip('Play/Pause (Space)'));
     await tester.pump();
     expect(player.state.playing, isTrue);
     await tester.tap(find.byIcon(AppIcons.pauseCircle));
@@ -240,7 +241,7 @@ void main() {
       home: Scaffold(body: ColoredBox(color: Colors.black, child: PlayerControls(player: player, state: null, controller: controller))),
     ));
     await tester.pump();
-    await tester.tap(find.byTooltip('字幕'));
+    await tester.tap(byTooltip('字幕'));
     await tester.pumpAndSettle();
     expect(find.text('第一字幕'), findsOneWidget);
     expect(find.text('第二字幕（上方）'), findsOneWidget);
@@ -258,7 +259,7 @@ void main() {
     await tester.pump();
     expect(find.text('YouTube 自动翻译'), findsNWidgets(2));
     expect(find.byIcon(AppIcons.check), findsNWidgets(2), reason: 'both sides start off');
-    await tester.tap(find.byTooltip('关闭'));
+    await tester.tap(byTooltip('关闭'));
     await tester.pumpAndSettle();
     expect(find.text('第一字幕'), findsNothing);
     expect(tester.takeException(), isNull);
@@ -266,7 +267,7 @@ void main() {
 
   testWidgets('字幕列表 opens from 更多设置 and asks for a subtitle first', (tester) async {
     await pump(tester);
-    await tester.tap(find.byTooltip('More settings'));
+    await tester.tap(byTooltip('More settings'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Subtitle list'), 200, scrollable: find.byType(Scrollable).last);
     await tester.ensureVisible(find.text('Subtitle list'));
@@ -292,7 +293,7 @@ void main() {
 
   testWidgets('the fit choice in 更多设置 changes the picture fit', (tester) async {
     await pump(tester);
-    await tester.tap(find.byTooltip('More settings'));
+    await tester.tap(byTooltip('More settings'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('16:9'));
     await tester.pumpAndSettle();
@@ -326,7 +327,7 @@ void main() {
     final semantics = tester.ensureSemantics();
     await pump(tester);
     expect(find.bySemanticsLabel('Play/Pause (Space)'), findsWidgets);
-    final ring = find.descendant(of: find.byTooltip('Play/Pause (Space)'), matching: find.byType(AnimatedContainer));
+    final ring = find.descendant(of: byTooltip('Play/Pause (Space)'), matching: find.byType(AnimatedContainer));
     expect(ring, findsOneWidget);
     var focused = false;
     for (var i = 0; i < 40 && !focused; i++) {
@@ -390,7 +391,7 @@ void main() {
   testWidgets('the volume slider opens when its button is tapped', (tester) async {
     await pump(tester);
     expect(find.byType(Slider), findsNothing);
-    await tester.tap(find.byTooltip('Mute (M)'));
+    await tester.tap(byTooltip('Mute (M)'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(Slider), findsOneWidget);
@@ -411,7 +412,7 @@ void main() {
 
   testWidgets('the more panel applies choices and stays open', (tester) async {
     await pump(tester);
-    await tester.tap(find.byTooltip('More settings'));
+    await tester.tap(byTooltip('More settings'));
     await tester.pumpAndSettle();
     final panel = find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first;
     for (final item in ['Keep window on top', 'Listen only', 'SponsorBlock', 'Playback info', 'Mirror', 'Quality', 'Aspect ratio']) {
@@ -433,7 +434,7 @@ void main() {
       await tester.scrollUntilVisible(find.text(item), 60, scrollable: panel);
       expect(find.text(item), findsWidgets, reason: item);
     }
-    await tester.tap(find.byTooltip('Close'));
+    await tester.tap(byTooltip('Close'));
     await tester.pumpAndSettle();
     expect(find.text('Playback strategy'), findsNothing);
     expect(tester.takeException(), isNull);
@@ -521,10 +522,10 @@ void main() {
     lightsOff.value = false;
     await tester.tap(find.byType(PlayerControls), warnIfMissed: false);
     await tester.pump();
-    await tester.tap(find.byTooltip('Lights off (B)'));
+    await tester.tap(byTooltip('Lights off (B)'));
     await tester.pump();
     expect(lightsOff.value, isTrue);
-    expect(find.byTooltip('Lights on (B)'), findsOneWidget);
+    expect(byTooltip('Lights on (B)'), findsOneWidget);
     lightsOff.value = false;
     await tester.pump(const Duration(seconds: 4));
   });
@@ -534,16 +535,16 @@ void main() {
     await tester.tap(find.byType(PlayerControls), warnIfMissed: false);
     await tester.pump();
     final playing = player.state.playing;
-    await tester.tap(find.byTooltip('Lock'));
+    await tester.tap(byTooltip('Lock'));
     await tester.pump();
-    expect(find.byTooltip('Unlock'), findsOneWidget);
-    expect(find.byTooltip('More settings'), findsNothing);
+    expect(byTooltip('Unlock'), findsOneWidget);
+    expect(byTooltip('More settings'), findsNothing);
     await tester.tapAt(tester.getRect(find.byType(PlayerControls)).center + const Offset(150, 0));
     await tester.pump(const Duration(milliseconds: 400));
     expect(player.state.playing, playing);
-    await tester.tap(find.byTooltip('Unlock'));
+    await tester.tap(byTooltip('Unlock'));
     await tester.pump();
-    expect(find.byTooltip('More settings'), findsOneWidget);
+    expect(byTooltip('More settings'), findsOneWidget);
     await tester.pump(const Duration(seconds: 10));
     expect(tester.takeException(), isNull);
   });

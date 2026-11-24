@@ -7,7 +7,7 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:media_kit_video/src/video_controller/video_controller.dart';
 

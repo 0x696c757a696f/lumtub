@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/academic_topics.dart';
 import 'package:lumtub/app/app_controller.dart';
@@ -17,6 +17,7 @@ import 'package:lumtub/search_options.dart';
 import 'package:lumtub/state_media.dart';
 import 'package:lumtub/ui/pages/explore_page.dart';
 import 'package:lumtub/ui/app_icons.dart';
+import 'tooltip_finder.dart';
 
 /// Narrower than [ExplorePage.wideLayout], so zones are in a row on top.
 Future<AppController> _open(WidgetTester tester, {double width = 950}) async {
@@ -569,7 +570,7 @@ void main() {
     final faith = find.ancestor(of: find.text('Gaming'), matching: find.byType(ListTile));
     await tester.ensureVisible(faith);
     await tester.pump();
-    await tester.tap(find.descendant(of: faith, matching: find.byTooltip('Pinned')));
+    await tester.tap(find.descendant(of: faith, matching: byTooltip('Pinned')));
     await tester.pump();
     await tester.tap(find.widgetWithText(FilledButton, 'Save'));
     await tester.pump(const Duration(milliseconds: 300));

@@ -365,7 +365,7 @@ extension SettingsActions on AppController {
 
   Future<void> openStore(String url) async {
     try {
-      await Process.start('explorer.exe', [url]);
+      await Process.start(windowsProgram('explorer.exe'), [url]);
     } catch (_) {
       _notice(tr("Couldn't open the Microsoft Store link."));
     }

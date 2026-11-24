@@ -13,6 +13,7 @@ import 'file_mode.dart';
 import 'friendly_error.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
+import 'system_env.dart';
 
 /// The package this build is, such as `windows-x64-v3`; empty for builds
 /// made outside CI, which never update themselves.
@@ -552,7 +553,7 @@ class AppUpdater extends ChangeNotifier {
         // Windows PowerShell reads a script without a byte order mark in the
         // ANSI code page, which garbles a path outside it.
         await script.writeAsBytes([0xEF, 0xBB, 0xBF, ...utf8.encode(text)]);
-        await Process.start('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', script.path], mode: ProcessStartMode.detached);
+        await Process.start(windowsProgram(r'System32\WindowsPowerShell\v1.0\powershell.exe'), ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', script.path], mode: ProcessStartMode.detached);
         logInfo('Installing Lumtub ${readyVersion ?? available?.version ?? ''} after exit');
         await AppLog.current?.flush();
       }

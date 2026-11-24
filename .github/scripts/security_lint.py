@@ -20,6 +20,8 @@ RULES = [
      "text is spliced into a shell or PowerShell command; use a raw string and pass values as arguments or environment variables"),
     ('ytdlp-separator', ['lib/**.dart'], r"""(?:\[\s*|(?<!'--'),\s*)'https://www\.youtube\.com/watch\?v=\$""",
      "a video address in an argument list without '--', right before it on the same line"),
+    ('windows-bare-program', ['lib/**.dart'], r"""Process\.(?:start|run|runSync)\(\s*['"](?:[\w.-]+\.exe|reg|cmd|tar|powershell|explorer|rundll32|where)['"]""",
+     "a Windows program started by bare name is looked for in the current folder first; use windowsProgram()"),
     ('device-reply', ['lib/cast/**.dart'], r'utf8\.decodeStream\(',
      'a reply from the network is read without a size limit; use readDeviceReply'),
     ('tls-bypass', ['lib/**.dart', 'native/**.rs', 'android/**.kt', 'macos/**.swift', 'ios/**.swift', 'linux/**.cc', 'windows/**.cpp'],

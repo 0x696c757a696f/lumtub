@@ -422,7 +422,7 @@ Future<void> openExternal(String url) async {
   if (!Platform.isWindows) return openWithDesktop(uri.toString());
   // rundll32 passes the whole address on; explorer.exe can drop everything
   // after the first '&'.
-  await Process.start('rundll32.exe', ['url.dll,FileProtocolHandler', uri.toString()]);
+  await Process.start(windowsProgram(r'System32\rundll32.exe'), ['url.dll,FileProtocolHandler', uri.toString()]);
 }
 
 Future<void> copyText(BuildContext context, String text, String notice) async {

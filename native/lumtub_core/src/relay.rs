@@ -569,10 +569,23 @@ fn answer(
     fetch: &dyn Fetch,
 ) {
     let mut buffer = vec![0u8; 256 << 10];
+    let mut first = true;
     loop {
-        let Some((method, path, headers)) = read_request(reader) else {
+        // The first request has to come soon and whole: a connection that
+        // only holds a place under the cap is let go. Between requests
+        // libmpv may wait long.
+        let ask = if first {
+            read_request_within(reader, Some(FIRST_HEAD))
+        } else {
+            read_request(reader)
+        };
+        let Some((method, path, headers)) = ask else {
             return;
         };
+        if first {
+            first = false;
+            let _ = reader.get_ref().set_read_timeout(Some(IDLE_TIMEOUT));
+        }
         let keep_open = !headers
             .get("connection")
             .is_some_and(|v| v.eq_ignore_ascii_case("close"));
@@ -585,12 +598,12 @@ fn answer(
                 .or_else(|| shared.parts.get(token))
                 .cloned()
         };
+        // Nothing it may have: the connection is not kept for more.
         let Some(target) = target.filter(|_| method == "GET" || method == "HEAD") else {
-            let _ = writer.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n");
-            if !keep_open {
-                return;
-            }
-            continue;
+            let _ = writer.write_all(
+                b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+            );
+            return;
         };
         if target.hls != crate::relay_hls::Hls::No {
             if method == "GET" {
@@ -726,6 +739,8 @@ pub(crate) type Request = (String, String, HashMap<String, String>);
 const MAX_CONNECTIONS: usize = 64;
 /// How long a connection may wait for its next request.
 const IDLE_TIMEOUT: Duration = Duration::from_secs(300);
+/// How long a new connection has to send its first request head whole.
+const FIRST_HEAD: Duration = Duration::from_secs(10);
 /// The longest request or header line read.
 const MAX_LINE: u64 = 8 << 10;
 

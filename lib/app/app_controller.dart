@@ -942,6 +942,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// 盲听 and 复听 hide the subtitles.
   bool studyHidesSubtitles = false;
   final _studyOwner = Object();
+  /// iOS's picture-in-picture window, while it hides the subtitles.
+  final _iosPipOwner = Object();
   double? _studyRateBefore;
   String? _studyChannel;
 

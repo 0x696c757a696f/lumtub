@@ -229,6 +229,15 @@ class DownloadManager extends ChangeNotifier {
   int _maxConcurrent;
   DownloadDefaults _defaults = const DownloadDefaults();
   final List<DownloadTask> tasks = [];
+  /// The first task of [tasks] for each video, kept with it.
+  final _byId = <String, DownloadTask>{};
+
+  void _drop(DownloadTask task) {
+    tasks.remove(task);
+    if (!identical(_byId[task.id], task)) return;
+    _byId.remove(task.id);
+    if (tasks.where((t) => t.id == task.id).firstOrNull case final other?) _byId[task.id] = other;
+  }
   final _active = <String>{};
   final _processes = <String, Process>{};
   final _stopping = <String>{};
@@ -292,6 +301,7 @@ class DownloadManager extends ChangeNotifier {
           // What the last run left half done continues.
           if (task.status == DownloadStatus.downloading) task.status = DownloadStatus.queued;
           tasks.add(task);
+          _byId.putIfAbsent(task.id, () => task);
         }
       }
     } on _NoList {
@@ -372,7 +382,7 @@ class DownloadManager extends ChangeNotifier {
 
   // Queue.
 
-  DownloadTask? taskFor(String id) => tasks.where((t) => t.id == id).firstOrNull;
+  DownloadTask? taskFor(String id) => _byId[id];
 
   /// Queues [item]; null when it is already downloaded or in the queue.
   DownloadTask? add(VideoItem item, DownloadQuality quality, {DownloadSelection? selection}) {
@@ -380,10 +390,11 @@ class DownloadManager extends ChangeNotifier {
     if (existing != null) {
       if (existing.status == DownloadStatus.done && existing.filePath != null && File(existing.filePath!).existsSync()) return null;
       if (existing.active || existing.status == DownloadStatus.paused) return null;
-      tasks.remove(existing);
+      _drop(existing);
     }
     final task = DownloadTask(item: item, quality: quality, directory: _directory, selection: selection);
     tasks.insert(0, task);
+    _byId[task.id] = task;
     _changed();
     return task;
   }
@@ -431,7 +442,7 @@ class DownloadManager extends ChangeNotifier {
   Future<void> remove(String id, {bool deleteFiles = false}) async {
     final task = taskFor(id);
     if (task == null) return;
-    tasks.remove(task);
+    _drop(task);
     _stop(id);
     _changed();
     if (deleteFiles) await _wipeAfterStop(task);

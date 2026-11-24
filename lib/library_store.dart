@@ -126,10 +126,10 @@ class IdList<T> extends ListBase<T> {
 }
 
 class LocalPlaylist {
-  LocalPlaylist({required this.id, required this.name, List<VideoItem>? items}) : items = items ?? [];
+  LocalPlaylist({required this.id, required this.name, List<VideoItem>? items}) : items = IdList<VideoItem>((item) => item.id)..addAll(items ?? const []);
   final String id;
   String name;
-  final List<VideoItem> items;
+  final IdList<VideoItem> items;
 
   Map<String, dynamic> toJson() => {'id': id, 'name': name, 'items': items.map((item) => item.toJson()).toList()};
 }
@@ -538,7 +538,7 @@ class LibraryStore {
 
   /// Adds [item] at the end of [playlist]; false when it was already there.
   bool addToPlaylist(LocalPlaylist playlist, VideoItem item) {
-    if (playlist.items.any((other) => other.id == item.id)) return false;
+    if (playlist.items.containsId(item.id)) return false;
     playlist.items.add(item);
     return true;
   }

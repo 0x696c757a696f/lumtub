@@ -150,6 +150,11 @@ void main() {
     expect(library.removeWatchLater(other.id), isFalse);
     library.watchLater.clear();
     expect(library.isWatchLater(video.id), isFalse);
+    final playlist = library.createPlaylist('P');
+    expect(library.addToPlaylist(playlist, video), isTrue);
+    expect(library.addToPlaylist(playlist, video), isFalse);
+    playlist.items.clear();
+    expect(library.addToPlaylist(playlist, video), isTrue);
     expect(library.toggleFollow(channel), isTrue);
     expect(library.isFollowing(channel.id), isTrue);
     expect(library.toggleFollow(channel), isFalse);

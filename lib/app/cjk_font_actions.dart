@@ -48,20 +48,22 @@ extension CjkFontActions on AppController {
       if (packs.installedOf(ScriptFontPack.id) == null) {
         // One download, however many lines ask for it meanwhile.
         final pending = ScriptFontPack.installing ??= () async {
-          try {
-            if (!packs.catalog.any((p) => p.id == ScriptFontPack.id)) await packs.refresh();
-            if (!packs.catalog.any((p) => p.id == ScriptFontPack.id && p.suitsThisBuild)) {
-              logInfo('No data pack ${ScriptFontPack.id} to download');
-              return false;
-            }
-            logInfo('Downloading ${ScriptFontPack.id}: this system has no font for ${wanted.join(', ')}');
-            await packs.install(ScriptFontPack.id);
-            return true;
-          } finally {
-            ScriptFontPack.installing = null;
+          if (!packs.catalog.any((p) => p.id == ScriptFontPack.id)) await packs.refresh();
+          if (!packs.catalog.any((p) => p.id == ScriptFontPack.id && p.suitsThisBuild)) {
+            logInfo('No data pack ${ScriptFontPack.id} to download');
+            return false;
           }
+          logInfo('Downloading ${ScriptFontPack.id}: this system has no font for ${wanted.join(', ')}');
+          await packs.install(ScriptFontPack.id);
+          return true;
         }();
-        if (!await pending) return;
+        final bool installed;
+        try {
+          installed = await pending;
+        } finally {
+          if (identical(ScriptFontPack.installing, pending)) ScriptFontPack.installing = null;
+        }
+        if (!installed) return;
       }
       final files = ScriptFontPack.installedFiles(packs);
       var loaded = false;

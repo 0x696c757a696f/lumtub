@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:path_provider/path_provider.dart';
 
@@ -72,7 +71,6 @@ class AppDirectories {
 }
 
 final _atomicWrites = <String, Future<void>>{};
-final _tempNames = Random.secure();
 
 /// Writes to a temporary file first so a crash never leaves half a file.
 /// Writes to the same file run one after another in the order they were
@@ -90,7 +88,9 @@ Future<void> writeFileAtomic(File file, String text) {
 
 Future<void> _writeFileAtomic(File file, String text) async {
   await file.parent.create(recursive: true);
-  final temp = File('${file.path}.${_tempNames.nextInt(1 << 32).toRadixString(16)}.tmp');
+  // One name per file: writes to it are one at a time (above), and a crash
+  // mid-write leaves one leftover that the next write replaces.
+  final temp = File('${file.path}.tmp');
   try {
     await temp.writeAsString(text, flush: true);
     await temp.rename(file.path);

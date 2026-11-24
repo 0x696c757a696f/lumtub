@@ -137,9 +137,10 @@ extension DownloadActions on AppController {
     final names = <String>{};
     String fileFor(String tag) {
       // The tags come from YouTube; only these characters reach a file name.
-      var name = '$stem.${tag.replaceAll(RegExp(r'[^A-Za-z0-9_+-]'), '_')}';
+      final safe = tag.replaceAll(RegExp(r'[^A-Za-z0-9_+-]'), '_');
+      var name = '$stem.$safe';
       for (var i = 2; names.contains(name); i++) {
-        name = '$stem.$tag-$i';
+        name = '$stem.$safe-$i';
       }
       names.add(name);
       return '$name.${picked.srt ? 'srt' : 'vtt'}';

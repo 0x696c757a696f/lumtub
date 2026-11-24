@@ -717,6 +717,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   Stream<DownloadTask> get finishedDownloads => _finishedDownloads.stream;
 
   List<VideoItem> get history => _history?.items ?? const [];
+  /// Changes whenever [history] does, entries changed in place included.
+  int get historyRevision => _history?.revision ?? 0;
 
   /// When each video of [history] was last played, by id.
   Map<String, DateTime> get watchedTimes => _history?.watched ?? const {};

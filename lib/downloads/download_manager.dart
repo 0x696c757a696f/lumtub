@@ -732,7 +732,7 @@ class DownloadManager extends ChangeNotifier {
           if (path != null) {
             printed.add(path);
           } else if (text.startsWith(_infoPrefix)) {
-            info = text.substring(_infoPrefix.length);
+            info ??= text.substring(_infoPrefix.length);
           } else if (text.trim().isNotEmpty) {
             errors.add(text.trim());
             if (errors.length > 20) errors.removeAt(0);

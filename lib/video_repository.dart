@@ -519,6 +519,8 @@ class HistoryStore {
   /// Where each id is in [items], made again after [items] moved.
   final _positions = <String, int>{};
   bool _moved = true;
+  /// Counts every change to [items], so a view of them knows when to look again.
+  int revision = 0;
 
   /// Where [id] is in [items], or -1.
   int indexOf(String id) {
@@ -574,6 +576,7 @@ class HistoryStore {
         final item = VideoItem.fromJson(value);
         items.add(item);
         _moved = true;
+        revision++;
         if (DateTime.tryParse('${value['watched_at'] ?? ''}') case final at?) watched[item.id] = at.toLocal();
       }
     } catch (e) {
@@ -609,6 +612,7 @@ class HistoryStore {
       items.clear();
       watched.clear();
       _moved = true;
+      revision++;
       await setBrokenFileAside(file, e);
     }
   }
@@ -616,6 +620,7 @@ class HistoryStore {
   Future<void> clear() {
     items.clear();
     _moved = true;
+    revision++;
     watched.clear();
     return _saveNow();
   }
@@ -624,6 +629,7 @@ class HistoryStore {
   Future<void> remove(Set<String> ids) {
     items.removeWhere((item) => ids.contains(item.id));
     _moved = true;
+    revision++;
     watched.removeWhere((id, _) => ids.contains(id));
     return _saveNow();
   }
@@ -633,6 +639,7 @@ class HistoryStore {
     for (final (i, item) in items.indexed) {
       if (states.containsKey(item.id)) items[i] = item.withLiveStatus(states[item.id]);
     }
+    revision++;
     return _saveNow();
   }
 
@@ -642,6 +649,7 @@ class HistoryStore {
     items.removeWhere((other) => other.id == item.id);
     items.insert(0, item);
     _moved = true;
+    revision++;
     watched[item.id] = DateTime.now();
     if (items.length > historyLimit) {
       for (final old in items.skip(historyLimit)) {
@@ -660,6 +668,7 @@ class HistoryStore {
     final at = indexOf(item.id);
     if (at < 0) return Future.value();
     items[at] = item;
+    revision++;
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 300), () => unawaited(_saveNow()));
     return Future.value();
@@ -671,6 +680,7 @@ class HistoryStore {
     final at = indexOf(id);
     if (at < 0 || items[at].duration != null) return Future.value();
     items[at] = items[at].withDuration(seconds);
+    revision++;
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 300), () => unawaited(_saveNow()));
     return Future.value();

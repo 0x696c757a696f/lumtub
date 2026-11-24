@@ -154,12 +154,21 @@ class SecureJsonFile {
       }
       rethrow;
     }
+    // A newer write or a delete came while this was sealing: what is on
+    // disk is theirs to decide, so an account signed out stays signed out.
+    if (generation != _generation) return;
     if (!Platform.isWindows) {
       // Readable by the user alone before anything is in it.
       await temporary.writeAsBytes(const [], flush: true);
       setFileMode(temporary.path, ownerOnlyMode);
     }
     await temporary.writeAsBytes(sealed, flush: true);
+    if (generation != _generation) {
+      try {
+        await temporary.delete();
+      } catch (_) {}
+      return;
+    }
     await temporary.rename(file.path);
   }
 

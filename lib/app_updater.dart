@@ -491,6 +491,11 @@ class AppUpdater extends ChangeNotifier {
     return false;
   }
 
+  /// Runs [launchInstaller] on another isolate. Static, so that the closure
+  /// sent there carries only these plain values and never the updater.
+  static Future<Map<String, dynamic>?> _launchOffThread({required String package, required String folder, required int processId, required bool relaunch, required String name}) =>
+      Isolate.run(() => launchInstaller(package: package, folder: folder, processId: processId, relaunch: relaunch, name: name, signature: '$package.sig'));
+
   /// Installs the downloaded package once this process has ended, and
   /// starts Lumtub again when [relaunch]. Returns whether it was handed
   /// over; false when it could not start, as when the administrator prompt
@@ -525,7 +530,7 @@ class AppUpdater extends ChangeNotifier {
         final package = file.path, processId = pid;
         // Hashing the package and waiting on the administrator prompt take
         // seconds: never on the window's isolate.
-        final result = await Isolate.run(() => launchInstaller(package: package, folder: folder, processId: processId, relaunch: relaunch, name: name, signature: '$package.sig'));
+        final result = await _launchOffThread(package: package, folder: folder, processId: processId, relaunch: relaunch, name: name);
         if (result == null) throw StateError('No native core');
         if (result['rejected'] == true) {
           logWarn('The downloaded Lumtub update failed its check before installing: ${result['error']}');

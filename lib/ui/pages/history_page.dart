@@ -43,16 +43,14 @@ class _HistoryPageState extends State<HistoryPage> {
 
   // The history runs to thousands of entries and the page rebuilds on
   // every notify and tick: the filtered list and the pruned selection are
-  // worked out again only when the history or the search changes. Videos
-  // are added at the front and removed by count, so its length and ends
-  // tell a change.
+  // worked out again only when the history or the search changes.
   Object? _shownFor;
   List<VideoItem> _shownItems = const [];
   Object? _allSelectedFor;
   bool _allSelectedKept = false;
 
   List<VideoItem> _shown(List<VideoItem> all) {
-    final key = (all.length, all.firstOrNull?.id, all.lastOrNull?.id, _query);
+    final key = (controller.historyRevision, all.length, _query);
     if (key == _shownFor) return _shownItems;
     _shownFor = key;
     if (_selected.isNotEmpty) {

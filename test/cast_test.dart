@@ -27,7 +27,7 @@ const _description = '''<?xml version="1.0"?>
 <service><serviceType>urn:schemas-upnp-org:service:AVTransport:1</serviceType><serviceId>urn:upnp-org:serviceId:AVTransport</serviceId><controlURL>/upnp/control/AVTransport</controlURL></service>
 </serviceList></device></root>''';
 
-Uint8List _mdnsPacket() {
+Uint8List _mdnsPacket({List<int> address = const [192, 168, 1, 77]}) {
   final out = BytesBuilder();
   out.add([0, 0, 0x84, 0, 0, 0, 0, 4, 0, 0, 0, 0]);
   final ptrName = <int>[];
@@ -64,7 +64,7 @@ Uint8List _mdnsPacket() {
   out.add(txt);
   // Record 4: A record for the target.
   out.add(target);
-  out.add([0, 1, 0x80, 1, 0, 0, 0, 120, 0, 4, 192, 168, 1, 77]);
+  out.add([0, 1, 0x80, 1, 0, 0, 0, 120, 0, 4, ...address]);
   return out.toBytes();
 }
 
@@ -269,12 +269,17 @@ void main() {
       expect(services.single.host.address, '192.168.1.77');
     });
 
-    test('takes only the address the reply came from, and answers what the packet completed', () {
-      final other = MdnsCollector();
-      expect(other.add(_mdnsPacket(), from: InternetAddress('192.168.1.5')), isEmpty);
-      expect(other.services, isEmpty);
+    test('takes the sender or a local-network address, and answers what the packet completed', () {
       final found = MdnsCollector().add(_mdnsPacket(), from: InternetAddress('192.168.1.77'));
       expect(found.single.host.address, '192.168.1.77');
+      // Passed on by an mDNS reflector from the network next door.
+      final reflected = MdnsCollector().add(_mdnsPacket(), from: InternetAddress('192.168.1.5'));
+      expect(reflected.single.host.address, '192.168.1.77');
+      for (final address in [[8, 8, 8, 8], [127, 0, 0, 1]]) {
+        final other = MdnsCollector();
+        expect(other.add(_mdnsPacket(address: address), from: InternetAddress('192.168.1.5')), isEmpty);
+        expect(other.services, isEmpty);
+      }
     });
 
     test('ignores truncated packets', () {

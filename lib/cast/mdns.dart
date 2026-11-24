@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import '../app_log.dart';
+import '../network_proxy.dart';
 import 'cast_net.dart';
 import 'cast_parse.dart';
 
@@ -96,7 +97,10 @@ class MdnsCollector {
     for (final row in rows('addresses')) {
       if (row case [final String name, final String text] when room(_addresses, name)) {
         final address = InternetAddress.tryParse(text);
-        if (address == null || (from != null && address != from)) continue;
+        // The sender's own address, or (through an mDNS reflector between
+        // two networks) another address on the local network; never this
+        // PC or one on the internet.
+        if (address == null || (from != null && address != from && (address.isLoopback || !isLocalHost(address.address)))) continue;
         // An IPv4 address wins over an IPv6 one for the same name.
         if (address.type == InternetAddressType.IPv4) {
           _addresses[name] = address;

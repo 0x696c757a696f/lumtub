@@ -33,9 +33,13 @@ class LiveChatRepository {
       ? '${Directory.systemTemp.path}${Platform.pathSeparator}lumtub-live-chat'
       : '${cacheDirectory!}${Platform.pathSeparator}live-chat');
 
-  File fileFor(String videoId) => File('${directory.path}${Platform.pathSeparator}$videoId.live_chat.json');
+  /// A folder of its own for one run of yt-dlp, so that a run ending (and
+  /// cleaning up) never takes the file of another run for the same video.
+  Directory _runFolder() => Directory('${directory.path}${Platform.pathSeparator}${Random.secure().nextInt(1 << 32).toRadixString(16)}');
 
-  List<String> arguments(String videoId) => [
+  File fileFor(String videoId, [Directory? folder]) => File('${(folder ?? directory).path}${Platform.pathSeparator}$videoId.live_chat.json');
+
+  List<String> arguments(String videoId, [Directory? folder]) => [
         '--no-warnings',
         '--skip-download',
         '--no-playlist',
@@ -48,23 +52,27 @@ class LiveChatRepository {
         '--no-part',
         '--sub-langs', 'live_chat',
         '--sub-format', 'json',
-        '--output', '${directory.path}${Platform.pathSeparator}%(id)s.%(ext)s',
+        '--output', '${(folder ?? directory).path}${Platform.pathSeparator}%(id)s.%(ext)s',
         '--', 'https://www.youtube.com/watch?v=$videoId',
       ];
 
   /// Downloads and parses a finished stream's chat replay. Videos without
   /// public chat replay leave no output file and return an empty list.
   Future<List<LiveChatMessage>> replay(String videoId) async {
-    final file = fileFor(videoId);
-    await directory.create(recursive: true);
+    final folder = _runFolder();
+    final file = fileFor(videoId, folder);
+    await folder.create(recursive: true);
     try {
-      await file.delete();
-    } on FileSystemException {
-      // No previous replay for this video.
+      return await _replay(videoId, folder, file);
+    } finally {
+      await _delete(folder);
     }
+  }
+
+  Future<List<LiveChatMessage>> _replay(String videoId, Directory folder, File file) async {
     final result = await runWithTimeout(
       ytDlpPath,
-      arguments(videoId),
+      arguments(videoId, folder),
       timeout: const Duration(minutes: 2),
       environment: _environment,
     );
@@ -73,17 +81,13 @@ class LiveChatRepository {
       if (result.exitCode == 0 || RegExp(r'no subtitles|live chat replay is not available', caseSensitive: false).hasMatch(error)) return const [];
       throw StateError(error.isEmpty ? 'yt-dlp exited with code ${result.exitCode}' : error);
     }
-    // Once read, the file is only taking room.
-    try {
-      return await _readReplay(file);
-    } finally {
-      await _delete(file);
-    }
+    // Once read, the file is only taking room (its folder goes after).
+    return _readReplay(file);
   }
 
-  static Future<void> _delete(File file) async {
+  static Future<void> _delete(Directory folder) async {
     try {
-      await file.delete();
+      await folder.delete(recursive: true);
     } on FileSystemException {
       // Gone already, or left for the next fetch of this video.
     }
@@ -125,16 +129,12 @@ class LiveChatRepository {
   /// continuation requests and appends each action to the same JSON format
   /// used for recorded replays. Cancelling the subscription stops that run.
   Stream<LiveChatMessage> current(String videoId) async* {
-    final file = fileFor(videoId);
-    await directory.create(recursive: true);
-    try {
-      await file.delete();
-    } on FileSystemException {
-      // The previous managed chat capture did not exist.
-    }
+    final folder = _runFolder();
+    final file = fileFor(videoId, folder);
+    await folder.create(recursive: true);
     final process = await ProcessTree.start(
       ytDlpPath,
-      arguments(videoId),
+      arguments(videoId, folder),
       environment: _environment,
     );
     lowerPriority(process.pid);
@@ -224,7 +224,7 @@ class LiveChatRepository {
       // The file grows as long as the live is watched; it goes once yt-dlp
       // has let go of it (Windows keeps it locked until then).
       await process.exitCode.timeout(const Duration(seconds: 5), onTimeout: () => -1);
-      await _delete(file);
+      await _delete(folder);
     }
   }
 }

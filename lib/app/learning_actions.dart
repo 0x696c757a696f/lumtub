@@ -326,7 +326,14 @@ extension LearningActions on AppController {
     await seek(lineStart(line));
     if (this.player != player) return false;
     late final StreamSubscription<Duration> once;
+    // Positions from before the seek landed say nothing about this line.
+    var inLine = false;
+    final from = lineStart(line) - const Duration(seconds: 1);
     once = _lineOnce = player.stream.position.listen((position) {
+      if (!inLine) {
+        if (position < from || position >= line.end) return;
+        inLine = true;
+      }
       if (position < line.end) return;
       if (identical(_lineOnce, once)) _lineOnce = null;
       unawaited(once.cancel());

@@ -48,8 +48,11 @@ extension CjkFontActions on AppController {
   /// thread on iOS 27, holding the OSD lock (the crash report: core and
   /// main thread waiting on it), which stalled playback and got the app
   /// killed in the background.
-  Future<void> _prepareIosSubtitleFonts(NativePlayer platform) async {
-    final cache = directories?.cache.path;
+  ///
+  /// [cache] is the cache folder while starting up, before [directories]
+  /// is set.
+  Future<void> _prepareIosSubtitleFonts(NativePlayer platform, {String? cache}) async {
+    cache ??= directories?.cache.path;
     if (cache == null) return;
     final packs = this.packs;
     final app = File(Platform.resolvedExecutable).parent.path;
@@ -80,8 +83,8 @@ extension CjkFontActions on AppController {
   }
 
   /// On Linux: libass finds the downloaded fonts beside the system's.
-  Future<void> _useDownloadedSubtitleFonts(NativePlayer platform) async {
-    final cache = directories?.cache.path;
+  Future<void> _useDownloadedSubtitleFonts(NativePlayer platform, {String? cache}) async {
+    cache ??= directories?.cache.path;
     final packs = this.packs;
     if (cache == null || packs == null) return;
     final folder = CjkFontPacks.linkFolder(packs, '$cache/downloaded-fonts');

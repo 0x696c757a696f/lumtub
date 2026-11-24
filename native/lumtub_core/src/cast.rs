@@ -181,6 +181,8 @@ struct Atom {
 
 /// The boxes laid one after another in `data[from..to]`.
 fn atoms(data: &[u8], from: usize, to: usize) -> Vec<Atom> {
+    // A parent may claim more bytes than were read.
+    let to = to.min(data.len());
     let mut found = Vec::new();
     let mut at = from;
     while at + 8 <= to {
@@ -491,6 +493,20 @@ fn index(data: &[u8], sidx: Atom) -> Option<Vec<Segment>> {
 }
 
 // ---- fragments ----
+
+/// Reads one segment as an MP4 fragment and as a WebM cluster, for the
+/// fuzzer. Returns how many samples each gave.
+#[doc(hidden)]
+pub fn read_fragment(data: &[u8], base: u64) -> (Option<usize>, Option<usize>) {
+    let defaults = Defaults {
+        duration: 1,
+        size: 1,
+        flags: 0,
+    };
+    let mp4 = fragment(data.to_vec(), base, defaults).ok();
+    let webm = webm_fragment(data.to_vec(), 1, 1).ok();
+    (mp4.map(|f| f.samples.len()), webm.map(|f| f.samples.len()))
+}
 
 /// The samples of every `moof` in one segment's bytes. `base` is the
 /// segment's offset in its file, for a `tfhd` that gives an absolute one.
@@ -1465,7 +1481,12 @@ fn renumbered(trak: &[u8], id: u32) -> Vec<u8> {
         end: trak.len(),
     };
     if let Some(tkhd) = child(&trak, outer, b"tkhd") {
-        let at = tkhd.body + if trak[tkhd.body] == 1 { 20 } else { 12 };
+        let at = tkhd.body
+            + if trak.get(tkhd.body) == Some(&1) {
+                20
+            } else {
+                12
+            };
         if at + 4 <= tkhd.end {
             trak[at..at + 4].copy_from_slice(&id.to_be_bytes());
         }
@@ -3219,6 +3240,24 @@ pub extern "C" fn lumtub_cast_log() -> *mut c_char {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_traf_longer_than_its_segment_is_refused_not_a_crash() {
+        let mut data = Vec::new();
+        data.extend_from_slice(&36u32.to_be_bytes());
+        data.extend_from_slice(b"moof");
+        data.extend_from_slice(&100u32.to_be_bytes());
+        data.extend_from_slice(b"traf");
+        data.extend_from_slice(&16u32.to_be_bytes());
+        data.extend_from_slice(b"tfhd");
+        data.extend_from_slice(&[0; 8]);
+        data.extend_from_slice(&[0, 0, 0, 9]);
+        assert_eq!(data.len(), 36);
+        let _ = read_fragment(&data, 0);
+        let mut trak = Vec::new();
+        put_box(&mut trak, b"trak", |o| put_box(o, b"tkhd", |_| {}));
+        assert_eq!(renumbered(&trak, 2), trak);
+    }
 
     #[test]
     fn text_track_keeps_the_box_and_the_bottom_margin() {

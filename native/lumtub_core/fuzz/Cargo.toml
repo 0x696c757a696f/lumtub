@@ -74,3 +74,10 @@ path = "fuzz_targets/packs.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "cast_fragment"
+path = "fuzz_targets/cast_fragment.rs"
+test = false
+doc = false
+bench = false

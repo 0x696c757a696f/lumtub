@@ -342,7 +342,15 @@ extension LibassLookActions on AppController {
       text = secondAss(cues, settings, outline: look.em > 0 ? look.border / look.em : 0, room: room.toDouble(), font: font, main: main, aspect: _videoAspect, scale: _secondCopyScale, blurred: blur);
     } else {
       final room = _roomEms(settings.subtitleScale).toDouble();
-      final wrapped = [for (final c in cues) LibassLayout.wrap(c.text, room, font: settings.subtitleFont, bold: settings.subtitleBold)];
+      final wrapped = <String>[];
+      for (final (i, c) in cues.indexed) {
+        // A batch at a time, so a long track does not hold up the frames.
+        if (i > 0 && i % 100 == 0) {
+          await Future<void>(() {});
+          if (!current()) return source;
+        }
+        wrapped.add(LibassLayout.wrap(c.text, room, font: settings.subtitleFont, bold: settings.subtitleBold));
+      }
       // Nothing runs past the edges: the track shows as it is.
       if (Iterable.generate(cues.length).every((i) => wrapped[i] == cues[i].text)) {
         _plainFits.add('$source|$key');

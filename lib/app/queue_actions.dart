@@ -43,7 +43,7 @@ extension QueueActions on AppController {
     final next = item ?? playQueue.items.firstOrNull;
     if (next == null) return false;
     _update(() => playQueue.remove(next.id));
-    final at = playing == null ? -1 : queue.indexWhere((other) => other.id == playing!.id);
+    final at = playing == null ? -1 : _queueIndexOf(playing!.id);
     final rest = [for (final other in queue) if (other.id != next.id) other];
     final from = at < 0 ? null : [...rest.take(at + 1), next, ...rest.skip(at + 1)];
     await play(next, from: from, keepMini: keepMini);
@@ -54,7 +54,7 @@ extension QueueActions on AppController {
   VideoItem? get previousInQueue {
     final current = playing;
     if (current == null) return null;
-    final index = queue.indexWhere((item) => item.id == current.id);
+    final index = _queueIndexOf(current.id);
     return index > 0 ? queue[index - 1] : null;
   }
 
@@ -118,10 +118,43 @@ extension QueueActions on AppController {
 
   /// Videos after the current one in the queue, or the whole queue when the
   /// current video was opened from elsewhere.
+  /// Read on every build of the controls and the watch page: made once
+  /// for each queue and video playing.
   List<VideoItem> get upNext {
     final current = playing;
     if (current == null) return const [];
-    final index = queue.indexWhere((item) => item.id == current.id);
-    return index < 0 ? queue : queue.sublist(index + 1);
+    if (!identical(_upNextOf, queue) || _upNextFor != current.id) {
+      final index = _queueIndexOf(current.id);
+      _upNextOf = queue;
+      _upNextFor = current.id;
+      _upNext = index < 0 ? queue : List.unmodifiable(queue.sublist(index + 1));
+    }
+    return _upNext;
+  }
+
+  /// Whether [id] is in [upNext].
+  bool upNextHas(String id) {
+    final current = playing;
+    if (current == null) return false;
+    if (_queueIndexOf(id) < 0) return false;
+    final at = _queueIndexOf(current.id);
+    // A video listed twice counts by its last place.
+    return at < 0 || _queueLast[id]! > at;
+  }
+
+  /// Where [id] first is in [queue], or -1; the index is made once for each
+  /// queue, as a list can hold thousands of videos.
+  int _queueIndexOf(String id) {
+    if (!identical(_indexedQueue, queue)) {
+      _indexedQueue = queue;
+      final index = <String, int>{}, last = <String, int>{};
+      for (final (i, item) in queue.indexed) {
+        index.putIfAbsent(item.id, () => i);
+        last[item.id] = i;
+      }
+      _queueIndex = index;
+      _queueLast = last;
+    }
+    return _queueIndex[id] ?? -1;
   }
 }

@@ -380,4 +380,20 @@ void main() {
     expect(video.audience, 9);
     expect(video.watching, isNull);
   });
+
+  test('a list put away reads no further pages by itself', () async {
+    final source = _Source([for (var i = 0; i < 40; i++) _video(i)]);
+    final loader = VideoListLoader(() => Listing(source.open), pageSize: 2, where: (item) => int.parse(item.title) > 30, fill: 2)..paused = true;
+    addTearDown(loader.dispose);
+    loader.loadMore();
+    await pumpEventQueue();
+    expect(source.read, lessThanOrEqualTo(3));
+    expect(loader.loading, isFalse);
+    expect(loader.hasMore, isTrue);
+    loader
+      ..paused = false
+      ..loadMore();
+    await pumpEventQueue();
+    expect(loader.items, isNotEmpty);
+  });
 }

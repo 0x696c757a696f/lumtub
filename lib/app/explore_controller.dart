@@ -267,6 +267,7 @@ extension ExploreActions on AppController {
       return;
     }
     loader.removeListener(_passOn('explore'));
+    loader.paused = true;
     final key = _exploreKey;
     final older = _recentExplore.remove(key)?.$2;
     if (older != null && !identical(older, loader)) older.dispose();
@@ -286,7 +287,9 @@ extension ExploreActions on AppController {
     if (_recentExplore.remove(_exploreKey) case (final at, final loader)) {
       if (DateTime.now().difference(at) < (exploreSection.isLive ? _keepLiveExplore : _keepExplore)) {
         logDebug(() => 'Explore ${exploreSection.name} · ${exploreTopicNow.label}: shown again from ${DateTime.now().difference(at).inSeconds} s ago');
-        _update(() => explore = loader..addListener(_passOn('explore')));
+        _update(() => explore = loader
+          ..paused = false
+          ..addListener(_passOn('explore')));
         return;
       }
       loader.dispose();
@@ -372,7 +375,8 @@ extension ExploreActions on AppController {
       return faith == null || faith(item) || drop('faith filter');
     }
 
-    _update(() => explore = VideoListLoader(
+    late final VideoListLoader made;
+    _update(() => explore = made = VideoListLoader(
           () {
             // YouTube ranks a search by the language it is asked in.
             final hl = spoken ? language.youtubeHl : null;
@@ -410,7 +414,8 @@ extension ExploreActions on AppController {
                     giveUpAfter: VideoLanguages.giveUpAfterDefault * (depth + 1),
                     done: (check) {
                       total = (asked: total.asked + check.asked, kept: total.kept + check.kept, heard: total.heard + check.heard);
-                      _update(() => exploreLanguageCheck = total);
+                      // Only the list shown says how its check went.
+                      if (identical(explore, made)) _update(() => exploreLanguageCheck = total);
                     },
                   ));
             }

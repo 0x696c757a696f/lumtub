@@ -1186,8 +1186,7 @@ class _UpNext extends StatelessWidget {
     final items = controller.upNext;
     final related = controller.related;
     // What 接下来播放 already lists is not repeated under 相关视频.
-    final queued = {for (final item in items) item.id};
-    final relatedItems = [for (final item in controller.relatedItems) if (!queued.contains(item.id)) item];
+    final relatedItems = [for (final item in controller.relatedItems) if (!controller.upNextHas(item.id)) item];
     final autoplay = Row(mainAxisSize: MainAxisSize.min, children: [
       Flexible(child: Text(tr('Autoplay next'), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12))),
       Transform.scale(

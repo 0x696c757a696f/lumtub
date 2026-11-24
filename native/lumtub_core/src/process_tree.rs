@@ -122,7 +122,7 @@ mod imp {
     //! job when it closes; so does Lumtub quitting. The start time keeps a
     //! reused pid from being mistaken for one seen earlier.
 
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet};
     use std::sync::{Mutex, Once};
     use std::time::Duration;
 
@@ -160,8 +160,13 @@ mod imp {
                             .as_ref()
                             .map(|t| t.keys().copied().collect())
                             .unwrap_or_default();
+                        if roots.is_empty() {
+                            continue;
+                        }
+                        // One look at the processes for every tree.
+                        let now = Snapshot::take();
                         for root in roots {
-                            grow(root);
+                            grow(root, &now);
                         }
                     }
                 });
@@ -182,30 +187,32 @@ mod imp {
         }
     }
 
-    /// Adds the processes started since by the tree's members.
-    fn grow(root: libc::pid_t) {
+    /// Keeps the tree's members still running and adds the processes they
+    /// started since; a tree with none left is forgotten, as [close]
+    /// would find nothing to end.
+    fn grow(root: libc::pid_t, now: &Snapshot) {
         let Some(mut members) = trees().as_ref().and_then(|t| t.get(&root).cloned()) else {
             return;
         };
+        members.retain(|&(pid, start)| now.started(pid) == Some(start));
+        let mut seen: HashSet<libc::pid_t> = members.iter().map(|m| m.0).collect();
         let mut i = 0;
         while i < members.len() {
-            let (pid, start) = members[i];
-            if started(pid) == Some(start) {
-                for child in children(pid) {
-                    if !members.iter().any(|m| m.0 == child)
-                        && let Some(at) = started(child)
-                    {
-                        members.push((child, at));
-                    }
+            for child in now.children(members[i].0) {
+                if !seen.contains(&child)
+                    && let Some(at) = now.started(child)
+                {
+                    seen.insert(child);
+                    members.push((child, at));
                 }
             }
             i += 1;
         }
-        if let Some(tree) = trees().as_mut().and_then(|t| t.get_mut(&root)) {
-            for member in members {
-                if !tree.contains(&member) {
-                    tree.push(member);
-                }
+        if let Some(trees) = trees().as_mut() {
+            if members.is_empty() {
+                trees.remove(&root);
+            } else if let Some(tree) = trees.get_mut(&root) {
+                *tree = members;
             }
         }
     }
@@ -225,17 +232,26 @@ mod imp {
         for pid in &tree {
             unsafe { libc::kill(*pid, libc::SIGSTOP) };
         }
-        let mut i = 0;
-        while i < tree.len() {
-            for child in children(tree[i]) {
-                if !tree.contains(&child) {
-                    unsafe { libc::kill(child, libc::SIGSTOP) };
-                    tree.push(child);
+        let mut seen: HashSet<libc::pid_t> = tree.iter().copied().collect();
+        // Looked at again until nothing new turns up: a child found in one
+        // look may have started another before it was stopped.
+        loop {
+            let now = Snapshot::take();
+            let before = tree.len();
+            let mut i = 0;
+            while i < tree.len() {
+                for child in now.children(tree[i]) {
+                    if seen.insert(child) {
+                        unsafe { libc::kill(child, libc::SIGSTOP) };
+                        tree.push(child);
+                    }
                 }
+                i += 1;
             }
-            i += 1;
+            if tree.len() == before {
+                return tree;
+            }
         }
-        tree
     }
 
     pub fn kill(job: isize, _code: u32) -> bool {
@@ -271,15 +287,83 @@ mod imp {
     /// When [pid] started, in the system's own units; None once it is gone.
     #[cfg(target_os = "linux")]
     pub fn started(pid: libc::pid_t) -> Option<u64> {
+        stat(pid)?.1
+    }
+
+    /// From /proc/<pid>/stat: the parent, and the start time unless the
+    /// process is a zombie. The command name before them is in
+    /// parentheses and may itself hold spaces and ')'.
+    #[cfg(target_os = "linux")]
+    fn stat(pid: libc::pid_t) -> Option<(libc::pid_t, Option<u64>)> {
         let stat = std::fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
         let rest = &stat[stat.rfind(')')? + 1..];
         let mut fields = rest.split_whitespace();
         // A zombie has ended; only its parent's wait is left.
-        if fields.next()? == "Z" {
-            return None;
+        let zombie = fields.next()? == "Z";
+        let parent = fields.next()?.parse().ok()?;
+        // Field 22, counted from the parent, field 4.
+        let start = fields.nth(17).and_then(|s| s.parse().ok());
+        Some((parent, start.filter(|_| !zombie)))
+    }
+
+    /// Every process at one moment: its parent and when it started. Read
+    /// once a second for all trees together, so watching costs one pass
+    /// over /proc however many trees and members there are.
+    #[cfg(target_os = "linux")]
+    #[derive(Default)]
+    struct Snapshot {
+        children: HashMap<libc::pid_t, Vec<libc::pid_t>>,
+        started: HashMap<libc::pid_t, u64>,
+    }
+
+    #[cfg(target_os = "linux")]
+    impl Snapshot {
+        fn take() -> Self {
+            let mut now = Snapshot::default();
+            let Ok(entries) = std::fs::read_dir("/proc") else {
+                return now;
+            };
+            for pid in entries
+                .flatten()
+                .filter_map(|entry| entry.file_name().to_str()?.parse::<libc::pid_t>().ok())
+            {
+                let Some((parent, start)) = stat(pid) else {
+                    continue;
+                };
+                now.children.entry(parent).or_default().push(pid);
+                if let Some(start) = start {
+                    now.started.insert(pid, start);
+                }
+            }
+            now
         }
-        // Field 22, counted from the state, field 3.
-        fields.nth(18)?.parse().ok()
+
+        fn started(&self, pid: libc::pid_t) -> Option<u64> {
+            self.started.get(&pid).copied()
+        }
+
+        fn children(&self, pid: libc::pid_t) -> Vec<libc::pid_t> {
+            self.children.get(&pid).cloned().unwrap_or_default()
+        }
+    }
+
+    /// Elsewhere the system answers for one process at a time cheaply.
+    #[cfg(not(target_os = "linux"))]
+    struct Snapshot;
+
+    #[cfg(not(target_os = "linux"))]
+    impl Snapshot {
+        fn take() -> Self {
+            Snapshot
+        }
+
+        fn started(&self, pid: libc::pid_t) -> Option<u64> {
+            started(pid)
+        }
+
+        fn children(&self, pid: libc::pid_t) -> Vec<libc::pid_t> {
+            children(pid)
+        }
     }
 
     #[cfg(target_os = "macos")]
@@ -317,23 +401,7 @@ mod imp {
 
     #[cfg(target_os = "linux")]
     pub fn children(parent: libc::pid_t) -> Vec<libc::pid_t> {
-        let Ok(entries) = std::fs::read_dir("/proc") else {
-            return Vec::new();
-        };
-        entries
-            .flatten()
-            .filter_map(|entry| entry.file_name().to_str()?.parse::<libc::pid_t>().ok())
-            .filter(|pid| parent_of(*pid) == Some(parent))
-            .collect()
-    }
-
-    /// The parent in /proc/<pid>/stat: the field after the command name,
-    /// which is in parentheses and may itself hold spaces and ')'.
-    #[cfg(target_os = "linux")]
-    fn parent_of(pid: libc::pid_t) -> Option<libc::pid_t> {
-        let stat = std::fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
-        let rest = &stat[stat.rfind(')')? + 1..];
-        rest.split_whitespace().nth(1)?.parse().ok()
+        Snapshot::take().children(parent)
     }
 
     #[cfg(target_os = "macos")]

@@ -79,6 +79,7 @@ class NativeCore {
         relayLog = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_relay_log'),
         socksStart = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size), Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_socks_start'),
         socksPort = library.lookupFunction<Uint16 Function(Pointer<Void>), int Function(Pointer<Void>)>('lumtub_socks_port'),
+        socksToken = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>), Pointer<Utf8> Function(Pointer<Void>)>('lumtub_socks_token'),
         socksClose = library.lookupFunction<Void Function(Pointer<Void>), void Function(Pointer<Void>)>('lumtub_socks_close'),
         youtubePostComments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_post_comments'),
         titleLanguage = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_title_language'),
@@ -247,6 +248,8 @@ class NativeCore {
   /// URL is not a SOCKS proxy or it cannot listen.
   final Pointer<Void> Function(Pointer<Uint8> url, int length) socksStart;
   final int Function(Pointer<Void> bridge) socksPort;
+  /// The password a bridge asks its clients for.
+  final Pointer<Utf8> Function(Pointer<Void> bridge) socksToken;
   /// Stops a bridge and frees it.
   final void Function(Pointer<Void> bridge) socksClose;
   /// The comment section token of a community post's HTML.

@@ -85,13 +85,18 @@ Future<(HttpServer, List<String>)> startTarget() async {
   return (server, seen);
 }
 
-/// Sends [request] to the bridge and returns everything it answers.
-Future<String> ask(SocksBridge bridge, String request, {String? thenSend}) async {
+/// The bridge's login header, as dart:io and libmpv send it.
+String loginOf(SocksBridge bridge) => 'Proxy-Authorization: Basic ${base64.encode(utf8.encode('${SocksBridge.user}:${bridge.token}'))}\r\n';
+
+/// Sends [request] to the bridge, logged in with [login] after its first
+/// line, and returns everything it answers.
+Future<String> ask(SocksBridge bridge, String request, {String? thenSend, String? login}) async {
   final socket = await Socket.connect('127.0.0.1', bridge.port);
   final answer = StringBuffer();
   final done = Completer<void>();
   socket.listen((data) => answer.write(latin1.decode(data)), onDone: done.complete, onError: (_) => done.complete());
-  socket.write(request);
+  final line = request.indexOf('\r\n') + 2;
+  socket.write('${request.substring(0, line)}${login ?? loginOf(bridge)}${request.substring(line)}');
   if (thenSend != null) {
     await Future.delayed(const Duration(milliseconds: 200));
     socket.write(thenSend);
@@ -207,9 +212,32 @@ void _tests(bool native) {
     await target.close(force: true);
   });
 
+  test('only a client with the login is served, and the login is not sent on', () async {
+    final (target, _) = await startTarget();
+    final heads = <String>[];
+    final origin = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+    origin.listen((socket) => socket.listen((data) {
+          heads.add(latin1.decode(data));
+          socket.add(latin1.encode('HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n'));
+          socket.close();
+        }));
+    final bridge = await start('socks5h://127.0.0.1:1');
+    final connect = 'CONNECT 127.0.0.1:${target.port} HTTP/1.1\r\n\r\n';
+    final refused = await ask(bridge, connect, login: '');
+    expect(refused, startsWith('HTTP/1.1 407'));
+    expect(refused, contains('Proxy-Authenticate: Basic'));
+    expect(await ask(bridge, connect, login: 'Proxy-Authorization: Basic ${base64.encode(utf8.encode('lumtub:guess'))}\r\n'), startsWith('HTTP/1.1 407'));
+    expect(await ask(bridge, 'GET http://127.0.0.1:${origin.port}/x HTTP/1.1\r\nHost: h\r\n\r\n'), startsWith('HTTP/1.1 200'));
+    expect(heads.join(), 'GET /x HTTP/1.1\r\nHost: h\r\n\r\n');
+    await bridge.close();
+    await origin.close();
+    await target.close(force: true);
+  });
+
   test('the bridge listens on loopback only and stops on close', () async {
     final bridge = await start('socks5://127.0.0.1:1');
-    expect(bridge.hostPort, startsWith('127.0.0.1:'));
+    expect(bridge.token, hasLength(32));
+    expect(bridge.hostPort, startsWith('lumtub:${bridge.token}@127.0.0.1:'));
     await bridge.close();
     await expectLater(Socket.connect('127.0.0.1', bridge.port), throwsA(isA<SocketException>()));
   });

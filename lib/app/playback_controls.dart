@@ -62,6 +62,7 @@ extension PlaybackControls on AppController {
   Future<void> seek(Duration target) async {
     final player = this.player;
     if (player == null) return;
+    _cancelLineOnce();
     if (_liveSplit != null && _liveSplit == playing?.id && !await _splitHolds(player, target)) {
       if (target > player.state.position) return goLive();
       _notice(tr('This live stream cannot go back further at this quality'));

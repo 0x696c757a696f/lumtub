@@ -25,7 +25,7 @@ extension CastActions on AppController {
       final split = castSplitFromYtDlp(info, maxHeight: preferences.castMaxHeight);
       if (split != null && split.height > (source?.height ?? 0)) {
         try {
-          return await _joinedCast(split, device, start, title, info, subtitles);
+          return await _joinedCast(item.id, split, device, start, title, info, subtitles);
         } catch (e) {
           logWarn('Cast: could not join the ${split.height}p picture with its sound: $e');
         }
@@ -52,10 +52,10 @@ extension CastActions on AppController {
     return CastMedia(url: source.url, title: title, mime: source.mime, start: start, subtitles: lines);
   }
 
-  Future<CastMedia> _joinedCast(CastSplit split, CastDevice device, Duration start, String title, Map<String, dynamic> info, ({List<SubtitleCue> cues, String? language}) subtitles) async {
+  /// [videoId] is the video [info] is of, which may no longer be the one playing.
+  Future<CastMedia> _joinedCast(String videoId, CastSplit split, CastDevice device, Duration start, String title, Map<String, dynamic> info, ({List<SubtitleCue> cues, String? language}) subtitles) async {
     final core = NativeCore.instance;
-    final videoId = playing?.id;
-    if (core == null || videoId == null) throw StateError('no lumtub_core');
+    if (core == null) throw StateError('no lumtub_core');
     // The cast server fetches YouTube itself, directly or through the proxy.
     final port = core.castStart();
     if (port == 0) throw StateError('the cast server could not listen');

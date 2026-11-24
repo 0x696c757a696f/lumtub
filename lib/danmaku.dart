@@ -207,6 +207,9 @@ class DanmakuOverlay {
       batch.add(entry);
       sent.add(message.timestampUsec);
     }
+    // A live stream's ids are kept for the newest messages only, which are
+    // all the chat still holds; the oldest go a few thousand at a time.
+    if (_added.length > 8000) _added.removeAll(_added.take(4000).toList());
     if (batch.isEmpty) return;
     if (_live) {
       final starts = _timing.starts(sent, now, wall);

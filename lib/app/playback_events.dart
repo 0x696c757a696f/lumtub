@@ -30,6 +30,16 @@ extension PlaybackEvents on AppController {
     unawaited(account?.loadRating(item.id));
     _saveProgress();
     _countWatchTime(flush: true);
+    // The file there is another video's, or failed: nothing it reports from
+    // now on is taken for this one (see _fileSerial), and the new file
+    // picks its subtitles again.
+    if (playing?.id != item.id || playbackError != null) {
+      _tracking = null;
+      _stallTimer?.cancel();
+      _openIssued = null;
+    }
+    if (_tracking == null) _secondaryAutoFor = null;
+    _cancelLineOnce();
     _playbackChannel = null;
     _stopCurrentChat();
     final serial = ++_playSerial;
@@ -55,6 +65,7 @@ extension PlaybackEvents on AppController {
       }
       details = null;
       loadingDetails = true;
+      waitingForSubtitles = false;
       replayChat = const [];
       chatTicker = const [];
       loadingReplayChat = false;
@@ -71,6 +82,8 @@ extension PlaybackEvents on AppController {
     });
     _syncDanmaku();
     _subtitlesSerial = serial;
+    // The last video's wait for its subtitles ends with it.
+    if (!_subtitlesReady.isCompleted) _subtitlesReady.complete();
     _subtitlesReady = Completer<void>();
     unawaited(_loadDetails(item, serial));
     if (settings.returnDislike) unawaited(_loadDislikes(item, serial));
@@ -81,7 +94,7 @@ extension PlaybackEvents on AppController {
     final hold = preferences.autoPlay && settings.subtitleMode != SubtitleMode.off && !item.isLive;
     // Listened for before opening, so a length reported while it opens
     // still counts, and the last video's never does.
-    final length = item.duration == null && !item.isLive ? player.stream.duration.firstWhere((length) => length > Duration.zero).timeout(const Duration(minutes: 1)) : null;
+    final length = item.duration == null && !item.isLive ? player.stream.duration.firstWhere((length) => length > Duration.zero && _fileSerial == serial).timeout(const Duration(minutes: 1)) : null;
     unawaited(length?.then((_) {}, onError: (_) {}));
     if (await _open(item, serial, start: start, play: preferences.autoPlay && !hold) && serial == _playSerial) {
       if (hold) unawaited(_playOnceSubtitlesReady(serial));
@@ -256,7 +269,7 @@ extension PlaybackEvents on AppController {
         unawaited(_tools?.libmpv.confirm());
       }),
       player.stream.completed.listen((done) {
-        if (!done || playing == null) return;
+        if (!done || playing == null || _fileSerial != _playSerial) return;
         // A live stream through the relay ends only when its fragments
         // stopped coming.
         if (_tracking != null && (_liveSplit == _tracking!.id || PlaybackRecovery.endedEarly(_lastPosition, player.state.duration))) {
@@ -270,7 +283,7 @@ extension PlaybackEvents on AppController {
       // yt-dlp finding no playable format, only through this stream. Errors
       // once the video has loaded (a broken subtitle track) are not fatal.
       player.stream.error.listen((message) {
-        if (playing == null || message.isEmpty) return;
+        if (playing == null || message.isEmpty || _fileSerial != _playSerial) return;
         if (isSubtitleError(message)) {
           logWarn('Subtitles failed to load, video keeps playing: $message');
           return;
@@ -288,7 +301,7 @@ extension PlaybackEvents on AppController {
         if ((log.level == 'error' || log.prefix == 'ytdl_hook') && _recentErrors.length < 20 && !subtitle && !isUnattributedHttpError(text)) _recentErrors.add(text);
         // curl gave up on a stream; when it was the video's, the sound
         // plays on over the last picture.
-        final lost = log.prefix == 'curl' && text.startsWith('transfer failed');
+        final lost = log.prefix == 'curl' && text.startsWith('transfer failed') && _fileSerial == _playSerial;
         if (lost) _streamLostIn = _playSerial;
         // Data cut off mid-frame, after curl lost a stream, leaves the
         // decoder failing on every frame over a still picture.
@@ -303,7 +316,7 @@ extension PlaybackEvents on AppController {
             ..removeWhere((at) => now.difference(at) > const Duration(seconds: 10));
         }
         // Opened again at once rather than after the picture watch notices.
-        if ((lost || _decodeErrors.length >= 3) && player.state.playing && DateTime.now().difference(_lastBrokenReopen) > const Duration(seconds: 30)) {
+        if ((lost || _decodeErrors.length >= 3) && _fileSerial == _playSerial && player.state.playing && DateTime.now().difference(_lastBrokenReopen) > const Duration(seconds: 30)) {
           _lastBrokenReopen = DateTime.now();
           _decodeErrors.clear();
           unawaited(_recover(lost ? 'libmpv gave up on a stream' : 'The video data broke and frames stopped decoding'));
@@ -328,8 +341,9 @@ extension PlaybackEvents on AppController {
       player.stream.buffering.listen((buffering) {
         _stallTimer?.cancel();
         if (!buffering || _tracking == null) return;
+        final serial = _playSerial;
         _stallTimer = Timer(PlaybackRecovery.stallTimeout, () {
-          if (player.state.buffering && player.state.playing) unawaited(_recover('No buffering progress for over ${PlaybackRecovery.stallTimeout.inSeconds} seconds'));
+          if (serial == _playSerial && _fileSerial == serial && player.state.buffering && player.state.playing) unawaited(_recover('No buffering progress for over ${PlaybackRecovery.stallTimeout.inSeconds} seconds'));
         });
       }),
     ]);
@@ -574,8 +588,10 @@ extension PlaybackEvents on AppController {
     _countWatchTime(flush: true);
     _playbackChannel = null;
     _tracking = null;
+    _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     _startTimer?.cancel();
+    _cancelLineOnce();
     _recovery.reset();
     _settled.stop();
     ++_playSerial;
@@ -585,6 +601,7 @@ extension PlaybackEvents on AppController {
       playbackError = null;
       _waitingForStart = false;
     });
+    _syncDanmaku();
     _unload();
   }
 

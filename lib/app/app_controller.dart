@@ -422,6 +422,14 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// The list the current video was opened from, shown as the play queue.
   List<VideoItem> queue = const [];
+  /// [queue]'s first index of each id, and [upNext] for [_upNextFor]; made
+  /// again when [queue] is another list (QueueActions).
+  List<VideoItem>? _indexedQueue;
+  Map<String, int> _queueIndex = const {};
+  Map<String, int> _queueLast = const {};
+  List<VideoItem>? _upNextOf;
+  String? _upNextFor;
+  List<VideoItem> _upNext = const [];
   /// The playlist the playing video was opened from, for the watch page's
   /// playlist panel; null when it came from anywhere else.
   PlayingList? playingList;
@@ -545,6 +553,10 @@ class AppController extends ChangeNotifier with _ExploreState {
   }
 
   int _playSerial = 0;
+  /// The [_playSerial] libmpv's file was opened for: until the video asked
+  /// for opens, what the file before it reports (its end, an error, a
+  /// stall) is not about that video.
+  int _fileSerial = 0;
   final _silence = SilenceSkipper();
   String? _query;
   final _playerSubscriptions = <StreamSubscription<Object?>>[];
@@ -908,6 +920,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   );
 
   final _cues = <String, List<SubtitleCue>>{};
+  /// Subtitle files that could not be read, by the key of [_cues].
+  final _cueMisses = <String, int>{};
   /// Bumped when a subtitle file was read again, as the lines in it grew.
   int _cueGeneration = 0;
   /// The lines 每句说完暂停 and stepping by line go by, and what they were
@@ -1261,6 +1275,10 @@ class AppController extends ChangeNotifier with _ExploreState {
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     _startTimer?.cancel();
+    _castWatch?.cancel();
+    _hoverResume?.cancel();
+    _cancelLineOnce();
+    _stopIosPip();
     _sleepTimer?.cancel();
     _dropTimer?.cancel();
     _outputSize?.dispose();

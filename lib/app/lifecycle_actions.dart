@@ -78,6 +78,8 @@ extension LifecycleActions on AppController {
         logInfo(logged);
         _update(() => status = message);
       });
+      // An earlier attempt that failed may have left one.
+      _tools?.dispose();
       _tools = manager;
       packs?.dispose();
       packs = PackManager(Directory('${directories.data.path}${sep}packs'), manager);

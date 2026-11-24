@@ -48,9 +48,17 @@ extension ChatActions on AppController {
         if (entry.$2.isAfter(now)) entry,
     ];
     if (ticker.length != chatTicker.length || ticker.isNotEmpty) chatTicker = List.unmodifiable(ticker.take(50));
+    final fresh = [..._currentChatPending];
     _currentChatPending.clear();
     replayChat = List.unmodifiable(next.length > 2000 ? next.sublist(next.length - 2000) : next);
-    _syncDanmaku();
+    // The ids seen are kept for the messages kept, not for every one of a
+    // stream that runs for hours: rebuilt once they are twice as many.
+    if (_currentChatIds.length > 4000) {
+      _currentChatIds
+        ..clear()
+        ..addAll(replayChat.map((message) => message.id));
+    }
+    _syncDanmaku(fresh: fresh);
     if (loadingReplayChat) {
       _update(() => loadingReplayChat = false);
     } else if (!_disposed) {
@@ -67,7 +75,9 @@ extension ChatActions on AppController {
 
   /// Starts, feeds or stops the 弹幕 for the video playing, the chat it
   /// has and the 弹幕 settings.
-  void _syncDanmaku() {
+  /// [fresh] are the chat messages just added to [replayChat], the only
+  /// ones a running overlay has not seen.
+  void _syncDanmaku({List<LiveChatMessage>? fresh}) {
     final player = this.player;
     final item = playing;
     final settings = preferences.danmaku;
@@ -75,6 +85,8 @@ extension ChatActions on AppController {
     final chat = hasChat;
     final key = player == null || item == null || !settings.enabled || !hasDanmaku || (!chat && !settings.comments) ? null : '${identityHashCode(player)}|${item.id}|$live|${settings.hashCode}';
     if (key != _danmakuFor) {
+      // A new overlay is given the whole chat.
+      fresh = null;
       _danmakuFor = key;
       _danmaku?.stop();
       _danmaku = null;
@@ -88,7 +100,7 @@ extension ChatActions on AppController {
     }
     if (key == null || item == null) return;
     if (chat) {
-      _danmaku?.add(replayChat);
+      _danmaku?.add(fresh ?? replayChat);
     } else {
       _loadCommentDanmaku(item);
       if (_commentDanmakuFor == item.id) _danmaku?.add(_commentDanmaku);

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 /// Decides when a video that stopped because of the network is reopened at
 /// the same position, and when to give up and show the error.
 class PlaybackRecovery {
@@ -189,4 +191,20 @@ class SettledPlayback {
     _waiting = false;
     return true;
   }
+}
+
+/// The first of [futures] to succeed; fails, with the last failure, only
+/// once all of them failed. Unlike [Future.any], a quick failure does not
+/// win over a success still on its way.
+Future<T> firstSuccess<T>(List<Future<T>> futures) {
+  final done = Completer<T>();
+  var failed = 0;
+  for (final future in futures) {
+    future.then((value) {
+      if (!done.isCompleted) done.complete(value);
+    }, onError: (Object error, StackTrace stack) {
+      if (++failed == futures.length && !done.isCompleted) done.completeError(error, stack);
+    });
+  }
+  return done.future;
 }

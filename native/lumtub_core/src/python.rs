@@ -107,86 +107,17 @@ fn literal(value: &str) -> String {
     format!("bytes.fromhex('{hex}').decode()")
 }
 
-type Settings<'a> = ([(&'static str, &'a str); 2], [(&'static str, i64); 5]);
-
-/// The interpreter's settings, as PYTHONHOME, PYTHONUTF8 and the like
-/// would give them: (name, string value) or (name, number).
-fn settings(config: &Config) -> Settings<'_> {
-    (
-        [("home", config.home.as_str()), ("stdio_encoding", "utf-8")],
-        [
-            ("utf8_mode", 1),
-            ("write_bytecode", 0),
-            ("user_site_directory", 0),
-            ("buffered_stdio", 0),
-            // Python leaves the app's signal handlers alone.
-            ("install_signal_handlers", 0),
-        ],
-    )
-}
-
-/// Starts Python with [settings] through PEP 741's PyInitConfig (Python
-/// 3.14 on), which needs nothing from the process environment. None when
-/// this Python has no PyInitConfig.
-unsafe fn initialize_configured(
-    library: *mut c_void,
-    config: &Config,
-) -> Option<Result<(), String>> {
-    type Create = unsafe extern "C" fn() -> *mut c_void;
-    type Free = unsafe extern "C" fn(*mut c_void);
-    type SetStr = unsafe extern "C" fn(*mut c_void, *const c_char, *const c_char) -> c_int;
-    type SetInt = unsafe extern "C" fn(*mut c_void, *const c_char, i64) -> c_int;
-    type Start = unsafe extern "C" fn(*mut c_void) -> c_int;
-    type GetError = unsafe extern "C" fn(*mut c_void, *mut *const c_char) -> c_int;
-    let create: Create = unsafe { symbol(library, "PyInitConfig_Create") }.ok()?;
-    let free: Free = unsafe { symbol(library, "PyInitConfig_Free") }.ok()?;
-    let set_str: SetStr = unsafe { symbol(library, "PyInitConfig_SetStr") }.ok()?;
-    let set_int: SetInt = unsafe { symbol(library, "PyInitConfig_SetInt") }.ok()?;
-    let start: Start = unsafe { symbol(library, "Py_InitializeFromInitConfig") }.ok()?;
-    let get_error: GetError = unsafe { symbol(library, "PyInitConfig_GetError") }.ok()?;
-    let init = unsafe { create() };
-    if init.is_null() {
-        return Some(Err("Python could not be configured".into()));
-    }
-    let (strings, numbers) = settings(config);
-    let mut ok = true;
-    for (name, value) in strings {
-        let (Ok(name), Ok(value)) = (CString::new(name), CString::new(value)) else {
-            ok = false;
-            break;
-        };
-        // SAFETY: [init] is live and both strings end in NUL.
-        ok &= unsafe { set_str(init, name.as_ptr(), value.as_ptr()) } == 0;
-    }
-    for (name, value) in numbers {
-        let name = CString::new(name).unwrap_or_default();
-        // SAFETY: [init] is live and [name] ends in NUL.
-        ok &= unsafe { set_int(init, name.as_ptr(), value) } == 0;
-    }
-    // SAFETY: [init] is live until freed below.
-    ok = ok && unsafe { start(init) } == 0;
-    let result = if ok {
-        Ok(())
-    } else {
-        let mut message: *const c_char = std::ptr::null();
-        // SAFETY: the message, when given, lives as long as [init].
-        let detail = if unsafe { get_error(init, &mut message) } == 1 && !message.is_null() {
-            unsafe { std::ffi::CStr::from_ptr(message) }
-                .to_string_lossy()
-                .into_owned()
-        } else {
-            "unknown error".into()
-        };
-        Err(format!("Python did not start: {detail}"))
-    };
-    unsafe { free(init) };
-    Some(result)
-}
-
 unsafe fn start_python(config: &Config) -> Result<Api, String> {
-    // The app's own settings (LUMTUB_CORE, SSL_CERT_FILE…) are read from
-    // the environment by the runner and by OpenSSL, so they go there, once:
-    // Python starts only on the first run.
+    for (name, value) in [
+        ("PYTHONHOME", config.home.as_str()),
+        ("PYTHONUTF8", "1"),
+        ("PYTHONIOENCODING", "utf-8"),
+        ("PYTHONDONTWRITEBYTECODE", "1"),
+        ("PYTHONNOUSERSITE", "1"),
+        ("PYTHONUNBUFFERED", "1"),
+    ] {
+        unsafe { std::env::set_var(name, value) };
+    }
     for (name, value) in &config.environment {
         unsafe { std::env::set_var(name, value) };
     }
@@ -205,29 +136,12 @@ unsafe fn start_python(config: &Config) -> Result<Api, String> {
         ensure: unsafe { symbol(library, "PyGILState_Ensure")? },
         release: unsafe { symbol(library, "PyGILState_Release")? },
     };
-    match unsafe { initialize_configured(library, config) } {
-        Some(started) => started?,
-        None => {
-            // An older Python reads its settings from the environment.
-            let (strings, _) = settings(config);
-            for (name, value) in [
-                ("PYTHONHOME", strings[0].1),
-                ("PYTHONUTF8", "1"),
-                ("PYTHONIOENCODING", "utf-8"),
-                ("PYTHONDONTWRITEBYTECODE", "1"),
-                ("PYTHONNOUSERSITE", "1"),
-                ("PYTHONUNBUFFERED", "1"),
-            ] {
-                unsafe { std::env::set_var(name, value) };
-            }
-            // Text is UTF-8 whatever the locale says.
-            if let Ok(utf8) = unsafe { symbol::<*mut c_int>(library, "Py_UTF8Mode") } {
-                unsafe { *utf8 = 1 };
-            }
-            // 0: Python leaves the app's signal handlers alone.
-            unsafe { initialize(0) };
-        }
+    // Text is UTF-8 whatever the locale says (the default from 3.15).
+    if let Ok(utf8) = unsafe { symbol::<*mut c_int>(library, "Py_UTF8Mode") } {
+        unsafe { *utf8 = 1 };
     }
+    // 0: Python leaves the app's signal handlers alone.
+    unsafe { initialize(0) };
     if unsafe { is_initialized() } == 0 {
         return Err("Python did not start".into());
     }

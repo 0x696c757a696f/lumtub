@@ -191,11 +191,8 @@ def _main(run, app, argv, environment=None):
     global _loaded
     _local.run = run
     # The settings in force for this run; every run sets the same names.
-    # Only a change is written: setting the process environment while other
-    # threads read it is not safe, and the values rarely change.
-    for name, value in (environment or {}).items():
-        if os.environ.get(name) != value:
-            os.environ[name] = value
+    if environment:
+        os.environ.update(environment)
     code = 0
     try:
         if _loaded not in (None, app) and argv == ["--version"]:

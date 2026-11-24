@@ -107,9 +107,16 @@ extension IosPipActions on AppController {
   void _iosPipActiveChanged() {
     // The window shows the picture's own shape: subtitles are wrapped for it.
     _queueLibassLook();
+    _iosPipSubtitles(settings.pipSubtitles);
     if (IosVideoLayer.active.value || !_windowHidden) return;
     final restored = _iosPip?.restoredAt;
     if (restored != null && DateTime.now().difference(restored) < const Duration(seconds: 3)) return;
     unawaited(setBackgroundAudioOnly(true));
+  }
+
+  /// 画中画显示字幕 off: the window shows the picture without subtitles.
+  void _iosPipSubtitles(bool shown) {
+    if (!Platform.isIOS) return;
+    subtitlesOffIn(_iosPipOwner, IosVideoLayer.active.value && !shown);
   }
 }

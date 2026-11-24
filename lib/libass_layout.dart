@@ -252,8 +252,8 @@ String secondCopyOwnText(String text) => text.split(RegExp(r'\n\s*\n')).first.tr
 ///
 /// [runs] splits a line mixing scripts into stretches each in its family
 /// (Android and iOS, where libass has no fallback); null where the line's
-/// style font draws it all. [second] tells the second subtitle's lines
-/// from the main one's.
+/// style font draws it all. A stretch with no family is in the line's own
+/// font. [second] tells the second subtitle's lines from the main one's.
 String secondAss(List<SubtitleCue> cues, PlayerSettings settings,
     {required double outline,
     double room = 0,
@@ -262,7 +262,7 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings,
     double aspect = 16 / 9,
     double scale = 1,
     bool blurred = false,
-    List<({String text, String family})>? Function(String text, {required bool second})? runs}) {
+    List<({String text, String? family})>? Function(String text, {required bool second})? runs}) {
   font ??= settings.secondaryFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.secondaryFont);
   final unit = secondEm * scale;
   final size = unit * settings.secondaryScale * LibassLook.lineEms(font);
@@ -305,7 +305,9 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings,
   String fonts(String text, {required bool second}) {
     final parts = runs?.call(text, second: second);
     if (parts == null) return ass(text);
-    return parts.map((r) => '{\\fn${r.family.replaceAll(RegExp(r'[{}\\,]'), ' ')}}${ass(r.text)}').join();
+    // Back to the line's own font: the style's, or the main subtitle's.
+    final own = second ? '' : main?.font ?? '';
+    return parts.map((r) => '{\\fn${(r.family ?? own).replaceAll(RegExp(r'[{}\\,]'), ' ')}}${ass(r.text)}').join();
   }
 
   // 模糊翻译: libass blurs the outline alone when there is one, so the

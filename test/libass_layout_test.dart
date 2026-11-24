@@ -109,6 +109,12 @@ void main() {
       expect(events(plain).single, endsWith(r',,你好'), reason: 'a line one font draws stays as it is');
     });
 
+    test('a stretch with no family goes back to the line\'s own font', () {
+      List<({String text, String? family})>? runs(String text, {required bool second}) => [(text: 'yes ', family: null), (text: 'བཀྲ', family: 'Noto Serif Tibetan')];
+      final ass = secondAss([(start: s(1), end: s(3), text: 'yes བཀྲ')], settings, outline: 0.1, runs: runs);
+      expect(events(ass).single, endsWith(r',,{\fn}yes {\fnNoto Serif Tibetan}བཀྲ'));
+    });
+
     test('carries its own size for a libmpv without secondary-sub-scale', () {
       final ass = secondAss([(start: s(1), end: s(3), text: '你好')], settings.copyWith(subtitleScale: 1.5), outline: 0.1, main: main, scale: 2);
       expect(events(ass).first, endsWith(r'你好\N{\alpha&HFF&\fs7.50}\h\N{\alpha&HFF&}{\fnArial\fs67.02\b0}Hello there'));

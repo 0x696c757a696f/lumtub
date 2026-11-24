@@ -302,31 +302,9 @@ class AndroidSubtitleFonts {
     // Each character's kind: a script of [_scripts], 'cjk' for Chinese,
     // Japanese and Korean, 'letter' for any other letter, null for the
     // rest, which joins its neighbours.
-    // Each character is looked up once per run of the app.
-    String? kindOf(int rune, String c) => _kinds.putIfAbsent(rune, () {
-          for (final MapEntry(key: script, value: pattern) in _scripts.entries) {
-            if (pattern.hasMatch(c)) return script;
-          }
-          if (_cjkText.hasMatch(c) || _kana.hasMatch(c)) return 'cjk';
-          return _letter.hasMatch(c) ? 'letter' : null;
-        });
-
-    final pieces = <({StringBuffer text, String? kind})>[];
-    for (final rune in text.runes) {
-      final c = String.fromCharCode(rune);
-      final kind = kindOf(rune, c);
-      if (pieces.isEmpty || (kind != null && pieces.last.kind != null && kind != pieces.last.kind)) {
-        pieces.add((text: StringBuffer(c), kind: kind));
-      } else if (kind != null && pieces.last.kind == null) {
-        // Leading spaces or punctuation take the first letters' kind.
-        pieces[pieces.length - 1] = (text: pieces.last.text..write(c), kind: kind);
-      } else {
-        pieces.last.text.write(c);
-      }
-    }
     final out = <({String text, String family})>[];
-    for (final piece in pieces) {
-      final part = piece.text.toString();
+    for (final piece in _pieces(text)) {
+      final part = piece.text;
       final family = familyFor(part, language: language);
       if (family == null) {
         // Only spaces or punctuation: drawn in the stretch before.
@@ -344,6 +322,70 @@ class AndroidSubtitleFonts {
       }
     }
     return out.isEmpty ? null : out;
+  }
+
+  /// Each character's kind, looked up once per run of the app: a script
+  /// of [_scripts], 'cjk' for Chinese, Japanese and Korean, 'letter' for
+  /// any other letter, null for the rest (spaces, digits, punctuation).
+  static String? _kindOf(int rune) => _kinds.putIfAbsent(rune, () {
+        final c = String.fromCharCode(rune);
+        for (final MapEntry(key: script, value: pattern) in _scripts.entries) {
+          if (pattern.hasMatch(c)) return script;
+        }
+        if (_cjkText.hasMatch(c) || _kana.hasMatch(c)) return 'cjk';
+        return _letter.hasMatch(c) ? 'letter' : null;
+      });
+
+  /// [text] in pieces of one kind each; the rest joins the piece before
+  /// it, or the first one.
+  static List<({String text, String? kind})> _pieces(String text) {
+    final pieces = <({StringBuffer text, String? kind})>[];
+    for (final rune in text.runes) {
+      final kind = _kindOf(rune);
+      if (pieces.isEmpty || (kind != null && pieces.last.kind != null && kind != pieces.last.kind)) {
+        pieces.add((text: StringBuffer()..writeCharCode(rune), kind: kind));
+      } else if (kind != null && pieces.last.kind == null) {
+        // Leading spaces or punctuation take the first letters' kind.
+        pieces[pieces.length - 1] = (text: pieces.last.text..writeCharCode(rune), kind: kind);
+      } else {
+        pieces.last.text.writeCharCode(rune);
+      }
+    }
+    return [for (final p in pieces) (text: p.text.toString(), kind: p.kind)];
+  }
+
+  /// The scripts of [_scripts] in [text], each with one of its characters.
+  static Map<String, int> scriptsIn(String text) {
+    final found = <String, int>{};
+    for (final rune in text.runes) {
+      final kind = _kindOf(rune);
+      if (kind != null && kind != 'cjk' && kind != 'letter') found.putIfAbsent(kind, () => rune);
+    }
+    return found;
+  }
+
+  /// The script whose font [fileName] is, by [_scriptFiles]; null for none.
+  static String? scriptOfFile(String fileName) {
+    for (final MapEntry(key: script, value: prefixes) in _scriptFiles.entries) {
+      if (prefixes.any(fileName.startsWith)) return script;
+    }
+    return null;
+  }
+
+  /// [text] in stretches, those in a script of [families] marked with its
+  /// family and the rest with null: where libass finds fonts by itself
+  /// (fontconfig on Linux) and only [families] were added beside them.
+  static List<({String text, String? family})> stretches(String text, Map<String, String> families) {
+    final out = <({String text, String? family})>[];
+    for (final piece in _pieces(text)) {
+      final family = families[piece.kind];
+      if (out.isNotEmpty && (out.last.family == family || piece.kind == null)) {
+        out[out.length - 1] = (text: out.last.text + piece.text, family: out.last.family);
+      } else {
+        out.add((text: piece.text, family: family));
+      }
+    }
+    return out;
   }
 
   /// The one family that draws all of [text], for subtitles whose language

@@ -161,6 +161,10 @@ bool isSimplifiedChineseTag(String language) {
 /// Chinese on a system that has none, by [cjkFormOf]; see CjkFontPacks.
 final downloadedCjkFamilies = <String, String>{};
 
+/// Downloaded faces for scripts the system has no font for (Tibetan on a
+/// Linux without it, say), tried after the rest; see ScriptFontPack.
+final downloadedScriptFamilies = <String>[];
+
 /// The fonts tried after [family] for characters it lacks, before the
 /// system's own fallback. In Japanese, Korean and traditional Chinese the
 /// system picks a face with that language's character forms (it knows the
@@ -169,8 +173,8 @@ final downloadedCjkFamilies = <String, String>{};
 /// alike.
 List<String> fontFallback(String? family, [String? languageTag]) {
   final forms = cjkFormOf(languageTag ?? currentLanguage.tag);
-  if (family == bundledFont || forms == null) return const [bundledFont, blankFont];
-  return [if (downloadedCjkFamilies[forms] case final face?) face, blankFont];
+  if (family == bundledFont || forms == null) return downloadedScriptFamilies.isEmpty ? const [bundledFont, blankFont] : [bundledFont, ...downloadedScriptFamilies, blankFont];
+  return [if (downloadedCjkFamilies[forms] case final face?) face, ...downloadedScriptFamilies, blankFont];
 }
 
 /// For text known to be in [language] (a subtitle line, a word being
@@ -192,9 +196,9 @@ TextStyle? languageStyle(String? language) {
     locale = Locale(forms ?? code);
   }
   final fallback = forms != null
-      ? [if (downloadedCjkFamilies[forms] case final face?) face, blankFont]
+      ? [if (downloadedCjkFamilies[forms] case final face?) face, ...downloadedScriptFamilies, blankFont]
       : isSimplifiedChineseTag(tag)
-          ? const [bundledFont, blankFont]
+          ? [bundledFont, ...downloadedScriptFamilies, blankFont]
           : fontFallback(null);
   return TextStyle(locale: locale, fontFamilyFallback: fallback);
 }

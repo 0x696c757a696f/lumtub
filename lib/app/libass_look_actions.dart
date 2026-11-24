@@ -137,7 +137,7 @@ extension LibassLookActions on AppController {
   int _roomEms(double scale) => LibassLayout.roomEms(em: _libassLook.em, scale: scale, aspect: _canvasAspect).floor();
 
   /// What the copy of the main subtitle depends on: where it wraps.
-  String get _mainCopyKey => 'main|${_roomEms(settings.subtitleScale)}';
+  String get _mainCopyKey => 'main|${_roomEms(settings.subtitleScale)}|${linuxScriptFamilies.keys.join('+')}';
 
   /// What the styled copy of a second subtitle depends on.
   String get _secondCopyKey => _secondCopyKeyFor(secondBlurred);
@@ -148,6 +148,8 @@ extension LibassLookActions on AppController {
     return [
       'second',
       if (blurred) 'blurred',
+      // The downloaded script fonts its stretches name (Linux).
+      linuxScriptFamilies.keys.join('+'),
       _roomEms(settings.secondaryScale),
       settings.secondaryFont,
       settings.secondaryScale,
@@ -348,7 +350,11 @@ extension LibassLookActions on AppController {
           aspect: _videoAspect,
           scale: _secondCopyScale,
           blurred: blur,
-          runs: Platform.isAndroid || Platform.isIOS ? (text, {required bool second}) => _runsAgainst(text, second ? font : _mainFont, second ? secondLanguage : mainLanguage) : null);
+          runs: Platform.isAndroid || Platform.isIOS
+              ? (text, {required bool second}) => _runsAgainst(text, second ? font : _mainFont, second ? secondLanguage : mainLanguage)
+              : Platform.isLinux
+                  ? (text, {required bool second}) => _mixedRuns(text, second ? secondLanguage : mainLanguage)
+                  : null);
     } else {
       final room = _roomEms(settings.subtitleScale).toDouble();
       final language = track.language ?? '';
@@ -368,7 +374,7 @@ extension LibassLookActions on AppController {
           (
             start: c.start,
             end: c.end,
-            text: (mixed[i]?.map((r) => '<font face="${r.family}">${r.text}</font>').join() ?? wrapped[i]).replaceAll(RegExp(r'\n\s*\n'), '\n'),
+            text: (mixed[i]?.map((r) => r.family == null ? r.text : '<font face="${r.family}">${r.text}</font>').join() ?? wrapped[i]).replaceAll(RegExp(r'\n\s*\n'), '\n'),
           ),
       ]);
     }
@@ -395,8 +401,15 @@ extension LibassLookActions on AppController {
   }
 
   /// [text]'s stretches in their fonts when it mixes scripts no one font
-  /// draws, on Android and iOS; null where libass draws it as it is.
-  List<({String text, String family})>? _mixedRuns(String text, String language) {
+  /// draws, on Android and iOS; null where libass draws it as it is. On
+  /// Linux, the stretches in scripts whose fonts were downloaded name
+  /// them (the rest null), as fontconfig does not know those fonts.
+  List<({String text, String? family})>? _mixedRuns(String text, String language) {
+    if (Platform.isLinux) {
+      if (linuxScriptFamilies.isEmpty) return null;
+      final stretches = AndroidSubtitleFonts.stretches(text, linuxScriptFamilies);
+      return stretches.any((r) => r.family != null) ? stretches : null;
+    }
     if (!(Platform.isAndroid || Platform.isIOS) || AndroidSubtitleFonts.familyFor(text, language: language) != null) return null;
     final runs = AndroidSubtitleFonts.runs(text, language: language);
     return runs != null && runs.length > 1 ? runs : null;

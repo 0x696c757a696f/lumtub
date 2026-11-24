@@ -30,6 +30,51 @@ extension CjkFontActions on AppController {
     }
   }
 
+  /// On Linux: fonts for the scripts in [text] that fontconfig has none
+  /// for, from the script font pack, downloaded the first time one is
+  /// missing. Each script is asked about once per run; text with only
+  /// Latin, Chinese and the like returns at once.
+  Future<void> ensureScriptFonts(String text) async {
+    if (!Platform.isLinux) return;
+    final packs = this.packs;
+    if (packs == null) return;
+    final wanted = <String>[];
+    for (final MapEntry(key: script, value: sample) in AndroidSubtitleFonts.scriptsIn(text).entries) {
+      if (!_scriptFontsAsked.add(script)) continue;
+      if (await ScriptFontPack.missing(script, sample)) wanted.add(script);
+    }
+    if (wanted.isEmpty) return;
+    try {
+      if (packs.installedOf(ScriptFontPack.id) == null) {
+        if (!packs.catalog.any((p) => p.id == ScriptFontPack.id)) await packs.refresh();
+        if (!packs.catalog.any((p) => p.id == ScriptFontPack.id && p.suitsThisBuild)) {
+          logInfo('No data pack ${ScriptFontPack.id} to download');
+          return;
+        }
+        logInfo('Downloading ${ScriptFontPack.id}: this system has no font for ${wanted.join(', ')}');
+        await packs.install(ScriptFontPack.id);
+      }
+      final files = ScriptFontPack.installedFiles(packs);
+      var loaded = false;
+      for (final script in wanted) {
+        final file = files[script];
+        if (file == null) continue;
+        linuxScriptFamilies[script] = ScriptFontPack.familyOf(file);
+        if (await ScriptFontPack.load(file)) loaded = true;
+      }
+      if (loaded) _update(() => cjkFontsRevision++);
+      final platform = player?.platform;
+      if (platform is NativePlayer) {
+        await _useDownloadedSubtitleFonts(platform);
+        // Lumtub's copies name the new fonts for their stretches.
+        _plainFits.clear();
+        if (player case final player?) _restyleSubtitles(player);
+      }
+    } catch (e) {
+      logWarn('Could not get the font pack ${ScriptFontPack.id}: $e');
+    }
+  }
+
   /// Puts the installed font packs to use: in Flutter's text, and in
   /// libass on Linux and iOS.
   Future<void> useDownloadedCjkFonts() async {
@@ -87,7 +132,12 @@ extension CjkFontActions on AppController {
     cache ??= directories?.cache.path;
     final packs = this.packs;
     if (cache == null || packs == null) return;
-    final folder = CjkFontPacks.linkFolder(packs, '$cache/downloaded-fonts');
+    // Only the scripts fontconfig lacks: libass reads every font there.
+    final scripts = ScriptFontPack.installedFiles(packs);
+    final folder = CjkFontPacks.linkFolder(packs, '$cache/downloaded-fonts', extra: [
+      for (final script in linuxScriptFamilies.keys)
+        if (scripts[script] case final file?) file,
+    ]);
     if (folder == null) return;
     await platform.setProperty('sub-fonts-dir', folder).catchError((Object e) => logDebug(() => 'Could not set the subtitle fonts: $e'));
   }

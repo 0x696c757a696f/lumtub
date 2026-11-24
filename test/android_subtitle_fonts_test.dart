@@ -73,6 +73,17 @@ void main() {
     expect(AndroidSubtitleFonts.forLines(['hello', 'ᠮᠣᠩᠭᠣᠯ']).drawable, isFalse);
   });
 
+  test('on Linux only stretches in scripts with downloaded fonts name them', () {
+    expect(AndroidSubtitleFonts.scriptsIn('hello བཀྲ مرحبا'), {'Tibetan': 0xF56, 'Arabic': 0x645});
+    expect(AndroidSubtitleFonts.stretches('yes བཀྲ་ཤིས no', {'Tibetan': 'Noto Serif Tibetan'}), [
+      (text: 'yes ', family: null),
+      (text: 'བཀྲ་ཤིས ', family: 'Noto Serif Tibetan'),
+      (text: 'no', family: null),
+    ]);
+    expect(AndroidSubtitleFonts.scriptOfFile('NotoSerifTibetan-Regular.ttf'), 'Tibetan');
+    expect(AndroidSubtitleFonts.scriptOfFile('NotoSans-Regular.ttf'), isNull);
+  });
+
   test('another script gets its own font, alone with digits and punctuation', () {
     expect(AndroidSubtitleFonts.familyFor('مرحبا بالعالم 2026!'), 'Noto Naskh Arabic');
     expect(AndroidSubtitleFonts.familyFor('สวัสดี'), 'Noto Sans Thai');

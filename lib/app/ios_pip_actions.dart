@@ -108,6 +108,7 @@ extension IosPipActions on AppController {
     // The window shows the picture's own shape: subtitles are wrapped for it.
     _queueLibassLook();
     _iosPipSubtitles(settings.pipSubtitles);
+    _sendPipSubtitles();
     if (IosVideoLayer.active.value || !_windowHidden) return;
     final restored = _iosPip?.restoredAt;
     if (restored != null && DateTime.now().difference(restored) < const Duration(seconds: 3)) return;
@@ -118,5 +119,70 @@ extension IosPipActions on AppController {
   void _iosPipSubtitles(bool shown) {
     if (!Platform.isIOS) return;
     subtitlesOffIn(_iosPipOwner, IosVideoLayer.active.value && !shown);
+  }
+
+  /// The window shows only what goes into the frames: libmpv's subtitles
+  /// go in by themselves, while those Flutter draws (where libmpv has no
+  /// font for a line) are drawn here into a picture for it. Only while the
+  /// window is open and Flutter draws, and only when the lines change.
+  void _sendPipSubtitles([List<String>? lines]) {
+    if (!Platform.isIOS) return;
+    final player = this.player;
+    final wanted = player != null && IosVideoLayer.active.value && !libassDraws && !subtitlesOff && settings.pipSubtitles;
+    final shown = lines ?? player?.state.subtitle ?? const [];
+    final main = wanted && shown.isNotEmpty ? shown.first.trim() : '';
+    final second = wanted && shown.length > 1 && secondarySubtitle != null ? shown[1].trim() : '';
+    final aspect = _videoAspect;
+    final s = settings;
+    final key = main.isEmpty && second.isEmpty
+        ? ''
+        : [main, second, aspect, s.subtitleFont, s.subtitleScale, s.subtitleColor, s.subtitleOpacity, s.secondaryFont, s.secondaryScale, s.secondaryColor, s.secondaryOpacity, s.subtitleBold, s.subtitleBackground, s.subtitleBorder, s.subtitlePosition].join('|');
+    if (key == _pipSubtitlesSent) return;
+    _pipSubtitlesSent = key;
+    final serial = ++_pipSubtitlesSerial;
+    if (key.isEmpty) {
+      unawaited(IosVideoLayer.setSubtitles(null).catchError((Object e) => logDebug(() => 'Could not clear the picture-in-picture subtitles: $e')));
+      return;
+    }
+    // At the height the window's frames are made (720 lines), in the
+    // picture's shape, sized by height as the phone's player sizes them.
+    final canvas = Size(720 * aspect.clamp(0.3, 4.0), 720);
+    PipSubtitleStyle look(String font, double scale, int color, double opacity, String language) {
+      final style = languageStyle(language);
+      return pipSubtitleStyle(
+        font: font,
+        scale: scale,
+        color: color,
+        opacity: opacity,
+        bold: s.subtitleBold,
+        box: s.subtitleBackground,
+        outline: LibassLook.outlineFor(s.subtitleBorder),
+        fallback: style?.fontFamilyFallback ?? [bundledFont, ...downloadedScriptFamilies, blankFont],
+        locale: style?.locale,
+      );
+    }
+
+    unawaited(() async {
+      try {
+        final picture = await drawPipSubtitles(
+          main: main,
+          second: second,
+          mainStyle: look(s.subtitleFont, s.subtitleScale, s.subtitleColor, s.subtitleOpacity, mainSubtitleLanguage),
+          secondStyle: look(s.secondaryFont, s.secondaryScale, s.secondaryColor, s.secondaryOpacity, secondSubtitleLanguage),
+          canvas: canvas,
+          scale: max(12.0, min(canvas.height, canvas.width * 0.75) * 0.0533) / 32,
+          position: s.subtitlePosition,
+        );
+        if (serial != _pipSubtitlesSerial) return;
+        if (picture == null) {
+          await IosVideoLayer.setSubtitles(null);
+          return;
+        }
+        await IosVideoLayer.setSubtitles(picture.pixels,
+            width: picture.width, height: picture.height, x: picture.x, y: picture.y, canvasWidth: canvas.width, canvasHeight: canvas.height);
+      } catch (e) {
+        logDebug(() => 'Could not draw the picture-in-picture subtitles: $e');
+      }
+    }());
   }
 }

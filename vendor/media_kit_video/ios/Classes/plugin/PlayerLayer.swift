@@ -128,6 +128,23 @@ final class PlayerLayer: NSObject {
     sink.setCompositing(on)
   }
 
+  /// Subtitles drawn by the app, for picture in picture where libmpv
+  /// draws none; nil pixels take them away.
+  func setAppSubtitles(pixels: Data?, width: Int, height: Int, box: CGRect, canvas: CGSize) {
+    guard let pixels, width > 0, height > 0, pixels.count >= width * height * 4,
+          let provider = CGDataProvider(data: pixels as CFData),
+          let image = CGImage(
+            width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue),
+            provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+    else {
+      sink.setAppOverlay(nil, box: .zero, canvas: .zero)
+      return
+    }
+    sink.setAppOverlay(image, box: box, canvas: canvas)
+  }
+
   @objc private func didBecomeActive() {
     // iOS interrupts the layer while the app is in the background.
     sink.resume()

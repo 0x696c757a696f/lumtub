@@ -197,6 +197,7 @@ extension PlaybackEvents on AppController {
         _fitSubtitleFont(player, lines);
         _placeSecondary(player, lines);
         _secondLineChanged(lines);
+        _sendPipSubtitles(lines);
       }),
       player.stream.playing.listen((_) {
         _updateEfficiency();

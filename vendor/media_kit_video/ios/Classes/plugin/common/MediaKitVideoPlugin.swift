@@ -119,6 +119,16 @@ public class MediaKitVideoPlugin: NSObject, FlutterPlugin {
       case "Layer.Mirror":
         layer.setMirror((args["on"] as? Bool) ?? false)
         result(nil)
+      case "Layer.Subtitles":
+        func number(_ key: String) -> Double { (args[key] as? NSNumber)?.doubleValue ?? 0 }
+        layer.setAppSubtitles(
+          pixels: (args["pixels"] as? FlutterStandardTypedData)?.data,
+          width: Int(number("width")),
+          height: Int(number("height")),
+          box: CGRect(x: number("x"), y: number("y"), width: number("width"), height: number("height")),
+          canvas: CGSize(width: number("canvasWidth"), height: number("canvasHeight"))
+        )
+        result(nil)
       case "Layer.StartPip":
         result(layer.startPip())
       case "Layer.StopPip":

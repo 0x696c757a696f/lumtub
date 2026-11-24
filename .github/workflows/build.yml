@@ -942,8 +942,17 @@ jobs:
           # The runtime appimagetool would fetch itself, with retries.
           runtime="$PWD/.linux-downloads/runtime-$APPIMAGE_ARCH"
           [ -s "$runtime" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$runtime" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-$APPIMAGE_ARCH"
-          APPIMAGE_EXTRACT_AND_RUN=1 ARCH="$APPIMAGE_ARCH" "$tool" --runtime-file "$runtime" --no-appstream "$RUNNER_TEMP/AppDir" "Lumtub_${LUMTUB_VERSION}_linux-$PACKAGE_ARCH.AppImage"
-          ls -l Lumtub_*.AppImage
+          # Update information for AppImageUpdate, AppImageLauncher and Gear Lever:
+          # the .zsync of this package in the latest release. The tool's own
+          # zsyncmake writes Lumtub_<version>_linux-<arch>.AppImage.zsync beside it.
+          update_info="gh-releases-zsync|${GITHUB_REPOSITORY%%/*}|${GITHUB_REPOSITORY#*/}|latest|Lumtub_*_linux-$PACKAGE_ARCH.AppImage.zsync"
+          APPIMAGE_EXTRACT_AND_RUN=1 ARCH="$APPIMAGE_ARCH" "$tool" --runtime-file "$runtime" --no-appstream \
+            --updateinformation "$update_info" "$RUNNER_TEMP/AppDir" "Lumtub_${LUMTUB_VERSION}_linux-$PACKAGE_ARCH.AppImage"
+          [ -s "Lumtub_${LUMTUB_VERSION}_linux-$PACKAGE_ARCH.AppImage.zsync" ] || { echo "No .zsync was written" >&2; exit 1; }
+          objcopy -O binary --only-section=.upd_info "Lumtub_${LUMTUB_VERSION}_linux-$PACKAGE_ARCH.AppImage" "$RUNNER_TEMP/upd_info"
+          embedded=$(tr -d '\0' < "$RUNNER_TEMP/upd_info")
+          [ "$embedded" = "$update_info" ] || { echo "Embedded update information is '$embedded'" >&2; exit 1; }
+          ls -l Lumtub_*.AppImage*
 
       - name: Linux - smoke test the AppImage
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
@@ -996,7 +1005,9 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: Lumtub-linux-${{ matrix.package_arch }}-appimage
-          path: Lumtub_*_linux-${{ matrix.package_arch }}.AppImage
+          path: |
+            Lumtub_*_linux-${{ matrix.package_arch }}.AppImage
+            Lumtub_*_linux-${{ matrix.package_arch }}.AppImage.zsync
           if-no-files-found: error
 
   showcase:

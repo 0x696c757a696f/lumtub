@@ -207,7 +207,7 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 表格里的链接总是下载最新版本。发布页上的文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
 **Windows**：用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。也可以用包管理器（正在审核，通过后可用）：`winget install Lumtub.Lumtub`。<br>
 第一次打开时 Windows 可能提示「Windows 已保护你的电脑」，因为安装程序还没有买付费的代码签名证书。点「更多信息」，再点「仍要运行」。只对从下面官方渠道下载的文件这样做。<br>
-**Linux**：给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新。如果提示缺少 FUSE，请安装发行版的 `fuse3` 软件包，或用 `--appimage-extract-and-run` 参数启动。想用 Flatpak 的话：`flatpak install --user Lumtub_*_linux-x64.flatpak`。<br>
+**Linux**：给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新，也可以用 AppImageUpdate、AppImageLauncher 或 Gear Lever 更新（只下载变化的部分）。如果提示缺少 FUSE，请安装发行版的 `fuse3` 软件包，或用 `--appimage-extract-and-run` 参数启动。想用 Flatpak 的话：`flatpak install --user Lumtub_*_linux-x64.flatpak`。<br>
 第一次启动时会从 GitHub 下载 yt-dlp 和 Deno，之后 Lumtub 会自己保持更新。<br>
 **Android（预览版）**：打开 APK，按提示允许浏览器或文件管理器安装应用。新版本可以在 Lumtub 里直接安装，Android 会请你确认一次。直播和下载也都能用，靠的是应用里自带的 yt-dlp；会员专属视频在 Android 上暂时还不能看。<br>
 **iPhone 和 iPad（预览版，尚未在真机上测试）**：Lumtub 没有上架 App Store，请用 [SideStore](https://sidestore.io)、[AltStore](https://altstore.io) 或 Sideloadly 配合你自己的 Apple ID 安装 IPA，也可以用 TrollStore。在 SideStore 或 AltStore 里添加源 `https://github.com/0x696c757a696f/lumtub/releases/latest/download/altstore-source.json`，就能收到新版本。yt-dlp 用应用自带的 Python 在应用内运行。

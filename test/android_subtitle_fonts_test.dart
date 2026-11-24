@@ -45,13 +45,32 @@ void main() {
     expect(AndroidSubtitleFonts.forLines(['مرحبا بالعالم', '你好，世界']), (drawable: true, main: 'Noto Naskh Arabic'));
     expect(AndroidSubtitleFonts.forLines(['Dobrý den, příteli', 'สวัสดี']), (drawable: true, main: 'Roboto'));
     expect(AndroidSubtitleFonts.forLines(['', '你好']), (drawable: true, main: null), reason: 'no main line: its font stays');
-    expect(AndroidSubtitleFonts.forLines(['圣人的短篇故事 historia świętego', '']), (drawable: false, main: null));
-    expect(AndroidSubtitleFonts.forLines(['hello', 'مرحبا 你好']), (drawable: false, main: 'Noto Sans CJK SC'));
+    expect(AndroidSubtitleFonts.forLines(['圣人的短篇故事 historia świętego', '']), (drawable: true, main: null), reason: 'drawn in stretches');
+    expect(AndroidSubtitleFonts.forLines(['hello', 'مرحبا 你好']), (drawable: true, main: 'Noto Sans CJK SC'));
     expect(AndroidSubtitleFonts.forLines(['hello', 'नमस्ते']).drawable, isFalse, reason: 'no Devanagari font was found');
     // The second subtitle's copy holds the main lines after a blank line.
     const copy = '早上好。亲爱的朋友们。\n\u00a0\n20 dzień listopada, piątunio.';
-    expect(AndroidSubtitleFonts.forLines(['20 dzień listopada, piątunio.', copy]).drawable, isFalse);
+    expect(AndroidSubtitleFonts.forLines(['20 dzień listopada, piątunio.', copy]).drawable, isTrue, reason: 'in stretches too');
     expect(AndroidSubtitleFonts.forLines(['20 dzień listopada, piątunio.', secondCopyOwnText(copy)]), (drawable: true, main: 'Roboto'));
+  });
+
+  test('a line mixing scripts is drawn in stretches, each in its font', () {
+    AndroidSubtitleFonts.families['Devanagari'] = 'Noto Sans Devanagari';
+    AndroidSubtitleFonts.families['Adlam'] = 'Noto Sans Adlam';
+    final runs = AndroidSubtitleFonts.runs;
+    expect(runs('ogni componente del sistema'), [(text: 'ogni componente del sistema', family: 'Noto Sans CJK SC')]);
+    expect(runs('यह iPhone बहुत अच्छा है'), [
+      (text: 'यह ', family: 'Noto Sans Devanagari'),
+      (text: 'iPhone ', family: 'Noto Sans CJK SC'),
+      (text: 'बहुत अच्छा है', family: 'Noto Sans Devanagari'),
+    ]);
+    expect(runs('مرحبا 你好!'), [(text: 'مرحبا ', family: 'Noto Naskh Arabic'), (text: '你好!', family: 'Noto Sans CJK SC')]);
+    expect(runs('圣人的短篇故事 historia świętego'), [(text: '圣人的短篇故事 ', family: 'Noto Sans CJK SC'), (text: 'historia świętego', family: 'Roboto')]);
+    expect(runs('“Hello” — สวัสดี.'), [(text: '“Hello” — ', family: 'Noto Sans CJK SC'), (text: 'สวัสดี.', family: 'Noto Sans Thai')]);
+    expect(runs('नमस्ते\nhello'), [(text: 'नमस्ते\n', family: 'Noto Sans Devanagari'), (text: 'hello', family: 'Noto Sans CJK SC')]);
+    expect(runs('\u{1E900}\u{1E901} hello'), [(text: '\u{1E900}\u{1E901} ', family: 'Noto Sans Adlam'), (text: 'hello', family: 'Noto Sans CJK SC')], reason: 'beyond the BMP');
+    expect(runs('hello ᠮᠣᠩᠭᠣᠯ'), isNull, reason: 'no Mongolian font was found');
+    expect(AndroidSubtitleFonts.forLines(['hello', 'ᠮᠣᠩᠭᠣᠯ']).drawable, isFalse);
   });
 
   test('another script gets its own font, alone with digits and punctuation', () {
@@ -63,7 +82,9 @@ void main() {
     expect(AndroidSubtitleFonts.familyFor('مرحبا\n你好'), isNull);
     expect(AndroidSubtitleFonts.familyFor('สวัสดี hello'), isNull);
     expect(AndroidSubtitleFonts.familyFor('नमस्ते'), isNull, reason: 'no Devanagari font was found');
-    expect(AndroidSubtitleFonts.familyFor('བཀྲ་ཤིས་བདེ་ལེགས'), isNull, reason: 'no font here has Tibetan');
+    expect(AndroidSubtitleFonts.familyFor('བཀྲ་ཤིས་བདེ་ལེགས'), isNull, reason: 'no Tibetan font was found');
+    AndroidSubtitleFonts.families['Tibetan'] = 'Noto Serif Tibetan';
+    expect(AndroidSubtitleFonts.familyFor('བཀྲ་ཤིས་བདེ་ལེགས'), 'Noto Serif Tibetan');
     AndroidSubtitleFonts.cjk = false;
     expect(AndroidSubtitleFonts.familyFor('hello'), isNull);
   });

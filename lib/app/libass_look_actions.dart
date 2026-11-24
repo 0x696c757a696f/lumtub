@@ -329,7 +329,7 @@ extension LibassLookActions on AppController {
     if (second) {
       final room = _roomEms(settings.secondaryScale);
       final font = Platform.isAndroid || Platform.isIOS
-          ? AndroidSubtitleFonts.familyFor(cues.take(40).map((c) => c.text).join('\n'), language: track.language ?? '')
+          ? _trackFamily(cues.take(40).map((c) => c.text).join('\n'), track.language ?? '')
           // In the character forms of the second subtitle's own language.
           : settings.secondaryFont.isEmpty
               ? null
@@ -339,17 +339,38 @@ extension LibassLookActions on AppController {
       if (key.endsWith(_quickMark)) mainCues = mainCues.where(near).toList();
       if (!current()) return source;
       final main = (cues: mainCues, font: _mainFont, room: _roomEms(settings.subtitleScale).toDouble(), wrapFont: settings.subtitleFont);
-      text = secondAss(cues, settings, outline: look.em > 0 ? look.border / look.em : 0, room: room.toDouble(), font: font, main: main, aspect: _videoAspect, scale: _secondCopyScale, blurred: blur);
+      final secondLanguage = track.language ?? '', mainLanguage = mainTrack?.language ?? '';
+      text = secondAss(cues, settings,
+          outline: look.em > 0 ? look.border / look.em : 0,
+          room: room.toDouble(),
+          font: font,
+          main: main,
+          aspect: _videoAspect,
+          scale: _secondCopyScale,
+          blurred: blur,
+          runs: Platform.isAndroid || Platform.isIOS ? (text, {required bool second}) => _runsAgainst(text, second ? font : _mainFont, second ? secondLanguage : mainLanguage) : null);
     } else {
       final room = _roomEms(settings.subtitleScale).toDouble();
+      final language = track.language ?? '';
       final wrapped = [for (final c in cues) LibassLayout.wrap(c.text, room, font: settings.subtitleFont, bold: settings.subtitleBold)];
-      // Nothing runs past the edges: the track shows as it is.
-      if (Iterable.generate(cues.length).every((i) => wrapped[i] == cues[i].text)) {
+      // Lines mixing scripts, in stretches each in its font (Android and
+      // iOS, where libass has no fallback); null for the rest.
+      final mixed = [for (final w in wrapped) _mixedRuns(w, language)];
+      // Nothing runs past the edges and no line mixes scripts: the track
+      // shows as it is.
+      if (Iterable.generate(cues.length).every((i) => wrapped[i] == cues[i].text && mixed[i] == null)) {
         _plainFits.add('$source|$key');
         return source;
       }
       // Blank lines would end an SRT cue.
-      text = toSrt([for (final (i, c) in cues.indexed) (start: c.start, end: c.end, text: wrapped[i].replaceAll(RegExp(r'\n\s*\n'), '\n'))]);
+      text = toSrt([
+        for (final (i, c) in cues.indexed)
+          (
+            start: c.start,
+            end: c.end,
+            text: (mixed[i]?.map((r) => '<font face="${r.family}">${r.text}</font>').join() ?? wrapped[i]).replaceAll(RegExp(r'\n\s*\n'), '\n'),
+          ),
+      ]);
     }
     final folder = Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles');
     await folder.create(recursive: true);
@@ -371,5 +392,35 @@ extension LibassLookActions on AppController {
     // may have gone out before this copy was there.
     if (second) _queueLibassLook();
     return id;
+  }
+
+  /// [text]'s stretches in their fonts when it mixes scripts no one font
+  /// draws, on Android and iOS; null where libass draws it as it is.
+  List<({String text, String family})>? _mixedRuns(String text, String language) {
+    if (!(Platform.isAndroid || Platform.isIOS) || AndroidSubtitleFonts.familyFor(text, language: language) != null) return null;
+    final runs = AndroidSubtitleFonts.runs(text, language: language);
+    return runs != null && runs.length > 1 ? runs : null;
+  }
+
+  /// [text]'s stretches when any is drawn in another family than [font],
+  /// the one its style already names; null when [font] draws it all.
+  List<({String text, String family})>? _runsAgainst(String text, String? font, String language) {
+    final runs = AndroidSubtitleFonts.runs(text, language: language);
+    if (runs == null || runs.every((r) => r.family == font)) return null;
+    return runs;
+  }
+
+  /// The family a whole track is drawn in by its style: the one that draws
+  /// all of [sample], or else the one that draws most of it.
+  String? _trackFamily(String sample, String language) {
+    final whole = AndroidSubtitleFonts.familyFor(sample, language: language);
+    if (whole != null) return whole;
+    final counts = <String, int>{};
+    for (final line in sample.split('\n')) {
+      for (final run in AndroidSubtitleFonts.runs(line, language: language) ?? const <({String text, String family})>[]) {
+        counts[run.family] = (counts[run.family] ?? 0) + run.text.length;
+      }
+    }
+    return counts.entries.fold<MapEntry<String, int>?>(null, (best, e) => best == null || e.value > best.value ? e : best)?.key;
   }
 }

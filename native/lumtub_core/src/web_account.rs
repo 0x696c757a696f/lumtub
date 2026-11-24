@@ -204,7 +204,8 @@ fn keep(jar: &Jar, hello: bool) -> Result<Guard, String> {
         )
     };
     let header = Zeroizing::new(jar.header());
-    let sealer = Sealer::new(hello, &reason);
+    let sealer =
+        Sealer::new(hello, &reason).ok_or("the system keyring did not answer; try again")?;
     let sealed = sealer
         .seal(header.as_bytes())
         .ok_or("Windows could not encrypt the cookies")?;

@@ -717,7 +717,7 @@ mod store {
         use crate::vault::{Sealer, open};
 
         pub fn protect(data: &[u8]) -> Option<Vec<u8>> {
-            Sealer::new(false, "Lumtub").seal(data)
+            Sealer::new(false, "Lumtub")?.seal(data)
         }
 
         pub fn unprotect(data: &[u8]) -> Option<Vec<u8>> {

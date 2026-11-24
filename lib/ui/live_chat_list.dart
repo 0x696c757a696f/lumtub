@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../l10n/l10n.dart';
 import '../live_chat.dart';
 import 'app_icons.dart';
+import 'motion.dart';
 
 /// The live chat, newest at the bottom, following new messages as YouTube's
 /// and Twitch's chats do: scrolled up to read, it holds still and offers
@@ -18,8 +21,11 @@ class LiveChatList extends StatefulWidget {
 
 class LiveChatListState extends State<LiveChatList> {
   final _scroll = ScrollController();
-  /// How many messages show while scrolled up; null while following.
-  int? _held;
+  /// The newest message shown while scrolled up; null while following.
+  /// Held by the message itself, not by a count: once the chat is at its
+  /// cap the count stays the same as the oldest are dropped.
+  LiveChatMessage? _held;
+  bool _holding = false;
 
   @override
   void initState() {
@@ -35,24 +41,44 @@ class LiveChatListState extends State<LiveChatList> {
 
   void _scrolled() {
     final away = _scroll.offset > 48;
-    if (away && _held == null) {
-      setState(() => _held = widget.messages.length);
-    } else if (!away && _held != null) {
-      setState(() => _held = null);
+    if (away && !_holding) {
+      setState(() {
+        _holding = true;
+        _held = widget.messages.lastOrNull;
+      });
+    } else if (!away && _holding) {
+      setState(() {
+        _holding = false;
+        _held = null;
+      });
     }
   }
 
   void _toLatest() {
-    setState(() => _held = null);
-    if (_scroll.hasClients) _scroll.animateTo(0, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+    setState(() {
+      _holding = false;
+      _held = null;
+    });
+    if (_scroll.hasClients) unawaited(Motion.scrollTo(_scroll, 0, duration: const Duration(milliseconds: 250), curve: Curves.easeOut));
+  }
+
+  /// How many messages, from the oldest, show while held.
+  int _shown(List<LiveChatMessage> messages) {
+    if (!_holding) return messages.length;
+    final held = _held;
+    if (held == null) return 0;
+    for (var i = messages.length - 1; i >= 0; i--) {
+      final m = messages[i];
+      if (identical(m, held) || (held.id.isNotEmpty && m.id == held.id)) return i + 1;
+    }
+    // Dropped as the list is capped: nothing shown is left to hold.
+    return messages.length;
   }
 
   @override
   Widget build(BuildContext context) {
     final total = widget.messages.length;
-    // The oldest are dropped as the list is capped, so what was held may
-    // now be fewer.
-    final shown = (_held ?? total).clamp(0, total);
+    final shown = _shown(widget.messages);
     final waiting = total - shown;
     return Stack(children: [
       ListView.builder(
@@ -62,7 +88,7 @@ class LiveChatListState extends State<LiveChatList> {
         itemCount: shown,
         itemBuilder: (context, index) => widget.messageAt(shown - 1 - index),
       ),
-      if (_held != null)
+      if (_holding)
         Positioned(
           left: 0,
           right: 0,

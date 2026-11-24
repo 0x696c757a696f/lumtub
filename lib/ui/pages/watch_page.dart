@@ -1197,10 +1197,7 @@ class _UpNext extends StatelessWidget {
     ]);
     final head = <Widget>[
       if (controller.playQueue.isNotEmpty) ...[PlayQueuePanel(controller: controller), const SizedBox(height: 16)],
-      if (controller.playingList != null)
-        PlayingListPanel(controller: controller, trailing: autoplay, shrinkWrap: shrinkWrap)
-      else
-        _header(context, tr('Up next'), items.isEmpty ? null : '${items.length}', trailing: autoplay),
+      if (controller.playingList == null) _header(context, tr('Up next'), items.isEmpty ? null : '${items.length}', trailing: autoplay),
       if (controller.playingList == null && items.isEmpty)
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
@@ -1221,6 +1218,7 @@ class _UpNext extends StatelessWidget {
     // Slivers, so a long list builds only the tiles on screen.
     return [
       SliverList.list(children: head),
+      if (controller.playingList != null) ...playingListSlivers(context, controller: controller, trailing: autoplay, shrinkWrap: shrinkWrap),
       if (controller.playingList == null && items.isNotEmpty) SliverList.builder(itemCount: items.length, itemBuilder: (context, i) => _tile(items[i], null)),
       if (related != null) ...[
         SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.only(top: 16), child: _header(context, tr('Related videos'), tr('Search by title')))),

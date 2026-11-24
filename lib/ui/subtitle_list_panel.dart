@@ -95,6 +95,22 @@ class _SubtitleListState extends State<SubtitleList> {
   final _rows = <int, (bool, Widget)>{};
   Object? _rowsFor;
   int _learningSeen = 0;
+  List<int>? _shown;
+  (List<PairedCue>, String)? _shownFor;
+
+  /// The lines that match the search, by index; null for all of them.
+  /// Worked out once for each list and search, not each time the playing
+  /// line moves.
+  List<int>? _shownOf(List<PairedCue> cues) {
+    if (_query.isEmpty) return null;
+    final key = _shownFor;
+    if (key != null && identical(key.$1, cues) && key.$2 == _query) return _shown;
+    _shownFor = (cues, _query);
+    return _shown = [
+      for (final (i, cue) in cues.indexed)
+        if (cue.cue.text.toLowerCase().contains(_query) || (cue.second?.toLowerCase().contains(_query) ?? false)) i,
+    ];
+  }
 
   /// [text] as words with pinyin a tap looks up, when it is Chinese and
   /// the learning pack's dictionary is there; otherwise plain.
@@ -405,10 +421,7 @@ class _SubtitleListState extends State<SubtitleList> {
           _rowsFor = rowsFor;
           _rows.clear();
         }
-        final shown = [
-          for (final (i, cue) in cues.indexed)
-            if (_query.isEmpty || cue.cue.text.toLowerCase().contains(_query) || (cue.second?.toLowerCase().contains(_query) ?? false)) i,
-        ];
+        final shown = _shownOf(cues);
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Padding(
             padding: EdgeInsetsDirectional.fromSTEB(16, 0, _bothOn ? 4 : 16, 8),
@@ -448,9 +461,9 @@ class _SubtitleListState extends State<SubtitleList> {
                 controller: _scroll,
                 // Room under the last line for the way back to the playing one.
                 padding: const EdgeInsets.only(bottom: 64),
-                itemCount: shown.length,
+                itemCount: shown?.length ?? cues.length,
                 itemBuilder: (context, k) {
-                  final i = shown[k];
+                  final i = shown == null ? k : shown[k];
                   final playing = i == _current;
                   if (_rows[i] case (final was, final row) when was == playing) return row;
                   final row = _row(cues, i, playing, colors);

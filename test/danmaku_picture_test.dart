@@ -49,5 +49,15 @@ void main() {
     final big = (await tester.runAsync(() => painter.draw(parts, osdHeight: 2160, paid: true)))!;
     addTearDown(big.free);
     expect(big.height, (52 * 1.25 * 2).ceil());
+    // Paid messages are gold (FFC838), stored blue first for libmpv.
+    final gold = big.pixels.asTypedList(big.width * big.height * 4);
+    var blueFirst = 0, redFirst = 0;
+    for (var i = 0; i < gold.length; i += 4) {
+      if (gold[i + 3] != 255) continue;
+      if (gold[i] < 100 && gold[i + 1] > 150 && gold[i + 2] > 230) blueFirst++;
+      if (gold[i] > 230 && gold[i + 1] > 150 && gold[i + 2] < 100) redFirst++;
+    }
+    expect(blueFirst, greaterThan(50));
+    expect(redFirst, 0);
   });
 }

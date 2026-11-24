@@ -43,6 +43,24 @@ void main() {
     expect(again.items.last.id, video(0).id);
   });
 
+  test('finds an entry by id after records, removals and duration fills', () async {
+    final store = await open();
+    for (var i = 0; i < 5; i++) {
+      await store.record(video(i));
+    }
+    expect(store.indexOf(video(4).id), 0);
+    expect(store.indexOf(video(0).id), 4);
+    await store.record(video(0));
+    expect(store.indexOf(video(0).id), 0);
+    expect(store.indexOf(video(4).id), 1);
+    await store.remove({video(4).id});
+    expect(store.indexOf(video(4).id), -1);
+    expect(store.indexOf(video(3).id), 1);
+    await store.fillDuration(video(3).id, 90);
+    expect(store.byId(video(3).id)?.duration, 90);
+    expect(store.byId('missing'), isNull);
+  });
+
   test('records close together are written by flush', () async {
     final store = await open();
     unawaited(store.record(video(1)));

@@ -399,7 +399,7 @@ mod imp {
         false
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(all(target_os = "linux", test))]
     pub fn children(parent: libc::pid_t) -> Vec<libc::pid_t> {
         Snapshot::take().children(parent)
     }

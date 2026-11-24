@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 
 import '../device.dart';
+import '../l10n/l10n.dart';
 import '../skins/skin.dart';
 import '../window_frame.dart';
 import 'app_icons.dart';
@@ -171,7 +172,7 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
         }
         // Seeing the desktop, the title glows as on Windows 7's glass.
         title = GlassPlate(surface: surface, child: title);
-        final minimize = _WindowButton(key: _minimize, bar: bar, icon: _Glyph.minimize, tooltip: MaterialLocalizations.of(context).collapsedHint, onPressed: WindowFrame.minimize);
+        final minimize = _WindowButton(key: _minimize, bar: bar, icon: _Glyph.minimize, label: tr('Minimize'), onPressed: WindowFrame.minimize);
         final maximize = ValueListenableBuilder(
           valueListenable: WindowFrame.maximized,
           builder: (context, maximized, _) => ValueListenableBuilder(
@@ -180,12 +181,13 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
               key: _maximize,
               bar: bar,
               icon: maximized ? _Glyph.restore : _Glyph.maximize,
+              label: maximized ? tr('Restore') : tr('Maximize'),
               onPressed: WindowFrame.toggleMaximize,
               forced: state,
             ),
           ),
         );
-        final close = _WindowButton(key: _close, bar: bar, icon: _Glyph.close, close: true, onPressed: WindowFrame.close);
+        final close = _WindowButton(key: _close, bar: bar, icon: _Glyph.close, label: tr('Close'), close: true, onPressed: WindowFrame.close);
         final gap = SizedBox(width: bar.buttonsLeft ? 7 : 2);
         // Pointing at any of them shows the signs on all three, as on the
         // desktops these buttons come from.
@@ -248,7 +250,9 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
         // On Windows the system moves the window from the caption itself.
         onPanStart: Platform.isWindows ? null : (_) => unawaited(WindowFrame.startDrag()),
         onDoubleTap: Platform.isWindows ? null : () => unawaited(WindowFrame.toggleMaximize()),
-        child: SizedBox(key: _self, height: height, child: SkinBox(surface: surface, child: row)),
+        // The buttons and title repaint in a layer of their own, not
+        // with the bar's surface under them.
+        child: SizedBox(key: _self, height: height, child: SkinBox(surface: surface, child: RepaintBoundary(child: row))),
       );
 }
 
@@ -277,7 +281,7 @@ abstract final class _AfterLayout {
 enum _Glyph { minimize, maximize, restore, close }
 
 class _WindowButton extends StatefulWidget {
-  const _WindowButton({super.key, required this.bar, required this.icon, required this.onPressed, this.close = false, this.forced, this.tooltip});
+  const _WindowButton({super.key, required this.bar, required this.icon, required this.label, required this.onPressed, this.close = false, this.forced});
   /// Whether the pointer is over the window buttons, any of them.
   static final group = ValueNotifier(false);
 
@@ -287,7 +291,8 @@ class _WindowButton extends StatefulWidget {
   final bool close;
   /// The state Windows reports for the maximise button, which it owns.
   final WindowButtonState? forced;
-  final String? tooltip;
+  /// What the button does, for its tooltip and screen readers.
+  final String label;
 
   @override
   State<_WindowButton> createState() => _WindowButtonState();
@@ -327,7 +332,7 @@ class _WindowButtonState extends State<_WindowButton> {
     };
     final surface = base?.forState(hovered: hovered, pressed: pressed);
     final size = bar.buttonSize;
-    return MouseRegion(
+    final button = MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() {
         _hover = false;
@@ -355,6 +360,13 @@ class _WindowButtonState extends State<_WindowButton> {
           ),
         ),
       ),
+    );
+    return Semantics(
+      button: true,
+      label: widget.label,
+      onTap: () => unawaited(widget.onPressed()),
+      excludeSemantics: true,
+      child: Tooltip(message: widget.label, excludeFromSemantics: true, child: button),
     );
   }
 }
@@ -575,7 +587,8 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
     final menus = widget.menus;
     Widget content = SkinBox(
       surface: widget.embedded ? null : bar.surface,
-      child: SizedBox(
+      // The clock and menu highlights repaint apart from the bar's surface.
+      child: RepaintBoundary(child: SizedBox(
         height: bar.height,
         child: Row(children: [
           Expanded(child: MenuBar(
@@ -610,7 +623,7 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
           )),
           if (widget.clock) Padding(padding: const EdgeInsetsDirectional.only(end: 10), child: GlassPlate(surface: bar.surface, child: _Clock(color: bar.text))),
         ]),
-      ),
+      )),
     );
     // Along the top of the window the empty part of the bar moves the
     // window, as the title bar does. Windows does that from the caption.

@@ -718,6 +718,8 @@
   "Back {0} s": "Reculer de {0} s",
   "Always on (including auto-generated)": "Toujours activés (y compris générés automatiquement)",
   "Restore": "Restaurer",
+  "Minimize": "Réduire",
+  "Maximize": "Agrandir",
   "Restore all player defaults": "Rétablir tous les paramètres par défaut du lecteur",
   "Recommend again": "Recommander de nouveau",
   "Recommend this channel again": "Recommander de nouveau cette chaîne",

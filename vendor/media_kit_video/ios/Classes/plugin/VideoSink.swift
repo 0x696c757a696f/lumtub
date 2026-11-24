@@ -218,7 +218,7 @@ final class VideoSink: @unchecked Sendable {
       appOverlay = content
       appCanvas = canvas
       // Shown at once, also while paused.
-      if compositing { show() }
+      if compositing { _ = show() }
     }
   }
 

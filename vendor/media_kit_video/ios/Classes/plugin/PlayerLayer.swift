@@ -9,6 +9,7 @@
 
 import AVFoundation
 import AVKit
+import CoreText
 import Flutter
 import UIKit
 
@@ -138,6 +139,8 @@ final class PlayerLayer: NSObject {
     let outline: CGFloat
     let bold: Bool
     let box: UIColor?
+    /// The line's language (BCP 47), for its character forms.
+    let language: String
   }
 
   /// Drawn here with Core Text, not by Flutter: iOS gives a backgrounded
@@ -158,6 +161,21 @@ final class PlayerLayer: NSObject {
     }
   }
 
+  /// The fonts libass draws with (the app's subtitle fonts and its
+  /// Chinese face), made known to Core Text once so the window shows the
+  /// same faces.
+  private static let appFontsRegistered: Void = {
+    let app = Bundle.main.bundleURL
+    var urls = [app.appendingPathComponent("Frameworks/App.framework/flutter_assets/assets/fonts/NotoSansSC-Regular.ttf")]
+    let folder = app.appendingPathComponent("SubtitleFonts")
+    let names = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
+    urls += names.filter { $0.hasSuffix(".ttf") || $0.hasSuffix(".otf") }.map { folder.appendingPathComponent($0) }
+    let existing = urls.filter { FileManager.default.fileExists(atPath: $0.path) }
+    if !existing.isEmpty {
+      CTFontManagerRegisterFontURLs(existing as CFArray, .process, false, nil)
+    }
+  }()
+
   private static func subtitleFont(_ family: String, size: CGFloat, bold: Bool) -> UIFont {
     var font = !family.isEmpty && !UIFont.fontNames(forFamilyName: family).isEmpty
       ? UIFont(descriptor: UIFontDescriptor(fontAttributes: [.family: family]), size: size)
@@ -170,6 +188,7 @@ final class PlayerLayer: NSObject {
 
   private static func drawSubtitles(_ lines: [AppSubtitle], canvas: CGSize, bottom: CGFloat, spacing: CGFloat) -> (image: CGImage, box: CGRect)? {
     guard canvas.width > 0, canvas.height > 0 else { return nil }
+    _ = appFontsRegistered
     let room = canvas.width * 0.9
     var laid = [(fill: NSAttributedString, stroke: NSAttributedString?, size: CGSize)]()
     for line in lines where !line.text.isEmpty {
@@ -184,6 +203,7 @@ final class PlayerLayer: NSObject {
         .paragraphStyle: paragraph,
       ]
       if let box = line.box { look[.backgroundColor] = box }
+      if !line.language.isEmpty { look[NSAttributedString.Key(kCTLanguageAttributeName as String)] = line.language }
       let fill = NSAttributedString(string: line.text, attributes: look)
       var stroke: NSAttributedString?
       if line.outline > 0 {

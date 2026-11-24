@@ -145,7 +145,7 @@ extension IosPipActions on AppController {
     final canvas = Size(720 * aspect.clamp(0.3, 4.0), 720);
     final unit = max(12.0, min(canvas.height, canvas.width * 0.75) * 0.0533) / 32;
     final outline = s.subtitleBackground ? 0.0 : LibassLook.outlineFor(s.subtitleBorder) * unit;
-    Map<String, Object?> line(String text, String font, double scale, int color, double opacity) => {
+    Map<String, Object?> line(String text, String font, double scale, int color, double opacity, String language) => {
           'text': text,
           'font': font,
           'size': 32 * scale * unit,
@@ -153,12 +153,13 @@ extension IosPipActions on AppController {
           'outline': outline,
           'bold': s.subtitleBold,
           'box': s.subtitleBackground ? (0.67 * opacity.clamp(0.0, 1.0) * 255).round() << 24 : null,
+          'language': language,
         };
     final sent = key.isEmpty
         ? const <Map<String, Object?>>[]
         : [
-            if (second.isNotEmpty) line(second, s.secondaryFont, s.secondaryScale, s.secondaryColor, s.secondaryOpacity),
-            if (main.isNotEmpty) line(main, s.subtitleFont, s.subtitleScale, s.subtitleColor, s.subtitleOpacity),
+            if (second.isNotEmpty) line(second, s.secondaryFont, s.secondaryScale, s.secondaryColor, s.secondaryOpacity, secondSubtitleLanguage),
+            if (main.isNotEmpty) line(main, s.subtitleFont, s.subtitleScale, s.subtitleColor, s.subtitleOpacity, mainSubtitleLanguage),
           ];
     unawaited(IosVideoLayer.setSubtitles(
       sent,

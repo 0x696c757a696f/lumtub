@@ -185,12 +185,16 @@ class AndroidSubtitleFonts {
   static Future<String?> prepareIos(String folder, {required String flutterFonts, required String bundled, Map<String, (File, String)> downloaded = const {}}) async {
     try {
       const sc = 'NotoSansSC-Regular.ttf';
-      if (!File('$flutterFonts/$sc').existsSync()) return null;
+      final hasSc = File('$flutterFonts/$sc').existsSync();
+      final names = Directory(bundled).existsSync() ? ([for (final f in Directory(bundled).listSync()) f.path.split(RegExp(r'[/\\]')).last]..sort()) : <String>[];
+      // Without the Chinese face the other scripts are still drawn by
+      // libass; Chinese, Japanese and Korean lines go to Flutter's view.
+      if (!hasSc && names.isEmpty) return null;
+      if (!hasSc) logWarn('No $sc in $flutterFonts; libass draws no Chinese, Japanese or Korean');
       final dir = Directory(folder);
       if (dir.existsSync()) dir.deleteSync(recursive: true);
       dir.createSync(recursive: true);
-      Link('$folder/$sc').createSync('$flutterFonts/$sc');
-      final names = Directory(bundled).existsSync() ? ([for (final f in Directory(bundled).listSync()) f.path.split(RegExp(r'[/\\]')).last]..sort()) : <String>[];
+      if (hasSc) Link('$folder/$sc').createSync('$flutterFonts/$sc');
       families.clear();
       latin = null;
       var korean = false;
@@ -206,7 +210,7 @@ class AndroidSubtitleFonts {
       for (final (file, _) in downloaded.values) {
         Link('$folder/${file.uri.pathSegments.last}').createSync(file.path);
       }
-      cjk = true;
+      cjk = hasSc;
       cjkFamilies = {
         'ja': downloaded['ja']?.$2 ?? 'Noto Sans SC',
         'ko': downloaded['ko']?.$2 ?? (korean ? 'Noto Sans KR' : 'Noto Sans SC'),
@@ -404,7 +408,8 @@ class AndroidSubtitleFonts {
     final rest = _letter.hasMatch(other);
     if (needed.length > 1 || (needed.length == 1 && rest)) return null;
     if (needed.length == 1) return families[needed.first];
-    if (!cjk) return null;
+    // Without the CJK font only Latin, Greek and Cyrillic lines have one.
+    if (!cjk) return _cjkText.hasMatch(text) || _kana.hasMatch(text) || _hangul.hasMatch(text) ? null : latin;
     // A letter of a script no font here has (Tibetan, Mongolian...).
     if (_letter.hasMatch(other.replaceAll(_drawnLetters, ''))) return null;
     // Polish, Czech, Vietnamese, Ukrainian and the like: the Latin font,

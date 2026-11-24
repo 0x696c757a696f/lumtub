@@ -97,7 +97,8 @@ void main() {
     AndroidSubtitleFonts.families['Tibetan'] = 'Noto Serif Tibetan';
     expect(AndroidSubtitleFonts.familyFor('བཀྲ་ཤིས་བདེ་ལེགས'), 'Noto Serif Tibetan');
     AndroidSubtitleFonts.cjk = false;
-    expect(AndroidSubtitleFonts.familyFor('hello'), isNull);
+    expect(AndroidSubtitleFonts.familyFor('你好'), isNull, reason: 'no CJK font');
+    expect(AndroidSubtitleFonts.familyFor('hello'), AndroidSubtitleFonts.latin, reason: 'Latin needs no CJK font');
   });
 
   test('the folder links the CJK font and the plain face of each script, nothing else', () async {

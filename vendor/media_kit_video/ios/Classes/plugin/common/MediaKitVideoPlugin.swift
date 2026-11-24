@@ -135,7 +135,8 @@ public class MediaKitVideoPlugin: NSObject, FlutterPlugin {
             color: color(line["color"]),
             outline: number(line["outline"]),
             bold: line["bold"] as? Bool ?? false,
-            box: line["box"] == nil || line["box"] is NSNull ? nil : color(line["box"]))
+            box: line["box"] == nil || line["box"] is NSNull ? nil : color(line["box"]),
+            language: line["language"] as? String ?? "")
         }
         layer.setAppSubtitles(
           lines,

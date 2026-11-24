@@ -1,7 +1,7 @@
 //! Tests that keep videos out of a list: the language a title reads as,
 //! bait titles, Shorts, and the channels of the block lists.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use serde::Deserialize;
 
@@ -439,6 +439,22 @@ pub fn is_latin(language: Language) -> bool {
     )
 }
 
+/// The languages of [LATIN_WORDS], as bits by their place there, that
+/// have [word] among their small words.
+fn small_word_languages(word: &str) -> u32 {
+    static BY_WORD: std::sync::LazyLock<HashMap<&'static str, u32>> =
+        std::sync::LazyLock::new(|| {
+            let mut by_word: HashMap<&'static str, u32> = HashMap::new();
+            for (at, (_, small)) in LATIN_WORDS.iter().enumerate() {
+                for word in *small {
+                    *by_word.entry(word).or_default() |= 1 << at;
+                }
+            }
+            by_word
+        });
+    BY_WORD.get(word).copied().unwrap_or(0)
+}
+
 /// Whether a Latin [title] read as [language] is surely in it: two of its
 /// small words, a letter only it writes, or a sure statistical reading of
 /// four words or more.
@@ -451,16 +467,15 @@ fn latin_sure(title: &str, language: Language) -> bool {
         .split(|c: char| !(c.is_alphabetic() || c == '\''))
         .filter(|w| !w.is_empty())
         .collect();
-    let small =
-        LATIN_WORDS
-            .iter()
-            .find(|(l, _)| *l == language)
-            .map_or(Vec::new(), |(_, small)| {
-                words
-                    .iter()
-                    .filter(|w| small.contains(w))
-                    .collect::<Vec<_>>()
-            });
+    let small = LATIN_WORDS
+        .iter()
+        .position(|(l, _)| *l == language)
+        .map_or(Vec::new(), |at| {
+            words
+                .iter()
+                .filter(|w| small_word_languages(w) & (1 << at) != 0)
+                .collect::<Vec<_>>()
+        });
     // Two small words, one of them longer than two letters: "o", "do",
     // "em", "no", "na" are words of many languages.
     if small.len() >= 2 && small.iter().any(|w| w.chars().count() > 2) {
@@ -577,10 +592,19 @@ fn read(title: &str) -> Language {
         .split(|c: char| !(c.is_alphabetic() || c == '\''))
         .filter(|w| !w.is_empty())
         .collect();
+    // How many of the words are small words of each language, from one
+    // lookup per word.
+    let mut counts = [0usize; LATIN_WORDS.len()];
+    for word in &words {
+        let mask = small_word_languages(word);
+        for (at, count) in counts.iter_mut().enumerate() {
+            *count += (mask >> at & 1) as usize;
+        }
+    }
     let mut best = Language::En;
     let mut best_score = 0.0;
-    for (language, small) in LATIN_WORDS {
-        let mut score = words.iter().filter(|w| small.contains(w)).count() as f64;
+    for (at, (language, _)) in LATIN_WORDS.into_iter().enumerate() {
+        let mut score = counts[at] as f64;
         if latin_letters(language, &lower) {
             score += 1.5;
         }
@@ -598,10 +622,8 @@ fn read(title: &str) -> Language {
     let score_of = |language: Language| {
         LATIN_WORDS
             .iter()
-            .find(|(l, _)| *l == language)
-            .map_or(0.0, |(_, small)| {
-                words.iter().filter(|w| small.contains(w)).count() as f64
-            })
+            .position(|(l, _)| *l == language)
+            .map_or(0.0, |at| counts[at] as f64)
     };
     if let Some(info) = latin_detector()
         .detect(title)
@@ -792,7 +814,7 @@ fn tagged_shorts(lower: &str) -> bool {
 #[serde(default)]
 pub struct Blocks {
     /// Names, or what a name starts with as a whole word, lower case.
-    channels: Vec<String>,
+    channels: HashSet<String>,
     /// Whole names, lower case.
     exact: HashSet<String>,
     /// @handles, lower case.
@@ -836,12 +858,19 @@ impl Blocks {
             }
         }
         let lower = channel.name.trim().to_lowercase();
-        !lower.is_empty()
-            && (self.exact.contains(&lower)
-                || self
-                    .channels
-                    .iter()
-                    .any(|word| name_starts_with(&lower, word)))
+        !lower.is_empty() && (self.exact.contains(&lower) || self.starts_listed(&lower))
+    }
+
+    /// Whether [name] starts with one of [Self::channels] as
+    /// [name_starts_with] has it: each of the name's own beginnings is
+    /// looked up, rather than every listed word tried against the name.
+    fn starts_listed(&self, name: &str) -> bool {
+        std::iter::once(0)
+            .chain(name.char_indices().map(|(i, c)| i + c.len_utf8()))
+            .any(|end| {
+                let word = &name[..end];
+                self.channels.contains(word) && name_starts_with(name, word)
+            })
     }
 }
 
@@ -1123,6 +1152,55 @@ mod tests {
         assert!(!short("", "fun #shortstory", Some(120), false));
         assert!(!short("", "fun #shorts", Some(200), false));
         assert!(!short("", "", None, false));
+    }
+
+    #[test]
+    fn small_word_lookup_agrees_with_the_lists() {
+        let every = LATIN_WORDS.iter().flat_map(|(_, small)| small.iter());
+        for word in every.chain(["xyz", "", "l'"].iter()) {
+            for (at, (_, small)) in LATIN_WORDS.iter().enumerate() {
+                assert_eq!(
+                    small_word_languages(word) & (1 << at) != 0,
+                    small.contains(word),
+                    "{word}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn prefix_lookup_matches_as_trying_every_prefix() {
+        let mut blocks = Blocks::default();
+        let mut names: Vec<String> = Vec::new();
+        for record in crate::lists::built_in().iter().flat_map(|l| &l.records) {
+            blocks
+                .channels
+                .extend(record.prefixes.iter().map(|p| p.to_lowercase()));
+            names.extend(record.names.iter().map(|n| n.to_lowercase()));
+            names.extend(record.prefixes.iter().map(|p| p.to_lowercase()));
+        }
+        assert!(blocks.channels.len() > 100, "{}", blocks.channels.len());
+        blocks.channels.insert(String::new());
+        let listed: Vec<String> = blocks.channels.iter().cloned().collect();
+        for word in &listed {
+            for tail in [
+                "", " news", "x", "1", "-tv", "新闻", "台", "é", ".", " ", "ab cd",
+            ] {
+                names.push(format!("{word}{tail}"));
+            }
+            let mut chars = word.chars();
+            chars.next_back();
+            names.push(chars.as_str().to_string());
+        }
+        names.extend(["ntd", "rtl", "rt documentary", "央视新闻", "-x", "a"].map(String::from));
+        let mut differ = 0;
+        for name in names.iter().filter(|n| !n.is_empty()) {
+            let old = listed.iter().any(|word| name_starts_with(name, word));
+            if old != blocks.starts_listed(name) {
+                differ += 1;
+            }
+        }
+        assert_eq!(differ, 0);
     }
 
     #[test]

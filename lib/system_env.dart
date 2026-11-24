@@ -8,6 +8,16 @@ import 'app_log.dart';
 typedef _SetEnvNative = Int32 Function(Pointer<Utf16>, Pointer<Utf16>);
 typedef _SetEnvDart = int Function(Pointer<Utf16>, Pointer<Utf16>);
 
+/// The full path of a program that ships with Windows, such as
+/// `System32\reg.exe`, under `%SystemRoot%`. A bare name would be looked
+/// for in the current folder first, where anyone could have put a copy.
+String windowsProgram(String inSystemRoot, {Map<String, String>? environment}) {
+  final root = (environment ?? Platform.environment)['SystemRoot']?.trim() ?? '';
+  final usable = RegExp(r'^[A-Za-z]:\\[^"<>|?*]*$').hasMatch(root) && !root.contains('..');
+  final base = usable ? root.replaceAll(RegExp(r'\\+$'), '') : r'C:\Windows';
+  return '$base\\$inSystemRoot';
+}
+
 /// Prepend tool paths to the CURRENT process environment.
 /// This allows mpv's built-in ytdl_hook.lua to discover yt-dlp.
 void addToPath(Iterable<String> directories) {

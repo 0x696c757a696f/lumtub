@@ -17,8 +17,21 @@ import 'libmpv_updates.dart';
 import 'native_core.dart';
 import 'native_http.dart';
 import 'process_runner.dart';
+import 'system_env.dart';
 import 'version_order.dart';
 import 'l10n/l10n.dart';
+
+/// The libmpv-2.dll entry of a `tar -tf` listing, when its path stays
+/// inside the folder it is unpacked to.
+String? libmpvMember(String listing) {
+  for (final name in listing.split(RegExp(r'\r?\n')).map((line) => line.trim())) {
+    final parts = name.split(RegExp(r'[\\/]'));
+    if (parts.last.toLowerCase() != 'libmpv-2.dll' || name.contains(':')) continue;
+    if (parts.any((part) => part.isEmpty || part == '.' || part == '..')) continue;
+    return name;
+  }
+  return null;
+}
 
 class ToolPaths {
   final String mpv;
@@ -619,7 +632,7 @@ class ToolManager {
       await partial.create(recursive: true);
       try {
         try {
-          await _extractZip(archive, partial);
+          await _extractLibmpv(archive, partial);
         } on ProcessException {
           // Windows before 11 23H2 has no 7z support in tar.exe; do not
           // download every new release only to fail again.
@@ -678,15 +691,21 @@ class ToolManager {
     return tag;
   }
 
-  Future<void> _extractZip(File archive, Directory into) async {
-    if (!Platform.isWindows) {
-      await extractZip(archive, into);
-      return;
+  Future<void> _extractZip(File archive, Directory into) => extractZip(archive, into);
+
+  /// Unpacks only libmpv-2.dll from the 7z [archive] with Windows' own
+  /// tar.exe, which reads 7z from Windows 11 23H2 on.
+  Future<void> _extractLibmpv(File archive, Directory into) async {
+    final tar = windowsProgram(r'System32\tar.exe');
+    Future<String> run(List<String> arguments) async {
+      final result = await Process.run(tar, arguments);
+      if (result.exitCode != 0) throw ProcessException(tar, arguments, result.stderr.toString(), result.exitCode);
+      return result.stdout.toString();
     }
-    final result = await Process.run('tar.exe', ['-xf', archive.path, '-C', into.path]);
-    if (result.exitCode != 0) {
-      throw ProcessException('tar.exe', ['-xf', archive.path, '-C', into.path], result.stderr.toString(), result.exitCode);
-    }
+
+    final member = libmpvMember(await run(['-tf', archive.path]));
+    if (member == null) return;
+    await run(['-xf', archive.path, '-C', into.path, '--', member]);
   }
 
   static String get _userAgent => Platform.isWindows ? 'Lumtub-Windows/0.1' : 'Lumtub-${Platform.operatingSystem}/0.1';

@@ -68,7 +68,7 @@ Future<void> copyImageToClipboard(File file) async {
   try {
     // The path (which holds the video's title) goes in by environment, never
     // into the command text: PowerShell also reads curly quotes as quotes.
-    await Process.run('powershell.exe', [
+    await Process.run(windowsProgram(r'System32\WindowsPowerShell\v1.0\powershell.exe'), [
       '-STA',
       '-NoProfile',
       '-NonInteractive',
@@ -83,5 +83,5 @@ Future<void> copyImageToClipboard(File file) async {
 /// Shows [file] selected in Explorer, or its folder in the file manager.
 Future<void> revealInFolder(File file) async {
   if (!Platform.isWindows) return openWithDesktop(file.parent.path);
-  await Process.start('explorer.exe', ['/select,${file.path}']);
+  await Process.start(windowsProgram('explorer.exe'), ['/select,${file.path}']);
 }

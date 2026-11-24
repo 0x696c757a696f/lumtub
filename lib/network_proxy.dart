@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
+import 'system_env.dart';
 
 /// Where Lumtub sends its network traffic: yt-dlp, libmpv's video streams
 /// and the app's own requests all go the same way.
@@ -187,12 +188,12 @@ class NetworkProxy {
     }
     try {
       const key = r'HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings';
-      final enabled = await Process.run('reg', ['query', key, '/v', 'ProxyEnable']).timeout(const Duration(seconds: 5));
+      final enabled = await Process.run(windowsProgram(r'System32\reg.exe'), ['query', key, '/v', 'ProxyEnable']).timeout(const Duration(seconds: 5));
       if (!RegExp(r'ProxyEnable\s+REG_DWORD\s+0x0*1\b').hasMatch(enabled.stdout.toString())) {
-        final script = await Process.run('reg', ['query', key, '/v', 'AutoConfigURL']).timeout(const Duration(seconds: 5));
+        final script = await Process.run(windowsProgram(r'System32\reg.exe'), ['query', key, '/v', 'AutoConfigURL']).timeout(const Duration(seconds: 5));
         return await pac(RegExp(r'AutoConfigURL\s+REG_SZ\s+(.+)').firstMatch(script.stdout.toString())?.group(1) ?? '');
       }
-      final server = await Process.run('reg', ['query', key, '/v', 'ProxyServer']).timeout(const Duration(seconds: 5));
+      final server = await Process.run(windowsProgram(r'System32\reg.exe'), ['query', key, '/v', 'ProxyServer']).timeout(const Duration(seconds: 5));
       final match = RegExp(r'ProxyServer\s+REG_SZ\s+(.+)').firstMatch(server.stdout.toString());
       return NetworkProxy(match == null ? null : parseWindows(match.group(1)!.trim()));
     } catch (_) {

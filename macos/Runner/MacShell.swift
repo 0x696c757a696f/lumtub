@@ -202,14 +202,14 @@ final class MacShell: NSObject, NSWindowDelegate {
   private func loadArtwork(_ address: String) {
     artworkAddress = address
     guard let url = URL(string: address), url.scheme == "https" else { return }
-    URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+    CappedDownload.start(url, limit: 8 << 20) { [weak self] data in
       guard let data, let image = NSImage(data: data) else { return }
       DispatchQueue.main.async {
         guard let self, self.artworkAddress == address, !self.info.isEmpty else { return }
         self.info[MPMediaItemPropertyArtwork] = MacShell.artwork(image)
         self.publish()
       }
-    }.resume()
+    }
   }
 
   /// Made outside the main queue's closures: MediaPlayer asks for the
@@ -315,9 +315,11 @@ final class MacShell: NSObject, NSWindowDelegate {
     let start = NSEvent.mouseLocation
     let frame = window.frame
     let ratio = window.contentAspectRatio
-    dragMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged, .leftMouseUp]) { [weak self] event in
+    // A new press also ends it: the release may have happened outside the
+    // app, where this monitor does not see it.
+    dragMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged, .leftMouseUp, .leftMouseDown]) { [weak self] event in
       guard let self, let window = self.window else { return event }
-      if event.type == .leftMouseUp {
+      if event.type == .leftMouseUp || event.type == .leftMouseDown {
         if let monitor = self.dragMonitor { NSEvent.removeMonitor(monitor) }
         self.dragMonitor = nil
         return event
@@ -398,6 +400,8 @@ final class MacShell: NSObject, NSWindowDelegate {
   }
 
   func windowDidResignKey(_ notification: Notification) {
+    if let monitor = dragMonitor { NSEvent.removeMonitor(monitor) }
+    dragMonitor = nil
     frameChannel.invokeMethod("active", arguments: false)
   }
 
@@ -405,5 +409,43 @@ final class MacShell: NSObject, NSWindowDelegate {
     guard closeToTray else { return true }
     sender.orderOut(nil)
     return false
+  }
+}
+
+/// Downloads at most [limit] bytes (a thumbnail for Now Playing);
+/// a larger answer is dropped instead of read into memory whole.
+private final class CappedDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable {
+  private let limit: Int
+  private let done: (Data?) -> Void
+  private var data = Data()
+
+  private init(limit: Int, done: @escaping (Data?) -> Void) {
+    self.limit = limit
+    self.done = done
+    super.init()
+  }
+
+  static func start(_ url: URL, limit: Int, done: @escaping (Data?) -> Void) {
+    // The session keeps its delegate until it is invalidated, when the
+    // download ends; its delegate queue runs one callback at a time.
+    let session = URLSession(configuration: .ephemeral, delegate: CappedDownload(limit: limit, done: done), delegateQueue: nil)
+    session.dataTask(with: url).resume()
+  }
+
+  func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse,
+                  completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+    completionHandler(response.expectedContentLength > Int64(limit) ? .cancel : .allow)
+  }
+
+  func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive chunk: Data) {
+    data.append(chunk)
+    if data.count > limit {
+      dataTask.cancel()
+    }
+  }
+
+  func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+    done(error == nil && data.count <= limit ? data : nil)
+    session.finishTasksAndInvalidate()
   }
 }

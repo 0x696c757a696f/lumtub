@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <set>
@@ -63,6 +64,10 @@ struct Shell {
   std::string icon_name = "lumtub";
   void* indicator = nullptr;
   GtkWidget* menu = nullptr;
+  // Whether a StatusNotifier host runs, kept up to date by a name watch
+  // instead of asking D-Bus and waiting for the answer.
+  bool tray_runs = false;
+  guint tray_watch = 0;
 
   GDBusConnection* bus = nullptr;
   guint bus_name = 0;
@@ -99,6 +104,12 @@ struct Shell {
   bool has_normal = false;
   int normal_x = 0, normal_y = 0, normal_width = 0, normal_height = 0;
   guint save_timer = 0;
+
+  // The last desktop glass asked for, set again when the window is shown:
+  // on Wayland a hidden window loses its surface and the blur with it.
+  bool glass_set = false;
+  bool glass_on = false;
+  bool glass_blur = false;
 };
 
 Shell shell;
@@ -157,13 +168,18 @@ bool LoadIndicator() {
   return true;
 }
 
+// Whether the window is there and shown; it is gone once destroyed.
+bool WindowVisible() { return shell.window != nullptr && gtk_widget_get_visible(GTK_WIDGET(shell.window)); }
+
 void ShowFromTray() {
+  if (shell.window == nullptr) return;
   if (shell.indicator != nullptr && !shell.close_to_tray && !shell.minimize_to_tray) shell.indicator_set_status(shell.indicator, kStatusPassive);
   gtk_widget_show(GTK_WIDGET(shell.window));
   gtk_window_present(shell.window);
 }
 
 void ExitFromTray() {
+  if (shell.window == nullptr) return;
   // The normal close path, so Dart saves progress and releases the player.
   shell.close_to_tray = false;
   shell.minimize_to_tray = false;
@@ -195,15 +211,14 @@ void BuildMenu() {
 
 // Whether a tray that shows StatusNotifier icons runs: GNOME has none
 // without an extension, and a hidden window would then be lost.
-bool TrayRuns() {
-  g_autoptr(GDBusConnection) bus = g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, nullptr);
-  if (bus == nullptr) return false;
-  g_autoptr(GVariant) answer = g_dbus_connection_call_sync(
-      bus, "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "NameHasOwner",
-      g_variant_new("(s)", "org.kde.StatusNotifierWatcher"), G_VARIANT_TYPE("(b)"), G_DBUS_CALL_FLAGS_NONE, 1000, nullptr, nullptr);
-  gboolean owned = FALSE;
-  if (answer != nullptr) g_variant_get(answer, "(b)", &owned);
-  return owned;
+bool TrayRuns() { return shell.tray_runs; }
+
+void WatchTray() {
+  if (shell.tray_watch != 0) return;
+  shell.tray_watch = g_bus_watch_name(
+      G_BUS_TYPE_SESSION, "org.kde.StatusNotifierWatcher", G_BUS_NAME_WATCHER_FLAGS_NONE,
+      +[](GDBusConnection*, const gchar*, const gchar*, gpointer) { shell.tray_runs = true; },
+      +[](GDBusConnection*, const gchar*, gpointer) { shell.tray_runs = false; }, nullptr, nullptr);
 }
 
 // Shows the tray icon; false when there is no tray to show it in.
@@ -225,7 +240,7 @@ bool ShowTrayIcon() {
 // Hides the window behind a tray icon; false when there is no tray to
 // bring it back from, and the window stays open.
 bool HideToTray() {
-  if (!ShowTrayIcon()) return false;
+  if (shell.window == nullptr || !ShowTrayIcon()) return false;
   gtk_widget_hide(GTK_WIDGET(shell.window));
   return true;
 }
@@ -305,6 +320,7 @@ gboolean OnDelete(GtkWidget*, GdkEvent*, gpointer) {
 // Lumtub's own title bar: its minimise button goes to the tray directly, as
 // Wayland would not tell the window it was minimised.
 void OnMinimizeButton(GtkButton*, gpointer) {
+  if (shell.window == nullptr) return;
   if (shell.minimize_to_tray && HideToTray()) return;
   gtk_window_iconify(shell.window);
 }
@@ -320,6 +336,7 @@ void HookMinimizeButtons(GtkWidget* widget, gpointer) {
 }
 
 void HookHeaderBar() {
+  if (shell.window == nullptr) return;
   GtkWidget* bar = gtk_window_get_titlebar(shell.window);
   if (bar != nullptr) HookMinimizeButtons(bar, nullptr);
 }
@@ -341,7 +358,7 @@ gboolean OnWindowState(GtkWidget*, GdkEventWindowState* event, gpointer) {
   const bool minimised = (event->changed_mask & GDK_WINDOW_STATE_ICONIFIED) && (event->new_window_state & GDK_WINDOW_STATE_ICONIFIED);
   if (minimised && shell.minimize_to_tray) {
     g_idle_add(+[](gpointer) -> gboolean {
-      if (shell.minimize_to_tray && gtk_widget_get_visible(GTK_WIDGET(shell.window))) HideToTray();
+      if (shell.minimize_to_tray && WindowVisible()) HideToTray();
       return G_SOURCE_REMOVE;
     }, nullptr);
   }
@@ -450,9 +467,9 @@ void CallMethod(GDBusConnection*, const gchar*, const gchar*, const gchar*, cons
     ShowFromTray();
   } else if (name == "Minimized") {
     // KWin's script reports a minimised window, which Wayland itself does not.
-    if (shell.minimize_to_tray && gtk_widget_get_visible(GTK_WIDGET(shell.window))) {
+    if (shell.minimize_to_tray && WindowVisible()) {
       g_idle_add(+[](gpointer) -> gboolean {
-        if (shell.minimize_to_tray && gtk_widget_get_visible(GTK_WIDGET(shell.window))) HideToTray();
+        if (shell.minimize_to_tray && WindowVisible()) HideToTray();
         return G_SOURCE_REMOVE;
       }, nullptr);
     }
@@ -563,6 +580,12 @@ double DoubleArg(FlValue* args, const char* key) {
   return 0;
 }
 
+// A window size in pixels; 0 when it is missing, not finite or too large.
+int SizeArg(FlValue* args, const char* key) {
+  const double value = DoubleArg(args, key);
+  return std::isfinite(value) && value >= 1 && value <= 16384 ? static_cast<int>(value + 0.5) : 0;
+}
+
 bool BoolValue(FlValue* value) { return value != nullptr && fl_value_get_type(value) == FL_VALUE_TYPE_BOOL && fl_value_get_bool(value); }
 
 // Keeps the window's ratio while it is resized; 0 lets it go.
@@ -583,7 +606,8 @@ void KeepAspect(double aspect) {
 
 void EnterPip(double aspect, int width, int height) {
   GtkWindow* window = shell.window;
-  if (window == nullptr || shell.pip) return;
+  if (window == nullptr || shell.pip || width <= 0 || height <= 0) return;
+  if (!std::isfinite(aspect)) aspect = 0;
   shell.pip = true;
   shell.was_maximized = gtk_window_is_maximized(window);
   // Unmaximizing takes effect later; the size read now would still be the
@@ -628,7 +652,7 @@ void ExitPip(bool keep_on_top) {
 }
 
 void SetPipAspect(double aspect) {
-  if (shell.window == nullptr || !shell.pip || aspect <= 0) return;
+  if (shell.window == nullptr || !shell.pip || !(aspect > 0) || !std::isfinite(aspect)) return;
   int width = 0, height = 0;
   gtk_window_get_size(shell.window, &width, &height);
   KeepAspect(aspect);
@@ -670,7 +694,7 @@ void SetKeepAwake(bool on) {
 // are Flutter's, which asks for moves and resizes below.
 void SetCustomFrame(bool on) {
   shell.custom_frame = on;
-  if (shell.pip) return;
+  if (shell.pip || shell.window == nullptr) return;
   GtkWidget* bar = gtk_window_get_titlebar(shell.window);
   if (bar != nullptr) gtk_widget_set_visible(bar, !on);
   gtk_window_set_decorated(shell.window, !on);
@@ -732,7 +756,7 @@ gboolean WatchHiddenPointer(gpointer) {
 // bottom in logical pixels of Flutter's view), until it moves.
 void HidePointer(FlValue* area) {
   if (area == nullptr || fl_value_get_type(area) != FL_VALUE_TYPE_LIST || fl_value_get_length(area) != 4) return;
-  if (shell.view == nullptr || shell.pointer_watch != 0 || !gtk_window_is_active(shell.window)) return;
+  if (shell.view == nullptr || shell.window == nullptr || shell.pointer_watch != 0 || !gtk_window_is_active(shell.window)) return;
   double box[4];
   for (size_t i = 0; i < 4; ++i) {
     FlValue* item = fl_value_get_list_value(area, i);
@@ -852,6 +876,10 @@ struct WaylandBlur {
   struct wl_proxy* compositor = nullptr;
   struct wl_proxy* effects = nullptr;
   struct wl_proxy* effect = nullptr;
+  // The surface |effect| belongs to. GTK destroys a window's wl_surface
+  // when it is hidden and makes a new one when it is shown again; using the
+  // old effect then is a protocol error that ends the connection.
+  struct wl_surface* effect_surface = nullptr;
   struct wl_proxy* kde = nullptr;
   struct wl_proxy* kde_blur = nullptr;
 };
@@ -903,8 +931,13 @@ bool SetWaylandBlur(GdkWindow* surface, bool on) {
   }
   if (wayland_blur.effects != nullptr && wayland_blur.compositor != nullptr) {
     const uint32_t version = wl.version(wayland_blur.effects);
+    if (wayland_blur.effect != nullptr && wayland_blur.effect_surface != wl_surface) {
+      wl.marshal(wayland_blur.effect, 0 /* destroy */, nullptr, wl.version(wayland_blur.effect), WL_MARSHAL_FLAG_DESTROY);
+      wayland_blur.effect = nullptr;
+    }
     if (wayland_blur.effect == nullptr) {
       wayland_blur.effect = wl.marshal(wayland_blur.effects, 1 /* get_background_effect */, &kEffectInterface, version, 0, nullptr, wl_surface);
+      wayland_blur.effect_surface = wl_surface;
     }
     struct wl_proxy* region = nullptr;
     if (on) {
@@ -942,6 +975,9 @@ bool SetWaylandBlur(GdkWindow* surface, bool on) {
 // compositor, and with the alpha visual chosen at start
 // (linux_shell_use_alpha_visual). KWin blurs it, on X11 and Wayland.
 FlValue* SetDesktopGlass(bool on, bool blur) {
+  shell.glass_set = true;
+  shell.glass_on = on;
+  shell.glass_blur = blur;
   GtkWidget* window = GTK_WIDGET(shell.window);
   GdkScreen* screen = gtk_widget_get_screen(window);
   const bool possible = shell.view != nullptr && gdk_screen_is_composited(screen) &&
@@ -1049,7 +1085,7 @@ void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
     shell.exit_label = StringArg(args, "exit");
     if (shell.indicator != nullptr) {
       BuildMenu();
-      if (!shell.close_to_tray && !shell.minimize_to_tray && !gtk_widget_get_visible(GTK_WIDGET(shell.window))) ShowFromTray();
+      if (!shell.close_to_tray && !shell.minimize_to_tray && shell.window != nullptr && !WindowVisible()) ShowFromTray();
       if (!shell.close_to_tray && !shell.minimize_to_tray) shell.indicator_set_status(shell.indicator, kStatusPassive);
     }
     // With either tray option on, the icon stays while the window is open too.
@@ -1094,7 +1130,7 @@ void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
     shell.above = BoolValue(args);
     if (shell.window != nullptr) gtk_window_set_keep_above(shell.window, shell.above);
   } else if (method == "enterPip") {
-    EnterPip(DoubleArg(args, "aspect"), static_cast<int>(DoubleArg(args, "width") + 0.5), static_cast<int>(DoubleArg(args, "height") + 0.5));
+    EnterPip(DoubleArg(args, "aspect"), SizeArg(args, "width"), SizeArg(args, "height"));
   } else if (method == "exitPip") {
     ExitPip(BoolValue(args));
   } else if (method == "setPipAspect") {
@@ -1122,7 +1158,31 @@ void linux_shell_attach(GtkWindow* window) {
   g_signal_connect(window, "delete-event", G_CALLBACK(OnDelete), nullptr);
   g_signal_connect(window, "window-state-event", G_CALLBACK(OnWindowState), nullptr);
   g_signal_connect(window, "configure-event", G_CALLBACK(OnConfigure), nullptr);
-  g_signal_connect(window, "map", G_CALLBACK(+[](GtkWidget*, gpointer) { HookHeaderBar(); }), nullptr);
+  g_signal_connect(window, "map", G_CALLBACK(+[](GtkWidget*, gpointer) {
+    HookHeaderBar();
+    if (shell.glass_set) {
+      g_idle_add(+[](gpointer) -> gboolean {
+        if (shell.window != nullptr) fl_value_unref(SetDesktopGlass(shell.glass_on, shell.glass_blur));
+        return G_SOURCE_REMOVE;
+      }, nullptr);
+    }
+  }), nullptr);
+  // Nothing may reach the window, or the view inside it, once it is gone:
+  // MPRIS, the tray and timers can still run while the app shuts down.
+  g_signal_connect(window, "destroy", G_CALLBACK(+[](GtkWidget*, gpointer) {
+    if (shell.save_timer != 0) {
+      g_source_remove(shell.save_timer);
+      shell.save_timer = 0;
+    }
+    if (shell.pointer_watch != 0) {
+      g_source_remove(shell.pointer_watch);
+      shell.pointer_watch = 0;
+    }
+    g_clear_object(&shell.pointer_before);
+    shell.window = nullptr;
+    shell.view = nullptr;
+  }), nullptr);
+  WatchTray();
   gtk_window_set_icon_from_file(window, IconPath().c_str(), nullptr);
   StartMpris();
 }

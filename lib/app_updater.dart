@@ -137,8 +137,13 @@ class AppUpdater extends ChangeNotifier {
     if (!Platform.isMacOS) return null;
     final app = File(Platform.resolvedExecutable).parent.parent.parent.path;
     if (!app.endsWith('.app') || app.startsWith('/Volumes/')) return null;
-    return canReplace(app) ? app : null;
+    return _canReplace(app) ? app : null;
   }
+
+  /// [canReplace], asked once a run: it writes a file, and the update bar
+  /// asks on every rebuild.
+  static final _replaceable = <String, bool>{};
+  static bool _canReplace(String app) => _replaceable.putIfAbsent(app, () => canReplace(app));
 
   /// The AppImage file this Linux build runs from, which an update replaces,
   /// when Lumtub may write the folder it is in: one a package manager put
@@ -146,7 +151,7 @@ class AppUpdater extends ChangeNotifier {
   static String? get appImage {
     if (!Platform.isLinux) return null;
     final path = Platform.environment['APPIMAGE'] ?? '';
-    return path.isEmpty || !canReplace(path) ? null : path;
+    return path.isEmpty || !_canReplace(path) ? null : path;
   }
 
   /// Checks now and then every six hours, downloading what it finds when
@@ -465,9 +470,9 @@ class AppUpdater extends ChangeNotifier {
   /// Checks the package against the `.sig` saved at download once more,
   /// right before it is installed, in case the file changed on disk since.
   /// Deletes it and returns false when it no longer holds.
-  Future<bool> _recheck(File file) async {
+  Future<bool> _recheck(File file, {File? copy}) async {
     final name = _nameOf(file);
-    final sigPath = '${file.path}.sig', path = file.path, version = readyVersion ?? available?.version, current = _current, verify = _verifier;
+    final sigPath = '${file.path}.sig', path = (copy ?? file).path, version = readyVersion ?? available?.version, current = _current, verify = _verifier;
     String? error;
     try {
       error = await File(sigPath).exists() ? await Isolate.run(() => verify(file: path, name: name, signature: sigPath, version: version, current: current)) : 'The update signature is missing';
@@ -504,12 +509,12 @@ class AppUpdater extends ChangeNotifier {
       final image = appImage;
       final app = macApp;
       if (app != null) {
-        await replaceMacApp(file, app);
+        await replaceMacApp(file, app, check: (copy) => _recheck(file, copy: copy));
         logInfo('Installed Lumtub ${readyVersion ?? available?.version ?? ''} to $app');
         await AppLog.current?.flush();
         if (relaunch) await relaunchAfterExit(app, pid, open: true);
       } else if (image != null) {
-        await replaceAppImage(file, image);
+        await replaceAppImage(file, image, check: (copy) => _recheck(file, copy: copy));
         logInfo('Installed Lumtub ${readyVersion ?? available?.version ?? ''} to $image');
         await AppLog.current?.flush();
         if (relaunch) await relaunchAfterExit(image, pid);
@@ -538,6 +543,9 @@ class AppUpdater extends ChangeNotifier {
         logInfo('Installing Lumtub ${readyVersion ?? available?.version ?? ''} after exit${result['elevated'] == true ? ' as administrator' : ''}');
         await AppLog.current?.flush();
       } else {
+        // The portable ZIP is unpacked by the script after Lumtub has
+        // exited, so no handle can be held until then; the folder it is in
+        // is the user's own, as is the folder it unpacks into.
         final script = File('${_directory.path}${Platform.pathSeparator}install-update.ps1');
         final text = updateScript(package: file.path, processId: pid, executable: executable, portable: true, relaunch: relaunch);
         if (text == null) return false;
@@ -562,7 +570,8 @@ class AppUpdater extends ChangeNotifier {
   }
 
   /// Hands the APK to Android's installer, which asks the user and then
-  /// replaces the running app. The file stays ready in case they say no.
+  /// replaces the running app; the installer checks the APK's own
+  /// signature against the installed app's as it reads it. The file stays ready in case they say no.
   Future<bool> _installApk(File file) async {
     try {
       await const MethodChannel('lumtub/windows_shell').invokeMethod<void>('installApk', file.path);
@@ -634,14 +643,16 @@ class AppUpdater extends ChangeNotifier {
 
 /// Puts the verified AppImage [update] in place of [image]. The running
 /// program keeps the old file open, so it is replaced by a rename on the
-/// same file system, never written over.
-Future<void> replaceAppImage(File update, String image) async {
+/// same file system, never written over. The copy is what [check]
+/// verifies, the file that is then put in place.
+Future<void> replaceAppImage(File update, String image, {Future<bool> Function(File copy)? check}) async {
   final next = File('$image.update');
   await update.copy(next.path);
   try {
     setFileMode(next.path, executableMode);
+    if (check != null && !await check(next)) throw StateError('The update failed its check');
   } catch (_) {
-    await next.delete();
+    if (await next.exists()) await next.delete();
     rethrow;
   }
   await next.rename(image);
@@ -673,9 +684,12 @@ bool canReplace(String app) {
 /// bundle [app]. The new bundle is copied next to the old one first and
 /// swapped in by renames; the running program keeps its open files.
 /// Lumtub downloads the image itself, so it carries no quarantine mark and
-/// opens without Gatekeeper's first-launch check.
-Future<void> replaceMacApp(File update, String app) async {
+/// opens without Gatekeeper's first-launch check. The image is copied into
+/// a private folder first, and that copy is what [check] verifies and
+/// what is opened.
+Future<void> replaceMacApp(File update, String app, {Future<bool> Function(File copy)? check}) async {
   final mount = await Directory.systemTemp.createTemp('lumtub-update-');
+  final held = await Directory.systemTemp.createTemp('lumtub-update-image-');
   final next = '$app.update';
   final old = '$app.old';
   Future<void> run(String program, List<String> arguments) async {
@@ -684,7 +698,9 @@ Future<void> replaceMacApp(File update, String app) async {
   }
 
   try {
-    await run('/usr/bin/hdiutil', ['attach', '-nobrowse', '-readonly', '-noautoopen', '-mountpoint', mount.path, update.path]);
+    final image = await update.copy('${held.path}/update.dmg');
+    if (check != null && !await check(image)) throw StateError('The update failed its check');
+    await run('/usr/bin/hdiutil', ['attach', '-nobrowse', '-readonly', '-noautoopen', '-mountpoint', mount.path, image.path]);
     try {
       final bundles = mount.listSync().where((e) => e.path.endsWith('.app')).toList();
       if (bundles.length != 1) throw StateError('The disk image holds ${bundles.length} apps');
@@ -709,6 +725,11 @@ Future<void> replaceMacApp(File update, String app) async {
       await mount.delete();
     } catch (e) {
       logDebug(() => 'Could not remove the update mount folder: $e');
+    }
+    try {
+      await held.delete(recursive: true);
+    } catch (e) {
+      logDebug(() => 'Could not remove the copied update image: $e');
     }
   }
 }

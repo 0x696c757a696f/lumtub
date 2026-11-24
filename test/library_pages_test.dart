@@ -10,6 +10,8 @@ import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app/library_controller.dart';
 import 'package:lumtub/app/video_list_loader.dart';
 import 'package:lumtub/library_store.dart';
+import 'package:lumtub/list_order.dart';
+import 'package:lumtub/ui/app_icons.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/ui/pages/channel_page.dart';
 import 'package:lumtub/ui/pages/library_pages.dart';
@@ -187,6 +189,130 @@ void main() {
     await tester.drag(find.byType(CustomScrollView).first, const Offset(0, -600));
     await tester.pump();
     expect(tester.getTopLeft(tab).dy, inInclusiveRange(0, 52));
+    expect(tester.takeException(), isNull);
+    unawaited(library.flush());
+  });
+
+  testWidgets('groups can be dragged into order or sorted by name', (tester) async {
+    library.toggleFollow(channel);
+    for (final name in ['Music', 'Learning', 'News']) {
+      library.addGroup(name, {channel.id});
+    }
+    await pump(tester, SubscriptionsPage(controller: controller));
+    double chipX(String name) => tester.getTopLeft(find.text('$name · 1')).dx;
+    expect(chipX('Music'), lessThan(chipX('Learning')));
+
+    await tester.tap(find.text('Manage groups'));
+    await tester.pumpAndSettle();
+    // Drag Music below News.
+    final handle = find.byIcon(AppIcons.dotsSixVertical).first;
+    final gesture = await tester.startGesture(tester.getCenter(handle));
+    await tester.pump(const Duration(milliseconds: 100));
+    for (var i = 0; i < 12; i++) {
+      await gesture.moveBy(const Offset(0, 12));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect([for (final g in library.channelGroups) g.name], ['Learning', 'News', 'Music']);
+    expect(controller.preferences.groupOrder, GroupOrder.manual);
+
+    await tester.tap(find.byTooltip('Group order'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Name').last);
+    await tester.pumpAndSettle();
+    expect(controller.preferences.groupOrder, GroupOrder.name);
+    // Sorting by name shows the groups that way and leaves the dragged
+    // order stored for later.
+    expect([for (final g in controller.orderedGroups) g.name], ['Learning', 'Music', 'News']);
+    expect([for (final g in library.channelGroups) g.name], ['Learning', 'News', 'Music']);
+    expect(tester.takeException(), isNull);
+    unawaited(library.flush());
+  });
+
+  testWidgets('channels on the subscriptions page follow the order picked', (tester) async {
+    for (final name in ['Banana', 'apple', 'Cherry']) {
+      library.toggleFollow(ChannelRef('UC${name.toLowerCase().padRight(22, 'x')}', name));
+    }
+    await pump(tester, SubscriptionsPage(controller: controller), width: 900);
+    await tester.tap(find.byTooltip('Channel order'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Name').last);
+    await tester.pumpAndSettle();
+    expect(controller.preferences.channelOrder, ChannelOrder.name);
+    await pump(tester, SubscriptionsPage(controller: controller), width: 900);
+    double x(String name) => tester.getTopLeft(find.text(name).first).dx;
+    expect(x('apple'), lessThan(x('Banana')));
+    expect(x('Banana'), lessThan(x('Cherry')));
+    expect(tester.takeException(), isNull);
+    unawaited(library.flush());
+  });
+
+  testWidgets('a playlist sorts its videos, turns around and takes a dragged order', (tester) async {
+    final playlist = library.createPlaylist('周末歌单');
+    for (final (i, length) in [30, 300, 120].indexed) {
+      library.addToPlaylist(playlist, VideoItem(id: 'video${i}xxxxx', title: '视频 $i', channel: 'Rick Astley', url: 'https://www.youtube.com/watch?v=video${i}xxxxx', duration: length, channelId: channel.id));
+    }
+    controller.openPlaylistId = playlist.id;
+    await pump(tester, PlaylistDetailPage(controller: controller));
+    double y(String title) {
+      final at = tester.getTopLeft(find.text(title));
+      return at.dy * 10000 + at.dx;
+    }
+    expect(y('视频 0'), lessThan(y('视频 1')));
+
+    await tester.tap(find.byTooltip('Video order'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Length'));
+    await tester.pumpAndSettle();
+    await pump(tester, PlaylistDetailPage(controller: controller));
+    expect(y('视频 1'), lessThan(y('视频 2')));
+    expect(y('视频 2'), lessThan(y('视频 0')));
+
+    await tester.tap(find.byTooltip('Video order'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reverse order'));
+    await tester.pumpAndSettle();
+    await pump(tester, PlaylistDetailPage(controller: controller));
+    expect(y('视频 0'), lessThan(y('视频 2')));
+
+    await tester.tap(find.byTooltip('Video order'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Arrange by dragging…'));
+    await tester.pumpAndSettle();
+    // Shown: 0, 2, 1. Move 1 to the top and save.
+    await tester.tap(find.byTooltip('Move to top').last);
+    await tester.pump();
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect([for (final v in playlist.items) v.title], ['视频 1', '视频 0', '视频 2']);
+    expect(controller.videoOrder(playlist.id), VideoOrder.added);
+    expect(controller.isReversed(playlist.id), isFalse);
+    expect(tester.takeException(), isNull);
+    unawaited(library.flush());
+  });
+
+  testWidgets('playlists can be sorted by name or dragged into order', (tester) async {
+    for (final name in ['b', 'A', 'c']) {
+      library.createPlaylist(name);
+    }
+    await pump(tester, PlaylistsPage(controller: controller));
+    await tester.tap(find.byTooltip('Playlist order'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Name').last);
+    await tester.pumpAndSettle();
+    expect([for (final p in controller.orderedPlaylists) p.name], ['A', 'b', 'c']);
+
+    await tester.tap(find.byTooltip('Playlist order'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Arrange by dragging…'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Move to top').last);
+    await tester.pump();
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect([for (final p in library.playlists) p.name], ['c', 'A', 'b']);
+    expect(controller.preferences.playlistOrder, PlaylistOrder.manual);
     expect(tester.takeException(), isNull);
     unawaited(library.flush());
   });

@@ -750,14 +750,14 @@ class FollowButton extends StatelessWidget {
       IconButton.filledTonal(
         tooltip: tr('Subscription groups'),
         icon: Icon(AppIcons.folder),
-        onPressed: () => unawaited(showChannelGroups(context, library, channel)),
+        onPressed: () => unawaited(showChannelGroups(context, controller, library, channel)),
       ),
     ]);
   }
 }
 
 /// Ticks for the subscription groups [channel] is in, and a new group.
-Future<void> showChannelGroups(BuildContext context, LibraryController library, ChannelRef channel) => showDialog<void>(
+Future<void> showChannelGroups(BuildContext context, AppController controller, LibraryController library, ChannelRef channel) => showDialog<void>(
       context: context,
       builder: (context) => ListenableBuilder(
         listenable: library,
@@ -768,7 +768,7 @@ Future<void> showChannelGroups(BuildContext context, LibraryController library, 
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Flexible(
                 child: ListView(shrinkWrap: true, children: [
-                  for (final group in library.channelGroups)
+                  for (final group in controller.orderedGroups)
                     CheckboxListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Text tabs that show every label whole whenever they can: tabs sharing
 /// the width when the widest label fits its share, else tabs as wide as

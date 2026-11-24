@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart' show Color, PaintingBinding, Size;
 import 'package:flutter/services.dart' show MethodChannel, rootBundle;
 import 'package:flutter/widgets.dart' show WidgetsBinding;
-import 'package:flutter/material.dart' show ThemeMode;
+import 'package:material_ui/material_ui.dart' show ThemeMode;
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';

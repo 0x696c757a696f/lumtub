@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A skin: a whole look for the window, read from a `skin.jsonc` file.
 /// skins/README.md describes every field; skins/template/skin.jsonc is a

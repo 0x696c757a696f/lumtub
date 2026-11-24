@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/live_chat_composer.dart';
 import 'package:lumtub/ui/emoji_picker.dart';
+import 'tooltip_finder.dart';
 
 void main() {
   test('groups split into whole emoji in their emoji form', () {
@@ -30,8 +31,8 @@ void main() {
     await tester.tap(find.byType(IconButton));
     await tester.pumpAndSettle();
     await tester.tap(find.text('😂'));
-    await tester.tap(find.byTooltip(':_wave:'));
-    await tester.tap(find.byTooltip(':_vip: (for members)'));
+    await tester.tap(byTooltip(':_wave:'));
+    await tester.tap(byTooltip(':_vip: (for members)'));
     await tester.pump();
     expect(field.text, '😂:_wave:');
   });

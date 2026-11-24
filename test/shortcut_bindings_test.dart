@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
@@ -9,6 +9,7 @@ import 'package:lumtub/right_click.dart';
 import 'package:lumtub/shortcut_bindings.dart';
 import 'package:lumtub/ui/player_shortcuts.dart';
 import 'package:lumtub/ui/shortcut_settings.dart';
+import 'tooltip_finder.dart';
 
 void main() {
   const bracketLeft = KeyCombo(LogicalKeyboardKey.bracketLeft);
@@ -105,7 +106,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     final row = find.ancestor(of: find.text('Back 5 s'), matching: find.byType(Row)).first;
-    await tester.tap(find.descendant(of: row, matching: find.byTooltip('Add a key')));
+    await tester.tap(find.descendant(of: row, matching: byTooltip('Add a key')));
     await tester.pumpAndSettle();
     expect(find.text('Press a key'), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.digit3);

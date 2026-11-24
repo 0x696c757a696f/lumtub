@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'dart:ui' show PointMode;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'scene_props.dart';
 import 'skin_paint.dart' show noiseShader;

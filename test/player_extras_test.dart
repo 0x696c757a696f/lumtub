@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
@@ -24,6 +24,7 @@ import 'package:lumtub/widgets/video_progress_bar.dart';
 import 'package:lumtub/wheel_gesture.dart';
 
 import 'player_controls_test.dart' show FakePlayer;
+import 'tooltip_finder.dart';
 
 Map<String, dynamic> _board(String id, int width, {double fps = 0.5, List<num> durations = const [50, 50, 20]}) => {
       'format_id': id,
@@ -290,12 +291,12 @@ void main() {
     testWidgets('T toggles theater mode and the bottom bar has its button', (tester) async {
       addTearDown(() => theaterMode.value = false);
       await pump(tester);
-      expect(find.byTooltip('Theater mode (T)'), findsOneWidget);
+      expect(byTooltip('Theater mode (T)'), findsOneWidget);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyT);
       await tester.pump();
       expect(theaterMode.value, isTrue);
-      expect(find.byTooltip('Exit theater mode (T)'), findsOneWidget);
-      await tester.tap(find.byTooltip('Exit theater mode (T)'));
+      expect(byTooltip('Exit theater mode (T)'), findsOneWidget);
+      await tester.tap(byTooltip('Exit theater mode (T)'));
       await tester.pump();
       expect(theaterMode.value, isFalse);
     });
@@ -308,15 +309,15 @@ void main() {
       });
       theaterPanelBeside = true;
       await pump(tester);
-      expect(find.byTooltip('Expand'), findsNothing, reason: 'not in theater mode');
-      expect(find.byTooltip('Fill the window (W)'), findsOneWidget);
+      expect(byTooltip('Expand'), findsNothing, reason: 'not in theater mode');
+      expect(byTooltip('Fill the window (W)'), findsOneWidget);
       theaterMode.value = true;
       theaterChatOpen.value = false;
       await tester.pump();
-      await tester.tap(find.byTooltip('Expand'));
+      await tester.tap(byTooltip('Expand'));
       await tester.pump();
       expect(theaterChatOpen.value, isTrue);
-      expect(find.byTooltip('Expand'), findsNothing);
+      expect(byTooltip('Expand'), findsNothing);
     });
 
     testWidgets('the thin progress line follows the setting', (tester) async {

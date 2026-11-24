@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A sign-in's state with its buttons under the text, not beside it, so a
 /// phone's width or large text never squeezes them out.

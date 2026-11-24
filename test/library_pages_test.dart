@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/app/app_controller.dart';
@@ -19,6 +19,7 @@ import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/ui/video_card.dart';
 import 'package:lumtub/video_repository.dart';
 import 'package:lumtub/youtube_account.dart';
+import 'tooltip_finder.dart';
 
 void main() {
   const channel = ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Rick Astley');
@@ -146,11 +147,11 @@ void main() {
     await pump(tester, PlaylistDetailPage(controller: controller));
     expect(find.text('Play all'), findsOneWidget);
     expect(find.text('视频 2'), findsOneWidget);
-    expect(find.byTooltip('Rename'), findsOneWidget);
+    expect(byTooltip('Rename'), findsOneWidget);
 
     controller.openPlaylistId = AppController.favoritesPlaylistId;
     await pump(tester, PlaylistDetailPage(controller: controller));
-    expect(find.byTooltip('Rename'), findsNothing);
+    expect(byTooltip('Rename'), findsNothing);
     expect(find.text('视频 0'), findsOneWidget);
     expect(tester.takeException(), isNull);
     // Cancels the delayed save, which the test clock would never run.
@@ -217,7 +218,7 @@ void main() {
     expect([for (final g in library.channelGroups) g.name], ['Learning', 'News', 'Music']);
     expect(controller.preferences.groupOrder, GroupOrder.manual);
 
-    await tester.tap(find.byTooltip('Group order'));
+    await tester.tap(byTooltip('Group order'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Name').last);
     await tester.pumpAndSettle();
@@ -235,7 +236,7 @@ void main() {
       library.toggleFollow(ChannelRef('UC${name.toLowerCase().padRight(22, 'x')}', name));
     }
     await pump(tester, SubscriptionsPage(controller: controller), width: 900);
-    await tester.tap(find.byTooltip('Channel order'));
+    await tester.tap(byTooltip('Channel order'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Name').last);
     await tester.pumpAndSettle();
@@ -261,7 +262,7 @@ void main() {
     }
     expect(y('视频 0'), lessThan(y('视频 1')));
 
-    await tester.tap(find.byTooltip('Video order'));
+    await tester.tap(byTooltip('Video order'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Length'));
     await tester.pumpAndSettle();
@@ -269,19 +270,19 @@ void main() {
     expect(y('视频 1'), lessThan(y('视频 2')));
     expect(y('视频 2'), lessThan(y('视频 0')));
 
-    await tester.tap(find.byTooltip('Video order'));
+    await tester.tap(byTooltip('Video order'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Reverse order'));
     await tester.pumpAndSettle();
     await pump(tester, PlaylistDetailPage(controller: controller));
     expect(y('视频 0'), lessThan(y('视频 2')));
 
-    await tester.tap(find.byTooltip('Video order'));
+    await tester.tap(byTooltip('Video order'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Arrange by dragging…'));
     await tester.pumpAndSettle();
     // Shown: 0, 2, 1. Move 1 to the top and save.
-    await tester.tap(find.byTooltip('Move to top').last);
+    await tester.tap(byTooltip('Move to top').last);
     await tester.pump();
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
@@ -297,17 +298,17 @@ void main() {
       library.createPlaylist(name);
     }
     await pump(tester, PlaylistsPage(controller: controller));
-    await tester.tap(find.byTooltip('Playlist order'));
+    await tester.tap(byTooltip('Playlist order'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Name').last);
     await tester.pumpAndSettle();
     expect([for (final p in controller.orderedPlaylists) p.name], ['A', 'b', 'c']);
 
-    await tester.tap(find.byTooltip('Playlist order'));
+    await tester.tap(byTooltip('Playlist order'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Arrange by dragging…'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Move to top').last);
+    await tester.tap(byTooltip('Move to top').last);
     await tester.pump();
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();

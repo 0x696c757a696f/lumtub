@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'app_log.dart';
 import 'live_chat.dart';
@@ -72,7 +73,20 @@ class LiveChatRepository {
       if (result.exitCode == 0 || RegExp(r'no subtitles|live chat replay is not available', caseSensitive: false).hasMatch(error)) return const [];
       throw StateError(error.isEmpty ? 'yt-dlp exited with code ${result.exitCode}' : error);
     }
-    return _readReplay(file);
+    // Once read, the file is only taking room.
+    try {
+      return await _readReplay(file);
+    } finally {
+      await _delete(file);
+    }
+  }
+
+  static Future<void> _delete(File file) async {
+    try {
+      await file.delete();
+    } on FileSystemException {
+      // Gone already, or left for the next fetch of this video.
+    }
   }
 
   /// The most read from the chat file at once.
@@ -140,7 +154,7 @@ class LiveChatRepository {
       running = false;
     }));
     var offset = 0;
-    var pending = <int>[];
+    final pending = BytesBuilder(copy: false);
     // Set while a line longer than [_lineBytes] is being skipped.
     var skipping = false;
     var yielded = false;
@@ -163,11 +177,15 @@ class LiveChatRepository {
                   skipping = false;
                   start = end + 1;
                 }
-                pending.addAll(piece.sublist(start));
-                final lastLine = pending.lastIndexOf(10);
-                if (lastLine >= 0) {
-                  final lines = utf8.decode(pending.sublist(0, lastLine + 1), allowMalformed: true);
-                  pending = pending.sublist(lastLine + 1);
+                final rest = Uint8List.sublistView(piece, start);
+                // Only the new bytes can hold the end of a line.
+                final lastLine = rest.lastIndexOf(10);
+                if (lastLine < 0) {
+                  pending.add(rest);
+                } else {
+                  pending.add(Uint8List.sublistView(rest, 0, lastLine + 1));
+                  final lines = utf8.decode(pending.takeBytes(), allowMalformed: true);
+                  pending.add(Uint8List.sublistView(rest, lastLine + 1));
                   for (final message in LiveChatMessage.parseLines(lines)) {
                     yielded = true;
                     yield message;
@@ -175,7 +193,7 @@ class LiveChatRepository {
                 }
                 if (pending.length > _lineBytes) {
                   logWarn('Live chat: skipped a line over ${_lineBytes >> 20} MiB');
-                  pending = [];
+                  pending.clear();
                   skipping = true;
                 }
               }
@@ -186,11 +204,10 @@ class LiveChatRepository {
         }
         if (!running) {
           if (pending.isNotEmpty) {
-            for (final message in LiveChatMessage.parseLine(utf8.decode(pending, allowMalformed: true))) {
+            for (final message in LiveChatMessage.parseLine(utf8.decode(pending.takeBytes(), allowMalformed: true))) {
               yielded = true;
               yield message;
             }
-            pending = const [];
           }
           break;
         }
@@ -204,6 +221,10 @@ class LiveChatRepository {
       process.kill();
       await errorSubscription.cancel();
       await outputSubscription.cancel();
+      // The file grows as long as the live is watched; it goes once yt-dlp
+      // has let go of it (Windows keeps it locked until then).
+      await process.exitCode.timeout(const Duration(seconds: 5), onTimeout: () => -1);
+      await _delete(file);
     }
   }
 }

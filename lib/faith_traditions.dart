@@ -195,15 +195,23 @@ enum FaithTradition {
 
   /// [admits] for text already put through [normalizeFaithText].
   bool admitsText(String text, {required bool strict}) {
-    final own = _scoreOf(family, text);
+    final scores = _scoresOf(text);
+    int sum(List<int> traditions) => traditions.fold(0, (total, t) => total + scores[t]);
+    final own = sum(_families[index]);
     var rival = 0;
-    for (final branch in rivals) {
-      final score = _scoreOf(branch, text);
+    for (final branch in _rivals[index]) {
+      final score = sum(branch);
       if (score > rival) rival = score;
     }
     if (own == 0) return rival == 0 && !strict;
     return own >= rival;
   }
+
+  /// Each tradition's [family] and [rivals], by index, worked out once.
+  static final _families = [for (final t in values) [for (final f in t.family) f.index]];
+  static final _rivals = [
+    for (final t in values) [for (final branch in t.rivals) [for (final f in branch) f.index]],
+  ];
 
   /// What a video says of itself: title, channel and the description's
   /// start, as [normalizeFaithText] writes it.
@@ -218,18 +226,50 @@ enum FaithTradition {
     return null;
   }
 
-  static int _scoreOf(Iterable<FaithTradition> traditions, String text) {
-    var score = 0;
-    for (final t in traditions) {
-      for (final word in _markers[t.index].strong) {
-        if (word.foundIn(text)) score += 2;
-      }
-      for (final word in _markers[t.index].weak) {
-        if (word.foundIn(text)) score += 1;
+  /// What [text] scores for each tradition, by index: two for each of its
+  /// strong words found, one for each weak one. One pass over the text
+  /// finds every word of every tradition; the last text is remembered, as
+  /// one video is tried against several zones.
+  static List<int> _scoresOf(String text) {
+    final last = _lastScores;
+    if (last != null && last.$1 == text) return last.$2;
+    final scores = List.filled(values.length, 0);
+    final found = <_Placed>{};
+    for (var at = 0; at < text.length; at++) {
+      var node = _trie.next[text.codeUnitAt(at)];
+      for (var end = at + 1; node != null; end++) {
+        for (final placed in node.ends) {
+          if (!found.contains(placed) && placed.marker.foundAt(text, at, end)) {
+            found.add(placed);
+            scores[placed.tradition] += placed.weight;
+          }
+        }
+        node = end < text.length ? node.next[text.codeUnitAt(end)] : null;
       }
     }
-    return score;
+    _lastScores = (text, scores);
+    return scores;
   }
+
+  static (String, List<int>)? _lastScores;
+
+  /// Every tradition's words, by their letters.
+  static final _trie = () {
+    final root = _Node();
+    for (final t in values) {
+      for (final (markers, weight) in [(_markers[t.index].strong, 2), (_markers[t.index].weak, 1)]) {
+        for (final marker in markers) {
+          if (marker.word.isEmpty) continue;
+          var node = root;
+          for (final unit in marker.word.codeUnits) {
+            node = node.next[unit] ??= _Node();
+          }
+          node.ends.add(_Placed(marker, t.index, weight));
+        }
+      }
+    }
+    return root;
+  }();
 
   /// Each tradition's words, without those another of its words already
   /// finds: "christianity" is found by "christian", "lutheran" by
@@ -322,14 +362,23 @@ class _Marker {
     return anywhere ? other.word.contains(word) : other.word.startsWith(word) && !other.anywhere;
   }
 
-  bool foundIn(String text) {
-    if (anywhere) return text.contains(word);
-    for (var at = text.indexOf(word); at >= 0; at = text.indexOf(word, at + 1)) {
-      if (at > 0 && _letter.hasMatch(text[at - 1])) continue;
-      final end = at + word.length;
-      if (whole && end < text.length && _letter.hasMatch(text[end])) continue;
-      return true;
-    }
-    return false;
+  /// Whether [word], written in [text] from [at] to [end], counts there.
+  bool foundAt(String text, int at, int end) {
+    if (anywhere) return true;
+    if (at > 0 && _letter.hasMatch(text[at - 1])) return false;
+    return !(whole && end < text.length && _letter.hasMatch(text[end]));
   }
+}
+
+/// A word of one tradition, and what it scores.
+class _Placed {
+  _Placed(this.marker, this.tradition, this.weight);
+  final _Marker marker;
+  final int tradition;
+  final int weight;
+}
+
+class _Node {
+  final next = <int, _Node>{};
+  final ends = <_Placed>[];
 }

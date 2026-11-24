@@ -248,6 +248,14 @@ void main() {
       expect(args, isNot(contains('--merge-output-format')));
     });
 
+    test('a signed-in download writes no info file, which would hold the cookies', () {
+      final task = DownloadTask(item: item, quality: DownloadQuality.best, directory: 'D');
+      expect(manager().arguments(task), contains('--write-info-json'));
+      final args = manager().arguments(task, cookies: 'c.txt');
+      expect(args, isNot(contains('--write-info-json')));
+      expect(args.where((a) => a.startsWith('video:lumtub-info|')).single, isNot(contains('cookies')));
+    });
+
     test('without the core to join takes a single-file format at most that tall', () {
       final s = planDownload(parsed(), codec: VideoCodec.h264).selection!;
       final args = manager().arguments(DownloadTask(item: item, quality: DownloadQuality.best, directory: 'D', selection: s));

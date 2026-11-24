@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'app_directories.dart';
+
 /// Pictures of YouTube's own emoji (`:face-red-heart-shape:`), learned from
 /// every comment and chat message that came with them, so a comment that
 /// carries only the shortcut is still drawn. A channel's emoji
@@ -10,6 +12,7 @@ abstract final class EmojiPictures {
   static final Map<String, String> _known = {};
   static File? _file;
   static Timer? _save;
+  static final _writes = WriteQueue();
 
   static final _shortcut = RegExp(r':[a-z0-9][a-z0-9-]*:');
 
@@ -39,7 +42,7 @@ abstract final class EmojiPictures {
       _save?.cancel();
       _save = Timer(const Duration(seconds: 5), () {
         final file = _file;
-        if (file != null) unawaited(file.writeAsString(jsonEncode(_known)).then((_) {}, onError: (_) {}));
+        if (file != null) unawaited(_writes.run(() => writeFileAtomic(file, jsonEncode(_known))).then((_) {}, onError: (_) {}));
       });
     }
   }

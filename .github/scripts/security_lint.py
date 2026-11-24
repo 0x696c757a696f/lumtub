@@ -23,7 +23,7 @@ RULES = [
     ('device-reply', ['lib/cast/**.dart'], r'utf8\.decodeStream\(',
      'a reply from the network is read without a size limit; use readDeviceReply'),
     ('tls-bypass', ['lib/**.dart', 'native/**.rs', 'android/**.kt', 'macos/**.swift', 'ios/**.swift', 'linux/**.cc', 'windows/**.cpp'],
-     r'badCertificateCallback|danger_accept_invalid|dangerous\(\)|\.dangerous_configuration|ServerCertVerifier for|onReceivedSslError|ALLOW_ALL_HOSTNAME|setHostnameVerifier',
+     r'badCertificateCallback|onBadCertificate|danger_accept_invalid|dangerous\(\)|\.dangerous_configuration|ServerCertVerifier for|onReceivedSslError|ALLOW_ALL_HOSTNAME|setHostnameVerifier',
      'certificate checks are turned off or replaced'),
     ('webview-bridge', ['android/**.kt'], r'addJavascriptInterface|allowFileAccess\s*=\s*true|allowUniversalAccessFromFileURLs|allowFileAccessFromFileURLs|setAllowFileAccess\(true\)',
      'a web page gets access to the app or to files'),

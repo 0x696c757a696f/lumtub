@@ -26,4 +26,15 @@ void main() {
       '--', 'https://www.youtube.com/watch?v=abcdefghijk',
     ]));
   });
+
+  test('a replay leaves no chat file behind once read', () async {
+    final dir = await Directory.systemTemp.createTemp('lumtub-chat-');
+    addTearDown(() => dir.delete(recursive: true));
+    final script = File('${dir.path}/yt-dlp');
+    await script.writeAsString('#!/bin/sh\nprintf \'{}\\n\' > "${dir.path}/live-chat/abcdefghijk.live_chat.json"\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final repository = LiveChatRepository(script.path, cacheDirectory: dir.path);
+    expect(await repository.replay('abcdefghijk'), isEmpty);
+    expect(repository.fileFor('abcdefghijk').existsSync(), isFalse);
+  }, skip: Platform.isWindows);
 }

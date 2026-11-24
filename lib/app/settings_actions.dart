@@ -297,6 +297,7 @@ extension SettingsActions on AppController {
     final ignoredOptions = await PlayerOptionApplicator.apply(player, next, previous: _lightRendering == null ? oldSettings : null);
     _applied = next;
     _lightRendering = null;
+    _iosPipSubtitles(next.pipSubtitles);
     if (this.player case final playing?) _refitCrop(playing);
     await store.save(next);
     _update(() => settings = next);

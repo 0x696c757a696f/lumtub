@@ -11,6 +11,7 @@ import '../../library_store.dart';
 import '../../list_order.dart';
 import '../../models.dart';
 import '../../thumbnail_cache.dart';
+import '../../widgets/settings_tiles.dart' show DialogTextFields;
 import '../../youtube_account_feed.dart';
 import '../common.dart';
 import '../motion.dart';
@@ -254,21 +255,23 @@ class _ManageGroups extends StatelessWidget {
   final List<ChannelRef> channels;
 
   Future<String?> _askName(BuildContext context, {String initial = ''}) {
-    final text = TextEditingController(text: initial);
     return showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(initial.isEmpty ? tr('New group') : tr('Rename group')),
-        content: TextField(
-          controller: text,
-          autofocus: true,
-          decoration: InputDecoration(labelText: tr('Group name')),
-          onSubmitted: (v) => Navigator.pop(context, v),
+      builder: (context) => DialogTextFields(
+        initial: [initial],
+        builder: (context, fields) => AlertDialog(
+          title: Text(initial.isEmpty ? tr('New group') : tr('Rename group')),
+          content: TextField(
+            controller: fields.single,
+            autofocus: true,
+            decoration: InputDecoration(labelText: tr('Group name')),
+            onSubmitted: (v) => Navigator.pop(context, v),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
+            TextButton(onPressed: () => Navigator.pop(context, fields.single.text), child: Text(tr('Confirm'))),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
-          TextButton(onPressed: () => Navigator.pop(context, text.text), child: Text(tr('Confirm'))),
-        ],
       ),
     );
   }

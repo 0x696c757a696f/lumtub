@@ -592,6 +592,32 @@ class _OrderedMultiSelectDialogState<T> extends State<OrderedMultiSelectDialog<T
   }
 }
 
+/// Text controllers for a dialog built inline, owned by the dialog so
+/// they outlive its closing animation and are disposed with it.
+class DialogTextFields extends StatefulWidget {
+  const DialogTextFields({super.key, required this.initial, required this.builder});
+  final List<String> initial;
+  final Widget Function(BuildContext context, List<TextEditingController> fields) builder;
+
+  @override
+  State<DialogTextFields> createState() => _DialogTextFieldsState();
+}
+
+class _DialogTextFieldsState extends State<DialogTextFields> {
+  late final List<TextEditingController> _fields = [for (final text in widget.initial) TextEditingController(text: text)];
+
+  @override
+  void dispose() {
+    for (final field in _fields) {
+      field.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context, _fields);
+}
+
 class TextEditDialog extends StatefulWidget {
   const TextEditDialog({
     super.key,

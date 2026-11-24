@@ -525,7 +525,9 @@ class DownloadManager extends ChangeNotifier {
       if (joins) ...['-o', 'infojson:%(title).80B [%(id)s].%(ext)s', '-o', 'subtitle:%(title).80B [%(id)s].%(ext)s'],
       '--progress-template', DownloadProgress.progressTemplate,
       '--print', DownloadProgress.filePrint,
-      '--write-info-json',
+      // yt-dlp keeps the cookies it used in the info file, so a signed-in
+      // download prints only the keys the sidecar keeps and writes no file.
+      if (cookies == null) '--write-info-json' else ...['--print', 'video:$_infoPrefix%(.{${_sidecarKeys.join(',')}})j'],
       '--format', joins ? selection?.joinFormat() ?? task.quality.joinFormat() : selection?.format() ?? task.quality.format(),
       // Files are kept as YouTube sends them, which the core reads; yt-dlp
       // never runs an ffmpeg it may find on PATH.
@@ -677,15 +679,20 @@ class DownloadManager extends ChangeNotifier {
   /// What yt-dlp says when YouTube takes the address for a bot.
   static final _botCheck = RegExp(r"not a bot|confirm you.?re not|Sign in to confirm", caseSensitive: false);
 
+  /// Prefix of the line a signed-in download prints its info on.
+  static const _infoPrefix = 'lumtub-info|';
+
   Future<void> _run(DownloadTask task) async {
     final id = task.id;
     final printed = <String>[];
     final errors = <String>[];
     String? shown;
+    String? info;
     var exitCode = -1;
     Future<int> attempt(String? cookies) async {
       printed.clear();
       errors.clear();
+      info = null;
       try {
         await Directory(task.directory).create(recursive: true);
         final env = {
@@ -708,6 +715,8 @@ class DownloadManager extends ChangeNotifier {
           final path = DownloadProgress.parseFile(text);
           if (path != null) {
             printed.add(path);
+          } else if (text.startsWith(_infoPrefix)) {
+            info = text.substring(_infoPrefix.length);
           } else if (text.trim().isNotEmpty) {
             errors.add(text.trim());
             if (errors.length > 20) errors.removeAt(0);
@@ -761,7 +770,7 @@ class DownloadManager extends ChangeNotifier {
     if (_stopping.remove(id)) {
       // Paused, cancelled or removed: the status was set by the caller.
     } else if (exitCode == 0) {
-      await _finish(task, printed);
+      await _finish(task, printed, info);
     } else {
       task.status = DownloadStatus.failed;
       task.speed = null;
@@ -786,7 +795,7 @@ class DownloadManager extends ChangeNotifier {
     }
   }
 
-  Future<void> _finish(DownloadTask task, List<String> printed) async {
+  Future<void> _finish(DownloadTask task, List<String> printed, [String? info]) async {
     var path = printed.lastOrNull;
     List<SkipSegment>? segments;
     var cut = const <(Duration, Duration)>[];
@@ -870,7 +879,7 @@ class DownloadManager extends ChangeNotifier {
     // The offline info is saved before the task says done, so whoever
     // opens the finished file reads the whole sidecar, not one half written.
     try {
-      await _writeSidecar(task, path, segments ?? await _segments(task), cut);
+      await _writeSidecar(task, path, segments ?? await _segments(task), cut, info);
     } catch (e) {
       logError('Could not save the offline info of ${task.id}', e);
     }
@@ -934,11 +943,12 @@ class DownloadManager extends ChangeNotifier {
   /// SponsorBlock segments, so playback can restore both offline. Times
   /// are moved past the stretches [cut] out of the file, and segments
   /// wholly cut are left out.
-  Future<void> _writeSidecar(DownloadTask task, String media, List<SkipSegment> segments, List<(Duration, Duration)> cut) async {
+  Future<void> _writeSidecar(DownloadTask task, String media, List<SkipSegment> segments, List<(Duration, Duration)> cut, [String? info]) async {
     final sidecar = LocalVideo.sidecarOf(media);
     var full = <String, dynamic>{};
-    if (sidecar.existsSync()) {
-      final data = await decodeJsonInBackground(await sidecar.readAsString());
+    final text = info ?? (await sidecar.exists() ? await sidecar.readAsString() : null);
+    if (text != null) {
+      final data = await decodeJsonInBackground(text);
       if (data is Map<String, dynamic>) full = data;
     }
     final kept = <Map<String, Object>>[];

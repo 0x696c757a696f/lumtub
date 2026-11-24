@@ -57,6 +57,12 @@ final class PlayerLayer: NSObject {
       name: UIApplication.didBecomeActiveNotification,
       object: nil
     )
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(willEnterForeground),
+      name: UIApplication.willEnterForegroundNotification,
+      object: nil
+    )
   }
 
   /// The address mpv takes as --wid: the sink's host, not a layer.
@@ -125,6 +131,13 @@ final class PlayerLayer: NSObject {
   @objc private func didBecomeActive() {
     // iOS interrupts the layer while the app is in the background.
     sink.resume()
+  }
+
+  /// Back from the background, the video belongs in the app again: the
+  /// floating window closes. Only a return from the background counts, so a
+  /// window opened with the app on screen stays.
+  @objc private func willEnterForeground() {
+    stopPip()
   }
 
   // MARK: Picture in picture

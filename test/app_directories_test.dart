@@ -22,6 +22,15 @@ void main() {
     expect(await keep.readAsString(), '{"keep":true}');
   });
 
+  test('saves to one file overlapping keep the last and leave no temporary file', () async {
+    final temp = await Directory.systemTemp.createTemp('lumtub_atomic');
+    addTearDown(() => temp.delete(recursive: true));
+    final file = File('${temp.path}${Platform.pathSeparator}known.json');
+    await Future.wait([for (var i = 0; i < 20; i++) writeFileAtomic(file, '{"n":$i,"pad":"${'x' * 100000}"}')]);
+    expect(await file.readAsString(), startsWith('{"n":19,'));
+    expect(temp.listSync().map((e) => e.uri.pathSegments.last), ['known.json']);
+  });
+
   test('uses the folder the runner chose, else LocalAppData', () async {
     final temp = await Directory.systemTemp.createTemp('lumtub_dirs');
     addTearDown(() => temp.delete(recursive: true));

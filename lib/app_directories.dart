@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:path_provider/path_provider.dart';
 
@@ -70,12 +71,35 @@ class AppDirectories {
   }
 }
 
+final _atomicWrites = <String, Future<void>>{};
+final _tempNames = Random.secure();
+
 /// Writes to a temporary file first so a crash never leaves half a file.
-Future<void> writeFileAtomic(File file, String text) async {
+/// Writes to the same file run one after another in the order they were
+/// asked for, so the last one asked for is the one kept.
+Future<void> writeFileAtomic(File file, String text) {
+  final key = file.absolute.path;
+  final result = (_atomicWrites[key] ?? Future.value()).then((_) => _writeFileAtomic(file, text));
+  final tail = result.then((_) {}, onError: (_) {});
+  _atomicWrites[key] = tail;
+  tail.then((_) {
+    if (identical(_atomicWrites[key], tail)) _atomicWrites.remove(key);
+  });
+  return result;
+}
+
+Future<void> _writeFileAtomic(File file, String text) async {
   await file.parent.create(recursive: true);
-  final temp = File('${file.path}.tmp');
-  await temp.writeAsString(text, flush: true);
-  await temp.rename(file.path);
+  final temp = File('${file.path}.${_tempNames.nextInt(1 << 32).toRadixString(16)}.tmp');
+  try {
+    await temp.writeAsString(text, flush: true);
+    await temp.rename(file.path);
+  } catch (_) {
+    try {
+      await temp.delete();
+    } catch (_) {}
+    rethrow;
+  }
 }
 
 /// Moves an unreadable file aside as `<name>.broken`, so the next save does

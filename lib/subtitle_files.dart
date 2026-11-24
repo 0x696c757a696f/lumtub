@@ -245,16 +245,18 @@ class SubtitleFiles {
       groups.add((start, end));
       start = end;
     }
+    // Read once, not on every look at where playback is.
+    final starts = [for (final (start, _) in groups) WebVtt.startOf(cues[start].timing)];
+    final ends = [for (final (_, end) in groups) WebVtt.endOf(cues[end - 1].timing)];
     // The pieces from the one playing at [now] onwards, then those before.
     List<int> order(Duration now) {
-      final at = groups.lastIndexWhere((g) => WebVtt.startOf(cues[g.$1].timing) <= now).clamp(0, groups.length - 1);
+      final at = starts.lastIndexWhere((start) => start <= now).clamp(0, groups.length - 1);
       return [for (var i = at; i < groups.length; i++) i, for (var i = 0; i < at; i++) i];
     }
 
     // Whether a piece is near enough to [now] to be needed soon.
     bool near(int i, Duration now) {
-      final (start, end) = groups[i];
-      return WebVtt.endOf(cues[end - 1].timing) >= now - behind && WebVtt.startOf(cues[start].timing) <= now + ahead;
+      return ends[i] >= now - behind && starts[i] <= now + ahead;
     }
 
     final translated = List<List<String>?>.filled(groups.length, null);

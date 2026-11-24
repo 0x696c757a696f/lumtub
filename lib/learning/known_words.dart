@@ -43,7 +43,9 @@ class KnownWords extends ChangeNotifier {
   Set<int> characters(String language) {
     final prefix = '$language:';
     return {
-      for (final key in [..._keys, ...review.knownKeys])
+      for (final key in _keys)
+        if (key.startsWith(prefix)) ...key.substring(prefix.length).runes,
+      for (final key in review.knownKeys)
         if (key.startsWith(prefix)) ...key.substring(prefix.length).runes,
     };
   }

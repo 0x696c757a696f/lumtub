@@ -682,14 +682,32 @@ class Learning extends ChangeNotifier {
     }
   }
 
-  /// The published SHA256SUMS, checked against its signature.
-  static Future<SignedSums> _signedSums(http.Client client) async {
+  static ({DateTime at, Future<SignedSums> sums})? _lastSums;
+
+  /// The published SHA256SUMS, checked against its signature. Kept for a few
+  /// minutes, as one dictionary's download asks for it several times.
+  static Future<SignedSums> _signedSums(http.Client client) {
+    final last = _lastSums;
+    if (last != null && DateTime.now().difference(last.at) < const Duration(minutes: 5)) return last.sums;
+    final sums = _fetchSignedSums(client);
+    final kept = (at: DateTime.now(), sums: sums);
+    _lastSums = kept;
+    unawaited(sums.then((_) {}, onError: (Object _) {
+      if (identical(_lastSums, kept)) _lastSums = null;
+    }));
+    return sums;
+  }
+
+  static Future<SignedSums> _fetchSignedSums(http.Client client) async {
     final sums = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS')).timeout(const Duration(seconds: 30));
     if (sums.statusCode != 200) throw HttpException('SHA256SUMS HTTP ${sums.statusCode}');
     _serverDay = _dayOf(sums.headers['date']);
     final signature = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS.sig')).timeout(const Duration(seconds: 30));
     if (signature.statusCode != 200) throw HttpException('SHA256SUMS.sig HTTP ${signature.statusCode}');
-    final signed = SignedSums.verify(sums.bodyBytes, signature.body);
+    final bytes = sums.bodyBytes;
+    final text = signature.body;
+    // Ed25519 in Dart's BigInt takes long enough to drop frames.
+    final signed = await Isolate.run(() => SignedSums.verify(bytes, text));
     if (signed == null) throw const FormatException('The dictionary list is not signed by Lumtub');
     return signed;
   }
@@ -1080,7 +1098,10 @@ class Learning extends ChangeNotifier {
           hasher.add(chunk);
           received += chunk.length;
           if (!quiet && total != null && total > 0) {
-            state.progress = received / total;
+            // Once a percent, not once a network chunk.
+            final now = received / total;
+            if ((now * 100).floor() == ((state.progress ?? -1) * 100).floor()) continue;
+            state.progress = now;
             notifyListeners();
           }
         }

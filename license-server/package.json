@@ -1,0 +1,7 @@
+{
+  "name": "lumtub-license-server",
+  "private": true,
+  "devDependencies": {
+    "wrangler": "4.20.0"
+  }
+}

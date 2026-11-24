@@ -279,7 +279,7 @@ class DownloadManager extends ChangeNotifier {
   Future<void> load() async {
     try {
       if (!await file.exists()) throw const _NoList();
-      final data = jsonDecode(await file.readAsString());
+      final data = await decodeJsonInBackground(await file.readAsString());
       if (data is Map) {
         final dir = data['directory']?.toString();
         if (dir != null && dir.isNotEmpty) _directory = dir;
@@ -337,9 +337,14 @@ class DownloadManager extends ChangeNotifier {
     _saveTimer = Timer(const Duration(seconds: 1), () => unawaited(_save()));
   }
 
+  /// [data] as JSON, encoded away from the UI isolate: a long download
+  /// history is thousands of videos.
+  static Future<String> _encode(Object data) => Isolate.run(() => jsonEncode(data));
+
   Future<void> _write() async {
     try {
-      await writeFileAtomic(file, jsonEncode({'directory': _directory, 'concurrent': _maxConcurrent, 'defaults': _defaults.toJson(), 'tasks': tasks.map((t) => t.toJson()).toList()}));
+      final list = {'directory': _directory, 'concurrent': _maxConcurrent, 'defaults': _defaults.toJson(), 'tasks': tasks.map((t) => t.toJson()).toList()};
+      await writeFileAtomic(file, await _encode(list));
     } on FileSystemException catch (e) {
       logError('Could not save the download list', e);
     }

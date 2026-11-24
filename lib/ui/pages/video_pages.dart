@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../app/app_controller.dart';
+import '../../app/library_controller.dart' show LibraryController;
 import '../../models.dart';
 import '../../search_options.dart';
 import '../../video_repository.dart';
@@ -32,7 +33,7 @@ class HomeFeedPage extends StatelessWidget {
     final library = controller.library;
     final unfinished = library == null || !prefs.homeShowContinue
         ? const <VideoItem>[]
-        : controller.history.where((item) => library.progressOf(item.id)?.resumable ?? false).take(showFeed ? 4 : 8).toList();
+        : _unfinished(controller.history, library, showFeed ? 4 : 8);
     final watched = watchedLabels(controller.watchedTimes);
     return NearEndListener(
       // The feed goes on: the next page loads before the end is reached.
@@ -102,6 +103,20 @@ class HomeFeedPage extends StatelessWidget {
     );
   }
 }
+
+/// The first [count] videos of [history] that can be resumed, looked for
+/// again when the history or the library changes, or after ten seconds
+/// (positions are saved without a notify): with few of them unfinished the
+/// search runs through all of the history.
+List<VideoItem> _unfinished(List<VideoItem> history, LibraryController library, int count) {
+  final key = (history.length, history.firstOrNull?.id, history.lastOrNull?.id, library, library.revision, count, DateTime.now().millisecondsSinceEpoch ~/ 10000);
+  if (_unfinishedMemo case (final known, final kept) when known == key) return kept;
+  final kept = history.where((item) => library.progressOf(item.id)?.resumable ?? false).take(count).toList();
+  _unfinishedMemo = (key, kept);
+  return kept;
+}
+
+(Object, List<VideoItem>)? _unfinishedMemo;
 
 /// [items] before and from [seenFrom], or all of them in one part.
 List<List<VideoItem>> _seenSplit(List<VideoItem> items, String? seenFrom) {

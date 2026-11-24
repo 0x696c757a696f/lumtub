@@ -7,9 +7,11 @@ import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart' show DeviceOrientation, SystemChrome, SystemUiMode;
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:media_kit/media_kit.dart' show Player;
 
 import '../../device.dart';
 import '../../libass_layout.dart' show LibassLook;
+import '../../live_chat.dart' show LiveChatMessage;
 import '../window_chrome.dart';
 import '../../app/app_controller.dart';
 import '../../learning/word_token.dart';
@@ -406,6 +408,11 @@ class _RatingButtons extends StatelessWidget {
   }
 }
 
+/// Whether [player] has played past its first second; one stream per
+/// player, so a rebuild keeps its subscription.
+Stream<bool> _startedOf(Player player) => _started[player] ??= player.stream.position.map((p) => p.inSeconds > 0).distinct();
+final _started = Expando<Stream<bool>>();
+
 class _Toolbar extends StatelessWidget {
   const _Toolbar({required this.controller});
   final AppController controller;
@@ -469,7 +476,7 @@ class _Toolbar extends StatelessWidget {
           _ActionButton(tooltip: tr('Copy link'), icon: Icon(AppIcons.link), onPressed: () => copyText(context, item.url, tr('Link copied'))),
           if (!item.isLive && controller.player != null)
             StreamBuilder<bool>(
-              stream: controller.player!.stream.position.map((p) => p.inSeconds > 0).distinct(),
+              stream: _startedOf(controller.player!),
               initialData: controller.player!.state.position.inSeconds > 0,
               builder: (context, started) => started.data != true
                   ? const SizedBox.shrink()
@@ -1105,6 +1112,46 @@ class _KeepAliveState extends State<_KeepAlive> with AutomaticKeepAliveClientMix
   }
 }
 
+(Object, (List<VideoItem>, List<VideoItem>))? _upNextMemo;
+(Object, List<(_Related, String, List<VideoItem>)>)? _choicesMemo;
+
+/// Whether the chat holds a Super Chat, kept up as messages arrive: a
+/// live chat grows by a few messages a flush, so only those are looked at.
+final _superChats = _SuperChatsSeen();
+
+class _SuperChatsSeen {
+  List<LiveChatMessage> _list = const [];
+  // Messages after the newest coloured one, or -1 for none.
+  int _after = -1;
+
+  bool seenIn(List<LiveChatMessage> list) {
+    if (!identical(list, _list)) {
+      // A flush appends to the last list (dropping the oldest); anything
+      // else is looked through whole.
+      var added = list.length;
+      if (_list.isNotEmpty) {
+        final last = _list.last;
+        for (var i = list.length - 1; i >= 0; i--) {
+          if (identical(list[i], last)) {
+            added = list.length - 1 - i;
+            break;
+          }
+        }
+      }
+      if (added == list.length) {
+        _after = -1;
+      } else if (_after >= 0) {
+        _after += added;
+      }
+      for (var i = list.length - added; i < list.length; i++) {
+        if (list[i].color != null) _after = list.length - 1 - i;
+      }
+      _list = list;
+    }
+    return _after >= 0 && _after < list.length;
+  }
+}
+
 class _ReplayChatPanel extends StatelessWidget {
   const _ReplayChatPanel({required this.controller, this.shrinkWrap = false});
   final AppController controller;
@@ -1121,7 +1168,7 @@ class _ReplayChatPanel extends StatelessWidget {
     final header = <Widget>[
       Row(children: [
         Expanded(child: Text(tr(live ? 'Chat' : 'Chat replay'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
-        if (messages.any((m) => m.color != null) || controller.chatTicker.isNotEmpty) SuperChatHighlightSwitch(controller: controller),
+        if (_superChats.seenIn(messages) || controller.chatTicker.isNotEmpty) SuperChatHighlightSwitch(controller: controller),
         ImmersiveTranslationSwitch(controller: controller),
       ]),
       const SizedBox(height: 8),
@@ -1183,11 +1230,8 @@ class _UpNext extends StatelessWidget {
   final bool shrinkWrap;
 
   List<Widget> slivers(BuildContext context) {
-    final items = controller.upNext;
+    final (items, relatedItems) = _upNextAndRelated();
     final related = controller.related;
-    // What 接下来播放 already lists is not repeated under 相关视频.
-    final queued = {for (final item in items) item.id};
-    final relatedItems = [for (final item in controller.relatedItems) if (!queued.contains(item.id)) item];
     final autoplay = Row(mainAxisSize: MainAxisSize.min, children: [
       Flexible(child: Text(tr('Autoplay next'), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12))),
       Transform.scale(
@@ -1271,10 +1315,31 @@ class _UpNext extends StatelessWidget {
         ]),
       );
 
+  /// 接下来播放 and the related videos it does not already list, worked
+  /// out again only when the queue, the video or the related list changes:
+  /// the panel rebuilds on every notify.
+  (List<VideoItem>, List<VideoItem>) _upNextAndRelated() {
+    final key = (controller.queue, controller.playing?.id, controller.relatedItems);
+    if (_upNextMemo case (final known, final kept) when known == key) return kept;
+    final items = controller.upNext;
+    final queued = {for (final item in items) item.id};
+    final kept = (items, [for (final item in controller.relatedItems) if (!queued.contains(item.id)) item]);
+    _upNextMemo = (key, kept);
+    return kept;
+  }
+
   /// The ways the related videos can be narrowed, as YouTube offers them
   /// beside a video, each with what it shows; only those that show
-  /// something, after 全部.
+  /// something, after 全部. Kept while what they come from stays.
   List<(_Related, String, List<VideoItem>)> _relatedChoices(VideoItem? playing, List<VideoItem> related) {
+    final key = (related, playing, controller.details?.channelId, controller.homeFeed?.items, controller.library?.revision);
+    if (_choicesMemo case (final known, final kept) when known == key) return kept;
+    final kept = _workOutRelatedChoices(playing, related);
+    _choicesMemo = (key, kept);
+    return kept;
+  }
+
+  List<(_Related, String, List<VideoItem>)> _workOutRelatedChoices(VideoItem? playing, List<VideoItem> related) {
     final channelId = playing?.channelId ?? controller.details?.channelId;
     final channel = playing?.channel ?? '';
     bool own(VideoItem item) => channelId != null && item.channelId != null ? item.channelId == channelId : channel.isNotEmpty && item.channel == channel;

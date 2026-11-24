@@ -25,3 +25,22 @@ String? playlistLength(List<VideoItem> items, {WatchProgress? Function(String id
   if (progressOf == null || left == total) return length;
   return left == 0 ? tr('{0} · all watched', [length]) : tr('{0} · {1} left', [length, watchDuration(left)]);
 }
+
+/// What a playlist page shows of [source]: a copy of it, the same last to
+/// first when [reversed], and its [playlistLength]. The page rebuilds on
+/// every notify and a list runs to thousands of videos, so this is kept
+/// while [key] (what the list comes from and its state) stays; the time
+/// left follows saved positions, which change without a notify, so it is
+/// also worked out again every half minute.
+({List<VideoItem> own, List<VideoItem> items, String? length}) playlistView(Object? key, List<VideoItem> source,
+    {required bool reversed, WatchProgress? Function(String id)? progressOf, bool partial = false}) {
+  final full = (key, source, source.length, reversed, partial, DateTime.now().millisecondsSinceEpoch ~/ 30000);
+  if (_playlistView case (final known, final kept) when known == full) return kept;
+  final own = List<VideoItem>.of(source);
+  final items = reversed ? own.reversed.toList() : own;
+  final kept = (own: own, items: items, length: playlistLength(items, progressOf: progressOf, partial: partial));
+  _playlistView = (full, kept);
+  return kept;
+}
+
+(Object, ({List<VideoItem> own, List<VideoItem> items, String? length}))? _playlistView;

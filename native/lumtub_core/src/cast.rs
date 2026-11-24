@@ -1360,12 +1360,12 @@ fn next_fragment(
 }
 
 /// The segment holding `seconds`: the last that starts at or before it.
+/// Segments are in time order, so this is a binary search.
 fn segment_at(track: &Track, seconds: f64) -> usize {
     track
         .segments
-        .iter()
-        .rposition(|s| s.start <= seconds + 1e-6)
-        .unwrap_or(0)
+        .partition_point(|s| s.start <= seconds + 1e-6)
+        .saturating_sub(1)
 }
 
 // ---- writing ----
@@ -1888,8 +1888,9 @@ impl Cuts {
             .iter()
             .filter_map(|&(from, to)| {
                 let (from, to) = ((from * 1000.0).round() as i64, (to * 1000.0).round() as i64);
-                let start = *keyframes.iter().find(|&&k| k >= from)?;
-                let end = *keyframes.iter().rev().find(|&&k| k <= to)?;
+                let start = *keyframes.get(keyframes.partition_point(|&k| k < from))?;
+                let end =
+                    *keyframes.get(keyframes.partition_point(|&k| k <= to).checked_sub(1)?)?;
                 (end > start).then_some((start, end))
             })
             .collect();
@@ -2104,26 +2105,37 @@ impl Session {
     /// The picture's segments from the one holding the start: index, start
     /// and length in seconds.
     fn hls_segments(&self) -> Vec<(usize, f64, f64)> {
-        let segments = &self.video.segments;
         let first = segment_at(&self.video, self.start);
-        let last = segments.last().map_or(0.0, |s| s.start);
-        let typical = if segments.len() > 1 {
-            last / (segments.len() - 1) as f64
-        } else {
-            5.0
-        };
-        let end = if self.duration > last {
-            self.duration
-        } else {
-            last + typical
-        };
-        (first..segments.len())
-            .map(|i| {
-                let start = segments[i].start;
-                let next = segments.get(i + 1).map_or(end, |s| s.start);
-                (i, start, (next - start).max(0.001))
-            })
+        (first..self.video.segments.len())
+            .filter_map(|i| self.hls_span(i).map(|(start, length)| (i, start, length)))
             .collect()
+    }
+
+    /// The start and length in seconds of the picture's segment `i`, one
+    /// of [Session::hls_segments]; none for any other.
+    fn hls_span(&self, i: usize) -> Option<(f64, f64)> {
+        let segments = &self.video.segments;
+        if i < segment_at(&self.video, self.start) {
+            return None;
+        }
+        let start = segments.get(i)?.start;
+        let next = match segments.get(i + 1) {
+            Some(next) => next.start,
+            None => {
+                let last = segments.last().map_or(0.0, |s| s.start);
+                let typical = if segments.len() > 1 {
+                    last / (segments.len() - 1) as f64
+                } else {
+                    5.0
+                };
+                if self.duration > last {
+                    self.duration
+                } else {
+                    last + typical
+                }
+            }
+        };
+        Some((start, (next - start).max(0.001)))
     }
 
     /// The playlist asked for first: with subtitles, a master playlist
@@ -2221,11 +2233,7 @@ impl Session {
         if let Some((_, made)) = self.made.lock().unwrap().iter().find(|(i, _)| *i == index) {
             return Ok(made.clone());
         }
-        let (_, start, length) = *self
-            .hls_segments()
-            .iter()
-            .find(|s| s.0 == index)
-            .ok_or("no such segment")?;
+        let (start, length) = self.hls_span(index).ok_or("no such segment")?;
         let end = if index + 1 < self.video.segments.len() {
             start + length
         } else {

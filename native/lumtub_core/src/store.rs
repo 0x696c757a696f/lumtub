@@ -368,12 +368,13 @@ struct ReadAsk {
 
 #[derive(Deserialize)]
 struct ListAsk<'a> {
-    #[serde(borrow)]
-    name: &'a str,
+    // Owned, not borrowed: a name or key holding `"` or `\` arrives
+    // escaped and cannot be borrowed from the request.
+    name: String,
+    #[serde(default)]
+    keys: Vec<String>,
     #[serde(borrow, default)]
-    keys: Vec<&'a str>,
-    #[serde(borrow, default)]
-    bodies: HashMap<&'a str, &'a RawValue>,
+    bodies: HashMap<String, &'a RawValue>,
 }
 
 #[derive(Deserialize)]
@@ -381,10 +382,10 @@ struct WriteAsk<'a> {
     path: String,
     #[serde(borrow, default)]
     lists: Vec<ListAsk<'a>>,
-    #[serde(borrow, default)]
-    drop: Vec<&'a str>,
-    #[serde(borrow, default)]
-    meta: HashMap<&'a str, &'a str>,
+    #[serde(default)]
+    drop: Vec<String>,
+    #[serde(default)]
+    meta: HashMap<String, String>,
 }
 
 pub(crate) fn error_json(error: StoreError) -> String {
@@ -443,17 +444,22 @@ fn write_json(ask: &str) -> String {
         .lists
         .iter()
         .map(|list| ListWrite {
-            name: list.name,
-            keys: list.keys.clone(),
+            name: &list.name,
+            keys: list.keys.iter().map(String::as_str).collect(),
             bodies: list
                 .bodies
                 .iter()
-                .map(|(key, body)| (*key, body.get()))
+                .map(|(key, body)| (key.as_str(), body.get()))
                 .collect(),
         })
         .collect();
-    let meta: Vec<(&str, &str)> = ask.meta.iter().map(|(k, v)| (*k, *v)).collect();
-    match write(&ask.path, &lists, &ask.drop, &meta) {
+    let drop: Vec<&str> = ask.drop.iter().map(String::as_str).collect();
+    let meta: Vec<(&str, &str)> = ask
+        .meta
+        .iter()
+        .map(|(k, v)| (k.as_str(), v.as_str()))
+        .collect();
+    match write(&ask.path, &lists, &drop, &meta) {
         Ok(written) => serde_json::json!({"inserted": written.inserted, "updated": written.updated, "deleted": written.deleted}).to_string(),
         Err(error) => error_json(error),
     }
@@ -643,6 +649,25 @@ mod tests {
         ));
         assert!(answer.contains("error"), "{answer}");
         assert!(keys(&path, "f").is_empty());
+    }
+
+    #[test]
+    fn names_and_keys_with_quotes_and_backslashes_are_written() {
+        let path = temp("escaped");
+        let odd = "Music \"live\" A\\B\n";
+        let ask = serde_json::json!({
+            "path": path,
+            "lists": [{"name": odd, "keys": [odd, "plain"], "bodies": {odd: {"a": 1}, "plain": {"b": "\"x\""}}}],
+            "drop": ["gone \"old\""],
+            "meta": {odd: odd},
+        });
+        let answer: serde_json::Value =
+            serde_json::from_str(&write_json(&ask.to_string())).unwrap();
+        assert_eq!(answer["inserted"], 2, "{answer}");
+        assert_eq!(keys(&path, odd), vec![odd.to_string(), "plain".to_string()]);
+        let (lists, meta) = read(&path, &[odd.to_string()], &[]).unwrap();
+        assert_eq!(lists[odd][1].1, "{\"b\":\"\\\"x\\\"\"}");
+        assert_eq!(meta[odd], odd);
     }
 
     #[test]

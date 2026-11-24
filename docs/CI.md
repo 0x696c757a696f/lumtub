@@ -37,6 +37,9 @@ it builds everything: while debugging one platform, name it (`[ios]`).
   `all` or one platform.
 - The daily run and release tags (`v*`) always build every platform; a
   release publishes only a build with every package.
+- Each AppImage carries `gh-releases-zsync` update information, and the
+  release publishes a `.zsync` beside it, so AppImageUpdate, AppImageLauncher
+  and Gear Lever update it by downloading only the changed blocks.
 
 One build runs at a time: a newer run waits for older ones, and a newer push
 to a pull request cancels its older run.

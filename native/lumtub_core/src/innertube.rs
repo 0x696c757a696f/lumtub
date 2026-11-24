@@ -7,7 +7,7 @@ use serde_json::{Map, Value};
 use std::os::raw::c_char;
 
 use crate::filter::{Language, alike, is_latin, reading};
-use crate::taste::{give_json, text};
+use crate::taste::{give_json, outside};
 
 /// The value at [path] of nested objects.
 pub(crate) fn at<'a>(node: &'a Value, path: &[&str]) -> Option<&'a Value> {
@@ -85,7 +85,9 @@ pub(crate) fn seconds(text: &str) -> Option<u32> {
     if secs.len() != 2 {
         return None;
     }
-    Some(hours * 3600 + minutes * 60 + digits(secs, 2)?)
+    hours
+        .checked_mul(3600)?
+        .checked_add(minutes * 60 + digits(secs, 2)?)
 }
 
 fn contains_ignore_case(text: &str, words: &[&str]) -> bool {
@@ -644,7 +646,7 @@ pub unsafe extern "C" fn lumtub_youtube_next(body: *const u8, length: usize) -> 
         text: Option<Localized>,
         facts: Facts,
     }
-    let Ok(data) = serde_json::from_str::<Value>(unsafe { text(body, length) }) else {
+    let Ok(data) = serde_json::from_str::<Value>(unsafe { outside(body, length) }) else {
         return std::ptr::null_mut();
     };
     let parts = Parts::of(&data);
@@ -1033,7 +1035,7 @@ pub unsafe extern "C" fn lumtub_spoken_language(body: *const u8, length: usize) 
         #[serde(skip_serializing_if = "Vec::is_empty")]
         alike: Vec<u32>,
     }
-    let Ok(data) = serde_json::from_str::<Value>(unsafe { text(body, length) }) else {
+    let Ok(data) = serde_json::from_str::<Value>(unsafe { outside(body, length) }) else {
         return std::ptr::null_mut();
     };
     let Some(spoken) = spoken_language(&data) else {
@@ -1113,7 +1115,7 @@ pub unsafe extern "C" fn lumtub_ai_label(body: *const u8, length: usize) -> *mut
     struct Label {
         ai: Option<bool>,
     }
-    let ai = serde_json::from_str::<Value>(unsafe { text(body, length) })
+    let ai = serde_json::from_str::<Value>(unsafe { outside(body, length) })
         .ok()
         .and_then(|data| ai_label(&data));
     give_json(&Label { ai })
@@ -1164,7 +1166,7 @@ pub fn listed_channel_ids(list: &str) -> Vec<String> {
 /// `body` must point to `length` readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_ai_channels(body: *const u8, length: usize) -> *mut c_char {
-    let body = unsafe { text(body, length) };
+    let body = unsafe { outside(body, length) };
     let channels = match serde_json::from_str::<Value>(body) {
         Ok(data) => ai_channels(&data),
         Err(_) => listed_channel_ids(body),
@@ -1503,6 +1505,7 @@ mod tests {
         assert_eq!(seconds("4:5"), None);
         assert_eq!(seconds("123:45"), None);
         assert_eq!(seconds("直播"), None);
+        assert_eq!(seconds("999999999:00:00"), None);
         assert_eq!(count("1,234 次观看"), Some(1234));
         assert_eq!(count("12万次观看"), Some(120_000));
         assert_eq!(count("3.4亿次"), Some(340_000_000));

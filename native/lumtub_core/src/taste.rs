@@ -471,6 +471,18 @@ pub(crate) unsafe fn text<'a>(ptr: *const u8, len: usize) -> &'a str {
     std::str::from_utf8(unsafe { std::slice::from_raw_parts(ptr, len) }).unwrap_or("")
 }
 
+/// The most of one answer from outside (YouTube's JSON or HTML, yt-dlp's,
+/// a feed) that a parser takes.
+pub(crate) const MAX_BODY: usize = 32 << 20;
+
+/// [text] for an answer from outside: empty past [MAX_BODY].
+pub(crate) unsafe fn outside<'a>(ptr: *const u8, len: usize) -> &'a str {
+    if len > MAX_BODY {
+        return "";
+    }
+    unsafe { text(ptr, len) }
+}
+
 pub(crate) fn give(value: String) -> *mut c_char {
     CString::new(value).map_or(std::ptr::null_mut(), CString::into_raw)
 }

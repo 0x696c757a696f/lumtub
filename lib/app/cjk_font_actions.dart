@@ -46,13 +46,22 @@ extension CjkFontActions on AppController {
     if (wanted.isEmpty) return;
     try {
       if (packs.installedOf(ScriptFontPack.id) == null) {
-        if (!packs.catalog.any((p) => p.id == ScriptFontPack.id)) await packs.refresh();
-        if (!packs.catalog.any((p) => p.id == ScriptFontPack.id && p.suitsThisBuild)) {
-          logInfo('No data pack ${ScriptFontPack.id} to download');
-          return;
-        }
-        logInfo('Downloading ${ScriptFontPack.id}: this system has no font for ${wanted.join(', ')}');
-        await packs.install(ScriptFontPack.id);
+        // One download, however many lines ask for it meanwhile.
+        final pending = ScriptFontPack.installing ??= () async {
+          try {
+            if (!packs.catalog.any((p) => p.id == ScriptFontPack.id)) await packs.refresh();
+            if (!packs.catalog.any((p) => p.id == ScriptFontPack.id && p.suitsThisBuild)) {
+              logInfo('No data pack ${ScriptFontPack.id} to download');
+              return false;
+            }
+            logInfo('Downloading ${ScriptFontPack.id}: this system has no font for ${wanted.join(', ')}');
+            await packs.install(ScriptFontPack.id);
+            return true;
+          } finally {
+            ScriptFontPack.installing = null;
+          }
+        }();
+        if (!await pending) return;
       }
       final files = ScriptFontPack.installedFiles(packs);
       var loaded = false;
@@ -72,6 +81,8 @@ extension CjkFontActions on AppController {
       }
     } catch (e) {
       logWarn('Could not get the font pack ${ScriptFontPack.id}: $e');
+      // Asked again at a later line, as when offline for a while.
+      _scriptFontsAsked.removeAll(wanted);
     }
   }
 

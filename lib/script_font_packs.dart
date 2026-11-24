@@ -20,6 +20,9 @@ class ScriptFontPack {
 
   static final _missing = <String, bool>{};
 
+  /// The download under way, if any: true once the pack is installed.
+  static Future<bool>? installing;
+
   /// Whether fontconfig knows no font with [sample], a character of
   /// [script]; asked once per script.
   static Future<bool> missing(String script, int sample) async {

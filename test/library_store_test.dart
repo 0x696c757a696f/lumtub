@@ -127,4 +127,25 @@ void main() {
     expect(target.channelGroups, hasLength(1));
     expect(target.mergeBackup(LibraryBackup.parse('not a map')).changed, isFalse);
   });
+
+  test('membership answers stay right however the lists are changed', () {
+    final library = store();
+    expect(library.isFavorite(video.id), isFalse);
+    expect(library.toggleFavorite(video), isTrue);
+    expect(library.isFavorite(video.id), isTrue);
+    library.favorites[0] = other;
+    expect((library.isFavorite(video.id), library.isFavorite(other.id)), (false, true));
+    library.favorites.removeAt(0);
+    expect(library.isFavorite(other.id), isFalse);
+    library.watchLater.addAll([video, other]);
+    expect(library.isWatchLater(other.id), isTrue);
+    expect(library.removeWatchLater(other.id), isTrue);
+    expect(library.removeWatchLater(other.id), isFalse);
+    library.watchLater.clear();
+    expect(library.isWatchLater(video.id), isFalse);
+    expect(library.toggleFollow(channel), isTrue);
+    expect(library.isFollowing(channel.id), isTrue);
+    expect(library.toggleFollow(channel), isFalse);
+    expect(library.isFollowing(channel.id), isFalse);
+  });
 }

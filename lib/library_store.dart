@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -21,6 +22,73 @@ class WatchProgress {
 
   /// Worth resuming: past the first seconds and not at the credits.
   bool get resumable => position >= const Duration(seconds: 10) && fraction < 0.95;
+}
+
+/// A list that knows the ids of its entries, so asking whether one is in
+/// it costs no scan; the ids are kept right whoever changes the list.
+class IdList<T> extends ListBase<T> {
+  IdList(this._idOf);
+  final String Function(T) _idOf;
+  final _items = <T>[];
+  Set<String>? _ids;
+
+  bool containsId(String id) => (_ids ??= {for (final item in _items) _idOf(item)}).contains(id);
+
+  @override
+  int get length => _items.length;
+  @override
+  set length(int value) {
+    _items.length = value;
+    _ids = null;
+  }
+
+  @override
+  T operator [](int index) => _items[index];
+  @override
+  void operator []=(int index, T value) {
+    _items[index] = value;
+    _ids = null;
+  }
+
+  @override
+  void add(T element) {
+    _items.add(element);
+    _ids?.add(_idOf(element));
+  }
+
+  @override
+  void addAll(Iterable<T> iterable) {
+    _items.addAll(iterable);
+    _ids = null;
+  }
+
+  @override
+  void insert(int index, T element) {
+    _items.insert(index, element);
+    _ids?.add(_idOf(element));
+  }
+
+  @override
+  bool remove(Object? element) {
+    final removed = _items.remove(element);
+    if (removed) _ids = null;
+    return removed;
+  }
+
+  @override
+  void removeWhere(bool Function(T element) test) {
+    _items.removeWhere(test);
+    _ids = null;
+  }
+
+  @override
+  void clear() {
+    _items.clear();
+    _ids = null;
+  }
+
+  @override
+  void sort([int Function(T a, T b)? compare]) => _items.sort(compare);
 }
 
 class LocalPlaylist {
@@ -118,11 +186,11 @@ class LibraryStore {
 
   static const _maxProgress = 500;
 
-  final favorites = <VideoItem>[];
+  final favorites = IdList<VideoItem>((item) => item.id);
   /// 稍后观看, newest first.
-  final watchLater = <VideoItem>[];
+  final watchLater = IdList<VideoItem>((item) => item.id);
   final playlists = <LocalPlaylist>[];
-  final channels = <ChannelRef>[];
+  final channels = IdList<ChannelRef>((channel) => channel.id);
   final channelGroups = <ChannelGroup>[];
   /// Followed channels' videos that were live or about to go live at the
   /// last look, by video id: the channel's id and `is_live` or
@@ -171,7 +239,7 @@ class LibraryStore {
     _playlistLists.addAll(lists.keys.where((name) => name.startsWith(_playlistList)));
     for (final (_, body) in list('channels')) {
       final channel = ChannelRef.fromJson(body);
-      if (channel != null && !channels.contains(channel)) channels.add(channel);
+      if (channel != null && !channels.containsId(channel.id)) channels.add(channel);
     }
     for (final (name, body) in list('groups')) {
       if (name.trim().isEmpty) continue;
@@ -222,7 +290,7 @@ class LibraryStore {
       }
       for (final raw in data['channels'] is List ? data['channels'] as List : const []) {
         final channel = ChannelRef.fromJson(raw);
-        if (channel != null && !channels.contains(channel)) channels.add(channel);
+        if (channel != null && !channels.containsId(channel.id)) channels.add(channel);
       }
       for (final raw in data['groups'] is List ? data['groups'] as List : const []) {
         if (raw is! Map || raw['name'] is! String || (raw['name'] as String).trim().isEmpty) continue;
@@ -399,7 +467,7 @@ class LibraryStore {
     }
   }
 
-  bool isFavorite(String id) => favorites.any((item) => item.id == id);
+  bool isFavorite(String id) => favorites.containsId(id);
 
   /// Adds or removes [item]; returns whether it is now a favorite.
   bool toggleFavorite(VideoItem item) {
@@ -411,7 +479,7 @@ class LibraryStore {
     return true;
   }
 
-  bool isWatchLater(String id) => watchLater.any((item) => item.id == id);
+  bool isWatchLater(String id) => watchLater.containsId(id);
 
   /// Adds or removes [item] from 稍后观看; returns whether it is now there.
   bool toggleWatchLater(VideoItem item) {
@@ -422,6 +490,7 @@ class LibraryStore {
 
   /// Takes [id] off 稍后观看; false when it was not there.
   bool removeWatchLater(String id) {
+    if (!watchLater.containsId(id)) return false;
     final before = watchLater.length;
     watchLater.removeWhere((item) => item.id == id);
     return watchLater.length != before;
@@ -440,7 +509,7 @@ class LibraryStore {
     return true;
   }
 
-  bool isFollowing(String channelId) => channels.any((channel) => channel.id == channelId);
+  bool isFollowing(String channelId) => channels.containsId(channelId);
 
   bool toggleFollow(ChannelRef channel) {
     if (channels.remove(channel)) return false;

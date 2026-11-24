@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'bounded_get.dart';
 import 'native_core.dart';
 import 'sponsor_block.dart';
 
@@ -93,9 +94,9 @@ class DeArrow extends ChangeNotifier {
   Future<void> _fetch(String videoId) async {
     Branding found = Branding.none;
     try {
-      final response = await _client!.get(requestUri(videoId), headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 10));
+      final (status, body) = await getBounded(_client!, requestUri(videoId), limit: 1 << 20, headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 10));
       // 404: no video with this prefix has submissions.
-      if (response.statusCode == 200) found = parse(response.body, videoId);
+      if (status == 200) found = parse(utf8.decode(body, allowMalformed: true), videoId);
     } catch (_) {
       // Shown as YouTube has it; asked again after a restart.
     }

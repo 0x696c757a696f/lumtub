@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
 import 'background_json.dart';
+import 'bounded_get.dart';
 import 'l10n/l10n.dart';
 import 'piped_streams.dart';
 import 'relay_servers.dart';
@@ -123,9 +124,9 @@ class InvidiousStreams extends RelayServers {
 
   @override
   Future<Set<String>> downloadCatalog() async {
-    final response = await client.get(Uri.parse(instanceList)).timeout(const Duration(seconds: 8));
-    if (response.statusCode != 200) throw StateError('HTTP ${response.statusCode}');
-    return parseInvidiousInstances(utf8.decode(response.bodyBytes)).toSet();
+    final (status, body) = await getBounded(client, Uri.parse(instanceList), limit: 2 << 20).timeout(const Duration(seconds: 8));
+    if (status != 200) throw StateError('HTTP $status');
+    return parseInvidiousInstances(utf8.decode(body)).toSet();
   }
 
   /// The streams of [videoId] from [server], or from the fastest instances
@@ -138,10 +139,10 @@ class InvidiousStreams extends RelayServers {
     Object? lastError;
     for (final candidate in order) {
       try {
-        final response = await client.get(Uri.parse('$candidate/api/v1/videos/$videoId?local=true')).timeout(const Duration(seconds: 10));
-        final data = await decodeUtf8JsonInBackground(response.bodyBytes);
-        if (response.statusCode != 200 || data is! Map<String, dynamic>) {
-          throw StateError(data is Map && data['error'] != null ? '${data['error']}' : 'HTTP ${response.statusCode}');
+        final (status, body) = await getBounded(client, Uri.parse('$candidate/api/v1/videos/$videoId?local=true'), limit: 8 << 20).timeout(const Duration(seconds: 10));
+        final data = await decodeUtf8JsonInBackground(body);
+        if (status != 200 || data is! Map<String, dynamic>) {
+          throw StateError(data is Map && data['error'] != null ? '${data['error']}' : 'HTTP $status');
         }
         return await parseInvidiousVideo(candidate, data).withoutPrivateHosts();
       } catch (e) {

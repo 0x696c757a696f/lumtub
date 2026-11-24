@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'bounded_get.dart';
 import 'models.dart';
 import 'native_core.dart';
 import 'youtube_player_probe.dart';
@@ -213,9 +214,8 @@ class AiFilter extends ChangeNotifier {
     for (final MapEntry(key: name, value: url) in lists.entries) {
       if (_disposed) return;
       try {
-        final response = await _client.get(Uri.parse(url)).timeout(const Duration(seconds: 30));
-        if (response.statusCode != 200) throw StateError('HTTP ${response.statusCode}');
-        final body = response.bodyBytes;
+        final (status, body) = await getBounded(_client, Uri.parse(url), limit: 64 << 20).timeout(const Duration(seconds: 30));
+        if (status != 200) throw StateError('HTTP $status');
         final channels = await Isolate.run(() {
           final core = NativeCore.instance!;
           return [for (final c in jsonDecode(core.take(core.withBytes(body, core.aiChannels)) ?? '[]') as List) c.toString()];

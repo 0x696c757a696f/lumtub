@@ -69,6 +69,10 @@ class TasteProfile implements Finalizable {
     core.tasteFree(handle);
   }
 
+  /// Older entries weigh next to nothing at the decays used, so only this
+  /// many of the history, newest first, are read.
+  static const maxHistory = 600;
+
   /// [searches] are the words typed into search, newest first.
   factory TasteProfile.from({
     required List<VideoItem> history,
@@ -83,7 +87,7 @@ class TasteProfile implements Finalizable {
     final json = jsonEncode({
       'decay': decay,
       'history': [
-        for (final item in history)
+        for (final item in history.take(maxHistory))
           {
             'k': channelKey(item),
             't': item.title,

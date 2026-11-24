@@ -3,7 +3,7 @@
 //! 观看统计 from the watch time kept on this computer.
 
 use serde_json::{Value, json};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ffi::c_char;
 
 use crate::subtitles::{Cue, cues};
@@ -188,6 +188,7 @@ pub fn overview_check(source: &str, overview: &Value) -> Value {
         2000,
     );
     let mut chapters: Vec<(u64, String)> = Vec::new();
+    let mut chapter_times = HashSet::new();
     for chapter in overview
         .get("chapters")
         .and_then(Value::as_array)
@@ -201,7 +202,7 @@ pub fn overview_check(source: &str, overview: &Value) -> Value {
         let Some(ms) = chapter.get("time").and_then(parse_clock).and_then(snap) else {
             continue;
         };
-        if title.is_empty() || chapters.iter().any(|(at, _)| *at == ms) {
+        if title.is_empty() || !chapter_times.insert(ms) {
             continue;
         }
         chapters.push((ms, title));

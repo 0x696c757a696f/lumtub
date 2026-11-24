@@ -1954,7 +1954,15 @@ class _X11ModeSwitch extends StatefulWidget {
 }
 
 class _X11ModeSwitchState extends State<_X11ModeSwitch> {
-  late bool _on = AppWindow.x11Marker(widget.data).existsSync();
+  bool _on = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(AppWindow.x11Marker(widget.data).exists().then((on) {
+      if (mounted && on != _on) setState(() => _on = on);
+    }));
+  }
 
   Future<void> _set(bool on) async {
     final marker = AppWindow.x11Marker(widget.data);
@@ -1967,8 +1975,8 @@ class _X11ModeSwitchState extends State<_X11ModeSwitch> {
     } catch (_) {
       return;
     }
-    setState(() => _on = on);
     if (!mounted) return;
+    setState(() => _on = on);
     final restart = await confirmDialog(context, title: tr('Takes effect after a restart'), content: tr('Lumtub uses the new display mode after it restarts. Restart now?'), confirm: tr('Restart now'));
     if (restart) await widget.controller.restart();
   }

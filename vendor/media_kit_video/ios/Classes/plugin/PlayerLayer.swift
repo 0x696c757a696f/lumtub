@@ -128,21 +128,103 @@ final class PlayerLayer: NSObject {
     sink.setCompositing(on)
   }
 
-  /// Subtitles drawn by the app, for picture in picture where libmpv
-  /// draws none; nil pixels take them away.
-  func setAppSubtitles(pixels: Data?, width: Int, height: Int, box: CGRect, canvas: CGSize) {
-    guard let pixels, width > 0, height > 0, pixels.count >= width * height * 4,
-          let provider = CGDataProvider(data: pixels as CFData),
-          let image = CGImage(
-            width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: width * 4,
-            space: CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue),
-            provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
-    else {
-      sink.setAppOverlay(nil, box: .zero, canvas: .zero)
-      return
+  /// One subtitle line the app shows where libmpv draws none, for picture
+  /// in picture: its size and outline in canvas pixels.
+  struct AppSubtitle {
+    let text: String
+    let font: String
+    let size: CGFloat
+    let color: UIColor
+    let outline: CGFloat
+    let bold: Bool
+    let box: UIColor?
+  }
+
+  /// Drawn here with Core Text, not by Flutter: iOS gives a backgrounded
+  /// app no GPU, so Flutter can't make pictures while the window shows.
+  private static let subtitleQueue = DispatchQueue(label: "lumtub.pip.subtitles", qos: .userInitiated)
+
+  /// Subtitles the app shows, for picture in picture where libmpv draws
+  /// none: [lines] top to bottom, centred on a [canvas] the picture's shape,
+  /// the last line's bottom at [bottom]. No lines take them away.
+  func setAppSubtitles(_ lines: [AppSubtitle], canvas: CGSize, bottom: CGFloat, spacing: CGFloat) {
+    let sink = self.sink
+    Self.subtitleQueue.async {
+      guard let drawn = Self.drawSubtitles(lines, canvas: canvas, bottom: bottom, spacing: spacing) else {
+        sink.setAppOverlay(nil, box: .zero, canvas: .zero)
+        return
+      }
+      sink.setAppOverlay(drawn.image, box: drawn.box, canvas: canvas)
     }
-    sink.setAppOverlay(image, box: box, canvas: canvas)
+  }
+
+  private static func subtitleFont(_ family: String, size: CGFloat, bold: Bool) -> UIFont {
+    var font = !family.isEmpty && !UIFont.fontNames(forFamilyName: family).isEmpty
+      ? UIFont(descriptor: UIFontDescriptor(fontAttributes: [.family: family]), size: size)
+      : UIFont.systemFont(ofSize: size)
+    if bold, let descriptor = font.fontDescriptor.withSymbolicTraits(.traitBold) {
+      font = UIFont(descriptor: descriptor, size: size)
+    }
+    return font
+  }
+
+  private static func drawSubtitles(_ lines: [AppSubtitle], canvas: CGSize, bottom: CGFloat, spacing: CGFloat) -> (image: CGImage, box: CGRect)? {
+    guard canvas.width > 0, canvas.height > 0 else { return nil }
+    let room = canvas.width * 0.9
+    var laid = [(fill: NSAttributedString, stroke: NSAttributedString?, size: CGSize)]()
+    for line in lines where !line.text.isEmpty {
+      let paragraph = NSMutableParagraphStyle()
+      paragraph.alignment = .center
+      paragraph.lineBreakMode = .byWordWrapping
+      paragraph.minimumLineHeight = line.size * 1.3
+      paragraph.maximumLineHeight = line.size * 1.3
+      var look: [NSAttributedString.Key: Any] = [
+        .font: subtitleFont(line.font, size: line.size, bold: line.bold),
+        .foregroundColor: line.color,
+        .paragraphStyle: paragraph,
+      ]
+      if let box = line.box { look[.backgroundColor] = box }
+      let fill = NSAttributedString(string: line.text, attributes: look)
+      var stroke: NSAttributedString?
+      if line.outline > 0 {
+        var outline = look
+        outline.removeValue(forKey: .backgroundColor)
+        var alpha: CGFloat = 1
+        line.color.getRed(nil, green: nil, blue: nil, alpha: &alpha)
+        outline[.strokeColor] = UIColor.black.withAlphaComponent(alpha)
+        // A positive width strokes without filling, in percent of the size;
+        // half of it falls outside the letters.
+        outline[.strokeWidth] = line.outline * 2 / line.size * 100
+        stroke = NSAttributedString(string: line.text, attributes: outline)
+      }
+      let bounds = fill.boundingRect(
+        with: CGSize(width: room, height: .greatestFiniteMagnitude),
+        options: [.usesLineFragmentOrigin, .usesFontLeading], context: nil)
+      laid.append((fill, stroke, CGSize(width: ceil(bounds.width), height: ceil(bounds.height))))
+    }
+    guard !laid.isEmpty else { return nil }
+    let pad = ceil(lines.map(\.outline).max() ?? 0) + 1
+    let width = (laid.map(\.size.width).max() ?? 0) + 2 * pad
+    let height = laid.reduce(0) { $0 + $1.size.height } + spacing * CGFloat(laid.count - 1) + 2 * pad
+    guard width > 0, height > 0 else { return nil }
+
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 1
+    format.opaque = false
+    let image = UIGraphicsImageRenderer(size: CGSize(width: width, height: height), format: format).image { context in
+      context.cgContext.setLineJoin(.round)
+      context.cgContext.setLineCap(.round)
+      var top = pad
+      for line in laid {
+        let rect = CGRect(x: (width - line.size.width) / 2, y: top, width: line.size.width, height: line.size.height)
+        line.stroke?.draw(with: rect, options: [.usesLineFragmentOrigin, .usesFontLeading], context: nil)
+        line.fill.draw(with: rect, options: [.usesLineFragmentOrigin, .usesFontLeading], context: nil)
+        top += line.size.height + spacing
+      }
+    }
+    guard let picture = image.cgImage else { return nil }
+    let y = max(0, min(bottom, canvas.height) - height)
+    return (picture, CGRect(x: (canvas.width - width) / 2, y: y, width: width, height: height))
   }
 
   @objc private func didBecomeActive() {

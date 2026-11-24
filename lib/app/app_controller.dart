@@ -31,7 +31,6 @@ import '../app_log.dart';
 import '../app_window.dart';
 import '../app_preferences.dart';
 import '../libass_layout.dart';
-import '../ui/pip_subtitle_picture.dart';
 import '../line_pause.dart';
 import '../save_file.dart';
 import '../shadowing.dart';
@@ -1103,9 +1102,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   final _cjkFontsAsked = <String>{};
 
   /// What iOS's picture-in-picture window was last given of the subtitles
-  /// Flutter draws, and a count that drops answers outdated meanwhile.
+  /// Flutter draws.
   String _pipSubtitlesSent = '';
-  int _pipSubtitlesSerial = 0;
 
   /// The scripts whose fonts were looked for in this run (Linux).
   final _scriptFontsAsked = <String>{};

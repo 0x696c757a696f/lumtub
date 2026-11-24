@@ -122,9 +122,10 @@ extension IosPipActions on AppController {
   }
 
   /// The window shows only what goes into the frames: libmpv's subtitles
-  /// go in by themselves, while those Flutter draws (where libmpv has no
-  /// font for a line) are drawn here into a picture for it. Only while the
-  /// window is open and Flutter draws, and only when the lines change.
+  /// go in by themselves, while the lines Flutter draws (where libmpv has
+  /// no font for a line) are sent to be drawn natively into them: Flutter
+  /// can't draw a picture while the app is in the background. Only while
+  /// the window is open and Flutter draws, and only when the lines change.
   void _sendPipSubtitles([List<String>? lines]) {
     if (!Platform.isIOS) return;
     final player = this.player;
@@ -139,50 +140,32 @@ extension IosPipActions on AppController {
         : [main, second, aspect, s.subtitleFont, s.subtitleScale, s.subtitleColor, s.subtitleOpacity, s.secondaryFont, s.secondaryScale, s.secondaryColor, s.secondaryOpacity, s.subtitleBold, s.subtitleBackground, s.subtitleBorder, s.subtitlePosition].join('|');
     if (key == _pipSubtitlesSent) return;
     _pipSubtitlesSent = key;
-    final serial = ++_pipSubtitlesSerial;
-    if (key.isEmpty) {
-      unawaited(IosVideoLayer.setSubtitles(null).catchError((Object e) => logDebug(() => 'Could not clear the picture-in-picture subtitles: $e')));
-      return;
-    }
     // At the height the window's frames are made (720 lines), in the
     // picture's shape, sized by height as the phone's player sizes them.
     final canvas = Size(720 * aspect.clamp(0.3, 4.0), 720);
-    PipSubtitleStyle look(String font, double scale, int color, double opacity, String language) {
-      final style = languageStyle(language);
-      return pipSubtitleStyle(
-        font: font,
-        scale: scale,
-        color: color,
-        opacity: opacity,
-        bold: s.subtitleBold,
-        box: s.subtitleBackground,
-        outline: LibassLook.outlineFor(s.subtitleBorder),
-        fallback: style?.fontFamilyFallback ?? [bundledFont, ...downloadedScriptFamilies, blankFont],
-        locale: style?.locale,
-      );
-    }
-
-    unawaited(() async {
-      try {
-        final picture = await drawPipSubtitles(
-          main: main,
-          second: second,
-          mainStyle: look(s.subtitleFont, s.subtitleScale, s.subtitleColor, s.subtitleOpacity, mainSubtitleLanguage),
-          secondStyle: look(s.secondaryFont, s.secondaryScale, s.secondaryColor, s.secondaryOpacity, secondSubtitleLanguage),
-          canvas: canvas,
-          scale: max(12.0, min(canvas.height, canvas.width * 0.75) * 0.0533) / 32,
-          position: s.subtitlePosition,
-        );
-        if (serial != _pipSubtitlesSerial) return;
-        if (picture == null) {
-          await IosVideoLayer.setSubtitles(null);
-          return;
-        }
-        await IosVideoLayer.setSubtitles(picture.pixels,
-            width: picture.width, height: picture.height, x: picture.x, y: picture.y, canvasWidth: canvas.width, canvasHeight: canvas.height);
-      } catch (e) {
-        logDebug(() => 'Could not draw the picture-in-picture subtitles: $e');
-      }
-    }());
+    final unit = max(12.0, min(canvas.height, canvas.width * 0.75) * 0.0533) / 32;
+    final outline = s.subtitleBackground ? 0.0 : LibassLook.outlineFor(s.subtitleBorder) * unit;
+    Map<String, Object?> line(String text, String font, double scale, int color, double opacity) => {
+          'text': text,
+          'font': font,
+          'size': 32 * scale * unit,
+          'color': ((opacity.clamp(0.0, 1.0) * 255).round() << 24) | (color & 0xFFFFFF),
+          'outline': outline,
+          'bold': s.subtitleBold,
+          'box': s.subtitleBackground ? (0.67 * opacity.clamp(0.0, 1.0) * 255).round() << 24 : null,
+        };
+    final sent = key.isEmpty
+        ? const <Map<String, Object?>>[]
+        : [
+            if (second.isNotEmpty) line(second, s.secondaryFont, s.secondaryScale, s.secondaryColor, s.secondaryOpacity),
+            if (main.isNotEmpty) line(main, s.subtitleFont, s.subtitleScale, s.subtitleColor, s.subtitleOpacity),
+          ];
+    unawaited(IosVideoLayer.setSubtitles(
+      sent,
+      canvasWidth: canvas.width,
+      canvasHeight: canvas.height,
+      bottom: canvas.height * s.subtitlePosition.clamp(0, 100) / 100 - canvas.height * 0.03,
+      spacing: 6 * unit,
+    ).catchError((Object e) => logDebug(() => 'Could not send the picture-in-picture subtitles: $e')));
   }
 }

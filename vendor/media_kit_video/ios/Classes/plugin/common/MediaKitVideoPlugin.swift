@@ -120,14 +120,28 @@ public class MediaKitVideoPlugin: NSObject, FlutterPlugin {
         layer.setMirror((args["on"] as? Bool) ?? false)
         result(nil)
       case "Layer.Subtitles":
-        func number(_ key: String) -> Double { (args[key] as? NSNumber)?.doubleValue ?? 0 }
+        func number(_ value: Any?) -> CGFloat { CGFloat((value as? NSNumber)?.doubleValue ?? 0) }
+        func color(_ value: Any?) -> UIColor {
+          let argb = (value as? NSNumber)?.uint32Value ?? 0
+          return UIColor(
+            red: CGFloat((argb >> 16) & 0xFF) / 255, green: CGFloat((argb >> 8) & 0xFF) / 255,
+            blue: CGFloat(argb & 0xFF) / 255, alpha: CGFloat((argb >> 24) & 0xFF) / 255)
+        }
+        let lines = (args["lines"] as? [[String: Any]] ?? []).map { line in
+          PlayerLayer.AppSubtitle(
+            text: line["text"] as? String ?? "",
+            font: line["font"] as? String ?? "",
+            size: max(1, number(line["size"])),
+            color: color(line["color"]),
+            outline: number(line["outline"]),
+            bold: line["bold"] as? Bool ?? false,
+            box: line["box"] == nil || line["box"] is NSNull ? nil : color(line["box"]))
+        }
         layer.setAppSubtitles(
-          pixels: (args["pixels"] as? FlutterStandardTypedData)?.data,
-          width: Int(number("width")),
-          height: Int(number("height")),
-          box: CGRect(x: number("x"), y: number("y"), width: number("width"), height: number("height")),
-          canvas: CGSize(width: number("canvasWidth"), height: number("canvasHeight"))
-        )
+          lines,
+          canvas: CGSize(width: number(args["canvasWidth"]), height: number(args["canvasHeight"])),
+          bottom: number(args["bottom"]),
+          spacing: number(args["spacing"]))
         result(nil)
       case "Layer.StartPip":
         result(layer.startPip())

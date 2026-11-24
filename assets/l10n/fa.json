@@ -718,6 +718,8 @@
   "Back {0} s": "{0} ثانیه عقب",
   "Always on (including auto-generated)": "همیشه روشن (شامل زیرنویس خودکار)",
   "Restore": "بازیابی",
+  "Minimize": "کوچک کردن",
+  "Maximize": "بزرگ کردن",
   "Restore all player defaults": "بازیابی همه تنظیمات پیش‌فرض پخش‌کننده",
   "Recommend again": "پیشنهاد دوباره",
   "Recommend this channel again": "پیشنهاد دوباره این کانال",

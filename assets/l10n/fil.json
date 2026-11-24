@@ -718,6 +718,8 @@
   "Back {0} s": "Paatras nang {0} s",
   "Always on (including auto-generated)": "Laging naka-on (kasama ang auto-generated)",
   "Restore": "I-restore",
+  "Minimize": "I-minimize",
+  "Maximize": "I-maximize",
   "Restore all player defaults": "I-restore ang lahat ng default ng player",
   "Recommend again": "Irekomenda ulit",
   "Recommend this channel again": "Irekomenda ulit ang channel na ito",

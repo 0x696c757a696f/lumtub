@@ -718,6 +718,8 @@
   "Back {0} s": "Tilbake {0} s",
   "Always on (including auto-generated)": "Alltid på (inkludert automatisk genererte)",
   "Restore": "Gjenopprett",
+  "Minimize": "Minimer",
+  "Maximize": "Maksimer",
   "Restore all player defaults": "Gjenopprett alle standardinnstillinger for spilleren",
   "Recommend again": "Anbefal igjen",
   "Recommend this channel again": "Anbefal denne kanalen igjen",

@@ -51,23 +51,36 @@ void main() {
     expect(SkinDecorationPainter.paints, before);
   });
 
-  test('resizing the window records a scene only once a step', () {
+  test('resizing records a scene once a step, then at the exact size once it rests', () async {
     final painter = ScenePainter(SkinScene.meadow, night: false, seed: 42);
+    final scales = <double>[];
     void paintAt(Size size) {
       final recorder = ui.PictureRecorder();
-      painter.paint(Canvas(recorder), size);
+      painter.paint(_ScaleSpy(recorder, scales), size);
       recorder.endRecording().dispose();
     }
 
+    var settled = 0;
+    void count() => settled++;
+    ScenePainter.settled.addListener(count);
+    addTearDown(() => ScenePainter.settled.removeListener(count));
+
     final before = ScenePainter.recordings;
-    for (var w = 961.0; w <= 1020; w += 3) {
+    paintAt(const Size(961, 650));
+    expect(ScenePainter.recordings - before, 1, reason: 'a window at rest gets its exact size at once');
+    expect(scales.last, closeTo(1, 0.001));
+    for (var w = 964.0; w <= 1020; w += 3) {
       paintAt(Size(w, 650 + (w - 961) / 4));
     }
-    expect(ScenePainter.recordings - before, 1);
-    paintAt(const Size(1400, 900));
-    expect(ScenePainter.recordings - before, 2);
-    paintAt(const Size(1000, 650));
-    expect(ScenePainter.recordings - before, 2, reason: 'the size resized back from is kept');
+    expect(ScenePainter.recordings - before, 2, reason: 'one stepped picture for the whole resize');
+    expect(settled, 0);
+    await Future<void>.delayed(ScenePainter.settle + const Duration(milliseconds: 50));
+    expect(settled, 1, reason: 'asks to be painted again once the size rests');
+    paintAt(const Size(1018, 664.25));
+    expect(ScenePainter.recordings - before, 3);
+    expect(scales.last, closeTo(1, 0.001), reason: 'not stretched at rest');
+    paintAt(const Size(1018, 664.25));
+    expect(ScenePainter.recordings - before, 3, reason: 'kept');
   });
 
   testWidgets("the LCD's meter asks for about 20 frames a second, not one per refresh", (tester) async {
@@ -110,4 +123,36 @@ void main() {
     }
     expect(SkinDeckView.bodyPaints, before);
   });
+}
+
+/// A canvas that notes the horizontal scale each picture is drawn at.
+class _ScaleSpy implements Canvas {
+  _ScaleSpy(ui.PictureRecorder recorder, this.scales) : _inner = Canvas(recorder);
+  final Canvas _inner;
+  final List<double> scales;
+  double _scale = 1;
+
+  @override
+  void save() => _inner.save();
+
+  @override
+  void restore() {
+    _scale = 1;
+    _inner.restore();
+  }
+
+  @override
+  void scale(double sx, [double? sy]) {
+    _scale = sx;
+    _inner.scale(sx, sy);
+  }
+
+  @override
+  void drawPicture(ui.Picture picture) {
+    scales.add(_scale);
+    _inner.drawPicture(picture);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

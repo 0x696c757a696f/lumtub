@@ -717,6 +717,8 @@
   "Back {0} s": "{0} с артка",
   "Always on (including auto-generated)": "Ар дайым күйүк (автоматтык түзүлгөндөрдү кошкондо)",
   "Restore": "Калыбына келтирүү",
+  "Minimize": "Кичирейтүү",
+  "Maximize": "Чоңойтуу",
   "Restore all player defaults": "Ойноткучтун бардык демейки жөндөөлөрүн калыбына келтирүү",
   "Recommend again": "Кайра сунуштоо",
   "Recommend this channel again": "Бул каналды кайра сунуштоо",

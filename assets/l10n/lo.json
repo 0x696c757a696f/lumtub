@@ -717,6 +717,8 @@
   "Back {0} s": "ຖອຍຫຼັງ {0} ວິ",
   "Always on (including auto-generated)": "ເປີດສະເໝີ (ລວມທັງອັດຕະໂນມັດ)",
   "Restore": "ກູ້ຄືນ",
+  "Minimize": "ຫຍໍ້ລົງ",
+  "Maximize": "ຂະຫຍາຍ",
   "Restore all player defaults": "ກູ້ຄືນຄ່າເລີ່ມຕົ້ນຂອງເຄື່ອງຫຼິ້ນທັງໝົດ",
   "Recommend again": "ແນະນຳອີກຄັ້ງ",
   "Recommend this channel again": "ແນະນຳຊ່ອງນີ້ອີກຄັ້ງ",

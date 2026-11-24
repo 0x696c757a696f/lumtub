@@ -718,6 +718,8 @@
   "Back {0} s": "Назад {0} сек.",
   "Always on (including auto-generated)": "Секогаш вклучено (вклучувајќи автоматски генерирани)",
   "Restore": "Врати",
+  "Minimize": "Минимизирај",
+  "Maximize": "Максимизирај",
   "Restore all player defaults": "Врати ги сите стандардни поставки на плеерот",
   "Recommend again": "Препорачувај повторно",
   "Recommend this channel again": "Препорачувај го каналот повторно",

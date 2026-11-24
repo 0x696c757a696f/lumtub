@@ -718,6 +718,8 @@
   "Back {0} s": "{0} sn geri",
   "Always on (including auto-generated)": "Her zaman açık (otomatik oluşturulanlar dahil)",
   "Restore": "Geri yükle",
+  "Minimize": "Simge durumuna küçült",
+  "Maximize": "Ekranı kapla",
   "Restore all player defaults": "Tüm oynatıcı ayarlarını varsayılana döndür",
   "Recommend again": "Yeniden öner",
   "Recommend this channel again": "Bu kanalı yeniden öner",

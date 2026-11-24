@@ -718,6 +718,8 @@
   "Back {0} s": "Taaksepäin {0} s",
   "Always on (including auto-generated)": "Aina päällä (myös automaattisesti luodut)",
   "Restore": "Palauta",
+  "Minimize": "Pienennä",
+  "Maximize": "Suurenna",
   "Restore all player defaults": "Palauta kaikki soittimen oletusasetukset",
   "Recommend again": "Suosittele uudelleen",
   "Recommend this channel again": "Suosittele tätä kanavaa uudelleen",

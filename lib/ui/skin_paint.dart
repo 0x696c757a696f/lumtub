@@ -494,7 +494,9 @@ class SkinBox extends StatelessWidget {
 }
 
 class SkinDecorationPainter extends CustomPainter {
-  SkinDecorationPainter(this.decorations);
+  // A scene stretched while the window was resized is drawn again at its
+  // exact size once the resize rests.
+  SkinDecorationPainter(this.decorations) : super(repaint: ScenePainter.settled);
   final List<SkinDecoration> decorations;
 
   /// How many times ornaments have been painted, for tests.

@@ -718,6 +718,8 @@
   "Back {0} s": "{0} வி பின்னே",
   "Always on (including auto-generated)": "எப்போதும் இயக்கத்தில் (தானாக உருவாக்கியவை உட்பட)",
   "Restore": "மீட்டெடு",
+  "Minimize": "சிறிதாக்கு",
+  "Maximize": "பெரிதாக்கு",
   "Restore all player defaults": "அனைத்து பிளேயர் இயல்புநிலைகளையும் மீட்டெடு",
   "Recommend again": "மீண்டும் பரிந்துரை",
   "Recommend this channel again": "இந்தச் சேனலை மீண்டும் பரிந்துரை செய்",

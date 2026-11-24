@@ -717,6 +717,8 @@
   "Back {0} s": "{0} сек ухраах",
   "Always on (including auto-generated)": "Үргэлж асаалттай (автомат хадмал орно)",
   "Restore": "Сэргээх",
+  "Minimize": "Багасгах",
+  "Maximize": "Томсгох",
   "Restore all player defaults": "Тоглуулагчийн бүх үндсэн тохиргоог сэргээх",
   "Recommend again": "Дахин санал болгох",
   "Recommend this channel again": "Энэ сувгийг дахин санал болгох",

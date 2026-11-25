@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lumtub/piped_streams.dart';
+import 'package:lumtub/relay_servers.dart';
 import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/video_codec.dart';
 
@@ -65,11 +66,12 @@ void main() {
           {'api_url': 'https://down.example', 'up_to_date': true},
         ]), 200);
       }
-      if (url.endsWith('/healthcheck')) {
+      if (url.startsWith('https://proxy.example/')) return http.Response.bytes(List.filled(1024, 0), 206);
+      if (url.endsWith('/streams/${RelayServers.probeVideo}')) {
         if (url.startsWith('https://down.example')) return http.Response('no', 503);
         if (url.startsWith('https://slow.example')) await Future<void>.delayed(const Duration(milliseconds: 60));
         if (PipedStreams.knownServers.any(url.startsWith)) return http.Response('no', 503);
-        return http.Response('OK', 200);
+        return http.Response.bytes(utf8.encode(jsonEncode(_streams())), 200);
       }
       if (url.startsWith('https://broken.example/streams/')) return http.Response(jsonEncode({'message': 'blocked'}), 500);
       return http.Response.bytes(utf8.encode(jsonEncode(_streams())), 200);
@@ -79,7 +81,7 @@ void main() {
     final fetched = await piped.fetch('dQw4w9WgXcQ');
     expect(fetched.server, 'https://slow.example');
     expect(await piped.servers(), ['https://slow.example', 'https://broken.example']);
-    expect(asked.where((u) => u.contains('/streams/')), ['https://broken.example/streams/dQw4w9WgXcQ', 'https://slow.example/streams/dQw4w9WgXcQ']);
+    expect(asked.where((u) => u.contains('/streams/dQw4w9WgXcQ')), ['https://broken.example/streams/dQw4w9WgXcQ', 'https://slow.example/streams/dQw4w9WgXcQ']);
   });
 
   test('playback source is saved, direct YouTube by default', () {
@@ -133,7 +135,9 @@ piped.yt | https://api.piped.yt | 🇩🇪 | No | ![](https://api.piped.yt/regis
             listRequests++;
             return http.Response('| new | https://new.example | x |', 200);
           }
-          return http.Response('OK', url.startsWith('https://new.example') ? 200 : 503);
+          if (url.startsWith('https://proxy.example/')) return http.Response.bytes([1], 206);
+          if (url.startsWith('https://new.example')) return http.Response.bytes(utf8.encode(jsonEncode(_streams())), 200);
+          return http.Response('no', 503);
         }))
       ..catalogFile = file;
 
@@ -226,11 +230,12 @@ piped.yt | https://api.piped.yt | 🇩🇪 | No | ![](https://api.piped.yt/regis
     await file.writeAsString(jsonEncode({'updated': DateTime.now().toIso8601String(), 'servers': servers, 'last': servers[9]}));
     final streams = PipedStreams(MockClient((request) async {
       final host = request.url.origin;
+      if (host == 'https://proxy.example') return http.Response.bytes([1], 206);
       order.add(host);
       most = max(most, ++running);
       await Future<void>.delayed(const Duration(milliseconds: 5));
       running--;
-      return http.Response('OK', host == servers[9] || host == servers[3] ? 200 : 503);
+      return host == servers[9] || host == servers[3] ? http.Response.bytes(utf8.encode(jsonEncode(_streams())), 200) : http.Response('no', 503);
     }))
       ..catalogFile = file;
     final ranked = await streams.servers();
@@ -240,5 +245,16 @@ piped.yt | https://api.piped.yt | 🇩🇪 | No | ![](https://api.piped.yt/regis
     expect(ranked.toSet(), {servers[9], servers[3]});
     await streams.saved;
     expect(((jsonDecode(await file.readAsString()) as Map)['last']), ranked.first);
+  });
+
+  test('a server that lists streams but cannot fetch them is not used', () async {
+    final piped = PipedStreams(MockClient((request) async {
+      final url = request.url.toString();
+      if (url.startsWith('https://proxy.example/')) return http.Response('denied', 403);
+      if (url.contains('/streams/')) return http.Response.bytes(utf8.encode(jsonEncode(_streams())), 200);
+      return http.Response('[]', 200);
+    }));
+    expect(await piped.servers(), isEmpty);
+    expect(piped.wasTried(PipedStreams.knownServers.first), isTrue);
   });
 }

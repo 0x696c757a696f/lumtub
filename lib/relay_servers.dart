@@ -24,11 +24,35 @@ abstract class RelayServers {
   /// [text] as a server address, or null when it is not one.
   String? normalize(String text);
 
-  /// The cheap request that shows [server] answers.
-  Uri healthUrl(String server);
+  /// A short public video ("Me at the zoo", 19 s): a server that can play
+  /// it works.
+  static const probeVideo = 'jNQXAC9IVRw';
 
-  /// Whether [response] to [healthUrl] means the server works.
-  bool isHealthy(http.Response response) => response.statusCode == 200;
+  /// Whether [server] really plays videos: it lists picture and sound for
+  /// [probeVideo] and its sound address answers with media bytes. Many
+  /// servers still answer a health check, or even list streams, while
+  /// YouTube no longer lets them fetch any.
+  Future<bool> plays(String server) async {
+    final video = await probe(server);
+    if (video.video.isEmpty || video.audio.isEmpty) return false;
+    return servesMedia(video.audio.first.url);
+  }
+
+  /// The streams [server] lists for [probeVideo]; throws when it lists none.
+  Future<({List<({String url})> video, List<({String url})> audio})> probe(String server);
+
+  /// Whether [url] answers a request for its first bytes with some: the
+  /// server passes media on, not just a list of addresses.
+  Future<bool> servesMedia(String url) async {
+    final request = http.Request('GET', Uri.parse(url))..headers['Range'] = 'bytes=0-1023';
+    final response = await client.send(request);
+    final body = StreamIterator(response.stream);
+    try {
+      return (response.statusCode == 206 || response.statusCode == 200) && await body.moveNext() && body.current.isNotEmpty;
+    } finally {
+      await body.cancel();
+    }
+  }
 
   /// Downloads the public list; may throw, an empty result keeps the old list.
   Future<Set<String>> downloadCatalog();
@@ -164,8 +188,7 @@ abstract class RelayServers {
     return mapLimited(list, probeConcurrency, (server) async {
       final watch = Stopwatch()..start();
       try {
-        final response = await client.get(healthUrl(server)).timeout(const Duration(seconds: 5));
-        if (isHealthy(response)) _timings[server] = watch.elapsedMilliseconds;
+        if (await plays(server).timeout(const Duration(seconds: 10))) _timings[server] = watch.elapsedMilliseconds;
       } catch (e) {
         logDebug(() => 'Relay health check failed: $e');
       }

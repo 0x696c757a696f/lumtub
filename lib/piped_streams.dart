@@ -251,23 +251,10 @@ class PipedStreams extends RelayServers {
   /// Public API servers checked first, without waiting for the live list;
   /// those that do not answer are simply left out.
   static const knownServers = [
-    'https://pipedapi.kavin.rocks',
-    'https://pipedapi-libre.kavin.rocks',
-    'https://pipedapi.adminforge.de',
+    // The two that still passed a stream check in November 2026.
     'https://api.piped.private.coffee',
-    'https://pipedapi.leptons.xyz',
-    'https://pipedapi.nosebs.ru',
-    'https://pipedapi.reallyaweso.me',
-    'https://piped-api.lunar.icu',
-    'https://pipedapi.tokhmi.xyz',
-    'https://pipedapi.moomoo.me',
-    'https://api.looleh.xyz',
-    'https://piped-api.cfe.re',
-    'https://pipedapi.r4fo.com',
-    'https://pa.mint.lgbt',
-    'https://piped-api.privacy.com.de',
-    'https://api.piped.projectsegfau.lt',
-    'https://pa.il.ax',
+    'https://pipedapi.ducks.party',
+    'https://pipedapi.kavin.rocks',
   ];
   /// The Piped project's table of public instances, and kavin.rocks's live
   /// status list; servers either names are measured with the known ones.
@@ -281,7 +268,10 @@ class PipedStreams extends RelayServers {
   @override
   String? normalize(String text) => normalizePipedServer(text);
   @override
-  Uri healthUrl(String server) => Uri.parse('$server/healthcheck');
+  Future<({List<({String url})> video, List<({String url})> audio})> probe(String server) async {
+    final video = await _from(server, RelayServers.probeVideo);
+    return (video: [for (final s in video.video) (url: s.url)], audio: [for (final s in video.audio) (url: s.url)]);
+  }
   @override
   String get pausedMessage => tr('Piped failed repeatedly; skipping it for now');
 
@@ -309,17 +299,7 @@ class PipedStreams extends RelayServers {
     Object? lastError;
     for (final candidate in order) {
       try {
-        final (status, body) = await getBounded(client, Uri.parse('$candidate/streams/$videoId'), limit: 8 << 20).timeout(const Duration(seconds: 8));
-        if (readRelayVideo(false, body) case final read?) {
-          final video = read.video;
-          if (status != 200 || video == null) throw StateError(video?.error ?? 'HTTP $status');
-          return await PipedVideo.fromCore(candidate, video).withoutPrivateHosts();
-        }
-        final data = await decodeUtf8JsonInBackground(body);
-        if (status != 200 || data is! Map<String, dynamic>) {
-          throw StateError(data is Map && data['message'] != null ? '${data['message']}' : 'HTTP $status');
-        }
-        return await PipedVideo.fromJson(candidate, data).withoutPrivateHosts();
+        return await _from(candidate, videoId);
       } catch (e) {
         lastError = e;
         logWarn('Piped server $candidate could not resolve $videoId: $e');
@@ -327,5 +307,20 @@ class PipedStreams extends RelayServers {
       }
     }
     throw StateError(tr('Piped failed to resolve: {0}', [lastError]));
+  }
+
+  /// The streams of [videoId] from [server]; throws when it has none.
+  Future<PipedVideo> _from(String server, String videoId) async {
+    final (status, body) = await getBounded(client, Uri.parse('$server/streams/$videoId'), limit: 8 << 20).timeout(const Duration(seconds: 8));
+    if (readRelayVideo(false, body) case final read?) {
+      final video = read.video;
+      if (status != 200 || video == null) throw StateError(video?.error ?? 'HTTP $status');
+      return PipedVideo.fromCore(server, video).withoutPrivateHosts();
+    }
+    final data = await decodeUtf8JsonInBackground(body);
+    if (status != 200 || data is! Map<String, dynamic>) {
+      throw StateError(data is Map && data['message'] != null ? '${data['message']}' : 'HTTP $status');
+    }
+    return PipedVideo.fromJson(server, data).withoutPrivateHosts();
   }
 }

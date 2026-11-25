@@ -122,26 +122,27 @@ class InvidiousStreams extends RelayServers {
   /// A few long-running instances, measured before the downloaded list is
   /// known; those that do not answer are simply left out.
   static const knownServers = [
-    'https://yewtu.be',
+    'https://eu.yt.chocolatemoo53.com',
+    'https://yt.chocolatemoo53.com',
+    'https://invidious.tiekoetter.com',
     'https://inv.nadeko.net',
     'https://invidious.nerdvpn.de',
-    'https://invidious.privacyredirect.com',
-    'https://invidious.f5.si',
   ];
   /// Invidious's own list of public instances.
   static const instanceList = 'https://api.invidious.io/instances.json?sort_by=type,users';
 
-  /// A short public video; an instance that can look it up works.
-  static const probeVideo = 'jNQXAC9IVRw';
+  /// A short public video; an instance that can play it works.
+  static const probeVideo = RelayServers.probeVideo;
 
   @override
   List<String> get defaultServers => knownServers;
   @override
   String? normalize(String text) => normalizePipedServer(text);
   @override
-  Uri healthUrl(String server) => Uri.parse('$server/api/v1/videos/$probeVideo?fields=videoId');
-  @override
-  bool isHealthy(http.Response response) => response.statusCode == 200 && response.body.contains(probeVideo);
+  Future<({List<({String url})> video, List<({String url})> audio})> probe(String server) async {
+    final video = await _from(server, probeVideo);
+    return (video: [for (final s in video.video) (url: s.url)], audio: [for (final s in video.audio) (url: s.url)]);
+  }
   @override
   String get pausedMessage => tr('Invidious has failed recently, temporarily disabled');
 
@@ -162,17 +163,7 @@ class InvidiousStreams extends RelayServers {
     Object? lastError;
     for (final candidate in order) {
       try {
-        final (status, body) = await getBounded(client, Uri.parse('$candidate/api/v1/videos/$videoId?local=true'), limit: 8 << 20).timeout(const Duration(seconds: 10));
-        if (readRelayVideo(true, body) case final read?) {
-          final video = read.video;
-          if (status != 200 || video == null) throw StateError(video?.error ?? 'HTTP $status');
-          return await invidiousVideoFromCore(candidate, video).withoutPrivateHosts();
-        }
-        final data = await decodeUtf8JsonInBackground(body);
-        if (status != 200 || data is! Map<String, dynamic>) {
-          throw StateError(data is Map && data['error'] != null ? '${data['error']}' : 'HTTP $status');
-        }
-        return await parseInvidiousVideo(candidate, data).withoutPrivateHosts();
+        return await _from(candidate, videoId);
       } catch (e) {
         lastError = e;
         logWarn('Invidious instance $candidate could not resolve $videoId: $e');
@@ -180,5 +171,21 @@ class InvidiousStreams extends RelayServers {
       }
     }
     throw StateError(tr('Invidious parsing failed: {0}', [lastError]));
+  }
+
+  /// The streams of [videoId] from [server], fetched through it
+  /// (`local=true`); throws when it has none.
+  Future<PipedVideo> _from(String server, String videoId) async {
+    final (status, body) = await getBounded(client, Uri.parse('$server/api/v1/videos/$videoId?local=true'), limit: 8 << 20).timeout(const Duration(seconds: 10));
+    if (readRelayVideo(true, body) case final read?) {
+      final video = read.video;
+      if (status != 200 || video == null) throw StateError(video?.error ?? 'HTTP $status');
+      return invidiousVideoFromCore(server, video).withoutPrivateHosts();
+    }
+    final data = await decodeUtf8JsonInBackground(body);
+    if (status != 200 || data is! Map<String, dynamic>) {
+      throw StateError(data is Map && data['error'] != null ? '${data['error']}' : 'HTTP $status');
+    }
+    return parseInvidiousVideo(server, data).withoutPrivateHosts();
   }
 }

@@ -110,3 +110,17 @@ path = "fuzz_targets/ytdlp_signature.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "vtt"
+path = "fuzz_targets/vtt.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "answers"
+path = "fuzz_targets/answers.rs"
+test = false
+doc = false
+bench = false

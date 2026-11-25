@@ -4239,5 +4239,14 @@
   "Previous match": "Նախորդ համընկնումը",
   "Next match": "Հաջորդ համընկնումը",
   "Show line by line": "Ցուցադրել տող առ տող",
-  "Read by whole sentence, translated as a whole": "Կարդալ ամբողջական նախադասություններով, թարգմանել որպես ամբողջություն"
+  "Read by whole sentence, translated as a whole": "Կարդալ ամբողջական նախադասություններով, թարգմանել որպես ամբողջություն",
+  "This part could not be shown; the details are in the error log": "Այս մասը հնարավոր չեղավ ցուցադրել․ մանրամասները սխալների մատյանում են",
+  "Top chat": "Լավագույն զրույց",
+  "All messages": "Բոլոր հաղորդագրությունները",
+  "Some messages, such as possible spam, are left out": "Որոշ հաղորդագրություններ, օրինակ՝ հնարավոր սպամը, բաց են թողնվում",
+  "Every message, as it is written": "Յուրաքանչյուր հաղորդագրություն՝ ինչպես գրվել է",
+  "{0} (not offered here)": "{0} (այստեղ հասանելի չէ)",
+  "Which messages show": "Որ հաղորդագրությունները ցուցադրել",
+  "Chat mode": "Զրույցի ռեժիմ",
+  "The installation is incomplete, so the chat can't be read": "Տեղադրումը թերի է, ուստի զրույցը հնարավոր չէ կարդալ"
 }

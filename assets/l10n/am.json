@@ -4239,5 +4239,14 @@
   "Previous match": "ቀዳሚ ውጤት",
   "Next match": "ቀጣይ ውጤት",
   "Show line by line": "መስመር በመስመር አሳይ",
-  "Read by whole sentence, translated as a whole": "በሙሉ ዓረፍተ ነገር አንብብ፣ በሙሉ ተተርጉሟል"
+  "Read by whole sentence, translated as a whole": "በሙሉ ዓረፍተ ነገር አንብብ፣ በሙሉ ተተርጉሟል",
+  "This part could not be shown; the details are in the error log": "ይህ ክፍል ሊታይ አልቻለም፤ ዝርዝሩ በስህተት መዝገቡ ውስጥ ነው",
+  "Top chat": "ዋና ውይይት",
+  "All messages": "ሁሉም መልዕክቶች",
+  "Some messages, such as possible spam, are left out": "አንዳንድ መልዕክቶች፣ ለምሳሌ አይፈለጌ ሊሆኑ የሚችሉ፣ ተትተዋል",
+  "Every message, as it is written": "እያንዳንዱ መልዕክት፣ እንደተጻፈ",
+  "{0} (not offered here)": "{0} (እዚህ አይቀርብም)",
+  "Which messages show": "የትኞቹ መልዕክቶች ይታያሉ",
+  "Chat mode": "የውይይት ሁነታ",
+  "The installation is incomplete, so the chat can't be read": "መጫኑ ያልተሟላ ነው፣ ስለዚህ ውይይቱ ሊነበብ አይችልም"
 }

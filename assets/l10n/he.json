@@ -4239,5 +4239,14 @@
   "Previous match": "ההתאמה הקודמת",
   "Next match": "ההתאמה הבאה",
   "Show line by line": "הצגה שורה אחר שורה",
-  "Read by whole sentence, translated as a whole": "קריאה לפי משפטים שלמים, מתורגמים כמכלול"
+  "Read by whole sentence, translated as a whole": "קריאה לפי משפטים שלמים, מתורגמים כמכלול",
+  "This part could not be shown; the details are in the error log": "לא ניתן היה להציג חלק זה; הפרטים ביומן השגיאות",
+  "Top chat": "צ'אט מוביל",
+  "All messages": "כל ההודעות",
+  "Some messages, such as possible spam, are left out": "חלק מההודעות, כמו ספאם אפשרי, מושמטות",
+  "Every message, as it is written": "כל הודעה, כפי שנכתבה",
+  "{0} (not offered here)": "{0} (לא זמין כאן)",
+  "Which messages show": "אילו הודעות להציג",
+  "Chat mode": "מצב צ'אט",
+  "The installation is incomplete, so the chat can't be read": "ההתקנה לא הושלמה, ולכן אי אפשר לקרוא את הצ'אט"
 }

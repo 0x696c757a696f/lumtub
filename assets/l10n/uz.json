@@ -4239,5 +4239,14 @@
   "Previous match": "Oldingi moslik",
   "Next match": "Keyingi moslik",
   "Show line by line": "Qatorma-qator ko'rsatish",
-  "Read by whole sentence, translated as a whole": "To'liq jumlalar bo'yicha o'qish, butunlay tarjima qilish"
+  "Read by whole sentence, translated as a whole": "To'liq jumlalar bo'yicha o'qish, butunlay tarjima qilish",
+  "This part could not be shown; the details are in the error log": "Bu qismni ko‘rsatib bo‘lmadi; tafsilotlar xatolar jurnalida",
+  "Top chat": "Asosiy chat",
+  "All messages": "Barcha xabarlar",
+  "Some messages, such as possible spam, are left out": "Ba'zi xabarlar, masalan, spam bo'lishi mumkin bo'lganlari, ko'rsatilmaydi",
+  "Every message, as it is written": "Har bir xabar yozilganidek",
+  "{0} (not offered here)": "{0} (bu yerda mavjud emas)",
+  "Which messages show": "Qaysi xabarlar ko'rsatiladi",
+  "Chat mode": "Chat rejimi",
+  "The installation is incomplete, so the chat can't be read": "O'rnatish to'liq emas, shuning uchun chatni o'qib bo'lmaydi"
 }

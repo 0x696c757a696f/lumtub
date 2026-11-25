@@ -4239,5 +4239,14 @@
   "Previous match": "លទ្ធផលផ្គូផ្គងមុន",
   "Next match": "លទ្ធផលផ្គូផ្គងបន្ទាប់",
   "Show line by line": "បង្ហាញម្ដងមួយបន្ទាត់",
-  "Read by whole sentence, translated as a whole": "អានតាមប្រយោគពេញ ហើយបកប្រែជាមួយគ្នា"
+  "Read by whole sentence, translated as a whole": "អានតាមប្រយោគពេញ ហើយបកប្រែជាមួយគ្នា",
+  "This part could not be shown; the details are in the error log": "មិនអាចបង្ហាញផ្នែកនេះបានទេ ព័ត៌មានលម្អិតមាននៅក្នុងកំណត់ហេតុកំហុស",
+  "Top chat": "ជជែកកំពូល",
+  "All messages": "សារទាំងអស់",
+  "Some messages, such as possible spam, are left out": "សារមួយចំនួន ដូចជាសារឥតបានការដែលអាចកើតមាន ត្រូវបានលុបចេញ",
+  "Every message, as it is written": "សារនីមួយៗ ដូចដែលបានសរសេរ",
+  "{0} (not offered here)": "{0} (មិនមាននៅទីនេះទេ)",
+  "Which messages show": "សារណាខ្លះត្រូវបង្ហាញ",
+  "Chat mode": "របៀបជជែក",
+  "The installation is incomplete, so the chat can't be read": "ការដំឡើងមិនពេញលេញ ដូច្នេះមិនអាចអានការជជែកបានទេ"
 }

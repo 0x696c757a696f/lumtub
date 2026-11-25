@@ -4239,5 +4239,14 @@
   "Previous match": "Претходно совпаѓање",
   "Next match": "Следно совпаѓање",
   "Show line by line": "Прикажи ред по ред",
-  "Read by whole sentence, translated as a whole": "Читај по цели реченици, преведувај како целина"
+  "Read by whole sentence, translated as a whole": "Читај по цели реченици, преведувај како целина",
+  "This part could not be shown; the details are in the error log": "Овој дел не може да се прикаже; деталите се во дневникот на грешки",
+  "Top chat": "Топ разговор",
+  "All messages": "Сите пораки",
+  "Some messages, such as possible spam, are left out": "Некои пораки, како можен спам, се изоставени",
+  "Every message, as it is written": "Секоја порака, онака како што е напишана",
+  "{0} (not offered here)": "{0} (не е достапно овде)",
+  "Which messages show": "Кои пораки се прикажуваат",
+  "Chat mode": "Режим на разговор",
+  "The installation is incomplete, so the chat can't be read": "Инсталацијата е нецелосна, па разговорот не може да се прочита"
 }

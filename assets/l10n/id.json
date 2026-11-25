@@ -4239,5 +4239,14 @@
   "Previous match": "Hasil sebelumnya",
   "Next match": "Hasil berikutnya",
   "Show line by line": "Tampilkan baris demi baris",
-  "Read by whole sentence, translated as a whole": "Baca per kalimat utuh, diterjemahkan secara utuh"
+  "Read by whole sentence, translated as a whole": "Baca per kalimat utuh, diterjemahkan secara utuh",
+  "This part could not be shown; the details are in the error log": "Bagian ini tidak dapat ditampilkan; detailnya ada di log kesalahan",
+  "Top chat": "Chat teratas",
+  "All messages": "Semua pesan",
+  "Some messages, such as possible spam, are left out": "Beberapa pesan, seperti kemungkinan spam, tidak ditampilkan",
+  "Every message, as it is written": "Setiap pesan, apa adanya",
+  "{0} (not offered here)": "{0} (tidak tersedia di sini)",
+  "Which messages show": "Pesan yang ditampilkan",
+  "Chat mode": "Mode chat",
+  "The installation is incomplete, so the chat can't be read": "Penginstalan tidak lengkap, sehingga chat tidak dapat dibaca"
 }

@@ -4239,5 +4239,14 @@
   "Previous match": "前の一致",
   "Next match": "次の一致",
   "Show line by line": "1 行ずつ表示",
-  "Read by whole sentence, translated as a whole": "文全体で読み、まとめて翻訳"
+  "Read by whole sentence, translated as a whole": "文全体で読み、まとめて翻訳",
+  "This part could not be shown; the details are in the error log": "この部分を表示できませんでした。詳細はエラーログにあります",
+  "Top chat": "トップチャット",
+  "All messages": "すべてのメッセージ",
+  "Some messages, such as possible spam, are left out": "スパムの可能性があるものなど、一部のメッセージは表示されません",
+  "Every message, as it is written": "すべてのメッセージを書かれたままに表示します",
+  "{0} (not offered here)": "{0}（このチャットでは選べません）",
+  "Which messages show": "表示するメッセージ",
+  "Chat mode": "チャットモード",
+  "The installation is incomplete, so the chat can't be read": "インストールが不完全なため、チャットを読み取れません"
 }

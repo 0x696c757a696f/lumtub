@@ -54,6 +54,90 @@ class SuperChatHighlightSwitch extends StatelessWidget {
   }
 }
 
+/// Picks Top chat or every message for the live chat and its replay, as
+/// YouTube's menu over the chat does.
+class ChatViewMenu extends StatelessWidget {
+  const ChatViewMenu({super.key, required this.controller});
+  final AppController controller;
+
+  static String labelOf(ChatView view) => switch (view) {
+        ChatView.top => tr('Top chat'),
+        ChatView.all => tr('All messages'),
+      };
+
+  static String detailOf(ChatView view) => switch (view) {
+        ChatView.top => tr('Some messages, such as possible spam, are left out'),
+        ChatView.all => tr('Every message, as it is written'),
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final picked = controller.preferences.chatView;
+    // Read through yt-dlp, or a chat with one view: YouTube's choice shows.
+    final shown = controller.chatViewShown;
+    final label = shown == null && !controller.loadingReplayChat && controller.replayChat.isNotEmpty ? tr('{0} (not offered here)', [labelOf(picked)]) : labelOf(picked);
+    return PopupMenuButton<ChatView>(
+      tooltip: tr('Which messages show'),
+      initialValue: picked,
+      onSelected: (view) {
+        if (view != picked) unawaited(controller.setChatView(view));
+      },
+      itemBuilder: (context) => [
+        for (final view in ChatView.values)
+          CheckedPopupMenuItem<ChatView>(
+            value: view,
+            checked: view == picked,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              Text(labelOf(view)),
+              Text(detailOf(view), style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12)),
+            ]),
+          ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Flexible(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurface, fontWeight: FontWeight.w600, fontSize: 13))),
+          Icon(AppIcons.caretDown, size: 14, color: colors.onSurfaceVariant),
+        ]),
+      ),
+    );
+  }
+}
+
+/// The chat's mode over the messages: its last change (slow mode,
+/// subscribers-only or members-only mode on or off) and who may write.
+class ChatModeStrip extends StatelessWidget {
+  const ChatModeStrip({super.key, required this.controller});
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final lines = [
+      if (controller.chatMode case final mode?) (AppIcons.hourglassMedium, mode.text),
+      if (controller.chatRestricted case final restricted?) (AppIcons.lock, restricted),
+    ];
+    if (lines.isEmpty) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(color: colors.surfaceContainerHighest, borderRadius: AppStyle.cardRadius),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        for (final (icon, text) in lines)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(children: [
+              Icon(icon, size: 16, color: colors.onSurfaceVariant),
+              const SizedBox(width: 8),
+              Expanded(child: Text(text, style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13))),
+            ]),
+          ),
+      ]),
+    );
+  }
+}
+
 /// One message of a live chat or chat replay: the author's picture and
 /// name, which open their channel, and a Super Chat in its tier's colour.
 class ChatMessageRow extends StatelessWidget {
@@ -73,9 +157,10 @@ class ChatMessageRow extends StatelessWidget {
     final colors = context.colors;
     final time = message.offset == null ? '' : formatPlaybackTime(message.offset!);
     final openAuthor = _openAuthor(controller, message);
-    final name = message.author.isEmpty ? tr('System message') : message.author;
+    final name = message.author.isNotEmpty ? message.author : message.kind == LiveChatKind.mode ? tr('Chat mode') : tr('System message');
     final Widget picture = switch (message.kind) {
       LiveChatKind.system => Icon(AppIcons.info, size: 20, color: colors.outline),
+      LiveChatKind.mode => Icon(AppIcons.hourglassMedium, size: 20, color: colors.outline),
       _ => InkWell(
           customBorder: const CircleBorder(),
           onTap: openAuthor,

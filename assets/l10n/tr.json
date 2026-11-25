@@ -4239,5 +4239,14 @@
   "Previous match": "Önceki eşleşme",
   "Next match": "Sonraki eşleşme",
   "Show line by line": "Satır satır göster",
-  "Read by whole sentence, translated as a whole": "Tam cümle olarak oku, bütün olarak çevir"
+  "Read by whole sentence, translated as a whole": "Tam cümle olarak oku, bütün olarak çevir",
+  "This part could not be shown; the details are in the error log": "Bu bölüm gösterilemedi; ayrıntılar hata günlüğünde",
+  "Top chat": "Üst sohbet",
+  "All messages": "Tüm mesajlar",
+  "Some messages, such as possible spam, are left out": "Olası spam gibi bazı mesajlar dışarıda bırakılır",
+  "Every message, as it is written": "Her mesaj, yazıldığı gibi",
+  "{0} (not offered here)": "{0} (burada sunulmuyor)",
+  "Which messages show": "Hangi mesajlar gösterilsin",
+  "Chat mode": "Sohbet modu",
+  "The installation is incomplete, so the chat can't be read": "Kurulum eksik olduğundan sohbet okunamıyor"
 }

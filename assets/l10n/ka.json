@@ -4239,5 +4239,14 @@
   "Previous match": "წინა დამთხვევა",
   "Next match": "შემდეგი დამთხვევა",
   "Show line by line": "ხაზ-ხაზ ჩვენება",
-  "Read by whole sentence, translated as a whole": "სრული წინადადებებით კითხვა, მთლიანად თარგმნა"
+  "Read by whole sentence, translated as a whole": "სრული წინადადებებით კითხვა, მთლიანად თარგმნა",
+  "This part could not be shown; the details are in the error log": "ამ ნაწილის ჩვენება ვერ მოხერხდა; დეტალები შეცდომების ჟურნალშია",
+  "Top chat": "ტოპ ჩატი",
+  "All messages": "ყველა შეტყობინება",
+  "Some messages, such as possible spam, are left out": "ზოგი შეტყობინება, მაგალითად შესაძლო სპამი, გამოტოვებულია",
+  "Every message, as it is written": "ყველა შეტყობინება ისე, როგორც დაიწერა",
+  "{0} (not offered here)": "{0} (აქ ხელმისაწვდომი არ არის)",
+  "Which messages show": "რომელი შეტყობინებები გამოჩნდეს",
+  "Chat mode": "ჩატის რეჟიმი",
+  "The installation is incomplete, so the chat can't be read": "ინსტალაცია არასრულია, ამიტომ ჩატის წაკითხვა შეუძლებელია"
 }

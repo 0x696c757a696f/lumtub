@@ -4239,5 +4239,14 @@
   "Previous match": "முந்தைய பொருத்தம்",
   "Next match": "அடுத்த பொருத்தம்",
   "Show line by line": "வரி வரியாகக் காட்டு",
-  "Read by whole sentence, translated as a whole": "முழு வாக்கியமாகப் படித்து, முழுமையாக மொழிபெயர்"
+  "Read by whole sentence, translated as a whole": "முழு வாக்கியமாகப் படித்து, முழுமையாக மொழிபெயர்",
+  "This part could not be shown; the details are in the error log": "இந்தப் பகுதியைக் காட்ட முடியவில்லை; விவரங்கள் பிழைப் பதிவில் உள்ளன",
+  "Top chat": "முதன்மை அரட்டை",
+  "All messages": "அனைத்து செய்திகளும்",
+  "Some messages, such as possible spam, are left out": "ஸ்பேமாக இருக்கக்கூடியவை போன்ற சில செய்திகள் தவிர்க்கப்படும்",
+  "Every message, as it is written": "ஒவ்வொரு செய்தியும், எழுதியபடியே",
+  "{0} (not offered here)": "{0} (இங்கே வழங்கப்படவில்லை)",
+  "Which messages show": "எந்தச் செய்திகள் காட்டப்படும்",
+  "Chat mode": "அரட்டை பயன்முறை",
+  "The installation is incomplete, so the chat can't be read": "நிறுவல் முழுமையடையவில்லை, எனவே அரட்டையைப் படிக்க முடியாது"
 }

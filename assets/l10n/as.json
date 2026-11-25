@@ -4239,5 +4239,14 @@
   "Previous match": "আগৰ মিল",
   "Next match": "পিছৰ মিল",
   "Show line by line": "শাৰী শাৰীকৈ দেখুৱাওক",
-  "Read by whole sentence, translated as a whole": "সম্পূৰ্ণ বাক্যকৈ পঢ়ক, সম্পূৰ্ণ অনুবাদ কৰক"
+  "Read by whole sentence, translated as a whole": "সম্পূৰ্ণ বাক্যকৈ পঢ়ক, সম্পূৰ্ণ অনুবাদ কৰক",
+  "This part could not be shown; the details are in the error log": "এই অংশটো দেখুৱাব পৰা নগ'ল; বিৱৰণ ত্ৰুটি লগত আছে",
+  "Top chat": "শীৰ্ষ চেট",
+  "All messages": "সকলো বাৰ্তা",
+  "Some messages, such as possible spam, are left out": "সম্ভাব্য স্পেমৰ দৰে কিছুমান বাৰ্তা বাদ দিয়া হৈছে",
+  "Every message, as it is written": "প্ৰতিটো বাৰ্তা, যেনেকৈ লিখা হৈছে",
+  "{0} (not offered here)": "{0} (ইয়াত উপলব্ধ নহয়)",
+  "Which messages show": "কোনবোৰ বাৰ্তা দেখুৱাব",
+  "Chat mode": "চেট মোড",
+  "The installation is incomplete, so the chat can't be read": "ইনস্টলেচন অসম্পূৰ্ণ, সেয়েহে চেট পঢ়িব নোৱাৰি"
 }

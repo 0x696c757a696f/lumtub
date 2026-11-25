@@ -404,6 +404,8 @@ fn lockup(model: &Value) -> Option<Value> {
         .iter()
         .filter_map(|r| r.get("metadataParts")?.as_array())
         .flatten()
+        // A channel's own playlists link "Playlist" or "View full podcast"
+        // to the list itself, which is no channel.
         .find(|p| {
             at(p, &["text", "commandRuns"])
                 .and_then(Value::as_array)
@@ -414,7 +416,8 @@ fn lockup(model: &Value) -> Option<Value> {
                         &["onTap", "innertubeCommand", "browseEndpoint", "browseId"],
                     )
                 })
-                .is_some()
+                .and_then(Value::as_str)
+                .is_some_and(is_channel_id)
         });
     let channel = channel_part
         .and_then(|p| at(p, &["text", "content"])?.as_str())
@@ -663,8 +666,23 @@ fn basic(item: &Value) -> Option<Value> {
     None
 }
 
-/// The continuation token of a `continuationItemRenderer`.
+/// The continuation token of a `continuationItemRenderer`, or of the
+/// `continuationItemViewModel` playlists end with since November 2026.
 fn continuation(item: &Value) -> Option<String> {
+    if let Some(model) = item.get("continuationItemViewModel") {
+        return at(
+            model,
+            &[
+                "continuationCommand",
+                "innertubeCommand",
+                "continuationCommand",
+                "token",
+            ],
+        )
+        .or_else(|| at(model, &["continuationCommand", "token"]))?
+        .as_str()
+        .map(str::to_owned);
+    }
     let renderer = item.get("continuationItemRenderer")?;
     let endpoint = renderer
         .get("continuationEndpoint")
@@ -1178,5 +1196,36 @@ mod tests {
             {"badges": [{"badgeViewModel": {"badgeText": "Members only", "badgeStyle": "BADGE_MEMBERS_ONLY"}}]}
         ]}}}}});
         assert_eq!(lockup(&model).unwrap()["availability"], "subscriber_only");
+    }
+
+    #[test]
+    fn reads_a_playlist_of_lockups_and_its_next_page() {
+        // A playlist's page as YouTube sends it since November 2026.
+        let channel = json!({"text": {"content": "Discerning Hearts®", "commandRuns": [{"onTap": {"innertubeCommand": {"browseEndpoint": {"browseId": "UCo1v9xcpaPVoyQ-uqsyoP-w", "canonicalBaseUrl": "/@DiscerningHearts"}}}}]}});
+        let response = json!({"contents": {"twoColumnBrowseResultsRenderer": {"tabs": [{"tabRenderer": {"selected": true, "content": {"sectionListRenderer": {"contents": [
+            {"itemSectionRenderer": {"contents": [
+                {"lockupViewModel": {"contentId": "vu0AE3yf96I", "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+                    "metadata": {"lockupMetadataViewModel": {"title": {"content": "How to Carry Sorrow with Faith"},
+                        "metadata": {"contentMetadataViewModel": {"metadataRows": [{"metadataParts": [channel]}]}}}}}}
+            ]}},
+            {"continuationItemViewModel": {"trigger": "CONTINUATION_TRIGGER_ON_ITEM_SHOWN", "continuationCommand": {"innertubeCommand": {"continuationCommand": {"token": "NEXTPAGE", "request": "CONTINUATION_REQUEST_TYPE_BROWSE"}}}}}
+        ]}}}}]}}});
+        let read = page(&response);
+        assert_eq!(read.entries.len(), 1);
+        assert_eq!(read.entries[0]["id"], "vu0AE3yf96I");
+        assert_eq!(read.entries[0]["channel"], "Discerning Hearts®");
+        assert_eq!(read.continuation.as_deref(), Some("NEXTPAGE"));
+    }
+
+    #[test]
+    fn a_channels_playlist_is_not_by_a_channel_called_playlist() {
+        let model = json!({"contentId": "PLRmlKJWQxo1o", "contentType": "LOCKUP_CONTENT_TYPE_PLAYLIST",
+        "metadata": {"lockupMetadataViewModel": {"title": {"content": "The Spiritual Journey"},
+            "metadata": {"contentMetadataViewModel": {"metadataRows": [{"metadataParts": [
+                {"text": {"content": "Playlist", "commandRuns": [{"onTap": {"innertubeCommand": {"browseEndpoint": {"browseId": "VLPLRmlKJWQxo1o"}}}}]}}
+            ]}]}}}}});
+        let read = lockup(&model).unwrap();
+        assert_eq!(read["id"], "PLRmlKJWQxo1o");
+        assert!(read["channel"].is_null());
     }
 }

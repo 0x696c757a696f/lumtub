@@ -4239,5 +4239,14 @@
   "Previous match": "Risultato precedente",
   "Next match": "Risultato successivo",
   "Show line by line": "Mostra riga per riga",
-  "Read by whole sentence, translated as a whole": "Leggi per frasi intere, tradotte nel loro insieme"
+  "Read by whole sentence, translated as a whole": "Leggi per frasi intere, tradotte nel loro insieme",
+  "This part could not be shown; the details are in the error log": "Impossibile mostrare questa parte; i dettagli sono nel log degli errori",
+  "Top chat": "Chat principale",
+  "All messages": "Tutti i messaggi",
+  "Some messages, such as possible spam, are left out": "Alcuni messaggi, come il possibile spam, vengono omessi",
+  "Every message, as it is written": "Ogni messaggio, così com'è scritto",
+  "{0} (not offered here)": "{0} (non disponibile qui)",
+  "Which messages show": "Quali messaggi mostrare",
+  "Chat mode": "Modalità chat",
+  "The installation is incomplete, so the chat can't be read": "L'installazione è incompleta, quindi la chat non può essere letta"
 }

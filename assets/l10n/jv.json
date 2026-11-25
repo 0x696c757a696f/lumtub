@@ -4239,5 +4239,14 @@
   "Previous match": "Asil sadurungé",
   "Next match": "Asil sabanjuré",
   "Show line by line": "Tampilna baris saben baris",
-  "Read by whole sentence, translated as a whole": "Woca saben ukara lengkap, diterjemahaké sakabèhé"
+  "Read by whole sentence, translated as a whole": "Woca saben ukara lengkap, diterjemahaké sakabèhé",
+  "This part could not be shown; the details are in the error log": "Bagéan iki ora bisa ditampilaké; rinciané ana ing log kesalahan",
+  "Top chat": "Chat utama",
+  "All messages": "Kabeh pesen",
+  "Some messages, such as possible spam, are left out": "Sawetara pesen, kayata spam kang bisa uga, ora ditampilake",
+  "Every message, as it is written": "Saben pesen, kaya sing ditulis",
+  "{0} (not offered here)": "{0} (ora kasedhiya ing kene)",
+  "Which messages show": "Pesen endi sing ditampilake",
+  "Chat mode": "Mode chat",
+  "The installation is incomplete, so the chat can't be read": "Instalasi ora lengkap, mula chat ora bisa diwaca"
 }

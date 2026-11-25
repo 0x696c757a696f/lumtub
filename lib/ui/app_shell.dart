@@ -940,7 +940,15 @@ class _TopBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         // Seeing the desktop, each thing on the bar glows to stay readable:
         // one plate for the whole row, as the halos are the same.
-        child: GlassPlate(surface: skin?.topBar, child: Row(children: [
+        // On a phone, typing a search hands the field the whole bar, so its
+        // list of recent and suggested searches is as wide as the screen;
+        // the arrow puts the bar back.
+        child: ListenableBuilder(listenable: searchFocus, builder: (context, _) {
+          final searching = !wide && searchFocus.hasFocus && MediaQuery.sizeOf(context).width < 600;
+          return GlassPlate(surface: skin?.topBar, child: Row(children: [
+          if (searching)
+            IconButton(tooltip: tr('Back'), onPressed: searchFocus.unfocus, icon: Icon(AppIcons.arrowLeft))
+          else
           InkWell(
             borderRadius: AppStyle.cardRadius,
             onTap: () => controller.navigate(PageMode.home),
@@ -965,6 +973,7 @@ class _TopBar extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 640),
             child: SizedBox(height: 40, child: _SearchField(app: controller, controller: searchText, focusNode: searchFocus, enabled: ready, onSubmit: onSubmit)),
           ))),
+          if (!searching) ...[
           SizedBox(width: wide ? 16 : 4),
           IconButton(
             tooltip: keyNames(controller.incognito ? tr('Incognito mode is on; click to turn it off (Ctrl+Shift+N)') : tr("Incognito mode: don't record watching and searching (Ctrl+Shift+N)")),
@@ -995,7 +1004,9 @@ class _TopBar extends StatelessWidget {
                 ? openSettingsCategory(context, controller, SettingsCategory.account)
                 : openSettings(context, controller, category: SettingsCategory.account),
           ),
-        ])),
+          ],
+        ]));
+        }),
       ),
       )),
     );

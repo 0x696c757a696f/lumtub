@@ -4239,5 +4239,14 @@
   "Previous match": "Potrivirea anterioară",
   "Next match": "Potrivirea următoare",
   "Show line by line": "Afișează rând cu rând",
-  "Read by whole sentence, translated as a whole": "Citește pe propoziții întregi, tradu ca întreg"
+  "Read by whole sentence, translated as a whole": "Citește pe propoziții întregi, tradu ca întreg",
+  "This part could not be shown; the details are in the error log": "Această parte nu a putut fi afișată; detaliile sunt în jurnalul de erori",
+  "Top chat": "Chat principal",
+  "All messages": "Toate mesajele",
+  "Some messages, such as possible spam, are left out": "Unele mesaje, cum ar fi posibilul spam, sunt omise",
+  "Every message, as it is written": "Fiecare mesaj, așa cum a fost scris",
+  "{0} (not offered here)": "{0} (indisponibil aici)",
+  "Which messages show": "Ce mesaje se afișează",
+  "Chat mode": "Mod chat",
+  "The installation is incomplete, so the chat can't be read": "Instalarea este incompletă, deci chatul nu poate fi citit"
 }

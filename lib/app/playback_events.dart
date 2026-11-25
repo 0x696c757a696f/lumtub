@@ -69,7 +69,11 @@ extension PlaybackEvents on AppController {
       replayChat = const [];
       chatTicker = const [];
       loadingReplayChat = false;
+      loadingMoreChat = false;
       replayChatError = null;
+      chatViewShown = null;
+      chatRestricted = null;
+      chatMode = null;
       availableHeights = const [];
       availableFrameRates = const {};
       availableAudioLanguages = const [];
@@ -110,11 +114,7 @@ extension PlaybackEvents on AppController {
         if (length != null && opened.duration == null && !opened.isLive) unawaited(_fillDuration(opened.id, serial, length));
       }
       if (start != null && at == null) _notice(tr('Resume from {0}', [AppController._clock(start)]));
-      if (opened.isLive) {
-        _startCurrentChat(opened, serial);
-      } else if (item.liveStatus == 'was_live') {
-        unawaited(_loadReplayChat(item, serial));
-      }
+      if (opened.isLive || item.liveStatus == 'was_live') _startChat(opened, serial);
     }
   }
 

@@ -4239,5 +4239,14 @@
   "Previous match": "Eelmine vaste",
   "Next match": "Järgmine vaste",
   "Show line by line": "Näita rida realt",
-  "Read by whole sentence, translated as a whole": "Loe tervete lausetena, tõlgitud tervikuna"
+  "Read by whole sentence, translated as a whole": "Loe tervete lausetena, tõlgitud tervikuna",
+  "This part could not be shown; the details are in the error log": "Seda osa ei saanud kuvada; üksikasjad on vealogis",
+  "Top chat": "Top-vestlus",
+  "All messages": "Kõik sõnumid",
+  "Some messages, such as possible spam, are left out": "Mõned sõnumid, näiteks võimalik rämpspost, jäetakse välja",
+  "Every message, as it is written": "Iga sõnum, nii nagu see on kirjutatud",
+  "{0} (not offered here)": "{0} (siin pole saadaval)",
+  "Which messages show": "Millised sõnumid kuvatakse",
+  "Chat mode": "Vestlusrežiim",
+  "The installation is incomplete, so the chat can't be read": "Installimine on poolik, seega ei saa vestlust lugeda"
 }

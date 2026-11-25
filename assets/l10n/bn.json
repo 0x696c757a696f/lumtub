@@ -4239,5 +4239,14 @@
   "Previous match": "আগের ফলাফল",
   "Next match": "পরের ফলাফল",
   "Show line by line": "লাইন ধরে ধরে দেখান",
-  "Read by whole sentence, translated as a whole": "পূর্ণ বাক্যে পড়ুন, পুরোটা একসঙ্গে অনুবাদ করুন"
+  "Read by whole sentence, translated as a whole": "পূর্ণ বাক্যে পড়ুন, পুরোটা একসঙ্গে অনুবাদ করুন",
+  "This part could not be shown; the details are in the error log": "এই অংশটি দেখানো যায়নি; বিস্তারিত ত্রুটি লগে আছে",
+  "Top chat": "শীর্ষ চ্যাট",
+  "All messages": "সব বার্তা",
+  "Some messages, such as possible spam, are left out": "সম্ভাব্য স্প্যামের মতো কিছু বার্তা বাদ দেওয়া হয়েছে",
+  "Every message, as it is written": "প্রতিটি বার্তা, যেভাবে লেখা হয়েছে",
+  "{0} (not offered here)": "{0} (এখানে দেওয়া হয় না)",
+  "Which messages show": "কোন বার্তাগুলো দেখাবে",
+  "Chat mode": "চ্যাট মোড",
+  "The installation is incomplete, so the chat can't be read": "ইনস্টলেশন অসম্পূর্ণ, তাই চ্যাট পড়া যাচ্ছে না"
 }

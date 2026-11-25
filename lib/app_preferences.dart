@@ -19,6 +19,7 @@ import 'wheel_gesture.dart';
 import 'translation_services.dart';
 import 'l10n/l10n.dart';
 import 'list_order.dart';
+import 'live_chat.dart' show ChatView;
 
 /// Pages the app can open on start, in navigation order.
 ///
@@ -136,6 +137,7 @@ class AppPreferences {
     this.bilingualTranslation = true,
     this.immersiveTranslation = false,
     this.superChatHighlights = true,
+    this.chatView = ChatView.top,
     this.danmaku = const DanmakuSettings(),
     this.immersiveLanguage = '',
     this.translationStyle = TranslationStyle.quote,
@@ -327,6 +329,9 @@ class AppPreferences {
   /// Super Chats in their amount's colour, and the strip of recent ones
   /// over the live chat.
   final bool superChatHighlights;
+  /// Which messages a live chat and its replay show: YouTube's Top chat
+  /// or every message.
+  final ChatView chatView;
   /// 弹幕: the live chat or its replay flying across the picture.
   final DanmakuSettings danmaku;
   /// The language 沉浸式翻译 turns text into; empty follows
@@ -555,6 +560,7 @@ class AppPreferences {
     bool? bilingualTranslation,
     bool? immersiveTranslation,
     bool? superChatHighlights,
+    ChatView? chatView,
     DanmakuSettings? danmaku,
     String? immersiveLanguage,
     TranslationStyle? translationStyle,
@@ -651,6 +657,7 @@ class AppPreferences {
         bilingualTranslation: bilingualTranslation ?? this.bilingualTranslation,
         immersiveTranslation: immersiveTranslation ?? this.immersiveTranslation,
         superChatHighlights: superChatHighlights ?? this.superChatHighlights,
+        chatView: chatView ?? this.chatView,
         danmaku: danmaku ?? this.danmaku,
         immersiveLanguage: immersiveLanguage ?? this.immersiveLanguage,
         translationStyle: translationStyle ?? this.translationStyle,
@@ -748,6 +755,7 @@ class AppPreferences {
         'bilingualTranslation': bilingualTranslation,
         'immersiveTranslation': immersiveTranslation,
         'superChatHighlights': superChatHighlights,
+        'chatView': chatView.name,
         'danmaku': danmaku.toJson(),
         'immersiveLanguage': immersiveLanguage,
         'translationStyle': translationStyle.name,
@@ -895,6 +903,7 @@ class AppPreferences {
       bilingualTranslation: flag('bilingualTranslation', d.bilingualTranslation),
       immersiveTranslation: flag('immersiveTranslation', d.immersiveTranslation),
       superChatHighlights: flag('superChatHighlights', d.superChatHighlights),
+      chatView: ChatView.values.where((v) => v.name == raw['chatView']).firstOrNull ?? d.chatView,
       danmaku: DanmakuSettings.fromJson(raw['danmaku']),
       immersiveLanguage: TranslationLanguage.maybeByCode(raw['immersiveLanguage'])?.code ?? '',
       translationStyle: TranslationStyle.values.where((v) => v.name == raw['translationStyle']).firstOrNull ?? d.translationStyle,

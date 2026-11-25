@@ -4239,5 +4239,14 @@
   "Previous match": "Föregående träff",
   "Next match": "Nästa träff",
   "Show line by line": "Visa rad för rad",
-  "Read by whole sentence, translated as a whole": "Läs hela meningar, översätt som en helhet"
+  "Read by whole sentence, translated as a whole": "Läs hela meningar, översätt som en helhet",
+  "This part could not be shown; the details are in the error log": "Den här delen kunde inte visas; detaljerna finns i felloggen",
+  "Top chat": "Toppchatt",
+  "All messages": "Alla meddelanden",
+  "Some messages, such as possible spam, are left out": "Vissa meddelanden, till exempel möjlig skräppost, utelämnas",
+  "Every message, as it is written": "Varje meddelande, precis som det är skrivet",
+  "{0} (not offered here)": "{0} (inte tillgängligt här)",
+  "Which messages show": "Vilka meddelanden som visas",
+  "Chat mode": "Chattläge",
+  "The installation is incomplete, so the chat can't be read": "Installationen är ofullständig, så chatten kan inte läsas"
 }

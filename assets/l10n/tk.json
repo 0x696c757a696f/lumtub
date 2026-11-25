@@ -4239,5 +4239,14 @@
   "Previous match": "Öňki gabat gelme",
   "Next match": "Indiki gabat gelme",
   "Show line by line": "Setir-setir görkez",
-  "Read by whole sentence, translated as a whole": "Doly sözlem boýunça oka, bütinleý terjime et"
+  "Read by whole sentence, translated as a whole": "Doly sözlem boýunça oka, bütinleý terjime et",
+  "This part could not be shown; the details are in the error log": "Bu bölegi görkezip bolmady; jikme-jiklikler ýalňyşlyklar žurnalynda",
+  "Top chat": "Esasy çat",
+  "All messages": "Ähli habarlar",
+  "Some messages, such as possible spam, are left out": "Spam bolmagy mümkin habarlar ýaly käbir habarlar görkezilmeýär",
+  "Every message, as it is written": "Her bir habar ýazylyşy ýaly",
+  "{0} (not offered here)": "{0} (bu ýerde elýeterli däl)",
+  "Which messages show": "Haýsy habarlar görkezilýär",
+  "Chat mode": "Çat tertibi",
+  "The installation is incomplete, so the chat can't be read": "Gurnama doly däl, şonuň üçin çaty okap bolmaýar"
 }

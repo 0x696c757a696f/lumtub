@@ -4239,5 +4239,14 @@
   "Previous match": "Cocog saméméhna",
   "Next match": "Cocog salajengna",
   "Show line by line": "Témbongkeun baris-baris",
-  "Read by whole sentence, translated as a whole": "Baca per kalimat lengkep, tarjamahkeun sakumna"
+  "Read by whole sentence, translated as a whole": "Baca per kalimat lengkep, tarjamahkeun sakumna",
+  "This part could not be shown; the details are in the error log": "Bagian ieu teu bisa ditémbongkeun; rinciana aya dina log kasalahan",
+  "Top chat": "Obrolan luhur",
+  "All messages": "Sadaya pesen",
+  "Some messages, such as possible spam, are left out": "Sababaraha pesen, sapertos spam anu mungkin, teu kaasup",
+  "Every message, as it is written": "Unggal pesen, sakumaha ditulis",
+  "{0} (not offered here)": "{0} (teu sayogi di dieu)",
+  "Which messages show": "Pesen mana anu dipidangkeun",
+  "Chat mode": "Mode obrolan",
+  "The installation is incomplete, so the chat can't be read": "Instalasina henteu lengkep, ku kituna obrolan teu tiasa dibaca"
 }

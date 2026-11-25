@@ -253,6 +253,34 @@ class PageHeader extends StatelessWidget {
   }
 }
 
+/// The heading of a page opened from another, such as a playlist: a back
+/// button, [title] with its lines under it, and [buttons]. On a phone the
+/// buttons go on their own lines under the title; on a wider page they
+/// sit beside it unless a translation makes them too wide for that.
+class BackHeading extends StatelessWidget {
+  const BackHeading({super.key, required this.onBack, required this.title, required this.buttons});
+  final VoidCallback onBack;
+  final Widget title;
+  final List<Widget> buttons;
+
+  static const stackBelow = 600.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final back = IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: onBack, icon: Icon(AppIcons.arrowLeft));
+    final heading = Row(children: [back, const SizedBox(width: 8), Expanded(child: title)]);
+    if (buttons.isEmpty) return heading;
+    final wrapped = Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: buttons);
+    return LayoutBuilder(builder: (context, constraints) => constraints.maxWidth < stackBelow
+        ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            heading,
+            const SizedBox(height: 8),
+            Padding(padding: const EdgeInsetsDirectional.only(start: 8), child: wrapped),
+          ])
+        : HeadingLine(children: [heading, wrapped]));
+  }
+}
+
 /// A title beside its buttons, bottoms lined up, or the buttons under the
 /// title when a translation makes them too wide to leave the title 160
 /// pixels beside them. [children] are the title, then the buttons.

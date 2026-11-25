@@ -554,7 +554,7 @@ class _PhoneDetailsState extends State<_PhoneDetails> {
         ),
         if (channelRef != null) ...[
           const SizedBox(width: 8),
-          FollowButton(controller: controller, channel: channelRef),
+          FollowButton(controller: controller, channel: channelRef, compact: MediaQuery.sizeOf(context).width < 600),
           ChannelMenuButton(controller: controller, channel: channelRef),
         ],
       ]),
@@ -1167,11 +1167,15 @@ class _ReplayChatPanel extends StatelessWidget {
     syncSuperChatHighlights(controller);
     final header = <Widget>[
       Row(children: [
-        Expanded(child: Text(tr(live ? 'Chat' : 'Chat replay'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
+        Flexible(child: Text(tr(live ? 'Chat' : 'Chat replay'), maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
+        const SizedBox(width: 4),
+        Expanded(child: Align(alignment: AlignmentDirectional.centerStart, child: ChatViewMenu(controller: controller))),
         if (_superChats.seenIn(messages) || controller.chatTicker.isNotEmpty) SuperChatHighlightSwitch(controller: controller),
         ImmersiveTranslationSwitch(controller: controller),
       ]),
       const SizedBox(height: 8),
+      ChatModeStrip(controller: controller),
+      if (controller.loadingMoreChat) const Padding(padding: EdgeInsets.only(bottom: 8), child: LinearProgressIndicator(minHeight: 2)),
       if (live && controller.chatTicker.isNotEmpty) Padding(padding: const EdgeInsets.only(bottom: 8), child: SuperChatStrip(controller: controller)),
       if (controller.loadingReplayChat) const Padding(padding: EdgeInsets.all(12), child: Center(child: CircularProgressIndicator())),
       if (controller.replayChatError != null) ErrorBanner(tr(live ? "Couldn't load the chat: {0}" : "Couldn't load chat replay: {0}", [controller.replayChatError]), onRetry: controller.retryChat),

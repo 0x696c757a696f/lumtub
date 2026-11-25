@@ -6,7 +6,19 @@ import 'native_core.dart';
 ///
 /// yt-dlp writes one JSON action per line. Replay actions include an offset
 /// into the video; current live-chat actions do not.
-enum LiveChatKind { message, paidMessage, paidSticker, membership, system }
+/// Which messages of a live chat show: YouTube's Top chat, which leaves out
+/// messages such as possible spam, or every message (Live chat).
+enum ChatView { top, all }
+
+enum LiveChatKind {
+  message,
+  paidMessage,
+  paidSticker,
+  membership,
+  system,
+  /// Slow mode, subscribers-only or members-only mode turned on or off.
+  mode,
+}
 
 class LiveChatMessage {
   const LiveChatMessage({
@@ -57,23 +69,23 @@ class LiveChatMessage {
     final core = NativeCore.instance;
     final list = core == null ? null : jsonDecode(core.take(core.withText(lines, core.liveChat)) ?? 'null');
     if (list is! List) return const [];
-    return [
-      for (final m in list.cast<Map<String, dynamic>>())
-        LiveChatMessage(
-          id: m['id'] as String,
-          kind: LiveChatKind.values.byName(m['kind'] as String),
-          text: m['text'] as String,
-          offset: m['offsetMs'] == null ? null : Duration(milliseconds: (m['offsetMs'] as num).toInt()),
-          timestampUsec: (m['timestampUsec'] as num?)?.toInt(),
-          author: m['author'] as String,
-          authorChannelId: m['authorChannelId'] as String?,
-          authorAvatar: m['authorAvatar'] as String?,
-          amount: m['amount'] as String?,
-          stickerUrl: m['stickerUrl'] as String?,
-          color: (m['color'] as num?)?.toInt(),
-          tickerSeconds: (m['tickerSeconds'] as num?)?.toInt(),
-          emojis: (m['emojis'] as Map<String, dynamic>?)?.cast<String, String>() ?? const {},
-        ),
-    ];
+    return [for (final m in list.cast<Map<String, dynamic>>()) fromCore(m)];
   }
+
+  /// A message as the native core reads it.
+  static LiveChatMessage fromCore(Map<String, dynamic> m) => LiveChatMessage(
+        id: m['id'] as String,
+        kind: LiveChatKind.values.byName(m['kind'] as String),
+        text: m['text'] as String,
+        offset: m['offsetMs'] == null ? null : Duration(milliseconds: (m['offsetMs'] as num).toInt()),
+        timestampUsec: (m['timestampUsec'] as num?)?.toInt(),
+        author: m['author'] as String,
+        authorChannelId: m['authorChannelId'] as String?,
+        authorAvatar: m['authorAvatar'] as String?,
+        amount: m['amount'] as String?,
+        stickerUrl: m['stickerUrl'] as String?,
+        color: (m['color'] as num?)?.toInt(),
+        tickerSeconds: (m['tickerSeconds'] as num?)?.toInt(),
+        emojis: (m['emojis'] as Map<String, dynamic>?)?.cast<String, String>() ?? const {},
+      );
 }

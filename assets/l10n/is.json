@@ -4239,5 +4239,14 @@
   "Previous match": "Fyrri niðurstaða",
   "Next match": "Næsta niðurstaða",
   "Show line by line": "Sýna línu fyrir línu",
-  "Read by whole sentence, translated as a whole": "Lesa heilar setningar, þýddar í heild"
+  "Read by whole sentence, translated as a whole": "Lesa heilar setningar, þýddar í heild",
+  "This part could not be shown; the details are in the error log": "Ekki tókst að sýna þennan hluta; nánar í villuskránni",
+  "Top chat": "Efstu skilaboð",
+  "All messages": "Öll skilaboð",
+  "Some messages, such as possible spam, are left out": "Sum skilaboð, svo sem hugsanlegur ruslpóstur, eru undanskilin",
+  "Every message, as it is written": "Öll skilaboð eins og þau eru skrifuð",
+  "{0} (not offered here)": "{0} (ekki í boði hér)",
+  "Which messages show": "Hvaða skilaboð birtast",
+  "Chat mode": "Spjallhamur",
+  "The installation is incomplete, so the chat can't be read": "Uppsetningin er ófullkomin og því er ekki hægt að lesa spjallið"
 }

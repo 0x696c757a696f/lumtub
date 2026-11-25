@@ -4239,5 +4239,14 @@
   "Previous match": "Predchádzajúca zhoda",
   "Next match": "Ďalšia zhoda",
   "Show line by line": "Zobraziť riadok po riadku",
-  "Read by whole sentence, translated as a whole": "Čítať po celých vetách, prekladať ako celok"
+  "Read by whole sentence, translated as a whole": "Čítať po celých vetách, prekladať ako celok",
+  "This part could not be shown; the details are in the error log": "Túto časť sa nepodarilo zobraziť; podrobnosti sú v denníku chýb",
+  "Top chat": "Top chat",
+  "All messages": "Všetky správy",
+  "Some messages, such as possible spam, are left out": "Niektoré správy, napríklad možný spam, sa vynechávajú",
+  "Every message, as it is written": "Každá správa tak, ako bola napísaná",
+  "{0} (not offered here)": "{0} (tu nie je k dispozícii)",
+  "Which messages show": "Ktoré správy sa zobrazujú",
+  "Chat mode": "Režim chatu",
+  "The installation is incomplete, so the chat can't be read": "Inštalácia je neúplná, preto sa chat nedá prečítať"
 }

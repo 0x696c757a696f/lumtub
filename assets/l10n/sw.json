@@ -4239,5 +4239,14 @@
   "Previous match": "Inayolingana iliyotangulia",
   "Next match": "Inayolingana inayofuata",
   "Show line by line": "Onyesha mstari kwa mstari",
-  "Read by whole sentence, translated as a whole": "Soma kwa sentensi kamili, tafsiri kama nzima"
+  "Read by whole sentence, translated as a whole": "Soma kwa sentensi kamili, tafsiri kama nzima",
+  "This part could not be shown; the details are in the error log": "Sehemu hii haikuweza kuonyeshwa; maelezo yako kwenye kumbukumbu ya hitilafu",
+  "Top chat": "Gumzo la juu",
+  "All messages": "Ujumbe wote",
+  "Some messages, such as possible spam, are left out": "Baadhi ya ujumbe, kama barua taka zinazowezekana, haujajumuishwa",
+  "Every message, as it is written": "Kila ujumbe, kama ulivyoandikwa",
+  "{0} (not offered here)": "{0} (haipatikani hapa)",
+  "Which messages show": "Ujumbe upi uonyeshwe",
+  "Chat mode": "Hali ya gumzo",
+  "The installation is incomplete, so the chat can't be read": "Usakinishaji haujakamilika, kwa hivyo gumzo haliwezi kusomwa"
 }

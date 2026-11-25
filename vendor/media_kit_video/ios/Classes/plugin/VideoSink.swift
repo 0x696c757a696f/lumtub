@@ -444,7 +444,11 @@ final class VideoSink: @unchecked Sendable {
       .highQualityDownsample: false,
       .useSoftwareRenderer: false,
     ]
-    if let space = CGColorSpace(name: CGColorSpace.extendedLinearDisplayP3) {
+    // Gamma-encoded, not linear: subtitles are blended as libass, the
+    // subtitle layer and Flutter blend them. In linear light a partly
+    // opaque outline (the second subtitle's 95%) over a light picture came
+    // out grey and see-through. Extended range keeps HDR frames whole.
+    if let space = CGColorSpace(name: CGColorSpace.extendedDisplayP3) {
       options[.workingColorSpace] = space
     }
     let made = MTLCreateSystemDefaultDevice().map { CIContext(mtlDevice: $0, options: options) }

@@ -4239,5 +4239,14 @@
   "Previous match": "Aurreko bat-etortzea",
   "Next match": "Hurrengo bat-etortzea",
   "Show line by line": "Erakutsi lerroz lerro",
-  "Read by whole sentence, translated as a whole": "Irakurri esaldi osoka, osotasunean itzulita"
+  "Read by whole sentence, translated as a whole": "Irakurri esaldi osoka, osotasunean itzulita",
+  "This part could not be shown; the details are in the error log": "Zati hau ezin izan da erakutsi; xehetasunak erroreen erregistroan daude",
+  "Top chat": "Txat nabarmendua",
+  "All messages": "Mezu guztiak",
+  "Some messages, such as possible spam, are left out": "Zenbait mezu, hala nola spam posiblea, ez dira erakusten",
+  "Every message, as it is written": "Mezu bakoitza, idatzi bezala",
+  "{0} (not offered here)": "{0} (ez dago hemen eskuragarri)",
+  "Which messages show": "Zein mezu erakutsi",
+  "Chat mode": "Txat modua",
+  "The installation is incomplete, so the chat can't be read": "Instalazioa osatu gabe dago, beraz txata ezin da irakurri"
 }

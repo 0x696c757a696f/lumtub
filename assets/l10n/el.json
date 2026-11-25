@@ -4239,5 +4239,14 @@
   "Previous match": "Προηγούμενο αποτέλεσμα",
   "Next match": "Επόμενο αποτέλεσμα",
   "Show line by line": "Εμφάνιση γραμμή προς γραμμή",
-  "Read by whole sentence, translated as a whole": "Ανάγνωση ανά ολόκληρη πρόταση, μετάφραση ως σύνολο"
+  "Read by whole sentence, translated as a whole": "Ανάγνωση ανά ολόκληρη πρόταση, μετάφραση ως σύνολο",
+  "This part could not be shown; the details are in the error log": "Αυτό το τμήμα δεν μπόρεσε να εμφανιστεί· οι λεπτομέρειες βρίσκονται στο αρχείο σφαλμάτων",
+  "Top chat": "Κορυφαία συνομιλία",
+  "All messages": "Όλα τα μηνύματα",
+  "Some messages, such as possible spam, are left out": "Ορισμένα μηνύματα, όπως πιθανά ανεπιθύμητα, παραλείπονται",
+  "Every message, as it is written": "Κάθε μήνυμα, όπως γράφτηκε",
+  "{0} (not offered here)": "{0} (δεν προσφέρεται εδώ)",
+  "Which messages show": "Ποια μηνύματα εμφανίζονται",
+  "Chat mode": "Λειτουργία συνομιλίας",
+  "The installation is incomplete, so the chat can't be read": "Η εγκατάσταση είναι ελλιπής, επομένως η συνομιλία δεν μπορεί να διαβαστεί"
 }

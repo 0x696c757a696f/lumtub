@@ -4239,5 +4239,14 @@
   "Previous match": "Előző találat",
   "Next match": "Következő találat",
   "Show line by line": "Megjelenítés soronként",
-  "Read by whole sentence, translated as a whole": "Olvasás egész mondatonként, egészében fordítva"
+  "Read by whole sentence, translated as a whole": "Olvasás egész mondatonként, egészében fordítva",
+  "This part could not be shown; the details are in the error log": "Ezt a részt nem sikerült megjeleníteni; a részletek a hibanaplóban vannak",
+  "Top chat": "Top chat",
+  "All messages": "Összes üzenet",
+  "Some messages, such as possible spam, are left out": "Egyes üzenetek, például a lehetséges spamek, kimaradnak",
+  "Every message, as it is written": "Minden üzenet úgy, ahogy megírták",
+  "{0} (not offered here)": "{0} (itt nem érhető el)",
+  "Which messages show": "Mely üzenetek jelenjenek meg",
+  "Chat mode": "Csevegési mód",
+  "The installation is incomplete, so the chat can't be read": "A telepítés hiányos, ezért a csevegés nem olvasható"
 }

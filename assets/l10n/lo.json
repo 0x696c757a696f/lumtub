@@ -4239,5 +4239,14 @@
   "Previous match": "ຜົນທີ່ກົງກັນກ່ອນໜ້າ",
   "Next match": "ຜົນທີ່ກົງກັນຖັດໄປ",
   "Show line by line": "ສະແດງເທື່ອລະແຖວ",
-  "Read by whole sentence, translated as a whole": "ອ່ານເປັນປະໂຫຍກເຕັມ ແລະ ແປທັງປະໂຫຍກ"
+  "Read by whole sentence, translated as a whole": "ອ່ານເປັນປະໂຫຍກເຕັມ ແລະ ແປທັງປະໂຫຍກ",
+  "This part could not be shown; the details are in the error log": "ບໍ່ສາມາດສະແດງສ່ວນນີ້ໄດ້; ລາຍລະອຽດຢູ່ໃນບັນທຶກຂໍ້ຜິດພາດ",
+  "Top chat": "ແຊັດເດັ່ນ",
+  "All messages": "ຂໍ້ຄວາມທັງໝົດ",
+  "Some messages, such as possible spam, are left out": "ບາງຂໍ້ຄວາມ ເຊັ່ນ ສະແປມທີ່ອາດເປັນໄປໄດ້ ຖືກຍົກເວັ້ນ",
+  "Every message, as it is written": "ທຸກຂໍ້ຄວາມ ຕາມທີ່ຂຽນ",
+  "{0} (not offered here)": "{0} (ບໍ່ມີໃຫ້ໃນນີ້)",
+  "Which messages show": "ສະແດງຂໍ້ຄວາມໃດແດ່",
+  "Chat mode": "ໂໝດແຊັດ",
+  "The installation is incomplete, so the chat can't be read": "ການຕິດຕັ້ງບໍ່ສົມບູນ ດັ່ງນັ້ນຈຶ່ງອ່ານແຊັດບໍ່ໄດ້"
 }

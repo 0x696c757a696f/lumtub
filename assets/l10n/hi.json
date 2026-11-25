@@ -4239,5 +4239,14 @@
   "Previous match": "पिछला मिलान",
   "Next match": "अगला मिलान",
   "Show line by line": "पंक्ति दर पंक्ति दिखाएँ",
-  "Read by whole sentence, translated as a whole": "पूरे वाक्य के रूप में पढ़ें, पूरा अनुवाद करें"
+  "Read by whole sentence, translated as a whole": "पूरे वाक्य के रूप में पढ़ें, पूरा अनुवाद करें",
+  "This part could not be shown; the details are in the error log": "यह भाग दिखाया नहीं जा सका; विवरण त्रुटि लॉग में है",
+  "Top chat": "टॉप चैट",
+  "All messages": "सभी संदेश",
+  "Some messages, such as possible spam, are left out": "संभावित स्पैम जैसे कुछ संदेश शामिल नहीं किए जाते",
+  "Every message, as it is written": "हर संदेश, जैसा लिखा गया है",
+  "{0} (not offered here)": "{0} (यहाँ उपलब्ध नहीं है)",
+  "Which messages show": "कौन-से संदेश दिखें",
+  "Chat mode": "चैट मोड",
+  "The installation is incomplete, so the chat can't be read": "इंस्टॉलेशन अधूरा है, इसलिए चैट नहीं पढ़ी जा सकती"
 }

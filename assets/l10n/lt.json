@@ -4239,5 +4239,14 @@
   "Previous match": "Ankstesnis atitikmuo",
   "Next match": "Kitas atitikmuo",
   "Show line by line": "Rodyti eilutė po eilutės",
-  "Read by whole sentence, translated as a whole": "Skaityti pagal sakinius, versti visą sakinį"
+  "Read by whole sentence, translated as a whole": "Skaityti pagal sakinius, versti visą sakinį",
+  "This part could not be shown; the details are in the error log": "Šios dalies nepavyko parodyti; išsami informacija klaidų žurnale",
+  "Top chat": "Populiariausias pokalbis",
+  "All messages": "Visi pranešimai",
+  "Some messages, such as possible spam, are left out": "Kai kurie pranešimai, pvz., galimas šlamštas, praleidžiami",
+  "Every message, as it is written": "Kiekvienas pranešimas, kaip jis parašytas",
+  "{0} (not offered here)": "{0} (čia nepasiūloma)",
+  "Which messages show": "Kurie pranešimai rodomi",
+  "Chat mode": "Pokalbio režimas",
+  "The installation is incomplete, so the chat can't be read": "Diegimas neišsamus, todėl pokalbio perskaityti negalima"
 }

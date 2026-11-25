@@ -4239,5 +4239,14 @@
   "Previous match": "Претходно подударање",
   "Next match": "Следеће подударање",
   "Show line by line": "Прикажи ред по ред",
-  "Read by whole sentence, translated as a whole": "Читај по целим реченицама, преводи као целину"
+  "Read by whole sentence, translated as a whole": "Читај по целим реченицама, преводи као целину",
+  "This part could not be shown; the details are in the error log": "Овај део није могао да се прикаже; детаљи су у дневнику грешака",
+  "Top chat": "Топ ћаскање",
+  "All messages": "Све поруке",
+  "Some messages, such as possible spam, are left out": "Неке поруке, као што је могући спам, изостављене су",
+  "Every message, as it is written": "Свака порука, онако како је написана",
+  "{0} (not offered here)": "{0} (није доступно овде)",
+  "Which messages show": "Које поруке се приказују",
+  "Chat mode": "Режим ћаскања",
+  "The installation is incomplete, so the chat can't be read": "Инсталација је непотпуна, па се ћаскање не може прочитати"
 }

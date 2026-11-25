@@ -4239,5 +4239,14 @@
   "Previous match": "മുൻ പൊരുത്തം",
   "Next match": "അടുത്ത പൊരുത്തം",
   "Show line by line": "വരി വരിയായി കാണിക്കുക",
-  "Read by whole sentence, translated as a whole": "മുഴുവൻ വാക്യമായി വായിച്ച് മുഴുവനായി വിവർത്തനം ചെയ്യുക"
+  "Read by whole sentence, translated as a whole": "മുഴുവൻ വാക്യമായി വായിച്ച് മുഴുവനായി വിവർത്തനം ചെയ്യുക",
+  "This part could not be shown; the details are in the error log": "ഈ ഭാഗം കാണിക്കാനായില്ല; വിശദാംശങ്ങൾ പിശക് ലോഗിലുണ്ട്",
+  "Top chat": "ടോപ്പ് ചാറ്റ്",
+  "All messages": "എല്ലാ സന്ദേശങ്ങളും",
+  "Some messages, such as possible spam, are left out": "സ്‌പാം ആകാൻ സാധ്യതയുള്ളവ പോലുള്ള ചില സന്ദേശങ്ങൾ ഒഴിവാക്കിയിരിക്കുന്നു",
+  "Every message, as it is written": "ഓരോ സന്ദേശവും, എഴുതിയതുപോലെ",
+  "{0} (not offered here)": "{0} (ഇവിടെ ലഭ്യമല്ല)",
+  "Which messages show": "ഏതൊക്കെ സന്ദേശങ്ങൾ കാണിക്കണം",
+  "Chat mode": "ചാറ്റ് മോഡ്",
+  "The installation is incomplete, so the chat can't be read": "ഇൻസ്റ്റലേഷൻ അപൂർണ്ണമാണ്, അതിനാൽ ചാറ്റ് വായിക്കാൻ കഴിയില്ല"
 }

@@ -108,9 +108,9 @@ void main() {
     final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero]);
     final path = await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated));
     expect(asked.last.queryParameters.containsKey('tlang'), isFalse);
-    expect(translator.asked, ['hello world\nhow & why']);
+    expect(translator.asked, ['hello world how & why']);
     expect(translator.targets, ['zh-CN']);
-    // Each line the original shows is translated as itself.
+    // Translated as one sentence, shown in the lines the original shows.
     final cues = WebVtt.cues(await File(path).readAsString());
     expect([for (final c in cues) c.text], ['HELLO WORLD', 'HOW & WHY']);
     expect(WebVtt.startOf(cues.last.timing), const Duration(milliseconds: 2010));
@@ -264,6 +264,19 @@ Ok, finita la chicca.
     // Each line of the original has its translation at the same times.
     final original = WebVtt.cues(WebVtt.asLines(asr));
     expect([for (final c in original) c.timing], [for (final c in cues) c.timing]);
+  });
+
+  test('cuts a translation like the lines of its original', () {
+    expect(WebVtt.splitLike('one two, three four five six', [8, 20]), ['one two,', 'three four five six']);
+    expect(WebVtt.splitLike('我们今天去公园，然后回家吃饭', [10, 10]), ['我们今天去公园，', '然后回家吃饭']);
+    expect(WebVtt.splitLike('我们今天去公园然后回家吃饭睡觉', [1, 1, 1]).length, 3);
+    expect(WebVtt.splitLike('abcdef', [1, 1]), ['abcdef']);
+    final long = 'parola ' * 60;
+    final parts = WebVtt.splitLike(long, [30, 30, 30, 30]);
+    expect(parts.length, 4);
+    for (final p in parts) {
+      expect(p.length, inInclusiveRange(80, 120));
+    }
   });
 
   test('reads when a cue starts', () {

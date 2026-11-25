@@ -1,0 +1,4 @@
+# Signed and hashed files: byte for byte on every system (no CRLF on Windows).
+testdata/yt-dlp-SHA2-256SUMS -text
+testdata/yt-dlp-SHA2-256SUMS.sig -text
+keys/** -text

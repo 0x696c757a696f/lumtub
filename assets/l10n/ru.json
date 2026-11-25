@@ -4239,5 +4239,6 @@
   "Previous match": "Предыдущее совпадение",
   "Next match": "Следующее совпадение",
   "Show line by line": "Показывать построчно",
-  "Read by whole sentence, translated as a whole": "Читать целыми предложениями, переводить целиком"
+  "Read by whole sentence, translated as a whole": "Читать целыми предложениями, переводить целиком",
+  "This part could not be shown; the details are in the error log": "Не удалось показать эту часть; подробности в журнале ошибок"
 }

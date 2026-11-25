@@ -4239,5 +4239,6 @@
   "Previous match": "ယခင်ကိုက်ညီမှု",
   "Next match": "နောက်ကိုက်ညီမှု",
   "Show line by line": "စာကြောင်းလိုက် ပြရန်",
-  "Read by whole sentence, translated as a whole": "ဝါကျအပြည့်အစုံအလိုက် ဖတ်ပြီး တစ်ခုလုံး ဘာသာပြန်ရန်"
+  "Read by whole sentence, translated as a whole": "ဝါကျအပြည့်အစုံအလိုက် ဖတ်ပြီး တစ်ခုလုံး ဘာသာပြန်ရန်",
+  "This part could not be shown; the details are in the error log": "ဤအပိုင်းကို ပြသ၍မရပါ။ အသေးစိတ်ကို အမှားမှတ်တမ်းတွင် ကြည့်ပါ"
 }

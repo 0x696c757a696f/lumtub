@@ -4239,5 +4239,6 @@
   "Previous match": "Congruentia prior",
   "Next match": "Congruentia proxima",
   "Show line by line": "Lineatim ostendere",
-  "Read by whole sentence, translated as a whole": "Per sententias integras legere, totas translatas"
+  "Read by whole sentence, translated as a whole": "Per sententias integras legere, totas translatas",
+  "This part could not be shown; the details are in the error log": "Haec pars ostendi non potuit; singula in tabula errorum sunt"
 }

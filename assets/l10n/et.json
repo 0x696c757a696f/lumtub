@@ -4239,5 +4239,6 @@
   "Previous match": "Eelmine vaste",
   "Next match": "Järgmine vaste",
   "Show line by line": "Näita rida realt",
-  "Read by whole sentence, translated as a whole": "Loe tervete lausetena, tõlgitud tervikuna"
+  "Read by whole sentence, translated as a whole": "Loe tervete lausetena, tõlgitud tervikuna",
+  "This part could not be shown; the details are in the error log": "Seda osa ei saanud kuvada; üksikasjad on vealogis"
 }

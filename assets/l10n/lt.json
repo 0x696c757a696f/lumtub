@@ -4239,5 +4239,6 @@
   "Previous match": "Ankstesnis atitikmuo",
   "Next match": "Kitas atitikmuo",
   "Show line by line": "Rodyti eilutė po eilutės",
-  "Read by whole sentence, translated as a whole": "Skaityti pagal sakinius, versti visą sakinį"
+  "Read by whole sentence, translated as a whole": "Skaityti pagal sakinius, versti visą sakinį",
+  "This part could not be shown; the details are in the error log": "Šios dalies nepavyko parodyti; išsami informacija klaidų žurnale"
 }

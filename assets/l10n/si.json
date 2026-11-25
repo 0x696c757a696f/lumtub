@@ -4239,5 +4239,6 @@
   "Previous match": "පෙර ගැළපීම",
   "Next match": "ඊළඟ ගැළපීම",
   "Show line by line": "පේළියෙන් පේළිය පෙන්වන්න",
-  "Read by whole sentence, translated as a whole": "සම්පූර්ණ වාක්‍ය අනුව කියවා, සමස්තයක් ලෙස පරිවර්තනය කරන්න"
+  "Read by whole sentence, translated as a whole": "සම්පූර්ණ වාක්‍ය අනුව කියවා, සමස්තයක් ලෙස පරිවර්තනය කරන්න",
+  "This part could not be shown; the details are in the error log": "මෙම කොටස පෙන්විය නොහැකි විය; විස්තර දෝෂ ලොගයේ ඇත"
 }

@@ -4239,5 +4239,6 @@
   "Previous match": "წინა დამთხვევა",
   "Next match": "შემდეგი დამთხვევა",
   "Show line by line": "ხაზ-ხაზ ჩვენება",
-  "Read by whole sentence, translated as a whole": "სრული წინადადებებით კითხვა, მთლიანად თარგმნა"
+  "Read by whole sentence, translated as a whole": "სრული წინადადებებით კითხვა, მთლიანად თარგმნა",
+  "This part could not be shown; the details are in the error log": "ამ ნაწილის ჩვენება ვერ მოხერხდა; დეტალები შეცდომების ჟურნალშია"
 }

@@ -4239,5 +4239,6 @@
   "Previous match": "Vorige overeenkomst",
   "Next match": "Volgende overeenkomst",
   "Show line by line": "Regel voor regel tonen",
-  "Read by whole sentence, translated as a whole": "Lezen per hele zin, als geheel vertaald"
+  "Read by whole sentence, translated as a whole": "Lezen per hele zin, als geheel vertaald",
+  "This part could not be shown; the details are in the error log": "Dit deel kon niet worden getoond; de details staan in het foutenlogboek"
 }

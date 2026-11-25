@@ -4239,5 +4239,6 @@
   "Previous match": "Претходно подударање",
   "Next match": "Следеће подударање",
   "Show line by line": "Прикажи ред по ред",
-  "Read by whole sentence, translated as a whole": "Читај по целим реченицама, преводи као целину"
+  "Read by whole sentence, translated as a whole": "Читај по целим реченицама, преводи као целину",
+  "This part could not be shown; the details are in the error log": "Овај део није могао да се прикаже; детаљи су у дневнику грешака"
 }

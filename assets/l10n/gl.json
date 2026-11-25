@@ -4239,5 +4239,6 @@
   "Previous match": "Coincidencia anterior",
   "Next match": "Coincidencia seguinte",
   "Show line by line": "Mostrar liña a liña",
-  "Read by whole sentence, translated as a whole": "Ler por frases completas, traducidas como un todo"
+  "Read by whole sentence, translated as a whole": "Ler por frases completas, traducidas como un todo",
+  "This part could not be shown; the details are in the error log": "Non se puido amosar esta parte; os detalles están no rexistro de erros"
 }

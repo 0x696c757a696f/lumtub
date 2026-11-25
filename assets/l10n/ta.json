@@ -4239,5 +4239,6 @@
   "Previous match": "முந்தைய பொருத்தம்",
   "Next match": "அடுத்த பொருத்தம்",
   "Show line by line": "வரி வரியாகக் காட்டு",
-  "Read by whole sentence, translated as a whole": "முழு வாக்கியமாகப் படித்து, முழுமையாக மொழிபெயர்"
+  "Read by whole sentence, translated as a whole": "முழு வாக்கியமாகப் படித்து, முழுமையாக மொழிபெயர்",
+  "This part could not be shown; the details are in the error log": "இந்தப் பகுதியைக் காட்ட முடியவில்லை; விவரங்கள் பிழைப் பதிவில் உள்ளன"
 }

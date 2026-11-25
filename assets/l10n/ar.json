@@ -4239,5 +4239,6 @@
   "Previous match": "النتيجة السابقة",
   "Next match": "النتيجة التالية",
   "Show line by line": "العرض سطرًا بسطر",
-  "Read by whole sentence, translated as a whole": "القراءة بالجملة الكاملة مع ترجمتها كاملة"
+  "Read by whole sentence, translated as a whole": "القراءة بالجملة الكاملة مع ترجمتها كاملة",
+  "This part could not be shown; the details are in the error log": "تعذّر عرض هذا الجزء؛ التفاصيل في سجل الأخطاء"
 }

@@ -4239,5 +4239,6 @@
   "Previous match": "Өмнөх тохирол",
   "Next match": "Дараагийн тохирол",
   "Show line by line": "Мөр мөрөөр харуулах",
-  "Read by whole sentence, translated as a whole": "Бүтэн өгүүлбэрээр унших, бүхэлд нь орчуулах"
+  "Read by whole sentence, translated as a whole": "Бүтэн өгүүлбэрээр унших, бүхэлд нь орчуулах",
+  "This part could not be shown; the details are in the error log": "Энэ хэсгийг харуулж чадсангүй; дэлгэрэнгүйг алдааны бүртгэлээс харна уу"
 }

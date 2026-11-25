@@ -4239,5 +4239,6 @@
   "Previous match": "نتیجه قبلی",
   "Next match": "نتیجه بعدی",
   "Show line by line": "نمایش خط‌به‌خط",
-  "Read by whole sentence, translated as a whole": "خواندن جمله‌به‌جمله، ترجمه به‌صورت کامل"
+  "Read by whole sentence, translated as a whole": "خواندن جمله‌به‌جمله، ترجمه به‌صورت کامل",
+  "This part could not be shown; the details are in the error log": "این بخش نمایش داده نشد؛ جزئیات در گزارش خطاها است"
 }

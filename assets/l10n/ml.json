@@ -4239,5 +4239,6 @@
   "Previous match": "മുൻ പൊരുത്തം",
   "Next match": "അടുത്ത പൊരുത്തം",
   "Show line by line": "വരി വരിയായി കാണിക്കുക",
-  "Read by whole sentence, translated as a whole": "മുഴുവൻ വാക്യമായി വായിച്ച് മുഴുവനായി വിവർത്തനം ചെയ്യുക"
+  "Read by whole sentence, translated as a whole": "മുഴുവൻ വാക്യമായി വായിച്ച് മുഴുവനായി വിവർത്തനം ചെയ്യുക",
+  "This part could not be shown; the details are in the error log": "ഈ ഭാഗം കാണിക്കാനായില്ല; വിശദാംശങ്ങൾ പിശക് ലോഗിലുണ്ട്"
 }

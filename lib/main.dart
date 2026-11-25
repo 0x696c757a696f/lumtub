@@ -21,6 +21,7 @@ import 'network_proxy.dart';
 import 'player_settings.dart';
 import 'skins/skin_library.dart';
 import 'ui/app_shell.dart';
+import 'ui/build_error_box.dart';
 import 'ui/learning/learning_page.dart' show installLearningPack;
 import 'ui/frame_stats.dart';
 import 'ui/app_icons.dart';
@@ -45,6 +46,7 @@ Future<void> main() async {
     logError('UI error', details.exception, details.stack);
     reportFlutterError?.call(details);
   };
+  BuildErrorBox.install();
   PlatformDispatcher.instance.onError = (error, stack) {
     logError('Unhandled error', error, stack);
     return false;

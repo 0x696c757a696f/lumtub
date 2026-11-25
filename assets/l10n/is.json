@@ -4239,5 +4239,6 @@
   "Previous match": "Fyrri niðurstaða",
   "Next match": "Næsta niðurstaða",
   "Show line by line": "Sýna línu fyrir línu",
-  "Read by whole sentence, translated as a whole": "Lesa heilar setningar, þýddar í heild"
+  "Read by whole sentence, translated as a whole": "Lesa heilar setningar, þýddar í heild",
+  "This part could not be shown; the details are in the error log": "Ekki tókst að sýna þennan hluta; nánar í villuskránni"
 }

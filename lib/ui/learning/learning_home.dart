@@ -410,8 +410,9 @@ class _SceneTile extends StatelessWidget {
 final _newestFirstOf = Expando<List<VocabularyWord>>();
 final _weekCountOf = Expando<(int, int)>();
 
-List<VocabularyWord> _newestFirst(List<VocabularyWord> words) =>
-    words.isEmpty ? words : _newestFirstOf[words] ??= [...words]..sort((a, b) => b.added.compareTo(a.added));
+@visibleForTesting
+List<VocabularyWord> newestFirstWords(List<VocabularyWord> words) =>
+    words.isEmpty ? words : _newestFirstOf[words] ??= ([...words]..sort((a, b) => b.added.compareTo(a.added)));
 
 /// Words saved in the last seven days, counted again each minute.
 int _savedThisWeek(List<VocabularyWord> words) {
@@ -436,7 +437,7 @@ class _VocabularyCard extends StatelessWidget {
     final learning = controller.learning;
     final colors = context.colors;
     final words = learning.book?.words ?? const <VocabularyWord>[];
-    final recent = _newestFirst(words);
+    final recent = newestFirstWords(words);
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [

@@ -4239,5 +4239,6 @@
   "Previous match": "ההתאמה הקודמת",
   "Next match": "ההתאמה הבאה",
   "Show line by line": "הצגה שורה אחר שורה",
-  "Read by whole sentence, translated as a whole": "קריאה לפי משפטים שלמים, מתורגמים כמכלול"
+  "Read by whole sentence, translated as a whole": "קריאה לפי משפטים שלמים, מתורגמים כמכלול",
+  "This part could not be shown; the details are in the error log": "לא ניתן היה להציג חלק זה; הפרטים ביומן השגיאות"
 }

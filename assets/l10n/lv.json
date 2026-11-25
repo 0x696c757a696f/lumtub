@@ -4239,5 +4239,6 @@
   "Previous match": "Iepriekšējais rezultāts",
   "Next match": "Nākamais rezultāts",
   "Show line by line": "Rādīt pa rindām",
-  "Read by whole sentence, translated as a whole": "Lasīt pa veseliem teikumiem, tulkot kā veselumu"
+  "Read by whole sentence, translated as a whole": "Lasīt pa veseliem teikumiem, tulkot kā veselumu",
+  "This part could not be shown; the details are in the error log": "Šo daļu neizdevās parādīt; sīkāka informācija ir kļūdu žurnālā"
 }

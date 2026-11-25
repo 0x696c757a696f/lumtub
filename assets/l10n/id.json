@@ -4239,5 +4239,6 @@
   "Previous match": "Hasil sebelumnya",
   "Next match": "Hasil berikutnya",
   "Show line by line": "Tampilkan baris demi baris",
-  "Read by whole sentence, translated as a whole": "Baca per kalimat utuh, diterjemahkan secara utuh"
+  "Read by whole sentence, translated as a whole": "Baca per kalimat utuh, diterjemahkan secara utuh",
+  "This part could not be shown; the details are in the error log": "Bagian ini tidak dapat ditampilkan; detailnya ada di log kesalahan"
 }

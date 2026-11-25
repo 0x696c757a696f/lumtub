@@ -4239,5 +4239,6 @@
   "Previous match": "Əvvəlki uyğunluq",
   "Next match": "Növbəti uyğunluq",
   "Show line by line": "Sətir-sətir göstər",
-  "Read by whole sentence, translated as a whole": "Tam cümlələrlə oxu, bütövlükdə tərcümə et"
+  "Read by whole sentence, translated as a whole": "Tam cümlələrlə oxu, bütövlükdə tərcümə et",
+  "This part could not be shown; the details are in the error log": "Bu hissəni göstərmək mümkün olmadı; təfərrüatlar xəta jurnalındadır"
 }

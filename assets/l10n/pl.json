@@ -4239,5 +4239,6 @@
   "Previous match": "Poprzednie dopasowanie",
   "Next match": "Następne dopasowanie",
   "Show line by line": "Pokaż wiersz po wierszu",
-  "Read by whole sentence, translated as a whole": "Czytaj całymi zdaniami, tłumacz jako całość"
+  "Read by whole sentence, translated as a whole": "Czytaj całymi zdaniami, tłumacz jako całość",
+  "This part could not be shown; the details are in the error log": "Nie udało się wyświetlić tej części; szczegóły są w dzienniku błędów"
 }

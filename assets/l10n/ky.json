@@ -4239,5 +4239,6 @@
   "Previous match": "Мурунку дал келүү",
   "Next match": "Кийинки дал келүү",
   "Show line by line": "Сап-сап көрсөтүү",
-  "Read by whole sentence, translated as a whole": "Толук сүйлөм менен окуу, бүтүндөй которуу"
+  "Read by whole sentence, translated as a whole": "Толук сүйлөм менен окуу, бүтүндөй которуу",
+  "This part could not be shown; the details are in the error log": "Бул бөлүктү көрсөтүү мүмкүн болбоду; чоо-жайы каталар журналында"
 }

@@ -4239,5 +4239,6 @@
   "Previous match": "Előző találat",
   "Next match": "Következő találat",
   "Show line by line": "Megjelenítés soronként",
-  "Read by whole sentence, translated as a whole": "Olvasás egész mondatonként, egészében fordítva"
+  "Read by whole sentence, translated as a whole": "Olvasás egész mondatonként, egészében fordítva",
+  "This part could not be shown; the details are in the error log": "Ezt a részt nem sikerült megjeleníteni; a részletek a hibanaplóban vannak"
 }

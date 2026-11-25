@@ -4239,5 +4239,6 @@
   "Previous match": "আগের ফলাফল",
   "Next match": "পরের ফলাফল",
   "Show line by line": "লাইন ধরে ধরে দেখান",
-  "Read by whole sentence, translated as a whole": "পূর্ণ বাক্যে পড়ুন, পুরোটা একসঙ্গে অনুবাদ করুন"
+  "Read by whole sentence, translated as a whole": "পূর্ণ বাক্যে পড়ুন, পুরোটা একসঙ্গে অনুবাদ করুন",
+  "This part could not be shown; the details are in the error log": "এই অংশটি দেখানো যায়নি; বিস্তারিত ত্রুটি লগে আছে"
 }

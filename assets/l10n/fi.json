@@ -4239,5 +4239,6 @@
   "Previous match": "Edellinen osuma",
   "Next match": "Seuraava osuma",
   "Show line by line": "Näytä rivi riviltä",
-  "Read by whole sentence, translated as a whole": "Lue kokonaisina lauseina, käännä kokonaisuutena"
+  "Read by whole sentence, translated as a whole": "Lue kokonaisina lauseina, käännä kokonaisuutena",
+  "This part could not be shown; the details are in the error log": "Tätä osaa ei voitu näyttää; tiedot ovat virhelokissa"
 }

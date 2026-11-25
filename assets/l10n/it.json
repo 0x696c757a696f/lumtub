@@ -4239,5 +4239,6 @@
   "Previous match": "Risultato precedente",
   "Next match": "Risultato successivo",
   "Show line by line": "Mostra riga per riga",
-  "Read by whole sentence, translated as a whole": "Leggi per frasi intere, tradotte nel loro insieme"
+  "Read by whole sentence, translated as a whole": "Leggi per frasi intere, tradotte nel loro insieme",
+  "This part could not be shown; the details are in the error log": "Impossibile mostrare questa parte; i dettagli sono nel log degli errori"
 }

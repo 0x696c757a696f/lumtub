@@ -4239,5 +4239,6 @@
   "Previous match": "Oldingi moslik",
   "Next match": "Keyingi moslik",
   "Show line by line": "Qatorma-qator ko'rsatish",
-  "Read by whole sentence, translated as a whole": "To'liq jumlalar bo'yicha o'qish, butunlay tarjima qilish"
+  "Read by whole sentence, translated as a whole": "To'liq jumlalar bo'yicha o'qish, butunlay tarjima qilish",
+  "This part could not be shown; the details are in the error log": "Bu qismni ko‘rsatib bo‘lmadi; tafsilotlar xatolar jurnalida"
 }

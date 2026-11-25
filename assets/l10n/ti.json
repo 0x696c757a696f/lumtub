@@ -4239,5 +4239,6 @@
   "Previous match": "ዝሓለፈ ዝመሳሰል",
   "Next match": "ዝቕጽል ዝመሳሰል",
   "Show line by line": "መስርዕ ብመስርዕ ኣርእይ",
-  "Read by whole sentence, translated as a whole": "ብምሉእ ሓረግ ኣንብብ፣ ብምሉኡ ተርጉም"
+  "Read by whole sentence, translated as a whole": "ብምሉእ ሓረግ ኣንብብ፣ ብምሉኡ ተርጉም",
+  "This part could not be shown; the details are in the error log": "እዚ ክፋል ክርአ ኣይከኣለን፤ ዝርዝሩ ኣብ መዝገብ ጌጋታት ኣሎ"
 }

@@ -4239,5 +4239,6 @@
   "Previous match": "Potrivirea anterioară",
   "Next match": "Potrivirea următoare",
   "Show line by line": "Afișează rând cu rând",
-  "Read by whole sentence, translated as a whole": "Citește pe propoziții întregi, tradu ca întreg"
+  "Read by whole sentence, translated as a whole": "Citește pe propoziții întregi, tradu ca întreg",
+  "This part could not be shown; the details are in the error log": "Această parte nu a putut fi afișată; detaliile sunt în jurnalul de erori"
 }

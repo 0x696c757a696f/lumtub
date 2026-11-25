@@ -4239,5 +4239,6 @@
   "Previous match": "પાછલું પરિણામ",
   "Next match": "આગલું પરિણામ",
   "Show line by line": "લીટી પ્રમાણે બતાવો",
-  "Read by whole sentence, translated as a whole": "આખા વાક્ય પ્રમાણે વાંચો, આખું અનુવાદિત કરો"
+  "Read by whole sentence, translated as a whole": "આખા વાક્ય પ્રમાણે વાંચો, આખું અનુવાદિત કરો",
+  "This part could not be shown; the details are in the error log": "આ ભાગ બતાવી શકાયો નથી; વિગતો ભૂલ લૉગમાં છે"
 }

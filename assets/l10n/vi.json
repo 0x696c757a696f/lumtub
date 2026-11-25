@@ -4239,5 +4239,6 @@
   "Previous match": "Kết quả trước",
   "Next match": "Kết quả tiếp theo",
   "Show line by line": "Hiển thị từng dòng",
-  "Read by whole sentence, translated as a whole": "Đọc theo câu hoàn chỉnh, dịch cả câu"
+  "Read by whole sentence, translated as a whole": "Đọc theo câu hoàn chỉnh, dịch cả câu",
+  "This part could not be shown; the details are in the error log": "Không thể hiển thị phần này; chi tiết có trong nhật ký lỗi"
 }

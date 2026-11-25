@@ -4239,5 +4239,6 @@
   "Previous match": "मागील जुळणी",
   "Next match": "पुढील जुळणी",
   "Show line by line": "ओळीनुसार दाखवा",
-  "Read by whole sentence, translated as a whole": "पूर्ण वाक्यानुसार वाचा, पूर्ण वाक्याचे भाषांतर करा"
+  "Read by whole sentence, translated as a whole": "पूर्ण वाक्यानुसार वाचा, पूर्ण वाक्याचे भाषांतर करा",
+  "This part could not be shown; the details are in the error log": "हा भाग दाखवता आला नाही; तपशील त्रुटी लॉगमध्ये आहेत"
 }

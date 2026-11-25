@@ -4239,5 +4239,6 @@
   "Previous match": "Алдыңғы сәйкестік",
   "Next match": "Келесі сәйкестік",
   "Show line by line": "Жолма-жол көрсету",
-  "Read by whole sentence, translated as a whole": "Толық сөйлемдермен оқу, тұтас аудару"
+  "Read by whole sentence, translated as a whole": "Толық сөйлемдермен оқу, тұтас аудару",
+  "This part could not be shown; the details are in the error log": "Бұл бөлікті көрсету мүмкін болмады; толығырақ қателер журналында"
 }

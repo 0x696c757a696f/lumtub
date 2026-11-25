@@ -4239,5 +4239,6 @@
   "Previous match": "Antaŭa trafo",
   "Next match": "Sekva trafo",
   "Show line by line": "Montri linion post linio",
-  "Read by whole sentence, translated as a whole": "Legi per tutaj frazoj, tradukitaj kiel tutaĵo"
+  "Read by whole sentence, translated as a whole": "Legi per tutaj frazoj, tradukitaj kiel tutaĵo",
+  "This part could not be shown; the details are in the error log": "Ĉi tiu parto ne povis esti montrata; la detaloj estas en la erarprotokolo"
 }

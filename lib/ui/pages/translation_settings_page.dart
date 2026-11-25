@@ -8,7 +8,7 @@ import '../../translation_services.dart';
 import '../../widgets/settings_tiles.dart';
 import '../app_icons.dart';
 import '../common.dart' show dialogWidth;
-import '../translatable.dart' show TranslationView;
+import '../translatable.dart' show TranslationView, standInNotice;
 import '../skin_paint.dart';
 
 /// 设置 › 翻译与 AI: the service behind 翻译 and translated subtitles, and
@@ -82,6 +82,13 @@ List<Widget> _items(BuildContext context, AppController controller) {
       onSelected: (v) => saveConfig((c) => c.copyWith(service: v)),
     ),
     if (service.kind.isNotEmpty) tip(service.kind),
+    ValueListenableBuilder(
+      valueListenable: FallbackTranslator.refusing,
+      builder: (context, refusing, child) => switch (standInNotice(controller)) {
+        final notice? => tip(notice),
+        null => const SizedBox.shrink(),
+      },
+    ),
     PopupItem<String>(
       title: tr('Translation target language'),
       leading: Icon(AppIcons.translate),
@@ -271,16 +278,16 @@ List<Widget> _items(BuildContext context, AppController controller) {
       title: tr('Immersive translation'),
       leading: Icon(AppIcons.translate),
       value: prefs.immersiveTranslation ? prefs.immersiveLanguage : _off,
-      values: [(_off, tr('Close')), ('', tr('Into the interface language ({0})', [interfaceTranslationLanguage.label])), for (final l in TranslationLanguage.all) (l.code, tr('Into {0}', [l.label]))],
+      values: [(_off, tr('Close')), ('', tr('Into the translation target language ({0})', [TranslationLanguage.byCode(prefs.translateTarget).label])), for (final l in TranslationLanguage.all) (l.code, tr('Into {0}', [l.label]))],
       onSelected: (v) => controller.savePreferences(v == _off
           ? controller.preferences.copyWith(immersiveTranslation: false)
           : controller.preferences.copyWith(immersiveTranslation: true, immersiveLanguage: v)),
     ),
-    tip(tr('When on, foreign-language comments, posts and live chat show a translation underneath; text in the interface or system language is left alone.')),
+    tip(tr('When on, comments, posts and live chat in other languages are translated as you set under Translation layout; text already in the target language, or in one listed under Languages never translated, is left alone.')),
     NormalItem(
       title: tr('Languages never translated'),
       subtitle: prefs.neverTranslate.isEmpty
-          ? tr('None besides the target, interface and system languages')
+          ? tr('None besides the target language')
           : prefs.neverTranslate.map((code) => TranslationLanguage.byCode(code).label).join(', '),
       leading: Icon(AppIcons.skipForward),
       onTap: () async {
@@ -300,7 +307,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
       leading: Icon(AppIcons.paintRoller),
       value: prefs.translationStyle,
       values: [for (final v in TranslationStyle.values) (v, v.label)],
-      enabled: prefs.bilingualTranslation || prefs.immersiveTranslation,
+      enabled: prefs.bilingualTranslation,
       onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(translationStyle: v)),
     ),
     SwitchItem(

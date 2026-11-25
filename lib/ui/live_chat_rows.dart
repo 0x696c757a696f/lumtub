@@ -115,8 +115,12 @@ class ChatMessageRow extends StatelessWidget {
                   ),
           if (time.isNotEmpty) Padding(padding: const EdgeInsetsDirectional.only(start: 8), child: Text(time, style: TextStyle(color: colors.outline, fontSize: 12))),
         ]),
-        if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 4), child: SelectionArea(child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis))))),
-        if (message.text.isNotEmpty) ChatMessageTranslation(controller: controller, message: message),
+        if (message.text.isNotEmpty)
+          ChatMessageTranslation(
+            controller: controller,
+            message: message,
+            original: Padding(padding: const EdgeInsets.only(top: 4), child: SelectionArea(child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis))))),
+          ),
         if (message.stickerUrl != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),

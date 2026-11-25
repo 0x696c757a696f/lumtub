@@ -8,6 +8,7 @@ import '../language_guess.dart';
 import '../live_chat.dart';
 import '../live_chat_composer.dart';
 import '../translation.dart';
+import '../translation_services.dart' show FallbackTranslator;
 import 'app_icons.dart';
 import 'common.dart';
 import 'emoji_picker.dart';
@@ -26,18 +27,24 @@ void syncChatTranslation(AppController controller) {
 }
 
 /// The 沉浸式翻译 switch: comments, posts and the live chat in another
-/// language show their translation under them.
+/// language show their translation, as 翻译布局 says.
 class ImmersiveTranslationSwitch extends StatelessWidget {
   const ImmersiveTranslationSwitch({super.key, required this.controller});
   final AppController controller;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ValueListenableBuilder(
+        valueListenable: FallbackTranslator.refusing,
+        builder: (context, refusing, child) => _chip(context, standInNotice(controller)),
+      );
+
+  /// The chip, marked while another service stands in for the chosen one.
+  Widget _chip(BuildContext context, String? standIn) {
     final on = controller.preferences.immersiveTranslation;
     return FilterChip(
-      avatar: Icon(AppIcons.translate, size: 16, color: chipForeground(context, on)),
+      avatar: Icon(standIn != null && on ? AppIcons.warningCircle : AppIcons.translate, size: 16, color: chipForeground(context, on)),
       label: Text(tr('Immersive translation')),
-      tooltip: tr('Show translations under foreign-language text automatically'),
+      tooltip: standIn != null && on ? standIn : tr('Show translations in other languages automatically, as Translation layout says'),
       selected: on,
       showCheckmark: false,
       visualDensity: VisualDensity.compact,
@@ -49,8 +56,18 @@ class ImmersiveTranslationSwitch extends StatelessWidget {
   }
 }
 
-final _translations = Expando<Future<String?>>();
-final _askedTranslations = Expando<Future<String?>>();
+/// Each message's translation, with the [AppController.translationSetup]
+/// it was made under; made again under another.
+final _translations = Expando<(String, Future<String?>)>();
+final _askedTranslations = Expando<(String, Future<String?>)>();
+
+Future<String?> _madeUnder(Expando<(String, Future<String?>)> made, LiveChatMessage message, String setup, Future<String?> Function() make) {
+  final kept = made[message];
+  if (kept != null && kept.$1 == setup) return kept.$2;
+  final future = make();
+  made[message] = (setup, future);
+  return future;
+}
 final _asked = Expando<ValueNotifier<bool>>();
 
 /// Whether [message] was asked to be translated by hand.
@@ -108,13 +125,15 @@ class _ChatMessageTranslateButtonState extends State<ChatMessageTranslateButton>
 /// when it is off or the message is already in the chosen language. Each
 /// message is translated once, when it is first shown.
 class ChatMessageTranslation extends StatelessWidget {
-  const ChatMessageTranslation({super.key, required this.controller, required this.message});
+  const ChatMessageTranslation({super.key, required this.controller, required this.message, required this.original});
   final AppController controller;
   final LiveChatMessage message;
+  /// The message as written, shown with its translation as 翻译布局 says.
+  final Widget original;
 
   /// Asked by hand, anything not already in the chosen language is
-  /// translated; 沉浸式翻译 also leaves the interface's and Windows'
-  /// languages alone.
+  /// translated; 沉浸式翻译 also leaves alone the languages listed as
+  /// never translated.
   Future<String?> _translate({required bool asked}) async {
     final language = asked ? controller.preferences.translateTarget : controller.preferences.immersiveTarget;
     final known = asked ? {language} : readLanguages(controller);
@@ -132,18 +151,22 @@ class ChatMessageTranslation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-        listenable: Listenable.merge([chatTranslation, chatMessageAsked(message)]),
+        listenable: Listenable.merge([chatTranslation, chatMessageAsked(message), controller.translationSetup]),
         builder: (context, _) {
-          if (!chatTranslation.value && !chatMessageAsked(message).value) return const SizedBox.shrink();
+          if (!chatTranslation.value && !chatMessageAsked(message).value) return original;
           return FutureBuilder(
-            future: chatMessageAsked(message).value ? _askedTranslations[message] ??= _translate(asked: true) : _translations[message] ??= _translate(asked: false),
+            future: chatMessageAsked(message).value
+                ? _madeUnder(_askedTranslations, message, controller.translationSetup.value, () => _translate(asked: true))
+                : _madeUnder(_translations, message, controller.translationSetup.value, () => _translate(asked: false)),
             builder: (context, snapshot) {
               final text = snapshot.data;
-              if (text == null) return const SizedBox.shrink();
-              return Padding(
-                padding: const EdgeInsets.only(top: Space.xs),
-                child: SelectionArea(child: Text(text, style: TextStyle(color: context.colors.onSurfaceVariant))),
-              );
+              if (text == null) return original;
+              final prefs = controller.preferences;
+              final translated = SelectionArea(child: Text(text));
+              // 翻译布局, as for comments and posts.
+              if (!prefs.bilingualTranslation) return Padding(padding: const EdgeInsets.only(top: Space.xs), child: translated);
+              final under = Padding(padding: const EdgeInsets.only(top: Space.xs), child: TranslationView(style: prefs.translationStyle, child: translated));
+              return Column(crossAxisAlignment: CrossAxisAlignment.start, children: prefs.translationFirst ? [under, original] : [original, under]);
             },
           );
         },

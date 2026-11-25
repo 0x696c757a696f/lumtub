@@ -190,13 +190,13 @@ jobs:
               # repository: a fork's pull request runs its own copy of the
               # workflows and could upload a marker and packages for any tree.
               if [[ "$repo" != "$GITHUB_REPOSITORY" || "$path" != .github/workflows/build.yml ]]; then
-                echo "Not reusing run $id ($event from $repo, $path)."
+                echo "Not reusing run $id ($event from $repo, $path)." >&2
                 continue
               fi
               # A push or daily run on main, or a pull request: a manual run
               # can start from any branch's own copy of this workflow.
               if ! [[ ( "$event" == push || "$event" == schedule ) && "$branch" == main || "$event" == pull_request ]]; then
-                echo "Not reusing run $id ($event on $branch)."
+                echo "Not reusing run $id ($event on $branch)." >&2
                 continue
               fi
               # The marker's name is the run's own word. The commit the run
@@ -204,7 +204,7 @@ jobs:
               # them, so the workflow that made the packages is the one
               # being released: a branch that edits build.yml has other files.
               if [[ "$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$head" --jq .tree.sha || true)" != "$tree" ]]; then
-                echo "Not reusing run $id (its commit $head has other files)."
+                echo "Not reusing run $id (its commit $head has other files)." >&2
                 continue
               fi
               # The daily run wants a build made on main, for main's caches.

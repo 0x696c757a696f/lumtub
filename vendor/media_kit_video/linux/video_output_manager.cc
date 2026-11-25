@@ -74,6 +74,10 @@ void video_output_manager_set_size(VideoOutputManager* self,
 
 void video_output_manager_dispose(VideoOutputManager* self, gint64 handle) {
   if (g_hash_table_contains(self->video_outputs, GINT_TO_POINTER(handle))) {
+    // Lumtub: frame callbacks still queued hold a reference; the render
+    // context goes now, while the player's mpv core is still there.
+    g_object_run_dispose(G_OBJECT(
+        g_hash_table_lookup(self->video_outputs, GINT_TO_POINTER(handle))));
     g_hash_table_remove(self->video_outputs, GINT_TO_POINTER(handle));
   }
 }

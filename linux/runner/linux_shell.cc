@@ -213,11 +213,17 @@ void BuildMenu() {
 // without an extension, and a hidden window would then be lost.
 bool TrayRuns() { return shell.tray_runs; }
 
+bool ShowTrayIcon();
+
 void WatchTray() {
   if (shell.tray_watch != 0) return;
   shell.tray_watch = g_bus_watch_name(
       G_BUS_TYPE_SESSION, "org.kde.StatusNotifierWatcher", G_BUS_NAME_WATCHER_FLAGS_NONE,
-      +[](GDBusConnection*, const gchar*, const gchar*, gpointer) { shell.tray_runs = true; },
+      +[](GDBusConnection*, const gchar*, const gchar*, gpointer) {
+        shell.tray_runs = true;
+        // Tray settings that came before the answer show the icon now.
+        if (shell.close_to_tray || shell.minimize_to_tray) ShowTrayIcon();
+      },
       +[](GDBusConnection*, const gchar*, gpointer) { shell.tray_runs = false; }, nullptr, nullptr);
 }
 

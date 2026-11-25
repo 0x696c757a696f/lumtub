@@ -350,13 +350,33 @@ fn load_player(
     context.with(|ctx| run_bytecode(&ctx, &code))?;
     if let Some(path) = &kept {
         let partial = path.with_extension("qbc.part");
-        if std::fs::write(&partial, sealed(&code)).is_ok()
-            && std::fs::rename(&partial, path).is_err()
-        {
-            let _ = std::fs::remove_file(&partial);
+        if std::fs::write(&partial, sealed(&code)).is_ok() {
+            if std::fs::rename(&partial, path).is_err() {
+                let _ = std::fs::remove_file(&partial);
+            } else {
+                forget_other_players(path);
+            }
         }
     }
     Ok((runtime, context))
+}
+
+/// Removes the bytecode of earlier players and QuickJS versions beside
+/// [kept]: none of it is read again.
+fn forget_other_players(kept: &Path) {
+    let (Some(folder), Some(name)) = (kept.parent(), kept.file_name()) else {
+        return;
+    };
+    let Ok(entries) = std::fs::read_dir(folder) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let other = entry.file_name();
+        let text = other.to_string_lossy();
+        if other != name && text.starts_with("lumtub-player-") && text.ends_with(".qbc") {
+            let _ = std::fs::remove_file(entry.path());
+        }
+    }
 }
 
 fn exception(ctx: &rquickjs::Ctx) -> String {

@@ -77,9 +77,12 @@ fn main() {
     let quickjs = std::fs::read_to_string(&lock)
         .ok()
         .and_then(|lock| {
-            let (_, after) = lock.split_once("name = \"rquickjs-sys\"\nversion = \"")?;
-            Some(after.split('"').next()?.to_string())
+            // Line by line: a checkout with CRLF endings has \r\n between.
+            let mut lines = lock.lines().map(str::trim);
+            lines.find(|line| *line == "name = \"rquickjs-sys\"")?;
+            let version = lines.next()?.strip_prefix("version = \"")?;
+            Some(version.trim_end_matches('"').to_string())
         })
-        .unwrap_or_else(|| "unknown".into());
+        .expect("rquickjs-sys's version in Cargo.lock");
     println!("cargo:rustc-env=LUMTUB_QUICKJS={quickjs}");
 }

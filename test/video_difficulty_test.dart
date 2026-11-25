@@ -31,7 +31,8 @@ void main() {
 
   test('bands follow the viewing studies', () {
     expect(VideoWords.levelFor(0.99), VideoLevel.easy);
-    expect(VideoWords.levelFor(0.93), VideoLevel.right);
+    expect(VideoWords.levelFor(0.96), VideoLevel.right);
+    expect(VideoWords.levelFor(0.93), VideoLevel.challenging);
     expect(VideoWords.levelFor(0.85), VideoLevel.hard);
     expect(VideoWords.levelFor(0.6), VideoLevel.tooHard);
   });

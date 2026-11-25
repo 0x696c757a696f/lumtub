@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'caption_tracks.dart';
 import 'explore_filters.dart';
 import 'models.dart';
 import 'native_core.dart';
@@ -49,7 +50,7 @@ class VideoLanguages {
 
   static const _fields = 'videoDetails.title,videoDetails.shortDescription,captions.playerCaptionsTracklistRenderer.captionTracks.languageCode,'
       'captions.playerCaptionsTracklistRenderer.captionTracks.kind,streamingData.adaptiveFormats.audioTrack,streamingData.adaptiveFormats.xtags,playabilityStatus.status,'
-      'videoDetails.viewCount,microformat.playerMicroformatRenderer.publishDate';
+      'videoDetails.viewCount,microformat.playerMicroformatRenderer.publishDate,captions.playerCaptionsTracklistRenderer.captionTracks.baseUrl';
   late final _probe = YoutubePlayerProbe(_client);
 
   Map<String, SpokenVideo>? _known;
@@ -59,6 +60,23 @@ class VideoLanguages {
   /// may tell by audio or captions next time.
   final _unheard = <String, SpokenVideo>{};
   final _textAt = <String, int>{};
+
+  /// While [keepCaptionTracks] is above zero, the subtitle tracks of the
+  /// answers asked, so a list that reads videos' subtitles (videos at the
+  /// learner's level) need not ask `/player` a second time. Their
+  /// addresses stop working after some hours: kept for [_tracksFor].
+  int keepCaptionTracks = 0;
+  final _tracks = <String, (int, List<CaptionTrack>)>{};
+  static const _tracksFor = Duration(hours: 2);
+  static const _tracksKept = 1000;
+
+  /// [id]'s subtitle tracks from an answer of the last two hours; null
+  /// when none was asked meanwhile.
+  List<CaptionTrack>? captionTracks(String id) {
+    final (at, tracks) = _tracks[id] ?? (0, const <CaptionTrack>[]);
+    if (at == 0 || DateTime.now().millisecondsSinceEpoch - at > _tracksFor.inMilliseconds) return null;
+    return tracks;
+  }
 
   /// Views and when published (seconds since 1970), as the `/player`
   /// answers give them in any language: a search asked in another language
@@ -207,6 +225,16 @@ class VideoLanguages {
       final read = await _readInBackground(bytes);
       if (read is! Map<String, dynamic>) return null;
       _factsOf(id, bytes);
+      if (keepCaptionTracks > 0) {
+        final tracks = bytes.length < 32 << 10 ? captionTracksOf(bytes) : await Isolate.run(() => captionTracksOf(bytes));
+        // An app that lists none may only hold them back: another's
+        // answer is not overwritten by it.
+        if (tracks.isNotEmpty || captionTracks(id) == null) {
+          _tracks.remove(id);
+          _tracks[id] = (DateTime.now().millisecondsSinceEpoch, tracks);
+          if (_tracks.length > _tracksKept) _tracks.remove(_tracks.keys.first);
+        }
+      }
       return (spoken: _spoken(read), playable: read['playable'] != false);
     } catch (e) {
       logDebug(() => 'Video languages: ${client.name} gave no answer for $id: $e');

@@ -131,9 +131,12 @@ fn plain(text: &str) -> Vec<char> {
 }
 
 /// When [quote] is said in [cues]: the start of the cue its first words
-/// are in, if they are there as said.
+/// are in. Its opening is looked for first; a quote tidied of a filler
+/// word or a false start near its beginning is still found by a later
+/// stretch of it, at the cue that stretch starts in: counting back could
+/// land in the line before, as the words tidied away were never said.
 fn find_quote(cues: &[Cue], quote: &str) -> Option<u64> {
-    let wanted: Vec<char> = plain(quote).into_iter().take(24).collect();
+    let wanted = plain(quote);
     if wanted.len() < 4 {
         return None;
     }
@@ -145,9 +148,27 @@ fn find_quote(cues: &[Cue], quote: &str) -> Option<u64> {
             owner.push(i);
         }
     }
-    all.windows(wanted.len())
-        .position(|w| w == wanted.as_slice())
-        .map(|at| cues[owner[at]].start)
+    // The opening, as long as it is up to 24 letters; then three shorter
+    // stretches further on, the last at the very end.
+    let opening = wanted.len().min(24);
+    let mut tries = vec![(0, opening)];
+    const LATER: usize = 12;
+    if wanted.len() >= LATER + 4 {
+        let last = wanted.len() - LATER;
+        for offset in [wanted.len() / 3, wanted.len() * 2 / 3, last] {
+            let offset = offset.min(last);
+            if offset > 0 && !tries.contains(&(offset, LATER)) {
+                tries.push((offset, LATER));
+            }
+        }
+    }
+    for (offset, width) in tries {
+        let stretch = &wanted[offset..offset + width];
+        if let Some(at) = all.windows(width).position(|w| w == stretch) {
+            return Some(cues[owner[at]].start);
+        }
+    }
+    None
 }
 
 fn short(text: &str, most: usize) -> String {
@@ -187,7 +208,7 @@ pub fn overview_check(source: &str, overview: &Value) -> Value {
         overview.get("about").and_then(Value::as_str).unwrap_or(""),
         2000,
     );
-    let mut chapters: Vec<(u64, String)> = Vec::new();
+    let mut chapters: Vec<(u64, String, String)> = Vec::new();
     let mut chapter_times = HashSet::new();
     for chapter in overview
         .get("chapters")
@@ -199,15 +220,19 @@ pub fn overview_check(source: &str, overview: &Value) -> Value {
             chapter.get("title").and_then(Value::as_str).unwrap_or(""),
             100,
         );
+        let summary = short(
+            chapter.get("summary").and_then(Value::as_str).unwrap_or(""),
+            400,
+        );
         let Some(ms) = chapter.get("time").and_then(parse_clock).and_then(snap) else {
             continue;
         };
         if title.is_empty() || !chapter_times.insert(ms) {
             continue;
         }
-        chapters.push((ms, title));
+        chapters.push((ms, title, summary));
     }
-    chapters.sort_by_key(|(ms, _)| *ms);
+    chapters.sort_by_key(|(ms, _, _)| *ms);
     chapters.truncate(30);
     if let Some(first) = chapters.first_mut() {
         first.0 = 0;
@@ -248,9 +273,9 @@ pub fn overview_check(source: &str, overview: &Value) -> Value {
         "chapters": chapters
             .iter()
             .enumerate()
-            .map(|(i, (ms, title))| {
-                let until = chapters.get(i + 1).map_or(end.max(*ms), |(next, _)| *next);
-                json!({"ms": ms, "end": until, "title": title})
+            .map(|(i, (ms, title, summary))| {
+                let until = chapters.get(i + 1).map_or(end.max(*ms), |(next, _, _)| *next);
+                json!({"ms": ms, "end": until, "title": title, "summary": summary})
             })
             .collect::<Vec<_>>(),
         "quotes": quotes,
@@ -602,7 +627,7 @@ mod tests {
         let overview = json!({
             "about": "  A talk   about batteries. ",
             "chapters": [
-                {"time": "0:22", "title": "Cold"},
+                {"time": "0:22", "title": "Cold", "summary": "  Why   batteries fade in winter. "},
                 {"time": "0:03", "title": "Start"},
                 {"time": "1:12", "title": "Heat"},
                 {"time": "9:00", "title": "Made up"},
@@ -611,6 +636,7 @@ mod tests {
             ],
             "quotes": [
                 {"time": "0:00", "text": "Batteries hate the cold.", "translation": "电池怕冷。"},
+                {"time": "0:00", "text": "So, um, in the end it is all about heat.", "translation": ""},
                 {"time": "1:10", "text": "Something nobody said at all"},
                 {"time": "30:00", "text": "Nobody said this either"},
             ],
@@ -620,15 +646,16 @@ mod tests {
         assert_eq!(
             checked["chapters"],
             json!([
-                {"ms": 0, "end": 20_000, "title": "Start"},
-                {"ms": 20_000, "end": 70_000, "title": "Cold"},
-                {"ms": 70_000, "end": 74_000, "title": "Heat"}
+                {"ms": 0, "end": 20_000, "title": "Start", "summary": ""},
+                {"ms": 20_000, "end": 70_000, "title": "Cold", "summary": "Why batteries fade in winter."},
+                {"ms": 70_000, "end": 74_000, "title": "Heat", "summary": ""}
             ])
         );
         assert_eq!(
             checked["quotes"],
             json!([
                 {"ms": 24_000, "text": "Batteries hate the cold.", "translation": "电池怕冷。", "found": true},
+                {"ms": 70_000, "text": "So, um, in the end it is all about heat.", "translation": "", "found": true},
                 {"ms": 70_000, "text": "Something nobody said at all", "translation": "", "found": false},
             ])
         );

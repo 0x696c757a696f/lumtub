@@ -22,7 +22,8 @@ import '../app_directories.dart';
 import '../learning/learning.dart';
 import '../learning/known_words.dart' show KnownWords, knownWordsOf;
 import '../learning/video_difficulty.dart' show videoDifficulty;
-import '../learning/video_words.dart' show videoWordsOf;
+import '../learning/level_videos.dart';
+import '../learning/video_words.dart' show VideoLevel, videoWordsOf;
 import '../learning/vocabulary.dart' show wavTail;
 import '../learning/word_voice.dart' show WordVoice;
 import '../learning/word_token.dart' show WordToken;
@@ -174,6 +175,7 @@ part 'ios_pip_actions.dart';
 part 'learning_actions.dart';
 part 'study_actions.dart';
 part 'cjk_font_actions.dart';
+part 'level_video_actions.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, downloads, learning, settings, channel, playlist, youtubePlaylist }
 
@@ -276,6 +278,10 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Comments under videos and posts, and liking them and posts, signed in
   /// with the browser sign-in when there is one.
   late final comments = YoutubeComments(_http);
+
+  /// What reading videos' subtitles told about how hard they are, for
+  /// the learning page's videos at the learner's level.
+  late final levelVideos = LevelVideos(_http);
 
   /// Whether the statistics overlay is shown over the video.
   bool showStats = false;

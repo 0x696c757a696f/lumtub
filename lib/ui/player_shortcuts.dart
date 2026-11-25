@@ -15,6 +15,8 @@ import 'theater_mode.dart';
 import 'app_icons.dart';
 import 'common.dart';
 import 'fill_window.dart';
+import 'video_notes.dart' show showNoteEditor;
+import '../subtitle_cues.dart' show cueIndexAt;
 
 /// What [action] does, as the settings and the help name it.
 String shortcutActionLabel(PlayerAction action, AppPreferences prefs) => switch (action) {
@@ -44,6 +46,7 @@ String shortcutActionLabel(PlayerAction action, AppPreferences prefs) => switch 
       PlayerAction.linePause => tr('Pause after each line on or off'),
       PlayerAction.revealTranslation => tr('Show or hide the translation'),
       PlayerAction.copySubtitle => tr('Copy the current subtitle'),
+      PlayerAction.saveNote => tr('Save a note at this moment'),
       PlayerAction.theater => tr('Theater mode'),
       PlayerAction.fillWindow => tr('Fill the window'),
       PlayerAction.lightsOff => tr('Lights off'),
@@ -96,6 +99,7 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) {
     (of(PlayerAction.linePause), tr('Pause after each line on or off')),
     (of(PlayerAction.revealTranslation), tr('Show or hide the translation')),
     (of(PlayerAction.copySubtitle), tr('Copy the current subtitle')),
+    (of(PlayerAction.saveNote), tr('Save a note at this moment')),
     (of(PlayerAction.theater), tr('Theater mode')),
     (of(PlayerAction.fillWindow), tr('Fill the window')),
     (of(PlayerAction.lightsOff), tr('Lights off')),
@@ -193,6 +197,26 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     unawaited(Clipboard.setData(ClipboardData(text: text)));
     onFeedback?.call(AppIcons.copy, tr('Subtitle copied'));
   }
+  // A note on the line being said, paused while it is written.
+  void saveNote() {
+    final state = video();
+    if (state == null || !state.mounted || controller.playing == null) return;
+    final at = player.state.position;
+    final lines = controller.learningLines;
+    final i = cueIndexAt(lines, at);
+    final playing = player.state.playing;
+    if (playing) unawaited(player.pause());
+    unawaited(showNoteEditor(
+      state.context,
+      controller,
+      at: i >= 0 ? lines[i].start : at,
+      quote: controller.currentSubtitleText.isNotEmpty ? controller.currentSubtitleText : i >= 0 ? lines[i].text : '',
+      before: [for (final c in lines.sublist(i > 3 ? i - 3 : 0, i < 0 ? 0 : i)) c.text],
+      after: [if (i >= 0) for (final c in lines.sublist(i + 1, i + 5 < lines.length ? i + 5 : lines.length)) c.text],
+    ).then((_) {
+      if (playing) unawaited(player.play());
+    }));
+  }
   void previous() {
     if (controller.hasPrevious) unawaited(controller.playPrevious());
   }
@@ -274,6 +298,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
         PlayerAction.linePause => linePause,
         PlayerAction.revealTranslation => revealTranslation,
         PlayerAction.copySubtitle => copySubtitle,
+        PlayerAction.saveNote => saveNote,
         PlayerAction.theater => () => theaterMode.value = !theaterMode.value,
         PlayerAction.fillWindow => () => unawaited(toggleFillWindow(video())),
         PlayerAction.lightsOff => () => lightsOff.value = !lightsOff.value,

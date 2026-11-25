@@ -18,6 +18,33 @@ The Phosphor icon fonts (assets/fonts/phosphor, from the phosphor_flutter
 2.1.0 package) are Copyright 2020-2021 Phosphor Icons, licensed under the
 MIT License (assets/fonts/phosphor/LICENSE).
 
+Parts of the AI prompts in lib/video_summary.dart (the overview's chapters
+and key quotes, and making saved subtitle words a whole sentence) and the
+segment rule of AI translation in lib/translation_services.dart are adapted
+from YouTube Digest (https://github.com/zarazhangrui/youtube-digest):
+
+  MIT License
+
+  Copyright (c) 2026 Zara Zhang
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
 The upscaling shaders in assets/shaders (Settings › Picture › Picture
 enhancement) keep their own licences:
 - ravu-lite-ar-r3.glsl, RAVU by Bin Jin (https://github.com/bjin/mpv-prescalers),

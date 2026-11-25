@@ -28,4 +28,22 @@ void main() {
     expect(srt, '1\n00:00:01,000 --> 00:00:02,500\nHello & hi\n\n2\n00:00:02,500 --> 00:00:04,000\nworld\n\n');
     expect(dartSubtitleCues(srt).map((c) => c.text), ['Hello & hi', 'world']);
   });
+
+  test('short caption lines join into whole sentences for reading', () {
+    PairedCue row(int start, String text, [String? second]) => (cue: (start: Duration(milliseconds: start), end: Duration(milliseconds: start + 900), text: text), second: second);
+    final rows = sentenceRows([
+      row(0, 'so the thing about batteries', '所以电池'),
+      row(1000, 'is that they really hate the cold', '真的怕冷'),
+      row(2000, 'and lose power when it freezes.'),
+      // A pause ends a row even mid-sentence.
+      row(6000, 'then'),
+      row(9000, '电池在低温下会掉电，'),
+      row(10000, '这是因为化学反应变慢了。'),
+    ]);
+    expect([for (final r in rows) (r.cue.start.inMilliseconds, r.cue.end.inMilliseconds, r.cue.text, r.second)], [
+      (0, 2900, 'so the thing about batteries is that they really hate the cold and lose power when it freezes.', '所以电池真的怕冷'),
+      (6000, 6900, 'then', null),
+      (9000, 10900, '电池在低温下会掉电，这是因为化学反应变慢了。', null),
+    ]);
+  });
 }

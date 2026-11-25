@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'l10n/l10n.dart';
+import 'network_proxy.dart' show isLocalHost;
 import 'speech_subtitles.dart';
 import 'translation.dart' show TranslationException;
 import 'translation_services.dart';
@@ -57,6 +58,14 @@ abstract class IntelligenceProvider {
 
   /// The model used for [capability], if known.
   String modelFor(Capability capability) => '';
+
+  /// How many characters of a transcript [complete] takes in one request:
+  /// a whole hour for a model known to read long texts, a quarter of an
+  /// hour otherwise.
+  int get completeBudget => shortBudget;
+
+  static const shortBudget = 12000;
+  static const longBudget = 200000;
 
   /// Subtitles for audio in [parts], each with where it starts in the
   /// video; [language] is a hint. [onProgress] counts parts done.
@@ -118,6 +127,9 @@ class Intelligence {
 
   Future<String> complete(String system, String prompt, {double temperature = 0.3}) async => _for(Capability.complete).complete(system, prompt, temperature: temperature);
 
+  /// [IntelligenceProvider.completeBudget] of the provider [complete] uses.
+  int get completeBudget => providerFor(Capability.complete)?.completeBudget ?? IntelligenceProvider.shortBudget;
+
   Future<List<Float32List>> embed(List<String> texts) async => _for(Capability.embed).embed(texts);
 }
 
@@ -153,6 +165,20 @@ class CloudIntelligence extends IntelligenceProvider {
         Capability.translate || Capability.complete => ai?.model ?? '',
         Capability.embed => '',
       };
+
+  @override
+  int get completeBudget => ai == null ? IntelligenceProvider.shortBudget : longContextModel(ai!.model, ai!.baseUrl) ? IntelligenceProvider.longBudget : IntelligenceProvider.shortBudget;
+
+  /// Whether [model] reads 100,000 tokens or more at once: the hosted
+  /// families known to. A model on this computer or the local network is
+  /// taken as small, whatever its name, as its server may be set to less.
+  static bool longContextModel(String model, String baseUrl) {
+    final host = Uri.tryParse(baseUrl.trim())?.host ?? '';
+    if (host.isEmpty || isLocalHost(host)) return false;
+    final name = model.toLowerCase();
+    return const ['deepseek', 'gpt-4o', 'gpt-4.1', 'gpt-5', 'o3', 'o4-', 'claude', 'gemini', 'qwen-plus', 'qwen-max', 'qwen-long', 'qwen-turbo', 'qwen-flash', 'qwen3', 'glm-4', 'glm-5', 'kimi', 'moonshot', 'grok', 'mistral-large', 'mistral-medium', 'llama-3.1', 'llama-3.3', 'llama-4', 'command-r', 'minimax']
+        .any(name.contains);
+  }
 
   @override
   Future<Transcript> transcribe(List<SpeechPart> parts, {String? language, void Function(int done, int total)? onProgress, bool Function()? cancelled}) async {

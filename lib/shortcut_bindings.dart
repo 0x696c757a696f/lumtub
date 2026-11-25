@@ -33,6 +33,7 @@ enum PlayerAction {
   linePause,
   revealTranslation,
   copySubtitle,
+  saveNote,
   theater,
   fillWindow,
   lightsOff,
@@ -208,6 +209,8 @@ Map<PlayerAction, List<KeyCombo>> defaultShortcutKeys() {
     PlayerAction.shadow: const [KeyCombo(LogicalKeyboardKey.keyE)],
     PlayerAction.revealTranslation: const [KeyCombo(LogicalKeyboardKey.keyV)],
     PlayerAction.copySubtitle: [KeyCombo(LogicalKeyboardKey.keyC, control: !mac, meta: mac)],
+    // N for note, as in YouTube Digest; Shift+N stays the next video.
+    PlayerAction.saveNote: const [KeyCombo(LogicalKeyboardKey.keyN)],
     PlayerAction.theater: const [KeyCombo(LogicalKeyboardKey.keyT)],
     PlayerAction.fillWindow: const [KeyCombo(LogicalKeyboardKey.keyW)],
     PlayerAction.lightsOff: const [KeyCombo(LogicalKeyboardKey.keyB)],

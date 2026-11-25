@@ -694,6 +694,13 @@ class AiTranslator extends _CachedTranslator {
       final recent = [..._recent, ...lines];
       _recent = recent.sublist(recent.length > contextLines ? recent.length - contextLines : 0);
     }
+    // Several lines go as numbered segments in JSON, matched back by
+    // number, so a model that joins two lines cannot shift the rest; one
+    // that does not answer in JSON gets them as lines.
+    if (lines.length > 1) {
+      final numbered = _segments(await _askSegments(lines, target, context), lines.length);
+      if (numbered != null) return numbered;
+    }
     final first = _split(await _ask(input, lines.length, target, null, context));
     if (first.length == lines.length) return first;
     final second = _split(await _ask(input, lines.length, target, 'Return exactly ${lines.length} lines.', context));
@@ -705,7 +712,14 @@ class AiTranslator extends _CachedTranslator {
   /// translation is into Chinese.
   static const chineseStyle = 'In the Chinese, put a space between Chinese characters and Latin letters or digits; '
       'address the listener as 你, not 您, unless the original is formal; leave out filler words such as um, uh and you know; '
-      'and keep well-known English terms, product names and brand names in English.';
+      'and keep well-known English terms, product names and brand names in English. '
+      'Read the whole sentence a line belongs to before choosing its words, and write natural Chinese, not English word order.';
+
+  /// Replaces the line rule of a prompt when lines go as JSON segments.
+  static const segmentRule = 'The user sends a JSON object {"segments": [{"id": "1", "text": "..."}]}: each text is one subtitle line. '
+      'Translate each with the lines around it in mind, as part of the sentence it belongs to, but keep the segments apart: '
+      'do not merge, split, leave out or reorder them. Reply with only a JSON object {"segments": [{"id": "1", "text": "..."}]}, '
+      'every id copied exactly and only the texts translated, with no code fence or remark.';
 
   /// The system prompt with the target, line count, style and the terms
   /// [text] uses filled in.
@@ -737,6 +751,43 @@ class AiTranslator extends _CachedTranslator {
   }
 
   static List<String> _split(String reply) => reply.split('\n');
+
+  Future<String> _askSegments(List<String> lines, String target, List<String> context) {
+    final input = lines.join('\n');
+    final rule = _lineRule.replaceAll('{lines}', '${lines.length}');
+    final system = systemPrompt(target, lines.length, context, input).replaceAll(rule, '');
+    return _chat([
+      {'role': 'system', 'content': '$system\n\n$segmentRule'},
+      {
+        'role': 'user',
+        'content': jsonEncode({
+          'segments': [for (final (i, line) in lines.indexed) {'id': '${i + 1}', 'text': line}],
+        }),
+      },
+    ], temperature, const Duration(seconds: 60));
+  }
+
+  /// The [count] translations in [reply], by their ids 1 to [count]; null
+  /// when it is no such JSON or one is missing.
+  static List<String>? _segments(String reply, int count) {
+    final start = reply.indexOf('{');
+    final end = reply.lastIndexOf('}');
+    if (start < 0 || end <= start) return null;
+    final Object? json;
+    try {
+      json = jsonDecode(reply.substring(start, end + 1));
+    } on FormatException {
+      return null;
+    }
+    final segments = json is Map ? json['segments'] : null;
+    if (segments is! List) return null;
+    final byId = <String, String>{
+      for (final s in segments)
+        if (s is Map && s['text'] is String) '${s['id']}': (s['text'] as String).replaceAll('\n', ' ').trim(),
+    };
+    final out = [for (var i = 1; i <= count; i++) byId['$i']];
+    return out.contains(null) ? null : out.cast<String>();
+  }
 
   Future<String> _ask(String input, int count, String target, String? note, List<String> context) => _chat([
         {'role': 'system', 'content': systemPrompt(target, count, context, input)},

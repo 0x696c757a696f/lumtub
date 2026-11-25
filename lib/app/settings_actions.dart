@@ -14,6 +14,7 @@ extension SettingsActions on AppController {
       if (player?.platform case final NativePlayer native) unawaited(native.requestLogMessages(next.logLevel == LogLevel.debug ? MPVLogLevel.info : MPVLogLevel.warn));
     }
     if (service) _useTranslator();
+    translationSetup.value = _translationSetupNow();
     unawaited(_aiFilter?.setMode(next.aiFilter));
     if (gpu) await _writeGpuPreference(next.gpuPreference);
     try {
@@ -82,6 +83,7 @@ extension SettingsActions on AppController {
     // A language model may join or split lines, so it gets each text alone.
     translator = CachingTranslator(inner, _translationCache, preferences.translation.cacheScope, batch: inner is! AiTranslator);
     textTranslator = _textTranslatorOf(translator);
+    translationSetup.value = _translationSetupNow();
     logInfo('Translating with ${preferences.translation.service.name}');
   }
 

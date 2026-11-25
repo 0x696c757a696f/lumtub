@@ -23,7 +23,34 @@ class _Fake implements Translator {
   }
 }
 
+class _BusyGoogle extends GoogleTranslator {
+  _BusyGoogle() : super(MockClient((_) async => http.Response('', 500)));
+  bool busy = true;
+  @override
+  Future<String> translate(String text, String target) async {
+    if (busy) throw const TranslationException('busy', busy: true);
+    return 'G:$text';
+  }
+}
+
+class _Microsoft extends MicrosoftTranslator {
+  _Microsoft() : super(MockClient((_) async => http.Response('', 500)));
+  @override
+  Future<String> translate(String text, String target) async => 'M:$text';
+}
+
 void main() {
+  test('the chosen free service comes first; a stand-in is shown only while it refuses', () async {
+    final google = _BusyGoogle();
+    final chain = FallbackTranslator(google, _Microsoft());
+    expect(await chain.translate('hi', 'zh-CN'), 'M:hi');
+    expect(FallbackTranslator.refusing.value, contains(GoogleTranslator));
+    expect(FallbackTranslator.lastAnswered, TranslationService.microsoft.label);
+    google.busy = false;
+    expect(await chain.translate('hi', 'zh-CN'), 'G:hi');
+    expect(FallbackTranslator.refusing.value, isNot(contains(GoogleTranslator)));
+  });
+
   test('reads the endpoint reply and joins its segments', () {
     expect(GoogleTranslator.parseResponse('[[["你好，","Hello, ",null],["世界\\n","world\\n"]],null,"en"]'), '你好，世界\n');
     expect(() => GoogleTranslator.parseResponse('<html>'), throwsA(isA<TranslationException>()));
@@ -194,12 +221,41 @@ void main() {
     await tester.pump();
     await tester.pump();
     await tester.pump();
-    expect(find.text('Hello there'), findsOneWidget);
+    // 翻译布局 is 译文替换原文 here, so the translation takes its place.
+    expect(find.text('Hello there'), findsNothing);
     expect(find.text('[zh-CN] Hello there'), findsOneWidget);
     expect(fake.calls, 1);
-    await tester.tap(find.text('Hide translation'));
+    await tester.tap(find.text('Show original'));
     await tester.pump();
     expect(find.text('[zh-CN] Hello there'), findsNothing);
+    expect(find.text('Hello there'), findsOneWidget);
+  });
+
+  testWidgets('沉浸式翻译 follows the target language, the layout and later changes', (tester) async {
+    final fake = _Fake();
+    final controller = AppController()..translator = fake
+      ..textTranslator = fake;
+    // No language of its own: the one set for every translation.
+    controller.preferences = controller.preferences.copyWith(translateLanguage: 'zh-CN', immersiveLanguage: '', immersiveTranslation: true, bilingualTranslation: true);
+    expect(controller.preferences.immersiveTarget, 'zh-CN');
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(controller: controller, text: 'Это очень интересное видео, спасибо всем', builder: (context, text) => Text(text)))));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Это очень интересное видео, спасибо всем'), findsOneWidget);
+    expect(find.text('[zh-CN] Это очень интересное видео, спасибо всем'), findsOneWidget);
+    // Another target: what shows is made again in it.
+    await controller.savePreferences(controller.preferences.copyWith(translateLanguage: 'ja'));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('[zh-CN] Это очень интересное видео, спасибо всем'), findsNothing);
+    expect(find.text('[ja] Это очень интересное видео, спасибо всем'), findsOneWidget);
+    // A language listed as never translated is left alone.
+    await controller.savePreferences(controller.preferences.copyWith(neverTranslate: const ['ru']));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('[ja] Это очень интересное видео, спасибо всем'), findsNothing);
+    expect(find.text('Это очень интересное видео, спасибо всем'), findsOneWidget);
   });
 
   testWidgets('a tap turns Traditional Chinese into Simplified even when the two count as one', (tester) async {

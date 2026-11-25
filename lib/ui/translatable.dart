@@ -7,8 +7,8 @@ import 'package:flutter/services.dart';
 import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../language_guess.dart';
-import '../player_settings.dart' show SubtitleLanguage, interfaceTranslationLanguage;
 import '../translation.dart';
+import '../translation_services.dart';
 import 'theme.dart';
 import 'app_icons.dart';
 
@@ -40,14 +40,46 @@ class _TranslatableState extends State<Translatable> {
   bool _autoTried = false;
   /// [_showing] came from 沉浸式翻译, so turning it off hides it again.
   bool _byImmersive = false;
+  /// Counts changes of [AppController.translationSetup]: an answer asked
+  /// for before the last one is dropped.
+  int _round = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.translationSetup.addListener(_setupChanged);
+  }
 
   @override
   void didUpdateWidget(Translatable old) {
     super.didUpdateWidget(old);
+    if (old.controller != widget.controller) {
+      old.controller.translationSetup.removeListener(_setupChanged);
+      widget.controller.translationSetup.addListener(_setupChanged);
+    }
     if (old.text != widget.text) {
       _translation = _language = _error = null;
       _showing = _loading = _autoTried = false;
     }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.translationSetup.removeListener(_setupChanged);
+    super.dispose();
+  }
+
+  /// The service, the target or the languages left alone changed: what
+  /// shows is made again the new way, from the cache where it is there.
+  void _setupChanged() {
+    if (!mounted || _translation == null && _error == null && !_autoTried && !_loading) return;
+    final asked = _showing && !_byImmersive;
+    _round++;
+    setState(() {
+      _translation = _language = _error = null;
+      _showing = _byImmersive = _autoTried = _loading = false;
+    });
+    if (asked) unawaited(_toggle());
   }
 
   bool get _visible => _showing && !(_byImmersive && !widget.controller.preferences.immersiveTranslation);
@@ -90,9 +122,10 @@ class _TranslatableState extends State<Translatable> {
       _loading = true;
       _error = null;
     });
+    final round = _round;
     try {
       final result = await translateForeignLines(widget.controller.textTranslator, text, language, (line) => reads(line) || !_hasLetters(line));
-      if (!mounted || text != widget.text) return;
+      if (!mounted || text != widget.text || round != _round) return;
       // The service gave the text back as it was: it is in that language.
       if (_same(result, text)) {
         if (quiet) return setState(() => _loading = false);
@@ -109,14 +142,14 @@ class _TranslatableState extends State<Translatable> {
         _loading = false;
       });
     } on TranslationException catch (e) {
-      _fail(text, quiet ? null : e.message);
+      _fail(text, round, quiet ? null : e.message);
     } catch (_) {
-      _fail(text, quiet ? null : tr('Translation failed. Check your network or proxy.'));
+      _fail(text, round, quiet ? null : tr('Translation failed. Check your network or proxy.'));
     }
   }
 
-  void _fail(String text, String? message) {
-    if (!mounted || text != widget.text) return;
+  void _fail(String text, int round, String? message) {
+    if (!mounted || text != widget.text || round != _round) return;
     setState(() {
       _error = message;
       _loading = false;
@@ -128,8 +161,8 @@ class _TranslatableState extends State<Translatable> {
     final colors = context.colors;
     final prefs = widget.controller.preferences;
     if (prefs.immersiveTranslation && !_autoTried && widget.text.trim().isNotEmpty) _auto();
-    // 沉浸式翻译 always shows both.
-    final both = prefs.bilingualTranslation || prefs.immersiveTranslation;
+    // 沉浸式翻译 and the 翻译 button show it as 翻译布局 says.
+    final both = prefs.bilingualTranslation;
     final translation = _visible && both ? TranslationView(style: prefs.translationStyle, child: widget.builder(context, _translation!)) : null;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       if (translation != null && prefs.translationFirst) ...[translation, const SizedBox(height: 4)],
@@ -151,13 +184,23 @@ class _TranslatableState extends State<Translatable> {
   }
 }
 
-/// The languages 沉浸式翻译 leaves alone: the one it translates into, the
-/// interface's, Windows' and those the user listed as never translated.
+/// While the free service chosen under 翻译服务 refuses (Google's when it
+/// says it is busy), which one translates instead, as a sentence; null
+/// while the chosen one answers or another kind of service is chosen.
+String? standInNotice(AppController controller) {
+  final chosen = controller.preferences.translation.service;
+  final type = FallbackTranslator.typeOf(chosen);
+  if (type == null || !FallbackTranslator.refusing.value.contains(type)) return null;
+  final other = FallbackTranslator.lastAnswered;
+  if (other == null || other == chosen.label) return tr('{0} is not answering for now; another free service translates meanwhile.', [chosen.label]);
+  return tr('{0} is not answering for now; {1} translates meanwhile.', [chosen.label, other]);
+}
+
+/// The languages 沉浸式翻译 leaves alone: the one it translates into and
+/// those the user listed as never translated.
 Set<String> readLanguages(AppController controller) => {
       controller.preferences.immersiveTarget,
       ...controller.preferences.neverTranslate,
-      interfaceTranslationLanguage.code,
-      SubtitleLanguage.systemTranslation.code,
     };
 
 /// Whether some line of [text] is in none of [readLanguages].

@@ -582,22 +582,34 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// names; called only when something is to be translated.
   late Translator translator = CachingTranslator(_googleFirst, _translationCache, preferences.translation.cacheScope, batch: true);
   /// Behind comments, descriptions, chapter titles, chat and search words:
-  /// [translator], except that with Google's free endpoint chosen it is
-  /// Microsoft's free one first, so subtitles, which ask Google for whole
-  /// sentences at a time, keep Google's allowance for themselves. Either
-  /// free service takes over while the other refuses or fails, and the
-  /// first is asked again on the next text.
+  /// the service chosen, as for subtitles, batched. With Google's free
+  /// endpoint chosen, Microsoft's free one takes a text only while Google
+  /// refuses or fails, then MyMemory; Google is asked again on the next.
   late Translator textTranslator = _textTranslatorOf(translator);
+
+  /// What decides how text is translated and shown (the services, the
+  /// languages left alone, the one translated into, 翻译布局), changed only
+  /// when one of them is, so shown translations are made again the new
+  /// way; the translation cache answers those already made.
+  late final translationSetup = ValueNotifier<String>(_translationSetupNow());
+
+  String _translationSetupNow() {
+    final p = preferences;
+    return [identityHashCode(textTranslator), p.translateTarget, p.immersiveTarget, p.chineseAsOne, p.skipSameLanguage, p.bilingualTranslation, p.translationFirst, p.translationStyle.name, ...p.neverTranslate].join('|');
+  }
   late final _microsoftFree = MicrosoftTranslator(_http);
   late final _googleFirst = FallbackTranslator(_google, _microsoftFree);
   /// MyMemory takes short texts last, when both others refuse; its email
   /// (optional, for a larger allowance) is kept with the keys.
   late final _myMemory = MyMemoryTranslator(_http, email: () => translationKeys[TranslationService.mymemory.name] ?? '');
+  late final _googleThenOthers = FallbackTranslator(_google, FallbackTranslator(_microsoftFree, _myMemory));
+  /// For the words Explore searches with, not shown as translations:
+  /// Microsoft's first, keeping Google's allowance for what is shown.
   late final _microsoftFirst = FallbackTranslator(_microsoftFree, FallbackTranslator(_google, _myMemory));
 
   Translator _textTranslatorOf(Translator translator) => switch (preferences.translation.service) {
-        TranslationService.google => CachingTranslator(_microsoftFirst, _translationCache, preferences.translation.cacheScope, batch: true),
-        TranslationService.mymemory => CachingTranslator(FallbackTranslator(_myMemory, _microsoftFirst), _translationCache, preferences.translation.cacheScope, batch: true),
+        TranslationService.google => CachingTranslator(_googleThenOthers, _translationCache, preferences.translation.cacheScope, batch: true),
+        TranslationService.mymemory => CachingTranslator(FallbackTranslator(_myMemory, _googleFirst), _translationCache, preferences.translation.cacheScope, batch: true),
         _ => translator,
       };
   /// The translation services' API keys, by [TranslationService.name],

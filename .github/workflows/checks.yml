@@ -118,6 +118,22 @@ jobs:
           cargo build --manifest-path native/lumtub_core/Cargo.toml --release --lib
           echo "LUMTUB_CORE_DLL=$PWD/native/lumtub_core/target/release/liblumtub_core.so" >> "$GITHUB_ENV"
 
+      # iOS starts Python through PyInitConfig; a desktop CPython of the same
+      # version checks those calls here, since CI has no iPhone.
+      - name: Python start-up through PyInitConfig
+        run: |
+          set -euo pipefail
+          release=$(grep -E '^PYTHON_TEST_RELEASE=' .github/pins.env | cut -d= -f2)
+          file=$(grep -E '^PYTHON_TEST_FILE=' .github/pins.env | cut -d= -f2)
+          sum=$(grep -E '^PYTHON_TEST_SHA256=' .github/pins.env | cut -d= -f2)
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/python.tar.gz" "https://github.com/astral-sh/python-build-standalone/releases/download/$release/${file//+/%2B}"
+          echo "$sum  $RUNNER_TEMP/python.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/python.tar.gz" -C "$RUNNER_TEMP"
+          LUMTUB_TEST_PYTHON_LIBRARY="$RUNNER_TEMP/python/lib/libpython3.14.so.1.0" \
+          LUMTUB_TEST_PYTHON_HOME="$RUNNER_TEMP/python" \
+          LUMTUB_TEST_CORE="$LUMTUB_CORE_DLL" \
+            cargo test --manifest-path native/lumtub_core/Cargo.toml --release --lib python::tests -- --nocapture
+
       - name: Get packages
         run: flutter pub get
 

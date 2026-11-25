@@ -378,6 +378,85 @@ pub extern "C" fn lumtub_py_exit(port: i64, code: i32) {
 mod tests {
     use super::*;
 
+    /// Starts a real Python 3.14+ through PyInitConfig and reads back what
+    /// it was given. Runs when LUMTUB_TEST_PYTHON_LIBRARY names a shared
+    /// libpython and LUMTUB_TEST_PYTHON_HOME its prefix (CI's Linux job and
+    /// a local check; the iOS framework takes the same calls).
+    #[test]
+    fn python_starts_with_its_settings_and_no_python_variables() {
+        let (Ok(library), Ok(home)) = (
+            std::env::var("LUMTUB_TEST_PYTHON_LIBRARY"),
+            std::env::var("LUMTUB_TEST_PYTHON_HOME"),
+        ) else {
+            return;
+        };
+        let temporary = std::env::temp_dir().join(format!("lumtub-python-{}", std::process::id()));
+        std::fs::create_dir_all(&temporary).unwrap();
+        let config = Config {
+            library,
+            home: home.clone(),
+            temporary: temporary.to_string_lossy().into_owned(),
+            environment: HashMap::from([
+                ("LUMTUB_TEST_SETTING".to_string(), "kept".to_string()),
+                // The runner loads the core for its callbacks.
+                (
+                    "LUMTUB_CORE".to_string(),
+                    std::env::var("LUMTUB_TEST_CORE").unwrap_or_else(|_| {
+                        concat!(
+                            env!("CARGO_MANIFEST_DIR"),
+                            "/target/debug/liblumtub_core.so"
+                        )
+                        .to_string()
+                    }),
+                ),
+            ]),
+        };
+        // Whatever the shell running the tests has set stays out of the check.
+        let inherited: Vec<String> = std::env::vars()
+            .map(|(k, _)| k)
+            .filter(|k| k.starts_with("PYTHON"))
+            .collect();
+        let handler = |signal| {
+            let mut action: libc::sigaction = unsafe { std::mem::zeroed() };
+            assert_eq!(
+                unsafe { libc::sigaction(signal, std::ptr::null(), &mut action) },
+                0
+            );
+            action.sa_sigaction
+        };
+        let handlers = [handler(libc::SIGINT), handler(libc::SIGPIPE)];
+        let api = unsafe { start_python(&config) }.unwrap();
+        // The process's own handlers are as they were: Python installs
+        // none when it starts.
+        for (signal, before) in [libc::SIGINT, libc::SIGPIPE].into_iter().zip(handlers) {
+            assert_eq!(handler(signal), before, "signal {signal}");
+        }
+        let out = temporary.join("seen.json");
+        let code = format!(
+            "import json, os, sys, ssl\nwith open({}, 'w') as f:\n    json.dump({{'utf8': sys.flags.utf8_mode, 'bytecode': sys.dont_write_bytecode, 'user_site': sys.flags.no_user_site, 'prefix': sys.prefix, 'python_vars': sorted(k for k in os.environ if k.startswith('PYTHON')), 'setting': os.environ.get('LUMTUB_TEST_SETTING'), 'stdout': sys.stdout.encoding, 'runner': '_lumtub_runner' in sys.modules}}, f)\n",
+            literal(&out.to_string_lossy())
+        );
+        assert!(unsafe { run_code(&api, &code, true) });
+        let seen: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&out).unwrap()).unwrap();
+        let _ = std::fs::remove_dir_all(&temporary);
+        assert_eq!(seen["utf8"], 1, "{seen}");
+        assert_eq!(seen["bytecode"], true, "{seen}");
+        assert_eq!(seen["user_site"], 1, "{seen}");
+        assert_eq!(seen["prefix"], home.as_str(), "{seen}");
+        let set: Vec<&str> = seen["python_vars"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|v| v.as_str())
+            .filter(|k| !inherited.iter().any(|i| i == k))
+            .collect();
+        assert!(set.is_empty(), "{seen}");
+        assert_eq!(seen["setting"], "kept", "{seen}");
+        assert_eq!(seen["stdout"], "utf-8", "{seen}");
+        assert_eq!(seen["runner"], true, "{seen}");
+    }
+
     #[test]
     fn literal_survives_quotes() {
         assert_eq!(literal("a'\"\n"), "bytes.fromhex('6127220a').decode()");

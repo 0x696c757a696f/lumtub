@@ -9,7 +9,7 @@ pub static FR: Text = Text {
     nav: ["Fonctionnalités", "Télécharger", "Confidentialité", "FAQ", "Soutien"],
     nav_download: "Télécharger",
     hero_title: ["Regardez YouTube", "à votre façon"],
-    hero_body: "Une application YouTube gratuite qui lit les vidéos avec mpv, choisit les recommandations sur votre propre ordinateur et affiche deux sous-titres à la fois. Aucun compte requis pour regarder.",
+    hero_body: "Marre des pubs, des recommandations opaques et de la lecture poussive dans le navigateur ? Lumtub est un client natif, gratuit et open source. Aucun compte requis pour regarder, et un Pack d'apprentissage en option pour apprendre les langues.",
     proof: ["Windows, macOS, Linux, Android et iOS", "82\u{a0}langues d'interface", "Open source, AGPL 3.0"],
     download_for: [
         "Télécharger pour Windows",

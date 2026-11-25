@@ -216,7 +216,7 @@ pub static EN: Text = Text {
     nav: ["Features", "Download", "Privacy", "FAQ", "Support"],
     nav_download: "Download",
     hero_title: ["Watch YouTube", "your way"],
-    hero_body: "A free YouTube app that plays through mpv, picks recommendations on your own computer and shows two subtitles at once. No account needed to watch.",
+    hero_body: "Tired of ads, black-box feeds and sluggish browser playback? Lumtub is a free, open-source native client. No account needed to watch, with an optional Learning Pack for language learners.",
     proof: ["Windows, macOS, Linux, Android and iOS", "82 interface languages", "Open source, AGPL 3.0"],
     download_for: [
         "Download for Windows",
@@ -420,7 +420,7 @@ pub static ZH: Text = Text {
     nav: ["功能", "下载", "隐私", "常见问题", "支持"],
     nav_download: "下载",
     hero_title: ["按你的方式", "看 YouTube"],
-    hero_body: "免费的 YouTube 客户端：用 mpv 原生播放，推荐在你自己的电脑上计算，两条字幕同时显示。不登录也能看。",
+    hero_body: "受够了广告、黑箱推荐和吃资源的网页播放器？Lumtub 是一款免费、开源的原生客户端，不登录也能看，还可选配外语学习包。",
     proof: ["Windows、macOS、Linux、Android 和 iOS", "82 种界面语言", "开源，AGPL 3.0"],
     download_for: [
         "下载 Windows 版",

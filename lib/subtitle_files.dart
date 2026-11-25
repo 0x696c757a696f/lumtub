@@ -236,13 +236,10 @@ class SubtitleFiles {
       pieces = [for (final c in cues) [(timing: c.timing, weight: 1)]];
       sentenceOf = [for (final l in lines) l.sentence];
     } else {
-      final fragments = WebVtt.cues(vtt);
-      if (fragments.isEmpty) return (text: vtt, rest: null);
-      final spans = WebVtt.sentenceSpans(fragments, maxLength: sentenceTime, maxWidth: sentenceWidth);
-      cues = [for (final (from, to) in spans) (timing: '${WebVtt._stamp(WebVtt.startOf(fragments[from].timing))} --> ${WebVtt._stamp(WebVtt.endOf(fragments[to - 1].timing))}', text: WebVtt.textOf(fragments, from, to))];
-      pieces = [
-        for (final (from, to) in spans) [for (var k = from; k < to; k++) (timing: fragments[k].timing, weight: WebVtt.width(fragments[k].text))],
-      ];
+      final plan = WebVtt.plan(vtt);
+      if (plan.cues.isEmpty) return (text: vtt, rest: null);
+      cues = plan.cues;
+      pieces = plan.pieces;
     }
     // How many cues before a request AI reads: more of the short lines.
     final context = asr ? 2 * contextSentences : contextSentences;
@@ -305,18 +302,36 @@ class SubtitleFiles {
     }
 
     // The translation [text] of sentence [c] as the lines it shows in.
-    List<({String timing, String text})> shownAs(int c, String text) {
-      final lines = pieces[c];
-      final parts = lines.length > 1 ? WebVtt.splitLike(text, [for (final l in lines) l.weight]) : const <String>[];
-      if (parts.length != lines.length) return [(timing: cues[c].timing, text: text)];
-      return [for (final (n, part) in parts.indexed) (timing: lines[n].timing, text: part)];
+    // The lines of each translated piece, worked out once: [write] runs
+    // again on every stretch that comes in, over every piece done so far.
+    final shown = List<List<({String timing, String text})>?>.filled(groups.length, null);
+    List<({String timing, String text})> shownOf(int i, List<String> lines) {
+      if (shown[i] case final done?) return done;
+      final (start, end) = groups[i];
+      final texts = [for (var c = start; c < end; c++) lines[c - start].trim()];
+      // Translations of sentences shown as several cues, cut like those
+      // cues, all of the piece in one go.
+      final asks = [
+        for (var c = start; c < end; c++)
+          if (texts[c - start].isNotEmpty && pieces[c].length > 1) (texts[c - start], [for (final l in pieces[c]) l.weight]),
+      ];
+      final parts = asks.isEmpty ? const <List<String>>[] : WebVtt.splitMany(asks);
+      var k = 0;
+      return shown[i] = [
+        for (var c = start; c < end; c++)
+          if (texts[c - start] case final text when text.isNotEmpty)
+            if (pieces[c].length < 2)
+              (timing: cues[c].timing, text: text)
+            else if (parts[k++] case final cut when cut.length == pieces[c].length)
+              for (final (n, part) in cut.indexed) (timing: pieces[c][n].timing, text: part)
+            else
+              (timing: cues[c].timing, text: text),
+      ];
     }
 
     String write() => WebVtt.write([
-          for (final (i, (start, end)) in groups.indexed)
-            if (translated[i] case final lines?)
-              for (var c = start; c < end; c++)
-                if (lines[c - start].trim() case final text when text.isNotEmpty) ...shownAs(c, text),
+          for (final (i, _) in groups.indexed)
+            if (translated[i] case final lines?) ...shownOf(i, lines),
         ]);
 
     // Enough to start with: the piece playing now and the next few.
@@ -428,6 +443,16 @@ class WebVtt {
   /// word timings of automatic captions. Automatic captions repeat the
   /// line before as the first line of the next cue; only new lines stay.
   static List<({String timing, String text})> cues(String vtt) {
+    final json = NativeCore.instance?.vttCues(jsonEncode({'vtt': vtt}));
+    return json == null ? dartCues(vtt) : _cuesOf(json);
+  }
+
+  static List<({String timing, String text})> _cuesOf(String json) => [
+        for (final c in jsonDecode(json) as List) (timing: c[0] as String, text: c[1] as String),
+      ];
+
+  /// [cues] without the native core.
+  static List<({String timing, String text})> dartCues(String vtt) {
     final cues = <({String timing, String text})>[];
     final blocks = vtt.replaceAll('\r\n', '\n').split(RegExp(r'\n{2,}'));
     String? previous;
@@ -454,6 +479,15 @@ class WebVtt {
   /// short enough to read ([maxWidth], characters of Chinese, Japanese, Thai and other scripts without spaces counting double) and
   /// within [maxLength] on screen. Each spans from its first cue's start to
   /// its last cue's end.
+  static List<({String timing, String text})> sentencesOf(String vtt, {
+    Duration maxLength = const Duration(seconds: 7),
+    int maxWidth = 90,
+  }) {
+    final json = NativeCore.instance?.vttCues(jsonEncode({'vtt': vtt, 'sentences': true, 'time': maxLength.inMilliseconds, 'width': maxWidth}));
+    return json == null ? sentences(dartCues(vtt), maxLength: maxLength, maxWidth: maxWidth) : _cuesOf(json);
+  }
+
+  /// [sentencesOf] the cues [cues], without the native core.
   static List<({String timing, String text})> sentences(
     List<({String timing, String text})> cues, {
     Duration gap = const Duration(milliseconds: 1200),
@@ -566,6 +600,44 @@ class WebVtt {
     return parts.any((p) => p.isEmpty) ? [text] : parts;
   }
 
+  /// [splitLike] for each of [asks] at once.
+  static List<List<String>> splitMany(List<(String, List<int>)> asks) {
+    final json = NativeCore.instance?.vttSplit(jsonEncode([for (final (text, weights) in asks) [text, weights]]));
+    if (json != null) {
+      final out = [for (final parts in jsonDecode(json) as List) (parts as List).cast<String>()];
+      if (out.length == asks.length) return out;
+    }
+    return [for (final (text, weights) in asks) splitLike(text, weights)];
+  }
+
+  /// What to translate in a track's own cues (automatic captions go by
+  /// [captionLines]): its sentences, each from its first cue's start to
+  /// its last cue's end, and for each the cues it shows in with how wide
+  /// the original is there.
+  static ({List<({String timing, String text})> cues, List<List<({String timing, int weight})>> pieces}) plan(String vtt) {
+    final json = NativeCore.instance?.vttPlan(vtt);
+    if (json == null) return dartPlan(vtt);
+    final map = jsonDecode(json) as Map<String, dynamic>;
+    return (
+      cues: _cuesOf(jsonEncode(map['cues'])),
+      pieces: [
+        for (final p in map['pieces'] as List) [for (final l in p as List) (timing: l[0] as String, weight: l[1] as int)],
+      ],
+    );
+  }
+
+  /// [plan] without the native core.
+  static ({List<({String timing, String text})> cues, List<List<({String timing, int weight})>> pieces}) dartPlan(String vtt) {
+    final fragments = dartCues(vtt);
+    final spans = sentenceSpans(fragments, maxLength: SubtitleFiles.sentenceTime, maxWidth: SubtitleFiles.sentenceWidth);
+    return (
+      cues: [for (final (from, to) in spans) (timing: '${_stamp(startOf(fragments[from].timing))} --> ${_stamp(endOf(fragments[to - 1].timing))}', text: textOf(fragments, from, to))],
+      pieces: [
+        for (final (from, to) in spans) [for (var k = from; k < to; k++) (timing: fragments[k].timing, weight: width(fragments[k].text))],
+      ],
+    );
+  }
+
   static final _cjkStop = RegExp(r'[，。、！？；：…）」』]');
 
   /// The text of [cues] from [from] up to [to] as one line.
@@ -631,7 +703,7 @@ class WebVtt {
 
   /// [captionLines] without the native core.
   static List<CaptionLine> dartCaptionLines(String vtt) {
-    final cues = WebVtt.cues(vtt);
+    final cues = dartCues(vtt);
     final lines = <(int, int)>[];
     final sentence = <int>[];
     for (final (s, span) in sentenceSpans(cues, maxLength: SubtitleFiles.sentenceTime, maxWidth: SubtitleFiles.sentenceWidth).indexed) {
@@ -673,7 +745,7 @@ class WebVtt {
 
   /// [asLinesOf] without the native core.
   static String dartAsLinesOf(String original, String translated) {
-    final pieces = WebVtt.cues(translated);
+    final pieces = dartCues(translated);
     final lines = dartCaptionLines(original);
     if (lines.isEmpty || pieces.isEmpty) return asLines(translated);
     final texts = List<String>.filled(lines.length, '');

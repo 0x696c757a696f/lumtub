@@ -73,6 +73,7 @@ pub mod tv_browse;
 pub mod tv_history;
 pub mod update;
 pub mod vault;
+pub mod vtt;
 pub mod web_account;
 pub mod words;
 pub mod ytdlp_signature;
@@ -80,5 +81,5 @@ pub mod ytdlp_signature;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    64
+    65
 }

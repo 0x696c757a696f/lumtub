@@ -30,7 +30,7 @@ pub struct Line {
 /// A letter of a script written without spaces between words, or between
 /// syllables as a line runs on: Thai, Lao, Tibetan, Burmese, Khmer, New Tai
 /// Lue, kana, CJK, Myanmar extended, Hangul and CJK compatibility.
-fn unspaced(c: char) -> bool {
+pub(crate) fn unspaced(c: char) -> bool {
     matches!(c as u32,
         0x0E00..=0x0EFF | 0x0F00..=0x0FFF | 0x1000..=0x109F | 0x1780..=0x17FF | 0x19E0..=0x19FF
         | 0x3040..=0x30FF | 0x31F0..=0x31FF | 0x3400..=0x9FFF | 0xAA60..=0xAA7F | 0xAC00..=0xD7AF
@@ -43,27 +43,27 @@ fn hangul(c: char) -> bool {
 
 /// Whether [a] and [b] go together without a space. Korean is spaced
 /// between words, and automatic captions break between words.
-fn joins_unspaced(a: char, b: char) -> bool {
+pub(crate) fn joins_unspaced(a: char, b: char) -> bool {
     unspaced(a) && unspaced(b) && !(hangul(a) && hangul(b))
 }
 
 /// How wide [text] shows, in Latin letters (UTF-16 units, as Dart counts):
 /// a letter of a script written without spaces is about two.
-fn width(text: &str) -> usize {
+pub(crate) fn width(text: &str) -> usize {
     text.chars()
         .map(|c| c.len_utf16() + usize::from(unspaced(c)))
         .sum()
 }
 
 /// Whether [a] and [b] are put together with a space.
-fn spaced(a: &str, b: &str) -> bool {
+pub(crate) fn spaced(a: &str, b: &str) -> bool {
     match (a.chars().next_back(), b.chars().next()) {
         (Some(x), Some(y)) => !joins_unspaced(x, y),
         _ => false,
     }
 }
 
-fn join(a: &str, b: &str) -> String {
+pub(crate) fn join(a: &str, b: &str) -> String {
     let mut out = String::with_capacity(a.len() + b.len() + 1);
     out.push_str(a);
     if spaced(a, b) {
@@ -74,7 +74,7 @@ fn join(a: &str, b: &str) -> String {
 }
 
 /// Whether [text] ends a sentence, closing quotes and brackets aside.
-fn sentence_end(text: &str) -> bool {
+pub(crate) fn sentence_end(text: &str) -> bool {
     let core = text.trim_end_matches(['"', '”', '’', '」', '』', '»', ')', '）']);
     core.ends_with([
         '.', '!', '?', '。', '！', '？', '…', '؟', '۔', '।', '॥', '։', '።', '။', '།', '‼', '⁇',
@@ -82,7 +82,7 @@ fn sentence_end(text: &str) -> bool {
 }
 
 /// Whether [text] ends after a clause, where a line may break.
-fn clause_tail(text: &str) -> bool {
+pub(crate) fn clause_tail(text: &str) -> bool {
     text.ends_with([
         ';', ':', ',', '；', '：', '，', '、', '…', ')', '）', '」', '』', '"', '”', '»', '،', '؛',
         '፣', '၊',

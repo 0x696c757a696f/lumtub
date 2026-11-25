@@ -75,6 +75,10 @@ final class VideoSink: @unchecked Sendable {
   /// bottom left), made once per change so Core Image keeps its texture.
   private var overlay: CIImage?
   private var canvas = CGSize.zero
+  /// Subtitles the app drew, in their canvas's coordinates, used while
+  /// compositing in place of libmpv's (which draws none then).
+  private var appOverlay: CIImage?
+  private var appCanvas = CGSize.zero
   private var context: CIContext?
   private var pool: CVPixelBufferPool?
   private var poolWidth = 0
@@ -203,6 +207,21 @@ final class VideoSink: @unchecked Sendable {
     }
   }
 
+  /// Subtitles the app drew (Flutter's, where libmpv has no font for a
+  /// line), for picture in picture; nil takes them away.
+  func setAppOverlay(_ image: CGImage?, box: CGRect, canvas: CGSize) {
+    let content = image.map {
+      CIImage(cgImage: $0).transformed(by: CGAffineTransform(
+        translationX: box.minX, y: canvas.height - box.maxY))
+    }
+    queue.async { [self] in
+      appOverlay = content
+      appCanvas = canvas
+      // Shown at once, also while paused.
+      if compositing { _ = show() }
+    }
+  }
+
   /// While picture in picture is open the frames carry the subtitles.
   func setCompositing(_ on: Bool) {
     queue.async { [self] in
@@ -235,7 +254,9 @@ final class VideoSink: @unchecked Sendable {
   /// The picture turned, mirrored, zoomed and with the subtitles, made
   /// anew; nil when it is shown as it is.
   private func compose(_ picture: CVPixelBuffer) -> CVPixelBuffer? {
-    let subs = compositing && canvas.width > 0 && canvas.height > 0 ? overlay : nil
+    let useApp = compositing && appOverlay != nil && appCanvas.width > 0 && appCanvas.height > 0
+    let subsCanvas = useApp ? appCanvas : canvas
+    let subs = useApp ? appOverlay : compositing && canvas.width > 0 && canvas.height > 0 ? overlay : nil
     let zoomed = abs(zoom - 1) > 1e-3
     guard subs != nil || rotate != 0 || mirror || zoomed else { return nil }
 
@@ -299,8 +320,8 @@ final class VideoSink: @unchecked Sendable {
     image = image.cropped(to: bounds).composited(over: CIImage(color: .black).cropped(to: bounds))
     if let subs {
       image = subs.transformed(by: CGAffineTransform(
-        scaleX: CGFloat(frameWidth) / canvas.width,
-        y: CGFloat(frameHeight) / canvas.height)).composited(over: image)
+        scaleX: CGFloat(frameWidth) / subsCanvas.width,
+        y: CGFloat(frameHeight) / subsCanvas.height)).composited(over: image)
     }
     imageContext().render(image, to: output, bounds: bounds, colorSpace: space)
     return output

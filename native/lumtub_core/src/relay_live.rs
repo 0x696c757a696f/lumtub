@@ -326,7 +326,8 @@ pub(crate) fn stream(
         }
     };
     let head = match newest {
-        Ok((200, Some(head), _)) => head,
+        // 204: the newest fragment isn't out yet, but its number is.
+        Ok((200 | 204, Some(head), _)) => head,
         Ok((status, head, _)) => {
             log(format!(
                 "Live stream gave no newest fragment (HTTP {status}, head {head:?})"

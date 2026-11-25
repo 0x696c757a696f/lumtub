@@ -644,6 +644,8 @@ extension SubtitleActions on AppController {
       unawaited(ensureCjkFont(mainSubtitleLanguage));
       unawaited(ensureCjkFont(secondSubtitleLanguage));
     }
+    // Fonts for scripts this Linux has none for.
+    if (Platform.isLinux) unawaited(ensureScriptFonts(lines.join('\n')));
     if (!(Platform.isAndroid || Platform.isIOS)) {
       // A desktop: the font follows the track's language, sent once it
       // differs from the one libmpv has.

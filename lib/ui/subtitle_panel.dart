@@ -104,13 +104,16 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final player = widget.player;
     final offered = controller.details?.subtitles ?? const <SubtitleOption>[];
     // The video's own language, at the top so it need not be looked for,
-    // then the interface's and Windows', each once.
+    // then the interface's, the two set in the settings and the system's,
+    // each once.
     final spoken = originalSubtitle(offered, language: controller.details?.language);
     final chosen = controller.settings.subtitleLanguage;
+    final second = controller.settings.secondaryTarget;
     final near = languageRows(offered, spoken, [
       (tr('Interface language'), interfaceTranslationLanguage),
+      if (!controller.settings.subtitleOriginal && chosen != SubtitleLanguage.auto) (tr('First subtitle language'), chosen.translation),
+      if (second != null) (tr('Second subtitle language'), second),
       (tr('System language'), SubtitleLanguage.systemTranslation),
-      if (chosen != SubtitleLanguage.auto) (tr('Subtitle language'), chosen.translation),
     ]);
     final nearOptions = [for (final r in near) r.option];
     final labels = {for (final o in offered) o.label};

@@ -17,6 +17,7 @@ import '../apple_chip.dart';
 import '../ai_filter.dart';
 import '../android_subtitle_fonts.dart';
 import '../cjk_font_packs.dart';
+import '../script_font_packs.dart';
 import '../app_directories.dart';
 import '../learning/learning.dart';
 import '../learning/known_words.dart' show KnownWords, knownWordsOf;
@@ -1099,6 +1100,17 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// The forms (see cjkFormOf) a font pack was looked for in this run.
   final _cjkFontsAsked = <String>{};
+
+  /// What iOS's picture-in-picture window was last given of the subtitles
+  /// Flutter draws.
+  String _pipSubtitlesSent = '';
+
+  /// The scripts whose fonts were looked for in this run (Linux).
+  final _scriptFontsAsked = <String>{};
+
+  /// On Linux, the scripts fontconfig has no font for whose downloaded
+  /// fonts are in use, with their families: libass gets them by name.
+  final linuxScriptFamilies = <String, String>{};
 
   /// Counts the downloaded faces loaded, so the theme is made again with
   /// them in its fallback.

@@ -122,6 +122,9 @@ flutter:
     # character map (assets/fonts/drop_combining_marks.py), so Polish ś or
     # ż come whole from another font instead of as s or z plus a misplaced
     # accent.
+    - family: Noto Sans CJK SC
+      fonts:
+        - asset: assets/fonts/NotoSansSC-Regular.ttf
     # The same face's proportional curly quotes, cut out with fontTools.
     - family: Lumtub Quotes
       fonts:

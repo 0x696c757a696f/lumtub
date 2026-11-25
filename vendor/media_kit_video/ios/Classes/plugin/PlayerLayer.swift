@@ -9,6 +9,7 @@
 
 import AVFoundation
 import AVKit
+import CoreText
 import Flutter
 import UIKit
 
@@ -126,6 +127,125 @@ final class PlayerLayer: NSObject {
   /// open they go into the frames instead.
   private func compositeSubtitles(_ on: Bool) {
     sink.setCompositing(on)
+  }
+
+  /// One subtitle line the app shows where libmpv draws none, for picture
+  /// in picture: its size and outline in canvas pixels.
+  struct AppSubtitle {
+    let text: String
+    let font: String
+    let size: CGFloat
+    let color: UIColor
+    let outline: CGFloat
+    let bold: Bool
+    let box: UIColor?
+    /// The line's language (BCP 47), for its character forms.
+    let language: String
+  }
+
+  /// Drawn here with Core Text, not by Flutter: iOS gives a backgrounded
+  /// app no GPU, so Flutter can't make pictures while the window shows.
+  private static let subtitleQueue = DispatchQueue(label: "lumtub.pip.subtitles", qos: .userInitiated)
+
+  /// Subtitles the app shows, for picture in picture where libmpv draws
+  /// none: [lines] top to bottom, centred on a [canvas] the picture's shape,
+  /// the last line's bottom at [bottom]. No lines take them away.
+  func setAppSubtitles(_ lines: [AppSubtitle], canvas: CGSize, bottom: CGFloat, spacing: CGFloat) {
+    let sink = self.sink
+    Self.subtitleQueue.async {
+      guard let drawn = Self.drawSubtitles(lines, canvas: canvas, bottom: bottom, spacing: spacing) else {
+        sink.setAppOverlay(nil, box: .zero, canvas: .zero)
+        return
+      }
+      sink.setAppOverlay(drawn.image, box: drawn.box, canvas: canvas)
+    }
+  }
+
+  /// The fonts libass draws with (the app's subtitle fonts and its
+  /// Chinese face), made known to Core Text once so the window shows the
+  /// same faces.
+  private static let appFontsRegistered: Void = {
+    let app = Bundle.main.bundleURL
+    var urls = [app.appendingPathComponent("Frameworks/App.framework/flutter_assets/assets/fonts/NotoSansSC-Regular.ttf")]
+    let folder = app.appendingPathComponent("SubtitleFonts")
+    let names = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
+    urls += names.filter { $0.hasSuffix(".ttf") || $0.hasSuffix(".otf") }.map { folder.appendingPathComponent($0) }
+    let existing = urls.filter { FileManager.default.fileExists(atPath: $0.path) }
+    if !existing.isEmpty {
+      CTFontManagerRegisterFontURLs(existing as CFArray, .process, false, nil)
+    }
+  }()
+
+  private static func subtitleFont(_ family: String, size: CGFloat, bold: Bool) -> UIFont {
+    var font = !family.isEmpty && !UIFont.fontNames(forFamilyName: family).isEmpty
+      ? UIFont(descriptor: UIFontDescriptor(fontAttributes: [.family: family]), size: size)
+      : UIFont.systemFont(ofSize: size)
+    if bold, let descriptor = font.fontDescriptor.withSymbolicTraits(.traitBold) {
+      font = UIFont(descriptor: descriptor, size: size)
+    }
+    return font
+  }
+
+  private static func drawSubtitles(_ lines: [AppSubtitle], canvas: CGSize, bottom: CGFloat, spacing: CGFloat) -> (image: CGImage, box: CGRect)? {
+    guard canvas.width > 0, canvas.height > 0 else { return nil }
+    _ = appFontsRegistered
+    let room = canvas.width * 0.9
+    var laid = [(fill: NSAttributedString, stroke: NSAttributedString?, size: CGSize)]()
+    for line in lines where !line.text.isEmpty {
+      let paragraph = NSMutableParagraphStyle()
+      paragraph.alignment = .center
+      paragraph.lineBreakMode = .byWordWrapping
+      paragraph.minimumLineHeight = line.size * 1.3
+      paragraph.maximumLineHeight = line.size * 1.3
+      var look: [NSAttributedString.Key: Any] = [
+        .font: subtitleFont(line.font, size: line.size, bold: line.bold),
+        .foregroundColor: line.color,
+        .paragraphStyle: paragraph,
+      ]
+      if let box = line.box { look[.backgroundColor] = box }
+      if !line.language.isEmpty { look[NSAttributedString.Key(kCTLanguageAttributeName as String)] = line.language }
+      let fill = NSAttributedString(string: line.text, attributes: look)
+      var stroke: NSAttributedString?
+      if line.outline > 0 {
+        var outline = look
+        outline.removeValue(forKey: .backgroundColor)
+        var alpha: CGFloat = 1
+        line.color.getRed(nil, green: nil, blue: nil, alpha: &alpha)
+        outline[.strokeColor] = UIColor.black.withAlphaComponent(alpha)
+        // A positive width strokes without filling, in percent of the size;
+        // half of it falls outside the letters.
+        outline[.strokeWidth] = line.outline * 2 / line.size * 100
+        stroke = NSAttributedString(string: line.text, attributes: outline)
+      }
+      let bounds = fill.boundingRect(
+        with: CGSize(width: room, height: .greatestFiniteMagnitude),
+        options: [.usesLineFragmentOrigin, .usesFontLeading], context: nil)
+      // A point wider than measured, so drawing breaks the lines where measuring did.
+      laid.append((fill, stroke, CGSize(width: ceil(bounds.width) + 1, height: ceil(bounds.height))))
+    }
+    guard !laid.isEmpty else { return nil }
+    let pad = ceil(lines.map(\.outline).max() ?? 0) + 1
+    let width = (laid.map(\.size.width).max() ?? 0) + 2 * pad
+    let height = laid.reduce(0) { $0 + $1.size.height } + spacing * CGFloat(laid.count - 1) + 2 * pad
+    guard width > 0, height > 0 else { return nil }
+
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 1
+    format.opaque = false
+    let image = UIGraphicsImageRenderer(size: CGSize(width: width, height: height), format: format).image { context in
+      context.cgContext.setLineJoin(.round)
+      context.cgContext.setLineCap(.round)
+      var top = pad
+      for line in laid {
+        let rect = CGRect(x: (width - line.size.width) / 2, y: top, width: line.size.width, height: line.size.height)
+        line.stroke?.draw(with: rect, options: [.usesLineFragmentOrigin, .usesFontLeading], context: nil)
+        line.fill.draw(with: rect, options: [.usesLineFragmentOrigin, .usesFontLeading], context: nil)
+        top += line.size.height + spacing
+      }
+    }
+    guard let picture = image.cgImage else { return nil }
+    let y = max(0, min(bottom, canvas.height) - height)
+    return (picture, CGRect(x: (canvas.width - width) / 2, y: y, width: width, height: height))
   }
 
   @objc private func didBecomeActive() {

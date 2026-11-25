@@ -72,16 +72,16 @@ class CjkFontPacks {
     return added;
   }
 
-  /// Makes [folder] hold links to the installed packs' fonts, for libass's
-  /// sub-fonts-dir on Linux; null when none is installed.
-  static String? linkFolder(PackManager packs, String folder) {
-    final files = installedFiles(packs);
+  /// Makes [folder] hold links to the installed packs' fonts and [extra],
+  /// for libass's sub-fonts-dir on Linux; null when there are none.
+  static String? linkFolder(PackManager packs, String folder, {List<File> extra = const []}) {
+    final files = [...installedFiles(packs).values, ...extra];
     if (files.isEmpty) return null;
     try {
       final dir = Directory(folder);
       if (dir.existsSync()) dir.deleteSync(recursive: true);
       dir.createSync(recursive: true);
-      for (final file in files.values) {
+      for (final file in files) {
         Link('$folder/${file.uri.pathSegments.last}').createSync(file.path);
       }
       return folder;

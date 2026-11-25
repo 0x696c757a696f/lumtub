@@ -194,7 +194,7 @@ class PackManager extends ChangeNotifier {
   /// Reads the catalog kept and the packs on this device.
   Future<void> load() async {
     final folder = root.path;
-    final answer = NativeCore.instance == null ? const <String, dynamic>{} : await Isolate.run(() => callCoreJson('lumtub_packs_in', jsonEncode({'folder': folder})));
+    final answer = NativeCore.instance == null ? const <String, dynamic>{} : await _inIsolate('lumtub_packs_in', jsonEncode({'folder': folder}));
     _catalogVersion = (answer['version'] as num?)?.toInt() ?? 0;
     _catalog = [
       for (final p in answer['packs'] is List ? answer['packs'] as List : const [])
@@ -234,7 +234,7 @@ class PackManager extends ChangeNotifier {
     try {
       final text = await file.readAsString();
       if (NativeCore.instance == null) return Pack.fromJson(jsonDecode(text));
-      final answer = await Isolate.run(() => callCoreJson('lumtub_pack_check', text));
+      final answer = await _inIsolate('lumtub_pack_check', text);
       return answer['error'] == null ? Pack.fromJson(answer) : null;
     } catch (e) {
       logDebug(() => 'Could not read ${file.path}: $e');
@@ -256,7 +256,7 @@ class PackManager extends ChangeNotifier {
           await _get(catalogUri, json, most: 4 << 20);
           await _get(signatureUri, signature, most: 64 << 10);
           final ask = jsonEncode({'file': json.path, 'signature': signature.path, 'folder': root.path});
-          final answer = await Isolate.run(() => callCoreJson('lumtub_packs_take', ask));
+          final answer = await _inIsolate('lumtub_packs_take', ask);
           if (answer['error'] case final String problem) throw FormatException(problem);
           logInfo('Pack catalog ${answer['version']} with ${answer['packs']} pack(s)${answer['newer'] == true ? '' : ' (already kept)'}');
           await load();
@@ -413,3 +413,9 @@ class PackManager extends ChangeNotifier {
     super.dispose();
   }
 }
+
+/// Calls the core's [name] with [ask] on another isolate. A top-level
+/// function, so the closure sent there holds only these two strings: one
+/// made inside a method can carry the method's whole context, futures too,
+/// which an isolate refuses.
+Future<Map<String, dynamic>> _inIsolate(String name, String ask) => Isolate.run(() => callCoreJson(name, ask));

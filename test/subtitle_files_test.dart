@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -300,6 +301,72 @@ Ok, finita la chicca.
     expect(cues.length, 2);
     expect(cues.every((c) => c.text.trim().isNotEmpty), isTrue);
     expect(translator.asked.last, 'che stiano sviluppando armi.');
+  });
+
+  // Automatic captions in many scripts, fragment by fragment as YouTube
+  // rolls them on: the original and every translation of it show in the
+  // same lines at the same times, none of them empty.
+  const samples = {
+    'it': ['Quella culla vinta con la pipì', 'è progettata per durare meno', 'del tempo che servirà a tuo figlio', 'per imparare a camminare.', 'Poi basta.'],
+    'en': ['so today we are going', 'to talk about subtitles', 'and how they work, which', 'is a long story.', 'Okay.'],
+    'zh': ['今天我们', '来聊一聊字幕', '它是怎么工作的，', '这是个很长的故事。', '好。'],
+    'ja': ['今日は', '字幕について話します', 'どう動くのか、', 'それは長い話です。', 'はい。'],
+    'ko': ['오늘은 자막에', '대해 이야기하겠습니다', '어떻게 작동하는지,', '긴 이야기입니다.', '네.'],
+    'th': ['วันนี้เราจะ', 'พูดถึงคำบรรยาย', 'ว่ามันทำงานอย่างไร', 'เป็นเรื่องยาว', 'โอเค'],
+    'ar': ['اليوم سنتحدث', 'عن الترجمة', 'وكيف تعمل،', 'إنها قصة طويلة؟', 'حسنا.'],
+    'hi': ['आज हम', 'उपशीर्षक के बारे में', 'बात करेंगे,', 'यह लंबी कहानी है।', 'ठीक है।'],
+    'ru': ['сегодня мы', 'поговорим о субтитрах', 'и как они работают,', 'это долгая история.', 'Ладно.'],
+  };
+  String rolling(List<String> fragments) {
+    final vtt = StringBuffer('WEBVTT\n\n');
+    for (final (i, f) in fragments.indexed) {
+      final previous = i == 0 ? '' : '${fragments[i - 1]}\n';
+      vtt.write('00:00:${(i * 2).toString().padLeft(2, '0')}.000 --> 00:00:${(i * 2 + 2).toString().padLeft(2, '0')}.000\n$previous<00:00:0$i.100><c>$f</c>\n\n');
+    }
+    return '$vtt';
+  }
+
+  for (final MapEntry(key: lang, value: fragments) in samples.entries) {
+    for (final second in ['zh-Hans', 'en', 'ar']) {
+      test('automatic $lang captions and their $second translation show in the same lines', () async {
+        final asr = rolling(fragments);
+        final client = MockClient((request) async => http.Response.bytes(utf8.encode(asr), 200, headers: {'content-type': 'text/vtt; charset=utf-8'}));
+        final files = SubtitleFiles(client, folder, _Upper.new);
+        final original = WebVtt.cues(await File(await files.pathFor(SubtitleOption(language: lang, name: '', url: 'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr'))).readAsString());
+        final translated = WebVtt.cues(await File(await files.pathFor(SubtitleOption(language: second, name: '', url: 'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr&tlang=$second', kind: SubtitleKind.translated))).readAsString());
+        // A first subtitle that is itself a translation goes with the second too.
+        final other = WebVtt.cues(await File(await files.pathFor(SubtitleOption(language: 'fr', name: '', url: 'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr&tlang=fr', kind: SubtitleKind.translated))).readAsString());
+        expect([for (final c in translated) c.timing], [for (final c in original) c.timing]);
+        expect([for (final c in other) c.timing], [for (final c in original) c.timing]);
+        expect([for (final c in translated) c.text], [for (final c in original) c.text.toUpperCase()]);
+        expect(original.every((c) => c.text.trim().isNotEmpty), isTrue);
+        // Every word of the track, in order, each once.
+        final joined = original.map((c) => c.text).join(' ').replaceAll(' ', '');
+        expect(joined, fragments.join().replaceAll(' ', ''));
+      });
+    }
+  }
+
+  test('Korean fragments join with a space, Chinese and Japanese without', () {
+    final ko = WebVtt.cues(WebVtt.asLines(rolling(samples['ko']!)));
+    expect(ko.first.text, startsWith('오늘은 자막에 대해'));
+    final zh = WebVtt.cues(WebVtt.asLines(rolling(samples['zh']!)));
+    expect(zh.first.text, startsWith('今天我们来聊一聊字幕'));
+  });
+
+  test('sentence ends of other scripts end a line', () {
+    final ar = WebVtt.cues(WebVtt.asLines(rolling(samples['ar']!)));
+    expect(ar.last.text, 'حسنا.');
+    final hi = WebVtt.cues(WebVtt.asLines(rolling(samples['hi']!)));
+    expect(hi.last.text, 'ठीक है।');
+  });
+
+  test('YouTube\'s own translation, when the service is busy, shows in the original\'s lines', () {
+    final original = rolling(samples['it']!);
+    final translated = rolling(['那张', '设计用来', '比你孩子需要的时间', '学会走路短。', '就这样。']);
+    final lines = WebVtt.cues(WebVtt.asLinesOf(original, translated));
+    final shown = WebVtt.cues(WebVtt.asLines(original));
+    expect([for (final c in lines) c.timing], [for (final c in shown) c.timing]);
   });
 
   test('reads when a cue starts', () {

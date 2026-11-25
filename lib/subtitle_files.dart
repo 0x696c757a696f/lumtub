@@ -116,8 +116,9 @@ class SubtitleFiles {
     }
 
     if (translator != null && source != null) {
+      final original = await _get(source.url);
       try {
-        result = await _translate(await _get(source.url), source.target, translator, key, save, asr: _isAsr(source.url));
+        result = await _translate(original, source.target, translator, key, save, asr: _isAsr(source.url));
       } on TranslationException catch (e) {
         // The service still refuses after its pauses: YouTube's own
         // translation, fragment by fragment, rather than none.
@@ -129,7 +130,8 @@ class SubtitleFiles {
         } on _Refused {
           throw e;
         }
-        result = (text: _isAsr(option.url) ? WebVtt.asLines(text) : text, rest: null);
+        // In the lines of the original, so the two still go together.
+        result = (text: _isAsr(option.url) ? WebVtt.asLinesOf(original, text) : text, rest: null);
       }
     } else {
       try {
@@ -428,7 +430,7 @@ class WebVtt {
     return cues;
   }
 
-  static final _sentenceEnd = RegExp(r'[.!?。！？…]["”’」』)）]*$');
+  static final _sentenceEnd = RegExp(r'[.!?。！？…؟۔।॥։።။།‼⁇]["”’」』»)）]*$');
 
   /// [cues] joined into sentences: a cue runs on into the next while it has
   /// no sentence end, the next follows within [gap], and the sentence stays
@@ -481,7 +483,7 @@ class WebVtt {
     return out;
   }
 
-  static final _clauseTail = RegExp(r'[;:,；：，、…)）」』"”]$');
+  static final _clauseTail = RegExp(r'[;:,；：，、…)）」』"”»،؛፣၊]$');
 
   /// How long and how wide a line of automatic captions may grow.
   static const lineTime = Duration(seconds: 7);
@@ -510,7 +512,7 @@ class WebVtt {
       final prev = chars[k - 1], next = chars[k];
       if (_cjkStop.hasMatch(prev) && next.trim().isNotEmpty) return 3;
       if (next.trim().isEmpty) return prev.trim().isEmpty ? 0 : (_clauseTail.hasMatch(prev) || _sentenceEnd.hasMatch(prev) ? 3 : 2);
-      if (unspacedScript.hasMatch(prev) && unspacedScript.hasMatch(next)) return 1;
+      if (_unspaced(prev, next)) return 1;
       return 0;
     }
 
@@ -608,13 +610,38 @@ class WebVtt {
   }
 
 
+  /// YouTube's translation [translated] of automatic captions [original]
+  /// in the lines [asLines] shows the original in: each translated cue
+  /// goes into the line it starts in, so the two tracks change together.
+  static String asLinesOf(String original, String translated) {
+    final cues = WebVtt.cues(original);
+    final pieces = WebVtt.cues(translated);
+    if (cues.isEmpty || pieces.isEmpty) return asLines(translated);
+    final lines = [for (final span in sentenceSpans(cues, maxLength: SubtitleFiles.sentenceTime, maxWidth: SubtitleFiles.sentenceWidth)) ...lineSpans(cues, span)];
+    final timings = lineTimings(cues, lines);
+    final texts = List<String>.filled(lines.length, '');
+    for (final piece in pieces) {
+      final at = startOf(piece.timing);
+      var k = timings.lastIndexWhere((t) => startOf(t) <= at);
+      if (k < 0) k = 0;
+      texts[k] = texts[k].isEmpty ? piece.text : _join(texts[k], piece.text);
+    }
+    return write([for (final (k, text) in texts.indexed) if (text.isNotEmpty) (timing: timings[k], text: text)]);
+  }
+
   /// [a] and [b] as one line: with a space, except between letters of
   /// scripts written without spaces (Chinese, Japanese, Thai…).
   static String _join(String a, String b) {
     if (a.isEmpty || b.isEmpty) return a + b;
-    final unspaced = unspacedScript.hasMatch(a[a.length - 1]) && unspacedScript.hasMatch(b[0]);
-    return unspaced ? '$a$b' : '$a $b';
+    return _unspaced(a[a.length - 1], b[0]) ? '$a$b' : '$a $b';
   }
+
+  static final _hangul = RegExp(r'[ᄀ-ᇿ㄰-㆏가-힯]');
+
+  /// Whether letters [a] and [b] go together without a space: both of a
+  /// script written without spaces. Korean is spaced between words, and
+  /// automatic captions break between words.
+  static bool _unspaced(String a, String b) => unspacedScript.hasMatch(a) && unspacedScript.hasMatch(b) && !(_hangul.hasMatch(a) && _hangul.hasMatch(b));
 
   static String _stamp(Duration d) {
     String two(int n, [int width = 2]) => n.toString().padLeft(width, '0');

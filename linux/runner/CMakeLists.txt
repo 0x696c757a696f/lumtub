@@ -33,3 +33,9 @@ target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 target_compile_options(${BINARY_NAME} PRIVATE -fstack-protector-strong
   "$<$<NOT:$<CONFIG:Debug>>:-U_FORTIFY_SOURCE;-D_FORTIFY_SOURCE=3>")
 target_link_options(${BINARY_NAME} PRIVATE -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack)
+
+# libgcc_s comes before the Flutter library in the load order. The engine
+# exports its own _Unwind_* functions since Flutter 3.50, and every library
+# loaded later binds to the first one found: libmpv's LuaJIT then raised Lua
+# errors with the engine's unwinder and crashed in the stats script.
+target_link_options(${BINARY_NAME} PRIVATE "LINKER:--push-state,--no-as-needed,-lgcc_s,--pop-state")

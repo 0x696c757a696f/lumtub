@@ -11,8 +11,11 @@ import 'app_log.dart';
 /// Chinese, Japanese, Korean, Latin, Greek and Cyrillic, Roboto for the
 /// accented letters Noto Sans CJK lacks (Polish ł, ę, ś) and one font for
 /// each other script, and the font is picked by the script of the text on
-/// screen. A line no one of them can draw whole, such as Arabic and Chinese
-/// in one line, is left to Flutter's subtitle view, which falls back by itself.
+/// screen. A line mixing scripts no one of them draws whole, such as Hindi
+/// with English words, is drawn in stretches each in its own font ([runs]),
+/// marked in Lumtub's copies of the subtitles; only a letter no font here
+/// has leaves the video's subtitles to Flutter's view, which falls back by
+/// itself.
 ///
 /// iOS works the same way with the app's own fonts ([prepareIos]): libass
 /// looking through Core Text there stalled mpv's video thread for seconds.
@@ -43,6 +46,39 @@ class AndroidSubtitleFonts {
     'Ethiopic': ['NotoSansEthiopic-'],
     'Georgian': ['NotoSansGeorgian-'],
     'Armenian': ['NotoSansArmenian-'],
+    'Tibetan': ['NotoSerifTibetan-', 'NotoSansTibetan-'],
+    'Mongolian': ['NotoSansMongolian-'],
+    'Syriac': ['NotoSansSyriac-'],
+    'Thaana': ['NotoSansThaana-'],
+    'NKo': ['NotoSansNKo-'],
+    'Tifinagh': ['NotoSansTifinagh-'],
+    'Cherokee': ['NotoSansCherokee-'],
+    'CanadianAboriginal': ['NotoSansCanadianAboriginal-'],
+    'Yi': ['NotoSansYi-'],
+    'Lisu': ['NotoSansLisu-'],
+    'Vai': ['NotoSansVai-'],
+    'Bamum': ['NotoSansBamum-'],
+    'SylotiNagri': ['NotoSansSylotiNagri-'],
+    'Saurashtra': ['NotoSansSaurashtra-'],
+    'KayahLi': ['NotoSansKayahLi-'],
+    'Javanese': ['NotoSansJavanese-'],
+    'Cham': ['NotoSansCham-'],
+    'TaiViet': ['NotoSansTaiViet-'],
+    'MeeteiMayek': ['NotoSansMeeteiMayek-'],
+    'Limbu': ['NotoSansLimbu-'],
+    'TaiLe': ['NotoSansTaiLe-'],
+    'NewTaiLue': ['NotoSansNewTaiLue-'],
+    'Buginese': ['NotoSansBuginese-'],
+    'TaiTham': ['NotoSansTaiTham-'],
+    'Balinese': ['NotoSansBalinese-'],
+    'Sundanese': ['NotoSansSundanese-'],
+    'Batak': ['NotoSansBatak-'],
+    'Lepcha': ['NotoSansLepcha-'],
+    'OlChiki': ['NotoSansOlChiki-'],
+    'Osage': ['NotoSansOsage-'],
+    'HanifiRohingya': ['NotoSansHanifiRohingya-'],
+    'Chakma': ['NotoSansChakma-'],
+    'Adlam': ['NotoSansAdlam-'],
   };
 
   /// The characters of each script in [_scriptFiles].
@@ -66,7 +102,41 @@ class AndroidSubtitleFonts {
     'Ethiopic': RegExp(r'[ሀ-᎟]'),
     'Georgian': RegExp(r'[Ⴀ-ჿ]'),
     'Armenian': RegExp(r'[԰-֏]'),
+    'Tibetan': RegExp(r'[\u0F00-\u0FFF]'),
+    'Mongolian': RegExp(r'[\u1800-\u18AF]'),
+    'Syriac': RegExp(r'[\u0700-\u074F\u0860-\u086F]'),
+    'Thaana': RegExp(r'[\u0780-\u07BF]'),
+    'NKo': RegExp(r'[\u07C0-\u07FF]'),
+    'Tifinagh': RegExp(r'[\u2D30-\u2D7F]'),
+    'Cherokee': RegExp(r'[\u13A0-\u13FF\uAB70-\uABBF]'),
+    'CanadianAboriginal': RegExp(r'[\u1400-\u167F\u18B0-\u18FF]'),
+    'Yi': RegExp(r'[\uA000-\uA4CF]'),
+    'Lisu': RegExp(r'[\uA4D0-\uA4FF]'),
+    'Vai': RegExp(r'[\uA500-\uA63F]'),
+    'Bamum': RegExp(r'[\uA6A0-\uA6FF]'),
+    'SylotiNagri': RegExp(r'[\uA800-\uA82F]'),
+    'Saurashtra': RegExp(r'[\uA880-\uA8DF]'),
+    'KayahLi': RegExp(r'[\uA900-\uA92F]'),
+    'Javanese': RegExp(r'[\uA980-\uA9DF]'),
+    'Cham': RegExp(r'[\uAA00-\uAA5F]'),
+    'TaiViet': RegExp(r'[\uAA80-\uAADF]'),
+    'MeeteiMayek': RegExp(r'[\uAAE0-\uAAFF\uABC0-\uABFF]'),
+    'Limbu': RegExp(r'[\u1900-\u194F]'),
+    'TaiLe': RegExp(r'[\u1950-\u197F]'),
+    'NewTaiLue': RegExp(r'[\u1980-\u19DF]'),
+    'Buginese': RegExp(r'[\u1A00-\u1A1F]'),
+    'TaiTham': RegExp(r'[\u1A20-\u1AAF]'),
+    'Balinese': RegExp(r'[\u1B00-\u1B7F]'),
+    'Sundanese': RegExp(r'[\u1B80-\u1BBF\u1CC0-\u1CCF]'),
+    'Batak': RegExp(r'[\u1BC0-\u1BFF]'),
+    'Lepcha': RegExp(r'[\u1C00-\u1C4F]'),
+    'OlChiki': RegExp(r'[\u1C50-\u1C7F]'),
+    'Osage': RegExp(r'[\u{104B0}-\u{104FF}]', unicode: true),
+    'HanifiRohingya': RegExp(r'[\u{10D00}-\u{10D3F}]', unicode: true),
+    'Chakma': RegExp(r'[\u{11100}-\u{1114F}]', unicode: true),
+    'Adlam': RegExp(r'[\u{1E900}-\u{1E95F}]', unicode: true),
   };
+
 
   static final _letter = RegExp(r'[\p{L}]', unicode: true);
   static final _kana = RegExp(r'[぀-ヿ]');
@@ -115,12 +185,16 @@ class AndroidSubtitleFonts {
   static Future<String?> prepareIos(String folder, {required String flutterFonts, required String bundled, Map<String, (File, String)> downloaded = const {}}) async {
     try {
       const sc = 'NotoSansSC-Regular.ttf';
-      if (!File('$flutterFonts/$sc').existsSync()) return null;
+      final hasSc = File('$flutterFonts/$sc').existsSync();
+      final names = Directory(bundled).existsSync() ? ([for (final f in Directory(bundled).listSync()) f.path.split(RegExp(r'[/\\]')).last]..sort()) : <String>[];
+      // Without the Chinese face the other scripts are still drawn by
+      // libass; Chinese, Japanese and Korean lines go to Flutter's view.
+      if (!hasSc && names.isEmpty) return null;
+      if (!hasSc) logWarn('No $sc in $flutterFonts; libass draws no Chinese, Japanese or Korean');
       final dir = Directory(folder);
       if (dir.existsSync()) dir.deleteSync(recursive: true);
       dir.createSync(recursive: true);
-      Link('$folder/$sc').createSync('$flutterFonts/$sc');
-      final names = Directory(bundled).existsSync() ? ([for (final f in Directory(bundled).listSync()) f.path.split(RegExp(r'[/\\]')).last]..sort()) : <String>[];
+      if (hasSc) Link('$folder/$sc').createSync('$flutterFonts/$sc');
       families.clear();
       latin = null;
       var korean = false;
@@ -136,7 +210,7 @@ class AndroidSubtitleFonts {
       for (final (file, _) in downloaded.values) {
         Link('$folder/${file.uri.pathSegments.last}').createSync(file.path);
       }
-      cjk = true;
+      cjk = hasSc;
       cjkFamilies = {
         'ja': downloaded['ja']?.$2 ?? 'Noto Sans SC',
         'ko': downloaded['ko']?.$2 ?? (korean ? 'Noto Sans KR' : 'Noto Sans SC'),
@@ -201,12 +275,121 @@ class AndroidSubtitleFonts {
   /// second one is Lumtub's copy in the family for its track), so each line
   /// only has to fit one font by itself: Polish under Chinese is drawn,
   /// Polish and Chinese in one line is not.
+  ///
+  /// A line mixing scripts is drawable when each stretch of it has a font
+  /// ([runs]): Lumtub's copies mark the stretches. Its main family is then
+  /// null, and libmpv keeps the font it has.
   static ({bool drawable, String? main}) forLines(List<String> lines, {String language = ''}) {
     final main = lines.isEmpty ? '' : lines.first.trim();
     final rest = lines.skip(1).map((l) => l.trim()).where((l) => l.isNotEmpty);
     final family = main.isEmpty ? null : familyFor(main, language: language);
-    final drawable = (main.isEmpty || family != null) && rest.every((l) => familyFor(l) != null);
+    bool fits(String line, String? whole, String language) => whole != null || runs(line, language: language) != null;
+    final drawable = (main.isEmpty || fits(main, family, language)) && rest.every((l) => fits(l, familyFor(l), ''));
     return (drawable: drawable, main: family);
+  }
+
+  /// The kind of each character [runs] has met: a script, 'cjk', 'letter'
+  /// or null.
+  static final _kinds = <int, String?>{};
+
+  /// [text] in stretches each drawn whole by one family: one stretch when
+  /// one family draws it all ([familyFor]), more for a line mixing
+  /// scripts, such as Hindi with English words or Arabic with Chinese.
+  /// Spaces, digits and punctuation go with the stretch before them.
+  /// Null when some letter has no font here.
+  ///
+  /// One pass over the text; the stretches are looked up only for a line
+  /// no one family draws.
+  static List<({String text, String family})>? runs(String text, {String language = ''}) {
+    final whole = familyFor(text, language: language);
+    if (whole != null) return [(text: text, family: whole)];
+    // Each character's kind: a script of [_scripts], 'cjk' for Chinese,
+    // Japanese and Korean, 'letter' for any other letter, null for the
+    // rest, which joins its neighbours.
+    final out = <({String text, String family})>[];
+    for (final piece in _pieces(text)) {
+      final part = piece.text;
+      final family = familyFor(part, language: language);
+      if (family == null) {
+        // Only spaces or punctuation: drawn in the stretch before.
+        if (piece.kind == null && out.isNotEmpty) {
+          out[out.length - 1] = (text: out.last.text + part, family: out.last.family);
+          continue;
+        }
+        if (piece.kind == null) continue;
+        return null;
+      }
+      if (out.isNotEmpty && out.last.family == family) {
+        out[out.length - 1] = (text: out.last.text + part, family: family);
+      } else {
+        out.add((text: part, family: family));
+      }
+    }
+    return out.isEmpty ? null : out;
+  }
+
+  /// Each character's kind, looked up once per run of the app: a script
+  /// of [_scripts], 'cjk' for Chinese, Japanese and Korean, 'letter' for
+  /// any other letter, null for the rest (spaces, digits, punctuation).
+  static String? _kindOf(int rune) => _kinds.putIfAbsent(rune, () {
+        final c = String.fromCharCode(rune);
+        for (final MapEntry(key: script, value: pattern) in _scripts.entries) {
+          if (pattern.hasMatch(c)) return script;
+        }
+        if (_cjkText.hasMatch(c) || _kana.hasMatch(c)) return 'cjk';
+        return _letter.hasMatch(c) ? 'letter' : null;
+      });
+
+  /// [text] in pieces of one kind each; the rest joins the piece before
+  /// it, or the first one.
+  static List<({String text, String? kind})> _pieces(String text) {
+    final pieces = <({StringBuffer text, String? kind})>[];
+    for (final rune in text.runes) {
+      final kind = _kindOf(rune);
+      if (pieces.isEmpty || (kind != null && pieces.last.kind != null && kind != pieces.last.kind)) {
+        pieces.add((text: StringBuffer()..writeCharCode(rune), kind: kind));
+      } else if (kind != null && pieces.last.kind == null) {
+        // Leading spaces or punctuation take the first letters' kind.
+        pieces[pieces.length - 1] = (text: pieces.last.text..writeCharCode(rune), kind: kind);
+      } else {
+        pieces.last.text.writeCharCode(rune);
+      }
+    }
+    return [for (final p in pieces) (text: p.text.toString(), kind: p.kind)];
+  }
+
+  /// The scripts of [_scripts] in [text], each with one of its characters.
+  static Map<String, int> scriptsIn(String text) {
+    final found = <String, int>{};
+    for (final rune in text.runes) {
+      final kind = _kindOf(rune);
+      if (kind != null && kind != 'cjk' && kind != 'letter') found.putIfAbsent(kind, () => rune);
+    }
+    return found;
+  }
+
+  /// The script whose font [fileName] is, by [_scriptFiles]; null for none.
+  static String? scriptOfFile(String fileName) {
+    for (final MapEntry(key: script, value: prefixes) in _scriptFiles.entries) {
+      if (prefixes.any(fileName.startsWith)) return script;
+    }
+    return null;
+  }
+
+  /// [text] in stretches, those in a script of [families] marked with its
+  /// family and the rest with null: where libass finds fonts by itself
+  /// (fontconfig on Linux) and only [families] were added beside them.
+  static List<({String text, String? family})> stretches(String text, Map<String, String> families) {
+    final out = <({String text, String? family})>[];
+    for (final piece in _pieces(text)) {
+      final family = families[piece.kind];
+      if (out.isNotEmpty && (out.last.family == family || piece.kind == null)) {
+        out[out.length - 1] = (text: out.last.text + piece.text, family: out.last.family);
+      } else {
+        out.add((text: piece.text, family: family));
+      }
+    }
+    return out;
   }
 
   /// The one family that draws all of [text], for subtitles whose language
@@ -225,7 +408,8 @@ class AndroidSubtitleFonts {
     final rest = _letter.hasMatch(other);
     if (needed.length > 1 || (needed.length == 1 && rest)) return null;
     if (needed.length == 1) return families[needed.first];
-    if (!cjk) return null;
+    // Without the CJK font only Latin, Greek and Cyrillic lines have one.
+    if (!cjk) return _cjkText.hasMatch(text) || _kana.hasMatch(text) || _hangul.hasMatch(text) ? null : latin;
     // A letter of a script no font here has (Tibetan, Mongolian...).
     if (_letter.hasMatch(other.replaceAll(_drawnLetters, ''))) return null;
     // Polish, Czech, Vietnamese, Ukrainian and the like: the Latin font,

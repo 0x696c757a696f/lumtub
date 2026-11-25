@@ -1128,7 +1128,7 @@ class PlayerSettings {
       d3d11vaZeroCopy: raw['d3d11vaZeroCopy'] == true,
       // Always on iOS: Flutter's subtitles over the video's platform view
       // leave ghosts of earlier lines there.
-      libassSubtitles: Platform.isIOS || raw['libassSubtitles'] == true,
+      libassSubtitles: raw['libassSubtitles'] == true || (Platform.isIOS && !raw.containsKey('libassSubtitles')),
       proxyMode: _enumByName(ProxyMode.values, raw['proxyMode'], ProxyMode.system),
       proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
       dnsServer: raw['dnsServer']?.toString() ?? '',

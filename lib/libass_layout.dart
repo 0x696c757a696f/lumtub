@@ -262,7 +262,20 @@ String secondCopyOwnText(String text) => text.split(RegExp(r'\n\s*\n')).first.tr
 /// subtitle's. Its letters are [secondEm] units at secondary-sub-scale 1;
 /// [outline] is the outline's width for a letter one unit wide. [scale]
 /// sizes everything in it, for a libmpv without secondary-sub-scale.
-String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required double outline, double room = 0, String? font, MainUnder? main, double aspect = 16 / 9, double scale = 1, bool blurred = false}) {
+///
+/// [runs] splits a line mixing scripts into stretches each in its family
+/// (Android and iOS, where libass has no fallback); null where the line's
+/// style font draws it all. A stretch with no family is in the line's own
+/// font. [second] tells the second subtitle's lines from the main one's.
+String secondAss(List<SubtitleCue> cues, PlayerSettings settings,
+    {required double outline,
+    double room = 0,
+    String? font,
+    MainUnder? main,
+    double aspect = 16 / 9,
+    double scale = 1,
+    bool blurred = false,
+    List<({String text, String? family})>? Function(String text, {required bool second})? runs}) {
   font ??= settings.secondaryFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.secondaryFont);
   final unit = secondEm * scale;
   final size = unit * settings.secondaryScale * LibassLook.lineEms(font);
@@ -301,10 +314,19 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
     ..writeln('Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text');
   // Braces would open override tags; line breaks are ASS's own.
   String ass(String text) => text.replaceAll('{', '(').replaceAll('}', ')').replaceAll(RegExp(r'\r?\n'), r'\N');
+  // Each stretch of a line mixing scripts in its own family.
+  String fonts(String text, {required bool second}) {
+    final parts = runs?.call(text, second: second);
+    if (parts == null) return ass(text);
+    // Back to the line's own font: the style's, or the main subtitle's.
+    final own = second ? '' : main?.font ?? '';
+    return parts.map((r) => '{\\fn${(r.family ?? own).replaceAll(RegExp(r'[{}\\,]'), ' ')}}${ass(r.text)}').join();
+  }
+
   // 模糊翻译: libass blurs the outline alone when there is one, so the
   // letters lose it and are blurred themselves, as the Flutter view blurs.
   final blur = blurred ? '{\\bord0\\shad0\\blur${(size * blurEms).toStringAsFixed(1)}}' : '';
-  String second(String text) => '$blur${ass(LibassLayout.wrap(text, room, font: settings.secondaryFont, bold: settings.subtitleBold))}';
+  String second(String text) => '$blur${fonts(LibassLayout.wrap(text, room, font: settings.secondaryFont, bold: settings.subtitleBold), second: true)}';
   if (main == null || main.cues.isEmpty) {
     for (final cue in cues) {
       out.writeln('Dialogue: 0,${stamp(cue.start)},${stamp(cue.end)},Default,,0,0,0,,${second(cue.text)}');
@@ -322,7 +344,7 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings, {required doub
   final gap = '{\\alpha&HFF&\\fs${(unit * 6 / 32).toStringAsFixed(2)}}\\h';
   // Broken as Lumtub's copy of the main subtitle breaks them, blank lines
   // left out as there.
-  final mainText = [for (final cue in main.cues) ass(LibassLayout.wrap(cue.text, main.room, font: main.wrapFont, bold: settings.subtitleBold).replaceAll(RegExp(r'\n\s*\n'), '\n'))];
+  final mainText = [for (final cue in main.cues) fonts(LibassLayout.wrap(cue.text, main.room, font: main.wrapFont, bold: settings.subtitleBold).replaceAll(RegExp(r'\n\s*\n'), '\n'), second: false)];
   final secondText = [for (final cue in cues) second(cue.text)];
   final times = <Duration>{for (final cue in cues) ...[cue.start, cue.end], for (final cue in main.cues) ...[cue.start, cue.end]}.toList()..sort();
   final seconds = _Showing(cues), mains = _Showing(main.cues);

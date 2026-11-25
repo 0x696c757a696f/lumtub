@@ -45,13 +45,43 @@ void main() {
     expect(AndroidSubtitleFonts.forLines(['مرحبا بالعالم', '你好，世界']), (drawable: true, main: 'Noto Naskh Arabic'));
     expect(AndroidSubtitleFonts.forLines(['Dobrý den, příteli', 'สวัสดี']), (drawable: true, main: 'Roboto'));
     expect(AndroidSubtitleFonts.forLines(['', '你好']), (drawable: true, main: null), reason: 'no main line: its font stays');
-    expect(AndroidSubtitleFonts.forLines(['圣人的短篇故事 historia świętego', '']), (drawable: false, main: null));
-    expect(AndroidSubtitleFonts.forLines(['hello', 'مرحبا 你好']), (drawable: false, main: 'Noto Sans CJK SC'));
+    expect(AndroidSubtitleFonts.forLines(['圣人的短篇故事 historia świętego', '']), (drawable: true, main: null), reason: 'drawn in stretches');
+    expect(AndroidSubtitleFonts.forLines(['hello', 'مرحبا 你好']), (drawable: true, main: 'Noto Sans CJK SC'));
     expect(AndroidSubtitleFonts.forLines(['hello', 'नमस्ते']).drawable, isFalse, reason: 'no Devanagari font was found');
     // The second subtitle's copy holds the main lines after a blank line.
     const copy = '早上好。亲爱的朋友们。\n\u00a0\n20 dzień listopada, piątunio.';
-    expect(AndroidSubtitleFonts.forLines(['20 dzień listopada, piątunio.', copy]).drawable, isFalse);
+    expect(AndroidSubtitleFonts.forLines(['20 dzień listopada, piątunio.', copy]).drawable, isTrue, reason: 'in stretches too');
     expect(AndroidSubtitleFonts.forLines(['20 dzień listopada, piątunio.', secondCopyOwnText(copy)]), (drawable: true, main: 'Roboto'));
+  });
+
+  test('a line mixing scripts is drawn in stretches, each in its font', () {
+    AndroidSubtitleFonts.families['Devanagari'] = 'Noto Sans Devanagari';
+    AndroidSubtitleFonts.families['Adlam'] = 'Noto Sans Adlam';
+    final runs = AndroidSubtitleFonts.runs;
+    expect(runs('ogni componente del sistema'), [(text: 'ogni componente del sistema', family: 'Noto Sans CJK SC')]);
+    expect(runs('यह iPhone बहुत अच्छा है'), [
+      (text: 'यह ', family: 'Noto Sans Devanagari'),
+      (text: 'iPhone ', family: 'Noto Sans CJK SC'),
+      (text: 'बहुत अच्छा है', family: 'Noto Sans Devanagari'),
+    ]);
+    expect(runs('مرحبا 你好!'), [(text: 'مرحبا ', family: 'Noto Naskh Arabic'), (text: '你好!', family: 'Noto Sans CJK SC')]);
+    expect(runs('圣人的短篇故事 historia świętego'), [(text: '圣人的短篇故事 ', family: 'Noto Sans CJK SC'), (text: 'historia świętego', family: 'Roboto')]);
+    expect(runs('“Hello” — สวัสดี.'), [(text: '“Hello” — ', family: 'Noto Sans CJK SC'), (text: 'สวัสดี.', family: 'Noto Sans Thai')]);
+    expect(runs('नमस्ते\nhello'), [(text: 'नमस्ते\n', family: 'Noto Sans Devanagari'), (text: 'hello', family: 'Noto Sans CJK SC')]);
+    expect(runs('\u{1E900}\u{1E901} hello'), [(text: '\u{1E900}\u{1E901} ', family: 'Noto Sans Adlam'), (text: 'hello', family: 'Noto Sans CJK SC')], reason: 'beyond the BMP');
+    expect(runs('hello ᠮᠣᠩᠭᠣᠯ'), isNull, reason: 'no Mongolian font was found');
+    expect(AndroidSubtitleFonts.forLines(['hello', 'ᠮᠣᠩᠭᠣᠯ']).drawable, isFalse);
+  });
+
+  test('on Linux only stretches in scripts with downloaded fonts name them', () {
+    expect(AndroidSubtitleFonts.scriptsIn('hello བཀྲ مرحبا'), {'Tibetan': 0xF56, 'Arabic': 0x645});
+    expect(AndroidSubtitleFonts.stretches('yes བཀྲ་ཤིས no', {'Tibetan': 'Noto Serif Tibetan'}), [
+      (text: 'yes ', family: null),
+      (text: 'བཀྲ་ཤིས ', family: 'Noto Serif Tibetan'),
+      (text: 'no', family: null),
+    ]);
+    expect(AndroidSubtitleFonts.scriptOfFile('NotoSerifTibetan-Regular.ttf'), 'Tibetan');
+    expect(AndroidSubtitleFonts.scriptOfFile('NotoSans-Regular.ttf'), isNull);
   });
 
   test('another script gets its own font, alone with digits and punctuation', () {
@@ -63,9 +93,12 @@ void main() {
     expect(AndroidSubtitleFonts.familyFor('مرحبا\n你好'), isNull);
     expect(AndroidSubtitleFonts.familyFor('สวัสดี hello'), isNull);
     expect(AndroidSubtitleFonts.familyFor('नमस्ते'), isNull, reason: 'no Devanagari font was found');
-    expect(AndroidSubtitleFonts.familyFor('བཀྲ་ཤིས་བདེ་ལེགས'), isNull, reason: 'no font here has Tibetan');
+    expect(AndroidSubtitleFonts.familyFor('བཀྲ་ཤིས་བདེ་ལེགས'), isNull, reason: 'no Tibetan font was found');
+    AndroidSubtitleFonts.families['Tibetan'] = 'Noto Serif Tibetan';
+    expect(AndroidSubtitleFonts.familyFor('བཀྲ་ཤིས་བདེ་ལེགས'), 'Noto Serif Tibetan');
     AndroidSubtitleFonts.cjk = false;
-    expect(AndroidSubtitleFonts.familyFor('hello'), isNull);
+    expect(AndroidSubtitleFonts.familyFor('你好'), isNull, reason: 'no CJK font');
+    expect(AndroidSubtitleFonts.familyFor('hello'), AndroidSubtitleFonts.latin, reason: 'Latin needs no CJK font');
   });
 
   test('the folder links the CJK font and the plain face of each script, nothing else', () async {
@@ -104,8 +137,26 @@ void main() {
     expect(AndroidSubtitleFonts.familyFor('因此 so'), 'Noto Sans SC');
     expect(AndroidSubtitleFonts.familyFor('สวัสดี'), 'Noto Sans Thai');
     expect(AndroidSubtitleFonts.familyFor('błogosławionej'), 'Noto Sans');
+    // Without the Chinese face libass still draws the other scripts.
     File('${flutter.path}/NotoSansSC-Regular.ttf').deleteSync();
+    expect(await AndroidSubtitleFonts.prepareIos('${root.path}/subs', flutterFonts: flutter.path, bundled: bundled.path), isNotNull);
+    expect(AndroidSubtitleFonts.familyFor('błogosławionej'), 'Noto Sans');
+    expect(AndroidSubtitleFonts.familyFor('สวัสดี'), 'Noto Sans Thai');
+    expect(AndroidSubtitleFonts.familyFor('因此 so'), isNull);
+    expect(AndroidSubtitleFonts.forLines(['ciao', '你好']).drawable, isFalse);
+    // With no font at all there is nothing for libass.
+    for (final f in bundled.listSync()) {
+      f.deleteSync();
+    }
     expect(await AndroidSubtitleFonts.prepareIos('${root.path}/subs', flutterFonts: flutter.path, bundled: bundled.path), isNull);
+  });
+
+  test('the app bundles the Chinese face libass on iOS starts from', () {
+    // Left out of pubspec.yaml once (0.2.59 to 0.2.61): iOS subtitles all
+    // fell to Flutter's view and never reached picture in picture.
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    expect(pubspec, contains('asset: assets/fonts/NotoSansSC-Regular.ttf'));
+    expect(File('assets/fonts/NotoSansSC-Regular.ttf').existsSync(), isTrue);
   });
 
   test('on iOS downloaded Japanese and traditional Chinese faces draw those languages', () async {

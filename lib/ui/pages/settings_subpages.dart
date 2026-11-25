@@ -510,14 +510,13 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           setOpacity: (v) => change((s) => s.copyWith(secondaryOpacity: v)),
         ),
         _header(context, tr('General')),
-        if (!Platform.isIOS)
-          SwitchItem(
-            title: tr('Subtitles rendered by mpv (libass)'),
-            subtitle: tr('Supports styled subtitles; when off, the UI draws them, using fewer resources'),
-            leading: Icon(AppIcons.stack),
-            value: settings.libassSubtitles,
-            onChanged: (v) => change((s) => s.copyWith(libassSubtitles: v)),
-          ),
+        SwitchItem(
+          title: tr('Subtitles rendered by mpv (libass)'),
+          subtitle: tr('Supports styled subtitles; when off, the UI draws them, using fewer resources'),
+          leading: Icon(AppIcons.stack),
+          value: settings.libassSubtitles,
+          onChanged: (v) => change((s) => s.copyWith(libassSubtitles: v)),
+        ),
         SwitchItem(
           title: tr('Subtitles in picture in picture'),
           leading: Icon(AppIcons.pictureInpicture),

@@ -1,0 +1,335 @@
+{
+  "id": "fonts-noto-scripts",
+  "version": "1.0.0",
+  "kind": "language",
+  "title": {
+    "en": "Noto fonts for more scripts",
+    "zh-Hans": "更多文字的 Noto 字体"
+  },
+  "description": {
+    "en": "Draws subtitles in Arabic, Hindi, Thai, Tibetan, Mongolian and 47 other scripts where Linux has no font for them. Downloaded by itself when a subtitle needs one.",
+    "zh-Hans": "Linux 没有对应字体时，用它显示阿拉伯文、印地文、泰文、藏文、蒙古文等 52 种文字的字幕。字幕用到时自动下载。"
+  },
+  "license": "OFL-1.1",
+  "notice": "Copyright 2015-2022 Google Inc. and The Noto Project Authors (https://github.com/notofonts). Licensed under the SIL Open Font License, Version 1.1 (https://openfontlicense.org).",
+  "source": "https://github.com/0x696c757a696f/lumtub/tree/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts",
+  "minApp": "0.2.62",
+  "platforms": [
+    "linux-x64",
+    "linux-arm64"
+  ],
+  "files": [
+    {
+      "path": "NotoSansAdlam-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansAdlam-Regular.ttf",
+      "sha256": "7360a8023487bff116bfde73a070da0f734f837f3056c81b20791b1f2839b7d3",
+      "size": 94464
+    },
+    {
+      "path": "NotoSansArabic-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansArabic-Regular.ttf",
+      "sha256": "bdff3e5659d67e67def05b33f749683b9376ae819d65d3dd62ac4640b3aaef48",
+      "size": 234892
+    },
+    {
+      "path": "NotoSansArmenian-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansArmenian-Regular.ttf",
+      "sha256": "720df88c332417a235b4d6209d14ec2e2bf4bfe2a954b7453d869ea593bfce1e",
+      "size": 30752
+    },
+    {
+      "path": "NotoSansBalinese-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansBalinese-Regular.ttf",
+      "sha256": "97d94b44707d68adde5d0e766536c016e635b64006a4b2dcf4ed79959480f095",
+      "size": 92364
+    },
+    {
+      "path": "NotoSansBamum-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansBamum-Regular.ttf",
+      "sha256": "5de881d26f4913c63f81db283bcffaafe1f0775d1be8072f39a4f8c0c09b90aa",
+      "size": 228920
+    },
+    {
+      "path": "NotoSansBatak-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansBatak-Regular.ttf",
+      "sha256": "d7913a9681f6bf3f63a3c87f34c87d20bcf8515aceee9c081dc2851292f4efa4",
+      "size": 15104
+    },
+    {
+      "path": "NotoSansBengali-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansBengali-Regular.ttf",
+      "sha256": "b55c62ee531e3214da6c0701daecea89a52ba42db7d8206b92e6b51f397a3193",
+      "size": 143072
+    },
+    {
+      "path": "NotoSansBuginese-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansBuginese-Regular.ttf",
+      "sha256": "9572118c512044497fa06cf5ae5209a245295a21746dac2f34ec5fad094f66c0",
+      "size": 7200
+    },
+    {
+      "path": "NotoSansCanadianAboriginal-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansCanadianAboriginal-Regular.ttf",
+      "sha256": "66b4f453f27d176045bab8e168397ec46322d74306931c807f500eb41c984157",
+      "size": 86372
+    },
+    {
+      "path": "NotoSansChakma-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansChakma-Regular.ttf",
+      "sha256": "281bbdb5c31aae460c3a58acd0ba9ed5f92e58ebb03f7614be7c4441520c5525",
+      "size": 59588
+    },
+    {
+      "path": "NotoSansCham-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansCham-Regular.ttf",
+      "sha256": "b87ef0181fb1f11da6a36846724a299143d73d8afffd238018fd91291beb87bb",
+      "size": 30532
+    },
+    {
+      "path": "NotoSansCherokee-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansCherokee-Regular.ttf",
+      "sha256": "bda37783ba22f62d71a647f5ddce6f8e4b4d6959eba3afd5a7eccbcaaa85f72c",
+      "size": 94592
+    },
+    {
+      "path": "NotoSansDevanagari-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansDevanagari-Regular.ttf",
+      "sha256": "4e3c66638958c3e2ab5d37f47a8deb89fffeb7be9985c665a519bbc7ba762313",
+      "size": 243520
+    },
+    {
+      "path": "NotoSansEthiopic-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansEthiopic-Regular.ttf",
+      "sha256": "f6f7fc379db9438959a2b0527e7a2cf36ea9c84626d56ec444fff37fc24c3c10",
+      "size": 376804
+    },
+    {
+      "path": "NotoSansGeorgian-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansGeorgian-Regular.ttf",
+      "sha256": "d3e33254b09e7bb2c5cf0f17e554b80462056c5a107097f258d495168c3a9346",
+      "size": 52888
+    },
+    {
+      "path": "NotoSansGujarati-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansGujarati-Regular.ttf",
+      "sha256": "9b5a7aaeeb649a2e75a49d8b006a1f87db1b61c0df3b001609f4e0725d88dbf6",
+      "size": 200704
+    },
+    {
+      "path": "NotoSansGurmukhi-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansGurmukhi-Regular.ttf",
+      "sha256": "658d0207da305a1411c539a8b0bbeda64d4146e54fb4827facddb890b6b90d74",
+      "size": 55172
+    },
+    {
+      "path": "NotoSansHanifiRohingya-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansHanifiRohingya-Regular.ttf",
+      "sha256": "abcfae7a163727e1d4507bc2603b2122cc3fbb9d5e14a8f5c11c89222de281f2",
+      "size": 27192
+    },
+    {
+      "path": "NotoSansHebrew-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansHebrew-Regular.ttf",
+      "sha256": "cdefaf8efd47045f6820928eba84db5bed7557539328952b5f828315485e02ee",
+      "size": 26860
+    },
+    {
+      "path": "NotoSansJavanese-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansJavanese-Regular.ttf",
+      "sha256": "faff63a3ea4c5a882508d85935f02e4f80e923551d4716e27706dd3c6cb07d67",
+      "size": 127040
+    },
+    {
+      "path": "NotoSansKannada-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansKannada-Regular.ttf",
+      "sha256": "9ad74dc64838c6855b96f671fc08e425a58921b9d0c71712ea79c328a27e6e38",
+      "size": 182416
+    },
+    {
+      "path": "NotoSansKayahLi-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansKayahLi-Regular.ttf",
+      "sha256": "24fce18dd43d89de37f1be211ae935d30b2c87e19eece8d52cfc0d9c2ce44806",
+      "size": 17720
+    },
+    {
+      "path": "NotoSansKhmer-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansKhmer-Regular.ttf",
+      "sha256": "e66675f2082788f0511a714bef5a1748928294b38c8e286a96ea73a864b5e605",
+      "size": 114576
+    },
+    {
+      "path": "NotoSansLao-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansLao-Regular.ttf",
+      "sha256": "0a86e5e1ccfe34ca78c43fac6829dc751b42bcc469272a9a55325aae587bfbe7",
+      "size": 35884
+    },
+    {
+      "path": "NotoSansLepcha-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansLepcha-Regular.ttf",
+      "sha256": "168771a2b64da0214bc92d0b93c20f910685b6b4107405fb57ce7ede438fe9d9",
+      "size": 24456
+    },
+    {
+      "path": "NotoSansLimbu-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansLimbu-Regular.ttf",
+      "sha256": "2a7e9f84c1dedb1016a841a81363b2e609090c78799afe01247ccb0f25efd9b0",
+      "size": 12868
+    },
+    {
+      "path": "NotoSansLisu-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansLisu-Regular.ttf",
+      "sha256": "243c09079c08619a4b11621f07027c10e5eb067b7e2e217537ae5e01be79e21b",
+      "size": 12860
+    },
+    {
+      "path": "NotoSansMalayalam-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansMalayalam-Regular.ttf",
+      "sha256": "c08de7fa8d032a5d6a4d120fb82c78cec60b362a4e73fa26360d89759ff2a7f9",
+      "size": 112936
+    },
+    {
+      "path": "NotoSansMeeteiMayek-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansMeeteiMayek-Regular.ttf",
+      "sha256": "1e6633879d76284a1fb2e361205341a788313afdd6b1dfb8b7bbe77e27164393",
+      "size": 17152
+    },
+    {
+      "path": "NotoSansMongolian-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansMongolian-Regular.ttf",
+      "sha256": "601afb9f08fbbc39f0cf72cb7e11079ada6fa3feed1fadca8e6e5095e7957687",
+      "size": 242252
+    },
+    {
+      "path": "NotoSansMyanmar-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansMyanmar-Regular.ttf",
+      "sha256": "fafce4db400bc0b214907ccdbfb0ad2f18a57bfefd08c8a571830b84088cf2fc",
+      "size": 195088
+    },
+    {
+      "path": "NotoSansNKo-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansNKo-Regular.ttf",
+      "sha256": "389f4082894bf1833dc5f140a282496114366b410779fbb16b3486f4660e9313",
+      "size": 38352
+    },
+    {
+      "path": "NotoSansNewTaiLue-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansNewTaiLue-Regular.ttf",
+      "sha256": "53005c3e1b61c5d3002510479144867a5a1370a32a78c5cf374f9a6dd576cf9b",
+      "size": 17024
+    },
+    {
+      "path": "NotoSansOlChiki-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansOlChiki-Regular.ttf",
+      "sha256": "3dc960a2d687b0e4fe03e5c2eb88be2a3d244c4509029277ca2be248787d33b3",
+      "size": 15172
+    },
+    {
+      "path": "NotoSansOriya-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansOriya-Regular.ttf",
+      "sha256": "a16645d056017927406546aa78e4ce15e782fd8783467267b75450453d007415",
+      "size": 131216
+    },
+    {
+      "path": "NotoSansOsage-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansOsage-Regular.ttf",
+      "sha256": "27d3b1ea74cc799025ed5e8b58d1a33185530c43fbb4119fffbcd161269477d3",
+      "size": 21036
+    },
+    {
+      "path": "NotoSansSaurashtra-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansSaurashtra-Regular.ttf",
+      "sha256": "6b5944253e7a33a9336317de9b73bb8a137e7f7795e9f9f2ef82fc13cc665f5c",
+      "size": 35308
+    },
+    {
+      "path": "NotoSansSinhala-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansSinhala-Regular.ttf",
+      "sha256": "9e32612d47004552f3125e78648a9e2e7899a216ccd3cefbb93a9b5f4c809feb",
+      "size": 154912
+    },
+    {
+      "path": "NotoSansSundanese-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansSundanese-Regular.ttf",
+      "sha256": "eff2b13deacba332b2ddbfebee7dce77cb999d99fb2e342d6027fce71902669b",
+      "size": 22888
+    },
+    {
+      "path": "NotoSansSylotiNagri-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansSylotiNagri-Regular.ttf",
+      "sha256": "4ff931e443e1356a1207c12c4e18fff62442bd1d3a653430ac56a4aa0a70021b",
+      "size": 26704
+    },
+    {
+      "path": "NotoSansSyriac-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansSyriac-Regular.ttf",
+      "sha256": "49917b4472e91dfb37291ef4f4821957f4225edaddb6100b1d8736df3910b237",
+      "size": 233508
+    },
+    {
+      "path": "NotoSansTaiLe-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansTaiLe-Regular.ttf",
+      "sha256": "a2cde56384066013cf1efafc5d3cfc142b9a0d10c77c7e1f8ee2880cbe121d4c",
+      "size": 19796
+    },
+    {
+      "path": "NotoSansTaiTham-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansTaiTham-Regular.ttf",
+      "sha256": "d3065a143eb21f13406307602940b9f7cd20e935a1e20a829f9867b152056714",
+      "size": 95316
+    },
+    {
+      "path": "NotoSansTaiViet-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansTaiViet-Regular.ttf",
+      "sha256": "b7e6d86488e34d9bbc3c6ba55097d8b1a16325650af50a7242df2c2a4a663ced",
+      "size": 30980
+    },
+    {
+      "path": "NotoSansTamil-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansTamil-Regular.ttf",
+      "sha256": "3c0a186feb3c63c7f6d63e1511dcdc144e745ae09b98e217c83f3e317974f6f9",
+      "size": 73992
+    },
+    {
+      "path": "NotoSansTelugu-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansTelugu-Regular.ttf",
+      "sha256": "b274780b69d1d23fe84b55e809a152cb2ac5306d33864b1f87622f6971871aae",
+      "size": 235176
+    },
+    {
+      "path": "NotoSansThaana-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansThaana-Regular.ttf",
+      "sha256": "241b4be4717d495a72cf7eb8e69891e63a6eb1cc18d98fa357f5af7f58c02446",
+      "size": 18728
+    },
+    {
+      "path": "NotoSansThai-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansThai-Regular.ttf",
+      "sha256": "61cf814eec46b294d6ea4401ac295d0cecd5207bd2331dcc5a15e7301d30ee44",
+      "size": 37780
+    },
+    {
+      "path": "NotoSansTifinagh-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansTifinagh-Regular.ttf",
+      "sha256": "176233c9dd5649184f3206680debc1a50b411a9229049e0b5d212776af1e2034",
+      "size": 39208
+    },
+    {
+      "path": "NotoSansVai-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansVai-Regular.ttf",
+      "sha256": "5f58a9c96639c56ea31f85282084dde6d658ede746e3eec64869212fc25a393a",
+      "size": 91684
+    },
+    {
+      "path": "NotoSansYi-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSansYi-Regular.ttf",
+      "sha256": "f621f514dce105a414ef7373a36b54ccc8d760a6319ad7133695fb42a1f02552",
+      "size": 182808
+    },
+    {
+      "path": "NotoSerifTibetan-Regular.ttf",
+      "url": "https://github.com/0x696c757a696f/lumtub/raw/6fa76a1fe7e7f5fb1fe5b85e1f254dc86543fd96/ios/packaging/subtitle-fonts/NotoSerifTibetan-Regular.ttf",
+      "sha256": "5893c1e0aefb250bcbeff5c0f8ee4bb27cd3dc19b47d14954b154b094e10ee63",
+      "size": 595476
+    }
+  ]
+}

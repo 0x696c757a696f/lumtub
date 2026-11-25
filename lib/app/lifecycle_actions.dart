@@ -130,9 +130,9 @@ extension LifecycleActions on AppController {
           // for seconds on mpv's video thread on iOS 27, holding the OSD lock
           // (the crash report: core and main thread waiting on it), which
           // stalled playback and got the app killed in the background.
-          await _prepareIosSubtitleFonts(platform);
+          await _prepareIosSubtitleFonts(platform, cache: directories.cache.path);
         }
-        if (Platform.isLinux) await _useDownloadedSubtitleFonts(platform);
+        if (Platform.isLinux) await _useDownloadedSubtitleFonts(platform, cache: directories.cache.path);
         final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders');
         try {
           shaders.createSync(recursive: true);

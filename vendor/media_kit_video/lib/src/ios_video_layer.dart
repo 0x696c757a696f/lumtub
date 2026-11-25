@@ -89,6 +89,24 @@ class IosVideoLayer {
     await _channel.invokeMethod('Layer.Mirror', _args({'on': on}));
   }
 
+  /// Subtitles the app shows where libmpv draws none, for picture in
+  /// picture, drawn natively: [lines] top to bottom, each with 'text',
+  /// 'font', 'size' and 'outline' in canvas pixels, 'color' ARGB, 'bold'
+  /// and 'box' (ARGB or null), centred on a canvas [canvasWidth] by
+  /// [canvasHeight] the picture's shape, the last one's bottom at [bottom].
+  /// No lines take them away. Used only while the window is open, in place
+  /// of libmpv's.
+  static Future<void> setSubtitles(List<Map<String, Object?>> lines, {double canvasWidth = 0, double canvasHeight = 0, double bottom = 0, double spacing = 0}) async {
+    if (!available) return;
+    await _channel.invokeMethod('Layer.Subtitles', _args({
+      'lines': lines,
+      'canvasWidth': canvasWidth,
+      'canvasHeight': canvasHeight,
+      'bottom': bottom,
+      'spacing': spacing,
+    }));
+  }
+
   static Future<bool> supported() async => available && (await _channel.invokeMethod<bool>('Layer.PipSupported', _args()) ?? false);
 
   static final _byName = {for (final e in IosPipEvent.values) e.name: e};

@@ -19,7 +19,7 @@ import '../../learning/known_words.dart';
 import '../../learning/learning.dart';
 import '../learning/ruby_line.dart';
 import '../learning/word_card.dart';
-import '../../appearance_settings.dart' show blankFont, bundledFont, cjkFormOf, languageStyle;
+import '../../appearance_settings.dart' show blankFont, bundledFont, cjkFormOf, downloadedScriptFamilies, languageStyle;
 import '../../models.dart';
 import '../../player_settings.dart';
 import '../../timestamp_link.dart';
@@ -1433,7 +1433,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
                 : font,
         locale: languageStyle(language)?.locale,
         // Where the font is missing (another system), the bundled one.
-        fontFamilyFallback: languageStyle(language)?.fontFamilyFallback ?? const [bundledFont, blankFont],
+        fontFamilyFallback: languageStyle(language)?.fontFamilyFallback ?? [bundledFont, ...downloadedScriptFamilies, blankFont],
         letterSpacing: 0.0,
         wordSpacing: 0.0,
         color: Color(0xFF000000 | color).withValues(alpha: opacity),

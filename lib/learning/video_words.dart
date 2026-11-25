@@ -34,14 +34,24 @@ class VideoWords {
   /// About how hard the video is for this learner, from what is known.
   VideoLevel get level => levelFor(known);
 
-  static VideoLevel levelFor(double known) => known >= 0.98 ? VideoLevel.easy : (known >= 0.90 ? VideoLevel.right : (known >= 0.80 ? VideoLevel.hard : VideoLevel.tooHard));
+  static VideoLevel levelFor(double known) => known >= 0.98
+      ? VideoLevel.easy
+      : known >= 0.95
+          ? VideoLevel.right
+          : known >= 0.90
+              ? VideoLevel.challenging
+              : known >= 0.80
+                  ? VideoLevel.hard
+                  : VideoLevel.tooHard;
 }
 
-/// From studies of viewing (Durbahn et al. 2024, Webb & Rodgers 2009):
-/// 98 % of words known watches with ease, 90 to 98 % is where a learner
-/// with subtitles learns most, 80 % still gets the gist with help, and
-/// below that every line stops for a word.
-enum VideoLevel { easy, right, hard, tooHard }
+/// From studies of viewing (Webb & Rodgers 2009, Durbahn et al. 2024):
+/// 98 % of words known watches with ease, about 95 % is where a learner
+/// with subtitles follows well and still meets new words, 90 to 95 % asks
+/// for careful listening and looking words up, 80 % still gets the gist
+/// with help, and below that every line stops for a word. Starting
+/// points for the product, to be tuned by what learners say.
+enum VideoLevel { easy, right, challenging, hard, tooHard }
 
 final _cache = <String, Future<VideoWords?>>{};
 

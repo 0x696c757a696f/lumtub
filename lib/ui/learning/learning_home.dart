@@ -28,6 +28,7 @@ class _LearningHomeState extends State<LearningHome> {
         if ((learning.book?.words.isNotEmpty ?? false)) _ReviewHomeCard(controller: controller),
         if (_GettingStarted.needed(learning)) _GettingStarted(controller: controller),
         if (learning.licensed) _StatusCard(controller: controller) else _Pitch(learning: learning),
+        _LevelVideosCard(controller: controller),
         _VocabularyCard(controller: controller),
         _LevelTestCard(controller: controller),
         _DictionariesCard(learning: learning),

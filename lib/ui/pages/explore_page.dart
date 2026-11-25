@@ -20,6 +20,7 @@ import '../../l10n/l10n.dart';
 import '../../models.dart';
 import '../motion.dart';
 import '../app_icons.dart';
+import '../learning/learning_page.dart' show openLevelVideos;
 
 /// Explore, in zones as Bilibili's 分区: videos, live streams or the tabs of
 /// 宗教与信仰, a zone and one of its sub-categories, how they are picked, and
@@ -299,9 +300,20 @@ class _ExplorePageState extends State<ExplorePage> {
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 4, AppStyle.pagePadding, 0),
             child: ChipStrip(
               title: topic.label,
-              choices: [for (final label in [tr('All'), for (final s in topic.subs) s.label]) (label: label, icon: null)],
+              choices: [
+                (label: tr('All'), icon: null),
+                for (final s in topic.subs) (label: s.label, icon: s.opensLearning ? AppIcons.graduationCap : null),
+              ],
               selected: sub,
-              onSelected: (i) => controller.setExplore(sub: i),
+              onSelected: (i) {
+                // 语言学习 opens videos by language and level, which a
+                // search by its words could not find.
+                if (i > 0 && topic.subs[i - 1].opensLearning) {
+                  unawaited(openLevelVideos(context, controller));
+                  return;
+                }
+                controller.setExplore(sub: i);
+              },
             ),
           )),
         if (subNow != null && subNow.subs.isNotEmpty)

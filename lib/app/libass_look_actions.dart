@@ -358,10 +358,20 @@ extension LibassLookActions on AppController {
     } else {
       final room = _roomEms(settings.subtitleScale).toDouble();
       final language = track.language ?? '';
-      final wrapped = [for (final c in cues) LibassLayout.wrap(c.text, room, font: settings.subtitleFont, bold: settings.subtitleBold)];
+      final wrapped = <String>[];
       // Lines mixing scripts, in stretches each in its font (Android and
       // iOS, where libass has no fallback); null for the rest.
-      final mixed = [for (final w in wrapped) _mixedRuns(w, language)];
+      final mixed = <List<({String text, String? family})>?>[];
+      for (final (i, c) in cues.indexed) {
+        // A batch at a time, so a long track does not hold up the frames.
+        if (i > 0 && i % 100 == 0) {
+          await Future<void>(() {});
+          if (!current()) return source;
+        }
+        final w = LibassLayout.wrap(c.text, room, font: settings.subtitleFont, bold: settings.subtitleBold);
+        wrapped.add(w);
+        mixed.add(_mixedRuns(w, language));
+      }
       // Nothing runs past the edges and no line mixes scripts: the track
       // shows as it is.
       if (Iterable.generate(cues.length).every((i) => wrapped[i] == cues[i].text && mixed[i] == null)) {

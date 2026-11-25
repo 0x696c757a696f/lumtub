@@ -205,8 +205,9 @@ extension VideoDetailsActions on AppController {
       } else {
         _subtitlesSettled(serial);
       }
-    } catch (_) {
+    } catch (e) {
       // The page still shows what the list already knew about the video.
+      logWarn('Could not load the details of ${item.id}: $e');
       _subtitlesSettled(serial);
     } finally {
       if (serial == _playSerial) _update(() => loadingDetails = false);
@@ -253,7 +254,7 @@ extension VideoDetailsActions on AppController {
     final filled = filledFromDetails(current, loaded, length: length);
     if (!saysMore(current, filled)) return;
     if (playing?.id == item.id) _update(() => playing = filled);
-    if (history.any((other) => other.id == item.id)) unawaited(_history?.update(filledFromDetails(history.firstWhere((other) => other.id == item.id), loaded, length: length)));
+    if (_history?.byId(item.id) case final saved?) unawaited(_history?.update(filledFromDetails(saved, loaded, length: length)));
   }
 
   /// Videos in the history opened from a link before their title was
@@ -265,7 +266,7 @@ extension VideoDetailsActions on AppController {
     for (final id in unnamed) {
       final found = await linkVideo(_http, id);
       if (_disposed) return;
-      final at = history.indexWhere((item) => item.id == id);
+      final at = _history?.indexOf(id) ?? -1;
       if (found == null || at < 0) continue;
       final old = history[at];
       await _history?.update(VideoItem(

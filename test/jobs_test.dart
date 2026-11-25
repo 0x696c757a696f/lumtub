@@ -82,6 +82,23 @@ void main() {
     await expectLater(running, throwsA(isA<JobCancelled>()));
   });
 
+  test('asking again for a job told to stop starts it afresh', () async {
+    final queue = JobQueue();
+    addTearDown(queue.dispose);
+    final gate = Completer<void>();
+    final first = queue.run('one', (context) async {
+      await gate.future;
+      context.checkCancelled();
+      return 1;
+    }, lane: JobLane.network);
+    await pumpEventQueue();
+    queue.cancel('one');
+    final again = queue.run('one', (context) async => 2, lane: JobLane.network);
+    gate.complete();
+    await expectLater(first, throwsA(isA<JobCancelled>()));
+    expect(await again, 2);
+  });
+
   test('progress shows on the job and failures reach the caller', () async {
     final queue = JobQueue();
     addTearDown(queue.dispose);

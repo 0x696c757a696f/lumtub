@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -26,7 +27,7 @@ const _description = '''<?xml version="1.0"?>
 <service><serviceType>urn:schemas-upnp-org:service:AVTransport:1</serviceType><serviceId>urn:upnp-org:serviceId:AVTransport</serviceId><controlURL>/upnp/control/AVTransport</controlURL></service>
 </serviceList></device></root>''';
 
-Uint8List _mdnsPacket() {
+Uint8List _mdnsPacket({List<int> address = const [192, 168, 1, 77]}) {
   final out = BytesBuilder();
   out.add([0, 0, 0x84, 0, 0, 0, 0, 4, 0, 0, 0, 0]);
   final ptrName = <int>[];
@@ -63,7 +64,7 @@ Uint8List _mdnsPacket() {
   out.add(txt);
   // Record 4: A record for the target.
   out.add(target);
-  out.add([0, 1, 0x80, 1, 0, 0, 0, 120, 0, 4, 192, 168, 1, 77]);
+  out.add([0, 1, 0x80, 1, 0, 0, 0, 120, 0, 4, ...address]);
   return out.toBytes();
 }
 
@@ -94,6 +95,15 @@ class _FakeCastDevice implements CastDevice {
   Future<CastStatus?> status() async => next;
   @override
   Future<void> close() async => calls.add('close');
+}
+
+class _SlowCastDevice extends _FakeCastDevice {
+  final loaded = Completer<void>();
+  @override
+  Future<void> load(CastMedia media) async {
+    calls.add('load ${media.url}');
+    await loaded.future;
+  }
 }
 
 void main() {
@@ -257,6 +267,19 @@ void main() {
       expect(services.single.id, '0f1e2d');
       expect(services.single.port, 8009);
       expect(services.single.host.address, '192.168.1.77');
+    });
+
+    test('takes the sender or a local-network address, and answers what the packet completed', () {
+      final found = MdnsCollector().add(_mdnsPacket(), from: InternetAddress('192.168.1.77'));
+      expect(found.single.host.address, '192.168.1.77');
+      // Passed on by an mDNS reflector from the network next door.
+      final reflected = MdnsCollector().add(_mdnsPacket(), from: InternetAddress('192.168.1.5'));
+      expect(reflected.single.host.address, '192.168.1.77');
+      for (final address in [[8, 8, 8, 8], [127, 0, 0, 1]]) {
+        final other = MdnsCollector();
+        expect(other.add(_mdnsPacket(address: address), from: InternetAddress('192.168.1.5')), isEmpty);
+        expect(other.services, isEmpty);
+      }
     });
 
     test('ignores truncated packets', () {
@@ -544,6 +567,18 @@ void main() {
       expect(device.calls.last, 'stop');
       expect(controller.active, isFalse);
       expect(await controller.stop(), isNull);
+    });
+
+    test('of two devices picked at once, only the newest keeps the session', () async {
+      final first = _SlowCastDevice(), second = _FakeCastDevice();
+      final controller = CastController();
+      addTearDown(controller.dispose);
+      final starting = controller.start(first, const CastMedia(url: 'http://a', title: 'A'));
+      await controller.start(second, const CastMedia(url: 'http://b', title: 'B'));
+      first.loaded.complete();
+      await starting;
+      expect(controller.device, same(second));
+      expect(first.calls.last, 'close');
     });
 
     test('polls less often while the window is hidden', () async {

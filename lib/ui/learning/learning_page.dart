@@ -63,15 +63,16 @@ String learningSummary(Learning learning) => learning.licensed
 /// the email paid with too, and fetches the code from the license server.
 Future<bool> claimPurchase(BuildContext context, Learning learning, {required bool afdianFirst}) async {
   final outer = context;
-  final field = TextEditingController();
-  final email = TextEditingController();
   var source = afdianFirst ? PurchaseSource.afdian : PurchaseSource.kofi;
   var busy = false;
   var agreed = false;
+  var tooManyDevices = false;
+  var order = '';
   String? error;
   final ok = await showDialog<bool>(
     context: context,
-    builder: (context) => StatefulBuilder(builder: (context, setState) {
+    builder: (context) => DialogTextFields(initial: const ['', ''], builder: (context, fields) => StatefulBuilder(builder: (context, setState) {
+      final [field, email] = fields;
       Future<void> claim() async {
         if (field.text.trim().isEmpty || (source.needsEmail && email.text.trim().isEmpty) || !agreed || busy) return;
         setState(() {
@@ -81,12 +82,13 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
         final result = await learning.claimLicense(source: source, order: field.text, email: email.text);
         if (!context.mounted) return;
         if (result == ClaimResult.ok) {
+          order = field.text.trim();
           Navigator.pop(context, true);
           return;
         }
         if (result == ClaimResult.devices) {
+          tooManyDevices = true;
           Navigator.pop(context, false);
-          if (context.mounted) unawaited(manageLicenseDevices(context, learning));
           return;
         }
         setState(() {
@@ -191,11 +193,10 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
           ),
         ],
       );
-    }),
+    })),
   );
-  final order = field.text.trim();
-  field.dispose();
-  email.dispose();
+  // Opened from the page: the dialog's own context is gone by now.
+  if (tooManyDevices && outer.mounted) unawaited(manageLicenseDevices(outer, learning));
   if (ok == true && context.mounted) await _showConfirmation(context, learning, source: source, order: order);
   return ok ?? false;
 }
@@ -505,17 +506,17 @@ String _languageName(String language) => _packLanguage(DictionaryPack.values.fir
 
 /// Asks for a license code and keeps it when it is one.
 Future<bool> enterLicenseCode(BuildContext context, Learning learning) async {
-  final field = TextEditingController();
   String? error;
+  var tooManyDevices = false;
   final ok = await showDialog<bool>(
     context: context,
-    builder: (context) => StatefulBuilder(
+    builder: (context) => DialogTextFields(initial: const [''], builder: (context, fields) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
         title: Text(tr('Enter license code')),
         content: SizedBox(
           width: 420,
           child: TextField(
-            controller: field,
+            controller: fields.single,
             autofocus: true,
             minLines: 3,
             maxLines: 5,
@@ -526,14 +527,14 @@ Future<bool> enterLicenseCode(BuildContext context, Learning learning) async {
           TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
           FilledButton(
             onPressed: () async {
-              final result = await learning.enterLicense(field.text);
+              final result = await learning.enterLicense(fields.single.text);
               if (!context.mounted) return;
               switch (result) {
                 case LicenseResult.ok || LicenseResult.offline:
                   Navigator.pop(context, true);
                 case LicenseResult.devices:
+                  tooManyDevices = true;
                   Navigator.pop(context, false);
-                  unawaited(manageLicenseDevices(context, learning));
                 case LicenseResult.revoked:
                   setState(() => error = learning.lastRefunded ? tr('This order was refunded, so the learning pack is off. Your vocabulary book stays on this device and can still be exported.') : tr('This code has been revoked because it was shared publicly. If you bought it, write to the author with your order number.'));
                 case LicenseResult.invalid:
@@ -544,9 +545,9 @@ Future<bool> enterLicenseCode(BuildContext context, Learning learning) async {
           ),
         ],
       ),
-    ),
+    )),
   );
-  field.dispose();
+  if (tooManyDevices && context.mounted) unawaited(manageLicenseDevices(context, learning));
   return ok ?? false;
 }
 

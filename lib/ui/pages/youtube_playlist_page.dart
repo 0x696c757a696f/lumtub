@@ -26,7 +26,9 @@ class YoutubePlaylistPage extends StatelessWidget {
     final reversed = controller.isReversed(listId);
     // Last to first needs the whole playlist.
     if (reversed && loader.hasMore) WidgetsBinding.instance.addPostFrameCallback((_) => controller.loadWholeYoutubePlaylist());
-    final items = reversed ? own.reversed.toList() : own;
+    final library = controller.library;
+    final view = playlistView((listId, library?.revision, library?.store.finishedVersion), own, reversed: reversed, progressOf: library?.progressOf, partial: loader.hasMore);
+    final items = view.items;
     final error = loader.error;
     final colors = context.colors;
     return NearEndListener(
@@ -44,7 +46,7 @@ class YoutubePlaylistPage extends StatelessWidget {
                 [if (playlist.channel.isNotEmpty) playlist.channel, if (playlist.count != null) tr('{0} videos', [playlist.count]), tr('YouTube playlists')].join(' · '),
                 style: TextStyle(color: colors.onSurfaceVariant),
               ),
-              if (playlistLength(items, progressOf: controller.library?.progressOf, partial: loader.hasMore) case final length?)
+              if (view.length case final length?)
                 Text(length, style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12)),
             ])),
             PlaylistOrderButton(controller: controller, id: listId, onReversed: controller.loadWholeYoutubePlaylist),

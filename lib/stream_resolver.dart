@@ -59,11 +59,10 @@ class ResolvedVideo {
     return _summaries.putIfAbsent('${disabled.join(',')}/$cap', () {
       final core = NativeCore.instance;
       if (core == null) return null;
-      // yt-dlp's text is a second copy of [info] as large as a megabyte or
-      // more; it is let go once read, and written again if other settings
-      // ask.
-      final text = _text ?? jsonEncode(info);
-      _text = null;
+      // yt-dlp's text of [info] is kept for the other settings an open asks
+      // about (three or so): writing a megabyte of it again for each took
+      // longer than the core's reading of it.
+      final text = _text ??= jsonEncode(info);
       final answer = core.resolved(text, jsonEncode({'disabled': disabled, 'cap': cap, 'fetched': fetched.millisecondsSinceEpoch ~/ 1000}));
       return answer == null ? null : jsonDecode(answer) as Map<String, dynamic>;
     });

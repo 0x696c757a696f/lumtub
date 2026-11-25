@@ -16,15 +16,16 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 add_compile_definitions(_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR)
 
 # ------------------------------------------------------------------------------
-function(download_and_verify url md5 locationForArchive)
+# Lumtub: checked by SHA-256 instead of MD5.
+function(download_and_verify url sha256 locationForArchive)
   # Check if the archive exists.
   if(EXISTS "${locationForArchive}")
-    file(MD5 "${locationForArchive}" ARCHIVE_MD5)
+    file(SHA256 "${locationForArchive}" ARCHIVE_SHA256)
 
-    # If MD5 doesn't match, delete the archive to download again.
-    if(NOT md5 STREQUAL ARCHIVE_MD5)
+    # If SHA-256 doesn't match, delete the archive to download again.
+    if(NOT sha256 STREQUAL ARCHIVE_SHA256)
       file(REMOVE "${locationForArchive}")
-      message(STATUS "MD5 mismatch. File deleted.")
+      message(STATUS "SHA-256 mismatch. File deleted.")
     endif()
   endif()
 
@@ -34,10 +35,10 @@ function(download_and_verify url md5 locationForArchive)
     file(DOWNLOAD "${url}" "${locationForArchive}")
     message(STATUS "Downloaded archive to ${locationForArchive}.")
 
-    # Verify MD5 of the newly downloaded file.
-    file(MD5 "${locationForArchive}" ARCHIVE_MD5)
+    # Verify SHA-256 of the newly downloaded file.
+    file(SHA256 "${locationForArchive}" ARCHIVE_SHA256)
 
-    if(md5 STREQUAL ARCHIVE_MD5)
+    if(sha256 STREQUAL ARCHIVE_SHA256)
       message(STATUS "${locationForArchive} Verification successful.")
     else()
       message(FATAL_ERROR "${locationForArchive} Integrity check failed, please try to re-build project again.")
@@ -88,9 +89,9 @@ else()
   # libmpv archive containing the pre-built shared libraries & headers.
   set(LIBMPV "mpv-dev-x86_64-20230924-git-652a1dd.7z")
 
-  # Download URL & MD5 hash of the libmpv archive.
+  # Download URL & SHA-256 hash of the libmpv archive.
   set(LIBMPV_URL "https://github.com/media-kit/libmpv-win32-video-build/releases/download/2023-09-24/${LIBMPV}")
-  set(LIBMPV_MD5 "a832ef24b3a6ff97cd2560b5b9d04cd8")
+  set(LIBMPV_SHA256 "dce982222d7a23e4a1c6f0fb6cc39f6e899a6714624b95ea49cff6558ee97572")
 
   # Download location of the libmpv archive.
   set(LIBMPV_ARCHIVE "${CMAKE_BINARY_DIR}/${LIBMPV}")
@@ -98,7 +99,7 @@ else()
 
   download_and_verify(
     ${LIBMPV_URL}
-    ${LIBMPV_MD5}
+    ${LIBMPV_SHA256}
     ${LIBMPV_ARCHIVE}
   )
 
@@ -124,9 +125,9 @@ else()
   # ANGLE archive containing the pre-built shared libraries & headers.
   set(ANGLE "ANGLE.7z")
 
-  # Download URL & MD5 hash of the ANGLE archive.
+  # Download URL & SHA-256 hash of the ANGLE archive.
   set(ANGLE_URL "https://github.com/alexmercerind/flutter-windows-ANGLE-OpenGL-ES/releases/download/v1.0.1/ANGLE.7z")
-  set(ANGLE_MD5 "e866f13e8d552348058afaafe869b1ed")
+  set(ANGLE_SHA256 "cc5911bb15d596fd5a2b362613ad35b7093b427117269a7359054a65746a5f9a")
 
   # Download location of the ANGLE archive.
   set(ANGLE_ARCHIVE "${CMAKE_BINARY_DIR}/${ANGLE}")
@@ -134,7 +135,7 @@ else()
 
   download_and_verify(
     ${ANGLE_URL}
-    ${ANGLE_MD5}
+    ${ANGLE_SHA256}
     ${ANGLE_ARCHIVE}
   )
 

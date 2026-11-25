@@ -41,6 +41,7 @@ class _LearningHomeState extends State<LearningHome> {
       listenable: Listenable.merge([learning, if (book != null) book]),
       builder: (context, _) {
         final words = book?.words.length ?? 0;
+        final cards = _cards(context);
         return LayoutBuilder(builder: (context, constraints) {
           // A comfortable reading width; wide windows get margins, not
           // stretched rows.
@@ -64,9 +65,9 @@ class _LearningHomeState extends State<LearningHome> {
             SliverPadding(
               padding: EdgeInsets.fromLTRB(side, 0, side, Space.xxxl),
               sliver: SliverList.separated(
-                itemCount: _cards(context).length,
+                itemCount: cards.length,
                 separatorBuilder: (context, index) => const SizedBox(height: AppStyle.cardSpacing),
-                itemBuilder: (context, i) => _cards(context)[i],
+                itemBuilder: (context, i) => cards[i],
               ),
             ),
           ]);
@@ -170,8 +171,7 @@ class _StatusCard extends StatelessWidget {
     final colors = context.colors;
     final ready = [for (final p in DictionaryPack.values) if (const {PackState.ready, PackState.downloaded, PackState.loading}.contains(learning.stateOf(p))) p];
     final words = learning.book?.words ?? const <VocabularyWord>[];
-    final week = DateTime.now().subtract(const Duration(days: 7));
-    final thisWeek = words.where((w) => w.added.isAfter(week)).length;
+    final thisWeek = _savedThisWeek(words);
     Widget stat(String value, String label) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(value, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: colors.primary)),
           Text(label, style: context.text.bodySmall?.copyWith(color: colors.onSurfaceVariant)),
@@ -220,10 +220,38 @@ class _ReviewHomeCardState extends State<_ReviewHomeCard> {
   late final VocabularyBook _book = widget.controller.learning.book!;
   late final ReviewStore _store = reviewStoreOf(_book);
 
+  // Worked out again when the book or the reviews change, or a minute on,
+  // not on each of the page's rebuilds.
+  Object? _countedFor;
+  late ({List<VocabularyWord> queue, List<ReviewScene> scenes, int streak, int known, DateTime? next}) _counts;
+
   @override
   void initState() {
     super.initState();
+    _store.addListener(_recount);
     unawaited(_store.load());
+  }
+
+  @override
+  void dispose() {
+    _store.removeListener(_recount);
+    super.dispose();
+  }
+
+  void _recount() => _countedFor = null;
+
+  ({List<VocabularyWord> queue, List<ReviewScene> scenes, int streak, int known, DateTime? next}) _countAt(DateTime now) {
+    final key = (_book.words, now.millisecondsSinceEpoch ~/ 60000);
+    if (key == _countedFor) return _counts;
+    final queue = _store.due(_book.words, now);
+    _countedFor = key;
+    return _counts = (
+      queue: queue,
+      scenes: todaysScenes(queue),
+      streak: _store.streak(now),
+      known: _store.knownCount(_book.words),
+      next: queue.isNotEmpty ? null : _store.nextDue(_book.words, now),
+    );
   }
 
   @override
@@ -232,13 +260,9 @@ class _ReviewHomeCardState extends State<_ReviewHomeCard> {
         builder: (context, _) {
           final colors = context.colors;
           final now = DateTime.now();
-          final queue = _store.due(_book.words, now);
+          final (:queue, :scenes, :streak, :known, :next) = _countAt(now);
           final due = queue.length;
-          final streak = _store.streak(now);
-          final known = _store.knownCount(_book.words);
           final locked = !widget.controller.learning.unlocked;
-          final scenes = todaysScenes(queue);
-          final next = due > 0 ? null : _store.nextDue(_book.words, now);
           final summary = due > 0
               ? tr('{0} words · about {1} min', [due, _store.minutesFor(due)])
               : next == null
@@ -379,6 +403,27 @@ class _SceneTile extends StatelessWidget {
   }
 }
 
+// The page rebuilds many times a second while a dictionary downloads; a
+// book's list of words is a new object on each change, so work on it is
+// kept with the list.
+final _newestFirstOf = Expando<List<VocabularyWord>>();
+final _weekCountOf = Expando<(int, int)>();
+
+List<VocabularyWord> _newestFirst(List<VocabularyWord> words) =>
+    words.isEmpty ? words : _newestFirstOf[words] ??= [...words]..sort((a, b) => b.added.compareTo(a.added));
+
+/// Words saved in the last seven days, counted again each minute.
+int _savedThisWeek(List<VocabularyWord> words) {
+  if (words.isEmpty) return 0;
+  final now = DateTime.now();
+  final minute = now.millisecondsSinceEpoch ~/ 60000;
+  if (_weekCountOf[words] case (final at, final count) when at == minute) return count;
+  final week = now.subtract(const Duration(days: 7));
+  final count = words.where((w) => w.added.isAfter(week)).length;
+  _weekCountOf[words] = (minute, count);
+  return count;
+}
+
 /// The newest words, each opening its video at its moment, with the
 /// whole book and its exports one tap away.
 class _VocabularyCard extends StatelessWidget {
@@ -390,7 +435,7 @@ class _VocabularyCard extends StatelessWidget {
     final learning = controller.learning;
     final colors = context.colors;
     final words = learning.book?.words ?? const <VocabularyWord>[];
-    final recent = [...words]..sort((a, b) => b.added.compareTo(a.added));
+    final recent = _newestFirst(words);
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [

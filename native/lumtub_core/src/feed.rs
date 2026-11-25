@@ -6,7 +6,7 @@
 use serde::Serialize;
 use std::os::raw::c_char;
 
-use crate::taste::{give_json, text};
+use crate::taste::{give_json, outside};
 
 #[derive(Debug, Serialize, PartialEq)]
 pub struct FeedVideo {
@@ -160,9 +160,9 @@ pub fn decode(raw: &str) -> String {
             rest = &rest[1..];
             continue;
         }
-        let reference = rest[1..]
-            .find(';')
-            .filter(|end| *end <= 10)
+        let reference = rest.as_bytes()[1..rest.len().min(12)]
+            .iter()
+            .position(|&b| b == b';')
             .map(|end| &rest[1..=end]);
         match reference.and_then(character) {
             Some(c) => {
@@ -203,12 +203,20 @@ fn character(reference: &str) -> Option<char> {
 /// [xml] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_channel_feed(xml: *const u8, length: usize) -> *mut c_char {
-    give_json(&parse(unsafe { text(xml, length) }))
+    give_json(&parse(unsafe { outside(xml, length) }))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn decodes_references_only_when_short() {
+        assert_eq!(decode("a &amp; b &lt;é&gt;"), "a & b <é>");
+        assert_eq!(decode("&abcdefghijkl;"), "&abcdefghijkl;");
+        let many = "&é".repeat(100_000);
+        assert_eq!(decode(&many), many);
+    }
 
     const FEED: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/" xmlns="http://www.w3.org/2005/Atom">

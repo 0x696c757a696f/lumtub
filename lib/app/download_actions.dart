@@ -136,9 +136,11 @@ extension DownloadActions on AppController {
     final saved = <SavedSubtitle>[];
     final names = <String>{};
     String fileFor(String tag) {
-      var name = '$stem.$tag';
+      // The tags come from YouTube; only these characters reach a file name.
+      final safe = tag.replaceAll(RegExp(r'[^A-Za-z0-9_+-]'), '_');
+      var name = '$stem.$safe';
       for (var i = 2; names.contains(name); i++) {
-        name = '$stem.$tag-$i';
+        name = '$stem.$safe-$i';
       }
       names.add(name);
       return '$name.${picked.srt ? 'srt' : 'vtt'}';
@@ -155,7 +157,7 @@ extension DownloadActions on AppController {
     if (picked.bilingual) {
       final top = await load(picked.top!), bottom = await load(picked.bottom!);
       if (top != null && bottom != null) {
-        final lines = bilingualLines(parseSubtitleCues(top.$2), parseSubtitleCues(bottom.$2));
+        final lines = await bilingualLinesInBackground(parseSubtitleCues(top.$2), parseSubtitleCues(bottom.$2));
         if (lines.isNotEmpty) {
           final cues = [for (final l in lines) (start: l.start, end: l.end, text: [l.top, l.bottom].where((t) => t.isNotEmpty).join('\n'))];
           final path = fileFor('${top.$1.language}+${bottom.$1.language}');

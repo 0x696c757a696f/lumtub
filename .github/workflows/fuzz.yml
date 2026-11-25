@@ -1,8 +1,9 @@
 name: Fuzz
 
 # Feeds random and mutated input to the core's parsers of data from outside
-# (MP4 and WebM streams, AirPlay property lists, PAC scripts, subtitles,
-# update signatures) for five minutes each, every night. A crash fails the
+# (MP4 and WebM streams, downloaded and recorded sound and video files,
+# YouTube and yt-dlp answers, AirPlay property lists, PAC scripts,
+# subtitles, update signatures) for five minutes each, every night. A crash fails the
 # run, keeps the input that caused it as an artifact, and Retry and report
 # opens an issue. The corpus grows from night to night through the cache.
 on:
@@ -21,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [mp4_head, webm, bplist, pac, subtitles, update_signature, cast_lan, packs]
+        target: [mp4_head, webm, bplist, pac, subtitles, update_signature, cast_lan, packs, cut, record, youtube, cast_fragment, ytdlp_signature]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -37,10 +38,13 @@ jobs:
           restore-keys: fuzz-corpus-${{ matrix.target }}-
       - name: Fuzz ${{ matrix.target }}
         working-directory: native/lumtub_core
+        env:
+          EVENT: ${{ github.event_name }}
+          TARGET: ${{ matrix.target }}
         run: |
           seconds=300
-          if [ "${{ github.event_name }}" = pull_request ]; then seconds=30; fi
-          cargo +nightly fuzz run ${{ matrix.target }} -- -max_total_time=$seconds -rss_limit_mb=2048 -timeout=10
+          if [ "$EVENT" = pull_request ]; then seconds=30; fi
+          cargo +nightly fuzz run "$TARGET" -- -max_total_time=$seconds -rss_limit_mb=2048 -timeout=10
       - name: Keep the crashing input
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

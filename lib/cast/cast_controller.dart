@@ -22,6 +22,8 @@ class CastController extends ChangeNotifier {
   var _misses = 0;
   var _disposed = false;
   var _hidden = false;
+  /// Counts [start]s, so only the newest one keeps its device.
+  var _starts = 0;
 
   /// How often the device is asked for its status: slower while the window
   /// is hidden, when nobody sees the progress bar.
@@ -44,6 +46,7 @@ class CastController extends ChangeNotifier {
   /// Casts [media] to [target], replacing any session; throws
   /// [CastException] when the device refuses.
   Future<void> start(CastDevice target, CastMedia media, {String? videoId}) async {
+    final serial = ++_starts;
     await end();
     error = null;
     try {
@@ -51,6 +54,11 @@ class CastController extends ChangeNotifier {
     } catch (e) {
       await target.close();
       throw e is CastException ? e : CastException('$e');
+    }
+    // Another device was picked, or the app closed, while this one loaded.
+    if (serial != _starts || _disposed) {
+      await target.close();
+      return;
     }
     device = target;
     _media = media;

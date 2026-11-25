@@ -25,4 +25,25 @@ void main() {
     expect(controller.preferences.reversedPlaylists, isEmpty);
     expect([for (final item in controller.queue) item.id], ['a', 'b', 'c']);
   });
+
+  test('up next follows the video playing and the queue, a repeated video by its first place', () {
+    VideoItem video(String id) => VideoItem(id: id, title: id, channel: '', url: '');
+    final controller = AppController()
+      ..queue = List.unmodifiable([for (final id in ['a', 'b', 'c', 'b', 'd']) video(id)])
+      ..playing = video('b');
+    expect([for (final item in controller.upNext) item.id], ['c', 'b', 'd']);
+    expect(identical(controller.upNext, controller.upNext), isTrue, reason: 'made once per queue and video');
+    expect(controller.previousInQueue?.id, 'a');
+    expect(controller.upNextHas('d'), isTrue);
+    expect(controller.upNextHas('b'), isTrue);
+    expect(controller.upNextHas('a'), isFalse);
+    controller.playing = video('d');
+    expect(controller.upNext, isEmpty);
+    expect(controller.upNextHas('c'), isFalse);
+    controller.playing = video('elsewhere');
+    expect(controller.upNext.map((item) => item.id), ['a', 'b', 'c', 'b', 'd']);
+    expect(controller.upNextHas('a'), isTrue);
+    controller.queue = List.unmodifiable([video('x'), video('elsewhere'), video('y')]);
+    expect([for (final item in controller.upNext) item.id], ['y']);
+  });
 }

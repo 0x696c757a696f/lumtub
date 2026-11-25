@@ -1,5 +1,7 @@
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:material_ui/material_ui.dart';
 
 /// A coloured stretch of the bar, such as a SponsorBlock segment or the
@@ -53,6 +55,10 @@ class VideoProgressBar extends StatefulWidget {
 
   static const double barHeight = 3.5;
   static const double height = 20.0;
+
+  /// The height that takes a tap: a finger needs more than a mouse, the
+  /// track drawn in its middle stays as thin.
+  static final double touchHeight = Platform.isAndroid || Platform.isIOS ? 40.0 : height;
   static const double heatmapHeight = 16.0;
 
   @override
@@ -62,6 +68,13 @@ class VideoProgressBar extends StatefulWidget {
 class _VideoProgressBarState extends State<VideoProgressBar> {
   double? _hover;
   double? _drag;
+  bool _touching = false;
+
+  void _letGo() {
+    if (!_touching) return;
+    _touching = false;
+    setState(() => _hover = null);
+  }
 
   double _fractionAt(double x, double width) => width <= 0 ? 0 : (x / width).clamp(0.0, 1.0);
 
@@ -85,6 +98,15 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
     widget.onSeek(_timeAt(fraction));
   }
 
+  String _spoken(Duration at) => '${_clock(at < Duration.zero ? Duration.zero : (at > widget.total ? widget.total : at))} / ${_clock(widget.total)}';
+
+  /// Screen readers move it five seconds at a time.
+  void _step(int seconds) {
+    if (widget.total <= Duration.zero) return;
+    final to = widget.position + Duration(seconds: seconds);
+    widget.onSeek(to < Duration.zero ? Duration.zero : (to > widget.total ? widget.total : to));
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
@@ -94,49 +116,69 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
       final heat = widget.heatmap;
       final hasHeat = heat != null && heat.length > 1;
       final played = _drag ?? _fractionOf(widget.position);
-      return MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onHover: (event) => setState(() => _hover = _fractionAt(event.localPosition.dx, width)),
-        onExit: (_) => setState(() => _hover = null),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapUp: (details) => _seekTo(_fractionAt(details.localPosition.dx, width)),
-          onHorizontalDragStart: (details) => setState(() => _drag = _fractionAt(details.localPosition.dx, width)),
-          onHorizontalDragUpdate: (details) => setState(() => _drag = _fractionAt(details.localPosition.dx, width)),
-          onHorizontalDragEnd: (_) {
-            final last = _drag;
-            setState(() => _drag = null);
-            if (last != null) _seekTo(last);
-          },
-          onHorizontalDragCancel: () => setState(() => _drag = null),
-          child: SizedBox(
-            width: width,
-            height: VideoProgressBar.height,
-            child: Stack(clipBehavior: Clip.none, children: [
-              if (hasHeat)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  height: VideoProgressBar.heatmapHeight,
-                  bottom: VideoProgressBar.height / 2 + VideoProgressBar.barHeight / 2 + 1,
-                  child: IgnorePointer(child: CustomPaint(painter: _HeatPainter(heat, widget.color))),
-                ),
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _TrackPainter(
-                    color: widget.color,
-                    gradient: widget.playedGradient,
-                    played: played,
-                    buffered: _fractionOf(widget.buffered),
-                    segments: [for (final s in widget.segments) (_fractionOf(s.start), _fractionOf(s.end), s.color)],
-                    chapters: [for (final c in widget.chapterStarts) if (c > Duration.zero) _fractionOf(c)],
-                    active: pointer != null,
-                    pointer: pointer,
+      final height = VideoProgressBar.touchHeight;
+      final known = widget.total > Duration.zero;
+      return Semantics(
+        slider: true,
+        value: known ? _spoken(widget.position) : null,
+        increasedValue: known ? _spoken(widget.position + const Duration(seconds: 5)) : null,
+        decreasedValue: known ? _spoken(widget.position - const Duration(seconds: 5)) : null,
+        onIncrease: known ? () => _step(5) : null,
+        onDecrease: known ? () => _step(-5) : null,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onHover: (event) => setState(() => _hover = _fractionAt(event.localPosition.dx, width)),
+          onExit: (_) => setState(() => _hover = null),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            // A finger has no hover: the time shows while it is down.
+            onTapDown: (details) {
+              if (details.kind == PointerDeviceKind.mouse) return;
+              _touching = true;
+              setState(() => _hover = _fractionAt(details.localPosition.dx, width));
+            },
+            onTapCancel: _letGo,
+            onTapUp: (details) {
+              _letGo();
+              _seekTo(_fractionAt(details.localPosition.dx, width));
+            },
+            onHorizontalDragStart: (details) => setState(() => _drag = _fractionAt(details.localPosition.dx, width)),
+            onHorizontalDragUpdate: (details) => setState(() => _drag = _fractionAt(details.localPosition.dx, width)),
+            onHorizontalDragEnd: (_) {
+              final last = _drag;
+              setState(() => _drag = null);
+              if (last != null) _seekTo(last);
+            },
+            onHorizontalDragCancel: () => setState(() => _drag = null),
+            child: SizedBox(
+              width: width,
+              height: height,
+              child: Stack(clipBehavior: Clip.none, children: [
+                if (hasHeat)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    height: VideoProgressBar.heatmapHeight,
+                    bottom: height / 2 + VideoProgressBar.barHeight / 2 + 1,
+                    child: IgnorePointer(child: CustomPaint(painter: _HeatPainter(heat, widget.color))),
+                  ),
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _TrackPainter(
+                      color: widget.color,
+                      gradient: widget.playedGradient,
+                      played: played,
+                      buffered: _fractionOf(widget.buffered),
+                      segments: [for (final s in widget.segments) (_fractionOf(s.start), _fractionOf(s.end), s.color)],
+                      chapters: [for (final c in widget.chapterStarts) if (c > Duration.zero) _fractionOf(c)],
+                      active: pointer != null,
+                      pointer: pointer,
+                    ),
                   ),
                 ),
-              ),
-              if (pointer != null && widget.total > Duration.zero) _label(width, pointer, hasHeat, dragging),
-            ]),
+                if (pointer != null && widget.total > Duration.zero) _label(width, pointer, hasHeat, dragging),
+              ]),
+            ),
           ),
         ),
       );
@@ -156,7 +198,7 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
     return Positioned(
       left: left,
       width: columnWidth,
-      bottom: VideoProgressBar.height + 4 + (hasHeat ? 16 : 0),
+      bottom: VideoProgressBar.touchHeight + 4 + (hasHeat ? 16 : 0),
       child: IgnorePointer(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
             if (preview != null) ...[

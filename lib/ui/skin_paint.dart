@@ -35,7 +35,9 @@ void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
     ..color = p.color
     ..isAntiAlias = false;
   if (fade != null) paint.shader = fade;
-  final step = p.spacing;
+  // A skin file may ask for a spacing too fine to draw: under a pixel the
+  // loops below would never end, or draw millions of marks.
+  final step = p.spacing.isFinite ? math.max(p.spacing, 1.0) : 4.0;
   final size = p.size;
   canvas.save();
   canvas.clipRect(rect);
@@ -59,9 +61,11 @@ void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
         canvas.drawRect(Rect.fromLTWH(x, cover.top, size, cover.height), paint);
       }
     case 'dots':
+      // At most about 100,000 dots, however fine the spacing.
+      final dot = math.max(step, math.sqrt(cover.width * cover.height / 100000));
       final points = <Offset>[];
-      for (var y = cover.top; y < cover.bottom; y += step) {
-        for (var x = cover.left; x < cover.right; x += step) {
+      for (var y = cover.top; y < cover.bottom; y += dot) {
+        for (var x = cover.left; x < cover.right; x += dot) {
           points.add(Offset(x, y));
         }
       }
@@ -106,6 +110,7 @@ final _noiseTiles = <(Color, double, double), ImageShader>{};
 /// across, each a little lighter or stronger than the next. Drawn at twice
 /// the size and scaled down, so grains stay crisp on high-density screens.
 ImageShader noiseShader(Color color, {required double spacing, required double size}) {
+  if (!spacing.isFinite || spacing < 1) spacing = 1;
   final key = (color, spacing, size);
   final cached = _noiseTiles[key];
   if (cached != null) return cached;
@@ -489,11 +494,18 @@ class SkinBox extends StatelessWidget {
 }
 
 class SkinDecorationPainter extends CustomPainter {
-  SkinDecorationPainter(this.decorations);
+  // A scene stretched while the window was resized is drawn again at its
+  // exact size once the resize rests.
+  SkinDecorationPainter(this.decorations) : super(repaint: ScenePainter.settled);
   final List<SkinDecoration> decorations;
+
+  /// How many times ornaments have been painted, for tests.
+  @visibleForTesting
+  static int paints = 0;
 
   @override
   void paint(Canvas canvas, Size size) {
+    paints++;
     final rect = Offset.zero & size;
     for (final d in decorations) {
       switch (d) {
@@ -570,9 +582,10 @@ class SkinDecorationPainter extends CustomPainter {
       ..strokeWidth = 1
       ..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [d.color.withValues(alpha: 0), d.color]).createShader(floor);
     final vanish = Offset(size.width / 2, horizon);
-    final lines = (size.width / d.spacing).ceil() * 3;
+    final spacing = d.spacing.isFinite ? math.max(d.spacing, 4.0) : 48.0;
+    final lines = (size.width / spacing).ceil() * 3;
     for (var i = -lines; i <= lines; i++) {
-      canvas.drawLine(vanish, Offset(size.width / 2 + i * d.spacing * 2, size.height), paint);
+      canvas.drawLine(vanish, Offset(size.width / 2 + i * spacing * 2, size.height), paint);
     }
     // Rows close up towards the horizon.
     for (var t = 1.0; t > 0.02; t *= 0.78) {
@@ -633,8 +646,10 @@ class SkinDecorationPainter extends CustomPainter {
     canvas.restore();
   }
 
+  // The lists are made again whenever the window's frame is built; the same
+  // ornaments need no new paint of the whole window.
   @override
-  bool shouldRepaint(SkinDecorationPainter old) => !identical(old.decorations, decorations);
+  bool shouldRepaint(SkinDecorationPainter old) => !listEquals(old.decorations, decorations);
 }
 
 /// A page's [bar] drawn on the skin's top bar, glass included, with its
@@ -656,7 +671,8 @@ class SkinAppBar extends StatelessWidget implements PreferredSizeWidget {
       decoration: SurfaceDecoration.of(context, top),
       child: Theme(
         data: theme.copyWith(appBarTheme: theme.appBarTheme.copyWith(backgroundColor: Colors.transparent, foregroundColor: skin.topBarText)),
-        child: bar,
+        // The bar's buttons repaint apart from the surface under them.
+        child: RepaintBoundary(child: bar),
       ),
     );
   }

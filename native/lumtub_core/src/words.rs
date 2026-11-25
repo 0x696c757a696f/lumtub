@@ -18,6 +18,7 @@
 //! Places are in UTF-16 code units, as Flutter counts text.
 
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::os::raw::c_char;
 use std::sync::{Mutex, OnceLock};
@@ -99,7 +100,10 @@ fn cut_spaced(language: &str, line: &str, known: &dyn Fn(&str) -> bool) -> Vec<P
     while let Some((at, c)) = chars.next() {
         // [Music], [Applaus]: what is heard, not said.
         if c == '['
-            && let Some(close) = line[at..].find(']').filter(|n| *n <= 60)
+            && let Some(close) = line.as_bytes()[at..]
+                .iter()
+                .take(61)
+                .position(|&b| b == b']')
         {
             while chars.peek().is_some_and(|(i, _)| *i <= at + close) {
                 chars.next();
@@ -735,18 +739,43 @@ fn utf16_places(line: &str, pieces: Vec<Piece>) -> Vec<Word> {
 /// The words of [line] in [language]; None when the language needs a
 /// segmenter that is not open.
 pub fn words(language: &str, line: &str) -> Option<Vec<Word>> {
+    words_known(language, line, &RefCell::new(HashMap::new()))
+}
+
+/// [words], with what the dictionary was found to know or not in [seen].
+fn words_known(
+    language: &str,
+    line: &str,
+    seen: &RefCell<HashMap<String, bool>>,
+) -> Option<Vec<Word>> {
+    let segmented = matches!(language, "ja" | "ko" | "zh");
+    // Cut before the dictionaries are locked, so a lookup elsewhere does
+    // not wait for the segmenter.
+    let cut = if segmented {
+        let open = cutters().lock().ok()?;
+        Some(open.get(language)?.cut(line))
+    } else {
+        None
+    };
     let lexicons = crate::lexicon::open_lexicons().lock().ok();
     let lexicon = lexicons.as_ref().and_then(|open| open.get(language));
-    let known = |key: &str| lexicon.is_some_and(|l| l.knows(key));
-    let pieces = match language {
-        "ja" | "ko" | "zh" => {
-            let open = cutters().lock().ok()?;
-            let cutter = open.get(language)?;
-            let mut pieces = cutter.cut(line);
+    let known = |key: &str| {
+        let Some(lexicon) = lexicon else {
+            return false;
+        };
+        if let Some(&knows) = seen.borrow().get(key) {
+            return knows;
+        }
+        let knows = lexicon.knows(key);
+        seen.borrow_mut().insert(key.to_string(), knows);
+        knows
+    };
+    let pieces = match cut {
+        Some(mut pieces) => {
             // Keys the dictionary knows first.
-            if let Some(lexicon) = lexicon {
+            if lexicon.is_some() {
                 for piece in &mut pieces {
-                    if let Some(at) = piece.keys.iter().position(|k| lexicon.knows(k))
+                    if let Some(at) = piece.keys.iter().position(|k| known(k))
                         && at > 0
                     {
                         let key = piece.keys.remove(at);
@@ -756,7 +785,7 @@ pub fn words(language: &str, line: &str) -> Option<Vec<Word>> {
             }
             pieces
         }
-        _ => cut_spaced(language, line, &known),
+        None => cut_spaced(language, line, &known),
     };
     Some(utf16_places(line, pieces))
 }
@@ -834,9 +863,10 @@ pub unsafe extern "C" fn lumtub_words(json: *const u8, length: usize) -> *mut c_
         .map_err(|e| e.to_string())
         .and_then(|ask| {
             let mut lines = Vec::new();
+            let seen = RefCell::new(HashMap::new());
             for line in ask.lines.iter().take(MOST_LINES) {
                 lines.push(
-                    words(&ask.language, line)
+                    words_known(&ask.language, line, &seen)
                         .ok_or_else(|| format!("no segmenter for {}", ask.language))?,
                 );
             }

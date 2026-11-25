@@ -53,7 +53,18 @@ void VideoOutputManager::Dispose(int64_t handle,
 }
 
 VideoOutputManager::~VideoOutputManager() {
-  lifecycle_thread_pool_->Post([this]() { video_outputs_.clear(); }).get();
+  lifecycle_thread_pool_->Post([this]() {
+    if (VideoOutput::engine_closing_) {
+      // Lumtub: Flutter's raster thread can still call a texture's callback
+      // while the engine shuts down, and the callback uses its VideoOutput;
+      // the outputs stop drawing and are left allocated as the app exits.
+      for (auto& entry : video_outputs_) {
+        entry.second->StopForEngineShutdown();
+        static_cast<void>(entry.second.release());
+      }
+    }
+    video_outputs_.clear();
+  }).get();
   lifecycle_thread_pool_.reset();
   thread_pool_.reset();
 }

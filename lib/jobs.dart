@@ -128,7 +128,8 @@ class JobQueue extends ChangeNotifier {
   /// it answers. Throws [JobCancelled] when it is cancelled before it
   /// starts; a running job stops at its next [JobContext.checkCancelled].
   Future<T> run<T>(String key, Future<T> Function(JobContext job) work, {JobLane lane = JobLane.network, JobPriority priority = JobPriority.asked}) {
-    if (_byKey[key] case final same?) {
+    // A job told to stop is not joined: the new request starts afresh.
+    if (_byKey[key] case final same? when !same.cancelled) {
       return same.completer.future.then((value) => value as T);
     }
     final job = _Job<Object?>(this, JobInfo(key: key, lane: lane, priority: priority, running: false), (context) async => await work(context), _order++);

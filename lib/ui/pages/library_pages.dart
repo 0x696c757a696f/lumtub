@@ -11,6 +11,7 @@ import '../../library_store.dart';
 import '../../list_order.dart';
 import '../../models.dart';
 import '../../thumbnail_cache.dart';
+import '../../widgets/settings_tiles.dart' show DialogTextFields;
 import '../../youtube_account_feed.dart';
 import '../common.dart';
 import '../motion.dart';
@@ -59,6 +60,40 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
     }
   }
 
+  // The feed runs to thousands of videos and the page rebuilds on every
+  // notify: what it shows is worked out again only when the feed, the
+  // channel or the group (or the library, which holds the groups) changes.
+  Object? _feedKey;
+  List<VideoItem> _feedKept = const [];
+
+  Object? _groupKey;
+  List<ChannelRef> _groupKept = const [];
+
+  /// The group's channels, or all of them, again only when they change.
+  List<ChannelRef> _groupChannels(List<ChannelRef> channels, ChannelGroup? group, int revision) {
+    if (group == null) return channels;
+    final key = (channels, channels.length, group, revision);
+    if (key == _groupKey) return _groupKept;
+    _groupKey = key;
+    return _groupKept = [for (final c in channels) if (group.channels.contains(c.id)) c];
+  }
+
+  static Set<String> _idsOf(List<ChannelRef> channels) => _channelIds[channels] ??= {for (final c in channels) c.id};
+  static final _channelIds = Expando<Set<String>>();
+
+  List<VideoItem> _feedFor(List<VideoItem> all, ChannelRef? selected, ChannelGroup? group, int revision) {
+    final key = (all, selected?.id, group, group == null ? null : revision);
+    if (key == _feedKey) return _feedKept;
+    final chosen = selected != null
+        ? [for (final item in all) if (item.channelId == selected.id) item]
+        : group != null
+            ? [for (final item in all) if (group.channels.contains(item.channelId)) item]
+            : all;
+    _feedKey = key;
+    // Streams that are on now come first.
+    return _feedKept = [for (final item in chosen) if (item.isLive) item, for (final item in chosen) if (!item.isLive) item];
+  }
+
   void _select(ChannelRef? channel) => setState(() => _selected = channel == _selected ? null : channel);
 
   @override
@@ -80,16 +115,10 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
       );
     }
     final group = library.channelGroups.contains(_group) ? _group : null;
-    final inGroup = controller.orderedChannels(group == null ? channels : [for (final c in channels) if (group.channels.contains(c.id)) c], key: group);
-    final selected = inGroup.contains(_selected) ? _selected : null;
-    final all = controller.visible(library.feed, subscriptions: true);
-    final chosen = selected != null
-        ? [for (final item in all) if (item.channelId == selected.id) item]
-        : group != null
-            ? [for (final item in all) if (group.channels.contains(item.channelId)) item]
-            : all;
-    // Streams that are on now come first.
-    final feed = [for (final item in chosen) if (item.isLive) item, for (final item in chosen) if (!item.isLive) item];
+    final inGroup = controller.orderedChannels(_groupChannels(channels, group, library.revision), key: group);
+    final picked = _selected;
+    final selected = picked != null && _idsOf(inGroup).contains(picked.id) ? picked : null;
+    final feed = _feedFor(controller.visible(library.feed, subscriptions: true), selected, group, library.revision);
     Widget strip({bool vertical = false}) => _ChannelStrip(
           vertical: vertical,
           itemWidth: vertical ? _railWidth - 12 : 72,
@@ -254,21 +283,23 @@ class _ManageGroups extends StatelessWidget {
   final List<ChannelRef> channels;
 
   Future<String?> _askName(BuildContext context, {String initial = ''}) {
-    final text = TextEditingController(text: initial);
     return showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(initial.isEmpty ? tr('New group') : tr('Rename group')),
-        content: TextField(
-          controller: text,
-          autofocus: true,
-          decoration: InputDecoration(labelText: tr('Group name')),
-          onSubmitted: (v) => Navigator.pop(context, v),
+      builder: (context) => DialogTextFields(
+        initial: [initial],
+        builder: (context, fields) => AlertDialog(
+          title: Text(initial.isEmpty ? tr('New group') : tr('Rename group')),
+          content: TextField(
+            controller: fields.single,
+            autofocus: true,
+            decoration: InputDecoration(labelText: tr('Group name')),
+            onSubmitted: (v) => Navigator.pop(context, v),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
+            TextButton(onPressed: () => Navigator.pop(context, fields.single.text), child: Text(tr('Confirm'))),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
-          TextButton(onPressed: () => Navigator.pop(context, text.text), child: Text(tr('Confirm'))),
-        ],
       ),
     );
   }
@@ -443,14 +474,21 @@ class _ChannelStripState extends State<_ChannelStrip> {
     super.dispose();
   }
 
+  /// The newest upload of each channel, for the mark on recent ones; made
+  /// once per feed list, which the page keeps while nothing changes.
+  static Map<String, DateTime?> _latestOf(List<VideoItem> feed) => _latest[feed] ??= () {
+        final latest = <String, DateTime?>{};
+        for (final item in feed) {
+          final id = item.channelId;
+          if (id != null && !latest.containsKey(id)) latest[id] = item.published;
+        }
+        return latest;
+      }();
+  static final _latest = Expando<Map<String, DateTime?>>();
+
   @override
   Widget build(BuildContext context) {
-    // The newest upload of each channel, for the mark on recent ones.
-    final latest = <String, DateTime?>{};
-    for (final item in widget.feed) {
-      final id = item.channelId;
-      if (id != null && !latest.containsKey(id)) latest[id] = item.published;
-    }
+    final latest = _latestOf(widget.feed);
     final live = widget.live;
     var ordered = widget.channels;
     final selected = widget.selected;
@@ -941,9 +979,10 @@ class PlaylistDetailPage extends StatelessWidget {
       );
     }
     final saved = favorites ? library.favorites : later ? library.watchLater : playlist!.items;
-    final own = List<VideoItem>.of(controller.orderedVideos(id, saved));
     final reversed = controller.isReversed(id);
-    final items = reversed ? own.reversed.toList() : own;
+    final view = playlistView((id, library.revision, library.store.finishedVersion), controller.orderedVideos(id, saved), reversed: reversed, progressOf: library.progressOf);
+    final own = view.own;
+    final items = view.items;
     // A copy of one of the account's YouTube playlists takes a dragged
     // order only when it can be sent to YouTube; the next sync would undo
     // it otherwise.
@@ -967,7 +1006,7 @@ class PlaylistDetailPage extends StatelessWidget {
               playlist != null && LibraryController.isRemote(playlist) ? tr('{0} videos · From your YouTube account, updated on sync', [items.length]) : tr('{0} videos · Saved on this device only', [items.length]),
               style: TextStyle(color: context.colors.onSurfaceVariant),
             ),
-            if (playlistLength(items, progressOf: library.progressOf) case final length?)
+            if (view.length case final length?)
               Text(length, style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
           ]));
           final buttons = <Widget>[

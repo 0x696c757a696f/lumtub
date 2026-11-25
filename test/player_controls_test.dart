@@ -407,6 +407,8 @@ void main() {
     await tester.pump();
     expect(find.text('Forward 7 s'), findsOneWidget);
     await tester.pump(const Duration(seconds: 1));
+    // Then it fades out.
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Forward 7 s'), findsNothing);
   });
 

@@ -156,4 +156,22 @@ void main() {
     expect(found.lists['list']!.first.$1, 'k0');
     expect(found.lists['list']!.first.$2, {'n': 0});
   }, skip: skip);
+
+  test('additions, removals, changes and moves all reach the file in order', () async {
+    final db = LocalDb('${directories.data.path}${Platform.pathSeparator}lumtub.db');
+    Future<List<String>> stored() async => [for (final (key, _) in (await db.read(['list'])).lists['list']!) key];
+    var entries = [for (var i = 0; i < 10; i++) ('k$i', '{"n":$i}')];
+    await db.write({'list': entries});
+    // Nothing moved: sent as an edit.
+    entries = [('new', '{}'), ...entries.where((e) => e.$1 != 'k3'), ('end', '{}')]..insert(5, ('mid', '{}'));
+    entries[2] = ('k1', '{"n":"changed"}');
+    await db.write({'list': entries});
+    expect(await stored(), [for (final (key, _) in entries) key]);
+    expect((await db.read(['list'])).lists['list']![2].$2, {'n': 'changed'});
+    // A move: sent whole.
+    entries = [entries.last, ...entries.take(entries.length - 1)];
+    await db.write({'list': entries});
+    await db.write({'list': entries.reversed.toList()});
+    expect(await stored(), [for (final (key, _) in entries.reversed) key]);
+  }, skip: skip);
 }

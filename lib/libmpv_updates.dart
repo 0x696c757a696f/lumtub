@@ -1,6 +1,8 @@
 import 'dart:ffi';
 import 'dart:io';
 
+import 'app_directories.dart';
+
 /// An LGPL libmpv build from zhongfly/mpv-winbuild: its release tag
 /// (a date such as 20261018) and CPU variant.
 class LibmpvBuild {
@@ -110,18 +112,27 @@ class LibmpvState {
 
   bool get usesDownload => loadedPath != null;
 
-  Set<String> failedPaths() {
-    final file = _file('failed.txt');
-    if (!file.existsSync()) return const {};
-    return file.readAsLinesSync().map((line) => line.trim().toLowerCase()).where((line) => line.isNotEmpty).toSet();
+  // The files are read once and then kept: only this class changes them
+  // while Lumtub runs (the runner does before it starts), and the settings
+  // page asks on every build.
+  Set<String>? _failed;
+  (String?,)? _use;
+  (String?,)? _confirmedText;
+
+  String? _read(String name) {
+    final file = _file(name);
+    return file.existsSync() ? file.readAsStringSync() : null;
   }
+
+  Set<String> failedPaths() =>
+      _failed ??= (_read('failed.txt') ?? '').split('\n').map((line) => line.trim().toLowerCase()).where((line) => line.isNotEmpty).toSet();
 
   bool hasFailed(String path) => failedPaths().contains(path.toLowerCase());
 
   bool get _confirmed {
     final path = loadedPath;
-    final file = _file('confirmed.txt');
-    return path != null && file.existsSync() && file.readAsStringSync().trim().toLowerCase() == path.toLowerCase();
+    final text = (_confirmedText ??= (_read('confirmed.txt'),)).$1;
+    return path != null && text != null && text.trim().toLowerCase() == path.toLowerCase();
   }
 
   /// Called before a video starts: a crash from here until [confirm] rolls
@@ -136,33 +147,36 @@ class LibmpvState {
   Future<void> confirm() async {
     final path = loadedPath;
     if (path == null || _confirmed) return;
-    await _file('confirmed.txt').writeAsString(path);
+    await writeFileAtomic(_file('confirmed.txt'), path);
+    _confirmedText = (path,);
     final pending = _file('pending.txt');
     if (await pending.exists()) await pending.delete();
   }
 
   /// Uses [dll] from the next launch on.
   Future<void> select(String dll) async {
-    await directory.create(recursive: true);
-    await _file('use.txt').writeAsString(dll);
+    await writeFileAtomic(_file('use.txt'), dll);
+    _use = (dll,);
   }
 
   /// Goes back to the bundled DLL from the next launch on, and never loads
   /// the current download again.
   Future<void> rollBack() async {
     final path = loadedPath ?? _selectedPath();
-    if (path != null) await _file('failed.txt').writeAsString('$path\n', mode: FileMode.append);
+    if (path != null) {
+      await _file('failed.txt').writeAsString('$path\n', mode: FileMode.append, flush: true);
+      _failed = null;
+    }
     for (final name in ['use.txt', 'pending.txt']) {
       final file = _file(name);
       if (await file.exists()) await file.delete();
     }
+    _use = (null,);
   }
 
   String? _selectedPath() {
-    final file = _file('use.txt');
-    if (!file.existsSync()) return null;
-    final path = file.readAsStringSync().trim();
-    return path.isEmpty ? null : path;
+    final path = (_use ??= (_read('use.txt'),)).$1?.trim();
+    return path == null || path.isEmpty ? null : path;
   }
 
   /// The build the next launch will load, if it differs from the bundled one.
@@ -182,5 +196,6 @@ class LibmpvState {
     if (chosen == null || shipped == null || shipped.isReplacedBy(chosen)) return;
     final file = _file('use.txt');
     if (await file.exists()) await file.delete();
+    _use = (null,);
   }
 }

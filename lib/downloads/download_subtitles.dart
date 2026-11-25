@@ -1,3 +1,6 @@
+import 'dart:collection';
+import 'dart:isolate';
+
 import '../l10n/l10n.dart';
 import '../libass_layout.dart';
 import '../models.dart';
@@ -78,13 +81,12 @@ typedef BilingualLine = ({Duration start, Duration end, String top, String botto
 /// apart are dropped.
 List<BilingualLine> bilingualLines(List<SubtitleCue> top, List<SubtitleCue> bottom) {
   final marks = <Duration>{for (final c in [...top, ...bottom]) ...[c.start, c.end]}.toList()..sort();
-  String at(List<SubtitleCue> cues, Duration from, Duration to) =>
-      [for (final c in cues) if (c.start <= from && c.end >= to) c.text.trim()].where((t) => t.isNotEmpty).join(' ');
+  final upperAt = _ShownAt(top), lowerAt = _ShownAt(bottom);
   final out = <BilingualLine>[];
   for (var i = 0; i + 1 < marks.length; i++) {
     final from = marks[i], to = marks[i + 1];
     if (to <= from) continue;
-    final (upper, lower) = (at(top, from, to), at(bottom, from, to));
+    final (upper, lower) = (upperAt(from), lowerAt(from));
     if (upper.isEmpty && lower.isEmpty) continue;
     final last = out.lastOrNull;
     if (last != null && last.top == upper && last.bottom == lower && last.end == from) {
@@ -97,6 +99,35 @@ List<BilingualLine> bilingualLines(List<SubtitleCue> top, List<SubtitleCue> bott
     for (final (i, c) in out.indexed)
       if (c.end - c.start >= const Duration(milliseconds: 120) || (i > 0 && out[i - 1].end != c.start) && (i + 1 == out.length || out[i + 1].start != c.end)) c,
   ];
+}
+
+/// [bilingualLines] off the UI isolate: auto-captions of a long video
+/// hold thousands of lines.
+Future<List<BilingualLine>> bilingualLinesInBackground(List<SubtitleCue> top, List<SubtitleCue> bottom) =>
+    Isolate.run(() => bilingualLines(top, bottom));
+
+/// The text of [cues] shown from one mark of [bilingualLines] to the next,
+/// asked for marks in order: one pass over the cues in all.
+class _ShownAt {
+  _ShownAt(this.cues)
+      : _byStart = [for (final (i, c) in cues.indexed) if (c.end > c.start) i]..sort((a, b) => cues[a].start.compareTo(cues[b].start)),
+        _byEnd = [for (final (i, c) in cues.indexed) if (c.end > c.start) i]..sort((a, b) => cues[a].end.compareTo(cues[b].end));
+
+  final List<SubtitleCue> cues;
+  final List<int> _byStart, _byEnd;
+  // In the cues' own order, as their lines are joined.
+  final _shown = SplayTreeSet<int>();
+  var _started = 0, _ended = 0;
+
+  String call(Duration from) {
+    while (_started < _byStart.length && cues[_byStart[_started]].start <= from) {
+      _shown.add(_byStart[_started++]);
+    }
+    while (_ended < _byEnd.length && cues[_byEnd[_ended]].end <= from) {
+      _shown.remove(_byEnd[_ended++]);
+    }
+    return [for (final i in _shown) cues[i].text.trim()].where((t) => t.isNotEmpty).join(' ');
+  }
 }
 
 /// One track of [top] and [bottom] together, [top]'s line over [bottom]'s.

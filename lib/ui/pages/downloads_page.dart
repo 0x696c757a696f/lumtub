@@ -134,7 +134,15 @@ Future<void> openInExplorer(String path, {bool select = false}) async {
     return;
   }
   if (!Platform.isWindows) return openWithDesktop(select ? File(path).parent.path : path);
-  await Process.start('explorer.exe', [select ? '/select,$path' : path]);
+  await Process.start(_explorer(), [select ? '/select,$path' : path]);
+}
+
+/// explorer.exe by its full path under %SystemRoot%, so a program of the
+/// same name in the working folder or on PATH is never started instead.
+String _explorer() {
+  final root = Platform.environment['SystemRoot'] ?? '';
+  final windows = RegExp(r'^[A-Za-z]:\\[^<>:"/|?*\x00-\x1f]*$').hasMatch(root) && !root.contains('..') ? root : r'C:\Windows';
+  return '${windows.endsWith(r'\') ? windows.substring(0, windows.length - 1) : windows}\\explorer.exe';
 }
 
 /// 下载: queued, running, finished and failed downloads.
@@ -214,7 +222,7 @@ class _DownloadTile extends StatelessWidget {
   final DownloadManager manager;
   final DownloadTask task;
 
-  String _status() {
+  String _status([int? size]) {
     switch (task.status) {
       case DownloadStatus.queued:
         return tr('Waiting');
@@ -232,9 +240,7 @@ class _DownloadTile extends StatelessWidget {
       case DownloadStatus.paused:
         return tr('Paused');
       case DownloadStatus.done:
-        final bytes = task.filePath == null ? null : _sizes[task.filePath!] ??= _sizeOf(task.filePath!);
-        final size = bytes == null ? '' : ' · ${formatBytes(bytes)}';
-        return '${tr('Completed')} · ${task.qualityLabel}$size';
+        return '${tr('Completed')} · ${task.qualityLabel}${size == null ? '' : ' · ${formatBytes(size)}'}';
       case DownloadStatus.failed:
         return tr('Download failed: {0}', [task.error ?? '']);
       case DownloadStatus.cancelled:
@@ -243,12 +249,37 @@ class _DownloadTile extends StatelessWidget {
   }
 
   // The list rebuilds twice a second while a download runs; a finished
-  // file keeps its size.
-  static final _sizes = <String, int?>{};
+  // file is measured once, off the UI thread, missing files included.
+  static final _sizes = <String, Future<int?>>{};
+  static final _knownSizes = <String, int?>{};
 
-  static int? _sizeOf(String path) {
-    final file = File(path);
-    return file.existsSync() ? file.lengthSync() : null;
+  static Future<int?> _sizeOf(String path) {
+    if (_sizes.length > 500) {
+      _sizes.clear();
+      _knownSizes.clear();
+    }
+    return _sizes[path] ??= () async {
+      int? size;
+      try {
+        size = await File(path).length();
+      } catch (_) {}
+      return _knownSizes[path] = size;
+    }();
+  }
+
+  static void _forget(String? path) {
+    _sizes.remove(path);
+    _knownSizes.remove(path);
+  }
+
+  Widget _statusText(TextStyle style) {
+    final path = task.filePath;
+    if (task.status != DownloadStatus.done || path == null) return Text(_status(), maxLines: 2, overflow: TextOverflow.ellipsis, style: style);
+    return FutureBuilder<int?>(
+      future: _sizeOf(path),
+      initialData: _knownSizes[path],
+      builder: (context, size) => Text(_status(size.data), maxLines: 2, overflow: TextOverflow.ellipsis, style: style),
+    );
   }
 
   @override
@@ -276,26 +307,48 @@ class _DownloadTile extends StatelessWidget {
       ),
       title: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(_status(), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: failed ? colors.error : null)),
+        _statusText(TextStyle(color: failed ? colors.error : null)),
         if (running || task.status == DownloadStatus.paused)
           Padding(padding: const EdgeInsets.only(top: 4), child: LinearProgressIndicator(value: task.fraction, minHeight: 3)),
       ]),
       onTap: task.status == DownloadStatus.done ? () => controller.play(item) : null,
-      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (task.active && task.item.isLive && !task.finishing) button(AppIcons.stop, tr('Stop recording and save'), () => manager.pause(task.id)),
-        if (task.active && !task.item.isLive) button(AppIcons.pauseFill, tr('Pause'), () => manager.pause(task.id)),
-        if (task.status == DownloadStatus.paused && !task.item.isLive) button(AppIcons.playFill, tr('Resume'), () => manager.resume(task.id)),
-        if ((task.active || task.status == DownloadStatus.paused) && !task.finishing) button(AppIcons.x, tr('Cancel'), () => manager.cancel(task.id)),
-        if (failed || task.status == DownloadStatus.cancelled) button(AppIcons.arrowsClockwise, tr('Retry'), () => manager.retry(task.id)),
+      trailing: _actions(context, [
+        if (task.active && task.item.isLive && !task.finishing) (AppIcons.stop, tr('Stop recording and save'), () => manager.pause(task.id)),
+        if (task.active && !task.item.isLive) (AppIcons.pauseFill, tr('Pause'), () => manager.pause(task.id)),
+        if (task.status == DownloadStatus.paused && !task.item.isLive) (AppIcons.playFill, tr('Resume'), () => manager.resume(task.id)),
+        if ((task.active || task.status == DownloadStatus.paused) && !task.finishing) (AppIcons.x, tr('Cancel'), () => manager.cancel(task.id)),
+        if (failed || task.status == DownloadStatus.cancelled) (AppIcons.arrowsClockwise, tr('Retry'), () => manager.retry(task.id)),
         if (task.status == DownloadStatus.done && task.filePath != null && !Platform.isAndroid && !Platform.isIOS)
-          button(AppIcons.folderOpen, tr('Show in folder'), () => unawaited(openInExplorer(task.filePath!, select: true))),
-        if (!task.active) button(AppIcons.trash, tr('Delete'), () => _confirmDelete(context)),
-      ]),
+          (AppIcons.folderOpen, tr('Show in folder'), () => unawaited(openInExplorer(task.filePath!, select: true))),
+        if (!task.active) (AppIcons.trash, tr('Delete'), () => _confirmDelete(context)),
+      ], button),
     );
   }
 
+  /// The task's buttons; on a phone all but the first go in a menu, so
+  /// the title keeps room to be read.
+  Widget _actions(BuildContext context, List<(IconData, String, VoidCallback)> actions, IconButton Function(IconData, String, VoidCallback) button) {
+    if (actions.length <= 2 || MediaQuery.sizeOf(context).width >= 600) {
+      return Row(mainAxisSize: MainAxisSize.min, children: [for (final (icon, tooltip, onPressed) in actions) button(icon, tooltip, onPressed)]);
+    }
+    final (icon, tooltip, onPressed) = actions.first;
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      button(icon, tooltip, onPressed),
+      PopupMenuButton<VoidCallback>(
+        icon: Icon(AppIcons.dotsThreeVertical),
+        onSelected: (action) => action(),
+        itemBuilder: (_) => [
+          for (final (icon, label, onPressed) in actions.skip(1))
+            PopupMenuItem(value: onPressed, child: Row(children: [Icon(icon, size: 20), const SizedBox(width: 12), Text(label)])),
+        ],
+      ),
+    ]);
+  }
+
   Future<void> _confirmDelete(BuildContext context) async {
-    if (task.status != DownloadStatus.done) return unawaited(manager.remove(task.id, deleteFiles: true));
+    // A task nothing was saved for yet goes at once; one with part of a
+    // file is asked about, as a mis-tap could lose hours of downloading.
+    if (task.status != DownloadStatus.done && task.downloaded <= 0) return unawaited(manager.remove(task.id, deleteFiles: true));
     final choice = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -308,6 +361,8 @@ class _DownloadTile extends StatelessWidget {
         ],
       ),
     );
-    if (choice != null) await manager.remove(task.id, deleteFiles: choice);
+    if (choice == null) return;
+    _forget(task.filePath);
+    await manager.remove(task.id, deleteFiles: choice);
   }
 }

@@ -139,6 +139,39 @@ The changes, marked "Lumtub" in the code:
   `SecondaryRevealArea`, above the controls in `video_texture.dart`, takes
   hovering and taps over that line only and passes every other pointer
   event on to the controls.
+- `linux/texture_gl.cc`, `video_output.cc`, `video_output_manager.cc`,
+  `media_kit_video_plugin.cc`: resource and lifetime fixes. A resize frees
+  the copy texture, its framebuffer and the EGLImage too (each size change
+  leaked a full-size texture). The render node's descriptor starts at -1
+  and is closed at dispose (it leaked, and paths that never opened one
+  closed descriptor 0). Dispose detaches the texture under its lock before
+  freeing mpv's render context, so a frame Flutter's raster thread is
+  drawing finishes first and later ones draw nothing. The software path's
+  idle callbacks hold a reference to the output; a failed hardware attempt
+  unregisters and frees its texture and EGL context. The texture update
+  callback's data is freed with the output.
+- `linux/video_output.cc`, `windows/video_output.cc`
+  (`GetVideoWidth`/`GetVideoHeight`): `video-out-params` is read into a
+  zeroed node and used only when mpv returns it (a failed read walked and
+  freed stack garbage); the software size is computed in floating point.
+- `windows/video_output.cc`, `video_output.h`: the software texture is
+  stored before its id is published, under the textures' lock, and every
+  reader takes that lock (the raster thread's `at()` threw). A hardware
+  size is kept within Direct3D 11's texture limit, and when making the
+  textures fails the previous size stays (the video was black until a
+  restart).
+- `windows/video_output_manager.cc`: when the engine closes, the outputs
+  stop mpv and are left allocated instead of freed, since Flutter can still
+  call their texture callbacks then.
+- `windows/media_kit_video_plugin.cc`: malformed method-call arguments get
+  an error reply instead of an exception that ended the app.
+- `macos/Classes/plugin/TextureHW.swift`, `ios/Classes/plugin/TextureHW.swift`,
+  `TextureSW.swift` (all three copies): mpv's update callback reaches the
+  texture through a retained box holding a weak reference, released after
+  the render context is freed, so a callback in flight no longer uses a
+  freed texture; pointers given to mpv stay inside their `withUnsafe…`
+  closures. On macOS a failed `mpv_render_context_create` returns nil
+  (software drawing follows) instead of `exit(1)`.
 - Material widgets come from `package:material_ui` (Flutter 3.50 deprecated
   `package:flutter/material.dart`), so the fullscreen route, subtitle view
   and controls read the app's own theme.

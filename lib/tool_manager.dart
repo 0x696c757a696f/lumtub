@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ffi' show Abi;
+import 'dart:ffi';
+import 'package:ffi/ffi.dart' show Utf8;
 import 'dart:io';
 import 'dart:isolate';
 import 'package:crypto/crypto.dart';
@@ -17,8 +18,21 @@ import 'libmpv_updates.dart';
 import 'native_core.dart';
 import 'native_http.dart';
 import 'process_runner.dart';
+import 'system_env.dart';
 import 'version_order.dart';
 import 'l10n/l10n.dart';
+
+/// The libmpv-2.dll entry of a `tar -tf` listing, when its path stays
+/// inside the folder it is unpacked to.
+String? libmpvMember(String listing) {
+  for (final name in listing.split(RegExp(r'\r?\n')).map((line) => line.trim())) {
+    final parts = name.split(RegExp(r'[\\/]'));
+    if (parts.last.toLowerCase() != 'libmpv-2.dll' || name.contains(':')) continue;
+    if (parts.any((part) => part.isEmpty || part == '.' || part == '..')) continue;
+    return name;
+  }
+  return null;
+}
 
 class ToolPaths {
   final String mpv;
@@ -378,6 +392,42 @@ class ToolManager {
     };
   }
 
+  static const _ytDlpRepository = 'yt-dlp/yt-dlp-nightly-builds';
+
+  /// yt-dlp's SHA2-256SUMS for [tag], name to SHA-256, once the core has
+  /// checked its OpenPGP signature against yt-dlp's pinned key. Throws when
+  /// the signature is missing or wrong, or the core cannot check it.
+  Future<Map<String, String>> _signedYtDlpSums(String tag) async {
+    if (!RegExp(r'^[0-9A-Za-z._-]{1,100}$').hasMatch(tag)) throw FormatException('Unexpected yt-dlp tag: $tag');
+    final base = 'https://github.com/$_ytDlpRepository/releases/download/$tag';
+    Future<List<int>> fetch(String name, int limit) async {
+      final response = await _client.get(Uri.parse('$base/$name'), headers: {'User-Agent': _userAgent}).timeout(const Duration(seconds: 25));
+      if (response.statusCode != 200) throw HttpException('$name HTTP ${response.statusCode}');
+      if (response.bodyBytes.length > limit) throw FormatException('$name is too large');
+      return response.bodyBytes;
+    }
+    final (sums, signature) = await (fetch('SHA2-256SUMS', 64 << 10), fetch('SHA2-256SUMS.sig', 4096)).wait;
+    final text = utf8.decode(sums);
+    final problem = verifyYtDlpSums(text, signature, tag);
+    if (problem != null) throw StateError('yt-dlp $tag: $problem');
+    return {for (final (hash, name) in parseSha256Sums(text)) name: hash};
+  }
+
+  /// Null when [signature] (yt-dlp's binary .sig) holds for [sums] and
+  /// [tag], else what is wrong. Without the core nothing can be checked, so
+  /// that is wrong too.
+  static String? verifyYtDlpSums(String sums, List<int> signature, String tag) {
+    final core = NativeCore.instance;
+    if (core == null || !core.library.providesSymbol('lumtub_ytdlp_sums_verify')) return 'the core that checks signatures is missing';
+    final call = _sumsVerify ??= core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_ytdlp_sums_verify');
+    final hex = signature.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    final answer = jsonDecode(core.take(core.withText(jsonEncode({'sums': sums, 'signature': hex, 'tag': tag}), call)) ?? 'null');
+    if (answer is Map && answer['ok'] == true) return null;
+    return answer is Map ? '${answer['error']}' : 'the signature could not be checked';
+  }
+
+  static Pointer<Utf8> Function(Pointer<Uint8>, int)? _sumsVerify;
+
   /// The tag a github.com `releases/latest` redirect points at.
   static String? releaseTagOfRedirect(String repository, String? location) {
     if (location == null) return null;
@@ -495,7 +545,7 @@ class ToolManager {
   }
 
   Future<void> _installYtDlp() async {
-    final release = await _release('yt-dlp/yt-dlp-nightly-builds');
+    final release = await _release(_ytDlpRepository);
     final tag = _safeTag(release['tag_name']);
     final group = Directory('${root.path}${_separator}yt-dlp');
     if (!_zipApp) await _removeSingleFileYtDlp(group);
@@ -513,10 +563,13 @@ class ToolManager {
       if (await File('${dest.path}$_separator${_exe('yt-dlp')}').exists()) return;
     }
     status('Downloading yt-dlp {0}…', [tag]);
+    // The sums signed with yt-dlp's key, not the digest GitHub lists: a
+    // release whose files were swapped on GitHub is not installed.
+    final sums = await _signedYtDlpSums('${release['tag_name']}');
     final partial = Directory('${dest.path}.partial');
     if (await partial.exists()) await partial.delete(recursive: true);
     try {
-      final file = await _downloadYtDlp(release, partial);
+      final file = await _downloadYtDlp(release, partial, sums);
       // A build that cannot even report its version is never used.
       final check = await runWithTimeout(file.path, ['--version'], timeout: const Duration(seconds: 30));
       if (check.exitCode != 0) throw StateError('yt-dlp $tag failed its self-check');
@@ -531,13 +584,15 @@ class ToolManager {
   /// The unpacked build (yt-dlp_win.zip). The single-file yt-dlp.exe
   /// unpacks itself to a temp folder on every start, which costs a second
   /// of CPU and a second process for each search or channel page.
-  Future<File> _downloadYtDlp(Map<String, dynamic> release, Directory into) async {
+  Future<File> _downloadYtDlp(Map<String, dynamic> release, Directory into, Map<String, String> sums) async {
+    final sha256Hex = sums[ytDlpFolderAsset];
+    if (sha256Hex == null) throw StateError('The signed yt-dlp checksums do not list $ytDlpFolderAsset');
     if (_zipApp) {
-      final app = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset), Directory('${root.path}${_separator}downloads'));
+      final app = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset), Directory('${root.path}${_separator}downloads'), sha256Hex: sha256Hex);
       await into.create(recursive: true);
       return app.rename('${into.path}${_separator}yt-dlp');
     }
-    final archive = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset), Directory('${root.path}${_separator}downloads'));
+    final archive = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset), Directory('${root.path}${_separator}downloads'), sha256Hex: sha256Hex);
     await into.create(recursive: true);
     await _extractZip(archive, into);
     await archive.delete();
@@ -619,7 +674,7 @@ class ToolManager {
       await partial.create(recursive: true);
       try {
         try {
-          await _extractZip(archive, partial);
+          await _extractLibmpv(archive, partial);
         } on ProcessException {
           // Windows before 11 23H2 has no 7z support in tar.exe; do not
           // download every new release only to fail again.
@@ -678,15 +733,21 @@ class ToolManager {
     return tag;
   }
 
-  Future<void> _extractZip(File archive, Directory into) async {
-    if (!Platform.isWindows) {
-      await extractZip(archive, into);
-      return;
+  Future<void> _extractZip(File archive, Directory into) => extractZip(archive, into);
+
+  /// Unpacks only libmpv-2.dll from the 7z [archive] with Windows' own
+  /// tar.exe, which reads 7z from Windows 11 23H2 on.
+  Future<void> _extractLibmpv(File archive, Directory into) async {
+    final tar = windowsProgram(r'System32\tar.exe');
+    Future<String> run(List<String> arguments) async {
+      final result = await Process.run(tar, arguments);
+      if (result.exitCode != 0) throw ProcessException(tar, arguments, result.stderr.toString(), result.exitCode);
+      return result.stdout.toString();
     }
-    final result = await Process.run('tar.exe', ['-xf', archive.path, '-C', into.path]);
-    if (result.exitCode != 0) {
-      throw ProcessException('tar.exe', ['-xf', archive.path, '-C', into.path], result.stderr.toString(), result.exitCode);
-    }
+
+    final member = libmpvMember(await run(['-tf', archive.path]));
+    if (member == null) return;
+    await run(['-xf', archive.path, '-C', into.path, '--', member]);
   }
 
   static String get _userAgent => Platform.isWindows ? 'Lumtub-Windows/0.1' : 'Lumtub-${Platform.operatingSystem}/0.1';

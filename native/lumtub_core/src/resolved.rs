@@ -194,7 +194,7 @@ fn streams(info: &Value, tracks: &[&Value]) -> Option<Vec<Stream>> {
 
 pub fn summary(info: &Value, ask: &Ask) -> Summary {
     let tracks = tracks(info);
-    let limit = ask.fetched + 3600;
+    let limit = ask.fetched.saturating_add(3600);
     let expire = tracks
         .first()
         .and_then(|t| t.get("url")?.as_str())
@@ -317,7 +317,7 @@ pub fn summary(info: &Value, ask: &Ask) -> Summary {
         .find_map(|t| t.get("http_headers")?.get("User-Agent"))
         .map(|v| v.as_str().map_or_else(|| v.to_string(), str::to_owned));
     Summary {
-        expires: expire.map_or(limit, |e| (e - 900).min(limit)),
+        expires: expire.map_or(limit, |e| e.saturating_sub(900).min(limit)),
         clients,
         formats,
         heights,
@@ -354,7 +354,7 @@ pub unsafe extern "C" fn lumtub_resolved(
 ) -> *mut c_char {
     let ask: Ask =
         serde_json::from_str(unsafe { crate::taste::text(ask, ask_len) }).unwrap_or_default();
-    match serde_json::from_str::<Value>(unsafe { crate::taste::text(info, info_len) }) {
+    match serde_json::from_str::<Value>(unsafe { crate::taste::outside(info, info_len) }) {
         Ok(info) if info.is_object() => crate::taste::give_json(&summary(&info, &ask)),
         _ => std::ptr::null_mut(),
     }

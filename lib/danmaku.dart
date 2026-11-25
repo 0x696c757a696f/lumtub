@@ -148,6 +148,13 @@ class DanmakuOverlay {
   bool _live = false;
   final _liveClock = Stopwatch();
   final _added = <String>{};
+  /// The ids a live keeps to tell new messages from those already shown.
+  static const _liveIds = 5000;
+  /// A replay's messages not given to the layout yet, by start: each is
+  /// laid out a little before it flies, not all when danmaku starts.
+  final _waiting = <(double, LiveChatMessage)>[];
+  var _given = 0;
+  static const _ahead = 30000.0;
   var _timing = LiveDanmakuTiming();
   Timer? _timer;
   String _shown = '';
@@ -187,27 +194,68 @@ class DanmakuOverlay {
     final wall = DateTime.now().microsecondsSinceEpoch / 1000;
     final batch = <Map<String, Object>>[];
     final sent = <int?>[];
+    final waiting = _waiting.length;
     for (final message in messages) {
       if (!_added.add(message.id)) continue;
       final paid = message.kind != LiveChatKind.message;
       if (message.kind == LiveChatKind.system || (paid && !settings.paid)) continue;
-      final text = message.text.trim().isNotEmpty ? message.text : message.amount ?? '';
-      if (text.trim().isEmpty) continue;
+      if (_textOf(message).trim().isEmpty) continue;
       final start = _live ? now : message.offset?.inMilliseconds.toDouble();
       if (start == null) continue;
-      final entry = <String, Object>{'start_ms': start, 'text': text, 'paid': paid};
-      final parts = danmakuParts(text, EmojiPictures.fill(text, message.emojis));
-      final painter = _painter;
-      if (parts != null && painter != null) {
-        final id = _nextPicture++;
-        _pictureParts[id] = (parts, paid);
-        entry['picture'] = id;
-        entry['width'] = painter.measure(parts, _osdWidth, _osdHeight);
+      if (!_live) {
+        _waiting.add((start, message));
+        continue;
       }
-      batch.add(entry);
+      batch.add(_entry(start, message));
       sent.add(message.timestampUsec);
     }
-    if (batch.isEmpty) return;
+    if (_live) _forgetOldIds();
+    if (_waiting.length != waiting) {
+      final rest = _waiting.sublist(_given)..sort((a, b) => a.$1.compareTo(b.$1));
+      _waiting.setRange(_given, _waiting.length, rest);
+      _changed = true;
+    }
+    _send(batch, sent, now, wall);
+  }
+
+  static String _textOf(LiveChatMessage message) => message.text.trim().isNotEmpty ? message.text : message.amount ?? '';
+
+  Map<String, Object> _entry(double start, LiveChatMessage message) {
+    final paid = message.kind != LiveChatKind.message;
+    final text = _textOf(message);
+    final entry = <String, Object>{'start_ms': start, 'text': text, 'paid': paid};
+    final parts = danmakuParts(text, EmojiPictures.fill(text, message.emojis));
+    final painter = _painter;
+    if (parts != null && painter != null) {
+      final id = _nextPicture++;
+      _pictureParts[id] = (parts, paid);
+      entry['picture'] = id;
+      entry['width'] = painter.measure(parts, _osdWidth, _osdHeight);
+    }
+    return entry;
+  }
+
+  void _forgetOldIds() {
+    if (_added.length <= _liveIds) return;
+    final old = _added.take(_added.length - _liveIds).toList();
+    _added.removeAll(old);
+  }
+
+  /// Gives the layout the replay's messages that fly before [now] and a
+  /// little after, in order.
+  void _giveUpTo(double now) {
+    final batch = <Map<String, Object>>[];
+    while (_given < _waiting.length && _waiting[_given].$1 <= now + _ahead) {
+      final (start, message) = _waiting[_given++];
+      batch.add(_entry(start, message));
+    }
+    _send(batch, const [], now, 0);
+  }
+
+  void _send(List<Map<String, Object>> batch, List<int?> sent, double now, double wall) {
+    final core = _core;
+    final layout = _layout;
+    if (batch.isEmpty || core == null || layout == null) return;
     if (_live) {
       final starts = _timing.starts(sent, now, wall);
       for (var i = 0; i < batch.length; i++) {
@@ -224,6 +272,7 @@ class DanmakuOverlay {
     for (final message in messages) {
       _added.add(message.id);
     }
+    if (_live) _forgetOldIds();
   }
 
   void _tick() {
@@ -236,6 +285,7 @@ class DanmakuOverlay {
       if (!playing && _liveClock.isRunning) _liveClock.stop();
     }
     final now = _live ? _liveClock.elapsedMilliseconds.toDouble() : player.state.position.inMilliseconds.toDouble();
+    if (!_live) _giveUpTo(now);
     if (++_ticks % 30 == 0) unawaited(_readOsdSize());
     if (!_changed && now == _laidOut) return;
     _laidOut = now;
@@ -384,6 +434,8 @@ class DanmakuOverlay {
     if (layout != null) _core?.danmakuFree(layout);
     _layout = null;
     _added.clear();
+    _waiting.clear();
+    _given = 0;
     _timing = LiveDanmakuTiming();
     _liveClock.stop();
     _generation++;

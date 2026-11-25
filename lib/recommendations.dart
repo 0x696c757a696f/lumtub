@@ -69,6 +69,10 @@ class TasteProfile implements Finalizable {
     core.tasteFree(handle);
   }
 
+  /// Older entries weigh next to nothing at the decays used, so only this
+  /// many of the history, newest first, are read.
+  static const maxHistory = 600;
+
   /// [searches] are the words typed into search, newest first.
   factory TasteProfile.from({
     required List<VideoItem> history,
@@ -83,7 +87,7 @@ class TasteProfile implements Finalizable {
     final json = jsonEncode({
       'decay': decay,
       'history': [
-        for (final item in history)
+        for (final item in history.take(maxHistory))
           {
             'k': channelKey(item),
             't': item.title,
@@ -191,17 +195,22 @@ List<Recommendation> mixLanes(Map<FeedLane, List<Recommendation>> lanes, int cou
   final seen = taken ?? <String>{};
   final counts = placed ?? {for (final lane in FeedLane.values) lane: 0};
   final result = <Recommendation>[];
+  // Where each lane is read from; what was read is cut off once at the end.
+  final heads = <FeedLane, int>{};
+  var placedSoFar = counts.values.fold(0, (a, b) => a + b);
   while (result.length < count) {
-    final total = counts.values.fold(0, (a, b) => a + b) + 1;
+    final total = placedSoFar + 1;
     FeedLane? next;
     var behind = double.negativeInfinity;
     for (final lane in FeedLane.values) {
       final queue = lanes[lane];
       if (queue == null) continue;
-      while (queue.isNotEmpty && seen.contains(queue.first.item.id)) {
-        queue.removeAt(0);
+      var at = heads[lane] ?? 0;
+      while (at < queue.length && seen.contains(queue[at].item.id)) {
+        at++;
       }
-      if (queue.isEmpty) continue;
+      heads[lane] = at;
+      if (at >= queue.length) continue;
       final gap = lane.share * total - (counts[lane] ?? 0);
       if (gap > behind) {
         behind = gap;
@@ -209,10 +218,16 @@ List<Recommendation> mixLanes(Map<FeedLane, List<Recommendation>> lanes, int cou
       }
     }
     if (next == null) break;
-    final pick = lanes[next]!.removeAt(0);
+    final at = heads[next]!;
+    final pick = lanes[next]![at];
+    heads[next] = at + 1;
     seen.add(pick.item.id);
     counts.update(next, (v) => v + 1, ifAbsent: () => 1);
+    placedSoFar++;
     result.add(pick);
+  }
+  for (final MapEntry(key: lane, value: read) in heads.entries) {
+    lanes[lane]!.removeRange(0, read);
   }
   return result;
 }

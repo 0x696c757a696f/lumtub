@@ -43,6 +43,10 @@ class WarmLayer extends StatelessWidget {
     return (red.clamp(0, 255).toDouble(), green.clamp(0, 255).toDouble(), blue.clamp(0, 255).toDouble());
   }
 
+  /// The tint each layer last gave the native video layer; a new one
+  /// sends its own.
+  static final _sentWarmth = Expando<int>();
+
   @override
   Widget build(BuildContext context) {
     final warmth = Theme.of(context).extension<AppTones>()?.warmth ?? 0;
@@ -57,7 +61,12 @@ class WarmLayer extends StatelessWidget {
         curve: Curves.easeInOut,
         child: child,
         builder: (context, value, child) {
-          unawaited(IosVideoLayer.setWarmth((value <= 0.001 ? const Color(0xFFFFFFFF) : tint(value)).toARGB32()).catchError((_) {}));
+          // Only a change goes over the platform channel, not every build.
+          final argb = (value <= 0.001 ? const Color(0xFFFFFFFF) : tint(value)).toARGB32();
+          if (_sentWarmth[context] != argb) {
+            _sentWarmth[context] = argb;
+            unawaited(IosVideoLayer.setWarmth(argb).catchError((_) {}));
+          }
           return child!;
         },
       );

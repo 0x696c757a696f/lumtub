@@ -266,6 +266,11 @@ void main() {
     expect(playlistLength(items, progressOf: (id) => id == 'a' ? const WatchProgress(Duration(minutes: 50), Duration(hours: 1)) : null), '1 h 20 min in total · 30 min left');
     expect(playlistLength(items, progressOf: (_) => const WatchProgress(Duration(hours: 1), Duration(hours: 1))), '1 h 20 min in total · all watched');
     expect(playlistLength(const []), isNull);
+    // A playlist page works its view out again when the order changes.
+    final view = playlistView('p', items, reversed: true);
+    expect(view.items.map((v) => v.id), ['b', 'a']);
+    expect(view.length, '1 h 20 min in total');
+    expect(playlistView('p', items, reversed: false).items.map((v) => v.id), ['a', 'b']);
   });
 
   test('订阅分组 are kept with the library', () async {

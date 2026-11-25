@@ -5,6 +5,7 @@
 #include <windows.h>
 
 #include <string>
+#include <vector>
 
 // media_kit_video_plugin.dll imports libmpv-2.dll by name and is delay-loaded
 // (see CMakeLists.txt). Windows reuses a module that is already loaded under
@@ -22,6 +23,7 @@
 namespace {
 
 constexpr int kMaxUnconfirmedLaunches = 3;
+constexpr size_t kMaxFailed = 50;
 
 std::wstring StateDirectory() {
   if (DataRoot().empty()) return L"";
@@ -92,8 +94,28 @@ bool ListedIn(const std::wstring& list, const std::wstring& path) {
   return false;
 }
 
+// Rewrites failed.txt with [path] added, keeping the newest entries only so
+// the list never outgrows what ReadText reads.
+void AddFailed(const std::wstring& directory, const std::wstring& path) {
+  const std::wstring list = ReadText(directory + L"failed.txt");
+  std::vector<std::wstring> paths;
+  size_t start = 0;
+  while (start < list.size()) {
+    size_t end = list.find(L'\n', start);
+    if (end == std::wstring::npos) end = list.size();
+    const std::wstring line = Trim(list.substr(start, end - start));
+    if (!line.empty()) paths.push_back(line);
+    start = end + 1;
+  }
+  paths.push_back(path);
+  const size_t first = paths.size() > kMaxFailed ? paths.size() - kMaxFailed : 0;
+  std::wstring text;
+  for (size_t i = first; i < paths.size(); ++i) text += paths[i] + L"\n";
+  WriteText(directory + L"failed.txt", text, false);
+}
+
 void MarkFailed(const std::wstring& directory, const std::wstring& path) {
-  WriteText(directory + L"failed.txt", path + L"\n", true);
+  AddFailed(directory, path);
   ::DeleteFileW((directory + L"pending.txt").c_str());
   ::DeleteFileW((directory + L"use.txt").c_str());
 }

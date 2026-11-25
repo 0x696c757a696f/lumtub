@@ -285,6 +285,14 @@ void main() {
   });
 
   group('AiTranslator', () {
+    test('sends the key over https except to this computer or the local network', () {
+      expect(AiTranslator.aiEndpoint('http://api.example.com/v1/', 'models').toString(), 'https://api.example.com/v1/models');
+      expect(AiTranslator.aiEndpoint('http://api.example.com:8080/v1', 'models').toString(), 'https://api.example.com:8080/v1/models');
+      expect(AiTranslator.aiEndpoint('http://localhost:11434/v1', 'models').toString(), 'http://localhost:11434/v1/models');
+      expect(AiTranslator.aiEndpoint('http://192.168.1.5:11434/v1', 'models').toString(), 'http://192.168.1.5:11434/v1/models');
+      expect(AiTranslator.aiEndpoint('ftp://example.com', 'models'), isNull);
+    });
+
     http.Response reply(String content) => _json({'choices': [{'message': {'role': 'assistant', 'content': content}}]});
 
     AiTranslator make(MockClient client, {String key = 'sk', String prompt = 'To {target}, {lines} lines.'}) =>

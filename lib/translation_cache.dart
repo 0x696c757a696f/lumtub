@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'translation.dart';
 
@@ -36,7 +37,8 @@ class TranslationCache {
     final generation = _generation;
     try {
       if (!await file.exists()) return;
-      final data = jsonDecode(await file.readAsString());
+      final text = await file.readAsString();
+      final data = await _decode(text);
       if (data is! Map || generation != _generation) return;
       final oldest = _now().subtract(maxAge).millisecondsSinceEpoch;
       for (final MapEntry(:key, :value) in data.entries) {
@@ -123,11 +125,13 @@ class TranslationCache {
     if (file == null) return Future.value();
     _saveTimer?.cancel();
     final generation = _generation;
-    final json = jsonEncode({for (final MapEntry(:key, :value) in _entries.entries) if (!_private.contains(key)) key: [value.$1, value.$2]});
+    final data = {for (final MapEntry(:key, :value) in _entries.entries) if (!_private.contains(key)) key: [value.$1, value.$2]};
     return _write(() async {
       // A clear since this save was asked for wins.
       if (generation != _generation) return;
       try {
+        final json = await _encode(data);
+        if (generation != _generation) return;
         await file.parent.create(recursive: true);
         final temp = File('${file.path}.tmp');
         await temp.writeAsString(json);
@@ -142,6 +146,13 @@ class TranslationCache {
     });
   }
 }
+
+/// Several megabytes of subtitle lines are encoded and decoded on another
+/// isolate, so translating does not stall the window every few seconds.
+/// Functions of their own, so the closure sent there holds only the data.
+Future<String> _encode(Map<String, List<Object>> data) => data.length > 200 ? Isolate.run(() => jsonEncode(data)) : Future.value(jsonEncode(data));
+
+Future<Object?> _decode(String text) => text.length > 64 * 1024 ? Isolate.run(() => jsonDecode(text)) : Future.value(jsonDecode(text));
 
 /// [inner] with answers kept in [cache] under [scope], which names the
 /// service and its settings so another one translates afresh.

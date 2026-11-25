@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ffi';
 import 'dart:isolate';
 
-import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 
 import '../native_core.dart';
@@ -122,8 +120,7 @@ Future<VideoWords?> _videoWords(Learning learning, KnownWords known, List<String
   final input = jsonEncode({'lines': keys, 'known': knownKeys.toList(), 'half': compounds.toList(), 'most': most});
   final answer = await Isolate.run(() {
     final core = NativeCore.instance!;
-    final coverage = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_word_coverage');
-    return core.take(core.withText(input, coverage));
+    return core.take(core.withText(input, core.wordCoverage));
   });
   final json = answer == null ? null : jsonDecode(answer);
   if (json is! Map) return null;

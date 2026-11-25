@@ -6,7 +6,9 @@ import 'dart:isolate';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'app_directories.dart';
 import 'app_log.dart';
+import 'bounded_get.dart';
 import 'models.dart';
 import 'native_core.dart';
 import 'youtube_player_probe.dart';
@@ -213,9 +215,8 @@ class AiFilter extends ChangeNotifier {
     for (final MapEntry(key: name, value: url) in lists.entries) {
       if (_disposed) return;
       try {
-        final response = await _client.get(Uri.parse(url)).timeout(const Duration(seconds: 30));
-        if (response.statusCode != 200) throw StateError('HTTP ${response.statusCode}');
-        final body = response.bodyBytes;
+        final (status, body) = await getBounded(_client, Uri.parse(url), limit: 64 << 20).timeout(const Duration(seconds: 30));
+        if (status != 200) throw StateError('HTTP $status');
         final channels = await Isolate.run(() {
           final core = NativeCore.instance!;
           return [for (final c in jsonDecode(core.take(core.withBytes(body, core.aiChannels)) ?? '[]') as List) c.toString()];
@@ -233,11 +234,9 @@ class AiFilter extends ChangeNotifier {
     _listFetched = DateTime.now();
     final path = channelsFile?.path;
     if (path != null) {
-      await Isolate.run(() {
-        final file = File(path);
-        file.parent.createSync(recursive: true);
-        file.writeAsStringSync(jsonEncode(listed));
-      }).catchError((Object e) => logWarn('Could not save the AI channel lists: $e'));
+      await _writes
+          .run(() async => writeFileAtomic(File(path), await _encode(listed)))
+          .catchError((Object e) => logWarn('Could not save the AI channel lists: $e'));
     }
     version++;
     _notify();
@@ -252,12 +251,15 @@ class AiFilter extends ChangeNotifier {
     final path = labelsFile?.path;
     if (labels == null || path == null) return;
     final copy = Map<String, bool>.of(labels);
-    unawaited(Isolate.run(() {
-      final file = File(path);
-      file.parent.createSync(recursive: true);
-      file.writeAsStringSync(jsonEncode(copy));
-    }).catchError((Object e) => logWarn('Could not save AI labels: $e')));
+    // Queued: the timer's save and the one on dispose never interleave.
+    unawaited(_writes
+        .run(() async => writeFileAtomic(File(path), await _encode(copy)))
+        .catchError((Object e) => logWarn('Could not save AI labels: $e')));
   }
+
+  final _writes = WriteQueue();
+
+  static Future<String> _encode(Object data) => Isolate.run(() => jsonEncode(data));
 
   void _notify() {
     if (!_disposed) notifyListeners();

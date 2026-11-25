@@ -70,12 +70,36 @@ class AppDirectories {
   }
 }
 
+final _atomicWrites = <String, Future<void>>{};
+
 /// Writes to a temporary file first so a crash never leaves half a file.
-Future<void> writeFileAtomic(File file, String text) async {
+/// Writes to the same file run one after another in the order they were
+/// asked for, so the last one asked for is the one kept.
+Future<void> writeFileAtomic(File file, String text) {
+  final key = file.absolute.path;
+  final result = (_atomicWrites[key] ?? Future.value()).then((_) => _writeFileAtomic(file, text));
+  final tail = result.then((_) {}, onError: (_) {});
+  _atomicWrites[key] = tail;
+  tail.then((_) {
+    if (identical(_atomicWrites[key], tail)) _atomicWrites.remove(key);
+  });
+  return result;
+}
+
+Future<void> _writeFileAtomic(File file, String text) async {
   await file.parent.create(recursive: true);
+  // One name per file: writes to it are one at a time (above), and a crash
+  // mid-write leaves one leftover that the next write replaces.
   final temp = File('${file.path}.tmp');
-  await temp.writeAsString(text, flush: true);
-  await temp.rename(file.path);
+  try {
+    await temp.writeAsString(text, flush: true);
+    await temp.rename(file.path);
+  } catch (_) {
+    try {
+      await temp.delete();
+    } catch (_) {}
+    rethrow;
+  }
 }
 
 /// Moves an unreadable file aside as `<name>.broken`, so the next save does

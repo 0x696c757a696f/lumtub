@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 use std::os::raw::c_char;
 
 use crate::innertube::{at, members_only, seconds};
-use crate::taste::{give_json, text};
+use crate::taste::{give_json, outside};
 
 /// `simpleText`, or the joined `runs` of [node].
 fn get_text(node: Option<&Value>) -> Option<String> {
@@ -873,7 +873,7 @@ pub fn page(response: &Value) -> Page {
 /// [body] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_youtube_listing(body: *const u8, length: usize) -> *mut c_char {
-    let Ok(data) = serde_json::from_str::<Value>(unsafe { text(body, length) }) else {
+    let Ok(data) = serde_json::from_str::<Value>(unsafe { outside(body, length) }) else {
         return std::ptr::null_mut();
     };
     give_json(&page(&data))

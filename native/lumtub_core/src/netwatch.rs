@@ -15,8 +15,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{LazyLock, Mutex, Once};
 use std::time::Duration;
 
-/// How often the route is read.
-const EVERY: Duration = Duration::from_secs(2);
+/// How often the route is read: two small sockets each time, so not so
+/// often that it keeps a phone awake.
+const EVERY: Duration = Duration::from_secs(10);
 
 static GENERATION: AtomicU64 = AtomicU64::new(0);
 static LOG: LazyLock<Mutex<VecDeque<String>>> = LazyLock::new(|| Mutex::new(VecDeque::new()));
@@ -63,12 +64,25 @@ fn describe(route: &(Option<SocketAddr>, Option<SocketAddr>)) -> String {
     }
 }
 
-/// Whether two readings name different networks.
+/// Whether two readings name different networks. An IPv6 address counts
+/// by its network (the first 64 bits): the system replaces its temporary
+/// addresses every few hours on the same network.
 pub(crate) fn changed(
     before: &(Option<SocketAddr>, Option<SocketAddr>),
     now: &(Option<SocketAddr>, Option<SocketAddr>),
 ) -> bool {
-    before != now
+    fn network(address: &Option<SocketAddr>) -> Option<[u16; 4]> {
+        match (*address)?.ip() {
+            std::net::IpAddr::V6(v6) => {
+                let s = v6.segments();
+                Some([s[0], s[1], s[2], s[3]])
+            }
+            std::net::IpAddr::V4(_) => None,
+        }
+    }
+    before.0 != now.0
+        || before.1.is_some() != now.1.is_some()
+        || network(&before.1) != network(&now.1)
 }
 
 fn start() {
@@ -129,6 +143,15 @@ mod tests {
         assert!(changed(
             &(Some(a), None),
             &(Some(a), Some("[fe80::1]:0".parse().unwrap()))
+        ));
+        let temporary = |text: &str| (Some(a), Some(text.parse().unwrap()));
+        assert!(!changed(
+            &temporary("[2001:db8:1:2:aaaa::1]:0"),
+            &temporary("[2001:db8:1:2:bbbb::7]:0")
+        ));
+        assert!(changed(
+            &temporary("[2001:db8:1:2::1]:0"),
+            &temporary("[2001:db8:9:9::1]:0")
         ));
     }
 }

@@ -228,10 +228,14 @@ class _TranslationViewState extends State<TranslationView> {
           },
           child: GestureDetector(
             onTap: () => setState(() => _revealed = !_revealed),
-            child: ImageFiltered(
-              enabled: !_revealed,
-              imageFilter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-              child: child,
+            // A boundary of its own keeps the blurred result for the
+            // engine to reuse while the list scrolls.
+            child: RepaintBoundary(
+              child: ImageFiltered(
+                enabled: !_revealed,
+                imageFilter: ImageFilter.blur(sigmaX: 4, sigmaY: 4, tileMode: TileMode.decal),
+                child: child,
+              ),
             ),
           ),
         );

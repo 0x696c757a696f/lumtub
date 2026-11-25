@@ -349,10 +349,20 @@ fn shell_execute(file: &str, arguments: &str, elevate: bool) -> Result<(), Strin
     fn wide(value: &str) -> Vec<u16> {
         value.encode_utf16().chain(std::iter::once(0)).collect()
     }
+    #[link(name = "ole32")]
+    unsafe extern "system" {
+        fn CoInitializeEx(reserved: *const std::ffi::c_void, flags: u32) -> i32;
+        fn CoUninitialize();
+    }
+    /// COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE.
+    const COINIT: u32 = 0x2 | 0x4;
     let verb = wide(if elevate { "runas" } else { "open" });
     let file = wide(file);
     let arguments = wide(arguments);
+    // SAFETY: the strings outlive the call; COM is set up for this thread
+    // (Dart runs this on a worker isolate's thread) and undone after.
     unsafe {
+        let com = CoInitializeEx(std::ptr::null(), COINIT) >= 0;
         let mut info: SHELLEXECUTEINFOW = std::mem::zeroed();
         info.cbSize = std::mem::size_of::<SHELLEXECUTEINFOW>() as u32;
         info.fMask = SEE_MASK_NOASYNC;
@@ -360,11 +370,15 @@ fn shell_execute(file: &str, arguments: &str, elevate: bool) -> Result<(), Strin
         info.lpFile = file.as_ptr();
         info.lpParameters = arguments.as_ptr();
         info.nShow = SW_SHOWNORMAL;
-        if ShellExecuteExW(&mut info) != 0 {
+        let started = if ShellExecuteExW(&mut info) != 0 {
             Ok(())
         } else {
             Err(std::io::Error::last_os_error().to_string())
+        };
+        if com {
+            CoUninitialize();
         }
+        started
     }
 }
 

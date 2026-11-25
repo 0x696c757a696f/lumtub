@@ -10,6 +10,8 @@
 
 #include <Windows.h>
 
+#include <exception>
+
 namespace media_kit_video {
 
 MediaKitVideoPlugin* MediaKitVideoPlugin::instance_ = nullptr;
@@ -43,7 +45,15 @@ MediaKitVideoPlugin::MediaKitVideoPlugin(
       registrar->messenger(), "com.alexmercerind/media_kit_video",
       &flutter::StandardMethodCodec::GetInstance());
   channel_->SetMethodCallHandler([&](const auto& call, auto result) {
-    HandleMethodCall(call, std::move(result));
+    // Lumtub: arguments of the wrong type or a malformed number answer with
+    // an error instead of ending the app with an uncaught exception.
+    try {
+      HandleMethodCall(call, result);
+    } catch (const std::exception&) {
+      if (result) {
+        result->Error("invalid_arguments", "Malformed method call arguments.");
+      }
+    }
   });
 }
 
@@ -114,7 +124,7 @@ void MediaKitVideoPlugin::ProcessMainThreadTasks() {
 
 void MediaKitVideoPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue>& method_call,
-    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>>& result) {
   if (method_call.method_name().compare("VideoOutputManager.Create") == 0) {
     auto arguments = std::get<flutter::EncodableMap>(*method_call.arguments());
     auto handle =

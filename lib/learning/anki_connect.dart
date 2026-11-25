@@ -102,24 +102,27 @@ class AnkiConnect {
     await _call('version');
     await _call('createDeck', {'deck': deck});
     await _noteType();
-    final notes = <Map<String, Object?>>[];
-    for (final w in words) {
-      final sound = book.soundOf(w.key);
-      notes.add({
-        'deckName': deck,
-        'modelName': AnkiCard.modelName,
-        'fields': AnkiCard.noteFields(w),
-        'tags': AnkiCard.tags(w),
-        'options': {'allowDuplicate': false, 'duplicateScope': 'deck'},
-        if (await sound.exists())
-          'audio': [
-            {'data': base64Encode(await sound.readAsBytes()), 'filename': AnkiCard.soundName(w), 'fields': ['Audio']},
-          ],
-      });
-    }
+    final notes = <Map<String, Object?>>[
+      for (final w in words)
+        {
+          'deckName': deck,
+          'modelName': AnkiCard.modelName,
+          'fields': AnkiCard.noteFields(w),
+          'tags': AnkiCard.tags(w),
+          'options': {'allowDuplicate': false, 'duplicateScope': 'deck'},
+        },
+    ];
     final can = await _call('canAddNotes', {'notes': notes});
     final fresh = [for (final (i, note) in notes.indexed) if (can is List && i < can.length && can[i] == true) (words[i], note)];
     if (fresh.isEmpty) return 0;
+    // Sounds are read only for the words Anki does not have yet.
+    for (final (w, note) in fresh) {
+      final sound = book.soundOf(w.key);
+      if (!await sound.exists()) continue;
+      note['audio'] = [
+        {'data': base64Encode(await sound.readAsBytes()), 'filename': AnkiCard.soundName(w), 'fields': ['Audio']},
+      ];
+    }
     if (picture != null) {
       final pictures = <String, AnkiPictureFile?>{};
       for (final (w, note) in fresh) {

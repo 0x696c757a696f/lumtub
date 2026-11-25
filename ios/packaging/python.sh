@@ -59,6 +59,9 @@ cp "$root/native/lumtub_core/roots/chrome.pem" "$app/python/cacert.pem"
 base=https://github.com/yt-dlp/yt-dlp-nightly-builds/releases/latest/download
 curl -fsSL --retry 5 --retry-all-errors -o "$work/yt-dlp" "$base/yt-dlp"
 curl -fsSL --retry 5 --retry-all-errors -o "$work/SHA2-256SUMS" "$base/SHA2-256SUMS"
+curl -fsSL --retry 5 --retry-all-errors -o "$work/SHA2-256SUMS.sig" "$base/SHA2-256SUMS.sig"
+# The sums count only with yt-dlp's signature (the key the core pins).
+python3 -I "$root/.github/scripts/ytdlp_sums_verify.py" "$work/SHA2-256SUMS" "$work/SHA2-256SUMS.sig"
 expected=$(awk '$2 == "yt-dlp" { print $1 }' "$work/SHA2-256SUMS")
 [ -n "$expected" ] || { echo "SHA2-256SUMS has no yt-dlp"; exit 1; }
 echo "$expected  $work/yt-dlp" | shasum -a 256 -c -

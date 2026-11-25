@@ -71,6 +71,19 @@ class LibassLayout {
   static String wrap(String text, double room, {String font = '', bool bold = false}) {
     // Lines that fit with room to spare are left as they are.
     if (room <= 2 || text.split('\n').every((line) => _ems(line) <= room * 0.9)) return text;
+    // A track is wrapped again for each player size, and going in and out
+    // of fullscreen comes back to the same few sizes.
+    final key = '$room|$bold|$font|$text';
+    if (_wrapped[key] case final known?) return known;
+    final wrapped = _layOut(text, room, font: font, bold: bold);
+    if (_wrapped.length >= _wrappedKept) _wrapped.remove(_wrapped.keys.first);
+    return _wrapped[key] = wrapped;
+  }
+
+  static final _wrapped = <String, String>{};
+  static const _wrappedKept = 8000;
+
+  static String _layOut(String text, double room, {required String font, required bool bold}) {
     const size = 32.0;
     final painter = TextPainter(
       text: TextSpan(

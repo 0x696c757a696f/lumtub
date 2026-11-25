@@ -360,7 +360,7 @@ pub unsafe extern "C" fn lumtub_quick_info(
         serde_json::from_str(unsafe { crate::taste::text(settings, settings_len) })
             .unwrap_or_default();
     let Ok(player) =
-        serde_json::from_str::<Value>(unsafe { crate::taste::text(player, player_len) })
+        serde_json::from_str::<Value>(unsafe { crate::taste::outside(player, player_len) })
     else {
         return std::ptr::null_mut();
     };

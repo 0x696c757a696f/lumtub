@@ -219,40 +219,36 @@ pub struct Sealer {
 
 impl Sealer {
     /// A new key; one behind the user's confirmation asks for it. [reason]
-    /// is what the system's prompt says.
-    pub fn new(presence: bool, reason: &str) -> Sealer {
+    /// is what the system's prompt says. None when the system's keyring
+    /// did not answer or its prompt was dismissed: nothing is sealed then,
+    /// so the caller keeps what it had and tries again later.
+    pub fn new(presence: bool, reason: &str) -> Option<Sealer> {
         // One at a time: two first seals at once would each make a key and
         // the second would replace the first.
         static MAKING: std::sync::Mutex<()> = std::sync::Mutex::new(());
         let _making = MAKING.lock().unwrap_or_else(|e| e.into_inner());
         // A keyring holds one key for the app: one already there is used
         // again, so that files sealed earlier still open.
-        let mut unsure = false;
         for &mode in keys::modes(presence) {
             match keys::existing(mode, reason) {
                 Ok(Some(key)) if key.len() == 32 => {
                     if let Some(key) = Secret::new(&key) {
-                        return Sealer {
+                        return Some(Sealer {
                             key: Some(key),
                             mode,
                             wrapped: vec![mode],
-                        };
+                        });
                     }
                 }
                 Ok(_) => {}
-                Err(_) => unsure = true,
+                // A keyring that did not answer, or whose prompt was
+                // dismissed, may still hold the key: a new one would
+                // replace it and every file sealed with it would never open
+                // again, and leaving the data unencrypted would undo the
+                // sealed copy it replaces.
+                Err(_) if !keys::absent() => return None,
+                Err(_) => {}
             }
-        }
-        // A keyring that did not answer, or whose prompt was dismissed, may
-        // still hold the key: a new one would replace it and every file
-        // sealed with it would never open again. Kept unencrypted this time
-        // instead, by the file's permissions.
-        if unsure {
-            return Sealer {
-                key: None,
-                mode: PLAIN,
-                wrapped: Vec::new(),
-            };
         }
         if let Some(key) = random(32) {
             for &mode in keys::modes(presence) {
@@ -265,19 +261,21 @@ impl Sealer {
                     .is_some_and(|back| *back == *key)
                     && let Some(key) = Secret::new(&key)
                 {
-                    return Sealer {
+                    return Some(Sealer {
                         key: Some(key),
                         mode,
                         wrapped,
-                    };
+                    });
                 }
             }
         }
-        Sealer {
+        // Only a system with no keyring at all keeps it by the file's
+        // permissions (and on Windows the account's encryption).
+        keys::absent().then(|| Sealer {
             key: None,
             mode: PLAIN,
             wrapped: Vec::new(),
-        }
+        })
     }
 
     pub fn guard(&self) -> Guard {
@@ -574,6 +572,12 @@ mod keys {
         }
     }
 
+    /// Without a TPM key a file is still sealed for the Windows account
+    /// (DPAPI), so that is always allowed.
+    pub fn absent() -> bool {
+        true
+    }
+
     struct Handle(NCRYPT_HANDLE);
 
     impl Drop for Handle {
@@ -861,6 +865,11 @@ mod keys {
         }
     }
 
+    /// A Mac always has a keychain; one that does not answer is locked.
+    pub fn absent() -> bool {
+        false
+    }
+
     /// The item's options: in the data protection keychain behind Touch ID
     /// or the password for [KEYCHAIN_PRESENCE], which takes a signed app;
     /// else in the login keychain, which only this app reads unasked.
@@ -923,7 +932,7 @@ mod keys {
 
 #[cfg(target_os = "linux")]
 mod keys {
-    use std::time::Duration;
+    use std::time::{Duration, Instant};
 
     use super::{Failure, Locked, SECRET_SERVICE};
 
@@ -935,17 +944,45 @@ mod keys {
 
     const NO_KEY: &str = "the keyring has no key";
 
-    /// Set once no Secret Service answered: none is asked again until
-    /// Lumtub restarts, so that each save does not wait for it.
-    static UNREACHABLE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    #[derive(Clone, Copy, PartialEq)]
+    enum Down {
+        /// No Secret Service on this system.
+        Absent,
+        /// One is there but did not answer in time.
+        Silent,
+    }
+
+    /// Set when no Secret Service answered: none is asked again for a
+    /// minute, so that each save does not wait for it.
+    static DOWN: std::sync::Mutex<Option<(Instant, Down)>> = std::sync::Mutex::new(None);
+    const ASK_AGAIN: Duration = Duration::from_secs(60);
+
+    fn down() -> Option<Down> {
+        let mut down = DOWN.lock().unwrap_or_else(|e| e.into_inner());
+        match *down {
+            Some((since, why)) if since.elapsed() < ASK_AGAIN => Some(why),
+            _ => {
+                *down = None;
+                None
+            }
+        }
+    }
+
+    fn mark(why: Down) {
+        *DOWN.lock().unwrap_or_else(|e| e.into_inner()) = Some((Instant::now(), why));
+    }
+
+    /// True when the last attempt found no Secret Service at all.
+    pub fn absent() -> bool {
+        down() == Some(Down::Absent)
+    }
 
     /// Runs [work] on the Secret Service, here on this thread. Unlocking
     /// waits for the user; everything else answers within 10 seconds.
     fn run<T: Send>(
         work: impl AsyncFnOnce(oo7::Keyring) -> Result<T, String> + Send,
     ) -> Result<T, String> {
-        use std::sync::atomic::Ordering;
-        if UNREACHABLE.load(Ordering::Relaxed) {
+        if down().is_some() {
             return Err("no keyring answered".to_owned());
         }
         // Called from a thread that runs async work itself, such as the one
@@ -962,7 +999,6 @@ mod keys {
     }
 
     fn run_here<T>(work: impl AsyncFnOnce(oo7::Keyring) -> Result<T, String>) -> Result<T, String> {
-        use std::sync::atomic::Ordering;
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -972,11 +1008,11 @@ mod keys {
                 match tokio::time::timeout(Duration::from_secs(10), oo7::Keyring::new()).await {
                     Ok(Ok(keyring)) => keyring,
                     Ok(Err(e)) => {
-                        UNREACHABLE.store(true, Ordering::Relaxed);
+                        mark(Down::Absent);
                         return Err(e.to_string());
                     }
                     Err(_) => {
-                        UNREACHABLE.store(true, Ordering::Relaxed);
+                        mark(Down::Silent);
                         return Err("no keyring answered".to_owned());
                     }
                 };
@@ -1045,6 +1081,9 @@ mod keys {
     pub fn modes(_presence: bool) -> &'static [u8] {
         &[]
     }
+    pub fn absent() -> bool {
+        true
+    }
     pub fn existing(_: u8, _: &str) -> Result<Option<Locked>, Failure> {
         Ok(None)
     }
@@ -1069,7 +1108,7 @@ pub unsafe extern "C" fn lumtub_vault_seal(
     length: usize,
 ) -> *mut std::os::raw::c_char {
     let plain = unsafe { crate::taste::text(text, length) };
-    match Sealer::new(false, "Lumtub").seal(plain.as_bytes()) {
+    match Sealer::new(false, "Lumtub").and_then(|sealer| sealer.seal(plain.as_bytes())) {
         Some(sealed) => crate::taste::give(sealed.iter().map(|b| format!("{b:02x}")).collect()),
         None => std::ptr::null_mut(),
     }

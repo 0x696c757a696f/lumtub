@@ -26,4 +26,16 @@ void main() {
       '--', 'https://www.youtube.com/watch?v=abcdefghijk',
     ]));
   });
+
+  test('a replay leaves no chat file behind once read', () async {
+    final dir = await Directory.systemTemp.createTemp('lumtub-chat-');
+    addTearDown(() => dir.delete(recursive: true));
+    final script = File('${dir.path}/yt-dlp');
+    // Writes the chat where --output says, as yt-dlp would.
+    await script.writeAsString('#!/bin/sh\nwhile [ "\$1" != "--output" ]; do shift; done\nout=\$(dirname "\$2")\nprintf \'{}\\n\' > "\$out/abcdefghijk.live_chat.json"\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final repository = LiveChatRepository(script.path, cacheDirectory: dir.path);
+    expect(await repository.replay('abcdefghijk'), isEmpty);
+    expect(Directory('${dir.path}/live-chat').listSync(), isEmpty);
+  }, skip: Platform.isWindows);
 }

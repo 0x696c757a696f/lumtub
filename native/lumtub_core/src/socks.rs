@@ -72,16 +72,28 @@ pub struct Bridge {
     listener: Arc<Loopback>,
     stop: Arc<AtomicBool>,
     open: Arc<Mutex<HashMap<u64, TcpStream>>>,
+    token: String,
 }
+
+/// The user name clients give with the bridge's token as the password.
+pub const USER: &str = "lumtub";
 
 impl Bridge {
     /// Listens on a random loopback port, and again when the system takes
-    /// the socket away (see [Loopback]), and forwards through [proxy].
+    /// the socket away (see [Loopback]), and forwards through [proxy] for
+    /// clients that log in with [USER] and [Bridge::token]. The proxy's
+    /// name is looked up for each connection, not here: this runs on the
+    /// caller's thread, and the address may change with the network.
     pub fn start(proxy: Proxy) -> std::io::Result<Bridge> {
-        let address = (proxy.host.as_str(), proxy.port)
-            .to_socket_addrs()
-            .ok()
-            .and_then(|mut a| a.next());
+        let mut secret = [0u8; 16];
+        getrandom::fill(&mut secret).map_err(|e| std::io::Error::other(e.to_string()))?;
+        let token: String = secret.iter().map(|b| format!("{b:02x}")).collect();
+        let login: Arc<[u8]> = format!(
+            "Basic {}",
+            crate::edge_tts::base64(format!("{USER}:{token}").as_bytes())
+        )
+        .into_bytes()
+        .into();
         let stop = Arc::new(AtomicBool::new(false));
         let open = Arc::new(Mutex::new(HashMap::new()));
         let (stopping, tracked) = (stop.clone(), open.clone());
@@ -104,12 +116,17 @@ impl Bridge {
                     tracked.lock().unwrap().insert(id, copy);
                 }
                 serving.fetch_add(1, Ordering::SeqCst);
-                let (proxy, mine, count) = (proxy.clone(), tracked.clone(), serving.clone());
+                let (proxy, login, mine, count) = (
+                    proxy.clone(),
+                    login.clone(),
+                    tracked.clone(),
+                    serving.clone(),
+                );
                 let spawned = std::thread::Builder::new()
                     .name("socks-client".into())
                     .stack_size(STACK)
                     .spawn(move || {
-                        handle(client, &proxy, address, &mine, id);
+                        handle(client, &proxy, &login, &mine, id);
                         mine.lock().unwrap().remove(&id);
                         count.fetch_sub(1, Ordering::SeqCst);
                     });
@@ -128,12 +145,18 @@ impl Bridge {
             listener,
             stop,
             open,
+            token,
         })
     }
 
     /// The port, listening again first when the socket was taken away.
     pub fn port(&self) -> u16 {
         self.listener.ensure()
+    }
+
+    /// The password clients give with [USER] in `Proxy-Authorization`.
+    pub fn token(&self) -> &str {
+        &self.token
     }
 
     /// Stops listening and drops the connections still open.
@@ -154,13 +177,14 @@ impl Drop for Bridge {
 
 enum Bad {
     Request,
+    Login,
     Gateway,
 }
 
 fn handle(
     client: TcpStream,
     proxy: &Proxy,
-    address: Option<SocketAddr>,
+    login: &[u8],
     open: &Mutex<HashMap<u64, TcpStream>>,
     id: u64,
 ) {
@@ -169,11 +193,14 @@ fn handle(
     };
     let mut reader = BufReader::new(client);
     let _ = reader.get_ref().set_read_timeout(Some(TIMEOUT));
-    let upstream = match open_tunnel(&mut reader, proxy, address) {
+    let upstream = match open_tunnel(&mut reader, proxy, login) {
         Ok(tunnel) => tunnel,
         Err(bad) => {
             let status = match bad {
                 Bad::Request => "400 Bad Request",
+                Bad::Login => {
+                    "407 Proxy Authentication Required\r\nProxy-Authenticate: Basic realm=\"lumtub\""
+                }
                 Bad::Gateway => "502 Bad Gateway",
             };
             let _ = write!(
@@ -188,7 +215,12 @@ fn handle(
                 .get_ref()
                 .set_read_timeout(Some(Duration::from_secs(2)));
             let mut rest = [0u8; 4096];
-            while matches!(reader.read(&mut rest), Ok(n) if n > 0) {}
+            let mut left = HEAD_MAX;
+            while left > 0
+                && let Ok(n @ 1..) = reader.read(&mut rest)
+            {
+                left = left.saturating_sub(n);
+            }
             return;
         }
     };
@@ -253,17 +285,33 @@ fn pipe(from: &mut TcpStream, to: &mut TcpStream) {
 }
 
 /// Reads the client's request head and opens the SOCKS tunnel it asks for;
-/// the request to forward for plain HTTP, none for CONNECT.
+/// the request to forward for plain HTTP, none for CONNECT. Only a client
+/// whose `Proxy-Authorization` is [login] is served.
 fn open_tunnel(
     reader: &mut BufReader<TcpStream>,
     proxy: &Proxy,
-    address: Option<SocketAddr>,
+    login: &[u8],
 ) -> Result<(TcpStream, Option<Vec<u8>>), Bad> {
     let head = read_head(reader).ok_or(Bad::Request)?;
     let end = head
         .windows(2)
         .position(|w| w == b"\r\n")
         .ok_or(Bad::Request)?;
+    // The other headers, without the login: it is not sent on.
+    const FIELD: &[u8] = b"proxy-authorization:";
+    let mut allowed = false;
+    let mut fields = Vec::with_capacity(head.len() - end);
+    for field in head[end + 2..].split_inclusive(|&b| b == b'\n') {
+        match field.get(..FIELD.len()) {
+            Some(name) if name.eq_ignore_ascii_case(FIELD) => {
+                allowed |= same(field[FIELD.len()..].trim_ascii(), login);
+            }
+            _ => fields.extend_from_slice(field),
+        }
+    }
+    if !allowed {
+        return Err(Bad::Login);
+    }
     let line = String::from_utf8_lossy(&head[..end]).into_owned();
     let parts: Vec<&str> = line.split(' ').collect();
     let [method, target, version] = parts[..] else {
@@ -285,20 +333,34 @@ fn open_tunnel(
         let (host, port) = split_host_port(authority)
             .or_else(|| (!authority.is_empty()).then(|| (authority.to_string(), 80)))
             .ok_or(Bad::Request)?;
-        let mut forward = format!("{method} {path} {version}").into_bytes();
-        forward.extend_from_slice(&head[end..]);
+        let mut forward = format!("{method} {path} {version}\r\n").into_bytes();
+        forward.extend_from_slice(&fields);
         (host, port, Some(forward))
     };
-    let upstream = connect_to(proxy, address, &host, port).map_err(|_| Bad::Gateway)?;
+    let upstream = connect(proxy, &host, port).map_err(|_| Bad::Gateway)?;
     Ok((upstream, forward))
 }
 
-/// An HTTP request head, up to and including the blank line.
+/// Whether [a] and [b] are equal, compared in time that does not depend
+/// on where they differ.
+fn same(a: &[u8], b: &[u8]) -> bool {
+    a.len() == b.len() && a.iter().zip(b).fold(0, |d, (x, y)| d | (x ^ y)) == 0
+}
+
+const HEAD_MAX: usize = 64 << 10;
+
+/// An HTTP request head, up to and including the blank line; none past
+/// [HEAD_MAX] bytes, which are never read.
 fn read_head(reader: &mut BufReader<TcpStream>) -> Option<Vec<u8>> {
     let mut head = Vec::new();
     loop {
-        let n = reader.read_until(b'\n', &mut head).ok()?;
-        if n == 0 || head.len() > 64 << 10 {
+        let room = (HEAD_MAX + 1 - head.len()) as u64;
+        let n = reader
+            .by_ref()
+            .take(room)
+            .read_until(b'\n', &mut head)
+            .ok()?;
+        if n == 0 || head.len() > HEAD_MAX {
             return None;
         }
         if head.ends_with(b"\r\n\r\n") {
@@ -309,16 +371,6 @@ fn read_head(reader: &mut BufReader<TcpStream>) -> Option<Vec<u8>> {
 
 /// Opens a tunnel to [host]:[port] through [proxy].
 pub fn connect(proxy: &Proxy, host: &str, port: u16) -> std::io::Result<TcpStream> {
-    connect_to(proxy, None, host, port)
-}
-
-/// As [connect], with the proxy's address already resolved when known.
-fn connect_to(
-    proxy: &Proxy,
-    address: Option<SocketAddr>,
-    host: &str,
-    port: u16,
-) -> std::io::Result<TcpStream> {
     // This PC (the app's own relay) is reached directly: through the proxy,
     // 127.0.0.1 would be the proxy server's own machine.
     if host.eq_ignore_ascii_case("localhost")
@@ -328,13 +380,10 @@ fn connect_to(
         socket.set_nodelay(true)?;
         return Ok(socket);
     }
-    let address = match address {
-        Some(address) => address,
-        None => (proxy.host.as_str(), proxy.port)
-            .to_socket_addrs()?
-            .next()
-            .ok_or_else(|| err("no address for the SOCKS proxy"))?,
-    };
+    let address = (proxy.host.as_str(), proxy.port)
+        .to_socket_addrs()?
+        .next()
+        .ok_or_else(|| err("no address for the SOCKS proxy"))?;
     let mut socket = TcpStream::connect_timeout(&address, TIMEOUT)?;
     socket.set_nodelay(true)?;
     socket.set_read_timeout(Some(TIMEOUT))?;
@@ -487,6 +536,16 @@ pub unsafe extern "C" fn lumtub_socks_port(bridge: *const Bridge) -> u16 {
     unsafe { bridge.as_ref() }.map_or(0, Bridge::port)
 }
 
+/// The password the bridge asks clients for, with the user name `lumtub`;
+/// empty for a null bridge. Free it with `lumtub_string_free`.
+///
+/// # Safety
+/// [bridge] came from [lumtub_socks_start] and is not closed.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_socks_token(bridge: *const Bridge) -> *mut std::os::raw::c_char {
+    crate::taste::give(unsafe { bridge.as_ref() }.map_or(String::new(), |b| b.token().to_owned()))
+}
+
 /// Stops the bridge, drops its connections and frees it.
 ///
 /// # Safety
@@ -540,6 +599,7 @@ mod tests {
         drop(dead);
         let bridge =
             Bridge::start(Proxy::parse(&format!("socks5://127.0.0.1:{port}")).unwrap()).unwrap();
+        let login = login_of(&bridge);
         let ask = |request: &str| {
             let mut s = TcpStream::connect(("127.0.0.1", bridge.port())).unwrap();
             s.write_all(request.as_bytes()).unwrap();
@@ -547,7 +607,54 @@ mod tests {
             let _ = s.read_to_string(&mut answer);
             answer
         };
-        assert!(ask("CONNECT 127.0.0.1:9 HTTP/1.1\r\n\r\n").starts_with("HTTP/1.1 502"));
-        assert!(ask("nonsense\r\n\r\n").starts_with("HTTP/1.1 400"));
+        assert!(
+            ask(&format!("CONNECT 127.0.0.1:9 HTTP/1.1\r\n{login}\r\n\r\n"))
+                .starts_with("HTTP/1.1 502")
+        );
+        assert!(ask(&format!("nonsense\r\n{login}\r\n\r\n")).starts_with("HTTP/1.1 400"));
+        let refused = ask("CONNECT 127.0.0.1:9 HTTP/1.1\r\n\r\n");
+        assert!(refused.starts_with("HTTP/1.1 407"), "{refused}");
+        assert!(refused.contains("Proxy-Authenticate: Basic"));
+        assert!(
+            ask("CONNECT 127.0.0.1:9 HTTP/1.1\r\nProxy-Authorization: Basic bHVtdHViOng=\r\n\r\n")
+                .starts_with("HTTP/1.1 407")
+        );
+        let endless = "a".repeat(HEAD_MAX + 4096);
+        assert!(ask(&endless).starts_with("HTTP/1.1 400"));
+    }
+
+    fn login_of(bridge: &Bridge) -> String {
+        let pair = format!("{USER}:{}", bridge.token());
+        format!(
+            "Proxy-Authorization: Basic {}",
+            crate::edge_tts::base64(pair.as_bytes())
+        )
+    }
+
+    #[test]
+    fn the_login_is_not_sent_on() {
+        let server = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = server.local_addr().unwrap().port();
+        let bridge = Bridge::start(Proxy::parse("socks5://127.0.0.1:1").unwrap()).unwrap();
+        let mut s = TcpStream::connect(("127.0.0.1", bridge.port())).unwrap();
+        write!(
+            s,
+            "GET http://127.0.0.1:{port}/x HTTP/1.1\r\nHost: 127.0.0.1\r\n{}\r\nAccept: */*\r\n\r\n",
+            login_of(&bridge)
+        )
+        .unwrap();
+        let (upstream, _) = server.accept().unwrap();
+        upstream
+            .set_read_timeout(Some(Duration::from_secs(5)))
+            .unwrap();
+        let mut head = BufReader::new(upstream);
+        let mut got = String::new();
+        while !got.ends_with("\r\n\r\n") {
+            assert!(head.read_line(&mut got).unwrap() > 0);
+        }
+        assert_eq!(
+            got,
+            "GET /x HTTP/1.1\r\nHost: 127.0.0.1\r\nAccept: */*\r\n\r\n"
+        );
     }
 }

@@ -211,7 +211,9 @@ extension _MorePanel on _PlayerControlsState {
         values: [for (final o in PlayOrder.values) (o, o.label)],
         onSelected: (o) => unawaited(c.setPlayOrder(o)),
       ),
-      _sleepChoice(),
+      // Built again every half minute while the timer runs, so the minutes
+      // left count down with the panel open.
+      _Every(period: const Duration(seconds: 30), active: c.sleepAt != null, builder: (_) => _sleepChoice()),
       PanelChoices<PlaybackStrategy>(
         label: tr('Playback strategy'),
         icon: AppIcons.filmStrip,
@@ -283,4 +285,45 @@ extension _MorePanel on _PlayerControlsState {
       ),
     ]);
   }
+}
+
+/// [builder]'s widget, built again every [period] while [active].
+class _Every extends StatefulWidget {
+  const _Every({required this.period, required this.active, required this.builder});
+  final Duration period;
+  final bool active;
+  final WidgetBuilder builder;
+
+  @override
+  State<_Every> createState() => _EveryState();
+}
+
+class _EveryState extends State<_Every> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _run();
+  }
+
+  @override
+  void didUpdateWidget(_Every old) {
+    super.didUpdateWidget(old);
+    if (old.active != widget.active || old.period != widget.period) _run();
+  }
+
+  void _run() {
+    _timer?.cancel();
+    _timer = widget.active ? Timer.periodic(widget.period, (_) => setState(() {})) : null;
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context);
 }

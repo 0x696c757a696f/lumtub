@@ -64,6 +64,7 @@ jobs:
         run: |
           version=$(tr -d '[:space:]' < .flutter-version)
           curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/flutter.tar.xz" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$version-stable.tar.xz"
+          echo "$(grep -E '^FLUTTER_SHA256_LINUX=' .github/pins.env | cut -d= -f2)  $RUNNER_TEMP/flutter.tar.xz" | sha256sum -c -
           tar -xJf "$RUNNER_TEMP/flutter.tar.xz" -C "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
 
@@ -89,6 +90,7 @@ jobs:
         run: |
           version=$(tr -d '[:space:]' < .flutter-version)
           curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/flutter.tar.xz" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$version-stable.tar.xz"
+          echo "$(grep -E '^FLUTTER_SHA256_LINUX=' .github/pins.env | cut -d= -f2)  $RUNNER_TEMP/flutter.tar.xz" | sha256sum -c -
           tar -xJf "$RUNNER_TEMP/flutter.tar.xz" -C "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
 
@@ -116,6 +118,22 @@ jobs:
           cargo build --manifest-path native/lumtub_core/Cargo.toml --release --lib
           echo "LUMTUB_CORE_DLL=$PWD/native/lumtub_core/target/release/liblumtub_core.so" >> "$GITHUB_ENV"
 
+      # iOS starts Python through PyInitConfig; a desktop CPython of the same
+      # version checks those calls here, since CI has no iPhone.
+      - name: Python start-up through PyInitConfig
+        run: |
+          set -euo pipefail
+          release=$(grep -E '^PYTHON_TEST_RELEASE=' .github/pins.env | cut -d= -f2)
+          file=$(grep -E '^PYTHON_TEST_FILE=' .github/pins.env | cut -d= -f2)
+          sum=$(grep -E '^PYTHON_TEST_SHA256=' .github/pins.env | cut -d= -f2)
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/python.tar.gz" "https://github.com/astral-sh/python-build-standalone/releases/download/$release/${file//+/%2B}"
+          echo "$sum  $RUNNER_TEMP/python.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/python.tar.gz" -C "$RUNNER_TEMP"
+          LUMTUB_TEST_PYTHON_LIBRARY="$RUNNER_TEMP/python/lib/libpython3.14.so.1.0" \
+          LUMTUB_TEST_PYTHON_HOME="$RUNNER_TEMP/python" \
+          LUMTUB_TEST_CORE="$LUMTUB_CORE_DLL" \
+            cargo test --manifest-path native/lumtub_core/Cargo.toml --release --lib python::tests -- --nocapture
+
       - name: Get packages
         run: flutter pub get
 
@@ -139,6 +157,9 @@ jobs:
           $archive = Join-Path $env:RUNNER_TEMP "flutter_windows_$version-stable.zip"
           $destination = Join-Path $env:RUNNER_TEMP 'flutter-sdk'
           Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_$version-stable.zip" -OutFile $archive
+          $expected = ((Select-String -LiteralPath .github/pins.env -Pattern '^FLUTTER_SHA256_WINDOWS=(.+)$').Matches[0].Groups[1].Value).Trim()
+          $sum = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sum -ne $expected) { throw "The Flutter SDK has SHA-256 $sum; pins.env has $expected." }
           Expand-Archive -LiteralPath $archive -DestinationPath $destination -Force
           (Join-Path $destination 'flutter/bin') | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 

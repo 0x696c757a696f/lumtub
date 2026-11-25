@@ -66,6 +66,7 @@ pub mod speech;
 pub mod store;
 pub mod store_texts;
 pub mod subtitles;
+pub mod suggestions;
 pub mod system_proxy;
 pub mod taste;
 pub mod tls;

@@ -45,6 +45,7 @@ class NativeCore {
         redact = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_redact'),
         subtitleCues = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_subtitle_cues'),
         _captionLines = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_caption_lines'),
+        _searchSuggestions = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_search_suggestions'),
         _relayVideo = library.lookupFunction<Pointer<Utf8> Function(Bool, Pointer<Uint8>, Size), Pointer<Utf8> Function(bool, Pointer<Uint8>, int)>('lumtub_relay_video'),
         _vttPlan = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vtt_plan'),
         _vttCues = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vtt_cues'),
@@ -140,6 +141,12 @@ class NativeCore {
   /// the original's lines, as [captionLines] gives.
   String? captionTranslationLines(String original, String translated) =>
       take(withText(original, (o, ol) => withText(translated, (t, tl) => _captionTranslationLines(o, ol, t, tl))));
+  final Pointer<Utf8> Function(Pointer<Uint8> body, int length) _searchSuggestions;
+
+  /// The suggestions in an answer of YouTube's completion service, as a
+  /// JSON list (native/lumtub_core/src/suggestions.rs).
+  String? searchSuggestions(List<int> body) => take(withBytes(body, _searchSuggestions));
+
   final Pointer<Utf8> Function(bool invidious, Pointer<Uint8> body, int length) _relayVideo;
 
   /// The streams in a Piped or ([invidious]) Invidious answer [body], as

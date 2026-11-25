@@ -31,6 +31,9 @@ void main() {
   test('parses suggestions', () {
     expect(SearchSuggestions.parse('["lofi",["lofi hip hop","lofi 中文",3]]'), ['lofi hip hop', 'lofi 中文']);
     expect(SearchSuggestions.parse('<html>'), isEmpty);
+    for (final body in ['["lofi",["lofi hip hop","lofi 中文",3]]', '<html>', '["q"]', '["q",["${'x' * 201}","ok"]]', '["q",[${List.filled(30, '"s"').join(',')}]]', '{"a":[]}']) {
+      expect(SearchSuggestions.parseBytes(utf8.encode(body)), SearchSuggestions.parse(body), reason: body);
+    }
   });
 
   test('fetches suggestions once per text', () async {

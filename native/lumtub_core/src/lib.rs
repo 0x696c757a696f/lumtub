@@ -56,6 +56,7 @@ pub mod redirect;
 pub mod relay;
 pub mod relay_hls;
 pub mod relay_live;
+pub mod relay_video;
 pub mod resolved;
 pub mod review;
 pub mod roots;

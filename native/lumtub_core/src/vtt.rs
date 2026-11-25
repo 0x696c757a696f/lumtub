@@ -53,7 +53,7 @@ fn dart_space(c: char) -> bool {
     c.is_whitespace() || c == '\u{FEFF}'
 }
 
-fn dart_trim(s: &str) -> &str {
+pub(crate) fn dart_trim(s: &str) -> &str {
     s.trim_matches(dart_space)
 }
 
@@ -187,7 +187,7 @@ fn dart_double(s: &str) -> Option<f64> {
 
 /// Dart's `int.tryParse`: a sign and decimal digits, or `0x` and hex digits;
 /// none past 64 bits.
-fn dart_int(s: &str) -> Option<i64> {
+pub(crate) fn dart_int(s: &str) -> Option<i64> {
     let s = dart_trim(s);
     let (negative, body) = match s.as_bytes().first() {
         Some(b'-') => (true, &s[1..]),

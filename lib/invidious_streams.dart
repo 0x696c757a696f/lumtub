@@ -37,14 +37,7 @@ List<String> parseInvidiousInstances(String text, {int limit = 30}) {
 /// `local=true` gives on some instances) belong to [server].
 PipedVideo parseInvidiousVideo(String server, Map<String, dynamic> json) {
   final host = Uri.parse(server).host;
-  String? address(Object? raw) {
-    var url = '$raw';
-    if (url.startsWith('/')) url = '$server$url';
-    final uri = Uri.tryParse(url);
-    if (uri == null || uri.host.isEmpty) return null;
-    // An instance behind a TLS-terminating proxy may state its own address as http.
-    return uri.host == host && uri.scheme == 'http' ? uri.replace(scheme: 'https').toString() : url;
-  }
+  String? address(Object? raw) => _address(server, host, raw);
 
   final video = <PipedStream>[];
   final audio = <PipedStream>[];
@@ -88,6 +81,36 @@ PipedVideo parseInvidiousVideo(String server, Map<String, dynamic> json) {
     if (stream != null && stream.height > 0 && stream.mime == 'video/mp4') muxed.add(stream);
   }
   return PipedVideo(server: server, video: video, audio: audio, live: json['liveNow'] == true, muxed: muxed);
+}
+
+/// [raw], an address an instance gave, as one to open: one without a host
+/// (`/videoplayback?…`) is on [server], and the instance's own http one is
+/// https. Null when it has no host.
+String? _address(String server, String host, Object? raw) {
+  var url = '$raw';
+  if (url.startsWith('/')) url = '$server$url';
+  final uri = Uri.tryParse(url);
+  if (uri == null || uri.host.isEmpty) return null;
+  // An instance behind a TLS-terminating proxy may state its own address as http.
+  return uri.host == host && uri.scheme == 'http' ? uri.replace(scheme: 'https').toString() : url;
+}
+
+/// [read], the core's reading of an Invidious answer from [server], as
+/// [parseInvidiousVideo] gives it.
+PipedVideo invidiousVideoFromCore(String server, CoreRelayVideo read) {
+  final host = Uri.parse(server).host;
+  PipedStream? stream(List<Object?> row) {
+    final url = _address(server, host, row[0]);
+    return url == null ? null : PipedStream.fromRow(row, [host], url: url);
+  }
+
+  return PipedVideo(
+    server: server,
+    video: [for (final r in read.video) if (stream(r) case final s?) s],
+    audio: [for (final r in read.audio) if (stream(r) case final s?) s],
+    muxed: [for (final r in read.muxed) if (stream(r) case final s?) s],
+    live: read.live,
+  );
 }
 
 /// Finds playable streams on Invidious instances, the second source beside
@@ -140,6 +163,11 @@ class InvidiousStreams extends RelayServers {
     for (final candidate in order) {
       try {
         final (status, body) = await getBounded(client, Uri.parse('$candidate/api/v1/videos/$videoId?local=true'), limit: 8 << 20).timeout(const Duration(seconds: 10));
+        if (readRelayVideo(true, body) case final read?) {
+          final video = read.video;
+          if (status != 200 || video == null) throw StateError(video?.error ?? 'HTTP $status');
+          return await invidiousVideoFromCore(candidate, video).withoutPrivateHosts();
+        }
         final data = await decodeUtf8JsonInBackground(body);
         if (status != 200 || data is! Map<String, dynamic>) {
           throw StateError(data is Map && data['error'] != null ? '${data['error']}' : 'HTTP $status');

@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Өнөөдрийн таны түвшний үнэгүй бичлэг дууслаа",
   "Checked {0} new videos this time, to keep data use low.": "Дата хэмнэхийн тулд энэ удаа шинэ бичлэг шалгасан: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube одоогоор хариу өгөхгүй байна. Хэдэн минутын дараа дахин оролдоно уу.",
-  "Subtitles may be unreliable": "Хадмал буруу байж болно"
+  "Subtitles may be unreliable": "Хадмал буруу байж болно",
+  "Save a note at this moment": "Яг одоо тэмдэглэл хадгалах",
+  "Make it a whole sentence with AI": "Хиймэл оюунаар бүтэн өгүүлбэр болгох",
+  "Explain the selection with AI": "Сонгосныг хиймэл оюунаар тайлбарлах",
+  "Save the selection as a note": "Сонгосныг тэмдэглэл болгон хадгалах",
+  "Previous match": "Өмнөх тохирол",
+  "Next match": "Дараагийн тохирол",
+  "Show line by line": "Мөр мөрөөр харуулах",
+  "Read by whole sentence, translated as a whole": "Бүтэн өгүүлбэрээр унших, бүхэлд нь орчуулах"
 }

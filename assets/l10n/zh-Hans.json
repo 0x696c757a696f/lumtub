@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "今天适合你水平的免费视频已用完",
   "Checked {0} new videos this time, to keep data use low.": "为节省流量，这次先检查了 {0} 条新视频。",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube 暂时没有回应，过几分钟再试。",
-  "Subtitles may be unreliable": "字幕可能不准"
+  "Subtitles may be unreliable": "字幕可能不准",
+  "Save a note at this moment": "在此刻记笔记",
+  "Make it a whole sentence with AI": "用 AI 补成完整句子",
+  "Explain the selection with AI": "AI 讲解选中的文字",
+  "Save the selection as a note": "把选中的文字存为笔记",
+  "Previous match": "上一个匹配",
+  "Next match": "下一个匹配",
+  "Show line by line": "逐行显示",
+  "Read by whole sentence, translated as a whole": "按整句阅读，整句翻译"
 }

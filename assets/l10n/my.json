@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "ယနေ့ သင့်အဆင့်နှင့်ကိုက်ညီသော အခမဲ့ဗီဒီယိုများ ကုန်သွားပါပြီ",
   "Checked {0} new videos this time, to keep data use low.": "ဒေတာချွေတာရန် ယခုအကြိမ်တွင် စစ်ဆေးထားသော ဗီဒီယိုအသစ်: {0}။",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube က လောလောဆယ် မတုံ့ပြန်ပါ။ မိနစ်အနည်းငယ်အကြာတွင် ထပ်ကြိုးစားပါ။",
-  "Subtitles may be unreliable": "စာတန်းထိုး မမှန်ကန်နိုင်ပါ"
+  "Subtitles may be unreliable": "စာတန်းထိုး မမှန်ကန်နိုင်ပါ",
+  "Save a note at this moment": "ဤအချိန်တွင် မှတ်စုသိမ်းရန်",
+  "Make it a whole sentence with AI": "AI ဖြင့် ဝါကျအပြည့်အစုံ ပြုလုပ်ရန်",
+  "Explain the selection with AI": "ရွေးထားသည်ကို AI ဖြင့် ရှင်းပြရန်",
+  "Save the selection as a note": "ရွေးထားသည်ကို မှတ်စုအဖြစ် သိမ်းရန်",
+  "Previous match": "ယခင်ကိုက်ညီမှု",
+  "Next match": "နောက်ကိုက်ညီမှု",
+  "Show line by line": "စာကြောင်းလိုက် ပြရန်",
+  "Read by whole sentence, translated as a whole": "ဝါကျအပြည့်အစုံအလိုက် ဖတ်ပြီး တစ်ခုလုံး ဘာသာပြန်ရန်"
 }

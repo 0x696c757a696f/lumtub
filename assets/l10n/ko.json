@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "오늘 무료로 볼 수 있는 내 수준의 동영상을 모두 사용했어요",
   "Checked {0} new videos this time, to keep data use low.": "데이터 사용량을 줄이기 위해 이번에 확인한 새 동영상: {0}개.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube가 잠시 응답하지 않아요. 몇 분 뒤에 다시 시도해 주세요.",
-  "Subtitles may be unreliable": "자막이 정확하지 않을 수 있어요"
+  "Subtitles may be unreliable": "자막이 정확하지 않을 수 있어요",
+  "Save a note at this moment": "이 시점에 메모 저장",
+  "Make it a whole sentence with AI": "AI로 완전한 문장 만들기",
+  "Explain the selection with AI": "선택한 내용을 AI로 해설",
+  "Save the selection as a note": "선택한 내용을 메모로 저장",
+  "Previous match": "이전 검색 결과",
+  "Next match": "다음 검색 결과",
+  "Show line by line": "한 줄씩 표시",
+  "Read by whole sentence, translated as a whole": "문장 단위로 읽고 통째로 번역"
 }

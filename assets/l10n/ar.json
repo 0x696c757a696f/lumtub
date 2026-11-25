@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "انتهت الفيديوهات المجانية بمستواك لهذا اليوم",
   "Checked {0} new videos this time, to keep data use low.": "عدد الفيديوهات الجديدة التي تم فحصها هذه المرة: {0}، للحفاظ على استهلاك البيانات.",
   "YouTube stopped answering for now. Try again in a few minutes.": "توقف YouTube عن الاستجابة مؤقتًا. حاول مرة أخرى بعد بضع دقائق.",
-  "Subtitles may be unreliable": "قد تكون الترجمة غير دقيقة"
+  "Subtitles may be unreliable": "قد تكون الترجمة غير دقيقة",
+  "Save a note at this moment": "حفظ ملاحظة في هذه اللحظة",
+  "Make it a whole sentence with AI": "تحويله إلى جملة كاملة بالذكاء الاصطناعي",
+  "Explain the selection with AI": "شرح المحدد بالذكاء الاصطناعي",
+  "Save the selection as a note": "حفظ المحدد كملاحظة",
+  "Previous match": "النتيجة السابقة",
+  "Next match": "النتيجة التالية",
+  "Show line by line": "العرض سطرًا بسطر",
+  "Read by whole sentence, translated as a whole": "القراءة بالجملة الكاملة مع ترجمتها كاملة"
 }

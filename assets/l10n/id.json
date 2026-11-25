@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Video gratis hari ini sesuai levelmu sudah habis",
   "Checked {0} new videos this time, to keep data use low.": "Untuk menghemat data, kali ini video baru yang diperiksa: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube sedang tidak merespons. Coba lagi dalam beberapa menit.",
-  "Subtitles may be unreliable": "Subtitel mungkin kurang akurat"
+  "Subtitles may be unreliable": "Subtitel mungkin kurang akurat",
+  "Save a note at this moment": "Simpan catatan pada saat ini",
+  "Make it a whole sentence with AI": "Jadikan kalimat utuh dengan AI",
+  "Explain the selection with AI": "Jelaskan bagian yang dipilih dengan AI",
+  "Save the selection as a note": "Simpan bagian yang dipilih sebagai catatan",
+  "Previous match": "Hasil sebelumnya",
+  "Next match": "Hasil berikutnya",
+  "Show line by line": "Tampilkan baris demi baris",
+  "Read by whole sentence, translated as a whole": "Baca per kalimat utuh, diterjemahkan secara utuh"
 }

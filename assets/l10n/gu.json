@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "આજના તમારા સ્તરના મફત વીડિયો પૂરા થઈ ગયા",
   "Checked {0} new videos this time, to keep data use low.": "ડેટાનો ઉપયોગ ઓછો રાખવા આ વખતે નવા વીડિયો {0} તપાસ્યા.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube હમણાં જવાબ આપી રહ્યું નથી. થોડી મિનિટ પછી ફરી પ્રયાસ કરો.",
-  "Subtitles may be unreliable": "સબટાઇટલ કદાચ ચોક્કસ ન હોય"
+  "Subtitles may be unreliable": "સબટાઇટલ કદાચ ચોક્કસ ન હોય",
+  "Save a note at this moment": "આ ક્ષણે નોંધ સાચવો",
+  "Make it a whole sentence with AI": "AI થી પૂર્ણ વાક્ય બનાવો",
+  "Explain the selection with AI": "AI થી પસંદ કરેલું સમજાવો",
+  "Save the selection as a note": "પસંદ કરેલું નોંધ તરીકે સાચવો",
+  "Previous match": "પાછલું પરિણામ",
+  "Next match": "આગલું પરિણામ",
+  "Show line by line": "લીટી પ્રમાણે બતાવો",
+  "Read by whole sentence, translated as a whole": "આખા વાક્ય પ્રમાણે વાંચો, આખું અનુવાદિત કરો"
 }

@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Gaurko zure mailako doako bideoak amaitu dira",
   "Checked {0} new videos this time, to keep data use low.": "Datuak aurrezteko, oraingoan bideo berriak egiaztatu dira: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTubek ez du erantzuten oraingoz. Saiatu berriro minutu batzuk barru.",
-  "Subtitles may be unreliable": "Baliteke azpitituluak fidagarriak ez izatea"
+  "Subtitles may be unreliable": "Baliteke azpitituluak fidagarriak ez izatea",
+  "Save a note at this moment": "Gorde ohar bat une honetan",
+  "Make it a whole sentence with AI": "Esaldi oso bihurtu AArekin",
+  "Explain the selection with AI": "Azaldu hautapena AArekin",
+  "Save the selection as a note": "Gorde hautapena ohar gisa",
+  "Previous match": "Aurreko bat-etortzea",
+  "Next match": "Hurrengo bat-etortzea",
+  "Show line by line": "Erakutsi lerroz lerro",
+  "Read by whole sentence, translated as a whole": "Irakurri esaldi osoka, osotasunean itzulita"
 }

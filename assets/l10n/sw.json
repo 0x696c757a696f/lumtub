@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Video za bila malipo za kiwango chako za leo zimeisha",
   "Checked {0} new videos this time, to keep data use low.": "Ili kuokoa data, safari hii video mpya zilizokaguliwa: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube haijibu kwa sasa. Jaribu tena baada ya dakika chache.",
-  "Subtitles may be unreliable": "Manukuu yanaweza kuwa si sahihi"
+  "Subtitles may be unreliable": "Manukuu yanaweza kuwa si sahihi",
+  "Save a note at this moment": "Hifadhi dokezo wakati huu",
+  "Make it a whole sentence with AI": "Fanya sentensi kamili kwa AI",
+  "Explain the selection with AI": "Fafanua kilichochaguliwa kwa AI",
+  "Save the selection as a note": "Hifadhi kilichochaguliwa kama dokezo",
+  "Previous match": "Inayolingana iliyotangulia",
+  "Next match": "Inayolingana inayofuata",
+  "Show line by line": "Onyesha mstari kwa mstari",
+  "Read by whole sentence, translated as a whole": "Soma kwa sentensi kamili, tafsiri kama nzima"
 }

@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "ಇಂದಿನ ನಿಮ್ಮ ಮಟ್ಟದ ಉಚಿತ ವೀಡಿಯೊಗಳು ಮುಗಿದಿವೆ",
   "Checked {0} new videos this time, to keep data use low.": "ಡೇಟಾ ಬಳಕೆ ಕಡಿಮೆ ಮಾಡಲು ಈ ಬಾರಿ ಪರಿಶೀಲಿಸಿದ ಹೊಸ ವೀಡಿಯೊಗಳು: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube ಸದ್ಯಕ್ಕೆ ಪ್ರತಿಕ್ರಿಯಿಸುತ್ತಿಲ್ಲ. ಕೆಲವು ನಿಮಿಷಗಳ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
-  "Subtitles may be unreliable": "ಉಪಶೀರ್ಷಿಕೆಗಳು ನಿಖರವಾಗಿಲ್ಲದಿರಬಹುದು"
+  "Subtitles may be unreliable": "ಉಪಶೀರ್ಷಿಕೆಗಳು ನಿಖರವಾಗಿಲ್ಲದಿರಬಹುದು",
+  "Save a note at this moment": "ಈ ಕ್ಷಣದಲ್ಲಿ ಟಿಪ್ಪಣಿ ಉಳಿಸಿ",
+  "Make it a whole sentence with AI": "AI ಯಿಂದ ಪೂರ್ಣ ವಾಕ್ಯ ಮಾಡಿ",
+  "Explain the selection with AI": "ಆಯ್ದ ಭಾಗವನ್ನು AI ಯಿಂದ ವಿವರಿಸಿ",
+  "Save the selection as a note": "ಆಯ್ದ ಭಾಗವನ್ನು ಟಿಪ್ಪಣಿಯಾಗಿ ಉಳಿಸಿ",
+  "Previous match": "ಹಿಂದಿನ ಹೊಂದಾಣಿಕೆ",
+  "Next match": "ಮುಂದಿನ ಹೊಂದಾಣಿಕೆ",
+  "Show line by line": "ಸಾಲಿನ ಪ್ರಕಾರ ತೋರಿಸಿ",
+  "Read by whole sentence, translated as a whole": "ಪೂರ್ಣ ವಾಕ್ಯವಾಗಿ ಓದಿ, ಪೂರ್ಣವಾಗಿ ಅನುವಾದಿಸಿ"
 }

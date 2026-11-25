@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "I video gratuiti di oggi al tuo livello sono esauriti",
   "Checked {0} new videos this time, to keep data use low.": "Per risparmiare dati, questa volta sono stati controllati video nuovi: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube non risponde al momento. Riprova tra qualche minuto.",
-  "Subtitles may be unreliable": "I sottotitoli potrebbero non essere affidabili"
+  "Subtitles may be unreliable": "I sottotitoli potrebbero non essere affidabili",
+  "Save a note at this moment": "Salva una nota in questo momento",
+  "Make it a whole sentence with AI": "Trasforma in frase completa con l'IA",
+  "Explain the selection with AI": "Spiega la selezione con l'IA",
+  "Save the selection as a note": "Salva la selezione come nota",
+  "Previous match": "Risultato precedente",
+  "Next match": "Risultato successivo",
+  "Show line by line": "Mostra riga per riga",
+  "Read by whole sentence, translated as a whole": "Leggi per frasi intere, tradotte nel loro insieme"
 }

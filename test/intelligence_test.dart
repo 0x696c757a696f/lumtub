@@ -105,4 +105,13 @@ void main() {
     expect(transcript.vtt, contains('00:20:00.000 --> 00:20:01.500'));
     expect(transcript.vtt.indexOf('part 0'), lessThan(transcript.vtt.indexOf('part 2')));
   }, skip: NativeCore.instance == null ? 'needs lumtub_core (LUMTUB_CORE_DLL)' : false);
+
+  test('a hosted model known to read long texts gets the whole transcript at once', () {
+    expect(CloudIntelligence.longContextModel('deepseek-chat', 'https://api.deepseek.com/v1'), isTrue);
+    expect(CloudIntelligence.longContextModel('gemini-2.5-flash', 'https://generativelanguage.googleapis.com/v1beta/openai'), isTrue);
+    expect(CloudIntelligence.longContextModel('Qwen/Qwen2.5-7B-Instruct', 'https://api.siliconflow.cn/v1'), isFalse);
+    // A model on this computer may be set to a short context.
+    expect(CloudIntelligence.longContextModel('qwen3', 'http://localhost:11434/v1'), isFalse);
+    expect(const CloudIntelligence().completeBudget, IntelligenceProvider.shortBudget);
+  });
 }

@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "วิดีโอฟรีระดับของคุณสำหรับวันนี้หมดแล้ว",
   "Checked {0} new videos this time, to keep data use low.": "เพื่อประหยัดข้อมูล ครั้งนี้ตรวจสอบวิดีโอใหม่ {0} รายการ",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube ไม่ตอบสนองในขณะนี้ ลองอีกครั้งในอีกสักครู่",
-  "Subtitles may be unreliable": "คำบรรยายอาจไม่แม่นยำ"
+  "Subtitles may be unreliable": "คำบรรยายอาจไม่แม่นยำ",
+  "Save a note at this moment": "บันทึกโน้ต ณ ตอนนี้",
+  "Make it a whole sentence with AI": "ให้ AI เรียบเรียงเป็นประโยคสมบูรณ์",
+  "Explain the selection with AI": "ให้ AI อธิบายส่วนที่เลือก",
+  "Save the selection as a note": "บันทึกส่วนที่เลือกเป็นโน้ต",
+  "Previous match": "รายการที่ตรงกันก่อนหน้า",
+  "Next match": "รายการที่ตรงกันถัดไป",
+  "Show line by line": "แสดงทีละบรรทัด",
+  "Read by whole sentence, translated as a whole": "อ่านทีละประโยคเต็มและแปลทั้งประโยค"
 }

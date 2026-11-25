@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "ວິດີໂອຟຣີຕາມລະດັບຂອງເຈົ້າສຳລັບມື້ນີ້ໝົດແລ້ວ",
   "Checked {0} new videos this time, to keep data use low.": "ເພື່ອປະຫຍັດຂໍ້ມູນ ເທື່ອນີ້ກວດວິດີໂອໃໝ່: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube ບໍ່ຕອບຕອນນີ້. ລອງໃໝ່ອີກຫຼັງສອງສາມນາທີ.",
-  "Subtitles may be unreliable": "ຄຳບັນຍາຍອາດບໍ່ຖືກຕ້ອງ"
+  "Subtitles may be unreliable": "ຄຳບັນຍາຍອາດບໍ່ຖືກຕ້ອງ",
+  "Save a note at this moment": "ເກັບບັນທຶກໃນຈຸດນີ້",
+  "Make it a whole sentence with AI": "ໃຫ້ AI ປັບເປັນປະໂຫຍກເຕັມ",
+  "Explain the selection with AI": "ໃຫ້ AI ອະທິບາຍສ່ວນທີ່ເລືອກ",
+  "Save the selection as a note": "ເກັບສ່ວນທີ່ເລືອກເປັນບັນທຶກ",
+  "Previous match": "ຜົນທີ່ກົງກັນກ່ອນໜ້າ",
+  "Next match": "ຜົນທີ່ກົງກັນຖັດໄປ",
+  "Show line by line": "ສະແດງເທື່ອລະແຖວ",
+  "Read by whole sentence, translated as a whole": "ອ່ານເປັນປະໂຫຍກເຕັມ ແລະ ແປທັງປະໂຫຍກ"
 }

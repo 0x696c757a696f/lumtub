@@ -332,14 +332,36 @@ void main() {
       expect(AiTranslator.cleanReply('甲\n\n'), '甲');
     });
 
+    test('sends several lines as numbered segments and matches the answer by number', () async {
+      final bodies = <Map>[];
+      final client = MockClient((request) async {
+        bodies.add(jsonDecode(request.body) as Map);
+        // Out of order, with a code fence: still matched by id.
+        return reply('```json\n{"segments": [{"id": "2", "text": "二"}, {"id": "1", "text": "一"}]}\n```');
+      });
+      expect(await make(client, prompt: AiTranslator.promptPresets.first.text).translate('one\ntwo', 'zh-CN'), '一\n二');
+      expect(bodies.length, 1);
+      final messages = bodies.single['messages'] as List;
+      final system = (messages[0] as Map)['content'] as String;
+      expect(system, contains(AiTranslator.segmentRule));
+      expect(system, isNot(contains('Output exactly 2 lines')));
+      expect(jsonDecode((messages[1] as Map)['content'] as String), {
+        'segments': [
+          {'id': '1', 'text': 'one'},
+          {'id': '2', 'text': 'two'},
+        ],
+      });
+    });
+
     test('retries once with a note when the line count is wrong', () async {
       final bodies = <Map>[];
       final client = MockClient((request) async {
         bodies.add(jsonDecode(request.body) as Map);
-        return reply(bodies.length == 1 ? '一' : '一\n二');
+        // No JSON, then one line short, then right.
+        return reply(bodies.length <= 2 ? '一' : '一\n二');
       });
       expect(await make(client).translate('one\ntwo', 'zh-CN'), '一\n二');
-      expect(bodies.length, 2);
+      expect(bodies.length, 3);
       final messages = bodies.last['messages'] as List;
       expect(messages.last, {'role': 'user', 'content': 'Return exactly 2 lines.'});
     });
@@ -351,14 +373,16 @@ void main() {
         return reply('一');
       });
       expect(await _fails(make(client).translate('one\ntwo', 'zh-CN')), tr('The AI returned a different number of lines, so the subtitles cannot be aligned'));
-      expect(calls, 2);
+      expect(calls, 3);
     });
 
     test('splits long text at line ends', () async {
       final sizes = <int>[];
       final client = MockClient((request) async {
         final user = (jsonDecode(request.body)['messages'] as List)[1]['content'] as String;
-        sizes.add(user.length);
+        // Segments are measured by their texts, as the limit is.
+        final segments = user.startsWith('{') ? [for (final s in jsonDecode(user)['segments'] as List) s['text'] as String] : null;
+        sizes.add(segments == null ? user.length : segments.join('\n').length);
         return reply(user);
       });
       final text = [for (var i = 0; i < 100; i++) 'line $i ${'x' * 90}'].join('\n');

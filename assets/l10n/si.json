@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "අද ඔබේ මට්ටමේ නොමිලේ වීඩියෝ අවසන් වී ඇත",
   "Checked {0} new videos this time, to keep data use low.": "දත්ත ඉතිරි කිරීමට මෙවර පරීක්ෂා කළ නව වීඩියෝ: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube දැනට ප්‍රතිචාර නොදක්වයි. මිනිත්තු කිහිපයකින් නැවත උත්සාහ කරන්න.",
-  "Subtitles may be unreliable": "උපසිරැසි නිවැරදි නොවිය හැක"
+  "Subtitles may be unreliable": "උපසිරැසි නිවැරදි නොවිය හැක",
+  "Save a note at this moment": "මෙම මොහොතේ සටහනක් සුරකින්න",
+  "Make it a whole sentence with AI": "AI මඟින් සම්පූර්ණ වාක්‍යයක් කරන්න",
+  "Explain the selection with AI": "තෝරාගත් කොටස AI මඟින් පැහැදිලි කරන්න",
+  "Save the selection as a note": "තෝරාගත් කොටස සටහනක් ලෙස සුරකින්න",
+  "Previous match": "පෙර ගැළපීම",
+  "Next match": "ඊළඟ ගැළපීම",
+  "Show line by line": "පේළියෙන් පේළිය පෙන්වන්න",
+  "Read by whole sentence, translated as a whole": "සම්පූර්ණ වාක්‍ය අනුව කියවා, සමස්තයක් ලෙස පරිවර්තනය කරන්න"
 }

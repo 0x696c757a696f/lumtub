@@ -99,21 +99,26 @@ class _ExplanationState extends State<_Explanation> {
 
 /// A note on the playing video at [at], or a change to [note]: the
 /// subtitle words, which can be cut down to the part that matters, and
-/// what the person has to say, which AI can tidy up. True once kept.
-Future<bool> showNoteEditor(BuildContext context, AppController controller, {Duration at = Duration.zero, String quote = '', String body = '', VideoNote? note}) async =>
+/// what the person has to say, which AI can tidy up. With the lines said
+/// [before] and [after] it, AI can also make the words a whole sentence.
+/// True once kept.
+Future<bool> showNoteEditor(BuildContext context, AppController controller,
+        {Duration at = Duration.zero, String quote = '', String body = '', VideoNote? note, List<String> before = const [], List<String> after = const []}) async =>
     await showDialog<bool>(
       context: context,
-      builder: (context) => _NoteEditor(controller: controller, at: note?.at ?? at, quote: note?.quote ?? quote, body: note?.body ?? body, note: note),
+      builder: (context) => _NoteEditor(controller: controller, at: note?.at ?? at, quote: note?.quote ?? quote, body: note?.body ?? body, note: note, before: before, after: after),
     ) ??
     false;
 
 class _NoteEditor extends StatefulWidget {
-  const _NoteEditor({required this.controller, required this.at, required this.quote, required this.body, this.note});
+  const _NoteEditor({required this.controller, required this.at, required this.quote, required this.body, this.note, this.before = const [], this.after = const []});
   final AppController controller;
   final Duration at;
   final String quote;
   final String body;
   final VideoNote? note;
+  final List<String> before;
+  final List<String> after;
 
   @override
   State<_NoteEditor> createState() => _NoteEditorState();
@@ -140,6 +145,23 @@ class _NoteEditorState extends State<_NoteEditor> {
     try {
       final tidied = await widget.controller.tidyNote(_quote.text, _body.text);
       if (mounted && tidied.isNotEmpty) _body.text = tidied;
+    } catch (e) {
+      if (mounted) setState(() => _error = '$e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// The words said, made by AI into the whole sentence they are part of,
+  /// cleaned of filler, from the lines around them.
+  Future<void> _complete() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final whole = await widget.controller.completeQuote(_quote.text, widget.before, widget.after);
+      if (mounted && whole.isNotEmpty) _quote.text = whole;
     } catch (e) {
       if (mounted) setState(() => _error = '$e');
     } finally {
@@ -186,7 +208,17 @@ class _NoteEditorState extends State<_NoteEditor> {
               controller: _quote,
               minLines: 1,
               maxLines: 6,
-              decoration: InputDecoration(labelText: tr('Said in the video'), helperText: tr('Cut it down to the part that matters')),
+              decoration: InputDecoration(
+                labelText: tr('Said in the video'),
+                helperText: tr('Cut it down to the part that matters'),
+                suffixIcon: widget.controller.canSummarize && (widget.before.isNotEmpty || widget.after.isNotEmpty)
+                    ? IconButton(
+                        tooltip: tr('Make it a whole sentence with AI'),
+                        icon: Icon(AppIcons.sparkle, size: 18),
+                        onPressed: _busy ? null : _complete,
+                      )
+                    : null,
+              ),
             ),
             const SizedBox(height: 16),
             TextField(

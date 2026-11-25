@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Pelliculae gratuitae hodiernae tui gradus consumptae sunt",
   "Checked {0} new videos this time, to keep data use low.": "Ad data servanda, hoc tempore novae pelliculae inspectae: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube ad tempus non respondet. Post paucas minutas iterum conare.",
-  "Subtitles may be unreliable": "Subtitula fortasse non sunt certa"
+  "Subtitles may be unreliable": "Subtitula fortasse non sunt certa",
+  "Save a note at this moment": "Notam hoc momento servare",
+  "Make it a whole sentence with AI": "Cum intellegentia artificiali sententiam integram facere",
+  "Explain the selection with AI": "Selecta cum intellegentia artificiali explicare",
+  "Save the selection as a note": "Selecta ut notam servare",
+  "Previous match": "Congruentia prior",
+  "Next match": "Congruentia proxima",
+  "Show line by line": "Lineatim ostendere",
+  "Read by whole sentence, translated as a whole": "Per sententias integras legere, totas translatas"
 }

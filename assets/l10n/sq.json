@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Videot falas të sotme në nivelin tënd kanë mbaruar",
   "Checked {0} new videos this time, to keep data use low.": "Për të kursyer të dhëna, këtë herë u kontrolluan video të reja: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube nuk po përgjigjet për momentin. Provo përsëri pas pak minutash.",
-  "Subtitles may be unreliable": "Titrat mund të mos jenë të sakta"
+  "Subtitles may be unreliable": "Titrat mund të mos jenë të sakta",
+  "Save a note at this moment": "Ruaje një shënim në këtë moment",
+  "Make it a whole sentence with AI": "Bëje fjali të plotë me IA",
+  "Explain the selection with AI": "Shpjego përzgjedhjen me IA",
+  "Save the selection as a note": "Ruaje përzgjedhjen si shënim",
+  "Previous match": "Përputhja e mëparshme",
+  "Next match": "Përputhja tjetër",
+  "Show line by line": "Shfaq rresht pas rreshti",
+  "Read by whole sentence, translated as a whole": "Lexo sipas fjalive të plota, përkthe si tërësi"
 }

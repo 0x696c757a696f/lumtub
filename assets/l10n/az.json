@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Bu günkü səviyyənizə uyğun pulsuz videolar bitdi",
   "Checked {0} new videos this time, to keep data use low.": "Data istifadəsini azaltmaq üçün bu dəfə yeni videolar yoxlanıldı: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube hələlik cavab vermir. Bir neçə dəqiqədən sonra yenidən cəhd edin.",
-  "Subtitles may be unreliable": "Subtitrlər dəqiq olmaya bilər"
+  "Subtitles may be unreliable": "Subtitrlər dəqiq olmaya bilər",
+  "Save a note at this moment": "Bu andakı qeydi saxla",
+  "Make it a whole sentence with AI": "Süni intellektlə tam cümləyə çevir",
+  "Explain the selection with AI": "Seçilmiş hissəni süni intellektlə izah et",
+  "Save the selection as a note": "Seçilmiş hissəni qeyd kimi saxla",
+  "Previous match": "Əvvəlki uyğunluq",
+  "Next match": "Növbəti uyğunluq",
+  "Show line by line": "Sətir-sətir göstər",
+  "Read by whole sentence, translated as a whole": "Tam cümlələrlə oxu, bütövlükdə tərcümə et"
 }

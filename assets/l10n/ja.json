@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "今日の無料のレベル別動画は使い切りました",
   "Checked {0} new videos this time, to keep data use low.": "データ使用量を抑えるため、今回チェックした新着動画：{0}本。",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTubeが一時的に応答していません。数分後にもう一度お試しください。",
-  "Subtitles may be unreliable": "字幕が正確でない場合があります"
+  "Subtitles may be unreliable": "字幕が正確でない場合があります",
+  "Save a note at this moment": "この時点にメモを保存",
+  "Make it a whole sentence with AI": "AI で完全な文にする",
+  "Explain the selection with AI": "選択部分を AI で解説",
+  "Save the selection as a note": "選択部分をメモとして保存",
+  "Previous match": "前の一致",
+  "Next match": "次の一致",
+  "Show line by line": "1 行ずつ表示",
+  "Read by whole sentence, translated as a whole": "文全体で読み、まとめて翻訳"
 }

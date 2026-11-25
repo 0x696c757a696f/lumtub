@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Tänased tasuta videod sinu tasemel said otsa",
   "Checked {0} new videos this time, to keep data use low.": "Andmemahu säästmiseks kontrolliti seekord uusi videoid: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube ei vasta praegu. Proovi mõne minuti pärast uuesti.",
-  "Subtitles may be unreliable": "Subtiitrid ei pruugi olla usaldusväärsed"
+  "Subtitles may be unreliable": "Subtiitrid ei pruugi olla usaldusväärsed",
+  "Save a note at this moment": "Salvesta märkus selles hetkes",
+  "Make it a whole sentence with AI": "Tee AI-ga terve lause",
+  "Explain the selection with AI": "Selgita valikut AI-ga",
+  "Save the selection as a note": "Salvesta valik märkusena",
+  "Previous match": "Eelmine vaste",
+  "Next match": "Järgmine vaste",
+  "Show line by line": "Näita rida realt",
+  "Read by whole sentence, translated as a whole": "Loe tervete lausetena, tõlgitud tervikuna"
 }

@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Այսօրվա անվճար տեսանյութերը քո մակարդակով սպառվել են",
   "Checked {0} new videos this time, to keep data use low.": "Տվյալները խնայելու համար այս անգամ ստուգվել է նոր տեսանյութ՝ {0}։",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube-ը առայժմ չի պատասխանում։ Փորձիր նորից մի քանի րոպեից։",
-  "Subtitles may be unreliable": "Ենթագրերը կարող են անճշտություններ ունենալ"
+  "Subtitles may be unreliable": "Ենթագրերը կարող են անճշտություններ ունենալ",
+  "Save a note at this moment": "Պահել նշում այս պահին",
+  "Make it a whole sentence with AI": "Դարձնել ամբողջական նախադասություն արհեստական բանականությամբ",
+  "Explain the selection with AI": "Բացատրել ընտրվածը արհեստական բանականությամբ",
+  "Save the selection as a note": "Պահել ընտրվածը որպես նշում",
+  "Previous match": "Նախորդ համընկնումը",
+  "Next match": "Հաջորդ համընկնումը",
+  "Show line by line": "Ցուցադրել տող առ տող",
+  "Read by whole sentence, translated as a whole": "Կարդալ ամբողջական նախադասություններով, թարգմանել որպես ամբողջություն"
 }

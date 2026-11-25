@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "ఈ రోజు మీ స్థాయి ఉచిత వీడియోలు అయిపోయాయి",
   "Checked {0} new videos this time, to keep data use low.": "డేటా ఆదా చేయడానికి ఈసారి తనిఖీ చేసిన కొత్త వీడియోలు: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube ప్రస్తుతం స్పందించడం లేదు. కొన్ని నిమిషాల తర్వాత మళ్లీ ప్రయత్నించండి.",
-  "Subtitles may be unreliable": "ఉపశీర్షికలు సరిగా ఉండకపోవచ్చు"
+  "Subtitles may be unreliable": "ఉపశీర్షికలు సరిగా ఉండకపోవచ్చు",
+  "Save a note at this moment": "ఈ క్షణంలో నోట్ సేవ్ చేయి",
+  "Make it a whole sentence with AI": "AIతో పూర్తి వాక్యంగా మార్చు",
+  "Explain the selection with AI": "ఎంచుకున్నదాన్ని AIతో వివరించు",
+  "Save the selection as a note": "ఎంచుకున్నదాన్ని నోట్‌గా సేవ్ చేయి",
+  "Previous match": "మునుపటి సరిపోలిక",
+  "Next match": "తదుపరి సరిపోలిక",
+  "Show line by line": "లైన్ వారీగా చూపించు",
+  "Read by whole sentence, translated as a whole": "పూర్తి వాక్యాల వారీగా చదివి, మొత్తంగా అనువదించు"
 }

@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "আজকের জন্য আপনার স্তরের বিনামূল্যের ভিডিও শেষ",
   "Checked {0} new videos this time, to keep data use low.": "ডেটা কম খরচ করতে এবার {0}টি নতুন ভিডিও যাচাই করা হয়েছে।",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube আপাতত সাড়া দিচ্ছে না। কয়েক মিনিট পরে আবার চেষ্টা করুন।",
-  "Subtitles may be unreliable": "সাবটাইটেল নির্ভুল নাও হতে পারে"
+  "Subtitles may be unreliable": "সাবটাইটেল নির্ভুল নাও হতে পারে",
+  "Save a note at this moment": "এই মুহূর্তে নোট সংরক্ষণ করুন",
+  "Make it a whole sentence with AI": "এআই দিয়ে পূর্ণ বাক্য বানান",
+  "Explain the selection with AI": "এআই দিয়ে নির্বাচিত অংশ ব্যাখ্যা করুন",
+  "Save the selection as a note": "নির্বাচিত অংশ নোট হিসেবে সংরক্ষণ করুন",
+  "Previous match": "আগের ফলাফল",
+  "Next match": "পরের ফলাফল",
+  "Show line by line": "লাইন ধরে ধরে দেখান",
+  "Read by whole sentence, translated as a whole": "পূর্ণ বাক্যে পড়ুন, পুরোটা একসঙ্গে অনুবাদ করুন"
 }

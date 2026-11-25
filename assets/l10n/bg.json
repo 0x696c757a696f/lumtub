@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Безплатните видеа на вашето ниво за днес свършиха",
   "Checked {0} new videos this time, to keep data use low.": "За да спестим данни, този път са проверени нови видеа: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube временно не отговаря. Опитайте отново след няколко минути.",
-  "Subtitles may be unreliable": "Субтитрите може да не са точни"
+  "Subtitles may be unreliable": "Субтитрите може да не са точни",
+  "Save a note at this moment": "Запазване на бележка в този момент",
+  "Make it a whole sentence with AI": "Превръщане в цяло изречение с ИИ",
+  "Explain the selection with AI": "Обясни избраното с ИИ",
+  "Save the selection as a note": "Запазване на избраното като бележка",
+  "Previous match": "Предишно съвпадение",
+  "Next match": "Следващо съвпадение",
+  "Show line by line": "Показване ред по ред",
+  "Read by whole sentence, translated as a whole": "Четене по цели изречения, превеждани като цяло"
 }

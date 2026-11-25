@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Dagens gratis videoer på dit niveau er brugt",
   "Checked {0} new videos this time, to keep data use low.": "For at spare data blev der denne gang tjekket nye videoer: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube svarer ikke lige nu. Prøv igen om et par minutter.",
-  "Subtitles may be unreliable": "Undertekster er måske ikke pålidelige"
+  "Subtitles may be unreliable": "Undertekster er måske ikke pålidelige",
+  "Save a note at this moment": "Gem en note på dette tidspunkt",
+  "Make it a whole sentence with AI": "Gør det til en hel sætning med AI",
+  "Explain the selection with AI": "Forklar markeringen med AI",
+  "Save the selection as a note": "Gem markeringen som note",
+  "Previous match": "Forrige match",
+  "Next match": "Næste match",
+  "Show line by line": "Vis linje for linje",
+  "Read by whole sentence, translated as a whole": "Læs hele sætninger, oversat som helhed"
 }

@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Τα δωρεάν βίντεο της ημέρας στο επίπεδό σας εξαντλήθηκαν",
   "Checked {0} new videos this time, to keep data use low.": "Για εξοικονόμηση δεδομένων, αυτή τη φορά ελέγχθηκαν νέα βίντεο: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "Το YouTube δεν ανταποκρίνεται προς το παρόν. Δοκιμάστε ξανά σε λίγα λεπτά.",
-  "Subtitles may be unreliable": "Οι υπότιτλοι μπορεί να μην είναι αξιόπιστοι"
+  "Subtitles may be unreliable": "Οι υπότιτλοι μπορεί να μην είναι αξιόπιστοι",
+  "Save a note at this moment": "Αποθήκευση σημείωσης σε αυτή τη στιγμή",
+  "Make it a whole sentence with AI": "Μετατροπή σε ολόκληρη πρόταση με AI",
+  "Explain the selection with AI": "Επεξήγηση της επιλογής με AI",
+  "Save the selection as a note": "Αποθήκευση της επιλογής ως σημείωση",
+  "Previous match": "Προηγούμενο αποτέλεσμα",
+  "Next match": "Επόμενο αποτέλεσμα",
+  "Show line by line": "Εμφάνιση γραμμή προς γραμμή",
+  "Read by whole sentence, translated as a whole": "Ανάγνωση ανά ολόκληρη πρόταση, μετάφραση ως σύνολο"
 }

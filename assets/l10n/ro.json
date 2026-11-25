@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Videoclipurile gratuite de azi la nivelul tău s-au epuizat",
   "Checked {0} new videos this time, to keep data use low.": "Pentru a economisi date, de data aceasta au fost verificate videoclipuri noi: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube nu mai răspunde deocamdată. Încearcă din nou peste câteva minute.",
-  "Subtitles may be unreliable": "Subtitrările pot fi nesigure"
+  "Subtitles may be unreliable": "Subtitrările pot fi nesigure",
+  "Save a note at this moment": "Salvează o notă în acest moment",
+  "Make it a whole sentence with AI": "Transformă în propoziție întreagă cu IA",
+  "Explain the selection with AI": "Explică selecția cu IA",
+  "Save the selection as a note": "Salvează selecția ca notă",
+  "Previous match": "Potrivirea anterioară",
+  "Next match": "Potrivirea următoare",
+  "Show line by line": "Afișează rând cu rând",
+  "Read by whole sentence, translated as a whole": "Citește pe propoziții întregi, tradu ca întreg"
 }

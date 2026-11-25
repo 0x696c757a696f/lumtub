@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Dnešné bezplatné videá na vašej úrovni sú vyčerpané",
   "Checked {0} new videos this time, to keep data use low.": "Aby sa šetrili dáta, tentoraz sa skontrolovalo nových videí: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube zatiaľ neodpovedá. Skúste to znova o pár minút.",
-  "Subtitles may be unreliable": "Titulky nemusia byť spoľahlivé"
+  "Subtitles may be unreliable": "Titulky nemusia byť spoľahlivé",
+  "Save a note at this moment": "Uložiť poznámku v tomto momente",
+  "Make it a whole sentence with AI": "Urobiť z toho celú vetu pomocou AI",
+  "Explain the selection with AI": "Vysvetliť výber pomocou AI",
+  "Save the selection as a note": "Uložiť výber ako poznámku",
+  "Previous match": "Predchádzajúca zhoda",
+  "Next match": "Ďalšia zhoda",
+  "Show line by line": "Zobraziť riadok po riadku",
+  "Read by whole sentence, translated as a whole": "Čítať po celých vetách, prekladať ako celok"
 }

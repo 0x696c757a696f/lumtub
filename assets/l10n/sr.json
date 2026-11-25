@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Данашњи бесплатни видео-снимци на твом нивоу су искоришћени",
   "Checked {0} new videos this time, to keep data use low.": "Ради уштеде података, овај пут је проверено нових видео-снимака: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube тренутно не одговара. Покушај поново за неколико минута.",
-  "Subtitles may be unreliable": "Титлови можда нису поуздани"
+  "Subtitles may be unreliable": "Титлови можда нису поуздани",
+  "Save a note at this moment": "Сачувај белешку у овом тренутку",
+  "Make it a whole sentence with AI": "Направи целу реченицу уз АИ",
+  "Explain the selection with AI": "Објасни одабрано уз АИ",
+  "Save the selection as a note": "Сачувај одабрано као белешку",
+  "Previous match": "Претходно подударање",
+  "Next match": "Следеће подударање",
+  "Show line by line": "Прикажи ред по ред",
+  "Read by whole sentence, translated as a whole": "Читај по целим реченицама, преводи као целину"
 }

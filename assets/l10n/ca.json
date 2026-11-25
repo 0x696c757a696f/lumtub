@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Els vídeos gratuïts d'avui al teu nivell s'han acabat",
   "Checked {0} new videos this time, to keep data use low.": "Per estalviar dades, aquesta vegada s'han comprovat vídeos nous: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube ha deixat de respondre de moment. Torna-ho a provar d'aquí a uns minuts.",
-  "Subtitles may be unreliable": "Els subtítols poden no ser fiables"
+  "Subtitles may be unreliable": "Els subtítols poden no ser fiables",
+  "Save a note at this moment": "Desa una nota en aquest moment",
+  "Make it a whole sentence with AI": "Converteix-ho en una frase completa amb la IA",
+  "Explain the selection with AI": "Explica la selecció amb la IA",
+  "Save the selection as a note": "Desa la selecció com a nota",
+  "Previous match": "Coincidència anterior",
+  "Next match": "Coincidència següent",
+  "Show line by line": "Mostra línia a línia",
+  "Read by whole sentence, translated as a whole": "Llegeix per frases senceres, traduïdes com un tot"
 }

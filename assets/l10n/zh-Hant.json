@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "今天適合你水平的免費影片已用完",
   "Checked {0} new videos this time, to keep data use low.": "為節省流量，這次先檢查了 {0} 部新影片。",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube 暫時沒有回應，過幾分鐘再試。",
-  "Subtitles may be unreliable": "字幕可能不準"
+  "Subtitles may be unreliable": "字幕可能不準",
+  "Save a note at this moment": "在此刻記筆記",
+  "Make it a whole sentence with AI": "用 AI 補成完整句子",
+  "Explain the selection with AI": "AI 講解選取的文字",
+  "Save the selection as a note": "將選取的文字存為筆記",
+  "Previous match": "上一個符合項目",
+  "Next match": "下一個符合項目",
+  "Show line by line": "逐行顯示",
+  "Read by whole sentence, translated as a whole": "按整句閱讀，整句翻譯"
 }

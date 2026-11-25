@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "आजचे तुमच्या पातळीचे मोफत व्हिडिओ संपले",
   "Checked {0} new videos this time, to keep data use low.": "डेटा वाचवण्यासाठी यावेळी तपासलेले नवीन व्हिडिओ: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube सध्या प्रतिसाद देत नाही. काही मिनिटांनी पुन्हा प्रयत्न करा.",
-  "Subtitles may be unreliable": "उपशीर्षके अचूक नसू शकतात"
+  "Subtitles may be unreliable": "उपशीर्षके अचूक नसू शकतात",
+  "Save a note at this moment": "या क्षणी नोंद जतन करा",
+  "Make it a whole sentence with AI": "एआयने पूर्ण वाक्य बनवा",
+  "Explain the selection with AI": "निवडलेला भाग एआयने समजवा",
+  "Save the selection as a note": "निवडलेला भाग नोंद म्हणून जतन करा",
+  "Previous match": "मागील जुळणी",
+  "Next match": "पुढील जुळणी",
+  "Show line by line": "ओळीनुसार दाखवा",
+  "Read by whole sentence, translated as a whole": "पूर्ण वाक्यानुसार वाचा, पूर्ण वाक्याचे भाषांतर करा"
 }

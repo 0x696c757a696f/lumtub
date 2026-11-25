@@ -4231,5 +4231,13 @@
   "Today's free videos at your level are used up": "Бесплатные видео вашего уровня на сегодня закончились",
   "Checked {0} new videos this time, to keep data use low.": "Чтобы экономить трафик, в этот раз проверено новых видео: {0}.",
   "YouTube stopped answering for now. Try again in a few minutes.": "YouTube пока не отвечает. Повторите попытку через несколько минут.",
-  "Subtitles may be unreliable": "Субтитры могут быть неточными"
+  "Subtitles may be unreliable": "Субтитры могут быть неточными",
+  "Save a note at this moment": "Сохранить заметку в этот момент",
+  "Make it a whole sentence with AI": "Сделать цельным предложением с помощью ИИ",
+  "Explain the selection with AI": "Объяснить выделенное с помощью ИИ",
+  "Save the selection as a note": "Сохранить выделенное как заметку",
+  "Previous match": "Предыдущее совпадение",
+  "Next match": "Следующее совпадение",
+  "Show line by line": "Показывать построчно",
+  "Read by whole sentence, translated as a whole": "Читать целыми предложениями, переводить целиком"
 }

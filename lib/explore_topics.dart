@@ -57,7 +57,7 @@ enum ExploreSection {
 /// A sub-category of a zone: its name, the words searched for, and its own
 /// sub-categories, if it is split further.
 class ExploreSub {
-  const ExploreSub(this._label, this.query, {this.subs = const [], this.tradition});
+  const ExploreSub(this._label, this.query, {this.subs = const [], this.tradition, this.opensLearning = false});
   final String _label;
   String get label => tr(_label);
   final String query;
@@ -65,6 +65,10 @@ class ExploreSub {
   /// The faith tradition its videos must belong to; null to keep the
   /// enclosing zone's.
   final FaithTradition? tradition;
+
+  /// Opens the learning page's videos at the learner's level instead of a
+  /// search: 语言学习 finds videos by language and level there.
+  final bool opensLearning;
 }
 
 /// One explore zone, as Bilibili's 分区: what it is called, the search
@@ -194,7 +198,7 @@ final popularTopics = <ExploreTopic>[
     ExploreSub('Popular science', '科普'),
     ExploreSub('History', '历史 纪录片'),
     ExploreSub('University courses', '大学 公开课 lecture'),
-    ExploreSub('Language learning', '语言学习 英语 日语'),
+    ExploreSub('Language learning', '语言学习 英语 日语', opensLearning: true),
     ExploreSub('Math', '数学 讲解'),
     ExploreSub('Philosophy', '哲学 philosophy'),
     ExploreSub('Geography', '地理 geography explained'),

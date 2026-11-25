@@ -1,4 +1,6 @@
-import 'dart:ffi' hide Size;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/danmaku_picture.dart';
 
@@ -33,11 +35,18 @@ void main() {
     final parts = danmakuParts('ok 😂', const {})!;
     final units = painter.measure(parts, 1920, 1080);
     expect(units, greaterThan(52));
-    final bitmap = (await tester.runAsync(() => painter.draw(parts, osdHeight: 1080, paid: false)))!;
-    addTearDown(bitmap.free);
-    expect(bitmap.height, (52 * 1.25).ceil());
-    expect(bitmap.width, greaterThanOrEqualTo(units.floor()));
-    final pixels = bitmap.pixels.asTypedList(bitmap.width * bitmap.height * 4);
+    Future<(int, int, Uint8List)> rgba(double osdHeight, bool paid) async {
+      final (image, pad) = (await painter.image(parts, osdHeight: osdHeight, paid: paid))!;
+      expect(pad, greaterThan(0));
+      final data = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+      final size = (image.width, image.height);
+      image.dispose();
+      return (size.$1, size.$2, data.buffer.asUint8List());
+    }
+
+    final (width, height, pixels) = (await tester.runAsync(() => rgba(1080, false)))!;
+    expect(height, (52 * 1.25).ceil());
+    expect(width, greaterThanOrEqualTo(units.floor()));
     var white = 0, dark = 0;
     for (var i = 0; i < pixels.length; i += 4) {
       if (pixels[i + 3] == 255 && pixels[i] > 240 && pixels[i + 1] > 240 && pixels[i + 2] > 240) white++;
@@ -45,19 +54,14 @@ void main() {
     }
     expect(white, greaterThan(50), reason: 'the white fill');
     expect(dark, greaterThan(50), reason: 'the dark outline');
-    // Twice the size for a 2160-line OSD.
-    final big = (await tester.runAsync(() => painter.draw(parts, osdHeight: 2160, paid: true)))!;
-    addTearDown(big.free);
-    expect(big.height, (52 * 1.25 * 2).ceil());
-    // Paid messages are gold (FFC838), stored blue first for libmpv.
-    final gold = big.pixels.asTypedList(big.width * big.height * 4);
-    var blueFirst = 0, redFirst = 0;
+    // Twice the size for a picture 2160 pixels high.
+    final (_, bigHeight, gold) = (await tester.runAsync(() => rgba(2160, true)))!;
+    expect(bigHeight, (52 * 1.25 * 2).ceil());
+    // Paid messages are gold (FFC838).
+    var golden = 0;
     for (var i = 0; i < gold.length; i += 4) {
-      if (gold[i + 3] != 255) continue;
-      if (gold[i] < 100 && gold[i + 1] > 150 && gold[i + 2] > 230) blueFirst++;
-      if (gold[i] > 230 && gold[i + 1] > 150 && gold[i + 2] < 100) redFirst++;
+      if (gold[i + 3] == 255 && gold[i] > 230 && gold[i + 1] > 150 && gold[i + 2] < 100) golden++;
     }
-    expect(blueFirst, greaterThan(50));
-    expect(redFirst, 0);
+    expect(golden, greaterThan(50));
   });
 }

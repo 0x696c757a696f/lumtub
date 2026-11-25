@@ -1,5 +1,6 @@
-//! Chat messages flying across the picture (弹幕), laid out here and drawn
-//! by mpv's libass through `osd-overlay`, so Flutter repaints nothing.
+//! Chat messages flying across the picture (弹幕), laid out here. The app
+//! moves them at every frame of the display ([Danmaku::visible]);
+//! [Danmaku::frame] writes them as ASS for libass.
 //!
 //! Each message gets a lane when it is added, the way niconico and
 //! Bilibili lay theirs out: a lane takes a new message only once the one
@@ -233,6 +234,28 @@ impl Danmaku {
     }
 }
 
+impl Danmaku {
+    /// The messages on screen at some moment from [from] to [to], for the
+    /// app to move at every frame of the display:
+    /// `[[start, width, lane, text, paid, picture], …]`, by start. One that
+    /// starts at `start` is at `x = WIDTH - (now - start) * (WIDTH + width)
+    /// / duration`, the top of its lane `lane * line`.
+    pub fn visible(&self, from: f64, to: f64) -> String {
+        let duration = self.settings.duration_ms;
+        let first = self.placed.partition_point(|p| p.start + duration <= from);
+        let mut out = Vec::new();
+        for p in &self.placed[first..] {
+            if p.start > to {
+                break;
+            }
+            out.push(serde_json::json!([
+                p.start, p.width, p.lane, p.text, p.paid, p.picture
+            ]));
+        }
+        serde_json::Value::Array(out).to_string()
+    }
+}
+
 /// A [Danmaku] for Dart, from [Settings] as JSON. Free it with
 /// `lumtub_danmaku_free`.
 ///
@@ -283,6 +306,28 @@ pub unsafe extern "C" fn lumtub_danmaku_frame(
         danmaku.forget_before(now_ms);
     }
     give(danmaku.frame(now_ms))
+}
+
+/// The messages on screen at some moment from [from_ms] to [to_ms], as
+/// [Danmaku::visible] lists them; forgets the ones gone before [from_ms]
+/// when [forget] is true. Free the text with `lumtub_string_free`.
+///
+/// # Safety
+/// [danmaku] must come from `lumtub_danmaku_new`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_danmaku_visible(
+    danmaku: *mut Danmaku,
+    from_ms: f64,
+    to_ms: f64,
+    forget: bool,
+) -> *mut c_char {
+    let Some(danmaku) = (unsafe { danmaku.as_mut() }) else {
+        return give("[]".into());
+    };
+    if forget {
+        danmaku.forget_before(from_ms);
+    }
+    give(danmaku.visible(from_ms, to_ms))
 }
 
 /// # Safety
@@ -420,5 +465,26 @@ mod tests {
         let x = WIDTH - 1200.0 * (WIDTH + 300.0) / 12000.0;
         assert_eq!(lines.next().unwrap(), format!("!7 {x:.1} 0.0"));
         assert!(lines.next().unwrap().starts_with("{\\an7"));
+    }
+
+    #[test]
+    fn visible_lists_the_messages_on_screen_in_a_window() {
+        let mut d = Danmaku::new(Settings::default());
+        d.add(message(0.0, "gone"));
+        d.add(message(5000.0, "on"));
+        d.add(message(20000.0, "later"));
+        let rows: Vec<serde_json::Value> =
+            serde_json::from_str(&d.visible(13000.0, 14000.0)).unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0][0], 5000.0);
+        assert_eq!(rows[0][3], "on");
+        assert_eq!(rows[0][4], false);
+        assert!(rows[0][5].is_null());
+        assert!((rows[0][1].as_f64().unwrap() - text_width("on", 44.0)).abs() < 1e-9);
+        // A window reaching ahead lists what is about to come in.
+        let ahead: Vec<serde_json::Value> =
+            serde_json::from_str(&d.visible(13000.0, 20000.0)).unwrap();
+        assert_eq!(ahead.len(), 2);
+        assert_eq!(d.visible(40000.0, 41000.0), "[]");
     }
 }

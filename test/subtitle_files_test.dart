@@ -18,6 +18,19 @@ class _Upper implements Translator {
   }
 }
 
+/// Moves the second line's words into the first and leaves it empty, as
+/// machine translation sometimes does with a sentence over two lines.
+class _Emptying implements Translator {
+  final asked = <String>[];
+  @override
+  Future<String> translate(String text, String target) async {
+    asked.add(text);
+    final lines = text.split('\n');
+    if (lines.length < 2) return text.toUpperCase();
+    return [lines.take(2).join(' ').toUpperCase(), '', ...lines.skip(2).map((l) => l.toUpperCase())].join('\n');
+  }
+}
+
 /// Joins every two lines into one, as machine translation does with short
 /// caption fragments.
 class _Joining implements Translator {
@@ -213,7 +226,7 @@ void main() {
     expect(joined.every((c) => c.text.length <= 90), isTrue);
   });
 
-  test('automatic captions show in lines of one row, broken at commas', () {
+  test('automatic captions show as sentences, a long one in lines broken at commas', () {
     final vtt = StringBuffer('WEBVTT\n\n');
     const words = ['Io conoscevo tutte le parole,', 'tutte, ma ho pensato così tanto alla', 'risposta', 'che lui ha ripetuto la domanda', 'più lentamente,', 'molto più lentamente,', 'come se stesse parlando con una bambina.', 'Io ho sorriso.'];
     for (final (i, w) in words.indexed) {
@@ -222,11 +235,9 @@ void main() {
     }
     final lines = WebVtt.cues(WebVtt.asLines('$vtt'));
     expect([for (final l in lines) l.text], [
-      'Io conoscevo tutte le parole,',
-      'tutte, ma ho pensato così tanto alla',
-      'risposta che lui ha ripetuto la domanda',
-      'più lentamente, molto più lentamente,',
-      'come se stesse parlando con una bambina.',
+      'Io conoscevo tutte le parole, tutte, ma ho pensato così tanto alla risposta',
+      'che lui ha ripetuto la domanda più lentamente,',
+      'molto più lentamente, come se stesse parlando con una bambina.',
       'Io ho sorriso.',
     ]);
     // One line at a time: a line ends where the next begins.
@@ -277,6 +288,18 @@ Ok, finita la chicca.
     for (final p in parts) {
       expect(p.length, inInclusiveRange(80, 120));
     }
+  });
+
+  test('a line left empty by the translation is asked alone', () async {
+    const asr = 'WEBVTT\n\n00:00:00.000 --> 00:00:04.000\nma Kennedy non ci crede e sospetta\n\n00:00:04.000 --> 00:00:08.000\nche stiano sviluppando armi.\n';
+    final client = MockClient((request) async => http.Response(asr, 200));
+    final translator = _Emptying();
+    final files = SubtitleFiles(client, folder, () => translator);
+    const option = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=e&lang=it&kind=asr&tlang=zh-Hans', kind: SubtitleKind.translated);
+    final cues = WebVtt.cues(await File(await files.pathFor(option)).readAsString());
+    expect(cues.length, 2);
+    expect(cues.every((c) => c.text.trim().isNotEmpty), isTrue);
+    expect(translator.asked.last, 'che stiano sviluppando armi.');
   });
 
   test('reads when a cue starts', () {

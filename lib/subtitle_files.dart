@@ -213,7 +213,7 @@ class SubtitleFiles {
     // A sentence of a track's own cues shown as several of them has its
     // translation cut at the places nearest to where those cues end, each
     // piece at its cue's time. Automatic captions are translated in the
-    // lines they show in ([lineSpans], one row each), each line as itself,
+    // lines they show in ([lineSpans]), each line as itself,
     // so a line and its translation always say the same thing; AI reads
     // the lines before for the rest of the sentence.
     final fragments = WebVtt.cues(vtt);
@@ -354,7 +354,16 @@ class SubtitleFiles {
     final reply = (await (ai != null && before.isNotEmpty ? ai.translateInContext(text, target, before) : translator.translate(text, target))).trim();
     if (texts.length == 1) return [reply.replaceAll('\n', ' ')];
     final lines = reply.split('\n');
-    if (lines.length == texts.length) return lines;
+    if (lines.length == texts.length) {
+      // A line left empty (its words moved to a neighbour) is asked alone,
+      // so no line goes without its translation.
+      for (var i = 0; i < lines.length; i++) {
+        if (lines[i].trim().isEmpty && texts[i].trim().isNotEmpty) {
+          lines[i] = (await _translateLines([texts[i]], target, translator, [...before, ...texts.sublist(0, i)])).single;
+        }
+      }
+      return lines;
+    }
     final half = texts.length ~/ 2;
     return [
       ...await _translateLines(texts.sublist(0, half), target, translator, before),
@@ -474,10 +483,9 @@ class WebVtt {
 
   static final _clauseTail = RegExp(r'[;:,；：，、…)）」』"”]$');
 
-  /// How long and how wide a line of automatic captions may grow: one
-  /// row on a phone, as YouTube's own.
+  /// How long and how wide a line of automatic captions may grow.
   static const lineTime = Duration(seconds: 7);
-  static const lineWidth = 42;
+  static const lineWidth = 84;
 
   /// How wide [text] shows, in Latin letters: a letter of a script written
   /// without spaces is about two.

@@ -4240,5 +4240,13 @@
   "Next match": "Следующее совпадение",
   "Show line by line": "Показывать построчно",
   "Read by whole sentence, translated as a whole": "Читать целыми предложениями, переводить целиком",
-  "This part could not be shown; the details are in the error log": "Не удалось показать эту часть; подробности в журнале ошибок"
+  "This part could not be shown; the details are in the error log": "Не удалось показать эту часть; подробности в журнале ошибок",
+  "Top chat": "Топ чата",
+  "All messages": "Все сообщения",
+  "Some messages, such as possible spam, are left out": "Некоторые сообщения, например возможный спам, скрыты",
+  "Every message, as it is written": "Каждое сообщение как есть",
+  "{0} (not offered here)": "{0} (здесь недоступно)",
+  "Which messages show": "Какие сообщения показывать",
+  "Chat mode": "Режим чата",
+  "The installation is incomplete, so the chat can't be read": "Установка неполная, поэтому чат невозможно прочитать"
 }

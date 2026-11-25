@@ -4240,5 +4240,13 @@
   "Next match": "下一個符合項目",
   "Show line by line": "逐行顯示",
   "Read by whole sentence, translated as a whole": "按整句閱讀，整句翻譯",
-  "This part could not be shown; the details are in the error log": "無法顯示這部分；詳情見錯誤記錄"
+  "This part could not be shown; the details are in the error log": "無法顯示這部分；詳情見錯誤記錄",
+  "Top chat": "重要訊息",
+  "All messages": "全部訊息",
+  "Some messages, such as possible spam, are left out": "可能是垃圾訊息等部分訊息不會顯示",
+  "Every message, as it is written": "顯示所有訊息，即時更新",
+  "{0} (not offered here)": "{0}（此聊天室不提供）",
+  "Which messages show": "顯示哪些訊息",
+  "Chat mode": "聊天模式",
+  "The installation is incomplete, so the chat can't be read": "安裝不完整，無法讀取聊天內容"
 }

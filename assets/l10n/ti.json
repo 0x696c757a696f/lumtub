@@ -4240,5 +4240,13 @@
   "Next match": "ዝቕጽል ዝመሳሰል",
   "Show line by line": "መስርዕ ብመስርዕ ኣርእይ",
   "Read by whole sentence, translated as a whole": "ብምሉእ ሓረግ ኣንብብ፣ ብምሉኡ ተርጉም",
-  "This part could not be shown; the details are in the error log": "እዚ ክፋል ክርአ ኣይከኣለን፤ ዝርዝሩ ኣብ መዝገብ ጌጋታት ኣሎ"
+  "This part could not be shown; the details are in the error log": "እዚ ክፋል ክርአ ኣይከኣለን፤ ዝርዝሩ ኣብ መዝገብ ጌጋታት ኣሎ",
+  "Top chat": "ቀዳማይ ዕላል",
+  "All messages": "ኩሉ መልእኽቲታት",
+  "Some messages, such as possible spam, are left out": "ገለ መልእኽቲታት፣ ከም ክኸውን ዝኽእል ስፓም፣ ተሓሊፎም እዮም",
+  "Every message, as it is written": "ነፍሲ ወከፍ መልእኽቲ፣ ከም ዝተጻሕፈ",
+  "{0} (not offered here)": "{0} (ኣብዚ ኣይቀርብን እዩ)",
+  "Which messages show": "እንታይ መልእኽቲታት ይርአዩ",
+  "Chat mode": "ኩነት ዕላል",
+  "The installation is incomplete, so the chat can't be read": "ምትካል ኣይተማልአን፣ ስለዚ ዕላል ክንበብ ኣይከኣልን"
 }

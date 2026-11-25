@@ -4240,5 +4240,13 @@
   "Next match": "తదుపరి సరిపోలిక",
   "Show line by line": "లైన్ వారీగా చూపించు",
   "Read by whole sentence, translated as a whole": "పూర్తి వాక్యాల వారీగా చదివి, మొత్తంగా అనువదించు",
-  "This part could not be shown; the details are in the error log": "ఈ భాగాన్ని చూపించలేకపోయాం; వివరాలు లోపాల లాగ్‌లో ఉన్నాయి"
+  "This part could not be shown; the details are in the error log": "ఈ భాగాన్ని చూపించలేకపోయాం; వివరాలు లోపాల లాగ్‌లో ఉన్నాయి",
+  "Top chat": "టాప్ చాట్",
+  "All messages": "అన్ని సందేశాలు",
+  "Some messages, such as possible spam, are left out": "స్పామ్ అయ్యే అవకాశం ఉన్నవి వంటి కొన్ని సందేశాలు చూపబడవు",
+  "Every message, as it is written": "ప్రతి సందేశం, వ్రాసినట్లే",
+  "{0} (not offered here)": "{0} (ఇక్కడ అందుబాటులో లేదు)",
+  "Which messages show": "ఏ సందేశాలు చూపాలి",
+  "Chat mode": "చాట్ మోడ్",
+  "The installation is incomplete, so the chat can't be read": "ఇన్‌స్టాలేషన్ అసంపూర్ణంగా ఉంది, కాబట్టి చాట్‌ను చదవలేము"
 }

@@ -4240,5 +4240,13 @@
   "Next match": "نتیجه بعدی",
   "Show line by line": "نمایش خط‌به‌خط",
   "Read by whole sentence, translated as a whole": "خواندن جمله‌به‌جمله، ترجمه به‌صورت کامل",
-  "This part could not be shown; the details are in the error log": "این بخش نمایش داده نشد؛ جزئیات در گزارش خطاها است"
+  "This part could not be shown; the details are in the error log": "این بخش نمایش داده نشد؛ جزئیات در گزارش خطاها است",
+  "Top chat": "گفتگوی برتر",
+  "All messages": "همه پیام‌ها",
+  "Some messages, such as possible spam, are left out": "برخی پیام‌ها، مانند هرزنامه‌های احتمالی، حذف می‌شوند",
+  "Every message, as it is written": "هر پیام، همان‌طور که نوشته شده",
+  "{0} (not offered here)": "{0} (در اینجا ارائه نمی‌شود)",
+  "Which messages show": "کدام پیام‌ها نمایش داده شوند",
+  "Chat mode": "حالت گفتگو",
+  "The installation is incomplete, so the chat can't be read": "نصب ناقص است، بنابراین گفتگو خوانده نمی‌شود"
 }

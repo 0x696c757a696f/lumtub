@@ -4240,5 +4240,13 @@
   "Next match": "Susunod na tugma",
   "Show line by line": "Ipakita nang linya-linya",
   "Read by whole sentence, translated as a whole": "Basahin nang buong pangungusap, isinasalin nang buo",
-  "This part could not be shown; the details are in the error log": "Hindi maipakita ang bahaging ito; nasa error log ang mga detalye"
+  "This part could not be shown; the details are in the error log": "Hindi maipakita ang bahaging ito; nasa error log ang mga detalye",
+  "Top chat": "Nangungunang chat",
+  "All messages": "Lahat ng mensahe",
+  "Some messages, such as possible spam, are left out": "Ang ilang mensahe, gaya ng posibleng spam, ay hindi isinasama",
+  "Every message, as it is written": "Bawat mensahe, ayon sa pagkakasulat",
+  "{0} (not offered here)": "{0} (hindi iniaalok dito)",
+  "Which messages show": "Aling mga mensahe ang ipapakita",
+  "Chat mode": "Chat mode",
+  "The installation is incomplete, so the chat can't be read": "Hindi kumpleto ang pag-install, kaya hindi mabasa ang chat"
 }

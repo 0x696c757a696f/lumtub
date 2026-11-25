@@ -4240,5 +4240,13 @@
   "Next match": "Kết quả tiếp theo",
   "Show line by line": "Hiển thị từng dòng",
   "Read by whole sentence, translated as a whole": "Đọc theo câu hoàn chỉnh, dịch cả câu",
-  "This part could not be shown; the details are in the error log": "Không thể hiển thị phần này; chi tiết có trong nhật ký lỗi"
+  "This part could not be shown; the details are in the error log": "Không thể hiển thị phần này; chi tiết có trong nhật ký lỗi",
+  "Top chat": "Chat hàng đầu",
+  "All messages": "Tất cả tin nhắn",
+  "Some messages, such as possible spam, are left out": "Một số tin nhắn, chẳng hạn như tin nhắn có thể là spam, sẽ bị ẩn",
+  "Every message, as it is written": "Mọi tin nhắn, đúng như được viết",
+  "{0} (not offered here)": "{0} (không có ở đây)",
+  "Which messages show": "Những tin nhắn được hiển thị",
+  "Chat mode": "Chế độ trò chuyện",
+  "The installation is incomplete, so the chat can't be read": "Bản cài đặt chưa đầy đủ nên không thể đọc cuộc trò chuyện"
 }

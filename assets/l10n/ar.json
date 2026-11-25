@@ -4240,5 +4240,13 @@
   "Next match": "النتيجة التالية",
   "Show line by line": "العرض سطرًا بسطر",
   "Read by whole sentence, translated as a whole": "القراءة بالجملة الكاملة مع ترجمتها كاملة",
-  "This part could not be shown; the details are in the error log": "تعذّر عرض هذا الجزء؛ التفاصيل في سجل الأخطاء"
+  "This part could not be shown; the details are in the error log": "تعذّر عرض هذا الجزء؛ التفاصيل في سجل الأخطاء",
+  "Top chat": "أهم الرسائل",
+  "All messages": "كل الرسائل",
+  "Some messages, such as possible spam, are left out": "يتم استبعاد بعض الرسائل، مثل الرسائل المزعجة المحتملة",
+  "Every message, as it is written": "كل رسالة كما كُتبت",
+  "{0} (not offered here)": "{0} (غير متاح هنا)",
+  "Which messages show": "الرسائل المعروضة",
+  "Chat mode": "وضع الدردشة",
+  "The installation is incomplete, so the chat can't be read": "التثبيت غير مكتمل، لذا تتعذّر قراءة الدردشة"
 }

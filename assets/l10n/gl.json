@@ -4240,5 +4240,13 @@
   "Next match": "Coincidencia seguinte",
   "Show line by line": "Mostrar liña a liña",
   "Read by whole sentence, translated as a whole": "Ler por frases completas, traducidas como un todo",
-  "This part could not be shown; the details are in the error log": "Non se puido amosar esta parte; os detalles están no rexistro de erros"
+  "This part could not be shown; the details are in the error log": "Non se puido amosar esta parte; os detalles están no rexistro de erros",
+  "Top chat": "Chat destacado",
+  "All messages": "Todas as mensaxes",
+  "Some messages, such as possible spam, are left out": "Omítense algunhas mensaxes, como o posible spam",
+  "Every message, as it is written": "Todas as mensaxes, tal como se escriben",
+  "{0} (not offered here)": "{0} (non dispoñible aquí)",
+  "Which messages show": "Que mensaxes se amosan",
+  "Chat mode": "Modo de chat",
+  "The installation is incomplete, so the chat can't be read": "A instalación está incompleta, así que non se pode ler o chat"
 }

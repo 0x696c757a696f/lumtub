@@ -4240,5 +4240,13 @@
   "Next match": "Наступний збіг",
   "Show line by line": "Показувати по рядках",
   "Read by whole sentence, translated as a whole": "Читати цілими реченнями, перекладати повністю",
-  "This part could not be shown; the details are in the error log": "Не вдалося показати цю частину; подробиці в журналі помилок"
+  "This part could not be shown; the details are in the error log": "Не вдалося показати цю частину; подробиці в журналі помилок",
+  "Top chat": "Головний чат",
+  "All messages": "Усі повідомлення",
+  "Some messages, such as possible spam, are left out": "Деякі повідомлення, як-от можливий спам, не показуються",
+  "Every message, as it is written": "Кожне повідомлення, як воно написане",
+  "{0} (not offered here)": "{0} (тут недоступно)",
+  "Which messages show": "Які повідомлення показувати",
+  "Chat mode": "Режим чату",
+  "The installation is incomplete, so the chat can't be read": "Установлення неповне, тому чат неможливо прочитати"
 }

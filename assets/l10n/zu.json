@@ -4240,5 +4240,13 @@
   "Next match": "Okufanayo okulandelayo",
   "Show line by line": "Bonisa umugqa ngomugqa",
   "Read by whole sentence, translated as a whole": "Funda ngemisho ephelele, uhumushe yonke",
-  "This part could not be shown; the details are in the error log": "Le ngxenye ayikwazanga ukuboniswa; imininingwane itholakala kurekhodi lamaphutha"
+  "This part could not be shown; the details are in the error log": "Le ngxenye ayikwazanga ukuboniswa; imininingwane itholakala kurekhodi lamaphutha",
+  "Top chat": "Ingxoxo ephezulu",
+  "All messages": "Yonke imilayezo",
+  "Some messages, such as possible spam, are left out": "Eminye imilayezo, njengogaxekile okungenzeka, ayifakiwe",
+  "Every message, as it is written": "Wonke umlayezo, njengoba ubhalwe",
+  "{0} (not offered here)": "{0} (ayiboniswa lapha)",
+  "Which messages show": "Yimiphi imilayezo evezwayo",
+  "Chat mode": "Imodi yengxoxo",
+  "The installation is incomplete, so the chat can't be read": "Ukufakwa akuphelele, ngakho ingxoxo ayikwazi ukufundwa"
 }

@@ -4240,5 +4240,13 @@
   "Next match": "ପରବର୍ତ୍ତୀ ମେଳ",
   "Show line by line": "ଧାଡ଼ି ଧାଡ଼ି କରି ଦେଖାନ୍ତୁ",
   "Read by whole sentence, translated as a whole": "ପୂର୍ଣ୍ଣ ବାକ୍ୟ ଅନୁସାରେ ପଢ଼ନ୍ତୁ, ସମ୍ପୂର୍ଣ୍ଣ ଅନୁବାଦ କରନ୍ତୁ",
-  "This part could not be shown; the details are in the error log": "ଏହି ଅଂଶଟି ଦେଖାଯାଇପାରିଲା ନାହିଁ; ବିବରଣୀ ତ୍ରୁଟି ଲଗରେ ଅଛି"
+  "This part could not be shown; the details are in the error log": "ଏହି ଅଂଶଟି ଦେଖାଯାଇପାରିଲା ନାହିଁ; ବିବରଣୀ ତ୍ରୁଟି ଲଗରେ ଅଛି",
+  "Top chat": "ଶୀର୍ଷ ଚାଟ୍",
+  "All messages": "ସମସ୍ତ ବାର୍ତ୍ତା",
+  "Some messages, such as possible spam, are left out": "ସମ୍ଭାବ୍ୟ ସ୍ପାମ୍ ଭଳି କେତେକ ବାର୍ତ୍ତା ଛାଡ଼ି ଦିଆଯାଇଛି",
+  "Every message, as it is written": "ପ୍ରତ୍ୟେକ ବାର୍ତ୍ତା, ଯେପରି ଲେଖାଯାଇଛି",
+  "{0} (not offered here)": "{0} (ଏଠାରେ ଉପଲବ୍ଧ ନୁହେଁ)",
+  "Which messages show": "କେଉଁ ବାର୍ତ୍ତା ଦେଖାଇବେ",
+  "Chat mode": "ଚାଟ୍ ମୋଡ୍",
+  "The installation is incomplete, so the chat can't be read": "ଇନଷ୍ଟଲେସନ୍ ଅସମ୍ପୂର୍ଣ୍ଣ, ତେଣୁ ଚାଟ୍ ପଢ଼ାଯାଇପାରିବ ନାହିଁ"
 }

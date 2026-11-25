@@ -4240,5 +4240,13 @@
   "Next match": "ಮುಂದಿನ ಹೊಂದಾಣಿಕೆ",
   "Show line by line": "ಸಾಲಿನ ಪ್ರಕಾರ ತೋರಿಸಿ",
   "Read by whole sentence, translated as a whole": "ಪೂರ್ಣ ವಾಕ್ಯವಾಗಿ ಓದಿ, ಪೂರ್ಣವಾಗಿ ಅನುವಾದಿಸಿ",
-  "This part could not be shown; the details are in the error log": "ಈ ಭಾಗವನ್ನು ತೋರಿಸಲಾಗಲಿಲ್ಲ; ವಿವರಗಳು ದೋಷ ಲಾಗ್‌ನಲ್ಲಿವೆ"
+  "This part could not be shown; the details are in the error log": "ಈ ಭಾಗವನ್ನು ತೋರಿಸಲಾಗಲಿಲ್ಲ; ವಿವರಗಳು ದೋಷ ಲಾಗ್‌ನಲ್ಲಿವೆ",
+  "Top chat": "ಟಾಪ್ ಚಾಟ್",
+  "All messages": "ಎಲ್ಲಾ ಸಂದೇಶಗಳು",
+  "Some messages, such as possible spam, are left out": "ಸಂಭಾವ್ಯ ಸ್ಪ್ಯಾಮ್‌ನಂತಹ ಕೆಲವು ಸಂದೇಶಗಳನ್ನು ಬಿಡಲಾಗಿದೆ",
+  "Every message, as it is written": "ಪ್ರತಿ ಸಂದೇಶ, ಬರೆದಂತೆಯೇ",
+  "{0} (not offered here)": "{0} (ಇಲ್ಲಿ ಲಭ್ಯವಿಲ್ಲ)",
+  "Which messages show": "ಯಾವ ಸಂದೇಶಗಳು ತೋರಿಸಬೇಕು",
+  "Chat mode": "ಚಾಟ್ ಮೋಡ್",
+  "The installation is incomplete, so the chat can't be read": "ಸ್ಥಾಪನೆ ಅಪೂರ್ಣವಾಗಿದೆ, ಆದ್ದರಿಂದ ಚಾಟ್ ಓದಲು ಸಾಧ್ಯವಿಲ್ಲ"
 }

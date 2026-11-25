@@ -4240,5 +4240,13 @@
   "Next match": "Наступны вынік",
   "Show line by line": "Паказваць радок за радком",
   "Read by whole sentence, translated as a whole": "Чытаць поўнымі сказамі, перакладаць цалкам",
-  "This part could not be shown; the details are in the error log": "Гэтую частку не ўдалося паказаць; падрабязнасці ў журнале памылак"
+  "This part could not be shown; the details are in the error log": "Гэтую частку не ўдалося паказаць; падрабязнасці ў журнале памылак",
+  "Top chat": "Галоўны чат",
+  "All messages": "Усе паведамленні",
+  "Some messages, such as possible spam, are left out": "Некаторыя паведамленні, напрыклад магчымы спам, не паказваюцца",
+  "Every message, as it is written": "Кожнае паведамленне, як яно напісана",
+  "{0} (not offered here)": "{0} (тут недаступна)",
+  "Which messages show": "Якія паведамленні паказваць",
+  "Chat mode": "Рэжым чата",
+  "The installation is incomplete, so the chat can't be read": "Усталёўка няпоўная, таму чат прачытаць немагчыма"
 }

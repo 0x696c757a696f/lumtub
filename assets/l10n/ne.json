@@ -4240,5 +4240,13 @@
   "Next match": "अर्को मिल्दो नतिजा",
   "Show line by line": "लाइन-लाइन गरेर देखाउनुहोस्",
   "Read by whole sentence, translated as a whole": "पूरा वाक्यअनुसार पढ्नुहोस्, पूरै वाक्य अनुवाद गर्नुहोस्",
-  "This part could not be shown; the details are in the error log": "यो भाग देखाउन सकिएन; विवरण त्रुटि लगमा छ"
+  "This part could not be shown; the details are in the error log": "यो भाग देखाउन सकिएन; विवरण त्रुटि लगमा छ",
+  "Top chat": "शीर्ष च्याट",
+  "All messages": "सबै सन्देश",
+  "Some messages, such as possible spam, are left out": "सम्भावित स्प्याम जस्ता केही सन्देश छोडिएका छन्",
+  "Every message, as it is written": "हरेक सन्देश, जसरी लेखिएको हो",
+  "{0} (not offered here)": "{0} (यहाँ उपलब्ध छैन)",
+  "Which messages show": "कुन सन्देश देखाउने",
+  "Chat mode": "च्याट मोड",
+  "The installation is incomplete, so the chat can't be read": "स्थापना अधुरो छ, त्यसैले च्याट पढ्न सकिँदैन"
 }

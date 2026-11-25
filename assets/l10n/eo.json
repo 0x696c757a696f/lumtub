@@ -4240,5 +4240,13 @@
   "Next match": "Sekva trafo",
   "Show line by line": "Montri linion post linio",
   "Read by whole sentence, translated as a whole": "Legi per tutaj frazoj, tradukitaj kiel tutaĵo",
-  "This part could not be shown; the details are in the error log": "Ĉi tiu parto ne povis esti montrata; la detaloj estas en la erarprotokolo"
+  "This part could not be shown; the details are in the error log": "Ĉi tiu parto ne povis esti montrata; la detaloj estas en la erarprotokolo",
+  "Top chat": "Ĉefa babilo",
+  "All messages": "Ĉiuj mesaĝoj",
+  "Some messages, such as possible spam, are left out": "Kelkaj mesaĝoj, kiel eblaj spamoj, estas preterlasitaj",
+  "Every message, as it is written": "Ĉiu mesaĝo, kiel ĝi estas skribita",
+  "{0} (not offered here)": "{0} (ne havebla ĉi tie)",
+  "Which messages show": "Kiuj mesaĝoj montriĝas",
+  "Chat mode": "Babilreĝimo",
+  "The installation is incomplete, so the chat can't be read": "La instalo estas nekompleta, do la babilo ne povas esti legata"
 }

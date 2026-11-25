@@ -4240,5 +4240,13 @@
   "Next match": "Congruentia proxima",
   "Show line by line": "Lineatim ostendere",
   "Read by whole sentence, translated as a whole": "Per sententias integras legere, totas translatas",
-  "This part could not be shown; the details are in the error log": "Haec pars ostendi non potuit; singula in tabula errorum sunt"
+  "This part could not be shown; the details are in the error log": "Haec pars ostendi non potuit; singula in tabula errorum sunt",
+  "Top chat": "Colloquium principale",
+  "All messages": "Omnia nuntia",
+  "Some messages, such as possible spam, are left out": "Quaedam nuntia, ut spam possibile, omittuntur",
+  "Every message, as it is written": "Omne nuntium, ut scriptum est",
+  "{0} (not offered here)": "{0} (hic non praebetur)",
+  "Which messages show": "Quae nuntia ostendantur",
+  "Chat mode": "Modus colloquii",
+  "The installation is incomplete, so the chat can't be read": "Installatio imperfecta est, itaque colloquium legi non potest"
 }

@@ -2,68 +2,178 @@ part of 'app_controller.dart';
 
 /// Live chat, chat replays and the bullet chat over the picture.
 extension ChatActions on AppController {
-  void _startCurrentChat(VideoItem item, int serial) {
-    final repository = _repository;
-    if (repository == null || serial != _playSerial) return;
+  /// The most messages a live chat keeps; older ones leave the list.
+  static const _liveChatKept = 2000;
+
+  /// The most new messages of one flush that fly across the picture in a
+  /// busy live chat; Super Chats and the like always do.
+  static const _danmakuPerFlush = 40;
+
+  /// Follows the chat of [item], live or a replay, in the view picked: read
+  /// as YouTube's website reads it, or through yt-dlp when that fails
+  /// before the first messages (YouTube's default view then).
+  void _startChat(VideoItem item, int serial) {
+    if (serial != _playSerial) return;
+    final live = item.isLive;
+    final view = preferences.chatView;
     _update(() {
       loadingReplayChat = true;
+      loadingMoreChat = false;
       replayChatError = null;
     });
-    logInfo('Following the live chat of ${item.id}');
-    _currentChat = repository.liveChat.current(item.id).listen(
-      (message) {
-        if (serial != _playSerial || !_currentChatIds.add(message.id)) return;
-        _currentChatPending.add(message);
-        _currentChatFlushTimer ??= Timer(const Duration(milliseconds: 300), () {
-          _currentChatFlushTimer = null;
-          _flushCurrentChat(serial);
-        });
-      },
-      onError: (Object error) {
-        logWarn('The live chat of ${item.id} stopped: $error');
-        if (serial == _playSerial) {
-          _update(() {
-            replayChatError = friendlyError(error);
-            loadingReplayChat = false;
+    logInfo('Reading the chat of ${item.id} (${live ? 'live' : 'replay'}, ${view.name})');
+    var received = false;
+    void follow(Stream<LiveChatBatch> batches, {required bool fallback}) {
+      _currentChat = batches.listen(
+        (batch) {
+          if (serial != _playSerial) return;
+          if (!received) {
+            received = true;
+            _chatHistory = live;
+            chatViewShown = fallback ? null : batch.view;
+            if (!live) loadingMoreChat = !fallback;
+          }
+          _takeBatch(batch, live: live);
+          _currentChatFlushTimer ??= Timer(Duration(milliseconds: live ? 300 : 1000), () {
+            _currentChatFlushTimer = null;
+            _flushCurrentChat(serial, live: live);
           });
-        }
-      },
-      onDone: () {
-        _flushCurrentChat(serial);
-        if (serial == _playSerial) {
-          _update(() => loadingReplayChat = false);
-        }
-      },
-    );
+        },
+        onError: (Object error) {
+          if (serial != _playSerial) return;
+          if (!fallback && !received && error is! NoLiveChat) {
+            logWarn('The chat of ${item.id} could not be read directly ($error); reading it through yt-dlp');
+            final repository = _repository;
+            if (repository != null) {
+              final old = _currentChat;
+              final messages = live ? repository.liveChat.current(item.id).map((m) => LiveChatBatch(messages: [m])) : Stream.fromFuture(repository.liveChat.replay(item.id)).map((list) => LiveChatBatch(messages: list));
+              follow(messages, fallback: true);
+              unawaited(old?.cancel());
+              return;
+            }
+          }
+          logWarn('The chat of ${item.id} stopped: $error');
+          _flushCurrentChat(serial, live: live);
+          _update(() {
+            if (error is! NoLiveChat && (replayChat.isEmpty || live)) replayChatError = friendlyError(error);
+            loadingReplayChat = false;
+            loadingMoreChat = false;
+          });
+        },
+        onDone: () {
+          _flushCurrentChat(serial, live: live);
+          if (serial == _playSerial) {
+            if (!live) logInfo('Chat replay of ${item.id}: ${replayChat.length} messages');
+            _update(() {
+              loadingReplayChat = false;
+              loadingMoreChat = false;
+            });
+          }
+        },
+      );
+    }
+
+    follow(_chatFeed.follow(item.id, view), fallback: false);
   }
 
-  void _flushCurrentChat(int serial) {
-    if (serial != _playSerial || _currentChatPending.isEmpty) return;
-    final next = [...replayChat, ..._currentChatPending];
-    final now = DateTime.now();
-    final ticker = [
-      for (final message in _currentChatPending.reversed)
-        if (message.tickerSeconds case final seconds?) (message, now.add(Duration(seconds: seconds))),
-      for (final entry in chatTicker)
-        if (entry.$2.isAfter(now)) entry,
-    ];
-    if (ticker.length != chatTicker.length || ticker.isNotEmpty) chatTicker = List.unmodifiable(ticker.take(50));
-    final fresh = [..._currentChatPending];
+  /// Takes in what one answer of the chat brought, until the next flush.
+  void _takeBatch(LiveChatBatch batch, {required bool live}) {
+    if (batch.restricted != chatRestricted) chatRestricted = batch.restricted;
+    for (final message in batch.messages) {
+      if (!_currentChatIds.add(message.id)) continue;
+      if (message.kind == LiveChatKind.mode) chatMode = message;
+      _currentChatPending.add(message);
+    }
+    _chatRemoved.addAll(batch.removed);
+    _chatRemovedAuthors.addAll(batch.removedAuthors);
+    // A replay's answers follow each other in time: only the last one's ids
+    // can come again, so a long replay does not keep every id.
+    if (!live && _currentChatIds.length > 20000) {
+      _currentChatIds
+        ..clear()
+        ..addAll(batch.messages.map((m) => m.id));
+    }
+  }
+
+  void _flushCurrentChat(int serial, {required bool live}) {
+    _currentChatFlushTimer?.cancel();
+    _currentChatFlushTimer = null;
+    if (serial != _playSerial) return;
+    final removed = _chatRemoved.isNotEmpty || _chatRemovedAuthors.isNotEmpty;
+    if (_currentChatPending.isEmpty && !removed) {
+      if (loadingReplayChat) _update(() => loadingReplayChat = false);
+      return;
+    }
+    bool kept(LiveChatMessage m) => !_chatRemoved.contains(m.id) && (m.authorChannelId == null || !_chatRemovedAuthors.contains(m.authorChannelId));
+    final fresh = removed ? _currentChatPending.where(kept).toList() : [..._currentChatPending];
     _currentChatPending.clear();
-    replayChat = List.unmodifiable(next.length > 2000 ? next.sublist(next.length - 2000) : next);
+    // One pass over the list for everything taken down since the last
+    // flush, not one per message.
+    final before = removed ? replayChat.where(kept) : replayChat;
+    _chatRemoved.clear();
+    _chatRemovedAuthors.clear();
+    final next = [...before, ...fresh];
+    if (live) {
+      final now = DateTime.now();
+      final ticker = [
+        for (final message in fresh.reversed)
+          if (message.tickerSeconds case final seconds?) (message, now.add(Duration(seconds: seconds))),
+        for (final entry in chatTicker)
+          if (entry.$2.isAfter(now) && kept(entry.$1)) entry,
+      ];
+      if (ticker.length != chatTicker.length || ticker.isNotEmpty) chatTicker = List.unmodifiable(ticker.take(50));
+    }
+    replayChat = List.unmodifiable(live && next.length > _liveChatKept ? next.sublist(next.length - _liveChatKept) : next);
     // The ids seen are kept for the messages kept, not for every one of a
     // stream that runs for hours: rebuilt once they are twice as many.
-    if (_currentChatIds.length > 4000) {
+    if (live && _currentChatIds.length > _liveChatKept * 2) {
       _currentChatIds
         ..clear()
         ..addAll(replayChat.map((message) => message.id));
     }
-    _syncDanmaku(fresh: fresh);
+    if (live && _chatHistory) {
+      // What was said before the chat was opened is not flown.
+      _chatHistory = false;
+      _danmaku?.skip(fresh);
+      _syncDanmaku(fresh: const []);
+    } else {
+      _syncDanmaku(fresh: live ? _busiest(fresh) : fresh);
+    }
     if (loadingReplayChat) {
       _update(() => loadingReplayChat = false);
     } else if (!_disposed) {
       chatMessages.value++;
     }
+  }
+
+  /// The messages of a busy flush that fly: every paid one and the newest
+  /// [_danmakuPerFlush] others, in order.
+  static List<LiveChatMessage> _busiest(List<LiveChatMessage> fresh) {
+    if (fresh.length <= _danmakuPerFlush) return fresh;
+    var others = 0;
+    final keep = List.filled(fresh.length, false);
+    for (var i = fresh.length - 1; i >= 0; i--) {
+      final paid = fresh[i].kind != LiveChatKind.message;
+      if (paid || others < _danmakuPerFlush) keep[i] = true;
+      if (!paid) others++;
+    }
+    return [for (var i = 0; i < fresh.length; i++) if (keep[i]) fresh[i]];
+  }
+
+  /// Shows Top chat or every message, for this chat and the ones after.
+  Future<void> setChatView(ChatView view) async {
+    if (preferences.chatView == view) return;
+    await savePreferences(preferences.copyWith(chatView: view));
+    final item = playing;
+    if (item == null || !hasChat || item.isUpcoming) return;
+    _stopCurrentChat();
+    _update(() {
+      replayChat = const [];
+      chatTicker = const [];
+      chatMode = null;
+    });
+    _syncDanmaku();
+    _startChat(item, _playSerial);
   }
 
   /// Whether the video playing has a chat to fly across it.
@@ -83,7 +193,7 @@ extension ChatActions on AppController {
     final settings = preferences.danmaku;
     final live = item?.isLive ?? false;
     final chat = hasChat;
-    final key = player == null || item == null || !settings.enabled || !hasDanmaku || (!chat && !settings.comments) ? null : '${identityHashCode(player)}|${item.id}|$live|${settings.hashCode}';
+    final key = player == null || item == null || !settings.enabled || !hasDanmaku || (!chat && !settings.comments) ? null : '${identityHashCode(player)}|${item.id}|$live|${preferences.chatView.name}|${settings.hashCode}';
     if (key != _danmakuFor) {
       // A new overlay is given the whole chat.
       fresh = null;
@@ -151,6 +261,9 @@ extension ChatActions on AppController {
     _currentChatFlushTimer = null;
     _currentChatPending.clear();
     _currentChatIds.clear();
+    _chatRemoved.clear();
+    _chatRemovedAuthors.clear();
+    _chatHistory = false;
     unawaited(_currentChat?.cancel());
     _currentChat = null;
   }
@@ -159,31 +272,8 @@ extension ChatActions on AppController {
   void retryChat() {
     final item = playing;
     if (item == null) return;
-    if (item.isLive) {
-      unawaited(_currentChat?.cancel());
-      _startCurrentChat(item, _playSerial);
-    } else {
-      unawaited(_loadReplayChat(item, _playSerial));
-    }
-  }
-
-  Future<void> _loadReplayChat(VideoItem item, int serial) async {
-    final repository = _repository;
-    if (repository == null || serial != _playSerial) return;
-    _update(() {
-      loadingReplayChat = true;
-      replayChatError = null;
-    });
-    try {
-      final messages = await repository.liveChat.replay(item.id);
-      if (serial == _playSerial) {
-        _update(() => replayChat = messages);
-        _syncDanmaku();
-      }
-    } catch (error) {
-      if (serial == _playSerial) _update(() => replayChatError = friendlyError(error));
-    } finally {
-      if (serial == _playSerial) _update(() => loadingReplayChat = false);
-    }
+    _stopCurrentChat();
+    _update(() => replayChat = const []);
+    _startChat(item, _playSerial);
   }
 }

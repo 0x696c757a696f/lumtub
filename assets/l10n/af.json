@@ -4240,5 +4240,13 @@
   "Next match": "Volgende resultaat",
   "Show line by line": "Wys reël vir reël",
   "Read by whole sentence, translated as a whole": "Lees per volle sin, as geheel vertaal",
-  "This part could not be shown; the details are in the error log": "Hierdie deel kon nie gewys word nie; die besonderhede is in die foutlog"
+  "This part could not be shown; the details are in the error log": "Hierdie deel kon nie gewys word nie; die besonderhede is in die foutlog",
+  "Top chat": "Topgesels",
+  "All messages": "Alle boodskappe",
+  "Some messages, such as possible spam, are left out": "Sommige boodskappe, soos moontlike strooipos, word weggelaat",
+  "Every message, as it is written": "Elke boodskap, soos dit geskryf is",
+  "{0} (not offered here)": "{0} (nie hier beskikbaar nie)",
+  "Which messages show": "Watter boodskappe wys",
+  "Chat mode": "Geselsmodus",
+  "The installation is incomplete, so the chat can't be read": "Die installasie is onvolledig, so die gesels kan nie gelees word nie"
 }

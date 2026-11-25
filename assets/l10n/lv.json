@@ -4240,5 +4240,13 @@
   "Next match": "Nākamais rezultāts",
   "Show line by line": "Rādīt pa rindām",
   "Read by whole sentence, translated as a whole": "Lasīt pa veseliem teikumiem, tulkot kā veselumu",
-  "This part could not be shown; the details are in the error log": "Šo daļu neizdevās parādīt; sīkāka informācija ir kļūdu žurnālā"
+  "This part could not be shown; the details are in the error log": "Šo daļu neizdevās parādīt; sīkāka informācija ir kļūdu žurnālā",
+  "Top chat": "Galvenais čats",
+  "All messages": "Visi ziņojumi",
+  "Some messages, such as possible spam, are left out": "Daži ziņojumi, piemēram, iespējams surogātpasts, tiek izlaisti",
+  "Every message, as it is written": "Katrs ziņojums, kā tas uzrakstīts",
+  "{0} (not offered here)": "{0} (šeit nav pieejams)",
+  "Which messages show": "Kuri ziņojumi tiek rādīti",
+  "Chat mode": "Čata režīms",
+  "The installation is incomplete, so the chat can't be read": "Instalēšana ir nepilnīga, tāpēc čatu nevar nolasīt"
 }

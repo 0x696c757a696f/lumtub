@@ -70,6 +70,7 @@ import '../native_http.dart';
 import '../js_challenge_plugin.dart';
 import '../yt_dlp_tls.dart';
 import '../live_chat.dart';
+import '../live_chat_feed.dart';
 import '../link_video.dart';
 import '../models.dart';
 import '../ipv6_probe.dart';
@@ -453,11 +454,27 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// second: only the chat panel listens, not the whole app.
   final chatMessages = ValueNotifier(0);
   bool loadingReplayChat = false;
+  /// While a chat replay is still being read after its first messages.
+  bool loadingMoreChat = false;
   String? replayChatError;
-  StreamSubscription<LiveChatMessage>? _currentChat;
+  /// The view the chat shows; null when it offers only one, or is read
+  /// through yt-dlp, which shows YouTube's default.
+  ChatView? chatViewShown;
+  /// Who may write in the live chat, when not everyone may.
+  String? chatRestricted;
+  /// The chat's last mode change: slow mode, subscribers-only or
+  /// members-only mode turned on or off.
+  LiveChatMessage? chatMode;
+  StreamSubscription<LiveChatBatch>? _currentChat;
   Timer? _currentChatFlushTimer;
   final _currentChatPending = <LiveChatMessage>[];
   final _currentChatIds = <String>{};
+  final _chatRemoved = <String>{};
+  final _chatRemovedAuthors = <String>{};
+  /// The live chat's first answer since it started: what was said before,
+  /// shown in the chat but not flown across the picture.
+  bool _chatHistory = false;
+  late final _chatFeed = LiveChatFeed(_http);
   /// The audio language chosen for one video in the player ('' for its
   /// original sound), which lasts until another video plays.
   (String, String)? _audioPick;

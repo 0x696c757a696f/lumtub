@@ -4240,5 +4240,13 @@
   "Next match": "Дараагийн тохирол",
   "Show line by line": "Мөр мөрөөр харуулах",
   "Read by whole sentence, translated as a whole": "Бүтэн өгүүлбэрээр унших, бүхэлд нь орчуулах",
-  "This part could not be shown; the details are in the error log": "Энэ хэсгийг харуулж чадсангүй; дэлгэрэнгүйг алдааны бүртгэлээс харна уу"
+  "This part could not be shown; the details are in the error log": "Энэ хэсгийг харуулж чадсангүй; дэлгэрэнгүйг алдааны бүртгэлээс харна уу",
+  "Top chat": "Шилдэг чат",
+  "All messages": "Бүх мессеж",
+  "Some messages, such as possible spam, are left out": "Спам байж болзошгүй зэрэг зарим мессежийг оруулаагүй",
+  "Every message, as it is written": "Мессеж бүр бичигдсэнээрээ",
+  "{0} (not offered here)": "{0} (энд байхгүй)",
+  "Which messages show": "Аль мессежийг харуулах",
+  "Chat mode": "Чатын горим",
+  "The installation is incomplete, so the chat can't be read": "Суулгалт дутуу тул чатыг уншиж боломжгүй"
 }

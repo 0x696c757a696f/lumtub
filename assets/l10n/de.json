@@ -4240,5 +4240,13 @@
   "Next match": "Nächster Treffer",
   "Show line by line": "Zeile für Zeile anzeigen",
   "Read by whole sentence, translated as a whole": "Satzweise lesen, als Ganzes übersetzt",
-  "This part could not be shown; the details are in the error log": "Dieser Teil konnte nicht angezeigt werden; Details stehen im Fehlerprotokoll"
+  "This part could not be shown; the details are in the error log": "Dieser Teil konnte nicht angezeigt werden; Details stehen im Fehlerprotokoll",
+  "Top chat": "Top-Chat",
+  "All messages": "Alle Nachrichten",
+  "Some messages, such as possible spam, are left out": "Einige Nachrichten, etwa mögliche Spam-Nachrichten, werden ausgeblendet",
+  "Every message, as it is written": "Jede Nachricht, so wie sie geschrieben wurde",
+  "{0} (not offered here)": "{0} (hier nicht verfügbar)",
+  "Which messages show": "Welche Nachrichten angezeigt werden",
+  "Chat mode": "Chat-Modus",
+  "The installation is incomplete, so the chat can't be read": "Die Installation ist unvollständig, daher kann der Chat nicht gelesen werden"
 }

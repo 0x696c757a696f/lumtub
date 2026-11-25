@@ -4240,5 +4240,13 @@
   "Next match": "다음 검색 결과",
   "Show line by line": "한 줄씩 표시",
   "Read by whole sentence, translated as a whole": "문장 단위로 읽고 통째로 번역",
-  "This part could not be shown; the details are in the error log": "이 부분을 표시할 수 없습니다. 자세한 내용은 오류 로그에 있습니다"
+  "This part could not be shown; the details are in the error log": "이 부분을 표시할 수 없습니다. 자세한 내용은 오류 로그에 있습니다",
+  "Top chat": "인기 채팅",
+  "All messages": "모든 메시지",
+  "Some messages, such as possible spam, are left out": "스팸일 수 있는 메시지 등 일부 메시지는 표시되지 않습니다",
+  "Every message, as it is written": "모든 메시지를 작성된 그대로 표시합니다",
+  "{0} (not offered here)": "{0}(이 채팅에서는 제공되지 않음)",
+  "Which messages show": "표시할 메시지",
+  "Chat mode": "채팅 모드",
+  "The installation is incomplete, so the chat can't be read": "설치가 완전하지 않아 채팅을 읽을 수 없습니다"
 }

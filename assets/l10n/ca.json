@@ -4240,5 +4240,13 @@
   "Next match": "Coincidència següent",
   "Show line by line": "Mostra línia a línia",
   "Read by whole sentence, translated as a whole": "Llegeix per frases senceres, traduïdes com un tot",
-  "This part could not be shown; the details are in the error log": "Aquesta part no s'ha pogut mostrar; els detalls són al registre d'errors"
+  "This part could not be shown; the details are in the error log": "Aquesta part no s'ha pogut mostrar; els detalls són al registre d'errors",
+  "Top chat": "Xat destacat",
+  "All messages": "Tots els missatges",
+  "Some messages, such as possible spam, are left out": "S'ometen alguns missatges, com ara el possible correu brossa",
+  "Every message, as it is written": "Tots els missatges, tal com s'han escrit",
+  "{0} (not offered here)": "{0} (no disponible aquí)",
+  "Which messages show": "Quins missatges es mostren",
+  "Chat mode": "Mode de xat",
+  "The installation is incomplete, so the chat can't be read": "La instal·lació és incompleta, per això no es pot llegir el xat"
 }

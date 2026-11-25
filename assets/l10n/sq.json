@@ -4240,5 +4240,13 @@
   "Next match": "Përputhja tjetër",
   "Show line by line": "Shfaq rresht pas rreshti",
   "Read by whole sentence, translated as a whole": "Lexo sipas fjalive të plota, përkthe si tërësi",
-  "This part could not be shown; the details are in the error log": "Kjo pjesë nuk mund të shfaqej; hollësitë janë në regjistrin e gabimeve"
+  "This part could not be shown; the details are in the error log": "Kjo pjesë nuk mund të shfaqej; hollësitë janë në regjistrin e gabimeve",
+  "Top chat": "Biseda kryesore",
+  "All messages": "Të gjitha mesazhet",
+  "Some messages, such as possible spam, are left out": "Disa mesazhe, si spami i mundshëm, lihen jashtë",
+  "Every message, as it is written": "Çdo mesazh, ashtu siç është shkruar",
+  "{0} (not offered here)": "{0} (nuk ofrohet këtu)",
+  "Which messages show": "Cilat mesazhe shfaqen",
+  "Chat mode": "Modaliteti i bisedës",
+  "The installation is incomplete, so the chat can't be read": "Instalimi është i paplotë, prandaj biseda nuk mund të lexohet"
 }

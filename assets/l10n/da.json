@@ -4240,5 +4240,13 @@
   "Next match": "Næste match",
   "Show line by line": "Vis linje for linje",
   "Read by whole sentence, translated as a whole": "Læs hele sætninger, oversat som helhed",
-  "This part could not be shown; the details are in the error log": "Denne del kunne ikke vises; detaljerne står i fejlloggen"
+  "This part could not be shown; the details are in the error log": "Denne del kunne ikke vises; detaljerne står i fejlloggen",
+  "Top chat": "Topchat",
+  "All messages": "Alle beskeder",
+  "Some messages, such as possible spam, are left out": "Nogle beskeder, f.eks. mulig spam, udelades",
+  "Every message, as it is written": "Hver besked, som den er skrevet",
+  "{0} (not offered here)": "{0} (ikke tilgængelig her)",
+  "Which messages show": "Hvilke beskeder der vises",
+  "Chat mode": "Chattilstand",
+  "The installation is incomplete, so the chat can't be read": "Installationen er ufuldstændig, så chatten kan ikke læses"
 }

@@ -4240,5 +4240,13 @@
   "Next match": "Кийинки дал келүү",
   "Show line by line": "Сап-сап көрсөтүү",
   "Read by whole sentence, translated as a whole": "Толук сүйлөм менен окуу, бүтүндөй которуу",
-  "This part could not be shown; the details are in the error log": "Бул бөлүктү көрсөтүү мүмкүн болбоду; чоо-жайы каталар журналында"
+  "This part could not be shown; the details are in the error log": "Бул бөлүктү көрсөтүү мүмкүн болбоду; чоо-жайы каталар журналында",
+  "Top chat": "Негизги чат",
+  "All messages": "Бардык билдирүүлөр",
+  "Some messages, such as possible spam, are left out": "Айрым билдирүүлөр, мисалы, спам болушу мүмкүн болгондору, көрсөтүлбөйт",
+  "Every message, as it is written": "Ар бир билдирүү жазылгандай",
+  "{0} (not offered here)": "{0} (бул жерде жеткиликтүү эмес)",
+  "Which messages show": "Кайсы билдирүүлөр көрсөтүлөт",
+  "Chat mode": "Чат режими",
+  "The installation is incomplete, so the chat can't be read": "Орнотуу толук эмес, ошондуктан чатты окуу мүмкүн эмес"
 }

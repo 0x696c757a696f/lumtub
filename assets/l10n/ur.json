@@ -4240,5 +4240,13 @@
   "Next match": "اگلا نتیجہ",
   "Show line by line": "سطر بہ سطر دکھائیں",
   "Read by whole sentence, translated as a whole": "مکمل جملے کے مطابق پڑھیں، پورے جملے کا ترجمہ کریں",
-  "This part could not be shown; the details are in the error log": "یہ حصہ دکھایا نہیں جا سکا؛ تفصیلات خرابی لاگ میں ہیں"
+  "This part could not be shown; the details are in the error log": "یہ حصہ دکھایا نہیں جا سکا؛ تفصیلات خرابی لاگ میں ہیں",
+  "Top chat": "ٹاپ چیٹ",
+  "All messages": "تمام پیغامات",
+  "Some messages, such as possible spam, are left out": "کچھ پیغامات، جیسے ممکنہ اسپیم، شامل نہیں کیے جاتے",
+  "Every message, as it is written": "ہر پیغام، جیسا کہ لکھا گیا ہے",
+  "{0} (not offered here)": "{0} (یہاں دستیاب نہیں)",
+  "Which messages show": "کون سے پیغامات دکھائے جائیں",
+  "Chat mode": "چیٹ موڈ",
+  "The installation is incomplete, so the chat can't be read": "انسٹالیشن نامکمل ہے، اس لیے چیٹ نہیں پڑھی جا سکتی"
 }

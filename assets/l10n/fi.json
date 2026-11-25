@@ -4240,5 +4240,13 @@
   "Next match": "Seuraava osuma",
   "Show line by line": "Näytä rivi riviltä",
   "Read by whole sentence, translated as a whole": "Lue kokonaisina lauseina, käännä kokonaisuutena",
-  "This part could not be shown; the details are in the error log": "Tätä osaa ei voitu näyttää; tiedot ovat virhelokissa"
+  "This part could not be shown; the details are in the error log": "Tätä osaa ei voitu näyttää; tiedot ovat virhelokissa",
+  "Top chat": "Suosituimmat viestit",
+  "All messages": "Kaikki viestit",
+  "Some messages, such as possible spam, are left out": "Joitakin viestejä, kuten mahdollista roskapostia, jätetään pois",
+  "Every message, as it is written": "Jokainen viesti sellaisenaan",
+  "{0} (not offered here)": "{0} (ei saatavilla täällä)",
+  "Which messages show": "Mitkä viestit näytetään",
+  "Chat mode": "Chat-tila",
+  "The installation is incomplete, so the chat can't be read": "Asennus on epätäydellinen, joten chattia ei voi lukea"
 }

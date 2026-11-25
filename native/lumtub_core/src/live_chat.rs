@@ -17,6 +17,9 @@ pub enum Kind {
     PaidSticker,
     Membership,
     System,
+    /// The chat's mode changed: slow mode, subscribers-only or members-only
+    /// mode turned on or off.
+    Mode,
 }
 
 #[derive(Serialize, Debug, PartialEq)]
@@ -92,26 +95,46 @@ fn integer(value: Option<&Value>) -> Option<i64> {
 }
 
 fn message(item: &Value, offset_ms: Option<i64>) -> Option<Message> {
-    const KINDS: [(&str, Kind); 5] = [
+    const KINDS: [(&str, Kind); 6] = [
         ("liveChatTextMessageRenderer", Kind::Message),
         ("liveChatPaidMessageRenderer", Kind::PaidMessage),
         ("liveChatPaidStickerRenderer", Kind::PaidSticker),
         ("liveChatMembershipItemRenderer", Kind::Membership),
         ("liveChatViewerEngagementMessageRenderer", Kind::System),
+        ("liveChatModeChangeMessageRenderer", Kind::Mode),
     ];
     let (kind, renderer) = KINDS
         .iter()
         .find_map(|(key, kind)| item.get(*key).filter(|r| r.is_object()).map(|r| (*kind, r)))?;
-    let id = renderer.get("id").map(display).unwrap_or_default();
-    if id.is_empty() {
-        return None;
-    }
     let mut emojis = Emojis::new();
-    let text = ["message", "headerSubtext", "headerPrimaryText"]
+    let mut text = ["message", "headerSubtext", "headerPrimaryText", "text"]
         .iter()
         .map(|key| chat_text(renderer.get(*key), &mut emojis))
         .find(|t| !t.is_empty())
         .unwrap_or_default();
+    if kind == Kind::Mode {
+        let more = chat_text(renderer.get("subtext"), &mut emojis);
+        if !more.is_empty() {
+            text = if text.is_empty() {
+                more
+            } else {
+                format!("{text} · {more}")
+            };
+        }
+    }
+    let mut id = renderer.get("id").map(display).unwrap_or_default();
+    // A mode change may come without an id; the same change read twice
+    // still gets the same one.
+    if id.is_empty() && kind == Kind::Mode && !text.is_empty() {
+        let time = renderer
+            .get("timestampUsec")
+            .map(display)
+            .unwrap_or_default();
+        id = format!("mode:{time}:{text}");
+    }
+    if id.is_empty() {
+        return None;
+    }
     let mut ignored = Emojis::new();
     let amount = chat_text(renderer.get("purchaseAmountText"), &mut ignored);
     let color = ["bodyBackgroundColor", "backgroundColor"]
@@ -182,14 +205,17 @@ pub fn line(line: &str) -> Vec<Message> {
     };
     actions
         .iter()
-        .filter_map(|entry| {
-            entry
-                .get("addChatItemAction")?
-                .get("item")
-                .filter(|i| i.is_object())
-        })
+        .filter_map(added_item)
         .filter_map(|item| message(item, offset_ms))
         .collect()
+}
+
+/// The item an `addChatItemAction` adds.
+fn added_item(action: &Value) -> Option<&Value> {
+    action
+        .get("addChatItemAction")?
+        .get("item")
+        .filter(|i| i.is_object())
 }
 
 /// The most chat items read from one replay file.
@@ -328,6 +354,219 @@ pub fn composer(answer: &Value) -> Composer {
         restricted,
         emojis: chat_emojis(answer),
     }
+}
+
+/// One way of reading a chat as YouTube offers it: Top chat, which leaves
+/// out messages such as possible spam, or Live chat, every message.
+#[derive(Serialize, Debug, PartialEq)]
+pub struct View {
+    pub continuation: String,
+    pub selected: bool,
+}
+
+/// What one answer of `next`, `live_chat/get_live_chat` or
+/// `live_chat/get_live_chat_replay` says about the chat.
+#[derive(Serialize, Debug, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct Answer {
+    /// From `next`: the request that opens the video's chat.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub start: Option<String>,
+    /// The visitor id YouTube gave, sent back with the requests that follow.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub visitor: Option<String>,
+    /// From `next`: whether that chat is a replay.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub replay: bool,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub messages: Vec<Message>,
+    /// The request for what comes next; none once the chat has ended.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub next: Option<String>,
+    /// How long YouTube asks to wait before [next].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timeout_ms: Option<u64>,
+    /// The chat's views, Top chat first, when the answer names them.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub views: Vec<View>,
+    /// Who may write, when not everyone may (members-only mode).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub restricted: Option<String>,
+    /// Messages taken down by the channel's moderators.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub removed: Vec<String>,
+    /// Channels whose messages were all taken down.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub removed_authors: Vec<String>,
+}
+
+/// The most messages, and the most ids taken down, read from one answer.
+const ANSWER_ITEMS: usize = 20_000;
+/// The most views read; YouTube offers two.
+const VIEWS: usize = 4;
+
+/// The continuation of a `continuations` entry, in the order the website
+/// follows them, with its wait.
+fn next_of(chat: &Value) -> Option<(String, Option<u64>)> {
+    const KINDS: [&str; 4] = [
+        "invalidationContinuationData",
+        "timedContinuationData",
+        "liveChatReplayContinuationData",
+        "reloadContinuationData",
+    ];
+    let list = chat.get("continuations")?.as_array()?;
+    KINDS.iter().find_map(|kind| {
+        list.iter().find_map(|entry| {
+            let data = entry.get(*kind)?;
+            let continuation = data.get("continuation")?.as_str()?;
+            if continuation.is_empty() {
+                return None;
+            }
+            let wait = integer(data.get("timeoutMs")).and_then(|ms| u64::try_from(ms).ok());
+            Some((continuation.to_owned(), wait))
+        })
+    })
+}
+
+/// The views of a chat's header.
+fn views_of(chat: &Value) -> Vec<View> {
+    let items = chat
+        .pointer(
+            "/header/liveChatHeaderRenderer/viewSelector/sortFilterSubMenuRenderer/subMenuItems",
+        )
+        .and_then(Value::as_array)
+        .or_else(|| find_object(chat, "viewSelector").and_then(|s| find_array(s, "subMenuItems")));
+    let Some(items) = items else {
+        return Vec::new();
+    };
+    items
+        .iter()
+        .filter_map(|item| {
+            let continuation = item
+                .pointer("/continuation/reloadContinuationData/continuation")
+                .and_then(Value::as_str)
+                .map(str::to_owned)
+                .or_else(|| find_string(item.get("continuation")?, "continuation"))?;
+            let selected = item
+                .get("selected")
+                .and_then(Value::as_bool)
+                .unwrap_or(false);
+            Some(View {
+                continuation,
+                selected,
+            })
+        })
+        .take(VIEWS)
+        .collect()
+}
+
+/// Reads one chat action into [out]; [offset_ms] is a replay's position.
+fn read_action(action: &Value, offset_ms: Option<i64>, out: &mut Answer) {
+    if let Some(item) = added_item(action) {
+        if out.messages.len() < ANSWER_ITEMS
+            && let Some(message) = message(item, offset_ms)
+        {
+            out.messages.push(message);
+        }
+        return;
+    }
+    let target = |key: &str, field: &str| {
+        action
+            .get(key)?
+            .get(field)?
+            .as_str()
+            .filter(|id| !id.is_empty())
+            .map(str::to_owned)
+    };
+    if let Some(id) = target("removeChatItemAction", "targetItemId")
+        .or_else(|| target("markChatItemAsDeletedAction", "targetItemId"))
+    {
+        if out.removed.len() < ANSWER_ITEMS {
+            out.removed.push(id);
+        }
+    } else if let Some(channel) = target("removeChatItemByAuthorAction", "externalChannelId")
+        .or_else(|| target("markChatItemsByAuthorAsDeletedAction", "externalChannelId"))
+        && out.removed_authors.len() < ANSWER_ITEMS
+    {
+        out.removed_authors.push(channel);
+    }
+}
+
+pub fn answer(value: &Value) -> Answer {
+    let mut out = Answer {
+        visitor: value
+            .pointer("/responseContext/visitorData")
+            .and_then(Value::as_str)
+            .filter(|v| !v.is_empty() && v.len() <= 512)
+            .map(str::to_owned),
+        ..Answer::default()
+    };
+    if let Some(renderer) = value
+        .pointer("/contents/twoColumnWatchNextResults/conversationBar/liveChatRenderer")
+        .filter(|r| r.is_object())
+    {
+        out.start = renderer
+            .get("continuations")
+            .and_then(Value::as_array)
+            .and_then(|list| {
+                list.iter().find_map(|c| {
+                    c.pointer("/reloadContinuationData/continuation")?
+                        .as_str()
+                        .filter(|c| !c.is_empty())
+                        .map(str::to_owned)
+                })
+            });
+        out.replay = renderer
+            .get("isReplay")
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
+        out.views = views_of(renderer);
+        return out;
+    }
+    let Some(chat) = value
+        .pointer("/continuationContents/liveChatContinuation")
+        .or_else(|| value.pointer("/contents/liveChatRenderer"))
+        .filter(|c| c.is_object())
+    else {
+        return out;
+    };
+    if let Some(Value::Array(actions)) = chat.get("actions") {
+        for action in actions {
+            match action.get("replayChatItemAction") {
+                Some(replay @ Value::Object(_)) => {
+                    let offset_ms = integer(replay.get("videoOffsetTimeMsec"));
+                    if let Some(Value::Array(inner)) = replay.get("actions") {
+                        for action in inner {
+                            read_action(action, offset_ms, &mut out);
+                        }
+                    }
+                }
+                _ => read_action(action, None, &mut out),
+            }
+        }
+    }
+    if let Some((next, wait)) = next_of(chat) {
+        out.next = Some(next);
+        out.timeout_ms = wait;
+    }
+    out.views = views_of(chat);
+    out.restricted = chat
+        .pointer("/actionPanel/liveChatRestrictedParticipationRenderer")
+        .map(|r| text_of(r.get("message")))
+        .filter(|t| !t.is_empty());
+    out
+}
+
+/// [answer] of the answer [json]; an empty one for anything else.
+///
+/// # Safety
+/// [json] must point to [length] bytes of UTF-8.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_live_chat_answer(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: the caller gives [length] bytes at [json].
+    let value = serde_json::from_str::<Value>(unsafe { crate::taste::outside(json, length) })
+        .unwrap_or(Value::Null);
+    give_json(&answer(&value))
 }
 
 #[derive(Deserialize)]
@@ -489,6 +728,77 @@ mod tests {
         ]
         .map(ticker_seconds);
         assert_eq!(tiers, [0, 0, 120, 300, 600, 1800, 3600]);
+    }
+
+    #[test]
+    fn reads_chat_answers() {
+        let next = json!({"contents": {"twoColumnWatchNextResults": {"conversationBar": {"liveChatRenderer": {
+            "continuations": [{"reloadContinuationData": {"continuation": "start"}}], "isReplay": true}}}}});
+        let mut next = next;
+        next["responseContext"] = json!({"visitorData": "Cgt2"});
+        let opened = answer(&next);
+        assert_eq!(opened.visitor.as_deref(), Some("Cgt2"));
+        assert_eq!(opened.start.as_deref(), Some("start"));
+        assert!(opened.replay);
+        let live = json!({"continuationContents": {"liveChatContinuation": {
+        "continuations": [{"invalidationContinuationData": {"continuation": "next", "timeoutMs": 5000}}],
+        "header": {"liveChatHeaderRenderer": {"viewSelector": {"sortFilterSubMenuRenderer": {"subMenuItems": [
+            {"title": "Top chat", "selected": true, "continuation": {"reloadContinuationData": {"continuation": "top"}}},
+            {"title": "Live chat", "selected": false, "continuation": {"reloadContinuationData": {"continuation": "all"}}}]}}}},
+        "actionPanel": {"liveChatRestrictedParticipationRenderer": {"message": {"runs": [{"text": "Members-only mode"}]}}},
+        "actions": [
+            {"addChatItemAction": {"item": {"liveChatTextMessageRenderer": {"id": "m1", "message": {"simpleText": "hi"}, "authorName": {"simpleText": "a"}}}}},
+            {"addChatItemAction": {"item": {"liveChatModeChangeMessageRenderer": {"timestampUsec": "7",
+                "icon": {"iconType": "SLOW_MODE"}, "text": {"runs": [{"text": "Slow mode is on", "bold": true}]},
+                "subtext": {"runs": [{"text": "Send a message every "}, {"text": "30 seconds"}]}}}}},
+            {"markChatItemAsDeletedAction": {"targetItemId": "m0"}},
+            {"removeChatItemByAuthorAction": {"externalChannelId": "UCspam"}},
+            {"addLiveChatTickerItemAction": {}},
+            "nonsense"
+        ]}}});
+        let read = answer(&live);
+        assert_eq!(read.next.as_deref(), Some("next"));
+        assert_eq!(read.timeout_ms, Some(5000));
+        assert_eq!(
+            read.views,
+            vec![
+                View {
+                    continuation: "top".into(),
+                    selected: true
+                },
+                View {
+                    continuation: "all".into(),
+                    selected: false
+                }
+            ]
+        );
+        assert_eq!(read.restricted.as_deref(), Some("Members-only mode"));
+        assert_eq!(read.messages.len(), 2);
+        assert_eq!(read.messages[1].kind, Kind::Mode);
+        assert_eq!(
+            read.messages[1].text,
+            "Slow mode is on · Send a message every 30 seconds"
+        );
+        assert_eq!(
+            read.messages[1].id,
+            "mode:7:Slow mode is on · Send a message every 30 seconds"
+        );
+        assert_eq!(read.removed, vec!["m0".to_string()]);
+        assert_eq!(read.removed_authors, vec!["UCspam".to_string()]);
+        let replay = json!({"continuationContents": {"liveChatContinuation": {
+            "continuations": [{"playerSeekContinuationData": {"continuation": "seek"}}, {"liveChatReplayContinuationData": {"continuation": "more"}}],
+            "actions": [{"replayChatItemAction": {"videoOffsetTimeMsec": "1500", "actions": [
+                {"addChatItemAction": {"item": {"liveChatTextMessageRenderer": {"id": "r1", "message": {"simpleText": "old"}}}}}]}}]}}});
+        let read = answer(&replay);
+        assert_eq!(read.next.as_deref(), Some("more"));
+        assert_eq!(read.messages[0].offset_ms, Some(1500));
+        assert_eq!(
+            answer(&json!({"continuationContents": {"liveChatContinuation": {}}})),
+            Answer::default()
+        );
+        assert_eq!(answer(&json!([1, 2])), Answer::default());
+        let ended = json!({"continuationContents": {"liveChatContinuation": {"continuations": [{"timedContinuationData": {"continuation": "", "timeoutMs": -5}}]}}});
+        assert_eq!(answer(&ended).next, None);
     }
 
     #[test]

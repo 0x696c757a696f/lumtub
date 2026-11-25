@@ -4240,5 +4240,13 @@
   "Next match": "ඊළඟ ගැළපීම",
   "Show line by line": "පේළියෙන් පේළිය පෙන්වන්න",
   "Read by whole sentence, translated as a whole": "සම්පූර්ණ වාක්‍ය අනුව කියවා, සමස්තයක් ලෙස පරිවර්තනය කරන්න",
-  "This part could not be shown; the details are in the error log": "මෙම කොටස පෙන්විය නොහැකි විය; විස්තර දෝෂ ලොගයේ ඇත"
+  "This part could not be shown; the details are in the error log": "මෙම කොටස පෙන්විය නොහැකි විය; විස්තර දෝෂ ලොගයේ ඇත",
+  "Top chat": "ඉහළම චැට්",
+  "All messages": "සියලු පණිවුඩ",
+  "Some messages, such as possible spam, are left out": "සැක සහිත ස්පෑම් වැනි සමහර පණිවුඩ ඉවත් කර ඇත",
+  "Every message, as it is written": "සෑම පණිවුඩයක්ම, ලියා ඇති ලෙසම",
+  "{0} (not offered here)": "{0} (මෙහි නොලැබේ)",
+  "Which messages show": "පෙන්විය යුතු පණිවුඩ මොනවාද",
+  "Chat mode": "චැට් ප්‍රකාරය",
+  "The installation is incomplete, so the chat can't be read": "ස්ථාපනය අසම්පූර්ණයි, එබැවින් චැට් කියවිය නොහැක"
 }

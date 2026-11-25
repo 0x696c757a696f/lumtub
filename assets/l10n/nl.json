@@ -4240,5 +4240,13 @@
   "Next match": "Volgende overeenkomst",
   "Show line by line": "Regel voor regel tonen",
   "Read by whole sentence, translated as a whole": "Lezen per hele zin, als geheel vertaald",
-  "This part could not be shown; the details are in the error log": "Dit deel kon niet worden getoond; de details staan in het foutenlogboek"
+  "This part could not be shown; the details are in the error log": "Dit deel kon niet worden getoond; de details staan in het foutenlogboek",
+  "Top chat": "Topchat",
+  "All messages": "Alle berichten",
+  "Some messages, such as possible spam, are left out": "Sommige berichten, zoals mogelijke spam, worden weggelaten",
+  "Every message, as it is written": "Elk bericht, zoals het is geschreven",
+  "{0} (not offered here)": "{0} (hier niet beschikbaar)",
+  "Which messages show": "Welke berichten worden getoond",
+  "Chat mode": "Chatmodus",
+  "The installation is incomplete, so the chat can't be read": "De installatie is onvolledig, dus de chat kan niet worden gelezen"
 }

@@ -211,11 +211,35 @@ class DanmakuOverlay {
     }
     if (_live) _forgetOldIds();
     if (_waiting.length != waiting) {
-      final rest = _waiting.sublist(_given)..sort((a, b) => a.$1.compareTo(b.$1));
-      _waiting.setRange(_given, _waiting.length, rest);
+      _mergeWaiting(waiting);
       _changed = true;
     }
     _send(batch, sent, now, wall);
+  }
+
+  /// Puts the messages added after [from] in order among those waiting.
+  /// A replay read answer by answer adds them mostly after the ones before:
+  /// only the new ones are sorted, then merged in one pass, instead of
+  /// sorting everything still waiting each time.
+  void _mergeWaiting(int from) {
+    int byStart((double, LiveChatMessage) a, (double, LiveChatMessage) b) => a.$1.compareTo(b.$1);
+    final added = _waiting.sublist(from)..sort(byStart);
+    // Nothing waiting before them, or all of it earlier.
+    if (from <= _given || _waiting[from - 1].$1 <= added.first.$1) {
+      _waiting.setRange(from, _waiting.length, added);
+      return;
+    }
+    // Merged from the end, in place: the larger of the two tails goes last.
+    var i = from - 1;
+    var j = added.length - 1;
+    var k = _waiting.length - 1;
+    while (j >= 0) {
+      if (i >= _given && byStart(_waiting[i], added[j]) > 0) {
+        _waiting[k--] = _waiting[i--];
+      } else {
+        _waiting[k--] = added[j--];
+      }
+    }
   }
 
   static String _textOf(LiveChatMessage message) => message.text.trim().isNotEmpty ? message.text : message.amount ?? '';

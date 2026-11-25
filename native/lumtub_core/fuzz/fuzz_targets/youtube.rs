@@ -49,6 +49,8 @@ fuzz_target!(|data: &[u8]| {
     let _ = posts::page(&value);
     let _ = posts::section_token(&value);
     let _ = live_chat::composer(&value);
+    let read = live_chat::answer(&value);
+    assert!(read.views.len() <= 4);
     let _ = tv_browse::page(&value, false);
     let _ = tv_browse::page(&value, true);
     let _ = resolved::summary(&value, &resolved::Ask::default());

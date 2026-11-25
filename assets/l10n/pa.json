@@ -4240,5 +4240,13 @@
   "Next match": "ਅਗਲਾ ਮੇਲ",
   "Show line by line": "ਲਾਈਨ ਦਰ ਲਾਈਨ ਦਿਖਾਓ",
   "Read by whole sentence, translated as a whole": "ਪੂਰੇ ਵਾਕ ਅਨੁਸਾਰ ਪੜ੍ਹੋ, ਪੂਰੇ ਵਾਕ ਦਾ ਅਨੁਵਾਦ ਕਰੋ",
-  "This part could not be shown; the details are in the error log": "ਇਹ ਹਿੱਸਾ ਦਿਖਾਇਆ ਨਹੀਂ ਜਾ ਸਕਿਆ; ਵੇਰਵੇ ਗਲਤੀ ਲੌਗ ਵਿੱਚ ਹਨ"
+  "This part could not be shown; the details are in the error log": "ਇਹ ਹਿੱਸਾ ਦਿਖਾਇਆ ਨਹੀਂ ਜਾ ਸਕਿਆ; ਵੇਰਵੇ ਗਲਤੀ ਲੌਗ ਵਿੱਚ ਹਨ",
+  "Top chat": "ਟੌਪ ਚੈਟ",
+  "All messages": "ਸਾਰੇ ਸੁਨੇਹੇ",
+  "Some messages, such as possible spam, are left out": "ਸੰਭਾਵੀ ਸਪੈਮ ਵਰਗੇ ਕੁਝ ਸੁਨੇਹੇ ਛੱਡ ਦਿੱਤੇ ਗਏ ਹਨ",
+  "Every message, as it is written": "ਹਰ ਸੁਨੇਹਾ, ਜਿਵੇਂ ਲਿਖਿਆ ਗਿਆ ਹੈ",
+  "{0} (not offered here)": "{0} (ਇੱਥੇ ਉਪਲਬਧ ਨਹੀਂ)",
+  "Which messages show": "ਕਿਹੜੇ ਸੁਨੇਹੇ ਦਿਖਾਉਣੇ ਹਨ",
+  "Chat mode": "ਚੈਟ ਮੋਡ",
+  "The installation is incomplete, so the chat can't be read": "ਇੰਸਟਾਲੇਸ਼ਨ ਅਧੂਰੀ ਹੈ, ਇਸ ਲਈ ਚੈਟ ਪੜ੍ਹੀ ਨਹੀਂ ਜਾ ਸਕਦੀ"
 }

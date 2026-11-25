@@ -4240,5 +4240,13 @@
   "Next match": "နောက်ကိုက်ညီမှု",
   "Show line by line": "စာကြောင်းလိုက် ပြရန်",
   "Read by whole sentence, translated as a whole": "ဝါကျအပြည့်အစုံအလိုက် ဖတ်ပြီး တစ်ခုလုံး ဘာသာပြန်ရန်",
-  "This part could not be shown; the details are in the error log": "ဤအပိုင်းကို ပြသ၍မရပါ။ အသေးစိတ်ကို အမှားမှတ်တမ်းတွင် ကြည့်ပါ"
+  "This part could not be shown; the details are in the error log": "ဤအပိုင်းကို ပြသ၍မရပါ။ အသေးစိတ်ကို အမှားမှတ်တမ်းတွင် ကြည့်ပါ",
+  "Top chat": "ထိပ်တန်းချက်တင်",
+  "All messages": "မက်ဆေ့ချ်အားလုံး",
+  "Some messages, such as possible spam, are left out": "စပမ်းဖြစ်နိုင်သည့်မက်ဆေ့ချ်များကဲ့သို့ အချို့ကို ချန်လှပ်ထားသည်",
+  "Every message, as it is written": "မက်ဆေ့ချ်တိုင်းကို ရေးထားသည့်အတိုင်း",
+  "{0} (not offered here)": "{0} (ဤနေရာတွင် မရနိုင်ပါ)",
+  "Which messages show": "ဘယ်မက်ဆေ့ချ်များကို ပြမည်နည်း",
+  "Chat mode": "ချက်တင်မုဒ်",
+  "The installation is incomplete, so the chat can't be read": "ထည့်သွင်းမှု မပြည့်စုံသဖြင့် ချက်တင်ကို ဖတ်၍မရပါ"
 }

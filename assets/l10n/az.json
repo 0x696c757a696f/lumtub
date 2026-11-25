@@ -4240,5 +4240,13 @@
   "Next match": "Növbəti uyğunluq",
   "Show line by line": "Sətir-sətir göstər",
   "Read by whole sentence, translated as a whole": "Tam cümlələrlə oxu, bütövlükdə tərcümə et",
-  "This part could not be shown; the details are in the error log": "Bu hissəni göstərmək mümkün olmadı; təfərrüatlar xəta jurnalındadır"
+  "This part could not be shown; the details are in the error log": "Bu hissəni göstərmək mümkün olmadı; təfərrüatlar xəta jurnalındadır",
+  "Top chat": "Əsas çat",
+  "All messages": "Bütün mesajlar",
+  "Some messages, such as possible spam, are left out": "Mümkün spam kimi bəzi mesajlar göstərilmir",
+  "Every message, as it is written": "Hər mesaj yazıldığı kimi",
+  "{0} (not offered here)": "{0} (burada təklif olunmur)",
+  "Which messages show": "Hansı mesajlar göstərilsin",
+  "Chat mode": "Çat rejimi",
+  "The installation is incomplete, so the chat can't be read": "Quraşdırma natamamdır, ona görə çat oxuna bilmir"
 }

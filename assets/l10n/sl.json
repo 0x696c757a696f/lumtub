@@ -4240,5 +4240,13 @@
   "Next match": "Naslednje ujemanje",
   "Show line by line": "Prikaži vrstico za vrstico",
   "Read by whole sentence, translated as a whole": "Beri po celih stavkih, prevedi kot celoto",
-  "This part could not be shown; the details are in the error log": "Tega dela ni bilo mogoče prikazati; podrobnosti so v dnevniku napak"
+  "This part could not be shown; the details are in the error log": "Tega dela ni bilo mogoče prikazati; podrobnosti so v dnevniku napak",
+  "Top chat": "Top klepet",
+  "All messages": "Vsa sporočila",
+  "Some messages, such as possible spam, are left out": "Nekatera sporočila, na primer možna neželena, so izpuščena",
+  "Every message, as it is written": "Vsako sporočilo, kot je napisano",
+  "{0} (not offered here)": "{0} (tukaj ni na voljo)",
+  "Which messages show": "Katera sporočila se prikažejo",
+  "Chat mode": "Način klepeta",
+  "The installation is incomplete, so the chat can't be read": "Namestitev je nepopolna, zato klepeta ni mogoče prebrati"
 }

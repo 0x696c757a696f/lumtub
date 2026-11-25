@@ -4181,5 +4181,13 @@
   "None besides the target language": "Nenhum além do idioma de destino",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} não está respondendo no momento; outro serviço gratuito traduz enquanto isso.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} não está respondendo no momento; {1} traduz enquanto isso.",
-  "Show translations in other languages automatically, as Translation layout says": "Mostrar automaticamente traduções de outros idiomas, conforme “Exibição da tradução”"
+  "Show translations in other languages automatically, as Translation layout says": "Mostrar automaticamente traduções de outros idiomas, conforme “Exibição da tradução”",
+  "Save a note at this moment": "Salvar uma nota neste momento",
+  "Make it a whole sentence with AI": "Transformar em frase completa com a IA",
+  "Explain the selection with AI": "Explicar a seleção com a IA",
+  "Save the selection as a note": "Salvar a seleção como nota",
+  "Previous match": "Resultado anterior",
+  "Next match": "Próximo resultado",
+  "Show line by line": "Mostrar linha por linha",
+  "Read by whole sentence, translated as a whole": "Ler por frase completa, traduzida como um todo"
 }

@@ -4181,5 +4181,13 @@
   "None besides the target language": "Maksat dilinden başga ýok",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} häzir jogap bermeýär; şol wagt başga bir mugt hyzmat terjime edýär.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} häzir jogap bermeýär; şol wagt {1} terjime edýär.",
-  "Show translations in other languages automatically, as Translation layout says": "Beýleki dillerdäki terjimeleri “Terjimäniň ýerleşişi” görkezişi ýaly awtomatik görkez"
+  "Show translations in other languages automatically, as Translation layout says": "Beýleki dillerdäki terjimeleri “Terjimäniň ýerleşişi” görkezişi ýaly awtomatik görkez",
+  "Save a note at this moment": "Şu pursatda bellik sakla",
+  "Make it a whole sentence with AI": "Emeli aň bilen doly sözlem et",
+  "Explain the selection with AI": "Saýlananyny emeli aň bilen düşündir",
+  "Save the selection as a note": "Saýlananyny bellik hökmünde sakla",
+  "Previous match": "Öňki gabat gelme",
+  "Next match": "Indiki gabat gelme",
+  "Show line by line": "Setir-setir görkez",
+  "Read by whole sentence, translated as a whole": "Doly sözlem boýunça oka, bütinleý terjime et"
 }

@@ -194,7 +194,16 @@ class _OverviewView extends StatelessWidget {
           Text(tr('Chapters'), style: heading),
           if (byAi) Text(tr('The video has no chapters of its own, so these are shown on the progress bar.'), style: TextStyle(fontSize: 12, color: colors.outline)),
           const SizedBox(height: 4),
-          for (final c in overview.chapters) row(c.start, Text(c.title, style: const TextStyle(height: 1.5))),
+          for (final c in overview.chapters)
+            row(
+              c.start,
+              c.summary.isEmpty
+                  ? Text(c.title, style: const TextStyle(height: 1.5))
+                  : Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                      Text(c.title, style: const TextStyle(height: 1.5, fontWeight: FontWeight.w600)),
+                      Text(c.summary, style: TextStyle(height: 1.5, color: colors.onSurfaceVariant)),
+                    ]),
+            ),
         ],
         if (overview.quotes.isNotEmpty) ...[
           const SizedBox(height: 16),

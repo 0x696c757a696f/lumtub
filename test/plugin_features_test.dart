@@ -190,6 +190,46 @@ void main() {
       expect(progress.last.$1, progress.last.$2 - 1);
     });
 
+    test('chapters that stop early are asked for once more, and keep their summaries', () async {
+      final asked = <String>[];
+      final client = MockClient((request) async {
+        final messages = (jsonDecode(request.body) as Map)['messages'] as List;
+        asked.add((messages.last as Map)['content'] as String);
+        return _reply(jsonEncode({
+          'about': 'Lines.',
+          'chapters': [
+            {'time': '0:00', 'title': 'Start', 'summary': 'The first lines.'},
+            if (asked.length > 1) {'time': '4:10', 'title': 'End', 'summary': 'The last lines.'},
+          ],
+          'quotes': [
+            // Tidied of a false start, still found by its later words.
+            {'time': '0:00', 'text': 'Well, um, so line number 42.'},
+          ],
+        }));
+      });
+      final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
+      final body = await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(60)));
+      expect(asked, hasLength(2));
+      expect(asked.last, contains('Your last chapter started at 0:00, but the video runs until 4:59.'));
+      final overview = VideoOverview.parse(body)!;
+      expect([for (final c in overview.chapters) (c.title, c.summary)], [('Start', 'The first lines.'), ('End', 'The last lines.')]);
+      expect(overview.text, contains('    The last lines.'));
+      expect(overview.quotes.single.found, isTrue);
+      expect(overview.quotes.single.at, const Duration(seconds: 210));
+    });
+
+    test('a stretch of subtitles is made a whole sentence with the lines around it', () async {
+      final asked = <String>[];
+      final client = MockClient((request) async {
+        final messages = (jsonDecode(request.body) as Map)['messages'] as List;
+        asked.add((messages.last as Map)['content'] as String);
+        return _reply('"Batteries hate the cold."');
+      });
+      final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
+      expect(await completeQuoteText(ai.complete, 'hate the', title: 'T', before: ['so batteries'], after: ['cold you know']), 'Batteries hate the cold.');
+      expect(asked.last, allOf(contains('Before:\nso batteries'), contains('The stretch:\nhate the'), contains('After:\ncold you know')));
+    });
+
     test('a subtitle line is explained with the lines around it, and a note tidied', () async {
       final asked = <String>[];
       final client = MockClient((request) async {

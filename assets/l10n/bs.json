@@ -4181,5 +4181,13 @@
   "None besides the target language": "Nijedan osim ciljnog jezika",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} trenutno ne odgovara; u međuvremenu prevodi druga besplatna usluga.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} trenutno ne odgovara; u međuvremenu prevodi {1}.",
-  "Show translations in other languages automatically, as Translation layout says": "Automatski prikaži prijevode s drugih jezika prema „Raspored prijevoda“"
+  "Show translations in other languages automatically, as Translation layout says": "Automatski prikaži prijevode s drugih jezika prema „Raspored prijevoda“",
+  "Save a note at this moment": "Sačuvaj bilješku u ovom trenutku",
+  "Make it a whole sentence with AI": "Pretvori u cijelu rečenicu pomoću AI-ja",
+  "Explain the selection with AI": "Objasni odabir pomoću AI-ja",
+  "Save the selection as a note": "Sačuvaj odabir kao bilješku",
+  "Previous match": "Prethodno podudaranje",
+  "Next match": "Sljedeće podudaranje",
+  "Show line by line": "Prikaži red po red",
+  "Read by whole sentence, translated as a whole": "Čitaj cijelim rečenicama, prevedeno kao cjelina"
 }

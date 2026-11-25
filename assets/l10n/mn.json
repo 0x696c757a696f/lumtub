@@ -4181,5 +4181,13 @@
   "None besides the target language": "Орчуулах хэлээс бусад байхгүй",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} одоохондоо хариу өгөхгүй байна; энэ хооронд өөр үнэгүй үйлчилгээ орчуулна.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} одоохондоо хариу өгөхгүй байна; энэ хооронд {1} орчуулна.",
-  "Show translations in other languages automatically, as Translation layout says": "Бусад хэлний орчуулгыг “Орчуулгын байрлал”-ын дагуу автоматаар харуулах"
+  "Show translations in other languages automatically, as Translation layout says": "Бусад хэлний орчуулгыг “Орчуулгын байрлал”-ын дагуу автоматаар харуулах",
+  "Save a note at this moment": "Яг одоо тэмдэглэл хадгалах",
+  "Make it a whole sentence with AI": "Хиймэл оюунаар бүтэн өгүүлбэр болгох",
+  "Explain the selection with AI": "Сонгосныг хиймэл оюунаар тайлбарлах",
+  "Save the selection as a note": "Сонгосныг тэмдэглэл болгон хадгалах",
+  "Previous match": "Өмнөх тохирол",
+  "Next match": "Дараагийн тохирол",
+  "Show line by line": "Мөр мөрөөр харуулах",
+  "Read by whole sentence, translated as a whole": "Бүтэн өгүүлбэрээр унших, бүхэлд нь орчуулах"
 }

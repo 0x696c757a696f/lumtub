@@ -4181,5 +4181,13 @@
   "None besides the target language": "Которуу тилинен башка жок",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} азырынча жооп бербей жатат; ортодо башка акысыз кызмат которот.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} азырынча жооп бербей жатат; ортодо {1} которот.",
-  "Show translations in other languages automatically, as Translation layout says": "Башка тилдердеги тексттердин котормосун «Котормонун жайгашуусу» боюнча автоматтык түрдө көрсөтүү"
+  "Show translations in other languages automatically, as Translation layout says": "Башка тилдердеги тексттердин котормосун «Котормонун жайгашуусу» боюнча автоматтык түрдө көрсөтүү",
+  "Save a note at this moment": "Ушул учурда эскертме сактоо",
+  "Make it a whole sentence with AI": "ЖИ менен толук сүйлөм кылуу",
+  "Explain the selection with AI": "Тандалганды ЖИ менен түшүндүрүү",
+  "Save the selection as a note": "Тандалганды эскертме катары сактоо",
+  "Previous match": "Мурунку дал келүү",
+  "Next match": "Кийинки дал келүү",
+  "Show line by line": "Сап-сап көрсөтүү",
+  "Read by whole sentence, translated as a whole": "Толук сүйлөм менен окуу, бүтүндөй которуу"
 }

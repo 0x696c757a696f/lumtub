@@ -4181,5 +4181,13 @@
   "None besides the target language": "គ្មាន ក្រៅពីភាសាគោលដៅ",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} មិនឆ្លើយតបនៅពេលនេះទេ ហើយសេវាឥតគិតថ្លៃផ្សេងទៀតកំពុងបកប្រែជំនួស។",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} មិនឆ្លើយតបនៅពេលនេះទេ ហើយ {1} កំពុងបកប្រែជំនួស។",
-  "Show translations in other languages automatically, as Translation layout says": "បង្ហាញការបកប្រែនៃភាសាផ្សេងដោយស្វ័យប្រវត្តិ តាម «ការបង្ហាញការបកប្រែ»"
+  "Show translations in other languages automatically, as Translation layout says": "បង្ហាញការបកប្រែនៃភាសាផ្សេងដោយស្វ័យប្រវត្តិ តាម «ការបង្ហាញការបកប្រែ»",
+  "Save a note at this moment": "រក្សាទុកកំណត់ចំណាំនៅពេលនេះ",
+  "Make it a whole sentence with AI": "ធ្វើឱ្យជាប្រយោគពេញដោយ AI",
+  "Explain the selection with AI": "ពន្យល់ផ្នែកដែលបានជ្រើសដោយ AI",
+  "Save the selection as a note": "រក្សាទុកផ្នែកដែលបានជ្រើសជាកំណត់ចំណាំ",
+  "Previous match": "លទ្ធផលផ្គូផ្គងមុន",
+  "Next match": "លទ្ធផលផ្គូផ្គងបន្ទាប់",
+  "Show line by line": "បង្ហាញម្ដងមួយបន្ទាត់",
+  "Read by whole sentence, translated as a whole": "អានតាមប្រយោគពេញ ហើយបកប្រែជាមួយគ្នា"
 }

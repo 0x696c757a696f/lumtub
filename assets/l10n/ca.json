@@ -4181,5 +4181,13 @@
   "None besides the target language": "Cap, a part de l’idioma de destinació",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} no respon de moment; mentrestant tradueix un altre servei gratuït.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} no respon de moment; mentrestant tradueix {1}.",
-  "Show translations in other languages automatically, as Translation layout says": "Mostra automàticament les traduccions d’altres idiomes, segons «Disposició de la traducció»"
+  "Show translations in other languages automatically, as Translation layout says": "Mostra automàticament les traduccions d’altres idiomes, segons «Disposició de la traducció»",
+  "Save a note at this moment": "Desa una nota en aquest moment",
+  "Make it a whole sentence with AI": "Converteix-ho en una frase completa amb la IA",
+  "Explain the selection with AI": "Explica la selecció amb la IA",
+  "Save the selection as a note": "Desa la selecció com a nota",
+  "Previous match": "Coincidència anterior",
+  "Next match": "Coincidència següent",
+  "Show line by line": "Mostra línia a línia",
+  "Read by whole sentence, translated as a whole": "Llegeix per frases senceres, traduïdes com un tot"
 }

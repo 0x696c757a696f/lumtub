@@ -4181,5 +4181,13 @@
   "None besides the target language": "Không có, ngoài ngôn ngữ đích",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} tạm thời không phản hồi; trong lúc đó một dịch vụ miễn phí khác sẽ dịch.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} tạm thời không phản hồi; trong lúc đó {1} sẽ dịch.",
-  "Show translations in other languages automatically, as Translation layout says": "Tự động hiện bản dịch của ngôn ngữ khác, theo “Cách hiển thị bản dịch”"
+  "Show translations in other languages automatically, as Translation layout says": "Tự động hiện bản dịch của ngôn ngữ khác, theo “Cách hiển thị bản dịch”",
+  "Save a note at this moment": "Lưu ghi chú tại thời điểm này",
+  "Make it a whole sentence with AI": "Nhờ AI viết thành câu hoàn chỉnh",
+  "Explain the selection with AI": "Nhờ AI giải thích phần đã chọn",
+  "Save the selection as a note": "Lưu phần đã chọn thành ghi chú",
+  "Previous match": "Kết quả trước",
+  "Next match": "Kết quả tiếp theo",
+  "Show line by line": "Hiển thị từng dòng",
+  "Read by whole sentence, translated as a whole": "Đọc theo câu hoàn chỉnh, dịch cả câu"
 }

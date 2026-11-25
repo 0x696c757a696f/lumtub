@@ -4181,5 +4181,13 @@
   "None besides the target language": "Wala maliban sa target na wika",
   "{0} is not answering for now; another free service translates meanwhile.": "Hindi muna tumutugon ang {0}; isa pang libreng serbisyo ang magsasalin sa ngayon.",
   "{0} is not answering for now; {1} translates meanwhile.": "Hindi muna tumutugon ang {0}; ang {1} ang magsasalin sa ngayon.",
-  "Show translations in other languages automatically, as Translation layout says": "Awtomatikong ipakita ang mga salin ng ibang wika, ayon sa “Layout ng salin”"
+  "Show translations in other languages automatically, as Translation layout says": "Awtomatikong ipakita ang mga salin ng ibang wika, ayon sa “Layout ng salin”",
+  "Save a note at this moment": "Mag-save ng tala sa sandaling ito",
+  "Make it a whole sentence with AI": "Gawing buong pangungusap gamit ang AI",
+  "Explain the selection with AI": "Ipaliwanag ang napili gamit ang AI",
+  "Save the selection as a note": "I-save ang napili bilang tala",
+  "Previous match": "Nakaraang tugma",
+  "Next match": "Susunod na tugma",
+  "Show line by line": "Ipakita nang linya-linya",
+  "Read by whole sentence, translated as a whole": "Basahin nang buong pangungusap, isinasalin nang buo"
 }

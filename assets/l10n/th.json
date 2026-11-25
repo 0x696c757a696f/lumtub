@@ -4181,5 +4181,13 @@
   "None besides the target language": "ไม่มี นอกจากภาษาปลายทาง",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} ไม่ตอบสนองในขณะนี้ บริการฟรีอื่นจะแปลแทนไปก่อน",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} ไม่ตอบสนองในขณะนี้ {1} จะแปลแทนไปก่อน",
-  "Show translations in other languages automatically, as Translation layout says": "แสดงคำแปลของภาษาอื่นอัตโนมัติตาม“การแสดงคำแปล”"
+  "Show translations in other languages automatically, as Translation layout says": "แสดงคำแปลของภาษาอื่นอัตโนมัติตาม“การแสดงคำแปล”",
+  "Save a note at this moment": "บันทึกโน้ต ณ ตอนนี้",
+  "Make it a whole sentence with AI": "ให้ AI เรียบเรียงเป็นประโยคสมบูรณ์",
+  "Explain the selection with AI": "ให้ AI อธิบายส่วนที่เลือก",
+  "Save the selection as a note": "บันทึกส่วนที่เลือกเป็นโน้ต",
+  "Previous match": "รายการที่ตรงกันก่อนหน้า",
+  "Next match": "รายการที่ตรงกันถัดไป",
+  "Show line by line": "แสดงทีละบรรทัด",
+  "Read by whole sentence, translated as a whole": "อ่านทีละประโยคเต็มและแปลทั้งประโยค"
 }

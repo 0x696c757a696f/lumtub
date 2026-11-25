@@ -4181,5 +4181,13 @@
   "None besides the target language": "Аудару тілінен басқа жоқ",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} әзірге жауап бермейді; бұл кезде басқа тегін қызмет аударады.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} әзірге жауап бермейді; бұл кезде {1} аударады.",
-  "Show translations in other languages automatically, as Translation layout says": "Басқа тілдердегі мәтіндердің аудармасын «Аударма орналасуы» бойынша автоматты түрде көрсету"
+  "Show translations in other languages automatically, as Translation layout says": "Басқа тілдердегі мәтіндердің аудармасын «Аударма орналасуы» бойынша автоматты түрде көрсету",
+  "Save a note at this moment": "Осы сәтте жазба сақтау",
+  "Make it a whole sentence with AI": "ЖИ-мен толық сөйлем жасау",
+  "Explain the selection with AI": "Таңдалғанды ЖИ-мен түсіндіру",
+  "Save the selection as a note": "Таңдалғанды жазба ретінде сақтау",
+  "Previous match": "Алдыңғы сәйкестік",
+  "Next match": "Келесі сәйкестік",
+  "Show line by line": "Жолма-жол көрсету",
+  "Read by whole sentence, translated as a whole": "Толық сөйлемдермен оқу, тұтас аудару"
 }

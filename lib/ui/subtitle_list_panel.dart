@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/rendering.dart' show RenderAbstractViewport;
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
@@ -14,6 +15,8 @@ import '../subtitle_cues.dart';
 import '../save_file.dart';
 import '../friendly_error.dart';
 import '../app_log.dart';
+import '../language_guess.dart' show readsAs;
+import '../translation.dart' show translateForeignLines;
 import 'common.dart';
 import 'motion.dart';
 import 'player_panel.dart';
@@ -62,6 +65,69 @@ class _SubtitleListState extends State<SubtitleList> {
   late SubtitleOption? _second = widget.controller.secondarySubtitle;
   late String _secondTrack = widget.controller.secondaryTrackId;
   late SubtitleListMode _mode = widget.controller.preferences.subtitleListMode;
+
+  /// 按整句阅读: short caption lines joined into whole sentences, each
+  /// with its translation made from the whole sentence. Kept while the app
+  /// runs.
+  static bool _readBySentence = false;
+  bool _bySentence = _readBySentence;
+  (List<PairedCue>, List<PairedCue>)? _sentences;
+  /// Whole-sentence translations asked for, by sentence.
+  final _wholeTranslations = <String, Future<String?>>{};
+  /// What is selected in the list (with a mouse), for the menu's 讲解 and
+  /// 记笔记 of part of a line.
+  String _selected = '';
+  /// Which search match was stepped to last, for the arrows.
+  int _match = -1;
+
+  /// [cues] as listed: line by line, or as whole sentences.
+  List<PairedCue> _rowsOf(List<PairedCue> cues) {
+    if (!_bySentence) return cues;
+    final kept = _sentences;
+    if (kept != null && identical(kept.$1, cues)) return kept.$2;
+    final rows = sentenceRows(cues);
+    _sentences = (cues, rows);
+    return rows;
+  }
+
+  /// The translation of the whole [sentence] into the language set for
+  /// translations, asked once; null when it is already in that language
+  /// or could not be translated.
+  Future<String?> _wholeTranslation(String sentence) => _wholeTranslations.putIfAbsent(sentence, () async {
+        final prefs = widget.controller.preferences;
+        final target = prefs.translateTarget;
+        bool done(String line) => readsAs(line, target, chineseAsOne: prefs.chineseAsOne);
+        if (done(sentence)) return null;
+        try {
+          final result = (await translateForeignLines(widget.controller.translator, sentence, target, done)).trim();
+          return result.isEmpty || result == sentence.trim() ? null : result;
+        } catch (_) {
+          return null;
+        }
+      });
+
+  void _toggleSentences() => setState(() {
+        _bySentence = _readBySentence = !_bySentence;
+        _current = -1;
+        _match = -1;
+        unawaited(_positions?.cancel());
+        _positions = null;
+      });
+
+  /// Seeks to the next ([step] 1) or previous (-1) line that matches the
+  /// search, as YouTube Digest's arrows do, and marks it.
+  void _stepMatch(List<PairedCue> rows, List<int> shown, int step) {
+    if (shown.isEmpty) return;
+    final at = shown.indexOf(_current);
+    final from = at >= 0 ? at : _match;
+    final next = from < 0 ? (step > 0 ? 0 : shown.length - 1) : (from + step) % shown.length;
+    setState(() {
+      _match = next;
+      _current = shown[next];
+    });
+    unawaited(widget.controller.seek(rows[shown[next]].cue.start));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _reveal(next, shown.length));
+  }
 
   @override
   void initState() {
@@ -266,10 +332,17 @@ class _SubtitleListState extends State<SubtitleList> {
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
     if (overlay == null) return;
     final local = overlay.globalToLocal(at);
+    // Part of a line picked with the mouse: what 讲解 and 记笔记 take.
+    final part = _selected.trim();
     final picked = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(local.dx, local.dy, overlay.size.width - local.dx, overlay.size.height - local.dy),
       items: [
+        if (part.isNotEmpty && widget.controller.canSummarize)
+          PopupMenuItem(value: 'explainPart', child: ListTile(dense: true, leading: Icon(AppIcons.lightbulb, size: 18), title: Text(tr('Explain the selection with AI')))),
+        if (part.isNotEmpty)
+          PopupMenuItem(value: 'notePart', child: ListTile(dense: true, leading: Icon(AppIcons.notePencil, size: 18), title: Text(tr('Save the selection as a note')))),
+        if (part.isNotEmpty) const PopupMenuDivider(),
         PopupMenuItem(value: 'copy', child: ListTile(dense: true, leading: Icon(AppIcons.copy, size: 18), title: Text(tr('Copy')))),
         if (widget.controller.canSummarize) PopupMenuItem(value: 'explain', child: ListTile(dense: true, leading: Icon(AppIcons.lightbulb, size: 18), title: Text(tr('Explain with AI')))),
         PopupMenuItem(value: 'note', child: ListTile(dense: true, leading: Icon(AppIcons.notePencil, size: 18), title: Text(tr('Save as note')))),
@@ -277,21 +350,20 @@ class _SubtitleListState extends State<SubtitleList> {
     );
     if (!mounted || picked == null) return;
     final text = [line.cue.text, if (line.second != null) line.second!].join('\n');
+    String words(PairedCue c) => c.cue.text;
+    final before = [for (final c in cues.sublist(i > 3 ? i - 3 : 0, i)) words(c)];
+    final after = [for (final c in cues.sublist(i + 1, i + 4 < cues.length ? i + 4 : cues.length)) words(c)];
     switch (picked) {
+      case 'explainPart':
+        await showLineExplanation(context, widget.controller, text: part, at: line.cue.start, before: [...before, line.cue.text], after: after);
+      case 'notePart':
+        await showNoteEditor(context, widget.controller, at: line.cue.start, quote: part, before: [...before, line.cue.text], after: after);
       case 'copy':
         _copy(line);
       case 'explain':
-        String words(PairedCue c) => c.cue.text;
-        await showLineExplanation(
-          context,
-          widget.controller,
-          text: line.cue.text,
-          at: line.cue.start,
-          before: [for (final c in cues.sublist(i > 3 ? i - 3 : 0, i)) words(c)],
-          after: [for (final c in cues.sublist(i + 1, i + 3 < cues.length ? i + 3 : cues.length)) words(c)],
-        );
+        await showLineExplanation(context, widget.controller, text: line.cue.text, at: line.cue.start, before: before, after: after);
       case 'note':
-        await showNoteEditor(context, widget.controller, at: line.cue.start, quote: text);
+        await showNoteEditor(context, widget.controller, at: line.cue.start, quote: text, before: before, after: after);
     }
   }
 
@@ -356,7 +428,27 @@ class _SubtitleListState extends State<SubtitleList> {
                     at: cue.start,
                     colors: colors,
                   ),
-                  if (under != null) ...[
+                  if (_bySentence && !swap)
+                    // The whole sentence translated as one, in place of the
+                    // second subtitle's lines joined, once it is there.
+                    FutureBuilder<String?>(
+                      future: _wholeTranslation(cue.text),
+                      builder: (context, snapshot) {
+                        final words = snapshot.data ?? under;
+                        if (words == null) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: _line(
+                            words,
+                            TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
+                            other: top,
+                            at: cue.start,
+                            colors: colors,
+                          ),
+                        );
+                      },
+                    )
+                  else if (under != null) ...[
                     const SizedBox(height: 2),
                     _line(
                       under,
@@ -394,6 +486,20 @@ class _SubtitleListState extends State<SubtitleList> {
     );
   }
 
+  /// With a mouse, words can be picked out of the lines (a right click
+  /// then offers to explain or keep just those); a finger long-presses a
+  /// line for its menu instead, so touch lists stay as they are.
+  Widget _selectable(Widget list) {
+    const mouse = {TargetPlatform.windows, TargetPlatform.linux, TargetPlatform.macOS};
+    if (!mouse.contains(defaultTargetPlatform)) return list;
+    return SelectionArea(
+      onSelectionChanged: (content) => _selected = content?.plainText ?? '',
+      // The line's own menu (right click) carries 讲解 and 记笔记 for it.
+      contextMenuBuilder: (context, state) => const SizedBox.shrink(),
+      child: list,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -401,7 +507,7 @@ class _SubtitleListState extends State<SubtitleList> {
       future: _cues,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
-        final cues = snapshot.data ?? const <PairedCue>[];
+        final cues = _rowsOf(snapshot.data ?? const <PairedCue>[]);
         if (cues.isEmpty) {
           return Center(
             child: Padding(
@@ -416,7 +522,7 @@ class _SubtitleListState extends State<SubtitleList> {
         }
         if (_positions == null) _listen(cues);
         // Anything a row shows but the playing line builds them all again.
-        final rowsFor = Object.hash(cues, _query, _mode, colors, _learningSeen, Localizations.maybeLocaleOf(context), MediaQuery.textScalerOf(context));
+        final rowsFor = Object.hash(cues, _query, _mode, _bySentence, colors, _learningSeen, Localizations.maybeLocaleOf(context), MediaQuery.textScalerOf(context));
         if (rowsFor != _rowsFor) {
           _rowsFor = rowsFor;
           _rows.clear();
@@ -433,10 +539,42 @@ class _SubtitleListState extends State<SubtitleList> {
                     // Filtering thousands of lines waits for a pause in typing.
                     _typing?.cancel();
                     _typing = Timer(const Duration(milliseconds: 250), () {
-                      if (mounted) setState(() => _query = v.trim().toLowerCase());
+                      if (mounted) {
+                        setState(() {
+                          _query = v.trim().toLowerCase();
+                          _match = -1;
+                        });
+                      }
                     });
                   },
                 )),
+              ),
+              if (shown != null) ...[
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 8),
+                  child: Text(
+                    shown.isEmpty ? '0' : '${(_match < 0 ? 0 : _match + 1)}/${shown.length}',
+                    style: TextStyle(fontSize: 12, color: colors.outline, fontFeatures: const [FontFeature.tabularFigures()]),
+                  ),
+                ),
+                IconButton(
+                  tooltip: tr('Previous match'),
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(AppIcons.caretUp, size: 18),
+                  onPressed: shown.isEmpty ? null : () => _stepMatch(cues, shown, -1),
+                ),
+                IconButton(
+                  tooltip: tr('Next match'),
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(AppIcons.caretDown, size: 18),
+                  onPressed: shown.isEmpty ? null : () => _stepMatch(cues, shown, 1),
+                ),
+              ],
+              IconButton(
+                tooltip: _bySentence ? tr('Show line by line') : tr('Read by whole sentence, translated as a whole'),
+                isSelected: _bySentence,
+                icon: Icon(AppIcons.bookOpenText, size: 20),
+                onPressed: _toggleSentences,
               ),
               if (_bothOn) _modeMenu(colors),
               IconButton(
@@ -457,7 +595,7 @@ class _SubtitleListState extends State<SubtitleList> {
                 if (n.depth == 0 && n.dragDetails != null && _follow) setState(() => _follow = false);
                 return false;
               },
-              child: ListView.builder(
+              child: _selectable(ListView.builder(
                 controller: _scroll,
                 // Room under the last line for the way back to the playing one.
                 padding: const EdgeInsets.only(bottom: 64),
@@ -470,7 +608,7 @@ class _SubtitleListState extends State<SubtitleList> {
                   _rows[i] = (playing, row);
                   return row;
                 },
-              ),
+              )),
             )),),
               if (!_follow)
                 PositionedDirectional(

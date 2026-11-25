@@ -4181,5 +4181,13 @@
   "None besides the target language": "Nincs, a célnyelven kívül",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} jelenleg nem válaszol; addig egy másik ingyenes szolgáltatás fordít.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} jelenleg nem válaszol; addig {1} fordít.",
-  "Show translations in other languages automatically, as Translation layout says": "Más nyelvű szövegek fordításának automatikus megjelenítése a „Fordítás elrendezése” szerint"
+  "Show translations in other languages automatically, as Translation layout says": "Más nyelvű szövegek fordításának automatikus megjelenítése a „Fordítás elrendezése” szerint",
+  "Save a note at this moment": "Jegyzet mentése ezen a ponton",
+  "Make it a whole sentence with AI": "Egész mondattá alakítás MI-vel",
+  "Explain the selection with AI": "A kijelölés magyarázata MI-vel",
+  "Save the selection as a note": "A kijelölés mentése jegyzetként",
+  "Previous match": "Előző találat",
+  "Next match": "Következő találat",
+  "Show line by line": "Megjelenítés soronként",
+  "Read by whole sentence, translated as a whole": "Olvasás egész mondatonként, egészében fordítva"
 }

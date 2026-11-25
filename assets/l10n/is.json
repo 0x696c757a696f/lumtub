@@ -4181,5 +4181,13 @@
   "None besides the target language": "Engin önnur en markmálið",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} svarar ekki í bili; önnur ókeypis þjónusta þýðir á meðan.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} svarar ekki í bili; {1} þýðir á meðan.",
-  "Show translations in other languages automatically, as Translation layout says": "Sýna þýðingar á öðrum tungumálum sjálfkrafa, eins og „Birting þýðingar“ segir til um"
+  "Show translations in other languages automatically, as Translation layout says": "Sýna þýðingar á öðrum tungumálum sjálfkrafa, eins og „Birting þýðingar“ segir til um",
+  "Save a note at this moment": "Vista minnispunkt á þessu augnabliki",
+  "Make it a whole sentence with AI": "Gera að heilli setningu með gervigreind",
+  "Explain the selection with AI": "Útskýra valið með gervigreind",
+  "Save the selection as a note": "Vista valið sem minnispunkt",
+  "Previous match": "Fyrri niðurstaða",
+  "Next match": "Næsta niðurstaða",
+  "Show line by line": "Sýna línu fyrir línu",
+  "Read by whole sentence, translated as a whole": "Lesa heilar setningar, þýddar í heild"
 }

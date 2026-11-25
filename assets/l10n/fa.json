@@ -4181,5 +4181,13 @@
   "None besides the target language": "هیچ‌کدام جز زبان مقصد",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} فعلاً پاسخ نمی‌دهد؛ تا آن زمان یک سرویس رایگان دیگر ترجمه می‌کند.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} فعلاً پاسخ نمی‌دهد؛ تا آن زمان {1} ترجمه می‌کند.",
-  "Show translations in other languages automatically, as Translation layout says": "نمایش خودکار ترجمهٔ متن‌های زبان‌های دیگر، طبق «نحوه نمایش ترجمه»"
+  "Show translations in other languages automatically, as Translation layout says": "نمایش خودکار ترجمهٔ متن‌های زبان‌های دیگر، طبق «نحوه نمایش ترجمه»",
+  "Save a note at this moment": "ذخیره یادداشت در همین لحظه",
+  "Make it a whole sentence with AI": "تبدیل به جمله کامل با هوش مصنوعی",
+  "Explain the selection with AI": "توضیح بخش انتخاب‌شده با هوش مصنوعی",
+  "Save the selection as a note": "ذخیره بخش انتخاب‌شده به‌عنوان یادداشت",
+  "Previous match": "نتیجه قبلی",
+  "Next match": "نتیجه بعدی",
+  "Show line by line": "نمایش خط‌به‌خط",
+  "Read by whole sentence, translated as a whole": "خواندن جمله‌به‌جمله، ترجمه به‌صورت کامل"
 }

@@ -4181,5 +4181,13 @@
   "None besides the target language": "లక్ష్య భాష తప్ప మరేదీ లేదు",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} ప్రస్తుతం స్పందించడం లేదు; ఈలోగా మరో ఉచిత సేవ అనువదిస్తుంది.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} ప్రస్తుతం స్పందించడం లేదు; ఈలోగా {1} అనువదిస్తుంది.",
-  "Show translations in other languages automatically, as Translation layout says": "“అనువాద లేఅవుట్” ప్రకారం ఇతర భాషల అనువాదాలను ఆటోమేటిక్‌గా చూపు"
+  "Show translations in other languages automatically, as Translation layout says": "“అనువాద లేఅవుట్” ప్రకారం ఇతర భాషల అనువాదాలను ఆటోమేటిక్‌గా చూపు",
+  "Save a note at this moment": "ఈ క్షణంలో నోట్ సేవ్ చేయి",
+  "Make it a whole sentence with AI": "AIతో పూర్తి వాక్యంగా మార్చు",
+  "Explain the selection with AI": "ఎంచుకున్నదాన్ని AIతో వివరించు",
+  "Save the selection as a note": "ఎంచుకున్నదాన్ని నోట్‌గా సేవ్ చేయి",
+  "Previous match": "మునుపటి సరిపోలిక",
+  "Next match": "తదుపరి సరిపోలిక",
+  "Show line by line": "లైన్ వారీగా చూపించు",
+  "Read by whole sentence, translated as a whole": "పూర్తి వాక్యాల వారీగా చదివి, మొత్తంగా అనువదించు"
 }

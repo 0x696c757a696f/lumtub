@@ -4181,5 +4181,13 @@
   "None besides the target language": "ಗುರಿ ಭಾಷೆಯನ್ನು ಬಿಟ್ಟು ಯಾವುದೂ ಇಲ್ಲ",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} ಸದ್ಯಕ್ಕೆ ಪ್ರತಿಕ್ರಿಯಿಸುತ್ತಿಲ್ಲ; ಅಷ್ಟರಲ್ಲಿ ಮತ್ತೊಂದು ಉಚಿತ ಸೇವೆ ಅನುವಾದಿಸುತ್ತದೆ.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} ಸದ್ಯಕ್ಕೆ ಪ್ರತಿಕ್ರಿಯಿಸುತ್ತಿಲ್ಲ; ಅಷ್ಟರಲ್ಲಿ {1} ಅನುವಾದಿಸುತ್ತದೆ.",
-  "Show translations in other languages automatically, as Translation layout says": "“ಅನುವಾದ ವಿನ್ಯಾಸ”ದ ಪ್ರಕಾರ ಇತರ ಭಾಷೆಗಳ ಅನುವಾದಗಳನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ತೋರಿಸಿ"
+  "Show translations in other languages automatically, as Translation layout says": "“ಅನುವಾದ ವಿನ್ಯಾಸ”ದ ಪ್ರಕಾರ ಇತರ ಭಾಷೆಗಳ ಅನುವಾದಗಳನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ತೋರಿಸಿ",
+  "Save a note at this moment": "ಈ ಕ್ಷಣದಲ್ಲಿ ಟಿಪ್ಪಣಿ ಉಳಿಸಿ",
+  "Make it a whole sentence with AI": "AI ಯಿಂದ ಪೂರ್ಣ ವಾಕ್ಯ ಮಾಡಿ",
+  "Explain the selection with AI": "ಆಯ್ದ ಭಾಗವನ್ನು AI ಯಿಂದ ವಿವರಿಸಿ",
+  "Save the selection as a note": "ಆಯ್ದ ಭಾಗವನ್ನು ಟಿಪ್ಪಣಿಯಾಗಿ ಉಳಿಸಿ",
+  "Previous match": "ಹಿಂದಿನ ಹೊಂದಾಣಿಕೆ",
+  "Next match": "ಮುಂದಿನ ಹೊಂದಾಣಿಕೆ",
+  "Show line by line": "ಸಾಲಿನ ಪ್ರಕಾರ ತೋರಿಸಿ",
+  "Read by whole sentence, translated as a whole": "ಪೂರ್ಣ ವಾಕ್ಯವಾಗಿ ಓದಿ, ಪೂರ್ಣವಾಗಿ ಅನುವಾದಿಸಿ"
 }

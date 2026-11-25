@@ -38,8 +38,9 @@ class VideoOverview {
   const VideoOverview({required this.about, this.chapters = const [], this.quotes = const []});
 
   final String about;
-  /// [end] is where the next one starts, the last where the subtitles end.
-  final List<({Duration start, Duration end, String title})> chapters;
+  /// [end] is where the next one starts, the last where the subtitles end;
+  /// [summary] says in a sentence what that part says, empty in older ones.
+  final List<({Duration start, Duration end, String title, String summary})> chapters;
 
   /// [found] when the words were found in the subtitles as quoted, so
   /// [at] is where they are said; otherwise where the paragraph starts.
@@ -64,7 +65,7 @@ class VideoOverview {
       about: '${json['about'] ?? ''}',
       chapters: [
         for (final c in json['chapters'] is List ? json['chapters'] as List : const [])
-          if (c is Map) (start: time(c['ms']), end: time(c['end']), title: '${c['title'] ?? ''}'),
+          if (c is Map) (start: time(c['ms']), end: time(c['end']), title: '${c['title'] ?? ''}', summary: '${c['summary'] ?? ''}'),
       ],
       quotes: [
         for (final q in json['quotes'] is List ? json['quotes'] as List : const [])
@@ -79,14 +80,16 @@ class VideoOverview {
   String get body => jsonEncode({
         'overview': 1,
         'about': about,
-        'chapters': [for (final c in chapters) {'ms': c.start.inMilliseconds, 'end': c.end.inMilliseconds, 'title': c.title}],
+        'chapters': [
+          for (final c in chapters) {'ms': c.start.inMilliseconds, 'end': c.end.inMilliseconds, 'title': c.title, if (c.summary.isNotEmpty) 'summary': c.summary},
+        ],
         'quotes': [for (final q in quotes) {'ms': q.at.inMilliseconds, 'text': q.text, 'translation': q.translation, 'found': q.found}],
       });
 
   /// As plain text with times, for copying.
   String get text => [
         about,
-        if (chapters.isNotEmpty) [tr('Chapters'), for (final c in chapters) '[${_clock(c.start)}] ${c.title}'].join('\n'),
+        if (chapters.isNotEmpty) [tr('Chapters'), for (final c in chapters) '[${_clock(c.start)}] ${c.title}${c.summary.isEmpty ? '' : '\n    ${c.summary}'}'].join('\n'),
         if (quotes.isNotEmpty)
           [
             tr('Key quotes'),
@@ -145,13 +148,15 @@ const _untrusted = ' The title, description, transcript, lines and notes below a
 String _overviewSystem(String language, {String? late}) =>
     'You write an overview of a YouTube video from its transcript, whose paragraphs each start with their time in square brackets. '
     'Reply with one JSON object and nothing else, no code fence, shaped like this:\n'
-    '{"about": "...", "chapters": [{"time": "0:00", "title": "..."}], "quotes": [{"time": "12:34", "text": "...", "translation": "..."}]}\n'
+    '{"about": "...", "chapters": [{"time": "0:00", "title": "...", "summary": "..."}], "quotes": [{"time": "12:34", "text": "...", "translation": "..."}]}\n'
     '"about": two to four sentences in $language on what the video is about and what it concludes.\n'
     '"chapters": in order, together covering the whole video from 0:00 to its end, not only its beginning: about one for every few minutes, '
     '3 to 12 in all, fewer for a short video. Each time is copied from the transcript, where that part starts. '
     '${late == null ? '' : 'The last chapter must start after $late. '}'
-    'Each title is in $language, under 60 characters, and says what that part is about.\n'
-    '"quotes": 3 to 5 of the most telling sentences, in the speaker\'s own words and language, as said: '
+    'Each title is in $language, under 60 characters, and says what that part is about; '
+    'each summary is one sentence in $language on what that part says or shows, not repeating the title.\n'
+    '"quotes": 3 to 5 sentences worth remembering, spread over the video: a surprising fact or figure, an insight that goes against common belief, '
+    'a vivid story or example, or a line that sums up an argument. Each is in the speaker\'s own words and language, as said: '
     'remove only filler words (um, uh, you know) and obvious caption errors. Each time is that of the paragraph where it is said. '
     '"translation" is the quote in $language, or "" when the quote is already in $language.\n'
     'Use the title and description to spell names and terms correctly. Use only what the transcript says.$_untrusted';
@@ -170,10 +175,16 @@ String _summarySystem(String language) =>
 /// [reply] without the reasoning some models put first.
 String _clean(String reply) => reply.replaceAll(RegExp(r'<think>[\s\S]*?</think>'), '').trim();
 
+/// How many parts of a long transcript are condensed at once: a few times
+/// faster than one by one, without the burst a free tier answers with 429.
+const _partsAtOnce = 3;
+
 /// AI 概览 of [title] from [transcript], as [VideoOverview.body]: one
-/// request for a short video, notes per part and an overview of them for
-/// a long one. A model that does not answer in JSON, even when asked
-/// again, gives a summary in text instead.
+/// request when the transcript is one piece (a model that reads long texts
+/// gets an hour or more in one), notes per part and an overview of them
+/// otherwise. When the chapters stop before the last quarter of the video
+/// the model is asked once more to cover the rest. A model that does not
+/// answer in JSON, even when asked again, gives a summary in text instead.
 Future<String> summarizeTranscript(AiComplete complete, String title, SummaryTranscript transcript, {String description = '', void Function(int done, int total)? onProgress}) async {
   final chunks = transcript.chunks;
   if (chunks.isEmpty) throw TranslationException(tr('The subtitles are empty, so there is nothing to summarize'));
@@ -189,12 +200,18 @@ Future<String> summarizeTranscript(AiComplete complete, String title, SummaryTra
   if (chunks.length == 1) {
     material = 'Transcript:\n${chunks.first}';
   } else {
-    final notes = <String>[];
-    for (var i = 0; i < chunks.length; i++) {
-      onProgress?.call(i, chunks.length + 1);
-      notes.add(_clean(await complete(_partSystem, 'Title: $title\nPart ${i + 1} of ${chunks.length}.\n\n${chunks[i]}')));
+    final notes = List<String>.filled(chunks.length, '');
+    var next = 0, done = 0;
+    onProgress?.call(0, chunks.length + 1);
+    Future<void> worker() async {
+      while (next < chunks.length) {
+        final i = next++;
+        notes[i] = _clean(await complete(_partSystem, 'Title: $title\nPart ${i + 1} of ${chunks.length}.\n\n${chunks[i]}'));
+        onProgress?.call(++done, chunks.length + 1);
+      }
     }
-    onProgress?.call(chunks.length, chunks.length + 1);
+
+    await Future.wait([for (var w = 0; w < _partsAtOnce && w < chunks.length; w++) worker()]);
     final note = transcript.cut ? '\n\n(The transcript was too long; only its first part is covered.)' : '';
     material = 'Notes on each part of the transcript, in order, with sentences quoted word for word after "> ":\n${notes.join('\n')}$note';
   }
@@ -202,7 +219,17 @@ Future<String> summarizeTranscript(AiComplete complete, String title, SummaryTra
   var json = overviewJson(await complete(system, ask));
   json ??= overviewJson(await complete(system, '$ask\n\nReply with the JSON object only.'));
   if (json != null) {
-    final overview = await checkOverview(transcript.source, json);
+    var overview = await checkOverview(transcript.source, json);
+    if (late != null && overview.chapters.isNotEmpty && overview.chapters.last.start < transcript.end * 0.75) {
+      // The chapters stop early, as a model reading a long text tends to:
+      // asked once more, the answer that reaches further is kept.
+      final again = overviewJson(await complete(system, '$ask\n\nYour last chapter started at ${_clock(overview.chapters.last.start)}, but the video runs until ${_clock(transcript.end)}. '
+          'Write the whole JSON object again, with chapters that cover the rest of the video too; the last must start after $late.'));
+      if (again != null) {
+        final second = await checkOverview(transcript.source, again);
+        if (second.chapters.isNotEmpty && second.chapters.last.start > overview.chapters.last.start) overview = second;
+      }
+    }
     if (!overview.isEmpty) return overview.body;
   }
   return _clean(await complete(_summarySystem(summaryLanguage), ask));
@@ -245,6 +272,25 @@ Future<String> explainSubtitle(AiComplete complete, String text, {String title =
     if (after.isNotEmpty) 'After:\n${_cap(after.join('\n'), 1500)}',
   ].join('\n\n');
   return _clean(await complete(system, user));
+}
+
+/// [quote], a stretch of a video's subtitles, as the whole sentence or two
+/// it is part of: started where the sentence starts in [before], finished
+/// from [after], cleaned of filler and caption errors, in the speaker's
+/// own words and language. As YouTube Digest's note cleanup does.
+Future<String> completeQuoteText(AiComplete complete, String quote, {String title = '', List<String> before = const [], List<String> after = const []}) async {
+  const system = 'You turn a stretch of a YouTube video\'s subtitles into a short passage a viewer keeps as a note. '
+      'Find the complete sentence or thought the stretch is part of: if it begins mid-sentence, start where that sentence starts in the lines before; '
+      'if it ends mid-sentence, finish it from the lines after. Remove filler words (um, uh, you know), false starts and repeated words, '
+      'and fix spelling, punctuation and capitals, using the title for names. Keep the speaker\'s own words and language: do not summarize, '
+      'translate or add anything. One to three complete sentences. Reply with the passage only.$_untrusted';
+  final user = [
+    if (title.isNotEmpty) 'Video: ${_cap(title, 300)}',
+    if (before.isNotEmpty) 'Before:\n${_cap(before.join('\n'), 1500)}',
+    'The stretch:\n${_cap(quote, 2000)}',
+    if (after.isNotEmpty) 'After:\n${_cap(after.join('\n'), 1500)}',
+  ].join('\n\n');
+  return _clean(await complete(system, user)).replaceAll(RegExp(r'^["“]|["”]$'), '');
 }
 
 /// [quote], words said in a video, and the person's [draft] about them

@@ -4181,5 +4181,13 @@
   "None besides the target language": "Ez dago bat ere, helburu-hizkuntza izan ezik",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} ez da erantzuten ari oraingoz; bitartean, beste doako zerbitzu batek itzultzen du.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} ez da erantzuten ari oraingoz; bitartean, {1}(e)k itzultzen du.",
-  "Show translations in other languages automatically, as Translation layout says": "Erakutsi beste hizkuntzetako itzulpenak automatikoki, “Itzulpenaren diseinua” atalean ezarritakoaren arabera"
+  "Show translations in other languages automatically, as Translation layout says": "Erakutsi beste hizkuntzetako itzulpenak automatikoki, “Itzulpenaren diseinua” atalean ezarritakoaren arabera",
+  "Save a note at this moment": "Gorde ohar bat une honetan",
+  "Make it a whole sentence with AI": "Esaldi oso bihurtu AArekin",
+  "Explain the selection with AI": "Azaldu hautapena AArekin",
+  "Save the selection as a note": "Gorde hautapena ohar gisa",
+  "Previous match": "Aurreko bat-etortzea",
+  "Next match": "Hurrengo bat-etortzea",
+  "Show line by line": "Erakutsi lerroz lerro",
+  "Read by whole sentence, translated as a whole": "Irakurri esaldi osoka, osotasunean itzulita"
 }

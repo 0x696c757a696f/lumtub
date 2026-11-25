@@ -4181,5 +4181,13 @@
   "None besides the target language": "लक्षित भाषाबाहेक अरू कुनै छैन",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} अहिले जवाफ दिइरहेको छैन; त्यतिन्जेल अर्को निःशुल्क सेवाले अनुवाद गर्छ।",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} अहिले जवाफ दिइरहेको छैन; त्यतिन्जेल {1} ले अनुवाद गर्छ।",
-  "Show translations in other languages automatically, as Translation layout says": "“अनुवादको लेआउट” अनुसार अन्य भाषाका अनुवाद स्वतः देखाउनुहोस्"
+  "Show translations in other languages automatically, as Translation layout says": "“अनुवादको लेआउट” अनुसार अन्य भाषाका अनुवाद स्वतः देखाउनुहोस्",
+  "Save a note at this moment": "यो क्षणमा नोट सुरक्षित गर्नुहोस्",
+  "Make it a whole sentence with AI": "एआईले पूर्ण वाक्य बनाउनुहोस्",
+  "Explain the selection with AI": "चयन गरिएको अंश एआईले बुझाउनुहोस्",
+  "Save the selection as a note": "चयन गरिएको अंश नोटको रूपमा सुरक्षित गर्नुहोस्",
+  "Previous match": "अघिल्लो मिल्दो नतिजा",
+  "Next match": "अर्को मिल्दो नतिजा",
+  "Show line by line": "लाइन-लाइन गरेर देखाउनुहोस्",
+  "Read by whole sentence, translated as a whole": "पूरा वाक्यअनुसार पढ्नुहोस्, पूरै वाक्य अनुवाद गर्नुहोस्"
 }

@@ -4181,5 +4181,13 @@
   "None besides the target language": "ਟੀਚਾ ਭਾਸ਼ਾ ਤੋਂ ਇਲਾਵਾ ਕੋਈ ਨਹੀਂ",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} ਹੁਣ ਜਵਾਬ ਨਹੀਂ ਦੇ ਰਿਹਾ; ਇਸ ਦੌਰਾਨ ਕੋਈ ਹੋਰ ਮੁਫ਼ਤ ਸੇਵਾ ਅਨੁਵਾਦ ਕਰਦੀ ਹੈ।",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} ਹੁਣ ਜਵਾਬ ਨਹੀਂ ਦੇ ਰਿਹਾ; ਇਸ ਦੌਰਾਨ {1} ਅਨੁਵਾਦ ਕਰਦਾ ਹੈ।",
-  "Show translations in other languages automatically, as Translation layout says": "“ਅਨੁਵਾਦ ਦਾ ਲੇਆਉਟ” ਅਨੁਸਾਰ ਹੋਰ ਭਾਸ਼ਾਵਾਂ ਦੇ ਅਨੁਵਾਦ ਆਪਣੇ-ਆਪ ਦਿਖਾਓ"
+  "Show translations in other languages automatically, as Translation layout says": "“ਅਨੁਵਾਦ ਦਾ ਲੇਆਉਟ” ਅਨੁਸਾਰ ਹੋਰ ਭਾਸ਼ਾਵਾਂ ਦੇ ਅਨੁਵਾਦ ਆਪਣੇ-ਆਪ ਦਿਖਾਓ",
+  "Save a note at this moment": "ਇਸ ਪਲ ਨੋਟ ਸੁਰੱਖਿਅਤ ਕਰੋ",
+  "Make it a whole sentence with AI": "AI ਨਾਲ ਪੂਰਾ ਵਾਕ ਬਣਾਓ",
+  "Explain the selection with AI": "ਚੁਣੇ ਹੋਏ ਨੂੰ AI ਨਾਲ ਸਮਝਾਓ",
+  "Save the selection as a note": "ਚੁਣੇ ਹੋਏ ਨੂੰ ਨੋਟ ਵਜੋਂ ਸੁਰੱਖਿਅਤ ਕਰੋ",
+  "Previous match": "ਪਿਛਲਾ ਮੇਲ",
+  "Next match": "ਅਗਲਾ ਮੇਲ",
+  "Show line by line": "ਲਾਈਨ ਦਰ ਲਾਈਨ ਦਿਖਾਓ",
+  "Read by whole sentence, translated as a whole": "ਪੂਰੇ ਵਾਕ ਅਨੁਸਾਰ ਪੜ੍ਹੋ, ਪੂਰੇ ਵਾਕ ਦਾ ਅਨੁਵਾਦ ਕਰੋ"
 }

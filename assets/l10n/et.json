@@ -4181,5 +4181,13 @@
   "None besides the target language": "Peale sihtkeele pole ühtegi",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} ei vasta praegu; vahepeal tõlgib mõni teine tasuta teenus.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} ei vasta praegu; vahepeal tõlgib {1}.",
-  "Show translations in other languages automatically, as Translation layout says": "Näita muudes keeltes tekstide tõlkeid automaatselt, nagu määrab „Tõlke paigutus“"
+  "Show translations in other languages automatically, as Translation layout says": "Näita muudes keeltes tekstide tõlkeid automaatselt, nagu määrab „Tõlke paigutus“",
+  "Save a note at this moment": "Salvesta märkus selles hetkes",
+  "Make it a whole sentence with AI": "Tee AI-ga terve lause",
+  "Explain the selection with AI": "Selgita valikut AI-ga",
+  "Save the selection as a note": "Salvesta valik märkusena",
+  "Previous match": "Eelmine vaste",
+  "Next match": "Järgmine vaste",
+  "Show line by line": "Näita rida realt",
+  "Read by whole sentence, translated as a whole": "Loe tervete lausetena, tõlgitud tervikuna"
 }

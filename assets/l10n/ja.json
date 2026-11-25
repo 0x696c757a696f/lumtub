@@ -4181,5 +4181,13 @@
   "None besides the target language": "翻訳先の言語以外はなし",
   "{0} is not answering for now; another free service translates meanwhile.": "{0}は現在応答していません。その間は別の無料サービスで翻訳します。",
   "{0} is not answering for now; {1} translates meanwhile.": "{0}は現在応答していません。その間は{1}で翻訳します。",
-  "Show translations in other languages automatically, as Translation layout says": "「訳文の表示」の設定に従って、他の言語の訳文を自動で表示する"
+  "Show translations in other languages automatically, as Translation layout says": "「訳文の表示」の設定に従って、他の言語の訳文を自動で表示する",
+  "Save a note at this moment": "この時点にメモを保存",
+  "Make it a whole sentence with AI": "AI で完全な文にする",
+  "Explain the selection with AI": "選択部分を AI で解説",
+  "Save the selection as a note": "選択部分をメモとして保存",
+  "Previous match": "前の一致",
+  "Next match": "次の一致",
+  "Show line by line": "1 行ずつ表示",
+  "Read by whole sentence, translated as a whole": "文全体で読み、まとめて翻訳"
 }

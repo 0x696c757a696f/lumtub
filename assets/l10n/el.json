@@ -4181,5 +4181,13 @@
   "None besides the target language": "Καμία εκτός από τη γλώσσα-στόχο",
   "{0} is not answering for now; another free service translates meanwhile.": "Το {0} δεν ανταποκρίνεται προς το παρόν· στο μεταξύ μεταφράζει άλλη δωρεάν υπηρεσία.",
   "{0} is not answering for now; {1} translates meanwhile.": "Το {0} δεν ανταποκρίνεται προς το παρόν· στο μεταξύ μεταφράζει το {1}.",
-  "Show translations in other languages automatically, as Translation layout says": "Αυτόματη εμφάνιση μεταφράσεων από άλλες γλώσσες, όπως ορίζει η «Διάταξη μετάφρασης»"
+  "Show translations in other languages automatically, as Translation layout says": "Αυτόματη εμφάνιση μεταφράσεων από άλλες γλώσσες, όπως ορίζει η «Διάταξη μετάφρασης»",
+  "Save a note at this moment": "Αποθήκευση σημείωσης σε αυτή τη στιγμή",
+  "Make it a whole sentence with AI": "Μετατροπή σε ολόκληρη πρόταση με AI",
+  "Explain the selection with AI": "Επεξήγηση της επιλογής με AI",
+  "Save the selection as a note": "Αποθήκευση της επιλογής ως σημείωση",
+  "Previous match": "Προηγούμενο αποτέλεσμα",
+  "Next match": "Επόμενο αποτέλεσμα",
+  "Show line by line": "Εμφάνιση γραμμή προς γραμμή",
+  "Read by whole sentence, translated as a whole": "Ανάγνωση ανά ολόκληρη πρόταση, μετάφραση ως σύνολο"
 }

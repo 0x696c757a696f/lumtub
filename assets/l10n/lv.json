@@ -4181,5 +4181,13 @@
   "None besides the target language": "Nav, izņemot mērķvalodu",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} pašlaik neatbild; pa to laiku tulko cits bezmaksas pakalpojums.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} pašlaik neatbild; pa to laiku tulko {1}.",
-  "Show translations in other languages automatically, as Translation layout says": "Automātiski rādīt tulkojumus citās valodās, kā norādīts sadaļā „Tulkojuma izkārtojums“"
+  "Show translations in other languages automatically, as Translation layout says": "Automātiski rādīt tulkojumus citās valodās, kā norādīts sadaļā „Tulkojuma izkārtojums“",
+  "Save a note at this moment": "Saglabāt piezīmi šajā brīdī",
+  "Make it a whole sentence with AI": "Pārvērst pilnā teikumā ar AI",
+  "Explain the selection with AI": "Izskaidrot atlasīto ar AI",
+  "Save the selection as a note": "Saglabāt atlasīto kā piezīmi",
+  "Previous match": "Iepriekšējais rezultāts",
+  "Next match": "Nākamais rezultāts",
+  "Show line by line": "Rādīt pa rindām",
+  "Read by whole sentence, translated as a whole": "Lasīt pa veseliem teikumiem, tulkot kā veselumu"
 }

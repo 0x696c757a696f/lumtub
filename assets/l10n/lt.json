@@ -4181,5 +4181,13 @@
   "None besides the target language": "Be tikslinės kalbos, nėra",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} kol kas neatsako; tuo metu verčia kita nemokama paslauga.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} kol kas neatsako; tuo metu verčia {1}.",
-  "Show translations in other languages automatically, as Translation layout says": "Automatiškai rodyti vertimus kitomis kalbomis, kaip nurodyta: „Vertimo išdėstymas“"
+  "Show translations in other languages automatically, as Translation layout says": "Automatiškai rodyti vertimus kitomis kalbomis, kaip nurodyta: „Vertimo išdėstymas“",
+  "Save a note at this moment": "Išsaugoti pastabą šiuo momentu",
+  "Make it a whole sentence with AI": "Paversti visu sakiniu su DI",
+  "Explain the selection with AI": "Paaiškinti pažymėtą dalį su DI",
+  "Save the selection as a note": "Išsaugoti pažymėtą dalį kaip pastabą",
+  "Previous match": "Ankstesnis atitikmuo",
+  "Next match": "Kitas atitikmuo",
+  "Show line by line": "Rodyti eilutė po eilutės",
+  "Read by whole sentence, translated as a whole": "Skaityti pagal sakinius, versti visą sakinį"
 }

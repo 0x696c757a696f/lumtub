@@ -4181,5 +4181,13 @@
   "None besides the target language": "Žádné kromě cílového jazyka",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} momentálně neodpovídá; mezitím překládá jiná bezplatná služba.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} momentálně neodpovídá; mezitím překládá {1}.",
-  "Show translations in other languages automatically, as Translation layout says": "Automaticky zobrazovat překlady z jiných jazyků podle „Zobrazení překladu“"
+  "Show translations in other languages automatically, as Translation layout says": "Automaticky zobrazovat překlady z jiných jazyků podle „Zobrazení překladu“",
+  "Save a note at this moment": "Uložit poznámku v tomto okamžiku",
+  "Make it a whole sentence with AI": "Udělat z toho celou větu pomocí AI",
+  "Explain the selection with AI": "Vysvětlit výběr pomocí AI",
+  "Save the selection as a note": "Uložit výběr jako poznámku",
+  "Previous match": "Předchozí shoda",
+  "Next match": "Další shoda",
+  "Show line by line": "Zobrazit řádek po řádku",
+  "Read by whole sentence, translated as a whole": "Číst po celých větách, překládat jako celek"
 }

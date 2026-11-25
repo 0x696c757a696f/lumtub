@@ -4181,5 +4181,13 @@
   "None besides the target language": "Akukho ngaphandle kolimi lokuhumushela kulo",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} ayiphenduli okwamanje; kuphuma enye isevisi yamahhala ihumusha ngaleso sikhathi.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} ayiphenduli okwamanje; {1} ihumusha ngaleso sikhathi.",
-  "Show translations in other languages automatically, as Translation layout says": "Bonisa ngokuzenzakalelayo izinguqulo zezinye izilimi, njengoba “Ukubukeka kokuhumusha” ithi"
+  "Show translations in other languages automatically, as Translation layout says": "Bonisa ngokuzenzakalelayo izinguqulo zezinye izilimi, njengoba “Ukubukeka kokuhumusha” ithi",
+  "Save a note at this moment": "Gcina inothi ngalesi sikhathi",
+  "Make it a whole sentence with AI": "Yenza ibe umusho ophelele nge-AI",
+  "Explain the selection with AI": "Chaza okukhethiwe nge-AI",
+  "Save the selection as a note": "Gcina okukhethiwe njengenothi",
+  "Previous match": "Okufanayo okwandulelayo",
+  "Next match": "Okufanayo okulandelayo",
+  "Show line by line": "Bonisa umugqa ngomugqa",
+  "Read by whole sentence, translated as a whole": "Funda ngemisho ephelele, uhumushe yonke"
 }

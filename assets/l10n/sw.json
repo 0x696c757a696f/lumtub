@@ -4181,5 +4181,13 @@
   "None besides the target language": "Hakuna isipokuwa lugha lengwa",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} haijibu kwa sasa; huduma nyingine ya bure inatafsiri kwa wakati huu.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} haijibu kwa sasa; {1} inatafsiri kwa wakati huu.",
-  "Show translations in other languages automatically, as Translation layout says": "Onyesha tafsiri za lugha nyingine kiotomatiki, kama “Mpangilio wa tafsiri” inavyosema"
+  "Show translations in other languages automatically, as Translation layout says": "Onyesha tafsiri za lugha nyingine kiotomatiki, kama “Mpangilio wa tafsiri” inavyosema",
+  "Save a note at this moment": "Hifadhi dokezo wakati huu",
+  "Make it a whole sentence with AI": "Fanya sentensi kamili kwa AI",
+  "Explain the selection with AI": "Fafanua kilichochaguliwa kwa AI",
+  "Save the selection as a note": "Hifadhi kilichochaguliwa kama dokezo",
+  "Previous match": "Inayolingana iliyotangulia",
+  "Next match": "Inayolingana inayofuata",
+  "Show line by line": "Onyesha mstari kwa mstari",
+  "Read by whole sentence, translated as a whole": "Soma kwa sentensi kamili, tafsiri kama nzima"
 }

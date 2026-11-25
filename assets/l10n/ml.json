@@ -4181,5 +4181,13 @@
   "None besides the target language": "ലക്ഷ്യ ഭാഷ ഒഴികെ ഒന്നുമില്ല",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} തൽക്കാലം പ്രതികരിക്കുന്നില്ല; അതിനിടെ മറ്റൊരു സൗജന്യ സേവനം വിവർത്തനം ചെയ്യുന്നു.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} തൽക്കാലം പ്രതികരിക്കുന്നില്ല; അതിനിടെ {1} വിവർത്തനം ചെയ്യുന്നു.",
-  "Show translations in other languages automatically, as Translation layout says": "“വിവർത്തന ലേഔട്ട്” പ്രകാരം മറ്റ് ഭാഷകളിലെ വിവർത്തനങ്ങൾ സ്വയം കാണിക്കുക"
+  "Show translations in other languages automatically, as Translation layout says": "“വിവർത്തന ലേഔട്ട്” പ്രകാരം മറ്റ് ഭാഷകളിലെ വിവർത്തനങ്ങൾ സ്വയം കാണിക്കുക",
+  "Save a note at this moment": "ഈ നിമിഷത്തിൽ കുറിപ്പ് സേവ് ചെയ്യുക",
+  "Make it a whole sentence with AI": "AI ഉപയോഗിച്ച് പൂർണ വാക്യമാക്കുക",
+  "Explain the selection with AI": "തിരഞ്ഞെടുത്തത് AI ഉപയോഗിച്ച് വിശദീകരിക്കുക",
+  "Save the selection as a note": "തിരഞ്ഞെടുത്തത് കുറിപ്പായി സേവ് ചെയ്യുക",
+  "Previous match": "മുൻ പൊരുത്തം",
+  "Next match": "അടുത്ത പൊരുത്തം",
+  "Show line by line": "വരി വരിയായി കാണിക്കുക",
+  "Read by whole sentence, translated as a whole": "മുഴുവൻ വാക്യമായി വായിച്ച് മുഴുവനായി വിവർത്തനം ചെയ്യുക"
 }

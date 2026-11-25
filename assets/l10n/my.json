@@ -4181,5 +4181,13 @@
   "None besides the target language": "ဘာသာပြန်မည့် ဘာသာစကားမှလွဲ၍ မရှိပါ",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} ယာယီ တုံ့ပြန်ခြင်းမရှိပါ။ ထိုအတောအတွင်း အခြားအခမဲ့ဝန်ဆောင်မှုက ဘာသာပြန်ပေးပါမည်။",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} ယာယီ တုံ့ပြန်ခြင်းမရှိပါ။ ထိုအတောအတွင်း {1} က ဘာသာပြန်ပေးပါမည်။",
-  "Show translations in other languages automatically, as Translation layout says": "“ဘာသာပြန်ချက် ပြသပုံ” အရ အခြားဘာသာစကားများ၏ ဘာသာပြန်ချက်များကို အလိုအလျောက် ပြပါ"
+  "Show translations in other languages automatically, as Translation layout says": "“ဘာသာပြန်ချက် ပြသပုံ” အရ အခြားဘာသာစကားများ၏ ဘာသာပြန်ချက်များကို အလိုအလျောက် ပြပါ",
+  "Save a note at this moment": "ဤအချိန်တွင် မှတ်စုသိမ်းရန်",
+  "Make it a whole sentence with AI": "AI ဖြင့် ဝါကျအပြည့်အစုံ ပြုလုပ်ရန်",
+  "Explain the selection with AI": "ရွေးထားသည်ကို AI ဖြင့် ရှင်းပြရန်",
+  "Save the selection as a note": "ရွေးထားသည်ကို မှတ်စုအဖြစ် သိမ်းရန်",
+  "Previous match": "ယခင်ကိုက်ညီမှု",
+  "Next match": "နောက်ကိုက်ညီမှု",
+  "Show line by line": "စာကြောင်းလိုက် ပြရန်",
+  "Read by whole sentence, translated as a whole": "ဝါကျအပြည့်အစုံအလိုက် ဖတ်ပြီး တစ်ခုလုံး ဘာသာပြန်ရန်"
 }

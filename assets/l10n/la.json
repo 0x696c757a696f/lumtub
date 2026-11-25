@@ -4181,5 +4181,13 @@
   "None besides the target language": "Nulla praeter linguam destinatam",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} nunc non respondet; interim alia ministratio gratuita transfert.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} nunc non respondet; interim {1} transfert.",
-  "Show translations in other languages automatically, as Translation layout says": "Translationes aliarum linguarum sponte ostendere, ut “Dispositio translationis” dicit"
+  "Show translations in other languages automatically, as Translation layout says": "Translationes aliarum linguarum sponte ostendere, ut “Dispositio translationis” dicit",
+  "Save a note at this moment": "Notam hoc momento servare",
+  "Make it a whole sentence with AI": "Cum intellegentia artificiali sententiam integram facere",
+  "Explain the selection with AI": "Selecta cum intellegentia artificiali explicare",
+  "Save the selection as a note": "Selecta ut notam servare",
+  "Previous match": "Congruentia prior",
+  "Next match": "Congruentia proxima",
+  "Show line by line": "Lineatim ostendere",
+  "Read by whole sentence, translated as a whole": "Per sententias integras legere, totas translatas"
 }

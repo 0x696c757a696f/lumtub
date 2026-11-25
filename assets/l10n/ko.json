@@ -4181,5 +4181,13 @@
   "None besides the target language": "번역 대상 언어 외에는 없음",
   "{0} is not answering for now; another free service translates meanwhile.": "{0}에서 지금은 응답하지 않아, 그동안 다른 무료 서비스가 번역합니다.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0}에서 지금은 응답하지 않아, 그동안 {1}에서 번역합니다.",
-  "Show translations in other languages automatically, as Translation layout says": "“번역문 표시” 설정에 따라 다른 언어의 번역문을 자동으로 표시"
+  "Show translations in other languages automatically, as Translation layout says": "“번역문 표시” 설정에 따라 다른 언어의 번역문을 자동으로 표시",
+  "Save a note at this moment": "이 시점에 메모 저장",
+  "Make it a whole sentence with AI": "AI로 완전한 문장 만들기",
+  "Explain the selection with AI": "선택한 내용을 AI로 해설",
+  "Save the selection as a note": "선택한 내용을 메모로 저장",
+  "Previous match": "이전 검색 결과",
+  "Next match": "다음 검색 결과",
+  "Show line by line": "한 줄씩 표시",
+  "Read by whole sentence, translated as a whole": "문장 단위로 읽고 통째로 번역"
 }

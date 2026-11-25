@@ -209,3 +209,39 @@ String pairedCuesCsv(List<PairedCue> rows) {
   }
   return out.toString();
 }
+
+/// [rows] joined into whole sentences for reading, as automatic captions
+/// cut a sentence into many short lines: a row ends at the end of a
+/// sentence once it has some length, at a pause, or when it grows past
+/// about 320 letters (a Chinese or Japanese character counting three) or
+/// 20 seconds. The second subtitle's words of each
+/// row are joined the same way. One pass over the rows.
+List<PairedCue> sentenceRows(List<PairedCue> rows) {
+  const enough = 60, most = 320;
+  const longest = Duration(seconds: 20), pause = Duration(milliseconds: 1500);
+  final out = <PairedCue>[];
+  SubtitleCue? cue;
+  String? second;
+  void flush() {
+    if (cue != null) out.add((cue: cue!, second: second));
+    cue = null;
+    second = null;
+  }
+
+  for (final (i, row) in rows.indexed) {
+    final now = cue;
+    cue = now == null ? row.cue : (start: now.start, end: row.cue.end, text: joinCueText(now.text, row.cue.text));
+    if (row.second case final words?) second = second == null ? words : joinCueText(second!, words);
+    final text = cue!.text;
+    final next = i + 1 < rows.length ? rows[i + 1].cue : null;
+    // A Chinese or Japanese character says about as much as three letters.
+    final size = text.length + 2 * _wide.allMatches(text).length;
+    final ended = _sentenceEnd.hasMatch(text) && size >= enough;
+    final paused = next == null || next.start - row.cue.end >= pause;
+    if (ended || paused || size >= most || cue!.end - cue!.start >= longest) flush();
+  }
+  flush();
+  return out;
+}
+
+final _sentenceEnd = RegExp(r'[.!?。！？…؟।][)"”’」』）]*$');

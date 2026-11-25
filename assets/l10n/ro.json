@@ -4181,5 +4181,13 @@
   "None besides the target language": "Niciuna în afară de limba țintă",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} nu răspunde momentan; între timp traduce un alt serviciu gratuit.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} nu răspunde momentan; între timp traduce {1}.",
-  "Show translations in other languages automatically, as Translation layout says": "Afișează automat traducerile din alte limbi, conform „Aspectul traducerii”"
+  "Show translations in other languages automatically, as Translation layout says": "Afișează automat traducerile din alte limbi, conform „Aspectul traducerii”",
+  "Save a note at this moment": "Salvează o notă în acest moment",
+  "Make it a whole sentence with AI": "Transformă în propoziție întreagă cu IA",
+  "Explain the selection with AI": "Explică selecția cu IA",
+  "Save the selection as a note": "Salvează selecția ca notă",
+  "Previous match": "Potrivirea anterioară",
+  "Next match": "Potrivirea următoare",
+  "Show line by line": "Afișează rând cu rând",
+  "Read by whole sentence, translated as a whole": "Citește pe propoziții întregi, tradu ca întreg"
 }

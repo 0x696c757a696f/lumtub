@@ -4181,5 +4181,13 @@
   "None besides the target language": "Asnjë përveç gjuhës së përkthimit",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} nuk përgjigjet për momentin; ndërkohë përkthen një shërbim tjetër falas.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} nuk përgjigjet për momentin; ndërkohë përkthen {1}.",
-  "Show translations in other languages automatically, as Translation layout says": "Shfaq automatikisht përkthimet e gjuhëve të tjera, siç caktohet te „Paraqitja e përkthimit“"
+  "Show translations in other languages automatically, as Translation layout says": "Shfaq automatikisht përkthimet e gjuhëve të tjera, siç caktohet te „Paraqitja e përkthimit“",
+  "Save a note at this moment": "Ruaje një shënim në këtë moment",
+  "Make it a whole sentence with AI": "Bëje fjali të plotë me IA",
+  "Explain the selection with AI": "Shpjego përzgjedhjen me IA",
+  "Save the selection as a note": "Ruaje përzgjedhjen si shënim",
+  "Previous match": "Përputhja e mëparshme",
+  "Next match": "Përputhja tjetër",
+  "Show line by line": "Shfaq rresht pas rreshti",
+  "Read by whole sentence, translated as a whole": "Lexo sipas fjalive të plota, përkthe si tërësi"
 }

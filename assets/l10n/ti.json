@@ -4181,5 +4181,13 @@
   "None besides the target language": "ብዘይካ ቋንቋ ዕላማ ዋላ ሓደ የለን",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} ሕጂ ኣይመልስን እዩ፤ ኣብዚ ግዜ ካልእ ነጻ ኣገልግሎት ይትርጉም።",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} ሕጂ ኣይመልስን እዩ፤ ኣብዚ ግዜ {1} ይትርጉም።",
-  "Show translations in other languages automatically, as Translation layout says": "ከም “ኣቀማምጣ ትርጉም” ዝብሎ ትርጉም ካልኦት ቋንቋታት ባዕሉ ኣርኢ"
+  "Show translations in other languages automatically, as Translation layout says": "ከም “ኣቀማምጣ ትርጉም” ዝብሎ ትርጉም ካልኦት ቋንቋታት ባዕሉ ኣርኢ",
+  "Save a note at this moment": "ኣብዚ እዋን ምዝካር ሕዝ",
+  "Make it a whole sentence with AI": "ብAI ምሉእ ሓረግ ግበሮ",
+  "Explain the selection with AI": "ዝተመረጸ ብAI ግለጽ",
+  "Save the selection as a note": "ዝተመረጸ ከም ምዝካር ሕዝ",
+  "Previous match": "ዝሓለፈ ዝመሳሰል",
+  "Next match": "ዝቕጽል ዝመሳሰል",
+  "Show line by line": "መስርዕ ብመስርዕ ኣርእይ",
+  "Read by whole sentence, translated as a whole": "ብምሉእ ሓረግ ኣንብብ፣ ብምሉኡ ተርጉም"
 }

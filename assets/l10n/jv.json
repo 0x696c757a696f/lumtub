@@ -4181,5 +4181,13 @@
   "None besides the target language": "Ora ana kajaba basa target",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} lagi ora mangsuli; sauntara kuwi layanan gratis liyane sing nerjemahaké.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} lagi ora mangsuli; sauntara kuwi {1} sing nerjemahaké.",
-  "Show translations in other languages automatically, as Translation layout says": "Tampilaké terjemahan basa liya kanthi otomatis, miturut “Tata letak terjemahan”"
+  "Show translations in other languages automatically, as Translation layout says": "Tampilaké terjemahan basa liya kanthi otomatis, miturut “Tata letak terjemahan”",
+  "Save a note at this moment": "Simpen cathetan ing wayahe iki",
+  "Make it a whole sentence with AI": "Dadekna ukara lengkap nganggo AI",
+  "Explain the selection with AI": "Jelasna bagean sing dipilih nganggo AI",
+  "Save the selection as a note": "Simpen bagean sing dipilih minangka cathetan",
+  "Previous match": "Asil sadurungé",
+  "Next match": "Asil sabanjuré",
+  "Show line by line": "Tampilna baris saben baris",
+  "Read by whole sentence, translated as a whole": "Woca saben ukara lengkap, diterjemahaké sakabèhé"
 }

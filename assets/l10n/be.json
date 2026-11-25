@@ -4181,5 +4181,13 @@
   "None besides the target language": "Няма, акрамя мовы перакладу",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} часова не адказвае; тым часам пераклад выконвае іншы бясплатны сервіс.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} часова не адказвае; тым часам пераклад выконвае {1}.",
-  "Show translations in other languages automatically, as Translation layout says": "Аўтаматычна паказваць пераклады тэкстаў на іншых мовах, як вызначана ў «Выгляд перакладу»"
+  "Show translations in other languages automatically, as Translation layout says": "Аўтаматычна паказваць пераклады тэкстаў на іншых мовах, як вызначана ў «Выгляд перакладу»",
+  "Save a note at this moment": "Захаваць нататку ў гэты момант",
+  "Make it a whole sentence with AI": "Зрабіць поўны сказ з дапамогай ІІ",
+  "Explain the selection with AI": "Растлумачыць вылучанае з дапамогай ІІ",
+  "Save the selection as a note": "Захаваць вылучанае як нататку",
+  "Previous match": "Папярэдні вынік",
+  "Next match": "Наступны вынік",
+  "Show line by line": "Паказваць радок за радком",
+  "Read by whole sentence, translated as a whole": "Чытаць поўнымі сказамі, перакладаць цалкам"
 }

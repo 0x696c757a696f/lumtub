@@ -4181,5 +4181,13 @@
   "None besides the target language": "ከዒላማ ቋንቋው ሌላ ምንም የለም",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} ለጊዜው አይመልስም፤ እስከዚያው ሌላ ነጻ አገልግሎት ይተረጉማል።",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} ለጊዜው አይመልስም፤ እስከዚያው {1} ይተረጉማል።",
-  "Show translations in other languages automatically, as Translation layout says": "በሌሎች ቋንቋዎች ያሉ ትርጉሞችን በ“የትርጉም አቀማመጥ” መሠረት በራስ-ሰር አሳይ"
+  "Show translations in other languages automatically, as Translation layout says": "በሌሎች ቋንቋዎች ያሉ ትርጉሞችን በ“የትርጉም አቀማመጥ” መሠረት በራስ-ሰር አሳይ",
+  "Save a note at this moment": "በዚህ ቅጽበት ማስታወሻ አስቀምጥ",
+  "Make it a whole sentence with AI": "በ AI ሙሉ ዓረፍተ ነገር አድርግ",
+  "Explain the selection with AI": "የተመረጠውን በ AI አብራራ",
+  "Save the selection as a note": "የተመረጠውን እንደ ማስታወሻ አስቀምጥ",
+  "Previous match": "ቀዳሚ ውጤት",
+  "Next match": "ቀጣይ ውጤት",
+  "Show line by line": "መስመር በመስመር አሳይ",
+  "Read by whole sentence, translated as a whole": "በሙሉ ዓረፍተ ነገር አንብብ፣ በሙሉ ተተርጉሟል"
 }

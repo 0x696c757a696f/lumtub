@@ -4181,5 +4181,13 @@
   "None besides the target language": "Tarjima tilidan boshqasi yo'q",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} hozircha javob bermayapti; shu orada boshqa bepul xizmat tarjima qiladi.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} hozircha javob bermayapti; shu orada {1} tarjima qiladi.",
-  "Show translations in other languages automatically, as Translation layout says": "Boshqa tillardagi tarjimalarni “Tarjimani ko'rsatish” bo'yicha avtomatik ko'rsatish"
+  "Show translations in other languages automatically, as Translation layout says": "Boshqa tillardagi tarjimalarni “Tarjimani ko'rsatish” bo'yicha avtomatik ko'rsatish",
+  "Save a note at this moment": "Shu lahzada qayd saqlash",
+  "Make it a whole sentence with AI": "SI bilan to'liq jumla qilish",
+  "Explain the selection with AI": "Tanlanganni SI bilan tushuntirish",
+  "Save the selection as a note": "Tanlanganni qayd sifatida saqlash",
+  "Previous match": "Oldingi moslik",
+  "Next match": "Keyingi moslik",
+  "Show line by line": "Qatorma-qator ko'rsatish",
+  "Read by whole sentence, translated as a whole": "To'liq jumlalar bo'yicha o'qish, butunlay tarjima qilish"
 }

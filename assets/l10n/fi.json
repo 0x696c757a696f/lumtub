@@ -4181,5 +4181,13 @@
   "None besides the target language": "Ei muita kuin kohdekieli",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} ei vastaa tällä hetkellä; sillä välin kääntää toinen ilmainen palvelu.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} ei vastaa tällä hetkellä; sillä välin kääntää {1}.",
-  "Show translations in other languages automatically, as Translation layout says": "Näytä muunkielisten tekstien käännökset automaattisesti “Käännöksen asettelu” -asetuksen mukaan"
+  "Show translations in other languages automatically, as Translation layout says": "Näytä muunkielisten tekstien käännökset automaattisesti “Käännöksen asettelu” -asetuksen mukaan",
+  "Save a note at this moment": "Tallenna muistiinpano tästä kohdasta",
+  "Make it a whole sentence with AI": "Muuta kokonaiseksi lauseeksi tekoälyllä",
+  "Explain the selection with AI": "Selitä valinta tekoälyllä",
+  "Save the selection as a note": "Tallenna valinta muistiinpanona",
+  "Previous match": "Edellinen osuma",
+  "Next match": "Seuraava osuma",
+  "Show line by line": "Näytä rivi riviltä",
+  "Read by whole sentence, translated as a whole": "Lue kokonaisina lauseina, käännä kokonaisuutena"
 }

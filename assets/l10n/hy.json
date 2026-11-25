@@ -4181,5 +4181,13 @@
   "None besides the target language": "Բացի նպատակային լեզվից՝ ոչ մեկը",
   "{0} is not answering for now; another free service translates meanwhile.": "{0}-ը ժամանակավորապես չի պատասխանում. այդ ընթացքում թարգմանում է մեկ այլ անվճար ծառայություն։",
   "{0} is not answering for now; {1} translates meanwhile.": "{0}-ը ժամանակավորապես չի պատասխանում. այդ ընթացքում թարգմանում է {1}-ը։",
-  "Show translations in other languages automatically, as Translation layout says": "Ավտոմատ ցույց տալ այլ լեզուների թարգմանությունները՝ ըստ «Թարգմանության դասավորություն»-ի"
+  "Show translations in other languages automatically, as Translation layout says": "Ավտոմատ ցույց տալ այլ լեզուների թարգմանությունները՝ ըստ «Թարգմանության դասավորություն»-ի",
+  "Save a note at this moment": "Պահել նշում այս պահին",
+  "Make it a whole sentence with AI": "Դարձնել ամբողջական նախադասություն արհեստական բանականությամբ",
+  "Explain the selection with AI": "Բացատրել ընտրվածը արհեստական բանականությամբ",
+  "Save the selection as a note": "Պահել ընտրվածը որպես նշում",
+  "Previous match": "Նախորդ համընկնումը",
+  "Next match": "Հաջորդ համընկնումը",
+  "Show line by line": "Ցուցադրել տող առ տող",
+  "Read by whole sentence, translated as a whole": "Կարդալ ամբողջական նախադասություններով, թարգմանել որպես ամբողջություն"
 }

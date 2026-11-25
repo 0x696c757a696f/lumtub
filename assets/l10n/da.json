@@ -4181,5 +4181,13 @@
   "None besides the target language": "Ingen ud over målsproget",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} svarer ikke lige nu; en anden gratis tjeneste oversætter i mellemtiden.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} svarer ikke lige nu; {1} oversætter i mellemtiden.",
-  "Show translations in other languages automatically, as Translation layout says": "Vis automatisk oversættelser af andre sprog som angivet under “Visning af oversættelse”"
+  "Show translations in other languages automatically, as Translation layout says": "Vis automatisk oversættelser af andre sprog som angivet under “Visning af oversættelse”",
+  "Save a note at this moment": "Gem en note på dette tidspunkt",
+  "Make it a whole sentence with AI": "Gør det til en hel sætning med AI",
+  "Explain the selection with AI": "Forklar markeringen med AI",
+  "Save the selection as a note": "Gem markeringen som note",
+  "Previous match": "Forrige match",
+  "Next match": "Næste match",
+  "Show line by line": "Vis linje for linje",
+  "Read by whole sentence, translated as a whole": "Læs hele sætninger, oversat som helhed"
 }

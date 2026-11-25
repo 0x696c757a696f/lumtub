@@ -4181,5 +4181,13 @@
   "None besides the target language": "ඉලක්ක භාෂාව හැර කිසිවක් නැත",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} දැනට ප්‍රතිචාර නොදක්වයි; මේ අතරතුර වෙනත් නොමිලේ සේවාවක් පරිවර්තනය කරයි.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} දැනට ප්‍රතිචාර නොදක්වයි; මේ අතරතුර {1} පරිවර්තනය කරයි.",
-  "Show translations in other languages automatically, as Translation layout says": "“පරිවර්තන සැකැස්ම” අනුව වෙනත් භාෂාවල පරිවර්තන ස්වයංක්‍රීයව පෙන්වන්න"
+  "Show translations in other languages automatically, as Translation layout says": "“පරිවර්තන සැකැස්ම” අනුව වෙනත් භාෂාවල පරිවර්තන ස්වයංක්‍රීයව පෙන්වන්න",
+  "Save a note at this moment": "මෙම මොහොතේ සටහනක් සුරකින්න",
+  "Make it a whole sentence with AI": "AI මඟින් සම්පූර්ණ වාක්‍යයක් කරන්න",
+  "Explain the selection with AI": "තෝරාගත් කොටස AI මඟින් පැහැදිලි කරන්න",
+  "Save the selection as a note": "තෝරාගත් කොටස සටහනක් ලෙස සුරකින්න",
+  "Previous match": "පෙර ගැළපීම",
+  "Next match": "ඊළඟ ගැළපීම",
+  "Show line by line": "පේළියෙන් පේළිය පෙන්වන්න",
+  "Read by whole sentence, translated as a whole": "සම්පූර්ණ වාක්‍ය අනුව කියවා, සමස්තයක් ලෙස පරිවර්තනය කරන්න"
 }

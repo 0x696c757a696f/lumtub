@@ -4181,5 +4181,13 @@
   "None besides the target language": "مطلوبہ زبان کے علاوہ کوئی نہیں",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} فی الحال جواب نہیں دے رہا؛ اس دوران کوئی دوسری مفت سروس ترجمہ کرتی ہے۔",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} فی الحال جواب نہیں دے رہا؛ اس دوران {1} ترجمہ کرتا ہے۔",
-  "Show translations in other languages automatically, as Translation layout says": "“ترجمے کی ترتیب” کے مطابق دوسری زبانوں کے ترجمے خودکار طور پر دکھائیں"
+  "Show translations in other languages automatically, as Translation layout says": "“ترجمے کی ترتیب” کے مطابق دوسری زبانوں کے ترجمے خودکار طور پر دکھائیں",
+  "Save a note at this moment": "اس لمحے نوٹ محفوظ کریں",
+  "Make it a whole sentence with AI": "اے آئی سے مکمل جملہ بنائیں",
+  "Explain the selection with AI": "منتخب حصے کی اے آئی سے وضاحت",
+  "Save the selection as a note": "منتخب حصے کو نوٹ کے طور پر محفوظ کریں",
+  "Previous match": "پچھلا نتیجہ",
+  "Next match": "اگلا نتیجہ",
+  "Show line by line": "سطر بہ سطر دکھائیں",
+  "Read by whole sentence, translated as a whole": "مکمل جملے کے مطابق پڑھیں، پورے جملے کا ترجمہ کریں"
 }

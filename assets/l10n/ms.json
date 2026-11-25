@@ -4181,5 +4181,13 @@
   "None besides the target language": "Tiada selain bahasa sasaran",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} tidak bertindak balas buat masa ini; perkhidmatan percuma lain menerjemah sementara itu.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} tidak bertindak balas buat masa ini; {1} menerjemah sementara itu.",
-  "Show translations in other languages automatically, as Translation layout says": "Papar terjemahan bahasa lain secara automatik, seperti yang ditetapkan di “Susun atur terjemahan”"
+  "Show translations in other languages automatically, as Translation layout says": "Papar terjemahan bahasa lain secara automatik, seperti yang ditetapkan di “Susun atur terjemahan”",
+  "Save a note at this moment": "Simpan nota pada saat ini",
+  "Make it a whole sentence with AI": "Jadikan ayat penuh dengan AI",
+  "Explain the selection with AI": "Terangkan bahagian terpilih dengan AI",
+  "Save the selection as a note": "Simpan bahagian terpilih sebagai nota",
+  "Previous match": "Padanan sebelumnya",
+  "Next match": "Padanan seterusnya",
+  "Show line by line": "Papar baris demi baris",
+  "Read by whole sentence, translated as a whole": "Baca mengikut ayat penuh, terjemah sebagai satu keseluruhan"
 }

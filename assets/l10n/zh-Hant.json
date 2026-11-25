@@ -4181,5 +4181,13 @@
   "None besides the target language": "除目標語言外沒有",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} 暫時沒有回應，先由其他免費服務翻譯。",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} 暫時沒有回應，先由 {1} 翻譯。",
-  "Show translations in other languages automatically, as Translation layout says": "依「「譯文顯示方式」」自動顯示其他語言內容的譯文"
+  "Show translations in other languages automatically, as Translation layout says": "依「「譯文顯示方式」」自動顯示其他語言內容的譯文",
+  "Save a note at this moment": "在此刻記筆記",
+  "Make it a whole sentence with AI": "用 AI 補成完整句子",
+  "Explain the selection with AI": "AI 講解選取的文字",
+  "Save the selection as a note": "將選取的文字存為筆記",
+  "Previous match": "上一個符合項目",
+  "Next match": "下一個符合項目",
+  "Show line by line": "逐行顯示",
+  "Read by whole sentence, translated as a whole": "按整句閱讀，整句翻譯"
 }

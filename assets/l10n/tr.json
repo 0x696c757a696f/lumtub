@@ -4181,5 +4181,13 @@
   "None besides the target language": "Hedef dil dışında yok",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} şu an yanıt vermiyor; bu arada başka bir ücretsiz hizmet çeviriyor.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} şu an yanıt vermiyor; bu arada {1} çeviriyor.",
-  "Show translations in other languages automatically, as Translation layout says": "Diğer dillerdeki çevirileri “Çeviri düzeni” ayarına göre otomatik göster"
+  "Show translations in other languages automatically, as Translation layout says": "Diğer dillerdeki çevirileri “Çeviri düzeni” ayarına göre otomatik göster",
+  "Save a note at this moment": "Bu anda not kaydet",
+  "Make it a whole sentence with AI": "Yapay zekayla tam cümle yap",
+  "Explain the selection with AI": "Seçimi yapay zekayla açıkla",
+  "Save the selection as a note": "Seçimi not olarak kaydet",
+  "Previous match": "Önceki eşleşme",
+  "Next match": "Sonraki eşleşme",
+  "Show line by line": "Satır satır göster",
+  "Read by whole sentence, translated as a whole": "Tam cümle olarak oku, bütün olarak çevir"
 }

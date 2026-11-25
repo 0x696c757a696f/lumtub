@@ -4181,5 +4181,13 @@
   "None besides the target language": "ບໍ່ມີ ນອກຈາກພາສາປາຍທາງ",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} ບໍ່ຕອບສະໜອງຊົ່ວຄາວ; ບໍລິການຟຣີອື່ນຈະແປແທນໃນຕອນນີ້.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} ບໍ່ຕອບສະໜອງຊົ່ວຄາວ; {1} ຈະແປແທນໃນຕອນນີ້.",
-  "Show translations in other languages automatically, as Translation layout says": "ສະແດງການແປພາສາອື່ນອັດຕະໂນມັດ ຕາມ “ຮູບແບບການແປ”"
+  "Show translations in other languages automatically, as Translation layout says": "ສະແດງການແປພາສາອື່ນອັດຕະໂນມັດ ຕາມ “ຮູບແບບການແປ”",
+  "Save a note at this moment": "ເກັບບັນທຶກໃນຈຸດນີ້",
+  "Make it a whole sentence with AI": "ໃຫ້ AI ປັບເປັນປະໂຫຍກເຕັມ",
+  "Explain the selection with AI": "ໃຫ້ AI ອະທິບາຍສ່ວນທີ່ເລືອກ",
+  "Save the selection as a note": "ເກັບສ່ວນທີ່ເລືອກເປັນບັນທຶກ",
+  "Previous match": "ຜົນທີ່ກົງກັນກ່ອນໜ້າ",
+  "Next match": "ຜົນທີ່ກົງກັນຖັດໄປ",
+  "Show line by line": "ສະແດງເທື່ອລະແຖວ",
+  "Read by whole sentence, translated as a whole": "ອ່ານເປັນປະໂຫຍກເຕັມ ແລະ ແປທັງປະໂຫຍກ"
 }

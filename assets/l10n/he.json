@@ -4181,5 +4181,13 @@
   "None besides the target language": "אין, מלבד שפת היעד",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} אינו מגיב כרגע; בינתיים שירות חינמי אחר מתרגם.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} אינו מגיב כרגע; בינתיים {1} מתרגם.",
-  "Show translations in other languages automatically, as Translation layout says": "הצגה אוטומטית של תרגומים משפות אחרות, לפי “פריסת התרגום”"
+  "Show translations in other languages automatically, as Translation layout says": "הצגה אוטומטית של תרגומים משפות אחרות, לפי “פריסת התרגום”",
+  "Save a note at this moment": "שמירת הערה ברגע הזה",
+  "Make it a whole sentence with AI": "הפיכה למשפט שלם באמצעות בינה מלאכותית",
+  "Explain the selection with AI": "הסבר הבחירה באמצעות בינה מלאכותית",
+  "Save the selection as a note": "שמירת הבחירה כהערה",
+  "Previous match": "ההתאמה הקודמת",
+  "Next match": "ההתאמה הבאה",
+  "Show line by line": "הצגה שורה אחר שורה",
+  "Read by whole sentence, translated as a whole": "קריאה לפי משפטים שלמים, מתורגמים כמכלול"
 }

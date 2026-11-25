@@ -4181,5 +4181,13 @@
   "None besides the target language": "სათარგმნი ენის გარდა არცერთი",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} ამჟამად არ პასუხობს; ამასობაში თარგმნის სხვა უფასო სერვისი.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} ამჟამად არ პასუხობს; ამასობაში თარგმნის {1}.",
-  "Show translations in other languages automatically, as Translation layout says": "სხვა ენების თარგმანის ავტომატურად ჩვენება „თარგმანის განლაგების“ მიხედვით"
+  "Show translations in other languages automatically, as Translation layout says": "სხვა ენების თარგმანის ავტომატურად ჩვენება „თარგმანის განლაგების“ მიხედვით",
+  "Save a note at this moment": "შენიშვნის შენახვა ამ მომენტში",
+  "Make it a whole sentence with AI": "სრულ წინადადებად გადაქცევა ხელოვნური ინტელექტით",
+  "Explain the selection with AI": "მონიშნულის განმარტება ხელოვნური ინტელექტით",
+  "Save the selection as a note": "მონიშნულის შენიშვნად შენახვა",
+  "Previous match": "წინა დამთხვევა",
+  "Next match": "შემდეგი დამთხვევა",
+  "Show line by line": "ხაზ-ხაზ ჩვენება",
+  "Read by whole sentence, translated as a whole": "სრული წინადადებებით კითხვა, მთლიანად თარგმნა"
 }

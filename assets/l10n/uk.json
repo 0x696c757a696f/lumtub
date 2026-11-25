@@ -4181,5 +4181,13 @@
   "None besides the target language": "Немає, крім цільової мови",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} зараз не відповідає; тим часом перекладає інший безкоштовний сервіс.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} зараз не відповідає; тим часом перекладає {1}.",
-  "Show translations in other languages automatically, as Translation layout says": "Автоматично показувати переклади іншими мовами, як задано в «Розташування перекладу»"
+  "Show translations in other languages automatically, as Translation layout says": "Автоматично показувати переклади іншими мовами, як задано в «Розташування перекладу»",
+  "Save a note at this moment": "Зберегти нотатку в цей момент",
+  "Make it a whole sentence with AI": "Зробити повним реченням за допомогою ШІ",
+  "Explain the selection with AI": "Пояснити виділене за допомогою ШІ",
+  "Save the selection as a note": "Зберегти виділене як нотатку",
+  "Previous match": "Попередній збіг",
+  "Next match": "Наступний збіг",
+  "Show line by line": "Показувати по рядках",
+  "Read by whole sentence, translated as a whole": "Читати цілими реченнями, перекладати повністю"
 }

@@ -4181,5 +4181,13 @@
   "None besides the target language": "Geen behalwe die teikentaal",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} reageer tans nie; ’n ander gratis diens vertaal intussen.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} reageer tans nie; {1} vertaal intussen.",
-  "Show translations in other languages automatically, as Translation layout says": "Wys vertalings van ander tale outomaties, soos “Vertaalinguitleg” bepaal"
+  "Show translations in other languages automatically, as Translation layout says": "Wys vertalings van ander tale outomaties, soos “Vertaalinguitleg” bepaal",
+  "Save a note at this moment": "Stoor 'n nota op hierdie oomblik",
+  "Make it a whole sentence with AI": "Maak 'n volledige sin daarvan met KI",
+  "Explain the selection with AI": "Verduidelik die seleksie met KI",
+  "Save the selection as a note": "Stoor die seleksie as nota",
+  "Previous match": "Vorige resultaat",
+  "Next match": "Volgende resultaat",
+  "Show line by line": "Wys reël vir reël",
+  "Read by whole sentence, translated as a whole": "Lees per volle sin, as geheel vertaal"
 }

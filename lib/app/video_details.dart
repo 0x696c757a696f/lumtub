@@ -87,8 +87,21 @@ extension VideoDetailsActions on AppController {
       return summary;
     }
     final source = await File(await _subtitleFile(option)).readAsString();
-    final transcript = await summaryTranscript(source);
-    final summary = await summarizeTranscript(complete, title, transcript, description: details?.description ?? '', onProgress: onProgress);
+    final description = details?.description ?? '';
+    // A model that reads long texts gets the whole transcript at once, as
+    // the chapters and quotes then come from what was said, not from notes.
+    final budget = intelligence.completeBudget;
+    var transcript = await summaryTranscript(source, budget: budget, most: budget > IntelligenceProvider.shortBudget ? 3 : 8);
+    String summary;
+    try {
+      summary = await summarizeTranscript(complete, title, transcript, description: description, onProgress: onProgress);
+    } on TranslationException catch (e) {
+      if (budget <= IntelligenceProvider.shortBudget || e.busy) rethrow;
+      // Refused as too long for this model after all: in parts, as before.
+      logInfo('The whole transcript of ${item.id} was refused ($e); summarizing it in parts');
+      transcript = await summaryTranscript(source);
+      summary = await summarizeTranscript(complete, title, transcript, description: description, onProgress: onProgress);
+    }
     logInfo('Summarized ${item.id} from ${transcript.chunks.length} part(s)');
     return summary;
   }
@@ -127,6 +140,17 @@ extension VideoDetailsActions on AppController {
     final item = playing;
     final title = details?.title.isNotEmpty == true ? details!.title : item?.title ?? '';
     return explainSubtitle(intelligence.complete, text, title: title, before: before, after: after);
+  }
+
+  /// [quote], words said in the playing video, made by AI into the whole
+  /// sentence they are part of, read with the lines [before] and [after].
+  Future<String> completeQuote(String quote, List<String> before, List<String> after) async {
+    final intelligence = this.intelligence;
+    if (!intelligence.can(Capability.complete)) throw TranslationException(tr('Set up the AI interface and key under Translation & AI first'));
+    final details = this.details;
+    final item = playing;
+    final title = details?.title.isNotEmpty == true ? details!.title : item?.title ?? '';
+    return completeQuoteText(intelligence.complete, quote, title: title, before: before, after: after);
   }
 
   /// [quote] and the person's [draft] made into a clear note by AI.

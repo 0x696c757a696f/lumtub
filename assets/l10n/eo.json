@@ -4181,5 +4181,13 @@
   "None besides the target language": "Neniu krom la cellingvo",
   "{0} is not answering for now; another free service translates meanwhile.": "{0} nun ne respondas; intertempe alia senpaga servo tradukas.",
   "{0} is not answering for now; {1} translates meanwhile.": "{0} nun ne respondas; intertempe {1} tradukas.",
-  "Show translations in other languages automatically, as Translation layout says": "Aŭtomate montri tradukojn de aliaj lingvoj, kiel difinas “Aranĝo de traduko”"
+  "Show translations in other languages automatically, as Translation layout says": "Aŭtomate montri tradukojn de aliaj lingvoj, kiel difinas “Aranĝo de traduko”",
+  "Save a note at this moment": "Konservi noton en ĉi tiu momento",
+  "Make it a whole sentence with AI": "Fari plenan frazon per AI",
+  "Explain the selection with AI": "Klarigi la elekton per AI",
+  "Save the selection as a note": "Konservi la elekton kiel noton",
+  "Previous match": "Antaŭa trafo",
+  "Next match": "Sekva trafo",
+  "Show line by line": "Montri linion post linio",
+  "Read by whole sentence, translated as a whole": "Legi per tutaj frazoj, tradukitaj kiel tutaĵo"
 }
